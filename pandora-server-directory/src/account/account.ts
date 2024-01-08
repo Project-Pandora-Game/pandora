@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient, Assert, OutfitMeasureCost, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, AsyncSynchronized, AssetFrameworkOutfitWithId, AccountPublicInfo, ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT } from 'pandora-common';
+import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient, Assert, OutfitMeasureCost, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, AsyncSynchronized, AssetFrameworkOutfitWithId, AccountPublicInfo, ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT, IDirectoryAccountSettingsLimited, KnownObject, ACCOUNT_SETTINGS_LIMITED_LIMITS } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { CharacterInfo } from './character';
 import { ENV } from '../config';
@@ -122,6 +122,43 @@ export class Account {
 			settings: this.data.settings,
 		});
 		this.onAccountInfoChange();
+	}
+
+	public async changeSettingsLimited(settingsLimited: Partial<IDirectoryAccountSettingsLimited>): Promise<'ok' | 'changeIsNotAllowed'> {
+		const now = Date.now();
+		const next = cloneDeep(this.data.settingsLimited);
+
+		let changed = false;
+
+		for (const [key, value] of KnownObject.entries(settingsLimited)) {
+			if (value == null)
+				continue;
+
+			const setting = next[key];
+			Assert(setting, `Unknown setting ${key}`);
+
+			if (setting.nextAllowedChange > now) {
+				return 'changeIsNotAllowed';
+			}
+
+			if (setting.value !== value) {
+				setting.value = value;
+				setting.nextAllowedChange = now + ACCOUNT_SETTINGS_LIMITED_LIMITS[key];
+				changed = true;
+			}
+		}
+
+		if (!changed)
+			return 'ok';
+
+		this.data.settingsLimited = next;
+
+		await GetDatabase().updateAccountData(this.data.id, {
+			settingsLimited: this.data.settingsLimited,
+		});
+		this.onAccountInfoChange();
+
+		return 'ok';
 	}
 
 	@AsyncSynchronized()

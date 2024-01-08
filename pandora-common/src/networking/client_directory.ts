@@ -1,5 +1,5 @@
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
-import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
+import { AccountCryptoKeySchema, DirectoryAccountSettingsLimitedSchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { ICharacterSelfInfo } from '../character/characterData';
 import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomListExtendedInfo, IChatRoomListInfo, RoomId, RoomIdSchema } from '../chatroom/room';
@@ -174,6 +174,10 @@ export const ClientDirectorySchema = {
 	changeSettings: {
 		request: DirectoryAccountSettingsSchema.partial(),
 		response: null,
+	},
+	changeSettingsLimited: {
+		request: DirectoryAccountSettingsLimitedSchema.partial(),
+		response: ZodCast<{ result: 'ok' | 'changeIsNotAllowed'; }>(),
 	},
 	setInitialCryptoKey: {
 		request: z.object({

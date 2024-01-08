@@ -86,6 +86,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			gitHubBind: this.handleGitHubBind.bind(this),
 			gitHubUnbind: this.handleGitHubUnbind.bind(this),
 			changeSettings: this.handleChangeSettings.bind(this),
+			changeSettingsLimited: this.handleChangeSettingsLimited.bind(this),
 			setInitialCryptoKey: this.handleSetInitialCryptoKey.bind(this),
 
 			getAccountContacts: this.handleGetAccountContacts.bind(this),
@@ -554,6 +555,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		await connection.account.changeSettings(settings);
+	}
+
+	private async handleChangeSettingsLimited(settingsLimited: IClientDirectoryArgument['changeSettingsLimited'], connection: ClientConnection): IClientDirectoryPromiseResult['changeSettingsLimited'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const result = await connection.account.changeSettingsLimited(settingsLimited);
+		return { result };
 	}
 
 	private async handleManageGetAccountRoles({ id }: IClientDirectoryArgument['manageGetAccountRoles']): IClientDirectoryPromiseResult['manageGetAccountRoles'] {

@@ -80,6 +80,7 @@ export const DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES = [
 	'profileDescription',
 	'characters',
 	'settings',
+	'settingsLimited',
 	'directMessages',
 	'storedOutfits',
 ] satisfies readonly (keyof DatabaseAccount)[];

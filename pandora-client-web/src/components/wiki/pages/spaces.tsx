@@ -98,7 +98,7 @@ export function WikiSpaces(): ReactElement {
 			<ul>
 				<li>Both public and private spaces can be password protected.</li>
 				<li>Admins do not need to know and enter the password to join a password protected space.</li>
-				<li>When an account is banned from a space, it cannot join it.</li>
+				<li>When a user's account is banned from a room, the user cannot join it.</li>
 				<li>No one can join a space if it is full, not even owners or admins of it.</li>
 			</ul>
 

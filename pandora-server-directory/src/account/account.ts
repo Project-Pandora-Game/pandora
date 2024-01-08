@@ -36,9 +36,8 @@ export class Account {
 		return this.data.username;
 	}
 
-	/** TODO: Allow choosing custom display name instead of always showing a username */
 	public get displayName(): string {
-		return this.data.username;
+		return this.data.settingsLimited.displayName.value;
 	}
 
 	constructor(data: DatabaseAccountWithSecure) {

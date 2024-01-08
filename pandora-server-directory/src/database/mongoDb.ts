@@ -255,15 +255,14 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async queryAccountDisplayNames(query: AccountId[]): Promise<Record<AccountId, string>> {
-		// TODO get the actual display name when it's implemented
 		const result: Record<AccountId, string> = {};
 		const accounts = await this._accounts
 			.find({ id: { $in: query } })
-			.project<Pick<DatabaseAccount, 'id' | 'username'>>({ id: 1, username: 1 })
+			.project<Pick<DatabaseAccount, 'id' | 'settingsLimited'>>({ id: 1, settingsLimited: 1 })
 			.toArray();
 
 		for (const acc of accounts) {
-			result[acc.id] = acc.username;
+			result[acc.id] = acc.settingsLimited.displayName.value;
 		}
 		return result;
 	}

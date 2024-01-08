@@ -138,11 +138,10 @@ export class MockDatabase implements PandoraDatabase {
 	}
 
 	public queryAccountDisplayNames(query: AccountId[]): Promise<Record<AccountId, string>> {
-		// TODO get the actual display name when it's implemented
 		const result: Record<AccountId, string> = {};
 		for (const acc of this.accountDbView) {
 			if (query.includes(acc.id))
-				result[acc.id] = acc.username;
+				result[acc.id] = acc.settingsLimited.displayName.value;
 		}
 		return Promise.resolve(result);
 	}

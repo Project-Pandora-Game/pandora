@@ -511,16 +511,6 @@ export function DoAppearanceAction(
 					},
 				});
 			}
-			// To manipulate room devices, player must be holding room construction tools
-			if (!playerRestrictionManager.getEffects().toolRoomConstruction) {
-				processingContext.addProblem({
-					result: 'restrictionError',
-					restriction: {
-						type: 'modifyRoomRestriction',
-						reason: 'missingConstructionTools',
-					},
-				});
-			}
 
 			const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 			if (!ActionRoomDeviceDeploy(processingContext, targetManipulator, action.item, action.deployment))

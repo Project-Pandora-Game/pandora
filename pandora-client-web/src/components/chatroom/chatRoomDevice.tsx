@@ -55,8 +55,14 @@ type ChatRoomDeviceProps = {
 	onPointerUp?: (event: FederatedPointerEvent) => void;
 };
 
-export const DeviceOverlaySettingSchema = z.enum(['never', 'interactable', 'always']);
-export const DeviceOverlaySetting = BrowserStorage.create('temp-device-overlay-toggle', 'interactable', DeviceOverlaySettingSchema);
+export const DeviceOverlaySettingSchema = z.object({
+	roomConstructionMode: z.boolean(),
+	defaultView: z.enum(['never', 'intractable', 'always']),
+});
+export const DeviceOverlaySetting = BrowserStorage.create('temp-device-overlay-toggle', {
+	roomConstructionMode: false,
+	defaultView: 'intractable',
+}, DeviceOverlaySettingSchema);
 
 export function ChatRoomDeviceMovementTool({
 	item,
@@ -248,7 +254,6 @@ export function ChatRoomDeviceInteractive({
 	menuOpen,
 }: ChatRoomDeviceInteractiveProps): ReactElement | null {
 	const asset = item.asset;
-	const { player, playerState } = usePlayerState();
 
 	const isBeingMoved = chatRoomMode.mode === 'moveDevice' && chatRoomMode.deviceItemId === item.id;
 
@@ -281,15 +286,14 @@ export function ChatRoomDeviceInteractive({
 	});
 
 	// Overlay graphics
-	const showOverlaySetting = useObservable(DeviceOverlaySetting);
+	const { roomConstructionMode, defaultView } = useObservable(DeviceOverlaySetting);
+	const showOverlaySetting = roomConstructionMode ? 'always' : defaultView;
 
 	const canInteractNormally = Object.keys(asset.definition.slots).length > 0;
-	const hasConstructionTool = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getEffects().toolRoomConstruction);
-	const enableMenu = !isBeingMoved && (canInteractNormally || hasConstructionTool || showOverlaySetting === 'always');
+	const enableMenu = !isBeingMoved && (canInteractNormally || showOverlaySetting === 'always');
 	const showMenuHelper = enableMenu && (
 		showOverlaySetting === 'always' ||
-		hasConstructionTool ||
-		(showOverlaySetting === 'interactable' && canInteractNormally)
+		(showOverlaySetting === 'intractable' && canInteractNormally)
 	);
 
 	const deviceMenuHelperDraw = useCallback((g: PIXI.Graphics) => {
@@ -299,9 +303,9 @@ export function ChatRoomDeviceInteractive({
 		}
 
 		g.clear()
-			.beginFill(hasConstructionTool ? 0xff0000 : 0x000075, hasConstructionTool ? 0.7 : 0.2)
+			.beginFill(roomConstructionMode ? 0xff0000 : 0x000075, roomConstructionMode ? 0.7 : 0.2)
 			.drawCircle(0, 0, hitAreaRadius)
-			.beginFill(hasConstructionTool ? 0x000000 : 0x0000ff, hasConstructionTool ? 0.8 : 0.4)
+			.beginFill(roomConstructionMode ? 0x000000 : 0x0000ff, roomConstructionMode ? 0.8 : 0.4)
 			.drawPolygon([
 				-30, 10,
 				5, -40,
@@ -310,7 +314,7 @@ export function ChatRoomDeviceInteractive({
 				-5, 40,
 				-5, 10,
 			]);
-	}, [showMenuHelper, hasConstructionTool, hitAreaRadius]);
+	}, [showMenuHelper, roomConstructionMode, hitAreaRadius]);
 
 	return (
 		<ChatRoomDevice

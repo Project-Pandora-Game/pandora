@@ -112,29 +112,49 @@ export function PersonalRoomControls(): ReactElement {
 }
 
 function DeviceOverlaySelector(): ReactElement {
-	const deviceOverlaySetting = useObservable(DeviceOverlaySetting);
+	const { roomConstructionMode, defaultView } = useObservable(DeviceOverlaySetting);
+
+	const onRoomConstructionModeChange = () => {
+		DeviceOverlaySetting.value = {
+			roomConstructionMode: !roomConstructionMode,
+			defaultView,
+		};
+	};
+
+	const onSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		DeviceOverlaySetting.value = DeviceOverlaySettingSchema.parse({
+			roomConstructionMode,
+			defaultView: e.target.value,
+		});
+	};
 
 	return (
-		<div>
-			<label htmlFor='chatroom-device-overlay'>Show device movement area overlay</label>
-			{ ' ' }
-			<Select
-				value={ deviceOverlaySetting }
-				onChange={ (e) => {
-					DeviceOverlaySetting.value = DeviceOverlaySettingSchema.parse(e.target.value);
-				} }
-			>
-				<option value='never'>
-					Never (enterable devices can still be interacted with)
-				</option>
-				<option value='interactable'>
-					For enterable devices only
-				</option>
-				<option value='always'>
-					For all devices
-				</option>
-			</Select>
-		</div>
+		<>
+			<Row padding='small'>
+				<Button onClick={ onRoomConstructionModeChange }>
+					{ roomConstructionMode ? 'Disable' : 'Enable' } room construction mode
+				</Button>
+			</Row>
+			<br />
+			<div >
+				<label htmlFor='chatroom-device-overlay'>Show device movement area overlay</label>
+				{ ' ' }
+				<Select
+					value={ defaultView }
+					onChange={ onSelectionChange }
+				>
+					<option value='never'>
+						Never (enterable devices can still be interacted with)
+					</option>
+					<option value='intractable'>
+						For enterable devices only
+					</option>
+					<option value='always'>
+						For all devices
+					</option>
+				</Select>
+			</div>
+		</>
 	);
 }
 

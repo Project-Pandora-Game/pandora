@@ -11,7 +11,6 @@ const GLOBAL_LOCK = new AsyncLock();
 
 type AccountContactCache = {
 	id: AccountId;
-	displayName: string;
 	updated: number;
 	contact: DatabaseAccountContactType;
 };
@@ -59,10 +58,14 @@ export class AccountContacts {
 		const isNotBlockedBy = ({ contact }: AccountContactCache) => {
 			return contact.type !== 'oneSidedBlock' || contact.from === this.account.id;
 		};
+		const filtered = [...this.contacts.values()]
+			.filter(isNotBlockedBy);
 
-		return [...this.contacts.values()]
-			.filter(isNotBlockedBy)
-			.map(this.cacheToClientData.bind(this));
+		const ids = await GetDatabase().queryAccountDisplayNames(filtered.map((contact) => contact.id));
+
+		return filtered
+			.filter((contact) => ids[contact.id] != null)
+			.map((contact) => this.cacheToClientData(contact, ids[contact.id]));
 	}
 
 	public async getFriendsStatus(): Promise<IAccountFriendStatus[]> {
@@ -236,12 +239,12 @@ export class AccountContacts {
 	private async update(contact: DatabaseAccountContact): Promise<void> {
 		const id = contact.accounts[0] === this.account.id ? contact.accounts[1] : contact.accounts[0];
 		const existing = this.get(id);
-		const displayName = existing ? existing.displayName : (await GetDatabase().queryAccountDisplayNames([id]))[id];
+		const displayName = (await GetDatabase().queryAccountDisplayNames([id]))[id];
 		if (!displayName) {
 			this.logger.warning(`Could not find name for account ${id}`);
 			return;
 		}
-		this.setAccountContact(id, displayName, contact.updated, contact.contact);
+		this.setAccountContact(id, contact.updated, contact.contact);
 		const newContact = this.get(id);
 		if (!newContact)
 			return;
@@ -268,7 +271,7 @@ export class AccountContacts {
 			}
 		}
 		this.account.associatedConnections.sendMessage('accountContactUpdate', {
-			contact: this.cacheToClientData(newContact),
+			contact: this.cacheToClientData(newContact, displayName),
 			friendStatus,
 		});
 	}
@@ -293,16 +296,9 @@ export class AccountContacts {
 			return;
 		}
 		const contacts = await GetDatabase().getAccountContacts(this.account.id);
-		const ids = contacts.map((contact) => contact.accounts[0] === this.account.id ? contact.accounts[1] : contact.accounts[0]);
-		const names = await GetDatabase().queryAccountDisplayNames(_.uniq(ids));
 		for (const contact of contacts) {
 			const id = contact.accounts[0] === this.account.id ? contact.accounts[1] : contact.accounts[0];
-			const name = names[id];
-			if (!name) {
-				this.logger.warning(`Could not find name for account ${id}`);
-				continue;
-			}
-			this.setAccountContact(id, name, contact.updated, contact.contact);
+			this.setAccountContact(id, contact.updated, contact.contact);
 		}
 		this.loaded = true;
 		this.updateStatus();
@@ -320,10 +316,9 @@ export class AccountContacts {
 		await accountManager.getAccountById(other)?.contacts.update(contact);
 	}
 
-	private setAccountContact(id: AccountId, displayName: string, updated: number, contact: DatabaseAccountContactType): void {
+	private setAccountContact(id: AccountId, updated: number, contact: DatabaseAccountContactType): void {
 		this.contacts.set(id, {
 			id,
-			displayName,
 			updated,
 			contact,
 		});
@@ -348,7 +343,7 @@ export class AccountContacts {
 		}
 	}
 
-	private cacheToClientData({ id, displayName, updated, contact }: AccountContactCache): IAccountContact {
+	private cacheToClientData({ id, updated, contact }: AccountContactCache, displayName: string): IAccountContact {
 		let type: IAccountContact['type'];
 		switch (contact.type) {
 			case 'friend':

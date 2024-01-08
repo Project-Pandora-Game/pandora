@@ -301,7 +301,7 @@ export class AccountContacts {
 			this.setAccountContact(id, contact.updated, contact.contact);
 		}
 		this.loaded = true;
-		this.updateStatus();
+		this._updateStatus();
 	}
 
 	private async updateAccountContact(other: AccountId, type: DatabaseAccountContactType | null) {
@@ -324,7 +324,32 @@ export class AccountContacts {
 		});
 	}
 
+	private _updatingStatus = false;
 	public updateStatus(): void {
+		if (this._updatingStatus) {
+			return;
+		}
+		if (this.loaded) {
+			this._updateStatus();
+			return;
+		}
+		this._updateStatusAsync()
+			.catch((err) => {
+				this.logger.error('Failed to update status', err);
+			});
+	}
+
+	private async _updateStatusAsync(): Promise<void> {
+		this._updatingStatus = true;
+		try {
+			await this.load();
+		} finally {
+			this._updatingStatus = true;
+			this._updateStatus();
+		}
+	}
+
+	public _updateStatus(): void {
 		const status = this.getStatus();
 		if (_.isEqual(status, this.lastStatus)) {
 			return;

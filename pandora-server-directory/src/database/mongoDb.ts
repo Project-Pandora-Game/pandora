@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { ENV } from '../config';
 const { DATABASE_URL, DATABASE_NAME } = ENV;
@@ -518,6 +518,12 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	private async _doMigrations(): Promise<void> {
 		// insert migration code here
+		for await (const account of this._accounts.find()) {
+			const settingsLimited = _.cloneDeep(ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT);
+			settingsLimited.displayName.value = account.username;
+
+			await this._accounts.updateOne({ id: account.id }, { $set: { settingsLimited } });
+		}
 	}
 }
 

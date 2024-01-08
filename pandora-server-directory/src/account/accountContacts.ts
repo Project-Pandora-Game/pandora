@@ -151,7 +151,7 @@ export class AccountContacts {
 		if (!names[id]) {
 			return 'accountNotFound';
 		}
-		await this.updateAccountContact(id, { type: 'request', from: this.account.id }, names[id]);
+		await this.updateAccountContact(id, { type: 'request', from: this.account.id });
 		return 'ok';
 	}
 
@@ -161,7 +161,7 @@ export class AccountContacts {
 		if (existing?.contact.type !== 'request' || existing.contact.from !== id) {
 			return 'requestNotFound';
 		}
-		await this.updateAccountContact(id, { type: 'friend' }, existing.displayName);
+		await this.updateAccountContact(id, { type: 'friend' });
 		return 'ok';
 	}
 
@@ -233,10 +233,10 @@ export class AccountContacts {
 		return true;
 	}
 
-	private async update(contact: DatabaseAccountContact, displayName?: string): Promise<void> {
+	private async update(contact: DatabaseAccountContact): Promise<void> {
 		const id = contact.accounts[0] === this.account.id ? contact.accounts[1] : contact.accounts[0];
 		const existing = this.get(id);
-		displayName ??= existing ? existing.displayName : (await GetDatabase().queryAccountDisplayNames([id]))[id];
+		const displayName = existing ? existing.displayName : (await GetDatabase().queryAccountDisplayNames([id]))[id];
 		if (!displayName) {
 			this.logger.warning(`Could not find name for account ${id}`);
 			return;
@@ -308,7 +308,7 @@ export class AccountContacts {
 		this.updateStatus();
 	}
 
-	private async updateAccountContact(other: AccountId, type: DatabaseAccountContactType | null, otherName?: string) {
+	private async updateAccountContact(other: AccountId, type: DatabaseAccountContactType | null) {
 		if (type == null) {
 			await GetDatabase().removeAccountContact(this.account.id, other);
 			this.remove(other);
@@ -316,8 +316,8 @@ export class AccountContacts {
 			return;
 		}
 		const contact = await GetDatabase().setAccountContact(this.account.id, other, type);
-		await this.update(contact, otherName);
-		await accountManager.getAccountById(other)?.contacts.update(contact, this.account.username);
+		await this.update(contact);
+		await accountManager.getAccountById(other)?.contacts.update(contact);
 	}
 
 	private setAccountContact(id: AccountId, displayName: string, updated: number, contact: DatabaseAccountContactType): void {

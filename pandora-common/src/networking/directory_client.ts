@@ -1,9 +1,9 @@
-import { z } from 'zod';
+import { z, ZodObject, ZodNumber } from 'zod';
 import { IAccountRoleInfo, AccountRoleSchema, AccountId } from '../account';
 import type { CharacterId } from '../character';
 import type { ShardFeature } from '../chatroom';
-import { Satisfies } from '../utility';
-import { HexColorStringSchema, ZodCast } from '../validation';
+import { KnownObject, Satisfies, TimeSpanMs } from '../utility';
+import { DisplayNameSchema, HexColorStringSchema, ZodCast } from '../validation';
 import type { IAccountContact, IAccountFriendStatus } from './client_directory';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 import { Immutable } from 'immer';
@@ -101,6 +101,40 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>
 	interfaceChatroomOfflineCharacterFilter: 'ghost',
 });
 
+export const DirectoryAccountSettingsLimitedSchema = z.object({
+	displayName: DisplayNameSchema,
+});
+export type IDirectoryAccountSettingsLimited = z.infer<typeof DirectoryAccountSettingsLimitedSchema>;
+
+type DirectoryAccountSettingsLimitedStoredSchemaAcc = {
+	[K in keyof IDirectoryAccountSettingsLimited]: ZodObject<{
+		value: typeof DirectoryAccountSettingsLimitedSchema.shape[K];
+		nextAllowedChange: ZodNumber;
+	}>;
+};
+export const DirectoryAccountSettingsLimitedStoredSchema = z.object(
+	KnownObject.entries(DirectoryAccountSettingsLimitedSchema.shape).reduce(
+		(acc, [key, value]) => {
+			acc[key] = z.object({
+				value,
+				nextAllowedChange: z.number(),
+			});
+			return acc;
+		},
+		// eslint-disable-next-line @typescript-eslint/consistent-type-assertions
+		{} as DirectoryAccountSettingsLimitedStoredSchemaAcc,
+	),
+);
+export type IDirectoryAccountSettingsLimitedStored = z.infer<typeof DirectoryAccountSettingsLimitedStoredSchema>;
+
+export const ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT = Object.freeze<IDirectoryAccountSettingsLimitedStored>({
+	displayName: { value: '', nextAllowedChange: 0 },
+});
+
+export const ACCOUNT_SETTINGS_LIMITED_LIMITS = Object.freeze<Readonly<Record<keyof IDirectoryAccountSettingsLimited, number>>>({
+	displayName: TimeSpanMs(1, 'months'),
+});
+
 // TODO: This needs reasonable size limits
 export const AccountCryptoKeySchema = z.object({
 	publicKey: z.string(),
@@ -120,6 +154,7 @@ export type IDirectoryAccountInfo = {
 	/** Limit of how many rooms this account can own */
 	roomOwnershipLimit: number;
 	settings: IDirectoryAccountSettings;
+	settingsLimited: IDirectoryAccountSettingsLimitedStored;
 	cryptoKey?: IAccountCryptoKey;
 };
 

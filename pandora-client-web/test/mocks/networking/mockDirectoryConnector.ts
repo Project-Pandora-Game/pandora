@@ -1,6 +1,7 @@
 import { cloneDeep } from 'lodash';
 import {
 	ACCOUNT_SETTINGS_DEFAULT,
+	ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT,
 	CreateDefaultDirectoryStatus,
 	IDirectoryAccountInfo,
 	IDirectoryClientArgument,
@@ -64,6 +65,7 @@ export function MockAccountInfo(overrides?: Partial<IDirectoryAccountInfo>): IDi
 		roles: {},
 		roomOwnershipLimit: 5,
 		settings: cloneDeep(ACCOUNT_SETTINGS_DEFAULT),
+		settingsLimited: cloneDeep(ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT),
 		...overrides,
 	};
 }

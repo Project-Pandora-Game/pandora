@@ -54,8 +54,8 @@ export function WikiSafety(): ReactElement {
 
 			<h4 id='SA_Safemode'>Safemode</h4>
 			<p>
-				Safemode is a mode that immediately disables all restricting effect that were applied to your character. It also allows
-				no one to modify anything about your character or interact with you while you are in this mode, similar to timeout mode.
+				Safemode is a mode that immediately disables all restricting effect that were applied to your character. It also prevents everyone
+				else from modifying anything about your character or interact with you while you are in this mode, similar to timeout mode.
 				Additionally, it allows you to remove items freely from yourself, ignoring locks, doors, or restricting room devices.
 				Nothing can hold or limit you in this mode.<br />
 				Safemode should be seen as a last resort that you will hopefully never need to use in the case when your OOC-wishes were

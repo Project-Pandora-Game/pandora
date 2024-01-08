@@ -93,7 +93,7 @@ export function WikiSpaces(): ReactElement {
 
 			<h4 id='RO_Space_access'>Space access</h4>
 			<p>
-				Spaces in Pandora that are visible can be joined unless they are password protected.
+				Spaces in Pandora that are visible can be joined unless they are password protected or a user is banned from it.
 			</p>
 			<ul>
 				<li>Both public and private spaces can be password protected.</li>
@@ -170,6 +170,14 @@ export function WikiSpaces(): ReactElement {
 				<li>If you want to permanently switch to another chat mode via a chat command, send the command without a text message behind the command.</li>
 				<li>Certain chat modes can be combined with the whisper mode.</li>
 				<li>All chat modes have a variant to send text without any formatting, which are the "raw" variants of the according chat commands.</li>
+				<li>
+					There are also shortcuts to write one-off messages while in the default, normal chat mode.<br />
+					These shortcuts are<br />
+					"((" - (( ooc message ))<br />
+					"*"  - *me-emote that gets prefixed with your character's name*<br />
+					"**" - **generic emote that doesn't get prefixed**<br />
+					Note: A single message can have multiple parts, so the above shortcut types can be mixed in a single message if each different one is in a new line.
+				</li>
 			</ul>
 
 			<h4 id='RO_Room_chat_Editing_text'>Room chat: Editing text</h4>
@@ -200,7 +208,8 @@ export function WikiSpaces(): ReactElement {
 
 			<h4 id='RO_Room_chat_Text_formatting'>Room chat: Text formatting</h4>
 			<p>
-				Pandora supports a part of the markdown syntax to write text italic or bold: "__bold text__" or "_italicized  text_"<br />
+				Starting a message with "https://" will turn it into an inline-link.
+				Also, Pandora supports a part of the markdown syntax to write text italic or bold: "__bold text__" or "_italicized  text_"<br />
 				While the chat input field is focused, you can also use keyboard shortcuts to get the supported markdown syntax:
 			</p>
 			<ul>

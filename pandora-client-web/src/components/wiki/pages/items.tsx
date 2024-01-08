@@ -83,7 +83,7 @@ export function WikiItems(): ReactElement {
 
 			<h4 id='IT_Item_preferences_and_limits'>Item preferences and limits</h4>
 			<p>
-				You can set set preferences for individual items or groups of similar items or limit them with the "Item Limits"-tab in the wardrobe.
+				With the "Item Limits"-tab in the wardrobe, you can set preferences for individual items or groups of similar items, such as limiting them.
 				The possible preferences are "Favorite", "Normal", and "Maybe". The possible limits are "Prevent", and "Do not render".
 			</p>
 			<ul>

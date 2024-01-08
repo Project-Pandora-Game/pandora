@@ -2,7 +2,7 @@ import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, Sock
 import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { ICharacterSelfInfo } from '../character/characterData';
-import { ChatRoomDirectoryConfigSchema, ChatRoomDirectoryUpdateSchema, IChatRoomListExtendedInfo, IChatRoomListInfo, RoomId, RoomIdSchema } from '../chatroom/room';
+import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceListExtendedInfo, SpaceListInfo, SpaceId, SpaceIdSchema } from '../space/space';
 import { AccountId, AccountIdSchema, AccountRoleSchema, ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
 import { EmailAddressSchema, HexColorString, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast, ZodTruncate } from '../validation';
 import { z } from 'zod';
@@ -54,11 +54,11 @@ export type IBetaKeyInfo = IBaseTokenInfo & {
 	uses: number;
 };
 
-export type IChatRoomExtendedInfoResponse = {
+export type SpaceExtendedInfoResponse = {
 	result: 'notFound' | 'noAccess';
 } | {
 	result: 'success';
-	data: IChatRoomListExtendedInfo;
+	data: SpaceListExtendedInfo;
 };
 
 export type IAccountContact = {
@@ -83,7 +83,7 @@ export type IAccountFriendStatus = {
 	characters?: {
 		id: CharacterId;
 		name: string;
-		inRoom?: RoomId;
+		space: SpaceId | null;
 	}[];
 };
 
@@ -255,47 +255,47 @@ export const ClientDirectorySchema = {
 		request: z.object({}),
 		response: ZodCast<{ shards: IDirectoryShardInfo[]; }>(),
 	},
-	listRooms: {
+	listSpaces: {
 		request: z.object({}),
-		response: ZodCast<{ rooms: IChatRoomListInfo[]; }>(),
+		response: ZodCast<{ spaces: SpaceListInfo[]; }>(),
 	},
-	chatRoomGetInfo: {
+	spaceGetInfo: {
 		request: z.object({
-			id: RoomIdSchema,
+			id: SpaceIdSchema,
 		}),
-		response: ZodCast<IChatRoomExtendedInfoResponse>(),
+		response: ZodCast<SpaceExtendedInfoResponse>(),
 	},
-	chatRoomCreate: {
-		request: ChatRoomDirectoryConfigSchema,
-		response: ZodCast<{ result: 'ok' | 'roomOwnershipLimitReached' | ShardError; }>(),
+	spaceCreate: {
+		request: SpaceDirectoryConfigSchema,
+		response: ZodCast<{ result: 'ok' | 'spaceOwnershipLimitReached' | ShardError; }>(),
 	},
-	chatRoomEnter: {
+	spaceEnter: {
 		request: z.object({
-			id: RoomIdSchema,
+			id: SpaceIdSchema,
 			password: z.string().optional(),
 		}),
 		response: ZodCast<{ result: 'ok' | 'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword'; }>(),
 	},
-	chatRoomLeave: {
+	spaceLeave: {
 		request: z.object({}),
 		response: z.object({
 			result: z.enum(['ok', 'failed', 'restricted', 'inRoomDevice']),
 		}),
 	},
-	chatRoomUpdate: {
-		request: ChatRoomDirectoryUpdateSchema,
-		response: ZodCast<{ result: 'ok' | 'notInRoom' | 'noAccess'; }>(),
+	spaceUpdate: {
+		request: SpaceDirectoryUpdateSchema,
+		response: ZodCast<{ result: 'ok' | 'notInPublicSpace' | 'noAccess'; }>(),
 	},
-	chatRoomAdminAction: {
+	spaceAdminAction: {
 		request: z.object({
 			action: z.enum(['kick', 'ban', 'unban', 'promote', 'demote']),
 			targets: z.array(AccountIdSchema),
 		}),
 		response: null,
 	},
-	chatRoomOwnershipRemove: {
+	spaceOwnershipRemove: {
 		request: z.object({
-			id: RoomIdSchema,
+			id: SpaceIdSchema,
 		}),
 		response: ZodCast<{ result: 'ok' | 'notAnOwner'; }>(),
 	},

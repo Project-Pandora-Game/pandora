@@ -10,8 +10,8 @@ const CHAT_ACTIONS_DEF = {
 	characterKicked: 'TARGET_CHARACTER has been kicked by SOURCE_CHARACTER.',
 	characterBanned: 'TARGET_CHARACTER has been banned by SOURCE_CHARACTER.',
 
-	roomUpdatedSingle: `SOURCE_CHARACTER changed the room's CHANGE.`,
-	roomUpdatedMultiple: `SOURCE_CHARACTER changed COUNT room settings:`,
+	spaceUpdatedSingle: `SOURCE_CHARACTER changed the spaces's CHANGE.`,
+	spaceUpdatedMultiple: `SOURCE_CHARACTER changed COUNT space settings:`,
 	//#endregion
 
 	//#region Action messages
@@ -61,7 +61,7 @@ const CHAT_ACTIONS_DEF = {
 };
 
 const CHAT_ACTIONS_DEF_FOLDED_EXTRA: Partial<Record<keyof typeof CHAT_ACTIONS_DEF, string>> = {
-	roomUpdatedMultiple: `CHANGES`,
+	spaceUpdatedMultiple: `CHANGES`,
 };
 
 /**

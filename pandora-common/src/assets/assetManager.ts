@@ -3,7 +3,7 @@ import type { Logger } from '../logging';
 import { Assert, AssertNotNullable, CloneDeepMutable } from '../utility';
 import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
-import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetsDefinitionFile, AssetsPosePresets, AssetType, BackgroundTagDefinition, IChatroomBackgroundInfo } from './definitions';
+import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetsDefinitionFile, AssetsPosePresets, AssetType, RoomBackgroundTagDefinition, RoomBackgroundInfo } from './definitions';
 import type { AssetId } from './base';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 import { LoadItemFromBundle, Item, ItemBundle, ItemTemplate, CreateItemBundleFromTemplate } from './item';
@@ -13,13 +13,13 @@ export class AssetManager {
 	protected readonly _assets: ReadonlyMap<AssetId, Asset>;
 	protected readonly _bones: ReadonlyMap<string, BoneDefinition>;
 	protected readonly _posePresets: Immutable<AssetsPosePresets>;
-	protected readonly _backgrounds: readonly Immutable<IChatroomBackgroundInfo>[];
+	protected readonly _backgrounds: readonly Immutable<RoomBackgroundInfo>[];
 
 	public readonly definitionsHash: string;
 	public readonly graphicsId: string;
 	public readonly rawData: Immutable<AssetsDefinitionFile>;
 
-	public readonly backgroundTags: ReadonlyMap<string, BackgroundTagDefinition>;
+	public readonly backgroundTags: ReadonlyMap<string, RoomBackgroundTagDefinition>;
 	public readonly attributes: ReadonlyMap<string, Immutable<AssetAttributeDefinition>>;
 	public readonly bodyparts: readonly AssetBodyPart[];
 	public readonly randomization: AppearanceRandomizationData;
@@ -40,11 +40,11 @@ export class AssetManager {
 		return CloneDeepMutable(this._posePresets);
 	}
 
-	public getBackgrounds(): readonly IChatroomBackgroundInfo[] {
+	public getBackgrounds(): readonly RoomBackgroundInfo[] {
 		return CloneDeepMutable(this._backgrounds);
 	}
 
-	public getBackgroundById(id: string): IChatroomBackgroundInfo | null {
+	public getBackgroundById(id: string): RoomBackgroundInfo | null {
 		return CloneDeepMutable(this._backgrounds.find((b) => b.id === id) ?? null);
 	}
 
@@ -96,7 +96,7 @@ export class AssetManager {
 		this.randomization = fullData.randomization;
 
 		//#region Load Background Tags
-		const tags = new Map<string, Readonly<BackgroundTagDefinition>>();
+		const tags = new Map<string, Readonly<RoomBackgroundTagDefinition>>();
 
 		for (const [id, definition] of Object.entries(fullData.backgroundTags)) {
 			tags.set(id, definition);

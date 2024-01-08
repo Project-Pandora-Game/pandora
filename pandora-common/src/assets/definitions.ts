@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { IChatroomBackgroundData } from '../chatroom';
+import type { RoomBackgroundData } from '../space/room';
 import { HexRGBAColorString } from '../validation';
 import type { AppearanceArmPose, AppearancePose } from './state/characterState';
 import type { BoneDefinitionCompressed, BoneName, BoneType, CharacterView, Condition, Coordinates, LayerImageOverride, LegsPose } from './graphics';
@@ -483,7 +483,7 @@ export type AppearanceRandomizationData<A extends AssetDefinitionExtraArgs = Ass
 	clothes: readonly A['attributes'][];
 };
 
-export type IChatroomBackgroundInfo = IChatroomBackgroundData & {
+export type RoomBackgroundInfo = RoomBackgroundData & {
 	/** The unique identifier for this background */
 	id: string;
 	/** The visible name for this background */
@@ -494,7 +494,7 @@ export type IChatroomBackgroundInfo = IChatroomBackgroundData & {
 	tags: string[];
 };
 
-export interface BackgroundTagDefinition {
+export interface RoomBackgroundTagDefinition {
 	name: string;
 	category: string;
 }
@@ -505,8 +505,8 @@ export interface AssetsDefinitionFile {
 	posePresets: AssetsPosePresets;
 	bodyparts: AssetBodyPart[];
 	graphicsId: string;
-	backgroundTags: Record<string, BackgroundTagDefinition>;
-	backgrounds: IChatroomBackgroundInfo[];
+	backgroundTags: Record<string, RoomBackgroundTagDefinition>;
+	backgrounds: RoomBackgroundInfo[];
 	attributes: Record<string, AssetAttributeDefinition>;
 	randomization: AppearanceRandomizationData;
 }

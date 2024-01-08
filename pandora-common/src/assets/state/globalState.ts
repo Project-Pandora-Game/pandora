@@ -6,7 +6,7 @@ import { AppearanceClientBundle, AppearanceBundleSchema, AssetFrameworkCharacter
 import { z } from 'zod';
 import { Assert, AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import { RoomTargetSelector } from '../appearanceTypes';
+import { ActionTargetSelector } from '../appearanceTypes';
 import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClientBundle } from './roomState';
 import { IExportOptions } from '../modules/common';
 
@@ -73,7 +73,7 @@ export class AssetFrameworkGlobalState {
 		};
 	}
 
-	public getItems(target: RoomTargetSelector): AppearanceItems | null {
+	public getItems(target: ActionTargetSelector): AppearanceItems | null {
 		if (target.type === 'character') {
 			const character = this.getCharacterState(target.characterId);
 			if (!character)

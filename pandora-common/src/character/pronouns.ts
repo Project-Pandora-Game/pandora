@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ChatActionDictionaryMetaEntry } from '../chatroom';
+import type { ChatActionDictionaryMetaEntry } from '../chat';
 import type { Satisfies } from '../utility';
 
 export type Pronouns = {

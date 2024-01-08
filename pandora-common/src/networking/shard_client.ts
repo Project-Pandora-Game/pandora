@@ -2,11 +2,11 @@ import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHa
 import type { CharacterId } from '../character/characterTypes';
 import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData';
 import type { AssetsDefinitionFile } from '../assets/definitions';
-import type { IChatRoomMessage, IChatRoomStatus } from '../chatroom/chat';
+import type { IChatMessage, ChatCharacterStatus } from '../chat/chat';
 import { ZodCast } from '../validation';
 import { Satisfies } from '../utility';
 import { AssetFrameworkGlobalStateClientBundle } from '../assets/state/globalState';
-import { IChatRoomClientInfo, RoomId } from '../chatroom';
+import { SpaceClientInfo, SpaceId } from '../space/space';
 import { Immutable } from 'immer';
 
 // Fix for pnpm resolution weirdness
@@ -15,21 +15,14 @@ import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
 
 export type ICharacterRoomData = ICharacterPublicData & {
+	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
 	position: CharacterRoomPosition;
 	isOnline: boolean;
 };
 
-export type IChatRoomUpdate = {
-	globalState?: AssetFrameworkGlobalStateClientBundle;
-	info?: Partial<IChatRoomClientInfo>;
-	leave?: CharacterId;
-	join?: ICharacterRoomData;
-	characters?: Record<CharacterId, Partial<ICharacterRoomData>>;
-};
-
-export type IChatRoomLoadData = {
-	id: RoomId | null;
-	info: IChatRoomClientInfo;
+export type SpaceLoadData = {
+	id: SpaceId | null;
+	info: SpaceClientInfo;
 	characters: ICharacterRoomData[];
 };
 
@@ -41,7 +34,7 @@ export const ShardClientSchema = {
 		request: ZodCast<{
 			character: ICharacterPrivateData;
 			globalState: AssetFrameworkGlobalStateClientBundle;
-			room: IChatRoomLoadData;
+			space: SpaceLoadData;
 			assetsDefinition: Immutable<AssetsDefinitionFile>;
 			assetsDefinitionHash: string;
 			assetsSource: string;
@@ -52,27 +45,33 @@ export const ShardClientSchema = {
 		request: ZodCast<Partial<ICharacterPrivateData>>(),
 		response: null,
 	},
-	chatRoomLoad: {
+	gameStateLoad: {
 		request: ZodCast<{
 			globalState: AssetFrameworkGlobalStateClientBundle;
-			room: IChatRoomLoadData;
+			space: SpaceLoadData;
 		}>(),
 		response: null,
 	},
-	chatRoomUpdate: {
-		request: ZodCast<IChatRoomUpdate>(),
-		response: null,
-	},
-	chatRoomMessage: {
+	gameStateUpdate: {
 		request: ZodCast<{
-			messages: IChatRoomMessage[];
+			globalState?: AssetFrameworkGlobalStateClientBundle;
+			info?: Partial<SpaceClientInfo>;
+			leave?: CharacterId;
+			join?: ICharacterRoomData;
+			characters?: Record<CharacterId, Partial<ICharacterRoomData>>;
 		}>(),
 		response: null,
 	},
-	chatRoomStatus: {
+	chatMessage: {
+		request: ZodCast<{
+			messages: IChatMessage[];
+		}>(),
+		response: null,
+	},
+	chatCharacterStatus: {
 		request: ZodCast<{
 			id: CharacterId;
-			status: IChatRoomStatus;
+			status: ChatCharacterStatus;
 		}>(),
 		response: null,
 	},

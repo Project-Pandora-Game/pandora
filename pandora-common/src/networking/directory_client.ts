@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { IAccountRoleInfo, AccountRoleSchema, AccountId } from '../account';
 import type { CharacterId } from '../character';
-import type { ShardFeature } from '../chatroom';
+import type { ShardFeature } from '../space/space';
 import { KnownObject, ParseArrayNotEmpty, Satisfies, TimeSpanMs } from '../utility';
 import { DisplayNameSchema, HexColorStringSchema, ZodCast } from '../validation';
 import type { IAccountContact, IAccountFriendStatus } from './client_directory';
@@ -31,7 +31,7 @@ export const DirectoryAccountSettingsSchema = z.object({
 	hideOnlineStatus: z.boolean().default(false),
 	/**
 	 * - 'all' - Allow direct messages from anyone
-	 * - 'room' - Allow direct messages from friends and people in the same room
+	 * - 'room' - Allow direct messages from friends and people in the same space | TODO(spaces): Update?
 	 * - 'friends' - Only allow direct messages from friends
 	 */
 	allowDirectMessagesFrom: z.enum(['all', 'room', 'friends']).default('all'),
@@ -67,15 +67,15 @@ export const DirectoryAccountSettingsSchema = z.object({
 	 */
 	wardrobeBigPreview: z.enum(['icon', 'image']).default('image'),
 	/**
-	 * Controls how many parts (of 10 total) the chatroom graphics takes inside chatroom, while in horizontal mode
+	 * Controls how many parts (of 10 total) the room graphics takes, while in horizontal mode
 	 */
 	interfaceChatroomGraphicsRatioHorizontal: z.number().int().min(1).max(9).catch(7),
 	/**
-	 * Controls how many parts (of 10 total) the chatroom graphics takes inside chatroom, while in vertical mode
+	 * Controls how many parts (of 10 total) the room graphics takes, while in vertical mode
 	 */
 	interfaceChatroomGraphicsRatioVertical: z.number().int().min(1).max(9).catch(4),
 	/**
-	 * Controls how offline characters are displayed in chatroom:
+	 * Controls how offline characters are displayed in a room:
 	 * - None: No difference between online and offline characters
 	 * - Icon: Show disconnected icon under the name (not shown on other options)
 	 * - Darken: The characters are darkened (similar to blindness)
@@ -129,8 +129,8 @@ export type IDirectoryAccountInfo = {
 	created: number;
 	github?: { id: number; login: string; };
 	roles?: IAccountRoleInfo;
-	/** Limit of how many rooms this account can own */
-	roomOwnershipLimit: number;
+	/** Limit of how many spaces this account can own */
+	spaceOwnershipLimit: number;
 	settings: IDirectoryAccountSettings;
 	settingsCooldowns: DirectoryAccountSettingsCooldowns;
 	cryptoKey?: IAccountCryptoKey;
@@ -148,7 +148,7 @@ export type IDirectoryCharacterConnectionInfo = {
 	secret: string;
 } & IDirectoryShardInfo;
 
-export type IDirectoryClientChangeEvents = 'characterList' | 'shardList' | 'roomList' | 'storedOutfits';
+export type IDirectoryClientChangeEvents = 'characterList' | 'shardList' | 'spaceList' | 'storedOutfits';
 
 export type IDirectoryDirectMessage = {
 	/** Encrypted content, or empty string if the message was deleted. */

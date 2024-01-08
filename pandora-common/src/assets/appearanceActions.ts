@@ -3,7 +3,7 @@ import { CharacterId, CharacterIdSchema, RestrictionResult } from '../character'
 import { Assert, AssertNever, ShuffleArray } from '../utility';
 import { AssetManager } from './assetManager';
 import { WearableAssetType } from './definitions';
-import { ActionMessageTemplateHandler, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, RoomActionTarget, RoomCharacterSelectorSchema, RoomTargetSelectorSchema } from './appearanceTypes';
+import { ActionMessageTemplateHandler, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, ActionTarget, CharacterSelectorSchema, ActionTargetSelectorSchema } from './appearanceTypes';
 import { ItemInteractionType } from '../character/restrictionsManager';
 import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure } from './modules';
 import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, ItemTemplateSchema, RoomDeviceDeploymentChange, RoomDeviceDeploymentChangeSchema } from './item';
@@ -18,7 +18,7 @@ import { AssetFrameworkGlobalStateContainer } from './state/globalState';
 import { CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
 import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
 import { GameLogicCharacter } from '../gameLogic';
-import { ActionRoomContext } from '../chatroom';
+import { ActionSpaceContext } from '../space/space';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../validation';
@@ -28,7 +28,7 @@ export const AppearanceActionCreateSchema = z.object({
 	/** Template describing an item configuration for creating the new item */
 	itemTemplate: ItemTemplateSchema,
 	/** Target the item should be added to after creation */
-	target: RoomTargetSelectorSchema,
+	target: ActionTargetSelectorSchema,
 	/** Container path on target where to add the item to */
 	container: ItemContainerPathSchema,
 	/** Item to insert the new one in front of in the target container */
@@ -38,20 +38,20 @@ export const AppearanceActionCreateSchema = z.object({
 export const AppearanceActionDeleteSchema = z.object({
 	type: z.literal('delete'),
 	/** Target with the item to delete */
-	target: RoomTargetSelectorSchema,
+	target: ActionTargetSelectorSchema,
 	/** Path to the item to delete */
 	item: ItemPathSchema,
 });
 
-/** Action that moves item between two containers (e.g. character and character or character and room or character and bag the charater is wearing) */
+/** Action that moves item between two containers (e.g. character and character or character and room inventory or character and bag the charater is wearing) */
 export const AppearanceActionTransferSchema = z.object({
 	type: z.literal('transfer'),
 	/** Target with the item to get */
-	source: RoomTargetSelectorSchema,
+	source: ActionTargetSelectorSchema,
 	/** Path to the item */
 	item: ItemPathSchema,
 	/** Target the item should be added to after removing it from original place */
-	target: RoomTargetSelectorSchema,
+	target: ActionTargetSelectorSchema,
 	/** Container path on target where to add the item to */
 	container: ItemContainerPathSchema,
 	/** Item to insert the current one in front of in the target container */
@@ -83,7 +83,7 @@ export const AppearanceActionSetView = z.object({
 export const AppearanceActionMove = z.object({
 	type: z.literal('move'),
 	/** Target with the item to move */
-	target: RoomTargetSelectorSchema,
+	target: ActionTargetSelectorSchema,
 	/** Path to the item to move */
 	item: ItemPathSchema,
 	/** Relative shift for the item inside its container */
@@ -93,7 +93,7 @@ export const AppearanceActionMove = z.object({
 export const AppearanceActionColor = z.object({
 	type: z.literal('color'),
 	/** Target with the item to color */
-	target: RoomTargetSelectorSchema,
+	target: ActionTargetSelectorSchema,
 	/** Path to the item to color */
 	item: ItemPathSchema,
 	/** The new color to set */
@@ -103,7 +103,7 @@ export const AppearanceActionColor = z.object({
 export const AppearanceActionModuleAction = z.object({
 	type: z.literal('moduleAction'),
 	/** Target with the item to color */
-	target: RoomTargetSelectorSchema,
+	target: ActionTargetSelectorSchema,
 	/** Path to the item to interact with */
 	item: ItemPathSchema,
 	/** The module to interact with */
@@ -127,7 +127,7 @@ export const AppearanceActionRandomize = z.object({
 export const AppearanceActionRoomDeviceDeploy = z.object({
 	type: z.literal('roomDeviceDeploy'),
 	/** Target with the room device (so room) */
-	target: RoomTargetSelectorSchema,
+	target: ActionTargetSelectorSchema,
 	/** Path to the room device */
 	item: ItemPathSchema,
 	/** The resulting deployment we want */
@@ -137,13 +137,13 @@ export const AppearanceActionRoomDeviceDeploy = z.object({
 export const AppearanceActionRoomDeviceEnter = z.object({
 	type: z.literal('roomDeviceEnter'),
 	/** Target with the room device (so room) */
-	target: RoomTargetSelectorSchema,
+	target: ActionTargetSelectorSchema,
 	/** Path to the room device */
 	item: ItemPathSchema,
 	/** The slot the character wants to enter */
 	slot: z.string(),
 	/** The target character to enter the device */
-	character: RoomCharacterSelectorSchema,
+	character: CharacterSelectorSchema,
 	/** ID to give the new wearable part item */
 	itemId: ItemIdSchema,
 });
@@ -151,7 +151,7 @@ export const AppearanceActionRoomDeviceEnter = z.object({
 export const AppearanceActionRoomDeviceLeave = z.object({
 	type: z.literal('roomDeviceLeave'),
 	/** Target with the room device (so room) */
-	target: RoomTargetSelectorSchema,
+	target: ActionTargetSelectorSchema,
 	/** Path to the room device */
 	item: ItemPathSchema,
 	/** The slot that should be cleared */
@@ -179,14 +179,14 @@ export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 export interface AppearanceActionContext {
 	player: GameLogicCharacter;
 	globalState: AssetFrameworkGlobalStateContainer;
-	roomContext: ActionRoomContext;
+	spaceContext: ActionSpaceContext;
 	getCharacter(id: CharacterId): GameLogicCharacter | null;
 }
 
 /** Context for performing module actions */
 export interface AppearanceModuleActionContext {
 	processingContext: AppearanceActionProcessingContext;
-	target: RoomActionTarget;
+	target: ActionTarget;
 
 	messageHandler: ActionMessageTemplateHandler;
 	reject: (reason: ModuleActionError) => void;
@@ -366,7 +366,7 @@ export function DoAppearanceAction(
 				return processingContext.invalid();
 			const item = target.getItem(action.item);
 			// To manipulate the color of room devices, player must be an admin
-			if (item?.isType('roomDevice') && !playerRestrictionManager.isCurrentRoomAdmin()) {
+			if (item?.isType('roomDevice') && !playerRestrictionManager.isCurrentSpaceAdmin()) {
 				processingContext.addProblem({
 					result: 'restrictionError',
 					restriction: {
@@ -463,7 +463,7 @@ export function DoAppearanceAction(
 			if (current?.allowLeaveAt != null && Date.now() < current.allowLeaveAt)
 				return processingContext.invalid();
 
-			const removeAllowLeaveAt = !!playerRestrictionManager.room.features.includes('development');
+			const removeAllowLeaveAt = !!playerRestrictionManager.spaceContext.features.includes('development');
 
 			if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) =>
 				character.produceWithRestrictionOverride(action.mode, removeAllowLeaveAt),
@@ -502,7 +502,7 @@ export function DoAppearanceAction(
 				});
 			}
 			// To manipulate room devices, player must be an admin
-			if (!playerRestrictionManager.isCurrentRoomAdmin()) {
+			if (!playerRestrictionManager.isCurrentSpaceAdmin()) {
 				processingContext.addProblem({
 					result: 'restrictionError',
 					restriction: {
@@ -814,7 +814,7 @@ export function ActionAppearanceRandomize({
 	}
 
 	// Room must allow body changes if running full randomization
-	if (kind === 'full' && !character.room.features.includes('allowBodyChanges')) {
+	if (kind === 'full' && !character.spaceContext.features.includes('allowBodyChanges')) {
 		processingContext.addProblem({
 			result: 'restrictionError',
 			restriction: {

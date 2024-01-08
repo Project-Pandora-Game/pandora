@@ -1,8 +1,8 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified, SocketInterfaceDefinition } from './helpers';
 import { CharacterIdSchema } from '../character/characterTypes';
 import { CharacterDataSchema, CharacterDataShardUpdateSchema, ICharacterData } from '../character/characterData';
-import { DirectoryShardUpdateSchema, ShardCharacterDefinitionSchema, ShardChatRoomDefinitionSchema } from './directory_shard';
-import { ChatRoomDataShardUpdateSchema, IChatRoomData, RoomIdSchema, ShardFeatureSchema } from '../chatroom/room';
+import { DirectoryShardUpdateSchema, ShardCharacterDefinitionSchema, ShardSpaceDefinitionSchema } from './directory_shard';
+import { SpaceDataShardUpdateSchema, SpaceData, SpaceIdSchema, ShardFeatureSchema } from '../space/space';
 import { z } from 'zod';
 import { Satisfies } from '../utility';
 import { ZodCast } from '../validation';
@@ -12,7 +12,7 @@ import { Immutable } from 'immer';
 import type { } from '../assets/appearance';
 import type { } from '../assets/item';
 import type { } from '../character/pronouns';
-import type { } from '../chatroom/chat';
+import type { } from '../chat/chat';
 
 export const ShardDirectorySchema = {
 	shardRegister: {
@@ -22,7 +22,7 @@ export const ShardDirectorySchema = {
 			version: z.string(),
 			characters: z.array(ShardCharacterDefinitionSchema),
 			disconnectCharacters: z.array(CharacterIdSchema),
-			rooms: z.array(ShardChatRoomDefinitionSchema.pick({ id: true, accessId: true })),
+			spaces: z.array(ShardSpaceDefinitionSchema.pick({ id: true, accessId: true })),
 		}),
 		response: DirectoryShardUpdateSchema.extend({
 			shardId: z.string(),
@@ -45,9 +45,9 @@ export const ShardDirectorySchema = {
 		}),
 		response: null,
 	},
-	roomError: {
+	spaceError: {
 		request: z.object({
-			id: RoomIdSchema,
+			id: SpaceIdSchema,
 		}),
 		response: null,
 	},
@@ -80,21 +80,21 @@ export const ShardDirectorySchema = {
 			result: z.enum(['success', 'invalidAccessId']),
 		}),
 	},
-	getChatRoom: {
+	getSpaceData: {
 		request: z.object({
-			id: RoomIdSchema,
+			id: SpaceIdSchema,
 			accessId: z.string(),
 		}),
 		response: z.object({
 			// Response is intentionally not checked, as DB might contain outdated data and migration happens on the shard
-			result: ZodCast<IChatRoomData>().nullable(),
+			result: ZodCast<SpaceData>().nullable(),
 		}),
 	},
-	setChatRoom: {
+	setSpaceData: {
 		request: z.object({
-			id: RoomIdSchema,
+			id: SpaceIdSchema,
 			accessId: z.string(),
-			data: ChatRoomDataShardUpdateSchema,
+			data: SpaceDataShardUpdateSchema,
 		}),
 		response: z.object({
 			result: z.enum(['success', 'invalidAccessId']),

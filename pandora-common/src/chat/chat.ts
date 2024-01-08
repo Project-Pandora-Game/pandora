@@ -46,47 +46,47 @@ export const ClientChatMessagesSchema = z.array(ClientMessageSchema).superRefine
 	}
 });
 
-export type IChatRoomMessageChatCharacter = { id: CharacterId; name: string; labelColor: string; };
-export type IChatRoomMessageChat = Omit<IClientMessage, 'from' | 'to'> & {
+export type IChatMessageChatCharacter = { id: CharacterId; name: string; labelColor: string; };
+export type IChatMessageChat = Omit<IClientMessage, 'from' | 'to'> & {
 	id: number;
 	insertId?: number;
 } & ({
 	type: 'me' | 'emote';
-	from: IChatRoomMessageChatCharacter;
+	from: IChatMessageChatCharacter;
 } | {
 	type: 'chat' | 'ooc';
-	from: IChatRoomMessageChatCharacter;
-	to?: IChatRoomMessageChatCharacter;
+	from: IChatMessageChatCharacter;
+	to?: IChatMessageChatCharacter;
 });
 
-export type IChatRoomMessageDeleted = {
+export type IChatMessageDeleted = {
 	type: 'deleted';
 	id: number;
 	from: CharacterId;
 };
 
-export type IChatRoomMessageActionTargetCharacter = {
+export type IChatMessageActionTargetCharacter = {
 	type: 'character';
 	id: CharacterId;
 	name: string;
 	pronoun: PronounKey;
 	labelColor: string;
 };
-export type IChatRoomMessageActionItem = {
+export type IChatMessageActionItem = {
 	assetId: AssetId;
 };
-export type IChatroomMessageActionContainerPath = {
+export type IChatMessageActionContainerPath = {
 	assetId: AssetId;
 	module: string;
 }[];
 
-export type IChatRoomMessageActionTargetRoomInventory = {
+export type IChatMessageActionTargetRoomInventory = {
 	type: 'roomInventory';
 };
 
-export type IChatRoomMessageActionTarget = IChatRoomMessageActionTargetCharacter | IChatRoomMessageActionTargetRoomInventory;
+export type IChatMessageActionTarget = IChatMessageActionTargetCharacter | IChatMessageActionTargetRoomInventory;
 
-export type IChatRoomMessageAction = {
+export type IChatMessageAction = {
 	type: 'action' | 'serverMessage';
 	/** id to be looked up in message translation database */
 	id: ChatActionId;
@@ -96,26 +96,26 @@ export type IChatRoomMessageAction = {
 	sendTo?: CharacterId[];
 	data?: {
 		/** Used to generate specific dictionary entries, acts as source */
-		character?: IChatRoomMessageActionTargetCharacter;
+		character?: IChatMessageActionTargetCharacter;
 		/** Used to generate specific dictionary entries, defaults to `character` */
-		target?: IChatRoomMessageActionTarget;
+		target?: IChatMessageActionTarget;
 		/** The item this message is about */
-		item?: IChatRoomMessageActionItem;
+		item?: IChatMessageActionItem;
 		/** The previous state of item this message is about, defaults to `item` */
-		itemPrevious?: IChatRoomMessageActionItem;
+		itemPrevious?: IChatMessageActionItem;
 		/** Path to the container possible on `character` that `item` or `itemPrevious` are in */
-		itemContainerPath?: IChatroomMessageActionContainerPath;
+		itemContainerPath?: IChatMessageActionContainerPath;
 	};
 	dictionary?: Record<string, string>;
 };
 
-export type IChatRoomMessageBase = IChatRoomMessageChat | IChatRoomMessageAction | IChatRoomMessageDeleted;
-export type IChatRoomMessage = IChatRoomMessageBase & {
+export type IChatMessageBase = IChatMessageChat | IChatMessageAction | IChatMessageDeleted;
+export type IChatMessage = IChatMessageBase & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
 };
 
-export type IChatRoomMessageDirectoryAction = Omit<IChatRoomMessageAction, 'data'> & {
+export type IChatMessageDirectoryAction = Omit<IChatMessageAction, 'data'> & {
 	/** Time the message was sent, guaranteed to be unique from Directory; not necessarily the final one */
 	directoryTime: number;
 	data?: {
@@ -124,8 +124,8 @@ export type IChatRoomMessageDirectoryAction = Omit<IChatRoomMessageAction, 'data
 	};
 };
 
-export const ChatRoomStatusSchema = z.enum(['none', 'typing', 'whispering', 'afk']);
-export type IChatRoomStatus = z.infer<typeof ChatRoomStatusSchema>;
+export const ChatCharacterStatusSchema = z.enum(['none', 'typing', 'whispering', 'afk']);
+export type ChatCharacterStatus = z.infer<typeof ChatCharacterStatusSchema>;
 
 export const LONGDESC_RAW = ' Symbols that usually apply formatting (e.g. _italics_) will be displayed as plaintext without any formatting.';
 export const LONGDESC_THIRD_PERSON = ' It describes events in third-person instead of representing spoken words.';

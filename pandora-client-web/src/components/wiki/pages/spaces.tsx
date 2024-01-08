@@ -177,6 +177,7 @@ export function WikiSpaces(): ReactElement {
 					"*"  - *me-emote that gets prefixed with your character's name*<br />
 					"**" - **generic emote that doesn't get prefixed**<br />
 					Note: A single message can have multiple parts, so the above shortcut types can be mixed in a single message if each different one is in a new line.
+					But if you intend to format the rest of the message in the same way, you do not need to close a shortcut syntax at the end.
 				</li>
 			</ul>
 
@@ -210,6 +211,7 @@ export function WikiSpaces(): ReactElement {
 			<p>
 				Starting a message with "https://" will turn it into an inline-link.
 				Also, Pandora supports a part of the markdown syntax to write text italic or bold: "__bold text__" or "_italicized  text_"<br />
+				Note: You do not need to close the syntax if you intend to format the rest of the message the same way.<br />
 				While the chat input field is focused, you can also use keyboard shortcuts to get the supported markdown syntax:
 			</p>
 			<ul>

@@ -10,6 +10,7 @@ import { ItemId } from '../appearanceTypes';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
 import { IsNotNullable, Satisfies } from '../../utility';
 import { Immutable } from 'immer';
+import type { InteractionId } from '../../gameLogic/interactions';
 
 export interface IModuleConfigStorage extends IModuleConfigCommon<'storage'> {
 	maxCount: number;
@@ -74,6 +75,8 @@ export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TPr
 	public get interactionType(): ItemInteractionType {
 		return ItemInteractionType.MODIFY;
 	}
+
+	public readonly interactionId: InteractionId = 'useStorageModule';
 
 	protected constructor(props: ItemModuleStorageProps, overrideProps?: Partial<ItemModuleStorageProps>) {
 		this.assetManager = overrideProps?.assetManager ?? props.assetManager;

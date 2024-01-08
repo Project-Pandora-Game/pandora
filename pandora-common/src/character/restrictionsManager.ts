@@ -542,6 +542,10 @@ export class CharacterRestrictionsManager {
 		if (interaction === ItemInteractionType.ACCESS_ONLY)
 			return { allowed: true };
 
+		if (target.type === 'character') {
+			context.addInteraction(target.character, module.interactionId);
+		}
+
 		const properties = item.isType('roomDevice') ? item.getRoomDeviceProperties() : item.getProperties();
 
 		// If item blocks this module, fail

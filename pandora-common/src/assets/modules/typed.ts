@@ -9,6 +9,7 @@ import type { AppearanceModuleActionContext } from '../appearanceActions';
 import { CharacterIdSchema } from '../../character/characterTypes';
 import { Satisfies } from '../../utility';
 import { Immutable } from 'immer';
+import type { InteractionId } from '../../gameLogic/interactions';
 
 export interface IModuleTypedOption<TProperties> {
 	/** ID if this variant, must be unique */
@@ -154,6 +155,8 @@ export class ItemModuleTyped<out TProperties = unknown> implements IItemModule<T
 		return this.config.interactionType ??
 			(this.config.expression != null ? ItemInteractionType.EXPRESSION_CHANGE : ItemInteractionType.MODIFY);
 	}
+
+	public readonly interactionId: InteractionId = 'useTypedModule';
 
 	protected constructor(props: ItemModuleTypedProps<TProperties>, overrideProps?: Partial<ItemModuleTypedProps<TProperties>>) {
 		this.assetManager = overrideProps?.assetManager ?? props.assetManager;

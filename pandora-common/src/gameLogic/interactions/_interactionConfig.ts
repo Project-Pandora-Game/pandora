@@ -18,6 +18,24 @@ export const INTERACTION_CONFIG = {
 			allowOthers: false,
 		},
 	},
+	useStorageModule: {
+		visibleName: 'Interact with items stored inside worn items',
+		defaultPermissions: {
+			allowOthers: false,
+		},
+	},
+	useLockSlotModule: {
+		visibleName: 'Change and interact with locks on worn items',
+		defaultPermissions: {
+			allowOthers: true,
+		},
+	},
+	useTypedModule: {
+		visibleName: 'Change the state of worn items',
+		defaultPermissions: {
+			allowOthers: true,
+		},
+	},
 } as const satisfies Immutable<Record<InteractionGenericId, IInteractionConfig>>;
 
 //#endregion

@@ -9,6 +9,7 @@ import { AssetManager } from '../assetManager';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
 import { Satisfies } from '../../utility';
 import { Immutable } from 'immer';
+import type { InteractionId } from '../../gameLogic/interactions';
 
 export interface IModuleConfigLockSlot<TProperties> extends IModuleConfigCommon<'lockSlot'> {
 	/** Properties applied when this slot isn't occupied by a lock */
@@ -87,6 +88,8 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 	public get interactionType(): ItemInteractionType {
 		return ItemInteractionType.MODIFY;
 	}
+
+	public readonly interactionId: InteractionId = 'useLockSlotModule';
 
 	protected constructor(props: ItemModuleLockSlotProps<TProperties>, overrideProps?: Partial<ItemModuleLockSlotProps<TProperties>>) {
 		this.assetManager = overrideProps?.assetManager ?? props.assetManager;

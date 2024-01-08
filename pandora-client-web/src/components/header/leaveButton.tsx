@@ -188,7 +188,8 @@ function AccountLeave(): ReactElement {
 			{
 				currentAccount ? (
 					<>
-						<span>Name: { currentAccount.username }</span>
+						<span>Display name: { currentAccount.displayName }</span>
+						<span>Username: { currentAccount.username }</span>
 						<span>Id: { currentAccount.id }</span>
 						<Button onClick={ onClick }>Logout</Button>
 					</>

@@ -15,7 +15,7 @@ export function WikiIntroduction(): ReactElement {
 			<ol type='1'>
 				<li>Dynamically generated body model with many poses and free arm movement</li>
 				<li>Front and back character view</li>
-				<li>Persistent multiplayer rooms and a character-specific personal room</li>
+				<li>Persistent multiplayer spaces and a character-specific personal space</li>
 				<li>A feature-rich room chat (e.g. message editing, advanced text styling)</li>
 				<li>Free character placement and movement inside rooms</li>
 				<li>Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</li>
@@ -46,25 +46,25 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>3. Persistent rooms & personal room</h4>
 			<p>
-				In Pandora, each room is persistent (settings, inventory, and room devices stay even after everyone has left) and has one or more owners.
+				In Pandora, a user created space can consist if one or many rooms and everything is persistent (settings, inventory, and room devices stay even after everyone has left) and has one or more owners.
 				It only gets deleted when it no longer has any owners.<br />
-				A room is visible to everyone (except accounts banned from the room), if it is marked as public and there is at least one admin inside the room.
-				You can always see rooms you are either admin or owner of.<br />
-				When a character goes offline inside a room, they will stay in the room and are shown as not connected.
+				A space is visible to everyone (except accounts banned from the space), if it is marked as public and there is at least one admin inside the room.
+				You can always see spaces you are either admin or owner of.<br />
+				When a character goes offline inside a room, they will stay in the space the room is a part of and are shown as not connected.
 				By default, this is shown by the character having a ghost-like effect; this effect can be changed in the settings.<br />
-				Rooms can have a long description that can be read from the outside in the room preview popup.
+				Spaces can have a long description that can be read from the outside in the space preview popup.
 			</p>
 			<p>
-				Each <strong>account</strong> has a maximum number of rooms it can own. You can view the rooms owned by your account
-				as well as your ownership limit on the room search screen.
-				If you want to create another room beyond your room ownership limit, you must select any of your owned rooms and either repurpose it or
-				give up ownership of that room (resulting in the room being deleted if it has no other owners).
+				Each <strong>account</strong> has a maximum number of spaces it can own. You can view the spaces owned by your account
+				as well as your ownership limit on the space search screen.
+				If you want to create another space beyond your space ownership limit, you must select any of your owned spaces and either repurpose it or
+				give up ownership of that space (resulting in the space being deleted if it has no other owners).
 			</p>
 			<p>
-				Every character has their own <strong>personal room</strong> that does not count towards this limit and that cannot be entered by any
+				Every character has their own <strong>personal space</strong> that does not count towards this limit and that cannot be entered by any
 				other character. It functions as a singleplayer lobby and cannot be deleted or given up.<br />
-				You will automatically end up in the personal room when your selected character is not in any multiplayer room. Restraining effects will not
-				prevent you from leaving the personal room.
+				You will automatically end up in the personal space when your selected character is not in any other space. Restraining effects will not
+				prevent you from leaving the personal space.
 			</p>
 
 			<h4>4. A feature-rich room chat</h4>
@@ -79,7 +79,7 @@ export function WikiIntroduction(): ReactElement {
 			<h4>5. Free character placement and movement inside rooms</h4>
 			<p>
 				You can freely move your character inside a room by dragging them by the character name below.
-				Room admins can also move other characters this way.
+				Space admins can also move other characters this way.
 			</p>
 
 			<h4>6. Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</h4>
@@ -136,7 +136,7 @@ export function WikiIntroduction(): ReactElement {
 				To write someone a DM, you have to click the contacts icon at the top and then under the "DMs"-tab,
 				you have to either look for the account name of the user you want to exchange messages with on the left, or
 				you have to search for them via the bottom left input field using their <b>account ID</b>. You can find the account
-				ID either under the "Contacts"-tab or in the "Room"-tab while with a character in the same room. The account ID is
+				ID either under the "Contacts"-tab or in the "Room"-tab while with a character in the same space/room. The account ID is
 				the rightmost number behind the character name. Direct messages are end-to-end encrypted.
 			</p>
 
@@ -172,11 +172,11 @@ export function WikiIntroduction(): ReactElement {
 				<li>Hearing impairment effect by assets</li>
 				<li>Advanced permission feature</li>
 				<li>Character rules</li>
-				<li>Connecting rooms with each other into a small housing area with a customized layout and ways to move from room to room</li>
-				<li>Spectator mode for rooms that will help to not disrupt the chat during plays and that can be managed by room admins</li>
+				<li>Connecting rooms with each other into a small housing area "space" with a customized layout and ways to move from room to room</li>
+				<li>Spectator mode for spaces that will help to not disrupt the chat during plays and that can be managed by space admins</li>
 				<li>Creating character contracts to temporarily or permanently agree on sets of rules and permissions between specific characters</li>
 				<li>Improvements to the new user experience & safety</li>
-				<li>New room role "storyteller" that can orchestrate a prepared roleplay without a physical presence in the room</li>
+				<li>New space role "storyteller" that can orchestrate a prepared roleplay without a physical presence in any room of the space</li>
 				... and many more, which can be found by looking at Pandora's issue list on <a href='https://github.com/Project-Pandora-Game/pandora/issues' target='_blank' rel='external nofollow noopener noreferrer'>GitHub</a>
 			</ul>
 		</>

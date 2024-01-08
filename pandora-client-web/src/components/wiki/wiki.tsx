@@ -9,7 +9,7 @@ import { WikiIntroduction } from './pages/intro';
 import { WikiGreeting } from './pages/greeting';
 import { WikiContact } from './pages/contact';
 import { WikiHistory } from './pages/history';
-import { WikiRooms } from './pages/rooms';
+import { WikiSpaces } from './pages/spaces';
 import { WikiItems } from './pages/items';
 import { WikiCharacters } from './pages/characters';
 import { WikiSafety } from './pages/safety';
@@ -25,8 +25,8 @@ export function Wiki(): ReactElement {
 					<WikiIntroduction />
 				</WikiContent>
 			</UrlTab>
-			<WikiContentTab name='Rooms' urlChunk='rooms'>
-				<WikiRooms />
+			<WikiContentTab name='Spaces' urlChunk='spaces'>
+				<WikiSpaces />
 			</WikiContentTab>
 			<WikiContentTab name='Items' urlChunk='items'>
 				<WikiItems />

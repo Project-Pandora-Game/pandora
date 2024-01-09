@@ -2,7 +2,7 @@ import { GetLogger, IEmpty, logConfig } from 'pandora-common';
 import { CharacterManager } from './character/characterManager';
 import { StopHttpServer } from './networking/httpServer';
 import { DirectoryConnector } from './networking/socketio_directory_connector';
-import { RoomManager } from './room/roomManager';
+import { RoomManager } from './spaces/spaceManager';
 import wtfnode from 'wtfnode';
 import { CloseDatabase } from './database/databaseProvider';
 

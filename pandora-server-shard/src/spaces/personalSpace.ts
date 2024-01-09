@@ -1,4 +1,4 @@
-import { Room } from './room';
+import { Room } from './space';
 import { Character } from '../character/character';
 import { AccountId, DEFAULT_BACKGROUND, GetLogger, IChatRoomDirectoryConfig, RoomInventoryBundle } from 'pandora-common';
 import { cloneDeep } from 'lodash';

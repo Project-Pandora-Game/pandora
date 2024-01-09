@@ -6,7 +6,7 @@ const { ASSETS_DEFINITION_PATH, SHARD_DEVELOPMENT_MODE } = ENV;
 import express from 'express';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { CharacterManager } from '../character/characterManager';
-import { RoomManager } from '../room/roomManager';
+import { RoomManager } from '../spaces/spaceManager';
 
 const logger = GetLogger('AssetManager');
 

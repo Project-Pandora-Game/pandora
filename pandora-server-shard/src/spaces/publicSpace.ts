@@ -1,5 +1,5 @@
 import { AccountId, AsyncSynchronized, CHATROOM_SHARD_UPDATEABLE_PROPERTIES, CalculateCharacterMaxYForBackground, ChatRoomDataSchema, GetLogger, IChatRoomData, IChatRoomDataShardUpdate, IChatRoomDirectoryConfig, IChatRoomUpdate, IShardChatRoomDefinition, ResolveBackground, RoomId } from 'pandora-common';
-import { GenerateInitialRoomPosition, Room } from './room';
+import { GenerateInitialRoomPosition, Room } from './space';
 import { assetManager } from '../assets/assetManager';
 import { GetDatabase } from '../database/databaseProvider';
 import _, { omit, pick } from 'lodash';

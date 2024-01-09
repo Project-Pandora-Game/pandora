@@ -1,10 +1,10 @@
 import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataShardUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer, IShardClientChangeEvents, NOT_NARROWING_FALSE, AssetPreferences, ResolveAssetPreference, KnownObject, CleanupAssetPreferences, CHARACTER_SHARD_UPDATEABLE_PROPERTIES, CloneDeepMutable, ROOM_INVENTORY_BUNDLE_DEFAULT } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
-import type { Room } from '../room/room';
-import { RoomManager } from '../room/roomManager';
+import type { Room } from '../spaces/space';
+import { RoomManager } from '../spaces/spaceManager';
 import { GetDatabase } from '../database/databaseProvider';
 import { ClientConnection } from '../networking/connection_client';
-import { PersonalRoom } from '../room/personalRoom';
+import { PersonalRoom } from '../spaces/personalSpace';
 import { assetManager } from '../assets/assetManager';
 
 import _, { cloneDeep, isEqual } from 'lodash';

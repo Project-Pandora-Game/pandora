@@ -1,5 +1,5 @@
 import { RoomId, GetLogger, IShardChatRoomDefinition, Assert } from 'pandora-common';
-import { PublicRoom } from './publicRoom';
+import { PublicRoom } from './publicSpace';
 import promClient from 'prom-client';
 import { assetManager } from '../assets/assetManager';
 

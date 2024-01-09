@@ -37,7 +37,7 @@
 		"pixi.js": "7.3.3",
 		"react": "18.2.0",
 		"react-dom": "18.2.0",
-		"react-hook-form": "7.49.2",
+		"react-hook-form": "7.49.3",
 		"react-rnd": "10.4.1",
 		"react-router": "6.21.1",
 		"react-router-dom": "6.21.1",
@@ -46,7 +46,7 @@
 		"zod": "3.22.4"
 	},
 	"devDependencies": {
-		"@babel/preset-env": "7.23.7",
+		"@babel/preset-env": "7.23.8",
 		"@pmmmwh/react-refresh-webpack-plugin": "0.5.11",
 		"@project-pandora-game/sass-loader": "13.2.0",
 		"@testing-library/jest-dom": "6.2.0",
@@ -64,8 +64,8 @@
 		"@types/react-router-dom": "5.3.3",
 		"@types/testing-library__jest-dom": "5.14.9",
 		"@types/webpack": "5.28.5",
-		"@typescript-eslint/eslint-plugin": "6.18.0",
-		"@typescript-eslint/parser": "6.18.0",
+		"@typescript-eslint/eslint-plugin": "6.18.1",
+		"@typescript-eslint/parser": "6.18.1",
 		"babel-jest": "29.7.0",
 		"browser-resolve": "2.0.0",
 		"clean-webpack-plugin": "4.0.0",

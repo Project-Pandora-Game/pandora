@@ -26,6 +26,14 @@ export type SpaceLoadData = {
 	characters: ICharacterRoomData[];
 };
 
+export type GameStateUpdate = {
+	globalState?: AssetFrameworkGlobalStateClientBundle;
+	info?: Partial<SpaceClientInfo>;
+	leave?: CharacterId;
+	join?: ICharacterRoomData;
+	characters?: Record<CharacterId, Partial<ICharacterRoomData>>;
+};
+
 export type IShardClientChangeEvents = 'permissions';
 
 /** Shard->Client messages */
@@ -53,13 +61,7 @@ export const ShardClientSchema = {
 		response: null,
 	},
 	gameStateUpdate: {
-		request: ZodCast<{
-			globalState?: AssetFrameworkGlobalStateClientBundle;
-			info?: Partial<SpaceClientInfo>;
-			leave?: CharacterId;
-			join?: ICharacterRoomData;
-			characters?: Record<CharacterId, Partial<ICharacterRoomData>>;
-		}>(),
+		request: ZodCast<GameStateUpdate>(),
 		response: null,
 	},
 	chatMessage: {

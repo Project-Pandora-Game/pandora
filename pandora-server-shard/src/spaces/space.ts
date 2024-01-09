@@ -1,4 +1,38 @@
-import { CharacterId, IChatRoomMessage, Logger, IChatRoomClientInfo, RoomId, AssertNever, IChatRoomMessageDirectoryAction, IChatRoomUpdate, ServerRoom, IShardClient, IClientMessage, IChatSegment, IChatRoomStatus, IChatRoomMessageActionTargetCharacter, ICharacterRoomData, ActionHandlerMessage, CharacterSize, ActionRoomContext, CalculateCharacterMaxYForBackground, ResolveBackground, AccountId, AssetManager, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkRoomState, AppearanceBundle, AssetFrameworkCharacterState, AssertNotNullable, RoomInventory, CharacterRoomPosition, RoomInventoryBundle, IChatRoomDirectoryConfig, IChatRoomLoadData } from 'pandora-common';
+import {
+	CharacterId,
+	IChatMessage,
+	Logger,
+	SpaceClientInfo,
+	SpaceId,
+	AssertNever,
+	IChatMessageDirectoryAction,
+	GameStateUpdate,
+	ServerRoom,
+	IShardClient,
+	IClientMessage,
+	IChatSegment,
+	ChatCharacterStatus,
+	IChatMessageActionTargetCharacter,
+	ICharacterRoomData,
+	ActionHandlerMessage,
+	CharacterSize,
+	ActionSpaceContext,
+	CalculateCharacterMaxYForBackground,
+	ResolveBackground,
+	AccountId,
+	AssetManager,
+	AssetFrameworkGlobalStateContainer,
+	AssetFrameworkGlobalState,
+	AssetFrameworkRoomState,
+	AppearanceBundle,
+	AssetFrameworkCharacterState,
+	AssertNotNullable,
+	RoomInventory,
+	CharacterRoomPosition,
+	RoomInventoryBundle,
+	SpaceDirectoryConfig,
+	SpaceLoadData,
+} from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { isEqual, omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
@@ -6,22 +40,22 @@ import { assetManager } from '../assets/assetManager';
 const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 20; // 20 minutes
 const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
 
-/** Time (in ms) as interval when rooms's periodic actions (like saving of modified data or message cleanup) happen */
-export const ROOM_TICK_INTERVAL = 120_000;
+/** Time (in ms) as interval for space's periodic actions (like saving of modified data or message cleanup) happen */
+export const SPACE_TICK_INTERVAL = 120_000;
 
-export abstract class Room extends ServerRoom<IShardClient> {
+export abstract class Space extends ServerRoom<IShardClient> {
 
 	protected readonly characters: Set<Character> = new Set();
 	protected readonly history = new Map<CharacterId, Map<number, number>>();
-	protected readonly status = new Map<CharacterId, { status: IChatRoomStatus; target?: CharacterId; }>();
-	protected readonly actionCache = new Map<CharacterId, { result: IChatRoomMessageActionTargetCharacter; leave?: number; }>();
+	protected readonly status = new Map<CharacterId, { status: ChatCharacterStatus; target?: CharacterId; }>();
+	protected readonly actionCache = new Map<CharacterId, { result: IChatMessageActionTargetCharacter; leave?: number; }>();
 	protected readonly tickInterval: NodeJS.Timeout;
 
-	public readonly roomState: AssetFrameworkGlobalStateContainer;
+	public readonly gameState: AssetFrameworkGlobalStateContainer;
 
-	public abstract get id(): RoomId | null;
+	public abstract get id(): SpaceId | null;
 	public abstract get owners(): readonly AccountId[];
-	public abstract get config(): IChatRoomDirectoryConfig;
+	public abstract get config(): SpaceDirectoryConfig;
 
 	protected readonly logger: Logger;
 
@@ -40,20 +74,20 @@ export abstract class Room extends ServerRoom<IShardClient> {
 				.loadFromBundle(assetManager, inventory, this.logger.prefixMessages('Room inventory load:')),
 		);
 
-		this.roomState = new AssetFrameworkGlobalStateContainer(
+		this.gameState = new AssetFrameworkGlobalStateContainer(
 			this.logger,
 			this.onStateChanged.bind(this),
 			initialState,
 		);
 
-		this.tickInterval = setInterval(() => this._tick(), ROOM_TICK_INTERVAL);
+		this.tickInterval = setInterval(() => this._tick(), SPACE_TICK_INTERVAL);
 	}
 
 	public reloadAssetManager(manager: AssetManager) {
-		this.roomState.reloadAssetManager(manager);
+		this.gameState.reloadAssetManager(manager);
 
 		// Background definition might have changed, make sure all characters are still inside range
-		const update: IChatRoomUpdate = {};
+		const update: GameStateUpdate = {};
 
 		// Put characters into correct place if needed
 		const roomBackground = ResolveBackground(assetManager, this.config.background);
@@ -70,7 +104,7 @@ export abstract class Room extends ServerRoom<IShardClient> {
 		}
 
 		if (update.characters) {
-			this.sendUpdateToAllInRoom(update);
+			this.sendUpdateToAllCharacters(update);
 		}
 	}
 
@@ -119,21 +153,21 @@ export abstract class Room extends ServerRoom<IShardClient> {
 		if (this._suppressUpdates)
 			return;
 
-		this.sendUpdateToAllInRoom({
+		this.sendUpdateToAllCharacters({
 			globalState: newState.exportToClientBundle(),
 		});
 	}
 
 	protected abstract _onDataModified(data: 'inventory'): void;
 
-	public getInfo(): IChatRoomClientInfo {
+	public getInfo(): SpaceClientInfo {
 		return {
 			...this.config,
 			owners: this.owners.slice(),
 		};
 	}
 
-	public getLoadData(): IChatRoomLoadData {
+	public getLoadData(): SpaceLoadData {
 		return {
 			id: this.id,
 			info: this.getInfo(),
@@ -141,7 +175,7 @@ export abstract class Room extends ServerRoom<IShardClient> {
 		};
 	}
 
-	public getActionRoomContext(): ActionRoomContext {
+	public getActionSpaceContext(): ActionSpaceContext {
 		return {
 			features: this.config.features,
 			isAdmin: (account) => Array.from(this.characters).some((character) => character.accountId === account && this.isAdmin(character)),
@@ -183,7 +217,7 @@ export abstract class Room extends ServerRoom<IShardClient> {
 			return;
 		}
 		character.position = [x, y, yOffset];
-		this.sendUpdateToAllInRoom({
+		this.sendUpdateToAllCharacters({
 			characters: {
 				[character.id]: {
 					position: character.position,
@@ -214,7 +248,7 @@ export abstract class Room extends ServerRoom<IShardClient> {
 	}
 
 	public getRoomInventory(): RoomInventory {
-		const state = this.roomState.currentState.room;
+		const state = this.gameState.currentState.room;
 		AssertNotNullable(state);
 		return new RoomInventory(state);
 	}
@@ -230,7 +264,7 @@ export abstract class Room extends ServerRoom<IShardClient> {
 		);
 
 		this.runWithSuppressedUpdates(() => {
-			let roomState = this.roomState.currentState;
+			let newState = this.gameState.currentState;
 
 			// Add the character to the room
 			this.characters.add(character);
@@ -239,24 +273,24 @@ export abstract class Room extends ServerRoom<IShardClient> {
 					assetManager,
 					character.id,
 					appearance,
-					roomState.room,
+					newState.room,
 					this.logger.prefixMessages(`Character ${character.id} join:`),
 				);
-			roomState = roomState.withCharacter(character.id, characterState);
+			newState = newState.withCharacter(character.id, characterState);
 
-			this.roomState.setState(roomState);
+			this.gameState.setState(newState);
 
 			// Send update to current characters
-			const globalState = this.roomState.currentState.exportToClientBundle();
-			this.sendUpdateToAllInRoom({
+			const globalState = this.gameState.currentState.exportToClientBundle();
+			this.sendUpdateToAllCharacters({
 				globalState,
 				join: this.getCharacterData(character),
 			});
 			// Send update to joining character
-			character.setRoom(this, appearance);
-			character.connection?.sendMessage('chatRoomLoad', {
+			character.setSpace(this, appearance);
+			character.connection?.sendMessage('gameStateLoad', {
 				globalState,
-				room: this.getLoadData(),
+				space: this.getLoadData(),
 			});
 		});
 
@@ -266,27 +300,26 @@ export abstract class Room extends ServerRoom<IShardClient> {
 	}
 
 	/**
-	 * Removes a character from the room
+	 * Removes a character from the space
 	 * @param character - The character being removed
-	 * @param updateCharacterOutsideRoom - If the character should be updated to be valid outside of a room (should be false only if character is removed as part of being unloaded)
 	 */
 	public characterRemove(character: Character): void {
 		this.runWithSuppressedUpdates(() => {
 			// Remove character
-			let roomState = this.roomState.currentState;
-			const characterAppearance = roomState.characters.get(character.id)?.exportToBundle();
+			let newState = this.gameState.currentState;
+			const characterAppearance = newState.characters.get(character.id)?.exportToBundle();
 			AssertNotNullable(characterAppearance);
 
 			this.characters.delete(character);
-			roomState = roomState.withCharacter(character.id, null);
+			newState = newState.withCharacter(character.id, null);
 
 			// Update the target character
-			character.setRoom(null, characterAppearance);
+			character.setSpace(null, characterAppearance);
 
-			// Update anyone remaining in the room
-			this.roomState.setState(roomState);
-			this.sendUpdateToAllInRoom({
-				globalState: this.roomState.currentState.exportToClientBundle(),
+			// Update anyone remaining in the space
+			this.gameState.setState(newState);
+			this.sendUpdateToAllCharacters({
+				globalState: this.gameState.currentState.exportToClientBundle(),
 				leave: character.id,
 			});
 
@@ -298,8 +331,8 @@ export abstract class Room extends ServerRoom<IShardClient> {
 		this.logger.debug(`Character ${character.id} removed`);
 	}
 
-	public sendUpdateToAllInRoom(data: IChatRoomUpdate): void {
-		this.sendMessage('chatRoomUpdate', data);
+	public sendUpdateToAllCharacters(data: GameStateUpdate): void {
+		this.sendMessage('gameStateUpdate', data);
 	}
 
 	private lastMessageTime: number = 0;
@@ -314,19 +347,19 @@ export abstract class Room extends ServerRoom<IShardClient> {
 		return this.lastMessageTime = time;
 	}
 
-	public updateStatus(character: Character, status: IChatRoomStatus, target?: CharacterId): void {
+	public updateStatus(character: Character, status: ChatCharacterStatus, target?: CharacterId): void {
 		const last = this.status.get(character.id) ?? { status: 'none', target: undefined };
 		this.status.set(character.id, { status, target });
 
 		if (target !== last.target && last.status !== 'none') {
 			const lastTarget = last.target ? this.getCharacterById(last.target)?.connection : this;
-			lastTarget?.sendMessage('chatRoomStatus', { id: character.id, status: 'none' });
+			lastTarget?.sendMessage('chatCharacterStatus', { id: character.id, status: 'none' });
 			if (status === 'none')
 				return;
 		}
 
 		const sendTo = target ? this.getCharacterById(target)?.connection : this;
-		sendTo?.sendMessage('chatRoomStatus', { id: character.id, status });
+		sendTo?.sendMessage('chatCharacterStatus', { id: character.id, status });
 	}
 
 	public handleMessages(from: Character, messages: IClientMessage[], id: number, insertId?: number): void {
@@ -343,7 +376,7 @@ export abstract class Room extends ServerRoom<IShardClient> {
 			}
 		}
 
-		const queue: IChatRoomMessage[] = [];
+		const queue: IChatMessage[] = [];
 		const now = Date.now();
 		let history = this.history.get(from.id);
 		if (!history) {
@@ -434,7 +467,7 @@ export abstract class Room extends ServerRoom<IShardClient> {
 		]);
 	}
 
-	private _queueMessages(messages: IChatRoomMessage[]): void {
+	private _queueMessages(messages: IChatMessage[]): void {
 		for (const character of this.characters) {
 			character.queueMessages(messages.filter((msg) => {
 				switch (msg.type) {
@@ -458,7 +491,7 @@ export abstract class Room extends ServerRoom<IShardClient> {
 		}
 	}
 
-	public processDirectoryMessages(messages: IChatRoomMessageDirectoryAction[]): void {
+	public processDirectoryMessages(messages: IChatMessageDirectoryAction[]): void {
 		this._queueMessages(messages
 			.filter((m) => m.directoryTime > this.lastDirectoryMessageTime)
 			.map((m) => ({
@@ -475,7 +508,7 @@ export abstract class Room extends ServerRoom<IShardClient> {
 			.max() ?? this.lastDirectoryMessageTime;
 	}
 
-	private _getCharacterActionInfo(id?: CharacterId | null): IChatRoomMessageActionTargetCharacter | undefined {
+	private _getCharacterActionInfo(id?: CharacterId | null): IChatMessageActionTargetCharacter | undefined {
 		if (!id)
 			return undefined;
 
@@ -489,7 +522,7 @@ export abstract class Room extends ServerRoom<IShardClient> {
 				labelColor: '#ffffff',
 			};
 
-		const result: IChatRoomMessageActionTargetCharacter = {
+		const result: IChatMessageActionTargetCharacter = {
 			type: 'character',
 			id: char.id,
 			name: char.name,

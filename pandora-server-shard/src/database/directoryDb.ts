@@ -1,4 +1,12 @@
-import { CharacterId, ICharacterData, GetLogger, RoomId, IChatRoomData, IChatRoomDataShardUpdate, ICharacterDataShardUpdate } from 'pandora-common';
+import {
+	CharacterId,
+	ICharacterData,
+	GetLogger,
+	SpaceId,
+	SpaceData,
+	SpaceDataShardUpdate,
+	ICharacterDataShardUpdate,
+} from 'pandora-common';
 import type { ShardDatabase } from './databaseProvider';
 import { DirectoryConnectionState, DirectoryConnector } from '../networking/socketio_directory_connector';
 import _ from 'lodash';
@@ -30,11 +38,11 @@ export default class DirectoryDatabase implements ShardDatabase {
 		return result === 'success';
 	}
 
-	public async getChatRoom(id: RoomId, accessId: string): Promise<Omit<IChatRoomData, 'config' | 'accessId' | 'owners'> | null | false> {
+	public async getSpaceData(id: SpaceId, accessId: string): Promise<Omit<SpaceData, 'config' | 'accessId' | 'owners'> | null | false> {
 		if (DirectoryConnector.state !== DirectoryConnectionState.CONNECTED)
 			return false;
 
-		const { result } = await DirectoryConnector.awaitResponse('getChatRoom', { id, accessId });
+		const { result } = await DirectoryConnector.awaitResponse('getSpaceData', { id, accessId });
 
 		if (result == null)
 			return null;
@@ -45,11 +53,11 @@ export default class DirectoryDatabase implements ShardDatabase {
 		);
 	}
 
-	public async setChatRoom(id: RoomId, data: IChatRoomDataShardUpdate, accessId: string): Promise<boolean> {
+	public async setSpaceData(id: SpaceId, data: SpaceDataShardUpdate, accessId: string): Promise<boolean> {
 		if (DirectoryConnector.state !== DirectoryConnectionState.CONNECTED)
 			return false;
 
-		const { result } = await DirectoryConnector.awaitResponse('setChatRoom', {
+		const { result } = await DirectoryConnector.awaitResponse('setSpaceData', {
 			id,
 			data,
 			accessId,

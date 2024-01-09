@@ -6,7 +6,7 @@ const { ASSETS_DEFINITION_PATH, SHARD_DEVELOPMENT_MODE } = ENV;
 import express from 'express';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { CharacterManager } from '../character/characterManager';
-import { RoomManager } from '../spaces/spaceManager';
+import { SpaceManager } from '../spaces/spaceManager';
 
 const logger = GetLogger('AssetManager');
 
@@ -39,7 +39,7 @@ export function LoadAssetDefinitions(): void {
 
 	logger.info(`Loaded asset definitions, version: ${assetManager.definitionsHash}`);
 
-	RoomManager.onAssetDefinitionsChanged();
+	SpaceManager.onAssetDefinitionsChanged();
 	CharacterManager.onAssetDefinitionsChanged();
 	ConnectionManagerClient.onAssetDefinitionsChanged();
 

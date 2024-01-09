@@ -1,10 +1,10 @@
-import { Room } from './space';
+import { Space } from './space';
 import { Character } from '../character/character';
-import { AccountId, DEFAULT_BACKGROUND, GetLogger, IChatRoomDirectoryConfig, RoomInventoryBundle } from 'pandora-common';
+import { AccountId, DEFAULT_BACKGROUND, GetLogger, SpaceDirectoryConfig, RoomInventoryBundle } from 'pandora-common';
 import { cloneDeep } from 'lodash';
 import { assetManager } from '../assets/assetManager';
 
-export class PersonalRoom extends Room {
+export class PersonalSpace extends Space {
 	private readonly _character: Character;
 
 	public readonly id: null = null;
@@ -13,9 +13,9 @@ export class PersonalRoom extends Room {
 		return [this._character.accountId];
 	}
 
-	public override get config(): IChatRoomDirectoryConfig {
+	public override get config(): SpaceDirectoryConfig {
 		return {
-			name: `${this._character.name}'s personal room`,
+			name: `${this._character.name}'s personal space`,
 			description: '',
 			public: false,
 			maxUsers: 1,
@@ -33,11 +33,11 @@ export class PersonalRoom extends Room {
 	}
 
 	constructor(character: Character, inventory: RoomInventoryBundle) {
-		super(inventory, GetLogger('Room', `[PersonalRoom ${character.id}]`));
+		super(inventory, GetLogger('Space', `[PersonalSpace ${character.id}]`));
 		this._character = character;
 	}
 
 	protected override _onDataModified(_data: 'inventory'): void {
-		this._character.onPersonalRoomChanged();
+		this._character.onPersonalSpaceChanged();
 	}
 }

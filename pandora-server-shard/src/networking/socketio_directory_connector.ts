@@ -1,9 +1,24 @@
 import { APP_VERSION, ENV } from '../config';
 const { DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_DEVELOPMENT_MODE, SHARD_SHARED_SECRET } = ENV;
-import { GetLogger, HTTP_HEADER_SHARD_SECRET, HTTP_SOCKET_IO_SHARD_PATH, IShardDirectory, MessageHandler, IDirectoryShard, ConnectionBase, ShardFeature, IDirectoryShardUpdate, RoomId, ShardDirectorySchema, DirectoryShardSchema, IDirectoryShardArgument, IDirectoryShardResult } from 'pandora-common';
+import {
+	GetLogger,
+	HTTP_HEADER_SHARD_SECRET,
+	HTTP_SOCKET_IO_SHARD_PATH,
+	IShardDirectory,
+	MessageHandler,
+	IDirectoryShard,
+	ConnectionBase,
+	ShardFeature,
+	IDirectoryShardUpdate,
+	ShardDirectorySchema,
+	DirectoryShardSchema,
+	IDirectoryShardArgument,
+	IDirectoryShardResult,
+	SpaceIdSchema,
+} from 'pandora-common';
 import { connect, Socket } from 'socket.io-client';
 import { CharacterManager } from '../character/characterManager';
-import { RoomManager } from '../spaces/spaceManager';
+import { SpaceManager } from '../spaces/spaceManager';
 import { Stop } from '../lifecycle';
 import promClient from 'prom-client';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
@@ -77,8 +92,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		this._messageHandler = new MessageHandler<IDirectoryShard>({
 			update: (update) => this.updateFromDirectory(update).then(() => ({})),
 			stop: Stop,
-			roomCheckCanEnter: this.handleRoomCheckCanEnter.bind(this),
-			roomCheckCanLeave: this.handleRoomCheckCanLeave.bind(this),
+			spaceCheckCanEnter: this.handleSpaceCheckCanEnter.bind(this),
+			spaceCheckCanLeave: this.handleSpaceCheckCanLeave.bind(this),
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
 	}
@@ -174,7 +189,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		logger.warning('Connection to Directory failed:', err.message);
 	}
 
-	private async updateFromDirectory({ rooms, characters, messages }: Partial<IDirectoryShardUpdate>): Promise<void> {
+	private async updateFromDirectory({ spaces, characters, messages }: Partial<IDirectoryShardUpdate>): Promise<void> {
 		// Invalidate old characters
 		if (characters) {
 			const characterIds = characters.map((c) => c.id);
@@ -187,28 +202,28 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 			);
 		}
 
-		// Invalidate old rooms
-		if (rooms) {
-			const roomIds = rooms.map((r) => r.id);
+		// Invalidate old spaces
+		if (spaces) {
+			const spaceIds = spaces.map((r) => r.id);
 			await Promise.allSettled(
-				RoomManager
-					.listRoomIds()
-					.filter((id) => !roomIds.includes(id))
-					.map((id) => RoomManager.removeRoom(id)),
+				SpaceManager
+					.listSpaceIds()
+					.filter((id) => !spaceIds.includes(id))
+					.map((id) => SpaceManager.removeSpace(id)),
 			);
 		}
 
-		// Load and update existing rooms
-		if (rooms) {
+		// Load and update existing spaces
+		if (spaces) {
 			await Promise.all(
-				rooms.map((room) =>
-					RoomManager
-						.loadRoom(room)
+				spaces.map((space) =>
+					SpaceManager
+						.loadSpace(space)
 						.then((result) => {
 							if (!result) {
-								logger.error(`Failed to load room ${room.id} for access ${room.accessId}`);
-								// Report back that room load failed
-								this.sendMessage('roomError', { id: room.id });
+								logger.error(`Failed to load space ${space.id} for access ${space.accessId}`);
+								// Report back that space load failed
+								this.sendMessage('spaceError', { id: space.id });
 							}
 						})
 						.catch((err) => {
@@ -241,15 +256,15 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		}
 
 		if (messages) {
-			for (const [roomId, messageList] of Object.entries(messages)) {
+			for (const [spaceId, messageList] of Object.entries(messages)) {
 				if (messageList == null)
 					continue;
-				const room = RoomManager.getRoom(roomId as RoomId);
-				if (!room) {
-					logger.warning('Ignoring messages to non-existing room', roomId);
+				const space = SpaceManager.getSpace(SpaceIdSchema.parse(spaceId));
+				if (!space) {
+					logger.warning('Ignoring messages to non-existing space', spaceId);
 					continue;
 				}
-				room.processDirectoryMessages(messageList);
+				space.processDirectoryMessages(messageList);
 			}
 		}
 	}
@@ -266,7 +281,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 			version: APP_VERSION,
 			characters: CharacterManager.listCharacters(),
 			disconnectCharacters: CharacterManager.listInvalidCharacters(),
-			rooms: RoomManager.listRooms(),
+			spaces: SpaceManager.listSpaces(),
 		}, 10_000);
 
 		if (this._state !== DirectoryConnectionState.REGISTRATION_PENDING) {
@@ -281,34 +296,34 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 		logger.info('Registered with Directory');
 	}
 
-	private handleRoomCheckCanEnter({ character: characterId, room: roomId }: IDirectoryShardArgument['roomCheckCanEnter']): IDirectoryShardResult['roomCheckCanEnter'] {
+	private handleSpaceCheckCanEnter({ character: characterId, space: spaceId }: IDirectoryShardArgument['spaceCheckCanEnter']): IDirectoryShardResult['spaceCheckCanEnter'] {
 		const character = CharacterManager.getCharacter(characterId);
-		const room = RoomManager.getRoom(roomId);
+		const space = SpaceManager.getSpace(spaceId);
 
-		// We must know both the character and room
-		if (character == null || room == null)
+		// We must know both the character and the space
+		if (character == null || space == null)
 			return { result: 'targetNotFound' };
 
 		return { result: 'ok' };
 	}
 
-	private handleRoomCheckCanLeave({ character: characterId }: IDirectoryShardArgument['roomCheckCanLeave']): IDirectoryShardResult['roomCheckCanLeave'] {
+	private handleSpaceCheckCanLeave({ character: characterId }: IDirectoryShardArgument['spaceCheckCanLeave']): IDirectoryShardResult['spaceCheckCanLeave'] {
 		const character = CharacterManager.getCharacter(characterId);
 
-		// We must know the character and character must be in a room
+		// We must know the character and character must be in a space
 		if (character == null)
 			return { result: 'targetNotFound' };
 
 		const restrictionManager = character.getRestrictionManager();
-		const inPublicRoom = character.getCurrentPublicRoomid() != null;
+		const inPublicSpace = character.getCurrentPublicSpaceId() != null;
 
 		if (restrictionManager.getRoomDeviceLink() != null)
 			return { result: 'inRoomDevice' };
 
 		// Skips any checks if force-allow is enabled
 		if (!restrictionManager.forceAllowRoomLeave()) {
-			// The character must not have leave-restricting effect (this doesn't affect personal rooms)
-			if (restrictionManager.getEffects().blockRoomLeave && inPublicRoom)
+			// The character must not have leave-restricting effect (this doesn't affect personal spaces)
+			if (restrictionManager.getEffects().blockRoomLeave && inPublicSpace)
 				return { result: 'restricted' };
 		}
 

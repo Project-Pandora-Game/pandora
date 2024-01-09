@@ -1,90 +1,91 @@
-import { RoomId, GetLogger, IShardChatRoomDefinition, Assert } from 'pandora-common';
-import { PublicRoom } from './publicSpace';
+import { SpaceId, GetLogger, IShardSpaceDefinition, Assert } from 'pandora-common';
+import { PublicSpace } from './publicSpace';
 import promClient from 'prom-client';
 import { assetManager } from '../assets/assetManager';
 
-const logger = GetLogger('RoomManager');
+const logger = GetLogger('SpaceManager');
 
-const roomsMetric = new promClient.Gauge({
+// TODO(spaces): Consider migrating metric ids
+const spacesMetric = new promClient.Gauge({
 	name: 'pandora_shard_rooms',
-	help: 'Current count of rooms on this shard',
+	help: 'Current count of spaces loaded on this shard',
 });
 
-export const RoomManager = new class RoomManager {
-	private readonly _rooms: Map<RoomId, PublicRoom> = new Map();
+export const SpaceManager = new class SpaceManager {
+	private readonly _spaces: Map<SpaceId, PublicSpace> = new Map();
 
-	public getRoom(id: RoomId): PublicRoom | undefined {
-		return this._rooms.get(id);
+	public getSpace(id: SpaceId): PublicSpace | undefined {
+		return this._spaces.get(id);
 	}
 
-	public listRooms(): Pick<IShardChatRoomDefinition, 'id' | 'accessId'>[] {
-		return [...this._rooms.values()]
-			.map((room) => ({
-				id: room.id,
-				accessId: room.accessId,
+	public listSpaces(): Pick<IShardSpaceDefinition, 'id' | 'accessId'>[] {
+		return [...this._spaces.values()]
+			.map((space) => ({
+				id: space.id,
+				accessId: space.accessId,
 			}));
 	}
 
-	public listRoomIds(): RoomId[] {
-		return Array.from(this._rooms.keys());
+	public listSpaceIds(): SpaceId[] {
+		return Array.from(this._spaces.keys());
 	}
 
-	public async loadRoom(definition: IShardChatRoomDefinition): Promise<PublicRoom | null> {
+	public async loadSpace(definition: IShardSpaceDefinition): Promise<PublicSpace | null> {
 		const id = definition.id;
 
-		let room = this._rooms.get(id);
-		if (room) {
-			room.update(definition);
-			return room;
+		let space = this._spaces.get(id);
+		if (space) {
+			space.update(definition);
+			return space;
 		}
 
-		const data = await PublicRoom.load(id, definition.accessId);
+		const data = await PublicSpace.load(id, definition.accessId);
 		if (!data)
 			return null;
 		Assert(data.id === definition.id);
 
-		room = this._rooms.get(id);
-		if (room) {
-			room.update(definition);
-			return room;
+		space = this._spaces.get(id);
+		if (space) {
+			space.update(definition);
+			return space;
 		}
 
-		logger.debug(`Adding room ${data.id}`);
-		room = new PublicRoom({
+		logger.debug(`Adding space ${data.id}`);
+		space = new PublicSpace({
 			...data,
 			id: definition.id,
 			config: definition.config,
 			accessId: definition.accessId,
 			owners: definition.owners,
 		});
-		this._rooms.set(id, room);
-		roomsMetric.set(this._rooms.size);
-		return room;
+		this._spaces.set(id, space);
+		spacesMetric.set(this._spaces.size);
+		return space;
 	}
 
-	public removeRoom(id: RoomId): Promise<void> {
-		const room = this._rooms.get(id);
-		if (!room)
+	public removeSpace(id: SpaceId): Promise<void> {
+		const space = this._spaces.get(id);
+		if (!space)
 			return Promise.resolve();
-		logger.verbose(`Removing room ${id}`);
-		room.onRemove();
-		this._rooms.delete(id);
-		roomsMetric.set(this._rooms.size);
+		logger.verbose(`Removing space ${id}`);
+		space.onRemove();
+		this._spaces.delete(id);
+		spacesMetric.set(this._spaces.size);
 
-		// Save all data after removing room
-		return room.save();
+		// Save all data after removing the space
+		return space.save();
 	}
 
-	public async removeAllRooms(): Promise<void> {
+	public async removeAllSpaces(): Promise<void> {
 		await Promise.allSettled(
-			Array.from(this._rooms.keys())
-				.map((id) => this.removeRoom(id)),
+			Array.from(this._spaces.keys())
+				.map((id) => this.removeSpace(id)),
 		);
 	}
 
 	public onAssetDefinitionsChanged() {
-		for (const room of this._rooms.values()) {
-			room.reloadAssetManager(assetManager);
+		for (const space of this._spaces.values()) {
+			space.reloadAssetManager(assetManager);
 		}
 	}
 };

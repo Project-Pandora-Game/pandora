@@ -1,10 +1,48 @@
-import { AppearanceActionContext, AssertNever, AssetManager, CharacterId, GetLogger, ICharacterData, ICharacterDataShardUpdate, ICharacterPublicData, ICharacterPublicSettings, IChatRoomMessage, IShardCharacterDefinition, Logger, RoomId, IsAuthorized, AccountRole, IShardAccountDefinition, CharacterDataSchema, AssetFrameworkGlobalStateContainer, AssetFrameworkCharacterState, AppearanceBundle, Assert, AssertNotNullable, ICharacterPrivateData, CharacterRestrictionsManager, AsyncSynchronized, GetDefaultAppearanceBundle, CharacterRoomPosition, GameLogicCharacterServer, IShardClientChangeEvents, NOT_NARROWING_FALSE, AssetPreferences, ResolveAssetPreference, KnownObject, CleanupAssetPreferences, CHARACTER_SHARD_UPDATEABLE_PROPERTIES, CloneDeepMutable, ROOM_INVENTORY_BUNDLE_DEFAULT } from 'pandora-common';
+import {
+	AppearanceActionContext,
+	AssertNever,
+	AssetManager,
+	CharacterId,
+	GetLogger,
+	ICharacterData,
+	ICharacterDataShardUpdate,
+	ICharacterPublicData,
+	ICharacterPublicSettings,
+	IChatMessage,
+	IShardCharacterDefinition,
+	Logger,
+	SpaceId,
+	IsAuthorized,
+	AccountRole,
+	IShardAccountDefinition,
+	CharacterDataSchema,
+	AssetFrameworkGlobalStateContainer,
+	AssetFrameworkCharacterState,
+	AppearanceBundle,
+	Assert,
+	AssertNotNullable,
+	ICharacterPrivateData,
+	CharacterRestrictionsManager,
+	AsyncSynchronized,
+	GetDefaultAppearanceBundle,
+	CharacterRoomPosition,
+	GameLogicCharacterServer,
+	IShardClientChangeEvents,
+	NOT_NARROWING_FALSE,
+	AssetPreferences,
+	ResolveAssetPreference,
+	KnownObject,
+	CleanupAssetPreferences,
+	CHARACTER_SHARD_UPDATEABLE_PROPERTIES,
+	CloneDeepMutable,
+	ROOM_INVENTORY_BUNDLE_DEFAULT,
+} from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
-import type { Room } from '../spaces/space';
-import { RoomManager } from '../spaces/spaceManager';
+import type { Space } from '../spaces/space';
+import { SpaceManager } from '../spaces/spaceManager';
 import { GetDatabase } from '../database/databaseProvider';
 import { ClientConnection } from '../networking/connection_client';
-import { PersonalRoom } from '../spaces/personalSpace';
+import { PersonalSpace } from '../spaces/personalSpace';
 import { assetManager } from '../assets/assetManager';
 
 import _, { cloneDeep, isEqual } from 'lodash';
@@ -31,7 +69,7 @@ export class Character {
 	public accountData: IShardAccountDefinition;
 	public connectSecret: string | null;
 
-	private readonly _personalRoom: PersonalRoom;
+	private readonly _personalSpace: PersonalSpace;
 
 	private modified: Set<keyof ICharacterDataShardUpdate> = new Set();
 
@@ -48,30 +86,30 @@ export class Character {
 	}
 
 	private _context: {
-		state: 'room';
-		room: Room;
+		state: 'space';
+		space: Space;
 	} | {
 		state: 'unloaded';
 		appearanceBundle: AppearanceBundle;
 	};
 
-	private get _loadedRoom(): Room | undefined {
-		return this._context.state === 'room' ? this._context.room : undefined;
+	private get _loadedSpace(): Space | undefined {
+		return this._context.state === 'space' ? this._context.space : undefined;
 	}
 
-	public setRoom(room: Room | null, appearance: AppearanceBundle): void {
+	public setSpace(space: Space | null, appearance: AppearanceBundle): void {
 		if (this.connection) {
-			if (this._context.state === 'room') {
-				this.connection.leaveRoom(this._context.room);
+			if (this._context.state === 'space') {
+				this.connection.leaveRoom(this._context.space);
 			}
-			if (room) {
-				this.connection.joinRoom(room);
+			if (space) {
+				this.connection.joinRoom(space);
 			}
 		}
-		if (room) {
+		if (space) {
 			this._context = {
-				state: 'room',
-				room,
+				state: 'space',
+				space,
 			};
 		} else {
 			this._context = {
@@ -134,27 +172,27 @@ export class Character {
 		return this.data.position;
 	}
 
-	public initRoomPosition(roomId: RoomId | null, value: CharacterRoomPosition, [maxX, maxY]: readonly [number, number]) {
-		if (this.data.roomId === roomId) {
+	public initRoomPosition(spaceId: SpaceId | null, value: CharacterRoomPosition, [maxX, maxY]: readonly [number, number]) {
+		if (this.data.roomId === spaceId) {
 			if (this.data.position[0] > maxX || this.data.position[1] > maxY) {
 				this.data.position = value;
 				this.modified.add('position');
 			}
 			return;
 		}
-		this.data.roomId = roomId;
+		this.data.roomId = spaceId;
 		this.data.position = value;
 		this.modified.add('roomId');
 		this.modified.add('position');
 	}
 
-	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string | null, roomId: RoomId | null) {
+	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string | null, spaceId: SpaceId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
 		this.data = data;
 		this.accountData = account;
 		this.connectSecret = connectSecret;
 
-		this._personalRoom = new PersonalRoom(this, data.personalRoom?.inventory ?? CloneDeepMutable(ROOM_INVENTORY_BUNDLE_DEFAULT));
+		this._personalSpace = new PersonalSpace(this, data.personalRoom?.inventory ?? CloneDeepMutable(ROOM_INVENTORY_BUNDLE_DEFAULT));
 
 		const originalInteractionConfig = data.interactionConfig;
 		this.gameLogicCharacter = new GameLogicCharacterServer(data, this.logger.prefixMessages('[GameLogic]'));
@@ -171,8 +209,8 @@ export class Character {
 			appearanceBundle: data.appearance ?? GetDefaultAppearanceBundle(),
 		};
 
-		// Load into the room
-		this.linkRoom(roomId);
+		// Load into the space
+		this.linkSpace(spaceId);
 
 		// Link events from game logic parts
 		this.gameLogicCharacter.on('dataChanged', (type) => {
@@ -197,7 +235,7 @@ export class Character {
 	}
 
 	public reloadAssetManager(manager: AssetManager) {
-		this._personalRoom.reloadAssetManager(manager);
+		this._personalSpace.reloadAssetManager(manager);
 	}
 
 	public update(data: IShardCharacterDefinition) {
@@ -229,7 +267,7 @@ export class Character {
 				if (!this.isOnline) {
 					this.messageQueue.length = 0;
 				}
-				this._loadedRoom?.sendUpdateToAllInRoom({
+				this._loadedSpace?.sendUpdateToAllCharacters({
 					characters: {
 						[this.id]: {
 							isOnline: this.isOnline,
@@ -238,39 +276,39 @@ export class Character {
 				});
 			}
 		}
-		this.linkRoom(data.room);
+		this.linkSpace(data.space);
 	}
 
 	public isAuthorized(role: AccountRole): boolean {
 		return IsAuthorized(this.accountData.roles ?? {}, role);
 	}
 
-	private linkRoom(id: RoomId | null): void {
-		let room: Room | null = null;
+	private linkSpace(id: SpaceId | null): void {
+		let space: Space | null = null;
 		if (id != null) {
-			room = RoomManager.getRoom(id) ?? null;
-			if (!room) {
-				this.logger.error(`Failed to link character to room ${id}; not found`);
+			space = SpaceManager.getSpace(id) ?? null;
+			if (!space) {
+				this.logger.error(`Failed to link character to space ${id}; not found`);
 			}
 		}
 		// Short path: No change
-		if (this._context.state === 'room' && this._context.room === room)
+		if (this._context.state === 'space' && this._context.space === space)
 			return;
 
-		if (this._context.state === 'room') {
-			this._context.room.characterRemove(this);
+		if (this._context.state === 'space') {
+			this._context.space.characterRemove(this);
 		}
 		Assert(NOT_NARROWING_FALSE || this._context.state === 'unloaded');
 
-		if (room) {
-			room.characterAdd(
+		if (space) {
+			space.characterAdd(
 				this,
 				this.getCharacterAppearanceBundle(),
 			);
-			Assert(NOT_NARROWING_FALSE || this._context.state === 'room');
+			Assert(NOT_NARROWING_FALSE || this._context.state === 'space');
 		} else {
-			// Trigger load into personal room
-			this.getOrLoadRoom();
+			// Trigger load into personal space
+			this.getOrLoadSpace();
 		}
 	}
 
@@ -296,8 +334,8 @@ export class Character {
 		if (connection) {
 			this.logger.debug(`Connected (${connection.id})`);
 			connection.character = this;
-			if (this._context.state === 'room') {
-				connection.joinRoom(this._context.room);
+			if (this._context.state === 'space') {
+				connection.joinRoom(this._context.space);
 			}
 			this._connection = connection;
 		} else if (this.isValid && this.connectSecret != null) {
@@ -358,11 +396,11 @@ export class Character {
 			this._clientTimeout = null;
 		}
 
-		// Leave room after disconnecting client (so change propagates to other people in the room)
-		this._loadedRoom?.characterRemove(this);
+		// Leave space after disconnecting client (so change propagates to other people in the space)
+		this._loadedSpace?.characterRemove(this);
 
-		// Finally unload personal room
-		this._personalRoom.onRemove();
+		// Finally unload personal space
+		this._personalSpace.onRemove();
 
 		if (reason === 'error') {
 			DirectoryConnector.sendMessage('characterError', { id: this.id });
@@ -412,29 +450,29 @@ export class Character {
 	}
 
 	/**
-	 * Gets the current room or loads the character into a personal room before returning it
+	 * Gets the current space or loads the character into a personal space before returning it
 	 */
-	public getOrLoadRoom(): Room {
+	public getOrLoadSpace(): Space {
 		// Perform lazy-load if needed
 		if (this._context.state === 'unloaded') {
 			Assert(this.invalid == null, 'Character state should not load while invalid');
-			// Load into the personal room
-			this._personalRoom.characterAdd(
+			// Load into the personal space
+			this._personalSpace.characterAdd(
 				this,
 				this._context.appearanceBundle,
 			);
 		}
-		Assert(this._context.state === 'room');
-		return this._context.room;
+		Assert(this._context.state === 'space');
+		return this._context.space;
 	}
 
-	public getCurrentPublicRoomid(): RoomId | null {
-		return this._loadedRoom?.id ?? null;
+	public getCurrentPublicSpaceId(): SpaceId | null {
+		return this._loadedSpace?.id ?? null;
 	}
 
 	public getGlobalState(): AssetFrameworkGlobalStateContainer {
-		const room = this.getOrLoadRoom();
-		return room.roomState;
+		const space = this.getOrLoadSpace();
+		return space.gameState;
 	}
 
 	public getCharacterState(): AssetFrameworkCharacterState {
@@ -454,7 +492,7 @@ export class Character {
 		const state = this.getGlobalState().currentState.characters.get(this.id);
 		AssertNotNullable(state);
 
-		return this.gameLogicCharacter.getRestrictionManager(state, this.getOrLoadRoom().getActionRoomContext());
+		return this.gameLogicCharacter.getRestrictionManager(state, this.getOrLoadSpace().getActionSpaceContext());
 	}
 
 	public getAppearanceActionContext(): AppearanceActionContext {
@@ -462,9 +500,9 @@ export class Character {
 		return {
 			player: this.gameLogicCharacter,
 			globalState,
-			roomContext: this.getOrLoadRoom().getActionRoomContext(),
+			spaceContext: this.getOrLoadSpace().getActionSpaceContext(),
 			getCharacter: (id) => {
-				const char = this.id === id ? this : this.getOrLoadRoom().getCharacterById(id);
+				const char = this.id === id ? this : this.getOrLoadSpace().getCharacterById(id);
 				return char?.gameLogicCharacter ?? null;
 			},
 		};
@@ -485,7 +523,7 @@ export class Character {
 			if (key === 'appearance') {
 				data.appearance = this.getCharacterAppearanceBundle();
 			} else if (key === 'personalRoom') {
-				const roomState = this._personalRoom.roomState.currentState.room;
+				const roomState = this._personalSpace.gameState.currentState.room;
 				data.personalRoom = {
 					inventory: roomState.exportToBundle(),
 				};
@@ -506,17 +544,17 @@ export class Character {
 		}
 	}
 
-	private setValue<Key extends keyof ICharacterPublicDataChange>(key: Key, value: ICharacterData[Key], room: true): void;
-	private setValue<Key extends keyof ICharacterPrivateDataChange>(key: Key, value: ICharacterData[Key], room: false): void;
-	private setValue<Key extends keyof Omit<ICharacterDataShardUpdate, ManuallyGeneratedKeys>>(key: Key, value: ICharacterData[Key], room: boolean): void {
+	private setValue<Key extends keyof ICharacterPublicDataChange>(key: Key, value: ICharacterData[Key], intoSpace: true): void;
+	private setValue<Key extends keyof ICharacterPrivateDataChange>(key: Key, value: ICharacterData[Key], intoSpace: false): void;
+	private setValue<Key extends keyof Omit<ICharacterDataShardUpdate, ManuallyGeneratedKeys>>(key: Key, value: ICharacterData[Key], intoSpace: boolean): void {
 		if (this.data[key] === value)
 			return;
 
 		this.data[key] = value;
 		this.modified.add(key);
 
-		if (room) {
-			this._loadedRoom?.sendUpdateToAllInRoom({
+		if (intoSpace) {
+			this._loadedSpace?.sendUpdateToAllCharacters({
 				characters: {
 					[this.id]: {
 						[key]: value,
@@ -529,8 +567,8 @@ export class Character {
 	}
 
 	private _emitSomethingChanged(...changes: IShardClientChangeEvents[]): void {
-		if (this._loadedRoom != null) {
-			this._loadedRoom.sendMessage('somethingChanged', {
+		if (this._loadedSpace != null) {
+			this._loadedSpace.sendMessage('somethingChanged', {
 				changes,
 			});
 		} else {
@@ -544,13 +582,13 @@ export class Character {
 		this.modified.add('appearance');
 	}
 
-	public onPersonalRoomChanged(): void {
+	public onPersonalSpaceChanged(): void {
 		this.modified.add('personalRoom');
 	}
 
 	public setPublicSettings(settings: Partial<ICharacterPublicSettings>): void {
-		const room = this.getOrLoadRoom();
-		if (!room.getInfo().features.includes('allowPronounChanges')) {
+		const space = this.getOrLoadSpace();
+		if (!space.getInfo().features.includes('allowPronounChanges')) {
 			delete settings.pronoun;
 		}
 		if (Object.keys(settings).length === 0)
@@ -628,16 +666,16 @@ export class Character {
 
 	//#region Chat messages
 
-	private readonly messageQueue: IChatRoomMessage[] = [];
+	private readonly messageQueue: IChatMessage[] = [];
 
-	public queueMessages(messages: IChatRoomMessage[]): void {
+	public queueMessages(messages: IChatMessage[]): void {
 		if (messages.length === 0)
 			return;
 		// Do not store messages for offline characters
 		if (!this.isOnline)
 			return;
 		this.messageQueue.push(...messages);
-		this.connection?.sendMessage('chatRoomMessage', {
+		this.connection?.sendMessage('chatMessage', {
 			messages,
 		});
 	}
@@ -652,7 +690,7 @@ export class Character {
 	}
 
 	public sendAllPendingMessages(): void {
-		this.connection?.sendMessage('chatRoomMessage', {
+		this.connection?.sendMessage('chatMessage', {
 			messages: this.messageQueue,
 		});
 	}

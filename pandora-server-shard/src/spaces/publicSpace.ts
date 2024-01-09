@@ -1,15 +1,29 @@
-import { AccountId, AsyncSynchronized, CHATROOM_SHARD_UPDATEABLE_PROPERTIES, CalculateCharacterMaxYForBackground, ChatRoomDataSchema, GetLogger, IChatRoomData, IChatRoomDataShardUpdate, IChatRoomDirectoryConfig, IChatRoomUpdate, IShardChatRoomDefinition, ResolveBackground, RoomId } from 'pandora-common';
-import { GenerateInitialRoomPosition, Room } from './space';
+import {
+	AccountId,
+	AsyncSynchronized,
+	SPACE_SHARD_UPDATEABLE_PROPERTIES,
+	CalculateCharacterMaxYForBackground,
+	SpaceDataSchema,
+	GetLogger,
+	SpaceData,
+	SpaceDataShardUpdate,
+	SpaceDirectoryConfig,
+	GameStateUpdate,
+	IShardSpaceDefinition,
+	ResolveBackground,
+	SpaceId,
+} from 'pandora-common';
+import { GenerateInitialRoomPosition, Space } from './space';
 import { assetManager } from '../assets/assetManager';
 import { GetDatabase } from '../database/databaseProvider';
 import _, { omit, pick } from 'lodash';
 import { diffString } from 'json-diff';
 
-export class PublicRoom extends Room {
-	private readonly data: IShardChatRoomDefinition;
-	private readonly _modified: Set<keyof IChatRoomDataShardUpdate> = new Set();
+export class PublicSpace extends Space {
+	private readonly data: IShardSpaceDefinition;
+	private readonly _modified: Set<keyof SpaceDataShardUpdate> = new Set();
 
-	public override get id(): RoomId {
+	public override get id(): SpaceId {
 		return this.data.id;
 	}
 
@@ -21,18 +35,18 @@ export class PublicRoom extends Room {
 		return this.data.owners;
 	}
 
-	public override get config(): IChatRoomDirectoryConfig {
+	public override get config(): SpaceDirectoryConfig {
 		return this.data.config;
 	}
 
-	constructor(data: IChatRoomData) {
-		super(data.inventory, GetLogger('Room', `[PublicRoom ${data.id}]`));
+	constructor(data: SpaceData) {
+		super(data.inventory, GetLogger('Space', `[PublicSpace ${data.id}]`));
 		this.data = data;
 	}
 
-	public update(data: IShardChatRoomDefinition): void {
+	public update(data: IShardSpaceDefinition): void {
 		if (data.id !== this.data.id) {
-			throw new Error('Chatroom id cannot change');
+			throw new Error('Space id cannot change');
 		}
 		if (data.accessId !== this.data.accessId) {
 			this.logger.warning('Access id changed! This could be a bug');
@@ -40,7 +54,7 @@ export class PublicRoom extends Room {
 		}
 		this.data.config = data.config;
 
-		const update: IChatRoomUpdate = {
+		const update: GameStateUpdate = {
 			info: this.getInfo(),
 		};
 
@@ -58,7 +72,7 @@ export class PublicRoom extends Room {
 			}
 		}
 
-		this.sendUpdateToAllInRoom(update);
+		this.sendUpdateToAllCharacters(update);
 	}
 
 	protected override _tick(): void {
@@ -83,15 +97,15 @@ export class PublicRoom extends Room {
 		if (keys.length === 0)
 			return;
 
-		const data: IChatRoomDataShardUpdate = {};
+		const data: SpaceDataShardUpdate = {};
 
 		if (keys.includes('inventory')) {
-			const roomState = this.roomState.currentState.room;
+			const roomState = this.gameState.currentState.room;
 			data.inventory = roomState.exportToBundle();
 		}
 
 		try {
-			if (!await GetDatabase().setChatRoom(this.id, data, this.accessId)) {
+			if (!await GetDatabase().setSpaceData(this.id, data, this.accessId)) {
 				throw new Error('Database returned failure');
 			}
 		} catch (error) {
@@ -102,23 +116,23 @@ export class PublicRoom extends Room {
 		}
 	}
 
-	public static async load(id: RoomId, accessId: string): Promise<Omit<IChatRoomData, 'config' | 'accessId' | 'owners'> | null> {
-		const room = await GetDatabase().getChatRoom(id, accessId);
-		if (room === false) {
+	public static async load(id: SpaceId, accessId: string): Promise<Omit<SpaceData, 'config' | 'accessId' | 'owners'> | null> {
+		const space = await GetDatabase().getSpaceData(id, accessId);
+		if (space === false) {
 			return null;
 		}
-		const result = await ChatRoomDataSchema
+		const result = await SpaceDataSchema
 			.omit({ config: true, accessId: true, owners: true })
-			.safeParseAsync(room);
+			.safeParseAsync(space);
 		if (!result.success) {
-			GetLogger('Room').error(`Failed to load room ${id}: `, result.error);
+			GetLogger('Space').error(`Failed to load space ${id}: `, result.error);
 			return null;
 		}
-		const roomWithoutDbData = omit(room, '_id');
-		if (!_.isEqual(result.data, roomWithoutDbData)) {
-			const diff = diffString(roomWithoutDbData, result.data, { color: false });
-			GetLogger('Room').warning(`Room ${id} has invalid data, fixing...\n`, diff);
-			await GetDatabase().setChatRoom(id, pick(result.data, CHATROOM_SHARD_UPDATEABLE_PROPERTIES), accessId);
+		const spaceWithoutDbData = omit(space, '_id');
+		if (!_.isEqual(result.data, spaceWithoutDbData)) {
+			const diff = diffString(spaceWithoutDbData, result.data, { color: false });
+			GetLogger('Space').warning(`Space ${id} has invalid data, fixing...\n`, diff);
+			await GetDatabase().setSpaceData(id, pick(result.data, SPACE_SHARD_UPDATEABLE_PROPERTIES), accessId);
 		}
 		return result.data;
 	}

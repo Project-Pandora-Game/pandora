@@ -503,7 +503,7 @@ function ChatroomManualYOffsetControl({ character }: {
 
 	const setYOffset = useCallback((newYOffset: number) => {
 		setYOffsetLocal(newYOffset);
-		shard?.sendMessage('chatRoomCharacterMove', {
+		shard?.sendMessage('roomCharacterMove', {
 			id,
 			position: [position[0], position[1], newYOffset],
 		});

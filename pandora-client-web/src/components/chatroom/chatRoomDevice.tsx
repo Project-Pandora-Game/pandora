@@ -1,4 +1,20 @@
-import { AssertNever, AssetFrameworkCharacterState, AssetFrameworkGlobalState, CalculateCharacterMaxYForBackground, CharacterSize, CloneDeepMutable, Coordinates, EMPTY_ARRAY, ICharacterRoomData, IChatroomBackgroundData, IRoomDeviceGraphicsCharacterPosition, IRoomDeviceGraphicsLayerSlot, IRoomDeviceGraphicsLayerSprite, ItemRoomDevice, RoomDeviceDeploymentPosition } from 'pandora-common';
+import {
+	AssertNever,
+	AssetFrameworkCharacterState,
+	AssetFrameworkGlobalState,
+	CalculateCharacterMaxYForBackground,
+	CharacterSize,
+	CloneDeepMutable,
+	Coordinates,
+	EMPTY_ARRAY,
+	ICharacterRoomData,
+	RoomBackgroundData,
+	IRoomDeviceGraphicsCharacterPosition,
+	IRoomDeviceGraphicsLayerSlot,
+	IRoomDeviceGraphicsLayerSprite,
+	ItemRoomDevice,
+	RoomDeviceDeploymentPosition,
+} from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as PIXI from 'pixi.js';
 import { useObservable } from '../../observable';
@@ -32,7 +48,7 @@ type ChatRoomDeviceInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
-	background: Immutable<IChatroomBackgroundData>;
+	background: Immutable<RoomBackgroundData>;
 	chatRoomMode: Immutable<IChatRoomMode>;
 	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;
 	shard: ShardConnector | null;
@@ -44,7 +60,7 @@ type ChatRoomDeviceProps = {
 	globalState: AssetFrameworkGlobalState;
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
-	background: Immutable<IChatroomBackgroundData>;
+	background: Immutable<RoomBackgroundData>;
 
 	children?: ReactNode;
 	hitArea?: PIXI.Rectangle;

@@ -1,4 +1,15 @@
-import { AssertNever, AssertNotNullable, AssetFrameworkGlobalState, CalculateCharacterMaxYForBackground, FilterItemType, ICharacterRoomData, IChatRoomClientInfo, ItemId, ItemRoomDevice, ResolveBackground } from 'pandora-common';
+import {
+	AssertNever,
+	AssertNotNullable,
+	AssetFrameworkGlobalState,
+	CalculateCharacterMaxYForBackground,
+	FilterItemType,
+	ICharacterRoomData,
+	SpaceClientInfo,
+	ItemId,
+	ItemRoomDevice,
+	ResolveBackground,
+} from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
@@ -38,7 +49,7 @@ interface ChatRoomGraphicsSceneProps extends CommonProps {
 	characters: readonly Character<ICharacterRoomData>[];
 	shard: ShardConnector | null;
 	globalState: AssetFrameworkGlobalState;
-	info: Immutable<IChatRoomClientInfo>;
+	info: Immutable<SpaceClientInfo>;
 	debugConfig: ChatroomDebugConfig;
 	chatRoomMode: Immutable<IChatRoomMode>;
 	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;

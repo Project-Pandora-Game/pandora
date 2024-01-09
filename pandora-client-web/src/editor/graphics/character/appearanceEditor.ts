@@ -1,4 +1,33 @@
-import { CharacterAppearance, Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageSetting, LayerMirror, Asset, ItemId, ActionRoomContext, CharacterRestrictionsManager, CloneDeepMutable, GetLogger, CharacterId, AssetFrameworkCharacterState, AssetFrameworkGlobalStateContainer, AssertNotNullable, CharacterView, ICharacterRoomData, CHARACTER_DEFAULT_PUBLIC_SETTINGS, TypedEventEmitter, GameLogicCharacter, GameLogicCharacterClient, DoAppearanceAction, AppearanceAction, AppearanceActionContext, ASSET_PREFERENCES_DEFAULT } from 'pandora-common';
+import {
+	CharacterAppearance,
+	Assert,
+	AssetGraphicsDefinition,
+	AssetId,
+	CharacterSize,
+	LayerDefinition,
+	LayerImageSetting,
+	LayerMirror,
+	Asset,
+	ItemId,
+	ActionSpaceContext,
+	CharacterRestrictionsManager,
+	CloneDeepMutable,
+	GetLogger,
+	CharacterId,
+	AssetFrameworkCharacterState,
+	AssetFrameworkGlobalStateContainer,
+	AssertNotNullable,
+	CharacterView,
+	ICharacterRoomData,
+	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
+	TypedEventEmitter,
+	GameLogicCharacter,
+	GameLogicCharacterClient,
+	DoAppearanceAction,
+	AppearanceAction,
+	AppearanceActionContext,
+	ASSET_PREFERENCES_DEFAULT,
+} from 'pandora-common';
 import { BaseTexture, Texture } from 'pixi.js';
 import { toast } from 'react-toastify';
 import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
@@ -11,7 +40,7 @@ import { downloadZip, InputWithSizeMeta } from 'client-zip';
 import { ICharacter, CharacterEvents } from '../../../character/character';
 import { Immutable } from 'immer';
 import { useEditorState } from '../../editorContextProvider';
-import { EDITOR_ROOM_CONTEXT } from '../../components/wardrobe/wardrobe';
+import { EDITOR_SPACE_CONTEXT } from '../../components/wardrobe/wardrobe';
 import { DownloadAsFile } from '../../../common/downloadHelper';
 
 export interface EditorActionContext {
@@ -30,7 +59,7 @@ export class AppearanceEditor extends CharacterAppearance {
 		return {
 			player: this.character,
 			globalState: this.globalState,
-			roomContext: EDITOR_ROOM_CONTEXT,
+			spaceContext: EDITOR_SPACE_CONTEXT,
 			getCharacter: (id) => {
 				if (id === this.id) {
 					return this.character;
@@ -161,8 +190,8 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 		return new AppearanceEditor(state, this.gameLogicCharacter, this.editor.globalState);
 	}
 
-	public getRestrictionManager(state: AssetFrameworkCharacterState | undefined, roomContext: ActionRoomContext): CharacterRestrictionsManager {
-		return this.getAppearance(state).getRestrictionManager(roomContext);
+	public getRestrictionManager(state: AssetFrameworkCharacterState | undefined, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
+		return this.getAppearance(state).getRestrictionManager(spaceContext);
 	}
 }
 

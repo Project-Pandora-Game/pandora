@@ -1,4 +1,4 @@
-import { AssertNotNullable, ICharacterRoomData, IChatRoomClientInfo, IDirectoryAccountInfo } from 'pandora-common';
+import { AssertNotNullable, ICharacterRoomData, SpaceClientInfo, IDirectoryAccountInfo } from 'pandora-common';
 import React, { ReactElement, useCallback, useState, useEffect, createContext, useContext, useMemo, ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { Character, useCharacterData } from '../../../character/character';
@@ -22,7 +22,7 @@ const characterMenuContext = createContext<{
 	isPlayerAdmin: boolean;
 	currentAccount: IDirectoryAccountInfo;
 	character: Character<ICharacterRoomData>;
-	chatRoomInfo: Immutable<IChatRoomClientInfo>;
+	chatRoomInfo: Immutable<SpaceClientInfo>;
 	menu: MenuType;
 	setMenu: (menu: MenuType) => void;
 	close: () => void;
@@ -45,7 +45,7 @@ function AdminActionContextMenuInner(): ReactElement {
 			return;
 		}
 
-		connector.sendMessage('chatRoomAdminAction', { action: 'kick', targets: [character.data.accountId] });
+		connector.sendMessage('spaceAdminAction', { action: 'kick', targets: [character.data.accountId] });
 		close();
 	}, [isCharacterAdmin, character, connector, close]);
 
@@ -55,17 +55,17 @@ function AdminActionContextMenuInner(): ReactElement {
 			return;
 		}
 
-		connector.sendMessage('chatRoomAdminAction', { action: 'ban', targets: [character.data.accountId] });
+		connector.sendMessage('spaceAdminAction', { action: 'ban', targets: [character.data.accountId] });
 		close();
 	}, [isCharacterAdmin, character, connector, close]);
 
 	const promote = useCallback(() => {
-		connector.sendMessage('chatRoomAdminAction', { action: 'promote', targets: [character.data.accountId] });
+		connector.sendMessage('spaceAdminAction', { action: 'promote', targets: [character.data.accountId] });
 		close();
 	}, [character, connector, close]);
 
 	const demote = useCallback(() => {
-		connector.sendMessage('chatRoomAdminAction', { action: 'demote', targets: [character.data.accountId] });
+		connector.sendMessage('spaceAdminAction', { action: 'demote', targets: [character.data.accountId] });
 		close();
 	}, [character, connector, close]);
 

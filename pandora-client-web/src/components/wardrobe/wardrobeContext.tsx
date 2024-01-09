@@ -9,7 +9,7 @@ import {
 	EMPTY_ARRAY,
 	GetLogger,
 	Nullable,
-	RoomTargetSelector,
+	ActionTargetSelector,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
@@ -38,7 +38,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 	const assetList = useAssetManager().assetList;
 	const room = useChatroomRequired();
 	const globalStateContainer = room.globalState;
-	const roomContext = useActionRoomContext();
+	const spaceContext = useActionRoomContext();
 	const shardConnector = useShardConnector();
 	const chatroomCharacters: readonly ICharacter[] = useChatRoomCharacters() ?? EMPTY_ARRAY;
 
@@ -53,7 +53,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 	const actions = useMemo<AppearanceActionContext>(() => ({
 		player: player.gameLogicCharacter,
 		globalState: globalStateContainer,
-		roomContext,
+		spaceContext,
 		getCharacter: (id) => {
 			const state = globalStateContainer.currentState.getCharacterState(id);
 			const character = chatroomCharacters.find((c) => c.id === id);
@@ -62,9 +62,9 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 
 			return character.gameLogicCharacter;
 		},
-	}), [player, globalStateContainer, roomContext, chatroomCharacters]);
+	}), [player, globalStateContainer, spaceContext, chatroomCharacters]);
 
-	const targetSelector = useMemo<RoomTargetSelector>(() => {
+	const targetSelector = useMemo((): ActionTargetSelector => {
 		if (target.type === 'character') {
 			return {
 				type: 'character',
@@ -172,7 +172,7 @@ export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, re
 	const [execute, processing] = useWardrobeExecuteCallback(props);
 	const {
 		player,
-		actions: { roomContext },
+		actions: { spaceContext },
 	} = useWardrobeContext();
 
 	const confirm = useConfirmDialog();
@@ -188,7 +188,7 @@ export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, re
 			}
 
 			// Detect need for confirmation
-			const warnings = WardrobeCheckResultForConfirmationWarnings(player, roomContext, action, result);
+			const warnings = WardrobeCheckResultForConfirmationWarnings(player, spaceContext, action, result);
 
 			if (warnings.length > 0) {
 				confirm(
@@ -209,7 +209,7 @@ export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, re
 				execute(action);
 			}
 
-		}, [execute, confirm, player, roomContext, action, result]),
+		}, [execute, confirm, player, spaceContext, action, result]),
 		processing,
 	] as const;
 }

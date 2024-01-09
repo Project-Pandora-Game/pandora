@@ -6,8 +6,8 @@ import {
 	FilterItemType,
 	HexColorString,
 	ICharacterRoomData,
-	IChatRoomClientInfo,
-	IChatroomBackgroundData,
+	SpaceClientInfo,
+	RoomBackgroundData,
 	ItemRoomDevice,
 	Rectangle,
 	ResolveBackground,
@@ -85,7 +85,7 @@ export function CharacterPreview({ character, characterState, overlay }: {
 	const assetManager = useAssetManager();
 	const accountSettings = useCurrentAccountSettings();
 
-	const roomBackground = useMemo((): Immutable<IChatroomBackgroundData> | null => {
+	const roomBackground = useMemo((): Immutable<RoomBackgroundData> | null => {
 		if (roomInfo && accountSettings.wardrobeUseRoomBackground) {
 			return ResolveBackground(assetManager, roomInfo.config.background);
 		}
@@ -124,7 +124,7 @@ function WardrobeRoomBackground({
 	character,
 	characterState,
 }: {
-	roomBackground: Immutable<IChatroomBackgroundData>;
+	roomBackground: Immutable<RoomBackgroundData>;
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
@@ -171,7 +171,7 @@ function WardrobeBackgroundColorPicker(): ReactElement | null {
 export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }: {
 	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
-	info: IChatRoomClientInfo;
+	info: SpaceClientInfo;
 	isPreview?: boolean;
 }): ReactElement {
 	const { focus } = useWardrobeContext();
@@ -216,7 +216,7 @@ export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }
 interface RoomPreviewProps {
 	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
-	info: IChatRoomClientInfo;
+	info: SpaceClientInfo;
 	overlay?: ReactNode;
 	focusDevice?: ItemRoomDevice;
 }

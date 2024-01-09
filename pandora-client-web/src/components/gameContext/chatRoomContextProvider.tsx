@@ -1,4 +1,37 @@
-import { ITypedEventEmitter, TypedEventEmitter, ActionRoomContext, CharacterId, CharacterRestrictionsManager, ChatRoomFeature, ICharacterRoomData, IChatRoomClientInfo, IChatRoomMessage, IChatRoomStatus, IChatRoomUpdate, IClientMessage, IShardClientArgument, RoomId, ChatTypeSchema, CharacterIdSchema, RoomIdSchema, ZodCast, IsAuthorized, Nullable, IDirectoryAccountInfo, RoomInventory, Logger, ItemPath, Item, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkCharacterState, AssetFrameworkGlobalStateClientBundle, LIMIT_CHAT_MESSAGE_LENGTH, CloneDeepMutable, ICharacterPrivateData } from 'pandora-common';
+import {
+	ITypedEventEmitter,
+	TypedEventEmitter,
+	ActionSpaceContext,
+	CharacterId,
+	CharacterRestrictionsManager,
+	SpaceFeature,
+	ICharacterRoomData,
+	SpaceClientInfo,
+	IChatMessage,
+	GameStateUpdate,
+	IClientMessage,
+	IShardClientArgument,
+	SpaceId,
+	ChatTypeSchema,
+	CharacterIdSchema,
+	SpaceIdSchema,
+	ZodCast,
+	IsAuthorized,
+	Nullable,
+	IDirectoryAccountInfo,
+	RoomInventory,
+	Logger,
+	ItemPath,
+	Item,
+	AssetFrameworkGlobalStateContainer,
+	AssetFrameworkGlobalState,
+	AssetFrameworkCharacterState,
+	AssetFrameworkGlobalStateClientBundle,
+	LIMIT_CHAT_MESSAGE_LENGTH,
+	CloneDeepMutable,
+	ICharacterPrivateData,
+	ChatCharacterStatus,
+} from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { Character } from '../../character/character';
@@ -11,7 +44,7 @@ import { NotificationData } from './notificationContextProvider';
 import { useShardConnector } from './shardConnectorContextProvider';
 import { GetCurrentAssetManager } from '../../assets/assetManager';
 import { z } from 'zod';
-import { IChatroomMessageProcessed } from '../chatroom/chatroomMessages';
+import { IChatMessageProcessed } from '../chatroom/chatroomMessages';
 import { useCurrentAccount } from './directoryConnectorContextProvider';
 import { Immutable } from 'immer';
 
@@ -49,8 +82,8 @@ export type RoomInventoryEvents = {
 };
 
 export type ICurrentRoomInfo = {
-	id: RoomId | null;
-	config: IChatRoomClientInfo;
+	id: SpaceId | null;
+	config: SpaceClientInfo;
 };
 
 export type IChatRoomContext = ITypedEventEmitter<RoomInventoryEvents> & {
@@ -66,7 +99,7 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
 
-	public readonly messages = new Observable<readonly IChatroomMessageProcessed[]>([]);
+	public readonly messages = new Observable<readonly IChatMessageProcessed[]>([]);
 	public readonly currentRoom: Observable<ICurrentRoomInfo>;
 	public readonly characters: Observable<readonly Character<ICharacterRoomData>[]>;
 	public readonly status = new Observable<ReadonlySet<CharacterId>>(new Set<CharacterId>());
@@ -79,8 +112,8 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 	protected readonly logger: Logger;
 
 	private readonly _restore = BrowserStorage.createSession('chatRoomRestore', undefined, z.object({
-		roomId: RoomIdSchema.nullable(),
-		messages: z.array(ZodCast<IChatroomMessageProcessed>()),
+		roomId: SpaceIdSchema.nullable(),
+		messages: z.array(ZodCast<IChatMessageProcessed>()),
 		sent: z.array(z.tuple([z.number(), SavedMessageSchema])),
 	}).optional());
 
@@ -106,14 +139,14 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		return id;
 	}
 
-	constructor(shard: ShardConnector, characterData: ICharacterPrivateData, { globalState, room }: IShardClientArgument['chatRoomLoad']) {
+	constructor(shard: ShardConnector, characterData: ICharacterPrivateData, { globalState, space }: IShardClientArgument['gameStateLoad']) {
 		super();
 		this.logger = GetLogger('ChatRoom');
 		this._shard = shard;
 		this.player = new PlayerCharacter(characterData);
 		this.characters = new Observable<readonly Character<ICharacterRoomData>[]>([this.player]);
 
-		const { id, info, characters } = room;
+		const { id, info, characters } = space;
 		this.currentRoom = new Observable<ICurrentRoomInfo>({
 			id,
 			config: info,
@@ -144,9 +177,9 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 
 	//#region Handler
 
-	public onLoad(data: IShardClientArgument['chatRoomLoad']): void {
+	public onLoad(data: IShardClientArgument['gameStateLoad']): void {
 		const oldRoom = this.currentRoom.value;
-		const { id, info, characters } = data.room;
+		const { id, info, characters } = data.space;
 		this.currentRoom.value = {
 			id,
 			config: info,
@@ -169,7 +202,7 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		this._updateGlobalState(data.globalState);
 	}
 
-	public onUpdate(data: IChatRoomUpdate): void {
+	public onUpdate(data: GameStateUpdate): void {
 		if (!this.player) {
 			throw new Error('Cannot update room when player is not loaded');
 		}
@@ -250,12 +283,12 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		);
 	}
 
-	public onMessage(incoming: IChatRoomMessage[]): number {
-		const roomId = this.currentRoom.value.id;
+	public onMessage(incoming: IChatMessage[]): number {
+		const spaceId = this.currentRoom.value.id;
 
 		const messages = incoming
 			.filter((m) => m.time > this._lastMessageTime)
-			.map<IChatRoomMessage & { roomId: RoomId | null; }>((m) => ({ ...m, roomId }));
+			.map<IChatMessage & { spaceId: SpaceId | null; }>((m) => ({ ...m, spaceId }));
 
 		this._lastMessageTime = messages
 			.map((m) => m.time)
@@ -269,7 +302,7 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		for (const message of messages) {
 			if (message.type === 'deleted') {
 				let found = false;
-				const acc: IChatroomMessageProcessed[] = [];
+				const acc: IChatMessageProcessed[] = [];
 				for (const m of nextMessages) {
 					if (m.id !== message.id)
 						acc.push(m);
@@ -306,8 +339,8 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		return this._lastMessageTime;
 	}
 
-	private readonly _status = new Map<CharacterId, IChatRoomStatus>();
-	public onStatus({ id, status }: IShardClientArgument['chatRoomStatus']): void {
+	private readonly _status = new Map<CharacterId, ChatCharacterStatus>();
+	public onStatus({ id, status }: IShardClientArgument['chatCharacterStatus']): void {
 		if (id === this.playerId)
 			return;
 
@@ -325,10 +358,10 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 
 	//#endregion Handler
 
-	private _indicatorStatus: IChatRoomStatus = 'none';
+	private _indicatorStatus: ChatCharacterStatus = 'none';
 	private _indicatorTarget: CharacterId | undefined;
 
-	public setPlayerStatus(status: IChatRoomStatus, target?: CharacterId): void {
+	public setPlayerStatus(status: ChatCharacterStatus, target?: CharacterId): void {
 		const id = this.playerId;
 		if (id && this._status.get(id) !== status) {
 			this._status.set(id, status);
@@ -343,11 +376,11 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		if (this._indicatorStatus !== status || this._indicatorTarget !== target) {
 			this._indicatorStatus = status;
 			this._indicatorTarget = target;
-			this._shard.sendMessage('chatRoomStatus', { status, target });
+			this._shard.sendMessage('chatStatus', { status, target });
 		}
 	}
 
-	public getStatus(id: CharacterId): IChatRoomStatus {
+	public getStatus(id: CharacterId): ChatCharacterStatus {
 		return this._status.get(id) ?? 'none';
 	}
 
@@ -395,7 +428,7 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		if (editing !== undefined) {
 			this._sent.delete(editing);
 		}
-		this._shard.sendMessage('chatRoomMessage', { id, messages, editId: editing });
+		this._shard.sendMessage('chatMessage', { id, messages, editId: editing });
 		this._setRestore();
 	}
 
@@ -409,7 +442,7 @@ export class ChatRoom extends TypedEventEmitter<RoomInventoryEvents & {
 		}
 		this._sent.delete(deleteId);
 		const id = this._getNextMessageId();
-		this._shard.sendMessage('chatRoomMessage', { id, messages: [], editId: deleteId });
+		this._shard.sendMessage('chatMessage', { id, messages: [], editId: deleteId });
 		this._setRestore();
 	}
 
@@ -469,7 +502,7 @@ export function useChatRoomMessageSender(): IChatRoomMessageSender {
 	return useChatroomRequired();
 }
 
-export function useChatRoomMessages(): readonly IChatroomMessageProcessed[] {
+export function useChatRoomMessages(): readonly IChatMessageProcessed[] {
 	const context = useChatroomRequired();
 	return useObservable(context.messages);
 }
@@ -489,15 +522,15 @@ export function useChatRoomInfoOptional(): Immutable<ICurrentRoomInfo> | null {
 	return useNullableObservable(context?.currentRoom);
 }
 
-export function useChatRoomFeatures(): readonly ChatRoomFeature[] {
+export function useChatRoomFeatures(): readonly SpaceFeature[] {
 	const info = useChatRoomInfo();
 	return info.config.features;
 }
 
-export function useActionRoomContext(): ActionRoomContext {
+export function useActionRoomContext(): ActionSpaceContext {
 	const info = useChatRoomInfo();
 	const playerAccount = useCurrentAccount();
-	return useMemo((): ActionRoomContext => ({
+	return useMemo((): ActionSpaceContext => ({
 		features: info.config.features,
 		isAdmin: (accountId) => {
 			if (accountId === playerAccount?.id) {
@@ -514,17 +547,17 @@ export function useCharacterRestrictionsManager<T>(characterState: AssetFramewor
 	return useMemo(() => use(manager), [use, manager]);
 }
 
-export function useChatRoomSetPlayerStatus(): (status: IChatRoomStatus, target?: CharacterId) => void {
+export function useChatRoomSetPlayerStatus(): (status: ChatCharacterStatus, target?: CharacterId) => void {
 	const context = useChatroomRequired();
-	return useCallback((status: IChatRoomStatus, target?: CharacterId) => context.setPlayerStatus(status, target), [context]);
+	return useCallback((status: ChatCharacterStatus, target?: CharacterId) => context.setPlayerStatus(status, target), [context]);
 }
 
-export function useChatRoomStatus(): { data: ICharacterRoomData; status: IChatRoomStatus; }[] {
+export function useChatRoomStatus(): { data: ICharacterRoomData; status: ChatCharacterStatus; }[] {
 	const context = useChatroomRequired();
 	const characters = useObservable(context.characters);
 	const status = useObservable(context.status);
 	return useMemo(() => {
-		const result: { data: ICharacterRoomData; status: IChatRoomStatus; }[] = [];
+		const result: { data: ICharacterRoomData; status: ChatCharacterStatus; }[] = [];
 		for (const c of characters) {
 			if (status.has(c.data.id)) {
 				result.push({ data: c.data, status: context.getStatus(c.data.id) });
@@ -566,7 +599,7 @@ export function useRoomInventoryItems(context: IChatRoomContext): readonly Item[
 	return useMemo(() => (roomInventory?.getAllItems() ?? []), [roomInventory]);
 }
 
-export function IsChatroomAdmin(data: Immutable<IChatRoomClientInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {
+export function IsChatroomAdmin(data: Immutable<SpaceClientInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {
 	if (!account?.id)
 		return false;
 

@@ -79,7 +79,7 @@ function CreateMessageTypeParsers(type: IChatType, allowFormattedMode: boolean =
 	];
 }
 
-function CreateChatroomAdminAction(action: IClientDirectoryArgument['chatRoomAdminAction']['action'], longDescription: string): IClientCommand {
+function CreateChatroomAdminAction(action: IClientDirectoryArgument['spaceAdminAction']['action'], longDescription: string): IClientCommand {
 	return {
 		key: [action],
 		usage: '<target>',
@@ -97,7 +97,7 @@ function CreateChatroomAdminAction(action: IClientDirectoryArgument['chatRoomAdm
 					return;
 				}
 
-				directoryConnector.sendMessage('chatRoomAdminAction', {
+				directoryConnector.sendMessage('spaceAdminAction', {
 					action,
 					targets: [target.data.accountId],
 				});

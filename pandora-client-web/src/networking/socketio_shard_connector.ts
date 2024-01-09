@@ -89,25 +89,25 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 		this._messageHandler = new MessageHandler<IShardClient>({
 			load: this.onLoad.bind(this),
 			updateCharacter: this.onUpdateCharacter.bind(this),
-			chatRoomLoad: (data: IShardClientArgument['chatRoomLoad']) => {
+			gameStateLoad: (data: IShardClientArgument['gameStateLoad']) => {
 				const gameState = this._gameState.value;
 				Assert(gameState != null, 'Received update data without game state');
 				gameState.onLoad(data);
 			},
-			chatRoomUpdate: (data: IShardClientArgument['chatRoomUpdate']) => {
+			gameStateUpdate: (data: IShardClientArgument['gameStateUpdate']) => {
 				const gameState = this._gameState.value;
 				Assert(gameState != null, 'Received update data without game state');
 				gameState.onUpdate(data);
 			},
-			chatRoomMessage: (message: IShardClientArgument['chatRoomMessage']) => {
+			chatMessage: (message: IShardClientArgument['chatMessage']) => {
 				const gameState = this._gameState.value;
 				Assert(gameState != null, 'Received chatroom message without game state');
 				const lastTime = gameState.onMessage(message.messages);
 				if (lastTime > 0) {
-					this.sendMessage('chatRoomMessageAck', { lastTime });
+					this.sendMessage('chatMessageAck', { lastTime });
 				}
 			},
-			chatRoomStatus: (status: IShardClientArgument['chatRoomStatus']) => {
+			chatCharacterStatus: (status: IShardClientArgument['chatCharacterStatus']) => {
 				const gameState = this._gameState.value;
 				Assert(gameState != null, 'Received chatroom status data without game state');
 				gameState.onStatus(status);
@@ -218,16 +218,16 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 		logger.warning('Connection to Shard failed:', err.message);
 	}
 
-	private onLoad({ character, room, globalState, assetsDefinition, assetsDefinitionHash, assetsSource }: IShardClientArgument['load']): void {
+	private onLoad({ character, space, globalState, assetsDefinition, assetsDefinitionHash, assetsSource }: IShardClientArgument['load']): void {
 		const currentState = this._state.value;
 
 		LoadAssetDefinitions(assetsDefinitionHash, assetsDefinition, assetsSource);
 		const currentGameState = this._gameState.value;
 		if (currentGameState?.player.data.id === character.id) {
 			currentGameState.player.update(character);
-			currentGameState.onLoad({ globalState, room });
+			currentGameState.onLoad({ globalState, space });
 		} else {
-			this._gameState.value = new ChatRoom(this, character, { globalState, room });
+			this._gameState.value = new ChatRoom(this, character, { globalState, space });
 		}
 
 		if (currentState === ShardConnectionState.CONNECTED) {

@@ -1,4 +1,4 @@
-import { AssertNotNullable, CharacterId, EMPTY_ARRAY, IChatRoomStatus, IChatType, RoomId, ZodTransformReadonly } from 'pandora-common';
+import { AssertNotNullable, CharacterId, EMPTY_ARRAY, ChatCharacterStatus, IChatType, SpaceId, ZodTransformReadonly } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { clamp } from 'lodash';
 import { Character } from '../../character/character';
@@ -49,9 +49,9 @@ const chatInputContext = createContext<IChatInputHandler | null>(null);
 
 type ChatInputSave = {
 	input: string;
-	roomId: RoomId | null;
+	spaceId: SpaceId | null;
 };
-const InputRestore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', roomId: null });
+const InputRestore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', spaceId: null });
 /** List of recently sent chat messages (both commands and actually sent). Newest is first. */
 const InputHistory = BrowserStorage.createSession<readonly string[]>('saveChatInputHistory', EMPTY_ARRAY, z.string().array().transform(ZodTransformReadonly));
 /** How many last sent messages are remembered in the session storage */
@@ -72,16 +72,16 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	const chatroom = useChatroom();
 	const characters = useChatRoomCharacters();
 	const playerId = usePlayerId();
-	const roomId = useNullableObservable(useChatroom()?.currentRoom)?.id ?? null;
+	const spaceId = useNullableObservable(useChatroom()?.currentRoom)?.id ?? null;
 
 	useEffect(() => {
-		if (!roomId)
+		if (!spaceId)
 			return;
 
-		if (roomId !== InputRestore.value.roomId) {
-			InputRestore.value = { input: '', roomId };
+		if (spaceId !== InputRestore.value.spaceId) {
+			InputRestore.value = { input: '', spaceId };
 		}
-	}, [roomId]);
+	}, [spaceId]);
 
 	const setEditing = useEvent((edit: Editing | null) => {
 		setEditingState(edit);
@@ -148,7 +148,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 				if (ref.current) {
 					ref.current.value = value;
 				}
-				InputRestore.value = { input: value, roomId: InputRestore.value.roomId };
+				InputRestore.value = { input: value, spaceId: InputRestore.value.spaceId };
 			},
 			target,
 			setTarget: newSetTarget,
@@ -458,8 +458,8 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 			return;
 
 		lastInput.current = value;
-		InputRestore.value = { input: value, roomId: InputRestore.value.roomId };
-		let nextStatus: null | { status: IChatRoomStatus; target?: CharacterId; } = null;
+		InputRestore.value = { input: value, spaceId: InputRestore.value.spaceId };
+		let nextStatus: null | { status: ChatCharacterStatus; target?: CharacterId; } = null;
 		const trimmed = value.trim();
 		if (trimmed.length > 0 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY) || !allowCommands)) {
 			nextStatus = { status: target ? 'whispering' : 'typing', target: target?.data.id };

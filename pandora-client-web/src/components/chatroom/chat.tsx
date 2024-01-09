@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { CharacterId, IChatRoomMessageAction, IChatRoomMessageChat, RoomId } from 'pandora-common';
+import { CharacterId, IChatMessageAction, IChatMessageChat, SpaceId } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -18,7 +18,7 @@ import { useShardConnector } from '../gameContext/shardConnectorContextProvider'
 import { ChatInputArea, useChatInput } from './chatInput';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { useAutoScroll } from '../../common/useAutoScroll';
-import { IChatroomMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatroomMessages';
+import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatroomMessages';
 
 export function Chat(): ReactElement | null {
 	const messages = useChatRoomMessages();
@@ -50,11 +50,11 @@ export function Chat(): ReactElement | null {
 	);
 }
 
-function ChatroomMessageEquals(a: IChatroomMessageProcessed, b: IChatroomMessageProcessed): boolean {
-	return a.time === b.time && a.edited === b.edited && a.roomId === b.roomId;
+function ChatMessageEquals(a: IChatMessageProcessed, b: IChatMessageProcessed): boolean {
+	return a.time === b.time && a.edited === b.edited && a.spaceId === b.spaceId;
 }
 
-const Message = memo(function Message({ message, playerId }: { message: IChatroomMessageProcessed; playerId: CharacterId | null; }): ReactElement | null {
+const Message = memo(function Message({ message, playerId }: { message: IChatMessageProcessed; playerId: CharacterId | null; }): ReactElement | null {
 	if (IsActionMessage(message)) {
 		return <ActionMessage message={ message } />;
 	}
@@ -63,10 +63,10 @@ const Message = memo(function Message({ message, playerId }: { message: IChatroo
 	}
 	return <DisplayUserMessage message={ message } playerId={ playerId } />;
 }, (prev, next) => {
-	return ChatroomMessageEquals(prev.message, next.message) && prev.playerId === next.playerId;
+	return ChatMessageEquals(prev.message, next.message) && prev.playerId === next.playerId;
 });
 
-function DisplayUserMessage({ message, playerId }: { message: IChatRoomMessageChat & { time: number; roomId: RoomId | null; }; playerId: CharacterId | null; }): ReactElement {
+function DisplayUserMessage({ message, playerId }: { message: IChatMessageChat & { time: number; spaceId: SpaceId | null; }; playerId: CharacterId | null; }): ReactElement {
 	const [before, after] = useMemo(() => {
 		switch (message.type) {
 			case 'ooc':
@@ -158,7 +158,7 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number;
 	);
 }
 
-function DisplayInfo({ message }: { message: IChatroomMessageProcessed; }): ReactElement {
+function DisplayInfo({ message }: { message: IChatMessageProcessed; }): ReactElement {
 	const time = useMemo(() => new Date(message.time), [message.time]);
 	const [full, setFull] = useState(new Date().getDate() !== time.getDate());
 
@@ -185,7 +185,7 @@ function DisplayInfo({ message }: { message: IChatroomMessageProcessed; }): Reac
 	);
 }
 
-function DisplayName({ message, color }: { message: IChatRoomMessageChat; color: string; }): ReactElement | null {
+function DisplayName({ message, color }: { message: IChatMessageChat; color: string; }): ReactElement | null {
 	const { setTarget } = useChatInput();
 	const playerId = usePlayerId();
 
@@ -235,7 +235,7 @@ function DisplayName({ message, color }: { message: IChatRoomMessageChat; color:
 	);
 }
 
-function ActionMessage({ message }: { message: IChatroomMessageProcessed<IChatRoomMessageAction>; }): ReactElement | null {
+function ActionMessage({ message }: { message: IChatMessageProcessed<IChatMessageAction>; }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const [folded, setFolded] = useState(true);
 

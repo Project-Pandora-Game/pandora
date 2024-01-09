@@ -1,5 +1,15 @@
-import { AssetId, AssignPronouns, IChatRoomMessageAction, IChatRoomMessageBase, IChatSegment, MessageSubstitute, RoomId } from 'pandora-common';
-import { ChatActionDictionaryMetaEntry, CHAT_ACTIONS, CHAT_ACTIONS_FOLDED_EXTRA } from 'pandora-common/dist/chatroom/chatActions';
+import {
+	AssetId,
+	AssignPronouns,
+	CHAT_ACTIONS,
+	CHAT_ACTIONS_FOLDED_EXTRA,
+	ChatActionDictionaryMetaEntry,
+	IChatMessageAction,
+	IChatMessageBase,
+	IChatSegment,
+	MessageSubstitute,
+	SpaceId,
+} from 'pandora-common';
 import React, {
 	ReactElement,
 } from 'react';
@@ -7,21 +17,21 @@ import { AssetManagerClient } from '../../assets/assetManager';
 import { ChatParser } from './chatParser';
 import './chatroom.scss';
 
-export type IChatroomMessageProcessed<T extends IChatRoomMessageBase = IChatRoomMessageBase> = T & {
+export type IChatMessageProcessed<T extends IChatMessageBase = IChatMessageBase> = T & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
-	roomId: RoomId | null;
+	spaceId: SpaceId | null;
 	edited?: boolean;
 };
 
-export function IsActionMessage(message: IChatroomMessageProcessed): message is IChatroomMessageProcessed<IChatRoomMessageAction> {
+export function IsActionMessage(message: IChatMessageProcessed): message is IChatMessageProcessed<IChatMessageAction> {
 	return message.type === 'action' || message.type === 'serverMessage';
 }
 
 function ActionMessagePrepareDictionary(
-	message: IChatroomMessageProcessed<IChatRoomMessageAction>,
+	message: IChatMessageProcessed<IChatMessageAction>,
 	assetManager: AssetManagerClient,
-): IChatroomMessageProcessed<IChatRoomMessageAction> {
+): IChatMessageProcessed<IChatMessageAction> {
 	const metaDictionary: Partial<Record<ChatActionDictionaryMetaEntry, string>> = {};
 
 	const source = message.data?.character;
@@ -142,7 +152,7 @@ export function RenderChatPart([type, contents]: IChatSegment, index: number, al
 	}
 }
 
-function GetActionText(action: IChatroomMessageProcessed<IChatRoomMessageAction>, assetManager: AssetManagerClient): string | undefined {
+function GetActionText(action: IChatMessageProcessed<IChatMessageAction>, assetManager: AssetManagerClient): string | undefined {
 	if (action.customText != null)
 		return action.customText;
 
@@ -189,7 +199,7 @@ function GetActionText(action: IChatroomMessageProcessed<IChatRoomMessageAction>
 	return defaultMessage;
 }
 
-export function RenderActionContent(action: IChatroomMessageProcessed<IChatRoomMessageAction>, assetManager: AssetManagerClient): [IChatSegment[], IChatSegment[] | null] {
+export function RenderActionContent(action: IChatMessageProcessed<IChatMessageAction>, assetManager: AssetManagerClient): [IChatSegment[], IChatSegment[] | null] {
 	// Append implicit dictionary entries
 	action = ActionMessagePrepareDictionary(action, assetManager);
 	let actionText = GetActionText(action, assetManager);

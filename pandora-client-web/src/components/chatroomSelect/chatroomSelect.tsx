@@ -1,5 +1,13 @@
 import { noop } from 'lodash';
-import { EMPTY, GetLogger, IChatRoomListInfo, IChatRoomExtendedInfoResponse, IClientDirectoryNormalResult, RoomId, AssertNotNullable } from 'pandora-common';
+import {
+	EMPTY,
+	GetLogger,
+	SpaceListInfo,
+	SpaceExtendedInfoResponse,
+	IClientDirectoryNormalResult,
+	SpaceId,
+	AssertNotNullable,
+} from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { PersistentToast } from '../../persistentToast';
@@ -19,6 +27,7 @@ import { ContextHelpButton } from '../help/contextHelpButton';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { useObservable } from '../../observable';
 
+// TODO(spaces): Update relevant text lines
 const TIPS: readonly string[] = [
 	`You can move your character inside a room by dragging the character name below her.`,
 	`Careful! Your rooms are set to private as default when you first create them.`,
@@ -102,7 +111,7 @@ function TipsListDialog({ hide }: {
 }
 
 function ChatroomSelectRoomList({ roomList }: {
-	roomList: IChatRoomListInfo[];
+	roomList: SpaceListInfo[];
 }): ReactElement {
 	const navigate = useNavigate();
 	const account = useCurrentAccount();
@@ -115,7 +124,7 @@ function ChatroomSelectRoomList({ roomList }: {
 		<>
 			<div>
 				<h3>
-					My rooms ({ ownRooms.length }/{ account.roomOwnershipLimit })
+					My rooms ({ ownRooms.length }/{ account.spaceOwnershipLimit })
 					<ContextHelpButton>
 						<p>
 							Rooms are a place where you can meet other characters.
@@ -130,7 +139,7 @@ function ChatroomSelectRoomList({ roomList }: {
 						</p>
 						<p>
 							Each <strong>account</strong> has a maximum number of rooms it can own.<br />
-							You can own at most { account.roomOwnershipLimit } rooms.<br />
+							You can own at most { account.spaceOwnershipLimit } rooms.<br />
 							If you want to create another room beyond your room ownership limit,<br />
 							you must select any of your owned rooms and either repurpose it or give up<br />
 							ownership of that room (resulting in the room being deleted if it has no other owners).
@@ -139,7 +148,7 @@ function ChatroomSelectRoomList({ roomList }: {
 				</h3>
 				{ ownRooms.map((room) => <RoomEntry key={ room.id } roomInfo={ room } />) }
 				{
-					ownRooms.length >= account.roomOwnershipLimit ? null : (
+					ownRooms.length >= account.spaceOwnershipLimit ? null : (
 						<a className='roomListGrid' onClick={ () => navigate('/chatroom_create') } >
 							<div className='icon'>➕</div>
 							<div className='entry'>Create a new room</div>
@@ -158,7 +167,7 @@ function ChatroomSelectRoomList({ roomList }: {
 }
 
 function RoomEntry({ roomInfo }: {
-	roomInfo: IChatRoomListInfo;
+	roomInfo: SpaceListInfo;
 }): ReactElement {
 
 	const [show, setShow] = useState(false);
@@ -190,7 +199,7 @@ function RoomEntry({ roomInfo }: {
 }
 
 function RoomDetailsDialog({ baseRoomInfo, hide }: {
-	baseRoomInfo: IChatRoomListInfo;
+	baseRoomInfo: SpaceListInfo;
 	hide: () => void;
 }): ReactElement | null {
 
@@ -296,15 +305,15 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 
 const RoomJoinProgress = new PersistentToast();
 
-type ChatRoomEnterResult = IClientDirectoryNormalResult['chatRoomEnter']['result'];
+type ChatRoomEnterResult = IClientDirectoryNormalResult['spaceEnter']['result'];
 
-function useJoinRoom(): (id: RoomId, password?: string) => Promise<ChatRoomEnterResult> {
+function useJoinRoom(): (id: SpaceId, password?: string) => Promise<ChatRoomEnterResult> {
 	const directoryConnector = useDirectoryConnector();
 
 	return useCallback(async (id, password) => {
 		try {
 			RoomJoinProgress.show('progress', 'Joining room...');
-			const result = await directoryConnector.awaitResponse('chatRoomEnter', { id, password });
+			const result = await directoryConnector.awaitResponse('spaceEnter', { id, password });
 			if (result.result === 'ok') {
 				RoomJoinProgress.show('success', 'Room joined!');
 			} else {
@@ -320,34 +329,34 @@ function useJoinRoom(): (id: RoomId, password?: string) => Promise<ChatRoomEnter
 	}, [directoryConnector]);
 }
 
-function useRoomList(): IChatRoomListInfo[] | undefined {
-	const [roomList, setRoomList] = useState<IChatRoomListInfo[]>();
+function useRoomList(): SpaceListInfo[] | undefined {
+	const [roomList, setRoomList] = useState<SpaceListInfo[]>();
 	const directoryConnector = useDirectoryConnector();
 
 	const fetchRoomList = useCallback(async () => {
-		const result = await directoryConnector.awaitResponse('listRooms', EMPTY);
-		if (result && result.rooms) {
-			setRoomList(result.rooms);
+		const result = await directoryConnector.awaitResponse('listSpaces', EMPTY);
+		if (result && result.spaces) {
+			setRoomList(result.spaces);
 		}
 	}, [directoryConnector]);
 
-	useDirectoryChangeListener('roomList', () => {
+	useDirectoryChangeListener('spaceList', () => {
 		fetchRoomList().catch(noop);
 	});
 
 	return roomList;
 }
 
-export function useRoomExtendedInfo(chatroomId: RoomId): IChatRoomExtendedInfoResponse | undefined {
-	const [response, setResponse] = useState<IChatRoomExtendedInfoResponse>();
+export function useRoomExtendedInfo(chatroomId: SpaceId): SpaceExtendedInfoResponse | undefined {
+	const [response, setResponse] = useState<SpaceExtendedInfoResponse>();
 	const directoryConnector = useDirectoryConnector();
 
 	const fetchRoomInfo = useCallback(async () => {
-		const result = await directoryConnector.awaitResponse('chatRoomGetInfo', { id: chatroomId });
+		const result = await directoryConnector.awaitResponse('spaceGetInfo', { id: chatroomId });
 		setResponse(result);
 	}, [directoryConnector, chatroomId]);
 
-	useDirectoryChangeListener('roomList', () => {
+	useDirectoryChangeListener('spaceList', () => {
 		fetchRoomInfo().catch(noop);
 	});
 

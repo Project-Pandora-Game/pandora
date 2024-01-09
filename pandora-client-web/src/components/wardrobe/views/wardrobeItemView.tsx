@@ -9,7 +9,7 @@ import {
 	ItemContainerPath,
 	ItemId,
 	ItemPath,
-	RoomTargetSelector,
+	ActionTargetSelector,
 } from 'pandora-common';
 import React, { ReactElement, useEffect, useMemo } from 'react';
 import { useObservable } from '../../../observable';
@@ -155,7 +155,7 @@ export function InventoryItemView({
 }
 
 export function InventoryItemViewDropArea({ target, container, insertBefore }: {
-	target: RoomTargetSelector;
+	target: ActionTargetSelector;
 	container: ItemContainerPath;
 	insertBefore?: ItemId;
 }): ReactElement | null {

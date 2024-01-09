@@ -1,4 +1,14 @@
-import { AssetFrameworkCharacterState, AssetFrameworkGlobalState, CalculateCharacterMaxYForBackground, CharacterRoomPosition, CharacterSize, ICharacterRoomData, IChatroomBackgroundData, IChatRoomClientInfo, LegsPose } from 'pandora-common';
+import {
+	AssetFrameworkCharacterState,
+	AssetFrameworkGlobalState,
+	CalculateCharacterMaxYForBackground,
+	CharacterRoomPosition,
+	CharacterSize,
+	ICharacterRoomData,
+	RoomBackgroundData,
+	SpaceClientInfo,
+	LegsPose,
+} from 'pandora-common';
 import PIXI, { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Character, useCharacterData } from '../../character/character';
@@ -21,9 +31,9 @@ import { Immutable } from 'immer';
 type ChatRoomCharacterInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
-	roomInfo: Immutable<IChatRoomClientInfo>;
+	roomInfo: Immutable<SpaceClientInfo>;
 	debugConfig: ChatroomDebugConfig;
-	background: Immutable<IChatroomBackgroundData>;
+	background: Immutable<RoomBackgroundData>;
 	shard: ShardConnector | null;
 	menuOpen: (target: Character<ICharacterRoomData>, data: FederatedPointerEvent) => void;
 };
@@ -31,7 +41,7 @@ type ChatRoomCharacterInteractiveProps = {
 type ChatRoomCharacterDisplayProps = {
 	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
-	background: Immutable<IChatroomBackgroundData>;
+	background: Immutable<RoomBackgroundData>;
 
 	debugConfig?: Immutable<ChatroomDebugConfig>;
 
@@ -103,7 +113,7 @@ export function useChatRoomCharacterOffsets(characterState: AssetFrameworkCharac
 	};
 }
 
-export function useChatRoomCharacterPosition(position: CharacterRoomPosition, characterState: AssetFrameworkCharacterState, background: Immutable<IChatroomBackgroundData>): {
+export function useChatRoomCharacterPosition(position: CharacterRoomPosition, characterState: AssetFrameworkCharacterState, background: Immutable<RoomBackgroundData>): {
 	/** Position on the room canvas */
 	position: Readonly<PointLike>;
 	/** Z index to use for the character within the room's container */
@@ -187,7 +197,7 @@ function ChatRoomCharacterInteractiveImpl({
 
 		newX = _.clamp(Math.round(newX), 0, background.size[0]);
 		newY = _.clamp(Math.round(newY), 0, maxY);
-		shard?.sendMessage('chatRoomCharacterMove', {
+		shard?.sendMessage('roomCharacterMove', {
 			id,
 			position: [newX, newY, yOffsetExtra],
 		});

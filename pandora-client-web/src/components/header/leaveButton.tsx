@@ -4,7 +4,7 @@ import { HeaderButton } from './HeaderButton';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
 import { usePlayer, usePlayerData, usePlayerState } from '../gameContext/playerContextProvider';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { EMPTY, GetLogger, IChatRoomClientInfo, RoomId } from 'pandora-common';
+import { EMPTY, GetLogger, SpaceClientInfo, SpaceId } from 'pandora-common';
 import { Button } from '../common/button/button';
 import { useLogout } from '../../networking/account_manager';
 import { useCharacterRestrictionsManager, useChatRoomInfoOptional } from '../gameContext/chatRoomContextProvider';
@@ -89,8 +89,8 @@ function ChatRoomLeave(): ReactElement {
 
 function CharRoomLeaveInner({ player, roomConfig, roomId }: {
 	player: PlayerCharacter;
-	roomConfig: Immutable<IChatRoomClientInfo>;
-	roomId: RoomId;
+	roomConfig: Immutable<SpaceClientInfo>;
+	roomId: SpaceId;
 }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const { playerState } = usePlayerState();
@@ -99,7 +99,7 @@ function CharRoomLeaveInner({ player, roomConfig, roomId }: {
 	const closeDialog = useContext(leaveButtonContext);
 
 	const onRoomLeave = useCallback(() => {
-		directoryConnector.awaitResponse('chatRoomLeave', EMPTY)
+		directoryConnector.awaitResponse('spaceLeave', EMPTY)
 			.then((result) => {
 				if (result.result !== 'ok') {
 					toast(`Failed to leave room:\n${result.result}`, TOAST_OPTIONS_ERROR);

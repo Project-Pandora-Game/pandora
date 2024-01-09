@@ -1,22 +1,22 @@
-import { clamp, cloneDeep, noop, uniq } from 'lodash';
+import { clamp, noop, uniq } from 'lodash';
 import {
-	ChatRoomFeature,
+	SpaceFeature,
 	EMPTY,
 	GetLogger,
-	IChatRoomDirectoryConfig,
+	SpaceDirectoryConfig,
 	IDirectoryShardInfo,
-	ChatRoomBaseInfoSchema,
+	SpaceBaseInfoSchema,
 	ZodMatcher,
 	DEFAULT_BACKGROUND,
 	IsObject,
 	AccountId,
 	AssertNotNullable,
-	RoomId,
-	BackgroundTagDefinition,
+	SpaceId,
+	RoomBackgroundTagDefinition,
 	AssetManager,
-	IChatroomBackgroundInfo,
-	LIMIT_ROOM_DESCRIPTION_LENGTH,
-	LIMIT_ROOM_NAME_LENGTH,
+	RoomBackgroundInfo,
+	LIMIT_SPACE_DESCRIPTION_LENGTH,
+	LIMIT_SPACE_NAME_LENGTH,
 	CloneDeepMutable,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
@@ -44,10 +44,10 @@ import { SelectionIndicator } from '../common/selectionIndicator/selectionIndica
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { Immutable } from 'immer';
 
-const IsChatroomName = ZodMatcher(ChatRoomBaseInfoSchema.shape.name);
-const IsChatroomDescription = ZodMatcher(ChatRoomBaseInfoSchema.shape.description);
+const IsChatroomName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
+const IsChatroomDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
 
-function DefaultRoomConfig(): IChatRoomDirectoryConfig {
+function DefaultRoomConfig(): SpaceDirectoryConfig {
 	return {
 		name: '',
 		description: '',
@@ -57,11 +57,11 @@ function DefaultRoomConfig(): IChatRoomDirectoryConfig {
 		public: false,
 		password: null,
 		features: [],
-		background: cloneDeep(DEFAULT_BACKGROUND),
+		background: CloneDeepMutable(DEFAULT_BACKGROUND),
 	};
 }
 
-export const CHATROOM_FEATURES: { id: ChatRoomFeature; name: string; icon?: string; }[] = [
+export const CHATROOM_FEATURES: { id: SpaceFeature; name: string; icon?: string; }[] = [
 	{
 		id: 'allowBodyChanges',
 		name: 'Allow changes to character body',
@@ -93,7 +93,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	AssertNotNullable(currentAccount);
 	const createRoom = useCreateRoom();
 	let currentRoomInfo: Immutable<ICurrentRoomInfo> | null = useChatRoomInfo();
-	const lastRoomId = useRef<RoomId | null>();
+	const lastRoomId = useRef<SpaceId | null>();
 	const isInPublicRoom = currentRoomInfo.id != null;
 	if (creation) {
 		currentRoomInfo = null;
@@ -103,8 +103,8 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 			lastRoomId.current = currentRoomInfo.id;
 		}
 	}
-	const [roomModifiedData, setRoomModifiedData] = useReducer((oldState: Partial<IChatRoomDirectoryConfig>, action: Partial<IChatRoomDirectoryConfig>) => {
-		const result: Partial<IChatRoomDirectoryConfig> = {
+	const [roomModifiedData, setRoomModifiedData] = useReducer((oldState: Partial<SpaceDirectoryConfig>, action: Partial<SpaceDirectoryConfig>) => {
+		const result: Partial<SpaceDirectoryConfig> = {
 			...oldState,
 			...action,
 		};
@@ -125,11 +125,11 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	const accountId = currentAccount.id;
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 
-	const currentConfig: IChatRoomDirectoryConfig = useMemo(() => ({
+	const currentConfig: SpaceDirectoryConfig = useMemo(() => ({
 		...(CloneDeepMutable(currentRoomInfo?.config ?? DefaultRoomConfig())),
 		...roomModifiedData,
 	}), [currentRoomInfo, roomModifiedData]);
-	const roomId: RoomId | null = currentRoomInfo?.id ?? null;
+	const roomId: SpaceId | null = currentRoomInfo?.id ?? null;
 
 	const isPlayerOwner = !!(creation || accountId && currentRoomInfo?.config.owners.includes(accountId));
 	const isPlayerAdmin = creation || currentRoomInfo == null || IsChatroomAdmin(currentRoomInfo.config, currentAccount);
@@ -182,7 +182,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	const configurableElements = (
 		<>
 			<div className='input-container'>
-				<label>Room name ({ currentConfig.name.length }/{ LIMIT_ROOM_NAME_LENGTH } characters)</label>
+				<label>Room name ({ currentConfig.name.length }/{ LIMIT_SPACE_NAME_LENGTH } characters)</label>
 				<input
 					autoComplete='none'
 					type='text'
@@ -199,7 +199,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 			</div>
 			<FieldsetToggle legend='Presentation and access'>
 				<div className='input-container'>
-					<label>Room description ({ currentConfig.description.length }/{ LIMIT_ROOM_DESCRIPTION_LENGTH } characters)</label>
+					<label>Room description ({ currentConfig.description.length }/{ LIMIT_SPACE_DESCRIPTION_LENGTH } characters)</label>
 					<textarea
 						value={ currentConfig.description }
 						onChange={ (event) => setRoomModifiedData({ description: event.target.value }) }
@@ -448,7 +448,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	);
 }
 
-export function ChatroomOwnershipRemoval({ buttonClassName, ...data }: { id: RoomId; name: string; buttonClassName?: string; }): ReactElement | null {
+export function ChatroomOwnershipRemoval({ buttonClassName, ...data }: { id: SpaceId; name: string; buttonClassName?: string; }): ReactElement | null {
 	const [state, setState] = useState<boolean>(false);
 	return (
 		<>
@@ -464,13 +464,13 @@ export function ChatroomOwnershipRemoval({ buttonClassName, ...data }: { id: Roo
 	);
 }
 
-function ChatroomOwnershipRemovalDialog({ id, name, closeDialog }: { id: RoomId; name: string; closeDialog: () => void; }): ReactElement {
+function ChatroomOwnershipRemovalDialog({ id, name, closeDialog }: { id: SpaceId; name: string; closeDialog: () => void; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 
 	const removeOwnership = useCallback(() => {
 		(async () => {
 			RoomAdminProgress.show('progress', 'Removing ownership...');
-			const result = await directoryConnector.awaitResponse('chatRoomOwnershipRemove', { id });
+			const result = await directoryConnector.awaitResponse('spaceOwnershipRemove', { id });
 			if (result.result === 'ok') {
 				RoomAdminProgress.show('success', 'Room ownership removed!');
 				closeDialog();
@@ -596,8 +596,8 @@ function BackgroundInfo({ background }: { background: string; }): ReactElement {
 
 function BackgroundSelectDialog({ hide, current, select }: {
 	hide: () => void;
-	current: string | IChatRoomDirectoryConfig['background'];
-	select: (background: IChatRoomDirectoryConfig['background']) => void;
+	current: string | SpaceDirectoryConfig['background'];
+	select: (background: SpaceDirectoryConfig['background']) => void;
 }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const [selectedBackground, setSelectedBackground] = useState(current);
@@ -610,7 +610,7 @@ function BackgroundSelectDialog({ hide, current, select }: {
 	const [selection, setSelection] = useState(() => BackgroundSelectionStateClass.create(assetManager));
 
 	/** Comparator for sorting backgrounds */
-	const backgroundSortOrder = useCallback((a: Readonly<IChatroomBackgroundInfo>, b: Readonly<IChatroomBackgroundInfo>): number => {
+	const backgroundSortOrder = useCallback((a: Readonly<RoomBackgroundInfo>, b: Readonly<RoomBackgroundInfo>): number => {
 		return a.name.localeCompare(b.name);
 	}, []);
 
@@ -701,7 +701,7 @@ function BackgroundSelectDialog({ hide, current, select }: {
 						disabled={ IsObject(current) }
 						className='hideDisabled'
 						onClick={ () => {
-							select(DEFAULT_BACKGROUND);
+							select(CloneDeepMutable(DEFAULT_BACKGROUND));
 							hide();
 						} }>
 						Solid-color background
@@ -720,7 +720,7 @@ function BackgroundSelectDialog({ hide, current, select }: {
 	);
 }
 
-type BackgroundTag = Readonly<BackgroundTagDefinition & { id: string; }>;
+type BackgroundTag = Readonly<RoomBackgroundTagDefinition & { id: string; }>;
 
 function TagCategoryButton({ category, selection, setSelection }: {
 	category: string;
@@ -775,13 +775,13 @@ function TagButton({ id, name, selection, setSelection }: {
 
 const RoomAdminProgress = new PersistentToast();
 
-function useCreateRoom(): (config: IChatRoomDirectoryConfig) => Promise<void> {
+function useCreateRoom(): (config: SpaceDirectoryConfig) => Promise<void> {
 	const directoryConnector = useDirectoryConnector();
 	const navigate = useNavigate();
 	return useCallback(async (config) => {
 		try {
 			RoomAdminProgress.show('progress', 'Creating room...');
-			const result = await directoryConnector.awaitResponse('chatRoomCreate', config);
+			const result = await directoryConnector.awaitResponse('spaceCreate', config);
 			if (result.result === 'ok') {
 				RoomAdminProgress.show('success', 'Room created!');
 				navigate('/chatroom');
@@ -795,10 +795,10 @@ function useCreateRoom(): (config: IChatRoomDirectoryConfig) => Promise<void> {
 	}, [directoryConnector, navigate]);
 }
 
-function UpdateRoom(directoryConnector: DirectoryConnector, config: Partial<IChatRoomDirectoryConfig>, onSuccess?: () => void): void {
+function UpdateRoom(directoryConnector: DirectoryConnector, config: Partial<SpaceDirectoryConfig>, onSuccess?: () => void): void {
 	(async () => {
 		RoomAdminProgress.show('progress', 'Updating room...');
-		const result = await directoryConnector.awaitResponse('chatRoomUpdate', config);
+		const result = await directoryConnector.awaitResponse('spaceUpdate', config);
 		if (result.result === 'ok') {
 			RoomAdminProgress.show('success', 'Room updated!');
 			onSuccess?.();
@@ -831,9 +831,9 @@ function useShards(): IDirectoryShardInfo[] | undefined {
 }
 
 interface BackgroundSelectionState {
-	readonly availableBackgrounds: readonly Readonly<IChatroomBackgroundInfo>[];
+	readonly availableBackgrounds: readonly Readonly<RoomBackgroundInfo>[];
 	readonly availableTags: ReadonlyMap<string, readonly BackgroundTag[]>;
-	readonly backgroundTags: ReadonlyMap<string, Readonly<BackgroundTagDefinition>>;
+	readonly backgroundTags: ReadonlyMap<string, Readonly<RoomBackgroundTagDefinition>>;
 	readonly tagToCategory: ReadonlyMap<string, string>;
 	readonly categories: readonly string[];
 	readonly selectedCategories: Set<string>;
@@ -842,7 +842,7 @@ interface BackgroundSelectionState {
 
 class BackgroundSelectionStateClass {
 	private readonly state: BackgroundSelectionState;
-	public readonly backgrounds: readonly Readonly<IChatroomBackgroundInfo>[];
+	public readonly backgrounds: readonly Readonly<RoomBackgroundInfo>[];
 	public readonly categories: ReadonlySet<string>;
 
 	public get knownCategories(): readonly string[] {
@@ -964,7 +964,7 @@ class BackgroundSelectionStateClass {
 		return this.state.availableTags.get(category) ?? EMPTY_ARRAY;
 	}
 
-	private static isSelected(state: BackgroundSelectionState, info: Readonly<IChatroomBackgroundInfo>): boolean {
+	private static isSelected(state: BackgroundSelectionState, info: Readonly<RoomBackgroundInfo>): boolean {
 		if (state.selectedCategories.size === 0) {
 			return true;
 		}

@@ -113,3 +113,7 @@ export function useCharacterAppearanceItem(characterState: AssetFrameworkCharact
 
 	return useMemo(() => (items && path) ? EvalItemPath(items, path) : undefined, [items, path]);
 }
+
+export function useCharacterRestrictionManager(character: Character, state: AssetFrameworkCharacterState, room: ActionRoomContext): CharacterRestrictionsManager {
+	return useMemo(() => character.gameLogicCharacter.getRestrictionManager(state, room), [character, state, room]);
+}

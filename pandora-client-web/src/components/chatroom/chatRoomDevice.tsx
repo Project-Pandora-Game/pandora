@@ -24,7 +24,6 @@ import { RoomDeviceRenderContext } from './chatRoomDeviceContext';
 import { EvaluateCondition } from '../../graphics/utility';
 import { useStandaloneConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { MovementHelperGraphics } from '../../graphics/movementHelper';
-import { usePlayerState } from '../gameContext/playerContextProvider';
 
 const PIVOT_TO_LABEL_OFFSET = 100 - CHARACTER_BASE_Y_OFFSET;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
@@ -57,11 +56,16 @@ type ChatRoomDeviceProps = {
 
 export const DeviceOverlaySettingSchema = z.object({
 	roomConstructionMode: z.boolean(),
+	roomId: z.string().nullish(),
+	isPlayerAdmin: z.boolean(),
+	canUseHands: z.boolean(),
 	defaultView: z.enum(['never', 'intractable', 'always']),
 });
 export const DeviceOverlaySetting = BrowserStorage.create('temp-device-overlay-toggle', {
 	roomConstructionMode: false,
 	defaultView: 'intractable',
+	isPlayerAdmin: false,
+	canUseHands: false,
 }, DeviceOverlaySettingSchema);
 
 export function ChatRoomDeviceMovementTool({

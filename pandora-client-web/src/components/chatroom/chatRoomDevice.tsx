@@ -59,13 +59,14 @@ export const DeviceOverlaySettingSchema = z.object({
 	roomId: z.string().nullish(),
 	isPlayerAdmin: z.boolean(),
 	canUseHands: z.boolean(),
-	defaultView: z.enum(['never', 'intractable', 'always']),
+	defaultView: z.enum(['never', 'interactable', 'always']),
 });
 export const DeviceOverlaySetting = BrowserStorage.create('temp-device-overlay-toggle', {
 	roomConstructionMode: false,
-	defaultView: 'intractable',
+	roomId: undefined,
 	isPlayerAdmin: false,
 	canUseHands: false,
+	defaultView: 'interactable',
 }, DeviceOverlaySettingSchema);
 
 export function ChatRoomDeviceMovementTool({
@@ -297,7 +298,7 @@ export function ChatRoomDeviceInteractive({
 	const enableMenu = !isBeingMoved && (canInteractNormally || showOverlaySetting === 'always');
 	const showMenuHelper = enableMenu && (
 		showOverlaySetting === 'always' ||
-		(showOverlaySetting === 'intractable' && canInteractNormally)
+		(showOverlaySetting === 'interactable' && canInteractNormally)
 	);
 
 	const deviceMenuHelperDraw = useCallback((g: PIXI.Graphics) => {

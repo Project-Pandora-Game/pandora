@@ -125,7 +125,7 @@ export function useRoomConstructionModeCheck() {
 		let nextValue = DeviceOverlaySetting.value;
 		if (value.roomId !== chatRoomInfo.id) {
 			nextValue = {
-				...DeviceOverlaySetting.value,
+				...nextValue,
 				roomConstructionMode: false,
 				roomId: chatRoomInfo.id,
 			};
@@ -144,9 +144,7 @@ export function useRoomConstructionModeCheck() {
 				canUseHands,
 			};
 		}
-		if (nextValue !== DeviceOverlaySetting.value) {
-			DeviceOverlaySetting.value = nextValue;
-		}
+		DeviceOverlaySetting.value = nextValue;
 	}, [value, chatRoomInfo.id, isPlayerAdmin, canUseHands]);
 }
 
@@ -196,7 +194,7 @@ function DeviceOverlaySelector(): ReactElement {
 					<option value='never'>
 						Never (enterable devices can still be interacted with)
 					</option>
-					<option value='intractable'>
+					<option value='interactable'>
 						For enterable devices only
 					</option>
 					<option value='always'>

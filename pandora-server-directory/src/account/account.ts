@@ -119,25 +119,29 @@ export class Account {
 		const update: Parameters<(typeof db)['updateAccountData']>['1'] = {};
 
 		const now = Date.now();
-		for (const [key, value] of KnownObject.entries(this.data.settingsCooldowns)) {
-			if (value == null || !(key in settings))
+		for (const [key, limit] of KnownObject.entries(ACCOUNT_SETTINGS_LIMITED_LIMITS)) {
+			if (limit == null || !(key in settings))
 				continue;
 
-			if (value > now) {
+			const cooldown = this.data.settingsCooldowns[key] ?? 0;
+			if (cooldown > now) {
 				delete settings[key];
 				continue;
 			}
 
 			let settingsCooldowns = update.settingsCooldowns;
 			if (!settingsCooldowns) {
-				settingsCooldowns = update.settingsCooldowns = cloneDeep(this.data.settingsCooldowns);
+				settingsCooldowns = cloneDeep(this.data.settingsCooldowns);
+				update.settingsCooldowns = settingsCooldowns;
 			}
 
-			settingsCooldowns[key] = now + ACCOUNT_SETTINGS_LIMITED_LIMITS[key];
+			settingsCooldowns[key] = limit + now;
 		}
 
 		if (settings.displayName === this.data.username)
 			settings.displayName = null;
+		if (update.settingsCooldowns != null)
+			this.data.settingsCooldowns = update.settingsCooldowns;
 
 		this.data.settings = { ...this.data.settings, ...settings };
 		update.settings = this.data.settings;

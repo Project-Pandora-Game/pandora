@@ -214,7 +214,7 @@ function DisplayName({ account }: { account: IDirectoryAccountInfo; }): ReactEle
 			toast(`You can change your display name again in ${FormatTimeInterval(nextAllowedChange - Date.now())}`, TOAST_OPTIONS_ERROR);
 			return;
 		}
-		const displayName = account.username === current ? null : current;
+		const displayName = account.username === name ? null : name;
 		directory.sendMessage('changeSettings', { displayName });
 	});
 

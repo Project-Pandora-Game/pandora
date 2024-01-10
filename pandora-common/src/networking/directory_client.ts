@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { IAccountRoleInfo, AccountRoleSchema, AccountId } from '../account';
 import type { CharacterId } from '../character';
 import type { ShardFeature } from '../chatroom';
-import { Satisfies, TimeSpanMs } from '../utility';
+import { KnownObject, ParseArrayNotEmpty, Satisfies, TimeSpanMs } from '../utility';
 import { DisplayNameSchema, HexColorStringSchema, ZodCast } from '../validation';
 import type { IAccountContact, IAccountFriendStatus } from './client_directory';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
@@ -107,8 +107,11 @@ export const ACCOUNT_SETTINGS_LIMITED_LIMITS = Object.freeze({
 	displayName: TimeSpanMs(1, 'weeks'),
 } as const satisfies Partial<Record<keyof IDirectoryAccountSettings, number>>);
 
-export type DirectoryAccountSettingsLimitedKeys = keyof typeof ACCOUNT_SETTINGS_LIMITED_LIMITS;
-export type DirectoryAccountSettingsCooldowns = Partial<Record<DirectoryAccountSettingsLimitedKeys, number>>;
+export const DirectoryAccountSettingsLimitedKeysSchema = z.enum(ParseArrayNotEmpty(KnownObject.keys(ACCOUNT_SETTINGS_LIMITED_LIMITS)));
+export type DirectoryAccountSettingsLimitedKeys = z.infer<typeof DirectoryAccountSettingsLimitedKeysSchema>;
+
+export const DirectoryAccountSettingsCooldownsSchema = z.record(DirectoryAccountSettingsLimitedKeysSchema, z.number().optional());
+export type DirectoryAccountSettingsCooldowns = z.infer<typeof DirectoryAccountSettingsCooldownsSchema>;
 
 // TODO: This needs reasonable size limits
 export const AccountCryptoKeySchema = z.object({

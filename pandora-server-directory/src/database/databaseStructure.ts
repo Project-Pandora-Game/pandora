@@ -5,7 +5,7 @@ import {
 	AccountId,
 	AccountIdSchema,
 	AssetFrameworkOutfitWithIdSchema,
-	DirectoryAccountSettingsCooldowns,
+	DirectoryAccountSettingsCooldownsSchema,
 	DirectoryAccountSettingsSchema,
 	IAccountRoleManageInfo,
 	IBetaKeyInfo,
@@ -67,7 +67,7 @@ export const DatabaseAccountSchema = z.object({
 	profileDescription: z.string().default('').transform(ZodTruncate(LIMIT_ACCOUNT_PROFILE_LENGTH)),
 	characters: ZodCast<ICharacterSelfInfoDb>().array(),
 	settings: DirectoryAccountSettingsSchema.catch(() => cloneDeep(ACCOUNT_SETTINGS_DEFAULT)),
-	settingsCooldowns: ZodCast<DirectoryAccountSettingsCooldowns>().catch(() => ({})),
+	settingsCooldowns: DirectoryAccountSettingsCooldownsSchema.catch(() => ({})),
 	directMessages: ZodCast<DatabaseDirectMessageInfo>().array().optional(),
 	storedOutfits: AssetFrameworkOutfitWithIdSchema.array().catch(() => []),
 });

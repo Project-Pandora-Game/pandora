@@ -223,6 +223,7 @@ export function TimeSpanMs(time: number, unit: TimeUnit): number {
 		case 'weeks':
 			return time * 1000 * 60 * 60 * 24 * 7;
 	}
+	AssertNever(unit);
 }
 
 export function MessageSubstitute(originalMessage: string, substitutions: Readonly<Record<string, string>>): string {

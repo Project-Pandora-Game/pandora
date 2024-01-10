@@ -210,7 +210,7 @@ function DisplayName({ account }: { account: IDirectoryAccountInfo; }): ReactEle
 	const onSetDisplayName = useEvent(() => {
 		if (name === current)
 			return;
-		if (nextAllowedChange && nextAllowedChange > Date.now()) {
+		if (nextAllowedChange > Date.now()) {
 			toast(`You can change your display name again in ${FormatTimeInterval(nextAllowedChange - Date.now())}`, TOAST_OPTIONS_ERROR);
 			return;
 		}
@@ -225,7 +225,7 @@ function DisplayName({ account }: { account: IDirectoryAccountInfo; }): ReactEle
 			<legend>Display name</legend>
 			<div className='input-row'>
 				<label>Name</label>
-				<input type='text' value={ name } onChange={ (e) => setName(e.target.value) } />
+				<input type='text' value={ name } onChange={ (e) => setName(e.target.value) } disabled={ nextAllowedChange > now } />
 				<Button className='slim fadeDisabled' onClick={ onSetDisplayName } disabled={ name === current || nextAllowedChange > now }>Save</Button>
 			</div>
 			<div className='input-row'>

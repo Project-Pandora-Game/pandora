@@ -2,8 +2,8 @@ import { z } from 'zod';
 import { IAccountRoleInfo, AccountRoleSchema, AccountId } from '../account';
 import type { CharacterId } from '../character';
 import type { ShardFeature } from '../chatroom';
-import { Satisfies } from '../utility';
-import { HexColorStringSchema, ZodCast } from '../validation';
+import { KnownObject, ParseArrayNotEmpty, Satisfies, TimeSpanMs } from '../utility';
+import { DisplayNameSchema, HexColorStringSchema, ZodCast } from '../validation';
 import type { IAccountContact, IAccountFriendStatus } from './client_directory';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 import { Immutable } from 'immer';
@@ -26,6 +26,7 @@ export function CreateDefaultDirectoryStatus(): IDirectoryStatus {
 export const DirectoryAccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema).max(AccountRoleSchema.options.length),
 	labelColor: HexColorStringSchema.catch('#ffffff'),
+	displayName: DisplayNameSchema.nullable().catch(null),
 	/** Hides online status from friends */
 	hideOnlineStatus: z.boolean().default(false),
 	/**
@@ -87,6 +88,7 @@ export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsS
 export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>({
 	visibleRoles: [],
 	labelColor: '#ffffff',
+	displayName: null,
 	hideOnlineStatus: false,
 	allowDirectMessagesFrom: 'all',
 	wardrobeExtraActionButtons: true,
@@ -100,6 +102,16 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>
 	interfaceChatroomGraphicsRatioVertical: 4,
 	interfaceChatroomOfflineCharacterFilter: 'ghost',
 });
+
+export const ACCOUNT_SETTINGS_LIMITED_LIMITS = Object.freeze({
+	displayName: TimeSpanMs(1, 'weeks'),
+} as const satisfies Partial<Record<keyof IDirectoryAccountSettings, number>>);
+
+export const DirectoryAccountSettingsLimitedKeysSchema = z.enum(ParseArrayNotEmpty(KnownObject.keys(ACCOUNT_SETTINGS_LIMITED_LIMITS)));
+export type DirectoryAccountSettingsLimitedKeys = z.infer<typeof DirectoryAccountSettingsLimitedKeysSchema>;
+
+export const DirectoryAccountSettingsCooldownsSchema = z.record(DirectoryAccountSettingsLimitedKeysSchema, z.number().optional());
+export type DirectoryAccountSettingsCooldowns = z.infer<typeof DirectoryAccountSettingsCooldownsSchema>;
 
 // TODO: This needs reasonable size limits
 export const AccountCryptoKeySchema = z.object({
@@ -120,6 +132,7 @@ export type IDirectoryAccountInfo = {
 	/** Limit of how many rooms this account can own */
 	roomOwnershipLimit: number;
 	settings: IDirectoryAccountSettings;
+	settingsCooldowns: DirectoryAccountSettingsCooldowns;
 	cryptoKey?: IAccountCryptoKey;
 };
 

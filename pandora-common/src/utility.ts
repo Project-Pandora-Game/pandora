@@ -200,6 +200,32 @@ export function FormatTimeInterval(time: number, mode: 'full' | 'short' = 'full'
 	return res;
 }
 
+export type TimeUnit = 'milliseconds' | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks';
+
+/**
+ * Converts a time value in specified unit to milliseconds
+ * @param time The time value
+ * @param unit The unit of the time value
+ * @returns The time value in milliseconds
+ */
+export function TimeSpanMs(time: number, unit: TimeUnit): number {
+	switch (unit) {
+		case 'milliseconds':
+			return time;
+		case 'seconds':
+			return time * 1000;
+		case 'minutes':
+			return time * 1000 * 60;
+		case 'hours':
+			return time * 1000 * 60 * 60;
+		case 'days':
+			return time * 1000 * 60 * 60 * 24;
+		case 'weeks':
+			return time * 1000 * 60 * 60 * 24 * 7;
+	}
+	AssertNever(unit);
+}
+
 export function MessageSubstitute(originalMessage: string, substitutions: Readonly<Record<string, string>>): string {
 	let message = originalMessage;
 	for (const [key, value] of Object

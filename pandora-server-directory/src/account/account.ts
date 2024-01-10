@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient, Assert, OutfitMeasureCost, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, AsyncSynchronized, AssetFrameworkOutfitWithId, AccountPublicInfo } from 'pandora-common';
+import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient, Assert, OutfitMeasureCost, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, AsyncSynchronized, AssetFrameworkOutfitWithId, AccountPublicInfo, KnownObject, ACCOUNT_SETTINGS_LIMITED_LIMITS } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { CharacterInfo } from './character';
 import { ENV } from '../config';
@@ -8,7 +8,7 @@ import { AccountRoles } from './accountRoles';
 import { AccountDirectMessages } from './accountDirectMessages';
 import type { ClientConnection } from '../networking/connection_client';
 import { AccountContacts } from './accountContacts';
-import { DatabaseAccount, DatabaseAccountWithSecure, DirectMessageAccounts } from '../database/databaseStructure';
+import { DatabaseAccount, DatabaseAccountUpdate, DatabaseAccountWithSecure, DirectMessageAccounts } from '../database/databaseStructure';
 
 import _, { cloneDeep, omit, uniq } from 'lodash';
 
@@ -36,9 +36,8 @@ export class Account {
 		return this.data.username;
 	}
 
-	/** TODO: Allow choosing custom display name instead of always showing a username */
 	public get displayName(): string {
-		return this.data.username;
+		return this.data.settings.displayName ?? this.data.username;
 	}
 
 	constructor(data: DatabaseAccountWithSecure) {
@@ -87,6 +86,7 @@ export class Account {
 			roles: this.roles.getSelfInfo(),
 			roomOwnershipLimit: this.roomOwnershipLimit,
 			settings: _.cloneDeep(this.data.settings),
+			settingsCooldowns: _.cloneDeep(this.data.settingsCooldowns),
 			cryptoKey: this.secure.getCryptoKey(),
 		};
 	}
@@ -115,11 +115,38 @@ export class Account {
 			settings.visibleRoles = uniq(settings.visibleRoles.filter((role) => this.roles.isAuthorized(role)));
 		}
 
-		this.data.settings = { ...this.data.settings, ...settings };
+		const db = GetDatabase();
+		const update: DatabaseAccountUpdate = {};
 
-		await GetDatabase().updateAccountData(this.data.id, {
-			settings: this.data.settings,
-		});
+		const now = Date.now();
+		for (const [key, limit] of KnownObject.entries(ACCOUNT_SETTINGS_LIMITED_LIMITS)) {
+			if (limit == null || !(key in settings))
+				continue;
+
+			const cooldown = this.data.settingsCooldowns[key] ?? 0;
+			if (cooldown > now) {
+				delete settings[key];
+				continue;
+			}
+
+			let settingsCooldowns = update.settingsCooldowns;
+			if (!settingsCooldowns) {
+				settingsCooldowns = cloneDeep(this.data.settingsCooldowns);
+				update.settingsCooldowns = settingsCooldowns;
+			}
+
+			settingsCooldowns[key] = limit + now;
+		}
+
+		if (settings.displayName === this.data.username)
+			settings.displayName = null;
+		if (update.settingsCooldowns != null)
+			this.data.settingsCooldowns = update.settingsCooldowns;
+
+		this.data.settings = { ...this.data.settings, ...settings };
+		update.settings = this.data.settings;
+
+		await db.updateAccountData(this.data.id, update);
 		this.onAccountInfoChange();
 	}
 
@@ -250,6 +277,7 @@ export async function CreateAccountData(username: string, password: string, emai
 		profileDescription: '',
 		characters: [],
 		settings: cloneDeep(ACCOUNT_SETTINGS_DEFAULT),
+		settingsCooldowns: {},
 		storedOutfits: [],
 		secure: await GenerateAccountSecureData(password, email, activated),
 	};

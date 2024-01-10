@@ -5,7 +5,7 @@ const { DATABASE_TYPE } = ENV;
 import type { CharacterId, IChatRoomData, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryDirectMessage, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId, Service, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
 import type { IChatRoomCreationData } from './dbHelper';
 import { ServiceInit } from 'pandora-common';
-import { DatabaseAccount, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType } from './databaseStructure';
+import { DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate } from './databaseStructure';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
@@ -46,7 +46,7 @@ export interface PandoraDatabase extends Service {
 	 * @param id - Account id
 	 * @param data - Settings data
 	 */
-	updateAccountData(id: AccountId, data: Partial<Pick<DatabaseAccount, DatabaseAccountUpdateableProperties>>): Promise<void>;
+	updateAccountData(id: AccountId, data: DatabaseAccountUpdate): Promise<void>;
 
 	/**
 	 * Sets account's secure data use should only be used in AccountSecure class

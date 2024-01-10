@@ -154,6 +154,9 @@ export const IsUndefined = (value: unknown): value is undefined => value === und
 export const UserNameSchema = z.string().min(3).max(LIMIT_ACCOUNT_NAME_LENGTH).regex(/^[a-zA-Z0-9_-]*$/);
 export const IsUsername = ZodMatcher(UserNameSchema);
 
+export const DisplayNameSchema = z.string().min(3).max(LIMIT_ACCOUNT_NAME_LENGTH).regex(/^[a-zA-Z0-9_\- ]*$/).regex(ZodTrimedRegex);
+export const IsDisplayName = ZodMatcher(DisplayNameSchema);
+
 /** Name of a character */
 export const CharacterNameSchema = z.string().max(LIMIT_CHARACTER_NAME_LENGTH).regex(/^[a-zA-Z0-9_\- ]*$/).regex(ZodTrimedRegex);
 /** Name of a character as entered by user; further limits allowed values */

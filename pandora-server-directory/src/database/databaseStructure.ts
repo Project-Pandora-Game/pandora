@@ -4,7 +4,9 @@ import {
 	AccountCryptoKeySchema,
 	AccountId,
 	AccountIdSchema,
+	ArrayToRecordKeys,
 	AssetFrameworkOutfitWithIdSchema,
+	DirectoryAccountSettingsCooldownsSchema,
 	DirectoryAccountSettingsSchema,
 	IAccountRoleManageInfo,
 	IBetaKeyInfo,
@@ -66,6 +68,7 @@ export const DatabaseAccountSchema = z.object({
 	profileDescription: z.string().default('').transform(ZodTruncate(LIMIT_ACCOUNT_PROFILE_LENGTH)),
 	characters: ZodCast<ICharacterSelfInfoDb>().array(),
 	settings: DirectoryAccountSettingsSchema.catch(() => cloneDeep(ACCOUNT_SETTINGS_DEFAULT)),
+	settingsCooldowns: DirectoryAccountSettingsCooldownsSchema.catch(() => ({})),
 	directMessages: ZodCast<DatabaseDirectMessageInfo>().array().optional(),
 	storedOutfits: AssetFrameworkOutfitWithIdSchema.array().catch(() => []),
 });
@@ -77,10 +80,14 @@ export const DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES = [
 	'profileDescription',
 	'characters',
 	'settings',
+	'settingsCooldowns',
 	'directMessages',
 	'storedOutfits',
-] satisfies readonly (keyof DatabaseAccount)[];
+] as const satisfies readonly (keyof DatabaseAccount)[];
 export type DatabaseAccountUpdateableProperties = (typeof DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES)[number];
+
+export const DatabaseAccountUpdateSchema = DatabaseAccountSchema.pick(ArrayToRecordKeys(DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, true)).partial();
+export type DatabaseAccountUpdate = z.infer<typeof DatabaseAccountUpdateSchema>;
 
 export type DatabaseAccountContactType = {
 	type: 'friend' | 'mutualBlock';

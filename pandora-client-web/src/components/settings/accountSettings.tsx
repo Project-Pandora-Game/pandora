@@ -1,7 +1,7 @@
 import React, { ReactElement, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { AccountRole, ACCOUNT_ROLES_CONFIG, EMPTY, IDirectoryAccountInfo, IsAuthorized } from 'pandora-common';
+import { AccountRole, ACCOUNT_ROLES_CONFIG, EMPTY, IDirectoryAccountInfo, IsAuthorized, TimeSpanMs, ACCOUNT_SETTINGS_LIMITED_LIMITS, FormatTimeInterval } from 'pandora-common';
 import { useEvent } from '../../common/useEvent';
 import { useMounted } from '../../common/useMounted';
 import { Button } from '../common/button/button';
@@ -11,6 +11,7 @@ import { ColorInput } from '../common/colorInput/colorInput';
 import { useColorInput } from '../../common/useColorInput';
 import { useConfirmDialog } from '../dialog/dialog';
 import { useNavigate } from 'react-router-dom';
+import { useCurrentTime } from '../../common/useCurrentTime';
 
 export function AccountSettings(): ReactElement | null {
 	const navigate = useNavigate();
@@ -33,6 +34,7 @@ export function AccountSettings(): ReactElement | null {
 			<GitHubIntegration account={ account } />
 			<AccountRoleList account={ account } />
 			<LabelColor account={ account } />
+			<DisplayName account={ account } />
 		</>
 	);
 }
@@ -194,6 +196,46 @@ function LabelColor({ account }: { account: IDirectoryAccountInfo; }): ReactElem
 					disabled={ color === account.settings.labelColor?.toUpperCase() }>
 					Save
 				</Button>
+			</div>
+		</fieldset>
+	);
+}
+
+function DisplayName({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+	const directory = useDirectoryConnector();
+	const nextAllowedChange = account.settingsCooldowns.displayName ?? 0;
+	const current = account.settings.displayName ?? account.username;
+	const [name, setName] = useState(current);
+
+	const onSetDisplayName = useEvent(() => {
+		if (name === current)
+			return;
+		if (nextAllowedChange > Date.now()) {
+			toast(`You can change your display name again in ${FormatTimeInterval(nextAllowedChange - Date.now())}`, TOAST_OPTIONS_ERROR);
+			return;
+		}
+		const displayName = account.username === name ? null : name;
+		directory.sendMessage('changeSettings', { displayName });
+	});
+
+	const now = useCurrentTime(TimeSpanMs(1, 'seconds'));
+
+	return (
+		<fieldset>
+			<legend>Display name</legend>
+			<div className='input-row'>
+				<label>Name</label>
+				<input type='text' value={ name } onChange={ (e) => setName(e.target.value) } disabled={ nextAllowedChange > now } />
+				<Button className='slim fadeDisabled' onClick={ onSetDisplayName } disabled={ name === current || nextAllowedChange > now }>Save</Button>
+			</div>
+			<div className='input-row'>
+				{
+					(nextAllowedChange > now) ? (
+						<span>Next change available in { FormatTimeInterval(nextAllowedChange - now) }</span>
+					) : (
+						<span>Display name can be changed only once every { FormatTimeInterval(ACCOUNT_SETTINGS_LIMITED_LIMITS.displayName) }</span>
+					)
+				}
 			</div>
 		</fieldset>
 	);

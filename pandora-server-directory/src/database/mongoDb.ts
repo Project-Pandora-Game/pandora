@@ -3,7 +3,7 @@ import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { ENV } from '../config';
 const { DATABASE_URL, DATABASE_NAME } = ENV;
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType } from './databaseStructure';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate } from './databaseStructure';
 
 import AsyncLock from 'async-lock';
 import { type MatchKeysAndValues, MongoClient, CollationOptions, IndexDescription } from 'mongodb';
@@ -229,7 +229,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		});
 	}
 
-	public async updateAccountData(id: AccountId, data: Partial<Pick<DatabaseAccount, DatabaseAccountUpdateableProperties>>): Promise<void> {
+	public async updateAccountData(id: AccountId, data: DatabaseAccountUpdate): Promise<void> {
 		data = DatabaseAccountSchema
 			.pick(ArrayToRecordKeys(DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, true))
 			.partial()
@@ -255,15 +255,14 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async queryAccountDisplayNames(query: AccountId[]): Promise<Record<AccountId, string>> {
-		// TODO get the actual display name when it's implemented
 		const result: Record<AccountId, string> = {};
 		const accounts = await this._accounts
 			.find({ id: { $in: query } })
-			.project<Pick<DatabaseAccount, 'id' | 'username'>>({ id: 1, username: 1 })
+			.project<Pick<DatabaseAccount, 'id' | 'username' | 'settings'>>({ id: 1, username: 1, settings: 1 })
 			.toArray();
 
 		for (const acc of accounts) {
-			result[acc.id] = acc.username;
+			result[acc.id] = acc.settings.displayName ?? acc.username;
 		}
 		return result;
 	}

@@ -54,23 +54,24 @@ type ChatRoomDeviceProps = {
 	onPointerUp?: (event: FederatedPointerEvent) => void;
 };
 
-export const DeviceOverlaySettingSchema = z.object({
+export const DeviceOverlaySettingSchema = z.enum(['never', 'interactable', 'always']);
+export const DeviceOverlayStateSchema = z.object({
 	roomConstructionMode: z.boolean(),
 	roomId: z.string().nullish(),
 	isPlayerAdmin: z.boolean(),
 	canUseHands: z.boolean(),
-	defaultView: z.enum(['never', 'interactable', 'always']),
 });
-export const DeviceOverlaySetting = BrowserStorage.create('temp-device-overlay-toggle', {
+
+export const DeviceOverlaySetting = BrowserStorage.create('device-overlay-toggle', 'interactable', DeviceOverlaySettingSchema);
+export const DeviceOverlayState = BrowserStorage.createSession('device-overlay-state', {
 	roomConstructionMode: false,
 	roomId: undefined,
 	isPlayerAdmin: false,
 	canUseHands: false,
-	defaultView: 'interactable',
-}, DeviceOverlaySettingSchema);
+}, DeviceOverlayStateSchema);
 
 export function useIsRoomConstructionModeEnabled(): boolean {
-	const { roomConstructionMode } = useObservable(DeviceOverlaySetting);
+	const { roomConstructionMode } = useObservable(DeviceOverlayState);
 	return roomConstructionMode;
 }
 
@@ -296,7 +297,8 @@ export function ChatRoomDeviceInteractive({
 	});
 
 	// Overlay graphics
-	const { roomConstructionMode, defaultView } = useObservable(DeviceOverlaySetting);
+	const defaultView = useObservable(DeviceOverlaySetting);
+	const roomConstructionMode = useIsRoomConstructionModeEnabled();
 	const showOverlaySetting = roomConstructionMode ? 'always' : defaultView;
 
 	const canInteractNormally = Object.keys(asset.definition.slots).length > 0;

@@ -11,7 +11,7 @@ import { ChatroomDebugConfigView } from './chatroomDebug';
 import { Column, Row } from '../common/container/container';
 import { Character, useCharacterData, useCharacterRestrictionManager } from '../../character/character';
 import { CharacterRestrictionOverrideWarningContent, useRestrictionOverrideDialogContext, GetRestrictionOverrideText } from '../characterRestrictionOverride/characterRestrictionOverride';
-import { DeviceOverlaySetting, DeviceOverlaySettingSchema } from './chatRoomDevice';
+import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState } from './chatRoomDevice';
 import { useObservable } from '../../observable';
 import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
 import { Select } from '../common/select/select';
@@ -113,7 +113,7 @@ export function PersonalRoomControls(): ReactElement {
 }
 
 export function useRoomConstructionModeCheck() {
-	const value = useObservable(DeviceOverlaySetting);
+	const value = useObservable(DeviceOverlayState);
 	const currentAccount = useCurrentAccount();
 	const chatRoomInfo = useChatRoomInfo();
 	const isPlayerAdmin = IsChatroomAdmin(chatRoomInfo.config, currentAccount);
@@ -122,7 +122,7 @@ export function useRoomConstructionModeCheck() {
 	const canUseHands = useCharacterRestrictionManager(player, playerState, room).canUseHands();
 
 	useEffect(() => {
-		let nextValue = DeviceOverlaySetting.value;
+		let nextValue = DeviceOverlayState.value;
 		if (value.roomId !== chatRoomInfo.id) {
 			nextValue = {
 				...nextValue,
@@ -144,25 +144,23 @@ export function useRoomConstructionModeCheck() {
 				canUseHands,
 			};
 		}
-		DeviceOverlaySetting.value = nextValue;
+		DeviceOverlayState.value = nextValue;
 	}, [value, chatRoomInfo.id, isPlayerAdmin, canUseHands]);
 }
 
 function DeviceOverlaySelector(): ReactElement {
-	const { roomConstructionMode, defaultView, isPlayerAdmin, canUseHands } = useObservable(DeviceOverlaySetting);
+	const { roomConstructionMode, isPlayerAdmin, canUseHands } = useObservable(DeviceOverlayState);
+	const defaultView = useObservable(DeviceOverlaySetting);
 
 	const onRoomConstructionModeChange = () => {
-		DeviceOverlaySetting.value = {
-			...DeviceOverlaySetting.value,
+		DeviceOverlayState.value = {
+			...DeviceOverlayState.value,
 			roomConstructionMode: !roomConstructionMode && isPlayerAdmin && canUseHands,
 		};
 	};
 
 	const onSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		DeviceOverlaySetting.value = DeviceOverlaySettingSchema.parse({
-			...DeviceOverlaySetting.value,
-			defaultView: e.target.value,
-		});
+		DeviceOverlaySetting.value = DeviceOverlaySettingSchema.parse(e.target.value);
 	};
 
 	return (

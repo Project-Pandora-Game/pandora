@@ -141,7 +141,7 @@ export class MockDatabase implements PandoraDatabase {
 		const result: Record<AccountId, string> = {};
 		for (const acc of this.accountDbView) {
 			if (query.includes(acc.id))
-				result[acc.id] = acc.settingsLimited.displayName.value;
+				result[acc.id] = acc.settingsLimited.displayName.value ?? acc.username;
 		}
 		return Promise.resolve(result);
 	}

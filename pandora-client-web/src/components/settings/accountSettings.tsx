@@ -204,17 +204,19 @@ function LabelColor({ account }: { account: IDirectoryAccountInfo; }): ReactElem
 function DisplayName({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
 	const directory = useDirectoryConnector();
 	const { value, nextAllowedChange } = account.settingsLimited.displayName;
-	const [name, setName] = useState(value);
+	const actualValue = value ?? account.username;
+	const [name, setName] = useState(actualValue);
 
 	const [onSetDisplayName, processing] = useAsyncEvent(
 		async () => {
-			if (name === value)
+			if (name === actualValue)
 				return;
 			if (nextAllowedChange && nextAllowedChange > Date.now()) {
 				toast(`You can change your display name again in ${FormatTimeInterval(nextAllowedChange - Date.now())}`, TOAST_OPTIONS_ERROR);
 				return;
 			}
-			return await directory.awaitResponse('changeSettingsLimited', { displayName: name });
+			const displayName = account.username === actualValue ? null : actualValue;
+			return await directory.awaitResponse('changeSettingsLimited', { displayName });
 		},
 		(r) => {
 			if (r?.result !== 'ok') {
@@ -232,7 +234,7 @@ function DisplayName({ account }: { account: IDirectoryAccountInfo; }): ReactEle
 			<div className='input-row'>
 				<label>Name</label>
 				<input type='text' value={ name } onChange={ (e) => setName(e.target.value) } />
-				<Button className='slim fadeDisabled' onClick={ onSetDisplayName } disabled={ processing || name === value || nextAllowedChange > now }>Save</Button>
+				<Button className='slim fadeDisabled' onClick={ onSetDisplayName } disabled={ processing || name === actualValue || nextAllowedChange > now }>Save</Button>
 			</div>
 			<div className='input-row'>
 				{

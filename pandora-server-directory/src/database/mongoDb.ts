@@ -258,11 +258,11 @@ export default class MongoDatabase implements PandoraDatabase {
 		const result: Record<AccountId, string> = {};
 		const accounts = await this._accounts
 			.find({ id: { $in: query } })
-			.project<Pick<DatabaseAccount, 'id' | 'settingsLimited'>>({ id: 1, settingsLimited: 1 })
+			.project<Pick<DatabaseAccount, 'id' | 'username' | 'settingsLimited'>>({ id: 1, username: 1, settingsLimited: 1 })
 			.toArray();
 
 		for (const acc of accounts) {
-			result[acc.id] = acc.settingsLimited.displayName.value;
+			result[acc.id] = acc.settingsLimited.displayName.value ?? acc.username;
 		}
 		return result;
 	}
@@ -520,8 +520,6 @@ export default class MongoDatabase implements PandoraDatabase {
 		// insert migration code here
 		for await (const account of this._accounts.find()) {
 			const settingsLimited = _.cloneDeep(ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT);
-			settingsLimited.displayName.value = account.username;
-
 			await this._accounts.updateOne({ id: account.id }, { $set: { settingsLimited } });
 		}
 	}

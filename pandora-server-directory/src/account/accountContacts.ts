@@ -349,7 +349,7 @@ export class AccountContacts {
 		}
 	}
 
-	public _updateStatus(): void {
+	private _updateStatus(): void {
 		const status = this.getStatus();
 		if (_.isEqual(status, this.lastStatus)) {
 			return;

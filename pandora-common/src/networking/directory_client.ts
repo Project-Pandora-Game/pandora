@@ -102,12 +102,12 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>
 });
 
 export const DirectoryAccountSettingsLimitedSchema = z.object({
-	displayName: DisplayNameSchema,
+	displayName: DisplayNameSchema.nullable(),
 });
-export type IDirectoryAccountSettingsLimited = z.infer<typeof DirectoryAccountSettingsLimitedSchema>;
+export type DirectoryAccountSettingsLimited = z.infer<typeof DirectoryAccountSettingsLimitedSchema>;
 
 type DirectoryAccountSettingsLimitedStoredSchemaAcc = {
-	[K in keyof IDirectoryAccountSettingsLimited]: ZodObject<{
+	[K in keyof DirectoryAccountSettingsLimited]: ZodObject<{
 		value: typeof DirectoryAccountSettingsLimitedSchema.shape[K];
 		nextAllowedChange: ZodNumber;
 	}>;
@@ -125,14 +125,14 @@ export const DirectoryAccountSettingsLimitedStoredSchema = z.object(
 		{} as DirectoryAccountSettingsLimitedStoredSchemaAcc,
 	),
 );
-export type IDirectoryAccountSettingsLimitedStored = z.infer<typeof DirectoryAccountSettingsLimitedStoredSchema>;
+export type DirectoryAccountSettingsLimitedStored = z.infer<typeof DirectoryAccountSettingsLimitedStoredSchema>;
 
-export const ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT = Object.freeze<IDirectoryAccountSettingsLimitedStored>({
-	displayName: { value: '', nextAllowedChange: 0 },
+export const ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT = Object.freeze<DirectoryAccountSettingsLimitedStored>({
+	displayName: { value: null, nextAllowedChange: 0 },
 });
 
-export const ACCOUNT_SETTINGS_LIMITED_LIMITS = Object.freeze<Readonly<Record<keyof IDirectoryAccountSettingsLimited, number>>>({
-	displayName: TimeSpanMs(1, 'months'),
+export const ACCOUNT_SETTINGS_LIMITED_LIMITS = Object.freeze<Readonly<Record<keyof DirectoryAccountSettingsLimited, number>>>({
+	displayName: TimeSpanMs(1, 'weeks'),
 });
 
 // TODO: This needs reasonable size limits
@@ -154,7 +154,7 @@ export type IDirectoryAccountInfo = {
 	/** Limit of how many rooms this account can own */
 	roomOwnershipLimit: number;
 	settings: IDirectoryAccountSettings;
-	settingsLimited: IDirectoryAccountSettingsLimitedStored;
+	settingsLimited: DirectoryAccountSettingsLimitedStored;
 	cryptoKey?: IAccountCryptoKey;
 };
 

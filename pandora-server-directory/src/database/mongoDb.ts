@@ -3,7 +3,7 @@ import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { ENV } from '../config';
 const { DATABASE_URL, DATABASE_NAME } = ENV;
 import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdateableProperties, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType } from './databaseStructure';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate } from './databaseStructure';
 
 import AsyncLock from 'async-lock';
 import { type MatchKeysAndValues, MongoClient, CollationOptions, IndexDescription } from 'mongodb';
@@ -229,7 +229,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		});
 	}
 
-	public async updateAccountData(id: AccountId, data: Partial<Pick<DatabaseAccount, DatabaseAccountUpdateableProperties>>): Promise<void> {
+	public async updateAccountData(id: AccountId, data: DatabaseAccountUpdate): Promise<void> {
 		data = DatabaseAccountSchema
 			.pick(ArrayToRecordKeys(DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, true))
 			.partial()

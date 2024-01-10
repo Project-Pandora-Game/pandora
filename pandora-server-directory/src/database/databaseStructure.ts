@@ -4,6 +4,7 @@ import {
 	AccountCryptoKeySchema,
 	AccountId,
 	AccountIdSchema,
+	ArrayToRecordKeys,
 	AssetFrameworkOutfitWithIdSchema,
 	DirectoryAccountSettingsCooldownsSchema,
 	DirectoryAccountSettingsSchema,
@@ -82,8 +83,11 @@ export const DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES = [
 	'settingsCooldowns',
 	'directMessages',
 	'storedOutfits',
-] satisfies readonly (keyof DatabaseAccount)[];
+] as const satisfies readonly (keyof DatabaseAccount)[];
 export type DatabaseAccountUpdateableProperties = (typeof DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES)[number];
+
+export const DatabaseAccountUpdateSchema = DatabaseAccountSchema.pick(ArrayToRecordKeys(DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, true)).partial();
+export type DatabaseAccountUpdate = z.infer<typeof DatabaseAccountUpdateSchema>;
 
 export type DatabaseAccountContactType = {
 	type: 'friend' | 'mutualBlock';

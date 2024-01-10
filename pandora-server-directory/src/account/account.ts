@@ -8,7 +8,7 @@ import { AccountRoles } from './accountRoles';
 import { AccountDirectMessages } from './accountDirectMessages';
 import type { ClientConnection } from '../networking/connection_client';
 import { AccountContacts } from './accountContacts';
-import { DatabaseAccount, DatabaseAccountWithSecure, DirectMessageAccounts } from '../database/databaseStructure';
+import { DatabaseAccount, DatabaseAccountUpdate, DatabaseAccountWithSecure, DirectMessageAccounts } from '../database/databaseStructure';
 
 import _, { cloneDeep, omit, uniq } from 'lodash';
 
@@ -116,7 +116,7 @@ export class Account {
 		}
 
 		const db = GetDatabase();
-		const update: Parameters<(typeof db)['updateAccountData']>['1'] = {};
+		const update: DatabaseAccountUpdate = {};
 
 		const now = Date.now();
 		for (const [key, limit] of KnownObject.entries(ACCOUNT_SETTINGS_LIMITED_LIMITS)) {

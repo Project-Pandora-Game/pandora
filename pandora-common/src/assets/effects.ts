@@ -32,11 +32,6 @@ export type EffectsDefinition = MuffleSettings & {
 	 * - 10 = completely blind
 	 */
 	blind: number;
-
-	/**
-	 * Allows this item to work as a room construction tool - enabling admins to edit room and room devices while holding it.
-	 */
-	toolRoomConstruction: boolean;
 };
 
 export const EFFECTS_DEFAULT: EffectsDefault = {
@@ -55,7 +50,6 @@ export const EFFECTS_DEFAULT: EffectsDefault = {
 	blockRoomMovement: false,
 	blockRoomLeave: false,
 	blind: 0,
-	toolRoomConstruction: false,
 };
 
 //#endregion

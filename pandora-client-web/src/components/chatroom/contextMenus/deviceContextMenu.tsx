@@ -17,6 +17,7 @@ import { toast } from 'react-toastify';
 import { ActionWarningContent } from '../../wardrobe/wardrobeComponents';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 import { omit } from 'lodash';
+import { useIsRoomConstructionModeEnabled } from '../chatRoomDevice';
 
 function StoreDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;
@@ -32,11 +33,20 @@ function StoreDeviceMenu({ device, close }: {
 		deployment: { deployed: false },
 	}), [device]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
-	const available = checkResult != null && checkResult.problems.length === 0;
+	const roomConstructionMode = useIsRoomConstructionModeEnabled();
+	const available = roomConstructionMode && checkResult != null && checkResult.problems.length === 0;
 	const [execute, processing] = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
 
+	const onClick = () => {
+		if (!roomConstructionMode) {
+			toast('You must be in room construction mode to store devices', TOAST_OPTIONS_WARNING);
+			return;
+		}
+		execute();
+	};
+
 	return (
-		<button onClick={ execute } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
+		<button onClick={ onClick } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
 			Store the device
 		</button>
 	);
@@ -57,21 +67,24 @@ function MoveDeviceMenu({ device, setChatRoomMode, close }: {
 		deployment: { deployed: true, position: omit(device.deployment, 'deployed') },
 	}), [device]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
-	const available = checkResult != null && checkResult.problems.length === 0;
+	const roomConstructionMode = useIsRoomConstructionModeEnabled();
+	const available = roomConstructionMode && checkResult != null && checkResult.problems.length === 0;
+
+	const onClick = () => {
+		if (!roomConstructionMode) {
+			toast('You must be in room construction mode to move devices', TOAST_OPTIONS_WARNING);
+			return;
+		}
+		if (checkResult != null && (!checkResult.valid || checkResult.problems.length > 0)) {
+			toast(<ActionWarningContent problems={ checkResult.problems } />, TOAST_OPTIONS_WARNING);
+			return;
+		}
+		setChatRoomMode({ mode: 'moveDevice', deviceItemId: device.id });
+		close();
+	};
 
 	return (
-		<button
-			onClick={ () => {
-				if (checkResult != null && (!checkResult.valid || checkResult.problems.length > 0)) {
-					toast(<ActionWarningContent problems={ checkResult.problems } />, TOAST_OPTIONS_WARNING);
-					return;
-				}
-
-				setChatRoomMode({ mode: 'moveDevice', deviceItemId: device.id });
-				close();
-			} }
-			className={ available ? '' : 'text-strikethrough' }
-		>
+		<button onClick={ onClick } className={ available ? '' : 'text-strikethrough' }>
 			Move
 		</button>
 	);

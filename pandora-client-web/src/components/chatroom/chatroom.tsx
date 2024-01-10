@@ -8,7 +8,7 @@ import { WardrobePoseGui } from '../wardrobe/views/wardrobePoseView';
 import { usePlayerState } from '../gameContext/playerContextProvider';
 import { Chat } from './chat';
 import { Scrollable } from '../common/scrollbar/scrollbar';
-import { ChatroomControls, PersonalRoomControls } from './chatroomControls';
+import { ChatroomControls, PersonalRoomControls, useRoomConstructionModeCheck } from './chatroomControls';
 import './chatroom.scss';
 import { useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 import { useIsPortrait } from '../../styles/mediaQueries';
@@ -18,6 +18,7 @@ export function Chatroom(): ReactElement | null {
 	const { interfaceChatroomGraphicsRatioHorizontal, interfaceChatroomGraphicsRatioVertical } = useCurrentAccountSettings();
 	const isPortrait = useIsPortrait();
 	const roomInfo = useChatRoomInfo();
+	useRoomConstructionModeCheck();
 
 	const chatroomGraphicsRatio = isPortrait ? interfaceChatroomGraphicsRatioVertical : interfaceChatroomGraphicsRatioHorizontal;
 	const chatroomChatRatio = 10 - chatroomGraphicsRatio;

@@ -82,6 +82,14 @@
 	}
 }
 
+.room-construction-mode {
+	.error {
+		color: $theme-error;
+		font-weight: bold;
+		margin: auto 0;
+	}
+}
+
 .chatArea {
 	background-color: #333;
 	display: flex;

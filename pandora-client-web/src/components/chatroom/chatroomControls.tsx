@@ -1,21 +1,22 @@
 import React, {
-	ReactElement,
+	ReactElement, useEffect,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../common/button/button';
-import { useChatRoomCharacters, useCharacterState, useChatRoomInfo, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
-import { usePlayerId, usePlayer } from '../gameContext/playerContextProvider';
+import { useChatRoomCharacters, useCharacterState, useChatRoomInfo, useChatroomRequired, IsChatroomAdmin, useActionRoomContext } from '../gameContext/chatRoomContextProvider';
+import { usePlayerId, usePlayer, usePlayerState } from '../gameContext/playerContextProvider';
 import { useChatInput } from './chatInput';
 import { USER_DEBUG } from '../../config/Environment';
 import { ChatroomDebugConfigView } from './chatroomDebug';
 import { Column, Row } from '../common/container/container';
-import { Character, useCharacterData } from '../../character/character';
+import { Character, useCharacterData, useCharacterRestrictionManager } from '../../character/character';
 import { CharacterRestrictionOverrideWarningContent, useRestrictionOverrideDialogContext, GetRestrictionOverrideText } from '../characterRestrictionOverride/characterRestrictionOverride';
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema } from './chatRoomDevice';
 import { useObservable } from '../../observable';
 import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
 import { Select } from '../common/select/select';
 import { ContextHelpButton } from '../help/contextHelpButton';
+import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
 
 export function ChatroomControls(): ReactElement | null {
 	const roomInfo = useChatRoomInfo().config;
@@ -111,30 +112,97 @@ export function PersonalRoomControls(): ReactElement {
 	);
 }
 
+export function useRoomConstructionModeCheck() {
+	const value = useObservable(DeviceOverlaySetting);
+	const currentAccount = useCurrentAccount();
+	const chatRoomInfo = useChatRoomInfo();
+	const isPlayerAdmin = IsChatroomAdmin(chatRoomInfo.config, currentAccount);
+	const { player, playerState } = usePlayerState();
+	const room = useActionRoomContext();
+	const canUseHands = useCharacterRestrictionManager(player, playerState, room).canUseHands();
+
+	useEffect(() => {
+		let nextValue = DeviceOverlaySetting.value;
+		if (value.roomId !== chatRoomInfo.id) {
+			nextValue = {
+				...nextValue,
+				roomConstructionMode: false,
+				roomId: chatRoomInfo.id,
+			};
+		}
+		if (isPlayerAdmin !== value.isPlayerAdmin) {
+			nextValue = {
+				...nextValue,
+				roomConstructionMode: nextValue.roomConstructionMode && isPlayerAdmin,
+				isPlayerAdmin,
+			};
+		}
+		if (canUseHands !== value.canUseHands) {
+			nextValue = {
+				...nextValue,
+				roomConstructionMode: nextValue.roomConstructionMode && canUseHands,
+				canUseHands,
+			};
+		}
+		DeviceOverlaySetting.value = nextValue;
+	}, [value, chatRoomInfo.id, isPlayerAdmin, canUseHands]);
+}
+
 function DeviceOverlaySelector(): ReactElement {
-	const deviceOverlaySetting = useObservable(DeviceOverlaySetting);
+	const { roomConstructionMode, defaultView, isPlayerAdmin, canUseHands } = useObservable(DeviceOverlaySetting);
+
+	const onRoomConstructionModeChange = () => {
+		DeviceOverlaySetting.value = {
+			...DeviceOverlaySetting.value,
+			roomConstructionMode: !roomConstructionMode && isPlayerAdmin && canUseHands,
+		};
+	};
+
+	const onSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+		DeviceOverlaySetting.value = DeviceOverlaySettingSchema.parse({
+			...DeviceOverlaySetting.value,
+			defaultView: e.target.value,
+		});
+	};
 
 	return (
-		<div>
-			<label htmlFor='chatroom-device-overlay'>Show device movement area overlay</label>
-			{ ' ' }
-			<Select
-				value={ deviceOverlaySetting }
-				onChange={ (e) => {
-					DeviceOverlaySetting.value = DeviceOverlaySettingSchema.parse(e.target.value);
-				} }
-			>
-				<option value='never'>
-					Never (enterable devices can still be interacted with)
-				</option>
-				<option value='interactable'>
-					For enterable devices only
-				</option>
-				<option value='always'>
-					For all devices
-				</option>
-			</Select>
-		</div>
+		<>
+			<Row padding='small' className='room-construction-mode'>
+				<Button onClick={ onRoomConstructionModeChange } className='fadeDisabled' disabled={ !isPlayerAdmin || !canUseHands }>
+					{ roomConstructionMode ? 'Disable' : 'Enable' } room construction mode
+				</Button>
+				{
+					!isPlayerAdmin ? (
+						<span className='error'>
+							You must be an admin to use this feature
+						</span>
+					) : !canUseHands ? (
+						<span className='error'>
+							You must be able to use your hands to use this feature
+						</span>
+					) : null
+				}
+			</Row>
+			<br />
+			<div >
+				<label htmlFor='chatroom-device-overlay'>Show device movement area overlay</label>
+				{ ' ' }
+				<Select
+					value={ defaultView }
+					onChange={ onSelectionChange }
+				>
+					<option value='never'>
+						Never (enterable devices can still be interacted with)
+					</option>
+					<option value='interactable'>
+						For enterable devices only
+					</option>
+					<option value='always'>
+						For all devices
+					</option>
+				</Select>
+			</div>
+		</>
 	);
 }
 

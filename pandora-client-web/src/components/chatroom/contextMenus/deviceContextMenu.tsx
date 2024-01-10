@@ -42,10 +42,6 @@ function StoreDeviceMenu({ device, close }: {
 			toast('You must be in room construction mode to store devices', TOAST_OPTIONS_WARNING);
 			return;
 		}
-		if (checkResult != null && (!checkResult.valid || checkResult.problems.length > 0)) {
-			toast(<ActionWarningContent problems={ checkResult.problems } />, TOAST_OPTIONS_WARNING);
-			return;
-		}
 		execute();
 	};
 

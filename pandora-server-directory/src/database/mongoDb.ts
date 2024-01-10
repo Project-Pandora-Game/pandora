@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { ENV } from '../config';
 const { DATABASE_URL, DATABASE_NAME } = ENV;
@@ -258,11 +258,11 @@ export default class MongoDatabase implements PandoraDatabase {
 		const result: Record<AccountId, string> = {};
 		const accounts = await this._accounts
 			.find({ id: { $in: query } })
-			.project<Pick<DatabaseAccount, 'id' | 'username' | 'settingsLimited'>>({ id: 1, username: 1, settingsLimited: 1 })
+			.project<Pick<DatabaseAccount, 'id' | 'username' | 'settings'>>({ id: 1, username: 1, settings: 1 })
 			.toArray();
 
 		for (const acc of accounts) {
-			result[acc.id] = acc.settingsLimited.displayName.value ?? acc.username;
+			result[acc.id] = acc.settings.displayName ?? acc.username;
 		}
 		return result;
 	}
@@ -518,10 +518,6 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	private async _doMigrations(): Promise<void> {
 		// insert migration code here
-		for await (const account of this._accounts.find()) {
-			const settingsLimited = _.cloneDeep(ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT);
-			await this._accounts.updateOne({ id: account.id }, { $set: { settingsLimited } });
-		}
 	}
 }
 

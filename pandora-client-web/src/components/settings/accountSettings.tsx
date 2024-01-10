@@ -2,7 +2,7 @@ import React, { ReactElement, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { AccountRole, ACCOUNT_ROLES_CONFIG, EMPTY, IDirectoryAccountInfo, IsAuthorized, TimeSpanMs, ACCOUNT_SETTINGS_LIMITED_LIMITS, FormatTimeInterval } from 'pandora-common';
-import { useAsyncEvent, useEvent } from '../../common/useEvent';
+import { useEvent } from '../../common/useEvent';
 import { useMounted } from '../../common/useMounted';
 import { Button } from '../common/button/button';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
@@ -203,28 +203,20 @@ function LabelColor({ account }: { account: IDirectoryAccountInfo; }): ReactElem
 
 function DisplayName({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
 	const directory = useDirectoryConnector();
-	const { value, nextAllowedChange } = account.settingsLimited.displayName;
-	const actualValue = value ?? account.username;
-	const [name, setName] = useState(actualValue);
+	const nextAllowedChange = account.settingsCooldowns.displayName ?? 0;
+	const current = account.settings.displayName ?? account.username;
+	const [name, setName] = useState(current);
 
-	const [onSetDisplayName, processing] = useAsyncEvent(
-		async () => {
-			if (name === actualValue)
-				return;
-			if (nextAllowedChange && nextAllowedChange > Date.now()) {
-				toast(`You can change your display name again in ${FormatTimeInterval(nextAllowedChange - Date.now())}`, TOAST_OPTIONS_ERROR);
-				return;
-			}
-			const displayName = account.username === actualValue ? null : actualValue;
-			return await directory.awaitResponse('changeSettingsLimited', { displayName });
-		},
-		(r) => {
-			if (r?.result !== 'ok') {
-				toast('Failed to change display name', TOAST_OPTIONS_ERROR);
-				return;
-			}
-		},
-	);
+	const onSetDisplayName = useEvent(() => {
+		if (name === current)
+			return;
+		if (nextAllowedChange && nextAllowedChange > Date.now()) {
+			toast(`You can change your display name again in ${FormatTimeInterval(nextAllowedChange - Date.now())}`, TOAST_OPTIONS_ERROR);
+			return;
+		}
+		const displayName = account.username === current ? null : current;
+		directory.sendMessage('changeSettings', { displayName });
+	});
 
 	const now = useCurrentTime(TimeSpanMs(1, 'seconds'));
 
@@ -234,7 +226,7 @@ function DisplayName({ account }: { account: IDirectoryAccountInfo; }): ReactEle
 			<div className='input-row'>
 				<label>Name</label>
 				<input type='text' value={ name } onChange={ (e) => setName(e.target.value) } />
-				<Button className='slim fadeDisabled' onClick={ onSetDisplayName } disabled={ processing || name === actualValue || nextAllowedChange > now }>Save</Button>
+				<Button className='slim fadeDisabled' onClick={ onSetDisplayName } disabled={ name === current || nextAllowedChange > now }>Save</Button>
 			</div>
 			<div className='input-row'>
 				{

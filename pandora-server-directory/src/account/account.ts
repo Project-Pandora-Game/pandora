@@ -1,4 +1,4 @@
-import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient, Assert, OutfitMeasureCost, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, AsyncSynchronized, AssetFrameworkOutfitWithId, AccountPublicInfo, ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT, DirectoryAccountSettingsLimited, KnownObject, ACCOUNT_SETTINGS_LIMITED_LIMITS } from 'pandora-common';
+import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient, Assert, OutfitMeasureCost, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, AsyncSynchronized, AssetFrameworkOutfitWithId, AccountPublicInfo, KnownObject, ACCOUNT_SETTINGS_LIMITED_LIMITS } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { CharacterInfo } from './character';
 import { ENV } from '../config';
@@ -37,7 +37,7 @@ export class Account {
 	}
 
 	public get displayName(): string {
-		return this.data.settingsLimited.displayName.value ?? this.data.username;
+		return this.data.settings.displayName ?? this.data.username;
 	}
 
 	constructor(data: DatabaseAccountWithSecure) {
@@ -86,7 +86,7 @@ export class Account {
 			roles: this.roles.getSelfInfo(),
 			roomOwnershipLimit: this.roomOwnershipLimit,
 			settings: _.cloneDeep(this.data.settings),
-			settingsLimited: _.cloneDeep(this.data.settingsLimited),
+			settingsCooldowns: _.cloneDeep(this.data.settingsCooldowns),
 			cryptoKey: this.secure.getCryptoKey(),
 		};
 	}
@@ -115,53 +115,35 @@ export class Account {
 			settings.visibleRoles = uniq(settings.visibleRoles.filter((role) => this.roles.isAuthorized(role)));
 		}
 
-		this.data.settings = { ...this.data.settings, ...settings };
+		const db = GetDatabase();
+		const update: Parameters<(typeof db)['updateAccountData']>['1'] = {};
 
-		await GetDatabase().updateAccountData(this.data.id, {
-			settings: this.data.settings,
-		});
-		this.onAccountInfoChange();
-	}
-
-	public async changeSettingsLimited(settingsLimited: Partial<DirectoryAccountSettingsLimited>): Promise<'ok' | 'changeIsNotAllowed'> {
 		const now = Date.now();
-		const next = cloneDeep(this.data.settingsLimited);
-
-		let changed = false;
-
-		if (settingsLimited?.displayName === this.data.username) {
-			settingsLimited.displayName = null;
-		}
-
-		for (const [key, value] of KnownObject.entries(settingsLimited)) {
-			if (value == null)
+		for (const [key, value] of KnownObject.entries(this.data.settingsCooldowns)) {
+			if (value == null || !(key in settings))
 				continue;
 
-			const setting = next[key];
-			Assert(setting, `Unknown setting ${key}`);
-
-			if (setting.nextAllowedChange > now) {
-				return 'changeIsNotAllowed';
+			if (value > now) {
+				delete settings[key];
+				continue;
 			}
 
-			if (setting.value !== value) {
-				setting.value = value;
-				setting.nextAllowedChange = now + ACCOUNT_SETTINGS_LIMITED_LIMITS[key];
-				changed = true;
+			let settingsCooldowns = update.settingsCooldowns;
+			if (!settingsCooldowns) {
+				settingsCooldowns = update.settingsCooldowns = cloneDeep(this.data.settingsCooldowns);
 			}
+
+			settingsCooldowns[key] = now + ACCOUNT_SETTINGS_LIMITED_LIMITS[key];
 		}
 
-		if (!changed)
-			return 'ok';
+		if (settings.displayName === this.data.username)
+			settings.displayName = null;
 
-		this.data.settingsLimited = next;
+		this.data.settings = { ...this.data.settings, ...settings };
+		update.settings = this.data.settings;
 
-		await GetDatabase().updateAccountData(this.data.id, {
-			settingsLimited: this.data.settingsLimited,
-		});
+		await db.updateAccountData(this.data.id, update);
 		this.onAccountInfoChange();
-
-		return 'ok';
 	}
 
 	@AsyncSynchronized()
@@ -291,7 +273,7 @@ export async function CreateAccountData(username: string, password: string, emai
 		profileDescription: '',
 		characters: [],
 		settings: cloneDeep(ACCOUNT_SETTINGS_DEFAULT),
-		settingsLimited: cloneDeep(ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT),
+		settingsCooldowns: {},
 		storedOutfits: [],
 		secure: await GenerateAccountSecureData(password, email, activated),
 	};

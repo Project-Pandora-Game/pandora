@@ -1,12 +1,11 @@
 import { AccountTokenReason } from '../account/accountSecure';
 import {
 	ACCOUNT_SETTINGS_DEFAULT,
-	ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT,
 	AccountCryptoKeySchema,
 	AccountId,
 	AccountIdSchema,
 	AssetFrameworkOutfitWithIdSchema,
-	DirectoryAccountSettingsLimitedStoredSchema,
+	DirectoryAccountSettingsCooldowns,
 	DirectoryAccountSettingsSchema,
 	IAccountRoleManageInfo,
 	IBetaKeyInfo,
@@ -68,7 +67,7 @@ export const DatabaseAccountSchema = z.object({
 	profileDescription: z.string().default('').transform(ZodTruncate(LIMIT_ACCOUNT_PROFILE_LENGTH)),
 	characters: ZodCast<ICharacterSelfInfoDb>().array(),
 	settings: DirectoryAccountSettingsSchema.catch(() => cloneDeep(ACCOUNT_SETTINGS_DEFAULT)),
-	settingsLimited: DirectoryAccountSettingsLimitedStoredSchema.catch(() => cloneDeep(ACCOUNT_SETTINGS_LIMITED_STORED_DEFAULT)),
+	settingsCooldowns: ZodCast<DirectoryAccountSettingsCooldowns>().catch(() => ({})),
 	directMessages: ZodCast<DatabaseDirectMessageInfo>().array().optional(),
 	storedOutfits: AssetFrameworkOutfitWithIdSchema.array().catch(() => []),
 });
@@ -80,7 +79,7 @@ export const DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES = [
 	'profileDescription',
 	'characters',
 	'settings',
-	'settingsLimited',
+	'settingsCooldowns',
 	'directMessages',
 	'storedOutfits',
 ] satisfies readonly (keyof DatabaseAccount)[];

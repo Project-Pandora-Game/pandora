@@ -69,6 +69,11 @@ export const DeviceOverlaySetting = BrowserStorage.create('temp-device-overlay-t
 	defaultView: 'interactable',
 }, DeviceOverlaySettingSchema);
 
+export function useIsRoomConstructionModeEnabled(): boolean {
+	const { roomConstructionMode } = useObservable(DeviceOverlaySetting);
+	return roomConstructionMode;
+}
+
 export function ChatRoomDeviceMovementTool({
 	item,
 	deployment,

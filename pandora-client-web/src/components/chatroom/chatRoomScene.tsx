@@ -2,7 +2,7 @@ import { AssertNever, AssertNotNullable, AssetFrameworkGlobalState, CalculateCha
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
-import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useEvent } from '../../common/useEvent';
 import { Character, useCharacterData } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
@@ -17,7 +17,7 @@ import { PixiViewportSetupCallback } from '../../graphics/pixiViewport';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { ChatRoomCharacterInteractive } from './chatRoomCharacter';
 import { PointLike } from '../../graphics/graphicsCharacter';
-import { ChatRoomDeviceInteractive, ChatRoomDeviceMovementTool } from './chatRoomDevice';
+import { ChatRoomDeviceInteractive, ChatRoomDeviceMovementTool, useIsRoomConstructionModeEnabled } from './chatRoomDevice';
 import { useChatroomRequired } from '../gameContext/chatRoomContextProvider';
 import { shardConnectorContext } from '../gameContext/shardConnectorContextProvider';
 import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
@@ -265,6 +265,13 @@ export function ChatRoomScene({ className }: {
 
 	const playerState = useCharacterState(chatRoom, player.id);
 	AssertNotNullable(playerState);
+
+	const roomConstructionMode = useIsRoomConstructionModeEnabled();
+	useEffect(() => {
+		if (!roomConstructionMode && chatRoomMode.mode === 'moveDevice') {
+			setChatRoomMode({ mode: 'normal' });
+		}
+	}, [roomConstructionMode, chatRoomMode]);
 
 	const menuOpen = useCallback((target: Character<ICharacterRoomData> | ItemRoomDevice | null, event: FederatedPointerEvent | null) => {
 		if (!target || !event) {

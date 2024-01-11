@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import { Character, useCharacterData } from '../../../character/character';
 import { PointLike } from '../../../graphics/graphicsCharacter';
 import { useContextMenuPosition } from '../../../components/contextMenu';
-import { IsChatroomAdmin, useChatRoomInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { IsSpaceAdmin, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import { useDirectoryConnector, useCurrentAccount } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
 import { useChatInput } from '../../../ui/components/chat/chatInput';
@@ -22,7 +22,7 @@ const characterMenuContext = createContext<{
 	isPlayerAdmin: boolean;
 	currentAccount: IDirectoryAccountInfo;
 	character: Character<ICharacterRoomData>;
-	chatRoomInfo: Immutable<SpaceClientInfo>;
+	spaceInfo: Immutable<SpaceClientInfo>;
 	menu: MenuType;
 	setMenu: (menu: MenuType) => void;
 	close: () => void;
@@ -35,8 +35,8 @@ function useCharacterMenuContext() {
 }
 
 function AdminActionContextMenuInner(): ReactElement {
-	const { character, chatRoomInfo, setMenu, close } = useCharacterMenuContext();
-	const isCharacterAdmin = IsChatroomAdmin(chatRoomInfo, { id: character.data.accountId });
+	const { character, spaceInfo, setMenu, close } = useCharacterMenuContext();
+	const isCharacterAdmin = IsSpaceAdmin(spaceInfo, { id: character.data.accountId });
 	const connector = useDirectoryConnector();
 
 	const kick = useCallback(() => {
@@ -260,8 +260,8 @@ export function CharacterContextMenu({ character, position, onClose, closeText =
 	const ref = useContextMenuPosition(position);
 
 	const characterData = useCharacterData(character);
-	const chatRoomInfo = useChatRoomInfo().config;
-	const isPlayerAdmin = IsChatroomAdmin(chatRoomInfo, currentAccount);
+	const spaceInfo = useSpaceInfo().config;
+	const isPlayerAdmin = IsSpaceAdmin(spaceInfo, currentAccount);
 
 	useEffect(() => {
 		if (!isPlayerAdmin && menu === 'admin') {
@@ -275,19 +275,19 @@ export function CharacterContextMenu({ character, position, onClose, closeText =
 	}, [onClose]);
 
 	const context = useMemo(() => {
-		if (!chatRoomInfo || !currentAccount) return null;
+		if (!spaceInfo || !currentAccount) return null;
 		return {
 			isPlayerAdmin,
 			currentAccount,
 			character,
-			chatRoomInfo,
+			spaceInfo,
 			menu,
 			setMenu,
 			close: onCloseActual,
 		};
-	}, [isPlayerAdmin, currentAccount, character, chatRoomInfo, menu, setMenu, onCloseActual]);
+	}, [isPlayerAdmin, currentAccount, character, spaceInfo, menu, setMenu, onCloseActual]);
 
-	if (!chatRoomInfo || !context) {
+	if (!spaceInfo || !context) {
 		return null;
 	}
 

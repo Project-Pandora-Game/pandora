@@ -1,6 +1,6 @@
 @import '../../../styles/common';
 
-.roomListGrid {
+.spacesSearchGrid {
 	display: grid;
 	width: 100%;
 	height: 4.5em;
@@ -60,7 +60,7 @@
 	}
 }
 
-.chatroomDetails {
+.spacesSearchSpaceDetails {
 	max-width: 95vw;
 	display: grid;
 	gap: spacing('medium');

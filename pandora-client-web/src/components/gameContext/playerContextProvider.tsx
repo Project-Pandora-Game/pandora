@@ -3,7 +3,7 @@ import { AssertNotNullable, AssetFrameworkCharacterState, CharacterId, ICharacte
 import { PlayerCharacter } from '../../character/player';
 import { useNullableObservable } from '../../observable';
 import { useShardConnector } from './shardConnectorContextProvider';
-import { useCharacterState, useChatroomRequired } from './gameStateContextProvider';
+import { useCharacterState, useGameState } from './gameStateContextProvider';
 
 export function usePlayer(): PlayerCharacter | null {
 	return useNullableObservable(useShardConnector()?.gameState)?.player ?? null;
@@ -14,9 +14,9 @@ export function usePlayerState(): {
 	playerState: AssetFrameworkCharacterState;
 } {
 	const player = usePlayer();
-	const chatRoom = useChatroomRequired();
+	const gameState = useGameState();
 	AssertNotNullable(player);
-	const playerState = useCharacterState(chatRoom, player.id);
+	const playerState = useCharacterState(gameState, player.id);
 	AssertNotNullable(playerState);
 
 	return useMemo(() => ({

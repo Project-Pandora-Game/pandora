@@ -5,14 +5,14 @@ import { Character, ICharacter, useCharacterData } from '../../../character/char
 import { ChildrenProps } from '../../../common/reactTypes';
 import { PointLike } from '../../../graphics/graphicsCharacter';
 import { useContextMenuPosition } from '../../../components/contextMenu';
-import { useChatRoomCharacters, useChatroom, useChatroomRequired, useRoomState } from '../../../components/gameContext/gameStateContextProvider';
+import { useSpaceCharacters, useGameStateOptional, useGameState, useGlobalState } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue';
-import { useWardrobeContext, useWardrobeExecuteChecked, WardrobeContextProvider } from '../../../components/wardrobe/wardrobeContext';
+import { useWardrobeContext, useWardrobeExecuteChecked, WARDROBE_TARGET_ROOM, WardrobeContextProvider } from '../../../components/wardrobe/wardrobeContext';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { CharacterContextMenu } from './characterContextMenu';
 import { Immutable } from 'immer';
-import { IChatRoomMode } from '../roomScene';
+import { IRoomSceneMode } from '../roomScene';
 import { toast } from 'react-toastify';
 import { ActionWarningContent } from '../../../components/wardrobe/wardrobeComponents';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
@@ -52,9 +52,9 @@ function StoreDeviceMenu({ device, close }: {
 	);
 }
 
-function MoveDeviceMenu({ device, setChatRoomMode, close }: {
+function MoveDeviceMenu({ device, setRoomSceneMode, close }: {
 	device: ItemRoomDevice;
-	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;
+	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	close: () => void;
 }) {
 	const action = useMemo<AppearanceAction>(() => ({
@@ -79,7 +79,7 @@ function MoveDeviceMenu({ device, setChatRoomMode, close }: {
 			toast(<ActionWarningContent problems={ checkResult.problems } />, TOAST_OPTIONS_WARNING);
 			return;
 		}
-		setChatRoomMode({ mode: 'moveDevice', deviceItemId: device.id });
+		setRoomSceneMode({ mode: 'moveDevice', deviceItemId: device.id });
 		close();
 	};
 
@@ -178,18 +178,16 @@ function DeviceSlotsMenu({ device, position, close }: {
 }) {
 	const [slot, setSlot] = useState<string | null>(null);
 	const occupancy = useMemo(() => slot && device.slotOccupancy.get(slot), [device, slot]);
-	const { player } = useWardrobeContext();
-	const chatRoomCharacters = useChatRoomCharacters();
-	const characters = useMemo<readonly ICharacter[]>(() => chatRoomCharacters || [player], [chatRoomCharacters, player]);
+	const characters = useSpaceCharacters();
 	const character = useMemo(() => characters.find(({ id }) => id === occupancy), [characters, occupancy]);
 	const [selectedCharacter, setSelectedCharacter] = useState<Character<ICharacterRoomData> | null>(null);
 	const onSelectCharacter = useCallback(() => {
-		if (!chatRoomCharacters || !character) {
+		if (!characters || !character) {
 			setSelectedCharacter(null);
 			return;
 		}
-		setSelectedCharacter(chatRoomCharacters.find((c) => c.data.id === character.data.id) ?? null);
-	}, [chatRoomCharacters, character]);
+		setSelectedCharacter(characters.find((c) => c.data.id === character.data.id) ?? null);
+	}, [characters, character]);
 
 	if (selectedCharacter) {
 		return (
@@ -253,19 +251,19 @@ function DeviceSlotsMenu({ device, position, close }: {
 	);
 }
 
-function DeviceContextMenuCurrent({ device, position, setChatRoomMode, onClose }: {
+function DeviceContextMenuCurrent({ device, position, setRoomSceneMode, onClose }: {
 	device: ItemRoomDevice;
 	position: Readonly<PointLike>;
-	chatRoomMode: Immutable<IChatRoomMode>;
-	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;
+	roomSceneMode: Immutable<IRoomSceneMode>;
+	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	onClose: () => void;
 }): ReactElement | null {
 	const ref = useContextMenuPosition(position);
 	const player = usePlayer();
-	const chatRoom = useChatroom();
+	const gameState = useGameStateOptional();
 	const [menu, setMenu] = useState<'main' | 'slots'>('main');
 
-	if (!player || !chatRoom) {
+	if (!player || !gameState) {
 		return null;
 	}
 
@@ -274,14 +272,14 @@ function DeviceContextMenuCurrent({ device, position, setChatRoomMode, onClose }
 			<span>
 				{ device.asset.definition.name }
 			</span>
-			<WardrobeContextProvider target={ chatRoom } player={ player }>
+			<WardrobeContextProvider target={ WARDROBE_TARGET_ROOM } player={ player }>
 				{ menu === 'main' && (
 					<>
 						<LeaveDeviceMenu device={ device } close={ onClose } />
 						<button onClick={ () => setMenu('slots') }>
 							Slots
 						</button>
-						<MoveDeviceMenu device={ device } setChatRoomMode={ setChatRoomMode } close={ onClose } />
+						<MoveDeviceMenu device={ device } setRoomSceneMode={ setRoomSceneMode } close={ onClose } />
 						<StoreDeviceMenu device={ device } close={ onClose } />
 					</>
 				) }
@@ -301,14 +299,14 @@ function DeviceContextMenuCurrent({ device, position, setChatRoomMode, onClose }
 	);
 }
 
-export function DeviceContextMenu({ deviceItemId, position, chatRoomMode, setChatRoomMode, onClose }: {
+export function DeviceContextMenu({ deviceItemId, position, roomSceneMode, setRoomSceneMode, onClose }: {
 	deviceItemId: ItemId;
 	position: Readonly<PointLike>;
-	chatRoomMode: Immutable<IChatRoomMode>;
-	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;
+	roomSceneMode: Immutable<IRoomSceneMode>;
+	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	onClose: () => void;
 }): ReactElement | null {
-	const globalState = useRoomState(useChatroomRequired());
+	const globalState = useGlobalState(useGameState());
 	const item = useMemo(() => {
 		const actual = globalState.getItems({ type: 'roomInventory' });
 		if (!actual)
@@ -332,8 +330,8 @@ export function DeviceContextMenu({ deviceItemId, position, chatRoomMode, setCha
 		<DeviceContextMenuCurrent
 			device={ item }
 			position={ position }
-			chatRoomMode={ chatRoomMode }
-			setChatRoomMode={ setChatRoomMode }
+			roomSceneMode={ roomSceneMode }
+			setRoomSceneMode={ setRoomSceneMode }
 			onClose={ onClose }
 		/>
 	);

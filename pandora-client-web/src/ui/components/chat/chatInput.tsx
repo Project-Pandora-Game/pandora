@@ -2,7 +2,7 @@ import { AssertNotNullable, CharacterId, EMPTY_ARRAY, ChatCharacterStatus, IChat
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { clamp } from 'lodash';
 import { Character } from '../../../character/character';
-import { IMessageParseOptions, useChatroom, useChatRoomCharacters, useChatRoomMessageSender, useChatroomRequired, useChatRoomSetPlayerStatus, useChatRoomStatus } from '../../../components/gameContext/gameStateContextProvider';
+import { IMessageParseOptions, useGameStateOptional, useSpaceCharacters, useChatMessageSender, useGameState, useChatSetPlayerStatus, useChatCharacterStatus } from '../../../components/gameContext/gameStateContextProvider';
 import { useEvent } from '../../../common/useEvent';
 import { AutocompleteDisplayData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand, ICommandInvokeContext } from './commandsProcessor';
 import { toast } from 'react-toastify';
@@ -68,10 +68,10 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	const [autocompleteHint, setAutocompleteHint] = useState<AutocompleteDisplayData | null>(null);
 	const [mode, setMode] = useState<ChatMode | null>(null);
 	const [showSelector, setShowSelector] = useState(false);
-	const chatroom = useChatroom();
-	const characters = useChatRoomCharacters();
+	const gameState = useGameStateOptional();
+	const characters = useSpaceCharacters();
 	const playerId = usePlayerId();
-	const spaceId = useNullableObservable(useChatroom()?.currentRoom)?.id ?? null;
+	const spaceId = useNullableObservable(gameState?.currentSpace)?.id ?? null;
 
 	useEffect(() => {
 		if (!spaceId)
@@ -88,7 +88,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 			ref.current?.focus();
 			return true;
 		}
-		const editingMessage = chatroom?.getMessageEdit(edit?.target);
+		const editingMessage = gameState?.getMessageEdit(edit?.target);
 		if (!editingMessage) return false;
 		const { text, options } = editingMessage;
 		if (!text) {
@@ -222,9 +222,9 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 }, ref: ForwardedRef<HTMLTextAreaElement>) {
 	const lastInput = useRef('');
 	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-	const setPlayerStatus = useChatRoomSetPlayerStatus();
-	const chatRoom = useChatroomRequired();
-	const sender = useChatRoomMessageSender();
+	const setPlayerStatus = useChatSetPlayerStatus();
+	const gameState = useGameState();
+	const sender = useChatMessageSender();
 	const chatInput = useChatInput();
 	const { target, editing, setEditing, setValue, setAutocompleteHint, mode, allowCommands } = chatInput;
 
@@ -246,12 +246,12 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 		},
 		shardConnector,
 		directoryConnector,
-		chatRoom,
-		player: chatRoom.player,
+		gameState,
+		player: gameState.player,
 		messageSender: sender,
 		inputHandlerContext: chatInput,
 		navigate,
-	}), [chatInput, chatRoom, directoryConnector, navigate, sender, shardConnector]);
+	}), [chatInput, gameState, directoryConnector, navigate, sender, shardConnector]);
 
 	const inputEnd = useEvent(() => {
 		if (timeout.current) {
@@ -499,7 +499,7 @@ export function useChatInput(): IChatInputHandler {
 }
 
 function TypingIndicator(): ReactElement {
-	let statuses = useChatRoomStatus();
+	let statuses = useChatCharacterStatus();
 	const playerId = usePlayerId();
 	const { showSelector, setShowSelector } = useChatInput();
 
@@ -614,8 +614,8 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 function AutoCompleteHint(): ReactElement | null {
 	const { autocompleteHint, ref } = useChatInput();
 
-	const chatRoom = useChatroomRequired();
-	const sender = useChatRoomMessageSender();
+	const gameState = useGameState();
+	const sender = useChatMessageSender();
 	const chatInput = useChatInput();
 	const { setAutocompleteHint, allowCommands } = chatInput;
 
@@ -668,8 +668,8 @@ function AutoCompleteHint(): ReactElement | null {
 										const autocompleteResult = CommandAutocomplete(input, {
 											shardConnector,
 											directoryConnector,
-											chatRoom,
-											player: chatRoom.player,
+											gameState,
+											player: gameState.player,
 											messageSender: sender,
 											inputHandlerContext: chatInput,
 											navigate,

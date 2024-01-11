@@ -14,6 +14,7 @@ import {
 	IRoomDeviceGraphicsLayerSprite,
 	ItemRoomDevice,
 	RoomDeviceDeploymentPosition,
+	SpaceIdSchema,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 import * as PIXI from 'pixi.js';
@@ -30,12 +31,12 @@ import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import _ from 'lodash';
 import { ShardConnector } from '../../networking/shardConnector';
 import { Character } from '../../character/character';
-import { useCharacterRestrictionsManager, useChatRoomCharacters } from '../../components/gameContext/gameStateContextProvider';
+import { useCharacterRestrictionsManager, useSpaceCharacters } from '../../components/gameContext/gameStateContextProvider';
 import type { FederatedPointerEvent } from 'pixi.js';
 import { z } from 'zod';
 import { BrowserStorage } from '../../browserStorage';
-import { IChatRoomMode, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
-import { useChatRoomCharacterOffsets } from './roomCharacter';
+import { IRoomSceneMode, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
+import { useRoomCharacterOffsets } from './roomCharacter';
 import { RoomDeviceRenderContext } from './roomDeviceContext';
 import { EvaluateCondition } from '../utility';
 import { useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator';
@@ -44,19 +45,19 @@ import { MovementHelperGraphics } from '../movementHelper';
 const PIVOT_TO_LABEL_OFFSET = 100 - CHARACTER_BASE_Y_OFFSET;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
 
-type ChatRoomDeviceInteractiveProps = {
+type RoomDeviceInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
 	background: Immutable<RoomBackgroundData>;
-	chatRoomMode: Immutable<IChatRoomMode>;
-	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;
+	roomSceneMode: Immutable<IRoomSceneMode>;
+	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	shard: ShardConnector | null;
 	menuOpen: (character: ItemRoomDevice, data: FederatedPointerEvent) => void;
 
 };
 
-type ChatRoomDeviceProps = {
+type RoomDeviceProps = {
 	globalState: AssetFrameworkGlobalState;
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
@@ -73,7 +74,7 @@ type ChatRoomDeviceProps = {
 export const DeviceOverlaySettingSchema = z.enum(['never', 'interactable', 'always']);
 export const DeviceOverlayStateSchema = z.object({
 	roomConstructionMode: z.boolean(),
-	roomId: z.string().nullish(),
+	spaceId: SpaceIdSchema.nullish(),
 	isPlayerAdmin: z.boolean(),
 	canUseHands: z.boolean(),
 });
@@ -81,7 +82,7 @@ export const DeviceOverlayStateSchema = z.object({
 export const DeviceOverlaySetting = BrowserStorage.create('device-overlay-toggle', 'interactable', DeviceOverlaySettingSchema);
 export const DeviceOverlayState = BrowserStorage.createSession('device-overlay-state', {
 	roomConstructionMode: false,
-	roomId: undefined,
+	spaceId: undefined,
 	isPlayerAdmin: false,
 	canUseHands: false,
 }, DeviceOverlayStateSchema);
@@ -91,13 +92,13 @@ export function useIsRoomConstructionModeEnabled(): boolean {
 	return roomConstructionMode;
 }
 
-export function ChatRoomDeviceMovementTool({
+export function RoomDeviceMovementTool({
 	item,
 	deployment,
 	background,
-	setChatRoomMode,
+	setRoomSceneMode,
 	shard,
-}: ChatRoomDeviceInteractiveProps): ReactElement | null {
+}: RoomDeviceInteractiveProps): ReactElement | null {
 	const asset = item.asset;
 	const app = useApp();
 
@@ -204,7 +205,7 @@ export function ChatRoomDeviceMovementTool({
 			Date.now() < pointerDown.current + DEVICE_WAIT_DRAG_THRESHOLD
 		) {
 			if (pointerDownTarget.current === 'pos') {
-				setChatRoomMode({ mode: 'normal' });
+				setRoomSceneMode({ mode: 'normal' });
 			} else if (pointerDownTarget.current === 'offset') {
 				setPositionThrottled(deployment.x, deployment.y, 0);
 			}
@@ -272,17 +273,17 @@ export function ChatRoomDeviceMovementTool({
 	);
 }
 
-export function ChatRoomDeviceInteractive({
+export function RoomDeviceInteractive({
 	globalState,
 	item,
 	deployment,
 	background,
-	chatRoomMode,
+	roomSceneMode,
 	menuOpen,
-}: ChatRoomDeviceInteractiveProps): ReactElement | null {
+}: RoomDeviceInteractiveProps): ReactElement | null {
 	const asset = item.asset;
 
-	const isBeingMoved = chatRoomMode.mode === 'moveDevice' && chatRoomMode.deviceItemId === item.id;
+	const isBeingMoved = roomSceneMode.mode === 'moveDevice' && roomSceneMode.deviceItemId === item.id;
 
 	const pivot = useMemo<PointLike>(() => ({
 		x: asset.definition.pivot.x,
@@ -345,7 +346,7 @@ export function ChatRoomDeviceInteractive({
 	}, [showMenuHelper, roomConstructionMode, hitAreaRadius]);
 
 	return (
-		<ChatRoomDevice
+		<RoomDevice
 			globalState={ globalState }
 			item={ item }
 			deployment={ deployment }
@@ -365,11 +366,11 @@ export function ChatRoomDeviceInteractive({
 					/>
 				) : null
 			}
-		</ChatRoomDevice>
+		</RoomDevice>
 	);
 }
 
-export function ChatRoomDevice({
+export function RoomDevice({
 	globalState,
 	item,
 	deployment,
@@ -381,7 +382,7 @@ export function ChatRoomDevice({
 	eventMode,
 	onPointerDown,
 	onPointerUp,
-}: ChatRoomDeviceProps): ReactElement | null {
+}: RoomDeviceProps): ReactElement | null {
 	const asset = item.asset;
 	const debugConfig = useDebugConfig();
 
@@ -584,13 +585,13 @@ function RoomDeviceGraphicsLayerSlot({ item, layer, globalState }: {
 	globalState: AssetFrameworkGlobalState;
 }): ReactElement | null {
 	const characterId = item.slotOccupancy.get(layer.slot);
-	const chatroomCharacters = useChatRoomCharacters();
+	const characters = useSpaceCharacters();
 	const characterState = useMemo(() => (characterId != null ? globalState.characters.get(characterId) : undefined), [globalState, characterId]);
 
 	if (!characterId)
 		return null;
 
-	const character = chatroomCharacters?.find((c) => c.id === characterId);
+	const character = characters?.find((c) => c.id === characterId);
 
 	if (!character || !characterState)
 		return null;
@@ -633,7 +634,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 		baseScale,
 		pivot,
 		rotationAngle,
-	} = useChatRoomCharacterOffsets(characterState);
+	} = useRoomCharacterOffsets(characterState);
 
 	const scale = baseScale * (effectiveCharacterPosition.relativeScale ?? 1);
 

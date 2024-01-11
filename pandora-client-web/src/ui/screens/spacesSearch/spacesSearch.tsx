@@ -12,12 +12,12 @@ import React, { ReactElement, useCallback, useEffect, useReducer, useState } fro
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { PersistentToast } from '../../../persistentToast';
 import { Button } from '../../../components/common/button/button';
-import { useChatRoomInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ResolveBackground } from 'pandora-common';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
-import { ChatroomOwnershipRemoval, CHATROOM_FEATURES } from '../spaceConfiguration/spaceConfiguration';
+import { SpaceOwnershipRemoval, SPACE_FEATURES } from '../spaceConfiguration/spaceConfiguration';
 import { Row } from '../../../components/common/container/container';
 import './spacesSearch.scss';
 import closedDoor from '../../../icons/closed-door.svg';
@@ -27,24 +27,21 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { useObservable } from '../../../observable';
 
-// TODO(spaces): Update relevant text lines
 const TIPS: readonly string[] = [
 	`You can move your character inside a room by dragging the character name below her.`,
-	`Careful! Your rooms are set to private as default when you first create them.`,
+	`Careful! Your spaces are set to private as default when you first create them.`,
 	`Press "arrow up" or right-click on a chat message to edit or delete it in the chat.`,
-	`Your character can turn around for everyone in a chat room in the "Pose" tab or with "/turn".`,
+	`Your character can turn around for everyone in a room in the "Pose" tab or with "/turn".`,
 	`Chat commands start with a "/" and typing just this one character shows a help menu.`,
 	`You can use your browser's "back" and "forward" buttons to navigate between screens.`,
 	`In the Pandora settings, character (chat) and account (direct messages) name colors are set separately.`,
 	`Every single change in the wardrobe happens instantly and is immediately visible to everyone in the room.`,
-	`The handheld item "room construction tools" is needed to modify your room.`,
-	`You can keep "room construction tools" in your room's inventory for quick access.`,
-	`Public rooms without an admin online inside are not publicly listed in the room search.`,
+	`Public spaces without an admin online inside are not publicly listed in the spaces search.`,
 ];
 
-export function ChatroomSelect(): ReactElement {
-	const roomInfo = useChatRoomInfo();
-	const roomList = useRoomList();
+export function SpacesSearch(): ReactElement {
+	const spaceInfo = useSpaceInfo();
+	const list = useSpacesList();
 
 	const directoryStatus = useObservable(useDirectoryConnector().directoryStatus);
 
@@ -64,8 +61,8 @@ export function ChatroomSelect(): ReactElement {
 		};
 	}, []);
 
-	// Chatroom selection is only accessible from the personal room
-	if (roomInfo.id != null) {
+	// Spaces search is only accessible when inside player's personal space
+	if (spaceInfo.id != null) {
 		return <Navigate to='/chatroom' />;
 	}
 
@@ -78,12 +75,12 @@ export function ChatroomSelect(): ReactElement {
 				</span>
 			</Row>
 			<Row wrap alignX='space-between'>
-				<h2>Room search</h2>
+				<h2>Spaces search</h2>
 				<Row padding='medium' alignY='center'>
 					Accounts online: { directoryStatus.onlineAccounts } / Characters online: { directoryStatus.onlineCharacters }
 				</Row>
 			</Row>
-			{ !roomList ? <div className='loading'>Loading...</div> : <ChatroomSelectRoomList roomList={ roomList } /> }
+			{ !list ? <div className='loading'>Loading...</div> : <SpaceSearchList list={ list } /> }
 			{ showTips && <TipsListDialog
 				hide={ () => setShowTips(false) }
 			/> }
@@ -110,78 +107,78 @@ function TipsListDialog({ hide }: {
 	);
 }
 
-function ChatroomSelectRoomList({ roomList }: {
-	roomList: SpaceListInfo[];
+function SpaceSearchList({ list }: {
+	list: SpaceListInfo[];
 }): ReactElement {
 	const navigate = useNavigate();
 	const account = useCurrentAccount();
 	AssertNotNullable(account);
 
-	const ownRooms = roomList.filter((r) => r.isOwner);
-	const otherRooms = roomList.filter((r) => !r.isOwner);
+	const ownSpaces = list.filter((r) => r.isOwner);
+	const otherSpaces = list.filter((r) => !r.isOwner);
 
 	return (
 		<>
 			<div>
 				<h3>
-					My rooms ({ ownRooms.length }/{ account.spaceOwnershipLimit })
+					My spaces ({ ownSpaces.length }/{ account.spaceOwnershipLimit })
 					<ContextHelpButton>
 						<p>
-							Rooms are a place where you can meet other characters.
+							Spaces are a place where you can meet other characters.
 						</p>
 						<p>
-							In Pandora, each room is persistent and has one or more owners.<br />
+							In Pandora, each space is persistent and has one or more owners.<br />
 							It only gets deleted when it no longer has any owners.<br />
-							A room is visible to everyone (except accounts banned from the room),<br />
-							if it is marked as public and there is at least one admin inside the room.<br />
-							The default setting for newly created rooms is private visibility.<br />
-							You can always see rooms you are either admin or owner of.
+							A space is visible to everyone (except accounts banned from it),<br />
+							if it is marked as public and there is at least one admin inside the space.<br />
+							The default setting for newly created spaces is private visibility.<br />
+							You can always see spaces you are either admin or owner of.
 						</p>
 						<p>
-							Each <strong>account</strong> has a maximum number of rooms it can own.<br />
-							You can own at most { account.spaceOwnershipLimit } rooms.<br />
-							If you want to create another room beyond your room ownership limit,<br />
-							you must select any of your owned rooms and either repurpose it or give up<br />
-							ownership of that room (resulting in the room being deleted if it has no other owners).
+							Each <strong>account</strong> has a maximum number of spaces it can own.<br />
+							You can own at most { account.spaceOwnershipLimit } spaces.<br />
+							If you want to create another space beyond your space ownership limit,<br />
+							you must select any of your owned spaces and either repurpose it or give up<br />
+							ownership of that space (resulting in the space being deleted if it has no other owners).
 						</p>
 					</ContextHelpButton>
 				</h3>
-				{ ownRooms.map((room) => <RoomEntry key={ room.id } roomInfo={ room } />) }
+				{ ownSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
 				{
-					ownRooms.length >= account.spaceOwnershipLimit ? null : (
-						<a className='roomListGrid' onClick={ () => navigate('/chatroom_create') } >
+					ownSpaces.length >= account.spaceOwnershipLimit ? null : (
+						<a className='spacesSearchGrid' onClick={ () => navigate('/chatroom_create') } >
 							<div className='icon'>➕</div>
-							<div className='entry'>Create a new room</div>
+							<div className='entry'>Create a new space</div>
 						</a>
 					)
 				}
 			</div>
 			<hr />
 			<div>
-				<h3>Found rooms ({ otherRooms.length })</h3>
-				{ otherRooms.length === 0 ? <p>No room matches your filter criteria</p> : null }
-				{ otherRooms.map((room) => <RoomEntry key={ room.id } roomInfo={ room } />) }
+				<h3>Found spaces ({ otherSpaces.length })</h3>
+				{ otherSpaces.length === 0 ? <p>No space matches your filter criteria</p> : null }
+				{ otherSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
 			</div>
 		</>
 	);
 }
 
-function RoomEntry({ roomInfo }: {
-	roomInfo: SpaceListInfo;
+function SpaceSearchEntry({ baseInfo }: {
+	baseInfo: SpaceListInfo;
 }): ReactElement {
 
 	const [show, setShow] = useState(false);
 
-	const { name, onlineCharacters, totalCharacters, maxUsers, description, hasPassword } = roomInfo;
+	const { name, onlineCharacters, totalCharacters, maxUsers, description, hasPassword } = baseInfo;
 
 	return (
 		<>
-			<a className='roomListGrid' onClick={ () => setShow(true) } >
+			<a className='spacesSearchGrid' onClick={ () => setShow(true) } >
 				<div className='icon'>
 					<img
-						src={ hasPassword ? closedDoor : roomInfo.public ? publicDoor : privateDoor }
-						title={ hasPassword ? 'Protected room' : roomInfo.public ? 'Public room' : 'Private room' }
-						alt={ hasPassword ? 'Protected room' : roomInfo.public ? 'Public room' : 'Private room' } />
+						src={ hasPassword ? closedDoor : baseInfo.public ? publicDoor : privateDoor }
+						title={ hasPassword ? 'Protected space' : baseInfo.public ? 'Public space' : 'Private space' }
+						alt={ hasPassword ? 'Protected space' : baseInfo.public ? 'Public space' : 'Private space' } />
 				</div>
 				<div className='entry'>
 					{ `${name} ( ${onlineCharacters} ` }
@@ -190,54 +187,54 @@ function RoomEntry({ roomInfo }: {
 				</div>
 				<div className='description-preview'>{ `${description}` }</div>
 			</a>
-			{ show && <RoomDetailsDialog
-				baseRoomInfo={ roomInfo }
+			{ show && <SpaceDetailsDialog
+				baseInfo={ baseInfo }
 				hide={ () => setShow(false) }
 			/> }
 		</>
 	);
 }
 
-function RoomDetailsDialog({ baseRoomInfo, hide }: {
-	baseRoomInfo: SpaceListInfo;
+function SpaceDetailsDialog({ baseInfo, hide }: {
+	baseInfo: SpaceListInfo;
 	hide: () => void;
 }): ReactElement | null {
 
 	const assetManager = useAssetManager();
 	const accountId = useCurrentAccount()?.id;
-	const [roomPassword, setPassword] = useState('');
-	const joinRoom = useJoinRoom();
-	const room = useRoomExtendedInfo(baseRoomInfo.id);
+	const [password, setPassword] = useState('');
+	const join = useJoinSpace();
+	const extendedInfo = useSpaceExtendedInfo(baseInfo.id);
 
-	// Close if room disappears
+	// Close if the space disappears
 	useEffect(() => {
-		if (room?.result === 'notFound') {
+		if (extendedInfo?.result === 'notFound') {
 			hide();
 		}
-	}, [room, hide]);
+	}, [extendedInfo, hide]);
 
-	// Do not show anything if the room doesn't exist anymore
+	// Do not show anything if the space doesn't exist anymore
 	// Do not show anything if we don't have account (aka WTF?)
-	if (room?.result === 'notFound' || accountId == null)
+	if (extendedInfo?.result === 'notFound' || accountId == null)
 		return null;
 
 	// Get basic info
-	const { id, name, description, hasPassword } = baseRoomInfo;
+	const { id, name, description, hasPassword } = baseInfo;
 	// Get advanced info, if we can
-	const roomDetails = room?.result === 'success' ? room.data : undefined;
-	const characters = roomDetails?.characters ?? [];
-	const owners = roomDetails?.owners ?? [];
-	const background = roomDetails?.background ? ResolveBackground(assetManager, roomDetails.background, GetAssetsSourceUrl()).image : '';
-	const features = roomDetails?.features ?? [];
+	const detailedData = extendedInfo?.result === 'success' ? extendedInfo.data : undefined;
+	const characters = detailedData?.characters ?? [];
+	const owners = detailedData?.owners ?? [];
+	const background = detailedData?.background ? ResolveBackground(assetManager, detailedData.background, GetAssetsSourceUrl()).image : '';
+	const features = detailedData?.features ?? [];
 
-	const userIsOwner = !!roomDetails?.isOwner;
-	const userIsAdmin = !!roomDetails?.isAdmin;
+	const userIsOwner = !!detailedData?.isOwner;
+	const userIsAdmin = !!detailedData?.isAdmin;
 
 	return (
 		<ModalDialog>
-			<div className='chatroomDetails'>
+			<div className='spacesSearchSpaceDetails'>
 				<div>
-					Details for { roomDetails?.public ? 'public' : 'private' } room <b>{ name }</b><br />
+					Details for { detailedData?.public ? 'public' : 'private' } space <b>{ name }</b><br />
 				</div>
 				<Row className='ownership' alignY='center'>
 					Owned by: { owners.join(', ') }
@@ -245,9 +242,9 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 				{ (background !== '' && !background.startsWith('#')) &&
 					<img className='preview' src={ background } width='200px' height='100px' /> }
 				<Row className='features'>
-					{ hasPassword && <img className='features-img' src={ closedDoor } title='Protected Room' /> }
+					{ hasPassword && <img className='features-img' src={ closedDoor } title='Protected Space' /> }
 					{
-						CHATROOM_FEATURES
+						SPACE_FEATURES
 							.filter((f) => features.includes(f.id))
 							.map((f) => (
 								<img key={ f.id } className='features-img' src={ f.icon } title={ f.name } alt={ f.name } />
@@ -257,7 +254,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 				<div className='description-title'>Description:</div>
 				<textarea className='widebox' value={ description } rows={ 16 } readOnly />
 				{ characters.length > 0 &&
-					<div className='title'>Current users in this room:
+					<div className='title'>Characters currently in this space:
 						<div className='users-list'>
 							{
 								characters.map((char) => (
@@ -271,21 +268,20 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 						</div>
 					</div> }
 				{ (!userIsAdmin && hasPassword) &&
-					<div className='title'>This room requires a password:</div> }
+					<div className='title'>This spaces requires a password to enter:</div> }
 				{ (!userIsAdmin && hasPassword) &&
 					<input className='widebox'
-						name='roomPwd'
 						type='password'
-						value={ roomPassword }
+						value={ password }
 						onChange={ (e) => setPassword(e.target.value) }
 					/> }
 				<Row padding='medium' className='buttons' alignX='space-between' alignY='center'>
 					<Button onClick={ hide }>Close</Button>
-					{ userIsOwner && <ChatroomOwnershipRemoval buttonClassName='slim' id={ id } name={ name } /> }
+					{ userIsOwner && <SpaceOwnershipRemoval buttonClassName='slim' id={ id } name={ name } /> }
 					<Button className='fadeDisabled'
-						disabled={ !userIsAdmin && hasPassword && !roomPassword }
+						disabled={ !userIsAdmin && hasPassword && !password }
 						onClick={ () => {
-							joinRoom(id, roomPassword)
+							join(id, password)
 								.then((joinResult) => {
 									if (joinResult === 'notFound')
 										hide();
@@ -295,7 +291,7 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 									// You can handle if joining crashed or server communication failed here
 								});
 						} }>
-						Enter Room
+						Enter Space
 					</Button>
 				</Row>
 			</div>
@@ -303,61 +299,61 @@ function RoomDetailsDialog({ baseRoomInfo, hide }: {
 	);
 }
 
-const RoomJoinProgress = new PersistentToast();
+const SpaceJoinProgress = new PersistentToast();
 
-type ChatRoomEnterResult = IClientDirectoryNormalResult['spaceEnter']['result'];
+type SpaceEnterResult = IClientDirectoryNormalResult['spaceEnter']['result'];
 
-function useJoinRoom(): (id: SpaceId, password?: string) => Promise<ChatRoomEnterResult> {
+function useJoinSpace(): (id: SpaceId, password?: string) => Promise<SpaceEnterResult> {
 	const directoryConnector = useDirectoryConnector();
 
 	return useCallback(async (id, password) => {
 		try {
-			RoomJoinProgress.show('progress', 'Joining room...');
+			SpaceJoinProgress.show('progress', 'Joining space...');
 			const result = await directoryConnector.awaitResponse('spaceEnter', { id, password });
 			if (result.result === 'ok') {
-				RoomJoinProgress.show('success', 'Room joined!');
+				SpaceJoinProgress.show('success', 'Space joined!');
 			} else {
-				RoomJoinProgress.show('error', `Failed to join room:\n${ result.result }`);
+				SpaceJoinProgress.show('error', `Failed to join space:\n${ result.result }`);
 			}
 			return result.result;
 		} catch (err) {
-			GetLogger('JoinRoom').warning('Error during room join', err);
-			RoomJoinProgress.show('error',
-				`Error during room join:\n${ err instanceof Error ? err.message : String(err) }`);
+			GetLogger('JoinSpace').warning('Error during space join', err);
+			SpaceJoinProgress.show('error',
+				`Error during space join:\n${ err instanceof Error ? err.message : String(err) }`);
 			return 'failed';
 		}
 	}, [directoryConnector]);
 }
 
-function useRoomList(): SpaceListInfo[] | undefined {
-	const [roomList, setRoomList] = useState<SpaceListInfo[]>();
+function useSpacesList(): SpaceListInfo[] | undefined {
+	const [data, setData] = useState<SpaceListInfo[]>();
 	const directoryConnector = useDirectoryConnector();
 
-	const fetchRoomList = useCallback(async () => {
+	const fetchData = useCallback(async () => {
 		const result = await directoryConnector.awaitResponse('listSpaces', EMPTY);
 		if (result && result.spaces) {
-			setRoomList(result.spaces);
+			setData(result.spaces);
 		}
 	}, [directoryConnector]);
 
 	useDirectoryChangeListener('spaceList', () => {
-		fetchRoomList().catch(noop);
+		fetchData().catch(noop);
 	});
 
-	return roomList;
+	return data;
 }
 
-export function useRoomExtendedInfo(chatroomId: SpaceId): SpaceExtendedInfoResponse | undefined {
+export function useSpaceExtendedInfo(id: SpaceId): SpaceExtendedInfoResponse | undefined {
 	const [response, setResponse] = useState<SpaceExtendedInfoResponse>();
 	const directoryConnector = useDirectoryConnector();
 
-	const fetchRoomInfo = useCallback(async () => {
-		const result = await directoryConnector.awaitResponse('spaceGetInfo', { id: chatroomId });
+	const fetchData = useCallback(async () => {
+		const result = await directoryConnector.awaitResponse('spaceGetInfo', { id });
 		setResponse(result);
-	}, [directoryConnector, chatroomId]);
+	}, [directoryConnector, id]);
 
 	useDirectoryChangeListener('spaceList', () => {
-		fetchRoomInfo().catch(noop);
+		fetchData().catch(noop);
 	});
 
 	return response;

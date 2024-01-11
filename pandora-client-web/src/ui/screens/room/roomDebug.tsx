@@ -6,7 +6,7 @@ import { useEvent } from '../../../common/useEvent';
 import { USER_DEBUG } from '../../../config/Environment';
 import { useObservable } from '../../../observable';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
-import { useChatRoomCharacters, useChatRoomInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
 import { Character, useCharacterData } from '../../../character/character';
 
 const ChatroomDebugConfigSchema = z.object({
@@ -48,8 +48,7 @@ export function ChatroomDebugConfigView(): ReactElement {
 		});
 	});
 
-	const roomInfo = useChatRoomInfo();
-	const roomCharacters = useChatRoomCharacters();
+	const characters = useSpaceCharacters();
 
 	return (
 		<FieldsetToggle legend='[DEV] Debug options' forceOpen={ chatroomDebugConfig.enabled } onChange={ setOpen }>
@@ -92,19 +91,13 @@ export function ChatroomDebugConfigView(): ReactElement {
 					} }
 				/>
 			</div>
-			<h3>Chatroom details</h3>
-			{
-				(!roomInfo || !roomCharacters) ? <div>Not in a chatroom</div> : (
-					<>
-						<h4>Characters</h4>
-						<div className='flex-col'>
-							{ roomCharacters.map((c) => (
-								<ChatroomDebugCharacterView key={ c.id } character={ c } />
-							)) }
-						</div>
-					</>
-				)
-			}
+			<h3>Space details</h3>
+			<h4>Characters</h4>
+			<div className='flex-col'>
+				{ characters.map((c) => (
+					<ChatroomDebugCharacterView key={ c.id } character={ c } />
+				)) }
+			</div>
 		</FieldsetToggle>
 	);
 }

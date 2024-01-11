@@ -1,4 +1,4 @@
-import { ChatParser, LineParser, SegmentParser } from '../../../src/components/chatroom/chatParser';
+import { ChatParser, LineParser, SegmentParser } from '../../../src/ui/components/chat/chatParser';
 
 describe('LineParser', () => {
 	const mockLineParser = new LineParser();

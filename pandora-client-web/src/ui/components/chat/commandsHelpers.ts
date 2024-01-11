@@ -9,10 +9,10 @@ export type SelfSelect = 'none' | 'otherCharacter' | 'any';
 
 export const CommandSelectorCharacter = ({ allowSelf }: {
 	allowSelf: SelfSelect;
-}): CommandStepProcessor<Character<ICharacterRoomData>, ICommandClientNeededContext<'chatRoom'>> => ({
+}): CommandStepProcessor<Character<ICharacterRoomData>, ICommandClientNeededContext<'gameState'>> => ({
 	preparse: 'quotedArgTrimmed',
-	parse(selector, { chatRoom }, _args) {
-		const characters = chatRoom.characters.value;
+	parse(selector, { gameState }, _args) {
+		const characters = gameState.characters.value;
 
 		if (!selector) {
 			return {
@@ -42,7 +42,7 @@ export const CommandSelectorCharacter = ({ allowSelf }: {
 					error: `This command doesn't allow targeting yourself.`,
 				};
 			}
-			if (allowSelf === 'none' && target.data.accountId === chatRoom.player?.data.accountId) {
+			if (allowSelf === 'none' && target.data.accountId === gameState.player?.data.accountId) {
 				return {
 					success: false,
 					error: `This command doesn't allow targeting your account.`,
@@ -67,7 +67,7 @@ export const CommandSelectorCharacter = ({ allowSelf }: {
 					error: `This command doesn't allow targeting yourself.`,
 				};
 			}
-			if (allowSelf === 'none' && targets[0].data.accountId === chatRoom.player?.data.accountId) {
+			if (allowSelf === 'none' && targets[0].data.accountId === gameState.player?.data.accountId) {
 				return {
 					success: false,
 					error: `This command doesn't allow targeting your account.`,
@@ -89,10 +89,10 @@ export const CommandSelectorCharacter = ({ allowSelf }: {
 			};
 		}
 	},
-	autocomplete(selector, { chatRoom }, _args) {
-		const characters = chatRoom.characters.value
+	autocomplete(selector, { gameState }, _args) {
+		const characters = gameState.characters.value
 			.filter((c) => allowSelf === 'any' || !c.isPlayer())
-			.filter((c) => allowSelf !== 'none' || c.data.accountId !== chatRoom.player?.data.accountId);
+			.filter((c) => allowSelf !== 'none' || c.data.accountId !== gameState.player?.data.accountId);
 		// Prefer using id, if the input looks anything like an id
 		if (/^c?[0-9]+$/.test(selector)) {
 			if (selector.startsWith('c')) {

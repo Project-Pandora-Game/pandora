@@ -1,6 +1,6 @@
 import React, { ReactElement } from 'react';
 import { DivContainer } from '../../../components/common/container/container';
-import { ChatRoomScene } from '../../../graphics/room/roomScene';
+import { RoomScene } from '../../../graphics/room/roomScene';
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs';
 import { WardrobeContextProvider } from '../../../components/wardrobe/wardrobeContext';
 import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardrobeExpressionsView';
@@ -8,24 +8,24 @@ import { WardrobePoseGui } from '../../../components/wardrobe/views/wardrobePose
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { Chat } from '../../components/chat/chat';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
-import { ChatroomControls, PersonalRoomControls, useRoomConstructionModeCheck } from './roomControls';
+import { RoomControls, PersonalSpaceControls, useRoomConstructionModeCheck } from './roomControls';
 import { useCurrentAccountSettings } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { useIsPortrait } from '../../../styles/mediaQueries';
-import { useChatRoomInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import './room.scss';
 
-export function Chatroom(): ReactElement | null {
+export function RoomScreen(): ReactElement | null {
 	const { interfaceChatroomGraphicsRatioHorizontal, interfaceChatroomGraphicsRatioVertical } = useCurrentAccountSettings();
 	const isPortrait = useIsPortrait();
-	const roomInfo = useChatRoomInfo();
+	const spaceInfo = useSpaceInfo();
 	useRoomConstructionModeCheck();
 
 	const chatroomGraphicsRatio = isPortrait ? interfaceChatroomGraphicsRatioVertical : interfaceChatroomGraphicsRatioHorizontal;
 	const chatroomChatRatio = 10 - chatroomGraphicsRatio;
 
 	return (
-		<DivContainer className='chatroom' direction={ isPortrait ? 'column' : 'row' } key={ roomInfo.id ?? '_personal' }>
-			<ChatRoomScene className={ `chatroom-scene flex-${chatroomGraphicsRatio}` } />
+		<DivContainer className='roomScreen' direction={ isPortrait ? 'column' : 'row' } key={ spaceInfo.id ?? '_personal' }>
+			<RoomScene className={ `room-scene flex-${chatroomGraphicsRatio}` } />
 			<InteractionBox className={ `interactionArea flex-${chatroomChatRatio}` } />
 		</DivContainer>
 	);
@@ -35,16 +35,16 @@ function InteractionBox({ className }: {
 	className?: string;
 }): ReactElement {
 	const { player, playerState } = usePlayerState();
-	const roomInfo = useChatRoomInfo();
-	const isPersonalRoom = roomInfo.id == null;
+	const spaceInfo = useSpaceInfo();
+	const isPersonalSpace = spaceInfo.id == null;
 
 	return (
 		<TabContainer className={ className } collapsable>
 			{
-				isPersonalRoom ? (
-					<Tab name='Personal room'>
+				isPersonalSpace ? (
+					<Tab name='Personal space'>
 						<Scrollable color='dark' className='controls-container flex-1'>
-							<PersonalRoomControls />
+							<PersonalSpaceControls />
 						</Scrollable>
 					</Tab>
 				) : null
@@ -53,10 +53,10 @@ function InteractionBox({ className }: {
 				<Chat />
 			</Tab>
 			{
-				!isPersonalRoom ? (
+				!isPersonalSpace ? (
 					<Tab name='Room'>
 						<Scrollable color='dark' className='controls-container flex-1'>
-							<ChatroomControls />
+							<RoomControls />
 						</Scrollable>
 					</Tab>
 				) : null

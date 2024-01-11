@@ -13,10 +13,9 @@ import {
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
-import { ICharacter } from '../../character/character';
 import { Observable } from '../../observable';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { useActionRoomContext, useChatRoomCharacters, useChatroomRequired, useRoomState } from '../gameContext/gameStateContextProvider';
+import { useActionSpaceContext, useSpaceCharacters, useGameState, useGlobalState } from '../gameContext/gameStateContextProvider';
 import type { PlayerCharacter } from '../../character/player';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
@@ -29,18 +28,20 @@ import { Column } from '../common/container/container';
 import { useConfirmDialog } from '../dialog/dialog';
 import { WardrobeCheckResultForConfirmationWarnings } from './wardrobeUtils';
 import { ActionWarningContent } from './wardrobeComponents';
-import { Immutable } from 'immer';
+import { Immutable, freeze } from 'immer';
 
 export const wardrobeContext = createContext<WardrobeContext | null>(null);
+
+export const WARDROBE_TARGET_ROOM: WardrobeTarget = freeze({ type: 'room' });
 
 export function WardrobeContextProvider({ target, player, children }: { target: WardrobeTarget; player: PlayerCharacter; children: ReactNode; }): ReactElement {
 	const account = useCurrentAccount();
 	const assetList = useAssetManager().assetList;
-	const room = useChatroomRequired();
-	const globalStateContainer = room.globalState;
-	const spaceContext = useActionRoomContext();
+	const gameState = useGameState();
+	const globalStateContainer = gameState.globalState;
+	const spaceContext = useActionSpaceContext();
 	const shardConnector = useShardConnector();
-	const chatroomCharacters: readonly ICharacter[] = useChatRoomCharacters() ?? EMPTY_ARRAY;
+	const characters = useSpaceCharacters();
 
 	AssertNotNullable(account);
 
@@ -56,13 +57,13 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		spaceContext,
 		getCharacter: (id) => {
 			const state = globalStateContainer.currentState.getCharacterState(id);
-			const character = chatroomCharacters.find((c) => c.id === id);
+			const character = characters.find((c) => c.id === id);
 			if (!state || !character)
 				return null;
 
 			return character.gameLogicCharacter;
 		},
-	}), [player, globalStateContainer, spaceContext, chatroomCharacters]);
+	}), [player, globalStateContainer, spaceContext, characters]);
 
 	const targetSelector = useMemo((): ActionTargetSelector => {
 		if (target.type === 'character') {
@@ -78,7 +79,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		AssertNever(target);
 	}, [target]);
 
-	const globalState = useRoomState(room);
+	const globalState = useGlobalState(gameState);
 
 	useEffect(() => {
 		if (heldItem.type === 'item') {

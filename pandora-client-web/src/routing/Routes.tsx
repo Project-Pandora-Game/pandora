@@ -6,9 +6,9 @@ import { usePlayerData } from '../components/gameContext/playerContextProvider';
 import { Settings } from '../components/settings/settings';
 import { CharacterCreate } from '../components/characterCreate/characterCreate';
 import { CharacterSelect } from '../components/characterSelect/characterSelect';
-import { Chatroom } from '../ui/screens/room/room';
-import { ChatroomAdmin, ChatroomCreate } from '../ui/screens/spaceConfiguration/spaceConfiguration';
-import { ChatroomSelect } from '../ui/screens/spacesSearch/spacesSearch';
+import { RoomScreen } from '../ui/screens/room/room';
+import { SpaceConfiguration, SpaceCreate } from '../ui/screens/spaceConfiguration/spaceConfiguration';
+import { SpacesSearch } from '../ui/screens/spacesSearch/spacesSearch';
 import { useCurrentAccount } from '../components/gameContext/directoryConnectorContextProvider';
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
 import { AuthPage } from '../components/login/authPage';
@@ -36,10 +36,10 @@ export function PandoraRoutes(): ReactElement {
 			<Route path='/profiles/account/:accountId' element={ <RequiresLogin element={ AccountProfileScreenRouter } /> } />
 			<Route path='/profiles/character/:characterId' element={ <RequiresCharacter element={ CharacterProfileScreenRouter } /> } />
 
-			<Route path='/chatroom' element={ <RequiresCharacter element={ Chatroom } /> } />
-			<Route path='/chatroom_select' element={ <RequiresCharacter element={ ChatroomSelect } /> } />
-			<Route path='/chatroom_create' element={ <RequiresCharacter element={ ChatroomCreate } /> } />
-			<Route path='/chatroom_admin' element={ <RequiresCharacter element={ ChatroomAdmin } /> } />
+			<Route path='/chatroom' element={ <RequiresCharacter element={ RoomScreen } /> } />
+			<Route path='/chatroom_select' element={ <RequiresCharacter element={ SpacesSearch } /> } />
+			<Route path='/chatroom_create' element={ <RequiresCharacter element={ SpaceCreate } /> } />
+			<Route path='/chatroom_admin' element={ <RequiresCharacter element={ SpaceConfiguration } /> } />
 
 			<Route path='/wardrobe' element={ <RequiresCharacter element={ WardrobeScreen } /> } />
 

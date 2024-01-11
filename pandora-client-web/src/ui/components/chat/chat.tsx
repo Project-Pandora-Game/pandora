@@ -11,7 +11,7 @@ import React, {
 } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import { ContextMenu, useContextMenu } from '../../../components/contextMenu';
-import { useChatRoomMessages, useChatRoomMessageSender } from '../../../components/gameContext/gameStateContextProvider';
+import { useChatMessages, useChatMessageSender } from '../../../components/gameContext/gameStateContextProvider';
 import { NotificationSource, useNotificationSuppressed } from '../../../components/gameContext/notificationContextProvider';
 import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider';
@@ -21,7 +21,7 @@ import { useAutoScroll } from '../../../common/useAutoScroll';
 import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatMessages';
 
 export function Chat(): ReactElement | null {
-	const messages = useChatRoomMessages();
+	const messages = useChatMessages();
 	const shardConnector = useShardConnector();
 	const [messagesDiv, scroll, isScrolling] = useAutoScroll<HTMLDivElement>([messages]);
 	const lastMessageCount = useRef(0);
@@ -104,7 +104,7 @@ function DisplayUserMessage({ message, playerId }: { message: IChatMessageChat &
 }
 
 function DisplayContextMenuItems({ close, id }: { close: () => void; id: number; }): ReactElement {
-	const sender = useChatRoomMessageSender();
+	const sender = useChatMessageSender();
 	const timeout = sender.getMessageEditTimeout(id);
 	const [edit, setEdit] = useState(timeout !== undefined && timeout > 0);
 	const { setEditing } = useChatInput();

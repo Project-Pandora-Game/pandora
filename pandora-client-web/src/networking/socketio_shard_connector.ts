@@ -17,7 +17,7 @@ import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/
 import { connect, Socket } from 'socket.io-client';
 import { LoadAssetDefinitions } from '../assets/assetManager';
 import { BrowserStorage } from '../browserStorage';
-import { ChatRoom } from '../components/gameContext/gameStateContextProvider';
+import { GameState } from '../components/gameContext/gameStateContextProvider';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
 import { ShardConnector, ShardConnectionState } from './shardConnector';
@@ -50,7 +50,7 @@ const ShardConnectionProgress = new PersistentToast();
 export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardClient, Socket> implements ShardConnector {
 
 	private readonly _state: Observable<ShardConnectionState> = new Observable<ShardConnectionState>(ShardConnectionState.NONE);
-	private readonly _gameState: Observable<ChatRoom | null>;
+	private readonly _gameState: Observable<GameState | null>;
 	private readonly _connectionInfo: Observable<IDirectoryCharacterConnectionInfo>;
 	private readonly _changeEventEmitter = new ShardChangeEventEmitter();
 	private readonly _messageHandler: MessageHandler<IShardClient>;
@@ -62,7 +62,7 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 		return this._state;
 	}
 
-	public get gameState(): ReadonlyObservable<ChatRoom | null> {
+	public get gameState(): ReadonlyObservable<GameState | null> {
 		return this._gameState;
 	}
 
@@ -78,7 +78,7 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 	constructor(info: IDirectoryCharacterConnectionInfo) {
 		super(CreateConnection(info), [ClientShardSchema, ShardClientSchema], logger);
 		this._connectionInfo = new Observable<IDirectoryCharacterConnectionInfo>(info);
-		this._gameState = new Observable<ChatRoom | null>(null);
+		this._gameState = new Observable<GameState | null>(null);
 
 		// Setup event handlers
 		this.socket.on('connect', this.onConnect.bind(this));
@@ -101,7 +101,7 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 			},
 			chatMessage: (message: IShardClientArgument['chatMessage']) => {
 				const gameState = this._gameState.value;
-				Assert(gameState != null, 'Received chatroom message without game state');
+				Assert(gameState != null, 'Received chat message without game state');
 				const lastTime = gameState.onMessage(message.messages);
 				if (lastTime > 0) {
 					this.sendMessage('chatMessageAck', { lastTime });
@@ -109,7 +109,7 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 			},
 			chatCharacterStatus: (status: IShardClientArgument['chatCharacterStatus']) => {
 				const gameState = this._gameState.value;
-				Assert(gameState != null, 'Received chatroom status data without game state');
+				Assert(gameState != null, 'Received chat character status data without game state');
 				gameState.onStatus(status);
 			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
@@ -227,7 +227,7 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 			currentGameState.player.update(character);
 			currentGameState.onLoad({ globalState, space });
 		} else {
-			this._gameState.value = new ChatRoom(this, character, { globalState, space });
+			this._gameState.value = new GameState(this, character, { globalState, space });
 		}
 
 		if (currentState === ShardConnectionState.CONNECTED) {

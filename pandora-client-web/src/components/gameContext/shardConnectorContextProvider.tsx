@@ -61,15 +61,15 @@ export function ShardConnectorContextProvider({ children }: ChildrenProps): Reac
 		shardConnectorFactory: (info) => new SocketIOShardConnector(info),
 	}), []);
 
-	const chatRoom = useNullableObservable(shardConnector?.gameState);
+	const gameState = useNullableObservable(shardConnector?.gameState);
 
 	useEffect(() => {
-		return chatRoom?.on('messageNotify', notify);
-	}, [chatRoom, notify]);
+		return gameState?.on('messageNotify', notify);
+	}, [gameState, notify]);
 
 	useDebugExpose('shardConnector', shardConnector);
-	useDebugExpose('player', chatRoom?.player);
-	useDebugExpose('chatRoom', chatRoom);
+	useDebugExpose('player', gameState?.player);
+	useDebugExpose('gameState', gameState);
 
 	return (
 		<connectorFactoryContext.Provider value={ context }>

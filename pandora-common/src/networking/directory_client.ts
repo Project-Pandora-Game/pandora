@@ -49,10 +49,12 @@ export const DirectoryAccountSettingsSchema = z.object({
 	 * If outfits tab should generate previews for outfits and if the previews should be small or big.
 	 */
 	wardrobeOutfitsPreview: z.enum(['disabled', 'small', 'big']).default('small'),
+	// TODO(spaces): Consider dropping this option, it might no longer be needed
 	/**
 	 * Color to use as wardrobe character preview background, unless room background is used (see `wardrobeUseRoomBackground` setting).
 	 */
 	wardrobeBackground: HexColorStringSchema.catch('#aaaaaa'),
+	// TODO(spaces): Consider dropping this option, it might no longer be needed
 	/**
 	 * Controls whether wardrobe should use the room's background, if character is in a room.
 	 * If character is not in the room, or if this is `false`, then `wardrobeBackground` setting is used.

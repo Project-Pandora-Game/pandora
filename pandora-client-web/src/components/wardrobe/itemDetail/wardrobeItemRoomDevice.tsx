@@ -9,7 +9,7 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react';
 import { ICharacter } from '../../../character/character';
-import { useChatRoomCharacters } from '../../gameContext/gameStateContextProvider';
+import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import _ from 'lodash';
 import { Column, Row } from '../../common/container/container';
@@ -179,7 +179,7 @@ function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
 }): ReactElement | null {
 	const { targetSelector, player } = useWardrobeContext();
 
-	const characters: readonly ICharacter[] = useChatRoomCharacters() ?? [player];
+	const characters: readonly ICharacter[] = useSpaceCharacters();
 
 	let contents: ReactNode;
 

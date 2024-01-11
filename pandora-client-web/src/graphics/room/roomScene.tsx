@@ -17,7 +17,7 @@ import React, { ReactElement, useCallback, useEffect, useMemo, useState } from '
 import { useEvent } from '../../common/useEvent';
 import { Character, useCharacterData } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
-import { useChatRoomInfo, useChatRoomCharacters, useCharacterRestrictionsManager, useCharacterState, useRoomState } from '../../components/gameContext/gameStateContextProvider';
+import { useSpaceInfo, useSpaceCharacters, useCharacterRestrictionsManager, useCharacterState, useGlobalState } from '../../components/gameContext/gameStateContextProvider';
 import { useShardConnector } from '../../components/gameContext/shardConnectorContextProvider';
 import { usePlayer, usePlayerState } from '../../components/gameContext/playerContextProvider';
 import { IBounceOptions } from 'pixi-viewport';
@@ -26,10 +26,10 @@ import { useAssetManager } from '../../assets/assetManager';
 import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomDebug';
 import { PixiViewportSetupCallback } from '../pixiViewport';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphicsScene';
-import { ChatRoomCharacterInteractive } from './roomCharacter';
+import { RoomCharacterInteractive } from './roomCharacter';
 import { PointLike } from '../graphicsCharacter';
-import { ChatRoomDeviceInteractive, ChatRoomDeviceMovementTool, useIsRoomConstructionModeEnabled } from './roomDevice';
-import { useChatroomRequired } from '../../components/gameContext/gameStateContextProvider';
+import { RoomDeviceInteractive, RoomDeviceMovementTool, useIsRoomConstructionModeEnabled } from './roomDevice';
+import { useGameState } from '../../components/gameContext/gameStateContextProvider';
 import { shardConnectorContext } from '../../components/gameContext/shardConnectorContextProvider';
 import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
 import { CharacterContextMenu } from './contextMenus/characterContextMenu';
@@ -45,19 +45,19 @@ const BASE_BOUNCE_OPTIONS: IBounceOptions = {
 	underflow: 'center',
 };
 
-interface ChatRoomGraphicsSceneProps extends CommonProps {
+interface RoomGraphicsSceneProps extends CommonProps {
 	characters: readonly Character<ICharacterRoomData>[];
 	shard: ShardConnector | null;
 	globalState: AssetFrameworkGlobalState;
 	info: Immutable<SpaceClientInfo>;
 	debugConfig: ChatroomDebugConfig;
-	chatRoomMode: Immutable<IChatRoomMode>;
-	setChatRoomMode: (newMode: Immutable<IChatRoomMode>) => void;
+	roomSceneMode: Immutable<IRoomSceneMode>;
+	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void;
 	menuOpen: (target: Character<ICharacterRoomData> | ItemRoomDevice, event: FederatedPointerEvent) => void;
 }
 
-export function ChatRoomGraphicsScene({
+export function RoomGraphicsScene({
 	id,
 	className,
 	children,
@@ -66,11 +66,11 @@ export function ChatRoomGraphicsScene({
 	globalState,
 	info,
 	debugConfig,
-	chatRoomMode,
-	setChatRoomMode,
+	roomSceneMode,
+	setRoomSceneMode,
 	onPointerDown,
 	menuOpen,
-}: ChatRoomGraphicsSceneProps): ReactElement {
+}: RoomGraphicsSceneProps): ReactElement {
 	const assetManager = useAssetManager();
 
 	const roomState = globalState.room;
@@ -137,11 +137,11 @@ export function ChatRoomGraphicsScene({
 			<Container zIndex={ 10 } sortableChildren>
 				{
 					characters.map((character) => (
-						<ChatRoomCharacterInteractive
+						<RoomCharacterInteractive
 							key={ character.data.id }
 							globalState={ globalState }
 							character={ character }
-							roomInfo={ info }
+							spaceInfo={ info }
 							debugConfig={ debugConfig }
 							background={ roomBackground }
 							shard={ shard }
@@ -151,14 +151,14 @@ export function ChatRoomGraphicsScene({
 				}
 				{
 					roomDevices.map((device) => (device.isDeployed() ? (
-						<ChatRoomDeviceInteractive
+						<RoomDeviceInteractive
 							key={ device.id }
 							globalState={ globalState }
 							item={ device }
 							deployment={ device.deployment }
 							background={ roomBackground }
-							chatRoomMode={ chatRoomMode }
-							setChatRoomMode={ setChatRoomMode }
+							roomSceneMode={ roomSceneMode }
+							setRoomSceneMode={ setRoomSceneMode }
 							shard={ shard }
 							menuOpen={ menuOpen }
 						/>
@@ -167,15 +167,15 @@ export function ChatRoomGraphicsScene({
 			</Container>
 			<Container zIndex={ 20 } sortableChildren>
 				{
-					roomDevices.map((device) => ((chatRoomMode.mode === 'moveDevice' && chatRoomMode.deviceItemId === device.id && device.isDeployed()) ? (
-						<ChatRoomDeviceMovementTool
+					roomDevices.map((device) => ((roomSceneMode.mode === 'moveDevice' && roomSceneMode.deviceItemId === device.id && device.isDeployed()) ? (
+						<RoomDeviceMovementTool
 							key={ device.id }
 							globalState={ globalState }
 							item={ device }
 							deployment={ device.deployment }
 							background={ roomBackground }
-							chatRoomMode={ chatRoomMode }
-							setChatRoomMode={ setChatRoomMode }
+							roomSceneMode={ roomSceneMode }
+							setRoomSceneMode={ setRoomSceneMode }
 							shard={ shard }
 							menuOpen={ menuOpen }
 						/>
@@ -245,19 +245,19 @@ export function useCharacterDisplayFilters(character: Character<ICharacterRoomDa
 	return isOnline ? onlineFilters : offlineFilters;
 }
 
-export type IChatRoomMode = {
+export type IRoomSceneMode = {
 	mode: 'normal';
 } | {
 	mode: 'moveDevice';
 	deviceItemId: ItemId;
 };
 
-export function ChatRoomScene({ className }: {
+export function RoomScene({ className }: {
 	className?: string;
 }): ReactElement {
-	const chatRoom = useChatroomRequired();
-	const info = useChatRoomInfo();
-	const characters = useChatRoomCharacters();
+	const gameState = useGameState();
+	const info = useSpaceInfo();
+	const characters = useSpaceCharacters();
 	const shard = useShardConnector();
 	const [menuActive, setMenuActive] = useState<{
 		character?: Character<ICharacterRoomData>;
@@ -267,22 +267,22 @@ export function ChatRoomScene({ className }: {
 	const player = usePlayer();
 	const debugConfig = useDebugConfig();
 
-	const globalState = useRoomState(chatRoom);
+	const globalState = useGlobalState(gameState);
 
-	const [chatRoomMode, setChatRoomMode] = useState<Immutable<IChatRoomMode>>({ mode: 'normal' });
+	const [roomSceneMode, setRoomSceneMode] = useState<Immutable<IRoomSceneMode>>({ mode: 'normal' });
 
 	AssertNotNullable(characters);
 	AssertNotNullable(player);
 
-	const playerState = useCharacterState(chatRoom, player.id);
+	const playerState = useCharacterState(gameState, player.id);
 	AssertNotNullable(playerState);
 
 	const roomConstructionMode = useIsRoomConstructionModeEnabled();
 	useEffect(() => {
-		if (!roomConstructionMode && chatRoomMode.mode === 'moveDevice') {
-			setChatRoomMode({ mode: 'normal' });
+		if (!roomConstructionMode && roomSceneMode.mode === 'moveDevice') {
+			setRoomSceneMode({ mode: 'normal' });
 		}
-	}, [roomConstructionMode, chatRoomMode]);
+	}, [roomConstructionMode, roomSceneMode]);
 
 	const menuOpen = useCallback((target: Character<ICharacterRoomData> | ItemRoomDevice | null, event: FederatedPointerEvent | null) => {
 		if (!target || !event) {
@@ -312,15 +312,15 @@ export function ChatRoomScene({ className }: {
 	}, []);
 
 	return (
-		<ChatRoomGraphicsScene
+		<RoomGraphicsScene
 			className={ className }
 			characters={ characters }
 			shard={ shard }
 			globalState={ globalState }
 			info={ info.config }
 			debugConfig={ debugConfig }
-			chatRoomMode={ chatRoomMode }
-			setChatRoomMode={ setChatRoomMode }
+			roomSceneMode={ roomSceneMode }
+			setRoomSceneMode={ setRoomSceneMode }
 			onPointerDown={ onPointerDown }
 			menuOpen={ menuOpen }
 		>
@@ -332,12 +332,12 @@ export function ChatRoomScene({ className }: {
 					<DeviceContextMenu
 						deviceItemId={ menuActive.deviceItemId }
 						position={ menuActive.position }
-						chatRoomMode={ chatRoomMode }
-						setChatRoomMode={ setChatRoomMode }
+						roomSceneMode={ roomSceneMode }
+						setRoomSceneMode={ setRoomSceneMode }
 						onClose={ closeContextMenu }
 					/>
 				) : null
 			}
-		</ChatRoomGraphicsScene>
+		</RoomGraphicsScene>
 	);
 }

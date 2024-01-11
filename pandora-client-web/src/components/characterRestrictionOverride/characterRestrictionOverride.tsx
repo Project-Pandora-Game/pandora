@@ -10,7 +10,7 @@ import { ModalDialog } from '../dialog/dialog';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { ContextHelpButton } from '../help/contextHelpButton';
-import { useCharacterState, useChatroomRequired } from '../gameContext/gameStateContextProvider';
+import { useCharacterState, useGameState } from '../gameContext/gameStateContextProvider';
 
 export type RestrictionOverrideDialogContext = {
 	show: () => void;
@@ -47,8 +47,8 @@ export function CharacterRestrictionOverrideDialog({ player }: {
 	player: PlayerCharacter;
 }): ReactElement {
 	const { hide } = useRestrictionOverrideDialogContext();
-	const roomContext = useChatroomRequired();
-	const state = useCharacterState(roomContext, player.id);
+	const gameState = useGameState();
+	const state = useCharacterState(gameState, player.id);
 	const restrictionOverride = state?.restrictionOverride;
 
 	useKeyDownEvent(useCallback(() => {
@@ -191,7 +191,7 @@ function CharacterSafemodeHelpText(): ReactElement {
 			<p>
 				<b>Safemode is a mode in which items do not apply any restrictions to the character in it.</b><br />
 				This means that the character can modify their appearance and items without any limits<br />
-				(except if the room limits usage or spawning of certain items).<br />
+				(except if the space limits usage or spawning of certain items).<br />
 				For instance, characters in safe mode can generally open/remove any lock on themselves.
 			</p>
 			<p>

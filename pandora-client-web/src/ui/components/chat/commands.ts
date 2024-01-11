@@ -2,7 +2,7 @@ import type { IClientCommand, ICommandExecutionContextClient } from './commandsP
 import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, AccountIdSchema, CommandStepProcessor, AccountId } from 'pandora-common';
 import { CommandSelectorCharacter, CommandSelectorEnum } from './commandsHelpers';
 import { ChatMode } from './chatInput';
-import { IsChatroomAdmin } from '../../../components/gameContext/gameStateContextProvider';
+import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider';
 import { capitalize } from 'lodash';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
@@ -79,7 +79,7 @@ function CreateMessageTypeParsers(type: IChatType, allowFormattedMode: boolean =
 	];
 }
 
-function CreateChatroomAdminAction(action: IClientDirectoryArgument['spaceAdminAction']['action'], longDescription: string): IClientCommand {
+function CreateSpaceAdminAction(action: IClientDirectoryArgument['spaceAdminAction']['action'], longDescription: string): IClientCommand {
 	return {
 		key: [action],
 		usage: '<target>',
@@ -88,12 +88,12 @@ function CreateChatroomAdminAction(action: IClientDirectoryArgument['spaceAdminA
 		handler: CreateClientCommand()
 			// TODO make this accept multiple targets and accountIds
 			.argument('target', CommandSelectorCharacter({ allowSelf: 'none' }))
-			.handler(({ chatRoom, directoryConnector }, { target }) => {
-				if (!IsChatroomAdmin(chatRoom.currentRoom.value.config, directoryConnector.currentAccount.value))
+			.handler(({ gameState, directoryConnector }, { target }) => {
+				if (!IsSpaceAdmin(gameState.currentSpace.value.config, directoryConnector.currentAccount.value))
 					return;
 
-				if (['kick', 'ban'].includes(action) && IsChatroomAdmin(chatRoom.currentRoom.value.config, { id: target.data.accountId })) {
-					toast('You cannot kick or ban a chatroom admin.', TOAST_OPTIONS_WARNING);
+				if (['kick', 'ban'].includes(action) && IsSpaceAdmin(gameState.currentSpace.value.config, { id: target.data.accountId })) {
+					toast('You cannot kick or ban an admin.', TOAST_OPTIONS_WARNING);
 					return;
 				}
 
@@ -124,10 +124,10 @@ export const COMMANDS: readonly IClientCommand[] = [
 	...CreateMessageTypeParsers('ooc'),
 	...CreateMessageTypeParsers('me'),
 	...CreateMessageTypeParsers('emote'),
-	CreateChatroomAdminAction('kick', 'Kicks a user from the current chatroom.'),
-	CreateChatroomAdminAction('ban', 'Bans a user from the current chatroom.'),
-	CreateChatroomAdminAction('promote', 'Promotes a user to chatroom admin.'),
-	CreateChatroomAdminAction('demote', 'Demotes a user from chatroom admin.'),
+	CreateSpaceAdminAction('kick', 'Kicks a user from the current space.'),
+	CreateSpaceAdminAction('ban', 'Bans a user from the current space.'),
+	CreateSpaceAdminAction('promote', 'Promotes a user to a space admin.'),
+	CreateSpaceAdminAction('demote', 'Demotes a user from a space admin.'),
 	{
 		key: ['block'],
 		usage: '<target>',
@@ -217,8 +217,8 @@ export const COMMANDS: readonly IClientCommand[] = [
 		longDescription: `(alternative command: '/t')`,
 		usage: '',
 		handler: CreateClientCommand()
-			.handler(({ shardConnector, chatRoom, player }) => {
-				const playerState = chatRoom.globalState.currentState.characters.get(player.id);
+			.handler(({ shardConnector, gameState, player }) => {
+				const playerState = gameState.globalState.currentState.characters.get(player.id);
 				if (!playerState)
 					return false;
 

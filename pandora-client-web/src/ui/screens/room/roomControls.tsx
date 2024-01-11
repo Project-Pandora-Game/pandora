@@ -3,7 +3,7 @@ import React, {
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/common/button/button';
-import { useChatRoomCharacters, useCharacterState, useChatRoomInfo, useChatroomRequired, IsChatroomAdmin, useActionRoomContext } from '../../../components/gameContext/gameStateContextProvider';
+import { useSpaceCharacters, useCharacterState, useSpaceInfo, useGameState, IsSpaceAdmin, useActionSpaceContext } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayerId, usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { useChatInput } from '../../components/chat/chatInput';
 import { USER_DEBUG } from '../../../config/Environment';
@@ -18,13 +18,13 @@ import { Select } from '../../../components/common/select/select';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { useCurrentAccount } from '../../../components/gameContext/directoryConnectorContextProvider';
 
-export function ChatroomControls(): ReactElement | null {
-	const roomInfo = useChatRoomInfo().config;
-	const roomCharacters = useChatRoomCharacters();
-	const navigate = useNavigate();
+export function RoomControls(): ReactElement | null {
+	const spaceConfig = useSpaceInfo().config;
+	const characters = useSpaceCharacters();
 	const player = usePlayer();
+	const navigate = useNavigate();
 
-	if (!roomCharacters || !player) {
+	if (!characters || !player) {
 		return null;
 	}
 
@@ -32,16 +32,16 @@ export function ChatroomControls(): ReactElement | null {
 		<Column padding='medium' className='controls'>
 			<Row padding='small'>
 				<Button onClick={ () => navigate('/wardrobe', { state: { target: 'room' } }) } >Room inventory</Button>
-				<Button onClick={ () => navigate('/chatroom_admin') }>Room administration</Button>
+				<Button onClick={ () => navigate('/chatroom_admin') }>Space configuration</Button>
 			</Row>
 			<br />
 			<span>
-				These characters are in the room <b>{ roomInfo.name }</b>:
+				These characters are in the space <b>{ spaceConfig.name }</b>:
 			</span>
 			<div className='character-info'>
 				<DisplayCharacter char={ player } />
 				{
-					roomCharacters
+					characters
 						.filter((c) => c !== player)
 						.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />)
 				}
@@ -54,7 +54,7 @@ export function ChatroomControls(): ReactElement | null {
 	);
 }
 
-export function PersonalRoomControls(): ReactElement {
+export function PersonalSpaceControls(): ReactElement {
 	const navigate = useNavigate();
 	const player = usePlayer();
 	AssertNotNullable(player);
@@ -62,17 +62,17 @@ export function PersonalRoomControls(): ReactElement {
 	return (
 		<Column padding='medium' className='controls'>
 			<span>
-				This is { player.name }'s <b>personal room</b>.
+				This is { player.name }'s <b>personal space</b>.
 				<ContextHelpButton>
-					<h3>Personal room</h3>
+					<h3>Personal space</h3>
 					<p>
-						Every character has their own personal room, which functions as a singleplayer lobby.<br />
-						It cannot be deleted or given up. You will automatically end up in this room when your<br />
-						selected character is not in any multiplayer room.
+						Every character has their own personal space, which functions as a singleplayer lobby.<br />
+						It cannot be deleted or given up. You will automatically end up in this space when your<br />
+						selected character is not in any multiplayer space.
 					</p>
 					<span>
-						The personal room functions the same as any other room.<br />
-						As no one except you will see whatever you do in this room, it is a great place to experiment!<br />
+						The personal space functions the same as any other space.<br />
+						As no one except you will see whatever you do in this space, it is a great place to experiment!<br />
 						For example you can:
 						<ul className='margin-none'>
 							<li>Use the chat or chat commands</li>
@@ -83,14 +83,14 @@ export function PersonalRoomControls(): ReactElement {
 						</ul>
 					</span>
 					<p>
-						You can leave the room by joining another room with the "List of chatrooms" button in the "Personal room" tab.
+						You can leave the space by joining another space with the "List of spaces" button in the "Personal space" tab.
 					</p>
 					<span>
 						<b>Important notes:</b>
 						<ul>
-							<li>No other characters can join your personal room (not even your account's other characters)</li>
-							<li>Restraints will not prevent you from leaving the personal room</li>
-							<li>Being in a room device will also not prevent you from leaving the personal room</li>
+							<li>No other characters can join your personal space (not even your account's other characters)</li>
+							<li>Restraints will not prevent you from leaving the personal space</li>
+							<li>Being in a room device will also not prevent you from leaving the personal space</li>
 						</ul>
 					</span>
 				</ContextHelpButton>
@@ -102,7 +102,7 @@ export function PersonalRoomControls(): ReactElement {
 				<DisplayCharacter char={ player } />
 			</div>
 			<Row padding='small'>
-				<Button onClick={ () => navigate('/chatroom_select') } >List of chatrooms</Button>
+				<Button onClick={ () => navigate('/chatroom_select') } >List of spaces</Button>
 			</Row>
 			<br />
 			<DeviceOverlaySelector />
@@ -115,19 +115,19 @@ export function PersonalRoomControls(): ReactElement {
 export function useRoomConstructionModeCheck() {
 	const value = useObservable(DeviceOverlayState);
 	const currentAccount = useCurrentAccount();
-	const chatRoomInfo = useChatRoomInfo();
-	const isPlayerAdmin = IsChatroomAdmin(chatRoomInfo.config, currentAccount);
+	const spaceInfo = useSpaceInfo();
+	const isPlayerAdmin = IsSpaceAdmin(spaceInfo.config, currentAccount);
 	const { player, playerState } = usePlayerState();
-	const room = useActionRoomContext();
-	const canUseHands = useCharacterRestrictionManager(player, playerState, room).canUseHands();
+	const spaceContext = useActionSpaceContext();
+	const canUseHands = useCharacterRestrictionManager(player, playerState, spaceContext).canUseHands();
 
 	useEffect(() => {
 		let nextValue = DeviceOverlayState.value;
-		if (value.roomId !== chatRoomInfo.id) {
+		if (value.spaceId !== spaceInfo.id) {
 			nextValue = {
 				...nextValue,
 				roomConstructionMode: false,
-				roomId: chatRoomInfo.id,
+				spaceId: spaceInfo.id,
 			};
 		}
 		if (isPlayerAdmin !== value.isPlayerAdmin) {
@@ -145,7 +145,7 @@ export function useRoomConstructionModeCheck() {
 			};
 		}
 		DeviceOverlayState.value = nextValue;
-	}, [value, chatRoomInfo.id, isPlayerAdmin, canUseHands]);
+	}, [value, spaceInfo.id, isPlayerAdmin, canUseHands]);
 }
 
 function DeviceOverlaySelector(): ReactElement {
@@ -209,11 +209,11 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 	const { setTarget } = useChatInput();
 	const navigate = useNavigate();
 	const location = useLocation();
-	const chatroom = useChatroomRequired();
+	const gameState = useGameState();
 	const { show: showRestrictionOverrideContext } = useRestrictionOverrideDialogContext();
 
 	const data = useCharacterData(char);
-	const state = useCharacterState(chatroom, char.id);
+	const state = useCharacterState(gameState, char.id);
 	const isOnline = data.isOnline;
 
 	const isPlayer = char.id === playerId;

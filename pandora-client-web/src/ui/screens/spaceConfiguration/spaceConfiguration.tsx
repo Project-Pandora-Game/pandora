@@ -19,7 +19,7 @@ import {
 	LIMIT_SPACE_NAME_LENGTH,
 	CloneDeepMutable,
 } from 'pandora-common';
-import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { DirectoryConnector } from '../../../networking/directoryConnector';
 import { PersistentToast } from '../../../persistentToast';
@@ -29,7 +29,7 @@ import {
 	useDirectoryChangeListener,
 	useDirectoryConnector,
 } from '../../../components/gameContext/directoryConnectorContextProvider';
-import { ICurrentRoomInfo, IsChatroomAdmin, useChatRoomInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { CurrentSpaceInfo, IsSpaceAdmin, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
 import { Select } from '../../../components/common/select/select';
 import { ModalDialog } from '../../../components/dialog/dialog';
@@ -44,10 +44,10 @@ import { SelectionIndicator } from '../../../components/common/selectionIndicato
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { Immutable } from 'immer';
 
-const IsChatroomName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
-const IsChatroomDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
+const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
+const IsValidDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
 
-function DefaultRoomConfig(): SpaceDirectoryConfig {
+function DefaultConfig(): SpaceDirectoryConfig {
 	return {
 		name: '',
 		description: '',
@@ -61,7 +61,7 @@ function DefaultRoomConfig(): SpaceDirectoryConfig {
 	};
 }
 
-export const CHATROOM_FEATURES: { id: SpaceFeature; name: string; icon?: string; }[] = [
+export const SPACE_FEATURES: { id: SpaceFeature; name: string; icon?: string; }[] = [
 	{
 		id: 'allowBodyChanges',
 		name: 'Allow changes to character body',
@@ -81,29 +81,29 @@ export const CHATROOM_FEATURES: { id: SpaceFeature; name: string; icon?: string;
 
 const MAX_SCALING = 4;
 
-export function ChatroomCreate(): ReactElement {
-	return <ChatroomAdmin creation={ true } />;
+export function SpaceCreate(): ReactElement {
+	return <SpaceConfiguration creation />;
 }
 
-export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}): ReactElement | null {
-	const ID_PREFIX = 'chatroom-admin';
+export function SpaceConfiguration({ creation = false }: { creation?: boolean; } = {}): ReactElement | null {
+	const idPrefix = useId();
 
 	const navigate = useNavigate();
 	const currentAccount = useCurrentAccount();
 	AssertNotNullable(currentAccount);
-	const createRoom = useCreateRoom();
-	let currentRoomInfo: Immutable<ICurrentRoomInfo> | null = useChatRoomInfo();
-	const lastRoomId = useRef<SpaceId | null>();
-	const isInPublicRoom = currentRoomInfo.id != null;
+	const create = useCreateSpace();
+	let currentSpaceInfo: Immutable<CurrentSpaceInfo> | null = useSpaceInfo();
+	const lastSpaceId = useRef<SpaceId | null>();
+	const isInPublicSpace = currentSpaceInfo.id != null;
 	if (creation) {
-		currentRoomInfo = null;
+		currentSpaceInfo = null;
 	} else {
-		// Remember which room we were opened into - that way we can exit the screen if room changes abruptly
-		if (lastRoomId.current === undefined) {
-			lastRoomId.current = currentRoomInfo.id;
+		// Remember which space we were opened into - that way we can exit the screen if it changes abruptly
+		if (lastSpaceId.current === undefined) {
+			lastSpaceId.current = currentSpaceInfo.id;
 		}
 	}
-	const [roomModifiedData, setRoomModifiedData] = useReducer((oldState: Partial<SpaceDirectoryConfig>, action: Partial<SpaceDirectoryConfig>) => {
+	const [modifiedData, setModifiedData] = useReducer((oldState: Partial<SpaceDirectoryConfig>, action: Partial<SpaceDirectoryConfig>) => {
 		const result: Partial<SpaceDirectoryConfig> = {
 			...oldState,
 			...action,
@@ -126,18 +126,18 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 
 	const currentConfig: SpaceDirectoryConfig = useMemo(() => ({
-		...(CloneDeepMutable(currentRoomInfo?.config ?? DefaultRoomConfig())),
-		...roomModifiedData,
-	}), [currentRoomInfo, roomModifiedData]);
-	const roomId: SpaceId | null = currentRoomInfo?.id ?? null;
+		...(CloneDeepMutable(currentSpaceInfo?.config ?? DefaultConfig())),
+		...modifiedData,
+	}), [currentSpaceInfo, modifiedData]);
+	const currentSpaceId: SpaceId | null = currentSpaceInfo?.id ?? null;
 
-	const isPlayerOwner = !!(creation || accountId && currentRoomInfo?.config.owners.includes(accountId));
-	const isPlayerAdmin = creation || currentRoomInfo == null || IsChatroomAdmin(currentRoomInfo.config, currentAccount);
-	const canEdit = isPlayerAdmin && (creation || roomId != null);
+	const isPlayerOwner = !!(creation || accountId && currentSpaceInfo?.config.owners.includes(accountId));
+	const isPlayerAdmin = creation || currentSpaceInfo == null || IsSpaceAdmin(currentSpaceInfo.config, currentAccount);
+	const canEdit = isPlayerAdmin && (creation || currentSpaceId != null);
 
 	const owners: readonly AccountId[] = useMemo(() => (
-		creation ? [accountId] : (currentRoomInfo?.config.owners ?? [])
-	), [creation, accountId, currentRoomInfo]);
+		creation ? [accountId] : (currentSpaceInfo?.config.owners ?? [])
+	), [creation, accountId, currentSpaceInfo]);
 
 	const currentConfigBackground = currentConfig.background;
 
@@ -150,14 +150,14 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 			// Can't modify scaling of preset
 			if (typeof currentConfigBackground === 'string')
 				return;
-			setRoomModifiedData({
+			setModifiedData({
 				background: {
 					...currentConfigBackground,
 					scaling,
 				},
 			});
 		},
-	}), [setRoomModifiedData, currentConfigBackground]);
+	}), [setModifiedData, currentConfigBackground]);
 
 	const invalidBans = useMemo(() => ({
 		note: 'Owners and admins will be removed from the ban list automatically.',
@@ -167,11 +167,11 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 		],
 	}), [owners, currentConfig.admin]);
 
-	if (!creation && currentRoomInfo != null && currentRoomInfo.id !== lastRoomId.current) {
-		// If room id changes abruptly, navigate to default view (this is likely some form of kick or the room stopping to exist)
+	if (!creation && currentSpaceInfo != null && currentSpaceInfo.id !== lastSpaceId.current) {
+		// If space id changes abruptly, navigate to default view (this is likely some form of kick or the space stopping to exist)
 		return <Navigate to='/' />;
-	} else if (creation && isInPublicRoom) {
-		// If in a public room, you cannot make a new room directly (as you need to leave first)
+	} else if (creation && isInPublicSpace) {
+		// If in a public space, you cannot make a new space directly (as you need to leave first)
 		return <Navigate to='/chatroom' />;
 	}
 
@@ -182,40 +182,40 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 	const configurableElements = (
 		<>
 			<div className='input-container'>
-				<label>Room name ({ currentConfig.name.length }/{ LIMIT_SPACE_NAME_LENGTH } characters)</label>
+				<label>Space name ({ currentConfig.name.length }/{ LIMIT_SPACE_NAME_LENGTH } characters)</label>
 				<input
 					autoComplete='none'
 					type='text'
 					value={ currentConfig.name }
-					onChange={ (event) => setRoomModifiedData({ name: event.target.value }) }
+					onChange={ (event) => setModifiedData({ name: event.target.value }) }
 					readOnly={ !canEdit }
 				/>
-				{ canEdit && !IsChatroomName(currentConfig.name) ? (<div className='error'>Invalid room name</div>) : null }
+				{ canEdit && !IsValidName(currentConfig.name) ? (<div className='error'>Invalid name</div>) : null }
 			</div>
 			<div className='input-container'>
-				<label>Room size</label>
+				<label>Space size (maximum number of characters allowed inside)</label>
 				<input autoComplete='none' type='number' value={ currentConfig.maxUsers } min={ 1 } readOnly={ !canEdit }
-					onChange={ (event) => setRoomModifiedData({ maxUsers: Number.parseInt(event.target.value, 10) }) } />
+					onChange={ (event) => setModifiedData({ maxUsers: Number.parseInt(event.target.value, 10) }) } />
 			</div>
 			<FieldsetToggle legend='Presentation and access'>
 				<div className='input-container'>
-					<label>Room description ({ currentConfig.description.length }/{ LIMIT_SPACE_DESCRIPTION_LENGTH } characters)</label>
+					<label>Space description ({ currentConfig.description.length }/{ LIMIT_SPACE_DESCRIPTION_LENGTH } characters)</label>
 					<textarea
 						value={ currentConfig.description }
-						onChange={ (event) => setRoomModifiedData({ description: event.target.value }) }
+						onChange={ (event) => setModifiedData({ description: event.target.value }) }
 						readOnly={ !canEdit }
 						rows={ 16 }
 					/>
-					{ canEdit && !IsChatroomDescription(currentConfig.description) ? (<div className='error'>Invalid description</div>) : null }
+					{ canEdit && !IsValidDescription(currentConfig.description) ? (<div className='error'>Invalid description</div>) : null }
 				</div>
 				<div className='input-container'>
 					<label>Public</label>
-					<Button onClick={ () => setRoomModifiedData({ public: !currentConfig.public }) } disabled={ !canEdit } className='fadeDisabled'>{ currentConfig.public ? 'Yes' : 'No' }</Button>
+					<Button onClick={ () => setModifiedData({ public: !currentConfig.public }) } disabled={ !canEdit } className='fadeDisabled'>{ currentConfig.public ? 'Yes' : 'No' }</Button>
 				</div>
 				<div className='input-container'>
 					<label>Entry password (optional)</label>
 					<input autoComplete='none' type='text' value={ currentConfig.password ?? '' } readOnly={ !canEdit }
-						onChange={ (event) => setRoomModifiedData({ password: event.target.value || null }) } />
+						onChange={ (event) => setModifiedData({ password: event.target.value || null }) } />
 				</div>
 			</FieldsetToggle>
 			<FieldsetToggle legend='Permissions'>
@@ -223,23 +223,23 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 					<label>Owners</label>
 					<Row>
 						<NumberListArea className='flex-1' values={ owners } setValues={ () => { /* NOOP */ } } readOnly />
-						{ !creation && currentRoomInfo != null && roomId != null && isPlayerOwner ? <ChatroomOwnershipRemoval id={ roomId } name={ currentRoomInfo.config.name } /> : null }
+						{ !creation && currentSpaceInfo != null && currentSpaceId != null && isPlayerOwner ? <SpaceOwnershipRemoval id={ currentSpaceId } name={ currentSpaceInfo.config.name } /> : null }
 					</Row>
 				</div>
 				<div className='input-container'>
 					<label>Admins</label>
-					<NumberListArea values={ currentConfig.admin } setValues={ (admin) => setRoomModifiedData({ admin }) } readOnly={ !canEdit } />
+					<NumberListArea values={ currentConfig.admin } setValues={ (admin) => setModifiedData({ admin }) } readOnly={ !canEdit } />
 				</div>
 				<div className='input-container'>
 					<label>Ban list</label>
-					<NumberListArea values={ currentConfig.banned } setValues={ (banned) => setRoomModifiedData({ banned }) } readOnly={ !canEdit } invalid={ invalidBans } />
+					<NumberListArea values={ currentConfig.banned } setValues={ (banned) => setModifiedData({ banned }) } readOnly={ !canEdit } invalid={ invalidBans } />
 				</div>
 			</FieldsetToggle>
 			<FieldsetToggle legend='Background'>
 				{ showBackgrounds && <BackgroundSelectDialog
 					hide={ () => setShowBackgrounds(false) }
 					current={ currentConfigBackground }
-					select={ (background) => setRoomModifiedData({ background }) }
+					select={ (background) => setModifiedData({ background }) }
 				/> }
 				{
 					typeof currentConfigBackground === 'string' ? (
@@ -260,7 +260,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 								<div className='row-first'>
 									<ColorInput
 										initialValue={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
-										onChange={ (color) => setRoomModifiedData({ background: { ...currentConfigBackground, image: color } }) }
+										onChange={ (color) => setModifiedData({ background: { ...currentConfigBackground, image: color } }) }
 										disabled={ !canEdit }
 									/>
 								</div>
@@ -272,7 +272,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 										autoComplete='none'
 										value={ currentConfigBackground.size[0] }
 										readOnly={ !canEdit }
-										onChange={ (event) => setRoomModifiedData({
+										onChange={ (event) => setModifiedData({
 											background: {
 												...currentConfigBackground,
 												size: [Number.parseInt(event.target.value, 10), currentConfigBackground.size[1]],
@@ -283,7 +283,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 										autoComplete='none'
 										value={ currentConfigBackground.size[1] }
 										readOnly={ !canEdit }
-										onChange={ (event) => setRoomModifiedData({
+										onChange={ (event) => setModifiedData({
 											background: {
 												...currentConfigBackground,
 												size: [currentConfigBackground.size[0], Number.parseInt(event.target.value, 10)],
@@ -301,7 +301,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 									readOnly={ !canEdit }
 									onChange={ (event) => {
 										const value = Number.parseInt(event.target.value, 10);
-										setRoomModifiedData({
+										setModifiedData({
 											background: {
 												...currentConfigBackground,
 												maxY: isNaN(value) || value < 0 ? undefined : value,
@@ -342,30 +342,30 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 
 	if (creation) {
 		return (
-			<div className='roomAdminScreen creation'>
+			<div className='spaceConfigurationScreen creation'>
 				<Link to='/chatroom_select'>◄ Back</Link>
-				<p>Room creation</p>
+				<p>Space creation</p>
 				{ configurableElements }
 				<div className='input-container'>
 					<label>Features (cannot be changed after creation)</label>
 					<ul>
 						{
-							CHATROOM_FEATURES.map((feature) => (
+							SPACE_FEATURES.map((feature) => (
 								<li key={ feature.id }>
 									<input type='checkbox'
-										id={ `${ID_PREFIX}-feature-${feature.id}` }
+										id={ `${idPrefix}-feature-${feature.id}` }
 										checked={ currentConfig.features.includes(feature.id) }
 										onChange={ (event) => {
 											if (event.target.checked) {
 												if (!currentConfig.features.includes(feature.id)) {
-													setRoomModifiedData({ features: [...currentConfig.features, feature.id] });
+													setModifiedData({ features: [...currentConfig.features, feature.id] });
 												}
 											} else {
-												setRoomModifiedData({ features: currentConfig.features.filter((f) => f !== feature.id) });
+												setModifiedData({ features: currentConfig.features.filter((f) => f !== feature.id) });
 											}
 										} }
 									/>
-									<label htmlFor={ `${ID_PREFIX}-feature-${feature.id}` }>{ feature.name }</label>
+									<label htmlFor={ `${idPrefix}-feature-${feature.id}` }>{ feature.name }</label>
 								</li>
 							))
 						}
@@ -375,11 +375,11 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 					currentConfig.features.includes('development') &&
 					<div className='input-container'>
 						<h3>Development settings</h3>
-						<label>Shard for room</label>
+						<label>Shard for space</label>
 						<Select disabled={ !shards } value={ currentConfig.development?.shardId ?? '[Auto]' } onChange={
 							(event) => {
 								const value = event.target.value;
-								setRoomModifiedData({
+								setModifiedData({
 									development: {
 										...currentConfig.development,
 										shardId: value === '[Auto]' ? undefined : value,
@@ -403,7 +403,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 							<input type='checkbox' checked={ currentConfig.development?.autoAdmin ?? false } onChange={
 								(event) => {
 									const autoAdmin = event.target.checked;
-									setRoomModifiedData({
+									setModifiedData({
 										development: {
 											...currentConfig.development,
 											autoAdmin,
@@ -414,19 +414,19 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 						</div>
 					</div>
 				}
-				<Button onClick={ () => void createRoom(currentConfig) }>Create room</Button>
+				<Button onClick={ () => void create(currentConfig) }>Create space</Button>
 			</div>
 		);
 	}
 
 	return (
-		<div className='roomAdminScreen configuration'>
+		<div className='spaceConfigurationScreen configuration'>
 			<Link to='/chatroom'>◄ Back</Link>
 			{
-				roomId != null ? (
-					<p>Current room ID: <span className='selectable-all'>{ roomId }</span></p>
+				currentSpaceId != null ? (
+					<p>Current space ID: <span className='selectable-all'>{ currentSpaceId }</span></p>
 				) : (
-					<p>Currently in a personal room</p>
+					<p>Currently in a personal space</p>
 				)
 			}
 			{ configurableElements }
@@ -434,7 +434,7 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 				<label>Features (cannot be changed after creation)</label>
 				<ul>
 					{
-						CHATROOM_FEATURES
+						SPACE_FEATURES
 							.filter((feature) => currentConfig.features.includes(feature.id))
 							.map((feature) => (
 								<li key={ feature.id }>{ feature.name }</li>
@@ -442,20 +442,20 @@ export function ChatroomAdmin({ creation = false }: { creation?: boolean; } = {}
 					}
 				</ul>
 			</div>
-			{ canEdit && <Button className='fill-x' onClick={ () => UpdateRoom(directoryConnector, roomModifiedData, () => navigate('/chatroom')) }>Update room</Button> }
+			{ canEdit && <Button className='fill-x' onClick={ () => UpdateSpace(directoryConnector, modifiedData, () => navigate('/chatroom')) }>Update space</Button> }
 			{ !canEdit && <Button className='fill-x' onClick={ () => navigate('/chatroom') }>Back</Button> }
 		</div>
 	);
 }
 
-export function ChatroomOwnershipRemoval({ buttonClassName, ...data }: { id: SpaceId; name: string; buttonClassName?: string; }): ReactElement | null {
+export function SpaceOwnershipRemoval({ buttonClassName, ...data }: { id: SpaceId; name: string; buttonClassName?: string; }): ReactElement | null {
 	const [state, setState] = useState<boolean>(false);
 	return (
 		<>
-			<Button className={ buttonClassName } onClick={ () => setState(true) }>Give up room ownership</Button>
+			<Button className={ buttonClassName } onClick={ () => setState(true) }>Give up space ownership</Button>
 			{
 				state ? (
-					<ChatroomOwnershipRemovalDialog { ...data } closeDialog={ () => setState(false) } />
+					<SpaceOwnershipRemovalDialog { ...data } closeDialog={ () => setState(false) } />
 				) : (
 					null
 				)
@@ -464,23 +464,23 @@ export function ChatroomOwnershipRemoval({ buttonClassName, ...data }: { id: Spa
 	);
 }
 
-function ChatroomOwnershipRemovalDialog({ id, name, closeDialog }: { id: SpaceId; name: string; closeDialog: () => void; }): ReactElement {
+function SpaceOwnershipRemovalDialog({ id, name, closeDialog }: { id: SpaceId; name: string; closeDialog: () => void; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 
 	const removeOwnership = useCallback(() => {
 		(async () => {
-			RoomAdminProgress.show('progress', 'Removing ownership...');
+			SpaceConfigurationProgress.show('progress', 'Removing ownership...');
 			const result = await directoryConnector.awaitResponse('spaceOwnershipRemove', { id });
 			if (result.result === 'ok') {
-				RoomAdminProgress.show('success', 'Room ownership removed!');
+				SpaceConfigurationProgress.show('success', 'Space ownership removed!');
 				closeDialog();
 			} else {
-				RoomAdminProgress.show('error', `Failed to remove room ownership:\n${result.result}`);
+				SpaceConfigurationProgress.show('error', `Failed to remove space ownership:\n${result.result}`);
 			}
 		})()
 			.catch((err) => {
-				GetLogger('UpdateRoom').warning('Error during room ownership removal', err);
-				RoomAdminProgress.show('error', `Error during room ownership removal:\n${err instanceof Error ? err.message : String(err)}`);
+				GetLogger('UpdateSpace').warning('Error during space ownership removal', err);
+				SpaceConfigurationProgress.show('error', `Error during space ownership removal:\n${err instanceof Error ? err.message : String(err)}`);
 			});
 	}, [id, closeDialog, directoryConnector]);
 
@@ -488,17 +488,17 @@ function ChatroomOwnershipRemovalDialog({ id, name, closeDialog }: { id: SpaceId
 		<ModalDialog priority={ 10 }>
 			<p>
 				<b>
-					Are you sure that you no longer want ownership of this room?
+					Are you sure that you no longer want ownership of this space?
 				</b>
 			</p>
 			<p>
-				Room name: { name }<br />
-				Room id: { id }
+				Space name: { name }<br />
+				Space id: { id }
 			</p>
 			<p>
-				Removing yourself as an owner will turn you into an admin instead and free up a room slot in your account's room count limit.<br />
-				Note that a room without any owner gets instantly deleted, kicking everyone currently inside the room in the process.<br />
-				You cannot affect other owners - only an owner can give up their own ownership of a room.
+				Removing yourself as an owner will turn you into an admin instead and free up a space slot in your account's space count limit.<br />
+				Note that a space without any owner gets instantly deleted, kicking everyone currently inside it in the process.<br />
+				You cannot affect other owners - only an owner can give up their own ownership of a space.
 			</p>
 			<Row padding='medium' alignX='space-between'>
 				<Button onClick={ closeDialog }>Cancel</Button>
@@ -773,42 +773,42 @@ function TagButton({ id, name, selection, setSelection }: {
 	);
 }
 
-const RoomAdminProgress = new PersistentToast();
+const SpaceConfigurationProgress = new PersistentToast();
 
-function useCreateRoom(): (config: SpaceDirectoryConfig) => Promise<void> {
+function useCreateSpace(): (config: SpaceDirectoryConfig) => Promise<void> {
 	const directoryConnector = useDirectoryConnector();
 	const navigate = useNavigate();
 	return useCallback(async (config) => {
 		try {
-			RoomAdminProgress.show('progress', 'Creating room...');
+			SpaceConfigurationProgress.show('progress', 'Creating space...');
 			const result = await directoryConnector.awaitResponse('spaceCreate', config);
 			if (result.result === 'ok') {
-				RoomAdminProgress.show('success', 'Room created!');
+				SpaceConfigurationProgress.show('success', 'Space created!');
 				navigate('/chatroom');
 			} else {
-				RoomAdminProgress.show('error', `Failed to create room:\n${result.result}`);
+				SpaceConfigurationProgress.show('error', `Failed to create space:\n${result.result}`);
 			}
 		} catch (err) {
-			GetLogger('CreateRoom').warning('Error during room creation', err);
-			RoomAdminProgress.show('error', `Error during room creation:\n${err instanceof Error ? err.message : String(err)}`);
+			GetLogger('CreateSpace').warning('Error during space creation', err);
+			SpaceConfigurationProgress.show('error', `Error during space creation:\n${err instanceof Error ? err.message : String(err)}`);
 		}
 	}, [directoryConnector, navigate]);
 }
 
-function UpdateRoom(directoryConnector: DirectoryConnector, config: Partial<SpaceDirectoryConfig>, onSuccess?: () => void): void {
+function UpdateSpace(directoryConnector: DirectoryConnector, config: Partial<SpaceDirectoryConfig>, onSuccess?: () => void): void {
 	(async () => {
-		RoomAdminProgress.show('progress', 'Updating room...');
+		SpaceConfigurationProgress.show('progress', 'Updating space...');
 		const result = await directoryConnector.awaitResponse('spaceUpdate', config);
 		if (result.result === 'ok') {
-			RoomAdminProgress.show('success', 'Room updated!');
+			SpaceConfigurationProgress.show('success', 'Space updated!');
 			onSuccess?.();
 		} else {
-			RoomAdminProgress.show('error', `Failed to update room:\n${result.result}`);
+			SpaceConfigurationProgress.show('error', `Failed to update space:\n${result.result}`);
 		}
 	})()
 		.catch((err) => {
-			GetLogger('UpdateRoom').warning('Error during room update', err);
-			RoomAdminProgress.show('error', `Error during room update:\n${err instanceof Error ? err.message : String(err)}`);
+			GetLogger('UpdateSpace').warning('Error during space update', err);
+			SpaceConfigurationProgress.show('error', `Error during space update:\n${err instanceof Error ? err.message : String(err)}`);
 		});
 }
 

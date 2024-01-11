@@ -1,7 +1,7 @@
 import { CommandAutocompleteResult, CommandRunner, ICommandExecutionContext, IEmpty, LongestCommonPrefix } from 'pandora-common';
 import { DirectoryConnector } from '../../../networking/directoryConnector';
 import type { ShardConnector } from '../../../networking/shardConnector';
-import type { ChatRoom, IChatRoomMessageSender } from '../../../components/gameContext/gameStateContextProvider';
+import type { GameState, IChatMessageSender } from '../../../components/gameContext/gameStateContextProvider';
 import type { IChatInputHandler } from './chatInput';
 import { COMMANDS } from './commands';
 import type { useNavigate } from 'react-router';
@@ -12,9 +12,9 @@ export const COMMAND_KEY = '/';
 export interface ICommandExecutionContextClient extends ICommandExecutionContext {
 	shardConnector: ShardConnector;
 	directoryConnector: DirectoryConnector;
-	chatRoom: ChatRoom;
+	gameState: GameState;
 	player: PlayerCharacter;
-	messageSender: IChatRoomMessageSender;
+	messageSender: IChatMessageSender;
 	inputHandlerContext: IChatInputHandler;
 	navigate: ReturnType<typeof useNavigate>;
 }
@@ -26,7 +26,7 @@ export type IClientCommand = {
 	usage: string;
 	handler: CommandRunner<ICommandExecutionContextClient, IEmpty>;
 	// TODO
-	// status?: { status: IChatRoomStatus; } | ((args: string[]) => { status: IChatRoomStatus; } | { status: IChatRoomStatus, target: CharacterId; });
+	// status?: { status: IChatCharacterStatus; } | ((args: string[]) => { status: IChatCharacterStatus; } | { status: IChatCharacterStatus, target: CharacterId; });
 };
 
 export function GetCommand(input: string): {

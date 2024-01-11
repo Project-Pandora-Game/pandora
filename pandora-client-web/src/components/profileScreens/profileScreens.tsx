@@ -5,15 +5,15 @@ import { Column } from '../common/container/container';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { CharacterProfile } from './characterProfile';
 import { AccountProfile } from './accountProfile';
-import { useChatRoomCharacters } from '../gameContext/gameStateContextProvider';
+import { useSpaceCharacters } from '../gameContext/gameStateContextProvider';
 import './profileScreens.scss';
 import { BackLink, useNavigateBack } from '../common/link/back';
 
 function CharacterProfileScreen({ characterId }: { characterId: CharacterId; }): ReactElement {
 	const navigateBack = useNavigateBack();
 
-	const chatroomCharacters = useChatRoomCharacters();
-	const character = chatroomCharacters?.find((c) => c.id === characterId);
+	const characters = useSpaceCharacters();
+	const character = characters.find((c) => c.id === characterId);
 
 	if (character == null) {
 		return (
@@ -21,7 +21,7 @@ function CharacterProfileScreen({ characterId }: { characterId: CharacterId; }):
 				<Column>
 					<BackLink>◄ Back</BackLink>
 					<span>
-						Character not found (character must be in the same room to view the profile).
+						Character not found (character must be in the same space to view the profile).
 					</span>
 				</Column>
 			</Column>

@@ -15,12 +15,11 @@ import {
 import { ReactElement } from 'react';
 import { ICharacter, IChatroomCharacter } from '../../character/character';
 import { Observable } from '../../observable';
-import { IChatRoomContext } from '../gameContext/gameStateContextProvider';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { Immutable } from 'immer';
 
 export type WardrobeContextExtraItemActionComponent = (props: { item: ItemPath; }) => ReactElement | null;
-export type WardrobeTarget = IChatroomCharacter | IChatRoomContext;
+export type WardrobeTarget = IChatroomCharacter | { type: 'room'; };
 
 export type WardrobeHeldItem = {
 	type: 'nothing';

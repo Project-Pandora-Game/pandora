@@ -7,12 +7,12 @@ import {
 import React, { ReactElement, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Character, IChatroomCharacter } from '../../character/character';
-import { IChatRoomContext, useChatroom, useChatRoomCharacters, useChatRoomInfo } from '../gameContext/gameStateContextProvider';
+import { useSpaceCharacters, useGameState } from '../gameContext/gameStateContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { CharacterRestrictionOverrideWarningContent } from '../characterRestrictionOverride/characterRestrictionOverride';
 import { WardrobeTarget } from './wardrobeTypes';
-import { WardrobeContextProvider, useWardrobeContext } from './wardrobeContext';
+import { WARDROBE_TARGET_ROOM, WardrobeContextProvider, useWardrobeContext } from './wardrobeContext';
 import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphics';
 import { WardrobeBodyManipulation } from './wardrobeBody';
 import { WardrobePoseGui } from './views/wardrobePoseView';
@@ -26,9 +26,7 @@ import { WardrobeItemPreferences } from './wardrobeItemPreferences';
 export function WardrobeScreen(): ReactElement | null {
 	const locationState = useLocation().state as unknown;
 	const player = usePlayer();
-	const chatRoom = useChatroom();
-	const isInRoom = useChatRoomInfo() != null;
-	const chatRoomCharacters = useChatRoomCharacters();
+	const characters = useSpaceCharacters();
 
 	const characterId = IsObject(locationState) && IsCharacterId(locationState.character) ? locationState.character : null;
 	const targetIsRoomInventory = IsObject(locationState) && locationState.target === 'room';
@@ -37,12 +35,12 @@ export function WardrobeScreen(): ReactElement | null {
 		if (characterId == null || characterId === player?.data.id) {
 			return player;
 		}
-		return chatRoomCharacters?.find((c) => c.data.id === characterId) ?? null;
-	}, [characterId, player, chatRoomCharacters]);
+		return characters?.find((c) => c.data.id === characterId) ?? null;
+	}, [characterId, player, characters]);
 
 	const target: WardrobeTarget | null =
 		targetIsRoomInventory ? (
-			isInRoom ? chatRoom : null
+			WARDROBE_TARGET_ROOM
 		) : (
 			character?.data ? character : null
 		);
@@ -61,19 +59,18 @@ function Wardrobe(): ReactElement | null {
 	const { target } = useWardrobeContext();
 
 	if (target.type === 'room') {
-		return <WardrobeRoom room={ target } />;
+		return <WardrobeRoom />;
 	} else if (target.type === 'character') {
 		return <WardrobeCharacter character={ target } />;
 	}
 	AssertNever(target);
 }
 
-function WardrobeRoom({ room }: {
-	room: IChatRoomContext;
-}): ReactElement {
+function WardrobeRoom(): ReactElement {
 	const navigate = useNavigate();
-	const characters = useChatRoomCharacters();
-	const roomInfo = useObservable(room.currentRoom).config;
+	const gameState = useGameState();
+	const characters = useSpaceCharacters();
+	const roomInfo = useObservable(gameState.currentSpace).config;
 	const { globalState, actionPreviewState } = useWardrobeContext();
 	const globalPreviewState = useObservable(actionPreviewState);
 

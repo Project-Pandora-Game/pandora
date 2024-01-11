@@ -1,5 +1,5 @@
 import { IDirectoryCharacterConnectionInfo } from 'pandora-common';
-import { ChatRoom } from '../../../src/components/gameContext/chatRoomContextProvider';
+import { GameState } from '../../../src/components/gameContext/gameStateContextProvider';
 import { ShardConnectionState, ShardConnector } from '../../../src/networking/shardConnector';
 import { Observable } from '../../../src/observable';
 import { ShardChangeEventEmitter } from '../../../src/networking/socketio_shard_connector';
@@ -8,10 +8,10 @@ import { ShardChangeEventEmitter } from '../../../src/networking/socketio_shard_
 export class MockShardConnector implements ShardConnector {
 	public readonly connectionInfo: Observable<Readonly<IDirectoryCharacterConnectionInfo>>;
 	public readonly state = new Observable<ShardConnectionState>(ShardConnectionState.NONE);
-	public readonly gameState: Observable<ChatRoom | null>;
+	public readonly gameState: Observable<GameState | null>;
 	public readonly changeEventEmitter = new ShardChangeEventEmitter();
 
-	constructor(info: IDirectoryCharacterConnectionInfo = MockConnectionInfo(), gameState: Observable<ChatRoom | null> = new Observable<ChatRoom | null>(null)) {
+	constructor(info: IDirectoryCharacterConnectionInfo = MockConnectionInfo(), gameState: Observable<GameState | null> = new Observable<GameState | null>(null)) {
 		this.connectionInfo = new Observable<Readonly<IDirectoryCharacterConnectionInfo>>(info);
 		this.gameState = gameState;
 	}

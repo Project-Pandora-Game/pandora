@@ -20,7 +20,7 @@ import { ImportDialog } from '../../exportImport/importDialog';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../../graphics/graphicsCharacter';
 import { usePlayerState } from '../../gameContext/playerContextProvider';
-import { useChatRoomCharacterOffsets } from '../../../graphics/room/roomCharacter';
+import { useRoomCharacterOffsets } from '../../../graphics/room/roomCharacter';
 import { usePlayerVisionFilters } from '../../../graphics/room/roomScene';
 import classNames from 'classnames';
 import { useBrowserSessionStorage } from '../../../browserStorage';
@@ -351,7 +351,7 @@ function OutfitPreview({ outfit }: {
 		};
 	}, [isHovering, showHoverPreview, actionPreviewState, assetManager, characterState]);
 
-	const { pivot } = useChatRoomCharacterOffsets(characterState);
+	const { pivot } = useRoomCharacterOffsets(characterState);
 	const filters = usePlayerVisionFilters(true);
 
 	return (

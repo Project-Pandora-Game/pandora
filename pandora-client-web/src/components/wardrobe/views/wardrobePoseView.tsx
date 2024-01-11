@@ -371,7 +371,7 @@ export function WardrobePoseGui({ character, characterState }: {
 					</Button>
 				</Row>
 				<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
-				<ChatroomManualYOffsetControl character={ character } />
+				<RoomManualYOffsetControl character={ character } />
 				<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
 					<Column>
 						<WardrobeArmPoses characterState={ characterState } setPose={ setPose } />
@@ -488,7 +488,7 @@ export function BoneRowElement({ definition, onChange, characterState }: {
 	);
 }
 
-function ChatroomManualYOffsetControl({ character }: {
+function RoomManualYOffsetControl({ character }: {
 	character: IChatroomCharacter;
 }): ReactElement {
 

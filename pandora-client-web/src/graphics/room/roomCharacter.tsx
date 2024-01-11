@@ -28,17 +28,17 @@ import disconnectedIcon from '../../assets/icons/disconnected.svg';
 import { useAppOptional } from '../utility';
 import { Immutable } from 'immer';
 
-type ChatRoomCharacterInteractiveProps = {
+type RoomCharacterInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
-	roomInfo: Immutable<SpaceClientInfo>;
+	spaceInfo: Immutable<SpaceClientInfo>;
 	debugConfig: ChatroomDebugConfig;
 	background: Immutable<RoomBackgroundData>;
 	shard: ShardConnector | null;
 	menuOpen: (target: Character<ICharacterRoomData>, data: FederatedPointerEvent) => void;
 };
 
-type ChatRoomCharacterDisplayProps = {
+type RoomCharacterDisplayProps = {
 	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
 	background: Immutable<RoomBackgroundData>;
@@ -60,7 +60,7 @@ type CharacterStateProps = {
 const PIVOT_TO_LABEL_OFFSET = 100 - CHARACTER_BASE_Y_OFFSET;
 const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
 
-export function useChatRoomCharacterOffsets(characterState: AssetFrameworkCharacterState): {
+export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterState): {
 	/** Scale generated from pose */
 	baseScale: number;
 	/**
@@ -113,7 +113,7 @@ export function useChatRoomCharacterOffsets(characterState: AssetFrameworkCharac
 	};
 }
 
-export function useChatRoomCharacterPosition(position: CharacterRoomPosition, characterState: AssetFrameworkCharacterState, background: Immutable<RoomBackgroundData>): {
+export function useRoomCharacterPosition(position: CharacterRoomPosition, characterState: AssetFrameworkCharacterState, background: Immutable<RoomBackgroundData>): {
 	/** Position on the room canvas */
 	position: Readonly<PointLike>;
 	/** Z index to use for the character within the room's container */
@@ -154,7 +154,7 @@ export function useChatRoomCharacterPosition(position: CharacterRoomPosition, ch
 		pivot,
 		rotationAngle,
 		errorCorrectedPivot,
-	} = useChatRoomCharacterOffsets(characterState);
+	} = useRoomCharacterOffsets(characterState);
 
 	const scale = baseScale * (1 - (y * scaling) / height);
 
@@ -170,16 +170,16 @@ export function useChatRoomCharacterPosition(position: CharacterRoomPosition, ch
 	};
 }
 
-function ChatRoomCharacterInteractiveImpl({
+function RoomCharacterInteractiveImpl({
 	globalState,
 	character,
 	characterState,
-	roomInfo,
+	spaceInfo,
 	debugConfig,
 	background,
 	shard,
 	menuOpen,
-}: ChatRoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
+}: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
 	const id = characterState.id;
 	const {
 		position: dataPosition,
@@ -190,7 +190,7 @@ function ChatRoomCharacterInteractiveImpl({
 		yOffsetExtra,
 		scale,
 		errorCorrectedPivot,
-	} = useChatRoomCharacterPosition(dataPosition, characterState, background);
+	} = useRoomCharacterPosition(dataPosition, characterState, background);
 
 	const setPositionRaw = useEvent((newX: number, newY: number): void => {
 		const maxY = CalculateCharacterMaxYForBackground(background);
@@ -221,7 +221,7 @@ function ChatRoomCharacterInteractiveImpl({
 	}, []);
 
 	const onDragMove = useEvent((event: FederatedPointerEvent) => {
-		if (!dragging.current || !roomInfo || !characterContainer.current) return;
+		if (!dragging.current || !spaceInfo || !characterContainer.current) return;
 		const dragPointerEnd = event.getLocalPosition<Point>(characterContainer.current.parent);
 
 		const newY = height - (dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale);
@@ -254,7 +254,7 @@ function ChatRoomCharacterInteractiveImpl({
 	}, [onDragMove, onDragStart]);
 
 	return (
-		<ChatRoomCharacterDisplay
+		<RoomCharacterDisplay
 			ref={ characterContainer }
 			globalState={ globalState }
 			character={ character }
@@ -271,7 +271,7 @@ function ChatRoomCharacterInteractiveImpl({
 	);
 }
 
-const ChatRoomCharacterDisplay = React.forwardRef(function ChatRoomCharacterDisplay({
+const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 	character,
 	characterState,
 	background,
@@ -283,7 +283,7 @@ const ChatRoomCharacterDisplay = React.forwardRef(function ChatRoomCharacterDisp
 	onPointerDown,
 	onPointerMove,
 	onPointerUp,
-}: ChatRoomCharacterDisplayProps & CharacterStateProps, ref?: React.ForwardedRef<PIXI.Container>): ReactElement | null {
+}: RoomCharacterDisplayProps & CharacterStateProps, ref?: React.ForwardedRef<PIXI.Container>): ReactElement | null {
 	const app = useAppOptional();
 
 	const {
@@ -307,7 +307,7 @@ const ChatRoomCharacterDisplay = React.forwardRef(function ChatRoomCharacterDisp
 		pivot,
 		rotationAngle,
 		errorCorrectedPivot,
-	} = useChatRoomCharacterPosition(dataPosition, characterState, background);
+	} = useRoomCharacterPosition(dataPosition, characterState, background);
 
 	const backView = characterState.actualPose.view === 'back';
 
@@ -450,18 +450,18 @@ const ChatRoomCharacterDisplay = React.forwardRef(function ChatRoomCharacterDisp
 	);
 });
 
-export function ChatRoomCharacterInteractive({
+export function RoomCharacterInteractive({
 	globalState,
 	character,
 	...props
-}: ChatRoomCharacterInteractiveProps): ReactElement | null {
+}: RoomCharacterInteractiveProps): ReactElement | null {
 	const characterState = useMemo(() => globalState.characters.get(character.id), [globalState, character.id]);
 
 	if (!characterState)
 		return null;
 
 	return (
-		<ChatRoomCharacterInteractiveImpl
+		<RoomCharacterInteractiveImpl
 			{ ...props }
 			globalState={ globalState }
 			character={ character }
@@ -470,18 +470,18 @@ export function ChatRoomCharacterInteractive({
 	);
 }
 
-export function ChatRoomCharacter({
+export function RoomCharacter({
 	globalState,
 	character,
 	...props
-}: ChatRoomCharacterDisplayProps): ReactElement | null {
+}: RoomCharacterDisplayProps): ReactElement | null {
 	const characterState = useMemo(() => globalState.characters.get(character.id), [globalState, character.id]);
 
 	if (!characterState)
 		return null;
 
 	return (
-		<ChatRoomCharacterDisplay
+		<RoomCharacterDisplay
 			{ ...props }
 			globalState={ globalState }
 			character={ character }

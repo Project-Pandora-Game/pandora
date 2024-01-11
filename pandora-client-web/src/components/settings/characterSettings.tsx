@@ -5,7 +5,7 @@ import { usePlayerData } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { PronounKey, PRONOUNS } from 'pandora-common/dist/character/pronouns';
-import { useChatRoomFeatures } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomFeatures } from '../gameContext/gameStateContextProvider';
 import { Select } from '../common/select/select';
 import { useColorInput } from '../../common/useColorInput';
 import { useNavigate } from 'react-router-dom';

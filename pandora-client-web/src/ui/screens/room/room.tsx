@@ -1,18 +1,18 @@
 import React, { ReactElement } from 'react';
-import { DivContainer } from '../common/container/container';
-import { ChatRoomScene } from './chatRoomScene';
-import { Tab, TabContainer } from '../common/tabs/tabs';
-import { WardrobeContextProvider } from '../wardrobe/wardrobeContext';
-import { WardrobeExpressionGui } from '../wardrobe/views/wardrobeExpressionsView';
-import { WardrobePoseGui } from '../wardrobe/views/wardrobePoseView';
-import { usePlayerState } from '../gameContext/playerContextProvider';
-import { Chat } from './chat';
-import { Scrollable } from '../common/scrollbar/scrollbar';
-import { ChatroomControls, PersonalRoomControls, useRoomConstructionModeCheck } from './chatroomControls';
-import './chatroom.scss';
-import { useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
-import { useIsPortrait } from '../../styles/mediaQueries';
-import { useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
+import { DivContainer } from '../../../components/common/container/container';
+import { ChatRoomScene } from '../../../graphics/room/roomScene';
+import { Tab, TabContainer } from '../../../components/common/tabs/tabs';
+import { WardrobeContextProvider } from '../../../components/wardrobe/wardrobeContext';
+import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardrobeExpressionsView';
+import { WardrobePoseGui } from '../../../components/wardrobe/views/wardrobePoseView';
+import { usePlayerState } from '../../../components/gameContext/playerContextProvider';
+import { Chat } from '../../components/chat/chat';
+import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
+import { ChatroomControls, PersonalRoomControls, useRoomConstructionModeCheck } from './roomControls';
+import { useCurrentAccountSettings } from '../../../components/gameContext/directoryConnectorContextProvider';
+import { useIsPortrait } from '../../../styles/mediaQueries';
+import { useChatRoomInfo } from '../../../components/gameContext/gameStateContextProvider';
+import './room.scss';
 
 export function Chatroom(): ReactElement | null {
 	const { interfaceChatroomGraphicsRatioHorizontal, interfaceChatroomGraphicsRatioVertical } = useCurrentAccountSettings();

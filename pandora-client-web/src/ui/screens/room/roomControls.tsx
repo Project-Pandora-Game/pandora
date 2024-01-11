@@ -2,21 +2,21 @@ import React, {
 	ReactElement, useEffect,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '../common/button/button';
-import { useChatRoomCharacters, useCharacterState, useChatRoomInfo, useChatroomRequired, IsChatroomAdmin, useActionRoomContext } from '../gameContext/chatRoomContextProvider';
-import { usePlayerId, usePlayer, usePlayerState } from '../gameContext/playerContextProvider';
-import { useChatInput } from './chatInput';
-import { USER_DEBUG } from '../../config/Environment';
-import { ChatroomDebugConfigView } from './chatroomDebug';
-import { Column, Row } from '../common/container/container';
-import { Character, useCharacterData, useCharacterRestrictionManager } from '../../character/character';
-import { CharacterRestrictionOverrideWarningContent, useRestrictionOverrideDialogContext, GetRestrictionOverrideText } from '../characterRestrictionOverride/characterRestrictionOverride';
-import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState } from './chatRoomDevice';
-import { useObservable } from '../../observable';
+import { Button } from '../../../components/common/button/button';
+import { useChatRoomCharacters, useCharacterState, useChatRoomInfo, useChatroomRequired, IsChatroomAdmin, useActionRoomContext } from '../../../components/gameContext/gameStateContextProvider';
+import { usePlayerId, usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
+import { useChatInput } from '../../components/chat/chatInput';
+import { USER_DEBUG } from '../../../config/Environment';
+import { ChatroomDebugConfigView } from './roomDebug';
+import { Column, Row } from '../../../components/common/container/container';
+import { Character, useCharacterData, useCharacterRestrictionManager } from '../../../character/character';
+import { CharacterRestrictionOverrideWarningContent, useRestrictionOverrideDialogContext, GetRestrictionOverrideText } from '../../../components/characterRestrictionOverride/characterRestrictionOverride';
+import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState } from '../../../graphics/room/roomDevice';
+import { useObservable } from '../../../observable';
 import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
-import { Select } from '../common/select/select';
-import { ContextHelpButton } from '../help/contextHelpButton';
-import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
+import { Select } from '../../../components/common/select/select';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
+import { useCurrentAccount } from '../../../components/gameContext/directoryConnectorContextProvider';
 
 export function ChatroomControls(): ReactElement | null {
 	const roomInfo = useChatRoomInfo().config;

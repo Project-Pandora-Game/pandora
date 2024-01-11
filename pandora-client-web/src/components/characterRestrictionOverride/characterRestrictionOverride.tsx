@@ -10,7 +10,7 @@ import { ModalDialog } from '../dialog/dialog';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { ContextHelpButton } from '../help/contextHelpButton';
-import { useCharacterState, useChatroomRequired } from '../gameContext/chatRoomContextProvider';
+import { useCharacterState, useChatroomRequired } from '../gameContext/gameStateContextProvider';
 
 export type RestrictionOverrideDialogContext = {
 	show: () => void;

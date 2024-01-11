@@ -3,17 +3,17 @@ import React, { ReactElement, useCallback, useState, useEffect, createContext, u
 import { useNavigate } from 'react-router';
 import { Character, useCharacterData } from '../../../character/character';
 import { PointLike } from '../../../graphics/graphicsCharacter';
-import { useContextMenuPosition } from '../../contextMenu';
-import { IsChatroomAdmin, useChatRoomInfo } from '../../gameContext/chatRoomContextProvider';
-import { useDirectoryConnector, useCurrentAccount } from '../../gameContext/directoryConnectorContextProvider';
-import { usePlayerId } from '../../gameContext/playerContextProvider';
-import { useChatInput } from '../chatInput';
+import { useContextMenuPosition } from '../../../components/contextMenu';
+import { IsChatroomAdmin, useChatRoomInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { useDirectoryConnector, useCurrentAccount } from '../../../components/gameContext/directoryConnectorContextProvider';
+import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
+import { useChatInput } from '../../../ui/components/chat/chatInput';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast';
-import { AccountContactChangeHandleResult, useAccountContact } from '../../accountContacts/accountContactContext';
-import { useConfirmDialog } from '../../dialog/dialog';
+import { AccountContactChangeHandleResult, useAccountContact } from '../../../components/accountContacts/accountContactContext';
+import { useConfirmDialog } from '../../../components/dialog/dialog';
 import { useAsyncEvent } from '../../../common/useEvent';
-import { useGoToDM } from '../../accountContacts/accountContacts';
+import { useGoToDM } from '../../../components/accountContacts/accountContacts';
 import { Immutable } from 'immer';
 
 type MenuType = 'main' | 'admin' | 'contacts';

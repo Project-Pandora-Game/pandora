@@ -1,7 +1,7 @@
 import React, { ReactElement, useState } from 'react';
 import { AssertNever, CharacterId, GetLogger, ICharacterRoomData, LIMIT_CHARACTER_PROFILE_LENGTH, PRONOUNS } from 'pandora-common';
 import { Column, Row } from '../common/container/container';
-import { ChatRoom, useCharacterState, useChatRoomCharacters, useChatroom } from '../gameContext/chatRoomContextProvider';
+import { ChatRoom, useCharacterState, useChatRoomCharacters, useChatroom } from '../gameContext/gameStateContextProvider';
 import { Character, useCharacterData } from '../../character/character';
 import { useIsNarrowScreen } from '../../styles/mediaQueries';
 import { CharacterPreview } from '../wardrobe/wardrobeGraphics';

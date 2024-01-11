@@ -3,7 +3,7 @@ import { AssertNotNullable, AssetFrameworkCharacterState, CharacterId, ICharacte
 import { PlayerCharacter } from '../../character/player';
 import { useNullableObservable } from '../../observable';
 import { useShardConnector } from './shardConnectorContextProvider';
-import { useCharacterState, useChatroomRequired } from './chatRoomContextProvider';
+import { useCharacterState, useChatroomRequired } from './gameStateContextProvider';
 
 export function usePlayer(): PlayerCharacter | null {
 	return useNullableObservable(useShardConnector()?.gameState)?.player ?? null;

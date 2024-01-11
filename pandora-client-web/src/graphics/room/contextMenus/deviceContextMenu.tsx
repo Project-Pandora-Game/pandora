@@ -4,20 +4,20 @@ import React, { useMemo, useState, ReactElement, useEffect, useCallback } from '
 import { Character, ICharacter, useCharacterData } from '../../../character/character';
 import { ChildrenProps } from '../../../common/reactTypes';
 import { PointLike } from '../../../graphics/graphicsCharacter';
-import { useContextMenuPosition } from '../../contextMenu';
-import { useChatRoomCharacters, useChatroom, useChatroomRequired, useRoomState } from '../../gameContext/chatRoomContextProvider';
-import { usePlayer } from '../../gameContext/playerContextProvider';
-import { useStaggeredAppearanceActionResult } from '../../wardrobe/wardrobeCheckQueue';
-import { useWardrobeContext, useWardrobeExecuteChecked, WardrobeContextProvider } from '../../wardrobe/wardrobeContext';
+import { useContextMenuPosition } from '../../../components/contextMenu';
+import { useChatRoomCharacters, useChatroom, useChatroomRequired, useRoomState } from '../../../components/gameContext/gameStateContextProvider';
+import { usePlayer } from '../../../components/gameContext/playerContextProvider';
+import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue';
+import { useWardrobeContext, useWardrobeExecuteChecked, WardrobeContextProvider } from '../../../components/wardrobe/wardrobeContext';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { CharacterContextMenu } from './characterContextMenu';
 import { Immutable } from 'immer';
-import { IChatRoomMode } from '../chatRoomScene';
+import { IChatRoomMode } from '../roomScene';
 import { toast } from 'react-toastify';
-import { ActionWarningContent } from '../../wardrobe/wardrobeComponents';
+import { ActionWarningContent } from '../../../components/wardrobe/wardrobeComponents';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 import { omit } from 'lodash';
-import { useIsRoomConstructionModeEnabled } from '../chatRoomDevice';
+import { useIsRoomConstructionModeEnabled } from '../roomDevice';
 
 function StoreDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;

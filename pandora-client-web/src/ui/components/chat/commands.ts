@@ -2,10 +2,10 @@ import type { IClientCommand, ICommandExecutionContextClient } from './commandsP
 import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, AccountIdSchema, CommandStepProcessor, AccountId } from 'pandora-common';
 import { CommandSelectorCharacter, CommandSelectorEnum } from './commandsHelpers';
 import { ChatMode } from './chatInput';
-import { IsChatroomAdmin } from '../gameContext/chatRoomContextProvider';
+import { IsChatroomAdmin } from '../../../components/gameContext/gameStateContextProvider';
 import { capitalize } from 'lodash';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_WARNING } from '../../persistentToast';
+import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 
 function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
 	return CreateCommand<ICommandExecutionContextClient>();

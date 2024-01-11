@@ -1,13 +1,13 @@
 import { ICharacterRoomData, ZodMatcher } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import z from 'zod';
-import { BrowserStorage } from '../../browserStorage';
-import { useEvent } from '../../common/useEvent';
-import { USER_DEBUG } from '../../config/Environment';
-import { useObservable } from '../../observable';
-import { FieldsetToggle } from '../common/fieldsetToggle';
-import { useChatRoomCharacters, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
-import { Character, useCharacterData } from '../../character/character';
+import { BrowserStorage } from '../../../browserStorage';
+import { useEvent } from '../../../common/useEvent';
+import { USER_DEBUG } from '../../../config/Environment';
+import { useObservable } from '../../../observable';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
+import { useChatRoomCharacters, useChatRoomInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { Character, useCharacterData } from '../../../character/character';
 
 const ChatroomDebugConfigSchema = z.object({
 	enabled: z.boolean().catch(false),

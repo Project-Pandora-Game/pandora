@@ -7,7 +7,7 @@ import {
 import React, { ReactElement, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Character, IChatroomCharacter } from '../../character/character';
-import { IChatRoomContext, useChatroom, useChatRoomCharacters, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
+import { IChatRoomContext, useChatroom, useChatRoomCharacters, useChatRoomInfo } from '../gameContext/gameStateContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { CharacterRestrictionOverrideWarningContent } from '../characterRestrictionOverride/characterRestrictionOverride';

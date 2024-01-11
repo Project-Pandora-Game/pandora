@@ -14,18 +14,18 @@ import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 're
 import { Character, useCharacterData } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
 import _ from 'lodash';
-import { ChatroomDebugConfig } from './chatroomDebug';
-import { CHARACTER_BASE_Y_OFFSET, CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../../graphics/graphicsCharacter';
+import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug';
+import { CHARACTER_BASE_Y_OFFSET, CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
 import { Container, Graphics, Sprite, Text } from '@pixi/react';
-import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
+import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
 import { useEvent } from '../../common/useEvent';
-import { MASK_SIZE, SwapCullingDirection } from '../../graphics/graphicsLayer';
-import { useCharacterRestrictionsManager } from '../gameContext/chatRoomContextProvider';
-import { useCharacterDisplayFilters, usePlayerVisionFilters } from './chatRoomScene';
-import { useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
-import { useTexture } from '../../graphics/useTexture';
+import { MASK_SIZE, SwapCullingDirection } from '../graphicsLayer';
+import { useCharacterRestrictionsManager } from '../../components/gameContext/gameStateContextProvider';
+import { useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
+import { useCurrentAccountSettings } from '../../components/gameContext/directoryConnectorContextProvider';
+import { useTexture } from '../useTexture';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
-import { useAppOptional } from '../../graphics/utility';
+import { useAppOptional } from '../utility';
 import { Immutable } from 'immer';
 
 type ChatRoomCharacterInteractiveProps = {

@@ -1,5 +1,5 @@
 import { CommandStepProcessor, ICharacterRoomData, ICommandExecutionContext } from 'pandora-common';
-import type { Character } from '../../character/character';
+import type { Character } from '../../../character/character';
 import type { ICommandExecutionContextClient } from './commandsProcessor';
 
 type ICommandClientNeededContext<RequiredKeys extends Exclude<keyof ICommandExecutionContextClient, keyof ICommandExecutionContext>> =

@@ -1,5 +1,5 @@
 import type { IClientShard, IConnectionBase, IDirectoryCharacterConnectionInfo, IShardClientChangeEvents, TypedEventEmitter } from 'pandora-common';
-import type { ChatRoom } from '../components/gameContext/chatRoomContextProvider';
+import type { ChatRoom } from '../components/gameContext/gameStateContextProvider';
 import type { ReadonlyObservable } from '../observable';
 
 /** State of connection to Shard */

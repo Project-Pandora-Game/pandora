@@ -37,14 +37,14 @@ import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { Character } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
 import { Observable, ReadonlyObservable, useNullableObservable, useObservable } from '../../observable';
-import { ChatParser } from '../chatroom/chatParser';
+import { ChatParser } from '../../ui/components/chat/chatParser';
 import { ShardConnectionState, ShardConnector } from '../../networking/shardConnector';
 import { BrowserStorage } from '../../browserStorage';
 import { NotificationData } from './notificationContextProvider';
 import { useShardConnector } from './shardConnectorContextProvider';
 import { GetCurrentAssetManager } from '../../assets/assetManager';
 import { z } from 'zod';
-import { IChatMessageProcessed } from '../chatroom/chatroomMessages';
+import { IChatMessageProcessed } from '../../ui/components/chat/chatMessages';
 import { useCurrentAccount } from './directoryConnectorContextProvider';
 import { Immutable } from 'immer';
 

@@ -15,7 +15,7 @@ import {
 import { ReactElement } from 'react';
 import { ICharacter, IChatroomCharacter } from '../../character/character';
 import { Observable } from '../../observable';
-import { IChatRoomContext } from '../gameContext/chatRoomContextProvider';
+import { IChatRoomContext } from '../gameContext/gameStateContextProvider';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { Immutable } from 'immer';
 

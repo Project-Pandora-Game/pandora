@@ -10,22 +10,22 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { PersistentToast } from '../../persistentToast';
-import { Button } from '../common/button/button';
-import { useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
-import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { ModalDialog } from '../dialog/dialog';
+import { PersistentToast } from '../../../persistentToast';
+import { Button } from '../../../components/common/button/button';
+import { useChatRoomInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
+import { ModalDialog } from '../../../components/dialog/dialog';
 import { ResolveBackground } from 'pandora-common';
-import { GetAssetsSourceUrl, useAssetManager } from '../../assets/assetManager';
-import { ChatroomOwnershipRemoval, CHATROOM_FEATURES } from '../chatroomAdmin/chatroomAdmin';
-import { Row } from '../common/container/container';
-import './chatroomSelect.scss';
-import closedDoor from '../../icons/closed-door.svg';
-import privateDoor from '../../icons/private-door.svg';
-import publicDoor from '../../icons/public-door.svg';
-import { ContextHelpButton } from '../help/contextHelpButton';
-import { Scrollbar } from '../common/scrollbar/scrollbar';
-import { useObservable } from '../../observable';
+import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
+import { ChatroomOwnershipRemoval, CHATROOM_FEATURES } from '../spaceConfiguration/spaceConfiguration';
+import { Row } from '../../../components/common/container/container';
+import './spacesSearch.scss';
+import closedDoor from '../../../icons/closed-door.svg';
+import privateDoor from '../../../icons/private-door.svg';
+import publicDoor from '../../../icons/public-door.svg';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
+import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
+import { useObservable } from '../../../observable';
 
 // TODO(spaces): Update relevant text lines
 const TIPS: readonly string[] = [

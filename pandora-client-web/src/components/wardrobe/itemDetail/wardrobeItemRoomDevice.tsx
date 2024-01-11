@@ -9,7 +9,7 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react';
 import { ICharacter } from '../../../character/character';
-import { useChatRoomCharacters } from '../../gameContext/chatRoomContextProvider';
+import { useChatRoomCharacters } from '../../gameContext/gameStateContextProvider';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import _ from 'lodash';
 import { Column, Row } from '../../common/container/container';

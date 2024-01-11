@@ -5,7 +5,7 @@ import { Column } from '../common/container/container';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { CharacterProfile } from './characterProfile';
 import { AccountProfile } from './accountProfile';
-import { useChatRoomCharacters } from '../gameContext/chatRoomContextProvider';
+import { useChatRoomCharacters } from '../gameContext/gameStateContextProvider';
 import './profileScreens.scss';
 import { BackLink, useNavigateBack } from '../common/link/back';
 

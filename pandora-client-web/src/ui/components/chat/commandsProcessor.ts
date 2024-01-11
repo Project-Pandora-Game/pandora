@@ -1,11 +1,11 @@
 import { CommandAutocompleteResult, CommandRunner, ICommandExecutionContext, IEmpty, LongestCommonPrefix } from 'pandora-common';
-import { DirectoryConnector } from '../../networking/directoryConnector';
-import type { ShardConnector } from '../../networking/shardConnector';
-import type { ChatRoom, IChatRoomMessageSender } from '../gameContext/chatRoomContextProvider';
+import { DirectoryConnector } from '../../../networking/directoryConnector';
+import type { ShardConnector } from '../../../networking/shardConnector';
+import type { ChatRoom, IChatRoomMessageSender } from '../../../components/gameContext/gameStateContextProvider';
 import type { IChatInputHandler } from './chatInput';
 import { COMMANDS } from './commands';
 import type { useNavigate } from 'react-router';
-import type { PlayerCharacter } from '../../character/player';
+import type { PlayerCharacter } from '../../../character/player';
 
 export const COMMAND_KEY = '/';
 

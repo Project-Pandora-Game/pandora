@@ -17,7 +17,7 @@ import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/
 import { connect, Socket } from 'socket.io-client';
 import { LoadAssetDefinitions } from '../assets/assetManager';
 import { BrowserStorage } from '../browserStorage';
-import { ChatRoom } from '../components/gameContext/chatRoomContextProvider';
+import { ChatRoom } from '../components/gameContext/gameStateContextProvider';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
 import { ShardConnector, ShardConnectionState } from './shardConnector';

@@ -7,7 +7,7 @@ import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directo
 import { EMPTY, GetLogger, SpaceClientInfo, SpaceId } from 'pandora-common';
 import { Button } from '../common/button/button';
 import { useLogout } from '../../networking/account_manager';
-import { useCharacterRestrictionsManager, useChatRoomInfoOptional } from '../gameContext/chatRoomContextProvider';
+import { useCharacterRestrictionsManager, useChatRoomInfoOptional } from '../gameContext/gameStateContextProvider';
 import { PlayerCharacter } from '../../character/player';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';

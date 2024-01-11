@@ -16,7 +16,7 @@ import { useAssetManager } from '../../assets/assetManager';
 import { ICharacter } from '../../character/character';
 import { Observable } from '../../observable';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { useActionRoomContext, useChatRoomCharacters, useChatroomRequired, useRoomState } from '../gameContext/chatRoomContextProvider';
+import { useActionRoomContext, useChatRoomCharacters, useChatroomRequired, useRoomState } from '../gameContext/gameStateContextProvider';
 import type { PlayerCharacter } from '../../character/player';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';

@@ -22,13 +22,13 @@ import { CHARACTER_BASE_Y_OFFSET, CHARACTER_PIVOT_POSITION, GraphicsCharacter } 
 import { ColorInput } from '../common/colorInput/colorInput';
 import { directoryConnectorContext, useCurrentAccountSettings, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useAssetManager } from '../../assets/assetManager';
-import { useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
-import { ChatRoomCharacter, useChatRoomCharacterOffsets, useChatRoomCharacterPosition } from '../chatroom/chatRoomCharacter';
-import { usePlayerVisionFilters } from '../chatroom/chatRoomScene';
+import { useChatRoomInfo } from '../gameContext/gameStateContextProvider';
+import { ChatRoomCharacter, useChatRoomCharacterOffsets, useChatRoomCharacterPosition } from '../../graphics/room/roomCharacter';
+import { usePlayerVisionFilters } from '../../graphics/room/roomScene';
 import { Row } from '../common/container/container';
 import * as PIXI from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
-import { ChatRoomDevice } from '../chatroom/chatRoomDevice';
+import { ChatRoomDevice } from '../../graphics/room/roomDevice';
 import { useWardrobeContext } from './wardrobeContext';
 import { useObservable } from '../../observable';
 import { min } from 'lodash';

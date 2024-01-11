@@ -13,9 +13,8 @@ import {
 import React, {
 	ReactElement,
 } from 'react';
-import { AssetManagerClient } from '../../assets/assetManager';
+import { AssetManagerClient } from '../../../assets/assetManager';
 import { ChatParser } from './chatParser';
-import './chatroom.scss';
 
 export type IChatMessageProcessed<T extends IChatMessageBase = IChatMessageBase> = T & {
 	/** Time the message was sent, guaranteed to be unique */

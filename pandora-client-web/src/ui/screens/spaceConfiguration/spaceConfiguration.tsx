@@ -21,27 +21,27 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { DirectoryConnector } from '../../networking/directoryConnector';
-import { PersistentToast } from '../../persistentToast';
-import { Button } from '../common/button/button';
+import { DirectoryConnector } from '../../../networking/directoryConnector';
+import { PersistentToast } from '../../../persistentToast';
+import { Button } from '../../../components/common/button/button';
 import {
 	useCurrentAccount,
 	useDirectoryChangeListener,
 	useDirectoryConnector,
-} from '../gameContext/directoryConnectorContextProvider';
-import { ICurrentRoomInfo, IsChatroomAdmin, useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
-import { GetAssetsSourceUrl, useAssetManager } from '../../assets/assetManager';
-import { Select } from '../common/select/select';
-import { ModalDialog } from '../dialog/dialog';
-import { Column, Row } from '../common/container/container';
-import bodyChange from '../../icons/body-change.svg';
-import devMode from '../../icons/developer.svg';
-import pronounChange from '../../icons/male-female.svg';
-import { FieldsetToggle } from '../common/fieldsetToggle';
-import './chatroomAdmin.scss';
-import { ColorInput } from '../common/colorInput/colorInput';
-import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator';
-import { Scrollbar } from '../common/scrollbar/scrollbar';
+} from '../../../components/gameContext/directoryConnectorContextProvider';
+import { ICurrentRoomInfo, IsChatroomAdmin, useChatRoomInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
+import { Select } from '../../../components/common/select/select';
+import { ModalDialog } from '../../../components/dialog/dialog';
+import { Column, Row } from '../../../components/common/container/container';
+import bodyChange from '../../../icons/body-change.svg';
+import devMode from '../../../icons/developer.svg';
+import pronounChange from '../../../icons/male-female.svg';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
+import './spaceConfiguration.scss';
+import { ColorInput } from '../../../components/common/colorInput/colorInput';
+import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator';
+import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { Immutable } from 'immer';
 
 const IsChatroomName = ZodMatcher(SpaceBaseInfoSchema.shape.name);

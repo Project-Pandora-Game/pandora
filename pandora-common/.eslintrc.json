@@ -11,7 +11,7 @@
 	"parserOptions": {
 		"ecmaVersion": 2021
 	},
-	"plugins": ["@typescript-eslint"],
+	"plugins": ["@typescript-eslint", "deprecation"],
 	"overrides": [
 		{
 			"extends": [
@@ -175,6 +175,7 @@
 		"no-multiple-empty-lines": ["warn", { "max": 1, "maxBOF": 0, "maxEOF": 1 }],
 		"operator-assignment": "warn",
 		"prefer-object-spread": "warn",
+		"deprecation/deprecation": "warn",
 		// Style rules
 		"dot-notation": "warn",
 		"semi": "off",

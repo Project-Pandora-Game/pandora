@@ -8,7 +8,7 @@ class DirectoryConnector {}
 class ShardConnector {
 	public readonly directoryConnector: DirectoryConnector;
 
-	constructor(props: { directoryConnector: DirectoryConnector; }) {
+	constructor(props: { directoryConnector: DirectoryConnector; }, {}: { test: string; }) {
 		this.directoryConnector = props.directoryConnector;
 	}
 }
@@ -16,6 +16,7 @@ class ShardConnector {
 const directoryConnector = new Service({
 	name: 'directoryConnector',
 	ctor: DirectoryConnector,
+	hasArgs: false,
 });
 
 directoryConnector.addDependencies(false);
@@ -23,6 +24,7 @@ directoryConnector.addDependencies(false);
 const shardConnector = new Service({
 	name: 'shardConnector',
 	ctor: ShardConnector,
+	hasArgs: true,
 });
 
 shardConnector.addDependencies({
@@ -50,8 +52,7 @@ export function ServiceManagerInit(): Promise<void> {
 
 export function useServiceRaw<TServiceName extends ServiceName>(name: TServiceName): [ServiceInstanceType<TServiceName>] | null {
 	const serviceManager = React.useContext(context);
-	const service = useObservable(serviceManager.getService(name).service);
-	return service as [ServiceInstanceType<TServiceName>] | null;
+	return useObservable(serviceManager.getServiceObserver(name));
 }
 
 export function useServiceNullable<TServiceName extends ServiceName>(name: TServiceName): ServiceInstanceType<TServiceName> | null {
@@ -66,6 +67,8 @@ export function useService<TServiceName extends ServiceName>(name: TServiceName)
 }
 
 export function Test() {
+	serviceManger.createService('shardConnector', { test: 'test' })
+		.catch(() => { /** */ });
 	const directory = useService('directoryConnector');
 	const shard = useService('shardConnector');
 	Assert(directory instanceof DirectoryConnector);

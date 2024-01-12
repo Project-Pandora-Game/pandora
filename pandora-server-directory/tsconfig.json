@@ -5,8 +5,5 @@
 		"noEmit": false,
 		"outDir": "./dist"
 	},
-	"include": [
-		"./src/**/*",
-		"./jest.config.js"
-	]
+	"include": ["./src/**/*"]
 }

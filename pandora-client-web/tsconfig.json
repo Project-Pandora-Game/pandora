@@ -13,8 +13,5 @@
 		"noEmit": false,
 		"target": "ES6"
 	},
-	"include": [
-		"./src/**/*",
-		"./jest.config.js"
-	]
+	"include": ["./src/**/*"]
 }

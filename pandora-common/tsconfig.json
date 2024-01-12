@@ -9,8 +9,5 @@
 		"declarationMap": true,
 		"removeComments": false
 	},
-	"include": [
-		"./src/**/*",
-		"./jest.config.js"
-	]
+	"include": ["./src/**/*"]
 }

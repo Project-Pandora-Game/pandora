@@ -1,7 +1,7 @@
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
-import { AccountId, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, IChatRoomDirectoryData, IDirectoryDirectMessage, PASSWORD_PREHASH_SALT, RoomId } from 'pandora-common';
-import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
+import { AccountId, ArrayToRecordKeys, SPACE_DIRECTORY_PROPERTIES, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, SpaceData, SpaceDataDirectoryUpdate, SpaceDataShardUpdate, SpaceDirectoryData, IDirectoryDirectMessage, PASSWORD_PREHASH_SALT, SpaceId } from 'pandora-common';
+import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
 import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate } from './databaseStructure';
 
 import _ from 'lodash';
@@ -21,7 +21,7 @@ const logger = GetLogger('db');
 export class MockDatabase implements PandoraDatabase {
 	private accountDb: Set<DatabaseAccountWithSecure> = new Set();
 	private characterDb: Map<CharacterId, ICharacterData> = new Map();
-	private chatroomDb: Map<RoomId, IChatRoomData> = new Map();
+	private spacesDb: Map<SpaceId, SpaceData> = new Map();
 	private configDb: Map<DatabaseConfigType, DatabaseConfigData<DatabaseConfigType>> = new Map();
 	private directMessagesDb: Map<DirectMessageAccounts, IDirectoryDirectMessage[]> = new Map();
 	private accountContactDb: DatabaseAccountContact[] = [];
@@ -228,7 +228,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(char.accessId);
 	}
 
-	public getCharactersInRoom(roomId: RoomId): Promise<{
+	public getCharactersInSpace(spaceId: SpaceId): Promise<{
 		accountId: AccountId;
 		characterId: CharacterId;
 	}[]> {
@@ -239,7 +239,7 @@ export class MockDatabase implements PandoraDatabase {
 
 		for (const account of this.accountDbView) {
 			for (const character of account.characters) {
-				if (character.currentRoom === roomId) {
+				if (character.currentRoom === spaceId) {
 					chars.push({
 						accountId: account.id,
 						characterId: character.id,
@@ -251,49 +251,49 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(chars);
 	}
 
-	//#region ChatRoom
+	//#region Spaces
 
-	public getChatRoomsWithOwner(account: AccountId): Promise<IChatRoomDirectoryData[]> {
+	public getSpacesWithOwner(account: AccountId): Promise<SpaceDirectoryData[]> {
 		return Promise.resolve(
-			Array.from(this.chatroomDb.values())
-				.filter((room) => room.owners.includes(account))
-				.map((room) => _.pick(room, CHATROOM_DIRECTORY_PROPERTIES)),
+			Array.from(this.spacesDb.values())
+				.filter((space) => space.owners.includes(account))
+				.map((space) => _.pick(space, SPACE_DIRECTORY_PROPERTIES)),
 		);
 	}
 
-	public getChatRoomsWithOwnerOrAdmin(account: AccountId): Promise<IChatRoomDirectoryData[]> {
+	public getSpacesWithOwnerOrAdmin(account: AccountId): Promise<SpaceDirectoryData[]> {
 		return Promise.resolve(
-			Array.from(this.chatroomDb.values())
-				.filter((room) => room.owners.includes(account) || room.config.admin.includes(account))
-				.map((room) => _.pick(room, CHATROOM_DIRECTORY_PROPERTIES)),
+			Array.from(this.spacesDb.values())
+				.filter((space) => space.owners.includes(account) || space.config.admin.includes(account))
+				.map((space) => _.pick(space, SPACE_DIRECTORY_PROPERTIES)),
 		);
 	}
 
-	public getChatRoomById(id: RoomId, accessId: string | null): Promise<IChatRoomData | null> {
-		const room = this.chatroomDb.get(id);
-		if (!room)
+	public getSpaceById(id: SpaceId, accessId: string | null): Promise<SpaceData | null> {
+		const space = this.spacesDb.get(id);
+		if (!space)
 			return Promise.resolve(null);
 
-		if ((accessId !== null) && (accessId !== room.accessId)) {
+		if ((accessId !== null) && (accessId !== space.accessId)) {
 			return Promise.resolve(null);
 		}
-		return Promise.resolve(_.cloneDeep(room));
+		return Promise.resolve(_.cloneDeep(space));
 	}
 
-	public createChatRoom(data: IChatRoomCreationData, id?: RoomId): Promise<IChatRoomData> {
-		const room = CreateChatRoom(data, id);
+	public createSpace(data: SpaceCreationData, id?: SpaceId): Promise<SpaceData> {
+		const space = CreateSpace(data, id);
 
-		if (this.chatroomDb.has(room.id)) {
+		if (this.spacesDb.has(space.id)) {
 			return Promise.reject('Duplicate ID');
 		}
-		this.chatroomDb.set(room.id, room);
-		return Promise.resolve(_.cloneDeep(room));
+		this.spacesDb.set(space.id, space);
+		return Promise.resolve(_.cloneDeep(space));
 	}
 
-	public updateChatRoom(id: RoomId, data: IChatRoomDataDirectoryUpdate & IChatRoomDataShardUpdate, accessId: string | null): Promise<boolean> {
-		const room = _.cloneDeep(data);
+	public updateSpace(id: SpaceId, data: SpaceDataDirectoryUpdate & SpaceDataShardUpdate, accessId: string | null): Promise<boolean> {
+		const space = _.cloneDeep(data);
 
-		const info = this.chatroomDb.get(id);
+		const info = this.spacesDb.get(id);
 		if (!info)
 			return Promise.reject();
 
@@ -301,23 +301,23 @@ export class MockDatabase implements PandoraDatabase {
 			return Promise.resolve(false);
 		}
 
-		Object.assign(info, room);
+		Object.assign(info, space);
 
 		return Promise.resolve(true);
 	}
 
-	public deleteChatRoom(id: RoomId): Promise<void> {
-		this.chatroomDb.delete(id);
+	public deleteSpace(id: SpaceId): Promise<void> {
+		this.spacesDb.delete(id);
 		return Promise.resolve();
 	}
 
-	public setChatRoomAccess(id: RoomId): Promise<string | null> {
-		const room = this.chatroomDb.get(id);
-		if (!room)
+	public setSpaceAccessId(id: SpaceId): Promise<string | null> {
+		const space = this.spacesDb.get(id);
+		if (!space)
 			return Promise.resolve(null);
 
-		room.accessId = nanoid(8);
-		return Promise.resolve(room.accessId);
+		space.accessId = nanoid(8);
+		return Promise.resolve(space.accessId);
 	}
 
 	//#endregion

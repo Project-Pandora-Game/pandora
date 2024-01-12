@@ -12,7 +12,7 @@ import { ProvidersProps, RenderHookWithProviders } from '../../testUtils';
 const directoryChangeEvents: IDirectoryClientChangeEvents[] = [
 	'characterList',
 	'shardList',
-	'roomList',
+	'spaceList',
 ];
 
 describe('DirectoryConnectorContextProvider', () => {

@@ -1,0 +1,230 @@
+@import '../../../styles/common';
+
+.roomScreen {
+	overflow: hidden;
+	min-width: 0 !important;
+
+	>.room-scene {
+		min-width: 0;
+		min-height: 0;
+		overflow: hidden;
+
+		&.disabled {
+			display: none;
+		}
+	}
+
+	>.interactionArea {
+		min-width: min(20em, 100%);
+		min-height: min(10vw, 100%);
+	}
+}
+
+.controls-container {
+	background-color: $grey-lighter;
+	border: solid $black 2px;
+}
+
+.character-info {
+	margin-bottom: spacing('large');
+
+	fieldset {
+		display: flex;
+		flex-direction: column;
+		border: 1px solid $black;
+		border-radius: 0.5em;
+		margin-bottom: 0.5em;
+
+		>legend {
+			display: flex;
+			flex-flow: row wrap;
+			border: 1px solid $black;
+			border-radius: 0.5em;
+			overflow: hidden;
+			padding: 0;
+
+			background-color: $black;
+			gap: 1px;
+
+			&.player {
+				>span {
+					background-color: $white;
+				}
+			}
+
+			.colorStrip {
+				text-shadow: #666 1px 1px 1px;
+			}
+
+			>span {
+				font-size: 1em;
+				padding: 0.2em 0.5em;
+				flex-grow: 1;
+
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+
+				background-color: $grey-lightest;
+
+				&.safemode {
+					background: $theme-warning;
+					padding: 0 0.5em;
+				}
+
+				&.offline {
+					background-color: $grey-light;
+					padding: 0 0.5em;
+					font-style: italic;
+				}
+			}
+		}
+	}
+}
+
+.room-construction-mode {
+	.error {
+		color: $theme-error;
+		font-weight: bold;
+		margin: auto 0;
+	}
+}
+
+.chatArea {
+	background-color: #333;
+	display: flex;
+	flex-flow: column;
+	flex: 1;
+	overflow: hidden;
+
+	&>div.messages {
+		display: flex;
+		flex-flow: column;
+		flex: 1;
+		overflow-x: hidden;
+		overflow-y: scroll;
+		user-select: text;
+	}
+
+	.message {
+		color: $white;
+		padding: 0.1em;
+		white-space: pre-wrap;
+		overflow-wrap: break-word;
+
+		&.serverMessage {
+			border-left: solid 5px $white;
+			background-color: #222;
+			margin: 0.4em;
+			padding: 0.2em;
+
+			&.foldable:hover {
+				background-color: #1a1a1a;
+				cursor: pointer;
+			}
+		}
+
+		&.emote .name {
+			display: none;
+		}
+
+		&.private {
+			opacity: 0.7;
+		}
+
+		&> .info {
+			float: right;
+			color: $grey-mid;
+			font-style: italic;
+			font-size: 0.6em;
+			margin-right: 0.2em;
+		}
+
+		a {
+			color: $white;
+			text-decoration: underline;
+
+			&:hover {
+				color: $grey-mid;
+			}
+		}
+
+		&.editing {
+			background-color: #444;
+			padding: 0.2em;
+			margin: 0 0.2em;
+			border-left: solid 2px #09f;
+		}
+	}
+
+	textarea {
+		height: min(10em, 35%);
+		resize: none;
+		margin: 0;
+	}
+}
+
+.typing-indicator {
+	padding-right: 0.5em;
+	cursor: pointer;
+
+	&:hover {
+		background-color: #202020;
+	}
+
+	img {
+		height: 1em;
+		filter: brightness(0) saturate(100%) invert(100%);
+	}
+}
+
+.typing-indicator, .input-modifiers, .unread-messages-indicator {
+	@include flex(row, wrap);
+	align-items: center;
+
+	background-color: #2A2A2A;
+	color: $white;
+	padding-left: 0.5em;
+	gap: 0.5em;
+}
+
+.typing-indicator, .unread-messages-indicator {
+	min-height: 1.5em;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+.unread-messages-indicator:hover {
+	background-color: #202020;
+	cursor: pointer;
+}
+
+.autocomplete-hint {
+	position: relative;
+
+	>div {
+		position: absolute;
+		left: 0;
+		bottom: 0;
+		right: 1em;
+		margin: 0.2em;
+
+		@include flex(column);
+		background-color: #338;
+		color: $white;
+		padding: 0.5em;
+		gap: 0.1em;
+
+		hr {
+			width: 100%;
+		}
+
+		span {
+			cursor: pointer;
+
+			&:hover, &.selected {
+				background-color: #7e7eff54;
+			}
+		}
+	}
+}

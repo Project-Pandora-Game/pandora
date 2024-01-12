@@ -6,7 +6,7 @@ import {
 	Item,
 	Logger,
 	CharacterRestrictionsManager,
-	ActionRoomContext,
+	ActionSpaceContext,
 	ItemPath,
 	CharacterId,
 	AppearanceItems,
@@ -31,7 +31,7 @@ export interface ICharacter<T extends ICharacterPublicData = ICharacterPublicDat
 	readonly gameLogicCharacter: GameLogicCharacter;
 	isPlayer(): boolean;
 	getAppearance(state: AssetFrameworkCharacterState): CharacterAppearance;
-	getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext | null): CharacterRestrictionsManager;
+	getRestrictionManager(state: AssetFrameworkCharacterState, spaceContext: ActionSpaceContext | null): CharacterRestrictionsManager;
 }
 
 export type IChatroomCharacter = ICharacter<ICharacterRoomData>;
@@ -81,8 +81,8 @@ export class Character<T extends ICharacterPublicData = ICharacterPublicData> ex
 		return new CharacterAppearance(state, this.gameLogicCharacter);
 	}
 
-	public getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext): CharacterRestrictionsManager {
-		return this.getAppearance(state).getRestrictionManager(roomContext);
+	public getRestrictionManager(state: AssetFrameworkCharacterState, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
+		return this.getAppearance(state).getRestrictionManager(spaceContext);
 	}
 }
 
@@ -114,6 +114,6 @@ export function useCharacterAppearanceItem(characterState: AssetFrameworkCharact
 	return useMemo(() => (items && path) ? EvalItemPath(items, path) : undefined, [items, path]);
 }
 
-export function useCharacterRestrictionManager(character: Character, state: AssetFrameworkCharacterState, room: ActionRoomContext): CharacterRestrictionsManager {
-	return useMemo(() => character.gameLogicCharacter.getRestrictionManager(state, room), [character, state, room]);
+export function useCharacterRestrictionManager(character: Character, state: AssetFrameworkCharacterState, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
+	return useMemo(() => character.gameLogicCharacter.getRestrictionManager(state, spaceContext), [character, state, spaceContext]);
 }

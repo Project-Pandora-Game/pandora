@@ -2,7 +2,7 @@ import { CharacterIdSchema } from '../character/characterTypes';
 import { CharacterPublicSettingsSchema } from '../character/characterData';
 import { AppearanceActionSchema } from '../assets/appearanceActions';
 import { AppearanceActionProblem } from '../assets/appearanceActionProblems';
-import { ClientChatMessagesSchema, ChatRoomStatusSchema } from '../chatroom/chat';
+import { ClientChatMessagesSchema, ChatCharacterStatusSchema } from '../chat/chat';
 import { z } from 'zod';
 import { CharacterInputNameSchema, ZodCast } from '../validation';
 import { Satisfies } from '../utility';
@@ -25,7 +25,7 @@ export const ClientShardSchema = {
 		}),
 		response: ZodCast<{ result: 'ok' | 'failed'; }>(),
 	},
-	chatRoomMessage: {
+	chatMessage: {
 		request: z.object({
 			messages: ClientChatMessagesSchema,
 			id: z.number().min(0),
@@ -33,20 +33,20 @@ export const ClientShardSchema = {
 		}),
 		response: null,
 	},
-	chatRoomStatus: {
+	chatStatus: {
 		request: z.object({
-			status: ChatRoomStatusSchema,
+			status: ChatCharacterStatusSchema,
 			target: CharacterIdSchema.optional(),
 		}),
 		response: null,
 	},
-	chatRoomMessageAck: {
+	chatMessageAck: {
 		request: z.object({
 			lastTime: z.number().min(0),
 		}),
 		response: null,
 	},
-	chatRoomCharacterMove: {
+	roomCharacterMove: {
 		request: z.object({
 			id: CharacterIdSchema.optional(),
 			position: z.tuple([z.number().int().min(0), z.number().int().min(0), z.number().int()]),

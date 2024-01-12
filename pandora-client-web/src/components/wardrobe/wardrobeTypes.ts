@@ -10,23 +10,22 @@ import {
 	ItemPath,
 	ItemTemplate,
 	ModuleType,
-	RoomTargetSelector,
+	ActionTargetSelector,
 } from 'pandora-common';
 import { ReactElement } from 'react';
 import { ICharacter, IChatroomCharacter } from '../../character/character';
 import { Observable } from '../../observable';
-import { IChatRoomContext } from '../gameContext/chatRoomContextProvider';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { Immutable } from 'immer';
 
 export type WardrobeContextExtraItemActionComponent = (props: { item: ItemPath; }) => ReactElement | null;
-export type WardrobeTarget = IChatroomCharacter | IChatRoomContext;
+export type WardrobeTarget = IChatroomCharacter | { type: 'room'; };
 
 export type WardrobeHeldItem = {
 	type: 'nothing';
 } | {
 	type: 'item';
-	target: RoomTargetSelector;
+	target: ActionTargetSelector;
 	path: ItemPath;
 } | {
 	type: 'template';
@@ -35,7 +34,7 @@ export type WardrobeHeldItem = {
 
 export interface WardrobeContext {
 	target: WardrobeTarget;
-	targetSelector: RoomTargetSelector;
+	targetSelector: ActionTargetSelector;
 	player: ICharacter;
 	globalState: AssetFrameworkGlobalState;
 	assetList: readonly Asset[];

@@ -13,7 +13,7 @@ import { GitHubVerifier } from './services/github/githubVerify';
 import { ShardTokenStore } from './shard/shardTokenStore';
 import { DiscordBot } from './services/discord/discordBot';
 import { BetaKeyStore } from './shard/betaKeyStore';
-import { RoomManager } from './room/roomManager';
+import { SpaceManager } from './spaces/spaceManager';
 
 const logger = GetLogger('init');
 
@@ -37,7 +37,7 @@ async function Start(): Promise<void> {
 	await ServiceInit(BetaKeyStore);
 	logger.verbose('Initializing managers...');
 	await ServiceInit(accountManager);
-	await ServiceInit(RoomManager);
+	await ServiceInit(SpaceManager);
 	await ServiceInit(ConnectionManagerClient);
 	logger.verbose('Initializing APIs...');
 	await ServiceInit(GitHubVerifier);

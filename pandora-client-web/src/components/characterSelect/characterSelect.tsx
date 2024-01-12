@@ -66,7 +66,7 @@ export function CharacterSelect(): ReactElement {
 
 	if (playerData) {
 		if (playerData.inCreation) {
-			return <Navigate to='/character_create' />;
+			return <Navigate to='/character/create' />;
 		} else {
 			return <Navigate to='/' />;
 		}

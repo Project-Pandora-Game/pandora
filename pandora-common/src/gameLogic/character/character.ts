@@ -4,7 +4,7 @@ import { TypedEventEmitter } from '../../event';
 import { InteractionSubsystem } from '../interactions/interactionSubsystem';
 import { AssetFrameworkCharacterState, CharacterAppearance } from '../../assets';
 import { Assert } from '../../utility';
-import { ActionRoomContext } from '../../chatroom';
+import { ActionSpaceContext } from '../../space/space';
 import { GameLogicPermission, IPermissionProvider, PermissionGroup } from '../permissions';
 import type { Immutable } from 'immer';
 
@@ -32,8 +32,8 @@ export abstract class GameLogicCharacter extends TypedEventEmitter<GameLogicChar
 		return new CharacterAppearance(state, this);
 	}
 
-	public getRestrictionManager(state: AssetFrameworkCharacterState, roomContext: ActionRoomContext): CharacterRestrictionsManager {
-		return this.getAppearance(state).getRestrictionManager(roomContext);
+	public getRestrictionManager(state: AssetFrameworkCharacterState, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
+		return this.getAppearance(state).getRestrictionManager(spaceContext);
 	}
 
 	protected abstract _getPermissionProvider(permissionGroup: PermissionGroup): IPermissionProvider;

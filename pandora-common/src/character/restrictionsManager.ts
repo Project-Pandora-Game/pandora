@@ -2,11 +2,11 @@ import _ from 'lodash';
 import type { CharacterAppearance } from '../assets/appearance';
 import { EffectsDefinition } from '../assets/effects';
 import { AssetPropertiesResult, CreateAssetPropertiesResult } from '../assets/properties';
-import { ActionRoomContext } from '../chatroom';
+import { ActionSpaceContext } from '../space/space';
 import { Muffler } from '../character/speech';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { Item, RoomDeviceLink } from '../assets/item';
-import { AppearanceActionProcessingContext, Asset, AssetId, ItemContainerPath, ItemId, ItemPath, RoomActionTarget, RestrictionOverrideConfig, GetRestrictionOverrideConfig } from '../assets';
+import { AppearanceActionProcessingContext, Asset, AssetId, ItemContainerPath, ItemId, ItemPath, ActionTarget, RestrictionOverrideConfig, GetRestrictionOverrideConfig } from '../assets';
 import { AppearanceItemProperties } from '../assets/appearanceValidation';
 import { Immutable } from 'immer';
 import { GameLogicCharacter } from '../gameLogic/character/character';
@@ -134,7 +134,7 @@ export type RestrictionResult = {
  */
 export class CharacterRestrictionsManager {
 	public readonly appearance: CharacterAppearance;
-	public readonly room: ActionRoomContext;
+	public readonly spaceContext: ActionSpaceContext;
 	public readonly restrictionOverrideConfig: RestrictionOverrideConfig;
 	private _items: readonly Item[] = [];
 	private _properties: Immutable<AssetPropertiesResult> = CreateAssetPropertiesResult();
@@ -144,9 +144,9 @@ export class CharacterRestrictionsManager {
 		return this.appearance.character;
 	}
 
-	constructor(appearance: CharacterAppearance, room: ActionRoomContext) {
+	constructor(appearance: CharacterAppearance, spaceContext: ActionSpaceContext) {
 		this.appearance = appearance;
-		this.room = room;
+		this.spaceContext = spaceContext;
 		this.restrictionOverrideConfig = GetRestrictionOverrideConfig(this.appearance.getRestrictionOverride());
 	}
 
@@ -238,14 +238,14 @@ export class CharacterRestrictionsManager {
 		return this.restrictionOverrideConfig.forceAllowRoomLeave;
 	}
 
-	public isCurrentRoomAdmin(): boolean {
-		if (this.room.isAdmin(this.character.accountId))
+	public isCurrentSpaceAdmin(): boolean {
+		if (this.spaceContext.isAdmin(this.character.accountId))
 			return true;
 
 		return false;
 	}
 
-	public canInteractWithTarget(context: AppearanceActionProcessingContext, target: RoomActionTarget): RestrictionResult {
+	public canInteractWithTarget(context: AppearanceActionProcessingContext, target: ActionTarget): RestrictionResult {
 		// Room inventory can always be interacted with
 		if (target.type === 'roomInventory')
 			return { allowed: true };
@@ -255,7 +255,7 @@ export class CharacterRestrictionsManager {
 			if (target.character.id === this.character.id)
 				return { allowed: true };
 
-			const targetCharacter = target.getRestrictionManager(this.room);
+			const targetCharacter = target.getRestrictionManager(this.spaceContext);
 
 			// Mark as interaction
 			context.addInteraction(target.character, 'interact');
@@ -273,7 +273,7 @@ export class CharacterRestrictionsManager {
 		return { allowed: true };
 	}
 
-	public canUseAsset(context: AppearanceActionProcessingContext, target: RoomActionTarget, asset: Asset): RestrictionResult {
+	public canUseAsset(context: AppearanceActionProcessingContext, target: ActionTarget, asset: Asset): RestrictionResult {
 		// Must be able to interact with character
 		const r = this.canInteractWithTarget(context, target);
 		if (!r.allowed)
@@ -306,7 +306,7 @@ export class CharacterRestrictionsManager {
 		return { allowed: true };
 	}
 
-	public hasPermissionForItemContents(context: AppearanceActionProcessingContext, target: RoomActionTarget, item: Item): RestrictionResult {
+	public hasPermissionForItemContents(context: AppearanceActionProcessingContext, target: ActionTarget, item: Item): RestrictionResult {
 		// Iterate over whole content
 		for (const module of item.getModules().keys()) {
 			for (const innerItem of item.getModuleItems(module)) {
@@ -328,7 +328,7 @@ export class CharacterRestrictionsManager {
 	 * @param interaction - What kind of interaction to check against
 	 * @param insertBeforeRootItem - Simulate the item being positioned before (under) this item. Undefined means that it either is currently present or that it is to be inserted to the end.
 	 */
-	public canUseItem(context: AppearanceActionProcessingContext, target: RoomActionTarget, itemPath: ItemPath, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): RestrictionResult {
+	public canUseItem(context: AppearanceActionProcessingContext, target: ActionTarget, itemPath: ItemPath, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): RestrictionResult {
 		const item = target.getItem(itemPath);
 		// The item must exist to interact with it
 		if (!item)
@@ -350,7 +350,7 @@ export class CharacterRestrictionsManager {
 	 * @param interaction - What kind of interaction to check against
 	 * @param insertBeforeRootItem - Simulate the item being positioned before (under) this item. Undefined means that it either is currently present or that it is to be inserted to the end.
 	 */
-	public canUseItemDirect(context: AppearanceActionProcessingContext, target: RoomActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): RestrictionResult {
+	public canUseItemDirect(context: AppearanceActionProcessingContext, target: ActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): RestrictionResult {
 		// Must validate insertBeforeRootItem, if present
 		if (insertBeforeRootItem && target.getItem({ container: [], itemId: insertBeforeRootItem }) == null)
 			return {
@@ -413,7 +413,7 @@ export class CharacterRestrictionsManager {
 
 			// Not all rooms allow bodypart changes (changing expression is allowed)
 			if (
-				!this.room.features.includes('allowBodyChanges') &&
+				!this.spaceContext.features.includes('allowBodyChanges') &&
 				interaction !== ItemInteractionType.EXPRESSION_CHANGE
 			) {
 				return {
@@ -474,7 +474,7 @@ export class CharacterRestrictionsManager {
 		}
 
 		if (isCharacter && isPhysicallyEquipped && !forceAllowItemActions) {
-			const targetProperties = target.getRestrictionManager(this.room).getLimitedProperties({
+			const targetProperties = target.getRestrictionManager(this.spaceContext).getLimitedProperties({
 				from: insertBeforeRootItem ?? (container.length > 0 ? container[0].item : item.id),
 				exclude: container.length > 0 ? container[0].item : item.id,
 			});
@@ -503,7 +503,7 @@ export class CharacterRestrictionsManager {
 		return { allowed: true };
 	}
 
-	public canUseItemModule(context: AppearanceActionProcessingContext, target: RoomActionTarget, itemPath: ItemPath, moduleName: string, interaction?: ItemInteractionType): RestrictionResult {
+	public canUseItemModule(context: AppearanceActionProcessingContext, target: ActionTarget, itemPath: ItemPath, moduleName: string, interaction?: ItemInteractionType): RestrictionResult {
 		const item = target.getItem(itemPath);
 		// The item must exist to interact with it
 		if (!item)
@@ -517,7 +517,7 @@ export class CharacterRestrictionsManager {
 		return this.canUseItemModuleDirect(context, target, itemPath.container, item, moduleName, interaction);
 	}
 
-	public canUseItemModuleDirect(context: AppearanceActionProcessingContext, target: RoomActionTarget, container: ItemContainerPath, item: Item, moduleName: string, interaction?: ItemInteractionType): RestrictionResult {
+	public canUseItemModuleDirect(context: AppearanceActionProcessingContext, target: ActionTarget, container: ItemContainerPath, item: Item, moduleName: string, interaction?: ItemInteractionType): RestrictionResult {
 		// The module must exist
 		const module = item.getModules().get(moduleName);
 		if (!module)

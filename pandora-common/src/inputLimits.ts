@@ -1,10 +1,10 @@
 /* TODO list of things to potentially limit *
 - AccountCryptoKeySchema limits (or more thorough validation)
-- Room admin list
-- Room banned list
-- Room owner list
-- Room password
-- Chatroom chat limits are per-segment
+- Space admin list
+- Space banned list
+- Space owner list
+- Space password
+- Chat limits are per-segment
 */
 
 /** The maximum length of an account name */
@@ -18,13 +18,13 @@ export const LIMIT_CHARACTER_NAME_LENGTH = 32;
 /** The maximum length of an e-mail address */
 export const LIMIT_MAIL_LENGTH = 256;
 
-/** The maximum length of a room's name */
-export const LIMIT_ROOM_NAME_LENGTH = 40;
-/** The pattern used for validating room name */
-export const LIMIT_ROOM_NAME_PATTERN = /^[a-zA-Z0-9_+\-:'"& ]+$/;
+/** The maximum length of a space's name */
+export const LIMIT_SPACE_NAME_LENGTH = 40;
+/** The pattern used for validating space's name */
+export const LIMIT_SPACE_NAME_PATTERN = /^[a-zA-Z0-9_+\-:'"& ]+$/;
 
-/** The maximum length of a room's description */
-export const LIMIT_ROOM_DESCRIPTION_LENGTH = 10_000;
+/** The maximum length of a spaces's description */
+export const LIMIT_SPACE_DESCRIPTION_LENGTH = 10_000;
 
 /** The maximum length of a chat message */
 export const LIMIT_CHAT_MESSAGE_LENGTH = 25_000;

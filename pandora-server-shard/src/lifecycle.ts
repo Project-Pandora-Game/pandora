@@ -2,7 +2,7 @@ import { GetLogger, IEmpty, logConfig } from 'pandora-common';
 import { CharacterManager } from './character/characterManager';
 import { StopHttpServer } from './networking/httpServer';
 import { DirectoryConnector } from './networking/socketio_directory_connector';
-import { RoomManager } from './room/roomManager';
+import { SpaceManager } from './spaces/spaceManager';
 import wtfnode from 'wtfnode';
 import { CloseDatabase } from './database/databaseProvider';
 
@@ -25,7 +25,7 @@ async function StopGracefully(): Promise<IEmpty> {
 	await CharacterManager.removeAllCharacters();
 	// Cleanup all rooms
 	destroying = 'RoomManager';
-	await RoomManager.removeAllRooms();
+	await SpaceManager.removeAllSpaces();
 	// Stop HTTP server
 	destroying = 'HTTP Server';
 	StopHttpServer();

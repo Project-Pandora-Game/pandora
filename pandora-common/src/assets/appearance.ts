@@ -1,9 +1,9 @@
 import type { CharacterId } from '../character/characterTypes';
 import { CharacterRestrictionsManager } from '../character/restrictionsManager';
-import type { ActionRoomContext } from '../chatroom';
+import type { ActionSpaceContext } from '../space/space';
 import { Assert } from '../utility';
 import { EvalItemPath } from './appearanceHelpers';
-import type { ItemPath, RoomActionTargetCharacter } from './appearanceTypes';
+import type { ItemPath, ActionTargetCharacter } from './appearanceTypes';
 import type { AppearanceItems } from './appearanceValidation';
 import type { AssetManager } from './assetManager';
 import type { WearableAssetType } from './definitions';
@@ -46,7 +46,7 @@ export type CharacterArmsPose = Readonly<Pick<AppearancePose, 'leftArm' | 'right
 /**
  * A helper wrapper around a global state that allows easy access and manipulation of specific character.
  */
-export class CharacterAppearance implements RoomActionTargetCharacter {
+export class CharacterAppearance implements ActionTargetCharacter {
 	public readonly characterState: AssetFrameworkCharacterState;
 
 	public readonly type = 'character';
@@ -68,8 +68,8 @@ export class CharacterAppearance implements RoomActionTargetCharacter {
 		this.character = character;
 	}
 
-	public getRestrictionManager(room: ActionRoomContext): CharacterRestrictionsManager {
-		return new CharacterRestrictionsManager(this, room);
+	public getRestrictionManager(spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
+		return new CharacterRestrictionsManager(this, spaceContext);
 	}
 
 	public getAssetManager(): AssetManager {

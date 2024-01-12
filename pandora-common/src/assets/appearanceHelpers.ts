@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import type { ActionHandlerMessageTarget, ActionHandlerMessageTemplate, ActionHandlerMessageWithTarget, ItemContainerPath, ItemId, ItemPath, RoomTargetSelector } from './appearanceTypes';
+import type { ActionHandlerMessageTarget, ActionHandlerMessageTemplate, ActionHandlerMessageWithTarget, ItemContainerPath, ItemId, ItemPath, ActionTargetSelector } from './appearanceTypes';
 import type { AssetManager } from './assetManager';
 import type { Item } from './item';
 import type { IItemModule } from './modules/common';
@@ -174,9 +174,9 @@ class AppearanceContainerManipulator extends AppearanceManipulator {
 
 export class AppearanceRootManipulator extends AppearanceManipulator {
 	protected readonly _base: AssetFrameworkGlobalStateManipulator;
-	protected readonly _target: RoomTargetSelector;
+	protected readonly _target: ActionTargetSelector;
 
-	public get target(): Readonly<RoomTargetSelector> {
+	public get target(): Readonly<ActionTargetSelector> {
 		return this._target;
 	}
 
@@ -187,7 +187,7 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 		return this._base.currentState;
 	}
 
-	constructor(base: AssetFrameworkGlobalStateManipulator, target: RoomTargetSelector) {
+	constructor(base: AssetFrameworkGlobalStateManipulator, target: ActionTargetSelector) {
 		super(base.assetManager);
 		this._base = base;
 		this._target = target;

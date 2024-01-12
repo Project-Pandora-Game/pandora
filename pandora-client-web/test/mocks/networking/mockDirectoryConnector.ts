@@ -62,7 +62,7 @@ export function MockAccountInfo(overrides?: Partial<IDirectoryAccountInfo>): IDi
 		username: 'test-user',
 		displayName: 'Test User',
 		roles: {},
-		roomOwnershipLimit: 5,
+		spaceOwnershipLimit: 5,
 		settings: cloneDeep(ACCOUNT_SETTINGS_DEFAULT),
 		settingsCooldowns: {},
 		...overrides,

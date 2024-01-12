@@ -3,7 +3,7 @@ import {
 	AssetFrameworkRoomState,
 	ItemContainerPath,
 	ItemPath,
-	RoomTargetSelector,
+	ActionTargetSelector,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect } from 'react';
 import deleteIcon from '../../../assets/icons/delete.svg';
@@ -138,7 +138,7 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 	item: ItemPath;
 	characterContainer: ItemContainerPath;
 }): ReactElement {
-	const inventoryTarget: RoomTargetSelector = {
+	const inventoryTarget: ActionTargetSelector = {
 		type: 'roomInventory',
 	};
 

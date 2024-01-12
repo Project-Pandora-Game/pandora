@@ -1,5 +1,5 @@
 import React, { ReactElement } from 'react';
-import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/chatRoomContextProvider';
+import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/gameStateContextProvider';
 
 export function WikiIntroduction(): ReactElement {
 	return (

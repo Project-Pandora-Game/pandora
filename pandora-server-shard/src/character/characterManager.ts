@@ -23,12 +23,12 @@ export const CharacterManager = new class CharacterManager {
 
 	public listCharacters(): IShardCharacterDefinition[] {
 		return [...this._characters.values()]
-			.map((char) => ({
+			.map((char): IShardCharacterDefinition => ({
 				id: char.id,
 				account: char.accountData,
 				accessId: char.accessId,
 				connectSecret: char.connectSecret,
-				room: char.getCurrentPublicRoomid(),
+				space: char.getCurrentPublicSpaceId(),
 			}));
 	}
 
@@ -59,7 +59,7 @@ export const CharacterManager = new class CharacterManager {
 		}
 
 		logger.verbose(`Adding character ${data.id}`);
-		char = new Character(data, definition.account, definition.connectSecret, definition.room);
+		char = new Character(data, definition.account, definition.connectSecret, definition.space);
 		this._characters.set(id, char);
 		charactersMetric.set(this._characters.size);
 		return char;

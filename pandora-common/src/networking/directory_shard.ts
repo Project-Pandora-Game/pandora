@@ -1,7 +1,7 @@
 import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified, SocketInterfaceDefinition } from './helpers';
 import { CharacterIdSchema } from '../character';
-import { ChatRoomDataSchema, RoomIdSchema } from '../chatroom/room';
-import type { IChatRoomMessageDirectoryAction } from '../chatroom';
+import { SpaceDataSchema, SpaceIdSchema } from '../space/space';
+import type { IChatMessageDirectoryAction } from '../chat';
 import { z } from 'zod';
 import { AccountRoleInfoSchema } from '../account';
 import { ZodCast } from '../validation';
@@ -21,26 +21,27 @@ export const ShardCharacterDefinitionSchema = z.object({
 	id: CharacterIdSchema,
 	account: ShardAccountDefinitionSchema,
 	accessId: z.string(),
-	/** Secret for client to connect; `null` means this character is only loaded in room, but not connected to ("offline") */
+	/** Secret for client to connect; `null` means this character is only loaded in a space, but not connected to by any client ("offline") */
 	connectSecret: z.string().nullable(),
-	room: RoomIdSchema.nullable(),
+	/** Which space this character is in; `null` means this character is in their personal space */
+	space: SpaceIdSchema.nullable(),
 });
 export type IShardCharacterDefinition = z.infer<typeof ShardCharacterDefinitionSchema>;
 
-export const ShardChatRoomDefinitionSchema = ChatRoomDataSchema.pick({
+export const ShardSpaceDefinitionSchema = SpaceDataSchema.pick({
 	id: true,
 	config: true,
 	accessId: true,
 	owners: true,
 });
-export type IShardChatRoomDefinition = z.infer<typeof ShardChatRoomDefinitionSchema>;
+export type IShardSpaceDefinition = z.infer<typeof ShardSpaceDefinitionSchema>;
 
 export const DirectoryShardUpdateSchema = z.object({
 	/** List of characters connected to this shard (both outside and in room) */
 	characters: ShardCharacterDefinitionSchema.array(),
-	/** List of rooms which exist on this shard */
-	rooms: ShardChatRoomDefinitionSchema.array(),
-	messages: z.record(RoomIdSchema, ZodCast<IChatRoomMessageDirectoryAction>().array()),
+	/** List of spaces which are loaded on this shard */
+	spaces: ShardSpaceDefinitionSchema.array(),
+	messages: z.record(SpaceIdSchema, ZodCast<IChatMessageDirectoryAction>().array()),
 });
 export type IDirectoryShardUpdate = z.infer<typeof DirectoryShardUpdateSchema>;
 
@@ -54,17 +55,17 @@ export const DirectoryShardSchema = {
 		request: z.object({}),
 		response: z.object({}),
 	},
-	//#region Room manipulation
-	roomCheckCanEnter: {
+	//#region Space manipulation
+	spaceCheckCanEnter: {
 		request: z.object({
 			character: CharacterIdSchema,
-			room: RoomIdSchema,
+			space: SpaceIdSchema,
 		}),
 		response: z.object({
 			result: z.enum(['ok', 'targetNotFound']),
 		}),
 	},
-	roomCheckCanLeave: {
+	spaceCheckCanLeave: {
 		request: z.object({
 			character: CharacterIdSchema,
 		}),

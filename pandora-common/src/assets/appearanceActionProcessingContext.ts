@@ -4,7 +4,7 @@ import { GameLogicCharacter, GameLogicPermission, InteractionId } from '../gameL
 import { Assert, AssertNever, AssertNotNullable } from '../utility';
 import { AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
 import { AppearanceActionContext } from './appearanceActions';
-import { ActionHandlerMessage, ActionHandlerMessageWithTarget, RoomActionTarget, RoomTargetSelector } from './appearanceTypes';
+import { ActionHandlerMessage, ActionHandlerMessageWithTarget, ActionTarget, ActionTargetSelector } from './appearanceTypes';
 import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
 import { RoomInventory } from './roomInventory';
 import { AssetFrameworkGlobalState } from './state/globalState';
@@ -56,10 +56,10 @@ export class AppearanceActionProcessingContext {
 		if (char == null || charState == null)
 			return null;
 
-		return char.getRestrictionManager(charState, this._context.roomContext);
+		return char.getRestrictionManager(charState, this._context.spaceContext);
 	}
 
-	public getTarget(target: RoomTargetSelector): RoomActionTarget | null {
+	public getTarget(target: ActionTargetSelector): ActionTarget | null {
 		if (target.type === 'character') {
 			const char = this._context.getCharacter(target.characterId);
 			const charState = this.manipulator.currentState.getCharacterState(target.characterId);

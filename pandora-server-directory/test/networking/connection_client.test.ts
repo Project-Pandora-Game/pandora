@@ -51,7 +51,7 @@ describe('ClientConnection', () => {
 
 		expect(() => {
 			return client.awaitResponse('test', {});
-		}).toThrowError('Invalid operation');
+		}).toThrow('Invalid operation');
 	});
 
 	describe('Receiving messages', () => {

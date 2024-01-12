@@ -26,19 +26,19 @@ describe('Observable', () => {
 			const sub = jest.fn();
 			mockObservable.subscribe(sub);
 			mockObservable.value = updated;
-			expect(sub).toBeCalledTimes(1);
-			expect(sub).toBeCalledWith(updated);
+			expect(sub).toHaveBeenCalledTimes(1);
+			expect(sub).toHaveBeenCalledWith(updated);
 		});
 
 		it('should not notify deleted observers', () => {
 			const sub = jest.fn();
 			const handle = mockObservable.subscribe(sub);
 			mockObservable.value = updated;
-			expect(sub).toBeCalledTimes(1);
-			expect(sub).toBeCalledWith(updated);
+			expect(sub).toHaveBeenCalledTimes(1);
+			expect(sub).toHaveBeenCalledWith(updated);
 			handle(); //delete me
 			mockObservable.value = defValue;
-			expect(sub).toBeCalledTimes(1);
+			expect(sub).toHaveBeenCalledTimes(1);
 		});
 	});
 	describe('subscribe()', () => {
@@ -85,7 +85,7 @@ describe('@ObservableProperty()', () => {
 
 		mock.test = 'updated';
 		expect(eventObserver).toHaveBeenCalledTimes(1);
-		expect(eventObserver).lastCalledWith({ test: 'updated' });
+		expect(eventObserver).toHaveBeenLastCalledWith({ test: 'updated' });
 		expect(mock.test).toBe('updated');
 
 		eventObserver.mockClear();

@@ -7,7 +7,7 @@
 	"env": {
 		"es6": true
 	},
-	"ignorePatterns": [".git", "node_modules", "dist"],
+	"ignorePatterns": [".git", "node_modules", "dist", "jest.config.js"],
 	"parserOptions": {
 		"ecmaVersion": 2021,
 		"project": ["./tsconfig.json", "./test/tsconfig.json"]
@@ -43,6 +43,7 @@
 				"@typescript-eslint/no-throw-literal": "error",
 				// Warnings
 				"@typescript-eslint/no-unnecessary-boolean-literal-compare": "warn",
+				"deprecation/deprecation": "warn",
 				// Style rules
 				"dot-notation": "off",
 				"@typescript-eslint/dot-notation": "warn",
@@ -176,7 +177,6 @@
 		"no-multiple-empty-lines": ["warn", { "max": 1, "maxBOF": 0, "maxEOF": 1 }],
 		"operator-assignment": "warn",
 		"prefer-object-spread": "warn",
-		"deprecation/deprecation": "warn",
 		// Style rules
 		"dot-notation": "warn",
 		"semi": "off",

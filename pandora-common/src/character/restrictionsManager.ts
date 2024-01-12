@@ -460,6 +460,13 @@ export class CharacterRestrictionsManager {
 				return r;
 		}
 
+		// Styling the item is a "color"-like interaction
+		if (interaction === ItemInteractionType.STYLING) {
+			if (target.type === 'character') {
+				context.addInteraction(target.character, 'changeItemColor');
+			}
+		}
+
 		const properties = item.getProperties();
 
 		// If equipping there are further checks

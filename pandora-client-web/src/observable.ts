@@ -1,8 +1,8 @@
 import { noop } from 'lodash';
 import { useSyncExternalStore } from 'react';
-import { ClassNamedAccessorDecoratorContext, TypedEvent, TypedEventEmitter } from 'pandora-common';
+import { ClassNamedAccessorDecoratorContext, GetLogger, TypedEvent, TypedEventEmitter } from 'pandora-common';
 import { produce, Draft } from 'immer';
-import { USER_DEBUG } from './config/Environment';
+import { NODE_ENV, USER_DEBUG } from './config/Environment';
 
 export type Observer<T> = (value: T) => void;
 export type UnsubscribeCallback = () => void;
@@ -75,10 +75,10 @@ class RateLimitedObservable<T> extends NormalObservable<T> {
 			if (timeDiff < RateLimitedObservable.timeWindow) {
 				if (this.storageEventCount > RateLimitedObservable.maxEvents) {
 					this.async = true;
-					console.error('Too many observable events in a short time window!!!', new Error().stack, this);
+					GetLogger('RateLimitedObservable').error('Too many observable events in a short time window!!!', new Error().stack, this);
 				}
 			} else {
-				this.storageEventCount = 0;
+				this.storageEventCount = 1;
 				this.lastEventTime = now;
 			}
 		};
@@ -91,11 +91,11 @@ class RateLimitedObservable<T> extends NormalObservable<T> {
 }
 
 /** Class that stores value of type T, while allowing subscribers to observe reference changes */
-export const Observable = USER_DEBUG ? RateLimitedObservable : NormalObservable;
+export const Observable = (USER_DEBUG && NODE_ENV !== 'test') ? RateLimitedObservable : NormalObservable;
 /** Class that stores value of type T, while allowing subscribers to observe reference changes */
 export type Observable<T> = NormalObservable<T>;
 
-if (USER_DEBUG) {
+if (USER_DEBUG && NODE_ENV !== 'test') {
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
 	(window as any).RateLimitedObservable = RateLimitedObservable;
 }

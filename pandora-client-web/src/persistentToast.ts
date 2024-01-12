@@ -55,6 +55,7 @@ export class PersistentToast {
 
 		let id = this.id;
 
+		// eslint-disable-next-line deprecation/deprecation
 		options.onOpen = () => {
 			if (id === null)
 				return;
@@ -66,6 +67,7 @@ export class PersistentToast {
 			}
 		};
 
+		// eslint-disable-next-line deprecation/deprecation
 		options.onClose = () => {
 			if (id === null)
 				return;

@@ -18,6 +18,7 @@
 				"plugin:@typescript-eslint/recommended-type-checked",
 				"plugin:@typescript-eslint/stylistic-type-checked"
 			],
+			"plugins": ["@typescript-eslint", "deprecation"],
 			"files": ["*.ts", "*.tsx"],
 			"parser": "@typescript-eslint/parser",
 			"parserOptions": {
@@ -42,6 +43,7 @@
 				"@typescript-eslint/no-throw-literal": "error",
 				// Warnings
 				"@typescript-eslint/no-unnecessary-boolean-literal-compare": "warn",
+				"deprecation/deprecation": "warn",
 				// Style rules
 				"dot-notation": "off",
 				"@typescript-eslint/dot-notation": "warn",

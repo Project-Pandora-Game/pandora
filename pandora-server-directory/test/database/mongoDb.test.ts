@@ -45,7 +45,7 @@ describe('MongoDatabase extra tests', () => {
 		const testDb = new MongoDatabase({ url: server.getUri() });
 		await testDb.init();
 
-		await expect(testDb.init()).rejects.toThrowError('Database already initialized');
+		await expect(testDb.init()).rejects.toThrow('Database already initialized');
 
 		await testDb.onDestroy();
 	});

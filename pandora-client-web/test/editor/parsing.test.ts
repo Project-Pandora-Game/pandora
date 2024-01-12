@@ -45,7 +45,7 @@ describe('Transforms', () => {
 		});
 
 		it('should throw error if bone is not valid', () => {
-			expect(() => ParseTransforms(mockSerialize, ['invalid_bone'])).toThrowError();
+			expect(() => ParseTransforms(mockSerialize, ['invalid_bone'])).toThrow();
 		});
 
 	});

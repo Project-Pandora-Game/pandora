@@ -164,6 +164,7 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 			range.selectNode(reportElement);
 			window.getSelection()?.removeAllRanges();
 			window.getSelection()?.addRange(range);
+			// eslint-disable-next-line deprecation/deprecation
 			return document.execCommand('copy');
 		} catch (_) {
 			return false;

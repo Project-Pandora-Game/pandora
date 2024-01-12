@@ -272,7 +272,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		});
 
 		it('fails on unknown account', async () => {
-			await expect(db.createCharacter(999)).rejects.toThrowError('Account not found');
+			await expect(db.createCharacter(999)).rejects.toThrow('Account not found');
 			// Doesn't affect accounts
 			const accountData1 = await db.getAccountById(accountId1);
 			expect(accountData1?.characters).toEqual([]);

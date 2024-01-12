@@ -39,18 +39,18 @@ describe('TypedEventEmitter', () => {
 			const unsub = jest.fn();
 			const handler = mockEmitter.on('event1', unsub);
 			mockEmitter.emit1();
-			expect(unsub).lastCalledWith(def.event1);
+			expect(unsub).toHaveBeenLastCalledWith(def.event1);
 			handler(); //unsubscribe
 			mockEmitter.emit1();
-			expect(unsub).toBeCalledTimes(1);
-			expect(unsub).not.toBeCalledTimes(2);
+			expect(unsub).toHaveBeenCalledTimes(1);
+			expect(unsub).not.toHaveBeenCalledTimes(2);
 		});
 
 		it('should register callbacks for a certain event', () => {
 			mockEmitter.emit1();
-			expect(fn).lastCalledWith(def.event1);
+			expect(fn).toHaveBeenLastCalledWith(def.event1);
 			mockEmitter.emit2();
-			expect(fn).lastCalledWith(def.event2);
+			expect(fn).toHaveBeenLastCalledWith(def.event2);
 		});
 	});
 	describe('onAny()', () => {
@@ -62,21 +62,21 @@ describe('TypedEventEmitter', () => {
 			const unsub = jest.fn();
 			const handler = mockEmitter.onAny(unsub);
 			mockEmitter.emit1();
-			expect(unsub).lastCalledWith({ event1: def.event1 });
+			expect(unsub).toHaveBeenLastCalledWith({ event1: def.event1 });
 			mockEmitter.emit2();
-			expect(unsub).lastCalledWith({ event2: def.event2 });
+			expect(unsub).toHaveBeenLastCalledWith({ event2: def.event2 });
 			handler(); //unsubscribe
 			mockEmitter.emit1();
 			mockEmitter.emit2();
-			expect(unsub).toBeCalledTimes(2);
-			expect(unsub).not.toBeCalledTimes(4);
+			expect(unsub).toHaveBeenCalledTimes(2);
+			expect(unsub).not.toHaveBeenCalledTimes(4);
 		});
 
 		it('should register callbacks for any defined event', () => {
 			mockEmitter.emit1();
-			expect(fnAny).lastCalledWith({ event1: def.event1 });
+			expect(fnAny).toHaveBeenLastCalledWith({ event1: def.event1 });
 			mockEmitter.emit2();
-			expect(fnAny).lastCalledWith({ event2: def.event2 });
+			expect(fnAny).toHaveBeenLastCalledWith({ event2: def.event2 });
 		});
 	});
 });

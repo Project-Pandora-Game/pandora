@@ -71,6 +71,7 @@ export function ExportDialog<T extends ZodType<unknown>>({
 			textArea.select();
 
 			try {
+				// eslint-disable-next-line deprecation/deprecation
 				const successful = document.execCommand('copy');
 				if (successful) {
 					if (showCopyClearTimeout.current != null) {

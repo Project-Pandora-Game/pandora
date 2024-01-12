@@ -2,14 +2,13 @@ import {
 	AppearanceAction,
 	AppearanceItems,
 	AssetColorization,
+	CloneDeepMutable,
 	ColorGroupResult,
-	DoAppearanceAction,
 	Item,
 	ItemPath,
 	Writeable,
 } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
-import { useAssetManager } from '../../../assets/assetManager';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import _ from 'lodash';
 import { ColorInputRGBA } from '../../common/colorInput/colorInput';
@@ -17,6 +16,7 @@ import { Immutable } from 'immer';
 import { useItemColorString } from '../../../graphics/graphicsLayer';
 import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
 import { useWardrobeTargetItems } from '../wardrobeUtils';
+import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 
 export function WardrobeItemColorization({ wornItem, item }: {
 	wornItem: Item<'personal' | 'roomDevice'>;
@@ -60,11 +60,13 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup
 	overrideGroup?: ColorGroupResult;
 	item: Item;
 }): ReactElement | null {
-	const assetManager = useAssetManager();
-	const { actions } = useWardrobeContext();
 	const current = useItemColorString(allItems, item, colorKey) ?? colorDefinition.default;
 	const bundle = useMemo(() => item.exportColorToBundle(), [item]);
-	const disabled = useMemo(() => bundle == null || DoAppearanceAction({ ...action, color: bundle }, actions, assetManager).problems.length > 0, [bundle, action, actions, assetManager]);
+
+	const checkAction = useMemo((): AppearanceAction => ({ ...action, color: CloneDeepMutable(bundle) ?? {} }), [action, bundle]);
+	const check = useStaggeredAppearanceActionResult(checkAction);
+	const disabled = check == null || !check.valid || check.problems.length > 0;
+
 	const [execute] = useWardrobeExecuteCallback();
 
 	if (!colorDefinition.name || !bundle)

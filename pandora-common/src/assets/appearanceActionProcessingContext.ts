@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash';
+import { isEqual, uniqWith } from 'lodash';
 import type { CharacterId, CharacterRestrictionsManager, ItemInteractionType, RestrictionResult } from '../character';
 import type { GameLogicCharacter, GameLogicPermission, InteractionId } from '../gameLogic';
 import { Assert, AssertNever, AssertNotNullable } from '../utility';
@@ -191,6 +191,8 @@ export class AppearanceActionProcessingContext {
 }
 
 abstract class AppearanceActionProcessingResultBase {
+	private readonly _finalProcessingContext: AppearanceActionProcessingContext;
+
 	public readonly originalState: AssetFrameworkGlobalState;
 
 	public abstract readonly problems: readonly AppearanceActionProblem[];
@@ -198,8 +200,13 @@ abstract class AppearanceActionProcessingResultBase {
 	public readonly requiredPermissions: ReadonlySet<GameLogicPermission>;
 
 	constructor(processingContext: AppearanceActionProcessingContext) {
+		this._finalProcessingContext = processingContext;
 		this.originalState = processingContext.originalState;
 		this.requiredPermissions = processingContext.requiredPermissions;
+	}
+
+	public addAdditionalProblems(additionalProblems: readonly AppearanceActionProblem[]): AppearanceActionProcessingResult {
+		return new AppearanceActionProcessingResultInvalid(this._finalProcessingContext, additionalProblems);
 	}
 }
 
@@ -208,9 +215,9 @@ export class AppearanceActionProcessingResultInvalid extends AppearanceActionPro
 
 	public readonly problems: readonly AppearanceActionProblem[];
 
-	constructor(processingContext: AppearanceActionProcessingContext) {
+	constructor(processingContext: AppearanceActionProcessingContext, additionalProblems: readonly AppearanceActionProblem[] = []) {
 		super(processingContext);
-		this.problems = [...processingContext.actionProblems];
+		this.problems = uniqWith([...processingContext.actionProblems, ...additionalProblems], isEqual);
 		Assert(this.problems.length > 0);
 	}
 }

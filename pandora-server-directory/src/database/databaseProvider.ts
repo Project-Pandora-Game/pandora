@@ -229,11 +229,10 @@ export interface PandoraDatabase extends Service {
 /** Current database connection */
 let database: PandoraDatabase | undefined;
 
-/** Init database connection based on configuration */
-export async function InitDatabase(setDb?: typeof database): Promise<void> {
-	if (setDb) {
-		database = setDb;
-		return;
+/** Gets the database service without initialization */
+export function GetDatabaseService(): PandoraDatabase {
+	if (database) {
+		return database;
 	}
 	switch (DATABASE_TYPE) {
 		case 'mongodb':
@@ -249,13 +248,13 @@ export async function InitDatabase(setDb?: typeof database): Promise<void> {
 		default:
 			database = new MockDatabase();
 	}
-	await ServiceInit(database);
+	return database;
 }
 
-export async function CloseDatabase(): Promise<void> {
-	if (database instanceof MongoDatabase) {
-		await database.onDestroy();
-	}
+/** Sets and initialize the database for tests */
+export async function InitDatabaseForTests(setDb: typeof database): Promise<void> {
+	database = setDb;
+	await ServiceInit(GetDatabaseService());
 }
 
 /** Get currently active database connection */

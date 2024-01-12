@@ -2,10 +2,10 @@ import { mkdirSync } from 'fs';
 import { APP_VERSION, ENV } from './config';
 const { APP_NAME, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION, SERVER_PUBLIC_ADDRESS } = ENV;
 import { AddDiscordLogOutput, AddFileOutput } from './logging';
-import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
+import { GetLogger, LogLevel, ServiceInit, SetConsoleOutput } from 'pandora-common';
 import { ConnectToDirectory } from './networking/socketio_directory_connector';
-import { StartHttpServer } from './networking/httpServer';
-import { InitDatabase } from './database/databaseProvider';
+import { HttpServer } from './networking/httpServer';
+import { GetDatabaseService } from './database/databaseProvider';
 import { SetupSignalHandling } from './lifecycle';
 import { LoadAssetDefinitions } from './assets/assetManager';
 // get version from package.json
@@ -29,9 +29,9 @@ async function Start(): Promise<void> {
 	logger.verbose('Connecting to Directory...');
 	await ConnectToDirectory();
 	logger.verbose('Initializing database...');
-	await InitDatabase();
+	await ServiceInit(GetDatabaseService());
 	logger.verbose('Starting HTTP server...');
-	await StartHttpServer();
+	await ServiceInit(HttpServer);
 	logger.alert('Ready!');
 }
 

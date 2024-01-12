@@ -72,7 +72,6 @@ export class MockConnectionSocket implements IncomingSocket {
 			emit: (event: string, arg: unknown, callback: (socketError: unknown, error: unknown, arg?: unknown) => void) => {
 				let finished = false;
 
-				/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
 				// eslint-disable-next-line @typescript-eslint/ban-ts-comment
 				// @ts-ignore: setTimeout - not sure if Node.js or browser
 				const timeout = setTimeout(() => {
@@ -91,7 +90,6 @@ export class MockConnectionSocket implements IncomingSocket {
 					clearTimeout(timeout);
 					callback(null, error, result);
 				});
-				/* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
 			},
 		});
 	}

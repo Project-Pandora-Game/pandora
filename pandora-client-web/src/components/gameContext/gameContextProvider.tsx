@@ -6,7 +6,7 @@ import { DirectoryConnectorContextProvider } from './directoryConnectorContextPr
 import { NotificationContextProvider } from './notificationContextProvider';
 import { ShardConnectorContextProvider } from './shardConnectorContextProvider';
 import { CharacterRestrictionOverrideDialogContext } from '../characterRestrictionOverride/characterRestrictionOverride';
-import { ChatInputContextProvider } from '../chatroom/chatInput';
+import { ChatInputContextProvider } from '../../ui/components/chat/chatInput';
 import { PermissionCheckServiceProvider } from './permissionCheckProvider';
 
 export function GameContextProvider({ children }: ChildrenProps): ReactElement {

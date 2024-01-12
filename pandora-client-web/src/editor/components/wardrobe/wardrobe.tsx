@@ -1,4 +1,10 @@
-import { ActionRoomContext, AppearanceActionContext, AssetFrameworkGlobalState, ChatRoomFeatureSchema, DoAppearanceAction, EMPTY_ARRAY } from 'pandora-common';
+import {
+	ActionSpaceContext,
+	AppearanceActionContext,
+	AssetFrameworkGlobalState,
+	DoAppearanceAction,
+	EMPTY_ARRAY,
+} from 'pandora-common';
 import React, { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import { Column, Row } from '../../../components/common/container/container';
@@ -19,10 +25,14 @@ import '../../../components/wardrobe/wardrobe.scss';
 import { WardrobeActionButton } from '../../../components/wardrobe/wardrobeComponents';
 import { Immutable } from 'immer';
 
-export const EDITOR_ROOM_CONTEXT = {
-	features: ChatRoomFeatureSchema.options,
+export const EDITOR_SPACE_CONTEXT = {
+	features: [
+		'development',
+		'allowBodyChanges',
+		'allowPronounChanges',
+	],
 	isAdmin: () => true,
-} as const satisfies ActionRoomContext;
+} as const satisfies Immutable<ActionSpaceContext>;
 
 export function EditorWardrobeContextProvider({ children }: { children: ReactNode; }): ReactElement {
 	const assetManager = useAssetManager();
@@ -39,7 +49,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	const actions = useMemo<AppearanceActionContext>(() => ({
 		player: character.gameLogicCharacter,
 		globalState: editor.globalState,
-		roomContext: EDITOR_ROOM_CONTEXT,
+		spaceContext: EDITOR_SPACE_CONTEXT,
 		getCharacter: (id) => {
 			if (id === character.id) {
 				return character.gameLogicCharacter;

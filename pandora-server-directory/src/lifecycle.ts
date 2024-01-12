@@ -1,12 +1,12 @@
 import { GetLogger, Service, logConfig } from 'pandora-common';
 import { accountManager } from './account/accountManager';
-import { CloseDatabase } from './database/databaseProvider';
-import { StopHttpServer } from './networking/httpServer';
+import { GetDatabaseService } from './database/databaseProvider';
+import { HttpServer } from './networking/httpServer';
 import { ConnectionManagerClient } from './networking/manager_client';
 import { ShardManager } from './shard/shardManager';
 import wtfnode from 'wtfnode';
 import { DiscordBot } from './services/discord/discordBot';
-import { RoomManager } from './room/roomManager';
+import { SpaceManager } from './spaces/spaceManager';
 
 const logger = GetLogger('Lifecycle');
 
@@ -28,8 +28,7 @@ function DestroyService(service: Service): Promise<void> | void {
 
 async function StopGracefully(): Promise<void> {
 	// Stop HTTP server
-	destroying = 'HTTP Server';
-	StopHttpServer();
+	await DestroyService(HttpServer);
 	// Stop discord bot
 	await DestroyService(DiscordBot);
 	// Stop sending status updates
@@ -39,14 +38,13 @@ async function StopGracefully(): Promise<void> {
 	// Unload all characters
 	destroying = 'AccountManager Characters';
 	await accountManager.onDestroyCharacters();
-	// Unload all rooms
-	await DestroyService(RoomManager);
+	// Unload all spaces
+	await DestroyService(SpaceManager);
 	// Unload all accounts
 	destroying = 'AccountManager Accounts';
 	accountManager.onDestroyAccounts();
 	// Disconnect database
-	destroying = 'Database';
-	await CloseDatabase();
+	await DestroyService(GetDatabaseService());
 	destroying = '[done]';
 }
 

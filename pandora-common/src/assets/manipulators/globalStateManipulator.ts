@@ -1,7 +1,7 @@
 import { CharacterId } from '../../character';
 import { AssertNever } from '../../utility';
 import { AppearanceCharacterManipulator, AppearanceRootManipulator } from '../appearanceHelpers';
-import { RoomTargetSelector } from '../appearanceTypes';
+import { ActionTargetSelector } from '../appearanceTypes';
 import { AppearanceItems } from '../appearanceValidation';
 import { AssetManager } from '../assetManager';
 import { FilterItemWearable } from '../item';
@@ -18,7 +18,7 @@ export class AssetFrameworkGlobalStateManipulator {
 		this.currentState = originState;
 	}
 
-	public getManipulatorFor(target: RoomTargetSelector): AppearanceRootManipulator {
+	public getManipulatorFor(target: ActionTargetSelector): AppearanceRootManipulator {
 		if (target.type === 'character') {
 			return new AppearanceCharacterManipulator(this, target);
 		} else if (target.type === 'roomInventory') {
@@ -50,11 +50,11 @@ export class AssetFrameworkGlobalStateManipulator {
 		return true;
 	}
 
-	public getItems(target: RoomTargetSelector): AppearanceItems {
+	public getItems(target: ActionTargetSelector): AppearanceItems {
 		return this.currentState.getItems(target) ?? [];
 	}
 
-	public setItems(target: RoomTargetSelector, newItems: AppearanceItems): boolean {
+	public setItems(target: ActionTargetSelector, newItems: AppearanceItems): boolean {
 		if (target.type === 'character') {
 			// Check only wearable items are being applied
 			const wearableItems = newItems.filter(FilterItemWearable);

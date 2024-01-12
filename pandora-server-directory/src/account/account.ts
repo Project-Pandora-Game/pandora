@@ -84,7 +84,7 @@ export class Account {
 			created: this.data.created,
 			github: this.secure.getGitHubStatus(),
 			roles: this.roles.getSelfInfo(),
-			roomOwnershipLimit: this.roomOwnershipLimit,
+			spaceOwnershipLimit: this.spaceOwnershipLimit,
 			settings: _.cloneDeep(this.data.settings),
 			settingsCooldowns: _.cloneDeep(this.data.settingsCooldowns),
 			cryptoKey: this.secure.getCryptoKey(),
@@ -260,9 +260,9 @@ export class Account {
 
 	//#endregion
 
-	//#region Rooms
+	//#region Spaces
 
-	public get roomOwnershipLimit(): number {
+	public get spaceOwnershipLimit(): number {
 		return ROOM_LIMIT_NORMAL;
 	}
 

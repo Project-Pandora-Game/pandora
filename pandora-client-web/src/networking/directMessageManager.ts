@@ -4,7 +4,7 @@ import type { DirectoryConnector } from './directoryConnector';
 import { KeyExchange } from '../crypto/keyExchange';
 import { BrowserStorage } from '../browserStorage';
 import { Observable, ReadonlyObservable } from '../observable';
-import { ChatParser } from '../components/chatroom/chatParser';
+import { ChatParser } from '../ui/components/chat/chatParser';
 import { HashSHA256Base64 } from '../crypto/helpers';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast';

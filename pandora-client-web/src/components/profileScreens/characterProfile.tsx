@@ -1,7 +1,7 @@
 import React, { ReactElement, useState } from 'react';
 import { AssertNever, CharacterId, GetLogger, ICharacterRoomData, LIMIT_CHARACTER_PROFILE_LENGTH, PRONOUNS } from 'pandora-common';
 import { Column, Row } from '../common/container/container';
-import { ChatRoom, useCharacterState, useChatRoomCharacters, useChatroom } from '../gameContext/chatRoomContextProvider';
+import { GameState, useCharacterState, useSpaceCharacters, useGameStateOptional } from '../gameContext/gameStateContextProvider';
 import { Character, useCharacterData } from '../../character/character';
 import { useIsNarrowScreen } from '../../styles/mediaQueries';
 import { CharacterPreview } from '../wardrobe/wardrobeGraphics';
@@ -13,11 +13,11 @@ import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast';
 
 export function CharacterProfile({ characterId }: { characterId: CharacterId; }): ReactElement {
-	const chatroomCharacters = useChatRoomCharacters();
-	const character = chatroomCharacters?.find((c) => c.id === characterId);
-	const chatroom = useChatroom();
+	const characters = useSpaceCharacters();
+	const character = characters?.find((c) => c.id === characterId);
+	const gameState = useGameStateOptional();
 
-	if (character == null || chatroom == null) {
+	if (character == null || gameState == null) {
 		return (
 			<Column className='profileView flex-1' alignX='center' alignY='center'>
 				Failed to load character data.
@@ -25,13 +25,13 @@ export function CharacterProfile({ characterId }: { characterId: CharacterId; })
 		);
 	}
 
-	return <CharacterProfileContent character={ character } chatroom={ chatroom } />;
+	return <CharacterProfileContent character={ character } gameState={ gameState } />;
 }
 
-function CharacterProfileContent({ character, chatroom }: { character: Character<ICharacterRoomData>; chatroom: ChatRoom; }): ReactElement {
+function CharacterProfileContent({ character, gameState }: { character: Character<ICharacterRoomData>; gameState: GameState; }): ReactElement {
 	const isPlayer = usePlayer()?.id === character.id;
 	const characterData = useCharacterData(character);
-	const characterState = useCharacterState(chatroom, character.id);
+	const characterState = useCharacterState(gameState, character.id);
 	const isNarrowScreen = useIsNarrowScreen();
 
 	const pronouns = PRONOUNS[characterData.settings.pronoun];

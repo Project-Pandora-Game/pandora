@@ -4,10 +4,10 @@ import { HeaderButton } from './HeaderButton';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
 import { usePlayer, usePlayerData, usePlayerState } from '../gameContext/playerContextProvider';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { EMPTY, GetLogger, IChatRoomClientInfo, RoomId } from 'pandora-common';
+import { EMPTY, GetLogger, SpaceClientInfo, SpaceId } from 'pandora-common';
 import { Button } from '../common/button/button';
 import { useLogout } from '../../networking/account_manager';
-import { useCharacterRestrictionsManager, useChatRoomInfoOptional } from '../gameContext/chatRoomContextProvider';
+import { useCharacterRestrictionsManager, useSpaceInfoOptional } from '../gameContext/gameStateContextProvider';
 import { PlayerCharacter } from '../../character/player';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
@@ -44,19 +44,19 @@ export function LeaveButton({ onClickExtra }: {
 
 function DialogLeave(): ReactElement {
 	const closeDialog = useContext(leaveButtonContext);
-	const inPublicRoom = useChatRoomInfoOptional()?.id != null;
+	const inPublicSpace = useSpaceInfoOptional()?.id != null;
 
 	return (
 		<ModalDialog>
 			<Column className='LeaveDialog' alignX='center'>
-				<ChatRoomLeave />
+				<SpaceLeave />
 				{
-					inPublicRoom ? (
+					inPublicSpace ? (
 						<span>
 							<strong>
 								Warning:
 								Changing character or logging out<br />
-								will leave the character inside the current room
+								will leave the character inside the current space
 							</strong>
 						</span>
 					) : null
@@ -69,28 +69,30 @@ function DialogLeave(): ReactElement {
 	);
 }
 
-function ChatRoomLeave(): ReactElement {
+function SpaceLeave(): ReactElement {
 	const player = usePlayer();
-	const room = useChatRoomInfoOptional();
+	const space = useSpaceInfoOptional();
 
 	return (
 		<fieldset>
-			<legend>Chat Room</legend>
+			<legend>Space</legend>
 			{
-				(player && room?.id) ? (
-					<CharRoomLeaveInner player={ player } roomConfig={ room.config } roomId={ room.id } />
+				(player && space?.id) ? (
+					<SpaceLeaveInner player={ player } config={ space.config } spaceId={ space.id } />
+				) : player ? (
+					<span>Currently in { player.name }'s personal space</span>
 				) : (
-					<span>Not in a chat room</span>
+					<span>No character selected</span>
 				)
 			}
 		</fieldset>
 	);
 }
 
-function CharRoomLeaveInner({ player, roomConfig, roomId }: {
+function SpaceLeaveInner({ player, config, spaceId }: {
 	player: PlayerCharacter;
-	roomConfig: Immutable<IChatRoomClientInfo>;
-	roomId: RoomId;
+	config: Immutable<SpaceClientInfo>;
+	spaceId: SpaceId;
 }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const { playerState } = usePlayerState();
@@ -98,41 +100,41 @@ function CharRoomLeaveInner({ player, roomConfig, roomId }: {
 	const canLeave = useCharacterRestrictionsManager(playerState, player, (manager) => (manager.forceAllowRoomLeave() || !manager.getEffects().blockRoomLeave));
 	const closeDialog = useContext(leaveButtonContext);
 
-	const onRoomLeave = useCallback(() => {
-		directoryConnector.awaitResponse('chatRoomLeave', EMPTY)
+	const onLeave = useCallback(() => {
+		directoryConnector.awaitResponse('spaceLeave', EMPTY)
 			.then((result) => {
 				if (result.result !== 'ok') {
-					toast(`Failed to leave room:\n${result.result}`, TOAST_OPTIONS_ERROR);
+					toast(`Failed to leave space:\n${result.result}`, TOAST_OPTIONS_ERROR);
 				} else {
 					closeDialog();
 				}
 			})
 			.catch((err) => {
-				GetLogger('LeaveRoom').warning('Error while leaving room', err);
-				toast(`Error while leaving room:\n${err instanceof Error ? err.message : String(err)}`, TOAST_OPTIONS_ERROR);
+				GetLogger('LeaveSpace').warning('Error while leaving space', err);
+				toast(`Error while leaving space:\n${err instanceof Error ? err.message : String(err)}`, TOAST_OPTIONS_ERROR);
 			});
 	}, [directoryConnector, closeDialog]);
 
 	return (
 		<>
-			<span>Name: { roomConfig.name }</span>
-			<span>Id: { roomId }</span>
+			<span>Name: { config.name }</span>
+			<span>Id: { spaceId }</span>
 			{
 				roomDeviceLink ? (
 					<Row alignX='center' padding='large'>
-						<b>You must exit the room device before leaving the room.</b>
+						<b>You must exit the room device before leaving the space.</b>
 					</Row>
 				) : null
 			}
 			{
 				(!canLeave && roomDeviceLink == null) ? (
 					<Row alignX='center' padding='large'>
-						<b>An item is preventing you from leaving the room.</b>
+						<b>An item is preventing you from leaving the space.</b>
 					</Row>
 				) : null
 			}
-			<Button onClick={ onRoomLeave } className='fadeDisabled' disabled={ !canLeave || roomDeviceLink != null }>
-				Leave room
+			<Button onClick={ onLeave } className='fadeDisabled' disabled={ !canLeave || roomDeviceLink != null }>
+				Leave space
 			</Button>
 		</>
 	);

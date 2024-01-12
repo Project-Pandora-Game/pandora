@@ -6,8 +6,8 @@ import {
 	FilterItemType,
 	HexColorString,
 	ICharacterRoomData,
-	IChatRoomClientInfo,
-	IChatroomBackgroundData,
+	SpaceClientInfo,
+	RoomBackgroundData,
 	ItemRoomDevice,
 	Rectangle,
 	ResolveBackground,
@@ -22,13 +22,13 @@ import { CHARACTER_BASE_Y_OFFSET, CHARACTER_PIVOT_POSITION, GraphicsCharacter } 
 import { ColorInput } from '../common/colorInput/colorInput';
 import { directoryConnectorContext, useCurrentAccountSettings, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useAssetManager } from '../../assets/assetManager';
-import { useChatRoomInfo } from '../gameContext/chatRoomContextProvider';
-import { ChatRoomCharacter, useChatRoomCharacterOffsets, useChatRoomCharacterPosition } from '../chatroom/chatRoomCharacter';
-import { usePlayerVisionFilters } from '../chatroom/chatRoomScene';
+import { useSpaceInfo } from '../gameContext/gameStateContextProvider';
+import { RoomCharacter, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter';
+import { usePlayerVisionFilters } from '../../graphics/room/roomScene';
 import { Row } from '../common/container/container';
 import * as PIXI from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
-import { ChatRoomDevice } from '../chatroom/chatRoomDevice';
+import { RoomDevice } from '../../graphics/room/roomDevice';
 import { useWardrobeContext } from './wardrobeContext';
 import { useObservable } from '../../observable';
 import { min } from 'lodash';
@@ -81,16 +81,16 @@ export function CharacterPreview({ character, characterState, overlay }: {
 	characterState: AssetFrameworkCharacterState;
 	overlay?: ReactNode;
 }): ReactElement {
-	const roomInfo = useChatRoomInfo();
+	const spaceInfo = useSpaceInfo();
 	const assetManager = useAssetManager();
 	const accountSettings = useCurrentAccountSettings();
 
-	const roomBackground = useMemo((): Immutable<IChatroomBackgroundData> | null => {
-		if (roomInfo && accountSettings.wardrobeUseRoomBackground) {
-			return ResolveBackground(assetManager, roomInfo.config.background);
+	const roomBackground = useMemo((): Immutable<RoomBackgroundData> | null => {
+		if (spaceInfo && accountSettings.wardrobeUseRoomBackground) {
+			return ResolveBackground(assetManager, spaceInfo.config.background);
 		}
 		return null;
-	}, [assetManager, roomInfo, accountSettings]);
+	}, [assetManager, spaceInfo, accountSettings]);
 
 	const wardrobeBackground: number = Number.parseInt(accountSettings.wardrobeBackground.substring(1, 7), 16);
 
@@ -99,7 +99,7 @@ export function CharacterPreview({ character, characterState, overlay }: {
 		backgroundColor: roomBackground ? 0x000000 : wardrobeBackground,
 	}), [roomBackground, wardrobeBackground]);
 
-	const { pivot } = useChatRoomCharacterOffsets(characterState);
+	const { pivot } = useRoomCharacterOffsets(characterState);
 	const filters = usePlayerVisionFilters(character.isPlayer());
 
 	return (
@@ -124,11 +124,11 @@ function WardrobeRoomBackground({
 	character,
 	characterState,
 }: {
-	roomBackground: Immutable<IChatroomBackgroundData>;
+	roomBackground: Immutable<RoomBackgroundData>;
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const { position, scale, errorCorrectedPivot, yOffset } = useChatRoomCharacterPosition(character.data.position, characterState, roomBackground);
+	const { position, scale, errorCorrectedPivot, yOffset } = useRoomCharacterPosition(character.data.position, characterState, roomBackground);
 	const filters = usePlayerVisionFilters(false);
 
 	const inverseScale = 1 / scale;
@@ -171,7 +171,7 @@ function WardrobeBackgroundColorPicker(): ReactElement | null {
 export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }: {
 	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
-	info: IChatRoomClientInfo;
+	info: SpaceClientInfo;
 	isPreview?: boolean;
 }): ReactElement {
 	const { focus } = useWardrobeContext();
@@ -216,7 +216,7 @@ export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }
 interface RoomPreviewProps {
 	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
-	info: IChatRoomClientInfo;
+	info: SpaceClientInfo;
 	overlay?: ReactNode;
 	focusDevice?: ItemRoomDevice;
 }
@@ -320,7 +320,7 @@ export function RoomPreview({
 				<Container zIndex={ 10 } sortableChildren>
 					{
 						characters.map((character) => (
-							<ChatRoomCharacter
+							<RoomCharacter
 								key={ character.data.id }
 								globalState={ globalState }
 								character={ character }
@@ -330,7 +330,7 @@ export function RoomPreview({
 					}
 					{
 						roomDevices.map((device) => (device.isDeployed() ? (
-							<ChatRoomDevice
+							<RoomDevice
 								key={ device.id }
 								globalState={ globalState }
 								item={ device }

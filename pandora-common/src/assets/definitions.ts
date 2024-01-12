@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { IChatroomBackgroundData } from '../chatroom';
+import type { RoomBackgroundData } from '../space/room';
 import { HexRGBAColorString } from '../validation';
 import type { AppearanceArmPose, AppearancePose } from './state/characterState';
 import type { BoneDefinitionCompressed, BoneName, BoneType, CharacterView, Condition, Coordinates, LayerImageOverride, LegsPose } from './graphics';
@@ -128,7 +128,7 @@ export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = As
 	/**
 	 * Chat specific settings for this asset
 	 *
-	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chatroom/chatActions.ts
+	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chat/chatActions.ts
 	 */
 	chat?: {
 		/** How items of this asset are referred to in chat (defaults to asset's name) */
@@ -250,7 +250,7 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 	/**
 	 * Chat specific settings for this asset
 	 *
-	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chatroom/chatActions.ts
+	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chat/chatActions.ts
 	 */
 	chat?: {
 		/** How items of this asset are referred to in chat (defaults to asset's name) */
@@ -280,7 +280,7 @@ export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinition
 	/**
 	 * Chat specific settings for this asset
 	 *
-	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chatroom/chatActions.ts
+	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chat/chatActions.ts
 	 */
 	chat?: {
 		/** How items of this asset are referred to in chat (defaults to asset's name) */
@@ -309,7 +309,7 @@ export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetD
 	/**
 	 * Chat specific settings for this asset
 	 *
-	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chatroom/chatActions.ts
+	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chat/chatActions.ts
 	 */
 	chat?: {
 		/** How items of this asset are referred to in chat (defaults to asset's name) */
@@ -483,7 +483,7 @@ export type AppearanceRandomizationData<A extends AssetDefinitionExtraArgs = Ass
 	clothes: readonly A['attributes'][];
 };
 
-export type IChatroomBackgroundInfo = IChatroomBackgroundData & {
+export type RoomBackgroundInfo = RoomBackgroundData & {
 	/** The unique identifier for this background */
 	id: string;
 	/** The visible name for this background */
@@ -494,7 +494,7 @@ export type IChatroomBackgroundInfo = IChatroomBackgroundData & {
 	tags: string[];
 };
 
-export interface BackgroundTagDefinition {
+export interface RoomBackgroundTagDefinition {
 	name: string;
 	category: string;
 }
@@ -505,8 +505,8 @@ export interface AssetsDefinitionFile {
 	posePresets: AssetsPosePresets;
 	bodyparts: AssetBodyPart[];
 	graphicsId: string;
-	backgroundTags: Record<string, BackgroundTagDefinition>;
-	backgrounds: IChatroomBackgroundInfo[];
+	backgroundTags: Record<string, RoomBackgroundTagDefinition>;
+	backgrounds: RoomBackgroundInfo[];
 	attributes: Record<string, AssetAttributeDefinition>;
 	randomization: AppearanceRandomizationData;
 }

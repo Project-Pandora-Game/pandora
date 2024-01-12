@@ -1,8 +1,8 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessage, IChatRoomDirectoryData, IChatRoomData, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, CHATROOM_DIRECTORY_PROPERTIES, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessage, SpaceDirectoryData, SpaceData, SpaceDataDirectoryUpdate, SpaceDataShardUpdate, SpaceId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, SPACE_DIRECTORY_PROPERTIES, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { ENV } from '../config';
 const { DATABASE_URL, DATABASE_NAME } = ENV;
-import { CreateCharacter, CreateChatRoom, IChatRoomCreationData } from './dbHelper';
+import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
 import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate } from './databaseStructure';
 
 import AsyncLock from 'async-lock';
@@ -16,7 +16,8 @@ const logger = GetLogger('db');
 
 const ACCOUNTS_COLLECTION_NAME = 'accounts';
 const CHARACTERS_COLLECTION_NAME = 'characters';
-const CHATROOMS_COLLECTION_NAME = 'chatrooms';
+// TODO(spaces): Consider migrating this
+const SPACES_COLLECTION_NAME = 'chatrooms';
 const DIRECT_MESSAGES_COLLECTION_NAME = 'directMessages';
 const ACCOUNT_CONTACTS_COLLECTION_NAME = 'accountContacts';
 
@@ -42,7 +43,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _db!: Db;
 	private _accounts!: Collection<DatabaseAccountWithSecure>;
 	private _characters!: Collection<Omit<ICharacterData, 'id'> & { id: number; }>;
-	private _chatrooms!: Collection<IChatRoomData>;
+	private _spaces!: Collection<SpaceData>;
 	private _config!: Collection<{ type: DatabaseConfigType; data: DatabaseConfigData<DatabaseConfigType>; }>;
 	private _directMessages!: Collection<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>;
 	private _accountContacts!: Collection<DatabaseAccountContact>;
@@ -134,10 +135,10 @@ export default class MongoDatabase implements PandoraDatabase {
 			},
 		]);
 
-		//#region Chatrooms
-		this._chatrooms = this._db.collection(CHATROOMS_COLLECTION_NAME);
+		//#region Spaces
+		this._spaces = this._db.collection(SPACES_COLLECTION_NAME);
 
-		await this._chatrooms.createIndexes([
+		await this._spaces.createIndexes([
 			{
 				name: 'id',
 				unique: true,
@@ -330,7 +331,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		return result?.accessId ?? null;
 	}
 
-	public async getCharactersInRoom(roomId: RoomId): Promise<{
+	public async getCharactersInSpace(spaceId: SpaceId): Promise<{
 		accountId: AccountId;
 		characterId: CharacterId;
 	}[]> {
@@ -343,7 +344,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			.find({
 				characters: {
 					$elemMatch: {
-						currentRoom: roomId,
+						currentRoom: spaceId,
 					},
 				},
 			})
@@ -352,7 +353,7 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		for (const account of accounts) {
 			for (const character of account.characters) {
-				if (character.currentRoom === roomId) {
+				if (character.currentRoom === spaceId) {
 					chars.push({
 						accountId: account.id,
 						characterId: character.id,
@@ -364,25 +365,25 @@ export default class MongoDatabase implements PandoraDatabase {
 		return chars;
 	}
 
-	//#region ChatRoom
+	//#region Spaces
 
-	public async getChatRoomById(id: RoomId, accessId: string | null): Promise<IChatRoomData | null> {
+	public async getSpaceById(id: SpaceId, accessId: string | null): Promise<SpaceData | null> {
 		if (accessId !== null) {
-			return await this._chatrooms.findOne({ id, accessId });
+			return await this._spaces.findOne({ id, accessId });
 		}
-		return await this._chatrooms.findOne({ id });
+		return await this._spaces.findOne({ id });
 	}
 
-	public async getChatRoomsWithOwner(account: AccountId): Promise<IChatRoomDirectoryData[]> {
-		return await this._chatrooms.find({
+	public async getSpacesWithOwner(account: AccountId): Promise<SpaceDirectoryData[]> {
+		return await this._spaces.find({
 			owners: { $elemMatch: { $in: [account] } },
 		})
-			.project<Pick<IChatRoomDirectoryData, (typeof CHATROOM_DIRECTORY_PROPERTIES)[number]>>(ArrayToRecordKeys(CHATROOM_DIRECTORY_PROPERTIES, 1))
+			.project<Pick<SpaceDirectoryData, (typeof SPACE_DIRECTORY_PROPERTIES)[number]>>(ArrayToRecordKeys(SPACE_DIRECTORY_PROPERTIES, 1))
 			.toArray();
 	}
 
-	public async getChatRoomsWithOwnerOrAdmin(account: AccountId): Promise<IChatRoomDirectoryData[]> {
-		return await this._chatrooms.find({
+	public async getSpacesWithOwnerOrAdmin(account: AccountId): Promise<SpaceDirectoryData[]> {
+		return await this._spaces.find({
 			$or: [
 				{
 					owners: { $elemMatch: { $in: [account] } },
@@ -392,36 +393,36 @@ export default class MongoDatabase implements PandoraDatabase {
 				},
 			],
 		})
-			.project<Pick<IChatRoomDirectoryData, (typeof CHATROOM_DIRECTORY_PROPERTIES)[number]>>(ArrayToRecordKeys(CHATROOM_DIRECTORY_PROPERTIES, 1))
+			.project<Pick<SpaceDirectoryData, (typeof SPACE_DIRECTORY_PROPERTIES)[number]>>(ArrayToRecordKeys(SPACE_DIRECTORY_PROPERTIES, 1))
 			.toArray();
 	}
 
-	public async createChatRoom(data: IChatRoomCreationData, id?: RoomId): Promise<IChatRoomData> {
-		return await this._lock.acquire('createChatRoom', async () => {
-			const room = CreateChatRoom(data, id);
+	public async createSpace(data: SpaceCreationData, id?: SpaceId): Promise<SpaceData> {
+		return await this._lock.acquire('createSpace', async () => {
+			const space = CreateSpace(data, id);
 
-			const result = await this._chatrooms.insertOne(room);
+			const result = await this._spaces.insertOne(space);
 			Assert(result.acknowledged);
-			return room;
+			return space;
 		});
 	}
 
-	public async updateChatRoom(id: RoomId, data: IChatRoomDataDirectoryUpdate & IChatRoomDataShardUpdate, accessId: string | null): Promise<boolean> {
+	public async updateSpace(id: SpaceId, data: SpaceDataDirectoryUpdate & SpaceDataShardUpdate, accessId: string | null): Promise<boolean> {
 		if (accessId !== null) {
-			const result = await this._chatrooms.findOneAndUpdate({ id, accessId }, { $set: data });
+			const result = await this._spaces.findOneAndUpdate({ id, accessId }, { $set: data });
 			return result != null;
 		} else {
-			const result = await this._chatrooms.findOneAndUpdate({ id }, { $set: data });
+			const result = await this._spaces.findOneAndUpdate({ id }, { $set: data });
 			return result != null;
 		}
 	}
 
-	public async deleteChatRoom(id: RoomId): Promise<void> {
-		await this._chatrooms.deleteOne({ id });
+	public async deleteSpace(id: SpaceId): Promise<void> {
+		await this._spaces.deleteOne({ id });
 	}
 
-	public async setChatRoomAccess(id: RoomId): Promise<string | null> {
-		const result = await this._chatrooms.findOneAndUpdate({ id }, { $set: { accessId: nanoid(8) } }, { returnDocument: 'after' });
+	public async setSpaceAccessId(id: SpaceId): Promise<string | null> {
+		const result = await this._spaces.findOneAndUpdate({ id }, { $set: { accessId: nanoid(8) } }, { returnDocument: 'after' });
 		return result?.accessId ?? null;
 	}
 

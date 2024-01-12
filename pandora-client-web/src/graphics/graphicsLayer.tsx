@@ -15,7 +15,7 @@ import { useGraphicsSettings } from './graphicsSettings';
 import { PixiMesh } from './pixiMesh';
 import { useTexture } from './useTexture';
 import { EvaluateCondition, useAppOptional } from './utility';
-import { RoomDeviceRenderContext } from '../components/chatroom/chatRoomDeviceContext';
+import { RoomDeviceRenderContext } from './room/roomDeviceContext';
 
 export function useLayerPoints(layer: AssetGraphicsLayer): {
 	points: readonly PointDefinitionCalculated[];

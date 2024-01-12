@@ -3,7 +3,7 @@ import { AppearanceBundleSchema } from '../assets/state/characterState';
 import { CharacterNameSchema, HexColorStringSchema, ZodTruncate } from '../validation';
 import { CharacterId, CharacterIdSchema } from './characterTypes';
 import { PronounKeySchema } from './pronouns';
-import { RoomId } from '../chatroom';
+import { SpaceId } from '../space/space';
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
 import { AccountIdSchema } from '../account';
 import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesSchema } from './assetPreferences';
@@ -25,7 +25,12 @@ export const CHARACTER_DEFAULT_PUBLIC_SETTINGS: Readonly<ICharacterPublicSetting
 	pronoun: 'she',
 };
 
-/** Data about character, that is visible to everyone in same room */
+export const CharacterRoomPositionSchema = z.tuple([z.number(), z.number(), z.number()])
+	.catch([-1, -1, 0])
+	.readonly();
+export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: number];
+
+/** Data about character, that is visible to everyone in the same space */
 export const CharacterPublicDataSchema = z.object({
 	id: CharacterIdSchema,
 	accountId: AccountIdSchema,
@@ -34,7 +39,7 @@ export const CharacterPublicDataSchema = z.object({
 	settings: CharacterPublicSettingsSchema.default(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 	assetPreferences: AssetPreferencesSchema.default(ASSET_PREFERENCES_DEFAULT),
 });
-/** Data about character, that is visible to everyone in same room */
+/** Data about character, that is visible to everyone in the same space */
 export type ICharacterPublicData = z.infer<typeof CharacterPublicDataSchema>;
 
 export type ICharacterMinimalData = Pick<ICharacterPublicData, 'id' | 'name' | 'accountId'>;
@@ -47,19 +52,16 @@ export const CharacterPrivateDataSchema = CharacterPublicDataSchema.extend({
 /** Data about character, that is visible only to the character itself */
 export type ICharacterPrivateData = z.infer<typeof CharacterPrivateDataSchema>;
 
-export const CharacterRoomPositionSchema = z.tuple([z.number(), z.number(), z.number()])
-	.catch([-1, -1, 0])
-	.readonly();
-export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: number];
-
 /** Data about character, as seen by server */
 export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	accessId: z.string(),
 	appearance: AppearanceBundleSchema.optional(),
+	// TODO(spaces): Migrate this to be a personalSpace data
 	personalRoom: z.object({
 		inventory: z.lazy(() => RoomInventoryBundleSchema),
 	}).optional(),
 	interactionConfig: InteractionSystemDataSchema.optional(),
+	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
 	roomId: z.string().nullable().optional().catch(undefined),
 	position: CharacterRoomPositionSchema,
 });
@@ -91,7 +93,8 @@ export type ICharacterSelfInfo = {
 	name: string;
 	preview: string;
 	state: string;
-	currentRoom?: RoomId | null;
+	// TODO(spaces): This might need migration
+	currentRoom?: SpaceId | null;
 	inCreation?: true;
 };
 

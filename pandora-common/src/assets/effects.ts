@@ -19,8 +19,8 @@ export type EffectsDefinition = MuffleSettings & {
 	blockRoomMovement: boolean;
 
 	/**
-	 * Prevents character from leaving the room, even if admin.
-	 * Note that character can still be kicked/banned out of the room or is removed if the room itself gets destroyed.
+	 * Prevents character from leaving the room.
+	 * Note that character can still be kicked/banned out of the space or is removed if the space itself gets destroyed.
 	 */
 	blockRoomLeave: boolean;
 

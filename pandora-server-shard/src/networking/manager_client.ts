@@ -41,10 +41,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	constructor() {
 		this.messageHandler = new MessageHandler<IClientShard, ClientConnection>({
 			finishCharacterCreation: this.handleFinishCharacterCreation.bind(this),
-			chatRoomMessage: this.handleChatRoomMessage.bind(this),
-			chatRoomStatus: this.handleChatRoomStatus.bind(this),
-			chatRoomMessageAck: this.handleChatRoomMessageAck.bind(this),
-			chatRoomCharacterMove: this.handleChatRoomCharacterMove.bind(this),
+			chatMessage: this.handleChatMessage.bind(this),
+			chatStatus: this.handleChatStatus.bind(this),
+			chatMessageAck: this.handleChatMessageAck.bind(this),
+			roomCharacterMove: this.handleRoomCharacterMove.bind(this),
 			appearanceAction: this.handleAppearanceAction.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
 			updateAssetPreferences: this.handleUpdateAssetPreferences.bind(this),
@@ -96,44 +96,44 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result: 'ok' };
 	}
 
-	private handleChatRoomMessage({ messages, id, editId }: IClientShardArgument['chatRoomMessage'], client: ClientConnection): void {
+	private handleChatMessage({ messages, id, editId }: IClientShardArgument['chatMessage'], client: ClientConnection): void {
 		if (!client.character)
 			throw new BadMessageError();
 
 		if (messages.length === 0 && editId === undefined)
 			return;
 
-		const room = client.character.getOrLoadRoom();
+		const space = client.character.getOrLoadSpace();
 		const character = client.character;
 
-		room.handleMessages(character, messages, id, editId);
+		space.handleMessages(character, messages, id, editId);
 	}
 
-	private handleChatRoomMessageAck({ lastTime }: IClientShardArgument['chatRoomMessageAck'], client: ClientConnection): void {
+	private handleChatMessageAck({ lastTime }: IClientShardArgument['chatMessageAck'], client: ClientConnection): void {
 		if (!client.character)
 			throw new BadMessageError();
 
 		client.character.onMessageAck(lastTime);
 	}
 
-	private handleChatRoomStatus({ status, target }: IClientShardArgument['chatRoomStatus'], client: ClientConnection): void {
+	private handleChatStatus({ status, target }: IClientShardArgument['chatStatus'], client: ClientConnection): void {
 		if (!client.character)
 			throw new BadMessageError();
 
-		const room = client.character.getOrLoadRoom();
+		const space = client.character.getOrLoadSpace();
 		const character = client.character;
 
-		room.updateStatus(character, status, target);
+		space.updateStatus(character, status, target);
 	}
 
-	private handleChatRoomCharacterMove({ id, position }: IClientShardArgument['chatRoomCharacterMove'], client: ClientConnection): void {
+	private handleRoomCharacterMove({ id, position }: IClientShardArgument['roomCharacterMove'], client: ClientConnection): void {
 		if (!client.character)
 			throw new BadMessageError();
 
-		const room = client.character.getOrLoadRoom();
+		const space = client.character.getOrLoadSpace();
 		const character = client.character;
 
-		room.updateCharacterPosition(character, id ?? character.id, position);
+		space.updateCharacterPosition(character, id ?? character.id, position);
 	}
 
 	private handleAppearanceAction(action: IClientShardArgument['appearanceAction'], client: ClientConnection): IClientShardNormalResult['appearanceAction'] {
@@ -155,11 +155,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		// Apply the action
 		character.getGlobalState().setState(result.resultState);
-		const room = character.getOrLoadRoom();
+		const space = character.getOrLoadSpace();
 
 		// Send chat messages as needed
 		for (const message of result.pendingMessages) {
-			room.handleActionMessage(message);
+			space.handleActionMessage(message);
 		}
 
 		return {
@@ -201,10 +201,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			id: client.character.id,
 		};
 
-		const room = client.character.getOrLoadRoom();
+		const space = client.character.getOrLoadSpace();
 		switch (game.type) {
 			case 'coinFlip':
-				room.handleActionMessage({
+				space.handleActionMessage({
 					id: 'gamblingCoin',
 					character,
 					dictionary: { 'TOSS_RESULT': Math.random() < 0.5 ? 'heads' : 'tails' },
@@ -217,7 +217,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				const result = rolls.length > 1 ? `(${rolls.sort().join(', ')})` : rolls[0].toString();
 
 				if (game.hidden) {
-					room.handleActionMessage({
+					space.handleActionMessage({
 						id: 'gamblingDiceHidden',
 						character,
 						dictionary: {
@@ -226,7 +226,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								`${game.dice} ${game.sides}-sided dice`,
 						},
 					});
-					room.handleActionMessage({
+					space.handleActionMessage({
 						id: 'gamblingDiceHiddenResult',
 						character,
 						sendTo: [client.character.id],
@@ -238,7 +238,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 						},
 					});
 				} else {
-					room.handleActionMessage({
+					space.handleActionMessage({
 						id: 'gamblingDice',
 						character,
 						dictionary: {
@@ -257,7 +257,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					const paper: string[] = [];
 					const scissors: string[] = [];
 
-					for (const c of room.getAllCharacters()) {
+					for (const c of space.getAllCharacters()) {
 						const status = this.rockPaperScissorsStatus.get(c);
 						this.rockPaperScissorsStatus.delete(c);
 
@@ -273,7 +273,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 							}
 						}
 					}
-					room.handleActionMessage({
+					space.handleActionMessage({
 						id: 'gamblingRockPaperScissorsResult',
 						character,
 						dictionary: {
@@ -284,7 +284,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					});
 				} else {
 					this.rockPaperScissorsStatus.set(client.character, { time: Date.now(), choice: game.choice });
-					room.handleActionMessage({
+					space.handleActionMessage({
 						id: 'gamblingRockPaperScissorsSet',
 						character,
 					});
@@ -305,7 +305,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (client.character.id === target) {
 			targetCharacter = client.character;
 		} else {
-			targetCharacter = client.character.getOrLoadRoom().getCharacterById(target) ?? null;
+			targetCharacter = client.character.getOrLoadSpace().getCharacterById(target) ?? null;
 		}
 
 		if (targetCharacter == null) {

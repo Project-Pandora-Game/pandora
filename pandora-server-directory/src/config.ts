@@ -67,6 +67,8 @@ export const EnvParser = CreateEnvParser({
 
 	//#region Limits
 
+	// TODO(spaces): Move these limits into common limits definitions
+
 	/** Character limit for normal account */
 	CHARACTER_LIMIT_NORMAL: z.number().default(5),
 	/** Room ownership limit for normal account */

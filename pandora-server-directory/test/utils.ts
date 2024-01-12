@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid';
 import { Account, CreateAccountData } from '../src/account/account';
 import { accountManager } from '../src/account/accountManager';
 import { CharacterInfo } from '../src/account/character';
-import { InitDatabase } from '../src/database/databaseProvider';
+import { InitDatabaseForTests } from '../src/database/databaseProvider';
 import { MockDatabase, PrehashPassword } from '../src/database/mockDb';
 import { Shard } from '../src/shard/shard';
 import { ShardManager } from '../src/shard/shardManager';
@@ -14,7 +14,7 @@ let mockDb: MockDatabase | undefined;
 export async function TestMockDb(): Promise<MockDatabase> {
 	if (!mockDb) {
 		mockDb = new MockDatabase();
-		await InitDatabase(mockDb);
+		await InitDatabaseForTests(mockDb);
 	}
 	return mockDb;
 }
@@ -126,12 +126,12 @@ export async function TestMockShard({
 			version,
 			characters: [],
 			disconnectCharacters: [],
-			rooms: [],
+			spaces: [],
 		});
 		const expectedRegisterResult: IShardDirectoryNormalResult['shardRegister'] = {
 			shardId: shard.id,
 			characters: [],
-			rooms: [],
+			spaces: [],
 			messages: {},
 		};
 		expect(registerResult).toStrictEqual(expectedRegisterResult);

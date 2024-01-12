@@ -1,5 +1,5 @@
 import {
-	ActionRoomContext,
+	ActionSpaceContext,
 	AppearanceAction,
 	AppearanceActionProcessingResultValid,
 	AppearanceItems,
@@ -60,14 +60,14 @@ export function useWardrobeTargetItem(target: WardrobeTarget | null, itemPath: I
 	}, [items, itemPath]);
 }
 
-export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, roomContext: ActionRoomContext | null, _action: AppearanceAction, result: AppearanceActionProcessingResultValid): string[] {
+export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, spaceContext: ActionSpaceContext | null, _action: AppearanceAction, result: AppearanceActionProcessingResultValid): string[] {
 	const originalCharacterState = result.originalState.characters.get(player.id);
 	AssertNotNullable(originalCharacterState);
 	const resultCharacterState = result.resultState.characters.get(player.id);
 	AssertNotNullable(resultCharacterState);
 
-	const originalRestrictionManager = player.getRestrictionManager(originalCharacterState, roomContext);
-	const resultRestrictionManager = player.getRestrictionManager(resultCharacterState, roomContext);
+	const originalRestrictionManager = player.getRestrictionManager(originalCharacterState, spaceContext);
+	const resultRestrictionManager = player.getRestrictionManager(resultCharacterState, spaceContext);
 
 	const warnings: string[] = [];
 

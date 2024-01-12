@@ -1,5 +1,5 @@
 import { AppearanceActionProblem, AssertNever } from 'pandora-common';
-import { DescribeAsset, DescribeAttribute } from '../components/chatroom/chatroomMessages';
+import { DescribeAsset, DescribeAttribute } from '../ui/components/chat/chatMessages';
 import { AssetManagerClient } from './assetManager';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */

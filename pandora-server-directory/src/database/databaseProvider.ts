@@ -2,8 +2,8 @@ import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { ENV } from '../config';
 const { DATABASE_TYPE } = ENV;
-import type { CharacterId, IChatRoomData, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryDirectMessage, IChatRoomDataDirectoryUpdate, IChatRoomDataShardUpdate, RoomId, IChatRoomDirectoryData, AccountId, Service, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
-import type { IChatRoomCreationData } from './dbHelper';
+import type { CharacterId, SpaceData, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryDirectMessage, SpaceDataDirectoryUpdate, SpaceDataShardUpdate, SpaceId, SpaceDirectoryData, AccountId, Service, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
+import type { SpaceCreationData } from './dbHelper';
 import { ServiceInit } from 'pandora-common';
 import { DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate } from './databaseStructure';
 
@@ -87,7 +87,7 @@ export interface PandoraDatabase extends Service {
 	/**
 	 * Update character's info
 	 * @param id - Id of the character to update
-	 * @param data - Chatroom data to update, `id` is required
+	 * @param data - Character data to update
 	 * @param accessId - Id of access to check or null to ignore the accessId check
 	 * @returns false if a provided accessId is not the same as in the database
 	 */
@@ -108,64 +108,65 @@ export interface PandoraDatabase extends Service {
 	setCharacterAccess(id: CharacterId): Promise<string | null>;
 
 	/**
-	 * Lists all characters that are in a given room
-	 * @param roomId - The id of a room to query for
+	 * Lists all characters that are in a given space
+	 * @param space - The id of a space to query for
 	 */
-	getCharactersInRoom(roomId: RoomId): Promise<{
+	getCharactersInSpace(spaceId: SpaceId): Promise<{
 		accountId: AccountId;
 		characterId: CharacterId;
 	}[]>;
 
 	//#endregion
 
-	//#region ChatRoom
+	//#region Spaces
 
 	/**
-	 * Gets all chatrooms that have supplied account as owner
-	 * @param account - The owner of the rooms to look for
+	 * Gets all spaces that have supplied account as owner
+	 * @param account - The owner of the spaces to look for
 	 */
-	getChatRoomsWithOwner(account: AccountId): Promise<IChatRoomDirectoryData[]>;
+	getSpacesWithOwner(account: AccountId): Promise<SpaceDirectoryData[]>;
 
 	/**
-	 * Gets all chatrooms that have supplied account as owner or admin
-	 * @param account - The owner/admin of the rooms to look for
+	 * Gets all spaces that have supplied account as owner or admin
+	 * @param account - The owner/admin of the spaces to look for
 	 */
-	getChatRoomsWithOwnerOrAdmin(account: AccountId): Promise<IChatRoomDirectoryData[]>;
+	getSpacesWithOwnerOrAdmin(account: AccountId): Promise<SpaceDirectoryData[]>;
 
 	/**
-	 * Gets a chatroom by ID
-	 * @param id - Id of the chatroom to get
+	 * Gets a space data by ID
+	 * @param id - Id of the space to get
 	 * @param accessId - Id of access to check or null to ignore the accessId check
 	 */
-	getChatRoomById(id: RoomId, accessId: string | null): Promise<IChatRoomData | null>;
+	getSpaceById(id: SpaceId, accessId: string | null): Promise<SpaceData | null>;
 
 	/**
-	 * Creates a new chatroom
-	 * @param config - Config for the new room
-	 * @param id - Id of the room (randomly generated if not set)
+	 * Creates a new space
+	 * @param config - Config for the new space
+	 * @param id - Id of the space (randomly generated if not set)
 	 */
-	createChatRoom(config: IChatRoomCreationData, id?: RoomId): Promise<IChatRoomData>;
+	createSpace(config: SpaceCreationData, id?: SpaceId): Promise<SpaceData>;
 
 	/**
-	 * Update chatrooms's info
-	 * @param data - Chatroom data to update, `id` is required
+	 * Update space's info
+	 * @param id - Id of the space to update
+	 * @param data - Space data to update
 	 * @param accessId - Id of access to check or null to ignore the accessId check
 	 * @returns false if a provided accessId is not the same as in the database
 	 */
-	updateChatRoom(id: RoomId, data: IChatRoomDataDirectoryUpdate & IChatRoomDataShardUpdate, accessId: string | null): Promise<boolean>;
+	updateSpace(id: SpaceId, data: SpaceDataDirectoryUpdate & SpaceDataShardUpdate, accessId: string | null): Promise<boolean>;
 
 	/**
-	 * Delete a chatroom
-	 * @param id - Id of the chatroom to delete
+	 * Delete a space
+	 * @param id - Id of the space to delete
 	 */
-	deleteChatRoom(id: RoomId): Promise<void>;
+	deleteSpace(id: SpaceId): Promise<void>;
 
 	/**
-	 * Sets a new access id for the room
-	 * @param id - Id of the chatroom
+	 * Sets a new access id for the space
+	 * @param id - Id of the space
 	 * @return - New access id
 	 */
-	setChatRoomAccess(id: RoomId): Promise<string | null>;
+	setSpaceAccessId(id: SpaceId): Promise<string | null>;
 
 	//#endregion
 
@@ -228,11 +229,10 @@ export interface PandoraDatabase extends Service {
 /** Current database connection */
 let database: PandoraDatabase | undefined;
 
-/** Init database connection based on configuration */
-export async function InitDatabase(setDb?: typeof database): Promise<void> {
-	if (setDb) {
-		database = setDb;
-		return;
+/** Gets the database service without initialization */
+export function GetDatabaseService(): PandoraDatabase {
+	if (database) {
+		return database;
 	}
 	switch (DATABASE_TYPE) {
 		case 'mongodb':
@@ -248,13 +248,13 @@ export async function InitDatabase(setDb?: typeof database): Promise<void> {
 		default:
 			database = new MockDatabase();
 	}
-	await ServiceInit(database);
+	return database;
 }
 
-export async function CloseDatabase(): Promise<void> {
-	if (database instanceof MongoDatabase) {
-		await database.onDestroy();
-	}
+/** Sets and initialize the database for tests */
+export async function InitDatabaseForTests(setDb: typeof database): Promise<void> {
+	database = setDb;
+	await ServiceInit(GetDatabaseService());
 }
 
 /** Get currently active database connection */

@@ -1,4 +1,12 @@
-import type { CharacterId, ICharacterData, ICharacterDataShardUpdate, IChatRoomData, IChatRoomDataShardUpdate, RoomId, Service } from 'pandora-common';
+import type {
+	CharacterId,
+	ICharacterData,
+	ICharacterDataShardUpdate,
+	SpaceData,
+	SpaceDataShardUpdate,
+	SpaceId,
+	Service,
+} from 'pandora-common';
 import { ENV } from '../config';
 const { DATABASE_TYPE } = ENV;
 import DirectoryDatabase from './directoryDb';
@@ -18,36 +26,35 @@ export interface ShardDatabase extends Service {
 	setCharacter(id: CharacterId, data: ICharacterDataShardUpdate, accessId: string): Promise<boolean>;
 
 	/**
-	 * Get a room's data
-	 * @param id - Id of room
+	 * Get a space's data
+	 * @param id - Id of the space
+	 * @param accessId - Access id for accessing the data
 	 */
-	getChatRoom(id: RoomId, accessId: string): Promise<Omit<IChatRoomData, 'config' | 'accessId' | 'owners'> | null | false>;
+	getSpaceData(id: SpaceId, accessId: string): Promise<Omit<SpaceData, 'config' | 'accessId' | 'owners'> | null | false>;
 
 	/**
-	 * Update a room's data
-	 * @param data - Room data with id
+	 * Update a spaces's data
+	 * @param id - Id of the space
+	 * @param data - Data to update
+	 * @param accessId - Access id for accessing the data
 	 */
-	setChatRoom(id: RoomId, data: IChatRoomDataShardUpdate, accessId: string): Promise<boolean>;
-
+	setSpaceData(id: SpaceId, data: SpaceDataShardUpdate, accessId: string): Promise<boolean>;
 }
 
 /** Current database connection */
 let database: MongoDatabase | DirectoryDatabase | undefined;
 
-/** Init database connection based on configuration */
-export async function InitDatabase(): Promise<void> {
+/** Gets the database service without initialization */
+export function GetDatabaseService(): ShardDatabase {
+	if (database) {
+		return database;
+	}
 	if (DATABASE_TYPE === 'mongodb') {
 		database = new MongoDatabase();
 	} else {
 		database = new DirectoryDatabase();
 	}
-	await database.init();
-}
-
-export async function CloseDatabase(): Promise<void> {
-	if (database instanceof MongoDatabase) {
-		await database.onDestroy();
-	}
+	return database;
 }
 
 /** Get currently active database connection */

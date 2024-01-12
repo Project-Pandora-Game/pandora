@@ -1,13 +1,14 @@
 import { isEqual } from 'lodash';
-import { CharacterId, CharacterRestrictionsManager } from '../character';
-import { GameLogicCharacter, GameLogicPermission, InteractionId } from '../gameLogic';
+import type { CharacterId, CharacterRestrictionsManager, ItemInteractionType, RestrictionResult } from '../character';
+import type { GameLogicCharacter, GameLogicPermission, InteractionId } from '../gameLogic';
 import { Assert, AssertNever, AssertNotNullable } from '../utility';
-import { AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
-import { AppearanceActionContext } from './appearanceActions';
-import { ActionHandlerMessage, ActionHandlerMessageWithTarget, ActionTarget, ActionTargetSelector } from './appearanceTypes';
+import type { AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
+import type { AppearanceActionContext } from './appearanceActions';
+import type { ActionHandlerMessage, ActionHandlerMessageWithTarget, ActionTarget, ActionTargetSelector, ItemContainerPath, ItemId, ItemPath } from './appearanceTypes';
 import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
 import { RoomInventory } from './roomInventory';
-import { AssetFrameworkGlobalState } from './state/globalState';
+import type { AssetFrameworkGlobalState } from './state/globalState';
+import type { Item } from './item';
 
 export class AppearanceActionProcessingContext {
 	private readonly _context: AppearanceActionContext;
@@ -120,6 +121,48 @@ export class AppearanceActionProcessingContext {
 			this.addProblem({
 				result: 'restrictionError',
 				restriction: permission.getRestrictionDescriptor(),
+			});
+		}
+	}
+
+	public checkPlayerIsSpaceAdmin(): void {
+		const restrictionManager = this.getPlayerRestrictionManager();
+		if (!restrictionManager.isCurrentSpaceAdmin()) {
+			this.addProblem({
+				result: 'restrictionError',
+				restriction: {
+					type: 'modifyRoomRestriction',
+					reason: 'notAdmin',
+				},
+			});
+		}
+	}
+
+	public checkInteractWithTarget(target: ActionTarget): void {
+		const restrictionManager = this.getPlayerRestrictionManager();
+		this.addRestriction(restrictionManager.canInteractWithTarget(this, target));
+	}
+
+	public checkCanUseItem(target: ActionTarget, itemPath: ItemPath, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): void {
+		const restrictionManager = this.getPlayerRestrictionManager();
+		this.addRestriction(restrictionManager.canUseItem(this, target, itemPath, interaction, insertBeforeRootItem));
+	}
+
+	public checkCanUseItemDirect(target: ActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): void {
+		const restrictionManager = this.getPlayerRestrictionManager();
+		this.addRestriction(restrictionManager.canUseItemDirect(this, target, container, item, interaction, insertBeforeRootItem));
+	}
+
+	public checkCanUseItemModule(target: ActionTarget, itemPath: ItemPath, moduleName: string, interaction?: ItemInteractionType): void {
+		const restrictionManager = this.getPlayerRestrictionManager();
+		this.addRestriction(restrictionManager.canUseItemModule(this, target, itemPath, moduleName, interaction));
+	}
+
+	private addRestriction(result: RestrictionResult): void {
+		if (!result.allowed) {
+			this.addProblem({
+				result: 'restrictionError',
+				restriction: result.restriction,
 			});
 		}
 	}

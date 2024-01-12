@@ -335,6 +335,10 @@ export function DoAppearanceAction(
 			// Player coloring the item must be able to interact with the item
 			processingContext.checkCanUseItem(target, action.item, ItemInteractionType.STYLING);
 
+			if (target.type === 'character') {
+				processingContext.addInteraction(target.character, 'changeItemColor');
+			}
+
 			const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 			if (!ActionColorItem(targetManipulator, action.item, action.color))
 				return processingContext.invalid();

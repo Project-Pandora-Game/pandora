@@ -42,6 +42,24 @@ export const INTERACTION_CONFIG = {
 			allowOthers: true,
 		},
 	},
+	assetPrefFavorite: {
+		visibleName: 'Add and remove assets with favorite preference',
+		defaultPermissions: {
+			allowOthers: true,
+		},
+	},
+	assetPrefNormal: {
+		visibleName: 'Add and remove assets with normal preference',
+		defaultPermissions: {
+			allowOthers: true,
+		},
+	},
+	assetPrefMaybe: {
+		visibleName: 'Add and remove assets with maybe preference',
+		defaultPermissions: {
+			allowOthers: true,
+		},
+	},
 } as const satisfies Immutable<Record<InteractionGenericId, IInteractionConfig>>;
 
 //#endregion

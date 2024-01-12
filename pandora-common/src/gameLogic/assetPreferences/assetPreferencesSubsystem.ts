@@ -11,19 +11,19 @@ export type AssetPreferencesSubsystemEvents = {
 
 export const ASSET_PREFERENCES_PERMISSIONS = {
 	favorite: {
-		visibleName: 'Add and remove assets with favorite preference',
+		visibleName: 'Favorite',
 		defaultPermissions: {
 			allowOthers: true,
 		},
 	},
 	normal: {
-		visibleName: 'Add and remove assets with normal preference',
+		visibleName: 'Normal',
 		defaultPermissions: {
 			allowOthers: true,
 		},
 	},
 	maybe: {
-		visibleName: 'Add and remove assets with maybe preference',
+		visibleName: 'Maybe',
 		defaultPermissions: {
 			allowOthers: true,
 		},

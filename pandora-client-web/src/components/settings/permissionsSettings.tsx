@@ -65,8 +65,8 @@ function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
 function ItemLimitsPermissions(): ReactElement {
 	return (
 		<fieldset>
-			<legend>Item permissions</legend>
-			<i>Allow other characters to...</i>
+			<legend>Item Limits</legend>
+			<i>Allow other characters to interact with worn items that are marked as...</i>
 			{
 				KnownObject.keys(ASSET_PREFERENCES_PERMISSIONS).map((group) => (
 					<ItemLimitsSettings key={ group } group={ group } />

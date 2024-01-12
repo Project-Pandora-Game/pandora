@@ -28,7 +28,7 @@ export class AssetPreferencesSubsystemClient extends AssetPreferencesSubsystem i
 				new GameLogicPermissionClient(character, {
 					group: 'assetPreferences',
 					id: preference,
-					displayName: config.visibleName,
+					displayName: `Interact with worn items that are marked as "${config.visibleName}"`,
 					defaultConfig: config.defaultPermissions,
 				}),
 			);

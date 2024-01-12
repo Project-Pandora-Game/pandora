@@ -35,7 +35,7 @@ export class AssetPreferencesSubsystemServer extends AssetPreferencesSubsystem i
 				new GameLogicPermissionServer(character, {
 					group: 'assetPreferences',
 					id: preference,
-					displayName: config.visibleName,
+					displayName: `Interact with worn items that are marked as "${config.visibleName}"`,
 					defaultConfig: config.defaultPermissions,
 				}, data.permissions[preference] ?? null),
 			);

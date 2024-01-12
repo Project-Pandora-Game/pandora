@@ -1,7 +1,7 @@
 import { GetLogger, Service, logConfig } from 'pandora-common';
 import { accountManager } from './account/accountManager';
 import { CloseDatabase } from './database/databaseProvider';
-import { StopHttpServer } from './networking/httpServer';
+import { HttpServer } from './networking/httpServer';
 import { ConnectionManagerClient } from './networking/manager_client';
 import { ShardManager } from './shard/shardManager';
 import wtfnode from 'wtfnode';
@@ -28,8 +28,7 @@ function DestroyService(service: Service): Promise<void> | void {
 
 async function StopGracefully(): Promise<void> {
 	// Stop HTTP server
-	destroying = 'HTTP Server';
-	StopHttpServer();
+	await DestroyService(HttpServer);
 	// Stop discord bot
 	await DestroyService(DiscordBot);
 	// Stop sending status updates

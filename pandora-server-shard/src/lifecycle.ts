@@ -1,6 +1,6 @@
-import { GetLogger, IEmpty, logConfig } from 'pandora-common';
+import { GetLogger, IEmpty, Service, logConfig } from 'pandora-common';
 import { CharacterManager } from './character/characterManager';
-import { StopHttpServer } from './networking/httpServer';
+import { HttpServer } from './networking/httpServer';
 import { DirectoryConnector } from './networking/socketio_directory_connector';
 import { SpaceManager } from './spaces/spaceManager';
 import wtfnode from 'wtfnode';
@@ -19,6 +19,11 @@ let destroying = 'unknown service';
 let stopping: Promise<IEmpty> | undefined;
 const STOP_TIMEOUT = 10_000;
 
+function DestroyService(service: Service): Promise<void> | void {
+	destroying = service.constructor.name;
+	return service.onDestroy?.();
+}
+
 async function StopGracefully(): Promise<IEmpty> {
 	// Disconnect all characters
 	destroying = 'CharacterManager';
@@ -27,8 +32,7 @@ async function StopGracefully(): Promise<IEmpty> {
 	destroying = 'RoomManager';
 	await SpaceManager.removeAllSpaces();
 	// Stop HTTP server
-	destroying = 'HTTP Server';
-	StopHttpServer();
+	await DestroyService(HttpServer);
 	// Disconnect database
 	destroying = 'Database';
 	await CloseDatabase();

@@ -5,7 +5,7 @@ const { APP_NAME, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION } = ENV;
 import { InitDatabase } from './database/databaseProvider';
 import { AddDiscordLogOutput, AddFileOutput } from './logging';
 import { GetLogger, LogLevel, ServiceInit, SetConsoleOutput } from 'pandora-common';
-import { StartHttpServer } from './networking/httpServer';
+import { HttpServer } from './networking/httpServer';
 import GetEmailSender from './services/email';
 import { SetupSignalHandling } from './lifecycle';
 import { ConnectionManagerClient } from './networking/manager_client';
@@ -42,7 +42,7 @@ async function Start(): Promise<void> {
 	logger.verbose('Initializing APIs...');
 	await ServiceInit(GitHubVerifier);
 	logger.verbose('Starting HTTP server...');
-	await StartHttpServer();
+	await ServiceInit(HttpServer);
 	logger.alert('Ready!');
 }
 

@@ -13,6 +13,7 @@ import { GameLogicCharacter } from '../gameLogic/character/character';
 import { PermissionGroup } from '../gameLogic';
 import { CharacterId } from './characterTypes';
 import { AssetPreferenceResolution, ResolveAssetPreference } from './assetPreferences';
+import { AssertNever } from '../utility';
 
 export enum ItemInteractionType {
 	/**
@@ -296,10 +297,17 @@ export class CharacterRestrictionsManager {
 							resolution,
 						},
 					};
-				case 'favorite':
-				case 'normal':
 				case 'maybe':
+					context.addInteraction(target.character, 'assetPrefMaybe');
+				// Fallthrough
+				case 'normal':
+					context.addInteraction(target.character, 'assetPrefNormal');
+				// Fallthrough
+				case 'favorite':
+					context.addInteraction(target.character, 'assetPrefFavorite');
 					break;
+				default:
+					AssertNever(resolution.preference);
 			}
 		}
 

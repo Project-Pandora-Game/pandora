@@ -10,7 +10,7 @@ describe('GetDatabase()', () => {
 describe('InitDatabaseForTests()', () => {
 	it('sets given database', async () => {
 		const instance = new MockDatabase();
-		await InitDatabase(instance);
+		await InitDatabaseForTests(instance);
 		expect(() => GetDatabase()).not.toThrow();
 		expect(GetDatabase()).toBe(instance);
 	});

@@ -19,9 +19,9 @@ export const INTERACTION_CONFIG = {
 		},
 	},
 	changeItemColor: {
-		visibleName: "Modify an item's color on this character",
+		visibleName: 'Change the color or style of worn items',
 		defaultPermissions: {
-			allowOthers: false,
+			allowOthers: true,
 		},
 	},
 	useStorageModule: {

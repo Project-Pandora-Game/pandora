@@ -27,8 +27,8 @@ export function PandoraRoutes(): ReactElement {
 				<Route key={ path } path={ path } element={ <AuthPageFallback component={ component } /> } />
 			)) }
 
-			<Route path='/character_select' element={ <RequiresLogin element={ CharacterSelect } /> } />
-			<Route path='/character_create' element={ <RequiresCharacter element={ CharacterCreate } allowUnfinished={ true } /> } />
+			<Route path='/character/select' element={ <RequiresLogin element={ CharacterSelect } /> } />
+			<Route path='/character/create' element={ <RequiresCharacter element={ CharacterCreate } allowUnfinished={ true } /> } />
 
 			<Route path='/settings' element={ <RequiresLogin element={ Settings } /> } />
 
@@ -36,10 +36,11 @@ export function PandoraRoutes(): ReactElement {
 			<Route path='/profiles/account/:accountId' element={ <RequiresLogin element={ AccountProfileScreenRouter } /> } />
 			<Route path='/profiles/character/:characterId' element={ <RequiresCharacter element={ CharacterProfileScreenRouter } /> } />
 
-			<Route path='/chatroom' element={ <RequiresCharacter element={ RoomScreen } /> } />
-			<Route path='/chatroom_select' element={ <RequiresCharacter element={ SpacesSearch } /> } />
-			<Route path='/chatroom_create' element={ <RequiresCharacter element={ SpaceCreate } /> } />
-			<Route path='/chatroom_admin' element={ <RequiresCharacter element={ SpaceConfiguration } /> } />
+			<Route path='/room' element={ <RequiresCharacter element={ RoomScreen } /> } />
+			<Route path='/space/configuration' element={ <RequiresCharacter element={ SpaceConfiguration } /> } />
+
+			<Route path='/spaces/search' element={ <RequiresCharacter element={ SpacesSearch } /> } />
+			<Route path='/spaces/create' element={ <RequiresCharacter element={ SpaceCreate } /> } />
 
 			<Route path='/wardrobe' element={ <RequiresCharacter element={ WardrobeScreen } /> } />
 
@@ -77,10 +78,10 @@ function DefaultFallback(): ReactElement {
 	const playerData = usePlayerData();
 
 	if (playerData == null) {
-		return <Navigate to='/character_select' />;
+		return <Navigate to='/character/select' />;
 	}
 
-	return <Navigate to='/chatroom' />;
+	return <Navigate to='/room' />;
 }
 
 function useLoggedInCheck(preserveLocation = true): void {

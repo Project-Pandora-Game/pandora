@@ -32,7 +32,7 @@ export function RoomControls(): ReactElement | null {
 		<Column padding='medium' className='controls'>
 			<Row padding='small'>
 				<Button onClick={ () => navigate('/wardrobe', { state: { target: 'room' } }) } >Room inventory</Button>
-				<Button onClick={ () => navigate('/chatroom_admin') }>Space configuration</Button>
+				<Button onClick={ () => navigate('/space/configuration') }>Space configuration</Button>
 			</Row>
 			<br />
 			<span>
@@ -102,7 +102,7 @@ export function PersonalSpaceControls(): ReactElement {
 				<DisplayCharacter char={ player } />
 			</div>
 			<Row padding='small'>
-				<Button onClick={ () => navigate('/chatroom_select') } >List of spaces</Button>
+				<Button onClick={ () => navigate('/spaces/search') } >List of spaces</Button>
 			</Row>
 			<br />
 			<DeviceOverlaySelector />

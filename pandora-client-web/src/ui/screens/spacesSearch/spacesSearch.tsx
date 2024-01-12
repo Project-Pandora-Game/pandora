@@ -63,7 +63,7 @@ export function SpacesSearch(): ReactElement {
 
 	// Spaces search is only accessible when inside player's personal space
 	if (spaceInfo.id != null) {
-		return <Navigate to='/chatroom' />;
+		return <Navigate to='/room' />;
 	}
 
 	return (
@@ -146,7 +146,7 @@ function SpaceSearchList({ list }: {
 				{ ownSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
 				{
 					ownSpaces.length >= account.spaceOwnershipLimit ? null : (
-						<a className='spacesSearchGrid' onClick={ () => navigate('/chatroom_create') } >
+						<a className='spacesSearchGrid' onClick={ () => navigate('/spaces/create') } >
 							<div className='icon'>➕</div>
 							<div className='entry'>Create a new space</div>
 						</a>

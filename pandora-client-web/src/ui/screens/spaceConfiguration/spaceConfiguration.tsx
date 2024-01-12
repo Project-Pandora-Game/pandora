@@ -172,7 +172,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 		return <Navigate to='/' />;
 	} else if (creation && isInPublicSpace) {
 		// If in a public space, you cannot make a new space directly (as you need to leave first)
-		return <Navigate to='/chatroom' />;
+		return <Navigate to='/room' />;
 	}
 
 	if (shards && currentConfig.development?.shardId && !shards.some((s) => s.id === currentConfig.development?.shardId)) {
@@ -343,7 +343,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 	if (creation) {
 		return (
 			<div className='spaceConfigurationScreen creation'>
-				<Link to='/chatroom_select'>◄ Back</Link>
+				<Link to='/spaces/search'>◄ Back</Link>
 				<p>Space creation</p>
 				{ configurableElements }
 				<div className='input-container'>
@@ -421,7 +421,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 
 	return (
 		<div className='spaceConfigurationScreen configuration'>
-			<Link to='/chatroom'>◄ Back</Link>
+			<Link to='/room'>◄ Back</Link>
 			{
 				currentSpaceId != null ? (
 					<p>Current space ID: <span className='selectable-all'>{ currentSpaceId }</span></p>
@@ -442,8 +442,8 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 					}
 				</ul>
 			</div>
-			{ canEdit && <Button className='fill-x' onClick={ () => UpdateSpace(directoryConnector, modifiedData, () => navigate('/chatroom')) }>Update space</Button> }
-			{ !canEdit && <Button className='fill-x' onClick={ () => navigate('/chatroom') }>Back</Button> }
+			{ canEdit && <Button className='fill-x' onClick={ () => UpdateSpace(directoryConnector, modifiedData, () => navigate('/room')) }>Update space</Button> }
+			{ !canEdit && <Button className='fill-x' onClick={ () => navigate('/room') }>Back</Button> }
 		</div>
 	);
 }
@@ -784,7 +784,7 @@ function useCreateSpace(): (config: SpaceDirectoryConfig) => Promise<void> {
 			const result = await directoryConnector.awaitResponse('spaceCreate', config);
 			if (result.result === 'ok') {
 				SpaceConfigurationProgress.show('success', 'Space created!');
-				navigate('/chatroom');
+				navigate('/room');
 			} else {
 				SpaceConfigurationProgress.show('error', `Failed to create space:\n${result.result}`);
 			}

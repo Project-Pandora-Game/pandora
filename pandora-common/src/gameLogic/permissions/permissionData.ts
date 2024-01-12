@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const PermissionGroupSchema = z.enum([
 	'interaction',
+	'assetPreferences',
 ]);
 
 export type PermissionGroup = z.infer<typeof PermissionGroupSchema>;

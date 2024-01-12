@@ -13,7 +13,6 @@ import {
 	IChatSegment,
 	ChatCharacterStatus,
 	IChatMessageActionTargetCharacter,
-	ICharacterRoomData,
 	ActionHandlerMessage,
 	CharacterSize,
 	ActionSpaceContext,
@@ -171,7 +170,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		return {
 			id: this.id,
 			info: this.getInfo(),
-			characters: Array.from(this.characters).map((c) => this.getCharacterData(c)),
+			characters: Array.from(this.characters).map((c) => c.getRoomData()),
 		};
 	}
 
@@ -226,19 +225,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		});
 	}
 
-	public getCharacterData(c: Character): ICharacterRoomData {
-		return {
-			id: c.id,
-			accountId: c.accountId,
-			name: c.name,
-			profileDescription: c.profileDescription,
-			settings: c.settings,
-			position: c.position,
-			isOnline: c.isOnline,
-			assetPreferences: c.assetPreferences,
-		};
-	}
-
 	public getAllCharacters(): Character[] {
 		return [...this.characters.values()];
 	}
@@ -284,7 +270,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			const globalState = this.gameState.currentState.exportToClientBundle();
 			this.sendUpdateToAllCharacters({
 				globalState,
-				join: this.getCharacterData(character),
+				join: character.getRoomData(),
 			});
 			// Send update to joining character
 			character.setSpace(this, appearance);

@@ -109,9 +109,9 @@ export class AppearanceActionProcessingContext {
 		);
 	}
 
-	public addRequiredPermission(permission: GameLogicPermission): void {
+	public addRequiredPermission(permission: GameLogicPermission | null): void {
 		// Player has all the permissions towards themselves
-		if (permission.character.id === this.player.id)
+		if (permission == null || permission.character.id === this.player.id)
 			return;
 
 		this._requiredPermissions.add(permission);

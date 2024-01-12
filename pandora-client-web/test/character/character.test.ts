@@ -4,22 +4,22 @@ import {
 	ASSET_PREFERENCES_DEFAULT,
 	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
 	ICharacterData,
+	ICharacterRoomData,
 } from 'pandora-common';
 import {
 	Character,
 	useCharacterData,
 } from '../../src/character/character';
 
-const mockData: ICharacterData = {
+const mockData: ICharacterRoomData = {
 	id: 'c123',
 	accountId: 0,
 	name: 'mock',
 	profileDescription: 'A mock character',
-	created: 0,
-	accessId: 'mockID',
 	settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 	assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 	position: [0, 0, 0],
+	isOnline: true,
 };
 describe('Character', () => {
 	let mock: Character;

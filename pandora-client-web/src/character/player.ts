@@ -1,4 +1,4 @@
-import { GetLogger, ICharacterRoomData, CharacterSize, ICharacterPrivateData, IClientShardArgument } from 'pandora-common';
+import { GetLogger, ICharacterRoomData, ICharacterPrivateData, IClientShardArgument } from 'pandora-common';
 import { useCallback } from 'react';
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
 import { Character } from './character';
@@ -10,12 +10,8 @@ export type CharacterCreationCallback = (
 
 export class PlayerCharacter extends Character<ICharacterPrivateData & ICharacterRoomData> {
 
-	constructor(data: ICharacterPrivateData) {
-		super({
-			...data,
-			position: [CharacterSize.WIDTH / 2, 0, 0],
-			isOnline: true,
-		}, GetLogger('Character', `[Player ${data.id}]`));
+	constructor(data: ICharacterPrivateData & ICharacterRoomData) {
+		super(data, GetLogger('Character', `[Player ${data.id}]`));
 	}
 
 	public override isPlayer(): this is PlayerCharacter {

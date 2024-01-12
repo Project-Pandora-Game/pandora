@@ -36,7 +36,7 @@ export interface ICharacter<T extends ICharacterPublicData = ICharacterPublicDat
 
 export type IChatroomCharacter = ICharacter<ICharacterRoomData>;
 
-export class Character<T extends ICharacterPublicData = ICharacterPublicData> extends TypedEventEmitter<CharacterEvents<T>> implements ICharacter<T> {
+export class Character<T extends ICharacterRoomData = ICharacterRoomData> extends TypedEventEmitter<CharacterEvents<T>> implements ICharacter<T> {
 	public readonly type = 'character';
 
 	public get id(): CharacterId {

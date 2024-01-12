@@ -7,7 +7,7 @@ import {
 	Asset,
 	AssetPreferenceType,
 	AssetPreferenceTypeSchema,
-	AssetPreferences,
+	AssetPreferencesPublic,
 	ItemContainerPath,
 	ResolveAssetPreference,
 } from 'pandora-common';
@@ -382,7 +382,7 @@ function InventoryAssetDropArea(): ReactElement | null {
 	);
 }
 
-export function useAssetPreferences(): Immutable<AssetPreferences> {
+export function useAssetPreferences(): Immutable<AssetPreferencesPublic> {
 	const { target } = useWardrobeContext();
 	const characterPreferences = useCharacterDataOptional(target.type === 'character' ? target : null)?.assetPreferences;
 

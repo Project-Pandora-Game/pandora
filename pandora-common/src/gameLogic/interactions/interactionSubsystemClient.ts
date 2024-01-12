@@ -1,6 +1,6 @@
 import { AssertNotNullable } from '../../utility';
 import { ArrayIncludesGuard } from '../../validation';
-import { GameLogicCharacter } from '../character';
+import { GameLogicCharacterClient } from '../character';
 import { IPermissionProvider } from '../permissions';
 import { GameLogicPermissionClient } from '../permissions/permissionClient';
 import { INTERACTION_IDS, InteractionId } from './_interactionConfig';
@@ -10,7 +10,7 @@ import { InteractionSubsystem } from './interactionSubsystem';
 export class InteractionSubsystemClient extends InteractionSubsystem implements IPermissionProvider<GameLogicPermissionClient> {
 	private readonly interactions: ReadonlyMap<InteractionId, GameLogicInteractionClient>;
 
-	constructor(character: GameLogicCharacter) {
+	constructor(character: GameLogicCharacterClient) {
 		super();
 		// Load interactions
 		const interactions = new Map<InteractionId, GameLogicInteractionClient>();

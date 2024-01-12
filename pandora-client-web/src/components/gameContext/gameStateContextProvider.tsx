@@ -128,7 +128,7 @@ export class GameState extends TypedEventEmitter<{
 		return id;
 	}
 
-	constructor(shard: ShardConnector, characterData: ICharacterPrivateData, { globalState, space }: IShardClientArgument['gameStateLoad']) {
+	constructor(shard: ShardConnector, characterData: ICharacterPrivateData & ICharacterRoomData, { globalState, space }: IShardClientArgument['gameStateLoad']) {
 		super();
 		this.logger = GetLogger('GameState');
 		this._shard = shard;

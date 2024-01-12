@@ -6,7 +6,7 @@ import { PronounKeySchema } from './pronouns';
 import { SpaceId } from '../space/space';
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
 import { AccountIdSchema } from '../account';
-import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesSchema } from './assetPreferences';
+import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesServerSchema } from './assetPreferences';
 import { ArrayToRecordKeys } from '../utility';
 import { RoomInventoryBundleSchema } from '../assets';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
@@ -37,7 +37,6 @@ export const CharacterPublicDataSchema = z.object({
 	name: CharacterNameSchema,
 	profileDescription: z.string().default('').transform(ZodTruncate(LIMIT_CHARACTER_PROFILE_LENGTH)),
 	settings: CharacterPublicSettingsSchema.default(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
-	assetPreferences: AssetPreferencesSchema.default(ASSET_PREFERENCES_DEFAULT),
 });
 /** Data about character, that is visible to everyone in the same space */
 export type ICharacterPublicData = z.infer<typeof CharacterPublicDataSchema>;
@@ -61,6 +60,7 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 		inventory: z.lazy(() => RoomInventoryBundleSchema),
 	}).optional(),
 	interactionConfig: InteractionSystemDataSchema.optional(),
+	assetPreferences: AssetPreferencesServerSchema.default(ASSET_PREFERENCES_DEFAULT),
 	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
 	roomId: z.string().nullable().optional().catch(undefined),
 	position: CharacterRoomPositionSchema,

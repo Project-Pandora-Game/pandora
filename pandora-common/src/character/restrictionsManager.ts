@@ -12,7 +12,7 @@ import { Immutable } from 'immer';
 import { GameLogicCharacter } from '../gameLogic/character/character';
 import { PermissionGroup } from '../gameLogic';
 import { CharacterId } from './characterTypes';
-import { AssetPreferenceResolution, ResolveAssetPreference } from './assetPreferences';
+import { AssetPreferenceResolution } from './assetPreferences';
 import { AssertNever } from '../utility';
 
 export enum ItemInteractionType {
@@ -285,7 +285,7 @@ export class CharacterRestrictionsManager {
 			if (target.character.id === this.character.id)
 				return { allowed: true };
 
-			const resolution = ResolveAssetPreference(target.character.assetPreferences, asset, this.character.id);
+			const resolution = target.character.assetPreferences.resolveAssetPreference(asset, this.character.id);
 			switch (resolution.preference) {
 				case 'doNotRender':
 				case 'prevent':
@@ -298,13 +298,19 @@ export class CharacterRestrictionsManager {
 						},
 					};
 				case 'maybe':
-					context.addInteraction(target.character, 'assetPrefMaybe');
+					context.addRequiredPermission(
+						target.character.assetPreferences.getPreferencePermission('maybe'),
+					);
 				// Fallthrough
 				case 'normal':
-					context.addInteraction(target.character, 'assetPrefNormal');
+					context.addRequiredPermission(
+						target.character.assetPreferences.getPreferencePermission('normal'),
+					);
 				// Fallthrough
 				case 'favorite':
-					context.addInteraction(target.character, 'assetPrefFavorite');
+					context.addRequiredPermission(
+						target.character.assetPreferences.getPreferencePermission('favorite'),
+					);
 					break;
 				default:
 					AssertNever(resolution.preference);

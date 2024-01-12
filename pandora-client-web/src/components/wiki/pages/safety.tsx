@@ -20,6 +20,7 @@ export function WikiSafety(): ReactElement {
 				<li><a href='#SA_Out-of-character_communication'>Out-of-character communication</a></li>
 				<li><a href='#SA_Timeout_mode'>Timeout mode</a></li>
 				<li><a href='#SA_Safemode'>Safemode</a></li>
+				<li><a href='#SA_Display_name'>Display name</a></li>
 			</ul>
 
 			<h4 id='SA_Out-of-character_communication'>Out-of-character communication</h4>
@@ -44,7 +45,8 @@ export function WikiSafety(): ReactElement {
 			<p>
 				Timeout mode is a state you can enter at any point in time for an unlimited amount of time. It makes other users
 				unable to modify anything about your character, but you also cannot interact with other characters in turn.<br />
-				The timeout mode can be used as an escalating mechanism in the unlikely case that OOC communication is not immediately
+				The timeout mode can be used as an escalating mechanism in the unlikely case that
+				<a href='/wiki/items/#SA_Out-of-character_communication'>OOC</a> communication is not immediately
 				working or it can be used for you to feel more safe while discussing the situation in OOC messages.
 			</p>
 			<ul>
@@ -56,10 +58,11 @@ export function WikiSafety(): ReactElement {
 			<p>
 				Safemode is a mode that immediately disables all restricting effect that were applied to your character. It also prevents everyone
 				else from modifying anything about your character or interact with you while you are in this mode, similar to timeout mode.
-				Additionally, it allows you to remove items freely from yourself, ignoring locks, doors, or restricting room devices.
+				Additionally, it allows you to remove items freely from yourself, ignoring
+				<a href='/wiki/items/#IT_Lock_module'>locks</a>, doors, or restricting <a href='/wiki/items/#IT_Room-level_items'>room devices</a>.
 				Nothing can hold or limit you in this mode.<br />
-				Safemode should be seen as a last resort that you will hopefully never need to use in the case when your OOC-wishes were
-				maliciously ignored or you were irresponsibly abandoned.
+				Safemode should be seen as a last resort that you will hopefully never need to use in the case when your
+				<a href='/wiki/items/#SA_Out-of-character_communication'>OOC</a>-wishes were maliciously ignored or you were irresponsibly abandoned.
 			</p>
 			<ul>
 				<li>You can enter safemode at any time by clicking the "Enter safemode"-button next to your character under the "Rooms"-tab.</li>
@@ -67,6 +70,14 @@ export function WikiSafety(): ReactElement {
 				<li>The cooldown period is there to prevent misuse and should not matter, as it is only a backup user safety feature that would almost never be needed.</li>
 				<li>As we add further features that support user safety, we will likely increase the safemode cooldown time.</li>
 			</ul>
+
+			<h4 id='SA_Display_name'>Display name</h4>
+			<p>
+				Pandora also gives you the ability to change the display name for your user account that is used in your account's profile or in the contacts list, as well
+				as for chatting via direct messages. The default display name is your login username.<br />
+				If you do not want your username to be publicly visible to others, for safety or security reasons, you can change the display name under Settings
+				at the top and then "Account"-tab. The display name can be changed once every 7 days.
+			</p>
 
 		</>
 	);

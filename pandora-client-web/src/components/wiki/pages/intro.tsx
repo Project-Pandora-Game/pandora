@@ -46,7 +46,8 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>3. Persistent rooms & personal room</h4>
 			<p>
-				In Pandora, a user created space can consist if one or many rooms and everything is persistent (settings, inventory, and room devices stay even after everyone has left) and has one or more owners.
+				In Pandora, a user created space can consist if one or many rooms and everything is persistent (settings, inventory, and room devices stay even
+				after everyone has left) and has one or more owners.
 				It only gets deleted when it no longer has any owners.<br />
 				A space is visible to everyone (except accounts banned from the space), if it is marked as public and there is at least one admin inside the room.
 				You can always see spaces you are either admin or owner of.<br />
@@ -87,14 +88,15 @@ export function WikiIntroduction(): ReactElement {
 				Room-level items can only be set up, moved, and removed by admins that have the handheld item "room construction tools" equipped.
 				A room device must first be deployed from the room inventory to the room by selecting the according option in the item details.
 				Then, you can move/position the item by clicking the according menu point in the item's context menu by clicking the icon below it.
-				The red/green button lets you drag the device along the room floor and the blue button lets you drag the item higher or lower at the current spot (along the z-axis).
-				Leave the move mode by pressing the red/green button shortly.
+				The red/green button lets you drag the device along the room floor and the blue button lets you drag the item higher or lower at the current spot
+				(along the z-axis). Leave the move mode by pressing the red/green button shortly.
 				The icons below room devices can be toggled to be shown or hidden under the "Room"-tab.
 			</p>
 
 			<h4>7. Stable code base</h4>
 			<p>
-				Pandora aims for a stable experience without random disconnects. But even if a short disconnect happens, the character will not be shown as disconnected for some time, and you will still receive all the missed chat messages on reconnect, not losing anything.
+				Pandora aims for a stable experience without random disconnects. But even if a short disconnect happens, the character will not be shown as disconnected for
+				some time, and you will still receive all the missed chat messages on reconnect, not losing anything.
 				Additionally, Pandora's server architecture is scalable to support future growth of its user base without compromising stability.
 			</p>
 
@@ -110,25 +112,6 @@ export function WikiIntroduction(): ReactElement {
 			<p>
 				Items in Pandora can be ordered (almost) freely - as long as the item's requirements are satisfied, you can combine items in whatever order you want.
 				Right now, you can only add each asset once, but in the future you will be able to add countless layers of rope, if that is what you want.
-			</p>
-			<p>
-				Note on <strong>correct item layering order</strong>:<br />
-				The layering order of items is that the higher an item is in the wardrobe character list, the further outwards on the body it is worn.
-				So the first item is usually something like a jacket or dress, whereas underwear is further down in the list.<br />
-				You add and remove outfits worn on the body from top to bottom, so from the outermost worn body item (e.g. a jacket or dress)
-				towards the inner body pieces, like how you would undress in reality, too.<br />
-				In case you dropped items in that manner to the room inventory, you can again add them to the body from the top to bottom,
-				so from the item worn the closest to the body, like you would start dressing in reality, too.<br />
-				Now, when you make an outfit template from something you wear you need to start from the bottom, not from the top,
-				because you are not undressing your character, but you are "dressing" a mannequin template doll by means of copying your outfit.
-				So you need to start from the item worn closest to the body, therefore bottom-up.
-				When you want to use an outfit template to dress your character, you again need to start from the bottom, as you need to start with the item
-				worn closest to the body, like you would start dressing in reality, too. So, outfit template related direction is bottom-up and otherwise, top-down.<br />
-				👸🏽 → 🏠&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
-				🏠 → 👸🏽&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
-				👸🏽 → 💾&nbsp;&nbsp;&nbsp;&nbsp;order:⬆️<br />
-				💾 → 👸🏽&nbsp;&nbsp;&nbsp;&nbsp;order:⬆️<br />
-				<i>Side note</i>: It also works if you always do it top-down, if that is easier to remember, but then the mannequin template doll shows a preview image with reversed item order, which looks weirdly funny.
 			</p>
 
 			<h4>10. A direct messaging system</h4>
@@ -153,14 +136,15 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>13. A permission feature that allows the user to set who is allowed to do what</h4>
 			<p>
-				You can find it in the Pandora settings. Currently, you can set if other character are allowed to interact with you and if you allow your body to be changed, too. This will be much more configurable in the future.
+				You can find it in the Pandora settings. Currently, you can set if other character are allowed to interact with you and if you allow your body to be changed, too.
+				This will be much more configurable in the future.
 			</p>
 
 			<h4>14. Storing complete outfits in the wardrobe and supporting import/export</h4>
 			<p>
-				The "Items" and "Body"-tabs in the wardrobe, as well as the room inventory screen, have an "Outfits"-tab that lets you access and manage all your custom outfits stored on the Pandora server.<br />
-				It also allows you to export and import outfits to save even more externally or to share them with others. An outfit can contain normal items, room devices, body modifications, and even storage items.<br />
-				Outfit entries show a small live preview. You can increase the size of the previews in the interface settings or even switch them off altogether, if your computer/phone and connection cannot handle loading many previews at once.
+				The "Items" and "Body"-tabs in the wardrobe as well as the room inventory screen have an "Outfits"-tab that lets you access and manage all your custom outfits
+				stored on the Pandora server.<br />
+				It also allows you to export and import outfits to save even more externally or to share them with others. An outfit can contain any type of item, even room devices.
 			</p>
 
 			<hr />

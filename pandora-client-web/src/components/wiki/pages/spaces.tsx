@@ -88,7 +88,10 @@ export function WikiSpaces(): ReactElement {
 				<li>Public space are only visible for other players when there is an admin online inside the space.</li>
 				<li>Private spaces are currently only visible in the space search for admins and owners of that space and cannot be found otherwise.</li>
 				<li>Accounts can still see spaces they are banned from</li>
-				<li>Certain information about a space normally visible from the outside, such as who is inside, is not shown when the space is password protected or the viewing account is on the space's ban list.</li>
+				<li>
+					Certain information about a space normally visible from the outside, such as who is inside, is not shown when the space is password protected or the viewing
+					account is on the space's ban list.
+				</li>
 			</ul>
 
 			<h4 id='RO_Space_access'>Space access</h4>
@@ -98,7 +101,7 @@ export function WikiSpaces(): ReactElement {
 			<ul>
 				<li>Both public and private spaces can be password protected.</li>
 				<li>Admins do not need to know and enter the password to join a password protected space.</li>
-				<li>When a user's account is banned from a room, the user cannot join it.</li>
+				<li>When a user's account is banned from a space, the user cannot join it.</li>
 				<li>No one can join a space if it is full, not even owners or admins of it.</li>
 			</ul>
 
@@ -117,7 +120,10 @@ export function WikiSpaces(): ReactElement {
 					Alternatively, you can look up the player account id of a character inside the space up in the "Room"-Tab. It is the last number behind the name.<br />
 					The easiest way is to simply click on the name below a character and select "Admin" in the context menu.
 				</li>
-				<li>When creating a space for the first time, you can select if characters can change their body items or gender pronouns when inside this space. This currently cannot be changed later on.</li>
+				<li>
+					When creating a space for the first time, you can select if characters can change their <a href='/wiki/items/#IT_Body_parts'>body parts</a> or gender pronouns
+					when inside this space. This currently cannot be changed later on.
+				</li>
 			</ul>
 
 			<h4 id='RO_Leaving_a_space'>Leaving a space</h4>
@@ -134,14 +140,16 @@ export function WikiSpaces(): ReactElement {
 			<p>
 				Every character has their own personal space that does not count towards this limit and that cannot be entered by any
 				other character. It functions as a singleplayer lobby and cannot be deleted or given up.<br />
-				You will automatically end up in the personal space when your selected character is not in any other space. Restraining effects (also from <a href='/wiki/items/#IT_Room-level_items'>room devices</a>)
+				You will automatically end up in the personal space when your selected character is not in any other space. Restraining
+				effects (also from <a href='/wiki/items/#IT_Room-level_items'>room devices</a>)
 				will not prevent you from leaving the personal space.
 			</p>
 
 			<h4 id='RO_Room_inventory'>Room inventory</h4>
 			<p>
 				The room inventory shows all items that are inside the current room and can be picked up or used by other characters, if permitted.<br />
-				From this screen, you can also create new items inside the room inventory, edit them, or delete them.
+				From this screen, you can also create new items inside the room inventory, edit them, or delete them. Items stay in the inventory indefinitely
+				as long as they are not moved somewhere else, are deleted, or the room and/or space are deleted, e.g. by giving up ownership of a space.
 				Clicking on an item in the list opens its edit-view on the right side.
 				<a href='/wiki/items/#IT_Room-level_items'>Room devices</a> can be deployed to the room background in the edit-view by permitted parties.
 			</p>
@@ -158,7 +166,7 @@ export function WikiSpaces(): ReactElement {
 
 			<h4 id='RO_Room_chat_Chat_modes'>Room chat: Chat modes</h4>
 			<p>
-				The chat is always in a specific chat mode, such as emote mode or OOC mode.
+				The chat is always in a specific chat mode, such as emote mode or <a href='/wiki/items/#SA_Out-of-character_communication'>OOC</a> mode.
 				The default mode is writing normal text to the whole room that can be formatted.<br />
 				You can write in another chat mode by either using a chat command or by pressing the bar with the white cog above the input field.
 				This toggles a dropdown menu that lets you switch to a different chat mode.<br />

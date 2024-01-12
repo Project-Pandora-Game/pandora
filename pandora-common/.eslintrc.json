@@ -7,18 +7,18 @@
 	"env": {
 		"es6": true
 	},
-	"ignorePatterns": [".git", "node_modules", "dist", "jest.config.js"],
+	"ignorePatterns": [".git", "node_modules", "dist"],
 	"parserOptions": {
-		"ecmaVersion": 2021,
-		"project": ["./tsconfig.json", "./test/tsconfig.json"]
+		"ecmaVersion": 2021
 	},
-	"plugins": ["@typescript-eslint", "deprecation"],
+	"plugins": ["@typescript-eslint"],
 	"overrides": [
 		{
 			"extends": [
 				"plugin:@typescript-eslint/recommended-type-checked",
 				"plugin:@typescript-eslint/stylistic-type-checked"
 			],
+			"plugins": ["@typescript-eslint", "deprecation"],
 			"files": ["*.ts", "*.tsx"],
 			"parser": "@typescript-eslint/parser",
 			"parserOptions": {

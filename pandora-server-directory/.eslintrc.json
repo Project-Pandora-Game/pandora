@@ -3,6 +3,6 @@
 	"env": {
 		"node": true
 	},
-	"ignorePatterns": [".git", "node_modules", "dist", "jest.config.js"],
+	"ignorePatterns": [".git", "node_modules", "dist"],
 	"root": true
 }

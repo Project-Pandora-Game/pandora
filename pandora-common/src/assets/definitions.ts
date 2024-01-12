@@ -128,7 +128,7 @@ export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = As
 	/**
 	 * Chat specific settings for this asset
 	 *
-	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chatroom/chatActions.ts
+	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chat/chatActions.ts
 	 */
 	chat?: {
 		/** How items of this asset are referred to in chat (defaults to asset's name) */
@@ -250,7 +250,7 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 	/**
 	 * Chat specific settings for this asset
 	 *
-	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chatroom/chatActions.ts
+	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chat/chatActions.ts
 	 */
 	chat?: {
 		/** How items of this asset are referred to in chat (defaults to asset's name) */
@@ -280,7 +280,7 @@ export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinition
 	/**
 	 * Chat specific settings for this asset
 	 *
-	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chatroom/chatActions.ts
+	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chat/chatActions.ts
 	 */
 	chat?: {
 		/** How items of this asset are referred to in chat (defaults to asset's name) */
@@ -309,7 +309,7 @@ export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetD
 	/**
 	 * Chat specific settings for this asset
 	 *
-	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chatroom/chatActions.ts
+	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chat/chatActions.ts
 	 */
 	chat?: {
 		/** How items of this asset are referred to in chat (defaults to asset's name) */

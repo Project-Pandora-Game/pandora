@@ -14,8 +14,8 @@ export function WikiCharacters(): ReactElement {
 				the "Poses"-tab to assume custom poses.
 			</p>
 			<p>
-				Every character has their own
-				<a href='/wiki/items/#RO_Personal_space'>personal space</a>, <a href='/wiki/items/#IT_Item_preferences_and_limits'>item preferences and limits</a>,
+				Every character has their
+				own <a href='/wiki/items/#RO_Personal_space'>personal space</a>, <a href='/wiki/items/#IT_Item_preferences_and_limits'>item preferences and limits</a>,
 				and they can have items and different <a href='/wiki/items/#IT_Body_parts'>body parts</a> added onto the character.
 			</p>
 

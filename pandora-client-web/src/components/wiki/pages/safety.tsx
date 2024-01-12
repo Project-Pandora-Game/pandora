@@ -45,8 +45,8 @@ export function WikiSafety(): ReactElement {
 			<p>
 				Timeout mode is a state you can enter at any point in time for an unlimited amount of time. It makes other users
 				unable to modify anything about your character, but you also cannot interact with other characters in turn.<br />
-				The timeout mode can be used as an escalating mechanism in the unlikely case that
-				<a href='/wiki/items/#SA_Out-of-character_communication'>OOC</a> communication is not immediately
+				The timeout mode can be used as an escalating mechanism in the unlikely case
+				that <a href='/wiki/items/#SA_Out-of-character_communication'>OOC</a> communication is not immediately
 				working or it can be used for you to feel more safe while discussing the situation in OOC messages.
 			</p>
 			<ul>
@@ -58,11 +58,11 @@ export function WikiSafety(): ReactElement {
 			<p>
 				Safemode is a mode that immediately disables all restricting effect that were applied to your character. It also prevents everyone
 				else from modifying anything about your character or interact with you while you are in this mode, similar to timeout mode.
-				Additionally, it allows you to remove items freely from yourself, ignoring
-				<a href='/wiki/items/#IT_Lock_module'>locks</a>, doors, or restricting <a href='/wiki/items/#IT_Room-level_items'>room devices</a>.
+				Additionally, it allows you to remove items freely from yourself, ignoring <a href='/wiki/items/#IT_Lock_module'>locks</a>,
+				doors, or restricting <a href='/wiki/items/#IT_Room-level_items'>room devices</a>.
 				Nothing can hold or limit you in this mode.<br />
-				Safemode should be seen as a last resort that you will hopefully never need to use in the case when your
-				<a href='/wiki/items/#SA_Out-of-character_communication'>OOC</a>-wishes were maliciously ignored or you were irresponsibly abandoned.
+				Safemode should be seen as a last resort that you will hopefully never need to use in the case when
+				your <a href='/wiki/items/#SA_Out-of-character_communication'>OOC</a>-wishes were maliciously ignored or you were irresponsibly abandoned.
 			</p>
 			<ul>
 				<li>You can enter safemode at any time by clicking the "Enter safemode"-button next to your character under the "Rooms"-tab.</li>

@@ -11,8 +11,8 @@ export function WikiItems(): ReactElement {
 				Items in Pandora are created from assets, which are added to Pandora by artists and asset makers from the community.
 				Every character has access to all assets from the start and can freely create customized copies in the form of items.<br />
 				Almost all items have a customizable color. Some items also have one or more item modules. Aside from general modules, there can
-				be a <a href='/wiki/items/#IT_Storage_modules'>storage module</a> or <a href='/wiki/items/#IT_Lock_module'>lock module</a>
-				on an item, depending on what it is. These features can be accessed in the <a href='/wiki/items/#CH_Character_wardrobe'>character wardrobe</a> by clicking
+				be a <a href='/wiki/items/#IT_Storage_modules'>storage module</a> or <a href='/wiki/items/#IT_Lock_module'>lock module</a> on
+				an item, depending on what it is. These features can be accessed in the <a href='/wiki/items/#CH_Character_wardrobe'>character wardrobe</a> by clicking
 				on items.
 			</p>
 			<p>
@@ -85,8 +85,8 @@ export function WikiItems(): ReactElement {
 				<li>After opening the storage module, you can transfer items from and to the room inventory with the arrow button.</li>
 				<li>
 					It is possible to add an item from a worn storage container directly onto your own character by going into move-mode with
-					the multi-arrow button on the item you want to add, while having the storage module open in the
-					<a href='/wiki/items/#CH_Character_wardrobe'>wardrobe</a>. You then close
+					the multi-arrow button on the item you want to add, while having the storage module open in
+					the <a href='/wiki/items/#CH_Character_wardrobe'>wardrobe</a>. You then close
 					the storage view while in move-mode and add the moved item onto your character.
 				</li>
 				<li>
@@ -120,8 +120,8 @@ export function WikiItems(): ReactElement {
 			</p>
 			<ul>
 				<li>
-					Other users can see those preferences in the form of icon-based highlighting when they open your
-					<a href='/wiki/items/#CH_Character_wardrobe'>wardrobe</a> to add some items.
+					Other users can see those preferences in the form of icon-based highlighting when they open
+					your <a href='/wiki/items/#CH_Character_wardrobe'>wardrobe</a> to add some items.
 				</li>
 				<li>"Prevent" blocks anybody other than yourself to use this item on you.</li>
 				<li>"Do not render" will not show you this item on yourself or on other characters, item previews will be blurred in all wardrobes.</li>
@@ -134,8 +134,8 @@ export function WikiItems(): ReactElement {
 			<p>
 				The "Items" and "Body"-tabs in the <a href='/wiki/items/#CH_Character_wardrobe'>wardrobe</a> as
 				well as the <a href='/wiki/items/#RO_Room_inventory'>room inventory</a> screen have an "Outfits"-tab that lets you access and manage all your custom outfits
-				stored on the Pandora server. An outfit template can contain normal items,
-				<a href='/wiki/items/#IT_Room-level_items'>room-level items</a>, body modifications, and even storage items. Therefore,
+				stored on the Pandora server. An outfit template can contain normal
+				items, <a href='/wiki/items/#IT_Room-level_items'>room-level items</a>, body modifications, and even storage items. Therefore,
 				an outfit is not related only to clothing, but is basically an item collection.
 			</p>
 			<ul>

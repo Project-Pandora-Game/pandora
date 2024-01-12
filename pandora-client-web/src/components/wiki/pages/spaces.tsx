@@ -150,8 +150,8 @@ export function WikiSpaces(): ReactElement {
 				The room inventory shows all items that are inside the current room and can be picked up or used by other characters, if permitted.<br />
 				From this screen, you can also create new items inside the room inventory, edit them, or delete them. Items stay in the inventory indefinitely
 				as long as they are not moved somewhere else, are deleted, or the room and/or space are deleted, e.g. by giving up ownership of a space.
-				Clicking on an item in the list opens its edit-view on the right side.
-				<a href='/wiki/items/#IT_Room-level_items'>Room devices</a> can be deployed to the room background in the edit-view by permitted parties.
+				Clicking on an item in the list opens its edit-view on the right
+				side. <a href='/wiki/items/#IT_Room-level_items'>Room devices</a> can be deployed to the room background in the edit-view by permitted parties.
 			</p>
 
 			<h4 id='RO_Room_chat_Chat_commands'>Room chat: Chat commands</h4>

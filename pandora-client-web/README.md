@@ -115,3 +115,26 @@ pnpm type-check:src   # ./src
 [pandora-server-directory]: https://github.com/Project-Pandora-Game/pandora-server-directory
 [pandora-server-shard]: https://github.com/Project-Pandora-Game/pandora-server-shard
 
+## File structure
+
+Files for Pandora's client are organized in the following way.
+If you are adding a new feature, please consider where to place the code based on the following tree.
+
+- `assets` - Static non-code files such as icons.
+- `debug` - Code useful for debugging. This code is normally not actually used anywhere, but look here for useful tools to help you during development.
+- `common` - Code not strictly related to Pandora itself. Any code here should only use things from `common` and `assets`.
+	- `userInteraction` - Code related to how user interacts with the UI - for example components for a button, various inputs, ...
+	- `layout` - Code related to organising things on the screen
+- `services` - Code that runs in the background, not normally visible by users
+	- `accountLogic` - Logic around account-only actions (login, direct messaging, ...). Only needs directory connection.
+	- `gameLogic` - Logic around "game" features (character selection, chat, character/space state). Needs shard connection.
+- `config` - Build-time configuration data
+- `styles` - Anything related to global styling and theming
+- `ui` - All the UI code of Pandora
+	- `components` - UI components that are reusable across multiple screens
+	- `screens` - Each screen is meant to be shown by itself in the main UI area of the client. Parts of a screen are not meant to be reused by other screens.
+	- `dialogs` - Isolated UI that runs on top of some screen, but not intergrated into it
+	- `header` - Header. The always visible bar on top.
+- `graphics` - All code related to graphics rendering; should be lazy-loadable
+- `management` - Anything that is only relevant to Pandora admins; should be lazy-loadable
+- `editor` - Code that is only relevant to the editor; loads only when editor entrypoint is used

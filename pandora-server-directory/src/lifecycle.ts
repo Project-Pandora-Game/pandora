@@ -1,6 +1,6 @@
 import { GetLogger, Service, logConfig } from 'pandora-common';
 import { accountManager } from './account/accountManager';
-import { CloseDatabase } from './database/databaseProvider';
+import { GetDatabaseService } from './database/databaseProvider';
 import { HttpServer } from './networking/httpServer';
 import { ConnectionManagerClient } from './networking/manager_client';
 import { ShardManager } from './shard/shardManager';
@@ -44,8 +44,7 @@ async function StopGracefully(): Promise<void> {
 	destroying = 'AccountManager Accounts';
 	accountManager.onDestroyAccounts();
 	// Disconnect database
-	destroying = 'Database';
-	await CloseDatabase();
+	await DestroyService(GetDatabaseService());
 	destroying = '[done]';
 }
 

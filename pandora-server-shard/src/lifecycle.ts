@@ -4,7 +4,7 @@ import { HttpServer } from './networking/httpServer';
 import { DirectoryConnector } from './networking/socketio_directory_connector';
 import { SpaceManager } from './spaces/spaceManager';
 import wtfnode from 'wtfnode';
-import { CloseDatabase } from './database/databaseProvider';
+import { GetDatabaseService } from './database/databaseProvider';
 
 const logger = GetLogger('Lifecycle');
 
@@ -34,8 +34,7 @@ async function StopGracefully(): Promise<IEmpty> {
 	// Stop HTTP server
 	await DestroyService(HttpServer);
 	// Disconnect database
-	destroying = 'Database';
-	await CloseDatabase();
+	await DestroyService(GetDatabaseService());
 	// The result of promise from graceful stop is used by Directory, disconnect afterwards
 	destroying = 'DirectoryConnector';
 	setTimeout(() => {

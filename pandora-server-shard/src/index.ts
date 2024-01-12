@@ -5,7 +5,7 @@ import { AddDiscordLogOutput, AddFileOutput } from './logging';
 import { GetLogger, LogLevel, ServiceInit, SetConsoleOutput } from 'pandora-common';
 import { ConnectToDirectory } from './networking/socketio_directory_connector';
 import { HttpServer } from './networking/httpServer';
-import { InitDatabase } from './database/databaseProvider';
+import { GetDatabaseService } from './database/databaseProvider';
 import { SetupSignalHandling } from './lifecycle';
 import { LoadAssetDefinitions } from './assets/assetManager';
 // get version from package.json
@@ -29,7 +29,7 @@ async function Start(): Promise<void> {
 	logger.verbose('Connecting to Directory...');
 	await ConnectToDirectory();
 	logger.verbose('Initializing database...');
-	await InitDatabase();
+	await ServiceInit(GetDatabaseService());
 	logger.verbose('Starting HTTP server...');
 	await ServiceInit(HttpServer);
 	logger.alert('Ready!');

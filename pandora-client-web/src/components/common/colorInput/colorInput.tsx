@@ -139,7 +139,6 @@ function ColorEditor({
 		if (!ref.current) return;
 		ref.current.style.setProperty('--hue', (color.hue * 360).toString());
 		ref.current.style.setProperty('--saturation', color.saturation.toString());
-		ref.current.style.setProperty('--lightness', color.lightness.toString());
 		ref.current.style.setProperty('--alpha', color.alpha.toString());
 		ref.current.style.setProperty('--value', color.value.toString());
 	}, [color, ref]);
@@ -162,8 +161,8 @@ function ColorEditor({
 	const setSaturation = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
 		setState(color.setSaturation(Number(ev.target.value) / 100));
 	}, [color, setState]);
-	const setLightness = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
-		setState(color.setLightness(Number(ev.target.value) / 100));
+	const setValue = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
+		setState(color.setValue(Number(ev.target.value) / 100));
 	}, [color, setState]);
 	const setAlpha = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
 		let value = Number(ev.target.value);
@@ -219,7 +218,7 @@ function ColorEditor({
 				</div>
 				<input className='color-editor__hue' type='range' min='0' max='360' value={ Math.round(color.hue * 360) } onChange={ setHue } />
 				<input className='color-editor__saturation' type='range' min='0' max='100' value={ Math.round(color.saturation * 100) } onChange={ setSaturation } />
-				<input className='color-editor__lightness' type='range' min='0' max='100' value={ Math.round(color.lightness * 100) } onChange={ setLightness } />
+				<input className='color-editor__value' type='range' min='0' max='100' value={ Math.round(color.value * 100) } onChange={ setValue } />
 				{
 					minAlpha < 255 &&
 					<input className='color-editor__alpha' type='range' min='0' max='255' value={ Math.round(color.alpha * 255) } onChange={ setAlpha } />
@@ -239,7 +238,6 @@ class Color {
 	public readonly rbg: ColorArray;
 	public readonly hsv: ColorArray;
 	public readonly alpha: number;
-	public readonly lightness: number;
 
 	public get hue(): number {
 		return this.hsv[0] / Color.e / 6;
@@ -267,12 +265,6 @@ class Color {
 			hsv: [this.hsv[0], s, this.hsv[2]],
 			alpha: this.alpha,
 		});
-	}
-
-	public setLightness(lightness: number) {
-		const l = _.clamp(lightness, 0, 1);
-		const s = this.saturation;
-		return this.setValue(l + s * Math.min(l, 1 - l));
 	}
 
 	public setAlpha(alpha: number) {
@@ -308,7 +300,6 @@ class Color {
 			this.rbg = color.rbg;
 			this.hsv = color.hsv;
 			this.alpha = color.alpha;
-			this.lightness = color.lightness;
 			return;
 		}
 		if (typeof color === 'string') {
@@ -316,13 +307,11 @@ class Color {
 			this.rbg = [r, g, b];
 			this.hsv = Color.rgbToHsv(this.rbg);
 			this.alpha = a;
-			this.lightness = this.calculateLightness();
 			return;
 		}
 		this.rbg = color.rgb ?? (color.hsv ? Color.hsvToRgb(color.hsv) : [0, 0, 0]);
 		this.hsv = color.hsv ?? Color.rgbToHsv(this.rbg);
 		this.alpha = color.alpha;
-		this.lightness = this.calculateLightness();
 	}
 
 	public static hexToRgba(hex: string): [number, number, number, number] {
@@ -404,13 +393,6 @@ class Color {
 	}
 
 	/* eslint-enable no-bitwise */
-
-	public calculateLightness(): number {
-		const s = this.saturation;
-		const v = this.value;
-		const l = v * (1 - s / 2);
-		return l;
-	}
 
 	private static toHexPart(value: number) {
 		value = _.clamp(value, 0, 255);

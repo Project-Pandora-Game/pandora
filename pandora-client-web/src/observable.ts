@@ -63,6 +63,10 @@ class RateLimitedObservable<T> extends NormalObservable<T> {
 		super(defaultValue);
 	}
 
+	public override get value(): T {
+		return super.value;
+	}
+
 	public override set value(value: T) {
 		const actualSet = () => {
 			super.value = value;

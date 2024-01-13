@@ -141,7 +141,7 @@ function ColorEditor({
 		ref.current.style.setProperty('--saturation', color.saturation.toString());
 		ref.current.style.setProperty('--lightness', color.lightness.toString());
 		ref.current.style.setProperty('--alpha', color.alpha.toString());
-		ref.current.style.setProperty('--value', color.hsvaValue.toString());
+		ref.current.style.setProperty('--value', color.value.toString());
 	}, [color, ref]);
 
 	useEffect(() => {
@@ -205,7 +205,7 @@ function ColorEditor({
 		const y = ev.clientY - rect.top;
 		setState(color
 			.setSaturation(x / rect.width)
-			.setHsvaValue(1 - y / rect.height));
+			.setValue(1 - y / rect.height));
 	}, [dragging, color, setState]);
 
 	return (
@@ -230,156 +230,184 @@ function ColorEditor({
 	);
 }
 
+type ColorArray = readonly [number, number, number];
+
 class Color {
-	public readonly rbga: readonly [number, number, number, number];
-	public readonly hsla: readonly [number, number, number, number];
-	public readonly hsvaValue: number;
+	/** Edge length constant */
+	private static e: number = 65537;
+
+	public readonly rbg: ColorArray;
+	public readonly hsv: ColorArray;
+	public readonly alpha: number;
+	public readonly lightness: number;
 
 	public get hue(): number {
-		return this.hsla[0];
+		return this.hsv[0] / Color.e / 6;
 	}
 
 	public get saturation(): number {
-		return this.hsla[1];
+		return this.hsv[1] / Color.e;
 	}
 
-	public get lightness(): number {
-		return this.hsla[2];
-	}
-
-	public get alpha(): number {
-		return this.rbga[3];
+	public get value(): number {
+		return this.hsv[2] / 255;
 	}
 
 	public setHue(hue: number) {
+		const h = Math.floor(_.clamp(hue, 0, 1) * Color.e * 6);
 		return new Color({
-			hsla: [_.clamp(hue, 0, 1), this.hsla[1], this.hsla[2], this.hsla[3]],
+			hsv: [h, this.hsv[1], this.hsv[2]],
+			alpha: this.alpha,
 		});
 	}
 
 	public setSaturation(saturation: number) {
+		const s = Math.floor(_.clamp(saturation, 0, 1) * Color.e);
 		return new Color({
-			hsla: [this.hsla[0], _.clamp(saturation, 0, 1), this.hsla[2], this.hsla[3]],
+			hsv: [this.hsv[0], s, this.hsv[2]],
+			alpha: this.alpha,
 		});
 	}
 
 	public setLightness(lightness: number) {
-		return new Color({
-			hsla: [this.hsla[0], this.hsla[1], _.clamp(lightness, 0, 1), this.hsla[3]],
-		});
+		const l = _.clamp(lightness, 0, 1);
+		const s = this.saturation;
+		return this.setValue(l + s * Math.min(l, 1 - l));
 	}
 
 	public setAlpha(alpha: number) {
-		alpha = _.clamp(alpha, 0, 1);
+		alpha = Math.floor(_.clamp(alpha, 0, 1) * 255);
 		return new Color({
-			rgba: [this.rbga[0], this.rbga[1], this.rbga[2], alpha],
-			hsla: [this.hsla[0], this.hsla[1], this.hsla[2], alpha],
+			rgb: this.rbg,
+			hsv: this.hsv,
+			alpha,
 		});
 	}
 
-	public setHsvaValue(value: number) {
+	public setValue(value: number) {
+		const v = Math.floor(_.clamp(value, 0, 1) * 255);
 		return new Color({
-			hsla: [this.hsla[0], this.hsla[1], Color.hsvToHslLightness([this.hsla[0], this.hsla[1], _.clamp(value, 0, 1)]), this.hsla[3]],
+			hsv: [this.hsv[0], this.hsv[1], v],
+			alpha: this.alpha,
 		});
 	}
 
 	public toHex(): HexRGBAColorString {
-		const [r, g, b, a] = this.rbga;
-		if (a === 1) {
+		const [r, g, b] = this.rbg;
+		if (this.alpha === 255) {
 			return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}` as HexColorString;
 		}
-		return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}${Color.toHexPart(Math.round(a * 255))}` as HexRGBAColorString;
+		return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}${Color.toHexPart(Math.round(this.alpha))}` as HexRGBAColorString;
 	}
 
 	constructor(color: Color);
 	constructor(color: HexColorString | HexRGBAColorString);
-	constructor(color: { rgba?: [number, number, number, number]; hsla: [number, number, number, number]; } | { rgba: [number, number, number, number]; hsla?: [number, number, number, number]; });
-	constructor(color: HexColorString | HexRGBAColorString | Color | { rgba?: [number, number, number, number]; hsla?: [number, number, number, number]; }) {
+	constructor(color: { rgb?: ColorArray; hsv: ColorArray; alpha: number; } | { rgba: ColorArray; hsv?: ColorArray; alpha: number; });
+	constructor(color: HexColorString | HexRGBAColorString | Color | { rgb?: ColorArray; hsv?: ColorArray; alpha: number; }) {
 		if (color instanceof Color) {
-			this.rbga = [...color.rbga];
-			this.hsla = [...color.hsla];
-			this.hsvaValue = color.hsvaValue;
+			this.rbg = color.rbg;
+			this.hsv = color.hsv;
+			this.alpha = color.alpha;
+			this.lightness = color.lightness;
 			return;
 		}
 		if (typeof color === 'string') {
-			this.rbga = Color.hexToRgba(color);
-			this.hsla = Color.rgbaToHsla(this.rbga);
-			this.hsvaValue = Color.hslToHsvValue(this.hsla);
+			const [r, g, b, a] = Color.hexToRgba(color);
+			this.rbg = [r, g, b];
+			this.hsv = Color.rgbToHsv(this.rbg);
+			this.alpha = a;
+			this.lightness = this.calculateLightness();
 			return;
 		}
-		this.rbga = color.rgba ?? (color.hsla ? Color.hslaToRgba(color.hsla) : [0, 0, 0, 1]);
-		this.hsla = color.hsla ?? Color.rgbaToHsla(this.rbga);
-		this.hsvaValue = Color.hslToHsvValue(this.hsla);
+		this.rbg = color.rgb ?? (color.hsv ? Color.hsvToRgb(color.hsv) : [0, 0, 0]);
+		this.hsv = color.hsv ?? Color.rgbToHsv(this.rbg);
+		this.alpha = color.alpha;
+		this.lightness = this.calculateLightness();
 	}
 
 	public static hexToRgba(hex: string): [number, number, number, number] {
 		const r = parseInt(hex.substring(1, 3), 16);
 		const g = parseInt(hex.substring(3, 5), 16);
 		const b = parseInt(hex.substring(5, 7), 16);
-		const a = hex.length > 7 ? parseInt(hex.substring(7, 9), 16) / 255 : 1;
+		const a = hex.length > 7 ? parseInt(hex.substring(7, 9), 16) : 255;
 		return [r, g, b, a];
 	}
 
-	public static rgbaToHsla(rgba: readonly [number, number, number, number]): [number, number, number, number] {
-		const r = rgba[0] / 255;
-		const g = rgba[1] / 255;
-		const b = rgba[2] / 255;
-		const a = rgba[3];
+	/* eslint-disable no-bitwise */
 
+	public static rgbToHsv([r, g, b]: ColorArray): ColorArray {
+		// Step 1: Find the maximum (M), minimum (m) and middle (c) of R; G, and B.
 		const max = Math.max(r, g, b);
 		const min = Math.min(r, g, b);
-		let h = 0;
-		let s = 0;
-		const l = (max + min) / 2;
-
-		if (max !== min) {
-			const d = max - min;
-			s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-			switch (max) {
-				case r: h = (g - b) / d + (g < b ? 6 : 0); break;
-				case g: h = (b - r) / d + 2; break;
-				case b: h = (r - g) / d + 4; break;
-			}
-			h /= 6;
+		const mid = r + g + b - max - min;
+		// Step 2: Assign V with M.
+		const v = max;
+		// Step 3: Calculate the delta (d) between M and m
+		const d = max - min;
+		// Step 4: If d is equal to 0 then assign S with 0 and return. H is undefined in this case.
+		if (d === 0) {
+			return [0, 0, v];
 		}
-		return [h, s, l, a];
-	}
-
-	public static hueToRgb(p: number, q: number, t: number) {
-		if (t < 0) t += 1;
-		if (t > 1) t -= 1;
-		if (t < 1 / 6) return p + (q - p) * 6 * t;
-		if (t < 1 / 2) return q;
-		if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-		return p;
-	}
-
-	public static hslaToRgba(hsla: readonly [number, number, number, number]): [number, number, number, number] {
-		const [h, s, l, a] = hsla;
-
-		if (s === 0) {
-			const l255 = Math.round(l * 255);
-			return [l255, l255, l255, a];
+		// Step 5: Determine sector index (I).
+		let i: 0 | 1 | 2 | 3 | 4 | 5;
+		if (max === r && min === b) i = 0;
+		else if (max === g && min === b) i = 1;
+		else if (max === g && min === r) i = 2;
+		else if (max === b && min === r) i = 3;
+		else if (max === b && min === g) i = 4;
+		else i = 5; // if (max === r && min === g)
+		// Step 6: Calculate integer-based saturation (S).
+		const s = ((d << 16) / v) + 1;
+		// Step 7:  Calculate the fractional part of hue (F)
+		let f = ((mid - min) << 16) / (d + 1);
+		// Step 8: Inverse F for specific sectors (1, 3, and 5), by subtracting F from the edge length constant (E).
+		if (i === 1 || i === 3 || i === 5) {
+			f = Color.e - f;
 		}
+		// Step 9: Calculate the final integer-based hue (H).
+		const h = Color.e * i + f;
 
-		const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-		const p = 2 * l - q;
-		return [
-			Math.round(Color.hueToRgb(p, q, h + 1 / 3) * 255),
-			Math.round(Color.hueToRgb(p, q, h) * 255),
-			Math.round(Color.hueToRgb(p, q, h - 1 / 3) * 255),
-			a,
-		];
+		return [h, s, v];
 	}
 
-	public static hslToHsvValue(hsla: readonly [number, number, number, number] | readonly [number, number, number]): number {
-		const [, s, l] = hsla;
-		const v = l + s * Math.min(l, 1 - l);
-		return v;
+	public static hsvToRgb([h, s, v]: ColorArray): ColorArray {
+		// Step 1: If S or V is equal to 0 then assign all R; G, and B with V and return.
+		if (s === 0 || v === 0) {
+			return [v, v, v];
+		}
+		// Step 2: Calculate delta (d).
+		const d = ((s * v) >> 16) + 1;
+		// Ste[ 3: Calculate m, the minimal value of R; G, and B.
+		const m = v - d;
+		// Step 4: Determine the hue sector index (I) using the hexagon edge length constant (E).
+		const e = Color.e;
+		let i: 0 | 1 | 2 | 3 | 4 | 5;
+		if (h < e) i = 0;
+		else if (h >= e && h < e * 2) i = 1;
+		else if (h >= e * 2 && h < e * 3) i = 2;
+		else if (h >= e * 3 && h < e * 4) i = 3;
+		else if (h >= e * 4 && h < e * 5) i = 4;
+		else i = 5; // if (h >= e *5)
+		// Step 5: Calculate the fractional part of hue (F).
+		const f = h - e * i;
+		// Step 6: Calculate the middle component (c).
+		const c = ((f * d) >> 16) + m;
+		// Step 7: Assign R; G, and B according to the sector index (I).
+		switch (i) {
+			case 0: return [v, c, m];
+			case 1: return [c, v, m];
+			case 2: return [m, v, c];
+			case 3: return [m, c, v];
+			case 4: return [c, m, v];
+			case 5: return [v, m, c];
+		}
 	}
 
-	public static hsvToHslLightness(hsva: readonly [number, number, number, number] | readonly [number, number, number]): number {
-		const [, s, v] = hsva;
+	/* eslint-enable no-bitwise */
+
+	public calculateLightness(): number {
+		const s = this.saturation;
+		const v = this.value;
 		const l = v * (1 - s / 2);
 		return l;
 	}

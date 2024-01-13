@@ -7,10 +7,10 @@ import { AccountId, AccountIdSchema } from '../account/account';
 import { RoomInventoryBundleSchema } from '../assets/state/roomState';
 import { ArrayToRecordKeys } from '../utility';
 import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits';
+import { RoomBackgroundDataSchema } from './room';
 
 // Fix for pnpm resolution weirdness
-import type { } from '../assets/item';
-import { RoomBackgroundDataSchema } from './room';
+import type { } from '../assets/item/base';
 
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;

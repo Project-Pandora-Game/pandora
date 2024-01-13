@@ -22,6 +22,7 @@ import { ActionSpaceContext } from '../space/space';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../validation';
+import type { } from './item/base';
 
 export const AppearanceActionCreateSchema = z.object({
 	type: z.literal('create'),

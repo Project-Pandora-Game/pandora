@@ -13,7 +13,7 @@ import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from
 
 // Fix for pnpm resolution weirdness
 import type { } from '../account/accountRoles';
-import type { } from '../assets/item';
+import type { } from '../assets/item/base';
 
 type ShardError = 'noShardFound' | 'failed';
 

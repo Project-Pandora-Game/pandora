@@ -9,10 +9,10 @@ import { AccountIdSchema } from '../account';
 import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesSchema } from './assetPreferences';
 import { ArrayToRecordKeys } from '../utility';
 import { RoomInventoryBundleSchema } from '../assets';
+import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
 
 // Fix for pnpm resolution weirdness
-import type { } from '../assets/item';
-import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
+import type { } from '../assets/item/base';
 
 export const CharacterPublicSettingsSchema = z.object({
 	labelColor: HexColorStringSchema.catch('#ffffff'),

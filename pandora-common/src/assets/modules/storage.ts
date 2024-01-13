@@ -12,6 +12,9 @@ import { IsNotNullable, Satisfies } from '../../utility';
 import { Immutable } from 'immer';
 import type { InteractionId } from '../../gameLogic/interactions';
 
+// Fix for pnpm resolution weirdness
+import type { } from '../item/base';
+
 export interface IModuleConfigStorage extends IModuleConfigCommon<'storage'> {
 	maxCount: number;
 	maxAcceptedSize: AssetSize;

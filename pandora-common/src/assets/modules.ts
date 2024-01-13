@@ -9,6 +9,9 @@ import type { AssetId } from './base';
 import type { IItemCreationContext, IItemLoadContext } from './item';
 import type { Immutable } from 'immer';
 
+// Fix for pnpm resolution weirdness
+import type { } from './item/base';
+
 //#region Module definitions
 
 export const IAssetModuleTypesSchemas = {

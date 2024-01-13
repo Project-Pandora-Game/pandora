@@ -14,6 +14,9 @@ import { AssetFrameworkRoomState } from './roomState';
 import { CharacterId } from '../../character';
 import type { IExportOptions } from '../modules/common';
 
+// Fix for pnpm resolution weirdness
+import type { } from '../item/base';
+
 export const RestrictionOverrideSchema = z.object({
 	type: z.enum(['safemode', 'timeout']),
 	allowLeaveAt: z.number(),

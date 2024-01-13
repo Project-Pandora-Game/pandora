@@ -1,0 +1,151 @@
+import type { Immutable } from 'immer';
+
+import type { HexRGBAColorString } from '../../validation';
+import type { RoomDeviceLink, ItemRoomDevice } from './roomDevice';
+import type { AppearanceValidationResult } from '../appearanceValidation';
+import type { AssetProperties } from '../properties';
+import type { IExportOptions } from '../modules/common';
+import type { Asset } from '../asset';
+import type { ItemBundle, IItemLoadContext, IItemValidationContext, ItemTemplate } from './base';
+
+import { Assert, MemoizeNoArg } from '../../utility';
+import { RoomDevicePropertiesResult, GetPropertiesForSlot } from '../roomDeviceProperties';
+
+import { ItemBaseProps, ItemBase } from './_internal';
+
+declare module './_internal' {
+	interface InternalItemTypeMap {
+		roomDeviceWearablePart: ItemRoomDeviceWearablePart;
+	}
+}
+
+interface ItemRoomDeviceWearablePartProps extends ItemBaseProps<'roomDeviceWearablePart'> {
+	readonly roomDeviceLink: Immutable<RoomDeviceLink> | null;
+	readonly roomDevice: ItemRoomDevice | null;
+}
+export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart'> implements ItemRoomDeviceWearablePartProps {
+	public readonly roomDeviceLink: Immutable<RoomDeviceLink> | null;
+	public readonly roomDevice: ItemRoomDevice | null;
+
+	protected constructor(props: ItemRoomDeviceWearablePartProps, overrideProps?: Partial<ItemRoomDeviceWearablePartProps>) {
+		super(props, overrideProps);
+
+		this.roomDeviceLink = overrideProps?.roomDeviceLink !== undefined ? overrideProps.roomDeviceLink : props.roomDeviceLink;
+		this.roomDevice = overrideProps?.roomDevice !== undefined ? overrideProps.roomDevice : props.roomDevice;
+	}
+
+	protected override withProps(overrideProps: Partial<ItemRoomDeviceWearablePartProps>): ItemRoomDeviceWearablePart {
+		return new ItemRoomDeviceWearablePart(this, overrideProps);
+	}
+
+	public static loadFromBundle(asset: Asset<'roomDeviceWearablePart'>, bundle: ItemBundle, context: IItemLoadContext): ItemRoomDeviceWearablePart {
+		return new ItemRoomDeviceWearablePart({
+			...(ItemBase._parseBundle(asset, bundle, context)),
+			roomDeviceLink: bundle.roomDeviceLink ?? null,
+			roomDevice: null,
+		});
+	}
+
+	public override validate(context: IItemValidationContext): AppearanceValidationResult {
+		{
+			const r = super.validate(context);
+			if (!r.success)
+				return r;
+		}
+
+		// Room device wearable parts must be worn
+		if (context.location !== 'worn')
+			return {
+				success: false,
+				error: {
+					problem: 'contentNotAllowed',
+					asset: this.asset.id,
+				},
+			};
+
+		// We must have a valid link
+		if (this.roomDeviceLink == null)
+			return {
+				success: false,
+				error: {
+					problem: 'invalid',
+				},
+			};
+
+		const device = context.roomState?.items.find((item) => item.isType('roomDevice') && item.id === this.roomDeviceLink?.device);
+		if (
+			// Target device must exist
+			(device == null || device !== this.roomDevice) ||
+			// The device must have a matching slot
+			(device.asset.definition.slots[this.roomDeviceLink.slot]?.wearableAsset !== this.asset.id) ||
+			// The device must be deployed with this character in target slot
+			// TODO: We have no way to check that the character in the slot is us, because we don't have the character ID at this point
+			(!device.isDeployed() || !device.slotOccupancy.has(this.roomDeviceLink.slot))
+		) {
+			return {
+				success: false,
+				error: {
+					problem: 'invalid',
+				},
+			};
+		}
+
+		return { success: true };
+	}
+
+	/** Returns if this item can be transferred between inventories */
+	public override canBeTransferred(): boolean {
+		return false;
+	}
+
+	public override exportToTemplate(): ItemTemplate {
+		// Wearable part should create template of the device itself, not the wearable part
+		if (this.roomDevice != null)
+			return this.roomDevice.exportToTemplate();
+
+		// Fallback to creating the template of the wearable part (no one will be able to use it anyway and we avoid errors)
+		return super.exportToTemplate();
+	}
+
+	public override exportToBundle(options: IExportOptions): ItemBundle {
+		return {
+			...super.exportToBundle(options),
+			roomDeviceLink: this.roomDeviceLink ?? undefined,
+		};
+	}
+
+	public withLink(device: ItemRoomDevice, slot: string): ItemRoomDeviceWearablePart {
+		return this.withProps({
+			roomDeviceLink: {
+				device: device.id,
+				slot,
+			},
+			roomDevice: device,
+		});
+	}
+
+	public updateRoomStateLink(roomDevice: ItemRoomDevice | null): ItemRoomDeviceWearablePart {
+		Assert(roomDevice == null || this.roomDeviceLink?.device === roomDevice.id);
+		return this.withProps({
+			roomDevice,
+		});
+	}
+
+	public resolveColor(colorizationKey: string, roomDevice: ItemRoomDevice | null): HexRGBAColorString | undefined {
+		return roomDevice?.resolveColor(colorizationKey);
+	}
+
+	public getColorRibbon(roomDevice: ItemRoomDevice | null): HexRGBAColorString | undefined {
+		return roomDevice?.getColorRibbon();
+	}
+
+	@MemoizeNoArg
+	public override getPropertiesParts(): readonly Immutable<AssetProperties>[] {
+		const deviceProperties: RoomDevicePropertiesResult | undefined = this.roomDevice?.getRoomDeviceProperties();
+
+		return [
+			...super.getPropertiesParts(),
+			...(deviceProperties != null ? GetPropertiesForSlot(deviceProperties, this.roomDeviceLink!.slot) : []),
+		];
+	}
+}

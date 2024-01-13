@@ -1,4 +1,5 @@
 import React, { ReactElement } from 'react';
+import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/gameStateContextProvider';
 
 export function WikiSpaces(): ReactElement {
 	return (
@@ -20,25 +21,25 @@ export function WikiSpaces(): ReactElement {
 
 			<h3>Space-specific features</h3>
 			<ul>
-				<li><a href='#RO_Room_layout'>Room layout</a></li>
-				<li><a href='#RO_Space_ownership'>Space ownership</a></li>
-				<li><a href='#RO_Space_deletion'>Space deletion</a></li>
-				<li><a href='#RO_Space_persistence'>Space persistence</a></li>
-				<li><a href='#RO_Space_visibility'>Space visibility</a></li>
-				<li><a href='#RO_Space_access'>Space access</a></li>
-				<li><a href='#RO_Space_administration'>Space administration</a></li>
-				<li><a href='#RO_Leaving_a_space'>Leaving a space</a></li>
-				<li><a href='#RO_Personal_space'>Personal space</a></li>
-				<li><a href='#RO_Room_inventory'>Room inventory</a></li>
-				<li><a href='#RO_Room_chat_Chat_commands'>Room chat: Chat commands</a></li>
-				<li><a href='#RO_Room_chat_Chat_modes'>Room chat: Chat modes</a></li>
-				<li><a href='#RO_Room_chat_Editing_text'>Room chat: Editing text</a></li>
-				<li><a href='#RO_Room_chat_Whispering_someone'>Room chat: Whispering someone</a></li>
-				<li><a href='#RO_Room_chat_Text_formatting'>Room chat: Text formatting</a></li>
-				<li><a href='#RO_Room_chat_Chat_history'>Room chat: Chat history</a></li>
+				<li><a href='#SP_Room_layout'>Room layout</a></li>
+				<li><a href='#SP_Space_ownership'>Space ownership</a></li>
+				<li><a href='#SP_Space_deletion'>Space deletion</a></li>
+				<li><a href='#SP_Space_persistence'>Space persistence</a></li>
+				<li><a href='#SP_Space_visibility'>Space visibility</a></li>
+				<li><a href='#SP_Space_access'>Space access</a></li>
+				<li><a href='#SP_Space_administration'>Space administration</a></li>
+				<li><a href='#SP_Leaving_a_space'>Leaving a space</a></li>
+				<li><a href='#SP_Personal_space'>Personal space</a></li>
+				<li><a href='#SP_Room_inventory'>Room inventory</a></li>
+				<li><a href='#SP_Room_chat_Chat_commands'>Room chat: Chat commands</a></li>
+				<li><a href='#SP_Room_chat_Chat_modes'>Room chat: Chat modes</a></li>
+				<li><a href='#SP_Room_chat_Editing_text'>Room chat: Editing text</a></li>
+				<li><a href='#SP_Room_chat_Whispering_someone'>Room chat: Whispering someone</a></li>
+				<li><a href='#SP_Room_chat_Text_formatting'>Room chat: Text formatting</a></li>
+				<li><a href='#SP_Room_chat_Chat_history'>Room chat: Chat history</a></li>
 			</ul>
 
-			<h4 id='RO_Room_layout'>Room layout</h4>
+			<h4 id='SP_Room_layout'>Room layout</h4>
 			<p>
 				The room view in Pandora consists of the room canvas and the four tabs that show the chat per default.<br />
 				In a landscape view the tab is on the right side and it is on the bottom in a portrait view.
@@ -51,7 +52,7 @@ export function WikiSpaces(): ReactElement {
 				<li>If you experience performance issues, you can lower/disable graphics related features in Pandora's settings.</li>
 			</ul>
 
-			<h4 id='RO_Space_ownership'>Space ownership</h4>
+			<h4 id='SP_Space_ownership'>Space ownership</h4>
 			<p>
 				Spaces in Pandora are owned by one or more persons.
 			</p>
@@ -59,17 +60,21 @@ export function WikiSpaces(): ReactElement {
 				<li>Every owner is automatically admin in the space.</li>
 				<li>Player accounts that are not owner can still be admin of a space.</li>
 				<li>Creating a new space makes you automatically owner of it.</li>
-				<li>There is a limit to how many spaces you can own. You can see your ownership limit in the space search behind the heading "My spaces".</li>
 				<li>You currently cannot add other owners to your space. This is planned.</li>
+				<li>There is a limit to how many spaces you can own. You can see your ownership limit in the space search behind the heading "My spaces".</li>
+				<li>
+					If you want to create another space beyond your space ownership limit, you must select any of your owned spaces and either repurpose it or
+					give up ownership of that space (resulting in the space being deleted if it has no other owners).
+				</li>
 			</ul>
 
-			<h4 id='RO_Space_deletion'>Space deletion</h4>
+			<h4 id='SP_Space_deletion'>Space deletion</h4>
 			<p>
 				To permanently delete a space, you have to give up ownership over it. The space is automatically deleted if it has no other owners.
 				Removal of ownership can be done in the space search screen, when clicking on the space, or in the administration screen when inside the space.
 			</p>
 
-			<h4 id='RO_Space_persistence'>Space persistence</h4>
+			<h4 id='SP_Space_persistence'>Space persistence</h4>
 			<p>
 				Spaces in Pandora are not lost when they are empty. Every room inside the space will stay as it was when it was left, including characters that are offline inside.
 			</p>
@@ -79,7 +84,7 @@ export function WikiSpaces(): ReactElement {
 				<li>If characters will disconnect or log off inside a space, they will stay inside the current room, until they are removed from it manually or automatically.</li>
 			</ul>
 
-			<h4 id='RO_Space_visibility'>Space visibility</h4>
+			<h4 id='SP_Space_visibility'>Space visibility</h4>
 			<p>
 				Spaces in Pandora can be public or private, which affects who can see them.
 			</p>
@@ -94,7 +99,7 @@ export function WikiSpaces(): ReactElement {
 				</li>
 			</ul>
 
-			<h4 id='RO_Space_access'>Space access</h4>
+			<h4 id='SP_Space_access'>Space access</h4>
 			<p>
 				Spaces in Pandora that are visible can be joined unless they are password protected or a user is banned from it.
 			</p>
@@ -105,7 +110,7 @@ export function WikiSpaces(): ReactElement {
 				<li>No one can join a space if it is full, not even owners or admins of it.</li>
 			</ul>
 
-			<h4 id='RO_Space_administration'>Space administration</h4>
+			<h4 id='SP_Space_administration'>Space administration</h4>
 			<p>
 				You can find the button to administrate the current room and the space it is part of in the Room-tab.
 			</p>
@@ -126,7 +131,7 @@ export function WikiSpaces(): ReactElement {
 				</li>
 			</ul>
 
-			<h4 id='RO_Leaving_a_space'>Leaving a space</h4>
+			<h4 id='SP_Leaving_a_space'>Leaving a space</h4>
 			<p>
 				You leave a chat space with the top-right-most button that. Restraints or other effects may prevent you from being able to do that.
 			</p>
@@ -136,7 +141,7 @@ export function WikiSpaces(): ReactElement {
 				<li>Most regular restraints will not be able to prevent you from leaving a space.</li>
 			</ul>
 
-			<h4 id='RO_Personal_space'>Personal space</h4>
+			<h4 id='SP_Personal_space'>Personal space</h4>
 			<p>
 				Every character has their own personal space that does not count towards this limit and that cannot be entered by any
 				other character. It functions as a singleplayer lobby and cannot be deleted or given up.<br />
@@ -145,16 +150,17 @@ export function WikiSpaces(): ReactElement {
 				will not prevent you from leaving the personal space.
 			</p>
 
-			<h4 id='RO_Room_inventory'>Room inventory</h4>
+			<h4 id='SP_Room_inventory'>Room inventory</h4>
 			<p>
-				The room inventory shows all items that are inside the current room and can be picked up or used by other characters, if permitted.<br />
+				The room inventory shows all items that are inside the current room and can be picked up or used by other characters, if permitted
+				by the space configuration, or the <a href='/wiki/characters/#CH_Character_permissions'>character permissions</a> of the targeted character.<br />
 				From this screen, you can also create new items inside the room inventory, edit them, or delete them. Items stay in the inventory indefinitely
 				as long as they are not moved somewhere else, are deleted, or the room and/or space are deleted, e.g. by giving up ownership of a space.
 				Clicking on an item in the list opens its edit-view on the right
 				side. <a href='/wiki/items/#IT_Room-level_items'>Room devices</a> can be deployed to the room background in the edit-view by permitted parties.
 			</p>
 
-			<h4 id='RO_Room_chat_Chat_commands'>Room chat: Chat commands</h4>
+			<h4 id='SP_Room_chat_Chat_commands'>Room chat: Chat commands</h4>
 			<p>
 				There are also chat commands that either act as shortcuts to certain features or offer new functionality, such as playing games in the chat.
 				Type "/" into the chat field to see a list of all chat commands.
@@ -164,9 +170,9 @@ export function WikiSpaces(): ReactElement {
 				<li>The "tab"-key can also be used to autocomplete command arguments such as target characters or cycle through all of them</li>
 			</ul>
 
-			<h4 id='RO_Room_chat_Chat_modes'>Room chat: Chat modes</h4>
+			<h4 id='SP_Room_chat_Chat_modes'>Room chat: Chat modes</h4>
 			<p>
-				The chat is always in a specific chat mode, such as emote mode or <a href='/wiki/items/#SA_Out-of-character_communication'>OOC</a> mode.
+				The chat is always in a specific chat mode, such as emote mode or <a href='/wiki/safety/#SA_Out-of-character_communication'>OOC</a> mode.
 				The default mode is writing normal text to the whole room that can be formatted.<br />
 				You can write in another chat mode by either using a chat command or by pressing the bar with the white cog above the input field.
 				This toggles a dropdown menu that lets you switch to a different chat mode.<br />
@@ -189,9 +195,9 @@ export function WikiSpaces(): ReactElement {
 				</li>
 			</ul>
 
-			<h4 id='RO_Room_chat_Editing_text'>Room chat: Editing text</h4>
+			<h4 id='SP_Room_chat_Editing_text'>Room chat: Editing text</h4>
 			<p>
-				Pandora allows you to edit or even delete text you sent in the chat during the first minutes after posting it.<br />
+				Pandora allows you to edit or even delete text you sent in the chat during the first { MESSAGE_EDIT_TIMEOUT / 1000 / 60 } minutes after posting it.<br />
 				This works by right-clicking on any past text of yours or using the "Arrow-up" key to edit the last message specifically.
 			</p>
 			<ul>
@@ -200,7 +206,7 @@ export function WikiSpaces(): ReactElement {
 				<li>The message is tagged with a small "[edited]" on the right, next to the updated time stamp.</li>
 			</ul>
 
-			<h4 id='RO_Room_chat_Whispering_someone'>Room chat: Whispering someone</h4>
+			<h4 id='SP_Room_chat_Whispering_someone'>Room chat: Whispering someone</h4>
 			<p>
 				There are several ways to whisper someone in the same room.<br />
 				Any of them puts you into a whisper mode that you need to explicitly leave by using the "Cancel"-button above the chat input.
@@ -215,7 +221,7 @@ export function WikiSpaces(): ReactElement {
 				<li>If your whisper target goes offline, your whisper message will still be sent, but currently it will not be delivered.</li>
 			</ul>
 
-			<h4 id='RO_Room_chat_Text_formatting'>Room chat: Text formatting</h4>
+			<h4 id='SP_Room_chat_Text_formatting'>Room chat: Text formatting</h4>
 			<p>
 				Starting a message with "https://" will turn it into an inline-link.
 				Also, Pandora supports a part of the markdown syntax to write text italic or bold: "__bold text__" or "_italicized  text_"<br />
@@ -228,7 +234,7 @@ export function WikiSpaces(): ReactElement {
 				<li>No other markdown syntax is currently supported</li>
 			</ul>
 
-			<h4 id='RO_Room_chat_Chat_history'>Room chat: Chat history</h4>
+			<h4 id='SP_Room_chat_Chat_history'>Room chat: Chat history</h4>
 			<p>
 				The chat history is kept through page reloads and disconnects, as long as the browser tab is not closed. Additionally,
 				if a user only disconnects for a few seconds and no "character disconnected" message was yet shown to other users in the chat,

@@ -15,7 +15,7 @@ export function WikiCharacters(): ReactElement {
 			</p>
 			<p>
 				Every character has their
-				own <a href='/wiki/items/#RO_Personal_space'>personal space</a>, <a href='/wiki/items/#IT_Item_preferences_and_limits'>item preferences and limits</a>,
+				own <a href='/wiki/spaces/#SP_Personal_space'>personal space</a>, <a href='/wiki/items/#IT_Item_preferences_and_limits'>item preferences and limits</a>,
 				and they can have items and different <a href='/wiki/items/#IT_Body_parts'>body parts</a> added onto the character.
 			</p>
 
@@ -61,23 +61,37 @@ export function WikiCharacters(): ReactElement {
 			<h4 id='CH_Character_wardrobe'>Character wardrobe</h4>
 			<p>
 				You can enter the wardrobe under the "Room"-tab or by opening the character context menu.
-				There also is a button in the <a href='/wiki/items/#RO_Room_inventory'>room inventory</a>.
+				There also is a button in the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a>.
 			</p>
 			<ul>
 				<li>The "Randomization"-tab lets you change to a randomized appearance</li>
 				<li>The "Body"-tab allows you to change your character's body, but only if the space you are in allows that.</li>
 				<li>
 					The "Items"-tab shows has the section with the item on your body on the left and shows
-					what is inside the <a href='/wiki/items/#RO_Room_inventory'>room inventory</a> on the right.
+					what is inside the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a> on the right.
 					You can create and wear a new item under the "create new item"-tab there.
 				</li>
 			</ul>
 
 			<h4 id='CH_Character_permissions'>Character permissions</h4>
 			<p>
-				Permissions towards what other characters are allowed to do to your character are character-specific and can be found in the
-				"Permissions"-tab of the Pandora settings. Each permission has a different default setting,
-				so it is recommended to familiarize yourself with those and to adjust those settings to how you want them.
+				The settings on what other characters are allowed to do to your character can be found in the
+				"Permissions"-tab of the Pandora settings. Permissions are character-specific and not
+				account-wide. Each permission has a different default setting,
+				so it is recommended to familiarize yourself with those and to adjust those settings to how you want them.<br />
+				Note: In the future, you will be able to set permissions to "prompt", which will show you a confirmation popup
+				when someone tries to interact with you, but is missing only one or more permissions that you set to "prompt" you.
+			</p>
+			<p>
+				The basic group of permissions are the "interaction permissions". The very first permission to interact
+				with your character is the enabling permission for all other permissions. If someone does not have that, they
+				can do nothing, even if they have another permission for the specific interaction they want to do.
+			</p>
+			<p>
+				The "item limits" group of permissions relate to items you flagged with a star or question mark under
+				the <a href='/wiki/items/#IT_Item_preferences_and_limits'>"item limits"</a>-tab
+				of your wardrobe. These permissions are layered and depend upon each other:
+				To use items flagged as "maybe", the other character needs to also be permitted to use "favorite" and "normal" items.
 			</p>
 
 		</>

@@ -287,14 +287,22 @@ class Color {
 	}
 
 	public writeCss(style: CSSStyleDeclaration) {
-		const hue = this.hsv[0] / Color.maxHue * 360;
+		const hue = this.hsv[0] / Color.maxHue;
 		const saturation = this.hsv[1] / Color.maxSaturation;
 		const value = this.hsv[2] / Color.maxValue;
 		const alpha = this.alpha / Color.maxAlpha;
-		style.setProperty('--hue', hue.toString());
-		style.setProperty('--saturation', saturation.toString());
+
+		const [h, s, l] = Color.hsvToHsl([hue, saturation, value]);
+		style.setProperty('--hue', (h * 360).toString());
+		style.setProperty('--saturation', s.toString());
+		style.setProperty('--lightness', l.toString());
 		style.setProperty('--alpha', alpha.toString());
-		style.setProperty('--value', value.toString());
+
+		const hsl = ([h, s, l]: ColorArray) => `hsl(${h * 360}, ${s * 100}%, ${l * 100}%)`;
+		style.setProperty('--v-min', hsl(Color.hsvToHsl([hue, saturation, 0])));
+		style.setProperty('--v-max', hsl(Color.hsvToHsl([hue, saturation, 1])));
+		style.setProperty('--s-min', hsl(Color.hsvToHsl([hue, 0, value])));
+		style.setProperty('--s-max', hsl(Color.hsvToHsl([hue, 1, value])));
 	}
 
 	public toHex(): HexRGBAColorString {
@@ -403,6 +411,13 @@ class Color {
 			case 4: return [c, m, v];
 			case 5: return [v, m, c];
 		}
+	}
+
+	public static hsvToHsl([h, s, v]: ColorArray): ColorArray {
+		const l = v - v * s / 2;
+		const m = Math.min(l, 1 - l);
+		const s2 = m === 0 ? 0 : (v - l) / m;
+		return [h, s2, l];
 	}
 
 	/* eslint-enable no-bitwise */

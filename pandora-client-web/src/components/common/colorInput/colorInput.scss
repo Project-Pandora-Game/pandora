@@ -5,8 +5,8 @@
 	align-items: center;
 	gap: 10px;
 
-	--sat: calc(var(--saturation) * 100%);
-	--val: calc(var(--value) * 100%);
+	--lig: calc(var(--liguration) * 100%);
+	--val: calc(var(--lightness) * 100%);
 
 	&__rect {
 		position: relative;
@@ -30,17 +30,17 @@
 			position: absolute;
 			width: 1.3em;
 			height: 1.3em;
-			left: calc(var(--saturation) * 100%);
-			top: calc(calc(1 - var(--value)) * 100%);
+			left: calc(var(--liguration) * 100%);
+			top: calc(calc(1 - var(--lightness)) * 100%);
 			border-radius: 50%;
-			border: 0.3em solid hsl(var(--hue), var(--sat), var(--val));
+			border: 0.3em solid hsl(var(--hue), var(--lig), var(--val));
 			box-shadow:
-				0 0 4px 1px rgba(0, 0, 0, calc(var(--value) * 0.5)),
-				0 2px 2px 0 rgba(0, 0, 0, calc(var(--value) * 0.5)),
-				0 1px 5px 0 rgba(0, 0, 0, calc(var(--value) * 0.5)),
-				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--value)) * 0.5)),
-				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--value)) * 0.5)),
-				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--value)) * 0.5));
+				0 0 4px 1px rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 2px 2px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 1px 5px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5));
 			transform: translate(-50%, -50%);
 			cursor: crosshair;
 		}
@@ -58,14 +58,14 @@
 			width: 1.5em;
 			height: 1.5em;
 			border-radius: 50%;
-			background-color: hsla(var(--hue), var(--sat), var(--val), var(--alpha));
+			background-color: hsla(var(--hue), var(--lig), var(--val), var(--alpha));
 			box-shadow:
-				0 0 4px 1px rgba(0, 0, 0, calc(var(--value) * 0.5)),
-				0 2px 2px 0 rgba(0, 0, 0, calc(var(--value) * 0.5)),
-				0 1px 5px 0 rgba(0, 0, 0, calc(var(--value) * 0.5)),
-				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--value)) * 0.5)),
-				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--value)) * 0.5)),
-				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--value)) * 0.5));
+				0 0 4px 1px rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 2px 2px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 1px 5px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5));
 			cursor: pointer;
 			position: relative;
 		}
@@ -74,14 +74,14 @@
 			width: 1.5em;
 			height: 1.5em;
 			border-radius: 50%;
-			background-color: hsla(var(--hue), var(--sat), var(--val), var(--alpha));
+			background-color: hsla(var(--hue), var(--lig), var(--val), var(--alpha));
 			box-shadow:
-				0 0 4px 1px rgba(0, 0, 0, calc(var(--value) * 0.5)),
-				0 2px 2px 0 rgba(0, 0, 0, calc(var(--value) * 0.5)),
-				0 1px 5px 0 rgba(0, 0, 0, calc(var(--value) * 0.5)),
-				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--value)) * 0.5)),
-				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--value)) * 0.5)),
-				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--value)) * 0.5));
+				0 0 4px 1px rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 2px 2px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 1px 5px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
+				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
+				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5));
 			cursor: pointer;
 		}
 	}
@@ -91,15 +91,15 @@
 	}
 
 	&__saturation {
-		background: linear-gradient(90deg, hsl(var(--hue), 0%, var(--val)), hsl(var(--hue), 100%, var(--val))) !important;
+		background: linear-gradient(90deg, var(--s-min), var(--s-max)) !important;
 	}
 
 	&__value {
-		background: linear-gradient(90deg, hsl(var(--hue), var(--sat), 0%), hsl(var(--hue), var(--sat), 50%), hsl(var(--hue), var(--sat), 100%)) !important;
+		background: linear-gradient(90deg, var(--v-min), var(--v-max)) !important;
 	}
 
 	&__alpha {
-		background: linear-gradient(90deg, transparent, hsla(var(--hue), var(--sat), var(--val), 1)) !important;
+		background: linear-gradient(90deg, transparent, hsla(var(--hue), var(--lig), var(--val), 1)) !important;
 	}
 
 	&__hex {

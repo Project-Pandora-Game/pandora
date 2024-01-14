@@ -125,7 +125,7 @@ function ColorEditor({
 
 	useEffect(() => {
 		let newHex = color.toHex();
-		if (minAlpha === 255) {
+		if (minAlpha === Color.maxAlpha) {
 			newHex = newHex.substring(0, 7) as HexColorString;
 		}
 		if (newHex !== lastUpdate.current) {
@@ -136,12 +136,8 @@ function ColorEditor({
 	}, [color, onChange, minAlpha]);
 
 	useEffect(() => {
-		if (!ref.current) return;
-		ref.current.style.setProperty('--hue', (color.hue * 360).toString());
-		ref.current.style.setProperty('--saturation', color.saturation.toString());
-		ref.current.style.setProperty('--lightness', color.lightness.toString());
-		ref.current.style.setProperty('--alpha', color.alpha.toString());
-		ref.current.style.setProperty('--value', color.value.toString());
+		if (ref.current)
+			color.writeCss(ref.current.style);
 	}, [color, ref]);
 
 	useEffect(() => {
@@ -157,20 +153,20 @@ function ColorEditor({
 	}, [close]);
 
 	const setHue = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
-		setState(color.setHue(Number(ev.target.value) / 360));
+		setState(color.setHue(ev.target.valueAsNumber));
 	}, [color, setState]);
 	const setSaturation = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
-		setState(color.setSaturation(Number(ev.target.value) / 100));
+		setState(color.setSaturation(ev.target.valueAsNumber));
 	}, [color, setState]);
-	const setLightness = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
-		setState(color.setLightness(Number(ev.target.value) / 100));
+	const setValue = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
+		setState(color.setValue(ev.target.valueAsNumber));
 	}, [color, setState]);
 	const setAlpha = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
 		let value = Number(ev.target.value);
 		if (value < minAlpha) {
 			value = minAlpha;
 		}
-		setState(color.setAlpha(value / 255));
+		setState(color.setAlpha(value));
 	}, [minAlpha, color, setState]);
 
 	const onInputChange = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
@@ -179,8 +175,8 @@ function ColorEditor({
 		const result = HexRGBAColorStringSchema.safeParse(value);
 		if (result.success) {
 			let newColor = new Color(result.data);
-			if (color.alpha < minAlpha / 255) {
-				newColor = newColor.setAlpha(minAlpha / 255);
+			if (color.alpha < minAlpha) {
+				newColor = newColor.setAlpha(minAlpha);
 			}
 			setState(newColor);
 		}
@@ -204,8 +200,8 @@ function ColorEditor({
 		const x = ev.clientX - rect.left;
 		const y = ev.clientY - rect.top;
 		setState(color
-			.setSaturation(x / rect.width)
-			.setValue(1 - y / rect.height));
+			.setSaturation(Math.floor((x / rect.width) * Color.maxSaturation))
+			.setValue(Math.floor((1 - y / rect.height) * Color.maxValue)));
 	}, [dragging, color, setState]);
 
 	return (
@@ -217,14 +213,14 @@ function ColorEditor({
 						<div className='color-editor__rect__color__pointer' />
 					</div>
 				</div>
-				<input className='color-editor__hue' type='range' min='0' max='360' value={ Math.round(color.hue * 360) } onChange={ setHue } />
-				<input className='color-editor__saturation' type='range' min='0' max='100' value={ Math.round(color.saturation * 100) } onChange={ setSaturation } />
-				<input className='color-editor__lightness' type='range' min='0' max='100' value={ Math.round(color.lightness * 100) } onChange={ setLightness } />
+				<input className='color-editor__hue' type='range' min='0' max={ Color.maxHue } value={ color.hue } onChange={ setHue } />
+				<input className='color-editor__saturation' type='range' min='0' max={ Color.maxSaturation } value={ color.saturation } onChange={ setSaturation } />
+				<input className='color-editor__value' type='range' min='0' max={ Color.maxValue } value={ color.value } onChange={ setValue } />
 				{
-					minAlpha < 255 &&
-					<input className='color-editor__alpha' type='range' min='0' max='255' value={ Math.round(color.alpha * 255) } onChange={ setAlpha } />
+					minAlpha < Color.maxAlpha &&
+					<input className='color-editor__alpha' type='range' min='0' max={ Color.maxAlpha } value={ color.alpha } onChange={ setAlpha } />
 				}
-				<input className='color-editor_hex' type='text' value={ input } maxLength={ minAlpha === 255 ? 7 : 9 } onChange={ onInputChange } />
+				<input className='color-editor_hex' type='text' value={ input } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } onChange={ onInputChange } />
 			</div>
 		</DraggableDialog>
 	);
@@ -236,25 +232,29 @@ class Color {
 	/** Edge length constant */
 	private static e: number = 65537;
 
+	public static maxHue: number = Color.e * 6;
+	public static maxSaturation: number = Color.e;
+	public static maxValue: number = 255;
+	public static maxAlpha: number = 255;
+
 	public readonly rbg: ColorArray;
 	public readonly hsv: ColorArray;
 	public readonly alpha: number;
-	public readonly lightness: number;
 
 	public get hue(): number {
-		return this.hsv[0] / Color.e / 6;
+		return this.hsv[0];
 	}
 
 	public get saturation(): number {
-		return this.hsv[1] / Color.e;
+		return this.hsv[1];
 	}
 
 	public get value(): number {
-		return this.hsv[2] / 255;
+		return this.hsv[2];
 	}
 
 	public setHue(hue: number) {
-		const h = Math.floor(_.clamp(hue, 0, 1) * Color.e * 6);
+		const h = _.clamp(hue, 0, Color.maxHue);
 		return new Color({
 			hsv: [h, this.hsv[1], this.hsv[2]],
 			alpha: this.alpha,
@@ -262,21 +262,15 @@ class Color {
 	}
 
 	public setSaturation(saturation: number) {
-		const s = Math.floor(_.clamp(saturation, 0, 1) * Color.e);
+		const s = _.clamp(saturation, 0, Color.maxSaturation);
 		return new Color({
 			hsv: [this.hsv[0], s, this.hsv[2]],
 			alpha: this.alpha,
 		});
 	}
 
-	public setLightness(lightness: number) {
-		const l = _.clamp(lightness, 0, 1);
-		const s = this.saturation;
-		return this.setValue(l + s * Math.min(l, 1 - l));
-	}
-
 	public setAlpha(alpha: number) {
-		alpha = Math.floor(_.clamp(alpha, 0, 1) * 255);
+		alpha = _.clamp(alpha, 0, Color.maxAlpha);
 		return new Color({
 			rgb: this.rbg,
 			hsv: this.hsv,
@@ -285,11 +279,38 @@ class Color {
 	}
 
 	public setValue(value: number) {
-		const v = Math.floor(_.clamp(value, 0, 1) * 255);
+		const v = _.clamp(value, 0, Color.maxValue);
 		return new Color({
 			hsv: [this.hsv[0], this.hsv[1], v],
 			alpha: this.alpha,
 		});
+	}
+
+	public writeCss(style: CSSStyleDeclaration) {
+		style.setProperty('--rgb', `rgb(${this.rbg[0]}, ${this.rbg[1]}, ${this.rbg[2]})`);
+		style.setProperty('--rgba', `rgba(${this.rbg[0]}, ${this.rbg[1]}, ${this.rbg[2]}, ${this.alpha / Color.maxAlpha})`);
+
+		const hue = this.hue / Color.maxHue;
+		const saturation = this.saturation / Color.maxSaturation;
+		const value = this.value / Color.maxValue;
+		const alpha = this.alpha / Color.maxAlpha;
+
+		style.setProperty('--hue', (hue * 360).toString());
+		style.setProperty('--saturation', saturation.toString());
+		style.setProperty('--value', value.toString());
+		style.setProperty('--alpha', alpha.toString());
+
+		const hslLightness = value - value * saturation / 2;
+		style.setProperty('--hsl-lightness', hslLightness.toString());
+
+		style.setProperty('--gradient-saturation', Color.hsvLinerGradient([
+			[this.hue, 0, this.value],
+			[this.hue, Color.maxSaturation, this.value],
+		]));
+		style.setProperty('--gradient-value', Color.hsvLinerGradient([
+			[this.hue, this.saturation, 0],
+			[this.hue, this.saturation, Color.maxValue],
+		]));
 	}
 
 	public toHex(): HexRGBAColorString {
@@ -308,7 +329,6 @@ class Color {
 			this.rbg = color.rbg;
 			this.hsv = color.hsv;
 			this.alpha = color.alpha;
-			this.lightness = color.lightness;
 			return;
 		}
 		if (typeof color === 'string') {
@@ -316,20 +336,18 @@ class Color {
 			this.rbg = [r, g, b];
 			this.hsv = Color.rgbToHsv(this.rbg);
 			this.alpha = a;
-			this.lightness = this.calculateLightness();
 			return;
 		}
 		this.rbg = color.rgb ?? (color.hsv ? Color.hsvToRgb(color.hsv) : [0, 0, 0]);
 		this.hsv = color.hsv ?? Color.rgbToHsv(this.rbg);
 		this.alpha = color.alpha;
-		this.lightness = this.calculateLightness();
 	}
 
 	public static hexToRgba(hex: string): [number, number, number, number] {
 		const r = parseInt(hex.substring(1, 3), 16);
 		const g = parseInt(hex.substring(3, 5), 16);
 		const b = parseInt(hex.substring(5, 7), 16);
-		const a = hex.length > 7 ? parseInt(hex.substring(7, 9), 16) : 255;
+		const a = hex.length > 7 ? parseInt(hex.substring(7, 9), 16) : Color.maxAlpha;
 		return [r, g, b, a];
 	}
 
@@ -403,14 +421,16 @@ class Color {
 		}
 	}
 
-	/* eslint-enable no-bitwise */
-
-	public calculateLightness(): number {
-		const s = this.saturation;
-		const v = this.value;
-		const l = v * (1 - s / 2);
-		return l;
+	private static hsvLinerGradient(hsvs: ColorArray[]): string {
+		const colors = hsvs.map((hsv) => {
+			const [h, s, v] = hsv;
+			const [r, g, b] = Color.hsvToRgb([h, s, v]);
+			return `rgb(${r}, ${g}, ${b})`;
+		});
+		return `linear-gradient(to right, ${colors.join(', ')})`;
 	}
+
+	/* eslint-enable no-bitwise */
 
 	private static toHexPart(value: number) {
 		value = _.clamp(value, 0, 255);

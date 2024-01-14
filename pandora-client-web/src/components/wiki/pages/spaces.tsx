@@ -155,7 +155,8 @@ export function WikiSpaces(): ReactElement {
 				The room inventory shows all items that are inside the current room and can be picked up or used by other characters, if permitted
 				by the space configuration, or the <a href='/wiki/characters/#CH_Character_permissions'>character permissions</a> of the targeted character.<br />
 				From this screen, you can also create new items inside the room inventory, edit them, or delete them. Items stay in the inventory indefinitely
-				as long as they are not moved somewhere else, are deleted, or the room and/or space are deleted, e.g. by giving up ownership of a space.
+				as long as they are not moved somewhere else, are deleted, or the room and/or space are deleted, e.g. by giving
+				up <a href='#SP_Space_ownership'>ownership</a> of a space.
 				Clicking on an item in the list opens its edit-view on the right
 				side. <a href='/wiki/items/#IT_Room-level_items'>Room devices</a> can be deployed to the room background in the edit-view by permitted parties.
 			</p>
@@ -187,11 +188,12 @@ export function WikiSpaces(): ReactElement {
 				<li>
 					There are also shortcuts to write one-off messages while in the default, normal chat mode.<br />
 					These shortcuts are<br />
-					"((" - (( ooc message ))<br />
-					"*"  - *me-emote that gets prefixed with your character's name*<br />
-					"**" - **generic emote that doesn't get prefixed**<br />
-					Note: A single message can have multiple parts, so the above shortcut types can be mixed in a single message if each different one is in a new line.
-					But if you intend to format the rest of the message in the same way, you do not need to close a shortcut syntax at the end.
+					"((" - double round brackets - usage: (( ooc message )) <br />
+					"*"  - single asterisk/star - usage: *me-emote that gets prefixed with your character's name*<br />
+					"**" - double asterisk/star - usage: **generic emote that doesn't get prefixed**<br />
+					<i>Note</i>: A single message can have multiple different syntax parts, so the above shortcut types can be mixed in a single message if
+					each different one is in a new line.
+					That said, if you intend to format the rest of the message in the same way, you do not need to close a shortcut syntax at the end.
 				</li>
 			</ul>
 
@@ -213,7 +215,7 @@ export function WikiSpaces(): ReactElement {
 			</p>
 			<ul>
 				<li>You can click on a character name in the chat itself.</li>
-				<li>You can click on a character name under a character in the room and select "Whisper".</li>
+				<li>You can click on a character name under a character on the room background and select "Whisper".</li>
 				<li>You can click on the "Whisper"-button next to a character name in the "Room"-tab.</li>
 				<li>You can use the chat command "/w [target]" using either the character name or the character ID as whisper target argument.</li>
 				<li>Chat-related commands while in whisper mode (e.g., "/me") will be executed normally and not be whispered.</li>

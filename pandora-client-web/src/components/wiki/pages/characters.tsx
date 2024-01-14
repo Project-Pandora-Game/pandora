@@ -8,7 +8,7 @@ export function WikiCharacters(): ReactElement {
 			<h3>Introduction</h3>
 
 			<p>
-				An account in Pandora allows you to create a limited amount of characters (currently 5). You cannot rename or delete a character.
+				An account in Pandora allows you to create a limited amount of characters (typically 5). You cannot rename or delete a character.
 				Deleting a character of yours will be added in the future.<br />
 				Characters can assume a large number of different poses and can turn around. You can expand the manual pose section of
 				the "Poses"-tab to assume custom poses.

@@ -24,7 +24,7 @@ export function WikiIntroduction(): ReactElement {
 				<li>Flexible item layering possibilities</li>
 				<li>A direct messaging system that supports offline messages and a persistent message history</li>
 				<li>Ability to use the browser's back/forward buttons to navigate in Pandora</li>
-				<li>User safety features for emergencies only</li>
+				<li>User safety features for emergencies</li>
 				<li>A permission feature that allows the user to set who is allowed to do what</li>
 				<li>Storing complete outfits in the wardrobe and supporting import/export</li>
 			</ol>
@@ -49,18 +49,18 @@ export function WikiIntroduction(): ReactElement {
 			<p>
 				In Pandora, a user created space can consist of one or (in the future) several rooms and everything is persistent
 				(settings, <a href='/wiki/spaces/#SP_Room_inventory'>inventory</a>,
-				and <a href='/wiki/items/#IT_Room-level_items'>room devices</a> remain even after everyone has left). Every account can own a limited amount of spaces.
-				A space only gets deleted when it no longer has any owners.<br />
-				It is visible to everyone (except accounts banned from the space), if it is set to public and there is at least one admin inside the room.
-				You can always see spaces you are either admin or owner of.
+				and <a href='/wiki/items/#IT_Room-level_items'>room devices</a> remain even after everyone has left). Every account can own a
+				limited amount of spaces. A space only gets deleted when it no longer has any owners.<br />
+				Spaces set to public are visible to everyone, while at least one admin is online inside the room.
+				You can always see spaces you are either admin or owner of, such as when they are private or empty.
 			</p>
 			<p>
 				When a character goes offline inside a room, they will stay in the space the room is a part of and are shown as not connected.
 				By default, this is shown by the character having a ghost-like effect. This effect can be changed in the settings.
 			</p>
 			<p>
-				Every character also has their own <a href='/wiki/spaces/#SP_Personal_space'>personal space</a> that cannot be deleted and also not entered by any
-				other character.<br />
+				Every character also has their own <a href='/wiki/spaces/#SP_Personal_space'>personal space</a> that cannot be deleted
+				and also not entered by any other character.<br />
 				You can find more information about spaces and rooms under the <a href='/wiki/spaces/'>"spaces"-tab</a>.
 			</p>
 
@@ -87,8 +87,9 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>7. Stable code base</h4>
 			<p>
-				Pandora aims for a stable experience without random disconnects. But even if a short disconnect happens, the character will not be shown as disconnected for
-				some time, and you will still receive all the missed chat messages on reconnect, not losing anything.
+				Pandora aims for a stable experience without random disconnects. That said, in case a brief disconnect of several seconds would happen,
+				new chat messages in that time frame will be shown to the user on reconnect. They will only start missing messages after they
+				are mentioned in the chat as disconnected after that short grace period.<br />
 				Additionally, Pandora's server architecture is scalable to support future growth of its user base without compromising stability.
 			</p>
 
@@ -124,7 +125,7 @@ export function WikiIntroduction(): ReactElement {
 				Pandora has the ability to use the browser's back/forward buttons to navigate in Pandora and URLs can be copied, linked, and used.
 			</p>
 
-			<h4>12. User safety features for emergencies only</h4>
+			<h4>12. User safety features for emergencies</h4>
 			<p>
 				Beyond <a href='/wiki/safety/#SA_Out-of-character_communication'>OOC-communication</a>, there are two user safety features for
 				emergencies: <a href='/wiki/safety/#SA_Safemode'>Safemode</a> and <a href='/wiki/safety/#SA_Timeout_mode'>timeout mode</a>. You
@@ -152,15 +153,15 @@ export function WikiIntroduction(): ReactElement {
 
 			That's not all of course! We have many exciting features planned for the future:
 			<ul>
-				<li>Showing and managing relationships between characters</li>
-				<li>Allowing every item to have a custom name and description and enabling item templates to store those, too</li>
-				<li>Hearing impairment effect by assets</li>
 				<li>Advanced permission feature</li>
-				<li>Character rules</li>
 				<li>Allowing spaces to contain several connected rooms with a user-defined layout and ways to move from room to room</li>
+				<li>Showing and managing relationships between characters</li>
+				<li>Allowing every item to have a custom name and description</li>
+				<li>Hearing impairment effect by assets</li>
 				<li>Spectator mode for spaces that will help to not disrupt the chat during plays and that can be managed by space admins</li>
-				<li>Creating character contracts to temporarily or permanently agree on sets of rules and permissions between specific characters</li>
 				<li>Improvements to the new user experience & safety</li>
+				<li>Character rules</li>
+				<li>Room templates</li>
 				<li>New space role "storyteller" that can orchestrate a prepared roleplay without a physical presence in any room of the space</li>
 				... and many more, which can be found by looking at Pandora's issue list on <a href='https://github.com/Project-Pandora-Game/pandora/issues' target='_blank' rel='external nofollow noopener noreferrer'>GitHub</a>
 			</ul>

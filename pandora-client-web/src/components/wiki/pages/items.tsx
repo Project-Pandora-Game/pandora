@@ -9,9 +9,9 @@ export function WikiItems(): ReactElement {
 
 			<p>
 				Items in Pandora are created from assets, which are added to Pandora by artists and asset makers from the community.
-				Every character has access to all assets from the start and can freely create customized copies in the form of items.<br />
+				All assets are available from the start to all users, who can freely create customized items based on an asset.<br />
 				Almost all items have a customizable color. Some items also have one or more item modules. Aside from general modules, there can
-				be a <a href='/wiki/items/#IT_Storage_modules'>storage module</a> or <a href='/wiki/items/#IT_Lock_module'>lock module</a> on
+				be a <a href='#IT_Storage_modules'>storage module</a> or <a href='#IT_Lock_module'>lock modules</a> on
 				an item, depending on what it is. These features can be accessed in the <a href='/wiki/characters/#CH_Character_wardrobe'>character wardrobe</a> by clicking
 				on items.
 			</p>
@@ -73,9 +73,9 @@ export function WikiItems(): ReactElement {
 				<li>Room items with a blue icon below them have character slots. These icons can optionally be hidden under the "Room"-tab.</li>
 				<li>All users can interact with the character slots of room devices and use them if not occupied.</li>
 				<li>Currently, everyone can put someone else into a room device if they are <a href='/wiki/characters/#CH_Character_permissions'>permitted</a> to.</li>
-				<li>Some room devices have <a href='/wiki/items/#IT_Lock_module'>lock modules</a> that can for instance prevent a character from getting out of a room device slot.</li>
+				<li>Some room devices have <a href='#IT_Lock_module'>lock modules</a> that can for instance prevent a character from getting out of a room device slot.</li>
 				<li>You are unable to leave the room while your character occupies a character slot of a room device.</li>
-				<li>Room devices can also be stored in an <a href='/wiki/items/#IT_Saving_outfits'>outfit template</a>, like regular items.</li>
+				<li>Room devices can also be stored in an <a href='#IT_Saving_outfits'>outfit template</a>, like regular items.</li>
 			</ul>
 
 			<h4 id='IT_Storage_modules'>Storage modules</h4>
@@ -139,14 +139,14 @@ export function WikiItems(): ReactElement {
 				The "Items" and "Body"-tabs in the <a href='/wiki/characters/#CH_Character_wardrobe'>wardrobe</a> as
 				well as the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a> screen have an "Outfits"-tab that lets you access and manage all your custom outfits
 				stored on the Pandora server. An outfit template can contain normal
-				items, <a href='/wiki/items/#IT_Room-level_items'>room-level items</a>, body modifications, and even storage items. Therefore,
+				items, <a href='#IT_Room-level_items'>room-level items</a>, body modifications, and even storage items. Therefore,
 				an outfit is not related only to clothing, but is basically an item collection.
 			</p>
 			<ul>
 				<li>
 					Creating an outfit: After you clicked the button to create a new outfit, you need to start moving the items that you want to be part of the outfit one-by-one
 					from the left side (your worn items or the room's inventory) to the right side (the temporary outfit template you just created).<br />
-					<a href='/wiki/items/#IT_Item_layering_order'>Item order</a> is important and the following article gives tips on that aspect.
+					<a href='#IT_Item_layering_order'>Item order</a> is important and the following article gives tips on that aspect.
 				</li>
 				<li>
 					Storing an outfit: After you have completed your temporary outfit and given it a name, you can either save it on Pandora's server, if you have storage space left
@@ -179,11 +179,12 @@ export function WikiItems(): ReactElement {
 			<p>
 				Now when you make an outfit template from something you wear, you need to start from the bottom, not from the top,
 				because you are not undressing your character, but you are "dressing" a mannequin template doll by means of copying your outfit.
-				So you need to start from the item worn closest to the body, therefore bottom-up.
+				So you need to start from the item worn closest to the body, therefore bottom-up.<br />
+				When you want to use an outfit template to dress your character, you again need to start from the bottom, as you need to start with the item
+				worn closest to the body, like you would start dressing in reality, too.
 			</p>
 			<p>
-				When you want to use an outfit template to dress your character, you again need to start from the bottom, as you need to start with the item
-				worn closest to the body, like you would start dressing in reality, too. So, outfit template related direction is bottom-up and otherwise, top-down.<br />
+				In summary, the general dressing and undressing direction is top-down, but outfit template related directions are the opposite:<br />
 				👸🏽 → 🏠&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
 				🏠 → 👸🏽&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
 				👸🏽 → 💾&nbsp;&nbsp;&nbsp;&nbsp;order:⬆️<br />

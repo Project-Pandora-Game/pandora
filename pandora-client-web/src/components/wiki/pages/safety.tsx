@@ -64,7 +64,7 @@ export function WikiSafety(): ReactElement {
 			</p>
 			<p>
 				Safemode should be seen as a last resort that you will hopefully never need to use in the case when
-				your <a href='/wiki/safety/#SA_Out-of-character_communication'>OOC</a>-wishes were maliciously ignored or you were irresponsibly abandoned.
+				your <a href='#SA_Out-of-character_communication'>OOC</a>-wishes were maliciously ignored or you were irresponsibly abandoned.
 			</p>
 			<ul>
 				<li>You can enter safemode at any time by clicking the "Enter safemode"-button next to your character under the "Rooms"-tab.</li>

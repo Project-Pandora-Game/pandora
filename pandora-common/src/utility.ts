@@ -132,10 +132,11 @@ export function NaturalListJoin(list: string[]): string {
 /**
  * Shuffles an array in-place
  * @param array The array to shuffle
+ * @param source The random source to use, defaults to `Math`
  */
-export function ShuffleArray<T extends unknown[]>(array: T): T {
+export function ShuffleArray<T extends unknown[]>(array: T, source: { random(): number; } = Math): T {
 	for (let i = array.length - 1; i > 0; i--) {
-		const j = Math.floor(Math.random() * (i + 1));
+		const j = Math.floor(source.random() * (i + 1));
 		[array[i], array[j]] = [array[j], array[i]];
 	}
 	return array;

@@ -10,7 +10,7 @@ import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInt
 import { Immutable } from 'immer';
 import { PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema } from '../gameLogic';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
-import { AssetPreferencesSchema } from '../character/assetPreferences';
+import { AssetPreferencesPublicSchema } from '../character/assetPreferences';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/item/base';
@@ -70,7 +70,7 @@ export const ClientShardSchema = {
 		response: null,
 	},
 	updateAssetPreferences: {
-		request: AssetPreferencesSchema.partial(),
+		request: AssetPreferencesPublicSchema.partial(),
 		response: z.object({
 			result: z.enum(['ok', 'invalid']),
 		}),

@@ -1,7 +1,7 @@
 import React, { ReactElement, useCallback, useState } from 'react';
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
-import { GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, MakePermissionConfigFromDefault, PermissionConfig, PermissionGroup } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferenceType, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfig, PermissionGroup } from 'pandora-common';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ModalDialog } from '../dialog/dialog';
 import { Column, Row } from '../common/container/container';
@@ -17,7 +17,10 @@ export function PermissionsSettings(): ReactElement | null {
 		return <>No character selected</>;
 
 	return (
-		<InteractionPermissions />
+		<>
+			<InteractionPermissions />
+			<ItemLimitsPermissions />
+		</>
 	);
 }
 
@@ -53,6 +56,47 @@ function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
 					hide={ () => setShowConfig(false) }
 					permissionGroup='interaction'
 					permissionId={ id }
+				/>
+			) }
+		</div>
+	);
+}
+
+function ItemLimitsPermissions(): ReactElement {
+	return (
+		<fieldset>
+			<legend>Item Limits</legend>
+			<i>Allow other characters to interact with worn items that are marked as...</i>
+			{
+				KnownObject.keys(ASSET_PREFERENCES_PERMISSIONS).map((group) => (
+					<ItemLimitsSettings key={ group } group={ group } />
+				))
+			}
+		</fieldset>
+	);
+}
+
+function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactElement | null {
+	const config = ASSET_PREFERENCES_PERMISSIONS[group];
+	const [showConfig, setShowConfig] = useState(false);
+
+	if (config == null)
+		return null;
+
+	return (
+		<div className='input-row'>
+			<label>{ config.visibleName }</label>
+			<Button
+				className='slim'
+				onClick={ () => setShowConfig(true) }
+			>
+				Configure permission
+			</Button>
+			{ showConfig && (
+				<PermissionConfigDialog
+					hide={ () => setShowConfig(false) }
+					permissionGroup='assetPreferences'
+					permissionId={ group }
 				/>
 			) }
 		</div>

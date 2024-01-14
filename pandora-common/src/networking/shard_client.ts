@@ -1,13 +1,14 @@
-import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified, SocketInterfaceDefinition } from './helpers';
-import type { CharacterId } from '../character/characterTypes';
-import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData';
-import type { AssetsDefinitionFile } from '../assets/definitions';
-import type { IChatMessage, ChatCharacterStatus } from '../chat/chat';
-import { ZodCast } from '../validation';
-import { Satisfies } from '../utility';
-import { AssetFrameworkGlobalStateClientBundle } from '../assets/state/globalState';
-import { SpaceClientInfo, SpaceId } from '../space/space';
 import { Immutable } from 'immer';
+import type { AssetsDefinitionFile } from '../assets/definitions';
+import { AssetFrameworkGlobalStateClientBundle } from '../assets/state/globalState';
+import { AssetPreferencesPublic } from '../character';
+import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData';
+import type { CharacterId } from '../character/characterTypes';
+import type { ChatCharacterStatus, IChatMessage } from '../chat/chat';
+import { SpaceClientInfo, SpaceId } from '../space/space';
+import { Satisfies } from '../utility';
+import { ZodCast } from '../validation';
+import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 
 // Fix for pnpm resolution weirdness
 import type { } from 'zod';
@@ -15,6 +16,7 @@ import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
 
 export type ICharacterRoomData = ICharacterPublicData & {
+	assetPreferences: AssetPreferencesPublic;
 	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
 	position: CharacterRoomPosition;
 	isOnline: boolean;
@@ -40,7 +42,7 @@ export type IShardClientChangeEvents = 'permissions';
 export const ShardClientSchema = {
 	load: {
 		request: ZodCast<{
-			character: ICharacterPrivateData;
+			character: ICharacterPrivateData & ICharacterRoomData;
 			globalState: AssetFrameworkGlobalStateClientBundle;
 			space: SpaceLoadData;
 			assetsDefinition: Immutable<AssetsDefinitionFile>;

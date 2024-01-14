@@ -12,7 +12,8 @@ import { Immutable } from 'immer';
 import { GameLogicCharacter } from '../gameLogic/character/character';
 import { PermissionGroup } from '../gameLogic';
 import { CharacterId } from './characterTypes';
-import { AssetPreferenceResolution, ResolveAssetPreference } from './assetPreferences';
+import { AssetPreferenceResolution } from './assetPreferences';
+import { AssertNever } from '../utility';
 
 export enum ItemInteractionType {
 	/**
@@ -284,7 +285,7 @@ export class CharacterRestrictionsManager {
 			if (target.character.id === this.character.id)
 				return { allowed: true };
 
-			const resolution = ResolveAssetPreference(target.character.assetPreferences, asset, this.character.id);
+			const resolution = target.character.assetPreferences.resolveAssetPreference(asset, this.character.id);
 			switch (resolution.preference) {
 				case 'doNotRender':
 				case 'prevent':
@@ -296,10 +297,23 @@ export class CharacterRestrictionsManager {
 							resolution,
 						},
 					};
-				case 'favorite':
-				case 'normal':
 				case 'maybe':
+					context.addRequiredPermission(
+						target.character.assetPreferences.getPreferencePermission('maybe'),
+					);
+				// Fallthrough
+				case 'normal':
+					context.addRequiredPermission(
+						target.character.assetPreferences.getPreferencePermission('normal'),
+					);
+				// Fallthrough
+				case 'favorite':
+					context.addRequiredPermission(
+						target.character.assetPreferences.getPreferencePermission('favorite'),
+					);
 					break;
+				default:
+					AssertNever(resolution.preference);
 			}
 		}
 
@@ -444,6 +458,13 @@ export class CharacterRestrictionsManager {
 			r = this.hasPermissionForItemContents(context, target, item);
 			if (!r.allowed)
 				return r;
+		}
+
+		// Styling the item is a "color"-like interaction
+		if (interaction === ItemInteractionType.STYLING) {
+			if (target.type === 'character') {
+				context.addInteraction(target.character, 'changeItemColor');
+			}
 		}
 
 		const properties = item.getProperties();

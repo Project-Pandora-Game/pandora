@@ -1,7 +1,7 @@
 import { Immutable } from 'immer';
 import { InteractionGenericId } from './interactionData';
 import { PermissionConfigDefault } from '../permissions';
-import { ParseArrayNotEmpty } from '../../utility';
+import { KnownObject, ParseArrayNotEmpty } from '../../utility';
 
 //#region Config for existing interactions; when adding an interaction edit only this
 
@@ -16,6 +16,12 @@ export const INTERACTION_CONFIG = {
 		visibleName: `Modify this character's body`,
 		defaultPermissions: {
 			allowOthers: false,
+		},
+	},
+	changeItemColor: {
+		visibleName: 'Change the color or style of worn items',
+		defaultPermissions: {
+			allowOthers: true,
 		},
 	},
 	useStorageModule: {
@@ -41,7 +47,7 @@ export const INTERACTION_CONFIG = {
 //#endregion
 
 export const INTERACTION_IDS = ParseArrayNotEmpty(
-	Object.keys(INTERACTION_CONFIG) as (keyof typeof INTERACTION_CONFIG)[],
+	KnownObject.keys(INTERACTION_CONFIG),
 );
 export type InteractionId = keyof typeof INTERACTION_CONFIG;
 

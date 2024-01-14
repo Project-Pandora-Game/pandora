@@ -3,6 +3,7 @@ import {
 	AppearanceAction,
 	AppearanceActionProblem,
 	Asset,
+	EMPTY_ARRAY,
 	IsNotNullable,
 } from 'pandora-common';
 import React, { ReactElement, useEffect, useMemo, useState } from 'react';
@@ -15,7 +16,6 @@ import { useGraphicsUrl } from '../../assets/graphicsManager';
 import { useWardrobeContext, useWardrobeExecuteChecked } from './wardrobeContext';
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import _ from 'lodash';
-import { usePermissionCheck } from '../gameContext/permissionCheckProvider';
 import { useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 import { useAssetPreferenceVisibilityCheck } from '../../graphics/graphicsCharacter';
 
@@ -97,12 +97,7 @@ export function WardrobeActionButton({
 		onFailure,
 	});
 
-	const permissionProblems = usePermissionCheck(check?.requiredPermissions);
-
-	const finalProblems = useMemo<readonly AppearanceActionProblem[]>(() => check != null ? [
-		...check.problems,
-		...permissionProblems,
-	] : [], [check, permissionProblems]);
+	const finalProblems: readonly AppearanceActionProblem[] = check?.problems ?? EMPTY_ARRAY;
 
 	useEffect(() => {
 		if (!isHovering || !showHoverPreview || check == null || !check.valid || finalProblems.length > 0)

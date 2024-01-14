@@ -7,7 +7,8 @@ import {
 	Asset,
 	AssetPreferenceType,
 	AssetPreferenceTypeSchema,
-	AssetPreferences,
+	AssetPreferencesPublic,
+	EMPTY_ARRAY,
 	ItemContainerPath,
 	ResolveAssetPreference,
 } from 'pandora-common';
@@ -22,7 +23,6 @@ import { useWardrobeContext, useWardrobeExecuteChecked } from '../wardrobeContex
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
 import { ActionWarning, AttributeButton, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
-import { usePermissionCheck } from '../../gameContext/permissionCheckProvider';
 import { useCharacterDataOptional } from '../../../character/character';
 import { Immutable } from 'immer';
 
@@ -271,12 +271,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	const check = useStaggeredAppearanceActionResult(action, { lowPriority: true });
 	const [execute] = useWardrobeExecuteChecked(action, check);
 
-	const permissionProblems = usePermissionCheck(check?.requiredPermissions);
-
-	const finalProblems = useMemo<readonly AppearanceActionProblem[]>(() => check != null ? [
-		...check.problems,
-		...permissionProblems,
-	] : [], [check, permissionProblems]);
+	const finalProblems: readonly AppearanceActionProblem[] = check?.problems ?? EMPTY_ARRAY;
 
 	useEffect(() => {
 		if (!isHovering || !showHoverPreview || check == null || !check.valid || finalProblems.length > 0)
@@ -382,7 +377,7 @@ function InventoryAssetDropArea(): ReactElement | null {
 	);
 }
 
-export function useAssetPreferences(): Immutable<AssetPreferences> {
+export function useAssetPreferences(): Immutable<AssetPreferencesPublic> {
 	const { target } = useWardrobeContext();
 	const characterPreferences = useCharacterDataOptional(target.type === 'character' ? target : null)?.assetPreferences;
 

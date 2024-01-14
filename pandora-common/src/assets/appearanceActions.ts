@@ -223,20 +223,13 @@ export function DoAppearanceAction(
 			if (item == null)
 				return processingContext.invalid();
 			// Player adding the item must be able to use it
-			const r = playerRestrictionManager.canUseItemDirect(
-				processingContext,
+			processingContext.checkCanUseItemDirect(
 				target,
 				action.container,
 				item,
 				ItemInteractionType.ADD_REMOVE,
 				action.container.length === 0 ? action.insertBefore : undefined,
 			);
-			if (!r.allowed) {
-				processingContext.addProblem({
-					result: 'restrictionError',
-					restriction: r.restriction,
-				});
-			}
 
 			const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 			if (!targetManipulator)
@@ -252,13 +245,7 @@ export function DoAppearanceAction(
 			if (!target)
 				return processingContext.invalid();
 			// Player removing the item must be able to use it
-			const r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.ADD_REMOVE);
-			if (!r.allowed) {
-				processingContext.addProblem({
-					result: 'restrictionError',
-					restriction: r.restriction,
-				});
-			}
+			processingContext.checkCanUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
 
 			// Room device wearable parts cannot be deleted, you have to leave the device instead
 			const item = target.getItem(action.item);
@@ -289,29 +276,16 @@ export function DoAppearanceAction(
 				return processingContext.invalid();
 
 			// Player removing the item must be able to use it on source
-			let r = playerRestrictionManager.canUseItemDirect(processingContext, source, action.item.container, item, ItemInteractionType.ADD_REMOVE);
-			if (!r.allowed) {
-				processingContext.addProblem({
-					result: 'restrictionError',
-					restriction: r.restriction,
-				});
-			}
+			processingContext.checkCanUseItemDirect(source, action.item.container, item, ItemInteractionType.ADD_REMOVE);
 
 			// Player adding the item must be able to use it on target
-			r = playerRestrictionManager.canUseItemDirect(
-				processingContext,
+			processingContext.checkCanUseItemDirect(
 				target,
 				action.container,
 				item,
 				ItemInteractionType.ADD_REMOVE,
 				action.container.length === 0 ? action.insertBefore : undefined,
 			);
-			if (!r.allowed) {
-				processingContext.addProblem({
-					result: 'restrictionError',
-					restriction: r.restriction,
-				});
-			}
 
 			const sourceManipulator = processingContext.manipulator.getManipulatorFor(action.source);
 			const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
@@ -328,13 +302,7 @@ export function DoAppearanceAction(
 			if (!target)
 				return processingContext.invalid();
 			// Player moving the item must be able to interact with the item
-			let r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.ADD_REMOVE);
-			if (!r.allowed) {
-				processingContext.addProblem({
-					result: 'restrictionError',
-					restriction: r.restriction,
-				});
-			}
+			processingContext.checkCanUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
 
 			const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 
@@ -345,13 +313,7 @@ export function DoAppearanceAction(
 				const newPos = currentPos + action.shift;
 
 				if (newPos >= 0 && newPos < items.length) {
-					r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.ADD_REMOVE, items[newPos].id);
-					if (!r.allowed) {
-						processingContext.addProblem({
-							result: 'restrictionError',
-							restriction: r.restriction,
-						});
-					}
+					processingContext.checkCanUseItem(target, action.item, ItemInteractionType.ADD_REMOVE, items[newPos].id);
 				}
 			}
 
@@ -367,23 +329,11 @@ export function DoAppearanceAction(
 				return processingContext.invalid();
 			const item = target.getItem(action.item);
 			// To manipulate the color of room devices, player must be an admin
-			if (item?.isType('roomDevice') && !playerRestrictionManager.isCurrentSpaceAdmin()) {
-				processingContext.addProblem({
-					result: 'restrictionError',
-					restriction: {
-						type: 'modifyRoomRestriction',
-						reason: 'notAdmin',
-					},
-				});
+			if (item?.isType('roomDevice')) {
+				processingContext.checkPlayerIsSpaceAdmin();
 			}
 			// Player coloring the item must be able to interact with the item
-			const r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.STYLING);
-			if (!r.allowed) {
-				processingContext.addProblem({
-					result: 'restrictionError',
-					restriction: r.restriction,
-				});
-			}
+			processingContext.checkCanUseItem(target, action.item, ItemInteractionType.STYLING);
 
 			const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 			if (!ActionColorItem(targetManipulator, action.item, action.color))
@@ -412,13 +362,7 @@ export function DoAppearanceAction(
 			if (!target)
 				return processingContext.invalid();
 
-			const r = playerRestrictionManager.canInteractWithTarget(processingContext, target);
-			if (!r.allowed) {
-				processingContext.addProblem({
-					result: 'restrictionError',
-					restriction: r.restriction,
-				});
-			}
+			processingContext.checkInteractWithTarget(target);
 
 			if (!processingContext.manipulator.produceCharacterState(action.target, (character) => {
 				return character.produceWithPose(action, action.type);
@@ -434,13 +378,7 @@ export function DoAppearanceAction(
 			if (!target)
 				return processingContext.invalid();
 
-			const r = playerRestrictionManager.canInteractWithTarget(processingContext, target);
-			if (!r.allowed) {
-				processingContext.addProblem({
-					result: 'restrictionError',
-					restriction: r.restriction,
-				});
-			}
+			processingContext.checkInteractWithTarget(target);
 
 			if (!processingContext.manipulator.produceCharacterState(action.target, (character) => {
 				return character.produceWithView(action.view);
@@ -495,23 +433,10 @@ export function DoAppearanceAction(
 			if (!target)
 				return processingContext.invalid();
 			// Player deploying the device must be able to interact with it
-			const r = playerRestrictionManager.canUseItem(processingContext, target, action.item, ItemInteractionType.MODIFY);
-			if (!r.allowed) {
-				processingContext.addProblem({
-					result: 'restrictionError',
-					restriction: r.restriction,
-				});
-			}
+			processingContext.checkCanUseItem(target, action.item, ItemInteractionType.MODIFY);
+
 			// To manipulate room devices, player must be an admin
-			if (!playerRestrictionManager.isCurrentSpaceAdmin()) {
-				processingContext.addProblem({
-					result: 'restrictionError',
-					restriction: {
-						type: 'modifyRoomRestriction',
-						reason: 'notAdmin',
-					},
-				});
-			}
+			processingContext.checkPlayerIsSpaceAdmin();
 
 			const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 			if (!ActionRoomDeviceDeploy(processingContext, targetManipulator, action.item, action.deployment))
@@ -720,18 +645,11 @@ export function ActionModuleAction({
 	action,
 	processingContext,
 }: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionModuleAction>>): AppearanceActionProcessingResult {
-	const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
 	const target = processingContext.getTarget(action.target);
 	if (!target)
 		return processingContext.invalid();
 	// Player doing the action must be able to interact with the item
-	const r = playerRestrictionManager.canUseItemModule(processingContext, target, action.item, action.module);
-	if (!r.allowed) {
-		processingContext.addProblem({
-			result: 'restrictionError',
-			restriction: r.restriction,
-		});
-	}
+	processingContext.checkCanUseItemModule(target, action.item, action.module);
 
 	const rootManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 
@@ -984,7 +902,6 @@ export function ActionRoomDeviceEnter({
 	processingContext,
 	assetManager,
 }: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionRoomDeviceEnter>>): AppearanceActionProcessingResult {
-	const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
 	const target = processingContext.getTarget(action.target);
 	if (!target)
 		return processingContext.invalid();
@@ -1005,13 +922,7 @@ export function ActionRoomDeviceEnter({
 		return processingContext.invalid();
 
 	// Player must be able to interact with the device
-	let r = playerRestrictionManager.canUseItemDirect(processingContext, target, action.item.container, item, ItemInteractionType.MODIFY);
-	if (!r.allowed) {
-		processingContext.addProblem({
-			result: 'restrictionError',
-			restriction: r.restriction,
-		});
-	}
+	processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.MODIFY);
 
 	// We must have target character
 	const targetCharacter = processingContext.getTarget(action.character);
@@ -1022,13 +933,7 @@ export function ActionRoomDeviceEnter({
 		.createItem(action.itemId, asset)
 		.withLink(item, action.slot);
 	// Player adding the item must be able to use it
-	r = playerRestrictionManager.canUseItemDirect(processingContext, targetCharacter, [], wearableItem, ItemInteractionType.ADD_REMOVE);
-	if (!r.allowed) {
-		processingContext.addProblem({
-			result: 'restrictionError',
-			restriction: r.restriction,
-		});
-	}
+	processingContext.checkCanUseItemDirect(targetCharacter, [], wearableItem, ItemInteractionType.ADD_REMOVE);
 
 	// Actual action
 
@@ -1077,7 +982,6 @@ export function ActionRoomDeviceLeave({
 	processingContext,
 	assetManager,
 }: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionRoomDeviceLeave>>): AppearanceActionProcessingResult {
-	const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
 	const target = processingContext.getTarget(action.target);
 	if (!target)
 		return processingContext.invalid();
@@ -1099,13 +1003,7 @@ export function ActionRoomDeviceLeave({
 		return processingContext.invalid();
 
 	// Player must be able to interact with the device
-	let r = playerRestrictionManager.canUseItemDirect(processingContext, target, action.item.container, item, ItemInteractionType.MODIFY);
-	if (!r.allowed) {
-		processingContext.addProblem({
-			result: 'restrictionError',
-			restriction: r.restriction,
-		});
-	}
+	processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.MODIFY);
 
 	const roomManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 
@@ -1131,16 +1029,10 @@ export function ActionRoomDeviceLeave({
 		if (wearablePart != null) {
 
 			// Player must be able to remove the item
-			r = playerRestrictionManager.canUseItem(processingContext, targetCharacter, {
+			processingContext.checkCanUseItem(targetCharacter, {
 				container: [],
 				itemId: wearablePart.id,
 			}, ItemInteractionType.ADD_REMOVE);
-			if (!r.allowed) {
-				processingContext.addProblem({
-					result: 'restrictionError',
-					restriction: r.restriction,
-				});
-			}
 
 			// Actually remove the item
 			const removed = characterManipulator.removeMatchingItems((i) => i.asset === asset);

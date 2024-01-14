@@ -29,13 +29,14 @@ import {
 	GameLogicCharacterServer,
 	IShardClientChangeEvents,
 	NOT_NARROWING_FALSE,
-	AssetPreferences,
+	AssetPreferencesPublic,
 	ResolveAssetPreference,
 	KnownObject,
 	CleanupAssetPreferences,
 	CHARACTER_SHARD_UPDATEABLE_PROPERTIES,
 	CloneDeepMutable,
 	ROOM_INVENTORY_BUNDLE_DEFAULT,
+	ICharacterRoomData,
 } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Space } from '../spaces/space';
@@ -45,8 +46,9 @@ import { ClientConnection } from '../networking/connection_client';
 import { PersonalSpace } from '../spaces/personalSpace';
 import { assetManager } from '../assets/assetManager';
 
-import _, { cloneDeep, isEqual } from 'lodash';
+import _, { isEqual } from 'lodash';
 import { diffString } from 'json-diff';
+import { Immutable } from 'immer';
 
 /** Time (in ms) after which manager prunes character without any active connection */
 export const CHARACTER_TIMEOUT = 30_000;
@@ -155,8 +157,8 @@ export class Character {
 		return this.data.settings;
 	}
 
-	public get assetPreferences(): Readonly<AssetPreferences> {
-		return this.data.assetPreferences;
+	public get assetPreferences(): Immutable<AssetPreferencesPublic> {
+		return this.gameLogicCharacter.assetPreferences.currentPreferences;
 	}
 
 	public readonly gameLogicCharacter: GameLogicCharacterServer;
@@ -195,7 +197,8 @@ export class Character {
 		this._personalSpace = new PersonalSpace(this, data.personalRoom?.inventory ?? CloneDeepMutable(ROOM_INVENTORY_BUNDLE_DEFAULT));
 
 		const originalInteractionConfig = data.interactionConfig;
-		this.gameLogicCharacter = new GameLogicCharacterServer(data, this.logger.prefixMessages('[GameLogic]'));
+		const originalAssetPreferencesConfig = CloneDeepMutable(data.assetPreferences);
+		this.gameLogicCharacter = new GameLogicCharacterServer(data, assetManager, this.logger.prefixMessages('[GameLogic]'));
 
 		this.setConnection(null);
 		Assert(this._clientTimeout == null || connectSecret != null);
@@ -217,6 +220,12 @@ export class Character {
 			if (type === 'interactions') {
 				this.setValue('interactionConfig', this.gameLogicCharacter.interactions.getData(), false);
 				this._emitSomethingChanged('permissions');
+			} else if (type === 'assetPreferences') {
+				this.setValue('assetPreferences', this.gameLogicCharacter.assetPreferences.getData(), false);
+				this._sendDataUpdate({
+					assetPreferences: this.assetPreferences,
+				});
+				this._emitSomethingChanged('permissions');
 			} else {
 				AssertNever(type);
 			}
@@ -224,11 +233,13 @@ export class Character {
 
 		const currentInteractionConfig = this.gameLogicCharacter.interactions.getData();
 		if (!isEqual(originalInteractionConfig, currentInteractionConfig)) {
+			this.logger.debug('Migrated interaction config');
 			this.setValue('interactionConfig', currentInteractionConfig, false);
 		}
-		const assetPreferences = cloneDeep(this.data.assetPreferences);
-		if (CleanupAssetPreferences(assetManager, assetPreferences)) {
-			this.setValue('assetPreferences', assetPreferences, true);
+		const currentAssetPreferencesConfig = this.gameLogicCharacter.assetPreferences.getData();
+		if (!isEqual(originalAssetPreferencesConfig, currentAssetPreferencesConfig)) {
+			this.logger.debug('Migrated asset preferences');
+			this.setValue('assetPreferences', currentAssetPreferencesConfig, false);
 		}
 
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);
@@ -430,20 +441,22 @@ export class Character {
 		return result.data;
 	}
 
-	public getPublicData(): ICharacterPublicData {
+	public getRoomData(): ICharacterRoomData {
 		return {
 			id: this.id,
 			accountId: this.accountId,
 			name: this.name,
 			profileDescription: this.profileDescription,
 			settings: this.settings,
+			position: this.position,
+			isOnline: this.isOnline,
 			assetPreferences: this.assetPreferences,
 		};
 	}
 
-	public getPrivateData(): ICharacterPrivateData {
+	public getPrivateData(): ICharacterPrivateData & ICharacterRoomData {
 		return {
-			...this.getPublicData(),
+			...this.getRoomData(),
 			inCreation: this.data.inCreation,
 			created: this.data.created,
 		};
@@ -554,15 +567,23 @@ export class Character {
 		this.modified.add(key);
 
 		if (intoSpace) {
-			this._loadedSpace?.sendUpdateToAllCharacters({
-				characters: {
-					[this.id]: {
-						[key]: value,
-					},
-				},
+			this._sendDataUpdate({
+				[key]: value,
 			});
 		} else {
 			this.connection?.sendMessage('updateCharacter', { [key]: value });
+		}
+	}
+
+	private _sendDataUpdate(updatedData: Partial<ICharacterRoomData>): void {
+		if (this._loadedSpace != null) {
+			this._loadedSpace.sendUpdateToAllCharacters({
+				characters: {
+					[this.id]: updatedData,
+				},
+			});
+		} else {
+			this.connection?.sendMessage('updateCharacter', updatedData);
 		}
 	}
 
@@ -600,12 +621,12 @@ export class Character {
 		}, true);
 	}
 
-	public setAssetPreferences(newPreferences: Partial<AssetPreferences>): 'ok' | 'invalid' {
+	public setAssetPreferences(newPreferences: Partial<AssetPreferencesPublic>): 'ok' | 'invalid' {
 		if (CleanupAssetPreferences(assetManager, newPreferences))
 			return 'invalid';
 
 		let changed = false;
-		const updated = cloneDeep(this.assetPreferences);
+		const updated = CloneDeepMutable(this.assetPreferences);
 
 		if (newPreferences.attributes != null) {
 			for (const key of new Set([...KnownObject.keys(newPreferences.attributes), ...KnownObject.keys(updated.attributes)])) {
@@ -650,7 +671,7 @@ export class Character {
 			}
 		}
 
-		this.setValue('assetPreferences', updated, true);
+		this.gameLogicCharacter.assetPreferences.setPreferences(updated);
 		return 'ok';
 	}
 

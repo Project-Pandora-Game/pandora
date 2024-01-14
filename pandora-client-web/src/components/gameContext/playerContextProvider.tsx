@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo } from 'react';
-import { AssertNotNullable, AssetFrameworkCharacterState, CharacterId, ICharacterPrivateData } from 'pandora-common';
+import { useMemo } from 'react';
+import { AssertNotNullable, AssetFrameworkCharacterState, CharacterId, ICharacterPrivateData, ICharacterRoomData } from 'pandora-common';
 import { PlayerCharacter } from '../../character/player';
 import { useNullableObservable } from '../../observable';
 import { useShardConnector } from './shardConnectorContextProvider';
 import { useCharacterState, useGameState } from './gameStateContextProvider';
+import { useCharacterDataOptional } from '../../character/character';
 
 export function usePlayer(): PlayerCharacter | null {
 	return useNullableObservable(useShardConnector()?.gameState)?.player ?? null;
@@ -25,25 +26,12 @@ export function usePlayerState(): {
 	}), [player, playerState]);
 }
 
-export function usePlayerData(): Readonly<ICharacterPrivateData> | null {
+export function usePlayerData(): Readonly<ICharacterPrivateData & ICharacterRoomData> | null {
 	const player = usePlayer();
-	const [data, setData] = useState<Readonly<ICharacterPrivateData> | null>(player ? player.data : null);
-	useEffect(() => {
-		setData(player ? player.data : null);
-		return player?.onAny((ev) => {
-			if (ev.update) {
-				setData(player ? player.data : null);
-			}
-		});
-	}, [player]);
-	return data;
+	return useCharacterDataOptional(player);
 }
 
 export function usePlayerId(): CharacterId | null {
 	const player = usePlayer();
-	const [id, setId] = useState<CharacterId | null>(player?.data.id ?? null);
-	useEffect(() => {
-		setId(player?.data.id ?? null);
-	}, [id, player]);
-	return id;
+	return player?.id ?? null;
 }

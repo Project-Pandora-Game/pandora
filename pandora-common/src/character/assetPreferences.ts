@@ -5,8 +5,14 @@ import type { Asset } from '../assets/asset';
 import type { CharacterId } from './characterTypes';
 import { KnownObject } from '../utility';
 import { AssetManager } from '../assets';
+import { ZodMatcher } from '../validation';
+import { PermissionConfigSchema } from '../gameLogic';
 
-export const AttributePreferenceTypeSchema = z.enum(['normal', 'maybe', 'prevent', 'doNotRender']);
+export const AssetPreferenceTypeSchema = z.enum(['favorite', 'normal', 'maybe', 'prevent', 'doNotRender']);
+export type AssetPreferenceType = z.infer<typeof AssetPreferenceTypeSchema>;
+export const IsAssetPreferenceType = ZodMatcher(AssetPreferenceTypeSchema);
+
+export const AttributePreferenceTypeSchema = AssetPreferenceTypeSchema.and(z.enum(['normal', 'maybe', 'prevent', 'doNotRender']));
 export type AttributePreferenceType = z.infer<typeof AttributePreferenceTypeSchema>;
 
 export const AttributePreferenceSchema = z.object({
@@ -14,23 +20,26 @@ export const AttributePreferenceSchema = z.object({
 });
 export type AttributePreference = z.infer<typeof AttributePreferenceSchema>;
 
-export const AssetPreferenceTypeSchema = z.enum(['favorite', 'normal', 'maybe', 'prevent', 'doNotRender']);
-export type AssetPreferenceType = z.infer<typeof AssetPreferenceTypeSchema>;
-
 export const AssetPreferenceSchema = z.object({
 	base: AssetPreferenceTypeSchema.default('normal'),
 });
 export type AssetPreference = z.infer<typeof AssetPreferenceSchema>;
 
-export const AssetPreferencesSchema = z.object({
+export const AssetPreferencesPublicSchema = z.object({
 	attributes: z.record(z.string(), AttributePreferenceSchema).default({}),
 	assets: z.record(AssetIdSchema, AssetPreferenceSchema).default({}),
 });
-export type AssetPreferences = z.infer<typeof AssetPreferencesSchema>;
+export type AssetPreferencesPublic = z.infer<typeof AssetPreferencesPublicSchema>;
 
-export const ASSET_PREFERENCES_DEFAULT: Readonly<AssetPreferences> = Object.freeze<AssetPreferences>({
+export const AssetPreferencesServerSchema = AssetPreferencesPublicSchema.extend({
+	permissions: z.record(AssetPreferenceTypeSchema, PermissionConfigSchema.nullable().catch(null)).default(() => ({})),
+});
+export type AssetPreferencesServer = z.infer<typeof AssetPreferencesServerSchema>;
+
+export const ASSET_PREFERENCES_DEFAULT: Readonly<AssetPreferencesServer> = Object.freeze<AssetPreferencesServer>({
 	attributes: {},
 	assets: {},
+	permissions: {},
 });
 
 export type AssetPreferenceResolution = {
@@ -43,7 +52,7 @@ export type AssetPreferenceResolution = {
 	preference: AssetPreferenceType;
 };
 
-export function ResolveAssetPreference(preferences: Immutable<AssetPreferences>, asset: Asset, _source?: CharacterId): AssetPreferenceResolution {
+export function ResolveAssetPreference(preferences: Immutable<AssetPreferencesPublic>, asset: Asset, _source?: CharacterId): AssetPreferenceResolution {
 	const assetPreference = preferences.assets[asset.id];
 	if (assetPreference != null) {
 		return {
@@ -86,7 +95,7 @@ export function ResolveAssetPreference(preferences: Immutable<AssetPreferences>,
 export function CleanupAssetPreferences(assetManager: AssetManager, {
 	attributes = {},
 	assets = {},
-}: Partial<AssetPreferences>): boolean {
+}: Partial<AssetPreferencesServer>): boolean {
 	let hasInvalid = false;
 
 	for (const key of KnownObject.keys(attributes)) {

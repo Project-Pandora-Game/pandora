@@ -9,7 +9,7 @@ import { Satisfies } from '../utility';
 import { Immutable } from 'immer';
 
 // Fix for pnpm resolution weirdness
-import type { } from '../assets/item';
+import type { } from '../assets/item/base';
 
 export const ShardAccountDefinitionSchema = z.object({
 	id: z.number(),

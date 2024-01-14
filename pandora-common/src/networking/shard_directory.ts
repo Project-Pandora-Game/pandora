@@ -10,7 +10,7 @@ import { Immutable } from 'immer';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/appearance';
-import type { } from '../assets/item';
+import type { } from '../assets/item/base';
 import type { } from '../character/pronouns';
 import type { } from '../chat/chat';
 

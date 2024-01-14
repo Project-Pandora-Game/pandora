@@ -9,6 +9,9 @@ import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roo
 import type { IExportOptions } from '../modules/common';
 import { ZodArrayWithInvalidDrop } from '../../validation';
 
+// Fix for pnpm resolution weirdness
+import type { } from '../item/base';
+
 export const RoomInventoryBundleSchema = z.object({
 	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
 	clientOnly: z.boolean().optional(),

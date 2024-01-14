@@ -13,7 +13,7 @@ import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
 import { AssetPreferencesSchema } from '../character/assetPreferences';
 
 // Fix for pnpm resolution weirdness
-import type { } from '../assets/item';
+import type { } from '../assets/item/base';
 import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
 

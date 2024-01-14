@@ -11,6 +11,9 @@ import { Satisfies } from '../../utility';
 import { Immutable } from 'immer';
 import type { InteractionId } from '../../gameLogic/interactions';
 
+// Fix for pnpm resolution weirdness
+import type { } from '../item/base';
+
 export interface IModuleConfigLockSlot<TProperties> extends IModuleConfigCommon<'lockSlot'> {
 	/** Properties applied when this slot isn't occupied by a lock */
 	emptyProperties?: TProperties;

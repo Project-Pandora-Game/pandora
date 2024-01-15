@@ -49,7 +49,7 @@ function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
 				className='slim'
 				onClick={ () => setShowConfig(true) }
 			>
-				Configure permission
+				Edit permission
 			</Button>
 			{ showConfig && (
 				<PermissionConfigDialog
@@ -66,7 +66,7 @@ function ItemLimitsPermissions(): ReactElement {
 	return (
 		<fieldset>
 			<legend>Item Limits</legend>
-			<i>Allow other characters to interact with worn items that are marked as...</i>
+			<i>Allow other characters to interact with worn items and to add new items that are marked in the item limits as...</i>
 			{
 				KnownObject.keys(ASSET_PREFERENCES_PERMISSIONS).map((group) => (
 					<ItemLimitsSettings key={ group } group={ group } />
@@ -90,7 +90,7 @@ function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactEl
 				className='slim'
 				onClick={ () => setShowConfig(true) }
 			>
-				Configure permission
+				Edit permission
 			</Button>
 			{ showConfig && (
 				<PermissionConfigDialog

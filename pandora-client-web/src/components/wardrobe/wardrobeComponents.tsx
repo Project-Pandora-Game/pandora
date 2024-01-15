@@ -22,6 +22,8 @@ import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import _ from 'lodash';
 import { useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 import { useAssetPreferenceVisibilityCheck } from '../../graphics/graphicsCharacter';
+import { BrowserStorage } from '../../browserStorage';
+import { useObservable } from '../../observable';
 
 export function ActionWarningContent({ problems }: { problems: readonly AppearanceActionProblem[]; }): ReactElement {
 	const assetManager = useAssetManager();
@@ -151,14 +153,28 @@ export function WardrobeActionButton({
 	);
 }
 
+export const MIN_RANDOMIZE_UPDATE_INTERVAL = 10;
+export const WardrobeActionRandomizeUpdateInterval = BrowserStorage.create('wardrobe-action-randomize-update-interval', 100, z.number().min(0).max(10000));
+
 export function WardrobeActionRandomizeButton({
 	kind,
 }: {
 	kind: z.infer<typeof AppearanceActionRandomize>['kind'];
 }) {
+	const { showHoverPreview } = useWardrobeContext();
 	const [seed, newSeed] = useReducer(() => nanoid(), nanoid());
+	const updateInterval = useObservable(WardrobeActionRandomizeUpdateInterval);
 
 	useEffect(() => newSeed(), [newSeed]);
+	useEffect(() => {
+		if (!showHoverPreview || updateInterval < MIN_RANDOMIZE_UPDATE_INTERVAL)
+			return undefined;
+
+		const timeout = setInterval(newSeed, updateInterval);
+		return () => {
+			clearTimeout(timeout);
+		};
+	}, [showHoverPreview, updateInterval, newSeed]);
 
 	let text;
 	switch (kind) {

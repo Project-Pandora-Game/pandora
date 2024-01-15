@@ -51,7 +51,7 @@ export class BrowserStorage<T> extends Observable<T> {
 		if (storage !== undefined) {
 			return storage;
 		}
-		storage = new BrowserStorage<T>(localStorage, name, defaultValue, validate ?? (() => true));
+		storage = new BrowserStorage<T>(localStorage, name, defaultValue, validate);
 		BROWSER_STORAGES_LOCAL.set(name, storage as BrowserStorage<unknown>);
 		return storage;
 	}
@@ -62,7 +62,7 @@ export class BrowserStorage<T> extends Observable<T> {
 		if (storage !== undefined) {
 			return storage;
 		}
-		storage = new BrowserStorage<T>(sessionStorage, name, defaultValue, validate ?? (() => true));
+		storage = new BrowserStorage<T>(sessionStorage, name, defaultValue, validate);
 		BROWSER_STORAGES_SESSION.set(name, storage as BrowserStorage<unknown>);
 		return storage;
 	}

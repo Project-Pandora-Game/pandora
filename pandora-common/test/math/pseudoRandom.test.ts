@@ -6,7 +6,8 @@ describe('PseudoRandom', () => {
 			const rand = new PseudoRandom('my seed');
 			for (let i = 0; i < 200; i++) {
 				const num = rand.random();
-				expect(0 <= num || num <= 1).toBeTruthy();
+				expect(0 <= num).toBeTruthy();
+				expect(num < 1).toBeTruthy();
 			}
 		});
 

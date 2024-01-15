@@ -46,12 +46,12 @@ export type IChatInputHandler = {
 
 const chatInputContext = createContext<IChatInputHandler | null>(null);
 
-const ChatInputSchema = z.object({
+const ChatInputSaveSchema = z.object({
 	input: z.string(),
 	spaceId: SpaceIdSchema.nullable(),
 });
-type ChatInputSave = z.infer<typeof ChatInputSchema>;
-const InputRestore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', spaceId: null }, ChatInputSchema);
+type ChatInputSave = z.infer<typeof ChatInputSaveSchema>;
+const InputRestore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', spaceId: null }, ChatInputSaveSchema);
 /** List of recently sent chat messages (both commands and actually sent). Newest is first. */
 const InputHistory = BrowserStorage.createSession<readonly string[]>('saveChatInputHistory', EMPTY_ARRAY, z.string().array().transform(ZodTransformReadonly));
 /** How many last sent messages are remembered in the session storage */

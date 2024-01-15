@@ -22,7 +22,7 @@ import { useEditor, useEditorState } from '../../editorContextProvider';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import '../../../components/wardrobe/wardrobe.scss';
-import { WardrobeActionButton } from '../../../components/wardrobe/wardrobeComponents';
+import { WardrobeActionRandomizeButton } from '../../../components/wardrobe/wardrobeComponents';
 import { Immutable } from 'immer';
 
 export const EDITOR_SPACE_CONTEXT = {
@@ -180,18 +180,8 @@ export function EditorWardrobeUI(): ReactElement {
 				</FieldsetToggle>
 				<FieldsetToggle legend='Randomization' className='no-padding' open={ false } persistent='wardrobe-randomization'>
 					<Row padding='medium'>
-						<WardrobeActionButton action={ {
-							type: 'randomize',
-							kind: 'items',
-						} }>
-							Randomize clothes
-						</WardrobeActionButton>
-						<WardrobeActionButton action={ {
-							type: 'randomize',
-							kind: 'full',
-						} }>
-							Randomize everything
-						</WardrobeActionButton>
+						<WardrobeActionRandomizeButton kind='items' />
+						<WardrobeActionRandomizeButton kind='full' />
 					</Row>
 				</FieldsetToggle>
 			</Column>

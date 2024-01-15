@@ -7,6 +7,7 @@ import { Button } from '../common/button/button';
 import './characterCreate.scss';
 import { Form, FormCreateStringValidator, FormError, FormErrorMessage, FormField } from '../common/form/form';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import { nanoid } from 'nanoid';
 
 export function CharacterCreate(): ReactElement | null {
 	// React States
@@ -27,6 +28,7 @@ export function CharacterCreate(): ReactElement | null {
 			shardConnector?.awaitResponse('appearanceAction', {
 				type: 'randomize',
 				kind: 'full',
+				seed: nanoid(),
 			}).catch(() => {
 				// TODO: this is bad, ww shouldn't have a useEffect that calls a shard action like this
 			});

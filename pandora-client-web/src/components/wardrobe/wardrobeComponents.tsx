@@ -2,11 +2,15 @@ import classNames from 'classnames';
 import {
 	AppearanceAction,
 	AppearanceActionProblem,
+	AppearanceActionRandomize,
+	AssertNever,
 	Asset,
 	EMPTY_ARRAY,
 	IsNotNullable,
 } from 'pandora-common';
-import React, { ReactElement, useEffect, useMemo, useState } from 'react';
+import React, { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
+import { z } from 'zod';
+import { nanoid } from 'nanoid';
 import { useAssetManager } from '../../assets/assetManager';
 import { Button, ButtonProps, IconButton } from '../common/button/button';
 import { CommonProps } from '../../common/reactTypes';
@@ -144,6 +148,34 @@ export function WardrobeActionButton({
 			}
 			{ children }
 		</Element>
+	);
+}
+
+export function WardrobeActionRandomizeButton({
+	kind,
+}: {
+	kind: z.infer<typeof AppearanceActionRandomize>['kind'];
+}) {
+	const [seed, newSeed] = useReducer(() => nanoid(), nanoid());
+
+	useEffect(() => newSeed(), [newSeed]);
+
+	let text;
+	switch (kind) {
+		case 'items':
+			text = 'Randomize clothes';
+			break;
+		case 'full':
+			text = 'Randomize everything';
+			break;
+		default:
+			AssertNever(kind);
+	}
+
+	return (
+		<WardrobeActionButton onExecute={ newSeed } action={ { type: 'randomize', kind, seed } } >
+			{ text }
+		</WardrobeActionButton>
 	);
 }
 

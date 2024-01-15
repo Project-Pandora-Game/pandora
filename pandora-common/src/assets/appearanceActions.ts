@@ -19,6 +19,7 @@ import { CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
 import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
 import { GameLogicCharacter } from '../gameLogic';
 import { ActionSpaceContext } from '../space/space';
+import { PseudoRandom } from '../math/pseudoRandom';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../validation';
@@ -123,6 +124,8 @@ export const AppearanceActionRandomize = z.object({
 	type: z.literal('randomize'),
 	/** What to randomize */
 	kind: z.enum(['items', 'full']),
+	/** Seed to use for pseudo random generation */
+	seed: z.string().max(32),
 });
 
 export const AppearanceActionRoomDeviceDeploy = z.object({
@@ -812,6 +815,8 @@ export function ActionAppearanceRandomize({
 		return processingContext.invalid();
 	}
 
+	const randomSource = new PseudoRandom(action.seed);
+
 	// Go through wanted attributes one-by one, always try to find matching items and try to add them in random order
 	// After each time we try the item, we validate appearance in full to see if it is possible addition
 	// Note: Yes, this is computationally costly. We might want to look into rate-limiting character randomization
@@ -832,7 +837,7 @@ export function ActionAppearanceRandomize({
 			);
 
 		// Shuffle them so we try to add randomly
-		ShuffleArray(possibleAssets);
+		ShuffleArray(possibleAssets, randomSource);
 
 		// Try them one by one, stopping at first successful (if we skip all, nothing bad happens)
 		for (const asset of possibleAssets) {

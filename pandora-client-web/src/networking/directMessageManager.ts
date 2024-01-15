@@ -8,10 +8,11 @@ import { ChatParser } from '../ui/components/chat/chatParser';
 import { HashSHA256Base64 } from '../crypto/helpers';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast';
+import { z } from 'zod';
 
 export class DirectMessageManager extends TypedEventEmitter<{ newMessage: DirectMessageChannel; close: AccountId; }> {
 	public readonly connector: DirectoryConnector;
-	private readonly _cryptoPassword = BrowserStorage.create<string | undefined>('crypto-handler-password', undefined);
+	private readonly _cryptoPassword = BrowserStorage.create<string | undefined>('crypto-handler-password', undefined, z.string().optional());
 	private readonly _chats: Map<AccountId, DirectMessageChannel> = new Map();
 	private readonly _info = new Observable<readonly IDirectoryDirectMessageInfo[]>([]);
 	private readonly _selected = new Observable<AccountId | undefined>(undefined);

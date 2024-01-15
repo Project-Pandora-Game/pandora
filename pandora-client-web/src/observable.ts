@@ -54,7 +54,8 @@ class RateLimitedObservable<T> extends NormalObservable<T> {
 	private static timeWindow = 1000;
 	private static maxEvents = 10;
 	private static maxDelay = 10;
-	private static enabled = true;
+	// TODO: maybe enable this, but for now it breaks the hover preview
+	private static enabled = false;
 
 	private lastEventTime = 0;
 	private storageEventCount = 0;

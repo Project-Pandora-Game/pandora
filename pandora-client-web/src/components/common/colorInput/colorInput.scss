@@ -5,9 +5,6 @@
 	align-items: center;
 	gap: 10px;
 
-	--sat: calc(var(--saturation) * 100%);
-	--lig: calc(var(--lightness) * 100%);
-
 	&__rect {
 		position: relative;
 		width: 200px;
@@ -33,14 +30,14 @@
 			left: calc(var(--saturation) * 100%);
 			top: calc(calc(1 - var(--value)) * 100%);
 			border-radius: 50%;
-			border: 0.3em solid hsl(var(--hue), var(--sat), var(--lig));
+			border: 0.3em solid var(--rgb);
 			box-shadow:
-				0 0 4px 1px rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
-				0 2px 2px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
-				0 1px 5px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
-				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
-				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
-				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5));
+				0 0 4px 1px rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
+				0 2px 2px 0 rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
+				0 1px 5px 0 rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
+				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--hsl-lightness)) * 0.5)),
+				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--hsl-lightness)) * 0.5)),
+				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--hsl-lightness)) * 0.5));
 			transform: translate(-50%, -50%);
 			cursor: crosshair;
 		}
@@ -58,14 +55,14 @@
 			width: 1.5em;
 			height: 1.5em;
 			border-radius: 50%;
-			background-color: hsla(var(--hue), var(--sat), var(--lig), var(--alpha));
+			background-color: var(--rgba);
 			box-shadow:
-				0 0 4px 1px rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
-				0 2px 2px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
-				0 1px 5px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
-				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
-				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
-				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5));
+				0 0 4px 1px rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
+				0 2px 2px 0 rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
+				0 1px 5px 0 rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
+				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--hsl-lightness)) * 0.5)),
+				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--hsl-lightness)) * 0.5)),
+				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--hsl-lightness)) * 0.5));
 			cursor: pointer;
 			position: relative;
 		}
@@ -74,14 +71,14 @@
 			width: 1.5em;
 			height: 1.5em;
 			border-radius: 50%;
-			background-color: hsla(var(--hue), var(--sat), var(--lig), var(--alpha));
+			background-color: var(--rgba);
 			box-shadow:
-				0 0 4px 1px rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
-				0 2px 2px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
-				0 1px 5px 0 rgba(0, 0, 0, calc(var(--lightness) * 0.5)),
-				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
-				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5)),
-				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--lightness)) * 0.5));
+				0 0 4px 1px rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
+				0 2px 2px 0 rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
+				0 1px 5px 0 rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
+				0 0 4px 1px rgba(255, 255, 255, calc((1 - var(--hsl-lightness)) * 0.5)),
+				0 2px 2px 0 rgba(255, 255, 255, calc((1 - var(--hsl-lightness)) * 0.5)),
+				0 1px 5px 0 rgba(255, 255, 255, calc((1 - var(--hsl-lightness)) * 0.5));
 			cursor: pointer;
 		}
 	}
@@ -91,15 +88,15 @@
 	}
 
 	&__saturation {
-		background: linear-gradient(90deg, hsl(var(--hue), 0%, var(--lig)), hsl(var(--hue), 100%, var(--lig))) !important;
+		background: var(--gradient-saturation) !important;
 	}
 
-	&__lightness {
-		background: linear-gradient(90deg, hsl(var(--hue), var(--sat), 0%), hsl(var(--hue), var(--sat), 50%), hsl(var(--hue), var(--sat), 100%)) !important;
+	&__value {
+		background: var(--gradient-value) !important;
 	}
 
 	&__alpha {
-		background: linear-gradient(90deg, transparent, hsla(var(--hue), var(--sat), var(--lig), 1)) !important;
+		background: linear-gradient(90deg, transparent, var(--rgb)) !important;
 	}
 
 	&__hex {

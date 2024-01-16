@@ -1,4 +1,7 @@
 import React, { ReactElement, useCallback, useState } from 'react';
+import forbid from '../../assets/icons/forbidden.svg';
+import allow from '../../assets/icons/public.svg';
+// TODO: use '../../assets/icons/prompt.svg' as icon for future promptUser permission setting
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferenceType, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfig, PermissionGroup } from 'pandora-common';
@@ -41,15 +44,28 @@ function InteractionPermissions(): ReactElement {
 function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
 	const config: IInteractionConfig = INTERACTION_CONFIG[id];
 	const [showConfig, setShowConfig] = useState(false);
+	const permissionData = usePermissionData('interaction', id);
+	let effectiveConfig: { allowOthers: boolean; } = { allowOthers: false };
+	if (permissionData?.result === 'ok') {
+		const {
+			permissionSetup,
+			permissionConfig,
+		} = permissionData;
+		effectiveConfig = permissionConfig ?? MakePermissionConfigFromDefault(permissionSetup.defaultConfig);
+	}
 
 	return (
 		<div className='input-row'>
-			<label>{ config.visibleName }</label>
+			<label>
+				<img src={ effectiveConfig.allowOthers ? allow : forbid } width='26' height='26' alt='General permission configuration preview' />
+				&nbsp;&nbsp;
+				{ config.visibleName }
+			</label>
 			<Button
 				className='slim'
 				onClick={ () => setShowConfig(true) }
 			>
-				Configure permission
+				Edit
 			</Button>
 			{ showConfig && (
 				<PermissionConfigDialog
@@ -66,7 +82,7 @@ function ItemLimitsPermissions(): ReactElement {
 	return (
 		<fieldset>
 			<legend>Item Limits</legend>
-			<i>Allow other characters to interact with worn items that are marked as...</i>
+			<i>Allow other characters to interact with worn items and to add new items that are marked in the item limits as...</i>
 			{
 				KnownObject.keys(ASSET_PREFERENCES_PERMISSIONS).map((group) => (
 					<ItemLimitsSettings key={ group } group={ group } />
@@ -79,18 +95,31 @@ function ItemLimitsPermissions(): ReactElement {
 function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactElement | null {
 	const config = ASSET_PREFERENCES_PERMISSIONS[group];
 	const [showConfig, setShowConfig] = useState(false);
+	const permissionData = usePermissionData('assetPreferences', group);
+	let effectiveConfig: { allowOthers: boolean; } = { allowOthers: false };
+	if (permissionData?.result === 'ok') {
+		const {
+			permissionSetup,
+			permissionConfig,
+		} = permissionData;
+		effectiveConfig = permissionConfig ?? MakePermissionConfigFromDefault(permissionSetup.defaultConfig);
+	}
 
 	if (config == null)
 		return null;
 
 	return (
 		<div className='input-row'>
-			<label>{ config.visibleName }</label>
+			<label>
+				<img src={ effectiveConfig.allowOthers ? allow : forbid } width='26' height='26' alt='General permission configuration preview' />
+				&nbsp;&nbsp;
+				{ config.visibleName }
+			</label>
 			<Button
 				className='slim'
 				onClick={ () => setShowConfig(true) }
 			>
-				Configure permission
+				Edit
 			</Button>
 			{ showConfig && (
 				<PermissionConfigDialog

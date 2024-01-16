@@ -31,7 +31,7 @@ export const INTERACTION_CONFIG = {
 		},
 	},
 	useLockSlotModule: {
-		visibleName: 'Change and interact with locks on worn items',
+		visibleName: 'Interact with locks on worn items',
 		defaultPermissions: {
 			allowOthers: true,
 		},

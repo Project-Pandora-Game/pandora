@@ -166,7 +166,7 @@ export class Muffler {
 	}
 
 	private roll(muf: string[], probMuf: number, random: PseudoRandom, c: string): string {
-		if (random.rand() <= _.clamp(probMuf, 0, 10) / 10) {
+		if (random.random() <= _.clamp(probMuf, 0, 10) / 10) {
 			const ran = random.randomElement(muf);
 			return this.isUpper(c) ? ran.toUpperCase() : ran;
 		}

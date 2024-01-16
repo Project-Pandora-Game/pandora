@@ -8,7 +8,6 @@ import pandoraLogo from '../../assets/icons/pandora.svg';
 import { ModalDialog } from '../dialog/dialog';
 import './eula.scss';
 import { z } from 'zod';
-import { ZodMatcher } from 'pandora-common';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { EULA_LAST_UPDATED, EULA_VERSION, PrivacyPolicyContent } from './privacyPolicy';
 
@@ -78,7 +77,7 @@ function PolicyDialog({ hide }: {
 }
 
 export function EulaGate({ children }: ChildrenProps): ReactElement {
-	const [eula, setEula] = useBrowserStorage<number | undefined>('accepted-eula-version', undefined, ZodMatcher(z.number().optional()));
+	const [eula, setEula] = useBrowserStorage<number | undefined>('accepted-eula-version', undefined, z.number().optional());
 
 	if (!eula || eula < EULA_VERSION) {
 		return (

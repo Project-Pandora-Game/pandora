@@ -1,4 +1,4 @@
-import { ICharacterRoomData, ZodMatcher } from 'pandora-common';
+import { ICharacterRoomData } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import z from 'zod';
 import { BrowserStorage } from '../../../browserStorage';
@@ -25,7 +25,7 @@ const DEFAULT_DEBUG_CONFIG: z.infer<typeof ChatroomDebugConfigSchema> = {
 
 export type ChatroomDebugConfig = z.infer<typeof ChatroomDebugConfigSchema> | undefined;
 
-const ChatroomDebugConfigStorage = BrowserStorage.create<ChatroomDebugConfig>('debug-chatroom', undefined, ZodMatcher(ChatroomDebugConfigSchema));
+const ChatroomDebugConfigStorage = BrowserStorage.create<ChatroomDebugConfig>('debug-chatroom', undefined, ChatroomDebugConfigSchema);
 
 export function useDebugConfig(): ChatroomDebugConfig {
 	const chatroomDebugConfig = useObservable(ChatroomDebugConfigStorage);

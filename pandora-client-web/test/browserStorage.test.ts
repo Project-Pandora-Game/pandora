@@ -1,18 +1,22 @@
 import { act, renderHook, RenderHookResult } from '@testing-library/react';
 import { BrowserStorage, useBrowserStorage } from '../src/browserStorage';
+import { z } from 'zod';
 
-type T = { mockValue: string; };
-const mockDefault: T = Object.freeze({ mockValue: 'mockValue' });
-const mockUpdate: T = Object.freeze({ mockValue: 'sth-different' });
-const mockValidate = jest.fn().mockReturnValue(true);
+const MockDataSchema = z.object({
+	mockValue: z.string(),
+});
+type MockData = z.infer<typeof MockDataSchema>;
+const mockDefault: MockData = Object.freeze({ mockValue: 'mockValue' });
+const mockUpdate: MockData = Object.freeze({ mockValue: 'sth-different' });
+
 const NAME = 'mockname';
 
-let mockStorage: BrowserStorage<T>;
+let mockStorage: BrowserStorage<MockData>;
 describe('BrowserStorage', () => {
 
 	describe('create()', () => {
 		beforeEach(() => {
-			mockStorage = BrowserStorage.create<T>(NAME, mockDefault, mockValidate);
+			mockStorage = BrowserStorage.create<MockData>(NAME, mockDefault, MockDataSchema);
 		});
 
 		it('should create or return a BrowserStorage object', () => {
@@ -27,10 +31,10 @@ describe('BrowserStorage', () => {
 });
 
 describe('useBrowserStorage()', () => {
-	let result: RenderHookResult<[T, (t: T) => void], unknown>['result'];
+	let result: RenderHookResult<[MockData, (t: MockData) => void], unknown>['result'];
 
 	beforeEach(() => {
-		result = renderHook(() => useBrowserStorage<T>(NAME, mockDefault, mockValidate)).result;
+		result = renderHook(() => useBrowserStorage<MockData>(NAME, mockDefault, MockDataSchema)).result;
 	});
 
 	it('should return an array with two value', () => {

@@ -10,8 +10,6 @@ import {
 	IDirectoryClient,
 	IDirectoryClientChangeEvents,
 	IDirectoryStatus,
-	IsObject,
-	IsString,
 	MessageHandler,
 	ClientDirectorySchema,
 	DirectoryClientSchema,
@@ -28,6 +26,7 @@ import { PersistentToast } from '../persistentToast';
 import { DirectMessageManager } from './directMessageManager';
 import { AuthToken, DirectoryConnectionState, DirectoryConnector, LoginResponse } from './directoryConnector';
 import { freeze } from 'immer';
+import { z } from 'zod';
 
 type SocketAuthCallback = (data?: IClientDirectoryAuthMessage) => void;
 
@@ -45,6 +44,12 @@ class ConnectionStateEventEmitter extends TypedEventEmitter<Pick<IDirectoryClien
 	}
 }
 
+const AuthTokenSchema = z.object({
+	value: z.string(),
+	username: z.string(),
+	expires: z.number().refine((n) => n > Date.now(), { message: 'Token has expired' }),
+}).optional();
+
 /** Class housing connection from Shard to Directory */
 export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory, IDirectoryClient, Socket> implements DirectoryConnector {
 
@@ -56,9 +61,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 	private readonly _connectionStateEventEmitter = new ConnectionStateEventEmitter();
 
 	private readonly _directoryConnectionProgress = new PersistentToast();
-	private readonly _authToken = BrowserStorage.create<AuthToken | undefined>('authToken', undefined, (value) => {
-		return IsObject(value) && IsString(value.value) && typeof value.expires === 'number' && value.expires > Date.now();
-	});
+	private readonly _authToken = BrowserStorage.create<AuthToken | undefined>('authToken', undefined, AuthTokenSchema);
 
 	private _shardConnectionInfo: IDirectoryCharacterConnectionInfo | null = null;
 

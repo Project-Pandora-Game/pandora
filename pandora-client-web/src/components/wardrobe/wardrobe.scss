@@ -666,3 +666,9 @@ $drop-overlay-gap: 0.3em;
 .positioning-input {
 	width: 8em;
 }
+
+.input-row {
+	label, span {
+		margin: auto 0;
+	}
+}

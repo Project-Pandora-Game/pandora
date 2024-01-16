@@ -54,6 +54,8 @@ class RateLimitedObservable<T> extends NormalObservable<T> {
 	private static timeWindow = 1000;
 	private static maxEvents = 10;
 	private static maxDelay = 10;
+	// TODO: maybe enable this, but for now it breaks the hover preview
+	private static enabled = false;
 
 	private lastEventTime = 0;
 	private storageEventCount = 0;
@@ -68,6 +70,10 @@ class RateLimitedObservable<T> extends NormalObservable<T> {
 	}
 
 	public override set value(value: T) {
+		if (!RateLimitedObservable.enabled) {
+			super.value = value;
+			return;
+		}
 		const actualSet = () => {
 			super.value = value;
 

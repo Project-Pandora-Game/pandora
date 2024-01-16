@@ -23,7 +23,7 @@ export class PseudoRandom {
 	}
 
 	/** random between 0 -> 1 and uses xoshiro128ss under the hood */
-	public rand(): number {
+	public random(): number {
 		const h = this.cyrb128(this.hash.toString());
 
 		let a = h[0];
@@ -43,7 +43,7 @@ export class PseudoRandom {
 	public between(min: number, max: number): number {
 		if (min > max) throw Error(`min(${min}) cannot be larger than max(${max})`);
 
-		return (max - min) * this.rand() + min;
+		return (max - min) * this.random() + min;
 	}
 
 	public randomElement<T>(array: ArrayLike<T>): T {

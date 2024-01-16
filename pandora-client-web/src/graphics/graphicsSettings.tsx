@@ -1,4 +1,3 @@
-import { ZodMatcher } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
 import { z } from 'zod';
 import { BrowserStorage } from '../browserStorage';
@@ -16,7 +15,7 @@ const GRAPHICS_SETTINGS_DEFAULT: IGraphicsSettings = {
 	alphamaskEngine: 'customShader',
 };
 
-const storage = BrowserStorage.create<Partial<IGraphicsSettings>>('settings.graphics', {}, ZodMatcher(GraphicsSettingsScheme.partial()));
+const storage = BrowserStorage.create<Partial<IGraphicsSettings>>('settings.graphics', {}, GraphicsSettingsScheme.partial());
 
 export function useGraphicsSettings(): IGraphicsSettings {
 	const overrides = useObservable(storage);

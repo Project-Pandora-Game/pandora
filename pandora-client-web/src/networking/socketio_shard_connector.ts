@@ -12,6 +12,7 @@ import {
 	TypedEventEmitter,
 	IShardClientChangeEvents,
 	Assert,
+	CharacterIdSchema,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
@@ -31,7 +32,7 @@ export class ShardChangeEventEmitter extends TypedEventEmitter<Record<IShardClie
 }
 
 /** Used for auto-reconnect to character after window refresh */
-export const LastSelectedCharacter = BrowserStorage.createSession<CharacterId | undefined>('lastSelectedCharacter', undefined);
+export const LastSelectedCharacter = BrowserStorage.createSession<CharacterId | undefined>('lastSelectedCharacter', undefined, CharacterIdSchema.optional());
 
 function CreateConnection({ publicURL, secret, characterId }: IDirectoryCharacterConnectionInfo): Socket {
 	// Create the connection without connecting

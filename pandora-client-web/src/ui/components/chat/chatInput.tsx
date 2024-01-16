@@ -1,4 +1,4 @@
-import { AssertNotNullable, CharacterId, EMPTY_ARRAY, ChatCharacterStatus, IChatType, SpaceId, ZodTransformReadonly } from 'pandora-common';
+import { AssertNotNullable, CharacterId, EMPTY_ARRAY, ChatCharacterStatus, IChatType, ZodTransformReadonly, SpaceIdSchema } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { clamp } from 'lodash';
 import { Character } from '../../../character/character';
@@ -46,11 +46,12 @@ export type IChatInputHandler = {
 
 const chatInputContext = createContext<IChatInputHandler | null>(null);
 
-type ChatInputSave = {
-	input: string;
-	spaceId: SpaceId | null;
-};
-const InputRestore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', spaceId: null });
+const ChatInputSaveSchema = z.object({
+	input: z.string(),
+	spaceId: SpaceIdSchema.nullable(),
+});
+type ChatInputSave = z.infer<typeof ChatInputSaveSchema>;
+const InputRestore = BrowserStorage.createSession<ChatInputSave>('saveChatInput', { input: '', spaceId: null }, ChatInputSaveSchema);
 /** List of recently sent chat messages (both commands and actually sent). Newest is first. */
 const InputHistory = BrowserStorage.createSession<readonly string[]>('saveChatInputHistory', EMPTY_ARRAY, z.string().array().transform(ZodTransformReadonly));
 /** How many last sent messages are remembered in the session storage */

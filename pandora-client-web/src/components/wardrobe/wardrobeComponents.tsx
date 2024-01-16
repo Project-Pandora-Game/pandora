@@ -2,11 +2,15 @@ import classNames from 'classnames';
 import {
 	AppearanceAction,
 	AppearanceActionProblem,
+	AppearanceActionRandomize,
+	AssertNever,
 	Asset,
 	EMPTY_ARRAY,
 	IsNotNullable,
 } from 'pandora-common';
-import React, { ReactElement, useEffect, useMemo, useState } from 'react';
+import React, { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
+import { z } from 'zod';
+import { nanoid } from 'nanoid';
 import { useAssetManager } from '../../assets/assetManager';
 import { Button, ButtonProps, IconButton } from '../common/button/button';
 import { CommonProps } from '../../common/reactTypes';
@@ -18,6 +22,8 @@ import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import _ from 'lodash';
 import { useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 import { useAssetPreferenceVisibilityCheck } from '../../graphics/graphicsCharacter';
+import { BrowserStorage } from '../../browserStorage';
+import { useObservable } from '../../observable';
 
 export function ActionWarningContent({ problems }: { problems: readonly AppearanceActionProblem[]; }): ReactElement {
 	const assetManager = useAssetManager();
@@ -144,6 +150,48 @@ export function WardrobeActionButton({
 			}
 			{ children }
 		</Element>
+	);
+}
+
+export const MIN_RANDOMIZE_UPDATE_INTERVAL = 10;
+export const WardrobeActionRandomizeUpdateInterval = BrowserStorage.create('wardrobe-action-randomize-update-interval', 100, z.number().min(0).max(10000));
+
+export function WardrobeActionRandomizeButton({
+	kind,
+}: {
+	kind: z.infer<typeof AppearanceActionRandomize>['kind'];
+}) {
+	const { showHoverPreview } = useWardrobeContext();
+	const [seed, newSeed] = useReducer(() => nanoid(), nanoid());
+	const updateInterval = useObservable(WardrobeActionRandomizeUpdateInterval);
+
+	useEffect(() => newSeed(), [newSeed]);
+	useEffect(() => {
+		if (!showHoverPreview || updateInterval < MIN_RANDOMIZE_UPDATE_INTERVAL)
+			return undefined;
+
+		const timeout = setInterval(newSeed, updateInterval);
+		return () => {
+			clearTimeout(timeout);
+		};
+	}, [showHoverPreview, updateInterval, newSeed]);
+
+	let text;
+	switch (kind) {
+		case 'items':
+			text = 'Randomize clothes';
+			break;
+		case 'full':
+			text = 'Randomize everything';
+			break;
+		default:
+			AssertNever(kind);
+	}
+
+	return (
+		<WardrobeActionButton onExecute={ newSeed } action={ { type: 'randomize', kind, seed } } >
+			{ text }
+		</WardrobeActionButton>
 	);
 }
 

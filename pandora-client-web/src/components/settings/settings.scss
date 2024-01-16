@@ -58,6 +58,11 @@
 				&.input-row {
 					flex-direction: row;
 					align-items: center;
+
+					img {
+						vertical-align: middle;
+						margin-top: -0.2em;
+					}
 				}
 
 				&.input-section {

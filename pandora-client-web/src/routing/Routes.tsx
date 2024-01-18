@@ -15,8 +15,11 @@ import { AuthPage } from '../components/login/authPage';
 import { WardrobeScreen } from '../components/wardrobe/wardrobe';
 import { authPagePathsAndComponents } from './authRoutingData';
 import { AccountContacts } from '../components/accountContacts/accountContacts';
-import { Wiki } from '../components/wiki/wiki';
 import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens';
+
+// Lazily loaded screens
+const Management = lazy(() => import('../components/management'));
+const Wiki = lazy(() => import('../components/wiki/wiki'));
 
 export function PandoraRoutes(): ReactElement {
 	return (
@@ -46,7 +49,11 @@ export function PandoraRoutes(): ReactElement {
 
 			<Route path='/management/*' element={ <RequiresLogin element={ DeveloperRoutes } /> } />
 
-			<Route path='/wiki/*' element={ <Wiki /> } />
+			<Route path='/wiki/*' element={
+				<Suspense fallback={ <div>Loading...</div> }>
+					<Wiki />
+				</Suspense>
+			} />
 		</Routes>
 	);
 }
@@ -129,7 +136,6 @@ function GetDefaultNavigation(state?: unknown): {
 	};
 }
 
-const Management = lazy(() => import('../components/management'));
 function DeveloperRoutes(): ReactElement {
 	const account = useCurrentAccount();
 	const isDeveloper = account?.roles !== undefined && IsAuthorized(account.roles, 'developer');

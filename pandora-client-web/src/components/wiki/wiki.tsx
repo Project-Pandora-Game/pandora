@@ -14,7 +14,7 @@ import { WikiItems } from './pages/items';
 import { WikiCharacters } from './pages/characters';
 import { WikiSafety } from './pages/safety';
 
-export function Wiki(): ReactElement {
+export default function Wiki(): ReactElement {
 	const navigate = useNavigate();
 
 	return (

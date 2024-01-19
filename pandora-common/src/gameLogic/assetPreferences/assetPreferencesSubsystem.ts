@@ -12,18 +12,21 @@ export type AssetPreferencesSubsystemEvents = {
 export const ASSET_PREFERENCES_PERMISSIONS = {
 	favorite: {
 		visibleName: 'Favorite',
+		icon: 'star',
 		defaultPermissions: {
 			allowOthers: true,
 		},
 	},
 	normal: {
 		visibleName: 'Normal',
+		icon: 'arrow-right',
 		defaultPermissions: {
 			allowOthers: true,
 		},
 	},
 	maybe: {
 		visibleName: 'Maybe',
+		icon: 'questionmark',
 		defaultPermissions: {
 			allowOthers: true,
 		},
@@ -34,6 +37,7 @@ export const ASSET_PREFERENCES_PERMISSIONS = {
 
 export interface AssetPreferencePermissionConfig {
 	visibleName: string;
+	icon: string;
 	defaultPermissions: PermissionConfigDefault;
 }
 

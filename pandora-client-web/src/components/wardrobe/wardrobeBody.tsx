@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import {
+	AppearanceItemsCalculateTotalCount,
 	Assert,
 	Asset,
 	AssetFrameworkCharacterState,
@@ -34,7 +35,7 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 		return asset.isType('personal') && asset.definition.bodypart !== undefined;
 	};
 
-	const itemCount = characterState.items.length;
+	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(characterState.items), [characterState.items]);
 	const title = `Currently worn items, used: ${ itemCount } / ${ ITEM_LIMIT_CHARACTER_WORN } (${100 * itemCount / ITEM_LIMIT_CHARACTER_WORN}%)`;
 
 	const [selectedItemId, setSelectedItemId] = useState<ItemId | null>(null);

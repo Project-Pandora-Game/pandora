@@ -13,6 +13,7 @@ import { BetaKeyStore } from '../shard/betaKeyStore';
 import { SpaceManager } from '../spaces/spaceManager';
 import type { ClientConnection } from './connection_client';
 import { z } from 'zod';
+import { Sleep } from '../utility';
 
 /** Time (in ms) of how often the directory should send status updates */
 export const STATUS_UPDATE_INTERVAL = 60_000;
@@ -848,13 +849,21 @@ async function TestCaptcha(token?: string): Promise<boolean> {
 function WithConstantTime<TParams extends unknown[], TReturn extends { /** only messages with actual response */ }>(fn: (...args: TParams) => Awaitable<TReturn>, delay: number): (...args: TParams) => Promise<Awaited<TReturn>> {
 	return async (...args: TParams): Promise<Awaited<TReturn>> => {
 		const before = Date.now();
-		const result = await fn(...args);
+		let result: [true, Awaited<TReturn>] | [false, unknown];
+		try {
+			result = [true, await fn(...args)];
+		} catch (e) {
+			result = [false, e];
+		}
 		const after = Date.now();
 		const elapsed = after - before;
 		const remaining = delay - elapsed;
 		if (remaining > 0) {
-			await new Promise((resolve) => setTimeout(resolve, remaining));
+			await Sleep(remaining);
 		}
-		return result;
+		if (!result[0]) {
+			throw result[1];
+		}
+		return result[1];
 	};
 }

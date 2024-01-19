@@ -1,7 +1,10 @@
 import classNames from 'classnames';
 import {
+	AppearanceItemsCalculateTotalCount,
 	AssertNever,
 	Asset,
+	ITEM_LIMIT_CHARACTER_WORN,
+	ITEM_LIMIT_ROOM_INVENTORY,
 	Item,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo } from 'react';
@@ -101,10 +104,14 @@ export function WardrobeItemManipulation({ className }: { className?: string; })
 	const currentFocus = useObservable(focus);
 	const { preFilter, containerContentsFilter, assetFilterAttributes } = useWardrobeItems(currentFocus);
 
-	const title: string = target.type === 'character' ? 'Currently worn items' : 'Room inventory';
+	const appearance = useWardrobeTargetItems(target);
+	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(appearance), [appearance]);
+	const itemLimit: number = target.type === 'character' ? ITEM_LIMIT_CHARACTER_WORN : ITEM_LIMIT_ROOM_INVENTORY;
+	const titlePrefix: string = target.type === 'character' ? 'Currently worn items' : 'Room inventory';
+
+	const title = `${ titlePrefix }, used: ${ itemCount } / ${ itemLimit } (${ Math.ceil(100 * itemCount / itemLimit) }%)`;
 	const isRoomInventory = target.type === 'room' && currentFocus.container.length === 0;
 
-	const appearance = useWardrobeTargetItems(target);
 	const singleItemContainer = useMemo<boolean>(() => {
 		let items = appearance;
 		let container: IItemModule | undefined;

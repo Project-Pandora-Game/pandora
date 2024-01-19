@@ -1,47 +1,13 @@
 import { Logger } from '../logging';
-import { ItemId } from './appearanceTypes';
-import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
+import type { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import type { AssetManager } from './assetManager';
-
-export const ROOM_INVENTORY_MAX_ITEMS = 100;
+import { ValidateItemsPrefix } from './validation';
 
 /** Validates items prefix, ignoring required items */
-export function ValidateRoomInventoryItemsPrefix(_assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {
-
-	// Validate all items
-	const ids = new Set<ItemId>();
-	for (const item of items) {
-		// ID must be unique
-		if (ids.has(item.id))
-			return {
-				success: false,
-				error: {
-					problem: 'invalid',
-				},
-			};
-		ids.add(item.id);
-
-		// Run internal item validation
-		const r = item.validate({
-			roomState: null, // Cannot access room state while validating the room itself
-			location: 'roomInventory',
-		});
-		if (!r.success)
-			return r;
-	}
-
-	// Check there aren't too many items
-	if (items.length > ROOM_INVENTORY_MAX_ITEMS)
-		return {
-			success: false,
-			error: {
-				problem: 'tooManyItems',
-				asset: null,
-				limit: ROOM_INVENTORY_MAX_ITEMS,
-			},
-		};
-
-	return { success: true };
+export function ValidateRoomInventoryItemsPrefix(assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {
+	// Cannot access room state while validating the room itself
+	const roomState = null;
+	return ValidateItemsPrefix(assetManager, items, roomState, 'room');
 }
 
 /** Validates the room inventory items, including all prefixes */
@@ -73,4 +39,3 @@ export function RoomInventoryLoadAndValidate(assetManager: AssetManager, origina
 
 	return resultItems;
 }
-

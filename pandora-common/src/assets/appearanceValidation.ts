@@ -1,6 +1,5 @@
 import { Logger } from '../logging';
 import { Assert, ShuffleArray } from '../utility';
-import type { ItemId } from './appearanceTypes';
 import { FilterAssetType } from './asset';
 import type { AssetManager } from './assetManager';
 import type { AssetType, WearableAssetType } from './definitions';
@@ -8,6 +7,7 @@ import type { AssetId } from './base';
 import type { Item } from './item';
 import { AssetPropertiesResult, CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 import type { AssetFrameworkRoomState } from './state/roomState';
+import { ValidateItemsPrefix } from './validation';
 
 /** Appearance items are immutable, so changes can be created as new object, tested, and only then applied */
 export type AppearanceItems<Type extends AssetType = AssetType> = readonly Item<Type>[];
@@ -128,41 +128,19 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 			};
 	}
 
-	// Validate all items
-	const ids = new Set<ItemId>();
 	let hasDevicePart = false;
-	for (const item of items) {
-		// ID must be unique
-		if (ids.has(item.id))
-			return {
-				success: false,
-				error: {
-					problem: 'invalid',
-				},
-			};
-		ids.add(item.id);
-
-		// Run internal item validation
-		const r = item.validate({
-			location: 'worn',
-			roomState,
-		});
-		if (!r.success)
-			return r;
-
-		// Check that characer is in at most once device
+	ValidateItemsPrefix(assetManager, items, roomState, 'character', (item) => {
+		// Check that character is in at most once device
 		if (item.isType('roomDeviceWearablePart')) {
 			if (hasDevicePart) {
 				return {
-					success: false,
-					error: {
-						problem: 'canOnlyBeInOneDevice',
-					},
+					problem: 'canOnlyBeInOneDevice',
 				};
 			}
 			hasDevicePart = true;
 		}
-	}
+		return null;
+	});
 
 	// Check requirements are met, and check asset count limits
 	const assetCounts = new Map<AssetId, number>();

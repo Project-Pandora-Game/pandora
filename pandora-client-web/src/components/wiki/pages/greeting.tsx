@@ -14,9 +14,6 @@ export function WikiGreeting(): ReactElement {
 
 	return (
 		<Row className='fill-y'>
-			<Row alignX='center' className='maid-container'>
-				<img src={ maid } />
-			</Row>
 			<WikiContent>
 				<p>
 					“ Dear { useHelpUserName() },<br />
@@ -66,6 +63,9 @@ export function WikiGreeting(): ReactElement {
 					)
 				}
 			</WikiContent>
+			<Row alignX='center' className='maid-container'>
+				<img src={ maid } />
+			</Row>
 		</Row>
 	);
 }

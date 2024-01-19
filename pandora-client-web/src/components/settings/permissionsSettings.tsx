@@ -9,6 +9,8 @@ import star from '../../assets/icons/star.svg';
 import arrowRight from '../../assets/icons/arrow-right.svg';
 import questionmark from '../../assets/icons/questionmark.svg';
 import forbid from '../../assets/icons/forbidden.svg';
+import allow from '../../assets/icons/public.svg';
+// TODO: use '../../assets/icons/prompt.svg' as icon for future promptUser permission setting
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferenceType, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfig, PermissionGroup } from 'pandora-common';
@@ -89,11 +91,11 @@ function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
 	return (
 		<div className='input-row'>
 			<label className='flex-1'>
-				<img src={ GetIcon(config.icon) } width='28' height='28' alt='General permission configuration preview' />
+				<img src={ GetIcon(config.icon) } width='28' height='28' alt='permission icon' />
 				&nbsp;&nbsp;
 				{ config.visibleName }
 			</label>
-			<strong>{ effectiveConfig.allowOthers ? 'yes' : 'no' }</strong>
+			<img src={ effectiveConfig.allowOthers ? allow : forbid } width='26' height='26' alt='General permission configuration preview' />
 			<Button
 				className='slim'
 				onClick={ () => setShowConfig(true) }
@@ -148,7 +150,7 @@ function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactEl
 				&nbsp;&nbsp;
 				{ config.visibleName }
 			</label>
-			<strong>{ effectiveConfig.allowOthers ? 'yes' : 'no' }</strong>
+			<img src={ effectiveConfig.allowOthers ? allow : forbid } width='26' height='26' alt='General permission configuration preview' />
 			<Button
 				className='slim'
 				onClick={ () => setShowConfig(true) }

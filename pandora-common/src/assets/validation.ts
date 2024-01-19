@@ -1,7 +1,7 @@
 import type { ItemId } from './appearanceTypes';
-import type { AppearanceItems, AppearanceValidationError, AppearanceValidationResult } from './appearanceValidation';
+import type { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import type { AssetManager } from './assetManager';
-import type { IItemLocationDescriptor, Item } from './item';
+import type { IItemLocationDescriptor } from './item';
 import type { AssetFrameworkRoomState } from './state/roomState';
 import { ITEM_LIMIT_CHARACTER_WORN, ITEM_LIMIT_ROOM_INVENTORY } from './itemLimits';
 
@@ -24,7 +24,6 @@ export function ValidateItemsPrefix(
 	items: AppearanceItems,
 	roomState: AssetFrameworkRoomState | null,
 	type: keyof typeof VALIDATIONS,
-	extraChecks?: (item: Item) => AppearanceValidationError | null,
 ): AppearanceValidationResult {
 	const { location, limit } = VALIDATIONS[type];
 
@@ -46,10 +45,6 @@ export function ValidateItemsPrefix(
 		const r = item.validate({ location, roomState });
 		if (!r.success)
 			return r;
-
-		const error = extraChecks?.(item);
-		if (error)
-			return { success: false, error };
 	}
 
 	if (AppearanceItemsCalculateTotalCount(items) > limit) {

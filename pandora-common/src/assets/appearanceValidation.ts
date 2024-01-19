@@ -128,19 +128,23 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 			};
 	}
 
-	let hasDevicePart = false;
-	ValidateItemsPrefix(assetManager, items, roomState, 'character', (item) => {
-		// Check that character is in at most once device
-		if (item.isType('roomDeviceWearablePart')) {
-			if (hasDevicePart) {
-				return {
-					problem: 'canOnlyBeInOneDevice',
-				};
+	{
+		let hasDevicePart = false;
+		const r = ValidateItemsPrefix(assetManager, items, roomState, 'character', (item) => {
+			// Check that character is in at most once device
+			if (item.isType('roomDeviceWearablePart')) {
+				if (hasDevicePart) {
+					return {
+						problem: 'canOnlyBeInOneDevice',
+					};
+				}
+				hasDevicePart = true;
 			}
-			hasDevicePart = true;
-		}
-		return null;
-	});
+			return null;
+		});
+		if (!r.success)
+			return r;
+	}
 
 	// Check requirements are met, and check asset count limits
 	const assetCounts = new Map<AssetId, number>();

@@ -21,6 +21,7 @@ import { noop } from 'lodash';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator';
+import { HoverElement } from '../hoverElement/hoverElement';
 
 export function PermissionsSettings(): ReactElement | null {
 	const player = usePlayer();
@@ -76,6 +77,7 @@ function GetIcon(icon: string): string {
 }
 
 function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
+	const [ref, setRef] = useState<HTMLElement | null>(null);
 	const config: IInteractionConfig = INTERACTION_CONFIG[id];
 	const [showConfig, setShowConfig] = useState(false);
 	const permissionData = usePermissionData('interaction', id);
@@ -95,7 +97,10 @@ function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
 				&nbsp;&nbsp;
 				{ config.visibleName }
 			</label>
-			<img src={ effectiveConfig.allowOthers ? allow : forbid } width='26' height='26' alt='General permission configuration preview' />
+			<img ref={ setRef } src={ effectiveConfig.allowOthers ? allow : forbid } width='26' height='26' alt='General permission configuration preview' />
+			<HoverElement parent={ ref } className='attribute-description'>
+				{ effectiveConfig.allowOthers ? 'Everyone is allowed to do this, but exceptions can be set individually.' : 'No one is allowed to do this, but exceptions can be set individually.' }
+			</HoverElement>
 			<Button
 				className='slim'
 				onClick={ () => setShowConfig(true) }
@@ -128,6 +133,7 @@ function ItemLimitsPermissions(): ReactElement {
 }
 
 function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactElement | null {
+	const [ref, setRef] = useState<HTMLElement | null>(null);
 	const config = ASSET_PREFERENCES_PERMISSIONS[group];
 	const [showConfig, setShowConfig] = useState(false);
 	const permissionData = usePermissionData('assetPreferences', group);
@@ -150,7 +156,10 @@ function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactEl
 				&nbsp;&nbsp;
 				{ config.visibleName }
 			</label>
-			<img src={ effectiveConfig.allowOthers ? allow : forbid } width='26' height='26' alt='General permission configuration preview' />
+			<img ref={ setRef } src={ effectiveConfig.allowOthers ? allow : forbid } width='26' height='26' alt='General permission configuration preview' />
+			<HoverElement parent={ ref } className='attribute-description'>
+				{ effectiveConfig.allowOthers ? 'Everyone is allowed to do this, but exceptions can be set individually.' : 'No one is allowed to do this, but exceptions can be set individually.' }
+			</HoverElement>
 			<Button
 				className='slim'
 				onClick={ () => setShowConfig(true) }

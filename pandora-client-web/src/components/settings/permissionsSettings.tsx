@@ -1,7 +1,14 @@
 import React, { ReactElement, useCallback, useState } from 'react';
+import onOff from '../../assets/icons/on-off.svg';
+import body from '../../assets/icons/body.svg';
+import color from '../../assets/icons/color.svg';
+import lock from '../../assets/icons/lock.svg';
+import storage from '../../assets/icons/storage.svg';
+import toggle from '../../assets/icons/toggle.svg';
+import star from '../../assets/icons/star.svg';
+import arrowRight from '../../assets/icons/arrow-right.svg';
+import questionmark from '../../assets/icons/questionmark.svg';
 import forbid from '../../assets/icons/forbidden.svg';
-import allow from '../../assets/icons/public.svg';
-// TODO: use '../../assets/icons/prompt.svg' as icon for future promptUser permission setting
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferenceType, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfig, PermissionGroup } from 'pandora-common';
@@ -41,6 +48,31 @@ function InteractionPermissions(): ReactElement {
 	);
 }
 
+function GetIcon(icon: string): string {
+	switch (icon) {
+		case 'star':
+			return star;
+		case 'arrow-right':
+			return arrowRight;
+		case 'questionmark':
+			return questionmark;
+		case 'body':
+			return body;
+		case 'color':
+			return color;
+		case 'lock':
+			return lock;
+		case 'on-off':
+			return onOff;
+		case 'storage':
+			return storage;
+		case 'toggle':
+			return toggle;
+		default:
+			return forbid;
+	}
+}
+
 function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
 	const config: IInteractionConfig = INTERACTION_CONFIG[id];
 	const [showConfig, setShowConfig] = useState(false);
@@ -56,11 +88,12 @@ function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
 
 	return (
 		<div className='input-row'>
-			<label>
-				<img src={ effectiveConfig.allowOthers ? allow : forbid } width='26' height='26' alt='General permission configuration preview' />
+			<label className='flex-1'>
+				<img src={ GetIcon(config.icon) } width='28' height='28' alt='General permission configuration preview' />
 				&nbsp;&nbsp;
 				{ config.visibleName }
 			</label>
+			<strong>{ effectiveConfig.allowOthers ? 'yes' : 'no' }</strong>
 			<Button
 				className='slim'
 				onClick={ () => setShowConfig(true) }
@@ -109,12 +142,13 @@ function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactEl
 		return null;
 
 	return (
-		<div className='input-row'>
-			<label>
-				<img src={ effectiveConfig.allowOthers ? allow : forbid } width='26' height='26' alt='General permission configuration preview' />
+		<div className='input-row flex-1'>
+			<label className='flex-1'>
+				<img src={ GetIcon(config.icon) } width='28' height='28' alt='permission icon' />
 				&nbsp;&nbsp;
 				{ config.visibleName }
 			</label>
+			<strong>{ effectiveConfig.allowOthers ? 'yes' : 'no' }</strong>
 			<Button
 				className='slim'
 				onClick={ () => setShowConfig(true) }

@@ -4,7 +4,7 @@ import deleteIcon from '../../../assets/icons/delete.svg';
 import editIcon from '../../../assets/icons/edit.svg';
 import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { AppearanceBundle, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkOutfit, AssetFrameworkOutfitSchema, AssetFrameworkOutfitWithId, AssetFrameworkRoomState, CloneDeepMutable, CreateItemBundleFromTemplate, GetLogger, ItemContainerPath, ItemTemplate, LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS, LIMIT_OUTFIT_NAME_LENGTH, OutfitMeasureCost } from 'pandora-common';
+import { AppearanceBundle, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkOutfit, AssetFrameworkOutfitSchema, AssetFrameworkOutfitWithId, AssetFrameworkRoomState, CloneDeepMutable, CreateItemBundleFromTemplate, GetLogger, ItemContainerPath, ItemTemplate, ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE, LIMIT_OUTFIT_NAME_LENGTH, OutfitMeasureCost } from 'pandora-common';
 import { useCurrentAccountSettings, useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import _, { clamp, first, noop } from 'lodash';
 import { Column, DivContainer, Row } from '../../common/container/container';
@@ -105,7 +105,7 @@ export function InventoryOutfitView({ targetContainer }: {
 	}
 
 	const storageUsed = storedOutfits.reduce((p, outfit) => p + OutfitMeasureCost(outfit), 0);
-	const storageAvailableTotal = LIMIT_ACCOUNT_OUTFIT_STORAGE_ITEMS;
+	const storageAvailableTotal = ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE;
 
 	if (temporaryOutfit != null) {
 		const saveTemporaryOutfit = () => {

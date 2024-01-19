@@ -2,8 +2,7 @@ import { Logger } from '../logging';
 import { ItemId } from './appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import type { AssetManager } from './assetManager';
-
-export const ROOM_INVENTORY_MAX_ITEMS = 100;
+import { ITEM_LIMIT_ROOM_INVENTORY } from './itemLimits';
 
 /** Validates items prefix, ignoring required items */
 export function ValidateRoomInventoryItemsPrefix(_assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {
@@ -31,13 +30,13 @@ export function ValidateRoomInventoryItemsPrefix(_assetManager: AssetManager, it
 	}
 
 	// Check there aren't too many items
-	if (items.length > ROOM_INVENTORY_MAX_ITEMS)
+	if (items.length > ITEM_LIMIT_ROOM_INVENTORY)
 		return {
 			success: false,
 			error: {
 				problem: 'tooManyItems',
 				asset: null,
-				limit: ROOM_INVENTORY_MAX_ITEMS,
+				limit: ITEM_LIMIT_ROOM_INVENTORY,
 			},
 		};
 
@@ -73,4 +72,3 @@ export function RoomInventoryLoadAndValidate(assetManager: AssetManager, origina
 
 	return resultItems;
 }
-

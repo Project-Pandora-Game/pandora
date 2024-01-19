@@ -4,6 +4,7 @@ import {
 	Asset,
 	AssetFrameworkCharacterState,
 	EMPTY_ARRAY,
+	ITEM_LIMIT_CHARACTER_WORN,
 	Item,
 	ItemId,
 } from 'pandora-common';
@@ -33,6 +34,9 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 		return asset.isType('personal') && asset.definition.bodypart !== undefined;
 	};
 
+	const itemCount = characterState.items.length;
+	const title = `Currently worn items, used: ${ itemCount } / ${ ITEM_LIMIT_CHARACTER_WORN } (${100 * itemCount / ITEM_LIMIT_CHARACTER_WORN}%)`;
+
 	const [selectedItemId, setSelectedItemId] = useState<ItemId | null>(null);
 	const currentFocus = useMemo<WardrobeFocus>(() => ({
 		container: [],
@@ -56,7 +60,7 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
-			<InventoryItemView title='Currently worn items' filter={ filter } focus={ currentFocus } setFocus={ setFocus } />
+			<InventoryItemView title={ title } filter={ filter } focus={ currentFocus } setFocus={ setFocus } />
 			<TabContainer className={ classNames('flex-1', WardrobeFocusesItem(currentFocus) && 'hidden') }>
 				<Tab name='Change body parts'>
 					<InventoryAssetView

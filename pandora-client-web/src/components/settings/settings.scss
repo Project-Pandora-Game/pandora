@@ -1,5 +1,14 @@
 @import '../../styles/common';
 
+.attribute-description {
+	background: white;
+	padding: 1em;
+	border: 2px solid black;
+	border-radius: 1em;
+	line-height: 1.5em;
+	text-align: center;
+}
+
 .settings {
 	display: flex;
 	padding: 0.5em 0 0 0 !important;
@@ -59,9 +68,10 @@
 					flex-direction: row;
 					align-items: center;
 
+
 					img {
 						vertical-align: middle;
-						margin-top: -0.2em;
+						margin-top: -0.1em;
 					}
 				}
 

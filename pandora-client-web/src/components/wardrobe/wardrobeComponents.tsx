@@ -154,7 +154,7 @@ export function WardrobeActionButton({
 }
 
 export const MIN_RANDOMIZE_UPDATE_INTERVAL = 10;
-export const WardrobeActionRandomizeUpdateInterval = BrowserStorage.create('wardrobe-action-randomize-update-interval', 100, z.number().min(0).max(10000));
+export const WardrobeActionRandomizeUpdateInterval = BrowserStorage.create('wardrobe-action-randomize-update-interval', 800, z.number().min(0).max(10000));
 
 export function WardrobeActionRandomizeButton({
 	kind,

@@ -139,7 +139,7 @@ $drop-overlay-gap: 0.3em;
 		gap: 0.3em;
 		border-bottom: solid black 1px;
 
-		span {
+		> span {
 			flex: 1;
 			display: flex;
 			align-items: center;

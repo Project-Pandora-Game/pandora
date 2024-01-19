@@ -60,17 +60,6 @@ export type AppearanceValidationResult = {
 	error: AppearanceValidationError;
 };
 
-export function AppearanceItemsCalculateTotalCount(items: AppearanceItems): number {
-	let itemCount = 0;
-	for (const item of items) {
-		itemCount++;
-		for (const module of item.getModules().values()) {
-			itemCount += AppearanceItemsCalculateTotalCount(module.getContents());
-		}
-	}
-	return itemCount;
-}
-
 export function AppearanceValidationCombineResults(result1: AppearanceValidationResult, result2: AppearanceValidationResult): AppearanceValidationResult {
 	return !result1.success ? result1 : result2;
 }

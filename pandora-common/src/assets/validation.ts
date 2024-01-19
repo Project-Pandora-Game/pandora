@@ -1,8 +1,8 @@
 import type { ItemId } from './appearanceTypes';
+import type { AppearanceItems, AppearanceValidationError, AppearanceValidationResult } from './appearanceValidation';
 import type { AssetManager } from './assetManager';
 import type { IItemLocationDescriptor, Item } from './item';
 import type { AssetFrameworkRoomState } from './state/roomState';
-import { AppearanceItemsCalculateTotalCount, AppearanceItems, AppearanceValidationError, AppearanceValidationResult } from './appearanceValidation';
 import { ITEM_LIMIT_CHARACTER_WORN, ITEM_LIMIT_ROOM_INVENTORY } from './itemLimits';
 
 const VALIDATIONS = {
@@ -64,4 +64,15 @@ export function ValidateItemsPrefix(
 	}
 
 	return { success: true };
+}
+
+export function AppearanceItemsCalculateTotalCount(items: AppearanceItems): number {
+	let itemCount = 0;
+	for (const item of items) {
+		itemCount++;
+		for (const module of item.getModules().values()) {
+			itemCount += AppearanceItemsCalculateTotalCount(module.getContents());
+		}
+	}
+	return itemCount;
 }

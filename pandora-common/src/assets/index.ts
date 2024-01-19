@@ -17,4 +17,5 @@ export * from './properties';
 export * from './roomDeviceProperties';
 export * from './roomInventory';
 export * from './roomValidation';
+export * from './validation';
 export * from './state/_index';

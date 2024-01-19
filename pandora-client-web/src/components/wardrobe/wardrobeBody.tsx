@@ -36,7 +36,7 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 	};
 
 	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(characterState.items), [characterState.items]);
-	const title = `Currently worn items, used: ${ itemCount } / ${ ITEM_LIMIT_CHARACTER_WORN } (${100 * itemCount / ITEM_LIMIT_CHARACTER_WORN}%)`;
+	const title = `Currently worn items, used: ${ itemCount } / ${ ITEM_LIMIT_CHARACTER_WORN } (${ Math.ceil(100 * itemCount / ITEM_LIMIT_CHARACTER_WORN) }%)`;
 
 	const [selectedItemId, setSelectedItemId] = useState<ItemId | null>(null);
 	const currentFocus = useMemo<WardrobeFocus>(() => ({

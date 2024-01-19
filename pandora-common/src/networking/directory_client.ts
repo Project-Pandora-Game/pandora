@@ -84,6 +84,7 @@ export const DirectoryAccountSettingsSchema = z.object({
 	 * - Ghost: Darken + semi-transparent
 	 */
 	interfaceChatroomOfflineCharacterFilter: z.enum(['none', 'icon', 'darken', 'ghost']).default('ghost'),
+	favoriteBackgroundIds: z.array(z.string()),
 });
 export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;
 
@@ -103,6 +104,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,
 	interfaceChatroomOfflineCharacterFilter: 'ghost',
+	favoriteBackgroundIds: [],
 });
 
 export const ACCOUNT_SETTINGS_LIMITED_LIMITS = Object.freeze({

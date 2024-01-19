@@ -18,6 +18,7 @@ import {
 	LIMIT_SPACE_DESCRIPTION_LENGTH,
 	LIMIT_SPACE_NAME_LENGTH,
 	CloneDeepMutable,
+	IDirectoryAccountInfo,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -43,6 +44,8 @@ import { ColorInput } from '../../../components/common/colorInput/colorInput';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { Immutable } from 'immer';
+import starEmpty from '../../../icons/star-empty.svg';
+import starFilled from '../../../icons/star-filled.svg';
 
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
 const IsValidDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
@@ -237,6 +240,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 			</FieldsetToggle>
 			<FieldsetToggle legend='Background'>
 				{ showBackgrounds && <BackgroundSelectDialog
+					currentAccount={ currentAccount }
 					hide={ () => setShowBackgrounds(false) }
 					current={ currentConfigBackground }
 					select={ (background) => setModifiedData({ background }) }
@@ -594,7 +598,8 @@ function BackgroundInfo({ background }: { background: string; }): ReactElement {
 	);
 }
 
-function BackgroundSelectDialog({ hide, current, select }: {
+function BackgroundSelectDialog({ currentAccount, hide, current, select }: {
+	currentAccount: IDirectoryAccountInfo;
 	hide: () => void;
 	current: string | SpaceDirectoryConfig['background'];
 	select: (background: SpaceDirectoryConfig['background']) => void;
@@ -672,28 +677,37 @@ function BackgroundSelectDialog({ hide, current, select }: {
 				</div>
 				<Scrollbar className='backgrounds' color='lighter'>
 					{ backgroundsToShow
-						.map((b) => (
-							<a key={ b.id }
-								onClick={ () => {
-									setSelectedBackground(b.id);
-								} }
-							>
-								<SelectionIndicator
-									direction='column'
-									align='center'
-									justify='center'
-									padding='small'
-									selected={ b.id === selectedBackground }
-									active={ b.id === current }
-									className='details'
+						.map((b) => {
+							const favorited = currentAccount.settings.favoriteBackgroundIds.includes(b.id);
+							return (
+								<a key={ b.id }
+									onClick={ () => {
+										setSelectedBackground(b.id);
+									} }
 								>
-									<div className='preview'>
-										<img src={ GetAssetsSourceUrl() + b.preview } />
-									</div>
-									<div className='name'>{ b.name }</div>
-								</SelectionIndicator>
-							</a>
-						)) }
+									<SelectionIndicator
+										direction='column'
+										align='center'
+										justify='center'
+										padding='small'
+										selected={ b.id === selectedBackground }
+										active={ b.id === current }
+										className='details'
+									>
+										<div className='preview'>
+											<img src={ GetAssetsSourceUrl() + b.preview } />
+											<img src={ favorited ? starFilled : starEmpty } className='star'
+												onClick={ (e) => {
+													e.stopPropagation();
+													currentAccount.settings.favoriteBackgroundIds.push(b.id);
+													GetLogger('xxx').info('clickedd :D');
+												} } />
+										</div>
+										<div className='name'>{ b.name }</div>
+									</SelectionIndicator>
+								</a>
+							);
+						}) }
 				</Scrollbar>
 				<Row className='footer' alignX='space-between'>
 					<Button onClick={ hide }>Cancel</Button>

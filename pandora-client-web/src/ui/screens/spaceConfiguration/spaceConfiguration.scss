@@ -171,6 +171,18 @@
 				flex: 1;
 				overflow: hidden;
 
+				.star {
+					position: absolute;
+					top: 0px;
+					right: 1em;
+					box-shadow: none;
+					visibility: hidden;
+				}
+
+				&:hover .star {
+					visibility: visible;
+				}
+
 				img {
 					max-width: 100%;
 					max-height: 100%;

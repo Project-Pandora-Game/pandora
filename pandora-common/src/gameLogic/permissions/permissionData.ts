@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CharacterIdSchema } from '../../character/characterTypes';
 
 export const PermissionGroupSchema = z.enum([
 	'interaction',
@@ -28,7 +29,13 @@ export const PermissionSetupSchema = z.object({
 export type PermissionSetup = z.infer<typeof PermissionSetupSchema>;
 
 export const PermissionConfigSchema = PermissionConfigDefaultSchema.extend({
-
+	characterOverrides: z.record(CharacterIdSchema, PermissionTypeSchema),
 });
+
+export const PermissionConfigChangeSchema = z.object({
+	selector: CharacterIdSchema.or(z.literal('default')),
+	allowOthers: PermissionTypeSchema.nullable(),
+}).nullable();
+export type PermissionConfigChange = z.infer<typeof PermissionConfigChangeSchema>;
 
 export type PermissionConfig = z.infer<typeof PermissionConfigSchema>;

@@ -52,6 +52,7 @@ export abstract class GameLogicPermission extends TypedEventEmitter<GameLogicPer
 export function MakePermissionConfigFromDefault(defaultConfig: PermissionConfigDefault): PermissionConfig {
 	return {
 		allowOthers: defaultConfig.allowOthers,
+		characterOverrides: {},
 	};
 }
 

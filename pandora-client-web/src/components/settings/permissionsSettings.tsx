@@ -13,7 +13,7 @@ import allow from '../../assets/icons/public.svg';
 import prompt from '../../assets/icons/prompt.svg';
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
-import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferenceType, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfig, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferenceType, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ModalDialog } from '../dialog/dialog';
 import { Column, Row } from '../common/container/container';
@@ -213,16 +213,16 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 	const shardConnector = useShardConnector();
 	const permissionData = usePermissionData(permissionGroup, permissionId);
 
-	const setConfig = useCallback((newConfig: null | Partial<PermissionConfig>) => {
+	const setConfig = useCallback((allowOthers: PermissionType | null) => {
 		if (shardConnector == null || permissionData?.result !== 'ok')
 			return;
 
 		shardConnector.awaitResponse('permissionSet', {
 			permissionGroup,
 			permissionId,
-			config: newConfig == null ? null : {
-				...(permissionData.permissionConfig ?? MakePermissionConfigFromDefault(permissionData.permissionSetup.defaultConfig)),
-				...newConfig,
+			config: {
+				selector: 'default',
+				allowOthers,
 			},
 		})
 			.then((result) => {
@@ -288,7 +288,7 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 
 function PermissionAllowOthersSelector({ type, setConfig, effectiveConfig, permissionSetup }: {
 	type: PermissionType;
-	setConfig: (newConfig: null | Partial<PermissionConfig>) => void;
+	setConfig: (allowOthers: PermissionType) => void;
 	effectiveConfig: { allowOthers: PermissionType; };
 	permissionSetup: PermissionSetup;
 }): ReactElement {
@@ -297,7 +297,7 @@ function PermissionAllowOthersSelector({ type, setConfig, effectiveConfig, permi
 		if (disabled)
 			return;
 
-		setConfig({ allowOthers: type });
+		setConfig(type);
 	}, [disabled, setConfig, type]);
 
 	return (

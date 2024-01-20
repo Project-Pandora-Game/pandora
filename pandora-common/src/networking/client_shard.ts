@@ -8,7 +8,7 @@ import { CharacterInputNameSchema, ZodCast } from '../validation';
 import { Satisfies } from '../utility';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 import { Immutable } from 'immer';
-import { PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic';
+import { PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
 import { AssetPreferencesPublicSchema } from '../character/assetPreferences';
 
@@ -121,7 +121,7 @@ export const ClientShardSchema = {
 		request: z.object({
 			permissionGroup: PermissionGroupSchema,
 			permissionId: z.string(),
-			config: PermissionConfigSchema.nullable(),
+			config: PermissionConfigChangeSchema,
 		}),
 		response: z.discriminatedUnion('result', [
 			z.object({

@@ -10,6 +10,9 @@ import {
 	ItemId,
 	ItemPath,
 	ActionTargetSelector,
+	ITEM_LIMIT_CHARACTER_WORN,
+	ITEM_LIMIT_ROOM_INVENTORY,
+	AppearanceItemsCalculateTotalCount,
 } from 'pandora-common';
 import React, { ReactElement, useEffect, useMemo } from 'react';
 import { useObservable } from '../../../observable';
@@ -23,7 +26,7 @@ import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { WardrobeFocus, WardrobeHeldItem } from '../wardrobeTypes';
 import { useWardrobeContext } from '../wardrobeContext';
 import { useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
-import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
+import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
 import { useNavigate } from 'react-router';
 import { Button } from '../../common/button/button';
 
@@ -42,6 +45,7 @@ export function InventoryItemView({
 }): ReactElement | null {
 	const { target, targetSelector, heldItem } = useWardrobeContext();
 	const appearance = useWardrobeTargetItems(target);
+	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(appearance), [appearance]);
 	const navigate = useNavigate();
 
 	const [displayedItems, containerModule, containerSteps] = useMemo<[AppearanceItems, IItemModule | undefined, readonly string[]]>(() => {
@@ -99,8 +103,9 @@ export function InventoryItemView({
 							</div>
 						</>
 					) :
-						<span>{ title }</span>
+						<StorageUsageMeter title={ title } used={ itemCount } limit={ target.type === 'character' ? ITEM_LIMIT_CHARACTER_WORN : ITEM_LIMIT_ROOM_INVENTORY } />
 				}
+				<div className='flex-1' />
 				{ target.type === 'room' ?
 					<Button className='slim' onClick={ () =>
 						navigate('/wardrobe') } >

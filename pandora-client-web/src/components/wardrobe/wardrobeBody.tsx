@@ -1,11 +1,9 @@
 import classNames from 'classnames';
 import {
-	AppearanceItemsCalculateTotalCount,
 	Assert,
 	Asset,
 	AssetFrameworkCharacterState,
 	EMPTY_ARRAY,
-	ITEM_LIMIT_CHARACTER_WORN,
 	Item,
 	ItemId,
 } from 'pandora-common';
@@ -35,8 +33,7 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 		return asset.isType('personal') && asset.definition.bodypart !== undefined;
 	};
 
-	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(characterState.items), [characterState.items]);
-	const title = `Currently worn items, used: ${ itemCount } / ${ ITEM_LIMIT_CHARACTER_WORN } (${ Math.ceil(100 * itemCount / ITEM_LIMIT_CHARACTER_WORN) }%)`;
+	const title = `Currently worn items`;
 
 	const [selectedItemId, setSelectedItemId] = useState<ItemId | null>(null);
 	const currentFocus = useMemo<WardrobeFocus>(() => ({

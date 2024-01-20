@@ -4,7 +4,23 @@ import deleteIcon from '../../../assets/icons/delete.svg';
 import editIcon from '../../../assets/icons/edit.svg';
 import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { AppearanceBundle, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkOutfit, AssetFrameworkOutfitSchema, AssetFrameworkOutfitWithId, AssetFrameworkRoomState, CloneDeepMutable, CreateItemBundleFromTemplate, GetLogger, ItemContainerPath, ItemTemplate, ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE, LIMIT_OUTFIT_NAME_LENGTH, OutfitMeasureCost } from 'pandora-common';
+import {
+	AppearanceBundle,
+	AssetFrameworkCharacterState,
+	AssetFrameworkGlobalState,
+	AssetFrameworkOutfit,
+	AssetFrameworkOutfitSchema,
+	AssetFrameworkOutfitWithId,
+	AssetFrameworkRoomState,
+	CloneDeepMutable,
+	CreateItemBundleFromTemplate,
+	GetLogger,
+	ItemContainerPath,
+	ItemTemplate,
+	ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE,
+	LIMIT_OUTFIT_NAME_LENGTH,
+	OutfitMeasureCost,
+} from 'pandora-common';
 import { useCurrentAccountSettings, useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import _, { clamp, first, noop } from 'lodash';
 import { Column, DivContainer, Row } from '../../common/container/container';
@@ -15,7 +31,7 @@ import { nanoid } from 'nanoid';
 import { OutfitEditView } from './wardrobeOutfitEditView';
 import { useAssetManager } from '../../../assets/assetManager';
 import { useWardrobeContext } from '../wardrobeContext';
-import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
+import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
 import { ImportDialog } from '../../exportImport/importDialog';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../../graphics/graphicsCharacter';
@@ -88,7 +104,8 @@ export function InventoryOutfitView({ targetContainer }: {
 		return (
 			<div className='inventoryView'>
 				<div className='toolbar'>
-					<span>Storage used: Loading...</span>
+					<StorageUsageMeter title='Storage used' used={ null } limit={ ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE } />
+					<div className='flex-1' />
 					<Button
 						onClick={ () => {
 							setIsImporting(true);
@@ -193,7 +210,7 @@ export function InventoryOutfitView({ targetContainer }: {
 			<div className='inventoryView'>
 				<div className='toolbar'>
 					<span>Editing outfit: { editedOutfit?.name ?? editedOutfitId }</span>
-					<span>Storage used: { storageUsed } / { storageAvailableTotal } ({ Math.ceil(100 * storageUsed / storageAvailableTotal) }%)</span>
+					<StorageUsageMeter title='Storage used' used={ storageUsed } limit={ storageAvailableTotal } />
 					<button className='modeButton' onClick={ () => setEditedOutfitId(null) }>✖️</button>
 				</div>
 				{
@@ -247,7 +264,8 @@ export function InventoryOutfitView({ targetContainer }: {
 				) : null
 			}
 			<div className='toolbar'>
-				<span>Storage used: { storageUsed } / { storageAvailableTotal } ({ Math.ceil(100 * storageUsed / storageAvailableTotal) }%)</span>
+				<StorageUsageMeter title='Storage used' used={ storageUsed } limit={ storageAvailableTotal } />
+				<div className='flex-1' />
 				<Button
 					onClick={ () => {
 						setIsImporting(true);

@@ -35,8 +35,14 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 		return this._config;
 	}
 
-	public setConfig(newConfig: PermissionConfig | null): void {
+	public setConfig(newConfig: PermissionConfig | null): boolean {
+		if (newConfig?.allowOthers != null && this.forbidDefaultAllowOthers?.includes(newConfig.allowOthers)) {
+			return false;
+		}
+
 		this._config = cloneDeep(newConfig);
 		this.emit('configChanged', undefined);
+
+		return true;
 	}
 }

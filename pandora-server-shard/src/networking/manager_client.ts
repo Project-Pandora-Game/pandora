@@ -1,4 +1,4 @@
-import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter, IClientShardNormalResult, NaturalListJoin, PermissionGroup } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter, IClientShardNormalResult, NaturalListJoin, PermissionGroup, CloneDeepMutable } from 'pandora-common';
 import { ClientConnection } from './connection_client';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager } from '../assets/assetManager';
@@ -354,7 +354,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		return {
 			result: 'ok',
-			permissionSetup: permission.setup,
+			permissionSetup: CloneDeepMutable(permission.setup),
 			permissionConfig: permission.getConfig(),
 		};
 	}
@@ -370,9 +370,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			};
 		}
 
-		permission.setConfig(config);
+		const result = permission.setConfig(config);
 		return {
-			result: 'ok',
+			result: result ? 'ok' : 'invalidConfig',
 		};
 	}
 

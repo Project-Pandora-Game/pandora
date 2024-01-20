@@ -22,6 +22,7 @@ export const PermissionSetupSchema = z.object({
 	id: z.string(),
 	displayName: z.string(),
 	defaultConfig: PermissionConfigDefaultSchema,
+	forbidDefaultAllowOthers: z.array(PermissionTypeSchema).optional(),
 });
 
 export type PermissionSetup = z.infer<typeof PermissionSetupSchema>;

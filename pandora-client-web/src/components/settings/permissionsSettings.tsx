@@ -13,7 +13,7 @@ import allow from '../../assets/icons/public.svg';
 import prompt from '../../assets/icons/prompt.svg';
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
-import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferenceType, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfig, PermissionGroup, PermissionType } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferenceType, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfig, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ModalDialog } from '../dialog/dialog';
 import { Column, Row } from '../common/container/container';
@@ -22,6 +22,7 @@ import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator';
 import { HoverElement } from '../hoverElement/hoverElement';
+import type { Immutable } from 'immer';
 
 export function PermissionsSettings(): ReactElement | null {
 	const player = usePlayer();
@@ -130,7 +131,7 @@ function ShowEffectiveAllowOthers({ permissionGroup, permissionId }: { permissio
 }
 
 function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
-	const config: IInteractionConfig = INTERACTION_CONFIG[id];
+	const config: Immutable<IInteractionConfig> = INTERACTION_CONFIG[id];
 	const [showConfig, setShowConfig] = useState(false);
 
 	return (
@@ -271,15 +272,9 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 				<Row alignX='space-between' alignY='center'>
 					<span>Allow others:</span>
 					<Row>
-						<SelectionIndicator selected={ effectiveConfig.allowOthers === 'no' }>
-							<Button slim onClick={ () => setConfig({ allowOthers: 'no' }) }>No</Button>
-						</SelectionIndicator>
-						<SelectionIndicator selected={ effectiveConfig.allowOthers === 'yes' }>
-							<Button slim onClick={ () => setConfig({ allowOthers: 'yes' }) }>Yes</Button>
-						</SelectionIndicator>
-						<SelectionIndicator selected={ effectiveConfig.allowOthers === 'prompt' }>
-							<Button slim onClick={ () => setConfig({ allowOthers: 'prompt' }) }>Prompt</Button>
-						</SelectionIndicator>
+						<PermissionAllowOthersSelector type='no' setConfig={ setConfig } effectiveConfig={ effectiveConfig } permissionSetup={ permissionSetup } />
+						<PermissionAllowOthersSelector type='yes' setConfig={ setConfig } effectiveConfig={ effectiveConfig } permissionSetup={ permissionSetup } />
+						<PermissionAllowOthersSelector type='prompt' setConfig={ setConfig } effectiveConfig={ effectiveConfig } permissionSetup={ permissionSetup } />
 					</Row>
 				</Row>
 			</Column>
@@ -288,6 +283,27 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 				<Button onClick={ hide }>Close</Button>
 			</Row>
 		</ModalDialog>
+	);
+}
+
+function PermissionAllowOthersSelector({ type, setConfig, effectiveConfig, permissionSetup }: {
+	type: PermissionType;
+	setConfig: (newConfig: null | Partial<PermissionConfig>) => void;
+	effectiveConfig: { allowOthers: PermissionType; };
+	permissionSetup: PermissionSetup;
+}): ReactElement {
+	const disabled = permissionSetup.forbidDefaultAllowOthers ? permissionSetup.forbidDefaultAllowOthers.includes(type) : false;
+	const onClick = useCallback(() => {
+		if (disabled)
+			return;
+
+		setConfig({ allowOthers: type });
+	}, [disabled, setConfig, type]);
+
+	return (
+		<SelectionIndicator selected={ effectiveConfig.allowOthers === type }>
+			<Button slim onClick={ onClick } disabled={ disabled }>{ type }</Button>
+		</SelectionIndicator>
 	);
 }
 

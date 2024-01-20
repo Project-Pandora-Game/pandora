@@ -23,6 +23,9 @@ export abstract class GameLogicPermission extends TypedEventEmitter<GameLogicPer
 	public get defaultConfig(): Immutable<PermissionConfigDefault> {
 		return this.setup.defaultConfig;
 	}
+	public get forbidDefaultAllowOthers(): readonly PermissionType[] | undefined {
+		return this.setup.forbidDefaultAllowOthers;
+	}
 
 	public readonly character: GameLogicCharacter;
 

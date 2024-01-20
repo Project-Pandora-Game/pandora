@@ -130,6 +130,9 @@ export const ClientShardSchema = {
 			z.object({
 				result: z.literal('notFound'),
 			}),
+			z.object({
+				result: z.literal('invalidConfig'),
+			}),
 		]),
 	},
 	permissionCheck: {

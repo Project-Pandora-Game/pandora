@@ -7,13 +7,12 @@ export const PermissionGroupSchema = z.enum([
 
 export type PermissionGroup = z.infer<typeof PermissionGroupSchema>;
 
+export const PermissionTypeSchema = z.enum(['yes', 'no', 'prompt']);
+export type PermissionType = z.infer<typeof PermissionTypeSchema>;
+export type PermissionTypeInvalid = Exclude<PermissionType, 'yes'>;
+
 export const PermissionConfigDefaultSchema = z.object({
-	/**
-	 * TEMPORARY
-	 *
-	 * If others are allowed access (simple yes/no)
-	 */
-	allowOthers: z.boolean(),
+	allowOthers: PermissionTypeSchema,
 });
 
 export type PermissionConfigDefault = z.infer<typeof PermissionConfigDefaultSchema>;

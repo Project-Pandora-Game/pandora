@@ -8,9 +8,9 @@ import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { Item, RoomDeviceLink } from '../assets/item';
 import { AppearanceActionProcessingContext, Asset, AssetId, ItemContainerPath, ItemId, ItemPath, ActionTarget, RestrictionOverrideConfig, GetRestrictionOverrideConfig } from '../assets';
 import { AppearanceItemProperties } from '../assets/appearanceValidation';
-import { Immutable } from 'immer';
+import type { Immutable } from 'immer';
 import { GameLogicCharacter } from '../gameLogic/character/character';
-import { PermissionGroup } from '../gameLogic';
+import type { PermissionGroup, PermissionTypeInvalid } from '../gameLogic';
 import { CharacterId } from './characterTypes';
 import { AssetPreferenceResolution } from './assetPreferences';
 import { AssertNever } from '../utility';
@@ -80,6 +80,7 @@ export type PermissionRestriction = {
 	permissionGroup: PermissionGroup;
 	permissionId: string;
 	permissionDescription: string;
+	permissionResult: PermissionTypeInvalid;
 };
 
 export type Restriction =

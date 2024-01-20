@@ -117,10 +117,14 @@ export class AppearanceActionProcessingContext {
 		this._requiredPermissions.add(permission);
 
 		// Check the permission
+		const result = permission.checkPermission(this.player);
+		if (result === 'yes')
+			return;
+
 		if (!permission.checkPermission(this.player)) {
 			this.addProblem({
 				result: 'restrictionError',
-				restriction: permission.getRestrictionDescriptor(),
+				restriction: permission.getRestrictionDescriptor(result),
 			});
 		}
 	}

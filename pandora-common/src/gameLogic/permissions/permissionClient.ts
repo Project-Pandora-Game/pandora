@@ -1,6 +1,6 @@
-import { GameLogicCharacter } from '../character/character';
-import { PermissionSetup } from './permissionData';
-import { Immutable } from 'immer';
+import type { GameLogicCharacter } from '../character/character';
+import type { PermissionSetup, PermissionType } from './permissionData';
+import type { Immutable } from 'immer';
 import { GameLogicPermission } from './permission';
 
 export class GameLogicPermissionClient extends GameLogicPermission {
@@ -8,11 +8,11 @@ export class GameLogicPermissionClient extends GameLogicPermission {
 		super(character, setup);
 	}
 
-	public override checkPermission(actingCharacter: GameLogicCharacter): boolean {
+	public override checkPermission(actingCharacter: GameLogicCharacter): PermissionType {
 		if (actingCharacter.id === this.character.id)
-			return true;
+			return 'yes';
 
 		// Client knows nothing about permissions, so assume we can (server will correct us otherwise)
-		return true;
+		return 'yes';
 	}
 }

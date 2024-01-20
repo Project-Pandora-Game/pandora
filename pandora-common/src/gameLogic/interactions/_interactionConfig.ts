@@ -10,42 +10,42 @@ export const INTERACTION_CONFIG = {
 		visibleName: 'Interact with this character',
 		icon: 'on-off',
 		defaultPermissions: {
-			allowOthers: true,
+			allowOthers: 'prompt',
 		},
 	},
 	modifyBody: {
 		visibleName: `Modify this character's body`,
 		icon: 'body',
 		defaultPermissions: {
-			allowOthers: false,
+			allowOthers: 'no',
 		},
 	},
 	changeItemColor: {
 		visibleName: 'Change the color or style of worn items',
 		icon: 'color',
 		defaultPermissions: {
-			allowOthers: true,
+			allowOthers: 'yes',
 		},
 	},
 	useStorageModule: {
 		visibleName: 'Interact with items stored inside worn items',
 		icon: 'storage',
 		defaultPermissions: {
-			allowOthers: false,
+			allowOthers: 'no',
 		},
 	},
 	useLockSlotModule: {
 		visibleName: 'Change and interact with locks on worn items',
 		icon: 'lock',
 		defaultPermissions: {
-			allowOthers: true,
+			allowOthers: 'yes',
 		},
 	},
 	useTypedModule: {
 		visibleName: 'Change the state of worn items',
 		icon: 'toggle',
 		defaultPermissions: {
-			allowOthers: true,
+			allowOthers: 'yes',
 		},
 	},
 } as const satisfies Immutable<Record<InteractionGenericId, IInteractionConfig>>;

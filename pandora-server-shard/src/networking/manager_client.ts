@@ -324,7 +324,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const checkResult = permission.checkPermission(client.character.gameLogicCharacter);
 
 		return {
-			result: checkResult ? 'ok' : 'noAccess',
+			result: 'ok',
+			permission: checkResult,
 		};
 	}
 

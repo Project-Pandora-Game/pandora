@@ -1,4 +1,4 @@
-import React, { ReactElement, useCallback, useState } from 'react';
+import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import onOff from '../../assets/icons/on-off.svg';
 import body from '../../assets/icons/body.svg';
 import color from '../../assets/icons/color.svg';
@@ -10,10 +10,10 @@ import arrowRight from '../../assets/icons/arrow-right.svg';
 import questionmark from '../../assets/icons/questionmark.svg';
 import forbid from '../../assets/icons/forbidden.svg';
 import allow from '../../assets/icons/public.svg';
-// TODO: use '../../assets/icons/prompt.svg' as icon for future promptUser permission setting
+import prompt from '../../assets/icons/prompt.svg';
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
-import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferenceType, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfig, PermissionGroup } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferenceType, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfig, PermissionGroup, PermissionType } from 'pandora-common';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ModalDialog } from '../dialog/dialog';
 import { Column, Row } from '../common/container/container';
@@ -76,19 +76,62 @@ function GetIcon(icon: string): string {
 	}
 }
 
-function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
+function useEffectiveAllowOthers(permissionGroup: PermissionGroup, permissionId: string): PermissionType {
+	const permissionData = usePermissionData(permissionGroup, permissionId);
+	if (permissionData?.result !== 'ok')
+		return 'no';
+
+	const {
+		permissionSetup,
+		permissionConfig,
+	} = permissionData;
+
+	if (permissionConfig != null)
+		return permissionConfig.allowOthers;
+
+	return MakePermissionConfigFromDefault(permissionSetup.defaultConfig).allowOthers;
+}
+
+function ShowEffectiveAllowOthers({ permissionGroup, permissionId }: { permissionGroup: PermissionGroup; permissionId: string; }): ReactElement {
+	const effectiveConfig = useEffectiveAllowOthers(permissionGroup, permissionId);
 	const [ref, setRef] = useState<HTMLElement | null>(null);
+
+	const { src, alt, description } = useMemo(() => {
+		switch (effectiveConfig) {
+			case 'yes':
+				return {
+					src: allow,
+					alt: 'General permission configuration preview',
+					description: 'Everyone is allowed to do this, but exceptions can be set individually.',
+				};
+			case 'no':
+				return {
+					src: forbid,
+					alt: 'General permission configuration preview',
+					description: 'No one is allowed to do this, but exceptions can be set individually.',
+				};
+			case 'prompt':
+				return {
+					src: prompt,
+					alt: 'General permission configuration preview',
+					description: 'Trying to use this permission opens a popup that lets the targeted user decide if they want to give or deny the requester this permission. Exceptions can be set individually.',
+				};
+		}
+	}, [effectiveConfig]);
+
+	return (
+		<>
+			<img ref={ setRef } src={ src } width='26' height='26' alt={ alt } />
+			<HoverElement parent={ ref } className='attribute-description'>
+				{ description }
+			</HoverElement>
+		</>
+	);
+}
+
+function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
 	const config: IInteractionConfig = INTERACTION_CONFIG[id];
 	const [showConfig, setShowConfig] = useState(false);
-	const permissionData = usePermissionData('interaction', id);
-	let effectiveConfig: { allowOthers: boolean; } = { allowOthers: false };
-	if (permissionData?.result === 'ok') {
-		const {
-			permissionSetup,
-			permissionConfig,
-		} = permissionData;
-		effectiveConfig = permissionConfig ?? MakePermissionConfigFromDefault(permissionSetup.defaultConfig);
-	}
 
 	return (
 		<div className='input-row'>
@@ -97,10 +140,7 @@ function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
 				&nbsp;&nbsp;
 				{ config.visibleName }
 			</label>
-			<img ref={ setRef } src={ effectiveConfig.allowOthers ? allow : forbid } width='26' height='26' alt='General permission configuration preview' />
-			<HoverElement parent={ ref } className='attribute-description'>
-				{ effectiveConfig.allowOthers ? 'Everyone is allowed to do this, but exceptions can be set individually.' : 'No one is allowed to do this, but exceptions can be set individually.' }
-			</HoverElement>
+			<ShowEffectiveAllowOthers permissionGroup='interaction' permissionId={ id } />
 			<Button
 				className='slim'
 				onClick={ () => setShowConfig(true) }
@@ -133,18 +173,8 @@ function ItemLimitsPermissions(): ReactElement {
 }
 
 function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactElement | null {
-	const [ref, setRef] = useState<HTMLElement | null>(null);
 	const config = ASSET_PREFERENCES_PERMISSIONS[group];
 	const [showConfig, setShowConfig] = useState(false);
-	const permissionData = usePermissionData('assetPreferences', group);
-	let effectiveConfig: { allowOthers: boolean; } = { allowOthers: false };
-	if (permissionData?.result === 'ok') {
-		const {
-			permissionSetup,
-			permissionConfig,
-		} = permissionData;
-		effectiveConfig = permissionConfig ?? MakePermissionConfigFromDefault(permissionSetup.defaultConfig);
-	}
 
 	if (config == null)
 		return null;
@@ -156,10 +186,7 @@ function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactEl
 				&nbsp;&nbsp;
 				{ config.visibleName }
 			</label>
-			<img ref={ setRef } src={ effectiveConfig.allowOthers ? allow : forbid } width='26' height='26' alt='General permission configuration preview' />
-			<HoverElement parent={ ref } className='attribute-description'>
-				{ effectiveConfig.allowOthers ? 'Everyone is allowed to do this, but exceptions can be set individually.' : 'No one is allowed to do this, but exceptions can be set individually.' }
-			</HoverElement>
+			<ShowEffectiveAllowOthers permissionGroup='assetPreferences' permissionId={ group } />
 			<Button
 				className='slim'
 				onClick={ () => setShowConfig(true) }
@@ -244,11 +271,14 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 				<Row alignX='space-between' alignY='center'>
 					<span>Allow others:</span>
 					<Row>
-						<SelectionIndicator selected={ !effectiveConfig.allowOthers }>
-							<Button slim onClick={ () => setConfig({ allowOthers: false }) }>No</Button>
+						<SelectionIndicator selected={ effectiveConfig.allowOthers === 'no' }>
+							<Button slim onClick={ () => setConfig({ allowOthers: 'no' }) }>No</Button>
 						</SelectionIndicator>
-						<SelectionIndicator selected={ effectiveConfig.allowOthers }>
-							<Button slim onClick={ () => setConfig({ allowOthers: true }) }>Yes</Button>
+						<SelectionIndicator selected={ effectiveConfig.allowOthers === 'yes' }>
+							<Button slim onClick={ () => setConfig({ allowOthers: 'yes' }) }>Yes</Button>
+						</SelectionIndicator>
+						<SelectionIndicator selected={ effectiveConfig.allowOthers === 'prompt' }>
+							<Button slim onClick={ () => setConfig({ allowOthers: 'prompt' }) }>Prompt</Button>
 						</SelectionIndicator>
 					</Row>
 				</Row>

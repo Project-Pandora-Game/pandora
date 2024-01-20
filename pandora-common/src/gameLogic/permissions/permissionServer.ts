@@ -1,7 +1,7 @@
-import _, { cloneDeep } from 'lodash';
-import { GameLogicCharacter } from '../character/character';
-import { PermissionConfig, PermissionSetup } from './permissionData';
-import { Immutable } from 'immer';
+import { cloneDeep } from 'lodash';
+import type { GameLogicCharacter } from '../character/character';
+import type { PermissionConfig, PermissionSetup, PermissionType } from './permissionData';
+import type { Immutable } from 'immer';
 import { GameLogicPermission, MakePermissionConfigFromDefault } from './permission';
 
 export class GameLogicPermissionServer extends GameLogicPermission {
@@ -12,23 +12,20 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 
 	constructor(character: GameLogicCharacter, setup: Immutable<PermissionSetup>, config: PermissionConfig | null) {
 		super(character, setup);
-		this._config = _.cloneDeep(config);
+		this._config = cloneDeep(config);
 	}
 
-	public override checkPermission(actingCharacter: GameLogicCharacter): boolean {
+	public override checkPermission(actingCharacter: GameLogicCharacter): PermissionType {
 		if (actingCharacter.id === this.character.id)
-			return true;
+			return 'yes';
 
 		const config = this.getEffectiveConfig();
 
-		if (config.allowOthers)
-			return true;
-
-		return false;
+		return config.allowOthers;
 	}
 
 	public getConfig(): PermissionConfig | null {
-		return _.cloneDeep(this._config);
+		return cloneDeep(this._config);
 	}
 
 	public getEffectiveConfig(): PermissionConfig {

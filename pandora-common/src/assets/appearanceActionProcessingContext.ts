@@ -216,6 +216,7 @@ abstract class AppearanceActionProcessingResultBase {
 
 export class AppearanceActionProcessingResultInvalid extends AppearanceActionProcessingResultBase {
 	public readonly valid = false;
+	public readonly prompt: null | CharacterId;
 
 	public readonly problems: readonly AppearanceActionProblem[];
 
@@ -223,6 +224,21 @@ export class AppearanceActionProcessingResultInvalid extends AppearanceActionPro
 		super(processingContext);
 		this.problems = uniqWith([...processingContext.actionProblems, ...additionalProblems], isEqual);
 		Assert(this.problems.length > 0);
+
+		let prompt = null;
+		for (const problem of this.problems) {
+			if (problem.result !== 'restrictionError' || problem.restriction.type !== 'missingPermission' || problem.restriction.permissionResult !== 'prompt') {
+				prompt = null;
+				break;
+			}
+			if (prompt == null) {
+				prompt = problem.restriction.target;
+			} else {
+				// TODO: Support multiple prompts when we have actions with multiple targets, for now this should never happen
+				Assert(prompt !== problem.restriction.target, 'Multiple prompts for different targets');
+			}
+		}
+		this.prompt = prompt;
 	}
 }
 

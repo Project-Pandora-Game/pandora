@@ -31,6 +31,9 @@ import {
 	ICharacterPrivateData,
 	ChatCharacterStatus,
 	EMPTY_ARRAY,
+	AssertNever,
+	GameLogicPermissionClient,
+	GameLogicCharacterClient,
 } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
@@ -82,9 +85,15 @@ export type CurrentSpaceInfo = {
 	config: SpaceClientInfo;
 };
 
+export type PermissionPromptData = {
+	source: GameLogicCharacterClient;
+	requiredPermissions: readonly GameLogicPermissionClient[];
+};
+
 export class GameState extends TypedEventEmitter<{
 	globalStateChange: true;
 	messageNotify: NotificationData;
+	permissionPrompt: PermissionPromptData;
 }> implements IChatMessageSender {
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
 
@@ -343,6 +352,43 @@ export class GameState extends TypedEventEmitter<{
 			}
 			this.status.value = chars;
 		}
+	}
+
+	public onPermissionPrompt({ characterId, requiredPermissions }: IShardClientArgument['permissionPrompt']): void {
+		const source = this.characters.value.find((c) => c.data.id === characterId);
+		if (!source) {
+			this.logger.warning('Permission prompt for unknown character', characterId);
+			return;
+		}
+		const player = this.player.gameLogicCharacter;
+		const perms: GameLogicPermissionClient[] = [];
+		for (const [group, id] of requiredPermissions) {
+			const perm = player.getPermission(group, id);
+			if (!perm) {
+				this.logger.warning('Permission prompt for unknown permission', group, id);
+				continue;
+			}
+			const result = perm.checkPermission(source.gameLogicCharacter);
+			switch (result) {
+				case 'yes':
+					continue;
+				case 'no':
+					this.logger.warning('Permission prompt for permission that is not allowed', group, id);
+					return;
+				case 'prompt':
+					perms.push(perm);
+					break;
+				default:
+					AssertNever(result);
+			}
+		}
+		if (perms.length === 0)
+			return;
+
+		this.emit('permissionPrompt', {
+			source: source.gameLogicCharacter,
+			requiredPermissions: perms,
+		});
 	}
 
 	//#endregion Handler

@@ -1,4 +1,4 @@
-import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter, IClientShardNormalResult, NaturalListJoin } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter, IClientShardNormalResult, NaturalListJoin, PermissionGroup } from 'pandora-common';
 import { ClientConnection } from './connection_client';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager } from '../assets/assetManager';
@@ -144,9 +144,21 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const result = DoAppearanceAction(action, character.getAppearanceActionContext(), assetManager);
 
 		// Check if result is valid
-		if (!result.valid || result.problems.length > 0) {
-			// If the action failed, client might be out of sync, force-send full reload
-			client.sendLoadMessage();
+		if (!result.valid) {
+			const target = result.prompt ? character.getOrLoadSpace().getCharacterById(result.prompt) : null;
+			if (target == null) {
+				// If the action failed, client might be out of sync, force-send full reload
+				client.sendLoadMessage();
+			} else if (target.connection) {
+				const requiredPermissions: [PermissionGroup, string][] = [];
+				for (const permission of result.requiredPermissions) {
+					requiredPermissions.push([permission.group, permission.id]);
+				}
+				target.connection.sendMessage('permissionPrompt', {
+					characterId: character.id,
+					requiredPermissions,
+				});
+			}
 			return {
 				result: 'failure',
 				problems: result.problems.slice(),

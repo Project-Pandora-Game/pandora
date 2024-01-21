@@ -83,8 +83,8 @@ importers:
         specifier: 6.21.3
         version: 6.21.3(react-dom@18.2.0)(react@18.2.0)
       react-toastify:
-        specifier: 10.0.3
-        version: 10.0.3(react-dom@18.2.0)(react@18.2.0)
+        specifier: 10.0.4
+        version: 10.0.4(react-dom@18.2.0)(react@18.2.0)
       socket.io-client:
         specifier: 4.6.1
         version: 4.6.1
@@ -11450,8 +11450,8 @@ packages:
       react: 18.2.0
     dev: false
 
-  /react-toastify@10.0.3(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-PBJwXjFKKM73tgb6iSld4GMs9ShBWGUvc9zPHmdDgT4CdSr32iqSNh6y/fFN/tosvkTS6/tBLptDxXiXgcjvuw==}
+  /react-toastify@10.0.4(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-etR3RgueY8pe88SA67wLm8rJmL1h+CLqUGHuAoNsseW35oTGJEri6eBTyaXnFKNQ80v/eO10hBYLgz036XRGgA==}
     peerDependencies:
       react: '>=16'
       react-dom: '>=16'

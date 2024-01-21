@@ -149,20 +149,23 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			if (target == null) {
 				// If the action failed, client might be out of sync, force-send full reload
 				client.sendLoadMessage();
-			} else if (target.connection) {
-				const requiredPermissions: [PermissionGroup, string][] = [];
-				for (const permission of result.requiredPermissions) {
-					requiredPermissions.push([permission.group, permission.id]);
-				}
-				target.connection.sendMessage('permissionPrompt', {
-					characterId: character.id,
-					requiredPermissions,
-				});
+				return {
+					result: 'failure',
+					problems: result.problems.slice(),
+				};
 			}
-			return {
-				result: 'failure',
-				problems: result.problems.slice(),
-			};
+			if (target.connection == null) {
+				return { result: 'promptFailedCharacterOffline' };
+			}
+			const requiredPermissions: [PermissionGroup, string][] = [];
+			for (const permission of result.requiredPermissions) {
+				requiredPermissions.push([permission.group, permission.id]);
+			}
+			target.connection.sendMessage('permissionPrompt', {
+				characterId: character.id,
+				requiredPermissions,
+			});
+			return { result: 'promptSent' };
 		}
 
 		// Apply the action

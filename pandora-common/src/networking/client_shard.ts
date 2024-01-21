@@ -60,6 +60,12 @@ export const ClientShardSchema = {
 				result: z.literal('success'),
 			}),
 			z.object({
+				result: z.literal('promptSent'),
+			}),
+			z.object({
+				result: z.literal('promptFailedCharacterOffline'),
+			}),
+			z.object({
 				result: z.literal('failure'),
 				problems: ZodCast<AppearanceActionProblem>().array(),
 			}),

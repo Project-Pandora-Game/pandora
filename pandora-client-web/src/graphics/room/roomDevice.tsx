@@ -134,10 +134,10 @@ export function RoomDeviceMovementTool({
 
 	const deploymentX = clamp(deployment.x, 0, projectionResolver.floorAreaWidth);
 	const deploymentY = clamp(deployment.y, 0, projectionResolver.floorAreaDepth);
-	const deploymentZ = Math.round(deployment.yOffset);
+	const yOffsetExtra = Math.round(deployment.yOffset);
 
-	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, deploymentZ);
-	const scale = projectionResolver.scaleAt(deploymentX, deploymentY, deploymentZ);
+	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, 0);
+	const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
 
 	const pivot = useMemo<PointLike>(() => ({
 		x: asset.definition.pivot.x,
@@ -167,9 +167,9 @@ export function RoomDeviceMovementTool({
 		if (pointerDownTarget.current === 'pos') {
 			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(roomDeviceContainer.current.parent);
 
-			const [newX, newY, newZ] = projectionResolver.inverseGivenZ(dragPointerEnd.x, dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale, deploymentZ);
+			const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale, 0);
 
-			setPositionThrottled(newX, newY, newZ);
+			setPositionThrottled(newX, newY, yOffsetExtra);
 		} else if (pointerDownTarget.current === 'offset') {
 			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(roomDeviceContainer.current);
 
@@ -254,7 +254,7 @@ export function RoomDeviceMovementTool({
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
 				colorUpDown={ 0x0000ff }
-				position={ { x: labelX + 110, y: labelY - (deploymentZ / scale) } }
+				position={ { x: labelX + 110, y: labelY - (yOffsetExtra / scale) } }
 				hitArea={ hitArea }
 				eventMode='static'
 				cursor='ns-resize'
@@ -379,10 +379,10 @@ export function RoomDevice({
 
 	const deploymentX = clamp(deployment.x, 0, projectionResolver.floorAreaWidth);
 	const deploymentY = clamp(deployment.y, 0, projectionResolver.floorAreaDepth);
-	const deploymentZ = Math.round(deployment.yOffset);
+	const yOffsetExtra = Math.round(deployment.yOffset);
 
-	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, deploymentZ);
-	const scale = projectionResolver.scaleAt(deploymentX, deploymentY, deploymentZ);
+	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, 0);
+	const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
 
 	const pivot = useMemo<PointLike>(() => ({
 		x: asset.definition.pivot.x,
@@ -394,7 +394,7 @@ export function RoomDevice({
 			<RoomDeviceGraphics
 				globalState={ globalState }
 				item={ item }
-				position={ { x, y } }
+				position={ { x, y: y - yOffsetExtra } }
 				scale={ { x: scale, y: scale } }
 				pivot={ pivot }
 				hitArea={ hitArea }

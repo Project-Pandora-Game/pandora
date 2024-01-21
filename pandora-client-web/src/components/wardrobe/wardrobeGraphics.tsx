@@ -290,12 +290,12 @@ export function RoomPreview({
 		const deploymentY = clamp(focusDevice.deployment.y, 0, projectionResolver.floorAreaDepth);
 		const yOffsetExtra = Math.round(focusDevice.deployment.yOffset);
 
-		const scale = projectionResolver.scaleAt(deploymentX, deploymentY, yOffsetExtra);
-		const [posX, posY] = projectionResolver.transform(deploymentX, deploymentY, yOffsetExtra);
+		const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
+		const [posX, posY] = projectionResolver.transform(deploymentX, deploymentY, 0);
 
 		return {
 			x: posX + Math.floor((itemLeft - asset.pivot.x) * scale),
-			y: posY + Math.floor((itemTop - asset.pivot.y) * scale),
+			y: posY - yOffsetExtra + Math.floor((itemTop - asset.pivot.y) * scale),
 			width: Math.ceil((itemRight - itemLeft) * scale),
 			height: Math.ceil((itemBottom - itemTop) * scale),
 		};

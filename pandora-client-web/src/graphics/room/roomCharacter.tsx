@@ -140,13 +140,13 @@ export function useRoomCharacterPosition(position: CharacterRoomPosition, charac
 
 	return {
 		position: useMemo((): PointLike => {
-			const [x, y] = projectionResolver.transform(posX, posY, yOffsetExtra);
+			const [x, y] = projectionResolver.transform(posX, posY, 0);
 			return ({ x, y });
-		}, [projectionResolver, posX, posY, yOffsetExtra]),
+		}, [projectionResolver, posX, posY]),
 		zIndex: -posY,
 		yOffset,
 		yOffsetExtra,
-		scale: baseScale * projectionResolver.scaleAt(posX, posY, yOffsetExtra),
+		scale: baseScale * projectionResolver.scaleAt(posX, posY, 0),
 		pivot,
 		rotationAngle,
 	};
@@ -203,7 +203,7 @@ function RoomCharacterInteractiveImpl({
 		if (!dragging.current || !spaceInfo || !characterContainer.current) return;
 		const dragPointerEnd = event.getLocalPosition<Point>(characterContainer.current.parent);
 
-		const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, (dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale), yOffsetExtra);
+		const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, (dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale), 0);
 
 		setPositionThrottled(newX, newY);
 	});

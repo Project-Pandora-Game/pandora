@@ -33,7 +33,7 @@ import {
 	EMPTY_ARRAY,
 	AssertNever,
 	GameLogicPermissionClient,
-	GameLogicCharacterClient,
+	PermissionGroup,
 } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
@@ -86,8 +86,8 @@ export type CurrentSpaceInfo = {
 };
 
 export type PermissionPromptData = {
-	source: GameLogicCharacterClient;
-	requiredPermissions: readonly GameLogicPermissionClient[];
+	source: Character<ICharacterRoomData>;
+	requiredPermissions: Immutable<Partial<Record<PermissionGroup, GameLogicPermissionClient[]>>>;
 };
 
 export class GameState extends TypedEventEmitter<{
@@ -385,9 +385,15 @@ export class GameState extends TypedEventEmitter<{
 		if (perms.length === 0)
 			return;
 
+		const groups: Partial<Record<PermissionGroup, GameLogicPermissionClient[]>> = {};
+		for (const perm of perms) {
+			const group = groups[perm.group] ??= [];
+			group.push(perm);
+		}
+
 		this.emit('permissionPrompt', {
-			source: source.gameLogicCharacter,
-			requiredPermissions: perms,
+			source,
+			requiredPermissions: groups,
 		});
 	}
 

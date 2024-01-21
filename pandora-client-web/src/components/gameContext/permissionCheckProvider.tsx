@@ -3,6 +3,7 @@ import { ChildrenProps } from '../../common/reactTypes';
 import { AppearanceActionProblem, AssertNever, AssertNotNullable, GameLogicPermission, GetLogger, Logger, PermissionRestriction, PermissionType, TypedEventEmitter } from 'pandora-common';
 import { useShardChangeListener, useShardConnector } from './shardConnectorContextProvider';
 import { ShardConnector } from '../../networking/shardConnector';
+import { PermissionPromptHandler } from '../settings/permissionsSettings';
 
 export class PermissionCheckServiceBase extends TypedEventEmitter<{
 	permissionResultReset: void;
@@ -102,6 +103,7 @@ export function PermissionCheckServiceProvider({ children }: ChildrenProps): Rea
 
 	return (
 		<permissionCheckContext.Provider value={ service }>
+			<PermissionPromptHandler />
 			{ children }
 		</permissionCheckContext.Provider>
 	);

@@ -1,4 +1,4 @@
-import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import onOff from '../../assets/icons/on-off.svg';
 import body from '../../assets/icons/body.svg';
 import color from '../../assets/icons/color.svg';
@@ -13,7 +13,7 @@ import allow from '../../assets/icons/public.svg';
 import prompt from '../../assets/icons/prompt.svg';
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
-import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferenceType, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, GameLogicPermissionClient, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ModalDialog } from '../dialog/dialog';
 import { Column, Row } from '../common/container/container';
@@ -22,6 +22,7 @@ import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator';
 import { HoverElement } from '../hoverElement/hoverElement';
+import { PermissionPromptData, useGameStateOptional } from '../gameContext/gameStateContextProvider';
 import type { Immutable } from 'immer';
 
 export function PermissionsSettings(): ReactElement | null {
@@ -205,23 +206,17 @@ function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactEl
 	);
 }
 
-function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
-	permissionGroup: PermissionGroup;
-	permissionId: string;
-	hide: () => void;
-}): ReactElement {
+function usePermissionConfigSetAny(selector: CharacterId | 'default'): (permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionType | null) => void {
 	const shardConnector = useShardConnector();
-	const permissionData = usePermissionData(permissionGroup, permissionId);
-
-	const setConfig = useCallback((allowOthers: PermissionType | null) => {
-		if (shardConnector == null || permissionData?.result !== 'ok')
+	return useCallback((permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionType | null) => {
+		if (shardConnector == null)
 			return;
 
 		shardConnector.awaitResponse('permissionSet', {
 			permissionGroup,
 			permissionId,
 			config: {
-				selector: 'default',
+				selector,
 				allowOthers,
 			},
 		})
@@ -235,7 +230,25 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 				GetLogger('permissionSet').error('Error updating permission:', err);
 				toast(`Error updating permission`, TOAST_OPTIONS_ERROR);
 			});
-	}, [shardConnector, permissionGroup, permissionId, permissionData]);
+	}, [shardConnector, selector]);
+}
+
+function usePermissionConfigSet(permissionGroup: PermissionGroup, permissionId: string, selector: CharacterId | 'default'): (allowOthers: PermissionType | null) => void {
+	const setAny = usePermissionConfigSetAny(selector);
+	return useCallback((allowOthers: PermissionType | null) => {
+		setAny(permissionGroup, permissionId, allowOthers);
+	}, [permissionGroup, permissionId, setAny]);
+}
+
+function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
+	permissionGroup: PermissionGroup;
+	permissionId: string;
+	hide: () => void;
+}): ReactElement {
+	const shardConnector = useShardConnector();
+	const permissionData = usePermissionData(permissionGroup, permissionId);
+
+	const setConfig = usePermissionConfigSet(permissionGroup, permissionId, 'default');
 
 	if (shardConnector == null || permissionData == null) {
 		return (
@@ -329,4 +342,123 @@ export function usePermissionData(permissionGroup: PermissionGroup, permissionId
 	});
 
 	return permissionConfig;
+}
+
+export function PermissionPromptHandler(): ReactElement | null {
+	const gameState = useGameStateOptional();
+	const [prompts, setPrompts] = useState<readonly PermissionPromptData[]>([]);
+
+	useEffect(() => {
+		if (!gameState)
+			return undefined;
+
+		return gameState.on('permissionPrompt', (request) => {
+			setPrompts((requests) => [...requests, request]);
+		});
+	}, [gameState]);
+
+	const dismissFirst = useCallback(() => {
+		setPrompts((requests) => requests.slice(1));
+	}, []);
+
+	if (prompts.length === 0)
+		return null;
+
+	return <PermissionPromptDialog prompt={ prompts[0] } dismiss={ dismissFirst } />;
+}
+
+function PermissionPromptDialog({ prompt: { source, requiredPermissions }, dismiss }: { prompt: PermissionPromptData; dismiss: () => void; }): ReactElement {
+	const setAnyConfig = usePermissionConfigSetAny(source.id);
+	const acceptAll = useCallback(() => {
+		for (const [group, permissions] of KnownObject.entries(requiredPermissions)) {
+			if (!permissions)
+				continue;
+
+			for (const perm of permissions) {
+				setAnyConfig(group, perm.id, 'yes');
+			}
+		}
+		dismiss();
+	}, [requiredPermissions, dismiss, setAnyConfig]);
+
+	return (
+		<ModalDialog>
+			<Row alignX='center'>
+				<h2>
+					<span style={ { textShadow: `${source.data.settings.labelColor} 1px 2px` } }>
+						{ source.name }
+					</span>
+					{ ' ' }
+					({ source.id })
+					{ ' ' }
+					asks for permission to...
+				</h2>
+			</Row>
+			<Column padding='large'>
+				{
+					KnownObject.entries(requiredPermissions).map(([group, permissions]) => (
+						permissions == null ? null : <PermissionPromptGroup key={ group } permissionGroup={ group } permissions={ permissions } />
+					))
+				}
+			</Column>
+			<Row padding='medium' alignX='space-between' alignY='center'>
+				<Button onClick={ dismiss }>Dismiss</Button>
+				<Button onClick={ acceptAll }>Allow all</Button>
+			</Row>
+		</ModalDialog>
+	);
+}
+
+function PermissionPromptGroup({ permissionGroup, permissions }: { permissionGroup: PermissionGroup; permissions: Immutable<GameLogicPermissionClient[]>; }): ReactElement {
+	let header;
+	let note;
+	let config: Immutable<Record<string, { visibleName: string; icon: string; } | null>>;
+	switch (permissionGroup) {
+		case 'interaction':
+			header = 'Interactions';
+			note = 'Allow character to interact with worn items and to add new items that are marked in the item limits as...';
+			config = INTERACTION_CONFIG;
+			break;
+		case 'assetPreferences':
+			header = 'Item Limits';
+			note = 'Allow character to...';
+			config = ASSET_PREFERENCES_PERMISSIONS;
+			break;
+		default:
+			AssertNever(permissionGroup);
+	}
+
+	const perms = useMemo(() => {
+		const result: Readonly<{ id: string; visibleName: string; icon: string; }>[] = [];
+		for (const perm of permissions) {
+			const permConfig = config[perm.id];
+			if (permConfig == null)
+				continue;
+
+			result.push({
+				id: perm.id,
+				visibleName: permConfig.visibleName,
+				icon: permConfig.icon,
+			});
+		}
+		return result;
+	}, [permissions, config]);
+
+	return (
+		<Column>
+			<h3>{ header }</h3>
+			<i>{ note }</i>
+			{
+				perms.map((perm) => (
+					<div className='input-row flex-1' key={ perm.id }>
+						<label className='flex-1'>
+							<img src={ GetIcon(perm.icon) } width='28' height='28' alt='permission icon' />
+							&nbsp;&nbsp;
+							{ perm.visibleName }
+						</label>
+					</div>
+				))
+			}
+		</Column>
+	);
 }

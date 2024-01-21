@@ -88,209 +88,209 @@ export function ChatroomDebugConfigView(): ReactElement {
 					} }
 				/>
 			</div>
-			{
-				chatroomDebugConfig.roomScalingHelper ? (
-					<fieldset>
-						<Row alignY='center'>
-							<span>Custom calibration</span>
-							<input type='checkbox' checked={ chatroomDebugConfig.roomScalingHelperData != null } onChange={ (e) => {
-								applyChange({
-									roomScalingHelperData: e.target.checked ? CloneDeepMutable(DEFAULT_CALIBRATION_DATA) : null,
-								});
-							} } />
-						</Row>
-						{
-							chatroomDebugConfig.roomScalingHelperData != null ? (
-								<>
-									<Row alignY='center'>
-										<span>Image size</span>
-										<input
-											type='number'
-											value={ roomBackground.imageSize[0] }
-											disabled
-										/>
-										<input
-											type='number'
-											value={ roomBackground.imageSize[1] }
-											disabled
-										/>
-									</Row>
-									<Row alignY='center'>
-										<span>Camera center offset</span>
-										<input
-											type='number'
-											value={ chatroomDebugConfig.roomScalingHelperData.cameraCenterOffset[0] }
-											onChange={ (e) => {
-												applyChange((draft) => {
-													AssertNotNullable(draft.roomScalingHelperData);
-													draft.roomScalingHelperData.cameraCenterOffset[0] = e.target.valueAsNumber;
-												});
-											} }
-										/>
-										<input
-											type='number'
-											value={ chatroomDebugConfig.roomScalingHelperData.cameraCenterOffset[1] }
-											onChange={ (e) => {
-												applyChange((draft) => {
-													AssertNotNullable(draft.roomScalingHelperData);
-													draft.roomScalingHelperData.cameraCenterOffset[1] = e.target.valueAsNumber;
-												});
-											} }
-										/>
-									</Row>
-									<Row alignY='center'>
-										<span>Area coverage</span>
-										<input
-											type='range'
-											className='flex-1'
-											min={ 0.01 }
-											max={ 2 }
-											step={ 0.01 }
-											value={ chatroomDebugConfig.roomScalingHelperData.areaCoverage }
-											onChange={ (e) => {
-												applyChange((draft) => {
-													AssertNotNullable(draft.roomScalingHelperData);
-													draft.roomScalingHelperData.areaCoverage = e.target.valueAsNumber;
-												});
-											} }
-										/>
-										<input
-											type='number'
-											min={ 0.01 }
-											max={ 2 }
-											step={ 0.01 }
-											value={ chatroomDebugConfig.roomScalingHelperData.areaCoverage }
-											onChange={ (e) => {
-												applyChange((draft) => {
-													AssertNotNullable(draft.roomScalingHelperData);
-													draft.roomScalingHelperData.areaCoverage = e.target.valueAsNumber;
-												});
-											} }
-										/>
-									</Row>
-									<Row alignY='center'>
-										<span>Ceiling</span>
-										<input
-											type='range'
-											className='flex-1'
-											min={ 0 }
-											max={ 4 * roomBackground.imageSize[1] }
-											step={ 1 }
-											value={ chatroomDebugConfig.roomScalingHelperData.ceiling }
-											onChange={ (e) => {
-												applyChange((draft) => {
-													AssertNotNullable(draft.roomScalingHelperData);
-													draft.roomScalingHelperData.ceiling = e.target.valueAsNumber;
-												});
-											} }
-										/>
-										<input
-											type='number'
-											min={ 0 }
-											step={ 1 }
-											value={ chatroomDebugConfig.roomScalingHelperData.ceiling }
-											onChange={ (e) => {
-												applyChange((draft) => {
-													AssertNotNullable(draft.roomScalingHelperData);
-													draft.roomScalingHelperData.ceiling = e.target.valueAsNumber;
-												});
-											} }
-										/>
-									</Row>
-									<Row alignY='center'>
-										<span>Area depth ratio</span>
-										<input
-											type='range'
-											className='flex-1'
-											min={ 0.01 }
-											max={ 20 }
-											step={ 0.01 }
-											value={ chatroomDebugConfig.roomScalingHelperData.areaDepthRatio }
-											onChange={ (e) => {
-												applyChange((draft) => {
-													AssertNotNullable(draft.roomScalingHelperData);
-													draft.roomScalingHelperData.areaDepthRatio = e.target.valueAsNumber;
-												});
-											} }
-										/>
-										<input
-											type='number'
-											min={ 0.01 }
-											step={ 0.01 }
-											value={ chatroomDebugConfig.roomScalingHelperData.areaDepthRatio }
-											onChange={ (e) => {
-												applyChange((draft) => {
-													AssertNotNullable(draft.roomScalingHelperData);
-													draft.roomScalingHelperData.areaDepthRatio = e.target.valueAsNumber;
-												});
-											} }
-										/>
-									</Row>
-									<Row alignY='center'>
-										<span>Base scale</span>
-										<input
-											type='range'
-											className='flex-1'
-											min={ 0.01 }
-											max={ 10 }
-											step={ 0.01 }
-											value={ chatroomDebugConfig.roomScalingHelperData.baseScale }
-											onChange={ (e) => {
-												applyChange((draft) => {
-													AssertNotNullable(draft.roomScalingHelperData);
-													draft.roomScalingHelperData.baseScale = e.target.valueAsNumber;
-												});
-											} }
-										/>
-										<input
-											type='number'
-											min={ 0.01 }
-											step={ 0.01 }
-											value={ chatroomDebugConfig.roomScalingHelperData.baseScale }
-											onChange={ (e) => {
-												applyChange((draft) => {
-													AssertNotNullable(draft.roomScalingHelperData);
-													draft.roomScalingHelperData.baseScale = e.target.valueAsNumber;
-												});
-											} }
-										/>
-									</Row>
-									<Row alignY='center'>
-										<span>FOV</span>
-										<input
-											type='range'
-											className='flex-1'
-											min={ 0.1 }
-											max={ 135 }
-											step={ 0.1 }
-											value={ chatroomDebugConfig.roomScalingHelperData.fov }
-											onChange={ (e) => {
-												applyChange((draft) => {
-													AssertNotNullable(draft.roomScalingHelperData);
-													draft.roomScalingHelperData.fov = e.target.valueAsNumber;
-												});
-											} }
-										/>
-										<input
-											type='number'
-											min={ 0.1 }
-											max={ 135 }
-											step={ 0.1 }
-											value={ chatroomDebugConfig.roomScalingHelperData.fov }
-											onChange={ (e) => {
-												applyChange((draft) => {
-													AssertNotNullable(draft.roomScalingHelperData);
-													draft.roomScalingHelperData.fov = e.target.valueAsNumber;
-												});
-											} }
-										/>
-									</Row>
-								</>
-							) : null
-						}
-					</fieldset>
-				) : null
-			}
+			<fieldset>
+				<Row alignY='center'>
+					<span>Custom calibration</span>
+					<input type='checkbox'
+						checked={ chatroomDebugConfig.roomScalingHelperData != null && spaceConfig.features.includes('development') }
+						onChange={ (e) => {
+							applyChange({
+								roomScalingHelperData: e.target.checked ? CloneDeepMutable(DEFAULT_CALIBRATION_DATA) : null,
+							});
+						} }
+						disabled={ !spaceConfig.features.includes('development') }
+					/>
+				</Row>
+				{
+					chatroomDebugConfig.roomScalingHelperData != null && spaceConfig.features.includes('development') ? (
+						<>
+							<Row alignY='center'>
+								<span>Image size</span>
+								<input
+									type='number'
+									value={ roomBackground.imageSize[0] }
+									disabled
+								/>
+								<input
+									type='number'
+									value={ roomBackground.imageSize[1] }
+									disabled
+								/>
+							</Row>
+							<Row alignY='center'>
+								<span>Camera center offset</span>
+								<input
+									type='number'
+									value={ chatroomDebugConfig.roomScalingHelperData.cameraCenterOffset[0] }
+									onChange={ (e) => {
+										applyChange((draft) => {
+											AssertNotNullable(draft.roomScalingHelperData);
+											draft.roomScalingHelperData.cameraCenterOffset[0] = e.target.valueAsNumber;
+										});
+									} }
+								/>
+								<input
+									type='number'
+									value={ chatroomDebugConfig.roomScalingHelperData.cameraCenterOffset[1] }
+									onChange={ (e) => {
+										applyChange((draft) => {
+											AssertNotNullable(draft.roomScalingHelperData);
+											draft.roomScalingHelperData.cameraCenterOffset[1] = e.target.valueAsNumber;
+										});
+									} }
+								/>
+							</Row>
+							<Row alignY='center'>
+								<span>Area coverage</span>
+								<input
+									type='range'
+									className='flex-1'
+									min={ 0.01 }
+									max={ 2 }
+									step={ 0.01 }
+									value={ chatroomDebugConfig.roomScalingHelperData.areaCoverage }
+									onChange={ (e) => {
+										applyChange((draft) => {
+											AssertNotNullable(draft.roomScalingHelperData);
+											draft.roomScalingHelperData.areaCoverage = e.target.valueAsNumber;
+										});
+									} }
+								/>
+								<input
+									type='number'
+									min={ 0.01 }
+									max={ 2 }
+									step={ 0.01 }
+									value={ chatroomDebugConfig.roomScalingHelperData.areaCoverage }
+									onChange={ (e) => {
+										applyChange((draft) => {
+											AssertNotNullable(draft.roomScalingHelperData);
+											draft.roomScalingHelperData.areaCoverage = e.target.valueAsNumber;
+										});
+									} }
+								/>
+							</Row>
+							<Row alignY='center'>
+								<span>Ceiling</span>
+								<input
+									type='range'
+									className='flex-1'
+									min={ 0 }
+									max={ 4 * roomBackground.imageSize[1] }
+									step={ 1 }
+									value={ chatroomDebugConfig.roomScalingHelperData.ceiling }
+									onChange={ (e) => {
+										applyChange((draft) => {
+											AssertNotNullable(draft.roomScalingHelperData);
+											draft.roomScalingHelperData.ceiling = e.target.valueAsNumber;
+										});
+									} }
+								/>
+								<input
+									type='number'
+									min={ 0 }
+									step={ 1 }
+									value={ chatroomDebugConfig.roomScalingHelperData.ceiling }
+									onChange={ (e) => {
+										applyChange((draft) => {
+											AssertNotNullable(draft.roomScalingHelperData);
+											draft.roomScalingHelperData.ceiling = e.target.valueAsNumber;
+										});
+									} }
+								/>
+							</Row>
+							<Row alignY='center'>
+								<span>Area depth ratio</span>
+								<input
+									type='range'
+									className='flex-1'
+									min={ 0.01 }
+									max={ 20 }
+									step={ 0.01 }
+									value={ chatroomDebugConfig.roomScalingHelperData.areaDepthRatio }
+									onChange={ (e) => {
+										applyChange((draft) => {
+											AssertNotNullable(draft.roomScalingHelperData);
+											draft.roomScalingHelperData.areaDepthRatio = e.target.valueAsNumber;
+										});
+									} }
+								/>
+								<input
+									type='number'
+									min={ 0.01 }
+									step={ 0.01 }
+									value={ chatroomDebugConfig.roomScalingHelperData.areaDepthRatio }
+									onChange={ (e) => {
+										applyChange((draft) => {
+											AssertNotNullable(draft.roomScalingHelperData);
+											draft.roomScalingHelperData.areaDepthRatio = e.target.valueAsNumber;
+										});
+									} }
+								/>
+							</Row>
+							<Row alignY='center'>
+								<span>Base scale</span>
+								<input
+									type='range'
+									className='flex-1'
+									min={ 0.01 }
+									max={ 10 }
+									step={ 0.01 }
+									value={ chatroomDebugConfig.roomScalingHelperData.baseScale }
+									onChange={ (e) => {
+										applyChange((draft) => {
+											AssertNotNullable(draft.roomScalingHelperData);
+											draft.roomScalingHelperData.baseScale = e.target.valueAsNumber;
+										});
+									} }
+								/>
+								<input
+									type='number'
+									min={ 0.01 }
+									step={ 0.01 }
+									value={ chatroomDebugConfig.roomScalingHelperData.baseScale }
+									onChange={ (e) => {
+										applyChange((draft) => {
+											AssertNotNullable(draft.roomScalingHelperData);
+											draft.roomScalingHelperData.baseScale = e.target.valueAsNumber;
+										});
+									} }
+								/>
+							</Row>
+							<Row alignY='center'>
+								<span>FOV</span>
+								<input
+									type='range'
+									className='flex-1'
+									min={ 0.1 }
+									max={ 135 }
+									step={ 0.1 }
+									value={ chatroomDebugConfig.roomScalingHelperData.fov }
+									onChange={ (e) => {
+										applyChange((draft) => {
+											AssertNotNullable(draft.roomScalingHelperData);
+											draft.roomScalingHelperData.fov = e.target.valueAsNumber;
+										});
+									} }
+								/>
+								<input
+									type='number'
+									min={ 0.1 }
+									max={ 135 }
+									step={ 0.1 }
+									value={ chatroomDebugConfig.roomScalingHelperData.fov }
+									onChange={ (e) => {
+										applyChange((draft) => {
+											AssertNotNullable(draft.roomScalingHelperData);
+											draft.roomScalingHelperData.fov = e.target.valueAsNumber;
+										});
+									} }
+								/>
+							</Row>
+						</>
+					) : null
+				}
+			</fieldset>
 			<div>
 				<label htmlFor='chatroom-debug-character-overlay'>Show character debug overlay</label>
 				<input

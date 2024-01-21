@@ -80,7 +80,7 @@ export function RoomGraphicsScene({
 	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
 		const resolved = ResolveBackground(assetManager, info.background);
 
-		if (debugConfig?.enabled && debugConfig.roomScalingHelper && debugConfig.roomScalingHelperData != null) {
+		if (debugConfig?.enabled && debugConfig.roomScalingHelperData != null && info.features.includes('development')) {
 			return CalculateBackgroundDataFromCalibrationData(resolved.image, {
 				...debugConfig.roomScalingHelperData,
 				imageSize: resolved.imageSize,
@@ -88,7 +88,7 @@ export function RoomGraphicsScene({
 		}
 
 		return resolved;
-	}, [assetManager, info.background, debugConfig]);
+	}, [assetManager, info, debugConfig]);
 
 	const projectionResolver = useRoomViewProjection(roomBackground);
 

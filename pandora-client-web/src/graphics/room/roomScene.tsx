@@ -2,13 +2,14 @@ import {
 	AssertNever,
 	AssertNotNullable,
 	AssetFrameworkGlobalState,
-	CalculateCharacterMaxYForBackground,
 	FilterItemType,
 	ICharacterRoomData,
 	SpaceClientInfo,
 	ItemId,
 	ItemRoomDevice,
 	ResolveBackground,
+	CalculateBackgroundDataFromCalibrationData,
+	RoomBackgroundData,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
@@ -35,6 +36,7 @@ import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
 import { CharacterContextMenu } from './contextMenus/characterContextMenu';
 import { directoryConnectorContext, useCurrentAccountSettings } from '../../components/gameContext/directoryConnectorContextProvider';
 import { Immutable } from 'immer';
+import { clamp } from 'lodash';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -75,50 +77,85 @@ export function RoomGraphicsScene({
 
 	const roomState = globalState.room;
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
-	const roomBackground = useMemo(() => ResolveBackground(assetManager, info.background), [assetManager, info.background]);
+	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
+		const resolved = ResolveBackground(assetManager, info.background);
+
+		if (debugConfig?.enabled && debugConfig.roomScalingHelper && debugConfig.roomScalingHelperData != null) {
+			return CalculateBackgroundDataFromCalibrationData(resolved.image, {
+				...debugConfig.roomScalingHelperData,
+				imageSize: resolved.imageSize,
+			});
+		}
+
+		return resolved;
+	}, [assetManager, info.background, debugConfig]);
+
+	const projectionResolver = useRoomViewProjection(roomBackground);
 
 	const borderDraw = useCallback((g: PIXI.Graphics) => {
 		g.clear()
 			.lineStyle(2, 0x404040, 0.4)
-			.drawRect(0, 0, roomBackground.size[0], roomBackground.size[1]);
+			.drawRect(0, 0, roomBackground.imageSize[0], roomBackground.imageSize[1]);
 	}, [roomBackground]);
 
 	const calibrationLineDraw = useCallback((g: PIXI.Graphics) => {
-		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
-		const scaleAtMaxY = 1 - (maxY * roomBackground.scaling) / roomBackground.size[1];
+		const {
+			transform,
+			floorAreaWidth,
+			floorAreaDepth,
+			ceiling,
+			renderedAreaWidth,
+		} = projectionResolver;
 
 		g.clear()
 			.beginFill(0x550000, 0.8)
 			.drawPolygon([
-				0.6 * roomBackground.size[0], roomBackground.size[1],
-				0.4 * roomBackground.size[0], roomBackground.size[1],
-				(0.5 - 0.1 * scaleAtMaxY) * roomBackground.size[0], roomBackground.size[1] - maxY,
-				(0.5 + 0.1 * scaleAtMaxY) * roomBackground.size[0], roomBackground.size[1] - maxY,
+				...transform(floorAreaWidth, 0, 0),
+				...transform(0, 0, 0),
+				...transform(0, floorAreaDepth, 0),
+				...transform(floorAreaWidth, floorAreaDepth, 0),
 			])
 			.beginFill(0x990000, 0.6)
 			.drawPolygon([
-				0.55 * roomBackground.size[0], roomBackground.size[1],
-				0.45 * roomBackground.size[0], roomBackground.size[1],
-				0.5 * roomBackground.size[0], (1 - 1 / roomBackground.scaling) * roomBackground.size[1],
+				...transform(floorAreaWidth - (floorAreaWidth - renderedAreaWidth) / 2, 0, 0),
+				...transform((floorAreaWidth - renderedAreaWidth) / 2, 0, 0),
+				...transform(0.5 * floorAreaWidth, Infinity, 0),
 			]);
-	}, [roomBackground]);
+
+		if (ceiling > 0) {
+			g
+				.beginFill(0xffff00, 0.4)
+				.drawPolygon([
+					...transform(floorAreaWidth, floorAreaDepth, 0),
+					...transform(0, floorAreaDepth, 0),
+					...transform(0, floorAreaDepth, ceiling),
+					...transform(floorAreaWidth, floorAreaDepth, ceiling),
+				])
+				.beginFill(0x000055, 0.8)
+				.drawPolygon([
+					...transform(floorAreaWidth, 0, ceiling),
+					...transform(0, 0, ceiling),
+					...transform(0, floorAreaDepth, ceiling),
+					...transform(floorAreaWidth, floorAreaDepth, ceiling),
+				]);
+		}
+	}, [projectionResolver]);
 
 	const viewportConfig = useCallback<PixiViewportSetupCallback>((viewport) => {
 		viewport
 			.drag({ clampWheel: true })
 			.wheel({ smooth: 10, percent: 0.1 })
-			.bounce({ ...BASE_BOUNCE_OPTIONS })
 			.bounce({
 				...BASE_BOUNCE_OPTIONS,
-				bounceBox: new Rectangle(-BONCE_OVERFLOW, -BONCE_OVERFLOW, roomBackground.size[0] + 2 * BONCE_OVERFLOW, roomBackground.size[1] + 2 * BONCE_OVERFLOW),
+				bounceBox: new Rectangle(-BONCE_OVERFLOW, -BONCE_OVERFLOW, roomBackground.imageSize[0] + 2 * BONCE_OVERFLOW, roomBackground.imageSize[1] + 2 * BONCE_OVERFLOW),
 			});
 	}, [roomBackground]);
 
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
 		forwardContexts: [directoryConnectorContext, shardConnectorContext],
-		worldWidth: roomBackground.size[0],
-		worldHeight: roomBackground.size[1],
+		worldWidth: roomBackground.imageSize[0],
+		worldHeight: roomBackground.imageSize[1],
 		backgroundColor: 0x000000,
 	}), [viewportConfig, roomBackground]);
 
@@ -143,7 +180,7 @@ export function RoomGraphicsScene({
 							character={ character }
 							spaceInfo={ info }
 							debugConfig={ debugConfig }
-							background={ roomBackground }
+							projectionResolver={ projectionResolver }
 							shard={ shard }
 							menuOpen={ menuOpen }
 						/>
@@ -156,7 +193,7 @@ export function RoomGraphicsScene({
 							globalState={ globalState }
 							item={ device }
 							deployment={ device.deployment }
-							background={ roomBackground }
+							projectionResolver={ projectionResolver }
 							roomSceneMode={ roomSceneMode }
 							setRoomSceneMode={ setRoomSceneMode }
 							shard={ shard }
@@ -173,7 +210,7 @@ export function RoomGraphicsScene({
 							globalState={ globalState }
 							item={ device }
 							deployment={ device.deployment }
-							background={ roomBackground }
+							projectionResolver={ projectionResolver }
 							roomSceneMode={ roomSceneMode }
 							setRoomSceneMode={ setRoomSceneMode }
 							shard={ shard }
@@ -193,11 +230,90 @@ export function RoomGraphicsScene({
 			<GraphicsBackground
 				zIndex={ -1000 }
 				background={ roomBackground.image }
-				backgroundSize={ roomBackground.size }
+				backgroundSize={ roomBackground.imageSize }
 				backgroundFilters={ usePlayerVisionFilters(false) }
 			/>
 		</GraphicsScene>
 	);
+}
+
+export interface RoomProjectionResolver {
+	transform(x: number, y: number, z: number): [x: number, y: number];
+	scaleAt(x: number, y: number, z: number): number;
+	inverseGivenZ(resX: number, resY: number, z: number): [x: number, y: number, z: number];
+	imageAspectRatio: number;
+	floorAreaWidth: number;
+	floorAreaDepth: number;
+	ceiling: number;
+	renderedAreaWidth: number;
+	renderedAreaHeight: number;
+}
+
+export function useRoomViewProjection(roomBackground: Immutable<RoomBackgroundData>): Immutable<RoomProjectionResolver> {
+	return useMemo((): Immutable<RoomProjectionResolver> => {
+		const {
+			imageSize,
+			cameraCenterOffset,
+			ceiling,
+			areaCoverage,
+			cameraFov,
+			floorArea,
+		} = roomBackground;
+
+		const imageAspectRatio = imageSize[0] / imageSize[1];
+
+		const floorAreaWidth = floorArea[0];
+		const floorAreaDepth = floorArea[1];
+
+		const renderedAreaWidth = floorAreaWidth / areaCoverage;
+		const renderedAreaHeight = renderedAreaWidth / imageAspectRatio;
+		const renderedAreaScale = imageSize[0] / renderedAreaWidth;
+
+		const cameraSkewX = cameraCenterOffset[0] / imageSize[0];
+		const cameraSkewY = cameraCenterOffset[1] / imageSize[1];
+
+		const areaCameraPositionX = 0.5 * (floorAreaWidth - renderedAreaWidth) + (0.5 + cameraSkewX) * renderedAreaWidth;
+		const areaCameraPositionZ = (0.5 + cameraSkewY) * renderedAreaHeight;
+
+		const frustumNearDistance = (0.5 * renderedAreaHeight) / Math.tan(cameraFov * 0.5 * PIXI.DEG_TO_RAD);
+
+		const transform = (x: number, y: number, z: number): [x: number, y: number] => {
+			const scale = frustumNearDistance / (y + frustumNearDistance);
+
+			return [
+				imageSize[0] * (0.5 + cameraSkewX + scale * (x - areaCameraPositionX) / renderedAreaWidth),
+				imageSize[1] * (0.5 - cameraSkewY - scale * (z - areaCameraPositionZ) / renderedAreaHeight),
+			];
+		};
+
+		const scaleAt = (_x: number, y: number, _z: number): number => {
+			return renderedAreaScale * (frustumNearDistance / (y + frustumNearDistance));
+		};
+
+		const inverseGivenZ = (resX: number, resY: number, z: number): [x: number, y: number, z: number] => {
+			// Clamp input to the viewport
+			resX = clamp(resX, 0, imageSize[0]);
+			resY = clamp(resY, 0, imageSize[1]);
+
+			const scale = (0.5 - cameraSkewY - (resY / imageSize[1])) * renderedAreaHeight / (z - areaCameraPositionZ);
+			const x = ((-0.5 - cameraSkewX + (resX / imageSize[0])) * renderedAreaWidth / scale) + areaCameraPositionX;
+			const y = (frustumNearDistance / scale) - frustumNearDistance;
+
+			return [x, y, z];
+		};
+
+		return {
+			transform,
+			scaleAt,
+			inverseGivenZ,
+			imageAspectRatio,
+			floorAreaWidth,
+			floorAreaDepth,
+			ceiling,
+			renderedAreaWidth,
+			renderedAreaHeight,
+		};
+	}, [roomBackground]);
 }
 
 export function usePlayerVisionFilters(targetIsPlayer: boolean): Filter[] {

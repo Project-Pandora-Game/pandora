@@ -2,7 +2,6 @@ import {
 	AccountId,
 	AsyncSynchronized,
 	SPACE_SHARD_UPDATEABLE_PROPERTIES,
-	CalculateCharacterMaxYForBackground,
 	SpaceDataSchema,
 	GetLogger,
 	SpaceData,
@@ -60,9 +59,8 @@ export class PublicSpace extends Space {
 
 		// Put characters into correct place if needed
 		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
-		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 		for (const character of this.characters) {
-			if (character.position[0] > roomBackground.size[0] || character.position[1] > maxY) {
+			if (character.position[0] > roomBackground.floorArea[0] || character.position[1] > roomBackground.floorArea[1]) {
 				character.position = GenerateInitialRoomPosition();
 
 				update.characters ??= {};

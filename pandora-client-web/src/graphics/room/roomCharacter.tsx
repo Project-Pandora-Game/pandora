@@ -1,11 +1,9 @@
 import {
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
-	CalculateCharacterMaxYForBackground,
 	CharacterRoomPosition,
 	CharacterSize,
 	ICharacterRoomData,
-	RoomBackgroundData,
 	SpaceClientInfo,
 	LegsPose,
 } from 'pandora-common';
@@ -13,15 +11,15 @@ import PIXI, { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle } 
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Character, useCharacterData } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
-import _ from 'lodash';
+import _, { clamp } from 'lodash';
 import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug';
-import { CHARACTER_BASE_Y_OFFSET, CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
 import { Container, Graphics, Sprite, Text } from '@pixi/react';
 import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
 import { useEvent } from '../../common/useEvent';
 import { MASK_SIZE, SwapCullingDirection } from '../graphicsLayer';
 import { useCharacterRestrictionsManager } from '../../components/gameContext/gameStateContextProvider';
-import { useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
+import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
 import { useCurrentAccountSettings } from '../../components/gameContext/directoryConnectorContextProvider';
 import { useTexture } from '../useTexture';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
@@ -33,7 +31,7 @@ type RoomCharacterInteractiveProps = {
 	character: Character<ICharacterRoomData>;
 	spaceInfo: Immutable<SpaceClientInfo>;
 	debugConfig: ChatroomDebugConfig;
-	background: Immutable<RoomBackgroundData>;
+	projectionResolver: Immutable<RoomProjectionResolver>;
 	shard: ShardConnector | null;
 	menuOpen: (target: Character<ICharacterRoomData>, data: FederatedPointerEvent) => void;
 };
@@ -41,7 +39,7 @@ type RoomCharacterInteractiveProps = {
 type RoomCharacterDisplayProps = {
 	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
-	background: Immutable<RoomBackgroundData>;
+	projectionResolver: Immutable<RoomProjectionResolver>;
 
 	debugConfig?: Immutable<ChatroomDebugConfig>;
 
@@ -57,7 +55,7 @@ type CharacterStateProps = {
 	characterState: AssetFrameworkCharacterState;
 };
 
-const PIVOT_TO_LABEL_OFFSET = 100 - CHARACTER_BASE_Y_OFFSET;
+const PIVOT_TO_LABEL_OFFSET = 100;
 const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
 
 export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterState): {
@@ -73,11 +71,6 @@ export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterS
 	pivot: Readonly<PointLike>;
 	/** Angle (in degrees) of whole-character rotation */
 	rotationAngle: number;
-	/**
-	 * This pivot is adjusted for the error in the room positioning
-	 * @see CHARACTER_BASE_Y_OFFSET
-	 */
-	errorCorrectedPivot: Readonly<PointLike>;
 } {
 	const evaluator = useAppearanceConditionEvaluator(characterState);
 
@@ -102,18 +95,16 @@ export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterS
 		- legEffect * Math.cos(DEG_TO_RAD * effectiveLegAngle);
 
 	const pivot = useMemo((): PointLike => ({ x: CHARACTER_PIVOT_POSITION.x, y: CHARACTER_PIVOT_POSITION.y - yOffset }), [yOffset]);
-	const errorCorrectedPivot = useMemo((): PointLike => ({ x: pivot.x, y: pivot.y + CHARACTER_BASE_Y_OFFSET }), [pivot]);
 
 	return {
 		baseScale,
 		yOffset,
 		pivot,
 		rotationAngle: evaluator.getBoneLikeValue('character_rotation'),
-		errorCorrectedPivot,
 	};
 }
 
-export function useRoomCharacterPosition(position: CharacterRoomPosition, characterState: AssetFrameworkCharacterState, background: Immutable<RoomBackgroundData>): {
+export function useRoomCharacterPosition(position: CharacterRoomPosition, characterState: AssetFrameworkCharacterState, projectionResolver: Immutable<RoomProjectionResolver>): {
 	/** Position on the room canvas */
 	position: Readonly<PointLike>;
 	/** Z index to use for the character within the room's container */
@@ -135,17 +126,9 @@ export function useRoomCharacterPosition(position: CharacterRoomPosition, charac
 	pivot: Readonly<PointLike>;
 	/** Angle (in degrees) of whole-character rotation */
 	rotationAngle: number;
-	/**
-	 * This pivot is adjusted for the error in the room positioning
-	 * @see CHARACTER_BASE_Y_OFFSET
-	 */
-	errorCorrectedPivot: Readonly<PointLike>;
 } {
-	const [width, height] = background.size;
-	const scaling = background.scaling;
-
-	const x = Math.min(width, position[0]);
-	const y = Math.min(height, position[1]);
+	const posX = clamp(position[0], 0, projectionResolver.floorAreaWidth);
+	const posY = clamp(position[1], 0, projectionResolver.floorAreaDepth);
 	const yOffsetExtra = Math.round(position[2]);
 
 	const {
@@ -153,20 +136,19 @@ export function useRoomCharacterPosition(position: CharacterRoomPosition, charac
 		yOffset,
 		pivot,
 		rotationAngle,
-		errorCorrectedPivot,
 	} = useRoomCharacterOffsets(characterState);
 
-	const scale = baseScale * (1 - (y * scaling) / height);
-
 	return {
-		position: useMemo((): PointLike => ({ x, y: height - y }), [x, y, height]),
-		zIndex: -y,
+		position: useMemo((): PointLike => {
+			const [x, y] = projectionResolver.transform(posX, posY, yOffsetExtra);
+			return ({ x, y });
+		}, [projectionResolver, posX, posY, yOffsetExtra]),
+		zIndex: -posY,
 		yOffset,
 		yOffsetExtra,
-		scale,
+		scale: baseScale * projectionResolver.scaleAt(posX, posY, yOffsetExtra),
 		pivot,
 		rotationAngle,
-		errorCorrectedPivot,
 	};
 }
 
@@ -176,7 +158,7 @@ function RoomCharacterInteractiveImpl({
 	characterState,
 	spaceInfo,
 	debugConfig,
-	background,
+	projectionResolver,
 	shard,
 	menuOpen,
 }: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
@@ -185,18 +167,15 @@ function RoomCharacterInteractiveImpl({
 		position: dataPosition,
 	} = useCharacterData(character);
 
-	const height = background.size[1];
 	const {
 		yOffsetExtra,
 		scale,
-		errorCorrectedPivot,
-	} = useRoomCharacterPosition(dataPosition, characterState, background);
+		pivot,
+	} = useRoomCharacterPosition(dataPosition, characterState, projectionResolver);
 
 	const setPositionRaw = useEvent((newX: number, newY: number): void => {
-		const maxY = CalculateCharacterMaxYForBackground(background);
-
-		newX = _.clamp(Math.round(newX), 0, background.size[0]);
-		newY = _.clamp(Math.round(newY), 0, maxY);
+		newX = _.clamp(Math.round(newX), 0, projectionResolver.floorAreaWidth);
+		newY = _.clamp(Math.round(newY), 0, projectionResolver.floorAreaDepth);
 		shard?.sendMessage('roomCharacterMove', {
 			id,
 			position: [newX, newY, yOffsetExtra],
@@ -205,8 +184,8 @@ function RoomCharacterInteractiveImpl({
 
 	const setPositionThrottled = useMemo(() => _.throttle(setPositionRaw, 100), [setPositionRaw]);
 
-	const labelX = errorCorrectedPivot.x;
-	const labelY = errorCorrectedPivot.y + PIVOT_TO_LABEL_OFFSET;
+	const labelX = pivot.x;
+	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
 
 	const hitArea = useMemo(() => new Rectangle(labelX - 100, labelY - 50, 200, 100), [labelX, labelY]);
 
@@ -224,9 +203,9 @@ function RoomCharacterInteractiveImpl({
 		if (!dragging.current || !spaceInfo || !characterContainer.current) return;
 		const dragPointerEnd = event.getLocalPosition<Point>(characterContainer.current.parent);
 
-		const newY = height - (dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale);
+		const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, (dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale), yOffsetExtra);
 
-		setPositionThrottled(dragPointerEnd.x, newY);
+		setPositionThrottled(newX, newY);
 	});
 
 	const onPointerDown = useCallback((event: FederatedPointerEvent) => {
@@ -259,7 +238,7 @@ function RoomCharacterInteractiveImpl({
 			globalState={ globalState }
 			character={ character }
 			characterState={ characterState }
-			background={ background }
+			projectionResolver={ projectionResolver }
 			debugConfig={ debugConfig }
 			eventMode='static'
 			cursor='pointer'
@@ -274,7 +253,7 @@ function RoomCharacterInteractiveImpl({
 const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 	character,
 	characterState,
-	background,
+	projectionResolver,
 	debugConfig,
 
 	eventMode,
@@ -306,15 +285,14 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 		scale,
 		pivot,
 		rotationAngle,
-		errorCorrectedPivot,
-	} = useRoomCharacterPosition(dataPosition, characterState, background);
+	} = useRoomCharacterPosition(dataPosition, characterState, projectionResolver);
 
 	const backView = characterState.actualPose.view === 'back';
 
 	const scaleX = backView ? -1 : 1;
 
-	const labelX = errorCorrectedPivot.x;
-	const labelY = errorCorrectedPivot.y + PIVOT_TO_LABEL_OFFSET;
+	const labelX = pivot.x;
+	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
 
 	const showDisconnectedIcon = !isOnline && interfaceChatroomOfflineCharacterFilter === 'icon';
 	const disconnectedIconTexture = useTexture(disconnectedIcon);
@@ -354,7 +332,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 			ref={ ref }
 			position={ position }
 			scale={ { x: scale, y: scale } }
-			pivot={ errorCorrectedPivot }
+			pivot={ pivot }
 			zIndex={ zIndex }
 			filters={ filters }
 			sortableChildren
@@ -434,11 +412,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 										// Pivot point (wanted)
 										.beginFill(0xffff00)
 										.lineStyle({ color: 0x000000, width: 1 })
-										.drawCircle(pivot.x, pivot.y, 5)
-										// Pivot point (actual)
-										.beginFill(0xccff00)
-										.lineStyle({ color: 0x000000, width: 1 })
-										.drawCircle(errorCorrectedPivot.x, errorCorrectedPivot.y, 5);
+										.drawCircle(pivot.x, pivot.y, 5);
 								} }
 							/>
 							<Graphics draw={ hotboxDebugDraw } />

@@ -176,7 +176,7 @@ export class Character {
 
 	public initRoomPosition(spaceId: SpaceId | null, value: CharacterRoomPosition, [maxX, maxY]: readonly [number, number]) {
 		if (this.data.roomId === spaceId) {
-			if (this.data.position[0] > maxX || this.data.position[1] > maxY) {
+			if (this.data.position[0] < 0 || this.data.position[0] > maxX || this.data.position[1] < 0 || this.data.position[1] > maxY) {
 				this.data.position = value;
 				this.modified.add('position');
 			}

@@ -16,7 +16,6 @@ import {
 	ActionHandlerMessage,
 	CharacterSize,
 	ActionSpaceContext,
-	CalculateCharacterMaxYForBackground,
 	ResolveBackground,
 	AccountId,
 	AssetManager,
@@ -89,16 +88,18 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		const update: GameStateUpdate = {};
 
 		// Put characters into correct place if needed
-		const roomBackground = ResolveBackground(assetManager, this.config.background);
-		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
-		for (const character of this.characters) {
-			if (character.position[0] > roomBackground.size[0] || character.position[1] > maxY) {
-				character.position = GenerateInitialRoomPosition();
+		// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
+		if (!this.getInfo().features.includes('development')) {
+			const roomBackground = ResolveBackground(assetManager, this.config.background);
+			for (const character of this.characters) {
+				if (character.position[0] > roomBackground.floorArea[0] || character.position[1] > roomBackground.floorArea[1]) {
+					character.position = GenerateInitialRoomPosition();
 
-				update.characters ??= {};
-				update.characters[character.id] = {
-					position: character.position,
-				};
+					update.characters ??= {};
+					update.characters[character.id] = {
+						position: character.position,
+					};
+				}
 			}
 		}
 
@@ -195,12 +196,15 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	}
 
 	public updateCharacterPosition(source: Character, id: CharacterId, [x, y, yOffset]: CharacterRoomPosition): void {
-		const roomBackground = ResolveBackground(assetManager, this.config.background);
-		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
+		// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
+		if (!this.getInfo().features.includes('development')) {
+			const roomBackground = ResolveBackground(assetManager, this.config.background);
 
-		if (x > roomBackground.size[0] || y > maxY) {
-			return;
+			if (x < 0 || x > roomBackground.floorArea[0] || y < 0 || y > roomBackground.floorArea[1]) {
+				return;
+			}
 		}
+
 		const character = this.getCharacterById(id);
 		if (!character) {
 			return;
@@ -242,11 +246,10 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public characterAdd(character: Character, appearance: AppearanceBundle): void {
 		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
 		const roomBackground = ResolveBackground(assetManager, this.config.background);
-		const maxY = CalculateCharacterMaxYForBackground(roomBackground);
 		character.initRoomPosition(
 			this.id,
 			GenerateInitialRoomPosition(),
-			[roomBackground.size[0], maxY],
+			roomBackground.floorArea,
 		);
 
 		this.runWithSuppressedUpdates(() => {

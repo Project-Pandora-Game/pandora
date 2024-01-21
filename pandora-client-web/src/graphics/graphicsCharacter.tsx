@@ -76,14 +76,6 @@ export const CHARACTER_PIVOT_POSITION: Readonly<PointLike> = {
 	y: 1290, // The position where heels seemingly touch the floor
 };
 
-/**
- * Our original calculations were broken, treating character as if floating in the air.
- * This can be resolved by simply setting this variable to zero,
- * however some of backgrounds we have currently were tuned to match the old behaviour.
- * This variable preserves the offset such that the backgrounds work before the work to migrate them is done.
- */
-export const CHARACTER_BASE_Y_OFFSET: number = CharacterSize.HEIGHT - CHARACTER_PIVOT_POSITION.y;
-
 function GraphicsCharacterWithManagerImpl({
 	layer: Layer,
 	characterState,

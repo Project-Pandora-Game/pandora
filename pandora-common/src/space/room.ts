@@ -81,7 +81,7 @@ export function CalculateBackgroundDataFromCalibrationData(image: string, calibr
 	return {
 		image,
 		imageSize: CloneDeepMutable(calibrationData.imageSize),
-		floorArea: [floorAreaWidth, floorAreaDepth],
+		floorArea: [Math.floor(floorAreaWidth), Math.floor(floorAreaDepth)],
 		areaCoverage: calibrationData.areaCoverage,
 		ceiling: Math.ceil(calibrationData.ceiling / calibrationData.baseScale),
 		cameraCenterOffset: CloneDeepMutable(calibrationData.cameraCenterOffset),

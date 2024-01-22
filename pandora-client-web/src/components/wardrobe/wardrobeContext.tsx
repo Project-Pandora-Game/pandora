@@ -191,8 +191,8 @@ export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, re
 			if (action == null || result == null)
 				return;
 
-			if (!result.valid || result.problems.length > 0) {
-				toast(<ActionWarningContent problems={ result.problems } />, TOAST_OPTIONS_WARNING);
+			if (!result.valid) {
+				toast(<ActionWarningContent problems={ result.problems } prompt={ result.prompt != null } />, TOAST_OPTIONS_WARNING);
 				return;
 			}
 

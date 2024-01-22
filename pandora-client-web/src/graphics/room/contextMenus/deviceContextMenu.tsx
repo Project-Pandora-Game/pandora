@@ -75,8 +75,8 @@ function MoveDeviceMenu({ device, setRoomSceneMode, close }: {
 			toast('You must be in room construction mode to move devices', TOAST_OPTIONS_WARNING);
 			return;
 		}
-		if (checkResult != null && (!checkResult.valid || checkResult.problems.length > 0)) {
-			toast(<ActionWarningContent problems={ checkResult.problems } />, TOAST_OPTIONS_WARNING);
+		if (checkResult != null && !checkResult.valid) {
+			toast(<ActionWarningContent problems={ checkResult.problems } prompt={ checkResult.prompt != null } />, TOAST_OPTIONS_WARNING);
 			return;
 		}
 		setRoomSceneMode({ mode: 'moveDevice', deviceItemId: device.id });

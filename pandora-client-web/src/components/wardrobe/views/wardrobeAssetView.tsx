@@ -309,7 +309,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 		>
 			{
 				check != null ? (
-					<ActionWarning problems={ finalProblems } parent={ ref } />
+					<ActionWarning problems={ finalProblems } prompt={ !check.valid && check.prompt != null } parent={ ref } />
 				) : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ listMode } />

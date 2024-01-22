@@ -13,7 +13,7 @@ import allow from '../../assets/icons/public.svg';
 import prompt from '../../assets/icons/prompt.svg';
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
-import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, CharacterIdSchema, EMPTY, GameLogicPermissionClient, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfigChangeSelector, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, CharacterIdSchema, EMPTY, GameLogicPermissionClient, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ModalDialog } from '../dialog/dialog';
 import { Column, Row } from '../common/container/container';
@@ -207,9 +207,9 @@ function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactEl
 	);
 }
 
-function usePermissionConfigSetAny(): (permissionGroup: PermissionGroup, permissionId: string, selector: PermissionConfigChangeSelector, allowOthers: PermissionType | null) => void {
+function usePermissionConfigSetAny(): (permissionGroup: PermissionGroup, permissionId: string, selector: PermissionConfigChangeSelector, allowOthers: PermissionConfigChangeType) => void {
 	const shardConnector = useShardConnector();
-	return useCallback((permissionGroup: PermissionGroup, permissionId: string, selector: PermissionConfigChangeSelector, allowOthers: PermissionType | null) => {
+	return useCallback((permissionGroup: PermissionGroup, permissionId: string, selector: PermissionConfigChangeSelector, allowOthers: PermissionConfigChangeType) => {
 		if (shardConnector == null)
 			return;
 
@@ -296,7 +296,7 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 	);
 }
 
-function PermissionConfigOverrides({ overrides, setConfig }: { overrides: Partial<Record<CharacterId, PermissionType>>; setConfig: (selector: PermissionConfigChangeSelector, allowOthers: PermissionType | null) => void; }): ReactElement | null {
+function PermissionConfigOverrides({ overrides, setConfig }: { overrides: Partial<Record<CharacterId, PermissionType>>; setConfig: (selector: PermissionConfigChangeSelector, allowOthers: PermissionConfigChangeType) => void; }): ReactElement | null {
 	const values = useMemo(() => {
 		const result: { allow: CharacterId[]; deny: CharacterId[]; prompt: CharacterId[]; } = { allow: [], deny: [], prompt: [] };
 		for (const [characterId, allowOthers] of KnownObject.entries(overrides)) {
@@ -435,7 +435,7 @@ export function PermissionPromptHandler(): ReactElement | null {
 
 function PermissionPromptDialog({ prompt: { source, requiredPermissions }, dismiss }: { prompt: PermissionPromptData; dismiss: () => void; }): ReactElement {
 	const setFull = usePermissionConfigSetAny();
-	const setAnyConfig = useCallback((permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionType | null) => {
+	const setAnyConfig = useCallback((permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionConfigChangeType) => {
 		setFull(permissionGroup, permissionId, source.id, allowOthers);
 	}, [setFull, source.id]);
 	const acceptAll = useCallback(() => {
@@ -444,7 +444,7 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions }, dismi
 				continue;
 
 			for (const perm of permissions) {
-				setAnyConfig(group, perm.id, 'yes');
+				setAnyConfig(group, perm.id, 'accept');
 			}
 		}
 		dismiss();
@@ -482,7 +482,7 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions }, dismi
 function PermissionPromptGroup({ permissionGroup, permissions, setAnyConfig, disableAccept }: {
 	permissionGroup: PermissionGroup;
 	permissions: Immutable<GameLogicPermissionClient[]>;
-	setAnyConfig: (permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionType | null) => void;
+	setAnyConfig: (permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionConfigChangeType) => void;
 	disableAccept: () => void;
 }): ReactElement {
 	let header;

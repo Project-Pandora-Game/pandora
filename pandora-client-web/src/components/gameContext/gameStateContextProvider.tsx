@@ -31,7 +31,6 @@ import {
 	ICharacterPrivateData,
 	ChatCharacterStatus,
 	EMPTY_ARRAY,
-	AssertNever,
 	GameLogicPermissionClient,
 	PermissionGroup,
 } from 'pandora-common';

@@ -53,6 +53,9 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 
 		const { selector, allowOthers } = newConfig;
 		if (selector === 'default') {
+			if (allowOthers === 'accept') {
+				return false;
+			}
 			if (allowOthers == null) {
 				next.allowOthers = this.defaultConfig.allowOthers;
 			} else if (this.forbidDefaultAllowOthers?.includes(allowOthers)) {
@@ -68,7 +71,12 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 					.filter(([_, value]) => value != null && value as unknown !== allowOthers));
 			}
 		} else {
-			if (next.characterOverrides[selector] == null) {
+			if (allowOthers === 'accept') {
+				if (next.allowOthers !== 'prompt') {
+					return true;
+				}
+				next.characterOverrides[selector] = 'yes';
+			} else if (next.characterOverrides[selector] == null) {
 				if (allowOthers != null) {
 					next.characterOverrides[selector] = allowOthers;
 				}

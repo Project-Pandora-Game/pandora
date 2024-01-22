@@ -368,22 +368,12 @@ export class GameState extends TypedEventEmitter<{
 				this.logger.warning('Permission prompt for unknown permission', group, id);
 				continue;
 			}
-			const result = perm.checkPermission(source.gameLogicCharacter);
-			switch (result) {
-				case 'yes':
-					continue;
-				case 'no':
-					this.logger.warning('Permission prompt for permission that is not allowed', group, id);
-					return;
-				case 'prompt':
-					perms.push(perm);
-					break;
-				default:
-					AssertNever(result);
-			}
+			perms.push(perm);
 		}
-		if (perms.length === 0)
+		if (perms.length === 0) {
+			logger.warning('Permission prompt for no permissions');
 			return;
+		}
 
 		const groups: Partial<Record<PermissionGroup, GameLogicPermissionClient[]>> = {};
 		for (const perm of perms) {

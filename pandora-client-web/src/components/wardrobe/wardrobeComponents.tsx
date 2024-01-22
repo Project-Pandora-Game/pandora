@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import {
 	AppearanceAction,
 	AppearanceActionProblem,
+	AppearanceActionProcessingResult,
 	AppearanceActionRandomize,
 	AssertNever,
 	Asset,
@@ -129,7 +130,7 @@ export function WardrobeActionButton({
 			className={ classNames(
 				'wardrobeActionButton',
 				className,
-				check === null ? 'pending' : finalProblems.length === 0 ? 'allowed' : 'blocked',
+				CheckResultToClassName(check),
 				hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null,
 			) }
 			onClick={ (ev) => {
@@ -152,6 +153,17 @@ export function WardrobeActionButton({
 			{ children }
 		</Element>
 	);
+}
+
+function CheckResultToClassName(result: AppearanceActionProcessingResult | null): string {
+	if (result == null)
+		return 'pending';
+	if (result.valid)
+		return 'allowed';
+	if (result.prompt != null)
+		return 'promptRequired';
+
+	return 'blocked';
 }
 
 export const MIN_RANDOMIZE_UPDATE_INTERVAL = 10;

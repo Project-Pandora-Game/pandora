@@ -556,6 +556,10 @@ $drop-overlay-gap: 0.3em;
 	&.pending:not(.selected) {
 		background-color: #999;
 	}
+
+	&.promptRequired:not(.selected) {
+		background-color: #997;
+	}
 }
 
 .wardrobeColorRow {

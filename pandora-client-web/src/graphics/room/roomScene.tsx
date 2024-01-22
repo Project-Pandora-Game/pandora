@@ -10,6 +10,7 @@ import {
 	ResolveBackground,
 	CalculateBackgroundDataFromCalibrationData,
 	RoomBackgroundData,
+	Assert,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
@@ -238,9 +239,24 @@ export function RoomGraphicsScene({
 }
 
 export interface RoomProjectionResolver {
+	/**
+	 * Gets an on-screen position a point on the given coordinates in the world should be rendered to.
+	 */
 	transform(x: number, y: number, z: number): [x: number, y: number];
+	/**
+	 * Gets a scale that should be applied to a point on the given coordinates. Accounts for base scale as well.
+	 */
 	scaleAt(x: number, y: number, z: number): number;
-	inverseGivenZ(resX: number, resY: number, z: number): [x: number, y: number, z: number];
+	/**
+	 * Gets the 3D coordinates from on-screen coordinates, if Z coordinate (height) is already known
+	 * @param resX - The on-screen X coordinate
+	 * @param resY - The on-screen Y coordinate
+	 * @param z - The target height
+	 * @param ignoreFloorBounds - If normal floor bounds should be ignored
+	 * (allows arbitrary values for x and y that match closest, otherwise it selects closest values still within bounds)
+	 * Default: `false`
+	 */
+	inverseGivenZ(resX: number, resY: number, z: number, ignoreFloorBounds?: boolean): [x: number, y: number, z: number];
 	imageAspectRatio: number;
 	floorAreaWidth: number;
 	floorAreaDepth: number;
@@ -290,14 +306,34 @@ export function useRoomViewProjection(roomBackground: Immutable<RoomBackgroundDa
 			return renderedAreaScale * (frustumNearDistance / (y + frustumNearDistance));
 		};
 
-		const inverseGivenZ = (resX: number, resY: number, z: number): [x: number, y: number, z: number] => {
+		const horizonY = transform(NaN, Infinity, 0)[1];
+		Assert(!Number.isNaN(horizonY));
+		const maxFloorY = transform(NaN, floorAreaDepth, 0)[1];
+		Assert(!Number.isNaN(maxFloorY));
+
+		const inverseGivenZ = (resX: number, resY: number, z: number, ignoreFloorBounds: boolean = false): [x: number, y: number, z: number] => {
 			// Clamp input to the viewport
 			resX = clamp(resX, 0, imageSize[0]);
-			resY = clamp(resY, 0, imageSize[1]);
+			// Remember, that Y increases from the bottom, and we need `scale` to be strictly bigger than zero (doesn't matter how small)
+			resY = clamp(resY, horizonY + 1, imageSize[1]);
+
+			// If the floor bounds are not ignored, limit the values further to match floor
+			if (!ignoreFloorBounds) {
+				resY = clamp(resY, maxFloorY, imageSize[1]);
+			}
 
 			const scale = (0.5 - cameraSkewY - (resY / imageSize[1])) * renderedAreaHeight / (z - areaCameraPositionZ);
 			const x = ((-0.5 - cameraSkewX + (resX / imageSize[0])) * renderedAreaWidth / scale) + areaCameraPositionX;
 			const y = (frustumNearDistance / scale) - frustumNearDistance;
+
+			// Clamp the output coordinates to the floor area
+			if (!ignoreFloorBounds) {
+				return [
+					clamp(x, 0, floorAreaWidth),
+					clamp(y, 0, floorAreaDepth),
+					z,
+				];
+			}
 
 			return [x, y, z];
 		};

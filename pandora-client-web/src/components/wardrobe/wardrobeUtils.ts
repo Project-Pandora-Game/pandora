@@ -1,8 +1,9 @@
 import {
 	ActionSpaceContext,
 	AppearanceAction,
-	AppearanceActionProcessingResultValid,
+	AppearanceActionProcessingResult,
 	AppearanceItems,
+	Assert,
 	AssertNever,
 	AssertNotNullable,
 	EMPTY_ARRAY,
@@ -60,7 +61,11 @@ export function useWardrobeTargetItem(target: WardrobeTarget | null, itemPath: I
 	}, [items, itemPath]);
 }
 
-export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, spaceContext: ActionSpaceContext | null, _action: AppearanceAction, result: AppearanceActionProcessingResultValid): string[] {
+export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, spaceContext: ActionSpaceContext | null, _action: AppearanceAction, result: AppearanceActionProcessingResult): string[] {
+	if (!result.valid) {
+		Assert(result.prompt != null);
+		return [];
+	}
 	const originalCharacterState = result.originalState.characters.get(player.id);
 	AssertNotNullable(originalCharacterState);
 	const resultCharacterState = result.resultState.characters.get(player.id);

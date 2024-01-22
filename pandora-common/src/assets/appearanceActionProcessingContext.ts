@@ -121,12 +121,10 @@ export class AppearanceActionProcessingContext {
 		if (result === 'yes')
 			return;
 
-		if (!permission.checkPermission(this.player)) {
-			this.addProblem({
-				result: 'restrictionError',
-				restriction: permission.getRestrictionDescriptor(result),
-			});
-		}
+		this.addProblem({
+			result: 'restrictionError',
+			restriction: permission.getRestrictionDescriptor(result),
+		});
 	}
 
 	public checkPlayerIsSpaceAdmin(): void {

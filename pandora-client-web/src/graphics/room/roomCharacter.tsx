@@ -11,7 +11,7 @@ import PIXI, { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle } 
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { Character, useCharacterData } from '../../character/character';
 import { ShardConnector } from '../../networking/shardConnector';
-import _, { clamp } from 'lodash';
+import { throttle } from 'lodash';
 import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
 import { Container, Graphics, Sprite, Text } from '@pixi/react';
@@ -127,9 +127,7 @@ export function useRoomCharacterPosition(position: CharacterRoomPosition, charac
 	/** Angle (in degrees) of whole-character rotation */
 	rotationAngle: number;
 } {
-	const posX = clamp(position[0], 0, projectionResolver.floorAreaWidth);
-	const posY = clamp(position[1], 0, projectionResolver.floorAreaDepth);
-	const yOffsetExtra = Math.round(position[2]);
+	const [posX, posY, yOffsetExtra] = projectionResolver.fixupPosition(position);
 
 	const {
 		baseScale,
@@ -174,15 +172,13 @@ function RoomCharacterInteractiveImpl({
 	} = useRoomCharacterPosition(dataPosition, characterState, projectionResolver);
 
 	const setPositionRaw = useEvent((newX: number, newY: number): void => {
-		newX = _.clamp(Math.round(newX), 0, projectionResolver.floorAreaWidth);
-		newY = _.clamp(Math.round(newY), 0, projectionResolver.floorAreaDepth);
 		shard?.sendMessage('roomCharacterMove', {
 			id,
-			position: [newX, newY, yOffsetExtra],
+			position: projectionResolver.fixupPosition([newX, newY, yOffsetExtra]),
 		});
 	});
 
-	const setPositionThrottled = useMemo(() => _.throttle(setPositionRaw, 100), [setPositionRaw]);
+	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, 100), [setPositionRaw]);
 
 	const labelX = pivot.x;
 	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;

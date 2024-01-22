@@ -30,10 +30,13 @@ import {
 	RoomInventoryBundle,
 	SpaceDirectoryConfig,
 	SpaceLoadData,
+	RoomBackgroundData,
+	CloneDeepMutable,
 } from 'pandora-common';
 import type { Character } from '../character/character';
-import _, { isEqual, omit } from 'lodash';
+import _, { clamp, isEqual, omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
+import { Immutable } from 'immer';
 
 const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 20; // 20 minutes
 const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
@@ -92,8 +95,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		if (!this.getInfo().features.includes('development')) {
 			const roomBackground = ResolveBackground(assetManager, this.config.background);
 			for (const character of this.characters) {
-				if (character.position[0] > roomBackground.floorArea[0] || character.position[1] > roomBackground.floorArea[1]) {
-					character.position = GenerateInitialRoomPosition();
+				if (!IsValidRoomPosition(roomBackground, character.position)) {
+					character.position = GenerateInitialRoomPosition(roomBackground);
 
 					update.characters ??= {};
 					update.characters[character.id] = {
@@ -195,12 +198,12 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		return false;
 	}
 
-	public updateCharacterPosition(source: Character, id: CharacterId, [x, y, yOffset]: CharacterRoomPosition): void {
+	public updateCharacterPosition(source: Character, id: CharacterId, newPosition: CharacterRoomPosition): void {
 		// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
 		if (!this.getInfo().features.includes('development')) {
 			const roomBackground = ResolveBackground(assetManager, this.config.background);
 
-			if (x < 0 || x > roomBackground.floorArea[0] || y < 0 || y > roomBackground.floorArea[1]) {
+			if (!IsValidRoomPosition(roomBackground, newPosition)) {
 				return;
 			}
 		}
@@ -219,7 +222,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		if (character.id !== source.id && !this.isAdmin(source)) {
 			return;
 		}
-		character.position = [x, y, yOffset];
+		character.position = CloneDeepMutable(newPosition);
 		this.sendUpdateToAllCharacters({
 			characters: {
 				[character.id]: {
@@ -248,7 +251,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		const roomBackground = ResolveBackground(assetManager, this.config.background);
 		character.initRoomPosition(
 			this.id,
-			GenerateInitialRoomPosition(),
+			GenerateInitialRoomPosition(roomBackground),
 			roomBackground.floorArea,
 		);
 
@@ -539,6 +542,22 @@ function IsTargeted(message: IClientMessage): message is { type: 'chat' | 'ooc';
 	return (message.type === 'chat' || message.type === 'ooc') && message.to !== undefined;
 }
 
-export function GenerateInitialRoomPosition(): CharacterRoomPosition {
-	return [Math.floor(CharacterSize.WIDTH * (0.7 + 0.4 * (Math.random() - 0.5))), 0, 0];
+export function IsValidRoomPosition(roomBackground: Immutable<RoomBackgroundData>, position: CharacterRoomPosition): boolean {
+	const minX = -Math.floor(roomBackground.floorArea[0] / 2);
+	const maxX = Math.floor(roomBackground.floorArea[0] / 2);
+	const minY = 0;
+	const maxY = roomBackground.floorArea[1];
+
+	return position[0] >= minX && position[0] <= maxX && position[1] >= minY || position[1] <= maxY;
+}
+
+export function GenerateInitialRoomPosition(roomBackground: Immutable<RoomBackgroundData>): CharacterRoomPosition {
+	const minX = -Math.floor(roomBackground.floorArea[0] / 2);
+	const maxX = Math.floor(roomBackground.floorArea[0] / 2);
+
+	return [
+		clamp(Math.round(CharacterSize.WIDTH * (0.4 * (Math.random() - 0.5))), minX, maxX),
+		0,
+		0,
+	];
 }

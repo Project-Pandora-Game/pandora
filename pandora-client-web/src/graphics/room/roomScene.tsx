@@ -102,42 +102,45 @@ export function RoomGraphicsScene({
 	const calibrationLineDraw = useCallback((g: PIXI.Graphics) => {
 		const {
 			transform,
-			floorAreaWidth,
+			floorAreaWidthLeft,
+			floorAreaWidthRight,
 			floorAreaDepth,
 			ceiling,
 			renderedAreaWidth,
 		} = projectionResolver;
 
+		const renderedAreaWidthHalf = Math.floor(renderedAreaWidth / 2);
+
 		g.clear()
 			.beginFill(0x550000, 0.8)
 			.drawPolygon([
-				...transform(floorAreaWidth, 0, 0),
-				...transform(0, 0, 0),
-				...transform(0, floorAreaDepth, 0),
-				...transform(floorAreaWidth, floorAreaDepth, 0),
+				...transform(floorAreaWidthRight, 0, 0),
+				...transform(-floorAreaWidthLeft, 0, 0),
+				...transform(-floorAreaWidthLeft, floorAreaDepth, 0),
+				...transform(floorAreaWidthRight, floorAreaDepth, 0),
 			])
 			.beginFill(0x990000, 0.6)
 			.drawPolygon([
-				...transform(floorAreaWidth - (floorAreaWidth - renderedAreaWidth) / 2, 0, 0),
-				...transform((floorAreaWidth - renderedAreaWidth) / 2, 0, 0),
-				...transform(0.5 * floorAreaWidth, Infinity, 0),
+				...transform(renderedAreaWidthHalf, 0, 0),
+				...transform(-renderedAreaWidthHalf, 0, 0),
+				...transform(0, Infinity, 0),
 			]);
 
 		if (ceiling > 0) {
 			g
 				.beginFill(0xffff00, 0.4)
 				.drawPolygon([
-					...transform(floorAreaWidth, floorAreaDepth, 0),
-					...transform(0, floorAreaDepth, 0),
-					...transform(0, floorAreaDepth, ceiling),
-					...transform(floorAreaWidth, floorAreaDepth, ceiling),
+					...transform(floorAreaWidthRight, floorAreaDepth, 0),
+					...transform(-floorAreaWidthLeft, floorAreaDepth, 0),
+					...transform(-floorAreaWidthLeft, floorAreaDepth, ceiling),
+					...transform(floorAreaWidthRight, floorAreaDepth, ceiling),
 				])
 				.beginFill(0x000055, 0.8)
 				.drawPolygon([
-					...transform(floorAreaWidth, 0, ceiling),
-					...transform(0, 0, ceiling),
-					...transform(0, floorAreaDepth, ceiling),
-					...transform(floorAreaWidth, floorAreaDepth, ceiling),
+					...transform(floorAreaWidthRight, 0, ceiling),
+					...transform(-floorAreaWidthLeft, 0, ceiling),
+					...transform(-floorAreaWidthLeft, floorAreaDepth, ceiling),
+					...transform(floorAreaWidthRight, floorAreaDepth, ceiling),
 				]);
 		}
 	}, [projectionResolver]);
@@ -257,8 +260,13 @@ export interface RoomProjectionResolver {
 	 * Default: `false`
 	 */
 	inverseGivenZ(resX: number, resY: number, z: number, ignoreFloorBounds?: boolean): [x: number, y: number, z: number];
+	/**
+	 * Takes a position and returns the closest valid position
+	 */
+	fixupPosition(position: readonly [x: number, y: number, z: number]): [x: number, y: number, z: number];
 	imageAspectRatio: number;
-	floorAreaWidth: number;
+	floorAreaWidthLeft: number;
+	floorAreaWidthRight: number;
 	floorAreaDepth: number;
 	ceiling: number;
 	renderedAreaWidth: number;
@@ -279,6 +287,7 @@ export function useRoomViewProjection(roomBackground: Immutable<RoomBackgroundDa
 		const imageAspectRatio = imageSize[0] / imageSize[1];
 
 		const floorAreaWidth = floorArea[0];
+		const floorAreaWidthHalf = Math.floor(floorArea[0] / 2);
 		const floorAreaDepth = floorArea[1];
 
 		const renderedAreaWidth = floorAreaWidth / areaCoverage;
@@ -288,7 +297,7 @@ export function useRoomViewProjection(roomBackground: Immutable<RoomBackgroundDa
 		const cameraSkewX = cameraCenterOffset[0] / imageSize[0];
 		const cameraSkewY = cameraCenterOffset[1] / imageSize[1];
 
-		const areaCameraPositionX = 0.5 * (floorAreaWidth - renderedAreaWidth) + (0.5 + cameraSkewX) * renderedAreaWidth;
+		const areaCameraPositionX = cameraSkewX * renderedAreaWidth;
 		const areaCameraPositionZ = (0.5 + cameraSkewY) * renderedAreaHeight;
 
 		const frustumNearDistance = (0.5 * renderedAreaHeight) / Math.tan(cameraFov * 0.5 * PIXI.DEG_TO_RAD);
@@ -329,7 +338,7 @@ export function useRoomViewProjection(roomBackground: Immutable<RoomBackgroundDa
 			// Clamp the output coordinates to the floor area
 			if (!ignoreFloorBounds) {
 				return [
-					clamp(x, 0, floorAreaWidth),
+					clamp(x, -floorAreaWidthHalf, floorAreaWidthHalf),
 					clamp(y, 0, floorAreaDepth),
 					z,
 				];
@@ -338,12 +347,27 @@ export function useRoomViewProjection(roomBackground: Immutable<RoomBackgroundDa
 			return [x, y, z];
 		};
 
+		const fixupPosition = ([x, y, z]: readonly [x: number, y: number, z: number]): [x: number, y: number, z: number] => {
+			const minX = -floorAreaWidthHalf;
+			const maxX = floorAreaWidthHalf;
+			const minY = 0;
+			const maxY = roomBackground.floorArea[1];
+
+			return [
+				clamp(Math.round(x), minX, maxX),
+				clamp(Math.round(y), minY, maxY),
+				Math.round(z),
+			];
+		};
+
 		return {
 			transform,
 			scaleAt,
 			inverseGivenZ,
+			fixupPosition,
 			imageAspectRatio,
-			floorAreaWidth,
+			floorAreaWidthLeft: floorAreaWidthHalf,
+			floorAreaWidthRight: floorAreaWidthHalf,
 			floorAreaDepth,
 			ceiling,
 			renderedAreaWidth,

@@ -26,7 +26,7 @@ import { useDebugConfig } from '../../ui/screens/room/roomDebug';
 import { MASK_SIZE, SwapCullingDirection, useItemColor } from '../graphicsLayer';
 import { Immutable } from 'immer';
 import { useAsyncEvent, useEvent } from '../../common/useEvent';
-import _, { clamp } from 'lodash';
+import { throttle } from 'lodash';
 import { ShardConnector } from '../../networking/shardConnector';
 import { Character } from '../../character/character';
 import { useCharacterRestrictionsManager, useSpaceCharacters } from '../../components/gameContext/gameStateContextProvider';
@@ -105,9 +105,8 @@ export function RoomDeviceMovementTool({
 			return;
 		}
 
-		newX = _.clamp(Math.round(newX), 0, projectionResolver.floorAreaWidth);
-		newY = _.clamp(Math.round(newY), 0, projectionResolver.floorAreaDepth);
-		newYOffset = Math.round(newYOffset);
+		[newX, newY, newYOffset] = projectionResolver.fixupPosition([newX, newY, newYOffset]);
+
 		await shard.awaitResponse('appearanceAction', {
 			type: 'roomDeviceDeploy',
 			target: {
@@ -130,11 +129,13 @@ export function RoomDeviceMovementTool({
 		/* Do nothing */
 	});
 
-	const setPositionThrottled = useMemo(() => _.throttle(setPositionRaw, 100), [setPositionRaw]);
+	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, 100), [setPositionRaw]);
 
-	const deploymentX = clamp(deployment.x, 0, projectionResolver.floorAreaWidth);
-	const deploymentY = clamp(deployment.y, 0, projectionResolver.floorAreaDepth);
-	const yOffsetExtra = Math.round(deployment.yOffset);
+	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
+		deployment.x,
+		deployment.y,
+		deployment.yOffset,
+	]);
 
 	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, 0);
 	const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
@@ -377,9 +378,11 @@ export function RoomDevice({
 	const asset = item.asset;
 	const debugConfig = useDebugConfig();
 
-	const deploymentX = clamp(deployment.x, 0, projectionResolver.floorAreaWidth);
-	const deploymentY = clamp(deployment.y, 0, projectionResolver.floorAreaDepth);
-	const yOffsetExtra = Math.round(deployment.yOffset);
+	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
+		deployment.x,
+		deployment.y,
+		deployment.yOffset,
+	]);
 
 	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, 0);
 	const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);

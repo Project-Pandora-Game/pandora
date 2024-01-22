@@ -12,7 +12,7 @@ import {
 	ResolveBackground,
 	SpaceId,
 } from 'pandora-common';
-import { GenerateInitialRoomPosition, Space } from './space';
+import { GenerateInitialRoomPosition, IsValidRoomPosition, Space } from './space';
 import { assetManager } from '../assets/assetManager';
 import { GetDatabase } from '../database/databaseProvider';
 import _, { omit, pick } from 'lodash';
@@ -58,15 +58,17 @@ export class PublicSpace extends Space {
 		};
 
 		// Put characters into correct place if needed
-		const roomBackground = ResolveBackground(assetManager, this.data.config.background);
-		for (const character of this.characters) {
-			if (character.position[0] > roomBackground.floorArea[0] || character.position[1] > roomBackground.floorArea[1]) {
-				character.position = GenerateInitialRoomPosition();
+		{
+			const roomBackground = ResolveBackground(assetManager, this.data.config.background);
+			for (const character of this.characters) {
+				if (!IsValidRoomPosition(roomBackground, character.position)) {
+					character.position = GenerateInitialRoomPosition(roomBackground);
 
-				update.characters ??= {};
-				update.characters[character.id] = {
-					position: character.position,
-				};
+					update.characters ??= {};
+					update.characters[character.id] = {
+						position: character.position,
+					};
+				}
 			}
 		}
 

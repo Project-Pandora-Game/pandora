@@ -31,7 +31,7 @@ import { Container, Graphics } from '@pixi/react';
 import { RoomDevice } from '../../graphics/room/roomDevice';
 import { useWardrobeContext } from './wardrobeContext';
 import { useObservable } from '../../observable';
-import { clamp, min } from 'lodash';
+import { min } from 'lodash';
 import { Immutable } from 'immer';
 
 export function WardrobeCharacterPreview({ character, characterState, isPreview = false }: {
@@ -286,9 +286,11 @@ export function RoomPreview({
 			}
 		}
 
-		const deploymentX = clamp(focusDevice.deployment.x, 0, projectionResolver.floorAreaWidth);
-		const deploymentY = clamp(focusDevice.deployment.y, 0, projectionResolver.floorAreaDepth);
-		const yOffsetExtra = Math.round(focusDevice.deployment.yOffset);
+		const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
+			focusDevice.deployment.x,
+			focusDevice.deployment.y,
+			focusDevice.deployment.yOffset,
+		]);
 
 		const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
 		const [posX, posY] = projectionResolver.transform(deploymentX, deploymentY, 0);

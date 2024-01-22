@@ -184,7 +184,7 @@ export type HearingImpairmentSettings = {
 	 */
 	distortion: number;
 	/**
-	 * Frequency loss, replaces high-frequency sounds (s, f, t, h) with '*'
+	 * Frequency loss, replaces high-frequency sounds (s, f, t, h) with replacement character
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
@@ -192,7 +192,7 @@ export type HearingImpairmentSettings = {
 	 */
 	frequencyLoss: number;
 	/**
-	 * Vowel hiding, replaces vowels (a, e, i, o, u) with '*'
+	 * Vowel hiding, replaces vowels (a, e, i, o, u) with replacement character
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
@@ -200,7 +200,7 @@ export type HearingImpairmentSettings = {
 	 */
 	vowelLoss: number;
 	/**
-	 * Middle loss, randomly replace characters with '*' inside words keeping the first and last character intact
+	 * Middle loss, randomly replace characters with replacement character inside words keeping the first and last character intact
 	 * only the first letter is preserved for words with 3 or less characters
 	 *
 	 * Effective value range:
@@ -213,6 +213,7 @@ export type HearingImpairmentSettings = {
 export class HearingImpairment {
 	private salt: string;
 	private setting: HearingImpairmentSettings;
+	private readonly replacement = '~';
 
 	constructor(salt: string, setting?: Partial<HearingImpairmentSettings>) {
 		this.salt = salt;
@@ -250,7 +251,7 @@ export class HearingImpairment {
 		if (frequencyLoss > 0) {
 			output = output.replace(/(s|f|t|h)/ig, (match) => {
 				if (r.random() <= _.clamp(frequencyLoss, 0, 10) / 10) {
-					return '*';
+					return this.replacement;
 				}
 				return match;
 			});
@@ -258,7 +259,7 @@ export class HearingImpairment {
 		if (vowelLoss > 0) {
 			output = output.replace(/(a|e|i|o|u)/ig, (match) => {
 				if (r.random() <= _.clamp(vowelLoss, 0, 10) / 10) {
-					return '*';
+					return this.replacement;
 				}
 				return match;
 			});
@@ -283,7 +284,7 @@ export class HearingImpairment {
 	private distortWordPart(r: PseudoRandom, word: string, level: number): string {
 		return word.replace(/./ig, (match) => {
 			if (r.random() <= _.clamp(level, 0, 10) / 10) {
-				return '*';
+				return this.replacement;
 			}
 			return match;
 		});

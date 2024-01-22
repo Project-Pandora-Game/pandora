@@ -491,12 +491,12 @@ function PermissionPromptGroup({ permissionGroup, permissions, setAnyConfig, dis
 	switch (permissionGroup) {
 		case 'interaction':
 			header = 'Interactions';
-			note = 'Allow character to interact with worn items and to add new items that are marked in the item limits as...';
+			note = 'Allow character to...';
 			config = INTERACTION_CONFIG;
 			break;
 		case 'assetPreferences':
 			header = 'Item Limits';
-			note = 'Allow character to...';
+			note = 'Allow character to interact with worn items and to add new items that are marked in the item limits as...';
 			config = ASSET_PREFERENCES_PERMISSIONS;
 			break;
 		default:
@@ -520,7 +520,7 @@ function PermissionPromptGroup({ permissionGroup, permissions, setAnyConfig, dis
 	}, [permissions, config]);
 
 	return (
-		<Column>
+		<Column className='permissionPrompt'>
 			<h3>{ header }</h3>
 			<i>{ note }</i>
 			{
@@ -529,7 +529,7 @@ function PermissionPromptGroup({ permissionGroup, permissions, setAnyConfig, dis
 						<label className='flex-1'>
 							<img src={ GetIcon(perm.icon) } width='28' height='28' alt='permission icon' />
 							&nbsp;&nbsp;
-							{ perm.visibleName }
+							<span>{ perm.visibleName }</span>
 						</label>
 						<Button
 							className='slim'

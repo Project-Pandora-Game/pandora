@@ -676,3 +676,22 @@ $drop-overlay-gap: 0.3em;
 		margin: auto 0;
 	}
 }
+
+.permissionPrompt {
+	i {
+		max-width: 26em;
+	}
+
+	.input-row {
+		display: flex;
+		gap: 0.5em;
+		justify-content: space-between;
+		flex-direction: row;
+		align-items: center;
+
+		label, span {
+			margin: auto 0;
+			display: flex;
+		}
+	}
+}

@@ -1,4 +1,4 @@
-import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import onOff from '../../assets/icons/on-off.svg';
 import body from '../../assets/icons/body.svg';
 import color from '../../assets/icons/color.svg';
@@ -380,6 +380,7 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions }, dismi
 		}
 		dismiss();
 	}, [requiredPermissions, dismiss, setAnyConfig]);
+	const [allowAccept, disableAccept] = useReducer(() => false, true);
 
 	return (
 		<ModalDialog>
@@ -397,19 +398,24 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions }, dismi
 			<Column padding='large'>
 				{
 					KnownObject.entries(requiredPermissions).map(([group, permissions]) => (
-						permissions == null ? null : <PermissionPromptGroup key={ group } permissionGroup={ group } permissions={ permissions } />
+						permissions == null ? null : <PermissionPromptGroup key={ group } permissionGroup={ group } permissions={ permissions } setAnyConfig={ setAnyConfig } disableAccept={ disableAccept } />
 					))
 				}
 			</Column>
 			<Row padding='medium' alignX='space-between' alignY='center'>
 				<Button onClick={ dismiss }>Dismiss</Button>
-				<Button onClick={ acceptAll }>Allow all</Button>
+				<Button onClick={ acceptAll } disabled={ !allowAccept }>Allow all</Button>
 			</Row>
 		</ModalDialog>
 	);
 }
 
-function PermissionPromptGroup({ permissionGroup, permissions }: { permissionGroup: PermissionGroup; permissions: Immutable<GameLogicPermissionClient[]>; }): ReactElement {
+function PermissionPromptGroup({ permissionGroup, permissions, setAnyConfig, disableAccept }: {
+	permissionGroup: PermissionGroup;
+	permissions: Immutable<GameLogicPermissionClient[]>;
+	setAnyConfig: (permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionType | null) => void;
+	disableAccept: () => void;
+}): ReactElement {
 	let header;
 	let note;
 	let config: Immutable<Record<string, { visibleName: string; icon: string; } | null>>;
@@ -456,6 +462,15 @@ function PermissionPromptGroup({ permissionGroup, permissions }: { permissionGro
 							&nbsp;&nbsp;
 							{ perm.visibleName }
 						</label>
+						<Button
+							className='slim'
+							onClick={ () => {
+								setAnyConfig(permissionGroup, perm.id, 'no');
+								disableAccept();
+							} }
+						>
+							Deny
+						</Button>
 					</div>
 				))
 			}

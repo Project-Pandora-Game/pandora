@@ -1,4 +1,4 @@
-import { GetLogger, SpaceDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, AssertNever, IShardTokenConnectInfo, Service } from 'pandora-common';
+import { GetLogger, SpaceDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, AssertNever, IShardTokenConnectInfo, Service, Awaitable } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { ENV } from '../config';
@@ -13,9 +13,16 @@ import { BetaKeyStore } from '../shard/betaKeyStore';
 import { SpaceManager } from '../spaces/spaceManager';
 import type { ClientConnection } from './connection_client';
 import { z } from 'zod';
+import { Sleep } from '../utility';
 
 /** Time (in ms) of how often the directory should send status updates */
 export const STATUS_UPDATE_INTERVAL = 60_000;
+
+/**
+ * The constant time in milliseconds for the login, register, ...
+ * This is used to ensure the functions takes a consistent amount of time to execute, helping to prevent timing attacks.
+ */
+const CONSTANT_TIME = 1000;
 
 const logger = GetLogger('ConnectionManager-Client');
 
@@ -75,11 +82,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	constructor() {
 		this.messageHandler = new MessageHandler<IClientDirectory, ClientConnection>({
 			// Before Login
-			login: this.handleLogin.bind(this),
-			register: this.handleRegister.bind(this),
-			resendVerificationEmail: this.handleResendVerificationEmail.bind(this),
-			passwordReset: this.handlePasswordReset.bind(this),
-			passwordResetConfirm: this.handlePasswordResetConfirm.bind(this),
+			login: WithConstantTime(this.handleLogin.bind(this), CONSTANT_TIME),
+			register: WithConstantTime(this.handleRegister.bind(this), CONSTANT_TIME),
+			resendVerificationEmail: WithConstantTime(this.handleResendVerificationEmail.bind(this), CONSTANT_TIME),
+			passwordReset: WithConstantTime(this.handlePasswordReset.bind(this), CONSTANT_TIME),
+			passwordResetConfirm: WithConstantTime(this.handlePasswordResetConfirm.bind(this), CONSTANT_TIME),
 
 			// Account management
 			passwordChange: this.handlePasswordChange.bind(this),
@@ -827,4 +834,36 @@ async function TestCaptcha(token?: string): Promise<boolean> {
 		logger.error('Error verifying captcha', e);
 		return false;
 	}
+}
+
+/**
+ * Creates a wrapper around a function to ensure it executes in a constant time, regardless of the original function's execution time.
+ * This is useful for mitigating timing attacks, especially in security-sensitive operations like password checking.
+ *
+ * @param fn - The original function to be wrapped. This function can be asynchronous or return a promise.
+ * @param delay - The total execution time (in milliseconds) that the wrapped function should take.
+ * @returns A function that, when called, executes the original function and ensures that the total execution time meets the specified delay.
+ * @template TParams - The type of the parameters passed to the original function.
+ * @template TReturn - The type of the return value of the original function.
+ */
+function WithConstantTime<TParams extends unknown[], TReturn extends { /** only messages with actual response */ }>(fn: (...args: TParams) => Awaitable<TReturn>, delay: number): (...args: TParams) => Promise<Awaited<TReturn>> {
+	return async (...args: TParams): Promise<Awaited<TReturn>> => {
+		const before = Date.now();
+		let result: [true, Awaited<TReturn>] | [false, unknown];
+		try {
+			result = [true, await fn(...args)];
+		} catch (e) {
+			result = [false, e];
+		}
+		const after = Date.now();
+		const elapsed = after - before;
+		const remaining = delay - elapsed;
+		if (remaining > 0) {
+			await Sleep(remaining);
+		}
+		if (!result[0]) {
+			throw result[1];
+		}
+		return result[1];
+	};
 }

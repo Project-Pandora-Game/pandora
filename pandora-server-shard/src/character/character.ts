@@ -695,9 +695,33 @@ export class Character {
 		// Do not store messages for offline characters
 		if (!this.isOnline)
 			return;
-		this.messageQueue.push(...messages);
+
+		let transformed: IChatMessage[];
+
+		const hearingImpairment = this.getRestrictionManager().getHearingImpairment();
+		if (hearingImpairment.isActive()) {
+			transformed = [];
+			for (const message of messages) {
+				if (message.type === 'chat') {
+					const parts: typeof message.parts = [];
+					for (const part of message.parts) {
+						parts.push([part[0], hearingImpairment.distort(part[1])]);
+					}
+					transformed.push({
+						...message,
+						parts,
+					});
+				} else {
+					transformed.push(message);
+				}
+			}
+		} else {
+			transformed = messages;
+		}
+
+		this.messageQueue.push(...transformed);
 		this.connection?.sendMessage('chatMessage', {
-			messages,
+			messages: transformed,
 		});
 	}
 

@@ -3,6 +3,7 @@ import type { GameLogicCharacter } from '../character/character';
 import type { PermissionConfig, PermissionSetup, PermissionType, PermissionConfigChange } from './permissionData';
 import type { Immutable } from 'immer';
 import { GameLogicPermission, MakePermissionConfigFromDefault } from './permission';
+import { KnownObject } from '../../utility';
 
 export class GameLogicPermissionServer extends GameLogicPermission {
 	/**
@@ -58,6 +59,13 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 				return false;
 			} else if (allowOthers === null) {
 				next.allowOthers = allowOthers;
+			}
+		} else if (selector === 'clearOverridesWith') {
+			if (allowOthers == null) {
+				next.characterOverrides = {};
+			} else {
+				next.characterOverrides = KnownObject.fromEntries(KnownObject.entries(next.characterOverrides)
+					.filter(([_, value]) => value != null && value as unknown !== allowOthers));
 			}
 		} else {
 			if (next.characterOverrides[selector] == null) {

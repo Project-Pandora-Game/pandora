@@ -13,7 +13,7 @@ import allow from '../../assets/icons/public.svg';
 import prompt from '../../assets/icons/prompt.svg';
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
-import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, GameLogicPermissionClient, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, EMPTY, GameLogicPermissionClient, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfigChangeSelector, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ModalDialog } from '../dialog/dialog';
 import { Column, Row } from '../common/container/container';
@@ -24,6 +24,7 @@ import { SelectionIndicator } from '../common/selectionIndicator/selectionIndica
 import { HoverElement } from '../hoverElement/hoverElement';
 import { PermissionPromptData, useGameStateOptional } from '../gameContext/gameStateContextProvider';
 import type { Immutable } from 'immer';
+import { useFunctionBind } from '../../common/useFunctionBind';
 
 export function PermissionsSettings(): ReactElement | null {
 	const player = usePlayer();
@@ -206,9 +207,9 @@ function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactEl
 	);
 }
 
-function usePermissionConfigSetAny(selector: CharacterId | 'default'): (permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionType | null) => void {
+function usePermissionConfigSetAny(): (permissionGroup: PermissionGroup, permissionId: string, selector: PermissionConfigChangeSelector, allowOthers: PermissionType | null) => void {
 	const shardConnector = useShardConnector();
-	return useCallback((permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionType | null) => {
+	return useCallback((permissionGroup: PermissionGroup, permissionId: string, selector: PermissionConfigChangeSelector, allowOthers: PermissionType | null) => {
 		if (shardConnector == null)
 			return;
 
@@ -230,14 +231,7 @@ function usePermissionConfigSetAny(selector: CharacterId | 'default'): (permissi
 				GetLogger('permissionSet').error('Error updating permission:', err);
 				toast(`Error updating permission`, TOAST_OPTIONS_ERROR);
 			});
-	}, [shardConnector, selector]);
-}
-
-function usePermissionConfigSet(permissionGroup: PermissionGroup, permissionId: string, selector: CharacterId | 'default'): (allowOthers: PermissionType | null) => void {
-	const setAny = usePermissionConfigSetAny(selector);
-	return useCallback((allowOthers: PermissionType | null) => {
-		setAny(permissionGroup, permissionId, allowOthers);
-	}, [permissionGroup, permissionId, setAny]);
+	}, [shardConnector]);
 }
 
 function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
@@ -248,7 +242,9 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 	const shardConnector = useShardConnector();
 	const permissionData = usePermissionData(permissionGroup, permissionId);
 
-	const setConfig = usePermissionConfigSet(permissionGroup, permissionId, 'default');
+	const setConfig = usePermissionConfigSetAny();
+	const setDefault = useFunctionBind(setConfig, permissionGroup, permissionId, 'default');
+	const setAny = useFunctionBind(setConfig, permissionGroup, permissionId);
 
 	if (shardConnector == null || permissionData == null) {
 		return (
@@ -285,17 +281,60 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 				<Row alignX='space-between' alignY='center'>
 					<span>Allow others:</span>
 					<Row>
-						<PermissionAllowOthersSelector type='no' setConfig={ setConfig } effectiveConfig={ effectiveConfig } permissionSetup={ permissionSetup } />
-						<PermissionAllowOthersSelector type='yes' setConfig={ setConfig } effectiveConfig={ effectiveConfig } permissionSetup={ permissionSetup } />
-						<PermissionAllowOthersSelector type='prompt' setConfig={ setConfig } effectiveConfig={ effectiveConfig } permissionSetup={ permissionSetup } />
+						<PermissionAllowOthersSelector type='no' setConfig={ setDefault } effectiveConfig={ effectiveConfig } permissionSetup={ permissionSetup } />
+						<PermissionAllowOthersSelector type='yes' setConfig={ setDefault } effectiveConfig={ effectiveConfig } permissionSetup={ permissionSetup } />
+						<PermissionAllowOthersSelector type='prompt' setConfig={ setDefault } effectiveConfig={ effectiveConfig } permissionSetup={ permissionSetup } />
 					</Row>
 				</Row>
 			</Column>
 			<Row padding='medium' alignX='space-between' alignY='center'>
-				<Button slim onClick={ () => setConfig(null) } className='fadeDisabled' disabled={ permissionConfig == null }>Reset defaults</Button>
+				<Button slim onClick={ () => setDefault(null) } className='fadeDisabled' disabled={ permissionConfig == null }>Reset defaults</Button>
 				<Button onClick={ hide }>Close</Button>
 			</Row>
+			<PermissionConfigOverrides overrides={ permissionConfig?.characterOverrides ?? EMPTY } setConfig={ setAny } />
 		</ModalDialog>
+	);
+}
+
+function PermissionConfigOverrides({ overrides, setConfig }: { overrides: Partial<Record<CharacterId, PermissionType>>; setConfig: (selector: PermissionConfigChangeSelector, allowOthers: PermissionType | null) => void; }): ReactElement | null {
+	const values = useMemo(() => {
+		const result: { allow: CharacterId[]; deny: CharacterId[]; prompt: CharacterId[]; } = { allow: [], deny: [], prompt: [] };
+		for (const [characterId, allowOthers] of KnownObject.entries(overrides)) {
+			switch (allowOthers) {
+				case 'yes':
+					result.allow.push(characterId);
+					break;
+				case 'no':
+					result.deny.push(characterId);
+					break;
+				case 'prompt':
+					result.prompt.push(characterId);
+					break;
+			}
+		}
+		return {
+			allow: result.allow.sort().join(', '),
+			deny: result.deny.sort().join(', '),
+			prompt: result.prompt.sort().join(', '),
+		};
+	}, [overrides]);
+
+	return (
+		<Column padding='large'>
+			<h4>Character based overrides</h4>
+			<hr />
+			<span>Allowed:</span>
+			<textarea value={ values.allow } readOnly />
+			<Button onClick={ () => setConfig('clearOverridesWith', 'yes') }>Clear Allowed</Button>
+			<hr />
+			<span>Denied:</span>
+			<textarea value={ values.deny } readOnly />
+			<Button onClick={ () => setConfig('clearOverridesWith', 'no') }>Clear Denied</Button>
+			<hr />
+			<span>Prompt:</span>
+			<textarea value={ values.prompt } readOnly />
+			<Button onClick={ () => setConfig('clearOverridesWith', 'prompt') }>Clear Prompt</Button>
+		</Column>
 	);
 }
 
@@ -368,7 +407,10 @@ export function PermissionPromptHandler(): ReactElement | null {
 }
 
 function PermissionPromptDialog({ prompt: { source, requiredPermissions }, dismiss }: { prompt: PermissionPromptData; dismiss: () => void; }): ReactElement {
-	const setAnyConfig = usePermissionConfigSetAny(source.id);
+	const setFull = usePermissionConfigSetAny();
+	const setAnyConfig = useCallback((permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionType | null) => {
+		setFull(permissionGroup, permissionId, source.id, allowOthers);
+	}, [setFull, source.id]);
 	const acceptAll = useCallback(() => {
 		for (const [group, permissions] of KnownObject.entries(requiredPermissions)) {
 			if (!permissions)

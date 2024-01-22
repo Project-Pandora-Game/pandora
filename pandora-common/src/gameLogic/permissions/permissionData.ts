@@ -32,8 +32,10 @@ export const PermissionConfigSchema = PermissionConfigDefaultSchema.extend({
 	characterOverrides: z.record(CharacterIdSchema, PermissionTypeSchema),
 });
 
+const PermissionConfigChangeSelectorSchema = CharacterIdSchema.or(z.enum(['default', 'clearOverridesWith']));
+export type PermissionConfigChangeSelector = z.infer<typeof PermissionConfigChangeSelectorSchema>;
 export const PermissionConfigChangeSchema = z.object({
-	selector: CharacterIdSchema.or(z.literal('default')),
+	selector: PermissionConfigChangeSelectorSchema,
 	allowOthers: PermissionTypeSchema.nullable(),
 }).nullable();
 export type PermissionConfigChange = z.infer<typeof PermissionConfigChangeSchema>;

@@ -13,11 +13,11 @@ import allow from '../../assets/icons/public.svg';
 import prompt from '../../assets/icons/prompt.svg';
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
-import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, EMPTY, GameLogicPermissionClient, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfigChangeSelector, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, CharacterIdSchema, EMPTY, GameLogicPermissionClient, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfigChangeSelector, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ModalDialog } from '../dialog/dialog';
 import { Column, Row } from '../common/container/container';
-import { noop } from 'lodash';
+import { capitalize, noop } from 'lodash';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator';
@@ -288,7 +288,7 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 				</Row>
 			</Column>
 			<Row padding='medium' alignX='space-between' alignY='center'>
-				<Button slim onClick={ () => setDefault(null) } className='fadeDisabled' disabled={ permissionConfig == null }>Reset defaults</Button>
+				<Button slim onClick={ () => setDefault(null) } className='fadeDisabled'>Reset defaults</Button>
 				<Button onClick={ hide }>Close</Button>
 			</Row>
 			<PermissionConfigOverrides overrides={ permissionConfig?.characterOverrides ?? EMPTY } setConfig={ setAny } />
@@ -313,29 +313,56 @@ function PermissionConfigOverrides({ overrides, setConfig }: { overrides: Partia
 			}
 		}
 		return {
-			allow: result.allow.sort().join(', '),
-			deny: result.deny.sort().join(', '),
-			prompt: result.prompt.sort().join(', '),
+			allow: result.allow.sort(),
+			deny: result.deny.sort(),
+			prompt: result.prompt.sort(),
 		};
 	}, [overrides]);
 
 	return (
 		<Column padding='large'>
 			<h4>Character based overrides</h4>
-			<hr />
-			<span>Allowed:</span>
-			<textarea value={ values.allow } readOnly />
-			<Button onClick={ () => setConfig('clearOverridesWith', 'yes') }>Clear Allowed</Button>
-			<hr />
-			<span>Denied:</span>
-			<textarea value={ values.deny } readOnly />
-			<Button onClick={ () => setConfig('clearOverridesWith', 'no') }>Clear Denied</Button>
-			<hr />
-			<span>Prompt:</span>
-			<textarea value={ values.prompt } readOnly />
-			<Button onClick={ () => setConfig('clearOverridesWith', 'prompt') }>Clear Prompt</Button>
+			<br />
+			<PermissionConfigOverrideType type='yes' content={ values.allow } setConfig={ setConfig } />
+			<br />
+			<PermissionConfigOverrideType type='no' content={ values.deny } setConfig={ setConfig } />
+			<br />
+			<PermissionConfigOverrideType type='prompt' content={ values.prompt } setConfig={ setConfig } />
 		</Column>
 	);
+}
+
+function PermissionConfigOverrideType({ type, content, setConfig }: { type: PermissionType; content: CharacterId[]; setConfig: (selector: PermissionConfigChangeSelector, allowOthers: PermissionType | null) => void; }): ReactElement {
+	const [id, setId] = useState('');
+	const result = useMemo(() => CharacterIdSchema.safeParse(id), [id]);
+
+	const onAdd = useCallback(() => {
+		if (!result.success || content.includes(result.data))
+			return;
+
+		setConfig(result.data, type);
+	}, [result, content, setConfig, type]);
+
+	const onRemove = useCallback(() => {
+		if (!result.success || !content.includes(result.data))
+			return;
+
+		setConfig(result.data, null);
+	}, [result, content, setConfig]);
+
+	return (
+		<>
+			<span>{ capitalize(type as string) }:</span>
+			<textarea value={ content.join(', ') } readOnly />
+			<Row className='input-row'>
+				<input type='text' placeholder='Character ID' value={ id } onChange={ (e) => setId(e.target.value.trim()) } />
+				<Button slim onClick={ onAdd } disabled={ !result.success || content.includes(result.data) }>Add</Button>
+				<Button slim onClick={ onRemove } disabled={ !result.success || !content.includes(result.data) }>Remove</Button>
+				<Button slim onClick={ () => setConfig('clearOverridesWith', type) }>Clear All</Button>
+			</Row>
+		</>
+	);
+
 }
 
 function PermissionAllowOthersSelector({ type, setConfig, effectiveConfig, permissionSetup }: {

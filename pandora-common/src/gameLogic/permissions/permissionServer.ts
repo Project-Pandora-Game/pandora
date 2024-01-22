@@ -57,7 +57,7 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 				next.allowOthers = this.defaultConfig.allowOthers;
 			} else if (this.forbidDefaultAllowOthers?.includes(allowOthers)) {
 				return false;
-			} else if (allowOthers === null) {
+			} else {
 				next.allowOthers = allowOthers;
 			}
 		} else if (selector === 'clearOverridesWith') {

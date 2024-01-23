@@ -277,7 +277,7 @@ export class AccountManager implements Service {
 		if (typeof data === 'string')
 			return data;
 
-		logger.info(`Registered new account ${username}`);
+		logger.audit(`Registered new account ${username}`);
 		const account = await this._loadAccount(data);
 		AssertNotNullable(account);
 

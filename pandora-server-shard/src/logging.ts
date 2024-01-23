@@ -67,6 +67,7 @@ export function AddDiscordLogOutput(name: string, webhookUrl: string, logLevel: 
 	const LOG_COLORS: Record<LogLevel, number> = {
 		[LogLevel.FATAL]: 0x581845,
 		[LogLevel.ERROR]: 0xC70039,
+		[LogLevel.AUDIT]: 0x800080,
 		[LogLevel.WARNING]: 0xFF5733,
 		[LogLevel.ALERT]: 0xFFC300,
 		[LogLevel.INFO]: 0xFFFFFF,

@@ -15,7 +15,7 @@ import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, CharacterIdSchema, EMPTY, GameLogicPermissionClient, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { ModalDialog } from '../dialog/dialog';
+import { ButtonConfirm, DraggableDialog, ModalDialog } from '../dialog/dialog';
 import { Column, Row } from '../common/container/container';
 import { capitalize, noop } from 'lodash';
 import { toast } from 'react-toastify';
@@ -358,7 +358,12 @@ function PermissionConfigOverrideType({ type, content, setConfig }: { type: Perm
 				<input type='text' placeholder='Character ID' value={ id } onChange={ (e) => setId(e.target.value.trim()) } />
 				<Button slim onClick={ onAdd } disabled={ !result.success || content.includes(result.data) }>Add</Button>
 				<Button slim onClick={ onRemove } disabled={ !result.success || !content.includes(result.data) }>Remove</Button>
-				<Button slim onClick={ () => setConfig('clearOverridesWith', type) }>Clear All</Button>
+				<ButtonConfirm slim onClick={ () => setConfig('clearOverridesWith', type) }
+					title='Clear all overrides'
+					content={ `Are you sure you want to clear all overrides with ${type}?` }
+				>
+					Clear All
+				</ButtonConfirm>
 			</Row>
 		</>
 	);
@@ -452,7 +457,7 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions }, dismi
 	const [allowAccept, disableAccept] = useReducer(() => false, true);
 
 	return (
-		<ModalDialog>
+		<DraggableDialog title='Permission Prompt'>
 			<Row alignX='center'>
 				<h2>
 					<span style={ { textShadow: `${source.data.settings.labelColor} 1px 2px` } }>
@@ -473,9 +478,9 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions }, dismi
 			</Column>
 			<Row padding='medium' alignX='space-between' alignY='center'>
 				<Button onClick={ dismiss }>Dismiss</Button>
-				<Button onClick={ acceptAll } disabled={ !allowAccept }>Allow all</Button>
+				<Button onClick={ acceptAll } disabled={ !allowAccept } className='fadeDisabled'>Allow all</Button>
 			</Row>
-		</ModalDialog>
+		</DraggableDialog>
 	);
 }
 

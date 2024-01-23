@@ -3,10 +3,10 @@ import React, { ReactElement, ReactNode, useCallback, useRef, useEffect, useMemo
 import { Rnd } from 'react-rnd';
 import { sortBy } from 'lodash';
 import { ChildrenProps } from '../../common/reactTypes';
-import { Button } from '../common/button/button';
+import { Button, ButtonProps } from '../common/button/button';
 import { Observable, useObservable } from '../../observable';
 import './dialog.scss';
-import { useEvent } from '../../common/useEvent';
+import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import { Column, Row } from '../common/container/container';
 import classNames from 'classnames';
 
@@ -14,6 +14,7 @@ import classNames from 'classnames';
 type HtmlPortalNodeAny = HtmlPortalNode<any>;
 
 const DEFAULT_CONFIRM_DIALOG_SYMBOL = Symbol('DEFAULT_CONFIRM_DIALOG_SYMBOL');
+const DEFAULT_CONFIRM_DIALOG_PRIORITY = 10;
 
 export type DialogLocation = 'global' | 'mainOverlay';
 
@@ -145,6 +146,7 @@ export function DraggableDialog({ children, title, rawContent, close }: {
 type ConfirmDialogEntry = Readonly<{
 	title: string;
 	content: ReactNode;
+	priority?: number;
 	handler: (result: boolean) => void;
 }>;
 
@@ -162,6 +164,7 @@ function useConfirmDialogController(symbol: symbol): {
 	open: boolean;
 	title: string;
 	content: ReactNode;
+	priority: number;
 	onConfirm: () => void;
 	onCancel: () => void;
 } {
@@ -181,10 +184,12 @@ function useConfirmDialogController(symbol: symbol): {
 	const open = observed != null;
 	const title = observed != null ? observed.title : '';
 	const content = observed?.content;
+	const priority = observed?.priority ?? DEFAULT_CONFIRM_DIALOG_PRIORITY;
 	return {
 		open,
 		title,
 		content,
+		priority,
 		onConfirm,
 		onCancel,
 	};
@@ -197,13 +202,13 @@ type ConfirmDialogProps = {
 };
 
 export function ConfirmDialog({ symbol, yes = 'Ok', no = 'Cancel' }: ConfirmDialogProps) {
-	const { open, title, content, onConfirm, onCancel } = useConfirmDialogController(symbol);
+	const { open, title, content, priority, onConfirm, onCancel } = useConfirmDialogController(symbol);
 
 	if (!open)
 		return null;
 
 	return (
-		<ModalDialog>
+		<ModalDialog priority={ priority }>
 			<Column className='dialog-confirm'>
 				<strong>{ title }<hr /></strong>
 				<Column padding='large'>
@@ -222,7 +227,7 @@ export function ConfirmDialog({ symbol, yes = 'Ok', no = 'Cancel' }: ConfirmDial
 	);
 }
 
-export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL): (title: string, content?: ReactNode) => Promise<boolean> {
+export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL): (title: string, content?: ReactNode, priority?: number) => Promise<boolean> {
 	const unset = useRef(false);
 	const entry = GetConfirmDialogEntry(symbol);
 	useEffect(() => () => {
@@ -230,11 +235,12 @@ export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL)
 			entry.value = null;
 		}
 	}, [entry]);
-	return useCallback((title: string, content?: ReactNode) => new Promise<boolean>((resolve) => {
+	return useCallback((title: string, content?: ReactNode, priority?: number) => new Promise<boolean>((resolve) => {
 		unset.current = true;
 		entry.value = {
 			title,
 			content,
+			priority,
 			handler: (result) => {
 				unset.current = false;
 				entry.value = null;
@@ -243,3 +249,25 @@ export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL)
 		};
 	}), [entry]);
 }
+
+function ButtonConfirmImpl({ title, content, priority, onClick, disabled, children, ...props }: ButtonProps & { title: string; content?: ReactNode; priority?: number; }, ref: React.ForwardedRef<HTMLButtonElement>) {
+	const confirm = useConfirmDialog();
+
+	const [onActualClick, processing] = useAsyncEvent(async (ev: React.MouseEvent<HTMLButtonElement>) => {
+		ev.preventDefault();
+		ev.stopPropagation();
+		return [await confirm(title, content, priority), ev] as const;
+	}, ([result, ev]: readonly [boolean, React.MouseEvent<HTMLButtonElement>]) => {
+		if (result) {
+			onClick?.(ev);
+		}
+	});
+
+	return (
+		<Button { ...props } ref={ ref } onClick={ onActualClick } disabled={ disabled || processing }>
+			{ children }
+		</Button>
+	);
+}
+
+export const ButtonConfirm = React.forwardRef(ButtonConfirmImpl);

@@ -72,7 +72,7 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 			}
 		} else {
 			if (allowOthers === 'accept') {
-				if (next.allowOthers !== 'prompt') {
+				if (next.allowOthers !== 'prompt' && next.characterOverrides[selector] !== 'prompt') {
 					return true;
 				}
 				next.characterOverrides[selector] = 'yes';

@@ -3,7 +3,7 @@ import type { CharacterAppearance } from '../assets/appearance';
 import { EffectsDefinition } from '../assets/effects';
 import { AssetPropertiesResult, CreateAssetPropertiesResult } from '../assets/properties';
 import { ActionSpaceContext } from '../space/space';
-import { Muffler } from '../character/speech';
+import { HearingImpairment, Muffler } from '../character/speech';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { Item, RoomDeviceLink } from '../assets/item';
 import { AppearanceActionProcessingContext, Asset, AssetId, ItemContainerPath, ItemId, ItemPath, ActionTarget, RestrictionOverrideConfig, GetRestrictionOverrideConfig } from '../assets';
@@ -218,6 +218,13 @@ export class CharacterRestrictionsManager {
 	 */
 	public getMuffler(): Muffler {
 		return new Muffler(this.character.id, this.getEffects());
+	}
+
+	/**
+	 * Returns the HearingImpairment class for this CharacterRestrictionsManager
+	 */
+	public getHearingImpairment(): HearingImpairment {
+		return new HearingImpairment(this.character.id, this.getEffects());
 	}
 
 	/**

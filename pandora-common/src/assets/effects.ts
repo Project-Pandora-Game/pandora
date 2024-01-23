@@ -1,4 +1,4 @@
-import type { MuffleSettings } from '../character/speech';
+import type { HearingImpairmentSettings, MuffleSettings } from '../character/speech';
 import type { Satisfies } from '../utility';
 
 //#region Effects definition
@@ -6,7 +6,7 @@ import type { Satisfies } from '../utility';
 /**
  * The effects definition should be shallow structure, containing only named `number` or `boolean`.
  */
-export type EffectsDefinition = MuffleSettings & {
+export type EffectsDefinition = MuffleSettings & HearingImpairmentSettings & {
 	/**
 	 * Prevents character from adding and removing items
 	 */
@@ -44,6 +44,12 @@ export const EFFECTS_DEFAULT: EffectsDefault = {
 	throatBreath: 0,
 	coherency: 0,
 	stimulus: 0,
+
+	// hearing impairment
+	distortion: 0,
+	frequencyLoss: 0,
+	vowelLoss: 0,
+	middleLoss: 0,
 
 	// others
 	blockHands: false,

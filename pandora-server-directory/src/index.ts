@@ -64,6 +64,7 @@ async function SetupLogging(): Promise<void> {
 		}
 		await AddFileOutput(`${LOG_DIR}/${logPrefix}_debug.log`, false, LogLevel.DEBUG);
 		await AddFileOutput(`${LOG_DIR}/${logPrefix}_error.log`, true, LogLevel.ALERT);
+		await AddFileOutput(`${LOG_DIR}/${logPrefix}_audit.log`, true, LogLevel.AUDIT, true);
 	}
 	// Setup logging to Discord
 	if (LOG_DISCORD_WEBHOOK_URL) {

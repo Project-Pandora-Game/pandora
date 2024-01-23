@@ -37,7 +37,7 @@ export function AnyToString(data: unknown): string {
 	);
 }
 
-export async function AddFileOutput(fileName: string, append: boolean, logLevel: LogLevel, logLevelOverrides: Record<string, LogLevel> = {}): Promise<void> {
+export async function AddFileOutput(fileName: string, append: boolean, logLevel: LogLevel, exactLevel: boolean = false, logLevelOverrides: Record<string, LogLevel> = {}): Promise<void> {
 	const writeStream = (await fsPromises.open(fileName, append ? 'a' : 'w'))
 		.createWriteStream({
 			encoding: 'utf8',
@@ -45,6 +45,7 @@ export async function AddFileOutput(fileName: string, append: boolean, logLevel:
 	logConfig.logOutputs.push({
 		logLevel,
 		logLevelOverrides,
+		exactLevel,
 		supportsColor: false,
 		onMessage: (prefix, message) => {
 			const line = [prefix, ...message.map((v) => AnyToString(v))].join(' ') + '\n';

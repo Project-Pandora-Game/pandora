@@ -1,8 +1,9 @@
+import { Immutable } from 'immer';
 import { TypedEventEmitter } from '../../event';
 import { GameLogicCharacter } from '../character';
 import { GameLogicPermission, GameLogicPermissionServer } from '../permissions';
 import { GameLogicPermissionClient } from '../permissions/permissionClient';
-import { INTERACTION_CONFIG, InteractionId } from './_interactionConfig';
+import { IInteractionConfig, INTERACTION_CONFIG, InteractionId } from './_interactionConfig';
 import { InteractionData } from './interactionData';
 
 export type GameLogicInteractionEvents = {
@@ -22,13 +23,14 @@ export class GameLogicInteractionClient extends GameLogicInteraction {
 
 	constructor(character: GameLogicCharacter, id: InteractionId) {
 		super();
-		const config = INTERACTION_CONFIG[id];
+		const config: Immutable<IInteractionConfig> = INTERACTION_CONFIG[id];
 
 		this.permission = new GameLogicPermissionClient(character, {
 			group: 'interaction',
 			id,
 			displayName: `${config.visibleName}`,
 			defaultConfig: config.defaultPermissions,
+			forbidDefaultAllowOthers: config.forbidDefaultAllowOthers,
 		});
 	}
 }
@@ -38,13 +40,14 @@ export class GameLogicInteractionServer extends GameLogicInteraction {
 
 	constructor(character: GameLogicCharacter, id: InteractionId, data: InteractionData) {
 		super();
-		const config = INTERACTION_CONFIG[id];
+		const config: Immutable<IInteractionConfig> = INTERACTION_CONFIG[id];
 
 		this.permission = new GameLogicPermissionServer(character, {
 			group: 'interaction',
 			id,
 			displayName: `${config.visibleName}`,
 			defaultConfig: config.defaultPermissions,
+			forbidDefaultAllowOthers: config.forbidDefaultAllowOthers,
 		}, data.permissionConfig);
 
 		this.permission.on('configChanged', () => {

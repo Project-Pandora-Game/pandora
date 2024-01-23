@@ -14,21 +14,21 @@ export const ASSET_PREFERENCES_PERMISSIONS = {
 		visibleName: 'Favorite',
 		icon: 'star',
 		defaultPermissions: {
-			allowOthers: true,
+			allowOthers: 'yes',
 		},
 	},
 	normal: {
 		visibleName: 'Normal',
 		icon: 'arrow-right',
 		defaultPermissions: {
-			allowOthers: true,
+			allowOthers: 'yes',
 		},
 	},
 	maybe: {
 		visibleName: 'Maybe',
 		icon: 'questionmark',
 		defaultPermissions: {
-			allowOthers: true,
+			allowOthers: 'prompt',
 		},
 	},
 	prevent: null,

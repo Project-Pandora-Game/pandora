@@ -1,8 +1,9 @@
 import React, { ReactElement, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
-import { AppearanceActionProblem, AssertNever, AssertNotNullable, GameLogicPermission, GetLogger, Logger, PermissionRestriction, TypedEventEmitter } from 'pandora-common';
+import { AppearanceActionProblem, AssertNever, AssertNotNullable, GameLogicPermission, GetLogger, Logger, PermissionRestriction, PermissionType, TypedEventEmitter } from 'pandora-common';
 import { useShardChangeListener, useShardConnector } from './shardConnectorContextProvider';
 import { ShardConnector } from '../../networking/shardConnector';
+import { PermissionPromptHandler } from '../settings/permissionsSettings';
 
 export class PermissionCheckServiceBase extends TypedEventEmitter<{
 	permissionResultReset: void;
@@ -23,7 +24,7 @@ class PermissionCheckService extends PermissionCheckServiceBase {
 
 	private _permissionsGeneration = 1;
 	private readonly _pendingChecks = new Set<GameLogicPermission>();
-	private readonly _cachedResults = new Map<GameLogicPermission, boolean>();
+	private readonly _cachedResults = new Map<GameLogicPermission, PermissionType>();
 
 	constructor(shardConnector: ShardConnector) {
 		super();
@@ -38,9 +39,9 @@ class PermissionCheckService extends PermissionCheckServiceBase {
 
 		for (const permission of permissions) {
 			const cachedResult = this._cachedResults.get(permission);
-			if (cachedResult !== undefined) {
-				if (!cachedResult) {
-					restrictions.push(permission.getRestrictionDescriptor());
+			if (cachedResult != null) {
+				if (cachedResult !== 'yes') {
+					restrictions.push(permission.getRestrictionDescriptor(cachedResult));
 				}
 				continue;
 			}
@@ -61,11 +62,7 @@ class PermissionCheckService extends PermissionCheckServiceBase {
 
 					switch (result.result) {
 						case 'ok':
-							this._cachedResults.set(permission, true);
-							this.emit('permissionResultUpdated', permission);
-							break;
-						case 'noAccess':
-							this._cachedResults.set(permission, false);
+							this._cachedResults.set(permission, result.permission);
 							this.emit('permissionResultUpdated', permission);
 							break;
 						case 'notFound':
@@ -106,6 +103,7 @@ export function PermissionCheckServiceProvider({ children }: ChildrenProps): Rea
 
 	return (
 		<permissionCheckContext.Provider value={ service }>
+			<PermissionPromptHandler />
 			{ children }
 		</permissionCheckContext.Provider>
 	);

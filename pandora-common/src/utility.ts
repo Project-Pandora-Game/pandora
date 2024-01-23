@@ -455,4 +455,7 @@ export class KnownObject {
 	public static entries<T extends object>(obj: T): ObjectEntry<T, keyof T>[] {
 		return Object.entries(obj) as ObjectEntry<T, keyof T>[];
 	}
+	public static fromEntries<T extends object, K extends keyof T>(entries: ObjectEntry<T, K>[]): T {
+		return Object.fromEntries(entries) as T;
+	}
 }

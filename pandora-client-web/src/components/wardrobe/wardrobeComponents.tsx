@@ -2,6 +2,7 @@ import classNames from 'classnames';
 import {
 	AppearanceAction,
 	AppearanceActionProblem,
+	AppearanceActionProcessingResult,
 	AppearanceActionRandomize,
 	AssertNever,
 	Asset,
@@ -26,7 +27,7 @@ import { BrowserStorage } from '../../browserStorage';
 import { useObservable } from '../../observable';
 import { Column } from '../common/container/container';
 
-export function ActionWarningContent({ problems }: { problems: readonly AppearanceActionProblem[]; }): ReactElement {
+export function ActionWarningContent({ problems, prompt }: { problems: readonly AppearanceActionProblem[]; prompt: boolean; }): ReactElement {
 	const assetManager = useAssetManager();
 	const reasons = useMemo(() => (
 		_.uniq(
@@ -44,9 +45,14 @@ export function ActionWarningContent({ problems }: { problems: readonly Appearan
 		);
 	}
 
+	let text = "This action isn't possible, because:";
+	if (prompt) {
+		text = 'Executing the action will prompt for the following permissions:';
+	}
+
 	return (
 		<>
-			This action isn't possible, because:
+			{ text }
 			<ul>
 				{
 					reasons.map((reason, i) => (<li key={ i }>{ reason }</li>))
@@ -56,14 +62,14 @@ export function ActionWarningContent({ problems }: { problems: readonly Appearan
 	);
 }
 
-export function ActionWarning({ problems, parent }: { problems: readonly AppearanceActionProblem[]; parent: HTMLElement | null; }) {
+export function ActionWarning({ problems, prompt, parent }: { problems: readonly AppearanceActionProblem[]; prompt: boolean; parent: HTMLElement | null; }) {
 	if (problems.length === 0) {
 		return null;
 	}
 
 	return (
 		<HoverElement parent={ parent } className='action-warning display-linebreak'>
-			<ActionWarningContent problems={ problems } />
+			<ActionWarningContent problems={ problems } prompt={ prompt } />
 		</HoverElement>
 	);
 }
@@ -129,7 +135,7 @@ export function WardrobeActionButton({
 			className={ classNames(
 				'wardrobeActionButton',
 				className,
-				check === null ? 'pending' : finalProblems.length === 0 ? 'allowed' : 'blocked',
+				CheckResultToClassName(check),
 				hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null,
 			) }
 			onClick={ (ev) => {
@@ -146,12 +152,23 @@ export function WardrobeActionButton({
 		>
 			{
 				showActionBlockedExplanation && check != null ? (
-					<ActionWarning problems={ finalProblems } parent={ ref } />
+					<ActionWarning problems={ finalProblems } prompt={ !check.valid && check.prompt != null } parent={ ref } />
 				) : null
 			}
 			{ children }
 		</Element>
 	);
+}
+
+function CheckResultToClassName(result: AppearanceActionProcessingResult | null): string {
+	if (result == null)
+		return 'pending';
+	if (result.valid)
+		return 'allowed';
+	if (result.prompt != null)
+		return 'promptRequired';
+
+	return 'blocked';
 }
 
 export const MIN_RANDOMIZE_UPDATE_INTERVAL = 10;

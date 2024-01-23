@@ -1,8 +1,9 @@
-import _, { cloneDeep } from 'lodash';
-import { GameLogicCharacter } from '../character/character';
-import { PermissionConfig, PermissionSetup } from './permissionData';
-import { Immutable } from 'immer';
+import { cloneDeep } from 'lodash';
+import type { GameLogicCharacter } from '../character/character';
+import type { PermissionConfig, PermissionSetup, PermissionType, PermissionConfigChange } from './permissionData';
+import type { Immutable } from 'immer';
 import { GameLogicPermission, MakePermissionConfigFromDefault } from './permission';
+import { KnownObject } from '../../utility';
 
 export class GameLogicPermissionServer extends GameLogicPermission {
 	/**
@@ -12,23 +13,23 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 
 	constructor(character: GameLogicCharacter, setup: Immutable<PermissionSetup>, config: PermissionConfig | null) {
 		super(character, setup);
-		this._config = _.cloneDeep(config);
+		this._config = cloneDeep(config);
 	}
 
-	public override checkPermission(actingCharacter: GameLogicCharacter): boolean {
+	public override checkPermission(actingCharacter: GameLogicCharacter): PermissionType {
 		if (actingCharacter.id === this.character.id)
-			return true;
+			return 'yes';
 
 		const config = this.getEffectiveConfig();
+		const characterOverride = config.characterOverrides[actingCharacter.id];
+		if (characterOverride != null)
+			return characterOverride;
 
-		if (config.allowOthers)
-			return true;
-
-		return false;
+		return config.allowOthers;
 	}
 
 	public getConfig(): PermissionConfig | null {
-		return _.cloneDeep(this._config);
+		return cloneDeep(this._config);
 	}
 
 	public getEffectiveConfig(): PermissionConfig {
@@ -38,8 +39,62 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 		return this._config;
 	}
 
-	public setConfig(newConfig: PermissionConfig | null): void {
-		this._config = cloneDeep(newConfig);
+	public setConfig(newConfig: PermissionConfigChange): boolean {
+		if (newConfig == null) {
+			if (this._config == null)
+				return true;
+
+			this._config = null;
+			this.emit('configChanged', undefined);
+			return true;
+		}
+
+		const next = this.getConfig() ?? MakePermissionConfigFromDefault(this.defaultConfig);
+
+		const { selector, allowOthers } = newConfig;
+		if (selector === 'default') {
+			if (allowOthers === 'accept') {
+				return false;
+			}
+			if (allowOthers == null) {
+				next.allowOthers = this.defaultConfig.allowOthers;
+			} else if (this.forbidDefaultAllowOthers?.includes(allowOthers)) {
+				return false;
+			} else {
+				next.allowOthers = allowOthers;
+			}
+		} else if (selector === 'clearOverridesWith') {
+			if (allowOthers == null) {
+				next.characterOverrides = {};
+			} else {
+				next.characterOverrides = KnownObject.fromEntries(KnownObject.entries(next.characterOverrides)
+					.filter(([_, value]) => value != null && value as unknown !== allowOthers));
+			}
+		} else {
+			if (allowOthers === 'accept') {
+				if (next.allowOthers !== 'prompt') {
+					return true;
+				}
+				next.characterOverrides[selector] = 'yes';
+			} else if (next.characterOverrides[selector] == null) {
+				if (allowOthers != null) {
+					next.characterOverrides[selector] = allowOthers;
+				}
+			} else if (allowOthers == null) {
+				delete next.characterOverrides[selector];
+			} else {
+				next.characterOverrides[selector] = allowOthers;
+			}
+		}
+
+		if (next.allowOthers === this.defaultConfig.allowOthers && Object.keys(next.characterOverrides).length === 0) {
+			return this.setConfig(null);
+		}
+
+		this._config = next;
+
 		this.emit('configChanged', undefined);
+
+		return true;
 	}
 }

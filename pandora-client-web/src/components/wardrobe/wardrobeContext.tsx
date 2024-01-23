@@ -136,6 +136,14 @@ export function useWardrobeExecuteCallback({ onSuccess, onFailure }: ExecuteCall
 				case 'success':
 					onSuccess?.();
 					break;
+				case 'promptSent':
+					toast('Prompt sent', TOAST_OPTIONS_WARNING);
+					onFailure?.([]);
+					break;
+				case 'promptFailedCharacterOffline':
+					toast('Character is offline, try again later', TOAST_OPTIONS_ERROR);
+					onFailure?.([]);
+					break;
 				case 'failure':
 					GetLogger('wardrobeExecute').info('Failure executing action:', result.problems);
 					toast(
@@ -183,8 +191,8 @@ export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, re
 			if (action == null || result == null)
 				return;
 
-			if (!result.valid || result.problems.length > 0) {
-				toast(<ActionWarningContent problems={ result.problems } />, TOAST_OPTIONS_WARNING);
+			if (!result.valid && result.prompt == null) {
+				toast(<ActionWarningContent problems={ result.problems } prompt={ false } />, TOAST_OPTIONS_WARNING);
 				return;
 			}
 

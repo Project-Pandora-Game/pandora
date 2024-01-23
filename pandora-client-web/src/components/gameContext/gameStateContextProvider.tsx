@@ -31,6 +31,8 @@ import {
 	ICharacterPrivateData,
 	ChatCharacterStatus,
 	EMPTY_ARRAY,
+	GameLogicPermissionClient,
+	PermissionGroup,
 } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
@@ -82,9 +84,15 @@ export type CurrentSpaceInfo = {
 	config: SpaceClientInfo;
 };
 
+export type PermissionPromptData = {
+	source: Character<ICharacterRoomData>;
+	requiredPermissions: Immutable<Partial<Record<PermissionGroup, GameLogicPermissionClient[]>>>;
+};
+
 export class GameState extends TypedEventEmitter<{
 	globalStateChange: true;
 	messageNotify: NotificationData;
+	permissionPrompt: PermissionPromptData;
 }> implements IChatMessageSender {
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
 
@@ -343,6 +351,39 @@ export class GameState extends TypedEventEmitter<{
 			}
 			this.status.value = chars;
 		}
+	}
+
+	public onPermissionPrompt({ characterId, requiredPermissions }: IShardClientArgument['permissionPrompt']): void {
+		const source = this.characters.value.find((c) => c.data.id === characterId);
+		if (!source) {
+			this.logger.warning('Permission prompt for unknown character', characterId);
+			return;
+		}
+		const player = this.player.gameLogicCharacter;
+		const perms: GameLogicPermissionClient[] = [];
+		for (const [group, id] of requiredPermissions) {
+			const perm = player.getPermission(group, id);
+			if (!perm) {
+				this.logger.warning('Permission prompt for unknown permission', group, id);
+				continue;
+			}
+			perms.push(perm);
+		}
+		if (perms.length === 0) {
+			logger.warning('Permission prompt for no permissions');
+			return;
+		}
+
+		const groups: Partial<Record<PermissionGroup, GameLogicPermissionClient[]>> = {};
+		for (const perm of perms) {
+			const group = groups[perm.group] ??= [];
+			group.push(perm);
+		}
+
+		this.emit('permissionPrompt', {
+			source,
+			requiredPermissions: groups,
+		});
 	}
 
 	//#endregion Handler

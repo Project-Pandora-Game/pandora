@@ -1,8 +1,8 @@
-import { Immutable } from 'immer';
+import type { Immutable } from 'immer';
 import { TypedEventEmitter } from '../../event';
-import { GameLogicCharacter } from '../character/character';
-import { PermissionConfig, PermissionConfigDefault, PermissionGroup, PermissionSetup } from './permissionData';
-import { PermissionRestriction } from '../../character';
+import type { GameLogicCharacter } from '../character/character';
+import type { PermissionConfig, PermissionConfigDefault, PermissionGroup, PermissionSetup, PermissionType, PermissionTypeInvalid } from './permissionData';
+import type { PermissionRestriction } from '../../character';
 
 export type GameLogicPermissionEvents = {
 	configChanged: void;
@@ -23,6 +23,9 @@ export abstract class GameLogicPermission extends TypedEventEmitter<GameLogicPer
 	public get defaultConfig(): Immutable<PermissionConfigDefault> {
 		return this.setup.defaultConfig;
 	}
+	public get forbidDefaultAllowOthers(): readonly PermissionType[] | undefined {
+		return this.setup.forbidDefaultAllowOthers;
+	}
 
 	public readonly character: GameLogicCharacter;
 
@@ -32,22 +35,24 @@ export abstract class GameLogicPermission extends TypedEventEmitter<GameLogicPer
 		this.character = character;
 	}
 
-	public getRestrictionDescriptor(): PermissionRestriction {
+	public getRestrictionDescriptor(permissionResult: PermissionTypeInvalid): PermissionRestriction {
 		return {
 			type: 'missingPermission',
 			target: this.character.id,
 			permissionGroup: this.group,
 			permissionId: this.id,
 			permissionDescription: this.displayName,
+			permissionResult,
 		};
 	}
 
-	public abstract checkPermission(actingCharacter: GameLogicCharacter): boolean;
+	public abstract checkPermission(actingCharacter: GameLogicCharacter): PermissionType;
 }
 
 export function MakePermissionConfigFromDefault(defaultConfig: PermissionConfigDefault): PermissionConfig {
 	return {
 		allowOthers: defaultConfig.allowOthers,
+		characterOverrides: {},
 	};
 }
 

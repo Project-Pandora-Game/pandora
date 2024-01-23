@@ -114,6 +114,11 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 				gameState.onStatus(status);
 			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
+			permissionPrompt: (data: IShardClientArgument['permissionPrompt']) => {
+				const gameState = this._gameState.value;
+				Assert(gameState != null, 'Received permission prompt without game state');
+				gameState.onPermissionPrompt(data);
+			},
 		});
 		this.socket.onAny(this.handleMessage.bind(this));
 	}

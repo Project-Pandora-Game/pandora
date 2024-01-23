@@ -11,6 +11,7 @@ import type { AssetManager } from './assetManager';
 import _ from 'lodash';
 import { BONE_MAX, BONE_MIN } from './appearance';
 import type { RoomDeviceProperties } from './roomDeviceProperties';
+import type { AssetPreferenceType } from '../character';
 import type { AssetId } from './base';
 
 // Each asset must have a size (bodyparts and only bodyparts have `bodypart` size)
@@ -110,6 +111,12 @@ export interface AssetBaseDefinition<Type extends AssetType, A extends AssetDefi
 	 *  - `undefined` temporarily until all previews are added
 	 */
 	preview?: string | null;
+
+	/**
+	 * Override the default asset preference
+	 *  - only 'maybe' and 'prevent' are allowed since 'favorite', 'normal', and 'doNotRender' does not make sense
+	 */
+	assetPreferenceOverride?: AssetPreferenceType & ('maybe' | 'prevent');
 }
 
 export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'personal', A> {

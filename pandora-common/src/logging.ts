@@ -76,7 +76,7 @@ const consoleOutput: LogOutputDefinition = {
 			const c = console as Record<string, unknown>;
 			if (level <= LogLevel.ERROR && typeof c.error === 'function') {
 				c.error(...log);
-			} else if (level <= LogLevel.ERROR && typeof c.warn === 'function') {
+			} else if (level <= LogLevel.WARNING && typeof c.warn === 'function') {
 				c.warn(...log);
 			} else if (level >= LogLevel.DEBUG && typeof c.debug === 'function') {
 				c.debug(...log);

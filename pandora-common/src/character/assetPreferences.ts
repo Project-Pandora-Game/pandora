@@ -61,6 +61,13 @@ export function ResolveAssetPreference(preferences: Immutable<AssetPreferencesPu
 			preference: assetPreference.base,
 		};
 	}
+	if (asset.definition.assetPreferenceOverride != null) {
+		return {
+			type: 'asset',
+			asset: asset.id,
+			preference: asset.definition.assetPreferenceOverride,
+		};
+	}
 
 	let result: AssetPreferenceResolution = {
 		type: 'asset',

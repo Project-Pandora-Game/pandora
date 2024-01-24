@@ -328,8 +328,8 @@ importers:
   pandora-server-directory:
     dependencies:
       '@aws-sdk/client-ses':
-        specifier: 3.496.0
-        version: 3.496.0
+        specifier: 3.498.0
+        version: 3.498.0
       '@aws-sdk/credential-provider-node':
         specifier: 3.496.0
         version: 3.496.0
@@ -659,8 +659,8 @@ packages:
       tslib: 1.14.1
     dev: false
 
-  /@aws-sdk/client-ses@3.496.0:
-    resolution: {integrity: sha512-GYJwio6e7Jw7ma+oFH0QineEf8JF4asoR88KQXNghf7th8IcDSlMzM1WhgHq/XX4ZwN0rOiysPcZKcmC7bBFYQ==}
+  /@aws-sdk/client-ses@3.498.0:
+    resolution: {integrity: sha512-LUzaOT6ZklTUNpUqidb3I5Zb01yzNJhOhm0fz7HaFf7JzRPFxPUviN6tlVbWNMP14/aciJyGztrzGwv53M9m/A==}
     engines: {node: '>=14.0.0'}
     dependencies:
       '@aws-crypto/sha256-browser': 3.0.0

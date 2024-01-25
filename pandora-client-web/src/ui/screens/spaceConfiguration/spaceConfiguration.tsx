@@ -194,7 +194,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 			</div>
 			<div className='input-container'>
 				<label>Space size (maximum number of characters allowed inside)</label>
-				<input autoComplete='none' type='number' value={ currentConfig.maxUsers } min={ 1 } readOnly={ !canEdit }
+				<input autoComplete='none' type='number' value={ currentConfig.maxUsers } min={ 1 } max={ 100 } readOnly={ !canEdit }
 					onChange={ (event) => setModifiedData({ maxUsers: Number.parseInt(event.target.value, 10) }) } />
 			</div>
 			<FieldsetToggle legend='Presentation and access'>

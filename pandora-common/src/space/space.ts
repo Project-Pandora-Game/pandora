@@ -42,7 +42,7 @@ export const SpaceBaseInfoSchema = z.object({
 	/** Spaces are private by default and can be published to be seen in public space search. */
 	public: z.boolean(),
 	/** The maximum amount of characters that can be present at once in the space */
-	maxUsers: z.number().min(1),
+	maxUsers: z.number().int().min(1).max(100).catch(10),
 });
 export type SpaceBaseInfo = z.infer<typeof SpaceBaseInfoSchema>;
 

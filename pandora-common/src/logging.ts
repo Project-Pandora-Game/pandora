@@ -41,8 +41,8 @@ const LOG_NAMES: Readonly<Record<LogLevel, string>> = {
 
 /** Definition for any log output */
 export interface LogOutputDefinition {
-	logLevel: LogLevel;
-	logLevelOverrides: Record<string, LogLevel>;
+	logLevel: LogLevel | false;
+	logLevelOverrides: Record<string, LogLevel | false>;
 	supportsColor: boolean;
 	onMessage: (prefix: string, message: unknown[], level: LogLevel) => void;
 	flush?: () => Promise<void>;
@@ -178,7 +178,7 @@ export class Logger {
 		const colorPrefix = this.logHeader(level, true);
 		for (const output of logConfig.logOutputs) {
 			const outputLevel = output.logLevelOverrides[this.category] ?? output.logLevel;
-			if (outputLevel >= level) {
+			if (outputLevel !== false && outputLevel >= level) {
 				output.onMessage(output.supportsColor ? colorPrefix : plainPrefix, message, level);
 			}
 		}

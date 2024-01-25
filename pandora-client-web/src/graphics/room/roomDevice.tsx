@@ -406,7 +406,7 @@ export function RoomDevice({
 				onPointerDown={ onPointerDown }
 				onPointerUp={ onPointerUp }
 				onPointerUpOutside={ onPointerUp }
-				zIndex={ -y }
+				zIndex={ -deploymentY }
 			>
 				{ children }
 				{

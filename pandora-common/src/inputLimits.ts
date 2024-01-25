@@ -18,6 +18,9 @@ export const LIMIT_CHARACTER_NAME_LENGTH = 32;
 /** The maximum length of an e-mail address */
 export const LIMIT_MAIL_LENGTH = 256;
 
+/** The maximum amount of characters inside a space */
+export const LIMIT_SPACE_MAX_CHARACTER_NUMBER = 100;
+
 /** The maximum length of a space's name */
 export const LIMIT_SPACE_NAME_LENGTH = 40;
 /** The pattern used for validating space's name */

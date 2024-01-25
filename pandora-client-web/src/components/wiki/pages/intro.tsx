@@ -1,5 +1,6 @@
 import React, { ReactElement } from 'react';
 import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/gameStateContextProvider';
+import { ExternalLink } from '../../common/link/externalLink';
 
 export function WikiIntroduction(): ReactElement {
 	return (
@@ -163,7 +164,7 @@ export function WikiIntroduction(): ReactElement {
 				<li>Character rules</li>
 				<li>Room templates</li>
 				<li>New space role "storyteller" that can orchestrate a prepared roleplay without a physical presence in any room of the space</li>
-				... and many more, which can be found by looking at Pandora's issue list on <a href='https://github.com/Project-Pandora-Game/pandora/issues' target='_blank' rel='external nofollow noopener noreferrer'>GitHub</a>
+				... and many more, which can be found by looking at Pandora's issue list on <ExternalLink href='https://github.com/Project-Pandora-Game/pandora/issues'>GitHub</ExternalLink>
 			</ul>
 		</>
 	);

@@ -5,7 +5,7 @@ export function ExternalLink({ href, children }: {
 	children: ReactNode;
 }): ReactElement {
 	return (
-		<a href={ href } target='_blank' referrerPolicy='no-referrer' rel='external noopener noreferrer'>
+		<a href={ href } target='_blank' referrerPolicy='no-referrer' rel='external noopener noreferrer nofollow'>
 			{ children }
 		</a>
 	);

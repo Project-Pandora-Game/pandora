@@ -150,10 +150,12 @@ export function ChatroomDebugConfigView(): ReactElement {
 									step={ 0.01 }
 									value={ chatroomDebugConfig.roomScalingHelperData.areaCoverage }
 									onChange={ (e) => {
-										applyChange((draft) => {
-											AssertNotNullable(draft.roomScalingHelperData);
-											draft.roomScalingHelperData.areaCoverage = e.target.valueAsNumber;
-										});
+										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+											applyChange((draft) => {
+												AssertNotNullable(draft.roomScalingHelperData);
+												draft.roomScalingHelperData.areaCoverage = e.target.valueAsNumber;
+											});
+										}
 									} }
 								/>
 								<input
@@ -163,10 +165,12 @@ export function ChatroomDebugConfigView(): ReactElement {
 									step={ 0.01 }
 									value={ chatroomDebugConfig.roomScalingHelperData.areaCoverage }
 									onChange={ (e) => {
-										applyChange((draft) => {
-											AssertNotNullable(draft.roomScalingHelperData);
-											draft.roomScalingHelperData.areaCoverage = e.target.valueAsNumber;
-										});
+										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+											applyChange((draft) => {
+												AssertNotNullable(draft.roomScalingHelperData);
+												draft.roomScalingHelperData.areaCoverage = e.target.valueAsNumber;
+											});
+										}
 									} }
 								/>
 							</Row>
@@ -209,10 +213,12 @@ export function ChatroomDebugConfigView(): ReactElement {
 									step={ 0.01 }
 									value={ chatroomDebugConfig.roomScalingHelperData.areaDepthRatio }
 									onChange={ (e) => {
-										applyChange((draft) => {
-											AssertNotNullable(draft.roomScalingHelperData);
-											draft.roomScalingHelperData.areaDepthRatio = e.target.valueAsNumber;
-										});
+										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+											applyChange((draft) => {
+												AssertNotNullable(draft.roomScalingHelperData);
+												draft.roomScalingHelperData.areaDepthRatio = e.target.valueAsNumber;
+											});
+										}
 									} }
 								/>
 								<input
@@ -221,10 +227,12 @@ export function ChatroomDebugConfigView(): ReactElement {
 									step={ 0.01 }
 									value={ chatroomDebugConfig.roomScalingHelperData.areaDepthRatio }
 									onChange={ (e) => {
-										applyChange((draft) => {
-											AssertNotNullable(draft.roomScalingHelperData);
-											draft.roomScalingHelperData.areaDepthRatio = e.target.valueAsNumber;
-										});
+										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+											applyChange((draft) => {
+												AssertNotNullable(draft.roomScalingHelperData);
+												draft.roomScalingHelperData.areaDepthRatio = e.target.valueAsNumber;
+											});
+										}
 									} }
 								/>
 							</Row>
@@ -238,10 +246,12 @@ export function ChatroomDebugConfigView(): ReactElement {
 									step={ 0.01 }
 									value={ chatroomDebugConfig.roomScalingHelperData.baseScale }
 									onChange={ (e) => {
-										applyChange((draft) => {
-											AssertNotNullable(draft.roomScalingHelperData);
-											draft.roomScalingHelperData.baseScale = e.target.valueAsNumber;
-										});
+										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+											applyChange((draft) => {
+												AssertNotNullable(draft.roomScalingHelperData);
+												draft.roomScalingHelperData.baseScale = e.target.valueAsNumber;
+											});
+										}
 									} }
 								/>
 								<input
@@ -250,10 +260,12 @@ export function ChatroomDebugConfigView(): ReactElement {
 									step={ 0.01 }
 									value={ chatroomDebugConfig.roomScalingHelperData.baseScale }
 									onChange={ (e) => {
-										applyChange((draft) => {
-											AssertNotNullable(draft.roomScalingHelperData);
-											draft.roomScalingHelperData.baseScale = e.target.valueAsNumber;
-										});
+										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+											applyChange((draft) => {
+												AssertNotNullable(draft.roomScalingHelperData);
+												draft.roomScalingHelperData.baseScale = e.target.valueAsNumber;
+											});
+										}
 									} }
 								/>
 							</Row>
@@ -267,10 +279,12 @@ export function ChatroomDebugConfigView(): ReactElement {
 									step={ 0.1 }
 									value={ chatroomDebugConfig.roomScalingHelperData.fov }
 									onChange={ (e) => {
-										applyChange((draft) => {
-											AssertNotNullable(draft.roomScalingHelperData);
-											draft.roomScalingHelperData.fov = e.target.valueAsNumber;
-										});
+										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+											applyChange((draft) => {
+												AssertNotNullable(draft.roomScalingHelperData);
+												draft.roomScalingHelperData.fov = e.target.valueAsNumber;
+											});
+										}
 									} }
 								/>
 								<input
@@ -280,10 +294,12 @@ export function ChatroomDebugConfigView(): ReactElement {
 									step={ 0.1 }
 									value={ chatroomDebugConfig.roomScalingHelperData.fov }
 									onChange={ (e) => {
-										applyChange((draft) => {
-											AssertNotNullable(draft.roomScalingHelperData);
-											draft.roomScalingHelperData.fov = e.target.valueAsNumber;
-										});
+										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+											applyChange((draft) => {
+												AssertNotNullable(draft.roomScalingHelperData);
+												draft.roomScalingHelperData.fov = e.target.valueAsNumber;
+											});
+										}
 									} }
 								/>
 							</Row>

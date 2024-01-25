@@ -2,6 +2,8 @@ import type { RESTPostAPIWebhookWithTokenJSONBody } from 'discord-api-types/v10'
 import fsPromises from 'fs/promises';
 import { GetLogger, logConfig, LogLevel } from 'pandora-common';
 
+export const AUDIT_LOG = GetLogger('audit', 'Audit');
+
 /** Custom function for stringifying data when logging into file */
 export function AnyToString(data: unknown): string {
 	if (typeof data === 'string') {
@@ -37,7 +39,7 @@ export function AnyToString(data: unknown): string {
 	);
 }
 
-export async function AddFileOutput(fileName: string, append: boolean, logLevel: LogLevel, logLevelOverrides: Record<string, LogLevel> = {}): Promise<void> {
+export async function AddFileOutput(fileName: string, append: boolean, logLevel: LogLevel | false, logLevelOverrides: Record<string, LogLevel | false> = {}): Promise<void> {
 	const writeStream = (await fsPromises.open(fileName, append ? 'a' : 'w'))
 		.createWriteStream({
 			encoding: 'utf8',

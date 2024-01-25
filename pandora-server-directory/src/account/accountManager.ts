@@ -6,6 +6,7 @@ import { DiscordBot } from '../services/discord/discordBot';
 import { isEqual, omit, pick } from 'lodash';
 import { diffString } from 'json-diff';
 import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccountWithSecure, DatabaseAccountWithSecureSchema } from '../database/databaseStructure';
+import { AUDIT_LOG } from '../logging';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 export const ACCOUNT_INACTIVITY_THRESHOLD = 60_000;
@@ -277,7 +278,7 @@ export class AccountManager implements Service {
 		if (typeof data === 'string')
 			return data;
 
-		logger.info(`Registered new account ${username}`);
+		AUDIT_LOG.info(`Registered new account. id=${data.id} username="${username}"`);
 		const account = await this._loadAccount(data);
 		AssertNotNullable(account);
 

@@ -1,4 +1,4 @@
-import { GetLogger, IAccountCryptoKey } from 'pandora-common';
+import { GetLogger, IAccountCryptoKey, Logger } from 'pandora-common';
 import { ENV } from '../config';
 const { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION } = ENV;
 import { GetDatabase } from '../database/databaseProvider';
@@ -11,6 +11,7 @@ import { webcrypto } from 'node:crypto';
 import { nanoid } from 'nanoid';
 import * as argon2 from 'argon2';
 import _ from 'lodash';
+import { AUDIT_LOG } from '../logging';
 
 export enum AccountTokenReason {
 	/** Account activation token */
@@ -29,10 +30,12 @@ export enum AccountTokenReason {
 export default class AccountSecure {
 	readonly #account: Account;
 	readonly #secure: DatabaseAccountSecure;
+	readonly #auditLog: Logger;
 
 	constructor(account: Account, secure: DatabaseAccountSecure) {
 		this.#account = account;
 		this.#secure = secure;
+		this.#auditLog = AUDIT_LOG.prefixMessages(`[Account ${account.id}]`);
 
 		this.#secure.tokens = this.#secure.tokens.filter((t) => t.expires > Date.now());
 	}
@@ -47,6 +50,8 @@ export default class AccountSecure {
 
 		const { value } = await this.#generateToken(AccountTokenReason.ACTIVATION);
 		await GetEmailSender().sendRegistrationConfirmation(email, this.#account.username, value);
+
+		this.#auditLog.info('Activation requested');
 	}
 
 	public async activateAccount(token: string): Promise<boolean> {
@@ -57,6 +62,9 @@ export default class AccountSecure {
 		this.#secure.activated = true;
 
 		await this.#updateDatabase();
+
+		this.#auditLog.verbose('Account activated');
+
 		return true;
 	}
 
@@ -83,6 +91,8 @@ export default class AccountSecure {
 
 		await this.#updateDatabase();
 
+		this.#auditLog.info('Password changed');
+
 		return true;
 	}
 
@@ -92,6 +102,8 @@ export default class AccountSecure {
 
 		const { value } = await this.#generateToken(AccountTokenReason.PASSWORD_RESET);
 		await GetEmailSender().sendPasswordReset(email, this.#account.username, value);
+
+		this.#auditLog.info('Password reset requested');
 
 		return true;
 	}
@@ -106,6 +118,8 @@ export default class AccountSecure {
 		this.#secure.cryptoKey = undefined;
 
 		await this.#updateDatabase();
+
+		this.#auditLog.info('Password reset');
 
 		return true;
 	}

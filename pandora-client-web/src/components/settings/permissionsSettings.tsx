@@ -351,6 +351,11 @@ function PermissionConfigOverrideType({ type, content, setConfig }: { type: Perm
 		setConfig(result.data, null);
 	}, [result, content, setConfig]);
 
+	useEffect(() => {
+		if (id.length > 0 && /^\d+$/.test(id))
+			setId(`c${id}`);
+	}, [id]);
+
 	return (
 		<>
 			<span>{ capitalize(type as string) }:</span>

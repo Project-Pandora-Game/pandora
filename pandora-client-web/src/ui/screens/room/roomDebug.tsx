@@ -1,4 +1,4 @@
-import { AssertNotNullable, CloneDeepMutable, ICharacterRoomData, ResolveBackground, RoomBackgroundCalibrationData, RoomBackgroundCalibrationDataSchema } from 'pandora-common';
+import { AssertNotNullable, CloneDeepMutable, ICharacterRoomData, ResolveBackground, RoomBackgroundCalibrationDataSchema } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
 import z from 'zod';
 import { BrowserStorage } from '../../../browserStorage';
@@ -19,15 +19,6 @@ const ChatroomDebugConfigSchema = z.object({
 	characterDebugOverlay: z.boolean().catch(false),
 	deviceDebugOverlay: z.boolean().catch(false),
 });
-
-const DEFAULT_CALIBRATION_DATA: Omit<RoomBackgroundCalibrationData, 'imageSize'> = {
-	cameraCenterOffset: [0, 0],
-	areaCoverage: 1,
-	ceiling: 0,
-	areaDepthRatio: 1,
-	baseScale: 1,
-	fov: 80,
-};
 
 const DEFAULT_DEBUG_CONFIG: z.infer<typeof ChatroomDebugConfigSchema> = {
 	enabled: false,
@@ -94,9 +85,26 @@ export function ChatroomDebugConfigView(): ReactElement {
 					<input type='checkbox'
 						checked={ chatroomDebugConfig.roomScalingHelperData != null && spaceConfig.features.includes('development') }
 						onChange={ (e) => {
-							applyChange({
-								roomScalingHelperData: e.target.checked ? CloneDeepMutable(DEFAULT_CALIBRATION_DATA) : null,
-							});
+							if (e.target.checked) {
+								const renderedAreaWidth = Math.floor(roomBackground.floorArea[0] / roomBackground.areaCoverage);
+								const baseScale = Math.round(100 * roomBackground.imageSize[0] / renderedAreaWidth) / 100;
+								const areaDepthRatio = Math.round(100 * roomBackground.floorArea[1] / renderedAreaWidth) / 100;
+
+								applyChange({
+									roomScalingHelperData: {
+										baseScale,
+										areaDepthRatio,
+										areaCoverage: roomBackground.areaCoverage,
+										ceiling: Math.floor(roomBackground.ceiling * baseScale),
+										cameraCenterOffset: CloneDeepMutable(roomBackground.cameraCenterOffset),
+										fov: roomBackground.cameraFov,
+									},
+								});
+							} else {
+								applyChange({
+									roomScalingHelperData: null,
+								});
+							}
 						} }
 						disabled={ !spaceConfig.features.includes('development') }
 					/>

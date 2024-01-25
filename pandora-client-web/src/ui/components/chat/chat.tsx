@@ -235,7 +235,7 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 	);
 }
 
-function ActionMessage({ message }: { message: IChatMessageProcessed<IChatMessageAction>; }): ReactElement | null {
+export function ActionMessage({ message }: { message: IChatMessageProcessed<IChatMessageAction>; }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const [folded, setFolded] = useState(true);
 

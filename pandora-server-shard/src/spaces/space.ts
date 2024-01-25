@@ -422,7 +422,11 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		this._queueMessages(queue);
 	}
 
-	public handleActionMessage({
+	public handleActionMessage(actionMessage: ActionHandlerMessage): void {
+		this._queueMessages([this.mapActionMessageToChatMessage(actionMessage)]);
+	}
+
+	public mapActionMessageToChatMessage({
 		id,
 		customText,
 		character,
@@ -430,28 +434,25 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		sendTo,
 		dictionary,
 		...data
-	}: ActionHandlerMessage): void {
+	}: ActionHandlerMessage): IChatMessage {
 		// No reason to duplicate target if it matches character
 		if (isEqual(target, character)) {
 			target = undefined;
 		}
-
-		this._queueMessages([
-			{
-				type: 'action',
-				id,
-				customText,
-				sendTo,
-				time: this.nextMessageTime(),
-				data: {
-					character: this._getCharacterActionInfo(character?.id),
-					target: target?.type === 'character' ? this._getCharacterActionInfo(target.id) :
-						target,
-					...data,
-				},
-				dictionary,
+		return {
+			type: 'action',
+			id,
+			customText,
+			sendTo,
+			time: this.nextMessageTime(),
+			data: {
+				character: this._getCharacterActionInfo(character?.id),
+				target: target?.type === 'character' ? this._getCharacterActionInfo(target.id) :
+					target,
+				...data,
 			},
-		]);
+			dictionary,
+		};
 	}
 
 	private _queueMessages(messages: IChatMessage[]): void {

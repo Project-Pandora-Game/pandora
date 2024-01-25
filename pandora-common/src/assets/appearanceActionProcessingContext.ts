@@ -216,6 +216,8 @@ export class AppearanceActionProcessingResultInvalid extends AppearanceActionPro
 	public readonly valid = false;
 	public readonly prompt: null | CharacterId;
 
+	public readonly pendingMessages: readonly ActionHandlerMessage[];
+
 	public readonly problems: readonly AppearanceActionProblem[];
 
 	constructor(processingContext: AppearanceActionProcessingContext, additionalProblems: readonly AppearanceActionProblem[] = []) {
@@ -237,6 +239,7 @@ export class AppearanceActionProcessingResultInvalid extends AppearanceActionPro
 			}
 		}
 		this.prompt = prompt;
+		this.pendingMessages = prompt != null ? processingContext.pendingMessages : [];
 	}
 }
 

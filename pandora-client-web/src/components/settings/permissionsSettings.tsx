@@ -25,6 +25,7 @@ import { HoverElement } from '../hoverElement/hoverElement';
 import { PermissionPromptData, useGameStateOptional } from '../gameContext/gameStateContextProvider';
 import type { Immutable } from 'immer';
 import { useFunctionBind } from '../../common/useFunctionBind';
+import { ActionMessage } from '../../ui/components/chat/chat';
 
 export function PermissionsSettings(): ReactElement | null {
 	const player = usePlayer();
@@ -438,7 +439,7 @@ export function PermissionPromptHandler(): ReactElement | null {
 	return <PermissionPromptDialog prompt={ prompts[0] } dismiss={ dismissFirst } />;
 }
 
-function PermissionPromptDialog({ prompt: { source, requiredPermissions }, dismiss }: { prompt: PermissionPromptData; dismiss: () => void; }): ReactElement {
+function PermissionPromptDialog({ prompt: { source, requiredPermissions, messages }, dismiss }: { prompt: PermissionPromptData; dismiss: () => void; }): ReactElement {
 	const setFull = usePermissionConfigSetAny();
 	const setAnyConfig = useCallback((permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionConfigChangeType) => {
 		setFull(permissionGroup, permissionId, source.id, allowOthers);
@@ -469,6 +470,13 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions }, dismi
 					asks for permission to...
 				</h2>
 			</Row>
+			<Column>
+				{
+					messages.map((message, i) => (
+						<ActionMessage key={ i } message={ message } />
+					))
+				}
+			</Column>
 			<Column padding='large'>
 				{
 					KnownObject.entries(requiredPermissions).map(([group, permissions]) => (

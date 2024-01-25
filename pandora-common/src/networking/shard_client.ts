@@ -90,6 +90,7 @@ export const ShardClientSchema = {
 		request: ZodCast<{
 			characterId: CharacterId;
 			requiredPermissions: [PermissionGroup, string][];
+			messages: IChatMessage[];
 		}>(),
 		response: null,
 	},

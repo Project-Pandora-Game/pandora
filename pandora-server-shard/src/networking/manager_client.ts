@@ -1,4 +1,4 @@
-import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter, IClientShardNormalResult, NaturalListJoin, PermissionGroup, CloneDeepMutable } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter, IClientShardNormalResult, NaturalListJoin, PermissionGroup, CloneDeepMutable, IChatMessage } from 'pandora-common';
 import { ClientConnection } from './connection_client';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager } from '../assets/assetManager';
@@ -145,7 +145,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		// Check if result is valid
 		if (!result.valid) {
-			const target = result.prompt ? character.getOrLoadSpace().getCharacterById(result.prompt) : null;
+			const space = character.getOrLoadSpace();
+			const target = result.prompt ? space.getCharacterById(result.prompt) : null;
 			if (target == null) {
 				// If the action failed, client might be out of sync, force-send full reload
 				client.sendLoadMessage();
@@ -161,20 +162,26 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			for (const permission of result.requiredPermissions) {
 				requiredPermissions.push([permission.group, permission.id]);
 			}
+			const messages: IChatMessage[] = [];
+			for (const message of result.pendingMessages) {
+				messages.push(space.mapActionMessageToChatMessage(message));
+			}
 			target.connection.sendMessage('permissionPrompt', {
 				characterId: character.id,
 				requiredPermissions,
+				messages,
 			});
 			return { result: 'promptSent' };
 		}
+		{
+			// Apply the action
+			character.getGlobalState().setState(result.resultState);
+			const space = character.getOrLoadSpace();
 
-		// Apply the action
-		character.getGlobalState().setState(result.resultState);
-		const space = character.getOrLoadSpace();
-
-		// Send chat messages as needed
-		for (const message of result.pendingMessages) {
-			space.handleActionMessage(message);
+			// Send chat messages as needed
+			for (const message of result.pendingMessages) {
+				space.handleActionMessage(message);
+			}
 		}
 
 		return {

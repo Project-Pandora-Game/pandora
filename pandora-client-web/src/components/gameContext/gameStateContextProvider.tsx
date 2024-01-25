@@ -33,6 +33,7 @@ import {
 	EMPTY_ARRAY,
 	GameLogicPermissionClient,
 	PermissionGroup,
+	IChatMessageAction,
 } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
@@ -87,6 +88,7 @@ export type CurrentSpaceInfo = {
 export type PermissionPromptData = {
 	source: Character<ICharacterRoomData>;
 	requiredPermissions: Immutable<Partial<Record<PermissionGroup, GameLogicPermissionClient[]>>>;
+	messages: IChatMessageProcessed<IChatMessageAction>[];
 };
 
 export class GameState extends TypedEventEmitter<{
@@ -353,7 +355,7 @@ export class GameState extends TypedEventEmitter<{
 		}
 	}
 
-	public onPermissionPrompt({ characterId, requiredPermissions }: IShardClientArgument['permissionPrompt']): void {
+	public onPermissionPrompt({ characterId, requiredPermissions, messages }: IShardClientArgument['permissionPrompt']): void {
 		const source = this.characters.value.find((c) => c.data.id === characterId);
 		if (!source) {
 			this.logger.warning('Permission prompt for unknown character', characterId);
@@ -379,10 +381,23 @@ export class GameState extends TypedEventEmitter<{
 			const group = groups[perm.group] ??= [];
 			group.push(perm);
 		}
+		const actionMessages: IChatMessageProcessed<IChatMessageAction>[] = [];
+		for (const message of messages) {
+			if (message.type !== 'action' && message.type !== 'serverMessage') {
+				logger.warning('Permission prompt with non-action message', message);
+				continue;
+			}
+
+			actionMessages.push({
+				...message,
+				spaceId: this.currentSpace.value.id,
+			});
+		}
 
 		this.emit('permissionPrompt', {
 			source,
 			requiredPermissions: groups,
+			messages: actionMessages,
 		});
 	}
 

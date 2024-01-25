@@ -10,19 +10,17 @@ export enum LogLevel {
 	 */
 	FATAL = -1,
 	ERROR = 0,
-	AUDIT = 1,
-	WARNING = 2,
-	ALERT = 3,
-	INFO = 4,
-	VERBOSE = 5,
-	DEBUG = 6,
+	WARNING = 1,
+	ALERT = 2,
+	INFO = 3,
+	VERBOSE = 4,
+	DEBUG = 5,
 }
 
 /** Colors used for coloring loglevel names when outputting to console */
 const LOG_COLORS: Readonly<Record<LogLevel, string>> = {
 	[LogLevel.FATAL]: IS_NODE ? '41m\x1b[97' : 'background-color: red; color: white;',
 	[LogLevel.ERROR]: IS_NODE ? '101m\x1b[30' : 'background-color: red; color: black;',
-	[LogLevel.AUDIT]: IS_NODE ? '45m\x1b[97' : 'background-color: purple; color: white;',
 	[LogLevel.WARNING]: IS_NODE ? '43m\x1b[30' : 'background-color: yellow; color: black;',
 	[LogLevel.ALERT]: IS_NODE ? '93' : 'background-color: #222; color: yellow;',
 	[LogLevel.INFO]: IS_NODE ? '37' : 'background-color: #222; color: white;',
@@ -34,7 +32,6 @@ const LOG_COLORS: Readonly<Record<LogLevel, string>> = {
 const LOG_NAMES: Readonly<Record<LogLevel, string>> = {
 	[LogLevel.FATAL]: ' FATAL ',
 	[LogLevel.ERROR]: ' ERROR ',
-	[LogLevel.AUDIT]: ' AUDIT ',
 	[LogLevel.WARNING]: 'WARNING',
 	[LogLevel.ALERT]: 'ALERT  ',
 	[LogLevel.INFO]: 'INFO   ',
@@ -46,7 +43,6 @@ const LOG_NAMES: Readonly<Record<LogLevel, string>> = {
 export interface LogOutputDefinition {
 	logLevel: LogLevel;
 	logLevelOverrides: Record<string, LogLevel>;
-	exactLevel?: boolean;
 	supportsColor: boolean;
 	onMessage: (prefix: string, message: unknown[], level: LogLevel) => void;
 	flush?: () => Promise<void>;
@@ -157,11 +153,6 @@ export class Logger {
 		this.logMessage(LogLevel.WARNING, message);
 	}
 
-	/** Logs a message with `AUDIT` loglevel. */
-	public audit(...message: unknown[]): void {
-		this.logMessage(LogLevel.AUDIT, message);
-	}
-
 	/** Logs a message with `ERROR` loglevel. */
 	public error(...message: unknown[]): void {
 		this.logMessage(LogLevel.ERROR, message);
@@ -187,7 +178,7 @@ export class Logger {
 		const colorPrefix = this.logHeader(level, true);
 		for (const output of logConfig.logOutputs) {
 			const outputLevel = output.logLevelOverrides[this.category] ?? output.logLevel;
-			if (output.exactLevel ? outputLevel === level : outputLevel >= level) {
+			if (outputLevel >= level) {
 				output.onMessage(output.supportsColor ? colorPrefix : plainPrefix, message, level);
 			}
 		}

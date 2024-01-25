@@ -2,24 +2,40 @@ import { z } from 'zod';
 import { HexColorString } from '../validation';
 import { AssetManager } from '../assets';
 import { Immutable } from 'immer';
+import { CloneDeepMutable } from '../utility';
 
 export const RoomBackgroundDataSchema = z.object({
 	/** The background image of a room */
 	image: z.string(),
-	/** The size of the room's area */
-	size: z.tuple([z.number().int().min(0), z.number().int().min(0)]),
-	/** Limit how high can character move */
-	maxY: z.number().int().min(0).optional(),
-	/** The Y -> scale of the room */
-	scaling: z.number().min(0),
+
+	/** The size of the image, in pixels */
+	imageSize: z.tuple([z.number().int().min(0), z.number().int().min(0)]),
+
+	/** The width and depth of the floor area of the room */
+	floorArea: z.tuple([z.number().int().min(0), z.number().int().min(0)]),
+
+	/** How much of the image's bottom edge is covered by the area */
+	areaCoverage: z.number().min(0.01),
+
+	/** The height of the ceiling, in area size units. Unused, debug-only. */
+	ceiling: z.number().min(0),
+
+	/** The offset of the camera's center, used for calculating skew */
+	cameraCenterOffset: z.tuple([z.number(), z.number()]),
+
+	/** The camera's FOV - used for accurately representing distances on the Z axes (but those are not really used throughout Pandora at the moment) */
+	cameraFov: z.number().min(0.1).max(135),
 });
 export type RoomBackgroundData = z.infer<typeof RoomBackgroundDataSchema>;
 
-export const DEFAULT_ROOM_SIZE = [4000, 2000] as const;
 export const DEFAULT_BACKGROUND = {
 	image: '#1099bb',
-	size: DEFAULT_ROOM_SIZE,
-	scaling: 1,
+	imageSize: [4000, 2000],
+	floorArea: [4000, 2000],
+	areaCoverage: 1,
+	ceiling: 0,
+	cameraCenterOffset: [0, 0],
+	cameraFov: 80,
 } as const satisfies Immutable<RoomBackgroundData & { image: HexColorString; }>;
 
 /**
@@ -46,14 +62,29 @@ export function ResolveBackground(assetManager: AssetManager, background: string
 	return roomBackground;
 }
 
-/** What is the minimal scale allowed for character inside room. */
-export const CHARACTER_MIN_SIZE = 0.05;
+export const RoomBackgroundCalibrationDataSchema = z.object({
+	imageSize: z.tuple([z.number().int().min(0), z.number().int().min(0)]),
+	cameraCenterOffset: z.tuple([z.number().int(), z.number().int()]),
+	areaCoverage: z.number(),
+	ceiling: z.number().min(0),
+	areaDepthRatio: z.number().min(0.01),
+	baseScale: z.number().min(0.01),
+	fov: z.number().min(0.1).max(135),
+});
+export type RoomBackgroundCalibrationData = z.infer<typeof RoomBackgroundCalibrationDataSchema>;
 
-/** Calculates maximum Y coordinate for character in room based on background config */
-export function CalculateCharacterMaxYForBackground(roomBackground: Immutable<RoomBackgroundData>): number {
-	// Y is limited by room size, but also by background and by lowest achievable character size
-	return Math.floor(Math.min(
-		roomBackground.maxY != null ? Math.min(roomBackground.maxY, roomBackground.size[1]) : roomBackground.size[1],
-		(1 - CHARACTER_MIN_SIZE) * roomBackground.size[1] / roomBackground.scaling,
-	));
+export function CalculateBackgroundDataFromCalibrationData(image: string, calibrationData: Immutable<RoomBackgroundCalibrationData>): RoomBackgroundData {
+	const renderedAreaWidth = calibrationData.imageSize[0] / calibrationData.baseScale;
+	const floorAreaWidth = calibrationData.areaCoverage * renderedAreaWidth;
+	const floorAreaDepth = calibrationData.areaDepthRatio * renderedAreaWidth;
+
+	return {
+		image,
+		imageSize: CloneDeepMutable(calibrationData.imageSize),
+		floorArea: [Math.floor(floorAreaWidth), Math.floor(floorAreaDepth)],
+		areaCoverage: calibrationData.areaCoverage,
+		ceiling: Math.ceil(calibrationData.ceiling / calibrationData.baseScale),
+		cameraCenterOffset: CloneDeepMutable(calibrationData.cameraCenterOffset),
+		cameraFov: calibrationData.fov,
+	};
 }

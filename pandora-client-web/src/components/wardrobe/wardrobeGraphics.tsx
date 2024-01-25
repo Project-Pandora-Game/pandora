@@ -18,13 +18,13 @@ import { shardConnectorContext, useAppearanceActionEvent } from '../gameContext/
 import { Button } from '../common/button/button';
 import { useEvent } from '../../common/useEvent';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
-import { CHARACTER_BASE_Y_OFFSET, CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../graphics/graphicsCharacter';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { directoryConnectorContext, useCurrentAccountSettings, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useAssetManager } from '../../assets/assetManager';
 import { useSpaceInfo } from '../gameContext/gameStateContextProvider';
 import { RoomCharacter, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter';
-import { usePlayerVisionFilters } from '../../graphics/room/roomScene';
+import { RoomProjectionResolver, usePlayerVisionFilters, useRoomViewProjection } from '../../graphics/room/roomScene';
 import { Row } from '../common/container/container';
 import * as PIXI from 'pixi.js';
 import { Container, Graphics } from '@pixi/react';
@@ -85,12 +85,10 @@ export function CharacterPreview({ character, characterState, overlay }: {
 	const assetManager = useAssetManager();
 	const accountSettings = useCurrentAccountSettings();
 
-	const roomBackground = useMemo((): Immutable<RoomBackgroundData> | null => {
-		if (spaceInfo && accountSettings.wardrobeUseRoomBackground) {
-			return ResolveBackground(assetManager, spaceInfo.config.background);
-		}
-		return null;
-	}, [assetManager, spaceInfo, accountSettings]);
+	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
+		return ResolveBackground(assetManager, spaceInfo.config.background);
+	}, [assetManager, spaceInfo]);
+	const projectionResolver = useRoomViewProjection(roomBackground);
 
 	const wardrobeBackground: number = Number.parseInt(accountSettings.wardrobeBackground.substring(1, 7), 16);
 
@@ -112,7 +110,12 @@ export function CharacterPreview({ character, characterState, overlay }: {
 			/>
 			{
 				roomBackground ? (
-					<WardrobeRoomBackground character={ character } characterState={ characterState } roomBackground={ roomBackground } />
+					<WardrobeRoomBackground
+						character={ character }
+						characterState={ characterState }
+						roomBackground={ roomBackground }
+						projectionResolver={ projectionResolver }
+					/>
 				) : null
 			}
 		</GraphicsScene>
@@ -121,14 +124,16 @@ export function CharacterPreview({ character, characterState, overlay }: {
 
 function WardrobeRoomBackground({
 	roomBackground,
+	projectionResolver,
 	character,
 	characterState,
 }: {
 	roomBackground: Immutable<RoomBackgroundData>;
+	projectionResolver: Immutable<RoomProjectionResolver>;
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const { position, scale, errorCorrectedPivot, yOffset } = useRoomCharacterPosition(character.data.position, characterState, roomBackground);
+	const { position, scale, pivot, yOffset } = useRoomCharacterPosition(character.data.position, characterState, projectionResolver);
 	const filters = usePlayerVisionFilters(false);
 
 	const inverseScale = 1 / scale;
@@ -137,9 +142,9 @@ function WardrobeRoomBackground({
 		<GraphicsBackground
 			zIndex={ -1000 }
 			background={ roomBackground.image }
-			x={ errorCorrectedPivot.x - position.x * inverseScale }
-			y={ errorCorrectedPivot.y + yOffset - position.y * inverseScale }
-			backgroundSize={ [roomBackground.size[0] * inverseScale, roomBackground.size[1] * inverseScale] }
+			x={ pivot.x - position.x * inverseScale }
+			y={ pivot.y + yOffset - position.y * inverseScale }
+			backgroundSize={ [roomBackground.imageSize[0] * inverseScale, roomBackground.imageSize[1] * inverseScale] }
 			backgroundFilters={ filters }
 		/>
 	);
@@ -233,11 +238,12 @@ export function RoomPreview({
 	const roomState = globalState.room;
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
 	const roomBackground = useMemo(() => ResolveBackground(assetManager, info.background), [assetManager, info.background]);
+	const projectionResolver = useRoomViewProjection(roomBackground);
 
 	const borderDraw = useCallback((g: PIXI.Graphics) => {
 		g.clear()
 			.lineStyle(2, 0x404040, 0.4)
-			.drawRect(0, 0, roomBackground.size[0], roomBackground.size[1]);
+			.drawRect(0, 0, roomBackground.imageSize[0], roomBackground.imageSize[1]);
 	}, [roomBackground]);
 
 	const focusArea = useMemo((): Rectangle | undefined => {
@@ -249,7 +255,7 @@ export function RoomPreview({
 		let itemLeft = asset.pivot.x - 20;
 		let itemRight = asset.pivot.x + 20;
 		let itemTop = asset.pivot.y - 20;
-		let itemBottom = asset.pivot.y + CHARACTER_BASE_Y_OFFSET + 20;
+		let itemBottom = asset.pivot.y + 20;
 
 		for (const layer of asset.graphicsLayers) {
 			if (layer.type === 'sprite') {
@@ -280,25 +286,27 @@ export function RoomPreview({
 			}
 		}
 
-		const [backgroundWidth, backgroundHeight] = roomBackground.size;
-		const scaling = roomBackground.scaling;
-		const deploymentX = Math.min(backgroundWidth, focusDevice.deployment.x);
-		const deploymentY = Math.min(backgroundHeight, focusDevice.deployment.y);
-		const yOffsetExtra = Math.round(focusDevice.deployment.yOffset);
-		const scale = 1 - (deploymentY * scaling) / backgroundHeight;
+		const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
+			focusDevice.deployment.x,
+			focusDevice.deployment.y,
+			focusDevice.deployment.yOffset,
+		]);
+
+		const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
+		const [posX, posY] = projectionResolver.transform(deploymentX, deploymentY, 0);
 
 		return {
-			x: deploymentX + Math.floor((itemLeft - asset.pivot.x) * scale),
-			y: backgroundHeight - deploymentY - yOffsetExtra + Math.floor((itemTop - (asset.pivot.y + CHARACTER_BASE_Y_OFFSET)) * scale),
+			x: posX + Math.floor((itemLeft - asset.pivot.x) * scale),
+			y: posY - yOffsetExtra + Math.floor((itemTop - asset.pivot.y) * scale),
 			width: Math.ceil((itemRight - itemLeft) * scale),
 			height: Math.ceil((itemBottom - itemTop) * scale),
 		};
-	}, [focusDevice, roomBackground]);
+	}, [focusDevice, projectionResolver]);
 
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		forwardContexts: [directoryConnectorContext, shardConnectorContext],
-		worldWidth: focusArea?.width ?? roomBackground.size[0],
-		worldHeight: focusArea?.height ?? roomBackground.size[1],
+		worldWidth: focusArea?.width ?? roomBackground.imageSize[0],
+		worldHeight: focusArea?.height ?? roomBackground.imageSize[1],
 		backgroundColor: 0x000000,
 	}), [focusArea, roomBackground]);
 
@@ -324,7 +332,7 @@ export function RoomPreview({
 								key={ character.data.id }
 								globalState={ globalState }
 								character={ character }
-								background={ roomBackground }
+								projectionResolver={ projectionResolver }
 							/>
 						))
 					}
@@ -335,7 +343,7 @@ export function RoomPreview({
 								globalState={ globalState }
 								item={ device }
 								deployment={ device.deployment }
-								background={ roomBackground }
+								projectionResolver={ projectionResolver }
 							/>
 						) : null))
 					}
@@ -343,7 +351,7 @@ export function RoomPreview({
 				<GraphicsBackground
 					zIndex={ -1000 }
 					background={ roomBackground.image }
-					backgroundSize={ roomBackground.size }
+					backgroundSize={ roomBackground.imageSize }
 					backgroundFilters={ usePlayerVisionFilters(false) }
 				/>
 			</Container>

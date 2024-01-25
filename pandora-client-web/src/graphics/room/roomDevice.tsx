@@ -2,13 +2,11 @@ import {
 	AssertNever,
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
-	CalculateCharacterMaxYForBackground,
 	CharacterSize,
 	CloneDeepMutable,
 	Coordinates,
 	EMPTY_ARRAY,
 	ICharacterRoomData,
-	RoomBackgroundData,
 	IRoomDeviceGraphicsCharacterPosition,
 	IRoomDeviceGraphicsLayerSlot,
 	IRoomDeviceGraphicsLayerSprite,
@@ -21,35 +19,35 @@ import * as PIXI from 'pixi.js';
 import { useObservable } from '../../observable';
 import { ChildrenProps } from '../../common/reactTypes';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
-import { CHARACTER_BASE_Y_OFFSET, CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
 import { Container, Graphics, Sprite, useApp } from '@pixi/react';
 import { useTexture } from '../useTexture';
 import { useDebugConfig } from '../../ui/screens/room/roomDebug';
 import { MASK_SIZE, SwapCullingDirection, useItemColor } from '../graphicsLayer';
 import { Immutable } from 'immer';
 import { useAsyncEvent, useEvent } from '../../common/useEvent';
-import _ from 'lodash';
+import { throttle } from 'lodash';
 import { ShardConnector } from '../../networking/shardConnector';
 import { Character } from '../../character/character';
 import { useCharacterRestrictionsManager, useSpaceCharacters } from '../../components/gameContext/gameStateContextProvider';
 import type { FederatedPointerEvent } from 'pixi.js';
 import { z } from 'zod';
 import { BrowserStorage } from '../../browserStorage';
-import { IRoomSceneMode, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
+import { IRoomSceneMode, RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
 import { useRoomCharacterOffsets } from './roomCharacter';
 import { RoomDeviceRenderContext } from './roomDeviceContext';
 import { EvaluateCondition } from '../utility';
 import { useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator';
 import { MovementHelperGraphics } from '../movementHelper';
 
-const PIVOT_TO_LABEL_OFFSET = 100 - CHARACTER_BASE_Y_OFFSET;
+const PIVOT_TO_LABEL_OFFSET = 100;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
 
 type RoomDeviceInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
-	background: Immutable<RoomBackgroundData>;
+	projectionResolver: Immutable<RoomProjectionResolver>;
 	roomSceneMode: Immutable<IRoomSceneMode>;
 	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	shard: ShardConnector | null;
@@ -61,7 +59,7 @@ type RoomDeviceProps = {
 	globalState: AssetFrameworkGlobalState;
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
-	background: Immutable<RoomBackgroundData>;
+	projectionResolver: Immutable<RoomProjectionResolver>;
 
 	children?: ReactNode;
 	hitArea?: PIXI.Rectangle;
@@ -95,7 +93,7 @@ export function useIsRoomConstructionModeEnabled(): boolean {
 export function RoomDeviceMovementTool({
 	item,
 	deployment,
-	background,
+	projectionResolver,
 	setRoomSceneMode,
 	shard,
 }: RoomDeviceInteractiveProps): ReactElement | null {
@@ -107,11 +105,8 @@ export function RoomDeviceMovementTool({
 			return;
 		}
 
-		const maxY = CalculateCharacterMaxYForBackground(background);
+		[newX, newY, newYOffset] = projectionResolver.fixupPosition([newX, newY, newYOffset]);
 
-		newX = _.clamp(Math.round(newX), 0, background.size[0]);
-		newY = _.clamp(Math.round(newY), 0, maxY);
-		newYOffset = Math.round(newYOffset);
 		await shard.awaitResponse('appearanceAction', {
 			type: 'roomDeviceDeploy',
 			target: {
@@ -134,25 +129,24 @@ export function RoomDeviceMovementTool({
 		/* Do nothing */
 	});
 
-	const setPositionThrottled = useMemo(() => _.throttle(setPositionRaw, 100), [setPositionRaw]);
+	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, 100), [setPositionRaw]);
 
-	const [width, height] = background.size;
-	const scaling = background.scaling;
-	const x = Math.min(width, deployment.x);
-	const y = Math.min(height, deployment.y);
-	const yOffsetExtra = Math.round(deployment.yOffset);
+	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
+		deployment.x,
+		deployment.y,
+		deployment.yOffset,
+	]);
 
-	const scale = 1 - (y * scaling) / height;
+	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, 0);
+	const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
 
 	const pivot = useMemo<PointLike>(() => ({
 		x: asset.definition.pivot.x,
 		y: asset.definition.pivot.y,
 	}), [asset]);
 
-	const errorCorrectedPivot = useMemo((): PointLike => ({ x: pivot.x, y: pivot.y + CHARACTER_BASE_Y_OFFSET }), [pivot]);
-
-	const labelX = errorCorrectedPivot.x;
-	const labelY = errorCorrectedPivot.y + PIVOT_TO_LABEL_OFFSET;
+	const labelX = pivot.x;
+	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
 
 	const hitAreaRadius = 50;
 	const hitArea = useMemo(() => new PIXI.Rectangle(-hitAreaRadius, -hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius]);
@@ -174,9 +168,9 @@ export function RoomDeviceMovementTool({
 		if (pointerDownTarget.current === 'pos') {
 			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(roomDeviceContainer.current.parent);
 
-			const newY = height - (dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale);
+			const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale, 0);
 
-			setPositionThrottled(dragPointerEnd.x, newY, deployment.yOffset);
+			setPositionThrottled(newX, newY, yOffsetExtra);
 		} else if (pointerDownTarget.current === 'offset') {
 			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(roomDeviceContainer.current);
 
@@ -241,9 +235,9 @@ export function RoomDeviceMovementTool({
 	return (
 		<Container
 			ref={ roomDeviceContainer }
-			position={ { x, y: height - y } }
+			position={ { x, y } }
 			scale={ { x: scale, y: scale } }
-			pivot={ errorCorrectedPivot }
+			pivot={ pivot }
 		>
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
@@ -277,7 +271,7 @@ export function RoomDeviceInteractive({
 	globalState,
 	item,
 	deployment,
-	background,
+	projectionResolver,
 	roomSceneMode,
 	menuOpen,
 }: RoomDeviceInteractiveProps): ReactElement | null {
@@ -290,10 +284,8 @@ export function RoomDeviceInteractive({
 		y: asset.definition.pivot.y,
 	}), [asset]);
 
-	const errorCorrectedPivot = useMemo((): PointLike => ({ x: pivot.x, y: pivot.y + CHARACTER_BASE_Y_OFFSET }), [pivot]);
-
-	const labelX = errorCorrectedPivot.x;
-	const labelY = errorCorrectedPivot.y + PIVOT_TO_LABEL_OFFSET;
+	const labelX = pivot.x;
+	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
 
 	const hitAreaRadius = 50;
 	const hitArea = useMemo(() => new PIXI.Rectangle(labelX - hitAreaRadius, labelY - hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius, labelX, labelY]);
@@ -350,7 +342,7 @@ export function RoomDeviceInteractive({
 			globalState={ globalState }
 			item={ item }
 			deployment={ deployment }
-			background={ background }
+			projectionResolver={ projectionResolver }
 			hitArea={ hitArea }
 			cursor={ enableMenu ? 'pointer' : 'none' }
 			eventMode={ enableMenu ? 'static' : 'none' }
@@ -374,7 +366,7 @@ export function RoomDevice({
 	globalState,
 	item,
 	deployment,
-	background,
+	projectionResolver,
 
 	children,
 	hitArea,
@@ -386,36 +378,35 @@ export function RoomDevice({
 	const asset = item.asset;
 	const debugConfig = useDebugConfig();
 
-	const [width, height] = background.size;
-	const scaling = background.scaling;
-	const x = Math.min(width, deployment.x);
-	const y = Math.min(height, deployment.y);
-	const yOffsetExtra = Math.round(deployment.yOffset);
+	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
+		deployment.x,
+		deployment.y,
+		deployment.yOffset,
+	]);
 
-	const scale = 1 - (y * scaling) / height;
+	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, 0);
+	const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
 
 	const pivot = useMemo<PointLike>(() => ({
 		x: asset.definition.pivot.x,
 		y: asset.definition.pivot.y,
 	}), [asset]);
 
-	const errorCorrectedPivot = useMemo((): PointLike => ({ x: pivot.x, y: pivot.y + CHARACTER_BASE_Y_OFFSET }), [pivot]);
-
 	return (
 		<RoomDeviceRenderContext.Provider value={ item }>
 			<RoomDeviceGraphics
 				globalState={ globalState }
 				item={ item }
-				position={ { x, y: height - y - yOffsetExtra } }
+				position={ { x, y: y - yOffsetExtra } }
 				scale={ { x: scale, y: scale } }
-				pivot={ errorCorrectedPivot }
+				pivot={ pivot }
 				hitArea={ hitArea }
 				eventMode={ eventMode }
 				cursor={ cursor }
 				onPointerDown={ onPointerDown }
 				onPointerUp={ onPointerUp }
 				onPointerUpOutside={ onPointerUp }
-				zIndex={ -y }
+				zIndex={ -deploymentY }
 			>
 				{ children }
 				{
@@ -437,11 +428,7 @@ export function RoomDevice({
 										// Pivot point (wanted)
 										.beginFill(0xffff00)
 										.lineStyle({ color: 0x000000, width: 1 })
-										.drawCircle(pivot.x, pivot.y, 5)
-										// Pivot point (actual)
-										.beginFill(0xccff00)
-										.lineStyle({ color: 0x000000, width: 1 })
-										.drawCircle(errorCorrectedPivot.x, errorCorrectedPivot.y, 5);
+										.drawCircle(pivot.x, pivot.y, 5);
 								} }
 							/>
 						</Container>

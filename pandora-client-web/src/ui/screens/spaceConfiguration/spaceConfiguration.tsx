@@ -1,4 +1,4 @@
-import { clamp, noop, uniq } from 'lodash';
+import { noop, uniq } from 'lodash';
 import {
 	SpaceFeature,
 	EMPTY,
@@ -80,8 +80,6 @@ export const SPACE_FEATURES: { id: SpaceFeature; name: string; icon?: string; }[
 	},
 ];
 
-const MAX_SCALING = 4;
-
 export function SpaceCreate(): ReactElement {
 	return <SpaceConfiguration creation />;
 }
@@ -141,24 +139,6 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 	), [creation, accountId, currentSpaceInfo]);
 
 	const currentConfigBackground = currentConfig.background;
-
-	const scalingProps = useMemo(() => ({
-		min: 0,
-		max: MAX_SCALING,
-		step: 0.1,
-		onChange: (event: React.ChangeEvent<HTMLInputElement>) => {
-			const scaling = clamp(Number.parseFloat(event.target.value), 0, MAX_SCALING);
-			// Can't modify scaling of preset
-			if (typeof currentConfigBackground === 'string')
-				return;
-			setModifiedData({
-				background: {
-					...currentConfigBackground,
-					scaling,
-				},
-			});
-		},
-	}), [setModifiedData, currentConfigBackground]);
 
 	const invalidBans = useMemo(() => ({
 		note: 'Owners and admins will be removed from the ban list automatically.',
@@ -263,66 +243,6 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 										initialValue={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
 										onChange={ (color) => setModifiedData({ background: { ...currentConfigBackground, image: color } }) }
 										disabled={ !canEdit }
-									/>
-								</div>
-							</div>
-							<div className='input-container'>
-								<label>Room Size: width, height</label>
-								<div className='row-half'>
-									<input type='number'
-										autoComplete='none'
-										value={ currentConfigBackground.size[0] }
-										readOnly={ !canEdit }
-										onChange={ (event) => setModifiedData({
-											background: {
-												...currentConfigBackground,
-												size: [Number.parseInt(event.target.value, 10), currentConfigBackground.size[1]],
-											},
-										}) }
-									/>
-									<input type='number'
-										autoComplete='none'
-										value={ currentConfigBackground.size[1] }
-										readOnly={ !canEdit }
-										onChange={ (event) => setModifiedData({
-											background: {
-												...currentConfigBackground,
-												size: [currentConfigBackground.size[0], Number.parseInt(event.target.value, 10)],
-											},
-										}) }
-									/>
-								</div>
-							</div>
-							<div className='input-container'>
-								<label>Y limit</label>
-								<input type='number'
-									autoComplete='none'
-									min={ -1 }
-									value={ currentConfigBackground.maxY ?? -1 }
-									readOnly={ !canEdit }
-									onChange={ (event) => {
-										const value = Number.parseInt(event.target.value, 10);
-										setModifiedData({
-											background: {
-												...currentConfigBackground,
-												maxY: isNaN(value) || value < 0 ? undefined : value,
-											},
-										});
-									} }
-								/>
-							</div>
-							<div className='input-container'>
-								<label>Y Scaling</label>
-								<div className='row-first'>
-									<input type='range'
-										value={ currentConfigBackground.scaling }
-										readOnly={ !canEdit }
-										{ ...scalingProps }
-									/>
-									<input type='number'
-										value={ currentConfigBackground.scaling }
-										readOnly={ !canEdit }
-										{ ...scalingProps }
 									/>
 								</div>
 							</div>
@@ -583,7 +503,14 @@ function NumberListArea({ values, setValues, readOnly, invalid, ...props }: {
 function BackgroundInfo({ background }: { background: string; }): ReactElement {
 	const assetManager = useAssetManager();
 	const backgroundInfo = useMemo(() => assetManager.getBackgrounds().find((b) => b.id === background), [assetManager, background]);
-	AssertNotNullable(backgroundInfo);
+
+	if (backgroundInfo == null) {
+		return (
+			<Column className='backgroundInfo'>
+				[ ERROR: Unknown background "{ background }" ]
+			</Column>
+		);
+	}
 
 	return (
 		<Column className='backgroundInfo'>

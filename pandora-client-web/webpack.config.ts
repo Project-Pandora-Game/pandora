@@ -94,9 +94,9 @@ export default function (env: WebpackEnv): Configuration {
 					// Ignore editor assets
 					!/^editor\//.test(assetFilename);
 			},
-			// Increase limit to 2 MiB
-			maxAssetSize: 2 * 1024 * 1024,
-			maxEntrypointSize: 2 * 1024 * 1024,
+			// Increase limit to 3 MiB
+			maxAssetSize: 3 * 1024 * 1024,
+			maxEntrypointSize: 3 * 1024 * 1024,
 		},
 		infrastructureLogging: {
 			level: 'log',

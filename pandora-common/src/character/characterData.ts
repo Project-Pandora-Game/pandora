@@ -25,8 +25,8 @@ export const CHARACTER_DEFAULT_PUBLIC_SETTINGS: Readonly<ICharacterPublicSetting
 	pronoun: 'she',
 };
 
-export const CharacterRoomPositionSchema = z.tuple([z.number(), z.number(), z.number()])
-	.catch([-1, -1, 0])
+export const CharacterRoomPositionSchema = z.tuple([z.number().int(), z.number().int(), z.number().int()])
+	.catch([0, 0, 0])
 	.readonly();
 export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: number];
 

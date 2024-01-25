@@ -1,5 +1,5 @@
 import { CharacterIdSchema } from '../character/characterTypes';
-import { CharacterPublicSettingsSchema } from '../character/characterData';
+import { CharacterPublicSettingsSchema, CharacterRoomPositionSchema } from '../character/characterData';
 import { AppearanceActionSchema } from '../assets/appearanceActions';
 import { AppearanceActionProblem } from '../assets/appearanceActionProblems';
 import { ClientChatMessagesSchema, ChatCharacterStatusSchema } from '../chat/chat';
@@ -49,7 +49,7 @@ export const ClientShardSchema = {
 	roomCharacterMove: {
 		request: z.object({
 			id: CharacterIdSchema.optional(),
-			position: z.tuple([z.number().int().min(0), z.number().int().min(0), z.number().int()]),
+			position: CharacterRoomPositionSchema,
 		}),
 		response: null,
 	},

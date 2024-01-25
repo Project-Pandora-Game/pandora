@@ -17,6 +17,7 @@ import {
 	RoomBackgroundInfo,
 	LIMIT_SPACE_DESCRIPTION_LENGTH,
 	LIMIT_SPACE_NAME_LENGTH,
+	LIMIT_SPACE_MAX_CHARACTER_NUMBER,
 	CloneDeepMutable,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
@@ -194,7 +195,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 			</div>
 			<div className='input-container'>
 				<label>Space size (maximum number of characters allowed inside)</label>
-				<input autoComplete='none' type='number' value={ currentConfig.maxUsers } min={ 1 } readOnly={ !canEdit }
+				<input autoComplete='none' type='number' value={ currentConfig.maxUsers } min={ 1 } max={ LIMIT_SPACE_MAX_CHARACTER_NUMBER } readOnly={ !canEdit }
 					onChange={ (event) => setModifiedData({ maxUsers: Number.parseInt(event.target.value, 10) }) } />
 			</div>
 			<FieldsetToggle legend='Presentation and access'>

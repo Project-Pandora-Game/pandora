@@ -6,7 +6,7 @@ import { CharacterId } from '../character';
 import { AccountId, AccountIdSchema } from '../account/account';
 import { RoomInventoryBundleSchema } from '../assets/state/roomState';
 import { ArrayToRecordKeys } from '../utility';
-import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits';
+import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN, LIMIT_SPACE_MAX_CHARACTER_NUMBER } from '../inputLimits';
 import { RoomBackgroundDataSchema } from './room';
 
 // Fix for pnpm resolution weirdness
@@ -42,7 +42,7 @@ export const SpaceBaseInfoSchema = z.object({
 	/** Spaces are private by default and can be published to be seen in public space search. */
 	public: z.boolean(),
 	/** The maximum amount of characters that can be present at once in the space */
-	maxUsers: z.number().min(1),
+	maxUsers: z.number().int().min(1).max(LIMIT_SPACE_MAX_CHARACTER_NUMBER).catch(10),
 });
 export type SpaceBaseInfo = z.infer<typeof SpaceBaseInfoSchema>;
 

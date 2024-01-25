@@ -11,8 +11,7 @@ import { webcrypto } from 'node:crypto';
 import { nanoid } from 'nanoid';
 import * as argon2 from 'argon2';
 import _ from 'lodash';
-
-const logger = GetLogger('AccountSecure');
+import { AUDIT_LOG } from '../logging';
 
 export enum AccountTokenReason {
 	/** Account activation token */
@@ -31,12 +30,12 @@ export enum AccountTokenReason {
 export default class AccountSecure {
 	readonly #account: Account;
 	readonly #secure: DatabaseAccountSecure;
-	readonly #logger: Logger;
+	readonly #auditLog: Logger;
 
 	constructor(account: Account, secure: DatabaseAccountSecure) {
 		this.#account = account;
 		this.#secure = secure;
-		this.#logger = logger.prefixMessages(`[${account.id}]`);
+		this.#auditLog = AUDIT_LOG.prefixMessages(`[Account ${account.id}]`);
 
 		this.#secure.tokens = this.#secure.tokens.filter((t) => t.expires > Date.now());
 	}
@@ -52,7 +51,7 @@ export default class AccountSecure {
 		const { value } = await this.#generateToken(AccountTokenReason.ACTIVATION);
 		await GetEmailSender().sendRegistrationConfirmation(email, this.#account.username, value);
 
-		this.#logger.audit('Activation requested');
+		this.#auditLog.info('Activation requested');
 	}
 
 	public async activateAccount(token: string): Promise<boolean> {
@@ -64,7 +63,7 @@ export default class AccountSecure {
 
 		await this.#updateDatabase();
 
-		this.#logger.audit('Account activated');
+		this.#auditLog.verbose('Account activated');
 
 		return true;
 	}
@@ -92,7 +91,7 @@ export default class AccountSecure {
 
 		await this.#updateDatabase();
 
-		this.#logger.audit('Password changed');
+		this.#auditLog.info('Password changed');
 
 		return true;
 	}
@@ -104,7 +103,7 @@ export default class AccountSecure {
 		const { value } = await this.#generateToken(AccountTokenReason.PASSWORD_RESET);
 		await GetEmailSender().sendPasswordReset(email, this.#account.username, value);
 
-		this.#logger.audit('Password reset requested');
+		this.#auditLog.info('Password reset requested');
 
 		return true;
 	}
@@ -120,7 +119,7 @@ export default class AccountSecure {
 
 		await this.#updateDatabase();
 
-		this.#logger.audit('Password reset');
+		this.#auditLog.info('Password reset');
 
 		return true;
 	}

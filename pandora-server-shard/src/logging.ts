@@ -2,6 +2,8 @@ import type { RESTPostAPIWebhookWithTokenJSONBody } from 'discord-api-types/v10'
 import fsPromises from 'fs/promises';
 import { GetLogger, logConfig, LogLevel } from 'pandora-common';
 
+export const AUDIT_LOG = GetLogger('audit', 'Audit');
+
 /** Custom function for stringifying data when logging into file */
 export function AnyToString(data: unknown): string {
 	if (typeof data === 'string') {

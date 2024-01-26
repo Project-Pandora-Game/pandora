@@ -13,7 +13,7 @@ import allow from '../../assets/icons/public.svg';
 import prompt from '../../assets/icons/prompt.svg';
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
-import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, CharacterIdSchema, EMPTY, GameLogicPermissionClient, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, CharacterIdSchema, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ButtonConfirm, DraggableDialog, ModalDialog } from '../dialog/dialog';
 import { Column, Row } from '../common/container/container';
@@ -499,7 +499,7 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions, message
 
 function PermissionPromptGroup({ permissionGroup, permissions, setAnyConfig, disableAccept }: {
 	permissionGroup: PermissionGroup;
-	permissions: Immutable<GameLogicPermissionClient[]>;
+	permissions: Immutable<[PermissionSetup, PermissionConfig][]>;
 	setAnyConfig: (permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionConfigChangeType) => void;
 	disableAccept: () => void;
 }): ReactElement {
@@ -523,13 +523,13 @@ function PermissionPromptGroup({ permissionGroup, permissions, setAnyConfig, dis
 
 	const perms = useMemo(() => {
 		const result: Readonly<{ id: string; visibleName: string; icon: string; }>[] = [];
-		for (const perm of permissions) {
-			const permConfig = config[perm.id];
+		for (const [setup] of permissions) {
+			const permConfig = config[setup.id];
 			if (permConfig == null)
 				continue;
 
 			result.push({
-				id: perm.id,
+				id: setup.id,
 				visibleName: permConfig.visibleName,
 				icon: permConfig.icon,
 			});

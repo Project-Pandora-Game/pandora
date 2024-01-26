@@ -31,9 +31,11 @@ import {
 	ICharacterPrivateData,
 	ChatCharacterStatus,
 	EMPTY_ARRAY,
-	GameLogicPermissionClient,
 	PermissionGroup,
 	IChatMessageAction,
+	MakePermissionConfigFromDefault,
+	PermissionSetup,
+	PermissionConfig,
 } from 'pandora-common';
 import { GetLogger } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
@@ -87,7 +89,7 @@ export type CurrentSpaceInfo = {
 
 export type PermissionPromptData = {
 	source: Character<ICharacterRoomData>;
-	requiredPermissions: Immutable<Partial<Record<PermissionGroup, GameLogicPermissionClient[]>>>;
+	requiredPermissions: Immutable<Partial<Record<PermissionGroup, [PermissionSetup, PermissionConfig][]>>>;
 	messages: IChatMessageProcessed<IChatMessageAction>[];
 };
 
@@ -361,26 +363,17 @@ export class GameState extends TypedEventEmitter<{
 			this.logger.warning('Permission prompt for unknown character', characterId);
 			return;
 		}
-		const player = this.player.gameLogicCharacter;
-		const perms: GameLogicPermissionClient[] = [];
-		for (const [group, id] of requiredPermissions) {
-			const perm = player.getPermission(group, id);
-			if (!perm) {
-				this.logger.warning('Permission prompt for unknown permission', group, id);
-				continue;
-			}
-			perms.push(perm);
+
+		const groups: Partial<Record<PermissionGroup, [PermissionSetup, PermissionConfig][]>> = {};
+		for (const [setup, config] of requiredPermissions) {
+			const group = groups[setup.group] ??= [];
+			group.push([setup, config ?? MakePermissionConfigFromDefault(setup.defaultConfig)]);
 		}
-		if (perms.length === 0) {
+		if (Object.keys(groups).length === 0) {
 			logger.warning('Permission prompt for no permissions');
 			return;
 		}
 
-		const groups: Partial<Record<PermissionGroup, GameLogicPermissionClient[]>> = {};
-		for (const perm of perms) {
-			const group = groups[perm.group] ??= [];
-			group.push(perm);
-		}
 		const actionMessages: IChatMessageProcessed<IChatMessageAction>[] = [];
 		for (const message of messages) {
 			if (message.type !== 'action' && message.type !== 'serverMessage') {

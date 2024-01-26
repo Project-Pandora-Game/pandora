@@ -1,4 +1,4 @@
-import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter, IClientShardNormalResult, NaturalListJoin, PermissionGroup, CloneDeepMutable, IChatMessage } from 'pandora-common';
+import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter, IClientShardNormalResult, NaturalListJoin, CloneDeepMutable, IChatMessage, GameLogicPermissionServer, PermissionConfig, PermissionSetup } from 'pandora-common';
 import { ClientConnection } from './connection_client';
 import { CharacterManager } from '../character/characterManager';
 import { assetManager } from '../assets/assetManager';
@@ -158,9 +158,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			if (target.connection == null) {
 				return { result: 'promptFailedCharacterOffline' };
 			}
-			const requiredPermissions: [PermissionGroup, string][] = [];
+			const requiredPermissions: [PermissionSetup, PermissionConfig | null][] = [];
 			for (const permission of result.requiredPermissions) {
-				requiredPermissions.push([permission.group, permission.id]);
+				if (permission instanceof GameLogicPermissionServer) {
+					requiredPermissions.push([CloneDeepMutable(permission.setup), permission.getConfig()]);
+				}
 			}
 			const messages: IChatMessage[] = [];
 			for (const message of result.pendingMessages) {

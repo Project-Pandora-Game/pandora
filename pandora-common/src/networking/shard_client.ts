@@ -9,7 +9,7 @@ import { SpaceClientInfo, SpaceId } from '../space/space';
 import { Satisfies } from '../utility';
 import { ZodCast } from '../validation';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
-import type { PermissionGroup } from '../gameLogic/permissions/permissionData';
+import type { PermissionConfig, PermissionSetup } from '../gameLogic/permissions/permissionData';
 
 // Fix for pnpm resolution weirdness
 import type { } from 'zod';
@@ -89,7 +89,7 @@ export const ShardClientSchema = {
 	permissionPrompt: {
 		request: ZodCast<{
 			characterId: CharacterId;
-			requiredPermissions: [PermissionGroup, string][];
+			requiredPermissions: [PermissionSetup, PermissionConfig | null][];
 			messages: IChatMessage[];
 		}>(),
 		response: null,

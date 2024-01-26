@@ -4,7 +4,7 @@ import { PseudoRandom } from '../math/pseudoRandom';
 
 export type MuffleSettings = {
 	/**
-	 * Muffle lips related sounds (`b`, `d`, `g`, `p`,...)
+	 * Speaking: Muffle lips related sounds (`b`, `d`, `g`, `p`,...)
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
@@ -13,7 +13,7 @@ export type MuffleSettings = {
 	lipsTouch: number;
 
 	/**
-	 * Muffle jaws related sounds (`z`, `s`)
+	 * Speaking: Muffle jaws related sounds (`z`, `s`)
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
@@ -22,7 +22,7 @@ export type MuffleSettings = {
 	jawMove: number;
 
 	/**
-	 * Muffle tongue related sounds (`r`, `re`, `k`, `c`,...)
+	 * Speaking: Muffle tongue related sounds (`r`, `re`, `k`, `c`,...)
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
@@ -30,7 +30,7 @@ export type MuffleSettings = {
 	 */
 	tongueRoof: number;
 	/**
-	 * Muffle air breath sounds (`th`, `tph`, `ch`,...)
+	 * Speaking: Muffle air breath sounds (`th`, `tph`, `ch`,...)
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
@@ -38,7 +38,7 @@ export type MuffleSettings = {
 	 */
 	mouthBreath: number;
 	/**
-	 * Muffle strong throat vibration sounds (`gh`, `c`, `ch`, `gi`,...)
+	 * Speaking: Muffle strong throat vibration sounds (`gh`, `c`, `ch`, `gi`,...)
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
@@ -46,7 +46,7 @@ export type MuffleSettings = {
 	 */
 	throatBreath: number;
 	/**
-	 * Muffle hinting letters (h, j, l, r, v, w, x, y, q)
+	 * Speaking: Muffle hinting letters (h, j, l, r, v, w, x, y, q)
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
@@ -54,7 +54,7 @@ export type MuffleSettings = {
 	 */
 	coherency: number;
 	/**
-	 * Create stutter effects for the sentence.
+	 * Speaking: Create stutter effects for the sentence.
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
@@ -176,7 +176,7 @@ export class Muffler {
 
 export type HearingImpairmentSettings = {
 	/**
-	 * Distort words by replacing letters with similar-sounding but incorrect letters (m <-> n, b <-> p)
+	 * Hearing: Distort words by replacing letters with similar-sounding but incorrect letters (m <-> n, b <-> p)
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
@@ -184,7 +184,7 @@ export type HearingImpairmentSettings = {
 	 */
 	distortion: number;
 	/**
-	 * Frequency loss, replaces high-frequency sounds (s, f, t, h) with replacement character
+	 * Hearing: Frequency loss, replaces high-frequency sounds (s, f, t, h) with replacement character
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
@@ -192,7 +192,7 @@ export type HearingImpairmentSettings = {
 	 */
 	frequencyLoss: number;
 	/**
-	 * Vowel hiding, replaces vowels (a, e, i, o, u) with replacement character
+	 * Hearing: Vowel hiding, replaces vowels (a, e, i, o, u) with replacement character
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
@@ -200,7 +200,7 @@ export type HearingImpairmentSettings = {
 	 */
 	vowelLoss: number;
 	/**
-	 * Middle loss, randomly replace characters with replacement character inside words keeping the first and last character intact
+	 * Hearing: Middle loss, randomly replace characters with replacement character inside words keeping the first and last character intact
 	 * only the first letter is preserved for words with 3 or less characters
 	 *
 	 * Effective value range:

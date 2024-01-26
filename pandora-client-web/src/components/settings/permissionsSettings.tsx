@@ -98,10 +98,16 @@ function useEffectiveAllowOthers(permissionGroup: PermissionGroup, permissionId:
 
 function ShowEffectiveAllowOthers({ permissionGroup, permissionId }: { permissionGroup: PermissionGroup; permissionId: string; }): ReactElement {
 	const effectiveConfig = useEffectiveAllowOthers(permissionGroup, permissionId);
+	return (
+		<ShowAllowOthers config={ effectiveConfig } />
+	);
+}
+
+function ShowAllowOthers({ config }: { config: PermissionType; }): ReactElement {
 	const [ref, setRef] = useState<HTMLElement | null>(null);
 
 	const { src, alt, description } = useMemo(() => {
-		switch (effectiveConfig) {
+		switch (config) {
 			case 'yes':
 				return {
 					src: allow,
@@ -121,7 +127,7 @@ function ShowEffectiveAllowOthers({ permissionGroup, permissionId }: { permissio
 					description: 'Trying to use this permission opens a popup that lets the targeted user decide if they want to give or deny the requester this permission. Exceptions can be set individually.',
 				};
 		}
-	}, [effectiveConfig]);
+	}, [config]);
 
 	return (
 		<>
@@ -454,8 +460,8 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions, message
 			if (!permissions)
 				continue;
 
-			for (const perm of permissions) {
-				setAnyConfig(group, perm.id, 'accept');
+			for (const [setup] of permissions) {
+				setAnyConfig(group, setup.id, 'accept');
 			}
 		}
 		dismiss();
@@ -475,17 +481,18 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions, message
 					asks for permission to...
 				</h2>
 			</Row>
-			<Column>
+			<Column alignX='center'>
+				<span>Action text:</span>
 				{
 					messages.map((message, i) => (
-						<ActionMessage key={ i } message={ message } />
+						<ActionMessage key={ i } message={ message } ignoreColor />
 					))
 				}
 			</Column>
 			<Column padding='large'>
 				{
 					KnownObject.entries(requiredPermissions).map(([group, permissions]) => (
-						permissions == null ? null : <PermissionPromptGroup key={ group } permissionGroup={ group } permissions={ permissions } setAnyConfig={ setAnyConfig } disableAccept={ disableAccept } />
+						permissions == null ? null : <PermissionPromptGroup key={ group } sourceId={ source.id } permissionGroup={ group } permissions={ permissions } setAnyConfig={ setAnyConfig } disableAccept={ disableAccept } />
 					))
 				}
 			</Column>
@@ -497,7 +504,8 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions, message
 	);
 }
 
-function PermissionPromptGroup({ permissionGroup, permissions, setAnyConfig, disableAccept }: {
+function PermissionPromptGroup({ sourceId, permissionGroup, permissions, setAnyConfig, disableAccept }: {
+	sourceId: CharacterId;
 	permissionGroup: PermissionGroup;
 	permissions: Immutable<[PermissionSetup, PermissionConfig][]>;
 	setAnyConfig: (permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionConfigChangeType) => void;
@@ -522,8 +530,8 @@ function PermissionPromptGroup({ permissionGroup, permissions, setAnyConfig, dis
 	}
 
 	const perms = useMemo(() => {
-		const result: Readonly<{ id: string; visibleName: string; icon: string; }>[] = [];
-		for (const [setup] of permissions) {
+		const result: Readonly<{ id: string; visibleName: string; icon: string; allowOthers: PermissionType; isAllowed: boolean; }>[] = [];
+		for (const [setup, cfg] of permissions) {
 			const permConfig = config[setup.id];
 			if (permConfig == null)
 				continue;
@@ -532,10 +540,12 @@ function PermissionPromptGroup({ permissionGroup, permissions, setAnyConfig, dis
 				id: setup.id,
 				visibleName: permConfig.visibleName,
 				icon: permConfig.icon,
+				allowOthers: cfg.allowOthers,
+				isAllowed: (cfg.characterOverrides[sourceId] ?? cfg.allowOthers) === 'yes',
 			});
 		}
 		return result;
-	}, [permissions, config]);
+	}, [permissions, config, sourceId]);
 
 	return (
 		<Column className='permissionPrompt'>
@@ -549,18 +559,50 @@ function PermissionPromptGroup({ permissionGroup, permissions, setAnyConfig, dis
 							&nbsp;&nbsp;
 							<span>{ perm.visibleName }</span>
 						</label>
-						<Button
-							className='slim'
-							onClick={ () => {
+						<ShowAllowOthers config={ perm.allowOthers } />
+						<PermissionPromptButton
+							isAllowed={ perm.isAllowed }
+							setYes={ () => setAnyConfig(permissionGroup, perm.id, 'yes') }
+							setNo={ () => {
 								setAnyConfig(permissionGroup, perm.id, 'no');
 								disableAccept();
 							} }
-						>
-							Deny
-						</Button>
+						/>
 					</div>
 				))
 			}
 		</Column>
+	);
+}
+
+function PermissionPromptButton({ setYes, setNo, isAllowed }: { setYes: () => void; setNo: () => void; isAllowed: boolean; }): ReactElement {
+	const [state, setState] = useState<'yes' | 'no' | null>(isAllowed ? 'yes' : null);
+
+	return (
+		<>
+			<Button
+				className='slim fadeDisabled'
+				disabled={ state === 'yes' }
+				onClick={ () => {
+					if (state !== 'yes') {
+						setYes();
+						setState('yes');
+					}
+				} }
+			>
+				Allow
+			</Button>
+			<Button
+				className='slim'
+				onClick={ () => {
+					if (state !== 'no') {
+						setNo();
+						setState('no');
+					}
+				} }
+			>
+				Deny
+			</Button>
+		</>
 	);
 }

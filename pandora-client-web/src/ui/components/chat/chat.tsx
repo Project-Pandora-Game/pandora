@@ -235,7 +235,7 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 	);
 }
 
-export function ActionMessage({ message }: { message: IChatMessageProcessed<IChatMessageAction>; }): ReactElement | null {
+export function ActionMessage({ message, ignoreColor = false }: { message: IChatMessageProcessed<IChatMessageAction>; ignoreColor?: boolean; }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const [folded, setFolded] = useState(true);
 
@@ -245,7 +245,7 @@ export function ActionMessage({ message }: { message: IChatMessageProcessed<ICha
 	if (content.length === 0 && extraContent == null)
 		return null;
 
-	const style = message.type === 'action' && message.data?.character ? ({ backgroundColor: message.data.character.labelColor + '44' }) : undefined;
+	const style = (message.type === 'action' && message.data?.character && !ignoreColor) ? ({ backgroundColor: message.data.character.labelColor + '44' }) : undefined;
 
 	return (
 		<div className={ classNames('message', message.type, extraContent !== null ? 'foldable' : null) } style={ style } onClick={ () => setFolded(!folded) }>

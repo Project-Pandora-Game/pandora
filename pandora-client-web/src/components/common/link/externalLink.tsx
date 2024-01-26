@@ -49,47 +49,63 @@ export function UntrustedLink({ href, children }: {
 			<ExternalLink href={ href } onClick={ onClick }>
 				{ children }
 			</ExternalLink>
-			{ showWarning && (<PromptUntrustedLink href={ href } setShowWarning={ setShowWarning } />) }
+			{ showWarning && (<PromptUntrustedLink href={ href } close={ () => setShowWarning(false) } />) }
 		</>
 	);
 }
 
-function PromptUntrustedLink({ href, setShowWarning }: {
+function PromptUntrustedLink({ href, close }: {
 	href: string;
-	setShowWarning: (value: boolean) => void;
+	close: () => void;
 }): ReactElement {
 	const ref = React.useRef<HTMLAnchorElement>(null);
+	const [remember, setRemember] = React.useState(false);
+
+	const parsedLink = new URL(href);
 
 	const onOpen = () => {
-		setShowWarning(false);
 		ref.current?.click();
-	};
-
-	const onRemember = () => {
-		const current = trustedDomains.value;
-		if (!IsTrustedLink(href)) {
-			trustedDomains.value = [...current, new URL(href).hostname];
+		if (remember && !IsTrustedLink(href)) {
+			trustedDomains.produceImmer((v) => {
+				v.push(parsedLink.hostname);
+			});
 		}
-		onOpen();
+		close();
 	};
 
 	return (
 		<ModalDialog>
 			<Column alignX='center'>
 				<h1>Untrusted link</h1>
+				<ExternalLink ref={ ref } href={ href } style={ { display: 'none' } }>{ href }</ExternalLink>
 				<p>
-					<ExternalLink ref={ ref } href={ href } onClick={ () => setShowWarning(false) }>{ href }</ExternalLink>
+					You are about to open a link to <b>{ parsedLink.hostname }</b>.
 				</p>
-				<p>
-					You are about to open a link to <b>{ new URL(href).hostname }</b> which is not a trusted domain.
-				</p>
+				<textarea
+					value={ href }
+					readOnly
+					className='fill-x'
+					rows={ 5 }
+					style={ { resize: 'none', wordBreak: 'break-all' } }
+				/>
 				<p>
 					Are you sure you want to open this link?
 				</p>
-				<Row>
-					<Button onClick={ () => setShowWarning(false) }>Cancel</Button>
+				<p>
+					<label>
+						<input
+							type='checkbox'
+							checked={ remember }
+							onChange={ (ev) => {
+								setRemember(ev.target.checked);
+							} }
+						/>
+						Trust links to <b>{ parsedLink.hostname }</b> in the future
+					</label>
+				</p>
+				<Row alignX='space-between' className='fill-x'>
+					<Button onClick={ close }>Cancel</Button>
 					<Button onClick={ onOpen }>Open link</Button>
-					<Button onClick={ onRemember }>Open and remember my choice</Button>
 				</Row>
 			</Column>
 		</ModalDialog>

@@ -11,6 +11,7 @@ import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardro
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 import { EditorCharacter, useEditorCharacterState } from '../../graphics/character/appearanceEditor';
+import { ExternalLink } from '../../../components/common/link/externalLink';
 
 export function BoneUI(): ReactElement {
 	const editor = useEditor();
@@ -154,9 +155,9 @@ function PoseExportGui({ characterState }: { character: EditorCharacter; charact
 				<h2>Pose export</h2>
 				<p>
 					You can use the following TypeScript code and insert into&nbsp;
-					<a href='https://github.com/Project-Pandora-Game/pandora-assets/blob/master/src/posePresets.ts' target='_blank' rel='noreferrer'>
+					<ExternalLink href='https://github.com/Project-Pandora-Game/pandora-assets/blob/master/src/posePresets.ts'>
 						<code>'src/posePresets.ts'</code>
-					</a>
+					</ExternalLink>
 					&nbsp;in pandora-assets repository.
 				</p>
 				<textarea value={ typeScriptValue } readOnly rows={ typeScriptValue.split('\n').length } />

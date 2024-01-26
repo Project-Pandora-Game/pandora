@@ -15,6 +15,7 @@ import React, {
 } from 'react';
 import { AssetManagerClient } from '../../../assets/assetManager';
 import { ChatParser } from './chatParser';
+import { UntrustedLink } from '../../../components/common/link/externalLink';
 
 export type IChatMessageProcessed<T extends IChatMessageBase = IChatMessageBase> = T & {
 	/** Time the message was sent, guaranteed to be unique */
@@ -136,9 +137,9 @@ export function DescribeAttribute(assetManager: AssetManagerClient, attributeNam
 export function RenderChatPart([type, contents]: IChatSegment, index: number, allowLinkInNormal: boolean): ReactElement {
 	if (type === 'normal' && allowLinkInNormal && contents.match(/^https?:\/\//)) {
 		return (
-			<a key={ index } href={ contents } target='_blank' referrerPolicy='no-referrer' rel='noopener noreferrer'>
+			<UntrustedLink key={ index } href={ contents }>
 				{ contents }
-			</a>
+			</UntrustedLink>
 		);
 	}
 	switch (type) {

@@ -12,6 +12,7 @@ import { useColorInput } from '../../common/useColorInput';
 import { useConfirmDialog } from '../dialog/dialog';
 import { useNavigate } from 'react-router-dom';
 import { useCurrentTime } from '../../common/useCurrentTime';
+import { ExternalLink } from '../common/link/externalLink';
 
 export function AccountSettings(): ReactElement | null {
 	const navigate = useNavigate();
@@ -94,7 +95,7 @@ function GitHubIntegration({ account }: { account: IDirectoryAccountInfo; }): Re
 				<legend>GitHub Integration</legend>
 				<span>Open this link in your browser to link your GitHub account:</span>
 				<br />
-				<a href={ githubUrl } target='_blank' rel='noopener noreferrer'>{ githubUrl }</a>
+				<ExternalLink href={ githubUrl }>{ githubUrl }</ExternalLink>
 			</fieldset>
 		);
 	}

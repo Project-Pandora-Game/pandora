@@ -17,6 +17,7 @@ import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
 import { ParseLayerImageOverrides, SerializeLayerImageOverrides } from '../../parsing';
 import { useEditorLayerTint } from '../../editor';
 import { Row } from '../../../components/common/container/container';
+import { ExternalLink } from '../../../components/common/link/externalLink';
 
 export function LayerUI(): ReactElement {
 	const editor = useEditor();
@@ -727,7 +728,7 @@ function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset
 						<p>
 							For more information on stop points, corresponding slider state values, and<br />
 							full body templates to draw over, see this Discord post:<br />
-							<a href='https://discord.com/channels/872284471611760720/873309624441401404/1019125393774620692' target='_blank' rel='noopener noreferrer'>Link to Discord</a>
+							<ExternalLink href='https://discord.com/channels/872284471611760720/873309624441401404/1019125393774620692'>Link to Discord</ExternalLink>
 						</p>
 					</ContextHelpButton>
 				</label>

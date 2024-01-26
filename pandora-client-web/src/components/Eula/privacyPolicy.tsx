@@ -1,4 +1,5 @@
 import React, { ReactElement } from 'react';
+import { ExternalLink } from '../common/link/externalLink';
 
 // ********************************
 // Update both of these variables whenever you make any changes to EULA and/or Privacy Policy!
@@ -159,7 +160,7 @@ export function PrivacyPolicyContent(): ReactElement {
 				You can contact us by any of the following methods:
 			</p>
 			<ul>
-				<li>Using our Discord server: <a href='https://discord.gg/EnaPvuQf8d' rel='external nofollow noopener noreferrer' target='_blank'>https://discord.gg/EnaPvuQf8d</a></li>
+				<li>Using our Discord server: <ExternalLink href='https://discord.gg/EnaPvuQf8d'>https://discord.gg/EnaPvuQf8d</ExternalLink></li>
 				<li>Using the email address: <a href='mailto:support@project-pandora.com'>support@project-pandora.com</a></li>
 			</ul>
 		</>

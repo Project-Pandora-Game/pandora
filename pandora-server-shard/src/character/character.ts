@@ -37,6 +37,9 @@ import {
 	CloneDeepMutable,
 	ROOM_INVENTORY_BUNDLE_DEFAULT,
 	ICharacterRoomData,
+	RoomBackgroundData,
+	IsValidRoomPosition,
+	GenerateInitialRoomPosition,
 } from 'pandora-common';
 import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import type { Space } from '../spaces/space';
@@ -174,16 +177,12 @@ export class Character {
 		return this.data.position;
 	}
 
-	public initRoomPosition(spaceId: SpaceId | null, value: CharacterRoomPosition, [maxX, maxY]: readonly [number, number]) {
-		if (this.data.roomId === spaceId) {
-			if (this.data.position[0] < 0 || this.data.position[0] > maxX || this.data.position[1] < 0 || this.data.position[1] > maxY) {
-				this.data.position = value;
-				this.modified.add('position');
-			}
+	public initRoomPosition(spaceId: SpaceId | null, roomBackground: Immutable<RoomBackgroundData>) {
+		if (this.data.roomId === spaceId && IsValidRoomPosition(roomBackground, this.data.position)) {
 			return;
 		}
 		this.data.roomId = spaceId;
-		this.data.position = value;
+		this.data.position = GenerateInitialRoomPosition(roomBackground);
 		this.modified.add('roomId');
 		this.modified.add('position');
 	}

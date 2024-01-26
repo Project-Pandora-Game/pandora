@@ -11,8 +11,10 @@ import {
 	IShardSpaceDefinition,
 	ResolveBackground,
 	SpaceId,
+	IsValidRoomPosition,
+	GenerateInitialRoomPosition,
 } from 'pandora-common';
-import { GenerateInitialRoomPosition, IsValidRoomPosition, Space } from './space';
+import { Space } from './space';
 import { assetManager } from '../assets/assetManager';
 import { GetDatabase } from '../database/databaseProvider';
 import _, { omit, pick } from 'lodash';

@@ -28,6 +28,9 @@ importers:
       '@pixi/react':
         specifier: 7.1.1
         version: 7.1.1(@babel/runtime@7.23.7)(@pixi/app@7.3.3)(@pixi/constants@7.3.3)(@pixi/core@7.3.3)(@pixi/display@7.3.3)(@pixi/extensions@7.3.3)(@pixi/graphics@7.3.3)(@pixi/math@7.3.3)(@pixi/mesh-extras@7.3.3)(@pixi/mesh@7.3.3)(@pixi/particle-container@7.3.3)(@pixi/sprite-animated@7.3.3)(@pixi/sprite-tiling@7.3.3)(@pixi/sprite@7.3.3)(@pixi/text-bitmap@7.3.3)(@pixi/text@7.3.3)(@pixi/ticker@7.3.3)(prop-types@15.8.1)(react-dom@18.2.0)(react@18.2.0)
+      '@pixi/unsafe-eval':
+        specifier: ^7.3.3
+        version: 7.3.3(@pixi/core@7.3.3)
       bowser:
         specifier: 2.11.0
         version: 2.11.0
@@ -3951,6 +3954,14 @@ packages:
       '@pixi/extensions': 7.3.3
       '@pixi/settings': 7.3.3
       '@pixi/utils': 7.3.3
+    dev: false
+
+  /@pixi/unsafe-eval@7.3.3(@pixi/core@7.3.3):
+    resolution: {integrity: sha512-MWWvi/Y+xt9Kub1Yzu/OWBXiY+/GA6RaXSkplrOqNUNcOQnQVbkE8n1TRcuEDOYtwTJes+Ji/zrwnpil8HgqnA==}
+    peerDependencies:
+      '@pixi/core': 7.3.3
+    dependencies:
+      '@pixi/core': 7.3.3
     dev: false
 
   /@pixi/utils@7.3.3:

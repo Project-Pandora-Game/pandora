@@ -61,11 +61,11 @@ export function ResolveAssetPreference(preferences: Immutable<AssetPreferencesPu
 			preference: assetPreference.base,
 		};
 	}
-	if (asset.definition.assetPreferenceOverride != null) {
+	if (asset.definition.assetPreferenceDefault != null) {
 		return {
 			type: 'asset',
 			asset: asset.id,
-			preference: asset.definition.assetPreferenceOverride,
+			preference: asset.definition.assetPreferenceDefault,
 		};
 	}
 

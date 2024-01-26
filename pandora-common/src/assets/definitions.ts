@@ -113,10 +113,10 @@ export interface AssetBaseDefinition<Type extends AssetType, A extends AssetDefi
 	preview?: string | null;
 
 	/**
-	 * Override the default asset preference
+	 * Override the standard asset preference 'normal' with a new default
 	 *  - only 'maybe' and 'prevent' are allowed since 'favorite', 'normal', and 'doNotRender' does not make sense
 	 */
-	assetPreferenceOverride?: AssetPreferenceType & ('maybe' | 'prevent');
+	assetPreferenceDefault?: AssetPreferenceType & ('maybe' | 'prevent');
 }
 
 export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'personal', A> {

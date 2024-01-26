@@ -14,7 +14,6 @@ import {
 	ChatCharacterStatus,
 	IChatMessageActionTargetCharacter,
 	ActionHandlerMessage,
-	CharacterSize,
 	ActionSpaceContext,
 	ResolveBackground,
 	AccountId,
@@ -30,13 +29,13 @@ import {
 	RoomInventoryBundle,
 	SpaceDirectoryConfig,
 	SpaceLoadData,
-	RoomBackgroundData,
 	CloneDeepMutable,
+	IsValidRoomPosition,
+	GenerateInitialRoomPosition,
 } from 'pandora-common';
 import type { Character } from '../character/character';
-import _, { clamp, isEqual, omit } from 'lodash';
+import _, { isEqual, omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
-import { Immutable } from 'immer';
 
 const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 20; // 20 minutes
 const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
@@ -249,11 +248,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public characterAdd(character: Character, appearance: AppearanceBundle): void {
 		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
 		const roomBackground = ResolveBackground(assetManager, this.config.background);
-		character.initRoomPosition(
-			this.id,
-			GenerateInitialRoomPosition(roomBackground),
-			roomBackground.floorArea,
-		);
+		character.initRoomPosition(this.id, roomBackground);
 
 		this.runWithSuppressedUpdates(() => {
 			let newState = this.gameState.currentState;
@@ -540,24 +535,4 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 function IsTargeted(message: IClientMessage): message is { type: 'chat' | 'ooc'; parts: IChatSegment[]; to: CharacterId; } {
 	return (message.type === 'chat' || message.type === 'ooc') && message.to !== undefined;
-}
-
-export function IsValidRoomPosition(roomBackground: Immutable<RoomBackgroundData>, position: CharacterRoomPosition): boolean {
-	const minX = -Math.floor(roomBackground.floorArea[0] / 2);
-	const maxX = Math.floor(roomBackground.floorArea[0] / 2);
-	const minY = 0;
-	const maxY = roomBackground.floorArea[1];
-
-	return position[0] >= minX && position[0] <= maxX && position[1] >= minY || position[1] <= maxY;
-}
-
-export function GenerateInitialRoomPosition(roomBackground: Immutable<RoomBackgroundData>): CharacterRoomPosition {
-	const minX = -Math.floor(roomBackground.floorArea[0] / 2);
-	const maxX = Math.floor(roomBackground.floorArea[0] / 2);
-
-	return [
-		clamp(Math.round(CharacterSize.WIDTH * (0.4 * (Math.random() - 0.5))), minX, maxX),
-		0,
-		0,
-	];
 }

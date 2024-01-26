@@ -1,8 +1,10 @@
 import { z } from 'zod';
 import { HexColorString } from '../validation';
-import { AssetManager } from '../assets';
+import { AssetManager, CharacterSize } from '../assets';
 import { Immutable } from 'immer';
 import { CloneDeepMutable } from '../utility';
+import type { CharacterRoomPosition } from '../character/characterData';
+import { clamp } from 'lodash';
 
 export const RoomBackgroundDataSchema = z.object({
 	/** The background image of a room */
@@ -87,4 +89,44 @@ export function CalculateBackgroundDataFromCalibrationData(image: string, calibr
 		cameraCenterOffset: CloneDeepMutable(calibrationData.cameraCenterOffset),
 		cameraFov: calibrationData.fov,
 	};
+}
+
+export function IsValidRoomPosition(roomBackground: Immutable<RoomBackgroundData>, position: CharacterRoomPosition): boolean {
+	const minX = -Math.floor(roomBackground.floorArea[0] / 2);
+	const maxX = Math.floor(roomBackground.floorArea[0] / 2);
+	const minY = 0;
+	const maxY = roomBackground.floorArea[1];
+
+	return position[0] >= minX && position[0] <= maxX && position[1] >= minY || position[1] <= maxY;
+}
+
+export function GenerateInitialRoomPosition(roomBackground: Immutable<RoomBackgroundData>): CharacterRoomPosition {
+	// Random spread to use for the positioning
+	const spreadX = 200;
+	const spreadY = 100;
+
+	// Absolute bounds of the background
+	const minX = -Math.floor(roomBackground.floorArea[0] / 2);
+	const maxX = Math.floor(roomBackground.floorArea[0] / 2);
+	const minY = 0;
+	const maxY = roomBackground.floorArea[1];
+
+	// Idea is to position new characters to the very left of still visible background
+	// and slightly up to avoid the name being out of bounds
+	// (as the position is position of feet and name is under the character)
+	const startPointX =
+		(-0.5 * (roomBackground.floorArea[0] / roomBackground.areaCoverage))
+		+ 0.5 * CharacterSize.WIDTH
+		+ (Math.random() - 0.5) * spreadX;
+
+	const startPointY =
+		minY
+		+ 200
+		+ (Math.random() - 0.5) * spreadY;
+
+	return [
+		clamp(Math.round(startPointX), minX, maxX),
+		clamp(Math.round(startPointY), minY, maxY),
+		0,
+	];
 }

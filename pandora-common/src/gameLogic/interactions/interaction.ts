@@ -31,6 +31,7 @@ export class GameLogicInteractionClient extends GameLogicInteraction {
 			displayName: `${config.visibleName}`,
 			defaultConfig: config.defaultPermissions,
 			forbidDefaultAllowOthers: config.forbidDefaultAllowOthers,
+			maxCharacterOverrides: config.maxCharacterOverrides,
 		});
 	}
 }
@@ -48,6 +49,7 @@ export class GameLogicInteractionServer extends GameLogicInteraction {
 			displayName: `${config.visibleName}`,
 			defaultConfig: config.defaultPermissions,
 			forbidDefaultAllowOthers: config.forbidDefaultAllowOthers,
+			maxCharacterOverrides: config.maxCharacterOverrides,
 		}, data.permissionConfig);
 
 		this.permission.on('configChanged', () => {

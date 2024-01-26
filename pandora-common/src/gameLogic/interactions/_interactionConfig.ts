@@ -1,6 +1,6 @@
-import { Immutable } from 'immer';
-import { InteractionGenericId } from './interactionData';
-import { PermissionConfigDefault, PermissionType } from '../permissions';
+import type { Immutable } from 'immer';
+import type { InteractionGenericId } from './interactionData';
+import { PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfigDefault, PermissionType } from '../permissions';
 import { KnownObject, ParseArrayNotEmpty } from '../../utility';
 
 //#region Config for existing interactions; when adding an interaction edit only this
@@ -13,6 +13,7 @@ export const INTERACTION_CONFIG = {
 			allowOthers: 'prompt',
 		},
 		forbidDefaultAllowOthers: ['yes'],
+		maxCharacterOverrides: PERMISSION_MAX_CHARACTER_OVERRIDES * 3,
 	},
 	modifyBody: {
 		visibleName: `Modify this character's body`,
@@ -63,4 +64,5 @@ export interface IInteractionConfig {
 	icon: string;
 	defaultPermissions: PermissionConfigDefault;
 	forbidDefaultAllowOthers?: [PermissionType, ...PermissionType[]];
+	maxCharacterOverrides?: number;
 }

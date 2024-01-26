@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { TypedEventEmitter } from '../../event';
 import type { GameLogicCharacter } from '../character/character';
-import type { PermissionConfig, PermissionConfigDefault, PermissionGroup, PermissionSetup, PermissionType, PermissionTypeInvalid } from './permissionData';
+import { PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigDefault, PermissionGroup, PermissionSetup, PermissionType, PermissionTypeInvalid } from './permissionData';
 import type { PermissionRestriction } from '../../character';
 
 export type GameLogicPermissionEvents = {
@@ -25,6 +25,9 @@ export abstract class GameLogicPermission extends TypedEventEmitter<GameLogicPer
 	}
 	public get forbidDefaultAllowOthers(): readonly PermissionType[] | undefined {
 		return this.setup.forbidDefaultAllowOthers;
+	}
+	public get maxCharacterOverrides(): number {
+		return this.setup.maxCharacterOverrides ?? PERMISSION_MAX_CHARACTER_OVERRIDES;
 	}
 
 	public readonly character: GameLogicCharacter;

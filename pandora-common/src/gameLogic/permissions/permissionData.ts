@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { CharacterIdSchema } from '../../character/characterTypes';
 
+export const PERMISSION_MAX_CHARACTER_OVERRIDES = 100;
+
 export const PermissionGroupSchema = z.enum([
 	'interaction',
 	'assetPreferences',
@@ -24,6 +26,7 @@ export const PermissionSetupSchema = z.object({
 	displayName: z.string(),
 	defaultConfig: PermissionConfigDefaultSchema,
 	forbidDefaultAllowOthers: z.array(PermissionTypeSchema).optional(),
+	maxCharacterOverrides: z.number().int().positive().optional(),
 });
 
 export type PermissionSetup = z.infer<typeof PermissionSetupSchema>;

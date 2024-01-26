@@ -50,6 +50,7 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 		}
 
 		const next = this.getConfig() ?? MakePermissionConfigFromDefault(this.defaultConfig);
+		let checkOverrideCount = false;
 
 		const { selector, allowOthers } = newConfig;
 		if (selector === 'default') {
@@ -76,6 +77,7 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 					return true;
 				}
 				next.characterOverrides[selector] = 'yes';
+				checkOverrideCount = true;
 			} else if (next.characterOverrides[selector] == null) {
 				if (allowOthers != null) {
 					next.characterOverrides[selector] = allowOthers;
@@ -84,11 +86,16 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 				delete next.characterOverrides[selector];
 			} else {
 				next.characterOverrides[selector] = allowOthers;
+				checkOverrideCount = true;
 			}
 		}
 
 		if (next.allowOthers === this.defaultConfig.allowOthers && Object.keys(next.characterOverrides).length === 0) {
 			return this.setConfig(null);
+		}
+
+		if (checkOverrideCount && Object.keys(next.characterOverrides).length > this.maxCharacterOverrides) {
+			return false;
 		}
 
 		this._config = next;

@@ -13,7 +13,7 @@ import allow from '../../assets/icons/public.svg';
 import prompt from '../../assets/icons/prompt.svg';
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
-import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, CharacterIdSchema, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, CharacterIdSchema, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ButtonConfirm, DraggableDialog, ModalDialog } from '../dialog/dialog';
 import { Column, Row } from '../common/container/container';
@@ -26,6 +26,7 @@ import { PermissionPromptData, useGameStateOptional } from '../gameContext/gameS
 import type { Immutable } from 'immer';
 import { useFunctionBind } from '../../common/useFunctionBind';
 import { ActionMessage } from '../../ui/components/chat/chat';
+import { StorageUsageMeter } from '../wardrobe/wardrobeComponents';
 
 export function PermissionsSettings(): ReactElement | null {
 	const player = usePlayer();
@@ -298,12 +299,12 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 				<Button slim onClick={ () => setDefault(null) } className='fadeDisabled'>Reset defaults</Button>
 				<Button onClick={ hide }>Close</Button>
 			</Row>
-			<PermissionConfigOverrides overrides={ permissionConfig?.characterOverrides ?? EMPTY } setConfig={ setAny } />
+			<PermissionConfigOverrides overrides={ permissionConfig?.characterOverrides ?? EMPTY } limit={ permissionSetup.maxCharacterOverrides ?? PERMISSION_MAX_CHARACTER_OVERRIDES } setConfig={ setAny } />
 		</ModalDialog>
 	);
 }
 
-function PermissionConfigOverrides({ overrides, setConfig }: { overrides: Partial<Record<CharacterId, PermissionType>>; setConfig: (selector: PermissionConfigChangeSelector, allowOthers: PermissionConfigChangeType) => void; }): ReactElement | null {
+function PermissionConfigOverrides({ overrides, limit, setConfig }: { overrides: Partial<Record<CharacterId, PermissionType>>; limit: number; setConfig: (selector: PermissionConfigChangeSelector, allowOthers: PermissionConfigChangeType) => void; }): ReactElement | null {
 	const values = useMemo(() => {
 		const result: { allow: CharacterId[]; deny: CharacterId[]; prompt: CharacterId[]; } = { allow: [], deny: [], prompt: [] };
 		for (const [characterId, allowOthers] of KnownObject.entries(overrides)) {
@@ -329,6 +330,7 @@ function PermissionConfigOverrides({ overrides, setConfig }: { overrides: Partia
 	return (
 		<Column padding='large'>
 			<h4>Character based overrides</h4>
+			<StorageUsageMeter title='Used' used={ Object.keys(overrides).length } limit={ limit } />
 			<br />
 			<PermissionConfigOverrideType type='yes' content={ values.allow } setConfig={ setConfig } />
 			<br />

@@ -131,13 +131,7 @@ export const ClientShardSchema = {
 		}),
 		response: z.discriminatedUnion('result', [
 			z.object({
-				result: z.literal('ok'),
-			}),
-			z.object({
-				result: z.literal('notFound'),
-			}),
-			z.object({
-				result: z.literal('invalidConfig'),
+				result: z.enum(['ok', 'notFound', 'invalidConfig', 'tooManyOverrides']),
 			}),
 		]),
 	},

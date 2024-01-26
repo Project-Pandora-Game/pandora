@@ -384,7 +384,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		const result = permission.setConfig(config);
 		return {
-			result: result ? 'ok' : 'invalidConfig',
+			result,
 		};
 	}
 

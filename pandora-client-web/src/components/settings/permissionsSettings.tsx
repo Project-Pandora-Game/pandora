@@ -230,7 +230,9 @@ function usePermissionConfigSetAny(): (permissionGroup: PermissionGroup, permiss
 			},
 		})
 			.then((result) => {
-				if (result.result !== 'ok') {
+				if (result.result === 'tooManyOverrides') {
+					toast(`Too many character overrides`, TOAST_OPTIONS_ERROR);
+				} else if (result.result !== 'ok') {
 					GetLogger('permissionSet').error('Error updating permission:', result);
 					toast(`Error updating permission:\n${result.result}`, TOAST_OPTIONS_ERROR);
 				}

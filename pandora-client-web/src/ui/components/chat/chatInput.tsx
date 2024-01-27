@@ -324,6 +324,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 					textarea.value = '';
 					inputHistoryIndex.current = -1;
 					setEditing(null);
+					inputEnd();
 
 					if (input && (InputHistory.value.length === 0 || InputHistory.value[0] !== input)) {
 						InputHistory.produceImmer((arr) => {
@@ -452,7 +453,9 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 
 			return;
 		}
+	});
 
+	const updateTypingStatus = (textarea: HTMLTextAreaElement) => {
 		const value = textarea.value;
 		if (value === lastInput.current)
 			return;
@@ -461,7 +464,8 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 		InputRestore.value = { input: value, spaceId: InputRestore.value.spaceId };
 		let nextStatus: null | { status: ChatCharacterStatus; target?: CharacterId; } = null;
 		const trimmed = value.trim();
-		if (trimmed.length > 0 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY) || !allowCommands)) {
+		// Only start showing typing indicator once user wrote at least three characters and do not show it for commands
+		if (trimmed.length >= 3 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY) || !allowCommands)) {
 			nextStatus = { status: target ? 'whispering' : 'typing', target: target?.data.id };
 		} else {
 			nextStatus = { status: 'none' };
@@ -479,16 +483,27 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 			timeout.current = null;
 		}
 		timeout.current = setTimeout(() => inputEnd(), 3_000);
-	});
+	};
 
 	const onChange = useEvent((ev: React.ChangeEvent<HTMLTextAreaElement>) => {
-		updateCommandHelp(ev.target);
+		const textarea = ev.target;
+		updateCommandHelp(textarea);
+		updateTypingStatus(textarea);
 	});
 
 	useEffect(() => () => inputEnd(), [inputEnd]);
 	const actualRef = useTextFormattingOnKeyboardEvent(ref);
 
-	return <textarea placeholder='> Type message or /command' ref={ actualRef } onKeyDown={ onKeyDown } onChange={ onChange } onBlur={ inputEnd } defaultValue={ InputRestore.value.input } />;
+	return (
+		<textarea
+			placeholder='> Type message or /command'
+			ref={ actualRef }
+			onKeyDown={ onKeyDown }
+			onChange={ onChange }
+			onBlur={ inputEnd }
+			defaultValue={ InputRestore.value.input }
+		/>
+	);
 }
 
 const TextArea = forwardRef(TextAreaImpl);

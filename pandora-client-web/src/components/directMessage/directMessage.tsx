@@ -9,9 +9,10 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { RenderChatPart } from '../../ui/components/chat/chatMessages';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { DirectMessageChannelProvider, useDirectMessageChannel } from '../gameContext/directMessageChannelProvieder';
-import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
+import { useCurrentAccount, useCurrentAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 import './directMessage.scss';
 import { useTextFormattingOnKeyboardEvent } from '../../common/useTextFormattingOnKeyboardEvent';
+import classNames from 'classnames';
 
 export function DirectMessage({ accountId }: { accountId: number; }): ReactElement {
 	return (
@@ -25,6 +26,7 @@ export function DirectMessage({ accountId }: { accountId: number; }): ReactEleme
 }
 
 function DirectMessageList(): ReactElement | null {
+	const { interfaceChatroomChatFontSize } = useCurrentAccountSettings();
 	const channel = useDirectMessageChannel();
 	const channelAccount = channel.account;
 	const messages = useObservable(channel.messages);
@@ -36,7 +38,14 @@ function DirectMessageList(): ReactElement | null {
 	}
 
 	return (
-		<Scrollbar ref={ ref } color='dark' className='direct-message-list'>
+		<Scrollbar
+			ref={ ref }
+			color='dark'
+			className={ classNames(
+				'direct-message-list',
+				`fontSize-${interfaceChatroomChatFontSize}`,
+			) }
+		>
 			{ messages.map((message) => (
 				<DirectMessageElement key={ message.time } message={ message } channel={ channelAccount } account={ account } />
 			)) }

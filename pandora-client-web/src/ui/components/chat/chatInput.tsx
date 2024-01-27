@@ -12,7 +12,7 @@ import { usePlayerId } from '../../../components/gameContext/playerContextProvid
 import { BrowserStorage } from '../../../browserStorage';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider';
 import classNames from 'classnames';
-import { Row } from '../../../components/common/container/container';
+import { Column, Row } from '../../../components/common/container/container';
 import { GetChatModeDescription } from './commands';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { Select } from '../../../components/common/select/select';
@@ -21,6 +21,7 @@ import { z } from 'zod';
 import { useNavigate } from 'react-router';
 import { useNullableObservable } from '../../../observable';
 import { useTextFormattingOnKeyboardEvent } from '../../../common/useTextFormattingOnKeyboardEvent';
+import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
 
 type Editing = {
 	target: number;
@@ -207,7 +208,6 @@ export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messag
 
 	return (
 		<>
-			<AutoCompleteHint />
 			<UnreadMessagesIndicator newMessageCount={ newMessageCount } scroll={ scroll } />
 			<TypingIndicator />
 			<Modifiers scroll={ scroll } />
@@ -324,6 +324,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 					textarea.value = '';
 					inputHistoryIndex.current = -1;
 					setEditing(null);
+					inputEnd();
 
 					if (input && (InputHistory.value.length === 0 || InputHistory.value[0] !== input)) {
 						InputHistory.produceImmer((arr) => {
@@ -349,7 +350,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 				const inputPosition = textarea.selectionStart || textarea.value.length;
 				const command = textarea.value.slice(1, textarea.selectionStart);
 
-				const autocompleteResult = CommandAutocompleteCycle(command, commandInvokeContext);
+				const autocompleteResult = CommandAutocompleteCycle(command, commandInvokeContext, ev.shiftKey);
 
 				const replacementStart = COMMAND_KEY + autocompleteResult.replace;
 
@@ -452,7 +453,9 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 
 			return;
 		}
+	});
 
+	const updateTypingStatus = (textarea: HTMLTextAreaElement) => {
 		const value = textarea.value;
 		if (value === lastInput.current)
 			return;
@@ -461,7 +464,8 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 		InputRestore.value = { input: value, spaceId: InputRestore.value.spaceId };
 		let nextStatus: null | { status: ChatCharacterStatus; target?: CharacterId; } = null;
 		const trimmed = value.trim();
-		if (trimmed.length > 0 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY) || !allowCommands)) {
+		// Only start showing typing indicator once user wrote at least three characters and do not show it for commands
+		if (trimmed.length >= 3 && (!value.startsWith(COMMAND_KEY) || value.startsWith(COMMAND_KEY + COMMAND_KEY) || !allowCommands)) {
 			nextStatus = { status: target ? 'whispering' : 'typing', target: target?.data.id };
 		} else {
 			nextStatus = { status: 'none' };
@@ -479,16 +483,27 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 			timeout.current = null;
 		}
 		timeout.current = setTimeout(() => inputEnd(), 3_000);
-	});
+	};
 
 	const onChange = useEvent((ev: React.ChangeEvent<HTMLTextAreaElement>) => {
-		updateCommandHelp(ev.target);
+		const textarea = ev.target;
+		updateCommandHelp(textarea);
+		updateTypingStatus(textarea);
 	});
 
 	useEffect(() => () => inputEnd(), [inputEnd]);
 	const actualRef = useTextFormattingOnKeyboardEvent(ref);
 
-	return <textarea ref={ actualRef } onKeyDown={ onKeyDown } onChange={ onChange } onBlur={ inputEnd } defaultValue={ InputRestore.value.input } />;
+	return (
+		<textarea
+			placeholder='> Type message or /command'
+			ref={ actualRef }
+			onKeyDown={ onKeyDown }
+			onChange={ onChange }
+			onBlur={ inputEnd }
+			defaultValue={ InputRestore.value.input }
+		/>
+	);
 }
 
 const TextArea = forwardRef(TextAreaImpl);
@@ -612,8 +627,9 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 	);
 }
 
-function AutoCompleteHint(): ReactElement | null {
+export function AutoCompleteHint(): ReactElement | null {
 	const { autocompleteHint, ref } = useChatInput();
+	const selectedElementRef = useRef<HTMLSpanElement>(null);
 
 	const gameState = useGameState();
 	const sender = useChatMessageSender();
@@ -624,79 +640,91 @@ function AutoCompleteHint(): ReactElement | null {
 	const shardConnector = useShardConnector();
 	const navigate = useNavigate();
 	AssertNotNullable(shardConnector);
+
+	useEffect(() => {
+		if (autocompleteHint?.index != null && selectedElementRef.current != null) {
+			selectedElementRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+		}
+	}, [autocompleteHint?.index]);
+
 	if (!autocompleteHint?.result || !allowCommands)
 		return null;
 
 	// When only one command can/should be displayed, onlyShowOption is set to that command's index in the option array
-	let onlyShowOption = -1;
-	if (autocompleteHint.result.options.length === 1) {
-		onlyShowOption = 0;
+	let longDescriptionOption: number | null = null;
+	if (autocompleteHint.index != null) {
+		longDescriptionOption = autocompleteHint.index;
+	} else if (autocompleteHint.result.options.length === 1) {
+		longDescriptionOption = 0;
 	} else if (ref.current) {
-		onlyShowOption = autocompleteHint.result.options.findIndex((option) => COMMAND_KEY + option.replaceValue === ref.current?.value);
+		longDescriptionOption = autocompleteHint.result.options.findIndex((option) => COMMAND_KEY + option.replaceValue === ref.current?.value);
 	}
-	if (onlyShowOption !== -1 && !autocompleteHint.result.options[onlyShowOption]?.longDescription) {
-		onlyShowOption = -1;
+	if (longDescriptionOption != null && !autocompleteHint.result.options[longDescriptionOption]?.longDescription) {
+		longDescriptionOption = null;
 	}
 
 	return (
 		<div className='autocomplete-hint'>
-			<div>
-				{ autocompleteHint.result.header }
-				{
-					autocompleteHint.result.options.length > 0 &&
+			{ autocompleteHint.result.header }
+			{
+				autocompleteHint.result.options.length > 0 &&
+				<>
+					<hr />
+					<Scrollable color='dark' className='flex-1'>
+						<Column gap='tiny'>
+							{
+								autocompleteHint.result.options.map((option, index) => (
+									<span key={ index }
+										className={ classNames({ selected: index === autocompleteHint.index }) }
+										ref={ index === autocompleteHint.index ? selectedElementRef : undefined }
+										onClick={ (ev) => {
+											const textarea = ref.current;
+											if (!textarea)
+												return;
+
+											ev.preventDefault();
+											ev.stopPropagation();
+
+											const inputPosition = textarea.selectionStart || textarea.value.length;
+											const input = option.replaceValue + ' ';
+
+											textarea.value = COMMAND_KEY + input + textarea.value.slice(inputPosition).trimStart();
+											textarea.focus();
+											textarea.setSelectionRange(input.length + 1, input.length + 1, 'none');
+
+											const autocompleteResult = CommandAutocomplete(input, {
+												shardConnector,
+												directoryConnector,
+												gameState,
+												player: gameState.player,
+												messageSender: sender,
+												inputHandlerContext: chatInput,
+												navigate,
+											});
+
+											setAutocompleteHint({
+												replace: textarea.value,
+												result: autocompleteResult,
+												index: null,
+											});
+										} }
+									>
+										{ option.displayValue }
+									</span>
+								))
+							}
+						</Column>
+					</Scrollable>
+				</>
+			}
+			{
+				longDescriptionOption != null ? (
 					<>
 						<hr />
-						{
-							autocompleteHint.result.options.map((option, index) => (
-								(onlyShowOption === -1 || onlyShowOption === index) &&
-								<span key={ index }
-									className={ classNames({ selected: index === autocompleteHint.index }) }
-									onClick={ (ev) => {
-										const textarea = ref.current;
-										if (!textarea)
-											return;
-
-										ev.preventDefault();
-										ev.stopPropagation();
-
-										const inputPosition = textarea.selectionStart || textarea.value.length;
-										const input = option.replaceValue + ' ';
-
-										textarea.value = COMMAND_KEY + input + textarea.value.slice(inputPosition).trimStart();
-										textarea.focus();
-										textarea.setSelectionRange(input.length + 1, input.length + 1, 'none');
-
-										const autocompleteResult = CommandAutocomplete(input, {
-											shardConnector,
-											directoryConnector,
-											gameState,
-											player: gameState.player,
-											messageSender: sender,
-											inputHandlerContext: chatInput,
-											navigate,
-										});
-
-										setAutocompleteHint({
-											replace: textarea.value,
-											result: autocompleteResult,
-											index: null,
-										});
-									} }
-								>
-									{ option.displayValue }
-								</span>
-							))
-						}
+						{ autocompleteHint.result.options[longDescriptionOption]?.longDescription }
 					</>
-				}
-				{
-					onlyShowOption >= 0 &&
-					<>
-						<hr />
-						{ autocompleteHint.result.options[onlyShowOption]?.longDescription }
-					</>
-				}
-			</div>
+				) : null
+			}
 		</div>
 	);
 }

@@ -1,6 +1,6 @@
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryAccountSettings } from 'pandora-common';
+import { DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryAccountSettings, KnownObject } from 'pandora-common';
 import { Button } from '../common/button/button';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { useColorInput } from '../../common/useColorInput';
@@ -28,6 +28,7 @@ function ChatroomSettings({ account }: { account: IDirectoryAccountInfo; }): Rea
 		<fieldset>
 			<legend>Chatroom UI</legend>
 			<ChatroomGraphicsRatio account={ account } />
+			<ChatroomChatFontSize account={ account } />
 			<ChatroomOfflineCharacters account={ account } />
 		</fieldset>
 	);
@@ -75,6 +76,38 @@ function ChatroomGraphicsRatio({ account }: { account: IDirectoryAccountInfo; })
 				</Select>
 			</div>
 		</>
+	);
+}
+
+function ChatroomChatFontSize({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+	const directory = useDirectoryConnector();
+	const [size, setSize] = useState(account.settings.interfaceChatroomChatFontSize);
+
+	const onChange = useCallback<NonNullable<SelectProps['onChange']>>(({ target }) => {
+		const newValue = DirectoryAccountSettingsSchema.shape.interfaceChatroomChatFontSize.parse(target.value);
+
+		setSize(newValue);
+		directory.sendMessage('changeSettings', { interfaceChatroomChatFontSize: newValue });
+	}, [directory]);
+
+	const SELECTION_DESCRIPTIONS: Record<IDirectoryAccountSettings['interfaceChatroomChatFontSize'], string> = {
+		xs: 'Extra small',
+		s: 'Small',
+		m: 'Medium (default)',
+		l: 'Large',
+		xl: 'Extra large',
+	};
+
+	return (
+		<div className='input-section'>
+			<label>Font size of the main chat</label>
+			<Select value={ size } onChange={ onChange }>
+				{
+					KnownObject.keys(SELECTION_DESCRIPTIONS)
+						.map((v) => <option key={ v } value={ v }>{ SELECTION_DESCRIPTIONS[v] }</option>)
+				}
+			</Select>
+		</div>
 	);
 }
 

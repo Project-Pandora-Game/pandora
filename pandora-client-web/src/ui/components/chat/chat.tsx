@@ -15,14 +15,17 @@ import { useChatMessages, useChatMessageSender } from '../../../components/gameC
 import { NotificationSource, useNotificationSuppressed } from '../../../components/gameContext/notificationContextProvider';
 import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider';
-import { ChatInputArea, useChatInput } from './chatInput';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
+import { AutoCompleteHint, ChatInputArea, useChatInput } from './chatInput';
+import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
 import { useAutoScroll } from '../../../common/useAutoScroll';
 import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatMessages';
+import { useCurrentAccountSettings } from '../../../components/gameContext/directoryConnectorContextProvider';
+import { Column } from '../../../components/common/container/container';
 
 export function Chat(): ReactElement | null {
 	const messages = useChatMessages();
 	const shardConnector = useShardConnector();
+	const { interfaceChatroomChatFontSize } = useCurrentAccountSettings();
 	const [messagesDiv, scroll, isScrolling] = useAutoScroll<HTMLDivElement>([messages]);
 	const lastMessageCount = useRef(0);
 	let newMessageCount = 0;
@@ -42,9 +45,19 @@ export function Chat(): ReactElement | null {
 
 	return (
 		<div className='chatArea'>
-			<Scrollbar color='dark' className='messages' ref={ messagesDiv } tabIndex={ 1 }>
-				{ messages.map((m) => <Message key={ m.time } message={ m } playerId={ playerId } />) }
-			</Scrollbar>
+			<div
+				className={ classNames(
+					'messages',
+					`fontSize-${interfaceChatroomChatFontSize}`,
+				) }
+			>
+				<Scrollable color='dark' className='fill' ref={ messagesDiv } tabIndex={ 1 }>
+					<Column gap='none'>
+						{ messages.map((m) => <Message key={ m.time } message={ m } playerId={ playerId } />) }
+					</Column>
+				</Scrollable>
+				<AutoCompleteHint />
+			</div>
 			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } newMessageCount={ newMessageCount } />
 		</div>
 	);
@@ -87,7 +100,16 @@ function DisplayUserMessage({ message, playerId }: { message: IChatMessageChat &
 	const self = message.from.id === playerId;
 	return (
 		<>
-			<div className={ classNames('message', message.type, isPrivate && 'private', editingClass) } style={ style } onContextMenu={ self ? onContextMenu : undefined }>
+			<div
+				className={ classNames(
+					'message',
+					message.type,
+					isPrivate && 'private',
+					editingClass,
+				) }
+				style={ style }
+				onContextMenu={ self ? onContextMenu : undefined }
+			>
 				<DisplayInfo message={ message } />
 				{ before }
 				<DisplayName message={ message } color={ message.from.labelColor } />
@@ -241,14 +263,22 @@ export function ActionMessage({ message, ignoreColor = false }: { message: IChat
 
 	const [content, extraContent] = useMemo(() => RenderActionContent(message, assetManager), [message, assetManager]);
 
-	// If there is nothing to disply, hide this message
+	// If there is nothing to display, hide this message
 	if (content.length === 0 && extraContent == null)
 		return null;
 
 	const style = (message.type === 'action' && message.data?.character && !ignoreColor) ? ({ backgroundColor: message.data.character.labelColor + '44' }) : undefined;
 
 	return (
-		<div className={ classNames('message', message.type, extraContent !== null ? 'foldable' : null) } style={ style } onClick={ () => setFolded(!folded) }>
+		<div
+			className={ classNames(
+				'message',
+				message.type,
+				extraContent !== null ? 'foldable' : null,
+			) }
+			style={ style }
+			onClick={ () => setFolded(!folded) }
+		>
 			<DisplayInfo message={ message } />
 			{ extraContent != null ? (folded ? '\u25ba ' : '\u25bc ') : null }
 			{ content.map((c, i) => RenderChatPart(c, i, false)) }

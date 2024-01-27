@@ -91,18 +91,16 @@
 }
 
 .chatArea {
-	background-color: #333;
+	background-color: #303030;
 	display: flex;
 	flex-flow: column;
 	flex: 1;
 	overflow: hidden;
 
 	&>div.messages {
-		display: flex;
-		flex-flow: column;
+		position: relative;
 		flex: 1;
-		overflow-x: hidden;
-		overflow-y: scroll;
+		overflow: hidden;
 		user-select: text;
 	}
 
@@ -114,12 +112,12 @@
 
 		&.serverMessage {
 			border-left: solid 5px $white;
-			background-color: #222;
+			background-color: #202020;
 			margin: 0.4em;
 			padding: 0.2em;
 
 			&.foldable:hover {
-				background-color: #1a1a1a;
+				background-color: #181818;
 				cursor: pointer;
 			}
 		}
@@ -161,6 +159,20 @@
 		height: min(10em, 35%);
 		resize: none;
 		margin: 0;
+		color: #fff;
+		font-size: 105%;
+		background-color: #444;
+		border: none;
+  		outline: none;
+
+		&:focus {
+			background-color: #000;
+		}
+
+		&::placeholder {
+			color: #666;
+			opacity: 1; /* Firefox */
+		}
 	}
 }
 
@@ -169,7 +181,7 @@
 	cursor: pointer;
 
 	&:hover {
-		background-color: #202020;
+		background-color: #101010;
 	}
 
 	img {
@@ -182,7 +194,7 @@
 	@include flex(row, wrap);
 	align-items: center;
 
-	background-color: #2A2A2A;
+	background-color: #202020;
 	color: $white;
 	padding-left: 0.5em;
 	gap: 0.5em;
@@ -195,36 +207,35 @@
 }
 
 .unread-messages-indicator:hover {
-	background-color: #202020;
+	background-color: #101010;
 	cursor: pointer;
 }
 
 .autocomplete-hint {
-	position: relative;
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	max-height: calc(100% - 0.4em);
+	overflow-y: scroll;
+	margin: 0.2em;
+	font-size: medium;
 
-	>div {
-		position: absolute;
-		left: 0;
-		bottom: 0;
-		right: 1em;
-		margin: 0.2em;
+	@include flex(column);
+	background-color: #336;
+	color: $white;
+	padding: 0.5em;
+	gap: 0.1em;
 
-		@include flex(column);
-		background-color: #338;
-		color: $white;
-		padding: 0.5em;
-		gap: 0.1em;
+	hr {
+		width: 100%;
+	}
 
-		hr {
-			width: 100%;
-		}
+	span {
+		cursor: pointer;
 
-		span {
-			cursor: pointer;
-
-			&:hover, &.selected {
-				background-color: #7e7eff54;
-			}
+		&:hover, &.selected {
+			background-color: #7e7eff54;
 		}
 	}
 }

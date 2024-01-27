@@ -84,6 +84,11 @@ export const DirectoryAccountSettingsSchema = z.object({
 	 * - Ghost: Darken + semi-transparent
 	 */
 	interfaceChatroomOfflineCharacterFilter: z.enum(['none', 'icon', 'darken', 'ghost']).default('ghost'),
+	/**
+	 * Controls how big the font size used in the main chat area is
+	 */
+	interfaceChatroomChatFontSize: z.enum(['fontSizeVerySmall', 'fontSizeSmall', 'fontSizeNormal', 'fontSizeLarge']).default('fontSizeNormal'),
+
 });
 export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;
 
@@ -103,6 +108,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,
 	interfaceChatroomOfflineCharacterFilter: 'ghost',
+	interfaceChatroomChatFontSize: 'fontSizeNormal',
 });
 
 export const ACCOUNT_SETTINGS_LIMITED_LIMITS = Object.freeze({

@@ -1,5 +1,7 @@
 @import '../../../styles/common';
 
+$default-font-size: 1em;
+
 .roomScreen {
 	overflow: hidden;
 	min-width: 0 !important;
@@ -91,7 +93,7 @@
 }
 
 .chatArea {
-	background-color: #333;
+	background-color: #303030;
 	display: flex;
 	flex-flow: column;
 	flex: 1;
@@ -112,14 +114,30 @@
 		white-space: pre-wrap;
 		overflow-wrap: break-word;
 
+		&.fontSizeVerySmall {
+			font-size: $default-font-size - 0.2em;
+		}
+
+		&.fontSizeSmall {
+			font-size: $default-font-size - 0.1em;
+		}
+
+		&.fontSizeNormal {
+			font-size: $default-font-size;
+		}
+
+		&.fontSizeLarge {
+			font-size: $default-font-size + 0.1em;
+		}
+
 		&.serverMessage {
 			border-left: solid 5px $white;
-			background-color: #222;
+			background-color: #202020;
 			margin: 0.4em;
 			padding: 0.2em;
 
 			&.foldable:hover {
-				background-color: #1a1a1a;
+				background-color: #181818;
 				cursor: pointer;
 			}
 		}
@@ -161,6 +179,20 @@
 		height: min(10em, 35%);
 		resize: none;
 		margin: 0;
+		color: #fff;
+		font-size: $default-font-size + 0.05em;
+		background-color: #444;
+		border: none;
+  		outline: none;
+
+		&:focus {
+			background-color: #000;
+		}
+
+		&::placeholder {
+			color: #666;
+			opacity: 1; /* Firefox */
+		}
 	}
 }
 
@@ -169,7 +201,7 @@
 	cursor: pointer;
 
 	&:hover {
-		background-color: #202020;
+		background-color: #101010;
 	}
 
 	img {
@@ -182,7 +214,7 @@
 	@include flex(row, wrap);
 	align-items: center;
 
-	background-color: #2A2A2A;
+	background-color: #202020;
 	color: $white;
 	padding-left: 0.5em;
 	gap: 0.5em;
@@ -195,7 +227,7 @@
 }
 
 .unread-messages-indicator:hover {
-	background-color: #202020;
+	background-color: #101010;
 	cursor: pointer;
 }
 
@@ -210,8 +242,9 @@
 		margin: 0.2em;
 
 		@include flex(column);
-		background-color: #338;
+		background-color: #336;
 		color: $white;
+		font-size: $default-font-size - 0.1em;
 		padding: 0.5em;
 		gap: 0.1em;
 

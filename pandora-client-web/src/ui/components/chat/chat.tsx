@@ -19,6 +19,7 @@ import { ChatInputArea, useChatInput } from './chatInput';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { useAutoScroll } from '../../../common/useAutoScroll';
 import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatMessages';
+import { useCurrentAccountSettings } from '../../../components/gameContext/directoryConnectorContextProvider';
 
 export function Chat(): ReactElement | null {
 	const messages = useChatMessages();
@@ -67,6 +68,7 @@ const Message = memo(function Message({ message, playerId }: { message: IChatMes
 });
 
 function DisplayUserMessage({ message, playerId }: { message: IChatMessageChat & { time: number; spaceId: SpaceId | null; }; playerId: CharacterId | null; }): ReactElement {
+	const { interfaceChatroomChatFontSize } = useCurrentAccountSettings();
 	const [before, after] = useMemo(() => {
 		switch (message.type) {
 			case 'ooc':
@@ -87,7 +89,7 @@ function DisplayUserMessage({ message, playerId }: { message: IChatMessageChat &
 	const self = message.from.id === playerId;
 	return (
 		<>
-			<div className={ classNames('message', message.type, isPrivate && 'private', editingClass) } style={ style } onContextMenu={ self ? onContextMenu : undefined }>
+			<div className={ classNames('message', interfaceChatroomChatFontSize, message.type, isPrivate && 'private', editingClass) } style={ style } onContextMenu={ self ? onContextMenu : undefined }>
 				<DisplayInfo message={ message } />
 				{ before }
 				<DisplayName message={ message } color={ message.from.labelColor } />
@@ -236,19 +238,20 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 }
 
 export function ActionMessage({ message, ignoreColor = false }: { message: IChatMessageProcessed<IChatMessageAction>; ignoreColor?: boolean; }): ReactElement | null {
+	const { interfaceChatroomChatFontSize } = useCurrentAccountSettings();
 	const assetManager = useAssetManager();
 	const [folded, setFolded] = useState(true);
 
 	const [content, extraContent] = useMemo(() => RenderActionContent(message, assetManager), [message, assetManager]);
 
-	// If there is nothing to disply, hide this message
+	// If there is nothing to display, hide this message
 	if (content.length === 0 && extraContent == null)
 		return null;
 
 	const style = (message.type === 'action' && message.data?.character && !ignoreColor) ? ({ backgroundColor: message.data.character.labelColor + '44' }) : undefined;
 
 	return (
-		<div className={ classNames('message', message.type, extraContent !== null ? 'foldable' : null) } style={ style } onClick={ () => setFolded(!folded) }>
+		<div className={ classNames('message', interfaceChatroomChatFontSize, message.type, extraContent !== null ? 'foldable' : null) } style={ style } onClick={ () => setFolded(!folded) }>
 			<DisplayInfo message={ message } />
 			{ extraContent != null ? (folded ? '\u25ba ' : '\u25bc ') : null }
 			{ content.map((c, i) => RenderChatPart(c, i, false)) }

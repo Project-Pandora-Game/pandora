@@ -28,6 +28,7 @@ function ChatroomSettings({ account }: { account: IDirectoryAccountInfo; }): Rea
 		<fieldset>
 			<legend>Chatroom UI</legend>
 			<ChatroomGraphicsRatio account={ account } />
+			<ChatroomChatFontSize account={ account } />
 			<ChatroomOfflineCharacters account={ account } />
 		</fieldset>
 	);
@@ -75,6 +76,37 @@ function ChatroomGraphicsRatio({ account }: { account: IDirectoryAccountInfo; })
 				</Select>
 			</div>
 		</>
+	);
+}
+
+function ChatroomChatFontSize({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+	const directory = useDirectoryConnector();
+	const [size, setSize] = useState(account.settings.interfaceChatroomChatFontSize);
+
+	const onChange = useCallback<NonNullable<SelectProps['onChange']>>(({ target }) => {
+		const newValue = DirectoryAccountSettingsSchema.shape.interfaceChatroomChatFontSize.parse(target.value);
+
+		setSize(newValue);
+		directory.sendMessage('changeSettings', { interfaceChatroomChatFontSize: newValue });
+	}, [directory]);
+
+	const SELECTION_DESCRIPTIONS: Record<IDirectoryAccountSettings['interfaceChatroomChatFontSize'], string> = {
+		fontSizeVerySmall: 'Very small size',
+		fontSizeSmall: 'Smaller size',
+		fontSizeNormal: 'Default size',
+		fontSizeLarge: 'Larger size',
+	};
+
+	return (
+		<div className='input-section'>
+			<label>Font size of the main chat</label>
+			<Select value={ size } onChange={ onChange }>
+				{
+					(Object.keys(SELECTION_DESCRIPTIONS) as IDirectoryAccountSettings['interfaceChatroomChatFontSize'][])
+						.map((v) => <option key={ v } value={ v }>{ SELECTION_DESCRIPTIONS[v] }</option>)
+				}
+			</Select>
+		</div>
 	);
 }
 

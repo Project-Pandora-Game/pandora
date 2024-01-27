@@ -488,7 +488,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 	useEffect(() => () => inputEnd(), [inputEnd]);
 	const actualRef = useTextFormattingOnKeyboardEvent(ref);
 
-	return <textarea ref={ actualRef } onKeyDown={ onKeyDown } onChange={ onChange } onBlur={ inputEnd } defaultValue={ InputRestore.value.input } />;
+	return <textarea placeholder='> Type message or /command' ref={ actualRef } onKeyDown={ onKeyDown } onChange={ onChange } onBlur={ inputEnd } defaultValue={ InputRestore.value.input } />;
 }
 
 const TextArea = forwardRef(TextAreaImpl);

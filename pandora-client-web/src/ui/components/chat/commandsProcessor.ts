@@ -125,18 +125,19 @@ export interface AutocompleteDisplayData {
 
 let autocompleteLastQuery: string | null = null;
 let autocompleteLastResult: CommandAutocompleteResult = null;
-let autocompleteNextIndex = 0;
+let autocompleteCurrentIndex: number | null = null;
 
-export function CommandAutocompleteCycle(msg: string, ctx: ICommandInvokeContext): AutocompleteDisplayData {
-	if (autocompleteLastQuery === msg && autocompleteLastResult && autocompleteNextIndex < autocompleteLastResult.options.length) {
-		const index = autocompleteNextIndex;
-		const replace = autocompleteLastResult.options[index].replaceValue.trim();
-		autocompleteNextIndex = (autocompleteNextIndex + 1) % autocompleteLastResult.options.length;
+export function CommandAutocompleteCycle(msg: string, ctx: ICommandInvokeContext, reverse: boolean = false): AutocompleteDisplayData {
+	if (autocompleteLastQuery === msg && autocompleteLastResult) {
+		autocompleteCurrentIndex = reverse ?
+			((autocompleteCurrentIndex ?? autocompleteLastResult.options.length) - 1 + autocompleteLastResult.options.length) % autocompleteLastResult.options.length :
+			((autocompleteCurrentIndex ?? -1) + 1) % autocompleteLastResult.options.length;
+		const replace = autocompleteLastResult.options[autocompleteCurrentIndex].replaceValue.trim();
 		autocompleteLastQuery = replace;
 		return {
 			replace,
 			result: autocompleteLastResult,
-			index,
+			index: autocompleteCurrentIndex,
 		};
 	}
 	autocompleteLastQuery = null;
@@ -158,7 +159,7 @@ export function CommandAutocompleteCycle(msg: string, ctx: ICommandInvokeContext
 	// Only use the prefix if it matches with the already entered value
 	const bestReplacement = best.toLocaleLowerCase().startsWith(msg.toLocaleLowerCase()) ? best : msg;
 	autocompleteLastQuery = bestReplacement;
-	autocompleteNextIndex = 0;
+	autocompleteCurrentIndex = null;
 	return {
 		replace: bestReplacement,
 		result: autocompleteLastResult,

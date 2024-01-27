@@ -15,11 +15,12 @@ import { useChatMessages, useChatMessageSender } from '../../../components/gameC
 import { NotificationSource, useNotificationSuppressed } from '../../../components/gameContext/notificationContextProvider';
 import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider';
-import { ChatInputArea, useChatInput } from './chatInput';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
+import { AutoCompleteHint, ChatInputArea, useChatInput } from './chatInput';
+import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
 import { useAutoScroll } from '../../../common/useAutoScroll';
 import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatMessages';
 import { useCurrentAccountSettings } from '../../../components/gameContext/directoryConnectorContextProvider';
+import { Column } from '../../../components/common/container/container';
 
 export function Chat(): ReactElement | null {
 	const messages = useChatMessages();
@@ -43,9 +44,14 @@ export function Chat(): ReactElement | null {
 
 	return (
 		<div className='chatArea'>
-			<Scrollbar color='dark' className='messages' ref={ messagesDiv } tabIndex={ 1 }>
-				{ messages.map((m) => <Message key={ m.time } message={ m } playerId={ playerId } />) }
-			</Scrollbar>
+			<div className='messages'>
+				<Scrollable color='dark' className='fill' ref={ messagesDiv } tabIndex={ 1 }>
+					<Column gap='none'>
+						{ messages.map((m) => <Message key={ m.time } message={ m } playerId={ playerId } />) }
+					</Column>
+				</Scrollable>
+				<AutoCompleteHint />
+			</div>
 			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } newMessageCount={ newMessageCount } />
 		</div>
 	);

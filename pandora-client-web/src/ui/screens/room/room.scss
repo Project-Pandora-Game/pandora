@@ -98,11 +98,9 @@
 	overflow: hidden;
 
 	&>div.messages {
-		display: flex;
-		flex-flow: column;
+		position: relative;
 		flex: 1;
-		overflow-x: hidden;
-		overflow-y: scroll;
+		overflow: hidden;
 		user-select: text;
 	}
 
@@ -234,31 +232,29 @@
 }
 
 .autocomplete-hint {
-	position: relative;
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	max-height: calc(100% - 0.4em);
+	overflow-y: scroll;
+	margin: 0.2em;
 
-	>div {
-		position: absolute;
-		left: 0;
-		bottom: 0;
-		right: 1em;
-		margin: 0.2em;
+	@include flex(column);
+	background-color: #336;
+	color: $white;
+	padding: 0.5em;
+	gap: 0.1em;
 
-		@include flex(column);
-		background-color: #336;
-		color: $white;
-		padding: 0.5em;
-		gap: 0.1em;
+	hr {
+		width: 100%;
+	}
 
-		hr {
-			width: 100%;
-		}
+	span {
+		cursor: pointer;
 
-		span {
-			cursor: pointer;
-
-			&:hover, &.selected {
-				background-color: #7e7eff54;
-			}
+		&:hover, &.selected {
+			background-color: #7e7eff54;
 		}
 	}
 }

@@ -87,7 +87,7 @@ export const DirectoryAccountSettingsSchema = z.object({
 	/**
 	 * Controls how big the font size used in the main chat area is
 	 */
-	interfaceChatroomChatFontSize: z.enum(['xs', 's', 'm', 'l']).default('m'),
+	interfaceChatroomChatFontSize: z.enum(['xs', 's', 'm', 'l', 'xl']).default('m'),
 });
 
 export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;

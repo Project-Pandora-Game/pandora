@@ -91,10 +91,11 @@ function ChatroomChatFontSize({ account }: { account: IDirectoryAccountInfo; }):
 	}, [directory]);
 
 	const SELECTION_DESCRIPTIONS: Record<IDirectoryAccountSettings['interfaceChatroomChatFontSize'], string> = {
-		xs: 'Very small size',
-		s: 'Smaller size',
-		m: 'Default size',
-		l: 'Larger size',
+		xs: 'Extra small',
+		s: 'Small',
+		m: 'Medium (default)',
+		l: 'Large',
+		xl: 'Extra large',
 	};
 
 	return (

@@ -1,7 +1,5 @@
 @import '../../../styles/common';
 
-$default-font-size: 1em;
-
 .roomScreen {
 	overflow: hidden;
 	min-width: 0 !important;
@@ -115,19 +113,23 @@ $default-font-size: 1em;
 		overflow-wrap: break-word;
 
 		&.fontSize-xs {
-			font-size: $default-font-size - 0.2em;
+			font-size: x-small;
 		}
 
 		&.fontSize-s {
-			font-size: $default-font-size - 0.1em;
+			font-size: small;
 		}
 
 		&.fontSize-m {
-			font-size: $default-font-size;
+			font-size: medium;
 		}
 
 		&.fontSize-l {
-			font-size: $default-font-size + 0.1em;
+			font-size: large;
+		}
+
+		&.fontSize-xl {
+			font-size: x-large;
 		}
 
 		&.serverMessage {
@@ -180,7 +182,7 @@ $default-font-size: 1em;
 		resize: none;
 		margin: 0;
 		color: #fff;
-		font-size: $default-font-size + 0.05em;
+		font-size: 105%;
 		background-color: #444;
 		border: none;
   		outline: none;
@@ -244,7 +246,6 @@ $default-font-size: 1em;
 		@include flex(column);
 		background-color: #336;
 		color: $white;
-		font-size: $default-font-size - 0.1em;
 		padding: 0.5em;
 		gap: 0.1em;
 

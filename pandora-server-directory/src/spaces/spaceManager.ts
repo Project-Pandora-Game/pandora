@@ -1,4 +1,4 @@
-import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SpaceDirectoryConfig, SpaceDirectoryData, SpaceId, Service } from 'pandora-common';
+import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SpaceDirectoryConfig, SpaceDirectoryData, SpaceId, Service, SpaceDirectoryDataSchema, SPACE_DIRECTORY_PROPERTIES } from 'pandora-common';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Space } from './space';
 import promClient from 'prom-client';
@@ -6,6 +6,8 @@ import { GetDatabase } from '../database/databaseProvider';
 import { accountManager } from '../account/accountManager';
 import { Account } from '../account/account';
 import { CharacterInfo } from '../account/character';
+import { isEqual, pick } from 'lodash';
+import { diffString } from 'json-diff';
 
 /** Time (in ms) after which manager prunes spaces without any activity (search or characters inside) */
 export const SPACE_INACTIVITY_THRESHOLD = 60_000;
@@ -87,7 +89,7 @@ export const SpaceManager = new class SpaceManagerClass implements Service {
 			// Load the space (using already loaded to avoid race conditions)
 			const space = this.loadedSpaces.get(spaceData.id) ?? await this._loadSpace(spaceData);
 			// If we are still owner or admin, add it to the list
-			if (space.checkVisibleTo(account)) {
+			if (space?.checkVisibleTo(account)) {
 				result.add(space);
 			}
 		}
@@ -153,7 +155,8 @@ export const SpaceManager = new class SpaceManagerClass implements Service {
 			owners,
 		});
 		logger.verbose(`Created space ${spaceData.id}, owned by ${spaceData.owners.join(',')}`);
-		const space = this._loadSpace(spaceData);
+		const space = await this._loadSpace(spaceData);
+		AssertNotNullable(space);
 
 		ConnectionManagerClient.onSpaceListChange();
 
@@ -162,12 +165,29 @@ export const SpaceManager = new class SpaceManagerClass implements Service {
 
 	/** Load space from received data, adding it to loaded spaces */
 	@AsyncSynchronized()
-	private async _loadSpace({ id, config, owners, accessId }: SpaceDirectoryData): Promise<Space> {
+	private async _loadSpace(data: SpaceDirectoryData): Promise<Space | null> {
 		{
-			const existingSpace = this.loadedSpaces.get(id);
+			const existingSpace = this.loadedSpaces.get(data.id);
 			if (existingSpace != null)
 				return existingSpace;
 		}
+
+		const result = await SpaceDirectoryDataSchema.safeParseAsync(data);
+		if (!result.success) {
+			logger.error(`Failed to load space ${data.id} due to invalid data`, result.error);
+			return null;
+		}
+		{
+			const validated = pick(result.data, ...SPACE_DIRECTORY_PROPERTIES);
+			const original = pick(data, ...SPACE_DIRECTORY_PROPERTIES);
+			if (!isEqual(validated, original)) {
+				const diff = diffString(original, validated, { color: false });
+				logger.warning(`Loaded space ${data.id} has invalid data, fixing...\n`, diff);
+				await GetDatabase().updateSpace(data.id, validated, null);
+			}
+		}
+
+		const { id, config, owners, accessId } = result.data;
 
 		// Load the space itself
 		const space = new Space(id, config, owners, accessId);

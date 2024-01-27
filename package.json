@@ -1,6 +1,6 @@
 {
 	"private": true,
-	"packageManager": "pnpm@8.14.3",
+	"packageManager": "pnpm@8.15.0",
 	"pnpm": {
 		"overrides": {
 			"@types/css-font-loading-module": "^0.0.8",

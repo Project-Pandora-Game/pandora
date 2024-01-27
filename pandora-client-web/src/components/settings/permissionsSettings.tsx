@@ -13,7 +13,7 @@ import allow from '../../assets/icons/public.svg';
 import prompt from '../../assets/icons/prompt.svg';
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
-import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, CharacterIdSchema, EMPTY, GameLogicPermissionClient, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, CharacterIdSchema, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { ButtonConfirm, DraggableDialog, ModalDialog } from '../dialog/dialog';
 import { Column, Row } from '../common/container/container';
@@ -25,6 +25,8 @@ import { HoverElement } from '../hoverElement/hoverElement';
 import { PermissionPromptData, useGameStateOptional } from '../gameContext/gameStateContextProvider';
 import type { Immutable } from 'immer';
 import { useFunctionBind } from '../../common/useFunctionBind';
+import { ActionMessage } from '../../ui/components/chat/chat';
+import { StorageUsageMeter } from '../wardrobe/wardrobeComponents';
 
 export function PermissionsSettings(): ReactElement | null {
 	const player = usePlayer();
@@ -97,10 +99,16 @@ function useEffectiveAllowOthers(permissionGroup: PermissionGroup, permissionId:
 
 function ShowEffectiveAllowOthers({ permissionGroup, permissionId }: { permissionGroup: PermissionGroup; permissionId: string; }): ReactElement {
 	const effectiveConfig = useEffectiveAllowOthers(permissionGroup, permissionId);
+	return (
+		<ShowAllowOthers config={ effectiveConfig } />
+	);
+}
+
+function ShowAllowOthers({ config }: { config: PermissionType; }): ReactElement {
 	const [ref, setRef] = useState<HTMLElement | null>(null);
 
 	const { src, alt, description } = useMemo(() => {
-		switch (effectiveConfig) {
+		switch (config) {
 			case 'yes':
 				return {
 					src: allow,
@@ -120,7 +128,7 @@ function ShowEffectiveAllowOthers({ permissionGroup, permissionId }: { permissio
 					description: 'Trying to use this permission opens a popup that lets the targeted user decide if they want to give or deny the requester this permission. Exceptions can be set individually.',
 				};
 		}
-	}, [effectiveConfig]);
+	}, [config]);
 
 	return (
 		<>
@@ -222,7 +230,9 @@ function usePermissionConfigSetAny(): (permissionGroup: PermissionGroup, permiss
 			},
 		})
 			.then((result) => {
-				if (result.result !== 'ok') {
+				if (result.result === 'tooManyOverrides') {
+					toast(`Too many character overrides`, TOAST_OPTIONS_ERROR);
+				} else if (result.result !== 'ok') {
 					GetLogger('permissionSet').error('Error updating permission:', result);
 					toast(`Error updating permission:\n${result.result}`, TOAST_OPTIONS_ERROR);
 				}
@@ -291,12 +301,12 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 				<Button slim onClick={ () => setDefault(null) } className='fadeDisabled'>Reset defaults</Button>
 				<Button onClick={ hide }>Close</Button>
 			</Row>
-			<PermissionConfigOverrides overrides={ permissionConfig?.characterOverrides ?? EMPTY } setConfig={ setAny } />
+			<PermissionConfigOverrides overrides={ permissionConfig?.characterOverrides ?? EMPTY } limit={ permissionSetup.maxCharacterOverrides ?? PERMISSION_MAX_CHARACTER_OVERRIDES } setConfig={ setAny } />
 		</ModalDialog>
 	);
 }
 
-function PermissionConfigOverrides({ overrides, setConfig }: { overrides: Partial<Record<CharacterId, PermissionType>>; setConfig: (selector: PermissionConfigChangeSelector, allowOthers: PermissionConfigChangeType) => void; }): ReactElement | null {
+function PermissionConfigOverrides({ overrides, limit, setConfig }: { overrides: Partial<Record<CharacterId, PermissionType>>; limit: number; setConfig: (selector: PermissionConfigChangeSelector, allowOthers: PermissionConfigChangeType) => void; }): ReactElement | null {
 	const values = useMemo(() => {
 		const result: { allow: CharacterId[]; deny: CharacterId[]; prompt: CharacterId[]; } = { allow: [], deny: [], prompt: [] };
 		for (const [characterId, allowOthers] of KnownObject.entries(overrides)) {
@@ -322,6 +332,7 @@ function PermissionConfigOverrides({ overrides, setConfig }: { overrides: Partia
 	return (
 		<Column padding='large'>
 			<h4>Character based overrides</h4>
+			<StorageUsageMeter title='Used' used={ Object.keys(overrides).length } limit={ limit } />
 			<br />
 			<PermissionConfigOverrideType type='yes' content={ values.allow } setConfig={ setConfig } />
 			<br />
@@ -349,6 +360,11 @@ function PermissionConfigOverrideType({ type, content, setConfig }: { type: Perm
 
 		setConfig(result.data, null);
 	}, [result, content, setConfig]);
+
+	useEffect(() => {
+		if (id.length > 0 && /^\d+$/.test(id))
+			setId(`c${id}`);
+	}, [id]);
 
 	return (
 		<>
@@ -438,7 +454,7 @@ export function PermissionPromptHandler(): ReactElement | null {
 	return <PermissionPromptDialog prompt={ prompts[0] } dismiss={ dismissFirst } />;
 }
 
-function PermissionPromptDialog({ prompt: { source, requiredPermissions }, dismiss }: { prompt: PermissionPromptData; dismiss: () => void; }): ReactElement {
+function PermissionPromptDialog({ prompt: { source, requiredPermissions, messages }, dismiss }: { prompt: PermissionPromptData; dismiss: () => void; }): ReactElement {
 	const setFull = usePermissionConfigSetAny();
 	const setAnyConfig = useCallback((permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionConfigChangeType) => {
 		setFull(permissionGroup, permissionId, source.id, allowOthers);
@@ -448,8 +464,8 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions }, dismi
 			if (!permissions)
 				continue;
 
-			for (const perm of permissions) {
-				setAnyConfig(group, perm.id, 'accept');
+			for (const [setup] of permissions) {
+				setAnyConfig(group, setup.id, 'accept');
 			}
 		}
 		dismiss();
@@ -469,10 +485,18 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions }, dismi
 					asks for permission to...
 				</h2>
 			</Row>
+			<Column alignX='center'>
+				<span>Action text:</span>
+				{
+					messages.map((message, i) => (
+						<ActionMessage key={ i } message={ message } ignoreColor />
+					))
+				}
+			</Column>
 			<Column padding='large'>
 				{
 					KnownObject.entries(requiredPermissions).map(([group, permissions]) => (
-						permissions == null ? null : <PermissionPromptGroup key={ group } permissionGroup={ group } permissions={ permissions } setAnyConfig={ setAnyConfig } disableAccept={ disableAccept } />
+						permissions == null ? null : <PermissionPromptGroup key={ group } sourceId={ source.id } permissionGroup={ group } permissions={ permissions } setAnyConfig={ setAnyConfig } disableAccept={ disableAccept } />
 					))
 				}
 			</Column>
@@ -484,9 +508,10 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions }, dismi
 	);
 }
 
-function PermissionPromptGroup({ permissionGroup, permissions, setAnyConfig, disableAccept }: {
+function PermissionPromptGroup({ sourceId, permissionGroup, permissions, setAnyConfig, disableAccept }: {
+	sourceId: CharacterId;
 	permissionGroup: PermissionGroup;
-	permissions: Immutable<GameLogicPermissionClient[]>;
+	permissions: Immutable<[PermissionSetup, PermissionConfig][]>;
 	setAnyConfig: (permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionConfigChangeType) => void;
 	disableAccept: () => void;
 }): ReactElement {
@@ -509,20 +534,22 @@ function PermissionPromptGroup({ permissionGroup, permissions, setAnyConfig, dis
 	}
 
 	const perms = useMemo(() => {
-		const result: Readonly<{ id: string; visibleName: string; icon: string; }>[] = [];
-		for (const perm of permissions) {
-			const permConfig = config[perm.id];
+		const result: Readonly<{ id: string; visibleName: string; icon: string; allowOthers: PermissionType; isAllowed: boolean; }>[] = [];
+		for (const [setup, cfg] of permissions) {
+			const permConfig = config[setup.id];
 			if (permConfig == null)
 				continue;
 
 			result.push({
-				id: perm.id,
+				id: setup.id,
 				visibleName: permConfig.visibleName,
 				icon: permConfig.icon,
+				allowOthers: cfg.allowOthers,
+				isAllowed: (cfg.characterOverrides[sourceId] ?? cfg.allowOthers) === 'yes',
 			});
 		}
 		return result;
-	}, [permissions, config]);
+	}, [permissions, config, sourceId]);
 
 	return (
 		<Column className='permissionPrompt'>
@@ -536,18 +563,50 @@ function PermissionPromptGroup({ permissionGroup, permissions, setAnyConfig, dis
 							&nbsp;&nbsp;
 							<span>{ perm.visibleName }</span>
 						</label>
-						<Button
-							className='slim'
-							onClick={ () => {
+						<ShowAllowOthers config={ perm.allowOthers } />
+						<PermissionPromptButton
+							isAllowed={ perm.isAllowed }
+							setYes={ () => setAnyConfig(permissionGroup, perm.id, 'yes') }
+							setNo={ () => {
 								setAnyConfig(permissionGroup, perm.id, 'no');
 								disableAccept();
 							} }
-						>
-							Deny
-						</Button>
+						/>
 					</div>
 				))
 			}
 		</Column>
+	);
+}
+
+function PermissionPromptButton({ setYes, setNo, isAllowed }: { setYes: () => void; setNo: () => void; isAllowed: boolean; }): ReactElement {
+	const [state, setState] = useState<'yes' | 'no' | null>(isAllowed ? 'yes' : null);
+
+	return (
+		<>
+			<Button
+				className='slim fadeDisabled'
+				disabled={ state === 'yes' }
+				onClick={ () => {
+					if (state !== 'yes') {
+						setYes();
+						setState('yes');
+					}
+				} }
+			>
+				Allow
+			</Button>
+			<Button
+				className='slim'
+				onClick={ () => {
+					if (state !== 'no') {
+						setNo();
+						setState('no');
+					}
+				} }
+			>
+				Deny
+			</Button>
+		</>
 	);
 }

@@ -39,27 +39,28 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 		return this._config;
 	}
 
-	public setConfig(newConfig: PermissionConfigChange): boolean {
+	public setConfig(newConfig: PermissionConfigChange): 'ok' | 'invalidConfig' | 'tooManyOverrides' {
 		if (newConfig == null) {
 			if (this._config == null)
-				return true;
+				return 'ok';
 
 			this._config = null;
 			this.emit('configChanged', undefined);
-			return true;
+			return 'ok';
 		}
 
 		const next = this.getConfig() ?? MakePermissionConfigFromDefault(this.defaultConfig);
+		let checkOverrideCount = false;
 
 		const { selector, allowOthers } = newConfig;
 		if (selector === 'default') {
 			if (allowOthers === 'accept') {
-				return false;
+				return 'invalidConfig';
 			}
 			if (allowOthers == null) {
 				next.allowOthers = this.defaultConfig.allowOthers;
 			} else if (this.forbidDefaultAllowOthers?.includes(allowOthers)) {
-				return false;
+				return 'invalidConfig';
 			} else {
 				next.allowOthers = allowOthers;
 			}
@@ -73,9 +74,10 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 		} else {
 			if (allowOthers === 'accept') {
 				if (next.allowOthers !== 'prompt' && next.characterOverrides[selector] !== 'prompt') {
-					return true;
+					return 'ok';
 				}
 				next.characterOverrides[selector] = 'yes';
+				checkOverrideCount = true;
 			} else if (next.characterOverrides[selector] == null) {
 				if (allowOthers != null) {
 					next.characterOverrides[selector] = allowOthers;
@@ -84,6 +86,7 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 				delete next.characterOverrides[selector];
 			} else {
 				next.characterOverrides[selector] = allowOthers;
+				checkOverrideCount = true;
 			}
 		}
 
@@ -91,10 +94,14 @@ export class GameLogicPermissionServer extends GameLogicPermission {
 			return this.setConfig(null);
 		}
 
+		if (checkOverrideCount && Object.keys(next.characterOverrides).length > this.maxCharacterOverrides) {
+			return 'tooManyOverrides';
+		}
+
 		this._config = next;
 
 		this.emit('configChanged', undefined);
 
-		return true;
+		return 'ok';
 	}
 }

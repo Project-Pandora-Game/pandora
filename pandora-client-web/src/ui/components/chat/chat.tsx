@@ -25,6 +25,7 @@ import { Column } from '../../../components/common/container/container';
 export function Chat(): ReactElement | null {
 	const messages = useChatMessages();
 	const shardConnector = useShardConnector();
+	const { interfaceChatroomChatFontSize } = useCurrentAccountSettings();
 	const [messagesDiv, scroll, isScrolling] = useAutoScroll<HTMLDivElement>([messages]);
 	const lastMessageCount = useRef(0);
 	let newMessageCount = 0;
@@ -44,7 +45,12 @@ export function Chat(): ReactElement | null {
 
 	return (
 		<div className='chatArea'>
-			<div className='messages'>
+			<div
+				className={ classNames(
+					'messages',
+					`fontSize-${interfaceChatroomChatFontSize}`,
+				) }
+			>
 				<Scrollable color='dark' className='fill' ref={ messagesDiv } tabIndex={ 1 }>
 					<Column gap='none'>
 						{ messages.map((m) => <Message key={ m.time } message={ m } playerId={ playerId } />) }
@@ -74,7 +80,6 @@ const Message = memo(function Message({ message, playerId }: { message: IChatMes
 });
 
 function DisplayUserMessage({ message, playerId }: { message: IChatMessageChat & { time: number; spaceId: SpaceId | null; }; playerId: CharacterId | null; }): ReactElement {
-	const { interfaceChatroomChatFontSize } = useCurrentAccountSettings();
 	const [before, after] = useMemo(() => {
 		switch (message.type) {
 			case 'ooc':
@@ -98,7 +103,6 @@ function DisplayUserMessage({ message, playerId }: { message: IChatMessageChat &
 			<div
 				className={ classNames(
 					'message',
-					`fontSize-${interfaceChatroomChatFontSize}`,
 					message.type,
 					isPrivate && 'private',
 					editingClass,
@@ -254,7 +258,6 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 }
 
 export function ActionMessage({ message, ignoreColor = false }: { message: IChatMessageProcessed<IChatMessageAction>; ignoreColor?: boolean; }): ReactElement | null {
-	const { interfaceChatroomChatFontSize } = useCurrentAccountSettings();
 	const assetManager = useAssetManager();
 	const [folded, setFolded] = useState(true);
 
@@ -270,7 +273,6 @@ export function ActionMessage({ message, ignoreColor = false }: { message: IChat
 		<div
 			className={ classNames(
 				'message',
-				`fontSize-${interfaceChatroomChatFontSize}`,
 				message.type,
 				extraContent !== null ? 'foldable' : null,
 			) }

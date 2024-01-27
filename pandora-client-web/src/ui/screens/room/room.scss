@@ -110,26 +110,6 @@
 		white-space: pre-wrap;
 		overflow-wrap: break-word;
 
-		&.fontSize-xs {
-			font-size: x-small;
-		}
-
-		&.fontSize-s {
-			font-size: small;
-		}
-
-		&.fontSize-m {
-			font-size: medium;
-		}
-
-		&.fontSize-l {
-			font-size: large;
-		}
-
-		&.fontSize-xl {
-			font-size: x-large;
-		}
-
 		&.serverMessage {
 			border-left: solid 5px $white;
 			background-color: #202020;
@@ -239,6 +219,7 @@
 	max-height: calc(100% - 0.4em);
 	overflow-y: scroll;
 	margin: 0.2em;
+	font-size: medium;
 
 	@include flex(column);
 	background-color: #336;

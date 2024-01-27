@@ -1,6 +1,6 @@
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryAccountSettings } from 'pandora-common';
+import { DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryAccountSettings, KnownObject } from 'pandora-common';
 import { Button } from '../common/button/button';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { useColorInput } from '../../common/useColorInput';
@@ -91,10 +91,10 @@ function ChatroomChatFontSize({ account }: { account: IDirectoryAccountInfo; }):
 	}, [directory]);
 
 	const SELECTION_DESCRIPTIONS: Record<IDirectoryAccountSettings['interfaceChatroomChatFontSize'], string> = {
-		fontSizeVerySmall: 'Very small size',
-		fontSizeSmall: 'Smaller size',
-		fontSizeNormal: 'Default size',
-		fontSizeLarge: 'Larger size',
+		xs: 'Very small size',
+		s: 'Smaller size',
+		m: 'Default size',
+		l: 'Larger size',
 	};
 
 	return (
@@ -102,7 +102,7 @@ function ChatroomChatFontSize({ account }: { account: IDirectoryAccountInfo; }):
 			<label>Font size of the main chat</label>
 			<Select value={ size } onChange={ onChange }>
 				{
-					(Object.keys(SELECTION_DESCRIPTIONS) as IDirectoryAccountSettings['interfaceChatroomChatFontSize'][])
+					KnownObject.keys(SELECTION_DESCRIPTIONS)
 						.map((v) => <option key={ v } value={ v }>{ SELECTION_DESCRIPTIONS[v] }</option>)
 				}
 			</Select>

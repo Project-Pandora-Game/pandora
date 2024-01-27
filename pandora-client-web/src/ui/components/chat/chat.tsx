@@ -89,7 +89,17 @@ function DisplayUserMessage({ message, playerId }: { message: IChatMessageChat &
 	const self = message.from.id === playerId;
 	return (
 		<>
-			<div className={ classNames('message', interfaceChatroomChatFontSize, message.type, isPrivate && 'private', editingClass) } style={ style } onContextMenu={ self ? onContextMenu : undefined }>
+			<div
+				className={ classNames(
+					'message',
+					`fontSize-${interfaceChatroomChatFontSize}`,
+					message.type,
+					isPrivate && 'private',
+					editingClass,
+				) }
+				style={ style }
+				onContextMenu={ self ? onContextMenu : undefined }
+			>
 				<DisplayInfo message={ message } />
 				{ before }
 				<DisplayName message={ message } color={ message.from.labelColor } />
@@ -251,7 +261,16 @@ export function ActionMessage({ message, ignoreColor = false }: { message: IChat
 	const style = (message.type === 'action' && message.data?.character && !ignoreColor) ? ({ backgroundColor: message.data.character.labelColor + '44' }) : undefined;
 
 	return (
-		<div className={ classNames('message', interfaceChatroomChatFontSize, message.type, extraContent !== null ? 'foldable' : null) } style={ style } onClick={ () => setFolded(!folded) }>
+		<div
+			className={ classNames(
+				'message',
+				`fontSize-${interfaceChatroomChatFontSize}`,
+				message.type,
+				extraContent !== null ? 'foldable' : null,
+			) }
+			style={ style }
+			onClick={ () => setFolded(!folded) }
+		>
 			<DisplayInfo message={ message } />
 			{ extraContent != null ? (folded ? '\u25ba ' : '\u25bc ') : null }
 			{ content.map((c, i) => RenderChatPart(c, i, false)) }

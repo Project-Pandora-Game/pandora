@@ -114,19 +114,19 @@ $default-font-size: 1em;
 		white-space: pre-wrap;
 		overflow-wrap: break-word;
 
-		&.fontSizeVerySmall {
+		&.fontSize-xs {
 			font-size: $default-font-size - 0.2em;
 		}
 
-		&.fontSizeSmall {
+		&.fontSize-s {
 			font-size: $default-font-size - 0.1em;
 		}
 
-		&.fontSizeNormal {
+		&.fontSize-m {
 			font-size: $default-font-size;
 		}
 
-		&.fontSizeLarge {
+		&.fontSize-l {
 			font-size: $default-font-size + 0.1em;
 		}
 

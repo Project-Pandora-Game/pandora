@@ -8,6 +8,7 @@ import { ChildrenProps } from '../common/reactTypes';
 import { USER_DEBUG } from '../config/Environment';
 import { DEFAULT_BACKGROUND_COLOR } from './graphicsScene';
 import { CalculationQueue } from '../common/calculationQueue';
+import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
 
 const SHARED_APP_MAX_COUNT = 2;
 
@@ -430,7 +431,7 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 	}
 }
 
-export function GraphicsSceneBackgroundRenderer({
+function GraphicsSceneBackgroundRendererUnsafe({
 	children,
 	renderArea,
 	resolution,
@@ -457,6 +458,14 @@ export function GraphicsSceneBackgroundRenderer({
 				{ children }
 			</React.StrictMode>
 		</ContextBridge>
+	);
+}
+
+export function GraphicsSceneBackgroundRenderer(props: GraphicsSceneBackgroundRendererProps): ReactElement {
+	return (
+		<LocalErrorBoundary>
+			<GraphicsSceneBackgroundRendererUnsafe { ...props } />
+		</LocalErrorBoundary>
 	);
 }
 

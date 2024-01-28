@@ -150,7 +150,7 @@ function CharacterLeave(): ReactElement {
 	const onClick = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 		e.preventDefault();
 		e.stopPropagation();
-		directoryConnector.sendMessage('disconnectCharacter', EMPTY);
+		directoryConnector.disconnectFromCharacter();
 		closeDialog();
 	}, [directoryConnector, closeDialog]);
 

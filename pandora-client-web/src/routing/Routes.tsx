@@ -9,7 +9,7 @@ import { CharacterSelect } from '../components/characterSelect/characterSelect';
 import { RoomScreen } from '../ui/screens/room/room';
 import { SpaceConfiguration, SpaceCreate } from '../ui/screens/spaceConfiguration/spaceConfiguration';
 import { SpacesSearch } from '../ui/screens/spacesSearch/spacesSearch';
-import { useAuthTokenIsValid, useCurrentAccount } from '../components/gameContext/directoryConnectorContextProvider';
+import { useAuthTokenIsValid, useCurrentAccount, useDirectoryConnector } from '../components/gameContext/directoryConnectorContextProvider';
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
 import { AuthPage } from '../components/login/authPage';
 import { WardrobeScreen } from '../components/wardrobe/wardrobe';
@@ -18,6 +18,7 @@ import { AccountContacts } from '../components/accountContacts/accountContacts';
 import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens';
 import { Freeze } from 'react-freeze';
 import { ModalDialog } from '../components/dialog/dialog';
+import { useObservable } from '../observable';
 
 // Lazily loaded screens
 const Management = lazy(() => import('../components/management'));
@@ -99,18 +100,50 @@ function RequiresLogin<TProps extends object>({ element: Element, preserveLocati
 
 function RequiresCharacterImpl({ characterElement: Element, allowUnfinished }: { characterElement: ComponentType<Record<string, never>>; allowUnfinished?: boolean; }): ReactElement {
 	const shardConnector = useShardConnector();
+	const autoConnectState = useObservable(useDirectoryConnector().characterAutoConnectState);
 	const playerData = usePlayerData();
 	const hasCharacter = shardConnector != null && playerData != null;
 
-	if (!hasCharacter) {
+	if (!hasCharacter && autoConnectState === 'none') {
 		return <CharacterSelect />;
 	}
 
-	if (playerData.inCreation && !allowUnfinished) {
-		return <CharacterCreate />;
-	}
+	return (
+		<>
+			{
+				(playerData?.inCreation && !allowUnfinished)
+					? <CharacterCreate />
+					: (
+						<Freeze freeze={ !hasCharacter }>
+							<Element />
+						</Freeze>
+					)
+			}
+			{
+				!hasCharacter && (
+					<ModalDialog>
+						<div className='message'>
+							{ AutoConnectStateMessage(autoConnectState) }
+						</div>
+					</ModalDialog>
+				)
+			}
+		</>
+	);
+}
 
-	return <Element />;
+function AutoConnectStateMessage(state: 'none' | 'initial' | 'loading' | 'connecting' | 'connected'): string {
+	switch (state) {
+		case 'none':
+		case 'initial':
+			return 'Loading...';
+		case 'loading':
+			return 'Loading characters...';
+		case 'connecting':
+			return 'Connecting to character...';
+		case 'connected':
+			return 'Connected to character, loading...';
+	}
 }
 
 function RequiresCharacter({ element, allowUnfinished }: { element: ComponentType<Record<string, never>>; allowUnfinished?: boolean; }): ReactElement {

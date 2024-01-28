@@ -15,7 +15,7 @@ import { ChildrenProps } from '../../common/reactTypes';
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { ShardConnector } from '../../networking/shardConnector';
-import { LastSelectedCharacter, SocketIOShardConnector } from '../../networking/socketio_shard_connector';
+import { SocketIOShardConnector } from '../../networking/socketio_shard_connector';
 import { useNullableObservable, useObservable } from '../../observable';
 import { useDebugContext } from '../error/debugContextProvider';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
@@ -185,7 +185,6 @@ export function useConnectToShard(): (info: IDirectoryCharacterConnectionInfo) =
 			setDebugData({ shardConnectionInfo: info });
 			const newShardConnector = shardConnectorFactory(info);
 			setShardConnector(newShardConnector);
-			LastSelectedCharacter.value = info.characterId;
 			await newShardConnector.connect();
 		},
 		[directoryConnector, shardConnector, disconnectFromShard, setShardConnector, shardConnectorFactory, setDebugData],
@@ -200,7 +199,6 @@ function useDisconnectFromShard(): () => void {
 		if (shardConnector) {
 			shardConnector.disconnect();
 			setShardConnector(null);
-			LastSelectedCharacter.value = undefined;
 		}
 	}, [shardConnector, setShardConnector]);
 }

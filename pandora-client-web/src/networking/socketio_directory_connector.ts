@@ -15,6 +15,9 @@ import {
 	DirectoryClientSchema,
 	TypedEventEmitter,
 	CreateDefaultDirectoryStatus,
+	CharacterIdSchema,
+	CharacterId,
+	EMPTY,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
@@ -22,11 +25,12 @@ import { BrowserStorage } from '../browserStorage';
 import { AccountContactContext } from '../components/accountContacts/accountContactContext';
 import { PrehashPassword } from '../crypto/helpers';
 import { Observable, ReadonlyObservable } from '../observable';
-import { PersistentToast } from '../persistentToast';
+import { PersistentToast, TOAST_OPTIONS_ERROR } from '../persistentToast';
 import { DirectMessageManager } from './directMessageManager';
 import { AuthToken, DirectoryConnectionState, DirectoryConnector, LoginResponse } from './directoryConnector';
 import { freeze } from 'immer';
 import { z } from 'zod';
+import { toast } from 'react-toastify';
 
 type SocketAuthCallback = (data?: IClientDirectoryAuthMessage) => void;
 
@@ -62,6 +66,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 
 	private readonly _directoryConnectionProgress = new PersistentToast();
 	private readonly _authToken = BrowserStorage.create<AuthToken | undefined>('authToken', undefined, AuthTokenSchema);
+	private readonly _lastSelectedCharacter = BrowserStorage.createSession<CharacterId | undefined>('lastSelectedCharacter', undefined, CharacterIdSchema.optional());
+	private readonly _characterAutoConnectState = new Observable<'none' | 'initial' | 'loading' | 'connecting' | 'connected'>('initial');
 
 	private _shardConnectionInfo: IDirectoryCharacterConnectionInfo | null = null;
 
@@ -85,6 +91,10 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 
 	public get authToken(): ReadonlyObservable<AuthToken | undefined> {
 		return this._authToken;
+	}
+
+	public get characterAutoConnectState(): ReadonlyObservable<'none' | 'initial' | 'loading' | 'connecting' | 'connected'> {
+		return this._characterAutoConnectState;
 	}
 
 	/** Event emitter for directory change events */
@@ -114,7 +124,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 			},
 			connectionState: async (message: IDirectoryClientArgument['connectionState']) => {
 				this._connectionStateEventEmitter.onStateChanged(message);
-				await this.handleAccountChange(message.account);
+				await this.handleAccountChange(message);
 				await this.directMessageHandler.accountChanged();
 			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
@@ -195,9 +205,9 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		if (result.result === 'ok') {
 			this._authToken.value = { ...result.token, username: result.account.username };
 			await this.directMessageHandler.initCryptoPassword(username, password);
-			await this.handleAccountChange(result.account);
+			await this.handleAccountChange({ account: result.account, character: null });
 		} else {
-			await this.handleAccountChange(null);
+			await this.handleAccountChange({ account: null, character: null });
 		}
 		await this.directMessageHandler.accountChanged();
 		return result.result;
@@ -208,6 +218,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		this._connectionStateEventEmitter.onStateChanged({ account: null, character: null });
 		this.directMessageHandler.clear();
 		AccountContactContext.handleLogout();
+		this._lastSelectedCharacter.value = undefined;
+		this._authToken.value = undefined;
 	}
 
 	/**
@@ -277,14 +289,21 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		this.socket.io.opts.extraHeaders = extraHeaders;
 	}
 
-	private async handleAccountChange(account: IDirectoryAccountInfo | null): Promise<void> {
+	private async handleAccountChange({ account, character }: { account: IDirectoryAccountInfo | null; character: IDirectoryCharacterConnectionInfo | null; }): Promise<void> {
 		// Update current account
 		this._currentAccount.value = account ? freeze(account) : null;
 		// Clear saved token if no account
 		if (!account) {
 			this._authToken.value = undefined;
+			this._characterAutoConnectState.value = 'initial';
 		} else {
 			await AccountContactContext.initStatus(this);
+			if (character === null) {
+				await this.autoConnectCharacter();
+			} else {
+				this._characterAutoConnectState.value = 'connected';
+				this._lastSelectedCharacter.value = character.characterId;
+			}
 		}
 	}
 
@@ -306,5 +325,46 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		} else {
 			return undefined;
 		}
+	}
+
+	private async autoConnectCharacter(): Promise<void> {
+		if (this._characterAutoConnectState.value !== 'initial') {
+			return;
+		}
+		this._characterAutoConnectState.value = 'loading';
+		const { characters } = await this.awaitResponse('listCharacters', EMPTY);
+		if (characters.length === 0) {
+			this._characterAutoConnectState.value = 'none';
+			return;
+		}
+		if (characters.length === 1 && characters[0].inCreation) {
+			await this.connectToCharacter(characters[0].id);
+			return;
+		}
+		if (this._lastSelectedCharacter.value != null) {
+			const character = characters.find((c) => c.id === this._lastSelectedCharacter.value);
+			if (character) {
+				await this.connectToCharacter(character.id);
+				return;
+			}
+		}
+		this._characterAutoConnectState.value = 'none';
+	}
+
+	public async connectToCharacter(id: CharacterId): Promise<boolean> {
+		this._characterAutoConnectState.value = 'connecting';
+		const data = await this.awaitResponse('connectCharacter', { id });
+		if (data.result !== 'ok') {
+			logger.error('Failed to connect to character:', data);
+			toast(`Failed to connect to character:\n${data.result}`, TOAST_OPTIONS_ERROR);
+			this._characterAutoConnectState.value = 'none';
+			return false;
+		}
+		return true;
+	}
+
+	public disconnectFromCharacter(): void {
+		this.sendMessage('disconnectCharacter', EMPTY);
+		this._characterAutoConnectState.value = 'none';
 	}
 }

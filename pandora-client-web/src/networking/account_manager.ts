@@ -110,14 +110,8 @@ export function useCreateNewCharacter(): CreateNewCharacterCallback {
 export function useConnectToCharacter(): ConnectToCharacterCallback {
 	const directoryConnector = useDirectoryConnector();
 
-	return useCallback(async (id) => {
-		const data = await directoryConnector.awaitResponse('connectCharacter', { id });
-		if (data.result !== 'ok') {
-			GetLogger('useConnectToCharacter').error('Failed to connect to character:', data);
-			toast(`Failed to connect to character:\n${data.result}`, TOAST_OPTIONS_ERROR);
-			return false;
-		}
-		return true;
+	return useCallback((id) => {
+		return directoryConnector.connectToCharacter(id);
 	}, [directoryConnector]);
 }
 

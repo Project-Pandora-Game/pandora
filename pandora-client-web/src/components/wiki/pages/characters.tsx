@@ -71,6 +71,7 @@ export function WikiCharacters(): ReactElement {
 					what is inside the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a> on the right.
 					You can create and wear a new item under the "create new item"-tab there.
 				</li>
+				<li>There is a maximum amount of items your character can wear or hold (also counting all items inside worn storage items)</li>
 			</ul>
 
 			<h4 id='CH_Character_permissions'>Character permissions</h4>
@@ -79,13 +80,31 @@ export function WikiCharacters(): ReactElement {
 				"Permissions"-tab of the Pandora settings. Permissions are character-specific and not
 				account-wide. Each permission has a different default setting,
 				so it is recommended to familiarize yourself with those and to adjust those settings to how you want them.<br />
-				Note: In the future, you will be able to set permissions to "prompt", which will show you a confirmation popup
-				when someone tries to interact with you, but is missing only one or more permissions that you set to "prompt" you.
+				The general settings a permission can possibly be set to are "yes", "no", and "prompt".
+				"Prompt" will show you a confirmation popup when someone tries to interact with you, but is missing one or more
+				permissions that are set to "prompt". You can then decide to ...
+			</p>
+			<ul>
+				<li>
+					... add permanent exceptions for the requesting character for every permission individually in the popup, either
+					allowing and denying that character all further uses of each permission from now on
+				</li>
+				<li>... allow all, which sets all mentioned permissions with no exceptions defined for the requesting character to "yes" just for the requester</li>
+				<li>... dismiss the popup, which is akin to not taking any decision at this point in time and leave things as they are.</li>
+			</ul>
+			<p>
+				Note that the interaction that was leading to the prompt has to be repeated again after permission was granted. The server
+				currently does not queue them as a part of this feature.<br />
+				You can edit each permission in the "Permissions"-tab and also manually add and remove character ids from the lists of exceptions.
+				There is a limit for the amount of character-specific permission exceptions a user can add and an according indicator in the user interface.
 			</p>
 			<p>
 				The basic group of permissions are the "interaction permissions". The very first permission to interact
-				with your character is the enabling permission for all other permissions. If someone does not have that, they
-				can do nothing, even if they have another permission for the specific interaction they want to do.
+				with your character is the "master-permission" gating all other permissions. If someone does not have that permission, they
+				can do nothing, even if they have another permission for the specific interaction they want to do.<br />
+				Please be aware that this central permission to interact with your character at all has a default value of "prompt",
+				making new, unknown characters unable to add/remove restraints or do other things to the own character without asking
+				once during the first interaction. It is not possible to change it universally to "yes" for various reasons.
 			</p>
 			<p>
 				The "item limits" group of permissions relate to items you flagged with a star or question mark under

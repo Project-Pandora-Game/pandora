@@ -2,6 +2,7 @@ import React, { ReactElement } from 'react';
 import { Row } from '../../common/container/container';
 import { WikiContent } from '../wiki';
 import maid from '../../../assets/maid.png';
+import wikiIcon from '../../../assets/icons/wiki.svg';
 import { useHelpUserName } from '../../help/helpUtils';
 import { ExternalLink } from '../../common/link/externalLink';
 import { Button } from '../../common/button/button';
@@ -27,30 +28,25 @@ export function WikiGreeting(): ReactElement {
 					Please be aware that different people have different preferences and limits.<br />
 					It is also important to be aware of what a <ExternalLink href='https://en.wikipedia.org/wiki/Safeword'><b>Safeword</b></ExternalLink> is and respect it when others use it.<br />
 					<br />
-					During your stay you will often encounter various restraints.
-					Restraints in Pandora are very secure and can really get you stuck with no one else being able to help so please be mindful of that.<br />
-					While communication with others is the most important tool, Pandora also offers several mechanisms to keep you safe.<br />
-					First of those is the ability to enforce your own limits through <i>permissions</i> - allowing you to prevent others from doing some things to your character.
-					Right now other visitors can interact with you as they wish, which you can change in the settings via the "cog" icon on the top right.<br />
+					During your stay you will often encounter various restraining items.
+					Restraints in Pandora are very secure and can really get you stuck with no one else being able to help so please be mindful of that.
+					As always, communication with others is the most important tool in our club community, but Pandora also offers several emergency mechanisms to keep you safe.<br />
+					First of those is the ability to enforce your own limits through <i>permissions</i> - allowing you to prevent others from doing certain things to your character.
+					Right now, the club is a totally safe space. You have to permit other visitors to be able to do actions individually or
+					generally, before anything can happen to you. Moreover, due to the security of restraints in Pandora, stricter ones such as
+					password locks are set to be unavailable to other characters until you change these default item limits.<br />
 					<br />
-					Second important mechanism is for when communication fails or others don't respect your safeword - for such a case there is a safemode feature,
-					which you can find in the top left by clicking the name of your character.
-					Do note, however, that we consider safemode as a last-resort option for emergencies and there are small drawbacks to using it,
-					most notably while other characters cannot interact with your character while in safemode, you also cannot interact with them.
-					It also comes with a cooldown period that simulates stopping the play after a safeword usage to recover and be safe.
-					This is explained further in the safemode menu.<br />
-					{ /* Right now, the club is a totally safe space. You have to permit other visitors to be able to do things individually or
-					generally, before anything can happen to you.
-					Moreover, as restraints in Pandora are very secure, the stricter ones such as password locks have to be permitted by you
-					individually. The reason is that such restraints can really get you stuck with no one else being able to help.
-					To balance this strictness, there is a safemode feature you can find top left by clicking on your name for emergency purposes.
-					It comes with a cooldown period that simulates stopping the play after a safeword usage to recover and be safe. We hope you
-					will never get into a situation where you will have to use this mode.<br /> */ }
+					Second important mechanism is for when communication should fail or someone not respecting your safeword. For such a case there are two safe modes,
+					which you can enter under the "Room"-tab via a button next to your character name: Timeout and safemode.
+					Both modes prevent interactions in both ways while active. Do note, however, that we consider safemode a last-resort option for emergencies.
+					It comes with a cooldown period that simulates stopping the play after a safeword usage to recover and be safe.<br />
 					<br />
-					You can find more guidance by pressing the (?) button on the top bar.<br />
+					You can find more guidance by pressing the "<img src={ wikiIcon } width='14' height='13' alt='Wiki' />"-button on the top bar.<br />
 					<br />
-					The club is still being renovated so you can expect many new things over time or even help us with building it up!<br />
-					You can consider the current limited selection of items a demonstration of what can be created in Pandora with the community's help.<br />
+					The club is still being renovated so you can expect many new things over time or even help us with building it up! Please be aware that the Pandora team
+					has a firm vision of how the club shall work, so not all ideas will be embraced. If you want to help, it is best to familiarize yourself with the club
+					and the plenty available information first, and then get in touch. You can find more information about this under the "Contact"-tab on the left.<br />
+					The current limited selection of items can be considered a demonstration of the vast asset creation possibilities in Pandora with the community's help.<br />
 					<br />
 					Please have a joyful stay~ ”
 				</p>

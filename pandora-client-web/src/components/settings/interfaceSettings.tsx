@@ -100,7 +100,7 @@ function ChatroomChatFontSize({ account }: { account: IDirectoryAccountInfo; }):
 
 	return (
 		<div className='input-section'>
-			<label>Font size of the main chat</label>
+			<label>Font size of main chat and direct messages</label>
 			<Select value={ size } onChange={ onChange }>
 				{
 					KnownObject.keys(SELECTION_DESCRIPTIONS)

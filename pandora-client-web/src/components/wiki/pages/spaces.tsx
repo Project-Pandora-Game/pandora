@@ -119,7 +119,7 @@ export function WikiSpaces(): ReactElement {
 				<li>The default number of characters that can join a space is 10, but the possible upper limit is 100.</li>
 				<li>You can set if the space should be public and visible to everyone, as long as there is an admin online inside. The default is "no", which means the space is private.</li>
 				<li>You can give up space ownership, which deletes the space permanently, if you are the only owner.</li>
-				<li>The admin and ban lists are comma separated and require the player account id.<br />
+				<li>The admin and ban lists are comma separated and require the player account id, as they are account-wide.<br />
 					The player account id number can be looked up in the account profile of the player.<br />
 					<strong>Careful:</strong> Do not mix it up with the character id which starts with "c" followed by a number.<br />
 					Alternatively, you can look up the player account id of a character inside the space up in the "Room"-Tab. It is the last number behind the name.<br />
@@ -167,8 +167,10 @@ export function WikiSpaces(): ReactElement {
 				Type "/" into the chat field to see a list of all chat commands.
 			</p>
 			<ul>
+				<li>The "tab"-key can be used to cycle through the list of shown commands</li>
 				<li>The "tab"-key will try to autocomplete commands you started typing or cycle through the possible matches shown</li>
 				<li>The "tab"-key can also be used to autocomplete command arguments such as target characters or cycle through all of them</li>
+				<li>Using "shift+tab" keys at the same time will cycle through the list in reverse order.</li>
 			</ul>
 
 			<h4 id='SP_Room_chat_Chat_modes'>Room chat: Chat modes</h4>
@@ -225,6 +227,7 @@ export function WikiSpaces(): ReactElement {
 
 			<h4 id='SP_Room_chat_Text_formatting'>Room chat: Text formatting</h4>
 			<p>
+				You can change the text size of the chat in the "Interface"-tab of Pandora's settings.<br />
 				Starting a message with "https://" will turn it into an inline-link.
 				Also, Pandora supports a part of the markdown syntax to write text italic or bold: "__bold text__" or "_italicized  text_"<br />
 				Note: You do not need to close the syntax if you intend to format the rest of the message the same way.<br />

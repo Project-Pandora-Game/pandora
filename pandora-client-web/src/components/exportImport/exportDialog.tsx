@@ -5,10 +5,9 @@ import { Button } from '../common/button/button';
 import { ZodType, z } from 'zod';
 import { CloneDeepMutable, GetLogger } from 'pandora-common';
 import { ExportData } from './exportImportUtils';
-import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import './exportDialog.scss';
 import { DownloadAsFile } from '../../common/downloadHelper';
+import { CopyToClipboard } from '../../common/clipboard';
 
 interface ExportDialogProps<T extends ZodType<unknown>> {
 	exportType: string;
@@ -62,54 +61,15 @@ export function ExportDialog<T extends ZodType<unknown>>({
 	}, [downloadFileName, exportString]);
 
 	const copyToClipboard = useCallback(() => {
-		function copyFallback() {
-			const textArea = textAreaRef.current;
-			if (textArea == null)
-				return;
-
-			textArea.focus();
-			textArea.select();
-
-			try {
-				// eslint-disable-next-line deprecation/deprecation
-				const successful = document.execCommand('copy');
-				if (successful) {
-					if (showCopyClearTimeout.current != null) {
-						clearTimeout(showCopyClearTimeout.current);
-					}
-					setShowCopySuccess(true);
-					showCopyClearTimeout.current = setTimeout(() => {
-						setShowCopySuccess(false);
-					}, COPY_SUCCESS_COOLDOWN);
-				} else {
-					logger.warning(`Failed to copy text with returned error by execCommand`);
-					toast(`Failed to copy the text, please copy it manually.`, TOAST_OPTIONS_ERROR);
-				}
-			} catch (err) {
-				logger.warning(`Failed to copy text with error:`, err);
-				toast(`Failed to copy the text, please copy it manually.`, TOAST_OPTIONS_ERROR);
+		CopyToClipboard(exportString, () => {
+			if (showCopyClearTimeout.current != null) {
+				clearTimeout(showCopyClearTimeout.current);
 			}
-		}
-
-		if (!navigator.clipboard) {
-			copyFallback();
-			return;
-		}
-		navigator.clipboard.writeText(exportString)
-			.then(() => {
-				if (showCopyClearTimeout.current != null) {
-					clearTimeout(showCopyClearTimeout.current);
-				}
-				setShowCopySuccess(true);
-				showCopyClearTimeout.current = setTimeout(() => {
-					setShowCopySuccess(false);
-				}, COPY_SUCCESS_COOLDOWN);
-			})
-			.catch((err) => {
-				logger.warning(`Failed to write text with error:`, err);
-				// Try fallback
-				copyFallback();
-			});
+			setShowCopySuccess(true);
+			showCopyClearTimeout.current = setTimeout(() => {
+				setShowCopySuccess(false);
+			}, COPY_SUCCESS_COOLDOWN);
+		});
 	}, [exportString]);
 
 	return (

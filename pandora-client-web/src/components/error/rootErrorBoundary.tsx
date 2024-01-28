@@ -6,6 +6,7 @@ import { DebugContext, debugContext } from './debugContextProvider';
 import { BuildErrorReport } from './errorReport';
 import './rootErrorBoundary.scss';
 import { Row } from '../common/container/container';
+import { CopyToClipboard } from '../../common/clipboard';
 
 export enum ReportCopyState {
 	NONE = 'Copy to clipboard',
@@ -107,7 +108,7 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 
 				<pre>
 					<span className='button-wrapper'>
-						<Button onClick={ () => void this.copyToClipboard() }>{ copyState }</Button>
+						<Button onClick={ () => this.copyToClipboard() }>{ copyState }</Button>
 					</span>
 					<span data-testid='report-content' className='report-content' ref={ this.reportRef }>
 						{ report }
@@ -127,48 +128,24 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 		);
 	}
 
-	private async copyToClipboard(): Promise<void> {
-		let copied = await this.copyUsingClipboardApi();
-
-		if (!copied) {
-			copied = this.copyUsingCommand();
-		}
-
-		if (copied) {
-			this.setState({ copyState: ReportCopyState.SUCCESS });
-		} else {
-			this.setState({ copyState: ReportCopyState.FAILED });
-		}
-		this.timeout = window.setTimeout(() => {
-			this.setState({ copyState: ReportCopyState.NONE });
-		}, 5000);
-	}
-
-	private async copyUsingClipboardApi(): Promise<boolean> {
+	private copyToClipboard(): void {
 		const { report } = this.state;
-		try {
-			await navigator.clipboard.writeText(report ?? '');
-			return true;
-		} catch (_) {
-			return false;
-		}
-	}
 
-	private copyUsingCommand(): boolean {
-		try {
-			const reportElement = this.reportRef.current;
-			if (!reportElement) {
-				return false;
-			}
-			const range = document.createRange();
-			range.selectNode(reportElement);
-			window.getSelection()?.removeAllRanges();
-			window.getSelection()?.addRange(range);
-			// eslint-disable-next-line deprecation/deprecation
-			return document.execCommand('copy');
-		} catch (_) {
-			return false;
-		}
+		CopyToClipboard(
+			report ?? '',
+			() => {
+				this.setState({ copyState: ReportCopyState.SUCCESS });
+				this.timeout = window.setTimeout(() => {
+					this.setState({ copyState: ReportCopyState.NONE });
+				}, 5000);
+			},
+			() => {
+				this.setState({ copyState: ReportCopyState.FAILED });
+				this.timeout = window.setTimeout(() => {
+					this.setState({ copyState: ReportCopyState.NONE });
+				}, 5000);
+			},
+		);
 	}
 }
 

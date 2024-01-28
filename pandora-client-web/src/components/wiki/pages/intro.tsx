@@ -163,6 +163,7 @@ export function WikiIntroduction(): ReactElement {
 				<li>Room templates</li>
 				<li>Key system for locks</li>
 				<li>Movement slowdown effects</li>
+				<li>Visible locks on worn items with different lock designs</li>
 				<li>Reworked UI design with focus on improved usability and design themes</li>
 				<li>More supporting features for roleplaying, for instance a new space role "storyteller" that can orchestrate a prepared roleplay without a physical presence in any room of the space</li>
 				... and many more, which can be found by looking at Pandora's issue list on <ExternalLink href='https://github.com/Project-Pandora-Game/pandora/issues'>GitHub</ExternalLink>

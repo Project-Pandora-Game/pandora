@@ -11,6 +11,7 @@ import questionmark from '../../assets/icons/questionmark.svg';
 import forbid from '../../assets/icons/forbidden.svg';
 import allow from '../../assets/icons/public.svg';
 import prompt from '../../assets/icons/prompt.svg';
+import wikiIcon from '../../assets/icons/wiki.svg';
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, CharacterIdSchema, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
@@ -27,6 +28,7 @@ import type { Immutable } from 'immer';
 import { useFunctionBind } from '../../common/useFunctionBind';
 import { ActionMessage } from '../../ui/components/chat/chat';
 import { StorageUsageMeter } from '../wardrobe/wardrobeComponents';
+import { Link } from 'react-router-dom';
 
 export function PermissionsSettings(): ReactElement | null {
 	const player = usePlayer();
@@ -43,10 +45,16 @@ export function PermissionsSettings(): ReactElement | null {
 }
 
 function InteractionPermissions(): ReactElement {
+
 	return (
 		<fieldset>
 			<legend>Interaction permissions</legend>
-			<i>Allow other characters to...</i>
+			<Row alignX='space-between' alignY='center' className='flex-1'>
+				<i>Allow other characters to...</i>
+				<Link title='Get help in the wiki' to='/wiki/characters#CH_Character_permissions'>
+					<img className='help-image' src={ wikiIcon } width='26' height='26' alt='Wiki' />
+				</Link>
+			</Row>
 			{
 				INTERACTION_IDS.map((id) => (
 					<InteractionSettings key={ id } id={ id } />

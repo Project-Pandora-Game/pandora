@@ -58,7 +58,8 @@ export function WikiSafety(): ReactElement {
 			<p>
 				Safemode is a mode that immediately disables all restricting effect that were applied to your character. It also prevents everyone
 				else from modifying anything about your character or interact with you while you are in this mode, similar to timeout mode.
-				Additionally, it allows you to remove items freely from yourself, ignoring <a href='/wiki/items/#IT_Lock_module'>locks</a>,
+				You also cannot interact with other characters during it, but we are considering removing this limitation in the future.
+				Additionally, the mode allows you to remove items freely from yourself, ignoring <a href='/wiki/items/#IT_Lock_module'>locks</a>,
 				doors, or restricting <a href='/wiki/items/#IT_Room-level_items'>room devices</a>.
 				Nothing can hold or limit you in this mode.
 			</p>
@@ -69,7 +70,7 @@ export function WikiSafety(): ReactElement {
 			<ul>
 				<li>You can enter safemode at any time by clicking the "Enter safemode"-button next to your character under the "Rooms"-tab.</li>
 				<li>After you entered safemode, you will be unable to leave the mode for a certain time, which simulates a period of time to recover from a bad play.</li>
-				<li>The cooldown period is there to prevent misuse and should not matter, as it is only a backup user safety feature that would almost never be needed.</li>
+				<li>The cooldown period is there to prevent misuse and should not matter, as it is only a backup user safety feature that ideally would never be needed.</li>
 				<li>As we add further features that support user safety, we will likely increase the safemode cooldown time.</li>
 			</ul>
 

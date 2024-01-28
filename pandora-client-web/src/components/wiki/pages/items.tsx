@@ -129,6 +129,7 @@ export function WikiItems(): ReactElement {
 				</li>
 				<li>"Prevent" blocks anybody other than yourself to use this item on you.</li>
 				<li>"Do not render" will not show you this item on yourself or on other characters, item previews will be blurred in all wardrobes.</li>
+				<li>Note that some assets have default limits set to protect new users from more extreme items, such as password locks or heavy ear plugs. You can change this as you see fit.</li>
 				<li>The attribute tab is used to set states for every item who has this attribute itself or potentially through some of its possible module states.</li>
 				<li>Using attributes to limit groups of items has the benefit of automatically applying to all items with those attributes added in the future of Pandora.</li>
 				<li>Setting a limit to an individual item overrides the global state based on attribute-based settings, but this can be reverted in the item-specific dropdown menu.</li>

@@ -154,16 +154,17 @@ export function WikiIntroduction(): ReactElement {
 
 			That's not all of course! We have many exciting features planned for the future:
 			<ul>
-				<li>Advanced permission feature</li>
 				<li>Allowing spaces to contain several connected rooms with a user-defined layout and ways to move from room to room</li>
 				<li>Showing and managing relationships between characters</li>
 				<li>Allowing every item to have a custom name and description</li>
-				<li>Hearing impairment effect by assets</li>
 				<li>Spectator mode for spaces that will help to not disrupt the chat during plays and that can be managed by space admins</li>
 				<li>Improvements to the new user experience & safety</li>
 				<li>Character rules</li>
 				<li>Room templates</li>
-				<li>New space role "storyteller" that can orchestrate a prepared roleplay without a physical presence in any room of the space</li>
+				<li>Key system for locks</li>
+				<li>Movement slowdown effects</li>
+				<li>Reworked UI design with focus on improved usability and design themes</li>
+				<li>More supporting features for roleplaying, for instance a new space role "storyteller" that can orchestrate a prepared roleplay without a physical presence in any room of the space</li>
 				... and many more, which can be found by looking at Pandora's issue list on <ExternalLink href='https://github.com/Project-Pandora-Game/pandora/issues'>GitHub</ExternalLink>
 			</ul>
 		</>

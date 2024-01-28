@@ -16,7 +16,6 @@ import { WardrobeScreen } from '../components/wardrobe/wardrobe';
 import { authPagePathsAndComponents } from './authRoutingData';
 import { AccountContacts } from '../components/accountContacts/accountContacts';
 import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens';
-import { Freeze } from 'react-freeze';
 import { ModalDialog } from '../components/dialog/dialog';
 import { useObservable } from '../observable';
 
@@ -208,6 +207,31 @@ function DeveloperRoutes(): ReactElement {
 	return (
 		<Suspense fallback={ <div>Loading...</div> }>
 			<Management />
+		</Suspense>
+	);
+}
+
+const infinite = new Promise(() => { /** */ });
+
+function Suspender({ freeze, children }: {
+	freeze: boolean;
+	children: React.ReactNode;
+}) {
+	if (freeze) {
+		// eslint-disable-next-line @typescript-eslint/no-throw-literal
+		throw infinite;
+	}
+	return <>{ children }</>;
+}
+
+function Freeze({ freeze, children, placeholder = null }: {
+	freeze: boolean;
+	children: React.ReactNode;
+	placeholder?: React.ReactNode;
+}) {
+	return (
+		<Suspense fallback={ placeholder }>
+			<Suspender freeze={ freeze }>{ children }</Suspender>
 		</Suspense>
 	);
 }

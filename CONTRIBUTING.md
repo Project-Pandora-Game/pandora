@@ -59,11 +59,11 @@ Please do not expect that every pull request will be merged if there was no prev
 
 ## Do you intend to add a new feature or change an existing one?
 
-- If there is an existing issue about the feature you are intending to implement, write a comment on the issue or __risk someone else starting work on it after you, too, and beating you to it__.
+- If there is an existing reviewed and accepted issue about the feature you are intending to implement, write a comment on the issue or __risk someone else starting work on it after you, too, and beating you to it__.
 
-- **If the feature doesn't have an open issue** get in contact with us using Discord or open an issue first.
+- **If the feature doesn't have an open issue** get in contact with us using Discord or open an issue first and ask for an acceptance review.
 
-- Be aware that there is always a small chance your change won't be accepted. While we will try to work together with you to get your contribution into the game, not all contributions will get in.
+- Be aware that we have a firm vision of how we want Pandora to work and things going against that vision will not be accepted. While we will try to work together with you to get your contribution into the game, not all contributions will get in.
 
 - Be aware that all your contributions will be licensed to Project Pandora under the Pandora's [Contributor License Agreement](./contributor-licence-agreement.md).
 

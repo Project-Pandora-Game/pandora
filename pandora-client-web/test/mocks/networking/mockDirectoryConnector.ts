@@ -1,6 +1,7 @@
 import { cloneDeep } from 'lodash';
 import {
 	ACCOUNT_SETTINGS_DEFAULT,
+	CharacterId,
 	CreateDefaultDirectoryStatus,
 	IDirectoryAccountInfo,
 	IDirectoryClientArgument,
@@ -26,6 +27,7 @@ export class MockDirectoryConnector implements DirectoryConnector {
 	public readonly currentAccount = new Observable<IDirectoryAccountInfo | null>(null);
 	public readonly directoryStatus = new Observable<IDirectoryStatus>(CreateDefaultDirectoryStatus());
 	public readonly state = new Observable<DirectoryConnectionState>(DirectoryConnectionState.NONE);
+	public readonly characterAutoConnectState = new Observable<'initial'>('initial');
 
 	public readonly changeEventEmitter = new TestEventEmitter<Record<IDirectoryClientChangeEvents, true>>();
 	public readonly connectionStateEventEmitter = new TestEventEmitter<Pick<IDirectoryClientArgument, 'connectionState'>>();
@@ -44,6 +46,11 @@ export class MockDirectoryConnector implements DirectoryConnector {
 	public sendMessage = jest.fn();
 
 	public setShardConnectionInfo = jest.fn();
+
+	public connectToCharacter(_id: CharacterId): Promise<boolean> {
+		return Promise.resolve(true);
+	}
+	public disconnectFromCharacter = jest.fn();
 }
 
 export function MockAuthToken(overrides?: Partial<AuthToken>): AuthToken {

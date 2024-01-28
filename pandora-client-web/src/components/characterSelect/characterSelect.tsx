@@ -3,7 +3,7 @@ import { EMPTY, GetLogger, ICharacterSelfInfo, IClientDirectoryNormalResult } fr
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { usePlayerData } from '../gameContext/playerContextProvider';
-import { useConnectToCharacter, useCreateNewCharacter } from '../../networking/account_manager';
+import { useCreateNewCharacter } from '../../networking/account_manager';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import './characterSelect.scss';
 import { toast } from 'react-toastify';
@@ -28,7 +28,7 @@ export function CharacterSelect(): ReactElement {
 	const { data, fetchCharacterList } = useCharacterList();
 	const playerData = usePlayerData();
 	const createNewCharacter = useCreateNewCharacter();
-	const connectToCharacter = useConnectToCharacter();
+	const directoryConnector = useDirectoryConnector();
 
 	const navigate = useNavigate();
 
@@ -48,7 +48,7 @@ export function CharacterSelect(): ReactElement {
 			showWiki = true;
 			navigate('/wiki/greeting');
 		}
-	}, [data, connectToCharacter, navigate]);
+	}, [data, navigate]);
 
 	if (playerData) {
 		if (playerData.inCreation) {
@@ -66,7 +66,7 @@ export function CharacterSelect(): ReactElement {
 						key={ character.id }
 						{ ...character }
 						onClick={ () => {
-							connectToCharacter(character.id).catch((err) => {
+							directoryConnector.connectToCharacter(character.id).catch((err) => {
 								GetLogger('connectToCharacter').error('Error connecting to character:', err);
 								toast(`Error connecting to character`, TOAST_OPTIONS_ERROR);
 							});
@@ -75,8 +75,7 @@ export function CharacterSelect(): ReactElement {
 				)) }
 				</>
 			) }
-			{ data && data.characters.length < data.limit && !data.characters.some(
-				(i) => i.inCreation) && (
+			{ data && data.characters.length < data.limit && !data.characters.some((i) => i.inCreation) && (
 				<CharacterListItem
 					key='create'
 					name={ 'Create new character' }

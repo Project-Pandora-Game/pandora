@@ -221,7 +221,6 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 	messagesDiv: RefObject<HTMLDivElement>;
 	scrollMessagesView: (forceScroll: boolean) => void;
 }, ref: ForwardedRef<HTMLTextAreaElement>) {
-	const lastInput = useRef('');
 	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const setPlayerStatus = useChatSetPlayerStatus();
 	const gameState = useGameState();
@@ -324,7 +323,6 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 					textarea.value = '';
 					inputHistoryIndex.current = -1;
 					setEditing(null);
-					inputEnd();
 
 					if (input && (InputHistory.value.length === 0 || InputHistory.value[0] !== input)) {
 						InputHistory.produceImmer((arr) => {
@@ -339,10 +337,8 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 				if (error instanceof Error) {
 					toast(error.message, TOAST_OPTIONS_ERROR);
 				}
-				return;
 			}
-		}
-		if (ev.key === 'Tab' && textarea.value.startsWith(COMMAND_KEY) && !textarea.value.startsWith(COMMAND_KEY + COMMAND_KEY) && allowCommands) {
+		} else if (ev.key === 'Tab' && textarea.value.startsWith(COMMAND_KEY) && !textarea.value.startsWith(COMMAND_KEY + COMMAND_KEY) && allowCommands) {
 			ev.preventDefault();
 			ev.stopPropagation();
 			try {
@@ -363,19 +359,15 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 					toast(error.message, TOAST_OPTIONS_ERROR);
 				}
 			}
-			return;
-		}
-		if (ev.key === 'ArrowUp' && !textarea.value.trim()) {
+		} else if (ev.key === 'ArrowUp' && !textarea.value.trim()) {
 			ev.preventDefault();
 			ev.stopPropagation();
 			const edit = sender.getLastMessageEdit();
 			if (edit) {
 				setEditing(edit);
-				return;
 			}
-		}
-		// On PageUp/Down with shift we scroll chat window
-		if ((ev.key === 'PageUp' || ev.key === 'PageDown') && ev.shiftKey) {
+		} else if ((ev.key === 'PageUp' || ev.key === 'PageDown') && ev.shiftKey) {
+			// On PageUp/Down with shift we scroll chat window
 			ev.preventDefault();
 			ev.stopPropagation();
 
@@ -389,12 +381,8 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 					behavior: 'smooth',
 				});
 			}
-
-			return;
-		}
-
-		// On page up without shift, we show the previous sent message
-		if (ev.key === 'PageUp' && !ev.shiftKey) {
+		} else if (ev.key === 'PageUp' && !ev.shiftKey) {
+			// On page up without shift, we show the previous sent message
 			ev.preventDefault();
 			ev.stopPropagation();
 
@@ -415,11 +403,8 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 				inputHistoryIndex.current++;
 				textarea.value = InputHistory.value[inputHistoryIndex.current];
 			}
-			return;
-		}
-
-		// On page down without shift, we show the next sent message (after going to previous)
-		if (ev.key === 'PageDown' && !ev.shiftKey) {
+		} else if (ev.key === 'PageDown' && !ev.shiftKey) {
+			// On page down without shift, we show the next sent message (after going to previous)
 			ev.preventDefault();
 			ev.stopPropagation();
 
@@ -435,10 +420,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 				inputHistoryIndex.current--;
 				textarea.value = inputHistoryIndex.current < 0 ? '' : InputHistory.value[inputHistoryIndex.current];
 			}
-			return;
-		}
-
-		if (ev.key === 'Escape') {
+		} else if (ev.key === 'Escape') {
 			ev.preventDefault();
 			ev.stopPropagation();
 
@@ -450,18 +432,16 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 				// Otherwise scroll to end of messages view
 				scrollMessagesView(true);
 			}
-
-			return;
 		}
+
+		// After running the whole handler update the typing status and saved restore state
+		updateTypingStatus(textarea);
 	});
 
 	const updateTypingStatus = (textarea: HTMLTextAreaElement) => {
 		const value = textarea.value;
-		if (value === lastInput.current)
-			return;
-
-		lastInput.current = value;
 		InputRestore.value = { input: value, spaceId: InputRestore.value.spaceId };
+
 		let nextStatus: null | { status: ChatCharacterStatus; target?: CharacterId; } = null;
 		const trimmed = value.trim();
 		// Only start showing typing indicator once user wrote at least three characters and do not show it for commands

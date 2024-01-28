@@ -16,6 +16,7 @@ export enum ReportCopyState {
 
 export interface RootErrorBoundaryState {
 	report?: string;
+	isTemporaryReport: boolean;
 	copyState: ReportCopyState;
 }
 
@@ -27,6 +28,7 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 
 	public override state: RootErrorBoundaryState = {
 		copyState: ReportCopyState.NONE,
+		isTemporaryReport: false,
 	};
 
 	public override render(): ReactElement {
@@ -43,15 +45,17 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 	public static getDerivedStateFromError(error: unknown): Partial<RootErrorBoundaryState> {
 		return {
 			report: BuildErrorReport(error, undefined, undefined),
+			isTemporaryReport: true,
 		};
 	}
 
 	public override componentDidCatch(error: Error, errorInfo?: ErrorInfo) {
-		const { report } = this.state;
-		if (!report) {
+		const { report, isTemporaryReport } = this.state;
+		if (!report || isTemporaryReport) {
 			const { debugData } = this.context as DebugContext;
 			this.setState({
 				report: BuildErrorReport(error, errorInfo, debugData),
+				isTemporaryReport: false,
 			});
 		}
 	}

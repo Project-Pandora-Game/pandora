@@ -22,6 +22,7 @@ export interface LocalErrorBoundaryProps extends ChildrenProps {
 
 export interface LocalErrorBoundaryState {
 	report?: string;
+	isTemporaryReport: boolean;
 	showReport: boolean;
 	copyState: ReportCopyState;
 }
@@ -34,6 +35,7 @@ export class LocalErrorBoundary extends Component<LocalErrorBoundaryProps, Local
 	public override state: LocalErrorBoundaryState = {
 		showReport: false,
 		copyState: ReportCopyState.NONE,
+		isTemporaryReport: false,
 	};
 
 	public override render(): ReactElement {
@@ -50,17 +52,19 @@ export class LocalErrorBoundary extends Component<LocalErrorBoundaryProps, Local
 	public static getDerivedStateFromError(error: unknown): Partial<LocalErrorBoundaryState> {
 		return {
 			report: BuildErrorReport(error, undefined, undefined),
+			isTemporaryReport: true,
 		};
 	}
 
 	public override componentDidCatch(error: Error, errorInfo?: ErrorInfo) {
 		logger.alert('Caught error:', error, errorInfo);
 
-		const { report } = this.state;
-		if (!report) {
+		const { report, isTemporaryReport } = this.state;
+		if (!report || isTemporaryReport) {
 			const { debugData } = this.context as DebugContext;
 			this.setState({
 				report: BuildErrorReport(error, errorInfo, debugData),
+				isTemporaryReport: false,
 			});
 		}
 	}

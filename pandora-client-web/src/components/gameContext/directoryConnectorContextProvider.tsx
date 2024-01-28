@@ -114,3 +114,23 @@ export function useAuthToken(): AuthToken | undefined {
 	const directoryConnector = useDirectoryConnector();
 	return useObservable(directoryConnector.authToken);
 }
+
+export function useAuthTokenIsValid(): boolean {
+	const authToken = useAuthToken();
+	const [isValid, setIsValid] = React.useState(authToken != null && authToken.expires >= Date.now());
+	React.useEffect(() => {
+		if (authToken == null) {
+			return;
+		}
+
+		const interval = setTimeout(() => {
+			setIsValid(false);
+		}, authToken.expires - Date.now());
+
+		return () => {
+			clearTimeout(interval);
+		};
+	}, [authToken]);
+
+	return isValid;
+}

@@ -8,6 +8,8 @@ import { ChildrenProps } from '../common/reactTypes';
 import { USER_DEBUG } from '../config/Environment';
 import { DEFAULT_BACKGROUND_COLOR } from './graphicsScene';
 import { CalculationQueue } from '../common/calculationQueue';
+import { ForwardingErrorBoundary } from '../components/error/forwardingErrorBoundary';
+import { useErrorHandler } from '../common/useErrorHandler';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
 
 const SHARED_APP_MAX_COUNT = 2;
@@ -48,6 +50,8 @@ export function GraphicsSceneRendererDirect({
 		resolution,
 	}), [resolution]);
 
+	const errorHandler = useErrorHandler();
+
 	return (
 		<ContextBridge contexts={ forwardContexts } render={ (c) => (
 			<Stage
@@ -57,7 +61,9 @@ export function GraphicsSceneRendererDirect({
 				raf={ false }
 				renderOnComponentChange={ true }
 			>
-				{ c }
+				<ForwardingErrorBoundary errorHandler={ errorHandler }>
+					{ c }
+				</ForwardingErrorBoundary>
 			</Stage>
 		) }>
 			<React.StrictMode>
@@ -223,6 +229,8 @@ export function GraphicsSceneRendererShared({
 	container,
 	forwardContexts = [],
 }: GraphicsSceneRendererProps): ReactElement {
+	const errorHandler = useErrorHandler();
+
 	return (
 		<ContextBridge contexts={ forwardContexts } render={ (c) => (
 			<GraphicsSceneRendererSharedImpl
@@ -231,7 +239,9 @@ export function GraphicsSceneRendererShared({
 				onUnmount={ onUnmount }
 				container={ container }
 			>
-				{ c }
+				<ForwardingErrorBoundary errorHandler={ errorHandler }>
+					{ c }
+				</ForwardingErrorBoundary>
 			</GraphicsSceneRendererSharedImpl>
 		) }>
 			<React.StrictMode>
@@ -441,6 +451,8 @@ function GraphicsSceneBackgroundRendererUnsafe({
 	onUnmount,
 	forwardContexts = [],
 }: GraphicsSceneBackgroundRendererProps): ReactElement {
+	const errorHandler = useErrorHandler();
+
 	return (
 		<ContextBridge contexts={ forwardContexts } render={ (c) => (
 			<GraphicsSceneBackgroundRendererImpl
@@ -451,7 +463,9 @@ function GraphicsSceneBackgroundRendererUnsafe({
 				onMount={ onMount }
 				onUnmount={ onUnmount }
 			>
-				{ c }
+				<ForwardingErrorBoundary errorHandler={ errorHandler }>
+					{ c }
+				</ForwardingErrorBoundary>
 			</GraphicsSceneBackgroundRendererImpl>
 		) }>
 			<React.StrictMode>

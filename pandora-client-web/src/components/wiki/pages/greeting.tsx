@@ -44,9 +44,9 @@ export function WikiGreeting(): ReactElement {
 					You can find more guidance by pressing the "<img src={ wikiIcon } width='14' height='13' alt='Wiki' />"-button on the top bar.<br />
 					<br />
 					The club is still being renovated so you can expect many new things over time or even help us with building it up! Please be aware that the Pandora team
-					has a firm vision of how the club shall work, so it is best to familiarize yourself with the club and the plenty available information first
-					(such as the <ExternalLink href='https://github.com/Project-Pandora-Game/pandora/blob/master/CONTRIBUTING.md'>contributing guideline</ExternalLink>).
-					You can consider the current limited selection of items a demonstration of the vast asset creation possibilities in Pandora with the community's help.<br />
+					has a firm vision of how the club shall work, so not all ideas will be embraced. If you want to help, it is best to familiarize yourself with the club
+					and the plenty available information first, and then get in touch. You can find more information about this under the "Contact"-tab on the left.<br />
+					The current limited selection of items can be considered a demonstration of the vast asset creation possibilities in Pandora with the community's help.<br />
 					<br />
 					Please have a joyful stay~ ”
 				</p>

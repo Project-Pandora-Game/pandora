@@ -40,6 +40,12 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 		return <>{ children }</>;
 	}
 
+	public static getDerivedStateFromError(error: unknown): Partial<RootErrorBoundaryState> {
+		return {
+			report: BuildErrorReport(error, undefined, undefined),
+		};
+	}
+
 	public override componentDidCatch(error: Error, errorInfo?: ErrorInfo) {
 		const { report } = this.state;
 		if (!report) {

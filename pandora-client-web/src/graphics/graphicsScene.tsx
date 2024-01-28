@@ -9,6 +9,7 @@ import { GraphicsSceneRendererDirect, GraphicsSceneRendererShared } from './grap
 import classNames from 'classnames';
 import { useGraphicsSettings } from './graphicsSettings';
 import { useTexture } from './useTexture';
+import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
 
 export type GraphicsSceneProps = {
 	viewportConfig?: PixiViewportSetupCallback;
@@ -206,21 +207,22 @@ export function GraphicsScene({
 	sceneOptions?: GraphicsSceneProps;
 	divChildren?: ReactNode;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>): ReactElement {
-
 	const { resolution } = useGraphicsSettings();
 
 	const [div, setDiv] = useState<HTMLDivElement | null>(null);
 
 	return (
-		<div className={ classNames({ disabled: resolution <= 0 }, className) } { ...divProps } ref={ setDiv }>
-			{
-				div && resolution > 0 ? (
-					<GraphicsSceneCore { ...sceneOptions } div={ div } resolution={ resolution / 100 }>
-						{ children }
-					</GraphicsSceneCore>
-				) : null
-			}
-			{ divChildren }
-		</div>
+		<LocalErrorBoundary errorOverlayClassName={ className }>
+			<div className={ classNames({ disabled: resolution <= 0 }, className) } { ...divProps } ref={ setDiv }>
+				{
+					div && resolution > 0 ? (
+						<GraphicsSceneCore { ...sceneOptions } div={ div } resolution={ resolution / 100 }>
+							{ children }
+						</GraphicsSceneCore>
+					) : null
+				}
+				{ divChildren }
+			</div>
+		</LocalErrorBoundary>
 	);
 }

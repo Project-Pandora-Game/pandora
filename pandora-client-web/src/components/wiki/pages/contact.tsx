@@ -25,14 +25,20 @@ export function WikiContact(): ReactElement {
 			<h2>Reporting problems, bugs and suggestions</h2>
 			<p>
 				If you encounter any problems or bugs inside the game or have suggestions on what to add or improve,
-				please report it on our Discord.
+				please check the related section in the <ExternalLink href='https://github.com/Project-Pandora-Game/pandora/blob/master/CONTRIBUTING.md'>contributing guideline</ExternalLink>.
 			</p>
 
 			<h2>Contributing</h2>
 			<p>
 				The game is open source - you can find all related sources on our <ExternalLink href='https://github.com/Project-Pandora-Game'>GitHub</ExternalLink><br />
-				If you want to contribute something (either a feature or an asset), please contact us first on our Discord,
-				so we can synchronize the efforts to make that happen.
+				If you want to contribute something (either a feature or an asset), please check
+				the <ExternalLink href='https://github.com/Project-Pandora-Game/pandora/blob/master/CONTRIBUTING.md'>contributing guideline</ExternalLink> and then
+				contact us on our Discord, so we can synchronize the efforts to make that happen.
+			</p>
+			<p>
+				For asset creators specifically, there is
+				another <ExternalLink href='https://github.com/Project-Pandora-Game/pandora-assets/blob/master/CONTRIBUTING.md'>contributing guideline</ExternalLink> for the asset repository and
+				an <ExternalLink href='https://github.com/Project-Pandora-Game/Documentation/blob/master/asset_creation/Asset_creation_tutorial.md'>asset creation tutorial</ExternalLink> on GitHub.
 			</p>
 		</>
 	);

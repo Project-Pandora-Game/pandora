@@ -1,0 +1,61 @@
+@import '../../styles/common';
+
+.localErrorBoundaryOverlay {
+	color: white;
+	background-color: darkred;
+	text-decoration: none;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+
+	>.localErrorBoundaryContent {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5em;
+		margin: auto;
+		width: fit-content;
+
+		>h1 {
+			margin: 0;
+		}
+	}
+}
+
+.localErrorBoundaryDialog {
+	width: 95vw;
+	max-width: 72em;
+	max-height: 90vh;
+	overflow: hidden;
+
+	h1 {
+		align-self: center;
+		margin-top: 0;
+	}
+
+	pre {
+		position: relative;
+		flex: 1;
+		margin: 0 0 1em;
+		border: 1px solid;
+		padding: 1em;
+		overflow: auto;
+		background-color: $grey-lighter;
+		border-radius: 0.25em;
+
+		.button-wrapper {
+			position: absolute;
+			top: 0;
+			right: 0;
+		}
+
+		.Button {
+			position: fixed;
+			border-radius: 0 0 0 0.2em;
+			transform: translateX(-100%);
+		}
+
+		.report-content {
+			user-select: all;
+		}
+	}
+}

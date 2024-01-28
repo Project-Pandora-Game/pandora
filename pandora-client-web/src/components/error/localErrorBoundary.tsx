@@ -57,7 +57,7 @@ export class LocalErrorBoundary extends Component<LocalErrorBoundaryProps, Local
 	}
 
 	public override componentDidCatch(error: Error, errorInfo?: ErrorInfo) {
-		logger.alert('Caught error:', error, errorInfo);
+		logger.error('Caught error:', error, errorInfo);
 
 		const { report, isTemporaryReport } = this.state;
 		if (!report || isTemporaryReport) {

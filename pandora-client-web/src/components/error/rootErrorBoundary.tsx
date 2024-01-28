@@ -50,6 +50,8 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 	}
 
 	public override componentDidCatch(error: Error, errorInfo?: ErrorInfo) {
+		logger.error('Caught error:', error, errorInfo);
+
 		const { report, isTemporaryReport } = this.state;
 		if (!report || isTemporaryReport) {
 			const { debugData } = this.context as DebugContext;

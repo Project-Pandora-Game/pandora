@@ -1,4 +1,4 @@
-import { Assert, AssertNever, AsyncSynchronized, CharacterId, CloneDeepMutable, GetLogger, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryCharacterConnectionInfo, Logger, NOT_NARROWING_TRUE, SpaceId } from 'pandora-common';
+import { Assert, AssertNever, AsyncSynchronized, CharacterId, CloneDeepMutable, GetLogger, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryCharacterConnectionInfo, Logger, NOT_NARROWING_TRUE, SpaceId, SpaceInviteId } from 'pandora-common';
 import type { Account } from './account';
 import type { Shard } from '../shard/shard';
 import type { Space } from '../spaces/space';
@@ -616,7 +616,7 @@ export class Character {
 	}
 
 	@AsyncSynchronized('object')
-	public async joinSpace(space: Space, password: string | null): Promise<'failed' | 'ok' | 'errFull' | 'noAccess' | 'invalidPassword'> {
+	public async joinSpace(space: Space, password?: string, invite?: SpaceInviteId): Promise<'failed' | 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' | 'invalidInvite'> {
 		// Only loaded characters can request join into a space
 		if (!this.isOnline())
 			return 'failed';
@@ -626,7 +626,7 @@ export class Character {
 			return 'failed';
 
 		// Must be allowed to join the space (quick check before attempt, also ignores the space being full, as that will be handled by second check)
-		const allowResult1 = space.checkAllowEnter(this, password, { characterLimit: true });
+		const allowResult1 = space.checkAllowEnter(this, { password, invite }, { characterLimit: true });
 
 		if (allowResult1 !== 'ok') {
 			return allowResult1;
@@ -667,14 +667,14 @@ export class Character {
 		}
 
 		// Must be allowed to join the space (second check to prevent race conditions)
-		const allowResult2 = space.checkAllowEnter(this, password);
+		const allowResult2 = space.checkAllowEnter(this, { password, invite });
 
 		if (allowResult2 !== 'ok') {
 			return allowResult2;
 		}
 
 		// Actually add the character to the space
-		await space.addCharacter(this);
+		await space.addCharacter(this, invite);
 
 		return 'ok';
 	}

@@ -2,7 +2,7 @@ import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, Sock
 import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { ICharacterSelfInfo } from '../character/characterData';
-import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceListExtendedInfo, SpaceListInfo, SpaceId, SpaceIdSchema } from '../space/space';
+import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceListExtendedInfo, SpaceListInfo, SpaceId, SpaceIdSchema, SpaceInviteIdSchema } from '../space/space';
 import { AccountId, AccountIdSchema, AccountRoleSchema, ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
 import { EmailAddressSchema, HexColorString, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast, ZodTruncate } from '../validation';
 import { z } from 'zod';
@@ -262,6 +262,7 @@ export const ClientDirectorySchema = {
 	spaceGetInfo: {
 		request: z.object({
 			id: SpaceIdSchema,
+			invite: SpaceInviteIdSchema.optional(),
 		}),
 		response: ZodCast<SpaceExtendedInfoResponse>(),
 	},
@@ -272,9 +273,10 @@ export const ClientDirectorySchema = {
 	spaceEnter: {
 		request: z.object({
 			id: SpaceIdSchema,
+			invite: SpaceInviteIdSchema.optional(),
 			password: z.string().optional(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword'; }>(),
+		response: ZodCast<{ result: 'ok' | 'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword' | 'invalidInvite'; }>(),
 	},
 	spaceLeave: {
 		request: z.object({}),

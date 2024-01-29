@@ -1,4 +1,4 @@
-import { GetLogger, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceListInfo, SpaceId, SpaceLeaveReason, AssertNever, IChatMessageDirectoryAction, SpaceListExtendedInfo, IClientDirectoryArgument, Assert, AccountId, AsyncSynchronized, CharacterId, ChatActionId } from 'pandora-common';
+import { GetLogger, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceListInfo, SpaceId, SpaceLeaveReason, AssertNever, IChatMessageDirectoryAction, SpaceListExtendedInfo, IClientDirectoryArgument, Assert, AccountId, AsyncSynchronized, CharacterId, ChatActionId, SpaceInvite, SpaceInviteId } from 'pandora-common';
 import { Character, CharacterInfo } from '../account/character';
 import { Shard } from '../shard/shard';
 import { ConnectionManagerClient } from '../networking/manager_client';
@@ -14,6 +14,7 @@ export class Space {
 	public readonly id: SpaceId;
 	private readonly config: SpaceDirectoryConfig;
 	private readonly _owners: Set<AccountId>;
+	private _invites: SpaceInvite[];
 	private _deletionPending = false;
 
 	public get isValid(): boolean {
@@ -41,10 +42,11 @@ export class Space {
 
 	private readonly logger: Logger;
 
-	constructor(id: SpaceId, config: SpaceDirectoryConfig, owners: AccountId[], accessId: string) {
+	constructor(id: SpaceId, config: SpaceDirectoryConfig, owners: AccountId[], accessId: string, invites: SpaceInvite[]) {
 		this.id = id;
 		this.config = config;
 		this._owners = new Set(owners);
+		this._invites = invites;
 		this.accessId = accessId;
 		this.logger = GetLogger('Space', `[Space ${this.id}]`);
 
@@ -342,7 +344,7 @@ export class Space {
 		// Ignore those - the requests will fail and once the space is not requestest for a bit, it will be unloaded from the directory too, actually vanishing
 	}
 
-	public checkAllowEnter(character: Character, password: string | null, ignore: { characterLimit?: boolean; password?: boolean; } = {}): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' {
+	public checkAllowEnter(character: Character, data: { password?: string; invite?: SpaceInviteId; }, ignore: { characterLimit?: boolean; password?: boolean; } = {}): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' | 'invalidInvite' {
 		// No-one can enter if the space is in an invalid state
 		if (!this.isValid) {
 			return 'errFull';
@@ -365,15 +367,39 @@ export class Space {
 			return 'noAccess';
 
 		// If the space is password protected and you have given valid password, you can enter it
-		if (this.config.password !== null && password && password === this.config.password)
+		if (this.config.password !== null && data.password && data.password === this.config.password)
 			return 'ok';
 
 		// If the space is public, you can enter it (unless it is password protected)
 		if (this.config.public && (this.config.password === null || ignore.password))
 			return 'ok';
 
+		if (data.invite) {
+			const invite = this._getValidInvite(character, data.invite);
+			if (!invite)
+				return 'invalidInvite';
+			if (this.config.password === null || invite.bypassPassword)
+				return 'ok';
+		}
+
 		// Otherwise you cannot enter
-		return (this.config.password !== null && password) ? 'invalidPassword' : 'noAccess';
+		return (this.config.password !== null && data.password) ? 'invalidPassword' : 'noAccess';
+	}
+
+	private _getValidInvite(character: Character, id: SpaceInviteId): SpaceInvite | undefined {
+		const invite = this._invites.find((i) => i.id === id);
+		if (!invite)
+			return undefined;
+		if (invite.expires != null && invite.expires < Date.now())
+			return undefined;
+		if (invite.maxUses != null && invite.uses >= invite.maxUses)
+			return undefined;
+		if (invite.accountId != null && invite.accountId !== character.baseInfo.account.id)
+			return undefined;
+		if (invite.characterId != null && invite.characterId !== character.baseInfo.id)
+			return undefined;
+
+		return invite;
 	}
 
 	/** Returns if this space is visible to the specific account when searching in space search */
@@ -421,7 +447,7 @@ export class Space {
 	}
 
 	@AsyncSynchronized('object')
-	public async addCharacter(character: Character): Promise<void> {
+	public async addCharacter(character: Character, invite?: SpaceInviteId): Promise<void> {
 		// Ignore if space is invalidated
 		if (!this.isValid) {
 			return;
@@ -456,7 +482,24 @@ export class Space {
 		await Promise.all([
 			this._assignedShard?.update('characters'),
 			character.baseInfo.updateSelfData({ currentRoom: this.id }),
+			this._useInvite(character, invite),
 		]);
+	}
+
+	private async _useInvite(character: Character, id?: SpaceInviteId): Promise<void> {
+		const invite = id ? this._getValidInvite(character, id) : undefined;
+		if (!invite)
+			return;
+
+		invite.uses++;
+		if (invite.maxUses != null && invite.uses >= invite.maxUses) {
+			this._invites = this._invites.filter((i) => i !== invite);
+		}
+
+		const now = Date.now();
+		this._invites = this._invites.filter((i) => i.expires == null || i.expires >= now);
+
+		await GetDatabase().updateSpace(this.id, { invites: this._invites }, null);
 	}
 
 	@AsyncSynchronized('object')

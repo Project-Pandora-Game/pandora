@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ZodTrimedRegex, ZodTemplateString, HexColorStringSchema } from '../validation';
 import { cloneDeep } from 'lodash';
 import { ROOM_INVENTORY_BUNDLE_DEFAULT } from '../assets';
-import { CharacterId } from '../character';
+import { CharacterId, CharacterIdSchema } from '../character';
 import { AccountId, AccountIdSchema } from '../account/account';
 import { RoomInventoryBundleSchema } from '../assets/state/roomState';
 import { ArrayToRecordKeys } from '../utility';
@@ -46,6 +46,28 @@ export const SpaceBaseInfoSchema = z.object({
 });
 export type SpaceBaseInfo = z.infer<typeof SpaceBaseInfoSchema>;
 
+export const SpaceInviteIdSchema = ZodTemplateString<`j${string}`>(z.string(), /^r\//);
+export type SpaceInviteId = z.infer<typeof SpaceInviteIdSchema>;
+export const SpaceInviteSchema = z.object({
+	/** Unique id of the invite */
+	id: SpaceInviteIdSchema,
+	/** The amount of times the invite has been used */
+	uses: z.number().int(),
+	/** Max uses of the invite */
+	maxUses: z.number().int().optional(),
+	/** Account that this invite limited to */
+	accountId: AccountIdSchema.optional(),
+	/** Character that this invite limited to */
+	characterId: CharacterIdSchema.optional(),
+	/** The time when the invite expires */
+	expires: z.number().int().optional(),
+	/** Allow joining room without password */
+	bypassPassword: z.boolean().optional(),
+});
+export type SpaceInvite = z.infer<typeof SpaceInviteSchema>;
+export const SpaceInviteCreateSchema = SpaceInviteSchema.omit({ id: true, uses: true });
+export type SpaceInviteCreate = z.infer<typeof SpaceInviteCreateSchema>;
+
 export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 	/** The requested features */
 	features: z.array(SpaceFeatureSchema).max(SpaceFeatureSchema.options.length),
@@ -59,9 +81,9 @@ export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 		autoAdmin: z.boolean().optional(),
 	}).optional(),
 	/** The banned account ids */
-	banned: z.array(z.number()),
+	banned: AccountIdSchema.array(),
 	/** The admin account ids */
-	admin: z.array(z.number()),
+	admin: AccountIdSchema.array(),
 	/** The password of the chat room if the room is protected */
 	password: z.string().nullable(),
 	/** The ID of the background or custom data */
@@ -114,11 +136,12 @@ export const SpaceDataSchema = z.object({
 	owners: AccountIdSchema.array(),
 	config: SpaceDirectoryConfigSchema,
 	inventory: RoomInventoryBundleSchema.default(() => cloneDeep(ROOM_INVENTORY_BUNDLE_DEFAULT)),
+	invites: z.array(SpaceInviteSchema).default([]),
 });
 /** Space data stored in database */
 export type SpaceData = z.infer<typeof SpaceDataSchema>;
 
-export const SPACE_DIRECTORY_UPDATEABLE_PROPERTIES = ['config', 'owners'] as const satisfies readonly (keyof SpaceData)[];
+export const SPACE_DIRECTORY_UPDATEABLE_PROPERTIES = ['config', 'owners', 'invites'] as const satisfies readonly (keyof SpaceData)[];
 export const SpaceDataDirectoryUpdateSchema = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_DIRECTORY_UPDATEABLE_PROPERTIES, true)).partial();
 export type SpaceDataDirectoryUpdate = z.infer<typeof SpaceDataDirectoryUpdateSchema>;
 
@@ -126,7 +149,7 @@ export const SPACE_SHARD_UPDATEABLE_PROPERTIES = ['inventory'] as const satisfie
 export const SpaceDataShardUpdateSchema = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_SHARD_UPDATEABLE_PROPERTIES, true)).partial();
 export type SpaceDataShardUpdate = z.infer<typeof SpaceDataShardUpdateSchema>;
 
-export const SPACE_DIRECTORY_PROPERTIES = ['id', 'config', 'owners', 'accessId'] as const satisfies readonly (keyof SpaceData)[];
+export const SPACE_DIRECTORY_PROPERTIES = ['id', 'config', 'owners', 'accessId', 'invites'] as const satisfies readonly (keyof SpaceData)[];
 /** Space data from database, only those relevant to Directory */
 export const SpaceDirectoryDataSchema = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_DIRECTORY_PROPERTIES, true));
 /** Space data from database, only those relevant to Directory */

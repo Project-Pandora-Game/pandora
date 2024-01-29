@@ -388,7 +388,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notFound' };
 		}
 
-		const allowResult = space.checkAllowEnter(connection.character, null, true);
+		const allowResult = space.checkAllowEnter(connection.character, null, { characterLimit: true, password: true });
 
 		if (allowResult !== 'ok') {
 			return { result: 'noAccess' };

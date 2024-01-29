@@ -342,7 +342,7 @@ export class Space {
 		// Ignore those - the requests will fail and once the space is not requestest for a bit, it will be unloaded from the directory too, actually vanishing
 	}
 
-	public checkAllowEnter(character: Character, password: string | null, ignoreCharacterLimit: boolean = false): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' {
+	public checkAllowEnter(character: Character, password: string | null, ignore: { characterLimit?: boolean; password?: boolean; } = {}): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' {
 		// No-one can enter if the space is in an invalid state
 		if (!this.isValid) {
 			return 'errFull';
@@ -353,7 +353,7 @@ export class Space {
 			return 'ok';
 
 		// If the space is full, you cannot enter it (some checks ignore space being full)
-		if (this.characterCount >= this.config.maxUsers && !ignoreCharacterLimit)
+		if (this.characterCount >= this.config.maxUsers && !ignore.characterLimit)
 			return 'errFull';
 
 		// If you are an owner or admin, you can enter the space (owner implies admin)
@@ -369,7 +369,7 @@ export class Space {
 			return 'ok';
 
 		// If the space is public, you can enter it (unless it is password protected)
-		if (this.config.public && this.config.password === null)
+		if (this.config.public && (this.config.password === null || ignore.password))
 			return 'ok';
 
 		// Otherwise you cannot enter

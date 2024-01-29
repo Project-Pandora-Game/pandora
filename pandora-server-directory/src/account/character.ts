@@ -626,7 +626,7 @@ export class Character {
 			return 'failed';
 
 		// Must be allowed to join the space (quick check before attempt, also ignores the space being full, as that will be handled by second check)
-		const allowResult1 = space.checkAllowEnter(this, password, true);
+		const allowResult1 = space.checkAllowEnter(this, password, { characterLimit: true });
 
 		if (allowResult1 !== 'ok') {
 			return allowResult1;

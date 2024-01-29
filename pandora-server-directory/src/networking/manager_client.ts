@@ -118,6 +118,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			spaceUpdate: this.handleSpaceUpdate.bind(this),
 			spaceAdminAction: this.handleSpaceAdminAction.bind(this),
 			spaceOwnershipRemove: this.handleSpaceOwnershipRemove.bind(this),
+			spaceInvite: this.handleSpaceInvite.bind(this),
 
 			// Outfits
 			storedOutfitsGetAll: this.handleStoredOutfitsGetAll.bind(this),
@@ -493,6 +494,36 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const result = await space.removeOwner(connection.account.id);
 
 		return { result };
+	}
+
+	private async handleSpaceInvite(req: IClientDirectoryArgument['spaceInvite'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceInvite'] {
+		if (!connection.isLoggedIn() || !connection.character?.space)
+			throw new BadMessageError();
+
+		if (!connection.character.space.isAdmin(connection.account))
+			return { result: 'notAnOwner' };
+
+		switch (req.action) {
+			case 'list':
+				return {
+					result: 'list',
+					invites: connection.character.space.invites,
+				};
+			case 'delete': {
+				const result = await connection.character.space.deleteInvite(req.id);
+				return {
+					result: result ? 'ok' : 'notFound',
+				};
+			}
+			case 'create': {
+				const invite = await connection.character.space.createInvite(req.data);
+				return {
+					result: invite ? 'ok' : 'tooManyInvites',
+				};
+			}
+			default:
+				AssertNever(req);
+		}
 	}
 
 	private handleStoredOutfitsGetAll(_data: IClientDirectoryArgument['storedOutfitsGetAll'], connection: ClientConnection): IClientDirectoryResult['storedOutfitsGetAll'] {

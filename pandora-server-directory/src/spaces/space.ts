@@ -1,11 +1,12 @@
-import { GetLogger, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceListInfo, SpaceId, SpaceLeaveReason, AssertNever, IChatMessageDirectoryAction, SpaceListExtendedInfo, IClientDirectoryArgument, Assert, AccountId, AsyncSynchronized, CharacterId, ChatActionId, SpaceInvite, SpaceInviteId } from 'pandora-common';
+import { GetLogger, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceListInfo, SpaceId, SpaceLeaveReason, AssertNever, IChatMessageDirectoryAction, SpaceListExtendedInfo, IClientDirectoryArgument, Assert, AccountId, AsyncSynchronized, CharacterId, ChatActionId, SpaceInvite, SpaceInviteId, SpaceInviteCreate, LIMIT_SPACE_INVITES, TimeSpanMs } from 'pandora-common';
 import { Character, CharacterInfo } from '../account/character';
 import { Shard } from '../shard/shard';
 import { ConnectionManagerClient } from '../networking/manager_client';
-import { cloneDeep, pick, uniq } from 'lodash';
+import { clamp, cloneDeep, pick, uniq } from 'lodash';
 import { ShardManager } from '../shard/shardManager';
 import { GetDatabase } from '../database/databaseProvider';
 import { Account } from '../account/account';
+import { nanoid } from 'nanoid';
 
 export class Space {
 	/** Time when this space was last requested */
@@ -38,6 +39,10 @@ export class Space {
 
 	public get isPublic(): boolean {
 		return this.config.public && this.hasAdminInside(true) && this._assignedShard?.type === 'stable';
+	}
+
+	public get invites(): SpaceInvite[] {
+		return cloneDeep(this._invites);
 	}
 
 	private readonly logger: Logger;
@@ -386,6 +391,13 @@ export class Space {
 		return (this.config.password !== null && data.password) ? 'invalidPassword' : 'noAccess';
 	}
 
+	private _cleanupInvites(): void {
+		const now = Date.now();
+		this._invites = this._invites
+			.filter((i) => i.expires == null || i.expires >= now)
+			.filter((i) => i.maxUses == null || i.uses < i.maxUses);
+	}
+
 	private _getValidInvite(character: Character, id: SpaceInviteId): SpaceInvite | undefined {
 		const invite = this._invites.find((i) => i.id === id);
 		if (!invite)
@@ -407,6 +419,45 @@ export class Space {
 			return undefined;
 
 		return cloneDeep(this._getValidInvite(character, id));
+	}
+
+	@AsyncSynchronized('object')
+	public async deleteInvite(id: SpaceInviteId): Promise<boolean> {
+		const index = this._invites.findIndex((i) => i.id === id);
+		if (index < 0)
+			return false;
+
+		this._invites.splice(index, 1);
+		this._cleanupInvites();
+		await GetDatabase().updateSpace(this.id, { invites: this._invites }, null);
+		return true;
+	}
+
+	@AsyncSynchronized('object')
+	public async createInvite(data: SpaceInviteCreate): Promise<SpaceInvite | null> {
+		this._cleanupInvites();
+
+		if (this._invites.length >= LIMIT_SPACE_INVITES)
+			return null;
+
+		let id: SpaceInviteId = `i_${nanoid()}`;
+		while (this._invites.some((i) => i.id === id)) {
+			id = `i_${nanoid()}`;
+		}
+
+		const now = Date.now();
+		const expires = clamp(data.expires ?? Infinity, now + TimeSpanMs(10, 'minutes'), now + TimeSpanMs(1, 'days'));
+
+		const invite: SpaceInvite = {
+			...data,
+			id,
+			expires,
+			uses: 0,
+		};
+
+		this._invites.push(invite);
+		await GetDatabase().updateSpace(this.id, { invites: this._invites }, null);
+		return invite;
 	}
 
 	/** Returns if this space is visible to the specific account when searching in space search */
@@ -499,13 +550,8 @@ export class Space {
 			return;
 
 		invite.uses++;
-		if (invite.maxUses != null && invite.uses >= invite.maxUses) {
-			this._invites = this._invites.filter((i) => i !== invite);
-		}
 
-		const now = Date.now();
-		this._invites = this._invites.filter((i) => i.expires == null || i.expires >= now);
-
+		this._cleanupInvites();
 		await GetDatabase().updateSpace(this.id, { invites: this._invites }, null);
 	}
 

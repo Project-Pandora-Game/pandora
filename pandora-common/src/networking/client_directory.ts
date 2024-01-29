@@ -2,7 +2,7 @@ import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, Sock
 import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { ICharacterSelfInfo } from '../character/characterData';
-import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceListExtendedInfo, SpaceListInfo, SpaceId, SpaceIdSchema, SpaceInviteIdSchema } from '../space/space';
+import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceListExtendedInfo, SpaceListInfo, SpaceId, SpaceIdSchema, SpaceInviteIdSchema, SpaceInvite } from '../space/space';
 import { AccountId, AccountIdSchema, AccountRoleSchema, ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
 import { EmailAddressSchema, HexColorString, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast, ZodTruncate } from '../validation';
 import { z } from 'zod';
@@ -59,6 +59,7 @@ export type SpaceExtendedInfoResponse = {
 } | {
 	result: 'success';
 	data: SpaceListExtendedInfo;
+	invite?: SpaceInvite;
 };
 
 export type IAccountContact = {

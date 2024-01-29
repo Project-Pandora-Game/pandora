@@ -2,7 +2,7 @@ import { GetLogger, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceListInfo, 
 import { Character, CharacterInfo } from '../account/character';
 import { Shard } from '../shard/shard';
 import { ConnectionManagerClient } from '../networking/manager_client';
-import { pick, uniq } from 'lodash';
+import { cloneDeep, pick, uniq } from 'lodash';
 import { ShardManager } from '../shard/shardManager';
 import { GetDatabase } from '../database/databaseProvider';
 import { Account } from '../account/account';
@@ -400,6 +400,13 @@ export class Space {
 			return undefined;
 
 		return invite;
+	}
+
+	public getInvite(character: Character, id?: SpaceInviteId): SpaceInvite | undefined {
+		if (!id)
+			return undefined;
+
+		return cloneDeep(this._getValidInvite(character, id));
 	}
 
 	/** Returns if this space is visible to the specific account when searching in space search */

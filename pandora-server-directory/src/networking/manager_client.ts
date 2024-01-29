@@ -397,6 +397,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return {
 			result: 'success',
 			data: space.getListExtendedInfo(connection.account),
+			invite: space.getInvite(connection.character, invite),
 		};
 	}
 

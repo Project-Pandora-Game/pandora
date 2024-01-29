@@ -46,7 +46,7 @@ export const SpaceBaseInfoSchema = z.object({
 });
 export type SpaceBaseInfo = z.infer<typeof SpaceBaseInfoSchema>;
 
-export const SpaceInviteIdSchema = ZodTemplateString<`j${string}`>(z.string(), /^r\//);
+export const SpaceInviteIdSchema = ZodTemplateString<`i_${string}`>(z.string(), /^i_/);
 export type SpaceInviteId = z.infer<typeof SpaceInviteIdSchema>;
 export const SpaceInviteSchema = z.object({
 	/** Unique id of the invite */

@@ -11,11 +11,11 @@ import {
 	SpaceListExtendedInfo,
 	SpaceInvite,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { PersistentToast } from '../../../persistentToast';
+import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Button } from '../../../components/common/button/button';
-import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { useCharacterRestrictionsManager, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ResolveBackground } from 'pandora-common';
@@ -30,6 +30,8 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { useObservable } from '../../../observable';
 import { useAsyncEvent } from '../../../common/useEvent';
+import { usePlayerState } from '../../../components/gameContext/playerContextProvider';
+import { toast } from 'react-toastify';
 
 const TIPS: readonly string[] = [
 	`You can move your character inside a room by dragging the character name below her.`,
@@ -342,14 +344,70 @@ export function SpaceDetails({ info, hide, invite }: { info: SpaceListExtendedIn
 					)
 				}
 				{ userIsOwner && <SpaceOwnershipRemoval buttonClassName='slim' id={ info.id } name={ info.name } /> }
-				<Button className='fadeDisabled'
-					disabled={ processing || (!userIsAdmin && requirePassword && !password) }
-					onClick={ join }>
-					Enter Space
-				</Button>
+				<GuardedJoinButton>
+					<Button className='fadeDisabled'
+						disabled={ processing || (!userIsAdmin && requirePassword && !password) }
+						onClick={ join }>
+						Enter Space
+					</Button>
+				</GuardedJoinButton>
 			</Row>
 		</div>
 	);
+}
+
+// TODO: remove when we automate leave process
+function GuardedJoinButton({ children }: { children: ReactNode; }): ReactElement {
+	const space = useSpaceInfoOptional();
+	const directoryConnector = useDirectoryConnector();
+	const { player, playerState } = usePlayerState();
+	const roomDeviceLink = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getRoomDeviceLink());
+	const canLeave = useCharacterRestrictionsManager(playerState, player, (manager) => (manager.forceAllowRoomLeave() || !manager.getEffects().blockRoomLeave));
+
+	const [leave, processing] = useAsyncEvent(
+		(e: React.MouseEvent<HTMLButtonElement>) => {
+			e.stopPropagation();
+			return directoryConnector.awaitResponse('spaceLeave', EMPTY);
+		},
+		(resp) => {
+			if (resp.result !== 'ok') {
+				toast(`Failed to leave space:\n${resp.result}`, TOAST_OPTIONS_ERROR);
+			}
+		},
+		{
+			errorHandler: (error) => {
+				GetLogger('LeaveSpace').warning('Error while leaving space', error);
+				toast(`Error while leaving space:\n${error instanceof Error ? error.message : String(error)}`, TOAST_OPTIONS_ERROR);
+			},
+		},
+	);
+
+	if (space?.id === null) {
+		return <>{ children }</>;
+	}
+
+	if (roomDeviceLink) {
+		return (
+			<Button className='fadeDisabled' disabled={ true }>
+				You must exit the room device before leaving the space
+			</Button>
+		);
+	}
+
+	if (!canLeave) {
+		return (
+			<Button className='fadeDisabled' disabled={ true }>
+				An item is preventing you from leaving the space
+			</Button>
+		);
+	}
+
+	return (
+		<Button onClick={ leave } className='fadeDisabled' disabled={ processing || !canLeave || roomDeviceLink != null }>
+			Leave current space
+		</Button>
+	);
+
 }
 
 const SpaceJoinProgress = new PersistentToast();

@@ -29,6 +29,7 @@ import publicDoor from '../../../icons/public-door.svg';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { useObservable } from '../../../observable';
+import { useAsyncEvent } from '../../../common/useEvent';
 
 const TIPS: readonly string[] = [
 	`You can move your character inside a room by dragging the character name below her.`,
@@ -243,7 +244,31 @@ function SpaceDetailsDialog({ baseInfo, hide }: {
 export function SpaceDetails({ info, hide, invite }: { info: SpaceListExtendedInfo; hide?: () => void; invite?: SpaceInvite; }): ReactElement {
 	const assetManager = useAssetManager();
 	const [password, setPassword] = useState('');
-	const join = useJoinSpace();
+	const directoryConnector = useDirectoryConnector();
+
+	const [join, processing] = useAsyncEvent(
+		() => {
+			SpaceJoinProgress.show('progress', 'Joining space...');
+			return directoryConnector.awaitResponse('spaceEnter', { id: info.id, password, invite: invite?.id });
+		},
+		(resp) => {
+			if (resp.result === 'ok') {
+				SpaceJoinProgress.show('success', 'Space joined!');
+			} else {
+				SpaceJoinProgress.show('error', `Failed to join space:\n${resp.result}`);
+			}
+			if (resp.result === 'notFound') {
+				hide?.();
+			}
+		},
+		{
+			errorHandler: (error) => {
+				GetLogger('JoinSpace').warning('Error during space join', error);
+				SpaceJoinProgress.show('error',
+					`Error during space join:\n${error instanceof Error ? error.message : String(error)}`);
+			},
+		},
+	);
 
 	const background = info.background ? ResolveBackground(assetManager, info.background, GetAssetsSourceUrl()).image : '';
 	const hasPassword = info.hasPassword;
@@ -308,18 +333,8 @@ export function SpaceDetails({ info, hide, invite }: { info: SpaceListExtendedIn
 				{ hide && <Button onClick={ hide }>Close</Button> }
 				{ userIsOwner && <SpaceOwnershipRemoval buttonClassName='slim' id={ info.id } name={ info.name } /> }
 				<Button className='fadeDisabled'
-					disabled={ !userIsAdmin && requirePassword && !password }
-					onClick={ () => {
-						join(info.id, password, invite?.id)
-							.then((joinResult) => {
-								if (joinResult === 'notFound')
-									hide?.();
-								// TODO: Move error messages here from the join itself (or remove this handler)
-							})
-							.catch((_error: unknown) => {
-								// You can handle if joining crashed or server communication failed here
-							});
-					} }>
+					disabled={ processing || (!userIsAdmin && requirePassword && !password) }
+					onClick={ join }>
 					Enter Space
 				</Button>
 			</Row>
@@ -328,30 +343,6 @@ export function SpaceDetails({ info, hide, invite }: { info: SpaceListExtendedIn
 }
 
 const SpaceJoinProgress = new PersistentToast();
-
-type SpaceEnterResult = IClientDirectoryNormalResult['spaceEnter']['result'];
-
-function useJoinSpace(): (id: SpaceId, password?: string, invite?: SpaceInviteId) => Promise<SpaceEnterResult> {
-	const directoryConnector = useDirectoryConnector();
-
-	return useCallback(async (id, password, invite) => {
-		try {
-			SpaceJoinProgress.show('progress', 'Joining space...');
-			const result = await directoryConnector.awaitResponse('spaceEnter', { id, password, invite });
-			if (result.result === 'ok') {
-				SpaceJoinProgress.show('success', 'Space joined!');
-			} else {
-				SpaceJoinProgress.show('error', `Failed to join space:\n${result.result}`);
-			}
-			return result.result;
-		} catch (err) {
-			GetLogger('JoinSpace').warning('Error during space join', err);
-			SpaceJoinProgress.show('error',
-				`Error during space join:\n${err instanceof Error ? err.message : String(err)}`);
-			return 'failed';
-		}
-	}, [directoryConnector]);
-}
 
 function useSpacesList(): SpaceListInfo[] | undefined {
 	const [data, setData] = useState<SpaceListInfo[]>();

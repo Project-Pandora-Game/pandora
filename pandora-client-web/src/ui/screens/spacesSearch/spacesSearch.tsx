@@ -247,7 +247,8 @@ export function SpaceDetails({ info, hide, invite }: { info: SpaceListExtendedIn
 	const directoryConnector = useDirectoryConnector();
 
 	const [join, processing] = useAsyncEvent(
-		() => {
+		(e: React.MouseEvent<HTMLButtonElement>) => {
+			e.stopPropagation();
 			SpaceJoinProgress.show('progress', 'Joining space...');
 			return directoryConnector.awaitResponse('spaceEnter', { id: info.id, password, invite: invite?.id });
 		},
@@ -330,7 +331,16 @@ export function SpaceDetails({ info, hide, invite }: { info: SpaceListExtendedIn
 				)
 			}
 			<Row padding='medium' className='buttons' alignX='space-between' alignY='center'>
-				{ hide && <Button onClick={ hide }>Close</Button> }
+				{
+					hide && (
+						<Button onClick={ (e) => {
+							e.stopPropagation();
+							hide();
+						} }>
+							Close
+						</Button>
+					)
+				}
 				{ userIsOwner && <SpaceOwnershipRemoval buttonClassName='slim' id={ info.id } name={ info.name } /> }
 				<Button className='fadeDisabled'
 					disabled={ processing || (!userIsAdmin && requirePassword && !password) }

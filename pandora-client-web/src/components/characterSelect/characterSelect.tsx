@@ -3,9 +3,7 @@ import { EMPTY, GetLogger, ICharacterSelfInfo, IClientDirectoryNormalResult } fr
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { usePlayerData } from '../gameContext/playerContextProvider';
-import { USER_DEBUG } from '../../config/Environment';
-import { useConnectToCharacter, useCreateNewCharacter } from '../../networking/account_manager';
-import { LastSelectedCharacter } from '../../networking/socketio_shard_connector';
+import { useCreateNewCharacter } from '../../networking/account_manager';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import './characterSelect.scss';
 import { toast } from 'react-toastify';
@@ -23,15 +21,14 @@ interface UseCharacterListResult {
 	fetchCharacterList: () => Promise<void>;
 }
 
-/** Prevents automatic selection of character if it has been attempted already to prevent loops */
-let autoSelectDone = false;
+/** Prevents showing wiki automatically if it was done already */
+let showWiki = false;
 
 export function CharacterSelect(): ReactElement {
-	const [state, setState] = useState('Loading...');
 	const { data, fetchCharacterList } = useCharacterList();
 	const playerData = usePlayerData();
 	const createNewCharacter = useCreateNewCharacter();
-	const connectToCharacter = useConnectToCharacter();
+	const directoryConnector = useDirectoryConnector();
 
 	const navigate = useNavigate();
 
@@ -41,28 +38,17 @@ export function CharacterSelect(): ReactElement {
 	}, [createNewCharacter, fetchCharacterList]);
 
 	useEffect(() => {
-		if (!data || autoSelectDone) {
+		if (!data || showWiki) {
 			return;
 		}
 
 		const { characters } = data;
 
-		void (async () => {
-			if (USER_DEBUG && LastSelectedCharacter.value !== undefined && characters.some((c) => c.id === LastSelectedCharacter.value)) {
-				autoSelectDone = true;
-				setState('Reconnecting to last character...');
-				await connectToCharacter(LastSelectedCharacter.value);
-			} else if (characters.length === 0) {
-				autoSelectDone = true;
-				navigate('/wiki/greeting');
-			} else if (characters.length === 1 && characters[0].inCreation) {
-				autoSelectDone = true;
-				setState('Character creation in progress...');
-				await connectToCharacter(characters[0].id);
-			}
-		})();
-
-	}, [data, connectToCharacter, navigate]);
+		if (characters.length === 0) {
+			showWiki = true;
+			navigate('/wiki/greeting');
+		}
+	}, [data, navigate]);
 
 	if (playerData) {
 		if (playerData.inCreation) {
@@ -74,13 +60,13 @@ export function CharacterSelect(): ReactElement {
 
 	return (
 		<ul className='character-select'>
-			{ !data ? <div className='loading'>{ state }</div> : (
+			{ !data ? <div className='loading'>Loading...</div> : (
 				<>{ data.characters.map((character) => (
 					<CharacterListItem
 						key={ character.id }
 						{ ...character }
 						onClick={ () => {
-							connectToCharacter(character.id).catch((err) => {
+							directoryConnector.connectToCharacter(character.id).catch((err) => {
 								GetLogger('connectToCharacter').error('Error connecting to character:', err);
 								toast(`Error connecting to character`, TOAST_OPTIONS_ERROR);
 							});
@@ -89,8 +75,7 @@ export function CharacterSelect(): ReactElement {
 				)) }
 				</>
 			) }
-			{ data && data.characters.length < data.limit && !data.characters.some(
-				(i) => i.inCreation) && (
+			{ data && data.characters.length < data.limit && !data.characters.some((i) => i.inCreation) && (
 				<CharacterListItem
 					key='create'
 					name={ 'Create new character' }

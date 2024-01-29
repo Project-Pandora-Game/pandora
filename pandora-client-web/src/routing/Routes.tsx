@@ -9,13 +9,15 @@ import { CharacterSelect } from '../components/characterSelect/characterSelect';
 import { RoomScreen } from '../ui/screens/room/room';
 import { SpaceConfiguration, SpaceCreate } from '../ui/screens/spaceConfiguration/spaceConfiguration';
 import { SpacesSearch } from '../ui/screens/spacesSearch/spacesSearch';
-import { useCurrentAccount } from '../components/gameContext/directoryConnectorContextProvider';
+import { useAuthTokenIsValid, useCurrentAccount, useDirectoryConnector } from '../components/gameContext/directoryConnectorContextProvider';
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
 import { AuthPage } from '../components/login/authPage';
 import { WardrobeScreen } from '../components/wardrobe/wardrobe';
 import { authPagePathsAndComponents } from './authRoutingData';
 import { AccountContacts } from '../components/accountContacts/accountContacts';
 import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens';
+import { ModalDialog } from '../components/dialog/dialog';
+import { useObservable } from '../observable';
 
 // Lazily loaded screens
 const Management = lazy(() => import('../components/management'));
@@ -58,30 +60,98 @@ export function PandoraRoutes(): ReactElement {
 	);
 }
 
-function RequiresLogin({ element: Element }: { element: ComponentType<Record<string, never>>; }): ReactElement {
-	useLoggedInCheck();
-	return <Element />;
+function RequiresLogin<TProps extends object>({ element: Element, preserveLocation = true, ...props }: TProps & {
+	element: ComponentType<TProps>;
+	preserveLocation?: boolean;
+}): ReactElement {
+	const isLoggedIn = useCurrentAccount() != null;
+	const hasAuthToken = useAuthTokenIsValid();
+	const location = useLocation();
+	const navigate = useNavigate();
+
+	useEffect(() => {
+		if (!isLoggedIn && !hasAuthToken) {
+			let options: NavigateOptions = {};
+			if (preserveLocation) {
+				options = { state: { redirectPath: location.pathname, redirectState: location.state as unknown } };
+			}
+			navigate('/login', options);
+		}
+	}, [isLoggedIn, hasAuthToken, navigate, location.pathname, location.state, preserveLocation]);
+
+	return (
+		<>
+			<Freeze freeze={ !isLoggedIn }>
+				<Element { ...props as TProps } />
+			</Freeze>
+			{
+				(!isLoggedIn && hasAuthToken) && (
+					<ModalDialog>
+						<div className='message'>
+							Awaiting automatic login...
+						</div>
+					</ModalDialog>
+				)
+			}
+		</>
+	);
 }
 
-function RequiresCharacter({ element: Element, allowUnfinished }: { element: ComponentType<Record<string, never>>; allowUnfinished?: boolean; }): ReactElement {
-	useLoggedInCheck();
+function RequiresCharacterImpl({ characterElement: Element, allowUnfinished }: { characterElement: ComponentType<Record<string, never>>; allowUnfinished?: boolean; }): ReactElement {
 	const shardConnector = useShardConnector();
+	const autoConnectState = useObservable(useDirectoryConnector().characterAutoConnectState);
 	const playerData = usePlayerData();
 	const hasCharacter = shardConnector != null && playerData != null;
 
-	if (!hasCharacter) {
+	if (!hasCharacter && autoConnectState === 'none') {
 		return <CharacterSelect />;
 	}
 
-	if (playerData.inCreation && !allowUnfinished) {
-		return <CharacterCreate />;
-	}
-
-	return <Element />;
+	return (
+		<>
+			{
+				(playerData?.inCreation && !allowUnfinished)
+					? <CharacterCreate />
+					: (
+						<Freeze freeze={ !hasCharacter }>
+							<Element />
+						</Freeze>
+					)
+			}
+			{
+				!hasCharacter && (
+					<ModalDialog>
+						<div className='message'>
+							{ AutoConnectStateMessage(autoConnectState) }
+						</div>
+					</ModalDialog>
+				)
+			}
+		</>
+	);
 }
 
-function DefaultFallback(): ReactElement {
-	useLoggedInCheck(false);
+function AutoConnectStateMessage(state: 'none' | 'initial' | 'loading' | 'connecting' | 'connected'): string {
+	switch (state) {
+		case 'none':
+		case 'initial':
+			return 'Loading...';
+		case 'loading':
+			return 'Loading characters...';
+		case 'connecting':
+			return 'Connecting to character...';
+		case 'connected':
+			return 'Connected to character, loading...';
+	}
+}
+
+function RequiresCharacter({ element, allowUnfinished }: { element: ComponentType<Record<string, never>>; allowUnfinished?: boolean; }): ReactElement {
+	return (
+		<RequiresLogin element={ RequiresCharacterImpl } characterElement={ element } preserveLocation={ false } allowUnfinished={ allowUnfinished } />
+	);
+}
+
+function DefaultFallbackImpl(): ReactElement {
 	const playerData = usePlayerData();
 
 	if (playerData == null) {
@@ -91,20 +161,10 @@ function DefaultFallback(): ReactElement {
 	return <Navigate to='/room' />;
 }
 
-function useLoggedInCheck(preserveLocation = true): void {
-	const isLoggedIn = useCurrentAccount() != null;
-	const location = useLocation();
-	const navigate = useNavigate();
-
-	useEffect(() => {
-		if (!isLoggedIn) {
-			let options: NavigateOptions = {};
-			if (preserveLocation) {
-				options = { state: { redirectPath: location.pathname, redirectState: location.state as unknown } };
-			}
-			navigate('/login', options);
-		}
-	}, [isLoggedIn, navigate, location.pathname, location.state, preserveLocation]);
+function DefaultFallback(): ReactElement {
+	return (
+		<RequiresLogin element={ DefaultFallbackImpl } preserveLocation={ false } />
+	);
 }
 
 function AuthPageFallback({ component }: { component: ComponentType<Record<string, never>>; }): ReactElement {
@@ -147,6 +207,31 @@ function DeveloperRoutes(): ReactElement {
 	return (
 		<Suspense fallback={ <div>Loading...</div> }>
 			<Management />
+		</Suspense>
+	);
+}
+
+const infinite = new Promise(() => { /** */ });
+
+function Suspender({ freeze, children }: {
+	freeze: boolean;
+	children: React.ReactNode;
+}) {
+	if (freeze) {
+		// eslint-disable-next-line @typescript-eslint/no-throw-literal
+		throw infinite;
+	}
+	return <>{ children }</>;
+}
+
+function Freeze({ freeze, children, placeholder = null }: {
+	freeze: boolean;
+	children: React.ReactNode;
+	placeholder?: React.ReactNode;
+}) {
+	return (
+		<Suspense fallback={ placeholder }>
+			<Suspender freeze={ freeze }>{ children }</Suspender>
 		</Suspense>
 	);
 }

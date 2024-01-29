@@ -1,4 +1,4 @@
-import { CharacterId, EMPTY, GetLogger } from 'pandora-common';
+import { EMPTY, GetLogger } from 'pandora-common';
 import { useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { useDirectoryConnector } from '../components/gameContext/directoryConnectorContextProvider';
@@ -22,13 +22,6 @@ type LoginCallback = (username: string, password: string, verificationToken?: st
  * @returns Promise resolving to a boolean indicating whether or not the creation was successful
  */
 type CreateNewCharacterCallback = () => Promise<boolean>;
-
-/**
- * Attempt to connect to a character by character ID
- * @param id - The ID of the character to connect to
- * @returns Promise resolving to a boolean indicating whether or not the connection was successful
- */
-type ConnectToCharacterCallback = (id: CharacterId) => Promise<boolean>;
 
 export type RegisterResponse = 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidBetaKey' | 'invalidCaptcha';
 
@@ -101,20 +94,6 @@ export function useCreateNewCharacter(): CreateNewCharacterCallback {
 		if (data.result !== 'ok') {
 			GetLogger('useCreateNewCharacter').error('Failed to create character:', data);
 			toast(`Failed to create character:\n${data.result}`, TOAST_OPTIONS_ERROR);
-			return false;
-		}
-		return true;
-	}, [directoryConnector]);
-}
-
-export function useConnectToCharacter(): ConnectToCharacterCallback {
-	const directoryConnector = useDirectoryConnector();
-
-	return useCallback(async (id) => {
-		const data = await directoryConnector.awaitResponse('connectCharacter', { id });
-		if (data.result !== 'ok') {
-			GetLogger('useConnectToCharacter').error('Failed to connect to character:', data);
-			toast(`Failed to connect to character:\n${data.result}`, TOAST_OPTIONS_ERROR);
 			return false;
 		}
 		return true;

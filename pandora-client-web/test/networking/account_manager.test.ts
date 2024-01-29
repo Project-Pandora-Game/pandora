@@ -2,7 +2,6 @@ import { RenderHookResult } from '@testing-library/react';
 import { EMPTY } from 'pandora-common';
 import {
 	RegisterResponse,
-	useConnectToCharacter,
 	useCreateNewCharacter,
 	useDirectoryPasswordReset,
 	useDirectoryPasswordResetConfirm,
@@ -89,26 +88,6 @@ describe('Account Manager', () => {
 			expect(success).toBe(true);
 			expect(directoryConnector.awaitResponse).toHaveBeenCalledTimes(1);
 			expect(directoryConnector.awaitResponse).toHaveBeenCalledWith('createCharacter', EMPTY);
-		});
-	});
-
-	describe('useConnectToCharacter', () => {
-		const characterId = 'c12345';
-
-		it('should return false if the directory was unable to connect to the given character', async () => {
-			directoryConnector.awaitResponse.mockResolvedValue({ result: 'failed' });
-			const { result } = renderHookWithTestProviders(useConnectToCharacter);
-			expect(await result.current(characterId)).toBe(false);
-		});
-
-		it('should connect to the given character successfully', async () => {
-			directoryConnector.awaitResponse.mockResolvedValue({ result: 'ok' });
-			const { result } = renderHookWithTestProviders(useConnectToCharacter);
-
-			const success = await result.current(characterId);
-			expect(success).toBe(true);
-			expect(directoryConnector.awaitResponse).toHaveBeenCalledTimes(1);
-			expect(directoryConnector.awaitResponse).toHaveBeenCalledWith('connectCharacter', { id: characterId });
 		});
 	});
 

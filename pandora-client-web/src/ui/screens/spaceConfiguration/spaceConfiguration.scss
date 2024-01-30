@@ -2,6 +2,7 @@
 
 .spaceConfigurationScreen {
 	width: min(100%, 50em);
+	margin: 0 auto;
 
 	&>* {
 		margin-top: 0.5em;
@@ -192,6 +193,7 @@
 	.footer {
 		max-width: 100%;
 	}
+
 }
 
 .backgroundInfo {
@@ -199,4 +201,17 @@
 		max-width: 46em;
 		max-height: 46em;
 	}
+}
+
+.spaceInviteCreation .input-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+
+	input[type='checkbox'] {
+		height: 1.2em;
+	}
+}
+
+.spaceInvitesTable td {
+	white-space: nowrap;
 }

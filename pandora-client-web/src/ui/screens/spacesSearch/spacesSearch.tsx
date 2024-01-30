@@ -4,7 +4,6 @@ import {
 	GetLogger,
 	SpaceListInfo,
 	SpaceExtendedInfoResponse,
-	IClientDirectoryNormalResult,
 	SpaceId,
 	AssertNotNullable,
 	SpaceInviteId,

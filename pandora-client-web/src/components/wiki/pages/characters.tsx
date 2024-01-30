@@ -45,8 +45,11 @@ export function WikiCharacters(): ReactElement {
 
 			<h4 id='CH_Character_context_menu'>Character context menu</h4>
 			<p>
-				You can open a context-specific character menu by clicking on the name below a character inside the room.<br />
-				This menu has different features depending on whom it is opened on.
+				You can open a context-specific character menu by clicking on the name below a character inside the room.
+				While characters are inside a <a href='/wiki/items/#IT_Room-level_items'>room-level item</a>, their name
+				is not visible currently. You can still open the context menu by opening the room item's context
+				menu, opening the slot the character is inside, and then clicking on the character name.<br />
+				The character context menu has different features depending on whom it is opened on.
 			</p>
 			<ul>
 				<li>You can use it to quickly open your or another character's profile or wardrobe.</li>

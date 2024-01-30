@@ -98,8 +98,8 @@ function OpenConversation(): React.ReactElement {
 
 	return (
 		<div className='input-line'>
-			<input type='text' inputMode='numeric' pattern='\d*' ref={ ref } onKeyDown={ onKeyDown } />
-			<Button className='slim' onClick={ onClick }>Open</Button>
+			<input type='text' inputMode='numeric' pattern='\d*' ref={ ref } onKeyDown={ onKeyDown } placeholder='Account ID' />
+			<Button className='slim' onClick={ onClick }>Start</Button>
 		</div>
 	);
 }

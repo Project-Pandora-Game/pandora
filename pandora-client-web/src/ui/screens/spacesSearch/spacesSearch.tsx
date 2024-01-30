@@ -37,6 +37,7 @@ const TIPS: readonly string[] = [
 	`In the Pandora settings, character (chat) and account (direct messages) name colors are set separately.`,
 	`Every single change in the wardrobe happens instantly and is immediately visible to everyone in the room.`,
 	`Public spaces without an admin online inside are not publicly listed in the spaces search.`,
+	`The character context menu can still be opened from a room item's menu while a character is inside.`,
 ];
 
 export function SpacesSearch(): ReactElement {

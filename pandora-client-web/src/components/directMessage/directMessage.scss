@@ -34,5 +34,19 @@
 		height: min(10em, 35%);
 		resize: none;
 		margin: 0;
+		color: #fff;
+		font-size: 105%;
+		background-color: #505050;
+		border: none;
+			outline: none;
+
+		&:focus {
+			background-color: #000;
+		}
+
+		&::placeholder {
+			color: #777;
+			opacity: 1; /* Firefox */
+		}
 	}
 }

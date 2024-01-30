@@ -118,7 +118,7 @@ function DirectChannelInput(): ReactElement | null {
 			ref={ actualRef }
 			onKeyDown={ onKeyDown }
 			maxLength={ LIMIT_DIRECT_MESSAGE_LENGTH }
-			placeholder={ `Send message to ${channel.account.displayName} (${channel.account.id})` }
+			placeholder={ `> Send message to ${channel.account.displayName} (${channel.account.id})` }
 		/>
 	);
 }

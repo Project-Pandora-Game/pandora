@@ -99,7 +99,7 @@ function OpenConversation(): React.ReactElement {
 	return (
 		<div className='input-line'>
 			<input type='text' inputMode='numeric' pattern='\d*' ref={ ref } onKeyDown={ onKeyDown } placeholder='Account ID' />
-			<Button className='slim' onClick={ onClick }>Add</Button>
+			<Button className='slim' onClick={ onClick }>Start</Button>
 		</div>
 	);
 }

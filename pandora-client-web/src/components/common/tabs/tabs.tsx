@@ -4,6 +4,7 @@ import { ChildrenProps } from '../../../common/reactTypes';
 import './tabs.scss';
 import { Column } from '../container/container';
 import { Navigate, Route, Routes, matchPath, resolvePath, useLocation, useNavigate, useResolvedPath } from 'react-router';
+import { LocalErrorBoundary } from '../../error/localErrorBoundary';
 
 interface TabProps extends ChildrenProps {
 	name: ReactNode;
@@ -93,7 +94,9 @@ export function TabContainer({
 
 	return (
 		<Tabulation tabs={ tabs } className={ className } collapsable={ collapsable } tabsPosition={ tabsPosition }>
-			{ currentTab < children.length ? children[currentTab] : null }
+			<React.Fragment key={ currentTab }>
+				{ currentTab < children.length ? children[currentTab] : null }
+			</React.Fragment>
 		</Tabulation>
 	);
 }
@@ -167,7 +170,11 @@ export function UrlTabContainer({
 }
 
 export function Tab({ children }: TabProps): ReactElement {
-	return <Column className='flex-1 tab-content overflow-hidden'>{ children }</Column>;
+	return (
+		<LocalErrorBoundary errorOverlayClassName='flex-1 tab-content overflow-hidden'>
+			<Column className='flex-1 tab-content overflow-hidden'>{ children }</Column>
+		</LocalErrorBoundary>
+	);
 }
 
 export function UrlTab(props: UrlTabProps): ReactElement {

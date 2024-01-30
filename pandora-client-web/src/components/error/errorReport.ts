@@ -5,6 +5,7 @@ import { ShardConnectionState } from '../../networking/shardConnector';
 import { DebugData } from './debugContextProvider';
 import { utils } from 'pixi.js';
 import bowser from 'bowser';
+import { IsNotNullable } from 'pandora-common';
 
 interface ReportSection {
 	heading: string;
@@ -13,16 +14,17 @@ interface ReportSection {
 
 export const MAX_ERROR_STACK_LINES = 20;
 
-export function BuildErrorReport(error: unknown, errorInfo: ErrorInfo | undefined, debugData: DebugData): string {
+export function BuildErrorReport(error: unknown, errorInfo: ErrorInfo | undefined, debugData: DebugData | undefined): string {
 	try {
 		const report = [
 			BuildStackTraceSection(error),
 			BuildComponentStackSection(errorInfo),
-			BuildDirectoryDataSection(debugData),
-			BuildShardDataSection(debugData),
+			debugData != null ? BuildDirectoryDataSection(debugData) : null,
+			debugData != null ? BuildShardDataSection(debugData) : null,
 			BuildDiagnosticsSection(),
 			BuildDeviceSection(),
 		]
+			.filter(IsNotNullable)
 			.map(DisplayReportSection)
 			.join('\n\n');
 		return '```\n' + report + '\n```';

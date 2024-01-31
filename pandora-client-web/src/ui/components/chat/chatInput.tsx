@@ -45,7 +45,7 @@ export type IChatInputHandler = {
 	ref: RefObject<HTMLTextAreaElement>;
 };
 
-const chatInputContext = createContext<IChatInputHandler | null>(null);
+export const chatInputContext = createContext<IChatInputHandler | null>(null);
 
 const ChatInputSaveSchema = z.object({
 	input: z.string(),

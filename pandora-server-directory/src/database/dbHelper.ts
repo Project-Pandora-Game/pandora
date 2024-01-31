@@ -40,6 +40,7 @@ export function CreateSpace(data: SpaceCreationData, id?: SpaceId): SpaceData {
 		id: id ?? `r/${nanoid()}`,
 		accessId: '',
 		inventory: ROOM_INVENTORY_BUNDLE_DEFAULT,
+		invites: [],
 		...data,
 	};
 }

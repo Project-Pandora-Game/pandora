@@ -1,10 +1,10 @@
-import { AssertNotNullable, CharacterId, EMPTY_ARRAY, ChatCharacterStatus, IChatType, ZodTransformReadonly, SpaceIdSchema } from 'pandora-common';
+import { AssertNotNullable, CharacterId, EMPTY_ARRAY, ChatCharacterStatus, IChatType, ZodTransformReadonly, SpaceIdSchema, ICommandExecutionContext } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { clamp } from 'lodash';
 import { Character } from '../../../character/character';
 import { IMessageParseOptions, useGameStateOptional, useSpaceCharacters, useChatMessageSender, useGameState, useChatSetPlayerStatus, useChatCharacterStatus } from '../../../components/gameContext/gameStateContextProvider';
 import { useEvent } from '../../../common/useEvent';
-import { AutocompleteDisplayData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand, ICommandInvokeContext } from './commandsProcessor';
+import { AutocompleteDisplayData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand, ICommandInvokeContext, ICommandExecutionContextClient, IClientCommand } from './commandsProcessor';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Button } from '../../../components/common/button/button';
@@ -13,7 +13,7 @@ import { BrowserStorage } from '../../../browserStorage';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider';
 import classNames from 'classnames';
 import { Column, Row } from '../../../components/common/container/container';
-import { GetChatModeDescription } from './commands';
+import { COMMANDS, GetChatModeDescription } from './commands';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { Select } from '../../../components/common/select/select';
 import settingsIcon from '../../../assets/icons/setting.svg';
@@ -45,7 +45,7 @@ export type IChatInputHandler = {
 	ref: RefObject<HTMLTextAreaElement>;
 };
 
-const chatInputContext = createContext<IChatInputHandler | null>(null);
+export const chatInputContext = createContext<IChatInputHandler | null>(null);
 
 const ChatInputSaveSchema = z.object({
 	input: z.string(),
@@ -240,7 +240,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 	 */
 	const inputHistoryIndex = useRef(-1);
 
-	const commandInvokeContext = useMemo<ICommandInvokeContext>(() => ({
+	const commandInvokeContext = useMemo<ICommandInvokeContext<ICommandExecutionContextClient>>(() => ({
 		displayError(error) {
 			toast(error, TOAST_OPTIONS_ERROR);
 		},
@@ -270,7 +270,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 		) {
 			input = input.slice(1, textarea.selectionStart || textarea.value.length);
 
-			const autocompleteResult = CommandAutocomplete(input, commandInvokeContext);
+			const autocompleteResult = CommandAutocomplete(input, commandInvokeContext, COMMANDS);
 
 			setAutocompleteHint({
 				replace: textarea.value,
@@ -290,7 +290,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 			allowCommands
 		) {
 			// Process command
-			return RunCommand(input.slice(1), commandInvokeContext);
+			return RunCommand(input.slice(1), commandInvokeContext, COMMANDS);
 		} else {
 			// Double command key escapes itself
 			if (input.startsWith(COMMAND_KEY + COMMAND_KEY) && allowCommands) {
@@ -346,7 +346,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 				const inputPosition = textarea.selectionStart || textarea.value.length;
 				const command = textarea.value.slice(1, textarea.selectionStart);
 
-				const autocompleteResult = CommandAutocompleteCycle(command, commandInvokeContext, ev.shiftKey);
+				const autocompleteResult = CommandAutocompleteCycle(command, commandInvokeContext, COMMANDS, ev.shiftKey);
 
 				const replacementStart = COMMAND_KEY + autocompleteResult.replace;
 
@@ -607,19 +607,33 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 	);
 }
 
-export function AutoCompleteHint(): ReactElement | null {
-	const { autocompleteHint, ref } = useChatInput();
-	const selectedElementRef = useRef<HTMLSpanElement>(null);
-
+export function useChatCommandContext(): ICommandInvokeContext<ICommandExecutionContextClient> {
 	const gameState = useGameState();
 	const sender = useChatMessageSender();
 	const chatInput = useChatInput();
-	const { setAutocompleteHint, allowCommands } = chatInput;
 
 	const directoryConnector = useDirectoryConnector();
 	const shardConnector = useShardConnector();
 	const navigate = useNavigate();
 	AssertNotNullable(shardConnector);
+
+	return useMemo(() => ({
+		shardConnector,
+		directoryConnector,
+		gameState,
+		player: gameState.player,
+		messageSender: sender,
+		inputHandlerContext: chatInput,
+		navigate,
+	}), [chatInput, gameState, directoryConnector, navigate, sender, shardConnector]);
+}
+
+export function AutoCompleteHint<TCommandExecutionContext extends ICommandExecutionContext>({ ctx, commands }: {
+	ctx: ICommandInvokeContext<TCommandExecutionContext>;
+	commands: readonly IClientCommand<TCommandExecutionContext>[];
+}): ReactElement | null {
+	const { autocompleteHint, ref, setAutocompleteHint, allowCommands } = useChatInput();
+	const selectedElementRef = useRef<HTMLSpanElement>(null);
 
 	useEffect(() => {
 		if (autocompleteHint?.index != null && selectedElementRef.current != null) {
@@ -672,15 +686,7 @@ export function AutoCompleteHint(): ReactElement | null {
 											textarea.focus();
 											textarea.setSelectionRange(input.length + 1, input.length + 1, 'none');
 
-											const autocompleteResult = CommandAutocomplete(input, {
-												shardConnector,
-												directoryConnector,
-												gameState,
-												player: gameState.player,
-												messageSender: sender,
-												inputHandlerContext: chatInput,
-												navigate,
-											});
+											const autocompleteResult = CommandAutocomplete(input, ctx, commands);
 
 											setAutocompleteHint({
 												replace: textarea.value,

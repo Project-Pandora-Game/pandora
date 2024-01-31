@@ -16,6 +16,7 @@ import React, {
 import { AssetManagerClient } from '../../../assets/assetManager';
 import { ChatParser } from './chatParser';
 import { UntrustedLink } from '../../../components/common/link/externalLink';
+import { SpaceInviteEmbed } from '../../screens/spaceJoin/spaceJoin';
 
 export type IChatMessageProcessed<T extends IChatMessageBase = IChatMessageBase> = T & {
 	/** Time the message was sent, guaranteed to be unique */
@@ -136,6 +137,20 @@ export function DescribeAttribute(assetManager: AssetManagerClient, attributeNam
 
 export function RenderChatPart([type, contents]: IChatSegment, index: number, allowLinkInNormal: boolean): ReactElement {
 	if (type === 'normal' && allowLinkInNormal && contents.match(/^https?:\/\//)) {
+		const url = new URL(contents);
+		switch (url.hostname) {
+			case 'project-pandora.com':
+			case 'www.project-pandora.com':
+				if (url.pathname.startsWith('/space/join/')) {
+					const invite = url.searchParams.get('invite') ?? undefined;
+					const spaceId = url.pathname.split('/').pop();
+					if (!spaceId)
+						break;
+
+					return <SpaceInviteEmbed key={ index } spaceId={ spaceId } invite={ invite } />;
+				}
+				break;
+		}
 		return (
 			<UntrustedLink key={ index } href={ contents }>
 				{ contents }

@@ -18,6 +18,7 @@ import { AccountContacts } from '../components/accountContacts/accountContacts';
 import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens';
 import { ModalDialog } from '../components/dialog/dialog';
 import { useObservable } from '../observable';
+import { SpaceJoin } from '../ui/screens/spaceJoin/spaceJoin';
 
 // Lazily loaded screens
 const Management = lazy(() => import('../components/management'));
@@ -43,6 +44,7 @@ export function PandoraRoutes(): ReactElement {
 
 			<Route path='/room' element={ <RequiresCharacter element={ RoomScreen } /> } />
 			<Route path='/space/configuration' element={ <RequiresCharacter element={ SpaceConfiguration } /> } />
+			<Route path='/space/join/*' element={ <RequiresCharacter element={ SpaceJoin } /> } />
 
 			<Route path='/spaces/search' element={ <RequiresCharacter element={ SpacesSearch } /> } />
 			<Route path='/spaces/create' element={ <RequiresCharacter element={ SpaceCreate } /> } />

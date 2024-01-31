@@ -1,11 +1,12 @@
-import { GetLogger, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceListInfo, SpaceId, SpaceLeaveReason, AssertNever, IChatMessageDirectoryAction, SpaceListExtendedInfo, IClientDirectoryArgument, Assert, AccountId, AsyncSynchronized, CharacterId, ChatActionId } from 'pandora-common';
+import { GetLogger, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceListInfo, SpaceId, SpaceLeaveReason, AssertNever, IChatMessageDirectoryAction, SpaceListExtendedInfo, IClientDirectoryArgument, Assert, AccountId, AsyncSynchronized, CharacterId, ChatActionId, SpaceInvite, SpaceInviteId, SpaceInviteCreate, LIMIT_SPACE_INVITES, TimeSpanMs } from 'pandora-common';
 import { Character, CharacterInfo } from '../account/character';
 import { Shard } from '../shard/shard';
 import { ConnectionManagerClient } from '../networking/manager_client';
-import { pick, uniq } from 'lodash';
+import { clamp, cloneDeep, pick, uniq } from 'lodash';
 import { ShardManager } from '../shard/shardManager';
 import { GetDatabase } from '../database/databaseProvider';
 import { Account } from '../account/account';
+import { nanoid } from 'nanoid';
 
 export class Space {
 	/** Time when this space was last requested */
@@ -14,6 +15,7 @@ export class Space {
 	public readonly id: SpaceId;
 	private readonly config: SpaceDirectoryConfig;
 	private readonly _owners: Set<AccountId>;
+	private _invites: SpaceInvite[];
 	private _deletionPending = false;
 
 	public get isValid(): boolean {
@@ -39,12 +41,17 @@ export class Space {
 		return this.config.public && this.hasAdminInside(true) && this._assignedShard?.type === 'stable';
 	}
 
+	public get invites(): SpaceInvite[] {
+		return cloneDeep(this._invites);
+	}
+
 	private readonly logger: Logger;
 
-	constructor(id: SpaceId, config: SpaceDirectoryConfig, owners: AccountId[], accessId: string) {
+	constructor(id: SpaceId, config: SpaceDirectoryConfig, owners: AccountId[], accessId: string, invites: SpaceInvite[]) {
 		this.id = id;
 		this.config = config;
 		this._owners = new Set(owners);
+		this._invites = invites;
 		this.accessId = accessId;
 		this.logger = GetLogger('Space', `[Space ${this.id}]`);
 
@@ -342,7 +349,7 @@ export class Space {
 		// Ignore those - the requests will fail and once the space is not requestest for a bit, it will be unloaded from the directory too, actually vanishing
 	}
 
-	public checkAllowEnter(character: Character, password: string | null, ignoreCharacterLimit: boolean = false): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' {
+	public checkAllowEnter(character: Character, data: { password?: string; invite?: SpaceInviteId; }, ignore: { characterLimit?: boolean; password?: boolean; } = {}): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' | 'invalidInvite' {
 		// No-one can enter if the space is in an invalid state
 		if (!this.isValid) {
 			return 'errFull';
@@ -353,7 +360,7 @@ export class Space {
 			return 'ok';
 
 		// If the space is full, you cannot enter it (some checks ignore space being full)
-		if (this.characterCount >= this.config.maxUsers && !ignoreCharacterLimit)
+		if (this.characterCount >= this.config.maxUsers && !ignore.characterLimit)
 			return 'errFull';
 
 		// If you are an owner or admin, you can enter the space (owner implies admin)
@@ -365,15 +372,92 @@ export class Space {
 			return 'noAccess';
 
 		// If the space is password protected and you have given valid password, you can enter it
-		if (this.config.password !== null && password && password === this.config.password)
+		if (this.config.password !== null && data.password && data.password === this.config.password)
 			return 'ok';
 
 		// If the space is public, you can enter it (unless it is password protected)
-		if (this.config.public && this.config.password === null)
+		if (this.config.public && (this.config.password === null || ignore.password))
 			return 'ok';
 
+		if (data.invite) {
+			const invite = this._getValidInvite(character, data.invite);
+			if (!invite)
+				return 'invalidInvite';
+			if (this.config.password === null || invite.bypassPassword)
+				return 'ok';
+		}
+
 		// Otherwise you cannot enter
-		return (this.config.password !== null && password) ? 'invalidPassword' : 'noAccess';
+		return (this.config.password !== null && data.password) ? 'invalidPassword' : 'noAccess';
+	}
+
+	private _cleanupInvites(): void {
+		const now = Date.now();
+		this._invites = this._invites
+			.filter((i) => i.expires == null || i.expires >= now)
+			.filter((i) => i.maxUses == null || i.uses < i.maxUses);
+	}
+
+	private _getValidInvite(character: Character, id: SpaceInviteId): SpaceInvite | undefined {
+		const invite = this._invites.find((i) => i.id === id);
+		if (!invite)
+			return undefined;
+		if (invite.expires != null && invite.expires < Date.now())
+			return undefined;
+		if (invite.maxUses != null && invite.uses >= invite.maxUses)
+			return undefined;
+		if (invite.accountId != null && invite.accountId !== character.baseInfo.account.id)
+			return undefined;
+		if (invite.characterId != null && invite.characterId !== character.baseInfo.id)
+			return undefined;
+
+		return invite;
+	}
+
+	public getInvite(character: Character, id?: SpaceInviteId): SpaceInvite | undefined {
+		if (!id)
+			return undefined;
+
+		return cloneDeep(this._getValidInvite(character, id));
+	}
+
+	@AsyncSynchronized('object')
+	public async deleteInvite(id: SpaceInviteId): Promise<boolean> {
+		const index = this._invites.findIndex((i) => i.id === id);
+		if (index < 0)
+			return false;
+
+		this._invites.splice(index, 1);
+		this._cleanupInvites();
+		await GetDatabase().updateSpace(this.id, { invites: this._invites }, null);
+		return true;
+	}
+
+	@AsyncSynchronized('object')
+	public async createInvite(data: SpaceInviteCreate): Promise<SpaceInvite | null> {
+		this._cleanupInvites();
+
+		if (this._invites.length >= LIMIT_SPACE_INVITES)
+			return null;
+
+		let id: SpaceInviteId = `i_${nanoid()}`;
+		while (this._invites.some((i) => i.id === id)) {
+			id = `i_${nanoid()}`;
+		}
+
+		const now = Date.now();
+		const expires = clamp(data.expires ?? Infinity, now + TimeSpanMs(10, 'minutes'), now + TimeSpanMs(1, 'days'));
+
+		const invite: SpaceInvite = {
+			...data,
+			id,
+			expires,
+			uses: 0,
+		};
+
+		this._invites.push(invite);
+		await GetDatabase().updateSpace(this.id, { invites: this._invites }, null);
+		return invite;
 	}
 
 	/** Returns if this space is visible to the specific account when searching in space search */
@@ -421,7 +505,7 @@ export class Space {
 	}
 
 	@AsyncSynchronized('object')
-	public async addCharacter(character: Character): Promise<void> {
+	public async addCharacter(character: Character, invite?: SpaceInviteId): Promise<void> {
 		// Ignore if space is invalidated
 		if (!this.isValid) {
 			return;
@@ -456,7 +540,19 @@ export class Space {
 		await Promise.all([
 			this._assignedShard?.update('characters'),
 			character.baseInfo.updateSelfData({ currentRoom: this.id }),
+			this._useInvite(character, invite),
 		]);
+	}
+
+	private async _useInvite(character: Character, id?: SpaceInviteId): Promise<void> {
+		const invite = id ? this._getValidInvite(character, id) : undefined;
+		if (!invite)
+			return;
+
+		invite.uses++;
+
+		this._cleanupInvites();
+		await GetDatabase().updateSpace(this.id, { invites: this._invites }, null);
 	}
 
 	@AsyncSynchronized('object')

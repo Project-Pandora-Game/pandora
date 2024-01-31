@@ -2,6 +2,7 @@
 
 .spaceConfigurationScreen {
 	width: min(100%, 50em);
+	margin: 0 auto;
 
 	&>* {
 		margin-top: 0.5em;
@@ -141,7 +142,7 @@
 			padding: 0.8em 1em;
 			z-index: 1;
 
-			a > span {
+			a>span {
 				display: inline-block;
 				width: 1rem;
 			}
@@ -192,11 +193,51 @@
 	.footer {
 		max-width: 100%;
 	}
+
 }
 
 .backgroundInfo {
 	img {
 		max-width: 46em;
 		max-height: 46em;
+	}
+}
+
+.spaceInviteCreation .input-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+
+	input[type='checkbox'] {
+		height: 1.2em;
+	}
+}
+
+.spaceInvitesTable td {
+	white-space: nowrap;
+}
+
+.permanentInvite {
+	display: block;
+	padding: 10px;
+	font-family: 'Courier New', Courier, monospace;
+
+	.text {
+		display: block;
+		user-select: none;
+		margin-bottom: 5px;
+	}
+
+	.invite {
+		background-color: #ccc;
+		border-radius: 5px;
+		border: 1px solid #ddd;
+		padding: 5px;
+		display: block;
+		user-select: all;
+		cursor: pointer;
+
+		&:hover {
+			text-decoration: underline;
+		}
 	}
 }

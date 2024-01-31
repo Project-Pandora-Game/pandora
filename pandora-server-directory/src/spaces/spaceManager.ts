@@ -187,10 +187,10 @@ export const SpaceManager = new class SpaceManagerClass implements Service {
 			}
 		}
 
-		const { id, config, owners, accessId } = result.data;
+		const { id, config, owners, accessId, invites } = result.data;
 
 		// Load the space itself
-		const space = new Space(id, config, owners, accessId);
+		const space = new Space(id, config, owners, accessId, invites);
 
 		// Load characters relevant to the space
 		const characterList = await GetDatabase().getCharactersInSpace(id);

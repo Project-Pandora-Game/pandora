@@ -4,15 +4,17 @@ import {
 	GetLogger,
 	SpaceListInfo,
 	SpaceExtendedInfoResponse,
-	IClientDirectoryNormalResult,
 	SpaceId,
 	AssertNotNullable,
+	SpaceInviteId,
+	SpaceListExtendedInfo,
+	SpaceInvite,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useReducer, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { PersistentToast } from '../../../persistentToast';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Button } from '../../../components/common/button/button';
-import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { useCharacterRestrictionsManager, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ResolveBackground } from 'pandora-common';
@@ -26,6 +28,9 @@ import publicDoor from '../../../icons/public-door.svg';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { useObservable } from '../../../observable';
+import { useAsyncEvent } from '../../../common/useEvent';
+import { usePlayerState } from '../../../components/gameContext/playerContextProvider';
+import { toast } from 'react-toastify';
 
 const TIPS: readonly string[] = [
 	`You can move your character inside a room by dragging the character name below her.`,
@@ -200,12 +205,23 @@ function SpaceDetailsDialog({ baseInfo, hide }: {
 	baseInfo: SpaceListInfo;
 	hide: () => void;
 }): ReactElement | null {
-
-	const assetManager = useAssetManager();
 	const accountId = useCurrentAccount()?.id;
-	const [password, setPassword] = useState('');
-	const join = useJoinSpace();
 	const extendedInfo = useSpaceExtendedInfo(baseInfo.id);
+
+	const info = useMemo<SpaceListExtendedInfo>(() => {
+		if (extendedInfo?.result === 'success')
+			return extendedInfo.data;
+
+		return {
+			...baseInfo,
+			features: [],
+			admin: [],
+			background: '',
+			isAdmin: false,
+			owners: [],
+			characters: [],
+		};
+	}, [extendedInfo, baseInfo]);
 
 	// Close if the space disappears
 	useEffect(() => {
@@ -219,46 +235,79 @@ function SpaceDetailsDialog({ baseInfo, hide }: {
 	if (extendedInfo?.result === 'notFound' || accountId == null)
 		return null;
 
-	// Get basic info
-	const { id, name, description, hasPassword } = baseInfo;
-	// Get advanced info, if we can
-	const detailedData = extendedInfo?.result === 'success' ? extendedInfo.data : undefined;
-	const characters = detailedData?.characters ?? [];
-	const owners = detailedData?.owners ?? [];
-	const background = detailedData?.background ? ResolveBackground(assetManager, detailedData.background, GetAssetsSourceUrl()).image : '';
-	const features = detailedData?.features ?? [];
-
-	const userIsOwner = !!detailedData?.isOwner;
-	const userIsAdmin = !!detailedData?.isAdmin;
-
 	return (
 		<ModalDialog>
-			<div className='spacesSearchSpaceDetails'>
-				<div>
-					Details for { detailedData?.public ? 'public' : 'private' } space <b>{ name }</b><br />
-				</div>
-				<Row className='ownership' alignY='center'>
-					Owned by: { owners.join(', ') }
-				</Row>
-				{ (background !== '' && !background.startsWith('#')) &&
-					<img className='preview' src={ background } width='200px' height='100px' /> }
-				<Row className='features'>
-					{ hasPassword && <img className='features-img' src={ closedDoor } title='Protected Space' /> }
-					{
-						SPACE_FEATURES
-							.filter((f) => features.includes(f.id))
-							.map((f) => (
-								<img key={ f.id } className='features-img' src={ f.icon } title={ f.name } alt={ f.name } />
-							))
-					}
-				</Row>
-				<div className='description-title'>Description:</div>
-				<textarea className='widebox' value={ description } rows={ 16 } readOnly />
-				{ characters.length > 0 &&
+			<SpaceDetails info={ info } hide={ hide } />
+		</ModalDialog>
+	);
+}
+
+export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeText = 'Close' }: { info: SpaceListExtendedInfo; hide?: () => void; invite?: SpaceInvite; redirectBeforeLeave?: boolean; closeText?: string; }): ReactElement {
+	const assetManager = useAssetManager();
+	const [password, setPassword] = useState('');
+	const directoryConnector = useDirectoryConnector();
+
+	const [join, processing] = useAsyncEvent(
+		(e: React.MouseEvent<HTMLButtonElement>) => {
+			e.stopPropagation();
+			SpaceJoinProgress.show('progress', 'Joining space...');
+			return directoryConnector.awaitResponse('spaceEnter', { id: info.id, password, invite: invite?.id });
+		},
+		(resp) => {
+			if (resp.result === 'ok') {
+				SpaceJoinProgress.show('success', 'Space joined!');
+			} else {
+				SpaceJoinProgress.show('error', `Failed to join space:\n${resp.result}`);
+			}
+			if (resp.result === 'notFound') {
+				hide?.();
+			}
+		},
+		{
+			errorHandler: (error) => {
+				GetLogger('JoinSpace').warning('Error during space join', error);
+				SpaceJoinProgress.show('error',
+					`Error during space join:\n${error instanceof Error ? error.message : String(error)}`);
+			},
+		},
+	);
+
+	const background = info.background ? ResolveBackground(assetManager, info.background, GetAssetsSourceUrl()).image : '';
+	const hasPassword = info.hasPassword;
+
+	const userIsOwner = !!info.isOwner;
+	const userIsAdmin = !!info.isAdmin;
+
+	const requirePassword = !userIsAdmin && !userIsOwner && hasPassword && !invite?.bypassPassword;
+
+	return (
+		<div className='spacesSearchSpaceDetails'>
+			<div>
+				Details for { info?.public ? 'public' : 'private' } space <b>{ info.name }</b><br />
+			</div>
+			<Row className='ownership' alignY='center'>
+				Owned by: { info.owners.join(', ') }
+			</Row>
+			{ (background !== '' && !background.startsWith('#')) &&
+				<img className='preview' src={ background } width='200px' height='100px' /> }
+			<Row className='features'>
+				{ hasPassword && <img className='features-img' src={ closedDoor } title='Protected Space' /> }
+				{
+					SPACE_FEATURES
+						.filter((f) => info.features.includes(f.id))
+						.map((f) => (
+							<img key={ f.id } className='features-img' src={ f.icon } title={ f.name } alt={ f.name } />
+						))
+				}
+			</Row>
+			<div className='description-title'>Description:</div>
+			<textarea className='widebox' value={ info.description } rows={ 16 } readOnly />
+			{
+				info.characters.length > 0 && (
 					<div className='title'>Characters currently in this space:
 						<div className='users-list'>
 							{
-								characters.map((char) => (
+								info.characters.map((char) => (
 									<div key={ char.id } className={ char.isOnline ? '' : 'offline' }>
 										{ char.isOnline ? '' : '( ' }
 										{ char.name } ({ char.id })
@@ -267,64 +316,119 @@ function SpaceDetailsDialog({ baseInfo, hide }: {
 								))
 							}
 						</div>
-					</div> }
-				{ (!userIsAdmin && hasPassword) &&
-					<div className='title'>This spaces requires a password to enter:</div> }
-				{ (!userIsAdmin && hasPassword) &&
-					<input className='widebox'
-						type='password'
-						value={ password }
-						onChange={ (e) => setPassword(e.target.value) }
-					/> }
-				<Row padding='medium' className='buttons' alignX='space-between' alignY='center'>
-					<Button onClick={ hide }>Close</Button>
-					{ userIsOwner && <SpaceOwnershipRemoval buttonClassName='slim' id={ id } name={ name } /> }
-					<Button className='fadeDisabled'
-						disabled={ !userIsAdmin && hasPassword && !password }
-						onClick={ () => {
-							join(id, password)
-								.then((joinResult) => {
-									if (joinResult === 'notFound')
-										hide();
-									// TODO: Move error messages here from the join itself (or remove this handler)
-								})
-								.catch((_error: unknown) => {
-									// You can handle if joining crashed or server communication failed here
-								});
+					</div>
+				)
+			}
+			{
+				requirePassword && (
+					<>
+						<div className='title'>This spaces requires a password to enter:</div>
+						<input className='widebox'
+							type='password'
+							value={ password }
+							onChange={ (e) => setPassword(e.target.value) }
+						/>
+					</>
+				)
+			}
+			<Row padding='medium' className='buttons' alignX='space-between' alignY='center'>
+				{
+					hide && (
+						<Button onClick={ (e) => {
+							e.stopPropagation();
+							hide();
 						} }>
+							{ closeText }
+						</Button>
+					)
+				}
+				{ userIsOwner && <SpaceOwnershipRemoval buttonClassName='slim' id={ info.id } name={ info.name } /> }
+				<GuardedJoinButton spaceId={ info.id } inviteId={ invite?.id } redirectBeforeLeave={ redirectBeforeLeave }>
+					<Button className='fadeDisabled'
+						disabled={ processing || (!userIsAdmin && requirePassword && !password) }
+						onClick={ join }>
 						Enter Space
 					</Button>
-				</Row>
-			</div>
-		</ModalDialog>
+				</GuardedJoinButton>
+			</Row>
+		</div>
+	);
+}
+
+// TODO: remove some of this when we automate leave process was added
+function GuardedJoinButton({ children, spaceId, inviteId, redirectBeforeLeave }: { children: ReactNode; spaceId: SpaceId; inviteId?: SpaceInviteId; redirectBeforeLeave?: boolean; }): ReactElement {
+	const { pathname } = useLocation();
+	const navigate = useNavigate();
+	const space = useSpaceInfoOptional();
+	const directoryConnector = useDirectoryConnector();
+	const { player, playerState } = usePlayerState();
+	const roomDeviceLink = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getRoomDeviceLink());
+	const canLeave = useCharacterRestrictionsManager(playerState, player, (manager) => (manager.forceAllowRoomLeave() || !manager.getEffects().blockRoomLeave));
+
+	const [leave, processing] = useAsyncEvent(
+		(e: React.MouseEvent<HTMLButtonElement>) => {
+			e.stopPropagation();
+			return directoryConnector.awaitResponse('spaceLeave', EMPTY);
+		},
+		(resp) => {
+			if (resp.result !== 'ok') {
+				toast(`Failed to leave space:\n${resp.result}`, TOAST_OPTIONS_ERROR);
+			}
+		},
+		{
+			errorHandler: (error) => {
+				GetLogger('LeaveSpace').warning('Error while leaving space', error);
+				toast(`Error while leaving space:\n${error instanceof Error ? error.message : String(error)}`, TOAST_OPTIONS_ERROR);
+			},
+		},
+	);
+
+	if (space?.id === null) {
+		return <>{ children }</>;
+	}
+
+	if (space?.id === spaceId) {
+		return (
+			<Button className='fadeDisabled' disabled={ true }>
+				You are already inside this space
+			</Button>
+		);
+	}
+
+	if (roomDeviceLink) {
+		return (
+			<Button className='fadeDisabled' disabled={ true }>
+				You must exit the room device before leaving the space
+			</Button>
+		);
+	}
+
+	if (!canLeave) {
+		return (
+			<Button className='fadeDisabled' disabled={ true }>
+				An item is preventing you from leaving the space
+			</Button>
+		);
+	}
+
+	if (redirectBeforeLeave && !pathname.startsWith('/space/join')) {
+		return (
+			<Button onClick={ () => {
+				navigate(`/space/join/${spaceId.split('/')[1]}${inviteId ? `?invite=${inviteId}` : ''}`);
+			} }>
+				Go To Invite URL
+			</Button>
+		);
+	}
+
+	return (
+		<Button onClick={ leave } className='fadeDisabled' disabled={ processing || !canLeave || roomDeviceLink != null }>
+			Leave current space
+		</Button>
 	);
 }
 
 const SpaceJoinProgress = new PersistentToast();
-
-type SpaceEnterResult = IClientDirectoryNormalResult['spaceEnter']['result'];
-
-function useJoinSpace(): (id: SpaceId, password?: string) => Promise<SpaceEnterResult> {
-	const directoryConnector = useDirectoryConnector();
-
-	return useCallback(async (id, password) => {
-		try {
-			SpaceJoinProgress.show('progress', 'Joining space...');
-			const result = await directoryConnector.awaitResponse('spaceEnter', { id, password });
-			if (result.result === 'ok') {
-				SpaceJoinProgress.show('success', 'Space joined!');
-			} else {
-				SpaceJoinProgress.show('error', `Failed to join space:\n${ result.result }`);
-			}
-			return result.result;
-		} catch (err) {
-			GetLogger('JoinSpace').warning('Error during space join', err);
-			SpaceJoinProgress.show('error',
-				`Error during space join:\n${ err instanceof Error ? err.message : String(err) }`);
-			return 'failed';
-		}
-	}, [directoryConnector]);
-}
 
 function useSpacesList(): SpaceListInfo[] | undefined {
 	const [data, setData] = useState<SpaceListInfo[]>();
@@ -344,14 +448,14 @@ function useSpacesList(): SpaceListInfo[] | undefined {
 	return data;
 }
 
-export function useSpaceExtendedInfo(id: SpaceId): SpaceExtendedInfoResponse | undefined {
+export function useSpaceExtendedInfo(id: SpaceId, invite?: SpaceInviteId): SpaceExtendedInfoResponse | undefined {
 	const [response, setResponse] = useState<SpaceExtendedInfoResponse>();
 	const directoryConnector = useDirectoryConnector();
 
 	const fetchData = useCallback(async () => {
-		const result = await directoryConnector.awaitResponse('spaceGetInfo', { id });
+		const result = await directoryConnector.awaitResponse('spaceGetInfo', { id, invite });
 		setResponse(result);
-	}, [directoryConnector, id]);
+	}, [directoryConnector, id, invite]);
 
 	useDirectoryChangeListener('spaceList', () => {
 		fetchData().catch(noop);

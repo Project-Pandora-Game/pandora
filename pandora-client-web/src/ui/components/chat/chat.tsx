@@ -15,12 +15,13 @@ import { useChatMessages, useChatMessageSender } from '../../../components/gameC
 import { NotificationSource, useNotificationSuppressed } from '../../../components/gameContext/notificationContextProvider';
 import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider';
-import { AutoCompleteHint, ChatInputArea, useChatInput } from './chatInput';
+import { AutoCompleteHint, ChatInputArea, useChatCommandContext, useChatInput } from './chatInput';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
 import { useAutoScroll } from '../../../common/useAutoScroll';
 import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatMessages';
 import { useCurrentAccountSettings } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { Column } from '../../../components/common/container/container';
+import { COMMANDS } from './commands';
 
 export function Chat(): ReactElement | null {
 	const messages = useChatMessages();
@@ -56,10 +57,17 @@ export function Chat(): ReactElement | null {
 						{ messages.map((m) => <Message key={ m.time } message={ m } playerId={ playerId } />) }
 					</Column>
 				</Scrollable>
-				<AutoCompleteHint />
+				<ChatAutoCompleteHint />
 			</div>
 			<ChatInputArea messagesDiv={ messagesDiv } scroll={ scroll } newMessageCount={ newMessageCount } />
 		</div>
+	);
+}
+
+function ChatAutoCompleteHint() {
+	const ctx = useChatCommandContext();
+	return (
+		<AutoCompleteHint ctx={ ctx } commands={ COMMANDS } />
 	);
 }
 

@@ -118,6 +118,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			spaceUpdate: this.handleSpaceUpdate.bind(this),
 			spaceAdminAction: this.handleSpaceAdminAction.bind(this),
 			spaceOwnershipRemove: this.handleSpaceOwnershipRemove.bind(this),
+			spaceInvite: this.handleSpaceInvite.bind(this),
 
 			// Outfits
 			storedOutfitsGetAll: this.handleStoredOutfitsGetAll.bind(this),
@@ -378,7 +379,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { spaces };
 	}
 
-	private async handleSpaceGetInfo({ id }: IClientDirectoryArgument['spaceGetInfo'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceGetInfo'] {
+	private async handleSpaceGetInfo({ id, invite }: IClientDirectoryArgument['spaceGetInfo'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceGetInfo'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
@@ -388,7 +389,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notFound' };
 		}
 
-		const allowResult = space.checkAllowEnter(connection.character, null, true);
+		const allowResult = space.checkAllowEnter(connection.character, { invite }, { characterLimit: true, password: true });
 
 		if (allowResult !== 'ok') {
 			return { result: 'noAccess' };
@@ -397,6 +398,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return {
 			result: 'success',
 			data: space.getListExtendedInfo(connection.account),
+			invite: space.getInvite(connection.character, invite),
 		};
 	}
 
@@ -412,15 +414,16 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: space };
 		}
 
-		const result = await character.joinSpace(space, null);
+		const result = await character.joinSpace(space);
 		Assert(result !== 'noAccess');
 		Assert(result !== 'errFull');
 		Assert(result !== 'invalidPassword');
+		Assert(result !== 'invalidInvite');
 
 		return { result };
 	}
 
-	private async handleSpaceEnter({ id, password }: IClientDirectoryArgument['spaceEnter'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceEnter'] {
+	private async handleSpaceEnter({ id, password, invite }: IClientDirectoryArgument['spaceEnter'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceEnter'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
@@ -432,7 +435,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notFound' };
 		}
 
-		const result = await character.joinSpace(space, password ?? null);
+		const result = await character.joinSpace(space, password, invite);
 
 		return { result };
 	}
@@ -491,6 +494,42 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const result = await space.removeOwner(connection.account.id);
 
 		return { result };
+	}
+
+	private async handleSpaceInvite(req: IClientDirectoryArgument['spaceInvite'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceInvite'] {
+		if (!connection.isLoggedIn() || !connection.character?.space)
+			throw new BadMessageError();
+
+		if (!connection.character.space.isAdmin(connection.account))
+			return { result: 'notAnOwner' };
+
+		switch (req.action) {
+			case 'list':
+				return {
+					result: 'list',
+					invites: connection.character.space.invites,
+				};
+			case 'delete': {
+				const result = await connection.character.space.deleteInvite(req.id);
+				return {
+					result: result ? 'ok' : 'notFound',
+				};
+			}
+			case 'create': {
+				const invite = await connection.character.space.createInvite(req.data);
+				if (invite) {
+					return {
+						result: 'created',
+						invite,
+					};
+				}
+				return {
+					result: 'tooManyInvites',
+				};
+			}
+			default:
+				AssertNever(req);
+		}
 	}
 
 	private handleStoredOutfitsGetAll(_data: IClientDirectoryArgument['storedOutfitsGetAll'], connection: ClientConnection): IClientDirectoryResult['storedOutfitsGetAll'] {

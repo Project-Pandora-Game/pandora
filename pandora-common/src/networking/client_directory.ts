@@ -2,7 +2,7 @@ import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, Sock
 import { AccountCryptoKeySchema, DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { ICharacterSelfInfo } from '../character/characterData';
-import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceListExtendedInfo, SpaceListInfo, SpaceId, SpaceIdSchema } from '../space/space';
+import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceListExtendedInfo, SpaceListInfo, SpaceId, SpaceIdSchema, SpaceInviteIdSchema, SpaceInvite, SpaceInviteCreateSchema } from '../space/space';
 import { AccountId, AccountIdSchema, AccountRoleSchema, ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account';
 import { EmailAddressSchema, HexColorString, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast, ZodTruncate } from '../validation';
 import { z } from 'zod';
@@ -59,6 +59,7 @@ export type SpaceExtendedInfoResponse = {
 } | {
 	result: 'success';
 	data: SpaceListExtendedInfo;
+	invite?: SpaceInvite;
 };
 
 export type IAccountContact = {
@@ -262,6 +263,7 @@ export const ClientDirectorySchema = {
 	spaceGetInfo: {
 		request: z.object({
 			id: SpaceIdSchema,
+			invite: SpaceInviteIdSchema.optional(),
 		}),
 		response: ZodCast<SpaceExtendedInfoResponse>(),
 	},
@@ -272,9 +274,10 @@ export const ClientDirectorySchema = {
 	spaceEnter: {
 		request: z.object({
 			id: SpaceIdSchema,
+			invite: SpaceInviteIdSchema.optional(),
 			password: z.string().optional(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword'; }>(),
+		response: ZodCast<{ result: 'ok' | 'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword' | 'invalidInvite'; }>(),
 	},
 	spaceLeave: {
 		request: z.object({}),
@@ -298,6 +301,28 @@ export const ClientDirectorySchema = {
 			id: SpaceIdSchema,
 		}),
 		response: ZodCast<{ result: 'ok' | 'notAnOwner'; }>(),
+	},
+	spaceInvite: {
+		request: z.discriminatedUnion('action', [
+			z.object({
+				action: z.literal('create'),
+				data: SpaceInviteCreateSchema,
+			}),
+			z.object({
+				action: z.literal('delete'),
+				id: SpaceInviteIdSchema,
+			}),
+			z.object({
+				action: z.literal('list'),
+			}),
+		]),
+		response: ZodCast<{ result: 'ok' | 'notAnOwner' | 'tooManyInvites' | 'notFound'; } | {
+			result: 'list';
+			invites: SpaceInvite[];
+		} | {
+			result: 'created';
+			invite: SpaceInvite;
+		}>(),
 	},
 	//#endregion
 

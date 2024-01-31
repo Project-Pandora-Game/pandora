@@ -119,7 +119,7 @@ function BlockMenu({ action, text }: { action: 'add' | 'remove'; text: ReactNode
 	const confirm = useConfirmDialog();
 
 	const block = useCallback(() => {
-		confirm(`Confirm ${ action === 'add' ? 'block' : 'unblock' }`, `Are you sure you want to ${action} the account behind ${character.data.name} ${ action === 'add' ? 'to' : 'from' } your block list?`)
+		confirm(`Confirm ${action === 'add' ? 'block' : 'unblock'}`, `Are you sure you want to ${action} the account behind ${character.data.name} ${action === 'add' ? 'to' : 'from'} your block list?`)
 			.then((result) => {
 				if (result) {
 					directory.sendMessage('blockList', { action, id: character.data.accountId });
@@ -251,13 +251,24 @@ export function CharacterContextMenu({ character, position, onClose, closeText =
 	onClose: () => void;
 	closeText?: string;
 }): ReactElement | null {
+	const ref = useContextMenuPosition(position);
+	return (
+		<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
+			<CharacterContextMenuContent character={ character } onClose={ onClose } closeText={ closeText } />
+		</div>
+	);
+}
+
+export function CharacterContextMenuContent({ character, onClose, closeText = 'Close' }: {
+	character: Character<ICharacterRoomData>;
+	onClose: () => void;
+	closeText?: string;
+}): ReactElement | null {
 	const navigate = useNavigate();
 	const { setTarget } = useChatInput();
 	const playerId = usePlayerId();
 	const currentAccount = useCurrentAccount();
 	const [menu, setMenu] = useState<MenuType>('main');
-
-	const ref = useContextMenuPosition(position);
 
 	const characterData = useCharacterData(character);
 	const spaceInfo = useSpaceInfo().config;
@@ -293,41 +304,39 @@ export function CharacterContextMenu({ character, position, onClose, closeText =
 
 	return (
 		<characterMenuContext.Provider value={ context }>
-			<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
-				<span>
-					{ characterData.name } ({ characterData.id })
-				</span>
-				{ menu === 'main' && (
-					<>
+			<span>
+				{ characterData.name } ({ characterData.id })
+			</span>
+			{ menu === 'main' && (
+				<>
+					<button onClick={ () => {
+						onCloseActual();
+						navigate('/wardrobe', { state: { character: characterData.id } });
+					} }>
+						Wardrobe
+					</button>
+					<button onClick={ () => {
+						onCloseActual();
+						navigate(`/profiles/character/${characterData.id}`);
+					} }>
+						Profile
+					</button>
+					{ characterData.id !== playerId && (
 						<button onClick={ () => {
-							onCloseActual();
-							navigate('/wardrobe', { state: { character: characterData.id } });
+							onClose();
+							setTarget(characterData.id);
 						} }>
-							Wardrobe
+							Whisper
 						</button>
-						<button onClick={ () => {
-							onCloseActual();
-							navigate(`/profiles/character/${characterData.id}`);
-						} }>
-							Profile
-						</button>
-						{ characterData.id !== playerId && (
-							<button onClick={ () => {
-								onClose();
-								setTarget(characterData.id);
-							} }>
-								Whisper
-							</button>
-						) }
-						<NavigateToDMMenu />
-					</>
-				) }
-				<AdminActionContextMenu />
-				<AccountContactActionContextMenu />
-				<button onClick={ onCloseActual } >
-					{ closeText }
-				</button>
-			</div>
+					) }
+					<NavigateToDMMenu />
+				</>
+			) }
+			<AdminActionContextMenu />
+			<AccountContactActionContextMenu />
+			<button onClick={ onCloseActual } >
+				{ closeText }
+			</button>
 		</characterMenuContext.Provider>
 	);
 }

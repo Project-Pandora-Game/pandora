@@ -19,11 +19,15 @@ import {
 	LIMIT_SPACE_NAME_LENGTH,
 	LIMIT_SPACE_MAX_CHARACTER_NUMBER,
 	CloneDeepMutable,
+	SpaceInvite,
+	FormatTimeInterval,
+	AccountIdSchema,
+	CharacterIdSchema,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { DirectoryConnector } from '../../../networking/directoryConnector';
-import { PersistentToast } from '../../../persistentToast';
+import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Button } from '../../../components/common/button/button';
 import {
 	useCurrentAccount,
@@ -33,7 +37,7 @@ import {
 import { CurrentSpaceInfo, IsSpaceAdmin, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
 import { Select } from '../../../components/common/select/select';
-import { ModalDialog } from '../../../components/dialog/dialog';
+import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
 import { Column, Row } from '../../../components/common/container/container';
 import bodyChange from '../../../icons/body-change.svg';
 import devMode from '../../../icons/developer.svg';
@@ -44,6 +48,10 @@ import { ColorInput } from '../../../components/common/colorInput/colorInput';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { Immutable } from 'immer';
+import { useAsyncEvent } from '../../../common/useEvent';
+import { useCurrentTime } from '../../../common/useCurrentTime';
+import { toast } from 'react-toastify';
+import { CopyToClipboard } from '../../../common/clipboard';
 
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
 const IsValidDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
@@ -365,7 +373,202 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 			</div>
 			{ canEdit && <Button className='fill-x' onClick={ () => UpdateSpace(directoryConnector, modifiedData, () => navigate('/room')) }>Update space</Button> }
 			{ !canEdit && <Button className='fill-x' onClick={ () => navigate('/room') }>Back</Button> }
+			{ canEdit && currentSpaceId != null && <SpaceInvites spaceId={ currentSpaceId } /> }
 		</div>
+	);
+}
+
+function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
+	const directoryConnector = useDirectoryConnector();
+	const [invites, setInvites] = useState<readonly SpaceInvite[]>([]);
+	const [showCreation, setShowCreation] = useState(false);
+
+	const [onChange] = useAsyncEvent(
+		async (isOpen) => {
+			if (!isOpen)
+				return null;
+
+			return await directoryConnector.awaitResponse('spaceInvite', { action: 'list' });
+		},
+		(resp) => {
+			if (resp?.result === 'list') {
+				setInvites(resp.invites);
+			}
+		},
+	);
+
+	const copyPublic = useCallback((ev: React.MouseEvent<HTMLElement>) => {
+		ev.stopPropagation();
+		CopyToClipboard(`https://project-pandora.com/space/join/${spaceId.split('/')[1]}`, () => toast('Copied invite to clipboard'));
+	}, [spaceId]);
+
+	const update = useCallback(() => onChange(true), [onChange]);
+
+	return (
+		<FieldsetToggle legend='Invites' onChange={ onChange } open={ false }>
+			<Column gap='medium'>
+				<div onClick={ copyPublic } className='permanentInvite'>
+					<span className='text'>Permanent public invite link:</span>
+					<span className='invite'>https://project-pandora.com/space/join/{ spaceId.split('/')[1] }</span>
+				</div>
+				<Button onClick={ () => setShowCreation(true) }>Create New Invite</Button>
+				<table className='spaceInvitesTable'>
+					<thead>
+						<tr>
+							<th>Invite ID</th>
+							<th>Uses</th>
+							<th>Limited To Account</th>
+							<th>Limited To Character</th>
+							<th>Expires</th>
+							<th>Bypass Password</th>
+							<th>Actions</th>
+						</tr>
+					</thead>
+					<tbody>
+						{
+							invites.map((invite) => (
+								<SpaceInviteRow key={ invite.id } spaceId={ spaceId } invite={ invite } directoryConnector={ directoryConnector } update={ update } />
+							))
+						}
+					</tbody>
+				</table>
+				{ showCreation && <SpaceInviteCreation closeDialog={ () => setShowCreation(false) } update={ update } /> }
+			</Column>
+		</FieldsetToggle>
+	);
+}
+
+function SpaceInviteCreation({ closeDialog, update }: { closeDialog: () => void; update: () => void; }): ReactElement {
+	const directoryConnector = useDirectoryConnector();
+	const [account, setAccount] = useState('');
+	const [character, setCharacter] = useState('');
+	const [uses, setUses] = useState('');
+	const [bypassPassword, setBypassPassword] = useState(true);
+
+	const [onCreate, processing] = useAsyncEvent(
+		async () => {
+			const acc = account === '' ? undefined : AccountIdSchema.safeParse(account);
+			if (acc && !acc.success) {
+				toast('Invalid account ID', TOAST_OPTIONS_ERROR);
+				return null;
+			}
+			const accountId = acc?.data;
+			const chr = character === '' ? undefined : CharacterIdSchema.safeParse(character);
+			if (chr && !chr.success) {
+				toast('Invalid character ID', TOAST_OPTIONS_ERROR);
+				return null;
+			}
+			const characterId = chr?.data;
+			const maxUses = uses === '' ? undefined : Math.min(parseInt(uses, 10), 1);
+
+			return await directoryConnector.awaitResponse('spaceInvite', {
+				action: 'create',
+				data: {
+					accountId,
+					characterId,
+					maxUses,
+					bypassPassword,
+				},
+			});
+		},
+		(resp) => {
+			if (resp == null)
+				return;
+
+			if (resp.result !== 'created') {
+				toast(`Failed to create invite:\n${resp.result}`, TOAST_OPTIONS_ERROR);
+				return;
+			}
+
+			update();
+		},
+	);
+
+	return (
+		<ModalDialog>
+			<Column className='spaceInviteCreation' gap='medium'>
+				<div className='input-row'>
+					<label>Limit To Account ID</label>
+					<input type='text' value={ account } onChange={ (e) => setAccount(e.target.value.trim()) } />
+				</div>
+				<div className='input-row'>
+					<label>Limit To Character ID</label>
+					<input type='text' value={ character } onChange={ (e) => setCharacter(e.target.value.trim()) } />
+				</div>
+				<div className='input-row'>
+					<label>Max uses</label>
+					<input type='number' value={ uses } onChange={ (e) => setUses(e.target.value.trim()) } />
+				</div>
+				<div className='input-row'>
+					<label>Bypass password</label>
+					<input type='checkbox' checked={ bypassPassword } onChange={ (e) => setBypassPassword(e.target.checked) } />
+				</div>
+				<Row padding='medium' alignX='space-between'>
+					<Button onClick={ closeDialog }>Cancel</Button>
+					<Button onClick={ onCreate } disabled={ processing }>Create</Button>
+				</Row>
+			</Column>
+		</ModalDialog>
+	);
+}
+
+function SpaceInviteRow({ spaceId, invite, directoryConnector, update }: { spaceId: SpaceId; invite: SpaceInvite; directoryConnector: DirectoryConnector; update: () => void; }): ReactElement {
+	const confirm = useConfirmDialog();
+
+	const [onDelete, processing] = useAsyncEvent(
+		async (ev: React.MouseEvent<HTMLElement>) => {
+			ev.stopPropagation();
+			if (!await confirm('Are you sure you want to delete this invite?', `Id: ${invite.id}`))
+				return null;
+
+			return await directoryConnector.awaitResponse('spaceInvite', { action: 'delete', id: invite.id });
+		},
+		(resp) => {
+			if (resp == null)
+				return;
+
+			if (resp.result !== 'ok') {
+				toast(`Failed to delete invite:\n${resp.result}`, TOAST_OPTIONS_ERROR);
+				return;
+			}
+
+			update();
+		},
+	);
+
+	const copy = useCallback((ev: React.MouseEvent<HTMLElement>) => {
+		ev.stopPropagation();
+		CopyToClipboard(`https://project-pandora.com/space/join/${spaceId.split('/')[1]}?invite=${invite.id}`, () => toast('Copied invite id to clipboard'));
+	}, [spaceId, invite.id]);
+
+	return (
+		<tr>
+			<td>{ invite.id }</td>
+			<td>{ invite.uses } / { invite.maxUses ?? '∞' }</td>
+			<td>{ invite.accountId ?? '' }</td>
+			<td>{ invite.characterId ?? '' }</td>
+			<td>{ invite.expires ? <SpaceInviteExpires expires={ invite.expires } update={ update } /> : 'Never' }</td>
+			<td>{ invite.bypassPassword ? 'Yes' : 'No' }</td>
+			<td>
+				<Button onClick={ copy } disabled={ processing } className='slim'>Copy</Button>
+				<Button onClick={ onDelete } disabled={ processing } className='slim'>Delete</Button>
+			</td>
+		</tr>
+	);
+}
+
+function SpaceInviteExpires({ expires, update }: { expires: number; update: () => void; }): ReactElement {
+	const now = useCurrentTime(1000);
+
+	useEffect(() => {
+		if (expires < now)
+			update();
+	}, [expires, now, update]);
+
+	return (
+		<>
+			{ FormatTimeInterval(expires - now) }
+		</>
 	);
 }
 

@@ -443,7 +443,7 @@ function SpaceInviteCreation({ closeDialog, update }: { closeDialog: () => void;
 	const [account, setAccount] = useState('');
 	const [character, setCharacter] = useState('');
 	const [uses, setUses] = useState('');
-	const [bypassPassword, setBypassPassword] = useState(false);
+	const [bypassPassword, setBypassPassword] = useState(true);
 
 	const [onCreate, processing] = useAsyncEvent(
 		async () => {

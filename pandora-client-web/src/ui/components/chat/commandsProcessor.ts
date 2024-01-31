@@ -3,7 +3,6 @@ import { DirectoryConnector } from '../../../networking/directoryConnector';
 import type { ShardConnector } from '../../../networking/shardConnector';
 import type { GameState, IChatMessageSender } from '../../../components/gameContext/gameStateContextProvider';
 import type { IChatInputHandler } from './chatInput';
-import { COMMANDS } from './commands';
 import type { useNavigate } from 'react-router';
 import type { PlayerCharacter } from '../../../character/player';
 
@@ -19,21 +18,21 @@ export interface ICommandExecutionContextClient extends ICommandExecutionContext
 	navigate: ReturnType<typeof useNavigate>;
 }
 
-export type IClientCommand = {
+export type IClientCommand<TCommandExecutionContext extends ICommandExecutionContext> = {
 	key: [string, ...string[]];
 	description: string;
 	longDescription: string;
 	usage: string;
-	handler: CommandRunner<ICommandExecutionContextClient, IEmpty>;
+	handler: CommandRunner<TCommandExecutionContext, IEmpty>;
 	// TODO
 	// status?: { status: IChatCharacterStatus; } | ((args: string[]) => { status: IChatCharacterStatus; } | { status: IChatCharacterStatus, target: CharacterId; });
 };
 
-export function GetCommand(input: string): {
+export function GetCommand<TCommandExecutionContext extends ICommandExecutionContext>(input: string, commands: readonly IClientCommand<TCommandExecutionContext>[]): {
 	commandName: string;
 	spacing: string;
 	args: string;
-	command: IClientCommand | null;
+	command: IClientCommand<TCommandExecutionContext> | null;
 } {
 	let commandName: string = '';
 	let spacing: string = '';
@@ -49,7 +48,7 @@ export function GetCommand(input: string): {
 		})
 		.trimStart();
 
-	const command = COMMANDS.find((c) => c.key.includes(commandName)) ?? null;
+	const command = commands.find((c) => c.key.includes(commandName)) ?? null;
 
 	return {
 		commandName,
@@ -59,37 +58,37 @@ export function GetCommand(input: string): {
 	};
 }
 
-export type ICommandInvokeContext = Omit<ICommandExecutionContextClient, 'executionType' | 'commandName'>;
+export type ICommandInvokeContext<TCommandExecutionContext extends ICommandExecutionContext> = Omit<TCommandExecutionContext, 'executionType' | 'commandName'>;
 
-export function RunCommand(originalInput: string, ctx: ICommandInvokeContext): boolean {
-	const { commandName, command, args } = GetCommand(originalInput);
+function CreateContext<TCommandExecutionContext extends ICommandExecutionContext>(ctx: ICommandInvokeContext<TCommandExecutionContext>, executionType: ICommandExecutionContext['executionType'], commandName: string): TCommandExecutionContext {
+	// @ts-expect-error - We are creating a new object here
+	return {
+		...ctx,
+		executionType,
+		commandName,
+	};
+}
+
+export function RunCommand<TCommandExecutionContext extends ICommandExecutionContext>(originalInput: string, ctx: ICommandInvokeContext<TCommandExecutionContext>, commands: readonly IClientCommand<TCommandExecutionContext>[]): boolean {
+	const { commandName, command, args } = GetCommand(originalInput, commands);
 
 	if (!command) {
 		ctx.displayError?.(`Unknown command '${commandName}'`);
 		return false;
 	}
 
-	const context: ICommandExecutionContextClient = {
-		...ctx,
-		executionType: 'run',
-		commandName,
-	};
-
+	const context = CreateContext(ctx, 'run', commandName);
 	return command.handler.run(context, {}, args);
 }
 
-export function CommandAutocomplete(msg: string, ctx: ICommandInvokeContext): CommandAutocompleteResult {
-	const { commandName, spacing, command, args } = GetCommand(msg);
+export function CommandAutocomplete<TCommandExecutionContext extends ICommandExecutionContext>(msg: string, ctx: ICommandInvokeContext<TCommandExecutionContext>, commands: readonly IClientCommand<TCommandExecutionContext>[]): CommandAutocompleteResult {
+	const { commandName, spacing, command, args } = GetCommand(msg, commands);
 
-	const context: ICommandExecutionContextClient = {
-		...ctx,
-		executionType: 'autocomplete',
-		commandName,
-	};
+	const context = CreateContext(ctx, 'autocomplete', commandName);
 
 	// If there is no space after commandName, we are autocompleting the command itself
 	if (!spacing) {
-		const options = COMMANDS
+		const options = commands
 			.filter((c) => c.key[0].startsWith(commandName))
 			.map((c) => ({
 				replaceValue: c.key[0],
@@ -127,7 +126,7 @@ let autocompleteLastQuery: string | null = null;
 let autocompleteLastResult: CommandAutocompleteResult = null;
 let autocompleteCurrentIndex: number | null = null;
 
-export function CommandAutocompleteCycle(msg: string, ctx: ICommandInvokeContext, reverse: boolean = false): AutocompleteDisplayData {
+export function CommandAutocompleteCycle<TCommandExecutionContext extends ICommandExecutionContext>(msg: string, ctx: ICommandInvokeContext<TCommandExecutionContext>, commands: readonly IClientCommand<TCommandExecutionContext>[], reverse: boolean = false): AutocompleteDisplayData {
 	if (autocompleteLastQuery === msg && autocompleteLastResult) {
 		autocompleteCurrentIndex = reverse ?
 			((autocompleteCurrentIndex ?? autocompleteLastResult.options.length) - 1 + autocompleteLastResult.options.length) % autocompleteLastResult.options.length :
@@ -141,7 +140,7 @@ export function CommandAutocompleteCycle(msg: string, ctx: ICommandInvokeContext
 		};
 	}
 	autocompleteLastQuery = null;
-	autocompleteLastResult = CommandAutocomplete(msg, ctx);
+	autocompleteLastResult = CommandAutocomplete(msg, ctx, commands);
 	if (!autocompleteLastResult || autocompleteLastResult.options.length === 0) {
 		return {
 			replace: msg,
@@ -151,7 +150,7 @@ export function CommandAutocompleteCycle(msg: string, ctx: ICommandInvokeContext
 	} else if (autocompleteLastResult.options.length === 1) {
 		return {
 			replace: autocompleteLastResult.options[0].replaceValue + ' ',
-			result: CommandAutocomplete(autocompleteLastResult.options[0].replaceValue + ' ', ctx),
+			result: CommandAutocomplete(autocompleteLastResult.options[0].replaceValue + ' ', ctx, commands),
 			index: null,
 		};
 	}

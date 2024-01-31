@@ -11,7 +11,7 @@ function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, I
 	return CreateCommand<ICommandExecutionContextClient>();
 }
 
-function CreateMessageTypeParser(names: [string, ...string[]], raw: boolean, type: IChatType, longDescription: string, allowModeSet: boolean = true): IClientCommand {
+function CreateMessageTypeParser(names: [string, ...string[]], raw: boolean, type: IChatType, longDescription: string, allowModeSet: boolean = true): IClientCommand<ICommandExecutionContextClient> {
 	const description = GetChatModeDescription({ type, raw });
 	return ({
 		key: names.map((name) => (raw ? 'raw' : '') + name) as [string, ...string[]],
@@ -70,7 +70,7 @@ export function GetChatModeDescription(mode: ChatMode, plural: boolean = false) 
 }
 
 /* Creates two commands for sending chat messages of a specific type, one formatted and one raw/unformatted */
-function CreateMessageTypeParsers(type: IChatType, allowFormattedMode: boolean = true): IClientCommand[] {
+function CreateMessageTypeParsers(type: IChatType, allowFormattedMode: boolean = true): IClientCommand<ICommandExecutionContextClient>[] {
 	const details = ChatTypeDetails[type];
 	const longDesc = `${BuildAlternativeCommandsMessage(details.commandKeywords)}${details.longDescription}`;
 	return [
@@ -79,7 +79,7 @@ function CreateMessageTypeParsers(type: IChatType, allowFormattedMode: boolean =
 	];
 }
 
-function CreateSpaceAdminAction(action: IClientDirectoryArgument['spaceAdminAction']['action'], longDescription: string): IClientCommand {
+function CreateSpaceAdminAction(action: IClientDirectoryArgument['spaceAdminAction']['action'], longDescription: string): IClientCommand<ICommandExecutionContextClient> {
 	return {
 		key: [action],
 		usage: '<target>',
@@ -119,7 +119,7 @@ const ACCOUNT_ID_PARSER: CommandStepProcessor<AccountId, ICommandExecutionContex
 	},
 };
 
-export const COMMANDS: readonly IClientCommand[] = [
+export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[] = [
 	...CreateMessageTypeParsers('chat', false),
 	...CreateMessageTypeParsers('ooc'),
 	...CreateMessageTypeParsers('me'),

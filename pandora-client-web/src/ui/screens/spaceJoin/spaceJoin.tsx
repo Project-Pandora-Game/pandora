@@ -1,6 +1,6 @@
 import { SpaceId, SpaceIdSchema, SpaceInviteId, SpaceInviteIdSchema } from 'pandora-common';
 import React, { ReactElement } from 'react';
-import { useLocation } from 'react-router';
+import { useLocation, useNavigate } from 'react-router';
 import { SpaceDetails, useSpaceExtendedInfo } from '../spacesSearch/spacesSearch';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import './spaceJoin.scss';
@@ -34,6 +34,7 @@ export function SpaceJoin(): ReactElement {
 
 function QuerySpaceInfo({ spaceId, invite }: { spaceId: SpaceId; invite?: SpaceInviteId; }): ReactElement {
 	const info = useSpaceExtendedInfo(spaceId, invite);
+	const navigate = useNavigate();
 
 	if (info?.result !== 'success') {
 		return (
@@ -42,7 +43,7 @@ function QuerySpaceInfo({ spaceId, invite }: { spaceId: SpaceId; invite?: SpaceI
 	}
 
 	return (
-		<SpaceDetails info={ info.data } invite={ info.invite } />
+		<SpaceDetails info={ info.data } invite={ info.invite } hide={ () => navigate('/room') } closeText='Back to room' />
 	);
 }
 

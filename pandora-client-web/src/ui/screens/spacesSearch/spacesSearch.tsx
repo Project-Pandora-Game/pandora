@@ -242,7 +242,7 @@ function SpaceDetailsDialog({ baseInfo, hide }: {
 	);
 }
 
-export function SpaceDetails({ info, hide, invite, redirectBeforeLeave }: { info: SpaceListExtendedInfo; hide?: () => void; invite?: SpaceInvite; redirectBeforeLeave?: boolean; }): ReactElement {
+export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeText = 'Close' }: { info: SpaceListExtendedInfo; hide?: () => void; invite?: SpaceInvite; redirectBeforeLeave?: boolean; closeText?: string; }): ReactElement {
 	const assetManager = useAssetManager();
 	const [password, setPassword] = useState('');
 	const directoryConnector = useDirectoryConnector();
@@ -338,7 +338,7 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave }: { info
 							e.stopPropagation();
 							hide();
 						} }>
-							Close
+							{ closeText }
 						</Button>
 					)
 				}

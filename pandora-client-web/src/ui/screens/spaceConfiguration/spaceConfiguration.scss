@@ -142,7 +142,7 @@
 			padding: 0.8em 1em;
 			z-index: 1;
 
-			a > span {
+			a>span {
 				display: inline-block;
 				width: 1rem;
 			}
@@ -214,4 +214,30 @@
 
 .spaceInvitesTable td {
 	white-space: nowrap;
+}
+
+.permanentInvite {
+	display: block;
+	padding: 10px;
+	font-family: 'Courier New', Courier, monospace;
+
+	.text {
+		display: block;
+		user-select: none;
+		margin-bottom: 5px;
+	}
+
+	.invite {
+		background-color: #ccc;
+		border-radius: 5px;
+		border: 1px solid #ddd;
+		padding: 5px;
+		display: block;
+		user-select: all;
+		cursor: pointer;
+
+		&:hover {
+			text-decoration: underline;
+		}
+	}
 }

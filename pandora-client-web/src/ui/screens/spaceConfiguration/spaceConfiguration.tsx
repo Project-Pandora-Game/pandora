@@ -51,6 +51,7 @@ import { Immutable } from 'immer';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { toast } from 'react-toastify';
+import { CopyToClipboard } from '../../../common/clipboard';
 
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
 const IsValidDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
@@ -372,12 +373,12 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 			</div>
 			{ canEdit && <Button className='fill-x' onClick={ () => UpdateSpace(directoryConnector, modifiedData, () => navigate('/room')) }>Update space</Button> }
 			{ !canEdit && <Button className='fill-x' onClick={ () => navigate('/room') }>Back</Button> }
-			{ canEdit && currentSpaceId != null && <SpaceInvites spaceId={ currentSpaceId } /> }
+			{ canEdit && currentSpaceId != null && <SpaceInvites spaceId={ currentSpaceId } isPublic={ currentConfig.public } /> }
 		</div>
 	);
 }
 
-function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
+function SpaceInvites({ spaceId, isPublic }: { spaceId: SpaceId; isPublic: boolean; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const [invites, setInvites] = useState<readonly SpaceInvite[]>([]);
 	const [showCreation, setShowCreation] = useState(false);
@@ -396,11 +397,24 @@ function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
 		},
 	);
 
+	const copyPublic = useCallback((ev: React.MouseEvent<HTMLElement>) => {
+		ev.stopPropagation();
+		CopyToClipboard(`https://project-pandora.com/space/join/${spaceId.split('/')[1]}`, () => toast('Copied invite to clipboard'));
+	}, [spaceId]);
+
 	const update = useCallback(() => onChange(true), [onChange]);
 
 	return (
 		<FieldsetToggle legend='Invites' onChange={ onChange } open={ false }>
 			<Column gap='medium'>
+				{
+					isPublic && (
+						<div onClick={ copyPublic } className='permanentInvite'>
+							<span className='text'>Permanent invite link:</span>
+							<span className='invite'>https://project-pandora.com/space/join/{ spaceId.split('/')[1] }</span>
+						</div>
+					)
+				}
 				<Button onClick={ () => setShowCreation(true) }>Create New Invite</Button>
 				<table className='spaceInvitesTable'>
 					<thead>
@@ -506,7 +520,8 @@ function SpaceInviteRow({ spaceId, invite, directoryConnector, update }: { space
 	const confirm = useConfirmDialog();
 
 	const [onDelete, processing] = useAsyncEvent(
-		async () => {
+		async (ev: React.MouseEvent<HTMLElement>) => {
+			ev.stopPropagation();
 			if (!await confirm('Are you sure you want to delete this invite?', `Id: ${invite.id}`))
 				return null;
 
@@ -525,15 +540,10 @@ function SpaceInviteRow({ spaceId, invite, directoryConnector, update }: { space
 		},
 	);
 
-	const [copy] = useAsyncEvent(
-		async () => {
-			await navigator.clipboard.writeText(`https://project-pandora.com/space/join/${spaceId.split('/')[1]}?invite=${invite.id}`);
-			toast('Copied invite id to clipboard');
-		},
-		() => {
-			// NOOP
-		},
-	);
+	const copy = useCallback((ev: React.MouseEvent<HTMLElement>) => {
+		ev.stopPropagation();
+		CopyToClipboard(`https://project-pandora.com/space/join/${spaceId.split('/')[1]}?invite=${invite.id}`, () => toast('Copied invite id to clipboard'));
+	}, [spaceId, invite.id]);
 
 	return (
 		<tr>

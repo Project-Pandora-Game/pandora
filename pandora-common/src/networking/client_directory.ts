@@ -319,6 +319,9 @@ export const ClientDirectorySchema = {
 		response: ZodCast<{ result: 'ok' | 'notAnOwner' | 'tooManyInvites' | 'notFound'; } | {
 			result: 'list';
 			invites: SpaceInvite[];
+		} | {
+			result: 'created';
+			invite: SpaceInvite;
 		}>(),
 	},
 	//#endregion

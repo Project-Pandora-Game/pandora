@@ -475,7 +475,7 @@ function SpaceInviteCreation({ closeDialog, update }: { closeDialog: () => void;
 			if (resp == null)
 				return;
 
-			if (resp.result !== 'ok') {
+			if (resp.result !== 'created') {
 				toast(`Failed to create invite:\n${resp.result}`, TOAST_OPTIONS_ERROR);
 				return;
 			}

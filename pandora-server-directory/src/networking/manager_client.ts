@@ -517,8 +517,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			}
 			case 'create': {
 				const invite = await connection.character.space.createInvite(req.data);
+				if (invite) {
+					return {
+						result: 'created',
+						invite,
+					};
+				}
 				return {
-					result: invite ? 'ok' : 'tooManyInvites',
+					result: 'tooManyInvites',
 				};
 			}
 			default:

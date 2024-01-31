@@ -11,7 +11,7 @@ import {
 	SpaceInvite,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Button } from '../../../components/common/button/button';
 import { useCharacterRestrictionsManager, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
@@ -242,7 +242,7 @@ function SpaceDetailsDialog({ baseInfo, hide }: {
 	);
 }
 
-export function SpaceDetails({ info, hide, invite }: { info: SpaceListExtendedInfo; hide?: () => void; invite?: SpaceInvite; }): ReactElement {
+export function SpaceDetails({ info, hide, invite, redirectBeforeLeave }: { info: SpaceListExtendedInfo; hide?: () => void; invite?: SpaceInvite; redirectBeforeLeave?: boolean; }): ReactElement {
 	const assetManager = useAssetManager();
 	const [password, setPassword] = useState('');
 	const directoryConnector = useDirectoryConnector();
@@ -343,7 +343,7 @@ export function SpaceDetails({ info, hide, invite }: { info: SpaceListExtendedIn
 					)
 				}
 				{ userIsOwner && <SpaceOwnershipRemoval buttonClassName='slim' id={ info.id } name={ info.name } /> }
-				<GuardedJoinButton>
+				<GuardedJoinButton spaceId={ info.id } inviteId={ invite?.id } redirectBeforeLeave={ redirectBeforeLeave }>
 					<Button className='fadeDisabled'
 						disabled={ processing || (!userIsAdmin && requirePassword && !password) }
 						onClick={ join }>
@@ -355,8 +355,10 @@ export function SpaceDetails({ info, hide, invite }: { info: SpaceListExtendedIn
 	);
 }
 
-// TODO: remove when we automate leave process
-function GuardedJoinButton({ children }: { children: ReactNode; }): ReactElement {
+// TODO: remove some of this when we automate leave process was added
+function GuardedJoinButton({ children, spaceId, inviteId, redirectBeforeLeave }: { children: ReactNode; spaceId: SpaceId; inviteId?: SpaceInviteId; redirectBeforeLeave?: boolean; }): ReactElement {
+	const { pathname } = useLocation();
+	const navigate = useNavigate();
 	const space = useSpaceInfoOptional();
 	const directoryConnector = useDirectoryConnector();
 	const { player, playerState } = usePlayerState();
@@ -385,6 +387,14 @@ function GuardedJoinButton({ children }: { children: ReactNode; }): ReactElement
 		return <>{ children }</>;
 	}
 
+	if (space?.id === spaceId) {
+		return (
+			<Button className='fadeDisabled' disabled={ true }>
+				You are already inside this space
+			</Button>
+		);
+	}
+
 	if (roomDeviceLink) {
 		return (
 			<Button className='fadeDisabled' disabled={ true }>
@@ -397,6 +407,16 @@ function GuardedJoinButton({ children }: { children: ReactNode; }): ReactElement
 		return (
 			<Button className='fadeDisabled' disabled={ true }>
 				An item is preventing you from leaving the space
+			</Button>
+		);
+	}
+
+	if (redirectBeforeLeave && !pathname.startsWith('/space/join')) {
+		return (
+			<Button onClick={ () => {
+				navigate(`/space/join/${spaceId.split('/')[1]}${inviteId ? `?invite=${inviteId}` : ''}`);
+			} }>
+				Go To Invite URL
 			</Button>
 		);
 	}

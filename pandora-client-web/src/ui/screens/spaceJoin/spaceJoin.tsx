@@ -3,6 +3,7 @@ import React, { ReactElement } from 'react';
 import { useLocation } from 'react-router';
 import { SpaceDetails, useSpaceExtendedInfo } from '../spacesSearch/spacesSearch';
 import { ModalDialog } from '../../../components/dialog/dialog';
+import './spaceJoin.scss';
 
 export function SpaceJoin(): ReactElement {
 	const { pathname, search } = useLocation();
@@ -18,14 +19,14 @@ export function SpaceJoin(): ReactElement {
 
 	if (!spaceId) {
 		return (
-			<div>
+			<div className='spaceJoin'>
 				<p>Invalid space ID</p>
 			</div>
 		);
 	}
 
 	return (
-		<div>
+		<div className='spaceJoin'>
 			<QuerySpaceInfo spaceId={ spaceId } invite={ invite } />
 		</div>
 	);
@@ -62,7 +63,7 @@ export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: string; invite?
 			{
 				!open ? null : (
 					<ModalDialog>
-						<SpaceDetails info={ info.data } invite={ info.invite } hide={ () => setOpen(false) } />
+						<SpaceDetails info={ info.data } invite={ info.invite } hide={ () => setOpen(false) } redirectBeforeLeave />
 					</ModalDialog>
 				)
 			}

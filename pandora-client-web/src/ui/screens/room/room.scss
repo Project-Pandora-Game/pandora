@@ -147,22 +147,6 @@
 			}
 		}
 
-		.spaceInvite {
-			display: flex;
-			flex-flow: row;
-			background-color: #222;
-			font-weight: bold;
-
-			span {
-				margin: 1em auto;
-			}
-
-			&.active:hover {
-				cursor: pointer;
-				background-color: #181818;
-			}
-		}
-
 		&.editing {
 			background-color: #444;
 			padding: 0.2em;

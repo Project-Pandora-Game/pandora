@@ -373,12 +373,12 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 			</div>
 			{ canEdit && <Button className='fill-x' onClick={ () => UpdateSpace(directoryConnector, modifiedData, () => navigate('/room')) }>Update space</Button> }
 			{ !canEdit && <Button className='fill-x' onClick={ () => navigate('/room') }>Back</Button> }
-			{ canEdit && currentSpaceId != null && <SpaceInvites spaceId={ currentSpaceId } isPublic={ currentConfig.public } /> }
+			{ canEdit && currentSpaceId != null && <SpaceInvites spaceId={ currentSpaceId } /> }
 		</div>
 	);
 }
 
-function SpaceInvites({ spaceId, isPublic }: { spaceId: SpaceId; isPublic: boolean; }): ReactElement {
+function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const [invites, setInvites] = useState<readonly SpaceInvite[]>([]);
 	const [showCreation, setShowCreation] = useState(false);
@@ -407,14 +407,10 @@ function SpaceInvites({ spaceId, isPublic }: { spaceId: SpaceId; isPublic: boole
 	return (
 		<FieldsetToggle legend='Invites' onChange={ onChange } open={ false }>
 			<Column gap='medium'>
-				{
-					isPublic && (
-						<div onClick={ copyPublic } className='permanentInvite'>
-							<span className='text'>Permanent invite link:</span>
-							<span className='invite'>https://project-pandora.com/space/join/{ spaceId.split('/')[1] }</span>
-						</div>
-					)
-				}
+				<div onClick={ copyPublic } className='permanentInvite'>
+					<span className='text'>Permanent public invite link:</span>
+					<span className='invite'>https://project-pandora.com/space/join/{ spaceId.split('/')[1] }</span>
+				</div>
 				<Button onClick={ () => setShowCreation(true) }>Create New Invite</Button>
 				<table className='spaceInvitesTable'>
 					<thead>

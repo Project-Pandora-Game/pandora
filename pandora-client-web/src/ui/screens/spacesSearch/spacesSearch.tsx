@@ -426,7 +426,6 @@ function GuardedJoinButton({ children, spaceId, inviteId, redirectBeforeLeave }:
 			Leave current space
 		</Button>
 	);
-
 }
 
 const SpaceJoinProgress = new PersistentToast();

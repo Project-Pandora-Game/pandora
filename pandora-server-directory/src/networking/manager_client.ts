@@ -419,6 +419,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		Assert(result !== 'errFull');
 		Assert(result !== 'invalidPassword');
 		Assert(result !== 'invalidInvite');
+		Assert(result !== 'spaceNotInUse');
 
 		return { result };
 	}

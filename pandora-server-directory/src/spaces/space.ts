@@ -379,7 +379,7 @@ export class Space {
 		// Ignore those - the requests will fail and once the space is not requestest for a bit, it will be unloaded from the directory too, actually vanishing
 	}
 
-	public checkAllowEnter(character: Character, data: { password?: string; invite?: SpaceInviteId; }, ignore: { characterLimit?: boolean; password?: boolean; } = {}): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' | 'invalidInvite' {
+	public checkAllowEnter(character: Character, data: { password?: string; invite?: SpaceInviteId; }, ignore: { characterLimit?: boolean; password?: boolean; } = {}): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' | 'invalidInvite' | 'spaceNotInUse' {
 		// No-one can enter if the space is in an invalid state
 		if (!this.isValid) {
 			return 'errFull';
@@ -410,6 +410,9 @@ export class Space {
 		// If you are on the allow list, you can enter the space
 		if (this.config.allow.includes(character.baseInfo.account.id))
 			return 'ok';
+
+		if (!this.isInUse())
+			return 'spaceNotInUse';
 
 		// If the space is password protected and you have given valid password, you can enter it
 		if (this.config.password !== null && data.password && data.password === this.config.password)

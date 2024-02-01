@@ -126,10 +126,11 @@ export class Space {
 			...pick(this.config, ['features', 'admin', 'background']),
 			owners: Array.from(this._owners),
 			isAdmin: this.isAdmin(queryingAccount),
+			isAllowed: this.config.allow.includes(queryingAccount.id),
 			characters: Array.from(this.characters).map((c): SpaceListExtendedInfo['characters'][number] => ({
 				id: c.baseInfo.id,
 				accountId: c.baseInfo.account.id,
-				name: c.baseInfo.data.name,
+			name: c.baseInfo.data.name,
 				isOnline: c.isOnline(),
 			})),
 		});

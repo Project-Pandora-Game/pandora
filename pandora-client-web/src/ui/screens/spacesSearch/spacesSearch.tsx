@@ -218,6 +218,7 @@ function SpaceDetailsDialog({ baseInfo, hide }: {
 			admin: [],
 			background: '',
 			isAdmin: false,
+			isAllowed: false,
 			owners: [],
 			characters: [],
 		};
@@ -277,8 +278,9 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 
 	const userIsOwner = !!info.isOwner;
 	const userIsAdmin = !!info.isAdmin;
+	const userIsAllowed = !!info.isAllowed;
 
-	const requirePassword = !userIsAdmin && !userIsOwner && hasPassword && !invite?.bypassPassword;
+	const requirePassword = !userIsAdmin && !userIsOwner && !userIsAllowed && hasPassword && !invite?.bypassPassword;
 
 	return (
 		<div className='spacesSearchSpaceDetails'>

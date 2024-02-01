@@ -115,6 +115,7 @@ export type SpaceListExtendedInfo = SpaceListInfo & Pick<SpaceDirectoryConfig, '
 	// Note: `isAdmin` is not part of the basic info (`SpaceListInfo`), as it has more complex check than `isOwner` and shouldn't be done en masse
 	/** Whether the account that requested the info is admin of this space */
 	isAdmin: boolean;
+	isAllowed: boolean;
 	owners: AccountId[];
 	characters: {
 		id: CharacterId;

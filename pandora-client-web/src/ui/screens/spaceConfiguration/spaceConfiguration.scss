@@ -205,10 +205,12 @@
 
 .spaceInviteCreation .input-row {
 	display: grid;
-	grid-template-columns: 1fr 1fr;
+	grid-template-columns: 1fr 2em 1fr;
+	height: 2.1em;
 
 	input[type='checkbox'] {
 		height: 1.2em;
+		margin: auto 0;
 	}
 }
 

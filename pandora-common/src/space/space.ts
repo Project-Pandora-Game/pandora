@@ -84,6 +84,8 @@ export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 	banned: AccountIdSchema.array(),
 	/** The admin account ids */
 	admin: AccountIdSchema.array(),
+	/** Account ids that always allow to enter */
+	allow: AccountIdSchema.array().default([]),
 	/** The password of the chat room if the room is protected */
 	password: z.string().nullable(),
 	/** The ID of the background or custom data */

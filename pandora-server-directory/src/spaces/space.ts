@@ -59,12 +59,17 @@ export class Space {
 		this.config.features = uniq(this.config.features);
 		this.config.admin = uniq(this.config.admin);
 		this.config.banned = this._cleanupBanList(uniq(this.config.banned));
+		this.config.allow = this._cleanupAllowList(uniq(this.config.allow));
 
 		this.logger.debug('Loaded');
 	}
 
 	private _cleanupBanList(list: AccountId[]): AccountId[] {
 		return list.filter((id) => !this.config.admin.includes(id) && !this._owners.has(id));
+	}
+
+	private _cleanupAllowList(list: AccountId[]): AccountId[] {
+		return list.filter((id) => !this.config.admin.includes(id) && !this._owners.has(id) && !this.config.banned.includes(id));
 	}
 
 	/** Update last activity timestamp to reflect last usage */
@@ -187,6 +192,9 @@ export class Space {
 			this.config.banned = this._cleanupBanList(uniq(changes.banned));
 			await this._removeBannedCharacters(source);
 		}
+		if (changes.allow) {
+			this.config.allow = this._cleanupAllowList(uniq(changes.allow));
+		}
 		if (changes.public !== undefined) {
 			this.config.public = changes.public;
 		}
@@ -216,6 +224,8 @@ export class Space {
 				changeList.push('admins');
 			if (changes.banned)
 				changeList.push('ban list');
+			if (changes.allow)
+				changeList.push('allow list');
 			if (changes.background)
 				changeList.push('background');
 
@@ -281,6 +291,7 @@ export class Space {
 				targets = this._cleanupBanList(targets);
 				const oldSize = this.config.banned.length;
 				this.config.banned = uniq([...this.config.banned, ...targets]);
+				this.config.allow = this.config.allow.filter((id) => !targets.includes(id));
 				updated = oldSize !== this.config.banned.length;
 				if (updated) {
 					await this._removeBannedCharacters(source);
@@ -294,6 +305,25 @@ export class Space {
 				updated = oldSize !== this.config.banned.length;
 				if (updated)
 					this._sendUpdatedMessage(source, 'ban list');
+
+				break;
+			}
+			case 'allow': {
+				targets = this._cleanupAllowList(targets);
+				const oldSize = this.config.allow.length;
+				this.config.allow = uniq([...this.config.allow, ...targets]);
+				updated = oldSize !== this.config.allow.length;
+				if (updated)
+					this._sendUpdatedMessage(source, 'allow list');
+
+				break;
+			}
+			case 'disallow': {
+				const oldSize = this.config.allow.length;
+				this.config.allow = this.config.allow.filter((id) => !targets.includes(id));
+				updated = oldSize !== this.config.allow.length;
+				if (updated)
+					this._sendUpdatedMessage(source, 'allow list');
 
 				break;
 			}
@@ -370,6 +400,10 @@ export class Space {
 		// If you are banned, you cannot enter the space
 		if (this.isBanned(character.baseInfo.account))
 			return 'noAccess';
+
+		// If you are on the allow list, you can enter the space
+		if (this.config.allow.includes(character.baseInfo.account.id))
+			return 'ok';
 
 		// If the space is password protected and you have given valid password, you can enter it
 		if (this.config.password !== null && data.password && data.password === this.config.password)

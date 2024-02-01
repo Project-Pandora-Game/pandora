@@ -6,6 +6,7 @@ const TEST_SPACE_DEFAULTS: Readonly<SpaceDirectoryConfig> = {
 	maxUsers: 10,
 	admin: [],
 	banned: [],
+	allow: [],
 	public: true,
 	password: null,
 	features: [],

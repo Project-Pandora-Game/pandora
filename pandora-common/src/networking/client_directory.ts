@@ -291,7 +291,7 @@ export const ClientDirectorySchema = {
 	},
 	spaceAdminAction: {
 		request: z.object({
-			action: z.enum(['kick', 'ban', 'unban', 'promote', 'demote']),
+			action: z.enum(['kick', 'ban', 'unban', 'allow', 'disallow', 'promote', 'demote']),
 			targets: z.array(AccountIdSchema),
 		}),
 		response: null,

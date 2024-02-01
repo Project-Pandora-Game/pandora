@@ -25,6 +25,7 @@ export class PersonalSpace extends Space {
 			],
 			banned: [],
 			admin: [],
+			allow: [],
 			password: null,
 			// Try to use the first background (if there is some)
 			// otherwise default to the default, solid-color background (important for tests that don't have any assets).

@@ -415,6 +415,7 @@ function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
 	}, [spaceId]);
 
 	const update = useCallback(() => onChange(true), [onChange]);
+	const addInvite = useCallback((invite: SpaceInvite) => setInvites((inv) => [...inv, invite]), []);
 
 	return (
 		<FieldsetToggle legend='Invites' onChange={ onChange } open={ false }>
@@ -444,13 +445,13 @@ function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
 						}
 					</tbody>
 				</table>
-				{ showCreation && <SpaceInviteCreation closeDialog={ () => setShowCreation(false) } update={ update } /> }
+				{ showCreation && <SpaceInviteCreation closeDialog={ () => setShowCreation(false) } addInvite={ addInvite } /> }
 			</Column>
 		</FieldsetToggle>
 	);
 }
 
-function SpaceInviteCreation({ closeDialog, update }: { closeDialog: () => void; update: () => void; }): ReactElement {
+function SpaceInviteCreation({ closeDialog, addInvite }: { closeDialog: () => void; addInvite: (invite: SpaceInvite) => void; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const [allowAccount, setAllowAccount] = useState(false);
 	const [account, setAccount] = useState(0);
@@ -483,7 +484,7 @@ function SpaceInviteCreation({ closeDialog, update }: { closeDialog: () => void;
 				return;
 			}
 
-			update();
+			addInvite(resp.invite);
 		},
 	);
 

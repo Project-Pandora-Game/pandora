@@ -130,7 +130,7 @@ export class Space {
 			characters: Array.from(this.characters).map((c): SpaceListExtendedInfo['characters'][number] => ({
 				id: c.baseInfo.id,
 				accountId: c.baseInfo.account.id,
-			name: c.baseInfo.data.name,
+				name: c.baseInfo.data.name,
 				isOnline: c.isOnline(),
 			})),
 		});

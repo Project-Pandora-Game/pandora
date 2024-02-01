@@ -1,21 +1,18 @@
 import * as PIXI from 'pixi.js';
 import { DraggablePointDisplay } from '../draggable';
 import { EditorLayer, EDITOR_LAYER_Z_INDEX_EXTRA } from './editorLayer';
-import { AssetFrameworkCharacterState, BoneName, LayerImageSetting } from 'pandora-common';
+import { AssetFrameworkCharacterState } from 'pandora-common';
 import { GraphicsLayerProps, useItemColor, useLayerPoints, useLayerVertices } from '../../../graphics/graphicsLayer';
 import React, { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react';
 import { useEditor } from '../../editorContextProvider';
 import { useObservable } from '../../../observable';
 import { Container, Graphics, Sprite } from '@pixi/react';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
-import { max, maxBy, min, minBy } from 'lodash';
-import { AssetGraphicsLayer, useLayerDefinition } from '../../../assets/assetGraphics';
+import { AssetGraphicsLayer, useLayerDefinition, useLayerImageSource } from '../../../assets/assetGraphics';
 import { useCharacterAppearanceItems } from '../../../character/character';
 import { Texture } from 'pixi.js';
 import { EditorAssetGraphics } from '../character/appearanceEditor';
 import { useTexture } from '../../../graphics/useTexture';
-import { EvaluateCondition } from '../../../graphics/utility';
-import { Immutable } from 'immer';
 import { useEditorLayerStateOverride } from '../../editor';
 
 export function SetupLayer({
@@ -26,32 +23,16 @@ export function SetupLayer({
 }: GraphicsLayerProps): ReactElement {
 	const evaluator = useAppearanceConditionEvaluator(characterState);
 
-	const { scaling } = useLayerDefinition(layer);
-
-	const uvPose = useMemo<Record<BoneName, number>>(() => {
-		if (scaling) {
-			let settingValue: number | undefined;
-			const stops = scaling.stops.map((stop) => stop[0]);
-			const value = evaluator.getBoneLikeValue(scaling.scaleBone);
-			// Find the best matching scaling override
-			if (value > 0) {
-				settingValue = max(stops.filter((stop) => stop > 0 && stop <= value));
-			} else if (value < 0) {
-				settingValue = min(stops.filter((stop) => stop < 0 && stop >= value));
-			}
-			if (settingValue) {
-				return { [scaling.scaleBone]: settingValue };
-			}
-		}
-		return {};
-	}, [evaluator, scaling]);
+	const {
+		imageUv,
+	} = useLayerImageSource(evaluator, layer, item);
 
 	return (
 		<EditorLayer
 			{ ...props }
 			layer={ layer }
 			item={ item }
-			verticesPoseOverride={ uvPose }
+			verticesPoseOverride={ imageUv }
 			characterState={ characterState }
 		/>
 	);
@@ -76,33 +57,18 @@ export function SetupLayerSelected({
 	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	const {
-		image: scalingBaseimage,
-		scaling,
 		height,
 		width,
 		colorizationKey,
 		x, y,
 	} = useLayerDefinition(layer);
 
-	const uvPose = useMemo<Record<BoneName, number>>(() => {
-		if (scaling) {
-			let settingValue: number | undefined;
-			const stops = scaling.stops.map((stop) => stop[0]);
-			const value = evaluator.getBoneLikeValue(scaling.scaleBone);
-			// Find the best matching scaling override
-			if (value > 0) {
-				settingValue = max(stops.filter((stop) => stop > 0 && stop <= value));
-			} else if (value < 0) {
-				settingValue = min(stops.filter((stop) => stop < 0 && stop >= value));
-			}
-			if (settingValue) {
-				return { [scaling.scaleBone]: settingValue };
-			}
-		}
-		return {};
-	}, [evaluator, scaling]);
+	const {
+		image,
+		imageUv,
+	} = useLayerImageSource(evaluator, layer, item);
 
-	const uv = useLayerVertices(evaluator, points, layer, item, true, uvPose);
+	const uv = useLayerVertices(evaluator, points, layer, item, true, imageUv);
 
 	const drawWireFrame = useCallback((g: PIXI.Graphics) => {
 		g.clear().lineStyle(1, 0x333333, 0.2);
@@ -134,23 +100,6 @@ export function SetupLayerSelected({
 		}
 		return undefined;
 	}, [editor, asset]);
-
-	const setting = useMemo<Immutable<LayerImageSetting>>(() => {
-		if (scaling) {
-			const value = evaluator.getBoneLikeValue(scaling.scaleBone);
-			// Find the best matching scaling override
-			if (value > 0) {
-				return maxBy(scaling.stops.filter((stop) => stop[0] > 0 && stop[0] <= value), (stop) => stop[0])?.[1] ?? scalingBaseimage;
-			} else if (value < 0) {
-				return minBy(scaling.stops.filter((stop) => stop[0] < 0 && stop[0] >= value), (stop) => stop[0])?.[1] ?? scalingBaseimage;
-			}
-		}
-		return scalingBaseimage;
-	}, [evaluator, scaling, scalingBaseimage]);
-
-	const image = useMemo<string>(() => {
-		return setting.overrides.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item)))?.image ?? setting.image;
-	}, [evaluator, item, setting]);
 
 	const texture = useTexture(image, undefined, editorGetTexture);
 

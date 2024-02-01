@@ -7,6 +7,9 @@ import { BuildErrorReport } from './errorReport';
 import './rootErrorBoundary.scss';
 import { Row } from '../common/container/container';
 import { CopyToClipboard } from '../../common/clipboard';
+import { NODE_ENV } from '../../config/Environment';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 
 export enum ReportCopyState {
 	NONE = 'Copy to clipboard',
@@ -70,7 +73,13 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 			logger.warning('Got a ResizeObserver loop warning:\n', errorDescription, event.error);
 			return;
 		}
-		// Ignore 'Script error.' as it gives no useful info anyway and 99% of the time is an extension crashing, not us
+		// Be nice in development mode
+		if (NODE_ENV === 'development') {
+			logger.error('Uncaught error\n', errorDescription, event.error);
+			toast('Detected uncaught error, see console', TOAST_OPTIONS_ERROR);
+			return;
+		}
+		// Ignore 'Script error.' in production as it gives no useful info anyway and 99% of the time is an extension crashing, not us
 		if (event.message === 'Script error.' && event.error == null) {
 			logger.warning('Got a Script error:\n', errorDescription);
 			return;
@@ -85,6 +94,13 @@ export class RootErrorBoundary extends PureComponent<ChildrenProps, RootErrorBou
 
 	private readonly _unhandledPromiseRejectionListener = (event: PromiseRejectionEvent) => this._unhandledPromiseRejectionListenerRaw(event);
 	private _unhandledPromiseRejectionListenerRaw(event: PromiseRejectionEvent): void {
+		// Be nice in development mode
+		if (NODE_ENV === 'development') {
+			logger.error('Unhandled promise rejection', event.promise, `\n`, event.reason);
+			toast('Detected unhandled promise rejection, see console', TOAST_OPTIONS_ERROR);
+			return;
+		}
+
 		logger.fatal('Unhandled promise rejection', event.promise, `\n`, event.reason);
 		if (event.reason instanceof Error) {
 			this.componentDidCatch(event.reason);

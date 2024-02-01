@@ -1,12 +1,10 @@
 import { Container, Sprite, useApp } from '@pixi/react';
 import Delaunator from 'delaunator';
-import { Immutable } from 'immer';
-import { max, maxBy, min, minBy } from 'lodash';
-import { AppearanceItems, Assert, BoneName, CharacterSize, CoordinatesCompressed, Item, LayerImageSetting, LayerMirror, PointDefinition, Rectangle as PandoraRectangle, HexColorString, AssertNever, AssetFrameworkCharacterState } from 'pandora-common';
+import { AppearanceItems, Assert, BoneName, CharacterSize, CoordinatesCompressed, Item, LayerMirror, PointDefinition, Rectangle as PandoraRectangle, HexColorString, AssertNever, AssetFrameworkCharacterState } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
 import React, { createContext, ReactElement, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AssetGraphicsLayer, PointDefinitionCalculated, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks } from '../assets/assetGraphics';
+import { AssetGraphicsLayer, PointDefinitionCalculated, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource } from '../assets/assetGraphics';
 import { ChildrenProps } from '../common/reactTypes';
 import { ConditionEvaluatorBase, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator';
 import { LayerStateOverrides } from './def';
@@ -148,46 +146,16 @@ export function GraphicsLayer({
 	const vertices = useLayerVertices(evaluator, points, layer, item, false, verticesPoseOverride);
 
 	const {
-		image: scalingBaseimage,
-		scaling,
 		colorizationKey,
 	} = useLayerDefinition(layer);
 
-	const uvPose = useMemo<Record<BoneName, number>>(() => {
-		if (scaling) {
-			let settingValue: number | undefined;
-			const stops = scaling.stops.map((stop) => stop[0]);
-			const value = evaluator.getBoneLikeValue(scaling.scaleBone);
-			// Find the best matching scaling override
-			if (value > 0) {
-				settingValue = max(stops.filter((stop) => stop > 0 && stop <= value));
-			} else if (value < 0) {
-				settingValue = min(stops.filter((stop) => stop < 0 && stop >= value));
-			}
-			if (settingValue) {
-				return { [scaling.scaleBone]: settingValue };
-			}
-		}
-		return {};
-	}, [evaluator, scaling]);
-	const uv = useLayerVertices(evaluator, points, layer, item, true, uvPose);
+	const {
+		setting,
+		image,
+		imageUv,
+	} = useLayerImageSource(evaluator, layer, item);
 
-	const setting = useMemo<Immutable<LayerImageSetting>>(() => {
-		if (scaling) {
-			const value = evaluator.getBoneLikeValue(scaling.scaleBone);
-			// Find the best matching scaling override
-			if (value > 0) {
-				return maxBy(scaling.stops.filter((stop) => stop[0] > 0 && stop[0] <= value), (stop) => stop[0])?.[1] ?? scalingBaseimage;
-			} else if (value < 0) {
-				return minBy(scaling.stops.filter((stop) => stop[0] < 0 && stop[0] >= value), (stop) => stop[0])?.[1] ?? scalingBaseimage;
-			}
-		}
-		return scalingBaseimage;
-	}, [evaluator, scaling, scalingBaseimage]);
-
-	const image = useMemo<string>(() => {
-		return setting.overrides.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item)))?.image ?? setting.image;
-	}, [evaluator, item, setting]);
+	const uv = useLayerVertices(evaluator, points, layer, item, true, imageUv);
 
 	const alphaImage = useMemo<string>(() => {
 		return setting.alphaOverrides?.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item)))?.image ?? setting.alphaImage ?? '';

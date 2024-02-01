@@ -160,6 +160,7 @@ export type PointTemplate = z.infer<typeof PointTemplateSchema>;
 
 export const LayerImageOverrideSchema = z.object({
 	image: z.string(),
+	uvPose: z.record(BoneNameSchema, z.number()).optional(),
 	condition: ConditionSchema,
 });
 export type LayerImageOverride = z.infer<typeof LayerImageOverrideSchema>;
@@ -209,6 +210,7 @@ export enum LayerSide {
 
 export const LayerImageSettingSchema = z.object({
 	image: z.string(),
+	uvPose: z.record(BoneNameSchema, z.number()).optional(),
 	overrides: z.array(LayerImageOverrideSchema),
 	alphaImage: z.string().min(1).optional(),
 	alphaOverrides: z.array(LayerImageOverrideSchema).min(1).optional(),

@@ -3,6 +3,7 @@ import { GraphicsManagerInstance, GraphicsManager } from './graphicsManager';
 import { URLGraphicsLoader } from './graphicsLoader';
 import { Observable, useObservable } from '../observable';
 import { Immutable } from 'immer';
+import { ConfigServerIndex } from '../config/searchArgs';
 
 const logger = GetLogger('AssetManager');
 
@@ -47,7 +48,8 @@ export function LoadAssetDefinitions(definitionsHash: string, data: Immutable<As
 		return;
 
 	lastGraphicsHash = data.graphicsId;
-	assetsSource = source;
+	const assetsSourceOptions = source.split(';').map((a) => a.trim());
+	assetsSource = assetsSourceOptions[ConfigServerIndex % assetsSourceOptions.length];
 
 	loader ??= new URLGraphicsLoader(source);
 	loader.loadTextFile(`graphics_${lastGraphicsHash}.json`).then((json) => {

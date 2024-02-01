@@ -7,26 +7,24 @@ import { useErrorHandler } from '../../common/useErrorHandler';
 import { DIRECTORY_ADDRESS } from '../../config/Environment';
 import { AuthToken, DirectoryConnector } from '../../networking/directoryConnector';
 import { SocketIODirectoryConnector } from '../../networking/socketio_directory_connector';
-import { useNullableObservable, useObservable } from '../../observable';
+import { Observable, useNullableObservable, useObservable } from '../../observable';
 import { Immutable } from 'immer';
+import { ConfigServerIndex } from '../../config/searchArgs';
 
-let directoryConnectorInstance: DirectoryConnector | undefined;
+const DirectoryConnector = new Observable<DirectoryConnector | undefined>(undefined);
+
 let connectionPromise: Promise<DirectoryConnector> | undefined;
 
 /** Factory function responsible for providing the concrete directory connector implementation to the application */
 function CreateDirectoryConnector(): DirectoryConnector {
-	if (!DIRECTORY_ADDRESS) {
+	const directoryAddressOptions = DIRECTORY_ADDRESS.split(';').map((a) => a.trim());
+	const directoryAddress = directoryAddressOptions[ConfigServerIndex];
+
+	if (!directoryAddress) {
 		throw new Error('Unable to create directory connector: missing DIRECTORY_ADDRESS');
 	}
 
-	return SocketIODirectoryConnector.create(DIRECTORY_ADDRESS);
-}
-
-try {
-	directoryConnectorInstance = CreateDirectoryConnector();
-} catch (err) { // Catch errors in connector creation so that they can be handled by an error boundary
-	directoryConnectorInstance = undefined;
-	connectionPromise = Promise.reject(err);
+	return SocketIODirectoryConnector.create(directoryAddress);
 }
 
 export const directoryConnectorContext = createContext<DirectoryConnector | undefined>(undefined);
@@ -39,8 +37,11 @@ export function DirectoryConnectorContextProvider({ children }: ChildrenProps): 
 	useEffect(() => {
 		void (async () => {
 			try {
+				if (DirectoryConnector.value === undefined) {
+					DirectoryConnector.value = CreateDirectoryConnector();
+				}
 				if (connectionPromise === undefined) {
-					connectionPromise = directoryConnectorInstance?.connect();
+					connectionPromise = DirectoryConnector.value?.connect();
 				}
 				await connectionPromise;
 			} catch (error) {
@@ -49,6 +50,8 @@ export function DirectoryConnectorContextProvider({ children }: ChildrenProps): 
 			}
 		})();
 	}, [errorHandler]);
+
+	const directoryConnectorInstance = useObservable(DirectoryConnector);
 
 	useDebugExpose('directoryConnector', directoryConnectorInstance);
 

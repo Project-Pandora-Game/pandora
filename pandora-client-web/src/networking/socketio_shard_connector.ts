@@ -38,7 +38,7 @@ export const LastSelectedCharacter = BrowserStorage.createSession<CharacterId | 
 function CreateConnection({ publicURL, secret, characterId }: IDirectoryCharacterConnectionInfo): Socket {
 	// Find which public URL we should actually use
 	const publicURLOptions = publicURL.split(';').map((a) => a.trim());
-	publicURL = publicURLOptions[ConfigServerIndex % publicURLOptions.length];
+	publicURL = publicURLOptions[ConfigServerIndex.value % publicURLOptions.length];
 
 	// Create the connection without connecting
 	return connect(publicURL, {

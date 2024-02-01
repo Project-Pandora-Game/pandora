@@ -1,11 +1,22 @@
 import { GetLogger, LogLevel } from 'pandora-common';
 import { USER_DEBUG } from './Environment';
+import { BrowserStorage } from '../browserStorage';
+import { z } from 'zod';
+import { Observable } from '../observable';
 
 /** Log level to use for logging to console, set by combination of build mode and URL arguments */
-export let ConfigLogLevel: LogLevel = USER_DEBUG ? LogLevel.VERBOSE : LogLevel.WARNING;
+export const ConfigLogLevel: Observable<LogLevel> = BrowserStorage.createSession(
+	'config-loglevel',
+	USER_DEBUG ? LogLevel.VERBOSE : LogLevel.WARNING,
+	z.nativeEnum(LogLevel),
+);
 
 /** Server index to use, set by URL arguments */
-export let ConfigServerIndex: number = 0;
+export const ConfigServerIndex: Observable<number> = BrowserStorage.createSession(
+	'config-serverindex',
+	0,
+	z.number().int().nonnegative(),
+);
 
 const logger = GetLogger('SearchArgs');
 
@@ -16,31 +27,31 @@ export function LoadSearchArgs(): void {
 		const logLevel = search.get('loglevel')?.trim() || '';
 		switch (logLevel.toLowerCase()) {
 			case 'debug':
-				ConfigLogLevel = LogLevel.DEBUG;
+				ConfigLogLevel.value = LogLevel.DEBUG;
 				break;
 			case 'verbose':
-				ConfigLogLevel = LogLevel.VERBOSE;
+				ConfigLogLevel.value = LogLevel.VERBOSE;
 				break;
 			case 'info':
-				ConfigLogLevel = LogLevel.INFO;
+				ConfigLogLevel.value = LogLevel.INFO;
 				break;
 			case 'alert':
-				ConfigLogLevel = LogLevel.ALERT;
+				ConfigLogLevel.value = LogLevel.ALERT;
 				break;
 			case 'warning':
-				ConfigLogLevel = LogLevel.WARNING;
+				ConfigLogLevel.value = LogLevel.WARNING;
 				break;
 			case 'error':
-				ConfigLogLevel = LogLevel.ERROR;
+				ConfigLogLevel.value = LogLevel.ERROR;
 				break;
 			case 'fatal':
-				ConfigLogLevel = LogLevel.FATAL;
+				ConfigLogLevel.value = LogLevel.FATAL;
 				break;
 			default: {
 				const parsed = parseInt(logLevel);
 				// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
 				if (parsed >= LogLevel.FATAL && parsed <= LogLevel.DEBUG) {
-					ConfigLogLevel = parsed;
+					ConfigLogLevel.value = parsed;
 				} else {
 					logger.warning('Log level has invalid value', logLevel);
 				}
@@ -52,7 +63,7 @@ export function LoadSearchArgs(): void {
 	if (search.has('serverindex')) {
 		const serverIndex = search.get('serverindex')?.trim() || '';
 		if (/^[0-9]+$/.test(serverIndex)) {
-			ConfigServerIndex = parseInt(serverIndex, 10);
+			ConfigServerIndex.value = parseInt(serverIndex, 10);
 		} else {
 			logger.warning('Server index has invalid value', serverIndex);
 		}

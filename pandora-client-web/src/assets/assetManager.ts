@@ -49,7 +49,7 @@ export function LoadAssetDefinitions(definitionsHash: string, data: Immutable<As
 
 	lastGraphicsHash = data.graphicsId;
 	const assetsSourceOptions = source.split(';').map((a) => a.trim());
-	assetsSource = assetsSourceOptions[ConfigServerIndex % assetsSourceOptions.length];
+	assetsSource = assetsSourceOptions[ConfigServerIndex.value % assetsSourceOptions.length];
 
 	loader ??= new URLGraphicsLoader(source);
 	loader.loadTextFile(`graphics_${lastGraphicsHash}.json`).then((json) => {

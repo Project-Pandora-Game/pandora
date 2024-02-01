@@ -64,5 +64,5 @@ function Start(): void {
  * Configures logging for the application.
  */
 function SetupLogging(): void {
-	SetConsoleOutput(ConfigLogLevel);
+	SetConsoleOutput(ConfigLogLevel.value);
 }

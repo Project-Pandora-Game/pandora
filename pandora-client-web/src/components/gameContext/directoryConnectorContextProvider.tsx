@@ -18,7 +18,7 @@ let connectionPromise: Promise<DirectoryConnector> | undefined;
 /** Factory function responsible for providing the concrete directory connector implementation to the application */
 function CreateDirectoryConnector(): DirectoryConnector {
 	const directoryAddressOptions = DIRECTORY_ADDRESS.split(';').map((a) => a.trim());
-	const directoryAddress = directoryAddressOptions[ConfigServerIndex];
+	const directoryAddress = directoryAddressOptions[ConfigServerIndex.value];
 
 	if (!directoryAddress) {
 		throw new Error('Unable to create directory connector: missing DIRECTORY_ADDRESS');

@@ -32,7 +32,7 @@ export function UpdateAssetManager(manager: AssetManagerClient) {
 }
 
 let lastGraphicsHash: string | undefined;
-let loader!: URLGraphicsLoader;
+let loader: URLGraphicsLoader | undefined;
 let assetsSource: string = '';
 
 export function GetAssetsSourceUrl(): string {
@@ -48,13 +48,17 @@ export function LoadAssetDefinitions(definitionsHash: string, data: Immutable<As
 		return;
 
 	lastGraphicsHash = data.graphicsId;
+	const lastAssetsSource = assetsSource;
 	const assetsSourceOptions = source.split(';').map((a) => a.trim());
 	assetsSource = assetsSourceOptions[ConfigServerIndex.value % assetsSourceOptions.length];
 
-	loader ??= new URLGraphicsLoader(source);
-	loader.loadTextFile(`graphics_${lastGraphicsHash}.json`).then((json) => {
+	if (lastAssetsSource !== assetsSource || loader == null) {
+		loader = new URLGraphicsLoader(assetsSource);
+	}
+	const currentLoader = loader;
+	currentLoader.loadTextFile(`graphics_${lastGraphicsHash}.json`).then((json) => {
 		const graphics = JSON.parse(json) as AssetsGraphicsDefinitionFile;
-		GraphicsManagerInstance.value = new GraphicsManager(loader, data.graphicsId, graphics);
+		GraphicsManagerInstance.value = new GraphicsManager(currentLoader, data.graphicsId, graphics);
 		logger.info(`Loaded graphics, version: ${data.graphicsId}`);
 	}).catch((err) => {
 		logger.error('Failed to load graphics', err);

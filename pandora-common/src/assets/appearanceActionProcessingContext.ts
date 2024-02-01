@@ -235,7 +235,7 @@ export class AppearanceActionProcessingResultInvalid extends AppearanceActionPro
 				prompt = problem.restriction.target;
 			} else {
 				// TODO: Support multiple prompts when we have actions with multiple targets, for now this should never happen
-				Assert(prompt !== problem.restriction.target, 'Multiple prompts for different targets');
+				Assert(prompt === problem.restriction.target, 'Multiple prompts for different targets');
 			}
 		}
 		this.prompt = prompt;

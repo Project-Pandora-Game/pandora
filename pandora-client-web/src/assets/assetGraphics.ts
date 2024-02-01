@@ -1,12 +1,14 @@
-import { Assert, Asset, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, LayerPriority, PointDefinition } from 'pandora-common';
+import { Assert, Asset, AssetGraphicsDefinition, AssetId, BoneName, CharacterSize, Item, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, LayerPriority, PointDefinition } from 'pandora-common';
 import { MakeMirroredPoints, MirrorBoneLike, MirrorImageOverride, MirrorLayerImageSetting, MirrorPoint } from '../graphics/mirroring';
 import { Observable, ReadonlyObservable, useObservable } from '../observable';
 import { useAssetManager } from './assetManager';
 import { GraphicsManagerInstance } from './graphicsManager';
 import { produce, Immutable, Draft, freeze } from 'immer';
 import { useMemo } from 'react';
-import { cloneDeep } from 'lodash';
+import { cloneDeep, maxBy, minBy } from 'lodash';
 import { MirrorPriority } from '../graphics/def';
+import { AppearanceConditionEvaluator } from '../graphics/appearanceConditionEvaluator';
+import { EvaluateCondition } from '../graphics/utility';
 
 export interface PointDefinitionCalculated extends PointDefinition {
 	index: number;
@@ -264,6 +266,55 @@ export function useGraphicsAsset(graphics: AssetGraphics): Asset {
 
 export function useLayerDefinition(layer: AssetGraphicsLayer): Immutable<LayerDefinition> {
 	return useObservable(layer.definition);
+}
+
+export function useLayerImageSource(evaluator: AppearanceConditionEvaluator, layer: AssetGraphicsLayer, item: Item | null): Immutable<{
+	setting: Immutable<LayerImageSetting>;
+	image: string;
+	imageUv: Record<BoneName, number>;
+}> {
+	const {
+		image: scalingBaseimage,
+		scaling,
+	} = useLayerDefinition(layer);
+
+	const [setting, scalingUv] = useMemo((): Immutable<[LayerImageSetting, scalingUv: Record<BoneName, number>]> => {
+		if (scaling) {
+			const value = evaluator.getBoneLikeValue(scaling.scaleBone);
+			// Find the best matching scaling override
+			if (value > 0) {
+				const best = maxBy(scaling.stops.filter((stop) => stop[0] > 0 && stop[0] <= value), (stop) => stop[0]);
+				if (best != null) {
+					return [
+						best[1],
+						{ [scaling.scaleBone]: best[0] },
+					];
+				}
+			} else if (value < 0) {
+				const best = minBy(scaling.stops.filter((stop) => stop[0] < 0 && stop[0] >= value), (stop) => stop[0]);
+				if (best != null) {
+					return [
+						best[1],
+						{ [scaling.scaleBone]: best[0] },
+					];
+				}
+			}
+		}
+		return [scalingBaseimage, {}];
+	}, [evaluator, scaling, scalingBaseimage]);
+
+	return useMemo((): ReturnType<typeof useLayerImageSource> => {
+		const resultSetting = setting.overrides.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item))) ?? setting;
+
+		return {
+			setting,
+			image: resultSetting.image,
+			imageUv: {
+				...resultSetting.uvPose,
+				...scalingUv,
+			},
+		};
+	}, [evaluator, item, setting, scalingUv]);
 }
 
 export function LayerToImmediateName(layer: AssetGraphicsLayer): string {

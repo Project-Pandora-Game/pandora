@@ -21,8 +21,6 @@ import {
 	CloneDeepMutable,
 	SpaceInvite,
 	FormatTimeInterval,
-	AccountIdSchema,
-	CharacterIdSchema,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -440,33 +438,24 @@ function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
 
 function SpaceInviteCreation({ closeDialog, update }: { closeDialog: () => void; update: () => void; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
-	const [account, setAccount] = useState('');
-	const [character, setCharacter] = useState('');
-	const [uses, setUses] = useState('');
+	const [allowAccount, setAllowAccount] = useState(false);
+	const [account, setAccount] = useState(0);
+	const [allowCharacter, setAllowCharacter] = useState(false);
+	const [character, setCharacter] = useState(0);
+	const [allowMaxUses, setAllowMaxUses] = useState(false);
+	const [uses, setUses] = useState(1);
 	const [bypassPassword, setBypassPassword] = useState(true);
 
 	const [onCreate, processing] = useAsyncEvent(
 		async () => {
-			const acc = account === '' ? undefined : AccountIdSchema.safeParse(account);
-			if (acc && !acc.success) {
-				toast('Invalid account ID', TOAST_OPTIONS_ERROR);
-				return null;
-			}
-			const accountId = acc?.data;
-			const chr = character === '' ? undefined : CharacterIdSchema.safeParse(character);
-			if (chr && !chr.success) {
-				toast('Invalid character ID', TOAST_OPTIONS_ERROR);
-				return null;
-			}
-			const characterId = chr?.data;
-			const maxUses = uses === '' ? undefined : Math.min(parseInt(uses, 10), 1);
+			closeDialog();
 
 			return await directoryConnector.awaitResponse('spaceInvite', {
 				action: 'create',
 				data: {
-					accountId,
-					characterId,
-					maxUses,
+					accountId: allowAccount ? account : undefined,
+					characterId: allowCharacter ? `c${character}` : undefined,
+					maxUses: allowMaxUses ? uses : undefined,
 					bypassPassword,
 				},
 			});
@@ -489,15 +478,18 @@ function SpaceInviteCreation({ closeDialog, update }: { closeDialog: () => void;
 			<Column className='spaceInviteCreation' gap='medium'>
 				<div className='input-row'>
 					<label>Limit To Account ID</label>
-					<input type='text' value={ account } onChange={ (e) => setAccount(e.target.value.trim()) } />
+					<input type='checkbox' checked={ allowAccount } onChange={ (e) => setAllowAccount(e.target.checked) } />
+					<input type='number' min={ 0 } value={ account } onChange={ (e) => setAccount(e.target.valueAsNumber) } readOnly={ !allowAccount } />
 				</div>
 				<div className='input-row'>
 					<label>Limit To Character ID</label>
-					<input type='text' value={ character } onChange={ (e) => setCharacter(e.target.value.trim()) } />
+					<input type='checkbox' checked={ allowCharacter } onChange={ (e) => setAllowCharacter(e.target.checked) } />
+					<input type='number' min={ 0 } value={ character } onChange={ (e) => setCharacter(e.target.valueAsNumber) } readOnly={ !allowCharacter } />
 				</div>
 				<div className='input-row'>
 					<label>Max uses</label>
-					<input type='number' value={ uses } onChange={ (e) => setUses(e.target.value.trim()) } />
+					<input type='checkbox' checked={ allowMaxUses } onChange={ (e) => setAllowMaxUses(e.target.checked) } />
+					<input type='number' min={ 1 } value={ uses } onChange={ (e) => setUses(e.target.valueAsNumber) } readOnly={ !allowMaxUses } />
 				</div>
 				<div className='input-row'>
 					<label>Bypass password</label>

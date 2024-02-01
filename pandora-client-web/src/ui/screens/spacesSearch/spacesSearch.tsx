@@ -14,7 +14,7 @@ import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRed
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Button } from '../../../components/common/button/button';
-import { useCharacterRestrictionsManager, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
+import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ResolveBackground } from 'pandora-common';
@@ -29,7 +29,7 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { useObservable } from '../../../observable';
 import { useAsyncEvent } from '../../../common/useEvent';
-import { usePlayerState } from '../../../components/gameContext/playerContextProvider';
+import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { toast } from 'react-toastify';
 
 const TIPS: readonly string[] = [
@@ -355,11 +355,40 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 	);
 }
 
-// TODO: remove some of this when we automate leave process was added
 function GuardedJoinButton({ children, spaceId, inviteId, redirectBeforeLeave }: { children: ReactNode; spaceId: SpaceId; inviteId?: SpaceInviteId; redirectBeforeLeave?: boolean; }): ReactElement {
+
+	const space = useSpaceInfoOptional();
+
+	const player = usePlayer();
+	const gameState = useGameStateOptional();
+
+	if (!player || !gameState) {
+		return (
+			<Button className='fadeDisabled' disabled={ true }>
+				No character selected
+			</Button>
+		);
+	}
+
+	if (space?.id === null) {
+		return <>{ children }</>;
+	}
+
+	if (space?.id === spaceId) {
+		return (
+			<Button className='fadeDisabled' disabled={ true }>
+				You are already inside this space
+			</Button>
+		);
+	}
+
+	return <GuardedJoinButtonWithLeave spaceId={ spaceId } inviteId={ inviteId } redirectBeforeLeave={ redirectBeforeLeave } />;
+}
+
+// TODO: remove some of this when we automate leave process was added
+function GuardedJoinButtonWithLeave({ spaceId, inviteId, redirectBeforeLeave }: { spaceId: SpaceId; inviteId?: SpaceInviteId; redirectBeforeLeave?: boolean; }) {
 	const { pathname } = useLocation();
 	const navigate = useNavigate();
-	const space = useSpaceInfoOptional();
 	const directoryConnector = useDirectoryConnector();
 	const { player, playerState } = usePlayerState();
 	const roomDeviceLink = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getRoomDeviceLink());
@@ -382,18 +411,6 @@ function GuardedJoinButton({ children, spaceId, inviteId, redirectBeforeLeave }:
 			},
 		},
 	);
-
-	if (space?.id === null) {
-		return <>{ children }</>;
-	}
-
-	if (space?.id === spaceId) {
-		return (
-			<Button className='fadeDisabled' disabled={ true }>
-				You are already inside this space
-			</Button>
-		);
-	}
 
 	if (roomDeviceLink) {
 		return (
@@ -426,6 +443,7 @@ function GuardedJoinButton({ children, spaceId, inviteId, redirectBeforeLeave }:
 			Leave current space
 		</Button>
 	);
+
 }
 
 const SpaceJoinProgress = new PersistentToast();

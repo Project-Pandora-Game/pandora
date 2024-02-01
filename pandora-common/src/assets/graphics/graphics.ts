@@ -160,6 +160,11 @@ export type PointTemplate = z.infer<typeof PointTemplateSchema>;
 
 export const LayerImageOverrideSchema = z.object({
 	image: z.string(),
+	/**
+	 * Pose to use for calculating UV coordinates of vertices.
+	 *
+	 * EXPERIMENTAL - subject to change, will likely be merged with `scaling` options soon.
+	 */
 	uvPose: z.record(BoneNameSchema, z.number()).optional(),
 	condition: ConditionSchema,
 });
@@ -210,6 +215,11 @@ export enum LayerSide {
 
 export const LayerImageSettingSchema = z.object({
 	image: z.string(),
+	/**
+	 * Pose to use for calculating UV coordinates of vertices.
+	 *
+	 * EXPERIMENTAL - subject to change, will likely be merged with `scaling` options soon.
+	 */
 	uvPose: z.record(BoneNameSchema, z.number()).optional(),
 	overrides: z.array(LayerImageOverrideSchema),
 	alphaImage: z.string().min(1).optional(),

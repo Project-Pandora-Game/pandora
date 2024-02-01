@@ -25,6 +25,7 @@ import { useEditor } from './editorContextProvider';
 import { EditorWardrobeUI } from './components/wardrobe/wardrobe';
 import { GetCurrentAssetManager } from '../assets/assetManager';
 import { AssetManagerEditor, EditorAssetManager } from './assets/assetManager';
+import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
 
 const logger = GetLogger('Editor');
 
@@ -364,7 +365,9 @@ function Tab({ tab, index }: { tab: TabsName; index: number; }): ReactElement {
 				</Button>
 			</div>
 			<currentTabContext.Provider value={ context }>
-				<CurrentTabComponent />
+				<LocalErrorBoundary>
+					<CurrentTabComponent />
+				</LocalErrorBoundary>
 			</currentTabContext.Provider>
 		</div>
 	);

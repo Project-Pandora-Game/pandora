@@ -505,7 +505,7 @@ export class Space {
 
 	/** Returns if this space is visible to the specific account when searching in space search */
 	public checkVisibleTo(account: Account): boolean {
-		return this.isValid && (this.isAdmin(account) || this.isPublic);
+		return this.isValid && (this.isPublic || this.isAdmin(account) || this.config.allow.includes(account.id));
 	}
 
 	public isOwner(account: Account): boolean {

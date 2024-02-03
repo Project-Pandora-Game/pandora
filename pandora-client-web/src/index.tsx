@@ -1,4 +1,4 @@
-import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
+import { GetLogger, SetConsoleOutput } from 'pandora-common';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -14,6 +14,7 @@ import { PandoraRoutes } from './routing/Routes';
 import { Dialogs } from './components/dialog/dialog';
 import { HoverElementsPortal } from './components/hoverElement/hoverElement';
 import { ConfigurePixiSettings } from './graphics/pixiSettings';
+import { ConfigLogLevel, LoadSearchArgs } from './config/searchArgs';
 
 const logger = GetLogger('init');
 
@@ -27,6 +28,7 @@ try {
  * Starts the application.
  */
 function Start(): void {
+	LoadSearchArgs();
 	SetupLogging();
 	ConfigurePixiSettings();
 	logger.info('Starting...');
@@ -62,40 +64,5 @@ function Start(): void {
  * Configures logging for the application.
  */
 function SetupLogging(): void {
-	let level = USER_DEBUG ? LogLevel.VERBOSE : LogLevel.WARNING;
-	const search = new URLSearchParams(window.location.search);
-	if (search.has('loglevel')) {
-		const logLevel = search.get('loglevel') || '';
-		switch (logLevel.toLowerCase()) {
-			case 'debug':
-				level = LogLevel.DEBUG;
-				break;
-			case 'verbose':
-				level = LogLevel.VERBOSE;
-				break;
-			case 'info':
-				level = LogLevel.INFO;
-				break;
-			case 'alert':
-				level = LogLevel.ALERT;
-				break;
-			case 'warning':
-				level = LogLevel.WARNING;
-				break;
-			case 'error':
-				level = LogLevel.ERROR;
-				break;
-			case 'fatal':
-				level = LogLevel.FATAL;
-				break;
-			default: {
-				const parsed = parseInt(logLevel);
-				// eslint-disable-next-line @typescript-eslint/no-unsafe-enum-comparison
-				if (parsed >= LogLevel.FATAL && parsed <= LogLevel.DEBUG)
-					level = parsed;
-				break;
-			}
-		}
-	}
-	SetConsoleOutput(level);
+	SetConsoleOutput(ConfigLogLevel.value);
 }

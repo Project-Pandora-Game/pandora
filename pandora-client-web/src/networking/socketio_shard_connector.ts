@@ -22,6 +22,7 @@ import { GameState } from '../components/gameContext/gameStateContextProvider';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
 import { ShardConnector, ShardConnectionState } from './shardConnector';
+import { ConfigServerIndex } from '../config/searchArgs';
 
 const logger = GetLogger('ShardConn');
 
@@ -35,6 +36,10 @@ export class ShardChangeEventEmitter extends TypedEventEmitter<Record<IShardClie
 export const LastSelectedCharacter = BrowserStorage.createSession<CharacterId | undefined>('lastSelectedCharacter', undefined, CharacterIdSchema.optional());
 
 function CreateConnection({ publicURL, secret, characterId }: IDirectoryCharacterConnectionInfo): Socket {
+	// Find which public URL we should actually use
+	const publicURLOptions = publicURL.split(';').map((a) => a.trim());
+	publicURL = publicURLOptions[ConfigServerIndex.value % publicURLOptions.length];
+
 	// Create the connection without connecting
 	return connect(publicURL, {
 		autoConnect: false,

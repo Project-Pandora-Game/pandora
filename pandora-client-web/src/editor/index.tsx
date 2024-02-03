@@ -16,6 +16,7 @@ import { EulaGate } from '../components/Eula';
 import { EditorWardrobeContextProvider } from './components/wardrobe/wardrobe';
 import { AssetManagerEditor } from './assets/assetManager';
 import { ConfigurePixiSettings } from '../graphics/pixiSettings';
+import { LoadSearchArgs } from '../config/searchArgs';
 
 const logger = GetLogger('init');
 
@@ -27,6 +28,7 @@ Start().catch((error) => {
  * Starts the application.
  */
 async function Start(): Promise<void> {
+	LoadSearchArgs();
 	SetupLogging();
 	ConfigurePixiSettings();
 	logger.info('Starting...');

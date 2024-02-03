@@ -63,7 +63,7 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 			space: this.character.getOrLoadSpace().getLoadData(),
 			assetsDefinition: assetManager.rawData,
 			assetsDefinitionHash: assetManager.definitionsHash,
-			assetsSource: ASSETS_SOURCE || (SERVER_PUBLIC_ADDRESS + '/assets/'),
+			assetsSource: ASSETS_SOURCE || (SERVER_PUBLIC_ADDRESS.split(';').map((addr) => addr.trim() + '/assets/').join(';')),
 		});
 	}
 

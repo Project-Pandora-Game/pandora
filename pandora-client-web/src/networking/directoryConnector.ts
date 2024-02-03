@@ -7,12 +7,14 @@ import type {
 	IDirectoryClientArgument,
 	IDirectoryClientChangeEvents,
 	IDirectoryStatus,
+	SecondFactorData,
+	SecondFactorResponse,
 	TypedEventEmitter,
 } from 'pandora-common';
 import type { ReadonlyObservable } from '../observable';
 import type { DirectMessageManager } from './directMessageManager';
 
-export type LoginResponse = 'ok' | 'verificationRequired' | 'invalidToken' | 'unknownCredentials';
+export type LoginResponse = 'ok' | 'verificationRequired' | 'invalidToken' | 'unknownCredentials' | 'invalidSecondFactor';
 
 /** State of connection to Directory */
 export enum DirectoryConnectionState {
@@ -57,6 +59,9 @@ export interface DirectoryConnector extends IConnectionBase<IClientDirectory> {
 	readonly connectionStateEventEmitter: TypedEventEmitter<Pick<IDirectoryClientArgument, 'connectionState'>>;
 
 	readonly directMessageHandler: DirectMessageManager;
+
+	/** Handler for second factor authentication */
+	secondFactorHandler: ((response: SecondFactorResponse) => Promise<SecondFactorData | null>) | null;
 
 	connect(): Promise<this>;
 

@@ -98,6 +98,22 @@ export const AccountPublicInfoSchema = z.object({
 });
 export type AccountPublicInfo = z.infer<typeof AccountPublicInfoSchema>;
 
+export const SecondFactorTypeSchema = z.enum(['captcha']);
+export type SecondFactorType = z.infer<typeof SecondFactorTypeSchema>;
+
+export const SecondFactorDataSchema = z.record(SecondFactorTypeSchema, z.string());
+export type SecondFactorData = z.infer<typeof SecondFactorDataSchema>;
+
+export type SecondFactorResponse = {
+	result: 'secondFactorRequired';
+	types: SecondFactorType[];
+} | {
+	result: 'secondFactorInvalid';
+	types: SecondFactorType[];
+	missing: SecondFactorType[];
+	invalid: SecondFactorType[];
+};
+
 /** Client->Directory messages */
 export const ClientDirectorySchema = {
 	//#region Before Login
@@ -106,8 +122,9 @@ export const ClientDirectorySchema = {
 			username: UserNameSchema,
 			passwordSha512: PasswordSha512Schema,
 			verificationToken: SimpleTokenSchema.optional(),
+			secondFactor: SecondFactorDataSchema.optional(),
 		}),
-		response: ZodCast<{ result: 'verificationRequired' | 'invalidToken' | 'unknownCredentials'; } | {
+		response: ZodCast<{ result: 'verificationRequired' | 'invalidToken' | 'unknownCredentials'; } | SecondFactorResponse | {
 			result: 'ok';
 			token: { value: string; expires: number; };
 			account: IDirectoryAccountInfo;

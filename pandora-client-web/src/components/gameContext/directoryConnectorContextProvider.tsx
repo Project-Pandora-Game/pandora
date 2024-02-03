@@ -1,5 +1,5 @@
 import { noop } from 'lodash';
-import { ACCOUNT_SETTINGS_DEFAULT, GetLogger, IDirectoryAccountInfo, IDirectoryAccountSettings, IDirectoryClientChangeEvents } from 'pandora-common';
+import { ACCOUNT_SETTINGS_DEFAULT, AssertNever, AssertNotNullable, GetLogger, IDirectoryAccountInfo, IDirectoryAccountSettings, IDirectoryClientChangeEvents, SecondFactorData, SecondFactorResponse, SecondFactorType } from 'pandora-common';
 import React, { createContext, ReactElement, useContext, useEffect, useRef } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { useDebugExpose } from '../../common/useDebugExpose';
@@ -10,6 +10,10 @@ import { SocketIODirectoryConnector } from '../../networking/socketio_directory_
 import { Observable, useNullableObservable, useObservable } from '../../observable';
 import { Immutable } from 'immer';
 import { ConfigServerIndex } from '../../config/searchArgs';
+import { Form, FormFieldCaptcha } from '../common/form/form';
+import { Button } from '../common/button/button';
+import { Row } from '../common/container/container';
+import { ModalDialog } from '../dialog/dialog';
 
 const DirectoryConnector = new Observable<DirectoryConnector | undefined>(undefined);
 
@@ -60,6 +64,7 @@ export function DirectoryConnectorContextProvider({ children }: ChildrenProps): 
 
 	return (
 		<directoryConnectorContext.Provider value={ directoryConnectorInstance }>
+			<SecondFactorDialog />
 			{ children }
 		</directoryConnectorContext.Provider>
 	);
@@ -142,4 +147,77 @@ export function useAuthTokenIsValid(): boolean {
 	}, [authToken]);
 
 	return authToken != null && isValid;
+}
+
+function SecondFactorDialog() {
+	const directoryConnector = useDirectoryConnector();
+	const [types, setTypes] = React.useState<SecondFactorType[] | null>([]);
+	const [invalid, setInvalid] = React.useState<SecondFactorType[] | null>([]);
+	const [handler, setHandler] = React.useState<null | { resolve: (data: SecondFactorData | PromiseLike<SecondFactorData> | null) => void; }>(null);
+
+	const secondFactorHandler = React.useCallback((response: SecondFactorResponse) => {
+		return new Promise<SecondFactorData | null>((resolve) => {
+			setTypes(response.types);
+			setInvalid(response.result === 'secondFactorInvalid' ? response.invalid : null);
+			setHandler({ resolve });
+		}).finally(() => {
+			setTypes(null);
+			setInvalid(null);
+			setHandler(null);
+		});
+	}, [setTypes, setHandler]);
+
+	React.useEffect(() => {
+		directoryConnector.secondFactorHandler = secondFactorHandler;
+		return () => {
+			handler?.resolve(null);
+			directoryConnector.secondFactorHandler = null;
+		};
+	}, [directoryConnector, secondFactorHandler]);
+
+	if (handler == null) {
+		return null;
+	}
+
+	AssertNotNullable(types);
+
+	return <SecondFactorDialogImpl types={ types } invalid={ invalid } handler={ handler } />;
+}
+
+function SecondFactorDialogImpl({ types, invalid, handler }: { types: SecondFactorType[]; invalid: SecondFactorType[] | null; handler: { resolve: (data: SecondFactorData | null) => void; }; }): ReactElement {
+	const [captcha, setCaptcha] = React.useState('');
+
+	const elements = React.useMemo(() => types.map((type) => {
+		switch (type) {
+			case 'captcha':
+				return <FormFieldCaptcha key='captcha' setCaptchaToken={ setCaptcha } invalidCaptcha={ invalid != null && invalid.includes('captcha') } />;
+			default:
+				AssertNever(type);
+		}
+	}), [types, invalid, setCaptcha]);
+
+	const onSubmit = React.useCallback(() => {
+		const data: SecondFactorData = {};
+		if (types.includes('captcha')) {
+			data.captcha = captcha;
+		}
+		handler.resolve(data);
+	}, [types, captcha, handler]);
+
+	const onCancel = React.useCallback(() => {
+		handler.resolve(null);
+	}, [handler]);
+
+	return (
+		<ModalDialog>
+			<Form onSubmit={ onSubmit }>
+				<h3>Second factor required</h3>
+				{ elements }
+				<Row>
+					<Button type='submit'>Submit</Button>
+					<Button onClick={ onCancel }>Cancel</Button>
+				</Row>
+			</Form>
+		</ModalDialog>
+	);
 }

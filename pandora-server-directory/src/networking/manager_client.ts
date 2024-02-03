@@ -1,4 +1,4 @@
-import { GetLogger, SpaceDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, AssertNever, IShardTokenConnectInfo, Service, Awaitable } from 'pandora-common';
+import { GetLogger, SpaceDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, AssertNever, IShardTokenConnectInfo, Service, Awaitable, SecondFactorData, SecondFactorType, KnownObject, TimeSpanMs, SecondFactorResponse } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { ENV } from '../config';
@@ -179,12 +179,18 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	 * @param connection - The connection that this message comes from
 	 * @returns Result of the login
 	 */
-	private async handleLogin({ username, passwordSha512, verificationToken }: IClientDirectoryArgument['login'], connection: ClientConnection): IClientDirectoryPromiseResult['login'] {
+	private async handleLogin({ username, passwordSha512, verificationToken, secondFactor }: IClientDirectoryArgument['login'], connection: ClientConnection): IClientDirectoryPromiseResult['login'] {
 		// Find account by username
 		const account = await accountManager.loadAccountByUsername(username);
 		// Verify the password
 		if (!account || !await account.secure.verifyPassword(passwordSha512)) {
+			LoginManager.loginFailed();
 			return { result: 'unknownCredentials' };
+		}
+		{
+			const r = await this.testSecondFactor(account, secondFactor, LoginManager.getRequiredSecondFactor());
+			if (r != null)
+				return r;
 		}
 		// Verify account is activated or activate it
 		if (!account.secure.isActivated()) {
@@ -801,6 +807,31 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			connection.sendMessage('somethingChanged', { changes: ['shardList'] });
 		}
 	}
+
+	private async testSecondFactor(_account: Account, data: SecondFactorData | undefined, types: SecondFactorType[]): Promise<null | SecondFactorResponse> {
+		if (data == null) {
+			return types.length === 0 ? null : { result: 'secondFactorRequired', types };
+		}
+		const missing: SecondFactorType[] = types.filter((type) => data[type] == null);
+		const invalid: SecondFactorType[] = [];
+		for (const [type, value] of KnownObject.entries(data)) {
+			if (value == null)
+				continue;
+
+			switch (type) {
+				case 'captcha':
+					if (!await TestCaptcha(value))
+						invalid.push('captcha');
+					break;
+				default:
+					AssertNever(type);
+			}
+		}
+		if (missing.length > 0 || invalid.length > 0) {
+			return { result: 'secondFactorInvalid', invalid, missing, types };
+		}
+		return null;
+	}
 };
 
 function Auth<T, R>(role: AccountRole, handler: (args: T, connection: ClientConnection & { readonly account: Account; }) => R): (args: T, connection: ClientConnection) => R {
@@ -898,3 +929,24 @@ function WithConstantTime<TParams extends unknown[], TReturn extends { /** only 
 		return result[1];
 	};
 }
+
+const LoginManager = new class LoginManager {
+	private static readonly maxAttempts = 10;
+	private static readonly attemptWindow = TimeSpanMs(5, 'minutes');
+	private invalidAttempts: { readonly timestamp: number; }[] = [];
+
+	public loginFailed(): void {
+		this.invalidAttempts.push({ timestamp: Date.now() });
+		this.invalidAttempts = this.invalidAttempts.slice(-LoginManager.maxAttempts);
+	}
+
+	public getRequiredSecondFactor(): SecondFactorType[] {
+		const now = Date.now();
+		this.invalidAttempts = this.invalidAttempts.filter((attempt) => attempt.timestamp + LoginManager.attemptWindow > now);
+		const required: SecondFactorType[] = [];
+		if (this.invalidAttempts.length >= LoginManager.maxAttempts) {
+			required.push('captcha');
+		}
+		return required;
+	}
+};

@@ -47,6 +47,8 @@ export class MockDirectoryConnector implements DirectoryConnector {
 
 	public setShardConnectionInfo = jest.fn();
 
+	public secondFactorHandler = jest.fn();
+
 	public connectToCharacter(_id: CharacterId): Promise<boolean> {
 		return Promise.resolve(true);
 	}

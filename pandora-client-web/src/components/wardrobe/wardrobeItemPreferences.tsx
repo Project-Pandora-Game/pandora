@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { ReactElement, createContext, useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react';
+import React, { ReactElement, createContext, useCallback, useContext, useId, useMemo, useRef, useState } from 'react';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { useAssetManager } from '../../assets/assetManager';
 import { WardrobeAssetList, useAssetPreference, useAssetPreferenceResolver, useAssetPreferences } from './views/wardrobeAssetView';
@@ -16,6 +16,7 @@ import { Column, Row } from '../common/container/container';
 import { Select } from '../common/select/select';
 import { useBrowserStorage } from '../../browserStorage';
 import { z } from 'zod';
+import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus';
 
 type ItemPreferencesFocus = {
 	type: 'none';
@@ -140,28 +141,7 @@ export function WardrobePreferencesAttributePicker({ title }: {
 	), [assetManager, flt]);
 
 	const filterInput = useRef<HTMLInputElement>(null);
-
-	useEffect(() => {
-		// Handler to autofocus search
-		const keyPressHandler = (ev: KeyboardEvent) => {
-			if (
-				filterInput.current &&
-				// Only if no other input is selected
-				(!document.activeElement || !(document.activeElement instanceof HTMLInputElement)) &&
-				// Only if this isn't a special key or key combo
-				!ev.ctrlKey &&
-				!ev.metaKey &&
-				!ev.altKey &&
-				ev.key.length === 1
-			) {
-				filterInput.current.focus();
-			}
-		};
-		window.addEventListener('keypress', keyPressHandler);
-		return () => {
-			window.removeEventListener('keypress', keyPressHandler);
-		};
-	}, []);
+	useInputAutofocus(filterInput);
 
 	return (
 		<div className='inventoryView'>

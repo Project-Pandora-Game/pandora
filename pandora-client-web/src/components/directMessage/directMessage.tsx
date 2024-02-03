@@ -19,13 +19,13 @@ import { useShardConnector } from '../gameContext/shardConnectorContextProvider'
 import { useGameStateOptional } from '../gameContext/gameStateContextProvider';
 import { useNavigate } from 'react-router';
 import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, ICommandInvokeContext, RunCommand } from '../../ui/components/chat/commandsProcessor';
+import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus';
 
 export function DirectMessage({ accountId }: { accountId: number; }): ReactElement {
 	const ref = React.useRef<HTMLTextAreaElement>(null);
 	const [autocompleteHint, setAutocompleteHint] = React.useState<AutocompleteDisplayData | null>(null);
 
-	const ctx = React.useMemo<IChatInputHandler>(() => ({
-		focus: () => ref.current?.focus(),
+	const ctx = React.useMemo((): IChatInputHandler => ({
 		setValue: (value: string) => {
 			if (ref.current) {
 				ref.current.value = value;
@@ -237,9 +237,7 @@ function DirectChannelInputImpl(_: unknown, ref: React.ForwardedRef<HTMLTextArea
 	});
 
 	const actualRef = useTextFormattingOnKeyboardEvent(ref);
-	React.useEffect(() => {
-		actualRef.current?.focus();
-	}, [actualRef, channel.account]);
+	useInputAutofocus(actualRef);
 
 	if (!channel.account) {
 		return null;

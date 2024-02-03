@@ -50,6 +50,7 @@ import { useAsyncEvent } from '../../../common/useEvent';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { toast } from 'react-toastify';
 import { CopyToClipboard } from '../../../common/clipboard';
+import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
 
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
 const IsValidDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
@@ -743,29 +744,9 @@ function BackgroundSelectDialog({ hide, current, select }: {
 			.filter((b) => filterParts.every((f) => b.name.toLowerCase().includes(f)))
 			.sort(backgroundSortOrder);
 	}, [selection, nameFilter, backgroundSortOrder]);
-	const nameFilterInput = useRef<HTMLInputElement>(null);
 
-	useEffect(() => {
-		// Handler to autofocus search
-		const keyPressHandler = (ev: KeyboardEvent) => {
-			if (
-				nameFilterInput.current &&
-				// Only if no other input is selected
-				(!document.activeElement || !(document.activeElement instanceof HTMLInputElement)) &&
-				// Only if this isn't a special key or key combo
-				!ev.ctrlKey &&
-				!ev.metaKey &&
-				!ev.altKey &&
-				ev.key.length === 1
-			) {
-				nameFilterInput.current.focus();
-			}
-		};
-		window.addEventListener('keypress', keyPressHandler);
-		return () => {
-			window.removeEventListener('keypress', keyPressHandler);
-		};
-	}, []);
+	const nameFilterInput = useRef<HTMLInputElement>(null);
+	useInputAutofocus(nameFilterInput);
 
 	return (
 		<ModalDialog position='top'>

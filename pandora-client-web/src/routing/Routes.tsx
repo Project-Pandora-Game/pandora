@@ -149,7 +149,7 @@ function AutoConnectStateMessage(state: 'none' | 'initial' | 'loading' | 'connec
 
 function RequiresCharacter({ element, allowUnfinished }: { element: ComponentType<Record<string, never>>; allowUnfinished?: boolean; }): ReactElement {
 	return (
-		<RequiresLogin element={ RequiresCharacterImpl } characterElement={ element } preserveLocation={ false } allowUnfinished={ allowUnfinished } />
+		<RequiresLogin element={ RequiresCharacterImpl } characterElement={ element } allowUnfinished={ allowUnfinished } />
 	);
 }
 

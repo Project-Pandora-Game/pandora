@@ -121,19 +121,25 @@ export function useAuthToken(): AuthToken | undefined {
 export function useAuthTokenIsValid(): boolean {
 	const authToken = useAuthToken();
 	const [isValid, setIsValid] = React.useState(authToken != null && authToken.expires >= Date.now());
+
 	React.useEffect(() => {
-		if (authToken == null) {
+		const now = Date.now();
+
+		if (authToken == null || authToken.expires <= now) {
+			setIsValid(false);
 			return;
 		}
 
+		setIsValid(true);
+
 		const interval = setTimeout(() => {
 			setIsValid(false);
-		}, authToken.expires - Date.now());
+		}, authToken.expires - now);
 
 		return () => {
 			clearTimeout(interval);
 		};
 	}, [authToken]);
 
-	return isValid;
+	return authToken != null && isValid;
 }

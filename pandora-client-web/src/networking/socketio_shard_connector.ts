@@ -1,5 +1,4 @@
 import {
-	CharacterId,
 	ConnectionBase,
 	GetLogger,
 	IClientShard,
@@ -12,12 +11,10 @@ import {
 	TypedEventEmitter,
 	IShardClientChangeEvents,
 	Assert,
-	CharacterIdSchema,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
 import { LoadAssetDefinitions } from '../assets/assetManager';
-import { BrowserStorage } from '../browserStorage';
 import { GameState } from '../components/gameContext/gameStateContextProvider';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
@@ -31,9 +28,6 @@ export class ShardChangeEventEmitter extends TypedEventEmitter<Record<IShardClie
 		changes.forEach((change) => this.emit(change, true));
 	}
 }
-
-/** Used for auto-reconnect to character after window refresh */
-export const LastSelectedCharacter = BrowserStorage.createSession<CharacterId | undefined>('lastSelectedCharacter', undefined, CharacterIdSchema.optional());
 
 function CreateConnection({ publicURL, secret, characterId }: IDirectoryCharacterConnectionInfo): Socket {
 	// Find which public URL we should actually use

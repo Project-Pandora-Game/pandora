@@ -19,6 +19,7 @@ import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../com
 import { ModalDialog } from '../components/dialog/dialog';
 import { useObservable } from '../observable';
 import { SpaceJoin } from '../ui/screens/spaceJoin/spaceJoin';
+import { Freeze } from '../ui/components/common/freeze';
 
 // Lazily loaded screens
 const Management = lazy(() => import('../components/management'));
@@ -73,11 +74,13 @@ function RequiresLogin<TProps extends object>({ element: Element, preserveLocati
 
 	useEffect(() => {
 		if (!isLoggedIn && !hasAuthToken) {
+			let path = '/login';
 			let options: NavigateOptions = {};
 			if (preserveLocation) {
-				options = { state: { redirectPath: location.pathname, redirectState: location.state as unknown } };
+				path = `/login?${new URLSearchParams({ redirect: location.pathname }).toString()}`;
+				options = { state: { redirectState: location.state as unknown } };
 			}
-			navigate('/login', options);
+			navigate(path, options);
 		}
 	}, [isLoggedIn, hasAuthToken, navigate, location.pathname, location.state, preserveLocation]);
 
@@ -149,7 +152,7 @@ function AutoConnectStateMessage(state: 'none' | 'initial' | 'loading' | 'connec
 
 function RequiresCharacter({ element, allowUnfinished }: { element: ComponentType<Record<string, never>>; allowUnfinished?: boolean; }): ReactElement {
 	return (
-		<RequiresLogin element={ RequiresCharacterImpl } characterElement={ element } preserveLocation={ false } allowUnfinished={ allowUnfinished } />
+		<RequiresLogin element={ RequiresCharacterImpl } characterElement={ element } allowUnfinished={ allowUnfinished } />
 	);
 }
 
@@ -171,31 +174,18 @@ function DefaultFallback(): ReactElement {
 
 function AuthPageFallback({ component }: { component: ComponentType<Record<string, never>>; }): ReactElement {
 	const isLoggedIn = useCurrentAccount() != null;
-	const state: unknown = useLocation().state;
+	const location = useLocation();
 
 	if (isLoggedIn) {
-		const { path: redirectPath, state: redirectState } = GetDefaultNavigation(state);
-		return <Navigate to={ redirectPath } state={ redirectState } />;
+		const param = new URLSearchParams(location.search);
+		let state: unknown;
+		if (IsObject(location.state) && 'redirectState' in location.state) {
+			state = location.state.redirectState;
+		}
+		return <Navigate to={ param.get('redirect') ?? '/' } state={ state } />;
 	}
 
 	return <AuthPage component={ component } />;
-}
-
-function GetDefaultNavigation(state?: unknown): {
-	path: string;
-	state: unknown;
-} {
-	if (IsObject(state) && typeof state.redirectPath === 'string') {
-		return {
-			path: state.redirectPath,
-			state: state.redirectState,
-		};
-	}
-
-	return {
-		path: '/',
-		state: undefined,
-	};
 }
 
 function DeveloperRoutes(): ReactElement {
@@ -209,31 +199,6 @@ function DeveloperRoutes(): ReactElement {
 	return (
 		<Suspense fallback={ <div>Loading...</div> }>
 			<Management />
-		</Suspense>
-	);
-}
-
-const infinite = new Promise(() => { /** */ });
-
-function Suspender({ freeze, children }: {
-	freeze: boolean;
-	children: React.ReactNode;
-}) {
-	if (freeze) {
-		// eslint-disable-next-line @typescript-eslint/no-throw-literal
-		throw infinite;
-	}
-	return <>{ children }</>;
-}
-
-function Freeze({ freeze, children, placeholder = null }: {
-	freeze: boolean;
-	children: React.ReactNode;
-	placeholder?: React.ReactNode;
-}) {
-	return (
-		<Suspense fallback={ placeholder }>
-			<Suspender freeze={ freeze }>{ children }</Suspender>
 		</Suspense>
 	);
 }

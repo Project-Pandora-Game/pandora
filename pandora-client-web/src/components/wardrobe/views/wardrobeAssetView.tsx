@@ -25,6 +25,7 @@ import { ActionWarning, AttributeButton, InventoryAssetPreview, WardrobeActionBu
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { useCharacterDataOptional } from '../../../character/character';
 import { Immutable } from 'immer';
+import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
 
 export function InventoryAssetView({ className, title, children, assets, container, attributesFilterOptions, spawnStyle }: {
 	className?: string;
@@ -126,28 +127,7 @@ export function WardrobeAssetList({ className, title, children, overlay, assets,
 	}, [attribute, attributesFilterOptions]);
 
 	const filterInput = useRef<HTMLInputElement>(null);
-
-	useEffect(() => {
-		// Handler to autofocus search
-		const keyPressHandler = (ev: KeyboardEvent) => {
-			if (
-				filterInput.current &&
-				// Only if no other input is selected
-				(!document.activeElement || !(document.activeElement instanceof HTMLInputElement)) &&
-				// Only if this isn't a special key or key combo
-				!ev.ctrlKey &&
-				!ev.metaKey &&
-				!ev.altKey &&
-				ev.key.length === 1
-			) {
-				filterInput.current.focus();
-			}
-		};
-		window.addEventListener('keypress', keyPressHandler);
-		return () => {
-			window.removeEventListener('keypress', keyPressHandler);
-		};
-	}, []);
+	useInputAutofocus(filterInput);
 
 	// Clear filter when looking from different focus
 	useEffect(() => {

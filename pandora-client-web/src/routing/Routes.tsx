@@ -73,11 +73,13 @@ function RequiresLogin<TProps extends object>({ element: Element, preserveLocati
 
 	useEffect(() => {
 		if (!isLoggedIn && !hasAuthToken) {
+			let path = '/login';
 			let options: NavigateOptions = {};
 			if (preserveLocation) {
-				options = { state: { redirectPath: location.pathname, redirectState: location.state as unknown } };
+				path = `/login?${new URLSearchParams({ redirect: location.pathname }).toString()}`;
+				options = { state: { redirectState: location.state as unknown } };
 			}
-			navigate('/login', options);
+			navigate(path, options);
 		}
 	}, [isLoggedIn, hasAuthToken, navigate, location.pathname, location.state, preserveLocation]);
 
@@ -171,31 +173,18 @@ function DefaultFallback(): ReactElement {
 
 function AuthPageFallback({ component }: { component: ComponentType<Record<string, never>>; }): ReactElement {
 	const isLoggedIn = useCurrentAccount() != null;
-	const state: unknown = useLocation().state;
+	const location = useLocation();
 
 	if (isLoggedIn) {
-		const { path: redirectPath, state: redirectState } = GetDefaultNavigation(state);
-		return <Navigate to={ redirectPath } state={ redirectState } />;
+		const param = new URLSearchParams(location.search);
+		let state: unknown;
+		if (IsObject(location.state) && 'redirectState' in location.state) {
+			state = location.state.redirectState;
+		}
+		return <Navigate to={ param.get('redirect') ?? '/' } state={ state } />;
 	}
 
 	return <AuthPage component={ component } />;
-}
-
-function GetDefaultNavigation(state?: unknown): {
-	path: string;
-	state: unknown;
-} {
-	if (IsObject(state) && typeof state.redirectPath === 'string') {
-		return {
-			path: state.redirectPath,
-			state: state.redirectState,
-		};
-	}
-
-	return {
-		path: '/',
-		state: undefined,
-	};
 }
 
 function DeveloperRoutes(): ReactElement {

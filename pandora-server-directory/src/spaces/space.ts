@@ -1,4 +1,4 @@
-import { GetLogger, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceListInfo, SpaceId, SpaceLeaveReason, AssertNever, IChatMessageDirectoryAction, SpaceListExtendedInfo, IClientDirectoryArgument, Assert, AccountId, AsyncSynchronized, CharacterId, ChatActionId, SpaceInvite, SpaceInviteId, SpaceInviteCreate, LIMIT_SPACE_INVITES, TimeSpanMs, LIMIT_SPACE_MAX_CHARACTER_ADMIN_OVERSHOT_MULTIPLIER } from 'pandora-common';
+import { GetLogger, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceListInfo, SpaceId, SpaceLeaveReason, AssertNever, IChatMessageDirectoryAction, SpaceListExtendedInfo, IClientDirectoryArgument, Assert, AccountId, AsyncSynchronized, CharacterId, ChatActionId, SpaceInvite, SpaceInviteId, SpaceInviteCreate, LIMIT_SPACE_INVITES, TimeSpanMs, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS } from 'pandora-common';
 import { Character, CharacterInfo } from '../account/character';
 import { Shard } from '../shard/shard';
 import { ConnectionManagerClient } from '../networking/manager_client';
@@ -393,8 +393,8 @@ export class Space {
 		// If the space is full, you cannot enter it (some checks ignore space being full)
 		if (!ignore.characterLimit) {
 			let maxUsers = this.config.maxUsers;
-			if (this.isAdmin(character.baseInfo.account)) {
-				maxUsers = Math.ceil(maxUsers * LIMIT_SPACE_MAX_CHARACTER_ADMIN_OVERSHOT_MULTIPLIER);
+			if (this.isOwner(character.baseInfo.account)) {
+				maxUsers += LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS;
 			}
 			if (this.characterCount >= maxUsers)
 				return 'errFull';

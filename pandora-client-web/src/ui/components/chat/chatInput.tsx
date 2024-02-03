@@ -22,6 +22,7 @@ import { useNavigate } from 'react-router';
 import { useNullableObservable } from '../../../observable';
 import { useTextFormattingOnKeyboardEvent } from '../../../common/useTextFormattingOnKeyboardEvent';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
+import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
 
 type Editing = {
 	target: number;
@@ -29,7 +30,6 @@ type Editing = {
 };
 
 export type IChatInputHandler = {
-	focus: () => void;
 	setValue: (value: string) => void;
 	target: Character | null;
 	setTarget: (target: CharacterId | null) => void;
@@ -115,28 +115,9 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	});
 
 	// Handler to autofocus chat input
-	useEffect(() => {
-		const keyPressHandler = (ev: KeyboardEvent) => {
-			if (
-				ref.current &&
-				// Only if no other input is selected
-				(!document.activeElement || !(document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement)) &&
-				// Only if this isn't a special key or key combo
-				!ev.ctrlKey &&
-				!ev.metaKey &&
-				!ev.altKey &&
-				ev.key.length === 1
-			) {
-				ref.current.focus();
-			}
-		};
-		window.addEventListener('keypress', keyPressHandler);
-		return () => {
-			window.removeEventListener('keypress', keyPressHandler);
-		};
-	}, []);
+	useInputAutofocus(ref);
 
-	const context = useMemo<IChatInputHandler>(() => {
+	const context = useMemo((): IChatInputHandler => {
 		const newSetTarget = (t: CharacterId | null) => {
 			if (t === playerId) {
 				return;
@@ -144,7 +125,6 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 			setTarget(!t ? null : characters?.find((c) => c.data.id === t) ?? null);
 		};
 		return {
-			focus: () => ref.current?.focus(),
 			setValue: (value: string) => {
 				if (ref.current) {
 					ref.current.value = value;

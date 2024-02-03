@@ -24,8 +24,7 @@ export function DirectMessage({ accountId }: { accountId: number; }): ReactEleme
 	const ref = React.useRef<HTMLTextAreaElement>(null);
 	const [autocompleteHint, setAutocompleteHint] = React.useState<AutocompleteDisplayData | null>(null);
 
-	const ctx = React.useMemo<IChatInputHandler>(() => ({
-		focus: () => ref.current?.focus(),
+	const ctx = React.useMemo((): IChatInputHandler => ({
 		setValue: (value: string) => {
 			if (ref.current) {
 				ref.current.value = value;

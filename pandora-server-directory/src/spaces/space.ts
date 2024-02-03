@@ -409,7 +409,7 @@ export class Space {
 			return 'noAccess';
 
 		// If you are on the allow list, you can enter the space
-		if (this.config.allow.includes(character.baseInfo.account.id))
+		if (this.isAllowed(character.baseInfo.account))
 			return 'ok';
 
 		if (!this.isInUse())
@@ -506,7 +506,7 @@ export class Space {
 
 	/** Returns if this space is visible to the specific account when searching in space search */
 	public checkVisibleTo(account: Account): boolean {
-		return this.isValid && (this.isPublic || this.isAdmin(account) || this.config.allow.includes(account.id));
+		return this.isValid && (this.isPublic || this.isAllowed(account));
 	}
 
 	public isOwner(account: Account): boolean {
@@ -531,6 +531,17 @@ export class Space {
 			return false;
 
 		if (this.config.banned.includes(account.id))
+			return true;
+
+		return false;
+	}
+
+	public isAllowed(account: Account): boolean {
+		if (this.isAdmin(account))
+			return true;
+		if (this.isBanned(account))
+			return false;
+		if (this.config.allow.includes(account.id))
 			return true;
 
 		return false;

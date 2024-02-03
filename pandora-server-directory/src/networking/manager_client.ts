@@ -1,4 +1,4 @@
-import { GetLogger, SpaceDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, AssertNever, IShardTokenConnectInfo, Service, Awaitable, SecondFactorData, SecondFactorType, KnownObject, TimeSpanMs, SecondFactorResponse } from 'pandora-common';
+import { GetLogger, SpaceDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, AssertNever, IShardTokenConnectInfo, Service, Awaitable, SecondFactorData, SecondFactorType, KnownObject, SecondFactorResponse } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { ENV } from '../config';
@@ -931,20 +931,18 @@ function WithConstantTime<TParams extends unknown[], TReturn extends { /** only 
 }
 
 const LoginManager = new class LoginManager {
-	private static readonly maxAttempts = 10;
-	private static readonly attemptWindow = TimeSpanMs(5, 'minutes');
 	private invalidAttempts: { readonly timestamp: number; }[] = [];
 
 	public loginFailed(): void {
 		this.invalidAttempts.push({ timestamp: Date.now() });
-		this.invalidAttempts = this.invalidAttempts.slice(-LoginManager.maxAttempts);
+		this.invalidAttempts = this.invalidAttempts.slice(-ENV.LOGIN_ATTEMPT_LIMIT);
 	}
 
 	public getRequiredSecondFactor(): SecondFactorType[] {
 		const now = Date.now();
-		this.invalidAttempts = this.invalidAttempts.filter((attempt) => attempt.timestamp + LoginManager.attemptWindow > now);
+		this.invalidAttempts = this.invalidAttempts.filter((attempt) => attempt.timestamp + ENV.LOGIN_ATTEMPT_WINDOW > now);
 		const required: SecondFactorType[] = [];
-		if (this.invalidAttempts.length >= LoginManager.maxAttempts) {
+		if (this.invalidAttempts.length >= ENV.LOGIN_ATTEMPT_LIMIT) {
 			required.push('captcha');
 		}
 		return required;

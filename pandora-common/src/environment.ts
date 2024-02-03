@@ -1,7 +1,9 @@
 import {
 	z,
+	ZodEffects,
 	ZodFirstPartyTypeKind,
 	ZodIssueCode,
+	ZodNumber,
 	type ZodTypeAny,
 } from 'zod';
 import { IsObject, ZodTemplateString } from './validation';
@@ -84,8 +86,12 @@ function GetZodDefType(schema: ZodTypeAny): 'number' | 'boolean' | 'unfiltered' 
 			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
 			return GetZodDefType(schema._def.innerType);
 		case ZodFirstPartyTypeKind.ZodEffects:
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
-			return GetZodDefType(schema._def.schema);
+			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+			if (schema._def.effect?.type === 'refinement' || schema._def.effect?.type === 'transform') {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument
+				return GetZodDefType(schema._def.schema);
+			}
+			return 'unfiltered';
 		default:
 			return 'unfiltered';
 	}
@@ -128,4 +134,35 @@ function Stringify(value: unknown, allowArray = true): string | undefined {
 		default:
 			return undefined;
 	}
+}
+
+export function EnvTimestamp() {
+	return z.preprocess((arg, ctx) => {
+		if (typeof arg !== 'string') {
+			return arg;
+		}
+		const match = arg.match(/^(\d+)([smhdw])?$/);
+		if (!match) {
+			ctx.addIssue({
+				code: ZodIssueCode.custom,
+				message: 'invalid timestamp',
+			});
+			return z.NEVER;
+		}
+		const value = parseInt(match[1]);
+		switch (match[2]) {
+			case 's':
+				return value * 1000;
+			case 'm':
+				return value * 60 * 1000;
+			case 'h':
+				return value * 60 * 60 * 1000;
+			case 'd':
+				return value * 24 * 60 * 60 * 1000;
+			case 'w':
+				return value * 7 * 24 * 60 * 60 * 1000;
+			default:
+				return value;
+		}
+	}, z.number().int().nonnegative()) as ZodEffects<ZodNumber, number, number | `${number}${'s' | 'm' | 'h' | 'd' | 'w' | ''}`>;
 }

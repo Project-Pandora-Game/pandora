@@ -3,6 +3,7 @@ import { z } from 'zod';
 export const WEBPACK_BASE_CONFIG = {
 	DIRECTORY_ADDRESS: z.string().default('http://127.0.0.1:25560'),
 	EDITOR_ASSETS_ADDRESS: z.string().default('http://127.0.0.1:26969/assets'),
+	EDITOR_ASSETS_OFFICIAL_ADDRESS: z.string().default('https://assets.project-pandora.com'),
 	EXTRA_ASSETS_ADDRESS: z.string().default(''),
 	USER_DEBUG: z.boolean().default(false),
 } as const;

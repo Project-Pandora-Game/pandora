@@ -4,7 +4,7 @@ import { GraphicsManager, GraphicsManagerInstance, IGraphicsLoader } from '../as
 import { GraphicsLoaderBase, URLGraphicsLoader } from '../assets/graphicsLoader';
 import { AssetManagerEditor, EditorAssetManager } from './assets/assetManager';
 import { LoadArrayBufferImageResource } from '../graphics/utility';
-import { EDITOR_ASSETS_ADDRESS } from '../config/Environment';
+import { EDITOR_ASSETS_ADDRESS, EDITOR_ASSETS_OFFICIAL_ADDRESS } from '../config/Environment';
 
 export async function LoadAssetsFromFileSystem(): Promise<[AssetManagerEditor, GraphicsManager]> {
 	const dirHandle = await showDirectoryPicker();
@@ -20,7 +20,7 @@ export async function LoadAssetsFromAssetDevServer(): Promise<[AssetManagerEdito
 }
 
 export async function LoadAssetsFromOfficialLink(): Promise<[AssetManagerEditor, GraphicsManager]> {
-	return Load(new URLGraphicsLoader('https://project-pandora.com/pandora-assets/'));
+	return Load(new URLGraphicsLoader(EDITOR_ASSETS_OFFICIAL_ADDRESS + '/'));
 }
 
 async function Load(loader: IGraphicsLoader): Promise<[AssetManagerEditor, GraphicsManager]> {

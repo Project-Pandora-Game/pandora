@@ -389,7 +389,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notFound' };
 		}
 
-		const allowResult = space.checkAllowEnter(connection.character, { invite }, { characterLimit: true, password: true });
+		const allowResult = space.checkAllowEnter(connection.character, { invite }, { characterLimit: true, passwordOnInvite: true });
 
 		if (allowResult !== 'ok') {
 			return { result: 'noAccess' };
@@ -419,7 +419,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		Assert(result !== 'errFull');
 		Assert(result !== 'invalidPassword');
 		Assert(result !== 'invalidInvite');
-		Assert(result !== 'spaceNotInUse');
 
 		return { result };
 	}

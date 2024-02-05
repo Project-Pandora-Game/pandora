@@ -277,7 +277,7 @@ export const ClientDirectorySchema = {
 			invite: SpaceInviteIdSchema.optional(),
 			password: z.string().optional(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword' | 'invalidInvite' | 'spaceNotInUse'; }>(),
+		response: ZodCast<{ result: 'ok' | 'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidPassword' | 'invalidInvite'; }>(),
 	},
 	spaceLeave: {
 		request: z.object({}),

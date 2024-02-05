@@ -380,7 +380,7 @@ export class Space {
 		// Ignore those - the requests will fail and once the space is not requestest for a bit, it will be unloaded from the directory too, actually vanishing
 	}
 
-	public checkAllowEnter(character: Character, data: { password?: string; invite?: SpaceInviteId; }, ignore: { characterLimit?: boolean; password?: boolean; } = {}): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' | 'invalidInvite' | 'spaceNotInUse' {
+	public checkAllowEnter(character: Character, data: { password?: string; invite?: SpaceInviteId; }, ignore: { characterLimit?: boolean; passwordOnInvite?: boolean; } = {}): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' | 'invalidInvite' {
 		// No-one can enter if the space is in an invalid state
 		if (!this.isValid) {
 			return 'errFull';
@@ -412,22 +412,19 @@ export class Space {
 		if (this.isAllowed(character.baseInfo.account))
 			return 'ok';
 
-		if (!this.isInUse())
-			return 'spaceNotInUse';
-
 		// If the space is password protected and you have given valid password, you can enter it
 		if (this.config.password !== null && data.password && data.password === this.config.password)
 			return 'ok';
 
 		// If the space is public, you can enter it (unless it is password protected)
-		if (this.config.public && (this.config.password === null || ignore.password))
+		if (this.config.public && this.hasAdminInside(true) && this.config.password === null)
 			return 'ok';
 
 		if (data.invite) {
 			const invite = this._getValidInvite(character, data.invite);
 			if (!invite)
 				return 'invalidInvite';
-			if (this.config.password === null || invite.bypassPassword)
+			if (this.config.password === null || invite.bypassPassword || ignore.passwordOnInvite)
 				return 'ok';
 		}
 

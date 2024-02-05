@@ -20,6 +20,8 @@ export const LIMIT_MAIL_LENGTH = 256;
 
 /** The maximum amount of characters inside a space */
 export const LIMIT_SPACE_MAX_CHARACTER_NUMBER = 100;
+/** The extra slots reserved for space owners */
+export const LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS = 5;
 
 /** The maximum length of a space's name */
 export const LIMIT_SPACE_NAME_LENGTH = 40;

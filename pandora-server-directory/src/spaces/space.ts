@@ -1,4 +1,4 @@
-import { GetLogger, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceListInfo, SpaceId, SpaceLeaveReason, AssertNever, IChatMessageDirectoryAction, SpaceListExtendedInfo, IClientDirectoryArgument, Assert, AccountId, AsyncSynchronized, CharacterId, ChatActionId, SpaceInvite, SpaceInviteId, SpaceInviteCreate, LIMIT_SPACE_INVITES, TimeSpanMs } from 'pandora-common';
+import { GetLogger, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceListInfo, SpaceId, SpaceLeaveReason, AssertNever, IChatMessageDirectoryAction, SpaceListExtendedInfo, IClientDirectoryArgument, Assert, AccountId, AsyncSynchronized, CharacterId, ChatActionId, SpaceInvite, SpaceInviteId, SpaceInviteCreate, LIMIT_SPACE_INVITES, TimeSpanMs, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS } from 'pandora-common';
 import { Character, CharacterInfo } from '../account/character';
 import { Shard } from '../shard/shard';
 import { ConnectionManagerClient } from '../networking/manager_client';
@@ -59,12 +59,17 @@ export class Space {
 		this.config.features = uniq(this.config.features);
 		this.config.admin = uniq(this.config.admin);
 		this.config.banned = this._cleanupBanList(uniq(this.config.banned));
+		this.config.allow = this._cleanupAllowList(uniq(this.config.allow));
 
 		this.logger.debug('Loaded');
 	}
 
 	private _cleanupBanList(list: AccountId[]): AccountId[] {
 		return list.filter((id) => !this.config.admin.includes(id) && !this._owners.has(id));
+	}
+
+	private _cleanupAllowList(list: AccountId[]): AccountId[] {
+		return list.filter((id) => !this.config.admin.includes(id) && !this._owners.has(id) && !this.config.banned.includes(id));
 	}
 
 	/** Update last activity timestamp to reflect last usage */
@@ -121,6 +126,7 @@ export class Space {
 			...pick(this.config, ['features', 'admin', 'background']),
 			owners: Array.from(this._owners),
 			isAdmin: this.isAdmin(queryingAccount),
+			isAllowed: this.isAllowed(queryingAccount),
 			characters: Array.from(this.characters).map((c): SpaceListExtendedInfo['characters'][number] => ({
 				id: c.baseInfo.id,
 				accountId: c.baseInfo.account.id,
@@ -187,6 +193,9 @@ export class Space {
 			this.config.banned = this._cleanupBanList(uniq(changes.banned));
 			await this._removeBannedCharacters(source);
 		}
+		if (changes.allow) {
+			this.config.allow = this._cleanupAllowList(uniq(changes.allow));
+		}
 		if (changes.public !== undefined) {
 			this.config.public = changes.public;
 		}
@@ -216,6 +225,8 @@ export class Space {
 				changeList.push('admins');
 			if (changes.banned)
 				changeList.push('ban list');
+			if (changes.allow)
+				changeList.push('allow list');
 			if (changes.background)
 				changeList.push('background');
 
@@ -281,6 +292,7 @@ export class Space {
 				targets = this._cleanupBanList(targets);
 				const oldSize = this.config.banned.length;
 				this.config.banned = uniq([...this.config.banned, ...targets]);
+				this.config.allow = this.config.allow.filter((id) => !targets.includes(id));
 				updated = oldSize !== this.config.banned.length;
 				if (updated) {
 					await this._removeBannedCharacters(source);
@@ -294,6 +306,25 @@ export class Space {
 				updated = oldSize !== this.config.banned.length;
 				if (updated)
 					this._sendUpdatedMessage(source, 'ban list');
+
+				break;
+			}
+			case 'allow': {
+				targets = this._cleanupAllowList(targets);
+				const oldSize = this.config.allow.length;
+				this.config.allow = uniq([...this.config.allow, ...targets]);
+				updated = oldSize !== this.config.allow.length;
+				if (updated)
+					this._sendUpdatedMessage(source, 'allow list');
+
+				break;
+			}
+			case 'disallow': {
+				const oldSize = this.config.allow.length;
+				this.config.allow = this.config.allow.filter((id) => !targets.includes(id));
+				updated = oldSize !== this.config.allow.length;
+				if (updated)
+					this._sendUpdatedMessage(source, 'allow list');
 
 				break;
 			}
@@ -349,7 +380,7 @@ export class Space {
 		// Ignore those - the requests will fail and once the space is not requestest for a bit, it will be unloaded from the directory too, actually vanishing
 	}
 
-	public checkAllowEnter(character: Character, data: { password?: string; invite?: SpaceInviteId; }, ignore: { characterLimit?: boolean; password?: boolean; } = {}): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' | 'invalidInvite' {
+	public checkAllowEnter(character: Character, data: { password?: string; invite?: SpaceInviteId; }, ignore: { characterLimit?: boolean; passwordOnInvite?: boolean; } = {}): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' | 'invalidInvite' {
 		// No-one can enter if the space is in an invalid state
 		if (!this.isValid) {
 			return 'errFull';
@@ -360,8 +391,14 @@ export class Space {
 			return 'ok';
 
 		// If the space is full, you cannot enter it (some checks ignore space being full)
-		if (this.characterCount >= this.config.maxUsers && !ignore.characterLimit)
-			return 'errFull';
+		if (!ignore.characterLimit) {
+			let maxUsers = this.config.maxUsers;
+			if (this.isOwner(character.baseInfo.account)) {
+				maxUsers += LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS;
+			}
+			if (this.characterCount >= maxUsers)
+				return 'errFull';
+		}
 
 		// If you are an owner or admin, you can enter the space (owner implies admin)
 		if (this.isAdmin(character.baseInfo.account))
@@ -371,19 +408,23 @@ export class Space {
 		if (this.isBanned(character.baseInfo.account))
 			return 'noAccess';
 
+		// If you are on the allow list, you can enter the space
+		if (this.isAllowed(character.baseInfo.account))
+			return 'ok';
+
 		// If the space is password protected and you have given valid password, you can enter it
 		if (this.config.password !== null && data.password && data.password === this.config.password)
 			return 'ok';
 
 		// If the space is public, you can enter it (unless it is password protected)
-		if (this.config.public && (this.config.password === null || ignore.password))
+		if (this.config.public && this.hasAdminInside(true) && this.config.password === null)
 			return 'ok';
 
 		if (data.invite) {
 			const invite = this._getValidInvite(character, data.invite);
 			if (!invite)
 				return 'invalidInvite';
-			if (this.config.password === null || invite.bypassPassword)
+			if (this.config.password === null || invite.bypassPassword || ignore.passwordOnInvite)
 				return 'ok';
 		}
 
@@ -462,7 +503,7 @@ export class Space {
 
 	/** Returns if this space is visible to the specific account when searching in space search */
 	public checkVisibleTo(account: Account): boolean {
-		return this.isValid && (this.isAdmin(account) || this.isPublic);
+		return this.isValid && (this.isPublic || this.isAllowed(account));
 	}
 
 	public isOwner(account: Account): boolean {
@@ -487,6 +528,17 @@ export class Space {
 			return false;
 
 		if (this.config.banned.includes(account.id))
+			return true;
+
+		return false;
+	}
+
+	public isAllowed(account: Account): boolean {
+		if (this.isAdmin(account))
+			return true;
+		if (this.isBanned(account))
+			return false;
+		if (this.config.allow.includes(account.id))
 			return true;
 
 		return false;

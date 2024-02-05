@@ -84,6 +84,8 @@ export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 	banned: AccountIdSchema.array(),
 	/** The admin account ids */
 	admin: AccountIdSchema.array(),
+	/** Account ids that always allow to enter */
+	allow: AccountIdSchema.array().default([]),
 	/** The password of the chat room if the room is protected */
 	password: z.string().nullable(),
 	/** The ID of the background or custom data */
@@ -113,6 +115,7 @@ export type SpaceListExtendedInfo = SpaceListInfo & Pick<SpaceDirectoryConfig, '
 	// Note: `isAdmin` is not part of the basic info (`SpaceListInfo`), as it has more complex check than `isOwner` and shouldn't be done en masse
 	/** Whether the account that requested the info is admin of this space */
 	isAdmin: boolean;
+	isAllowed: boolean;
 	owners: AccountId[];
 	characters: {
 		id: CharacterId;

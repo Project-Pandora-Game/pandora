@@ -62,6 +62,7 @@ function DefaultConfig(): SpaceDirectoryConfig {
 		maxUsers: 10,
 		admin: [],
 		banned: [],
+		allow: [],
 		public: false,
 		password: null,
 		features: [],
@@ -154,6 +155,14 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 			{ reason: 'Already an admin', list: currentConfig.admin },
 		],
 	}), [owners, currentConfig.admin]);
+	const invalidAllow = useMemo(() => ({
+		note: 'Owners and admins and banned users will be removed from the allow list automatically.',
+		when: [
+			{ reason: 'Already an owner', list: owners },
+			{ reason: 'Already an admin', list: currentConfig.admin },
+			{ reason: 'Already banned', list: currentConfig.banned },
+		],
+	}), [owners, currentConfig.admin, currentConfig.banned]);
 
 	if (!creation && currentSpaceInfo != null && currentSpaceInfo.id !== lastSpaceId.current) {
 		// If space id changes abruptly, navigate to default view (this is likely some form of kick or the space stopping to exist)
@@ -221,6 +230,10 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 				<div className='input-container'>
 					<label>Ban list</label>
 					<NumberListArea values={ currentConfig.banned } setValues={ (banned) => setModifiedData({ banned }) } readOnly={ !canEdit } invalid={ invalidBans } />
+				</div>
+				<div className='input-container'>
+					<label>Allow list</label>
+					<NumberListArea values={ currentConfig.allow } setValues={ (allow) => setModifiedData({ allow }) } readOnly={ !canEdit } invalid={ invalidAllow } />
 				</div>
 			</FieldsetToggle>
 			<FieldsetToggle legend='Background'>
@@ -402,6 +415,7 @@ function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
 	}, [spaceId]);
 
 	const update = useCallback(() => onChange(true), [onChange]);
+	const addInvite = useCallback((invite: SpaceInvite) => setInvites((inv) => [...inv, invite]), []);
 
 	return (
 		<FieldsetToggle legend='Invites' onChange={ onChange } open={ false }>
@@ -431,13 +445,13 @@ function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
 						}
 					</tbody>
 				</table>
-				{ showCreation && <SpaceInviteCreation closeDialog={ () => setShowCreation(false) } update={ update } /> }
+				{ showCreation && <SpaceInviteCreation closeDialog={ () => setShowCreation(false) } addInvite={ addInvite } /> }
 			</Column>
 		</FieldsetToggle>
 	);
 }
 
-function SpaceInviteCreation({ closeDialog, update }: { closeDialog: () => void; update: () => void; }): ReactElement {
+function SpaceInviteCreation({ closeDialog, addInvite }: { closeDialog: () => void; addInvite: (invite: SpaceInvite) => void; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const [allowAccount, setAllowAccount] = useState(false);
 	const [account, setAccount] = useState(0);
@@ -470,7 +484,7 @@ function SpaceInviteCreation({ closeDialog, update }: { closeDialog: () => void;
 				return;
 			}
 
-			update();
+			addInvite(resp.invite);
 		},
 	);
 

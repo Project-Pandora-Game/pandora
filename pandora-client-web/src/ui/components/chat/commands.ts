@@ -126,6 +126,8 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 	...CreateMessageTypeParsers('emote'),
 	CreateSpaceAdminAction('kick', 'Kicks a user from the current space.'),
 	CreateSpaceAdminAction('ban', 'Bans a user from the current space.'),
+	CreateSpaceAdminAction('allow', 'Add a user to the allow list of the current space.'),
+	CreateSpaceAdminAction('disallow', 'Remove a user from the allow list of the current space.'),
 	CreateSpaceAdminAction('promote', 'Promotes a user to a space admin.'),
 	CreateSpaceAdminAction('demote', 'Demotes a user from a space admin.'),
 	{

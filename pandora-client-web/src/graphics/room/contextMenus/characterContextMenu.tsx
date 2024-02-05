@@ -37,6 +37,7 @@ function useCharacterMenuContext() {
 function AdminActionContextMenuInner(): ReactElement {
 	const { character, spaceInfo, setMenu, close } = useCharacterMenuContext();
 	const isCharacterAdmin = IsSpaceAdmin(spaceInfo, { id: character.data.accountId });
+	const isAllowed = spaceInfo.allow.includes(character.data.accountId);
 	const connector = useDirectoryConnector();
 
 	const kick = useCallback(() => {
@@ -59,6 +60,26 @@ function AdminActionContextMenuInner(): ReactElement {
 		close();
 	}, [isCharacterAdmin, character, connector, close]);
 
+	const allow = useCallback(() => {
+		if (isCharacterAdmin) {
+			toast('Admins cannot be allowed', TOAST_OPTIONS_WARNING);
+			return;
+		}
+
+		connector.sendMessage('spaceAdminAction', { action: 'allow', targets: [character.data.accountId] });
+		close();
+	}, [isCharacterAdmin, character, connector, close]);
+
+	const disallow = useCallback(() => {
+		if (isCharacterAdmin) {
+			toast('Admins cannot be disallowed', TOAST_OPTIONS_WARNING);
+			return;
+		}
+
+		connector.sendMessage('spaceAdminAction', { action: 'disallow', targets: [character.data.accountId] });
+		close();
+	}, [isCharacterAdmin, character, connector, close]);
+
 	const promote = useCallback(() => {
 		connector.sendMessage('spaceAdminAction', { action: 'promote', targets: [character.data.accountId] });
 		close();
@@ -77,6 +98,15 @@ function AdminActionContextMenuInner(): ReactElement {
 			<button onClick={ ban } className={ isCharacterAdmin ? 'text-strikethrough' : '' } >
 				Ban
 			</button>
+			{ isAllowed ? (
+				<button onClick={ disallow } className={ isCharacterAdmin ? 'text-strikethrough' : '' }>
+					Disallow
+				</button>
+			) : (
+				<button onClick={ allow } className={ isCharacterAdmin ? 'text-strikethrough' : '' }>
+					Allow
+				</button>
+			) }
 			{ isCharacterAdmin ? (
 				<button onClick={ demote } >
 					Demote

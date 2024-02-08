@@ -18,6 +18,7 @@ import {
 	CharacterIdSchema,
 	CharacterId,
 	EMPTY,
+	AsyncSynchronized,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
@@ -67,7 +68,6 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 	private readonly _directoryConnectionProgress = new PersistentToast();
 	private readonly _authToken = BrowserStorage.create<AuthToken | undefined>('authToken', undefined, AuthTokenSchema);
 	private readonly _lastSelectedCharacter = BrowserStorage.createSession<CharacterId | undefined>('lastSelectedCharacter', undefined, CharacterIdSchema.optional());
-	private readonly _characterAutoConnectState = new Observable<'none' | 'initial' | 'loading' | 'connecting' | 'connected'>('initial');
 
 	private _shardConnectionInfo: IDirectoryCharacterConnectionInfo | null = null;
 
@@ -93,8 +93,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		return this._authToken;
 	}
 
-	public get characterAutoConnectState(): ReadonlyObservable<'none' | 'initial' | 'loading' | 'connecting' | 'connected'> {
-		return this._characterAutoConnectState;
+	public get lastSelectedCharacter(): ReadonlyObservable<CharacterId | undefined> {
+		return this._lastSelectedCharacter;
 	}
 
 	/** Event emitter for directory change events */
@@ -295,13 +295,17 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		// Clear saved token if no account
 		if (!account) {
 			this._authToken.value = undefined;
-			this._characterAutoConnectState.value = 'initial';
 		} else {
 			await AccountContactContext.initStatus(this);
 			if (character === null) {
-				await this.autoConnectCharacter();
+				// If we already have a character and we are requested to unload it, clear the last character
+				if (this._shardConnectionInfo != null) {
+					this._lastSelectedCharacter.value = undefined;
+				} else {
+					// Otherwise try to autoconnect
+					await this.autoConnectCharacter();
+				}
 			} else {
-				this._characterAutoConnectState.value = 'connected';
 				this._lastSelectedCharacter.value = character.characterId;
 			}
 		}
@@ -327,37 +331,26 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		}
 	}
 
+	@AsyncSynchronized()
 	private async autoConnectCharacter(): Promise<void> {
-		if (this._characterAutoConnectState.value !== 'initial') {
+		const characterId = this._lastSelectedCharacter.value;
+		if (characterId == null || this._shardConnectionInfo != null) {
 			return;
 		}
-		this._characterAutoConnectState.value = 'loading';
-		const { characters } = await this.awaitResponse('listCharacters', EMPTY);
-		if (characters.length === 0) {
-			this._characterAutoConnectState.value = 'none';
-			return;
+		// Try to directly connect to the last selected character
+		const data = await this.awaitResponse('connectCharacter', { id: characterId });
+		if (data.result !== 'ok') {
+			logger.alert('Failed to auto-connect to previous character:', data);
+			this._lastSelectedCharacter.value = undefined;
 		}
-		if (characters.length === 1 && characters[0].inCreation) {
-			await this.connectToCharacter(characters[0].id);
-			return;
-		}
-		if (this._lastSelectedCharacter.value != null) {
-			const character = characters.find((c) => c.id === this._lastSelectedCharacter.value);
-			if (character) {
-				await this.connectToCharacter(character.id);
-				return;
-			}
-		}
-		this._characterAutoConnectState.value = 'none';
 	}
 
 	public async connectToCharacter(id: CharacterId): Promise<boolean> {
-		this._characterAutoConnectState.value = 'connecting';
 		const data = await this.awaitResponse('connectCharacter', { id });
 		if (data.result !== 'ok') {
 			logger.error('Failed to connect to character:', data);
 			toast(`Failed to connect to character:\n${data.result}`, TOAST_OPTIONS_ERROR);
-			this._characterAutoConnectState.value = 'none';
+			this._lastSelectedCharacter.value = undefined;
 			return false;
 		}
 		return true;
@@ -365,6 +358,6 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 
 	public disconnectFromCharacter(): void {
 		this.sendMessage('disconnectCharacter', EMPTY);
-		this._characterAutoConnectState.value = 'none';
+		this._lastSelectedCharacter.value = undefined;
 	}
 }

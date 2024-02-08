@@ -17,9 +17,11 @@ import { authPagePathsAndComponents } from './authRoutingData';
 import { AccountContacts } from '../components/accountContacts/accountContacts';
 import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens';
 import { ModalDialog } from '../components/dialog/dialog';
-import { useObservable } from '../observable';
+import { useNullableObservable, useObservable } from '../observable';
 import { SpaceJoin } from '../ui/screens/spaceJoin/spaceJoin';
 import { Freeze } from '../ui/components/common/freeze';
+import { ShardConnectionState } from '../networking/shardConnector';
+import { useGameStateOptional } from '../components/gameContext/gameStateContextProvider';
 
 // Lazily loaded screens
 const Management = lazy(() => import('../components/management'));
@@ -35,7 +37,7 @@ export function PandoraRoutes(): ReactElement {
 			)) }
 
 			<Route path='/character/select' element={ <RequiresLogin element={ CharacterSelect } /> } />
-			<Route path='/character/create' element={ <RequiresCharacter element={ CharacterCreate } allowUnfinished={ true } /> } />
+			<Route path='/character/create' element={ <RequiresCharacter element={ CharacterCreate } allowUnfinished /> } />
 
 			<Route path='/settings' element={ <RequiresLogin element={ Settings } /> } />
 
@@ -104,30 +106,28 @@ function RequiresLogin<TProps extends object>({ element: Element, preserveLocati
 
 function RequiresCharacterImpl({ characterElement: Element, allowUnfinished }: { characterElement: ComponentType<Record<string, never>>; allowUnfinished?: boolean; }): ReactElement {
 	const shardConnector = useShardConnector();
-	const autoConnectState = useObservable(useDirectoryConnector().characterAutoConnectState);
+	const lastSelectedCharacter = useObservable(useDirectoryConnector().lastSelectedCharacter);
 	const playerData = usePlayerData();
 	const hasCharacter = shardConnector != null && playerData != null;
 
-	if (!hasCharacter && autoConnectState === 'none') {
+	if (!hasCharacter && lastSelectedCharacter == null) {
 		return <CharacterSelect />;
+	}
+
+	if (playerData?.inCreation && !allowUnfinished) {
+		return <CharacterCreate />;
 	}
 
 	return (
 		<>
-			{
-				(playerData?.inCreation && !allowUnfinished)
-					? <CharacterCreate />
-					: (
-						<Freeze freeze={ !hasCharacter }>
-							<Element />
-						</Freeze>
-					)
-			}
+			<Freeze freeze={ !hasCharacter }>
+				<Element />
+			</Freeze>
 			{
 				!hasCharacter && (
 					<ModalDialog>
 						<div className='message'>
-							{ AutoConnectStateMessage(autoConnectState) }
+							<CharacterAutoConnectState />
 						</div>
 					</ModalDialog>
 				)
@@ -136,18 +136,24 @@ function RequiresCharacterImpl({ characterElement: Element, allowUnfinished }: {
 	);
 }
 
-function AutoConnectStateMessage(state: 'none' | 'initial' | 'loading' | 'connecting' | 'connected'): string {
-	switch (state) {
-		case 'none':
-		case 'initial':
-			return 'Loading...';
-		case 'loading':
-			return 'Loading characters...';
-		case 'connecting':
-			return 'Connecting to character...';
-		case 'connected':
-			return 'Connected to character, loading...';
+function CharacterAutoConnectState(): ReactElement {
+	const shardConnector = useShardConnector();
+	const shardState = useNullableObservable(shardConnector?.state);
+	const gameState = useGameStateOptional();
+
+	if (shardState == null || shardState === ShardConnectionState.NONE) {
+		return <>Requesting character load...</>;
 	}
+
+	if (shardState === ShardConnectionState.INITIAL_CONNECTION_PENDING || shardState === ShardConnectionState.CONNECTION_LOST) {
+		return <>Connecting to shard...</>;
+	}
+
+	if (shardState === ShardConnectionState.WAIT_FOR_DATA || gameState == null) {
+		return <>Loading character data...</>;
+	}
+
+	return <>Connected.</>;
 }
 
 function RequiresCharacter({ element, allowUnfinished }: { element: ComponentType<Record<string, never>>; allowUnfinished?: boolean; }): ReactElement {

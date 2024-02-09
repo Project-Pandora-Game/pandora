@@ -180,17 +180,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	 * @returns Result of the login
 	 */
 	private async handleLogin({ username, passwordSha512, verificationToken, secondFactor }: IClientDirectoryArgument['login'], connection: ClientConnection): IClientDirectoryPromiseResult['login'] {
+		{
+			const r = await LoginManager.testOptionalCaptcha(secondFactor);
+			if (r != null)
+				return r;
+		}
 		// Find account by username
 		const account = await accountManager.loadAccountByUsername(username);
 		// Verify the password
 		if (!account || !await account.secure.verifyPassword(passwordSha512)) {
 			LoginManager.loginFailed();
 			return { result: 'unknownCredentials' };
-		}
-		{
-			const r = await this.testSecondFactor(account, secondFactor, LoginManager.getRequiredSecondFactor());
-			if (r != null)
-				return r;
 		}
 		// Verify account is activated or activate it
 		if (!account.secure.isActivated()) {
@@ -808,7 +808,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 	}
 
-	private async testSecondFactor(_account: Account, data: SecondFactorData | undefined, types: SecondFactorType[]): Promise<null | SecondFactorResponse> {
+	private async testSecondFactor(data: SecondFactorData | undefined, types: SecondFactorType[]): Promise<null | SecondFactorResponse> {
 		if (data == null) {
 			return types.length === 0 ? null : { result: 'secondFactorRequired', types };
 		}
@@ -934,17 +934,33 @@ const LoginManager = new class LoginManager {
 	private invalidAttempts: { readonly timestamp: number; }[] = [];
 
 	public loginFailed(): void {
-		this.invalidAttempts.push({ timestamp: Date.now() });
-		this.invalidAttempts = this.invalidAttempts.slice(-ENV.LOGIN_ATTEMPT_LIMIT);
+		const now = Date.now();
+		this.invalidAttempts.push({ timestamp: now });
+		this.invalidAttempts = this.invalidAttempts
+			.slice(-ENV.LOGIN_ATTEMPT_LIMIT)
+			.filter((attempt) => (attempt.timestamp + ENV.LOGIN_ATTEMPT_WINDOW) > now);
 	}
 
-	public getRequiredSecondFactor(): SecondFactorType[] {
-		const now = Date.now();
-		this.invalidAttempts = this.invalidAttempts.filter((attempt) => attempt.timestamp + ENV.LOGIN_ATTEMPT_WINDOW > now);
-		const required: SecondFactorType[] = [];
-		if (this.invalidAttempts.length >= ENV.LOGIN_ATTEMPT_LIMIT) {
-			required.push('captcha');
+	public async testOptionalCaptcha(data: SecondFactorData | undefined): Promise<null | SecondFactorResponse> {
+		if (!this.isCaptchaRequired()) {
+			return null;
 		}
-		return required;
+		const types: SecondFactorType[] = ['captcha'];
+		if (data == null) {
+			return { result: 'secondFactorRequired', types };
+		}
+		if (data.captcha == null) {
+			this.loginFailed();
+			return { result: 'secondFactorInvalid', types, invalid: [], missing: types };
+		}
+		if (!await TestCaptcha(data.captcha)) {
+			this.loginFailed();
+			return { result: 'secondFactorInvalid', types, invalid: types, missing: [] };
+		}
+		return null;
+	}
+
+	private isCaptchaRequired(): boolean {
+		return this.invalidAttempts.length >= ENV.LOGIN_ATTEMPT_LIMIT && (this.invalidAttempts[0].timestamp + ENV.LOGIN_ATTEMPT_WINDOW) > Date.now();
 	}
 };

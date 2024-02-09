@@ -173,7 +173,7 @@ function SecondFactorDialog() {
 			handler?.resolve(null);
 			directoryConnector.secondFactorHandler = null;
 		};
-	}, [directoryConnector, secondFactorHandler]);
+	}, [directoryConnector, handler, secondFactorHandler]);
 
 	if (handler == null) {
 		return null;

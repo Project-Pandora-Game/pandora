@@ -117,7 +117,7 @@ export const EnvParser = CreateEnvParser({
 	/** Time window for login attempts */
 	LOGIN_ATTEMPT_WINDOW: EnvTimestamp().default('15m'),
 	/** Max failed login attempts before requiring a captcha */
-	LOGIN_ATTEMPT_LIMIT: z.number().default(30),
+	LOGIN_ATTEMPT_LIMIT: z.number().int().positive().default(30),
 
 	//#endregion
 });

@@ -47,16 +47,8 @@ export interface DirectoryConnector extends IConnectionBase<IClientDirectory> {
 	/** Current auth token or undefined if not logged in */
 	readonly authToken: ReadonlyObservable<AuthToken | undefined>;
 
-	/**
-	 * Character auto connection state
-	 *
-	 * - `none`: no character will be auto connected
-	 * - `initial`: auto connection may be attempted
-	 * - `loading`: loading character infos
-	 * - `connecting`: attempting to connect to character
-	 * - `connected`: connected to character
-	 *  */
-	readonly characterAutoConnectState: ReadonlyObservable<'none' | 'initial' | 'loading' | 'connecting' | 'connected'>;
+	/** The Id of the last selected character for this session. On reconnect this character will be re-selected. */
+	readonly lastSelectedCharacter: ReadonlyObservable<CharacterId | undefined>;
 
 	/** Event emitter for directory change events */
 	readonly changeEventEmitter: TypedEventEmitter<Record<IDirectoryClientChangeEvents, true>>;

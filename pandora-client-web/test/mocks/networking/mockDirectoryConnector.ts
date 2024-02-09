@@ -24,10 +24,10 @@ export class TestEventEmitter<T extends TypedEvent> extends TypedEventEmitter<T>
 /** Mock directory connector implementation for testing */
 export class MockDirectoryConnector implements DirectoryConnector {
 	public readonly authToken = new Observable<AuthToken | undefined>(undefined);
+	public readonly lastSelectedCharacter = new Observable<CharacterId | undefined>(undefined);
 	public readonly currentAccount = new Observable<IDirectoryAccountInfo | null>(null);
 	public readonly directoryStatus = new Observable<IDirectoryStatus>(CreateDefaultDirectoryStatus());
 	public readonly state = new Observable<DirectoryConnectionState>(DirectoryConnectionState.NONE);
-	public readonly characterAutoConnectState = new Observable<'initial'>('initial');
 
 	public readonly changeEventEmitter = new TestEventEmitter<Record<IDirectoryClientChangeEvents, true>>();
 	public readonly connectionStateEventEmitter = new TestEventEmitter<Pick<IDirectoryClientArgument, 'connectionState'>>();

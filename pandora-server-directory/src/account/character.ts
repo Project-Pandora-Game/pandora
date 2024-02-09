@@ -310,9 +310,14 @@ export class Character {
 			await this.currentShard?.update('characters');
 		}
 
-		connection.setCharacter(this);
-		connection.sendConnectionStateUpdate();
-		Assert(this.assignedClient === connection);
+		// Race-condition check - check that the connection is still valid and logged in
+		if (connection.isConnected() && connection.account === this.baseInfo.account) {
+			// If yes, assign this character to the connection
+			// If no, then continue anyway (the character will later timeout on shard and disconnect automatically)
+			connection.setCharacter(this);
+			connection.sendConnectionStateUpdate();
+			Assert(this.assignedClient === connection);
+		}
 
 		// Perform action specific to the current assignment
 		if (this.assignment == null) {

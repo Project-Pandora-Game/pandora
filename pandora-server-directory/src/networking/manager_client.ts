@@ -359,8 +359,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		await connection.character?.disconnect();
-		connection.setCharacter(null);
-		connection.sendConnectionStateUpdate();
 	}
 
 	private handleShardInfo(_: IClientDirectoryArgument['shardInfo'], _connection: ClientConnection): IClientDirectoryResult['shardInfo'] {

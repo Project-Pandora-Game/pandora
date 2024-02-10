@@ -51,6 +51,7 @@ import { useCurrentTime } from '../../../common/useCurrentTime';
 import { toast } from 'react-toastify';
 import { CopyToClipboard } from '../../../common/clipboard';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
+import { Tab, TabContainer } from '../../../components/common/tabs/tabs';
 
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
 const IsValidDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
@@ -209,25 +210,13 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 					<Button onClick={ () => setModifiedData({ public: !currentConfig.public }) } disabled={ !canEdit } className='fadeDisabled'>{ currentConfig.public ? 'Yes' : 'No' }</Button>
 				</div>
 			</FieldsetToggle>
-			<FieldsetToggle legend='Permissions'>
+			<FieldsetToggle legend='Ownership'>
 				<div className='input-container'>
 					<label>Owners</label>
 					<Row>
 						<NumberListArea className='flex-1' values={ owners } setValues={ () => { /* NOOP */ } } readOnly />
 						{ !creation && currentSpaceInfo != null && currentSpaceId != null && isPlayerOwner ? <SpaceOwnershipRemoval id={ currentSpaceId } name={ currentSpaceInfo.config.name } /> : null }
 					</Row>
-				</div>
-				<div className='input-container'>
-					<label>Admins</label>
-					<NumberListArea values={ currentConfig.admin } setValues={ (admin) => setModifiedData({ admin }) } readOnly={ !canEdit } />
-				</div>
-				<div className='input-container'>
-					<label>Ban list</label>
-					<NumberListArea values={ currentConfig.banned } setValues={ (banned) => setModifiedData({ banned }) } readOnly={ !canEdit } invalid={ invalidBans } />
-				</div>
-				<div className='input-container'>
-					<label>Allow list</label>
-					<NumberListArea values={ currentConfig.allow } setValues={ (allow) => setModifiedData({ allow }) } readOnly={ !canEdit } invalid={ invalidAllow } />
 				</div>
 			</FieldsetToggle>
 			<FieldsetToggle legend='Background'>
@@ -356,30 +345,52 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 
 	return (
 		<div className='spaceConfigurationScreen configuration'>
-			<Link to='/room'>◄ Back</Link>
-			{
-				currentSpaceId != null ? (
-					<p>Current space ID: <span className='selectable-all'>{ currentSpaceId }</span></p>
-				) : (
-					<p>Currently in a personal space</p>
-				)
-			}
-			{ configurableElements }
-			<div className='input-container'>
-				<label>Features (cannot be changed after creation)</label>
-				<ul>
-					{
-						SPACE_FEATURES
-							.filter((feature) => currentConfig.features.includes(feature.id))
-							.map((feature) => (
-								<li key={ feature.id }>{ feature.name }</li>
-							))
-					}
-				</ul>
-			</div>
-			{ canEdit && <Button className='fill-x' onClick={ () => UpdateSpace(directoryConnector, modifiedData, () => navigate('/room')) }>Update space</Button> }
-			{ !canEdit && <Button className='fill-x' onClick={ () => navigate('/room') }>Back</Button> }
-			{ canEdit && currentSpaceId != null && <SpaceInvites spaceId={ currentSpaceId } /> }
+			<TabContainer className='flex-1'>
+				<Tab name='General'>
+					<div className='spaceConfigurationScreen-tab'>
+						<br />
+						{ configurableElements }
+						<div className='input-container'>
+							<label>Features (cannot be changed after creation)</label>
+							<ul>
+								{
+									SPACE_FEATURES
+										.filter((feature) => currentConfig.features.includes(feature.id))
+										.map((feature) => (
+											<li key={ feature.id }>{ feature.name }</li>
+										))
+								}
+							</ul>
+						</div>
+						{ canEdit && <Button className='fill-x' onClick={ () => UpdateSpace(directoryConnector, modifiedData, () => navigate('/room')) }>Update space</Button> }
+						{ !canEdit && <Button className='fill-x' onClick={ () => navigate('/room') }>Back</Button> }
+					</div>
+				</Tab>
+				<Tab name='Visitor Management'>
+					<div className='spaceConfigurationScreen-tab'>
+						<br />
+						<FieldsetToggle legend='Permission lists'>
+							<div className='input-container'>
+								<label>Admins</label>
+								<NumberListArea values={ currentConfig.admin } setValues={ (admin) => setModifiedData({ admin }) } readOnly={ !canEdit } />
+							</div>
+							<div className='input-container'>
+								<label>Banned users</label>
+								<NumberListArea values={ currentConfig.banned } setValues={ (banned) => setModifiedData({ banned }) } readOnly={ !canEdit } invalid={ invalidBans } />
+							</div>
+							<div className='input-container'>
+								<label>Allowed users</label>
+								<NumberListArea values={ currentConfig.allow } setValues={ (allow) => setModifiedData({ allow }) } readOnly={ !canEdit } invalid={ invalidAllow } />
+							</div>
+						</FieldsetToggle>
+						{ canEdit && currentSpaceId != null && <SpaceInvites spaceId={ currentSpaceId } /> }
+						<br />
+						{ canEdit && <Button className='fill-x' onClick={ () => UpdateSpace(directoryConnector, modifiedData, () => navigate('/room')) }>Update space</Button> }
+						{ !canEdit && <Button className='fill-x' onClick={ () => navigate('/room') }>Back</Button> }
+					</div>
+				</Tab>
+				<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/room') } />
+			</TabContainer>
 		</div>
 	);
 }
@@ -412,7 +423,7 @@ function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
 	const addInvite = useCallback((invite: SpaceInvite) => setInvites((inv) => [...inv, invite]), []);
 
 	return (
-		<FieldsetToggle legend='Invites' onChange={ onChange } open={ false }>
+		<FieldsetToggle legend='Invites' onChange={ onChange } open={ true }>
 			<Column gap='medium'>
 				<div onClick={ copyPublic } className='permanentInvite'>
 					<span className='text'>Permanent public invite link:</span>

@@ -1,11 +1,15 @@
 @import '../../../styles/common';
 
 .spaceConfigurationScreen {
-	width: min(100%, 50em);
+	width: min(100%, 60em);
 	margin: 0 auto;
 
 	&>* {
 		margin-top: 0.5em;
+	}
+
+	.spaceConfigurationScreen-tab {
+		border-top: 2px solid black;
 	}
 
 	.input-container {
@@ -221,7 +225,6 @@
 .permanentInvite {
 	display: block;
 	padding: 10px;
-	font-family: 'Courier New', Courier, monospace;
 
 	.text {
 		display: block;
@@ -230,6 +233,7 @@
 	}
 
 	.invite {
+		font-family: 'Courier New', Courier, monospace;
 		background-color: #ccc;
 		border-radius: 5px;
 		border: 1px solid #ddd;

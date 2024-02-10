@@ -8,7 +8,9 @@ export function WikiIntroduction(): ReactElement {
 			<h2>Introduction to Pandora with some quick hints to get you started</h2>
 
 			<p>
-				Pandora's vision is to establish a strict & secure, consensual roleplay platform that focuses on text-heavy interactions.
+				Pandora's vision is to establish a consensual BDSM roleplaying platform that focuses on text-heavy interactions with visual support
+				and meaningfully secure restraining effects. The design focus is to encourage describing scenes textually, with other aspects
+				enhancing the immersion. It is a social chat platform with a focus on kinky roleplaying, rather than a game.
 			</p>
 
 			The following will list some of the existing core features of Pandora.
@@ -162,7 +164,6 @@ export function WikiIntroduction(): ReactElement {
 				<li>Character rules</li>
 				<li>Room templates</li>
 				<li>Key system for locks</li>
-				<li>Movement slowdown effects</li>
 				<li>Visible locks on worn items with different lock designs</li>
 				<li>Reworked UI design with focus on improved usability and design themes</li>
 				<li>More supporting features for roleplaying, for instance a new space role "storyteller" that can orchestrate a prepared roleplay without a physical presence in any room of the space</li>

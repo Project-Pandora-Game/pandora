@@ -573,7 +573,7 @@ function SpaceInviteExpires({ expires, update }: { expires: number; update: () =
 
 	return (
 		<>
-			{ FormatTimeInterval(expires - now) }
+			{ FormatTimeInterval(expires - now, 'short') }
 		</>
 	);
 }

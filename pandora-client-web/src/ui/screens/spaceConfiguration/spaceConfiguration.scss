@@ -218,8 +218,19 @@
 	}
 }
 
-.spaceInvitesTable td {
-	white-space: nowrap;
+.spaceInvitesTable {
+	&, tr, td, th {
+		border: solid black 1px;
+		border-collapse: collapse;
+	}
+
+	th, td {
+		padding: spacing(small);
+	}
+
+	td {
+		white-space: nowrap;
+	}
 }
 
 .permanentInvite {

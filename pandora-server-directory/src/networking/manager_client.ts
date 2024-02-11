@@ -387,7 +387,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notFound' };
 		}
 
-		const allowResult = space.checkAllowEnter(connection.character, { invite }, { characterLimit: true, passwordOnInvite: true });
+		const allowResult = space.checkAllowEnter(connection.character, invite, { characterLimit: true });
 
 		if (allowResult !== 'ok') {
 			return { result: 'noAccess' };
@@ -415,13 +415,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const result = await character.joinSpace(space);
 		Assert(result !== 'noAccess');
 		Assert(result !== 'errFull');
-		Assert(result !== 'invalidPassword');
 		Assert(result !== 'invalidInvite');
 
 		return { result };
 	}
 
-	private async handleSpaceEnter({ id, password, invite }: IClientDirectoryArgument['spaceEnter'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceEnter'] {
+	private async handleSpaceEnter({ id, invite }: IClientDirectoryArgument['spaceEnter'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceEnter'] {
 		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
@@ -433,7 +432,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notFound' };
 		}
 
-		const result = await character.joinSpace(space, password, invite);
+		const result = await character.joinSpace(space, invite);
 
 		return { result };
 	}

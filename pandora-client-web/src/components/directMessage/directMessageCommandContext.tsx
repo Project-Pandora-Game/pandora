@@ -44,7 +44,6 @@ export const DIRECT_MESSAGE_COMMANDS: readonly IClientCommand<DirectMessageComma
 							data: {
 								maxUses: 1,
 								accountId: channel.account.id,
-								bypassPassword: true,
 							},
 						});
 						if (resp.result === 'created') {

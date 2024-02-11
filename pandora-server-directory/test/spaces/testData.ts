@@ -8,7 +8,6 @@ const TEST_SPACE_DEFAULTS: Readonly<SpaceDirectoryConfig> = {
 	banned: [],
 	allow: [],
 	public: true,
-	password: null,
 	features: [],
 	background: CloneDeepMutable(DEFAULT_BACKGROUND),
 };
@@ -26,7 +25,6 @@ export const TEST_SPACE2: Readonly<SpaceDirectoryConfig> = {
 	name: 'test2',
 	description: 'Another description',
 	maxUsers: 7,
-	password: 'abcd',
 	admin: [2],
 	banned: [22, 13],
 };

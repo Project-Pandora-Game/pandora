@@ -3,7 +3,6 @@ import {
 	AssertNotNullable,
 	EMPTY,
 	GetLogger,
-	ResolveBackground,
 	SpaceExtendedInfoResponse,
 	SpaceId,
 	SpaceInvite,
@@ -13,20 +12,19 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
+import { toast } from 'react-toastify';
+import { useAsyncEvent } from '../../../common/useEvent';
 import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
+import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
+import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { SPACE_FEATURES, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration';
 import './spacesSearch.scss';
-import { toast } from 'react-toastify';
-import { useAsyncEvent } from '../../../common/useEvent';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
-import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 // import closedDoor from '../../../icons/closed-door.svg';
 import privateDoor from '../../../icons/private-door.svg';
 import publicDoor from '../../../icons/public-door.svg';
@@ -245,7 +243,6 @@ function SpaceDetailsDialog({ baseInfo, hide }: {
 }
 
 export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeText = 'Close' }: { info: SpaceListExtendedInfo; hide?: () => void; invite?: SpaceInvite; redirectBeforeLeave?: boolean; closeText?: string; }): ReactElement {
-	const assetManager = useAssetManager();
 	const directoryConnector = useDirectoryConnector();
 
 	const [join, processing] = useAsyncEvent(
@@ -274,8 +271,6 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 		},
 	);
 
-	const background = info.background ? ResolveBackground(assetManager, info.background, GetAssetsSourceUrl()).image : '';
-
 	const userIsOwner = !!info.isOwner;
 
 	return (
@@ -286,8 +281,6 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 			<Row className='ownership' alignY='center'>
 				Owned by: { info.owners.join(', ') }
 			</Row>
-			{ (background !== '' && !background.startsWith('#')) &&
-				<img className='preview' src={ background } width='200px' height='100px' /> }
 			<Row className='features'>
 				{
 					SPACE_FEATURES

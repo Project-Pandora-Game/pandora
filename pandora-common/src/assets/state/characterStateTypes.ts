@@ -50,11 +50,16 @@ export function GetRestrictionOverrideConfig(type?: RestrictionOverride['type'] 
 	return INTERACTION_OVERRIDE_CONFIG[type.type];
 }
 
+export const CharacterRoomPositionSchema = z.tuple([z.number().int(), z.number().int(), z.number().int()])
+	.catch([0, 0, 0])
+	.readonly();
+export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: number];
+
 export const CharacterSpacePositionSchema = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('normal'),
 		roomId: RoomIdSchema,
-		position: z.tuple([z.number().int(), z.number().int(), z.number().int()]),
+		position: CharacterRoomPositionSchema,
 	}),
 	z.object({
 		type: z.literal('spectator'),

@@ -1,16 +1,16 @@
-import { AssertNotNullable, CloneDeepMutable, ICharacterRoomData, ResolveBackground, RoomBackgroundCalibrationDataSchema } from 'pandora-common';
-import React, { ReactElement, useMemo } from 'react';
+import { Draft } from 'immer';
+import { AssertNotNullable, CloneDeepMutable, ICharacterRoomData, RoomBackgroundCalibrationDataSchema } from 'pandora-common';
+import React, { ReactElement } from 'react';
 import z from 'zod';
 import { BrowserStorage } from '../../../browserStorage';
+import { Character, useCharacterData } from '../../../character/character';
 import { useEvent } from '../../../common/useEvent';
+import { Row } from '../../../components/common/container/container';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
+import { useGameState, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
+import { usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { USER_DEBUG } from '../../../config/Environment';
 import { useObservable } from '../../../observable';
-import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
-import { useGameState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
-import { Character, useCharacterData } from '../../../character/character';
-import { Row } from '../../../components/common/container/container';
-import { Draft } from 'immer';
-import { useAssetManager } from '../../../assets/assetManager';
 
 const ChatroomDebugConfigSchema = z.object({
 	enabled: z.boolean().catch(false),
@@ -38,10 +38,12 @@ export function useDebugConfig(): ChatroomDebugConfig {
 }
 
 export function ChatroomDebugConfigView(): ReactElement {
-	const assetManager = useAssetManager();
 	const gameState = useGameState();
 	const spaceConfig = useObservable(gameState.currentSpace).config;
-	const roomBackground = useMemo(() => ResolveBackground(assetManager, spaceConfig.background), [assetManager, spaceConfig.background]);
+	const { playerState } = usePlayerState();
+	const roomState = useGlobalState(gameState).getRoomState(playerState.getCurrentRoomId());
+	AssertNotNullable(roomState);
+	const roomBackground = roomState.getResolvedBackground();
 
 	const chatroomDebugConfig = useObservable(ChatroomDebugConfigStorage) ?? DEFAULT_DEBUG_CONFIG;
 
@@ -364,7 +366,6 @@ function ChatroomDebugCharacterView({
 			<span>Name: { characterData.name }</span>
 			<span>Character ID: { characterData.id }</span>
 			<span>Account ID: { characterData.accountId }</span>
-			<span>Position: { `[${characterData.position[0]}, ${characterData.position[1]}]` }</span>
 			<br />
 		</>
 	);

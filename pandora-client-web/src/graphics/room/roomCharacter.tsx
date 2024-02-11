@@ -4,7 +4,6 @@ import { throttle } from 'lodash';
 import {
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
-	CharacterRoomPosition,
 	CharacterSize,
 	ICharacterRoomData,
 	LegsPose,
@@ -15,7 +14,7 @@ import PIXI, { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle } 
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
 import { Character, useCharacterData } from '../../character/character';
-import { useEvent } from '../../common/useEvent';
+import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import { useAccountSettings } from '../../components/gameContext/directoryConnectorContextProvider';
 import { useCharacterRestrictionsManager } from '../../components/gameContext/gameStateContextProvider';
 import { ShardConnector } from '../../networking/shardConnector';
@@ -107,7 +106,7 @@ export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterS
 	};
 }
 
-export function useRoomCharacterPosition(position: CharacterRoomPosition, characterState: AssetFrameworkCharacterState, projectionResolver: Immutable<RoomProjectionResolver>): {
+export function useRoomCharacterPosition(characterState: AssetFrameworkCharacterState, projectionResolver: Immutable<RoomProjectionResolver>): {
 	/** Position on the room canvas */
 	position: Readonly<PointLike>;
 	/** Z index to use for the character within the room's container */
@@ -130,7 +129,7 @@ export function useRoomCharacterPosition(position: CharacterRoomPosition, charac
 	/** Angle (in degrees) of whole-character rotation */
 	rotationAngle: number;
 } {
-	const [posX, posY, yOffsetExtra] = projectionResolver.fixupPosition(position);
+	const [posX, posY, yOffsetExtra] = projectionResolver.fixupPosition(characterState.position.type === 'normal' ? characterState.position.position : [0, 0, 0]);
 
 	const {
 		baseScale,
@@ -164,22 +163,30 @@ function RoomCharacterInteractiveImpl({
 	shard,
 	menuOpen,
 }: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
-	const id = characterState.id;
-	const {
-		position: dataPosition,
-	} = useCharacterData(character);
-
 	const {
 		yOffsetExtra,
 		scale,
 		pivot,
-	} = useRoomCharacterPosition(dataPosition, characterState, projectionResolver);
+	} = useRoomCharacterPosition(characterState, projectionResolver);
 
-	const setPositionRaw = useEvent((newX: number, newY: number): void => {
-		shard?.sendMessage('roomCharacterMove', {
-			id,
-			position: projectionResolver.fixupPosition([newX, newY, yOffsetExtra]),
+	const [setPositionRaw] = useAsyncEvent(async (newX: number, newY: number, newYOffset: number) => {
+		if (!shard || characterState.position.type !== 'normal') {
+			return;
+		}
+
+		[newX, newY, newYOffset] = projectionResolver.fixupPosition([newX, newY, newYOffset]);
+
+		await shard.awaitResponse('appearanceAction', {
+			type: 'characterMove',
+			target: characterState.id,
+			position: {
+				type: 'normal',
+				roomId: characterState.position.roomId,
+				position: [newX, newY, newYOffset],
+			},
 		});
+	}, () => {
+		/* Do nothing */
 	});
 
 	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, 100), [setPositionRaw]);
@@ -205,7 +212,7 @@ function RoomCharacterInteractiveImpl({
 
 		const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, (dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale), 0);
 
-		setPositionThrottled(newX, newY);
+		setPositionThrottled(newX, newY, yOffsetExtra);
 	});
 
 	const onPointerDown = useCallback((event: FederatedPointerEvent) => {
@@ -268,7 +275,6 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 
 	const {
 		name,
-		position: dataPosition,
 		settings,
 		isOnline,
 	} = useCharacterData(character);
@@ -286,7 +292,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 		scale,
 		pivot,
 		rotationAngle,
-	} = useRoomCharacterPosition(dataPosition, characterState, projectionResolver);
+	} = useRoomCharacterPosition(characterState, projectionResolver);
 
 	const backView = characterState.actualPose.view === 'back';
 

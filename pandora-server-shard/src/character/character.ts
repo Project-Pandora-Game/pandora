@@ -14,12 +14,10 @@ import {
 	CharacterDataSchema,
 	CharacterId,
 	CharacterRestrictionsManager,
-	CharacterRoomPosition,
 	CleanupAssetPreferences,
 	CloneDeepMutable,
 	GameLogicCharacterServer,
 	GenerateDefaultSpaceStateBundle,
-	GenerateInitialRoomPosition,
 	GetDefaultAppearanceBundle,
 	GetLogger,
 	ICharacterData,
@@ -33,12 +31,10 @@ import {
 	IShardCharacterDefinition,
 	IShardClientChangeEvents,
 	IsAuthorized,
-	IsValidRoomPosition,
 	KnownObject,
 	Logger,
 	NOT_NARROWING_FALSE,
 	ResolveAssetPreference,
-	RoomBackgroundData,
 	SPACE_INVENTORY_BUNDLE_DEFAULT,
 	SpaceId,
 } from 'pandora-common';
@@ -168,25 +164,6 @@ export class Character {
 	public readonly gameLogicCharacter: GameLogicCharacterServer;
 
 	private logger: Logger;
-
-	public set position(value: CharacterRoomPosition) {
-		this.data.position = value;
-		this.modified.add('position');
-	}
-
-	public get position(): CharacterRoomPosition {
-		return this.data.position;
-	}
-
-	public initRoomPosition(spaceId: SpaceId | null, roomBackground: Immutable<RoomBackgroundData>) {
-		if (this.data.roomId === spaceId && IsValidRoomPosition(roomBackground, this.data.position)) {
-			return;
-		}
-		this.data.roomId = spaceId;
-		this.data.position = GenerateInitialRoomPosition(roomBackground);
-		this.modified.add('roomId');
-		this.modified.add('position');
-	}
 
 	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string | null, spaceId: SpaceId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
@@ -452,7 +429,6 @@ export class Character {
 			name: this.name,
 			profileDescription: this.profileDescription,
 			settings: this.settings,
-			position: this.position,
 			isOnline: this.isOnline,
 			assetPreferences: this.assetPreferences,
 		};

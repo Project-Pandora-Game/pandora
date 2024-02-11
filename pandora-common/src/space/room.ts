@@ -1,9 +1,9 @@
 import { Immutable } from 'immer';
 import { clamp } from 'lodash';
 import { z } from 'zod';
-import { CharacterSize } from '../assets/graphics/graphics';
 import type { AssetManager } from '../assets/assetManager';
-import type { CharacterRoomPosition } from '../character/characterData';
+import { CharacterSize } from '../assets/graphics/graphics';
+import type { CharacterRoomPosition } from '../assets/state/characterStateTypes';
 import { CloneDeepMutable } from '../utility';
 import { HexColorString } from '../validation';
 

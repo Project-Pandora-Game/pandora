@@ -63,7 +63,7 @@ function InteractionBox({ className }: {
 			}
 			<Tab name='Pose'>
 				<WardrobeContextProvider player={ player } target={ player }>
-					<WardrobePoseGui character={ player } characterState={ playerState } />
+					<WardrobePoseGui characterState={ playerState } />
 				</WardrobeContextProvider>
 			</Tab>
 			<Tab name='Expressions'>

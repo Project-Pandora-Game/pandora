@@ -1,7 +1,7 @@
-import React, { ReactElement, useState } from 'react';
+import React, { ReactElement, useMemo, useState } from 'react';
 import { AssertNever, CharacterId, GetLogger, ICharacterRoomData, LIMIT_CHARACTER_PROFILE_LENGTH, PRONOUNS } from 'pandora-common';
 import { Column, Row } from '../common/container/container';
-import { GameState, useCharacterState, useSpaceCharacters, useGameStateOptional } from '../gameContext/gameStateContextProvider';
+import { GameState, useSpaceCharacters, useGameStateOptional, useGlobalState } from '../gameContext/gameStateContextProvider';
 import { Character, useCharacterData } from '../../character/character';
 import { useIsNarrowScreen } from '../../styles/mediaQueries';
 import { CharacterPreview } from '../wardrobe/wardrobeGraphics';
@@ -31,7 +31,8 @@ export function CharacterProfile({ characterId }: { characterId: CharacterId; })
 function CharacterProfileContent({ character, gameState }: { character: Character<ICharacterRoomData>; gameState: GameState; }): ReactElement {
 	const isPlayer = usePlayer()?.id === character.id;
 	const characterData = useCharacterData(character);
-	const characterState = useCharacterState(gameState, character.id);
+	const globalState = useGlobalState(gameState);
+	const characterState = useMemo(() => globalState.characters.get(character.id) ?? null, [globalState, character]);
 	const isNarrowScreen = useIsNarrowScreen();
 
 	const pronouns = PRONOUNS[characterData.settings.pronoun];
@@ -40,7 +41,7 @@ function CharacterProfileContent({ character, gameState }: { character: Characte
 		<Row className='profileView flex-1' padding='medium' gap='large' overflowY='hidden'>
 			{
 				characterState != null && !isNarrowScreen ? (
-					<CharacterPreview character={ character } characterState={ characterState } />
+					<CharacterPreview character={ character } characterState={ characterState } globalState={ globalState } />
 				) : null
 			}
 			<Column className='flex-1' overflowY='auto'>

@@ -9,6 +9,7 @@ import {
 	BONE_MAX,
 	BONE_MIN,
 	BoneDefinition,
+	CharacterRoomPosition,
 	CloneDeepMutable,
 	LegsPoseSchema,
 	MergePartialAppearancePoses,
@@ -16,9 +17,8 @@ import {
 	ProduceAppearancePose,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
-import { IChatroomCharacter, useCharacterData } from '../../../character/character';
 import { useDebouncedValue } from '../../../common/useDebounceValue';
-import { useEvent } from '../../../common/useEvent';
+import { useAsyncEvent, useEvent } from '../../../common/useEvent';
 import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../common/button/button';
@@ -312,8 +312,7 @@ export function WardrobeLegsPose({ setPose, characterState }: {
 	);
 }
 
-export function WardrobePoseGui({ character, characterState }: {
-	character: IChatroomCharacter;
+export function WardrobePoseGui({ characterState }: {
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const [execute] = useWardrobeExecuteCallback();
@@ -323,7 +322,7 @@ export function WardrobePoseGui({ character, characterState }: {
 	const setPoseDirect = useEvent(({ bones, arms, leftArm, rightArm, legs, view }: PartialAppearancePose) => {
 		execute({
 			type: 'pose',
-			target: character.id,
+			target: characterState.id,
 			bones,
 			leftArm: { ...arms, ...leftArm },
 			rightArm: { ...arms, ...rightArm },
@@ -364,7 +363,7 @@ export function WardrobePoseGui({ character, characterState }: {
 					</Button>
 				</Row>
 				<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
-				<RoomManualYOffsetControl character={ character } />
+				<RoomManualYOffsetControl characterState={ characterState } />
 				<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
 					<Column>
 						<WardrobeArmPoses characterState={ characterState } setPose={ setPose } />
@@ -481,26 +480,40 @@ export function BoneRowElement({ definition, onChange, characterState }: {
 	);
 }
 
-function RoomManualYOffsetControl({ character }: {
-	character: IChatroomCharacter;
+function RoomManualYOffsetControl({ characterState }: {
+	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-
-	const {
-		id,
-		position,
-	} = useCharacterData(character);
-
-	const [yOffset, setYOffsetLocal] = useUpdatedUserInput(position[2], [character]);
-
 	const shard = useShardConnector();
 
-	const setYOffset = useCallback((newYOffset: number) => {
-		setYOffsetLocal(newYOffset);
-		shard?.sendMessage('roomCharacterMove', {
-			id,
-			position: [position[0], position[1], newYOffset],
+	const roomPosition: CharacterRoomPosition | null = characterState.position.type === 'normal' ? characterState.position.position : null;
+
+	const [yOffset, setYOffsetLocal] = useUpdatedUserInput(roomPosition?.[2] ?? 0, [characterState.id]);
+
+	const [setPositionRaw] = useAsyncEvent(async (newX: number, newY: number, newYOffset: number) => {
+		if (!shard) {
+			return;
+		}
+
+		await shard.awaitResponse('appearanceAction', {
+			type: 'characterMove',
+			target: characterState.id,
+			position: {
+				type: 'normal',
+				roomId: characterState.position.roomId,
+				position: [newX, newY, newYOffset],
+			},
 		});
-	}, [setYOffsetLocal, shard, id, position]);
+	}, () => {
+		/* Do nothing */
+	});
+
+	const setYOffset = useCallback((newYOffset: number) => {
+		if (roomPosition == null)
+			return;
+
+		setYOffsetLocal(newYOffset);
+		setPositionRaw(roomPosition[0], roomPosition[1], newYOffset);
+	}, [roomPosition, setYOffsetLocal, setPositionRaw]);
 
 	const onInput = useEvent((event: React.ChangeEvent<HTMLInputElement>) => {
 		const value = Math.round(parseFloat(event.target.value));
@@ -512,8 +525,8 @@ function RoomManualYOffsetControl({ character }: {
 	return (
 		<Row padding='small'>
 			<Row alignY='center'>Character Y Offset:</Row>
-			<input type='number' className='positioning-input' step='1' value={ yOffset } onChange={ onInput } />
-			<Button className='slim' onClick={ () => setYOffset(0) } disabled={ yOffset === 0 }>
+			<input type='number' className='positioning-input' step='1' value={ yOffset } onChange={ onInput } disabled={ roomPosition == null } />
+			<Button className='slim' onClick={ () => setYOffset(0) } disabled={ yOffset === 0 || roomPosition == null }>
 				↺
 			</Button>
 		</Row>

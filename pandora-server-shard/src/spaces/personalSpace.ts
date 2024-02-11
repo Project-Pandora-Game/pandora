@@ -1,13 +1,10 @@
-import { cloneDeep } from 'lodash';
 import {
 	AccountId,
-	DEFAULT_BACKGROUND,
 	GetLogger,
 	SpaceDirectoryConfig,
 	SpaceInventoryBundle,
 	SpaceStateBundle,
 } from 'pandora-common';
-import { assetManager } from '../assets/assetManager';
 import { Character } from '../character/character';
 import { Space } from './space';
 
@@ -33,9 +30,6 @@ export class PersonalSpace extends Space {
 			banned: [],
 			admin: [],
 			allow: [],
-			// Try to use the first background (if there is some)
-			// otherwise default to the default, solid-color background (important for tests that don't have any assets).
-			background: assetManager.getBackgrounds()[0].id ?? cloneDeep(DEFAULT_BACKGROUND),
 		};
 	}
 

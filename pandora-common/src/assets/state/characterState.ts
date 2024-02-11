@@ -2,6 +2,7 @@ import { Immutable, freeze } from 'immer';
 import _, { isEqual } from 'lodash';
 import type { CharacterId } from '../../character';
 import { Logger } from '../../logging';
+import { GenerateInitialRoomPosition, IsValidRoomPosition } from '../../space/room';
 import { Assert, CloneDeepMutable, IsNotNullable, MemoizeNoArg } from '../../utility';
 import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
@@ -179,6 +180,10 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		}, true);
 	}
 
+	public produceWithPosition(newPosition: CharacterSpacePosition): AssetFrameworkCharacterState {
+		return new AssetFrameworkCharacterState(this, { position: CloneDeepMutable(newPosition) });
+	}
+
 	public produceWithRestrictionOverride(type: RestrictionOverride['type'] | 'normal', removeAllowLeaveAt?: boolean): AssetFrameworkCharacterState;
 	public produceWithRestrictionOverride(value: RestrictionOverride): AssetFrameworkCharacterState;
 	public produceWithRestrictionOverride(value?: RestrictionOverride['type'] | RestrictionOverride | 'normal', removeAllowLeaveAt: boolean = false): AssetFrameworkCharacterState {
@@ -254,13 +259,21 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		if (currentRoom == null) {
 			// Do not log this problem; it occurs commonly whenever character switches spaces
 			currentRoom = spaceState.getDefaultRoom();
-			currentPosition = {
-				type: 'spectator',
-				roomId: currentRoom.id,
-			};
 		}
 
 		Assert(currentRoom != null);
+
+		if (
+			currentPosition.roomId !== currentRoom.id ||
+			(currentPosition.type === 'normal' && !IsValidRoomPosition(currentRoom.getResolvedBackground(), currentPosition.position))
+		) {
+			// TODO(spaces): Figure out logic for when to make character spectator by default
+			currentPosition = {
+				type: 'normal',
+				roomId: currentRoom.id,
+				position: GenerateInitialRoomPosition(currentRoom.getResolvedBackground()),
+			};
+		}
 
 		const physicalRoom: AssetFrameworkRoomState | null = currentPosition.type === 'normal' ? currentRoom : null;
 

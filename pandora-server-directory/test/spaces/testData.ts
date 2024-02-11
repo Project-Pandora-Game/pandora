@@ -1,4 +1,4 @@
-import { AccountId, CloneDeepMutable, DEFAULT_BACKGROUND, SpaceDirectoryConfig } from 'pandora-common';
+import { AccountId, SpaceDirectoryConfig } from 'pandora-common';
 
 const TEST_SPACE_DEFAULTS: Readonly<SpaceDirectoryConfig> = {
 	name: '',
@@ -9,7 +9,6 @@ const TEST_SPACE_DEFAULTS: Readonly<SpaceDirectoryConfig> = {
 	allow: [],
 	public: true,
 	features: [],
-	background: CloneDeepMutable(DEFAULT_BACKGROUND),
 };
 
 export const TEST_SPACE: Readonly<SpaceDirectoryConfig> = {

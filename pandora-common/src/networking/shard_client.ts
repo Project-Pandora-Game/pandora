@@ -2,7 +2,7 @@ import { Immutable } from 'immer';
 import type { AssetsDefinitionFile } from '../assets/definitions';
 import { AssetFrameworkGlobalStateClientBundle } from '../assets/state/globalState';
 import { AssetPreferencesPublic } from '../character';
-import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData';
+import type { ICharacterPrivateData, ICharacterPublicData } from '../character/characterData';
 import type { CharacterId } from '../character/characterTypes';
 import type { ChatCharacterStatus, IChatMessage } from '../chat/chat';
 import { SpaceClientInfo, SpaceId } from '../space/space';
@@ -18,8 +18,6 @@ import type { } from '../character/pronouns';
 
 export type ICharacterRoomData = ICharacterPublicData & {
 	assetPreferences: AssetPreferencesPublic;
-	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
-	position: CharacterRoomPosition;
 	isOnline: boolean;
 };
 

@@ -98,6 +98,10 @@ export type Restriction =
 		type: 'blockedHands';
 	}
 	| {
+		type: 'moveCharacterRestriction';
+		reason: 'movementBlocked' | 'notAdmin';
+	}
+	| {
 		type: 'safemodeInteractOther';
 	}
 	| {
@@ -105,7 +109,7 @@ export type Restriction =
 	}
 	| {
 		type: 'modifyRoomRestriction';
-		reason: 'notAdmin' | 'missingConstructionTools';
+		reason: 'notAdmin';
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
 	| {

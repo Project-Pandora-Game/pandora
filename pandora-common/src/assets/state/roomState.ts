@@ -1,9 +1,10 @@
-import { freeze } from 'immer';
+import { Immutable, freeze } from 'immer';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 import { Logger } from '../../logging';
-import { Assert, MemoizeNoArg } from '../../utility';
-import { ZodArrayWithInvalidDrop, ZodTemplateString } from '../../validation';
+import { DEFAULT_BACKGROUND, ResolveBackground, RoomBackgroundData, RoomBackgroundDataSchema } from '../../space/room';
+import { Assert, CloneDeepMutable, MemoizeNoArg } from '../../utility';
+import { HexColorStringSchema, ZodArrayWithInvalidDrop, ZodTemplateString } from '../../validation';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
 import { Item } from '../item/base';
@@ -17,9 +18,14 @@ import type { } from '../item/base';
 export const RoomIdSchema = ZodTemplateString<`room/${string}`>(z.string(), /^room\//);
 export type RoomId = z.infer<typeof RoomIdSchema>;
 
+export const RoomBackgroundConfigSchema = z.union([z.string(), RoomBackgroundDataSchema.extend({ image: HexColorStringSchema.catch('#1099bb') })]);
+export type RoomBackgroundConfig = z.infer<typeof RoomBackgroundConfigSchema>;
+
 export const RoomBundleSchema = z.object({
 	id: RoomIdSchema,
 	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
+	/** The ID of the background or custom data */
+	background: RoomBackgroundConfigSchema,
 	clientOnly: z.boolean().optional(),
 });
 
@@ -34,6 +40,7 @@ export function GenerateDefaultRoomBundle(): RoomBundle {
 	return {
 		id: GenerateRandomRoomId(),
 		items: [],
+		background: CloneDeepMutable(DEFAULT_BACKGROUND),
 	};
 }
 
@@ -45,15 +52,23 @@ export class AssetFrameworkRoomState {
 
 	public readonly id: RoomId;
 	public readonly items: AppearanceItems;
+	public readonly background: Immutable<RoomBackgroundConfig>;
 
 	private constructor(
 		assetManager: AssetManager,
 		id: RoomId,
 		items: AppearanceItems,
+		background: Immutable<RoomBackgroundConfig>,
 	) {
 		this.assetManager = assetManager;
 		this.id = id;
 		this.items = items;
+		this.background = background;
+	}
+
+	@MemoizeNoArg
+	public getResolvedBackground(): Immutable<RoomBackgroundData> {
+		return ResolveBackground(this.assetManager, this.background);
 	}
 
 	public isValid(): boolean {
@@ -77,6 +92,7 @@ export class AssetFrameworkRoomState {
 		return {
 			id: this.id,
 			items: this.items.map((item) => item.exportToBundle(options)),
+			background: CloneDeepMutable(this.background),
 		};
 	}
 
@@ -85,6 +101,7 @@ export class AssetFrameworkRoomState {
 		return {
 			id: this.id,
 			items: this.items.map((item) => item.exportToBundle(options)),
+			background: CloneDeepMutable(this.background),
 			clientOnly: true,
 		};
 	}
@@ -94,6 +111,16 @@ export class AssetFrameworkRoomState {
 			this.assetManager,
 			this.id,
 			newItems,
+			this.background,
+		);
+	}
+
+	public produceWithBackground(newBackground: Immutable<RoomBackgroundConfig>): AssetFrameworkRoomState {
+		return new AssetFrameworkRoomState(
+			this.assetManager,
+			this.id,
+			this.items,
+			newBackground,
 		);
 	}
 
@@ -126,6 +153,7 @@ export class AssetFrameworkRoomState {
 			assetManager,
 			parsed.id,
 			newItems,
+			bundle.background,
 		), true);
 
 		Assert(resultState.isValid(), 'State is invalid after load');

@@ -7,11 +7,11 @@ import {
 	AssertNotNullable,
 	AssetFrameworkGlobalState,
 	CalculateBackgroundDataFromCalibrationData,
+	DEFAULT_BACKGROUND,
 	FilterItemType,
 	ICharacterRoomData,
 	ItemId,
 	ItemRoomDevice,
-	ResolveBackground,
 	RoomBackgroundData,
 	RoomId,
 	SpaceClientInfo,
@@ -20,7 +20,6 @@ import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
-import { useAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterData } from '../../character/character';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
@@ -75,12 +74,10 @@ export function RoomGraphicsScene({
 	onPointerDown,
 	menuOpen,
 }: RoomGraphicsSceneProps): ReactElement {
-	const assetManager = useAssetManager();
-
 	const roomState = globalState.space.getRoomState(roomId);
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
 	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
-		const resolved = ResolveBackground(assetManager, info.background);
+		const resolved = roomState?.getResolvedBackground() ?? DEFAULT_BACKGROUND;
 
 		if (debugConfig?.enabled && debugConfig.roomScalingHelperData != null && info.features.includes('development')) {
 			return CalculateBackgroundDataFromCalibrationData(resolved.image, {
@@ -90,7 +87,7 @@ export function RoomGraphicsScene({
 		}
 
 		return resolved;
-	}, [assetManager, info, debugConfig]);
+	}, [roomState, info, debugConfig]);
 
 	const projectionResolver = useRoomViewProjection(roomBackground);
 

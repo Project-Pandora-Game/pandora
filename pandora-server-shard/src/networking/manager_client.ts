@@ -62,7 +62,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			chatMessage: this.handleChatMessage.bind(this),
 			chatStatus: this.handleChatStatus.bind(this),
 			chatMessageAck: this.handleChatMessageAck.bind(this),
-			roomCharacterMove: this.handleRoomCharacterMove.bind(this),
 			appearanceAction: this.handleAppearanceAction.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
 			updateAssetPreferences: this.handleUpdateAssetPreferences.bind(this),
@@ -142,16 +141,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const character = client.character;
 
 		space.updateStatus(character, status, target);
-	}
-
-	private handleRoomCharacterMove({ id, position }: IClientShardArgument['roomCharacterMove'], client: ClientConnection): void {
-		if (!client.character)
-			throw new BadMessageError();
-
-		const space = client.character.getOrLoadSpace();
-		const character = client.character;
-
-		space.updateCharacterPosition(character, id ?? character.id, position);
 	}
 
 	private handleAppearanceAction(action: IClientShardArgument['appearanceAction'], client: ClientConnection): IClientShardNormalResult['appearanceAction'] {

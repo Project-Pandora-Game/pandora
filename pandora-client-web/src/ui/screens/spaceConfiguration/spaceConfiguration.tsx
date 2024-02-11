@@ -400,11 +400,8 @@ function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
 	const [invites, setInvites] = useState<readonly SpaceInvite[]>([]);
 	const [showCreation, setShowCreation] = useState(false);
 
-	const [onChange] = useAsyncEvent(
-		async (isOpen) => {
-			if (!isOpen)
-				return null;
-
+	const [update] = useAsyncEvent(
+		async () => {
 			return await directoryConnector.awaitResponse('spaceInvite', { action: 'list' });
 		},
 		(resp) => {
@@ -419,11 +416,14 @@ function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
 		CopyToClipboard(`https://project-pandora.com/space/join/${spaceId.split('/')[1]}`, () => toast('Copied invite to clipboard'));
 	}, [spaceId]);
 
-	const update = useCallback(() => onChange(true), [onChange]);
+	useEffect(() => {
+		update();
+	}, [update]);
+
 	const addInvite = useCallback((invite: SpaceInvite) => setInvites((inv) => [...inv, invite]), []);
 
 	return (
-		<FieldsetToggle legend='Invites' onChange={ onChange } open={ true }>
+		<FieldsetToggle legend='Invites'>
 			<Column gap='medium'>
 				<div onClick={ copyPublic } className='permanentInvite'>
 					<span className='text'>Permanent public invite link:</span>
@@ -467,8 +467,6 @@ function SpaceInviteCreation({ closeDialog, addInvite }: { closeDialog: () => vo
 
 	const [onCreate, processing] = useAsyncEvent(
 		async () => {
-			closeDialog();
-
 			return await directoryConnector.awaitResponse('spaceInvite', {
 				action: 'create',
 				data: {
@@ -488,6 +486,7 @@ function SpaceInviteCreation({ closeDialog, addInvite }: { closeDialog: () => vo
 			}
 
 			addInvite(resp.invite);
+			closeDialog();
 		},
 	);
 
@@ -555,8 +554,10 @@ function SpaceInviteRow({ spaceId, invite, directoryConnector, update }: { space
 			<td>{ invite.characterId ?? '' }</td>
 			<td>{ invite.expires ? <SpaceInviteExpires expires={ invite.expires } update={ update } /> : 'Never' }</td>
 			<td>
-				<Button onClick={ copy } disabled={ processing } className='slim'>Copy</Button>
-				<Button onClick={ onDelete } disabled={ processing } className='slim'>Delete</Button>
+				<Row>
+					<Button onClick={ copy } disabled={ processing } className='slim'>Copy</Button>
+					<Button onClick={ onDelete } disabled={ processing } className='slim'>Delete</Button>
+				</Row>
 			</td>
 		</tr>
 	);

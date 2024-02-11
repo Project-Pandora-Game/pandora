@@ -5,6 +5,7 @@ import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { ItemInteractionType, RestrictionResult } from '../character/restrictionTypes';
 import type { GameLogicCharacter } from '../gameLogic';
 import { PseudoRandom } from '../math/pseudoRandom';
+import { IsValidRoomPosition } from '../space/room';
 import type { ActionSpaceContext } from '../space/space';
 import { Assert, AssertNever, ShuffleArray } from '../utility';
 import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
@@ -20,7 +21,7 @@ import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemI
 import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure } from './modules';
 import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 import { AppearanceArmPoseSchema, AppearancePoseSchema } from './state/characterStatePose';
-import { RestrictionOverride } from './state/characterStateTypes';
+import { CharacterSpacePositionSchema, RestrictionOverride } from './state/characterStateTypes';
 import { AssetFrameworkGlobalStateContainer } from './state/globalState';
 import { AssetFrameworkRoomState } from './state/roomState';
 
@@ -82,6 +83,13 @@ export const AppearanceActionSetView = z.object({
 	type: z.literal('setView'),
 	target: CharacterIdSchema,
 	view: CharacterViewSchema,
+});
+
+/** Character moves inside the room, between rooms, or between modes */
+export const AppearanceActionCharacterMove = z.object({
+	type: z.literal('characterMove'),
+	target: CharacterIdSchema,
+	position: CharacterSpacePositionSchema,
 });
 
 export const AppearanceActionMove = z.object({
@@ -171,6 +179,7 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionPose,
 	AppearanceActionBody,
 	AppearanceActionSetView,
+	AppearanceActionCharacterMove,
 	AppearanceActionMove,
 	AppearanceActionColor,
 	AppearanceActionModuleAction,
@@ -393,6 +402,11 @@ export function DoAppearanceAction(
 
 			return processingContext.finalize();
 		}
+		case 'characterMove':
+			return ActionCharacterMove({
+				...arg,
+				action,
+			});
 		case 'restrictionOverrideChange': {
 			const current = playerRestrictionManager.appearance.getRestrictionOverride();
 			const oldMode = current?.type ?? 'normal';
@@ -703,6 +717,74 @@ export function ActionModuleAction({
 			result: 'moduleActionError',
 			reason: rejectionReason ?? { type: 'invalid' },
 		});
+		return processingContext.invalid();
+	}
+
+	return processingContext.finalize();
+}
+
+export function ActionCharacterMove({
+	action,
+	processingContext,
+}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionCharacterMove>>): AppearanceActionProcessingResult {
+	const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
+
+	// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
+	if (!processingContext.spaceContext.features.includes('development')) {
+		const targetRoom = processingContext.manipulator.currentState.getRoomState(action.position.roomId);
+		if (targetRoom == null) {
+			processingContext.addProblem({
+				result: 'validationError',
+				validationError: {
+					problem: 'characterUnknownRoom',
+					character: action.target,
+				},
+			});
+			return processingContext.invalid();
+		}
+
+		const roomBackground = targetRoom.getResolvedBackground();
+
+		if (action.position.type === 'normal' && !IsValidRoomPosition(roomBackground, action.position.position)) {
+			processingContext.addProblem({
+				result: 'validationError',
+				validationError: {
+					problem: 'characterInvalidPosition',
+					character: action.target,
+				},
+			});
+			return processingContext.invalid();
+		}
+	}
+
+	if (action.target === processingContext.player.id) {
+		// If moving self, must not be restricted by items
+		if (playerRestrictionManager.getEffects().blockRoomMovement) {
+			processingContext.addProblem({
+				result: 'restrictionError',
+				restriction: {
+					type: 'moveCharacterRestriction',
+					reason: 'movementBlocked',
+				},
+			});
+		}
+	} else {
+		// Only admin can move other characters
+		if (!playerRestrictionManager.isCurrentSpaceAdmin()) {
+			processingContext.addProblem({
+				result: 'restrictionError',
+				restriction: {
+					type: 'moveCharacterRestriction',
+					reason: 'notAdmin',
+				},
+			});
+		}
+	}
+
+	if (!processingContext.manipulator.produceCharacterState(
+		action.target,
+		(character) => character.produceWithPosition(action.position),
+	)) {
 		return processingContext.invalid();
 	}
 

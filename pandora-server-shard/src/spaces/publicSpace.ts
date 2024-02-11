@@ -9,13 +9,9 @@ import {
 	SpaceDirectoryConfig,
 	GameStateUpdate,
 	IShardSpaceDefinition,
-	ResolveBackground,
 	SpaceId,
-	IsValidRoomPosition,
-	GenerateInitialRoomPosition,
 } from 'pandora-common';
 import { Space } from './space';
-import { assetManager } from '../assets/assetManager';
 import { GetDatabase } from '../database/databaseProvider';
 import _, { omit, pick } from 'lodash';
 import { diffString } from 'json-diff';
@@ -58,21 +54,6 @@ export class PublicSpace extends Space {
 		const update: GameStateUpdate = {
 			info: this.getInfo(),
 		};
-
-		// Put characters into correct place if needed
-		{
-			const roomBackground = ResolveBackground(assetManager, this.data.config.background);
-			for (const character of this.characters) {
-				if (!IsValidRoomPosition(roomBackground, character.position)) {
-					character.position = GenerateInitialRoomPosition(roomBackground);
-
-					update.characters ??= {};
-					update.characters[character.id] = {
-						position: character.position,
-					};
-				}
-			}
-		}
 
 		this.sendUpdateToAllCharacters(update);
 	}

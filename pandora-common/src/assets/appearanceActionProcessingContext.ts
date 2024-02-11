@@ -2,6 +2,7 @@ import { isEqual, uniqWith } from 'lodash';
 import type { CharacterId, CharacterRestrictionsManager } from '../character';
 import type { ItemInteractionType, RestrictionResult } from '../character/restrictionTypes';
 import type { GameLogicCharacter, GameLogicPermission, InteractionId } from '../gameLogic';
+import type { ActionSpaceContext } from '../space';
 import { Assert, AssertNever, AssertNotNullable } from '../utility';
 import type { AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
 import type { AppearanceActionContext } from './appearanceActions';
@@ -17,6 +18,10 @@ export class AppearanceActionProcessingContext {
 
 	public get player(): GameLogicCharacter {
 		return this._context.player;
+	}
+
+	public get spaceContext(): ActionSpaceContext {
+		return this._context.spaceContext;
 	}
 
 	public readonly originalState: AssetFrameworkGlobalState;

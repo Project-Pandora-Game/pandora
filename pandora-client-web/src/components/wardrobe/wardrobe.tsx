@@ -183,6 +183,7 @@ function WardrobeCharacter({ character }: {
 				<WardrobeCharacterPreview
 					character={ character }
 					characterState={ characterPreviewState ?? characterState }
+					globalState={ globalState }
 					isPreview={ characterPreviewState != null }
 				/>
 				<TabContainer className='flex-1'>
@@ -199,7 +200,7 @@ function WardrobeCharacter({ character }: {
 					<Tab name='Poses & Expressions'>
 						<div className='wardrobe-pane'>
 							<div className='wardrobe-ui'>
-								<WardrobePoseGui character={ character } characterState={ characterState } />
+								<WardrobePoseGui characterState={ characterState } />
 								<WardrobeExpressionGui character={ character } characterState={ characterState } />
 							</div>
 						</div>

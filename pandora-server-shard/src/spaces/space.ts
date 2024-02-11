@@ -14,11 +14,8 @@ import {
 	AssetFrameworkSpaceState,
 	AssetManager,
 	CharacterId,
-	CharacterRoomPosition,
 	ChatCharacterStatus,
-	CloneDeepMutable,
 	GameStateUpdate,
-	GenerateInitialRoomPosition,
 	IChatMessage,
 	IChatMessageActionTarget,
 	IChatMessageActionTargetCharacter,
@@ -26,9 +23,7 @@ import {
 	IChatSegment,
 	IClientMessage,
 	IShardClient,
-	IsValidRoomPosition,
 	Logger,
-	ResolveBackground,
 	ServerRoom,
 	SpaceClientInfo,
 	SpaceDirectoryConfig,
@@ -97,29 +92,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 	public reloadAssetManager(manager: AssetManager) {
 		this.gameState.reloadAssetManager(manager);
-
-		// Background definition might have changed, make sure all characters are still inside range
-		const update: GameStateUpdate = {};
-
-		// Put characters into correct place if needed
-		// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
-		if (!this.getInfo().features.includes('development')) {
-			const roomBackground = ResolveBackground(assetManager, this.config.background);
-			for (const character of this.characters) {
-				if (!IsValidRoomPosition(roomBackground, character.position)) {
-					character.position = GenerateInitialRoomPosition(roomBackground);
-
-					update.characters ??= {};
-					update.characters[character.id] = {
-						position: character.position,
-					};
-				}
-			}
-		}
-
-		if (update.characters) {
-			this.sendUpdateToAllCharacters(update);
-		}
 	}
 
 	public onRemove(): void {
@@ -210,40 +182,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		return false;
 	}
 
-	public updateCharacterPosition(source: Character, id: CharacterId, newPosition: CharacterRoomPosition): void {
-		// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
-		if (!this.getInfo().features.includes('development')) {
-			const roomBackground = ResolveBackground(assetManager, this.config.background);
-
-			if (!IsValidRoomPosition(roomBackground, newPosition)) {
-				return;
-			}
-		}
-
-		const character = this.getCharacterById(id);
-		if (!character) {
-			return;
-		}
-		// If moving self, must not be restricted by items
-		if (character.id === source.id) {
-			const restrictionManager = character.getRestrictionManager();
-			if (restrictionManager.getEffects().blockRoomMovement)
-				return;
-		}
-		// Only admin can move other characters
-		if (character.id !== source.id && !this.isAdmin(source)) {
-			return;
-		}
-		character.position = CloneDeepMutable(newPosition);
-		this.sendUpdateToAllCharacters({
-			characters: {
-				[character.id]: {
-					position: character.position,
-				},
-			},
-		});
-	}
-
 	public getAllCharacters(): Character[] {
 		return [...this.characters.values()];
 	}
@@ -257,10 +195,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	}
 
 	public characterAdd(character: Character, appearance: AppearanceBundle): void {
-		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
-		const roomBackground = ResolveBackground(assetManager, this.config.background);
-		character.initRoomPosition(this.id, roomBackground);
-
 		this.runWithSuppressedUpdates(() => {
 			let newState = this.gameState.currentState;
 

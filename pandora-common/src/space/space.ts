@@ -5,9 +5,8 @@ import { SPACE_INVENTORY_BUNDLE_DEFAULT, SpaceInventoryBundleSchema } from '../a
 import { GenerateDefaultSpaceStateBundle, SpaceStateBundleSchema } from '../assets/state/spaceState';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits';
-import { ArrayToRecordKeys, CloneDeepMutable } from '../utility';
-import { HexColorStringSchema, ZodArrayWithInvalidDrop, ZodTemplateString, ZodTrimedRegex } from '../validation';
-import { DEFAULT_BACKGROUND, RoomBackgroundDataSchema } from './room';
+import { ArrayToRecordKeys } from '../utility';
+import { ZodArrayWithInvalidDrop, ZodTemplateString, ZodTrimedRegex } from '../validation';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/item/base';
@@ -97,8 +96,6 @@ export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 	admin: AccountIdSchema.array(),
 	/** Account ids that always allow to enter */
 	allow: AccountIdSchema.array().default([]),
-	/** The ID of the background or custom data */
-	background: z.union([z.string(), RoomBackgroundDataSchema.extend({ image: HexColorStringSchema.catch('#1099bb') })]).catch(CloneDeepMutable(DEFAULT_BACKGROUND)),
 });
 export type SpaceDirectoryConfig = z.infer<typeof SpaceDirectoryConfigSchema>;
 
@@ -118,7 +115,7 @@ export type SpaceListInfo = SpaceBaseInfo & {
 };
 
 /** Info sent to client when displaying details about a space */
-export type SpaceListExtendedInfo = SpaceListInfo & Pick<SpaceDirectoryConfig, 'features' | 'admin' | 'background'> & {
+export type SpaceListExtendedInfo = SpaceListInfo & Pick<SpaceDirectoryConfig, 'features' | 'admin'> & {
 	// Note: `isAdmin` is not part of the basic info (`SpaceListInfo`), as it has more complex check than `isOwner` and shouldn't be done en masse
 	/** Whether the account that requested the info is admin of this space */
 	isAdmin: boolean;

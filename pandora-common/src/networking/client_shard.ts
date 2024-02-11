@@ -1,5 +1,5 @@
 import { CharacterIdSchema } from '../character/characterTypes';
-import { CharacterPublicSettingsSchema, CharacterRoomPositionSchema } from '../character/characterData';
+import { CharacterPublicSettingsSchema } from '../character/characterData';
 import { AppearanceActionSchema } from '../assets/appearanceActions';
 import { AppearanceActionProblem } from '../assets/appearanceActionProblems';
 import { ClientChatMessagesSchema, ChatCharacterStatusSchema } from '../chat/chat';
@@ -43,13 +43,6 @@ export const ClientShardSchema = {
 	chatMessageAck: {
 		request: z.object({
 			lastTime: z.number().min(0),
-		}),
-		response: null,
-	},
-	roomCharacterMove: {
-		request: z.object({
-			id: CharacterIdSchema.optional(),
-			position: CharacterRoomPositionSchema,
 		}),
 		response: null,
 	},

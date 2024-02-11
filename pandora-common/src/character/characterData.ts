@@ -26,11 +26,6 @@ export const CHARACTER_DEFAULT_PUBLIC_SETTINGS: Readonly<ICharacterPublicSetting
 	pronoun: 'she',
 };
 
-export const CharacterRoomPositionSchema = z.tuple([z.number().int(), z.number().int(), z.number().int()])
-	.catch([0, 0, 0])
-	.readonly();
-export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: number];
-
 /** Data about character, that is visible to everyone in the same space */
 export const CharacterPublicDataSchema = z.object({
 	id: CharacterIdSchema,
@@ -71,9 +66,6 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	}).optional(),
 	interactionConfig: InteractionSystemDataSchema.optional(),
 	assetPreferences: AssetPreferencesServerSchema.default(ASSET_PREFERENCES_DEFAULT),
-	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
-	roomId: z.string().nullable().optional().catch(undefined),
-	position: CharacterRoomPositionSchema,
 });
 /** Data about character, as seen by server */
 export type ICharacterData = z.infer<typeof CharacterDataSchema>;
@@ -91,8 +83,6 @@ export const CHARACTER_SHARD_UPDATEABLE_PROPERTIES = [
 	'profileDescription',
 	'appearance',
 	'personalRoom',
-	'position',
-	'roomId',
 	'settings',
 	'interactionConfig',
 	'assetPreferences',

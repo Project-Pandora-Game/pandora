@@ -6,18 +6,17 @@ import {
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
 	CharacterSize,
+	DEFAULT_BACKGROUND,
 	FilterItemType,
 	ICharacterRoomData,
 	ItemRoomDevice,
 	Rectangle,
-	ResolveBackground,
 	RoomBackgroundData,
-	SpaceClientInfo,
 	RoomId,
+	SpaceClientInfo,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, ReactNode, useCallback, useMemo } from 'react';
-import { useAssetManager } from '../../assets/assetManager';
 import { Character, IChatroomCharacter } from '../../character/character';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
@@ -28,13 +27,13 @@ import { useObservable } from '../../observable';
 import { Button } from '../common/button/button';
 import { Row } from '../common/container/container';
 import { directoryConnectorContext } from '../gameContext/directoryConnectorContextProvider';
-import { useSpaceInfo } from '../gameContext/gameStateContextProvider';
 import { shardConnectorContext, useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { useWardrobeContext } from './wardrobeContext';
 
-export function WardrobeCharacterPreview({ character, characterState, isPreview = false }: {
+export function WardrobeCharacterPreview({ character, characterState, globalState, isPreview = false }: {
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
+	globalState: AssetFrameworkGlobalState;
 	isPreview?: boolean;
 }): ReactElement {
 	const [onClick, processing] = useAppearanceActionEvent({
@@ -68,22 +67,20 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 		<CharacterPreview
 			character={ character }
 			characterState={ characterState }
+			globalState={ globalState }
 			overlay={ overlay }
 		/>
 	);
 }
 
-export function CharacterPreview({ character, characterState, overlay }: {
+export function CharacterPreview({ character, characterState, globalState, overlay }: {
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
+	globalState: AssetFrameworkGlobalState;
 	overlay?: ReactNode;
 }): ReactElement {
-	const spaceInfo = useSpaceInfo();
-	const assetManager = useAssetManager();
-
-	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
-		return ResolveBackground(assetManager, spaceInfo.config.background);
-	}, [assetManager, spaceInfo]);
+	const roomState = characterState.getPhysicalRoom(globalState.space);
+	const roomBackground: Immutable<RoomBackgroundData> = roomState?.getResolvedBackground() ?? DEFAULT_BACKGROUND;
 	const projectionResolver = useRoomViewProjection(roomBackground);
 
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
@@ -105,7 +102,6 @@ export function CharacterPreview({ character, characterState, overlay }: {
 			{
 				roomBackground ? (
 					<WardrobeRoomBackground
-						character={ character }
 						characterState={ characterState }
 						roomBackground={ roomBackground }
 						projectionResolver={ projectionResolver }
@@ -119,15 +115,13 @@ export function CharacterPreview({ character, characterState, overlay }: {
 function WardrobeRoomBackground({
 	roomBackground,
 	projectionResolver,
-	character,
 	characterState,
 }: {
 	roomBackground: Immutable<RoomBackgroundData>;
 	projectionResolver: Immutable<RoomProjectionResolver>;
-	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const { position, scale, pivot, yOffset } = useRoomCharacterPosition(character.data.position, characterState, projectionResolver);
+	const { position, scale, pivot, yOffset } = useRoomCharacterPosition(characterState, projectionResolver);
 	const filters = usePlayerVisionFilters(false);
 
 	const inverseScale = 1 / scale;
@@ -195,7 +189,6 @@ interface RoomPreviewProps {
 	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
 	roomId: RoomId;
-	info: SpaceClientInfo;
 	overlay?: ReactNode;
 	focusDevice?: ItemRoomDevice;
 }
@@ -204,15 +197,12 @@ export function RoomPreview({
 	characters,
 	globalState,
 	roomId,
-	info,
 	overlay,
 	focusDevice,
 }: RoomPreviewProps): ReactElement {
-	const assetManager = useAssetManager();
-
 	const roomState = globalState.space.getRoomState(roomId);
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
-	const roomBackground = useMemo(() => ResolveBackground(assetManager, info.background), [assetManager, info.background]);
+	const roomBackground: Immutable<RoomBackgroundData> = roomState?.getResolvedBackground() ?? DEFAULT_BACKGROUND;
 	const projectionResolver = useRoomViewProjection(roomBackground);
 
 	const borderDraw = useCallback((g: PIXI.Graphics) => {

@@ -55,6 +55,11 @@ export type AppearanceValidationError =
 		problem: 'characterUnknownRoom';
 		character: CharacterId;
 	}
+	| {
+		// Character is positioned outside of allowed room area
+		problem: 'characterInvalidPosition';
+		character: CharacterId;
+	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, non-unique ID, and so on...)
 	| {
 		problem: 'invalid';

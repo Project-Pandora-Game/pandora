@@ -118,7 +118,7 @@ export class Space {
 	public getListExtendedInfo(queryingAccount: Account): SpaceListExtendedInfo {
 		return ({
 			...this.getListInfo(queryingAccount),
-			...pick(this.config, ['features', 'admin', 'background']),
+			...pick(this.config, ['features', 'admin']),
 			owners: Array.from(this._owners),
 			isAdmin: this.isAdmin(queryingAccount),
 			isAllowed: this.isAllowed(queryingAccount),
@@ -194,9 +194,6 @@ export class Space {
 		if (changes.public !== undefined) {
 			this.config.public = changes.public;
 		}
-		if (changes.background) {
-			this.config.background = changes.background;
-		}
 
 		// Features and development fields are intentionally ignored
 
@@ -217,8 +214,6 @@ export class Space {
 				changeList.push('ban list');
 			if (changes.allow)
 				changeList.push('allow list');
-			if (changes.background)
-				changeList.push('background');
 
 			this._sendUpdatedMessage(source, ...changeList);
 		}

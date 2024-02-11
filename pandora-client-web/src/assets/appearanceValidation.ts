@@ -89,8 +89,14 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				switch (e.reason) {
 					case 'notAdmin':
 						return `You must be a room admin or a room owner to do this.`;
-					case 'missingConstructionTools':
-						return `You must be holding 'Room Construction Tools' to do this.`;
+				}
+				break;
+			case 'moveCharacterRestriction':
+				switch (e.reason) {
+					case 'notAdmin':
+						return `You must be a room admin or a room owner to move other characters.`;
+					case 'movementBlocked':
+						return `An item is preventing you from moving.`;
 				}
 				break;
 			case 'invalid':
@@ -141,6 +147,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `The space can have at most ${e.limit} rooms.`;
 			case 'characterUnknownRoom':
 				return `Room cannot be removed, because character ${e.character} is currently inside the room.`;
+			case 'characterInvalidPosition':
+				return `The action results in character ${e.character} being in an invalid position.`;
 			case 'invalid':
 				return `The action results in a generally invalid state.`;
 		}

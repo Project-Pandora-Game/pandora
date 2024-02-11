@@ -2,6 +2,7 @@ import { Immutable } from 'immer';
 import {
 	ActionSpaceContext,
 	AppearanceActionContext,
+	AssertNotNullable,
 	AssetFrameworkGlobalState,
 	DoAppearanceAction,
 	EMPTY_ARRAY,
@@ -39,6 +40,8 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	const editor = useEditor();
 	const globalState = useEditorState();
 	const character = editor.character;
+	const playerState = globalState.getCharacterState(character.id);
+	AssertNotNullable(playerState);
 	const assetList = assetManager.assetList;
 
 	const focus = useMemo(() => new Observable<Immutable<WardrobeFocus>>({ container: [], itemId: null }), []);
@@ -74,6 +77,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 			type: 'character',
 			characterId: character.id,
 		},
+		currentRoom: { type: 'room', roomId: playerState.getCurrentRoomId() },
 		globalState,
 		player: character,
 		assetList,
@@ -103,7 +107,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		},
 		showExtraActionButtons: true,
 		showHoverPreview: true,
-	}), [character, globalState, assetList, heldItem, focus, extraItemActions, actions, actionPreviewState, assetManager, editor]);
+	}), [character, playerState, globalState, assetList, heldItem, focus, extraItemActions, actions, actionPreviewState, assetManager, editor]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

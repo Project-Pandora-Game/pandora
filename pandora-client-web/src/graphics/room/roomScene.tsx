@@ -13,6 +13,7 @@ import {
 	ItemRoomDevice,
 	ResolveBackground,
 	RoomBackgroundData,
+	RoomId,
 	SpaceClientInfo,
 } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
@@ -50,6 +51,7 @@ interface RoomGraphicsSceneProps extends CommonProps {
 	characters: readonly Character<ICharacterRoomData>[];
 	shard: ShardConnector | null;
 	globalState: AssetFrameworkGlobalState;
+	roomId: RoomId;
 	info: Immutable<SpaceClientInfo>;
 	debugConfig: ChatroomDebugConfig;
 	roomSceneMode: Immutable<IRoomSceneMode>;
@@ -65,6 +67,7 @@ export function RoomGraphicsScene({
 	characters,
 	shard,
 	globalState,
+	roomId,
 	info,
 	debugConfig,
 	roomSceneMode,
@@ -74,7 +77,7 @@ export function RoomGraphicsScene({
 }: RoomGraphicsSceneProps): ReactElement {
 	const assetManager = useAssetManager();
 
-	const roomState = globalState.spaceInventory;
+	const roomState = globalState.space.getRoomState(roomId);
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
 	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
 		const resolved = ResolveBackground(assetManager, info.background);
@@ -180,6 +183,7 @@ export function RoomGraphicsScene({
 							key={ character.data.id }
 							globalState={ globalState }
 							character={ character }
+							roomId={ roomId }
 							spaceInfo={ info }
 							debugConfig={ debugConfig }
 							projectionResolver={ projectionResolver }
@@ -194,6 +198,7 @@ export function RoomGraphicsScene({
 							key={ device.id }
 							globalState={ globalState }
 							item={ device }
+							roomId={ roomId }
 							deployment={ device.deployment }
 							projectionResolver={ projectionResolver }
 							roomSceneMode={ roomSceneMode }
@@ -211,6 +216,7 @@ export function RoomGraphicsScene({
 							key={ device.id }
 							globalState={ globalState }
 							item={ device }
+							roomId={ roomId }
 							deployment={ device.deployment }
 							projectionResolver={ projectionResolver }
 							roomSceneMode={ roomSceneMode }
@@ -450,6 +456,7 @@ export function RoomScene({ className }: {
 
 	const playerState = globalState.getCharacterState(player.id);
 	AssertNotNullable(playerState);
+	const roomId = playerState.getCurrentRoomId();
 
 	const roomConstructionMode = useIsRoomConstructionModeEnabled();
 	useEffect(() => {
@@ -491,6 +498,7 @@ export function RoomScene({ className }: {
 			characters={ characters }
 			shard={ shard }
 			globalState={ globalState }
+			roomId={ roomId }
 			info={ info.config }
 			debugConfig={ debugConfig }
 			roomSceneMode={ roomSceneMode }
@@ -505,6 +513,7 @@ export function RoomScene({ className }: {
 				menuActive?.deviceItemId ? (
 					<DeviceContextMenu
 						deviceItemId={ menuActive.deviceItemId }
+						roomId={ roomId }
 						position={ menuActive.position }
 						roomSceneMode={ roomSceneMode }
 						setRoomSceneMode={ setRoomSceneMode }

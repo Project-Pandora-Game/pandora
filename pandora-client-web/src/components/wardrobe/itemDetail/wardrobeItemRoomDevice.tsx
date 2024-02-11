@@ -247,13 +247,15 @@ export function WardrobeRoomDeviceWearable({ roomDeviceWearable }: {
 	roomDeviceWearable: Item<'roomDeviceWearablePart'>;
 	item: ItemPath;
 }): ReactElement | null {
+	const { currentRoom } = useWardrobeContext();
+
 	let contents: ReactNode;
 
 	if (roomDeviceWearable.roomDeviceLink != null) {
 		contents = (
 			<WardrobeActionButton action={ {
 				type: 'roomDeviceLeave',
-				target: { type: 'spaceInventory' },
+				target: currentRoom,
 				item: {
 					container: [],
 					itemId: roomDeviceWearable.roomDeviceLink.device,

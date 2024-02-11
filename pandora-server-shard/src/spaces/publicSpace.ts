@@ -41,7 +41,7 @@ export class PublicSpace extends Space {
 	}
 
 	constructor(data: SpaceData) {
-		super(data.inventory, GetLogger('Space', `[PublicSpace ${data.id}]`));
+		super(data.spaceState, data.inventory, GetLogger('Space', `[PublicSpace ${data.id}]`));
 		this.data = data;
 	}
 
@@ -104,6 +104,11 @@ export class PublicSpace extends Space {
 		if (keys.includes('inventory')) {
 			const inventoryState = this.gameState.currentState.spaceInventory;
 			data.inventory = inventoryState.exportToBundle();
+		}
+
+		if (keys.includes('spaceState')) {
+			const spaceState = this.gameState.currentState.space;
+			data.spaceState = spaceState.exportToBundle();
 		}
 
 		try {

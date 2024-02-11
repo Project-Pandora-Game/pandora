@@ -5,6 +5,7 @@ import {
 	GetLogger,
 	SpaceDirectoryConfig,
 	SpaceInventoryBundle,
+	SpaceStateBundle,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager';
 import { Character } from '../character/character';
@@ -38,8 +39,8 @@ export class PersonalSpace extends Space {
 		};
 	}
 
-	constructor(character: Character, inventory: SpaceInventoryBundle) {
-		super(inventory, GetLogger('Space', `[PersonalSpace ${character.id}]`));
+	constructor(character: Character, spaceState: SpaceStateBundle, inventory: SpaceInventoryBundle) {
+		super(spaceState, inventory, GetLogger('Space', `[PersonalSpace ${character.id}]`));
 		this._character = character;
 	}
 

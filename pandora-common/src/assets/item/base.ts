@@ -7,7 +7,7 @@ import type { Satisfies } from '../../utility';
 import type { Asset } from '../asset';
 import type { AssetManager } from '../assetManager';
 import type { AssetColorization, AssetType, WearableAssetType } from '../definitions';
-import type { AssetFrameworkSpaceInventoryState } from '../state/spaceInventoryState';
+import type { AssetFrameworkRoomState } from '../state/roomState';
 import type { InternalItemTypeMap, ItemBase } from './_internal';
 import type { LockBundle } from './lock';
 import type { RoomDeviceBundle } from './roomDevice';
@@ -81,7 +81,7 @@ export type IItemCreationContext = {
 
 export type IItemValidationContext = {
 	location: IItemLocationDescriptor;
-	spaceInventory: AssetFrameworkSpaceInventoryState | null;
+	roomState: AssetFrameworkRoomState | null;
 };
 
 export type ColorGroupResult = {
@@ -98,4 +98,4 @@ export function FilterItemWearable(item: Item): item is Item<WearableAssetType> 
 	return item.isWearable();
 }
 
-export type IItemLocationDescriptor = 'worn' | 'attached' | 'stored' | 'spaceInventory';
+export type IItemLocationDescriptor = 'worn' | 'attached' | 'stored' | 'spaceInventory' | 'room';

@@ -8,6 +8,7 @@ import {
 	CharacterSize,
 	ICharacterRoomData,
 	LegsPose,
+	RoomId,
 	SpaceClientInfo,
 } from 'pandora-common';
 import PIXI, { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle } from 'pixi.js';
@@ -29,6 +30,7 @@ import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilt
 type RoomCharacterInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
+	roomId: RoomId;
 	spaceInfo: Immutable<SpaceClientInfo>;
 	debugConfig: ChatroomDebugConfig;
 	projectionResolver: Immutable<RoomProjectionResolver>;
@@ -39,6 +41,7 @@ type RoomCharacterInteractiveProps = {
 type RoomCharacterDisplayProps = {
 	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
+	roomId: RoomId;
 	projectionResolver: Immutable<RoomProjectionResolver>;
 
 	debugConfig?: Immutable<ChatroomDebugConfig>;
@@ -153,6 +156,7 @@ export function useRoomCharacterPosition(position: CharacterRoomPosition, charac
 function RoomCharacterInteractiveImpl({
 	globalState,
 	character,
+	roomId,
 	characterState,
 	spaceInfo,
 	debugConfig,
@@ -233,6 +237,7 @@ function RoomCharacterInteractiveImpl({
 			ref={ characterContainer }
 			globalState={ globalState }
 			character={ character }
+			roomId={ roomId }
 			characterState={ characterState }
 			projectionResolver={ projectionResolver }
 			debugConfig={ debugConfig }
@@ -423,11 +428,13 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 export function RoomCharacterInteractive({
 	globalState,
 	character,
+	roomId,
 	...props
 }: RoomCharacterInteractiveProps): ReactElement | null {
 	const characterState = useMemo(() => globalState.characters.get(character.id), [globalState, character.id]);
 
-	if (!characterState)
+	// Do not render characters we don't have data for or that are in other rooms
+	if (!characterState || characterState.position.type !== 'normal' || characterState.position.roomId !== roomId)
 		return null;
 
 	return (
@@ -435,6 +442,7 @@ export function RoomCharacterInteractive({
 			{ ...props }
 			globalState={ globalState }
 			character={ character }
+			roomId={ roomId }
 			characterState={ characterState }
 		/>
 	);
@@ -443,11 +451,13 @@ export function RoomCharacterInteractive({
 export function RoomCharacter({
 	globalState,
 	character,
+	roomId,
 	...props
 }: RoomCharacterDisplayProps): ReactElement | null {
 	const characterState = useMemo(() => globalState.characters.get(character.id), [globalState, character.id]);
 
-	if (!characterState)
+	// Do not render characters we don't have data for or that are in other rooms
+	if (!characterState || characterState.position.type !== 'normal' || characterState.position.roomId !== roomId)
 		return null;
 
 	return (
@@ -455,6 +465,7 @@ export function RoomCharacter({
 			{ ...props }
 			globalState={ globalState }
 			character={ character }
+			roomId={ roomId }
 			characterState={ characterState }
 		/>
 	);

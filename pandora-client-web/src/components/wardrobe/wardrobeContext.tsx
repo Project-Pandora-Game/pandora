@@ -67,6 +67,11 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 				type: 'character',
 				characterId: target.id,
 			};
+		} else if (target.type === 'room') {
+			return {
+				type: 'room',
+				roomId: target.roomId,
+			};
 		} else if (target.type === 'spaceInventory') {
 			return {
 				type: 'spaceInventory',
@@ -76,6 +81,8 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 	}, [target]);
 
 	const globalState = useGlobalState(gameState);
+	const playerState = globalState.getCharacterState(player.id);
+	AssertNotNullable(playerState);
 
 	useEffect(() => {
 		if (heldItem.type === 'item') {
@@ -91,6 +98,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		target,
 		targetSelector,
 		player,
+		currentRoom: { type: 'room', roomId: playerState.getCurrentRoomId() },
 		globalState,
 		assetList,
 		heldItem,
@@ -102,7 +110,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		actionPreviewState,
 		showExtraActionButtons: settings.wardrobeExtraActionButtons,
 		showHoverPreview: settings.wardrobeHoverPreview,
-	}), [target, targetSelector, player, globalState, assetList, heldItem, focus, extraItemActions, actions, actionPreviewState, settings, shardConnector]);
+	}), [target, targetSelector, player, playerState, globalState, assetList, heldItem, focus, extraItemActions, actions, actionPreviewState, settings, shardConnector]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

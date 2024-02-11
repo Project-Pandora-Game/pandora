@@ -7,6 +7,7 @@ import type { AssetManager } from '../assetManager';
 import { FilterItemWearable } from '../item';
 import type { AssetFrameworkCharacterState } from '../state/characterState';
 import type { AssetFrameworkGlobalState } from '../state/globalState';
+import type { AssetFrameworkRoomState, RoomId } from '../state/roomState';
 import type { AssetFrameworkSpaceInventoryState } from '../state/spaceInventoryState';
 
 export class AssetFrameworkGlobalStateManipulator {
@@ -21,6 +22,8 @@ export class AssetFrameworkGlobalStateManipulator {
 	public getManipulatorFor(target: ActionTargetSelector): AppearanceRootManipulator {
 		if (target.type === 'character') {
 			return new AppearanceCharacterManipulator(this, target);
+		} else if (target.type === 'room') {
+			return new AppearanceRootManipulator(this, target);
 		} else if (target.type === 'spaceInventory') {
 			return new AppearanceRootManipulator(this, target);
 		}
@@ -30,6 +33,19 @@ export class AssetFrameworkGlobalStateManipulator {
 	public produceCharacterState(characterId: CharacterId, producer: (currentState: AssetFrameworkCharacterState) => AssetFrameworkCharacterState | null): boolean {
 		const newState = this.currentState.produceCharacterState(
 			characterId,
+			producer,
+		);
+
+		if (!newState)
+			return false;
+
+		this.currentState = newState;
+		return true;
+	}
+
+	public produceRoomState(roomId: RoomId, producer: (currentState: AssetFrameworkRoomState) => AssetFrameworkRoomState | null): boolean {
+		const newState = this.currentState.produceRoomState(
+			roomId,
 			producer,
 		);
 
@@ -64,6 +80,11 @@ export class AssetFrameworkGlobalStateManipulator {
 			return this.produceCharacterState(
 				target.characterId,
 				(character) => character.produceWithItems(wearableItems),
+			);
+		} else if (target.type === 'room') {
+			return this.produceRoomState(
+				target.roomId,
+				(character) => character.produceWithItems(newItems),
 			);
 		} else if (target.type === 'spaceInventory') {
 			return this.produceSpaceInventoryState(

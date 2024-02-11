@@ -18,6 +18,7 @@ import {
 	CleanupAssetPreferences,
 	CloneDeepMutable,
 	GameLogicCharacterServer,
+	GenerateDefaultSpaceStateBundle,
 	GenerateInitialRoomPosition,
 	GetDefaultAppearanceBundle,
 	GetLogger,
@@ -195,6 +196,7 @@ export class Character {
 
 		this._personalSpace = new PersonalSpace(
 			this,
+			data.personalRoom?.spaceState ?? GenerateDefaultSpaceStateBundle(),
 			data.personalRoom?.inventory ?? CloneDeepMutable(SPACE_INVENTORY_BUNDLE_DEFAULT),
 		);
 
@@ -541,6 +543,7 @@ export class Character {
 				const spaceState = this._personalSpace.gameState.currentState;
 				data.personalRoom = {
 					inventory: spaceState.spaceInventory.exportToBundle(),
+					spaceState: spaceState.space.exportToBundle(),
 				};
 			} else {
 				(data as Record<string, unknown>)[key] = this.data[key];

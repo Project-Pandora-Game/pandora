@@ -1,6 +1,6 @@
 import { noop } from 'lodash';
 import { Assert, AssertNotNullable, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetId, CharacterSize, GetLogger, HexColorString, ParseArrayNotEmpty, TypedEventEmitter } from 'pandora-common';
-import React, { ReactElement, createContext, useContext, useMemo, useSyncExternalStore } from 'react';
+import React, { createContext, ReactElement, useContext, useMemo, useSyncExternalStore } from 'react';
 import { BrowserRouter } from 'react-router-dom';
 import z from 'zod';
 import { AssetGraphics, AssetGraphicsLayer, CalculateImmediateLayerPointDefinition, useGraphicsAsset, useLayerDefinition } from '../assets/assetGraphics';
@@ -99,7 +99,7 @@ export class Editor extends TypedEventEmitter<{
 
 		let newState = AssetFrameworkGlobalState.createDefault(assetManager);
 		const characterState = AssetFrameworkCharacterState
-			.createDefault(assetManager, EDITOR_CHARACTER_ID, newState.spaceInventory)
+			.createDefault(assetManager, EDITOR_CHARACTER_ID, newState.space)
 			.produceWithRestrictionOverride({ type: 'safemode', allowLeaveAt: 0 });
 		newState = newState
 			.withCharacter(EDITOR_CHARACTER_ID, characterState);

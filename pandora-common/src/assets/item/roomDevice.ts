@@ -146,7 +146,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 		}
 
 		// Deployed room devices must be in a room
-		if (this.isDeployed() && context.location !== 'spaceInventory')
+		if (this.isDeployed() && context.location !== 'room')
 			return {
 				success: false,
 				error: {

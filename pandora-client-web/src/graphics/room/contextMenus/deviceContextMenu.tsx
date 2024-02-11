@@ -1,7 +1,7 @@
 import { Immutable } from 'immer';
 import { omit } from 'lodash';
 import { nanoid } from 'nanoid';
-import { AppearanceAction, ICharacterRoomData, ItemId, ItemRoomDevice } from 'pandora-common';
+import { AppearanceAction, ICharacterRoomData, ItemId, ItemRoomDevice, RoomId } from 'pandora-common';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -19,8 +19,9 @@ import { useIsRoomConstructionModeEnabled } from '../roomDevice';
 import { IRoomSceneMode } from '../roomScene';
 import { CharacterContextMenu } from './characterContextMenu';
 
-function MoveDeviceMenu({ device, setRoomSceneMode, close }: {
+function MoveDeviceMenu({ device, roomId, setRoomSceneMode, close }: {
 	device: ItemRoomDevice;
+	roomId: RoomId;
 	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	close: () => void;
 }) {
@@ -30,9 +31,9 @@ function MoveDeviceMenu({ device, setRoomSceneMode, close }: {
 			container: [],
 			itemId: device.id,
 		},
-		target: { type: 'spaceInventory' },
+		target: { type: 'room', roomId },
 		deployment: { deployed: true, position: omit(device.deployment, 'deployed') },
-	}), [device]);
+	}), [device, roomId]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const roomConstructionMode = useIsRoomConstructionModeEnabled();
 	const available = roomConstructionMode && checkResult != null && checkResult.problems.length === 0;
@@ -57,8 +58,9 @@ function MoveDeviceMenu({ device, setRoomSceneMode, close }: {
 	);
 }
 
-function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
+function DeviceSlotClear({ device, roomId, slot, children, close }: ChildrenProps & {
 	device: ItemRoomDevice;
+	roomId: RoomId;
 	slot: string;
 	close: () => void;
 }) {
@@ -68,9 +70,9 @@ function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
 			container: [],
 			itemId: device.id,
 		},
-		target: { type: 'spaceInventory' },
+		target: { type: 'room', roomId },
 		slot,
-	}), [device, slot]);
+	}), [device, roomId, slot]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.problems.length === 0;
 	const [execute, processing] = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
@@ -82,8 +84,9 @@ function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
 	);
 }
 
-function LeaveDeviceMenu({ device, close }: {
+function LeaveDeviceMenu({ device, roomId, close }: {
 	device: ItemRoomDevice;
+	roomId: RoomId;
 	close: () => void;
 }) {
 	const { player } = useWardrobeContext();
@@ -92,14 +95,15 @@ function LeaveDeviceMenu({ device, close }: {
 		return null;
 
 	return (
-		<DeviceSlotClear device={ device } slot={ slot } close={ close }>
+		<DeviceSlotClear device={ device } roomId={ roomId } slot={ slot } close={ close }>
 			Exit the device
 		</DeviceSlotClear>
 	);
 }
 
-function OccupyDeviceSlotMenu({ device, slot, character, close }: {
+function OccupyDeviceSlotMenu({ device, roomId, slot, character, close }: {
 	device: ItemRoomDevice;
+	roomId: RoomId;
 	slot: string;
 	character: ICharacter;
 	close: () => void;
@@ -112,14 +116,14 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 			container: [],
 			itemId: device.id,
 		},
-		target: { type: 'spaceInventory' },
+		target: { type: 'room', roomId },
 		slot,
 		character: {
 			type: 'character',
 			characterId: character.id,
 		},
 		itemId: `i/${nanoid()}` as const,
-	}), [device, slot, character]);
+	}), [device, roomId, slot, character]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.problems.length === 0;
 	const [execute, processing] = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
@@ -138,8 +142,9 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 	);
 }
 
-function DeviceSlotsMenu({ device, position, close }: {
+function DeviceSlotsMenu({ device, roomId, position, close }: {
 	device: ItemRoomDevice;
+	roomId: RoomId;
 	position: Readonly<PointLike>;
 	close: () => void;
 }) {
@@ -188,7 +193,7 @@ function DeviceSlotsMenu({ device, position, close }: {
 				<button onClick={ onSelectCharacter }>
 					{ character?.name } ({ character?.id })
 				</button>
-				<DeviceSlotClear device={ device } slot={ slot } close={ close }>
+				<DeviceSlotClear device={ device } roomId={ roomId } slot={ slot } close={ close }>
 					{ (character)
 						? 'Exit the device'
 						: 'Clear occupancy of the slot' }
@@ -209,7 +214,7 @@ function DeviceSlotsMenu({ device, position, close }: {
 				Enter:
 			</span>
 			{ characters.map((char) => (
-				<OccupyDeviceSlotMenu key={ char.id } device={ device } slot={ slot } character={ char } close={ close } />
+				<OccupyDeviceSlotMenu key={ char.id } device={ device } roomId={ roomId } slot={ slot } character={ char } close={ close } />
 			)) }
 			<button onClick={ () => setSlot(null) }>
 				Back to slots
@@ -218,8 +223,9 @@ function DeviceSlotsMenu({ device, position, close }: {
 	);
 }
 
-function DeviceContextMenuCurrent({ device, position, setRoomSceneMode, onClose }: {
+function DeviceContextMenuCurrent({ device, roomId, position, setRoomSceneMode, onClose }: {
 	device: ItemRoomDevice;
+	roomId: RoomId;
 	position: Readonly<PointLike>;
 	roomSceneMode: Immutable<IRoomSceneMode>;
 	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
@@ -239,19 +245,19 @@ function DeviceContextMenuCurrent({ device, position, setRoomSceneMode, onClose 
 			<span>
 				{ device.asset.definition.name }
 			</span>
-			<WardrobeContextProvider target={ { type: 'spaceInventory' } } player={ player }>
+			<WardrobeContextProvider target={ { type: 'room', roomId } } player={ player }>
 				{ menu === 'main' && (
 					<>
-						<LeaveDeviceMenu device={ device } close={ onClose } />
+						<LeaveDeviceMenu device={ device } roomId={ roomId } close={ onClose } />
 						<button onClick={ () => setMenu('slots') }>
 							Slots
 						</button>
-						<MoveDeviceMenu device={ device } setRoomSceneMode={ setRoomSceneMode } close={ onClose } />
+						<MoveDeviceMenu device={ device } roomId={ roomId } setRoomSceneMode={ setRoomSceneMode } close={ onClose } />
 					</>
 				) }
 				{ menu === 'slots' && (
 					<>
-						<DeviceSlotsMenu device={ device } position={ position } close={ onClose } />
+						<DeviceSlotsMenu device={ device } roomId={ roomId } position={ position } close={ onClose } />
 						<button onClick={ () => setMenu('main') }>
 							Back
 						</button>
@@ -265,8 +271,9 @@ function DeviceContextMenuCurrent({ device, position, setRoomSceneMode, onClose 
 	);
 }
 
-export function DeviceContextMenu({ deviceItemId, position, roomSceneMode, setRoomSceneMode, onClose }: {
+export function DeviceContextMenu({ deviceItemId, roomId, position, roomSceneMode, setRoomSceneMode, onClose }: {
 	deviceItemId: ItemId;
+	roomId: RoomId;
 	position: Readonly<PointLike>;
 	roomSceneMode: Immutable<IRoomSceneMode>;
 	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
@@ -274,7 +281,7 @@ export function DeviceContextMenu({ deviceItemId, position, roomSceneMode, setRo
 }): ReactElement | null {
 	const globalState = useGlobalState(useGameState());
 	const item = useMemo(() => {
-		const actual = globalState.getItems({ type: 'spaceInventory' });
+		const actual = globalState.getItems({ type: 'room', roomId });
 		if (!actual)
 			return null;
 
@@ -282,7 +289,7 @@ export function DeviceContextMenu({ deviceItemId, position, roomSceneMode, setRo
 			container: [],
 			itemId: deviceItemId,
 		});
-	}, [globalState, deviceItemId]);
+	}, [globalState, roomId, deviceItemId]);
 
 	useEffect(() => {
 		if (!item?.isType('roomDevice'))
@@ -295,6 +302,7 @@ export function DeviceContextMenu({ deviceItemId, position, roomSceneMode, setRo
 	return (
 		<DeviceContextMenuCurrent
 			device={ item }
+			roomId={ roomId }
 			position={ position }
 			roomSceneMode={ roomSceneMode }
 			setRoomSceneMode={ setRoomSceneMode }

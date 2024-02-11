@@ -15,6 +15,7 @@ import {
 	IRoomDeviceGraphicsLayerSprite,
 	ItemRoomDevice,
 	RoomDeviceDeploymentPosition,
+	RoomId,
 	SpaceIdSchema,
 } from 'pandora-common';
 import type { FederatedPointerEvent } from 'pixi.js';
@@ -46,6 +47,7 @@ const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
 type RoomDeviceInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
 	item: ItemRoomDevice;
+	roomId: RoomId;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
 	projectionResolver: Immutable<RoomProjectionResolver>;
 	roomSceneMode: Immutable<IRoomSceneMode>;
@@ -92,6 +94,7 @@ export function useIsRoomConstructionModeEnabled(): boolean {
 
 export function RoomDeviceMovementTool({
 	item,
+	roomId,
 	deployment,
 	projectionResolver,
 	setRoomSceneMode,
@@ -110,7 +113,8 @@ export function RoomDeviceMovementTool({
 		await shard.awaitResponse('appearanceAction', {
 			type: 'roomDeviceDeploy',
 			target: {
-				type: 'spaceInventory',
+				type: 'room',
+				roomId,
 			},
 			item: {
 				container: [],

@@ -2,6 +2,8 @@ import {
 	AssertNotNullable,
 	CharacterIdSchema,
 	ICharacterRoomData,
+	RoomId,
+	RoomIdSchema,
 } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
@@ -27,6 +29,7 @@ export function WardrobeRouter(): ReactElement | null {
 		<Routes>
 			<Route index element={ <WardrobeRouterPlayer /> } />
 			<Route path='character/:characterId' element={ <WardrobeRouterCharacter /> } />
+			<Route path='room/:roomId' element={ <WardrobeRouterRoom /> } />
 			<Route path='space-inventory' element={ <WardrobeRouterSpaceInventory /> } />
 
 			<Route path='*' element={ <Navigate to='/' replace /> } />
@@ -70,6 +73,29 @@ function WardrobeRouterCharacter(): ReactElement {
 	);
 }
 
+function WardrobeRouterRoom(): ReactElement {
+	const player = usePlayer();
+	AssertNotNullable(player);
+	const { roomId } = useParams();
+
+	const target = useMemo((): (WardrobeTarget & { type: 'room'; }) | null => {
+		const parsedRoomId = RoomIdSchema.safeParse(roomId);
+		if (!parsedRoomId.success)
+			return null;
+
+		return { type: 'room', roomId: parsedRoomId.data };
+	}, [roomId]);
+
+	if (target == null)
+		return <Link to='/'>◄ Back</Link>;
+
+	return (
+		<WardrobeContextProvider target={ target } player={ player }>
+			<WardrobeRoom roomId={ target.roomId } />
+		</WardrobeContextProvider>
+	);
+}
+
 function WardrobeRouterSpaceInventory(): ReactElement {
 	const player = usePlayer();
 	AssertNotNullable(player);
@@ -85,6 +111,27 @@ function WardrobeRouterSpaceInventory(): ReactElement {
 
 function WardrobeSpaceInventory(): ReactElement {
 	const navigate = useNavigate();
+
+	return (
+		<div className='wardrobe'>
+			<div className='wardrobeMain'>
+				<TabContainer className='flex-1'>
+					<Tab name='Space inventory'>
+						<div className='wardrobe-pane'>
+							<WardrobeItemManipulation />
+						</div>
+					</Tab>
+					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
+				</TabContainer>
+			</div>
+		</div>
+	);
+}
+
+function WardrobeRoom({ roomId }: {
+	roomId: RoomId;
+}): ReactElement {
+	const navigate = useNavigate();
 	const gameState = useGameState();
 	const characters = useSpaceCharacters();
 	const roomInfo = useObservable(gameState.currentSpace).config;
@@ -99,6 +146,7 @@ function WardrobeSpaceInventory(): ReactElement {
 						<WardrobeRoomPreview
 							characters={ characters }
 							globalState={ globalPreviewState ?? globalState }
+							roomId={ roomId }
 							info={ roomInfo }
 							isPreview={ globalPreviewState != null }
 						/>

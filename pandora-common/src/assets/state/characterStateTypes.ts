@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { ZodArrayWithInvalidDrop } from '../../validation';
 import { ItemBundleSchema } from '../item/unified';
 import { AppearancePoseSchema, GetDefaultAppearancePose } from './characterStatePose';
+import { RoomIdSchema } from './roomState';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../item/base';
@@ -49,10 +50,24 @@ export function GetRestrictionOverrideConfig(type?: RestrictionOverride['type'] 
 	return INTERACTION_OVERRIDE_CONFIG[type.type];
 }
 
+export const CharacterSpacePositionSchema = z.discriminatedUnion('type', [
+	z.object({
+		type: z.literal('normal'),
+		roomId: RoomIdSchema,
+		position: z.tuple([z.number().int(), z.number().int(), z.number().int()]),
+	}),
+	z.object({
+		type: z.literal('spectator'),
+		roomId: RoomIdSchema,
+	}),
+]);
+export type CharacterSpacePosition = z.infer<typeof CharacterSpacePositionSchema>;
+
 export const AppearanceBundleSchema = z.object({
 	requestedPose: AppearancePoseSchema.catch(() => GetDefaultAppearancePose()),
 	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
 	restrictionOverride: RestrictionOverrideSchema.optional().catch(() => undefined),
+	position: CharacterSpacePositionSchema.catch({ type: 'spectator', roomId: 'room/invalid' }),
 	clientOnly: z.boolean().optional(),
 });
 export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;
@@ -62,5 +77,6 @@ export function GetDefaultAppearanceBundle(): AppearanceBundle {
 	return {
 		items: [],
 		requestedPose: GetDefaultAppearancePose(),
+		position: { type: 'spectator', roomId: 'room/invalid' },
 	};
 }

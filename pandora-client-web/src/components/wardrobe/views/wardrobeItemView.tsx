@@ -9,6 +9,7 @@ import {
 	CloneDeepMutable,
 	EMPTY_ARRAY,
 	ITEM_LIMIT_CHARACTER_WORN,
+	ITEM_LIMIT_ROOM_INVENTORY,
 	ITEM_LIMIT_SPACE_INVENTORY,
 	Item,
 	ItemContainerPath,
@@ -27,8 +28,14 @@ import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
-import { WardrobeFocus, WardrobeHeldItem } from '../wardrobeTypes';
+import { WardrobeFocus, WardrobeHeldItem, type WardrobeTarget } from '../wardrobeTypes';
 import { useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
+
+const STORAGE_USAGE_LIMITS: Record<WardrobeTarget['type'], number> = {
+	character: ITEM_LIMIT_CHARACTER_WORN,
+	room: ITEM_LIMIT_ROOM_INVENTORY,
+	spaceInventory: ITEM_LIMIT_SPACE_INVENTORY,
+};
 
 export function InventoryItemView({
 	className,
@@ -103,10 +110,10 @@ export function InventoryItemView({
 							</div>
 						</>
 					) :
-						<StorageUsageMeter title={ title } used={ itemCount } limit={ target.type === 'character' ? ITEM_LIMIT_CHARACTER_WORN : ITEM_LIMIT_SPACE_INVENTORY } />
+						<StorageUsageMeter title={ title } used={ itemCount } limit={ STORAGE_USAGE_LIMITS[target.type] } />
 				}
 				<div className='flex-1' />
-				{ target.type === 'spaceInventory' ?
+				{ target.type === 'room' || target.type === 'spaceInventory' ?
 					<Button className='slim' onClick={ () =>
 						navigate('/wardrobe') } >
 						Switch to your wardrobe

@@ -3,6 +3,7 @@ import {
 	AccountId,
 	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
 	CharacterId,
+	GenerateDefaultSpaceStateBundle,
 	ICharacterData,
 	IsNumber,
 	SPACE_INVENTORY_BUNDLE_DEFAULT,
@@ -50,6 +51,7 @@ export function CreateSpace(data: SpaceCreationData, id?: SpaceId): SpaceData {
 		id: id ?? `r/${nanoid()}`,
 		accessId: '',
 		inventory: SPACE_INVENTORY_BUNDLE_DEFAULT,
+		spaceState: GenerateDefaultSpaceStateBundle(),
 		invites: [],
 		...data,
 	};

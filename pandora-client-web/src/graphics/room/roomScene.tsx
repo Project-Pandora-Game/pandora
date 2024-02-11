@@ -89,13 +89,19 @@ export function RoomGraphicsScene({
 		return resolved;
 	}, [roomState, info, debugConfig]);
 
+	// Use numbers to avoid accidental resetting of viewport if the size didn't actually change
+	const [
+		roomBackgroundSizeX,
+		roomBackgroundSizeY,
+	] = roomBackground.imageSize;
+
 	const projectionResolver = useRoomViewProjection(roomBackground);
 
 	const borderDraw = useCallback((g: PIXI.Graphics) => {
 		g.clear()
 			.lineStyle(2, 0x404040, 0.4)
-			.drawRect(0, 0, roomBackground.imageSize[0], roomBackground.imageSize[1]);
-	}, [roomBackground]);
+			.drawRect(0, 0, roomBackgroundSizeX, roomBackgroundSizeY);
+	}, [roomBackgroundSizeX, roomBackgroundSizeY]);
 
 	const calibrationLineDraw = useCallback((g: PIXI.Graphics) => {
 		const {
@@ -149,17 +155,17 @@ export function RoomGraphicsScene({
 			.wheel({ smooth: 10, percent: 0.1 })
 			.bounce({
 				...BASE_BOUNCE_OPTIONS,
-				bounceBox: new Rectangle(-BONCE_OVERFLOW, -BONCE_OVERFLOW, roomBackground.imageSize[0] + 2 * BONCE_OVERFLOW, roomBackground.imageSize[1] + 2 * BONCE_OVERFLOW),
+				bounceBox: new Rectangle(-BONCE_OVERFLOW, -BONCE_OVERFLOW, roomBackgroundSizeX + 2 * BONCE_OVERFLOW, roomBackgroundSizeY + 2 * BONCE_OVERFLOW),
 			});
-	}, [roomBackground]);
+	}, [roomBackgroundSizeX, roomBackgroundSizeY]);
 
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
 		forwardContexts: [directoryConnectorContext, shardConnectorContext],
-		worldWidth: roomBackground.imageSize[0],
-		worldHeight: roomBackground.imageSize[1],
+		worldWidth: roomBackgroundSizeX,
+		worldHeight: roomBackgroundSizeY,
 		backgroundColor: 0x000000,
-	}), [viewportConfig, roomBackground]);
+	}), [viewportConfig, roomBackgroundSizeX, roomBackgroundSizeY]);
 
 	return (
 		<GraphicsScene

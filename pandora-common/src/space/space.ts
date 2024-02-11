@@ -5,9 +5,9 @@ import { ROOM_INVENTORY_BUNDLE_DEFAULT } from '../assets';
 import { CharacterId, CharacterIdSchema } from '../character';
 import { AccountId, AccountIdSchema } from '../account/account';
 import { RoomInventoryBundleSchema } from '../assets/state/roomState';
-import { ArrayToRecordKeys } from '../utility';
+import { ArrayToRecordKeys, CloneDeepMutable } from '../utility';
 import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN, LIMIT_SPACE_MAX_CHARACTER_NUMBER } from '../inputLimits';
-import { RoomBackgroundDataSchema } from './room';
+import { DEFAULT_BACKGROUND, RoomBackgroundDataSchema } from './room';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/item/base';
@@ -85,7 +85,7 @@ export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 	/** Account ids that always allow to enter */
 	allow: AccountIdSchema.array().default([]),
 	/** The ID of the background or custom data */
-	background: z.union([z.string(), RoomBackgroundDataSchema.extend({ image: HexColorStringSchema.catch('#1099bb') })]),
+	background: z.union([z.string(), RoomBackgroundDataSchema.extend({ image: HexColorStringSchema.catch('#1099bb') })]).catch(CloneDeepMutable(DEFAULT_BACKGROUND)),
 });
 export type SpaceDirectoryConfig = z.infer<typeof SpaceDirectoryConfigSchema>;
 

@@ -363,7 +363,6 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 							</ul>
 						</div>
 						{ canEdit && <Button className='fill-x' onClick={ () => UpdateSpace(directoryConnector, modifiedData, () => navigate('/room')) }>Update space</Button> }
-						{ !canEdit && <Button className='fill-x' onClick={ () => navigate('/room') }>Back</Button> }
 					</div>
 				</Tab>
 				<Tab name='Visitor Management'>
@@ -386,7 +385,6 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						{ canEdit && currentSpaceId != null && <SpaceInvites spaceId={ currentSpaceId } /> }
 						<br />
 						{ canEdit && <Button className='fill-x' onClick={ () => UpdateSpace(directoryConnector, modifiedData, () => navigate('/room')) }>Update space</Button> }
-						{ !canEdit && <Button className='fill-x' onClick={ () => navigate('/room') }>Back</Button> }
 					</div>
 				</Tab>
 				<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/room') } />

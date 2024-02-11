@@ -98,7 +98,7 @@ export class Editor extends TypedEventEmitter<{
 
 		let newState = AssetFrameworkGlobalState.createDefault(assetManager);
 		const characterState = AssetFrameworkCharacterState
-			.createDefault(assetManager, EDITOR_CHARACTER_ID, newState.spaceInventory)
+			.createDefault(assetManager, EDITOR_CHARACTER_ID, newState.space)
 			.produceWithRestrictionOverride({ type: 'safemode', allowLeaveAt: 0 });
 		newState = newState
 			.withCharacter(EDITOR_CHARACTER_ID, characterState);

@@ -6,6 +6,7 @@ import { Assert, AssertNever, AssertNotNullable } from '../utility';
 import type { AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
 import type { AppearanceActionContext } from './appearanceActions';
 import type { ActionHandlerMessage, ActionHandlerMessageWithTarget, ActionTarget, ActionTargetSelector, ItemContainerPath, ItemPath } from './appearanceTypes';
+import { RoomActionTarget } from './helpers/room';
 import { SpaceInventory } from './helpers/spaceInventory';
 import type { Item, ItemId } from './item';
 import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
@@ -71,6 +72,14 @@ export class AppearanceActionProcessingContext {
 				return null;
 
 			return char.getAppearance(charState);
+		}
+
+		if (target.type === 'room') {
+			const roomState = this.manipulator.currentState.getRoomState(target.roomId);
+			if (roomState == null)
+				return null;
+
+			return new RoomActionTarget(roomState);
 		}
 
 		if (target.type === 'spaceInventory') {

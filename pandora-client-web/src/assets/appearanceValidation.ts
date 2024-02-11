@@ -137,6 +137,10 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be used in that way.`;
 			case 'canOnlyBeInOneDevice':
 				return `Character can only be in a single device at a time.`;
+			case 'tooManyRooms':
+				return `The space can have at most ${e.limit} rooms.`;
+			case 'characterUnknownRoom':
+				return `Room cannot be removed, because character ${e.character} is currently inside the room.`;
 			case 'invalid':
 				return `The action results in a generally invalid state.`;
 		}

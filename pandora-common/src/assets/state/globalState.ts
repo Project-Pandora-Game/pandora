@@ -9,7 +9,9 @@ import { AssetManager } from '../assetManager';
 import { IExportOptions } from '../modules/common';
 import { AssetFrameworkCharacterState } from './characterState';
 import { AppearanceBundleSchema, AppearanceClientBundle } from './characterStateTypes';
+import { AssetFrameworkRoomState, RoomId } from './roomState';
 import { AssetFrameworkSpaceInventoryState, SpaceInventoryBundleSchema, SpaceInventoryClientBundle } from './spaceInventoryState';
+import { AssetFrameworkSpaceState, SpaceStateBundleSchema, SpaceStateClientBundle } from './spaceState';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../../validation';
@@ -17,12 +19,14 @@ import type { } from '../item/base';
 
 export const AssetFrameworkGlobalStateBundleSchema = z.object({
 	characters: z.record(CharacterIdSchema, AppearanceBundleSchema),
+	space: SpaceStateBundleSchema,
 	spaceInventory: SpaceInventoryBundleSchema,
 	clientOnly: z.boolean().optional(),
 });
 export type AssetFrameworkGlobalStateBundle = z.infer<typeof AssetFrameworkGlobalStateBundleSchema>;
 export type AssetFrameworkGlobalStateClientBundle = AssetFrameworkGlobalStateBundle & {
 	characters: Record<CharacterId, AppearanceClientBundle>;
+	space: SpaceStateClientBundle;
 	spaceInventory: SpaceInventoryClientBundle | null;
 	clientOnly: true;
 };
@@ -35,20 +39,27 @@ export type AssetFrameworkGlobalStateClientBundle = AssetFrameworkGlobalStateBun
 export class AssetFrameworkGlobalState {
 	public readonly assetManager: AssetManager;
 	public readonly characters: ReadonlyMap<CharacterId, AssetFrameworkCharacterState>;
+	public readonly space: AssetFrameworkSpaceState;
 	public readonly spaceInventory: AssetFrameworkSpaceInventoryState;
 
 	private constructor(
 		assetManager: AssetManager,
 		characters: ReadonlyMap<CharacterId, AssetFrameworkCharacterState>,
+		space: AssetFrameworkSpaceState,
 		spaceInventory: AssetFrameworkSpaceInventoryState,
 	) {
 		this.assetManager = assetManager;
 		this.characters = characters;
+		this.space = space;
 		this.spaceInventory = spaceInventory;
 	}
 
 	public getCharacterState(character: CharacterId): AssetFrameworkCharacterState | null {
 		return this.characters.get(character) ?? null;
+	}
+
+	public getRoomState(room: RoomId): AssetFrameworkRoomState | null {
+		return this.space.getRoomState(room);
 	}
 
 	public isValid(): boolean {
@@ -63,8 +74,14 @@ export class AssetFrameworkGlobalState {
 				return r;
 		}
 
+		{
+			const r = this.space.validate();
+			if (!r.success)
+				return r;
+		}
+
 		for (const character of this.characters.values()) {
-			const r = character.validate(this.spaceInventory);
+			const r = character.validate(this.space);
 			if (!r.success)
 				return r;
 		}
@@ -81,6 +98,12 @@ export class AssetFrameworkGlobalState {
 				return null;
 
 			return character.items;
+		} else if (target.type === 'room') {
+			const room = this.getRoomState(target.roomId);
+			if (!room)
+				return null;
+
+			return room.items;
 		} else if (target.type === 'spaceInventory') {
 			return this.spaceInventory.items;
 		}
@@ -90,6 +113,7 @@ export class AssetFrameworkGlobalState {
 	public exportToBundle(options: IExportOptions = {}): AssetFrameworkGlobalStateBundle {
 		const result: AssetFrameworkGlobalStateBundle = {
 			characters: {},
+			space: this.space.exportToBundle(options),
 			spaceInventory: this.spaceInventory.exportToBundle(options),
 		};
 
@@ -103,6 +127,7 @@ export class AssetFrameworkGlobalState {
 		options.clientOnly = true;
 		const result: AssetFrameworkGlobalStateClientBundle = {
 			characters: {},
+			space: this.space.exportToClientBundle(options),
 			spaceInventory: this.spaceInventory.exportToClientBundle(options),
 			clientOnly: true,
 		};
@@ -124,31 +149,6 @@ export class AssetFrameworkGlobalState {
 		return this.withCharacter(character, newState);
 	}
 
-	public produceSpaceInventoryState(producer: (currentState: AssetFrameworkSpaceInventoryState) => AssetFrameworkSpaceInventoryState | null): AssetFrameworkGlobalState | null {
-		const newState = producer(this.spaceInventory);
-		if (!newState)
-			return null;
-
-		return this.withSpaceInventoryState(newState);
-	}
-
-	public withSpaceInventoryState(newState: AssetFrameworkSpaceInventoryState): AssetFrameworkGlobalState {
-		Assert(this.assetManager === newState.assetManager);
-		const newCharacters = new Map(this.characters);
-		for (const [id, character] of newCharacters) {
-			newCharacters.set(
-				id,
-				character.updateRoomStateLink(newState, false),
-			);
-		}
-
-		return new AssetFrameworkGlobalState(
-			this.assetManager,
-			this.characters,
-			newState,
-		);
-	}
-
 	public withCharacter(characterId: CharacterId, characterState: AssetFrameworkCharacterState | null): AssetFrameworkGlobalState {
 		Assert(characterState == null || this.assetManager === characterState.assetManager);
 
@@ -164,7 +164,63 @@ export class AssetFrameworkGlobalState {
 		return new AssetFrameworkGlobalState(
 			this.assetManager,
 			newCharacters,
+			this.space,
 			this.spaceInventory,
+		);
+	}
+
+	public produceRoomState(room: RoomId, producer: (currentState: AssetFrameworkRoomState) => AssetFrameworkRoomState | null): AssetFrameworkGlobalState | null {
+		return this.produceSpaceState((space) => space.produceRoomState(room, producer));
+	}
+
+	public withRoom(room: RoomId, roomState: AssetFrameworkRoomState | null): AssetFrameworkGlobalState {
+		return this.withSpaceState(this.space.withRoom(room, roomState));
+	}
+
+	public produceSpaceState(producer: (currentState: AssetFrameworkSpaceState) => AssetFrameworkSpaceState | null): AssetFrameworkGlobalState | null {
+		const newState = producer(this.space);
+		if (!newState)
+			return null;
+
+		return this.withSpaceState(newState);
+	}
+
+	public withSpaceState(newState: AssetFrameworkSpaceState): AssetFrameworkGlobalState {
+		Assert(this.assetManager === newState.assetManager);
+
+		const newCharacters = new Map(this.characters);
+		for (const [id, character] of newCharacters) {
+			const characterRoom = character.getPhysicalRoom(newState);
+			newCharacters.set(
+				id,
+				character.updateRoomStateLink(characterRoom, false),
+			);
+		}
+
+		return new AssetFrameworkGlobalState(
+			this.assetManager,
+			this.characters,
+			newState,
+			this.spaceInventory,
+		);
+	}
+
+	public produceSpaceInventoryState(producer: (currentState: AssetFrameworkSpaceInventoryState) => AssetFrameworkSpaceInventoryState | null): AssetFrameworkGlobalState | null {
+		const newState = producer(this.spaceInventory);
+		if (!newState)
+			return null;
+
+		return this.withSpaceInventoryState(newState);
+	}
+
+	public withSpaceInventoryState(newState: AssetFrameworkSpaceInventoryState): AssetFrameworkGlobalState {
+		Assert(this.assetManager === newState.assetManager);
+
+		return new AssetFrameworkGlobalState(
+			this.assetManager,
+			this.characters,
+			this.space,
+			newState,
 		);
 	}
 
@@ -198,6 +254,7 @@ export class AssetFrameworkGlobalState {
 		const instance = new AssetFrameworkGlobalState(
 			assetManager,
 			new Map(),
+			AssetFrameworkSpaceState.createDefault(assetManager),
 			AssetFrameworkSpaceInventoryState.createDefault(assetManager),
 		);
 
@@ -207,20 +264,23 @@ export class AssetFrameworkGlobalState {
 	public static loadFromBundle(assetManager: AssetManager, bundle: AssetFrameworkGlobalStateBundle, logger: Logger | undefined): AssetFrameworkGlobalState {
 		const characters = new Map<CharacterId, AssetFrameworkCharacterState>();
 
-		const spaceInventory = AssetFrameworkSpaceInventoryState.loadFromBundle(assetManager, bundle.spaceInventory, logger);
+		const space = AssetFrameworkSpaceState.loadFromBundle(assetManager, bundle.space, logger);
 
 		for (const [key, characterData] of Object.entries(bundle.characters)) {
 			AssertNotNullable(characterData);
 			const characterId = CharacterIdSchema.parse(key);
 			characters.set(
 				characterId,
-				AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, characterData, spaceInventory, logger),
+				AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, characterData, space, logger),
 			);
 		}
+
+		const spaceInventory = AssetFrameworkSpaceInventoryState.loadFromBundle(assetManager, bundle.spaceInventory, logger);
 
 		const resultState = new AssetFrameworkGlobalState(
 			assetManager,
 			characters,
+			space,
 			spaceInventory,
 		);
 

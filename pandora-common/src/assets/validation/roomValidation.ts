@@ -4,17 +4,17 @@ import type { AssetManager } from '../assetManager';
 import { ValidateItemsPrefix } from './validation';
 
 /** Validates items prefix, ignoring required items */
-export function ValidateSpaceInventoryItemsPrefix(assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {
-	// There is no room state while validating global inventory
+export function ValidateRoomItemsPrefix(assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {
+	// Cannot access room state while validating the room itself
 	const roomState = null;
-	return ValidateItemsPrefix(assetManager, items, roomState, 'spaceInventory');
+	return ValidateItemsPrefix(assetManager, items, roomState, 'room');
 }
 
 /** Validates the room inventory items, including all prefixes */
-export function ValidateSpaceInventoryItems(assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {
+export function ValidateRoomItems(assetManager: AssetManager, items: AppearanceItems): AppearanceValidationResult {
 	// Validate prefixes
 	for (let i = 1; i <= items.length; i++) {
-		const r = ValidateSpaceInventoryItemsPrefix(assetManager, items.slice(0, i));
+		const r = ValidateRoomItemsPrefix(assetManager, items.slice(0, i));
 		if (!r.success)
 			return r;
 	}
@@ -22,7 +22,7 @@ export function ValidateSpaceInventoryItems(assetManager: AssetManager, items: A
 	return { success: true };
 }
 
-export function SpaceInventoryLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, logger?: Logger): AppearanceItems {
+export function RoomItemsLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, logger?: Logger): AppearanceItems {
 	// Get copy we can modify
 	const input = originalInput.slice();
 
@@ -30,7 +30,7 @@ export function SpaceInventoryLoadAndValidate(assetManager: AssetManager, origin
 	let resultItems: AppearanceItems = [];
 	for (const itemToAdd of input) {
 		const tryItem: AppearanceItems = [...resultItems, itemToAdd];
-		if (!ValidateSpaceInventoryItemsPrefix(assetManager, tryItem).success) {
+		if (!ValidateRoomItemsPrefix(assetManager, tryItem).success) {
 			logger?.warning(`Skipping invalid item ${itemToAdd.id}, asset ${itemToAdd.asset.id}`);
 		} else {
 			resultItems = tryItem;

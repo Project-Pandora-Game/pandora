@@ -350,9 +350,14 @@ function OutfitPreview({ outfit }: {
 		const characterBundle: AppearanceBundle = {
 			items: templateBundle,
 			requestedPose: CloneDeepMutable(baseCharacterState.requestedPose),
+			position: {
+				type: 'normal',
+				roomId: resultState.space.getDefaultRoom().id,
+				position: [0, 0, 0],
+			},
 		};
 
-		const resultCharacterState = AssetFrameworkCharacterState.loadFromBundle(assetManager, baseCharacterState.id, characterBundle, resultState.spaceInventory, undefined);
+		const resultCharacterState = AssetFrameworkCharacterState.loadFromBundle(assetManager, baseCharacterState.id, characterBundle, resultState.space, undefined);
 		resultState = resultState.withCharacter(resultCharacterState.id, resultCharacterState);
 
 		return [resultCharacterState, resultState];

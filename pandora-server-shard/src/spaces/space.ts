@@ -11,6 +11,7 @@ import {
 	AssetFrameworkGlobalState,
 	AssetFrameworkGlobalStateContainer,
 	AssetFrameworkSpaceInventoryState,
+	AssetFrameworkSpaceState,
 	AssetManager,
 	CharacterId,
 	CharacterRoomPosition,
@@ -35,6 +36,7 @@ import {
 	SpaceInventory,
 	SpaceInventoryBundle,
 	SpaceLoadData,
+	SpaceStateBundle,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager';
 import type { Character } from '../character/character';
@@ -61,11 +63,14 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 	protected readonly logger: Logger;
 
-	constructor(inventory: SpaceInventoryBundle, logger: Logger) {
+	constructor(spaceState: SpaceStateBundle, inventory: SpaceInventoryBundle, logger: Logger) {
 		super();
 		this.logger = logger;
 		this.logger.verbose('Loaded');
 
+		if (spaceState.clientOnly) {
+			this.logger.error('Space state is client-only');
+		}
 		if (inventory.clientOnly) {
 			this.logger.error('Room inventory is client-only');
 		}
@@ -73,6 +78,9 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		const initialState = AssetFrameworkGlobalState
 			.createDefault(
 				assetManager,
+			)
+			.withSpaceState(
+				AssetFrameworkSpaceState.loadFromBundle(assetManager, spaceState, this.logger.prefixMessages('Space load:')),
 			)
 			.withSpaceInventoryState(
 				AssetFrameworkSpaceInventoryState.loadFromBundle(assetManager, inventory, this.logger.prefixMessages('Space inventory load:')),
@@ -263,7 +271,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 					assetManager,
 					character.id,
 					appearance,
-					newState.spaceInventory,
+					newState.space,
 					this.logger.prefixMessages(`Character ${character.id} join:`),
 				);
 			newState = newState.withCharacter(character.id, characterState);

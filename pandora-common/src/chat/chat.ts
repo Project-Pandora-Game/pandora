@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { RoomId } from '../assets';
 import type { AssetId } from '../assets/base';
 import { CharacterId, CharacterIdSchema } from '../character';
 import type { PronounKey } from '../character/pronouns';
@@ -80,11 +81,16 @@ export type IChatMessageActionContainerPath = {
 	module: string;
 }[];
 
+export type IChatMessageActionTargetRoom = {
+	type: 'room';
+	roomId: RoomId;
+};
+
 export type IChatMessageActionTargetSpaceInventory = {
 	type: 'spaceInventory';
 };
 
-export type IChatMessageActionTarget = IChatMessageActionTargetCharacter | IChatMessageActionTargetSpaceInventory;
+export type IChatMessageActionTarget = IChatMessageActionTargetCharacter | IChatMessageActionTargetRoom | IChatMessageActionTargetSpaceInventory;
 
 export type IChatMessageAction = {
 	type: 'action' | 'serverMessage';

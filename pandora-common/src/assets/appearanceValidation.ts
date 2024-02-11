@@ -1,3 +1,4 @@
+import type { CharacterId } from '../character/characterTypes';
 import { Logger } from '../logging';
 import { Assert, ShuffleArray } from '../utility';
 import type { Asset } from './asset';
@@ -6,7 +7,7 @@ import type { AssetId } from './base';
 import type { AssetType, WearableAssetType } from './definitions';
 import type { Item } from './item';
 import { AssetPropertiesResult, CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
-import type { AssetFrameworkSpaceInventoryState } from './state/spaceInventoryState';
+import type { AssetFrameworkRoomState } from './state/roomState';
 import { ValidateItemsPrefix } from './validation/validation';
 
 /** Appearance items are immutable, so changes can be created as new object, tested, and only then applied */
@@ -43,6 +44,16 @@ export type AppearanceValidationError =
 	}
 	| {
 		problem: 'canOnlyBeInOneDevice';
+	}
+	// Global problems (rooms inside space)
+	| {
+		problem: 'tooManyRooms';
+		limit: number;
+	}
+	| {
+		// Character is positioned in a room that doesn't exist
+		problem: 'characterUnknownRoom';
+		character: CharacterId;
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, non-unique ID, and so on...)
 	| {
@@ -98,7 +109,7 @@ export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, 
 }
 
 /** Validates items prefix, ignoring required items */
-export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>, spaceInventory: AssetFrameworkSpaceInventoryState | null): AppearanceValidationResult {
+export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>, roomState: AssetFrameworkRoomState | null): AppearanceValidationResult {
 	// Bodypart validation
 
 	// Check bodypart order
@@ -125,7 +136,7 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 	}
 
 	{
-		const r = ValidateItemsPrefix(assetManager, items, spaceInventory, 'character');
+		const r = ValidateItemsPrefix(assetManager, items, roomState, 'character');
 		if (!r.success)
 			return r;
 	}
@@ -187,10 +198,10 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 }
 
 /** Validates the appearance items, including all prefixes and required items */
-export function ValidateAppearanceItems(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>, spaceInventory: AssetFrameworkSpaceInventoryState | null): AppearanceValidationResult {
+export function ValidateAppearanceItems(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>, roomState: AssetFrameworkRoomState | null): AppearanceValidationResult {
 	// Validate prefixes
 	for (let i = 1; i <= items.length; i++) {
-		const r = ValidateAppearanceItemsPrefix(assetManager, items.slice(0, i), spaceInventory);
+		const r = ValidateAppearanceItemsPrefix(assetManager, items.slice(0, i), roomState);
 		if (!r.success)
 			return r;
 	}
@@ -210,7 +221,7 @@ export function ValidateAppearanceItems(assetManager: AssetManager, items: Appea
 	return { success: true };
 }
 
-export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, spaceInventory: AssetFrameworkSpaceInventoryState | null, logger?: Logger): AppearanceItems<WearableAssetType> {
+export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, roomState: AssetFrameworkRoomState | null, logger?: Logger): AppearanceItems<WearableAssetType> {
 	// First sort input so bodyparts are ordered correctly work
 	const input = AppearanceItemsFixBodypartOrder(assetManager, originalInput);
 
@@ -243,7 +254,7 @@ export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, o
 
 				for (const asset of possibleAssets) {
 					const tryFix = [...resultItems, assetManager.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, logger)];
-					if (ValidateAppearanceItemsPrefix(assetManager, tryFix, spaceInventory).success) {
+					if (ValidateAppearanceItemsPrefix(assetManager, tryFix, roomState).success) {
 						resultItems = tryFix;
 						break;
 					}
@@ -272,7 +283,7 @@ export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, o
 		}
 
 		const tryItem: AppearanceItems<WearableAssetType> = [...resultItems, itemToAdd];
-		if (!ValidateAppearanceItemsPrefix(assetManager, tryItem, spaceInventory).success) {
+		if (!ValidateAppearanceItemsPrefix(assetManager, tryItem, roomState).success) {
 			logger?.warning(`Skipping invalid item ${itemToAdd.id}, asset ${itemToAdd.asset.id}`);
 		} else {
 			resultItems = tryItem;

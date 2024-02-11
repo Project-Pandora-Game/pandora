@@ -13,6 +13,7 @@ import {
 	ResolveBackground,
 	RoomBackgroundData,
 	SpaceClientInfo,
+	RoomId,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, ReactNode, useCallback, useMemo } from 'react';
@@ -143,9 +144,10 @@ function WardrobeRoomBackground({
 	);
 }
 
-export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }: {
+export function WardrobeRoomPreview({ isPreview, globalState, roomId, ...graphicsProps }: {
 	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
+	roomId: RoomId;
 	info: SpaceClientInfo;
 	isPreview?: boolean;
 }): ReactElement {
@@ -170,18 +172,19 @@ export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }
 		if (itemId == null)
 			return undefined;
 
-		const item = globalState.spaceInventory.items.find((i) => i.id === itemId);
+		const item = globalState.space.getRoomState(roomId)?.items.find((i) => i.id === itemId);
 
 		if (item == null || !item.isType('roomDevice') || !item.isDeployed())
 			return undefined;
 
 		return item;
-	}, [currentFocus, globalState]);
+	}, [currentFocus, roomId, globalState]);
 
 	return (
 		<RoomPreview
 			{ ...graphicsProps }
 			globalState={ globalState }
+			roomId={ roomId }
 			overlay={ overlay }
 			focusDevice={ focusDevice }
 		/>
@@ -191,6 +194,7 @@ export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }
 interface RoomPreviewProps {
 	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
+	roomId: RoomId;
 	info: SpaceClientInfo;
 	overlay?: ReactNode;
 	focusDevice?: ItemRoomDevice;
@@ -199,13 +203,14 @@ interface RoomPreviewProps {
 export function RoomPreview({
 	characters,
 	globalState,
+	roomId,
 	info,
 	overlay,
 	focusDevice,
 }: RoomPreviewProps): ReactElement {
 	const assetManager = useAssetManager();
 
-	const roomState = globalState.spaceInventory;
+	const roomState = globalState.space.getRoomState(roomId);
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
 	const roomBackground = useMemo(() => ResolveBackground(assetManager, info.background), [assetManager, info.background]);
 	const projectionResolver = useRoomViewProjection(roomBackground);
@@ -302,6 +307,7 @@ export function RoomPreview({
 								key={ character.data.id }
 								globalState={ globalState }
 								character={ character }
+								roomId={ roomId }
 								projectionResolver={ projectionResolver }
 							/>
 						))

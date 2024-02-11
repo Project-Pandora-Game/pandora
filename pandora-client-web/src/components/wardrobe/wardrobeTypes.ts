@@ -11,6 +11,7 @@ import {
 	ItemTemplate,
 	ModuleType,
 	ActionTargetSelector,
+	RoomId,
 } from 'pandora-common';
 import { ReactElement } from 'react';
 import { ICharacter, IChatroomCharacter } from '../../character/character';
@@ -20,6 +21,7 @@ import { Immutable } from 'immer';
 
 export type WardrobeContextExtraItemActionComponent = (props: { target: ActionTargetSelector; item: ItemPath; }) => ReactElement | null;
 export type WardrobeTarget = IChatroomCharacter
+	| { type: 'room'; roomId: RoomId; }
 	| { type: 'spaceInventory'; };
 
 export type WardrobeHeldItem = {
@@ -37,6 +39,7 @@ export interface WardrobeContext {
 	target: WardrobeTarget;
 	targetSelector: ActionTargetSelector;
 	player: ICharacter;
+	currentRoom: ActionTargetSelector & { type: 'room'; };
 	globalState: AssetFrameworkGlobalState;
 	assetList: readonly Asset[];
 	heldItem: WardrobeHeldItem;

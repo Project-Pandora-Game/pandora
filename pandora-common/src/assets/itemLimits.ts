@@ -1,3 +1,7 @@
+/** The maximum number of rooms a space can have */
+export const ITEM_LIMIT_SPACE_ROOMS = 10;
+/** The maximum number of devices a room can have deployed plus the items stored inside those devices */
+export const ITEM_LIMIT_ROOM_INVENTORY = 20;
 /** The maximum number of items a space inventory can store */
 export const ITEM_LIMIT_SPACE_INVENTORY = 100;
 /** The maximum number of items across all saved outfits */

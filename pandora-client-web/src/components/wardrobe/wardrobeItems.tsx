@@ -41,6 +41,9 @@ export function useWardrobeItems(currentFocus: WardrobeFocus): {
 					asset.definition.bodypart == null
 				);
 		}
+		if (target.type === 'room') {
+			return asset.isType('roomDevice');
+		}
 		if (target.type === 'character') {
 			return asset.isType('roomDeviceWearablePart') ||
 				(

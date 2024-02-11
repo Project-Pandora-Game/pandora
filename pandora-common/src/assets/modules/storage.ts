@@ -118,7 +118,7 @@ export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TPr
 				// Skip if invalid
 				if (!item.validate({
 					location: 'stored',
-					spaceInventory: null,
+					roomState: null,
 				}).success) {
 					context.logger?.warning(`Skipping stored item reporting invalid ${itemBundle.asset}`);
 					continue;
@@ -189,7 +189,7 @@ export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TPr
 		return this.contents
 			.map((i) => i.validate({
 				location: 'stored',
-				spaceInventory: null,
+				roomState: null,
 			}))
 			.reduce(AppearanceValidationCombineResults, { success: true });
 	}

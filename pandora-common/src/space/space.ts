@@ -2,6 +2,7 @@ import { cloneDeep } from 'lodash';
 import { z } from 'zod';
 import { AccountId, AccountIdSchema } from '../account/account';
 import { SPACE_INVENTORY_BUNDLE_DEFAULT, SpaceInventoryBundleSchema } from '../assets/state/spaceInventoryState';
+import { GenerateDefaultSpaceStateBundle, SpaceStateBundleSchema } from '../assets/state/spaceState';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits';
 import { ArrayToRecordKeys, CloneDeepMutable } from '../utility';
@@ -145,6 +146,7 @@ export const SpaceDataSchema = z.object({
 	owners: AccountIdSchema.array(),
 	config: SpaceDirectoryConfigSchema,
 	inventory: SpaceInventoryBundleSchema.default(() => cloneDeep(SPACE_INVENTORY_BUNDLE_DEFAULT)),
+	spaceState: SpaceStateBundleSchema.default(() => GenerateDefaultSpaceStateBundle()),
 	invites: ZodArrayWithInvalidDrop(SpaceInviteSchema, z.record(z.unknown())).default([]),
 });
 /** Space data stored in database */
@@ -154,7 +156,7 @@ export const SPACE_DIRECTORY_UPDATEABLE_PROPERTIES = ['config', 'owners', 'invit
 export const SpaceDataDirectoryUpdateSchema = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_DIRECTORY_UPDATEABLE_PROPERTIES, true)).partial();
 export type SpaceDataDirectoryUpdate = z.infer<typeof SpaceDataDirectoryUpdateSchema>;
 
-export const SPACE_SHARD_UPDATEABLE_PROPERTIES = ['inventory'] as const satisfies readonly Exclude<keyof SpaceData, ((typeof SPACE_DIRECTORY_PROPERTIES)[number])>[];
+export const SPACE_SHARD_UPDATEABLE_PROPERTIES = ['inventory', 'spaceState'] as const satisfies readonly Exclude<keyof SpaceData, ((typeof SPACE_DIRECTORY_PROPERTIES)[number])>[];
 export const SpaceDataShardUpdateSchema = SpaceDataSchema.pick(ArrayToRecordKeys(SPACE_SHARD_UPDATEABLE_PROPERTIES, true)).partial();
 export type SpaceDataShardUpdate = z.infer<typeof SpaceDataShardUpdateSchema>;
 

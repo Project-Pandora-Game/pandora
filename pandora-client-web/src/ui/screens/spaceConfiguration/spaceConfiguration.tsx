@@ -436,7 +436,6 @@ function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
 							<th>Limited To Account</th>
 							<th>Limited To Character</th>
 							<th>Expires</th>
-							<th>Bypass Password</th>
 							<th>Actions</th>
 						</tr>
 					</thead>

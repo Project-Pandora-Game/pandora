@@ -47,8 +47,8 @@ export const DEFAULT_BACKGROUND = {
  * @param background - The background to resolve
  * @param baseUrl - Base URL to use for resolving image path, otherwise no change
  */
-export function ResolveBackground(assetManager: AssetManager, background: string | Immutable<RoomBackgroundData>, baseUrl?: string): Immutable<RoomBackgroundData> {
-	let roomBackground: Immutable<RoomBackgroundData> = DEFAULT_BACKGROUND;
+export function ResolveBackground(assetManager: AssetManager, background: string | Immutable<RoomBackgroundData> | null, baseUrl?: string): Immutable<RoomBackgroundData> {
+	let roomBackground: Immutable<RoomBackgroundData> | undefined;
 
 	if (typeof background === 'string') {
 		const definition = assetManager.getBackgroundById(background);
@@ -58,11 +58,14 @@ export function ResolveBackground(assetManager: AssetManager, background: string
 				image: baseUrl + definition.image,
 			} : definition;
 		}
-	} else {
+	} else if (background != null) {
 		roomBackground = background;
+	} else {
+		// If background is explicitely undefined try to use the first assets background to behave nicer
+		roomBackground = assetManager.getBackgrounds()[0] ?? DEFAULT_BACKGROUND;
 	}
 
-	return roomBackground;
+	return roomBackground ?? DEFAULT_BACKGROUND;
 }
 
 export const RoomBackgroundCalibrationDataSchema = z.object({

@@ -2,7 +2,7 @@ import { Immutable, freeze } from 'immer';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 import { Logger } from '../../logging';
-import { DEFAULT_BACKGROUND, ResolveBackground, RoomBackgroundData, RoomBackgroundDataSchema } from '../../space/room';
+import { ResolveBackground, RoomBackgroundData, RoomBackgroundDataSchema } from '../../space/room';
 import { Assert, CloneDeepMutable, MemoizeNoArg } from '../../utility';
 import { HexColorStringSchema, ZodArrayWithInvalidDrop, ZodTemplateString } from '../../validation';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
@@ -24,8 +24,8 @@ export type RoomBackgroundConfig = z.infer<typeof RoomBackgroundConfigSchema>;
 export const RoomBundleSchema = z.object({
 	id: RoomIdSchema,
 	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
-	/** The ID of the background or custom data */
-	background: RoomBackgroundConfigSchema,
+	/** The ID of the background or custom data; null = default */
+	background: RoomBackgroundConfigSchema.nullable(),
 	clientOnly: z.boolean().optional(),
 });
 
@@ -40,7 +40,7 @@ export function GenerateDefaultRoomBundle(): RoomBundle {
 	return {
 		id: GenerateRandomRoomId(),
 		items: [],
-		background: CloneDeepMutable(DEFAULT_BACKGROUND),
+		background: null,
 	};
 }
 
@@ -52,13 +52,13 @@ export class AssetFrameworkRoomState {
 
 	public readonly id: RoomId;
 	public readonly items: AppearanceItems;
-	public readonly background: Immutable<RoomBackgroundConfig>;
+	public readonly background: Immutable<RoomBackgroundConfig> | null;
 
 	private constructor(
 		assetManager: AssetManager,
 		id: RoomId,
 		items: AppearanceItems,
-		background: Immutable<RoomBackgroundConfig>,
+		background: Immutable<RoomBackgroundConfig> | null,
 	) {
 		this.assetManager = assetManager;
 		this.id = id;

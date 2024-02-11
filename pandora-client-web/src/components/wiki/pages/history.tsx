@@ -27,13 +27,15 @@ export function WikiHistory(): ReactElement {
 			<h4>Does Pandora want to replace BC?</h4>
 
 			<p>
-				Not at all! Pandora has a different vision, wanting to be a secure, consensual roleplaying platform that focuses on text-heavy interactions.
+				Not at all! It is even likely that our vision for Pandora is not attractive enough to a significant part of today's BC community.
+				We want Pandora to be a secure, consensual roleplaying platform that focuses on text-heavy interactions.
 				BC was a bit like that in its first year before more and more game-like features were added that changed the focus of public rooms and the
 				interests of parts of the community slowly. Also the fact that console-usage/scripts/mods/extensions in BC are so all-powerful has certain
 				drawbacks and is exploited quite often.<br />
-				In a way, Pandora will offer an improved "classic" experience, focusing on roleplaying and clear house rules. We will actively remove/hinder
-				ways with which users can cheat or gain feature advantages that others do not have. Instead of embracing inofficial scripts/mods that can pose
-				a security risk to Pandora's users, we encourage developers with feature ideas to get in touch with us about contributing to Pandora directly.
+				In a way, Pandora is offering an improved "classic" experience, focusing on roleplaying and clear house rules. We will actively remove/hinder
+				ways with which users can cheat or gain unexpected feature advantages. Instead of embracing inofficial scripts/mods that can pose
+				a security risk to Pandora's users and will lead to a fragmented user experience, we encourage developers with feature ideas to get in
+				touch with us about contributing to Pandora directly.
 			</p>
 
 			<h4>What issues with BC were seen?</h4>
@@ -42,8 +44,9 @@ export function WikiHistory(): ReactElement {
 				<ul>
 					<li>Technical quality of BC: The source code of BC was not of good quality and while it improved quite a bit over the years (to a large part
 						thanks to the same people who founded Pandora), it is essentially still something held together by many band aids and compromises.
-						Contributing to it is not exactly pleasant and beginner friendly. Starting from scratch seemed like a more sensible decision than
-						trying to improve it further.
+						Since there were unsolvable roadblocks on the way to change that, starting from scratch seemed like the better decision compared to
+						trying to clean up constantly, especially as there are no suitable quality standards and checks for new contributions, making this topic
+						an endless struggle.
 					</li>
 					<li>BC project management: The desire for a different project management approach and development process was strong.</li>
 					<li>BC server architecture: It is singular and cannot scale beyond a certain number of users, where lag and disconnects slowly get worse.

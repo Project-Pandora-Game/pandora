@@ -22,7 +22,7 @@ import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManage
 import { SpaceOwnershipRemoval, SPACE_FEATURES } from '../spaceConfiguration/spaceConfiguration';
 import { Row } from '../../../components/common/container/container';
 import './spacesSearch.scss';
-import closedDoor from '../../../icons/closed-door.svg';
+// import closedDoor from '../../../icons/closed-door.svg';
 import privateDoor from '../../../icons/private-door.svg';
 import publicDoor from '../../../icons/public-door.svg';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
@@ -175,16 +175,16 @@ function SpaceSearchEntry({ baseInfo }: {
 
 	const [show, setShow] = useState(false);
 
-	const { name, onlineCharacters, totalCharacters, maxUsers, description, hasPassword } = baseInfo;
+	const { name, onlineCharacters, totalCharacters, maxUsers, description } = baseInfo;
 
 	return (
 		<>
 			<a className='spacesSearchGrid' onClick={ () => setShow(true) } >
 				<div className='icon'>
 					<img
-						src={ hasPassword ? closedDoor : baseInfo.public ? publicDoor : privateDoor }
-						title={ hasPassword ? 'Protected space' : baseInfo.public ? 'Public space' : 'Private space' }
-						alt={ hasPassword ? 'Protected space' : baseInfo.public ? 'Public space' : 'Private space' } />
+						src={ baseInfo.public ? publicDoor : privateDoor }
+						title={ baseInfo.public ? 'Public space' : 'Private space' }
+						alt={ baseInfo.public ? 'Public space' : 'Private space' } />
 				</div>
 				<div className='entry'>
 					{ `${name} ( ${onlineCharacters} ` }
@@ -245,14 +245,13 @@ function SpaceDetailsDialog({ baseInfo, hide }: {
 
 export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeText = 'Close' }: { info: SpaceListExtendedInfo; hide?: () => void; invite?: SpaceInvite; redirectBeforeLeave?: boolean; closeText?: string; }): ReactElement {
 	const assetManager = useAssetManager();
-	const [password, setPassword] = useState('');
 	const directoryConnector = useDirectoryConnector();
 
 	const [join, processing] = useAsyncEvent(
 		(e: React.MouseEvent<HTMLButtonElement>) => {
 			e.stopPropagation();
 			SpaceJoinProgress.show('progress', 'Joining space...');
-			return directoryConnector.awaitResponse('spaceEnter', { id: info.id, password, invite: invite?.id });
+			return directoryConnector.awaitResponse('spaceEnter', { id: info.id, invite: invite?.id });
 		},
 		(resp) => {
 			if (resp.result === 'ok') {
@@ -274,13 +273,8 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 	);
 
 	const background = info.background ? ResolveBackground(assetManager, info.background, GetAssetsSourceUrl()).image : '';
-	const hasPassword = info.hasPassword;
 
 	const userIsOwner = !!info.isOwner;
-	const userIsAdmin = !!info.isAdmin;
-	const userIsAllowed = !!info.isAllowed;
-
-	const requirePassword = !userIsAdmin && !userIsOwner && !userIsAllowed && hasPassword && !invite?.bypassPassword;
 
 	return (
 		<div className='spacesSearchSpaceDetails'>
@@ -293,7 +287,6 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 			{ (background !== '' && !background.startsWith('#')) &&
 				<img className='preview' src={ background } width='200px' height='100px' /> }
 			<Row className='features'>
-				{ hasPassword && <img className='features-img' src={ closedDoor } title='Protected Space' /> }
 				{
 					SPACE_FEATURES
 						.filter((f) => info.features.includes(f.id))
@@ -321,18 +314,6 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 					</div>
 				)
 			}
-			{
-				requirePassword && (
-					<>
-						<div className='title'>This spaces requires a password to enter:</div>
-						<input className='widebox'
-							type='password'
-							value={ password }
-							onChange={ (e) => setPassword(e.target.value) }
-						/>
-					</>
-				)
-			}
 			<Row padding='medium' className='buttons' alignX='space-between' alignY='center'>
 				{
 					hide && (
@@ -347,7 +328,7 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 				{ userIsOwner && <SpaceOwnershipRemoval buttonClassName='slim' id={ info.id } name={ info.name } /> }
 				<GuardedJoinButton spaceId={ info.id } inviteId={ invite?.id } redirectBeforeLeave={ redirectBeforeLeave }>
 					<Button className='fadeDisabled'
-						disabled={ processing || (!userIsAdmin && requirePassword && !password) }
+						disabled={ processing }
 						onClick={ join }>
 						Enter Space
 					</Button>

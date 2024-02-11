@@ -113,7 +113,6 @@ export class Space {
 		return ({
 			...this.getBaseInfo(),
 			id: this.id,
-			hasPassword: this.config.password !== null,
 			onlineCharacters: Array.from(this.characters).reduce((current, character) => current + (character.isOnline() ? 1 : 0), 0),
 			totalCharacters: this.characterCount,
 			isOwner: this.isOwner(queryingAccount),
@@ -199,9 +198,6 @@ export class Space {
 		if (changes.public !== undefined) {
 			this.config.public = changes.public;
 		}
-		if (changes.password !== undefined) {
-			this.config.password = changes.password;
-		}
 		if (changes.background) {
 			this.config.background = changes.background;
 		}
@@ -217,8 +213,6 @@ export class Space {
 				changeList.push(`character limit to '${changes.maxUsers}'`);
 			if (changes.public !== undefined)
 				changeList.push(`visibility to '${this.config.public ? 'public' : 'private'}'`);
-			if (changes.password !== undefined)
-				changeList.push('password');
 			if (changes.description !== undefined)
 				changeList.push('description');
 			if (changes.admin)
@@ -380,7 +374,7 @@ export class Space {
 		// Ignore those - the requests will fail and once the space is not requestest for a bit, it will be unloaded from the directory too, actually vanishing
 	}
 
-	public checkAllowEnter(character: Character, data: { password?: string; invite?: SpaceInviteId; }, ignore: { characterLimit?: boolean; passwordOnInvite?: boolean; } = {}): 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' | 'invalidInvite' {
+	public checkAllowEnter(character: Character, inviteId?: SpaceInviteId, ignore: { characterLimit?: boolean; } = {}): 'ok' | 'errFull' | 'noAccess' | 'invalidInvite' {
 		// No-one can enter if the space is in an invalid state
 		if (!this.isValid) {
 			return 'errFull';
@@ -412,24 +406,20 @@ export class Space {
 		if (this.isAllowed(character.baseInfo.account))
 			return 'ok';
 
-		// If the space is password protected and you have given valid password, you can enter it
-		if (this.config.password !== null && data.password && data.password === this.config.password)
+		// If the space is public, you can enter it
+		if (this.config.public && this.hasAdminInside(true))
 			return 'ok';
 
-		// If the space is public, you can enter it (unless it is password protected)
-		if (this.config.public && this.hasAdminInside(true) && this.config.password === null)
-			return 'ok';
-
-		if (data.invite) {
-			const invite = this._getValidInvite(character, data.invite);
+		if (inviteId != null) {
+			const invite = this._getValidInvite(character, inviteId);
 			if (!invite)
 				return 'invalidInvite';
-			if (this.config.password === null || invite.bypassPassword || ignore.passwordOnInvite)
-				return 'ok';
+
+			return 'ok';
 		}
 
 		// Otherwise you cannot enter
-		return (this.config.password !== null && data.password) ? 'invalidPassword' : 'noAccess';
+		return 'noAccess';
 	}
 
 	private _cleanupInvites(): void {

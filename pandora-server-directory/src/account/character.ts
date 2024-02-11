@@ -621,7 +621,7 @@ export class Character {
 	}
 
 	@AsyncSynchronized('object')
-	public async joinSpace(space: Space, password?: string, invite?: SpaceInviteId): Promise<'failed' | 'ok' | 'errFull' | 'noAccess' | 'invalidPassword' | 'invalidInvite'> {
+	public async joinSpace(space: Space, invite?: SpaceInviteId): Promise<'failed' | 'ok' | 'errFull' | 'noAccess' | 'invalidInvite'> {
 		// Only loaded characters can request join into a space
 		if (!this.isOnline())
 			return 'failed';
@@ -631,7 +631,7 @@ export class Character {
 			return 'failed';
 
 		// Must be allowed to join the space (quick check before attempt, also ignores the space being full, as that will be handled by second check)
-		const allowResult1 = space.checkAllowEnter(this, { password, invite }, { characterLimit: true });
+		const allowResult1 = space.checkAllowEnter(this, invite, { characterLimit: true });
 
 		if (allowResult1 !== 'ok') {
 			return allowResult1;
@@ -672,7 +672,7 @@ export class Character {
 		}
 
 		// Must be allowed to join the space (second check to prevent race conditions)
-		const allowResult2 = space.checkAllowEnter(this, { password, invite });
+		const allowResult2 = space.checkAllowEnter(this, invite);
 
 		if (allowResult2 !== 'ok') {
 			return allowResult2;

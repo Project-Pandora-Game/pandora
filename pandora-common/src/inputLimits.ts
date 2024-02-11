@@ -3,7 +3,6 @@
 - Space admin list
 - Space banned list
 - Space owner list
-- Space password
 - Chat limits are per-segment
 */
 

@@ -61,8 +61,6 @@ export const SpaceInviteSchema = z.object({
 	characterId: CharacterIdSchema.optional(),
 	/** The time when the invite expires */
 	expires: z.number().int().optional(),
-	/** Allow joining room without password */
-	bypassPassword: z.boolean().optional(),
 });
 export type SpaceInvite = z.infer<typeof SpaceInviteSchema>;
 export const SpaceInviteCreateSchema = SpaceInviteSchema.omit({ id: true, uses: true });
@@ -86,8 +84,6 @@ export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 	admin: AccountIdSchema.array(),
 	/** Account ids that always allow to enter */
 	allow: AccountIdSchema.array().default([]),
-	/** The password of the chat room if the room is protected */
-	password: z.string().nullable(),
 	/** The ID of the background or custom data */
 	background: z.union([z.string(), RoomBackgroundDataSchema.extend({ image: HexColorStringSchema.catch('#1099bb') })]),
 });
@@ -100,8 +96,6 @@ export type SpaceDirectoryUpdate = z.infer<typeof SpaceDirectoryUpdateSchema>;
 export type SpaceListInfo = SpaceBaseInfo & {
 	/** The id of the space, never changes */
 	id: SpaceId;
-	/** Indicated if a password is required */
-	hasPassword: boolean;
 	/** The amount of online characters in the space */
 	onlineCharacters: number;
 	/** The amount of characters in the space (both online and offline) */

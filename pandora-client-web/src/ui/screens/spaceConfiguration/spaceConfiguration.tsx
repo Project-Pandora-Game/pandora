@@ -64,7 +64,6 @@ function DefaultConfig(): SpaceDirectoryConfig {
 		banned: [],
 		allow: [],
 		public: false,
-		password: null,
 		features: [],
 		background: CloneDeepMutable(DEFAULT_BACKGROUND),
 	};
@@ -208,11 +207,6 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 				<div className='input-container'>
 					<label>Public</label>
 					<Button onClick={ () => setModifiedData({ public: !currentConfig.public }) } disabled={ !canEdit } className='fadeDisabled'>{ currentConfig.public ? 'Yes' : 'No' }</Button>
-				</div>
-				<div className='input-container'>
-					<label>Entry password (optional)</label>
-					<input autoComplete='none' type='text' value={ currentConfig.password ?? '' } readOnly={ !canEdit }
-						onChange={ (event) => setModifiedData({ password: event.target.value || null }) } />
 				</div>
 			</FieldsetToggle>
 			<FieldsetToggle legend='Permissions'>
@@ -459,7 +453,6 @@ function SpaceInviteCreation({ closeDialog, addInvite }: { closeDialog: () => vo
 	const [character, setCharacter] = useState(0);
 	const [allowMaxUses, setAllowMaxUses] = useState(false);
 	const [uses, setUses] = useState(1);
-	const [bypassPassword, setBypassPassword] = useState(true);
 
 	const [onCreate, processing] = useAsyncEvent(
 		async () => {
@@ -471,7 +464,6 @@ function SpaceInviteCreation({ closeDialog, addInvite }: { closeDialog: () => vo
 					accountId: allowAccount ? account : undefined,
 					characterId: allowCharacter ? `c${character}` : undefined,
 					maxUses: allowMaxUses ? uses : undefined,
-					bypassPassword,
 				},
 			});
 		},
@@ -505,10 +497,6 @@ function SpaceInviteCreation({ closeDialog, addInvite }: { closeDialog: () => vo
 					<label>Max uses</label>
 					<input type='checkbox' checked={ allowMaxUses } onChange={ (e) => setAllowMaxUses(e.target.checked) } />
 					<input type='number' min={ 1 } value={ uses } onChange={ (e) => setUses(e.target.valueAsNumber) } readOnly={ !allowMaxUses } />
-				</div>
-				<div className='input-row'>
-					<label>Bypass password</label>
-					<input type='checkbox' checked={ bypassPassword } onChange={ (e) => setBypassPassword(e.target.checked) } />
 				</div>
 				<Row padding='medium' alignX='space-between'>
 					<Button onClick={ closeDialog }>Cancel</Button>
@@ -555,7 +543,6 @@ function SpaceInviteRow({ spaceId, invite, directoryConnector, update }: { space
 			<td>{ invite.accountId ?? '' }</td>
 			<td>{ invite.characterId ?? '' }</td>
 			<td>{ invite.expires ? <SpaceInviteExpires expires={ invite.expires } update={ update } /> : 'Never' }</td>
-			<td>{ invite.bypassPassword ? 'Yes' : 'No' }</td>
 			<td>
 				<Button onClick={ copy } disabled={ processing } className='slim'>Copy</Button>
 				<Button onClick={ onDelete } disabled={ processing } className='slim'>Delete</Button>

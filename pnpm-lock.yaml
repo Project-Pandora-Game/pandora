@@ -23,8 +23,8 @@ importers:
   pandora-client-web:
     dependencies:
       '@hcaptcha/react-hcaptcha':
-        specifier: 1.9.3
-        version: 1.9.3(react-dom@18.2.0)(react@18.2.0)
+        specifier: 1.9.4
+        version: 1.9.4(react-dom@18.2.0)(react@18.2.0)
       '@pixi/react':
         specifier: 7.1.1
         version: 7.1.1(@babel/runtime@7.23.7)(@pixi/app@7.3.3)(@pixi/constants@7.3.3)(@pixi/core@7.3.3)(@pixi/display@7.3.3)(@pixi/extensions@7.3.3)(@pixi/graphics@7.3.3)(@pixi/math@7.3.3)(@pixi/mesh-extras@7.3.3)(@pixi/mesh@7.3.3)(@pixi/particle-container@7.3.3)(@pixi/sprite-animated@7.3.3)(@pixi/sprite-tiling@7.3.3)(@pixi/sprite@7.3.3)(@pixi/text-bitmap@7.3.3)(@pixi/text@7.3.3)(@pixi/ticker@7.3.3)(prop-types@15.8.1)(react-dom@18.2.0)(react@18.2.0)
@@ -3031,8 +3031,8 @@ packages:
     resolution: {integrity: sha512-aWrYY47l42O/7OhPDOYD1Xwl0pa3tmMAOu8yNTuuhcwRme0MDw3mMNG7EhAF4wqyE8SAr7kXiWYp+ryOnfS8EQ==}
     dev: false
 
-  /@hcaptcha/react-hcaptcha@1.9.3(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-3aaXKT2tEXr317eWYNXm7JGC9z6FkhuDX46uLSFAevtVB3grxgwVxcVQuZy/Y5p6+TeQ6iDTAD0Ca2xwe4Muvw==}
+  /@hcaptcha/react-hcaptcha@1.9.4(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-tCgU1Zc9VG/JeVWhQGyVEYfatq9f/Kmlu52UY/j1rXAbHfGoW52zgM8ZRamb0gR36I2FYoUHMP8YvO+GP4SMLQ==}
     peerDependencies:
       react: '>= 16.3.0'
       react-dom: '>= 16.3.0'

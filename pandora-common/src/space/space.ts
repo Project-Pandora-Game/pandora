@@ -61,9 +61,17 @@ export const SpaceInviteSchema = z.object({
 	characterId: CharacterIdSchema.optional(),
 	/** The time when the invite expires */
 	expires: z.number().int().optional(),
+	/** Type of the invite */
+	type: z.enum(['joinMe', 'spaceBound']),
+	/** Creator of the invite */
+	createdBy: z.object({
+		accountId: AccountIdSchema,
+		characterId: CharacterIdSchema,
+		characterName: z.string(),
+	}),
 });
 export type SpaceInvite = z.infer<typeof SpaceInviteSchema>;
-export const SpaceInviteCreateSchema = SpaceInviteSchema.omit({ id: true, uses: true });
+export const SpaceInviteCreateSchema = SpaceInviteSchema.omit({ id: true, uses: true, createdBy: true });
 export type SpaceInviteCreate = z.infer<typeof SpaceInviteCreateSchema>;
 
 export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({

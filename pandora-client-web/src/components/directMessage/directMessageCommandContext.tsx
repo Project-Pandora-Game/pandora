@@ -42,7 +42,7 @@ export const DIRECT_MESSAGE_COMMANDS: readonly IClientCommand<DirectMessageComma
 						const resp = await directoryConnector.awaitResponse('spaceInvite', {
 							action: 'create',
 							data: {
-								maxUses: 1,
+								type: 'joinMe',
 								accountId: channel.account.id,
 							},
 						});

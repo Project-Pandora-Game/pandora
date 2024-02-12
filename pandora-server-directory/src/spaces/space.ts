@@ -1,4 +1,4 @@
-import { GetLogger, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceListInfo, SpaceId, SpaceLeaveReason, AssertNever, IChatMessageDirectoryAction, SpaceListExtendedInfo, IClientDirectoryArgument, Assert, AccountId, AsyncSynchronized, CharacterId, ChatActionId, SpaceInvite, SpaceInviteId, SpaceInviteCreate, LIMIT_SPACE_INVITES, TimeSpanMs, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS } from 'pandora-common';
+import { GetLogger, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceListInfo, SpaceId, SpaceLeaveReason, AssertNever, IChatMessageDirectoryAction, SpaceListExtendedInfo, IClientDirectoryArgument, Assert, AccountId, AsyncSynchronized, CharacterId, ChatActionId, SpaceInvite, SpaceInviteId, SpaceInviteCreate, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, TimeSpanMs, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS } from 'pandora-common';
 import { Character, CharacterInfo } from '../account/character';
 import { Shard } from '../shard/shard';
 import { ConnectionManagerClient } from '../networking/manager_client';
@@ -423,19 +423,12 @@ export class Space {
 	}
 
 	private _cleanupInvites(): void {
-		const now = Date.now();
-		this._invites = this._invites
-			.filter((i) => i.expires == null || i.expires >= now)
-			.filter((i) => i.maxUses == null || i.uses < i.maxUses);
+		this._invites = this._invites.filter((i) => this._isValidInvite(i));
 	}
 
 	private _getValidInvite(character: Character, id: SpaceInviteId): SpaceInvite | undefined {
 		const invite = this._invites.find((i) => i.id === id);
-		if (!invite)
-			return undefined;
-		if (invite.expires != null && invite.expires < Date.now())
-			return undefined;
-		if (invite.maxUses != null && invite.uses >= invite.maxUses)
+		if (!invite || !this._isValidInvite(invite))
 			return undefined;
 		if (invite.accountId != null && invite.accountId !== character.baseInfo.account.id)
 			return undefined;
@@ -443,6 +436,17 @@ export class Space {
 			return undefined;
 
 		return invite;
+	}
+
+	private _isValidInvite(invite: SpaceInvite): boolean {
+		if (invite.expires != null && invite.expires < Date.now())
+			return false;
+		if (invite.maxUses != null && invite.uses >= invite.maxUses)
+			return false;
+		if (invite.type === 'joinMe' && [...this.characters].every((c) => c.baseInfo.id !== invite.createdBy.characterId))
+			return false;
+
+		return true;
 	}
 
 	public getInvite(character: Character, id?: SpaceInviteId): SpaceInvite | undefined {
@@ -465,25 +469,51 @@ export class Space {
 	}
 
 	@AsyncSynchronized('object')
-	public async createInvite(data: SpaceInviteCreate): Promise<SpaceInvite | null> {
+	public async createInvite(source: Character, data: SpaceInviteCreate): Promise<SpaceInvite | 'tooManyInvites' | 'invalidData'> {
 		this._cleanupInvites();
 
-		if (this._invites.length >= LIMIT_SPACE_INVITES)
-			return null;
+		const now = Date.now();
+		const account = source.baseInfo.account;
+
+		switch (data.type) {
+			case 'joinMe': {
+				if (data.accountId == null)
+					return 'invalidData';
+
+				let dropCount = this._invites.filter((i) => i.type === 'joinMe' && i.createdBy.accountId === account.id).length - LIMIT_JOIN_ME_INVITES + 1;
+				if (dropCount > 0)
+					this._invites = this._invites.filter((i) => i.type !== 'joinMe' || i.createdBy.accountId !== account.id || dropCount-- <= 0);
+
+				data.maxUses = 1;
+				data.expires = clamp(data.expires ?? Infinity, now + TimeSpanMs(10, 'minutes'), now + TimeSpanMs(2, 'hours'));
+				break;
+			}
+			case 'spaceBound':
+				if (this._invites.filter((i) => i.type === 'spaceBound').length >= LIMIT_SPACE_BOUND_INVITES)
+					return 'tooManyInvites';
+
+				if (data.expires)
+					data.expires = Math.max(data.expires, now + TimeSpanMs(10, 'minutes'));
+
+				break;
+			default:
+				AssertNever(data.type);
+		}
 
 		let id: SpaceInviteId = `i_${nanoid()}`;
 		while (this._invites.some((i) => i.id === id)) {
 			id = `i_${nanoid()}`;
 		}
 
-		const now = Date.now();
-		const expires = clamp(data.expires ?? Infinity, now + TimeSpanMs(10, 'minutes'), now + TimeSpanMs(1, 'days'));
-
 		const invite: SpaceInvite = {
 			...data,
 			id,
-			expires,
 			uses: 0,
+			createdBy: {
+				accountId: account.id,
+				characterId: source.baseInfo.id,
+				characterName: source.baseInfo.data.name,
+			},
 		};
 
 		this._invites.push(invite);
@@ -614,6 +644,7 @@ export class Space {
 
 		this.logger.debug(`Character ${character.baseInfo.id} removed (${reason})`);
 		this.characters.delete(character);
+		this._cleanupInvites();
 		character.assignment = {
 			type: 'space-tracking',
 			space: this,
@@ -656,6 +687,7 @@ export class Space {
 
 		await this._assignedShard?.update('characters');
 		ConnectionManagerClient.onSpaceListChange();
+		await GetDatabase().updateSpace(this.id, { invites: this._invites }, null);
 	}
 
 	/**

@@ -21,6 +21,7 @@ import {
 	CloneDeepMutable,
 	SpaceInvite,
 	FormatTimeInterval,
+	AssertNever,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -436,6 +437,7 @@ function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
 							<th>Limited To Account</th>
 							<th>Limited To Character</th>
 							<th>Expires</th>
+							<th>Type</th>
 							<th>Actions</th>
 						</tr>
 					</thead>
@@ -470,6 +472,7 @@ function SpaceInviteCreation({ closeDialog, addInvite }: { closeDialog: () => vo
 					accountId: allowAccount ? account : undefined,
 					characterId: allowCharacter ? `c${character}` : undefined,
 					maxUses: allowMaxUses ? uses : undefined,
+					type: 'spaceBound',
 				},
 			});
 		},
@@ -543,6 +546,18 @@ function SpaceInviteRow({ spaceId, invite, directoryConnector, update }: { space
 		CopyToClipboard(`https://project-pandora.com/space/join/${spaceId.split('/')[1]}?invite=${invite.id}`, () => toast('Copied invite id to clipboard'));
 	}, [spaceId, invite.id]);
 
+	let type: string;
+	switch (invite.type) {
+		case 'joinMe':
+			type = 'Join Me';
+			break;
+		case 'spaceBound':
+			type = 'Space Bound';
+			break;
+		default:
+			AssertNever(invite.type);
+	}
+
 	return (
 		<tr>
 			<td>{ invite.id }</td>
@@ -550,6 +565,7 @@ function SpaceInviteRow({ spaceId, invite, directoryConnector, update }: { space
 			<td>{ invite.accountId ?? '' }</td>
 			<td>{ invite.characterId ?? '' }</td>
 			<td>{ invite.expires ? <SpaceInviteExpires expires={ invite.expires } update={ update } /> : 'Never' }</td>
+			<td>{ type }</td>
 			<td>
 				<Row>
 					<Button onClick={ copy } disabled={ processing } className='slim'>Copy</Button>

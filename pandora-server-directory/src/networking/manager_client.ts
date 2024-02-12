@@ -513,15 +513,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				};
 			}
 			case 'create': {
-				const invite = await connection.character.space.createInvite(req.data);
-				if (invite) {
-					return {
-						result: 'created',
-						invite,
-					};
-				}
+				const result = await connection.character.space.createInvite(connection.character, req.data);
+				if (typeof result === 'string')
+					return { result };
+
 				return {
-					result: 'tooManyInvites',
+					result: 'created',
+					invite: result,
 				};
 			}
 			default:

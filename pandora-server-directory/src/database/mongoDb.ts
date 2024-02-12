@@ -1,16 +1,18 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessage, SpaceDirectoryData, SpaceData, SpaceDataDirectoryUpdate, SpaceDataShardUpdate, SpaceId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, SPACE_DIRECTORY_PROPERTIES, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
+import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessage, SpaceDirectoryData, SpaceData, SpaceDataDirectoryUpdate, SpaceDataShardUpdate, SpaceId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, SPACE_DIRECTORY_PROPERTIES, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, KnownObject, CharacterDataSchema, ZodCast, SpaceDataSchema } from 'pandora-common';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { ENV } from '../config';
-const { DATABASE_URL, DATABASE_NAME } = ENV;
+const { DATABASE_URL, DATABASE_NAME, DATABASE_MIGRATION } = ENV;
 import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate } from './databaseStructure';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate, DatabaseAccountWithSecureSchema } from './databaseStructure';
 
 import AsyncLock from 'async-lock';
-import { type MatchKeysAndValues, MongoClient, CollationOptions, IndexDescription } from 'mongodb';
+import { type MatchKeysAndValues, MongoClient, CollationOptions, IndexDescription, ObjectId } from 'mongodb';
 import type { Db, Collection } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
-import _ from 'lodash';
+import _, { isEqual, omit } from 'lodash';
+import { ZodType, ZodTypeDef, z } from 'zod';
+import { diffString } from 'json-diff';
 
 const logger = GetLogger('db');
 
@@ -43,10 +45,10 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _db!: Db;
 	private _accounts!: Collection<DatabaseAccountWithSecure>;
 	private _characters!: Collection<Omit<ICharacterData, 'id'> & { id: number; }>;
+	private _accountContacts!: Collection<DatabaseAccountContact>;
 	private _spaces!: Collection<SpaceData>;
 	private _config!: Collection<{ type: DatabaseConfigType; data: DatabaseConfigData<DatabaseConfigType>; }>;
 	private _directMessages!: Collection<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>;
-	private _accountContacts!: Collection<DatabaseAccountContact>;
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
 
@@ -518,7 +520,137 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	private async _doMigrations(): Promise<void> {
-		// insert migration code here
+		if (DATABASE_MIGRATION === 'disable')
+			return;
+
+		const dryRun = DATABASE_MIGRATION !== 'migrate';
+		const migrationLog = logger.prefixMessages('Migration:');
+
+		migrationLog.alert(`Running database migration!${dryRun ? ' (dry run)' : ''}`);
+
+		// Some stats to collect throughout migration
+		const startTime = Date.now();
+		let success = true;
+		let totalCount = 0;
+		let changeCount = 0;
+
+		// A generic function that processes a single collection, applying a schema to each document in the collection
+		const performMigration = async <T extends object>(name: string, collection: Collection<T>, schema: ZodType<T, ZodTypeDef, unknown>): Promise<void> => {
+			migrationLog.info(`Processing ${name}...`);
+
+			for await (const originalData of collection.find().stream()) {
+				totalCount++;
+				const documentId: ObjectId = originalData._id;
+				Assert(documentId instanceof ObjectId);
+
+				const originalDataWithoutType: Record<string, unknown> = originalData;
+				// Parse the data using schema (this is the main bit of migration)
+				const parsedData = schema.safeParse(originalData);
+				if (!parsedData.success) {
+					success = false;
+					migrationLog.error(`Failed to migrate ${name} document ${documentId.toHexString()}:\n`, parsedData.error);
+					continue;
+				}
+
+				if (isEqual(omit(originalData, '_id'), omit(parsedData.data, '_id')))
+					continue;
+
+				// If the parse result is not equal, the data needs migration
+				changeCount++;
+
+				// Collect updated properties and keys to delete
+				const update: Partial<T> = {};
+				const keysToDelete = new Set<string>();
+				for (const [key, value] of KnownObject.entries(parsedData.data)) {
+					if (key === '_id')
+						continue;
+
+					if (value !== undefined && !isEqual(originalDataWithoutType[key as string], value)) {
+						update[key] = value;
+					}
+				}
+				for (const key of Object.keys(originalData)) {
+					if (key === '_id')
+						continue;
+
+					if (parsedData.data[key as keyof T] === undefined) {
+						keysToDelete.add(key);
+					}
+				}
+
+				// Generate a diff for manual review
+				const diff = diffString(omit(originalData, '_id'), omit(parsedData.data, '_id'), { color: false });
+				migrationLog.verbose(
+					`Migrating ${name} document ${documentId.toHexString()}...\n`,
+					`Updates keys: ${Object.keys(update).join(', ')}\n`,
+					`Removed keys: ${Array.from(keysToDelete).join(', ')}\n`,
+					`Diff:\n`,
+					diff,
+				);
+
+				if (dryRun)
+					continue;
+
+				// Actually perform the update
+				const { matchedCount } = await collection.updateOne(
+					// @ts-expect-error: This works; typechecking is just broken for some reason
+					{ _id: documentId },
+					{
+						$set: update,
+						$unset: ArrayToRecordKeys(Array.from(keysToDelete), true),
+					},
+				);
+				if (matchedCount !== 1) {
+					success = false;
+					migrationLog.error(`Failed to migrate ${name} document ${documentId.toHexString()}: Update matched count is ${matchedCount}`);
+				}
+			}
+		};
+
+		// Perform migration on all collections
+		await performMigration<DatabaseAccountWithSecure>(
+			'accounts',
+			this._accounts,
+			DatabaseAccountWithSecureSchema,
+		);
+
+		await performMigration<Omit<ICharacterData, 'id'> & { id: number; }>(
+			'characters',
+			this._characters,
+			CharacterDataSchema.omit({ id: true }).and(z.object({ id: z.number().int() })),
+		);
+
+		await performMigration<DatabaseAccountContact>(
+			'accountContacts',
+			this._accountContacts,
+			ZodCast<DatabaseAccountContact>(), // TODO: This needs a proper schema!
+		);
+
+		await performMigration<SpaceData>(
+			'spaces',
+			this._spaces,
+			SpaceDataSchema,
+		);
+
+		await performMigration<{ type: DatabaseConfigType; data: DatabaseConfigData<DatabaseConfigType>; }>(
+			'config',
+			this._config,
+			ZodCast<{ type: DatabaseConfigType; data: DatabaseConfigData<DatabaseConfigType>; }>(), // TODO: This needs a proper schema!
+		);
+
+		await performMigration<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>(
+			'directMessages',
+			this._directMessages,
+			ZodCast<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>(), // TODO: This needs a proper schema!
+		);
+
+		if (!success) {
+			migrationLog.fatal('Database migration failed.');
+			throw new Error('Database migration failed');
+		}
+
+		const endTime = Date.now();
+		migrationLog.alert(`Database migration completed in ${endTime - startTime}ms, processed ${totalCount} documents, updated ${changeCount} documents${dryRun ? ' (dry run)' : ''}`);
 	}
 }
 

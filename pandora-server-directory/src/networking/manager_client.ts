@@ -497,17 +497,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn() || !connection.character?.space)
 			throw new BadMessageError();
 
-		if (!connection.character.space.isAdmin(connection.account))
-			return { result: 'notAnOwner' };
-
 		switch (req.action) {
 			case 'list':
 				return {
 					result: 'list',
-					invites: connection.character.space.invites,
+					invites: connection.character.space.getInvites(connection.character),
 				};
 			case 'delete': {
-				const result = await connection.character.space.deleteInvite(req.id);
+				const result = await connection.character.space.deleteInvite(connection.character, req.id);
 				return {
 					result: result ? 'ok' : 'notFound',
 				};

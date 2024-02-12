@@ -41,10 +41,6 @@ export class Space {
 		return this.config.public && this.hasAdminInside(true) && this._assignedShard?.type === 'stable';
 	}
 
-	public get invites(): SpaceInvite[] {
-		return cloneDeep(this._invites);
-	}
-
 	private readonly logger: Logger;
 
 	constructor(id: SpaceId, config: SpaceDirectoryConfig, owners: AccountId[], accessId: string, invites: SpaceInvite[]) {
@@ -414,7 +410,13 @@ export class Space {
 			const invite = this._getValidInvite(character, inviteId);
 			if (!invite)
 				return 'invalidInvite';
-
+			if (invite.type === 'joinMe') {
+				const creator = [...this.characters].find((c) => c.baseInfo.id === invite.createdBy.characterId);
+				if (creator?.assignedClient == null)
+					return 'invalidInvite';
+				if (!this.config.public && !this.isAdmin(creator.baseInfo.account))
+					return 'invalidInvite';
+			}
 			return 'ok';
 		}
 
@@ -456,10 +458,19 @@ export class Space {
 		return cloneDeep(this._getValidInvite(character, id));
 	}
 
+	public getInvites(source: Character): SpaceInvite[] {
+		if (this.isAdmin(source.baseInfo.account))
+			return cloneDeep(this._invites);
+
+		return cloneDeep(this._invites.filter((i) => i.createdBy.accountId === source.baseInfo.account.id));
+	}
+
 	@AsyncSynchronized('object')
-	public async deleteInvite(id: SpaceInviteId): Promise<boolean> {
+	public async deleteInvite(source: Character, id: SpaceInviteId): Promise<boolean> {
 		const index = this._invites.findIndex((i) => i.id === id);
 		if (index < 0)
+			return false;
+		if (!this.isAdmin(source.baseInfo.account) && this._invites[index].createdBy.accountId !== source.baseInfo.account.id)
 			return false;
 
 		this._invites.splice(index, 1);
@@ -469,7 +480,7 @@ export class Space {
 	}
 
 	@AsyncSynchronized('object')
-	public async createInvite(source: Character, data: SpaceInviteCreate): Promise<SpaceInvite | 'tooManyInvites' | 'invalidData'> {
+	public async createInvite(source: Character, data: SpaceInviteCreate): Promise<SpaceInvite | 'tooManyInvites' | 'invalidData' | 'requireAdmin'> {
 		this._cleanupInvites();
 
 		const now = Date.now();
@@ -489,6 +500,8 @@ export class Space {
 				break;
 			}
 			case 'spaceBound':
+				if (!this.isAdmin(account))
+					return 'requireAdmin';
 				if (this._invites.filter((i) => i.type === 'spaceBound').length >= LIMIT_SPACE_BOUND_INVITES)
 					return 'tooManyInvites';
 

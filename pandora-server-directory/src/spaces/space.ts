@@ -412,7 +412,7 @@ export class Space {
 				return 'invalidInvite';
 			if (invite.type === 'joinMe') {
 				const creator = [...this.characters].find((c) => c.baseInfo.id === invite.createdBy.characterId);
-				if (creator?.assignedClient == null)
+				if (!creator?.isOnline())
 					return 'invalidInvite';
 				if (!this.config.public && !this.isAdmin(creator.baseInfo.account))
 					return 'invalidInvite';
@@ -424,8 +424,10 @@ export class Space {
 		return 'noAccess';
 	}
 
-	private _cleanupInvites(): void {
+	private _cleanupInvites(): boolean {
+		const size = this._invites.length;
 		this._invites = this._invites.filter((i) => this._isValidInvite(i));
+		return size !== this._invites.length;
 	}
 
 	private _getValidInvite(character: Character, id: SpaceInviteId): SpaceInvite | undefined {
@@ -525,7 +527,6 @@ export class Space {
 			createdBy: {
 				accountId: account.id,
 				characterId: source.baseInfo.id,
-				characterName: source.baseInfo.data.name,
 			},
 		};
 
@@ -579,7 +580,7 @@ export class Space {
 
 	public hasAdminInside(requireOnline: boolean): boolean {
 		for (const c of this.characters) {
-			if (requireOnline && c.assignedClient == null)
+			if (requireOnline && !c.isOnline())
 				continue;
 
 			if (this.isAdmin(c.baseInfo.account)) {
@@ -657,7 +658,7 @@ export class Space {
 
 		this.logger.debug(`Character ${character.baseInfo.id} removed (${reason})`);
 		this.characters.delete(character);
-		this._cleanupInvites();
+		const invitesChanged = this._cleanupInvites();
 		character.assignment = {
 			type: 'space-tracking',
 			space: this,
@@ -700,7 +701,9 @@ export class Space {
 
 		await this._assignedShard?.update('characters');
 		ConnectionManagerClient.onSpaceListChange();
-		await GetDatabase().updateSpace(this.id, { invites: this._invites }, null);
+
+		if (invitesChanged)
+			await GetDatabase().updateSpace(this.id, { invites: this._invites }, null);
 	}
 
 	/**

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ZodTrimedRegex, ZodTemplateString, HexColorStringSchema } from '../validation';
+import { ZodTrimedRegex, ZodTemplateString, HexColorStringSchema, ZodArrayWithInvalidDrop } from '../validation';
 import { cloneDeep } from 'lodash';
 import { ROOM_INVENTORY_BUNDLE_DEFAULT } from '../assets';
 import { CharacterId, CharacterIdSchema } from '../character';
@@ -67,7 +67,6 @@ export const SpaceInviteSchema = z.object({
 	createdBy: z.object({
 		accountId: AccountIdSchema,
 		characterId: CharacterIdSchema,
-		characterName: z.string(),
 	}),
 });
 export type SpaceInvite = z.infer<typeof SpaceInviteSchema>;
@@ -141,7 +140,7 @@ export const SpaceDataSchema = z.object({
 	owners: AccountIdSchema.array(),
 	config: SpaceDirectoryConfigSchema,
 	inventory: RoomInventoryBundleSchema.default(() => cloneDeep(ROOM_INVENTORY_BUNDLE_DEFAULT)),
-	invites: z.array(SpaceInviteSchema).default([]),
+	invites: ZodArrayWithInvalidDrop(SpaceInviteSchema, z.record(z.unknown())).default([]),
 });
 /** Space data stored in database */
 export type SpaceData = z.infer<typeof SpaceDataSchema>;

@@ -3,7 +3,7 @@ import type { DirectoryConnector } from '../../networking/directoryConnector';
 import type { useNavigate } from 'react-router';
 import type { IClientCommand } from '../../ui/components/chat/commandsProcessor';
 import type { DirectMessageChannel } from '../../networking/directMessageManager';
-import { IsSpaceAdmin, GameState } from '../gameContext/gameStateContextProvider';
+import type { GameState } from '../gameContext/gameStateContextProvider';
 import type { ShardConnector } from '../../networking/shardConnector';
 
 export interface DirectMessageCommandExecutionContext extends ICommandExecutionContext {
@@ -37,24 +37,17 @@ export const DIRECT_MESSAGE_COMMANDS: readonly IClientCommand<DirectMessageComma
 					}
 
 					const spaceId = gameState.currentSpace.value.id.split('/')[1];
-
-					if (IsSpaceAdmin(gameState.currentSpace.value.config, directoryConnector.currentAccount.value)) {
-						const resp = await directoryConnector.awaitResponse('spaceInvite', {
-							action: 'create',
-							data: {
-								maxUses: 1,
-								accountId: channel.account.id,
-							},
-						});
-						if (resp.result === 'created') {
-							await channel.sendMessage(`https://project-pandora.com/space/join/${spaceId}?invite=${resp.invite.id}`);
-						} else {
-							displayError?.('Failed to create invite: ' + resp.result);
-						}
-					} else if (gameState.currentSpace.value.config.public) {
-						await channel.sendMessage(`https://project-pandora.com/space/join/${spaceId}`);
+					const resp = await directoryConnector.awaitResponse('spaceInvite', {
+						action: 'create',
+						data: {
+							type: 'joinMe',
+							accountId: channel.account.id,
+						},
+					});
+					if (resp.result === 'created') {
+						await channel.sendMessage(`https://project-pandora.com/space/join/${spaceId}?invite=${resp.invite.id}`);
 					} else {
-						displayError?.('You are not allowed to create invites for this space');
+						displayError?.('Failed to create invite: ' + resp.result);
 					}
 				})().catch((e) => {
 					if (e instanceof Error)

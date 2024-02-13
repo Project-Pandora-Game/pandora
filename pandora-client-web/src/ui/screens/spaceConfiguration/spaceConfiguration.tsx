@@ -21,6 +21,7 @@ import {
 	CloneDeepMutable,
 	SpaceInvite,
 	FormatTimeInterval,
+	AssertNever,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -382,7 +383,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 								<NumberListArea values={ currentConfig.allow } setValues={ (allow) => setModifiedData({ allow }) } readOnly={ !canEdit } invalid={ invalidAllow } />
 							</div>
 						</FieldsetToggle>
-						{ canEdit && currentSpaceId != null && <SpaceInvites spaceId={ currentSpaceId } /> }
+						{ (!creation && currentSpaceId != null) && <SpaceInvites spaceId={ currentSpaceId } isPlayerAdmin={ isPlayerAdmin } /> }
 						<br />
 						{ canEdit && <Button className='fill-x' onClick={ () => UpdateSpace(directoryConnector, modifiedData, () => navigate('/room')) }>Update space</Button> }
 					</div>
@@ -393,7 +394,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 	);
 }
 
-function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
+function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAdmin: boolean; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const [invites, setInvites] = useState<readonly SpaceInvite[]>([]);
 	const [showCreation, setShowCreation] = useState(false);
@@ -436,6 +437,7 @@ function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
 							<th>Limited To Account</th>
 							<th>Limited To Character</th>
 							<th>Expires</th>
+							<th>Type</th>
 							<th>Actions</th>
 						</tr>
 					</thead>
@@ -447,13 +449,13 @@ function SpaceInvites({ spaceId }: { spaceId: SpaceId; }): ReactElement {
 						}
 					</tbody>
 				</table>
-				{ showCreation && <SpaceInviteCreation closeDialog={ () => setShowCreation(false) } addInvite={ addInvite } /> }
+				{ showCreation && <SpaceInviteCreation closeDialog={ () => setShowCreation(false) } addInvite={ addInvite } isPlayerAdmin={ isPlayerAdmin } /> }
 			</Column>
 		</FieldsetToggle>
 	);
 }
 
-function SpaceInviteCreation({ closeDialog, addInvite }: { closeDialog: () => void; addInvite: (invite: SpaceInvite) => void; }): ReactElement {
+function SpaceInviteCreation({ closeDialog, addInvite, isPlayerAdmin }: { closeDialog: () => void; addInvite: (invite: SpaceInvite) => void; isPlayerAdmin: boolean; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const [allowAccount, setAllowAccount] = useState(false);
 	const [account, setAccount] = useState(0);
@@ -464,12 +466,17 @@ function SpaceInviteCreation({ closeDialog, addInvite }: { closeDialog: () => vo
 
 	const [onCreate, processing] = useAsyncEvent(
 		async () => {
+			if (!isPlayerAdmin && !allowAccount) {
+				toast('Account Id is required for non-admin invites', TOAST_OPTIONS_ERROR);
+				return null;
+			}
 			return await directoryConnector.awaitResponse('spaceInvite', {
 				action: 'create',
 				data: {
 					accountId: allowAccount ? account : undefined,
 					characterId: allowCharacter ? `c${character}` : undefined,
-					maxUses: allowMaxUses ? uses : undefined,
+					maxUses: (allowMaxUses && isPlayerAdmin) ? uses : undefined,
+					type: isPlayerAdmin ? 'spaceBound' : 'joinMe',
 				},
 			});
 		},
@@ -500,11 +507,15 @@ function SpaceInviteCreation({ closeDialog, addInvite }: { closeDialog: () => vo
 					<input type='checkbox' checked={ allowCharacter } onChange={ (e) => setAllowCharacter(e.target.checked) } />
 					<input type='number' min={ 0 } value={ character } onChange={ (e) => setCharacter(e.target.valueAsNumber) } readOnly={ !allowCharacter } />
 				</div>
-				<div className='input-row'>
-					<label>Max uses</label>
-					<input type='checkbox' checked={ allowMaxUses } onChange={ (e) => setAllowMaxUses(e.target.checked) } />
-					<input type='number' min={ 1 } value={ uses } onChange={ (e) => setUses(e.target.valueAsNumber) } readOnly={ !allowMaxUses } />
-				</div>
+				{
+					isPlayerAdmin && (
+						<div className='input-row'>
+							<label>Max uses</label>
+							<input type='checkbox' checked={ allowMaxUses } onChange={ (e) => setAllowMaxUses(e.target.checked) } />
+							<input type='number' min={ 1 } value={ uses } onChange={ (e) => setUses(e.target.valueAsNumber) } readOnly={ !allowMaxUses } />
+						</div>
+					)
+				}
 				<Row padding='medium' alignX='space-between'>
 					<Button onClick={ closeDialog }>Cancel</Button>
 					<Button onClick={ onCreate } disabled={ processing }>Create</Button>
@@ -543,6 +554,18 @@ function SpaceInviteRow({ spaceId, invite, directoryConnector, update }: { space
 		CopyToClipboard(`https://project-pandora.com/space/join/${spaceId.split('/')[1]}?invite=${invite.id}`, () => toast('Copied invite id to clipboard'));
 	}, [spaceId, invite.id]);
 
+	let type: string;
+	switch (invite.type) {
+		case 'joinMe':
+			type = 'Join Me';
+			break;
+		case 'spaceBound':
+			type = 'Space Bound';
+			break;
+		default:
+			AssertNever(invite.type);
+	}
+
 	return (
 		<tr>
 			<td>{ invite.id }</td>
@@ -550,6 +573,7 @@ function SpaceInviteRow({ spaceId, invite, directoryConnector, update }: { space
 			<td>{ invite.accountId ?? '' }</td>
 			<td>{ invite.characterId ?? '' }</td>
 			<td>{ invite.expires ? <SpaceInviteExpires expires={ invite.expires } update={ update } /> : 'Never' }</td>
+			<td>{ type }</td>
 			<td>
 				<Row>
 					<Button onClick={ copy } disabled={ processing } className='slim'>Copy</Button>

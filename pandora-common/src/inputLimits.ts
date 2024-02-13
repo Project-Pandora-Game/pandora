@@ -57,4 +57,5 @@ export const LIMIT_CHARACTER_PROFILE_LENGTH = 10_000;
 export const LIMIT_OUTFIT_NAME_LENGTH = 40;
 
 /** The maximum amount of invites a space can have */
-export const LIMIT_SPACE_INVITES = 20;
+export const LIMIT_SPACE_BOUND_INVITES = 20;
+export const LIMIT_JOIN_ME_INVITES = 10;

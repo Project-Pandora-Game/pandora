@@ -315,7 +315,7 @@ export const ClientDirectorySchema = {
 				action: z.literal('list'),
 			}),
 		]),
-		response: ZodCast<{ result: 'ok' | 'notAnOwner' | 'tooManyInvites' | 'notFound'; } | {
+		response: ZodCast<{ result: 'ok' | 'requireAdmin' | 'tooManyInvites' | 'invalidData' | 'notFound'; } | {
 			result: 'list';
 			invites: SpaceInvite[];
 		} | {

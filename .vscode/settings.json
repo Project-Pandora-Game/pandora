@@ -25,6 +25,7 @@
 	"typescript.format.enable": true,
 	"typescript.format.semicolons": "insert",
 	"typescript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces": true,
+	"typescript.preferences.preferTypeOnlyAutoImports": true,
 	"typescript.preferences.quoteStyle": "single",
 	"editor.codeActionsOnSave": {
 		"source.fixAll.eslint": "explicit"

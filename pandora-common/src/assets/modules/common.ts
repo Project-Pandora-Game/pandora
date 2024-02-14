@@ -1,6 +1,6 @@
 import type { Asset } from '../asset';
 import type { ConditionOperator } from '../graphics';
-import type { ItemInteractionType } from '../../character';
+import type { ItemInteractionType } from '../../character/restrictionTypes';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item';
 import type { AppearanceModuleActionContext } from '../appearanceActions';

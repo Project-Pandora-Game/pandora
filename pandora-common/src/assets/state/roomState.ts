@@ -1,13 +1,14 @@
-import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import { Assert, MemoizeNoArg } from '../../utility';
 import { freeze } from 'immer';
 import { z } from 'zod';
-import { Item, ItemBundleSchema } from '../item';
-import { AssetManager } from '../assetManager';
 import { Logger } from '../../logging';
-import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation';
-import type { IExportOptions } from '../modules/common';
+import { Assert, MemoizeNoArg } from '../../utility';
 import { ZodArrayWithInvalidDrop } from '../../validation';
+import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
+import type { AssetManager } from '../assetManager';
+import { Item } from '../item/base';
+import { ItemBundleSchema } from '../item/unified';
+import type { IExportOptions } from '../modules/common';
+import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../item/base';

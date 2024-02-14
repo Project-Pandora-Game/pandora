@@ -1,13 +1,13 @@
 import _ from 'lodash';
-import type { ActionHandlerMessageTarget, ActionHandlerMessageTemplate, ActionHandlerMessageWithTarget, ItemContainerPath, ItemId, ItemPath, ActionTargetSelector } from './appearanceTypes';
+import type { CharacterId } from '../character';
+import { Assert, AssertNever } from '../utility';
+import type { ActionHandlerMessageTarget, ActionHandlerMessageTemplate, ActionHandlerMessageWithTarget, ActionTargetSelector, ItemContainerPath, ItemId, ItemPath } from './appearanceTypes';
+import { AppearanceItems, AppearanceItemsFixBodypartOrder } from './appearanceValidation';
 import type { AssetManager } from './assetManager';
 import type { Item } from './item';
+import type { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
 import type { IItemModule } from './modules/common';
-import { AppearanceItems, AppearanceItemsFixBodypartOrder } from './appearanceValidation';
-import { Assert, AssertNever } from '../utility';
-import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
-import { CharacterId } from '../character';
-import { AssetFrameworkGlobalState } from './state/globalState';
+import type { AssetFrameworkGlobalState } from './state/globalState';
 
 export function SplitContainerPath(path: ItemContainerPath): {
 	itemPath: ItemPath;

@@ -1,13 +1,14 @@
 import { freeze, Immutable } from 'immer';
+import type { GameLogicCharacter } from '../gameLogic';
 import type { Logger } from '../logging';
 import { Assert, AssertNotNullable, CloneDeepMutable } from '../utility';
 import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
-import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetsDefinitionFile, AssetsPosePresets, AssetType, RoomBackgroundTagDefinition, RoomBackgroundInfo } from './definitions';
 import type { AssetId } from './base';
+import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetsDefinitionFile, AssetType, RoomBackgroundInfo, RoomBackgroundTagDefinition } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
-import { LoadItemFromBundle, Item, ItemBundle, ItemTemplate, CreateItemBundleFromTemplate } from './item';
-import type { GameLogicCharacter } from '../gameLogic';
+import { CreateItemBundleFromTemplate, Item, ItemBundle, ItemTemplate, LoadItemFromBundle } from './item';
+import type { AssetsPosePresets } from './state/characterStatePose';
 
 export class AssetManager {
 	protected readonly _assets: ReadonlyMap<AssetId, Asset>;

@@ -1,11 +1,11 @@
 import type { Immutable } from 'immer';
 import { Logger } from '../../logging';
+import type { ICharacterRoomData } from '../../networking/shard_client';
 import { AssertNever } from '../../utility';
+import { AssetPreferencesSubsystemClient } from '../assetPreferences';
 import { InteractionSubsystemClient } from '../interactions/interactionSubsystemClient';
 import { GameLogicPermissionClient, IPermissionProvider, PermissionGroup } from '../permissions';
 import { GameLogicCharacter } from './character';
-import { AssetPreferencesSubsystemClient } from '../assetPreferences';
-import { ICharacterRoomData } from '../../networking';
 
 export class GameLogicCharacterClient extends GameLogicCharacter {
 	public readonly _dataGetter: () => Immutable<ICharacterRoomData>;

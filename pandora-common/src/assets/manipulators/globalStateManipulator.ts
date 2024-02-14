@@ -3,11 +3,11 @@ import { AssertNever } from '../../utility';
 import { AppearanceCharacterManipulator, AppearanceRootManipulator } from '../appearanceHelpers';
 import { ActionTargetSelector } from '../appearanceTypes';
 import { AppearanceItems } from '../appearanceValidation';
-import { AssetManager } from '../assetManager';
+import type { AssetManager } from '../assetManager';
 import { FilterItemWearable } from '../item';
-import { AssetFrameworkCharacterState } from '../state/characterState';
-import { AssetFrameworkGlobalState } from '../state/globalState';
-import { AssetFrameworkRoomState } from '../state/roomState';
+import type { AssetFrameworkCharacterState } from '../state/characterState';
+import type { AssetFrameworkGlobalState } from '../state/globalState';
+import type { AssetFrameworkRoomState } from '../state/roomState';
 
 export class AssetFrameworkGlobalStateManipulator {
 	public readonly assetManager: AssetManager;

@@ -1,16 +1,17 @@
-import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon, IExportOptions } from './common';
+import { Immutable } from 'immer';
 import { z } from 'zod';
+import { ItemInteractionType } from '../../character/restrictionTypes';
+import type { InteractionId } from '../../gameLogic/interactions';
+import { IsNotNullable, Satisfies } from '../../utility';
+import type { AppearanceModuleActionContext } from '../appearanceActions';
+import { ItemId } from '../appearanceTypes';
+import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidationResult } from '../appearanceValidation';
+import type { AssetManager } from '../assetManager';
 import { AssetSize, AssetSizeMapping } from '../definitions';
 import { ConditionOperator } from '../graphics';
-import { ItemInteractionType } from '../../character/restrictionsManager';
-import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidationResult } from '../appearanceValidation';
-import { CreateItemBundleFromTemplate, IItemCreationContext, IItemLoadContext, IItemValidationContext, Item, ItemBundleSchema, ItemTemplateSchema, LoadItemFromBundle } from '../item';
-import { AssetManager } from '../assetManager';
-import { ItemId } from '../appearanceTypes';
-import type { AppearanceModuleActionContext } from '../appearanceActions';
-import { IsNotNullable, Satisfies } from '../../utility';
-import { Immutable } from 'immer';
-import type { InteractionId } from '../../gameLogic/interactions';
+import { IItemCreationContext, IItemLoadContext, IItemValidationContext, Item } from '../item/base';
+import { CreateItemBundleFromTemplate, ItemBundleSchema, ItemTemplateSchema, LoadItemFromBundle } from '../item/unified';
+import { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../item/base';

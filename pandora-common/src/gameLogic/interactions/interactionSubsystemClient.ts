@@ -1,6 +1,6 @@
 import { AssertNotNullable } from '../../utility';
 import { ArrayIncludesGuard } from '../../validation';
-import { GameLogicCharacterClient } from '../character';
+import type { GameLogicCharacterClient } from '../character/characterClient';
 import { IPermissionProvider } from '../permissions';
 import { GameLogicPermissionClient } from '../permissions/permissionClient';
 import { INTERACTION_IDS, InteractionId } from './_interactionConfig';

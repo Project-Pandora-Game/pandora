@@ -1,15 +1,15 @@
-import { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon } from './common';
-import { z } from 'zod';
-import { ConditionOperator } from '../graphics';
-import { ItemInteractionType } from '../../character/restrictionsManager';
-import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item';
-import { AssetManager } from '../assetManager';
-import type { AppearanceModuleActionContext } from '../appearanceActions';
-import { CharacterIdSchema } from '../../character/characterTypes';
-import { Satisfies } from '../../utility';
 import { Immutable } from 'immer';
+import { z } from 'zod';
+import { CharacterIdSchema } from '../../character/characterTypes';
+import { ItemInteractionType } from '../../character/restrictionTypes';
 import type { InteractionId } from '../../gameLogic/interactions';
+import { Satisfies } from '../../utility';
+import type { AppearanceModuleActionContext } from '../appearanceActions';
+import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
+import type { AssetManager } from '../assetManager';
+import type { ConditionOperator } from '../graphics';
+import type { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item';
+import { IAssetModuleDefinition, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common';
 
 export interface IModuleTypedOption<TProperties> {
 	/** ID if this variant, must be unique */

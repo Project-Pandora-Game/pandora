@@ -1,10 +1,11 @@
-import { z } from 'zod';
-import { HexColorString } from '../validation';
-import { AssetManager, CharacterSize } from '../assets';
 import { Immutable } from 'immer';
-import { CloneDeepMutable } from '../utility';
-import type { CharacterRoomPosition } from '../character/characterData';
 import { clamp } from 'lodash';
+import { z } from 'zod';
+import { CharacterSize } from '../assets/graphics/graphics';
+import type { AssetManager } from '../assets/assetManager';
+import type { CharacterRoomPosition } from '../character/characterData';
+import { CloneDeepMutable } from '../utility';
+import { HexColorString } from '../validation';
 
 export const RoomBackgroundDataSchema = z.object({
 	/** The background image of a room */

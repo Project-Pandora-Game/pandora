@@ -1,10 +1,10 @@
+import { Immutable } from 'immer';
+import { AssetPreferenceType, AssetPreferencesPublic, IsAssetPreferenceType } from '../../character';
 import { KnownObject } from '../../utility';
-import { GameLogicCharacterClient } from '../character';
+import type { GameLogicCharacterClient } from '../character/characterClient';
 import { IPermissionProvider } from '../permissions';
 import { GameLogicPermissionClient } from '../permissions/permissionClient';
 import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferencesSubsystem } from './assetPreferencesSubsystem';
-import { AssetPreferenceType, AssetPreferencesPublic, IsAssetPreferenceType } from '../../character';
-import { Immutable } from 'immer';
 
 export class AssetPreferencesSubsystemClient extends AssetPreferencesSubsystem implements IPermissionProvider<GameLogicPermissionClient> {
 	private readonly _character: GameLogicCharacterClient;

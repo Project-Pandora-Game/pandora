@@ -4,17 +4,18 @@ import { z, ZodTypeDef } from 'zod';
 import type { Asset } from '../asset';
 import type { AssetType } from '../definitions';
 
-import { ItemIdSchema, ItemId } from '../appearanceTypes';
-import { ItemTemplate, IItemCreationContext, ItemBundle, AssetFrameworkOutfit, IItemLoadContext, ItemColorBundleSchema, Item } from './base';
-import { AssertNever, Assert } from '../../utility';
-import { CreateModuleDataFromTemplate, ItemModuleDataSchema } from '../modules';
-import { HexRGBAColorStringSchema } from '../../validation';
+import { LIMIT_OUTFIT_NAME_LENGTH } from '../../inputLimits';
+import { Assert, AssertNever } from '../../utility';
+import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop } from '../../validation';
+import { ItemId, ItemIdSchema } from '../appearanceTypes';
 import { AssetIdSchema } from '../base';
+import { CreateModuleDataFromTemplate, ItemModuleDataSchema, ItemModuleTemplateSchema } from '../modules';
+import { IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemTemplate } from './base';
 
+import { ItemLock, LockBundleSchema } from './lock';
 import { ItemPersonal } from './personal';
 import { ItemRoomDevice, RoomDeviceBundleSchema, RoomDeviceLinkSchema } from './roomDevice';
 import { ItemRoomDeviceWearablePart } from './roomDeviceWearablePart';
-import { ItemLock, LockBundleSchema } from './lock';
 
 /**
  * Serializable data bundle containing information about an item.
@@ -37,6 +38,30 @@ export const ItemBundleSchema: z.ZodType<ItemBundle, ZodTypeDef, unknown> = z.ob
 export function GenerateRandomItemId(): ItemId {
 	return `i/${nanoid()}`;
 }
+
+/**
+ * Data describing an item configuration as a template.
+ * Used for creating a new item from the template with matching configuration.
+ * @note The schema is duplicated because of TS limitation on inferring type that contains recursion (through storage/lock modules)
+ */
+export const ItemTemplateSchema: z.ZodType<ItemTemplate, ZodTypeDef, unknown> = z.object({
+	asset: AssetIdSchema,
+	templateName: z.string().optional(),
+	color: ItemColorBundleSchema.optional(),
+	modules: z.record(z.lazy(() => ItemModuleTemplateSchema)).optional(),
+});
+
+export const AssetFrameworkOutfitSchema = z.object({
+	name: z.string().max(LIMIT_OUTFIT_NAME_LENGTH),
+	items: ZodArrayWithInvalidDrop(ItemTemplateSchema, z.record(z.unknown())),
+});
+export type AssetFrameworkOutfit = z.infer<typeof AssetFrameworkOutfitSchema>;
+
+export const AssetFrameworkOutfitWithIdSchema = AssetFrameworkOutfitSchema.extend({
+	/** Random ID used to keep track of the outfits to avoid having to address them by index */
+	id: z.string(),
+});
+export type AssetFrameworkOutfitWithId = z.infer<typeof AssetFrameworkOutfitWithIdSchema>;
 
 export function CreateItemBundleFromTemplate(template: ItemTemplate, context: IItemCreationContext): ItemBundle | undefined {
 	const asset = context.assetManager.getAssetById(template.asset);

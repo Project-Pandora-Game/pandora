@@ -49,11 +49,3 @@ export class Asset<Type extends AssetType = AssetType> {
 		return !this.isType('roomDeviceWearablePart');
 	}
 }
-
-export function FilterAssetType<T extends AssetType>(type: T): (asset: Asset) => asset is Asset<T> {
-	return (asset): asset is Asset<T> => asset.isType(type);
-}
-
-export function FilterAssetWearable(asset: Asset): asset is Asset<WearableAssetType> {
-	return asset.isWearable();
-}

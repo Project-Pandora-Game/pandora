@@ -1,15 +1,15 @@
 import { z } from 'zod';
-import { AppearanceBundleSchema } from '../assets/state/characterState';
+import { AccountIdSchema } from '../account';
+import { AppearanceBundleSchema } from '../assets/state/characterStateTypes';
+import { RoomInventoryBundleSchema } from '../assets/state/roomState';
+import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
+import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
+import type { SpaceId } from '../space/space';
+import { ArrayToRecordKeys } from '../utility';
 import { CharacterNameSchema, HexColorStringSchema, ZodTruncate } from '../validation';
+import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesServerSchema } from './assetPreferences';
 import { CharacterId, CharacterIdSchema } from './characterTypes';
 import { PronounKeySchema } from './pronouns';
-import { SpaceId } from '../space/space';
-import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
-import { AccountIdSchema } from '../account';
-import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesServerSchema } from './assetPreferences';
-import { ArrayToRecordKeys } from '../utility';
-import { RoomInventoryBundleSchema } from '../assets';
-import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../assets/item/base';

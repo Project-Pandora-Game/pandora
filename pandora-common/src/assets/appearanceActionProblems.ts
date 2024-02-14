@@ -1,6 +1,6 @@
-import { Restriction } from '../character';
-import { AppearanceValidationError } from './appearanceValidation';
-import { ModuleActionError, ModuleActionFailure } from './modules';
+import type { Restriction } from '../character/restrictionTypes';
+import type { AppearanceValidationError } from './appearanceValidation';
+import type { ModuleActionError, ModuleActionFailure } from './modules';
 
 export type AppearanceActionFailure = {
 	type: 'moduleActionFailure';

@@ -1,7 +1,7 @@
 import { Logger } from '../../logging';
 import { AssertNotNullable } from '../../utility';
 import { ArrayIncludesGuard } from '../../validation';
-import { GameLogicCharacter } from '../character';
+import type { GameLogicCharacter } from '../character/character';
 import { GameLogicPermissionServer, IPermissionProvider } from '../permissions';
 import { INTERACTION_IDS, InteractionId } from './_interactionConfig';
 import { GameLogicInteractionServer } from './interaction';

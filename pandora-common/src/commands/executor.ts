@@ -1,4 +1,4 @@
-import { IEmpty } from '../networking';
+import type { IEmpty } from '../networking';
 import { CommandArgumentNeedsQuotes, CommandArgumentQuote, CommandParseQuotedString, CommandParseQuotedStringTrim } from './parsers';
 
 export interface ICommandExecutionContext {

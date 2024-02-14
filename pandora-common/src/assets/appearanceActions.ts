@@ -1,25 +1,26 @@
-import { z } from 'zod';
-import { CharacterId, CharacterIdSchema, RestrictionResult } from '../character';
-import { Assert, AssertNever, ShuffleArray } from '../utility';
-import { AssetManager } from './assetManager';
-import { WearableAssetType } from './definitions';
-import { ActionMessageTemplateHandler, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema, ActionTarget, CharacterSelectorSchema, ActionTargetSelectorSchema } from './appearanceTypes';
-import { ItemInteractionType } from '../character/restrictionsManager';
-import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure } from './modules';
-import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, ItemTemplateSchema, RoomDeviceDeploymentChange, RoomDeviceDeploymentChangeSchema } from './item';
-import { AppearanceRootManipulator } from './appearanceHelpers';
-import { AppearanceItems, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import { isEqual, sample } from 'lodash';
 import { nanoid } from 'nanoid';
-import { Asset, FilterAssetType } from './asset';
-import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
-import { AppearanceArmPoseSchema, AppearancePoseSchema, RestrictionOverride } from './state/characterState';
-import { AssetFrameworkGlobalStateContainer } from './state/globalState';
-import { CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
-import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
-import { GameLogicCharacter } from '../gameLogic';
-import { ActionSpaceContext } from '../space/space';
+import { z } from 'zod';
+import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
+import { ItemInteractionType, RestrictionResult } from '../character/restrictionTypes';
+import type { GameLogicCharacter } from '../gameLogic';
 import { PseudoRandom } from '../math/pseudoRandom';
+import type { ActionSpaceContext } from '../space/space';
+import { Assert, AssertNever, ShuffleArray } from '../utility';
+import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
+import { AppearanceRootManipulator } from './appearanceHelpers';
+import { ActionMessageTemplateHandler, ActionTarget, ActionTargetSelectorSchema, CharacterSelectorSchema, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema } from './appearanceTypes';
+import { AppearanceItems, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
+import type { Asset } from './asset';
+import type { AssetManager } from './assetManager';
+import { WearableAssetType } from './definitions';
+import { CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
+import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, ItemTemplateSchema, RoomDeviceDeploymentChange, RoomDeviceDeploymentChangeSchema } from './item';
+import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure } from './modules';
+import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
+import { AppearanceArmPoseSchema, AppearancePoseSchema } from './state/characterStatePose';
+import { RestrictionOverride } from './state/characterStateTypes';
+import { AssetFrameworkGlobalStateContainer } from './state/globalState';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../validation';
@@ -828,7 +829,7 @@ export function ActionAppearanceRandomize({
 		// Find possible assets (intentionally using only always-present attributes, not statically collected ones)
 		const possibleAssets = assetManager
 			.getAllAssets()
-			.filter(FilterAssetType('personal'))
+			.filter((asset): asset is Asset<'personal'> => asset.isType('personal'))
 			.filter((asset) => asset.definition.bodypart == null &&
 				asset.definition.attributes?.provides?.includes(requestedAttribute) &&
 				asset.definition.allowRandomizerUsage === true &&

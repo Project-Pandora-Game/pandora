@@ -1,15 +1,17 @@
-import { Asset } from '../asset';
-import type { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon, IExportOptions } from './common';
-import { z } from 'zod';
-import { ConditionOperator } from '../graphics';
-import { ItemInteractionType } from '../../character/restrictionsManager';
-import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import { CreateItemBundleFromTemplate, IItemCreationContext, IItemLoadContext, IItemValidationContext, ItemBundleSchema, ItemLock, ItemLockActionSchema, ItemTemplateSchema, LoadItemFromBundle } from '../item';
-import { AssetManager } from '../assetManager';
-import type { AppearanceModuleActionContext } from '../appearanceActions';
-import { Satisfies } from '../../utility';
 import { Immutable } from 'immer';
+import { z } from 'zod';
+import { ItemInteractionType } from '../../character/restrictionTypes';
 import type { InteractionId } from '../../gameLogic/interactions';
+import { Satisfies } from '../../utility';
+import type { AppearanceModuleActionContext } from '../appearanceActions';
+import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
+import type { Asset } from '../asset';
+import type { AssetManager } from '../assetManager';
+import { ConditionOperator } from '../graphics';
+import { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item/base';
+import { ItemLock, ItemLockActionSchema } from '../item/lock';
+import { CreateItemBundleFromTemplate, ItemBundleSchema, ItemTemplateSchema, LoadItemFromBundle } from '../item/unified';
+import type { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../item/base';

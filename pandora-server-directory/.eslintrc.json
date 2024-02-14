@@ -4,5 +4,9 @@
 		"node": true
 	},
 	"ignorePatterns": [".git", "node_modules", "dist"],
-	"root": true
+	"root": true,
+	"rules": {
+		// Disabled recommended rules
+		"import/no-cycle": "off"
+	}
 }

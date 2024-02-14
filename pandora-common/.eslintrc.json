@@ -1,6 +1,8 @@
 {
 	"extends": [
 		"eslint:recommended",
+		"plugin:import/recommended",
+		"plugin:import/typescript",
 		"plugin:@typescript-eslint/recommended",
 		"plugin:@typescript-eslint/stylistic"
 	],
@@ -177,6 +179,7 @@
 		"no-multiple-empty-lines": ["warn", { "max": 1, "maxBOF": 0, "maxEOF": 1 }],
 		"operator-assignment": "warn",
 		"prefer-object-spread": "warn",
+		"import/no-cycle": "warn",
 		// Style rules
 		"dot-notation": "warn",
 		"semi": "off",

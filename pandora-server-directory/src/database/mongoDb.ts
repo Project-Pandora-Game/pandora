@@ -1,19 +1,17 @@
-import { CharacterId, ICharacterData, ICharacterSelfInfoUpdate, GetLogger, IDirectoryDirectMessage, SpaceDirectoryData, SpaceData, SpaceDataDirectoryUpdate, SpaceDataShardUpdate, SpaceId, Assert, AccountId, IsObject, AssertNotNullable, ArrayToRecordKeys, SPACE_DIRECTORY_PROPERTIES, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, KnownObject, CharacterDataSchema, ZodCast, SpaceDataSchema } from 'pandora-common';
-import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
-import { ENV } from '../config';
-const { DATABASE_URL, DATABASE_NAME, DATABASE_MIGRATION } = ENV;
-import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate, DatabaseAccountWithSecureSchema } from './databaseStructure';
-
 import AsyncLock from 'async-lock';
-import { type MatchKeysAndValues, MongoClient, CollationOptions, IndexDescription, ObjectId } from 'mongodb';
-import type { Db, Collection } from 'mongodb';
+import { diffString } from 'json-diff';
+import _, { isEqual, omit } from 'lodash';
+import { CollationOptions, Collection, Db, IndexDescription, MatchKeysAndValues, MongoClient, ObjectId } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
-import _, { isEqual, omit } from 'lodash';
+import { AccountId, ArrayToRecordKeys, Assert, AssertNotNullable, CharacterDataSchema, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, IDirectoryDirectMessage, IsObject, KnownObject, SPACE_DIRECTORY_PROPERTIES, SpaceData, SpaceDataDirectoryUpdate, SpaceDataSchema, SpaceDataShardUpdate, SpaceDirectoryData, SpaceId, ZodCast } from 'pandora-common';
 import { ZodType, ZodTypeDef, z } from 'zod';
-import { diffString } from 'json-diff';
+import { ENV } from '../config';
+import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountContact, DatabaseAccountContactType, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdate, DatabaseAccountWithSecure, DatabaseAccountWithSecureSchema, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DirectMessageAccounts } from './databaseStructure';
+import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
 
+const { DATABASE_URL, DATABASE_NAME, DATABASE_MIGRATION } = ENV;
 const logger = GetLogger('db');
 
 const ACCOUNTS_COLLECTION_NAME = 'accounts';

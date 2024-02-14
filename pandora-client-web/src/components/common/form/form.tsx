@@ -1,15 +1,15 @@
+import HCaptcha from '@hcaptcha/react-hcaptcha';
 import classNames from 'classnames';
+import { capitalize } from 'lodash';
 import React, { FormEvent, HTMLProps, ReactElement, RefAttributes, useCallback } from 'react';
 import { FieldError } from 'react-hook-form';
 import { Link, LinkProps } from 'react-router-dom';
-import HCaptcha from '@hcaptcha/react-hcaptcha';
-import { Promisable } from 'type-fest';
+import type { Promisable } from 'type-fest';
+import { z } from 'zod';
 import { CommonProps } from '../../../common/reactTypes';
-import './form.scss';
 import { useObservable } from '../../../observable';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
-import { z } from 'zod';
-import { capitalize } from 'lodash';
+import './form.scss';
 
 export interface AuthFormProps extends CommonProps {
 	dirty?: boolean;

@@ -1,36 +1,36 @@
 import { noop } from 'lodash';
 import {
+	AssertNotNullable,
 	EMPTY,
 	GetLogger,
-	SpaceListInfo,
+	ResolveBackground,
 	SpaceExtendedInfoResponse,
 	SpaceId,
-	AssertNotNullable,
+	SpaceInvite,
 	SpaceInviteId,
 	SpaceListExtendedInfo,
-	SpaceInvite,
+	SpaceListInfo,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { Button } from '../../../components/common/button/button';
-import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
-import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
-import { ModalDialog } from '../../../components/dialog/dialog';
-import { ResolveBackground } from 'pandora-common';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
-import { SpaceOwnershipRemoval, SPACE_FEATURES } from '../spaceConfiguration/spaceConfiguration';
+import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
+import { ModalDialog } from '../../../components/dialog/dialog';
+import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
+import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
+import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { SPACE_FEATURES, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration';
 import './spacesSearch.scss';
+import { toast } from 'react-toastify';
+import { useAsyncEvent } from '../../../common/useEvent';
+import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
+import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 // import closedDoor from '../../../icons/closed-door.svg';
 import privateDoor from '../../../icons/private-door.svg';
 import publicDoor from '../../../icons/public-door.svg';
-import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { useObservable } from '../../../observable';
-import { useAsyncEvent } from '../../../common/useEvent';
-import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
-import { toast } from 'react-toastify';
 
 const TIPS: readonly string[] = [
 	`You can move your character inside a room by dragging the character name below her.`,

@@ -1,6 +1,5 @@
 import classNames from 'classnames';
-import React from 'react';
-import { ReactElement } from 'react';
+import React, { ReactElement } from 'react';
 import { CommonProps } from '../../../common/reactTypes';
 import { ScssOverflow, ScssSpacing } from '../../../styles/constants';
 import './container.scss';

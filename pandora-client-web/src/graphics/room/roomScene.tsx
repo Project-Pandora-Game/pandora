@@ -1,43 +1,41 @@
+import { Container, Graphics } from '@pixi/react';
+import { Immutable } from 'immer';
+import { clamp } from 'lodash';
 import {
+	Assert,
 	AssertNever,
 	AssertNotNullable,
 	AssetFrameworkGlobalState,
+	CalculateBackgroundDataFromCalibrationData,
 	FilterItemType,
 	ICharacterRoomData,
-	SpaceClientInfo,
 	ItemId,
 	ItemRoomDevice,
 	ResolveBackground,
-	CalculateBackgroundDataFromCalibrationData,
 	RoomBackgroundData,
-	Assert,
+	SpaceClientInfo,
 } from 'pandora-common';
+import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
-import { Container, Graphics } from '@pixi/react';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
-import { useEvent } from '../../common/useEvent';
-import { Character, useCharacterData } from '../../character/character';
-import { ShardConnector } from '../../networking/shardConnector';
-import { useSpaceInfo, useSpaceCharacters, useCharacterRestrictionsManager, useCharacterState, useGlobalState } from '../../components/gameContext/gameStateContextProvider';
-import { useShardConnector } from '../../components/gameContext/shardConnectorContextProvider';
-import { usePlayer, usePlayerState } from '../../components/gameContext/playerContextProvider';
-import { IBounceOptions } from 'pixi-viewport';
-import { CommonProps } from '../../common/reactTypes';
 import { useAssetManager } from '../../assets/assetManager';
-import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomDebug';
-import { PixiViewportSetupCallback } from '../pixiViewport';
-import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphicsScene';
-import { RoomCharacterInteractive } from './roomCharacter';
-import { PointLike } from '../graphicsCharacter';
-import { RoomDeviceInteractive, RoomDeviceMovementTool, useIsRoomConstructionModeEnabled } from './roomDevice';
-import { useGameState } from '../../components/gameContext/gameStateContextProvider';
-import { shardConnectorContext } from '../../components/gameContext/shardConnectorContextProvider';
-import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
-import { CharacterContextMenu } from './contextMenus/characterContextMenu';
+import { Character, useCharacterData } from '../../character/character';
+import { CommonProps } from '../../common/reactTypes';
+import { useEvent } from '../../common/useEvent';
 import { directoryConnectorContext, useCurrentAccountSettings } from '../../components/gameContext/directoryConnectorContextProvider';
-import { Immutable } from 'immer';
-import { clamp } from 'lodash';
+import { useCharacterRestrictionsManager, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../components/gameContext/gameStateContextProvider';
+import { usePlayer, usePlayerState } from '../../components/gameContext/playerContextProvider';
+import { shardConnectorContext, useShardConnector } from '../../components/gameContext/shardConnectorContextProvider';
+import { ShardConnector } from '../../networking/shardConnector';
+import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomDebug';
+import { PointLike } from '../graphicsCharacter';
+import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphicsScene';
+import { PixiViewportSetupCallback } from '../pixiViewport';
+import { CharacterContextMenu } from './contextMenus/characterContextMenu';
+import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
+import { RoomCharacterInteractive } from './roomCharacter';
+import { RoomDeviceInteractive, RoomDeviceMovementTool, useIsRoomConstructionModeEnabled } from './roomDevice';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {

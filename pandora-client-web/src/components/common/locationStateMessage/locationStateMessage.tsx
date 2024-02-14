@@ -1,7 +1,6 @@
 import classNames from 'classnames';
 import { IsObject } from 'pandora-common';
-import React from 'react';
-import { HTMLProps, ReactElement } from 'react';
+import React, { HTMLProps, ReactElement } from 'react';
 import { useLocation } from 'react-router-dom';
 
 export interface LocationStateMessageProps extends HTMLProps<HTMLParagraphElement> {

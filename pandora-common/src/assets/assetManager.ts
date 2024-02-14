@@ -186,6 +186,7 @@ export class AssetManager {
 			assetManager: this,
 			doLoadTimeCleanup: false,
 			logger,
+			loadItemFromBundle: LoadItemFromBundle,
 		});
 	}
 
@@ -194,6 +195,7 @@ export class AssetManager {
 		const bundle: ItemBundle | undefined = CreateItemBundleFromTemplate(template, {
 			assetManager: this,
 			creator,
+			createItemBundleFromTemplate: CreateItemBundleFromTemplate,
 		});
 
 		// Fail if creating bundle failed for any reason
@@ -214,6 +216,7 @@ export class AssetManager {
 			assetManager: this,
 			doLoadTimeCleanup: true,
 			logger,
+			loadItemFromBundle: LoadItemFromBundle,
 		});
 	}
 }

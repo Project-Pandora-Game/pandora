@@ -10,7 +10,7 @@ import type { AssetManager } from '../assetManager';
 import { AssetSize, AssetSizeMapping } from '../definitions';
 import { ConditionOperator } from '../graphics';
 import { IItemCreationContext, IItemLoadContext, IItemValidationContext, Item } from '../item/base';
-import { CreateItemBundleFromTemplate, ItemBundleSchema, ItemTemplateSchema, LoadItemFromBundle } from '../item/unified';
+import { __internal_ItemBundleSchemaRecursive, __internal_ItemTemplateSchemaRecursive } from '../item/_internalRecursion';
 import { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common';
 
 // Fix for pnpm resolution weirdness
@@ -23,13 +23,13 @@ export interface IModuleConfigStorage extends IModuleConfigCommon<'storage'> {
 
 export const ModuleItemDataStorageSchema = z.object({
 	type: z.literal('storage'),
-	contents: z.array(z.lazy(() => ItemBundleSchema)),
+	contents: z.array(__internal_ItemBundleSchemaRecursive),
 });
 export type IModuleItemDataStorage = Satisfies<z.infer<typeof ModuleItemDataStorageSchema>, IModuleItemDataCommon<'storage'>>;
 
 export const ModuleItemTemplateStorageSchema = z.object({
 	type: z.literal('storage'),
-	contents: z.array(z.lazy(() => ItemTemplateSchema)),
+	contents: z.array(__internal_ItemTemplateSchemaRecursive),
 });
 export type IModuleItemTemplateStorage = z.infer<typeof ModuleItemTemplateStorageSchema>;
 
@@ -50,7 +50,7 @@ export class StorageModuleDefinition implements IAssetModuleDefinition<'storage'
 	public makeDataFromTemplate(_config: IModuleConfigStorage, template: IModuleItemTemplateStorage, context: IItemCreationContext): IModuleItemDataStorage {
 		return {
 			type: 'storage',
-			contents: template.contents.map((contentTemplate) => CreateItemBundleFromTemplate(contentTemplate, context)).filter(IsNotNullable),
+			contents: template.contents.map((contentTemplate) => context.createItemBundleFromTemplate(contentTemplate, context)).filter(IsNotNullable),
 		};
 	}
 
@@ -102,7 +102,7 @@ export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TPr
 				context.logger?.warning(`Skipping unknown asset ${itemBundle.asset}`);
 				continue;
 			}
-			const item = LoadItemFromBundle(
+			const item = context.loadItemFromBundle(
 				asset,
 				itemBundle,
 				context,

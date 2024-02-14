@@ -328,6 +328,7 @@ function OutfitPreview({ outfit }: {
 			const itemBundle = CreateItemBundleFromTemplate(itemTemplate, {
 				assetManager,
 				creator: player.gameLogicCharacter,
+				createItemBundleFromTemplate: CreateItemBundleFromTemplate,
 			});
 			if (itemBundle != null) {
 				const asset = assetManager.getAssetById(itemBundle.asset);

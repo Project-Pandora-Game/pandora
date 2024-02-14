@@ -16,6 +16,7 @@ import { ItemLock, LockBundleSchema } from './lock';
 import { ItemPersonal } from './personal';
 import { ItemRoomDevice, RoomDeviceBundleSchema, RoomDeviceLinkSchema } from './roomDevice';
 import { ItemRoomDeviceWearablePart } from './roomDeviceWearablePart';
+import { __internal_InitRecursiveItemSchemas } from './_internalRecursion';
 
 /**
  * Serializable data bundle containing information about an item.
@@ -62,6 +63,8 @@ export const AssetFrameworkOutfitWithIdSchema = AssetFrameworkOutfitSchema.exten
 	id: z.string(),
 });
 export type AssetFrameworkOutfitWithId = z.infer<typeof AssetFrameworkOutfitWithIdSchema>;
+
+__internal_InitRecursiveItemSchemas(ItemBundleSchema, ItemTemplateSchema);
 
 export function CreateItemBundleFromTemplate(template: ItemTemplate, context: IItemCreationContext): ItemBundle | undefined {
 	const asset = context.assetManager.getAssetById(template.asset);

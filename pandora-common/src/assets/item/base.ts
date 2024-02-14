@@ -4,6 +4,7 @@ import { z } from 'zod';
 import type { GameLogicCharacter } from '../../gameLogic';
 import type { Satisfies } from '../../utility';
 import type { ItemId } from '../appearanceTypes';
+import type { Asset } from '../asset';
 import type { AssetManager } from '../assetManager';
 import type { AssetColorization, AssetType, WearableAssetType } from '../definitions';
 import type { AssetFrameworkRoomState } from '../state/roomState';
@@ -61,11 +62,13 @@ export type IItemLoadContext = {
 	assetManager: AssetManager;
 	doLoadTimeCleanup: boolean;
 	logger?: Logger;
+	loadItemFromBundle<T extends AssetType>(asset: Asset<T>, bundle: ItemBundle, context: IItemLoadContext): Item<T>;
 };
 
 export type IItemCreationContext = {
 	assetManager: AssetManager;
 	creator: GameLogicCharacter;
+	createItemBundleFromTemplate(template: ItemTemplate, context: IItemCreationContext): ItemBundle | undefined;
 };
 
 export type IItemValidationContext = {

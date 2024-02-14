@@ -10,7 +10,7 @@ import type { AssetManager } from '../assetManager';
 import { ConditionOperator } from '../graphics';
 import { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item/base';
 import { ItemLock, ItemLockActionSchema } from '../item/lock';
-import { CreateItemBundleFromTemplate, ItemBundleSchema, ItemTemplateSchema, LoadItemFromBundle } from '../item/unified';
+import { __internal_ItemBundleSchemaRecursive, __internal_ItemTemplateSchemaRecursive } from '../item/_internalRecursion';
 import type { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common';
 
 // Fix for pnpm resolution weirdness
@@ -27,13 +27,13 @@ export interface IModuleConfigLockSlot<TProperties> extends IModuleConfigCommon<
 
 export const ModuleItemDataLockSlotSchema = z.object({
 	type: z.literal('lockSlot'),
-	lock: z.lazy(() => ItemBundleSchema).nullable(),
+	lock: __internal_ItemBundleSchemaRecursive.nullable(),
 });
 export type IModuleItemDataLockSlot = Satisfies<z.infer<typeof ModuleItemDataLockSlotSchema>, IModuleItemDataCommon<'lockSlot'>>;
 
 export const ModuleItemTemplateLockSlotSchema = z.object({
 	type: z.literal('lockSlot'),
-	lock: z.lazy(() => ItemTemplateSchema).nullable(),
+	lock: __internal_ItemTemplateSchemaRecursive.nullable(),
 });
 export type IModuleItemTemplateLockSlot = z.infer<typeof ModuleItemTemplateLockSlotSchema>;
 
@@ -54,7 +54,7 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 	public makeDataFromTemplate<TProperties>(_config: IModuleConfigLockSlot<TProperties>, template: IModuleItemTemplateLockSlot, context: IItemCreationContext): IModuleItemDataLockSlot {
 		return {
 			type: 'lockSlot',
-			lock: template.lock != null ? (CreateItemBundleFromTemplate(template.lock, context) ?? null) : null,
+			lock: template.lock != null ? (context.createItemBundleFromTemplate(template.lock, context) ?? null) : null,
 		};
 	}
 
@@ -116,7 +116,7 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 				context.logger?.warning(`Skipping unknown lock asset ${data.lock.asset}`);
 				lock = null;
 			} else {
-				const item = LoadItemFromBundle(
+				const item = context.loadItemFromBundle(
 					asset,
 					data.lock,
 					context,

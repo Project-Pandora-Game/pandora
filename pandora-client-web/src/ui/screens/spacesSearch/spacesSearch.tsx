@@ -265,6 +265,7 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 			}
 		},
 		{
+			updateAfterUnmount: true,
 			errorHandler: (error) => {
 				GetLogger('JoinSpace').warning('Error during space join', error);
 				SpaceJoinProgress.show('error',

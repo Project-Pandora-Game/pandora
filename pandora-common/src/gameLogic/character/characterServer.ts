@@ -1,4 +1,4 @@
-import { AssetManager } from '../../assets';
+import type { AssetManager } from '../../assets/assetManager';
 import type { ICharacterData } from '../../character';
 import { Logger } from '../../logging';
 import { AssertNever } from '../../utility';

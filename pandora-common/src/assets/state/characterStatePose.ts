@@ -2,8 +2,11 @@ import { Immutable, freeze, produce } from 'immer';
 import _ from 'lodash';
 import { z } from 'zod';
 import type { AssetManager } from '../assetManager';
-import type { BoneType, CharacterView, LegsPose } from '../graphics';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, CharacterViewSchema, LegsPoseSchema } from '../graphics';
+import type { BoneType, CharacterView, LegsPose } from '../graphics/graphics';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, CharacterViewSchema, LegsPoseSchema } from '../graphics/graphics';
+
+// Fix for pnpm resolution weirdness
+import type { } from '../../validation';
 
 export const AppearanceArmPoseSchema = z.object({
 	position: ArmPoseSchema.catch('front'),

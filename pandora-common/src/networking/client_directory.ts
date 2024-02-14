@@ -8,7 +8,7 @@ import { EmailAddressSchema, HexColorString, HexColorStringSchema, PasswordSha51
 import { z } from 'zod';
 import { Satisfies } from '../utility';
 import { Immutable } from 'immer';
-import { AssetFrameworkOutfitWithIdSchema } from '../assets';
+import { AssetFrameworkOutfitWithIdSchema } from '../assets/item/unified';
 import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from '../inputLimits';
 
 // Fix for pnpm resolution weirdness

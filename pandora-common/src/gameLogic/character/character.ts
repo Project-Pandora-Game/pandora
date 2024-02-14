@@ -1,5 +1,6 @@
 import { AccountId } from '../../account';
-import { AssetFrameworkCharacterState, CharacterAppearance } from '../../assets';
+import { CharacterAppearance } from '../../assets/appearance';
+import { AssetFrameworkCharacterState } from '../../assets/state/characterState';
 import { CharacterId, CharacterRestrictionsManager, ICharacterMinimalData } from '../../character';
 import { TypedEventEmitter } from '../../event';
 import type { ActionSpaceContext } from '../../space/space';

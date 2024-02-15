@@ -1,9 +1,9 @@
 import { EvalItemPath } from './appearanceHelpers';
-import type { ItemPath, ActionTargetRoomInventory } from './appearanceTypes';
-import { AppearanceItems } from './appearanceValidation';
-import { AssetManager } from './assetManager';
-import { Item } from './item';
-import { AssetFrameworkRoomState } from './state/roomState';
+import type { ActionTargetRoomInventory, ItemPath } from './appearanceTypes';
+import type { AppearanceItems } from './appearanceValidation';
+import type { AssetManager } from './assetManager';
+import type { Item } from './item';
+import type { AssetFrameworkRoomState } from './state/roomState';
 
 export class RoomInventory implements ActionTargetRoomInventory {
 	public readonly roomState: AssetFrameworkRoomState;

@@ -1,5 +1,6 @@
 import { isEqual, uniqWith } from 'lodash';
-import type { CharacterId, CharacterRestrictionsManager, ItemInteractionType, RestrictionResult } from '../character';
+import type { ItemInteractionType, RestrictionResult } from '../character/restrictionTypes';
+import type { CharacterId, CharacterRestrictionsManager } from '../character';
 import type { GameLogicCharacter, GameLogicPermission, InteractionId } from '../gameLogic';
 import { Assert, AssertNever, AssertNotNullable } from '../utility';
 import type { AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';

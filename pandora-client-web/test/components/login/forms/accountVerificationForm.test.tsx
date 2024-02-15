@@ -1,5 +1,5 @@
 import { RenderResult, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { userEvent } from '@testing-library/user-event';
 import React, { ReactElement } from 'react';
 import { authFormDataContext, AuthFormDataState } from '../../../../src/components/login/authFormDataProvider';
 import { AccountVerificationForm } from '../../../../src/components/login/forms/accountVerificationForm';

@@ -1,6 +1,6 @@
 import { Logger } from '../logging';
 import { Assert, ShuffleArray } from '../utility';
-import { FilterAssetType } from './asset';
+import type { Asset } from './asset';
 import type { AssetManager } from './assetManager';
 import type { AssetType, WearableAssetType } from './definitions';
 import type { AssetId } from './base';
@@ -240,7 +240,7 @@ export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, o
 				// Find matching bodypart assets
 				const possibleAssets = assetManager
 					.getAllAssets()
-					.filter(FilterAssetType('personal'))
+					.filter((asset): asset is Asset<'personal'> => asset.isType('personal'))
 					.filter((asset) => asset.definition.bodypart === bodypart.name && asset.definition.allowRandomizerUsage === true);
 
 				ShuffleArray(possibleAssets);

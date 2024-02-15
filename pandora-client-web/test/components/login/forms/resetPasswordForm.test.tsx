@@ -1,5 +1,5 @@
 import { screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { userEvent } from '@testing-library/user-event';
 import React from 'react';
 import { ResetPasswordForm } from '../../../../src/components/login/forms/resetPasswordForm';
 import { RenderWithRouterAndProviders } from '../../../testUtils';

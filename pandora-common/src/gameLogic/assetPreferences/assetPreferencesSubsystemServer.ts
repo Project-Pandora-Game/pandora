@@ -1,10 +1,10 @@
 import { Immutable, freeze } from 'immer';
+import type { AssetManager } from '../../assets/assetManager';
+import { AssetPreferenceType, AssetPreferencesPublic, AssetPreferencesServer, CleanupAssetPreferences, IsAssetPreferenceType } from '../../character/assetPreferences';
 import { KnownObject } from '../../utility';
-import { GameLogicCharacterServer } from '../character';
+import type { GameLogicCharacterServer } from '../character/characterServer';
 import { GameLogicPermissionServer, IPermissionProvider } from '../permissions';
 import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferencesSubsystem } from './assetPreferencesSubsystem';
-import { AssetPreferenceType, AssetPreferencesPublic, AssetPreferencesServer, CleanupAssetPreferences, IsAssetPreferenceType } from '../../character/assetPreferences';
-import { AssetManager } from '../../assets';
 
 export class AssetPreferencesSubsystemServer extends AssetPreferencesSubsystem implements IPermissionProvider<GameLogicPermissionServer> {
 	private readonly _permissions: ReadonlyMap<AssetPreferenceType, GameLogicPermissionServer>;

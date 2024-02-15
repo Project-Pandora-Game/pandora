@@ -113,6 +113,8 @@
 		}
 	},
 	"rules": {
+		// Disabled recommended rules
+		"import/no-cycle": "off",
 		// NOs
 		"react/no-unsafe": ["error", { "checkAliases": true }],
 		"react/no-unstable-nested-components": "error",

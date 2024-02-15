@@ -1,5 +1,5 @@
 import { screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
+import { userEvent } from '@testing-library/user-event';
 import React from 'react';
 import { ResendVerificationForm } from '../../../../src/components/login/forms/resendVerificationForm';
 import { RenderWithRouterAndProviders } from '../../../testUtils';

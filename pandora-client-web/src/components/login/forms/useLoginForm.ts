@@ -1,8 +1,8 @@
 import { AssertNever, GetLogger, IsString, IsUsername } from 'pandora-common';
 import { FormEvent, useState } from 'react';
-import { FieldErrors, useForm, UseFormRegister } from 'react-hook-form';
+import { FieldErrors, UseFormRegister, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
-import { Promisable } from 'type-fest';
+import type { Promisable } from 'type-fest';
 import { useLogin } from '../../../networking/account_manager';
 import { useNotificationPermissionCheck } from '../../gameContext/notificationContextProvider';
 import { useAuthFormData } from '../authFormDataProvider';

@@ -1,12 +1,13 @@
-import { CharacterId, CharacterRestrictionsManager, ICharacterMinimalData } from '../../character';
 import { AccountId } from '../../account';
+import { CharacterAppearance } from '../../assets/appearance';
+import { AssetFrameworkCharacterState } from '../../assets/state/characterState';
+import { CharacterId, CharacterRestrictionsManager, ICharacterMinimalData } from '../../character';
 import { TypedEventEmitter } from '../../event';
-import { InteractionSubsystem } from '../interactions/interactionSubsystem';
-import { AssetFrameworkCharacterState, CharacterAppearance } from '../../assets';
+import type { ActionSpaceContext } from '../../space/space';
 import { Assert } from '../../utility';
-import { ActionSpaceContext } from '../../space/space';
-import { GameLogicPermission, IPermissionProvider, PermissionGroup } from '../permissions';
 import { AssetPreferencesSubsystem } from '../assetPreferences';
+import { InteractionSubsystem } from '../interactions/interactionSubsystem';
+import { GameLogicPermission, IPermissionProvider, PermissionGroup } from '../permissions';
 
 export type GameLogicCharacterEvents = {
 	dataChanged: 'interactions' | 'assetPreferences';

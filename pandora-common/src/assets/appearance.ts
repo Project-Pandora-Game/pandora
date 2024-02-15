@@ -1,47 +1,19 @@
 import type { CharacterId } from '../character/characterTypes';
 import { CharacterRestrictionsManager } from '../character/restrictionsManager';
+import type { GameLogicCharacter } from '../gameLogic/character/character';
 import type { ActionSpaceContext } from '../space/space';
 import { Assert } from '../utility';
 import { EvalItemPath } from './appearanceHelpers';
-import type { ItemPath, ActionTargetCharacter } from './appearanceTypes';
+import type { ActionTargetCharacter, ItemPath } from './appearanceTypes';
 import type { AppearanceItems } from './appearanceValidation';
 import type { AssetManager } from './assetManager';
-import type { WearableAssetType } from './definitions';
 import type { AssetId } from './base';
+import type { WearableAssetType } from './definitions';
 import type { BoneState, CharacterView } from './graphics';
 import type { Item } from './item';
-import type { AppearanceArmPose, AppearanceBundle, AppearancePose, AssetFrameworkCharacterState, RestrictionOverride } from './state/characterState';
-import type { GameLogicCharacter } from '../gameLogic/character/character';
-
-export const BONE_MIN = -180;
-export const BONE_MAX = 180;
-
-function GetDefaultAppearanceArmPose(): AppearanceArmPose {
-	return {
-		position: 'front',
-		rotation: 'forward',
-		fingers: 'spread',
-	};
-}
-
-export function GetDefaultAppearancePose(): AppearancePose {
-	return {
-		bones: {},
-		leftArm: GetDefaultAppearanceArmPose(),
-		rightArm: GetDefaultAppearanceArmPose(),
-		legs: 'standing',
-		view: 'front',
-	};
-}
-
-export function GetDefaultAppearanceBundle(): AppearanceBundle {
-	return {
-		items: [],
-		requestedPose: GetDefaultAppearancePose(),
-	};
-}
-
-export type CharacterArmsPose = Readonly<Pick<AppearancePose, 'leftArm' | 'rightArm'>>;
+import type { AssetFrameworkCharacterState } from './state/characterState';
+import type { CharacterArmsPose } from './state/characterStatePose';
+import type { RestrictionOverride } from './state/characterStateTypes';
 
 /**
  * A helper wrapper around a global state that allows easy access and manipulation of specific character.

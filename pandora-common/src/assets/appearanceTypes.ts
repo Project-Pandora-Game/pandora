@@ -1,12 +1,12 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
-import { ZodTemplateString } from '../validation';
-import type { ChatActionId, IChatMessageAction, IChatMessageActionTargetCharacter, IChatMessageActionTargetRoomInventory } from '../chat';
-import type { ActionSpaceContext } from '../space/space';
-import type { Item } from './item';
 import type { CharacterRestrictionsManager } from '../character/restrictionsManager';
+import type { ChatActionId, IChatMessageAction, IChatMessageActionTargetCharacter, IChatMessageActionTargetRoomInventory } from '../chat';
+import type { GameLogicCharacter } from '../gameLogic/character';
+import type { ActionSpaceContext } from '../space/space';
+import { ZodTemplateString } from '../validation';
+import type { Item } from './item';
 import type { AssetFrameworkCharacterState } from './state/characterState';
-import { GameLogicCharacter } from '../gameLogic';
 
 export const ItemIdSchema = ZodTemplateString<`i/${string}`>(z.string(), /^i\//);
 export type ItemId = z.infer<typeof ItemIdSchema>;

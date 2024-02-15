@@ -1,15 +1,17 @@
-import { Asset } from '../asset';
-import type { IAssetModuleDefinition, IItemModule, IModuleItemDataCommon, IModuleConfigCommon, IModuleActionCommon, IExportOptions } from './common';
-import { z } from 'zod';
-import { ConditionOperator } from '../graphics';
-import { ItemInteractionType } from '../../character/restrictionsManager';
-import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import { CreateItemBundleFromTemplate, IItemCreationContext, IItemLoadContext, IItemValidationContext, ItemBundleSchema, ItemLock, ItemLockActionSchema, ItemTemplateSchema, LoadItemFromBundle } from '../item';
-import { AssetManager } from '../assetManager';
-import type { AppearanceModuleActionContext } from '../appearanceActions';
-import { Satisfies } from '../../utility';
 import { Immutable } from 'immer';
+import { z } from 'zod';
+import { ItemInteractionType } from '../../character/restrictionTypes';
 import type { InteractionId } from '../../gameLogic/interactions';
+import { Satisfies } from '../../utility';
+import type { AppearanceModuleActionContext } from '../appearanceActions';
+import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
+import type { Asset } from '../asset';
+import type { AssetManager } from '../assetManager';
+import { ConditionOperator } from '../graphics';
+import { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item/base';
+import { ItemLock, ItemLockActionSchema } from '../item/lock';
+import { __internal_ItemBundleSchemaRecursive, __internal_ItemTemplateSchemaRecursive } from '../item/_internalRecursion';
+import type { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../item/base';
@@ -25,13 +27,13 @@ export interface IModuleConfigLockSlot<TProperties> extends IModuleConfigCommon<
 
 export const ModuleItemDataLockSlotSchema = z.object({
 	type: z.literal('lockSlot'),
-	lock: z.lazy(() => ItemBundleSchema).nullable(),
+	lock: __internal_ItemBundleSchemaRecursive.nullable(),
 });
 export type IModuleItemDataLockSlot = Satisfies<z.infer<typeof ModuleItemDataLockSlotSchema>, IModuleItemDataCommon<'lockSlot'>>;
 
 export const ModuleItemTemplateLockSlotSchema = z.object({
 	type: z.literal('lockSlot'),
-	lock: z.lazy(() => ItemTemplateSchema).nullable(),
+	lock: __internal_ItemTemplateSchemaRecursive.nullable(),
 });
 export type IModuleItemTemplateLockSlot = z.infer<typeof ModuleItemTemplateLockSlotSchema>;
 
@@ -52,7 +54,7 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 	public makeDataFromTemplate<TProperties>(_config: IModuleConfigLockSlot<TProperties>, template: IModuleItemTemplateLockSlot, context: IItemCreationContext): IModuleItemDataLockSlot {
 		return {
 			type: 'lockSlot',
-			lock: template.lock != null ? (CreateItemBundleFromTemplate(template.lock, context) ?? null) : null,
+			lock: template.lock != null ? (context.createItemBundleFromTemplate(template.lock, context) ?? null) : null,
 		};
 	}
 
@@ -114,7 +116,7 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 				context.logger?.warning(`Skipping unknown lock asset ${data.lock.asset}`);
 				lock = null;
 			} else {
-				const item = LoadItemFromBundle(
+				const item = context.loadItemFromBundle(
 					asset,
 					data.lock,
 					context,

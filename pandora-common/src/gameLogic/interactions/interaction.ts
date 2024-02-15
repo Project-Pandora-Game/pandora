@@ -1,6 +1,6 @@
 import { Immutable } from 'immer';
 import { TypedEventEmitter } from '../../event';
-import { GameLogicCharacter } from '../character';
+import type { GameLogicCharacter } from '../character';
 import { GameLogicPermission, GameLogicPermissionServer } from '../permissions';
 import { GameLogicPermissionClient } from '../permissions/permissionClient';
 import { IInteractionConfig, INTERACTION_CONFIG, InteractionId } from './_interactionConfig';

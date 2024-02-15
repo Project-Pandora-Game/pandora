@@ -1,18 +1,19 @@
+import { freeze } from 'immer';
+import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../../character';
 import { Logger } from '../../logging';
-import { AssetManager } from '../assetManager';
-import { freeze } from 'immer';
-import { AppearanceClientBundle, AppearanceBundleSchema, AssetFrameworkCharacterState } from './characterState';
-import { z } from 'zod';
 import { Assert, AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility';
-import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import { ActionTargetSelector } from '../appearanceTypes';
-import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClientBundle } from './roomState';
+import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
+import { AssetManager } from '../assetManager';
 import { IExportOptions } from '../modules/common';
+import { AssetFrameworkCharacterState } from './characterState';
+import { AppearanceBundleSchema, AppearanceClientBundle } from './characterStateTypes';
+import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClientBundle } from './roomState';
 
 // Fix for pnpm resolution weirdness
-import type { } from '../item/base';
 import type { } from '../../validation';
+import type { } from '../item/base';
 
 export const AssetFrameworkGlobalStateBundleSchema = z.object({
 	characters: z.record(CharacterIdSchema, AppearanceBundleSchema),

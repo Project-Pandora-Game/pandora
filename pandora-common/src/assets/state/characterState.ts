@@ -1,91 +1,20 @@
-import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation';
-import { AssetsPosePreset, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose, WearableAssetType } from '../definitions';
-import { Assert, IsNotNullable, MemoizeNoArg } from '../../utility';
-import { ZodArrayWithInvalidDrop } from '../../validation';
 import { Immutable, freeze } from 'immer';
-import { z } from 'zod';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, BoneType, CharacterView, CharacterViewSchema, LegsPoseSchema } from '../graphics';
-import { Item, ItemBundleSchema } from '../item';
-import { AssetManager } from '../assetManager';
-import { BONE_MAX, BONE_MIN, GetDefaultAppearanceBundle, GetDefaultAppearancePose } from '../appearance';
-import { Logger } from '../../logging';
 import _, { isEqual } from 'lodash';
-import { AssetFrameworkRoomState } from './roomState';
-import { CharacterId } from '../../character';
+import type { CharacterId } from '../../character';
+import { Logger } from '../../logging';
+import { Assert, IsNotNullable, MemoizeNoArg } from '../../utility';
+import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation';
+import type { AssetManager } from '../assetManager';
+import { WearableAssetType } from '../definitions';
+import { BoneType, CharacterView } from '../graphics';
+import { Item } from '../item';
 import type { IExportOptions } from '../modules/common';
+import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose';
+import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type RestrictionOverride } from './characterStateTypes';
+import type { AssetFrameworkRoomState } from './roomState';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../item/base';
-
-export const RestrictionOverrideSchema = z.object({
-	type: z.enum(['safemode', 'timeout']),
-	allowLeaveAt: z.number(),
-});
-export type RestrictionOverride = Readonly<z.infer<typeof RestrictionOverrideSchema>>;
-
-export type RestrictionOverrideConfig = Readonly<{
-	allowLeaveAt: number;
-	blockInteractions: boolean;
-	forceAllowItemActions: boolean;
-	forceAllowRoomLeave: boolean;
-}>;
-
-const INTERACTION_OVERRIDE_CONFIG = {
-	normal: {
-		allowLeaveAt: 0,
-		blockInteractions: false,
-		forceAllowItemActions: false,
-		forceAllowRoomLeave: false,
-	},
-	safemode: {
-		allowLeaveAt: 60 * 60_000,
-		blockInteractions: true,
-		forceAllowItemActions: true,
-		forceAllowRoomLeave: true,
-	},
-	timeout: {
-		allowLeaveAt: 0,
-		blockInteractions: true,
-		forceAllowItemActions: false,
-		forceAllowRoomLeave: false,
-	},
-} as const satisfies Readonly<Record<RestrictionOverride['type'] | 'normal', RestrictionOverrideConfig>>;
-
-export function GetRestrictionOverrideConfig(type?: RestrictionOverride['type'] | RestrictionOverride): RestrictionOverrideConfig {
-	if (type == null)
-		return INTERACTION_OVERRIDE_CONFIG.normal;
-	if (typeof type === 'string')
-		return INTERACTION_OVERRIDE_CONFIG[type];
-
-	return INTERACTION_OVERRIDE_CONFIG[type.type];
-}
-
-export const AppearanceArmPoseSchema = z.object({
-	position: ArmPoseSchema.catch('front'),
-	rotation: ArmRotationSchema.catch('forward'),
-	fingers: ArmFingersSchema.catch('spread'),
-});
-export type AppearanceArmPose = z.infer<typeof AppearanceArmPoseSchema>;
-
-export const AppearancePoseSchema = z.object({
-	bones: z.record(BoneNameSchema, z.number().optional()).default({}),
-	leftArm: AppearanceArmPoseSchema.default({}),
-	rightArm: AppearanceArmPoseSchema.default({}),
-	legs: LegsPoseSchema.default('standing'),
-	view: CharacterViewSchema.catch('front'),
-});
-export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
-
-export const AppearanceBundleSchema = z.object({
-	requestedPose: AppearancePoseSchema.catch(() => GetDefaultAppearancePose()),
-	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
-	restrictionOverride: RestrictionOverrideSchema.optional().catch(() => undefined),
-	clientOnly: z.boolean().optional(),
-});
-export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;
-export type AppearanceClientBundle = AppearanceBundle & { clientOnly: true; };
-
-export type AppearanceCharacterPose = ReadonlyMap<BoneName, BoneState>;
 
 type AssetFrameworkCharacterStateProps = {
 	readonly assetManager: AssetManager;

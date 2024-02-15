@@ -1,21 +1,21 @@
 import type { Immutable } from 'immer';
-import { ZodTypeDef, z } from 'zod';
+import { z } from 'zod';
 
+import type { GameLogicCharacter } from '../../gameLogic';
+import type { Satisfies } from '../../utility';
 import type { ItemId } from '../appearanceTypes';
+import type { Asset } from '../asset';
+import type { AssetManager } from '../assetManager';
+import type { AssetColorization, AssetType, WearableAssetType } from '../definitions';
+import type { AssetFrameworkRoomState } from '../state/roomState';
+import type { InternalItemTypeMap, ItemBase } from './_internal';
 import type { LockBundle } from './lock';
 import type { RoomDeviceBundle, RoomDeviceLink } from './roomDevice';
-import type { AssetColorization, AssetType, WearableAssetType } from '../definitions';
-import type { AssetManager } from '../assetManager';
-import type { AssetFrameworkRoomState } from '../state/roomState';
-import type { GameLogicCharacter } from '../../gameLogic';
-import type { ItemBase, InternalItemTypeMap } from './_internal';
-import type { Satisfies } from '../../utility';
 
-import { AssetIdSchema, AssetId } from '../base';
-import { ItemModuleTemplateSchema, ItemModuleData, ItemModuleTemplate } from '../modules';
-import { HexRGBAColorStringSchema, HexRGBAColorString, ZodArrayWithInvalidDrop } from '../../validation';
-import { LIMIT_OUTFIT_NAME_LENGTH } from '../../inputLimits';
 import { Logger } from '../../logging';
+import { HexRGBAColorString, HexRGBAColorStringSchema } from '../../validation';
+import type { AssetId } from '../base';
+import type { ItemModuleData, ItemModuleTemplate } from '../modules';
 
 export type ItemTypeMap =
 	Satisfies<
@@ -58,39 +58,17 @@ export type ItemTemplate = {
 	modules?: Record<string, ItemModuleTemplate>;
 };
 
-/**
- * Data describing an item configuration as a template.
- * Used for creating a new item from the template with matching configuration.
- * @note The schema is duplicated because of TS limitation on inferring type that contains recursion (through storage/lock modules)
- */
-export const ItemTemplateSchema: z.ZodType<ItemTemplate, ZodTypeDef, unknown> = z.object({
-	asset: AssetIdSchema,
-	templateName: z.string().optional(),
-	color: ItemColorBundleSchema.optional(),
-	modules: z.record(z.lazy(() => ItemModuleTemplateSchema)).optional(),
-});
-
-export const AssetFrameworkOutfitSchema = z.object({
-	name: z.string().max(LIMIT_OUTFIT_NAME_LENGTH),
-	items: ZodArrayWithInvalidDrop(ItemTemplateSchema, z.record(z.unknown())),
-});
-export type AssetFrameworkOutfit = z.infer<typeof AssetFrameworkOutfitSchema>;
-
-export const AssetFrameworkOutfitWithIdSchema = AssetFrameworkOutfitSchema.extend({
-	/** Random ID used to keep track of the outfits to avoid having to address them by index */
-	id: z.string(),
-});
-export type AssetFrameworkOutfitWithId = z.infer<typeof AssetFrameworkOutfitWithIdSchema>;
-
 export type IItemLoadContext = {
 	assetManager: AssetManager;
 	doLoadTimeCleanup: boolean;
 	logger?: Logger;
+	loadItemFromBundle<T extends AssetType>(asset: Asset<T>, bundle: ItemBundle, context: IItemLoadContext): Item<T>;
 };
 
 export type IItemCreationContext = {
 	assetManager: AssetManager;
 	creator: GameLogicCharacter;
+	createItemBundleFromTemplate(template: ItemTemplate, context: IItemCreationContext): ItemBundle | undefined;
 };
 
 export type IItemValidationContext = {

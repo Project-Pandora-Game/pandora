@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { AssetId } from '../assets';
+import type { AssetId } from '../assets/base';
 import { CharacterId, CharacterIdSchema } from '../character';
 import type { PronounKey } from '../character/pronouns';
 import { ChatActionId } from './chatActions';

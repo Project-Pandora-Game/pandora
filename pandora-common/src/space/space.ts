@@ -1,12 +1,11 @@
-import { z } from 'zod';
-import { ZodTrimedRegex, ZodTemplateString, HexColorStringSchema, ZodArrayWithInvalidDrop } from '../validation';
 import { cloneDeep } from 'lodash';
-import { ROOM_INVENTORY_BUNDLE_DEFAULT } from '../assets';
-import { CharacterId, CharacterIdSchema } from '../character';
+import { z } from 'zod';
 import { AccountId, AccountIdSchema } from '../account/account';
-import { RoomInventoryBundleSchema } from '../assets/state/roomState';
+import { ROOM_INVENTORY_BUNDLE_DEFAULT, RoomInventoryBundleSchema } from '../assets/state/roomState';
+import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
+import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits';
 import { ArrayToRecordKeys, CloneDeepMutable } from '../utility';
-import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN, LIMIT_SPACE_MAX_CHARACTER_NUMBER } from '../inputLimits';
+import { HexColorStringSchema, ZodArrayWithInvalidDrop, ZodTemplateString, ZodTrimedRegex } from '../validation';
 import { DEFAULT_BACKGROUND, RoomBackgroundDataSchema } from './room';
 
 // Fix for pnpm resolution weirdness

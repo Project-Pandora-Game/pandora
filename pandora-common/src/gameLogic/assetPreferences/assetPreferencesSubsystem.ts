@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { Asset } from '../../assets/asset';
+import type { Asset } from '../../assets/asset';
 import { AssetPreferenceResolution, AssetPreferenceType, AssetPreferencesPublic, ResolveAssetPreference } from '../../character/assetPreferences';
 import { CharacterId } from '../../character/characterTypes';
 import { TypedEventEmitter } from '../../event';

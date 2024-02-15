@@ -1,11 +1,29 @@
-import { GetLogger, MessageHandler, IClientShard, IClientShardArgument, CharacterId, BadMessageError, IClientShardPromiseResult, IMessageHandler, AssertNever, ActionHandlerMessageTargetCharacter, IClientShardNormalResult, NaturalListJoin, CloneDeepMutable, IChatMessage, GameLogicPermissionServer, PermissionConfig, PermissionSetup } from 'pandora-common';
-import { ClientConnection } from './connection_client';
-import { CharacterManager } from '../character/characterManager';
-import { assetManager } from '../assets/assetManager';
-import promClient from 'prom-client';
-import { DoAppearanceAction } from 'pandora-common';
+import {
+	ActionHandlerMessageTargetCharacter,
+	AssertNever,
+	BadMessageError,
+	CharacterId,
+	CloneDeepMutable,
+	DoAppearanceAction,
+	GameLogicPermissionServer,
+	GetLogger,
+	IChatMessage,
+	IClientShard,
+	IClientShardArgument,
+	IClientShardNormalResult,
+	IClientShardPromiseResult,
+	IMessageHandler,
+	MessageHandler,
+	NaturalListJoin,
+	PermissionConfig,
+	PermissionSetup,
+} from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
+import promClient from 'prom-client';
+import { assetManager } from '../assets/assetManager';
 import { Character } from '../character/character';
+import { CharacterManager } from '../character/characterManager';
+import { ClientConnection } from './connection_client';
 
 const logger = GetLogger('ConnectionManager-Client');
 

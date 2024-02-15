@@ -1,135 +1,20 @@
+import type { Immutable } from 'immer';
 import _ from 'lodash';
 import type { CharacterAppearance } from '../assets/appearance';
-import { EffectsDefinition } from '../assets/effects';
-import { AssetPropertiesResult, CreateAssetPropertiesResult } from '../assets/properties';
-import { ActionSpaceContext } from '../space/space';
-import { HearingImpairment, Muffler } from '../character/speech';
+import type { AppearanceActionProcessingContext } from '../assets/appearanceActionProcessingContext';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
-import type { Item, RoomDeviceLink } from '../assets/item';
-import { AppearanceActionProcessingContext, Asset, AssetId, ItemContainerPath, ItemId, ItemPath, ActionTarget, RestrictionOverrideConfig, GetRestrictionOverrideConfig } from '../assets';
+import type { ActionTarget, ItemContainerPath, ItemId, ItemPath } from '../assets/appearanceTypes';
 import { AppearanceItemProperties } from '../assets/appearanceValidation';
-import type { Immutable } from 'immer';
-import { GameLogicCharacter } from '../gameLogic/character/character';
-import type { PermissionGroup, PermissionTypeInvalid } from '../gameLogic';
-import { CharacterId } from './characterTypes';
-import { AssetPreferenceResolution } from './assetPreferences';
+import { Asset } from '../assets/asset';
+import { EffectsDefinition } from '../assets/effects';
+import type { Item, RoomDeviceLink } from '../assets/item';
+import { AssetPropertiesResult, CreateAssetPropertiesResult } from '../assets/properties';
+import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes';
+import { HearingImpairment, Muffler } from '../character/speech';
+import type { GameLogicCharacter } from '../gameLogic/character/character';
+import type { ActionSpaceContext } from '../space/space';
 import { AssertNever } from '../utility';
-
-export enum ItemInteractionType {
-	/**
-	 * Special interaction that doesn't have prerequisites from the character itself.
-	 *
-	 * Requirements:
-	 * - Player can interact with character (handling things like permissions and safeword state)
-	 * - Player can use the asset of this item on character (blocked/limited items check)
-	 */
-	ACCESS_ONLY = 'ACCESS_ONLY',
-	/**
-	 * Special interaction for changing expression
-	 *
-	 * Requirements:
-	 * - Requires all `ACCESS_ONLY` requirements
-	 * - If asset __is__ bodypart:
-	 *   - Must be targetting herself
-	 * - If asset __is not__ bodypart this action is invalid (never allowed)
-	 */
-	EXPRESSION_CHANGE = 'EXPRESSION_CHANGE',
-	/**
-	 * Item modified only in stylistic way (e.g. color)
-	 *
-	 * Requirements:
-	 * - Requires all `ACCESS_ONLY` requirements
-	 * - If asset __is__ bodypart:
-	 *   - Must not be in room or the room must allow body modification
-	 *   - Must be targetting herself
-	 * - If asset __is not__ bodypart:
-	 *   - Player must be able to use hands
-	 */
-	STYLING = 'STYLING',
-	/**
-	 * Item being modified (e.g. changing its behavior or configuration)
-	 *
-	 * Requirements:
-	 * - Requires all `ACCESS_ONLY` requirements
-	 * - If asset __is__ bodypart:
-	 *   - Must not be in room or the room must allow body modification
-	 *   - Must be targetting herself
-	 * - If asset __is not__ bodypart:
-	 *   - Player must be able to use hands
-	 */
-	MODIFY = 'MODIFY',
-	/**
-	 * Item being added, removed or reordered.
-	 *
-	 * Requirements:
-	 * - Requires all `ACCESS_ONLY` requirements
-	 * - If asset __is__ bodypart:
-	 *   - Must not be in room or the room must allow body modification
-	 *   - Must be targetting herself
-	 * - If asset __is not__ bodypart:
-	 *   - Player must be able to use hands
-	 *   - If asset has `blockAddRemove`, then denied
-	 *   - If asset has `blockSelfAddRemove`, then cannot happen on self
-	 */
-	ADD_REMOVE = 'ADD_REMOVE',
-}
-
-export type PermissionRestriction = {
-	type: 'missingPermission';
-	target: CharacterId;
-	permissionGroup: PermissionGroup;
-	permissionId: string;
-	permissionDescription: string;
-	permissionResult: PermissionTypeInvalid;
-};
-
-export type Restriction =
-	| PermissionRestriction
-	| {
-		type: 'missingAssetPermission';
-		target: CharacterId;
-		resolution: AssetPreferenceResolution;
-	}
-	| {
-		type: 'blockedAddRemove';
-		asset: AssetId;
-		self: boolean;
-	}
-	| {
-		type: 'blockedModule';
-		asset: AssetId;
-		module: string;
-		self: boolean;
-	}
-	| {
-		type: 'covered';
-		asset: AssetId;
-		attribute: string;
-	}
-	| {
-		type: 'blockedHands';
-	}
-	| {
-		type: 'safemodeInteractOther';
-	}
-	| {
-		type: 'modifyBodyRoom';
-	}
-	| {
-		type: 'modifyRoomRestriction';
-		reason: 'notAdmin' | 'missingConstructionTools';
-	}
-	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
-	| {
-		type: 'invalid';
-	};
-
-export type RestrictionResult = {
-	allowed: true;
-} | {
-	allowed: false;
-	restriction: Restriction;
-};
+import { ItemInteractionType, type RestrictionResult } from './restrictionTypes';
 
 /**
  * All functions should return a stable value, or useSyncExternalStore will not work properly.

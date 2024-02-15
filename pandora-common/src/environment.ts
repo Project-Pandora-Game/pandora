@@ -136,7 +136,13 @@ function Stringify(value: unknown, allowArray = true): string | undefined {
 	}
 }
 
-export function EnvTimestamp() {
+/**
+ * Creates a Zod type that accepts a string representing a time interval in seconds (s), minutes (m), hours (h), days (d), or weeks (w). \
+ * If no unit is specified or number is provided, it is assumed to be in milliseconds.
+ *
+ * Output is always in milliseconds.
+ */
+export function EnvTimeInterval() {
 	return z.preprocess((arg, ctx) => {
 		if (typeof arg !== 'string') {
 			return arg;
@@ -145,7 +151,7 @@ export function EnvTimestamp() {
 		if (!match) {
 			ctx.addIssue({
 				code: ZodIssueCode.custom,
-				message: 'invalid timestamp',
+				message: 'invalid time interval',
 			});
 			return z.NEVER;
 		}

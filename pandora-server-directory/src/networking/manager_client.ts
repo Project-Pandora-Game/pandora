@@ -1,4 +1,4 @@
-import { GetLogger, SpaceDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, AssertNever, IShardTokenConnectInfo, Service, Awaitable, SecondFactorData, SecondFactorType, KnownObject, SecondFactorResponse } from 'pandora-common';
+import { GetLogger, SpaceDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, AssertNever, IShardTokenConnectInfo, Service, Awaitable, SecondFactorData, SecondFactorType, SecondFactorResponse } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { ENV } from '../config';
@@ -807,31 +807,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			connection.sendMessage('somethingChanged', { changes: ['shardList'] });
 		}
 	}
-
-	private async testSecondFactor(data: SecondFactorData | undefined, types: SecondFactorType[]): Promise<null | SecondFactorResponse> {
-		if (data == null) {
-			return types.length === 0 ? null : { result: 'secondFactorRequired', types };
-		}
-		const missing: SecondFactorType[] = types.filter((type) => data[type] == null);
-		const invalid: SecondFactorType[] = [];
-		for (const [type, value] of KnownObject.entries(data)) {
-			if (value == null)
-				continue;
-
-			switch (type) {
-				case 'captcha':
-					if (!await TestCaptcha(value))
-						invalid.push('captcha');
-					break;
-				default:
-					AssertNever(type);
-			}
-		}
-		if (missing.length > 0 || invalid.length > 0) {
-			return { result: 'secondFactorInvalid', invalid, missing, types };
-		}
-		return null;
-	}
 };
 
 function Auth<T, R>(role: AccountRole, handler: (args: T, connection: ClientConnection & { readonly account: Account; }) => R): (args: T, connection: ClientConnection) => R {
@@ -950,17 +925,18 @@ const LoginManager = new class LoginManager {
 			return { result: 'secondFactorRequired', types };
 		}
 		if (data.captcha == null) {
-			this.loginFailed();
 			return { result: 'secondFactorInvalid', types, invalid: [], missing: types };
 		}
 		if (!await TestCaptcha(data.captcha)) {
-			this.loginFailed();
 			return { result: 'secondFactorInvalid', types, invalid: types, missing: [] };
 		}
 		return null;
 	}
 
 	private isCaptchaRequired(): boolean {
+		if (!HCAPTCHA_SECRET_KEY || !HCAPTCHA_SITE_KEY)
+			return false;
+
 		return this.invalidAttempts.length >= ENV.LOGIN_ATTEMPT_LIMIT && (this.invalidAttempts[0].timestamp + ENV.LOGIN_ATTEMPT_WINDOW) > Date.now();
 	}
 };

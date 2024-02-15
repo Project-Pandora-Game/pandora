@@ -1,5 +1,5 @@
 import { noop } from 'lodash';
-import { ACCOUNT_SETTINGS_DEFAULT, AssertNever, AssertNotNullable, GetLogger, IDirectoryAccountInfo, IDirectoryAccountSettings, IDirectoryClientChangeEvents, SecondFactorData, SecondFactorResponse, SecondFactorType } from 'pandora-common';
+import { ACCOUNT_SETTINGS_DEFAULT, AssertNever, GetLogger, IDirectoryAccountInfo, IDirectoryAccountSettings, IDirectoryClientChangeEvents, SecondFactorData, SecondFactorResponse, SecondFactorType } from 'pandora-common';
 import React, { createContext, ReactElement, useContext, useEffect, useRef } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { useDebugExpose } from '../../common/useDebugExpose';
@@ -149,42 +149,46 @@ export function useAuthTokenIsValid(): boolean {
 	return authToken != null && isValid;
 }
 
+type SecondFactorState = {
+	types: SecondFactorType[];
+	invalid: SecondFactorType[] | null;
+	resolve: (data: SecondFactorData | PromiseLike<SecondFactorData> | null) => void;
+	reject: (reason?: Error) => void;
+};
+
 function SecondFactorDialog() {
 	const directoryConnector = useDirectoryConnector();
-	const [types, setTypes] = React.useState<SecondFactorType[] | null>([]);
-	const [invalid, setInvalid] = React.useState<SecondFactorType[] | null>([]);
-	const [handler, setHandler] = React.useState<null | { resolve: (data: SecondFactorData | PromiseLike<SecondFactorData> | null) => void; }>(null);
+	const [state, setState] = React.useState<SecondFactorState | null>(null);
 
 	const secondFactorHandler = React.useCallback((response: SecondFactorResponse) => {
-		return new Promise<SecondFactorData | null>((resolve) => {
-			setTypes(response.types);
-			setInvalid(response.result === 'secondFactorInvalid' ? response.invalid : null);
-			setHandler({ resolve });
+		return new Promise<SecondFactorData | null>((resolve, reject) => {
+			setState({
+				types: response.types,
+				invalid: response.result === 'secondFactorInvalid' ? response.invalid : null,
+				resolve,
+				reject,
+			});
 		}).finally(() => {
-			setTypes(null);
-			setInvalid(null);
-			setHandler(null);
+			setState(null);
 		});
-	}, [setTypes, setHandler]);
+	}, [setState]);
 
 	React.useEffect(() => {
 		directoryConnector.secondFactorHandler = secondFactorHandler;
 		return () => {
-			handler?.resolve(null);
+			state?.resolve(null);
 			directoryConnector.secondFactorHandler = null;
 		};
-	}, [directoryConnector, handler, secondFactorHandler]);
+	}, [directoryConnector, state, secondFactorHandler]);
 
-	if (handler == null) {
+	if (state == null) {
 		return null;
 	}
 
-	AssertNotNullable(types);
-
-	return <SecondFactorDialogImpl types={ types } invalid={ invalid } handler={ handler } />;
+	return <SecondFactorDialogImpl { ...state } />;
 }
 
-function SecondFactorDialogImpl({ types, invalid, handler }: { types: SecondFactorType[]; invalid: SecondFactorType[] | null; handler: { resolve: (data: SecondFactorData | null) => void; }; }): ReactElement {
+function SecondFactorDialogImpl({ types, invalid, resolve }: SecondFactorState): ReactElement {
 	const [captcha, setCaptcha] = React.useState('');
 
 	const elements = React.useMemo(() => types.map((type) => {
@@ -201,12 +205,12 @@ function SecondFactorDialogImpl({ types, invalid, handler }: { types: SecondFact
 		if (types.includes('captcha')) {
 			data.captcha = captcha;
 		}
-		handler.resolve(data);
-	}, [types, captcha, handler]);
+		resolve(data);
+	}, [types, captcha, resolve]);
 
 	const onCancel = React.useCallback(() => {
-		handler.resolve(null);
-	}, [handler]);
+		resolve(null);
+	}, [resolve]);
 
 	return (
 		<ModalDialog>

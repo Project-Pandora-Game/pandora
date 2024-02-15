@@ -1,4 +1,4 @@
-import { CreateEnvParser, EnvTimestamp } from 'pandora-common';
+import { CreateEnvParser, EnvTimeInterval } from 'pandora-common';
 import { z } from 'zod';
 
 export const EnvParser = CreateEnvParser({
@@ -33,11 +33,11 @@ export const EnvParser = CreateEnvParser({
 	//#region Expiration settings
 
 	/** Time (in ms) for how long is an account login token valid */
-	LOGIN_TOKEN_EXPIRATION: EnvTimestamp().default('1w'),
+	LOGIN_TOKEN_EXPIRATION: EnvTimeInterval().default('1w'),
 	/** Time (in ms) for how long is an account activation token valid */
-	ACTIVATION_TOKEN_EXPIRATION: EnvTimestamp().default('1w'),
+	ACTIVATION_TOKEN_EXPIRATION: EnvTimeInterval().default('1w'),
 	/** Time (in ms) for how long is a password reset token valid */
-	PASSWORD_RESET_TOKEN_EXPIRATION: EnvTimestamp().default('1d'),
+	PASSWORD_RESET_TOKEN_EXPIRATION: EnvTimeInterval().default('1d'),
 
 	//#endregion
 
@@ -115,7 +115,7 @@ export const EnvParser = CreateEnvParser({
 	//#region Account Security
 
 	/** Time window for login attempts */
-	LOGIN_ATTEMPT_WINDOW: EnvTimestamp().default('15m'),
+	LOGIN_ATTEMPT_WINDOW: EnvTimeInterval().default('15m'),
 	/** Max failed login attempts before requiring a captcha */
 	LOGIN_ATTEMPT_LIMIT: z.number().int().positive().default(30),
 

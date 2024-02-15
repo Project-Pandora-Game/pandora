@@ -57,7 +57,7 @@
 		"@types/delaunator": "5.0.2",
 		"@types/jest": "29.5.12",
 		"@types/lodash": "4.14.202",
-		"@types/node": "18.19.15",
+		"@types/node": "18.19.16",
 		"@types/offscreencanvas": "2019.7.3",
 		"@types/postcss-flexbugs-fixes": "5.0.3",
 		"@types/react": "18.2.55",
@@ -101,7 +101,7 @@
 		"type-fest": "4.10.2",
 		"typescript": "5.3.3",
 		"url-loader": "4.1.1",
-		"webpack": "5.90.1",
+		"webpack": "5.90.2",
 		"webpack-cli": "5.1.4",
 		"webpack-dev-server": "4.15.1"
 	}

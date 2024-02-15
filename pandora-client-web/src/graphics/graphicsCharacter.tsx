@@ -8,7 +8,7 @@ import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { useCharacterAppearanceItems } from '../character/character';
 import { ChildrenProps } from '../common/reactTypes';
 import { useObservable } from '../observable';
-import { ComputedLayerPriority, COMPUTED_LAYER_ORDERING, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES } from './def';
+import { ComputedLayerPriority, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def';
 import { GraphicsLayerProps, GraphicsLayer, SwapCullingDirection } from './graphicsLayer';
 import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense';
 import { usePlayerData } from '../components/gameContext/playerContextProvider';
@@ -178,10 +178,7 @@ function GraphicsCharacterWithManagerImpl({
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);
 	const position = useMemo<PointLike>(() => ({ x: (pivotExtra ? 0 : pivot.x) + positionOffset.x, y: 0 + positionOffset.y }), [pivot, pivotExtra, positionOffset]);
 
-	const sortOrder = useMemo<readonly ComputedLayerPriority[]>(() => {
-		const reverse = view === 'back';
-		return reverse ? COMPUTED_LAYER_ORDERING.slice().reverse() : COMPUTED_LAYER_ORDERING;
-	}, [view]);
+	const sortOrder = useComputedLayerPriority(characterState.actualPose);
 
 	const actualFilters = useMemo<PIXI.Filter[] | null>(() => filters?.slice() ?? null, [filters]);
 

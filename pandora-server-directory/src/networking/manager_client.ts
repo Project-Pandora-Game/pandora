@@ -1,4 +1,4 @@
-import { GetLogger, SpaceDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, AssertNever, IShardTokenConnectInfo, Service, Awaitable } from 'pandora-common';
+import { GetLogger, SpaceDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, AssertNever, IShardTokenConnectInfo, Service, Awaitable, SecondFactorData, SecondFactorType, SecondFactorResponse } from 'pandora-common';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { ENV } from '../config';
@@ -179,11 +179,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	 * @param connection - The connection that this message comes from
 	 * @returns Result of the login
 	 */
-	private async handleLogin({ username, passwordSha512, verificationToken }: IClientDirectoryArgument['login'], connection: ClientConnection): IClientDirectoryPromiseResult['login'] {
+	private async handleLogin({ username, passwordSha512, verificationToken, secondFactor }: IClientDirectoryArgument['login'], connection: ClientConnection): IClientDirectoryPromiseResult['login'] {
+		{
+			const r = await LoginManager.testOptionalCaptcha(secondFactor);
+			if (r != null)
+				return r;
+		}
 		// Find account by username
 		const account = await accountManager.loadAccountByUsername(username);
 		// Verify the password
 		if (!account || !await account.secure.verifyPassword(passwordSha512)) {
+			LoginManager.loginFailed();
 			return { result: 'unknownCredentials' };
 		}
 		// Verify account is activated or activate it
@@ -898,3 +904,39 @@ function WithConstantTime<TParams extends unknown[], TReturn extends { /** only 
 		return result[1];
 	};
 }
+
+const LoginManager = new class LoginManager {
+	private invalidAttempts: { readonly timestamp: number; }[] = [];
+
+	public loginFailed(): void {
+		const now = Date.now();
+		this.invalidAttempts.push({ timestamp: now });
+		this.invalidAttempts = this.invalidAttempts
+			.slice(-ENV.LOGIN_ATTEMPT_LIMIT)
+			.filter((attempt) => (attempt.timestamp + ENV.LOGIN_ATTEMPT_WINDOW) > now);
+	}
+
+	public async testOptionalCaptcha(data: SecondFactorData | undefined): Promise<null | SecondFactorResponse> {
+		if (!this.isCaptchaRequired()) {
+			return null;
+		}
+		const types: SecondFactorType[] = ['captcha'];
+		if (data == null) {
+			return { result: 'secondFactorRequired', types };
+		}
+		if (data.captcha == null) {
+			return { result: 'secondFactorInvalid', types, invalid: [], missing: types };
+		}
+		if (!await TestCaptcha(data.captcha)) {
+			return { result: 'secondFactorInvalid', types, invalid: types, missing: [] };
+		}
+		return null;
+	}
+
+	private isCaptchaRequired(): boolean {
+		if (!HCAPTCHA_SECRET_KEY || !HCAPTCHA_SITE_KEY)
+			return false;
+
+		return this.invalidAttempts.length >= ENV.LOGIN_ATTEMPT_LIMIT && (this.invalidAttempts[0].timestamp + ENV.LOGIN_ATTEMPT_WINDOW) > Date.now();
+	}
+};

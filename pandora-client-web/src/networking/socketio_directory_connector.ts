@@ -19,6 +19,9 @@ import {
 	CharacterId,
 	EMPTY,
 	AsyncSynchronized,
+	SecondFactorResponse,
+	IClientDirectoryArgument,
+	SecondFactorData,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
@@ -68,6 +71,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 	private readonly _directoryConnectionProgress = new PersistentToast();
 	private readonly _authToken = BrowserStorage.create<AuthToken | undefined>('authToken', undefined, AuthTokenSchema);
 	private readonly _lastSelectedCharacter = BrowserStorage.createSession<CharacterId | undefined>('lastSelectedCharacter', undefined, CharacterIdSchema.optional());
+
+	public secondFactorHandler: ((response: SecondFactorResponse) => Promise<SecondFactorData | null>) | null = null;
 
 	private _shardConnectionInfo: IDirectoryCharacterConnectionInfo | null = null;
 
@@ -200,17 +205,35 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 
 	public async login(username: string, password: string, verificationToken?: string): Promise<LoginResponse> {
 		const passwordSha512 = await PrehashPassword(password);
-		const result = await this.awaitResponse('login', { username, passwordSha512, verificationToken });
-
-		if (result.result === 'ok') {
-			this._authToken.value = { ...result.token, username: result.account.username };
+		const result = await this.loginDirect({ username, passwordSha512, verificationToken });
+		if (result === 'ok') {
 			await this.directMessageHandler.initCryptoPassword(username, password);
-			await this.handleAccountChange({ account: result.account, character: null });
 		} else {
 			await this.handleAccountChange({ account: null, character: null });
 		}
 		await this.directMessageHandler.accountChanged();
-		return result.result;
+		return result;
+	}
+
+	private async loginDirect(data: IClientDirectoryArgument['login']): Promise<LoginResponse> {
+		const result = await this.awaitResponse('login', data);
+		switch (result.result) {
+			case 'ok':
+				this._authToken.value = { ...result.token, username: result.account.username };
+				await this.handleAccountChange({ account: result.account, character: null });
+				return 'ok';
+			case 'secondFactorRequired':
+			case 'secondFactorInvalid':
+				if (this.secondFactorHandler) {
+					const secondFactor = await this.secondFactorHandler(result);
+					if (secondFactor) {
+						return this.loginDirect({ ...data, secondFactor });
+					}
+				}
+				return 'invalidSecondFactor';
+			default:
+				return result.result;
+		}
 	}
 
 	public logout(): void {

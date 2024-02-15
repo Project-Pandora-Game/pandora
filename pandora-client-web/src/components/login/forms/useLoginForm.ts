@@ -68,6 +68,8 @@ export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 				setErrorMessage('Invalid username or password');
 			} else if (result === 'invalidToken') {
 				setErrorMessage('Invalid verification code. Please make sure you entered your code correctly.');
+			} else if (result === 'invalidSecondFactor') {
+				setErrorMessage('Invalid second factor');
 			} else if (result !== 'verificationRequired') {
 				AssertNever(result);
 			}

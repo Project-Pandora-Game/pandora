@@ -55,7 +55,7 @@ export function WikiIntroduction(): ReactElement {
 				and <a href='/wiki/items/#IT_Room-level_items'>room devices</a> remain even after everyone has left). Every account can own a
 				limited amount of spaces. A space only gets deleted when it no longer has any owners.<br />
 				Spaces set to public are visible to everyone, while at least one admin is online inside the room.
-				You can always see spaces you are either admin or owner of, such as when they are private or empty.
+				You can always see spaces, such as when they are private or empty, where you are either owner, admin, or on the allow list.
 			</p>
 			<p>
 				When a character goes offline inside a room, they will stay in the space the room is a part of and are shown as not connected.
@@ -156,10 +156,10 @@ export function WikiIntroduction(): ReactElement {
 
 			That's not all of course! We have many exciting features planned for the future:
 			<ul>
-				<li>Allowing spaces to contain several connected rooms with a user-defined layout and ways to move from room to room</li>
+				<li>Advanced spectator mode for spaces that will help to not disrupt the chat during plays and that can be managed by space admins</li>
 				<li>Showing and managing relationships between characters</li>
 				<li>Allowing every item to have a custom name and description</li>
-				<li>Spectator mode for spaces that will help to not disrupt the chat during plays and that can be managed by space admins</li>
+				<li>Allowing spaces to contain several connected rooms with a user-defined layout and ways to move from room to room</li>
 				<li>Improvements to the new user experience & safety</li>
 				<li>Character rules</li>
 				<li>Room templates</li>

@@ -27,6 +27,7 @@ export function WikiSpaces(): ReactElement {
 				<li><a href='#SP_Space_persistence'>Space persistence</a></li>
 				<li><a href='#SP_Space_visibility'>Space visibility</a></li>
 				<li><a href='#SP_Space_access'>Space access</a></li>
+				<li><a href='#SP_Space_invites'>Space invites</a></li>
 				<li><a href='#SP_Space_administration'>Space administration</a></li>
 				<li><a href='#SP_Leaving_a_space'>Leaving a space</a></li>
 				<li><a href='#SP_Personal_space'>Personal space</a></li>
@@ -90,24 +91,57 @@ export function WikiSpaces(): ReactElement {
 			</p>
 			<ul>
 				<li>The default when creating a new space is private.</li>
-				<li>Public space are only visible for other players when there is an admin online inside the space.</li>
-				<li>Private spaces are currently only visible in the space search for admins and owners of that space and cannot be found otherwise.</li>
+				<li>Public spaces are only visible for other players when there is an admin online inside the space.</li>
+				<li>Private spaces are currently only visible in the space search for owners and admins of that space as well as users whose account is on the allow list of the space.</li>
 				<li>Accounts can still see spaces they are banned from</li>
 				<li>
-					Certain information about a space normally visible from the outside, such as who is inside, is not shown when the space is password protected or the viewing
+					Certain information about a space normally visible from the outside, such as who is inside, is not shown under certain circumstances, for instance when the viewing
 					account is on the space's ban list.
 				</li>
 			</ul>
 
 			<h4 id='SP_Space_access'>Space access</h4>
 			<p>
-				Spaces in Pandora that are visible can be joined unless they are password protected or a user is banned from it.
+				Spaces in Pandora that is public and visible can be joined unless a user is banned from it.
+				A private space can always be seen and joined by owners, admins and allowed people set for this space.
+				The "allowed users" list can be found in the "visitor management"-tab of the space configuration view and lets you (similarly to the admin list) define
+				user accounts whose characters can see and join also private rooms with no need to be specially invited. So there is no need to make everyone an admin.
 			</p>
 			<ul>
-				<li>Both public and private spaces can be password protected.</li>
-				<li>Admins do not need to know and enter the password to join a password protected space.</li>
+				<li>To invite other users to a space, you can send them a direct message with a join-link via the "/invite" command.</li>
+				<li>
+					As a space admin you can also create more powerful and configurable invite links in the "visitor management"-tab of the
+					space configuration view that you can share with others. More details in the following wiki entry.
+				</li>
 				<li>When a user's account is banned from a space, the user cannot join it.</li>
-				<li>No one can join a space if it is full, not even owners or admins of it.</li>
+				<li>Owners of a space can even join a space when it is already full. When they join they fill one of five temporary overshoot slots above the set maximum.</li>
+			</ul>
+
+			<h4 id='SP_Space_invites'>Space invites</h4>
+			<p>
+				Pandora also has two different types of space invites: "space-bound" and "join-me" invite links.<br />
+				"Space-bound" invite links can only be created by space owners and admins in the "visitor management"-tab of the
+				space configuration view. They are highly configurable.
+			</p>
+			<ul>
+				<li>These invites can have an infinite or set number of uses, can be permanent or expire after some time.</li>
+				<li>"Space-bound" invites can be account-specific, character specific, or can be used by anyone.</li>
+				<li>They can be used to join private spaces, empty and unlisted spaces, but not full spaces.</li>
+				<li>Space owners and admins can delete these invites at any point in time, after which they can no longer be used.</li>
+			</ul>
+			<p>
+				The second type, "join-me" invites can be created by anyone inside a space and are created by sending a direct message (DM) to someone.
+				They are essentially a quick way to tell someone where you are and invite them to join you.<br />
+				Note: While a "join-me" invite allows to join an unlisted public room, it does not allow to join a private room, unless the one using it
+				is permitted by other means (e.g. being an admin or on the space's allow list) or the creator of the "join-me" invite is an admin.
+			</p>
+			<ul>
+				<li>You can send a "join-me" invite by typing the "/invite" command into the direct message input field.</li>
+				<li>These invites can be used only once and currently expire 120 minutes after they were created and sent.</li>
+				<li>"Join-me" invites are bound to the user account they are sent to and cannot be used by someone else.</li>
+				<li>The invite link only works while any character of the user account who sent the invite is still online and inside the space the invite is for.</li>
+				<li>The invite details cannot be edited by the one creating it. The purpose of "join-me" invites is to be simple & quick.</li>
+				<li>Space owners and admins can delete these invites at any point in time, after which they can no longer be used.</li>
 			</ul>
 
 			<h4 id='SP_Space_administration'>Space administration</h4>
@@ -119,7 +153,7 @@ export function WikiSpaces(): ReactElement {
 				<li>The default number of characters that can join a space is 10, but the possible upper limit is 100.</li>
 				<li>You can set if the space should be public and visible to everyone, as long as there is an admin online inside. The default is "no", which means the space is private.</li>
 				<li>You can give up space ownership, which deletes the space permanently, if you are the only owner.</li>
-				<li>The admin and ban lists are comma separated and require the player account id, as they are account-wide.<br />
+				<li>The admin, ban, and allowed users lists are comma separated and require the player account id, as they are account-wide.<br />
 					The player account id number can be looked up in the account profile of the player.<br />
 					<strong>Careful:</strong> Do not mix it up with the character id which starts with "c" followed by a number.<br />
 					Alternatively, you can look up the player account id of a character inside the space up in the "Room"-Tab. It is the last number behind the name.<br />

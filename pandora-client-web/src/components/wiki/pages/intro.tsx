@@ -55,7 +55,7 @@ export function WikiIntroduction(): ReactElement {
 				and <a href='/wiki/items/#IT_Room-level_items'>room devices</a> remain even after everyone has left). Every account can own a
 				limited amount of spaces. A space only gets deleted when it no longer has any owners.<br />
 				Spaces set to public are visible to everyone, while at least one admin is online inside the room.
-				You can always see spaces, such as when they are private or empty, where you are either owner, admin, or on the allow list.
+				You can always see spaces where you are either owner, admin, or on the allow list (even if they are private or empty).
 			</p>
 			<p>
 				When a character goes offline inside a room, they will stay in the space the room is a part of and are shown as not connected.

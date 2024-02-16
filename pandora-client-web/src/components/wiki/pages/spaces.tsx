@@ -1,5 +1,6 @@
 import React, { ReactElement } from 'react';
 import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/gameStateContextProvider';
+import { LIMIT_SPACE_BOUND_INVITES } from 'pandora-common';
 
 export function WikiSpaces(): ReactElement {
 	return (
@@ -95,26 +96,35 @@ export function WikiSpaces(): ReactElement {
 				<li>Private spaces are currently only visible in the space search for owners and admins of that space as well as users whose account is on the allow list of the space.</li>
 				<li>Accounts can still see spaces they are banned from</li>
 				<li>
-					Certain information about a space normally visible from the outside, such as who is inside, is not shown under certain circumstances, for instance when the viewing
-					account is on the space's ban list.
+					Certain information about a space can be seen in the space preview popup by anyone able to enter the space even without actually entering it.
+					This includes, for example, the list of characters currently inside the space.
 				</li>
 			</ul>
 
 			<h4 id='SP_Space_access'>Space access</h4>
 			<p>
-				Spaces in Pandora that is public and visible can be joined unless a user is banned from it.
-				A private space can always be seen and joined by owners, admins and allowed people set for this space.
-				The "allowed users" list can be found in the "visitor management"-tab of the space configuration view and lets you (similarly to the admin list) define
-				user accounts whose characters can see and join also private rooms with no need to be specially invited. So there is no need to make everyone an admin.
+				Spaces in Pandora that are public and visible can be joined unless a user is banned from it or the space is full.
+				A private space can only be seen and joined by owners, admins and people on the allow list of said space. To invite other users to a private space,
+				they have to either be added to one of these lists or be invited by an admin in order to join.
+				The admin and "allowed users" lists can be found in the "visitor management"-tab of the space configuration view. Note that these lists
+				work with user account IDs and not with character IDs.
 			</p>
 			<ul>
-				<li>To invite other users to a space, you can send them a direct message with a join-link via the "/invite" command.</li>
+				<li>To invite other users to a space, you can send them a direct message with a "join-me" type invite via the "/invite" command.</li>
 				<li>
-					As a space admin you can also create more powerful and configurable invite links in the "visitor management"-tab of the
-					space configuration view that you can share with others. More details in the following wiki entry.
+					As a space admin you can also create more powerful and configurable "space-bound" type invite links in the "visitor management"-tab of the
+					space configuration view that you can share with others. More details about invite links in the <a href='#SP_Space_invites'>"Space invites"</a> section.
 				</li>
 				<li>When a user's account is banned from a space, the user cannot join it.</li>
 				<li>Owners of a space can even join a space when it is already full. When they join they fill one of five temporary overshoot slots above the set maximum.</li>
+			</ul>
+			<p>
+				Let's summarize how to best manage access to private spaces:<br />
+			</p>
+			<ul>
+				<li>If you want a user and all their characters to have permanent access to your space, add them to the list of allowed users.</li>
+				<li>If you want to create a link that your friends can share with their friends, create a "space-bound" invite not tied to any account or character.</li>
+				<li>If you want to invite another character for one time, send a direct message to them using the "/invite" command.</li>
 			</ul>
 
 			<h4 id='SP_Space_invites'>Space invites</h4>
@@ -126,22 +136,24 @@ export function WikiSpaces(): ReactElement {
 			<ul>
 				<li>These invites can have an infinite or set number of uses, can be permanent or expire after some time.</li>
 				<li>"Space-bound" invites can be account-specific, character specific, or can be used by anyone.</li>
-				<li>They can be used to join private spaces, empty and unlisted spaces, but not full spaces.</li>
+				<li>They can be used to join private spaces, empty and unlisted spaces, but not full spaces. Banned accounts also can't use them.</li>
 				<li>Space owners and admins can delete these invites at any point in time, after which they can no longer be used.</li>
+				<li>You can only create a maximum of { LIMIT_SPACE_BOUND_INVITES } "space-bound" invites per space.</li>
 			</ul>
 			<p>
-				The second type, "join-me" invites can be created by anyone inside a space and are created by sending a direct message (DM) to someone.
+				The second type - "join-me" invites - can be created by anyone inside a space by using an "/invite" command in a direct message (DM) chat.
 				They are essentially a quick way to tell someone where you are and invite them to join you.<br />
-				Note: While a "join-me" invite allows to join an unlisted public room, it does not allow to join a private room, unless the one using it
-				is permitted by other means (e.g. being an admin or on the space's allow list) or the creator of the "join-me" invite is an admin.
+				Note: While a "join-me" invite allows to join an unlisted public room, it does not allow to join a private room, unless the recipient
+				is able to join the space even without the invite (e.g. being an admin or on the space's allow list) or the creator of the "join-me" invite is an admin.
 			</p>
 			<ul>
-				<li>You can send a "join-me" invite by typing the "/invite" command into the direct message input field.</li>
-				<li>These invites can be used only once and currently expire 120 minutes after they were created and sent.</li>
+				<li>You can send a "join-me" invite by using the "/invite" command in the direct message input field.</li>
+				<li>These invites can be used only once and expire 120 minutes after they were created and sent.</li>
 				<li>"Join-me" invites are bound to the user account they are sent to and cannot be used by someone else.</li>
-				<li>The invite link only works while any character of the user account who sent the invite is still online and inside the space the invite is for.</li>
-				<li>The invite details cannot be edited by the one creating it. The purpose of "join-me" invites is to be simple & quick.</li>
-				<li>Space owners and admins can delete these invites at any point in time, after which they can no longer be used.</li>
+				<li>The invite link only works while the character that created it is still online and inside the space the invite is for.</li>
+				<li>The invite details cannot be edited by the one creating it. The purpose of "join-me" invites is to be simple and quick to use.</li>
+				<li>Banned accounts cannot be invited this way.</li>
+				<li>Space owners, admins and the invite's author can delete these invites at any point in time, after which they can no longer be used.</li>
 			</ul>
 
 			<h4 id='SP_Space_administration'>Space administration</h4>

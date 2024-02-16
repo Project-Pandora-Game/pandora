@@ -22,16 +22,14 @@ export function BoneUI(): ReactElement {
 	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 	const showBones = useObservable(editor.showBones);
 
-	const setPose = useCallback(({ bones, arms, leftArm, rightArm, legs, view }: PartialAppearancePose) => {
+	const setPose = useCallback(({ arms, leftArm, rightArm, ...copy }: PartialAppearancePose) => {
 		character.getAppearance()
 			.editorDoAction({
 				type: 'pose',
 				target: character.id,
-				bones,
 				leftArm: { ...arms, ...leftArm },
 				rightArm: { ...arms, ...rightArm },
-				legs,
-				view,
+				...copy,
 			});
 	}, [character]);
 

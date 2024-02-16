@@ -9,7 +9,7 @@ import type { BoneDefinitionCompressed, BoneName, CharacterView, Condition, Coor
 import type { AssetModuleDefinition } from './modules';
 import type { AssetLockProperties, AssetProperties } from './properties';
 import type { RoomDeviceProperties } from './roomDeviceProperties';
-import type { AppearanceArmPose, AssetsPosePreset, AssetsPosePresets } from './state/characterStatePose';
+import type { AppearanceArmPose, AppearanceArmsOrder, AssetsPosePreset, AssetsPosePresets } from './state/characterStatePose';
 
 // Each asset must have a size (bodyparts and only bodyparts have `bodypart` size)
 // The size is used to make sure you cannot infinitely recurse storing items into one another
@@ -37,6 +37,7 @@ export interface AssetDefinitionPoseLimit<A extends AssetDefinitionExtraArgs = A
 	arms?: Partial<AppearanceArmPose>;
 	leftArm?: Partial<AppearanceArmPose>;
 	rightArm?: Partial<AppearanceArmPose>;
+	armsOrder?: Partial<AppearanceArmsOrder>;
 	legs?: LegsPose | LegsPose[];
 	view?: CharacterView;
 }

@@ -39,9 +39,13 @@ export type ComputedLayerPriority = Exclude<LayerPriority, DoubleOrdered>
 
 type LeftRight = 'LEFT' | 'RIGHT';
 
-export function useComputedLayerPriority({ view }: Immutable<AppearancePose>): readonly ComputedLayerPriority[] {
+export function useComputedLayerPriority({ view, armsOrder }: Immutable<AppearancePose>): readonly ComputedLayerPriority[] {
 	return useMemo(() => {
 		const arms: [LeftRight, LeftRight] = ['LEFT', 'RIGHT'];
+
+		if (armsOrder.upper === 'right') {
+			arms.reverse();
+		}
 
 		const order = [
 			'BACKGROUND',
@@ -87,7 +91,7 @@ export function useComputedLayerPriority({ view }: Immutable<AppearancePose>): r
 				return order.reverse();
 		}
 		AssertNever(view);
-	}, [view]);
+	}, [view, armsOrder.upper]);
 }
 
 // Some priority layers need their internal order reversed to make sense

@@ -19,7 +19,7 @@ import { ItemRoomDevice, ItemTemplateSchema, RoomDeviceDeploymentChange, RoomDev
 import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemId, ItemIdSchema } from './item/base';
 import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure } from './modules';
 import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
-import { AppearanceArmPoseSchema, AppearancePoseSchema } from './state/characterStatePose';
+import { AppearanceArmPoseSchema, AppearanceArmsOrderSchema, AppearancePoseSchema } from './state/characterStatePose';
 import { RestrictionOverride } from './state/characterStateTypes';
 import { AssetFrameworkGlobalStateContainer } from './state/globalState';
 
@@ -67,6 +67,7 @@ export const AppearanceActionPose = z.object({
 	bones: AppearancePoseSchema.shape.bones.optional(),
 	leftArm: AppearanceArmPoseSchema.partial().optional(),
 	rightArm: AppearanceArmPoseSchema.partial().optional(),
+	armsOrder: AppearanceArmsOrderSchema.partial().optional(),
 	legs: LegsPoseSchema.optional(),
 	view: CharacterViewSchema.optional(),
 });

@@ -36,6 +36,9 @@ export type ArmRotation = z.infer<typeof ArmRotationSchema>;
 export const ArmFingersSchema = z.enum(['spread', 'fist']);
 export type ArmFingers = z.infer<typeof ArmFingersSchema>;
 
+export const ArmSegmentOrderSchema = z.enum(['left', 'right']);
+export type ArmSegmentOrder = z.infer<typeof ArmSegmentOrderSchema>;
+
 export const LegsPoseSchema = z.enum(['standing', 'sitting', 'kneeling']);
 export type LegsPose = z.infer<typeof LegsPoseSchema>;
 

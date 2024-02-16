@@ -3,8 +3,8 @@ import _ from 'lodash';
 import { ZodEnum } from 'zod';
 import { CloneDeepMutable, IntervalSetIntersection } from '../utility';
 import type { AssetDefinitionPoseLimit, AssetDefinitionPoseLimits } from './definitions';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
-import type { AppearanceArmPose, AppearancePose } from './state/characterStatePose';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
+import type { AppearanceArmPose, AppearanceArmsOrder, AppearancePose } from './state/characterStatePose';
 import { PartialAppearancePose, GetDefaultAppearancePose } from './state/characterStatePose';
 
 class TreeLimit {
@@ -270,7 +270,7 @@ function CreateTreeNode(limits: Immutable<AssetDefinitionPoseLimits>): TreeNode 
 	return new TreeNode(FromLimit(limits), nodeChildren);
 }
 
-function FromPose({ bones, leftArm, rightArm, arms, legs, view }: Immutable<PartialAppearancePose>): Map<string, number> {
+function FromPose({ bones, leftArm, rightArm, arms, armsOrder, legs, view }: Immutable<PartialAppearancePose>): Map<string, number> {
 	const data = new Map<string, number>();
 
 	if (bones) {
@@ -283,6 +283,7 @@ function FromPose({ bones, leftArm, rightArm, arms, legs, view }: Immutable<Part
 	}
 	FromArmPose(data, 'leftArm', { ...arms, ...leftArm });
 	FromArmPose(data, 'rightArm', { ...arms, ...rightArm });
+	FromArmsOrder(data, armsOrder);
 	EnumToIndex(LegsPoseSchema, legs, (index) => data.set('legs', index));
 	EnumToIndex(CharacterViewSchema, view, (index) => data.set('view', index));
 
@@ -295,7 +296,11 @@ function FromArmPose(data: Map<string, number>, prefix: 'leftArm' | 'rightArm', 
 	EnumToIndex(ArmFingersSchema, fingers, (index) => data.set(`${prefix}.fingers`, index));
 }
 
-function FromLimit({ bones, leftArm, rightArm, arms, legs, view }: Immutable<AssetDefinitionPoseLimit>): Map<string, [number, number][]> {
+function FromArmsOrder(data: Map<string, number>, { upper }: Partial<AppearanceArmsOrder> = {}): void {
+	EnumToIndex(ArmSegmentOrderSchema, upper, (index) => data.set('armsOrder.upper', index));
+}
+
+function FromLimit({ bones, leftArm, rightArm, arms, armsOrder, legs, view }: Immutable<AssetDefinitionPoseLimit>): Map<string, [number, number][]> {
 	const data = new Map<string, [number, number][]>();
 
 	if (bones) {
@@ -311,6 +316,7 @@ function FromLimit({ bones, leftArm, rightArm, arms, legs, view }: Immutable<Ass
 	}
 	FromArmLimit(data, 'leftArm', { ...arms, ...leftArm });
 	FromArmLimit(data, 'rightArm', { ...arms, ...rightArm });
+	FromArmsOrderLimit(data, armsOrder);
 	EnumToIndex(CharacterViewSchema, view, (index) => data.set('view', [[index, index]]));
 	if (typeof legs === 'string') {
 		EnumToIndex(LegsPoseSchema, legs, (index) => data.set('legs', [[index, index]]));
@@ -329,10 +335,18 @@ function FromArmLimit(data: Map<string, [number, number][]>, prefix: 'leftArm' |
 	EnumToIndex(ArmFingersSchema, fingers, (index) => data.set(`${prefix}.fingers`, [[index, index]]));
 }
 
+function FromArmsOrderLimit(data: Map<string, [number, number][]>, { upper }: Partial<AppearanceArmsOrder> = {}): void {
+	EnumToIndex(ArmSegmentOrderSchema, upper, (index) => data.set('armsOrder.upper', [[index, index]]));
+}
+
 function ToArmPose(data: ReadonlyMap<string, number>, prefix: 'leftArm' | 'rightArm', pose: AppearancePose): void {
 	IndexToEnum(ArmPoseSchema, data.get(`${prefix}.position`), (value) => pose[prefix].position = value);
 	IndexToEnum(ArmRotationSchema, data.get(`${prefix}.rotation`), (value) => pose[prefix].rotation = value);
 	IndexToEnum(ArmFingersSchema, data.get(`${prefix}.fingers`), (value) => pose[prefix].fingers = value);
+}
+
+function ToArmsOrder(data: ReadonlyMap<string, number>, pose: AppearancePose): void {
+	IndexToEnum(ArmSegmentOrderSchema, data.get('armsOrder.upper'), (value) => pose.armsOrder.upper = value);
 }
 
 function ToPose(data: ReadonlyMap<string, number>): AppearancePose {
@@ -340,6 +354,7 @@ function ToPose(data: ReadonlyMap<string, number>): AppearancePose {
 
 	ToArmPose(data, 'leftArm', pose);
 	ToArmPose(data, 'rightArm', pose);
+	ToArmsOrder(data, pose);
 
 	IndexToEnum(LegsPoseSchema, data.get('legs'), (value) => pose.legs = value);
 	IndexToEnum(CharacterViewSchema, data.get('view'), (value) => pose.view = value);

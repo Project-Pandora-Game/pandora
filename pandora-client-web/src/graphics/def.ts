@@ -42,6 +42,7 @@ type LeftRight = 'LEFT' | 'RIGHT';
 export function useComputedLayerPriority({ view, armsOrder }: Immutable<AppearancePose>): readonly ComputedLayerPriority[] {
 	return useMemo(() => {
 		const arms: [LeftRight, LeftRight] = ['LEFT', 'RIGHT'];
+		const legs: [LeftRight, LeftRight] = ['LEFT', 'RIGHT'];
 
 		if (armsOrder.upper === 'left') {
 			arms.reverse();
@@ -62,10 +63,26 @@ export function useComputedLayerPriority({ view, armsOrder }: Immutable<Appearan
 
 			'BELOW_BODY_SOLES',
 			'BODY_SOLES',
+
+			`BELOW_LEG_SOLE_${legs[0]}`,
+			`LEG_SOLE_${legs[0]}`,
+			`BELOW_LEG_${legs[0]}`,
+
+			`BELOW_LEG_SOLE_${legs[1]}`,
+			`LEG_SOLE_${legs[1]}`,
+			`BELOW_LEG_${legs[1]}`,
+
 			'BELOW_BODY',
+
+			`LEG_${legs[0]}`,
+			`LEG_${legs[1]}`,
+
 			'BODY',
 			'BELOW_BREASTS',
 			'BREASTS',
+
+			`ABOVE_LEG_${legs[0]}`,
+			`ABOVE_LEG_${legs[1]}`,
 			'ABOVE_BODY',
 
 			`BELOW_ARM_${arms[0]}_FRONT`,
@@ -100,6 +117,10 @@ export const PRIORITY_ORDER_REVERSE_PRIORITIES: ReadonlySet<ComputedLayerPriorit
 	'BELOW_BACK_HAIR',
 	'BACK_HAIR',
 	'BELOW_BODY_SOLES',
+	'BELOW_LEG_SOLE_LEFT',
+	'BELOW_LEG_SOLE_RIGHT',
+	'BELOW_LEG_LEFT',
+	'BELOW_LEG_RIGHT',
 	'BELOW_BODY',
 	'BELOW_BREASTS',
 	'BELOW_ARM_LEFT_BACK',
@@ -118,6 +139,21 @@ export const PRIORITY_ORDER_MIRROR: Partial<Record<LayerPriority, LayerPriority>
 
 	ABOVE_ARM_LEFT: 'ABOVE_ARM_RIGHT',
 	ABOVE_ARM_RIGHT: 'ABOVE_ARM_LEFT',
+
+	BELOW_LEG_SOLE_LEFT: 'BELOW_LEG_SOLE_RIGHT',
+	BELOW_LEG_SOLE_RIGHT: 'BELOW_LEG_SOLE_LEFT',
+
+	LEG_SOLE_LEFT: 'LEG_SOLE_RIGHT',
+	LEG_SOLE_RIGHT: 'LEG_SOLE_LEFT',
+
+	BELOW_LEG_LEFT: 'BELOW_LEG_RIGHT',
+	BELOW_LEG_RIGHT: 'BELOW_LEG_LEFT',
+
+	LEG_LEFT: 'LEG_RIGHT',
+	LEG_RIGHT: 'LEG_LEFT',
+
+	ABOVE_LEG_LEFT: 'ABOVE_LEG_RIGHT',
+	ABOVE_LEG_RIGHT: 'ABOVE_LEG_LEFT',
 };
 
 if (!(Object.entries(PRIORITY_ORDER_MIRROR)).every(([original, mirror]) => PRIORITY_ORDER_MIRROR[mirror] === original)) {

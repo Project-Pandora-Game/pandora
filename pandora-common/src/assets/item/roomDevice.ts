@@ -8,7 +8,7 @@ import type { AppearanceItems, AppearanceValidationResult } from '../appearanceV
 import type { Asset } from '../asset';
 import type { IExportOptions, IItemModule } from '../modules/common';
 import type { AssetProperties } from '../properties';
-import { ItemIdSchema, type IItemLoadContext, type IItemValidationContext, type ItemBundle } from './base';
+import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base';
 
 import { CharacterId, CharacterIdSchema } from '../../character/characterTypes';
 import { MemoizeNoArg } from '../../utility';
@@ -57,12 +57,6 @@ export const RoomDeviceBundleSchema = z.object({
 	slotOccupancy: z.record(z.string(), CharacterIdSchema),
 });
 export type RoomDeviceBundle = z.infer<typeof RoomDeviceBundleSchema>;
-
-export const RoomDeviceLinkSchema = z.object({
-	device: ItemIdSchema,
-	slot: z.string(),
-});
-export type RoomDeviceLink = z.infer<typeof RoomDeviceLinkSchema>;
 
 interface ItemRoomDeviceProps extends ItemBaseProps<'roomDevice'> {
 	readonly deployment: Immutable<RoomDeviceDeployment>;

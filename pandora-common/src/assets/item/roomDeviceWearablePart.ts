@@ -1,23 +1,30 @@
 import type { Immutable } from 'immer';
+import { z } from 'zod';
 
 import type { HexRGBAColorString } from '../../validation';
-import type { RoomDeviceLink, ItemRoomDevice } from './roomDevice';
 import type { AppearanceValidationResult } from '../appearanceValidation';
-import type { AssetProperties } from '../properties';
-import type { IExportOptions } from '../modules/common';
 import type { Asset } from '../asset';
-import type { ItemBundle, IItemLoadContext, IItemValidationContext, ItemTemplate } from './base';
+import type { IExportOptions } from '../modules/common';
+import type { AssetProperties } from '../properties';
+import { ItemIdSchema, type IItemLoadContext, type IItemValidationContext, type ItemBundle, type ItemTemplate } from './base';
+import type { ItemRoomDevice } from './roomDevice';
 
 import { Assert, MemoizeNoArg } from '../../utility';
-import { RoomDevicePropertiesResult, GetPropertiesForSlot } from '../roomDeviceProperties';
+import { GetPropertiesForSlot, RoomDevicePropertiesResult } from '../roomDeviceProperties';
 
-import { ItemBaseProps, ItemBase } from './_internal';
+import { ItemBase, ItemBaseProps } from './_internal';
 
 declare module './_internal' {
 	interface InternalItemTypeMap {
 		roomDeviceWearablePart: ItemRoomDeviceWearablePart;
 	}
 }
+
+export const RoomDeviceLinkSchema = z.object({
+	device: ItemIdSchema,
+	slot: z.string(),
+});
+export type RoomDeviceLink = z.infer<typeof RoomDeviceLinkSchema>;
 
 interface ItemRoomDeviceWearablePartProps extends ItemBaseProps<'roomDeviceWearablePart'> {
 	readonly roomDeviceLink: Immutable<RoomDeviceLink> | null;

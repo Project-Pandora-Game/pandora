@@ -10,7 +10,8 @@ import type { AssetColorization, AssetType, WearableAssetType } from '../definit
 import type { AssetFrameworkRoomState } from '../state/roomState';
 import type { InternalItemTypeMap, ItemBase } from './_internal';
 import type { LockBundle } from './lock';
-import type { RoomDeviceBundle, RoomDeviceLink } from './roomDevice';
+import type { RoomDeviceBundle } from './roomDevice';
+import type { RoomDeviceLink } from './roomDeviceWearablePart';
 
 import { Logger } from '../../logging';
 import { HexRGBAColorString, HexRGBAColorStringSchema, ZodTemplateString } from '../../validation';

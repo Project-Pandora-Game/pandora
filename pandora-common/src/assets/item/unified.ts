@@ -13,8 +13,8 @@ import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, Ite
 import { __internal_InitRecursiveItemSchemas } from './_internalRecursion';
 import { ItemLock, LockBundleSchema } from './lock';
 import { ItemPersonal } from './personal';
-import { ItemRoomDevice, RoomDeviceBundleSchema, RoomDeviceLinkSchema } from './roomDevice';
-import { ItemRoomDeviceWearablePart } from './roomDeviceWearablePart';
+import { ItemRoomDevice, RoomDeviceBundleSchema } from './roomDevice';
+import { ItemRoomDeviceWearablePart, RoomDeviceLinkSchema } from './roomDeviceWearablePart';
 
 /**
  * Serializable data bundle containing information about an item.

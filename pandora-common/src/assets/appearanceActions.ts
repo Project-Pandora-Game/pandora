@@ -9,13 +9,14 @@ import type { ActionSpaceContext } from '../space/space';
 import { Assert, AssertNever, ShuffleArray } from '../utility';
 import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
 import { AppearanceRootManipulator } from './appearanceHelpers';
-import { ActionMessageTemplateHandler, ActionTarget, ActionTargetSelectorSchema, CharacterSelectorSchema, ItemContainerPath, ItemContainerPathSchema, ItemId, ItemIdSchema, ItemPath, ItemPathSchema } from './appearanceTypes';
+import { ActionMessageTemplateHandler, ActionTarget, ActionTargetSelectorSchema, CharacterSelectorSchema, ItemContainerPath, ItemContainerPathSchema, ItemPath, ItemPathSchema } from './appearanceTypes';
 import { AppearanceItems, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import type { Asset } from './asset';
 import type { AssetManager } from './assetManager';
 import { WearableAssetType } from './definitions';
 import { CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
-import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemRoomDevice, ItemTemplateSchema, RoomDeviceDeploymentChange, RoomDeviceDeploymentChangeSchema } from './item';
+import { ItemRoomDevice, ItemTemplateSchema, RoomDeviceDeploymentChange, RoomDeviceDeploymentChangeSchema } from './item';
+import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemId, ItemIdSchema } from './item/base';
 import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure } from './modules';
 import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 import { AppearanceArmPoseSchema, AppearancePoseSchema } from './state/characterStatePose';
@@ -24,7 +25,6 @@ import { AssetFrameworkGlobalStateContainer } from './state/globalState';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../validation';
-import type { } from './item/base';
 
 export const AppearanceActionCreateSchema = z.object({
 	type: z.literal('create'),

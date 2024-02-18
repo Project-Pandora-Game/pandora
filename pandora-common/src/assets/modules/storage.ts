@@ -4,17 +4,13 @@ import { ItemInteractionType } from '../../character/restrictionTypes';
 import type { InteractionId } from '../../gameLogic/interactions';
 import { IsNotNullable, Satisfies } from '../../utility';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
-import { ItemId } from '../appearanceTypes';
 import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidationResult } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
 import { AssetSize, AssetSizeMapping } from '../definitions';
 import { ConditionOperator } from '../graphics';
-import { IItemCreationContext, IItemLoadContext, IItemValidationContext, Item } from '../item/base';
 import { __internal_ItemBundleSchemaRecursive, __internal_ItemTemplateSchemaRecursive } from '../item/_internalRecursion';
+import { IItemCreationContext, IItemLoadContext, IItemValidationContext, Item, ItemId } from '../item/base';
 import { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common';
-
-// Fix for pnpm resolution weirdness
-import type { } from '../item/base';
 
 export interface IModuleConfigStorage extends IModuleConfigCommon<'storage'> {
 	maxCount: number;

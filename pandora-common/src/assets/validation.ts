@@ -1,9 +1,8 @@
-import type { ItemId } from './appearanceTypes';
 import type { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
 import type { AssetManager } from './assetManager';
-import type { IItemLocationDescriptor } from './item';
-import type { AssetFrameworkRoomState } from './state/roomState';
+import type { IItemLocationDescriptor, ItemId } from './item';
 import { ITEM_LIMIT_CHARACTER_WORN, ITEM_LIMIT_ROOM_INVENTORY } from './itemLimits';
+import type { AssetFrameworkRoomState } from './state/roomState';
 
 const VALIDATIONS = {
 	character: {

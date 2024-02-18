@@ -1,9 +1,9 @@
 import type { Immutable } from 'immer';
+import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
 import type { GameLogicCharacter } from '../../gameLogic';
 import type { Satisfies } from '../../utility';
-import type { ItemId } from '../appearanceTypes';
 import type { Asset } from '../asset';
 import type { AssetManager } from '../assetManager';
 import type { AssetColorization, AssetType, WearableAssetType } from '../definitions';
@@ -13,9 +13,16 @@ import type { LockBundle } from './lock';
 import type { RoomDeviceBundle, RoomDeviceLink } from './roomDevice';
 
 import { Logger } from '../../logging';
-import { HexRGBAColorString, HexRGBAColorStringSchema } from '../../validation';
+import { HexRGBAColorString, HexRGBAColorStringSchema, ZodTemplateString } from '../../validation';
 import type { AssetId } from '../base';
 import type { ItemModuleData, ItemModuleTemplate } from '../modules';
+
+export const ItemIdSchema = ZodTemplateString<`i/${string}`>(z.string(), /^i\//);
+export type ItemId = z.infer<typeof ItemIdSchema>;
+
+export function GenerateRandomItemId(): ItemId {
+	return `i/${nanoid()}`;
+}
 
 export type ItemTypeMap =
 	Satisfies<

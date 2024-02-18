@@ -3,17 +3,16 @@ import type { Writeable } from 'zod';
 
 import type { HexRGBAColorString } from '../../validation';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
-import type { ItemId } from '../appearanceTypes';
+import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { Asset } from '../asset';
 import type { AssetManager } from '../assetManager';
+import type { AssetColorization, AssetType, WearableAssetType } from '../definitions';
 import type { ItemModuleAction } from '../modules';
-import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { IExportOptions, IItemModule } from '../modules/common';
-import type { AssetType, WearableAssetType, AssetColorization } from '../definitions';
-import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, ItemBundle, ItemColorBundle, ItemTemplate, Item } from './base';
+import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, Item, ItemBundle, ItemColorBundle, ItemId, ItemTemplate } from './base';
 
 import { Assert, MemoizeNoArg } from '../../utility';
-import { AssetProperties, AssetPropertiesIndividualResult, MergeAssetPropertiesIndividual, CreateAssetPropertiesIndividualResult } from '../properties';
+import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from '../properties';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 export interface InternalItemTypeMap { }

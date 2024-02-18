@@ -1,15 +1,15 @@
 import { isEqual, uniqWith } from 'lodash';
-import type { ItemInteractionType, RestrictionResult } from '../character/restrictionTypes';
 import type { CharacterId, CharacterRestrictionsManager } from '../character';
+import type { ItemInteractionType, RestrictionResult } from '../character/restrictionTypes';
 import type { GameLogicCharacter, GameLogicPermission, InteractionId } from '../gameLogic';
 import { Assert, AssertNever, AssertNotNullable } from '../utility';
 import type { AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
 import type { AppearanceActionContext } from './appearanceActions';
-import type { ActionHandlerMessage, ActionHandlerMessageWithTarget, ActionTarget, ActionTargetSelector, ItemContainerPath, ItemId, ItemPath } from './appearanceTypes';
+import type { ActionHandlerMessage, ActionHandlerMessageWithTarget, ActionTarget, ActionTargetSelector, ItemContainerPath, ItemPath } from './appearanceTypes';
+import type { Item, ItemId } from './item';
 import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
 import { RoomInventory } from './roomInventory';
 import type { AssetFrameworkGlobalState } from './state/globalState';
-import type { Item } from './item';
 
 export class AppearanceActionProcessingContext {
 	private readonly _context: AppearanceActionContext;

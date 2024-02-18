@@ -1,22 +1,21 @@
 import type { Immutable } from 'immer';
-import { z } from 'zod';
 import { first } from 'lodash';
+import { z } from 'zod';
 
-import type { Asset } from '../asset';
-import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import type { AppearanceModuleActionContext } from '../appearanceActions';
-import type { AssetProperties } from '../properties';
 import type { HexRGBAColorString } from '../../validation';
+import type { AppearanceModuleActionContext } from '../appearanceActions';
+import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
+import type { Asset } from '../asset';
 import type { IExportOptions, IItemModule } from '../modules/common';
-import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base';
+import type { AssetProperties } from '../properties';
+import { ItemIdSchema, type IItemLoadContext, type IItemValidationContext, type ItemBundle } from './base';
 
 import { CharacterId, CharacterIdSchema } from '../../character/characterTypes';
 import { MemoizeNoArg } from '../../utility';
-import { CreateRoomDevicePropertiesResult, MergeRoomDeviceProperties, RoomDeviceProperties, RoomDevicePropertiesResult } from '../roomDeviceProperties';
-import { ItemIdSchema } from '../appearanceTypes';
 import { ItemModuleAction, LoadItemModule } from '../modules';
+import { CreateRoomDevicePropertiesResult, MergeRoomDeviceProperties, RoomDeviceProperties, RoomDevicePropertiesResult } from '../roomDeviceProperties';
 
-import { ItemBaseProps, ItemBase } from './_internal';
+import { ItemBase, ItemBaseProps } from './_internal';
 
 declare module './_internal' {
 	interface InternalItemTypeMap {

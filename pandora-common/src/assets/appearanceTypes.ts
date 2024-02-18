@@ -4,12 +4,8 @@ import type { CharacterRestrictionsManager } from '../character/restrictionsMana
 import type { ChatActionId, IChatMessageAction, IChatMessageActionTargetCharacter, IChatMessageActionTargetRoomInventory } from '../chat';
 import type { GameLogicCharacter } from '../gameLogic/character';
 import type { ActionSpaceContext } from '../space/space';
-import { ZodTemplateString } from '../validation';
-import type { Item } from './item';
+import { ItemIdSchema, type Item } from './item/base';
 import type { AssetFrameworkCharacterState } from './state/characterState';
-
-export const ItemIdSchema = ZodTemplateString<`i/${string}`>(z.string(), /^i\//);
-export type ItemId = z.infer<typeof ItemIdSchema>;
 
 export const ItemContainerPathSchema = z.array(
 	z.object({

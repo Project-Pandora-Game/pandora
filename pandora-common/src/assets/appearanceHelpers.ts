@@ -1,10 +1,10 @@
 import _ from 'lodash';
 import type { CharacterId } from '../character';
 import { Assert, AssertNever } from '../utility';
-import type { ActionHandlerMessageTarget, ActionHandlerMessageTemplate, ActionHandlerMessageWithTarget, ActionTargetSelector, ItemContainerPath, ItemId, ItemPath } from './appearanceTypes';
+import type { ActionHandlerMessageTarget, ActionHandlerMessageTemplate, ActionHandlerMessageWithTarget, ActionTargetSelector, ItemContainerPath, ItemPath } from './appearanceTypes';
 import { AppearanceItems, AppearanceItemsFixBodypartOrder } from './appearanceValidation';
 import type { AssetManager } from './assetManager';
-import type { Item } from './item';
+import type { Item, ItemId } from './item';
 import type { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
 import type { IItemModule } from './modules/common';
 import type { AssetFrameworkGlobalState } from './state/globalState';

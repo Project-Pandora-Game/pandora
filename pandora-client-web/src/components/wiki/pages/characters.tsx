@@ -21,11 +21,48 @@ export function WikiCharacters(): ReactElement {
 
 			<h3>Character-specific features</h3>
 			<ul>
+				<li><a href='#CH_Character_immersion'>Character immersion effects</a></li>
 				<li><a href='#CH_Character_movement'>Character movement</a></li>
 				<li><a href='#CH_Character_context_menu'>Character context menu</a></li>
 				<li><a href='#CH_Character_wardrobe'>Character wardrobe</a></li>
 				<li><a href='#CH_Character_permissions'>Character permissions</a></li>
 			</ul>
+
+			<h4 id='CH_Character_immersion'>Character immersion effects</h4>
+			<p>
+				Items in Pandora can put certain immersion enhancing effects on a character. Restraints...
+			</p>
+			<ul>
+				<li>can prevent you from interacting with items, by blocking your hand usage.</li>
+				<li>can prevent you from moving around and/or leaving the current room (for example <a href='/wiki/items/#IT_Room-level_items'>room devices</a>).</li>
+				<li>with a seeing impairment effect will darken your view of the room partially or completely.</li>
+				<li>with a speech impairment effect will muffle your normal and whisper messages so that others have a hard time making sense out of them.</li>
+				<li>with a hearing impairment will muffle the messages you receive so that you have a hard time making sense out of them.</li>
+			</ul>
+			<p>
+				Items with such effects cannot just be used as a cosmetic to make your character look nice. They come with consistent experiences
+				and affect characters in predictable ways - the effects on them cannot be altered, ignored or bypassed.
+				That way everyone can easily predict what effects items have on the person wearing them.
+				If you dislike any of these effects, such as seeing a fully black room view with certain heavy blindfolds, you
+				can simply <a href='/wiki/items/#IT_Item_preferences_and_limits'>block according items.</a>
+				Note that items come with different strength levels of such effects.
+				For example items with a weaker speech impairment effect might still allow the wearer to be mostly understandable.
+			</p>
+			<p>
+				Note on roleplaying with communication impairments:<br />
+				While in a scene, someone may be of the view that not being able to understand speech is a problem in terms of making
+				decisions on how to follow-up with the current play. They may want a way to understand "gag-talk" to feel more safe and confident.
+				It is however the purpose of a gag to prevent exactly that.
+				All users can expect that in Pandora muffled speech cannot be assumed as understandable. It is a consistent experience for all users.
+				If you want someone to be understandable despite a gag, using gags with a light effect can be an option, too.<br />
+				Moreover, when the play partner supports the scene well, it is also not necessary to understand "gag-talk" to feel on top of things.
+				Users with gag effects on their character may want to
+				describe and convey important non-verbal communication towards the play partner in the
+				form of <a href='/wiki/items/#SP_Room_chat_Chat_modes'>emotes</a>.
+				This can be describing things the play partner could notice, such as discomfort, the state of the own body, or a hint towards
+				what the muffled sentence likely meant from the tone and strength of the voice. A good roleplaying scene relies on all parties
+				to describe the scene in detail.
+			</p>
 
 			<h4 id='CH_Character_movement'>Character movement</h4>
 			<p>
@@ -35,7 +72,7 @@ export function WikiCharacters(): ReactElement {
 			</p>
 			<ul>
 				<li>If you have problems dragging the name because it is too small, you can zoom in with mouse wheel or pinch-to-zoom gesture.</li>
-				<li>Items can prevent or slow down character movement.</li>
+				<li>Items can prevent character movement.</li>
 				<li>
 					The "Character Y Offset" value inside the "Pose"-tab can shift your character upwards and downwards alongside the z-axis
 					without changing your character's relative size in an unrealistic way.

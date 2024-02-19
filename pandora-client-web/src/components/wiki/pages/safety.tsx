@@ -66,11 +66,22 @@ export function WikiSafety(): ReactElement {
 			<p>
 				Safemode should be seen as a last resort that you will hopefully never need to use in the case when
 				your <a href='#SA_Out-of-character_communication'>OOC</a>-wishes were maliciously ignored or you were irresponsibly abandoned.
+				The intended way to get out of restraints is to ask other characters for help with removing them.
+			</p>
+			<p>
+				Some items might not be removable by everyone (for example several lock types). By default these items require additional permissions
+				to be used. The decision whether to allow someone to use them or not is left to users, letting everyone choose if they are
+				comfortable with such items being used and trust the person using them.
+				If you don't feel comfortable with these items being used on you, simply deny the request.
 			</p>
 			<ul>
 				<li>You can enter safemode at any time by clicking the "Enter safemode"-button next to your character under the "Rooms"-tab.</li>
 				<li>After you entered safemode, you will be unable to leave the mode for a certain time, which simulates a period of time to recover from a bad play.</li>
-				<li>The cooldown period is there to prevent misuse and should not matter, as it is only a backup user safety feature that ideally would never be needed.</li>
+				<li>
+					The cooldown period is there to make restraints feel impactful.
+					Safemode was not added to be used outside of emergencies.
+					It is a backup user safety feature that will not be needed in consensual, trusted power exchanges.
+				</li>
 				<li>As we add further features that support user safety, we will likely increase the safemode cooldown time.</li>
 			</ul>
 
@@ -79,7 +90,7 @@ export function WikiSafety(): ReactElement {
 				Pandora also gives you the ability to change the display name for your user account that is used in your account's profile or in the contacts list, as well
 				as for chatting via direct messages. The default display name is your login username.<br />
 				If you do not want your username to be publicly visible to others, for safety or security reasons, you can change the display name under Settings
-				at the top and then "Account"-tab. The display name can be changed once every 7 days.
+				at the top and then "Account"-tab. The account display name can be changed once every 7 days.
 			</p>
 
 		</>

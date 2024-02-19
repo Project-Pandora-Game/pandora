@@ -76,6 +76,10 @@ export function WikiItems(): ReactElement {
 				<li>Some room devices have <a href='#IT_Lock_module'>lock modules</a> that can for instance prevent a character from getting out of a room device slot.</li>
 				<li>You are unable to leave the room while your character occupies a character slot of a room device.</li>
 				<li>Room devices can also be stored in an <a href='#IT_Saving_outfits'>outfit template</a>, like regular items.</li>
+				<li>
+					Warning: Room devices can get you stuck in an empty room, which would make
+					using <a href='/wiki/characters/#SA_Safemode'>safemode</a> the only way out.
+				</li>
 			</ul>
 
 			<h4 id='IT_Storage_modules'>Storage modules</h4>

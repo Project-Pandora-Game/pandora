@@ -67,13 +67,23 @@ export function WikiSafety(): ReactElement {
 				Safemode should be seen as a last resort that you will hopefully never need to use in the case when
 				your <a href='#SA_Out-of-character_communication'>OOC</a>-wishes were maliciously ignored or you were irresponsibly abandoned.<br />
 				The intended way to get out of restraints is to ask other characters for help with removing them.
-				Restraint options that cannot be removed by others are per default
-				not usable by other characters without consent and it is the user's judgement whom to trust with high impact tools, such as password locks.
+				However, it is every user's responsibility to not leave another user's character in restraints against their will when a play ends
+				or someone has to leave.
+			</p>
+			<p>
+				Restraint options that cannot universally be removed by everyone are per default
+				not usable by other characters without explicitly consenting. It is the user's judgement whom to trust
+				with high impact tools, such as password locks. That said, it is generally advisable to not let others use such items on you
+				without establishing trust first, for instance by playing a few times with restraints that can be removed by anyone and that do not prevent
+				you from leaving a space (<a href='/wiki/items/#IT_Room-level_items'>room devices</a> can get you stuck!).
 			</p>
 			<ul>
 				<li>You can enter safemode at any time by clicking the "Enter safemode"-button next to your character under the "Rooms"-tab.</li>
 				<li>After you entered safemode, you will be unable to leave the mode for a certain time, which simulates a period of time to recover from a bad play.</li>
-				<li>The cooldown period is there to prevent misuse and should not matter, as it is only a backup user safety feature that ideally would never be needed.</li>
+				<li>
+					The cooldown period is there to make restraints feel impactful and should not matter, as
+					it is only a backup user safety feature that would never be needed in consensual, trusted power exchanges.
+				</li>
 				<li>As we add further features that support user safety, we will likely increase the safemode cooldown time.</li>
 			</ul>
 

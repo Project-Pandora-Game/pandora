@@ -45,8 +45,8 @@ export function WikiCharacters(): ReactElement {
 				That way everyone can easily predict what effects items have on the person wearing them.
 				If you dislike any of these effects, such as seeing a fully black room view with certain heavy blindfolds, you
 				can simply <a href='/wiki/items/#IT_Item_preferences_and_limits'>block according items.</a>
-				Note that items come with different strength levels of such effects. For example items with lighter levels of
-				speech impairments might still be mostly understandable.
+				Note that items come with different strength levels of such effects.
+				For example items with a weaker speech impairment effect might still allow the wearer to be mostly understandable.
 			</p>
 			<p>
 				Note on roleplaying with communication impairments:<br />

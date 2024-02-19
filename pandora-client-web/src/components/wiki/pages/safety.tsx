@@ -65,7 +65,10 @@ export function WikiSafety(): ReactElement {
 			</p>
 			<p>
 				Safemode should be seen as a last resort that you will hopefully never need to use in the case when
-				your <a href='#SA_Out-of-character_communication'>OOC</a>-wishes were maliciously ignored or you were irresponsibly abandoned.
+				your <a href='#SA_Out-of-character_communication'>OOC</a>-wishes were maliciously ignored or you were irresponsibly abandoned.<br />
+				The intended way to get out of restraints is to ask other characters for help with removing them.
+				Restraint options that cannot be removed by others are per default
+				not usable by other characters without consent and it is the user's judgement whom to trust with high impact tools, such as password locks.
 			</p>
 			<ul>
 				<li>You can enter safemode at any time by clicking the "Enter safemode"-button next to your character under the "Rooms"-tab.</li>
@@ -79,7 +82,7 @@ export function WikiSafety(): ReactElement {
 				Pandora also gives you the ability to change the display name for your user account that is used in your account's profile or in the contacts list, as well
 				as for chatting via direct messages. The default display name is your login username.<br />
 				If you do not want your username to be publicly visible to others, for safety or security reasons, you can change the display name under Settings
-				at the top and then "Account"-tab. The display name can be changed once every 7 days.
+				at the top and then "Account"-tab. The account display name can be changed once every 7 days.
 			</p>
 
 		</>

@@ -395,7 +395,7 @@ class Color {
 		}
 		// Step 2: Calculate delta (d).
 		const d = ((s * v) >> 16) + 1;
-		// Ste[ 3: Calculate m, the minimal value of R; G, and B.
+		// Step 3: Calculate m, the minimal value of R; G, and B.
 		const m = v - d;
 		// Step 4: Determine the hue sector index (I) using the hexagon edge length constant (E).
 		const e = Color.e;
@@ -407,10 +407,14 @@ class Color {
 		else if (h >= e * 4 && h < e * 5) i = 4;
 		else i = 5; // if (h >= e *5)
 		// Step 5: Calculate the fractional part of hue (F).
-		const f = h - e * i;
-		// Step 6: Calculate the middle component (c).
+		let f = h - e * i;
+		// Step 6: Inverse F for specific sectors (1, 3, and 5), by subtracting F from the edge length constant (E).
+		if (i === 1 || i === 3 || i === 5) {
+			f = Color.e - f;
+		}
+		// Step 7: Calculate the middle component (c).
 		const c = ((f * d) >> 16) + m;
-		// Step 7: Assign R; G, and B according to the sector index (I).
+		// Step 8: Assign R; G, and B according to the sector index (I).
 		switch (i) {
 			case 0: return [v, c, m];
 			case 1: return [c, v, m];

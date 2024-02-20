@@ -382,7 +382,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			.toArray();
 	}
 
-	public async getSpacesWithOwnerOrAdmin(account: AccountId): Promise<SpaceDirectoryData[]> {
+	public async getSpacesWithOwnerOrAdminOrAllowed(account: AccountId): Promise<SpaceDirectoryData[]> {
 		return await this._spaces.find({
 			$or: [
 				{
@@ -390,6 +390,9 @@ export default class MongoDatabase implements PandoraDatabase {
 				},
 				{
 					'config.admin': { $elemMatch: { $in: [account] } },
+				},
+				{
+					'config.allow': { $elemMatch: { $in: [account] } },
 				},
 			],
 		})

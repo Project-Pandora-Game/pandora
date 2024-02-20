@@ -85,7 +85,7 @@ export const SpaceManager = new class SpaceManagerClass implements Service {
 			}
 		}
 		// Look for owned spaces or spaces this account is admin of
-		for (const spaceData of await GetDatabase().getSpacesWithOwnerOrAdmin(account.id)) {
+		for (const spaceData of await GetDatabase().getSpacesWithOwnerOrAdminOrAllowed(account.id)) {
 			// Load the space (using already loaded to avoid race conditions)
 			const space = this.loadedSpaces.get(spaceData.id) ?? await this._loadSpace(spaceData);
 			// If we are still owner or admin, add it to the list

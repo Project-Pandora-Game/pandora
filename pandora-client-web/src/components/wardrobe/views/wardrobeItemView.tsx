@@ -318,7 +318,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 						) : null
 					)
 				}
-				{ extraActions.map((Action, i) => <Action key={ i } item={ item } />) }
+				{ extraActions.map((Action, i) => <Action key={ i } target={ targetSelector } item={ item } />) }
 				{
 					singleItemContainer ? null : (
 						<button

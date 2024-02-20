@@ -3,23 +3,24 @@ import {
 	AssertNever,
 	Asset,
 	Item,
+	type ActionTargetSelector,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo } from 'react';
-import { useAssetManager } from '../../assets/assetManager';
-import { Tab, TabContainer } from '../common/tabs/tabs';
+import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
-import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
-import { WardrobeFocus } from './wardrobeTypes';
-import { useWardrobeContext } from './wardrobeContext';
-import { WardrobeFocusesItem, useWardrobeTargetItem, useWardrobeTargetItems } from './wardrobeUtils';
-import { InventoryAssetView } from './views/wardrobeAssetView';
-import { WardrobeItemConfigMenu } from './itemDetail/_wardrobeItemDetail';
-import { InventoryItemView } from './views/wardrobeItemView';
-import { RoomInventoryView } from './views/wardrobeRoomInventoryView';
-import { WardrobeTemplateEditMenu } from './templateDetail/_wardrobeTemplateDetail';
-import { InventoryOutfitView } from './views/wardrobeOutfitView';
+import React, { ReactElement, useCallback, useMemo } from 'react';
+import { useAssetManager } from '../../assets/assetManager';
 import { useObservable } from '../../observable';
+import { Tab, TabContainer } from '../common/tabs/tabs';
+import { WardrobeItemConfigMenu } from './itemDetail/_wardrobeItemDetail';
+import { WardrobeTemplateEditMenu } from './templateDetail/_wardrobeTemplateDetail';
+import { InventoryAssetView } from './views/wardrobeAssetView';
+import { InventoryItemView } from './views/wardrobeItemView';
+import { InventoryOutfitView } from './views/wardrobeOutfitView';
+import { SecondaryInventoryView } from './views/wardrobeSecondaryInventoryView';
+import { useWardrobeContext } from './wardrobeContext';
+import { WardrobeFocus } from './wardrobeTypes';
+import { WardrobeFocusesItem, useWardrobeTargetItem, useWardrobeTargetItems } from './wardrobeUtils';
 
 /** This hook doesn't generate or use a global state and shouldn't be used recursively */
 export function useWardrobeItems(currentFocus: WardrobeFocus): {
@@ -96,8 +97,8 @@ export function useWardrobeItems(currentFocus: WardrobeFocus): {
 	};
 }
 
-export function WardrobeItemManipulation({ className }: { className?: string; }): ReactElement {
-	const { globalState, target, assetList, heldItem, setHeldItem, focus } = useWardrobeContext();
+export function WardrobeItemManipulation(): ReactElement {
+	const { target, targetSelector, assetList, heldItem, setHeldItem, focus } = useWardrobeContext();
 	const currentFocus = useObservable(focus);
 	const { preFilter, containerContentsFilter, assetFilterAttributes } = useWardrobeItems(currentFocus);
 
@@ -105,6 +106,7 @@ export function WardrobeItemManipulation({ className }: { className?: string; })
 	const title = target.type === 'character' ? 'Currently worn items' : 'Room inventory used';
 
 	const isRoomInventory = target.type === 'room' && currentFocus.container.length === 0;
+	const roomInventoryTarget = useMemo((): ActionTargetSelector => ({ type: 'roomInventory' }), []);
 
 	const singleItemContainer = useMemo<boolean>(() => {
 		let items = appearance;
@@ -125,7 +127,7 @@ export function WardrobeItemManipulation({ className }: { className?: string; })
 		'nothing';
 
 	return (
-		<div className={ classNames('wardrobe-ui', className) }>
+		<div className='wardrobe-ui'>
 			<InventoryItemView
 				title={ title }
 				filter={ preFilter }
@@ -134,9 +136,14 @@ export function WardrobeItemManipulation({ className }: { className?: string; })
 			/>
 			<TabContainer className={ classNames('flex-1', focusType !== 'nothing' ? 'hidden' : null) }>
 				{
-					globalState.room != null && !isRoomInventory ? (
+					!isRoomInventory ? (
 						<Tab name='Room inventory'>
-							<RoomInventoryView title='Use items in room inventory' container={ currentFocus.container } />
+							<SecondaryInventoryView
+								title='Use items in room inventory'
+								secondaryTarget={ roomInventoryTarget }
+								quickActionTarget={ targetSelector }
+								quickActionTargetContainer={ currentFocus.container }
+							/>
 						</Tab>
 					) : null
 				}

@@ -158,13 +158,6 @@ export function WardrobeItemManipulation(): ReactElement {
 						spawnStyle={ singleItemContainer ? 'spawn' : 'pickup' }
 					/>
 				</Tab>
-				<Tab name='Recent items'>
-					<div className='inventoryView'>
-						<div className='center-flex flex-1'>
-							TODO
-						</div>
-					</div>
-				</Tab>
 				<Tab name='Outfits'>
 					<InventoryOutfitView
 						targetContainer={ currentFocus.container }

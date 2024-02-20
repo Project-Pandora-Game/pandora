@@ -11,6 +11,7 @@ import questionmark from '../../assets/icons/questionmark.svg';
 import forbid from '../../assets/icons/forbidden.svg';
 import allow from '../../assets/icons/public.svg';
 import prompt from '../../assets/icons/prompt.svg';
+import deviceSvg from '../../assets/icons/device.svg';
 import wikiIcon from '../../assets/icons/wiki.svg';
 import { Button } from '../common/button/button';
 import { usePlayer } from '../gameContext/playerContextProvider';
@@ -84,6 +85,8 @@ function GetIcon(icon: string): string {
 			return storage;
 		case 'toggle':
 			return toggle;
+		case 'device':
+			return deviceSvg;
 		default:
 			return forbid;
 	}

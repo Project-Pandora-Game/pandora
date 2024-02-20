@@ -84,7 +84,7 @@ export function RoomInventoryViewList({
 			<div className='toolbar'>
 				<span>{ title }</span>
 				<Button className='slim' onClick={ () =>
-					navigate('/wardrobe', { state: { target: 'room' } }) } >
+					navigate('/wardrobe/room-inventory') } >
 					Switch to room inventory
 				</Button>
 			</div>

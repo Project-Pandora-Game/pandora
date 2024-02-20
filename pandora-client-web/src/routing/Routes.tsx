@@ -12,7 +12,7 @@ import { SpacesSearch } from '../ui/screens/spacesSearch/spacesSearch';
 import { useAuthTokenIsValid, useCurrentAccount, useDirectoryConnector } from '../components/gameContext/directoryConnectorContextProvider';
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
 import { AuthPage } from '../components/login/authPage';
-import { WardrobeScreen } from '../components/wardrobe/wardrobe';
+import { WardrobeRouter } from '../components/wardrobe/wardrobe';
 import { authPagePathsAndComponents } from './authRoutingData';
 import { AccountContacts } from '../components/accountContacts/accountContacts';
 import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens';
@@ -52,7 +52,7 @@ export function PandoraRoutes(): ReactElement {
 			<Route path='/spaces/search' element={ <RequiresCharacter element={ SpacesSearch } /> } />
 			<Route path='/spaces/create' element={ <RequiresCharacter element={ SpaceCreate } /> } />
 
-			<Route path='/wardrobe' element={ <RequiresCharacter element={ WardrobeScreen } /> } />
+			<Route path='/wardrobe/*' element={ <RequiresCharacter element={ WardrobeRouter } /> } />
 
 			<Route path='/management/*' element={ <RequiresLogin element={ DeveloperRoutes } /> } />
 

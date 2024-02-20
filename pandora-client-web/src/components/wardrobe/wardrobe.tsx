@@ -1,69 +1,82 @@
 import {
-	AssertNever,
+	AssertNotNullable,
+	CharacterIdSchema,
 	ICharacterRoomData,
-	IsCharacterId,
-	IsObject,
 } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { Character, IChatroomCharacter } from '../../character/character';
-import { useSpaceCharacters, useGameState } from '../gameContext/gameStateContextProvider';
-import { usePlayer } from '../gameContext/playerContextProvider';
-import { Tab, TabContainer } from '../common/tabs/tabs';
+import { useObservable } from '../../observable';
 import { CharacterRestrictionOverrideWarningContent } from '../characterRestrictionOverride/characterRestrictionOverride';
-import { WardrobeTarget } from './wardrobeTypes';
-import { WARDROBE_TARGET_ROOM, WardrobeContextProvider, useWardrobeContext } from './wardrobeContext';
-import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphics';
-import { WardrobeBodyManipulation } from './wardrobeBody';
+import { Tab, TabContainer } from '../common/tabs/tabs';
+import { useGameState, useSpaceCharacters } from '../gameContext/gameStateContextProvider';
+import { usePlayer } from '../gameContext/playerContextProvider';
+import { WardrobeExpressionGui } from './views/wardrobeExpressionsView';
 import { WardrobePoseGui } from './views/wardrobePoseView';
 import { WardrobeRandomizationGui } from './views/wardrobeRandomizationView';
-import { WardrobeExpressionGui } from './views/wardrobeExpressionsView';
-import { WardrobeItemManipulation } from './wardrobeItems';
 import './wardrobe.scss';
-import { useObservable } from '../../observable';
+import { WardrobeBodyManipulation } from './wardrobeBody';
+import { WARDROBE_TARGET_ROOM, WardrobeContextProvider, useWardrobeContext } from './wardrobeContext';
+import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphics';
 import { WardrobeItemPreferences } from './wardrobeItemPreferences';
+import { WardrobeItemManipulation } from './wardrobeItems';
 
-export function WardrobeScreen(): ReactElement | null {
-	const locationState = useLocation().state as unknown;
+export function WardrobeRouter(): ReactElement | null {
+	return (
+		<Routes>
+			<Route index element={ <WardrobeRouterPlayer /> } />
+			<Route path='character/:characterId' element={ <WardrobeRouterCharacter /> } />
+			<Route path='room-inventory' element={ <WardrobeRouterRoomInventory /> } />
+
+			<Route path='*' element={ <Navigate to='/' replace /> } />
+		</Routes>
+	);
+}
+
+function WardrobeRouterPlayer(): ReactElement {
 	const player = usePlayer();
-	const characters = useSpaceCharacters();
-
-	const characterId = IsObject(locationState) && IsCharacterId(locationState.character) ? locationState.character : null;
-	const targetIsRoomInventory = IsObject(locationState) && locationState.target === 'room';
-
-	const character = useMemo((): Character<ICharacterRoomData> | null => {
-		if (characterId == null || characterId === player?.data.id) {
-			return player;
-		}
-		return characters?.find((c) => c.data.id === characterId) ?? null;
-	}, [characterId, player, characters]);
-
-	const target: WardrobeTarget | null =
-		targetIsRoomInventory ? (
-			WARDROBE_TARGET_ROOM
-		) : (
-			character?.data ? character : null
-		);
-
-	if (!player || !target)
-		return <Link to='/'>◄ Back</Link>;
+	AssertNotNullable(player);
 
 	return (
-		<WardrobeContextProvider target={ target } player={ player }>
-			<Wardrobe />
+		<WardrobeContextProvider target={ player } player={ player }>
+			<WardrobeCharacter character={ player } />
 		</WardrobeContextProvider>
 	);
 }
 
-function Wardrobe(): ReactElement | null {
-	const { target } = useWardrobeContext();
+function WardrobeRouterCharacter(): ReactElement {
+	const player = usePlayer();
+	AssertNotNullable(player);
+	const characters = useSpaceCharacters();
 
-	if (target.type === 'room') {
-		return <WardrobeRoom />;
-	} else if (target.type === 'character') {
-		return <WardrobeCharacter character={ target } />;
-	}
-	AssertNever(target);
+	const { characterId } = useParams();
+	const parsedCharacterId = CharacterIdSchema.safeParse(characterId);
+
+	const character = useMemo((): Character<ICharacterRoomData> | null => {
+		if (!parsedCharacterId.success)
+			return null;
+		return characters?.find((c) => c.data.id === parsedCharacterId.data) ?? null;
+	}, [characters, parsedCharacterId]);
+
+	if (!character)
+		return <Link to='/'>◄ Back</Link>;
+
+	return (
+		<WardrobeContextProvider target={ character } player={ player }>
+			<WardrobeCharacter character={ character } />
+		</WardrobeContextProvider>
+	);
+}
+
+function WardrobeRouterRoomInventory(): ReactElement {
+	const player = usePlayer();
+	AssertNotNullable(player);
+
+	return (
+		<WardrobeContextProvider target={ WARDROBE_TARGET_ROOM } player={ player }>
+			<WardrobeRoom />
+		</WardrobeContextProvider>
+	);
 }
 
 function WardrobeRoom(): ReactElement {

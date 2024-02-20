@@ -341,7 +341,7 @@ export function CharacterContextMenuContent({ character, onClose, closeText = 'C
 				<>
 					<button onClick={ () => {
 						onCloseActual();
-						navigate('/wardrobe', { state: { character: characterData.id } });
+						navigate(`/wardrobe/character/${characterData.id}`);
 					} }>
 						Wardrobe
 					</button>

@@ -158,7 +158,7 @@ export function WardrobeItemManipulation(): ReactElement {
 						spawnStyle={ singleItemContainer ? 'spawn' : 'pickup' }
 					/>
 				</Tab>
-				<Tab name='Outfits'>
+				<Tab name='Saved items'>
 					<InventoryOutfitView
 						targetContainer={ currentFocus.container }
 					/>

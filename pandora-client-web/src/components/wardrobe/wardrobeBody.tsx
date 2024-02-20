@@ -72,7 +72,7 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 				<Tab name='Change body size'>
 					<WardrobeBodySizeEditor character={ character } characterState={ characterState } />
 				</Tab>
-				<Tab name='Outfits'>
+				<Tab name='Saved items'>
 					<InventoryOutfitView
 						targetContainer={ EMPTY_ARRAY }
 					/>

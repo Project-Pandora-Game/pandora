@@ -122,7 +122,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 		return (
 			<Column className='flex-1'>
 				<WardrobeTemplateEditMenu
-					title='Editing outfit item'
+					title='Editing saved item'
 					template={ editedItem }
 					updateTemplate={ (newTemplate) => updateItemTemplate(editedItemIndex, CloneDeepMutable(newTemplate)) }
 					cancelText='◄ Finish editing item'
@@ -138,7 +138,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 				{
 					showExportDialog ? (
 						<ExportDialog
-							exportType='Outfit'
+							exportType='ItemCollection'
 							exportVersion={ 1 }
 							dataSchema={ AssetFrameworkOutfitSchema }
 							data={ outfit }
@@ -149,7 +149,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 				{
 					isTemporary ? (
 						<Row alignX='center' padding='medium'>
-							<strong>This outfit is temporary and will be lost when the game is closed</strong>
+							<strong>This collection is temporary and will be lost when the game is closed</strong>
 						</Row>
 					) : null
 				}
@@ -159,7 +159,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 							<button
 								className='wardrobeActionButton allowed'
 								onClick={ () => {
-									confirm('Confirm deletion', `Are you sure you want to delete the outfit "${outfit.name}"?`)
+									confirm('Confirm deletion', `Are you sure you want to delete the collection "${outfit.name}"?`)
 										.then((result) => {
 											if (!result)
 												return;
@@ -169,7 +169,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 										.catch(noop);
 								} }
 							>
-								<img src={ deleteIcon } alt='Delete action' />&nbsp;Delete outfit
+								<img src={ deleteIcon } alt='Delete action' />&nbsp;Delete collection
 							</button>
 						) : null
 					}
@@ -184,7 +184,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 					{ extraActions }
 				</Row>
 				<fieldset>
-					<legend>Outfit name ({ editName.length }/{ LIMIT_OUTFIT_NAME_LENGTH } characters)</legend>
+					<legend>Collection name ({ editName.length }/{ LIMIT_OUTFIT_NAME_LENGTH } characters)</legend>
 					<Row>
 						<input className='flex-1' value={ editName } maxLength={ LIMIT_OUTFIT_NAME_LENGTH } onChange={ (e) => {
 							const newName = e.target.value.substring(0, LIMIT_OUTFIT_NAME_LENGTH);
@@ -435,7 +435,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 					className='wardrobeActionButton allowed'
 					onClick={ (ev) => {
 						ev.stopPropagation();
-						confirm('Confirm removal', `Are you sure you want to remove the item "${visibleName}" from this outfit?`)
+						confirm('Confirm removal', `Are you sure you want to remove the item "${visibleName}" from this collection?`)
 							.then((result) => {
 								if (!result)
 									return;

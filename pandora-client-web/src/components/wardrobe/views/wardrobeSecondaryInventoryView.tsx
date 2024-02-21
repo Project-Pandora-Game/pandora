@@ -1,45 +1,51 @@
 import classNames from 'classnames';
+import { isEqual } from 'lodash';
 import {
-	AssetFrameworkRoomState,
+	ActionTargetSelector,
+	EMPTY_ARRAY,
 	ItemContainerPath,
 	ItemPath,
-	ActionTargetSelector,
+	type AppearanceItems,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect } from 'react';
-import deleteIcon from '../../../assets/icons/delete.svg';
-import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
-import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
-import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { WardrobeContextExtraItemActionComponent, WardrobeHeldItem } from '../wardrobeTypes';
-import { useWardrobeContext } from '../wardrobeContext';
-import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
-import { InventoryItemViewDropArea } from './wardrobeItemView';
-import { isEqual } from 'lodash';
-import { Button } from '../../common/button/button';
+import { EvalContainerPath, EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import React, { ReactElement, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
+import deleteIcon from '../../../assets/icons/delete.svg';
+import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
+import { Button } from '../../common/button/button';
+import { Scrollbar } from '../../common/scrollbar/scrollbar';
+import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
+import { useWardrobeContext } from '../wardrobeContext';
+import { WardrobeContextExtraItemActionComponent, WardrobeHeldItem } from '../wardrobeTypes';
+import { InventoryItemViewDropArea } from './wardrobeItemView';
 
-export function RoomInventoryView({ title, container }: {
+export function SecondaryInventoryView({ title, secondaryTarget, secondaryTargetContainer = EMPTY_ARRAY, quickActionTarget, quickActionTargetContainer }: {
 	title: string;
-	container: ItemContainerPath;
+	secondaryTarget: ActionTargetSelector;
+	secondaryTargetContainer?: ItemContainerPath;
+	quickActionTarget: ActionTargetSelector;
+	quickActionTargetContainer: ItemContainerPath;
 }): ReactElement | null {
-	const { globalState, targetSelector, extraItemActions, showExtraActionButtons } = useWardrobeContext();
+	const { globalState, extraItemActions, showExtraActionButtons, heldItem } = useWardrobeContext();
+	const navigate = useNavigate();
 
-	const extraItemAction = useCallback<WardrobeContextExtraItemActionComponent>(({ item }) => {
+	const extraItemAction = useCallback<WardrobeContextExtraItemActionComponent>(({ target, item }) => {
 		if (!showExtraActionButtons)
 			return null;
 
 		return (
 			<WardrobeActionButton action={ {
 				type: 'transfer',
-				source: targetSelector,
+				source: target,
 				item,
-				target: { type: 'roomInventory' },
-				container: [],
+				target: secondaryTarget,
+				container: secondaryTargetContainer,
 			} }>
 				▷
 			</WardrobeActionButton>
 		);
-	}, [targetSelector, showExtraActionButtons]);
+	}, [showExtraActionButtons, secondaryTarget, secondaryTargetContainer]);
+
 	useEffect(() => {
 		extraItemActions.value = extraItemActions.value.concat([extraItemAction]);
 		return () => {
@@ -47,46 +53,23 @@ export function RoomInventoryView({ title, container }: {
 		};
 	}, [extraItemAction, extraItemActions]);
 
+	const rootItems = globalState.getItems(secondaryTarget) ?? EMPTY_ARRAY;
+	const displayedItems = useMemo((): AppearanceItems => {
+		return EvalContainerPath(rootItems, secondaryTargetContainer) ?? EMPTY_ARRAY;
+	}, [rootItems, secondaryTargetContainer]);
+
 	return (
 		<div className='inventoryView'>
-			{
-				globalState.room != null ? (
-					<RoomInventoryViewList
-						title={ title }
-						room={ globalState.room }
-						characterContainer={ container }
-					/>
-				) : (
-					<div className='center-flex flex-1'>
-						Not in a room
-					</div>
-				)
-			}
-		</div>
-	);
-}
-
-export function RoomInventoryViewList({
-	title,
-	room,
-	characterContainer,
-}: {
-	title: string;
-	room: AssetFrameworkRoomState;
-	characterContainer: ItemContainerPath;
-}): ReactElement | null {
-	const { heldItem } = useWardrobeContext();
-	const items = room.items;
-	const navigate = useNavigate();
-
-	return (
-		<>
 			<div className='toolbar'>
 				<span>{ title }</span>
-				<Button className='slim' onClick={ () =>
-					navigate('/wardrobe', { state: { target: 'room' } }) } >
-					Switch to room inventory
-				</Button>
+				{
+					secondaryTarget.type === 'roomInventory' ? (
+						<Button className='slim' onClick={ () =>
+							navigate('/wardrobe/room-inventory') } >
+							Switch to room inventory
+						</Button>
+					) : null
+				}
 			</div>
 			<Scrollbar color='dark'>
 				<div className='list reverse withDropButtons'>
@@ -96,23 +79,24 @@ export function RoomInventoryViewList({
 						) : null
 					}
 					{
-						items.map((i) => (
+						displayedItems.map((i) => (
 							<React.Fragment key={ i.id }>
 								<div className='overlayDropContainer'>
 									{
 										heldItem.type !== 'nothing' ? (
 											<InventoryItemViewDropArea
-												target={ { type: 'roomInventory' } }
-												container={ [] }
+												target={ secondaryTarget }
+												container={ secondaryTargetContainer }
 												insertBefore={ i.id }
 											/>
 										) : null
 									}
 								</div>
 								<RoomInventoryViewListItem key={ i.id }
-									room={ room }
-									item={ { container: [], itemId: i.id } }
-									characterContainer={ characterContainer }
+									target={ secondaryTarget }
+									itemPath={ { container: secondaryTargetContainer, itemId: i.id } }
+									quickActionTarget={ quickActionTarget }
+									quickActionTargetContainer={ quickActionTargetContainer }
 								/>
 							</React.Fragment>
 						))
@@ -121,46 +105,43 @@ export function RoomInventoryViewList({
 						{
 							heldItem.type !== 'nothing' ? (
 								<InventoryItemViewDropArea
-									target={ { type: 'roomInventory' } }
-									container={ [] }
+									target={ secondaryTarget }
+									container={ secondaryTargetContainer }
 								/>
 							) : null
 						}
 					</div>
 				</div>
 			</Scrollbar>
-		</>
+		</div>
 	);
 }
 
-function RoomInventoryViewListItem({ room, item, characterContainer }: {
-	room: AssetFrameworkRoomState;
-	item: ItemPath;
-	characterContainer: ItemContainerPath;
+function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickActionTargetContainer }: {
+	target: ActionTargetSelector;
+	itemPath: ItemPath;
+	quickActionTarget: ActionTargetSelector;
+	quickActionTargetContainer: ItemContainerPath;
 }): ReactElement {
-	const inventoryTarget: ActionTargetSelector = {
-		type: 'roomInventory',
-	};
+	const { globalState, heldItem, setHeldItem, showExtraActionButtons } = useWardrobeContext();
 
-	const { heldItem, setHeldItem, targetSelector, showExtraActionButtons } = useWardrobeContext();
-	const inventoryItem = EvalItemPath(room.items, item);
+	const item = EvalItemPath(globalState.getItems(target) ?? EMPTY_ARRAY, itemPath);
+	const ribbonColor = useItemColorRibbon([], item ?? null);
 
-	const ribbonColor = useItemColorRibbon([], inventoryItem ?? null);
-
-	const heldItemSelector: WardrobeHeldItem = {
+	const heldItemSelector = useMemo((): WardrobeHeldItem => ({
 		type: 'item',
-		target: inventoryTarget,
-		path: item,
-	};
+		target,
+		path: itemPath,
+	}), [target, itemPath]);
 
 	// Check if this item is held
 	const isHeld = isEqual(heldItem, heldItemSelector);
 
-	if (!inventoryItem) {
+	if (!item) {
 		return <div className='inventoryViewItem listMode blocked'>[ ERROR: ITEM NOT FOUND ]</div>;
 	}
 
-	const asset = inventoryItem.asset;
+	const asset = item.asset;
 
 	return (
 		<div
@@ -186,17 +167,17 @@ function RoomInventoryViewListItem({ room, item, characterContainer }: {
 					<>
 						<WardrobeActionButton action={ {
 							type: 'delete',
-							target: inventoryTarget,
-							item,
+							target,
+							item: itemPath,
 						} }>
 							<img src={ deleteIcon } alt='Delete action' />
 						</WardrobeActionButton>
 						<WardrobeActionButton action={ {
 							type: 'transfer',
-							source: inventoryTarget,
-							item,
-							target: targetSelector,
-							container: characterContainer,
+							source: target,
+							item: itemPath,
+							target: quickActionTarget,
+							container: quickActionTargetContainer,
 						} }>
 							◁
 						</WardrobeActionButton>

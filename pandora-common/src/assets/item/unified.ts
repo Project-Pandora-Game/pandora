@@ -1,4 +1,3 @@
-import { nanoid } from 'nanoid';
 import { z, ZodTypeDef } from 'zod';
 
 import type { Asset } from '../asset';
@@ -7,16 +6,15 @@ import type { AssetType } from '../definitions';
 import { LIMIT_OUTFIT_NAME_LENGTH } from '../../inputLimits';
 import { Assert, AssertNever } from '../../utility';
 import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop } from '../../validation';
-import { ItemId, ItemIdSchema } from '../appearanceTypes';
 import { AssetIdSchema } from '../base';
 import { CreateModuleDataFromTemplate, ItemModuleDataSchema, ItemModuleTemplateSchema } from '../modules';
-import { IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemTemplate } from './base';
+import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base';
 
+import { __internal_InitRecursiveItemSchemas } from './_internalRecursion';
 import { ItemLock, LockBundleSchema } from './lock';
 import { ItemPersonal } from './personal';
-import { ItemRoomDevice, RoomDeviceBundleSchema, RoomDeviceLinkSchema } from './roomDevice';
-import { ItemRoomDeviceWearablePart } from './roomDeviceWearablePart';
-import { __internal_InitRecursiveItemSchemas } from './_internalRecursion';
+import { ItemRoomDevice, RoomDeviceBundleSchema } from './roomDevice';
+import { ItemRoomDeviceWearablePart, RoomDeviceLinkSchema } from './roomDeviceWearablePart';
 
 /**
  * Serializable data bundle containing information about an item.
@@ -35,10 +33,6 @@ export const ItemBundleSchema: z.ZodType<ItemBundle, ZodTypeDef, unknown> = z.ob
 	/** Lock specific data */
 	lockData: LockBundleSchema.optional(),
 });
-
-export function GenerateRandomItemId(): ItemId {
-	return `i/${nanoid()}`;
-}
 
 /**
  * Data describing an item configuration as a template.

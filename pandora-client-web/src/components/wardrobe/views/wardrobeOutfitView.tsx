@@ -61,7 +61,7 @@ export function InventoryOutfitView({ targetContainer }: {
 
 		const index = storedOutfits.findIndex((outfit) => outfit.id === id);
 		if (index < 0) {
-			toast(`Failed to save outfit changes: \nOutfit not found`, TOAST_OPTIONS_ERROR);
+			toast(`Failed to save collection changes: \nCollection not found`, TOAST_OPTIONS_ERROR);
 			return;
 		}
 
@@ -87,7 +87,7 @@ export function InventoryOutfitView({ targetContainer }: {
 
 		const index = storedOutfits.findIndex((outfit) => outfit.id === id);
 		if (index < 0) {
-			toast(`Failed to move outfit: \nOutfit not found`, TOAST_OPTIONS_ERROR);
+			toast(`Failed to move collection: \nCollection not found`, TOAST_OPTIONS_ERROR);
 			return;
 		}
 
@@ -111,7 +111,7 @@ export function InventoryOutfitView({ targetContainer }: {
 							setIsImporting(true);
 						} }
 					>
-						Import outfit
+						Import collection
 					</Button>
 				</div>
 				<DivContainer className='flex-1' align='center' justify='center'>
@@ -143,7 +143,7 @@ export function InventoryOutfitView({ targetContainer }: {
 			return (
 				<div className='inventoryView'>
 					<div className='toolbar'>
-						<span>Editing:&nbsp;<strong>Temporary outfit</strong></span>
+						<span>Editing:&nbsp;<strong>Temporary collection</strong></span>
 					</div>
 					<OutfitEditView
 						outfit={ temporaryOutfit }
@@ -163,7 +163,7 @@ export function InventoryOutfitView({ targetContainer }: {
 										setEditedOutfitId(null);
 									} }
 								>
-									<img src={ diskIcon } alt='Save outfit' />&nbsp;Save outfit
+									<img src={ diskIcon } alt='Save collection' />&nbsp;Save collection
 								</button>
 								<div className='flex-1' />
 								<button
@@ -183,12 +183,12 @@ export function InventoryOutfitView({ targetContainer }: {
 		return (
 			<div className='inventoryView'>
 				<div className='toolbar'>
-					<span className='center-flex'><strong>Temporary outfit</strong></span>
+					<span className='center-flex'><strong>Temporary collection</strong></span>
 				</div>
 				<Scrollbar color='dark'>
 					<Column className='flex-1' padding='small'>
 						<Row alignX='center' padding='medium'>
-							<strong>This outfit is temporary and will be lost when the game is closed</strong>
+							<strong>This collection is temporary and will be lost when the game is closed</strong>
 						</Row>
 						<TemporaryOutfitEntry
 							outfit={ temporaryOutfit }
@@ -209,7 +209,7 @@ export function InventoryOutfitView({ targetContainer }: {
 		return (
 			<div className='inventoryView'>
 				<div className='toolbar'>
-					<span>Editing outfit: { editedOutfit?.name ?? editedOutfitId }</span>
+					<span>Editing collection: { editedOutfit?.name ?? editedOutfitId }</span>
 					<StorageUsageMeter title='Storage used' used={ storageUsed } limit={ storageAvailableTotal } />
 					<button className='modeButton' onClick={ () => setEditedOutfitId(null) }>✖️</button>
 				</div>
@@ -231,13 +231,13 @@ export function InventoryOutfitView({ targetContainer }: {
 										setEditedOutfitId('temporaryOutfit');
 									} }
 								>
-									<img src={ editIcon } alt='Delete action' />&nbsp;Duplicate
+									<img src={ editIcon } alt='Duplicate action' />&nbsp;Duplicate
 								</button>
 							) }
 						/>
 					) : (
 						<DivContainer align='center' justify='center' className='flex-1'>
-							[ ERROR: OUTFIT NOT FOUND ]
+							[ ERROR: COLLECTION NOT FOUND ]
 						</DivContainer>
 					)
 				}
@@ -250,7 +250,7 @@ export function InventoryOutfitView({ targetContainer }: {
 			{
 				isImporting ? (
 					<ImportDialog
-						expectedType='Outfit'
+						expectedType='ItemCollection'
 						expectedVersion={ 1 }
 						dataSchema={ AssetFrameworkOutfitSchema }
 						closeDialog={ () => {
@@ -430,7 +430,7 @@ function TemporaryOutfitEntry({ outfit, saveOutfit, updateOutfit, beginEditOutfi
 					className='wardrobeActionButton allowed flex-1'
 					onClick={ saveOutfit }
 				>
-					<img src={ diskIcon } alt='Save outfit' />&nbsp;Save outfit
+					<img src={ diskIcon } alt='Save outfit' />&nbsp;Save collection
 				</button>
 				<button
 					className='wardrobeActionButton allowed flex-1'
@@ -444,7 +444,7 @@ function TemporaryOutfitEntry({ outfit, saveOutfit, updateOutfit, beginEditOutfi
 						updateOutfit(null);
 					} }
 				>
-					<img src={ deleteIcon } alt='Discard action' /> Discard outfit
+					<img src={ deleteIcon } alt='Discard action' /> Discard collection
 				</button>
 			</Row>
 			<div className='list reverse'>
@@ -645,7 +645,7 @@ function OutfitEntryCreate({ onClick }: {
 					</div>
 				</div>
 				<Column padding='medium' alignX='start' alignY='space-evenly'>
-					<span>Create a new outfit</span>
+					<span>Create a new collection</span>
 				</Column>
 			</button>
 		</div>
@@ -671,8 +671,8 @@ function useSaveStoredOutfits(): (newStorage: AssetFrameworkOutfitWithId[], onSu
 				}
 			})
 			.catch((err) => {
-				GetLogger('useSaveStoredOutfits').error('Error saving outfits:', err);
-				toast(`Failed to save outfit changes: \n${String(err)}`, TOAST_OPTIONS_ERROR);
+				GetLogger('useSaveStoredOutfits').error('Error saving saved items:', err);
+				toast(`Failed to save changes: \n${String(err)}`, TOAST_OPTIONS_ERROR);
 			});
 	}, [directoryConnector]);
 }

@@ -2,12 +2,11 @@ import { freeze, Immutable } from 'immer';
 import type { GameLogicCharacter } from '../gameLogic';
 import type { Logger } from '../logging';
 import { Assert, AssertNotNullable, CloneDeepMutable } from '../utility';
-import type { ItemId } from './appearanceTypes';
 import { Asset } from './asset';
 import type { AssetId } from './base';
 import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetsDefinitionFile, AssetType, RoomBackgroundInfo, RoomBackgroundTagDefinition } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
-import { CreateItemBundleFromTemplate, Item, ItemBundle, ItemTemplate, LoadItemFromBundle } from './item';
+import { CreateItemBundleFromTemplate, Item, ItemBundle, ItemTemplate, LoadItemFromBundle, type ItemId } from './item';
 import type { AssetsPosePresets } from './state/characterStatePose';
 
 export class AssetManager {

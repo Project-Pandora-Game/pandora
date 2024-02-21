@@ -250,7 +250,7 @@ export function InventoryOutfitView({ targetContainer }: {
 			{
 				isImporting ? (
 					<ImportDialog
-						expectedType='Outfit'
+						expectedType='ItemCollection'
 						expectedVersion={ 1 }
 						dataSchema={ AssetFrameworkOutfitSchema }
 						closeDialog={ () => {

@@ -138,7 +138,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 				{
 					showExportDialog ? (
 						<ExportDialog
-							exportType='Outfit'
+							exportType='ItemCollection'
 							exportVersion={ 1 }
 							dataSchema={ AssetFrameworkOutfitSchema }
 							data={ outfit }

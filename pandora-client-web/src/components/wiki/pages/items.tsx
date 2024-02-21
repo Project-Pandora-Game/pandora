@@ -75,7 +75,7 @@ export function WikiItems(): ReactElement {
 				<li>Currently, everyone can put someone else into a room device if they are <a href='/wiki/characters/#CH_Character_permissions'>permitted</a> to.</li>
 				<li>Some room devices have <a href='#IT_Lock_module'>lock modules</a> that can for instance prevent a character from getting out of a room device slot.</li>
 				<li>You are unable to leave the room while your character occupies a character slot of a room device.</li>
-				<li>Room devices can also be stored in a <a href='#IT_Saving_collections'>collection template</a>, like regular items.</li>
+				<li>Room devices can also be stored in a <a href='#IT_Saving_collections'>saved items collection</a>, like regular items.</li>
 				<li>
 					Warning: Room devices can get you stuck in an empty room, which would make
 					using <a href='/wiki/characters/#SA_Safemode'>safemode</a> the only way out.
@@ -149,7 +149,7 @@ export function WikiItems(): ReactElement {
 			<ul>
 				<li>
 					Creating a collection: After you clicked the button to create a new collection, you need to start moving the items that you want to be part of the collection one-by-one
-					from the left side (your worn items or the room's inventory) to the right side (the temporary collection template you just created).<br />
+					from the left side (your worn items or the room's inventory) to the right side (the temporary collection you just created).<br />
 					<a href='#IT_Item_layering_order'>Item order</a> is important and the following article gives tips on that aspect.
 				</li>
 				<li>
@@ -158,7 +158,7 @@ export function WikiItems(): ReactElement {
 				</li>
 				<li>Exported collections can be stored on your device and later on be imported again or you can share the exported code with other users.</li>
 				<li>
-					Your collection templates stored inside Pandora show a small live preview. You can increase the size of the previews in the "Interface"-tab of Pandora's settings page
+					Collections stored inside Pandora show a small live preview. You can increase the size of the previews in the "Interface"-tab of Pandora's settings page
 					or even switch them off altogether, if your computer / mobile device and connection cannot handle loading many previews at once.
 				</li>
 			</ul>
@@ -175,20 +175,20 @@ export function WikiItems(): ReactElement {
 				So the first item is usually something like a jacket or dress, whereas underwear is further down in the list.
 			</p>
 			<p>
-				You add and remove the items worn by the character from top to bottom, so from the outermost worn item (e.g. a jacket or dress)
+				You add and remove items worn by the character from top to bottom, so from the outermost worn item (e.g. a jacket or dress)
 				towards the inner pieces, like how you would undress in reality, too.<br />
 				In case you dropped items in that manner to the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a>, you can again add them to the body from the top to bottom,
 				so from the item worn the closest to the body, like you would start dressing in reality, too.
 			</p>
 			<p>
-				Now when you make a collection template from something you wear, you need to start from the bottom, not from the top,
+				Now when you make a saved item collection from something you wear, you need to start from the bottom, not from the top,
 				because you are not undressing your character, but you are "dressing" a mannequin template doll by means of copying your outfit.
 				So you need to start from the item worn closest to the body, therefore bottom-up.<br />
-				When you want to use a collection template to dress your character, you again need to start from the bottom, as you need to start with the item
+				When you want to use a saved item collection to dress your character, you again need to start from the bottom, as you need to start with the item
 				worn closest to the body, like you would start dressing in reality, too.
 			</p>
 			<p>
-				In summary, the general dressing and undressing direction is top-down, but collection template related directions are the opposite:<br />
+				In summary, the general dressing and undressing direction is top-down, but saved item collection related directions are the opposite:<br />
 				👸🏽 → 🏠&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
 				🏠 → 👸🏽&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
 				👸🏽 → 💾&nbsp;&nbsp;&nbsp;&nbsp;order:⬆️<br />

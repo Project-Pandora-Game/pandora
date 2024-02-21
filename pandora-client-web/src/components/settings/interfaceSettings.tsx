@@ -150,7 +150,7 @@ function WardrobeSettings({ account }: { account: IDirectoryAccountInfo; }): Rea
 			<WardrobeUseRoomBackground account={ account } />
 			<WardrobeShowExtraButtons account={ account } />
 			<WardrobeHoverPreview account={ account } />
-			<WardrobeSelectSettings account={ account } setting='wardrobeOutfitsPreview' label='Outfit previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
+			<WardrobeSelectSettings account={ account } setting='wardrobeOutfitsPreview' label='Saved item collection previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
 			<WardrobeSelectSettings account={ account } setting='wardrobeSmallPreview' label='Item previews: List mode with small previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
 			<WardrobeSelectSettings account={ account } setting='wardrobeBigPreview' label='Item previews: Grid mode with big previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
 		</fieldset>

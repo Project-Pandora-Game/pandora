@@ -19,7 +19,7 @@ export function WikiItems(): ReactElement {
 				Aside from regular items that can be worn and used by characters, there are also locks, body parts, and room-level items that can freely be placed on a
 				room background. Body parts can only exist on a character's body, but except those, items can generally also be inside the storage module of some
 				other item or in a <a href='/wiki/spaces/#SP_Room_inventory'>room's inventory</a>, which could be considered the room's floor.<br />
-				Lastly, items can be part of an outfit, which is a collection of items that can be stored in Pandora or exported in form of a longer code that can be stored
+				Lastly, items can be part of a collection, which is a set of items that can be stored in Pandora or exported in form of a longer code that can be stored
 				outside of Pandora and later be imported again. You can add the same item several times.
 			</p>
 
@@ -30,7 +30,7 @@ export function WikiItems(): ReactElement {
 				<li><a href='#IT_Storage_modules'>Storage modules</a></li>
 				<li><a href='#IT_Lock_module'>Lock module</a></li>
 				<li><a href='#IT_Item_preferences_and_limits'>Item preferences and limits</a></li>
-				<li><a href='#IT_Saving_outfits'>Saving outfits</a></li>
+				<li><a href='#IT_Saving_collections'>Saving collections</a></li>
 				<li><a href='#IT_Item_layering_order'>Item layering order</a></li>
 				<li><a href='#IT_Layer_transparency'>Layer transparency</a></li>
 				<li><a href='#IT_Alpha_masks'>Alpha masks</a></li>
@@ -75,7 +75,7 @@ export function WikiItems(): ReactElement {
 				<li>Currently, everyone can put someone else into a room device if they are <a href='/wiki/characters/#CH_Character_permissions'>permitted</a> to.</li>
 				<li>Some room devices have <a href='#IT_Lock_module'>lock modules</a> that can for instance prevent a character from getting out of a room device slot.</li>
 				<li>You are unable to leave the room while your character occupies a character slot of a room device.</li>
-				<li>Room devices can also be stored in an <a href='#IT_Saving_outfits'>outfit template</a>, like regular items.</li>
+				<li>Room devices can also be stored in a <a href='#IT_Saving_collections'>saved items collection</a>, like regular items.</li>
 				<li>
 					Warning: Room devices can get you stuck in an empty room, which would make
 					using <a href='/wiki/characters/#SA_Safemode'>safemode</a> the only way out.
@@ -139,27 +139,26 @@ export function WikiItems(): ReactElement {
 				<li>Setting a limit to an individual item overrides the global state based on attribute-based settings, but this can be reverted in the item-specific dropdown menu.</li>
 			</ul>
 
-			<h4 id='IT_Saving_outfits'>Saving outfits</h4>
+			<h4 id='IT_Saving_collections'>Saving collections</h4>
 			<p>
 				The "Items" and "Body"-tabs in the <a href='/wiki/characters/#CH_Character_wardrobe'>wardrobe</a> as
-				well as the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a> screen have an "Outfits"-tab that lets you access and manage all your custom outfits
-				stored on the Pandora server. An outfit template can contain normal
-				items, <a href='#IT_Room-level_items'>room-level items</a>, body modifications, and even storage items. Therefore,
-				an outfit is not related only to clothing, but is basically an item collection.
+				well as the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a> screen have an "Saved items"-tab that lets you access and manage all
+				your custom item collections stored on the Pandora server. A collection template can contain normal
+				items, <a href='#IT_Room-level_items'>room-level items</a>, body modifications, and even storage items.
 			</p>
 			<ul>
 				<li>
-					Creating an outfit: After you clicked the button to create a new outfit, you need to start moving the items that you want to be part of the outfit one-by-one
-					from the left side (your worn items or the room's inventory) to the right side (the temporary outfit template you just created).<br />
+					Creating a collection: After you clicked the button to create a new collection, you need to start moving the items that you want to be part of the collection one-by-one
+					from the left side (your worn items or the room's inventory) to the right side (the temporary collection you just created).<br />
 					<a href='#IT_Item_layering_order'>Item order</a> is important and the following article gives tips on that aspect.
 				</li>
 				<li>
-					Storing an outfit: After you have completed your temporary outfit and given it a name, you can either save it on Pandora's server, if you have storage space left
+					Storing a collection: After you have completed your temporary collection and given it a name, you can either save it on Pandora's server, if you have storage space left
 					for your account, or you can export it in the form of a longer code, that can either be copied or downloaded, depending on what your device allows.
 				</li>
-				<li>Exported outfits can be stored on your device and later on be imported again or you can share the exported code with other users.</li>
+				<li>Exported collections can be stored on your device and later on be imported again or you can share the exported code with other users.</li>
 				<li>
-					Your outfit templates stored inside Pandora show a small live preview. You can increase the size of the previews in the "Interface"-tab of Pandora's settings page
+					Collections stored inside Pandora show a small live preview. You can increase the size of the previews in the "Interface"-tab of Pandora's settings page
 					or even switch them off altogether, if your computer / mobile device and connection cannot handle loading many previews at once.
 				</li>
 			</ul>
@@ -176,20 +175,20 @@ export function WikiItems(): ReactElement {
 				So the first item is usually something like a jacket or dress, whereas underwear is further down in the list.
 			</p>
 			<p>
-				You add and remove outfits worn by the character from top to bottom, so from the outermost worn item (e.g. a jacket or dress)
+				You add and remove items worn by the character from top to bottom, so from the outermost worn item (e.g. a jacket or dress)
 				towards the inner pieces, like how you would undress in reality, too.<br />
 				In case you dropped items in that manner to the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a>, you can again add them to the body from the top to bottom,
 				so from the item worn the closest to the body, like you would start dressing in reality, too.
 			</p>
 			<p>
-				Now when you make an outfit template from something you wear, you need to start from the bottom, not from the top,
+				Now when you make a saved item collection from something you wear, you need to start from the bottom, not from the top,
 				because you are not undressing your character, but you are "dressing" a mannequin template doll by means of copying your outfit.
 				So you need to start from the item worn closest to the body, therefore bottom-up.<br />
-				When you want to use an outfit template to dress your character, you again need to start from the bottom, as you need to start with the item
+				When you want to use a saved item collection to dress your character, you again need to start from the bottom, as you need to start with the item
 				worn closest to the body, like you would start dressing in reality, too.
 			</p>
 			<p>
-				In summary, the general dressing and undressing direction is top-down, but outfit template related directions are the opposite:<br />
+				In summary, the general dressing and undressing direction is top-down, but saved item collection related directions are the opposite:<br />
 				👸🏽 → 🏠&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
 				🏠 → 👸🏽&nbsp;&nbsp;&nbsp;&nbsp;order:⬇️<br />
 				👸🏽 → 💾&nbsp;&nbsp;&nbsp;&nbsp;order:⬆️<br />

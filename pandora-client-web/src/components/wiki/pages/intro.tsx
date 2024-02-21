@@ -29,7 +29,7 @@ export function WikiIntroduction(): ReactElement {
 				<li>Ability to use the browser's back/forward buttons to navigate in Pandora</li>
 				<li>User safety features for emergencies</li>
 				<li>A permission feature that allows the user to set who is allowed to do what</li>
-				<li>Storing complete outfits in the wardrobe and supporting import/export</li>
+				<li>Saving item collections in the wardrobe and supporting import/export</li>
 			</ol>
 
 			<p>
@@ -142,14 +142,15 @@ export function WikiIntroduction(): ReactElement {
 				account-wide. <a href='/wiki/characters/#CH_Character_permissions'>More information here</a>.
 			</p>
 
-			<h4>14. Storing complete outfits in the wardrobe and supporting import/export</h4>
+			<h4>14. Saving item collections in the wardrobe and supporting import/export</h4>
 			<p>
 				The "Items" and "Body"-tabs in the <a href='/wiki/characters/#CH_Character_wardrobe'>wardrobe</a> as well as
-				the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a> screen have an "Outfits"-tab
-				that lets you access and manage all your custom outfits stored on the Pandora server.<br />
-				It also allows you to export and import outfits to save even more externally or to share them with others. An outfit can contain any type of item,
+				the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a> screen have an "Saved items"-tab
+				that lets you access and manage all your custom item collections stored on the Pandora server.<br />
+				It also allows you to export and import collections to save them locally if you run out of storage space or
+				to share them with others. A collection can contain any type of item,
 				even <a href='/wiki/items/#IT_Room-level_items'>room devices</a>.<br />
-				<a href='/wiki/items/#IT_Saving_outfits'>More information here</a>.
+				<a href='/wiki/items/#IT_Saving_collections'>More information here</a>.
 			</p>
 
 			<hr />

@@ -134,7 +134,7 @@ export function useModifiedAccountSettings(): Immutable<Partial<AccountSettings>
  * Resolves full account settings to their effective values.
  * @returns The settings that apply to this account.
  */
-export function useEffectiveAccountSettings(): Immutable<AccountSettings> {
+export function useAccountSettings(): Immutable<AccountSettings> {
 	const modifiedSettings = useModifiedAccountSettings();
 	return useMemo((): Immutable<AccountSettings> => ({
 		...ACCOUNT_SETTINGS_DEFAULT,

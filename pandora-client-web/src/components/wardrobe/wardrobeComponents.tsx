@@ -21,7 +21,7 @@ import { useGraphicsUrl } from '../../assets/graphicsManager';
 import { useWardrobeContext, useWardrobeExecuteChecked } from './wardrobeContext';
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import _ from 'lodash';
-import { useEffectiveAccountSettings } from '../gameContext/directoryConnectorContextProvider';
+import { useAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 import { useAssetPreferenceVisibilityCheck } from '../../graphics/graphicsCharacter';
 import { BrowserStorage } from '../../browserStorage';
 import { useObservable } from '../../observable';
@@ -298,7 +298,7 @@ export function InventoryAssetPreview({ asset, small }: {
 }
 
 function useAssetPreviewType(small: boolean): 'icon' | 'image' {
-	const { wardrobeSmallPreview, wardrobeBigPreview } = useEffectiveAccountSettings();
+	const { wardrobeSmallPreview, wardrobeBigPreview } = useAccountSettings();
 
 	if (small)
 		return wardrobeSmallPreview;

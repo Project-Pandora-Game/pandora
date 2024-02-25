@@ -9,13 +9,13 @@ import { usePlayerState } from '../../../components/gameContext/playerContextPro
 import { Chat } from '../../components/chat/chat';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
 import { RoomControls, PersonalSpaceControls, useRoomConstructionModeCheck } from './roomControls';
-import { useEffectiveAccountSettings } from '../../../components/gameContext/directoryConnectorContextProvider';
+import { useAccountSettings } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { useIsPortrait } from '../../../styles/mediaQueries';
 import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import './room.scss';
 
 export function RoomScreen(): ReactElement | null {
-	const { interfaceChatroomGraphicsRatioHorizontal, interfaceChatroomGraphicsRatioVertical } = useEffectiveAccountSettings();
+	const { interfaceChatroomGraphicsRatioHorizontal, interfaceChatroomGraphicsRatioVertical } = useAccountSettings();
 	const isPortrait = useIsPortrait();
 	const spaceInfo = useSpaceInfo();
 	useRoomConstructionModeCheck();

@@ -19,14 +19,14 @@ import { AutoCompleteHint, ChatInputArea, useChatCommandContext, useChatInput } 
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
 import { useAutoScroll } from '../../../common/useAutoScroll';
 import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatMessages';
-import { useEffectiveAccountSettings } from '../../../components/gameContext/directoryConnectorContextProvider';
+import { useAccountSettings } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { Column } from '../../../components/common/container/container';
 import { COMMANDS } from './commands';
 
 export function Chat(): ReactElement | null {
 	const messages = useChatMessages();
 	const shardConnector = useShardConnector();
-	const { interfaceChatroomChatFontSize } = useEffectiveAccountSettings();
+	const { interfaceChatroomChatFontSize } = useAccountSettings();
 	const [messagesDiv, scroll, isScrolling] = useAutoScroll<HTMLDivElement>([messages]);
 	const lastMessageCount = useRef(0);
 	let newMessageCount = 0;

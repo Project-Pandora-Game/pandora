@@ -20,7 +20,7 @@ import { useEvent } from '../../common/useEvent';
 import { MASK_SIZE, SwapCullingDirection } from '../graphicsLayer';
 import { useCharacterRestrictionsManager } from '../../components/gameContext/gameStateContextProvider';
 import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
-import { useEffectiveAccountSettings } from '../../components/gameContext/directoryConnectorContextProvider';
+import { useAccountSettings } from '../../components/gameContext/directoryConnectorContextProvider';
 import { useTexture } from '../useTexture';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
 import { useAppOptional } from '../utility';
@@ -268,7 +268,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 		isOnline,
 	} = useCharacterData(character);
 
-	const { interfaceChatroomOfflineCharacterFilter } = useEffectiveAccountSettings();
+	const { interfaceChatroomOfflineCharacterFilter } = useAccountSettings();
 
 	const playerFilters = usePlayerVisionFilters(character.isPlayer());
 	const characterFilters = useCharacterDisplayFilters(character);

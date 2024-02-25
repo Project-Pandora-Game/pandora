@@ -2,10 +2,7 @@ import type { Immutable } from 'immer';
 import { range } from 'lodash';
 import { AccountSettings, AccountSettingsSchema } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
-import { useColorInput } from '../../common/useColorInput';
 import { useUpdatedUserInput } from '../../common/useSyncUserInput';
-import { Button } from '../common/button/button';
-import { ColorInput } from '../common/colorInput/colorInput';
 import { Select } from '../common/select/select';
 import { useCurrentAccount, useDirectoryConnector, useEffectiveAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 import { SelectAccountSettings, ToggleAccountSetting } from './helpers/accountSettings';
@@ -20,7 +17,7 @@ export function InterfaceSettings(): ReactElement | null {
 	return (
 		<>
 			<ChatroomSettings currentSettings={ currentSettings } />
-			<WardrobeSettings currentSettings={ currentSettings } />
+			<WardrobeSettings />
 		</>
 	);
 }
@@ -110,12 +107,10 @@ function ChatroomOfflineCharacters(): ReactElement {
 	return <SelectAccountSettings setting='interfaceChatroomOfflineCharacterFilter' label='Offline characters display effect' stringify={ SELECTION_DESCRIPTIONS } />;
 }
 
-function WardrobeSettings({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
+function WardrobeSettings(): ReactElement {
 	return (
 		<fieldset>
 			<legend>Wardrobe UI</legend>
-			<WardrobeBackgroundColor currentSettings={ currentSettings } />
-			<WardrobeUseRoomBackground />
 			<WardrobeShowExtraButtons />
 			<WardrobeHoverPreview />
 			<SelectAccountSettings setting='wardrobeOutfitsPreview' label='Saved item collection previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
@@ -123,37 +118,6 @@ function WardrobeSettings({ currentSettings }: { currentSettings: Immutable<Acco
 			<SelectAccountSettings setting='wardrobeBigPreview' label='Item previews: Grid mode with big previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
 		</fieldset>
 	);
-}
-
-function WardrobeBackgroundColor({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
-	const directory = useDirectoryConnector();
-	const [color, setColor] = useColorInput(currentSettings.wardrobeBackground);
-
-	return (
-		<div className='input-row'>
-			<label>Background</label>
-			<ColorInput
-				initialValue={ color }
-				onChange={ setColor }
-				inputColorTitle='Change background color'
-			/>
-			<Button
-				className='slim fadeDisabled'
-				onClick={ () => {
-					directory.sendMessage('changeSettings', {
-						type: 'set',
-						settings: { wardrobeBackground: color },
-					});
-				} }
-				disabled={ color === currentSettings.wardrobeBackground.toUpperCase() }>
-				Save
-			</Button>
-		</div>
-	);
-}
-
-function WardrobeUseRoomBackground(): ReactElement {
-	return <ToggleAccountSetting setting='wardrobeUseRoomBackground' label="Use room's background, if character is inside a room" />;
 }
 
 function WardrobeShowExtraButtons(): ReactElement {

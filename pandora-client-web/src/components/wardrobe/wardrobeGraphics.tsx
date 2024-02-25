@@ -1,38 +1,35 @@
+import { Container, Graphics } from '@pixi/react';
+import { Immutable } from 'immer';
+import { min } from 'lodash';
 import {
 	AssertNever,
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
 	CharacterSize,
 	FilterItemType,
-	HexColorString,
 	ICharacterRoomData,
-	SpaceClientInfo,
-	RoomBackgroundData,
 	ItemRoomDevice,
 	Rectangle,
 	ResolveBackground,
+	RoomBackgroundData,
+	SpaceClientInfo,
 } from 'pandora-common';
-import React, { ReactElement, ReactNode, useCallback, useMemo } from 'react';
-import { Character, IChatroomCharacter } from '../../character/character';
-import { shardConnectorContext, useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
-import { Button } from '../common/button/button';
-import { useEvent } from '../../common/useEvent';
-import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
-import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../graphics/graphicsCharacter';
-import { ColorInput } from '../common/colorInput/colorInput';
-import { directoryConnectorContext, useEffectiveAccountSettings, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { useAssetManager } from '../../assets/assetManager';
-import { useSpaceInfo } from '../gameContext/gameStateContextProvider';
-import { RoomCharacter, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter';
-import { RoomProjectionResolver, usePlayerVisionFilters, useRoomViewProjection } from '../../graphics/room/roomScene';
-import { Row } from '../common/container/container';
 import * as PIXI from 'pixi.js';
-import { Container, Graphics } from '@pixi/react';
+import React, { ReactElement, ReactNode, useCallback, useMemo } from 'react';
+import { useAssetManager } from '../../assets/assetManager';
+import { Character, IChatroomCharacter } from '../../character/character';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../graphics/graphicsCharacter';
+import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
+import { RoomCharacter, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter';
 import { RoomDevice } from '../../graphics/room/roomDevice';
-import { useWardrobeContext } from './wardrobeContext';
+import { RoomProjectionResolver, usePlayerVisionFilters, useRoomViewProjection } from '../../graphics/room/roomScene';
 import { useObservable } from '../../observable';
-import { min } from 'lodash';
-import { Immutable } from 'immer';
+import { Button } from '../common/button/button';
+import { Row } from '../common/container/container';
+import { directoryConnectorContext } from '../gameContext/directoryConnectorContextProvider';
+import { useSpaceInfo } from '../gameContext/gameStateContextProvider';
+import { shardConnectorContext, useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
+import { useWardrobeContext } from './wardrobeContext';
 
 export function WardrobeCharacterPreview({ character, characterState, isPreview = false }: {
 	character: IChatroomCharacter;
@@ -55,7 +52,6 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 				>
 					↷
 				</Button>
-				<WardrobeBackgroundColorPicker />
 			</Row>
 			<Row className='pointer-events-enable'>
 				{
@@ -83,19 +79,16 @@ export function CharacterPreview({ character, characterState, overlay }: {
 }): ReactElement {
 	const spaceInfo = useSpaceInfo();
 	const assetManager = useAssetManager();
-	const accountSettings = useEffectiveAccountSettings();
 
 	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
 		return ResolveBackground(assetManager, spaceInfo.config.background);
 	}, [assetManager, spaceInfo]);
 	const projectionResolver = useRoomViewProjection(roomBackground);
 
-	const wardrobeBackground: number = Number.parseInt(accountSettings.wardrobeBackground.substring(1, 7), 16);
-
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
 		forwardContexts: [directoryConnectorContext, shardConnectorContext],
-		backgroundColor: roomBackground ? 0x000000 : wardrobeBackground,
-	}), [roomBackground, wardrobeBackground]);
+		backgroundColor: 0x000000,
+	}), []);
 
 	const { pivot } = useRoomCharacterOffsets(characterState);
 	const filters = usePlayerVisionFilters(character.isPlayer());
@@ -146,32 +139,6 @@ function WardrobeRoomBackground({
 			y={ pivot.y + yOffset - position.y * inverseScale }
 			backgroundSize={ [roomBackground.imageSize[0] * inverseScale, roomBackground.imageSize[1] * inverseScale] }
 			backgroundFilters={ filters }
-		/>
-	);
-}
-
-function WardrobeBackgroundColorPicker(): ReactElement | null {
-	const { wardrobeUseRoomBackground, wardrobeBackground } = useEffectiveAccountSettings();
-	const directory = useDirectoryConnector();
-
-	const onChange = useEvent((newColor: HexColorString) => {
-		directory.sendMessage('changeSettings', {
-			type: 'set',
-			settings: { wardrobeBackground: newColor },
-		});
-	});
-
-	// Don't show the picker, if it would have no effect
-	if (wardrobeUseRoomBackground)
-		return null;
-
-	return (
-		<ColorInput
-			initialValue={ wardrobeBackground }
-			onChange={ onChange }
-			throttle={ 100 }
-			hideTextInput={ true }
-			inputColorTitle='Change background color'
 		/>
 	);
 }

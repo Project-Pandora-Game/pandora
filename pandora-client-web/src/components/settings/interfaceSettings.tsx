@@ -1,15 +1,14 @@
 import type { Immutable } from 'immer';
 import { range } from 'lodash';
-import { AccountSettings, AccountSettingsSchema, KnownObject } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import { AccountSettings, AccountSettingsSchema } from 'pandora-common';
+import React, { ReactElement, useMemo } from 'react';
 import { useColorInput } from '../../common/useColorInput';
-import { useRemotelyUpdatedUserInput } from '../../common/useRemotelyUpdatedUserInput';
 import { useUpdatedUserInput } from '../../common/useSyncUserInput';
 import { Button } from '../common/button/button';
 import { ColorInput } from '../common/colorInput/colorInput';
-import { Select, SelectProps } from '../common/select/select';
+import { Select } from '../common/select/select';
 import { useCurrentAccount, useDirectoryConnector, useEffectiveAccountSettings } from '../gameContext/directoryConnectorContextProvider';
-import { ToggleAccountSetting } from './helpers/accountSettings';
+import { SelectAccountSettings, ToggleAccountSetting } from './helpers/accountSettings';
 
 export function InterfaceSettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -31,8 +30,8 @@ function ChatroomSettings({ currentSettings }: { currentSettings: Immutable<Acco
 		<fieldset>
 			<legend>Chatroom UI</legend>
 			<ChatroomGraphicsRatio currentSettings={ currentSettings } />
-			<ChatroomChatFontSize currentSettings={ currentSettings } />
-			<ChatroomOfflineCharacters currentSettings={ currentSettings } />
+			<ChatroomChatFontSize />
+			<ChatroomOfflineCharacters />
 		</fieldset>
 	);
 }
@@ -88,73 +87,27 @@ function ChatroomGraphicsRatio({ currentSettings }: { currentSettings: Immutable
 	);
 }
 
-function ChatroomChatFontSize({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
-	const directory = useDirectoryConnector();
-	const [size, setSize] = useState(currentSettings.interfaceChatroomChatFontSize);
-
-	const onChange = useCallback<NonNullable<SelectProps['onChange']>>(({ target }) => {
-		const newValue = AccountSettingsSchema.shape.interfaceChatroomChatFontSize.parse(target.value);
-
-		setSize(newValue);
-		directory.sendMessage('changeSettings', {
-			type: 'set',
-			settings: { interfaceChatroomChatFontSize: newValue },
-		});
-	}, [directory]);
-
-	const SELECTION_DESCRIPTIONS: Record<AccountSettings['interfaceChatroomChatFontSize'], string> = {
+function ChatroomChatFontSize(): ReactElement {
+	const SELECTION_DESCRIPTIONS = useMemo((): Record<AccountSettings['interfaceChatroomChatFontSize'], string> => ({
 		xs: 'Extra small',
 		s: 'Small',
 		m: 'Medium (default)',
 		l: 'Large',
 		xl: 'Extra large',
-	};
+	}), []);
 
-	return (
-		<div className='input-section'>
-			<label>Font size of main chat and direct messages</label>
-			<Select value={ size } onChange={ onChange }>
-				{
-					KnownObject.keys(SELECTION_DESCRIPTIONS)
-						.map((v) => <option key={ v } value={ v }>{ SELECTION_DESCRIPTIONS[v] }</option>)
-				}
-			</Select>
-		</div>
-	);
+	return <SelectAccountSettings setting='interfaceChatroomChatFontSize' label='Font size of main chat and direct messages' stringify={ SELECTION_DESCRIPTIONS } />;
 }
 
-function ChatroomOfflineCharacters({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
-	const directory = useDirectoryConnector();
-	const [selection, setSelection] = useState(currentSettings.interfaceChatroomOfflineCharacterFilter);
-
-	const onChange = useCallback<NonNullable<SelectProps['onChange']>>(({ target }) => {
-		const newValue = AccountSettingsSchema.shape.interfaceChatroomOfflineCharacterFilter.parse(target.value);
-
-		setSelection(newValue);
-		directory.sendMessage('changeSettings', {
-			type: 'set',
-			settings: { interfaceChatroomOfflineCharacterFilter: newValue },
-		});
-	}, [directory]);
-
-	const SELECTION_DESCRIPTIONS: Record<AccountSettings['interfaceChatroomOfflineCharacterFilter'], string> = {
+function ChatroomOfflineCharacters(): ReactElement {
+	const SELECTION_DESCRIPTIONS = useMemo((): Record<AccountSettings['interfaceChatroomOfflineCharacterFilter'], string> => ({
 		none: 'No effect (displayed the same as online characters)',
 		icon: 'Show icon under the character name',
 		darken: 'Darken',
 		ghost: 'Ghost (darken + semi-transparent)',
-	};
+	}), []);
 
-	return (
-		<div className='input-section'>
-			<label>Offline characters display effect</label>
-			<Select value={ selection } onChange={ onChange }>
-				{
-					(Object.keys(SELECTION_DESCRIPTIONS) as AccountSettings['interfaceChatroomOfflineCharacterFilter'][])
-						.map((v) => <option key={ v } value={ v }>{ SELECTION_DESCRIPTIONS[v] }</option>)
-				}
-			</Select>
-		</div>
-	);
+	return <SelectAccountSettings setting='interfaceChatroomOfflineCharacterFilter' label='Offline characters display effect' stringify={ SELECTION_DESCRIPTIONS } />;
 }
 
 function WardrobeSettings({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
@@ -165,9 +118,9 @@ function WardrobeSettings({ currentSettings }: { currentSettings: Immutable<Acco
 			<WardrobeUseRoomBackground />
 			<WardrobeShowExtraButtons />
 			<WardrobeHoverPreview />
-			<WardrobeSelectSettings currentSettings={ currentSettings } setting='wardrobeOutfitsPreview' label='Saved item collection previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
-			<WardrobeSelectSettings currentSettings={ currentSettings } setting='wardrobeSmallPreview' label='Item previews: List mode with small previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
-			<WardrobeSelectSettings currentSettings={ currentSettings } setting='wardrobeBigPreview' label='Item previews: Grid mode with big previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
+			<SelectAccountSettings setting='wardrobeOutfitsPreview' label='Saved item collection previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
+			<SelectAccountSettings setting='wardrobeSmallPreview' label='Item previews: List mode with small previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
+			<SelectAccountSettings setting='wardrobeBigPreview' label='Item previews: Grid mode with big previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
 		</fieldset>
 	);
 }
@@ -221,41 +174,3 @@ const WARDROBE_PREVIEW_TYPE_DESCRIPTION: Record<AccountSettings['wardrobeSmallPr
 	icon: 'Show attribute icon',
 	image: 'Show preview image',
 };
-
-type StringKeyOf<T> = {
-	[K in keyof T]: T[K] extends string ? K : never
-}[keyof T];
-
-function WardrobeSelectSettings<K extends StringKeyOf<AccountSettings>>({ currentSettings, setting, label, stringify }: {
-	currentSettings: Immutable<AccountSettings>;
-	setting: K;
-	label: string;
-	stringify: Readonly<Record<AccountSettings[K], string>>;
-}): ReactElement {
-	const directory = useDirectoryConnector();
-	const [value, setValue] = useRemotelyUpdatedUserInput(currentSettings[setting], undefined, {
-		updateCallback: (newValue) => {
-			directory.sendMessage('changeSettings', {
-				type: 'set',
-				settings: { [setting]: newValue },
-			});
-		},
-	});
-	const onChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-		const newValue = AccountSettingsSchema.shape[setting].parse(e.target.value);
-		setValue(newValue as AccountSettings[K]);
-	}, [setting, setValue]);
-	const options = useMemo(() => (Object.entries(stringify) as [AccountSettings[K], string][]).map(([k, v]) => (
-		<option key={ k } value={ k }>
-			{ v }
-		</option>
-	)), [stringify]);
-	return (
-		<div className='input-section'>
-			<label>{ label }</label>
-			<Select value={ value } onChange={ onChange }>
-				{ options }
-			</Select>
-		</div>
-	);
-}

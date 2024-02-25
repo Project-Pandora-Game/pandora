@@ -137,8 +137,8 @@ export function useModifiedAccountSettings(): Immutable<Partial<AccountSettings>
 export function useEffectiveAccountSettings(): Immutable<AccountSettings> {
 	const modifiedSettings = useModifiedAccountSettings();
 	return useMemo((): Immutable<AccountSettings> => ({
-		...modifiedSettings,
 		...ACCOUNT_SETTINGS_DEFAULT,
+		...modifiedSettings,
 	}), [modifiedSettings]);
 }
 

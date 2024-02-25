@@ -1,85 +1,89 @@
-import type { Immutable } from 'immer';
 import { range } from 'lodash';
-import { AccountSettings, AccountSettingsSchema } from 'pandora-common';
+import { ACCOUNT_SETTINGS_DEFAULT, AccountSettings, AccountSettingsSchema } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
-import { useUpdatedUserInput } from '../../common/useSyncUserInput';
-import { Select } from '../common/select/select';
-import { useCurrentAccount, useDirectoryConnector, useEffectiveAccountSettings } from '../gameContext/directoryConnectorContextProvider';
+import { z } from 'zod';
+import { useCurrentAccount, useDirectoryConnector, useModifiedAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 import { SelectAccountSettings, ToggleAccountSetting } from './helpers/accountSettings';
+import { SelectSettingInput } from './helpers/settingsInputs';
 
 export function InterfaceSettings(): ReactElement | null {
 	const account = useCurrentAccount();
-	const currentSettings = useEffectiveAccountSettings();
 
 	if (!account)
 		return <>Not logged in</>;
 
 	return (
 		<>
-			<ChatroomSettings currentSettings={ currentSettings } />
+			<ChatroomSettings />
 			<WardrobeSettings />
 		</>
 	);
 }
 
-function ChatroomSettings({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
+function ChatroomSettings(): ReactElement {
 	return (
 		<fieldset>
 			<legend>Chatroom UI</legend>
-			<ChatroomGraphicsRatio currentSettings={ currentSettings } />
+			<ChatroomGraphicsRatio />
 			<ChatroomChatFontSize />
 			<ChatroomOfflineCharacters />
 		</fieldset>
 	);
 }
 
-function ChatroomGraphicsRatio({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
+function ChatroomGraphicsRatio(): ReactElement {
+	const modifiedSettings = useModifiedAccountSettings();
 	const directory = useDirectoryConnector();
 
-	const [ratioHorizontal, setRatioHorizontal] = useUpdatedUserInput(currentSettings.interfaceChatroomGraphicsRatioHorizontal);
-	const onChangeRatioHorizontal = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		const newValue = AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioHorizontal.parse(Number.parseInt(e.target.value, 10));
-		setRatioHorizontal(newValue);
+	const onChange = (s: 'interfaceChatroomGraphicsRatioHorizontal' | 'interfaceChatroomGraphicsRatioVertical', value: string) => {
+		const newValue = AccountSettingsSchema.shape[s].parse(Number.parseInt(value, 10));
 		directory.sendMessage('changeSettings', {
 			type: 'set',
-			settings: { interfaceChatroomGraphicsRatioHorizontal: newValue },
+			settings: { [s]: newValue },
 		});
 	};
 
-	const [ratioVertical, setRatioVertical] = useUpdatedUserInput(currentSettings.interfaceChatroomGraphicsRatioVertical);
-	const onChangeRatioVertical = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		const newValue = AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical.parse(Number.parseInt(e.target.value, 10));
-		setRatioVertical(newValue);
+	const onReset = (s: 'interfaceChatroomGraphicsRatioHorizontal' | 'interfaceChatroomGraphicsRatioVertical') => {
 		directory.sendMessage('changeSettings', {
-			type: 'set',
-			settings: { interfaceChatroomGraphicsRatioVertical: newValue },
+			type: 'reset',
+			settings: [s],
 		});
 	};
 
 	return (
 		<>
-			<div className='input-section'>
-				<label>Chatroom graphics to chat ratio (in landscape mode)</label>
-				<Select value={ ratioHorizontal.toString() } onChange={ onChangeRatioHorizontal }>
-					{
+			<SelectSettingInput<string>
+				currentValue={ modifiedSettings?.interfaceChatroomGraphicsRatioHorizontal?.toString() }
+				defaultValue={ ACCOUNT_SETTINGS_DEFAULT.interfaceChatroomGraphicsRatioHorizontal.toString() }
+				label='Chatroom graphics to chat ratio (in landscape mode)'
+				stringify={
+					Object.fromEntries(
 						range(
 							AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioHorizontal.minValue ?? 1,
 							(AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioHorizontal.maxValue ?? 9) + 1,
-						).map((v) => <option key={ v } value={ v.toString() }>{ `${v}:${10 - v}` }</option>)
-					}
-				</Select>
-			</div>
-			<div className='input-section'>
-				<label>Chatroom graphics to chat ratio (in portrait mode)</label>
-				<Select value={ ratioVertical.toString() } onChange={ onChangeRatioVertical }>
-					{
+						).map((v) => [v.toString(), `${v}:${10 - v}`]),
+					)
+				}
+				schema={ z.string() }
+				onChange={ (v) => onChange('interfaceChatroomGraphicsRatioHorizontal', v) }
+				onReset={ () => onReset('interfaceChatroomGraphicsRatioHorizontal') }
+			/>
+			<SelectSettingInput<string>
+				currentValue={ modifiedSettings?.interfaceChatroomGraphicsRatioVertical?.toString() }
+				defaultValue={ ACCOUNT_SETTINGS_DEFAULT.interfaceChatroomGraphicsRatioVertical.toString() }
+				label='Chatroom graphics to chat ratio (in portrait mode)'
+				stringify={
+					Object.fromEntries(
 						range(
 							AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical.minValue ?? 1,
 							(AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical.maxValue ?? 9) + 1,
-						).map((v) => <option key={ v } value={ v.toString() }>{ `${v}:${10 - v}` }</option>)
-					}
-				</Select>
-			</div>
+						).map((v) => [v.toString(), `${v}:${10 - v}`]),
+					)
+				}
+				schema={ z.string() }
+				onChange={ (v) => onChange('interfaceChatroomGraphicsRatioVertical', v) }
+				onReset={ () => onReset('interfaceChatroomGraphicsRatioVertical') }
+			/>
 		</>
 	);
 }

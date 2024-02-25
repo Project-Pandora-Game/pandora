@@ -1,23 +1,24 @@
+import { CloneDeepMutable } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
 import { z } from 'zod';
 import { BrowserStorage } from '../browserStorage';
-import { Select } from '../components/common/select/select';
+import { SelectSettingInput } from '../components/settings/helpers/settingsInputs';
 import { useObservable } from '../observable';
 
-export const GraphicsSettingsScheme = z.object({
+export const GraphicsSettingsSchema = z.object({
 	resolution: z.number().int().min(0).max(100),
 	alphamaskEngine: z.enum(['pixi', 'customShader', 'disabled']),
 });
-export type IGraphicsSettings = z.infer<typeof GraphicsSettingsScheme>;
+export type GraphicsSettings = z.infer<typeof GraphicsSettingsSchema>;
 
-const GRAPHICS_SETTINGS_DEFAULT: IGraphicsSettings = {
+const GRAPHICS_SETTINGS_DEFAULT: GraphicsSettings = {
 	resolution: 100,
 	alphamaskEngine: 'customShader',
 };
 
-const storage = BrowserStorage.create<Partial<IGraphicsSettings>>('settings.graphics', {}, GraphicsSettingsScheme.partial());
+const storage = BrowserStorage.create<Partial<GraphicsSettings>>('settings.graphics', {}, GraphicsSettingsSchema.partial());
 
-export function useGraphicsSettings(): IGraphicsSettings {
+export function useGraphicsSettings(): GraphicsSettings {
 	const overrides = useObservable(storage);
 	return useMemo(() => ({
 		...GRAPHICS_SETTINGS_DEFAULT,
@@ -25,11 +26,21 @@ export function useGraphicsSettings(): IGraphicsSettings {
 	}), [overrides]);
 }
 
-export function SetGraphicsSettings(changes: Partial<IGraphicsSettings>): void {
+function SetGraphicsSettings(changes: Partial<GraphicsSettings>): void {
 	storage.value = {
 		...storage.value,
 		...changes,
 	};
+}
+
+function ResetGraphicsSettings(settings: readonly (keyof GraphicsSettings)[]): void {
+	storage.produce((v) => {
+		const newValue = CloneDeepMutable(v);
+		for (const s of settings) {
+			delete newValue[s];
+		}
+		return newValue;
+	});
 }
 
 export function GraphicsSettings(): ReactElement | null {
@@ -39,9 +50,9 @@ export function GraphicsSettings(): ReactElement | null {
 }
 
 function QualitySettings(): ReactElement {
-	const { resolution, alphamaskEngine } = useGraphicsSettings();
+	const { resolution, alphamaskEngine } = useObservable(storage);
 
-	const ALPHAMASK_ENGINES_DESCRIPTIONS: Record<IGraphicsSettings['alphamaskEngine'], string> = {
+	const ALPHAMASK_ENGINES_DESCRIPTIONS: Record<GraphicsSettings['alphamaskEngine'], string> = {
 		pixi: 'Pixi.js',
 		customShader: 'Custom Pandora shader (default)',
 		disabled: 'Ignore masks - WILL CAUSE VISUAL GLITCHES',
@@ -50,28 +61,32 @@ function QualitySettings(): ReactElement {
 	return (
 		<fieldset>
 			<legend>Quality</legend>
-			<div className='input-section'>
-				<label>Resolution</label>
-				<Select value={ Math.round(resolution).toString() } onChange={ (e) => {
-					const res = GraphicsSettingsScheme.shape.resolution.safeParse(Number.parseInt(e.target.value, 10));
-					SetGraphicsSettings({ resolution: res.success ? res.data : GRAPHICS_SETTINGS_DEFAULT.resolution });
-				} }>
-					{
-						[100, 90, 80, 65, 50, 25, 0].map((v) => <option key={ v } value={ v.toString() }>{ `${v}%` }</option>)
-					}
-				</Select>
-			</div>
-			<div className='input-section'>
-				<label>Alphamasking engine</label>
-				<Select value={ alphamaskEngine } onChange={ (e) => {
-					const res = GraphicsSettingsScheme.shape.alphamaskEngine.safeParse(e.target.value);
-					SetGraphicsSettings({ alphamaskEngine: res.success ? res.data : GRAPHICS_SETTINGS_DEFAULT.alphamaskEngine });
-				} }>
-					{
-						(Object.keys(ALPHAMASK_ENGINES_DESCRIPTIONS) as IGraphicsSettings['alphamaskEngine'][]).map((v) => <option key={ v } value={ v }>{ ALPHAMASK_ENGINES_DESCRIPTIONS[v] }</option>)
-					}
-				</Select>
-			</div>
+			<SelectSettingInput<string>
+				currentValue={ resolution?.toString() }
+				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.resolution.toString() }
+				label='Resolution'
+				stringify={
+					Object.fromEntries(
+						([100, 90, 80, 65, 50, 25, 0])
+							.map((v) => [v.toString(), `${v}%`]),
+					)
+				}
+				schema={ z.string() }
+				onChange={ (v) => {
+					const newValue = GraphicsSettingsSchema.shape.resolution.parse(Number.parseInt(v, 10));
+					SetGraphicsSettings({ resolution: newValue });
+				} }
+				onReset={ () => ResetGraphicsSettings(['resolution']) }
+			/>
+			<SelectSettingInput<GraphicsSettings['alphamaskEngine']>
+				currentValue={ alphamaskEngine }
+				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.alphamaskEngine }
+				label='Alphamasking engine'
+				stringify={ ALPHAMASK_ENGINES_DESCRIPTIONS }
+				schema={ GraphicsSettingsSchema.shape.alphamaskEngine }
+				onChange={ (v) => SetGraphicsSettings({ alphamaskEngine: v }) }
+				onReset={ () => ResetGraphicsSettings(['alphamaskEngine']) }
+			/>
 		</fieldset>
 	);
 }

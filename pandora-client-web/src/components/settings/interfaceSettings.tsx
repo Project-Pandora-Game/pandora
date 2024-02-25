@@ -9,6 +9,7 @@ import { Button } from '../common/button/button';
 import { ColorInput } from '../common/colorInput/colorInput';
 import { Select, SelectProps } from '../common/select/select';
 import { useCurrentAccount, useDirectoryConnector, useEffectiveAccountSettings } from '../gameContext/directoryConnectorContextProvider';
+import { ToggleAccountSetting } from './helpers/accountSettings';
 
 export function InterfaceSettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -161,9 +162,9 @@ function WardrobeSettings({ currentSettings }: { currentSettings: Immutable<Acco
 		<fieldset>
 			<legend>Wardrobe UI</legend>
 			<WardrobeBackgroundColor currentSettings={ currentSettings } />
-			<WardrobeUseRoomBackground currentSettings={ currentSettings } />
-			<WardrobeShowExtraButtons currentSettings={ currentSettings } />
-			<WardrobeHoverPreview currentSettings={ currentSettings } />
+			<WardrobeUseRoomBackground />
+			<WardrobeShowExtraButtons />
+			<WardrobeHoverPreview />
 			<WardrobeSelectSettings currentSettings={ currentSettings } setting='wardrobeOutfitsPreview' label='Saved item collection previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
 			<WardrobeSelectSettings currentSettings={ currentSettings } setting='wardrobeSmallPreview' label='Item previews: List mode with small previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
 			<WardrobeSelectSettings currentSettings={ currentSettings } setting='wardrobeBigPreview' label='Item previews: Grid mode with big previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
@@ -198,67 +199,16 @@ function WardrobeBackgroundColor({ currentSettings }: { currentSettings: Immutab
 	);
 }
 
-function WardrobeUseRoomBackground({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
-	const directory = useDirectoryConnector();
-	const [show, setShow] = useState(currentSettings.wardrobeUseRoomBackground);
-
-	const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const newValue = e.target.checked;
-		setShow(newValue);
-		directory.sendMessage('changeSettings', {
-			type: 'set',
-			settings: { wardrobeUseRoomBackground: newValue },
-		});
-	};
-
-	return (
-		<div className='input-row'>
-			<input type='checkbox' checked={ show } onChange={ onChange } />
-			<label>Use room's background, if character is inside a room</label>
-		</div>
-	);
+function WardrobeUseRoomBackground(): ReactElement {
+	return <ToggleAccountSetting setting='wardrobeUseRoomBackground' label="Use room's background, if character is inside a room" />;
 }
 
-function WardrobeShowExtraButtons({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
-	const directory = useDirectoryConnector();
-	const [show, setShow] = useState(currentSettings.wardrobeExtraActionButtons);
-
-	const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const newValue = e.target.checked;
-		setShow(newValue);
-		directory.sendMessage('changeSettings', {
-			type: 'set',
-			settings: { wardrobeExtraActionButtons: newValue },
-		});
-	};
-
-	return (
-		<div className='input-row'>
-			<input type='checkbox' checked={ show } onChange={ onChange } />
-			<label>Show quick action buttons</label>
-		</div>
-	);
+function WardrobeShowExtraButtons(): ReactElement {
+	return <ToggleAccountSetting setting='wardrobeExtraActionButtons' label='Show quick action buttons' />;
 }
 
-function WardrobeHoverPreview({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
-	const directory = useDirectoryConnector();
-	const [show, setShow] = useState(currentSettings.wardrobeHoverPreview);
-
-	const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const newValue = e.target.checked;
-		setShow(newValue);
-		directory.sendMessage('changeSettings', {
-			type: 'set',
-			settings: { wardrobeHoverPreview: newValue },
-		});
-	};
-
-	return (
-		<div className='input-row'>
-			<input type='checkbox' checked={ show } onChange={ onChange } />
-			<label>Show preview when hovering over action button</label>
-		</div>
-	);
+function WardrobeHoverPreview(): ReactElement {
+	return <ToggleAccountSetting setting='wardrobeHoverPreview' label='Show preview when hovering over action button' />;
 }
 
 const WARDROBE_PREVIEWS_DESCRIPTION: Record<AccountSettings['wardrobeOutfitsPreview'], string> = {

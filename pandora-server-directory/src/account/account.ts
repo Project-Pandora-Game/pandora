@@ -1,16 +1,35 @@
-import { CharacterId, ICharacterSelfInfo, IDirectoryAccountInfo, IDirectoryAccountSettings, IShardAccountDefinition, ACCOUNT_SETTINGS_DEFAULT, AccountId, ServerRoom, IDirectoryClient, Assert, OutfitMeasureCost, ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE, AsyncSynchronized, AssetFrameworkOutfitWithId, AccountPublicInfo, KnownObject, ACCOUNT_SETTINGS_LIMITED_LIMITS } from 'pandora-common';
-import { GetDatabase } from '../database/databaseProvider';
-import { CharacterInfo } from './character';
+import _, { cloneDeep, omit, remove, uniq } from 'lodash';
+import {
+	ACCOUNT_SETTINGS_DEFAULT,
+	ACCOUNT_SETTINGS_LIMITED_LIMITS,
+	AccountId,
+	AccountPublicInfo,
+	Assert,
+	AssetFrameworkOutfitWithId,
+	AsyncSynchronized,
+	CharacterId,
+	ICharacterSelfInfo,
+	IDirectoryAccountInfo,
+	IDirectoryClient,
+	IShardAccountDefinition,
+	ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE,
+	KnownObject,
+	OutfitMeasureCost,
+	ServerRoom,
+	type AccountSettings,
+	type AccountSettingsKeys,
+} from 'pandora-common';
 import { ENV } from '../config';
-const { CHARACTER_LIMIT_NORMAL, ROOM_LIMIT_NORMAL } = ENV;
-import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
-import { AccountRoles } from './accountRoles';
-import { AccountDirectMessages } from './accountDirectMessages';
+import { GetDatabase } from '../database/databaseProvider';
+import { DatabaseAccount, DatabaseAccountUpdate, DatabaseAccountWithSecure, DirectMessageAccounts } from '../database/databaseStructure';
 import type { ClientConnection } from '../networking/connection_client';
 import { AccountContacts } from './accountContacts';
-import { DatabaseAccount, DatabaseAccountUpdate, DatabaseAccountWithSecure, DirectMessageAccounts } from '../database/databaseStructure';
+import { AccountDirectMessages } from './accountDirectMessages';
+import { AccountRoles } from './accountRoles';
+import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
+import { CharacterInfo } from './character';
 
-import _, { cloneDeep, omit, uniq } from 'lodash';
+const { CHARACTER_LIMIT_NORMAL, ROOM_LIMIT_NORMAL } = ENV;
 
 /** Currently logged in or recently used account */
 export class Account {
@@ -91,14 +110,27 @@ export class Account {
 		};
 	}
 
+	/**
+	 * Resolves full account settings to their effective values.
+	 * @returns The settings that apply to this account.
+	 */
+	public getEffectiveSettings(): Readonly<AccountSettings> {
+		return {
+			...ACCOUNT_SETTINGS_DEFAULT,
+			...this.data.settings,
+		};
+	}
+
 	/** The info that is visible to public (with some limitations) */
 	public getAccountPublicInfo(): AccountPublicInfo {
+		const settings = this.getEffectiveSettings();
+
 		return {
 			id: this.data.id,
 			displayName: this.displayName,
-			labelColor: this.data.settings.labelColor,
+			labelColor: settings.labelColor,
 			created: this.data.created,
-			visibleRoles: uniq(this.data.settings.visibleRoles.filter((role) => this.roles.isAuthorized(role))),
+			visibleRoles: uniq(settings.visibleRoles.filter((role) => this.roles.isAuthorized(role))),
 			profileDescription: this.data.profileDescription,
 		};
 	}
@@ -110,7 +142,8 @@ export class Account {
 		};
 	}
 
-	public async changeSettings(settings: Partial<IDirectoryAccountSettings>): Promise<void> {
+	@AsyncSynchronized('object')
+	public async changeSettings(settings: Partial<AccountSettings>): Promise<void> {
 		if (settings.visibleRoles) {
 			settings.visibleRoles = uniq(settings.visibleRoles.filter((role) => this.roles.isAuthorized(role)));
 		}
@@ -144,6 +177,44 @@ export class Account {
 			this.data.settingsCooldowns = update.settingsCooldowns;
 
 		this.data.settings = { ...this.data.settings, ...settings };
+		update.settings = this.data.settings;
+
+		await db.updateAccountData(this.data.id, update);
+		this.onAccountInfoChange();
+	}
+
+	@AsyncSynchronized('object')
+	public async resetSettings(settings: readonly AccountSettingsKeys[]): Promise<void> {
+		const db = GetDatabase();
+		const update: DatabaseAccountUpdate = {};
+
+		// Mark modified limited settings cooldowns (reset triggers cooldown as well)
+		const now = Date.now();
+		for (const [key, limit] of KnownObject.entries(ACCOUNT_SETTINGS_LIMITED_LIMITS)) {
+			if (limit == null || !settings.includes(key))
+				continue;
+
+			const cooldown = this.data.settingsCooldowns[key] ?? 0;
+			if (cooldown > now) {
+				remove(settings, (i) => i === key);
+				continue;
+			}
+
+			let settingsCooldowns = update.settingsCooldowns;
+			if (!settingsCooldowns) {
+				settingsCooldowns = cloneDeep(this.data.settingsCooldowns);
+				update.settingsCooldowns = settingsCooldowns;
+			}
+
+			settingsCooldowns[key] = limit + now;
+		}
+
+		if (update.settingsCooldowns != null)
+			this.data.settingsCooldowns = update.settingsCooldowns;
+
+		for (const setting of settings) {
+			delete this.data.settings[setting];
+		}
 		update.settings = this.data.settings;
 
 		await db.updateAccountData(this.data.id, update);
@@ -276,7 +347,7 @@ export async function CreateAccountData(username: string, password: string, emai
 		created: Date.now(),
 		profileDescription: '',
 		characters: [],
-		settings: cloneDeep(ACCOUNT_SETTINGS_DEFAULT),
+		settings: {},
 		settingsCooldowns: {},
 		storedOutfits: [],
 		secure: await GenerateAccountSecureData(password, email, activated),

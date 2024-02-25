@@ -1,54 +1,62 @@
+import type { Immutable } from 'immer';
+import { range } from 'lodash';
+import { AccountSettings, AccountSettingsSchema, KnownObject } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
-import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { DirectoryAccountSettingsSchema, IDirectoryAccountInfo, IDirectoryAccountSettings, KnownObject } from 'pandora-common';
+import { useColorInput } from '../../common/useColorInput';
+import { useRemotelyUpdatedUserInput } from '../../common/useRemotelyUpdatedUserInput';
+import { useUpdatedUserInput } from '../../common/useSyncUserInput';
 import { Button } from '../common/button/button';
 import { ColorInput } from '../common/colorInput/colorInput';
-import { useColorInput } from '../../common/useColorInput';
 import { Select, SelectProps } from '../common/select/select';
-import { useUpdatedUserInput } from '../../common/useSyncUserInput';
-import { range } from 'lodash';
-import { useRemotelyUpdatedUserInput } from '../../common/useRemotelyUpdatedUserInput';
+import { useCurrentAccount, useDirectoryConnector, useEffectiveAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 
 export function InterfaceSettings(): ReactElement | null {
 	const account = useCurrentAccount();
+	const currentSettings = useEffectiveAccountSettings();
 
 	if (!account)
 		return <>Not logged in</>;
 
 	return (
 		<>
-			<ChatroomSettings account={ account } />
-			<WardrobeSettings account={ account } />
+			<ChatroomSettings currentSettings={ currentSettings } />
+			<WardrobeSettings currentSettings={ currentSettings } />
 		</>
 	);
 }
 
-function ChatroomSettings({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+function ChatroomSettings({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
 	return (
 		<fieldset>
 			<legend>Chatroom UI</legend>
-			<ChatroomGraphicsRatio account={ account } />
-			<ChatroomChatFontSize account={ account } />
-			<ChatroomOfflineCharacters account={ account } />
+			<ChatroomGraphicsRatio currentSettings={ currentSettings } />
+			<ChatroomChatFontSize currentSettings={ currentSettings } />
+			<ChatroomOfflineCharacters currentSettings={ currentSettings } />
 		</fieldset>
 	);
 }
 
-function ChatroomGraphicsRatio({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+function ChatroomGraphicsRatio({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
 	const directory = useDirectoryConnector();
 
-	const [ratioHorizontal, setRatioHorizontal] = useUpdatedUserInput(account.settings.interfaceChatroomGraphicsRatioHorizontal);
+	const [ratioHorizontal, setRatioHorizontal] = useUpdatedUserInput(currentSettings.interfaceChatroomGraphicsRatioHorizontal);
 	const onChangeRatioHorizontal = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		const newValue = DirectoryAccountSettingsSchema.shape.interfaceChatroomGraphicsRatioHorizontal.parse(Number.parseInt(e.target.value, 10));
+		const newValue = AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioHorizontal.parse(Number.parseInt(e.target.value, 10));
 		setRatioHorizontal(newValue);
-		directory.sendMessage('changeSettings', { interfaceChatroomGraphicsRatioHorizontal: newValue });
+		directory.sendMessage('changeSettings', {
+			type: 'set',
+			settings: { interfaceChatroomGraphicsRatioHorizontal: newValue },
+		});
 	};
 
-	const [ratioVertical, setRatioVertical] = useUpdatedUserInput(account.settings.interfaceChatroomGraphicsRatioVertical);
+	const [ratioVertical, setRatioVertical] = useUpdatedUserInput(currentSettings.interfaceChatroomGraphicsRatioVertical);
 	const onChangeRatioVertical = (e: React.ChangeEvent<HTMLSelectElement>) => {
-		const newValue = DirectoryAccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical.parse(Number.parseInt(e.target.value, 10));
+		const newValue = AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical.parse(Number.parseInt(e.target.value, 10));
 		setRatioVertical(newValue);
-		directory.sendMessage('changeSettings', { interfaceChatroomGraphicsRatioVertical: newValue });
+		directory.sendMessage('changeSettings', {
+			type: 'set',
+			settings: { interfaceChatroomGraphicsRatioVertical: newValue },
+		});
 	};
 
 	return (
@@ -58,8 +66,8 @@ function ChatroomGraphicsRatio({ account }: { account: IDirectoryAccountInfo; })
 				<Select value={ ratioHorizontal.toString() } onChange={ onChangeRatioHorizontal }>
 					{
 						range(
-							DirectoryAccountSettingsSchema.shape.interfaceChatroomGraphicsRatioHorizontal._def.innerType.minValue ?? 1,
-							(DirectoryAccountSettingsSchema.shape.interfaceChatroomGraphicsRatioHorizontal._def.innerType.maxValue ?? 9) + 1,
+							AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioHorizontal.minValue ?? 1,
+							(AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioHorizontal.maxValue ?? 9) + 1,
 						).map((v) => <option key={ v } value={ v.toString() }>{ `${v}:${10 - v}` }</option>)
 					}
 				</Select>
@@ -69,8 +77,8 @@ function ChatroomGraphicsRatio({ account }: { account: IDirectoryAccountInfo; })
 				<Select value={ ratioVertical.toString() } onChange={ onChangeRatioVertical }>
 					{
 						range(
-							DirectoryAccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical._def.innerType.minValue ?? 1,
-							(DirectoryAccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical._def.innerType.maxValue ?? 9) + 1,
+							AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical.minValue ?? 1,
+							(AccountSettingsSchema.shape.interfaceChatroomGraphicsRatioVertical.maxValue ?? 9) + 1,
 						).map((v) => <option key={ v } value={ v.toString() }>{ `${v}:${10 - v}` }</option>)
 					}
 				</Select>
@@ -79,18 +87,21 @@ function ChatroomGraphicsRatio({ account }: { account: IDirectoryAccountInfo; })
 	);
 }
 
-function ChatroomChatFontSize({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+function ChatroomChatFontSize({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
 	const directory = useDirectoryConnector();
-	const [size, setSize] = useState(account.settings.interfaceChatroomChatFontSize);
+	const [size, setSize] = useState(currentSettings.interfaceChatroomChatFontSize);
 
 	const onChange = useCallback<NonNullable<SelectProps['onChange']>>(({ target }) => {
-		const newValue = DirectoryAccountSettingsSchema.shape.interfaceChatroomChatFontSize.parse(target.value);
+		const newValue = AccountSettingsSchema.shape.interfaceChatroomChatFontSize.parse(target.value);
 
 		setSize(newValue);
-		directory.sendMessage('changeSettings', { interfaceChatroomChatFontSize: newValue });
+		directory.sendMessage('changeSettings', {
+			type: 'set',
+			settings: { interfaceChatroomChatFontSize: newValue },
+		});
 	}, [directory]);
 
-	const SELECTION_DESCRIPTIONS: Record<IDirectoryAccountSettings['interfaceChatroomChatFontSize'], string> = {
+	const SELECTION_DESCRIPTIONS: Record<AccountSettings['interfaceChatroomChatFontSize'], string> = {
 		xs: 'Extra small',
 		s: 'Small',
 		m: 'Medium (default)',
@@ -111,18 +122,21 @@ function ChatroomChatFontSize({ account }: { account: IDirectoryAccountInfo; }):
 	);
 }
 
-function ChatroomOfflineCharacters({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+function ChatroomOfflineCharacters({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
 	const directory = useDirectoryConnector();
-	const [selection, setSelection] = useState(account.settings.interfaceChatroomOfflineCharacterFilter);
+	const [selection, setSelection] = useState(currentSettings.interfaceChatroomOfflineCharacterFilter);
 
 	const onChange = useCallback<NonNullable<SelectProps['onChange']>>(({ target }) => {
-		const newValue = DirectoryAccountSettingsSchema.shape.interfaceChatroomOfflineCharacterFilter.parse(target.value);
+		const newValue = AccountSettingsSchema.shape.interfaceChatroomOfflineCharacterFilter.parse(target.value);
 
 		setSelection(newValue);
-		directory.sendMessage('changeSettings', { interfaceChatroomOfflineCharacterFilter: newValue });
+		directory.sendMessage('changeSettings', {
+			type: 'set',
+			settings: { interfaceChatroomOfflineCharacterFilter: newValue },
+		});
 	}, [directory]);
 
-	const SELECTION_DESCRIPTIONS: Record<IDirectoryAccountSettings['interfaceChatroomOfflineCharacterFilter'], string> = {
+	const SELECTION_DESCRIPTIONS: Record<AccountSettings['interfaceChatroomOfflineCharacterFilter'], string> = {
 		none: 'No effect (displayed the same as online characters)',
 		icon: 'Show icon under the character name',
 		darken: 'Darken',
@@ -134,7 +148,7 @@ function ChatroomOfflineCharacters({ account }: { account: IDirectoryAccountInfo
 			<label>Offline characters display effect</label>
 			<Select value={ selection } onChange={ onChange }>
 				{
-					(Object.keys(SELECTION_DESCRIPTIONS) as IDirectoryAccountSettings['interfaceChatroomOfflineCharacterFilter'][])
+					(Object.keys(SELECTION_DESCRIPTIONS) as AccountSettings['interfaceChatroomOfflineCharacterFilter'][])
 						.map((v) => <option key={ v } value={ v }>{ SELECTION_DESCRIPTIONS[v] }</option>)
 				}
 			</Select>
@@ -142,24 +156,24 @@ function ChatroomOfflineCharacters({ account }: { account: IDirectoryAccountInfo
 	);
 }
 
-function WardrobeSettings({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+function WardrobeSettings({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
 	return (
 		<fieldset>
 			<legend>Wardrobe UI</legend>
-			<WardrobeBackgroundColor account={ account } />
-			<WardrobeUseRoomBackground account={ account } />
-			<WardrobeShowExtraButtons account={ account } />
-			<WardrobeHoverPreview account={ account } />
-			<WardrobeSelectSettings account={ account } setting='wardrobeOutfitsPreview' label='Saved item collection previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
-			<WardrobeSelectSettings account={ account } setting='wardrobeSmallPreview' label='Item previews: List mode with small previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
-			<WardrobeSelectSettings account={ account } setting='wardrobeBigPreview' label='Item previews: Grid mode with big previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
+			<WardrobeBackgroundColor currentSettings={ currentSettings } />
+			<WardrobeUseRoomBackground currentSettings={ currentSettings } />
+			<WardrobeShowExtraButtons currentSettings={ currentSettings } />
+			<WardrobeHoverPreview currentSettings={ currentSettings } />
+			<WardrobeSelectSettings currentSettings={ currentSettings } setting='wardrobeOutfitsPreview' label='Saved item collection previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
+			<WardrobeSelectSettings currentSettings={ currentSettings } setting='wardrobeSmallPreview' label='Item previews: List mode with small previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
+			<WardrobeSelectSettings currentSettings={ currentSettings } setting='wardrobeBigPreview' label='Item previews: Grid mode with big previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
 		</fieldset>
 	);
 }
 
-function WardrobeBackgroundColor({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+function WardrobeBackgroundColor({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
 	const directory = useDirectoryConnector();
-	const [color, setColor] = useColorInput(account.settings.wardrobeBackground);
+	const [color, setColor] = useColorInput(currentSettings.wardrobeBackground);
 
 	return (
 		<div className='input-row'>
@@ -171,22 +185,30 @@ function WardrobeBackgroundColor({ account }: { account: IDirectoryAccountInfo; 
 			/>
 			<Button
 				className='slim fadeDisabled'
-				onClick={ () => directory.sendMessage('changeSettings', { wardrobeBackground: color }) }
-				disabled={ color === account.settings.wardrobeBackground.toUpperCase() }>
+				onClick={ () => {
+					directory.sendMessage('changeSettings', {
+						type: 'set',
+						settings: { wardrobeBackground: color },
+					});
+				} }
+				disabled={ color === currentSettings.wardrobeBackground.toUpperCase() }>
 				Save
 			</Button>
 		</div>
 	);
 }
 
-function WardrobeUseRoomBackground({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+function WardrobeUseRoomBackground({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
 	const directory = useDirectoryConnector();
-	const [show, setShow] = useState(account.settings.wardrobeUseRoomBackground);
+	const [show, setShow] = useState(currentSettings.wardrobeUseRoomBackground);
 
 	const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = e.target.checked;
 		setShow(newValue);
-		directory.sendMessage('changeSettings', { wardrobeUseRoomBackground: newValue });
+		directory.sendMessage('changeSettings', {
+			type: 'set',
+			settings: { wardrobeUseRoomBackground: newValue },
+		});
 	};
 
 	return (
@@ -197,14 +219,17 @@ function WardrobeUseRoomBackground({ account }: { account: IDirectoryAccountInfo
 	);
 }
 
-function WardrobeShowExtraButtons({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+function WardrobeShowExtraButtons({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
 	const directory = useDirectoryConnector();
-	const [show, setShow] = useState(account.settings.wardrobeExtraActionButtons);
+	const [show, setShow] = useState(currentSettings.wardrobeExtraActionButtons);
 
 	const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = e.target.checked;
 		setShow(newValue);
-		directory.sendMessage('changeSettings', { wardrobeExtraActionButtons: newValue });
+		directory.sendMessage('changeSettings', {
+			type: 'set',
+			settings: { wardrobeExtraActionButtons: newValue },
+		});
 	};
 
 	return (
@@ -215,14 +240,17 @@ function WardrobeShowExtraButtons({ account }: { account: IDirectoryAccountInfo;
 	);
 }
 
-function WardrobeHoverPreview({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+function WardrobeHoverPreview({ currentSettings }: { currentSettings: Immutable<AccountSettings>; }): ReactElement {
 	const directory = useDirectoryConnector();
-	const [show, setShow] = useState(account.settings.wardrobeHoverPreview);
+	const [show, setShow] = useState(currentSettings.wardrobeHoverPreview);
 
 	const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newValue = e.target.checked;
 		setShow(newValue);
-		directory.sendMessage('changeSettings', { wardrobeHoverPreview: newValue });
+		directory.sendMessage('changeSettings', {
+			type: 'set',
+			settings: { wardrobeHoverPreview: newValue },
+		});
 	};
 
 	return (
@@ -233,13 +261,13 @@ function WardrobeHoverPreview({ account }: { account: IDirectoryAccountInfo; }):
 	);
 }
 
-const WARDROBE_PREVIEWS_DESCRIPTION: Record<IDirectoryAccountSettings['wardrobeOutfitsPreview'], string> = {
+const WARDROBE_PREVIEWS_DESCRIPTION: Record<AccountSettings['wardrobeOutfitsPreview'], string> = {
 	disabled: 'Disabled (better performance)',
 	small: 'Enabled (small live previews)',
 	big: 'Enabled (big live previews)',
 };
 
-const WARDROBE_PREVIEW_TYPE_DESCRIPTION: Record<IDirectoryAccountSettings['wardrobeSmallPreview'], string> = {
+const WARDROBE_PREVIEW_TYPE_DESCRIPTION: Record<AccountSettings['wardrobeSmallPreview'], string> = {
 	icon: 'Show attribute icon',
 	image: 'Show preview image',
 };
@@ -248,23 +276,26 @@ type StringKeyOf<T> = {
 	[K in keyof T]: T[K] extends string ? K : never
 }[keyof T];
 
-function WardrobeSelectSettings<K extends StringKeyOf<IDirectoryAccountSettings>>({ account, setting, label, stringify }: {
-	account: IDirectoryAccountInfo;
+function WardrobeSelectSettings<K extends StringKeyOf<AccountSettings>>({ currentSettings, setting, label, stringify }: {
+	currentSettings: Immutable<AccountSettings>;
 	setting: K;
 	label: string;
-	stringify: Readonly<Record<IDirectoryAccountSettings[K], string>>;
+	stringify: Readonly<Record<AccountSettings[K], string>>;
 }): ReactElement {
 	const directory = useDirectoryConnector();
-	const [value, setValue] = useRemotelyUpdatedUserInput(account.settings[setting], [account], {
+	const [value, setValue] = useRemotelyUpdatedUserInput(currentSettings[setting], undefined, {
 		updateCallback: (newValue) => {
-			directory.sendMessage('changeSettings', { [setting]: newValue });
+			directory.sendMessage('changeSettings', {
+				type: 'set',
+				settings: { [setting]: newValue },
+			});
 		},
 	});
 	const onChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-		const newValue = DirectoryAccountSettingsSchema.shape[setting].parse(e.target.value);
-		setValue(newValue as IDirectoryAccountSettings[K]);
+		const newValue = AccountSettingsSchema.shape[setting].parse(e.target.value);
+		setValue(newValue as AccountSettings[K]);
 	}, [setting, setValue]);
-	const options = useMemo(() => (Object.entries(stringify) as [IDirectoryAccountSettings[K], string][]).map(([k, v]) => (
+	const options = useMemo(() => (Object.entries(stringify) as [AccountSettings[K], string][]).map(([k, v]) => (
 		<option key={ k } value={ k }>
 			{ v }
 		</option>

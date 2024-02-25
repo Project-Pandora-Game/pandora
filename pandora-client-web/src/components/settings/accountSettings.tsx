@@ -158,15 +158,21 @@ function AccountRoleList({ account }: { account: IDirectoryAccountInfo; }): Reac
 }
 
 function AccountRole({ role, data }: { role: AccountRole; data?: { expires?: number; }; }): ReactElement {
-	const connector = useDirectoryConnector();
+	const directory = useDirectoryConnector();
 	const visibleRoles = useCurrentAccount()?.settings.visibleRoles || [];
 	const visible = visibleRoles.includes(role);
 
 	const onSetVisible = (e: React.ChangeEvent<HTMLInputElement>) => {
 		if (e.target.checked) {
-			connector.sendMessage('changeSettings', { visibleRoles: uniq([...visibleRoles, role]) });
+			directory.sendMessage('changeSettings', {
+				type: 'set',
+				settings: { visibleRoles: uniq([...visibleRoles, role]) },
+			});
 		} else {
-			connector.sendMessage('changeSettings', { visibleRoles: visibleRoles.filter((r) => r !== role) });
+			directory.sendMessage('changeSettings', {
+				type: 'set',
+				settings: { visibleRoles: visibleRoles.filter((r) => r !== role) },
+			});
 		}
 	};
 
@@ -193,7 +199,12 @@ function LabelColor({ account }: { account: IDirectoryAccountInfo; }): ReactElem
 				<ColorInput initialValue={ color } onChange={ setColor } />
 				<Button
 					className='slim fadeDisabled'
-					onClick={ () => directory?.sendMessage('changeSettings', { labelColor: color }) }
+					onClick={ () => {
+						directory.sendMessage('changeSettings', {
+							type: 'set',
+							settings: { labelColor: color },
+						});
+					} }
 					disabled={ color === account.settings.labelColor?.toUpperCase() }>
 					Save
 				</Button>
@@ -216,7 +227,10 @@ function DisplayName({ account }: { account: IDirectoryAccountInfo; }): ReactEle
 			return;
 		}
 		const displayName = account.username === name ? null : name;
-		directory.sendMessage('changeSettings', { displayName });
+		directory.sendMessage('changeSettings', {
+			type: 'set',
+			settings: { displayName },
+		});
 	});
 
 	const now = useCurrentTime(TimeSpanMs(1, 'seconds'));

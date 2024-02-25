@@ -3,59 +3,61 @@ import { AccountRoleSchema } from './accountRoles';
 import { KnownObject, ParseArrayNotEmpty, TimeSpanMs } from '../utility';
 import { DisplayNameSchema, HexColorStringSchema } from '../validation';
 
-export const DirectoryAccountSettingsSchema = z.object({
+//#region Settings declarations
+
+export const AccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema).max(AccountRoleSchema.options.length),
-	labelColor: HexColorStringSchema.catch('#ffffff'),
-	displayName: DisplayNameSchema.nullable().catch(null),
+	labelColor: HexColorStringSchema,
+	displayName: DisplayNameSchema.nullable(),
 	/** Hides online status from friends */
-	hideOnlineStatus: z.boolean().default(false),
+	hideOnlineStatus: z.boolean(),
 	/**
 	 * - 'all' - Allow direct messages from anyone
 	 * - 'room' - Allow direct messages from friends and people in the same space | TODO(spaces): Update?
 	 * - 'friends' - Only allow direct messages from friends
 	 */
-	allowDirectMessagesFrom: z.enum(['all', 'room', 'friends']).default('all'),
+	allowDirectMessagesFrom: z.enum(['all', 'room', 'friends']),
 	/**
 	 * Controls whether to show extra quick actions in wardrobe
 	 * (actions that are doable with multiple clicks even without this button, but the button allows doing them as single click)
 	 */
-	wardrobeExtraActionButtons: z.boolean().catch(true),
+	wardrobeExtraActionButtons: z.boolean(),
 	/**
 	 * Controls whether to show character preview when hovering over an action button.
 	 * (when action is possible the character preview shows the result state while hovering)
 	 */
-	wardrobeHoverPreview: z.boolean().catch(true),
+	wardrobeHoverPreview: z.boolean(),
 	/**
 	 * If outfits tab should generate previews for outfits and if the previews should be small or big.
 	 */
-	wardrobeOutfitsPreview: z.enum(['disabled', 'small', 'big']).default('small'),
+	wardrobeOutfitsPreview: z.enum(['disabled', 'small', 'big']),
 	// TODO(spaces): Consider dropping this option, it might no longer be needed
 	/**
 	 * Color to use as wardrobe character preview background, unless room background is used (see `wardrobeUseRoomBackground` setting).
 	 */
-	wardrobeBackground: HexColorStringSchema.catch('#aaaaaa'),
+	wardrobeBackground: HexColorStringSchema,
 	// TODO(spaces): Consider dropping this option, it might no longer be needed
 	/**
 	 * Controls whether wardrobe should use the room's background, if character is in a room.
 	 * If character is not in the room, or if this is `false`, then `wardrobeBackground` setting is used.
 	 */
-	wardrobeUseRoomBackground: z.boolean().catch(true),
+	wardrobeUseRoomBackground: z.boolean(),
 	/**
 	 * Controls whether to show the attribute icons or preview images in small preview.
 	 */
-	wardrobeSmallPreview: z.enum(['icon', 'image']).default('image'),
+	wardrobeSmallPreview: z.enum(['icon', 'image']),
 	/**
 	 * Controls whether to show the attribute icons or preview images in big preview.
 	 */
-	wardrobeBigPreview: z.enum(['icon', 'image']).default('image'),
+	wardrobeBigPreview: z.enum(['icon', 'image']),
 	/**
 	 * Controls how many parts (of 10 total) the room graphics takes, while in horizontal mode
 	 */
-	interfaceChatroomGraphicsRatioHorizontal: z.number().int().min(1).max(9).catch(7),
+	interfaceChatroomGraphicsRatioHorizontal: z.number().int().min(1).max(9),
 	/**
 	 * Controls how many parts (of 10 total) the room graphics takes, while in vertical mode
 	 */
-	interfaceChatroomGraphicsRatioVertical: z.number().int().min(1).max(9).catch(4),
+	interfaceChatroomGraphicsRatioVertical: z.number().int().min(1).max(9),
 	/**
 	 * Controls how offline characters are displayed in a room:
 	 * - None: No difference between online and offline characters
@@ -63,26 +65,25 @@ export const DirectoryAccountSettingsSchema = z.object({
 	 * - Darken: The characters are darkened (similar to blindness)
 	 * - Ghost: Darken + semi-transparent
 	 */
-	interfaceChatroomOfflineCharacterFilter: z.enum(['none', 'icon', 'darken', 'ghost']).default('ghost'),
+	interfaceChatroomOfflineCharacterFilter: z.enum(['none', 'icon', 'darken', 'ghost']),
 	/**
 	 * Controls how big the font size used in the main chat area is
 	 */
-	interfaceChatroomChatFontSize: z.enum(['xs', 's', 'm', 'l', 'xl']).default('m'),
+	interfaceChatroomChatFontSize: z.enum(['xs', 's', 'm', 'l', 'xl']),
 });
+export type AccountSettings = z.infer<typeof AccountSettingsSchema>;
 
-export type IDirectoryAccountSettings = z.infer<typeof DirectoryAccountSettingsSchema>;
-
-export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>({
+export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	visibleRoles: [],
 	labelColor: '#ffffff',
 	displayName: null,
 	hideOnlineStatus: false,
 	allowDirectMessagesFrom: 'all',
 	wardrobeExtraActionButtons: true,
-	wardrobeBackground: '#aaaaaa',
-	wardrobeUseRoomBackground: true,
 	wardrobeHoverPreview: true,
 	wardrobeOutfitsPreview: 'small',
+	wardrobeBackground: '#aaaaaa',
+	wardrobeUseRoomBackground: true,
 	wardrobeSmallPreview: 'image',
 	wardrobeBigPreview: 'image',
 	interfaceChatroomGraphicsRatioHorizontal: 7,
@@ -93,11 +94,15 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<IDirectoryAccountSettings>
 
 export const ACCOUNT_SETTINGS_LIMITED_LIMITS = Object.freeze({
 	displayName: TimeSpanMs(1, 'weeks'),
-} as const satisfies Partial<Record<keyof IDirectoryAccountSettings, number>>);
+} as const satisfies Partial<Record<keyof AccountSettings, number>>);
 
-export const DirectoryAccountSettingsLimitedKeysSchema = z.enum(ParseArrayNotEmpty(KnownObject.keys(ACCOUNT_SETTINGS_LIMITED_LIMITS)));
-export type DirectoryAccountSettingsLimitedKeys = z.infer<typeof DirectoryAccountSettingsLimitedKeysSchema>;
+//#endregion
 
-export const DirectoryAccountSettingsCooldownsSchema = z.record(DirectoryAccountSettingsLimitedKeysSchema, z.number().optional());
-export type DirectoryAccountSettingsCooldowns = z.infer<typeof DirectoryAccountSettingsCooldownsSchema>;
+export const AccountSettingsKeysSchema = z.enum(ParseArrayNotEmpty(KnownObject.keys(AccountSettingsSchema.shape)));
+export type AccountSettingsKeys = z.infer<typeof AccountSettingsKeysSchema>;
 
+export const AccountSettingsLimitedKeysSchema = z.enum(ParseArrayNotEmpty(KnownObject.keys(ACCOUNT_SETTINGS_LIMITED_LIMITS)));
+export type AccountSettingsLimitedKeys = z.infer<typeof AccountSettingsLimitedKeysSchema>;
+
+export const AccountSettingsCooldownsSchema = z.record(AccountSettingsLimitedKeysSchema, z.number().optional());
+export type AccountSettingsCooldowns = z.infer<typeof AccountSettingsCooldownsSchema>;

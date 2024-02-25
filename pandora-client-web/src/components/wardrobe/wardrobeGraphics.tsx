@@ -20,7 +20,7 @@ import { useEvent } from '../../common/useEvent';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { ColorInput } from '../common/colorInput/colorInput';
-import { directoryConnectorContext, useCurrentAccountSettings, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { directoryConnectorContext, useEffectiveAccountSettings, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useAssetManager } from '../../assets/assetManager';
 import { useSpaceInfo } from '../gameContext/gameStateContextProvider';
 import { RoomCharacter, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter';
@@ -83,7 +83,7 @@ export function CharacterPreview({ character, characterState, overlay }: {
 }): ReactElement {
 	const spaceInfo = useSpaceInfo();
 	const assetManager = useAssetManager();
-	const accountSettings = useCurrentAccountSettings();
+	const accountSettings = useEffectiveAccountSettings();
 
 	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
 		return ResolveBackground(assetManager, spaceInfo.config.background);
@@ -151,20 +151,23 @@ function WardrobeRoomBackground({
 }
 
 function WardrobeBackgroundColorPicker(): ReactElement | null {
-	const accountSettings = useCurrentAccountSettings();
+	const { wardrobeUseRoomBackground, wardrobeBackground } = useEffectiveAccountSettings();
 	const directory = useDirectoryConnector();
 
 	const onChange = useEvent((newColor: HexColorString) => {
-		directory.sendMessage('changeSettings', { wardrobeBackground: newColor });
+		directory.sendMessage('changeSettings', {
+			type: 'set',
+			settings: { wardrobeBackground: newColor },
+		});
 	});
 
 	// Don't show the picker, if it would have no effect
-	if (accountSettings.wardrobeUseRoomBackground)
+	if (wardrobeUseRoomBackground)
 		return null;
 
 	return (
 		<ColorInput
-			initialValue={ accountSettings.wardrobeBackground }
+			initialValue={ wardrobeBackground }
 			onChange={ onChange }
 			throttle={ 100 }
 			hideTextInput={ true }

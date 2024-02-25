@@ -9,7 +9,7 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { RenderChatPart } from '../../ui/components/chat/chatMessages';
 import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { DirectMessageChannelProvider, useDirectMessageChannel } from '../gameContext/directMessageChannelProvieder';
-import { useCurrentAccount, useCurrentAccountSettings, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useCurrentAccount, useDirectoryConnector, useEffectiveAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 import './directMessage.scss';
 import { useTextFormattingOnKeyboardEvent } from '../../common/useTextFormattingOnKeyboardEvent';
 import classNames from 'classnames';
@@ -59,7 +59,7 @@ export function DirectMessage({ accountId }: { accountId: number; }): ReactEleme
 }
 
 function DirectMessageList(): ReactElement | null {
-	const { interfaceChatroomChatFontSize } = useCurrentAccountSettings();
+	const { interfaceChatroomChatFontSize } = useEffectiveAccountSettings();
 	const channel = useDirectMessageChannel();
 	const channelAccount = channel.account;
 	const messages = useObservable(channel.messages);

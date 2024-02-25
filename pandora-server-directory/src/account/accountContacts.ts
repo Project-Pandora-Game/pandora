@@ -35,11 +35,12 @@ export class AccountContacts {
 		if (!this.loaded) {
 			return null;
 		}
-		const showStatus = !this.account.data.settings.hideOnlineStatus;
+		const accountSettings = this.account.getEffectiveSettings();
+		const showStatus = !accountSettings.hideOnlineStatus;
 		const online = showStatus && this.account.isOnline();
 		return {
 			id: this.account.id,
-			labelColor: this.account.data.settings.labelColor,
+			labelColor: accountSettings.labelColor,
 			online,
 			characters: !online ? [] : (
 				[...this.account.characters.values()]
@@ -80,13 +81,14 @@ export class AccountContacts {
 	public async canReceiveDM(from: Account): Promise<boolean> {
 		await this.load();
 		const { contact } = this.get(from.id) ?? {};
+		const accountSettings = this.account.getEffectiveSettings();
 
 		// No access if blocked
 		if (contact && (contact.type === 'mutualBlock' || contact.type === 'oneSidedBlock'))
 			return false;
 
 		// If allowing all, allow
-		if (this.account.data.settings.allowDirectMessagesFrom === 'all')
+		if (accountSettings.allowDirectMessagesFrom === 'all')
 			return true;
 
 		// If friend, allow
@@ -94,7 +96,7 @@ export class AccountContacts {
 			return true;
 
 		// If allowing from the same space and accounts share a space, allow
-		if (this.account.data.settings.allowDirectMessagesFrom === 'room' && AccountsHaveCharacterInSameSpace(this.account, from))
+		if (accountSettings.allowDirectMessagesFrom === 'room' && AccountsHaveCharacterInSameSpace(this.account, from))
 			return true;
 
 		// Default: No access

@@ -1,6 +1,6 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
-import { AccountId, IAccountRoleInfo, type DirectoryAccountSettingsCooldowns, type IDirectoryAccountSettings } from '../account';
+import { AccountId, IAccountRoleInfo, type AccountSettingsCooldowns, type AccountSettings } from '../account';
 import type { CharacterId } from '../character';
 import type { ShardFeature } from '../space/space';
 import { Satisfies } from '../utility';
@@ -41,8 +41,21 @@ export type IDirectoryAccountInfo = {
 	roles?: IAccountRoleInfo;
 	/** Limit of how many spaces this account can own */
 	spaceOwnershipLimit: number;
-	settings: IDirectoryAccountSettings;
-	settingsCooldowns: DirectoryAccountSettingsCooldowns;
+	/**
+	 * Modified settings of the account.
+	 *
+	 * This representation of the settings is sparse; only modified settings are saved.
+	 * Settings modified to the default are saved as well, so potential change of default wouldn't change the user-selected setting.
+	 * This lets us both save on stored data, but also change defaults for users that never changed it themselves.
+	 * Also lets us show non-default settings to users with a button to reset them.
+	 */
+	settings: Partial<AccountSettings>;
+	/**
+	 * Cooldowns for limited settings.
+	 *
+	 * These represent time at which said setting can be changed again.
+	 */
+	settingsCooldowns: AccountSettingsCooldowns;
 	cryptoKey?: IAccountCryptoKey;
 };
 

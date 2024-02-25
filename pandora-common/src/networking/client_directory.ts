@@ -1,6 +1,6 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
-import { AccountId, AccountIdSchema, AccountRoleSchema, ConfiguredAccountRoleSchema, DirectoryAccountSettingsSchema, IAccountRoleManageInfo } from '../account';
+import { AccountId, AccountIdSchema, AccountRoleSchema, ConfiguredAccountRoleSchema, AccountSettingsSchema, IAccountRoleManageInfo, AccountSettingsKeysSchema } from '../account';
 import { AssetFrameworkOutfitWithIdSchema } from '../assets/item/unified';
 import { ICharacterSelfInfo } from '../character/characterData';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
@@ -190,7 +190,16 @@ export const ClientDirectorySchema = {
 		response: null,
 	},
 	changeSettings: {
-		request: DirectoryAccountSettingsSchema.partial(),
+		request: z.discriminatedUnion('type', [
+			z.object({
+				type: z.literal('set'),
+				settings: AccountSettingsSchema.partial(),
+			}),
+			z.object({
+				type: z.literal('reset'),
+				settings: AccountSettingsKeysSchema.array().max(AccountSettingsKeysSchema.options.length),
+			}),
+		]),
 		response: null,
 	},
 	setInitialCryptoKey: {

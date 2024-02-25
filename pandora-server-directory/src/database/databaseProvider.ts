@@ -42,9 +42,9 @@ export interface PandoraDatabase extends Service {
 	createAccount(data: DatabaseAccountWithSecure): Promise<DatabaseAccountWithSecure | 'usernameTaken' | 'emailTaken'>;
 
 	/**
-	 * Sets account settings
+	 * Sets account data
 	 * @param id - Account id
-	 * @param data - Settings data
+	 * @param data - data to set
 	 */
 	updateAccountData(id: AccountId, data: DatabaseAccountUpdate): Promise<void>;
 

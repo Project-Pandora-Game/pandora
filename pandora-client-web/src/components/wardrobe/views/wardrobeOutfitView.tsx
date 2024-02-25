@@ -21,7 +21,7 @@ import {
 	LIMIT_OUTFIT_NAME_LENGTH,
 	OutfitMeasureCost,
 } from 'pandora-common';
-import { useCurrentAccountSettings, useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
+import { useEffectiveAccountSettings, useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import _, { clamp, first, noop } from 'lodash';
 import { Column, DivContainer, Row } from '../../common/container/container';
 import { toast } from 'react-toastify';
@@ -406,7 +406,7 @@ function TemporaryOutfitEntry({ outfit, saveOutfit, updateOutfit, beginEditOutfi
 	beginEditOutfit: () => void;
 	targetContainer: ItemContainerPath;
 }): ReactElement {
-	const { wardrobeOutfitsPreview } = useCurrentAccountSettings();
+	const { wardrobeOutfitsPreview } = useEffectiveAccountSettings();
 
 	return (
 		<div className='outfit'>
@@ -469,7 +469,7 @@ function OutfitEntry({ outfit, updateOutfit, reorderOutfit, beginEditOutfit, tar
 	beginEditOutfit: () => void;
 	targetContainer: ItemContainerPath;
 }): ReactElement {
-	const { wardrobeOutfitsPreview } = useCurrentAccountSettings();
+	const { wardrobeOutfitsPreview } = useEffectiveAccountSettings();
 	const [expanded, setExpanded] = useState(false);
 	const confirm = useConfirmDialog();
 

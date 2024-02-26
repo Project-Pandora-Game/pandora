@@ -428,8 +428,8 @@ importers:
         specifier: 7.0.2
         version: 7.0.2(eslint@8.57.0)(typescript@5.3.3)
       discord-api-types:
-        specifier: 0.37.70
-        version: 0.37.70
+        specifier: 0.37.71
+        version: 0.37.71
       eslint:
         specifier: 8.57.0
         version: 8.57.0
@@ -531,8 +531,8 @@ importers:
         specifier: 7.0.2
         version: 7.0.2(eslint@8.57.0)(typescript@5.3.3)
       discord-api-types:
-        specifier: 0.37.70
-        version: 0.37.70
+        specifier: 0.37.71
+        version: 0.37.71
       eslint:
         specifier: 8.57.0
         version: 8.57.0
@@ -7035,8 +7035,8 @@ packages:
     resolution: {integrity: sha512-o/dXNFfhBpYHpQFdT6FWzeO7pKc838QeeZ9d91CfVAtpr5XLK4B/zYxQbYgPdoMiTDvJfzcsLW5naXgmHGDNXw==}
     dev: false
 
-  /discord-api-types@0.37.70:
-    resolution: {integrity: sha512-8EtfZR0KwOK+yP5q/llWILdUAPmGmF1LmcVUYf7+gtGigz2pu6WR38ZN+IWtMzohY1Ujl2u3KOdbFvrEz9EC8w==}
+  /discord-api-types@0.37.71:
+    resolution: {integrity: sha512-oYDVWoiQdblr9DpwOgpi5d78dVhPcoN9YZCCqYZf2T0v9+iICs7k2bYGumoHuYMtaIitpp5aQNs+2guVkgjbOA==}
     dev: true
 
   /discord.js@14.14.1:

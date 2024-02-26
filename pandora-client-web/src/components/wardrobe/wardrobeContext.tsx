@@ -18,7 +18,7 @@ import { useShardConnector } from '../gameContext/shardConnectorContextProvider'
 import { useActionSpaceContext, useSpaceCharacters, useGameState, useGlobalState } from '../gameContext/gameStateContextProvider';
 import type { PlayerCharacter } from '../../character/player';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
-import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
+import { useAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocus, WardrobeHeldItem, WardrobeTarget } from './wardrobeTypes';
 import { useAsyncEvent } from '../../common/useEvent';
 import { toast } from 'react-toastify';
@@ -35,15 +35,13 @@ export const wardrobeContext = createContext<WardrobeContext | null>(null);
 export const WARDROBE_TARGET_ROOM: WardrobeTarget = freeze({ type: 'room' });
 
 export function WardrobeContextProvider({ target, player, children }: { target: WardrobeTarget; player: PlayerCharacter; children: ReactNode; }): ReactElement {
-	const account = useCurrentAccount();
+	const settings = useAccountSettings();
 	const assetList = useAssetManager().assetList;
 	const gameState = useGameState();
 	const globalStateContainer = gameState.globalState;
 	const spaceContext = useActionSpaceContext();
 	const shardConnector = useShardConnector();
 	const characters = useSpaceCharacters();
-
-	AssertNotNullable(account);
 
 	const focus = useMemo(() => new Observable<Immutable<WardrobeFocus>>({ container: [], itemId: null }), []);
 	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
@@ -104,9 +102,9 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		actions,
 		execute: (action) => shardConnector?.awaitResponse('appearanceAction', action),
 		actionPreviewState,
-		showExtraActionButtons: account.settings.wardrobeExtraActionButtons,
-		showHoverPreview: account.settings.wardrobeHoverPreview,
-	}), [target, targetSelector, player, globalState, assetList, heldItem, focus, extraItemActions, actions, shardConnector, actionPreviewState, account.settings]);
+		showExtraActionButtons: settings.wardrobeExtraActionButtons,
+		showHoverPreview: settings.wardrobeHoverPreview,
+	}), [target, targetSelector, player, globalState, assetList, heldItem, focus, extraItemActions, actions, shardConnector, actionPreviewState, settings]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

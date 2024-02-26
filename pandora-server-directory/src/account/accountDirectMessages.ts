@@ -144,10 +144,12 @@ export class AccountDirectMessages {
 
 	private _getAccountInfo(): IDirectoryDirectMessageAccount {
 		const account = this._account;
+		const accountSettings = account.getEffectiveSettings();
+
 		return {
 			id: account.id,
 			displayName: account.displayName,
-			labelColor: account.data.settings.labelColor,
+			labelColor: accountSettings.labelColor,
 			publicKeyData: account.directMessages._publicKey,
 		};
 	}

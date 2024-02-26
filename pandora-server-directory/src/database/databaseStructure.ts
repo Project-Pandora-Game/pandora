@@ -1,13 +1,11 @@
-import { AccountTokenReason } from '../account/accountSecure';
 import {
-	ACCOUNT_SETTINGS_DEFAULT,
 	AccountCryptoKeySchema,
 	AccountId,
 	AccountIdSchema,
+	AccountSettingsCooldownsSchema,
+	AccountSettingsSchema,
 	ArrayToRecordKeys,
 	AssetFrameworkOutfitWithIdSchema,
-	DirectoryAccountSettingsCooldownsSchema,
-	DirectoryAccountSettingsSchema,
 	IAccountRoleManageInfo,
 	IBetaKeyInfo,
 	IDirectoryDirectMessageInfo,
@@ -17,9 +15,9 @@ import {
 	ZodTruncate,
 } from 'pandora-common';
 import { z } from 'zod';
-import { ICharacterSelfInfoDb } from './databaseProvider';
+import { AccountTokenReason } from '../account/accountSecure';
 import { GitHubTeamSchema } from '../services/github/githubVerify';
-import { cloneDeep } from 'lodash';
+import { ICharacterSelfInfoDb } from './databaseProvider';
 
 export const DatabaseAccountTokenSchema = z.object({
 	/** The token secret */
@@ -67,8 +65,21 @@ export const DatabaseAccountSchema = z.object({
 	roles: ZodCast<IAccountRoleManageInfo>().optional(),
 	profileDescription: z.string().default('').transform(ZodTruncate(LIMIT_ACCOUNT_PROFILE_LENGTH)),
 	characters: ZodCast<ICharacterSelfInfoDb>().array(),
-	settings: DirectoryAccountSettingsSchema.catch(() => cloneDeep(ACCOUNT_SETTINGS_DEFAULT)),
-	settingsCooldowns: DirectoryAccountSettingsCooldownsSchema.catch(() => ({})),
+	/**
+	 * Settings of the account.
+	 *
+	 * This representation of the settings is sparse; only modified settings are saved.
+	 * Settings modified to the default are saved as well, so potential change of default wouldn't change the user-selected setting.
+	 * This lets us both save on stored data, but also change defaults for users that never changed it themselves.
+	 * Also lets us show non-default settings to users with a button to reset them.
+	 */
+	settings: AccountSettingsSchema.partial(),
+	/**
+	 * Cooldowns for limited settings.
+	 *
+	 * These represent time at which said setting can be changed again.
+	 */
+	settingsCooldowns: AccountSettingsCooldownsSchema.default(() => ({})),
 	directMessages: ZodCast<DatabaseDirectMessageInfo>().array().optional(),
 	storedOutfits: AssetFrameworkOutfitWithIdSchema.array().catch(() => []),
 });

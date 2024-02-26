@@ -594,11 +594,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		await connection.account.secure.setGitHubInfo(null);
 	}
 
-	private async handleChangeSettings(settings: IClientDirectoryArgument['changeSettings'], connection: ClientConnection): IClientDirectoryPromiseResult['changeSettings'] {
+	private async handleChangeSettings(request: IClientDirectoryArgument['changeSettings'], connection: ClientConnection): IClientDirectoryPromiseResult['changeSettings'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		await connection.account.changeSettings(settings);
+		if (request.type === 'set') {
+			await connection.account.changeSettings(request.settings);
+		} else if (request.type === 'reset') {
+			await connection.account.resetSettings(request.settings);
+		} else {
+			AssertNever(request);
+		}
 	}
 
 	private async handleManageGetAccountRoles({ id }: IClientDirectoryArgument['manageGetAccountRoles']): IClientDirectoryPromiseResult['manageGetAccountRoles'] {

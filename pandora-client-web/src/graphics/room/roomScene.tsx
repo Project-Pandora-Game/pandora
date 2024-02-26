@@ -23,7 +23,7 @@ import { useAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterData } from '../../character/character';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
-import { directoryConnectorContext, useCurrentAccountSettings } from '../../components/gameContext/directoryConnectorContextProvider';
+import { directoryConnectorContext, useAccountSettings } from '../../components/gameContext/directoryConnectorContextProvider';
 import { useCharacterRestrictionsManager, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../components/gameContext/gameStateContextProvider';
 import { usePlayer, usePlayerState } from '../../components/gameContext/playerContextProvider';
 import { shardConnectorContext, useShardConnector } from '../../components/gameContext/shardConnectorContextProvider';
@@ -394,7 +394,7 @@ export function useCharacterDisplayFilters(character: Character<ICharacterRoomDa
 		isOnline,
 	} = useCharacterData(character);
 
-	const { interfaceChatroomOfflineCharacterFilter } = useCurrentAccountSettings();
+	const { interfaceChatroomOfflineCharacterFilter } = useAccountSettings();
 
 	const onlineFilters = useMemo(() => [], []);
 

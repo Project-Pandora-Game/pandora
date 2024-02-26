@@ -1,18 +1,28 @@
+import { Immutable } from 'immer';
 import { noop } from 'lodash';
-import { ACCOUNT_SETTINGS_DEFAULT, AssertNever, GetLogger, IDirectoryAccountInfo, IDirectoryAccountSettings, IDirectoryClientChangeEvents, SecondFactorData, SecondFactorResponse, SecondFactorType } from 'pandora-common';
-import React, { createContext, ReactElement, useContext, useEffect, useRef } from 'react';
+import {
+	ACCOUNT_SETTINGS_DEFAULT,
+	AssertNever,
+	GetLogger,
+	IDirectoryAccountInfo,
+	IDirectoryClientChangeEvents,
+	SecondFactorData,
+	SecondFactorResponse,
+	SecondFactorType,
+	type AccountSettings,
+} from 'pandora-common';
+import React, { ReactElement, createContext, useContext, useEffect, useMemo, useRef } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { DIRECTORY_ADDRESS } from '../../config/Environment';
+import { ConfigServerIndex } from '../../config/searchArgs';
 import { AuthToken, DirectoryConnector } from '../../networking/directoryConnector';
 import { SocketIODirectoryConnector } from '../../networking/socketio_directory_connector';
 import { Observable, useNullableObservable, useObservable } from '../../observable';
-import { Immutable } from 'immer';
-import { ConfigServerIndex } from '../../config/searchArgs';
-import { Form, FormFieldCaptcha } from '../common/form/form';
 import { Button } from '../common/button/button';
 import { Row } from '../common/container/container';
+import { Form, FormFieldCaptcha } from '../common/form/form';
 import { ModalDialog } from '../dialog/dialog';
 
 const DirectoryConnector = new Observable<DirectoryConnector | undefined>(undefined);
@@ -111,11 +121,25 @@ export function useCurrentAccount(): IDirectoryAccountInfo | null {
 	return useObservable(directoryConnector.currentAccount);
 }
 
-export function useCurrentAccountSettings(): Immutable<IDirectoryAccountSettings> {
+/**
+ * Gets modified settings for the current account.
+ * @returns The partial settings object, or `undefined` if no account is loaded.
+ */
+export function useModifiedAccountSettings(): Immutable<Partial<AccountSettings>> | undefined {
 	// Get account manually to avoid error in the editor
-	const account = useNullableObservable(useDirectoryConnectorOptional()?.currentAccount);
-	// It is safe to return it simply like this, as when settings change, the whole account object is updated (it is immutable)
-	return account?.settings ?? ACCOUNT_SETTINGS_DEFAULT;
+	return useNullableObservable(useDirectoryConnectorOptional()?.currentAccount)?.settings;
+}
+
+/**
+ * Resolves full account settings to their effective values.
+ * @returns The settings that apply to this account.
+ */
+export function useAccountSettings(): Immutable<AccountSettings> {
+	const modifiedSettings = useModifiedAccountSettings();
+	return useMemo((): Immutable<AccountSettings> => ({
+		...ACCOUNT_SETTINGS_DEFAULT,
+		...modifiedSettings,
+	}), [modifiedSettings]);
 }
 
 export function useAuthToken(): AuthToken | undefined {

@@ -1,6 +1,7 @@
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import classNames from 'classnames';
 import { capitalize } from 'lodash';
+import { GetLogger } from 'pandora-common';
 import React, { FormEvent, HTMLProps, ReactElement, RefAttributes, useCallback } from 'react';
 import { FieldError } from 'react-hook-form';
 import { Link, LinkProps } from 'react-router-dom';
@@ -17,8 +18,17 @@ export interface AuthFormProps extends CommonProps {
 }
 
 export function Form({ children, className, dirty = false, id, onSubmit }: AuthFormProps): ReactElement {
+	const submitHandler = useCallback((event: FormEvent<HTMLFormElement>): void => {
+		(async () => {
+			await onSubmit?.(event);
+		})()
+			.catch((err) => {
+				GetLogger('Form').error('Error handling form submit: ', err);
+			});
+	}, [onSubmit]);
+
 	return (
-		<form className={ classNames('Form', className, { dirty }) } id={ id } onSubmit={ onSubmit }>
+		<form className={ classNames('Form', className, { dirty }) } id={ id } onSubmit={ submitHandler }>
 			{ children }
 		</form>
 	);

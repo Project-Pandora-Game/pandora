@@ -60,7 +60,7 @@
 		"@types/node": "18.19.18",
 		"@types/offscreencanvas": "2019.7.3",
 		"@types/postcss-flexbugs-fixes": "5.0.3",
-		"@types/react": "18.2.59",
+		"@types/react": "18.2.60",
 		"@types/react-dom": "18.2.19",
 		"@types/react-router-dom": "5.3.3",
 		"@types/testing-library__jest-dom": "5.14.9",

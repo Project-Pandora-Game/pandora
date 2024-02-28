@@ -23,7 +23,7 @@ import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties'
 import { AppearanceArmPoseSchema, AppearancePoseSchema } from './state/characterStatePose';
 import { CharacterSpacePositionSchema, RestrictionOverride } from './state/characterStateTypes';
 import { AssetFrameworkGlobalStateContainer } from './state/globalState';
-import { AssetFrameworkRoomState } from './state/roomState';
+import { AssetFrameworkRoomState, RoomBackgroundConfigSchema, RoomIdSchema } from './state/roomState';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../validation';
@@ -172,6 +172,24 @@ export const AppearanceActionRoomDeviceLeave = z.object({
 	slot: z.string(),
 });
 
+export const AppearanceActionSpaceConfigure = z.object({
+	type: z.literal('spaceConfigure'),
+	configureAction: z.discriminatedUnion('type', [
+		z.object({
+			type: z.literal('roomCreate'),
+		}),
+		z.object({
+			type: z.literal('roomConfigure'),
+			background: RoomBackgroundConfigSchema.optional(),
+			roomId: RoomIdSchema,
+		}),
+		z.object({
+			type: z.literal('roomDelete'),
+			roomId: RoomIdSchema,
+		}),
+	]),
+});
+
 export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionCreateSchema,
 	AppearanceActionDeleteSchema,
@@ -188,6 +206,7 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionRoomDeviceDeploy,
 	AppearanceActionRoomDeviceEnter,
 	AppearanceActionRoomDeviceLeave,
+	AppearanceActionSpaceConfigure,
 ]);
 export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
@@ -472,6 +491,12 @@ export function DoAppearanceAction(
 		}
 		case 'roomDeviceLeave': {
 			return ActionRoomDeviceLeave({
+				...arg,
+				action,
+			});
+		}
+		case 'spaceConfigure': {
+			return ActionSpaceConfigure({
 				...arg,
 				action,
 			});
@@ -1184,4 +1209,59 @@ export function ActionRoomDeviceLeave({
 	}
 
 	return processingContext.finalize();
+}
+
+export function ActionSpaceConfigure({
+	action: { configureAction },
+	processingContext,
+	assetManager,
+}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionSpaceConfigure>>): AppearanceActionProcessingResult {
+	if (!processingContext.checkPlayerIsSpaceAdmin()) {
+		return processingContext.invalid();
+	}
+
+	switch (configureAction.type) {
+		case 'roomCreate': {
+			if (!processingContext.manipulator.produceSpaceState((currentState) => {
+				const room = AssetFrameworkRoomState.createDefault(assetManager);
+				Assert(room.isValid());
+
+				// TODO: This needs action message
+				return currentState.withRoom(room.id, room);
+			})) {
+				return processingContext.invalid();
+			}
+
+			return processingContext.finalize();
+		}
+		case 'roomConfigure': {
+			if (!processingContext.manipulator.produceRoomState(configureAction.roomId, (room) => {
+				if (configureAction.background !== undefined) {
+					room = room.withBackground(configureAction.background);
+				}
+
+				// TODO: This needs action message
+				return room;
+			})) {
+				return processingContext.invalid();
+			}
+
+			return processingContext.finalize();
+		}
+		case 'roomDelete': {
+			if (!processingContext.manipulator.produceSpaceState((currentState) => {
+				if (currentState.getRoomState(configureAction.roomId) == null)
+					return null;
+
+				// TODO: This needs action message
+				return currentState.withRoom(configureAction.roomId, null);
+			})) {
+				return processingContext.invalid();
+			}
+
+			return processingContext.finalize();
+		}
+	}
+
+	AssertNever(configureAction);
 }

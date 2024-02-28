@@ -127,10 +127,10 @@ export interface PandoraDatabase extends Service {
 	getSpacesWithOwner(account: AccountId): Promise<SpaceDirectoryData[]>;
 
 	/**
-	 * Gets all spaces that have supplied account as owner or admin
+	 * Gets all spaces that have supplied account as owner or admin or allowed
 	 * @param account - The owner/admin of the spaces to look for
 	 */
-	getSpacesWithOwnerOrAdmin(account: AccountId): Promise<SpaceDirectoryData[]>;
+	getSpacesWithOwnerOrAdminOrAllowed(account: AccountId): Promise<SpaceDirectoryData[]>;
 
 	/**
 	 * Gets a space data by ID

@@ -50,6 +50,13 @@ export const INTERACTION_CONFIG = {
 			allowOthers: 'yes',
 		},
 	},
+	deviceEnterLeave: {
+		visibleName: 'Enter or leave a device',
+		icon: 'device',
+		defaultPermissions: {
+			allowOthers: 'prompt',
+		},
+	},
 } as const satisfies Immutable<Record<InteractionGenericId, IInteractionConfig>>;
 
 //#endregion

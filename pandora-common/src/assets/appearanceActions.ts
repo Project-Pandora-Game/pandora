@@ -935,6 +935,9 @@ export function ActionRoomDeviceEnter({
 	if (!targetCharacter)
 		return processingContext.invalid();
 
+	if (targetCharacter.type === 'character')
+		processingContext.addInteraction(targetCharacter.character, 'deviceEnterLeave');
+
 	const wearableItem = assetManager
 		.createItem(action.itemId, asset)
 		.withLink(item, action.slot);
@@ -1023,6 +1026,9 @@ export function ActionRoomDeviceLeave({
 	let isCleanup = true;
 
 	if (targetCharacter) {
+		if (targetCharacter.type === 'character')
+			processingContext.addInteraction(targetCharacter.character, 'deviceEnterLeave');
+
 		const characterManipulator = processingContext.manipulator.getManipulatorFor({
 			type: 'character',
 			characterId: occupyingCharacterId,

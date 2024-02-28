@@ -261,10 +261,10 @@ export class MockDatabase implements PandoraDatabase {
 		);
 	}
 
-	public getSpacesWithOwnerOrAdmin(account: AccountId): Promise<SpaceDirectoryData[]> {
+	public getSpacesWithOwnerOrAdminOrAllowed(account: AccountId): Promise<SpaceDirectoryData[]> {
 		return Promise.resolve(
 			Array.from(this.spacesDb.values())
-				.filter((space) => space.owners.includes(account) || space.config.admin.includes(account))
+				.filter((space) => space.owners.includes(account) || space.config.admin.includes(account) || space.config.allow.includes(account))
 				.map((space) => _.pick(space, SPACE_DIRECTORY_PROPERTIES)),
 		);
 	}

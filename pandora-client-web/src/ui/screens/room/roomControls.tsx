@@ -16,6 +16,7 @@ import { Select } from '../../../components/common/select/select';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { useCurrentAccount } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { SpaceControlCharacter } from './spaceControls';
+import { WardrobeContextProvider } from '../../../components/wardrobe/wardrobeContext';
 
 export function RoomControls(): ReactElement {
 	const characters = useSpaceCharacters();
@@ -27,36 +28,38 @@ export function RoomControls(): ReactElement {
 	const currentRoom = playerState.getCurrentRoomId();
 
 	return (
-		<Column padding='medium' className='controls'>
-			<Row padding='small'>
-				<Button onClick={ () => navigate(`/wardrobe/room/${encodeURIComponent(currentRoom)}`) } >Room inventory</Button>
-			</Row>
-			<br />
-			<span>
-				These characters are in the current room:
-			</span>
-			<div className='character-info'>
-				<SpaceControlCharacter char={ player } />
-				{
-					characters
-						.filter((c) => {
-							if (c === player)
-								return false;
+		<WardrobeContextProvider target={ { type: 'room', roomId: currentRoom } } player={ player }>
+			<Column padding='medium' className='controls'>
+				<Row padding='small'>
+					<Button onClick={ () => navigate(`/wardrobe/room/${encodeURIComponent(currentRoom)}`) } >Room inventory</Button>
+				</Row>
+				<br />
+				<span>
+					These characters are in the current room:
+				</span>
+				<div className='character-info'>
+					<SpaceControlCharacter char={ player } />
+					{
+						characters
+							.filter((c) => {
+								if (c === player)
+									return false;
 
-							const state = globalState.getCharacterState(c.id);
-							if (state == null || state.getCurrentRoomId() !== currentRoom)
-								return false;
+								const state = globalState.getCharacterState(c.id);
+								if (state == null || state.getCurrentRoomId() !== currentRoom)
+									return false;
 
-							return true;
-						})
-						.map((c) => <SpaceControlCharacter key={ c.data.id } char={ c } />)
-				}
-			</div>
-			<br />
-			<DeviceOverlaySelector />
-			<br />
-			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
-		</Column>
+								return true;
+							})
+							.map((c) => <SpaceControlCharacter key={ c.data.id } char={ c } />)
+					}
+				</div>
+				<br />
+				<DeviceOverlaySelector />
+				<br />
+				{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
+			</Column>
+		</WardrobeContextProvider>
 	);
 }
 

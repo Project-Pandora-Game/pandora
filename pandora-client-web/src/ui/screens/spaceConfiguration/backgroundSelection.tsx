@@ -23,23 +23,27 @@ import { ModalDialog } from '../../../components/dialog/dialog';
 import './spaceConfiguration.scss';
 
 export function BackgroundSelector({ value, onChange, disabled = false }: {
-	value: Immutable<RoomBackgroundConfig>;
+	value: Immutable<RoomBackgroundConfig> | null;
 	onChange?: (background: Immutable<RoomBackgroundConfig>) => void;
 	disabled?: boolean;
 }): ReactElement {
+	const assetManager = useAssetManager();
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
+
+	const defaultBackground = assetManager.getBackgrounds()[0]?.id ?? DEFAULT_BACKGROUND;
+	const actualValue = value ?? defaultBackground;
 
 	return (
 		<FieldsetToggle legend='Background'>
 			{ showBackgrounds && !disabled && <BackgroundSelectDialog
 				hide={ () => setShowBackgrounds(false) }
-				current={ value }
+				current={ actualValue }
 				select={ (background) => onChange?.(background) }
 			/> }
 			{
-				typeof value === 'string' ? (
+				typeof actualValue === 'string' ? (
 					<Column>
-						<BackgroundInfo background={ value } />
+						<BackgroundInfo background={ actualValue } />
 						<Button
 							onClick={ () => setShowBackgrounds(true) }
 							disabled={ disabled }
@@ -54,8 +58,8 @@ export function BackgroundSelector({ value, onChange, disabled = false }: {
 							<label>Background color</label>
 							<div className='row-first'>
 								<ColorInput
-									initialValue={ value.image.startsWith('#') ? value.image : '#FFFFFF' }
-									onChange={ (color) => onChange?.({ ...value, image: color }) }
+									initialValue={ actualValue.image.startsWith('#') ? actualValue.image : '#FFFFFF' }
+									onChange={ (color) => onChange?.({ ...actualValue, image: color }) }
 									disabled={ disabled }
 								/>
 							</div>

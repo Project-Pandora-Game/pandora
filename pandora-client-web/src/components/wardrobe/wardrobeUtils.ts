@@ -66,7 +66,7 @@ export function useWardrobeTargetItem(target: WardrobeTarget | null, itemPath: I
 	}, [items, itemPath]);
 }
 
-export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, spaceContext: ActionSpaceContext | null, _action: AppearanceAction, result: AppearanceActionProcessingResult): string[] {
+export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, spaceContext: ActionSpaceContext | null, action: AppearanceAction, result: AppearanceActionProcessingResult): string[] {
 	if (!result.valid) {
 		Assert(result.prompt != null);
 		return [];
@@ -88,6 +88,16 @@ export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, s
 		!resultRestrictionManager.canUseHands()
 	) {
 		warnings.push(`This action will prevent you from using your hands`);
+	}
+
+	// Warn about deleting a room
+	if (
+		action.type === 'spaceConfigure' &&
+		action.configureAction.type === 'roomDelete'
+	) {
+		warnings.push(`Deleting a room deletes all room devices inside`);
+		warnings.push(`Deleting a room deletes all items in its inventory`);
+		warnings.push(`This action cannot be undone`);
 	}
 
 	return warnings;

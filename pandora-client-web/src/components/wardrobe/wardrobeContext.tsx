@@ -181,7 +181,7 @@ export function useWardrobeExecuteCallback({ onSuccess, onFailure }: ExecuteCall
 	);
 }
 
-export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, result?: AppearanceActionProcessingResult | null, props: ExecuteCallbackOptions = {}) {
+export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, result: AppearanceActionProcessingResult | null, props: ExecuteCallbackOptions = {}) {
 	const [execute, processing] = useWardrobeExecuteCallback(props);
 	const {
 		player,

@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { AssertNever, AssertNotNullable, AssetFrameworkRoomState, CloneDeepMutable, GenerateInitialRoomPosition, ICharacterRoomData, ITEM_LIMIT_SPACE_ROOMS, type AppearanceAction, type AssetFrameworkGlobalState, type RoomBackgroundConfig, type RoomId } from 'pandora-common';
+import { AssertNever, AssertNotNullable, AssetFrameworkRoomState, CloneDeepMutable, GenerateInitialRoomPosition, ICharacterRoomData, ITEM_LIMIT_SPACE_ROOMS, type AppearanceAction, type AssetFrameworkCharacterState, type AssetFrameworkGlobalState, type RoomBackgroundConfig, type RoomId } from 'pandora-common';
 import React, {
 	ReactElement,
 	useEffect,
@@ -13,7 +13,7 @@ import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText,
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
 import { useCurrentAccount } from '../../../components/gameContext/directoryConnectorContextProvider';
-import { IsSpaceAdmin, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { IsSpaceAdmin, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayer, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue';
 import { WardrobeContextProvider, useWardrobeExecuteChecked } from '../../../components/wardrobe/wardrobeContext';
@@ -265,7 +265,9 @@ export function SpaceControlCharacter({ char }: { char: Character<ICharacterRoom
 	const { show: showRestrictionOverrideContext } = useRestrictionOverrideDialogContext();
 
 	const data = useCharacterData(char);
-	const state = useCharacterState(gameState, char.id);
+	const globalState = useGlobalState(gameState);
+	const characterState = globalState.characters.get(char.id) ?? null;
+	const roomState = characterState != null ? globalState.getRoomState(characterState.getCurrentRoomId()) : null;
 	const isOnline = data.isOnline;
 
 	const isPlayer = char.id === playerId;
@@ -285,7 +287,7 @@ export function SpaceControlCharacter({ char }: { char: Character<ICharacterRoom
 						Offline
 					</span>
 				) }
-				<CharacterRestrictionOverrideWarningContent mode={ state?.restrictionOverride } />
+				<CharacterRestrictionOverrideWarningContent mode={ characterState?.restrictionOverride } />
 			</legend>
 			<Column>
 				<Row wrap>
@@ -312,11 +314,59 @@ export function SpaceControlCharacter({ char }: { char: Character<ICharacterRoom
 					) }
 					{ isPlayer && (
 						<Button className='slim' onClick={ showRestrictionOverrideContext }>
-							{ state?.restrictionOverride ? `Exit ${GetRestrictionOverrideText(state?.restrictionOverride.type)}` : 'Enter safemode' }
+							{ characterState?.restrictionOverride ? `Exit ${GetRestrictionOverrideText(characterState?.restrictionOverride.type)}` : 'Enter safemode' }
 						</Button>
 					) }
+					{
+						(isPlayer && characterState != null && roomState != null) ? (
+							<CharacterSpectatorModeControl characterState={ characterState } roomState={ roomState } />
+						) : null
+					}
 				</Row>
 			</Column>
 		</fieldset>
+	);
+}
+
+function CharacterSpectatorModeControl({ characterState, roomState }: {
+	characterState: AssetFrameworkCharacterState;
+	roomState: AssetFrameworkRoomState;
+}): ReactElement {
+	const enterSpectatorModeAction = useMemo((): AppearanceAction => ({
+		type: 'characterMove',
+		target: characterState.id,
+		position: {
+			type: 'spectator',
+			roomId: roomState.id,
+		},
+	}), [characterState.id, roomState]);
+	const enterSpectatorModeActionCheck = useStaggeredAppearanceActionResult(enterSpectatorModeAction);
+	const [executeEnterSpectatorMode, processingEnterSpectatorMode] = useWardrobeExecuteChecked(enterSpectatorModeAction, enterSpectatorModeActionCheck);
+
+	const exitSpectatorModeAction = useMemo((): AppearanceAction => ({
+		type: 'characterMove',
+		target: characterState.id,
+		position: {
+			type: 'normal',
+			roomId: roomState.id,
+			position: GenerateInitialRoomPosition(roomState.getResolvedBackground()),
+		},
+	}), [characterState.id, roomState]);
+	const exitSpectatorModeActionCheck = useStaggeredAppearanceActionResult(exitSpectatorModeAction);
+	const [executeExitSpectatorMode, processingExitSpectatorMode] = useWardrobeExecuteChecked(exitSpectatorModeAction, exitSpectatorModeActionCheck);
+
+	return (
+		<>
+			{ characterState.position.type === 'normal' ? (
+				<Button className='slim fadeDisabled' onClick={ executeEnterSpectatorMode } disabled={ processingEnterSpectatorMode }>
+					Enter spectator mode
+				</Button>
+			) : null }
+			{ characterState.position.type === 'spectator' ? (
+				<Button className='slim fadeDisabled' onClick={ executeExitSpectatorMode } disabled={ processingExitSpectatorMode }>
+					Exit spectator mode
+				</Button>
+			) : null }
+		</>
 	);
 }

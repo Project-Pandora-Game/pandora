@@ -99,7 +99,7 @@ export class AssetFrameworkSpaceState {
 	public withRoom(room: RoomId, roomState: AssetFrameworkRoomState | null): AssetFrameworkSpaceState {
 		Assert(roomState == null || this.assetManager === roomState.assetManager);
 
-		const newRooms: AssetFrameworkRoomState[] = [];
+		const newRooms: AssetFrameworkRoomState[] = [...this.rooms];
 		const currentIndex = newRooms.findIndex((r) => r.id === room);
 
 		if (roomState == null) {

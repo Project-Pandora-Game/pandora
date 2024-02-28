@@ -141,7 +141,7 @@ export class AppearanceActionProcessingContext {
 		});
 	}
 
-	public checkPlayerIsSpaceAdmin(): void {
+	public checkPlayerIsSpaceAdmin(): boolean {
 		const restrictionManager = this.getPlayerRestrictionManager();
 		if (!restrictionManager.isCurrentSpaceAdmin()) {
 			this.addProblem({
@@ -151,7 +151,9 @@ export class AppearanceActionProcessingContext {
 					reason: 'notAdmin',
 				},
 			});
+			return false;
 		}
+		return true;
 	}
 
 	public checkInteractWithTarget(target: ActionTarget): void {

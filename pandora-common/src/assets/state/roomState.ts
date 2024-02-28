@@ -106,7 +106,7 @@ export class AssetFrameworkRoomState {
 		};
 	}
 
-	public produceWithItems(newItems: AppearanceItems): AssetFrameworkRoomState {
+	public withItems(newItems: AppearanceItems): AssetFrameworkRoomState {
 		return new AssetFrameworkRoomState(
 			this.assetManager,
 			this.id,
@@ -115,7 +115,7 @@ export class AssetFrameworkRoomState {
 		);
 	}
 
-	public produceWithBackground(newBackground: Immutable<RoomBackgroundConfig>): AssetFrameworkRoomState {
+	public withBackground(newBackground: Immutable<RoomBackgroundConfig>): AssetFrameworkRoomState {
 		return new AssetFrameworkRoomState(
 			this.assetManager,
 			this.id,

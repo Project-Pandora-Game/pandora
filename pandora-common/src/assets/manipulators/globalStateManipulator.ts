@@ -9,6 +9,7 @@ import type { AssetFrameworkCharacterState } from '../state/characterState';
 import type { AssetFrameworkGlobalState } from '../state/globalState';
 import type { AssetFrameworkRoomState, RoomId } from '../state/roomState';
 import type { AssetFrameworkSpaceInventoryState } from '../state/spaceInventoryState';
+import type { AssetFrameworkSpaceState } from '../state/spaceState';
 
 export class AssetFrameworkGlobalStateManipulator {
 	public readonly assetManager: AssetManager;
@@ -56,6 +57,16 @@ export class AssetFrameworkGlobalStateManipulator {
 		return true;
 	}
 
+	public produceSpaceState(producer: (currentState: AssetFrameworkSpaceState) => AssetFrameworkSpaceState | null): boolean {
+		const newState = this.currentState.produceSpaceState(producer);
+
+		if (!newState)
+			return false;
+
+		this.currentState = newState;
+		return true;
+	}
+
 	public produceSpaceInventoryState(producer: (currentState: AssetFrameworkSpaceInventoryState) => AssetFrameworkSpaceInventoryState | null): boolean {
 		const newState = this.currentState.produceSpaceInventoryState(producer);
 
@@ -84,7 +95,7 @@ export class AssetFrameworkGlobalStateManipulator {
 		} else if (target.type === 'room') {
 			return this.produceRoomState(
 				target.roomId,
-				(character) => character.produceWithItems(newItems),
+				(character) => character.withItems(newItems),
 			);
 		} else if (target.type === 'spaceInventory') {
 			return this.produceSpaceInventoryState(

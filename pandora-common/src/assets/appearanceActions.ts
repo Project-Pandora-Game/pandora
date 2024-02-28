@@ -808,7 +808,15 @@ export function ActionCharacterMove({
 
 	if (!processingContext.manipulator.produceCharacterState(
 		action.target,
-		(character) => character.produceWithPosition(action.position),
+		(character) => {
+			if (character.position.type !== action.position.type) {
+				// TODO: This needs action message
+			} else if (character.position.roomId !== action.position.roomId) {
+				// TODO: This needs action message
+			}
+
+			return character.produceWithPosition(action.position);
+		},
 	)) {
 		return processingContext.invalid();
 	}

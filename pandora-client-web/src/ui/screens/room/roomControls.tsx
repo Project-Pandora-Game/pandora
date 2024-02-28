@@ -15,7 +15,7 @@ import { AssertNotNullable } from 'pandora-common';
 import { Select } from '../../../components/common/select/select';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { useCurrentAccount } from '../../../components/gameContext/directoryConnectorContextProvider';
-import { SpaceControlCharacter } from './spaceControls';
+import { SpaceControlCharacter } from './characterControls';
 import { WardrobeContextProvider } from '../../../components/wardrobe/wardrobeContext';
 
 export function RoomControls(): ReactElement {

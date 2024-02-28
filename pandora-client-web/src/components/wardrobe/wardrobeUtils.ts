@@ -108,5 +108,15 @@ export function WardrobeCheckResultForConfirmationWarnings(
 		}
 	}
 
+	// Warn about deleting a room
+	if (
+		action.type === 'spaceConfigure' &&
+		action.configureAction.type === 'roomDelete'
+	) {
+		warnings.push(`Deleting a room deletes all room devices inside`);
+		warnings.push(`Deleting a room deletes all items in its inventory`);
+		warnings.push(`This action cannot be undone`);
+	}
+
 	return warnings;
 }

@@ -1,15 +1,24 @@
+import type { Immutable } from 'immer';
+import { AssertNever, AssertNotNullable, AssetFrameworkRoomState, CloneDeepMutable, GenerateInitialRoomPosition, ICharacterRoomData, ITEM_LIMIT_SPACE_ROOMS, type AppearanceAction, type AssetFrameworkGlobalState, type RoomBackgroundConfig, type RoomId } from 'pandora-common';
 import React, {
 	ReactElement,
+	useEffect,
+	useMemo,
+	useState,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '../../../components/common/button/button';
-import { useSpaceCharacters, useCharacterState, useSpaceInfo, useGameState, useGlobalState } from '../../../components/gameContext/gameStateContextProvider';
-import { usePlayerId, usePlayer } from '../../../components/gameContext/playerContextProvider';
-import { useChatInput } from '../../components/chat/chatInput';
-import { Column, Row } from '../../../components/common/container/container';
+import deleteIcon from '../../../assets/icons/delete.svg';
 import { Character, useCharacterData } from '../../../character/character';
-import { CharacterRestrictionOverrideWarningContent, useRestrictionOverrideDialogContext, GetRestrictionOverrideText } from '../../../components/characterRestrictionOverride/characterRestrictionOverride';
-import { AssetFrameworkRoomState, ICharacterRoomData } from 'pandora-common';
+import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText, useRestrictionOverrideDialogContext } from '../../../components/characterRestrictionOverride/characterRestrictionOverride';
+import { Button } from '../../../components/common/button/button';
+import { Column, Row } from '../../../components/common/container/container';
+import { useCurrentAccount } from '../../../components/gameContext/directoryConnectorContextProvider';
+import { IsSpaceAdmin, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { usePlayer, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider';
+import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue';
+import { WardrobeContextProvider, useWardrobeExecuteChecked } from '../../../components/wardrobe/wardrobeContext';
+import { useChatInput } from '../../components/chat/chatInput';
+import { BackgroundSelector } from '../spaceConfiguration/backgroundSelection';
 
 export function SpaceControls(): ReactElement | null {
 	const spaceConfig = useSpaceInfo().config;
@@ -19,54 +28,230 @@ export function SpaceControls(): ReactElement | null {
 	const player = usePlayer();
 	const navigate = useNavigate();
 
+	const [selectedRoomId, setSelectedRoomId] = useState<RoomId | null>(null);
+	const selectedRoom = selectedRoomId != null ? globalState.space.getRoomState(selectedRoomId) : null;
+
+	useEffect(() => {
+		if (selectedRoomId != null && selectedRoom == null) {
+			setSelectedRoomId(null);
+		}
+	}, [selectedRoomId, selectedRoom]);
+
 	if (!player) {
 		return null;
 	}
 
 	return (
-		<Column padding='medium' className='controls'>
-			<Row padding='small'>
-				<Button onClick={ () => navigate('/wardrobe/space-inventory') } >Space inventory</Button>
-				<Button onClick={ () => navigate('/space/configuration') }>Space configuration</Button>
-			</Row>
-			<br />
-			<span>
-				These rooms are part of the space <b>{ spaceConfig.name }</b>:
-			</span>
-			<Column>
-				{
-					globalState.space.rooms.map((room) => (
-						<SpaceRoomControls
-							key={ room.id }
-							room={ room }
-							characters={
-								characters
-									.filter((c) => {
-										const state = globalState.getCharacterState(c.id);
-										if (state == null || state.getCurrentRoomId() !== room.id)
-											return false;
+		<WardrobeContextProvider target={ { type: 'spaceInventory' } } player={ player }>
+			<Column padding='medium' className='controls'>
+				<Row padding='small'>
+					<Button onClick={ () => navigate('/wardrobe/space-inventory') } >Space inventory</Button>
+					<Button onClick={ () => navigate('/space/configuration') }>Space configuration</Button>
+				</Row>
+				<br />
+				<span>
+					These rooms are part of the space <b>{ spaceConfig.name }</b>:
+				</span>
+				<Column>
+					{
+						globalState.space.rooms.map((room) => (
+							<SpaceRoomControls
+								key={ room.id }
+								room={ room }
+								isSelected={ room.id === selectedRoomId }
+								onSelect={ () => {
+									setSelectedRoomId(room.id);
+								} }
+								characters={
+									characters
+										.filter((c) => {
+											const state = globalState.getCharacterState(c.id);
+											if (state == null || state.getCurrentRoomId() !== room.id)
+												return false;
 
-										return true;
-									})
-							}
+											return true;
+										})
+								}
+							/>
+						))
+					}
+					<CreateRoom globalState={ globalState } />
+				</Column>
+				{
+					selectedRoom != null ? (
+						<SpaceRoomConfig
+							key={ selectedRoom.id }
+							room={ selectedRoom }
 						/>
-					))
+					) : null
 				}
 			</Column>
-		</Column>
+		</WardrobeContextProvider>
 	);
 }
 
-function SpaceRoomControls({ characters }: {
-	characters: readonly Character<ICharacterRoomData>[];
-	room: AssetFrameworkRoomState;
-}): ReactElement {
+function CreateRoom({ globalState }: {
+	globalState: AssetFrameworkGlobalState;
+}): ReactElement | null {
+	const currentAccount = useCurrentAccount();
+	AssertNotNullable(currentAccount);
+	const currentSpaceInfo = useSpaceInfo();
+	const isPlayerAdmin = IsSpaceAdmin(currentSpaceInfo.config, currentAccount);
+
+	const action = useMemo((): AppearanceAction => ({
+		type: 'spaceConfigure',
+		configureAction: {
+			type: 'roomCreate',
+		},
+	}), []);
+	const check = useStaggeredAppearanceActionResult(action);
+	const [execute, processing] = useWardrobeExecuteChecked(action, check);
+
+	if (!isPlayerAdmin || globalState.space.rooms.length >= ITEM_LIMIT_SPACE_ROOMS)
+		return null;
+
 	return (
 		<fieldset>
-			<legend>Room</legend>
-			<div className='character-info'>
-				{ characters.map((c) => <SpaceControlCharacter key={ c.id } char={ c } />) }
-			</div>
+			<Button
+				className='fill fadeDisabled'
+				onClick={ execute }
+				disabled={ processing }
+			>
+				Add a new room
+			</Button>
+		</fieldset>
+	);
+}
+
+function SpaceRoomControls({ characters, room, isSelected, onSelect }: {
+	characters: readonly Character<ICharacterRoomData>[];
+	room: AssetFrameworkRoomState;
+	isSelected: boolean;
+	onSelect: () => void;
+}): ReactElement {
+	const { playerState } = usePlayerState();
+
+	const moveToRoomAction = useMemo((): AppearanceAction => {
+		if (playerState.position.type === 'normal') {
+			return {
+				type: 'characterMove',
+				target: playerState.id,
+				position: {
+					type: 'normal',
+					roomId: room.id,
+					position: GenerateInitialRoomPosition(room.getResolvedBackground()),
+				},
+			};
+		} else if (playerState.position.type === 'spectator') {
+			return {
+				type: 'characterMove',
+				target: playerState.id,
+				position: {
+					type: 'spectator',
+					roomId: room.id,
+				},
+			};
+		}
+
+		AssertNever(playerState.position);
+	}, [playerState, room]);
+	const moveToRoomActionCheck = useStaggeredAppearanceActionResult(moveToRoomAction);
+	const [exectuteMoveToRoom, processingMoveToRoom] = useWardrobeExecuteChecked(moveToRoomAction, moveToRoomActionCheck);
+
+	return (
+		<fieldset>
+			<legend>Room ({ room.id })</legend>
+			<Column>
+				<Row>
+					<Button
+						slim
+						className='fadeDisabled'
+						onClick={ exectuteMoveToRoom }
+						disabled={ playerState.getCurrentRoomId() === room.id || processingMoveToRoom }
+					>
+						Move to this room
+					</Button>
+					<Button
+						slim
+						className='fadeDisabled'
+						onClick={ onSelect }
+						disabled={ isSelected }
+					>
+						Configure this room
+					</Button>
+				</Row>
+				{
+					characters.length > 0 ? (
+						<div className='character-info'>
+							{ characters.map((c) => <SpaceControlCharacter key={ c.id } char={ c } />) }
+						</div>
+					) : (
+						<span>There are no characters in this room</span>
+					)
+				}
+			</Column>
+		</fieldset>
+	);
+}
+
+function SpaceRoomConfig({ room }: {
+	room: AssetFrameworkRoomState;
+}): ReactElement {
+	const [newRoomBackground, setNewRoomBackground] = useState<Immutable<RoomBackgroundConfig> | undefined>(undefined);
+
+	const hasChanges = newRoomBackground !== undefined;
+	const applyChangedAction = useMemo((): AppearanceAction => ({
+		type: 'spaceConfigure',
+		configureAction: {
+			type: 'roomConfigure',
+			roomId: room.id,
+			background: CloneDeepMutable(newRoomBackground),
+		},
+	}), [room.id, newRoomBackground]);
+	const applyChangedCheck = useStaggeredAppearanceActionResult(applyChangedAction);
+	const [execute, processing] = useWardrobeExecuteChecked(applyChangedAction, applyChangedCheck);
+
+	const deleteRoomAction = useMemo((): AppearanceAction => ({
+		type: 'spaceConfigure',
+		configureAction: {
+			type: 'roomDelete',
+			roomId: room.id,
+		},
+	}), [room.id]);
+	const deleteRoomCheck = useStaggeredAppearanceActionResult(deleteRoomAction);
+	const [executeDelete, processingDelete] = useWardrobeExecuteChecked(deleteRoomAction, deleteRoomCheck);
+
+	return (
+		<fieldset>
+			<legend>Configuration of room <b>{ room.id }</b></legend>
+			<Column>
+				<Row alignX='end'>
+					<Button
+						className='fadeDisabled'
+						onClick={ executeDelete }
+						disabled={ processing || processingDelete }
+						slim
+					>
+						<Row alignY='center' padding='small'>
+							<img src={ deleteIcon } alt='Delete room icon' className='filter-invert' />
+							Delete this room
+						</Row>
+					</Button>
+				</Row>
+
+				<BackgroundSelector
+					value={ newRoomBackground ?? room.background }
+					onChange={ setNewRoomBackground }
+				/>
+
+				<Button
+					className='fadeDisabled'
+					onClick={ execute }
+					disabled={ !hasChanges || processing || processingDelete }
+				>
+					Apply changes
+				</Button>
+			</Column>
 		</fieldset>
 	);
 }

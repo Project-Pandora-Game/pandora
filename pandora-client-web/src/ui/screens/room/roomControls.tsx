@@ -1,49 +1,55 @@
 import React, {
 	ReactElement, useEffect,
 } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/common/button/button';
-import { useSpaceCharacters, useCharacterState, useSpaceInfo, useGameState, IsSpaceAdmin, useActionSpaceContext } from '../../../components/gameContext/gameStateContextProvider';
-import { usePlayerId, usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
-import { useChatInput } from '../../components/chat/chatInput';
+import { useSpaceCharacters, useSpaceInfo, IsSpaceAdmin, useActionSpaceContext, useGameState, useGlobalState } from '../../../components/gameContext/gameStateContextProvider';
+import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { USER_DEBUG } from '../../../config/Environment';
 import { ChatroomDebugConfigView } from './roomDebug';
 import { Column, Row } from '../../../components/common/container/container';
-import { Character, useCharacterData, useCharacterRestrictionManager } from '../../../character/character';
-import { CharacterRestrictionOverrideWarningContent, useRestrictionOverrideDialogContext, GetRestrictionOverrideText } from '../../../components/characterRestrictionOverride/characterRestrictionOverride';
+import { useCharacterRestrictionManager } from '../../../character/character';
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState } from '../../../graphics/room/roomDevice';
 import { useObservable } from '../../../observable';
-import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
+import { AssertNotNullable } from 'pandora-common';
 import { Select } from '../../../components/common/select/select';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { useCurrentAccount } from '../../../components/gameContext/directoryConnectorContextProvider';
+import { SpaceControlCharacter } from './spaceControls';
 
-export function RoomControls(): ReactElement | null {
-	const spaceConfig = useSpaceInfo().config;
+export function RoomControls(): ReactElement {
 	const characters = useSpaceCharacters();
-	const player = usePlayer();
+	const gameState = useGameState();
+	const globalState = useGlobalState(gameState);
+	const { player, playerState } = usePlayerState();
 	const navigate = useNavigate();
 
-	if (!characters || !player) {
-		return null;
-	}
+	const currentRoom = playerState.getCurrentRoomId();
 
 	return (
 		<Column padding='medium' className='controls'>
 			<Row padding='small'>
-				<Button onClick={ () => navigate('/wardrobe/space-inventory') } >Space inventory</Button>
-				<Button onClick={ () => navigate('/space/configuration') }>Space configuration</Button>
+				<Button onClick={ () => navigate(`/wardrobe/room/${encodeURIComponent(currentRoom)}`) } >Room inventory</Button>
 			</Row>
 			<br />
 			<span>
-				These characters are in the space <b>{ spaceConfig.name }</b>:
+				These characters are in the current room:
 			</span>
 			<div className='character-info'>
-				<DisplayCharacter char={ player } />
+				<SpaceControlCharacter char={ player } />
 				{
 					characters
-						.filter((c) => c !== player)
-						.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />)
+						.filter((c) => {
+							if (c === player)
+								return false;
+
+							const state = globalState.getCharacterState(c.id);
+							if (state == null || state.getCurrentRoomId() !== currentRoom)
+								return false;
+
+							return true;
+						})
+						.map((c) => <SpaceControlCharacter key={ c.data.id } char={ c } />)
 				}
 			</div>
 			<br />
@@ -99,7 +105,7 @@ export function PersonalSpaceControls(): ReactElement {
 				<Button slim onClick={ () => navigate('/wardrobe/space-inventory') } >Space inventory</Button>
 			</Row>
 			<div className='character-info'>
-				<DisplayCharacter char={ player } />
+				<SpaceControlCharacter char={ player } />
 			</div>
 			<Row padding='small'>
 				<Button onClick={ () => navigate('/spaces/search') } >List of spaces</Button>
@@ -201,70 +207,5 @@ function DeviceOverlaySelector(): ReactElement {
 				</Select>
 			</div>
 		</>
-	);
-}
-
-function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): ReactElement {
-	const playerId = usePlayerId();
-	const { setTarget } = useChatInput();
-	const navigate = useNavigate();
-	const location = useLocation();
-	const gameState = useGameState();
-	const { show: showRestrictionOverrideContext } = useRestrictionOverrideDialogContext();
-
-	const data = useCharacterData(char);
-	const state = useCharacterState(gameState, char.id);
-	const isOnline = data.isOnline;
-
-	const isPlayer = char.id === playerId;
-
-	return (
-		<fieldset>
-			<legend className={ char.isPlayer() ? 'player' : '' }>
-				<span>
-					<span>
-						<span className='colorStrip' style={ { color: data.settings.labelColor } }><b>{ '/// ' }</b></span>
-						<span onClick={ () => setTarget(data.id) }><b>{ data.name }</b></span>
-						<span> / { data.id } / { data.accountId }</span>
-					</span>
-				</span>
-				{ isOnline ? null : (
-					<span className='offline'>
-						Offline
-					</span>
-				) }
-				<CharacterRestrictionOverrideWarningContent mode={ state?.restrictionOverride } />
-			</legend>
-			<Column>
-				<Row wrap>
-					<Button className='slim' onClick={ () => {
-						navigate(`/wardrobe/character/${data.id}`);
-					} }>
-						Wardrobe
-					</Button>
-					<Button className='slim' onClick={ () => {
-						navigate(`/profiles/character/${data.id}`, {
-							state: {
-								back: location.pathname,
-							},
-						});
-					} }>
-						Profile
-					</Button>
-					{ !isPlayer && (
-						<Button className='slim' onClick={ () => {
-							setTarget(data.id);
-						} }>
-							Whisper
-						</Button>
-					) }
-					{ isPlayer && (
-						<Button className='slim' onClick={ showRestrictionOverrideContext }>
-							{ state?.restrictionOverride ? `Exit ${GetRestrictionOverrideText(state?.restrictionOverride.type)}` : 'Enter safemode' }
-						</Button>
-					) }
-				</Row>
-			</Column>
-		</fieldset>
 	);
 }

@@ -13,6 +13,7 @@ import { useAccountSettings } from '../../../components/gameContext/directoryCon
 import { useIsPortrait } from '../../../styles/mediaQueries';
 import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import './room.scss';
+import { SpaceControls } from './spaceControls';
 
 export function RoomScreen(): ReactElement | null {
 	const { interfaceChatroomGraphicsRatioHorizontal, interfaceChatroomGraphicsRatioVertical } = useAccountSettings();
@@ -57,6 +58,15 @@ function InteractionBox({ className }: {
 					<Tab name='Room'>
 						<Scrollable color='dark' className='controls-container flex-1'>
 							<RoomControls />
+						</Scrollable>
+					</Tab>
+				) : null
+			}
+			{
+				!isPersonalSpace ? (
+					<Tab name='Space'>
+						<Scrollable color='dark' className='controls-container flex-1'>
+							<SpaceControls />
 						</Scrollable>
 					</Tab>
 				) : null

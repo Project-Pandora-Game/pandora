@@ -273,8 +273,7 @@ export class DirectMessageChannel {
 		if (this._loaded || this._failed) {
 			return;
 		}
-		const oldest = this._messages.value[0]?.time;
-		const response = await this.connector.awaitResponse('getDirectMessages', { id: this._id, until: oldest });
+		const response = await this.connector.awaitResponse('getDirectMessages', { id: this._id });
 		if (response.result !== 'ok') {
 			this._failed = response.result;
 			return;

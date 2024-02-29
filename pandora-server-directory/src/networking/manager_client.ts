@@ -685,11 +685,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result };
 	}
 
-	private async handleGetDirectMessages({ id, until }: IClientDirectoryArgument['getDirectMessages'], connection: ClientConnection): IClientDirectoryPromiseResult['getDirectMessages'] {
+	private async handleGetDirectMessages({ id }: IClientDirectoryArgument['getDirectMessages'], connection: ClientConnection): IClientDirectoryPromiseResult['getDirectMessages'] {
 		if (!connection.account || id === connection.account.id)
 			throw new BadMessageError();
 
-		return await connection.account.directMessages.getMessages(id, until);
+		return await connection.account.directMessages.getMessages(id);
 	}
 
 	private async handleSendDirectMessage(data: IClientDirectoryArgument['sendDirectMessage'], connection: ClientConnection): IClientDirectoryPromiseResult['sendDirectMessage'] {

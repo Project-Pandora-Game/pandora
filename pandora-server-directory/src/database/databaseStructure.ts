@@ -14,7 +14,7 @@ import {
 	ZodCast,
 	ZodTruncate,
 } from 'pandora-common';
-import { z } from 'zod';
+import { z, type ZodType } from 'zod';
 import { AccountTokenReason } from '../account/accountSecure';
 import { GitHubTeamSchema } from '../services/github/githubVerify';
 import { ICharacterSelfInfoDb } from './databaseProvider';
@@ -56,6 +56,21 @@ export type DatabaseDirectMessageInfo = Omit<IDirectoryDirectMessageInfo, 'displ
 	/** Flag to indicate the conversation was closed and the info should not be sent to the account */
 	closed?: true;
 };
+
+export const DatabaseDirectMessageAccountsKeySchema = z.string() as unknown as ZodType<DirectMessageAccounts>;
+export const DatabaseDirectMessageSchema = z.object({
+	content: z.string(),
+	source: z.number(),
+	time: z.number(),
+	edited: z.number().optional(),
+});
+export type DatabaseDirectMessage = z.infer<typeof DatabaseDirectMessageSchema>;
+export const DatabaseDirectMessageAccountsSchema = z.object({
+	accounts: DatabaseDirectMessageAccountsKeySchema,
+	keyHash: z.string(),
+	messages: DatabaseDirectMessageSchema.array(),
+});
+export type DatabaseDirectMessageAccounts = z.infer<typeof DatabaseDirectMessageAccountsSchema>;
 
 /** Representation of account stored in database */
 export const DatabaseAccountSchema = z.object({

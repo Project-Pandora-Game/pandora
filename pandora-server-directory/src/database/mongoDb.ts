@@ -1,13 +1,13 @@
 import AsyncLock from 'async-lock';
 import _ from 'lodash';
-import { CollationOptions, Db, MatchKeysAndValues, MongoClient } from 'mongodb';
+import { CollationOptions, Db, MatchKeysAndValues, MongoClient, MongoServerError } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
 import { AccountId, ArrayToRecordKeys, Assert, AssertNotNullable, CharacterDataSchema, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, IDirectoryDirectMessage, SPACE_DIRECTORY_PROPERTIES, SpaceData, SpaceDataDirectoryUpdate, SpaceDataSchema, SpaceDataShardUpdate, SpaceDirectoryData, SpaceId, ZodCast } from 'pandora-common';
 import { z } from 'zod';
 import { ENV } from '../config';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountContact, DatabaseAccountContactType, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdate, DatabaseAccountWithSecure, DatabaseAccountWithSecureSchema, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DirectMessageAccounts } from './databaseStructure';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountContact, DatabaseAccountContactType, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdate, DatabaseAccountWithSecure, DatabaseAccountWithSecureSchema, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageAccountsSchema, DatabaseDirectMessageInfo, DirectMessageAccounts, type DatabaseDirectMessageAccounts, type DatabaseDirectMessage } from './databaseStructure';
 import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
 import { ValidatedCollection, DbAutomaticMigration, ValidatedCollectionType } from './validatedCollection';
 
@@ -121,7 +121,7 @@ const configCollection = new ValidatedCollection(
 const directMessageCollection = new ValidatedCollection(
 	logger,
 	DIRECT_MESSAGES_COLLECTION_NAME,
-	ZodCast<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>(), // TODO: This needs a proper schema!
+	DatabaseDirectMessageAccountsSchema,
 	[
 		{
 			name: 'accounts',
@@ -469,27 +469,45 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	//#endregion
 
-	public async getDirectMessages(accounts: DirectMessageAccounts, limit: number, until?: number): Promise<IDirectoryDirectMessage[]> {
-		return await this._directMessages
-			.find(until ? { accounts, time: { $lt: until } } : { accounts })
-			.sort({ time: -1 })
-			.limit(limit)
-			.toArray();
+	public async getDirectMessages(accounts: DirectMessageAccounts): Promise<DatabaseDirectMessageAccounts | null> {
+		const result = await this._directMessages.findOne({ accounts });
+		return result ?? null;
 	}
 
-	public async setDirectMessage(accounts: DirectMessageAccounts, message: IDirectoryDirectMessage): Promise<boolean> {
-		if (message.edited === undefined) {
-			await this._directMessages.insertOne({ ...message, accounts });
+	public async setDirectMessage(accounts: DirectMessageAccounts, keyHash: string, message: DatabaseDirectMessage, maxCount: number): Promise<boolean> {
+		const data = await this._directMessages.findOne({ accounts });
+		if (!data) {
+			if (message.edited != null)
+				return false;
+
+			await this._directMessages.insertOne({
+				accounts,
+				keyHash,
+				messages: [message],
+			});
 			return true;
 		}
-		if (message.content) {
-			const { matchedCount } = await this._directMessages.updateOne({ accounts, time: message.time }, { $set: { content: message.content, edited: message.edited } });
-			Assert(matchedCount <= 1);
-			return matchedCount === 1;
+
+		if (data.keyHash !== keyHash)
+			data.messages = [];
+
+		if (message.edited != null) {
+			const index = data.messages.findIndex((m) => m.time === message.time);
+			if (index === -1)
+				return false;
+
+			if (message.content.length === 0) {
+				data.messages.splice(index, 1);
+			} else {
+				data.messages[index] = message;
+			}
+		} else {
+			data.messages.push(message);
+			data.messages = data.messages.slice(-maxCount);
 		}
-		const { deletedCount } = await this._directMessages.deleteOne({ accounts, time: message.time });
-		Assert(deletedCount <= 1);
-		return deletedCount === 1;
+
+		await this._directMessages.updateOne({ accounts }, { $set: data });
+		return true;
 	}
 
 	public async setDirectMessageInfo(accountId: number, directMessageInfo: DatabaseDirectMessageInfo[]): Promise<void> {
@@ -560,6 +578,81 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	private async doManualMigrations(): Promise<void> {
 		// Add manual migrations here
+		await directMessageCollection.doManualMigration(this._client, this._db, {
+			oldSchema: ZodCast<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>(),
+			migrate: async ({ self, logger: log, db, client, oldStream, oldCollection }) => {
+				const result = new Map<string, z.infer<typeof self.schema>>();
+
+				let success = true;
+				let totalCount = 0;
+
+				for await (const data of oldStream) {
+					if (data == null) {
+						success = false;
+						continue;
+					}
+
+					let dms = result.get(data.accounts);
+					if (!dms) {
+						dms = {
+							accounts: data.accounts,
+							keyHash: data.keyHash,
+							messages: [],
+						};
+						result.set(data.accounts, dms);
+					}
+					if (dms.keyHash !== data.keyHash) {
+						log.warning(`Key hash mismatch for account ${data.accounts}`);
+						dms.keyHash = data.keyHash;
+						dms.messages = [];
+					}
+					dms.messages.push({
+						content: data.content,
+						source: data.source,
+						time: data.time,
+						edited: data.edited,
+					});
+					++totalCount;
+				}
+				if (!success)
+					throw new Error('Migration failed');
+
+				for (const dms of result.values()) {
+					dms.messages = dms.messages
+						.sort((a, b) => a.time - b.time)
+						.slice(-100);
+				}
+
+				log.info(`Loaded ${result.size} accounts, ${totalCount} direct message conversations`);
+
+				const session = client.startSession();
+				try {
+					await session.withTransaction(async () => {
+						try {
+							await oldCollection.drop();
+						} catch (e) {
+							if (e instanceof MongoServerError && e.message === 'ns not found') {
+								// Ignore, collection doesn't exist
+							} else {
+								throw e;
+							}
+						}
+						const newCollection = await self.create(db);
+						for (const dms of result.values()) {
+							await newCollection.insertOne(dms);
+						}
+						const docCount = await newCollection.countDocuments();
+						if (result.size !== docCount) {
+							log.error(`Migration failed: Document count mismatch ${result.size} !== ${docCount}`);
+							await session.abortTransaction();
+						}
+					});
+					log.info('Migration successful');
+				} finally {
+					await session.endSession();
+				}
+			},
+		});
 	}
 }
 

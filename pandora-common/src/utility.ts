@@ -32,6 +32,10 @@ export type Writeable<T> = { -readonly [P in keyof T]: T[P] };
 
 export type Nullable<T> = T | null | undefined;
 
+export type KeyOfType<TObject, TValue> = NonNullable<{
+	[K in keyof TObject]: TObject[K] extends TValue ? K : never;
+}[keyof TObject]>;
+
 /**
  * Describes the allowed return value from a class `accessor` field decorator.
  * @template This The `this` type to which the target applies.

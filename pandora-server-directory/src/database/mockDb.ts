@@ -1,8 +1,8 @@
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
 import { CreateAccountData } from '../account/account';
-import { AccountId, ArrayToRecordKeys, SPACE_DIRECTORY_PROPERTIES, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, SpaceData, SpaceDataDirectoryUpdate, SpaceDataShardUpdate, SpaceDirectoryData, IDirectoryDirectMessage, PASSWORD_PREHASH_SALT, SpaceId } from 'pandora-common';
+import { AccountId, ArrayToRecordKeys, SPACE_DIRECTORY_PROPERTIES, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, SpaceData, SpaceDataDirectoryUpdate, SpaceDataShardUpdate, SpaceDirectoryData, PASSWORD_PREHASH_SALT, SpaceId } from 'pandora-common';
 import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate } from './databaseStructure';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate, type DatabaseDirectMessageAccounts, type DatabaseDirectMessage } from './databaseStructure';
 
 import _ from 'lodash';
 import { createHash } from 'crypto';
@@ -23,7 +23,7 @@ export class MockDatabase implements PandoraDatabase {
 	private characterDb: Map<CharacterId, ICharacterData> = new Map();
 	private spacesDb: Map<SpaceId, SpaceData> = new Map();
 	private configDb: Map<DatabaseConfigType, DatabaseConfigData<DatabaseConfigType>> = new Map();
-	private directMessagesDb: Map<DirectMessageAccounts, IDirectoryDirectMessage[]> = new Map();
+	private directMessagesDb: Map<DirectMessageAccounts, DatabaseDirectMessageAccounts> = new Map();
 	private accountContactDb: DatabaseAccountContact[] = [];
 	private _nextAccountId = 1;
 	private _nextCharacterId = 1;
@@ -322,42 +322,42 @@ export class MockDatabase implements PandoraDatabase {
 
 	//#endregion
 
-	public getDirectMessages(accounts: DirectMessageAccounts, limit: number, until?: number): Promise<IDirectoryDirectMessage[]> {
+	public getDirectMessages(accounts: DirectMessageAccounts): Promise<DatabaseDirectMessageAccounts | null> {
 		const data = this.directMessagesDb.get(accounts);
-		if (!data) {
-			return Promise.resolve([]);
-		}
-		return Promise.resolve(data
-			.sort((a, b) => b.time - a.time)
-			.filter((msg) => !until || msg.time < until)
-			.slice(0, limit)
-			.map((msg) => _.cloneDeep(msg)));
+		return Promise.resolve(data ?? null);
 	}
 
-	public setDirectMessage(accounts: DirectMessageAccounts, message: IDirectoryDirectMessage): Promise<boolean> {
+	public setDirectMessage(accounts: DirectMessageAccounts, keyHash: string, message: DatabaseDirectMessage, maxCount: number): Promise<boolean> {
 		let data = this.directMessagesDb.get(accounts);
 		if (!data) {
-			data = [];
-			this.directMessagesDb.set(accounts, data);
-		}
-		if (message.edited === undefined) {
-			data.push(message);
-			return Promise.resolve(true);
-		}
-		if (message.content) {
-			const msg = data.find((m) => m.time === message.time);
-			if (!msg)
+			if (message.edited != null)
 				return Promise.resolve(false);
 
-			msg.content = message.content;
-			msg.edited = message.edited;
+			data = {
+				accounts,
+				keyHash,
+				messages: [message],
+			};
 			return Promise.resolve(true);
 		}
-		const index = data.findIndex((m) => m.time === message.time);
-		if (index === -1)
-			return Promise.resolve(false);
 
-		data.splice(index, 1);
+		if (data.keyHash !== keyHash)
+			data.messages = [];
+
+		if (message.edited != null) {
+			const index = data.messages.findIndex((msg) => msg.time === message.time);
+			if (index < 0)
+				return Promise.resolve(false);
+
+			if (message.content.length === 0) {
+				data.messages.splice(index, 1);
+			} else {
+				data.messages[index] = message;
+			}
+		} else {
+			data.messages.push(message);
+			data.messages = data.messages.slice(-maxCount);
+		}
 		return Promise.resolve(true);
 	}
 

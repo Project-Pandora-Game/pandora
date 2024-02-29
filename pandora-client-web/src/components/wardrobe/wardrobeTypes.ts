@@ -19,7 +19,8 @@ import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { Immutable } from 'immer';
 
 export type WardrobeContextExtraItemActionComponent = (props: { target: ActionTargetSelector; item: ItemPath; }) => ReactElement | null;
-export type WardrobeTarget = IChatroomCharacter | { type: 'room'; };
+export type WardrobeTarget = IChatroomCharacter
+	| { type: 'spaceInventory'; };
 
 export type WardrobeHeldItem = {
 	type: 'nothing';

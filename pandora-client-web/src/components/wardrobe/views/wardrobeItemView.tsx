@@ -1,34 +1,34 @@
 import classNames from 'classnames';
+import { isEqual } from 'lodash';
 import {
+	ActionTargetSelector,
 	AppearanceAction,
 	AppearanceItems,
+	AppearanceItemsCalculateTotalCount,
 	AssertNever,
 	CloneDeepMutable,
 	EMPTY_ARRAY,
+	ITEM_LIMIT_CHARACTER_WORN,
+	ITEM_LIMIT_SPACE_INVENTORY,
 	Item,
 	ItemContainerPath,
 	ItemId,
 	ItemPath,
-	ActionTargetSelector,
-	ITEM_LIMIT_CHARACTER_WORN,
-	ITEM_LIMIT_ROOM_INVENTORY,
-	AppearanceItemsCalculateTotalCount,
 } from 'pandora-common';
-import React, { ReactElement, useEffect, useMemo } from 'react';
-import { useObservable } from '../../../observable';
-import { isEqual } from 'lodash';
+import { EvalContainerPath, SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
-import { EvalContainerPath, SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import React, { ReactElement, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
-import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { WardrobeFocus, WardrobeHeldItem } from '../wardrobeTypes';
-import { useWardrobeContext } from '../wardrobeContext';
-import { useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
-import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
-import { useNavigate } from 'react-router';
+import { useObservable } from '../../../observable';
 import { Button } from '../../common/button/button';
+import { Scrollbar } from '../../common/scrollbar/scrollbar';
+import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
+import { useWardrobeContext } from '../wardrobeContext';
+import { WardrobeFocus, WardrobeHeldItem } from '../wardrobeTypes';
+import { useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
 
 export function InventoryItemView({
 	className,
@@ -103,10 +103,10 @@ export function InventoryItemView({
 							</div>
 						</>
 					) :
-						<StorageUsageMeter title={ title } used={ itemCount } limit={ target.type === 'character' ? ITEM_LIMIT_CHARACTER_WORN : ITEM_LIMIT_ROOM_INVENTORY } />
+						<StorageUsageMeter title={ title } used={ itemCount } limit={ target.type === 'character' ? ITEM_LIMIT_CHARACTER_WORN : ITEM_LIMIT_SPACE_INVENTORY } />
 				}
 				<div className='flex-1' />
-				{ target.type === 'room' ?
+				{ target.type === 'spaceInventory' ?
 					<Button className='slim' onClick={ () =>
 						navigate('/wardrobe') } >
 						Switch to your wardrobe

@@ -170,7 +170,7 @@ export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }
 		if (itemId == null)
 			return undefined;
 
-		const item = globalState.room?.items.find((i) => i.id === itemId);
+		const item = globalState.spaceInventory.items.find((i) => i.id === itemId);
 
 		if (item == null || !item.isType('roomDevice') || !item.isDeployed())
 			return undefined;
@@ -205,7 +205,7 @@ export function RoomPreview({
 }: RoomPreviewProps): ReactElement {
 	const assetManager = useAssetManager();
 
-	const roomState = globalState.room;
+	const roomState = globalState.spaceInventory;
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
 	const roomBackground = useMemo(() => ResolveBackground(assetManager, info.background), [assetManager, info.background]);
 	const projectionResolver = useRoomViewProjection(roomBackground);

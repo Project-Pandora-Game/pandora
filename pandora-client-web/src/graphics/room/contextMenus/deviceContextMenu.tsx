@@ -1,56 +1,23 @@
+import { Immutable } from 'immer';
+import { omit } from 'lodash';
 import { nanoid } from 'nanoid';
-import { ItemRoomDevice, AppearanceAction, ItemId, ICharacterRoomData } from 'pandora-common';
-import React, { useMemo, useState, ReactElement, useEffect, useCallback } from 'react';
+import { AppearanceAction, ICharacterRoomData, ItemId, ItemRoomDevice } from 'pandora-common';
+import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import { toast } from 'react-toastify';
 import { Character, ICharacter, useCharacterData } from '../../../character/character';
 import { ChildrenProps } from '../../../common/reactTypes';
-import { PointLike } from '../../../graphics/graphicsCharacter';
 import { useContextMenuPosition } from '../../../components/contextMenu';
-import { useSpaceCharacters, useGameStateOptional, useGameState, useGlobalState } from '../../../components/gameContext/gameStateContextProvider';
+import { useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue';
-import { useWardrobeContext, useWardrobeExecuteChecked, WARDROBE_TARGET_ROOM, WardrobeContextProvider } from '../../../components/wardrobe/wardrobeContext';
-import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
-import { CharacterContextMenu } from './characterContextMenu';
-import { Immutable } from 'immer';
-import { IRoomSceneMode } from '../roomScene';
-import { toast } from 'react-toastify';
 import { ActionWarningContent } from '../../../components/wardrobe/wardrobeComponents';
+import { WardrobeContextProvider, useWardrobeContext, useWardrobeExecuteChecked } from '../../../components/wardrobe/wardrobeContext';
+import { PointLike } from '../../../graphics/graphicsCharacter';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
-import { omit } from 'lodash';
 import { useIsRoomConstructionModeEnabled } from '../roomDevice';
-
-function StoreDeviceMenu({ device, close }: {
-	device: ItemRoomDevice;
-	close: () => void;
-}) {
-	const action = useMemo<AppearanceAction>(() => ({
-		type: 'roomDeviceDeploy',
-		item: {
-			container: [],
-			itemId: device.id,
-		},
-		target: { type: 'roomInventory' },
-		deployment: { deployed: false },
-	}), [device]);
-	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
-	const roomConstructionMode = useIsRoomConstructionModeEnabled();
-	const available = roomConstructionMode && checkResult != null && checkResult.problems.length === 0;
-	const [execute, processing] = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
-
-	const onClick = () => {
-		if (!roomConstructionMode) {
-			toast('You must be in room construction mode to store devices', TOAST_OPTIONS_WARNING);
-			return;
-		}
-		execute();
-	};
-
-	return (
-		<button onClick={ onClick } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
-			Store the device
-		</button>
-	);
-}
+import { IRoomSceneMode } from '../roomScene';
+import { CharacterContextMenu } from './characterContextMenu';
 
 function MoveDeviceMenu({ device, setRoomSceneMode, close }: {
 	device: ItemRoomDevice;
@@ -63,7 +30,7 @@ function MoveDeviceMenu({ device, setRoomSceneMode, close }: {
 			container: [],
 			itemId: device.id,
 		},
-		target: { type: 'roomInventory' },
+		target: { type: 'spaceInventory' },
 		deployment: { deployed: true, position: omit(device.deployment, 'deployed') },
 	}), [device]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
@@ -101,7 +68,7 @@ function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
 			container: [],
 			itemId: device.id,
 		},
-		target: { type: 'roomInventory' },
+		target: { type: 'spaceInventory' },
 		slot,
 	}), [device, slot]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
@@ -145,7 +112,7 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 			container: [],
 			itemId: device.id,
 		},
-		target: { type: 'roomInventory' },
+		target: { type: 'spaceInventory' },
 		slot,
 		character: {
 			type: 'character',
@@ -272,7 +239,7 @@ function DeviceContextMenuCurrent({ device, position, setRoomSceneMode, onClose 
 			<span>
 				{ device.asset.definition.name }
 			</span>
-			<WardrobeContextProvider target={ WARDROBE_TARGET_ROOM } player={ player }>
+			<WardrobeContextProvider target={ { type: 'spaceInventory' } } player={ player }>
 				{ menu === 'main' && (
 					<>
 						<LeaveDeviceMenu device={ device } close={ onClose } />
@@ -280,7 +247,6 @@ function DeviceContextMenuCurrent({ device, position, setRoomSceneMode, onClose 
 							Slots
 						</button>
 						<MoveDeviceMenu device={ device } setRoomSceneMode={ setRoomSceneMode } close={ onClose } />
-						<StoreDeviceMenu device={ device } close={ onClose } />
 					</>
 				) }
 				{ menu === 'slots' && (
@@ -308,7 +274,7 @@ export function DeviceContextMenu({ deviceItemId, position, roomSceneMode, setRo
 }): ReactElement | null {
 	const globalState = useGlobalState(useGameState());
 	const item = useMemo(() => {
-		const actual = globalState.getItems({ type: 'roomInventory' });
+		const actual = globalState.getItems({ type: 'spaceInventory' });
 		if (!actual)
 			return null;
 

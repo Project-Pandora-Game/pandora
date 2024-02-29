@@ -31,9 +31,9 @@ export function useWardrobeTargetItems(target: WardrobeTarget | null): Appearanc
 				type: 'character',
 				characterId: target.id,
 			});
-		} else if (target.type === 'room') {
+		} else if (target.type === 'spaceInventory') {
 			return globalState.getItems({
-				type: 'roomInventory',
+				type: 'spaceInventory',
 			});
 		}
 		AssertNever(target);

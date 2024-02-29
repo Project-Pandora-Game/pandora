@@ -22,6 +22,7 @@ import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties'
 import { AppearanceArmPoseSchema, AppearancePoseSchema } from './state/characterStatePose';
 import { RestrictionOverride } from './state/characterStateTypes';
 import { AssetFrameworkGlobalStateContainer } from './state/globalState';
+import type { AssetFrameworkSpaceInventoryState } from './state/spaceInventoryState';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../validation';
@@ -767,7 +768,8 @@ export function ActionAppearanceRandomize({
 		properties = item.getPropertiesParts().reduce(MergeAssetProperties, properties);
 	});
 
-	const room = processingContext.manipulator.currentState.room;
+	// Random appearance should not depend on the room the character is in
+	const spaceInventory: AssetFrameworkSpaceInventoryState | null = null;
 
 	// Build body if running full randomization
 	if (kind === 'full') {
@@ -804,11 +806,11 @@ export function ActionAppearanceRandomize({
 		}
 
 		// Re-load the appearance we have to make sure body is valid
-		newAppearance = CharacterAppearanceLoadAndValidate(assetManager, newAppearance, room).slice();
+		newAppearance = CharacterAppearanceLoadAndValidate(assetManager, newAppearance, spaceInventory).slice();
 	}
 
 	// Make sure the appearance is valid (required for items step)
-	let r = ValidateAppearanceItems(assetManager, newAppearance, room);
+	let r = ValidateAppearanceItems(assetManager, newAppearance, spaceInventory);
 	if (!r.success) {
 		processingContext.addProblem({
 			result: 'validationError',
@@ -846,7 +848,7 @@ export function ActionAppearanceRandomize({
 			const item = assetManager.createItem(`i/${nanoid()}`, asset);
 			const newItems: Item<WearableAssetType>[] = [...newAppearance, item];
 
-			r = ValidateAppearanceItemsPrefix(assetManager, newItems, room);
+			r = ValidateAppearanceItemsPrefix(assetManager, newItems, spaceInventory);
 			if (r.success) {
 				newAppearance = newItems;
 				usedAssets.add(asset);
@@ -891,7 +893,7 @@ export function ActionRoomDeviceDeploy(processingContext: AppearanceActionProces
 
 		if (!processingContext.manipulator.produceCharacterState(
 			characterId,
-			(character) => character.updateRoomStateLink(processingContext.manipulator.currentState.room, true),
+			(character) => character.updateRoomStateLink(processingContext.manipulator.currentState.spaceInventory, true),
 		)) {
 			return false;
 		}
@@ -975,7 +977,7 @@ export function ActionRoomDeviceEnter({
 
 	if (!processingContext.manipulator.produceCharacterState(
 		action.character.characterId,
-		(character) => character.updateRoomStateLink(processingContext.manipulator.currentState.room, false),
+		(character) => character.updateRoomStateLink(processingContext.manipulator.currentState.spaceInventory, false),
 	))
 		return processingContext.invalid();
 

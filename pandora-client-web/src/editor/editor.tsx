@@ -1,6 +1,6 @@
 import { noop } from 'lodash';
-import { Assert, AssertNotNullable, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkRoomState, AssetId, CharacterSize, GetLogger, HexColorString, ParseArrayNotEmpty, TypedEventEmitter } from 'pandora-common';
-import React, { createContext, ReactElement, useContext, useMemo, useSyncExternalStore } from 'react';
+import { Assert, AssertNotNullable, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetId, CharacterSize, GetLogger, HexColorString, ParseArrayNotEmpty, TypedEventEmitter } from 'pandora-common';
+import React, { ReactElement, createContext, useContext, useMemo, useSyncExternalStore } from 'react';
 import z from 'zod';
 import { AssetGraphics, AssetGraphicsLayer, CalculateImmediateLayerPointDefinition, useGraphicsAsset, useLayerDefinition } from '../assets/assetGraphics';
 import { GetCurrentAssetManager } from '../assets/assetManager';
@@ -96,19 +96,19 @@ export class Editor extends TypedEventEmitter<{
 
 		this.manager = graphicsManager;
 
+		let newState = AssetFrameworkGlobalState.createDefault(assetManager);
+		const characterState = AssetFrameworkCharacterState
+			.createDefault(assetManager, EDITOR_CHARACTER_ID, newState.spaceInventory)
+			.produceWithRestrictionOverride({ type: 'safemode', allowLeaveAt: 0 });
+		newState = newState
+			.withCharacter(EDITOR_CHARACTER_ID, characterState);
+
 		this.globalState = new AssetFrameworkGlobalStateContainer(
 			logger.prefixMessages('[Asset framework state]'),
 			() => {
 				this.emit('globalStateChange', true);
 			},
-			AssetFrameworkGlobalState
-				.createDefault(assetManager, AssetFrameworkRoomState.createDefault(assetManager))
-				.withCharacter(
-					EDITOR_CHARACTER_ID,
-					AssetFrameworkCharacterState
-						.createDefault(assetManager, EDITOR_CHARACTER_ID)
-						.produceWithRestrictionOverride({ type: 'safemode', allowLeaveAt: 0 }),
-				),
+			newState,
 		);
 
 		this.character = new EditorCharacter(this);

@@ -94,12 +94,12 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: 
 								],
 								itemId: m.lock.id,
 							},
-							target: { type: 'roomInventory' },
+							target: { type: 'spaceInventory' },
 							container: [],
 						} }
 					>
 						<span>
-							<u>▽</u> Store in room
+							<u>▽</u> Store in space inventory
 						</span>
 					</WardrobeActionButton>
 				</Row>

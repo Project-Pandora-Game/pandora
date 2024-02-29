@@ -22,8 +22,6 @@ import {
 	IDirectoryAccountInfo,
 	IShardClientArgument,
 	IsAuthorized,
-	Item,
-	ItemPath,
 	LIMIT_CHAT_MESSAGE_LENGTH,
 	Logger,
 	MakePermissionConfigFromDefault,
@@ -31,7 +29,6 @@ import {
 	PermissionConfig,
 	PermissionGroup,
 	PermissionSetup,
-	RoomInventory,
 	SpaceClientInfo,
 	SpaceFeature,
 	SpaceId,
@@ -618,24 +615,6 @@ export function useCharacterState(context: GameState, id: CharacterId | null): A
 	const globalState = useGlobalState(context);
 
 	return useMemo(() => (id != null ? globalState.characters.get(id) ?? null : null), [globalState, id]);
-}
-
-export function useRoomInventory(context: GameState): RoomInventory | null {
-	const state = useGlobalState(context);
-
-	return useMemo(() => (state.room ? new RoomInventory(state.room) : null), [state]);
-}
-
-export function useRoomInventoryItem(context: GameState, item: ItemPath | null | undefined): Item | undefined {
-	const roomInventory = useRoomInventory(context);
-
-	return useMemo(() => (item ? roomInventory?.getItem(item) : undefined), [roomInventory, item]);
-}
-
-export function useRoomInventoryItems(context: GameState): readonly Item[] {
-	const roomInventory = useRoomInventory(context);
-
-	return useMemo(() => (roomInventory?.getAllItems() ?? []), [roomInventory]);
 }
 
 export function IsSpaceAdmin(data: Immutable<SpaceClientInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {

@@ -28,11 +28,9 @@ import { Column } from '../common/container/container';
 import { useConfirmDialog } from '../dialog/dialog';
 import { WardrobeCheckResultForConfirmationWarnings } from './wardrobeUtils';
 import { ActionWarningContent } from './wardrobeComponents';
-import { Immutable, freeze } from 'immer';
+import { Immutable } from 'immer';
 
 export const wardrobeContext = createContext<WardrobeContext | null>(null);
-
-export const WARDROBE_TARGET_ROOM: WardrobeTarget = freeze({ type: 'room' });
 
 export function WardrobeContextProvider({ target, player, children }: { target: WardrobeTarget; player: PlayerCharacter; children: ReactNode; }): ReactElement {
 	const settings = useAccountSettings();
@@ -69,9 +67,9 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 				type: 'character',
 				characterId: target.id,
 			};
-		} else if (target.type === 'room') {
+		} else if (target.type === 'spaceInventory') {
 			return {
-				type: 'roomInventory',
+				type: 'spaceInventory',
 			};
 		}
 		AssertNever(target);
@@ -89,7 +87,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		}
 	}, [heldItem, globalState]);
 
-	const context = useMemo<WardrobeContext>(() => ({
+	const context = useMemo((): WardrobeContext => ({
 		target,
 		targetSelector,
 		player,
@@ -104,7 +102,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		actionPreviewState,
 		showExtraActionButtons: settings.wardrobeExtraActionButtons,
 		showHoverPreview: settings.wardrobeHoverPreview,
-	}), [target, targetSelector, player, globalState, assetList, heldItem, focus, extraItemActions, actions, shardConnector, actionPreviewState, settings]);
+	}), [target, targetSelector, player, globalState, assetList, heldItem, focus, extraItemActions, actions, actionPreviewState, settings, shardConnector]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

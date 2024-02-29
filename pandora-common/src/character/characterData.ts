@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { AccountIdSchema } from '../account';
 import { AppearanceBundleSchema } from '../assets/state/characterStateTypes';
-import { RoomInventoryBundleSchema } from '../assets/state/roomState';
+import { SpaceInventoryBundleSchema } from '../assets/state/spaceInventoryState';
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
 import { SpaceIdSchema } from '../space/space';
@@ -65,7 +65,7 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	currentSpace: SpaceIdSchema.nullable().default(null),
 	// TODO(spaces): Migrate this to be a personalSpace data
 	personalRoom: z.object({
-		inventory: z.lazy(() => RoomInventoryBundleSchema),
+		inventory: z.lazy(() => SpaceInventoryBundleSchema),
 	}).optional(),
 	interactionConfig: InteractionSystemDataSchema.optional(),
 	assetPreferences: AssetPreferencesServerSchema.default(ASSET_PREFERENCES_DEFAULT),

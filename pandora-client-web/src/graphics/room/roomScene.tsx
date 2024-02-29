@@ -24,7 +24,7 @@ import { Character, useCharacterData } from '../../character/character';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { directoryConnectorContext, useAccountSettings } from '../../components/gameContext/directoryConnectorContextProvider';
-import { useCharacterRestrictionsManager, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../components/gameContext/gameStateContextProvider';
+import { useCharacterRestrictionsManager, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../components/gameContext/gameStateContextProvider';
 import { usePlayer, usePlayerState } from '../../components/gameContext/playerContextProvider';
 import { shardConnectorContext, useShardConnector } from '../../components/gameContext/shardConnectorContextProvider';
 import { ShardConnector } from '../../networking/shardConnector';
@@ -74,7 +74,7 @@ export function RoomGraphicsScene({
 }: RoomGraphicsSceneProps): ReactElement {
 	const assetManager = useAssetManager();
 
-	const roomState = globalState.room;
+	const roomState = globalState.spaceInventory;
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
 	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
 		const resolved = ResolveBackground(assetManager, info.background);
@@ -448,7 +448,7 @@ export function RoomScene({ className }: {
 	AssertNotNullable(characters);
 	AssertNotNullable(player);
 
-	const playerState = useCharacterState(gameState, player.id);
+	const playerState = globalState.getCharacterState(player.id);
 	AssertNotNullable(playerState);
 
 	const roomConstructionMode = useIsRoomConstructionModeEnabled();

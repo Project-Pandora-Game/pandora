@@ -33,7 +33,7 @@ export function useWardrobeItems(currentFocus: WardrobeFocus): {
 
 	const preFilter = useCallback((item: Item | Asset) => {
 		const asset = 'asset' in item ? item.asset : item;
-		if (target.type === 'room') {
+		if (target.type === 'spaceInventory') {
 			return asset.isType('roomDevice') ||
 				asset.isType('lock') ||
 				(
@@ -105,8 +105,8 @@ export function WardrobeItemManipulation(): ReactElement {
 	const appearance = useWardrobeTargetItems(target);
 	const title = target.type === 'character' ? 'Currently worn items' : 'Room inventory used';
 
-	const isRoomInventory = target.type === 'room' && currentFocus.container.length === 0;
-	const roomInventoryTarget = useMemo((): ActionTargetSelector => ({ type: 'roomInventory' }), []);
+	const isSpaceInventory = target.type === 'spaceInventory' && currentFocus.container.length === 0;
+	const spaceInventoryTarget = useMemo((): ActionTargetSelector => ({ type: 'spaceInventory' }), []);
 
 	const singleItemContainer = useMemo<boolean>(() => {
 		let items = appearance;
@@ -136,11 +136,11 @@ export function WardrobeItemManipulation(): ReactElement {
 			/>
 			<TabContainer className={ classNames('flex-1', focusType !== 'nothing' ? 'hidden' : null) }>
 				{
-					!isRoomInventory ? (
-						<Tab name='Room inventory'>
+					!isSpaceInventory ? (
+						<Tab name='Space inventory'>
 							<SecondaryInventoryView
-								title='Use items in room inventory'
-								secondaryTarget={ roomInventoryTarget }
+								title='Use items in space inventory'
+								secondaryTarget={ spaceInventoryTarget }
 								quickActionTarget={ targetSelector }
 								quickActionTargetContainer={ currentFocus.container }
 							/>

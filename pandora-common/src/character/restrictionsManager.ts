@@ -140,8 +140,8 @@ export class CharacterRestrictionsManager {
 	}
 
 	public canInteractWithTarget(context: AppearanceActionProcessingContext, target: ActionTarget): RestrictionResult {
-		// Room inventory can always be interacted with
-		if (target.type === 'roomInventory')
+		// Space inventory can always be interacted with
+		if (target.type === 'spaceInventory')
 			return { allowed: true };
 
 		if (target.type === 'character') {

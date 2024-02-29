@@ -63,10 +63,10 @@ export function SecondaryInventoryView({ title, secondaryTarget, secondaryTarget
 			<div className='toolbar'>
 				<span>{ title }</span>
 				{
-					secondaryTarget.type === 'roomInventory' ? (
+					secondaryTarget.type === 'spaceInventory' ? (
 						<Button className='slim' onClick={ () =>
-							navigate('/wardrobe/room-inventory') } >
-							Switch to room inventory
+							navigate('/wardrobe/space-inventory') } >
+							Switch to space inventory
 						</Button>
 					) : null
 				}

@@ -1,41 +1,43 @@
-import {
-	CharacterId,
-	IChatMessage,
-	Logger,
-	SpaceClientInfo,
-	SpaceId,
-	AssertNever,
-	IChatMessageDirectoryAction,
-	GameStateUpdate,
-	ServerRoom,
-	IShardClient,
-	IClientMessage,
-	IChatSegment,
-	ChatCharacterStatus,
-	IChatMessageActionTargetCharacter,
-	ActionHandlerMessage,
-	ActionSpaceContext,
-	ResolveBackground,
-	AccountId,
-	AssetManager,
-	AssetFrameworkGlobalStateContainer,
-	AssetFrameworkGlobalState,
-	AssetFrameworkRoomState,
-	AppearanceBundle,
-	AssetFrameworkCharacterState,
-	AssertNotNullable,
-	RoomInventory,
-	CharacterRoomPosition,
-	RoomInventoryBundle,
-	SpaceDirectoryConfig,
-	SpaceLoadData,
-	CloneDeepMutable,
-	IsValidRoomPosition,
-	GenerateInitialRoomPosition,
-} from 'pandora-common';
-import type { Character } from '../character/character';
 import _, { isEqual, omit } from 'lodash';
+import {
+	AccountId,
+	ActionHandlerMessage,
+	ActionHandlerMessageTarget,
+	ActionSpaceContext,
+	AppearanceBundle,
+	AssertNever,
+	AssertNotNullable,
+	AssetFrameworkCharacterState,
+	AssetFrameworkGlobalState,
+	AssetFrameworkGlobalStateContainer,
+	AssetFrameworkSpaceInventoryState,
+	AssetManager,
+	CharacterId,
+	CharacterRoomPosition,
+	ChatCharacterStatus,
+	CloneDeepMutable,
+	GameStateUpdate,
+	GenerateInitialRoomPosition,
+	IChatMessage,
+	IChatMessageActionTarget,
+	IChatMessageActionTargetCharacter,
+	IChatMessageDirectoryAction,
+	IChatSegment,
+	IClientMessage,
+	IShardClient,
+	IsValidRoomPosition,
+	Logger,
+	ResolveBackground,
+	ServerRoom,
+	SpaceClientInfo,
+	SpaceDirectoryConfig,
+	SpaceId,
+	SpaceInventory,
+	SpaceInventoryBundle,
+	SpaceLoadData,
+} from 'pandora-common';
 import { assetManager } from '../assets/assetManager';
+import type { Character } from '../character/character';
 
 const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 20; // 20 minutes
 const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
@@ -59,7 +61,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 	protected readonly logger: Logger;
 
-	constructor(inventory: RoomInventoryBundle, logger: Logger) {
+	constructor(inventory: SpaceInventoryBundle, logger: Logger) {
 		super();
 		this.logger = logger;
 		this.logger.verbose('Loaded');
@@ -68,11 +70,13 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			this.logger.error('Room inventory is client-only');
 		}
 
-		const initialState = AssetFrameworkGlobalState.createDefault(
-			assetManager,
-			AssetFrameworkRoomState
-				.loadFromBundle(assetManager, inventory, this.logger.prefixMessages('Room inventory load:')),
-		);
+		const initialState = AssetFrameworkGlobalState
+			.createDefault(
+				assetManager,
+			)
+			.withSpaceInventoryState(
+				AssetFrameworkSpaceInventoryState.loadFromBundle(assetManager, inventory, this.logger.prefixMessages('Space inventory load:')),
+			);
 
 		this.gameState = new AssetFrameworkGlobalStateContainer(
 			this.logger,
@@ -144,7 +148,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public onStateChanged(newState: AssetFrameworkGlobalState, oldState: AssetFrameworkGlobalState): void {
 		const changes = newState.listChanges(oldState);
 
-		if (changes.room) {
+		if (changes.spaceInventory) {
 			this._onDataModified('inventory');
 		}
 
@@ -240,10 +244,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		return Array.from(this.characters.values()).find((c) => c.id === id) ?? null;
 	}
 
-	public getRoomInventory(): RoomInventory {
-		const state = this.gameState.currentState.room;
-		AssertNotNullable(state);
-		return new RoomInventory(state);
+	public getSpaceInventory(): SpaceInventory {
+		return new SpaceInventory(this.gameState.currentState.spaceInventory);
 	}
 
 	public characterAdd(character: Character, appearance: AppearanceBundle): void {
@@ -261,7 +263,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 					assetManager,
 					character.id,
 					appearance,
-					newState.room,
+					newState.spaceInventory,
 					this.logger.prefixMessages(`Character ${character.id} join:`),
 				);
 			newState = newState.withCharacter(character.id, characterState);
@@ -448,12 +450,22 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			time: this.nextMessageTime(),
 			data: {
 				character: this._getCharacterActionInfo(character?.id),
-				target: target?.type === 'character' ? this._getCharacterActionInfo(target.id) :
-					target,
+				target: this._mapActionTargetToChatMesssageTarget(target),
 				...data,
 			},
 			dictionary,
 		};
+	}
+
+	private _mapActionTargetToChatMesssageTarget(target: ActionHandlerMessageTarget | undefined): IChatMessageActionTarget | undefined {
+		if (target == null)
+			return undefined;
+
+		if (target.type === 'character') {
+			return this._getCharacterActionInfo(target.id);
+		}
+
+		return target;
 	}
 
 	private _queueMessages(messages: IChatMessage[]): void {

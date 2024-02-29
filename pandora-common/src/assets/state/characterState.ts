@@ -11,7 +11,7 @@ import { Item } from '../item';
 import type { IExportOptions } from '../modules/common';
 import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose';
 import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type RestrictionOverride } from './characterStateTypes';
-import type { AssetFrameworkRoomState } from './roomState';
+import type { AssetFrameworkSpaceInventoryState } from './spaceInventoryState';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../item/base';
@@ -51,13 +51,13 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		this.restrictionOverride = 'restrictionOverride' in override ? override.restrictionOverride : props.restrictionOverride;
 	}
 
-	public isValid(roomState: AssetFrameworkRoomState | null): boolean {
-		return this.validate(roomState).success;
+	public isValid(spaceInventory: AssetFrameworkSpaceInventoryState): boolean {
+		return this.validate(spaceInventory).success;
 	}
 
-	public validate(roomState: AssetFrameworkRoomState | null): AppearanceValidationResult {
+	public validate(spaceInventory: AssetFrameworkSpaceInventoryState): AppearanceValidationResult {
 		{
-			const r = ValidateAppearanceItems(this.assetManager, this.items, roomState);
+			const r = ValidateAppearanceItems(this.assetManager, this.items, spaceInventory);
 			if (!r.success)
 				return r;
 		}
@@ -176,15 +176,15 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		return new AssetFrameworkCharacterState(this, { restrictionOverride: freeze(value, true) });
 	}
 
-	public updateRoomStateLink(roomInventory: AssetFrameworkRoomState | null, revalidate: boolean): AssetFrameworkCharacterState {
+	public updateRoomStateLink(spaceInventory: AssetFrameworkSpaceInventoryState | null, revalidate: boolean): AssetFrameworkCharacterState {
 		let updatedItems: AppearanceItems<WearableAssetType> = this.items.map((item) => {
 			if (item.isType('roomDeviceWearablePart')) {
 				const link = item.roomDeviceLink;
-				if (!roomInventory || !link)
+				if (!spaceInventory || !link)
 					return item.updateRoomStateLink(null);
 
 				// Target device must exist
-				const device = roomInventory.items.find((roomItem) => roomItem.id === link.device);
+				const device = spaceInventory.items.find((roomItem) => roomItem.id === link.device);
 				if (!device || !device.isType('roomDevice') || device.slotOccupancy.get(item.roomDeviceLink.slot) !== this.id)
 					return item.updateRoomStateLink(null);
 
@@ -202,8 +202,8 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 
 		if (revalidate) {
 			// Re-validate items as forceful removal might have broken dependencies
-			updatedItems = CharacterAppearanceLoadAndValidate(this.assetManager, updatedItems, roomInventory);
-			Assert(ValidateAppearanceItems(this.assetManager, updatedItems, roomInventory).success);
+			updatedItems = CharacterAppearanceLoadAndValidate(this.assetManager, updatedItems, spaceInventory);
+			Assert(ValidateAppearanceItems(this.assetManager, updatedItems, spaceInventory).success);
 		}
 
 		return new AssetFrameworkCharacterState(this, {
@@ -211,11 +211,11 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		});
 	}
 
-	public static createDefault(assetManager: AssetManager, characterId: CharacterId): AssetFrameworkCharacterState {
-		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, undefined, null, undefined);
+	public static createDefault(assetManager: AssetManager, characterId: CharacterId, spaceInventory: AssetFrameworkSpaceInventoryState): AssetFrameworkCharacterState {
+		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, undefined, spaceInventory, undefined);
 	}
 
-	public static loadFromBundle(assetManager: AssetManager, characterId: CharacterId, bundle: AppearanceBundle | undefined, roomState: AssetFrameworkRoomState | null, logger: Logger | undefined): AssetFrameworkCharacterState {
+	public static loadFromBundle(assetManager: AssetManager, characterId: CharacterId, bundle: AppearanceBundle | undefined, spaceInventory: AssetFrameworkSpaceInventoryState, logger: Logger | undefined): AssetFrameworkCharacterState {
 		bundle = AppearanceBundleSchema.parse(bundle ?? GetDefaultAppearanceBundle());
 
 		// Load all items
@@ -233,7 +233,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			// Properly link room device wearable parts
 			if (item.isType('roomDeviceWearablePart')) {
 				const link = item.roomDeviceLink;
-				const device = roomState?.items.find((roomItem) => roomItem.id === link?.device);
+				const device = spaceInventory.items.find((roomItem) => roomItem.id === link?.device);
 				if (device?.isType('roomDevice')) {
 					item = item.updateRoomStateLink(device);
 				}
@@ -243,7 +243,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		}
 
 		// Validate and add all items
-		const newItems = CharacterAppearanceLoadAndValidate(assetManager, loadedItems, roomState, logger);
+		const newItems = CharacterAppearanceLoadAndValidate(assetManager, loadedItems, spaceInventory, logger);
 
 		// Load pose
 		const requestedPose = _.cloneDeep(bundle.requestedPose);
@@ -269,11 +269,11 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				items: newItems,
 				requestedPose,
 				restrictionOverride: bundle.restrictionOverride,
-			}).updateRoomStateLink(roomState, true),
+			}).updateRoomStateLink(spaceInventory, true),
 			true,
 		);
 
-		Assert(resultState.isValid(roomState), 'State is invalid after load');
+		Assert(resultState.isValid(spaceInventory), 'State is invalid after load');
 
 		return resultState;
 	}

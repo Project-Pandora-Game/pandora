@@ -29,7 +29,7 @@ export function WardrobeItemConfigMenu({
 	const containerItem = useWardrobeTargetItem(target, containerPath?.itemPath);
 	const containerModule = containerPath != null ? containerItem?.getModules().get(containerPath.module) : undefined;
 	const singleItemContainer = containerModule != null && containerModule instanceof ItemModuleLockSlot;
-	const isRoomInventory = target.type === 'room' && item.container.length === 0;
+	const isSpaceInventory = target.type === 'spaceInventory' && item.container.length === 0;
 
 	const close = useCallback(() => {
 		setFocus({
@@ -96,19 +96,19 @@ export function WardrobeItemConfigMenu({
 						<img src={ deleteIcon } alt='Delete action' /> Remove and delete
 					</WardrobeActionButton>
 					{
-						!isRoomInventory ? (
+						!isSpaceInventory ? (
 							<WardrobeActionButton
 								action={ {
 									type: 'transfer',
 									source: targetSelector,
 									item,
-									target: { type: 'roomInventory' },
+									target: { type: 'spaceInventory' },
 									container: [],
 								} }
 								onExecute={ close }
 							>
 								<span>
-									<u>▽</u> Store in room
+									<u>▽</u> Store in space inventory
 								</span>
 							</WardrobeActionButton>
 						) : null

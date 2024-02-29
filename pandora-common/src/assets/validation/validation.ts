@@ -1,17 +1,17 @@
-import type { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
-import type { AssetManager } from './assetManager';
-import type { IItemLocationDescriptor, ItemId } from './item';
-import { ITEM_LIMIT_CHARACTER_WORN, ITEM_LIMIT_ROOM_INVENTORY } from './itemLimits';
-import type { AssetFrameworkRoomState } from './state/roomState';
+import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
+import type { AssetManager } from '../assetManager';
+import type { IItemLocationDescriptor, ItemId } from '../item';
+import { ITEM_LIMIT_CHARACTER_WORN, ITEM_LIMIT_SPACE_INVENTORY } from '../itemLimits';
+import type { AssetFrameworkSpaceInventoryState } from '../state/spaceInventoryState';
 
 const VALIDATIONS = {
 	character: {
 		location: 'worn',
 		limit: ITEM_LIMIT_CHARACTER_WORN,
 	},
-	room: {
-		location: 'roomInventory',
-		limit: ITEM_LIMIT_ROOM_INVENTORY,
+	spaceInventory: {
+		location: 'spaceInventory',
+		limit: ITEM_LIMIT_SPACE_INVENTORY,
 	},
 } as const satisfies Partial<Record<string, {
 	location: IItemLocationDescriptor;
@@ -21,7 +21,7 @@ const VALIDATIONS = {
 export function ValidateItemsPrefix(
 	_assetManager: AssetManager,
 	items: AppearanceItems,
-	roomState: AssetFrameworkRoomState | null,
+	spaceInventory: AssetFrameworkSpaceInventoryState | null,
 	type: keyof typeof VALIDATIONS,
 ): AppearanceValidationResult {
 	const { location, limit } = VALIDATIONS[type];
@@ -41,7 +41,7 @@ export function ValidateItemsPrefix(
 		ids.add(item.id);
 
 		// Run internal item validation
-		const r = item.validate({ location, roomState });
+		const r = item.validate({ location, spaceInventory });
 		if (!r.success)
 			return r;
 	}

@@ -7,9 +7,8 @@ import {
 	CharacterId,
 	ICharacterData,
 	IsNumber,
-	ROOM_INVENTORY_BUNDLE_DEFAULT,
-	SpaceData,
-	SpaceDirectoryConfig,
+	SPACE_INVENTORY_BUNDLE_DEFAULT,
+	SpaceData, SpaceDirectoryConfig,
 	SpaceId,
 } from 'pandora-common';
 import type { DatabaseCharacterSelfInfo } from './databaseStructure';
@@ -52,7 +51,7 @@ export function CreateSpace(data: SpaceCreationData, id?: SpaceId): SpaceData {
 	return {
 		id: id ?? `r/${nanoid()}`,
 		accessId: '',
-		inventory: ROOM_INVENTORY_BUNDLE_DEFAULT,
+		inventory: SPACE_INVENTORY_BUNDLE_DEFAULT,
 		invites: [],
 		...data,
 	};

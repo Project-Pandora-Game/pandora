@@ -1,7 +1,7 @@
 import { cloneDeep } from 'lodash';
 import { z } from 'zod';
 import { AccountId, AccountIdSchema } from '../account/account';
-import { ROOM_INVENTORY_BUNDLE_DEFAULT, RoomInventoryBundleSchema } from '../assets/state/roomState';
+import { SPACE_INVENTORY_BUNDLE_DEFAULT, SpaceInventoryBundleSchema } from '../assets/state/spaceInventoryState';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits';
 import { ArrayToRecordKeys, CloneDeepMutable } from '../utility';
@@ -144,7 +144,7 @@ export const SpaceDataSchema = z.object({
 	/** Account IDs of accounts owning this space */
 	owners: AccountIdSchema.array(),
 	config: SpaceDirectoryConfigSchema,
-	inventory: RoomInventoryBundleSchema.default(() => cloneDeep(ROOM_INVENTORY_BUNDLE_DEFAULT)),
+	inventory: SpaceInventoryBundleSchema.default(() => cloneDeep(SPACE_INVENTORY_BUNDLE_DEFAULT)),
 	invites: ZodArrayWithInvalidDrop(SpaceInviteSchema, z.record(z.unknown())).default([]),
 });
 /** Space data stored in database */

@@ -1,3 +1,4 @@
+import { Immutable } from 'immer';
 import {
 	ActionSpaceContext,
 	AppearanceActionContext,
@@ -5,25 +6,24 @@ import {
 	DoAppearanceAction,
 	EMPTY_ARRAY,
 } from 'pandora-common';
+import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import React, { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
+import { WardrobeItemConfigMenu } from '../../../components/wardrobe/itemDetail/_wardrobeItemDetail';
 import { InventoryAssetView } from '../../../components/wardrobe/views/wardrobeAssetView';
 import { InventoryItemView } from '../../../components/wardrobe/views/wardrobeItemView';
+import '../../../components/wardrobe/wardrobe.scss';
+import { WardrobeActionRandomizeButton } from '../../../components/wardrobe/wardrobeComponents';
 import { useWardrobeContext, wardrobeContext } from '../../../components/wardrobe/wardrobeContext';
 import { useWardrobeItems } from '../../../components/wardrobe/wardrobeItems';
 import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocus, WardrobeHeldItem } from '../../../components/wardrobe/wardrobeTypes';
 import { WardrobeFocusesItem } from '../../../components/wardrobe/wardrobeUtils';
-import { WardrobeItemConfigMenu } from '../../../components/wardrobe/itemDetail/_wardrobeItemDetail';
 import { Observable, useObservable } from '../../../observable';
 import { useEditor, useEditorState } from '../../editorContextProvider';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor';
-import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
-import '../../../components/wardrobe/wardrobe.scss';
-import { WardrobeActionRandomizeButton } from '../../../components/wardrobe/wardrobeComponents';
-import { Immutable } from 'immer';
 
 export const EDITOR_SPACE_CONTEXT = {
 	features: [
@@ -72,7 +72,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		}
 	}, [heldItem, globalState]);
 
-	const context = useMemo<WardrobeContext>(() => ({
+	const context = useMemo((): WardrobeContext => ({
 		target: character,
 		targetSelector: {
 			type: 'character',

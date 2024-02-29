@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import type { CharacterRestrictionsManager } from '../character/restrictionsManager';
-import type { ChatActionId, IChatMessageAction, IChatMessageActionTargetCharacter, IChatMessageActionTargetRoomInventory } from '../chat';
+import type { ChatActionId, IChatMessageAction, IChatMessageActionTargetCharacter, IChatMessageActionTargetSpaceInventory } from '../chat';
 import type { GameLogicCharacter } from '../gameLogic/character';
 import type { ActionSpaceContext } from '../space/space';
 import { ItemIdSchema, type Item } from './item/base';
@@ -29,12 +29,15 @@ export const CharacterSelectorSchema = z.object({
 	characterId: CharacterIdSchema,
 });
 
-export const RoomInventorySelectorSchema = z.object({
-	/** The item is to be found in room inventory */
-	type: z.literal('roomInventory'),
+export const SpaceInventorySelectorSchema = z.object({
+	/** The item is to be found in space inventory */
+	type: z.literal('spaceInventory'),
 });
 
-export const ActionTargetSelectorSchema = z.discriminatedUnion('type', [CharacterSelectorSchema, RoomInventorySelectorSchema]);
+export const ActionTargetSelectorSchema = z.discriminatedUnion('type', [
+	CharacterSelectorSchema,
+	SpaceInventorySelectorSchema,
+]);
 export type ActionTargetSelector = z.infer<typeof ActionTargetSelectorSchema>;
 
 export interface ActionHandlerMessageTemplate extends Omit<NonNullable<IChatMessageAction['data']>, 'character' | 'target'> {
@@ -46,8 +49,8 @@ export interface ActionHandlerMessageTemplate extends Omit<NonNullable<IChatMess
 export type ActionMessageTemplateHandler = (message: ActionHandlerMessageTemplate) => void;
 
 export type ActionHandlerMessageTargetCharacter = Pick<IChatMessageActionTargetCharacter, 'type' | 'id'>;
-export type ActionHandlerMessageTargetRoomInventory = IChatMessageActionTargetRoomInventory;
-export type ActionHandlerMessageTarget = ActionHandlerMessageTargetCharacter | ActionHandlerMessageTargetRoomInventory;
+export type ActionHandlerMessageTargetSpaceInventory = IChatMessageActionTargetSpaceInventory;
+export type ActionHandlerMessageTarget = ActionHandlerMessageTargetCharacter | ActionHandlerMessageTargetSpaceInventory;
 
 export interface ActionHandlerMessageWithTarget extends ActionHandlerMessageTemplate {
 	target?: ActionHandlerMessageTarget;
@@ -71,8 +74,8 @@ export interface ActionTargetCharacter extends ActionTargetBase {
 	getRestrictionManager(spaceContext: ActionSpaceContext): CharacterRestrictionsManager;
 }
 
-export interface ActionTargetRoomInventory extends ActionTargetBase {
-	readonly type: 'roomInventory';
+export interface ActionTargetSpaceInventory extends ActionTargetBase {
+	readonly type: 'spaceInventory';
 }
 
-export type ActionTarget = ActionTargetCharacter | ActionTargetRoomInventory;
+export type ActionTarget = ActionTargetCharacter | ActionTargetSpaceInventory;

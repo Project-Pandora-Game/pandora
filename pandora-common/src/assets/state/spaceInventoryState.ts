@@ -8,28 +8,27 @@ import type { AssetManager } from '../assetManager';
 import { Item } from '../item/base';
 import { ItemBundleSchema } from '../item/unified';
 import type { IExportOptions } from '../modules/common';
-import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation';
+import { SpaceInventoryLoadAndValidate, ValidateSpaceInventoryItems } from '../validation/inventoryValidation';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../item/base';
 
-export const RoomInventoryBundleSchema = z.object({
+export const SpaceInventoryBundleSchema = z.object({
 	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
 	clientOnly: z.boolean().optional(),
 });
 
-export type RoomInventoryBundle = z.infer<typeof RoomInventoryBundleSchema>;
-export type RoomInventoryClientBundle = RoomInventoryBundle & { clientOnly: true; };
+export type SpaceInventoryBundle = z.infer<typeof SpaceInventoryBundleSchema>;
+export type SpaceInventoryClientBundle = SpaceInventoryBundle & { clientOnly: true; };
 
-export const ROOM_INVENTORY_BUNDLE_DEFAULT: RoomInventoryBundle = {
+export const SPACE_INVENTORY_BUNDLE_DEFAULT: SpaceInventoryBundle = {
 	items: [],
 };
 
 /**
  * State of an room. Immutable.
  */
-export class AssetFrameworkRoomState {
-	public readonly type = 'roomInventory';
+export class AssetFrameworkSpaceInventoryState {
 	public readonly assetManager: AssetManager;
 
 	public readonly items: AppearanceItems;
@@ -49,7 +48,7 @@ export class AssetFrameworkRoomState {
 	@MemoizeNoArg
 	public validate(): AppearanceValidationResult {
 		{
-			const r = ValidateRoomInventoryItems(this.assetManager, this.items);
+			const r = ValidateSpaceInventoryItems(this.assetManager, this.items);
 			if (!r.success)
 				return r;
 		}
@@ -59,13 +58,13 @@ export class AssetFrameworkRoomState {
 		};
 	}
 
-	public exportToBundle(options: IExportOptions = {}): RoomInventoryBundle {
+	public exportToBundle(options: IExportOptions = {}): SpaceInventoryBundle {
 		return {
 			items: this.items.map((item) => item.exportToBundle(options)),
 		};
 	}
 
-	public exportToClientBundle(options: IExportOptions = {}): RoomInventoryClientBundle {
+	public exportToClientBundle(options: IExportOptions = {}): SpaceInventoryClientBundle {
 		options.clientOnly = true;
 		return {
 			items: this.items.map((item) => item.exportToBundle(options)),
@@ -73,19 +72,19 @@ export class AssetFrameworkRoomState {
 		};
 	}
 
-	public produceWithItems(newItems: AppearanceItems): AssetFrameworkRoomState {
-		return new AssetFrameworkRoomState(
+	public produceWithItems(newItems: AppearanceItems): AssetFrameworkSpaceInventoryState {
+		return new AssetFrameworkSpaceInventoryState(
 			this.assetManager,
 			newItems,
 		);
 	}
 
-	public static createDefault(assetManager: AssetManager): AssetFrameworkRoomState {
-		return AssetFrameworkRoomState.loadFromBundle(assetManager, ROOM_INVENTORY_BUNDLE_DEFAULT, undefined);
+	public static createDefault(assetManager: AssetManager): AssetFrameworkSpaceInventoryState {
+		return AssetFrameworkSpaceInventoryState.loadFromBundle(assetManager, SPACE_INVENTORY_BUNDLE_DEFAULT, undefined);
 	}
 
-	public static loadFromBundle(assetManager: AssetManager, bundle: RoomInventoryBundle, logger: Logger | undefined): AssetFrameworkRoomState {
-		const parsed = RoomInventoryBundleSchema.parse(bundle);
+	public static loadFromBundle(assetManager: AssetManager, bundle: SpaceInventoryBundle, logger: Logger | undefined): AssetFrameworkSpaceInventoryState {
+		const parsed = SpaceInventoryBundleSchema.parse(bundle);
 
 		// Load all items
 		const loadedItems: Item[] = [];
@@ -102,10 +101,10 @@ export class AssetFrameworkRoomState {
 		}
 
 		// Validate and add all items
-		const newItems = RoomInventoryLoadAndValidate(assetManager, loadedItems, logger);
+		const newItems = SpaceInventoryLoadAndValidate(assetManager, loadedItems, logger);
 
 		// Create the final state
-		const resultState = freeze(new AssetFrameworkRoomState(
+		const resultState = freeze(new AssetFrameworkSpaceInventoryState(
 			assetManager,
 			newItems,
 		), true);

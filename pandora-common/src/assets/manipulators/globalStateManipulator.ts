@@ -7,7 +7,7 @@ import type { AssetManager } from '../assetManager';
 import { FilterItemWearable } from '../item';
 import type { AssetFrameworkCharacterState } from '../state/characterState';
 import type { AssetFrameworkGlobalState } from '../state/globalState';
-import type { AssetFrameworkRoomState } from '../state/roomState';
+import type { AssetFrameworkSpaceInventoryState } from '../state/spaceInventoryState';
 
 export class AssetFrameworkGlobalStateManipulator {
 	public readonly assetManager: AssetManager;
@@ -21,7 +21,7 @@ export class AssetFrameworkGlobalStateManipulator {
 	public getManipulatorFor(target: ActionTargetSelector): AppearanceRootManipulator {
 		if (target.type === 'character') {
 			return new AppearanceCharacterManipulator(this, target);
-		} else if (target.type === 'roomInventory') {
+		} else if (target.type === 'spaceInventory') {
 			return new AppearanceRootManipulator(this, target);
 		}
 		AssertNever(target);
@@ -40,8 +40,8 @@ export class AssetFrameworkGlobalStateManipulator {
 		return true;
 	}
 
-	public produceRoomState(producer: (currentState: AssetFrameworkRoomState) => AssetFrameworkRoomState | null): boolean {
-		const newState = this.currentState.produceRoomState(producer);
+	public produceSpaceInventoryState(producer: (currentState: AssetFrameworkSpaceInventoryState) => AssetFrameworkSpaceInventoryState | null): boolean {
+		const newState = this.currentState.produceSpaceInventoryState(producer);
 
 		if (!newState)
 			return false;
@@ -65,9 +65,9 @@ export class AssetFrameworkGlobalStateManipulator {
 				target.characterId,
 				(character) => character.produceWithItems(wearableItems),
 			);
-		} else if (target.type === 'roomInventory') {
-			return this.produceRoomState(
-				(room) => room.produceWithItems(newItems),
+		} else if (target.type === 'spaceInventory') {
+			return this.produceSpaceInventoryState(
+				(inventory) => inventory.produceWithItems(newItems),
 			);
 		}
 		AssertNever(target);

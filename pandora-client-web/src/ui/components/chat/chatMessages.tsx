@@ -79,9 +79,9 @@ function ActionMessagePrepareDictionary(
 
 	if (itemContainerPath) {
 		if (itemContainerPath.length === 0) {
-			if (target?.type === 'roomInventory') {
+			if (target?.type === 'spaceInventory') {
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
-					`the room inventory`;
+					`the space inventory`;
 			} else {
 				metaDictionary.ITEM_CONTAINER_SIMPLE = metaDictionary.TARGET_CHARACTER;
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.TARGET_CHARACTER_DYNAMIC_REFLEXIVE;
@@ -89,9 +89,9 @@ function ActionMessagePrepareDictionary(
 		} else if (itemContainerPath.length === 1) {
 			const asset = DescribeAsset(assetManager, itemContainerPath[0].assetId);
 
-			if (target?.type === 'roomInventory') {
+			if (target?.type === 'spaceInventory') {
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
-					`${asset} in the room inventory`;
+					`${asset} in the space inventory`;
 			} else {
 				metaDictionary.ITEM_CONTAINER_SIMPLE = `${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${asset}`;
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${asset}`;
@@ -100,9 +100,9 @@ function ActionMessagePrepareDictionary(
 			const assetFirst = DescribeAsset(assetManager, itemContainerPath[0].assetId);
 			const assetLast = DescribeAsset(assetManager, itemContainerPath[itemContainerPath.length - 1].assetId);
 
-			if (target?.type === 'roomInventory') {
+			if (target?.type === 'spaceInventory') {
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
-					`the ${assetLast} in ${assetFirst} in the room inventory`;
+					`the ${assetLast} in ${assetFirst} in the space inventory`;
 			} else {
 				metaDictionary.ITEM_CONTAINER_SIMPLE = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${assetFirst}`;
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${assetFirst}`;

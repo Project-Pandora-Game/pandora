@@ -253,7 +253,7 @@ export function WardrobeRoomDeviceWearable({ roomDeviceWearable }: {
 		contents = (
 			<WardrobeActionButton action={ {
 				type: 'roomDeviceLeave',
-				target: { type: 'roomInventory' },
+				target: { type: 'spaceInventory' },
 				item: {
 					container: [],
 					itemId: roomDeviceWearable.roomDeviceLink.device,

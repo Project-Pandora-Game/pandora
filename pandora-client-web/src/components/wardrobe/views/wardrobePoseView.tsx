@@ -1,7 +1,7 @@
 import classNames from 'classnames';
+import _ from 'lodash';
 import {
 	AppearanceItemProperties,
-	AppearanceItems,
 	ArmRotationSchema,
 	AssetFrameworkCharacterState,
 	AssetsPosePreset,
@@ -17,17 +17,16 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
 import { IChatroomCharacter, useCharacterData } from '../../../character/character';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
-import { Button } from '../../common/button/button';
-import _ from 'lodash';
-import { useEvent } from '../../../common/useEvent';
-import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
-import { Column, Row } from '../../common/container/container';
-import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
-import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
-import { SelectionIndicator } from '../../common/selectionIndicator/selectionIndicator';
-import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
 import { useDebouncedValue } from '../../../common/useDebounceValue';
+import { useEvent } from '../../../common/useEvent';
+import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
+import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
+import { Button } from '../../common/button/button';
+import { Column, Row } from '../../common/container/container';
+import { FieldsetToggle } from '../../common/fieldsetToggle';
+import { SelectionIndicator } from '../../common/selectionIndicator/selectionIndicator';
+import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
+import { useWardrobeExecuteCallback } from '../wardrobeContext';
 
 type CheckedPosePreset = {
 	active: boolean;
@@ -71,25 +70,20 @@ function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkC
 	};
 }
 
-function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState, roomItems: AppearanceItems): AssetsPosePresets {
+function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState): AssetsPosePresets {
 	const assetManager = characterState.assetManager;
 	const presets: AssetsPosePresets = assetManager.getPosePresets();
 	for (const item of characterState.items) {
-		if (!item.isType('roomDeviceWearablePart') || item.roomDeviceLink == null)
+		if (!item.isType('roomDeviceWearablePart') || item.roomDevice == null)
 			continue;
 
-		const deviceId = item.roomDeviceLink.device;
-		const roomItem = roomItems.find((i) => i.id === deviceId);
-		if (!roomItem?.isType('roomDevice'))
-			continue;
-
-		if (!item.asset.definition.posePresets && !roomItem.asset.definition.posePresets)
+		if (!item.asset.definition.posePresets && !item.roomDevice.asset.definition.posePresets)
 			continue;
 
 		presets.unshift({
-			category: `Device: ${roomItem.asset.definition.name}`,
+			category: `Device: ${item.roomDevice.asset.definition.name}`,
 			poses: [
-				...roomItem.asset.definition.posePresets ?? [],
+				...item.roomDevice.asset.definition.posePresets ?? [],
 				...item.asset.definition.posePresets ?? [],
 			],
 		});
@@ -127,8 +121,7 @@ function WardrobePoseCategoriesInternal({ poses, setPose, characterState }: {
 }
 
 export function WardrobePoseCategories({ characterState, setPose }: { characterState: AssetFrameworkCharacterState; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
-	const roomItems = useWardrobeContext().globalState.getItems({ type: 'roomInventory' });
-	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, roomItems ?? []), [characterState, roomItems]);
+	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState), [characterState]);
 	return (
 		<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
 	);
@@ -324,7 +317,6 @@ export function WardrobePoseGui({ character, characterState }: {
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const [execute] = useWardrobeExecuteCallback();
-	const roomItems = useWardrobeContext().globalState.getItems({ type: 'roomInventory' });
 	const assetManager = characterState.assetManager;
 	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 
@@ -340,7 +332,7 @@ export function WardrobePoseGui({ character, characterState }: {
 		});
 	});
 
-	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, roomItems ?? []), [characterState, roomItems]);
+	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState), [characterState]);
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, 100), [setPoseDirect]);
 

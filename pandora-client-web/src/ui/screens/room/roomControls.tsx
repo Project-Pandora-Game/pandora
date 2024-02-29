@@ -31,7 +31,7 @@ export function RoomControls(): ReactElement | null {
 	return (
 		<Column padding='medium' className='controls'>
 			<Row padding='small'>
-				<Button onClick={ () => navigate('/wardrobe/room-inventory') } >Room inventory</Button>
+				<Button onClick={ () => navigate('/wardrobe/space-inventory') } >Space inventory</Button>
 				<Button onClick={ () => navigate('/space/configuration') }>Space configuration</Button>
 			</Row>
 			<br />
@@ -96,7 +96,7 @@ export function PersonalSpaceControls(): ReactElement {
 				</ContextHelpButton>
 			</span>
 			<Row padding='small'>
-				<Button slim onClick={ () => navigate('/wardrobe/room-inventory') } >Room inventory</Button>
+				<Button slim onClick={ () => navigate('/wardrobe/space-inventory') } >Space inventory</Button>
 			</Row>
 			<div className='character-info'>
 				<DisplayCharacter char={ player } />

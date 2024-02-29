@@ -16,17 +16,18 @@ import { WardrobePoseGui } from './views/wardrobePoseView';
 import { WardrobeRandomizationGui } from './views/wardrobeRandomizationView';
 import './wardrobe.scss';
 import { WardrobeBodyManipulation } from './wardrobeBody';
-import { WARDROBE_TARGET_ROOM, WardrobeContextProvider, useWardrobeContext } from './wardrobeContext';
+import { WardrobeContextProvider, useWardrobeContext } from './wardrobeContext';
 import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphics';
 import { WardrobeItemPreferences } from './wardrobeItemPreferences';
 import { WardrobeItemManipulation } from './wardrobeItems';
+import type { WardrobeTarget } from './wardrobeTypes';
 
 export function WardrobeRouter(): ReactElement | null {
 	return (
 		<Routes>
 			<Route index element={ <WardrobeRouterPlayer /> } />
 			<Route path='character/:characterId' element={ <WardrobeRouterCharacter /> } />
-			<Route path='room-inventory' element={ <WardrobeRouterRoomInventory /> } />
+			<Route path='space-inventory' element={ <WardrobeRouterSpaceInventory /> } />
 
 			<Route path='*' element={ <Navigate to='/' replace /> } />
 		</Routes>
@@ -50,13 +51,14 @@ function WardrobeRouterCharacter(): ReactElement {
 	const characters = useSpaceCharacters();
 
 	const { characterId } = useParams();
-	const parsedCharacterId = CharacterIdSchema.safeParse(characterId);
 
 	const character = useMemo((): Character<ICharacterRoomData> | null => {
+		const parsedCharacterId = CharacterIdSchema.safeParse(characterId);
+
 		if (!parsedCharacterId.success)
 			return null;
 		return characters?.find((c) => c.data.id === parsedCharacterId.data) ?? null;
-	}, [characters, parsedCharacterId]);
+	}, [characters, characterId]);
 
 	if (!character)
 		return <Link to='/'>◄ Back</Link>;
@@ -68,18 +70,20 @@ function WardrobeRouterCharacter(): ReactElement {
 	);
 }
 
-function WardrobeRouterRoomInventory(): ReactElement {
+function WardrobeRouterSpaceInventory(): ReactElement {
 	const player = usePlayer();
 	AssertNotNullable(player);
 
+	const target = useMemo((): WardrobeTarget => ({ type: 'spaceInventory' }), []);
+
 	return (
-		<WardrobeContextProvider target={ WARDROBE_TARGET_ROOM } player={ player }>
-			<WardrobeRoom />
+		<WardrobeContextProvider target={ target } player={ player }>
+			<WardrobeSpaceInventory />
 		</WardrobeContextProvider>
 	);
 }
 
-function WardrobeRoom(): ReactElement {
+function WardrobeSpaceInventory(): ReactElement {
 	const navigate = useNavigate();
 	const gameState = useGameState();
 	const characters = useSpaceCharacters();

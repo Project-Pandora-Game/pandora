@@ -6,9 +6,9 @@ import { Assert, AssertNever, AssertNotNullable } from '../utility';
 import type { AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
 import type { AppearanceActionContext } from './appearanceActions';
 import type { ActionHandlerMessage, ActionHandlerMessageWithTarget, ActionTarget, ActionTargetSelector, ItemContainerPath, ItemPath } from './appearanceTypes';
+import { SpaceInventory } from './helpers/spaceInventory';
 import type { Item, ItemId } from './item';
 import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
-import { RoomInventory } from './roomInventory';
 import type { AssetFrameworkGlobalState } from './state/globalState';
 
 export class AppearanceActionProcessingContext {
@@ -73,9 +73,8 @@ export class AppearanceActionProcessingContext {
 			return char.getAppearance(charState);
 		}
 
-		if (target.type === 'roomInventory') {
-			const state = this.manipulator.currentState.room;
-			return state != null ? new RoomInventory(state) : null;
+		if (target.type === 'spaceInventory') {
+			return new SpaceInventory(this.manipulator.currentState.spaceInventory);
 		}
 
 		AssertNever(target);

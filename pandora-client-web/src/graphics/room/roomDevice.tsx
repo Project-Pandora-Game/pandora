@@ -1,3 +1,6 @@
+import { Container, Graphics, Sprite, useApp } from '@pixi/react';
+import { Immutable } from 'immer';
+import { throttle } from 'lodash';
 import {
 	AssertNever,
 	AssetFrameworkCharacterState,
@@ -14,31 +17,28 @@ import {
 	RoomDeviceDeploymentPosition,
 	SpaceIdSchema,
 } from 'pandora-common';
-import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
-import * as PIXI from 'pixi.js';
-import { useObservable } from '../../observable';
-import { ChildrenProps } from '../../common/reactTypes';
-import { GraphicsManagerInstance } from '../../assets/graphicsManager';
-import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
-import { Container, Graphics, Sprite, useApp } from '@pixi/react';
-import { useTexture } from '../useTexture';
-import { useDebugConfig } from '../../ui/screens/room/roomDebug';
-import { MASK_SIZE, SwapCullingDirection, useItemColor } from '../graphicsLayer';
-import { Immutable } from 'immer';
-import { useAsyncEvent, useEvent } from '../../common/useEvent';
-import { throttle } from 'lodash';
-import { ShardConnector } from '../../networking/shardConnector';
-import { Character } from '../../character/character';
-import { useCharacterRestrictionsManager, useSpaceCharacters } from '../../components/gameContext/gameStateContextProvider';
 import type { FederatedPointerEvent } from 'pixi.js';
+import * as PIXI from 'pixi.js';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 import { z } from 'zod';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { BrowserStorage } from '../../browserStorage';
-import { IRoomSceneMode, RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
+import { Character } from '../../character/character';
+import { ChildrenProps } from '../../common/reactTypes';
+import { useAsyncEvent, useEvent } from '../../common/useEvent';
+import { useCharacterRestrictionsManager, useSpaceCharacters } from '../../components/gameContext/gameStateContextProvider';
+import { ShardConnector } from '../../networking/shardConnector';
+import { useObservable } from '../../observable';
+import { useDebugConfig } from '../../ui/screens/room/roomDebug';
+import { useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
+import { MASK_SIZE, SwapCullingDirection, useItemColor } from '../graphicsLayer';
+import { MovementHelperGraphics } from '../movementHelper';
+import { useTexture } from '../useTexture';
+import { EvaluateCondition } from '../utility';
 import { useRoomCharacterOffsets } from './roomCharacter';
 import { RoomDeviceRenderContext } from './roomDeviceContext';
-import { EvaluateCondition } from '../utility';
-import { useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator';
-import { MovementHelperGraphics } from '../movementHelper';
+import { IRoomSceneMode, RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
@@ -110,7 +110,7 @@ export function RoomDeviceMovementTool({
 		await shard.awaitResponse('appearanceAction', {
 			type: 'roomDeviceDeploy',
 			target: {
-				type: 'roomInventory',
+				type: 'spaceInventory',
 			},
 			item: {
 				container: [],

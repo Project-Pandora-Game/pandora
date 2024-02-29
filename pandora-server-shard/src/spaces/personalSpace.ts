@@ -1,8 +1,14 @@
-import { Space } from './space';
-import { Character } from '../character/character';
-import { AccountId, DEFAULT_BACKGROUND, GetLogger, SpaceDirectoryConfig, RoomInventoryBundle } from 'pandora-common';
 import { cloneDeep } from 'lodash';
+import {
+	AccountId,
+	DEFAULT_BACKGROUND,
+	GetLogger,
+	SpaceDirectoryConfig,
+	SpaceInventoryBundle,
+} from 'pandora-common';
 import { assetManager } from '../assets/assetManager';
+import { Character } from '../character/character';
+import { Space } from './space';
 
 export class PersonalSpace extends Space {
 	private readonly _character: Character;
@@ -32,7 +38,7 @@ export class PersonalSpace extends Space {
 		};
 	}
 
-	constructor(character: Character, inventory: RoomInventoryBundle) {
+	constructor(character: Character, inventory: SpaceInventoryBundle) {
 		super(inventory, GetLogger('Space', `[PersonalSpace ${character.id}]`));
 		this._character = character;
 	}

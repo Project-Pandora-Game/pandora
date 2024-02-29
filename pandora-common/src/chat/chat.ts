@@ -2,8 +2,8 @@ import { z } from 'zod';
 import type { AssetId } from '../assets/base';
 import { CharacterId, CharacterIdSchema } from '../character';
 import type { PronounKey } from '../character/pronouns';
-import { ChatActionId } from './chatActions';
 import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits';
+import { ChatActionId } from './chatActions';
 
 export const ChatModifierSchema = z.enum(['normal', 'bold', 'italic']);
 export type IChatModifier = z.infer<typeof ChatModifierSchema>;
@@ -80,11 +80,11 @@ export type IChatMessageActionContainerPath = {
 	module: string;
 }[];
 
-export type IChatMessageActionTargetRoomInventory = {
-	type: 'roomInventory';
+export type IChatMessageActionTargetSpaceInventory = {
+	type: 'spaceInventory';
 };
 
-export type IChatMessageActionTarget = IChatMessageActionTargetCharacter | IChatMessageActionTargetRoomInventory;
+export type IChatMessageActionTarget = IChatMessageActionTargetCharacter | IChatMessageActionTargetSpaceInventory;
 
 export type IChatMessageAction = {
 	type: 'action' | 'serverMessage';

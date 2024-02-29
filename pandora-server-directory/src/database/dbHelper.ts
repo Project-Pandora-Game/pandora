@@ -1,4 +1,14 @@
-import { AccountId, CharacterId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, ICharacterData, SpaceData, SpaceDirectoryConfig, IsNumber, SpaceId, ROOM_INVENTORY_BUNDLE_DEFAULT, ASSET_PREFERENCES_DEFAULT } from 'pandora-common';
+import {
+	ASSET_PREFERENCES_DEFAULT,
+	AccountId,
+	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
+	CharacterId,
+	ICharacterData,
+	IsNumber,
+	SPACE_INVENTORY_BUNDLE_DEFAULT,
+	SpaceData, SpaceDirectoryConfig,
+	SpaceId,
+} from 'pandora-common';
 import type { ICharacterSelfInfoDb } from './databaseProvider';
 
 import { cloneDeep } from 'lodash';
@@ -39,7 +49,7 @@ export function CreateSpace(data: SpaceCreationData, id?: SpaceId): SpaceData {
 	return {
 		id: id ?? `r/${nanoid()}`,
 		accessId: '',
-		inventory: ROOM_INVENTORY_BUNDLE_DEFAULT,
+		inventory: SPACE_INVENTORY_BUNDLE_DEFAULT,
 		invites: [],
 		...data,
 	};

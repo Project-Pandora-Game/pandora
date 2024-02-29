@@ -79,7 +79,7 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 				},
 			};
 
-		const device = context.roomState?.items.find((item) => item.isType('roomDevice') && item.id === this.roomDeviceLink?.device);
+		const device = context.spaceInventory?.items.find((item) => item.isType('roomDevice') && item.id === this.roomDeviceLink?.device);
 		if (
 			// Target device must exist
 			(device == null || device !== this.roomDevice) ||

@@ -33,12 +33,12 @@ export const LIMIT_SPACE_DESCRIPTION_LENGTH = 10_000;
 /** The maximum length of a chat message */
 export const LIMIT_CHAT_MESSAGE_LENGTH = 25_000;
 
-/** The maximum length of a direct message (not yet used) */
-/** Comment by Sekkmer:
+/** The maximum length of a direct message (not yet used)
+ *
  * Since DMs are encrypted using AES-GCM 256, and then Base64 encoded, whatever character limit we set
  * should be increased by roughly 35-40% at least when checked by directory.
  */
-export const LIMIT_DIRECT_MESSAGE_LENGTH = LIMIT_CHAT_MESSAGE_LENGTH;
+export const LIMIT_DIRECT_MESSAGE_LENGTH = 2500;
 export const LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 = LIMIT_DIRECT_MESSAGE_LENGTH * 1.4;
 
 /** The maximum length of a custom item name (not yet implemented)*/

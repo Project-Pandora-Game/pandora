@@ -18,7 +18,6 @@ const handleLog = (message: ConsoleMessage) => {
 	}
 };
 
-// eslint-disable-next-line @typescript-eslint/require-await
 export async function TestSetupPage(page: Page): Promise<void> {
 	page.on('console', handleLog);
 

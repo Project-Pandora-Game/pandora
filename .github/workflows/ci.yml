@@ -63,7 +63,7 @@ jobs:
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm run type-check:test
-      - run: pnpm run test --ci
+      - run: pnpm run test --ci --coverage
 
   test-e2e:
     name: Test (E2E)

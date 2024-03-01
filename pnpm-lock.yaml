@@ -19,6 +19,12 @@ importers:
       jest:
         specifier: 29.7.0
         version: 29.7.0(@types/node@18.19.21)(ts-node@10.9.2)
+      nyc:
+        specifier: 15.1.0
+        version: 15.1.0
+      rimraf:
+        specifier: 5.0.5
+        version: 5.0.5
 
   pandora-client-web:
     dependencies:

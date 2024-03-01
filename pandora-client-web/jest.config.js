@@ -8,6 +8,11 @@ module.exports = {
 	clearMocks: true,
 	collectCoverageFrom: ['src/**/*.ts', 'src/**/*.tsx'],
 	coverageDirectory: 'coverage',
+	coverageReporters: [
+		'html',
+		'json',
+		'text-summary',
+	],
 	errorOnDeprecated: true,
 	moduleNameMapper: {
 		'\\.(png|jpe?g|gif|svg|eot|ttf|woff2?)$': '<rootDir>/test/stubs/resourceStub.ts',

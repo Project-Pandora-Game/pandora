@@ -16,3 +16,5 @@ export const TEST_CLIENT_DIST_DIR = path.resolve(TEST_TEMP, './client_dist');
 export const TEST_SERVER_DIRECTORY_PROJECT_DIR = path.resolve(TEST_PROJECT_PANDORA_DIR, './pandora-server-directory');
 export const TEST_SERVER_DIRECTORY_ENTRYPOINT = path.resolve(TEST_SERVER_DIRECTORY_PROJECT_DIR, './dist/index.js');
 export const TEST_SERVER_DIRECTORY_TEST_DIR = path.resolve(TEST_TEMP, './server_directory');
+
+export const TEST_COVERAGE_TEMP = path.resolve(TEST_TEMP, './nyc_coverage');

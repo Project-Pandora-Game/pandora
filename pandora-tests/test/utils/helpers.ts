@@ -1,4 +1,5 @@
-import { ConsoleMessage, Page, expect } from '@playwright/test';
+import { ConsoleMessage, Page, expect, test } from '@playwright/test';
+import { CoverageProcessPage } from './coverage';
 
 const handleLog = (message: ConsoleMessage) => {
 	if (message.type() === 'error') {
@@ -20,6 +21,12 @@ const handleLog = (message: ConsoleMessage) => {
 // eslint-disable-next-line @typescript-eslint/require-await
 export async function TestSetupPage(page: Page): Promise<void> {
 	page.on('console', handleLog);
+
+	await page.coverage.startJSCoverage({
+		resetOnNavigation: false,
+	});
+
+	pagesToCleanup.push(page);
 }
 
 interface TestOpenPandoraOptions {
@@ -37,6 +44,21 @@ export async function TestOpenPandora(page: Page, options: TestOpenPandoraOption
 	if (options.agreeEula !== false) {
 		await TestPandoraAgreeEula(page);
 	}
+}
+
+// Coverage helpers
+const pagesToCleanup: Page[] = [];
+
+// This unfortunately needs to happen manually as the file is imported only once
+export function SetupTestingEnv(): void {
+	test.afterEach('Page cleanup', async ({ baseURL }): Promise<void> => {
+		for (let i = pagesToCleanup.length - 1; i >= 0; i--) {
+			const page = pagesToCleanup[i];
+			pagesToCleanup.splice(i, 1);
+
+			await CoverageProcessPage(page, baseURL);
+		}
+	});
 }
 
 // EULA helper

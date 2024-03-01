@@ -1,6 +1,8 @@
 import { test, expect } from '@playwright/test';
-import { TestOpenPandora } from './utils/helpers';
+import { SetupTestingEnv, TestOpenPandora } from './utils/helpers';
 import { TestStartDirectory, TestStopDirectory } from './utils/server';
+
+SetupTestingEnv();
 
 test.describe('Directory Connection', () => {
 	test('Should see directory toast when directory is not running', async ({ page }) => {

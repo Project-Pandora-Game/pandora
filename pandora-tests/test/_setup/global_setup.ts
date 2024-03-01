@@ -4,7 +4,7 @@ import { spawnSync, SpawnSyncOptions } from 'child_process';
 import * as fs from 'fs';
 import * as rimraf from 'rimraf';
 
-import { TEST_CLIENT_DIST_DIR, TEST_HTTP_SERVER_PORT, TEST_TEMP, TEST_CLIENT_DIRECTORY_ADDRESS, TEST_CLIENT_EDITOR_ASSETS_ADDRESS, TEST_SERVER_DIRECTORY_TEST_DIR } from './config';
+import { TEST_CLIENT_DIST_DIR, TEST_HTTP_SERVER_PORT, TEST_TEMP, TEST_CLIENT_DIRECTORY_ADDRESS, TEST_CLIENT_EDITOR_ASSETS_ADDRESS, TEST_SERVER_DIRECTORY_TEST_DIR, TEST_COVERAGE_TEMP } from './config';
 
 import type { WEBPACK_CONFIG } from '../../../pandora-client-web/src/config/definition';
 import type { EnvInputJson } from 'pandora-common';
@@ -55,6 +55,12 @@ setup('Setup', () => {
 			} satisfies EnvInputJson<typeof WEBPACK_CONFIG>,
 		});
 	}
+
+	// Clean coverage temporary directory
+	if (fs.existsSync(TEST_COVERAGE_TEMP)) {
+		rimraf.sync(TEST_COVERAGE_TEMP);
+	}
+	fs.mkdirSync(TEST_COVERAGE_TEMP);
 
 	console.log('\n--- Global setup done ---\n');
 });

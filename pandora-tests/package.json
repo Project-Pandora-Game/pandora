@@ -11,7 +11,7 @@
 		"type-check:test-e2e": "tsc -p ./test/tsconfig.json --noEmit",
 		"type-check:test-config": "tsc -p ./tsconfig.json --noEmit",
 		"test-e2e": "playwright test",
-		"coverage:report": "nyc report --cwd .. -t ./pandora-tests/temp/nyc_coverage --reporter=html",
+		"coverage:report": "nyc report --cwd .. -t ./pandora-tests/temp/nyc_coverage --report-dir ./pandora-tests/coverage --reporter=html --reporter=json --reporter=text-summary",
 		"playwright-setup": "playwright install chromium",
 		"playwright-setup-ci": "playwright install --with-deps chromium"
 	},

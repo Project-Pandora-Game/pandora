@@ -185,16 +185,13 @@ function GenerateRules(env: WebpackEnv): RuleSetRule[] {
 			test: /\.s?css$/i,
 			use: GenerateStyleLoaders(env),
 		},
-	];
-
-	if (!env.prod) {
-		moduleRules.push({
+		{
 			enforce: 'pre',
 			test: /\.js$/i,
 			exclude: /node_modules/,
 			loader: 'source-map-loader',
-		});
-	}
+		},
+	];
 
 	return moduleRules;
 }

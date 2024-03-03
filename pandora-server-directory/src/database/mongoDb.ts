@@ -176,6 +176,9 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		let migration: DbAutomaticMigration | undefined;
 		if (!inMemory || dbPath) {
+
+			await this.doManualMigrations();
+
 			if (DATABASE_MIGRATION !== 'disable') {
 				migration = {
 					dryRun: DATABASE_MIGRATION !== 'migrate',
@@ -553,6 +556,10 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async setConfig<T extends DatabaseConfigType>(type: T, data: DatabaseConfigData<T>): Promise<void> {
 		await this._config.updateOne({ type }, { $set: { data } }, { upsert: true });
+	}
+
+	private async doManualMigrations(): Promise<void> {
+		// Add manual migrations here
 	}
 }
 

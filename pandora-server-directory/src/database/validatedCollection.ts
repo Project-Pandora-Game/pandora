@@ -2,7 +2,7 @@ import type { ZodType, ZodTypeDef } from 'zod';
 import type { ConditionalKeys } from 'type-fest';
 import { diffString } from 'json-diff';
 import { isEqual, omit } from 'lodash';
-import { Collection, Db, Document, IndexDescription, ObjectId, WithId, type CollationOptions } from 'mongodb';
+import { Collection, Db, Document, IndexDescription, ObjectId, WithId, CollationOptions, MongoClient } from 'mongodb';
 import { ArrayToRecordKeys, Assert, IsObject, KnownObject, Logger } from 'pandora-common';
 
 export interface DbAutomaticMigration {
@@ -12,6 +12,21 @@ export interface DbAutomaticMigration {
 	success: boolean;
 	totalCount: number;
 	changeCount: number;
+}
+
+export interface DbManualMigrationProcess<TNew extends Document, TOld extends Document> {
+	readonly self: ValidatedCollection<TNew>;
+	readonly client: MongoClient;
+	readonly db: Db;
+	readonly logger: Logger;
+	readonly oldCollection: Collection<Document>;
+	readonly oldStream: AsyncIterableIterator<TOld | null>;
+}
+
+export interface DbManualMigration<TNew extends Document, TOld extends Document> {
+	readonly oldSchema: ZodType<TOld, ZodTypeDef, unknown>;
+	readonly oldCollectionName?: string;
+	readonly migrate: (process: DbManualMigrationProcess<TNew, TOld>) => Promise<void>;
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,6 +49,23 @@ export class ValidatedCollection<T extends Document> {
 		this.name = name;
 		this.schema = schema;
 		this.indexes = indexes;
+	}
+
+	public async doManualMigration<TOldType extends Document = T>(client: MongoClient, db: Db, migration: DbManualMigration<T, TOldType>): Promise<void> {
+		const logger = this.logger.prefixMessages(`[Manual Migration ${this.name}]`);
+		const oldCollection = db.collection(migration.oldCollectionName ?? this.name);
+		const oldStream = new ValidatedAsyncIter(logger, oldCollection, migration.oldSchema);
+
+		const process: DbManualMigrationProcess<T, TOldType> = {
+			self: this,
+			client,
+			db,
+			logger,
+			oldCollection,
+			oldStream,
+		};
+
+		await migration.migrate(process);
 	}
 
 	public async max<TKey extends ConditionalKeys<WithId<T>, number> & string>(key: TKey, fallback: WithId<T>[TKey]): Promise<WithId<T>[TKey]> {
@@ -190,5 +222,42 @@ export class ValidatedCollection<T extends Document> {
 				log.error(`Failed to migrate ${this.name} document ${documentId.toHexString()}: Update matched count is ${matchedCount}`);
 			}
 		}
+	}
+}
+
+class ValidatedAsyncIter<T extends Document> implements AsyncIterableIterator<T | null> {
+	private readonly name: string;
+	private readonly logger: Logger;
+	private readonly iter: AsyncIterator<WithId<Document>>;
+	private readonly schema: ZodType<T, ZodTypeDef, unknown>;
+
+	constructor(logger: Logger, document: Collection, schema: ZodType<T, ZodTypeDef, unknown>) {
+		this.logger = logger;
+		this.name = document.collectionName;
+		this.iter = document.find().stream()[Symbol.asyncIterator]();
+		this.schema = schema;
+	}
+
+	public async next(): Promise<IteratorResult<T | null>> {
+		const ret = await this.iter.next();
+		if (ret.done) {
+			return { done: true, value: undefined };
+		}
+
+		const originalData = ret.value;
+		const documentId: ObjectId = originalData._id;
+		Assert(documentId instanceof ObjectId);
+
+		const parsedData = this.schema.safeParse(originalData);
+		if (!parsedData.success) {
+			this.logger.error(`Failed to migrate ${this.name} document ${documentId.toHexString()}:\n`, parsedData.error);
+			return { done: false, value: null };
+		}
+
+		return { done: false, value: parsedData.data };
+	}
+
+	public [Symbol.asyncIterator](): AsyncIterableIterator<T | null> {
+		return this;
 	}
 }

@@ -132,7 +132,7 @@ const directMessageCollection = new ValidatedCollection(
 );
 
 export default class MongoDatabase implements PandoraDatabase {
-	private readonly _lock: AsyncLock;
+	protected readonly _lock: AsyncLock;
 	private readonly _init: MongoDbInit;
 	private _client!: MongoClient;
 	private _inMemoryServer!: MongoMemoryServer;
@@ -257,24 +257,22 @@ export default class MongoDatabase implements PandoraDatabase {
 		return await this._accounts.findOne({ 'secure.emailHash': emailHash });
 	}
 
+	@DbSynchronized()
 	public async createAccount(data: DatabaseAccountWithSecure): Promise<DatabaseAccountWithSecure | 'usernameTaken' | 'emailTaken'> {
-		return await this._lock.acquire('createAccount', async () => {
-
-			const existingUsername = await this._accounts.findOne({ username: data.username }, {
-				collation: COLLATION_CASE_INSENSITIVE,
-			});
-			if (existingUsername)
-				return 'usernameTaken';
-
-			const existingEmail = await this._accounts.findOne({ 'secure.emailHash': data.secure.emailHash });
-			if (existingEmail)
-				return 'emailTaken';
-
-			data.id = this._nextAccountId++;
-			await this._accounts.insertOne(data);
-
-			return await this.getAccountById(data.id) as DatabaseAccountWithSecure;
+		const existingUsername = await this._accounts.findOne({ username: data.username }, {
+			collation: COLLATION_CASE_INSENSITIVE,
 		});
+		if (existingUsername)
+			return 'usernameTaken';
+
+		const existingEmail = await this._accounts.findOne({ 'secure.emailHash': data.secure.emailHash });
+		if (existingEmail)
+			return 'emailTaken';
+
+		data.id = this._nextAccountId++;
+		await this._accounts.insertOne(data);
+
+		return await this.getAccountById(data.id) as DatabaseAccountWithSecure;
 	}
 
 	public async updateAccountData(id: AccountId, data: DatabaseAccountUpdate): Promise<void> {
@@ -315,18 +313,17 @@ export default class MongoDatabase implements PandoraDatabase {
 		return result;
 	}
 
+	@DbSynchronized()
 	public async createCharacter(accountId: AccountId): Promise<ICharacterSelfInfoDb> {
-		return await this._lock.acquire('createCharacter', async () => {
-			if (!await this.getAccountById(accountId))
-				throw new Error('Account not found');
+		if (!await this.getAccountById(accountId))
+			throw new Error('Account not found');
 
-			const [info, char] = CreateCharacter(accountId, this._nextCharacterId++);
+		const [info, char] = CreateCharacter(accountId, this._nextCharacterId++);
 
-			await this._accounts.updateOne({ id: accountId }, { $push: { characters: info } });
-			await this._characters.insertOne(char);
+		await this._accounts.updateOne({ id: accountId }, { $push: { characters: info } });
+		await this._characters.insertOne(char);
 
-			return info;
-		});
+		return info;
 	}
 
 	public async finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<ICharacterData | null> {
@@ -447,14 +444,13 @@ export default class MongoDatabase implements PandoraDatabase {
 			.toArray();
 	}
 
+	@DbSynchronized()
 	public async createSpace(data: SpaceCreationData, id?: SpaceId): Promise<SpaceData> {
-		return await this._lock.acquire('createSpace', async () => {
-			const space = CreateSpace(data, id);
+		const space = CreateSpace(data, id);
 
-			const result = await this._spaces.insertOne(space);
-			Assert(result.acknowledged);
-			return space;
-		});
+		const result = await this._spaces.insertOne(space);
+		Assert(result.acknowledged);
+		return space;
 	}
 
 	public async updateSpace(id: SpaceId, data: SpaceDataDirectoryUpdate & SpaceDataShardUpdate, accessId: string | null): Promise<boolean> {
@@ -483,6 +479,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		return result ?? null;
 	}
 
+	@DbSynchronized((name, args) => `${name}-${args[0]}`)
 	public async setDirectMessage(accounts: DirectMessageAccounts, keyHash: string, message: DatabaseDirectMessage, maxCount: number): Promise<boolean> {
 		const data = await this._directMessages.findOne({ accounts });
 		if (!data) {
@@ -515,7 +512,16 @@ export default class MongoDatabase implements PandoraDatabase {
 			data.messages = data.messages.slice(-maxCount);
 		}
 
-		await this._directMessages.updateOne({ accounts }, { $set: data });
+		await this._directMessages.updateOne(
+			{ accounts },
+			{
+				$set: {
+					keyHash: data.keyHash,
+					messages: data.messages,
+				},
+			},
+		);
+
 		return true;
 	}
 
@@ -697,4 +703,15 @@ function Id(obj: Omit<ICharacterData, 'id'> & { id: number; }): ICharacterData {
 
 function PlainId(id: CharacterId): number {
 	return parseInt(id.slice(1));
+}
+
+function DbSynchronized<Args extends unknown[], Return>(getKey?: (name: string, args: Args) => string) {
+	return function (method: (...args: Args) => Promise<Return>, context: ClassMethodDecoratorContext<MongoDatabase>) {
+		Assert(typeof context.name === 'string');
+		const name = context.name;
+		return function (this: MongoDatabase, ...args: Args) {
+			const key = getKey == null ? name : getKey(name, args);
+			return this._lock.acquire<Return>(key, () => method.apply(this, args));
+		};
+	};
 }

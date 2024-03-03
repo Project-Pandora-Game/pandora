@@ -12,9 +12,10 @@ import {
 	IShardTokenInfo,
 	LIMIT_ACCOUNT_PROFILE_LENGTH,
 	ZodCast,
+	ZodTemplateString,
 	ZodTruncate,
 } from 'pandora-common';
-import { z, type ZodType } from 'zod';
+import { z } from 'zod';
 import { AccountTokenReason } from '../account/accountSecure';
 import { GitHubTeamSchema } from '../services/github/githubVerify';
 import { ICharacterSelfInfoDb } from './databaseProvider';
@@ -57,7 +58,8 @@ export type DatabaseDirectMessageInfo = Omit<IDirectoryDirectMessageInfo, 'displ
 	closed?: true;
 };
 
-export const DatabaseDirectMessageAccountsKeySchema = z.string() as unknown as ZodType<DirectMessageAccounts>;
+export const DatabaseDirectMessageAccountsKeySchema = ZodTemplateString<DirectMessageAccounts>(z.string(), /^\d+-\d+$/);
+
 export const DatabaseDirectMessageSchema = z.object({
 	content: z.string(),
 	source: z.number(),

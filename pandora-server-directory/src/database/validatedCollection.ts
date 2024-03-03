@@ -65,7 +65,7 @@ export class ValidatedCollection<T extends Document> {
 	public async doManualMigration<TOldType extends Document = T>(client: MongoClient, db: Db, migration: DbManualMigration<T, TOldType>): Promise<void> {
 		const logger = this.logger.prefixMessages(`[Manual Migration ${this.name}]`);
 		const oldCollection = db.collection(migration.oldCollectionName ?? this.name);
-		const oldStream = new ValidatedAsyncIter(logger, oldCollection, migration.oldSchema);
+		const oldStream = ValidatingAsyncIter(logger, oldCollection, migration.oldSchema);
 
 		const process: DbManualMigrationProcess<T, TOldType> = {
 			self: this,
@@ -236,39 +236,17 @@ export class ValidatedCollection<T extends Document> {
 	}
 }
 
-class ValidatedAsyncIter<T extends Document> implements AsyncIterableIterator<T | null> {
-	private readonly name: string;
-	private readonly logger: Logger;
-	private readonly iter: AsyncIterator<WithId<Document>>;
-	private readonly schema: ZodType<T, ZodTypeDef, unknown>;
-
-	constructor(logger: Logger, document: Collection, schema: ZodType<T, ZodTypeDef, unknown>) {
-		this.logger = logger;
-		this.name = document.collectionName;
-		this.iter = document.find().stream()[Symbol.asyncIterator]();
-		this.schema = schema;
-	}
-
-	public async next(): Promise<IteratorResult<T | null>> {
-		const ret = await this.iter.next();
-		if (ret.done) {
-			return { done: true, value: undefined };
-		}
-
-		const originalData = ret.value;
+async function* ValidatingAsyncIter<T extends Document>(logger: Logger, document: Collection, schema: ZodType<T, ZodTypeDef, unknown>): AsyncGenerator<T | null, void, unknown> {
+	for await (const originalData of document.find().stream()) {
 		const documentId: ObjectId = originalData._id;
 		Assert(documentId instanceof ObjectId);
 
-		const parsedData = this.schema.safeParse(originalData);
+		const parsedData = schema.safeParse(originalData);
 		if (!parsedData.success) {
-			this.logger.error(`Failed to migrate ${this.name} document ${documentId.toHexString()}:\n`, parsedData.error);
-			return { done: false, value: null };
+			logger.error(`Failed to migrate ${document.collectionName} document ${documentId.toHexString()}:\n`, parsedData.error);
+			yield null;
+		} else {
+			yield parsedData.data;
 		}
-
-		return { done: false, value: parsedData.data };
-	}
-
-	public [Symbol.asyncIterator](): AsyncIterableIterator<T | null> {
-		return this;
 	}
 }

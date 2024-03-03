@@ -390,6 +390,9 @@ importers:
       socket.io:
         specifier: 4.6.1
         version: 4.6.1
+      type-fest:
+        specifier: 4.10.3
+        version: 4.10.3
       wtfnode:
         specifier: 0.9.1
         version: 0.9.1
@@ -12921,7 +12924,6 @@ packages:
   /type-fest@4.10.3:
     resolution: {integrity: sha512-JLXyjizi072smKGGcZiAJDCNweT8J+AuRxmPZ1aG7TERg4ijx9REl8CNhbr36RV4qXqL1gO1FF9HL8OkVmmrsA==}
     engines: {node: '>=16'}
-    dev: true
 
   /type-is@1.6.18:
     resolution: {integrity: sha512-TkRKr9sUTxEH8MdfuCSP7VizJyzRNMjj2J2do2Jr3Kym598JVdEksuzPQCnlFPW4ky9Q+iA+ma9BGm06XQBy8g==}

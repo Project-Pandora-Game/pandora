@@ -1,11 +1,9 @@
 import { createHash } from 'crypto';
-import type { IClientDirectoryArgument, IClientDirectoryPromiseResult, IDirectoryClientArgument, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
+import { LIMIT_DIRECT_MESSAGE_STORE_COUNT, IClientDirectoryArgument, IClientDirectoryPromiseResult, IDirectoryClientArgument, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { Account, GetDirectMessageId } from './account';
 import { accountManager } from './accountManager';
-import { DatabaseDirectMessageInfo } from '../database/databaseStructure';
-
-const MESSAGE_MAX_COUNT = 50;
+import type { DatabaseDirectMessageInfo, DatabaseDirectMessage } from '../database/databaseStructure';
 
 let lastMessageTime = 0;
 /** TODO: handle host machine time jumping backwards */
@@ -99,14 +97,14 @@ export class AccountDirectMessages {
 		}
 		const time = GetNextMessageTime();
 		const accounts = GetDirectMessageId(this._account, target);
-		const message = {
+		const message: DatabaseDirectMessage = {
 			content,
 			time: editing ?? time,
 			source: this._account.id,
 			edited: editing ? time : undefined,
 		};
 		const keyHash = KeyHash(this._publicKey, target.directMessages._publicKey);
-		if (!await GetDatabase().setDirectMessage(accounts, keyHash, message, MESSAGE_MAX_COUNT)) {
+		if (!await GetDatabase().setDirectMessage(accounts, keyHash, message, LIMIT_DIRECT_MESSAGE_STORE_COUNT)) {
 			return { result: 'messageNotFound' };
 		}
 		if (editing === undefined) {

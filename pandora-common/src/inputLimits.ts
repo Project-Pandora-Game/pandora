@@ -41,6 +41,8 @@ export const LIMIT_CHAT_MESSAGE_LENGTH = 25_000;
 export const LIMIT_DIRECT_MESSAGE_LENGTH = 2500;
 export const LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 = LIMIT_DIRECT_MESSAGE_LENGTH * 1.4;
 
+export const LIMIT_DIRECT_MESSAGE_STORE_COUNT = 50;
+
 /** The maximum length of a custom item name (not yet implemented)*/
 export const LIMIT_ITEM_NAME_LENGTH = 40;
 

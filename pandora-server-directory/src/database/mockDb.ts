@@ -328,16 +328,16 @@ export class MockDatabase implements PandoraDatabase {
 	}
 
 	public setDirectMessage(accounts: DirectMessageAccounts, keyHash: string, message: DatabaseDirectMessage, maxCount: number): Promise<boolean> {
-		let data = this.directMessagesDb.get(accounts);
+		const data = this.directMessagesDb.get(accounts);
 		if (!data) {
 			if (message.edited != null)
 				return Promise.resolve(false);
 
-			data = {
+			this.directMessagesDb.set(accounts, {
 				accounts,
 				keyHash,
 				messages: [message],
-			};
+			});
 			return Promise.resolve(true);
 		}
 

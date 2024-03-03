@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { CollationOptions, Db, MatchKeysAndValues, MongoClient, MongoServerError } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
-import { AccountId, ArrayToRecordKeys, Assert, AssertNotNullable, CharacterDataSchema, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, IDirectoryDirectMessage, SPACE_DIRECTORY_PROPERTIES, SpaceData, SpaceDataDirectoryUpdate, SpaceDataSchema, SpaceDataShardUpdate, SpaceDirectoryData, SpaceId, ZodCast } from 'pandora-common';
+import { AccountId, ArrayToRecordKeys, Assert, AssertNotNullable, CharacterDataSchema, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, IDirectoryDirectMessage, LIMIT_DIRECT_MESSAGE_STORE_COUNT, SPACE_DIRECTORY_PROPERTIES, SpaceData, SpaceDataDirectoryUpdate, SpaceDataSchema, SpaceDataShardUpdate, SpaceDirectoryData, SpaceId, ZodCast } from 'pandora-common';
 import { z } from 'zod';
 import { ENV } from '../config';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
@@ -620,7 +620,7 @@ export default class MongoDatabase implements PandoraDatabase {
 				for (const dms of result.values()) {
 					dms.messages = dms.messages
 						.sort((a, b) => a.time - b.time)
-						.slice(-100);
+						.slice(-LIMIT_DIRECT_MESSAGE_STORE_COUNT);
 				}
 
 				log.info(`Loaded ${result.size} accounts, ${totalCount} direct message conversations`);

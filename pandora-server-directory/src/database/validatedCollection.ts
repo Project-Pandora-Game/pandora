@@ -37,7 +37,14 @@ export class ValidatedCollection<T extends Document> {
 	public readonly name: string;
 	public readonly schema: ZodType<T, ZodTypeDef, unknown>;
 	public readonly indexes: (IndexDescription & { name: string; })[];
-	private collection!: Collection<T>;
+	private uninitializedCollection?: Collection<T>;
+
+	private get collection(): Collection<T> {
+		if (this.uninitializedCollection == null) {
+			throw new Error(`Collection ${this.name} not initialized`);
+		}
+		return this.uninitializedCollection;
+	}
 
 	constructor(
 		logger: Logger,
@@ -49,6 +56,10 @@ export class ValidatedCollection<T extends Document> {
 		this.name = name;
 		this.schema = schema;
 		this.indexes = indexes;
+	}
+
+	public onDestroy(): void {
+		delete this.uninitializedCollection;
 	}
 
 	public async doManualMigration<TOldType extends Document = T>(client: MongoClient, db: Db, migration: DbManualMigration<T, TOldType>): Promise<void> {
@@ -75,8 +86,8 @@ export class ValidatedCollection<T extends Document> {
 	}
 
 	public async create(db: Db, migration?: DbAutomaticMigration): Promise<Collection<T>> {
-		if (this.collection == null) {
-			this.collection = db.collection(this.name);
+		if (this.uninitializedCollection == null) {
+			this.uninitializedCollection = db.collection(this.name);
 			await this.updateIndexes(this.collection);
 		}
 		if (migration != null) {

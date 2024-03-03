@@ -220,6 +220,15 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async onDestroy(): Promise<void> {
+		[
+			accountCollection,
+			characterCollection,
+			accountContactCollection,
+			spaceCollection,
+			configCollection,
+			directMessageCollection,
+		].forEach((c) => c.onDestroy());
+
 		await this._client.close();
 		if (this._inMemoryServer) {
 			await this._inMemoryServer.stop();

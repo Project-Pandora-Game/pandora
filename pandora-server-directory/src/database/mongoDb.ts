@@ -1,9 +1,9 @@
 import AsyncLock from 'async-lock';
 import _ from 'lodash';
-import { CollationOptions, Db, MatchKeysAndValues, MongoClient, MongoServerError } from 'mongodb';
+import { CollationOptions, Db, MatchKeysAndValues, MongoClient } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
-import { AccountId, ArrayToRecordKeys, Assert, AssertNotNullable, CharacterDataSchema, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, IDirectoryDirectMessage, LIMIT_DIRECT_MESSAGE_STORE_COUNT, SPACE_DIRECTORY_PROPERTIES, SpaceData, SpaceDataDirectoryUpdate, SpaceDataSchema, SpaceDataShardUpdate, SpaceDirectoryData, SpaceId, ZodCast } from 'pandora-common';
+import { AccountId, ArrayToRecordKeys, Assert, AssertNotNullable, CharacterDataSchema, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, SPACE_DIRECTORY_PROPERTIES, SpaceData, SpaceDataDirectoryUpdate, SpaceDataSchema, SpaceDataShardUpdate, SpaceDirectoryData, SpaceId, ZodCast } from 'pandora-common';
 import { z } from 'zod';
 import { ENV } from '../config';
 import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
@@ -593,81 +593,6 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	private async doManualMigrations(): Promise<void> {
 		// Add manual migrations here
-		await directMessageCollection.doManualMigration(this._client, this._db, {
-			oldSchema: ZodCast<IDirectoryDirectMessage & { accounts: DirectMessageAccounts; }>(),
-			migrate: async ({ self, logger: log, db, client, oldStream, oldCollection }) => {
-				const result = new Map<string, z.infer<typeof self.schema>>();
-
-				let success = true;
-				let totalCount = 0;
-
-				for await (const data of oldStream) {
-					if (data == null) {
-						success = false;
-						continue;
-					}
-
-					let dms = result.get(data.accounts);
-					if (!dms) {
-						dms = {
-							accounts: data.accounts,
-							keyHash: data.keyHash,
-							messages: [],
-						};
-						result.set(data.accounts, dms);
-					}
-					if (dms.keyHash !== data.keyHash) {
-						log.warning(`Key hash mismatch for account ${data.accounts}`);
-						dms.keyHash = data.keyHash;
-						dms.messages = [];
-					}
-					dms.messages.push({
-						content: data.content,
-						source: data.source,
-						time: data.time,
-						edited: data.edited,
-					});
-					++totalCount;
-				}
-				if (!success)
-					throw new Error('Migration failed');
-
-				for (const dms of result.values()) {
-					dms.messages = dms.messages
-						.sort((a, b) => a.time - b.time)
-						.slice(-LIMIT_DIRECT_MESSAGE_STORE_COUNT);
-				}
-
-				log.info(`Loaded ${result.size} accounts, ${totalCount} direct message conversations`);
-
-				const session = client.startSession();
-				try {
-					await session.withTransaction(async () => {
-						try {
-							await oldCollection.drop();
-						} catch (e) {
-							if (e instanceof MongoServerError && e.message === 'ns not found') {
-								// Ignore, collection doesn't exist
-							} else {
-								throw e;
-							}
-						}
-						const newCollection = await self.create(db);
-						for (const dms of result.values()) {
-							await newCollection.insertOne(dms);
-						}
-						const docCount = await newCollection.countDocuments();
-						if (result.size !== docCount) {
-							log.error(`Migration failed: Document count mismatch ${result.size} !== ${docCount}`);
-							await session.abortTransaction();
-						}
-					});
-					log.info('Migration successful');
-				} finally {
-					await session.endSession();
-				}
-			},
-		});
 	}
 }
 

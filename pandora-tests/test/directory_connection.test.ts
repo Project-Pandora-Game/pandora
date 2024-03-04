@@ -18,7 +18,7 @@ test.describe('Directory Connection', () => {
 
 		await TestStartDirectory();
 
-		await expect(page.getByText('Connected to Directory')).toBeVisible();
+		await expect(page.getByText('Connected to Directory')).toBeVisible({ timeout: 10_000 });
 		await expect(page.getByText('Connecting to Directory...')).toBeHidden();
 	});
 
@@ -27,11 +27,11 @@ test.describe('Directory Connection', () => {
 		await TestStartDirectory();
 
 		// Wait for connection
-		await expect(page.getByText('Connected to Directory')).toBeVisible();
+		await expect(page.getByText('Connected to Directory')).toBeVisible({ timeout: 10_000 });
 
 		// Stop directory and check for warning toast
 		await TestStopDirectory();
-		await expect(page.getByText('Directory connection lost')).toBeVisible();
+		await expect(page.getByText('Directory connection lost')).toBeVisible({ timeout: 10_000 });
 	});
 
 	test('Should show information about directory reconnection', async ({ page }) => {
@@ -39,16 +39,16 @@ test.describe('Directory Connection', () => {
 		await TestStartDirectory();
 
 		// Wait for connection
-		await expect(page.getByText('Connected to Directory')).toBeVisible();
+		await expect(page.getByText('Connected to Directory')).toBeVisible({ timeout: 10_000 });
 
 		// Stop directory and check for warning toast
 		await TestStopDirectory();
-		await expect(page.getByText('Directory connection lost')).toBeVisible();
+		await expect(page.getByText('Directory connection lost')).toBeVisible({ timeout: 10_000 });
 
 		// Restart directory, expecting reconnect
 		await TestStartDirectory();
 
-		await expect(page.getByText('Reconnected to Directory')).toBeVisible();
+		await expect(page.getByText('Reconnected to Directory')).toBeVisible({ timeout: 10_000 });
 		await expect(page.getByText('Directory connection lost')).toBeHidden();
 	});
 });

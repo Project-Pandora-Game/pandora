@@ -1,6 +1,6 @@
 import { Assert, AssertNotNullable, EnvStringify } from './utils';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
-import { TEST_DIRECTORY_PORT, TEST_SERVER_DIRECTORY_ENTRYPOINT, TEST_SERVER_DIRECTORY_TEST_DIR, TEST_TEMP } from '../_setup/config';
+import { TEST_COVERAGE_TEMP, TEST_DIRECTORY_PORT, TEST_PROJECT_PANDORA_DIR, TEST_SERVER_DIRECTORY_ENTRYPOINT, TEST_SERVER_DIRECTORY_TEST_DIR, TEST_TEMP } from '../_setup/config';
 import { test } from '@playwright/test';
 import path from 'path';
 
@@ -39,12 +39,14 @@ export interface TestStartDirectoryOptions {
 	configOverrides: Partial<DirectoryEnvSetup>;
 }
 
-let DirectoryServer: {
+type ServerInstanceData = {
 	process: ChildProcessWithoutNullStreams;
 	keepActive: boolean;
 	stdout: string;
 	stderr: string;
-} | null = null;
+};
+
+let DirectoryServer: ServerInstanceData | null = null;
 
 const HandlePrematureExit = (code: number | null, signal: NodeJS.Signals | null) => {
 	Assert(DirectoryServer != null);
@@ -95,7 +97,17 @@ test.afterAll(async () => {
 export function TestStartDirectory(options: Partial<TestStartDirectoryOptions> = {}): Promise<void> {
 	Assert(DirectoryServer == null);
 
-	const directoryProcess = spawn('node', ['--enable-source-maps', TEST_SERVER_DIRECTORY_ENTRYPOINT], {
+	const directoryProcess = spawn('pnpm', [
+		'exec',
+		'nyc',
+		'--silent',
+		'--no-clean', // Clean is handled by global setup
+		'--cwd', TEST_PROJECT_PANDORA_DIR, // This is "working directory" only for istanbul, not for rest of command
+		'--temp-dir', TEST_COVERAGE_TEMP, // This needs to be an absolute path
+		'node',
+		'--enable-source-maps',
+		TEST_SERVER_DIRECTORY_ENTRYPOINT,
+	], {
 		cwd: TEST_TEMP,
 		env: EnvStringify({
 			...process.env,
@@ -105,20 +117,20 @@ export function TestStartDirectory(options: Partial<TestStartDirectoryOptions> =
 		stdio: 'pipe',
 	});
 
-	DirectoryServer = {
+	const instanceData: ServerInstanceData = {
 		process: directoryProcess,
 		keepActive: options.keepActive === true,
 		stderr: '',
 		stdout: '',
 	};
 
+	DirectoryServer = instanceData;
+
 	directoryProcess.stdout.on('data', function (data: string | Buffer) {
-		Assert(DirectoryServer?.process === directoryProcess);
-		DirectoryServer.stdout += data.toString();
+		instanceData.stdout += data.toString();
 	});
 	directoryProcess.stderr.on('data', function (data: string | Buffer) {
-		Assert(DirectoryServer?.process === directoryProcess);
-		DirectoryServer.stderr += data.toString();
+		instanceData.stderr += data.toString();
 	});
 	directoryProcess.on('exit', HandlePrematureExit);
 

@@ -11,6 +11,11 @@ module.exports = {
 		'!src/index.ts',
 	],
 	coverageDirectory: 'coverage',
+	coverageReporters: [
+		'html',
+		'json',
+		'text-summary',
+	],
 	errorOnDeprecated: true,
 	setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
 	transform: {

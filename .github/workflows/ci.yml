@@ -63,7 +63,7 @@ jobs:
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm run type-check:test
-      - run: pnpm run test --ci
+      - run: pnpm run test --ci --coverage
 
   test-e2e:
     name: Test (E2E)
@@ -83,6 +83,8 @@ jobs:
         run: pnpm run -C pandora-tests type-check
       - name: Run E2E tests
         run: pnpm run -C pandora-tests test-e2e
+      - name: Collect coverage
+        run: pnpm run -C pandora-tests coverage:report --reporter=text
       - name: Save test report
         uses: actions/upload-artifact@v4
         if: always()

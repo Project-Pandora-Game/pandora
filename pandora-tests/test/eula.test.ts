@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { TEST_EULA_TEXT, TestOpenPandora } from './utils/helpers';
+import { SetupTestingEnv, TEST_EULA_TEXT, TestOpenPandora } from './utils/helpers';
+
+SetupTestingEnv();
 
 test.describe('EULA', () => {
 	test('Shows privacy policy', async ({ page }) => {

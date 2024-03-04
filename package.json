@@ -14,7 +14,7 @@
 	},
 	"scripts": {
 		"postinstall": "node .hooks/postinstall.cjs",
-		"ci": "pnpm run build && pnpm run check-common-install && pnpm run lint && pnpm run type-check:test && pnpm run test --ci && pnpm run test-e2e",
+		"ci": "pnpm run build && pnpm run check-common-install && pnpm run lint && pnpm run type-check:test && pnpm run test --ci --coverage && pnpm run test-e2e && pnpm run coverage:collect",
 		"deploy": "pnpm run build && pnpm run deploy-client-rsync",
 		"deploy-client": "pnpm --filter pandora-client-web run build && pnpm run deploy-client-rsync",
 		"deploy-client-rsync": "rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist",
@@ -23,7 +23,8 @@
 		"lint:fix": "pnpm -r --no-bail --parallel run lint:fix",
 		"type-check:test": "pnpm -r --no-bail --parallel run type-check:test",
 		"test": "pnpm -r --no-bail --parallel run test",
-		"test-e2e": "pnpm run -C pandora-tests type-check && pnpm run -C pandora-tests playwright-setup && pnpm run -C pandora-tests test-e2e",
+		"test-e2e": "pnpm run -C pandora-tests type-check && pnpm run -C pandora-tests playwright-setup && pnpm run -C pandora-tests test-e2e && pnpm run -C pandora-tests coverage:report",
+		"coverage:collect": "node .hooks/coverage-collect.cjs",
 		"build": "pnpm -r --no-bail run build",
 		"dev": "pnpm --filter pandora-common run build && pnpm -r --parallel run dev"
 	},
@@ -31,6 +32,8 @@
 		"js-yaml": "4.1.0"
 	},
 	"devDependencies": {
-		"jest": "29.7.0"
+		"jest": "29.7.0",
+		"nyc": "15.1.0",
+		"rimraf": "5.0.5"
 	}
 }

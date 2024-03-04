@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { TestOpenPandora } from './utils/helpers';
+import { SetupTestingEnv, TestOpenPandora } from './utils/helpers';
+
+SetupTestingEnv();
 
 test.describe('Load', () => {
 	test('Should load Pandora', async ({ page }) => {

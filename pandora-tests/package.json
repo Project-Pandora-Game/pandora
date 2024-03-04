@@ -11,6 +11,7 @@
 		"type-check:test-e2e": "tsc -p ./test/tsconfig.json --noEmit",
 		"type-check:test-config": "tsc -p ./tsconfig.json --noEmit",
 		"test-e2e": "playwright test",
+		"coverage:report": "nyc report --cwd .. -t ./pandora-tests/temp/nyc_coverage --report-dir ./pandora-tests/coverage --reporter=html --reporter=json --reporter=text-summary",
 		"playwright-setup": "playwright install chromium",
 		"playwright-setup-ci": "playwright install --with-deps chromium"
 	},
@@ -20,12 +21,14 @@
 		"@typescript-eslint/eslint-plugin": "7.1.1",
 		"@typescript-eslint/parser": "7.1.1",
 		"eslint": "8.57.0",
+		"nyc": "15.1.0",
 		"pandora-common": "workspace:*",
 		"pandora-server-directory": "workspace:*",
 		"pandora-server-shard": "workspace:*",
 		"rimraf": "5.0.5",
 		"superstatic": "9.0.3",
 		"tslib": "2.6.2",
-		"typescript": "5.3.3"
+		"typescript": "5.3.3",
+		"v8-to-istanbul": "9.2.0"
 	}
 }

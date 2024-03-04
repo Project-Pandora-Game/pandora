@@ -8,6 +8,11 @@ module.exports = {
 	clearMocks: true,
 	collectCoverageFrom: ['src/**/*.ts', 'src/**/*.tsx'],
 	coverageDirectory: 'coverage',
+	coverageReporters: [
+		'html',
+		'json',
+		'text-summary',
+	],
 	errorOnDeprecated: true,
 	setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
 	transform: {

@@ -1,4 +1,4 @@
-#!/usr/bin/node
+#!/usr/bin/env node
 /* Scripts are run in Node, so don't make use of the logger or ES imports */
 /* eslint-disable no-console, @typescript-eslint/no-var-requires*/
 

@@ -377,7 +377,6 @@ export const ClientDirectorySchema = {
 	getDirectMessages: {
 		request: z.object({
 			id: AccountIdSchema,
-			until: z.number().min(0).optional(),
 		}),
 		response: ZodCast<{ result: 'notFound' | 'denied'; } | {
 			result: 'ok';

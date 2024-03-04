@@ -2,10 +2,10 @@ import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 import { ENV } from '../config';
 const { DATABASE_TYPE } = ENV;
-import type { CharacterId, SpaceData, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryDirectMessage, SpaceDataDirectoryUpdate, SpaceDataShardUpdate, SpaceId, SpaceDirectoryData, AccountId, Service, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
+import type { CharacterId, SpaceData, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, SpaceDataDirectoryUpdate, SpaceDataShardUpdate, SpaceId, SpaceDirectoryData, AccountId, Service, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
 import type { SpaceCreationData } from './dbHelper';
 import { ServiceInit } from 'pandora-common';
-import { DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate } from './databaseStructure';
+import { DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate, type DatabaseDirectMessageAccounts, type DatabaseDirectMessage } from './databaseStructure';
 
 export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
@@ -172,20 +172,20 @@ export interface PandoraDatabase extends Service {
 
 	/**
 	 * Gets direct messages for the account
-	 * @param keys - `${accountIdA}-${accessIdB}` where accountIdA < accountIdB
-	 * @param limit - Max number of messages to return
-	 * @param until - Get messages before this date
+	 * @param accounts - `${accountIdA}-${accessIdB}` where accountIdA < accountIdB
 	 * @returns direct messages associated with the accounts
 	 */
-	getDirectMessages(keys: DirectMessageAccounts, limit: number, until?: number): Promise<IDirectoryDirectMessage[]>;
+	getDirectMessages(accounts: DirectMessageAccounts): Promise<DatabaseDirectMessageAccounts | null>;
 
 	/**
 	 * Sets direct a direct message for the account
-	 * @param keys - `${accountIdA}-${accessIdB}` where accountIdA < accountIdB
-	 * @param message - direct messages to store
+	 * @param accounts -`${accountIdA}-${accessIdB}` where accountIdA < accountIdB
+	 * @param keyHash - Hash of the key used to encrypt the message
+	 * @param message - Message to set
+	 * @param maxCount - Maximum number of messages to keep
 	 * @returns false only if message was an edit and it was not found
 	 */
-	setDirectMessage(keys: DirectMessageAccounts, message: IDirectoryDirectMessage): Promise<boolean>;
+	setDirectMessage(accounts: DirectMessageAccounts, keyHash: string, message: DatabaseDirectMessage, maxCount: number): Promise<boolean>;
 
 	/**
 	 * Sets direct message info for the account

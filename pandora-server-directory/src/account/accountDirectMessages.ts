@@ -1,11 +1,9 @@
 import { createHash } from 'crypto';
-import type { IClientDirectoryArgument, IClientDirectoryPromiseResult, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
+import { LIMIT_DIRECT_MESSAGE_STORE_COUNT, IClientDirectoryArgument, IClientDirectoryPromiseResult, IDirectoryClientArgument, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { Account, GetDirectMessageId } from './account';
 import { accountManager } from './accountManager';
-import { DatabaseDirectMessageInfo } from '../database/databaseStructure';
-
-const MESSAGE_LOAD_COUNT = 50;
+import type { DatabaseDirectMessageInfo, DatabaseDirectMessage } from '../database/databaseStructure';
 
 let lastMessageTime = 0;
 /** TODO: handle host machine time jumping backwards */
@@ -99,22 +97,22 @@ export class AccountDirectMessages {
 		}
 		const time = GetNextMessageTime();
 		const accounts = GetDirectMessageId(this._account, target);
-		const message: IDirectoryDirectMessage = {
+		const message: DatabaseDirectMessage = {
 			content,
-			keyHash: KeyHash(this._publicKey, target.directMessages._publicKey),
 			time: editing ?? time,
 			source: this._account.id,
 			edited: editing ? time : undefined,
 		};
-		if (!await GetDatabase().setDirectMessage(accounts, message)) {
+		const keyHash = KeyHash(this._publicKey, target.directMessages._publicKey);
+		if (!await GetDatabase().setDirectMessage(accounts, keyHash, message, LIMIT_DIRECT_MESSAGE_STORE_COUNT)) {
 			return { result: 'messageNotFound' };
 		}
 		if (editing === undefined) {
 			await this.action(target, 'open', { notifyClients: false, time });
 			await target.directMessages.action(this._account, 'new', { notifyClients: false, time });
 		}
-		target.directMessages.directMessageGet({ ...message, account: this._getAccountInfo() });
-		this.directMessageSent({ ...message, target: target.id });
+		target.directMessages.directMessageGet({ ...message, keyHash, account: this._getAccountInfo() });
+		this.directMessageSent({ ...message, keyHash, target: target.id });
 		return { result: 'ok' };
 	}
 
@@ -126,7 +124,7 @@ export class AccountDirectMessages {
 		this._account.associatedConnections.sendMessage('directMessageSent', message);
 	}
 
-	public async getMessages(id: number, until?: number): IClientDirectoryPromiseResult['getDirectMessages'] {
+	public async getMessages(id: number): IClientDirectoryPromiseResult['getDirectMessages'] {
 		if (!this._publicKey) {
 			return { result: 'denied' };
 		}
@@ -134,11 +132,22 @@ export class AccountDirectMessages {
 		if (!target || !target.directMessages._publicKey) {
 			return { result: 'notFound' };
 		}
-		const messages = await GetDatabase().getDirectMessages(GetDirectMessageId(this._account, target), MESSAGE_LOAD_COUNT, until);
+		const dms = await GetDatabase().getDirectMessages(GetDirectMessageId(this._account, target));
+		if (dms == null || dms.messages.length === 0) {
+			return {
+				result: 'ok',
+				account: target.directMessages._getAccountInfo(),
+				messages: [],
+			};
+		}
+		const keyHash = KeyHash(this._publicKey, target.directMessages._publicKey);
 		return {
 			result: 'ok',
 			account: target.directMessages._getAccountInfo(),
-			messages,
+			messages: dms.messages.map((message) => ({
+				...message,
+				keyHash,
+			})),
 		};
 	}
 

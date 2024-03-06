@@ -1,10 +1,11 @@
 import { Immutable, freeze } from 'immer';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
+import { LIMIT_ROOM_NAME_LENGTH, LIMIT_ROOM_NAME_PATTERN } from '../../inputLimits';
 import { Logger } from '../../logging';
 import { ResolveBackground, RoomBackgroundData, RoomBackgroundDataSchema } from '../../space/room';
 import { Assert, CloneDeepMutable, MemoizeNoArg } from '../../utility';
-import { HexColorStringSchema, ZodArrayWithInvalidDrop, ZodTemplateString } from '../../validation';
+import { HexColorStringSchema, ZodArrayWithInvalidDrop, ZodTemplateString, ZodTrimedRegex } from '../../validation';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
 import { Item } from '../item/base';
@@ -18,8 +19,13 @@ export type RoomId = z.infer<typeof RoomIdSchema>;
 export const RoomBackgroundConfigSchema = z.union([z.string(), RoomBackgroundDataSchema.extend({ image: HexColorStringSchema.catch('#1099bb') })]);
 export type RoomBackgroundConfig = z.infer<typeof RoomBackgroundConfigSchema>;
 
+export const RoomNameSchema = z.string().max(LIMIT_ROOM_NAME_LENGTH).regex(LIMIT_ROOM_NAME_PATTERN).regex(ZodTrimedRegex);
+export type RoomName = z.infer<typeof RoomNameSchema>;
+
 export const RoomBundleSchema = z.object({
 	id: RoomIdSchema,
+	/** The name of the room */
+	name: RoomNameSchema.catch(''),
 	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
 	/** The ID of the background or custom data; null = default */
 	background: RoomBackgroundConfigSchema.nullable(),
@@ -36,6 +42,7 @@ export function GenerateRandomRoomId(): RoomId {
 export function GenerateDefaultRoomBundle(id: RoomId): RoomBundle {
 	return {
 		id,
+		name: '',
 		items: [],
 		background: null,
 	};
@@ -43,6 +50,7 @@ export function GenerateDefaultRoomBundle(id: RoomId): RoomBundle {
 
 interface AssetFrameworkRoomStateProps {
 	readonly assetManager: AssetManager;
+	readonly name: RoomName;
 	readonly id: RoomId;
 	readonly items: AppearanceItems;
 	readonly background: Immutable<RoomBackgroundConfig> | null;
@@ -55,6 +63,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 	public readonly assetManager: AssetManager;
 
 	public readonly id: RoomId;
+	public readonly name: RoomName;
 	public readonly items: AppearanceItems;
 	public readonly background: Immutable<RoomBackgroundConfig> | null;
 
@@ -62,6 +71,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 	private constructor(old: AssetFrameworkRoomState, override: Partial<AssetFrameworkRoomStateProps>);
 	private constructor(props: AssetFrameworkRoomStateProps, override: Partial<AssetFrameworkRoomStateProps> = {}) {
 		this.assetManager = override.assetManager ?? props.assetManager;
+		this.name = override.name ?? props.name;
 		this.id = override.id ?? props.id;
 		this.items = override.items ?? props.items;
 		this.background = override.background !== undefined ? override.background : props.background;
@@ -92,6 +102,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 	public exportToBundle(options: IExportOptions = {}): RoomBundle {
 		return {
 			id: this.id,
+			name: this.name,
 			items: this.items.map((item) => item.exportToBundle(options)),
 			background: CloneDeepMutable(this.background),
 		};
@@ -101,10 +112,15 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		options.clientOnly = true;
 		return {
 			id: this.id,
+			name: this.name,
 			items: this.items.map((item) => item.exportToBundle(options)),
 			background: CloneDeepMutable(this.background),
 			clientOnly: true,
 		};
+	}
+
+	public with(change: Partial<AssetFrameworkRoomStateProps>): AssetFrameworkRoomState {
+		return new AssetFrameworkRoomState(this, change);
 	}
 
 	public withItems(newItems: AppearanceItems): AssetFrameworkRoomState {
@@ -147,6 +163,7 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 		const resultState = freeze(new AssetFrameworkRoomState({
 			assetManager,
 			id: parsed.id,
+			name: bundle.name,
 			items: newItems,
 			background: bundle.background,
 		}), true);

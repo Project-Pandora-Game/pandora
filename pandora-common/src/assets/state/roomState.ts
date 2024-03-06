@@ -12,9 +12,6 @@ import { ItemBundleSchema } from '../item/unified';
 import type { IExportOptions } from '../modules/common';
 import { RoomItemsLoadAndValidate, ValidateRoomItems } from '../validation/roomValidation';
 
-// Fix for pnpm resolution weirdness
-import type { } from '../item/base';
-
 export const RoomIdSchema = ZodTemplateString<`room/${string}`>(z.string(), /^room\//);
 export type RoomId = z.infer<typeof RoomIdSchema>;
 
@@ -36,34 +33,38 @@ export function GenerateRandomRoomId(): RoomId {
 	return `room/${nanoid()}`;
 }
 
-export function GenerateDefaultRoomBundle(): RoomBundle {
+export function GenerateDefaultRoomBundle(id: RoomId): RoomBundle {
 	return {
-		id: GenerateRandomRoomId(),
+		id,
 		items: [],
 		background: null,
 	};
 }
 
+interface AssetFrameworkRoomStateProps {
+	readonly assetManager: AssetManager;
+	readonly id: RoomId;
+	readonly items: AppearanceItems;
+	readonly background: Immutable<RoomBackgroundConfig> | null;
+}
+
 /**
  * State of an room. Immutable.
  */
-export class AssetFrameworkRoomState {
+export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 	public readonly assetManager: AssetManager;
 
 	public readonly id: RoomId;
 	public readonly items: AppearanceItems;
 	public readonly background: Immutable<RoomBackgroundConfig> | null;
 
-	private constructor(
-		assetManager: AssetManager,
-		id: RoomId,
-		items: AppearanceItems,
-		background: Immutable<RoomBackgroundConfig> | null,
-	) {
-		this.assetManager = assetManager;
-		this.id = id;
-		this.items = items;
-		this.background = background;
+	private constructor(props: AssetFrameworkRoomStateProps);
+	private constructor(old: AssetFrameworkRoomState, override: Partial<AssetFrameworkRoomStateProps>);
+	private constructor(props: AssetFrameworkRoomStateProps, override: Partial<AssetFrameworkRoomStateProps> = {}) {
+		this.assetManager = override.assetManager ?? props.assetManager;
+		this.id = override.id ?? props.id;
+		this.items = override.items ?? props.items;
+		this.background = override.background !== undefined ? override.background : props.background;
 	}
 
 	@MemoizeNoArg
@@ -107,25 +108,19 @@ export class AssetFrameworkRoomState {
 	}
 
 	public withItems(newItems: AppearanceItems): AssetFrameworkRoomState {
-		return new AssetFrameworkRoomState(
-			this.assetManager,
-			this.id,
-			newItems,
-			this.background,
-		);
+		return new AssetFrameworkRoomState(this, {
+			items: newItems,
+		});
 	}
 
 	public withBackground(newBackground: Immutable<RoomBackgroundConfig>): AssetFrameworkRoomState {
-		return new AssetFrameworkRoomState(
-			this.assetManager,
-			this.id,
-			this.items,
-			newBackground,
-		);
+		return new AssetFrameworkRoomState(this, {
+			background: newBackground,
+		});
 	}
 
-	public static createDefault(assetManager: AssetManager): AssetFrameworkRoomState {
-		return AssetFrameworkRoomState.loadFromBundle(assetManager, GenerateDefaultRoomBundle(), undefined);
+	public static createDefault(assetManager: AssetManager, id: RoomId): AssetFrameworkRoomState {
+		return AssetFrameworkRoomState.loadFromBundle(assetManager, GenerateDefaultRoomBundle(id), undefined);
 	}
 
 	public static loadFromBundle(assetManager: AssetManager, bundle: RoomBundle, logger: Logger | undefined): AssetFrameworkRoomState {
@@ -149,12 +144,12 @@ export class AssetFrameworkRoomState {
 		const newItems = RoomItemsLoadAndValidate(assetManager, loadedItems, logger);
 
 		// Create the final state
-		const resultState = freeze(new AssetFrameworkRoomState(
+		const resultState = freeze(new AssetFrameworkRoomState({
 			assetManager,
-			parsed.id,
-			newItems,
-			bundle.background,
-		), true);
+			id: parsed.id,
+			items: newItems,
+			background: bundle.background,
+		}), true);
 
 		Assert(resultState.isValid(), 'State is invalid after load');
 

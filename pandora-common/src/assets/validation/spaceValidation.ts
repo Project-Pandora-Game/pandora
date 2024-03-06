@@ -3,7 +3,7 @@ import { Assert } from '../../utility';
 import type { AppearanceValidationResult } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
 import { ITEM_LIMIT_SPACE_ROOMS } from '../itemLimits';
-import { AssetFrameworkRoomState, RoomId } from '../state/roomState';
+import { AssetFrameworkRoomState, GenerateRandomRoomId, RoomId } from '../state/roomState';
 
 /** Validates the room inventory items, including all prefixes */
 export function ValidateSpaceRooms(rooms: readonly AssetFrameworkRoomState[]): AppearanceValidationResult {
@@ -54,9 +54,12 @@ export function SpaceRoomsLoadAndValidate(assetManager: AssetManager, originalIn
 	}
 
 	if (resultRooms.length === 0) {
-		logger?.warning(`No valid room, adding default`);
+		// Only warn if there was some room in the bundle (new spaces get room generated at this point for simplicity)
+		if (originalInput.length > 0) {
+			logger?.warning(`No valid room, adding default`);
+		}
 		resultRooms = [
-			AssetFrameworkRoomState.createDefault(assetManager),
+			AssetFrameworkRoomState.createDefault(assetManager, GenerateRandomRoomId()),
 		];
 	}
 

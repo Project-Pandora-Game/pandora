@@ -132,6 +132,10 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			this._onDataModified('inventory');
 		}
 
+		if (changes.space) {
+			this._onDataModified('space');
+		}
+
 		for (const character of changes.characters) {
 			this.getCharacterById(character)?.onAppearanceChanged();
 		}
@@ -144,7 +148,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		});
 	}
 
-	protected abstract _onDataModified(data: 'inventory'): void;
+	protected abstract _onDataModified(data: 'inventory' | 'space'): void;
 
 	public getInfo(): SpaceClientInfo {
 		return {

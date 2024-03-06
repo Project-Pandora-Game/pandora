@@ -38,7 +38,7 @@ export class PersonalSpace extends Space {
 		this._character = character;
 	}
 
-	protected override _onDataModified(_data: 'inventory'): void {
+	protected override _onDataModified(_data: 'inventory' | 'space'): void {
 		this._character.onPersonalSpaceChanged();
 	}
 }

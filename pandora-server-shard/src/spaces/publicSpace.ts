@@ -10,6 +10,7 @@ import {
 	GameStateUpdate,
 	IShardSpaceDefinition,
 	SpaceId,
+	AssertNever,
 } from 'pandora-common';
 import { Space } from './space';
 import { GetDatabase } from '../database/databaseProvider';
@@ -67,8 +68,14 @@ export class PublicSpace extends Space {
 		});
 	}
 
-	protected override _onDataModified(data: 'inventory'): void {
-		this._modified.add(data);
+	protected override _onDataModified(data: 'inventory' | 'space'): void {
+		if (data === 'space') {
+			this._modified.add('spaceState');
+		} else if (data === 'inventory') {
+			this._modified.add('inventory');
+		} else {
+			AssertNever(data);
+		}
 	}
 
 	@AsyncSynchronized()

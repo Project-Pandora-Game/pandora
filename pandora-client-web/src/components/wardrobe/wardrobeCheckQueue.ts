@@ -1,13 +1,16 @@
+import { isEqual } from 'lodash';
 import {
 	AppearanceAction,
 	AppearanceActionContext,
+	AppearanceActionProcessingContext,
 	AppearanceActionProcessingResult,
+	AppearanceActionSchema,
 	DoAppearanceAction,
 } from 'pandora-common';
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { useWardrobeContext } from './wardrobeContext';
 import { CalculationQueue, useCalculateInQueue } from '../../common/calculationQueue';
 import { usePermissionCheck } from '../gameContext/permissionCheckProvider';
+import { useWardrobeContext } from './wardrobeContext';
 
 const calculationQueue = new CalculationQueue({
 	immediate: 0,
@@ -35,7 +38,14 @@ export function useStaggeredAppearanceActionResult(action: AppearanceAction | nu
 				resultContext.current = null;
 				setResult(null);
 			} else {
-				const checkResult = DoAppearanceAction(action, actions, globalState.assetManager);
+				// Do a parse to verify value validity (server does that on receive, but here we can give nicer message and avoid server load)
+				const parsedAction = AppearanceActionSchema.safeParse(action);
+				const validAction = parsedAction.success && isEqual(parsedAction.data, action);
+
+				const checkResult = validAction ?
+					DoAppearanceAction(action, actions, globalState.assetManager) :
+					new AppearanceActionProcessingContext(actions).invalid();
+
 				resultAction.current = action;
 				resultContext.current = actions;
 				setResult(checkResult);

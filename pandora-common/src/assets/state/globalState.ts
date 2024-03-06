@@ -226,6 +226,7 @@ export class AssetFrameworkGlobalState {
 
 	public listChanges(oldState: AssetFrameworkGlobalState): {
 		spaceInventory: boolean;
+		space: boolean;
 		characters: Set<CharacterId>;
 	} {
 		const characters = new Set<CharacterId>();
@@ -246,6 +247,7 @@ export class AssetFrameworkGlobalState {
 
 		return {
 			spaceInventory: this.spaceInventory !== oldState.spaceInventory,
+			space: this.space !== oldState.space,
 			characters,
 		};
 	}

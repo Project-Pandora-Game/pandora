@@ -23,7 +23,7 @@ import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties'
 import { AppearanceArmPoseSchema, AppearancePoseSchema } from './state/characterStatePose';
 import { CharacterSpacePositionSchema, RestrictionOverride } from './state/characterStateTypes';
 import { AssetFrameworkGlobalStateContainer } from './state/globalState';
-import { AssetFrameworkRoomState, RoomBackgroundConfigSchema, RoomIdSchema } from './state/roomState';
+import { AssetFrameworkRoomState, GenerateRandomRoomId, RoomBackgroundConfigSchema, RoomIdSchema } from './state/roomState';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../validation';
@@ -1231,7 +1231,7 @@ export function ActionSpaceConfigure({
 	switch (configureAction.type) {
 		case 'roomCreate': {
 			if (!processingContext.manipulator.produceSpaceState((currentState) => {
-				const room = AssetFrameworkRoomState.createDefault(assetManager);
+				const room = AssetFrameworkRoomState.createDefault(assetManager, GenerateRandomRoomId());
 				Assert(room.isValid());
 
 				// TODO: This needs action message

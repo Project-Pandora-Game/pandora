@@ -7,7 +7,7 @@ import { AppearanceValidationResult } from '../appearanceValidation';
 import { AssetManager } from '../assetManager';
 import type { IExportOptions } from '../modules/common';
 import { SpaceRoomsLoadAndValidate, ValidateSpaceRooms } from '../validation/spaceValidation';
-import { AssetFrameworkRoomState, GenerateDefaultRoomBundle, RoomBundleSchema, RoomId } from './roomState';
+import { AssetFrameworkRoomState, RoomBundleSchema, RoomId } from './roomState';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../item/base';
@@ -22,9 +22,7 @@ export type SpaceStateClientBundle = SpaceStateBundle & { clientOnly: true; };
 
 export function GenerateDefaultSpaceStateBundle(): SpaceStateBundle {
 	return {
-		rooms: [
-			GenerateDefaultRoomBundle(),
-		],
+		rooms: [], // Default to no rooms; one is added in `SpaceRoomsLoadAndValidate`
 	};
 }
 

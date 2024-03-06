@@ -23,7 +23,7 @@ import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties'
 import { AppearanceArmPoseSchema, AppearancePoseSchema } from './state/characterStatePose';
 import { CharacterSpacePositionSchema, RestrictionOverride } from './state/characterStateTypes';
 import { AssetFrameworkGlobalStateContainer } from './state/globalState';
-import { AssetFrameworkRoomState, GenerateRandomRoomId, RoomBackgroundConfigSchema, RoomIdSchema } from './state/roomState';
+import { AssetFrameworkRoomState, GenerateRandomRoomId, RoomBackgroundConfigSchema, RoomIdSchema, RoomNameSchema } from './state/roomState';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../validation';
@@ -180,6 +180,7 @@ export const AppearanceActionSpaceConfigure = z.object({
 		}),
 		z.object({
 			type: z.literal('roomConfigure'),
+			name: RoomNameSchema.optional(),
 			background: RoomBackgroundConfigSchema.optional(),
 			roomId: RoomIdSchema,
 		}),
@@ -1244,6 +1245,9 @@ export function ActionSpaceConfigure({
 		}
 		case 'roomConfigure': {
 			if (!processingContext.manipulator.produceRoomState(configureAction.roomId, (room) => {
+				if (configureAction.name !== undefined) {
+					room = room.with({ name: configureAction.name });
+				}
 				if (configureAction.background !== undefined) {
 					room = room.withBackground(configureAction.background);
 				}

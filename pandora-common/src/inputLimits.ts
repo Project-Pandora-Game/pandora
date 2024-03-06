@@ -36,6 +36,14 @@ export const LIMIT_SPACE_NAME_PATTERN = /^[a-zA-Z0-9_+\-:'"& ]+$/;
 /** The maximum length of a spaces's description */
 export const LIMIT_SPACE_DESCRIPTION_LENGTH = 10_000;
 
+// Limits for in-space rooms
+// For simplicity we use same values as are used for the space itself
+
+/** The maximum length of a room's name */
+export const LIMIT_ROOM_NAME_LENGTH = 40;
+/** The pattern used for validating room's name */
+export const LIMIT_ROOM_NAME_PATTERN = /^[a-zA-Z0-9_+\-:'"& ]*$/;
+
 /** The maximum length of a chat message */
 export const LIMIT_CHAT_MESSAGE_LENGTH = 25_000;
 

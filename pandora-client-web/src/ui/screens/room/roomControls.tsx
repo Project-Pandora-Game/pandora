@@ -25,17 +25,18 @@ export function RoomControls(): ReactElement {
 	const { player, playerState } = usePlayerState();
 	const navigate = useNavigate();
 
-	const currentRoom = playerState.getCurrentRoomId();
+	const currentRoomId = playerState.getCurrentRoomId();
+	const currentRoom = globalState.getRoomState(currentRoomId);
 
 	return (
-		<WardrobeContextProvider target={ { type: 'room', roomId: currentRoom } } player={ player }>
+		<WardrobeContextProvider target={ { type: 'room', roomId: currentRoomId } } player={ player }>
 			<Column padding='medium' className='controls'>
 				<Row padding='small'>
-					<Button onClick={ () => navigate(`/wardrobe/room/${encodeURIComponent(currentRoom)}`) } >Room inventory</Button>
+					<Button onClick={ () => navigate(`/wardrobe/room/${encodeURIComponent(currentRoomId)}`) } >Room inventory</Button>
 				</Row>
 				<br />
 				<span>
-					These characters are in the current room:
+					These characters are in the room <b>{ currentRoom?.name || '[unnamed room]' }</b>:
 				</span>
 				<div className='character-info'>
 					<SpaceControlCharacter char={ player } />
@@ -46,7 +47,7 @@ export function RoomControls(): ReactElement {
 									return false;
 
 								const state = globalState.getCharacterState(c.id);
-								if (state == null || state.getCurrentRoomId() !== currentRoom)
+								if (state == null || state.getCurrentRoomId() !== currentRoomId)
 									return false;
 
 								return true;

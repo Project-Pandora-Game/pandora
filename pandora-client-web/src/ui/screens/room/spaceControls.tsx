@@ -1,8 +1,9 @@
 import type { Immutable } from 'immer';
-import { AssertNever, AssertNotNullable, AssetFrameworkRoomState, CloneDeepMutable, GenerateInitialRoomPosition, ICharacterRoomData, ITEM_LIMIT_SPACE_ROOMS, type AppearanceAction, type AssetFrameworkGlobalState, type RoomBackgroundConfig, type RoomId } from 'pandora-common';
+import { AssertNever, AssertNotNullable, AssetFrameworkRoomState, CloneDeepMutable, GenerateInitialRoomPosition, ICharacterRoomData, ITEM_LIMIT_SPACE_ROOMS, type AppearanceAction, type AssetFrameworkGlobalState, type RoomBackgroundConfig, type RoomId, type RoomName, LIMIT_ROOM_NAME_LENGTH, RoomNameSchema, ZodMatcher } from 'pandora-common';
 import React, {
 	ReactElement,
 	useEffect,
+	useId,
 	useMemo,
 	useState,
 } from 'react';
@@ -38,6 +39,20 @@ export function SpaceControls(): ReactElement | null {
 
 	if (!player) {
 		return null;
+	}
+
+	if (selectedRoom != null) {
+		return (
+			<WardrobeContextProvider target={ { type: 'spaceInventory' } } player={ player }>
+				<Column padding='medium' className='controls'>
+					<SpaceRoomConfig
+						key={ selectedRoom.id }
+						room={ selectedRoom }
+						close={ () => setSelectedRoomId(null) }
+					/>
+				</Column>
+			</WardrobeContextProvider>
+		);
 	}
 
 	return (
@@ -76,14 +91,6 @@ export function SpaceControls(): ReactElement | null {
 					}
 					<CreateRoom globalState={ globalState } />
 				</Column>
-				{
-					selectedRoom != null ? (
-						<SpaceRoomConfig
-							key={ selectedRoom.id }
-							room={ selectedRoom }
-						/>
-					) : null
-				}
 			</Column>
 		</WardrobeContextProvider>
 	);
@@ -159,7 +166,7 @@ function SpaceRoomControls({ characters, room, isSelected, onSelect }: {
 
 	return (
 		<fieldset>
-			<legend>Room ({ room.id })</legend>
+			<legend>{ room.name || '[unnamed room]' }</legend>
 			<Column>
 				<Row>
 					<Button
@@ -193,22 +200,34 @@ function SpaceRoomControls({ characters, room, isSelected, onSelect }: {
 	);
 }
 
-function SpaceRoomConfig({ room }: {
+const IsValidRoomName = ZodMatcher(RoomNameSchema);
+
+function SpaceRoomConfig({ room, close }: {
 	room: AssetFrameworkRoomState;
+	close: () => void;
 }): ReactElement {
+	const id = useId();
+
+	const [newRoomName, setNewRoomName] = useState<RoomName | undefined>(undefined);
 	const [newRoomBackground, setNewRoomBackground] = useState<Immutable<RoomBackgroundConfig> | undefined>(undefined);
 
-	const hasChanges = newRoomBackground !== undefined;
+	const hasChanges =
+		newRoomName !== undefined ||
+		newRoomBackground !== undefined;
+
 	const applyChangedAction = useMemo((): AppearanceAction => ({
 		type: 'spaceConfigure',
 		configureAction: {
 			type: 'roomConfigure',
 			roomId: room.id,
+			name: newRoomName,
 			background: CloneDeepMutable(newRoomBackground),
 		},
-	}), [room.id, newRoomBackground]);
+	}), [room.id, newRoomName, newRoomBackground]);
 	const applyChangedCheck = useStaggeredAppearanceActionResult(applyChangedAction);
-	const [execute, processing] = useWardrobeExecuteChecked(applyChangedAction, applyChangedCheck);
+	const [execute, processing] = useWardrobeExecuteChecked(applyChangedAction, applyChangedCheck, {
+		onSuccess: close,
+	});
 
 	const deleteRoomAction = useMemo((): AppearanceAction => ({
 		type: 'spaceConfigure',
@@ -224,7 +243,23 @@ function SpaceRoomConfig({ room }: {
 		<fieldset>
 			<legend>Configuration of room <b>{ room.id }</b></legend>
 			<Column>
-				<Row alignX='end'>
+				<Row alignX='space-between'>
+					<Button
+						className='fadeDisabled'
+						onClick={ close }
+						disabled={ processing || processingDelete }
+					>
+						Discard changes
+					</Button>
+
+					<Button
+						className='fadeDisabled'
+						onClick={ execute }
+						disabled={ !hasChanges || processing || processingDelete }
+					>
+						Apply changes
+					</Button>
+
 					<Button
 						className='fadeDisabled'
 						onClick={ executeDelete }
@@ -238,18 +273,27 @@ function SpaceRoomConfig({ room }: {
 					</Button>
 				</Row>
 
+				<Column>
+					<label
+						htmlFor={ `room-config-${id}-name` }
+					>
+						Room name ({ (newRoomName ?? room.name).length }/{ LIMIT_ROOM_NAME_LENGTH } characters)
+					</label>
+					<input
+						id={ `room-config-${id}-name` }
+						type='text'
+						autoComplete='none'
+						value={ newRoomName ?? room.name }
+						placeholder='[unnamed room]'
+						onChange={ (event) => setNewRoomName(event.target.value) }
+					/>
+					{ newRoomName !== undefined && !IsValidRoomName(newRoomName) ? (<div className='error'>Invalid name</div>) : null }
+				</Column>
+
 				<BackgroundSelector
 					value={ newRoomBackground ?? room.background }
 					onChange={ setNewRoomBackground }
 				/>
-
-				<Button
-					className='fadeDisabled'
-					onClick={ execute }
-					disabled={ !hasChanges || processing || processingDelete }
-				>
-					Apply changes
-				</Button>
 			</Column>
 		</fieldset>
 	);

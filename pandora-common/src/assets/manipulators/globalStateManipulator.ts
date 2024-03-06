@@ -95,7 +95,7 @@ export class AssetFrameworkGlobalStateManipulator {
 		} else if (target.type === 'room') {
 			return this.produceRoomState(
 				target.roomId,
-				(character) => character.withItems(newItems),
+				(room) => room.withItems(newItems),
 			);
 		} else if (target.type === 'spaceInventory') {
 			return this.produceSpaceInventoryState(

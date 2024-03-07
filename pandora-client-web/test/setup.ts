@@ -26,6 +26,14 @@ globalThis.process = {
 	},
 };
 
+Assert(typeof globalThis.Worker === 'undefined');
+// @ts-expect-error - Polyfill Worker as JSDom doesn't support it
+globalThis.Worker = class Worker {
+	constructor() {
+		throw new Error('Not implemented');
+	}
+};
+
 // Logging setup
 SetConsoleOutput(LogLevel.FATAL);
 logConfig.onFatal.push(() => {

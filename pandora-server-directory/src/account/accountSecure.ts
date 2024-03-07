@@ -201,8 +201,10 @@ export default class AccountSecure {
 	}
 
 	async #generateToken(reason: AccountTokenReason): Promise<DatabaseAccountToken> {
+		const { limit, expiration, generate } = TOKEN_TYPES[reason];
+
 		this.#secure.tokens = this.#secure.tokens.filter((t) => t.expires > Date.now());
-		if (TOKEN_LIMITS[reason] <= this.#secure.tokens.filter((t) => t.reason === reason).length) {
+		if (limit <= this.#secure.tokens.filter((t) => t.reason === reason).length) {
 			const index = this.#secure.tokens.findIndex((t) => t.reason === reason);
 			/* istanbul ignore else - should never happen because of positive TOKEN_LIMITS */
 			if (index !== -1)
@@ -210,8 +212,8 @@ export default class AccountSecure {
 		}
 
 		const token = {
-			value: TOKEN_TYPES[reason] === 'simple' ? GenerateSimpleToken() : nanoid(32),
-			expires: Date.now() + TOKEN_EXPIRATION[reason],
+			value: generate(),
+			expires: Date.now() + expiration,
 			reason,
 		};
 
@@ -294,20 +296,26 @@ function GenerateSimpleToken(): string {
 	return randomInt(0, 1000000).toString(10).padStart(6, '0');
 }
 
-const TOKEN_TYPES: Record<AccountTokenReason, 'secure' | 'simple'> = {
-	[AccountTokenReason.ACTIVATION]: 'simple',
-	[AccountTokenReason.PASSWORD_RESET]: 'simple',
-	[AccountTokenReason.LOGIN]: 'secure',
-};
+type TokenType = Record<AccountTokenReason, {
+	generate: () => string;
+	expiration: number;
+	limit: number;
+}>;
 
-const TOKEN_EXPIRATION: Record<AccountTokenReason, number> = {
-	[AccountTokenReason.ACTIVATION]: ACTIVATION_TOKEN_EXPIRATION,
-	[AccountTokenReason.PASSWORD_RESET]: PASSWORD_RESET_TOKEN_EXPIRATION,
-	[AccountTokenReason.LOGIN]: LOGIN_TOKEN_EXPIRATION,
-};
-
-const TOKEN_LIMITS: Record<AccountTokenReason, number> = {
-	[AccountTokenReason.ACTIVATION]: 1,
-	[AccountTokenReason.PASSWORD_RESET]: 1,
-	[AccountTokenReason.LOGIN]: 5,
-};
+const TOKEN_TYPES = {
+	[AccountTokenReason.ACTIVATION]: {
+		generate: GenerateSimpleToken,
+		expiration: ACTIVATION_TOKEN_EXPIRATION,
+		limit: 1,
+	},
+	[AccountTokenReason.PASSWORD_RESET]: {
+		generate: GenerateSimpleToken,
+		expiration: PASSWORD_RESET_TOKEN_EXPIRATION,
+		limit: 1,
+	},
+	[AccountTokenReason.LOGIN]: {
+		generate: () => nanoid(32),
+		expiration: LOGIN_TOKEN_EXPIRATION,
+		limit: 5,
+	},
+} as const satisfies TokenType;

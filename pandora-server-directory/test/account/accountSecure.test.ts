@@ -1,3 +1,4 @@
+import { ACCOUNT_TOKEN_ID_LENGTH } from 'pandora-common';
 import { Account, CreateAccountData } from '../../src/account/account';
 import AccountSecure, { AccountTokenReason, GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure';
 import { DatabaseAccountToken } from '../../src/database/databaseStructure';
@@ -367,7 +368,7 @@ describe('AccountSecure', () => {
 			it('Invalidates valid token', async () => {
 				expect(!!account.getLoginToken(token1.value)).toBe(true);
 
-				await account.invalidateLoginToken(token1.value);
+				await account.invalidateLoginToken(token1.value.substring(0, ACCOUNT_TOKEN_ID_LENGTH));
 
 				expect(!!account.getLoginToken(token1.value)).toBe(false);
 				// Other tokens are unaffected

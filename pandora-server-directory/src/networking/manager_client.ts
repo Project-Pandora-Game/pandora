@@ -211,21 +211,37 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
-	private async handleLogout({ invalidateToken }: IClientDirectoryArgument['logout'], connection: ClientConnection): IClientDirectoryPromiseResult['logout'] {
+	private async handleLogout(logout: IClientDirectoryArgument['logout'], connection: ClientConnection): IClientDirectoryPromiseResult['logout'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
 		const account = connection.account;
-		const character = connection.character;
 
-		connection.setAccount(null);
-		connection.sendConnectionStateUpdate();
-		logger.verbose(`${connection.id} logged out`);
-
-		if (invalidateToken) {
-			await account.secure.invalidateLoginToken(invalidateToken);
+		switch (logout.type) {
+			case 'self':
+				if (connection.loginTokenId != null)
+					await account.secure.invalidateLoginToken(connection.loginTokenId);
+				else
+					logger.warning(`Attempt to logout with no login token: ${connection.id}`);
+				break;
+			case 'all':
+				await account.secure.invalidateLoginToken();
+				break;
+			case 'selected':
+				await account.secure.invalidateLoginToken(logout.accountTokenId);
+				break;
+			default:
+				AssertNever(logout);
 		}
-		await character?.disconnect();
+
+		for (const info of account.characters.values()) {
+			const character = info.loadedCharacter;
+			if (character != null && character.toBeDisconnected) {
+				await character.disconnect();
+			}
+		}
+
+		logger.verbose(`${connection.id} logged out`);
 	}
 
 	private async handleRegister({ username, email, passwordSha512, betaKey, captchaToken }: IClientDirectoryArgument['register'], connection: ClientConnection): IClientDirectoryPromiseResult['register'] {

@@ -60,11 +60,11 @@ describe('ClientConnection', () => {
 
 			const client = new ClientConnection(server, connection.connect(), {});
 
-			connection.sendMessage('logout', {});
+			connection.sendMessage('logout', { type: 'self' });
 			await connection.awaitResponse('shardInfo', {});
 
 			expect(onMessageSpy).toHaveBeenCalledTimes(2);
-			expect(onMessageSpy).toHaveBeenNthCalledWith(1, 'logout', {}, client);
+			expect(onMessageSpy).toHaveBeenNthCalledWith(1, 'logout', { type: 'self' }, client);
 			expect(onMessageSpy).toHaveBeenNthCalledWith(2, 'shardInfo', expect.any(Object), client);
 		});
 	});

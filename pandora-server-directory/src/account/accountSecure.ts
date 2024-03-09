@@ -1,4 +1,4 @@
-import { GetLogger, IAccountCryptoKey, Logger } from 'pandora-common';
+import { ACCOUNT_TOKEN_ID_LENGTH, GetLogger, IAccountCryptoKey, Logger } from 'pandora-common';
 import { ENV } from '../config';
 const { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION } = ENV;
 import { GetDatabase } from '../database/databaseProvider';
@@ -131,9 +131,14 @@ export default class AccountSecure {
 		return this.#generateToken(AccountTokenReason.LOGIN);
 	}
 
-	public async invalidateLoginToken(token: string): Promise<void> {
+	public async invalidateLoginToken(tokenId?: string): Promise<void> {
 		const length = this.#tokens.length;
-		this.#invalidateToken(AccountTokenReason.LOGIN, token);
+
+		if (!tokenId) {
+			this.#invalidateToken(AccountTokenReason.LOGIN);
+		} else {
+			this.#invalidateToken(AccountTokenReason.LOGIN, (t) => t.getId() === tokenId);
+		}
 
 		if (length !== this.#tokens.length)
 			await this.#updateDatabase();
@@ -233,13 +238,13 @@ export default class AccountSecure {
 		return this.#findToken(reason, tokenSecret) !== undefined;
 	}
 
-	#invalidateToken(reason: AccountTokenReason, tokenSecret?: string): void {
+	#invalidateToken(reason: AccountTokenReason, isInvalid?: (token: AccountToken) => boolean): void {
 		const tokens: AccountToken[] = [];
 		for (const token of this.#tokens) {
 			if (!token.validate())
 				continue;
 
-			if (token.reason !== reason || (tokenSecret !== undefined && token.value !== tokenSecret))
+			if (token.reason !== reason || (isInvalid != null && !isInvalid(token)))
 				tokens.push(token);
 			else
 				token.onDestroy();
@@ -345,7 +350,7 @@ const TOKEN_TYPES = {
 } as const satisfies TokenType;
 
 export interface AccountTokenOwner {
-	onAccountTokenDestroyed(): void;
+	onAccountTokenDestroyed(token: AccountToken): void;
 }
 
 export class AccountToken implements Readonly<DatabaseAccountToken> {
@@ -356,7 +361,7 @@ export class AccountToken implements Readonly<DatabaseAccountToken> {
 	readonly #bound = new Set<AccountTokenOwner>();
 	#destroyed = false;
 
-	public constructor(token: Readonly<DatabaseAccountToken>) {
+	constructor(token: Readonly<DatabaseAccountToken>) {
 		this.value = token.value;
 		this.expires = token.expires;
 		this.reason = token.reason;
@@ -369,6 +374,10 @@ export class AccountToken implements Readonly<DatabaseAccountToken> {
 			expires: Date.now() + expiration,
 			reason,
 		});
+	}
+
+	public getId(): string {
+		return this.value.substring(0, ACCOUNT_TOKEN_ID_LENGTH);
 	}
 
 	public bind(owner: AccountTokenOwner): void {
@@ -394,7 +403,7 @@ export class AccountToken implements Readonly<DatabaseAccountToken> {
 		this.#destroyed = true;
 
 		for (const owner of this.#bound) {
-			owner.onAccountTokenDestroyed();
+			owner.onAccountTokenDestroyed(this);
 		}
 		this.#bound.clear();
 	}

@@ -237,7 +237,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 	}
 
 	public logout(): void {
-		this.sendMessage('logout', { invalidateToken: this._authToken.value?.value });
+		this.sendMessage('logout', { type: 'self' });
 		this._connectionStateEventEmitter.onStateChanged({ account: null, character: null });
 		this.directMessageHandler.clear();
 		AccountContactContext.handleLogout();

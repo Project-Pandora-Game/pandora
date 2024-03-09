@@ -114,6 +114,8 @@ export type SecondFactorResponse = {
 	invalid: SecondFactorType[];
 };
 
+export const ACCOUNT_TOKEN_ID_LENGTH = 16;
+
 /** Client->Directory messages */
 export const ClientDirectorySchema = {
 	//#region Before Login
@@ -174,9 +176,15 @@ export const ClientDirectorySchema = {
 		response: ZodCast<{ result: 'ok' | 'invalidPassword'; }>(),
 	},
 	logout: {
-		request: z.object({
-			invalidateToken: z.string().optional(),
-		}),
+		request: z.discriminatedUnion('type', [
+			z.object({
+				type: z.enum(['self', 'all']),
+			}),
+			z.object({
+				type: z.literal('selected'),
+				accountTokenId: z.string().length(ACCOUNT_TOKEN_ID_LENGTH),
+			}),
+		]),
 		response: null,
 	},
 	gitHubBind: {

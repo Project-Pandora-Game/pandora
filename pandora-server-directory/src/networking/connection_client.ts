@@ -1,4 +1,4 @@
-import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory, IncomingConnection, DirectoryClientSchema, Assert } from 'pandora-common';
+import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory, IncomingConnection, DirectoryClientSchema, Assert, ACCOUNT_TOKEN_ID_LENGTH } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import type { Account } from '../account/account';
 import type { Character } from '../account/character';
@@ -17,6 +17,11 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	private _character: Character | null = null;
 	public get character(): Character | null {
 		return this._character;
+	}
+
+	private _loginTokenId: string | null = null;
+	public get loginTokenId(): string | null {
+		return this._loginTokenId;
 	}
 
 	public isLoggedIn(): this is { readonly account: Account; } {
@@ -73,14 +78,23 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	public bindLoginToken(token: AccountToken): void {
 		Assert(token.reason === AccountTokenReason.LOGIN);
 		token.bind(this);
+		this._loginTokenId = token.getId();
 	}
 
-	public onAccountTokenDestroyed(): void {
-		if (this._account == null)
+	public onAccountTokenDestroyed(token: AccountToken): void {
+		if (this._loginTokenId !== token.getId()) {
+			this.logger.warning(`Invalid token destroyed '${this._loginTokenId ?? 'null'}' !== '${token.getId()}'`);
 			return;
+		}
 
-		this.setAccount(null);
-		this.sendConnectionStateUpdate();
+		if (this._account != null) {
+			this.setAccount(null);
+			this.sendConnectionStateUpdate();
+		}
+
+		this.character?.markForDisconnect();
+
+		this._loginTokenId = null;
 		this.logger.verbose(`${this.id} logged out`);
 	}
 

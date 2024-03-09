@@ -1,13 +1,13 @@
-import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SpaceDirectoryConfig, SpaceDirectoryData, SpaceId, Service, SpaceDirectoryDataSchema, SPACE_DIRECTORY_PROPERTIES } from 'pandora-common';
+import { diffString } from 'json-diff';
+import { isEqual, pick } from 'lodash';
+import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPACE_DIRECTORY_PROPERTIES, Service, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId } from 'pandora-common';
+import promClient from 'prom-client';
+import { Account } from '../account/account';
+import { accountManager } from '../account/accountManager';
+import { CharacterInfo } from '../account/character';
+import { GetDatabase } from '../database/databaseProvider';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { Space } from './space';
-import promClient from 'prom-client';
-import { GetDatabase } from '../database/databaseProvider';
-import { accountManager } from '../account/accountManager';
-import { Account } from '../account/account';
-import { CharacterInfo } from '../account/character';
-import { isEqual, pick } from 'lodash';
-import { diffString } from 'json-diff';
 
 /** Time (in ms) after which manager prunes spaces without any activity (search or characters inside) */
 export const SPACE_INACTIVITY_THRESHOLD = 60_000;
@@ -16,21 +16,19 @@ export const TICK_INTERVAL = 15_000;
 
 const logger = GetLogger('SpaceManager');
 
-// TODO(spaces): Consider migrating metric ids
-
 // TODO
 // const totalSpacesMetric = new promClient.Gauge({
-//     name: 'pandora_directory_rooms',
+//     name: 'pandora_directory_spaces',
 //     help: 'Total count of spaces that exist',
 // });
 
 const loadedSpacesMetric = new promClient.Gauge({
-	name: 'pandora_directory_rooms_loaded',
+	name: 'pandora_directory_spaces_loaded',
 	help: 'Current count of spaces loaded into memory',
 });
 
 const inUseSpacesMetric = new promClient.Gauge({
-	name: 'pandora_directory_rooms_in_use',
+	name: 'pandora_directory_spaces_in_use',
 	help: 'Current count of spaces in use',
 });
 

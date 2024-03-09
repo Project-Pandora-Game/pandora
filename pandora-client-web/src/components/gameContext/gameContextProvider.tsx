@@ -8,6 +8,7 @@ import { ShardConnectorContextProvider } from './shardConnectorContextProvider';
 import { CharacterRestrictionOverrideDialogContext } from '../characterRestrictionOverride/characterRestrictionOverride';
 import { ChatInputContextProvider } from '../../ui/components/chat/chatInput';
 import { PermissionCheckServiceProvider } from './permissionCheckProvider';
+import { AnchorAutoscroll } from '../../common/anchorAutoscroll';
 
 export function GameContextProvider({ children }: ChildrenProps): ReactElement {
 	return (
@@ -33,6 +34,8 @@ function MiscProviders({ children }: ChildrenProps): ReactElement {
 	return (
 		<CharacterRestrictionOverrideDialogContext>
 			<PermissionCheckServiceProvider>
+				<AnchorAutoscroll />
+
 				{ children }
 			</PermissionCheckServiceProvider>
 		</CharacterRestrictionOverrideDialogContext>

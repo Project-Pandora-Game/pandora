@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useLocation } from 'react-router';
+import './anchorHighlight.scss';
 
 /**
  * This is a service that listens for location changes, mainly anchor id changes.
@@ -21,24 +22,28 @@ export function AnchorAutoscroll(): null {
 			return;
 
 		let cancel = false;
+		let target: HTMLElement | null = null;
 
 		// HACK: Do a short wait to increase the chance of things loading correctly
 		setTimeout(() => {
 			if (cancel)
 				return;
 
-			const target = document.getElementById(targetId);
+			target = document.getElementById(targetId);
 			if (target != null) {
 				target.scrollIntoView({
 					behavior: 'smooth',
 					block: 'start',
 				});
+
+				target.classList.add('target-highlight');
 			}
 		}, 100);
 
 		// Cleanup the animation
 		return () => {
 			cancel = true;
+			target?.classList.remove('target-highlight');
 		};
 	}, [hash]);
 

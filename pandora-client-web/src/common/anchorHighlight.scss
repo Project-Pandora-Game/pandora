@@ -1,0 +1,12 @@
+:target, .target-highlight {
+	animation: target-highlight 2s ease-in;
+}
+
+@keyframes target-highlight {
+	from {
+		background-color: orange;
+	}
+	to {
+		background-color: transparent;
+	}
+}

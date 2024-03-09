@@ -10,10 +10,11 @@ import {
 	Item,
 	ItemPath,
 } from 'pandora-common';
+import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { useMemo } from 'react';
-import { WardrobeFocus, WardrobeTarget } from './wardrobeTypes';
-import { useWardrobeContext } from './wardrobeContext';
 import { ICharacter } from '../../character/character';
+import { useWardrobeContext } from './wardrobeContext';
+import { WardrobeFocus, WardrobeTarget } from './wardrobeTypes';
 
 export function WardrobeFocusesItem(focus: WardrobeFocus): focus is ItemPath {
 	return focus.itemId != null;
@@ -61,7 +62,12 @@ export function useWardrobeTargetItem(target: WardrobeTarget | null, itemPath: I
 	}, [items, itemPath]);
 }
 
-export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, spaceContext: ActionSpaceContext | null, _action: AppearanceAction, result: AppearanceActionProcessingResult): string[] {
+export function WardrobeCheckResultForConfirmationWarnings(
+	player: ICharacter,
+	spaceContext: ActionSpaceContext | null,
+	action: AppearanceAction,
+	result: AppearanceActionProcessingResult,
+): string[] {
 	if (!result.valid) {
 		Assert(result.prompt != null);
 		return [];
@@ -83,6 +89,18 @@ export function WardrobeCheckResultForConfirmationWarnings(player: ICharacter, s
 		!resultRestrictionManager.canUseHands()
 	) {
 		warnings.push(`This action will prevent you from using your hands`);
+	}
+
+	if (action.type === 'roomDeviceDeploy' && !action.deployment.deployed) {
+		const originalDeviceState = EvalItemPath(result.originalState.getItems(action.target) ?? [], action.item);
+		if (
+			originalDeviceState != null &&
+			originalDeviceState.isType('roomDevice') &&
+			originalDeviceState.deployment.deployed &&
+			originalDeviceState.slotOccupancy.size > 0
+		) {
+			warnings.push(`Storing an occupied room device will remove all characters from it`);
+		}
 	}
 
 	return warnings;

@@ -137,8 +137,6 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `The ${DescribeAsset(assetManager, e.asset)} cannot be used in that way.`;
 			case 'canOnlyBeInOneDevice':
 				return `Character can only be in a single device at a time.`;
-			case 'deviceOccupied':
-				return `The ${DescribeAsset(assetManager, e.asset)} is occupied.`;
 			case 'invalid':
 				return `The action results in a generally invalid state.`;
 		}

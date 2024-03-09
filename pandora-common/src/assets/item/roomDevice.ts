@@ -183,6 +183,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 					...this.deployment,
 					deployed: false,
 				},
+				slotOccupancy: new Map(),
 			});
 		}
 		if (newDeployment.position != null) {

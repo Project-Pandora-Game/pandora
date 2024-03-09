@@ -2,8 +2,8 @@ import { Logger } from '../logging';
 import { Assert, ShuffleArray } from '../utility';
 import type { Asset } from './asset';
 import type { AssetManager } from './assetManager';
-import type { AssetType, WearableAssetType } from './definitions';
 import type { AssetId } from './base';
+import type { AssetType, WearableAssetType } from './definitions';
 import type { Item } from './item';
 import { AssetPropertiesResult, CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 import type { AssetFrameworkRoomState } from './state/roomState';
@@ -43,10 +43,6 @@ export type AppearanceValidationError =
 	}
 	| {
 		problem: 'canOnlyBeInOneDevice';
-	}
-	| {
-		problem: 'deviceOccupied';
-		asset: AssetId;
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, non-unique ID, and so on...)
 	| {

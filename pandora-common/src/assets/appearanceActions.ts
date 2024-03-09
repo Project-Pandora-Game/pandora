@@ -867,26 +867,34 @@ export function ActionRoomDeviceDeploy(processingContext: AppearanceActionProces
 
 	let previousDeviceState: ItemRoomDevice | undefined;
 
+	const affectedCharacters = new Set<CharacterId>();
+
 	// Do change
 	if (!manipulator.modifyItem(itemId, (it) => {
 		if (!it.isType('roomDevice'))
 			return null;
 
-		if (!deployment.deployed && it.slotOccupancy.size > 0) {
-			processingContext.addProblem({
-				result: 'validationError',
-				validationError: {
-					problem: 'deviceOccupied',
-					asset: it.asset.id,
-				},
-			});
-			return null;
+		for (const characterId of it.slotOccupancy.values()) {
+			affectedCharacters.add(characterId);
 		}
 
 		previousDeviceState = it;
 		return it.changeDeployment(deployment);
 	}))
 		return false;
+
+	// If we did undeploy, do character re-validation in case it was forceful (similar to admin kick)
+	for (const characterId of affectedCharacters) {
+		if (processingContext.getCharacter(characterId) == null)
+			continue;
+
+		if (!processingContext.manipulator.produceCharacterState(
+			characterId,
+			(character) => character.updateRoomStateLink(processingContext.manipulator.currentState.room, true),
+		)) {
+			return false;
+		}
+	}
 
 	// Change message to chat
 	if (previousDeviceState != null && deployment.deployed !== previousDeviceState.isDeployed()) {

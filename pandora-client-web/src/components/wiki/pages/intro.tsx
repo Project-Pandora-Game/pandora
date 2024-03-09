@@ -1,6 +1,7 @@
 import React, { ReactElement } from 'react';
 import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/gameStateContextProvider';
 import { ExternalLink } from '../../common/link/externalLink';
+import { Link } from 'react-router-dom';
 
 export function WikiIntroduction(): ReactElement {
 	return (
@@ -40,7 +41,7 @@ export function WikiIntroduction(): ReactElement {
 			<p>
 				In the "Pose"-tab, you will find the ability to freely move arms and legs under the "manual pose" section at the bottom of the screen.
 				Expand this section to view the respective sliders. The "Body"-tab in
-				the <a href='/wiki/characters/#CH_Character_wardrobe'>wardrobe</a> lets you manage <a href='/wiki/items/#IT_Body_parts'>body parts</a>.
+				the <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link> lets you manage <Link to='/wiki/items#IT_Body_parts'>body parts</Link>.
 			</p>
 
 			<h4>2. Front and back character view</h4>
@@ -51,8 +52,8 @@ export function WikiIntroduction(): ReactElement {
 			<h4>3. Persistent rooms & personal room</h4>
 			<p>
 				In Pandora, a user created space can consist of one or (in the future) several rooms and everything is persistent
-				(settings, <a href='/wiki/spaces/#SP_Room_inventory'>inventory</a>,
-				and <a href='/wiki/items/#IT_Room-level_items'>room devices</a> remain even after everyone has left). Every account can own a
+				(settings, <Link to='/wiki/spaces#SP_Room_inventory'>inventory</Link>,
+				and <Link to='/wiki/items#IT_Room-level_items'>room devices</Link> remain even after everyone has left). Every account can own a
 				limited amount of spaces. A space only gets deleted when it no longer has any owners.<br />
 				Spaces set to public are visible to everyone, while at least one admin is online inside the room.
 				You can always see spaces where you are either owner, admin, or on the allow list (even if they are private or empty).
@@ -62,30 +63,30 @@ export function WikiIntroduction(): ReactElement {
 				By default, this is shown by the character having a ghost-like effect. This effect can be changed in the settings.
 			</p>
 			<p>
-				Every character also has their own <a href='/wiki/spaces/#SP_Personal_space'>personal space</a> that cannot be deleted
+				Every character also has their own <Link to='/wiki/spaces#SP_Personal_space'>personal space</Link> that cannot be deleted
 				and also not entered by any other character.<br />
-				You can find more information about spaces and rooms under the <a href='/wiki/spaces/'>"spaces"-tab</a>.
+				You can find more information about spaces and rooms under the <Link to='/wiki/spaces/'>"spaces"-tab</Link>.
 			</p>
 
 			<h4>4. A feature-rich room chat</h4>
-			You can find more information about all chat related features under the <a href='/wiki/spaces/'>"spaces"-tab</a>.
+			You can find more information about all chat related features under the <Link to='/wiki/spaces/'>"spaces"-tab</Link>.
 			<ul>
 				<li>Click a name in the chat to start whispering to that person</li>
 				<li>Right-clicking your own message enables you to edit or delete it for { MESSAGE_EDIT_TIMEOUT / 1000 / 60 } mins after posting it</li>
 				<li>To get help on chat commands, start the command by typing the "/" character, which will then show the list of available commands</li>
-				<li>You can write Out-Of-Character (<a href='/wiki/safety/#SA_Out-of-character_communication'>OOC</a>) messages by prefixing them with "(("</li>
+				<li>You can write Out-Of-Character (<Link to='/wiki/safety#SA_Out-of-character_communication'>OOC</Link>) messages by prefixing them with "(("</li>
 			</ul>
 
 			<h4>5. Free character placement and movement inside rooms</h4>
 			<p>
 				You can freely move your character inside a room by dragging them by the name below the character.
-				Space admins can also move other characters this way. <a href='/wiki/characters/#CH_Character_movement'>More information here</a>.
+				Space admins can also move other characters this way. <Link to='/wiki/characters#CH_Character_movement'>More information here</Link>.
 			</p>
 
 			<h4>6. Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</h4>
 			<p>
 				Room-level items can only be set up, moved, and removed by permitted characters, for instance space admins.
-				Some special ones can be used/entered by everyone. <a href='/wiki/items/#IT_Room-level_items'>More information here</a>.
+				Some special ones can be used/entered by everyone. <Link to='/wiki/items#IT_Room-level_items'>More information here</Link>.
 			</p>
 
 			<h4>7. Stable code base</h4>
@@ -100,7 +101,7 @@ export function WikiIntroduction(): ReactElement {
 			<p>
 				Pandora validates and performs all character interactions on the server,
 				preventing the creation of scripts/mods that do undesired actions, such as anti-garble or unauthorized removal
-				of (<a href='/wiki/items/#IT_Lock_module'>locked</a>) restraints.<br />
+				of (<Link to='/wiki/items#IT_Lock_module'>locked</Link>) restraints.<br />
 				This ensures consistency in what others see, resulting in everyone having the same experience.
 			</p>
 
@@ -109,12 +110,12 @@ export function WikiIntroduction(): ReactElement {
 				The items from the constantly growing number of assets in Pandora, available to everyone from the start,
 				can be ordered (almost) freely: As long as the item's requirements are satisfied, you can combine items in whatever order you want.
 				Right now, you can only add each asset once, but in the future you will be able to add countless layers of rope, if that is what you want.<br />
-				<a href='/wiki/items/#IT_Item_layering_order'>More information here</a>.
+				<Link to='/wiki/items#IT_Item_layering_order'>More information here</Link>.
 			</p>
 
 			<h4>10. A direct messaging system</h4>
 			<p>
-				To write someone a DM, <a href='/wiki/characters/#CH_Character_context_menu'>click their name</a> below their character, or click
+				To write someone a DM, <Link to='/wiki/characters#CH_Character_context_menu'>click their name</Link> below their character, or click
 				the contacts icon at the top and then under the "DMs"-tab
 				you have to either look for the account name of the user you want to exchange messages with on the left, or
 				you have to search for them via the bottom left input field using their <b>account ID</b>. You can find the account
@@ -130,8 +131,8 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>12. User safety features for emergencies</h4>
 			<p>
-				Beyond <a href='/wiki/safety/#SA_Out-of-character_communication'>OOC-communication</a>, there are two user safety features for
-				emergencies: <a href='/wiki/safety/#SA_Safemode'>Safemode</a> and <a href='/wiki/safety/#SA_Timeout_mode'>timeout mode</a>. You
+				Beyond <Link to='/wiki/safety#SA_Out-of-character_communication'>OOC-communication</Link>, there are two user safety features for
+				emergencies: <Link to='/wiki/safety#SA_Safemode'>Safemode</Link> and <Link to='/wiki/safety#SA_Timeout_mode'>timeout mode</Link>. You
 				can find those features via a button next to your own name in the "Room"-tab. Both modes are designed to make it harder
 				to misuse safety features outside of their intended usage.
 			</p>
@@ -139,18 +140,18 @@ export function WikiIntroduction(): ReactElement {
 			<h4>13. A permission feature that allows the user to set who is allowed to do what</h4>
 			<p>
 				You can see and change the current permissions in the Pandora settings. Permissions are character-specific and not
-				account-wide. <a href='/wiki/characters/#CH_Character_permissions'>More information here</a>.
+				account-wide. <Link to='/wiki/characters#CH_Character_permissions'>More information here</Link>.
 			</p>
 
 			<h4>14. Saving item collections in the wardrobe and supporting import/export</h4>
 			<p>
-				The "Items" and "Body"-tabs in the <a href='/wiki/characters/#CH_Character_wardrobe'>wardrobe</a> as well as
-				the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a> screen have an "Saved items"-tab
+				The "Items" and "Body"-tabs in the <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link> as well as
+				the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link> screen have an "Saved items"-tab
 				that lets you access and manage all your custom item collections stored on the Pandora server.<br />
 				It also allows you to export and import collections to save them locally if you run out of storage space or
 				to share them with others. A collection can contain any type of item,
-				even <a href='/wiki/items/#IT_Room-level_items'>room devices</a>.<br />
-				<a href='/wiki/items/#IT_Saving_collections'>More information here</a>.
+				even <Link to='/wiki/items#IT_Room-level_items'>room devices</Link>.<br />
+				<Link to='/wiki/items#IT_Saving_collections'>More information here</Link>.
 			</p>
 
 			<hr />

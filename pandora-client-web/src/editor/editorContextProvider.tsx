@@ -9,6 +9,7 @@ import { Editor } from './editor';
 import { AssetFrameworkGlobalState } from 'pandora-common';
 import { HoverElementsPortal } from '../components/hoverElement/hoverElement';
 import { permissionCheckContext, PermissionCheckServiceBase } from '../components/gameContext/permissionCheckProvider';
+import { AnchorAutoscroll } from '../common/anchorAutoscroll';
 
 export const EditorContext = createContext({
 	editor: null as Editor | null,
@@ -29,6 +30,7 @@ export function EditorContextProvider({ children }: ChildrenProps): ReactElement
 			<EditorErrorBoundary>
 				<Dialogs location='global' />
 				<Dialogs location='mainOverlay' />
+				<AnchorAutoscroll />
 				<HoverElementsPortal />
 				<EditorContext.Provider value={ context }>
 					<PermissionCheckServiceProvider>

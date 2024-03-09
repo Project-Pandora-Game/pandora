@@ -1,4 +1,5 @@
 import React, { ReactElement } from 'react';
+import { Link } from 'react-router-dom';
 
 export function WikiItems(): ReactElement {
 	return (
@@ -11,29 +12,29 @@ export function WikiItems(): ReactElement {
 				Items in Pandora are created from assets, which are added to Pandora by artists and asset makers from the community.
 				All assets are available from the start to all users, who can freely create customized items based on an asset.<br />
 				Almost all items have a customizable color. Some items also have one or more item modules. Aside from general modules, there can
-				be a <a href='#IT_Storage_modules'>storage module</a> or <a href='#IT_Lock_module'>lock modules</a> on
-				an item, depending on what it is. These features can be accessed in the <a href='/wiki/characters/#CH_Character_wardrobe'>character wardrobe</a> by clicking
+				be a <Link to='#IT_Storage_modules'>storage module</Link> or <Link to='#IT_Lock_module'>lock modules</Link> on
+				an item, depending on what it is. These features can be accessed in the <Link to='/wiki/characters#CH_Character_wardrobe'>character wardrobe</Link> by clicking
 				on items.
 			</p>
 			<p>
 				Aside from regular items that can be worn and used by characters, there are also locks, body parts, and room-level items that can freely be placed on a
 				room background. Body parts can only exist on a character's body, but except those, items can generally also be inside the storage module of some
-				other item or in a <a href='/wiki/spaces/#SP_Room_inventory'>room's inventory</a>, which could be considered the room's floor.<br />
+				other item or in a <Link to='/wiki/spaces#SP_Room_inventory'>room's inventory</Link>, which could be considered the room's floor.<br />
 				Lastly, items can be part of a collection, which is a set of items that can be stored in Pandora or exported in form of a longer code that can be stored
 				outside of Pandora and later be imported again. You can add the same item several times.
 			</p>
 
 			<h3>Item-specific features</h3>
 			<ul>
-				<li><a href='#IT_Body_parts'>Body parts</a></li>
-				<li><a href='#IT_Room-level_items'>Room-level items</a></li>
-				<li><a href='#IT_Storage_modules'>Storage modules</a></li>
-				<li><a href='#IT_Lock_module'>Lock module</a></li>
-				<li><a href='#IT_Item_preferences_and_limits'>Item preferences and limits</a></li>
-				<li><a href='#IT_Saving_collections'>Saving collections</a></li>
-				<li><a href='#IT_Item_layering_order'>Item layering order</a></li>
-				<li><a href='#IT_Layer_transparency'>Layer transparency</a></li>
-				<li><a href='#IT_Alpha_masks'>Alpha masks</a></li>
+				<li><Link to='#IT_Body_parts'>Body parts</Link></li>
+				<li><Link to='#IT_Room-level_items'>Room-level items</Link></li>
+				<li><Link to='#IT_Storage_modules'>Storage modules</Link></li>
+				<li><Link to='#IT_Lock_module'>Lock module</Link></li>
+				<li><Link to='#IT_Item_preferences_and_limits'>Item preferences and limits</Link></li>
+				<li><Link to='#IT_Saving_collections'>Saving collections</Link></li>
+				<li><Link to='#IT_Item_layering_order'>Item layering order</Link></li>
+				<li><Link to='#IT_Layer_transparency'>Layer transparency</Link></li>
+				<li><Link to='#IT_Alpha_masks'>Alpha masks</Link></li>
 			</ul>
 
 			<h4 id='IT_Body_parts'>Body parts</h4>
@@ -58,7 +59,7 @@ export function WikiItems(): ReactElement {
 			<p>
 				Room-level items, also called room devices, are items that can be freely placed onto the room background and can be customized similar to regular items.
 				Room devices persist with the room and some of them can also hold one or more player characters or regular items inside.
-				They first need to be created in the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a> and then deployed into the room with the according button,
+				They first need to be created in the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link> and then deployed into the room with the according button,
 				after clicking on them in the inventory list.
 			</p>
 			<p>
@@ -72,19 +73,19 @@ export function WikiItems(): ReactElement {
 				<li>Currently, modules of room devices can be changed by anybody. This will be changed in the future.</li>
 				<li>Room items with a blue icon below them have character slots. These icons can optionally be hidden under the "Room"-tab.</li>
 				<li>All users can interact with the character slots of room devices and use them if not occupied.</li>
-				<li>Currently, everyone can put someone else into a room device if they are <a href='/wiki/characters/#CH_Character_permissions'>permitted</a> to.</li>
-				<li>Some room devices have <a href='#IT_Lock_module'>lock modules</a> that can for instance prevent a character from getting out of a room device slot.</li>
+				<li>Currently, everyone can put someone else into a room device if they are <Link to='/wiki/characters#CH_Character_permissions'>permitted</Link> to.</li>
+				<li>Some room devices have <Link to='#IT_Lock_module'>lock modules</Link> that can for instance prevent a character from getting out of a room device slot.</li>
 				<li>You are unable to leave the room while your character occupies a character slot of a room device.</li>
-				<li>Room devices can also be stored in a <a href='#IT_Saving_collections'>saved items collection</a>, like regular items.</li>
+				<li>Room devices can also be stored in a <Link to='#IT_Saving_collections'>saved items collection</Link>, like regular items.</li>
 				<li>
 					Warning: Room devices can get you stuck in an empty room, which would make
-					using <a href='/wiki/characters/#SA_Safemode'>safemode</a> the only way out.
+					using <Link to='/wiki/characters#SA_Safemode'>safemode</Link> the only way out.
 				</li>
 			</ul>
 
 			<h4 id='IT_Storage_modules'>Storage modules</h4>
 			<p>
-				After clicking on an item with a storage module in the <a href='/wiki/characters/#CH_Character_wardrobe'>wardrobe</a>, the inventory view of the
+				After clicking on an item with a storage module in the <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link>, the inventory view of the
 				storage module can be opened there.
 				You can create and delete items inside a storage module inventory, but you can also transfer it:
 			</p>
@@ -94,7 +95,7 @@ export function WikiItems(): ReactElement {
 				<li>
 					It is possible to add an item from a worn storage container directly onto your own character by going into move-mode with
 					the multi-arrow button on the item you want to add, while having the storage module open in
-					the <a href='/wiki/characters/#CH_Character_wardrobe'>wardrobe</a>. You then close
+					the <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link>. You then close
 					the storage view while in move-mode and add the moved item onto your character.
 				</li>
 				<li>
@@ -116,20 +117,20 @@ export function WikiItems(): ReactElement {
 				<li>Exclusive locks can be unlocked by anybody but the wearer of the locked item.</li>
 				<li>
 					Combination and password locks store the last used input value which can be knowingly or blindly used to lock the lock again later,
-					even while it was stored somewhere else, e.g. in a <a href='/wiki/spaces/#SP_Room_inventory'>room's inventory</a>, in the meantime.
+					even while it was stored somewhere else, e.g. in a <Link to='/wiki/spaces#SP_Room_inventory'>room's inventory</Link>, in the meantime.
 				</li>
 			</ul>
 
 			<h4 id='IT_Item_preferences_and_limits'>Item preferences and limits</h4>
 			<p>
-				With the "Item Limits"-tab in the <a href='/wiki/characters/#CH_Character_wardrobe'>wardrobe</a>, you can set preferences for individual
+				With the "Item Limits"-tab in the <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link>, you can set preferences for individual
 				items or groups of similar items, such as limiting them.
 				The possible preferences are "Favorite", "Normal", and "Maybe". The possible limits are "Prevent", and "Do not render".
 			</p>
 			<ul>
 				<li>
 					Other users can see those preferences in the form of icon-based highlighting when they open
-					your <a href='/wiki/characters/#CH_Character_wardrobe'>wardrobe</a> to add some items.
+					your <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link> to add some items.
 				</li>
 				<li>"Prevent" blocks anybody other than yourself to use this item on you.</li>
 				<li>"Do not render" will not show you this item on yourself or on other characters, item previews will be blurred in all wardrobes.</li>
@@ -141,16 +142,16 @@ export function WikiItems(): ReactElement {
 
 			<h4 id='IT_Saving_collections'>Saving collections</h4>
 			<p>
-				The "Items" and "Body"-tabs in the <a href='/wiki/characters/#CH_Character_wardrobe'>wardrobe</a> as
-				well as the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a> screen have an "Saved items"-tab that lets you access and manage all
+				The "Items" and "Body"-tabs in the <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link> as
+				well as the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link> screen have an "Saved items"-tab that lets you access and manage all
 				your custom item collections stored on the Pandora server. A collection template can contain normal
-				items, <a href='#IT_Room-level_items'>room-level items</a>, body modifications, and even storage items.
+				items, <Link to='#IT_Room-level_items'>room-level items</Link>, body modifications, and even storage items.
 			</p>
 			<ul>
 				<li>
 					Creating a collection: After you clicked the button to create a new collection, you need to start moving the items that you want to be part of the collection one-by-one
 					from the left side (your worn items or the room's inventory) to the right side (the temporary collection you just created).<br />
-					<a href='#IT_Item_layering_order'>Item order</a> is important and the following article gives tips on that aspect.
+					<Link to='#IT_Item_layering_order'>Item order</Link> is important and the following article gives tips on that aspect.
 				</li>
 				<li>
 					Storing a collection: After you have completed your temporary collection and given it a name, you can either save it on Pandora's server, if you have storage space left
@@ -170,14 +171,14 @@ export function WikiItems(): ReactElement {
 			</p>
 			<p>
 				Note on correct item layering order:<br />
-				The layering order of items is that the higher an item is in the <a href='/wiki/characters/#CH_Character_wardrobe'>character wardrobe</a> list,
+				The layering order of items is that the higher an item is in the <Link to='/wiki/characters#CH_Character_wardrobe'>character wardrobe</Link> list,
 				the further outwards on the body it is worn.
 				So the first item is usually something like a jacket or dress, whereas underwear is further down in the list.
 			</p>
 			<p>
 				You add and remove items worn by the character from top to bottom, so from the outermost worn item (e.g. a jacket or dress)
 				towards the inner pieces, like how you would undress in reality, too.<br />
-				In case you dropped items in that manner to the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a>, you can again add them to the body from the top to bottom,
+				In case you dropped items in that manner to the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link>, you can again add them to the body from the top to bottom,
 				so from the item worn the closest to the body, like you would start dressing in reality, too.
 			</p>
 			<p>
@@ -213,7 +214,7 @@ export function WikiItems(): ReactElement {
 			<p>
 				Alpha masks are created by asset makers alongside the asset and are more of a hidden feature in the background to make item combinations look nicer and hide for instance
 				overlapping edges when two items do not perfectly align. An alpha mask is an invisible shape that hides parts of other items that are below the item with the alpha mask
-				in the <a href='/wiki/characters/#CH_Character_wardrobe'>character wardrobe</a> wear order. Currently, not many assets use alpha masks, as the performance impact is too
+				in the <Link to='/wiki/characters#CH_Character_wardrobe'>character wardrobe</Link> wear order. Currently, not many assets use alpha masks, as the performance impact is too
 				high to use them more widely. In case you experience performance issues, especially in rooms with many characters,
 				you could try to go the "Graphics"-tab in Pandora's settings and change or disable the alphamasking engine.
 			</p>

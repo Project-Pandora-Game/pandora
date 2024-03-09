@@ -150,9 +150,25 @@ export function UrlTabContainer({
 				{
 					children.map((tab, index) => (tab && tab.props.urlChunk != null && (
 						tab.props.urlChunk ? (
-							<Route key={ index } element={ tab } path={ tab.props.urlChunk + '/*' } />
+							<Route
+								key={ index }
+								element={ (
+									<React.Fragment key={ tab.props.urlChunk }>
+										{ tab }
+									</React.Fragment>
+								) }
+								path={ tab.props.urlChunk + '/*' }
+							/>
 						) : (
-							<Route key={ index } element={ tab } index />
+							<Route
+								key={ index }
+								element={ (
+									<React.Fragment key='index'>
+										{ tab }
+									</React.Fragment>
+								) }
+								index
+							/>
 						)
 					)))
 				}

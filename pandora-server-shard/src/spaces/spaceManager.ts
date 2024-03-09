@@ -1,13 +1,12 @@
-import { SpaceId, GetLogger, IShardSpaceDefinition, Assert } from 'pandora-common';
-import { PublicSpace } from './publicSpace';
+import { Assert, GetLogger, IShardSpaceDefinition, SpaceId } from 'pandora-common';
 import promClient from 'prom-client';
 import { assetManager } from '../assets/assetManager';
+import { PublicSpace } from './publicSpace';
 
 const logger = GetLogger('SpaceManager');
 
-// TODO(spaces): Consider migrating metric ids
 const spacesMetric = new promClient.Gauge({
-	name: 'pandora_shard_rooms',
+	name: 'pandora_shard_spaces',
 	help: 'Current count of spaces loaded on this shard',
 });
 

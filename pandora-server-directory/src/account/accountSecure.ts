@@ -139,8 +139,8 @@ export default class AccountSecure {
 			await this.#updateDatabase();
 	}
 
-	public verifyLoginToken(token: string): boolean {
-		return this.#validateToken(AccountTokenReason.LOGIN, token);
+	public getLoginToken(token: string): AccountToken | undefined {
+		return this.#findToken(AccountTokenReason.LOGIN, token);
 	}
 
 	public getGitHubStatus(): undefined | { id: number; login: string; } {
@@ -344,11 +344,16 @@ const TOKEN_TYPES = {
 	},
 } as const satisfies TokenType;
 
+export interface AccountTokenOwner {
+	onAccountTokenDestroyed(): void;
+}
+
 export class AccountToken implements Readonly<DatabaseAccountToken> {
 	public readonly value: string;
 	public readonly expires: number;
 	public readonly reason: AccountTokenReason;
 
+	readonly #bound = new Set<AccountTokenOwner>();
 	#destroyed = false;
 
 	public constructor(token: Readonly<DatabaseAccountToken>) {
@@ -364,6 +369,10 @@ export class AccountToken implements Readonly<DatabaseAccountToken> {
 			expires: Date.now() + expiration,
 			reason,
 		});
+	}
+
+	public bind(owner: AccountTokenOwner): void {
+		this.#bound.add(owner);
 	}
 
 	public validate(): boolean {
@@ -383,5 +392,10 @@ export class AccountToken implements Readonly<DatabaseAccountToken> {
 			return;
 
 		this.#destroyed = true;
+
+		for (const owner of this.#bound) {
+			owner.onAccountTokenDestroyed();
+		}
+		this.#bound.clear();
 	}
 }

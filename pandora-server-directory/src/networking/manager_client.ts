@@ -200,6 +200,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 		// Generate new auth token for new login
 		const token = await account.secure.generateNewLoginToken();
+		connection.bindLoginToken(token);
 		// Set the account for the connection and return result
 		logger.verbose(`${connection.id} logged in as ${account.data.username}`);
 		connection.setAccount(account);
@@ -561,9 +562,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	private async handleAuth(connection: ClientConnection, auth: IClientDirectoryAuthMessage): Promise<void> {
 		// Find account by username
 		const account = await accountManager.loadAccountByUsername(auth.username);
+		const token = account?.secure.getLoginToken(auth.token);
 		// Verify the token validity
-		if (account && account.secure.verifyLoginToken(auth.token)) {
+		if (account && token) {
 			logger.verbose(`${connection.id} logged in as ${account.data.username} using token`);
+			connection.bindLoginToken(token);
 			connection.setAccount(account);
 			if (auth.character) {
 				const char = account.characters.get(auth.character.id)?.loadedCharacter;

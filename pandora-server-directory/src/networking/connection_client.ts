@@ -3,6 +3,7 @@ import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/
 import type { Account } from '../account/account';
 import type { Character } from '../account/character';
 import { ConnectionManagerClient } from './manager_client';
+import { AccountTokenReason, AccountToken } from '../account/accountSecure';
 
 /** Class housing connection from a client */
 export class ClientConnection extends IncomingConnection<IDirectoryClient, IClientDirectory, IncomingSocket> {
@@ -67,6 +68,20 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 			this._account = account;
 			this.joinRoom(account.associatedConnections);
 		}
+	}
+
+	public bindLoginToken(token: AccountToken): void {
+		Assert(token.reason === AccountTokenReason.LOGIN);
+		token.bind(this);
+	}
+
+	public onAccountTokenDestroyed(): void {
+		if (this._account == null)
+			return;
+
+		this.setAccount(null);
+		this.sendConnectionStateUpdate();
+		this.logger.verbose(`${this.id} logged out`);
 	}
 
 	/**

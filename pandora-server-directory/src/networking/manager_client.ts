@@ -1,4 +1,4 @@
-import { AccountRole, Assert, AssertNever, AssertNotNullable, Awaitable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, Service } from 'pandora-common';
+import { AccountRole, Assert, AssertNever, AssertNotNullable, Awaitable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, Service } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import promClient from 'prom-client';
 import { z } from 'zod';
@@ -13,7 +13,7 @@ import { ShardTokenStore } from '../shard/shardTokenStore';
 import { SpaceManager } from '../spaces/spaceManager';
 import { Sleep } from '../utility';
 import type { ClientConnection } from './connection_client';
-const { BETA_KEY_ENABLED, CHARACTER_LIMIT_NORMAL, HCAPTCHA_SECRET_KEY, HCAPTCHA_SITE_KEY } = ENV;
+const { BETA_KEY_ENABLED, HCAPTCHA_SECRET_KEY, HCAPTCHA_SITE_KEY } = ENV;
 
 /** Time (in ms) of how often the directory should send status updates */
 export const STATUS_UPDATE_INTERVAL = 60_000;
@@ -297,7 +297,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		return {
 			characters: connection.account.listCharacters(),
-			limit: CHARACTER_LIMIT_NORMAL,
+			limit: LIMIT_CHARACTER_COUNT,
 		};
 	}
 

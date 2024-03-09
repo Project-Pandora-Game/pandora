@@ -96,7 +96,7 @@ export class AccountContacts {
 			return true;
 
 		// If allowing from the same space and accounts share a space, allow
-		if (accountSettings.allowDirectMessagesFrom === 'room' && AccountsHaveCharacterInSameSpace(this.account, from))
+		if (accountSettings.allowDirectMessagesFrom === 'space' && AccountsHaveCharacterInSameSpace(this.account, from))
 			return true;
 
 		// Default: No access

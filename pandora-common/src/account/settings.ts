@@ -13,10 +13,10 @@ export const AccountSettingsSchema = z.object({
 	hideOnlineStatus: z.boolean(),
 	/**
 	 * - 'all' - Allow direct messages from anyone
-	 * - 'room' - Allow direct messages from friends and people in the same space | TODO(spaces): Update?
+	 * - 'space' - Allow direct messages from friends and people in the same space
 	 * - 'friends' - Only allow direct messages from friends
 	 */
-	allowDirectMessagesFrom: z.enum(['all', 'room', 'friends']),
+	allowDirectMessagesFrom: z.enum(['all', 'space', 'friends']).catch('all'),
 	/**
 	 * Controls whether to show extra quick actions in wardrobe
 	 * (actions that are doable with multiple clicks even without this button, but the button allows doing them as single click)

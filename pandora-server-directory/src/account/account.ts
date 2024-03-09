@@ -14,12 +14,13 @@ import {
 	IShardAccountDefinition,
 	ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE,
 	KnownObject,
+	LIMIT_CHARACTER_COUNT,
+	LIMIT_SPACE_OWNED_COUNT,
 	OutfitMeasureCost,
 	ServerRoom,
 	type AccountSettings,
 	type AccountSettingsKeys,
 } from 'pandora-common';
-import { ENV } from '../config';
 import { GetDatabase } from '../database/databaseProvider';
 import { DatabaseAccount, DatabaseAccountUpdate, DatabaseAccountWithSecure, DirectMessageAccounts } from '../database/databaseStructure';
 import type { ClientConnection } from '../networking/connection_client';
@@ -28,8 +29,6 @@ import { AccountDirectMessages } from './accountDirectMessages';
 import { AccountRoles } from './accountRoles';
 import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import { CharacterInfo } from './character';
-
-const { CHARACTER_LIMIT_NORMAL, ROOM_LIMIT_NORMAL } = ENV;
 
 /** Currently logged in or recently used account */
 export class Account {
@@ -275,7 +274,7 @@ export class Account {
 	}
 
 	public async createCharacter(): Promise<CharacterInfo | null> {
-		if (this.characters.size > CHARACTER_LIMIT_NORMAL || Array.from(this.characters.values()).some((i) => i.inCreation))
+		if (this.characters.size > LIMIT_CHARACTER_COUNT || Array.from(this.characters.values()).some((i) => i.inCreation))
 			return null;
 
 		const info = await GetDatabase().createCharacter(this.data.id);
@@ -334,7 +333,7 @@ export class Account {
 	//#region Spaces
 
 	public get spaceOwnershipLimit(): number {
-		return ROOM_LIMIT_NORMAL;
+		return LIMIT_SPACE_OWNED_COUNT;
 	}
 
 	//#endregion

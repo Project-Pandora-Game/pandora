@@ -9,6 +9,9 @@
 /** The maximum length of an account name */
 export const LIMIT_ACCOUNT_NAME_LENGTH = 32;
 
+/** Character limit for an account */
+export const LIMIT_CHARACTER_COUNT = 5;
+
 /** The minimum length of a character name */
 export const LIMIT_CHARACTER_NAME_MIN_LENGTH = 3;
 /** The maximum length of a character name */
@@ -16,6 +19,9 @@ export const LIMIT_CHARACTER_NAME_LENGTH = 32;
 
 /** The maximum length of an e-mail address */
 export const LIMIT_MAIL_LENGTH = 256;
+
+/** Space ownership limit for an account */
+export const LIMIT_SPACE_OWNED_COUNT = 5;
 
 /** The maximum amount of characters inside a space */
 export const LIMIT_SPACE_MAX_CHARACTER_NUMBER = 100;

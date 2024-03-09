@@ -1,19 +1,19 @@
-import { GetLogger, SpaceDirectoryConfigSchema, MessageHandler, IClientDirectory, IClientDirectoryArgument, IClientDirectoryPromiseResult, BadMessageError, IClientDirectoryResult, IClientDirectoryAuthMessage, IDirectoryStatus, AccountRole, ZodMatcher, ClientDirectoryAuthMessageSchema, IMessageHandler, AssertNotNullable, Assert, AssertNever, IShardTokenConnectInfo, Service, Awaitable, SecondFactorData, SecondFactorType, SecondFactorResponse } from 'pandora-common';
+import { AccountRole, Assert, AssertNever, AssertNotNullable, Awaitable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, Service } from 'pandora-common';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
+import promClient from 'prom-client';
+import { z } from 'zod';
+import type { Account } from '../account/account';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { ENV } from '../config';
-const { BETA_KEY_ENABLED, CHARACTER_LIMIT_NORMAL, HCAPTCHA_SECRET_KEY, HCAPTCHA_SITE_KEY } = ENV;
-import { ShardManager } from '../shard/shardManager';
-import type { Account } from '../account/account';
 import { GitHubVerifier } from '../services/github/githubVerify';
-import promClient from 'prom-client';
-import { ShardTokenStore } from '../shard/shardTokenStore';
-import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { BetaKeyStore } from '../shard/betaKeyStore';
+import { ShardManager } from '../shard/shardManager';
+import { ShardTokenStore } from '../shard/shardTokenStore';
 import { SpaceManager } from '../spaces/spaceManager';
-import type { ClientConnection } from './connection_client';
-import { z } from 'zod';
 import { Sleep } from '../utility';
+import type { ClientConnection } from './connection_client';
+const { BETA_KEY_ENABLED, HCAPTCHA_SECRET_KEY, HCAPTCHA_SITE_KEY } = ENV;
 
 /** Time (in ms) of how often the directory should send status updates */
 export const STATUS_UPDATE_INTERVAL = 60_000;
@@ -37,10 +37,6 @@ const messagesMetric = new promClient.Counter({
 	help: 'Count of received messages from clients',
 	labelNames: ['messageType'],
 });
-
-// TODO(spaces): Drop these
-const IsIChatRoomDirectoryConfig = ZodMatcher(SpaceDirectoryConfigSchema);
-const IsClientDirectoryAuthMessage = ZodMatcher(ClientDirectoryAuthMessageSchema);
 
 /** Class that stores all currently connected clients */
 export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientDirectory, ClientConnection>, Service {
@@ -151,8 +147,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		// Send current server status to the client
 		connection.sendMessage('serverStatus', MakeStatus());
 		// Check if connect-time authentication is valid and process it
-		if (IsClientDirectoryAuthMessage(auth)) {
-			this.handleAuth(connection, auth)
+		const parsedAuth = ClientDirectoryAuthMessageSchema.safeParse(auth);
+		if (parsedAuth.success) {
+			this.handleAuth(connection, parsedAuth.data)
 				.catch((error) => {
 					logger.error(`Error processing connect auth from ${connection.id}`, error);
 				});
@@ -300,7 +297,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		return {
 			characters: connection.account.listCharacters(),
-			limit: CHARACTER_LIMIT_NORMAL,
+			limit: LIMIT_CHARACTER_COUNT,
 		};
 	}
 
@@ -407,7 +404,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private async handleSpaceCreate(spaceConfig: IClientDirectoryArgument['spaceCreate'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceCreate'] {
-		if (!connection.isLoggedIn() || !connection.character || !IsIChatRoomDirectoryConfig(spaceConfig))
+		if (!connection.isLoggedIn() || !connection.character)
 			throw new BadMessageError();
 
 		const character = connection.character;

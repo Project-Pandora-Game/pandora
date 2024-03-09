@@ -1,4 +1,5 @@
 import React, { ReactElement } from 'react';
+import { Link } from 'react-router-dom';
 
 export function WikiCharacters(): ReactElement {
 	return (
@@ -15,17 +16,17 @@ export function WikiCharacters(): ReactElement {
 			</p>
 			<p>
 				Every character has their
-				own <a href='/wiki/spaces/#SP_Personal_space'>personal space</a>, <a href='/wiki/items/#IT_Item_preferences_and_limits'>item preferences and limits</a>,
-				and they can have items and different <a href='/wiki/items/#IT_Body_parts'>body parts</a> added onto the character.
+				own <Link to='/wiki/spaces#SP_Personal_space'>personal space</Link>, <Link to='/wiki/items#IT_Item_preferences_and_limits'>item preferences and limits</Link>,
+				and they can have items and different <Link to='/wiki/items#IT_Body_parts'>body parts</Link> added onto the character.
 			</p>
 
 			<h3>Character-specific features</h3>
 			<ul>
-				<li><a href='#CH_Character_immersion'>Character immersion effects</a></li>
-				<li><a href='#CH_Character_movement'>Character movement</a></li>
-				<li><a href='#CH_Character_context_menu'>Character context menu</a></li>
-				<li><a href='#CH_Character_wardrobe'>Character wardrobe</a></li>
-				<li><a href='#CH_Character_permissions'>Character permissions</a></li>
+				<li><Link to='#CH_Character_immersion'>Character immersion effects</Link></li>
+				<li><Link to='#CH_Character_movement'>Character movement</Link></li>
+				<li><Link to='#CH_Character_context_menu'>Character context menu</Link></li>
+				<li><Link to='#CH_Character_wardrobe'>Character wardrobe</Link></li>
+				<li><Link to='#CH_Character_permissions'>Character permissions</Link></li>
 			</ul>
 
 			<h4 id='CH_Character_immersion'>Character immersion effects</h4>
@@ -34,7 +35,7 @@ export function WikiCharacters(): ReactElement {
 			</p>
 			<ul>
 				<li>can prevent you from interacting with items, by blocking your hand usage.</li>
-				<li>can prevent you from moving around and/or leaving the current room (for example <a href='/wiki/items/#IT_Room-level_items'>room devices</a>).</li>
+				<li>can prevent you from moving around and/or leaving the current room (for example <Link to='/wiki/items#IT_Room-level_items'>room devices</Link>).</li>
 				<li>with a seeing impairment effect will darken your view of the room partially or completely.</li>
 				<li>with a speech impairment effect will muffle your normal and whisper messages so that others have a hard time making sense out of them.</li>
 				<li>with a hearing impairment will muffle the messages you receive so that you have a hard time making sense out of them.</li>
@@ -44,7 +45,7 @@ export function WikiCharacters(): ReactElement {
 				and affect characters in predictable ways - the effects on them cannot be altered, ignored or bypassed.
 				That way everyone can easily predict what effects items have on the person wearing them.
 				If you dislike any of these effects, such as seeing a fully black room view with certain heavy blindfolds, you
-				can simply <a href='/wiki/items/#IT_Item_preferences_and_limits'>block according items.</a>
+				can simply <Link to='/wiki/items#IT_Item_preferences_and_limits'>block according items.</Link>
 				Note that items come with different strength levels of such effects.
 				For example items with a weaker speech impairment effect might still allow the wearer to be mostly understandable.
 			</p>
@@ -58,7 +59,7 @@ export function WikiCharacters(): ReactElement {
 				Moreover, when the play partner supports the scene well, it is also not necessary to understand "gag-talk" to feel on top of things.
 				Users with gag effects on their character may want to
 				describe and convey important non-verbal communication towards the play partner in the
-				form of <a href='/wiki/items/#SP_Room_chat_Chat_modes'>emotes</a>.
+				form of <Link to='/wiki/items#SP_Room_chat_Chat_modes'>emotes</Link>.
 				This can be describing things the play partner could notice, such as discomfort, the state of the own body, or a hint towards
 				what the muffled sentence likely meant from the tone and strength of the voice. A good roleplaying scene relies on all parties
 				to describe the scene in detail.
@@ -67,7 +68,7 @@ export function WikiCharacters(): ReactElement {
 			<h4 id='CH_Character_movement'>Character movement</h4>
 			<p>
 				You can move your character over the canvas by dragging the name under it. Space admins can also move other characters inside their rooms.
-				When you move next to a <a href='/wiki/items/#IT_Room-level_items'>room device</a> and interact with the blue icon under it, you can enter
+				When you move next to a <Link to='/wiki/items#IT_Room-level_items'>room device</Link> and interact with the blue icon under it, you can enter
 				a character slot of the device, if it has one.
 			</p>
 			<ul>
@@ -83,7 +84,7 @@ export function WikiCharacters(): ReactElement {
 			<h4 id='CH_Character_context_menu'>Character context menu</h4>
 			<p>
 				You can open a context-specific character menu by clicking on the name below a character inside the room.
-				While characters are inside a <a href='/wiki/items/#IT_Room-level_items'>room-level item</a>, their name
+				While characters are inside a <Link to='/wiki/items#IT_Room-level_items'>room-level item</Link>, their name
 				is not visible currently. You can still open the context menu by opening the room item's context
 				menu, opening the slot the character is inside, and then clicking on the character name.<br />
 				The character context menu has different features depending on whom it is opened on.
@@ -101,14 +102,14 @@ export function WikiCharacters(): ReactElement {
 			<h4 id='CH_Character_wardrobe'>Character wardrobe</h4>
 			<p>
 				You can enter the wardrobe under the "Room"-tab or by opening the character context menu.
-				There also is a button in the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a>.
+				There also is a button in the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link>.
 			</p>
 			<ul>
 				<li>The "Randomization"-tab lets you change to a randomized appearance</li>
 				<li>The "Body"-tab allows you to change your character's body, but only if the space you are in allows that.</li>
 				<li>
 					The "Items"-tab shows has the section with the item on your body on the left and shows
-					what is inside the <a href='/wiki/spaces/#SP_Room_inventory'>room inventory</a> on the right.
+					what is inside the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link> on the right.
 					You can create and wear a new item under the "create new item"-tab there.
 				</li>
 				<li>There is a maximum amount of items your character can wear or hold (also counting all items inside worn storage items)</li>
@@ -148,7 +149,7 @@ export function WikiCharacters(): ReactElement {
 			</p>
 			<p>
 				The "item limits" group of permissions relate to items you flagged with a star or question mark under
-				the <a href='/wiki/items/#IT_Item_preferences_and_limits'>"item limits"</a>-tab
+				the <Link to='/wiki/items#IT_Item_preferences_and_limits'>"item limits"</Link>-tab
 				of your wardrobe. These permissions are layered and depend upon each other:
 				To use items flagged as "maybe", the other character needs to also be permitted to use "favorite" and "normal" items.
 			</p>

@@ -1,6 +1,7 @@
 import React, { ReactElement } from 'react';
 import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/gameStateContextProvider';
 import { LIMIT_SPACE_BOUND_INVITES } from 'pandora-common';
+import { Link } from 'react-router-dom';
 
 export function WikiSpaces(): ReactElement {
 	return (
@@ -22,23 +23,23 @@ export function WikiSpaces(): ReactElement {
 
 			<h3>Space-specific features</h3>
 			<ul>
-				<li><a href='#SP_Room_layout'>Room layout</a></li>
-				<li><a href='#SP_Space_ownership'>Space ownership</a></li>
-				<li><a href='#SP_Space_deletion'>Space deletion</a></li>
-				<li><a href='#SP_Space_persistence'>Space persistence</a></li>
-				<li><a href='#SP_Space_visibility'>Space visibility</a></li>
-				<li><a href='#SP_Space_access'>Space access</a></li>
-				<li><a href='#SP_Space_invites'>Space invites</a></li>
-				<li><a href='#SP_Space_administration'>Space administration</a></li>
-				<li><a href='#SP_Leaving_a_space'>Leaving a space</a></li>
-				<li><a href='#SP_Personal_space'>Personal space</a></li>
-				<li><a href='#SP_Room_inventory'>Room inventory</a></li>
-				<li><a href='#SP_Room_chat_Chat_commands'>Room chat: Chat commands</a></li>
-				<li><a href='#SP_Room_chat_Chat_modes'>Room chat: Chat modes</a></li>
-				<li><a href='#SP_Room_chat_Editing_text'>Room chat: Editing text</a></li>
-				<li><a href='#SP_Room_chat_Whispering_someone'>Room chat: Whispering someone</a></li>
-				<li><a href='#SP_Room_chat_Text_formatting'>Room chat: Text formatting</a></li>
-				<li><a href='#SP_Room_chat_Chat_history'>Room chat: Chat history</a></li>
+				<li><Link to='#SP_Room_layout'>Room layout</Link></li>
+				<li><Link to='#SP_Space_ownership'>Space ownership</Link></li>
+				<li><Link to='#SP_Space_deletion'>Space deletion</Link></li>
+				<li><Link to='#SP_Space_persistence'>Space persistence</Link></li>
+				<li><Link to='#SP_Space_visibility'>Space visibility</Link></li>
+				<li><Link to='#SP_Space_access'>Space access</Link></li>
+				<li><Link to='#SP_Space_invites'>Space invites</Link></li>
+				<li><Link to='#SP_Space_administration'>Space administration</Link></li>
+				<li><Link to='#SP_Leaving_a_space'>Leaving a space</Link></li>
+				<li><Link to='#SP_Personal_space'>Personal space</Link></li>
+				<li><Link to='#SP_Room_inventory'>Room inventory</Link></li>
+				<li><Link to='#SP_Room_chat_Chat_commands'>Room chat: Chat commands</Link></li>
+				<li><Link to='#SP_Room_chat_Chat_modes'>Room chat: Chat modes</Link></li>
+				<li><Link to='#SP_Room_chat_Editing_text'>Room chat: Editing text</Link></li>
+				<li><Link to='#SP_Room_chat_Whispering_someone'>Room chat: Whispering someone</Link></li>
+				<li><Link to='#SP_Room_chat_Text_formatting'>Room chat: Text formatting</Link></li>
+				<li><Link to='#SP_Room_chat_Chat_history'>Room chat: Chat history</Link></li>
 			</ul>
 
 			<h4 id='SP_Room_layout'>Room layout</h4>
@@ -113,7 +114,7 @@ export function WikiSpaces(): ReactElement {
 				<li>To invite other users to a space, you can send them a direct message with a "join-me" type invite via the "/invite" command.</li>
 				<li>
 					As a space admin you can also create more powerful and configurable "space-bound" type invite links in the "visitor management"-tab of the
-					space configuration view that you can share with others. More details about invite links in the <a href='#SP_Space_invites'>"Space invites"</a> section.
+					space configuration view that you can share with others. More details about invite links in the <Link to='#SP_Space_invites'>"Space invites"</Link> section.
 				</li>
 				<li>When a user's account is banned from a space, the user cannot join it.</li>
 				<li>Owners of a space can even join a space when it is already full. When they join they fill one of five temporary overshoot slots above the set maximum.</li>
@@ -172,7 +173,7 @@ export function WikiSpaces(): ReactElement {
 					The easiest way is to simply click on the name below a character and select "Admin" in the context menu.
 				</li>
 				<li>
-					When creating a space for the first time, you can select if characters can change their <a href='/wiki/items/#IT_Body_parts'>body parts</a> or gender pronouns
+					When creating a space for the first time, you can select if characters can change their <Link to='/wiki/items#IT_Body_parts'>body parts</Link> or gender pronouns
 					when inside this space. This currently cannot be changed later on.
 				</li>
 			</ul>
@@ -183,7 +184,7 @@ export function WikiSpaces(): ReactElement {
 			</p>
 			<ul>
 				<li>Closing the browser, disconnecting, changing your character, or logging off, will all leave your character in the current chat space by default.</li>
-				<li>Being inside a <a href='/wiki/items/#IT_Room-level_items'>room device</a> slot will make you unable to leave a space</li>
+				<li>Being inside a <Link to='/wiki/items#IT_Room-level_items'>room device</Link> slot will make you unable to leave a space</li>
 				<li>Most regular restraints will not be able to prevent you from leaving a space.</li>
 			</ul>
 
@@ -192,19 +193,19 @@ export function WikiSpaces(): ReactElement {
 				Every character has their own personal space that does not count towards this limit and that cannot be entered by any
 				other character. It functions as a singleplayer lobby and cannot be deleted or given up.<br />
 				You will automatically end up in the personal space when your selected character is not in any other space. Restraining
-				effects (also from <a href='/wiki/items/#IT_Room-level_items'>room devices</a>)
+				effects (also from <Link to='/wiki/items#IT_Room-level_items'>room devices</Link>)
 				will not prevent you from leaving the personal space.
 			</p>
 
 			<h4 id='SP_Room_inventory'>Room inventory</h4>
 			<p>
 				The room inventory shows all items that are inside the current room and can be picked up or used by other characters, if permitted
-				by the space configuration, or the <a href='/wiki/characters/#CH_Character_permissions'>character permissions</a> of the targeted character.<br />
+				by the space configuration, or the <Link to='/wiki/characters#CH_Character_permissions'>character permissions</Link> of the targeted character.<br />
 				From this screen, you can also create new items inside the room inventory, edit them, or delete them. Items stay in the inventory indefinitely
 				as long as they are not moved somewhere else, are deleted, or the room and/or space are deleted, e.g. by giving
-				up <a href='#SP_Space_ownership'>ownership</a> of a space.
+				up <Link to='#SP_Space_ownership'>ownership</Link> of a space.
 				Clicking on an item in the list opens its edit-view on the right
-				side. <a href='/wiki/items/#IT_Room-level_items'>Room devices</a> can be deployed to the room background in the edit-view by permitted parties.
+				side. <Link to='/wiki/items#IT_Room-level_items'>Room devices</Link> can be deployed to the room background in the edit-view by permitted parties.
 			</p>
 
 			<h4 id='SP_Room_chat_Chat_commands'>Room chat: Chat commands</h4>
@@ -221,7 +222,7 @@ export function WikiSpaces(): ReactElement {
 
 			<h4 id='SP_Room_chat_Chat_modes'>Room chat: Chat modes</h4>
 			<p>
-				The chat is always in a specific chat mode, such as emote mode or <a href='/wiki/safety/#SA_Out-of-character_communication'>OOC</a> mode.
+				The chat is always in a specific chat mode, such as emote mode or <Link to='/wiki/safety#SA_Out-of-character_communication'>OOC</Link> mode.
 				The default mode is writing normal text to the whole room that can be formatted.<br />
 				You can write in another chat mode by either using a chat command or by pressing the bar with the white cog above the input field.
 				This toggles a dropdown menu that lets you switch to a different chat mode.<br />

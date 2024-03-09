@@ -1,4 +1,5 @@
 import React, { ReactElement } from 'react';
+import { Link } from 'react-router-dom';
 
 export function WikiSafety(): ReactElement {
 	return (
@@ -17,10 +18,10 @@ export function WikiSafety(): ReactElement {
 
 			<h3>Safety-specific features</h3>
 			<ul>
-				<li><a href='#SA_Out-of-character_communication'>Out-of-character communication</a></li>
-				<li><a href='#SA_Timeout_mode'>Timeout mode</a></li>
-				<li><a href='#SA_Safemode'>Safemode</a></li>
-				<li><a href='#SA_Display_name'>Display name</a></li>
+				<li><Link to='#SA_Out-of-character_communication'>Out-of-character communication</Link></li>
+				<li><Link to='#SA_Timeout_mode'>Timeout mode</Link></li>
+				<li><Link to='#SA_Safemode'>Safemode</Link></li>
+				<li><Link to='#SA_Display_name'>Display name</Link></li>
 			</ul>
 
 			<h4 id='SA_Out-of-character_communication'>Out-of-character communication</h4>
@@ -59,13 +60,13 @@ export function WikiSafety(): ReactElement {
 				Safemode is a mode that immediately disables all restricting effect that were applied to your character. It also prevents everyone
 				else from modifying anything about your character or interact with you while you are in this mode, similar to timeout mode.
 				You also cannot interact with other characters during it, but we are considering removing this limitation in the future.
-				Additionally, the mode allows you to remove items freely from yourself, ignoring <a href='/wiki/items/#IT_Lock_module'>locks</a>,
-				doors, or restricting <a href='/wiki/items/#IT_Room-level_items'>room devices</a>.
+				Additionally, the mode allows you to remove items freely from yourself, ignoring <Link to='/wiki/items#IT_Lock_module'>locks</Link>,
+				doors, or restricting <Link to='/wiki/items#IT_Room-level_items'>room devices</Link>.
 				Nothing can hold or limit you in this mode.
 			</p>
 			<p>
 				Safemode should be seen as a last resort that you will hopefully never need to use in the case when
-				your <a href='#SA_Out-of-character_communication'>OOC</a>-wishes were maliciously ignored or you were irresponsibly abandoned.
+				your <Link to='#SA_Out-of-character_communication'>OOC</Link>-wishes were maliciously ignored or you were irresponsibly abandoned.
 				The intended way to get out of restraints is to ask other characters for help with removing them.
 			</p>
 			<p>

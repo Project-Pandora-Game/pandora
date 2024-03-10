@@ -302,7 +302,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		if (!await connection.account.secure.changePassword(passwordSha512Old, passwordSha512New, cryptoKey))
+		if (!await connection.account.secure.changePassword(passwordSha512Old, passwordSha512New, cryptoKey, connection.loginTokenId))
 			return { result: 'invalidPassword' };
 
 		return { result: 'ok' };

@@ -84,9 +84,16 @@ export default class AccountSecure {
 		return argon2.verify(this.#secure.password, password);
 	}
 
-	public async changePassword(passwordOld: string, passwordNew: string, cryptoKey: IAccountCryptoKey): Promise<boolean> {
+	public async changePassword(passwordOld: string, passwordNew: string, cryptoKey: IAccountCryptoKey, loginTokenId?: string | null): Promise<boolean> {
 		if (!this.isActivated() || !await this.verifyPassword(passwordOld) || !await this.#validateCryptoKey(cryptoKey))
 			return false;
+
+		// Invalidate all login tokens except the one used to change the password
+		if (loginTokenId != null) {
+			this.#invalidateToken(AccountTokenReason.LOGIN, (t) => t.getId() !== loginTokenId);
+		} else {
+			this.#invalidateToken(AccountTokenReason.LOGIN);
+		}
 
 		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.password = await GeneratePasswordHash(passwordNew);
@@ -114,6 +121,9 @@ export default class AccountSecure {
 	public async finishPasswordReset(token: string, password: string): Promise<boolean> {
 		if (!this.#validateToken(AccountTokenReason.PASSWORD_RESET, token))
 			return false;
+
+		// Invalidate all login tokens
+		this.#invalidateToken(AccountTokenReason.LOGIN);
 
 		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.activated = true;

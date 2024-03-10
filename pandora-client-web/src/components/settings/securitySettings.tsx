@@ -1,11 +1,13 @@
 import React, { ReactElement } from 'react';
-import { AssertNever, PasswordSchema, IDirectoryAccountInfo } from 'pandora-common';
+import { AssertNever, PasswordSchema, IDirectoryAccountInfo, IClientDirectoryNormalResult } from 'pandora-common';
 import { useForm } from 'react-hook-form';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { PrehashPassword } from '../../crypto/helpers';
 import { Form, FormCreateStringValidator, FormField, FormFieldError } from '../common/form/form';
 import { Button } from '../common/button/button';
 import { FieldsetToggle } from '../common/fieldsetToggle/fieldsetToggle';
+import { useAsyncEvent } from '../../common/useEvent';
+import { useConfirmDialog } from '../dialog/dialog';
 
 export function SecuritySettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -14,7 +16,84 @@ export function SecuritySettings(): ReactElement | null {
 		return <>Not logged in</>;
 
 	return (
-		<PasswordChange account={ account } />
+		<>
+			<ConnectedClients />
+			<PasswordChange account={ account } />
+		</>
+	);
+}
+
+type AccountConnectedClients = IClientDirectoryNormalResult['queryConnections']['connections'];
+
+function ConnectedClients(): ReactElement {
+	const directoryConnector = useDirectoryConnector();
+	const [connections, setConnections] = React.useState<AccountConnectedClients | null>(null);
+
+	const [load, processing] = useAsyncEvent(
+		async () => await directoryConnector.awaitResponse('queryConnections', {}),
+		(resp) => setConnections(resp.connections),
+	);
+
+	const onChange = React.useCallback((open: boolean) => {
+		if (open && connections === null) {
+			void load();
+		}
+	}, [connections, load]);
+
+	return (
+		<FieldsetToggle legend='Connected Clients' open={ false } onChange={ onChange }>
+			<div>
+				<ConnectedClientsList connections={ connections } />
+				<Button onClick={ load } disabled={ processing }>Refresh</Button>
+			</div>
+		</FieldsetToggle>
+	);
+}
+
+function ConnectedClientsList({ connections }: { connections: AccountConnectedClients | null; }): ReactElement {
+	if (connections === null)
+		return <>Loading...</>;
+
+	return (
+		<table>
+			<thead>
+				<tr>
+					<th>Id</th>
+					<th>Characters</th>
+					<th>Actions</th>
+				</tr>
+			</thead>
+			<tbody>
+				{
+					connections.map((c) => <ConnectedClientConnection key={ c.loginTokenId } connection={ c } />)
+				}
+			</tbody>
+		</table>
+	);
+}
+
+function ConnectedClientConnection({ connection }: { connection: AccountConnectedClients[number]; }): ReactElement {
+	const directoryConnector = useDirectoryConnector();
+	const confirm = useConfirmDialog();
+
+	const { loginTokenId, connectedCharacters } = connection;
+
+	const disconnect = React.useCallback(() => {
+		void confirm('Are you sure you want to disconnect this client?').then((confirmed) => {
+			if (confirmed) {
+				directoryConnector.sendMessage('logout', { type: 'selected', accountTokenId: loginTokenId });
+			}
+		});
+	}, [confirm, directoryConnector, loginTokenId]);
+
+	return (
+		<tr>
+			<td>{ loginTokenId }</td>
+			<td>{ connectedCharacters.map(({ id, name }) => `${name} (${id})`).join(', ') }</td>
+			<td>
+				<Button className='slim' onClick={ disconnect }>Disconnect</Button>
+			</td>
+		</tr>
 	);
 }
 

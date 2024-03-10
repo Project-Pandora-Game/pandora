@@ -4,7 +4,7 @@ import { ExternalLink } from '../common/link/externalLink';
 // ********************************
 // Update both of these variables whenever you make any changes to EULA and/or Privacy Policy!
 // ********************************
-export const EULA_VERSION = 2;
+export const EULA_VERSION = 1;
 export const EULA_LAST_UPDATED = 'March 04, 2024';
 
 export function PrivacyPolicyContent(): ReactElement {
@@ -77,8 +77,6 @@ export function PrivacyPolicyContent(): ReactElement {
 			<p>We do not share Your personal information with third parties.</p>
 			<h3>How do We store the data?</h3>
 			<p>We will retain the aforementioned data potentially indefinitely so We can fulfill the purposes described in this Privacy Policy; typically for the lifetime of Your Pandora account.</p>
-			<p>If You do not log into Your Pandora account during a full calendar year, We will delete Your Pandora account and all the data stored in it during the following year.</p>
-			<p>In the case of Direct/Private Messages to other users, We will retain the encrypted data for a maximum of one year.</p>
 			<p>The server that stores the data is inside the European Union.</p>
 			<h3>Cookies</h3>
 			<p>When You visit our website, We may collect information from You automatically through cookies or similar technology.</p>

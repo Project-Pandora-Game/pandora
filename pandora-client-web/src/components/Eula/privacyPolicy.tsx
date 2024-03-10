@@ -5,7 +5,7 @@ import { ExternalLink } from '../common/link/externalLink';
 // Update both of these variables whenever you make any changes to EULA and/or Privacy Policy!
 // ********************************
 export const EULA_VERSION = 1;
-export const EULA_LAST_UPDATED = 'March 04, 2023';
+export const EULA_LAST_UPDATED = 'March 04, 2024';
 
 export function PrivacyPolicyContent(): ReactElement {
 	return (
@@ -29,7 +29,7 @@ export function PrivacyPolicyContent(): ReactElement {
 			</p>
 			<ul>
 				<li>
-					Email Address: We store Your email address hashed (pseudonymized), so we are not able to see it and use it to contact you.
+					Email Address: We store Your email address hashed (pseudonymized), so We are not able to see it and use it to contact you.
 				</li>
 				<li>
 					Usage Data
@@ -75,8 +75,8 @@ export function PrivacyPolicyContent(): ReactElement {
 				</li>
 			</ul>
 			<p>We do not share Your personal information with third parties.</p>
-			<h3>How do we store the data?</h3>
-			<p>We will retain the aforementioned data potentially indefinitely so we can fulfill the purposes described in this Privacy Policy; typically for the lifetime of Your Pandora account.</p>
+			<h3>How do We store the data?</h3>
+			<p>We will retain the aforementioned data potentially indefinitely so We can fulfill the purposes described in this Privacy Policy; typically for the lifetime of Your Pandora account.</p>
 			<p>The server that stores the data is inside the European Union.</p>
 			<h3>Cookies</h3>
 			<p>When You visit our website, We may collect information from You automatically through cookies or similar technology.</p>
@@ -129,7 +129,7 @@ export function PrivacyPolicyContent(): ReactElement {
 				</li>
 				<li>
 					<strong>The right to data portability</strong><br />
-					You have the right to request that We transfer the data that we have collected to You, provided that Your request does not adversely affect the rights and freedoms of others.
+					You have the right to request that We transfer the data that We have collected to You, provided that Your request does not adversely affect the rights and freedoms of others.
 				</li>
 			</ul>
 			<p>

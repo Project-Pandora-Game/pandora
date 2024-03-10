@@ -20,6 +20,8 @@ import {
 	ServerRoom,
 	type AccountSettings,
 	type AccountSettingsKeys,
+	GetLogger,
+	TimeSpanMs,
 } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { DatabaseAccount, DatabaseAccountUpdate, DatabaseAccountWithSecure, DirectMessageAccounts, type DatabaseCharacterSelfInfo } from '../database/databaseStructure';
@@ -73,6 +75,16 @@ export class Account {
 		for (const characterData of characters) {
 			this.characters.set(characterData.id, new CharacterInfo(characterData, this));
 		}
+
+		this._startCleanup();
+	}
+
+	public onLoad(): void {
+		this._startCleanup();
+	}
+
+	public onUnload(): void {
+		this._stopCleanup();
 	}
 
 	/** Update last activity timestamp to reflect last usage */
@@ -337,6 +349,53 @@ export class Account {
 	}
 
 	//#endregion
+
+	//#region Cleanup
+
+	private _cleanupInterval: NodeJS.Timeout | null = null;
+
+	private _startCleanup(): void {
+		if (this._cleanupInterval != null)
+			return;
+
+		this._cleanupInterval = setInterval(() => this._cleanup(), TimeSpanMs(1, 'minutes')).unref();
+	}
+
+	private _stopCleanup(): void {
+		if (this._cleanupInterval != null) {
+			clearInterval(this._cleanupInterval);
+			this._cleanupInterval = null;
+		}
+	}
+
+	private _cleanupActive = false;
+	private _cleanup(): void {
+		if (this._cleanupActive)
+			return;
+
+		this._cleanupActive = true;
+		try {
+			this._doCleanupAsync()
+				.catch((err) => {
+					GetLogger('Account', `[${this.id}]`).error('Account cleanup failed:', err);
+				});
+		} finally {
+			this._cleanupActive = false;
+		}
+	}
+
+	private async _doCleanupAsync(): Promise<void> {
+		this.secure.cleanupTokens();
+
+		for (const info of this.characters.values()) {
+			const character = info.loadedCharacter;
+			if (character != null && character.toBeDisconnected) {
+				await character.disconnect();
+			}
+		}
+	}
+
+	// #endregion
 }
 
 export async function CreateAccountData(username: string, password: string, email: string, activated: boolean = false): Promise<DatabaseAccountWithSecure> {

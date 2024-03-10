@@ -154,6 +154,10 @@ export default class AccountSecure {
 			await this.#updateDatabase();
 	}
 
+	public cleanupTokens(): void {
+		this.#tokens = this.#tokens.filter((t) => t.validate());
+	}
+
 	public getLoginToken(token: string): AccountToken | undefined {
 		return this.#findToken(AccountTokenReason.LOGIN, token);
 	}

@@ -1,4 +1,4 @@
-import { AccountRole, Assert, AssertNever, AssertNotNullable, Awaitable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, Service } from 'pandora-common';
+import { AccountRole, Assert, AssertNever, AssertNotNullable, Awaitable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, Service, type IClientDirectoryNormalResult, type CharacterId } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import promClient from 'prom-client';
 import { z } from 'zod';
@@ -91,6 +91,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			gitHubUnbind: this.handleGitHubUnbind.bind(this),
 			changeSettings: this.handleChangeSettings.bind(this),
 			setInitialCryptoKey: this.handleSetInitialCryptoKey.bind(this),
+			queryConnections: this.handleQueryConnections.bind(this),
 
 			getAccountContacts: this.handleGetAccountContacts.bind(this),
 			getAccountInfo: this.handleGetAccountInfo.bind(this),
@@ -699,6 +700,33 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const result = await connection.account.secure.setInitialCryptoKey(cryptoKey);
 
 		return { result };
+	}
+
+	private handleQueryConnections(_: IClientDirectoryArgument['queryConnections'], connection: ClientConnection): IClientDirectoryResult['queryConnections'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const connections = new Map<string, { id: CharacterId; name: string; }[]>();
+		for (const conn of connection.account.associatedConnections.clients) {
+			if (conn.loginTokenId == null || conn.character == null)
+				continue;
+
+			let list = connections.get(conn.loginTokenId);
+			if (list == null) {
+				list = [];
+				connections.set(conn.loginTokenId, list);
+			}
+
+			list.push({
+				id: conn.character.baseInfo.id,
+				name: conn.character.baseInfo.data.name,
+			});
+		}
+
+		return {
+			connections: Array.from(connections.entries())
+				.map(([loginTokenId, connectedCharacters]) => ({ loginTokenId, connectedCharacters })),
+		};
 	}
 
 	private async handleGetDirectMessages({ id }: IClientDirectoryArgument['getDirectMessages'], connection: ClientConnection): IClientDirectoryPromiseResult['getDirectMessages'] {

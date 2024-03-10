@@ -216,6 +216,18 @@ export const ClientDirectorySchema = {
 		}),
 		response: ZodCast<{ result: 'ok' | 'invalid' | 'keyAlreadySet'; }>(),
 	},
+	queryConnections: {
+		request: z.object({}),
+		response: z.object({
+			connections: z.array(z.object({
+				loginTokenId: z.string(),
+				connectedCharacters: z.array(z.object({
+					id: CharacterIdSchema,
+					name: z.string(),
+				})),
+			})),
+		}),
+	},
 	//#endregion
 
 	getAccountContacts: {

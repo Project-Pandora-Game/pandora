@@ -1,4 +1,4 @@
-import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory, IncomingConnection, DirectoryClientSchema, Assert, ACCOUNT_TOKEN_ID_LENGTH } from 'pandora-common';
+import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory, IncomingConnection, DirectoryClientSchema, Assert } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import type { Account } from '../account/account';
 import type { Character } from '../account/character';

@@ -376,8 +376,8 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
       mongodb:
-        specifier: 6.4.0
-        version: 6.4.0
+        specifier: 6.5.0
+        version: 6.5.0
       mongodb-memory-server-core:
         specifier: 9.1.7
         version: 9.1.7
@@ -488,8 +488,8 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
       mongodb:
-        specifier: 6.4.0
-        version: 6.4.0
+        specifier: 6.5.0
+        version: 6.5.0
       nanoid:
         specifier: 3.3.7
         version: 3.3.7
@@ -3380,6 +3380,14 @@ packages:
 
   /@mongodb-js/saslprep@1.1.1:
     resolution: {integrity: sha512-t7c5K033joZZMspnHg/gWPE4kandgc2OxE74aYOtGKfgB9VPuVJPix0H6fhmm2erj5PBJ21mqcx34lpIGtUCsQ==}
+    requiresBuild: true
+    dependencies:
+      sparse-bitfield: 3.0.3
+    dev: false
+    optional: true
+
+  /@mongodb-js/saslprep@1.1.5:
+    resolution: {integrity: sha512-XLNOMH66KhJzUJNwT/qlMnS4WsNDWD5ASdyaSH3EtK+F4r/CFGa3jT4GNi4mfOitGvWXtdLgQJkQjxSVrio+jA==}
     dependencies:
       sparse-bitfield: 3.0.3
     dev: false
@@ -10395,8 +10403,8 @@ packages:
       '@mongodb-js/saslprep': 1.1.1
     dev: false
 
-  /mongodb@6.4.0:
-    resolution: {integrity: sha512-MdFHsyb1a/Ee0H3NmzWTSLqchacDV/APF0H6BNQvraWrOiIocys2EmTFZPgHxWhcfO94c1F34I9MACU7x0hHKA==}
+  /mongodb@6.5.0:
+    resolution: {integrity: sha512-Fozq68InT+JKABGLqctgtb8P56pRrJFkbhW0ux+x1mdHeyinor8oNzJqwLjV/t5X5nJGfTlluxfyMnOXNggIUA==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
       '@aws-sdk/credential-providers': ^3.188.0
@@ -10422,7 +10430,7 @@ packages:
       socks:
         optional: true
     dependencies:
-      '@mongodb-js/saslprep': 1.1.1
+      '@mongodb-js/saslprep': 1.1.5
       bson: 6.4.0
       mongodb-connection-string-url: 3.0.0
     dev: false

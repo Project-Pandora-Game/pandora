@@ -92,6 +92,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			changeSettings: this.handleChangeSettings.bind(this),
 			setInitialCryptoKey: this.handleSetInitialCryptoKey.bind(this),
 			queryConnections: this.handleQueryConnections.bind(this),
+			extendLoginToken: this.handleExtendLoginToken.bind(this),
 
 			getAccountContacts: this.handleGetAccountContacts.bind(this),
 			getAccountInfo: this.handleGetAccountInfo.bind(this),
@@ -706,18 +707,25 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		const connections = new Map<string, { id: CharacterId; name: string; }[]>();
+		const connections = new Map<string, { connectionCount: number; connectedCharacters: { id: CharacterId; name: string; }[]; }>();
 		for (const conn of connection.account.associatedConnections.clients) {
-			if (conn.loginTokenId == null || conn.character == null)
+			if (conn.loginTokenId == null)
 				continue;
 
 			let list = connections.get(conn.loginTokenId);
 			if (list == null) {
-				list = [];
+				list = {
+					connectionCount: 0,
+					connectedCharacters: [],
+				};
 				connections.set(conn.loginTokenId, list);
 			}
 
-			list.push({
+			++list.connectionCount;
+			if (conn.character == null)
+				continue;
+
+			list.connectedCharacters.push({
 				id: conn.character.baseInfo.id,
 				name: conn.character.baseInfo.data.name,
 			});
@@ -725,7 +733,22 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		return {
 			connections: Array.from(connections.entries())
-				.map(([loginTokenId, connectedCharacters]) => ({ loginTokenId, connectedCharacters })),
+				.map(([loginTokenId, info]) => ({ loginTokenId, ...info })),
+		};
+	}
+
+	private async handleExtendLoginToken({ passwordSha512 }: IClientDirectoryArgument['extendLoginToken'], connection: ClientConnection): IClientDirectoryPromiseResult['extendLoginToken'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const token = await connection.account.secure.extendLoginToken(passwordSha512, connection.loginTokenId);
+		if (token == null)
+			return { result: 'invalidPassword' };
+
+		return {
+			result: 'ok',
+			token: token.value,
+			expires: token.expires,
 		};
 	}
 

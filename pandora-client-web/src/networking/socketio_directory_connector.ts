@@ -22,6 +22,7 @@ import {
 	SecondFactorResponse,
 	IClientDirectoryArgument,
 	SecondFactorData,
+	AssertNever,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
@@ -29,7 +30,7 @@ import { BrowserStorage } from '../browserStorage';
 import { AccountContactContext } from '../components/accountContacts/accountContactContext';
 import { PrehashPassword } from '../crypto/helpers';
 import { Observable, ReadonlyObservable } from '../observable';
-import { PersistentToast, TOAST_OPTIONS_ERROR } from '../persistentToast';
+import { PersistentToast, TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../persistentToast';
 import { DirectMessageManager } from './directMessageManager';
 import { AuthToken, DirectoryConnectionState, DirectoryConnector, LoginResponse } from './directoryConnector';
 import { freeze } from 'immer';
@@ -382,5 +383,29 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 	public disconnectFromCharacter(): void {
 		this.sendMessage('disconnectCharacter', EMPTY);
 		this._lastSelectedCharacter.value = undefined;
+	}
+
+	public async extendAuthToken(password: string): Promise<void> {
+		const username = this._authToken.value?.username;
+		if (!username) {
+			throw new Error('Not logged in');
+		}
+		const passwordSha512 = await PrehashPassword(password);
+		const response = await this.awaitResponse('extendLoginToken', { passwordSha512 });
+		switch (response.result) {
+			case 'ok':
+				this._authToken.value = {
+					username,
+					value: response.token,
+					expires: response.expires,
+				};
+				toast('Session extended', TOAST_OPTIONS_SUCCESS);
+				break;
+			case 'invalidPassword':
+				toast('Invalid password', TOAST_OPTIONS_ERROR);
+				break;
+			default:
+				AssertNever(response);
+		}
 	}
 }

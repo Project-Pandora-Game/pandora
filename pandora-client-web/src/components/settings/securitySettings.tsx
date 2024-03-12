@@ -1,5 +1,5 @@
 import React, { ReactElement } from 'react';
-import { AssertNever, PasswordSchema, IDirectoryAccountInfo, IClientDirectoryNormalResult } from 'pandora-common';
+import { AssertNever, FormatTimeInterval, PasswordSchema, IDirectoryAccountInfo, IClientDirectoryNormalResult } from 'pandora-common';
 import { useForm } from 'react-hook-form';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { PrehashPassword } from '../../crypto/helpers';
@@ -7,7 +7,10 @@ import { Form, FormCreateStringValidator, FormField, FormFieldError } from '../c
 import { Button } from '../common/button/button';
 import { FieldsetToggle } from '../common/fieldsetToggle/fieldsetToggle';
 import { useAsyncEvent } from '../../common/useEvent';
-import { useConfirmDialog } from '../dialog/dialog';
+import { ModalDialog, useConfirmDialog } from '../dialog/dialog';
+import { useObservable } from '../../observable';
+import type { AuthToken } from '../../networking/directoryConnector';
+import { useCurrentTime } from '../../common/useCurrentTime';
 
 export function SecuritySettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -59,6 +62,7 @@ function ConnectedClientsList({ connections }: { connections: AccountConnectedCl
 			<thead>
 				<tr>
 					<th>Id</th>
+					<th>Connections</th>
 					<th>Characters</th>
 					<th>Actions</th>
 				</tr>
@@ -74,9 +78,10 @@ function ConnectedClientsList({ connections }: { connections: AccountConnectedCl
 
 function ConnectedClientConnection({ connection }: { connection: AccountConnectedClients[number]; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
+	const authToken = useObservable(directoryConnector.authToken);
 	const confirm = useConfirmDialog();
 
-	const { loginTokenId, connectedCharacters } = connection;
+	const { loginTokenId, connectionCount, connectedCharacters } = connection;
 
 	const disconnect = React.useCallback(() => {
 		void confirm('Are you sure you want to disconnect this client?').then((confirmed) => {
@@ -86,14 +91,68 @@ function ConnectedClientConnection({ connection }: { connection: AccountConnecte
 		});
 	}, [confirm, directoryConnector, loginTokenId]);
 
+	const isCurrent = authToken?.value.startsWith(loginTokenId);
+
 	return (
-		<tr>
+		<tr className={ isCurrent ? 'current-connection' : undefined }>
 			<td>{ loginTokenId }</td>
+			<td>{ connectionCount }</td>
 			<td>{ connectedCharacters.map(({ id, name }) => `${name} (${id})`).join(', ') }</td>
 			<td>
-				<Button className='slim' onClick={ disconnect }>Disconnect</Button>
+				{
+					isCurrent ? (
+						<>
+							<Button className='slim' onClick={ disconnect }>Logout</Button>
+							<ExtendCurrentSession token={ authToken! } />
+						</>
+					) : (
+						<Button className='slim' onClick={ disconnect }>Disconnect</Button>
+					)
+				}
 			</td>
 		</tr>
+	);
+}
+
+function ExtendCurrentSession({ token }: { token: AuthToken; }): ReactElement {
+	const [show, setShow] = React.useState(false);
+	if (!show)
+		return <Button className='slim' onClick={ () => setShow(true) }>Extend</Button>;
+
+	return (
+		<>
+			<Button className='slim' onClick={ () => setShow(false) }>Extend</Button>
+			<ExtendCurrentSessionDialog token={ token } />
+		</>
+	);
+}
+
+function ExtendCurrentSessionDialog({ token }: { token: AuthToken; }): ReactElement {
+	const directory = useDirectoryConnector();
+	const [password, setPassword] = React.useState('');
+	const now = useCurrentTime(60_000);
+
+	const [extend, processing] = useAsyncEvent(
+		() => directory.extendAuthToken(password),
+		() => setPassword(''),
+	);
+
+	return (
+		<ModalDialog>
+			<Form dirty={ false } onSubmit={ extend }>
+				<p>Your session will expire in { FormatTimeInterval(token.expires - now, 'short') }</p>
+				<FormField>
+					<label htmlFor='extend-current-session-password'>Password</label>
+					<input
+						type='password'
+						id='extend-current-session-password'
+						value={ password }
+						onChange={ (e) => setPassword(e.target.value) }
+					/>
+				</FormField>
+				<Button type='submit' disabled={ processing }>Extend</Button>
+			</Form>
+		</ModalDialog>
 	);
 }
 

@@ -53,6 +53,8 @@ export class MockDirectoryConnector implements DirectoryConnector {
 		return Promise.resolve(true);
 	}
 	public disconnectFromCharacter = jest.fn();
+
+	public extendAuthToken = jest.fn();
 }
 
 export function MockAuthToken(overrides?: Partial<AuthToken>): AuthToken {

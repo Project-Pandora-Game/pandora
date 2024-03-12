@@ -221,12 +221,28 @@ export const ClientDirectorySchema = {
 		response: z.object({
 			connections: z.array(z.object({
 				loginTokenId: z.string(),
+				connectionCount: z.number(),
 				connectedCharacters: z.array(z.object({
 					id: CharacterIdSchema,
 					name: z.string(),
 				})),
 			})),
 		}),
+	},
+	extendLoginToken: {
+		request: z.object({
+			passwordSha512: PasswordSha512Schema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				token: z.string(),
+				expires: z.number(),
+			}),
+			z.object({
+				result: z.literal('invalidPassword'),
+			}),
+		]),
 	},
 	//#endregion
 

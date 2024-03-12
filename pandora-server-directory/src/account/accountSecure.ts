@@ -162,6 +162,20 @@ export default class AccountSecure {
 		return this.#findToken(AccountTokenReason.LOGIN, token);
 	}
 
+	public async extendLoginToken(password: string, loginTokenId: string | null): Promise<AccountToken | undefined> {
+		if (!await this.verifyPassword(password))
+			return undefined;
+
+		const token = this.#tokens.find((t) => t.reason === AccountTokenReason.LOGIN && t.getId() === loginTokenId);
+		if (!token || !token.extend())
+			return undefined;
+
+		this.#tokens = [...this.#tokens];
+		await this.#updateDatabase();
+
+		return token;
+	}
+
 	public getGitHubStatus(): undefined | { id: number; login: string; } {
 		if (!this.#secure.github)
 			return undefined;
@@ -368,17 +382,27 @@ export interface AccountTokenOwner {
 }
 
 export class AccountToken implements Readonly<DatabaseAccountToken> {
-	public readonly value: string;
-	public readonly expires: number;
-	public readonly reason: AccountTokenReason;
-
 	readonly #bound = new Set<AccountTokenOwner>();
+	readonly #reason: AccountTokenReason;
+	#value: string;
+	#expires: number;
+
 	#destroyed = false;
 
+	public get value(): string {
+		return this.#value;
+	}
+	public get expires(): number {
+		return this.#expires;
+	}
+	public get reason(): AccountTokenReason {
+		return this.#reason;
+	}
+
 	constructor(token: Readonly<DatabaseAccountToken>) {
-		this.value = token.value;
-		this.expires = token.expires;
-		this.reason = token.reason;
+		this.#value = token.value;
+		this.#expires = token.expires;
+		this.#reason = token.reason;
 	}
 
 	public static create(reason: AccountTokenReason): AccountToken {
@@ -420,5 +444,17 @@ export class AccountToken implements Readonly<DatabaseAccountToken> {
 			owner.onAccountTokenDestroyed(this);
 		}
 		this.#bound.clear();
+	}
+
+	public extend(): boolean {
+		if (this.#destroyed)
+			return false;
+
+		this.#expires = Date.now() + TOKEN_TYPES[this.reason].expiration;
+
+		if (this.value.length > ACCOUNT_TOKEN_ID_LENGTH)
+			this.#value = this.getId() + nanoid(32 - ACCOUNT_TOKEN_ID_LENGTH);
+
+		return true;
 	}
 }

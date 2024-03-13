@@ -21,6 +21,13 @@
 		white-space: pre-wrap;
 		overflow-wrap: break-word;
 
+		&:not(:hover) {
+			// Prevent Zalgo text from getting weird (but still show it if the message is hovered)
+			overflow: hidden;
+			overflow: clip;
+			overflow-clip-margin: 0.05em;
+		}
+
 		&__info {
 			float: right;
 			color: $grey-mid;

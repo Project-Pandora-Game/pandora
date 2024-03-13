@@ -110,6 +110,13 @@
 		white-space: pre-wrap;
 		overflow-wrap: break-word;
 
+		&:not(:hover) {
+			// Prevent Zalgo text from getting weird (but still show it if the message is hovered)
+			overflow: hidden;
+			overflow: clip;
+			overflow-clip-margin: 0.05em;
+		}
+
 		&.serverMessage {
 			border-left: solid 5px $white;
 			background-color: #202020;

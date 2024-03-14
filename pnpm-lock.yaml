@@ -141,8 +141,8 @@ importers:
         specifier: 5.0.3
         version: 5.0.3
       '@types/react':
-        specifier: 18.2.65
-        version: 18.2.65
+        specifier: 18.2.66
+        version: 18.2.66
       '@types/react-dom':
         specifier: 18.2.22
         version: 18.2.22
@@ -434,8 +434,8 @@ importers:
         specifier: 7.2.0
         version: 7.2.0(eslint@8.57.0)(typescript@5.3.3)
       discord-api-types:
-        specifier: 0.37.73
-        version: 0.37.73
+        specifier: 0.37.74
+        version: 0.37.74
       eslint:
         specifier: 8.57.0
         version: 8.57.0
@@ -540,8 +540,8 @@ importers:
         specifier: 7.2.0
         version: 7.2.0(eslint@8.57.0)(typescript@5.3.3)
       discord-api-types:
-        specifier: 0.37.73
-        version: 0.37.73
+        specifier: 0.37.74
+        version: 0.37.74
       eslint:
         specifier: 8.57.0
         version: 8.57.0
@@ -4908,14 +4908,14 @@ packages:
   /@types/react-dom@18.2.22:
     resolution: {integrity: sha512-fHkBXPeNtfvri6gdsMYyW+dW7RXFo6Ad09nLFK0VQWR7yGLai/Cyvyj696gbwYvBnhGtevUG9cET0pmUbMtoPQ==}
     dependencies:
-      '@types/react': 18.2.65
+      '@types/react': 18.2.66
     dev: true
 
   /@types/react-router-dom@5.3.3:
     resolution: {integrity: sha512-kpqnYK4wcdm5UaWI3fLcELopqLrHgLqNsdpHauzlQktfkHL3npOSwtj1Uz9oKBAzs7lFtVkV8j83voAz2D8fhw==}
     dependencies:
       '@types/history': 4.7.11
-      '@types/react': 18.2.65
+      '@types/react': 18.2.66
       '@types/react-router': 5.1.20
     dev: true
 
@@ -4923,11 +4923,11 @@ packages:
     resolution: {integrity: sha512-jGjmu/ZqS7FjSH6owMcD5qpq19+1RS9DeVRqfl1FeBMxTDQAGwlMWOcs52NDoXaNKyG3d1cYQFMs9rCrb88o9Q==}
     dependencies:
       '@types/history': 4.7.11
-      '@types/react': 18.2.65
+      '@types/react': 18.2.66
     dev: true
 
-  /@types/react@18.2.65:
-    resolution: {integrity: sha512-98TsY0aW4jqx/3RqsUXwMDZSWR1Z4CUlJNue8ueS2/wcxZOsz4xmW1X8ieaWVRHcmmQM3R8xVA4XWB3dJnWwDQ==}
+  /@types/react@18.2.66:
+    resolution: {integrity: sha512-OYTmMI4UigXeFMF/j4uv0lBBEbongSgptPrHBxqME44h9+yNov+oL6Z3ocJKo0WyXR84sQUNeyIp9MRfckvZpg==}
     dependencies:
       '@types/prop-types': 15.7.9
       '@types/scheduler': 0.16.5
@@ -7129,8 +7129,8 @@ packages:
     resolution: {integrity: sha512-o/dXNFfhBpYHpQFdT6FWzeO7pKc838QeeZ9d91CfVAtpr5XLK4B/zYxQbYgPdoMiTDvJfzcsLW5naXgmHGDNXw==}
     dev: false
 
-  /discord-api-types@0.37.73:
-    resolution: {integrity: sha512-mi915PBUxF1G233EwHKNegNAF/tVfiSRN9+hKwu0G3NpbtLXvWUxCuCjgSyY+QmQ6/Hvpqm0xs5HxzfvhAS20A==}
+  /discord-api-types@0.37.74:
+    resolution: {integrity: sha512-JC6jhM5oflJoYpZhv56yr45Lnx/8/CJhZXyFDARuvkq7RoAC9HpKrd1hJ/RVAI36K52IPZ+wDURoED63MIXXOw==}
     dev: true
 
   /discord.js@14.14.1:

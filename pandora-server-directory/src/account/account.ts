@@ -8,7 +8,7 @@ import {
 	AssetFrameworkOutfitWithId,
 	AsyncSynchronized,
 	CharacterId,
-	ICharacterSelfInfo,
+	CharacterSelfInfo,
 	IDirectoryAccountInfo,
 	IDirectoryClient,
 	IShardAccountDefinition,
@@ -266,7 +266,7 @@ export class Account {
 
 	//#region Character
 
-	public listCharacters(): ICharacterSelfInfo[] {
+	public listCharacters(): CharacterSelfInfo[] {
 		return Array.from(this.characters.values()).map((character) => ({
 			...character.data,
 			state: character.getInfoState(),

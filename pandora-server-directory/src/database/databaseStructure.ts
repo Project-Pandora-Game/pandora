@@ -6,6 +6,7 @@ import {
 	AccountSettingsSchema,
 	ArrayToRecordKeys,
 	AssetFrameworkOutfitWithIdSchema,
+	CharacterSelfInfoSchema,
 	IAccountRoleManageInfo,
 	IBetaKeyInfo,
 	IDirectoryDirectMessageInfo,
@@ -18,7 +19,6 @@ import {
 import { z } from 'zod';
 import { AccountTokenReason } from '../account/accountSecure';
 import { GitHubTeamSchema } from '../services/github/githubVerify';
-import { ICharacterSelfInfoDb } from './databaseProvider';
 
 export const DatabaseAccountTokenSchema = z.object({
 	/** The token secret */
@@ -74,6 +74,9 @@ export const DatabaseDirectMessageAccountsSchema = z.object({
 });
 export type DatabaseDirectMessageAccounts = z.infer<typeof DatabaseDirectMessageAccountsSchema>;
 
+export const DatabaseCharacterSelfInfoSchema = CharacterSelfInfoSchema.omit({ state: true });
+export type DatabaseCharacterSelfInfo = z.infer<typeof DatabaseCharacterSelfInfoSchema>;
+
 /** Representation of account stored in database */
 export const DatabaseAccountSchema = z.object({
 	username: z.string(),
@@ -81,7 +84,7 @@ export const DatabaseAccountSchema = z.object({
 	created: z.number(),
 	roles: ZodCast<IAccountRoleManageInfo>().optional(),
 	profileDescription: z.string().default('').transform(ZodTruncate(LIMIT_ACCOUNT_PROFILE_LENGTH)),
-	characters: ZodCast<ICharacterSelfInfoDb>().array(),
+	characters: DatabaseCharacterSelfInfoSchema.array(),
 	/**
 	 * Settings of the account.
 	 *

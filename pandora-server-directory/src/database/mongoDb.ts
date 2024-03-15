@@ -3,13 +3,33 @@ import _ from 'lodash';
 import { CollationOptions, Db, MatchKeysAndValues, MongoClient } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
-import { AccountId, ArrayToRecordKeys, Assert, AssertNotNullable, CharacterDataSchema, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, SPACE_DIRECTORY_PROPERTIES, SpaceData, SpaceDataDirectoryUpdate, SpaceDataSchema, SpaceDataShardUpdate, SpaceDirectoryData, SpaceId, ZodCast } from 'pandora-common';
+import {
+	AccountId,
+	ArrayToRecordKeys,
+	Assert,
+	AssertNotNullable,
+	CharacterDataSchema,
+	CharacterId,
+	GetLogger,
+	ICharacterData,
+	ICharacterDataDirectoryUpdate,
+	ICharacterDataShardUpdate,
+	CharacterSelfInfoUpdate,
+	SPACE_DIRECTORY_PROPERTIES,
+	SpaceData,
+	SpaceDataDirectoryUpdate,
+	SpaceDataSchema,
+	SpaceDataShardUpdate,
+	SpaceDirectoryData,
+	SpaceId,
+	ZodCast,
+} from 'pandora-common';
 import { z } from 'zod';
 import { ENV } from '../config';
-import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountContact, DatabaseAccountContactType, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdate, DatabaseAccountWithSecure, DatabaseAccountWithSecureSchema, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageAccountsSchema, DatabaseDirectMessageInfo, DirectMessageAccounts, type DatabaseDirectMessageAccounts, type DatabaseDirectMessage } from './databaseStructure';
+import type { PandoraDatabase } from './databaseProvider';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountContact, DatabaseAccountContactType, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdate, DatabaseAccountWithSecure, DatabaseAccountWithSecureSchema, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageAccountsSchema, DatabaseDirectMessageInfo, DirectMessageAccounts, type DatabaseDirectMessage, type DatabaseDirectMessageAccounts, type DatabaseCharacterSelfInfo } from './databaseStructure';
 import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
-import { ValidatedCollection, DbAutomaticMigration, ValidatedCollectionType } from './validatedCollection';
+import { DbAutomaticMigration, ValidatedCollection, ValidatedCollectionType } from './validatedCollection';
 
 const { DATABASE_URL, DATABASE_NAME, DATABASE_MIGRATION } = ENV;
 const logger = GetLogger('db');
@@ -314,7 +334,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	@DbSynchronized()
-	public async createCharacter(accountId: AccountId): Promise<ICharacterSelfInfoDb> {
+	public async createCharacter(accountId: AccountId): Promise<DatabaseCharacterSelfInfo> {
 		if (!await this.getAccountById(accountId))
 			throw new Error('Account not found');
 
@@ -336,7 +356,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		return Id(result);
 	}
 
-	public async updateCharacterSelfInfo(accountId: number, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null> {
+	public async updateCharacterSelfInfo(accountId: number, { id, ...data }: CharacterSelfInfoUpdate): Promise<DatabaseCharacterSelfInfo | null> {
 		// Transform the request
 		const update: Record<string, unknown> = {};
 		for (const [k, v] of Object.entries(data)) {

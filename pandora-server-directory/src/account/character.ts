@@ -1,13 +1,29 @@
-import { Assert, AssertNever, AsyncSynchronized, CharacterId, CloneDeepMutable, GetLogger, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryCharacterConnectionInfo, Logger, NOT_NARROWING_TRUE, SpaceId, SpaceInviteId } from 'pandora-common';
-import type { Account } from './account';
-import type { Shard } from '../shard/shard';
-import type { Space } from '../spaces/space';
-import type { ClientConnection } from '../networking/connection_client';
-import { GetDatabase, ICharacterSelfInfoDb } from '../database/databaseProvider';
 import { nanoid } from 'nanoid';
-import { ShardManager } from '../shard/shardManager';
-import { SpaceManager } from '../spaces/spaceManager';
+import {
+	Assert,
+	AssertNever,
+	AsyncSynchronized,
+	CharacterId,
+	CloneDeepMutable,
+	GetLogger,
+	ICharacterData,
+	IDirectoryCharacterConnectionInfo,
+	Logger,
+	NOT_NARROWING_TRUE,
+	SpaceId,
+	SpaceInviteId,
+	type CharacterSelfInfo,
+	type CharacterSelfInfoUpdate,
+} from 'pandora-common';
+import { GetDatabase } from '../database/databaseProvider';
+import type { DatabaseCharacterSelfInfo } from '../database/databaseStructure';
+import type { ClientConnection } from '../networking/connection_client';
 import { ConnectionManagerClient } from '../networking/manager_client';
+import type { Shard } from '../shard/shard';
+import { ShardManager } from '../shard/shardManager';
+import type { Space } from '../spaces/space';
+import { SpaceManager } from '../spaces/spaceManager';
+import type { Account } from './account';
 
 function GenerateConnectSecret(): string {
 	return nanoid(8);
@@ -18,8 +34,8 @@ export class CharacterInfo {
 	public readonly account: Account;
 	protected readonly logger: Logger;
 
-	protected _data: Readonly<ICharacterSelfInfoDb>;
-	public get data(): Readonly<ICharacterSelfInfoDb> {
+	protected _data: Readonly<DatabaseCharacterSelfInfo>;
+	public get data(): Readonly<DatabaseCharacterSelfInfo> {
 		return this._data;
 	}
 
@@ -28,7 +44,7 @@ export class CharacterInfo {
 		return this._loadedCharacter;
 	}
 
-	constructor(characterData: ICharacterSelfInfoDb, account: Account) {
+	constructor(characterData: DatabaseCharacterSelfInfo, account: Account) {
 		this.logger = GetLogger('Character', `[Character ${characterData.id}]`);
 		this.id = characterData.id;
 		this.account = account;
@@ -81,7 +97,7 @@ export class CharacterInfo {
 	}
 
 	@AsyncSynchronized('object')
-	public async updateSelfData(update: Omit<ICharacterSelfInfoUpdate, 'id'>): Promise<ICharacterSelfInfo | null> {
+	public async updateSelfData(update: Omit<CharacterSelfInfoUpdate, 'id'>): Promise<CharacterSelfInfo | null> {
 		const info = await GetDatabase().updateCharacterSelfInfo(this.account.id, {
 			...update,
 			id: this.id,

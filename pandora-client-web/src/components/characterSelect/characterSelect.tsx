@@ -1,5 +1,5 @@
 import { noop } from 'lodash';
-import { EMPTY, GetLogger, ICharacterSelfInfo, IClientDirectoryNormalResult } from 'pandora-common';
+import { EMPTY, GetLogger, CharacterSelfInfo, IClientDirectoryNormalResult } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { usePlayerData } from '../gameContext/playerContextProvider';
@@ -91,7 +91,7 @@ export function CharacterSelect(): ReactElement {
 	);
 }
 
-type CharacterListItemProps = Partial<ICharacterSelfInfo> & {
+type CharacterListItemProps = Partial<CharacterSelfInfo> & {
 	name: string;
 	onClick: () => void;
 };

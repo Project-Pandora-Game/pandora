@@ -1,12 +1,27 @@
-import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
-import { CreateAccountData } from '../account/account';
-import { AccountId, ArrayToRecordKeys, SPACE_DIRECTORY_PROPERTIES, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, SpaceData, SpaceDataDirectoryUpdate, SpaceDataShardUpdate, SpaceDirectoryData, PASSWORD_PREHASH_SALT, SpaceId } from 'pandora-common';
-import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate, type DatabaseDirectMessageAccounts, type DatabaseDirectMessage } from './databaseStructure';
-
-import _ from 'lodash';
 import { createHash } from 'crypto';
+import _ from 'lodash';
 import { nanoid } from 'nanoid';
+import {
+	AccountId,
+	ArrayToRecordKeys,
+	CharacterId,
+	GetLogger,
+	ICharacterData,
+	ICharacterDataDirectoryUpdate,
+	ICharacterDataShardUpdate,
+	CharacterSelfInfoUpdate,
+	PASSWORD_PREHASH_SALT,
+	SPACE_DIRECTORY_PROPERTIES,
+	SpaceData,
+	SpaceDataDirectoryUpdate,
+	SpaceDataShardUpdate,
+	SpaceDirectoryData,
+	SpaceId,
+} from 'pandora-common';
+import { CreateAccountData } from '../account/account';
+import type { PandoraDatabase } from './databaseProvider';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccountContact, DatabaseAccountContactType, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdate, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DirectMessageAccounts, type DatabaseDirectMessage, type DatabaseDirectMessageAccounts, type DatabaseCharacterSelfInfo } from './databaseStructure';
+import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
 
 function HashSHA512Base64(text: string): string {
 	return createHash('sha512').update(text, 'utf-8').digest('base64');
@@ -146,7 +161,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(result);
 	}
 
-	public createCharacter(accountId: AccountId): Promise<ICharacterSelfInfoDb> {
+	public createCharacter(accountId: AccountId): Promise<DatabaseCharacterSelfInfo> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
 		if (!acc)
 			return Promise.reject(new Error('Account not found'));
@@ -181,7 +196,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(_.cloneDeep(char));
 	}
 
-	public updateCharacterSelfInfo(accountId: AccountId, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null> {
+	public updateCharacterSelfInfo(accountId: AccountId, { id, ...data }: CharacterSelfInfoUpdate): Promise<DatabaseCharacterSelfInfo | null> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
 		if (!acc)
 			return Promise.resolve(null);

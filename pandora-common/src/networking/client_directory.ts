@@ -2,7 +2,7 @@ import { Immutable } from 'immer';
 import { z } from 'zod';
 import { AccountId, AccountIdSchema, AccountRoleSchema, ConfiguredAccountRoleSchema, AccountSettingsSchema, IAccountRoleManageInfo, AccountSettingsKeysSchema } from '../account';
 import { AssetFrameworkOutfitWithIdSchema } from '../assets/item/unified';
-import { ICharacterSelfInfo } from '../character/characterData';
+import { CharacterSelfInfoSchema } from '../character/characterData';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from '../inputLimits';
 import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceId, SpaceIdSchema, SpaceInvite, SpaceInviteCreateSchema, SpaceInviteIdSchema, SpaceListExtendedInfo, SpaceListInfo } from '../space/space';
@@ -243,10 +243,10 @@ export const ClientDirectorySchema = {
 	//#region Character management
 	listCharacters: {
 		request: z.object({}),
-		response: ZodCast<{
-			characters: ICharacterSelfInfo[];
-			limit: number;
-		}>(),
+		response: z.object({
+			characters: CharacterSelfInfoSchema.array(),
+			limit: z.number().int().nonnegative(),
+		}),
 	},
 	createCharacter: {
 		request: z.object({}),
@@ -257,7 +257,7 @@ export const ClientDirectorySchema = {
 			id: CharacterIdSchema,
 			preview: z.string().optional(), // TODO: Not yet implemented
 		}),
-		response: ZodCast<ICharacterSelfInfo>(),
+		response: CharacterSelfInfoSchema,
 	},
 	deleteCharacter: {
 		request: z.object({

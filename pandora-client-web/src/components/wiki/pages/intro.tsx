@@ -2,11 +2,15 @@ import React, { ReactElement } from 'react';
 import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/gameStateContextProvider';
 import { ExternalLink } from '../../common/link/externalLink';
 import { Link } from 'react-router-dom';
+import { Row } from '../../common/container/container';
 
 export function WikiIntroduction(): ReactElement {
 	return (
 		<>
-			<h2>Introduction to Pandora with some quick hints to get you started</h2>
+			<Row alignX='end'>
+				<Link to='/wiki/' target='_blank' rel='noopener noreferrer'>⧉ Open wiki in a separate window</Link>
+			</Row>
+			<h2>Wiki: Introduction to Pandora's features with further information</h2>
 
 			<p>
 				Pandora's vision is to establish a consensual BDSM roleplaying platform that focuses on text-heavy interactions with visual support
@@ -14,12 +18,16 @@ export function WikiIntroduction(): ReactElement {
 				enhancing the immersion. It is a social chat platform with a focus on kinky roleplaying, rather than a game.
 			</p>
 
+			<p>
+				If you are new to Pandora, it is recommended to first <Link to='/wiki/new'>click this link</Link> that leads to the new user guide, before proceeding.
+			</p>
+
 			The following will list some of the existing core features of Pandora.
 			Some of these features are explained in greater detail further below and in other tabs of this wiki.
 			<ol type='1'>
 				<li>Dynamically generated body model with many poses and free arm movement</li>
 				<li>Front and back character view</li>
-				<li>Persistent multiplayer spaces and a character-specific personal space</li>
+				<li>Persistent chatroom spaces and a character-specific personal space</li>
 				<li>A feature-rich room chat (e.g. message editing, advanced text styling)</li>
 				<li>Free character placement and movement inside rooms</li>
 				<li>Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</li>
@@ -127,6 +135,8 @@ export function WikiIntroduction(): ReactElement {
 			<h4>11. Using back/forward buttons/keys</h4>
 			<p>
 				Pandora has the ability to use the browser's back/forward buttons to navigate in Pandora and URLs can be copied, linked, and used.
+				You can even have certain account-level views open in a parallel window, such as the chatroom and the wiki, contacts, or direct messages
+				screen side by side.
 			</p>
 
 			<h4>12. User safety features for emergencies</h4>

@@ -131,7 +131,7 @@ export function WikiCharacters(): ReactElement {
 					allowing and denying that character all further uses of each permission from now on
 				</li>
 				<li>... allow all, which sets all mentioned permissions with no exceptions defined for the requesting character to "yes" just for the requester</li>
-				<li>... dismiss the popup, which is akin to not taking any decision at this point in time and leave things as they are.</li>
+				<li>... dismiss the popup, which is akin to closing the popup after you are happy with the individual permission changes you did.</li>
 			</ul>
 			<p>
 				Note that the interaction that was leading to the prompt has to be repeated again after permission was granted. The server

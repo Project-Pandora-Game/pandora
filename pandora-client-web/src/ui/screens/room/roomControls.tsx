@@ -68,7 +68,7 @@ export function PersonalSpaceControls(): ReactElement {
 					<p>
 						Every character has their own personal space, which functions as a singleplayer lobby.<br />
 						It cannot be deleted or given up. You will automatically end up in this space when your<br />
-						selected character is not in any multiplayer space.
+						selected character is not in any other space.
 					</p>
 					<span>
 						The personal space functions the same as any other space.<br />

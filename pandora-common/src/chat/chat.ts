@@ -146,7 +146,7 @@ export const ChatTypeDetails: Record<IChatType, IChatTypeDetails> = {
 	'ooc': {
 		commandKeywords: ['ooc', 'o'],
 		description: 'out-of-character (OOC) message',
-		longDescription: 'Sends an (( OOC )) message which ignores effects like muffling/deafening and is used for communicating as an aside from the main activity/discussion.' + LONGDESC_TOGGLE_MODE,
+		longDescription: 'Sends an (( OOC )) message which ignores effects like muffling/deafening and is used for communicating as the user in front of the screen.' + LONGDESC_TOGGLE_MODE,
 	},
 	'me': {
 		commandKeywords: ['me', 'm', 'action'],

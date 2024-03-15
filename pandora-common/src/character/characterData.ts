@@ -55,6 +55,14 @@ export type ICharacterPrivateData = z.infer<typeof CharacterPrivateDataSchema>;
 export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	accessId: z.string(),
 	appearance: AppearanceBundleSchema.optional(),
+	/**
+	 * TODO: Not yet implemented
+	 *
+	 * A character preview image, used in the character picker.
+	 */
+	preview: z.string(),
+	/** The space the character is currently in. `null` means personal space. */
+	currentSpace: SpaceIdSchema.nullable().default(null),
 	// TODO(spaces): Migrate this to be a personalSpace data
 	personalRoom: z.object({
 		inventory: z.lazy(() => RoomInventoryBundleSchema),
@@ -70,6 +78,8 @@ export type ICharacterData = z.infer<typeof CharacterDataSchema>;
 
 export const CHARACTER_DIRECTORY_UPDATEABLE_PROPERTIES = [
 	'accessId',
+	'preview',
+	'currentSpace',
 ] as const satisfies readonly (keyof ICharacterData)[];
 export const CharacterDataDirectoryUpdateSchema = CharacterDataSchema.pick(ArrayToRecordKeys(CHARACTER_DIRECTORY_UPDATEABLE_PROPERTIES, true)).partial();
 export type ICharacterDataDirectoryUpdate = z.infer<typeof CharacterDataDirectoryUpdateSchema>;
@@ -93,11 +103,7 @@ export const CharacterSelfInfoSchema = z.object({
 	name: z.string(),
 	preview: z.string(),
 	state: z.string(),
-	// TODO(spaces): This might need migration
-	currentRoom: SpaceIdSchema.nullable().optional(),
+	currentSpace: SpaceIdSchema.nullable(),
 	inCreation: z.literal(true).optional(),
 });
 export type CharacterSelfInfo = z.infer<typeof CharacterSelfInfoSchema>;
-
-export type CharacterSelfInfoUpdateProperties = 'preview' | 'currentRoom';
-export type CharacterSelfInfoUpdate = Pick<CharacterSelfInfo, 'id'> & Partial<Pick<CharacterSelfInfo, CharacterSelfInfoUpdateProperties>>;

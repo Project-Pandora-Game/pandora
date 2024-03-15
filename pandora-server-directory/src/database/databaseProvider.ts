@@ -1,7 +1,6 @@
 import type {
 	AccountId,
 	CharacterId,
-	CharacterSelfInfoUpdate,
 	ICharacterData,
 	ICharacterDataDirectoryUpdate,
 	ICharacterDataShardUpdate,
@@ -76,6 +75,12 @@ export interface PandoraDatabase extends Service {
 	//#region Character
 
 	/**
+	 * Queries characters for characters owned by the specified account
+	 * @param accountId - ID of account to find characters of
+	 */
+	getCharactersForAccount(accountId: AccountId): Promise<DatabaseCharacterSelfInfo[]>;
+
+	/**
 	 * Creates a new character for the account
 	 * @param accountId - Id of account to create character for
 	 * @param data - Character data
@@ -87,13 +92,6 @@ export interface PandoraDatabase extends Service {
 	 * @param accountId - Id of account to create character for
 	 */
 	finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<ICharacterData | null>;
-
-	/**
-	 * Update character's self info
-	 * @param accountId - Id of account to update character for
-	 * @param data - Character info data
-	 */
-	updateCharacterSelfInfo(accountId: AccountId, { id, ...data }: CharacterSelfInfoUpdate): Promise<DatabaseCharacterSelfInfo | null>;
 
 	/**
 	 * Update character's info

@@ -1,6 +1,6 @@
 import AsyncLock from 'async-lock';
 import _ from 'lodash';
-import { CollationOptions, Db, MatchKeysAndValues, MongoClient } from 'mongodb';
+import { CollationOptions, Db, MongoClient } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
 import {
@@ -14,7 +14,6 @@ import {
 	ICharacterData,
 	ICharacterDataDirectoryUpdate,
 	ICharacterDataShardUpdate,
-	CharacterSelfInfoUpdate,
 	SPACE_DIRECTORY_PROPERTIES,
 	SpaceData,
 	SpaceDataDirectoryUpdate,
@@ -22,12 +21,13 @@ import {
 	SpaceDataShardUpdate,
 	SpaceDirectoryData,
 	SpaceId,
+	SpaceIdSchema,
 	ZodCast,
 } from 'pandora-common';
 import { z } from 'zod';
 import { ENV } from '../config';
 import type { PandoraDatabase } from './databaseProvider';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountContact, DatabaseAccountContactType, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdate, DatabaseAccountWithSecure, DatabaseAccountWithSecureSchema, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageAccountsSchema, DatabaseDirectMessageInfo, DirectMessageAccounts, type DatabaseDirectMessage, type DatabaseDirectMessageAccounts, type DatabaseCharacterSelfInfo } from './databaseStructure';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountContact, DatabaseAccountContactType, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdate, DatabaseAccountWithSecure, DatabaseAccountWithSecureSchema, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageAccountsSchema, DatabaseDirectMessageInfo, DirectMessageAccounts, type DatabaseCharacterSelfInfo, type DatabaseDirectMessage, type DatabaseDirectMessageAccounts, DatabaseCharacterSelfInfoSchema } from './databaseStructure';
 import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
 import { DbAutomaticMigration, ValidatedCollection, ValidatedCollectionType } from './validatedCollection';
 
@@ -87,10 +87,13 @@ const accountCollection = new ValidatedCollection(
 	],
 );
 
+const DatabaseCharacterDataSchema = CharacterDataSchema.omit({ id: true }).and(z.object({ id: z.number().int() }));
+type DatabaseCharacterData = z.infer<typeof DatabaseCharacterDataSchema>;
+
 const characterCollection = new ValidatedCollection(
 	logger,
 	CHARACTERS_COLLECTION_NAME,
-	CharacterDataSchema.omit({ id: true }).and(z.object({ id: z.number().int() })),
+	DatabaseCharacterDataSchema,
 	[
 		{
 			name: 'id',
@@ -333,6 +336,22 @@ export default class MongoDatabase implements PandoraDatabase {
 		return result;
 	}
 
+	public async getCharactersForAccount(accountId: number): Promise<DatabaseCharacterSelfInfo[]> {
+		const result: DatabaseCharacterSelfInfo[] = await this._characters
+			.find({ accountId })
+			.project<Pick<DatabaseCharacterData, 'id' | 'name' | 'preview' | 'currentSpace' | 'inCreation'>>({ id: 1, name: 1, preview: 1, currentSpace: 1, inCreation: 1 })
+			.toArray()
+			.then((p) => p.map((c): DatabaseCharacterSelfInfo => ({
+				id: CharacterId(c.id),
+				name: c.name,
+				preview: c.preview,
+				currentSpace: c.currentSpace,
+				inCreation: c.inCreation,
+			})));
+
+		return result;
+	}
+
 	@DbSynchronized()
 	public async createCharacter(accountId: AccountId): Promise<DatabaseCharacterSelfInfo> {
 		if (!await this.getAccountById(accountId))
@@ -340,30 +359,21 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		const [info, char] = CreateCharacter(accountId, this._nextCharacterId++);
 
-		await this._accounts.updateOne({ id: accountId }, { $push: { characters: info } });
 		await this._characters.insertOne(char);
 
 		return info;
 	}
 
 	public async finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<ICharacterData | null> {
-		const result = await this._characters.findOneAndUpdate({ id: PlainId(characterId), inCreation: true }, { $set: { created: Date.now() }, $unset: { inCreation: '' } }, { returnDocument: 'after' });
+		const result = await this._characters.findOneAndUpdate(
+			{ accountId, id: PlainId(characterId), inCreation: true },
+			{ $set: { created: Date.now() }, $unset: { inCreation: '' } },
+			{ returnDocument: 'after' },
+		);
 		if (!result || result.inCreation !== undefined)
 			return null;
 
-		await this._accounts.updateOne({ 'id': accountId, 'characters.id': characterId }, { $set: { 'characters.$.name': result.name }, $unset: { 'characters.$.inCreation': '' } });
-
-		return Id(result);
-	}
-
-	public async updateCharacterSelfInfo(accountId: number, { id, ...data }: CharacterSelfInfoUpdate): Promise<DatabaseCharacterSelfInfo | null> {
-		// Transform the request
-		const update: Record<string, unknown> = {};
-		for (const [k, v] of Object.entries(data)) {
-			update[`characters.$.${k}`] = v;
-		}
-		const result = await this._accounts.findOneAndUpdate({ 'id': accountId, 'characters.id': id }, { $set: update as MatchKeysAndValues<DatabaseAccountWithSecure> }, { returnDocument: 'after' });
-		return result?.characters.find((c) => c.id === id) ?? null;
+		return CharacterIdObject(result);
 	}
 
 	public async updateCharacter(id: CharacterId, data: ICharacterDataDirectoryUpdate & ICharacterDataShardUpdate, accessId: string | null): Promise<boolean> {
@@ -387,7 +397,6 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async deleteCharacter(accountId: AccountId, characterId: CharacterId): Promise<void> {
 		await this._characters.deleteOne({ id: PlainId(characterId), accountId });
-		await this._accounts.updateOne({ id: accountId }, { $pull: { characters: { id: characterId } } });
 	}
 
 	public async setCharacterAccess(id: CharacterId): Promise<string | null> {
@@ -399,34 +408,20 @@ export default class MongoDatabase implements PandoraDatabase {
 		accountId: AccountId;
 		characterId: CharacterId;
 	}[]> {
-		const chars: {
-			accountId: AccountId;
-			characterId: CharacterId;
-		}[] = [];
-
-		const accounts = await this._accounts
+		const characters = await this._characters
 			.find({
-				characters: {
-					$elemMatch: {
-						currentRoom: spaceId,
-					},
-				},
+				currentSpace: spaceId,
 			})
-			.project<Pick<DatabaseAccountWithSecure, 'id' | 'characters'>>({ id: 1, characters: 1 })
+			.project<Pick<DatabaseCharacterData, 'id' | 'accountId'>>({ id: 1, accountId: 1 })
 			.toArray();
 
-		for (const account of accounts) {
-			for (const character of account.characters) {
-				if (character.currentRoom === spaceId) {
-					chars.push({
-						accountId: account.id,
-						characterId: character.id,
-					});
-				}
-			}
-		}
-
-		return chars;
+		return characters.map((c): {
+			accountId: AccountId;
+			characterId: CharacterId;
+		} => ({
+			characterId: CharacterId(c.id),
+			accountId: c.accountId,
+		}));
 	}
 
 	//#region Spaces
@@ -553,14 +548,14 @@ export default class MongoDatabase implements PandoraDatabase {
 		if (accessId === false) {
 			accessId = nanoid(8);
 			const result = await this._characters.findOneAndUpdate({ id: PlainId(id) }, { $set: { accessId } }, { returnDocument: 'after' });
-			return result ? Id(result) : null;
+			return result ? CharacterIdObject(result) : null;
 		}
 
 		const character = await this._characters.findOne({ id: PlainId(id), accessId });
 		if (!character)
 			return null;
 
-		return Id(character);
+		return CharacterIdObject(character);
 	}
 
 	public async getAccountContacts(accountId: AccountId): Promise<DatabaseAccountContact[]> {
@@ -613,6 +608,79 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	private async doManualMigrations(): Promise<void> {
 		// Add manual migrations here
+
+		//#region Migrate character self info from accounts to characters
+		const charactersToMigrate = new Map<CharacterId, { account: AccountId; character: DatabaseCharacterSelfInfo; }>();
+
+		// Gather data about characters
+		await accountCollection.doManualMigration(this._client, this._db, {
+			oldSchema: DatabaseAccountWithSecureSchema.extend({
+				characters: DatabaseCharacterSelfInfoSchema
+					.omit({ currentSpace: true })
+					.and(z.object({ currentRoom: SpaceIdSchema.nullable().optional() }))
+					.array()
+					.optional(),
+			}),
+			migrate: async ({ oldStream }) => {
+				for await (const account of oldStream) {
+					if (Array.isArray(account?.characters)) {
+						for (const character of account.characters) {
+							Assert(!charactersToMigrate.has(character.id));
+
+							charactersToMigrate.set(character.id, {
+								account: account.id,
+								character: {
+									id: character.id,
+									name: character.name,
+									preview: character.preview,
+									currentSpace: character.currentRoom ?? null,
+									inCreation: character.inCreation,
+								},
+							});
+						}
+					}
+				}
+			},
+		});
+
+		// Apply the data to the characters
+		await characterCollection.doManualMigration(this._client, this._db, {
+			oldSchema: CharacterDataSchema.pick({ accountId: true, name: true, inCreation: true }).and(z.object({ id: z.number().int() })),
+			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+				for await (const character of oldStream) {
+					if (character == null)
+						continue;
+
+					const migrationInfo = charactersToMigrate.get(CharacterId(character.id));
+					if (migrationInfo == null)
+						continue;
+
+					Assert(character.accountId === migrationInfo.account);
+					Assert(CharacterId(character.id) === migrationInfo.character.id);
+					Assert(character.name === migrationInfo.character.name);
+					Assert(character.inCreation === migrationInfo.character.inCreation);
+
+					migrationLogger.verbose(`Migrating character ${migrationInfo.account}/${migrationInfo.character.id}`);
+
+					const { matchedCount } = await oldCollection.updateOne(
+						{ id: character.id },
+						{
+							$set: {
+								currentSpace: migrationInfo.character.currentSpace,
+								preview: migrationInfo.character.preview,
+							},
+						},
+					);
+					Assert(matchedCount === 1);
+
+					charactersToMigrate.delete(migrationInfo.character.id);
+				}
+			},
+		});
+
+		// The character array from the account will be deleted during automatic migration
+
+		//#endregion
 	}
 }
 
@@ -639,10 +707,14 @@ async function CreateInMemoryMongo({
 	});
 }
 
-function Id(obj: Omit<ICharacterData, 'id'> & { id: number; }): ICharacterData {
+function CharacterId(id: number): CharacterId {
+	return `c${id}`;
+}
+
+function CharacterIdObject(obj: Omit<ICharacterData, 'id'> & { id: number; }): ICharacterData {
 	return {
 		...obj,
-		id: `c${obj.id}` as const,
+		id: CharacterId(obj.id),
 	};
 }
 

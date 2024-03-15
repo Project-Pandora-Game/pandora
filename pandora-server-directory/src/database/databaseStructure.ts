@@ -84,7 +84,6 @@ export const DatabaseAccountSchema = z.object({
 	created: z.number(),
 	roles: ZodCast<IAccountRoleManageInfo>().optional(),
 	profileDescription: z.string().default('').transform(ZodTruncate(LIMIT_ACCOUNT_PROFILE_LENGTH)),
-	characters: DatabaseCharacterSelfInfoSchema.array(),
 	/**
 	 * Settings of the account.
 	 *
@@ -109,7 +108,6 @@ export type DatabaseAccount = z.infer<typeof DatabaseAccountSchema>;
 export const DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES = [
 	'roles',
 	'profileDescription',
-	'characters',
 	'settings',
 	'settingsCooldowns',
 	'directMessages',

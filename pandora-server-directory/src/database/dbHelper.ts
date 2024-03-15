@@ -22,6 +22,7 @@ export function CreateCharacter<Id extends number | CharacterId>(accountId: numb
 		id: infoId,
 		name: '',
 		preview: '',
+		currentSpace: null,
 	};
 
 	const char: Omit<ICharacterData, 'id'> & { id: Id; } = {
@@ -29,6 +30,8 @@ export function CreateCharacter<Id extends number | CharacterId>(accountId: numb
 		id,
 		accountId,
 		name: info.name,
+		preview: '',
+		currentSpace: null,
 		profileDescription: '',
 		created: -1,
 		accessId: nanoid(8),

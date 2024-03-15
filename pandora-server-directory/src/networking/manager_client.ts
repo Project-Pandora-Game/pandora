@@ -316,20 +316,20 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result };
 	}
 
-	private async handleUpdateCharacter(arg: IClientDirectoryArgument['updateCharacter'], connection: ClientConnection): IClientDirectoryPromiseResult['updateCharacter'] {
+	private async handleUpdateCharacter({ id, preview }: IClientDirectoryArgument['updateCharacter'], connection: ClientConnection): IClientDirectoryPromiseResult['updateCharacter'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		const character = connection.account.characters.get(arg.id);
+		const character = connection.account.characters.get(id);
 
 		if (!character)
 			throw new BadMessageError();
 
-		const info = await character.updateSelfData(arg);
-		if (!info)
-			throw new Error(`Failed to update character ${arg.id}`);
+		await character.updateDirectoryData({ preview });
 
-		return info;
+		return {
+			result: true,
+		};
 	}
 
 	private async handleDeleteCharacter({ id }: IClientDirectoryArgument['deleteCharacter'], connection: ClientConnection): IClientDirectoryPromiseResult['deleteCharacter'] {

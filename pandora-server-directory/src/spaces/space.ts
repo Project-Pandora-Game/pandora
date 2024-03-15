@@ -625,7 +625,7 @@ export class Space {
 		ConnectionManagerClient.onSpaceListChange();
 		await Promise.all([
 			this._assignedShard?.update('characters'),
-			character.baseInfo.updateSelfData({ currentRoom: this.id }),
+			character.baseInfo.updateDirectoryData({ currentSpace: this.id }),
 			this._useInvite(character, invite),
 		]);
 	}
@@ -654,7 +654,7 @@ export class Space {
 		Assert(character.assignment?.type === 'space-joined' && character.assignment.space === this);
 		Assert(this.trackingCharacters.has(character));
 
-		await character.baseInfo.updateSelfData({ currentRoom: null });
+		await character.baseInfo.updateDirectoryData({ currentSpace: null });
 
 		this.logger.debug(`Character ${character.baseInfo.id} removed (${reason})`);
 		this.characters.delete(character);

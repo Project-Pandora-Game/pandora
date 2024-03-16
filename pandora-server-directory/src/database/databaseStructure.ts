@@ -64,7 +64,7 @@ export const DatabaseDirectMessageSchema = z.object({
 	content: z.string(),
 	source: z.number(),
 	time: z.number(),
-	edited: z.number().optional(),
+	edited: z.number().optional().catch(undefined),
 });
 export type DatabaseDirectMessage = z.infer<typeof DatabaseDirectMessageSchema>;
 export const DatabaseDirectMessageAccountsSchema = z.object({

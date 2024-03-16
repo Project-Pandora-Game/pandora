@@ -1,3 +1,4 @@
+import { LIMIT_CHARACTER_COUNT } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -12,7 +13,8 @@ export function WikiNew(): ReactElement {
 				This guide is targeting brand new users in Pandora and will help to take the first steps in the club.
 			</p>
 			<p>
-				Your account can have several characters, but initially you start with one character with a randomized appearance.
+				Your account can currently have up to { LIMIT_CHARACTER_COUNT } characters, but initially you start with one character
+				with a randomized appearance.
 				You find yourself in your personal space, which is like a safe sandbox to try things out alone.
 				From there you can for instance open the wardrobe where you can change your body
 				and looks as well as your clothes. By default you own all items existing in Pandora from the start.

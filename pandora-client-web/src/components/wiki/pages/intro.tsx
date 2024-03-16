@@ -168,10 +168,11 @@ export function WikiIntroduction(): ReactElement {
 
 			That's not all of course! We have many exciting features planned for the future:
 			<ul>
-				<li>Advanced spectator mode for spaces that will help to not disrupt the chat during plays and that can be managed by space admins</li>
+				<li>Spectator mode for spaces that will help to not disrupt the chat during plays and that can be managed by space admins</li>
 				<li>Showing and managing relationships between characters</li>
 				<li>Allowing every item to have a custom name and description</li>
 				<li>Allowing spaces to contain several connected rooms with a user-defined layout and ways to move from room to room</li>
+				<li>Multi-Layered bondage</li>
 				<li>Improvements to the new user experience & safety</li>
 				<li>Character rules</li>
 				<li>Room templates</li>

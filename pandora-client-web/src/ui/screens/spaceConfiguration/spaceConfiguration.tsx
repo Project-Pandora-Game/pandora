@@ -191,7 +191,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 				{ canEdit && !IsValidName(currentConfig.name) ? (<div className='error'>Invalid name</div>) : null }
 			</div>
 			<div className='input-container'>
-				<label>Space size (maximum number of characters allowed inside - from 1 to 100)</label>
+				<label>Space size (maximum number of characters allowed inside - from 1 to { LIMIT_SPACE_MAX_CHARACTER_NUMBER })</label>
 				<input autoComplete='none' type='number' value={ currentConfig.maxUsers } min={ 1 } max={ LIMIT_SPACE_MAX_CHARACTER_NUMBER } readOnly={ !canEdit }
 					onChange={ (event) => setModifiedData({ maxUsers: Number.parseInt(event.target.value, 10) }) } />
 			</div>

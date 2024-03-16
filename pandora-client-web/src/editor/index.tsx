@@ -1,22 +1,23 @@
+import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { toast, ToastContainer } from 'react-toastify';
+import { BrowserRouter } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { GetLogger, SetConsoleOutput, LogLevel } from 'pandora-common';
-import { LoadAssetsFromAssetDevServer, LoadAssetsFromFileSystem, LoadAssetsFromOfficialLink } from './assetLoader';
+import { GraphicsManager } from '../assets/graphicsManager';
+import { useEvent } from '../common/useEvent';
+import { EulaGate } from '../components/Eula';
 import { Button } from '../components/common/button/button';
+import { LoadSearchArgs } from '../config/searchArgs';
+import { ConfigurePixiSettings } from '../graphics/pixiSettings';
 import '../index.scss';
+import { TOAST_OPTIONS_ERROR } from '../persistentToast';
 import '../styles/globalUtils.scss';
+import { LoadAssetsFromAssetDevServer, LoadAssetsFromFileSystem, LoadAssetsFromOfficialLink } from './assetLoader';
+import { AssetManagerEditor } from './assets/assetManager';
+import { EditorWardrobeContextProvider } from './components/wardrobe/wardrobe';
 import { Editor, EditorView } from './editor';
 import { EditorContextProvider, useMaybeEditor, useSetEditor } from './editorContextProvider';
-import { TOAST_OPTIONS_ERROR } from '../persistentToast';
-import { useEvent } from '../common/useEvent';
-import { GraphicsManager } from '../assets/graphicsManager';
-import { EulaGate } from '../components/Eula';
-import { EditorWardrobeContextProvider } from './components/wardrobe/wardrobe';
-import { AssetManagerEditor } from './assets/assetManager';
-import { ConfigurePixiSettings } from '../graphics/pixiSettings';
-import { LoadSearchArgs } from '../config/searchArgs';
 
 const logger = GetLogger('init');
 
@@ -35,10 +36,12 @@ async function Start(): Promise<void> {
 	createRoot(document.querySelector('#editor-root') as HTMLElement).render(
 		<React.StrictMode>
 			<EulaGate>
-				<EditorContextProvider>
-					<ToastContainer theme='dark' />
-					<AssetLoaderElement />
-				</EditorContextProvider>
+				<BrowserRouter basename='/editor'>
+					<EditorContextProvider>
+						<ToastContainer theme='dark' />
+						<AssetLoaderElement />
+					</EditorContextProvider>
+				</BrowserRouter>
 			</EulaGate>
 		</React.StrictMode>,
 	);

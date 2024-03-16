@@ -200,11 +200,11 @@ export default class MongoDatabase implements PandoraDatabase {
 		let migration: DbAutomaticMigration | undefined;
 		if (!inMemory || dbPath) {
 
-			await this.doManualMigrations();
+			const requireFullMigration = await this.doManualMigrations();
 
-			if (DATABASE_MIGRATION !== 'disable') {
+			if (DATABASE_MIGRATION !== 'disable' || requireFullMigration) {
 				migration = {
-					dryRun: DATABASE_MIGRATION !== 'migrate',
+					dryRun: DATABASE_MIGRATION === 'dry-run',
 					log: logger.prefixMessages('Migration:'),
 					startTime: Date.now(),
 					success: true,
@@ -606,7 +606,13 @@ export default class MongoDatabase implements PandoraDatabase {
 		await this._config.updateOne({ type }, { $set: { data } }, { upsert: true });
 	}
 
-	private async doManualMigrations(): Promise<void> {
+	/**
+	 * Perform manual migrations (anything else than applying schema to everything)
+	 *
+	 * @returns If full migration is required
+	 */
+	private async doManualMigrations(): Promise<boolean> {
+		let requireFullMigration = false;
 		// Add manual migrations here
 
 		//#region Migrate character self info from accounts to characters
@@ -624,6 +630,8 @@ export default class MongoDatabase implements PandoraDatabase {
 			migrate: async ({ oldStream }) => {
 				for await (const account of oldStream) {
 					if (Array.isArray(account?.characters)) {
+						requireFullMigration = true;
+
 						for (const character of account.characters) {
 							Assert(!charactersToMigrate.has(character.id));
 
@@ -681,6 +689,8 @@ export default class MongoDatabase implements PandoraDatabase {
 		// The character array from the account will be deleted during automatic migration
 
 		//#endregion
+
+		return requireFullMigration;
 	}
 }
 

@@ -20,7 +20,7 @@ async function CreateAccountSecure(password: string, email: string, activated: b
 	const account = new Account({
 		...await CreateAccountData(TEST_USERNAME, password, email, activated),
 		id: 0,
-	});
+	}, []);
 	return account.secure;
 }
 

@@ -18,7 +18,7 @@ export interface DbManualMigrationProcess<TNew extends Document, TOld extends Do
 	readonly self: ValidatedCollection<TNew>;
 	readonly client: MongoClient;
 	readonly db: Db;
-	readonly logger: Logger;
+	readonly migrationLogger: Logger;
 	readonly oldCollection: Collection<Document>;
 	readonly oldStream: AsyncIterableIterator<TOld | null>;
 }
@@ -63,15 +63,15 @@ export class ValidatedCollection<T extends Document> {
 	}
 
 	public async doManualMigration<TOldType extends Document = T>(client: MongoClient, db: Db, migration: DbManualMigration<T, TOldType>): Promise<void> {
-		const logger = this.logger.prefixMessages(`[Manual Migration ${this.name}]`);
+		const migrationLogger = this.logger.prefixMessages(`[Manual Migration ${this.name}]`);
 		const oldCollection = db.collection(migration.oldCollectionName ?? this.name);
-		const oldStream = ValidatingAsyncIter(logger, oldCollection, migration.oldSchema);
+		const oldStream = ValidatingAsyncIter(migrationLogger, oldCollection, migration.oldSchema);
 
 		const process: DbManualMigrationProcess<T, TOldType> = {
 			self: this,
 			client,
 			db,
-			logger,
+			migrationLogger,
 			oldCollection,
 			oldStream,
 		};

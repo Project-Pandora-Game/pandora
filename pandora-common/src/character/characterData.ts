@@ -4,11 +4,11 @@ import { AppearanceBundleSchema } from '../assets/state/characterStateTypes';
 import { RoomInventoryBundleSchema } from '../assets/state/roomState';
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
-import type { SpaceId } from '../space/space';
+import { SpaceIdSchema } from '../space/space';
 import { ArrayToRecordKeys } from '../utility';
 import { CharacterNameSchema, HexColorStringSchema, ZodTruncate } from '../validation';
 import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesServerSchema } from './assetPreferences';
-import { CharacterId, CharacterIdSchema } from './characterTypes';
+import { CharacterIdSchema } from './characterTypes';
 import { PronounKeySchema } from './pronouns';
 
 // Fix for pnpm resolution weirdness
@@ -55,6 +55,14 @@ export type ICharacterPrivateData = z.infer<typeof CharacterPrivateDataSchema>;
 export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	accessId: z.string(),
 	appearance: AppearanceBundleSchema.optional(),
+	/**
+	 * TODO: Not yet implemented
+	 *
+	 * A character preview image, used in the character picker.
+	 */
+	preview: z.string(),
+	/** The space the character is currently in. `null` means personal space. */
+	currentSpace: SpaceIdSchema.nullable().default(null),
 	// TODO(spaces): Migrate this to be a personalSpace data
 	personalRoom: z.object({
 		inventory: z.lazy(() => RoomInventoryBundleSchema),
@@ -70,6 +78,8 @@ export type ICharacterData = z.infer<typeof CharacterDataSchema>;
 
 export const CHARACTER_DIRECTORY_UPDATEABLE_PROPERTIES = [
 	'accessId',
+	'preview',
+	'currentSpace',
 ] as const satisfies readonly (keyof ICharacterData)[];
 export const CharacterDataDirectoryUpdateSchema = CharacterDataSchema.pick(ArrayToRecordKeys(CHARACTER_DIRECTORY_UPDATEABLE_PROPERTIES, true)).partial();
 export type ICharacterDataDirectoryUpdate = z.infer<typeof CharacterDataDirectoryUpdateSchema>;
@@ -88,15 +98,12 @@ export const CHARACTER_SHARD_UPDATEABLE_PROPERTIES = [
 export const CharacterDataShardUpdateSchema = CharacterDataSchema.pick(ArrayToRecordKeys(CHARACTER_SHARD_UPDATEABLE_PROPERTIES, true)).partial();
 export type ICharacterDataShardUpdate = z.infer<typeof CharacterDataShardUpdateSchema>;
 
-export type ICharacterSelfInfo = {
-	id: CharacterId;
-	name: string;
-	preview: string;
-	state: string;
-	// TODO(spaces): This might need migration
-	currentRoom?: SpaceId | null;
-	inCreation?: true;
-};
-
-export type ICharacterSelfInfoUpdateProperties = 'preview' | 'currentRoom';
-export type ICharacterSelfInfoUpdate = Pick<ICharacterSelfInfo, 'id'> & Partial<Pick<ICharacterSelfInfo, ICharacterSelfInfoUpdateProperties>>;
+export const CharacterSelfInfoSchema = z.object({
+	id: CharacterIdSchema,
+	name: z.string(),
+	preview: z.string(),
+	state: z.string(),
+	currentSpace: SpaceIdSchema.nullable(),
+	inCreation: z.literal(true).optional(),
+});
+export type CharacterSelfInfo = z.infer<typeof CharacterSelfInfoSchema>;

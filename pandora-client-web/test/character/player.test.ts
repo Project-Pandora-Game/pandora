@@ -43,6 +43,8 @@ function MockPlayerData(overrides?: Partial<ICharacterData & ICharacterRoomData>
 		accountId: 0,
 		name: 'mock',
 		profileDescription: 'A mock player',
+		preview: '',
+		currentSpace: null,
 		created: 0,
 		accessId: 'mockID',
 		settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),

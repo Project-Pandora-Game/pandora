@@ -255,13 +255,6 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 
 			// New character is in process of creation
 			expect(result.inCreation).toBe(true);
-			// Saved into account
-			const accountData1 = await db.getAccountById(accountId1);
-			expect(accountData1?.characters).toHaveLength(1);
-			expect(accountData1?.characters).toContainEqual(result);
-			// Doesn't affect other accounts
-			const accountData2 = await db.getAccountById(accountId2);
-			expect(accountData2?.characters).toEqual([]);
 
 			// Exists in character database
 			const characterData = await db.getCharacter(result.id, false);
@@ -273,11 +266,26 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 
 		it('fails on unknown account', async () => {
 			await expect(db.createCharacter(999)).rejects.toThrow('Account not found');
-			// Doesn't affect accounts
-			const accountData1 = await db.getAccountById(accountId1);
-			expect(accountData1?.characters).toEqual([]);
-			const accountData2 = await db.getAccountById(accountId2);
-			expect(accountData2?.characters).toEqual([]);
+		});
+	});
+
+	describe('getCharactersForAccount()', () => {
+		it('Returns empty for unknown account', async () => {
+			const result = await db.getCharactersForAccount(999);
+
+			expect(result).toStrictEqual([]);
+		});
+
+		it('Returns characters of specified account', async () => {
+			const char1 = await db.createCharacter(accountId2);
+			const char2 = await db.createCharacter(accountId2);
+			await db.createCharacter(accountId1);
+
+			const result = await db.getCharactersForAccount(accountId2);
+			expect(result).toStrictEqual([
+				char1,
+				char2,
+			]);
 		});
 	});
 
@@ -294,10 +302,6 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			const char = await db.createCharacter(accountId2);
 
 			// Character is in creation after creation
-			const accountData1 = await db.getAccountById(accountId2);
-			expect(accountData1?.characters).toHaveLength(1);
-			expect(accountData1?.characters[0].id).toBe(char.id);
-			expect(accountData1?.characters[0].inCreation).toBe(true);
 			const characterData1 = await db.getCharacter(char.id, false);
 			expect(characterData1?.inCreation).toBe(true);
 
@@ -305,10 +309,6 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			expect(result).not.toBeNull();
 
 			// Character not in creation after finalize
-			const accountData2 = await db.getAccountById(accountId2);
-			expect(accountData2?.characters).toHaveLength(1);
-			expect(accountData2?.characters[0].id).toBe(char.id);
-			expect(accountData2?.characters[0].inCreation).toBeUndefined();
 			const characterData2 = await db.getCharacter(char.id, result?.accessId ?? '');
 			expect(characterData2?.inCreation).toBeUndefined();
 
@@ -318,52 +318,6 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 
 			// Fails on second finalize
 			await expect(db.finalizeCharacter(accountId2, char.id)).resolves.toBeNull();
-		});
-	});
-
-	describe('updateCharacterSelfInfo()', () => {
-		it('updates character info', async () => {
-			const char = await db.createCharacter(accountId2);
-
-			const result = await db.updateCharacterSelfInfo(accountId2, {
-				id: char.id,
-				preview: 'test preview',
-			});
-
-			expect(result).not.toBeNull();
-			expect(result).not.toBe(char);
-			expect(result).toEqual({
-				...char,
-				preview: 'test preview',
-			});
-		});
-
-		it('fails with unknown account', async () => {
-			const char = await db.createCharacter(accountId2);
-
-			await expect(
-				db.updateCharacterSelfInfo(999, {
-					id: char.id,
-					preview: 'test preview',
-				}),
-			).resolves.toBeNull();
-
-			const accountData = await db.getAccountById(accountId2);
-			expect(accountData?.characters[0]).toStrictEqual(char);
-		});
-
-		it('fails with unknown character', async () => {
-			const char = await db.createCharacter(accountId2);
-
-			await expect(
-				db.updateCharacterSelfInfo(accountId2, {
-					id: 'c999',
-					preview: 'test preview',
-				}),
-			).resolves.toBeNull();
-
-			const accountData = await db.getAccountById(accountId2);
-			expect(accountData?.characters[0]).toStrictEqual(char);
 		});
 	});
 
@@ -443,13 +397,6 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 
 			await expect(db.deleteCharacter(accountId2, char1.id)).resolves.toBeUndefined();
 
-			expect((await db.getAccountById(accountId1))?.characters).toStrictEqual([
-				char3,
-			]);
-			expect((await db.getAccountById(accountId2))?.characters).toStrictEqual([
-				char2,
-			]);
-
 			await expect(db.getCharacter(char1.id, false)).resolves.toBeNull();
 			await expect(db.getCharacter(char2.id, false)).resolves.not.toBeNull();
 			await expect(db.getCharacter(char3.id, false)).resolves.not.toBeNull();
@@ -461,13 +408,6 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 
 			await expect(db.deleteCharacter(999, char1.id)).resolves.toBeUndefined();
 
-			expect((await db.getAccountById(accountId1))?.characters).toStrictEqual([
-				char2,
-			]);
-			expect((await db.getAccountById(accountId2))?.characters).toStrictEqual([
-				char1,
-			]);
-
 			await expect(db.getCharacter(char1.id, false)).resolves.not.toBeNull();
 			await expect(db.getCharacter(char2.id, false)).resolves.not.toBeNull();
 		});
@@ -478,13 +418,6 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 
 			// Note character originates from different account
 			await expect(db.deleteCharacter(accountId1, char1.id)).resolves.toBeUndefined();
-
-			expect((await db.getAccountById(accountId1))?.characters).toStrictEqual([
-				char2,
-			]);
-			expect((await db.getAccountById(accountId2))?.characters).toStrictEqual([
-				char1,
-			]);
 
 			await expect(db.getCharacter(char1.id, false)).resolves.not.toBeNull();
 			await expect(db.getCharacter(char2.id, false)).resolves.not.toBeNull();

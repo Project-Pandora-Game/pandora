@@ -1,17 +1,28 @@
-import { AccountId, CharacterId, CHARACTER_DEFAULT_PUBLIC_SETTINGS, ICharacterData, SpaceData, SpaceDirectoryConfig, IsNumber, SpaceId, ROOM_INVENTORY_BUNDLE_DEFAULT, ASSET_PREFERENCES_DEFAULT } from 'pandora-common';
-import type { ICharacterSelfInfoDb } from './databaseProvider';
-
 import { cloneDeep } from 'lodash';
 import { nanoid } from 'nanoid';
+import {
+	ASSET_PREFERENCES_DEFAULT,
+	AccountId,
+	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
+	CharacterId,
+	ICharacterData,
+	IsNumber,
+	ROOM_INVENTORY_BUNDLE_DEFAULT,
+	SpaceData,
+	SpaceDirectoryConfig,
+	SpaceId,
+} from 'pandora-common';
+import type { DatabaseCharacterSelfInfo } from './databaseStructure';
 
-export function CreateCharacter<Id extends number | CharacterId>(accountId: number, id: Id): [ICharacterSelfInfoDb, Omit<ICharacterData, 'id'> & { id: Id; }] {
+export function CreateCharacter<Id extends number | CharacterId>(accountId: number, id: Id): [DatabaseCharacterSelfInfo, Omit<ICharacterData, 'id'> & { id: Id; }] {
 	const infoId: CharacterId = IsNumber(id) ? `c${id}` as const : id;
 
-	const info: ICharacterSelfInfoDb = {
+	const info: DatabaseCharacterSelfInfo = {
 		inCreation: true,
 		id: infoId,
 		name: '',
 		preview: '',
+		currentSpace: null,
 	};
 
 	const char: Omit<ICharacterData, 'id'> & { id: Id; } = {
@@ -19,6 +30,8 @@ export function CreateCharacter<Id extends number | CharacterId>(accountId: numb
 		id,
 		accountId,
 		name: info.name,
+		preview: '',
+		currentSpace: null,
 		profileDescription: '',
 		created: -1,
 		accessId: nanoid(8),

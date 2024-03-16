@@ -1,13 +1,23 @@
+import type {
+	AccountId,
+	CharacterId,
+	ICharacterData,
+	ICharacterDataDirectoryUpdate,
+	ICharacterDataShardUpdate,
+	Service,
+	SpaceData,
+	SpaceDataDirectoryUpdate,
+	SpaceDataShardUpdate,
+	SpaceDirectoryData,
+	SpaceId,
+} from 'pandora-common';
+import { ServiceInit } from 'pandora-common';
+import { ENV } from '../config';
+import { DatabaseAccountContact, DatabaseAccountContactType, DatabaseAccountSecure, DatabaseAccountUpdate, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DirectMessageAccounts, type DatabaseCharacterSelfInfo, type DatabaseDirectMessage, type DatabaseDirectMessageAccounts } from './databaseStructure';
+import type { SpaceCreationData } from './dbHelper';
 import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
-import { ENV } from '../config';
 const { DATABASE_TYPE } = ENV;
-import type { CharacterId, SpaceData, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, SpaceDataDirectoryUpdate, SpaceDataShardUpdate, SpaceId, SpaceDirectoryData, AccountId, Service, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate } from 'pandora-common';
-import type { SpaceCreationData } from './dbHelper';
-import { ServiceInit } from 'pandora-common';
-import { DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate, type DatabaseDirectMessageAccounts, type DatabaseDirectMessage } from './databaseStructure';
-
-export type ICharacterSelfInfoDb = Omit<ICharacterSelfInfo, 'state'>;
 
 export interface PandoraDatabase extends Service {
 	/** The id in numeric form that will be assigned to next created account */
@@ -65,24 +75,23 @@ export interface PandoraDatabase extends Service {
 	//#region Character
 
 	/**
+	 * Queries characters for characters owned by the specified account
+	 * @param accountId - ID of account to find characters of
+	 */
+	getCharactersForAccount(accountId: AccountId): Promise<DatabaseCharacterSelfInfo[]>;
+
+	/**
 	 * Creates a new character for the account
 	 * @param accountId - Id of account to create character for
 	 * @param data - Character data
 	 */
-	createCharacter(accountId: AccountId): Promise<ICharacterSelfInfoDb>;
+	createCharacter(accountId: AccountId): Promise<DatabaseCharacterSelfInfo>;
 
 	/**
 	 * Finish the character creation process
 	 * @param accountId - Id of account to create character for
 	 */
 	finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<ICharacterData | null>;
-
-	/**
-	 * Update character's self info
-	 * @param accountId - Id of account to update character for
-	 * @param data - Character info data
-	 */
-	updateCharacterSelfInfo(accountId: AccountId, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null>;
 
 	/**
 	 * Update character's info

@@ -1,12 +1,26 @@
-import type { ICharacterSelfInfoDb, PandoraDatabase } from './databaseProvider';
-import { CreateAccountData } from '../account/account';
-import { AccountId, ArrayToRecordKeys, SPACE_DIRECTORY_PROPERTIES, CharacterId, GetLogger, ICharacterData, ICharacterDataDirectoryUpdate, ICharacterDataShardUpdate, ICharacterSelfInfoUpdate, SpaceData, SpaceDataDirectoryUpdate, SpaceDataShardUpdate, SpaceDirectoryData, PASSWORD_PREHASH_SALT, SpaceId } from 'pandora-common';
-import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DatabaseAccountContact, DirectMessageAccounts, DatabaseAccountContactType, DatabaseAccountUpdate, type DatabaseDirectMessageAccounts, type DatabaseDirectMessage } from './databaseStructure';
-
-import _ from 'lodash';
 import { createHash } from 'crypto';
+import _ from 'lodash';
 import { nanoid } from 'nanoid';
+import {
+	AccountId,
+	ArrayToRecordKeys,
+	CharacterId,
+	GetLogger,
+	ICharacterData,
+	ICharacterDataDirectoryUpdate,
+	ICharacterDataShardUpdate,
+	PASSWORD_PREHASH_SALT,
+	SPACE_DIRECTORY_PROPERTIES,
+	SpaceData,
+	SpaceDataDirectoryUpdate,
+	SpaceDataShardUpdate,
+	SpaceDirectoryData,
+	SpaceId,
+} from 'pandora-common';
+import { CreateAccountData } from '../account/account';
+import type { PandoraDatabase } from './databaseProvider';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccountContact, DatabaseAccountContactType, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdate, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DirectMessageAccounts, type DatabaseDirectMessage, type DatabaseDirectMessageAccounts, type DatabaseCharacterSelfInfo } from './databaseStructure';
+import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
 
 function HashSHA512Base64(text: string): string {
 	return createHash('sha512').update(text, 'utf-8').digest('base64');
@@ -146,54 +160,40 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(result);
 	}
 
-	public createCharacter(accountId: AccountId): Promise<ICharacterSelfInfoDb> {
+	public getCharactersForAccount(accountId: number): Promise<DatabaseCharacterSelfInfo[]> {
+		return Promise.resolve(
+			Array.from(this.characterDb.values())
+				.filter((c) => c.accountId === accountId)
+				.map((c): DatabaseCharacterSelfInfo => ({
+					id: c.id,
+					name: c.name,
+					preview: c.preview,
+					currentSpace: c.currentSpace,
+					inCreation: c.inCreation,
+				})),
+		);
+	}
+
+	public createCharacter(accountId: AccountId): Promise<DatabaseCharacterSelfInfo> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
 		if (!acc)
 			return Promise.reject(new Error('Account not found'));
 
 		const [info, char] = CreateCharacter(accountId, `c${this._nextCharacterId++}`);
 
-		acc.characters.push(info);
 		this.characterDb.set(char.id, char);
 		return Promise.resolve(_.cloneDeep(info));
 	}
 
 	public finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<ICharacterData | null> {
-		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
-		if (!acc)
-			return Promise.resolve(null);
-
-		const info = acc.characters.find((c) => c.id === characterId);
-
-		if (!info)
-			return Promise.resolve(null);
-
-		const char = this.characterDb.get(info.id);
-		if (!char?.inCreation)
+		const char = this.characterDb.get(characterId);
+		if (char?.accountId !== accountId || !char?.inCreation)
 			return Promise.resolve(null);
 
 		char.inCreation = undefined;
 		char.created = Date.now();
 
-		info.inCreation = undefined;
-		info.name = char.name;
-
 		return Promise.resolve(_.cloneDeep(char));
-	}
-
-	public updateCharacterSelfInfo(accountId: AccountId, { id, ...data }: ICharacterSelfInfoUpdate): Promise<ICharacterSelfInfoDb | null> {
-		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
-		if (!acc)
-			return Promise.resolve(null);
-
-		const info = acc.characters.find((dbChar) => dbChar.id === id);
-		if (!info)
-			return Promise.resolve(null);
-
-		if (data.preview)
-			info.preview = data.preview;
-
-		return Promise.resolve(_.cloneDeep(info));
 	}
 
 	public updateCharacter(id: CharacterId, data: ICharacterDataDirectoryUpdate & ICharacterDataShardUpdate, accessId: string | null): Promise<boolean> {
@@ -206,15 +206,11 @@ export class MockDatabase implements PandoraDatabase {
 	}
 
 	public deleteCharacter(accountId: AccountId, characterId: CharacterId): Promise<void> {
-		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === accountId);
-		if (!acc)
+		const character = this.characterDb.get(characterId);
+
+		if (character?.accountId !== accountId)
 			return Promise.resolve();
 
-		const info = acc.characters.find((char) => char.id === characterId);
-		if (!info)
-			return Promise.resolve();
-
-		acc.characters = acc.characters.filter((char) => char.id !== characterId);
 		this.characterDb.delete(characterId);
 		return Promise.resolve();
 	}
@@ -232,23 +228,17 @@ export class MockDatabase implements PandoraDatabase {
 		accountId: AccountId;
 		characterId: CharacterId;
 	}[]> {
-		const chars: {
-			accountId: AccountId;
-			characterId: CharacterId;
-		}[] = [];
-
-		for (const account of this.accountDbView) {
-			for (const character of account.characters) {
-				if (character.currentRoom === spaceId) {
-					chars.push({
-						accountId: account.id,
-						characterId: character.id,
-					});
-				}
-			}
-		}
-
-		return Promise.resolve(chars);
+		return Promise.resolve(
+			Array.from(this.characterDb.values())
+				.filter((c) => c.currentSpace === spaceId)
+				.map((c): {
+					accountId: AccountId;
+					characterId: CharacterId;
+				} => ({
+					characterId: c.id,
+					accountId: c.accountId,
+				})),
+		);
 	}
 
 	//#region Spaces

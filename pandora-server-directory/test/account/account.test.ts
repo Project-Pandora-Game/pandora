@@ -17,8 +17,8 @@ describe('Account', () => {
 
 	});
 	beforeEach(() => {
-		accountActive = new Account(dataActive);
-		accountInactive = new Account(dataInactive);
+		accountActive = new Account(dataActive, []);
+		accountInactive = new Account(dataInactive, []);
 	});
 
 	describe('touch()', () => {

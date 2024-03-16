@@ -1,13 +1,28 @@
-import { Assert, AssertNever, AsyncSynchronized, CharacterId, CloneDeepMutable, GetLogger, ICharacterData, ICharacterSelfInfo, ICharacterSelfInfoUpdate, IDirectoryCharacterConnectionInfo, Logger, NOT_NARROWING_TRUE, SpaceId, SpaceInviteId } from 'pandora-common';
-import type { Account } from './account';
-import type { Shard } from '../shard/shard';
-import type { Space } from '../spaces/space';
-import type { ClientConnection } from '../networking/connection_client';
-import { GetDatabase, ICharacterSelfInfoDb } from '../database/databaseProvider';
 import { nanoid } from 'nanoid';
-import { ShardManager } from '../shard/shardManager';
-import { SpaceManager } from '../spaces/spaceManager';
+import {
+	Assert,
+	AssertNever,
+	AsyncSynchronized,
+	CharacterId,
+	CloneDeepMutable,
+	GetLogger,
+	ICharacterData,
+	IDirectoryCharacterConnectionInfo,
+	Logger,
+	NOT_NARROWING_TRUE,
+	SpaceId,
+	SpaceInviteId,
+	type ICharacterDataDirectoryUpdate,
+} from 'pandora-common';
+import { GetDatabase } from '../database/databaseProvider';
+import type { DatabaseCharacterSelfInfo } from '../database/databaseStructure';
+import type { ClientConnection } from '../networking/connection_client';
 import { ConnectionManagerClient } from '../networking/manager_client';
+import type { Shard } from '../shard/shard';
+import { ShardManager } from '../shard/shardManager';
+import type { Space } from '../spaces/space';
+import { SpaceManager } from '../spaces/spaceManager';
+import type { Account } from './account';
 
 function GenerateConnectSecret(): string {
 	return nanoid(8);
@@ -18,8 +33,8 @@ export class CharacterInfo {
 	public readonly account: Account;
 	protected readonly logger: Logger;
 
-	protected _data: Readonly<ICharacterSelfInfoDb>;
-	public get data(): Readonly<ICharacterSelfInfoDb> {
+	protected _data: Readonly<DatabaseCharacterSelfInfo>;
+	public get data(): Readonly<DatabaseCharacterSelfInfo> {
 		return this._data;
 	}
 
@@ -28,7 +43,7 @@ export class CharacterInfo {
 		return this._loadedCharacter;
 	}
 
-	constructor(characterData: ICharacterSelfInfoDb, account: Account) {
+	constructor(characterData: DatabaseCharacterSelfInfo, account: Account) {
 		this.logger = GetLogger('Character', `[Character ${characterData.id}]`);
 		this.id = characterData.id;
 		this.account = account;
@@ -81,23 +96,15 @@ export class CharacterInfo {
 	}
 
 	@AsyncSynchronized('object')
-	public async updateSelfData(update: Omit<ICharacterSelfInfoUpdate, 'id'>): Promise<ICharacterSelfInfo | null> {
-		const info = await GetDatabase().updateCharacterSelfInfo(this.account.id, {
-			...update,
-			id: this.id,
-		});
-		if (!info)
-			return null;
+	public async updateDirectoryData(update: ICharacterDataDirectoryUpdate): Promise<void> {
+		const result = await GetDatabase().updateCharacter(this.id, update, null);
+		if (!result)
+			throw new Error('Database update failed');
 
 		this._data = {
 			...this._data,
 			...update,
 		};
-
-		return ({
-			...info,
-			state: this.getInfoState(),
-		});
 	}
 
 	@AsyncSynchronized()
@@ -105,7 +112,7 @@ export class CharacterInfo {
 		if (this._loadedCharacter != null && NOT_NARROWING_TRUE)
 			return this._loadedCharacter;
 
-		const currentSpaceId: SpaceId | null = this._data.currentRoom ?? null;
+		const currentSpaceId: SpaceId | null = this._data.currentSpace ?? null;
 		if (currentSpaceId != null) {
 			// If we want to load into a space, load it
 			const space = await SpaceManager.loadSpace(currentSpaceId);
@@ -116,7 +123,7 @@ export class CharacterInfo {
 			}
 			// If the space failed to load, kick the character out of it
 			this.logger.warning('Failed to load current space, force-kick');
-			await this.updateSelfData({ currentRoom: null });
+			await this.updateDirectoryData({ currentSpace: null });
 			// Fallthrough to behaviour outside of a space
 		}
 

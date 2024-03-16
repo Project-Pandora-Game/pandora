@@ -686,6 +686,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			},
 		});
 
+		Assert(charactersToMigrate.size === 0, 'Accounts reference unknown characters');
 		// The character array from the account will be deleted during automatic migration
 
 		//#endregion

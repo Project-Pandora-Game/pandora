@@ -1,31 +1,30 @@
+import { noop } from 'lodash';
+import { Assert, AssertNotNullable, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkRoomState, AssetId, CharacterSize, GetLogger, HexColorString, ParseArrayNotEmpty, TypedEventEmitter } from 'pandora-common';
 import React, { createContext, ReactElement, useContext, useMemo, useSyncExternalStore } from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import { AssetsUI } from './components/assets/assets';
-import { AssetUI } from './components/asset/asset';
-import { BoneUI } from './components/bones/bones';
-import './editor.scss';
-import { Button } from '../components/common/button/button';
-import { GraphicsManager } from '../assets/graphicsManager';
-import { LayerStateOverrides } from '../graphics/def';
+import z from 'zod';
 import { AssetGraphics, AssetGraphicsLayer, CalculateImmediateLayerPointDefinition, useGraphicsAsset, useLayerDefinition } from '../assets/assetGraphics';
+import { GetCurrentAssetManager } from '../assets/assetManager';
+import { GraphicsManager } from '../assets/graphicsManager';
+import { useBrowserStorage } from '../browserStorage';
+import { useEvent } from '../common/useEvent';
+import { Button } from '../components/common/button/button';
+import { Select } from '../components/common/select/select';
+import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
+import { LayerStateOverrides } from '../graphics/def';
 import { Observable } from '../observable';
-import { EDITOR_CHARACTER_ID, EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor';
-import { TypedEventEmitter, AssetId, GetLogger, CharacterSize, ParseArrayNotEmpty, AssertNotNullable, Assert, AssetFrameworkGlobalStateContainer, AssetFrameworkGlobalState, AssetFrameworkCharacterState, HexColorString, AssetFrameworkRoomState } from 'pandora-common';
+import { AssetManagerEditor, EditorAssetManager } from './assets/assetManager';
+import { AssetUI } from './components/asset/asset';
+import { AssetInfoUI } from './components/assetInfo/assetInfo';
+import { AssetsUI } from './components/assets/assets';
+import { BoneUI } from './components/bones/bones';
 import { LayerUI } from './components/layer/layer';
 import { PointsUI } from './components/points/points';
-import { DraggablePoint } from './graphics/draggable';
-import { useEvent } from '../common/useEvent';
-import { useBrowserStorage } from '../browserStorage';
-import z from 'zod';
-import { AssetInfoUI } from './components/assetInfo/assetInfo';
-import { Select } from '../components/common/select/select';
-import { noop } from 'lodash';
-import { EditorResultScene, EditorSetupScene } from './graphics/editorScene';
-import { useEditor } from './editorContextProvider';
 import { EditorWardrobeUI } from './components/wardrobe/wardrobe';
-import { GetCurrentAssetManager } from '../assets/assetManager';
-import { AssetManagerEditor, EditorAssetManager } from './assets/assetManager';
-import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
+import './editor.scss';
+import { useEditor } from './editorContextProvider';
+import { EDITOR_CHARACTER_ID, EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor';
+import { DraggablePoint } from './graphics/draggable';
+import { EditorResultScene, EditorSetupScene } from './graphics/editorScene';
 
 const logger = GetLogger('Editor');
 
@@ -380,12 +379,10 @@ export function EditorView(): ReactElement {
 	const context = useMemo(() => ({ activeTabs, setActiveTabs }), [activeTabs, setActiveTabs]);
 
 	return (
-		<BrowserRouter basename='/editor'>
-			<activeTabsContext.Provider value={ context }>
-				<div className='editor'>
-					{ activeTabs.map((tab, index) => <Tab tab={ tab } index={ index } key={ index } />) }
-				</div>
-			</activeTabsContext.Provider>
-		</BrowserRouter>
+		<activeTabsContext.Provider value={ context }>
+			<div className='editor'>
+				{ activeTabs.map((tab, index) => <Tab tab={ tab } index={ index } key={ index } />) }
+			</div>
+		</activeTabsContext.Provider>
 	);
 }

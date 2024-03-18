@@ -76,4 +76,15 @@ test.describe('EULA', () => {
 		await page.waitForURL('/login');
 		await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
 	});
+
+	test('Agreement works in editor', async ({ page }) => {
+		await TestOpenPandora(page, {
+			path: '/editor',
+			agreeEula: true,
+		});
+
+		// No agreement needed
+		await expect(page.getByText(TEST_EULA_TEXT)).not.toBeVisible();
+		await expect(page.getByRole('button', { name: 'Load Assets From Local Development Server', exact: true })).toBeVisible();
+	});
 });

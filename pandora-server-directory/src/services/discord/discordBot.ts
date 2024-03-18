@@ -2,8 +2,9 @@ import Discord, { BitFieldResolvable, Events, GatewayIntentsString, GuildChannel
 import _ from 'lodash';
 import { Assert, GetLogger, Service } from 'pandora-common';
 import { ENV } from '../../config';
-import type { DiscordCommandDescriptor } from './commands/_common';
+import type { DiscordButtonDescriptor, DiscordCommandDescriptor } from './commands/_common';
 import { DISCORD_COMMAND_PING } from './commands/ping';
+import { DISCORD_BUTTON_REGISTER, DISCORD_COMMAND_ADMIN } from './commands/registration';
 const { DISCORD_BOT_TOKEN, DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID, DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID } = ENV;
 
 const STATUS_THROTTLE_TIME = 10 * 60 * 1000; // 10 minutes
@@ -15,6 +16,11 @@ const GATEWAY_INTENTS: BitFieldResolvable<GatewayIntentsString, number> = [
 
 const DISCORD_COMMANDS: readonly DiscordCommandDescriptor[] = [
 	DISCORD_COMMAND_PING,
+	DISCORD_COMMAND_ADMIN,
+];
+
+const DISCORD_BUTTONS: readonly DiscordButtonDescriptor[] = [
+	DISCORD_BUTTON_REGISTER,
 ];
 
 const logger = GetLogger('DiscordBot');
@@ -145,7 +151,7 @@ export const DiscordBot = new class DiscordBot implements Service {
 
 				await interaction.reply({
 					ephemeral: true,
-					content: `Error: I didn't recognize the command "${interaction.commandName}"`,
+					content: `Error: I don't recognize the command "${interaction.commandName}"`,
 				});
 				return;
 			}
@@ -158,6 +164,33 @@ export const DiscordBot = new class DiscordBot implements Service {
 					await interaction.followUp({ content: 'Error: Something went wrong while executing your command!', ephemeral: true });
 				} else {
 					await interaction.reply({ content: 'Error: Something went wrong while executing your command!', ephemeral: true });
+				}
+			}
+
+			return;
+		}
+
+		if (interaction.isButton()) {
+			const button = DISCORD_BUTTONS.find((b) => b.id === interaction.customId);
+
+			if (!button) {
+				logger.warning(`Unknown button used: '${interaction.customId}'`);
+
+				await interaction.reply({
+					ephemeral: true,
+					content: `Error: I don't recognize the button you pressed!`,
+				});
+				return;
+			}
+
+			try {
+				await button.execute(interaction);
+			} catch (error) {
+				logger.error(`Error executing button handler "${interaction.customId}":`, error);
+				if (interaction.replied || interaction.deferred) {
+					await interaction.followUp({ content: 'Error: Something went wrong while processing your action!', ephemeral: true });
+				} else {
+					await interaction.reply({ content: 'Error: Something went wrong while processing your action!', ephemeral: true });
 				}
 			}
 

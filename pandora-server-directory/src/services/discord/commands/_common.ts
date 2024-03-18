@@ -1,7 +1,7 @@
-import { SlashCommandBuilder, CommandInteraction, GuildMember } from 'discord.js';
+import { SlashCommandBuilder, CommandInteraction, GuildMember, type ButtonInteraction } from 'discord.js';
 import type { Promisable } from 'type-fest';
 
-export function GetInteractionMember(interaction: CommandInteraction): GuildMember | null {
+export function GetInteractionMember(interaction: CommandInteraction | ButtonInteraction): GuildMember | null {
 	if (interaction.member instanceof GuildMember) {
 		return interaction.member;
 	}
@@ -9,6 +9,11 @@ export function GetInteractionMember(interaction: CommandInteraction): GuildMemb
 }
 
 export type DiscordCommandDescriptor = {
-	config: SlashCommandBuilder;
+	config: Pick<SlashCommandBuilder, 'toJSON' | 'name'>;
 	execute: (interaction: CommandInteraction) => Promisable<void>;
+};
+
+export type DiscordButtonDescriptor = {
+	id: string;
+	execute: (interaction: ButtonInteraction) => Promisable<void>;
 };

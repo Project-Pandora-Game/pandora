@@ -1,7 +1,9 @@
-import Discord, { BitFieldResolvable, GatewayIntentsString, GuildChannel } from 'discord.js';
+import Discord, { BitFieldResolvable, Events, GatewayIntentsString, GuildChannel, REST, type Interaction, Routes } from 'discord.js';
 import _ from 'lodash';
-import { GetLogger, Service } from 'pandora-common';
+import { Assert, GetLogger, Service } from 'pandora-common';
 import { ENV } from '../../config';
+import type { DiscordCommandDescriptor } from './commands/_common';
+import { DISCORD_COMMAND_PING } from './commands/ping';
 const { DISCORD_BOT_TOKEN, DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID, DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID } = ENV;
 
 const STATUS_THROTTLE_TIME = 10 * 60 * 1000; // 10 minutes
@@ -9,6 +11,10 @@ const STATUS_THROTTLE_TIME = 10 * 60 * 1000; // 10 minutes
 const GATEWAY_INTENTS: BitFieldResolvable<GatewayIntentsString, number> = [
 	'Guilds',
 	'GuildIntegrations',
+];
+
+const DISCORD_COMMANDS: readonly DiscordCommandDescriptor[] = [
+	DISCORD_COMMAND_PING,
 ];
 
 const logger = GetLogger('DiscordBot');
@@ -35,22 +41,45 @@ export const DiscordBot = new class DiscordBot implements Service {
 			intents: GATEWAY_INTENTS,
 		});
 
+		this._client.on(Events.InteractionCreate, this._handleInteractionCreate.bind(this));
+
 		const result = await this._client.login(DISCORD_BOT_TOKEN);
 		if (result !== DISCORD_BOT_TOKEN) {
 			logger.error('Discord login failed');
 			return;
 		}
 
+		await new Promise((resolve, reject) => {
+			this._client?.once('ready', resolve);
+			this._client?.once('error', reject);
+		});
+
+		Assert(this._client.isReady());
+
+		//#region Init status channels
 		/** Call with no status to trigger throttle */
 		this.setOnlineStatus({});
 
 		this._statusChannels = {
-			accounts: await this._getGuildChannel(DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID),
-			characters: await this._getGuildChannel(DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID),
+			accounts: DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID ? await this._getGuildChannel(DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID) : undefined,
+			characters: DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID ? await this._getGuildChannel(DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID) : undefined,
 		};
+		//#endregion
 
-		this._client.user?.setStatus('online');
+		//#region Init commands metadata
+		await new REST()
+			.setToken(DISCORD_BOT_TOKEN)
+			.put(
+				Routes.applicationCommands(this._client.application.id),
+				{
+					body: DISCORD_COMMANDS.map((c) => c.config.toJSON()),
+				},
+			);
+		//#endregion
 
+		this._client.user.setPresence({
+			status: 'online',
+		});
 		logger.info('Discord Bot is ready');
 	}
 
@@ -105,5 +134,36 @@ export const DiscordBot = new class DiscordBot implements Service {
 			return undefined;
 		}
 		return channel;
+	}
+
+	private async _handleInteractionCreate(interaction: Interaction): Promise<void> {
+		if (interaction.isChatInputCommand()) {
+			const command = DISCORD_COMMANDS.find((c) => c.config.name === interaction.commandName);
+
+			if (!command) {
+				logger.warning(`Unknown command used: '${interaction.commandName}'`);
+
+				await interaction.reply({
+					ephemeral: true,
+					content: `Error: I didn't recognize the command "${interaction.commandName}"`,
+				});
+				return;
+			}
+
+			try {
+				await command.execute(interaction);
+			} catch (error) {
+				logger.error(`Error executing command "${interaction.commandName}":`, error);
+				if (interaction.replied || interaction.deferred) {
+					await interaction.followUp({ content: 'Error: Something went wrong while executing your command!', ephemeral: true });
+				} else {
+					await interaction.reply({ content: 'Error: Something went wrong while executing your command!', ephemeral: true });
+				}
+			}
+
+			return;
+		}
+
+		// Other interactions are not supported: Just ignore them
 	}
 };

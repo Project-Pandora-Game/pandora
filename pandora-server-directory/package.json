@@ -54,7 +54,7 @@
 		"nodemailer": "6.9.12",
 		"pandora-common": "workspace:*",
 		"prom-client": "15.1.0",
-		"socket.io": "4.6.1",
+		"socket.io": "4.7.5",
 		"wtfnode": "0.9.1",
 		"zod": "3.22.4"
 	},

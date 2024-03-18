@@ -102,7 +102,7 @@ type EulaProps = {
 
 function EulaDisagree() {
 	history.back();
-	setTimeout(() => {
+	window.setTimeout(() => {
 		window.location.href = 'about:blank';
 	}, 100);
 }

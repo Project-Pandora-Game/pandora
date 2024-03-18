@@ -201,7 +201,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 	messagesDiv: RefObject<HTMLDivElement>;
 	scrollMessagesView: (forceScroll: boolean) => void;
 }, ref: ForwardedRef<HTMLTextAreaElement>) {
-	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const timeout = useRef<number | null>(null);
 	const setPlayerStatus = useChatSetPlayerStatus();
 	const gameState = useGameState();
 	const sender = useChatMessageSender();
@@ -442,7 +442,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 			clearTimeout(timeout.current);
 			timeout.current = null;
 		}
-		timeout.current = setTimeout(() => inputEnd(), 3_000);
+		timeout.current = window.setTimeout(() => inputEnd(), 3_000);
 	};
 
 	const onChange = useEvent((ev: React.ChangeEvent<HTMLTextAreaElement>) => {

@@ -141,7 +141,7 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number;
 
 	useEffect(() => {
 		if (edit) {
-			const timer = setTimeout(() => {
+			const timer = window.setTimeout(() => {
 				setEdit(false);
 			}, timeout);
 			return () => clearTimeout(timer);
@@ -198,7 +198,7 @@ function DisplayInfo({ message }: { message: IChatMessageProcessed; }): ReactEle
 
 		const now = new Date();
 		const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
-		const cleanup = setTimeout(() => {
+		const cleanup = window.setTimeout(() => {
 			setFull(true);
 		}, tomorrow.getTime() - now.getTime());
 		return () => clearTimeout(cleanup);

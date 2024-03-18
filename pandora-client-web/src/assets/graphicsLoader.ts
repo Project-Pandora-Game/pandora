@@ -82,7 +82,7 @@ class TextureData {
 					const retryTimer = RETRY_INTERVALS[Math.min(this._failedCounter, RETRY_INTERVALS.length) - 1];
 					this.logger.warning(`Failed to load image '${this.path}', will retry after ${retryTimer}ms\n`, err);
 
-					setTimeout(() => {
+					window.setTimeout(() => {
 						this._pendingLoad = false;
 						this.load();
 					}, retryTimer);

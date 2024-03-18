@@ -152,7 +152,7 @@ class GraphicsSuspenseManager {
 			}
 		} else if (!this._showProgress && this._showProgressDelayTimer == null) {
 			// We want to show progress even if ready, but only with delay
-			this._showProgressDelayTimer = setTimeout(() => {
+			this._showProgressDelayTimer = window.setTimeout(() => {
 				this._showProgressDelayTimer = null;
 				if (this._loadingProgress < 1) {
 					this._showProgress = true;
@@ -209,4 +209,3 @@ class GraphicsSuspenseAsset extends TypedEventEmitter<{ update: void; }> {
 		this.emit('update', undefined);
 	}
 }
-

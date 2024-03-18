@@ -93,7 +93,7 @@ class RateLimitedObservable<T> extends NormalObservable<T> {
 			}
 		};
 		if (this.async && RateLimitedObservable.maxDelay) {
-			setTimeout(actualSet, RateLimitedObservable.maxDelay);
+			window.setTimeout(actualSet, RateLimitedObservable.maxDelay);
 		} else {
 			actualSet();
 		}

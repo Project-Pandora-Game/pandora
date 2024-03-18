@@ -54,7 +54,7 @@ export function useRemotelyUpdatedUserInput<T extends string | number | boolean 
 			resetTimeout.current = null;
 		}
 		if (!shouldUpdate.current) {
-			resetTimeout.current = setTimeout(resetValue, resetTimer);
+			resetTimeout.current = window.setTimeout(resetValue, resetTimer);
 		}
 		setValue(newValue);
 		updateCallback?.(newValue);

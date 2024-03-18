@@ -36,7 +36,7 @@ export const InputNumber = React.forwardRef<HTMLInputElement, InputNumberProps>(
 		if (!isNaN(parsed)) {
 			const clamped = ClampAndStepValue(parsed, props.min, props.max, props.step);
 			onChange?.(clamped);
-			resetTimeout.current = setTimeout(() => {
+			resetTimeout.current = window.setTimeout(() => {
 				setInputValue(clamped.toString());
 			}, resetTimer);
 		}
@@ -51,7 +51,7 @@ export const InputNumber = React.forwardRef<HTMLInputElement, InputNumberProps>(
 			resetTimeout.current = null;
 		}
 
-		resetTimeout.current = setTimeout(() => {
+		resetTimeout.current = window.setTimeout(() => {
 			setInputValue(value.toString());
 		}, resetTimer);
 	}, [value, inputValue, parse, resetTimer]);

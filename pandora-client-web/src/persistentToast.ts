@@ -75,7 +75,7 @@ export class PersistentToast {
 		};
 
 		// Wait a tick before showing, in case multiple show/hide calls have been made within the current tick
-		setTimeout(() => {
+		window.setTimeout(() => {
 			if (!this.shouldShow) {
 				return;
 			}

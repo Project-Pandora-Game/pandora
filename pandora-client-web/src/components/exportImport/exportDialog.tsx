@@ -66,7 +66,7 @@ export function ExportDialog<T extends ZodType<unknown>>({
 				clearTimeout(showCopyClearTimeout.current);
 			}
 			setShowCopySuccess(true);
-			showCopyClearTimeout.current = setTimeout(() => {
+			showCopyClearTimeout.current = window.setTimeout(() => {
 				setShowCopySuccess(false);
 			}, COPY_SUCCESS_COOLDOWN);
 		});

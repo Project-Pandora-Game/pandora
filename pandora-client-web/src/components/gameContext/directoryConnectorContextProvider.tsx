@@ -161,7 +161,7 @@ export function useAuthTokenIsValid(): boolean {
 
 		setIsValid(true);
 
-		const interval = setTimeout(() => {
+		const interval = window.setTimeout(() => {
 			setIsValid(false);
 		}, authToken.expires - now);
 

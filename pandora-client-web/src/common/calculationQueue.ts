@@ -91,7 +91,7 @@ export class CalculationQueue<const TPriorities extends Readonly<Record<string, 
 
 		if (newTimer != null && this._nextTickTimer == null) {
 			this._nextTick = newTimer;
-			this._nextTickTimer = setTimeout(() => {
+			this._nextTickTimer = window.setTimeout(() => {
 				this._nextTickTimer = null;
 				this._nextTick = null;
 				this._doTick();

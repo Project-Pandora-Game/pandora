@@ -385,7 +385,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		this._lastSelectedCharacter.value = undefined;
 	}
 
-	public async extendAuthToken(password: string): Promise<void> {
+	public async extendAuthToken(password: string): Promise<boolean> {
 		const username = this._authToken.value?.username;
 		if (!username) {
 			throw new Error('Not logged in');
@@ -400,10 +400,10 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 					expires: response.expires,
 				};
 				toast('Session extended', TOAST_OPTIONS_SUCCESS);
-				break;
+				return true;
 			case 'invalidPassword':
 				toast('Invalid password', TOAST_OPTIONS_ERROR);
-				break;
+				return false;
 			default:
 				AssertNever(response);
 		}

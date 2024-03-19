@@ -11,6 +11,8 @@ import { ModalDialog, useConfirmDialog } from '../dialog/dialog';
 import { useObservable } from '../../observable';
 import type { AuthToken } from '../../networking/directoryConnector';
 import { useCurrentTime } from '../../common/useCurrentTime';
+import { useKeyDownEvent } from '../../common/useKeyDownEvent';
+import { Row } from '../common/container/container';
 
 export function SecuritySettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -116,25 +118,38 @@ function ConnectedClientConnection({ connection }: { connection: AccountConnecte
 
 function ExtendCurrentSession({ token }: { token: AuthToken; }): ReactElement {
 	const [show, setShow] = React.useState(false);
+
+	const hide = React.useCallback(() => {
+		setShow(false);
+		return true;
+	}, []);
+
+	useKeyDownEvent(hide, 'Escape');
+
 	if (!show)
 		return <Button className='slim' onClick={ () => setShow(true) }>Extend</Button>;
 
 	return (
 		<>
-			<Button className='slim' onClick={ () => setShow(false) }>Extend</Button>
-			<ExtendCurrentSessionDialog token={ token } />
+			<Button className='slim' onClick={ hide }>Extend</Button>
+			<ExtendCurrentSessionDialog token={ token } hide={ hide } />
 		</>
 	);
 }
 
-function ExtendCurrentSessionDialog({ token }: { token: AuthToken; }): ReactElement {
+function ExtendCurrentSessionDialog({ token, hide }: { token: AuthToken; hide: () => boolean; }): ReactElement {
 	const directory = useDirectoryConnector();
 	const [password, setPassword] = React.useState('');
 	const now = useCurrentTime(60_000);
 
 	const [extend, processing] = useAsyncEvent(
 		() => directory.extendAuthToken(password),
-		() => setPassword(''),
+		(result) => {
+			if (result)
+				hide();
+			else
+				setPassword('');
+		},
 	);
 
 	return (
@@ -150,7 +165,11 @@ function ExtendCurrentSessionDialog({ token }: { token: AuthToken; }): ReactElem
 						onChange={ (e) => setPassword(e.target.value) }
 					/>
 				</FormField>
-				<Button type='submit' disabled={ processing }>Extend</Button>
+				<br />
+				<Row>
+					<Button onClick={ hide } disabled={ processing }>Cancel</Button>
+					<Button type='submit' disabled={ processing }>Extend</Button>
+				</Row>
 			</Form>
 		</ModalDialog>
 	);

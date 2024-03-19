@@ -47,7 +47,7 @@
 		"zod": "3.22.4"
 	},
 	"devDependencies": {
-		"@babel/preset-env": "7.24.0",
+		"@babel/preset-env": "7.24.1",
 		"@pmmmwh/react-refresh-webpack-plugin": "0.5.11",
 		"@project-pandora-game/sass-loader": "13.2.0",
 		"@testing-library/jest-dom": "6.4.2",
@@ -57,7 +57,7 @@
 		"@types/delaunator": "5.0.2",
 		"@types/jest": "29.5.12",
 		"@types/lodash": "4.17.0",
-		"@types/node": "18.19.25",
+		"@types/node": "18.19.26",
 		"@types/offscreencanvas": "2019.7.3",
 		"@types/postcss-flexbugs-fixes": "5.0.3",
 		"@types/react": "18.2.67",

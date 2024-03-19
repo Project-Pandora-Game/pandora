@@ -64,7 +64,7 @@
 		"@types/jest": "29.5.12",
 		"@types/json-diff": "1.0.3",
 		"@types/lodash": "4.17.0",
-		"@types/node": "18.19.25",
+		"@types/node": "18.19.26",
 		"@types/nodemailer": "6.4.14",
 		"@types/wtfnode": "0.7.3",
 		"@typescript-eslint/eslint-plugin": "7.3.1",

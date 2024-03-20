@@ -22,7 +22,7 @@
 	},
 	"dependencies": {
 		"@hcaptcha/react-hcaptcha": "1.10.1",
-		"@pixi/react": "7.1.1",
+		"@pixi/react": "7.1.2",
 		"@pixi/unsafe-eval": "7.4.0",
 		"bowser": "2.11.0",
 		"classnames": "2.5.1",
@@ -47,7 +47,7 @@
 		"zod": "3.22.4"
 	},
 	"devDependencies": {
-		"@babel/preset-env": "7.24.1",
+		"@babel/preset-env": "7.24.3",
 		"@pmmmwh/react-refresh-webpack-plugin": "0.5.11",
 		"@project-pandora-game/sass-loader": "13.2.0",
 		"@testing-library/jest-dom": "6.4.2",
@@ -99,11 +99,11 @@
 		"ts-mockito": "2.6.1",
 		"ts-node": "10.9.2",
 		"tslib": "2.6.2",
-		"type-fest": "4.13.0",
+		"type-fest": "4.13.1",
 		"typescript": "5.3.3",
 		"url-loader": "4.1.1",
 		"webpack": "5.91.0",
 		"webpack-cli": "5.1.4",
-		"webpack-dev-server": "4.15.1"
+		"webpack-dev-server": "4.15.2"
 	}
 }

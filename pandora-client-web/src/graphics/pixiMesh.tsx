@@ -54,7 +54,7 @@ export const PixiMesh = PixiComponent<PixiMeshProps, Mesh>('PixiMesh', {
 			drawMode: oldDrawMode,
 			tint: oldTint,
 			alpha: oldAlpha,
-		} = oldProps;
+		} = oldProps as Partial<typeof newProps>;
 		const {
 			vertices,
 			uvs,

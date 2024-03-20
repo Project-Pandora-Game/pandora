@@ -60,7 +60,7 @@ const PixiViewportComponent = PixiComponent<PixiViewportProps & { app: Applicati
 			worldWidth: oldWorldWidth,
 			worldHeight: oldWorldHeight,
 			setup: oldSetup,
-		} = oldProps;
+		} = oldProps as Partial<typeof newProps>;
 		const {
 			app,
 			width,

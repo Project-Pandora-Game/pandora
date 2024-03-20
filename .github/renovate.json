@@ -10,7 +10,6 @@
 	"automergeType": "branch",
 	"autoApprove": true,
 	"rangeStrategy": "pin",
-	"onboardingPrTitle": "[DEV] Configure Renovate",
 	"semanticCommits": "disabled",
 	"commitMessagePrefix": "[CHORE]",
 	"configMigration": true,

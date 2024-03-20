@@ -51,7 +51,7 @@
 		"mongodb": "6.5.0",
 		"mongodb-memory-server-core": "9.1.7",
 		"nanoid": "3.3.7",
-		"nodemailer": "6.9.12",
+		"nodemailer": "6.9.13",
 		"pandora-common": "workspace:*",
 		"prom-client": "15.1.0",
 		"socket.io": "4.6.1",
@@ -79,7 +79,7 @@
 		"ts-mockito": "2.6.1",
 		"tsc-watch": "6.0.4",
 		"tslib": "2.6.2",
-		"type-fest": "4.13.0",
+		"type-fest": "4.13.1",
 		"typescript": "5.3.3"
 	}
 }

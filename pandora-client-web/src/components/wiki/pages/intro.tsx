@@ -8,7 +8,7 @@ export function WikiIntroduction(): ReactElement {
 	return (
 		<>
 			<Row alignX='end'>
-				<Link to='/wiki/' target='_blank' rel='noopener noreferrer'>⧉ Open wiki in a separate window</Link>
+				<a href='/wiki/' target='_blank' rel='noopener noreferrer'>⧉ Open wiki in a separate window</a>
 			</Row>
 			<h2>Wiki: Introduction to Pandora's features with further information</h2>
 
@@ -19,7 +19,7 @@ export function WikiIntroduction(): ReactElement {
 			</p>
 
 			<p>
-				If you are new to Pandora, it is recommended to first <Link to='/wiki/new'>click this link</Link> that leads to the new user guide, before proceeding.
+				If you are new to Pandora, it is recommended to first click the following link that leads to the <Link to='/wiki/new'>new user guide</Link>, before proceeding.
 			</p>
 
 			The following will list some of the existing core features of Pandora.

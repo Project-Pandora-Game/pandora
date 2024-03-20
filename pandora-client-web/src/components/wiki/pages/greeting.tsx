@@ -28,8 +28,7 @@ export function WikiGreeting(): ReactElement {
 					We want Pandora to be a safe and welcoming place, but that also requires your help!
 					Please be aware that different people have different preferences and limits.
 					It is also important to be aware of what a <ExternalLink href='https://en.wikipedia.org/wiki/Safeword'><b>Safeword</b></ExternalLink> is and respect it when
-					other users mention a safeword in their profile or tell you their safeword upfront and end up using it during a play.
-					Chat messages that ask for help or to be freed with a [OOC] tag in front have to be treated like an indirect safeword usage.<br />
+					others mention a safeword in their profile or tell you their safeword.
 					<br />
 					During your stay you will often encounter various restraining items.
 					Restraints in Pandora are very secure and can really get you stuck with no one else being able to help so please be mindful of that.

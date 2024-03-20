@@ -22,7 +22,7 @@ export type MuffleSettings = {
 	jawMove: number;
 
 	/**
-	 * Speaking: Muffle tongue related sounds (`r`, `re`, `k`, `c`,...)
+	 * Speaking: Muffle tongue related sounds (`r`, `re`, `k`, `c`, `q`, ...)
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
@@ -30,7 +30,7 @@ export type MuffleSettings = {
 	 */
 	tongueRoof: number;
 	/**
-	 * Speaking: Muffle air breath sounds (`th`, `tph`, `ch`,...)
+	 * Speaking: Muffle air breath sounds (`th`, `ch`,...)
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
@@ -46,7 +46,7 @@ export type MuffleSettings = {
 	 */
 	throatBreath: number;
 	/**
-	 * Speaking: Muffle hinting letters (h, j, l, r, v, w, x, y, q)
+	 * Speaking: Muffle hinting letters (h, j, l, r, v, w, x, y)
 	 *
 	 * Effective value range:
 	 * - 0 = no effect
@@ -94,21 +94,21 @@ export class Muffler {
 
 		let muffled: string[] = word.split('').map((c) => {
 			if (/t/ig.test(c)) {
-				return this.roll(['th', 'tph'], tongueRoof, r, c);
-			} else if (/[kc]/ig.test(c)) {
+				return this.roll(['th'], tongueRoof, r, c);
+			} else if (/[kcq]/ig.test(c)) {
 				return this.roll(['ch', 'gh'], tongueRoof, r, c);
 			} else if (/[z]/ig.test(c)) {
 				return this.roll(['gi'], jawMove, r, c);
 			} else if (/[bdgp]/ig.test(c)) {
-				return this.roll(['ch', 'gh'], lipsTouch, r, c);
+				return this.roll(['gh'], lipsTouch, r, c);
 			} else if (/[s]/ig.test(c)) {
-				return this.roll(['sh', 'ss'], jawMove, r, c);
+				return this.roll(['sh'], jawMove, r, c);
 			} else if (/[f]/ig.test(c)) {
 				return this.roll(['ph'], lipsTouch, r, c);
-			} else if (/[hjlrwxyq]/ig.test(c)) {
+			} else if (/[hjlrwxy]/ig.test(c)) {
 				return this.roll(['w', 'm', 'h', 'n'], coherency, r, c);
 			} else if (/[aeiou]/ig.test(c)) {
-				return this.roll(['m', 'n', 'w', 'h'], jawMove, r, c);
+				return this.roll(['m', 'n', 'w'], jawMove, r, c);
 			} else {
 				return c;
 			}
@@ -116,7 +116,7 @@ export class Muffler {
 
 		if (mouthBreath > 0) {
 			muffled = muffled.map((c) => {
-				if (/(th|tph|ch|c)/ig.test(c)) {
+				if (/(th|ch|c)/ig.test(c)) {
 					return this.roll(['gh'], mouthBreath, r, c);
 				} else if (/(ph)/ig.test(c)) {
 					return this.roll(['mh', 'nh'], mouthBreath, r, c);

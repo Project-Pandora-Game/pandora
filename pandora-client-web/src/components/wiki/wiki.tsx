@@ -13,6 +13,7 @@ import { WikiSpaces } from './pages/spaces';
 import { WikiItems } from './pages/items';
 import { WikiCharacters } from './pages/characters';
 import { WikiSafety } from './pages/safety';
+import { WikiNew } from './pages/new';
 
 export default function Wiki(): ReactElement {
 	const navigate = useNavigate();
@@ -25,6 +26,9 @@ export default function Wiki(): ReactElement {
 					<WikiIntroduction />
 				</WikiContent>
 			</UrlTab>
+			<WikiContentTab name='New User Guide' urlChunk='new'>
+				<WikiNew />
+			</WikiContentTab>
 			<WikiContentTab name='Spaces' urlChunk='spaces'>
 				<WikiSpaces />
 			</WikiContentTab>

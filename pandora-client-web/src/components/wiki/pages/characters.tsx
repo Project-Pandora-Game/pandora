@@ -127,11 +127,10 @@ export function WikiCharacters(): ReactElement {
 			</p>
 			<ul>
 				<li>
-					... add permanent exceptions for the requesting character for every permission individually in the popup, either
-					allowing and denying that character all further uses of each permission from now on
+					... "deny" the requesting character asking for a specific permission from now on (unless you change the permission's settings manually).
 				</li>
-				<li>... allow all, which sets all mentioned permissions with no exceptions defined for the requesting character to "yes" just for the requester</li>
-				<li>... dismiss the popup, which is akin to not taking any decision at this point in time and leave things as they are.</li>
+				<li>... "allow all", which adds an exception for the requesting character to be able to use all mentioned permissions.</li>
+				<li>... "dismiss" the popup, which ignores the request, only saving any permission-specific blocks you selected.</li>
 			</ul>
 			<p>
 				Note that the interaction that was leading to the prompt has to be repeated again after permission was granted. The server

@@ -1,6 +1,6 @@
 import React, { ReactElement } from 'react';
 import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/gameStateContextProvider';
-import { LIMIT_SPACE_BOUND_INVITES } from 'pandora-common';
+import { LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_NUMBER } from 'pandora-common';
 import { Link } from 'react-router-dom';
 
 export function WikiSpaces(): ReactElement {
@@ -12,7 +12,8 @@ export function WikiSpaces(): ReactElement {
 
 			<p>
 				A space in Pandora always exists in the state it was set up, even when it was empty for a long time.
-				You can decorate every room inside a space with room items/furniture and it can theoretically be joined by up to 100 characters at the same time.<br />
+				You can decorate every room inside a space with room items/furniture and it can theoretically be joined by up
+				to { LIMIT_SPACE_MAX_CHARACTER_NUMBER } characters at the same time.<br />
 				The "Chat"-tab next to the room view can also be switched to:
 			</p>
 			<ul>
@@ -237,7 +238,7 @@ export function WikiSpaces(): ReactElement {
 				<li>
 					There are also shortcuts to write one-off messages while in the default, normal chat mode.<br />
 					These shortcuts are<br />
-					"((" - double round brackets - usage: (( ooc message )) <br />
+					"((" - double round brackets - usage: (( OOC message )) <br />
 					"*"  - single asterisk/star - usage: *me-emote that gets prefixed with your character's name*<br />
 					"**" - double asterisk/star - usage: **generic emote that doesn't get prefixed**<br />
 					<i>Note</i>: A single message can have multiple different syntax parts, so the above shortcut types can be mixed in a single message if
@@ -268,6 +269,7 @@ export function WikiSpaces(): ReactElement {
 				<li>You can click on the "Whisper"-button next to a character name in the "Room"-tab.</li>
 				<li>You can use the chat command "/w [target]" using either the character name or the character ID as whisper target argument.</li>
 				<li>Chat-related commands while in whisper mode (e.g., "/me") will be executed normally and not be whispered.</li>
+				<li>You can whisper an OOC message though, if you start a whispered message with "((".</li>
 				<li>If your whisper target leaves the room or space, your whisper message cannot be sent.</li>
 				<li>If your whisper target goes offline, your whisper message will still be sent, but currently it will not be delivered.</li>
 			</ul>

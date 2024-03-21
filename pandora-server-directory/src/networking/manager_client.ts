@@ -202,10 +202,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 		// Generate new auth token for new login
 		const token = await account.secure.generateNewLoginToken();
-		connection.bindLoginToken(token);
 		// Set the account for the connection and return result
 		logger.verbose(`${connection.id} logged in as ${account.data.username}`);
-		connection.setAccount(account);
+		connection.setAccount(account, token);
 		return {
 			result: 'ok',
 			token: { value: token.value, expires: token.expires },
@@ -221,10 +220,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		switch (logout.type) {
 			case 'self':
-				if (connection.loginTokenId != null)
+				if (connection.loginTokenId != null) {
 					await account.secure.invalidateLoginToken(connection.loginTokenId);
-				else
+				} else {
 					logger.warning(`Attempt to logout with no login token: ${connection.id}`);
+				}
 				break;
 			case 'all':
 				await account.secure.invalidateLoginToken();
@@ -304,7 +304,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		if (!await connection.account.secure.changePassword(passwordSha512Old, passwordSha512New, cryptoKey, connection.loginTokenId))
+		if (!await connection.account.secure.changePassword(passwordSha512Old, passwordSha512New, cryptoKey))
 			return { result: 'invalidPassword' };
 
 		return { result: 'ok' };
@@ -584,8 +584,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		// Verify the token validity
 		if (account && token) {
 			logger.verbose(`${connection.id} logged in as ${account.data.username} using token`);
-			connection.bindLoginToken(token);
-			connection.setAccount(account);
+			connection.setAccount(account, token);
 			if (auth.character) {
 				const char = account.characters.get(auth.character.id)?.loadedCharacter;
 				if (char && char.connectSecret === auth.character.secret) {
@@ -709,8 +708,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		const connections = new Map<string, { connectionCount: number; connectedCharacters: { id: CharacterId; name: string; }[]; }>();
 		for (const conn of connection.account.associatedConnections.clients) {
-			if (conn.loginTokenId == null)
-				continue;
+			AssertNotNullable(conn.loginTokenId);
 
 			let list = connections.get(conn.loginTokenId);
 			if (list == null) {

@@ -350,12 +350,12 @@ describe('AccountSecure', () => {
 
 		describe('getLoginToken()', () => {
 			it('Returns false with wrong token', () => {
-				expect(!!account.getLoginToken('wrongToken')).toBe(false);
+				expect(account.getLoginToken('wrongToken')).toBeUndefined();
 			});
 
 			it('Returns true with valid token', () => {
-				expect(!!account.getLoginToken(token1.value)).toBe(true);
-				expect(!!account.getLoginToken(token2.value)).toBe(true);
+				expect(account.getLoginToken(token1.value)).toBeDefined();
+				expect(account.getLoginToken(token2.value)).toBeDefined();
 			});
 		});
 
@@ -366,22 +366,22 @@ describe('AccountSecure', () => {
 			});
 
 			it('Invalidates valid token', async () => {
-				expect(!!account.getLoginToken(token1.value)).toBe(true);
+				expect(account.getLoginToken(token1.value)).toBeDefined();
 
 				await account.invalidateLoginToken(token1.value.substring(0, ACCOUNT_TOKEN_ID_LENGTH));
 
-				expect(!!account.getLoginToken(token1.value)).toBe(false);
+				expect(account.getLoginToken(token1.value)).toBeUndefined();
 				// Other tokens are unaffected
-				expect(!!account.getLoginToken(token2.value)).toBe(true);
+				expect(account.getLoginToken(token2.value)).toBeDefined();
 				// Saves data
 				expect(mockSaving).toHaveBeenCalledTimes(1);
 			});
 		});
 
 		test('Tokens timeout', () => {
-			expect(!!account.getLoginToken(token2.value)).toBe(true);
+			expect(account.getLoginToken(token2.value)).toBeDefined();
 			jest.setSystemTime(token2.expires + 1);
-			expect(!!account.getLoginToken(token2.value)).toBe(false);
+			expect(account.getLoginToken(token2.value)).toBeUndefined();
 		});
 	});
 });

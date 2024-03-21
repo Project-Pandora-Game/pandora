@@ -22,6 +22,7 @@ import {
 	type AccountSettingsKeys,
 	GetLogger,
 	TimeSpanMs,
+	type Logger,
 } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { DatabaseAccount, DatabaseAccountUpdate, DatabaseAccountWithSecure, DirectMessageAccounts, type DatabaseCharacterSelfInfo } from '../database/databaseStructure';
@@ -34,6 +35,8 @@ import { CharacterInfo } from './character';
 
 /** Currently logged in or recently used account */
 export class Account {
+	private readonly logger: Logger;
+
 	/** Time when this account was last used */
 	public lastActivity: number;
 	/** The account's saved data */
@@ -61,6 +64,7 @@ export class Account {
 	}
 
 	constructor(data: DatabaseAccountWithSecure, characters: readonly DatabaseCharacterSelfInfo[]) {
+		this.logger = GetLogger('Account', `[Account ${data.id}]`);
 		this.lastActivity = Date.now();
 		// Shallow copy to preserve received data when cleaning up secure
 		this.data = omit(data, 'secure', 'roles', 'characters');
@@ -76,10 +80,6 @@ export class Account {
 			this.characters.set(characterData.id, new CharacterInfo(characterData, this));
 		}
 
-		this._startCleanup();
-	}
-
-	public onLoad(): void {
 		this._startCleanup();
 	}
 
@@ -376,9 +376,7 @@ export class Account {
 		this._cleanupActive = true;
 		try {
 			this._doCleanupAsync()
-				.catch((err) => {
-					GetLogger('Account', `[${this.id}]`).error('Account cleanup failed:', err);
-				});
+				.catch((err) => this.logger.error('Account cleanup failed:', err));
 		} finally {
 			this._cleanupActive = false;
 		}

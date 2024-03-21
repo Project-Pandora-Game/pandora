@@ -12,7 +12,9 @@ import { useObservable } from '../../observable';
 import type { AuthToken } from '../../networking/directoryConnector';
 import { useCurrentTime } from '../../common/useCurrentTime';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
-import { Row } from '../common/container/container';
+import { Column, Row } from '../common/container/container';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast';
 
 export function SecuritySettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -47,10 +49,11 @@ function ConnectedClients(): ReactElement {
 
 	return (
 		<FieldsetToggle legend='Connected Clients' open={ false } onChange={ onChange }>
-			<div>
-				<ConnectedClientsList connections={ connections } />
+			<Column>
+				<CurrentSessionInfo />
 				<Button onClick={ load } disabled={ processing }>Refresh</Button>
-			</div>
+				<ConnectedClientsList connections={ connections } />
+			</Column>
 		</FieldsetToggle>
 	);
 }
@@ -63,7 +66,6 @@ function ConnectedClientsList({ connections }: { connections: AccountConnectedCl
 		<table>
 			<thead>
 				<tr>
-					<th>Id</th>
 					<th>Connections</th>
 					<th>Characters</th>
 					<th>Actions</th>
@@ -97,22 +99,54 @@ function ConnectedClientConnection({ connection }: { connection: AccountConnecte
 
 	return (
 		<tr className={ isCurrent ? 'current-connection' : undefined }>
-			<td>{ loginTokenId }</td>
 			<td>{ connectionCount }</td>
 			<td>{ connectedCharacters.map(({ id, name }) => `${name} (${id})`).join(', ') }</td>
 			<td>
 				{
 					isCurrent ? (
-						<>
-							<Button className='slim' onClick={ disconnect }>Logout</Button>
-							<ExtendCurrentSession token={ authToken! } />
-						</>
+						'Current connection'
 					) : (
 						<Button className='slim' onClick={ disconnect }>Disconnect</Button>
 					)
 				}
 			</td>
 		</tr>
+	);
+}
+
+function CurrentSessionInfo(): ReactElement {
+	const directoryConnector = useDirectoryConnector();
+	const authToken = useObservable(directoryConnector.authToken);
+	const confirm = useConfirmDialog();
+
+	const logout = React.useCallback(() => {
+		void confirm('Are you sure you want to logout?').then((confirmed) => {
+			if (confirmed) {
+				directoryConnector.sendMessage('logout', { type: 'self' });
+			}
+		});
+	}, [confirm, directoryConnector]);
+
+	const logoutAll = React.useCallback(() => {
+		void confirm('Are you sure you want to logout from all clients?').then((confirmed) => {
+			if (confirmed) {
+				directoryConnector.sendMessage('logout', { type: 'all' });
+			}
+		});
+	}, [confirm, directoryConnector]);
+
+	if (!authToken)
+		return <>Not logged in</>;
+
+	return (
+		<Column>
+			<SessionExpire token={ authToken } />
+			<Row>
+				<ExtendCurrentSession token={ authToken } />
+				<Button onClick={ logout }>Logout</Button>
+				<Button onClick={ logoutAll }>Logout all</Button>
+			</Row>
+		</Column>
 	);
 }
 
@@ -127,35 +161,45 @@ function ExtendCurrentSession({ token }: { token: AuthToken; }): ReactElement {
 	useKeyDownEvent(hide, 'Escape');
 
 	if (!show)
-		return <Button className='slim' onClick={ () => setShow(true) }>Extend</Button>;
+		return <Button onClick={ () => setShow(true) }>Extend Current Session</Button>;
 
 	return (
 		<>
-			<Button className='slim' onClick={ hide }>Extend</Button>
+			<Button onClick={ hide }>Extend Current Session</Button>
 			<ExtendCurrentSessionDialog token={ token } hide={ hide } />
 		</>
+	);
+}
+
+function SessionExpire({ token }: { token: AuthToken; }): ReactElement {
+	const now = useCurrentTime(60_000);
+
+	return (
+		<p>Your session will expire in { FormatTimeInterval(token.expires - now, 'full') }</p>
 	);
 }
 
 function ExtendCurrentSessionDialog({ token, hide }: { token: AuthToken; hide: () => boolean; }): ReactElement {
 	const directory = useDirectoryConnector();
 	const [password, setPassword] = React.useState('');
-	const now = useCurrentTime(60_000);
 
 	const [extend, processing] = useAsyncEvent(
 		() => directory.extendAuthToken(password),
 		(result) => {
-			if (result)
+			if (result) {
+				toast('Session extended', TOAST_OPTIONS_SUCCESS);
 				hide();
-			else
+			} else {
+				toast('Invalid password', TOAST_OPTIONS_ERROR);
 				setPassword('');
+			}
 		},
 	);
 
 	return (
 		<ModalDialog>
 			<Form dirty={ false } onSubmit={ extend }>
-				<p>Your session will expire in { FormatTimeInterval(token.expires - now, 'short') }</p>
+				<SessionExpire token={ token } />
 				<FormField>
 					<label htmlFor='extend-current-session-password'>Password</label>
 					<input
@@ -234,7 +278,6 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 						id='password-change-old'
 						{ ...register('oldPassword', {
 							required: 'Old password is required',
-							validate: FormCreateStringValidator(PasswordSchema, 'password'),
 						}) }
 					/>
 					<FormFieldError error={ errors.oldPassword } />

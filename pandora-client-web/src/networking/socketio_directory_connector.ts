@@ -30,7 +30,7 @@ import { BrowserStorage } from '../browserStorage';
 import { AccountContactContext } from '../components/accountContacts/accountContactContext';
 import { PrehashPassword } from '../crypto/helpers';
 import { Observable, ReadonlyObservable } from '../observable';
-import { PersistentToast, TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../persistentToast';
+import { PersistentToast, TOAST_OPTIONS_ERROR } from '../persistentToast';
 import { DirectMessageManager } from './directMessageManager';
 import { AuthToken, DirectoryConnectionState, DirectoryConnector, LoginResponse } from './directoryConnector';
 import { freeze } from 'immer';
@@ -399,10 +399,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 					value: response.token,
 					expires: response.expires,
 				};
-				toast('Session extended', TOAST_OPTIONS_SUCCESS);
 				return true;
 			case 'invalidPassword':
-				toast('Invalid password', TOAST_OPTIONS_ERROR);
 				return false;
 			default:
 				AssertNever(response);

@@ -4,7 +4,7 @@ import { HeaderButton } from './HeaderButton';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
 import { usePlayer, usePlayerData, usePlayerState } from '../gameContext/playerContextProvider';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { EMPTY, GetLogger, NOT_NARROWING_FALSE, SpaceClientInfo, SpaceId } from 'pandora-common';
+import { EMPTY, GetLogger, SpaceClientInfo, SpaceId } from 'pandora-common';
 import { Button } from '../common/button/button';
 import { useLogout } from '../../networking/account_manager';
 import { useCharacterRestrictionsManager, useSpaceInfoOptional } from '../gameContext/gameStateContextProvider';
@@ -17,7 +17,7 @@ import './leaveButton.scss';
 import { Immutable } from 'immer';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
 
-const leaveButtonContext = createContext(() => NOT_NARROWING_FALSE);
+const leaveButtonContext = createContext((): boolean => false);
 
 export function LeaveButton({ onClickExtra }: {
 	onClickExtra?: () => void;
@@ -200,13 +200,6 @@ function AccountLeave(): ReactElement {
 						<span>Username: { currentAccount.username }</span>
 						<span>Id: { currentAccount.id }</span>
 						<Button onClick={ onClick }>Logout</Button>
-						<br />
-						<span>
-							<strong>
-								Warning:
-								Logging out will effect all tabs in the current browser
-							</strong>
-						</span>
 					</>
 				) : (
 					<span>Not logged in</span>

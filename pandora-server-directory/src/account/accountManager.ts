@@ -149,7 +149,6 @@ export class AccountManager implements Service {
 		// If there already is account matching this id loaded, simply return it
 		const loadedAccount = this.getAccountById(rawData.id);
 		if (loadedAccount) {
-			loadedAccount.onLoad();
 			return loadedAccount;
 		}
 
@@ -236,7 +235,6 @@ export class AccountManager implements Service {
 		// Check if account is loaded and return it if it is
 		const account = this.getAccountById(id);
 		if (account) {
-			account.onLoad();
 			return account;
 		}
 		// Get it from database

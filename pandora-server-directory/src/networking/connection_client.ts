@@ -58,7 +58,9 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	 * Set or clear the account this connection is logged in as
 	 * @param account - The account to set or `null` to clear
 	 */
-	public setAccount(account: Account | null): void {
+	public setAccount(account: null): void;
+	public setAccount(account: Account, token: AccountToken): void;
+	public setAccount(account: Account | null, token?: AccountToken): void {
 		if (this._account === account)
 			return;
 		if (this._account) {
@@ -69,24 +71,21 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 			this._account = null;
 		}
 		if (account) {
+			Assert(token?.reason === AccountTokenReason.LOGIN);
 			account.touch();
 			this._account = account;
+			this._loginTokenId = token.getId();
+			const remove = token.on('tokenDestroyed', () => {
+				if (this._loginTokenId === token.getId()) {
+					this.onAccountTokenDestroyed();
+				}
+				remove();
+			});
 			this.joinRoom(account.associatedConnections);
 		}
 	}
 
-	public bindLoginToken(token: AccountToken): void {
-		Assert(token.reason === AccountTokenReason.LOGIN);
-		token.bind(this);
-		this._loginTokenId = token.getId();
-	}
-
-	public onAccountTokenDestroyed(token: AccountToken): void {
-		if (this._loginTokenId !== token.getId()) {
-			this.logger.warning(`Invalid token destroyed '${this._loginTokenId ?? 'null'}' !== '${token.getId()}'`);
-			return;
-		}
-
+	private onAccountTokenDestroyed(): void {
 		if (this._account != null) {
 			this.setAccount(null);
 			this.sendConnectionStateUpdate();

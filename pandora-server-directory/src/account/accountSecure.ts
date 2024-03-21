@@ -1,4 +1,4 @@
-import { ACCOUNT_TOKEN_ID_LENGTH, GetLogger, IAccountCryptoKey, Logger } from 'pandora-common';
+import { ACCOUNT_TOKEN_ID_LENGTH, GetLogger, IAccountCryptoKey, Logger, TypedEventEmitter } from 'pandora-common';
 import { ENV } from '../config';
 const { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION } = ENV;
 import { GetDatabase } from '../database/databaseProvider';
@@ -84,17 +84,12 @@ export default class AccountSecure {
 		return argon2.verify(this.#secure.password, password);
 	}
 
-	public async changePassword(passwordOld: string, passwordNew: string, cryptoKey: IAccountCryptoKey, loginTokenId?: string | null): Promise<boolean> {
+	public async changePassword(passwordOld: string, passwordNew: string, cryptoKey: IAccountCryptoKey): Promise<boolean> {
 		if (!this.isActivated() || !await this.verifyPassword(passwordOld) || !await this.#validateCryptoKey(cryptoKey))
 			return false;
 
-		// Invalidate all login tokens except the one used to change the password
-		if (loginTokenId != null) {
-			this.#invalidateToken(AccountTokenReason.LOGIN, (t) => t.getId() !== loginTokenId);
-		} else {
-			this.#invalidateToken(AccountTokenReason.LOGIN);
-		}
-
+		// Invalidate all login tokens
+		this.#invalidateToken(AccountTokenReason.LOGIN);
 		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.password = await GeneratePasswordHash(passwordNew);
 		this.#secure.cryptoKey = _.cloneDeep(cryptoKey);
@@ -170,7 +165,7 @@ export default class AccountSecure {
 		if (!token || !token.extend())
 			return undefined;
 
-		this.#tokens = [...this.#tokens];
+		this.#lastSavedTokens = undefined;
 		await this.#updateDatabase();
 
 		return token;
@@ -272,10 +267,11 @@ export default class AccountSecure {
 			if (!token.validate())
 				continue;
 
-			if (token.reason !== reason || (isInvalid != null && !isInvalid(token)))
+			if (token.reason !== reason || (isInvalid != null && !isInvalid(token))) {
 				tokens.push(token);
-			else
+			} else {
 				token.onDestroy();
+			}
 		}
 		this.#tokens = tokens;
 	}
@@ -377,12 +373,7 @@ const TOKEN_TYPES = {
 	},
 } as const satisfies TokenType;
 
-export interface AccountTokenOwner {
-	onAccountTokenDestroyed(token: AccountToken): void;
-}
-
-export class AccountToken implements Readonly<DatabaseAccountToken> {
-	readonly #bound = new Set<AccountTokenOwner>();
+export class AccountToken extends TypedEventEmitter<{ tokenDestroyed: AccountToken; }> implements Readonly<DatabaseAccountToken> {
 	readonly #reason: AccountTokenReason;
 	#value: string;
 	#expires: number;
@@ -400,6 +391,7 @@ export class AccountToken implements Readonly<DatabaseAccountToken> {
 	}
 
 	constructor(token: Readonly<DatabaseAccountToken>) {
+		super();
 		this.#value = token.value;
 		this.#expires = token.expires;
 		this.#reason = token.reason;
@@ -416,10 +408,6 @@ export class AccountToken implements Readonly<DatabaseAccountToken> {
 
 	public getId(): string {
 		return this.value.substring(0, ACCOUNT_TOKEN_ID_LENGTH);
-	}
-
-	public bind(owner: AccountTokenOwner): void {
-		this.#bound.add(owner);
 	}
 
 	public validate(): boolean {
@@ -440,10 +428,7 @@ export class AccountToken implements Readonly<DatabaseAccountToken> {
 
 		this.#destroyed = true;
 
-		for (const owner of this.#bound) {
-			owner.onAccountTokenDestroyed(this);
-		}
-		this.#bound.clear();
+		this.emit('tokenDestroyed', this);
 	}
 
 	public extend(): boolean {

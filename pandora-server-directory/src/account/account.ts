@@ -32,10 +32,12 @@ import { AccountDirectMessages } from './accountDirectMessages';
 import { AccountRoles } from './accountRoles';
 import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import { CharacterInfo } from './character';
+import { AsyncInterval } from '../utility';
 
 /** Currently logged in or recently used account */
 export class Account {
 	private readonly logger: Logger;
+	private readonly cleanupInterval: AsyncInterval;
 
 	/** Time when this account was last used */
 	public lastActivity: number;
@@ -80,11 +82,15 @@ export class Account {
 			this.characters.set(characterData.id, new CharacterInfo(characterData, this));
 		}
 
-		this._startCleanup();
+		this.cleanupInterval = new AsyncInterval(
+			() => this._doCleanupAsync(),
+			TimeSpanMs(1, 'minutes'),
+			(err) => this.logger.error('Account cleanup failed:', err),
+		).start();
 	}
 
 	public onUnload(): void {
-		this._stopCleanup();
+		this.cleanupInterval.stop();
 	}
 
 	/** Update last activity timestamp to reflect last usage */
@@ -352,34 +358,11 @@ export class Account {
 
 	//#region Cleanup
 
-	private _cleanupInterval: NodeJS.Timeout | null = null;
-
-	private _startCleanup(): void {
-		if (this._cleanupInterval != null)
-			return;
-
-		this._cleanupInterval = setInterval(() => this._cleanup(), TimeSpanMs(1, 'minutes')).unref();
-	}
-
-	private _stopCleanup(): void {
-		if (this._cleanupInterval != null) {
-			clearInterval(this._cleanupInterval);
-			this._cleanupInterval = null;
-		}
-	}
-
-	private _cleanupActive = false;
-	private _cleanup(): void {
-		if (this._cleanupActive)
-			return;
-
-		this._cleanupActive = true;
-		try {
-			this._doCleanupAsync()
-				.catch((err) => this.logger.error('Account cleanup failed:', err));
-		} finally {
-			this._cleanupActive = false;
-		}
+	/**
+	 * Cleanup the account, disconnecting characters and cleaning up tokens.
+	 */
+	public doCleanup(): Promise<void> {
+		return this.cleanupInterval.immediate();
 	}
 
 	private async _doCleanupAsync(): Promise<void> {

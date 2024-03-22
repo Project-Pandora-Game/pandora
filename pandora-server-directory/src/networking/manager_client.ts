@@ -236,12 +236,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				AssertNever(logout);
 		}
 
-		for (const info of account.characters.values()) {
-			const character = info.loadedCharacter;
-			if (character != null && character.toBeDisconnected) {
-				await character.disconnect();
-			}
-		}
+		await account.doCleanup();
 
 		logger.verbose(`${connection.id} logged out`);
 	}

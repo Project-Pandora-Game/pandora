@@ -2,12 +2,14 @@ import { IClientDirectory, IDirectoryClient, MockConnection, MockServerSocket } 
 import { ClientConnection } from '../../src/networking/connection_client';
 import { ConnectionManagerClient } from '../../src/networking/manager_client';
 import { TestMockAccount, TestMockCharacter, TestMockDb } from '../utils';
+import { AccountToken, AccountTokenReason } from '../../src/account/accountSecure';
 
 describe('ClientConnection', () => {
 	let connection: MockConnection<IClientDirectory, IDirectoryClient>;
 	let server: MockServerSocket<IDirectoryClient>;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	let connectionOnMessage: jest.Mock<any, any>;
+	const token = new AccountToken({ value: 'test', reason: AccountTokenReason.LOGIN, expires: Date.now() + 3600_000 });
 
 	beforeAll(async () => {
 		await TestMockDb();
@@ -80,7 +82,7 @@ describe('ClientConnection', () => {
 			const client = new ClientConnection(server, connection.connect(), {});
 
 			// Set
-			client.setAccount(account);
+			client.setAccount(account, token);
 			expect(client.account).toBe(account);
 			expect(account.associatedConnections.clients).toContain(client);
 			expect(client.isLoggedIn()).toBe(true);
@@ -98,13 +100,13 @@ describe('ClientConnection', () => {
 			const client = new ClientConnection(server, connection.connect(), {});
 
 			// Set first
-			client.setAccount(account1);
+			client.setAccount(account1, token);
 			expect(client.account).toBe(account1);
 			expect(account1.associatedConnections.clients).toContain(client);
 			expect(account2.associatedConnections.clients).not.toContain(client);
 
 			// Swap to second
-			client.setAccount(account2);
+			client.setAccount(account2, token);
 			expect(client.account).toBe(account2);
 			expect(account1.associatedConnections.clients).not.toContain(client);
 			expect(account2.associatedConnections.clients).toContain(client);
@@ -115,7 +117,7 @@ describe('ClientConnection', () => {
 			const client = new ClientConnection(server, connection.connect(), {});
 
 			// Set
-			client.setAccount(account);
+			client.setAccount(account, token);
 
 			// Disconnect
 			connection.disconnect();
@@ -136,7 +138,7 @@ describe('ClientConnection', () => {
 			const characterInfo = await TestMockCharacter(account);
 			const character = await characterInfo.requestLoad();
 			const client = new ClientConnection(server, connection.connect(), {});
-			client.setAccount(account);
+			client.setAccount(account, token);
 
 			// Set
 			client.setCharacter(character);
@@ -159,7 +161,7 @@ describe('ClientConnection', () => {
 			const characterInfo2 = await TestMockCharacter(account);
 			const character2 = await characterInfo2.requestLoad();
 			const client = new ClientConnection(server, connection.connect(), {});
-			client.setAccount(account);
+			client.setAccount(account, token);
 
 			// Set first
 			client.setCharacter(character1);
@@ -186,8 +188,8 @@ describe('ClientConnection', () => {
 			const client = new ClientConnection(server, connection.connect(), {});
 			const connection2 = new MockConnection<IClientDirectory, IDirectoryClient>({ onMessage: connectionOnMessage });
 			const client2 = new ClientConnection(server, connection2.connect(), {});
-			client.setAccount(account);
-			client2.setAccount(account);
+			client.setAccount(account, token);
+			client2.setAccount(account, token);
 			connectionOnMessage.mockClear();
 
 			// Set to first connection
@@ -215,7 +217,7 @@ describe('ClientConnection', () => {
 			const characterInfo = await TestMockCharacter(account);
 			const character = await characterInfo.requestLoad();
 			const client = new ClientConnection(server, connection.connect(), {});
-			client.setAccount(account);
+			client.setAccount(account, token);
 
 			// Set
 			client.setCharacter(character);
@@ -249,7 +251,7 @@ describe('ClientConnection', () => {
 			const client = new ClientConnection(server, connection.connect(), {});
 			connectionOnMessage.mockClear();
 
-			client.setAccount(account);
+			client.setAccount(account, token);
 
 			client.sendConnectionStateUpdate();
 
@@ -265,7 +267,7 @@ describe('ClientConnection', () => {
 			const characterInfo = await TestMockCharacter(account);
 			const character = await characterInfo.requestLoad();
 			const client = new ClientConnection(server, connection.connect(), {});
-			client.setAccount(account);
+			client.setAccount(account, token);
 			connectionOnMessage.mockClear();
 
 			client.setCharacter(character);

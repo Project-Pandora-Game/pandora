@@ -184,9 +184,12 @@ function ExtendCurrentSessionDialog({ token, hide }: { token: AuthToken; hide: (
 	const [password, setPassword] = React.useState('');
 
 	const [extend, processing] = useAsyncEvent(
-		() => directory.extendAuthToken(password),
-		(result) => {
-			if (result) {
+		async () => {
+			const passwordSha512 = await PrehashPassword(password);
+			return await directory.awaitResponse('extendLoginToken', { passwordSha512 });
+		},
+		({ result }) => {
+			if (result === 'ok') {
 				toast('Session extended', TOAST_OPTIONS_SUCCESS);
 				hide();
 			} else {

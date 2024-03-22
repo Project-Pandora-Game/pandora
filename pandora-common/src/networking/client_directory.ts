@@ -114,8 +114,6 @@ export type SecondFactorResponse = {
 	invalid: SecondFactorType[];
 };
 
-export const ACCOUNT_TOKEN_ID_LENGTH = 16;
-
 /** Client->Directory messages */
 export const ClientDirectorySchema = {
 	//#region Before Login
@@ -182,7 +180,7 @@ export const ClientDirectorySchema = {
 			}),
 			z.object({
 				type: z.literal('selected'),
-				accountTokenId: z.string().length(ACCOUNT_TOKEN_ID_LENGTH),
+				accountTokenId: z.string(),
 			}),
 		]),
 		response: null,
@@ -233,16 +231,9 @@ export const ClientDirectorySchema = {
 		request: z.object({
 			passwordSha512: PasswordSha512Schema,
 		}),
-		response: z.discriminatedUnion('result', [
-			z.object({
-				result: z.literal('ok'),
-				token: z.string(),
-				expires: z.number(),
-			}),
-			z.object({
-				result: z.literal('invalidPassword'),
-			}),
-		]),
+		response: z.object({
+			result: z.enum(['ok', 'invalidPassword']),
+		}),
 	},
 	//#endregion
 

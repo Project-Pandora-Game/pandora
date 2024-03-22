@@ -1,4 +1,4 @@
-import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory, IncomingConnection, DirectoryClientSchema, Assert } from 'pandora-common';
+import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory, IncomingConnection, DirectoryClientSchema, Assert, type TypedEventEmitterEvents } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import type { Account } from '../account/account';
 import type { Character } from '../account/character';
@@ -19,9 +19,10 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 		return this._character;
 	}
 
-	private _loginTokenId: string | null = null;
+	private _loginTokenEventUnsubscribe: (() => void) | null = null;
+	private _loginToken: AccountToken | null = null;
 	public get loginTokenId(): string | null {
-		return this._loginTokenId;
+		return this._loginToken ? this._loginToken.getId() : null;
 	}
 
 	public isLoggedIn(): this is { readonly account: Account; } {
@@ -74,14 +75,24 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 			Assert(token?.reason === AccountTokenReason.LOGIN);
 			account.touch();
 			this._account = account;
-			this._loginTokenId = token.getId();
-			const remove = token.on('tokenDestroyed', () => {
-				if (this._loginTokenId === token.getId()) {
-					this.onAccountTokenDestroyed();
-				}
-				remove();
-			});
+			this._loginTokenEventUnsubscribe?.();
+			this._loginToken = token;
+			this._loginTokenEventUnsubscribe = token.onAny((ev) => this.onTokenEvent(ev));
 			this.joinRoom(account.associatedConnections);
+		}
+	}
+
+	private onTokenEvent(event: Partial<TypedEventEmitterEvents<AccountToken>>): void {
+		if (event.tokenDestroyed != null) {
+			Assert(this._loginToken === event.tokenDestroyed);
+			this.onAccountTokenDestroyed();
+		}
+		if (event.extended != null) {
+			Assert(this._loginToken === event.extended);
+			this.sendMessage('loginTokenChanged', {
+				value: event.extended.value,
+				expires: event.extended.expires,
+			});
 		}
 	}
 
@@ -93,7 +104,10 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 
 		this.character?.markForDisconnect();
 
-		this._loginTokenId = null;
+		this._loginToken = null;
+		this._loginTokenEventUnsubscribe?.();
+		this._loginTokenEventUnsubscribe = null;
+
 		this.logger.verbose(`${this.id} logged out`);
 	}
 

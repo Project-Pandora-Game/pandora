@@ -22,7 +22,7 @@ import {
 	SecondFactorResponse,
 	IClientDirectoryArgument,
 	SecondFactorData,
-	AssertNever,
+	Assert,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
@@ -132,6 +132,14 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 				this._connectionStateEventEmitter.onStateChanged(message);
 				await this.handleAccountChange(message);
 				await this.directMessageHandler.accountChanged();
+			},
+			loginTokenChanged: (data) => {
+				Assert(this._authToken.value);
+				this._authToken.value = {
+					value: data.value,
+					expires: data.expires,
+					username: this._authToken.value.username,
+				};
 			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
 			directMessageSent: async (data) => {
@@ -383,27 +391,5 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 	public disconnectFromCharacter(): void {
 		this.sendMessage('disconnectCharacter', EMPTY);
 		this._lastSelectedCharacter.value = undefined;
-	}
-
-	public async extendAuthToken(password: string): Promise<boolean> {
-		const username = this._authToken.value?.username;
-		if (!username) {
-			throw new Error('Not logged in');
-		}
-		const passwordSha512 = await PrehashPassword(password);
-		const response = await this.awaitResponse('extendLoginToken', { passwordSha512 });
-		switch (response.result) {
-			case 'ok':
-				this._authToken.value = {
-					username,
-					value: response.token,
-					expires: response.expires,
-				};
-				return true;
-			case 'invalidPassword':
-				return false;
-			default:
-				AssertNever(response);
-		}
 	}
 }

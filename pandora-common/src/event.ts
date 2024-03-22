@@ -6,6 +6,8 @@ export interface ITypedEventEmitter<T extends TypedEvent> {
 	getSubscriber(key: keyof T): (onStoreChange: () => void) => () => void;
 }
 
+export type TypedEventEmitterEvents<T> = T extends ITypedEventEmitter<infer E> ? E : never;
+
 export abstract class TypedEventEmitter<T extends TypedEvent> implements ITypedEventEmitter<T> {
 	private readonly _listeners: Map<keyof T, Set<(value: T[keyof T]) => void>> = new Map();
 	private readonly _allListeners: Set<(value: Partial<T>) => void> = new Set();

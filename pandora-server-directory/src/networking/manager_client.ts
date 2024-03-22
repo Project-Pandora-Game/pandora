@@ -735,14 +735,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		const token = await connection.account.secure.extendLoginToken(passwordSha512, connection.loginTokenId);
-		if (token == null)
-			return { result: 'invalidPassword' };
-
-		return {
-			result: 'ok',
-			token: token.value,
-			expires: token.expires,
-		};
+		return { result: token == null ? 'invalidPassword' : 'ok' };
 	}
 
 	private async handleGetDirectMessages({ id }: IClientDirectoryArgument['getDirectMessages'], connection: ClientConnection): IClientDirectoryPromiseResult['getDirectMessages'] {

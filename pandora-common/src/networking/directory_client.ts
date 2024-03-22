@@ -125,6 +125,13 @@ export const DirectoryClientSchema = {
 		}>(),
 		response: null,
 	},
+	loginTokenChanged: {
+		request: ZodCast<{
+			value: string;
+			expires: number;
+		}>(),
+		response: null,
+	},
 	somethingChanged: {
 		request: ZodCast<{
 			changes: IDirectoryClientChangeEvents[];

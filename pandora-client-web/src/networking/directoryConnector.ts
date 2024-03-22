@@ -82,6 +82,4 @@ export interface DirectoryConnector extends IConnectionBase<IClientDirectory> {
 
 	connectToCharacter(id: CharacterId): Promise<boolean>;
 	disconnectFromCharacter(): void;
-
-	extendAuthToken(password: string): Promise<boolean>;
 }

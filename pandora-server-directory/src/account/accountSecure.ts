@@ -1,4 +1,4 @@
-import { ACCOUNT_TOKEN_ID_LENGTH, GetLogger, IAccountCryptoKey, Logger, TypedEventEmitter } from 'pandora-common';
+import { GetLogger, IAccountCryptoKey, Logger, TypedEventEmitter } from 'pandora-common';
 import { ENV } from '../config';
 const { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION } = ENV;
 import { GetDatabase } from '../database/databaseProvider';
@@ -165,7 +165,10 @@ export default class AccountSecure {
 		if (!token || !token.extend())
 			return undefined;
 
-		this.#lastSavedTokens = undefined;
+		// Ensure that tokens are sorted by expiration date
+		this.#tokens = [...this.#tokens]
+			.sort((a, b) => a.expires - b.expires);
+
 		await this.#updateDatabase();
 
 		return token;
@@ -276,18 +279,14 @@ export default class AccountSecure {
 		this.#tokens = tokens;
 	}
 
-	#lastSavedTokens: readonly AccountToken[] | undefined;
 	#updateDatabase(): Promise<void> {
-		if (this.#lastSavedTokens !== this.#tokens) {
-			this.#lastSavedTokens = this.#tokens;
-			this.#secure.tokens = this.#tokens
-				.filter((t) => t.validate())
-				.map((t) => ({
-					value: t.value,
-					expires: t.expires,
-					reason: t.reason,
-				}));
-		}
+		this.#secure.tokens = this.#tokens
+			.filter((t) => t.validate())
+			.map((t) => ({
+				value: t.value,
+				expires: t.expires,
+				reason: t.reason,
+			}));
 		return GetDatabase().setAccountSecure(this.#account.id, _.cloneDeep(this.#secure));
 	}
 }
@@ -373,7 +372,10 @@ const TOKEN_TYPES = {
 	},
 } as const satisfies TokenType;
 
-export class AccountToken extends TypedEventEmitter<{ tokenDestroyed: AccountToken; }> implements Readonly<DatabaseAccountToken> {
+export class AccountToken extends TypedEventEmitter<{
+	tokenDestroyed: AccountToken;
+	extended: AccountToken;
+}> implements Readonly<DatabaseAccountToken> {
 	readonly #reason: AccountTokenReason;
 	#value: string;
 	#expires: number;
@@ -407,7 +409,7 @@ export class AccountToken extends TypedEventEmitter<{ tokenDestroyed: AccountTok
 	}
 
 	public getId(): string {
-		return this.value.substring(0, ACCOUNT_TOKEN_ID_LENGTH);
+		return this.value.substring(0, 16);
 	}
 
 	public validate(): boolean {
@@ -435,10 +437,11 @@ export class AccountToken extends TypedEventEmitter<{ tokenDestroyed: AccountTok
 		if (this.#destroyed)
 			return false;
 
-		this.#expires = Date.now() + TOKEN_TYPES[this.reason].expiration;
+		const { generate, expiration } = TOKEN_TYPES[this.#reason];
+		this.#value = generate();
+		this.#expires = Date.now() + expiration;
 
-		if (this.value.length > ACCOUNT_TOKEN_ID_LENGTH)
-			this.#value = this.getId() + nanoid(32 - ACCOUNT_TOKEN_ID_LENGTH);
+		this.emit('extended', this);
 
 		return true;
 	}

@@ -139,10 +139,17 @@ export const DatabaseAccountWithSecureSchema = DatabaseAccountSchema.extend({
 /** Representation of account stored in database */
 export type DatabaseAccountWithSecure = z.infer<typeof DatabaseAccountWithSecureSchema>;
 
-export type DatabaseConfig = {
-	shardTokens: (IShardTokenInfo & { token: string; })[];
-	betaKeys: (IBetaKeyInfo & { token: string; })[];
-};
+export const DatabaseConfigSchema = z.discriminatedUnion('type', [
+	z.object({
+		type: z.literal('shardTokens'),
+		data: ZodCast<(IShardTokenInfo & { token: string; })[]>(),
+	}),
+	z.object({
+		type: z.literal('betaKeys'),
+		data: ZodCast<(IBetaKeyInfo & { token: string; })[]>(),
+	}),
+]);
+export type DatabaseConfig = z.infer<typeof DatabaseConfigSchema>;
 
-export type DatabaseConfigType = keyof DatabaseConfig;
-export type DatabaseConfigData<T extends DatabaseConfigType> = DatabaseConfig[T];
+export type DatabaseConfigType = DatabaseConfig['type'];
+export type DatabaseConfigData<T extends DatabaseConfigType> = (DatabaseConfig & { type: T; })['data'];

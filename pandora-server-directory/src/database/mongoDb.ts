@@ -27,7 +27,27 @@ import {
 import { z } from 'zod';
 import { ENV } from '../config';
 import type { PandoraDatabase } from './databaseProvider';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccount, DatabaseAccountContact, DatabaseAccountContactType, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdate, DatabaseAccountWithSecure, DatabaseAccountWithSecureSchema, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageAccountsSchema, DatabaseDirectMessageInfo, DirectMessageAccounts, type DatabaseCharacterSelfInfo, type DatabaseDirectMessage, type DatabaseDirectMessageAccounts, DatabaseCharacterSelfInfoSchema } from './databaseStructure';
+import {
+	DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES,
+	DatabaseAccount,
+	DatabaseAccountContact,
+	DatabaseAccountContactType,
+	DatabaseAccountSchema,
+	DatabaseAccountSecure,
+	DatabaseAccountUpdate,
+	DatabaseAccountWithSecure,
+	DatabaseAccountWithSecureSchema,
+	DatabaseCharacterSelfInfoSchema,
+	DatabaseConfigData,
+	DatabaseConfigSchema,
+	DatabaseConfigType,
+	DatabaseDirectMessageAccountsSchema,
+	DatabaseDirectMessageInfo,
+	DirectMessageAccounts,
+	type DatabaseCharacterSelfInfo,
+	type DatabaseDirectMessage,
+	type DatabaseDirectMessageAccounts,
+} from './databaseStructure';
 import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
 import { DbAutomaticMigration, ValidatedCollection, ValidatedCollectionType } from './validatedCollection';
 
@@ -131,7 +151,7 @@ const spaceCollection = new ValidatedCollection(
 const configCollection = new ValidatedCollection(
 	logger,
 	'config',
-	ZodCast<{ type: DatabaseConfigType; data: DatabaseConfigData<DatabaseConfigType>; }>(), // TODO: This needs a proper schema!
+	DatabaseConfigSchema,
 	[
 		{
 			name: 'id',
@@ -598,11 +618,13 @@ export default class MongoDatabase implements PandoraDatabase {
 		if (!result?.data)
 			return null;
 
+		Assert(result.type === type);
 		// @ts-expect-error data is unique to each config type
 		return result.data;
 	}
 
 	public async setConfig<T extends DatabaseConfigType>(type: T, data: DatabaseConfigData<T>): Promise<void> {
+		// @ts-expect-error data is unique to each config type
 		await this._config.updateOne({ type }, { $set: { data } }, { upsert: true });
 	}
 

@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import React, { ReactElement, useEffect } from 'react';
 import { AssertNever, FormatTimeInterval, PasswordSchema, IDirectoryAccountInfo, IClientDirectoryNormalResult } from 'pandora-common';
 import { useForm } from 'react-hook-form';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
@@ -41,20 +41,20 @@ function ConnectedClients(): ReactElement {
 		(resp) => setConnections(resp.connections),
 	);
 
-	const onChange = React.useCallback((open: boolean) => {
-		if (open && connections === null) {
-			void load();
+	useEffect(() => {
+		if (connections == null) {
+			load();
 		}
 	}, [connections, load]);
 
 	return (
-		<FieldsetToggle legend='Connected Clients' open={ false } onChange={ onChange }>
+		<fieldset>
+			<legend>Connected Clients</legend>
 			<Column>
-				<CurrentSessionInfo />
-				<Button onClick={ load } disabled={ processing }>Refresh</Button>
+				<CurrentSessionInfo refresh={ load } processing={ processing } />
 				<ConnectedClientsList connections={ connections } />
 			</Column>
-		</FieldsetToggle>
+		</fieldset>
 	);
 }
 
@@ -114,7 +114,7 @@ function ConnectedClientConnection({ connection }: { connection: AccountConnecte
 	);
 }
 
-function CurrentSessionInfo(): ReactElement {
+function CurrentSessionInfo({ refresh, processing }: { refresh: () => void; processing: boolean; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
 	const authToken = useObservable(directoryConnector.authToken);
 	const confirm = useConfirmDialog();
@@ -141,10 +141,11 @@ function CurrentSessionInfo(): ReactElement {
 	return (
 		<Column>
 			<SessionExpire token={ authToken } />
-			<Row>
+			<Row alignX='center'>
 				<ExtendCurrentSession token={ authToken } />
-				<Button onClick={ logout }>Logout</Button>
-				<Button onClick={ logoutAll }>Logout all</Button>
+				<Button className='slim' onClick={ logout } title='Logout from current session'>Logout</Button>
+				<Button className='slim' onClick={ logoutAll } title='Logout from all devices'>Logout all</Button>
+				<Button className='slim' onClick={ refresh } disabled={ processing } title='Refresh connection info'>Refresh</Button>
 			</Row>
 		</Column>
 	);
@@ -161,11 +162,11 @@ function ExtendCurrentSession({ token }: { token: AuthToken; }): ReactElement {
 	useKeyDownEvent(hide, 'Escape');
 
 	if (!show)
-		return <Button onClick={ () => setShow(true) }>Extend Current Session</Button>;
+		return <Button onClick={ () => setShow(true) } title='Extend current session'>Extend Session</Button>;
 
 	return (
 		<>
-			<Button onClick={ hide }>Extend Current Session</Button>
+			<Button className='slim' onClick={ hide } title='Extend current session'>Extend Session</Button>
 			<ExtendCurrentSessionDialog token={ token } hide={ hide } />
 		</>
 	);
@@ -272,7 +273,8 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 	});
 
 	return (
-		<FieldsetToggle legend='Password Change' open={ false }>
+		<fieldset>
+			<legend>Password Change</legend>
 			<Form dirty={ submitCount > 0 } onSubmit={ onSubmit }>
 				<FormField>
 					<label htmlFor='password-change-old'>Old password</label>
@@ -314,6 +316,6 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 				</FormField>
 				<Button type='submit' disabled={ isSubmitting }>Change password</Button>
 			</Form>
-		</FieldsetToggle>
+		</fieldset>
 	);
 }

@@ -175,7 +175,7 @@ function SessionExpire({ token }: { token: AuthToken; }): ReactElement {
 	const now = useCurrentTime(60_000);
 
 	return (
-		<p>Your session will expire in { FormatTimeInterval(token.expires - now, 'full') }</p>
+		<p>Your session will expire in { FormatTimeInterval(token.expires - now, 'two-most-significant') }</p>
 	);
 }
 

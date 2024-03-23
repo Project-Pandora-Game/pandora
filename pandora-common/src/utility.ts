@@ -162,7 +162,7 @@ export function LongestCommonPrefix(strings: string[]): string {
 }
 
 /** Formats time in ms into days, hours minutes and seconds - also has a short mode that only shows the largest unit, e.g. 17h */
-export function FormatTimeInterval(time: number, mode: 'full' | 'short' = 'full') {
+export function FormatTimeInterval(time: number, mode: 'full' | 'short' | 'two-most-significant' = 'full') {
 	let res = '';
 	if (time < 0) {
 		res = '-';
@@ -172,22 +172,7 @@ export function FormatTimeInterval(time: number, mode: 'full' | 'short' = 'full'
 	const minutes = Math.floor(seconds / 60);
 	const hours = Math.floor(minutes / 60);
 	const days = Math.floor(hours / 24);
-	if (mode === 'full') {
-		const parts: string[] = [];
-		if (days > 0) {
-			parts.push(`${days} day${days > 1 ? 's' : ''}`);
-		}
-		if (hours % 60 > 0) {
-			parts.push(`${hours % 24} hour${hours > 1 ? 's' : ''}`);
-		}
-		if (minutes % 60 > 0) {
-			parts.push(`${minutes % 60} minute${minutes > 1 ? 's' : ''}`);
-		}
-		if (seconds % 60 > 0 || parts.length === 0) {
-			parts.push(`${seconds % 60} second${seconds > 1 ? 's' : ''}`);
-		}
-		res += parts.join(', ');
-	} else if (mode === 'short') {
+	if (mode === 'short') {
 		if (days > 1) {
 			res += `${days}d`;
 		} else if (hours > 1) {
@@ -197,8 +182,29 @@ export function FormatTimeInterval(time: number, mode: 'full' | 'short' = 'full'
 		} else {
 			res += `${seconds}s`;
 		}
+		return res;
 	}
-	return res;
+	const parts: string[] = [];
+	if (days > 0) {
+		parts.push(`${days} day${days > 1 ? 's' : ''}`);
+	}
+	if (hours % 60 > 0) {
+		parts.push(`${hours % 24} hour${hours > 1 ? 's' : ''}`);
+	}
+	if (minutes % 60 > 0) {
+		parts.push(`${minutes % 60} minute${minutes > 1 ? 's' : ''}`);
+	}
+	if (seconds % 60 > 0 || parts.length === 0) {
+		parts.push(`${seconds % 60} second${seconds > 1 ? 's' : ''}`);
+	}
+	switch (mode) {
+		case 'full':
+			return res + parts.join(', ');
+		case 'two-most-significant':
+			return res + parts.slice(0, 2).join(', ');
+		default:
+			AssertNever(mode);
+	}
 }
 
 export type TimeUnit = 'milliseconds' | 'seconds' | 'minutes' | 'hours' | 'days' | 'weeks';

@@ -153,7 +153,6 @@ class NotificationHandler extends NotificationHandlerBase {
 			data: data.source,
 			icon: '',
 			tag: data.source,
-			renotify: true,
 			silent: audio === NotificationAudio.NONE,
 		};
 

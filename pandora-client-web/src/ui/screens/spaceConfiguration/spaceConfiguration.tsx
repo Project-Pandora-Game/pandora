@@ -22,6 +22,7 @@ import {
 	SpaceInvite,
 	FormatTimeInterval,
 	AssertNever,
+	IsAuthorized,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
@@ -74,7 +75,7 @@ function DefaultConfig(): SpaceDirectoryConfig {
 export const SPACE_FEATURES: { id: SpaceFeature; name: string; icon?: string; }[] = [
 	{
 		id: 'allowBodyChanges',
-		name: 'Allow changes to character body',
+		name: 'Allow changes to character bodies',
 		icon: bodyChange,
 	},
 	{
@@ -103,6 +104,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 	let currentSpaceInfo: Immutable<CurrentSpaceInfo> | null = useSpaceInfo();
 	const lastSpaceId = useRef<SpaceId | null>();
 	const isInPublicSpace = currentSpaceInfo.id != null;
+	const isDeveloper = currentAccount?.roles !== undefined && IsAuthorized(currentAccount.roles, 'developer');
 	if (creation) {
 		currentSpaceInfo = null;
 	} else {
@@ -120,9 +122,9 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 			delete result.features;
 			delete result.development;
 		} else if (result.features) {
-			if (result.features.includes('development') && !result.development) {
+			if (result.features.includes('development') && isDeveloper && !result.development) {
 				result.development = {};
-			} else if (!result.features.includes('development')) {
+			} else if (!result.features.includes('development') || !isDeveloper) {
 				delete result.development;
 			}
 		}
@@ -273,31 +275,30 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 				{ configurableElements }
 				<div className='input-container'>
 					<label>Features (cannot be changed after creation)</label>
-					<ul>
-						{
-							SPACE_FEATURES.map((feature) => (
-								<li key={ feature.id }>
-									<input type='checkbox'
-										id={ `${idPrefix}-feature-${feature.id}` }
-										checked={ currentConfig.features.includes(feature.id) }
-										onChange={ (event) => {
-											if (event.target.checked) {
-												if (!currentConfig.features.includes(feature.id)) {
-													setModifiedData({ features: [...currentConfig.features, feature.id] });
-												}
-											} else {
-												setModifiedData({ features: currentConfig.features.filter((f) => f !== feature.id) });
+					{
+						SPACE_FEATURES.map((feature) => (
+							(feature.id !== 'development' || (feature.id === 'development' && isDeveloper)) &&
+							<div key={ feature.id }>
+								<input type='checkbox'
+									id={ `${idPrefix}-feature-${feature.id}` }
+									checked={ currentConfig.features.includes(feature.id) }
+									onChange={ (event) => {
+										if (event.target.checked) {
+											if (!currentConfig.features.includes(feature.id)) {
+												setModifiedData({ features: [...currentConfig.features, feature.id] });
 											}
-										} }
-									/>
-									<label htmlFor={ `${idPrefix}-feature-${feature.id}` }>{ feature.name }</label>
-								</li>
-							))
-						}
-					</ul>
+										} else {
+											setModifiedData({ features: currentConfig.features.filter((f) => f !== feature.id) });
+										}
+									} }
+								/>
+								<label htmlFor={ `${idPrefix}-feature-${feature.id}` }>{ ' ' + feature.name }</label>
+							</div>
+						))
+					}
 				</div>
 				{
-					currentConfig.features.includes('development') &&
+					currentConfig.features.includes('development') && isDeveloper &&
 					<div className='input-container'>
 						<h3>Development settings</h3>
 						<label>Shard for space</label>

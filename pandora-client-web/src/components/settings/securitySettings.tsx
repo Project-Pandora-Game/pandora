@@ -209,6 +209,7 @@ function ExtendCurrentSessionDialog({ token, hide }: { token: AuthToken; hide: (
 					<input
 						type='password'
 						id='extend-current-session-password'
+						autoComplete='current-password'
 						value={ password }
 						onChange={ (e) => setPassword(e.target.value) }
 					/>
@@ -281,6 +282,7 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 					<input
 						type='password'
 						id='password-change-old'
+						autoComplete='current-password'
 						{ ...register('oldPassword', {
 							required: 'Old password is required',
 						}) }
@@ -292,6 +294,7 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 					<input
 						type='password'
 						id='password-change-new'
+						autoComplete='new-password'
 						{ ...register('newPassword', {
 							required: 'New password is required',
 							validate: FormCreateStringValidator(PasswordSchema, 'password'),

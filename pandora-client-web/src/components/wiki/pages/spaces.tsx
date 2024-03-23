@@ -31,7 +31,7 @@ export function WikiSpaces(): ReactElement {
 				<li><Link to='#SP_Space_visibility'>Space visibility</Link></li>
 				<li><Link to='#SP_Space_access'>Space access</Link></li>
 				<li><Link to='#SP_Space_invites'>Space invites</Link></li>
-				<li><Link to='#SP_Space_modifier'>Space modifier</Link></li>
+				<li><Link to='#SP_Space_features'>Space features</Link></li>
 				<li><Link to='#SP_Space_administration'>Space administration</Link></li>
 				<li><Link to='#SP_Leaving_a_space'>Leaving a space</Link></li>
 				<li><Link to='#SP_Personal_space'>Personal space</Link></li>
@@ -159,9 +159,9 @@ export function WikiSpaces(): ReactElement {
 				<li>Space owners, admins and the invite's author can delete these invites at any point in time, after which they can no longer be used.</li>
 			</ul>
 
-			<h4 id='SP_Space_modifier'>Space modifier</h4>
+			<h4 id='SP_Space_features'>Space features</h4>
 			<p>
-				While creating a room, you can set several space modifier check boxes at the end of the space creation screen. These cannot be changed after the space creation.
+				While creating a room, you can set several space features check boxes at the end of the space creation screen. These cannot be changed after the space creation.
 			</p>
 			<ul>
 				<li>

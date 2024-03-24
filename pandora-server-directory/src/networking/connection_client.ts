@@ -69,13 +69,15 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 			this.setCharacter(null);
 			this._account.touch();
 			this.leaveRoom(this._account.associatedConnections);
+			this._loginToken = null;
+			this._loginTokenEventUnsubscribe?.();
+			this._loginTokenEventUnsubscribe = null;
 			this._account = null;
 		}
 		if (account) {
 			Assert(token?.reason === AccountTokenReason.LOGIN);
 			account.touch();
 			this._account = account;
-			this._loginTokenEventUnsubscribe?.();
 			this._loginToken = token;
 			this._loginTokenEventUnsubscribe = token.onAny((ev) => this.onTokenEvent(ev));
 			this.joinRoom(account.associatedConnections);
@@ -97,16 +99,12 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	}
 
 	private onAccountTokenDestroyed(): void {
+		this.character?.markForDisconnect();
+
 		if (this._account != null) {
 			this.setAccount(null);
 			this.sendConnectionStateUpdate();
 		}
-
-		this.character?.markForDisconnect();
-
-		this._loginToken = null;
-		this._loginTokenEventUnsubscribe?.();
-		this._loginTokenEventUnsubscribe = null;
 
 		this.logger.verbose(`${this.id} logged out`);
 	}

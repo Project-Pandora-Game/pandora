@@ -269,7 +269,7 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 				reset();
 				break;
 			case 'invalidPassword':
-				setInvalidPassword('Invalid password');
+				setInvalidPassword(oldPassword);
 				break;
 			default:
 				AssertNever(resp.result);
@@ -288,6 +288,7 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 						autoComplete='current-password'
 						{ ...register('oldPassword', {
 							required: 'Old password is required',
+							validate: (oldPassword) => (invalidPassword === oldPassword) ? 'Invalid password' : true,
 						}) }
 					/>
 					<FormFieldError error={ errors.oldPassword } />
@@ -310,6 +311,7 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 					<input
 						type='password'
 						id='password-change-new-confirm'
+						autoComplete='new-password'
 						{ ...register('newPasswordConfirm', {
 							required: 'New password confirmation is required',
 							validate: (newPasswordConfirm) => {

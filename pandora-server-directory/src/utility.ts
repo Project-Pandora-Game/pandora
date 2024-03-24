@@ -1,3 +1,5 @@
+import type { Awaitable } from 'pandora-common';
+
 /** Sleep for certain amount of milliseconds */
 export function Sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms));
@@ -8,7 +10,7 @@ export function Sleep(ms: number): Promise<void> {
  * This class ensures that the asynchronous task does not run multiple times concurrently, and it allows for flexible management of the task execution with start, stop, and immediate execution capabilities.
  */
 export class AsyncInterval {
-	private readonly task: () => Promise<void>;
+	private readonly task: () => Awaitable<void>;
 	private readonly interval: number;
 	private readonly errorHandler: (error: unknown) => void;
 	private intervalId: NodeJS.Timeout | null = null;
@@ -22,7 +24,7 @@ export class AsyncInterval {
 	 * @param interval The interval in milliseconds between executions of the task.
 	 * @param errorHandler A callback function that handles errors thrown during the execution of the task.
 	 */
-	constructor(task: () => Promise<void>, interval: number, errorHandler: (error: unknown) => void) {
+	constructor(task: () => Awaitable<void>, interval: number, errorHandler: (error: unknown) => void) {
 		this.task = task;
 		this.interval = interval;
 		this.errorHandler = errorHandler;
@@ -93,14 +95,19 @@ export class AsyncInterval {
 	}
 
 	private createExecutionPromise(): Promise<void> {
-		this.shouldScheduleNext = false;
-		this.executingPromise = this.task()
-			.finally(() => {
-				this.executingPromise = null;
-				if (this.shouldScheduleNext) {
-					this.runOnInterval();
-				}
-			});
+		this.executingPromise = this.runTask();
 		return this.executingPromise;
+	}
+
+	private async runTask(): Promise<void> {
+		try {
+			this.shouldScheduleNext = false;
+			await this.task();
+		} finally {
+			this.executingPromise = null;
+			if (this.shouldScheduleNext) {
+				this.runOnInterval();
+			}
+		}
 	}
 }

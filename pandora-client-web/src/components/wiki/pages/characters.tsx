@@ -112,7 +112,11 @@ export function WikiCharacters(): ReactElement {
 					what is inside the <Link to='/wiki/spaces#SP_Room_inventory'>room inventory</Link> on the right.
 					You can create and wear a new item under the "create new item"-tab there.
 				</li>
-				<li>There is a maximum amount of items your character can wear or hold (also counting all items inside worn storage items)</li>
+				<li>
+					There is a maximum amount of items your character can wear or hold. This number is the sum
+					of all <Link to='/wiki/items#IT_Body_parts'>body parts</Link>, all items worn on the body, and all
+					items inside worn items with <Link to='/wiki/items#IT_Storage_modules'>storage modules</Link>, e.g. a bag.
+				</li>
 			</ul>
 
 			<h4 id='CH_Character_permissions'>Character permissions</h4>

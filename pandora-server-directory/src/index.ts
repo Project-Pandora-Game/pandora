@@ -1,19 +1,20 @@
 import { mkdirSync } from 'fs';
+import { GetLogger, LogLevel, ServiceInit, SetConsoleOutput } from 'pandora-common';
 import { accountManager } from './account/accountManager';
 import { ENV } from './config';
-const { APP_NAME, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION } = ENV;
 import { GetDatabaseService } from './database/databaseProvider';
-import { AddDiscordLogOutput, AddFileOutput } from './logging';
-import { GetLogger, LogLevel, ServiceInit, SetConsoleOutput } from 'pandora-common';
-import { HttpServer } from './networking/httpServer';
-import GetEmailSender from './services/email';
 import { SetupSignalHandling } from './lifecycle';
+import { AddDiscordLogOutput, AddFileOutput } from './logging';
+import { HttpServer } from './networking/httpServer';
 import { ConnectionManagerClient } from './networking/manager_client';
-import { GitHubVerifier } from './services/github/githubVerify';
-import { ShardTokenStore } from './shard/shardTokenStore';
+import { BetaRegistrationService } from './services/betaRegistration/betaRegistration';
 import { DiscordBot } from './services/discord/discordBot';
+import GetEmailSender from './services/email';
+import { GitHubVerifier } from './services/github/githubVerify';
 import { BetaKeyStore } from './shard/betaKeyStore';
+import { ShardTokenStore } from './shard/shardTokenStore';
 import { SpaceManager } from './spaces/spaceManager';
+const { APP_NAME, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION } = ENV;
 
 const logger = GetLogger('init');
 
@@ -30,7 +31,6 @@ async function Start(): Promise<void> {
 	await SetupLogging();
 	logger.info(`${APP_NAME} starting...`);
 	await ServiceInit(GetEmailSender());
-	await ServiceInit(DiscordBot);
 	logger.verbose('Initializing database...');
 	await ServiceInit(GetDatabaseService());
 	await ServiceInit(ShardTokenStore);
@@ -39,8 +39,10 @@ async function Start(): Promise<void> {
 	await ServiceInit(accountManager);
 	await ServiceInit(SpaceManager);
 	await ServiceInit(ConnectionManagerClient);
+	await ServiceInit(BetaRegistrationService);
 	logger.verbose('Initializing APIs...');
 	await ServiceInit(GitHubVerifier);
+	await ServiceInit(DiscordBot);
 	logger.verbose('Starting HTTP server...');
 	await ServiceInit(HttpServer);
 	logger.alert('Ready!');

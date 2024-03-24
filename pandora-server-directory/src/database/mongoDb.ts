@@ -624,8 +624,21 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async setConfig<T extends DatabaseConfigType>(type: T, data: DatabaseConfigData<T>): Promise<void> {
-		// @ts-expect-error data is unique to each config type
-		await this._config.updateOne({ type }, { $set: { data } }, { upsert: true });
+		await this._config.updateOne(
+			{
+				type,
+			},
+			{
+				$set: {
+					// @ts-expect-error data is unique to each config type
+					data,
+				},
+				$setOnInsert: {
+					type,
+				},
+			},
+			{ upsert: true },
+		);
 	}
 
 	/**

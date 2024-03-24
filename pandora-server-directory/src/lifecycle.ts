@@ -1,11 +1,13 @@
 import { GetLogger, Service, logConfig } from 'pandora-common';
+import wtfnode from 'wtfnode';
 import { accountManager } from './account/accountManager';
 import { GetDatabaseService } from './database/databaseProvider';
 import { HttpServer } from './networking/httpServer';
 import { ConnectionManagerClient } from './networking/manager_client';
-import { ShardManager } from './shard/shardManager';
-import wtfnode from 'wtfnode';
+import { BetaRegistrationService } from './services/betaRegistration/betaRegistration';
 import { DiscordBot } from './services/discord/discordBot';
+import { GitHubVerifier } from './services/github/githubVerify';
+import { ShardManager } from './shard/shardManager';
 import { SpaceManager } from './spaces/spaceManager';
 
 const logger = GetLogger('Lifecycle');
@@ -29,8 +31,10 @@ function DestroyService(service: Service): Promise<void> | void {
 async function StopGracefully(): Promise<void> {
 	// Stop HTTP server
 	await DestroyService(HttpServer);
-	// Stop discord bot
+	// Stop APIs
 	await DestroyService(DiscordBot);
+	await DestroyService(GitHubVerifier);
+	await DestroyService(BetaRegistrationService);
 	// Stop sending status updates
 	await DestroyService(ConnectionManagerClient);
 	// Unload all shards

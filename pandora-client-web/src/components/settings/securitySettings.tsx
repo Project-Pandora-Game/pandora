@@ -5,7 +5,6 @@ import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directo
 import { PrehashPassword } from '../../crypto/helpers';
 import { Form, FormCreateStringValidator, FormField, FormFieldError } from '../common/form/form';
 import { Button } from '../common/button/button';
-import { FieldsetToggle } from '../common/fieldsetToggle/fieldsetToggle';
 import { useAsyncEvent } from '../../common/useEvent';
 import { ModalDialog, useConfirmDialog } from '../dialog/dialog';
 import { useObservable } from '../../observable';
@@ -199,10 +198,14 @@ function ExtendCurrentSessionDialog({ token, hide }: { token: AuthToken; hide: (
 			}
 		},
 	);
+	const onSubmit = React.useCallback((ev: React.FormEvent) => {
+		ev.preventDefault();
+		extend();
+	}, [extend]);
 
 	return (
 		<ModalDialog>
-			<Form dirty={ false } onSubmit={ extend }>
+			<Form dirty={ false } onSubmit={ onSubmit }>
 				<SessionExpire token={ token } />
 				<FormField>
 					<label htmlFor='extend-current-session-password'>Password</label>

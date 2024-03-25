@@ -292,7 +292,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 										}
 									} }
 								/>
-								<label htmlFor={ `${idPrefix}-feature-${feature.id}` }>{ ' ' + feature.name }</label>
+								<label htmlFor={ `${idPrefix}-feature-${feature.id}` }> { feature.name }</label>
 							</div>
 						))
 					}

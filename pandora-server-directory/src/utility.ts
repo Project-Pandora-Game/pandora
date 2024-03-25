@@ -1,4 +1,4 @@
-import type { Awaitable } from 'pandora-common';
+import { CreateManuallyResolvedPromise, type Awaitable } from 'pandora-common';
 
 /** Sleep for certain amount of milliseconds */
 export function Sleep(ms: number): Promise<void> {
@@ -95,7 +95,9 @@ export class AsyncInterval {
 	}
 
 	private createExecutionPromise(): Promise<void> {
-		this.executingPromise = this.runTask();
+		const { promise, resolve, reject } = CreateManuallyResolvedPromise<void>();
+		this.executingPromise = promise;
+		this.runTask().then(resolve, reject);
 		return this.executingPromise;
 	}
 

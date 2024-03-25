@@ -77,7 +77,7 @@ export const EnvParser = CreateEnvParser({
 		.split(',')
 		.map((x) => x.trim())
 		.filter(Boolean)
-		.map(parseInt), z.array(z.number())).default([]),
+		.map((x) => parseInt(x, 10)), z.array(z.number())).default([]),
 
 	//#endregion
 

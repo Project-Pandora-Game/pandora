@@ -429,6 +429,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				result: 'failed',
 			};
 		}
+		// No development options allowed if the development feature is not in use
+		if (spaceConfig.development != null && !spaceConfig.features.includes('development')) {
+			return {
+				result: 'failed',
+			};
+		}
 
 		const space = await SpaceManager.createSpace(spaceConfig, [connection.account.id]);
 

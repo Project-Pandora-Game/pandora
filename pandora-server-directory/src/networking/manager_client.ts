@@ -423,6 +423,19 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		const character = connection.character;
 
+		// Only developers can create rooms with development mode enabled
+		if (spaceConfig.features.includes('development') && !connection.account.roles.isAuthorized('developer')) {
+			return {
+				result: 'failed',
+			};
+		}
+		// No development options allowed if the development feature is not in use
+		if (spaceConfig.development != null && !spaceConfig.features.includes('development')) {
+			return {
+				result: 'failed',
+			};
+		}
+
 		const space = await SpaceManager.createSpace(spaceConfig, [connection.account.id]);
 
 		if (typeof space === 'string') {

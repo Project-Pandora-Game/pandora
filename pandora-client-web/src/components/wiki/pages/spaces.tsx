@@ -31,6 +31,7 @@ export function WikiSpaces(): ReactElement {
 				<li><Link to='#SP_Space_visibility'>Space visibility</Link></li>
 				<li><Link to='#SP_Space_access'>Space access</Link></li>
 				<li><Link to='#SP_Space_invites'>Space invites</Link></li>
+				<li><Link to='#SP_Space_features'>Space features</Link></li>
 				<li><Link to='#SP_Space_administration'>Space administration</Link></li>
 				<li><Link to='#SP_Leaving_a_space'>Leaving a space</Link></li>
 				<li><Link to='#SP_Personal_space'>Personal space</Link></li>
@@ -156,6 +157,26 @@ export function WikiSpaces(): ReactElement {
 				<li>The invite details cannot be edited by the one creating it. The purpose of "join-me" invites is to be simple and quick to use.</li>
 				<li>Banned accounts cannot be invited this way.</li>
 				<li>Space owners, admins and the invite's author can delete these invites at any point in time, after which they can no longer be used.</li>
+			</ul>
+
+			<h4 id='SP_Space_features'>Space features</h4>
+			<p>
+				While creating a room, you can set several space feature check boxes at the bottom of the space creation screen. These cannot be changed after the space creation.
+			</p>
+			<ul>
+				<li>
+					Allow changes to character bodies: Determines if any character inside the space can change their body, for example changing the shape/size of their body,
+					or swapping to different eyes, nose, genitals.
+				</li>
+				<li>
+					Allow changes to character pronouns: Determines if any character inside the space can change their pronouns, so with which gender they are mentioned,
+					while inside the space.
+				</li>
+				<li>
+					Development mode: On a development server, spaces can be created in development mode. This enables use of many development tools, such as
+					room background calibration tool. Those can however break things when used incorrectly. Because of
+					that <strong>this option is not available on the public server for non-developers</strong>.
+				</li>
 			</ul>
 
 			<h4 id='SP_Space_administration'>Space administration</h4>

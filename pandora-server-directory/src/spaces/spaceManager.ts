@@ -175,6 +175,13 @@ export const SpaceManager = new class SpaceManagerClass implements Service {
 			logger.error(`Failed to load space ${data.id} due to invalid data`, result.error);
 			return null;
 		}
+
+		// Drop development data if development feature is disabled
+		// This is done before the equality check to also purge it from DB
+		if (result.data.config.development != null && !result.data.config.features.includes('development')) {
+			delete result.data.config.development;
+		}
+
 		{
 			const validated = pick(result.data, ...SPACE_DIRECTORY_PROPERTIES);
 			const original = pick(data, ...SPACE_DIRECTORY_PROPERTIES);

@@ -40,7 +40,7 @@
 	"dependencies": {
 		"async-lock": "1.4.1",
 		"dotenv": "16.4.5",
-		"express": "4.19.1",
+		"express": "4.19.2",
 		"json-diff": "1.0.6",
 		"lodash": "4.17.21",
 		"mongodb": "6.5.0",

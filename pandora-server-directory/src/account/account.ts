@@ -20,6 +20,9 @@ import {
 	ServerRoom,
 	type AccountSettings,
 	type AccountSettingsKeys,
+	GetLogger,
+	TimeSpanMs,
+	type Logger,
 } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { DatabaseAccount, DatabaseAccountUpdate, DatabaseAccountWithSecure, DirectMessageAccounts, type DatabaseCharacterSelfInfo } from '../database/databaseStructure';
@@ -29,9 +32,13 @@ import { AccountDirectMessages } from './accountDirectMessages';
 import { AccountRoles } from './accountRoles';
 import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import { CharacterInfo } from './character';
+import { AsyncInterval } from '../utility';
 
 /** Currently logged in or recently used account */
 export class Account {
+	private readonly logger: Logger;
+	private readonly cleanupInterval: AsyncInterval;
+
 	/** Time when this account was last used */
 	public lastActivity: number;
 	/** The account's saved data */
@@ -59,6 +66,7 @@ export class Account {
 	}
 
 	constructor(data: DatabaseAccountWithSecure, characters: readonly DatabaseCharacterSelfInfo[]) {
+		this.logger = GetLogger('Account', `[Account ${data.id}]`);
 		this.lastActivity = Date.now();
 		// Shallow copy to preserve received data when cleaning up secure
 		this.data = omit(data, 'secure', 'roles', 'characters');
@@ -73,6 +81,16 @@ export class Account {
 		for (const characterData of characters) {
 			this.characters.set(characterData.id, new CharacterInfo(characterData, this));
 		}
+
+		this.cleanupInterval = new AsyncInterval(
+			() => this._doCleanupAsync(),
+			TimeSpanMs(1, 'minutes'),
+			(err) => this.logger.error('Account cleanup failed:', err),
+		).start();
+	}
+
+	public onUnload(): void {
+		this.cleanupInterval.stop();
 	}
 
 	/** Update last activity timestamp to reflect last usage */
@@ -337,6 +355,28 @@ export class Account {
 	}
 
 	//#endregion
+
+	//#region Cleanup
+
+	/**
+	 * Cleanup the account, disconnecting characters and cleaning up tokens.
+	 */
+	public doCleanup(): Promise<void> {
+		return this.cleanupInterval.immediate();
+	}
+
+	private async _doCleanupAsync(): Promise<void> {
+		this.secure.cleanupTokens();
+
+		for (const info of this.characters.values()) {
+			const character = info.loadedCharacter;
+			if (character != null && character.toBeDisconnected) {
+				await character.disconnect();
+			}
+		}
+	}
+
+	// #endregion
 }
 
 export async function CreateAccountData(username: string, password: string, email: string, activated: boolean = false): Promise<DatabaseAccountWithSecure> {

@@ -247,6 +247,11 @@ export class Character {
 
 	//#endregion
 
+	private _toBeDisconnected: boolean = false;
+	public get toBeDisconnected(): boolean {
+		return this._toBeDisconnected;
+	}
+
 	private get _disposed(): boolean {
 		return this.baseInfo.loadedCharacter !== this;
 	}
@@ -348,8 +353,13 @@ export class Character {
 		AssertNever(this.assignment);
 	}
 
+	public markForDisconnect(): void {
+		this._toBeDisconnected = true;
+	}
+
 	@AsyncSynchronized('object')
 	public async disconnect(): Promise<void> {
+		this._toBeDisconnected = false;
 		this.baseInfo.account.touch();
 
 		// Detach the client

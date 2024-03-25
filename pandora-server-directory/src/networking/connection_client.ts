@@ -1,8 +1,9 @@
-import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory, IncomingConnection, DirectoryClientSchema, Assert } from 'pandora-common';
+import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory, IncomingConnection, DirectoryClientSchema, Assert, type TypedEventEmitterEvents } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import type { Account } from '../account/account';
 import type { Character } from '../account/character';
 import { ConnectionManagerClient } from './manager_client';
+import { AccountTokenReason, AccountToken } from '../account/accountSecure';
 
 /** Class housing connection from a client */
 export class ClientConnection extends IncomingConnection<IDirectoryClient, IClientDirectory, IncomingSocket> {
@@ -16,6 +17,12 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	private _character: Character | null = null;
 	public get character(): Character | null {
 		return this._character;
+	}
+
+	private _loginTokenEventUnsubscribe: (() => void) | null = null;
+	private _loginToken: AccountToken | null = null;
+	public get loginTokenId(): string | null {
+		return this._loginToken ? this._loginToken.getId() : null;
 	}
 
 	public isLoggedIn(): this is { readonly account: Account; } {
@@ -52,7 +59,9 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	 * Set or clear the account this connection is logged in as
 	 * @param account - The account to set or `null` to clear
 	 */
-	public setAccount(account: Account | null): void {
+	public setAccount(account: null): void;
+	public setAccount(account: Account, token: AccountToken): void;
+	public setAccount(account: Account | null, token?: AccountToken): void {
 		if (this._account === account)
 			return;
 		if (this._account) {
@@ -60,13 +69,44 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 			this.setCharacter(null);
 			this._account.touch();
 			this.leaveRoom(this._account.associatedConnections);
+			this._loginToken = null;
+			this._loginTokenEventUnsubscribe?.();
+			this._loginTokenEventUnsubscribe = null;
 			this._account = null;
 		}
 		if (account) {
+			Assert(token?.reason === AccountTokenReason.LOGIN);
 			account.touch();
 			this._account = account;
+			this._loginToken = token;
+			this._loginTokenEventUnsubscribe = token.onAny((ev) => this.onTokenEvent(ev));
 			this.joinRoom(account.associatedConnections);
 		}
+	}
+
+	private onTokenEvent(event: Partial<TypedEventEmitterEvents<AccountToken>>): void {
+		if (event.tokenDestroyed != null) {
+			Assert(this._loginToken === event.tokenDestroyed);
+			this.onAccountTokenDestroyed();
+		}
+		if (event.extended != null) {
+			Assert(this._loginToken === event.extended);
+			this.sendMessage('loginTokenChanged', {
+				value: event.extended.value,
+				expires: event.extended.expires,
+			});
+		}
+	}
+
+	private onAccountTokenDestroyed(): void {
+		this.character?.markForDisconnect();
+
+		if (this._account != null) {
+			this.setAccount(null);
+			this.sendConnectionStateUpdate();
+		}
+
+		this.logger.verbose(`${this.id} logged out`);
 	}
 
 	/**

@@ -148,8 +148,9 @@ export class AccountManager implements Service {
 	private async _loadAccount(rawData: DatabaseAccountWithSecure): Promise<Account | null> {
 		// If there already is account matching this id loaded, simply return it
 		const loadedAccount = this.getAccountById(rawData.id);
-		if (loadedAccount)
+		if (loadedAccount) {
 			return loadedAccount;
+		}
 
 		// Verify and migrate account data
 		rawData = omit(rawData, '_id');
@@ -179,6 +180,7 @@ export class AccountManager implements Service {
 	private unloadAccount(account: Account): void {
 		Assert(!account.isInUse());
 		logger.debug(`Unloading account ${account.data.username}`);
+		account.onUnload();
 		this._onlineAccounts.delete(account);
 		loadedAccountsMetric.set(this._onlineAccounts.size);
 	}
@@ -232,8 +234,9 @@ export class AccountManager implements Service {
 	public async loadAccountById(id: number): Promise<Account | null> {
 		// Check if account is loaded and return it if it is
 		const account = this.getAccountById(id);
-		if (account)
+		if (account) {
 			return account;
+		}
 		// Get it from database
 		const data = await GetDatabase().getAccountById(id);
 		// Use the acquired DB data to load character

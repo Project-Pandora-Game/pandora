@@ -1,4 +1,4 @@
-import { AccountRole, Assert, AssertNever, AssertNotNullable, Awaitable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, Service } from 'pandora-common';
+import { AccountRole, Assert, AssertNever, AssertNotNullable, Awaitable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, Service, type CharacterId } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import promClient from 'prom-client';
 import { z } from 'zod';
@@ -91,6 +91,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			gitHubUnbind: this.handleGitHubUnbind.bind(this),
 			changeSettings: this.handleChangeSettings.bind(this),
 			setInitialCryptoKey: this.handleSetInitialCryptoKey.bind(this),
+			queryConnections: this.handleQueryConnections.bind(this),
+			extendLoginToken: this.handleExtendLoginToken.bind(this),
 
 			getAccountContacts: this.handleGetAccountContacts.bind(this),
 			getAccountInfo: this.handleGetAccountInfo.bind(this),
@@ -202,7 +204,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const token = await account.secure.generateNewLoginToken();
 		// Set the account for the connection and return result
 		logger.verbose(`${connection.id} logged in as ${account.data.username}`);
-		connection.setAccount(account);
+		connection.setAccount(account, token);
 		return {
 			result: 'ok',
 			token: { value: token.value, expires: token.expires },
@@ -210,21 +212,33 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
-	private async handleLogout({ invalidateToken }: IClientDirectoryArgument['logout'], connection: ClientConnection): IClientDirectoryPromiseResult['logout'] {
+	private async handleLogout(logout: IClientDirectoryArgument['logout'], connection: ClientConnection): IClientDirectoryPromiseResult['logout'] {
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
 		const account = connection.account;
-		const character = connection.character;
 
-		connection.setAccount(null);
-		connection.sendConnectionStateUpdate();
-		logger.verbose(`${connection.id} logged out`);
-
-		if (invalidateToken) {
-			await account.secure.invalidateLoginToken(invalidateToken);
+		switch (logout.type) {
+			case 'self':
+				if (connection.loginTokenId != null) {
+					await account.secure.invalidateLoginToken(connection.loginTokenId);
+				} else {
+					logger.warning(`Attempt to logout with no login token: ${connection.id}`);
+				}
+				break;
+			case 'all':
+				await account.secure.invalidateLoginToken();
+				break;
+			case 'selected':
+				await account.secure.invalidateLoginToken(logout.accountTokenId);
+				break;
+			default:
+				AssertNever(logout);
 		}
-		await character?.disconnect();
+
+		await account.doCleanup();
+
+		logger.verbose(`${connection.id} logged out`);
 	}
 
 	private async handleRegister({ username, email, passwordSha512, betaKey, captchaToken }: IClientDirectoryArgument['register'], connection: ClientConnection): IClientDirectoryPromiseResult['register'] {
@@ -561,10 +575,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	private async handleAuth(connection: ClientConnection, auth: IClientDirectoryAuthMessage): Promise<void> {
 		// Find account by username
 		const account = await accountManager.loadAccountByUsername(auth.username);
+		const token = account?.secure.getLoginToken(auth.token);
 		// Verify the token validity
-		if (account && account.secure.verifyLoginToken(auth.token)) {
+		if (account && token) {
 			logger.verbose(`${connection.id} logged in as ${account.data.username} using token`);
-			connection.setAccount(account);
+			connection.setAccount(account, token);
 			if (auth.character) {
 				const char = account.characters.get(auth.character.id)?.loadedCharacter;
 				if (char && char.connectSecret === auth.character.secret) {
@@ -680,6 +695,47 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const result = await connection.account.secure.setInitialCryptoKey(cryptoKey);
 
 		return { result };
+	}
+
+	private handleQueryConnections(_: IClientDirectoryArgument['queryConnections'], connection: ClientConnection): IClientDirectoryResult['queryConnections'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const connections = new Map<string, { connectionCount: number; connectedCharacters: { id: CharacterId; name: string; }[]; }>();
+		for (const conn of connection.account.associatedConnections.clients) {
+			AssertNotNullable(conn.loginTokenId);
+
+			let list = connections.get(conn.loginTokenId);
+			if (list == null) {
+				list = {
+					connectionCount: 0,
+					connectedCharacters: [],
+				};
+				connections.set(conn.loginTokenId, list);
+			}
+
+			++list.connectionCount;
+			if (conn.character == null)
+				continue;
+
+			list.connectedCharacters.push({
+				id: conn.character.baseInfo.id,
+				name: conn.character.baseInfo.data.name,
+			});
+		}
+
+		return {
+			connections: Array.from(connections.entries())
+				.map(([loginTokenId, info]) => ({ loginTokenId, ...info })),
+		};
+	}
+
+	private async handleExtendLoginToken({ passwordSha512 }: IClientDirectoryArgument['extendLoginToken'], connection: ClientConnection): IClientDirectoryPromiseResult['extendLoginToken'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const token = await connection.account.secure.extendLoginToken(passwordSha512, connection.loginTokenId);
+		return { result: token == null ? 'invalidPassword' : 'ok' };
 	}
 
 	private async handleGetDirectMessages({ id }: IClientDirectoryArgument['getDirectMessages'], connection: ClientConnection): IClientDirectoryPromiseResult['getDirectMessages'] {

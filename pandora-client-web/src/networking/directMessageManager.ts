@@ -48,6 +48,23 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 		this._cryptoPassword.value = await KeyExchange.generateKeyPassword(username, password);
 	}
 
+	public async passwordChange(username: string, password: string): Promise<{ cryptoKey: IAccountCryptoKey; onSuccess: () => void; }> {
+		if (this.#crypto == null) {
+			throw new Error('Not logged in');
+		}
+
+		const cryptoPassword = await KeyExchange.generateKeyPassword(username, password);
+		const cryptoKey = await this.#crypto.export(cryptoPassword);
+
+		return {
+			cryptoKey,
+			onSuccess: () => {
+				this._cryptoPassword.value = cryptoPassword;
+				this._lastCryptoKey = cryptoKey;
+			},
+		};
+	}
+
 	public async accountChanged() {
 		const account = this.connector.currentAccount.value;
 		if (!account) {

@@ -15,14 +15,20 @@ import { ModalDialog } from '../dialog/dialog';
 import { Column, Row } from '../common/container/container';
 import './leaveButton.scss';
 import { Immutable } from 'immer';
+import { useKeyDownEvent } from '../../common/useKeyDownEvent';
 
-const leaveButtonContext = createContext(() => { /** noop */ });
+const leaveButtonContext = createContext((): boolean => false);
 
 export function LeaveButton({ onClickExtra }: {
 	onClickExtra?: () => void;
 }) {
 	const [show, setShow] = useState(false);
-	const closeDialog = useCallback(() => setShow(false), []);
+	const closeDialog = useCallback(() => {
+		setShow(false);
+		return true;
+	}, []);
+
+	useKeyDownEvent(closeDialog, 'Escape');
 
 	return (
 		<leaveButtonContext.Provider value={ closeDialog }>

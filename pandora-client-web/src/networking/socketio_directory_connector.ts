@@ -22,6 +22,7 @@ import {
 	SecondFactorResponse,
 	IClientDirectoryArgument,
 	SecondFactorData,
+	Assert,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import { connect, Socket } from 'socket.io-client';
@@ -132,6 +133,14 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 				await this.handleAccountChange(message);
 				await this.directMessageHandler.accountChanged();
 			},
+			loginTokenChanged: (data) => {
+				Assert(this._authToken.value);
+				this._authToken.value = {
+					value: data.value,
+					expires: data.expires,
+					username: this._authToken.value.username,
+				};
+			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
 			directMessageSent: async (data) => {
 				await this.directMessageHandler.handleDirectMessageSent(data);
@@ -237,7 +246,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 	}
 
 	public logout(): void {
-		this.sendMessage('logout', { invalidateToken: this._authToken.value?.value });
+		this.sendMessage('logout', { type: 'self' });
 		this._connectionStateEventEmitter.onStateChanged({ account: null, character: null });
 		this.directMessageHandler.clear();
 		AccountContactContext.handleLogout();

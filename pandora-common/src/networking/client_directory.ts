@@ -174,9 +174,15 @@ export const ClientDirectorySchema = {
 		response: ZodCast<{ result: 'ok' | 'invalidPassword'; }>(),
 	},
 	logout: {
-		request: z.object({
-			invalidateToken: z.string().optional(),
-		}),
+		request: z.discriminatedUnion('type', [
+			z.object({
+				type: z.enum(['self', 'all']),
+			}),
+			z.object({
+				type: z.literal('selected'),
+				accountTokenId: z.string(),
+			}),
+		]),
 		response: null,
 	},
 	gitHubBind: {
@@ -207,6 +213,27 @@ export const ClientDirectorySchema = {
 			cryptoKey: AccountCryptoKeySchema,
 		}),
 		response: ZodCast<{ result: 'ok' | 'invalid' | 'keyAlreadySet'; }>(),
+	},
+	queryConnections: {
+		request: z.object({}),
+		response: z.object({
+			connections: z.array(z.object({
+				loginTokenId: z.string(),
+				connectionCount: z.number(),
+				connectedCharacters: z.array(z.object({
+					id: CharacterIdSchema,
+					name: z.string(),
+				})),
+			})),
+		}),
+	},
+	extendLoginToken: {
+		request: z.object({
+			passwordSha512: PasswordSha512Schema,
+		}),
+		response: z.object({
+			result: z.enum(['ok', 'invalidPassword']),
+		}),
 	},
 	//#endregion
 

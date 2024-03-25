@@ -1,4 +1,4 @@
-import { GetLogger, IAccountCryptoKey, Logger } from 'pandora-common';
+import { GetLogger, IAccountCryptoKey, Logger, TypedEventEmitter } from 'pandora-common';
 import { ENV } from '../config';
 const { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION } = ENV;
 import { GetDatabase } from '../database/databaseProvider';
@@ -31,13 +31,16 @@ export default class AccountSecure {
 	readonly #account: Account;
 	readonly #secure: DatabaseAccountSecure;
 	readonly #auditLog: Logger;
+	#tokens: readonly AccountToken[];
 
 	constructor(account: Account, secure: DatabaseAccountSecure) {
 		this.#account = account;
 		this.#secure = secure;
 		this.#auditLog = AUDIT_LOG.prefixMessages(`[Account ${account.id}]`);
 
-		this.#secure.tokens = this.#secure.tokens.filter((t) => t.expires > Date.now());
+		this.#tokens = this.#secure.tokens
+			.filter((t) => t.expires > Date.now())
+			.map((t) => new AccountToken(t));
 	}
 
 	public isActivated(): boolean {
@@ -85,6 +88,8 @@ export default class AccountSecure {
 		if (!this.isActivated() || !await this.verifyPassword(passwordOld) || !await this.#validateCryptoKey(cryptoKey))
 			return false;
 
+		// Invalidate all login tokens
+		this.#invalidateToken(AccountTokenReason.LOGIN);
 		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.password = await GeneratePasswordHash(passwordNew);
 		this.#secure.cryptoKey = _.cloneDeep(cryptoKey);
@@ -112,6 +117,9 @@ export default class AccountSecure {
 		if (!this.#validateToken(AccountTokenReason.PASSWORD_RESET, token))
 			return false;
 
+		// Invalidate all login tokens
+		this.#invalidateToken(AccountTokenReason.LOGIN);
+
 		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.activated = true;
 		this.#secure.password = await GeneratePasswordHash(password);
@@ -124,20 +132,46 @@ export default class AccountSecure {
 		return true;
 	}
 
-	public generateNewLoginToken(): Promise<DatabaseAccountToken> {
+	public generateNewLoginToken(): Promise<AccountToken> {
 		return this.#generateToken(AccountTokenReason.LOGIN);
 	}
 
-	public async invalidateLoginToken(token: string): Promise<void> {
-		const length = this.#secure.tokens.length;
-		this.#invalidateToken(AccountTokenReason.LOGIN, token);
+	public async invalidateLoginToken(tokenId?: string): Promise<void> {
+		const length = this.#tokens.length;
 
-		if (length !== this.#secure.tokens.length)
+		if (!tokenId) {
+			this.#invalidateToken(AccountTokenReason.LOGIN);
+		} else {
+			this.#invalidateToken(AccountTokenReason.LOGIN, (t) => t.getId() === tokenId);
+		}
+
+		if (length !== this.#tokens.length)
 			await this.#updateDatabase();
 	}
 
-	public verifyLoginToken(token: string): boolean {
-		return this.#validateToken(AccountTokenReason.LOGIN, token);
+	public cleanupTokens(): void {
+		this.#tokens = this.#tokens.filter((t) => t.validate());
+	}
+
+	public getLoginToken(token: string): AccountToken | undefined {
+		return this.#findToken(AccountTokenReason.LOGIN, token);
+	}
+
+	public async extendLoginToken(password: string, loginTokenId: string | null): Promise<AccountToken | undefined> {
+		if (!await this.verifyPassword(password))
+			return undefined;
+
+		const token = this.#tokens.find((t) => t.reason === AccountTokenReason.LOGIN && t.getId() === loginTokenId);
+		if (!token || !token.extend())
+			return undefined;
+
+		// Ensure that tokens are sorted by expiration date
+		this.#tokens = [...this.#tokens]
+			.sort((a, b) => a.expires - b.expires);
+
+		await this.#updateDatabase();
+
+		return token;
 	}
 
 	public getGitHubStatus(): undefined | { id: number; login: string; } {
@@ -200,40 +234,60 @@ export default class AccountSecure {
 		return await IsPublicKey(publicKey);
 	}
 
-	async #generateToken(reason: AccountTokenReason): Promise<DatabaseAccountToken> {
-		this.#secure.tokens = this.#secure.tokens.filter((t) => t.expires > Date.now());
-		if (TOKEN_LIMITS[reason] <= this.#secure.tokens.filter((t) => t.reason === reason).length) {
-			const index = this.#secure.tokens.findIndex((t) => t.reason === reason);
-			/* istanbul ignore else - should never happen because of positive TOKEN_LIMITS */
-			if (index !== -1)
-				this.#secure.tokens.splice(index, 1);
+	async #generateToken(reason: AccountTokenReason): Promise<AccountToken> {
+		const { limit } = TOKEN_TYPES[reason];
+
+		const tokens = this.#tokens.filter((t) => t.validate());
+		if (limit <= tokens.filter((t) => t.reason === reason).length) {
+			const index = tokens.findIndex((t) => t.reason === reason);
+			/* istanbul ignore else - should never happen because of positive limit is always positive */
+			if (index !== -1) {
+				tokens[index].onDestroy();
+				tokens.splice(index, 1);
+			}
 		}
 
-		const token = {
-			value: TOKEN_TYPES[reason] === 'simple' ? GenerateSimpleToken() : nanoid(32),
-			expires: Date.now() + TOKEN_EXPIRATION[reason],
-			reason,
-		};
+		const token = AccountToken.create(reason);
+		this.#tokens = [...tokens, token];
 
-		this.#secure.tokens.push(token);
 		await this.#updateDatabase();
+
 		return token;
 	}
 
+	#findToken(reason: AccountTokenReason, tokenSecret: string): AccountToken | undefined {
+		const token = this.#tokens.find((t) => t.value === tokenSecret && t.reason === reason);
+		return token?.validate() ? token : undefined;
+	}
+
 	#validateToken(reason: AccountTokenReason, tokenSecret: string): boolean {
-		const token = this.#secure.tokens.find((t) => t.value === tokenSecret && t.reason === reason);
-		return !!token && token.expires > Date.now();
+		return this.#findToken(reason, tokenSecret) !== undefined;
 	}
 
-	#invalidateToken(reason: AccountTokenReason, tokenSecret?: string): void {
-		if (tokenSecret === undefined)
-			this.#secure.tokens = this.#secure.tokens.filter((t) => t.reason !== reason);
-		else
-			this.#secure.tokens = this.#secure.tokens.filter((t) => t.value !== tokenSecret || t.reason !== reason);
+	#invalidateToken(reason: AccountTokenReason, isInvalid?: (token: AccountToken) => boolean): void {
+		const tokens: AccountToken[] = [];
+		for (const token of this.#tokens) {
+			if (!token.validate())
+				continue;
+
+			if (token.reason !== reason || (isInvalid != null && !isInvalid(token))) {
+				tokens.push(token);
+			} else {
+				token.onDestroy();
+			}
+		}
+		this.#tokens = tokens;
 	}
 
-	async #updateDatabase(): Promise<void> {
-		await GetDatabase().setAccountSecure(this.#account.id, _.cloneDeep(this.#secure));
+	#updateDatabase(): Promise<void> {
+		this.#secure.tokens = this.#tokens
+			.filter((t) => t.validate())
+			.map((t) => ({
+				value: t.value,
+				expires: t.expires,
+				reason: t.reason,
+			}));
+		return GetDatabase().setAccountSecure(this.#account.id, _.cloneDeep(this.#secure));
 	}
 }
 
@@ -294,20 +348,101 @@ function GenerateSimpleToken(): string {
 	return randomInt(0, 1000000).toString(10).padStart(6, '0');
 }
 
-const TOKEN_TYPES: Record<AccountTokenReason, 'secure' | 'simple'> = {
-	[AccountTokenReason.ACTIVATION]: 'simple',
-	[AccountTokenReason.PASSWORD_RESET]: 'simple',
-	[AccountTokenReason.LOGIN]: 'secure',
-};
+type TokenType = Record<AccountTokenReason, {
+	generate: () => string;
+	expiration: number;
+	limit: number;
+}>;
 
-const TOKEN_EXPIRATION: Record<AccountTokenReason, number> = {
-	[AccountTokenReason.ACTIVATION]: ACTIVATION_TOKEN_EXPIRATION,
-	[AccountTokenReason.PASSWORD_RESET]: PASSWORD_RESET_TOKEN_EXPIRATION,
-	[AccountTokenReason.LOGIN]: LOGIN_TOKEN_EXPIRATION,
-};
+const TOKEN_TYPES = {
+	[AccountTokenReason.ACTIVATION]: {
+		generate: GenerateSimpleToken,
+		expiration: ACTIVATION_TOKEN_EXPIRATION,
+		limit: 1,
+	},
+	[AccountTokenReason.PASSWORD_RESET]: {
+		generate: GenerateSimpleToken,
+		expiration: PASSWORD_RESET_TOKEN_EXPIRATION,
+		limit: 1,
+	},
+	[AccountTokenReason.LOGIN]: {
+		generate: () => nanoid(32),
+		expiration: LOGIN_TOKEN_EXPIRATION,
+		limit: 5,
+	},
+} as const satisfies TokenType;
 
-const TOKEN_LIMITS: Record<AccountTokenReason, number> = {
-	[AccountTokenReason.ACTIVATION]: 1,
-	[AccountTokenReason.PASSWORD_RESET]: 1,
-	[AccountTokenReason.LOGIN]: 5,
-};
+export class AccountToken extends TypedEventEmitter<{
+	tokenDestroyed: AccountToken;
+	extended: AccountToken;
+}> implements Readonly<DatabaseAccountToken> {
+	readonly #reason: AccountTokenReason;
+	#value: string;
+	#expires: number;
+
+	#destroyed = false;
+
+	public get value(): string {
+		return this.#value;
+	}
+	public get expires(): number {
+		return this.#expires;
+	}
+	public get reason(): AccountTokenReason {
+		return this.#reason;
+	}
+
+	constructor(token: Readonly<DatabaseAccountToken>) {
+		super();
+		this.#value = token.value;
+		this.#expires = token.expires;
+		this.#reason = token.reason;
+	}
+
+	public static create(reason: AccountTokenReason): AccountToken {
+		const { generate, expiration } = TOKEN_TYPES[reason];
+		return new AccountToken({
+			value: generate(),
+			expires: Date.now() + expiration,
+			reason,
+		});
+	}
+
+	public getId(): string {
+		return this.value.substring(0, 16);
+	}
+
+	public validate(): boolean {
+		if (this.#destroyed)
+			return false;
+
+		if (this.expires <= Date.now()) {
+			this.onDestroy();
+			return false;
+		}
+
+		return true;
+	}
+
+	public onDestroy(): void {
+		if (this.#destroyed)
+			return;
+
+		this.#destroyed = true;
+
+		this.emit('tokenDestroyed', this);
+	}
+
+	public extend(): boolean {
+		if (this.#destroyed)
+			return false;
+
+		const { generate, expiration } = TOKEN_TYPES[this.#reason];
+		this.#value = generate();
+		this.#expires = Date.now() + expiration;
+
+		this.emit('extended', this);
+
+		return true;
+	}
+}

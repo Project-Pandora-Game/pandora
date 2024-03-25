@@ -114,7 +114,8 @@ export function WikiCharacters(): ReactElement {
 				</li>
 				<li>
 					There is a maximum amount of items your character can wear or hold. This number is the sum
-					of all <Link to='/wiki/items#IT_Body_parts'>body parts</Link>, all items worn on the body, and all
+					of all <Link to='/wiki/items#IT_Body_parts'>body parts</Link>, all items worn on the body, special
+					items, e.g. locks, and all
 					items inside worn items with <Link to='/wiki/items#IT_Storage_modules'>storage modules</Link>, e.g. a bag.
 				</li>
 			</ul>

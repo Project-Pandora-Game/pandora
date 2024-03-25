@@ -174,10 +174,8 @@ export function WikiSpaces(): ReactElement {
 				</li>
 				<li>
 					Development mode: On a development server, spaces can be created in development mode. This enables use of many development tools, such as
-					room background calibration tool. Those can however break things when used incorrectly. Because of that
-					<strong>
-						this option is not available on the public server for non-developers.
-					</strong>
+					room background calibration tool. Those can however break things when used incorrectly. Because of
+					that <strong>this option is not available on the public server for non-developers</strong>.
 				</li>
 			</ul>
 

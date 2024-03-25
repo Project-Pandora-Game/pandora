@@ -128,12 +128,8 @@ export const SpaceManager = new class SpaceManagerClass implements Service {
 	}
 
 	@AsyncSynchronized()
-	public async createSpace(config: SpaceDirectoryConfig, owners: AccountId[], creator: Account): Promise<Space | 'failed' | 'spaceOwnershipLimitReached'> {
+	public async createSpace(config: SpaceDirectoryConfig, owners: AccountId[]): Promise<Space | 'failed' | 'spaceOwnershipLimitReached'> {
 		Assert(owners.length > 0, 'Space must be created with some owners');
-
-		if (config.features.includes('development') && !creator.roles.isAuthorized('developer')) {
-			return 'failed';
-		}
 
 		// Check, that owners are within limits
 		for (const ownerId of owners) {

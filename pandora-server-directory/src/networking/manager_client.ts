@@ -423,7 +423,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		const character = connection.character;
 
-		const space = await SpaceManager.createSpace(spaceConfig, [connection.account.id], connection.account);
+		// Only developers can create rooms with development mode enabled
+		if (spaceConfig.features.includes('development') && !connection.account.roles.isAuthorized('developer')) {
+			return {
+				result: 'failed',
+			};
+		}
+
+		const space = await SpaceManager.createSpace(spaceConfig, [connection.account.id]);
 
 		if (typeof space === 'string') {
 			return { result: space };

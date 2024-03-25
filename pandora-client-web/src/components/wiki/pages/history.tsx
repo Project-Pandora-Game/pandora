@@ -113,7 +113,7 @@ export function WikiHistory(): ReactElement {
 					<li>Eve</li>
 					<li>Jenn</li>
 					<li>Jomshir (Clare)</li>
-					<li>Kane  (Hareo)</li>
+					<li>Kane (Hareo)</li>
 					<li>Kimei Nishimura</li>
 					<li>Natsuki</li>
 					<li>Nina</li>

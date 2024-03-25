@@ -423,7 +423,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		const character = connection.character;
 
-		const space = await SpaceManager.createSpace(spaceConfig, [connection.account.id]);
+		const space = await SpaceManager.createSpace(spaceConfig, [connection.account.id], connection.account);
 
 		if (typeof space === 'string') {
 			return { result: space };

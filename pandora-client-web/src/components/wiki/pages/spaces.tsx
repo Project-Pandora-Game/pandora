@@ -161,22 +161,23 @@ export function WikiSpaces(): ReactElement {
 
 			<h4 id='SP_Space_features'>Space features</h4>
 			<p>
-				While creating a room, you can set several space features check boxes at the end of the space creation screen. These cannot be changed after the space creation.
+				While creating a room, you can set several space feature check boxes at the bottom of the space creation screen. These cannot be changed after the space creation.
 			</p>
 			<ul>
 				<li>
 					Allow changes to character bodies: Determines if any character inside the space can change their body, for example changing the shape/size of their body,
-					or swapping different eyes, nose, genitals.
+					or swapping to different eyes, nose, genitals.
 				</li>
 				<li>
 					Allow changes to character pronouns: Determines if any character inside the space can change their pronouns, so with which gender they are mentioned,
 					while inside the space.
 				</li>
 				<li>
-					Development mode: On a development server, spaces can be created in development mode, which inhibits some checks, for example bounds checking
-					for room backgrounds, and enables development tools such as room background calibration tool, which are inaccessible without this turned on,
-					as they cause everyone in the space to see things differently based on their development settings.<br />
-					On the deployed production version of Pandora, spaces shall not be created in development mode!
+					Development mode: On a development server, spaces can be created in development mode. This enables use of many development tools, such as
+					room background calibration tool. Those can however break things when used incorrectly. Because of that
+					<strong>
+						this option is not available on the public server for non-developers.
+					</strong>
 				</li>
 			</ul>
 

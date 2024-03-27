@@ -455,8 +455,8 @@ importers:
         specifier: 2.6.1
         version: 2.6.1
       tsc-watch:
-        specifier: 6.0.4
-        version: 6.0.4(typescript@5.4.3)
+        specifier: 6.1.0
+        version: 6.1.0(typescript@5.4.3)
       tslib:
         specifier: 2.6.2
         version: 2.6.2
@@ -564,8 +564,8 @@ importers:
         specifier: 2.6.1
         version: 2.6.1
       tsc-watch:
-        specifier: 6.0.4
-        version: 6.0.4(typescript@5.4.3)
+        specifier: 6.1.0
+        version: 6.1.0(typescript@5.4.3)
       tslib:
         specifier: 2.6.2
         version: 2.6.2
@@ -12778,8 +12778,8 @@ packages:
       yn: 3.1.1
     dev: true
 
-  /tsc-watch@6.0.4(typescript@5.4.3):
-    resolution: {integrity: sha512-cHvbvhjO86w2aGlaHgSCeQRl+Aqw6X6XN4sQMPZKF88GoP30O+oTuh5lRIJr5pgFWrRpF1AgXnJJ2DoFEIPHyg==}
+  /tsc-watch@6.1.0(typescript@5.4.3):
+    resolution: {integrity: sha512-bNjUt25O/qZb4Yb+PyrnKnJzu4rpCtGHGb0HE737mGnfxrRDbILxsUM1321o87Bl00BETZ0Ry+wDEJbYzcxRTA==}
     engines: {node: '>=12.12.0'}
     hasBin: true
     peerDependencies:

@@ -90,6 +90,10 @@ export const EnvParser = CreateEnvParser({
 	/** Discord bot character status channel ID */
 	DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID: z.string().default(''),
 
+	// Beta registration roles
+	DISCORD_BETA_REGISTRATION_PENDING_ROLE_ID: z.string().default(''),
+	DISCORD_BETA_ACCESS_ROLE_ID: z.string().default(''),
+
 	//#endregion
 
 	//#region Captcha

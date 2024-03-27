@@ -1,7 +1,7 @@
 import { cloneDeep, debounce, omit } from 'lodash';
 import { Service, type IBaseTokenInfo, type Logger } from 'pandora-common';
-import { type Account } from '../account/account';
 import { nanoid } from 'nanoid';
+import type { ActorIdentity } from '../account/actorIdentity';
 
 const CLEANUP_INTERVAL = 1000 * 60 * 60 * 24 * 7; // 1 week
 const CLEANUP_DELAY = CLEANUP_INTERVAL;
@@ -38,7 +38,11 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> implements Se
 	protected abstract save(data: Full<Token>[]): Promise<void>;
 	protected abstract _validateExtra(info: Stripped<Token>): boolean;
 
-	protected async _create(acc: Account, data: Omit<Token, 'created' | 'id'>): Promise<{ info: Stripped<Token>; token: string; }> {
+	protected async _create(creator: ActorIdentity, data: Omit<Token, 'created' | 'id'>): Promise<{
+		info: Stripped<Token>;
+		id: string;
+		token: string;
+	}> {
 		let id = '';
 		do {
 			id = this.generator(this.idLength);
@@ -51,20 +55,21 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> implements Se
 			id,
 			token,
 			created: {
-				id: acc.id,
-				username: acc.username,
+				id: creator.id,
+				username: creator.username,
 				time: Date.now(),
 			},
 		} as Full<Token>;
 
 		this.#tokens.set(id, info);
 
-		this.logger.info(`${acc.username} (${acc.id}) created token '${id}': `, info);
+		this.logger.info(`${creator.username} (${creator.id}) created token '${id}': `, info);
 
 		await this._save();
 
 		return {
 			info: omit(info, 'token'),
+			id,
 			token,
 		};
 	}
@@ -79,18 +84,18 @@ export abstract class TokenStoreBase<Token extends IBaseTokenInfo> implements Se
 		return true;
 	}
 
-	public async revoke(acc: Account, id: string): Promise<'ok' | 'notFound' | 'adminRequired'> {
+	public async revoke(actor: ActorIdentity, id: string): Promise<'ok' | 'notFound' | 'adminRequired'> {
 		const info = this.#tokens.get(id);
 		if (!info)
 			return 'notFound';
 
-		if (info.created.id !== acc.id && !acc.roles.isAuthorized('admin'))
+		if (info.created.id !== actor.id && !actor.roles.isAuthorized('admin'))
 			return 'adminRequired';
 
 		this.#tokens.delete(id);
 		await this._save();
 
-		this.logger.info(`Token '${id}' revoked by ${acc.username} (${acc.id})`);
+		this.logger.info(`Token '${id}' revoked by ${actor.username} (${actor.id})`);
 
 		return 'ok';
 	}

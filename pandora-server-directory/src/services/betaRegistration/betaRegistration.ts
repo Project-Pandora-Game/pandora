@@ -56,6 +56,43 @@ export const BetaRegistrationService = new class BetaRegistrationService impleme
 		return 'added';
 	}
 
+	@AsyncSynchronized('object')
+	public async dropCandidate(discordId: string): Promise<void> {
+		Assert(this._betaRegistrations != null);
+		const candidateIndex = this._betaRegistrations.findIndex((r) => r.discordId === discordId);
+
+		// Do not drop candidates that already got key to avoid double-give in the future
+		if (candidateIndex < 0 || this._betaRegistrations[candidateIndex].assignedKey != null)
+			return;
+
+		this._betaRegistrations.splice(candidateIndex, 1);
+		this.logger.verbose(`Dropped candidate ${discordId}, ${this._getPendingRegistrations().length}/${this._betaRegistrations.length} pending.`);
+
+		await this._save();
+	}
+
+	public getCandidates(count: number): Readonly<DatabaseBetaRegistration>[] {
+		Assert(this._betaRegistrations != null);
+
+		return this._betaRegistrations.filter((r) => r.assignedKey == null).slice(0, count);
+	}
+
+	@AsyncSynchronized('object')
+	public async assignCandidateKey(discordId: string, key: string): Promise<boolean> {
+		Assert(this._betaRegistrations != null);
+		const candidate = this._betaRegistrations.find((r) => r.discordId === discordId);
+
+		if (candidate == null || candidate.assignedKey != null)
+			return false;
+
+		candidate.assignedKey = key;
+		this.logger.verbose(`Assigned key ${key} to candidate ${discordId}, ${this._getPendingRegistrations().length}/${this._betaRegistrations.length} pending.`);
+
+		await this._save();
+
+		return true;
+	}
+
 	private async _save(): Promise<void> {
 		Assert(this._betaRegistrations != null);
 

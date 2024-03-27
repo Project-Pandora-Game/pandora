@@ -1,8 +1,11 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, PermissionFlagsBits, SlashCommandBuilder, SlashCommandSubcommandBuilder, type MessageActionRowComponentBuilder } from 'discord.js';
-import { Assert, AssertNever, GetLogger } from 'pandora-common';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, PermissionFlagsBits, SlashCommandBuilder, SlashCommandSubcommandBuilder, type MessageActionRowComponentBuilder, SlashCommandIntegerOption, ApplicationCommandOptionType, userMention } from 'discord.js';
+import { Assert, AssertNever, GetLogger, TimeSpanMs } from 'pandora-common';
 import { ENV } from '../../../config';
 import { BetaRegistrationService } from '../../betaRegistration/betaRegistration';
 import { GetInteractionMember, type DiscordButtonDescriptor, type DiscordCommandDescriptor } from './_common';
+import { Sleep } from '../../../utility';
+import { BetaKeyStore } from '../../../shard/betaKeyStore';
+import { ACTOR_PANDORA } from '../../../account/actorPandora';
 
 const {
 	BETA_KEY_ENABLED,
@@ -21,10 +24,23 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 			new SlashCommandSubcommandBuilder()
 				.setName('add-registration-form')
 				.setDescription('Send a registration form message'),
+		)
+		.addSubcommand(
+			new SlashCommandSubcommandBuilder()
+				.setName('mass-invite')
+				.setDescription('Send out invites to a specified count of people')
+				.addIntegerOption(
+					new SlashCommandIntegerOption()
+						.setName('count')
+						.setDescription('How many people to invite')
+						.setMinValue(1)
+						.setRequired(true),
+				),
 		),
 	async execute(interaction) {
 		const member = GetInteractionMember(interaction);
-		logger.debug(`Admin command used by ${interaction.user.username} (${interaction.user.id}) in guild ${interaction.guild?.id ?? '[none]'}`);
+		const subcommand = interaction.isChatInputCommand() ? interaction.options.getSubcommand() : null;
+		logger.debug(`Admin command "${subcommand}" used by ${interaction.user.username} (${interaction.user.id}) in guild ${interaction.guild?.id ?? '[none]'}`);
 
 		if (!member || !member.permissions.has(PermissionFlagsBits.Administrator)) {
 			await interaction.reply({
@@ -33,8 +49,6 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 			});
 			return;
 		}
-
-		const subcommand = interaction.isChatInputCommand() ? interaction.options.getSubcommand() : null;
 
 		if (subcommand === 'add-registration-form') {
 			Assert(interaction.channel != null);
@@ -61,6 +75,78 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 			await interaction.reply({
 				ephemeral: true,
 				content: `Done! :white_check_mark:`,
+			});
+		} else if (subcommand === 'mass-invite') {
+			const count = interaction.options.get('count', true);
+			Assert(count.type === ApplicationCommandOptionType.Integer);
+			Assert(typeof count.value === 'number');
+			Assert(Number.isInteger(count.value));
+			Assert(count.value >= 1);
+			Assert(interaction.guild != null);
+
+			logger.alert(`Sending invites to ${count.value} people, triggered by ${interaction.user.username} (${interaction.user.id})`);
+			await interaction.reply({
+				content: `:hourglass_flowing_sand: Sending invites to ${count.value} people...`,
+			});
+
+			const candidates = BetaRegistrationService.getCandidates(count.value);
+
+			let successful = 0;
+			for (const candidate of candidates) {
+				// Pause for half a second between candidates not to run into any rate limit
+				await Sleep(500);
+
+				// Race condition prevention (just a simple one, it shouldn't happen anyway)
+				if (candidate.assignedKey != null)
+					continue;
+
+				try {
+					// Find the candidate in the server
+					const candidateMember = await interaction.guild.members.fetch({ user: candidate.discordId });
+
+					// Generate a new beta key for them
+					const key = await BetaKeyStore.create(ACTOR_PANDORA, {
+						maxUses: 1,
+						expires: Date.now() + TimeSpanMs(30, 'days'),
+					});
+					Assert(typeof key !== 'string');
+
+					// Give user roles
+					await candidateMember.roles.remove(DISCORD_BETA_REGISTRATION_PENDING_ROLE_ID, 'Automatic beta handout');
+					await candidateMember.roles.add(DISCORD_BETA_ACCESS_ROLE_ID, 'Automatic beta handout');
+
+					// Send user DM with the key
+					const dmChannel = await candidateMember.createDM();
+					await dmChannel.send({
+						content: `Hello ${userMention(candidateMember.user.id)}!\n` +
+							`Some time ago you have registered to join the beta of **Project Pandora** and now you have been selected! Congratulations!\n` +
+							`Here is your beta registration key. It can be used only once and expires in 30 days.\n` +
+							'```\n' +
+							`${key.token}\n` +
+							'```\n' +
+							`You can register with it at https://project-pandora.com\n` +
+							`You were also given access to betatester channels on Pandora's Discord where you can talk with other betatesters, share suggestions, or inform us about any issues you encounter. You can find those channels here: https://discord.com/channels/872284471611760720/1120733020962431046\n` +
+							`\n` +
+							`Have fun!\n`,
+					});
+
+					// Only after successful DM mark the candidate as having received a key
+					const assignmentResult = await BetaRegistrationService.assignCandidateKey(candidate.discordId, key.id);
+
+					if (!assignmentResult) {
+						logger.warning(`Failed to assign beta key ${key.id} to ${candidate.discordId}`);
+						continue;
+					}
+
+					successful++;
+					logger.verbose(`Successfully sent an invite to user ${candidate.discordId} (token: ${key.id})`);
+				} catch (error) {
+					logger.warning(`Failed to invite user ${candidate.discordId} (token: ${candidate.assignedKey}):`, error);
+				}
+			}
+			logger.info(`Done sending invites, successfully invited ${successful} people.`);
+			await interaction.followUp({
+				content: `:white_check_mark: Done sending invites! ${successful} were added successfully.`,
 			});
 		} else {
 			await interaction.reply({

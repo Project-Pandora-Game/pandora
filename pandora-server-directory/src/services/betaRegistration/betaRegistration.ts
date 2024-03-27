@@ -1,15 +1,23 @@
-import { Assert, AsyncSynchronized, type Service } from 'pandora-common';
+import { Assert, AsyncSynchronized, GetLogger, type Service } from 'pandora-common';
 import { GetDatabase } from '../../database/databaseProvider';
 import type { DatabaseBetaRegistration } from '../../database/databaseStructure';
 
 export const BetaRegistrationService = new class BetaRegistrationService implements Service {
 	private _betaRegistrations: DatabaseBetaRegistration[] | null = null;
+	private readonly logger = GetLogger('BetaRegistration');
+
+	private _getPendingRegistrations(): DatabaseBetaRegistration[] {
+		Assert(this._betaRegistrations != null);
+
+		return this._betaRegistrations.filter((r) => r.assignedKey == null);
+	}
 
 	@AsyncSynchronized('object')
 	public async init(): Promise<void> {
 		Assert(this._betaRegistrations == null);
 
 		this._betaRegistrations = await GetDatabase().getConfig('betaRegistrations') ?? [];
+		this.logger.info(`${this._betaRegistrations.length} registrations loaded, ${this._getPendingRegistrations().length} pending.`);
 	}
 
 	@AsyncSynchronized('object')
@@ -42,6 +50,7 @@ export const BetaRegistrationService = new class BetaRegistrationService impleme
 			registeredAt: Date.now(),
 			assignedKey: null,
 		});
+		this.logger.info(`Registered user ${discordId}, ${this._getPendingRegistrations().length}/${this._betaRegistrations.length} pending.`);
 		await this._save();
 
 		return 'added';

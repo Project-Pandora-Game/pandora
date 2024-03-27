@@ -38,7 +38,7 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 
 			const registerButton = new ButtonBuilder()
 				.setCustomId('button-register')
-				.setLabel('Press me!')
+				.setLabel('Register for the beta test')
 				.setStyle(ButtonStyle.Primary);
 
 			const row = new ActionRowBuilder<MessageActionRowComponentBuilder>()
@@ -48,7 +48,7 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 				embeds: [
 					new EmbedBuilder()
 						.setColor('Aqua')
-						.setDescription(`I'm a bot message with a button! (at least I hope there is one...)`)
+						.setDescription(`To register for the upcoming closed beta test of Project Pandora press the following button. We will send out beta keys in waves while the beta test is ongoing.`)
 						.toJSON(),
 				],
 				components: [row.toJSON()],

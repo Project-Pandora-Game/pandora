@@ -9,6 +9,7 @@ import {
 	AsyncSynchronized,
 	CharacterId,
 	CharacterSelfInfo,
+	GetLogger,
 	IDirectoryAccountInfo,
 	IDirectoryClient,
 	IShardAccountDefinition,
@@ -18,24 +19,24 @@ import {
 	LIMIT_SPACE_OWNED_COUNT,
 	OutfitMeasureCost,
 	ServerRoom,
+	TimeSpanMs,
 	type AccountSettings,
 	type AccountSettingsKeys,
-	GetLogger,
-	TimeSpanMs,
 	type Logger,
 } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
 import { DatabaseAccount, DatabaseAccountUpdate, DatabaseAccountWithSecure, DirectMessageAccounts, type DatabaseCharacterSelfInfo } from '../database/databaseStructure';
 import type { ClientConnection } from '../networking/connection_client';
+import { AsyncInterval } from '../utility';
 import { AccountContacts } from './accountContacts';
 import { AccountDirectMessages } from './accountDirectMessages';
 import { AccountRoles } from './accountRoles';
 import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
+import type { ActorIdentity } from './actorIdentity';
 import { CharacterInfo } from './character';
-import { AsyncInterval } from '../utility';
 
 /** Currently logged in or recently used account */
-export class Account {
+export class Account implements ActorIdentity {
 	private readonly logger: Logger;
 	private readonly cleanupInterval: AsyncInterval;
 

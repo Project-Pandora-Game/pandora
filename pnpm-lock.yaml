@@ -144,8 +144,8 @@ importers:
         specifier: 18.2.73
         version: 18.2.73
       '@types/react-dom':
-        specifier: 18.2.22
-        version: 18.2.22
+        specifier: 18.2.23
+        version: 18.2.23
       '@types/react-router-dom':
         specifier: 5.3.3
         version: 5.3.3
@@ -376,8 +376,8 @@ importers:
         specifier: 6.5.0
         version: 6.5.0
       mongodb-memory-server-core:
-        specifier: 9.1.7
-        version: 9.1.7
+        specifier: 9.1.8
+        version: 9.1.8
       nanoid:
         specifier: 3.3.7
         version: 3.3.7
@@ -431,8 +431,8 @@ importers:
         specifier: 7.4.0
         version: 7.4.0(eslint@8.57.0)(typescript@5.4.3)
       discord-api-types:
-        specifier: 0.37.76
-        version: 0.37.76
+        specifier: 0.37.77
+        version: 0.37.77
       eslint:
         specifier: 8.57.0
         version: 8.57.0
@@ -537,8 +537,8 @@ importers:
         specifier: 7.4.0
         version: 7.4.0(eslint@8.57.0)(typescript@5.4.3)
       discord-api-types:
-        specifier: 0.37.76
-        version: 0.37.76
+        specifier: 0.37.77
+        version: 0.37.77
       eslint:
         specifier: 8.57.0
         version: 8.57.0
@@ -4373,7 +4373,7 @@ packages:
     dependencies:
       '@babel/runtime': 7.23.7
       '@testing-library/dom': 9.3.3
-      '@types/react-dom': 18.2.22
+      '@types/react-dom': 18.2.23
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: true
@@ -4671,8 +4671,8 @@ packages:
     resolution: {integrity: sha512-+0autS93xyXizIYiyL02FCY8N+KkKPhILhcUSA276HxzreZ16kl+cmwvV2qAM/PuCCwPXzOXOWhiPcw20uSFcA==}
     dev: true
 
-  /@types/react-dom@18.2.22:
-    resolution: {integrity: sha512-fHkBXPeNtfvri6gdsMYyW+dW7RXFo6Ad09nLFK0VQWR7yGLai/Cyvyj696gbwYvBnhGtevUG9cET0pmUbMtoPQ==}
+  /@types/react-dom@18.2.23:
+    resolution: {integrity: sha512-ZQ71wgGOTmDYpnav2knkjr3qXdAFu0vsk8Ci5w3pGAIdj7/kKAyn+VsQDhXsmzzzepAiI9leWMmubXz690AI/A==}
     dependencies:
       '@types/react': 18.2.73
     dev: true
@@ -6756,8 +6756,8 @@ packages:
     resolution: {integrity: sha512-o/dXNFfhBpYHpQFdT6FWzeO7pKc838QeeZ9d91CfVAtpr5XLK4B/zYxQbYgPdoMiTDvJfzcsLW5naXgmHGDNXw==}
     dev: false
 
-  /discord-api-types@0.37.76:
-    resolution: {integrity: sha512-GQI02JvBVl9+WQiMmyc/OFuJ4bBBf2VWb6NjPBnzrrdF2D/2S07mA1ZCd5+IhHRjU8wQ83c/hmjj9nn1+r/K9g==}
+  /discord-api-types@0.37.77:
+    resolution: {integrity: sha512-AkEn9nZA5w/XJ8wzKzlpx3X+MToQCowKahftF1+KYnMWnuglCrVRojy1XlIWX8Frgp1v8INceGKpvDkbvMLJ4g==}
     dev: true
 
   /discord.js@14.14.1:
@@ -7749,8 +7749,18 @@ packages:
     resolution: {integrity: sha512-36yxDn5H7OFZQla0/jFJmbIKTdZAQHngCedGxiMmpNfEZM0sdEeT+WczLQrjK6D7o2aiyLYDnkw0R3JK0Qv1RQ==}
     dev: true
 
-  /follow-redirects@1.15.3(debug@4.3.4):
+  /follow-redirects@1.15.3:
     resolution: {integrity: sha512-1VzOtuEM8pC9SFU1E+8KfTjZyMztRsgEfwQl44z8A25uy13jSzTj6dyK2Df52iV0vgHCfBwLhDWevLn95w5v6Q==}
+    engines: {node: '>=4.0'}
+    peerDependencies:
+      debug: '*'
+    peerDependenciesMeta:
+      debug:
+        optional: true
+    dev: true
+
+  /follow-redirects@1.15.6(debug@4.3.4):
+    resolution: {integrity: sha512-wWN62YITEaOpSK584EZXJafH1AGpO8RVgElfkuXbTOrPX4fIfOyEpW/CsiNd8JdYrAoOvafRTOEnvsO++qCqFA==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -7759,6 +7769,7 @@ packages:
         optional: true
     dependencies:
       debug: 4.3.4(supports-color@5.5.0)
+    dev: false
 
   /for-each@0.3.3:
     resolution: {integrity: sha512-jqYfLp7mo9vIyQf8ykW2v7A+2N4QjeCeI5+Dz9XraiO1ign81wjiH7Fb9vSOWvQfNtmSa4H2RoQTrrXivdUZmw==}
@@ -8246,7 +8257,7 @@ packages:
     engines: {node: '>=8.0.0'}
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.15.3(debug@4.3.4)
+      follow-redirects: 1.15.3
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug
@@ -9839,15 +9850,15 @@ packages:
       whatwg-url: 13.0.0
     dev: false
 
-  /mongodb-memory-server-core@9.1.7:
-    resolution: {integrity: sha512-q8geqCmt5hGuxaDhRo03ZUB0ITr6lnJ3jffdNiC4nDq13WbHUfY2A1RQq3OHDbdrY6aRYvZphx2bcXYBFRis3A==}
+  /mongodb-memory-server-core@9.1.8:
+    resolution: {integrity: sha512-iCWwaP7De4lm1lRCUKB2ffUYr6GB0I/cj6fK0NV9dgwc9fA3xapHTTT/cPYRNx29M5gmAOSaOpUgjP7i2GZ/LQ==}
     engines: {node: '>=14.20.1'}
     dependencies:
       async-mutex: 0.4.0
       camelcase: 6.3.0
       debug: 4.3.4(supports-color@5.5.0)
       find-cache-dir: 3.3.2
-      follow-redirects: 1.15.3(debug@4.3.4)
+      follow-redirects: 1.15.6(debug@4.3.4)
       https-proxy-agent: 7.0.2
       mongodb: 5.9.1
       new-find-package-json: 2.0.0

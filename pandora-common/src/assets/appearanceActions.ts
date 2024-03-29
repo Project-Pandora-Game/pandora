@@ -406,7 +406,8 @@ export function DoAppearanceAction(
 			if (current?.allowLeaveAt != null && Date.now() < current.allowLeaveAt)
 				return processingContext.invalid();
 
-			const removeAllowLeaveAt = !!playerRestrictionManager.spaceContext.features.includes('development');
+			const { features, development } = playerRestrictionManager.spaceContext;
+			const removeAllowLeaveAt = features.includes('development') && development?.disableSafemodeCooldown === true;
 
 			if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) =>
 				character.produceWithRestrictionOverride(action.mode, removeAllowLeaveAt),

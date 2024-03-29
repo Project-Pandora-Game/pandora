@@ -32,6 +32,10 @@ export const EDITOR_SPACE_CONTEXT = {
 		'allowPronounChanges',
 	],
 	isAdmin: () => true,
+	development: {
+		autoAdmin: true,
+		disableSafemodeCooldown: true,
+	},
 } as const satisfies Immutable<ActionSpaceContext>;
 
 export function EditorWardrobeContextProvider({ children }: { children: ReactNode; }): ReactElement {

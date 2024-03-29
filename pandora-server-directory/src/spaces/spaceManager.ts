@@ -176,8 +176,23 @@ export const SpaceManager = new class SpaceManagerClass implements Service {
 			return null;
 		}
 
-		// Drop development data if development feature is disabled
+		// Remove development feature if no developer owner is found
 		// This is done before the equality check to also purge it from DB
+		if (result.data.config.features.includes('development')) {
+			let hasAuthorizedOwner = false;
+			for (const owner of result.data.owners) {
+				const account = await accountManager.loadAccountById(owner);
+				if (account?.roles.isAuthorized('developer')) {
+					hasAuthorizedOwner = true;
+					break;
+				}
+			}
+			if (!hasAuthorizedOwner) {
+				result.data.config.features = result.data.config.features.filter((f) => f !== 'development');
+				logger.warning(`Space [${data.id} - ${data.config.name}] had development feature enabled, but no developer owner was found. Disabling development feature.`);
+			}
+		}
+		// Drop development data if development feature is disabled
 		if (result.data.config.development != null && !result.data.config.features.includes('development')) {
 			delete result.data.config.development;
 		}

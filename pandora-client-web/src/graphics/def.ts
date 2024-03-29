@@ -64,9 +64,6 @@ export function useComputedLayerPriority({ view, armsOrder, legsOrder }: Immutab
 			`ARM_${arms[1]}_BACK`,
 			`ABOVE_ARM_${arms[1]}_BACK`,
 
-			'BELOW_BODY_SOLES',
-			'BODY_SOLES',
-
 			`BELOW_LEG_SOLE_${legs[0]}`,
 			`LEG_SOLE_${legs[0]}`,
 			`BELOW_LEG_${legs[0]}`,
@@ -119,7 +116,6 @@ export const PRIORITY_ORDER_REVERSE_PRIORITIES: ReadonlySet<ComputedLayerPriorit
 	'BACKGROUND',
 	'BELOW_BACK_HAIR',
 	'BACK_HAIR',
-	'BELOW_BODY_SOLES',
 	'BELOW_LEG_SOLE_LEFT',
 	'BELOW_LEG_SOLE_RIGHT',
 	'BELOW_LEG_LEFT',

@@ -30,7 +30,7 @@ export type SpaceFeature = z.infer<typeof SpaceFeatureSchema>;
 
 export type ActionSpaceContext = {
 	features: readonly SpaceFeature[];
-	development: Readonly<SpaceDirectoryConfig['development']>;
+	development: Readonly<SpaceDevelopmentConfig> | undefined;
 	isAdmin(account: AccountId): boolean;
 };
 
@@ -73,20 +73,23 @@ export type SpaceInvite = z.infer<typeof SpaceInviteSchema>;
 export const SpaceInviteCreateSchema = SpaceInviteSchema.omit({ id: true, uses: true, createdBy: true });
 export type SpaceInviteCreate = z.infer<typeof SpaceInviteCreateSchema>;
 
+export const SpaceDevelopmentConfigSchema = z.object({
+	/** The id of the shard that the room will be created on */
+	shardId: z.string().optional(),
+	/** Automatically grants admin to every developer on enter */
+	autoAdmin: z.boolean().optional(),
+	/** Disable safemode cooldown for everyone inside the space */
+	disableSafemodeCooldown: z.boolean().optional(),
+});
+export type SpaceDevelopmentConfig = z.infer<typeof SpaceDevelopmentConfigSchema>;
+
 export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 	/** The requested features */
 	features: z.array(SpaceFeatureSchema).max(SpaceFeatureSchema.options.length),
 	/**
 	 * Development options, may get ignored if requested features don't include 'development'
 	 */
-	development: z.object({
-		/** The id of the shard that the room will be created on */
-		shardId: z.string().optional(),
-		/** Automatically grants admin to every developer on enter */
-		autoAdmin: z.boolean().optional(),
-		/** Disable safemode cooldown for everyone inside the space */
-		disableCooldown: z.boolean().optional(),
-	}).optional(),
+	development: SpaceDevelopmentConfigSchema.optional(),
 	/** The banned account ids */
 	banned: AccountIdSchema.array(),
 	/** The admin account ids */

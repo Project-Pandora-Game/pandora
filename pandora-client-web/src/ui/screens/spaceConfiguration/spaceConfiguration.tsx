@@ -340,13 +340,13 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						</div>
 						<div className='input-line'>
 							<label>Bypass safemode cooldown</label>
-							<input type='checkbox' checked={ currentConfig.development?.disableCooldown ?? false } onChange={
+							<input type='checkbox' checked={ currentConfig.development?.disableSafemodeCooldown ?? false } onChange={
 								(event) => {
-									const disableCooldown = event.target.checked;
+									const disableSafemodeCooldown = event.target.checked;
 									setModifiedData({
 										development: {
 											...currentConfig.development,
-											disableCooldown,
+											disableSafemodeCooldown,
 										},
 									});
 								}

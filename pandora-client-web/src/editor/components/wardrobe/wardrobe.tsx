@@ -34,7 +34,7 @@ export const EDITOR_SPACE_CONTEXT = {
 	isAdmin: () => true,
 	development: {
 		autoAdmin: true,
-		disableCooldown: true,
+		disableSafemodeCooldown: true,
 	},
 } as const satisfies Immutable<ActionSpaceContext>;
 

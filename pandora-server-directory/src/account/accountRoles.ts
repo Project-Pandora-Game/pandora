@@ -1,15 +1,15 @@
-import { AccountRole, ACCOUNT_ROLES_CONFIG, GetLogger, IAccountRoleInfo, IAccountRoleManageInfo, IsAuthorized, Logger } from 'pandora-common';
-import { GetDatabase } from '../database/databaseProvider';
-import type { Account } from './account';
-import { ENV } from '../config';
-import { GitHubInfo } from '../database/databaseStructure';
-const { AUTO_ADMIN_ACCOUNTS } = ENV;
-
 import _ from 'lodash';
+import { ACCOUNT_ROLES_CONFIG, AccountRole, GetLogger, IAccountRoleInfo, IAccountRoleManageInfo, IsAuthorized, Logger } from 'pandora-common';
+import { ENV } from '../config';
+import { GetDatabase } from '../database/databaseProvider';
+import { GitHubInfo } from '../database/databaseStructure';
+import type { Account } from './account';
+import type { ActorRoles } from './actorIdentity';
+const { AUTO_ADMIN_ACCOUNTS } = ENV;
 
 const logger = GetLogger('AccountRoles');
 
-export class AccountRoles {
+export class AccountRoles implements ActorRoles {
 	private readonly _account: Account;
 	private readonly _logger: Logger;
 	/** Roles saved persistently into database */

@@ -659,7 +659,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		return {
 			result: 'ok',
-			...result,
+			info: result.info,
+			token: result.token,
 		};
 	}
 
@@ -686,7 +687,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		return {
 			result: 'ok',
-			...result,
+			info: result.info,
+			token: result.token,
 		};
 	}
 

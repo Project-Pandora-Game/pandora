@@ -338,6 +338,20 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 								}
 							} />
 						</div>
+						<div className='input-line'>
+							<label>Bypass safemode cooldown</label>
+							<input type='checkbox' checked={ currentConfig.development?.disableCooldown ?? false } onChange={
+								(event) => {
+									const disableCooldown = event.target.checked;
+									setModifiedData({
+										development: {
+											...currentConfig.development,
+											disableCooldown,
+										},
+									});
+								}
+							} />
+						</div>
 					</div>
 				}
 				<Button onClick={ () => void create(currentConfig) }>Create space</Button>

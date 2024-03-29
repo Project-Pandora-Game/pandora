@@ -576,6 +576,7 @@ export function useActionSpaceContext(): ActionSpaceContext {
 			}
 			return IsSpaceAdmin(info.config, { id: accountId });
 		},
+		development: info.config.development,
 	}), [info, playerAccount]);
 }
 

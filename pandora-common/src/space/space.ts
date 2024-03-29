@@ -30,6 +30,7 @@ export type SpaceFeature = z.infer<typeof SpaceFeatureSchema>;
 
 export type ActionSpaceContext = {
 	features: readonly SpaceFeature[];
+	development: Readonly<SpaceDirectoryConfig['development']>;
 	isAdmin(account: AccountId): boolean;
 };
 
@@ -83,6 +84,8 @@ export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 		shardId: z.string().optional(),
 		/** Automatically grants admin to every developer on enter */
 		autoAdmin: z.boolean().optional(),
+		/** Disable safemode cooldown for everyone inside the space */
+		disableCooldown: z.boolean().optional(),
 	}).optional(),
 	/** The banned account ids */
 	banned: AccountIdSchema.array(),

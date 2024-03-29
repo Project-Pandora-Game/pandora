@@ -181,6 +181,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		return {
 			features: this.config.features,
 			isAdmin: (account) => Array.from(this.characters).some((character) => character.accountId === account && this.isAdmin(character)),
+			development: this.config.development,
 		};
 	}
 

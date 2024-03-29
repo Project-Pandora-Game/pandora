@@ -5,7 +5,7 @@ import type { RoomBackgroundData } from '../space/room';
 import type { Satisfies } from '../utility';
 import { HexRGBAColorString } from '../validation';
 import type { AssetId } from './base';
-import type { BoneDefinitionCompressed, BoneName, CharacterView, Condition, Coordinates, LayerImageOverride, LegsPose } from './graphics';
+import type { BoneDefinitionCompressed, BoneName, CharacterView, Condition, Coordinates, LayerImageOverride, LegsOrder, LegsPose } from './graphics';
 import type { AssetModuleDefinition } from './modules';
 import type { AssetLockProperties, AssetProperties } from './properties';
 import type { RoomDeviceProperties } from './roomDeviceProperties';
@@ -38,6 +38,7 @@ export interface AssetDefinitionPoseLimit<A extends AssetDefinitionExtraArgs = A
 	leftArm?: Partial<AppearanceArmPose>;
 	rightArm?: Partial<AppearanceArmPose>;
 	armsOrder?: Partial<AppearanceArmsOrder>;
+	legsOrder?: LegsOrder;
 	legs?: LegsPose | LegsPose[];
 	view?: CharacterView;
 }

@@ -14,7 +14,7 @@ import { AppearanceItems, CharacterAppearanceLoadAndValidate, ValidateAppearance
 import type { Asset } from './asset';
 import type { AssetManager } from './assetManager';
 import { WearableAssetType } from './definitions';
-import { CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
+import { CharacterViewSchema, LegsOrderSchema, LegsPoseSchema } from './graphics/graphics';
 import { ItemRoomDevice, ItemTemplateSchema, RoomDeviceDeploymentChange, RoomDeviceDeploymentChangeSchema } from './item';
 import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemId, ItemIdSchema } from './item/base';
 import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure } from './modules';
@@ -69,6 +69,7 @@ export const AppearanceActionPose = z.object({
 	leftArm: AppearanceArmPoseSchema.partial().optional(),
 	rightArm: AppearanceArmPoseSchema.partial().optional(),
 	armsOrder: AppearanceArmsOrderSchema.partial().optional(),
+	legsOrder: LegsOrderSchema.optional(),
 	legs: LegsPoseSchema.optional(),
 	view: CharacterViewSchema.optional(),
 });

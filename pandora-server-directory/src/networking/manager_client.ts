@@ -198,9 +198,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		// Verify account is activated or activate it
 		if (!account.secure.isActivated()) {
 			if (verificationToken === undefined) {
+				AUDIT_LOG.verbose(`${connection.id} failed login: account not active`);
 				return { result: 'verificationRequired' };
 			}
 			if (!await account.secure.activateAccount(verificationToken)) {
+				AUDIT_LOG.verbose(`${connection.id} failed account activation: invalid token`);
 				return { result: 'invalidToken' };
 			}
 		}
@@ -220,6 +222,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
+		logger.verbose(`${connection.id} logged out (${logout.type})`);
 		const account = connection.account;
 
 		switch (logout.type) {
@@ -241,8 +244,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		await account.doCleanup();
-
-		logger.verbose(`${connection.id} logged out`);
 	}
 
 	private async handleRegister({ username, email, passwordSha512, betaKey, captchaToken }: IClientDirectoryArgument['register'], connection: ClientConnection): IClientDirectoryPromiseResult['register'] {
@@ -262,11 +263,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const result = await accountManager.createAccount(username, passwordSha512, email);
 		if (typeof result === 'string') {
 			if (BETA_KEY_ENABLED && betaKey) await BetaKeyStore.free(betaKey);
-			logger.debug(`${connection.id} failed account creation for the following reason: ${result}`);
+			logger.verbose(`${connection.id} failed account creation for the following reason: ${result}`);
 			return { result };
 		}
 
-		AUDIT_LOG.verbose(`${connection.id} registered the new account: ${result.username}`);
 		return { result: 'ok' };
 	}
 
@@ -279,6 +279,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'invalidCaptcha' };
 		}
 
+		logger.verbose(`${connection.id} requested a verification email resend`);
 		await AccountProcedureResendVerifyEmail(email);
 
 		return { result: 'maybeSent' };
@@ -293,7 +294,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'invalidCaptcha' };
 		}
 
-		AUDIT_LOG.verbose(`${connection.id} requested a password reset`);
+		logger.verbose(`${connection.id} requested a password reset`);
 		await AccountProcedurePasswordReset(email);
 
 		return { result: 'maybeSent' };
@@ -309,7 +310,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'unknownCredentials' };
 		}
 
-		AUDIT_LOG.verbose(`${connection.id} successfully completed the password reset for the account: ${username}`);
 		return { result: 'ok' };
 	}
 
@@ -322,7 +322,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'invalidPassword' };
 		}
 
-		AUDIT_LOG.verbose(`${connection.id} successfully completed the password change`);
 		return { result: 'ok' };
 	}
 
@@ -341,8 +340,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		const char = await connection.account.createCharacter();
-		if (!char)
+		if (!char) {
+			logger.verbose(`${connection.id} failed account creation: maxCharactersReached`);
 			return { result: 'maxCharactersReached' };
+		}
 
 		const loadedCharacter = await char.requestLoad();
 
@@ -446,12 +447,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		// Only developers can create rooms with development mode enabled
 		if (spaceConfig.features.includes('development') && !connection.account.roles.isAuthorized('developer')) {
+			logger.verbose(`${connection.id} attempted to create a development space witout being a developer`);
 			return {
 				result: 'failed',
 			};
 		}
 		// No development options allowed if the development feature is not in use
 		if (spaceConfig.development != null && !spaceConfig.features.includes('development')) {
+			logger.verbose(`${connection.id} attempted to create a space with development data without development feature`);
 			return {
 				result: 'failed',
 			};
@@ -460,6 +463,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const space = await SpaceManager.createSpace(spaceConfig, [connection.account.id]);
 
 		if (typeof space === 'string') {
+			logger.verbose(`${connection.id} failed to create a space: ${space}`);
 			return { result: space };
 		}
 
@@ -497,6 +501,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		if (!connection.character.space.isAdmin(connection.account)) {
+			logger.verbose(`${connection.id} failed to update a space: not a space admin`);
 			return { result: 'noAccess' };
 		}
 
@@ -514,6 +519,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		if (!connection.character.space.isAdmin(connection.account)) {
+			logger.verbose(`${connection.id} failed to perform admin action: not a space admin`);
 			return;
 		}
 
@@ -536,6 +542,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const space = await SpaceManager.loadSpace(id);
 
 		if (space == null) {
+			logger.verbose(`${connection.id} failed to give up space ownership: not a space owner`);
 			return { result: 'notAnOwner' };
 		}
 
@@ -562,9 +569,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			}
 			case 'create': {
 				const result = await connection.character.space.createInvite(connection.character, req.data);
-				if (typeof result === 'string')
+				if (typeof result === 'string') {
+					logger.verbose(`${connection.id} failed to create a space invite: ${result}`);
 					return { result };
+				}
 
+				logger.debug(`${connection.id} created a ${req.data.type} space invite`);
 				return {
 					result: 'created',
 					invite: result,
@@ -594,6 +604,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'ok' };
 		}
 
+		logger.verbose(`${connection.id} failed to save stored outfits: ${result}`);
 		return {
 			result: 'failed',
 			reason: result,
@@ -653,7 +664,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 	}
 
-	private async handleManageGetAccountRoles({ id }: IClientDirectoryArgument['manageGetAccountRoles']): IClientDirectoryPromiseResult['manageGetAccountRoles'] {
+	private async handleManageGetAccountRoles({ id }: IClientDirectoryArgument['manageGetAccountRoles'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryPromiseResult['manageGetAccountRoles'] {
+		logger.verbose(`[Management] ${connection.account.username} (${connection.account.id}): manageGetAccountRoles(id=${id})`);
 		const account = await accountManager.loadAccountById(id);
 		if (!account)
 			return { result: 'notFound' };
@@ -665,6 +677,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private async handleManageSetAccountRole({ id, role, expires }: IClientDirectoryArgument['manageSetAccountRole'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryPromiseResult['manageSetAccountRole'] {
+		logger.verbose(`[Management] ${connection.account.username} (${connection.account.id}): manageSetAccountRole(id=${id}, role=${role}, expires=${expires})`);
 		const account = await accountManager.loadAccountById(id);
 		if (!account)
 			return { result: 'notFound' };
@@ -674,6 +687,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private async handleManageCreateShardToken({ type, expires }: IClientDirectoryArgument['manageCreateShardToken'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryPromiseResult['manageCreateShardToken'] {
+		logger.verbose(`[Management] ${connection.account.username} (${connection.account.id}): manageCreateShardToken(type=${type}, expires=${expires})`);
 		const result = await ShardTokenStore.create(connection.account, { type, expires });
 		if (typeof result === 'string')
 			return { result };
@@ -686,22 +700,27 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private async handleManageInvalidateShardToken({ id }: IClientDirectoryArgument['manageInvalidateShardToken'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryPromiseResult['manageInvalidateShardToken'] {
-		return { result: await ShardTokenStore.revoke(connection.account, id) };
+		logger.verbose(`[Management] ${connection.account.username} (${connection.account.id}): manageInvalidateShardToken(id=${id})`);
+		return {
+			result: await ShardTokenStore.revoke(connection.account, id),
+		};
 	}
 
-	private handleManageListShardTokens(_: IClientDirectoryArgument['manageListShardTokens'], _connection: ClientConnection & { readonly account: Account; }): IClientDirectoryResult['manageListShardTokens'] {
+	private handleManageListShardTokens(_: IClientDirectoryArgument['manageListShardTokens'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryResult['manageListShardTokens'] {
+		logger.verbose(`[Management] ${connection.account.username} (${connection.account.id}): manageListShardTokens()`);
 		const info = ShardTokenStore.list()
 			.map<IShardTokenConnectInfo>((token) => {
-				const connection = ShardManager.getShard(token.id)?.shardConnection;
+				const shardConnection = ShardManager.getShard(token.id)?.shardConnection;
 				return {
 					...token,
-					connected: connection?.connectionTime,
+					connected: shardConnection?.connectionTime,
 				};
 			});
 		return { info };
 	}
 
 	private async handleManageCreateBetaKey({ expires, maxUses }: IClientDirectoryArgument['manageCreateBetaKey'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryPromiseResult['manageCreateBetaKey'] {
+		logger.verbose(`[Management] ${connection.account.username} (${connection.account.id}): manageCreateBetaKey(expires=${expires}, maxUses=${maxUses})`);
 		const result = await BetaKeyStore.create(connection.account, { expires, maxUses });
 		if (typeof result === 'string') {
 			logger.debug(`${connection.id} failed to create a beta key due to missing admin rights`);
@@ -716,13 +735,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
-	private handleManageListBetaKeys(_: IClientDirectoryArgument['manageListBetaKeys'], _connection: ClientConnection & { readonly account: Account; }): IClientDirectoryResult['manageListBetaKeys'] {
+	private handleManageListBetaKeys(_: IClientDirectoryArgument['manageListBetaKeys'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryResult['manageListBetaKeys'] {
+		logger.verbose(`[Management] ${connection.account.username} (${connection.account.id}): manageListBetaKeys()`);
 		const keys = BetaKeyStore.list();
 		return { keys };
 	}
 
 	private async handleManageInvalidateBetaKey({ id }: IClientDirectoryArgument['manageInvalidateBetaKey'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryPromiseResult['manageInvalidateBetaKey'] {
-		return { result: await BetaKeyStore.revoke(connection.account, id) };
+		logger.verbose(`[Management] ${connection.account.username} (${connection.account.id}): manageInvalidateBetaKey(id=${id})`);
+		return {
+			result: await BetaKeyStore.revoke(connection.account, id),
+		};
 	}
 
 	//#region Direct Messages
@@ -773,7 +796,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		const token = await connection.account.secure.extendLoginToken(passwordSha512, connection.loginTokenId);
+		const account = connection.account;
+		const token = await account.secure.extendLoginToken(passwordSha512, connection.loginTokenId);
+		AUDIT_LOG.verbose(`${connection.id} extended login token for ${account.username}`);
+
 		return { result: token == null ? 'invalidPassword' : 'ok' };
 	}
 
@@ -844,6 +870,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.account)
 			throw new BadMessageError();
 
+		logger.verbose(`${connection.account.username} (${connection.account.id}) updated account profile description`);
 		await connection.account.updateProfileDescription(profileDescription);
 
 		return { result: 'ok' };
@@ -861,6 +888,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			case 'decline':
 				return { result: await connection.account.contacts.declineFriendRequest(id) };
 			case 'initiate':
+				logger.verbose(`${connection.account.username} (${connection.account.id}) initiated a friend request towards ${id}`);
 				return { result: await connection.account.contacts.initiateFriendRequest(id) };
 			default:
 				AssertNever(action);

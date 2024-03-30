@@ -1,4 +1,5 @@
 import { AccountId, CloneDeepMutable, DEFAULT_BACKGROUND, SpaceDirectoryConfig } from 'pandora-common';
+import { ACTOR_PANDORA } from '../../src/account/actorPandora';
 
 const TEST_SPACE_DEFAULTS: Readonly<SpaceDirectoryConfig> = {
 	name: '',
@@ -39,4 +40,4 @@ export const TEST_SPACE_DEV: Readonly<SpaceDirectoryConfig> = {
 	},
 };
 
-export const TEST_SPACE_PANDORA_OWNED: readonly AccountId[] = [0];
+export const TEST_SPACE_PANDORA_OWNED: readonly AccountId[] = [ACTOR_PANDORA.id];

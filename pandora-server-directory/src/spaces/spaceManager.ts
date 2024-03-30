@@ -4,6 +4,7 @@ import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPA
 import promClient from 'prom-client';
 import { Account } from '../account/account';
 import { accountManager } from '../account/accountManager';
+import { ACTOR_PANDORA } from '../account/actorPandora';
 import { CharacterInfo } from '../account/character';
 import { GetDatabase } from '../database/databaseProvider';
 import { ConnectionManagerClient } from '../networking/manager_client';
@@ -181,7 +182,8 @@ export const SpaceManager = new class SpaceManagerClass implements Service {
 		if (result.data.config.features.includes('development')) {
 			let hasAuthorizedOwner = false;
 			for (const owner of result.data.owners) {
-				const account = await accountManager.loadAccountById(owner);
+				// Pandora itself can own some spaces (such as during testing), so account for that
+				const account = owner === ACTOR_PANDORA.id ? ACTOR_PANDORA : await accountManager.loadAccountById(owner);
 				if (account?.roles.isAuthorized('developer')) {
 					hasAuthorizedOwner = true;
 					break;

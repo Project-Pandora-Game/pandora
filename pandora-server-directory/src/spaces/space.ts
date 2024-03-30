@@ -152,9 +152,11 @@ export class Space {
 		}
 
 		if (this._owners.size === 0) {
+			this.logger.info(`Removed owner ${accountId}, no owners left - deleting`);
 			// Space without owners gets destroyed
 			await this.delete();
 		} else {
+			this.logger.info(`Removed owner ${accountId}`);
 			// Space with remaining owners only propagates the change to shard and clients
 			await this._assignedShard?.update('spaces');
 			// TODO: Make an announcement of the change

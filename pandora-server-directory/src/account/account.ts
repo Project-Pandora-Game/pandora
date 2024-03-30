@@ -300,6 +300,8 @@ export class Account implements ActorIdentity {
 		const character = new CharacterInfo(info, this);
 		this.characters.set(info.id, character);
 
+		this.logger.info(`Created a new character ${info.id}`);
+
 		this.onCharacterListChange();
 
 		return character;
@@ -309,6 +311,8 @@ export class Account implements ActorIdentity {
 		const character = this.characters.get(id);
 		if (!character || character.isInUse())
 			return false;
+
+		this.logger.info(`Deleting character ${id}`);
 
 		this.characters.delete(id);
 		await GetDatabase().deleteCharacter(this.data.id, id);

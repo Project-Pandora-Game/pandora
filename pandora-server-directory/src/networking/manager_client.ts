@@ -13,6 +13,7 @@ import { ShardTokenStore } from '../shard/shardTokenStore';
 import { SpaceManager } from '../spaces/spaceManager';
 import { Sleep } from '../utility';
 import type { ClientConnection } from './connection_client';
+import { AUDIT_LOG } from '../logging';
 const { BETA_KEY_ENABLED, HCAPTCHA_SECRET_KEY, HCAPTCHA_SITE_KEY } = ENV;
 
 /** Time (in ms) of how often the directory should send status updates */
@@ -181,14 +182,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	private async handleLogin({ username, passwordSha512, verificationToken, secondFactor }: IClientDirectoryArgument['login'], connection: ClientConnection): IClientDirectoryPromiseResult['login'] {
 		{
 			const r = await LoginManager.testOptionalCaptcha(secondFactor);
-			if (r != null)
+			if (r != null) {
+				logger.debug(`${connection.id} failed captcha check during login: ${r.result}`);
 				return r;
+			}
 		}
 		// Find account by username
 		const account = await accountManager.loadAccountByUsername(username);
 		// Verify the password
 		if (!account || !await account.secure.verifyPassword(passwordSha512)) {
 			LoginManager.loginFailed();
+			AUDIT_LOG.verbose(`${connection.id} failed login: ${account ? 'invalid password' : 'invalid username'}`);
 			return { result: 'unknownCredentials' };
 		}
 		// Verify account is activated or activate it
@@ -203,7 +207,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		// Generate new auth token for new login
 		const token = await account.secure.generateNewLoginToken();
 		// Set the account for the connection and return result
-		logger.verbose(`${connection.id} logged in as ${account.data.username}`);
+		AUDIT_LOG.verbose(`${connection.id} logged in as ${account.data.username}`);
 		connection.setAccount(account, token);
 		return {
 			result: 'ok',
@@ -245,18 +249,24 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
-		if (!await TestCaptcha(captchaToken))
+		if (!await TestCaptcha(captchaToken)) {
+			logger.debug(`${connection.id} failed captcha check during registration`);
 			return { result: 'invalidCaptcha' };
+		}
 
-		if (BETA_KEY_ENABLED && (!betaKey || !await BetaKeyStore.use(betaKey)))
+		if (BETA_KEY_ENABLED && (!betaKey || !await BetaKeyStore.use(betaKey))) {
+			logger.debug(`${connection.id} failed beta key check during registration`);
 			return { result: 'invalidBetaKey' };
+		}
 
 		const result = await accountManager.createAccount(username, passwordSha512, email);
 		if (typeof result === 'string') {
 			if (BETA_KEY_ENABLED && betaKey) await BetaKeyStore.free(betaKey);
+			logger.debug(`${connection.id} failed account creation for the following reason: ${result}`);
 			return { result };
 		}
 
+		AUDIT_LOG.verbose(`${connection.id} registered the new account: ${result.username}`);
 		return { result: 'ok' };
 	}
 
@@ -264,8 +274,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
-		if (!await TestCaptcha(captchaToken))
+		if (!await TestCaptcha(captchaToken)) {
+			logger.debug(`${connection.id} failed captcha check while requesting the resending of the verification mail`);
 			return { result: 'invalidCaptcha' };
+		}
 
 		await AccountProcedureResendVerifyEmail(email);
 
@@ -276,9 +288,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
-		if (!await TestCaptcha(captchaToken))
+		if (!await TestCaptcha(captchaToken)) {
+			logger.debug(`${connection.id} failed captcha check while requesting a password reset`);
 			return { result: 'invalidCaptcha' };
+		}
 
+		AUDIT_LOG.verbose(`${connection.id} requested a password reset`);
 		await AccountProcedurePasswordReset(email);
 
 		return { result: 'maybeSent' };
@@ -289,9 +304,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		const account = await accountManager.loadAccountByUsername(username);
-		if (!await account?.secure.finishPasswordReset(token, passwordSha512))
+		if (!await account?.secure.finishPasswordReset(token, passwordSha512)) {
+			logger.debug(`${connection.id} failed to finish the password reset due to invalid credentials`);
 			return { result: 'unknownCredentials' };
+		}
 
+		AUDIT_LOG.verbose(`${connection.id} successfully completed the password reset for the account: ${username}`);
 		return { result: 'ok' };
 	}
 
@@ -299,9 +317,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		if (!await connection.account.secure.changePassword(passwordSha512Old, passwordSha512New, cryptoKey))
+		if (!await connection.account.secure.changePassword(passwordSha512Old, passwordSha512New, cryptoKey)) {
+			logger.debug(`${connection.id} failed to change their password`);
 			return { result: 'invalidPassword' };
+		}
 
+		AUDIT_LOG.verbose(`${connection.id} successfully completed the password change`);
 		return { result: 'ok' };
 	}
 
@@ -682,9 +703,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 	private async handleManageCreateBetaKey({ expires, maxUses }: IClientDirectoryArgument['manageCreateBetaKey'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryPromiseResult['manageCreateBetaKey'] {
 		const result = await BetaKeyStore.create(connection.account, { expires, maxUses });
-		if (typeof result === 'string')
+		if (typeof result === 'string') {
+			logger.debug(`${connection.id} failed to create a beta key due to missing admin rights`);
 			return { result };
+		}
 
+		AUDIT_LOG.verbose(`${result.info.created.username} created a beta key with ${result.info.maxUses ?? '1'} use(s)`);
 		return {
 			result: 'ok',
 			info: result.info,

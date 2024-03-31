@@ -33,7 +33,7 @@ import { AccountDirectMessages } from './accountDirectMessages';
 import { AccountRoles } from './accountRoles';
 import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import type { ActorIdentity } from './actorIdentity';
-import { CharacterInfo } from './character';
+import { CharacterInfo, type Character } from './character';
 
 /** Currently logged in or recently used account */
 export class Account implements ActorIdentity {
@@ -307,15 +307,19 @@ export class Account implements ActorIdentity {
 		return character;
 	}
 
-	public async deleteCharacter(id: CharacterId): Promise<boolean> {
-		const character = this.characters.get(id);
-		if (!character || character.isInUse())
+	@AsyncSynchronized('object')
+	public async deleteCharacter(character: Character, passwordSha512: string): Promise<boolean> {
+		Assert(character.baseInfo.account === this);
+		Assert(this.characters.has(character.baseInfo.id));
+
+		if (!await this.secure.verifyPassword(passwordSha512))
 			return false;
 
-		this.logger.info(`Deleting character ${id}`);
+		this.logger.info(`Deleting character ${character.baseInfo.id}`);
+		await character.disconnect();
 
-		this.characters.delete(id);
-		await GetDatabase().deleteCharacter(this.data.id, id);
+		this.characters.delete(character.baseInfo.id);
+		await GetDatabase().deleteCharacter(this.data.id, character.baseInfo.id);
 
 		this.onCharacterListChange();
 

@@ -3,6 +3,7 @@ import { ClientConnection } from '../../src/networking/connection_client';
 import { ConnectionManagerClient } from '../../src/networking/manager_client';
 import { TestMockAccount, TestMockCharacter, TestMockDb } from '../utils';
 import { AccountToken, AccountTokenReason } from '../../src/account/accountSecure';
+import { nanoid } from 'nanoid';
 
 describe('ClientConnection', () => {
 	let connection: MockConnection<IClientDirectory, IDirectoryClient>;
@@ -134,7 +135,8 @@ describe('ClientConnection', () => {
 		});
 
 		it('Sets and removes character and associated connection', async () => {
-			const account = await TestMockAccount();
+			const password = nanoid();
+			const account = await TestMockAccount({ password });
 			const characterInfo = await TestMockCharacter(account);
 			const character = await characterInfo.requestLoad();
 			const client = new ClientConnection(server, connection.connect(), {});
@@ -151,11 +153,12 @@ describe('ClientConnection', () => {
 			expect(character.assignedClient).toBe(null);
 
 			// Cleanup
-			await account.deleteCharacter(characterInfo.id);
+			await account.deleteCharacter(character, password);
 		});
 
 		it('Swaps characters', async () => {
-			const account = await TestMockAccount();
+			const password = nanoid();
+			const account = await TestMockAccount({ password });
 			const characterInfo1 = await TestMockCharacter(account);
 			const character1 = await characterInfo1.requestLoad();
 			const characterInfo2 = await TestMockCharacter(account);
@@ -177,12 +180,13 @@ describe('ClientConnection', () => {
 
 			// Cleanup
 			client.setCharacter(null);
-			await account.deleteCharacter(characterInfo1.id);
-			await account.deleteCharacter(characterInfo2.id);
+			await account.deleteCharacter(character1, password);
+			await account.deleteCharacter(character2, password);
 		});
 
 		it('Fails when character is in use', async () => {
-			const account = await TestMockAccount();
+			const password = nanoid();
+			const account = await TestMockAccount({ password });
 			const characterInfo = await TestMockCharacter(account);
 			const character = await characterInfo.requestLoad();
 			const client = new ClientConnection(server, connection.connect(), {});
@@ -209,7 +213,7 @@ describe('ClientConnection', () => {
 
 			// Cleanup
 			client.setCharacter(null);
-			await account.deleteCharacter(characterInfo.id);
+			await account.deleteCharacter(character, password);
 		});
 
 		it('Removes character after disconnect', async () => {
@@ -263,7 +267,8 @@ describe('ClientConnection', () => {
 		});
 
 		it('Sends state message with character', async () => {
-			const account = await TestMockAccount();
+			const password = nanoid();
+			const account = await TestMockAccount({ password });
 			const characterInfo = await TestMockCharacter(account);
 			const character = await characterInfo.requestLoad();
 			const client = new ClientConnection(server, connection.connect(), {});
@@ -281,7 +286,7 @@ describe('ClientConnection', () => {
 
 			// Cleanup
 			client.setCharacter(null);
-			await account.deleteCharacter(characterInfo.id);
+			await account.deleteCharacter(character, password);
 		});
 	});
 });

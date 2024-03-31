@@ -291,8 +291,9 @@ export const ClientDirectorySchema = {
 	deleteCharacter: {
 		request: z.object({
 			id: CharacterIdSchema,
+			passwordSha512: PasswordSha512Schema,
 		}),
-		response: ZodCast<{ result: 'ok' | 'characterInUse'; }>(),
+		response: ZodCast<{ result: 'ok' | 'invalidPassword'; }>(),
 	},
 	//#endregion
 

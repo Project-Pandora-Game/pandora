@@ -19,6 +19,15 @@ $button-themes: (
 		focus-outline: $white,
 		icon-filter: invert(100%)
 	),
+	danger: (
+		background: $grey-darkest,
+		border: darkred,
+		color: red,
+		background-hover: $grey-dark,
+		color-hover: red,
+		focus-outline: red,
+		icon-filter: none
+	),
 );
 
 .Button {
@@ -81,5 +90,13 @@ $button-themes: (
 			width: 100%;
 			height: 100%;
 		}
+	}
+
+	&.danger {
+		font-weight: bold;
+	}
+
+	&.danger.fadeDisabled:disabled {
+		filter: grayscale(20%) opacity(80%);
 	}
 }

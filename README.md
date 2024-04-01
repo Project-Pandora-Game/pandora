@@ -12,7 +12,7 @@
 ### Prerequisites
 
 Required software:
- - Node.js v18+
+ - Node.js v20+
  - Either corepack enabled (recommended) or manually installed pnpm
  - Git
  - Visual Studio Code (recommended)

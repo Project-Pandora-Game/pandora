@@ -15,8 +15,8 @@
 ## Development
 ### Quick start
 #### Requirements
-- [Node][node] version 18 or above:
-- Enable pnpm through corepack which is included in node 18:
+- [Node][node] version 20 or above:
+- Enable pnpm through corepack which is included in node 20:
 ```
 corepack enable
 ```

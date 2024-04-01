@@ -5,7 +5,7 @@
 	"repository": "git@github.com:Project-Pandora-Game/pandora-common.git",
 	"license": "LGPL-3.0-or-later",
 	"engines": {
-		"node": ">=18.x"
+		"node": ">=20.x"
 	},
 	"main": "./dist/index.js",
 	"types": "./dist/index.d.ts",
@@ -34,7 +34,7 @@
 	"dependencies": {
 		"@types/async-lock": "1.4.2",
 		"@types/lodash": "4.17.0",
-		"@types/node": "18.19.28",
+		"@types/node": "20.12.2",
 		"async-lock": "1.4.1",
 		"immer": "10.0.4",
 		"lodash": "4.17.21",

@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm run build
@@ -33,7 +33,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
       - run: corepack enable
       - run: pnpm install --no-lockfile
         working-directory: ./.github/workflows/common-install-check
@@ -46,7 +46,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm run lint
@@ -59,7 +59,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm run type-check:test
@@ -73,7 +73,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
       - run: corepack enable
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

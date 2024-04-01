@@ -5,7 +5,7 @@
 	"repository": "github:Project-Pandora-Game/pandora-server-shard",
 	"license": "LGPL-3.0-or-later",
 	"engines": {
-		"node": ">=18.x"
+		"node": ">=20.x"
 	},
 	"scripts": {
 		"clean": "rimraf dist",
@@ -58,7 +58,7 @@
 		"@types/jest": "29.5.12",
 		"@types/json-diff": "1.0.3",
 		"@types/lodash": "4.17.0",
-		"@types/node": "18.19.28",
+		"@types/node": "20.12.2",
 		"@types/wtfnode": "0.7.3",
 		"@typescript-eslint/eslint-plugin": "7.4.0",
 		"@typescript-eslint/parser": "7.4.0",

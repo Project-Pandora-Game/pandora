@@ -368,13 +368,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
-	private async handleDeleteCharacter({ id }: IClientDirectoryArgument['deleteCharacter'], connection: ClientConnection): IClientDirectoryPromiseResult['deleteCharacter'] {
-		if (!connection.isLoggedIn() || !connection.account.hasCharacter(id))
+	private async handleDeleteCharacter({ id, passwordSha512 }: IClientDirectoryArgument['deleteCharacter'], connection: ClientConnection): IClientDirectoryPromiseResult['deleteCharacter'] {
+		if (!connection.isLoggedIn() || connection.character?.baseInfo.id !== id)
 			throw new BadMessageError();
 
-		const success = await connection.account.deleteCharacter(id);
+		const success = await connection.account.deleteCharacter(connection.character, passwordSha512);
 		if (!success)
-			return { result: 'characterInUse' };
+			return { result: 'invalidPassword' };
 
 		return { result: 'ok' };
 	}

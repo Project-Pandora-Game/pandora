@@ -193,7 +193,6 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 						id='character'
 						name='character'
 						type='text' aria-haspopup='false' autoCapitalize='off' autoComplete='off' autoCorrect='off' autoFocus spellCheck='false'
-						placeholder={ playerData.name }
 						value={ character }
 						onChange={ (ev) => setCharacter(ev.target.value) }
 					/>

@@ -34,8 +34,8 @@ export function AccountSettings(): ReactElement | null {
 			</Button>
 			<LabelColor account={ account } />
 			<DisplayName account={ account } />
-			<GitHubIntegration account={ account } />
 			<AccountRoleList account={ account } />
+			<GitHubIntegration account={ account } />
 		</>
 	);
 }

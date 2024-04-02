@@ -35,6 +35,13 @@ $button-themes: (
 	padding: 0.8em 1.8em;
 	border: 0.2em solid;
 
+	img {
+		vertical-align: middle;
+		margin-top: -0.1em;
+		height: 1.2em;
+		width: 1.2em;
+	}
+
 	@each $theme-name, $theme-data in $button-themes {
 		&.#{$theme-name} {
 			background-color: map-get($theme-data, "background");
@@ -71,6 +78,12 @@ $button-themes: (
 
 	&.slim {
 		padding: 0.1em 0.3em;
+	}
+
+	&.inverseColor {
+		img {
+			filter: invert(100%);
+		}
 	}
 
 	&.hideDisabled:disabled {

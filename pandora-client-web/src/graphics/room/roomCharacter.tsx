@@ -61,8 +61,7 @@ type CharacterStateProps = {
 const PIVOT_TO_LABEL_OFFSET = 100;
 const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
 
-const CharacterNameDisplaySchema = z.boolean();
-export const CharacterNameDisplay = BrowserStorage.createSession('character-name-display-toggle', true, CharacterNameDisplaySchema);
+export const SettingDisplayCharacterName = BrowserStorage.createSession('graphics.display-character-name', true, z.boolean());
 
 export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterState): {
 	/** Scale generated from pose */
@@ -300,7 +299,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 	const disconnectedIconTexture = useTexture(disconnectedIcon);
 	const disconnectedIconY = labelY + 50;
 
-	const showName = useObservable(CharacterNameDisplay);
+	const showName = useObservable(SettingDisplayCharacterName);
 
 	useEffect(() => {
 		if (app == null || onPointerMove == null)
@@ -382,7 +381,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 					}
 				</GraphicsCharacter>
 				{
-					!showName ? null : (
+					showName ? (
 						<Text
 							anchor={ { x: 0.5, y: 0.5 } }
 							position={ { x: labelX, y: labelY } }
@@ -396,7 +395,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 							}) }
 							text={ name }
 						/>
-					)
+					) : null
 				}
 				{
 						!showDisconnectedIcon ? null : (

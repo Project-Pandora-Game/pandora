@@ -142,7 +142,7 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 				) : null
 			}
 			<Button onClick={ onLeave } className='fadeDisabled inverseColor' disabled={ !canLeave || roomDeviceLink != null }>
-				<img src={ logoutIcon } />&nbsp;Leave space
+				<img src={ logoutIcon } />Leave space
 			</Button>
 		</>
 	);
@@ -171,7 +171,7 @@ function CharacterLeave(): ReactElement {
 						<span>Name: { characterName ?? `[Character ${connectionInfo.characterId}]` }</span>
 						<span>Id: { connectionInfo.characterId }</span>
 						<Button className='inverseColor' onClick={ onClick }>
-							<img src={ peopleIcon } />&nbsp;Change character
+							<img src={ peopleIcon } />Change character
 						</Button>
 					</>
 				) : (
@@ -204,7 +204,7 @@ function AccountLeave(): ReactElement {
 						<span>Username: { currentAccount.username }</span>
 						<span>Id: { currentAccount.id }</span>
 						<Button className='inverseColor' onClick={ onClick }>
-							<img src={ onoffIcon } />&nbsp;Logout
+							<img src={ onoffIcon } />Logout
 						</Button>
 					</>
 				) : (

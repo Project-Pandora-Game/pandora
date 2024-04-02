@@ -25,6 +25,9 @@ import { useTexture } from '../useTexture';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
 import { useAppOptional } from '../utility';
 import { Immutable } from 'immer';
+import { z } from 'zod';
+import { BrowserStorage } from '../../browserStorage';
+import { useObservable } from '../../observable';
 
 type RoomCharacterInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
@@ -57,6 +60,9 @@ type CharacterStateProps = {
 
 const PIVOT_TO_LABEL_OFFSET = 100;
 const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
+
+const CharacterNameDisplaySchema = z.boolean();
+export const CharacterNameDisplay = BrowserStorage.createSession('character-name-display-toggle', true, CharacterNameDisplaySchema);
 
 export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterState): {
 	/** Scale generated from pose */
@@ -294,6 +300,8 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 	const disconnectedIconTexture = useTexture(disconnectedIcon);
 	const disconnectedIconY = labelY + 50;
 
+	const showName = useObservable(CharacterNameDisplay);
+
 	useEffect(() => {
 		if (app == null || onPointerMove == null)
 			return;
@@ -373,19 +381,23 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 						)
 					}
 				</GraphicsCharacter>
-				<Text
-					anchor={ { x: 0.5, y: 0.5 } }
-					position={ { x: labelX, y: labelY } }
-					style={ new TextStyle({
-						fontFamily: 'Arial',
-						fontSize: 32,
-						fill: settings.labelColor,
-						align: 'center',
-						dropShadow: true,
-						dropShadowBlur: 4,
-					}) }
-					text={ name }
-				/>
+				{
+					!showName ? null : (
+						<Text
+							anchor={ { x: 0.5, y: 0.5 } }
+							position={ { x: labelX, y: labelY } }
+							style={ new TextStyle({
+								fontFamily: 'Arial',
+								fontSize: 32,
+								fill: settings.labelColor,
+								align: 'center',
+								dropShadow: true,
+								dropShadowBlur: 4,
+							}) }
+							text={ name }
+						/>
+					)
+				}
 				{
 						!showDisconnectedIcon ? null : (
 							<Sprite

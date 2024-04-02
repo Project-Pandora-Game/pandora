@@ -68,9 +68,17 @@ function AccountProfileContent({ accountData }: { accountData: AccountPublicInfo
 					<span>Member since: { new Date(accountData.created).toLocaleDateString() }</span>
 					<Row alignY='center'>
 						<span>Label color:</span>
-						<Link to={ isPlayer ? '/settings/account' : '' }>
-							<div className='labelColorMark' style={ { backgroundColor: accountData.labelColor } } />
-						</Link>
+						{
+							isPlayer ? (
+								<Link to='/settings/account'>
+									<div className='labelColorMark' style={ { backgroundColor: accountData.labelColor } } />
+								</Link>
+							) : (
+								<span>
+									<div className='labelColorMark' style={ { backgroundColor: accountData.labelColor } } />
+								</span>
+							)
+						}
 						<span className='selectable'>{ accountData.labelColor.toUpperCase() }</span>
 					</Row>
 					<AccountProfileDescription profileDescription={ accountData.profileDescription } allowEdit={ isPlayer } />

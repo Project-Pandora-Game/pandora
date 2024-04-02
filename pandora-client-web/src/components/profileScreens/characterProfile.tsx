@@ -63,9 +63,17 @@ function CharacterProfileContent({ character, gameState }: { character: Characte
 						<span>Pronouns: { pronouns.subjective }/{ pronouns.objective }</span>
 						<Row alignY='center'>
 							<span>Label color:</span>
-							<Link to={ isPlayer ? '/settings/character' : '' }>
-								<div className='labelColorMark' style={ { backgroundColor: characterData.settings.labelColor } } />
-							</Link>
+							{
+								isPlayer ? (
+									<Link to='/settings/character'>
+										<div className='labelColorMark' style={ { backgroundColor: characterData.settings.labelColor } } />
+									</Link>
+								) : (
+									<span>
+										<div className='labelColorMark' style={ { backgroundColor: characterData.settings.labelColor } } />
+									</span>
+								)
+							}
 							<span className='selectable'>{ characterData.settings.labelColor.toUpperCase() }</span>
 						</Row>
 						<CharacterProfileDescription profileDescription={ characterData.profileDescription } allowEdit={ isPlayer } />

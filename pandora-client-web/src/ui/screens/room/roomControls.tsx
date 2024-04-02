@@ -37,10 +37,10 @@ export function RoomControls(): ReactElement | null {
 		<Column padding='medium' className='controls'>
 			<Row padding='small'>
 				<Button className='inverseColor' onClick={ () => navigate('/wardrobe/room-inventory') } >
-					<img src={ storageIcon } />&nbsp;Room inventory
+					<img src={ storageIcon } />Room inventory
 				</Button>
 				<Button className='inverseColor' onClick={ () => navigate('/space/configuration') }>
-					<img src={ settingIcon } />&nbsp;Space configuration
+					<img src={ settingIcon } />Space configuration
 				</Button>
 			</Row>
 			<br />
@@ -106,7 +106,7 @@ export function PersonalSpaceControls(): ReactElement {
 			</span>
 			<Row padding='small'>
 				<Button className='inverseColor' onClick={ () => navigate('/wardrobe/room-inventory') } >
-					<img src={ storageIcon } />&nbsp;Room inventory
+					<img src={ storageIcon } />Room inventory
 				</Button>
 			</Row>
 			<div className='character-info'>
@@ -114,7 +114,7 @@ export function PersonalSpaceControls(): ReactElement {
 			</div>
 			<Row padding='small'>
 				<Button onClick={ () => navigate('/spaces/search') } >
-					<img src={ listIcon } />&nbsp;List of spaces
+					<img src={ listIcon } />List of spaces
 				</Button>
 			</Row>
 			&nbsp;<br />

@@ -32,10 +32,10 @@ export function AccountSettings(): ReactElement | null {
 			} }>
 				Edit your account profile
 			</Button>
-			<GitHubIntegration account={ account } />
-			<AccountRoleList account={ account } />
 			<LabelColor account={ account } />
 			<DisplayName account={ account } />
+			<AccountRoleList account={ account } />
+			<GitHubIntegration account={ account } />
 		</>
 	);
 }

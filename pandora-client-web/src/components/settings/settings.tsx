@@ -1,7 +1,7 @@
 import React, { ReactElement } from 'react';
 import './settings.scss';
 import { GIT_DESCRIBE } from '../../config/Environment';
-import { Tab, TabContainer } from '../common/tabs/tabs';
+import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
 import { AccountSettings } from './accountSettings';
 import { useNavigate } from 'react-router-dom';
 import { CharacterSettings } from './characterSettings';
@@ -16,27 +16,27 @@ export function Settings(): ReactElement | null {
 	return (
 		<>
 			<div className='settings'>
-				<TabContainer className='flex-1'>
-					<Tab name='Permissions'>
+				<UrlTabContainer className='flex-1'>
+					<UrlTab name='Permissions' urlChunk='permissions'>
 						<SettingsTab element={ PermissionsSettings } />
-					</Tab>
-					<Tab name='Character'>
+					</UrlTab>
+					<UrlTab name='Character' urlChunk='character'>
 						<SettingsTab element={ CharacterSettings } />
-					</Tab>
-					<Tab name='Account'>
+					</UrlTab>
+					<UrlTab name='Account' urlChunk='account'>
 						<SettingsTab element={ AccountSettings } />
-					</Tab>
-					<Tab name='Security'>
+					</UrlTab>
+					<UrlTab name='Security' urlChunk='security'>
 						<SettingsTab element={ SecuritySettings } />
-					</Tab>
-					<Tab name='Interface'>
+					</UrlTab>
+					<UrlTab name='Interface' urlChunk='interface'>
 						<SettingsTab element={ InterfaceSettings } />
-					</Tab>
-					<Tab name='Graphics'>
+					</UrlTab>
+					<UrlTab name='Graphics' urlChunk='graphics'>
 						<SettingsTab element={ GraphicsSettings } />
-					</Tab>
+					</UrlTab>
 					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
-				</TabContainer>
+				</UrlTabContainer>
 			</div>
 			<footer>Version: { GIT_DESCRIBE }</footer>
 		</>

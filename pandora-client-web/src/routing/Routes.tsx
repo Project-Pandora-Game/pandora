@@ -39,7 +39,7 @@ export function PandoraRoutes(): ReactElement {
 			<Route path='/character/select' element={ <RequiresLogin element={ CharacterSelect } /> } />
 			<Route path='/character/create' element={ <RequiresCharacter element={ CharacterCreate } allowUnfinished /> } />
 
-			<Route path='/settings' element={ <RequiresLogin element={ Settings } /> } />
+			<Route path='/settings/*' element={ <RequiresLogin element={ Settings } /> } />
 
 			<Route path='/contacts/*' element={ <RequiresLogin element={ AccountContacts } /> } />
 			<Route path='/profiles/account/:accountId' element={ <RequiresLogin element={ AccountProfileScreenRouter } /> } />

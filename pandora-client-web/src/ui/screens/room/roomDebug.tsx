@@ -67,7 +67,7 @@ export function ChatroomDebugConfigView(): ReactElement {
 	return (
 		<FieldsetToggle legend='[DEV] Debug options' forceOpen={ chatroomDebugConfig.enabled } onChange={ setOpen }>
 			<div>
-				<label htmlFor='chatroom-debug-room-scaling-helper'>Show scaling helper line</label>
+				<label htmlFor='chatroom-debug-room-scaling-helper'>Show scaling helper line </label>
 				<input
 					id='chatroom-debug-room-scaling-helper'
 					type='checkbox'
@@ -81,7 +81,7 @@ export function ChatroomDebugConfigView(): ReactElement {
 			</div>
 			<fieldset>
 				<Row alignY='center'>
-					<span>Custom calibration</span>
+					<span>Custom calibration </span>
 					<input type='checkbox'
 						checked={ chatroomDebugConfig.roomScalingHelperData != null && spaceConfig.features.includes('development') }
 						onChange={ (e) => {
@@ -316,7 +316,7 @@ export function ChatroomDebugConfigView(): ReactElement {
 				}
 			</fieldset>
 			<div>
-				<label htmlFor='chatroom-debug-character-overlay'>Show character debug overlay</label>
+				<label htmlFor='chatroom-debug-character-overlay'>Show character debug overlay </label>
 				<input
 					id='chatroom-debug-character-overlay'
 					type='checkbox'
@@ -329,7 +329,7 @@ export function ChatroomDebugConfigView(): ReactElement {
 				/>
 			</div>
 			<div>
-				<label htmlFor='chatroom-debug-device-overlay'>Show chatroom device debug overlay</label>
+				<label htmlFor='chatroom-debug-device-overlay'>Show chatroom device debug overlay </label>
 				<input
 					id='chatroom-debug-device-overlay'
 					type='checkbox'

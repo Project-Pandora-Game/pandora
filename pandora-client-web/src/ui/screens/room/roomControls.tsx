@@ -17,6 +17,11 @@ import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
 import { Select } from '../../../components/common/select/select';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { useCurrentAccount } from '../../../components/gameContext/directoryConnectorContextProvider';
+import settingIcon from '../../../assets/icons/setting.svg';
+import storageIcon from '../../../assets/icons/storage.svg';
+import listIcon from '../../../assets/icons/list.svg';
+import toolsIcon from '../../../assets/icons/tools.svg';
+import { SettingDisplayCharacterName } from '../../../graphics/room/roomCharacter';
 
 export function RoomControls(): ReactElement | null {
 	const spaceConfig = useSpaceInfo().config;
@@ -31,10 +36,14 @@ export function RoomControls(): ReactElement | null {
 	return (
 		<Column padding='medium' className='controls'>
 			<Row padding='small'>
-				<Button onClick={ () => navigate('/wardrobe/room-inventory') } >Room inventory</Button>
-				<Button onClick={ () => navigate('/space/configuration') }>Space configuration</Button>
+				<Button className='inverseColor' onClick={ () => navigate('/wardrobe/room-inventory') } >
+					<img src={ storageIcon } />Room inventory
+				</Button>
+				<Button className='inverseColor' onClick={ () => navigate('/space/configuration') }>
+					<img src={ settingIcon } />Space configuration
+				</Button>
 			</Row>
-			<br />
+			&nbsp;
 			<span>
 				These characters are in the space <b>{ spaceConfig.name }</b>:
 			</span>
@@ -46,9 +55,8 @@ export function RoomControls(): ReactElement | null {
 						.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />)
 				}
 			</div>
-			<br />
 			<DeviceOverlaySelector />
-			<br />
+			&nbsp;
 			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
 		</Column>
 	);
@@ -96,17 +104,21 @@ export function PersonalSpaceControls(): ReactElement {
 				</ContextHelpButton>
 			</span>
 			<Row padding='small'>
-				<Button slim onClick={ () => navigate('/wardrobe/room-inventory') } >Room inventory</Button>
+				<Button className='inverseColor' onClick={ () => navigate('/wardrobe/room-inventory') } >
+					<img src={ storageIcon } />Room inventory
+				</Button>
 			</Row>
 			<div className='character-info'>
 				<DisplayCharacter char={ player } />
 			</div>
 			<Row padding='small'>
-				<Button onClick={ () => navigate('/spaces/search') } >List of spaces</Button>
+				<Button onClick={ () => navigate('/spaces/search') } >
+					<img src={ listIcon } />List of spaces
+				</Button>
 			</Row>
-			<br />
+			&nbsp;
 			<DeviceOverlaySelector />
-			<br />
+			&nbsp;
 			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
 		</Column>
 	);
@@ -151,6 +163,7 @@ export function useRoomConstructionModeCheck() {
 function DeviceOverlaySelector(): ReactElement {
 	const { roomConstructionMode, isPlayerAdmin, canUseHands } = useObservable(DeviceOverlayState);
 	const defaultView = useObservable(DeviceOverlaySetting);
+	const showName = useObservable(SettingDisplayCharacterName);
 
 	const onRoomConstructionModeChange = () => {
 		DeviceOverlayState.value = {
@@ -166,8 +179,8 @@ function DeviceOverlaySelector(): ReactElement {
 	return (
 		<>
 			<Row padding='small' className='room-construction-mode'>
-				<Button onClick={ onRoomConstructionModeChange } className='fadeDisabled' disabled={ !isPlayerAdmin || !canUseHands }>
-					{ roomConstructionMode ? 'Disable' : 'Enable' } room construction mode
+				<Button onClick={ onRoomConstructionModeChange } className='fadeDisabled inverseColor' disabled={ !isPlayerAdmin || !canUseHands }>
+					<img src={ toolsIcon } />&nbsp;{ roomConstructionMode ? 'Disable' : 'Enable' } room construction mode
 				</Button>
 				{
 					!isPlayerAdmin ? (
@@ -181,7 +194,7 @@ function DeviceOverlaySelector(): ReactElement {
 					) : null
 				}
 			</Row>
-			<br />
+			&nbsp;
 			<div >
 				<label htmlFor='chatroom-device-overlay'>Show device movement area overlay</label>
 				{ ' ' }
@@ -199,6 +212,17 @@ function DeviceOverlaySelector(): ReactElement {
 						For all devices
 					</option>
 				</Select>
+			</div>
+			<div>
+				<label htmlFor='chatroom-character-name-display'>Show name under characters </label>
+				<input
+					id='chatroom-character-name-display'
+					type='checkbox'
+					checked={ showName }
+					onChange={ (e) => {
+						SettingDisplayCharacterName.value = e.target.checked;
+					} }
+				/>
 			</div>
 		</>
 	);

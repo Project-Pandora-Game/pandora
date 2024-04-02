@@ -1,4 +1,6 @@
 import React, { ReactElement, createContext, useCallback, useContext, useState } from 'react';
+import peopleIcon from '../../assets/icons/people-arrows.svg';
+import onoffIcon from '../../assets/icons/on-off.svg';
 import logoutIcon from '../../assets/icons/logout.svg';
 import { HeaderButton } from './HeaderButton';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
@@ -61,7 +63,7 @@ function DialogLeave(): ReactElement {
 						<span>
 							<strong>
 								Warning:
-								Changing character or logging out<br />
+								Changing the character or logging out<br />
 								will leave the character inside the current space
 							</strong>
 						</span>
@@ -139,8 +141,8 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 					</Row>
 				) : null
 			}
-			<Button onClick={ onLeave } className='fadeDisabled' disabled={ !canLeave || roomDeviceLink != null }>
-				Leave space
+			<Button onClick={ onLeave } className='fadeDisabled inverseColor' disabled={ !canLeave || roomDeviceLink != null }>
+				<img src={ logoutIcon } />Leave space
 			</Button>
 		</>
 	);
@@ -168,7 +170,9 @@ function CharacterLeave(): ReactElement {
 					<>
 						<span>Name: { characterName ?? `[Character ${connectionInfo.characterId}]` }</span>
 						<span>Id: { connectionInfo.characterId }</span>
-						<Button onClick={ onClick }>Change character</Button>
+						<Button className='inverseColor' onClick={ onClick }>
+							<img src={ peopleIcon } />Change character
+						</Button>
 					</>
 				) : (
 					<span>No character selected</span>
@@ -199,7 +203,9 @@ function AccountLeave(): ReactElement {
 						<span>Display name: { currentAccount.displayName }</span>
 						<span>Username: { currentAccount.username }</span>
 						<span>Id: { currentAccount.id }</span>
-						<Button onClick={ onClick }>Logout</Button>
+						<Button className='inverseColor' onClick={ onClick }>
+							<img src={ onoffIcon } />Logout
+						</Button>
 					</>
 				) : (
 					<span>Not logged in</span>

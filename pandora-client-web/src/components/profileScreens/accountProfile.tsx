@@ -7,6 +7,7 @@ import { Button } from '../common/button/button';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast';
 import { Scrollable } from '../common/scrollbar/scrollbar';
+import { Link } from 'react-router-dom';
 
 export function AccountProfile({ accountId }: { accountId: AccountId; }): ReactElement {
 	const accountData = useAccountProfileData(accountId);
@@ -67,7 +68,15 @@ function AccountProfileContent({ accountData }: { accountData: AccountPublicInfo
 					<span>Member since: { new Date(accountData.created).toLocaleDateString() }</span>
 					<Row alignY='center'>
 						<span>Label color:</span>
-						<div className='labelColorMark' style={ { backgroundColor: accountData.labelColor } } />
+						{
+							isPlayer ? (
+								<Link to='/settings/account' className='center-flex'>
+									<div className='labelColorMark' style={ { backgroundColor: accountData.labelColor } } />
+								</Link>
+							) : (
+								<div className='labelColorMark' style={ { backgroundColor: accountData.labelColor } } />
+							)
+						}
 						<span className='selectable'>{ accountData.labelColor.toUpperCase() }</span>
 					</Row>
 					<AccountProfileDescription profileDescription={ accountData.profileDescription } allowEdit={ isPlayer } />

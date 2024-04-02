@@ -11,6 +11,7 @@ import { useShardConnector } from '../gameContext/shardConnectorContextProvider'
 import { Button } from '../common/button/button';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast';
+import { Link } from 'react-router-dom';
 
 export function CharacterProfile({ characterId }: { characterId: CharacterId; }): ReactElement {
 	const characters = useSpaceCharacters();
@@ -62,7 +63,15 @@ function CharacterProfileContent({ character, gameState }: { character: Characte
 						<span>Pronouns: { pronouns.subjective }/{ pronouns.objective }</span>
 						<Row alignY='center'>
 							<span>Label color:</span>
-							<div className='labelColorMark' style={ { backgroundColor: characterData.settings.labelColor } } />
+							{
+								isPlayer ? (
+									<Link to='/settings/character' className='center-flex'>
+										<div className='labelColorMark' style={ { backgroundColor: characterData.settings.labelColor } } />
+									</Link>
+								) : (
+									<div className='labelColorMark' style={ { backgroundColor: characterData.settings.labelColor } } />
+								)
+							}
 							<span className='selectable'>{ characterData.settings.labelColor.toUpperCase() }</span>
 						</Row>
 						<CharacterProfileDescription profileDescription={ characterData.profileDescription } allowEdit={ isPlayer } />

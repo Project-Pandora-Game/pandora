@@ -65,13 +65,11 @@ function CharacterProfileContent({ character, gameState }: { character: Characte
 							<span>Label color:</span>
 							{
 								isPlayer ? (
-									<Link to='/settings/character'>
+									<Link to='/settings/character' className='center-flex'>
 										<div className='labelColorMark' style={ { backgroundColor: characterData.settings.labelColor } } />
 									</Link>
 								) : (
-									<span>
-										<div className='labelColorMark' style={ { backgroundColor: characterData.settings.labelColor } } />
-									</span>
+									<div className='labelColorMark' style={ { backgroundColor: characterData.settings.labelColor } } />
 								)
 							}
 							<span className='selectable'>{ characterData.settings.labelColor.toUpperCase() }</span>

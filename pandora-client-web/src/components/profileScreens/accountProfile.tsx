@@ -70,13 +70,11 @@ function AccountProfileContent({ accountData }: { accountData: AccountPublicInfo
 						<span>Label color:</span>
 						{
 							isPlayer ? (
-								<Link to='/settings/account'>
+								<Link to='/settings/account' className='center-flex'>
 									<div className='labelColorMark' style={ { backgroundColor: accountData.labelColor } } />
 								</Link>
 							) : (
-								<span>
-									<div className='labelColorMark' style={ { backgroundColor: accountData.labelColor } } />
-								</span>
+								<div className='labelColorMark' style={ { backgroundColor: accountData.labelColor } } />
 							)
 						}
 						<span className='selectable'>{ accountData.labelColor.toUpperCase() }</span>

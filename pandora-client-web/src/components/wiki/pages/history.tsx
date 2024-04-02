@@ -40,94 +40,90 @@ export function WikiHistory(): ReactElement {
 
 			<h4>What issues with BC were seen?</h4>
 
-			<p>
-				<ul>
-					<li>Technical quality of BC: The source code of BC was not of good quality and while it improved quite a bit over the years (to a large part
-						thanks to the same people who founded Pandora), it is essentially still something held together by many band aids and compromises.
-						Since there were unsolvable roadblocks on the way to change that, starting from scratch seemed like the better decision compared to
-						trying to clean up constantly, especially as there are no suitable quality standards and checks for new contributions, making this topic
-						an endless struggle.
-					</li>
-					<li>BC project management: The desire for a different project management approach and development process was strong.</li>
-					<li>BC server architecture: It is singular and cannot scale beyond a certain number of users, where lag and disconnects slowly get worse.
-						Starting from scratch with a modern and scalable approach seemed like the best option to give users a stable experience.
-					</li>
-					<li>Not Open-Source: While the source code of BC is public, it is not fully licensed under an open-source license. That means that most parts of BC
-						are proprietary and owned by its authors and that would mean that one cannot legally use the BC code anywhere else or copy it and further
-						develop it (e.g. if the project manager would disappear some day) without the explicit permission of almost every person who ever contributed
-						to BC which makes that almost impossible. The longevity of BC is therefore doubtful and contributing to BC
-						can be seen as a risk to invest time into a black hole.
-					</li>
-					<li>
-						Lack of server validation: In many cases the server in BC does not validate what the client does, which makes it possible for everyone
-						to alter things like locks, restraints, or messages. The overall lack of security was a concern often voiced.
-					</li>
-					<li>
-						No tests: BC has no (automated) tests that notify a contributor accidentally breaking something. In a project like BC, which is built
-						upon the code of more than hundred people with different experience levels, this regularly leads to significant quality issues and
-						an unnecessarily high number of bugs, especially since BC has no suitable review process for adding new features.
-						Looking into those reported bugs is a very time-intense and mostly not fun burden for voluntary developers investing their
-						free time to keep things running.<br />
-						Some bugs will even never be found, yet will contribute to problems such as instabilities or lag over time.
-					</li>
-					<li>
-						Inflexible releases: Aside from the first days after a new release and severe, game-breaking issues,
-						fixes in BC have to wait until the next release one month later, which can be inconvenient and annoying for the affected users.
-					</li>
-					<li>Asset creation: Asset creation in BC needs many variants of the same image and it is an extreme effort to add new poses.</li>
-					<li>Legality of assets/images: In BC there is no process for vetoing assets. Most of them do not provide where they originate
-						from or how the sources used for the assets were licensed. Proper licensing is the correct and safe way.
-					</li>
-				</ul>
-			</p>
+			<ul>
+				<li>Technical quality of BC: The source code of BC was not of good quality and while it improved quite a bit over the years (to a large part
+					thanks to the same people who founded Pandora), it is essentially still something held together by many band aids and compromises.
+					Since there were unsolvable roadblocks on the way to change that, starting from scratch seemed like the better decision compared to
+					trying to clean up constantly, especially as there are no suitable quality standards and checks for new contributions, making this topic
+					an endless struggle.
+				</li>
+				<li>BC project management: The desire for a different project management approach and development process was strong.</li>
+				<li>BC server architecture: It is singular and cannot scale beyond a certain number of users, where lag and disconnects slowly get worse.
+					Starting from scratch with a modern and scalable approach seemed like the best option to give users a stable experience.
+				</li>
+				<li>Not Open-Source: While the source code of BC is public, it is not fully licensed under an open-source license. That means that most parts of BC
+					are proprietary and owned by its authors and that would mean that one cannot legally use the BC code anywhere else or copy it and further
+					develop it (e.g. if the project manager would disappear some day) without the explicit permission of almost every person who ever contributed
+					to BC which makes that almost impossible. The longevity of BC is therefore doubtful and contributing to BC
+					can be seen as a risk to invest time into a black hole.
+				</li>
+				<li>
+					Lack of server validation: In many cases the server in BC does not validate what the client does, which makes it possible for everyone
+					to alter things like locks, restraints, or messages. The overall lack of security was a concern often voiced.
+				</li>
+				<li>
+					No tests: BC has no (automated) tests that notify a contributor accidentally breaking something. In a project like BC, which is built
+					upon the code of more than hundred people with different experience levels, this regularly leads to significant quality issues and
+					an unnecessarily high number of bugs, especially since BC has no suitable review process for adding new features.
+					Looking into those reported bugs is a very time-intense and mostly not fun burden for voluntary developers investing their
+					free time to keep things running.<br />
+					Some bugs will even never be found, yet will contribute to problems such as instabilities or lag over time.
+				</li>
+				<li>
+					Inflexible releases: Aside from the first days after a new release and severe, game-breaking issues,
+					fixes in BC have to wait until the next release one month later, which can be inconvenient and annoying for the affected users.
+				</li>
+				<li>Asset creation: Asset creation in BC needs many variants of the same image and it is an extreme effort to add new poses.</li>
+				<li>Legality of assets/images: In BC there is no process for vetoing assets. Most of them do not provide where they originate
+					from or how the sources used for the assets were licensed. Proper licensing is the correct and safe way.
+				</li>
+			</ul>
 
 			<h4>The people behind Pandora (Last updated: 1-11-2023)</h4>
 			<br />
-			<p>
-				<strong>Lead Developers</strong>
-				<ul>
-					<li>Ace</li>
-					<li>Claudia</li>
-					<li>Ellie</li>
-					<li>Jomshir (Clare)</li>
-					<li>Sekkmer</li>
-				</ul>
-				<strong>Developers</strong>
-				<ul>
-					<li>Kane (Hareo)</li>
-					<li>Nina</li>
-					<li>Nythaleath</li>
-					<li>Sandrine</li>
-					<li>TechTheAwesome</li>
-					<li>Titania</li>
-				</ul>
-				<strong>Founders</strong>
-				<ul>
-					<li>Ace</li>
-					<li>Ada</li>
-					<li>Cecilia</li>
-					<li>Claudia</li>
-					<li>Ellie</li>
-					<li>EmilyR</li>
-					<li>Estsanatlehi</li>
-					<li>Eve</li>
-					<li>Jenn</li>
-					<li>Jomshir (Clare)</li>
-					<li>Kane (Hareo)</li>
-					<li>Kimei Nishimura</li>
-					<li>Natsuki</li>
-					<li>Nina</li>
-					<li>Nosey Gatey (Gatetrek)</li>
-					<li>Nythaleath</li>
-					<li>ruilove</li>
-					<li>Sandrine</li>
-					<li>Sekkmer</li>
-					<li>Sidsel</li>
-					<li>TechTheAwesome</li>
-					<li>Titania</li>
-					<li>Verity</li>
-				</ul>
-			</p>
+			<strong>Lead Developers</strong>
+			<ul>
+				<li>Ace</li>
+				<li>Claudia</li>
+				<li>Ellie</li>
+				<li>Jomshir (Clare)</li>
+				<li>Sekkmer</li>
+			</ul>
+			<strong>Developers</strong>
+			<ul>
+				<li>Kane (Hareo)</li>
+				<li>Nina</li>
+				<li>Nythaleath</li>
+				<li>Sandrine</li>
+				<li>TechTheAwesome</li>
+				<li>Titania</li>
+			</ul>
+			<strong>Founders</strong>
+			<ul>
+				<li>Ace</li>
+				<li>Ada</li>
+				<li>Cecilia</li>
+				<li>Claudia</li>
+				<li>Ellie</li>
+				<li>EmilyR</li>
+				<li>Estsanatlehi</li>
+				<li>Eve</li>
+				<li>Jenn</li>
+				<li>Jomshir (Clare)</li>
+				<li>Kane (Hareo)</li>
+				<li>Kimei Nishimura</li>
+				<li>Natsuki</li>
+				<li>Nina</li>
+				<li>Nosey Gatey (Gatetrek)</li>
+				<li>Nythaleath</li>
+				<li>ruilove</li>
+				<li>Sandrine</li>
+				<li>Sekkmer</li>
+				<li>Sidsel</li>
+				<li>TechTheAwesome</li>
+				<li>Titania</li>
+				<li>Verity</li>
+			</ul>
 
 		</>
 	);

@@ -40,7 +40,7 @@
 		"@aws-sdk/client-ses": "3.540.0",
 		"@aws-sdk/credential-provider-node": "3.540.0",
 		"@octokit/auth-oauth-app": "7.0.1",
-		"@octokit/rest": "20.0.2",
+		"@octokit/rest": "20.1.0",
 		"argon2": "0.40.1",
 		"async-lock": "1.4.1",
 		"discord.js": "14.14.1",

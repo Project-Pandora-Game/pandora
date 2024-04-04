@@ -28,6 +28,8 @@ export const BetaRegistrationService = new class BetaRegistrationService impleme
 		Assert(this._betaRegistrations == null);
 
 		this._betaRegistrations = await GetDatabase().getConfig('betaRegistrations') ?? [];
+		betaRegistrationPending.set(this._getPendingRegistrations().length);
+		betaRegistrationTotal.set(this._betaRegistrations.length);
 		this.logger.info(`${this._betaRegistrations.length} registrations loaded, ${this._getPendingRegistrations().length} pending.`);
 	}
 

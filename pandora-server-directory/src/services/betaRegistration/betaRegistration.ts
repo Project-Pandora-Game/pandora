@@ -1,6 +1,17 @@
 import { Assert, AsyncSynchronized, GetLogger, type Service } from 'pandora-common';
+import promClient from 'prom-client';
 import { GetDatabase } from '../../database/databaseProvider';
 import type { DatabaseBetaRegistration } from '../../database/databaseStructure';
+
+const betaRegistrationTotal = new promClient.Gauge({
+	name: 'pandora_directory_beta_registration_registered_total',
+	help: 'Current count of total registrations for beta',
+});
+
+const betaRegistrationPending = new promClient.Gauge({
+	name: 'pandora_directory_beta_registration_pending_total',
+	help: 'Current count of pending registrations for beta',
+});
 
 export const BetaRegistrationService = new class BetaRegistrationService implements Service {
 	private _betaRegistrations: DatabaseBetaRegistration[] | null = null;
@@ -17,6 +28,8 @@ export const BetaRegistrationService = new class BetaRegistrationService impleme
 		Assert(this._betaRegistrations == null);
 
 		this._betaRegistrations = await GetDatabase().getConfig('betaRegistrations') ?? [];
+		betaRegistrationPending.set(this._getPendingRegistrations().length);
+		betaRegistrationTotal.set(this._betaRegistrations.length);
 		this.logger.info(`${this._betaRegistrations.length} registrations loaded, ${this._getPendingRegistrations().length} pending.`);
 	}
 
@@ -95,6 +108,9 @@ export const BetaRegistrationService = new class BetaRegistrationService impleme
 
 	private async _save(): Promise<void> {
 		Assert(this._betaRegistrations != null);
+
+		betaRegistrationPending.set(this._getPendingRegistrations().length);
+		betaRegistrationTotal.set(this._betaRegistrations.length);
 
 		await GetDatabase().setConfig('betaRegistrations', this._betaRegistrations);
 	}

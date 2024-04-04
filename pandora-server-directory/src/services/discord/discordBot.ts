@@ -1,6 +1,7 @@
-import Discord, { BitFieldResolvable, Events, GatewayIntentsString, GuildChannel, REST, type Interaction, Routes } from 'discord.js';
+import Discord, { BitFieldResolvable, Events, GatewayIntentsString, GuildChannel, REST, Routes, type Interaction } from 'discord.js';
 import _ from 'lodash';
 import { Assert, GetLogger, Service } from 'pandora-common';
+import promClient from 'prom-client';
 import { ENV } from '../../config';
 import type { DiscordButtonDescriptor, DiscordCommandDescriptor } from './commands/_common';
 import { DISCORD_COMMAND_PING } from './commands/ping';
@@ -24,6 +25,12 @@ const DISCORD_BUTTONS: readonly DiscordButtonDescriptor[] = [
 ];
 
 const logger = GetLogger('DiscordBot');
+
+const buttonInteractionMetric = new promClient.Counter({
+	name: 'pandora_discord_button_interaction_total',
+	help: 'Count of received button interactions',
+	labelNames: ['buttonId'],
+});
 
 type Status<T> = {
 	accounts: T;
@@ -182,6 +189,8 @@ export const DiscordBot = new class DiscordBot implements Service {
 				});
 				return;
 			}
+
+			buttonInteractionMetric.inc({ buttonId: button.id });
 
 			try {
 				await button.execute(interaction);

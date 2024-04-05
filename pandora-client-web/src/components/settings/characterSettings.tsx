@@ -16,7 +16,7 @@ import { useDirectoryConnector } from '../gameContext/directoryConnectorContextP
 import { PrehashPassword } from '../../crypto/helpers';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast';
 
 export function CharacterSettings(): ReactElement | null {
 	const navigate = useNavigate();
@@ -116,6 +116,7 @@ interface CharacterDeleteFormData {
 }
 
 function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Readonly<ICharacterPrivateData>; stage: number; setStage: (stage: number) => void; }): ReactElement | null {
+	const navigate = useNavigate();
 	const directoryConnector = useDirectoryConnector();
 	const [invalidPassword, setInvalidPassword] = React.useState('');
 	const [character, setCharacter] = React.useState('');
@@ -151,8 +152,9 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 
 		switch (result) {
 			case 'ok':
-				toast('Character deleted', TOAST_OPTIONS_ERROR);
+				toast('Character deleted', TOAST_OPTIONS_SUCCESS);
 				onReset();
+				navigate('/character/select');
 				return;
 			case 'invalidPassword':
 				setInvalidPassword(password);
@@ -204,7 +206,12 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 						<Button onClick={ onReset }>
 							Cancel
 						</Button>
-						<Button theme='danger' onClick={ toStage2 }>
+						<Button
+							theme='danger'
+							className='fadeDisabled'
+							onClick={ toStage2 }
+							disabled={ character !== playerData.name }
+						>
 							I have read and understood these effects
 						</Button>
 					</Row>

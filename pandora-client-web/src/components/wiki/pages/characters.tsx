@@ -162,8 +162,8 @@ export function WikiCharacters(): ReactElement {
 
 			<h4 id='CH_Character_deletion'>Character deletion</h4>
 			<p>
-				You can delete a character in the settings (top bar - cog icon) screen under the "Character"-tab.
-				In the final confirmation pop-up, you need to type in the character name and your account password again to complete the step.
+				You can delete a character in the settings screen under the "Character"-tab.
+				In the confirmation pop-up, you need to type in the character's name and your account password to confirm the deletion.
 			</p>
 
 		</>

@@ -158,6 +158,9 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 				setInvalidPassword(password);
 				toast('Invalid password', TOAST_OPTIONS_ERROR);
 				return;
+			case 'failed':
+				toast('Failed to delete the character. Please try again later.', TOAST_OPTIONS_ERROR);
+				return;
 			default:
 				AssertNever(result);
 		}

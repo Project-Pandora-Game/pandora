@@ -293,7 +293,7 @@ export const ClientDirectorySchema = {
 			id: CharacterIdSchema,
 			passwordSha512: PasswordSha512Schema,
 		}),
-		response: ZodCast<{ result: 'ok' | 'invalidPassword'; }>(),
+		response: ZodCast<{ result: 'ok' | 'invalidPassword' | 'failed'; }>(),
 	},
 	//#endregion
 

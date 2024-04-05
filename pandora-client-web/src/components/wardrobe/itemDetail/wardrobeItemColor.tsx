@@ -31,7 +31,7 @@ export function WardrobeItemColorization({ wornItem, item }: {
 	}), [targetSelector, item]);
 	const overrides = useMemo(() => wornItem.getColorOverrides(allItems) ?? {}, [wornItem, allItems]);
 
-	if (!wornItem.asset.definition.colorization)
+	if (!wornItem.asset.definition.colorization || Object.keys(wornItem.color).length === 0)
 		return null;
 
 	return (

@@ -1,9 +1,10 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useMounted } from '../../common/useMounted';
 import { GIT_COMMIT_HASH, NODE_ENV, USER_DEBUG } from '../../config/Environment';
 import { Button } from '../common/button/button';
+import { Row } from '../common/container/container';
 import { ModalDialog } from '../dialog/dialog';
-import { useNotification, NotificationSource } from '../gameContext/notificationContextProvider';
+import { NotificationSource, useNotification } from '../gameContext/notificationContextProvider';
 
 // In debug mode 30 seconds, otherwise 5 minutes per new version check
 const VERSION_CHECK_INTERVAL = USER_DEBUG ? 30_000 : (5 * 60_000);
@@ -48,23 +49,23 @@ function VersionCheckImpl() {
 	return (
 		<ModalDialog>
 			<h3>
-				You are running an outdated version of the application.
+				You are running an outdated version of Project Pandora.
 			</h3>
 			<p>
-				Current version: { GIT_COMMIT_HASH }.
+				Currently running version: { GIT_COMMIT_HASH }
 			</p>
 			<p>
 				New version: { nextVersion }
 			</p>
 			<p>
-				Please reload the page.
+				Please reload the page to get the newest version.
 			</p>
-			<div>
-				<Button onClick={ () => window.location.reload() }>Reload</Button>
+			<Row alignX='space-between'>
 				<Button onClick={ () => setIgnoredVersion(nextVersion) }>
 					Cancel
 				</Button>
-			</div>
+				<Button onClick={ () => window.location.reload() }>Reload</Button>
+			</Row>
 		</ModalDialog>
 	);
 }

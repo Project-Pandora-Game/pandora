@@ -33,7 +33,7 @@ import { AccountDirectMessages } from './accountDirectMessages';
 import { AccountRoles } from './accountRoles';
 import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
 import type { ActorIdentity } from './actorIdentity';
-import { CharacterInfo, type Character } from './character';
+import { CharacterInfo } from './character';
 
 /** Currently logged in or recently used account */
 export class Account implements ActorIdentity {
@@ -308,18 +308,27 @@ export class Account implements ActorIdentity {
 	}
 
 	@AsyncSynchronized('object')
-	public async deleteCharacter(character: Character, passwordSha512: string): Promise<boolean> {
-		Assert(character.baseInfo.account === this);
-		Assert(this.characters.has(character.baseInfo.id));
-
+	public async deleteCharacter(characterId: CharacterId, passwordSha512: string): Promise<true | 'invalidPassword' | 'failed'> {
 		if (!await this.secure.verifyPassword(passwordSha512))
-			return false;
+			return 'invalidPassword';
 
-		this.logger.info(`Deleting character ${character.baseInfo.id}`);
-		await character.disconnect();
+		// If there is no such character, then implicit success
+		const character = this.characters.get(characterId);
+		if (character == null)
+			return true;
 
-		this.characters.delete(character.baseInfo.id);
-		await GetDatabase().deleteCharacter(this.data.id, character.baseInfo.id);
+		await character.forceUnload(true);
+
+		// Check if unload without race conditions was successful
+		if (character.isValid)
+			return 'failed';
+
+		Assert(character.loadedCharacter == null);
+
+		// Actually delete the character
+		this.logger.info(`Deleting character ${character.id}`);
+		this.characters.delete(character.id);
+		await GetDatabase().deleteCharacter(this.data.id, character.id);
 
 		this.onCharacterListChange();
 

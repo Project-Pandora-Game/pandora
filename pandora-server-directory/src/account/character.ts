@@ -43,6 +43,11 @@ export class CharacterInfo {
 		return this._loadedCharacter;
 	}
 
+	public get isValid(): boolean {
+		return !this._invalid;
+	}
+	private _invalid: boolean = false;
+
 	constructor(characterData: DatabaseCharacterSelfInfo, account: Account) {
 		this.logger = GetLogger('Character', `[Character ${characterData.id}]`);
 		this.id = characterData.id;
@@ -67,6 +72,9 @@ export class CharacterInfo {
 	}
 
 	public getInfoState(): string {
+		if (this._invalid)
+			return 'invalid';
+
 		if (this.isOnline())
 			return 'connected';
 
@@ -78,7 +86,7 @@ export class CharacterInfo {
 
 	@AsyncSynchronized('object')
 	public async finishCharacterCreation(): Promise<ICharacterData | null> {
-		if (!this.inCreation)
+		if (this._invalid || !this.inCreation)
 			return null;
 
 		const char = await GetDatabase().finalizeCharacter(this.account.id, this.id);
@@ -95,8 +103,11 @@ export class CharacterInfo {
 		return char;
 	}
 
-	@AsyncSynchronized('object')
+	@AsyncSynchronized() // Synchronized intentionally only w.r.t itself
 	public async updateDirectoryData(update: ICharacterDataDirectoryUpdate): Promise<void> {
+		if (this._invalid)
+			return;
+
 		const result = await GetDatabase().updateCharacter(this.id, update, null);
 		if (!result)
 			throw new Error('Database update failed');
@@ -108,7 +119,10 @@ export class CharacterInfo {
 	}
 
 	@AsyncSynchronized()
-	public async requestLoad(): Promise<Character> {
+	public async requestLoad(): Promise<Character | null> {
+		if (this._invalid)
+			return null;
+
 		if (this._loadedCharacter != null && NOT_NARROWING_TRUE)
 			return this._loadedCharacter;
 
@@ -135,6 +149,11 @@ export class CharacterInfo {
 
 	public load(space: Space | null): void {
 		Assert(this._loadedCharacter == null);
+		// This should only happen if unloaded space the character is in is being loaded.
+		// If the character is invalid, simply ignore the load (it will get skipped by the space)
+		if (this._invalid)
+			return;
+
 		this._loadedCharacter = new Character(this, space);
 	}
 
@@ -164,6 +183,10 @@ export class CharacterInfo {
 		connectionSecret: string | null;
 		space: Space | null;
 	}): Promise<void> {
+		// Ignore if the character is invalidated - the reconnecting shard will simply get updated to exclude this character
+		if (this._invalid)
+			return Promise.resolve();
+
 		// If we are in a space, the character should have already been loaded by the space
 		if (space != null) {
 			Assert(this._loadedCharacter != null);
@@ -179,6 +202,46 @@ export class CharacterInfo {
 
 		this._loadedCharacter.shardReconnect({ shard, accessId, connectionSecret, space });
 		return Promise.resolve();
+	}
+
+	/**
+	 * This method will forcefully unload the character, removing it from any space it is in in the process.
+	 * It is only guaranteed that the character will be unloaded during this.
+	 * It is not guaranteed that they will not be loaded again even before this method returns.
+	 * @param markInvalid - If the character should be attempted to be marked as "invalid", preventing future loads.
+	 * This might not succeed and will be ignored in that case.
+	 */
+	@AsyncSynchronized('object')
+	public async forceUnload(markInvalid = false): Promise<void> {
+		// Check if we are already done
+		if (this._invalid)
+			return;
+
+		const oldCharacter = this._loadedCharacter;
+
+		if (oldCharacter != null) {
+			await oldCharacter.forceDisconnectShard();
+
+			// Fail if the character got loaded again after the force disconnect
+			if (oldCharacter.isInUse()) {
+				return;
+			}
+
+			Assert(this._loadedCharacter === oldCharacter);
+			// The character should be completely unloaded by this point (not in any space, not on any shard, or assigned to any client)
+			Assert(oldCharacter.assignment == null);
+			Assert(oldCharacter.connectSecret == null);
+			Assert(oldCharacter.assignedClient == null);
+			Assert(oldCharacter.currentShard == null);
+
+			// Finish unload
+			this._loadedCharacter = null;
+		}
+
+		// If the unload was successful and invalidation was requested, mark this character as invalid
+		if (markInvalid && this._loadedCharacter == null) {
+			this._invalid = true;
+		}
 	}
 }
 

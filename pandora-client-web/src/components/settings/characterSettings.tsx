@@ -16,7 +16,7 @@ import { useDirectoryConnector } from '../gameContext/directoryConnectorContextP
 import { PrehashPassword } from '../../crypto/helpers';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast';
 
 export function CharacterSettings(): ReactElement | null {
 	const navigate = useNavigate();
@@ -116,17 +116,18 @@ interface CharacterDeleteFormData {
 }
 
 function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Readonly<ICharacterPrivateData>; stage: number; setStage: (stage: number) => void; }): ReactElement | null {
+	const navigate = useNavigate();
 	const directoryConnector = useDirectoryConnector();
 	const [invalidPassword, setInvalidPassword] = React.useState('');
+	const [character, setCharacter] = React.useState('');
 
 	const {
-		formState: { errors, submitCount, isSubmitting, isValid },
+		formState: { errors, submitCount, isSubmitting },
 		reset,
 		handleSubmit,
 		register,
 		trigger,
-
-	} = useForm<CharacterDeleteFormData>({ shouldUseNativeValidation: true, progressive: true, reValidateMode: 'onChange' });
+	} = useForm<CharacterDeleteFormData>({ shouldUseNativeValidation: true, progressive: true });
 
 	React.useEffect(() => {
 		if (invalidPassword) {
@@ -134,7 +135,14 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 		}
 	}, [invalidPassword, trigger]);
 
-	const onSubmit = handleSubmit(async ({ password, character }) => {
+	const onReset = React.useCallback(() => {
+		reset();
+		setInvalidPassword('');
+		setCharacter('');
+		setStage(0);
+	}, [reset, setStage]);
+
+	const onSubmit = handleSubmit(async ({ password }) => {
 		if (character !== playerData.name)
 			return;
 
@@ -144,25 +152,29 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 
 		switch (result) {
 			case 'ok':
-				toast('Character deleted', TOAST_OPTIONS_ERROR);
-				reset();
-				setInvalidPassword('');
-				setStage(0);
+				toast('Character deleted', TOAST_OPTIONS_SUCCESS);
+				onReset();
+				navigate('/character/select');
 				return;
 			case 'invalidPassword':
 				setInvalidPassword(password);
 				toast('Invalid password', TOAST_OPTIONS_ERROR);
+				return;
+			case 'failed':
+				toast('Failed to delete the character. Please try again later.', TOAST_OPTIONS_ERROR);
 				return;
 			default:
 				AssertNever(result);
 		}
 	});
 
-	const onCancel = React.useCallback(() => {
-		reset();
-		setInvalidPassword('');
-		setStage(0);
-	}, [reset, setStage]);
+	const toStage2 = React.useCallback(() => {
+		if (character !== playerData.name) {
+			toast('Invalid character name', TOAST_OPTIONS_ERROR);
+			return;
+		}
+		setStage(2);
+	}, [character, playerData.name, setStage]);
 
 	if (stage < 1)
 		return null;
@@ -180,11 +192,26 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 					<span>
 						This action is irreversible, there is no going back.
 					</span>
+					<br />
+					<label htmlFor='character'>Enter your character name:</label>
+					<input
+						id='character'
+						name='character'
+						type='text' aria-haspopup='false' autoCapitalize='off' autoComplete='off' autoCorrect='off' autoFocus spellCheck='false'
+						value={ character }
+						onChange={ (ev) => setCharacter(ev.target.value) }
+					/>
+					<br />
 					<Row>
-						<Button onClick={ onCancel }>
+						<Button onClick={ onReset }>
 							Cancel
 						</Button>
-						<Button theme='danger' onClick={ () => setStage(2) }>
+						<Button
+							theme='danger'
+							className='fadeDisabled'
+							onClick={ toStage2 }
+							disabled={ character !== playerData.name }
+						>
 							I have read and understood these effects
 						</Button>
 					</Row>
@@ -200,19 +227,6 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 			</h3>
 			<Form dirty={ submitCount > 0 } onSubmit={ onSubmit }>
 				<FormField>
-					<label htmlFor='character'>Character name</label>
-					<input
-						id='character'
-						autoComplete='character-name'
-						placeholder={ playerData.name }
-						{ ...register('character', {
-							required: 'Character name is required',
-							validate: (name) => (name === playerData.name) ? true : 'Invalid character name',
-						}) }
-					/>
-					<FormFieldError error={ errors.character } />
-				</FormField>
-				<FormField>
 					<label htmlFor='password'>Current password</label>
 					<input
 						type='password'
@@ -226,10 +240,10 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 					<FormFieldError error={ errors.password } />
 				</FormField>
 				<Row>
-					<Button onClick={ onCancel }>
+					<Button onClick={ onReset }>
 						Cancel
 					</Button>
-					<Button className='fadeDisabled' theme='danger' type='submit' disabled={ isSubmitting || !isValid }>
+					<Button className='fadeDisabled' theme='danger' type='submit' disabled={ isSubmitting }>
 						Delete this character
 					</Button>
 				</Row>

@@ -346,6 +346,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		const loadedCharacter = await char.requestLoad();
+		// Request load might fail if character has been invalidated
+		if (loadedCharacter == null) {
+			return { result: 'failed' };
+		}
 
 		const result = await loadedCharacter.connect(connection);
 
@@ -372,9 +376,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn() || connection.character?.baseInfo.id !== id)
 			throw new BadMessageError();
 
-		const success = await connection.account.deleteCharacter(connection.character, passwordSha512);
-		if (!success)
-			return { result: 'invalidPassword' };
+		const result = await connection.account.deleteCharacter(id, passwordSha512);
+		if (result !== true)
+			return { result };
 
 		return { result: 'ok' };
 	}
@@ -387,6 +391,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		AssertNotNullable(char);
 
 		const loadedCharacter = await char.requestLoad();
+		// Request load might fail if character has been invalidated
+		if (loadedCharacter == null) {
+			return { result: 'failed' };
+		}
 
 		const result = await loadedCharacter.connect(connection);
 

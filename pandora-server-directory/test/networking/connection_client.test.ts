@@ -1,4 +1,4 @@
-import { IClientDirectory, IDirectoryClient, MockConnection, MockServerSocket } from 'pandora-common';
+import { Assert, IClientDirectory, IDirectoryClient, MockConnection, MockServerSocket } from 'pandora-common';
 import { ClientConnection } from '../../src/networking/connection_client';
 import { ConnectionManagerClient } from '../../src/networking/manager_client';
 import { TestMockAccount, TestMockCharacter, TestMockDb } from '../utils';
@@ -139,6 +139,7 @@ describe('ClientConnection', () => {
 			const account = await TestMockAccount({ password });
 			const characterInfo = await TestMockCharacter(account);
 			const character = await characterInfo.requestLoad();
+			Assert(character != null);
 			const client = new ClientConnection(server, connection.connect(), {});
 			client.setAccount(account, token);
 
@@ -153,7 +154,7 @@ describe('ClientConnection', () => {
 			expect(character.assignedClient).toBe(null);
 
 			// Cleanup
-			await account.deleteCharacter(character, password);
+			await account.deleteCharacter(characterInfo.id, password);
 		});
 
 		it('Swaps characters', async () => {
@@ -161,8 +162,10 @@ describe('ClientConnection', () => {
 			const account = await TestMockAccount({ password });
 			const characterInfo1 = await TestMockCharacter(account);
 			const character1 = await characterInfo1.requestLoad();
+			Assert(character1 != null);
 			const characterInfo2 = await TestMockCharacter(account);
 			const character2 = await characterInfo2.requestLoad();
+			Assert(character2 != null);
 			const client = new ClientConnection(server, connection.connect(), {});
 			client.setAccount(account, token);
 
@@ -180,8 +183,8 @@ describe('ClientConnection', () => {
 
 			// Cleanup
 			client.setCharacter(null);
-			await account.deleteCharacter(character1, password);
-			await account.deleteCharacter(character2, password);
+			await account.deleteCharacter(characterInfo1.id, password);
+			await account.deleteCharacter(characterInfo2.id, password);
 		});
 
 		it('Fails when character is in use', async () => {
@@ -189,6 +192,7 @@ describe('ClientConnection', () => {
 			const account = await TestMockAccount({ password });
 			const characterInfo = await TestMockCharacter(account);
 			const character = await characterInfo.requestLoad();
+			Assert(character != null);
 			const client = new ClientConnection(server, connection.connect(), {});
 			const connection2 = new MockConnection<IClientDirectory, IDirectoryClient>({ onMessage: connectionOnMessage });
 			const client2 = new ClientConnection(server, connection2.connect(), {});
@@ -213,13 +217,14 @@ describe('ClientConnection', () => {
 
 			// Cleanup
 			client.setCharacter(null);
-			await account.deleteCharacter(character, password);
+			await account.deleteCharacter(characterInfo.id, password);
 		});
 
 		it('Removes character after disconnect', async () => {
 			const account = await TestMockAccount();
 			const characterInfo = await TestMockCharacter(account);
 			const character = await characterInfo.requestLoad();
+			Assert(character != null);
 			const client = new ClientConnection(server, connection.connect(), {});
 			client.setAccount(account, token);
 
@@ -271,6 +276,7 @@ describe('ClientConnection', () => {
 			const account = await TestMockAccount({ password });
 			const characterInfo = await TestMockCharacter(account);
 			const character = await characterInfo.requestLoad();
+			Assert(character != null);
 			const client = new ClientConnection(server, connection.connect(), {});
 			client.setAccount(account, token);
 			connectionOnMessage.mockClear();
@@ -286,7 +292,7 @@ describe('ClientConnection', () => {
 
 			// Cleanup
 			client.setCharacter(null);
-			await account.deleteCharacter(character, password);
+			await account.deleteCharacter(characterInfo.id, password);
 		});
 	});
 });

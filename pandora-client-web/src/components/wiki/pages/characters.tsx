@@ -1,3 +1,4 @@
+import { LIMIT_CHARACTER_COUNT } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -9,8 +10,8 @@ export function WikiCharacters(): ReactElement {
 			<h3>Introduction</h3>
 
 			<p>
-				An account in Pandora allows you to create a limited amount of characters (typically 5). You cannot rename or delete a character.
-				Deleting a character of yours will be added in the future.<br />
+				An account in Pandora allows you to create a limited amount of characters (currently { LIMIT_CHARACTER_COUNT }).
+				You cannot rename a character or give it a nickname currently.<br />
 				Characters can assume a large number of different poses and can turn around. You can expand the manual pose section of
 				the "Poses"-tab to assume custom poses.
 			</p>
@@ -27,6 +28,7 @@ export function WikiCharacters(): ReactElement {
 				<li><Link to='#CH_Character_context_menu'>Character context menu</Link></li>
 				<li><Link to='#CH_Character_wardrobe'>Character wardrobe</Link></li>
 				<li><Link to='#CH_Character_permissions'>Character permissions</Link></li>
+				<li><Link to='#CH_Character_deletion'>Character deletion</Link></li>
 			</ul>
 
 			<h4 id='CH_Character_immersion'>Character immersion effects</h4>
@@ -156,6 +158,12 @@ export function WikiCharacters(): ReactElement {
 				the <Link to='/wiki/items#IT_Item_preferences_and_limits'>"item limits"</Link>-tab
 				of your wardrobe. These permissions are layered and depend upon each other:
 				To use items flagged as "maybe", the other character needs to also be permitted to use "favorite" and "normal" items.
+			</p>
+
+			<h4 id='CH_Character_deletion'>Character deletion</h4>
+			<p>
+				You can delete a character in the settings screen under the "Character"-tab.
+				In the confirmation pop-up, you need to type in the character's name and your account password to confirm the deletion.
 			</p>
 
 		</>

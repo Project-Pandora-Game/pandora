@@ -346,8 +346,8 @@ importers:
         specifier: 3.549.0
         version: 3.549.0
       '@octokit/auth-oauth-app':
-        specifier: 7.0.1
-        version: 7.0.1
+        specifier: 7.1.0
+        version: 7.1.0
       '@octokit/rest':
         specifier: 20.1.0
         version: 20.1.0
@@ -3238,37 +3238,37 @@ packages:
     dev: true
     optional: true
 
-  /@octokit/auth-oauth-app@7.0.1:
-    resolution: {integrity: sha512-RE0KK0DCjCHXHlQBoubwlLijXEKfhMhKm9gO56xYvFmP1QTMb+vvwRPmQLLx0V+5AvV9N9I3lr1WyTzwL3rMDg==}
+  /@octokit/auth-oauth-app@7.1.0:
+    resolution: {integrity: sha512-w+SyJN/b0l/HEb4EOPRudo7uUOSW51jcK1jwLa+4r7PA8FPFpoxEnHBHMITqCsc/3Vo2qqFjgQfz/xUUvsSQnA==}
     engines: {node: '>= 18'}
     dependencies:
-      '@octokit/auth-oauth-device': 6.0.1
-      '@octokit/auth-oauth-user': 4.0.1
+      '@octokit/auth-oauth-device': 6.1.0
+      '@octokit/auth-oauth-user': 4.1.0
       '@octokit/request': 8.3.1
-      '@octokit/types': 12.6.0
+      '@octokit/types': 13.1.0
       '@types/btoa-lite': 1.0.2
       btoa-lite: 1.0.0
       universal-user-agent: 6.0.1
     dev: false
 
-  /@octokit/auth-oauth-device@6.0.1:
-    resolution: {integrity: sha512-yxU0rkL65QkjbqQedgVx3gmW7YM5fF+r5uaSj9tM/cQGVqloXcqP2xK90eTyYvl29arFVCW8Vz4H/t47mL0ELw==}
+  /@octokit/auth-oauth-device@6.1.0:
+    resolution: {integrity: sha512-FNQ7cb8kASufd6Ej4gnJ3f1QB5vJitkoV1O0/g6e6lUsQ7+VsSNRHRmFScN2tV4IgKA12frrr/cegUs0t+0/Lw==}
     engines: {node: '>= 18'}
     dependencies:
-      '@octokit/oauth-methods': 4.0.1
+      '@octokit/oauth-methods': 4.1.0
       '@octokit/request': 8.3.1
-      '@octokit/types': 12.6.0
+      '@octokit/types': 13.1.0
       universal-user-agent: 6.0.1
     dev: false
 
-  /@octokit/auth-oauth-user@4.0.1:
-    resolution: {integrity: sha512-N94wWW09d0hleCnrO5wt5MxekatqEJ4zf+1vSe8MKMrhZ7gAXKFOKrDEZW2INltvBWJCyDUELgGRv8gfErH1Iw==}
+  /@octokit/auth-oauth-user@4.1.0:
+    resolution: {integrity: sha512-FrEp8mtFuS/BrJyjpur+4GARteUCrPeR/tZJzD8YourzoVhRics7u7we/aDcKv+yywRNwNi/P4fRi631rG/OyQ==}
     engines: {node: '>= 18'}
     dependencies:
-      '@octokit/auth-oauth-device': 6.0.1
-      '@octokit/oauth-methods': 4.0.1
+      '@octokit/auth-oauth-device': 6.1.0
+      '@octokit/oauth-methods': 4.1.0
       '@octokit/request': 8.3.1
-      '@octokit/types': 12.6.0
+      '@octokit/types': 13.1.0
       btoa-lite: 1.0.0
       universal-user-agent: 6.0.1
     dev: false
@@ -3313,14 +3313,14 @@ packages:
     engines: {node: '>= 18'}
     dev: false
 
-  /@octokit/oauth-methods@4.0.1:
-    resolution: {integrity: sha512-1NdTGCoBHyD6J0n2WGXg9+yDLZrRNZ0moTEex/LSPr49m530WNKcCfXDghofYptr3st3eTii+EHoG5k/o+vbtw==}
+  /@octokit/oauth-methods@4.1.0:
+    resolution: {integrity: sha512-4tuKnCRecJ6CG6gr0XcEXdZtkTDbfbnD5oaHBmLERTjTMZNi2CbfEHZxPU41xXLDG4DfKf+sonu00zvKI9NSbw==}
     engines: {node: '>= 18'}
     dependencies:
       '@octokit/oauth-authorization-url': 6.0.2
       '@octokit/request': 8.3.1
       '@octokit/request-error': 5.1.0
-      '@octokit/types': 12.6.0
+      '@octokit/types': 13.1.0
       btoa-lite: 1.0.0
     dev: false
 

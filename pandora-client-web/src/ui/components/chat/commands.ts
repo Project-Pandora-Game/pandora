@@ -1,5 +1,5 @@
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
-import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, AccountIdSchema, CommandStepProcessor, AccountId } from 'pandora-common';
+import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, AccountIdSchema, CommandStepProcessor, AccountId, CommandStepOptional } from 'pandora-common';
 import { CommandSelectorCharacter, CommandSelectorEnum } from './commandsHelpers';
 import { ChatMode } from './chatInput';
 import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider';
@@ -180,8 +180,13 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		longDescription: `Sends a message to the selected <target> character which only they will see. (alternative command: '/w')` + LONGDESC_THIRD_PERSON,
 		usage: '<target> [message]',
 		handler: CreateClientCommand()
-			.argument('target', CommandSelectorCharacter({ allowSelf: 'otherCharacter' }))
+			.argument('target', CommandStepOptional(CommandSelectorCharacter({ allowSelf: 'otherCharacter' })))
 			.handler({ restArgName: 'message' }, ({ messageSender, inputHandlerContext }, { target }, message) => {
+				if (!target) {
+					inputHandlerContext.setTarget(null);
+					return true;
+				}
+
 				message = message.trim();
 				if (!message) {
 					inputHandlerContext.setTarget(target.data.id);

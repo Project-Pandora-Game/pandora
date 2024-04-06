@@ -20,6 +20,7 @@ export interface UseLoginFormReturn {
 	errorMessage: string;
 	errors: FieldErrors<UseLoginFormData>;
 	onSubmit: (event: FormEvent<HTMLFormElement>) => Promisable<void>;
+	isSubmitting: boolean;
 	register: UseFormRegister<UseLoginFormData>;
 }
 
@@ -28,7 +29,7 @@ export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 	const login = useLogin();
 	const { state: authData, setState: setAuthData } = useAuthFormData();
 	const {
-		formState: { errors, submitCount },
+		formState: { errors, submitCount, isSubmitting },
 		handleSubmit,
 		register,
 	} = useForm<UseLoginFormData>({ shouldUseNativeValidation: true, progressive: true });
@@ -36,8 +37,9 @@ export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 	const checkNotifications = useNotificationPermissionCheck();
 	const dirty = submitCount > 0;
 
-	const onSubmit = handleSubmit(({ username: submittedUsername, password: submittedPassword, token }) => {
+	const onSubmit = handleSubmit(async ({ username: submittedUsername, password: submittedPassword, token }) => {
 		checkNotifications();
+
 		const username = useAuthData ? authData.username : submittedUsername;
 		const password = useAuthData ? authData.password : submittedPassword;
 
@@ -51,30 +53,28 @@ export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 			setAuthData({ username, password });
 		}
 
-		void (async () => {
-			// Compare user info
-			const result = await login(username, password, token);
+		// Compare user info
+		const result = await login(username, password, token);
 
-			const needsVerification = result === 'verificationRequired' || result === 'invalidToken';
-			if (needsVerification) {
-				navigate('/login_verify');
-			}
+		const needsVerification = result === 'verificationRequired' || result === 'invalidToken';
+		if (needsVerification) {
+			navigate('/login_verify');
+		}
 
-			if (result === 'ok') {
-				setErrorMessage('');
-				return;
-			} else if (result === 'unknownCredentials') {
-				// Invalid user data
-				setErrorMessage('Invalid username or password');
-			} else if (result === 'invalidToken') {
-				setErrorMessage('Invalid verification code. Please make sure you entered your code correctly.');
-			} else if (result === 'invalidSecondFactor') {
-				setErrorMessage('Invalid second factor');
-			} else if (result !== 'verificationRequired') {
-				AssertNever(result);
-			}
-		})();
+		if (result === 'ok') {
+			setErrorMessage('');
+			return;
+		} else if (result === 'unknownCredentials') {
+			// Invalid user data
+			setErrorMessage('Invalid username or password');
+		} else if (result === 'invalidToken') {
+			setErrorMessage('Invalid verification code. Please make sure you entered your code correctly.');
+		} else if (result === 'invalidSecondFactor') {
+			setErrorMessage('Invalid second factor');
+		} else if (result !== 'verificationRequired') {
+			AssertNever(result);
+		}
 	});
 
-	return { dirty, errorMessage, errors, register, onSubmit };
+	return { dirty, errorMessage, errors, register, onSubmit, isSubmitting };
 }

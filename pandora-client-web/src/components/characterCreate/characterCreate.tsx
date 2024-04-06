@@ -1,5 +1,5 @@
 import { CharacterInputNameSchema, IsValidCharacterName } from 'pandora-common';
-import React, { ReactElement, useEffect, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useCreateCharacter } from '../../character/player';
 import { usePlayer, usePlayerData } from '../gameContext/playerContextProvider';
@@ -8,6 +8,7 @@ import './characterCreate.scss';
 import { Form, FormCreateStringValidator, FormError, FormErrorMessage, FormField } from '../common/form/form';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { nanoid } from 'nanoid';
+import { useAsyncEvent } from '../../common/useEvent';
 
 export function CharacterCreate(): ReactElement | null {
 	// React States
@@ -35,25 +36,19 @@ export function CharacterCreate(): ReactElement | null {
 		}
 	}, [shouldRandomize, shardConnector]);
 
-	if (!player)
-		return null;
+	const [handleSubmit, processing] = useAsyncEvent(
+		async () => {
+			if (!player)
+				return null;
 
-	if (playerData && !playerData.inCreation) {
-		return <Navigate to='/' />;
-	}
+			if (!IsValidCharacterName(characterName)) {
+				setErrorMessage('Invalid character name format');
+				return null;
+			}
 
-	const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-		//Prevent page reload
-		event.preventDefault();
-
-		// Character name
-		if (!IsValidCharacterName(characterName)) {
-			setErrorMessage('Invalid character name format');
-			return;
-		}
-
-		void (async () => {
-			const result = await createCharacter(player, { name: characterName });
+			return await createCharacter(player, { name: characterName });
+		},
+		(result) => {
 
 			if (result === 'ok') {
 				setErrorMessage('');
@@ -66,8 +61,20 @@ export function CharacterCreate(): ReactElement | null {
 			} else {
 				setErrorMessage(`Failed to create character: ${result}`);
 			}
-		})();
-	};
+		});
+
+	const onSubmit = useCallback((event: React.FormEvent<HTMLFormElement>) => {
+		//Prevent page reload
+		event.preventDefault();
+		handleSubmit();
+	}, [handleSubmit]);
+
+	if (!player)
+		return null;
+
+	if (playerData && !playerData.inCreation) {
+		return <Navigate to='/' />;
+	}
 
 	const characterNameError = characterName ? FormCreateStringValidator(CharacterInputNameSchema, 'character name')(characterName) : undefined;
 
@@ -75,7 +82,7 @@ export function CharacterCreate(): ReactElement | null {
 		<div className='CharacterCreate'>
 			<div id='registration-form'>
 				<h1 className='title'>Name your character</h1>
-				<Form onSubmit={ handleSubmit }>
+				<Form onSubmit={ onSubmit }>
 					<FormField className='input-container'>
 						<label htmlFor='characterName'>Name</label>
 						<input
@@ -90,7 +97,7 @@ export function CharacterCreate(): ReactElement | null {
 						<FormError error={ characterNameError } />
 					</FormField>
 					{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
-					<Button type='submit'>Submit</Button>
+					<Button type='submit' className='fadeDisabled' disabled={ processing }>Submit</Button>
 				</Form>
 			</div>
 		</div>

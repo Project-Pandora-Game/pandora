@@ -5,6 +5,7 @@ import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from
 import { TestMockDb } from '../utils';
 
 const TEST_USERNAME = 'testuser';
+const TEST_DISPLAYNAME = 'TestUserDisplay';
 const TEST_EMAIL = 'test@project-pandora.com';
 
 let testAccountId: number;
@@ -12,7 +13,7 @@ let testAccountId: number;
 beforeAll(async () => {
 	await TestMockDb();
 	// Create at least one account
-	const account = await accountManager.createAccount(TEST_USERNAME, 'test', TEST_EMAIL);
+	const account = await accountManager.createAccount(TEST_USERNAME, TEST_DISPLAYNAME, 'test', TEST_EMAIL);
 	expect(account).toBeInstanceOf(Account);
 	testAccountId = (account as Account).id;
 	await accountManager.onDestroyCharacters();

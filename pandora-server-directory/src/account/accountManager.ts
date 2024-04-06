@@ -279,8 +279,8 @@ export class AccountManager implements Service {
 		return await this._loadAccount(data);
 	}
 
-	public async createAccount(username: string, password: string, email: string): Promise<Account | 'usernameTaken' | 'emailTaken'> {
-		const data = await GetDatabase().createAccount(await CreateAccountData(username, password, email));
+	public async createAccount(username: string, displayName: string, password: string, email: string): Promise<Account | 'usernameTaken' | 'emailTaken'> {
+		const data = await GetDatabase().createAccount(await CreateAccountData(username, displayName, password, email));
 		if (typeof data === 'string')
 			return data;
 

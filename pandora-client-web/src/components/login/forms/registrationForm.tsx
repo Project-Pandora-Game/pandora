@@ -1,4 +1,4 @@
-import { AssertNever, EmailAddressSchema, PasswordSchema, UserNameSchema } from 'pandora-common';
+import { AssertNever, DisplayNameSchema, EmailAddressSchema, PasswordSchema, UserNameSchema } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { useNavigate } from 'react-router';
@@ -11,6 +11,7 @@ import { useAuthFormData } from '../authFormDataProvider';
 
 export interface RegistrationFormData {
 	username: string;
+	displayName: string;
 	email: string;
 	password: string;
 	passwordConfirm: string;
@@ -52,6 +53,15 @@ export function RegistrationForm(): ReactElement {
 		return true;
 	}, [usernameTaken]);
 
+	const validateDisplayName = useCallback<Validate<string, RegistrationFormData>>((displayName) => {
+		const formatValidator = FormCreateStringValidator(DisplayNameSchema, 'display name');
+		const validationResult = formatValidator(displayName);
+		if (validationResult != null)
+			return validationResult;
+
+		return true;
+	}, []);
+
 	const validateEmail = useCallback<Validate<string, RegistrationFormData>>((email) => {
 		if (email === emailTaken) {
 			return 'Email already in use';
@@ -71,13 +81,13 @@ export function RegistrationForm(): ReactElement {
 		}
 	}, [usernameTaken, emailTaken, invalidBetaKey, trigger]);
 
-	const onSubmit = handleSubmit(({ username, email, password, betaKey }) => {
+	const onSubmit = handleSubmit(({ username, displayName, email, password, betaKey }) => {
 		void (async () => {
 			setUsernameTaken('');
 			setEmailTaken('');
 			setCaptchaFailed(false);
 
-			const result = await directoryRegister(username, password, email, betaKey || undefined, captchaToken);
+			const result = await directoryRegister(username, displayName, password, email, betaKey || undefined, captchaToken);
 
 			if (result === 'ok') {
 				setAuthData({ username, password, justRegistered: true });
@@ -112,6 +122,19 @@ export function RegistrationForm(): ReactElement {
 					}) }
 				/>
 				<FormFieldError error={ errors.username } />
+			</FormField>
+			<FormField>
+				<label htmlFor='registration-display-name'>User display name (shown to others)</label>
+				<input
+					type='text'
+					id='registration-display-name'
+					autoComplete='off'
+					{ ...register('displayName', {
+						required: 'User display name is required',
+						validate: validateDisplayName,
+					}) }
+				/>
+				<p />
 			</FormField>
 			<FormField>
 				<label htmlFor='registration-email'>Email</label>

@@ -104,6 +104,7 @@ describe('Account Manager', () => {
 			async (response) => {
 				await testRegister(
 					'test-user',
+					'test-user-display',
 					'123456',
 					'TyVsAI5QPt44dp/57gYlN1U0BhgLBVV6B3rLlRoyXNmD2eL8XlC74qTa9AdNaEcI4k7pA7zYbv38ahQkT3aqQQ==',
 					'test@test.com',
@@ -117,6 +118,7 @@ describe('Account Manager', () => {
 			async (response) => {
 				await testRegister(
 					'test-user',
+					'test-user-display',
 					'123456789',
 					'i67CRYOrMlOjOcZHXI+hJSbNNnboweM2Ku2utFasNC35HRX4bghzXFS1RHR7BMmaX0CrHn7v6gfrAbEHe4vFPw==',
 					'test@test.com',
@@ -128,6 +130,7 @@ describe('Account Manager', () => {
 
 		async function testRegister(
 			username: string,
+			displayName: string,
 			password: string,
 			passwordSha512: string,
 			email: string,
@@ -137,11 +140,11 @@ describe('Account Manager', () => {
 			directoryConnector.awaitResponse.mockResolvedValue({ result: expectedResponse });
 			const { result } = renderHookWithTestProviders(useDirectoryRegister);
 
-			const response = await result.current(username, password, email, betaKey);
+			const response = await result.current(username, displayName, password, email, betaKey);
 			expect(response).toBe(expectedResponse);
 			expect(directoryConnector.awaitResponse).toHaveBeenCalledTimes(1);
 			expect(directoryConnector.awaitResponse).toHaveBeenCalledWith('register', {
-				username, passwordSha512, email, betaKey,
+				username, displayName, passwordSha512, email, betaKey,
 			});
 		}
 	});

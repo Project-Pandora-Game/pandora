@@ -18,7 +18,7 @@ const TEST_CRYPT = {
 
 async function CreateAccountSecure(password: string, email: string, activated: boolean): Promise<AccountSecure> {
 	const account = new Account({
-		...await CreateAccountData(TEST_USERNAME, password, email, activated),
+		...await CreateAccountData(TEST_USERNAME, TEST_USERNAME, password, email, activated),
 		id: 0,
 	}, []);
 	return account.secure;

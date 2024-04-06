@@ -21,11 +21,13 @@ export async function TestMockDb(): Promise<MockDatabase> {
 
 export async function TestMockAccount({
 	username = nanoid(),
+	displayName,
 	email = `${nanoid()}@project-pandora.com`,
 	password = nanoid(),
 	activated = true,
 }: {
 	username?: string;
+	displayName?: string;
 	email?: string;
 	password?: string;
 	activated?: boolean;
@@ -34,6 +36,7 @@ export async function TestMockAccount({
 
 	const dbRes = await db.createAccount(await CreateAccountData(
 		username,
+		displayName ?? username,
 		PrehashPassword(password),
 		email,
 		activated,

@@ -246,7 +246,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		await account.doCleanup();
 	}
 
-	private async handleRegister({ username, email, passwordSha512, betaKey, captchaToken }: IClientDirectoryArgument['register'], connection: ClientConnection): IClientDirectoryPromiseResult['register'] {
+	private async handleRegister({ username, displayName, email, passwordSha512, betaKey, captchaToken }: IClientDirectoryArgument['register'], connection: ClientConnection): IClientDirectoryPromiseResult['register'] {
 		if (connection.isLoggedIn())
 			throw new BadMessageError();
 
@@ -260,7 +260,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'invalidBetaKey' };
 		}
 
-		const result = await accountManager.createAccount(username, passwordSha512, email);
+		const result = await accountManager.createAccount(username, displayName, passwordSha512, email);
 		if (typeof result === 'string') {
 			if (BETA_KEY_ENABLED && betaKey) await BetaKeyStore.free(betaKey);
 			logger.verbose(`${connection.id} failed account creation for the following reason: ${result}`);

@@ -6,6 +6,7 @@ import { TestMockDb } from '../utils';
 import { DatabaseAccountWithSecure } from '../../src/database/databaseStructure';
 
 const TEST_USERNAME = 'testuser';
+const TEST_DISPLAYNAME = 'TestUserDisplay';
 const TEST_USERNAME_DIFFERENT_CASE = TEST_USERNAME.toUpperCase();
 const TEST_EMAIL = 'test@project-pandora.com';
 const TEST_EMAIL_HASH = GenerateEmailHash(TEST_EMAIL);
@@ -18,6 +19,7 @@ describe('AccountManager', () => {
 		mockDb = await TestMockDb();
 		// Create at least one account
 		await mockDb.createAccount(await CreateAccountData(
+			'backgroundAccount',
 			'backgroundAccount',
 			PrehashPassword('test'),
 			'backgroundAccount@project-pandora.com',
@@ -54,7 +56,7 @@ describe('AccountManager', () => {
 		it('Creates account', async () => {
 			const sendObserver = jest.spyOn(AccountSecure.prototype, 'sendActivation');
 
-			const result = await accountManager.createAccount(TEST_USERNAME, 'password', TEST_EMAIL);
+			const result = await accountManager.createAccount(TEST_USERNAME, TEST_DISPLAYNAME, 'password', TEST_EMAIL);
 
 			expect(result).toBeInstanceOf(Account);
 			const acc = result as Account;
@@ -66,6 +68,9 @@ describe('AccountManager', () => {
 				expect.objectContaining<Partial<DatabaseAccountWithSecure>>({
 					id: acc.id,
 					username: TEST_USERNAME,
+					settings: {
+						displayName: TEST_DISPLAYNAME,
+					},
 				}),
 			);
 			// The account is not active
@@ -78,11 +83,11 @@ describe('AccountManager', () => {
 		});
 
 		it('Returns same error as database', async () => {
-			await expect(accountManager.createAccount(TEST_USERNAME, 'password', 'nonexistent@project-pandora.com'))
+			await expect(accountManager.createAccount(TEST_USERNAME, TEST_DISPLAYNAME, 'password', 'nonexistent@project-pandora.com'))
 				.resolves.toBe('usernameTaken');
-			await expect(accountManager.createAccount(TEST_USERNAME_DIFFERENT_CASE, 'password', 'nonexistent@project-pandora.com'))
+			await expect(accountManager.createAccount(TEST_USERNAME_DIFFERENT_CASE, TEST_DISPLAYNAME, 'password', 'nonexistent@project-pandora.com'))
 				.resolves.toBe('usernameTaken');
-			await expect(accountManager.createAccount('nonexistent', 'password', TEST_EMAIL))
+			await expect(accountManager.createAccount('nonexistent', TEST_DISPLAYNAME, 'password', TEST_EMAIL))
 				.resolves.toBe('emailTaken');
 		});
 	});

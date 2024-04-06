@@ -52,11 +52,13 @@ export class MockDatabase implements PandoraDatabase {
 	public async addTestAccounts() {
 		await this.createAccount(await CreateAccountData(
 			'test',
+			'test',
 			PrehashPassword('test'),
 			'test@project-pandora.com',
 			true,
 		));
 		await this.createAccount(await CreateAccountData(
+			'testinactive',
 			'testinactive',
 			PrehashPassword('test'),
 			'testinactive@project-pandora.com',

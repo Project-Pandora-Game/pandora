@@ -54,7 +54,7 @@ describe('MongoDatabase extra tests', () => {
 		const testDb = new MongoDatabase({ url: server.getUri() });
 		await testDb.init();
 
-		const acc = await testDb.createAccount(await CreateAccountData('testuser1', PrehashPassword('password1'), 'test1@project-pandora.com'));
+		const acc = await testDb.createAccount(await CreateAccountData('testuser1', 'testuser1', PrehashPassword('password1'), 'test1@project-pandora.com'));
 		Assert(typeof acc !== 'string');
 		const char = await testDb.createCharacter(acc.id);
 
@@ -63,7 +63,7 @@ describe('MongoDatabase extra tests', () => {
 		const testDb2 = new MongoDatabase({ url: server.getUri() });
 		await testDb2.init();
 
-		const acc2 = await testDb2.createAccount(await CreateAccountData('testuser2', PrehashPassword('password2'), 'test2@project-pandora.com'));
+		const acc2 = await testDb2.createAccount(await CreateAccountData('testuser2', 'testuser2', PrehashPassword('password2'), 'test2@project-pandora.com'));
 		Assert(typeof acc2 !== 'string');
 		const char2 = await testDb2.createCharacter(acc.id);
 

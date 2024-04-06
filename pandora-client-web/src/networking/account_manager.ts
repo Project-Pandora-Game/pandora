@@ -28,6 +28,7 @@ export type RegisterResponse = 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidB
 /**
  * Attempt to register a new account with the directory
  * @param username - The username to use
+ * @param displayName - The user display name of the account, shown to other users
  * @param password - The plaintext password
  * @param email - A plaintext email
  * @param betaKey - Beta key string, if required
@@ -36,6 +37,7 @@ export type RegisterResponse = 'ok' | 'usernameTaken' | 'emailTaken' | 'invalidB
  */
 type RegisterCallback = (
 	username: string,
+	displayName: string,
 	password: string,
 	email: string,
 	betaKey?: string,
@@ -102,9 +104,9 @@ export function useCreateNewCharacter(): CreateNewCharacterCallback {
 
 export function useDirectoryRegister(): RegisterCallback {
 	const directoryConnector = useDirectoryConnector();
-	return useCallback(async (username, password, email, betaKey, captchaToken) => {
+	return useCallback(async (username, displayName, password, email, betaKey, captchaToken) => {
 		const passwordSha512 = await PrehashPassword(password);
-		const result = await directoryConnector.awaitResponse('register', { username, passwordSha512, email, betaKey, captchaToken });
+		const result = await directoryConnector.awaitResponse('register', { username, displayName, passwordSha512, email, betaKey, captchaToken });
 		return result.result;
 	}, [directoryConnector]);
 }

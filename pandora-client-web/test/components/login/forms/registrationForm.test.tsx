@@ -4,10 +4,11 @@ import React from 'react';
 import { RegistrationForm } from '../../../../src/components/login/forms/registrationForm';
 import { RenderWithRouterAndProviders } from '../../../testUtils';
 import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
-import { INVALID_EMAILS, INVALID_USERNAMES } from '../loginTestData';
+import { INVALID_DISPLAY_NAMES, INVALID_EMAILS, INVALID_USERNAMES } from '../loginTestData';
 
 describe('Registration Form', () => {
 	const defaultUsername = 'test-user';
+	const defaultDisplayName = 'test-user-display';
 	const defaultEmail = 'test-user@domain.com';
 	const defaultPassword = 'password123';
 
@@ -25,6 +26,7 @@ describe('Registration Form', () => {
 	});
 
 	TestFieldIsRendered('username', 'Username', 'text', 'username');
+	TestFieldIsRendered('displayName', 'User display name (shown to others)', 'text', undefined);
 	TestFieldIsRendered('email', 'Email', 'email', 'email');
 	TestFieldIsRendered('password', 'Password', 'password', 'new-password');
 	TestFieldIsRendered('password confirmation', 'Confirm password', 'password', 'new-password');
@@ -34,6 +36,7 @@ describe('Registration Form', () => {
 		// TODO: Expand this to actually check that a WS message hasn't been sent
 		expect(screen.queryByText('Username is required')).not.toBeInTheDocument();
 
+		await user.type(screen.getByLabelText('User display name (shown to others)'), defaultDisplayName);
 		await user.type(screen.getByLabelText('Email'), defaultEmail);
 		await user.type(screen.getByLabelText('Password'), defaultPassword);
 		await user.type(screen.getByLabelText('Confirm password'), defaultPassword);
@@ -44,11 +47,27 @@ describe('Registration Form', () => {
 		// await ExpectFieldToBeInvalid('Username', 'Username is required');
 	});
 
+	it('should not permit an empty display name to be submitted', async () => {
+		// TODO: Expand this to actually check that a WS message hasn't been sent
+		expect(screen.queryByText('User display name (shown to others) is required')).not.toBeInTheDocument();
+
+		await user.type(screen.getByLabelText('Username'), defaultUsername);
+		await user.type(screen.getByLabelText('Email'), defaultEmail);
+		await user.type(screen.getByLabelText('Password'), defaultPassword);
+		await user.type(screen.getByLabelText('Confirm password'), defaultPassword);
+		await user.click(screen.getByRole('button'));
+
+		await ExpectFieldToBeInvalid('User display name (shown to others)');
+		// Error is caught by native validation, so the message is not displayed
+		// await ExpectFieldToBeInvalid('Username', 'Username is required');
+	});
+
 	it('should not permit an empty email to be submitted', async () => {
 		// TODO: Expand this to actually check that a WS message hasn't been sent
 		expect(screen.queryByText('Email is required')).not.toBeInTheDocument();
 
 		await user.type(screen.getByLabelText('Username'), defaultUsername);
+		await user.type(screen.getByLabelText('User display name (shown to others)'), defaultDisplayName);
 		await user.type(screen.getByLabelText('Password'), defaultPassword);
 		await user.type(screen.getByLabelText('Confirm password'), defaultPassword);
 		await user.click(screen.getByRole('button'));
@@ -63,6 +82,7 @@ describe('Registration Form', () => {
 		expect(screen.queryByText('Password is required')).not.toBeInTheDocument();
 
 		await user.type(screen.getByLabelText('Username'), defaultUsername);
+		await user.type(screen.getByLabelText('User display name (shown to others)'), defaultDisplayName);
 		await user.type(screen.getByLabelText('Email'), defaultEmail);
 		await user.type(screen.getByLabelText('Confirm password'), defaultPassword);
 		await user.click(screen.getByRole('button'));
@@ -77,6 +97,7 @@ describe('Registration Form', () => {
 		expect(screen.queryByText('Please confirm your password')).not.toBeInTheDocument();
 
 		await user.type(screen.getByLabelText('Username'), defaultUsername);
+		await user.type(screen.getByLabelText('User display name (shown to others)'), defaultDisplayName);
 		await user.type(screen.getByLabelText('Email'), defaultEmail);
 		await user.type(screen.getByLabelText('Password'), defaultPassword);
 		await user.click(screen.getByRole('button'));
@@ -90,16 +111,25 @@ describe('Registration Form', () => {
 		// TODO: Expand this to actually check that a WS message hasn't been sent
 		expect(screen.queryByText('Invalid username format')).not.toBeInTheDocument();
 
-		await fillInAndSubmitForm(invalidUsername, defaultEmail, defaultPassword, defaultPassword);
+		await fillInAndSubmitForm(invalidUsername, defaultDisplayName, defaultEmail, defaultPassword, defaultPassword);
 
 		await ExpectFieldToBeInvalid('Username');
+	});
+
+	it.each(INVALID_DISPLAY_NAMES)('should not permit the invalid display name %p to be submitted', async (invalidDisplayName) => {
+		// TODO: Expand this to actually check that a WS message hasn't been sent
+		expect(screen.queryByText('Invalid display name format')).not.toBeInTheDocument();
+
+		await fillInAndSubmitForm(defaultUsername, invalidDisplayName, defaultEmail, defaultPassword, defaultPassword);
+
+		await ExpectFieldToBeInvalid('User display name (shown to others)');
 	});
 
 	it.each(INVALID_EMAILS)('should not permit the invalid email %p to be submitted', async (invalidEmail) => {
 		// TODO: Expand this to actually check that a WS message hasn't been sent
 		expect(screen.queryByText('Invalid email format')).not.toBeInTheDocument();
 
-		await fillInAndSubmitForm(defaultUsername, invalidEmail, defaultPassword, defaultPassword);
+		await fillInAndSubmitForm(defaultUsername, defaultDisplayName, invalidEmail, defaultPassword, defaultPassword);
 
 		await ExpectFieldToBeInvalid('Email');
 		// Error may be caught by native validation, so the message is not reliably displayed
@@ -117,7 +147,7 @@ describe('Registration Form', () => {
 			// TODO: Expand this to actually check that a WS message hasn't been sent
 			expect(screen.queryByText('Passwords do not match')).not.toBeInTheDocument();
 
-			await fillInAndSubmitForm(defaultUsername, defaultEmail, defaultPassword, invalidPasswordConfirm);
+			await fillInAndSubmitForm(defaultUsername, defaultDisplayName, defaultEmail, defaultPassword, invalidPasswordConfirm);
 
 			await ExpectFieldToBeInvalid('Confirm password', 'Passwords do not match');
 		},
@@ -137,11 +167,13 @@ describe('Registration Form', () => {
 
 	async function fillInAndSubmitForm(
 		username: string,
+		displayName: string,
 		email: string,
 		password: string,
 		passwordConfirm: string,
 	): Promise<void> {
 		await user.type(screen.getByLabelText('Username'), username);
+		await user.type(screen.getByLabelText('User display name (shown to others)'), displayName);
 		await user.type(screen.getByLabelText('Email'), email);
 		await user.type(screen.getByLabelText('Password'), password);
 		await user.type(screen.getByLabelText('Confirm password'), passwordConfirm);
@@ -154,4 +186,3 @@ describe('Registration Form', () => {
 		});
 	}
 });
-

@@ -2,7 +2,7 @@ import { Account, CreateAccountData } from '../../src/account/account';
 
 describe('CreateAccountData()', () => {
 	it('should return an object', async () => {
-		expect(typeof await CreateAccountData('test', 'meh', 'test@example.com', true)).toBe('object');
+		expect(typeof await CreateAccountData('test', 'test', 'meh', 'test@example.com', true)).toBe('object');
 	});
 });
 
@@ -12,8 +12,8 @@ describe('Account', () => {
 	let accountActive: Account;
 	let accountInactive: Account;
 	beforeAll(async () => {
-		dataActive = await CreateAccountData('test', 'meh', 'test@example.com', true);
-		dataInactive = await CreateAccountData('test2', 'meh2', 'test2@example.com', false);
+		dataActive = await CreateAccountData('test', 'test', 'meh', 'test@example.com', true);
+		dataInactive = await CreateAccountData('test2', 'test2', 'meh2', 'test2@example.com', false);
 
 	});
 	beforeEach(() => {

@@ -21,6 +21,14 @@ export const INVALID_USERNAMES = Object.freeze([
 	'|||',
 	',,,',
 	'...',
+	'user name',
+	' aaa',
+	'bbb ',
+]);
+
+export const INVALID_DISPLAY_NAMES = Object.freeze([
+	...INVALID_USERNAMES // Reuse list of invalid usernames
+		.filter((u) => !u.includes(' ')), // But display names can have spaces
 ]);
 
 export const INVALID_LENGTH_TOKENS = Object.freeze([

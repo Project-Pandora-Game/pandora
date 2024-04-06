@@ -89,8 +89,8 @@ export function WikiSafety(): ReactElement {
 			<h4 id='SA_Display_name'>Display name</h4>
 			<p>
 				Pandora also gives you the ability to change the display name for your user account that is used in your account's profile or in the contacts list, as well
-				as for chatting via direct messages. The default display name is your login username.<br />
-				If you do not want your username to be publicly visible to others, for safety or security reasons, you can change the display name under Settings
+				as for chatting via direct messages. The default display name is the one you registered your account with.<br />
+				You can change the display name under Settings
 				at the top and then "Account"-tab. The account display name can be changed once every 7 days.
 			</p>
 

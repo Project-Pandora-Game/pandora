@@ -36,8 +36,8 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 	beforeEach(async () => {
 		db = await initDb();
 		// Create test accounts
-		const result1 = await db.createAccount(await CreateAccountData(TEST_USERNAME1, TEST_PASSWORD1, TEST_EMAIL1));
-		const result2 = await db.createAccount(await CreateAccountData(TEST_USERNAME2, TEST_PASSWORD2, TEST_EMAIL2, true));
+		const result1 = await db.createAccount(await CreateAccountData(TEST_USERNAME1, TEST_USERNAME1, TEST_PASSWORD1, TEST_EMAIL1));
+		const result2 = await db.createAccount(await CreateAccountData(TEST_USERNAME2, TEST_USERNAME2, TEST_PASSWORD2, TEST_EMAIL2, true));
 		if (typeof result1 === 'string') {
 			throw new Error(result1);
 		}
@@ -133,7 +133,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 	describe('createAccount()', () => {
 
 		it('creates accounts in parallel', async () => {
-			const mockAccount = await CreateAccountData('test', PrehashPassword('test'), 'test@example.com');
+			const mockAccount = await CreateAccountData('test', 'test', PrehashPassword('test'), 'test@example.com');
 
 			const [account1, account2, account3] = await Promise.all([mockAccount, mockAccount, mockAccount]
 				.map((acc) => _.cloneDeep(acc))
@@ -159,7 +159,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		});
 
 		it('creates account with gettable id', async () => {
-			const acc = await CreateAccountData('test', PrehashPassword('test'), 'test@example.com');
+			const acc = await CreateAccountData('test', 'test', PrehashPassword('test'), 'test@example.com');
 			const createdAcc = await db.createAccount(acc);
 			expect(createdAcc).toBeInstanceOf(Object);
 			Assert(typeof createdAcc !== 'string');
@@ -167,7 +167,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		});
 
 		it('creates account with gettable username', async () => {
-			const acc = await CreateAccountData('test', PrehashPassword('test'), 'test@example.com');
+			const acc = await CreateAccountData('test', 'test', PrehashPassword('test'), 'test@example.com');
 			const createdAcc = await db.createAccount(acc);
 			expect(createdAcc).toBeInstanceOf(Object);
 			Assert(typeof createdAcc !== 'string');
@@ -175,7 +175,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		});
 
 		it('creates account with gettable email hash', async () => {
-			const acc = await CreateAccountData('test', PrehashPassword('test'), 'test@example.com');
+			const acc = await CreateAccountData('test', 'test', PrehashPassword('test'), 'test@example.com');
 			const createdAcc = await db.createAccount(acc);
 			expect(createdAcc).toBeInstanceOf(Object);
 			Assert(typeof createdAcc !== 'string');
@@ -183,7 +183,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		});
 
 		it('rejects creating account with duplicate username', async () => {
-			const mockAccount = await CreateAccountData(TEST_USERNAME1, TEST_PASSWORD1, 'nonexistent@project-pandora.com');
+			const mockAccount = await CreateAccountData(TEST_USERNAME1, TEST_USERNAME1, TEST_PASSWORD1, 'nonexistent@project-pandora.com');
 
 			await expect(db.createAccount(mockAccount)).resolves.toBe('usernameTaken');
 		});
@@ -191,19 +191,19 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 		it('rejects creating account with duplicate username (case insensitive)', async () => {
 			const anotherUsername = TEST_USERNAME1.toUpperCase();
 			expect(anotherUsername).not.toEqual(TEST_USERNAME1);
-			const mockAccount = await CreateAccountData(anotherUsername, TEST_PASSWORD1, 'nonexistent@project-pandora.com');
+			const mockAccount = await CreateAccountData(anotherUsername, anotherUsername, TEST_PASSWORD1, 'nonexistent@project-pandora.com');
 
 			await expect(db.createAccount(mockAccount)).resolves.toBe('usernameTaken');
 		});
 
 		it('rejects creating account with duplicate email', async () => {
-			const mockAccount = await CreateAccountData('nonexistent', TEST_PASSWORD1, TEST_EMAIL1);
+			const mockAccount = await CreateAccountData('nonexistent', 'nonexistent', TEST_PASSWORD1, TEST_EMAIL1);
 
 			await expect(db.createAccount(mockAccount)).resolves.toBe('emailTaken');
 		});
 
 		it('reports duplicate username over email', async () => {
-			const mockAccount = await CreateAccountData(TEST_USERNAME1, TEST_PASSWORD1, TEST_EMAIL1);
+			const mockAccount = await CreateAccountData(TEST_USERNAME1, TEST_USERNAME1, TEST_PASSWORD1, TEST_EMAIL1);
 
 			await expect(db.createAccount(mockAccount)).resolves.toBe('usernameTaken');
 		});

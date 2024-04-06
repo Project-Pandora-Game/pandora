@@ -276,6 +276,8 @@ export default class MongoDatabase implements PandoraDatabase {
 		if (this._inMemoryServer) {
 			await this._inMemoryServer.stop();
 		}
+
+		logger.info(`Database closed`);
 	}
 
 	public get nextAccountId(): number {
@@ -749,6 +751,9 @@ async function CreateInMemoryMongo({
 			dbPath,
 			storageEngine: dbPath ? 'wiredTiger' : 'ephemeralForTest',
 			args: ['--setParameter', 'diagnosticDataCollectionEnabled=false'],
+		},
+		spawn: {
+			detached: true,
 		},
 	});
 }

@@ -21,7 +21,7 @@ const logger = GetLogger('Lifecycle');
 
 let destroying: string | undefined;
 let stopping: Promise<void> | undefined;
-const STOP_TIMEOUT = 10_000;
+const STOP_TIMEOUT = 15_000;
 
 function DestroyService(service: Service): Promise<void> | void {
 	destroying = service.constructor.name;

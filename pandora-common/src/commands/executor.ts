@@ -25,6 +25,28 @@ export interface CommandStepProcessor<ResultType, Context extends ICommandExecut
 	autocomplete?(input: string, context: Context, args: EntryArguments): CommandAutocompleteOption[];
 }
 
+export function CommandStepOptional<ResultType, Context extends ICommandExecutionContext = ICommandExecutionContext, EntryArguments extends Record<string, never> = IEmpty>(
+	processor: CommandStepProcessor<ResultType, Context, EntryArguments>,
+): CommandStepProcessor<ResultType | undefined, Context, EntryArguments> {
+	const result: CommandStepProcessor<ResultType | undefined, Context, EntryArguments> = {
+		preparse: processor.preparse,
+		parse(input, context, args) {
+			if (!input) {
+				return { success: true, value: undefined };
+			}
+			return processor.parse(input, context, args);
+		},
+	};
+	if (processor.autocomplete) {
+		const originalAutocomplete = processor.autocomplete.bind(processor);
+		result.autocomplete = (input, context, args) => {
+			const options = originalAutocomplete(input, context, args);
+			return options.length > 0 ? options : [{ replaceValue: '', displayValue: 'none' }];
+		};
+	}
+	return result;
+}
+
 export interface CommandRunner<
 	Context extends ICommandExecutionContext,
 	EntryArguments extends Record<string, never>,

@@ -13,7 +13,7 @@ const logger = GetLogger('AccountVerificationForm');
 export function AccountVerificationForm(): ReactElement {
 	const { state: { username, password, justRegistered } } = useAuthFormData();
 	const navigate = useNavigate();
-	const { dirty, errorMessage, errors, onSubmit, register } = useLoginForm(true);
+	const { dirty, errorMessage, errors, onSubmit, isSubmitting, register } = useLoginForm(true);
 
 	useEffect(() => {
 		if (!IsUsername(username) || !IsString(password) || !password.length) {
@@ -51,7 +51,7 @@ export function AccountVerificationForm(): ReactElement {
 				<FormFieldError error={ errors.token } />
 			</FormField>
 			{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
-			<Button type='submit'>Sign in</Button>
+			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>Sign in</Button>
 			<FormLink to='/resend_verification_email'>Didn't receive a code by email?</FormLink>
 		</Form>
 	);

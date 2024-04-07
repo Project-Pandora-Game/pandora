@@ -17,30 +17,28 @@ export function ResendVerificationForm(): ReactElement {
 	const [captchaFailed, setCaptchaFailed] = useState(false);
 
 	const {
-		formState: { errors, submitCount },
+		formState: { errors, submitCount, isSubmitting },
 		handleSubmit,
 		register,
 	} = useForm<ResendVerificationFormData>({ shouldUseNativeValidation: true, progressive: true });
 
-	const onSubmit = handleSubmit(({ email }) => {
-		void (async () => {
-			setCaptchaFailed(false);
+	const onSubmit = handleSubmit(async ({ email }) => {
+		setCaptchaFailed(false);
 
-			const result = await resendVerification(email, captchaToken);
+		const result = await resendVerification(email, captchaToken);
 
-			if (result === 'maybeSent') {
-				navigate('/login', {
-					state: {
-						message: 'An email with a verification code has been sent to the submitted email address, if there is an account registered using it.',
-					},
-				});
-				return;
-			} else if (result === 'invalidCaptcha') {
-				setCaptchaFailed(true);
-			} else {
-				AssertNever(result);
-			}
-		})();
+		if (result === 'maybeSent') {
+			navigate('/login', {
+				state: {
+					message: 'An email with a verification code has been sent to the submitted email address, if there is an account registered using it.',
+				},
+			});
+			return;
+		} else if (result === 'invalidCaptcha') {
+			setCaptchaFailed(true);
+		} else {
+			AssertNever(result);
+		}
 	});
 
 	return (
@@ -60,7 +58,7 @@ export function ResendVerificationForm(): ReactElement {
 				<FormFieldError error={ errors.email } />
 			</FormField>
 			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
-			<Button type='submit'>Resend verification email</Button>
+			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>Resend verification email</Button>
 			<FormLink to='/login'>◄ Return to login</FormLink>
 		</Form>
 	);

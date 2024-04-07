@@ -17,30 +17,28 @@ export function ForgotPasswordForm(): ReactElement {
 	const [captchaFailed, setCaptchaFailed] = useState(false);
 
 	const {
-		formState: { errors, submitCount },
+		formState: { errors, submitCount, isSubmitting },
 		handleSubmit,
 		register,
 	} = useForm<ForgotPasswordFormData>({ shouldUseNativeValidation: true, progressive: true });
 
-	const onSubmit = handleSubmit(({ email }) => {
-		void (async () => {
-			setCaptchaFailed(false);
+	const onSubmit = handleSubmit(async ({ email }) => {
+		setCaptchaFailed(false);
 
-			const result = await passwordReset(email, captchaToken);
+		const result = await passwordReset(email, captchaToken);
 
-			if (result === 'maybeSent') {
-				navigate('/reset_password', {
-					state: {
-						message: 'An email with a reset code has been sent to the submitted email address, if there is an account registered using it.',
-					},
-				});
-				return;
-			} else if (result === 'invalidCaptcha') {
-				setCaptchaFailed(true);
-			} else {
-				AssertNever(result);
-			}
-		})();
+		if (result === 'maybeSent') {
+			navigate('/reset_password', {
+				state: {
+					message: 'An email with a reset code has been sent to the submitted email address, if there is an account registered using it.',
+				},
+			});
+			return;
+		} else if (result === 'invalidCaptcha') {
+			setCaptchaFailed(true);
+		} else {
+			AssertNever(result);
+		}
 	});
 
 	return (
@@ -60,7 +58,7 @@ export function ForgotPasswordForm(): ReactElement {
 				<FormFieldError error={ errors.email } />
 			</FormField>
 			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
-			<Button type='submit'>Send reset email</Button>
+			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>Send reset email</Button>
 			<FormLink to='/reset_password'>Already have a reset code?</FormLink>
 			<FormLink to='/login'>◄ Return to login</FormLink>
 		</Form>

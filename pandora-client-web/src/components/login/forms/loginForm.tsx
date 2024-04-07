@@ -10,7 +10,7 @@ import pandoraLogo from '../../../assets/icons/pandora.svg';
 export function LoginForm(): ReactElement {
 	const auth = useAuthToken();
 	const loggedIn = useCurrentAccount() != null;
-	const { dirty, errorMessage, errors, onSubmit, register } = useLoginForm();
+	const { dirty, errorMessage, errors, onSubmit, isSubmitting, register } = useLoginForm();
 
 	if (loggedIn) {
 		return <div>Club membership was confirmed</div>;
@@ -59,7 +59,7 @@ export function LoginForm(): ReactElement {
 				<FormFieldError error={ errors.password } />
 			</FormField>
 			{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
-			<Button type='submit'>Sign in</Button>
+			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>Sign in</Button>
 			<FormLink to='/forgot_password'>Forgot your password?</FormLink>
 			<FormLink to='/register'>Not a member? <strong>Sign up</strong></FormLink>
 		</Form>

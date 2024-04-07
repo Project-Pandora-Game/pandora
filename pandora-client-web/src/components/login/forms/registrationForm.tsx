@@ -31,7 +31,7 @@ export function RegistrationForm(): ReactElement {
 	const navigate = useNavigate();
 	const { setState: setAuthData } = useAuthFormData();
 	const {
-		formState: { errors, submitCount },
+		formState: { errors, submitCount, isSubmitting },
 		getValues,
 		handleSubmit,
 		register,
@@ -81,30 +81,28 @@ export function RegistrationForm(): ReactElement {
 		}
 	}, [usernameTaken, emailTaken, invalidBetaKey, trigger]);
 
-	const onSubmit = handleSubmit(({ username, displayName, email, password, betaKey }) => {
-		void (async () => {
-			setUsernameTaken('');
-			setEmailTaken('');
-			setCaptchaFailed(false);
+	const onSubmit = handleSubmit(async ({ username, displayName, email, password, betaKey }) => {
+		setUsernameTaken('');
+		setEmailTaken('');
+		setCaptchaFailed(false);
 
-			const result = await directoryRegister(username, displayName, password, email, betaKey || undefined, captchaToken);
+		const result = await directoryRegister(username, displayName, password, email, betaKey || undefined, captchaToken);
 
-			if (result === 'ok') {
-				setAuthData({ username, password, justRegistered: true });
-				navigate('/login_verify');
-				return;
-			} else if (result === 'usernameTaken') {
-				setUsernameTaken(username);
-			} else if (result === 'emailTaken') {
-				setEmailTaken(email);
-			} else if (result === 'invalidBetaKey') {
-				setInvalidBetaKey(betaKey);
-			} else if (result === 'invalidCaptcha') {
-				setCaptchaFailed(true);
-			} else {
-				AssertNever(result);
-			}
-		})();
+		if (result === 'ok') {
+			setAuthData({ username, password, justRegistered: true });
+			navigate('/login_verify');
+			return;
+		} else if (result === 'usernameTaken') {
+			setUsernameTaken(username);
+		} else if (result === 'emailTaken') {
+			setEmailTaken(email);
+		} else if (result === 'invalidBetaKey') {
+			setInvalidBetaKey(betaKey);
+		} else if (result === 'invalidCaptcha') {
+			setCaptchaFailed(true);
+		} else {
+			AssertNever(result);
+		}
 	});
 
 	return (
@@ -193,7 +191,7 @@ export function RegistrationForm(): ReactElement {
 					<FormFieldError error={ errors.betaKey } />
 				</FormField> }
 			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
-			<Button type='submit'>Register</Button>
+			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>Register</Button>
 			<FormLink to='/login'>Already have an account? <strong>Sign in</strong></FormLink>
 		</Form>
 	);

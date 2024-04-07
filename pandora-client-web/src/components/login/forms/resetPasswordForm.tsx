@@ -19,31 +19,29 @@ export function ResetPasswordForm(): ReactElement {
 	const [errorMessage, setErrorMessage] = useState('');
 	const passwordResetConfirm = useDirectoryPasswordResetConfirm();
 	const {
-		formState: { errors, submitCount },
+		formState: { errors, submitCount, isSubmitting },
 		getValues,
 		handleSubmit,
 		register,
 	} = useForm<ResetPasswordFormData>({ shouldUseNativeValidation: true, progressive: true });
 
-	const onSubmit = handleSubmit(({ username, token, password }) => {
-		void (async () => {
-			const result = await passwordResetConfirm(username, token, password);
+	const onSubmit = handleSubmit(async ({ username, token, password }) => {
+		const result = await passwordResetConfirm(username, token, password);
 
-			if (result === 'ok') {
-				setErrorMessage('');
-				navigate('/login', {
-					state: {
-						message: 'Your password has been changed and can now be used to log in.',
-					},
-				});
-				return;
-			} else if (result === 'unknownCredentials') {
-				// Invalid user data
-				setErrorMessage('Invalid username or token');
-			} else {
-				AssertNever(result);
-			}
-		})();
+		if (result === 'ok') {
+			setErrorMessage('');
+			navigate('/login', {
+				state: {
+					message: 'Your password has been changed and can now be used to log in.',
+				},
+			});
+			return;
+		} else if (result === 'unknownCredentials') {
+			// Invalid user data
+			setErrorMessage('Invalid username or token');
+		} else {
+			AssertNever(result);
+		}
 	});
 
 	return (
@@ -114,7 +112,7 @@ export function ResetPasswordForm(): ReactElement {
 				<FormFieldError error={ errors.passwordConfirm } />
 			</FormField>
 			{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
-			<Button type='submit'>Reset password</Button>
+			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>Reset password</Button>
 			<FormLink to='/login'>◄ Return to login</FormLink>
 		</Form>
 	);

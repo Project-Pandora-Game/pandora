@@ -20,7 +20,7 @@ export const BetaRegistrationService = new class BetaRegistrationService impleme
 	private _getPendingRegistrations(): DatabaseBetaRegistration[] {
 		Assert(this._betaRegistrations != null);
 
-		return this._betaRegistrations.filter((r) => r.assignedKey == null);
+		return this._betaRegistrations.filter((r) => !r.invited);
 	}
 
 	@AsyncSynchronized('object')
@@ -87,7 +87,7 @@ export const BetaRegistrationService = new class BetaRegistrationService impleme
 	public getCandidates(count: number): Readonly<DatabaseBetaRegistration>[] {
 		Assert(this._betaRegistrations != null);
 
-		return this._betaRegistrations.filter((r) => r.assignedKey == null).slice(0, count);
+		return this._betaRegistrations.filter((r) => !r.invited).slice(0, count);
 	}
 
 	@AsyncSynchronized('object')
@@ -99,11 +99,59 @@ export const BetaRegistrationService = new class BetaRegistrationService impleme
 			return false;
 
 		candidate.assignedKey = key;
-		this.logger.verbose(`Assigned key ${key} to candidate ${discordId}, ${this._getPendingRegistrations().length}/${this._betaRegistrations.length} pending.`);
+		this.logger.verbose(`Assigned key ${key} to candidate ${discordId}.`);
 
 		await this._save();
 
 		return true;
+	}
+
+	@AsyncSynchronized('object')
+	public async finalizeInvitation(discordId: string): Promise<boolean> {
+		Assert(this._betaRegistrations != null);
+		const candidate = this._betaRegistrations.find((r) => r.discordId === discordId);
+
+		if (candidate == null || candidate.assignedKey == null)
+			return false;
+
+		candidate.invited = true;
+		this.logger.verbose(`Candidate ${discordId} successfully invited, ${this._getPendingRegistrations().length}/${this._betaRegistrations.length} pending.`);
+
+		await this._save();
+
+		return true;
+	}
+
+	/**
+	 * Prunes the candidates by calling check with each candidate
+	 * @param check - The check function. Should return `true` if the candidate is still valid
+	 * @param dryRun - If set the pruning doesn't actually happen
+	 */
+	@AsyncSynchronized('object', { maxExecutionTime: 60 * 60_000 })
+	public async pruneCandidates(check: (candidate: Readonly<DatabaseBetaRegistration>) => Promise<boolean>, dryRun: boolean = false): Promise<void> {
+		Assert(this._betaRegistrations != null);
+
+		for (let i = this._betaRegistrations.length - 1; i >= 0; i--) {
+			const candidate = this._betaRegistrations[i];
+
+			// Never discard people with a key to prevent giving someone multiple
+			if (candidate.assignedKey != null)
+				continue;
+
+			if (await check(candidate))
+				continue;
+
+			this.logger.verbose(`Pruning candidate ${candidate.discordId}${dryRun ? ' (dry run)' : ''}`);
+			Assert(this._betaRegistrations[i] === candidate);
+
+			if (dryRun)
+				continue;
+
+			this._betaRegistrations.splice(i, 1);
+		}
+
+		this.logger.verbose(`Prune completed, ${this._getPendingRegistrations().length}/${this._betaRegistrations.length} pending.`);
+		await this._save();
 	}
 
 	private async _save(): Promise<void> {

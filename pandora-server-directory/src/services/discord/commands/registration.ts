@@ -1,4 +1,19 @@
-import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, PermissionFlagsBits, SlashCommandBuilder, SlashCommandSubcommandBuilder, type MessageActionRowComponentBuilder, SlashCommandIntegerOption, ApplicationCommandOptionType, userMention } from 'discord.js';
+import {
+	ActionRowBuilder,
+	ButtonBuilder,
+	ButtonStyle,
+	EmbedBuilder,
+	PermissionFlagsBits,
+	SlashCommandBuilder,
+	SlashCommandSubcommandBuilder,
+	type MessageActionRowComponentBuilder,
+	SlashCommandIntegerOption,
+	SlashCommandBooleanOption,
+	ApplicationCommandOptionType,
+	userMention,
+	DiscordAPIError,
+	type GuildMember,
+} from 'discord.js';
 import { Assert, AssertNever, GetLogger, TimeSpanMs } from 'pandora-common';
 import { ENV } from '../../../config';
 import { BetaRegistrationService } from '../../betaRegistration/betaRegistration';
@@ -24,6 +39,16 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 			new SlashCommandSubcommandBuilder()
 				.setName('add-registration-form')
 				.setDescription('Send a registration form message'),
+		)
+		.addSubcommand(
+			new SlashCommandSubcommandBuilder()
+				.setName('registration-prune')
+				.setDescription('Prune the registered people, removing anyone without role or no longer in the server')
+				.addBooleanOption(
+					new SlashCommandBooleanOption()
+						.setName('dry-run')
+						.setDescription('Perform a dry run'),
+				),
 		)
 		.addSubcommand(
 			new SlashCommandSubcommandBuilder()
@@ -76,6 +101,62 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 				ephemeral: true,
 				content: `Done! :white_check_mark:`,
 			});
+		} else if (subcommand === 'registration-prune') {
+			const dryRunOption = interaction.options.get('dry-run');
+			Assert(dryRunOption == null || typeof dryRunOption.value === 'boolean');
+			const dryRun = dryRunOption?.value === true;
+
+			logger.verbose(`Running registration prune${dryRun ? ' (dry run)' : ''}`);
+			await interaction.reply({
+				content: `:hourglass_flowing_sand: Running registration prune${dryRun ? ' (dry run)' : ''}`,
+			});
+
+			await BetaRegistrationService.pruneCandidates(async (candidate) => {
+				Assert(interaction.guild != null);
+
+				// Sleep not to run into any throttling (hopefully)
+				await Sleep(120);
+
+				let candidateMember: GuildMember;
+				// Check membership
+				try {
+					candidateMember = await interaction.guild.members.fetch({ user: candidate.discordId, force: true });
+				} catch (err) {
+					if (err instanceof DiscordAPIError) {
+						if (err.code === 10_007) {
+							logger.verbose(`Candidate ${candidate.discordId} not found in the guild, removing.`);
+							return false;
+						} else {
+							logger.warning(`Failed to get candidate member status for ${candidate.discordId}, unknown Discord error:`, err.code, err.message);
+						}
+					} else {
+						logger.warning(`Failed to get candidate member status for ${candidate.discordId}, unknown error:`, err);
+					}
+					return true;
+				}
+
+				// Check beta role
+				const betaAccessRole = candidateMember.roles.resolve(DISCORD_BETA_ACCESS_ROLE_ID);
+				if (betaAccessRole != null) {
+					// This shouldn't happen: People that already have access shouldn't be candidates
+					logger.warning(`Candidate ${candidate.discordId} already has beta access role; skip.`);
+					return true;
+				}
+
+				// Check candidate role
+				const betaCandidateRole = candidateMember.roles.resolve(DISCORD_BETA_REGISTRATION_PENDING_ROLE_ID);
+				if (betaCandidateRole == null) {
+					logger.debug(`Candidate ${candidate.discordId} doesn't have candidate role, removing.`);
+					return false;
+				}
+
+				// A valid candidate
+				return true;
+			}, dryRun);
+
+			await interaction.followUp({
+				content: `:white_check_mark: Prune completed, check server log for details.`,
+			});
 		} else if (subcommand === 'mass-invite') {
 			const count = interaction.options.get('count', true);
 			Assert(count.type === ApplicationCommandOptionType.Integer);
@@ -93,23 +174,40 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 
 			let successful = 0;
 			for (const candidate of candidates) {
-				// Pause for half a second between candidates not to run into any rate limit
-				await Sleep(500);
+				// Pause for a bit between candidates not to run into any rate limit
+				await Sleep(1_500);
 
 				// Race condition prevention (just a simple one, it shouldn't happen anyway)
-				if (candidate.assignedKey != null)
+				if (candidate.invited)
 					continue;
 
 				try {
 					// Find the candidate in the server
 					const candidateMember = await interaction.guild.members.fetch({ user: candidate.discordId });
 
-					// Generate a new beta key for them
-					const key = await BetaKeyStore.create(ACTOR_PANDORA, {
-						maxUses: 1,
-						expires: Date.now() + TimeSpanMs(30, 'days'),
-					});
-					Assert(typeof key !== 'string');
+					let token: string;
+
+					if (candidate.assignedKey != null) {
+						token = candidate.assignedKey;
+						logger.warning(`Candidate ${candidate.discordId} already has a key (${candidate.assignedKey.substring(0, 8)}), resending.`);
+					} else {
+						// Generate a new beta key for them
+						const key = await BetaKeyStore.create(ACTOR_PANDORA, {
+							maxUses: 1,
+							expires: Date.now() + TimeSpanMs(30, 'days'),
+						});
+						Assert(typeof key !== 'string');
+						// Store the key to avoid generating multiple for one person,
+						// even if sending it fails
+						const assignmentResult = await BetaRegistrationService.assignCandidateKey(candidate.discordId, key.token);
+
+						if (!assignmentResult) {
+							logger.warning(`Failed to assign beta key ${key.id} to ${candidate.discordId}`);
+							continue;
+						}
+
+						token = key.token;
+					}
 
 					// Give user roles
 					await candidateMember.roles.remove(DISCORD_BETA_REGISTRATION_PENDING_ROLE_ID, 'Automatic beta handout');
@@ -122,7 +220,7 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 							`Some time ago you have registered to join the beta of **Project Pandora** and now you have been selected! Congratulations!\n` +
 							`Here is your beta registration key. It can be used only once and expires in 30 days.\n` +
 							'```\n' +
-							`${key.token}\n` +
+							`${token}\n` +
 							'```\n' +
 							`You can register with it at https://project-pandora.com\n` +
 							`You were also given access to betatester channels on Pandora's Discord where you can talk with other betatesters, share suggestions, or inform us about any issues you encounter. You can find those channels here: https://discord.com/channels/872284471611760720/1120733020962431046\n` +
@@ -130,16 +228,14 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 							`Have fun!\n`,
 					});
 
-					// Only after successful DM mark the candidate as having received a key
-					const assignmentResult = await BetaRegistrationService.assignCandidateKey(candidate.discordId, key.id);
-
-					if (!assignmentResult) {
-						logger.warning(`Failed to assign beta key ${key.id} to ${candidate.discordId}`);
+					// Only after successful DM mark the candidate as invited
+					if (!await BetaRegistrationService.finalizeInvitation(candidate.discordId)) {
+						logger.warning(`Failed to finalize invitation of ${candidate.discordId}`);
 						continue;
 					}
 
 					successful++;
-					logger.verbose(`Successfully sent an invite to user ${candidate.discordId} (token: ${key.id})`);
+					logger.verbose(`Successfully sent an invite to user ${candidate.discordId} (token: ${token})`);
 				} catch (error) {
 					logger.warning(`Failed to invite user ${candidate.discordId} (token: ${candidate.assignedKey}):`, error);
 				}

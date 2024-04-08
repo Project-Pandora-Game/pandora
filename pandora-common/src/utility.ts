@@ -278,8 +278,9 @@ const AsyncSynchronizedObjectLocks = new WeakMap<object, AsyncLock>();
  *
  * Only one call per instance runs at a time, other calls waiting in queue for the first call to finish (either resolve or reject)
  * @param options - Options passed directly to the `async-lock` library, or if `object` that the method synchronizes with all 'object' synchronized methods within instance
+ * @param lockOptions - Options applied when this function acquires the lock (useful mainly in combination with the `object` target)
  */
-export function AsyncSynchronized(options?: AsyncLockOptions | 'object') {
+export function AsyncSynchronized(options?: AsyncLockOptions | 'object', lockOptions?: AsyncLockOptions) {
 	if (options === 'object') {
 		return function <Args extends unknown[], Return, This extends object>(method: (...args: Args) => Promise<Return>, _context: ClassMethodDecoratorContext<This>) {
 			return function (this: This, ...args: Args) {
@@ -291,7 +292,7 @@ export function AsyncSynchronized(options?: AsyncLockOptions | 'object') {
 					AsyncSynchronizedObjectLocks.set(this, lock);
 				}
 
-				return lock.acquire<Return>('', () => method.apply(this, args));
+				return lock.acquire<Return>('', () => method.apply(this, args), lockOptions);
 			};
 		};
 	}
@@ -308,7 +309,7 @@ export function AsyncSynchronized(options?: AsyncLockOptions | 'object') {
 				locks.set(this, lock);
 			}
 
-			return lock.acquire<Return>('', () => method.apply(this, args));
+			return lock.acquire<Return>('', () => method.apply(this, args), lockOptions);
 		};
 	};
 }

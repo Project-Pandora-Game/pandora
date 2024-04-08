@@ -171,8 +171,8 @@ importers:
         specifier: 7.0.3
         version: 7.0.3
       css-loader:
-        specifier: 7.0.0
-        version: 7.0.0(webpack@5.91.0)
+        specifier: 7.1.0
+        version: 7.1.0(webpack@5.91.0)
       css-minimizer-webpack-plugin:
         specifier: 6.0.0
         version: 6.0.0(webpack@5.91.0)
@@ -6347,8 +6347,8 @@ packages:
       postcss-value-parser: 4.2.0
     dev: true
 
-  /css-loader@7.0.0(webpack@5.91.0):
-    resolution: {integrity: sha512-WrO4FVoamxt5zY9CauZjoJgXRi/LZKIk+Ta7YvpSGr5r/eMYPNp5/T9ODlMe4/1rF5DYlycG1avhV4g3A/tiAw==}
+  /css-loader@7.1.0(webpack@5.91.0):
+    resolution: {integrity: sha512-VFNj47MAG84MqYDdh9puJG0h98Xs7gEYaX0aeGkfjYqBLB0seOE325sVbqWwaNu3hMZwEP4bB+F4gvF+A63qMA==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@rspack/core': 0.x || 1.x

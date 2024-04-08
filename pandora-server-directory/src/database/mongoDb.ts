@@ -25,6 +25,7 @@ import {
 	SpaceId,
 	SpaceIdSchema,
 	ZodCast,
+	ZodTemplateString,
 } from 'pandora-common';
 import { z } from 'zod';
 import { ENV } from '../config';
@@ -678,7 +679,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			oldSchema: DatabaseAccountWithSecureSchema.extend({
 				characters: DatabaseCharacterSelfInfoSchema
 					.omit({ currentSpace: true })
-					.and(z.object({ currentRoom: SpaceIdSchema.nullable().optional() }))
+					.and(z.object({ currentRoom: z.union([SpaceIdSchema, OldSpaceIdSchema]).nullable().optional() }))
 					.array()
 					.optional(),
 			}),
@@ -696,7 +697,7 @@ export default class MongoDatabase implements PandoraDatabase {
 									id: character.id,
 									name: character.name,
 									preview: character.preview,
-									currentSpace: character.currentRoom ?? null,
+									currentSpace: typeof character.currentRoom === 'string' ? UpdateSpaceId(character.currentRoom) : null,
 									inCreation: character.inCreation,
 								},
 							});
@@ -813,6 +814,7 @@ export default class MongoDatabase implements PandoraDatabase {
 					if (typeof character.id === 'string')
 						continue;
 
+					requireFullMigration = true;
 					migrationLogger.verbose(`Migrating character id for ${character.id} -> ${CharacterIdToStringId(character.id)}`);
 
 					const { matchedCount } = await oldCollection.updateOne(
@@ -841,6 +843,70 @@ export default class MongoDatabase implements PandoraDatabase {
 				throw error;
 			}
 		}
+
+		//#endregion
+
+		//#region Change space id format from `r/abc` to `s/abc` (04/2024)
+
+		await spaceCollection.doManualMigration(this._client, this._db, {
+			oldSchema: z.object({
+				id: z.union([SpaceIdSchema, OldSpaceIdSchema]),
+			}),
+			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+				for await (const space of oldStream) {
+					if (space == null)
+						continue;
+
+					if (space.id.startsWith('s/'))
+						continue;
+
+					const newId: SpaceId = UpdateSpaceId(space.id);
+
+					requireFullMigration = true;
+					migrationLogger.verbose(`Migrating space id for ${space.id} -> ${newId}`);
+
+					const { matchedCount } = await oldCollection.updateOne(
+						{ id: space.id },
+						{
+							$set: {
+								id: newId,
+							},
+						},
+					);
+					Assert(matchedCount === 1);
+				}
+			},
+		});
+
+		await characterCollection.doManualMigration(this._client, this._db, {
+			oldSchema: CharacterDataSchema
+				.pick({ id: true })
+				.and(z.object({
+					currentSpace: z.union([SpaceIdSchema, OldSpaceIdSchema]).nullable().default(null),
+				})),
+			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+				for await (const character of oldStream) {
+					if (character == null)
+						continue;
+
+					if (character.currentSpace == null || character.currentSpace.startsWith('s/'))
+						continue;
+
+					requireFullMigration = true;
+					migrationLogger.verbose(`Migrating character ${character.id} current space id`);
+
+					const { matchedCount } = await oldCollection.updateOne(
+						{ id: character.id },
+						{
+							$set: {
+								currentSpace: UpdateSpaceId(character.currentSpace),
+							},
+						},
+					);
+					Assert(matchedCount === 1);
+				}
+			},
+		});
 
 		//#endregion
 
@@ -876,6 +942,13 @@ async function CreateInMemoryMongo({
 
 function CharacterIdToStringId(id: number | CharacterId): CharacterId {
 	return typeof id === 'number' ? `c${id}` : id;
+}
+
+// Temporary for migration
+const OldSpaceIdSchema = ZodTemplateString<`r/${string}`>(z.string(), /^r\//);
+
+function UpdateSpaceId(oldId: SpaceId | z.infer<typeof OldSpaceIdSchema>): SpaceId {
+	return oldId.startsWith('s/') ? SpaceIdSchema.parse(oldId) : `s/${oldId.slice(2)}`;
 }
 
 function DbSynchronized<Args extends unknown[], Return>(getKey?: (name: string, args: Args) => string) {

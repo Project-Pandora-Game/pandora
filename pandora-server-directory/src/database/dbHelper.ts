@@ -47,7 +47,7 @@ export interface SpaceCreationData {
 
 export function CreateSpace(data: SpaceCreationData, id?: SpaceId): SpaceData {
 	return {
-		id: id ?? `r/${nanoid()}`,
+		id: id ?? `s/${nanoid()}`,
 		accessId: '',
 		inventory: ROOM_INVENTORY_BUNDLE_DEFAULT,
 		invites: [],

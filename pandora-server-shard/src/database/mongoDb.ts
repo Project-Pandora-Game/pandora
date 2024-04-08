@@ -17,8 +17,7 @@ import type { Db, Collection } from 'mongodb';
 const logger = GetLogger('db');
 
 const CHARACTERS_COLLECTION_NAME = 'characters';
-// TODO(spaces): Consider migrating this
-const SPACES_COLLECTION_NAME = 'chatrooms';
+const SPACES_COLLECTION_NAME = 'spaces';
 
 export default class MongoDatabase implements ShardDatabase {
 	private readonly _client: MongoClient;

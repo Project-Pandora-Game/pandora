@@ -1,6 +1,6 @@
 import AsyncLock from 'async-lock';
 import _ from 'lodash';
-import { CollationOptions, Db, MongoClient } from 'mongodb';
+import { CollationOptions, Db, MongoClient, MongoServerError } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
 import {
@@ -59,8 +59,7 @@ const logger = GetLogger('db');
 
 const ACCOUNTS_COLLECTION_NAME = 'accounts';
 const CHARACTERS_COLLECTION_NAME = 'characters';
-// TODO(spaces): Consider migrating this
-const SPACES_COLLECTION_NAME = 'chatrooms';
+const SPACES_COLLECTION_NAME = 'spaces';
 const DIRECT_MESSAGES_COLLECTION_NAME = 'directMessages';
 const ACCOUNT_CONTACTS_COLLECTION_NAME = 'accountContacts';
 
@@ -828,6 +827,20 @@ export default class MongoDatabase implements PandoraDatabase {
 				}
 			},
 		});
+
+		//#endregion
+
+		//#region Rename spaces collection from old rooms collection (04/2024)
+
+		try {
+			await this._db.renameCollection('chatrooms', SPACES_COLLECTION_NAME, { dropTarget: false });
+
+			logger.info('Migrated old chatrooms collection to a new name');
+		} catch (error) {
+			if (!(error instanceof MongoServerError) || error.codeName !== 'NamespaceNotFound') {
+				throw error;
+			}
+		}
 
 		//#endregion
 

@@ -151,7 +151,17 @@ export const DatabaseBetaRegistrationSchema = z.object({
 });
 export type DatabaseBetaRegistration = z.infer<typeof DatabaseBetaRegistrationSchema>;
 
+export const DatabaseConfigCreationCountersSchema = z.object({
+	nextAccountId: z.number(),
+	nextCharacterId: z.number(),
+});
+export type DatabaseConfigCreationCounters = z.infer<typeof DatabaseConfigCreationCountersSchema>;
+
 export const DatabaseConfigSchema = z.discriminatedUnion('type', [
+	z.object({
+		type: z.literal('creationCounters'),
+		data: DatabaseConfigCreationCountersSchema,
+	}),
 	z.object({
 		type: z.literal('shardTokens'),
 		data: ZodCast<(IShardTokenInfo & { token: string; })[]>(),

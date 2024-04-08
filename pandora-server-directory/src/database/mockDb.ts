@@ -19,7 +19,23 @@ import {
 } from 'pandora-common';
 import { CreateAccountData } from '../account/account';
 import type { PandoraDatabase } from './databaseProvider';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccountContact, DatabaseAccountContactType, DatabaseAccountSchema, DatabaseAccountSecure, DatabaseAccountUpdate, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DirectMessageAccounts, type DatabaseDirectMessage, type DatabaseDirectMessageAccounts, type DatabaseCharacterSelfInfo } from './databaseStructure';
+import {
+	DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES,
+	DatabaseAccountContact,
+	DatabaseAccountContactType,
+	DatabaseAccountSchema,
+	DatabaseAccountSecure,
+	DatabaseAccountUpdate,
+	DatabaseAccountWithSecure,
+	DatabaseConfigData,
+	DatabaseConfigType,
+	DatabaseDirectMessageInfo,
+	DirectMessageAccounts,
+	type DatabaseCharacterSelfInfo,
+	type DatabaseConfigCreationCounters,
+	type DatabaseDirectMessage,
+	type DatabaseDirectMessageAccounts,
+} from './databaseStructure';
 import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
 
 function HashSHA512Base64(text: string): string {
@@ -39,8 +55,10 @@ export class MockDatabase implements PandoraDatabase {
 	private configDb: Map<DatabaseConfigType, DatabaseConfigData<DatabaseConfigType>> = new Map();
 	private directMessagesDb: Map<DirectMessageAccounts, DatabaseDirectMessageAccounts> = new Map();
 	private accountContactDb: DatabaseAccountContact[] = [];
-	private _nextAccountId = 1;
-	private _nextCharacterId = 1;
+	private _creationCounters: DatabaseConfigCreationCounters = {
+		nextAccountId: 1,
+		nextCharacterId: 1,
+	};
 	private get accountDbView(): DatabaseAccountWithSecure[] {
 		return Array.from(this.accountDb.values());
 	}
@@ -67,11 +85,11 @@ export class MockDatabase implements PandoraDatabase {
 	}
 
 	public get nextAccountId(): number {
-		return this._nextAccountId;
+		return this._creationCounters.nextAccountId;
 	}
 
 	public get nextCharacterId(): number {
-		return this._nextCharacterId;
+		return this._creationCounters.nextCharacterId;
 	}
 
 	/**
@@ -112,7 +130,7 @@ export class MockDatabase implements PandoraDatabase {
 		if (conflict) {
 			return Promise.resolve(conflict.username.toLowerCase() === acc.username.toLowerCase() ? 'usernameTaken' : 'emailTaken');
 		}
-		acc.id = this._nextAccountId++;
+		acc.id = this._creationCounters.nextAccountId++;
 		this.accountDb.add(acc);
 		return Promise.resolve(_.cloneDeep(acc));
 	}
@@ -181,7 +199,7 @@ export class MockDatabase implements PandoraDatabase {
 		if (!acc)
 			return Promise.reject(new Error('Account not found'));
 
-		const [info, char] = CreateCharacter(accountId, `c${this._nextCharacterId++}`);
+		const [info, char] = CreateCharacter(accountId, `c${this._creationCounters.nextCharacterId++}`);
 
 		this.characterDb.set(char.id, char);
 		return Promise.resolve(_.cloneDeep(info));

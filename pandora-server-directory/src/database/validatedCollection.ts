@@ -19,7 +19,7 @@ export interface DbManualMigrationProcess<TNew extends Document, TOld extends Do
 	readonly client: MongoClient;
 	readonly db: Db;
 	readonly migrationLogger: Logger;
-	readonly oldCollection: Collection<Document>;
+	readonly oldCollection: Collection<TOld>;
 	readonly oldStream: AsyncIterableIterator<TOld | null>;
 }
 
@@ -64,7 +64,7 @@ export class ValidatedCollection<T extends Document> {
 
 	public async doManualMigration<TOldType extends Document = T>(client: MongoClient, db: Db, migration: DbManualMigration<T, TOldType>): Promise<void> {
 		const migrationLogger = this.logger.prefixMessages(`[Manual Migration ${this.name}]`);
-		const oldCollection = db.collection(migration.oldCollectionName ?? this.name);
+		const oldCollection = db.collection<TOldType>(migration.oldCollectionName ?? this.name);
 		const oldStream = ValidatingAsyncIter(migrationLogger, oldCollection, migration.oldSchema);
 
 		const process: DbManualMigrationProcess<T, TOldType> = {
@@ -236,7 +236,7 @@ export class ValidatedCollection<T extends Document> {
 	}
 }
 
-async function* ValidatingAsyncIter<T extends Document>(logger: Logger, document: Collection, schema: ZodType<T, ZodTypeDef, unknown>): AsyncGenerator<T | null, void, unknown> {
+async function* ValidatingAsyncIter<T extends Document>(logger: Logger, document: Collection<T>, schema: ZodType<T, ZodTypeDef, unknown>): AsyncGenerator<T | null, void, unknown> {
 	for await (const originalData of document.find().stream()) {
 		const documentId: ObjectId = originalData._id;
 		Assert(documentId instanceof ObjectId);

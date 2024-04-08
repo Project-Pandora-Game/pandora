@@ -8,6 +8,7 @@ import {
 	ArrayToRecordKeys,
 	Assert,
 	AssertNotNullable,
+	AsyncSynchronized,
 	CharacterDataSchema,
 	CharacterId,
 	GetLogger,
@@ -45,6 +46,7 @@ import {
 	DatabaseDirectMessageInfo,
 	DirectMessageAccounts,
 	type DatabaseCharacterSelfInfo,
+	type DatabaseConfigCreationCounters,
 	type DatabaseDirectMessage,
 	type DatabaseDirectMessageAccounts,
 } from './databaseStructure';
@@ -180,14 +182,15 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _client!: MongoClient;
 	private _inMemoryServer!: MongoMemoryServer;
 	private _db!: Db;
+
+	private _creationCounters?: DatabaseConfigCreationCounters;
+
 	private _accounts!: ValidatedCollectionType<typeof accountCollection>;
 	private _characters!: ValidatedCollectionType<typeof characterCollection>;
 	private _accountContacts!: ValidatedCollectionType<typeof accountContactCollection>;
 	private _spaces!: ValidatedCollectionType<typeof spaceCollection>;
 	private _config!: ValidatedCollectionType<typeof configCollection>;
 	private _directMessages!: ValidatedCollectionType<typeof directMessageCollection>;
-	private _nextAccountId = 1;
-	private _nextCharacterId = 1;
 
 	constructor(init: MongoDbInit = {}) {
 		this._lock = new AsyncLock();
@@ -238,17 +241,21 @@ export default class MongoDatabase implements PandoraDatabase {
 		//#region Init Collections
 
 		this._accounts = await accountCollection.create(this._db, migration);
-		this._nextAccountId = await accountCollection.max('id', 0) + 1;
-
 		this._characters = await characterCollection.create(this._db, migration);
-		this._nextCharacterId = await characterCollection.max('id', 0) + 1;
-
 		this._accountContacts = await accountContactCollection.create(this._db, migration);
 		this._spaces = await spaceCollection.create(this._db, migration);
 		this._config = await configCollection.create(this._db, migration);
 		this._directMessages = await directMessageCollection.create(this._db, migration);
 
 		//#endregion
+
+		// Load counters
+		if (this._creationCounters == null) {
+			this._creationCounters = (await this.getConfig('creationCounters')) ?? {
+				nextAccountId: 1,
+				nextCharacterId: 1,
+			};
+		}
 
 		if (migration) {
 			if (!migration.success) {
@@ -281,11 +288,23 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public get nextAccountId(): number {
-		return this._nextAccountId;
+		AssertNotNullable(this._creationCounters);
+		return this._creationCounters.nextAccountId;
 	}
 
 	public get nextCharacterId(): number {
-		return this._nextCharacterId;
+		AssertNotNullable(this._creationCounters);
+		return this._creationCounters.nextCharacterId;
+	}
+
+	@AsyncSynchronized()
+	private async _generateNextId(type: keyof DatabaseConfigCreationCounters): Promise<number> {
+		AssertNotNullable(this._creationCounters);
+		const value = this._creationCounters[type]++;
+
+		await this.setConfig('creationCounters', this._creationCounters);
+
+		return value;
 	}
 
 	public async getAccountById(id: number): Promise<DatabaseAccountWithSecure | null> {
@@ -314,7 +333,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		if (existingEmail)
 			return 'emailTaken';
 
-		data.id = this._nextAccountId++;
+		data.id = await this._generateNextId('nextAccountId');
 		await this._accounts.insertOne(data);
 
 		return await this.getAccountById(data.id) as DatabaseAccountWithSecure;
@@ -379,7 +398,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		if (!await this.getAccountById(accountId))
 			throw new Error('Account not found');
 
-		const [info, char] = CreateCharacter(accountId, this._nextCharacterId++);
+		const [info, char] = CreateCharacter(accountId, await this._generateNextId('nextCharacterId'));
 
 		await this._characters.insertOne(char);
 
@@ -725,6 +744,54 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		Assert(charactersToMigrate.size === 0, 'Accounts reference unknown characters');
 		// The character array from the account will be deleted during automatic migration
+
+		//#endregion
+
+		//#region Generate explicit registration/character creation counters
+
+		await configCollection.doManualMigration(this._client, this._db, {
+			oldSchema: DatabaseConfigSchema,
+			migrate: async ({ oldCollection, migrationLogger }) => {
+				const existingCounters = await oldCollection.findOne({ type: 'creationCounters' });
+				if (existingCounters == null) {
+
+					let nextAccountId: number;
+					let nextCharacterId: number;
+
+					const maxAccount = await (await accountCollection.create(this._db)).find().sort({ id: -1 }).limit(1).toArray();
+
+					if (maxAccount.length > 0) {
+						Assert(typeof maxAccount[0].id === 'number');
+						nextAccountId = maxAccount[0].id + 1;
+					} else {
+						nextAccountId = 1;
+					}
+
+					const maxCharacter = await (await characterCollection.create(this._db)).find().sort({ id: -1 }).limit(1).toArray();
+
+					if (maxCharacter.length > 0) {
+						// Downcast to unknown as we are dealing with old, non-migrated data
+						const id: unknown = maxCharacter[0].id;
+						Assert(typeof id === 'number');
+						nextCharacterId = id + 1;
+					} else {
+						nextCharacterId = 1;
+					}
+
+					this._creationCounters = {
+						nextAccountId,
+						nextCharacterId,
+					};
+
+					await oldCollection.insertOne({
+						type: 'creationCounters',
+						data: this._creationCounters,
+					});
+
+					migrationLogger.alert(`Generated creation counters: nextAccountId=${nextAccountId}, nextCharacterId=${nextCharacterId}`);
+				}
+			},
+		});
 
 		//#endregion
 

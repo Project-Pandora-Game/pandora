@@ -11,6 +11,7 @@ import {
 	AsyncSynchronized,
 	CharacterDataSchema,
 	CharacterId,
+	CharacterIdSchema,
 	GetLogger,
 	ICharacterData,
 	ICharacterDataDirectoryUpdate,
@@ -109,13 +110,10 @@ const accountCollection = new ValidatedCollection(
 	],
 );
 
-const DatabaseCharacterDataSchema = CharacterDataSchema.omit({ id: true }).and(z.object({ id: z.number().int() }));
-type DatabaseCharacterData = z.infer<typeof DatabaseCharacterDataSchema>;
-
 const characterCollection = new ValidatedCollection(
 	logger,
 	CHARACTERS_COLLECTION_NAME,
-	DatabaseCharacterDataSchema,
+	CharacterDataSchema,
 	[
 		{
 			name: 'id',
@@ -380,10 +378,10 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async getCharactersForAccount(accountId: number): Promise<DatabaseCharacterSelfInfo[]> {
 		const result: DatabaseCharacterSelfInfo[] = await this._characters
 			.find({ accountId })
-			.project<Pick<DatabaseCharacterData, 'id' | 'name' | 'preview' | 'currentSpace' | 'inCreation'>>({ id: 1, name: 1, preview: 1, currentSpace: 1, inCreation: 1 })
+			.project<Pick<ICharacterData, 'id' | 'name' | 'preview' | 'currentSpace' | 'inCreation'>>({ id: 1, name: 1, preview: 1, currentSpace: 1, inCreation: 1 })
 			.toArray()
 			.then((p) => p.map((c): DatabaseCharacterSelfInfo => ({
-				id: CharacterId(c.id),
+				id: c.id,
 				name: c.name,
 				preview: c.preview,
 				currentSpace: c.currentSpace,
@@ -398,7 +396,9 @@ export default class MongoDatabase implements PandoraDatabase {
 		if (!await this.getAccountById(accountId))
 			throw new Error('Account not found');
 
-		const [info, char] = CreateCharacter(accountId, await this._generateNextId('nextCharacterId'));
+		const characterId: CharacterId = `c${await this._generateNextId('nextCharacterId')}`;
+
+		const [info, char] = CreateCharacter(accountId, characterId);
 
 		await this._characters.insertOne(char);
 
@@ -407,21 +407,21 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<ICharacterData | null> {
 		const result = await this._characters.findOneAndUpdate(
-			{ accountId, id: PlainId(characterId), inCreation: true },
+			{ accountId, id: characterId, inCreation: true },
 			{ $set: { created: Date.now() }, $unset: { inCreation: '' } },
 			{ returnDocument: 'after' },
 		);
 		if (!result || result.inCreation !== undefined)
 			return null;
 
-		return CharacterIdObject(result);
+		return result;
 	}
 
 	public async updateCharacter(id: CharacterId, data: ICharacterDataDirectoryUpdate & ICharacterDataShardUpdate, accessId: string | null): Promise<boolean> {
 		if (accessId !== null) {
 			const { matchedCount } = await this._characters
 				.updateOne({
-					id: PlainId(id),
+					id,
 					accessId,
 				}, { $set: data });
 			Assert(matchedCount <= 1);
@@ -429,7 +429,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		} else {
 			const { matchedCount } = await this._characters
 				.updateOne({
-					id: PlainId(id),
+					id,
 				}, { $set: data });
 			Assert(matchedCount <= 1);
 			return matchedCount === 1;
@@ -437,11 +437,11 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async deleteCharacter(accountId: AccountId, characterId: CharacterId): Promise<void> {
-		await this._characters.deleteOne({ id: PlainId(characterId), accountId });
+		await this._characters.deleteOne({ id: characterId, accountId });
 	}
 
 	public async setCharacterAccess(id: CharacterId): Promise<string | null> {
-		const result = await this._characters.findOneAndUpdate({ id: PlainId(id) }, { $set: { accessId: nanoid(8) } }, { returnDocument: 'after' });
+		const result = await this._characters.findOneAndUpdate({ id }, { $set: { accessId: nanoid(8) } }, { returnDocument: 'after' });
 		return result?.accessId ?? null;
 	}
 
@@ -453,14 +453,14 @@ export default class MongoDatabase implements PandoraDatabase {
 			.find({
 				currentSpace: spaceId,
 			})
-			.project<Pick<DatabaseCharacterData, 'id' | 'accountId'>>({ id: 1, accountId: 1 })
+			.project<Pick<ICharacterData, 'id' | 'accountId'>>({ id: 1, accountId: 1 })
 			.toArray();
 
 		return characters.map((c): {
 			accountId: AccountId;
 			characterId: CharacterId;
 		} => ({
-			characterId: CharacterId(c.id),
+			characterId: c.id,
 			accountId: c.accountId,
 		}));
 	}
@@ -588,15 +588,15 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null> {
 		if (accessId === false) {
 			accessId = nanoid(8);
-			const result = await this._characters.findOneAndUpdate({ id: PlainId(id) }, { $set: { accessId } }, { returnDocument: 'after' });
-			return result ? CharacterIdObject(result) : null;
+			const result = await this._characters.findOneAndUpdate({ id }, { $set: { accessId } }, { returnDocument: 'after' });
+			return result ? result : null;
 		}
 
-		const character = await this._characters.findOne({ id: PlainId(id), accessId });
+		const character = await this._characters.findOne({ id, accessId });
 		if (!character)
 			return null;
 
-		return CharacterIdObject(character);
+		return character;
 	}
 
 	public async getAccountContacts(accountId: AccountId): Promise<DatabaseAccountContact[]> {
@@ -709,18 +709,22 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		// Apply the data to the characters
 		await characterCollection.doManualMigration(this._client, this._db, {
-			oldSchema: CharacterDataSchema.pick({ accountId: true, name: true, inCreation: true }).and(z.object({ id: z.number().int() })),
+			oldSchema: CharacterDataSchema
+				.pick({ accountId: true, name: true, inCreation: true })
+				.and(z.object({
+					id: z.union([CharacterIdSchema, z.number().int()]),
+				})),
 			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
 				for await (const character of oldStream) {
 					if (character == null)
 						continue;
 
-					const migrationInfo = charactersToMigrate.get(CharacterId(character.id));
+					const migrationInfo = charactersToMigrate.get(CharacterIdToStringId(character.id));
 					if (migrationInfo == null)
 						continue;
 
 					Assert(character.accountId === migrationInfo.account);
-					Assert(CharacterId(character.id) === migrationInfo.character.id);
+					Assert(CharacterIdToStringId(character.id) === migrationInfo.character.id);
 					Assert(character.name === migrationInfo.character.name);
 					Assert(character.inCreation === migrationInfo.character.inCreation);
 
@@ -795,6 +799,38 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		//#endregion
 
+		//#region Character Id migration (04/2024)
+
+		// Go through all characters and replace numeric ids where needed by string ids
+		await characterCollection.doManualMigration(this._client, this._db, {
+			oldSchema: z.object({
+				id: z.union([CharacterIdSchema, z.number().int()]),
+			}),
+			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+				for await (const character of oldStream) {
+					if (character == null)
+						continue;
+
+					if (typeof character.id === 'string')
+						continue;
+
+					migrationLogger.verbose(`Migrating character id for ${character.id} -> ${CharacterIdToStringId(character.id)}`);
+
+					const { matchedCount } = await oldCollection.updateOne(
+						{ id: character.id },
+						{
+							$set: {
+								id: CharacterIdToStringId(character.id),
+							},
+						},
+					);
+					Assert(matchedCount === 1);
+				}
+			},
+		});
+
+		//#endregion
+
 		return requireFullMigration;
 	}
 }
@@ -825,19 +861,8 @@ async function CreateInMemoryMongo({
 	});
 }
 
-function CharacterId(id: number): CharacterId {
-	return `c${id}`;
-}
-
-function CharacterIdObject(obj: Omit<ICharacterData, 'id'> & { id: number; }): ICharacterData {
-	return {
-		...obj,
-		id: CharacterId(obj.id),
-	};
-}
-
-function PlainId(id: CharacterId): number {
-	return parseInt(id.slice(1));
+function CharacterIdToStringId(id: number | CharacterId): CharacterId {
+	return typeof id === 'number' ? `c${id}` : id;
 }
 
 function DbSynchronized<Args extends unknown[], Return>(getKey?: (name: string, args: Args) => string) {

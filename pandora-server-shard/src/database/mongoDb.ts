@@ -23,7 +23,7 @@ const SPACES_COLLECTION_NAME = 'chatrooms';
 export default class MongoDatabase implements ShardDatabase {
 	private readonly _client: MongoClient;
 	private _db!: Db;
-	private _characters!: Collection<Omit<ICharacterData, 'id'> & { id: number; }>;
+	private _characters!: Collection<ICharacterData>;
 	private _spaces!: Collection<SpaceData>;
 
 	constructor() {
@@ -54,15 +54,15 @@ export default class MongoDatabase implements ShardDatabase {
 	}
 
 	public async getCharacter(id: CharacterId, accessId: string): Promise<ICharacterData | null | false> {
-		const character = await this._characters.findOne({ id: PlainId(id), accessId });
+		const character = await this._characters.findOne({ id, accessId });
 		if (!character)
 			return null;
 
-		return Id(character);
+		return character;
 	}
 
 	public async setCharacter(id: CharacterId, data: ICharacterDataShardUpdate, accessId: string): Promise<boolean> {
-		const { matchedCount } = await this._characters.updateOne({ id: PlainId(id), accessId }, { $set: data });
+		const { matchedCount } = await this._characters.updateOne({ id, accessId }, { $set: data });
 		return matchedCount === 1;
 	}
 
@@ -79,15 +79,4 @@ export default class MongoDatabase implements ShardDatabase {
 		const { matchedCount } = await this._spaces.updateOne({ id, accessId }, { $set: data });
 		return matchedCount === 1;
 	}
-}
-
-function Id(obj: Omit<ICharacterData, 'id'> & { id: number; }): ICharacterData {
-	return {
-		...obj,
-		id: `c${obj.id}` as const,
-	};
-}
-
-function PlainId(id: CharacterId): number {
-	return parseInt(id.slice(1));
 }

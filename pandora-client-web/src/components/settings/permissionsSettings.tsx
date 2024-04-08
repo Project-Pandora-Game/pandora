@@ -30,6 +30,7 @@ import { useFunctionBind } from '../../common/useFunctionBind';
 import { ActionMessage } from '../../ui/components/chat/chat';
 import { StorageUsageMeter } from '../wardrobe/wardrobeComponents';
 import { Link } from 'react-router-dom';
+import { useKeyDownEvent } from '../../common/useKeyDownEvent';
 
 export function PermissionsSettings(): ReactElement | null {
 	const player = usePlayer();
@@ -255,6 +256,15 @@ function usePermissionConfigSetAny(): (permissionGroup: PermissionGroup, permiss
 	}, [shardConnector]);
 }
 
+function PermissionConfigDialogEscaper({ hide }: { hide: () => void; }): null {
+	useKeyDownEvent(useCallback(() => {
+		hide();
+		return true;
+	}, [hide]), 'Escape');
+
+	return null;
+}
+
 function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 	permissionGroup: PermissionGroup;
 	permissionId: string;
@@ -292,6 +302,7 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 
 	return (
 		<ModalDialog>
+			<PermissionConfigDialogEscaper hide={ hide } />
 			<Row alignX='center'>
 				<h2>Editing permission</h2>
 			</Row>
@@ -482,6 +493,11 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions, message
 		dismiss();
 	}, [requiredPermissions, dismiss, setAnyConfig]);
 	const [allowAccept, disableAccept] = useReducer(() => false, true);
+
+	useKeyDownEvent(useCallback(() => {
+		dismiss();
+		return true;
+	}, [dismiss]), 'Escape');
 
 	return (
 		<DraggableDialog title='Permission Prompt'>

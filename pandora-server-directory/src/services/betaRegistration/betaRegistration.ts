@@ -106,6 +106,38 @@ export const BetaRegistrationService = new class BetaRegistrationService impleme
 		return true;
 	}
 
+	/**
+	 * Prunes the candidates by calling check with each candidate
+	 * @param check - The check function. Should return `true` if the candidate is still valid
+	 * @param dryRun - If set the pruning doesn't actually happen
+	 */
+	@AsyncSynchronized('object')
+	public async pruneCandidates(check: (candidate: Readonly<DatabaseBetaRegistration>) => Promise<boolean>, dryRun: boolean = false): Promise<void> {
+		Assert(this._betaRegistrations != null);
+
+		for (let i = this._betaRegistrations.length - 1; i >= 0; i--) {
+			const candidate = this._betaRegistrations[i];
+
+			// Never discard people with a key to prevent giving someone multiple
+			if (candidate.assignedKey != null)
+				continue;
+
+			if (await check(candidate))
+				continue;
+
+			this.logger.verbose(`Pruning candidate ${candidate.discordId}${dryRun ? ' (dry run)' : ''}`);
+			Assert(this._betaRegistrations[i] === candidate);
+
+			if (dryRun)
+				continue;
+
+			this._betaRegistrations.splice(i, 1);
+		}
+
+		this.logger.verbose(`Prune completed, ${this._getPendingRegistrations().length}/${this._betaRegistrations.length} pending.`);
+		await this._save();
+	}
+
 	private async _save(): Promise<void> {
 		Assert(this._betaRegistrations != null);
 

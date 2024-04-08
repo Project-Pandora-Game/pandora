@@ -20,7 +20,7 @@ export const BetaRegistrationService = new class BetaRegistrationService impleme
 	private _getPendingRegistrations(): DatabaseBetaRegistration[] {
 		Assert(this._betaRegistrations != null);
 
-		return this._betaRegistrations.filter((r) => r.assignedKey == null);
+		return this._betaRegistrations.filter((r) => !r.invited);
 	}
 
 	@AsyncSynchronized('object')
@@ -87,7 +87,7 @@ export const BetaRegistrationService = new class BetaRegistrationService impleme
 	public getCandidates(count: number): Readonly<DatabaseBetaRegistration>[] {
 		Assert(this._betaRegistrations != null);
 
-		return this._betaRegistrations.filter((r) => r.assignedKey == null).slice(0, count);
+		return this._betaRegistrations.filter((r) => !r.invited).slice(0, count);
 	}
 
 	@AsyncSynchronized('object')
@@ -99,7 +99,23 @@ export const BetaRegistrationService = new class BetaRegistrationService impleme
 			return false;
 
 		candidate.assignedKey = key;
-		this.logger.verbose(`Assigned key ${key} to candidate ${discordId}, ${this._getPendingRegistrations().length}/${this._betaRegistrations.length} pending.`);
+		this.logger.verbose(`Assigned key ${key} to candidate ${discordId}.`);
+
+		await this._save();
+
+		return true;
+	}
+
+	@AsyncSynchronized('object')
+	public async finalizeInvitation(discordId: string): Promise<boolean> {
+		Assert(this._betaRegistrations != null);
+		const candidate = this._betaRegistrations.find((r) => r.discordId === discordId);
+
+		if (candidate == null || candidate.assignedKey == null)
+			return false;
+
+		candidate.invited = true;
+		this.logger.verbose(`Candidate ${discordId} successfully invited, ${this._getPendingRegistrations().length}/${this._betaRegistrations.length} pending.`);
 
 		await this._save();
 

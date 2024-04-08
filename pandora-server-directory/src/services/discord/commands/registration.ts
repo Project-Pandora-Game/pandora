@@ -174,23 +174,40 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 
 			let successful = 0;
 			for (const candidate of candidates) {
-				// Pause for half a second between candidates not to run into any rate limit
-				await Sleep(500);
+				// Pause for a bit between candidates not to run into any rate limit
+				await Sleep(1_500);
 
 				// Race condition prevention (just a simple one, it shouldn't happen anyway)
-				if (candidate.assignedKey != null)
+				if (candidate.invited)
 					continue;
 
 				try {
 					// Find the candidate in the server
 					const candidateMember = await interaction.guild.members.fetch({ user: candidate.discordId });
 
-					// Generate a new beta key for them
-					const key = await BetaKeyStore.create(ACTOR_PANDORA, {
-						maxUses: 1,
-						expires: Date.now() + TimeSpanMs(30, 'days'),
-					});
-					Assert(typeof key !== 'string');
+					let token: string;
+
+					if (candidate.assignedKey != null) {
+						token = candidate.assignedKey;
+						logger.warning(`Candidate ${candidate.discordId} already has a key (${candidate.assignedKey.substring(0, 8)}), resending.`);
+					} else {
+						// Generate a new beta key for them
+						const key = await BetaKeyStore.create(ACTOR_PANDORA, {
+							maxUses: 1,
+							expires: Date.now() + TimeSpanMs(30, 'days'),
+						});
+						Assert(typeof key !== 'string');
+						// Store the key to avoid generating multiple for one person,
+						// even if sending it fails
+						const assignmentResult = await BetaRegistrationService.assignCandidateKey(candidate.discordId, key.token);
+
+						if (!assignmentResult) {
+							logger.warning(`Failed to assign beta key ${key.id} to ${candidate.discordId}`);
+							continue;
+						}
+
+						token = key.token;
+					}
 
 					// Give user roles
 					await candidateMember.roles.remove(DISCORD_BETA_REGISTRATION_PENDING_ROLE_ID, 'Automatic beta handout');
@@ -203,7 +220,7 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 							`Some time ago you have registered to join the beta of **Project Pandora** and now you have been selected! Congratulations!\n` +
 							`Here is your beta registration key. It can be used only once and expires in 30 days.\n` +
 							'```\n' +
-							`${key.token}\n` +
+							`${token}\n` +
 							'```\n' +
 							`You can register with it at https://project-pandora.com\n` +
 							`You were also given access to betatester channels on Pandora's Discord where you can talk with other betatesters, share suggestions, or inform us about any issues you encounter. You can find those channels here: https://discord.com/channels/872284471611760720/1120733020962431046\n` +
@@ -211,16 +228,14 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 							`Have fun!\n`,
 					});
 
-					// Only after successful DM mark the candidate as having received a key
-					const assignmentResult = await BetaRegistrationService.assignCandidateKey(candidate.discordId, key.id);
-
-					if (!assignmentResult) {
-						logger.warning(`Failed to assign beta key ${key.id} to ${candidate.discordId}`);
+					// Only after successful DM mark the candidate as invited
+					if (!await BetaRegistrationService.finalizeInvitation(candidate.discordId)) {
+						logger.warning(`Failed to finalize invitation of ${candidate.discordId}`);
 						continue;
 					}
 
 					successful++;
-					logger.verbose(`Successfully sent an invite to user ${candidate.discordId} (token: ${key.id})`);
+					logger.verbose(`Successfully sent an invite to user ${candidate.discordId} (token: ${token})`);
 				} catch (error) {
 					logger.warning(`Failed to invite user ${candidate.discordId} (token: ${candidate.assignedKey}):`, error);
 				}

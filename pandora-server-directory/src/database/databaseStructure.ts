@@ -140,9 +140,14 @@ export const DatabaseAccountWithSecureSchema = DatabaseAccountSchema.extend({
 export type DatabaseAccountWithSecure = z.infer<typeof DatabaseAccountWithSecureSchema>;
 
 export const DatabaseBetaRegistrationSchema = z.object({
+	/** The Discord ID of the person that signed up for beta access */
 	discordId: z.string(),
+	/** Timestamp of the initial registration */
 	registeredAt: z.number(),
+	/** Assigned beta key (if any) */
 	assignedKey: z.string().nullable(),
+	/** If the invitation succeeded. If set this person is no longer just a candidate. */
+	invited: z.literal(true).optional(),
 });
 export type DatabaseBetaRegistration = z.infer<typeof DatabaseBetaRegistrationSchema>;
 

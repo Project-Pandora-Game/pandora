@@ -346,7 +346,7 @@ export class AccountContacts {
 		try {
 			await this.load();
 		} finally {
-			this._updatingStatus = true;
+			this._updatingStatus = false;
 			this._updateStatus();
 		}
 	}

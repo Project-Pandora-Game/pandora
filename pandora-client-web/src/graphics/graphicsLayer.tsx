@@ -27,18 +27,26 @@ export function useLayerPoints(layer: AssetGraphicsLayer): {
 	const points = useLayerCalculatedPoints(layer);
 	Assert(points.length < 65535, 'Points do not fit into indices');
 
-	const { pointType } = useLayerDefinition(layer);
+	const { pointType, mirror, priority } = useLayerDefinition(layer);
 	const triangles = useMemo<Uint16Array>(() => {
+		let selector = (def: PointDefinition) => SelectPoints(def, pointType);
+		if (pointType == null && mirror === LayerMirror.SELECT) {
+			if (priority.includes('_LEFT')) {
+				selector = (def) => SelectPointsOnSide(def, 'l');
+			} else if (priority.includes('_RIGHT')) {
+				selector = (def) => SelectPointsOnSide(def, 'r');
+			}
+		}
 		const result: number[] = [];
 		const delaunator = new Delaunator(points.flatMap((point) => point.pos));
 		for (let i = 0; i < delaunator.triangles.length; i += 3) {
 			const t = [i, i + 1, i + 2].map((tp) => delaunator.triangles[tp]);
-			if (t.every((tp) => SelectPoints(points[tp], pointType))) {
+			if (t.every((tp) => selector(points[tp]))) {
 				result.push(...t);
 			}
 		}
 		return new Uint16Array(result);
-	}, [pointType, points]);
+	}, [pointType, mirror, priority, points]);
 	return { points, triangles };
 }
 
@@ -54,8 +62,17 @@ export function SelectPoints({ pointType }: PointDefinition, pointTypes?: readon
 			pointTypes.includes(pointType + '_r') ||
 			pointTypes.includes(pointType + '_l')
 		) ||
-		// If the point type has side, indide it if wanted types have base one
+		// If the point type has side, inside it if wanted types have base one
 		pointTypes.includes(pointType.replace(/_[lr]$/, ''));
+}
+
+function SelectPointsOnSide({ pointType }: PointDefinition, side: 'l' | 'r'): boolean {
+	// If point has no type, include it
+	return !pointType ||
+		// If the point has no side, include it
+		!pointType.match(/_[lr]$/) ||
+		// If the point has side, include it if it matches
+		pointType.endsWith('_' + side);
 }
 
 export function MirrorPoint([x, y]: CoordinatesCompressed, mirror: LayerMirror, width: number): CoordinatesCompressed {

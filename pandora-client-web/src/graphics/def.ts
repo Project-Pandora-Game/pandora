@@ -64,25 +64,23 @@ export function useComputedLayerPriority({ view, armsOrder, legsOrder }: Immutab
 			`ARM_${arms[1]}_BACK`,
 			`ABOVE_ARM_${arms[1]}_BACK`,
 
+			'BELOW_BODY',
+			'BODY',
+
 			`BELOW_LEG_SOLE_${legs[0]}`,
 			`LEG_SOLE_${legs[0]}`,
 			`BELOW_LEG_${legs[0]}`,
+			`LEG_${legs[0]}`,
+			`ABOVE_LEG_${legs[0]}`,
 
 			`BELOW_LEG_SOLE_${legs[1]}`,
 			`LEG_SOLE_${legs[1]}`,
 			`BELOW_LEG_${legs[1]}`,
-
-			'BELOW_BODY',
-
-			`LEG_${legs[0]}`,
 			`LEG_${legs[1]}`,
+			`ABOVE_LEG_${legs[1]}`,
 
-			'BODY',
 			'BELOW_BREASTS',
 			'BREASTS',
-
-			`ABOVE_LEG_${legs[0]}`,
-			`ABOVE_LEG_${legs[1]}`,
 			'ABOVE_BODY',
 
 			`BELOW_ARM_${arms[0]}_FRONT`,

@@ -1,9 +1,8 @@
-import type { ZodType, ZodTypeDef } from 'zod';
-import type { ConditionalKeys } from 'type-fest';
 import { diffString } from 'json-diff';
 import { isEqual, omit } from 'lodash';
-import { Collection, Db, Document, IndexDescription, ObjectId, WithId, CollationOptions, MongoClient } from 'mongodb';
+import { CollationOptions, Collection, Db, Document, IndexDescription, MongoClient, ObjectId } from 'mongodb';
 import { ArrayToRecordKeys, Assert, IsObject, KnownObject, Logger } from 'pandora-common';
+import type { ZodType, ZodTypeDef } from 'zod';
 
 export interface DbAutomaticMigration {
 	readonly dryRun: boolean;
@@ -77,12 +76,6 @@ export class ValidatedCollection<T extends Document> {
 		};
 
 		await migration.migrate(process);
-	}
-
-	public async max<TKey extends ConditionalKeys<WithId<T>, number> & string>(key: TKey, fallback: WithId<T>[TKey]): Promise<WithId<T>[TKey]> {
-		const max = await this.collection.find().sort({ [key]: -1 }).limit(1).toArray();
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-		return max.length > 0 ? max[0][key] : fallback;
 	}
 
 	public async create(db: Db, migration?: DbAutomaticMigration): Promise<Collection<T>> {

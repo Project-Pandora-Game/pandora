@@ -671,7 +671,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		let requireFullMigration = false;
 		// Add manual migrations here
 
-		//#region Migrate character self info from accounts to characters
+		//#region Migrate character self info from accounts to characters (03/2024)
 		const charactersToMigrate = new Map<CharacterId, { account: AccountId; character: DatabaseCharacterSelfInfo; }>();
 
 		// Gather data about characters
@@ -747,7 +747,7 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		//#endregion
 
-		//#region Generate explicit registration/character creation counters
+		//#region Generate explicit registration/character creation counters (04/2024)
 
 		await configCollection.doManualMigration(this._client, this._db, {
 			oldSchema: DatabaseConfigSchema,

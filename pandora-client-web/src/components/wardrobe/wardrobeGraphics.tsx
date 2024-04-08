@@ -15,7 +15,7 @@ import {
 	SpaceClientInfo,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import React, { ReactElement, ReactNode, useCallback, useMemo } from 'react';
+import React, { ReactElement, ReactNode, useCallback, useMemo, useRef } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { Character, IChatroomCharacter } from '../../character/character';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../graphics/graphicsCharacter';
@@ -30,6 +30,7 @@ import { directoryConnectorContext } from '../gameContext/directoryConnectorCont
 import { useSpaceInfo } from '../gameContext/gameStateContextProvider';
 import { shardConnectorContext, useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { useWardrobeContext } from './wardrobeContext';
+import { PixiViewportSetupCallback, type PixiViewportRef } from '../../graphics/pixiViewport';
 
 export function WardrobeCharacterPreview({ character, characterState, isPreview = false }: {
 	character: IChatroomCharacter;
@@ -42,7 +43,9 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 		view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
 	});
 
-	const overlay = (
+	const viewportRef = useRef<PixiViewportRef>(null);
+
+	const overlay = useMemo(() => (
 		<Row gap='medium' padding='medium' className='overlay pointer-events-disable'>
 			<Row className='pointer-events-enable flex' gap='medium'>
 				<Button className='slim iconButton'
@@ -51,6 +54,14 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 					disabled={ processing }
 				>
 					↷
+				</Button>
+				<Button className='slim iconButton'
+					title='Center the view'
+					onClick={ () => {
+						viewportRef.current?.center();
+					} }
+				>
+					⊙
 				</Button>
 			</Row>
 			<Row className='pointer-events-enable'>
@@ -61,21 +72,23 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 				}
 			</Row>
 		</Row>
-	);
+	), [isPreview, onClick, processing]);
 
 	return (
 		<CharacterPreview
 			character={ character }
 			characterState={ characterState }
 			overlay={ overlay }
+			viewportRef={ viewportRef }
 		/>
 	);
 }
 
-export function CharacterPreview({ character, characterState, overlay }: {
+export function CharacterPreview({ character, characterState, overlay, viewportRef }: {
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 	overlay?: ReactNode;
+	viewportRef?: React.Ref<PixiViewportRef>;
 }): ReactElement {
 	const spaceInfo = useSpaceInfo();
 	const assetManager = useAssetManager();
@@ -85,10 +98,27 @@ export function CharacterPreview({ character, characterState, overlay }: {
 	}, [assetManager, spaceInfo]);
 	const projectionResolver = useRoomViewProjection(roomBackground);
 
+	const viewportConfig = useCallback<PixiViewportSetupCallback>((viewport) => {
+		viewport
+			.drag({ clampWheel: true })
+			.wheel({ smooth: 10, percent: 0.1 })
+			.pinch({ noDrag: false, percent: 2 })
+			.decelerate({ friction: 0.7 })
+			.bounce({
+				ease: 'easeOutQuad',
+				friction: 0,
+				sides: 'all',
+				time: 500,
+				underflow: 'center',
+			});
+	}, []);
+
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
+		viewportConfig,
+		viewportRef,
 		forwardContexts: [directoryConnectorContext, shardConnectorContext],
 		backgroundColor: 0x000000,
-	}), []);
+	}), [viewportRef, viewportConfig]);
 
 	const { pivot } = useRoomCharacterOffsets(characterState);
 	const filters = usePlayerVisionFilters(character.isPlayer());

@@ -127,7 +127,7 @@ export const BetaRegistrationService = new class BetaRegistrationService impleme
 	 * @param check - The check function. Should return `true` if the candidate is still valid
 	 * @param dryRun - If set the pruning doesn't actually happen
 	 */
-	@AsyncSynchronized('object')
+	@AsyncSynchronized('object', { maxExecutionTime: 60 * 60_000 })
 	public async pruneCandidates(check: (candidate: Readonly<DatabaseBetaRegistration>) => Promise<boolean>, dryRun: boolean = false): Promise<void> {
 		Assert(this._betaRegistrations != null);
 

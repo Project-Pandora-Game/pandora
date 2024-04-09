@@ -30,8 +30,6 @@ export function LeaveButton({ onClickExtra }: {
 		return true;
 	}, []);
 
-	useKeyDownEvent(closeDialog, 'Escape');
-
 	return (
 		<leaveButtonContext.Provider value={ closeDialog }>
 			<HeaderButton
@@ -53,6 +51,8 @@ export function LeaveButton({ onClickExtra }: {
 function DialogLeave(): ReactElement {
 	const closeDialog = useContext(leaveButtonContext);
 	const inPublicSpace = useSpaceInfoOptional()?.id != null;
+
+	useKeyDownEvent(closeDialog, 'Escape');
 
 	return (
 		<ModalDialog>

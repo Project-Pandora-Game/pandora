@@ -9,6 +9,7 @@ import './dialog.scss';
 import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import { Column, Row } from '../common/container/container';
 import classNames from 'classnames';
+import { useKeyDownEvent } from '../../common/useKeyDownEvent';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type HtmlPortalNodeAny = HtmlPortalNode<any>;
@@ -230,13 +231,25 @@ export function ConfirmDialog({ symbol, yes = 'Ok', no = 'Cancel' }: ConfirmDial
 export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL): (title: string, content?: ReactNode, priority?: number) => Promise<boolean> {
 	const unset = useRef(false);
 	const entry = GetConfirmDialogEntry(symbol);
+	const resolveRef = useRef<(result: boolean) => void>();
 	useEffect(() => () => {
 		if (unset.current) {
 			entry.value = null;
 		}
 	}, [entry]);
+	useKeyDownEvent(useCallback(() => {
+		if (resolveRef.current) {
+			unset.current = false;
+			entry.value = null;
+			resolveRef.current(false);
+			resolveRef.current = undefined;
+			return true;
+		}
+		return false;
+	}, [entry]), 'Escape');
 	return useCallback((title: string, content?: ReactNode, priority?: number) => new Promise<boolean>((resolve) => {
 		unset.current = true;
+		resolveRef.current = resolve;
 		entry.value = {
 			title,
 			content,
@@ -245,6 +258,7 @@ export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL)
 				unset.current = false;
 				entry.value = null;
 				resolve(result);
+				resolveRef.current = undefined;
 			},
 		};
 	}), [entry]);

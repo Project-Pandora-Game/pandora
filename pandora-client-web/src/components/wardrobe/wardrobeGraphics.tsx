@@ -98,12 +98,16 @@ export function CharacterPreview({ character, characterState, overlay, viewportR
 	}, [assetManager, spaceInfo]);
 	const projectionResolver = useRoomViewProjection(roomBackground);
 
-	const viewportConfig = useCallback<PixiViewportSetupCallback>((viewport) => {
+	const viewportConfig = useCallback<PixiViewportSetupCallback>((viewport, { worldWidth }) => {
 		viewport
 			.drag({ clampWheel: true })
 			.wheel({ smooth: 10, percent: 0.1 })
 			.pinch({ noDrag: false, percent: 2 })
 			.decelerate({ friction: 0.7 })
+			.clampZoom({
+				maxWidth: worldWidth,
+				minWidth: worldWidth / 4,
+			})
 			.bounce({
 				ease: 'easeOutQuad',
 				friction: 0,

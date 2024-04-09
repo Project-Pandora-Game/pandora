@@ -14,8 +14,7 @@ import type { } from '../assets/item/base';
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;
 
-// TODO(spaces): Consider updating this pattern to reflect that it is now called a "space"
-export const SpaceIdSchema = ZodTemplateString<`r/${string}`>(z.string(), /^r\//);
+export const SpaceIdSchema = ZodTemplateString<`s/${string}`>(z.string(), /^s\//);
 export type SpaceId = z.infer<typeof SpaceIdSchema>;
 
 export const SpaceFeatureSchema = z.enum([

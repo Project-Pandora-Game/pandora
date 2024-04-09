@@ -8,7 +8,7 @@ import './spaceJoin.scss';
 export function SpaceJoin(): ReactElement {
 	const { pathname, search } = useLocation();
 	const { spaceId, invite } = React.useMemo(() => {
-		const spaceResult = SpaceIdSchema.safeParse(`r/${pathname.split('/').pop()}`);
+		const spaceResult = SpaceIdSchema.safeParse(`s/${pathname.split('/').pop()}`);
 		const inviteResult = SpaceInviteIdSchema.safeParse(new URLSearchParams(search).get('invite'));
 
 		return {
@@ -50,7 +50,7 @@ function QuerySpaceInfo({ spaceId, invite }: { spaceId: SpaceId; invite?: SpaceI
 export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: string; invite?: string; }): ReactElement {
 	const inviteResult = SpaceInviteIdSchema.safeParse(invite);
 	const [open, setOpen] = React.useState(false);
-	const info = useSpaceExtendedInfo(`r/${spaceId}`, inviteResult.success ? inviteResult.data : undefined);
+	const info = useSpaceExtendedInfo(`s/${spaceId}`, inviteResult.success ? inviteResult.data : undefined);
 
 	if (info?.result !== 'success') {
 		return (

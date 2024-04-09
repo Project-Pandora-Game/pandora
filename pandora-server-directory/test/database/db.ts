@@ -484,18 +484,18 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			const result1 = await db.createSpace({
 				config: TEST_SPACE,
 				owners: TEST_SPACE_PANDORA_OWNED.slice(),
-			}, 'r/id1');
+			}, 's/id1');
 
 			// Correct result
 			expect(result1.config).toEqual(TEST_SPACE);
 			expect(result1.owners).toEqual(TEST_SPACE_PANDORA_OWNED);
-			expect(result1.id).toEqual('r/id1');
+			expect(result1.id).toEqual('s/id1');
 
 			// Fails to make space with same id
 			await expect(db.createSpace({
 				config: TEST_SPACE2,
 				owners: [0],
-			}, 'r/id1')).rejects.toEqual(expect.anything());
+			}, 's/id1')).rejects.toEqual(expect.anything());
 		});
 	});
 
@@ -581,7 +581,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			expect(result).not.toBeNull();
 
 			// Wrong id fails
-			await expect(db.setSpaceAccessId('r/invalid')).resolves.toBeNull();
+			await expect(db.setSpaceAccessId('s/invalid')).resolves.toBeNull();
 
 			// Old space not affected
 			await expect(db.getSpaceById(space.id, result)).resolves.not.toBeNull();

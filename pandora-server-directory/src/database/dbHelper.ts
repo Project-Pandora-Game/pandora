@@ -6,7 +6,6 @@ import {
 	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
 	CharacterId,
 	ICharacterData,
-	IsNumber,
 	ROOM_INVENTORY_BUNDLE_DEFAULT,
 	SpaceData,
 	SpaceDirectoryConfig,
@@ -14,18 +13,16 @@ import {
 } from 'pandora-common';
 import type { DatabaseCharacterSelfInfo } from './databaseStructure';
 
-export function CreateCharacter<Id extends number | CharacterId>(accountId: number, id: Id): [DatabaseCharacterSelfInfo, Omit<ICharacterData, 'id'> & { id: Id; }] {
-	const infoId: CharacterId = IsNumber(id) ? `c${id}` as const : id;
-
+export function CreateCharacter(accountId: number, id: CharacterId): [DatabaseCharacterSelfInfo, ICharacterData] {
 	const info: DatabaseCharacterSelfInfo = {
 		inCreation: true,
-		id: infoId,
+		id,
 		name: '',
 		preview: '',
 		currentSpace: null,
 	};
 
-	const char: Omit<ICharacterData, 'id'> & { id: Id; } = {
+	const char: ICharacterData = {
 		inCreation: true,
 		id,
 		accountId,
@@ -50,7 +47,7 @@ export interface SpaceCreationData {
 
 export function CreateSpace(data: SpaceCreationData, id?: SpaceId): SpaceData {
 	return {
-		id: id ?? `r/${nanoid()}`,
+		id: id ?? `s/${nanoid()}`,
 		accessId: '',
 		inventory: ROOM_INVENTORY_BUNDLE_DEFAULT,
 		invites: [],

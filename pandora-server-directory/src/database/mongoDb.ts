@@ -1,6 +1,6 @@
 import AsyncLock from 'async-lock';
 import _ from 'lodash';
-import { CollationOptions, Db, MongoClient } from 'mongodb';
+import { CollationOptions, Db, MongoClient, MongoServerError } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
 import {
@@ -8,8 +8,10 @@ import {
 	ArrayToRecordKeys,
 	Assert,
 	AssertNotNullable,
+	AsyncSynchronized,
 	CharacterDataSchema,
 	CharacterId,
+	CharacterIdSchema,
 	GetLogger,
 	ICharacterData,
 	ICharacterDataDirectoryUpdate,
@@ -23,6 +25,7 @@ import {
 	SpaceId,
 	SpaceIdSchema,
 	ZodCast,
+	ZodTemplateString,
 } from 'pandora-common';
 import { z } from 'zod';
 import { ENV } from '../config';
@@ -45,6 +48,7 @@ import {
 	DatabaseDirectMessageInfo,
 	DirectMessageAccounts,
 	type DatabaseCharacterSelfInfo,
+	type DatabaseConfigCreationCounters,
 	type DatabaseDirectMessage,
 	type DatabaseDirectMessageAccounts,
 } from './databaseStructure';
@@ -56,8 +60,7 @@ const logger = GetLogger('db');
 
 const ACCOUNTS_COLLECTION_NAME = 'accounts';
 const CHARACTERS_COLLECTION_NAME = 'characters';
-// TODO(spaces): Consider migrating this
-const SPACES_COLLECTION_NAME = 'chatrooms';
+const SPACES_COLLECTION_NAME = 'spaces';
 const DIRECT_MESSAGES_COLLECTION_NAME = 'directMessages';
 const ACCOUNT_CONTACTS_COLLECTION_NAME = 'accountContacts';
 
@@ -107,13 +110,10 @@ const accountCollection = new ValidatedCollection(
 	],
 );
 
-const DatabaseCharacterDataSchema = CharacterDataSchema.omit({ id: true }).and(z.object({ id: z.number().int() }));
-type DatabaseCharacterData = z.infer<typeof DatabaseCharacterDataSchema>;
-
 const characterCollection = new ValidatedCollection(
 	logger,
 	CHARACTERS_COLLECTION_NAME,
-	DatabaseCharacterDataSchema,
+	CharacterDataSchema,
 	[
 		{
 			name: 'id',
@@ -180,14 +180,15 @@ export default class MongoDatabase implements PandoraDatabase {
 	private _client!: MongoClient;
 	private _inMemoryServer!: MongoMemoryServer;
 	private _db!: Db;
+
+	private _creationCounters?: DatabaseConfigCreationCounters;
+
 	private _accounts!: ValidatedCollectionType<typeof accountCollection>;
 	private _characters!: ValidatedCollectionType<typeof characterCollection>;
 	private _accountContacts!: ValidatedCollectionType<typeof accountContactCollection>;
 	private _spaces!: ValidatedCollectionType<typeof spaceCollection>;
 	private _config!: ValidatedCollectionType<typeof configCollection>;
 	private _directMessages!: ValidatedCollectionType<typeof directMessageCollection>;
-	private _nextAccountId = 1;
-	private _nextCharacterId = 1;
 
 	constructor(init: MongoDbInit = {}) {
 		this._lock = new AsyncLock();
@@ -238,17 +239,21 @@ export default class MongoDatabase implements PandoraDatabase {
 		//#region Init Collections
 
 		this._accounts = await accountCollection.create(this._db, migration);
-		this._nextAccountId = await accountCollection.max('id', 0) + 1;
-
 		this._characters = await characterCollection.create(this._db, migration);
-		this._nextCharacterId = await characterCollection.max('id', 0) + 1;
-
 		this._accountContacts = await accountContactCollection.create(this._db, migration);
 		this._spaces = await spaceCollection.create(this._db, migration);
 		this._config = await configCollection.create(this._db, migration);
 		this._directMessages = await directMessageCollection.create(this._db, migration);
 
 		//#endregion
+
+		// Load counters
+		if (this._creationCounters == null) {
+			this._creationCounters = (await this.getConfig('creationCounters')) ?? {
+				nextAccountId: 1,
+				nextCharacterId: 1,
+			};
+		}
 
 		if (migration) {
 			if (!migration.success) {
@@ -281,11 +286,23 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public get nextAccountId(): number {
-		return this._nextAccountId;
+		AssertNotNullable(this._creationCounters);
+		return this._creationCounters.nextAccountId;
 	}
 
 	public get nextCharacterId(): number {
-		return this._nextCharacterId;
+		AssertNotNullable(this._creationCounters);
+		return this._creationCounters.nextCharacterId;
+	}
+
+	@AsyncSynchronized()
+	private async _generateNextId(type: keyof DatabaseConfigCreationCounters): Promise<number> {
+		AssertNotNullable(this._creationCounters);
+		const value = this._creationCounters[type]++;
+
+		await this.setConfig('creationCounters', this._creationCounters);
+
+		return value;
 	}
 
 	public async getAccountById(id: number): Promise<DatabaseAccountWithSecure | null> {
@@ -314,7 +331,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		if (existingEmail)
 			return 'emailTaken';
 
-		data.id = this._nextAccountId++;
+		data.id = await this._generateNextId('nextAccountId');
 		await this._accounts.insertOne(data);
 
 		return await this.getAccountById(data.id) as DatabaseAccountWithSecure;
@@ -361,15 +378,8 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async getCharactersForAccount(accountId: number): Promise<DatabaseCharacterSelfInfo[]> {
 		const result: DatabaseCharacterSelfInfo[] = await this._characters
 			.find({ accountId })
-			.project<Pick<DatabaseCharacterData, 'id' | 'name' | 'preview' | 'currentSpace' | 'inCreation'>>({ id: 1, name: 1, preview: 1, currentSpace: 1, inCreation: 1 })
-			.toArray()
-			.then((p) => p.map((c): DatabaseCharacterSelfInfo => ({
-				id: CharacterId(c.id),
-				name: c.name,
-				preview: c.preview,
-				currentSpace: c.currentSpace,
-				inCreation: c.inCreation,
-			})));
+			.project<Pick<ICharacterData, 'id' | 'name' | 'preview' | 'currentSpace' | 'inCreation'>>({ _id: 0, id: 1, name: 1, preview: 1, currentSpace: 1, inCreation: 1 })
+			.toArray();
 
 		return result;
 	}
@@ -379,7 +389,9 @@ export default class MongoDatabase implements PandoraDatabase {
 		if (!await this.getAccountById(accountId))
 			throw new Error('Account not found');
 
-		const [info, char] = CreateCharacter(accountId, this._nextCharacterId++);
+		const characterId: CharacterId = `c${await this._generateNextId('nextCharacterId')}`;
+
+		const [info, char] = CreateCharacter(accountId, characterId);
 
 		await this._characters.insertOne(char);
 
@@ -388,21 +400,21 @@ export default class MongoDatabase implements PandoraDatabase {
 
 	public async finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<ICharacterData | null> {
 		const result = await this._characters.findOneAndUpdate(
-			{ accountId, id: PlainId(characterId), inCreation: true },
+			{ accountId, id: characterId, inCreation: true },
 			{ $set: { created: Date.now() }, $unset: { inCreation: '' } },
 			{ returnDocument: 'after' },
 		);
 		if (!result || result.inCreation !== undefined)
 			return null;
 
-		return CharacterIdObject(result);
+		return result;
 	}
 
 	public async updateCharacter(id: CharacterId, data: ICharacterDataDirectoryUpdate & ICharacterDataShardUpdate, accessId: string | null): Promise<boolean> {
 		if (accessId !== null) {
 			const { matchedCount } = await this._characters
 				.updateOne({
-					id: PlainId(id),
+					id,
 					accessId,
 				}, { $set: data });
 			Assert(matchedCount <= 1);
@@ -410,7 +422,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		} else {
 			const { matchedCount } = await this._characters
 				.updateOne({
-					id: PlainId(id),
+					id,
 				}, { $set: data });
 			Assert(matchedCount <= 1);
 			return matchedCount === 1;
@@ -418,11 +430,11 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async deleteCharacter(accountId: AccountId, characterId: CharacterId): Promise<void> {
-		await this._characters.deleteOne({ id: PlainId(characterId), accountId });
+		await this._characters.deleteOne({ id: characterId, accountId });
 	}
 
 	public async setCharacterAccess(id: CharacterId): Promise<string | null> {
-		const result = await this._characters.findOneAndUpdate({ id: PlainId(id) }, { $set: { accessId: nanoid(8) } }, { returnDocument: 'after' });
+		const result = await this._characters.findOneAndUpdate({ id }, { $set: { accessId: nanoid(8) } }, { returnDocument: 'after' });
 		return result?.accessId ?? null;
 	}
 
@@ -434,14 +446,14 @@ export default class MongoDatabase implements PandoraDatabase {
 			.find({
 				currentSpace: spaceId,
 			})
-			.project<Pick<DatabaseCharacterData, 'id' | 'accountId'>>({ id: 1, accountId: 1 })
+			.project<Pick<ICharacterData, 'id' | 'accountId'>>({ id: 1, accountId: 1 })
 			.toArray();
 
 		return characters.map((c): {
 			accountId: AccountId;
 			characterId: CharacterId;
 		} => ({
-			characterId: CharacterId(c.id),
+			characterId: c.id,
 			accountId: c.accountId,
 		}));
 	}
@@ -569,15 +581,15 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null> {
 		if (accessId === false) {
 			accessId = nanoid(8);
-			const result = await this._characters.findOneAndUpdate({ id: PlainId(id) }, { $set: { accessId } }, { returnDocument: 'after' });
-			return result ? CharacterIdObject(result) : null;
+			const result = await this._characters.findOneAndUpdate({ id }, { $set: { accessId } }, { returnDocument: 'after' });
+			return result ? result : null;
 		}
 
-		const character = await this._characters.findOne({ id: PlainId(id), accessId });
+		const character = await this._characters.findOne({ id, accessId });
 		if (!character)
 			return null;
 
-		return CharacterIdObject(character);
+		return character;
 	}
 
 	public async getAccountContacts(accountId: AccountId): Promise<DatabaseAccountContact[]> {
@@ -652,7 +664,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		let requireFullMigration = false;
 		// Add manual migrations here
 
-		//#region Migrate character self info from accounts to characters
+		//#region Migrate character self info from accounts to characters (03/2024)
 		const charactersToMigrate = new Map<CharacterId, { account: AccountId; character: DatabaseCharacterSelfInfo; }>();
 
 		// Gather data about characters
@@ -660,7 +672,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			oldSchema: DatabaseAccountWithSecureSchema.extend({
 				characters: DatabaseCharacterSelfInfoSchema
 					.omit({ currentSpace: true })
-					.and(z.object({ currentRoom: SpaceIdSchema.nullable().optional() }))
+					.and(z.object({ currentRoom: z.union([SpaceIdSchema, OldSpaceIdSchema]).nullable().optional() }))
 					.array()
 					.optional(),
 			}),
@@ -678,7 +690,7 @@ export default class MongoDatabase implements PandoraDatabase {
 									id: character.id,
 									name: character.name,
 									preview: character.preview,
-									currentSpace: character.currentRoom ?? null,
+									currentSpace: typeof character.currentRoom === 'string' ? UpdateSpaceId(character.currentRoom) : null,
 									inCreation: character.inCreation,
 								},
 							});
@@ -690,18 +702,22 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		// Apply the data to the characters
 		await characterCollection.doManualMigration(this._client, this._db, {
-			oldSchema: CharacterDataSchema.pick({ accountId: true, name: true, inCreation: true }).and(z.object({ id: z.number().int() })),
+			oldSchema: CharacterDataSchema
+				.pick({ accountId: true, name: true, inCreation: true })
+				.and(z.object({
+					id: z.union([CharacterIdSchema, z.number().int()]),
+				})),
 			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
 				for await (const character of oldStream) {
 					if (character == null)
 						continue;
 
-					const migrationInfo = charactersToMigrate.get(CharacterId(character.id));
+					const migrationInfo = charactersToMigrate.get(CharacterIdToStringId(character.id));
 					if (migrationInfo == null)
 						continue;
 
 					Assert(character.accountId === migrationInfo.account);
-					Assert(CharacterId(character.id) === migrationInfo.character.id);
+					Assert(CharacterIdToStringId(character.id) === migrationInfo.character.id);
 					Assert(character.name === migrationInfo.character.name);
 					Assert(character.inCreation === migrationInfo.character.inCreation);
 
@@ -725,6 +741,165 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		Assert(charactersToMigrate.size === 0, 'Accounts reference unknown characters');
 		// The character array from the account will be deleted during automatic migration
+
+		//#endregion
+
+		//#region Generate explicit registration/character creation counters (04/2024)
+
+		await configCollection.doManualMigration(this._client, this._db, {
+			oldSchema: DatabaseConfigSchema,
+			migrate: async ({ oldCollection, migrationLogger }) => {
+				const existingCounters = await oldCollection.findOne({ type: 'creationCounters' });
+				if (existingCounters == null) {
+
+					let nextAccountId: number;
+					let nextCharacterId: number;
+
+					const maxAccount = await (await accountCollection.create(this._db)).find().sort({ id: -1 }).limit(1).toArray();
+
+					if (maxAccount.length > 0) {
+						Assert(typeof maxAccount[0].id === 'number');
+						nextAccountId = maxAccount[0].id + 1;
+					} else {
+						nextAccountId = 1;
+					}
+
+					const maxCharacter = await (await characterCollection.create(this._db)).find().sort({ id: -1 }).limit(1).toArray();
+
+					if (maxCharacter.length > 0) {
+						// Downcast to unknown as we are dealing with old, non-migrated data
+						const id: unknown = maxCharacter[0].id;
+						Assert(typeof id === 'number');
+						nextCharacterId = id + 1;
+					} else {
+						nextCharacterId = 1;
+					}
+
+					this._creationCounters = {
+						nextAccountId,
+						nextCharacterId,
+					};
+
+					await oldCollection.insertOne({
+						type: 'creationCounters',
+						data: this._creationCounters,
+					});
+
+					migrationLogger.alert(`Generated creation counters: nextAccountId=${nextAccountId}, nextCharacterId=${nextCharacterId}`);
+				}
+			},
+		});
+
+		//#endregion
+
+		//#region Character Id migration (04/2024)
+
+		// Go through all characters and replace numeric ids where needed by string ids
+		await characterCollection.doManualMigration(this._client, this._db, {
+			oldSchema: z.object({
+				id: z.union([CharacterIdSchema, z.number().int()]),
+			}),
+			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+				for await (const character of oldStream) {
+					if (character == null)
+						continue;
+
+					if (typeof character.id === 'string')
+						continue;
+
+					requireFullMigration = true;
+					migrationLogger.verbose(`Migrating character id for ${character.id} -> ${CharacterIdToStringId(character.id)}`);
+
+					const { matchedCount } = await oldCollection.updateOne(
+						{ id: character.id },
+						{
+							$set: {
+								id: CharacterIdToStringId(character.id),
+							},
+						},
+					);
+					Assert(matchedCount === 1);
+				}
+			},
+		});
+
+		//#endregion
+
+		//#region Rename spaces collection from old rooms collection (04/2024)
+
+		try {
+			await this._db.renameCollection('chatrooms', SPACES_COLLECTION_NAME, { dropTarget: false });
+
+			logger.info('Migrated old chatrooms collection to a new name');
+		} catch (error) {
+			if (!(error instanceof MongoServerError) || error.codeName !== 'NamespaceNotFound') {
+				throw error;
+			}
+		}
+
+		//#endregion
+
+		//#region Change space id format from `r/abc` to `s/abc` (04/2024)
+
+		await spaceCollection.doManualMigration(this._client, this._db, {
+			oldSchema: z.object({
+				id: z.union([SpaceIdSchema, OldSpaceIdSchema]),
+			}),
+			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+				for await (const space of oldStream) {
+					if (space == null)
+						continue;
+
+					if (space.id.startsWith('s/'))
+						continue;
+
+					const newId: SpaceId = UpdateSpaceId(space.id);
+
+					requireFullMigration = true;
+					migrationLogger.verbose(`Migrating space id for ${space.id} -> ${newId}`);
+
+					const { matchedCount } = await oldCollection.updateOne(
+						{ id: space.id },
+						{
+							$set: {
+								id: newId,
+							},
+						},
+					);
+					Assert(matchedCount === 1);
+				}
+			},
+		});
+
+		await characterCollection.doManualMigration(this._client, this._db, {
+			oldSchema: CharacterDataSchema
+				.pick({ id: true })
+				.and(z.object({
+					currentSpace: z.union([SpaceIdSchema, OldSpaceIdSchema]).nullable().default(null),
+				})),
+			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+				for await (const character of oldStream) {
+					if (character == null)
+						continue;
+
+					if (character.currentSpace == null || character.currentSpace.startsWith('s/'))
+						continue;
+
+					requireFullMigration = true;
+					migrationLogger.verbose(`Migrating character ${character.id} current space id`);
+
+					const { matchedCount } = await oldCollection.updateOne(
+						{ id: character.id },
+						{
+							$set: {
+								currentSpace: UpdateSpaceId(character.currentSpace),
+							},
+						},
+					);
+					Assert(matchedCount === 1);
+				}
+			},
+		});
 
 		//#endregion
 
@@ -758,19 +933,15 @@ async function CreateInMemoryMongo({
 	});
 }
 
-function CharacterId(id: number): CharacterId {
-	return `c${id}`;
+function CharacterIdToStringId(id: number | CharacterId): CharacterId {
+	return typeof id === 'number' ? `c${id}` : id;
 }
 
-function CharacterIdObject(obj: Omit<ICharacterData, 'id'> & { id: number; }): ICharacterData {
-	return {
-		...obj,
-		id: CharacterId(obj.id),
-	};
-}
+// Temporary for migration
+const OldSpaceIdSchema = ZodTemplateString<`r/${string}`>(z.string(), /^r\//);
 
-function PlainId(id: CharacterId): number {
-	return parseInt(id.slice(1));
+function UpdateSpaceId(oldId: SpaceId | z.infer<typeof OldSpaceIdSchema>): SpaceId {
+	return oldId.startsWith('s/') ? SpaceIdSchema.parse(oldId) : `s/${oldId.slice(2)}`;
 }
 
 function DbSynchronized<Args extends unknown[], Return>(getKey?: (name: string, args: Args) => string) {

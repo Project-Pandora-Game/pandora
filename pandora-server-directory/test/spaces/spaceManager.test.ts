@@ -84,7 +84,7 @@ describe('SpaceManager', () => {
 		});
 
 		it('Returns undefined with unknown space', () => {
-			const space = SpaceManager.getLoadedSpace('r/NonexistentSpace');
+			const space = SpaceManager.getLoadedSpace('s/NonexistentSpace');
 			expect(space).toBe(null);
 		});
 	});

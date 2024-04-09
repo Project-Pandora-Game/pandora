@@ -378,15 +378,8 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async getCharactersForAccount(accountId: number): Promise<DatabaseCharacterSelfInfo[]> {
 		const result: DatabaseCharacterSelfInfo[] = await this._characters
 			.find({ accountId })
-			.project<Pick<ICharacterData, 'id' | 'name' | 'preview' | 'currentSpace' | 'inCreation'>>({ id: 1, name: 1, preview: 1, currentSpace: 1, inCreation: 1 })
-			.toArray()
-			.then((p) => p.map((c): DatabaseCharacterSelfInfo => ({
-				id: c.id,
-				name: c.name,
-				preview: c.preview,
-				currentSpace: c.currentSpace,
-				inCreation: c.inCreation,
-			})));
+			.project<Pick<ICharacterData, 'id' | 'name' | 'preview' | 'currentSpace' | 'inCreation'>>({ _id: 0, id: 1, name: 1, preview: 1, currentSpace: 1, inCreation: 1 })
+			.toArray();
 
 		return result;
 	}

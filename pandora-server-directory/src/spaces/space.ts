@@ -372,10 +372,10 @@ export class Space {
 		// Ignore those - the requests will fail and once the space is not requestest for a bit, it will be unloaded from the directory too, actually vanishing
 	}
 
-	public checkAllowEnter(character: Character, inviteId?: SpaceInviteId, ignore: { characterLimit?: boolean; } = {}): 'ok' | 'errFull' | 'noAccess' | 'invalidInvite' {
+	public checkAllowEnter(character: Character, inviteId?: SpaceInviteId, ignore: { characterLimit?: boolean; } = {}): 'ok' | 'spaceFull' | 'noAccess' | 'invalidInvite' {
 		// No-one can enter if the space is in an invalid state
 		if (!this.isValid) {
-			return 'errFull';
+			return 'spaceFull';
 		}
 
 		// If you are already in this space, then you have rights to enter it
@@ -389,7 +389,7 @@ export class Space {
 				maxUsers += LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS;
 			}
 			if (this.characterCount >= maxUsers)
-				return 'errFull';
+				return 'spaceFull';
 		}
 
 		// If you are an owner or admin, you can enter the space (owner implies admin)

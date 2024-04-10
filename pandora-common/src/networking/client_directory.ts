@@ -333,7 +333,7 @@ export const ClientDirectorySchema = {
 			id: SpaceIdSchema,
 			invite: SpaceInviteIdSchema.optional(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'failed' | 'errFull' | 'notFound' | 'noAccess' | 'invalidInvite'; }>(),
+		response: ZodCast<{ result: 'ok' | 'failed' | 'spaceFull' | 'notFound' | 'noAccess' | 'invalidInvite'; }>(),
 	},
 	spaceLeave: {
 		request: z.object({}),

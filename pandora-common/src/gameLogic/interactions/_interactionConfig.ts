@@ -7,7 +7,7 @@ import { KnownObject, ParseArrayNotEmpty } from '../../utility';
 
 export const INTERACTION_CONFIG = {
 	interact: {
-		visibleName: 'Interact with this character',
+		visibleName: 'Interact and to use other allowed permissions',
 		icon: 'on-off',
 		defaultPermissions: {
 			allowOthers: 'prompt',

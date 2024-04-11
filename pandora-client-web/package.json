@@ -88,7 +88,7 @@
 		"postcss-preset-env": "9.3.0",
 		"react-refresh": "0.14.0",
 		"react-refresh-typescript": "2.0.9",
-		"react-reverse-portal": "2.1.1",
+		"react-reverse-portal": "2.1.2",
 		"rimraf": "5.0.5",
 		"sass": "1.74.1",
 		"source-map-loader": "5.0.0",

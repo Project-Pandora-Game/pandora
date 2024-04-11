@@ -185,11 +185,13 @@ function ColorEditor({
 	const onPointerDown = useCallback((ev: React.PointerEvent) => {
 		ev.preventDefault();
 		ev.stopPropagation();
+		ev.currentTarget.setPointerCapture(ev.pointerId);
 		setDragging(true);
 	}, [setDragging]);
 	const onPointerUp = useCallback((ev: React.PointerEvent) => {
 		ev.preventDefault();
 		ev.stopPropagation();
+		ev.currentTarget.releasePointerCapture(ev.pointerId);
 		setDragging(false);
 	}, [setDragging]);
 	const onPointerMove = useCallback((ev: React.PointerEvent) => {
@@ -209,7 +211,7 @@ function ColorEditor({
 			<div className='color-editor' ref={ ref }>
 				<div className='color-editor__rect'>
 					<div className='color-editor__rect__color'
-						onPointerDown={ onPointerDown } onPointerUp={ onPointerUp } onPointerMove={ onPointerMove } onPointerCancel={ onPointerUp }>
+						onPointerDown={ onPointerDown } onPointerUp={ onPointerUp } onPointerMove={ onPointerMove } onPointerCancel={ onPointerUp } onLostPointerCapture={ onPointerUp }>
 						<div className='color-editor__rect__color__pointer' />
 					</div>
 				</div>

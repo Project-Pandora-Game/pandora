@@ -218,26 +218,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				return true;
 			}),
 	},
-	{
-		key: ['turn', 't'],
-		description: `Turns yourself around`,
-		longDescription: `(alternative command: '/t')`,
-		usage: '',
-		handler: CreateClientCommand()
-			.handler(({ shardConnector, gameState, player }) => {
-				const playerState = gameState.globalState.currentState.characters.get(player.id);
-				if (!playerState)
-					return false;
-
-				shardConnector.awaitResponse('appearanceAction', {
-					type: 'setView',
-					target: player.data.id,
-					view: playerState.requestedPose.view === 'front' ? 'back' : 'front',
-				}).catch(() => { /** TODO */ });
-				return true;
-			}),
-	},
-	// Commands for gambling and playing games
+	//#region Commands for gambling and playing games
 	{
 		key: ['coinflip'],
 		description: 'Flip a coin with the result \'heads\' or \'tails\'',
@@ -308,7 +289,27 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				return true;
 			}),
 	},
-	// Commands to change the player's pose
+	//#endregion
+	//#region Commands to change the player's pose
+	{
+		key: ['turn', 't'],
+		description: `Turns yourself around`,
+		longDescription: `(alternative command: '/t')`,
+		usage: '',
+		handler: CreateClientCommand()
+			.handler(({ shardConnector, gameState, player }) => {
+				const playerState = gameState.globalState.currentState.characters.get(player.id);
+				if (!playerState)
+					return false;
+
+				shardConnector.awaitResponse('appearanceAction', {
+					type: 'setView',
+					target: player.data.id,
+					view: playerState.requestedPose.view === 'front' ? 'back' : 'front',
+				}).catch(() => { /** TODO */ });
+				return true;
+			}),
+	},
 	{
 		key: ['stand'],
 		description: 'Stand up.',
@@ -366,4 +367,5 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				return true;
 			}),
 	},
+	//#endregion
 ];

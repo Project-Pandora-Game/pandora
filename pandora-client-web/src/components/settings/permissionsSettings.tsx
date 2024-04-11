@@ -528,8 +528,8 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions, message
 				}
 			</Column>
 			<Row padding='medium' alignX='space-between' alignY='center'>
-				<Button onClick={ dismiss }>Dismiss</Button>
-				<Button onClick={ acceptAll } disabled={ !allowAccept } className='fadeDisabled'>Allow all</Button>
+				<Button onClick={ dismiss }>Deny unchosen once</Button>
+				<Button onClick={ acceptAll } disabled={ !allowAccept } className='fadeDisabled'>Allow all above always</Button>
 			</Row>
 		</DraggableDialog>
 	);
@@ -621,7 +621,7 @@ function PermissionPromptButton({ setYes, setNo, isAllowed }: { setYes: () => vo
 					}
 				} }
 			>
-				Allow
+				Allow always
 			</Button>
 			<Button
 				className='slim'
@@ -632,7 +632,7 @@ function PermissionPromptButton({ setYes, setNo, isAllowed }: { setYes: () => vo
 					}
 				} }
 			>
-				Deny
+				Deny always
 			</Button>
 		</>
 	);

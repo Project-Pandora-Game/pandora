@@ -97,6 +97,7 @@ export function WikiNew(): ReactElement {
 				<li>You can click on a character's name under the character on the room graphics to open a context menu and select "Whisper" there.</li>
 				<li>You can click on the "Whisper"-button next to a character name in the "Room"-tab.</li>
 				<li>You can use the chat command "/whisper target" (or "/w target") using either the character's name or the character's ID as the whisper target argument.</li>
+				<li>You can use the chat command "/whisper" (or "/w") without anything afterwards to cancel the state of whispering someone.</li>
 			</ul>
 
 			<p>

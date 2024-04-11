@@ -291,6 +291,7 @@ export function WikiSpaces(): ReactElement {
 				<li>You can use the chat command "/w [target]" using either the character name or the character ID as whisper target argument.</li>
 				<li>Chat-related commands while in whisper mode (e.g., "/me") will be executed normally and not be whispered.</li>
 				<li>You can whisper an OOC message though, if you start a whispered message with "((".</li>
+				<li>You can use the chat command "/whisper" (or "/w") without anything afterwards to cancel the state of whispering someone.</li>
 				<li>If your whisper target leaves the room or space, your whisper message cannot be sent.</li>
 				<li>If your whisper target goes offline, your whisper message will still be sent, but currently it will not be delivered.</li>
 			</ul>

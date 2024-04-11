@@ -701,7 +701,7 @@ export class Character {
 	}
 
 	@AsyncSynchronized('object')
-	public async joinSpace(space: Space, invite?: SpaceInviteId): Promise<'failed' | 'ok' | 'errFull' | 'noAccess' | 'invalidInvite'> {
+	public async joinSpace(space: Space, invite?: SpaceInviteId): Promise<'failed' | 'ok' | 'spaceFull' | 'noAccess' | 'invalidInvite'> {
 		// Only loaded characters can request join into a space
 		if (!this.isOnline())
 			return 'failed';

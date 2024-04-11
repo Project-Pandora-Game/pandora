@@ -455,7 +455,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		// Only developers can create rooms with development mode enabled
 		if (spaceConfig.features.includes('development') && !connection.account.roles.isAuthorized('developer')) {
-			logger.verbose(`${connection.id} attempted to create a development space witout being a developer`);
+			logger.verbose(`${connection.id} attempted to create a development space without being a developer`);
 			return {
 				result: 'failed',
 			};
@@ -477,7 +477,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		const result = await character.joinSpace(space);
 		Assert(result !== 'noAccess');
-		Assert(result !== 'errFull');
+		Assert(result !== 'spaceFull');
 		Assert(result !== 'invalidInvite');
 
 		return { result };

@@ -32,6 +32,7 @@ import {
 	CloneDeepMutable,
 	IsValidRoomPosition,
 	GenerateInitialRoomPosition,
+	type IChatMessageAction,
 } from 'pandora-common';
 import type { Character } from '../character/character';
 import _, { isEqual, omit } from 'lodash';
@@ -488,8 +489,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 				time: this.nextMessageTime(),
 				data: m.data ? {
 					character: this._getCharacterActionInfo(m.data.character),
-					targetCharacter: this._getCharacterActionInfo(m.data.targetCharacter),
-				} : undefined,
+					target: this._getCharacterActionInfo(m.data.targetCharacter),
+				} satisfies IChatMessageAction['data'] : undefined,
 			})));
 		this.lastDirectoryMessageTime = _(messages)
 			.map((m) => m.directoryTime)

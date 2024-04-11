@@ -1,5 +1,6 @@
 import { noop } from 'lodash';
 import {
+	AssertNever,
 	AssertNotNullable,
 	EMPTY,
 	GetLogger,
@@ -255,13 +256,27 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 			return directoryConnector.awaitResponse('spaceEnter', { id: info.id, invite: invite?.id });
 		},
 		(resp) => {
-			if (resp.result === 'ok') {
-				SpaceJoinProgress.show('success', 'Space joined!');
-			} else {
-				SpaceJoinProgress.show('error', `Failed to join space:\n${resp.result}`);
-			}
-			if (resp.result === 'notFound') {
-				hide?.();
+			switch (resp.result) {
+				case 'ok':
+					SpaceJoinProgress.show('success', 'Space joined!');
+					break;
+				case 'notFound':
+					hide?.();
+					break;
+				case 'spaceFull':
+					SpaceJoinProgress.show('error', 'Space is full');
+					break;
+				case 'invalidInvite':
+					SpaceJoinProgress.show('error', 'Invalid invite');
+					break;
+				case 'noAccess':
+					SpaceJoinProgress.show('error', 'No access');
+					break;
+				case 'failed':
+					SpaceJoinProgress.show('error', 'Failed to join space');
+					break;
+				default:
+					AssertNever(resp.result);
 			}
 		},
 		{

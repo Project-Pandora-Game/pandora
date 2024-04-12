@@ -1,4 +1,4 @@
-import React, { useId, type DependencyList, type ReactElement, useCallback, useMemo } from 'react';
+import React, { useId, type DependencyList, type ReactElement, useCallback, useMemo, type ReactNode } from 'react';
 import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
 import { EMPTY_ARRAY, KnownObject } from 'pandora-common';
 import { Button } from '../../common/button/button';
@@ -63,7 +63,7 @@ export function ToggleSettingInput({ currentValue, defaultValue, label, onChange
 export function SelectSettingInput<TValue extends string>({ currentValue, defaultValue, label, stringify, schema, onChange, onReset, deps }: {
 	currentValue: TValue | undefined;
 	defaultValue: TValue;
-	label: string;
+	label: ReactNode;
 	stringify: Readonly<Record<TValue, string>>;
 	schema: ZodSchema<TValue, ZodTypeDef, unknown>;
 	onChange: (newValue: TValue) => void;

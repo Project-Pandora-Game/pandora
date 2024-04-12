@@ -18,7 +18,7 @@ import {
 import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
-import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterData } from '../../character/character';
 import { CommonProps } from '../../common/reactTypes';
@@ -31,7 +31,7 @@ import { ShardConnector } from '../../networking/shardConnector';
 import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomDebug';
 import { PointLike } from '../graphicsCharacter';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphicsScene';
-import { PixiViewportSetupCallback } from '../pixiViewport';
+import { PixiViewportSetupCallback, PixiViewportRef } from '../pixiViewport';
 import { CharacterContextMenu } from './contextMenus/characterContextMenu';
 import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
 import { RoomCharacterInteractive } from './roomCharacter';
@@ -55,6 +55,7 @@ interface RoomGraphicsSceneProps extends CommonProps {
 	roomSceneMode: Immutable<IRoomSceneMode>;
 	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void;
+	onDoubleClick: (event: React.PointerEvent<HTMLDivElement>) => void;
 	menuOpen: (target: Character<ICharacterRoomData> | ItemRoomDevice, event: FederatedPointerEvent) => void;
 }
 
@@ -70,6 +71,7 @@ export function RoomGraphicsScene({
 	roomSceneMode,
 	setRoomSceneMode,
 	onPointerDown,
+	onDoubleClick,
 	menuOpen,
 }: RoomGraphicsSceneProps): ReactElement {
 	const assetManager = useAssetManager();
@@ -153,13 +155,16 @@ export function RoomGraphicsScene({
 			});
 	}, [roomBackground]);
 
+	const viewportRef = useRef<PixiViewportRef>(null);
+
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
+		viewportRef,
 		forwardContexts: [directoryConnectorContext, shardConnectorContext],
 		worldWidth: roomBackground.imageSize[0],
 		worldHeight: roomBackground.imageSize[1],
 		backgroundColor: 0x000000,
-	}), [viewportConfig, roomBackground]);
+	}), [viewportConfig, viewportRef, roomBackground]);
 
 	return (
 		<GraphicsScene
@@ -167,6 +172,7 @@ export function RoomGraphicsScene({
 			className={ className }
 			divChildren={ children }
 			onPointerDown={ onPointerDown }
+			onDoubleClick={ onDoubleClick }
 			sceneOptions={ sceneOptions }
 		>
 			<Graphics
@@ -481,6 +487,12 @@ export function RoomScene({ className }: {
 		}
 	});
 
+	const onDoubleClick = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
+		viewportRef.current?.center();
+		event.stopPropagation();
+		event.preventDefault();
+	});
+
 	const closeContextMenu = useCallback(() => {
 		setMenuActive(null);
 	}, []);
@@ -496,6 +508,7 @@ export function RoomScene({ className }: {
 			roomSceneMode={ roomSceneMode }
 			setRoomSceneMode={ setRoomSceneMode }
 			onPointerDown={ onPointerDown }
+			onDoubleClick={ onDoubleClick }
 			menuOpen={ menuOpen }
 		>
 			{

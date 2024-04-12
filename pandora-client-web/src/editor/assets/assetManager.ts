@@ -63,12 +63,12 @@ DefineAsset({
 	graphics: 'graphics.json',
 	// Definitions of how your asset should be colorable.
 	// Rename the example group or copy it to add more independent ones.
-	colorization: [
-		{
+	colorization: {
+		colorGroup: {
 			name: 'Color group',
 			default: '#FFFFFF',
 		},
-	],
+	},
 	// Info about who owns the asset(s)
 	ownership: {
 		// Same as the author of git commits present in PR, has responsibility for this asset
@@ -100,7 +100,7 @@ DefineAsset({
 				editedBy: 'CHANGE_ME',
 				// License; see possible licenses in ASSET_LICENSING.md file.
 				// Alternatively, write the name of the file with the license prefixed by \`./\` (e.g. \`./LICENSE.md\`)
-				license: 'Pandora-Use-Only',
+				license: 'Pandora-Use-Only-v1-or-later',
 			},
 		],
 	},

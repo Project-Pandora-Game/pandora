@@ -218,25 +218,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				return true;
 			}),
 	},
-	{
-		key: ['turn', 't'],
-		description: `Turns yourself around`,
-		longDescription: `(alternative command: '/t')`,
-		usage: '',
-		handler: CreateClientCommand()
-			.handler(({ shardConnector, gameState, player }) => {
-				const playerState = gameState.globalState.currentState.characters.get(player.id);
-				if (!playerState)
-					return false;
-
-				shardConnector.awaitResponse('appearanceAction', {
-					type: 'setView',
-					target: player.data.id,
-					view: playerState.requestedPose.view === 'front' ? 'back' : 'front',
-				}).catch(() => { /** TODO */ });
-				return true;
-			}),
-	},
+	//#region Commands for gambling and playing games
 	{
 		key: ['coinflip'],
 		description: 'Flip a coin with the result \'heads\' or \'tails\'',
@@ -307,4 +289,83 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				return true;
 			}),
 	},
+	//#endregion
+	//#region Commands to change the player's pose
+	{
+		key: ['turn', 't'],
+		description: `Turns yourself around`,
+		longDescription: `(alternative command: '/t')`,
+		usage: '',
+		handler: CreateClientCommand()
+			.handler(({ shardConnector, gameState, player }) => {
+				const playerState = gameState.globalState.currentState.characters.get(player.id);
+				if (!playerState)
+					return false;
+
+				shardConnector.awaitResponse('appearanceAction', {
+					type: 'setView',
+					target: player.data.id,
+					view: playerState.requestedPose.view === 'front' ? 'back' : 'front',
+				}).catch(() => { /** TODO */ });
+				return true;
+			}),
+	},
+	{
+		key: ['stand'],
+		description: 'Stand up.',
+		longDescription: '',
+		usage: '',
+		handler: CreateClientCommand()
+			.handler(({ shardConnector, gameState, player }) => {
+				const playerState = gameState.globalState.currentState.characters.get(player.id);
+				if (!playerState)
+					return false;
+
+				shardConnector.awaitResponse('appearanceAction', {
+					type: 'pose',
+					target: player.data.id,
+					legs: 'standing',
+				}).catch(() => { /** TODO */ });
+				return true;
+			}),
+	},
+	{
+		key: ['kneel'],
+		description: 'Kneel down.',
+		longDescription: '',
+		usage: '',
+		handler: CreateClientCommand()
+			.handler(({ shardConnector, gameState, player }) => {
+				const playerState = gameState.globalState.currentState.characters.get(player.id);
+				if (!playerState)
+					return false;
+
+				shardConnector.awaitResponse('appearanceAction', {
+					type: 'pose',
+					target: player.data.id,
+					legs: 'kneeling',
+				}).catch(() => { /** TODO */ });
+				return true;
+			}),
+	},
+	{
+		key: ['sit'],
+		description: 'Sit down.',
+		longDescription: 'May lead to sudden bum / floor impact, if not used carefully',
+		usage: '',
+		handler: CreateClientCommand()
+			.handler(({ shardConnector, gameState, player }) => {
+				const playerState = gameState.globalState.currentState.characters.get(player.id);
+				if (!playerState)
+					return false;
+
+				shardConnector.awaitResponse('appearanceAction', {
+					type: 'pose',
+					target: player.data.id,
+					legs: 'sitting',
+				}).catch(() => { /** TODO */ });
+				return true;
+			}),
+	},
+	//#endregion
 ];

@@ -90,7 +90,7 @@ export function ColorInputRGBA({
 
 	return (
 		<>
-			<input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ minAlpha === 255 ? 7 : 9 } />
+			<input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } />
 			<input type='color' value={ value.substring(0, 7) } disabled={ disabled } onClick={ onClick } readOnly />
 			{
 				resetValue != null &&
@@ -317,7 +317,7 @@ class Color {
 
 	public toHex(): HexRGBAColorString {
 		const [r, g, b] = this.rbg;
-		if (this.alpha === 255) {
+		if (this.alpha === Color.maxAlpha) {
 			return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}` as HexColorString;
 		}
 		return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}${Color.toHexPart(Math.round(this.alpha))}` as HexRGBAColorString;

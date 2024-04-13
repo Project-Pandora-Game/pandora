@@ -12,7 +12,7 @@ export function ColorInput({
 	throttle = 0,
 	disabled = false,
 	hideTextInput = false,
-	inputColorTitle,
+	title,
 }: {
 	initialValue: HexColorString;
 	resetValue?: HexColorString;
@@ -20,9 +20,10 @@ export function ColorInput({
 	throttle?: number;
 	disabled?: boolean;
 	hideTextInput?: boolean;
-	inputColorTitle?: string;
+	title: string;
 }): ReactElement {
 	const [value, setInput] = useState<HexColorString>(initialValue.toUpperCase() as HexColorString);
+	const [showEditor, setShowEditor] = useState(false);
 
 	const onChangeCaller = useCallback((color: HexColorString) => onChange?.(color), [onChange]);
 	const onChangeCallerThrottled = useMemo(() => throttle <= 0 ? onChangeCaller : _.throttle(onChangeCaller, throttle), [onChangeCaller, throttle]);
@@ -36,15 +37,29 @@ export function ColorInput({
 		}
 	}, [setInput, onChangeCallerThrottled]);
 
+	const onEdit = useCallback((color: HexRGBAColorString) => {
+		onChangeCallerThrottled(color);
+		setInput(color);
+	}, [onChangeCallerThrottled]);
+	const onClick = useCallback((ev: React.MouseEvent) => {
+		ev.stopPropagation();
+		ev.preventDefault();
+		setShowEditor(true);
+	}, [setShowEditor]);
+
 	const onInputChange = (ev: ChangeEvent<HTMLInputElement>) => changeCallback(ev.target.value);
 
 	return (
 		<>
 			{ !hideTextInput && <input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ 7 } /> }
-			<input type='color' value={ value } onChange={ onInputChange } disabled={ disabled } title={ inputColorTitle } />
+			<input type='color' value={ value } onChange={ onInputChange } onClick={ onClick } disabled={ disabled } title={ title } />
 			{
 				resetValue != null &&
 				<Button className='slim' onClick={ () => changeCallback(resetValue) }>↺</Button>
+			}
+			{
+				showEditor &&
+				<ColorEditor initialValue={ value } onChange={ onEdit } minAlpha={ Color.maxAlpha } close={ () => setShowEditor(false) } title={ title } />
 			}
 		</>
 	);

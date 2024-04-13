@@ -249,6 +249,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 										initialValue={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
 										onChange={ (color) => setModifiedData({ background: { ...currentConfigBackground, image: color } }) }
 										disabled={ !canEdit }
+										title='Background'
 									/>
 								</div>
 							</div>

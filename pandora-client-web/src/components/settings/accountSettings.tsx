@@ -196,7 +196,7 @@ function LabelColor({ account }: { account: IDirectoryAccountInfo; }): ReactElem
 			<legend>Name color</legend>
 			<div className='input-row'>
 				<label>Color</label>
-				<ColorInput initialValue={ color } onChange={ setColor } />
+				<ColorInput initialValue={ color } onChange={ setColor } title='Name' />
 				<Button
 					className='slim fadeDisabled'
 					onClick={ () => {

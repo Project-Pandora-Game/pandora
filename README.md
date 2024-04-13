@@ -17,7 +17,7 @@ Required software:
  - Git
  - Visual Studio Code (recommended)
 
-For more detailed steps you can follow [Pandora asset creation tutorial: Development tools installation](https://github.com/Project-Pandora-Game/Documentation/blob/master/Asset_creation_tutorial.md#development-tools-installation)
+For more detailed steps you can follow [Pandora asset creation tutorial: Development tools installation](https://github.com/Project-Pandora-Game/Documentation/blob/master/asset_creation/Asset_creation_tutorial.md#development-tools-installation)
 
 ### Client connecting to official servers
 

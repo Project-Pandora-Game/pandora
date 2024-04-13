@@ -232,7 +232,7 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 			default:
 				return ['', ''];
 		}
-	}, [message.type]);
+	}, [message.type, message.parts]);
 
 	const onClick = useCallback((event: React.MouseEvent<HTMLSpanElement>) => {
 		event.stopPropagation();

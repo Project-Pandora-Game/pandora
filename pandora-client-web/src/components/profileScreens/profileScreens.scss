@@ -52,5 +52,11 @@
 		background-color: $grey-lightest;
 		padding: 0.5em;
 		border: 1px solid black;
+		font-family: Arial, Helvetica, sans-serif;
+		white-space: pre-wrap;
+	}
+
+	.profileEdit {
+		border: 2px dashed $red-dark;
 	}
 }

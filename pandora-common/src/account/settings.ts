@@ -59,6 +59,10 @@ export const AccountSettingsSchema = z.object({
 	 * Controls how big the font size used in the main chat area is
 	 */
 	interfaceChatroomChatFontSize: z.enum(['xs', 's', 'm', 'l', 'xl']),
+	/**
+	 * Controls how big the font size used for the name of the character is
+	 */
+	interfaceChatroomCharacterNameFontSize: z.enum(['xs', 's', 'm', 'l', 'xl']),
 });
 export type AccountSettings = z.infer<typeof AccountSettingsSchema>;
 
@@ -77,6 +81,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceChatroomGraphicsRatioVertical: 4,
 	interfaceChatroomOfflineCharacterFilter: 'ghost',
 	interfaceChatroomChatFontSize: 'm',
+	interfaceChatroomCharacterNameFontSize: 'm',
 });
 
 export const ACCOUNT_SETTINGS_LIMITED_LIMITS = Object.freeze({

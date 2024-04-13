@@ -273,7 +273,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 		isOnline,
 	} = useCharacterData(character);
 
-	const { interfaceChatroomOfflineCharacterFilter } = useAccountSettings();
+	const { interfaceChatroomOfflineCharacterFilter, interfaceChatroomCharacterNameFontSize } = useAccountSettings();
 
 	const playerFilters = usePlayerVisionFilters(character.isPlayer());
 	const characterFilters = useCharacterDisplayFilters(character);
@@ -300,6 +300,16 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 	const disconnectedIconY = labelY + 50;
 
 	const showName = useObservable(SettingDisplayCharacterName);
+
+	// NOTE: Can this be done in a cleaner way?
+	let fontScale: number = 1.0;
+	switch (interfaceChatroomCharacterNameFontSize) {
+		case 'xs': fontScale = 0.6; break;
+		case 's': fontScale = 0.8; break;
+		case 'l': fontScale = 1.2; break;
+		case 'xl': fontScale = 1.4; break;
+		default: fontScale = 1.0; break;
+	}
 
 	useEffect(() => {
 		if (app == null || onPointerMove == null)
@@ -387,7 +397,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 							position={ { x: labelX, y: labelY } }
 							style={ new TextStyle({
 								fontFamily: 'Arial',
-								fontSize: 32,
+								fontSize: 32 * fontScale,
 								fill: settings.labelColor,
 								align: 'center',
 								dropShadow: true,

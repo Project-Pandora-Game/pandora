@@ -1,4 +1,4 @@
-import { AssertNever, IsEmail, UserNameSchema } from 'pandora-common';
+import { AssertNever, FormatTimeInterval, IsEmail, UserNameSchema } from 'pandora-common';
 import React, { ReactElement, useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
@@ -67,7 +67,7 @@ export function ResendVerificationAdvancedForm(): ReactElement {
 				showError('Account is already activated');
 				break;
 			case 'rateLimited':
-				showError('Rate limited');
+				showError('Rate limited, please try again in: ' + FormatTimeInterval(result.time, 'two-most-significant'));
 				break;
 			default:
 				AssertNever(result);

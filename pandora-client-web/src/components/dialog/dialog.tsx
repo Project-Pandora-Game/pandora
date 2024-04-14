@@ -103,12 +103,30 @@ export function ModalDialog({ children, priority, position = 'center' }: Childre
 	);
 }
 
-export function DraggableDialog({ children, title, rawContent, close }: {
+export function DraggableDialog({ children, title, rawContent, close, hiddenClose }: {
 	children?: ReactNode;
 	title: string;
 	rawContent?: boolean;
-	close?: () => void;
+	close: () => void;
+	hiddenClose?: boolean;
 }): ReactElement {
+	useEffect(() => {
+		if (close == null) {
+			return undefined;
+		}
+		const handler = (ev: KeyboardEvent) => {
+			if (ev.key === 'Escape') {
+				close();
+				ev.preventDefault();
+				ev.stopImmediatePropagation();
+			}
+		};
+		document.addEventListener('keydown', handler);
+		return () => {
+			document.removeEventListener('keydown', handler);
+		};
+	}, [close]);
+
 	return (
 		<DialogInPortal priority={ -1 } >
 			<div className='overlay-bounding-box'>
@@ -125,7 +143,7 @@ export function DraggableDialog({ children, title, rawContent, close }: {
 				>
 					<header className='drag-handle'>
 						{ title }
-						{ close ? (
+						{ hiddenClose !== true ? (
 							<span className='dialog-close' onClick={ close }>
 								×
 							</span>

@@ -2,7 +2,6 @@ import React, { MouseEvent, ReactElement, useCallback, useState } from 'react';
 import helpIcon from '../../assets/icons/help.svg';
 import { ChildrenProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
-import { useKeyDownEvent } from '../../common/useKeyDownEvent';
 import { Button } from '../common/button/button';
 import { Column } from '../common/container/container';
 import { DraggableDialog } from '../dialog/dialog';
@@ -23,7 +22,7 @@ export function ContextHelpButton({ children }: ChildrenProps): ReactElement {
 		setOpen(false);
 	}, []);
 
-	useKeyDownEvent(close, 'Escape');
+	const dialogClose = useCallback(() => setOpen(false), []);
 
 	return (
 		<>
@@ -31,7 +30,7 @@ export function ContextHelpButton({ children }: ChildrenProps): ReactElement {
 				<img src={ helpIcon } alt='Help' />
 			</button>
 			{ !open ? null : (
-				<DraggableDialog title='Help'>
+				<DraggableDialog title='Help' close={ dialogClose } hiddenClose>
 					<Column padding='medium' className='flex-1'>
 						{ children }
 					</Column>

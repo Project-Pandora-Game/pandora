@@ -38,6 +38,8 @@ export const EnvParser = CreateEnvParser({
 	ACTIVATION_TOKEN_EXPIRATION: EnvTimeInterval().default('1w'),
 	/** Time (in ms) for how long is a password reset token valid */
 	PASSWORD_RESET_TOKEN_EXPIRATION: EnvTimeInterval().default('1d'),
+	/** Time (in ms) for rate limiting email change for not activated accounts */
+	RATE_LIMIT_EMAIL_CHANGE_NOT_ACTIVATED: EnvTimeInterval().default('10m'),
 
 	//#endregion
 

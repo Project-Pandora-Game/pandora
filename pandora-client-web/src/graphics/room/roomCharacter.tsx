@@ -305,10 +305,10 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 	let fontScale: number = 1.0;
 	switch (interfaceChatroomCharacterNameFontSize) {
 		case 'xs': fontScale = 0.6; break;
-		case 's': fontScale = 0.8; break;
-		case 'l': fontScale = 1.2; break;
-		case 'xl': fontScale = 1.4; break;
-		default: fontScale = 1.0; break;
+		case 's': fontScale = 1.0; break;
+		case 'l': fontScale = 1.8; break;
+		case 'xl': fontScale = 2.2; break;
+		default: fontScale = 1.4; break;
 	}
 
 	useEffect(() => {

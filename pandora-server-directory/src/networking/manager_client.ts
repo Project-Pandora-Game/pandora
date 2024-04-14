@@ -82,6 +82,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			login: WithConstantTime(this.handleLogin.bind(this), CONSTANT_TIME),
 			register: WithConstantTime(this.handleRegister.bind(this), CONSTANT_TIME),
 			resendVerificationEmail: WithConstantTime(this.handleResendVerificationEmail.bind(this), CONSTANT_TIME),
+			resendVerificationEmailAdvanced: WithConstantTime(this.handleResendVerificationEmailAdvanced.bind(this), CONSTANT_TIME),
 			passwordReset: WithConstantTime(this.handlePasswordReset.bind(this), CONSTANT_TIME),
 			passwordResetConfirm: WithConstantTime(this.handlePasswordResetConfirm.bind(this), CONSTANT_TIME),
 
@@ -283,6 +284,31 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		await AccountProcedureResendVerifyEmail(email);
 
 		return { result: 'maybeSent' };
+	}
+
+	private async handleResendVerificationEmailAdvanced({ username, passwordSha512, email, captchaToken, overrideEmail }: IClientDirectoryArgument['resendVerificationEmailAdvanced'], connection: ClientConnection): IClientDirectoryPromiseResult['resendVerificationEmailAdvanced'] {
+		if (connection.isLoggedIn())
+			throw new BadMessageError();
+
+		if (!await TestCaptcha(captchaToken)) {
+			logger.debug(`${connection.id} failed captcha check while requesting the resending of the verification mail (advanced)`);
+			return { result: 'invalidCaptcha' };
+		}
+
+		// Find account by username
+		const account = await accountManager.loadAccountByUsername(username);
+		// Verify the password
+		if (!account || !await account.secure.verifyPassword(passwordSha512)) {
+			AUDIT_LOG.verbose(`${connection.id} failed resend verification email: ${account ? 'invalid password' : 'invalid username'}`);
+			return { result: 'unknownCredentials' };
+		}
+
+		const result = await account.secure.overrideActivation(email, overrideEmail);
+		if (typeof result === 'number') {
+			return { result: 'rateLimited', time: result };
+		}
+
+		return { result };
 	}
 
 	private async handlePasswordReset({ email, captchaToken }: IClientDirectoryArgument['passwordReset'], connection: ClientConnection): IClientDirectoryPromiseResult['passwordReset'] {

@@ -6,7 +6,8 @@ import { useDirectoryResendVerificationAdvanced } from '../../../networking/acco
 import { Button } from '../../common/button/button';
 import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldCaptcha, FormFieldError, FormLink } from '../../common/form/form';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
+import { Row } from '../../common/container/container';
 
 export interface ResendVerificationAdvancedFormData {
 	username: string;
@@ -39,13 +40,17 @@ export function ResendVerificationAdvancedForm(): ReactElement {
 		const result = await resendVerificationAdvanced(username, password, email, overrideEmail, captchaToken);
 
 		switch (result.result) {
-			case 'ok':
-				navigate('/login', {
-					state: {
-						message: 'An email with a verification code has been sent to the submitted email address, if there is an account registered using it.',
-					},
-				});
+			case 'ok': {
+				let message: string;
+				if (overrideEmail) {
+					message = 'The account email has been changed, verification email has been sent to the new email address';
+				} else {
+					message = 'An email with a verification code has been successfully sent to the account email address';
+				}
+				toast(message, TOAST_OPTIONS_SUCCESS);
+				navigate('/login', { state: { message } });
 				return;
+			}
 			case 'unknownCredentials':
 				showError('Invalid username or password');
 				break;
@@ -109,14 +114,17 @@ export function ResendVerificationAdvancedForm(): ReactElement {
 				<FormFieldError error={ errors.email } />
 			</FormField>
 			<FormField>
-				<label htmlFor='forgot-activation-override-email'>Override email</label>
-				<input
-					type='checkbox'
-					id='forgot-activation-override-email'
-					checked={ overrideEmail }
-					onChange={ (e) => setOverrideEmail(e.target.checked) }
-				/>
+				<Row>
+					<input
+						type='checkbox'
+						id='forgot-activation-override-email'
+						checked={ overrideEmail }
+						onChange={ (e) => setOverrideEmail(e.target.checked) }
+					/>
+					<label htmlFor='forgot-activation-override-email'>Override email</label>
+				</Row>
 			</FormField>
+			<br />
 			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
 			{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
 			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>

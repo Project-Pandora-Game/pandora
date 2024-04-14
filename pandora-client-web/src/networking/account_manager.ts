@@ -1,4 +1,4 @@
-import { EMPTY, GetLogger } from 'pandora-common';
+import { EMPTY, GetLogger, type IClientDirectoryPromiseResult } from 'pandora-common';
 import { useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { useDirectoryConnector } from '../components/gameContext/directoryConnectorContextProvider';
@@ -51,6 +51,16 @@ type RegisterCallback = (
  * @returns Promise of response from the directory
  */
 type ResendVerificationCallback = (email: string, captchaToken?: string) => Promise<'maybeSent' | 'invalidCaptcha'>;
+
+/**
+ * Attempt to request a new verification email
+ * @param username - Account username
+ * @param password - Account password
+ * @param email - Account email
+ * @param overrideEmail - Override email
+ * @param captchaToken - Captcha token, if required
+ */
+type ResendVerificationAdvancedCallback = (username: string, password: string, email: string, overrideEmail: boolean, captchaToken?: string) => IClientDirectoryPromiseResult['resendVerificationEmailAdvanced'];
 
 /**
  * Attempt to request a password reset
@@ -116,6 +126,14 @@ export function useDirectoryResendVerification(): ResendVerificationCallback {
 	return useCallback(async (email, captchaToken) => {
 		const result = await directoryConnector.awaitResponse('resendVerificationEmail', { email, captchaToken });
 		return result.result;
+	}, [directoryConnector]);
+}
+
+export function useDirectoryResendVerificationAdvanced(): ResendVerificationAdvancedCallback {
+	const directoryConnector = useDirectoryConnector();
+	return useCallback(async (username, password, email, overrideEmail, captchaToken) => {
+		const passwordSha512 = await PrehashPassword(password);
+		return await directoryConnector.awaitResponse('resendVerificationEmailAdvanced', { username, passwordSha512, email, overrideEmail, captchaToken });
 	}, [directoryConnector]);
 }
 

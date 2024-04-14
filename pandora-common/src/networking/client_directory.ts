@@ -1,7 +1,7 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
 import { AccountId, AccountIdSchema, AccountRoleSchema, ConfiguredAccountRoleSchema, AccountSettingsSchema, IAccountRoleManageInfo, AccountSettingsKeysSchema } from '../account';
-import { AssetFrameworkOutfitWithIdSchema } from '../assets/item/unified';
+import { AssetFrameworkOutfitWithIdSchema, AssetFrameworkPosePresetWithIdSchema } from '../assets/item/unified';
 import { CharacterSelfInfoSchema } from '../character/characterData';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from '../inputLimits';
@@ -405,6 +405,29 @@ export const ClientDirectorySchema = {
 	storedOutfitsSave: {
 		request: z.object({
 			storedOutfits: AssetFrameworkOutfitWithIdSchema.array(),
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+			}),
+			z.object({
+				result: z.literal('failed'),
+				reason: z.enum(['storageFull']),
+			}),
+		]),
+	},
+	//#endregion
+
+	//#region Poses
+	storedPosePresetsGetAll: {
+		request: z.object({}),
+		response: z.object({
+			storedPosePresets: AssetFrameworkPosePresetWithIdSchema.array(),
+		}),
+	},
+	storedPosePresetsSave: {
+		request: z.object({
+			storedPosePresets: AssetFrameworkPosePresetWithIdSchema.array(),
 		}),
 		response: z.discriminatedUnion('result', [
 			z.object({

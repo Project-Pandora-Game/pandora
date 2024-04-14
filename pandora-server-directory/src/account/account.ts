@@ -15,6 +15,7 @@ import {
 	IShardAccountDefinition,
 	ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE,
 	KnownObject,
+	LIMIT_ACCOUNT_POSE_PRESET_STORAGE,
 	LIMIT_CHARACTER_COUNT,
 	LIMIT_SPACE_OWNED_COUNT,
 	OutfitMeasureCost,
@@ -22,6 +23,7 @@ import {
 	TimeSpanMs,
 	type AccountSettings,
 	type AccountSettingsKeys,
+	type AssetFrameworkPosePresetWithId,
 	type Logger,
 } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
@@ -270,6 +272,27 @@ export class Account implements ActorIdentity {
 		return 'ok';
 	}
 
+	@AsyncSynchronized()
+	public async updateStoredPosePresets(poses: AssetFrameworkPosePresetWithId[]): Promise<'ok' | 'storageFull'> {
+		const totalCost = poses.length;
+		if (!Number.isInteger(totalCost) || totalCost > LIMIT_ACCOUNT_POSE_PRESET_STORAGE) {
+			return 'storageFull';
+		}
+
+		this.data.storedPosePresets = poses;
+
+		// Save the changed data
+		await GetDatabase().updateAccountData(this.data.id, {
+			storedPosePresets: this.data.storedPosePresets,
+		});
+		// Notify connected clients that the outfit storage changed
+		this.associatedConnections.sendMessage('somethingChanged', {
+			changes: ['storedPosePresets'],
+		});
+
+		return 'ok';
+	}
+
 	public async onManagerDestroy(): Promise<void> {
 		// Disconnect all characters
 		for (const character of this.characters.values()) {
@@ -408,6 +431,7 @@ export async function CreateAccountData(username: string, displayName: string, p
 		},
 		settingsCooldowns: {},
 		storedOutfits: [],
+		storedPosePresets: [],
 		secure: await GenerateAccountSecureData(password, email, activated),
 	};
 }

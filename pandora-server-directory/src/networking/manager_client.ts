@@ -124,6 +124,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			storedOutfitsGetAll: this.handleStoredOutfitsGetAll.bind(this),
 			storedOutfitsSave: this.handleStoredOutfitsSave.bind(this),
 
+			// Poses
+			storedPosePresetsGetAll: this.handleStoredPosePresetsGetAll.bind(this),
+			storedPosePresetsSave: this.handleStoredPosePresetsSave.bind(this),
+
 			getDirectMessages: this.handleGetDirectMessages.bind(this),
 			sendDirectMessage: this.handleSendDirectMessage.bind(this),
 			directMessage: this.handleDirectMessage.bind(this),
@@ -639,6 +643,32 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		logger.verbose(`${connection.id} failed to save stored outfits: ${result}`);
+		return {
+			result: 'failed',
+			reason: result,
+		};
+	}
+
+	private handleStoredPosePresetsGetAll(_data: IClientDirectoryArgument['storedPosePresetsGetAll'], connection: ClientConnection): IClientDirectoryResult['storedPosePresetsGetAll'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		return {
+			storedPosePresets: connection.account.data.storedPosePresets,
+		};
+	}
+
+	private async handleStoredPosePresetsSave({ storedPosePresets }: IClientDirectoryArgument['storedPosePresetsSave'], connection: ClientConnection): IClientDirectoryPromiseResult['storedPosePresetsSave'] {
+		if (!connection.isLoggedIn())
+			throw new BadMessageError();
+
+		const result = await connection.account.updateStoredPosePresets(storedPosePresets);
+
+		if (result === 'ok') {
+			return { result: 'ok' };
+		}
+
+		logger.verbose(`${connection.id} failed to save stored poses: ${result}`);
 		return {
 			result: 'failed',
 			reason: result,

@@ -55,7 +55,6 @@ interface RoomGraphicsSceneProps extends CommonProps {
 	roomSceneMode: Immutable<IRoomSceneMode>;
 	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void;
-	onDoubleClick: (event: React.PointerEvent<HTMLDivElement>) => void;
 	menuOpen: (target: Character<ICharacterRoomData> | ItemRoomDevice, event: FederatedPointerEvent) => void;
 }
 
@@ -71,7 +70,6 @@ export function RoomGraphicsScene({
 	roomSceneMode,
 	setRoomSceneMode,
 	onPointerDown,
-	onDoubleClick,
 	menuOpen,
 }: RoomGraphicsSceneProps): ReactElement {
 	const assetManager = useAssetManager();
@@ -156,6 +154,12 @@ export function RoomGraphicsScene({
 	}, [roomBackground]);
 
 	const viewportRef = useRef<PixiViewportRef>(null);
+
+	const onDoubleClick = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
+		viewportRef.current?.center();
+		event.stopPropagation();
+		event.preventDefault();
+	});
 
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
@@ -487,12 +491,6 @@ export function RoomScene({ className }: {
 		}
 	});
 
-	const onDoubleClick = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
-		viewportRef.current?.center();
-		event.stopPropagation();
-		event.preventDefault();
-	});
-
 	const closeContextMenu = useCallback(() => {
 		setMenuActive(null);
 	}, []);
@@ -508,7 +506,6 @@ export function RoomScene({ className }: {
 			roomSceneMode={ roomSceneMode }
 			setRoomSceneMode={ setRoomSceneMode }
 			onPointerDown={ onPointerDown }
-			onDoubleClick={ onDoubleClick }
 			menuOpen={ menuOpen }
 		>
 			{

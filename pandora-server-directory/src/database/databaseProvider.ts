@@ -52,6 +52,13 @@ export interface PandoraDatabase extends Service {
 	createAccount(data: DatabaseAccountWithSecure): Promise<DatabaseAccountWithSecure | 'usernameTaken' | 'emailTaken'>;
 
 	/**
+	 * Update account's email hash
+	 * @param id - Account id
+	 * @param emailHash - Email hash to set
+	 */
+	updateAccountEmailHash(id: AccountId, emailHash: string): Promise<'ok' | 'notFound' | 'emailTaken'>;
+
+	/**
 	 * Sets account data
 	 * @param id - Account id
 	 * @param data - data to set

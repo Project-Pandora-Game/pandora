@@ -135,6 +135,18 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(_.cloneDeep(acc));
 	}
 
+	public updateAccountEmailHash(id: AccountId, emailHash: string): Promise<'ok' | 'notFound' | 'emailTaken'> {
+		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === id);
+		if (!acc)
+			return Promise.resolve('notFound');
+
+		if (this.accountDbView.find((dbAccount) => dbAccount.secure.emailHash === emailHash))
+			return Promise.resolve('emailTaken');
+
+		acc.secure.emailHash = emailHash;
+		return Promise.resolve('ok');
+	}
+
 	public updateAccountData(id: AccountId, data: DatabaseAccountUpdate): Promise<void> {
 		data = DatabaseAccountSchema
 			.pick(ArrayToRecordKeys(DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, true))

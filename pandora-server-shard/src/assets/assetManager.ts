@@ -2,7 +2,7 @@ import { AssetManager, AssetsDefinitionFile, GetLogger, IsObject } from 'pandora
 import { join } from 'path';
 import { readFileSync, statSync } from 'fs';
 import { ENV } from '../config';
-const { ASSETS_DEFINITION_PATH, SHARD_DEVELOPMENT_MODE } = ENV;
+const { ASSETS_DEFINITION_PATH } = ENV;
 import express from 'express';
 import { ConnectionManagerClient } from '../networking/manager_client';
 import { CharacterManager } from '../character/characterManager';
@@ -43,7 +43,7 @@ export function LoadAssetDefinitions(): void {
 	CharacterManager.onAssetDefinitionsChanged();
 	ConnectionManagerClient.onAssetDefinitionsChanged();
 
-	if (SHARD_DEVELOPMENT_MODE && watcher === undefined) {
+	if (watcher === undefined) {
 		watcher = setInterval(WatchAssetDefinitionsTick, ASSET_DEFINITIONS_WATCH_INTERVAL).unref();
 	}
 }

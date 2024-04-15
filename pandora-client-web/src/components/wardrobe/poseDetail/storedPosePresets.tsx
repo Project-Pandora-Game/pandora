@@ -1,13 +1,15 @@
 import React, { type ReactNode } from 'react';
 import { toast } from 'react-toastify';
-import { capitalize, clamp, cloneDeep, noop } from 'lodash';
+import { capitalize, clamp, cloneDeep, noop, omit } from 'lodash';
 import { nanoid } from 'nanoid';
 import {
 	AssertNotNullable,
+	AssetFrameworkPosePresetSchema,
 	GetLogger,
 	LIMIT_POSE_PRESET_NAME_LENGTH,
 	type AppearanceArmPose,
 	type AssetFrameworkCharacterState,
+	type AssetFrameworkPosePreset,
 	type AssetFrameworkPosePresetWithId,
 	type BoneDefinition,
 	type PartialAppearancePose,
@@ -18,6 +20,8 @@ import { Button } from '../../common/button/button';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { DraggableDialog } from '../../dialog/dialog';
+import { ExportDialog } from '../../exportImport/exportDialog';
+import { ImportDialog } from '../../exportImport/importDialog';
 
 import deleteIcon from '../../../assets/icons/delete.svg';
 import editIcon from '../../../assets/icons/edit.svg';
@@ -41,7 +45,7 @@ export function WardrobeStoredPosePresets(props: WardrobeStoredPosePresetsProps)
 					<Row className='pose-row' gap='tiny' wrap>
 						<PosePresetCreateButton />
 						<Button slim className='flex-1' onClick={ openEditSaved }>Edit saved</Button>
-						<Button slim className='flex-1'>Import</Button>
+						<PosePresetImportButton />
 					</Row>
 					<PosePresetButtons />
 				</Column>
@@ -142,6 +146,37 @@ function PosePresetContextProvider({ setPose, characterState, children }: Wardro
 		<PosePresetContext.Provider value={ context }>
 			{ children }
 		</PosePresetContext.Provider>
+	);
+}
+
+function PosePresetImportButton(): ReactNode {
+	const { update } = usePosePresetContext();
+	const [show, setShow] = React.useState(false);
+	const open = React.useCallback(() => setShow(true), []);
+	const close = React.useCallback(() => setShow(false), []);
+	const onImport = React.useCallback((data: AssetFrameworkPosePreset) => {
+		update({
+			...data,
+			id: nanoid(),
+		});
+		close();
+	}, [update, close]);
+
+	return (
+		<>
+			<Button slim className='flex-1' onClick={ open }>Import</Button>
+			{
+				show && (
+					<ImportDialog
+						expectedType='PosePreset'
+						expectedVersion={ 1 }
+						dataSchema={ AssetFrameworkPosePresetSchema }
+						onImport={ onImport }
+						closeDialog={ close }
+					/>
+				)
+			}
+		</>
 	);
 }
 
@@ -271,6 +306,14 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 		return 'Save current pose';
 	}, [presets, preset]);
 
+	const [exported, setExported] = React.useState<AssetFrameworkPosePreset | null>(null);
+	const onExport = React.useCallback(() => {
+		setExported(omit(cloneDeep(preset), 'id'));
+	}, [preset]);
+	const closeExport = React.useCallback(() => {
+		setExported(null);
+	}, []);
+
 	return (
 		<DraggableDialog title={ title } close={ close }>
 			<label htmlFor='pose-preset-name'>Name</label>
@@ -308,7 +351,22 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 				<Button onClick={ onCheckAll }>Check all</Button>
 			</Row>
 			<br />
-			<Button onClick={ onSave }>Save</Button>
+			<Row alignX='center'>
+				<Button onClick={ close }>Cancel</Button>
+				<Button onClick={ onExport }>Export</Button>
+				<Button onClick={ onSave }>Save</Button>
+			</Row>
+			{
+				exported == null ? null : (
+					<ExportDialog
+						exportType='PosePreset'
+						exportVersion={ 1 }
+						dataSchema={ AssetFrameworkPosePresetSchema }
+						data={ exported }
+						closeDialog={ closeExport }
+					/>
+				)
+			}
 		</DraggableDialog>
 	);
 }
@@ -435,6 +493,15 @@ function PosePresetEditRow({ preset }: { preset: AssetFrameworkPosePresetWithId;
 	const onMoveDown = React.useCallback(() => reorder(preset.id, 1), [reorder, preset.id]);
 	const onRemove = React.useCallback(() => remove(preset.id), [remove, preset.id]);
 	const onEdit = React.useCallback(() => setEdit(cloneDeep(preset)), [setEdit, preset]);
+	const [exported, setExported] = React.useState<AssetFrameworkPosePreset | null>(null);
+
+	const onExport = React.useCallback(() => {
+		setExported(omit(cloneDeep(preset), 'id'));
+	}, [preset]);
+
+	const closeExport = React.useCallback(() => {
+		setExported(null);
+	}, []);
 
 	return (
 		<tr key={ preset.id }>
@@ -457,11 +524,22 @@ function PosePresetEditRow({ preset }: { preset: AssetFrameworkPosePresetWithId;
 						<img src={ deleteIcon } alt='Delete action' />
 						<span>&nbsp;Delete</span>
 					</button>
-					<button>
+					<button onClick={ onExport }>
 						<span>Export</span>
 					</button>
 				</Row>
 			</td>
+			{
+				exported == null ? null : (
+					<ExportDialog
+						exportType='PosePreset'
+						exportVersion={ 1 }
+						dataSchema={ AssetFrameworkPosePresetSchema }
+						data={ exported }
+						closeDialog={ closeExport }
+					/>
+				)
+			}
 		</tr>
 	);
 }

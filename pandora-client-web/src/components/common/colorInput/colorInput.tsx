@@ -26,7 +26,7 @@ type ColorInputRGBAProps = ColorInputProps<HexRGBAColorString> & {
 };
 
 export function ColorInputRGBA({
-	initialValue, resetValue, onChange, throttle = 0, disabled = false, minAlpha = 255, title,
+	title, initialValue, resetValue, onChange, throttle = 0, disabled = false, hideTextInput = false, minAlpha = 255,
 }: ColorInputRGBAProps): ReactElement {
 	const [value, setInput] = useState<HexRGBAColorString>(initialValue.toUpperCase() as HexRGBAColorString);
 	const [showEditor, setShowEditor] = useState(false);
@@ -57,11 +57,14 @@ export function ColorInputRGBA({
 
 	return (
 		<>
-			<input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } />
+			{
+				!hideTextInput &&
+				<input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } />
+			}
 			<input type='color' value={ value.substring(0, 7) } disabled={ disabled } onClick={ onClick } readOnly />
 			{
 				resetValue != null &&
-				<Button className='slim' onClick={ () => changeCallback(resetValue) }>↺</Button>
+				<Button className='slim' onClick={ () => changeCallback(resetValue) } disabled={ disabled }>↺</Button>
 			}
 			{
 				showEditor &&

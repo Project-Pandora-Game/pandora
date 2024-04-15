@@ -122,7 +122,7 @@ function AccountProfileDescription({ profileDescription, allowEdit }: { profileD
 					</Button>
 				</Row>
 				<textarea
-					className='flex-1'
+					className='flex-1 profileDescriptionContent profileEdit'
 					style={ { resize: 'none' } }
 					value={ editedDescription }
 					onChange={ (ev) => {
@@ -145,7 +145,7 @@ function AccountProfileDescription({ profileDescription, allowEdit }: { profileD
 					) : <span />
 				}
 			</Row>
-			<div className='flex-1 profileDescriptionContent display-linebreak'>
+			<div className='flex-1 profileDescriptionContent'>
 				{ editedDescription.trim() }
 			</div>
 		</Column>

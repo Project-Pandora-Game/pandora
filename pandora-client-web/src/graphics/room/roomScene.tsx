@@ -18,7 +18,7 @@ import {
 import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
-import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterData } from '../../character/character';
 import { CommonProps } from '../../common/reactTypes';
@@ -31,7 +31,7 @@ import { ShardConnector } from '../../networking/shardConnector';
 import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomDebug';
 import { PointLike } from '../graphicsCharacter';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphicsScene';
-import { PixiViewportSetupCallback } from '../pixiViewport';
+import { PixiViewportSetupCallback, PixiViewportRef } from '../pixiViewport';
 import { CharacterContextMenu } from './contextMenus/characterContextMenu';
 import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
 import { RoomCharacterInteractive } from './roomCharacter';
@@ -153,13 +153,22 @@ export function RoomGraphicsScene({
 			});
 	}, [roomBackground]);
 
+	const viewportRef = useRef<PixiViewportRef>(null);
+
+	const onDoubleClick = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
+		viewportRef.current?.center();
+		event.stopPropagation();
+		event.preventDefault();
+	});
+
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
+		viewportRef,
 		forwardContexts: [directoryConnectorContext, shardConnectorContext],
 		worldWidth: roomBackground.imageSize[0],
 		worldHeight: roomBackground.imageSize[1],
 		backgroundColor: 0x000000,
-	}), [viewportConfig, roomBackground]);
+	}), [viewportConfig, viewportRef, roomBackground]);
 
 	return (
 		<GraphicsScene
@@ -167,6 +176,7 @@ export function RoomGraphicsScene({
 			className={ className }
 			divChildren={ children }
 			onPointerDown={ onPointerDown }
+			onDoubleClick={ onDoubleClick }
 			sceneOptions={ sceneOptions }
 		>
 			<Graphics

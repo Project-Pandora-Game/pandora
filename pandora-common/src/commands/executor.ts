@@ -80,7 +80,7 @@ export class CommandRunnerExecutor<
 
 	public autocomplete(): CommandAutocompleteResult {
 		return this.options.restArgName ? {
-			header: `⮕<${this.options.restArgName}>⬅`,
+			header: `▶<${this.options.restArgName}>◀`,
 			options: [],
 		} : null;
 	}
@@ -148,7 +148,7 @@ export class CommandRunnerArgParser<
 			const shouldQuote = isQuotedPreprocessor && options.some(({ replaceValue }) => CommandArgumentNeedsQuotes(replaceValue));
 
 			return options.length > 0 ? {
-				header: `⮕<${this.name}>⬅ ${this.next.predictHeader()}`,
+				header: `▶<${this.name}>◀ ${this.next.predictHeader()}`,
 				options: options.map(({ displayValue, replaceValue }) => ({
 					displayValue,
 					replaceValue: shouldQuote ? CommandArgumentQuote(replaceValue, true) : replaceValue,

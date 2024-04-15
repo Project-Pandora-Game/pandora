@@ -52,7 +52,7 @@ function LabelColor({ playerData }: { playerData: Readonly<ICharacterPrivateData
 			<legend>Name color</legend>
 			<div className='input-row'>
 				<label>Color</label>
-				<ColorInput initialValue={ color } onChange={ setColor } />
+				<ColorInput initialValue={ color } onChange={ setColor } title='Name' />
 				<Button
 					className='slim fadeDisabled'
 					onClick={ () => shardConnector?.sendMessage('updateSettings', { labelColor: color }) }

@@ -5,62 +5,29 @@ import { Button } from '../button/button';
 import './colorInput.scss';
 import { DraggableDialog } from '../../dialog/dialog';
 
-export function ColorInput({
-	initialValue,
-	resetValue,
-	onChange,
-	throttle = 0,
-	disabled = false,
-	hideTextInput = false,
-	inputColorTitle,
-}: {
-	initialValue: HexColorString;
-	resetValue?: HexColorString;
-	onChange?: (value: HexColorString) => void;
+type ColorInputProps<THexString extends `#${string}`> = {
+	title: string;
+	initialValue: THexString;
+	resetValue?: THexString;
+	onChange?: (value: THexString) => void;
 	throttle?: number;
 	disabled?: boolean;
 	hideTextInput?: boolean;
-	inputColorTitle?: string;
-}): ReactElement {
-	const [value, setInput] = useState<HexColorString>(initialValue.toUpperCase() as HexColorString);
+};
 
-	const onChangeCaller = useCallback((color: HexColorString) => onChange?.(color), [onChange]);
-	const onChangeCallerThrottled = useMemo(() => throttle <= 0 ? onChangeCaller : _.throttle(onChangeCaller, throttle), [onChangeCaller, throttle]);
-
-	const changeCallback = useCallback((input: string) => {
-		input = '#' + input.replace(/[^0-9a-f]/gi, '').toUpperCase();
-		setInput(input as HexColorString);
-		const valid = HexColorStringSchema.safeParse(input).success;
-		if (valid) {
-			onChangeCallerThrottled(input as HexColorString);
-		}
-	}, [setInput, onChangeCallerThrottled]);
-
-	const onInputChange = (ev: ChangeEvent<HTMLInputElement>) => changeCallback(ev.target.value);
-
+export function ColorInput(props: ColorInputProps<HexColorString>): ReactElement {
 	return (
-		<>
-			{ !hideTextInput && <input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ 7 } /> }
-			<input type='color' value={ value } onChange={ onInputChange } disabled={ disabled } title={ inputColorTitle } />
-			{
-				resetValue != null &&
-				<Button className='slim' onClick={ () => changeCallback(resetValue) }>↺</Button>
-			}
-		</>
+		<ColorInputRGBA { ...props } minAlpha={ Color.maxAlpha } />
 	);
 }
 
-export function ColorInputRGBA({
-	initialValue, resetValue, onChange, throttle = 0, disabled = false, minAlpha = 255, title,
-}: {
-	initialValue: HexRGBAColorString;
-	resetValue?: HexRGBAColorString;
-	onChange?: (value: HexRGBAColorString) => void;
-	throttle?: number;
-	disabled?: boolean;
+type ColorInputRGBAProps = ColorInputProps<HexRGBAColorString> & {
 	minAlpha?: number;
-	title: string;
-}): ReactElement {
+};
+
+export function ColorInputRGBA({
+	title, initialValue, resetValue, onChange, throttle = 0, disabled = false, hideTextInput = false, minAlpha = 255,
+}: ColorInputRGBAProps): ReactElement {
 	const [value, setInput] = useState<HexRGBAColorString>(initialValue.toUpperCase() as HexRGBAColorString);
 	const [showEditor, setShowEditor] = useState(false);
 
@@ -70,11 +37,11 @@ export function ColorInputRGBA({
 	const changeCallback = useCallback((input: string) => {
 		input = '#' + input.replace(/[^0-9a-f]/gi, '').toUpperCase();
 		setInput(input as HexRGBAColorString);
-		const valid = HexRGBAColorStringSchema.safeParse(input).success;
+		const valid = (minAlpha === Color.maxAlpha) ? HexColorStringSchema.safeParse(input).success : HexRGBAColorStringSchema.safeParse(input).success;
 		if (valid) {
 			onChangeCallerThrottled(input as HexRGBAColorString);
 		}
-	}, [setInput, onChangeCallerThrottled]);
+	}, [minAlpha, setInput, onChangeCallerThrottled]);
 
 	const onEdit = useCallback((color: HexRGBAColorString) => {
 		onChangeCallerThrottled(color);
@@ -90,11 +57,14 @@ export function ColorInputRGBA({
 
 	return (
 		<>
-			<input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ minAlpha === 255 ? 7 : 9 } />
+			{
+				!hideTextInput &&
+				<input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } />
+			}
 			<input type='color' value={ value.substring(0, 7) } disabled={ disabled } onClick={ onClick } readOnly />
 			{
 				resetValue != null &&
-				<Button className='slim' onClick={ () => changeCallback(resetValue) }>↺</Button>
+				<Button className='slim' onClick={ () => changeCallback(resetValue) } disabled={ disabled }>↺</Button>
 			}
 			{
 				showEditor &&
@@ -317,7 +287,7 @@ class Color {
 
 	public toHex(): HexRGBAColorString {
 		const [r, g, b] = this.rbg;
-		if (this.alpha === 255) {
+		if (this.alpha === Color.maxAlpha) {
 			return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}` as HexColorString;
 		}
 		return `#${Color.toHexPart(r)}${Color.toHexPart(g)}${Color.toHexPart(b)}${Color.toHexPart(Math.round(this.alpha))}` as HexRGBAColorString;

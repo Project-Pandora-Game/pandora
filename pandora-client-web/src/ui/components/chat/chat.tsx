@@ -226,11 +226,13 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 			case 'chat':
 				return ['', ': '];
 			case 'me':
-				return ['', ' '];
+				// For /me messages that start with 's we don't insert a space, so the displayed message becomes "Name's"
+				// This works for both `*'s thing` and `/me 's thing`, which both display as `Name's thing`
+				return ['', message.parts.length > 0 && message.parts[0][1].startsWith('\'s') ? '' : ' '];
 			default:
 				return ['', ''];
 		}
-	}, [message.type]);
+	}, [message.type, message.parts]);
 
 	const onClick = useCallback((event: React.MouseEvent<HTMLSpanElement>) => {
 		event.stopPropagation();

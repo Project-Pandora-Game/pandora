@@ -26,6 +26,7 @@ function ChatroomSettings(): ReactElement {
 			<legend>Chatroom UI</legend>
 			<ChatroomGraphicsRatio />
 			<ChatroomChatFontSize />
+			<ChatroomCharacterNameFontSize />
 			<ChatroomOfflineCharacters />
 		</fieldset>
 	);
@@ -86,6 +87,18 @@ function ChatroomGraphicsRatio(): ReactElement {
 			/>
 		</>
 	);
+}
+
+function ChatroomCharacterNameFontSize(): ReactElement {
+	const SELECTION_DESCRIPTIONS = useMemo((): Record<AccountSettings['interfaceChatroomCharacterNameFontSize'], string> => ({
+		xs: 'Extra small',
+		s: 'Small',
+		m: 'Medium (default)',
+		l: 'Large',
+		xl: 'Extra large',
+	}), []);
+
+	return <SelectAccountSettings setting='interfaceChatroomCharacterNameFontSize' label='Font size of the name of the character on the canvas' stringify={ SELECTION_DESCRIPTIONS } />;
 }
 
 function ChatroomChatFontSize(): ReactElement {

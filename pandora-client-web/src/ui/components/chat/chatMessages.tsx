@@ -38,21 +38,25 @@ function ActionMessagePrepareDictionary(
 	const source = message.data?.character;
 	const target = message.data?.target ?? source;
 
+	const describeAsset = (assetId: AssetId) => ChatParser.escapeStyle(DescribeAsset(assetManager, assetId));
+
 	if (source) {
 		const { id, name, pronoun } = source;
-		metaDictionary.SOURCE_CHARACTER_NAME = name;
+		const nameEscaped = ChatParser.escapeStyle(name);
+		metaDictionary.SOURCE_CHARACTER_NAME = nameEscaped;
 		metaDictionary.SOURCE_CHARACTER_ID = id;
-		metaDictionary.SOURCE_CHARACTER = `${name} (${id})`;
-		metaDictionary.SOURCE_CHARACTER_POSSESSIVE = `${name}'s (${id})`;
+		metaDictionary.SOURCE_CHARACTER = `${nameEscaped} (${id})`;
+		metaDictionary.SOURCE_CHARACTER_POSSESSIVE = `${nameEscaped}'s (${id})`;
 		AssignPronouns('SOURCE_CHARACTER_PRONOUN', pronoun, metaDictionary);
 	}
 
 	if (target?.type === 'character') {
 		const { id, name, pronoun } = target;
-		metaDictionary.TARGET_CHARACTER_NAME = name;
+		const nameEscaped = ChatParser.escapeStyle(name);
+		metaDictionary.TARGET_CHARACTER_NAME = nameEscaped;
 		metaDictionary.TARGET_CHARACTER_ID = id;
-		metaDictionary.TARGET_CHARACTER = `${name} (${id})`;
-		metaDictionary.TARGET_CHARACTER_POSSESSIVE = `${name}'s (${id})`;
+		metaDictionary.TARGET_CHARACTER = `${nameEscaped} (${id})`;
+		metaDictionary.TARGET_CHARACTER_POSSESSIVE = `${nameEscaped}'s (${id})`;
 		AssignPronouns('TARGET_CHARACTER_PRONOUN', pronoun, metaDictionary);
 
 		if (id === source?.id) {
@@ -70,11 +74,11 @@ function ActionMessagePrepareDictionary(
 	const itemContainerPath = message.data?.itemContainerPath;
 
 	if (item) {
-		metaDictionary.ITEM_ASSET_NAME = DescribeAsset(assetManager, item.assetId);
+		metaDictionary.ITEM_ASSET_NAME = describeAsset(item.assetId);
 	}
 
 	if (itemPrevious) {
-		metaDictionary.ITEM_ASSET_NAME_PREVIOUS = DescribeAsset(assetManager, itemPrevious.assetId);
+		metaDictionary.ITEM_ASSET_NAME_PREVIOUS = describeAsset(itemPrevious.assetId);
 	}
 
 	if (itemContainerPath) {
@@ -87,7 +91,7 @@ function ActionMessagePrepareDictionary(
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.TARGET_CHARACTER_DYNAMIC_REFLEXIVE;
 			}
 		} else if (itemContainerPath.length === 1) {
-			const asset = DescribeAsset(assetManager, itemContainerPath[0].assetId);
+			const asset = describeAsset(itemContainerPath[0].assetId);
 
 			if (target?.type === 'roomInventory') {
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
@@ -97,8 +101,8 @@ function ActionMessagePrepareDictionary(
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${asset}`;
 			}
 		} else {
-			const assetFirst = DescribeAsset(assetManager, itemContainerPath[0].assetId);
-			const assetLast = DescribeAsset(assetManager, itemContainerPath[itemContainerPath.length - 1].assetId);
+			const assetFirst = describeAsset(itemContainerPath[0].assetId);
+			const assetLast = describeAsset(itemContainerPath[itemContainerPath.length - 1].assetId);
 
 			if (target?.type === 'roomInventory') {
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =

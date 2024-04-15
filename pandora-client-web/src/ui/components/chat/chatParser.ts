@@ -92,6 +92,7 @@ export class SegmentParser {
 		['__', 'bold'],
 		['_', 'italic'],
 	];
+	private readonly _toEscape = '_';
 
 	public parse(text: string, allowLinks: boolean = false): IChatSegment[] {
 		text = text.trim();
@@ -111,6 +112,17 @@ export class SegmentParser {
 				result.push([modifier, inner ?? '']);
 
 			text = next ?? '';
+		}
+		return result;
+	}
+
+	public escape(text: string): string {
+		let result = '';
+		for (const c of text) {
+			if (c.includes(this._toEscape) || c === ESCAPE)
+				result += ESCAPE;
+
+			result += c;
 		}
 		return result;
 	}
@@ -202,5 +214,9 @@ export const ChatParser = new class ChatParser {
 
 	public parseStyle(text: string, allowLinks: boolean = false): IChatSegment[] {
 		return this._segmentParser.parse(text, allowLinks);
+	}
+
+	public escapeStyle(text: string): string {
+		return this._segmentParser.escape(text);
 	}
 };

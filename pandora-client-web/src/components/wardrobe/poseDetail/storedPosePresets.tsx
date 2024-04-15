@@ -22,9 +22,13 @@ import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { DraggableDialog } from '../../dialog/dialog';
 import { ExportDialog } from '../../exportImport/exportDialog';
 import { ImportDialog } from '../../exportImport/importDialog';
+import { GetVisibleBoneName } from '../views/wardrobePoseView';
 
 import deleteIcon from '../../../assets/icons/delete.svg';
 import editIcon from '../../../assets/icons/edit.svg';
+import triangleUp from '../../../assets/icons/triangle_up.svg';
+import triangleDown from '../../../assets/icons/triangle_down.svg';
+import exportIcon from '../../../assets/icons/export.svg';
 
 import './storedPosePresets.scss';
 
@@ -316,8 +320,10 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 
 	return (
 		<DraggableDialog title={ title } close={ close }>
-			<label htmlFor='pose-preset-name'>Name</label>
-			<input id='pose-preset-name' type='text' value={ preset.name } onChange={ onNameChange } maxLength={ LIMIT_POSE_PRESET_NAME_LENGTH } />
+			<Column gap='small'>
+				<label htmlFor='pose-preset-name'>Name:</label>
+				<input id='pose-preset-name' type='text' value={ preset.name } onChange={ onNameChange } maxLength={ LIMIT_POSE_PRESET_NAME_LENGTH } />
+			</Column>
 			<br />
 			<table>
 				<thead>
@@ -328,8 +334,17 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 					</tr>
 				</thead>
 				<tbody>
+					<tr>
+						<td colSpan={ 3 }><hr /></td>
+					</tr>
 					<PosePresetArmPoses preset={ preset } />
+					<tr>
+						<td colSpan={ 3 }><hr /></td>
+					</tr>
 					<PosePresetLegPoses preset={ preset } />
+					<tr>
+						<td colSpan={ 3 }><hr /></td>
+					</tr>
 					{
 						allBones
 							.filter((bone) => bone.type === 'pose')
@@ -343,6 +358,9 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 								/>
 							))
 					}
+					<tr>
+						<td colSpan={ 3 }><hr /></td>
+					</tr>
 				</tbody>
 			</table>
 			<br />
@@ -458,7 +476,7 @@ function PosePresetBoneRow({ preset, bone, storedValue, currentValue }: { preset
 				<input type='checkbox' checked={ storedValue != null } onChange={ onChange } />
 			</td>
 			<td>
-				{ bone.name }
+				{ GetVisibleBoneName(bone.name) }
 			</td>
 			<td>
 				{ storedValue ?? currentValue }
@@ -471,7 +489,7 @@ function PosePresetEditDialog({ close }: { close: () => void; }): ReactNode {
 	const { presets } = usePosePresetContext();
 	return (
 		<DraggableDialog title='Edit saved poses' close={ close }>
-			<table>
+			<table className='pose-presets-table'>
 				<thead>
 					<tr>
 						<th>Name</th>
@@ -509,11 +527,11 @@ function PosePresetEditRow({ preset }: { preset: AssetFrameworkPosePresetWithId;
 			<td>
 				<Row>
 					<button onClick={ onMoveUp }>
-						▲
+						<img src={ triangleUp } alt='Move up' />
 						<span>&nbsp;Move up</span>
 					</button>
 					<button onClick={ onMoveDown }>
-						▼
+						<img src={ triangleDown } alt='Move down' />
 						<span>&nbsp;Move down</span>
 					</button>
 					<button onClick={ onEdit }>
@@ -525,7 +543,8 @@ function PosePresetEditRow({ preset }: { preset: AssetFrameworkPosePresetWithId;
 						<span>&nbsp;Delete</span>
 					</button>
 					<button onClick={ onExport }>
-						<span>Export</span>
+						<img src={ exportIcon } alt='Export action' />
+						<span>&nbsp;Export</span>
 					</button>
 				</Row>
 			</td>

@@ -7,7 +7,7 @@ import { DirectMessage } from '../../networking/directMessageManager';
 import { useObservable } from '../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { RenderChatPart } from '../../ui/components/chat/chatMessages';
-import { Scrollbar } from '../common/scrollbar/scrollbar';
+import { Scrollable } from '../common/scrollbar/scrollbar';
 import { DirectMessageChannelProvider, useDirectMessageChannel } from '../gameContext/directMessageChannelProvieder';
 import { useCurrentAccount, useDirectoryConnector, useAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 import './directMessage.scss';
@@ -20,6 +20,7 @@ import { useGameStateOptional } from '../gameContext/gameStateContextProvider';
 import { useNavigate } from 'react-router';
 import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, ICommandInvokeContext, RunCommand } from '../../ui/components/chat/commandsProcessor';
 import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus';
+import { Column } from '../common/container/container';
 
 export function DirectMessage({ accountId }: { accountId: number; }): ReactElement {
 	const ref = React.useRef<HTMLTextAreaElement>(null);
@@ -71,18 +72,25 @@ function DirectMessageList(): ReactElement | null {
 	}
 
 	return (
-		<Scrollbar
-			ref={ ref }
-			color='dark'
+		<div
 			className={ classNames(
 				'direct-message-list',
 				`fontSize-${interfaceChatroomChatFontSize}`,
 			) }
 		>
-			{ messages.map((message) => (
-				<DirectMessageElement key={ message.time } message={ message } channel={ channelAccount } account={ account } />
-			)) }
-		</Scrollbar>
+			<Scrollable
+				ref={ ref }
+				color='dark'
+				className='fill'
+				tabIndex={ 1 }
+			>
+				<Column gap='none'>
+					{ messages.map((message) => (
+						<DirectMessageElement key={ message.time } message={ message } channel={ channelAccount } account={ account } />
+					)) }
+				</Column>
+			</Scrollable>
+		</div>
 	);
 }
 

@@ -7,11 +7,9 @@
 	background-color: $grey-darker;
 
 	.direct-message-list {
-		display: flex;
-		flex-flow: column;
+		position: relative;
 		flex: 1;
-		overflow-x: hidden;
-		overflow-y: scroll;
+		overflow: hidden;
 		user-select: text;
 	}
 

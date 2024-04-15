@@ -28,6 +28,7 @@ import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { SelectionIndicator } from '../../common/selectionIndicator/selectionIndicator';
 import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
 import { useDebouncedValue } from '../../../common/useDebounceValue';
+import { WardrobeStoredPosePresets } from '../poseDetail/storedPosePresets';
 
 type CheckedPosePreset = {
 	active: boolean;
@@ -372,6 +373,7 @@ export function WardrobePoseGui({ character, characterState }: {
 					</Button>
 				</Row>
 				<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
+				<WardrobeStoredPosePresets setPose={ setPose } characterState={ characterState } />
 				<RoomManualYOffsetControl character={ character } />
 				<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
 					<Column>

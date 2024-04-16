@@ -110,18 +110,6 @@ function ColorEditor({
 			color.writeCss(ref.current.style);
 	}, [color, ref]);
 
-	useEffect(() => {
-		const onEscape = (ev: KeyboardEvent) => {
-			if (ev.key === 'Escape') {
-				close();
-			}
-		};
-		document.addEventListener('keydown', onEscape);
-		return () => {
-			document.removeEventListener('keydown', onEscape);
-		};
-	}, [close]);
-
 	const setHue = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
 		setState(color.setHue(ev.target.valueAsNumber));
 	}, [color, setState]);

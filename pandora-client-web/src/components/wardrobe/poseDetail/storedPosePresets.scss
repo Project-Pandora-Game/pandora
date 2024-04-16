@@ -1,0 +1,22 @@
+@import '../../../styles/common';
+
+.pose-presets-table {
+	td {
+		background-color: $grey-lightest;
+		button {
+			display: inline-flex;
+			text-align: center;
+			justify-content: center;
+
+			span, img {
+				margin: auto;
+			}
+
+			@media (max-width: 768px) {
+				span {
+					display: none;
+				}
+			}
+		}
+	}
+}

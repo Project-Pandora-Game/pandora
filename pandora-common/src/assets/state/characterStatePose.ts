@@ -3,6 +3,7 @@ import _ from 'lodash';
 import { z } from 'zod';
 import type { AssetManager } from '../assetManager';
 import type { BoneType, CharacterView, LegsPose } from '../graphics/graphics';
+import type { Satisfies } from '../../utility';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, CharacterViewSchema, LegsPoseSchema } from '../graphics/graphics';
 
 // Fix for pnpm resolution weirdness
@@ -55,6 +56,16 @@ export type PartialAppearancePose<Bones extends BoneName = BoneName> = {
 	legs?: LegsPose;
 	view?: CharacterView;
 };
+
+export const PartialAppearancePoseSchema = z.object({
+	bones: z.record(BoneNameSchema, z.number().int().min(BONE_MIN).max(BONE_MAX).optional()).optional(),
+	arms: AppearanceArmPoseSchema.partial().optional(),
+	leftArm: AppearanceArmPoseSchema.partial().optional(),
+	rightArm: AppearanceArmPoseSchema.partial().optional(),
+	legs: LegsPoseSchema.optional(),
+	view: CharacterViewSchema.optional(),
+});
+type __satisfies__PartialAppearancePoseSchema = Satisfies<PartialAppearancePose<string>, z.infer<typeof PartialAppearancePoseSchema>>;
 
 export type AssetsPosePreset<Bones extends BoneName = BoneName> = PartialAppearancePose<Bones> & {
 	name: string;

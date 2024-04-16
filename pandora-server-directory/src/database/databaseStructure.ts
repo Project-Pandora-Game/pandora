@@ -6,6 +6,7 @@ import {
 	AccountSettingsSchema,
 	ArrayToRecordKeys,
 	AssetFrameworkOutfitWithIdSchema,
+	AssetFrameworkPosePresetWithIdSchema,
 	CharacterSelfInfoSchema,
 	IAccountRoleManageInfo,
 	IBetaKeyInfo,
@@ -101,6 +102,7 @@ export const DatabaseAccountSchema = z.object({
 	settingsCooldowns: AccountSettingsCooldownsSchema.default(() => ({})),
 	directMessages: ZodCast<DatabaseDirectMessageInfo>().array().optional(),
 	storedOutfits: AssetFrameworkOutfitWithIdSchema.array().catch(() => []),
+	storedPosePresets: AssetFrameworkPosePresetWithIdSchema.array().catch(() => []),
 });
 /** Representation of account stored in database */
 export type DatabaseAccount = z.infer<typeof DatabaseAccountSchema>;
@@ -112,6 +114,7 @@ export const DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES = [
 	'settingsCooldowns',
 	'directMessages',
 	'storedOutfits',
+	'storedPosePresets',
 ] as const satisfies readonly (keyof DatabaseAccount)[];
 export type DatabaseAccountUpdateableProperties = (typeof DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES)[number];
 

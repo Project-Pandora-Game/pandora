@@ -3,12 +3,13 @@ import { z, ZodTypeDef } from 'zod';
 import type { Asset } from '../asset';
 import type { AssetType } from '../definitions';
 
-import { LIMIT_OUTFIT_NAME_LENGTH } from '../../inputLimits';
+import { LIMIT_OUTFIT_NAME_LENGTH, LIMIT_POSE_PRESET_NAME_LENGTH } from '../../inputLimits';
 import { Assert, AssertNever } from '../../utility';
 import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop } from '../../validation';
 import { AssetIdSchema } from '../base';
 import { CreateModuleDataFromTemplate, ItemModuleDataSchema, ItemModuleTemplateSchema } from '../modules';
 import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base';
+import { PartialAppearancePoseSchema } from '../state/characterStatePose';
 
 import { __internal_InitRecursiveItemSchemas } from './_internalRecursion';
 import { ItemLock, LockBundleSchema } from './lock';
@@ -57,6 +58,18 @@ export const AssetFrameworkOutfitWithIdSchema = AssetFrameworkOutfitSchema.exten
 	id: z.string(),
 });
 export type AssetFrameworkOutfitWithId = z.infer<typeof AssetFrameworkOutfitWithIdSchema>;
+
+export const AssetFrameworkPosePresetSchema = z.object({
+	name: z.string().max(LIMIT_POSE_PRESET_NAME_LENGTH),
+	pose: PartialAppearancePoseSchema,
+});
+export type AssetFrameworkPosePreset = z.infer<typeof AssetFrameworkPosePresetSchema>;
+
+export const AssetFrameworkPosePresetWithIdSchema = AssetFrameworkPosePresetSchema.extend({
+	/** Random ID used to keep track of the poses to avoid having to address them by index */
+	id: z.string(),
+});
+export type AssetFrameworkPosePresetWithId = z.infer<typeof AssetFrameworkPosePresetWithIdSchema>;
 
 __internal_InitRecursiveItemSchemas(ItemBundleSchema, ItemTemplateSchema);
 

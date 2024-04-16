@@ -494,13 +494,8 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions, message
 	}, [requiredPermissions, dismiss, setAnyConfig]);
 	const [allowAccept, disableAccept] = useReducer(() => false, true);
 
-	useKeyDownEvent(useCallback(() => {
-		dismiss();
-		return true;
-	}, [dismiss]), 'Escape');
-
 	return (
-		<DraggableDialog title='Permission Prompt'>
+		<DraggableDialog title='Permission Prompt' close={ dismiss } hiddenClose>
 			<Row alignX='center'>
 				<h2>
 					<span style={ { textShadow: `${source.data.settings.labelColor} 1px 2px` } }>

@@ -59,6 +59,7 @@ export function ResendVerificationForm(): ReactElement {
 			</FormField>
 			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
 			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>Resend verification email</Button>
+			<FormLink to='/override_verification'>Advanced form with feedback</FormLink>
 			<FormLink to='/login'>◄ Return to login</FormLink>
 		</Form>
 	);

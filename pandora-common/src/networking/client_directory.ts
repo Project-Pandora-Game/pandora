@@ -148,6 +148,19 @@ export const ClientDirectorySchema = {
 		}),
 		response: ZodCast<{ result: 'maybeSent' | 'invalidCaptcha'; }>(),
 	},
+	resendVerificationEmailAdvanced: {
+		request: z.object({
+			username: UserNameSchema,
+			passwordSha512: PasswordSha512Schema,
+			email: EmailAddressSchema,
+			captchaToken: z.string().optional(),
+			overrideEmail: z.boolean(),
+		}),
+		response: ZodCast<{ result: 'ok' | 'unknownCredentials' | 'emailTaken' | 'alreadyActivated' | 'invalidCaptcha' | 'invalidEmail'; } | {
+			result: 'rateLimited';
+			time: number;
+		}>(),
+	},
 	passwordReset: {
 		request: z.object({
 			email: EmailAddressSchema,

@@ -1,6 +1,6 @@
-import { GetLogger, IAccountCryptoKey, Logger, TypedEventEmitter } from 'pandora-common';
+import { Assert, AssertNever, GetLogger, IAccountCryptoKey, Logger, TypedEventEmitter } from 'pandora-common';
 import { ENV } from '../config';
-const { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION } = ENV;
+const { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION, RATE_LIMIT_EMAIL_CHANGE_NOT_ACTIVATED } = ENV;
 import { GetDatabase } from '../database/databaseProvider';
 import GetEmailSender from '../services/email';
 import type { Account } from './account';
@@ -51,10 +51,45 @@ export default class AccountSecure {
 		if (this.isActivated() || !this.verifyEmail(email))
 			return;
 
-		const { value } = await this.#generateToken(AccountTokenReason.ACTIVATION);
-		await GetEmailSender().sendRegistrationConfirmation(email, this.#account.username, value);
+		await this.#sendActivation(email, 'Activation requested');
+	}
 
-		this.#auditLog.info('Activation requested');
+	public async overrideActivation(email: string, override: boolean): Promise<'ok' | 'alreadyActivated' | 'invalidEmail' | 'emailTaken' | number> {
+		if (this.isActivated())
+			return 'alreadyActivated';
+
+		if (this.verifyEmail(email)) {
+			await this.#sendActivation(email, 'Activation requested');
+			return 'ok';
+		}
+
+		if (!override)
+			return 'invalidEmail';
+
+		const token = this.#tokens.find((t) => t.reason === AccountTokenReason.ACTIVATION);
+		if (token != null) {
+			const currentExpires = Date.now() + TOKEN_TYPES[AccountTokenReason.ACTIVATION].expiration;
+			const timeLeft = currentExpires - token.expires;
+			const rateLimit = RATE_LIMIT_EMAIL_CHANGE_NOT_ACTIVATED - timeLeft;
+			if (rateLimit > 0)
+				return rateLimit;
+		}
+
+		const emailHash = GenerateEmailHash(email);
+		const result = await GetDatabase().updateAccountEmailHash(this.#account.id, emailHash);
+		switch (result) {
+			case 'ok':
+				this.#secure.emailHash = emailHash;
+				await this.#sendActivation(email, 'Activation requested, email updated');
+				return 'ok';
+			case 'emailTaken':
+				return 'emailTaken';
+			case 'notFound':
+				Assert(false, 'Account not found');
+				break;
+			default:
+				AssertNever(result);
+		}
 	}
 
 	public async activateAccount(token: string): Promise<boolean> {
@@ -277,6 +312,12 @@ export default class AccountSecure {
 			}
 		}
 		this.#tokens = tokens;
+	}
+
+	async #sendActivation(email: string, log: string): Promise<void> {
+		const { value } = await this.#generateToken(AccountTokenReason.ACTIVATION);
+		await GetEmailSender().sendRegistrationConfirmation(email, this.#account.username, value);
+		this.#auditLog.info(log);
 	}
 
 	#updateDatabase(): Promise<void> {

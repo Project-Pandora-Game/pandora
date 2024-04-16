@@ -337,6 +337,21 @@ export default class MongoDatabase implements PandoraDatabase {
 		return await this.getAccountById(data.id) as DatabaseAccountWithSecure;
 	}
 
+	@DbSynchronized(() => 'createAccount')
+	public async updateAccountEmailHash(id: AccountId, emailHash: string): Promise<'ok' | 'notFound' | 'emailTaken'> {
+		const existingEmail = await this._accounts.findOne({ 'secure.emailHash': emailHash });
+		if (existingEmail)
+			return 'emailTaken';
+
+		const result = await this._accounts.findOneAndUpdate({ id }, { $set: { 'secure.emailHash': emailHash } }, { returnDocument: 'after' });
+		if (!result)
+			return 'notFound';
+		if (result.secure.emailHash !== emailHash)
+			return 'emailTaken';
+
+		return 'ok';
+	}
+
 	public async updateAccountData(id: AccountId, data: DatabaseAccountUpdate): Promise<void> {
 		data = DatabaseAccountSchema
 			.pick(ArrayToRecordKeys(DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, true))

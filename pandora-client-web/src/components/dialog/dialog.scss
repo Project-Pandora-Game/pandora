@@ -67,7 +67,6 @@
 		padding: 0.2em 0.2em 0.2em 1em;
 		background-color: $grey-light;
 		position: relative;
-		cursor: move;
 
 		.dialog-close {
 			flex: 1;
@@ -83,7 +82,8 @@
 		display: flex;
 
 		>.drag-handle{
-			flex: 12
+			flex: 12;
+			cursor: move;
 		}
 	}
 

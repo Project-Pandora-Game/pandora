@@ -131,7 +131,7 @@ export function WardrobeItemConfigMenu({
 				}
 				{
 					wornItem.isType('roomDeviceWearablePart') ? (
-						<WardrobeRoomDeviceWearable roomDeviceWearable={ wornItem } item={ item } />
+						<WardrobeRoomDeviceWearable roomDeviceWearable={ wornItem } item={ item } setFocus={ setFocus } />
 					) : null
 				}
 				{

@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { AssetManager } from '../assetManager';
 import type { BoneType, CharacterView, LegsPose } from '../graphics/graphics';
 import type { Satisfies } from '../../utility';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, BoneName, BoneNameSchema, BoneState, CharacterViewSchema, LegsPoseSchema } from '../graphics/graphics';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, BoneState, CharacterViewSchema, LegsPoseSchema } from '../graphics/graphics';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../../validation';
@@ -16,6 +16,11 @@ export const AppearanceArmPoseSchema = z.object({
 });
 export type AppearanceArmPose = z.infer<typeof AppearanceArmPoseSchema>;
 
+export const AppearanceArmsOrderSchema = z.object({
+	upper: ArmSegmentOrderSchema.catch('left'),
+});
+export type AppearanceArmsOrder = z.infer<typeof AppearanceArmsOrderSchema>;
+
 export const BONE_MIN = -180;
 export const BONE_MAX = 180;
 
@@ -23,11 +28,12 @@ export const AppearancePoseSchema = z.object({
 	bones: z.record(BoneNameSchema, z.number().int().min(BONE_MIN).max(BONE_MAX).optional()).default({}),
 	leftArm: AppearanceArmPoseSchema.default({}),
 	rightArm: AppearanceArmPoseSchema.default({}),
+	armsOrder: AppearanceArmsOrderSchema.default({}),
 	legs: LegsPoseSchema.default('standing'),
 	view: CharacterViewSchema.catch('front'),
 });
 export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
-export type CharacterArmsPose = Readonly<Pick<AppearancePose, 'leftArm' | 'rightArm'>>;
+export type CharacterArmsPose = Readonly<Pick<AppearancePose, 'leftArm' | 'rightArm' | 'armsOrder'>>;
 
 export type AppearanceCharacterPose = ReadonlyMap<BoneName, BoneState>;
 function GetDefaultAppearanceArmPose(): AppearanceArmPose {
@@ -43,6 +49,7 @@ export function GetDefaultAppearancePose(): AppearancePose {
 		bones: {},
 		leftArm: GetDefaultAppearanceArmPose(),
 		rightArm: GetDefaultAppearanceArmPose(),
+		armsOrder: { upper: 'left' },
 		legs: 'standing',
 		view: 'front',
 	};
@@ -53,6 +60,7 @@ export type PartialAppearancePose<Bones extends BoneName = BoneName> = {
 	arms?: Partial<AppearanceArmPose>;
 	leftArm?: Partial<AppearanceArmPose>;
 	rightArm?: Partial<AppearanceArmPose>;
+	armsOrder?: Partial<AppearanceArmsOrder>;
 	legs?: LegsPose;
 	view?: CharacterView;
 };
@@ -62,6 +70,7 @@ export const PartialAppearancePoseSchema = z.object({
 	arms: AppearanceArmPoseSchema.partial().optional(),
 	leftArm: AppearanceArmPoseSchema.partial().optional(),
 	rightArm: AppearanceArmPoseSchema.partial().optional(),
+	armsOrder: AppearanceArmsOrderSchema.partial().optional(),
 	legs: LegsPoseSchema.optional(),
 	view: CharacterViewSchema.optional(),
 });
@@ -86,6 +95,7 @@ export function MergePartialAppearancePoses(base: Immutable<PartialAppearancePos
 		arms: { ...base.arms, ...extend.arms },
 		leftArm: { ...base.leftArm, ...extend.leftArm },
 		rightArm: { ...base.rightArm, ...extend.rightArm },
+		armsOrder: { ...base.armsOrder, ...extend.armsOrder },
 		legs: base.legs ?? extend.legs,
 		view: base.view ?? extend.view,
 	};
@@ -124,6 +134,11 @@ export function ProduceAppearancePose(
 			if (armsChanged) {
 				draft.leftArm = freeze(leftArm, true);
 				draft.rightArm = freeze(rightArm, true);
+			}
+
+			const armsOrder = { ...basePose.armsOrder, ...pose.armsOrder };
+			if (!_.isEqual(basePose.armsOrder, armsOrder)) {
+				draft.armsOrder = freeze(armsOrder, true);
 			}
 		}
 

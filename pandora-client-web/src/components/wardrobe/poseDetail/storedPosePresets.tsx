@@ -8,6 +8,7 @@ import {
 	GetLogger,
 	LIMIT_POSE_PRESET_NAME_LENGTH,
 	type AppearanceArmPose,
+	type AppearanceArmsOrder,
 	type AssetFrameworkCharacterState,
 	type AssetFrameworkPosePreset,
 	type AssetFrameworkPosePresetWithId,
@@ -341,6 +342,10 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 					<tr>
 						<td colSpan={ 3 }><hr /></td>
 					</tr>
+					<PosePresetArmsOrder preset={ preset } />
+					<tr>
+						<td colSpan={ 3 }><hr /></td>
+					</tr>
 					<PosePresetLegPoses preset={ preset } />
 					<tr>
 						<td colSpan={ 3 }><hr /></td>
@@ -429,6 +434,40 @@ function PosePresetArmPoses({ preset }: { preset: AssetFrameworkPosePresetWithId
 			<Arm side='left' part='fingers' />
 			<Arm side='right' part='fingers' />
 		</>
+	);
+}
+
+function PosePresetArmsOrder({ preset }: { preset: AssetFrameworkPosePresetWithId; }): ReactNode {
+	const { characterState, setEdit } = usePosePresetContext();
+
+	const Arm = React.useCallback(({ part }: { part: keyof AppearanceArmsOrder; }): ReactNode => (
+		<tr>
+			<td>
+				<input
+					type='checkbox'
+					checked={ preset.pose.armsOrder?.[part] != null }
+					onChange={ (ev) => {
+						const checked = ev.target.checked;
+						if (checked) {
+							setEdit({ ...preset, pose: { ...preset.pose, armsOrder: { ...preset.pose.armsOrder, [part]: characterState.actualPose.armsOrder[part] } } });
+						} else {
+							const newOrder = { ...preset.pose.armsOrder };
+							delete newOrder[part];
+							setEdit({ ...preset, pose: { ...preset.pose, armsOrder: newOrder } });
+						}
+					} } />
+			</td>
+			<td>
+				{ capitalize(part) } arm order
+			</td>
+			<td>
+				{ preset.pose.armsOrder?.[part] ?? characterState.actualPose.armsOrder[part] }
+			</td>
+		</tr>
+	), [preset, setEdit, characterState]);
+
+	return (
+		<Arm part='upper' />
 	);
 }
 

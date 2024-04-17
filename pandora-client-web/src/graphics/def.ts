@@ -1,4 +1,15 @@
-import { CharacterArmsPose, Item, LayerPriority, LAYER_PRIORITIES, ArrayIncludesGuard, AssertNever } from 'pandora-common';
+import type { Immutable } from 'immer';
+import { useMemo } from 'react';
+import {
+	AppearancePose,
+	ArrayIncludesGuard,
+	Assert,
+	AssertNever,
+	CharacterArmsPose,
+	Item,
+	LAYER_PRIORITIES,
+	LayerPriority,
+} from 'pandora-common';
 import { AssetGraphicsLayer } from '../assets/assetGraphics';
 
 export type LayerStateOverrides = {
@@ -26,42 +37,61 @@ export type ComputedLayerPriority = Exclude<LayerPriority, DoubleOrdered>
 	| `${DoubleOrdered}_BACK`
 	| `${DoubleOrdered}_FRONT`;
 
-export const COMPUTED_LAYER_ORDERING = [
-	'BACKGROUND',
-	'BELOW_BACK_HAIR',
-	'BACK_HAIR',
+type LeftRight = 'LEFT' | 'RIGHT';
 
-	'BELOW_ARM_LEFT_BACK',
-	'ARM_LEFT_BACK',
-	'ABOVE_ARM_LEFT_BACK',
+export function useComputedLayerPriority({ view, armsOrder }: Immutable<AppearancePose>): readonly ComputedLayerPriority[] {
+	return useMemo(() => {
+		const arms: [LeftRight, LeftRight] = ['LEFT', 'RIGHT'];
 
-	'BELOW_ARM_RIGHT_BACK',
-	'ARM_RIGHT_BACK',
-	'ABOVE_ARM_RIGHT_BACK',
+		if (armsOrder.upper === 'left') {
+			arms.reverse();
+		}
 
-	'BELOW_BODY_SOLES',
-	'BODY_SOLES',
-	'BELOW_BODY',
-	'BODY',
-	'BELOW_BREASTS',
-	'BREASTS',
-	'ABOVE_BODY',
+		const order = [
+			'BACKGROUND',
+			'BELOW_BACK_HAIR',
+			'BACK_HAIR',
 
-	'BELOW_ARM_LEFT_FRONT',
-	'ARM_LEFT_FRONT',
-	'ABOVE_ARM_LEFT_FRONT',
+			`BELOW_ARM_${arms[0]}_BACK`,
+			`ARM_${arms[0]}_BACK`,
+			`ABOVE_ARM_${arms[0]}_BACK`,
 
-	'BELOW_ARM_RIGHT_FRONT',
-	'ARM_RIGHT_FRONT',
-	'ABOVE_ARM_RIGHT_FRONT',
+			`BELOW_ARM_${arms[1]}_BACK`,
+			`ARM_${arms[1]}_BACK`,
+			`ABOVE_ARM_${arms[1]}_BACK`,
 
-	'FRONT_HAIR',
-	'ABOVE_FRONT_HAIR',
-	'OVERLAY',
-] as const satisfies readonly ComputedLayerPriority[];
+			'BELOW_BODY_SOLES',
+			'BODY_SOLES',
+			'BELOW_BODY',
+			'BODY',
+			'BELOW_BREASTS',
+			'BREASTS',
+			'ABOVE_BODY',
 
-if (new Set(COMPUTED_LAYER_ORDERING).size !== COMPUTED_LAYER_ORDERING.length || LAYER_PRIORITIES.length + DOUBLE_ORDERED.length !== COMPUTED_LAYER_ORDERING.length) {
-	throw new Error('COMPUTED_LAYER_ORDERING not valid');
+			`BELOW_ARM_${arms[0]}_FRONT`,
+			`ARM_${arms[0]}_FRONT`,
+			`ABOVE_ARM_${arms[0]}_FRONT`,
+
+			`BELOW_ARM_${arms[1]}_FRONT`,
+			`ARM_${arms[1]}_FRONT`,
+			`ABOVE_ARM_${arms[1]}_FRONT`,
+
+			'FRONT_HAIR',
+			'ABOVE_FRONT_HAIR',
+			'OVERLAY',
+		] satisfies readonly ComputedLayerPriority[];
+
+		Assert(new Set(order).size === order.length);
+		Assert(order.length === LAYER_PRIORITIES.length + DOUBLE_ORDERED.length);
+
+		switch (view) {
+			case 'front':
+				return order;
+			case 'back':
+				return order.reverse();
+		}
+		AssertNever(view);
+	}, [view, armsOrder.upper]);
 }
 
 // Some priority layers need their internal order reversed to make sense

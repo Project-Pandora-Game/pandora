@@ -214,6 +214,32 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 			</Row>
 		</td>
 	), [characterState, setPose]);
+	const ArmSegmentOrder = useCallback(({ segment, colSpan }: { segment: 'upper'; colSpan?: number; }): ReactElement => (
+		<td colSpan={ colSpan }>
+			<Row gap='tiny' wrap>
+				<PoseButton
+					preset={ {
+						name: 'Left first',
+						armsOrder: {
+							[segment]: 'left',
+						},
+					} }
+					characterState={ characterState }
+					setPose={ setPose }
+				/>
+				<PoseButton
+					preset={ {
+						name: 'Right first',
+						armsOrder: {
+							[segment]: 'right',
+						},
+					} }
+					characterState={ characterState }
+					setPose={ setPose }
+				/>
+			</Row>
+		</td>
+	), [characterState, setPose]);
 	return (
 		<>
 			<strong>Arms</strong>
@@ -250,6 +276,10 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 								<td>Rotation</td>
 								<ArmRotation arm='arms' />
 							</tr>
+							<tr>
+								<td>Upper arm order</td>
+								<ArmSegmentOrder segment='upper' />
+							</tr>
 						</tbody>
 					</table>
 				) : (
@@ -276,6 +306,10 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 								<td>Rotation</td>
 								<ArmRotation arm='leftArm' />
 								<ArmRotation arm='rightArm' />
+							</tr>
+							<tr>
+								<td>Upper arm order</td>
+								<ArmSegmentOrder segment='upper' colSpan={ 2 } />
 							</tr>
 						</tbody>
 					</table>
@@ -329,15 +363,13 @@ export function WardrobePoseGui({ character, characterState }: {
 	const assetManager = characterState.assetManager;
 	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 
-	const setPoseDirect = useEvent(({ bones, arms, leftArm, rightArm, legs, view }: PartialAppearancePose) => {
+	const setPoseDirect = useEvent(({ arms, leftArm, rightArm, ...copy }: PartialAppearancePose) => {
 		execute({
 			type: 'pose',
 			target: character.id,
-			bones,
 			leftArm: { ...arms, ...leftArm },
 			rightArm: { ...arms, ...rightArm },
-			legs,
-			view,
+			...copy,
 		});
 	});
 

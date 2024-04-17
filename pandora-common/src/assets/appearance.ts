@@ -74,6 +74,7 @@ export class CharacterAppearance implements ActionTargetCharacter {
 		return {
 			leftArm: this.characterState.actualPose.leftArm,
 			rightArm: this.characterState.actualPose.rightArm,
+			armsOrder: this.characterState.actualPose.armsOrder,
 		};
 	}
 

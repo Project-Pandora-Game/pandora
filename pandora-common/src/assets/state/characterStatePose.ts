@@ -70,6 +70,7 @@ export const PartialAppearancePoseSchema = z.object({
 	arms: AppearanceArmPoseSchema.partial().optional(),
 	leftArm: AppearanceArmPoseSchema.partial().optional(),
 	rightArm: AppearanceArmPoseSchema.partial().optional(),
+	armsOrder: AppearanceArmsOrderSchema.partial().optional(),
 	legs: LegsPoseSchema.optional(),
 	view: CharacterViewSchema.optional(),
 });

@@ -1,9 +1,12 @@
+import React, { useState, type ChangeEvent, useCallback, useMemo, type ReactElement, useEffect, useRef } from 'react';
+import { toast } from 'react-toastify';
+import parse from 'color-parse';
 import _ from 'lodash';
 import { type HexColorString, HexColorStringSchema, HexRGBAColorString, HexRGBAColorStringSchema } from 'pandora-common';
-import React, { useState, type ChangeEvent, useCallback, useMemo, type ReactElement, useEffect, useRef } from 'react';
 import { Button } from '../button/button';
-import './colorInput.scss';
 import { DraggableDialog } from '../../dialog/dialog';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import './colorInput.scss';
 
 type ColorInputProps<THexString extends `#${string}`> = {
 	title: string;
@@ -43,6 +46,10 @@ export function ColorInputRGBA({
 		}
 	}, [minAlpha, setInput, onChangeCallerThrottled]);
 
+	const onPaste = useCallback((ev: React.ClipboardEvent) => {
+		ColorParsePaste(ev, changeCallback, minAlpha < Color.maxAlpha);
+	}, [changeCallback, minAlpha]);
+
 	const onEdit = useCallback((color: HexRGBAColorString) => {
 		onChangeCallerThrottled(color);
 		setInput(color);
@@ -59,7 +66,7 @@ export function ColorInputRGBA({
 		<>
 			{
 				!hideTextInput &&
-				<input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } />
+				<input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } onPaste={ onPaste } />
 			}
 			<input type='color' value={ value.substring(0, 7) } disabled={ disabled } onClick={ onClick } readOnly />
 			{
@@ -127,8 +134,8 @@ function ColorEditor({
 		setState(color.setAlpha(value));
 	}, [minAlpha, color, setState]);
 
-	const onInputChange = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
-		const value = '#' + ev.target.value.replace(/[^0-9a-f]/gi, '').toUpperCase() as HexRGBAColorString;
+	const onTextInput = useCallback((text: string) => {
+		const value = '#' + text.replace(/[^0-9a-f]/gi, '').toUpperCase() as HexRGBAColorString;
 		setInput(value);
 		const result = HexRGBAColorStringSchema.safeParse(value);
 		if (result.success) {
@@ -139,6 +146,14 @@ function ColorEditor({
 			setState(newColor);
 		}
 	}, [color, setState, minAlpha]);
+
+	const onInputChange = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
+		onTextInput(ev.target.value);
+	}, [onTextInput]);
+
+	const onPaste = useCallback((ev: React.ClipboardEvent) => {
+		ColorParsePaste(ev, onTextInput, minAlpha < Color.maxAlpha);
+	}, [onTextInput, minAlpha]);
 
 	const onPointerDown = useCallback((ev: React.PointerEvent) => {
 		ev.preventDefault();
@@ -180,10 +195,27 @@ function ColorEditor({
 					minAlpha < Color.maxAlpha &&
 					<input className='color-editor__alpha' type='range' min='0' max={ Color.maxAlpha } value={ color.alpha } onChange={ setAlpha } />
 				}
-				<input className='color-editor_hex' type='text' value={ input } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } onChange={ onInputChange } />
+				<input className='color-editor_hex' type='text' value={ input } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } onChange={ onInputChange } onPaste={ onPaste } />
 			</div>
 		</DraggableDialog>
 	);
+}
+
+function ColorParsePaste(ev: React.ClipboardEvent, set: (color: string) => void, allowAlpha: boolean) {
+	ev.preventDefault();
+	let text = ev.clipboardData.getData('text').trim();
+	if (/^[0-9a-f]{3,8}/i.test(text)) {
+		text = '#' + text;
+	}
+	const { space, values, alpha } = parse(text);
+	switch (space) {
+		case 'rgb':
+			set(`#${Color.toHexPart(values[0])}${Color.toHexPart(values[1])}${Color.toHexPart(values[2])}${allowAlpha ? Color.toHexPart(alpha) : ''}`);
+			break;
+		default:
+			toast(`Unsupported color space: ${space}`, TOAST_OPTIONS_ERROR);
+			break;
+	}
 }
 
 type ColorArray = readonly [number, number, number];
@@ -396,7 +428,7 @@ class Color {
 
 	/* eslint-enable no-bitwise */
 
-	private static toHexPart(value: number) {
+	public static toHexPart(value: number) {
 		value = _.clamp(value, 0, 255);
 		return value.toString(16).padStart(2, '0').substring(0, 2).toUpperCase();
 	}

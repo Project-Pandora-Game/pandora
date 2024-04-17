@@ -43,7 +43,7 @@ export function useComputedLayerPriority({ view, armsOrder }: Immutable<Appearan
 	return useMemo(() => {
 		const arms: [LeftRight, LeftRight] = ['LEFT', 'RIGHT'];
 
-		if (armsOrder.upper === 'right') {
+		if (armsOrder.upper === 'left') {
 			arms.reverse();
 		}
 

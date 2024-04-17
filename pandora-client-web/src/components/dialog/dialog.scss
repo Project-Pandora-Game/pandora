@@ -64,19 +64,26 @@
 
 	>header {
 		@include center-flex;
-		padding: 0.2em 1em;
+		padding: 0.2em 0.2em 0.2em 1em;
 		background-color: $grey-light;
 		position: relative;
 		cursor: move;
 
 		.dialog-close {
-			position: absolute;
-			right: 0.6em;
+			flex: 1;
 			cursor: pointer;
 
 			&:hover {
 				color: red;
 			}
+		}
+	}
+
+	>.dialog-header {
+		display: flex;
+
+		>.drag-handle{
+			flex: 12
 		}
 	}
 
@@ -92,3 +99,5 @@
 .dialog-confirm {
 	max-width: min(95vw, 50em);
 }
+
+

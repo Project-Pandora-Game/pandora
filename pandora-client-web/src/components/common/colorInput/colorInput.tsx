@@ -58,7 +58,6 @@ export function ColorInputRGBA({
 	const onInputChange = useCallback((ev: ChangeEvent<HTMLInputElement>) => changeCallback(ev.target.value), [changeCallback]);
 	const onClick = useCallback((ev: React.MouseEvent) => {
 		ev.stopPropagation();
-		ev.preventDefault();
 		setShowEditor(true);
 	}, [setShowEditor]);
 
@@ -68,7 +67,9 @@ export function ColorInputRGBA({
 				!hideTextInput &&
 				<input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } onPaste={ onPaste } />
 			}
-			<input type='color' value={ value.substring(0, 7) } disabled={ disabled } onClick={ onClick } readOnly />
+			<button className='color-input-button' disabled={ disabled } onClick={ onClick } >
+				<div className='color-view' style={ { backgroundColor: value } } />
+			</button>
 			{
 				resetValue != null &&
 				<Button className='slim' onClick={ () => changeCallback(resetValue) } disabled={ disabled }>↺</Button>

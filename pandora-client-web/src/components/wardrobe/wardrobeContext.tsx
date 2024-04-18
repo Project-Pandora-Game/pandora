@@ -8,6 +8,7 @@ import {
 	AssetFrameworkGlobalState,
 	EMPTY_ARRAY,
 	GetLogger,
+	ItemId,
 	Nullable,
 	ActionTargetSelector,
 } from 'pandora-common';
@@ -48,6 +49,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 	const actionPreviewState = useMemo(() => new Observable<AssetFrameworkGlobalState | null>(null), []);
 
 	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
+	const [scrollToItem, setScrollToItem] = useState<ItemId | null>(null);
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
 		player: player.gameLogicCharacter,
@@ -97,6 +99,8 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		assetList,
 		heldItem,
 		setHeldItem,
+		scrollToItem,
+		setScrollToItem,
 		focus,
 		extraItemActions,
 		actions,
@@ -104,7 +108,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		actionPreviewState,
 		showExtraActionButtons: settings.wardrobeExtraActionButtons,
 		showHoverPreview: settings.wardrobeHoverPreview,
-	}), [target, targetSelector, player, globalState, assetList, heldItem, focus, extraItemActions, actions, shardConnector, actionPreviewState, settings]);
+	}), [target, targetSelector, player, globalState, assetList, heldItem, scrollToItem, focus, extraItemActions, actions, shardConnector, actionPreviewState, settings]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

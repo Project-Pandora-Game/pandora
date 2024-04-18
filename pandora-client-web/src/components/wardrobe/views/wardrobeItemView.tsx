@@ -14,7 +14,7 @@ import {
 	ITEM_LIMIT_ROOM_INVENTORY,
 	AppearanceItemsCalculateTotalCount,
 } from 'pandora-common';
-import React, { ReactElement, useEffect, useMemo } from 'react';
+import React, { ReactElement, useEffect, useMemo, useRef } from 'react';
 import { useObservable } from '../../../observable';
 import { isEqual } from 'lodash';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
@@ -252,9 +252,17 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 	setFocus?: (newFocus: WardrobeFocus) => void;
 	singleItemContainer?: boolean;
 }): ReactElement {
-	const { targetSelector, target, extraItemActions, heldItem, setHeldItem } = useWardrobeContext();
+	const { targetSelector, target, extraItemActions, heldItem, setHeldItem, scrollToItem, setScrollToItem } = useWardrobeContext();
 	const wornItem = useWardrobeTargetItem(target, item);
 	const extraActions = useObservable(extraItemActions);
+
+	const ref = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		if (scrollToItem === item.itemId) {
+			ref.current?.scrollIntoView({ behavior: 'smooth' });
+			setScrollToItem(null);
+		}
+	});
 
 	const ribbonColor = useItemColorRibbon([], wornItem ?? null);
 
@@ -274,7 +282,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 	const asset = wornItem.asset;
 
 	return (
-		<div tabIndex={ 0 } className={ classNames('inventoryViewItem', 'listMode', selected && 'selected', singleItemContainer ? 'static' : 'allowed') } onClick={ () => {
+		<div ref={ ref } tabIndex={ 0 } className={ classNames('inventoryViewItem', 'listMode', selected && 'selected', singleItemContainer ? 'static' : 'allowed') } onClick={ () => {
 			if (singleItemContainer)
 				return;
 			setFocus?.({

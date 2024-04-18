@@ -4,6 +4,7 @@ import {
 	AssetFrameworkGlobalState,
 	DoAppearanceAction,
 	EMPTY_ARRAY,
+	ItemId,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
@@ -49,6 +50,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
 	const actionPreviewState = useMemo(() => new Observable<AssetFrameworkGlobalState | null>(null), []);
 	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
+	const [scrollToItem, setScrollToItem] = useState<ItemId | null>(null);
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
 		player: character.gameLogicCharacter,
@@ -83,6 +85,8 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		assetList,
 		heldItem,
 		setHeldItem,
+		scrollToItem,
+		setScrollToItem,
 		focus,
 		extraItemActions,
 		actions,
@@ -107,7 +111,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		},
 		showExtraActionButtons: true,
 		showHoverPreview: true,
-	}), [character, globalState, assetList, heldItem, focus, extraItemActions, actions, actionPreviewState, assetManager, editor]);
+	}), [character, globalState, assetList, heldItem, scrollToItem, focus, extraItemActions, actions, actionPreviewState, assetManager, editor]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

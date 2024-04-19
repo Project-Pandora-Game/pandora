@@ -16,7 +16,7 @@ import { Column, Row } from '../../common/container/container';
 import { Select } from '../../common/select/select';
 import { Immutable } from 'immer';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
-import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
+import { WardrobeContextSelectRoomInventoryProvider, useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
 import { WardrobeActionButton } from '../wardrobeComponents';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
@@ -284,14 +284,16 @@ export function WardrobeRoomDeviceWearable({ roomDeviceWearable, setFocus }: {
 					</WardrobeActionButton>
 				</Column>
 			</FieldsetToggle>
-			{
-				Array.from(roomDevice.getModules().entries())
-					.map(([moduleName, m]) => (
-						<FieldsetToggle legend={ `Module: ${m.config.name}` } key={ moduleName }>
-							<WardrobeModuleConfig item={ { container: [], itemId: roomDeviceLink.device } } moduleName={ moduleName } m={ m } setFocus={ setFocus } />
-						</FieldsetToggle>
-					))
-			}
+			<WardrobeContextSelectRoomInventoryProvider>
+				{
+					Array.from(roomDevice.getModules().entries())
+						.map(([moduleName, m]) => (
+							<FieldsetToggle legend={ `Device module: ${m.config.name}` } key={ moduleName }>
+								<WardrobeModuleConfig item={ { container: [], itemId: roomDeviceLink.device } } moduleName={ moduleName } m={ m } setFocus={ setFocus } />
+							</FieldsetToggle>
+						))
+				}
+			</WardrobeContextSelectRoomInventoryProvider>
 		</>
 	);
 }

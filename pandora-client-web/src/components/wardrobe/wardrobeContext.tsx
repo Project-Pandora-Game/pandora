@@ -215,7 +215,7 @@ export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, re
 					if (confirmResult) {
 						execute(action);
 					}
-				}).catch(() => {/* NOOP */});
+				}).catch(() => { /* NOOP */ });
 			} else {
 				execute(action);
 			}
@@ -223,4 +223,21 @@ export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, re
 		}, [execute, confirm, player, spaceContext, action, result]),
 		processing,
 	] as const;
+}
+
+export function WardrobeContextSelectRoomInventoryProvider({ children }: { children: ReactNode; }): ReactElement {
+	const ctx = useWardrobeContext();
+	const value = useMemo<WardrobeContext>(() => ({
+		...ctx,
+		target: WARDROBE_TARGET_ROOM,
+		targetSelector: {
+			type: 'roomInventory',
+		},
+	}), [ctx]);
+
+	return (
+		<wardrobeContext.Provider value={ value }>
+			{ children }
+		</wardrobeContext.Provider>
+	);
 }

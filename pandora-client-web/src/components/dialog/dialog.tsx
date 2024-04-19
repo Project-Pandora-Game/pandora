@@ -141,12 +141,14 @@ export function DraggableDialog({ children, title, rawContent, close, hiddenClos
 					} }
 					bounds='parent'
 				>
-					<header className='drag-handle'>
-						{ title }
+					<header className='dialog-header'>
+						<div className='drag-handle'>
+							{ title }
+						</div>
 						{ hiddenClose !== true ? (
-							<span className='dialog-close' onClick={ close }>
+							<div className='dialog-close' onClick={ close }>
 								×
-							</span>
+							</div>
 						) : null }
 					</header>
 					{

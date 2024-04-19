@@ -20,7 +20,6 @@ import { WardrobeContextSelectRoomInventoryProvider, useWardrobeContext, useWard
 import { WardrobeActionButton } from '../wardrobeComponents';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
-import type { WardrobeFocus } from '../wardrobeTypes';
 
 export function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
 	roomDevice: Item<'roomDevice'>;
@@ -245,10 +244,9 @@ function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
 	);
 }
 
-export function WardrobeRoomDeviceWearable({ roomDeviceWearable, setFocus }: {
+export function WardrobeRoomDeviceWearable({ roomDeviceWearable }: {
 	roomDeviceWearable: Item<'roomDeviceWearablePart'>;
 	item: ItemPath;
-	setFocus: (newFocus: WardrobeFocus) => void;
 }): ReactElement | null {
 	const roomDeviceLink = roomDeviceWearable.roomDeviceLink;
 	const { globalState } = useWardrobeContext();
@@ -289,7 +287,7 @@ export function WardrobeRoomDeviceWearable({ roomDeviceWearable, setFocus }: {
 					Array.from(roomDevice.getModules().entries())
 						.map(([moduleName, m]) => (
 							<FieldsetToggle legend={ `Device module: ${m.config.name}` } key={ moduleName }>
-								<WardrobeModuleConfig item={ { container: [], itemId: roomDeviceLink.device } } moduleName={ moduleName } m={ m } setFocus={ setFocus } />
+								<WardrobeModuleConfig item={ { container: [], itemId: roomDeviceLink.device } } moduleName={ moduleName } m={ m } />
 							</FieldsetToggle>
 						))
 				}

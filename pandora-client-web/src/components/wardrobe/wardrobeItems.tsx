@@ -1,17 +1,17 @@
+import React, { ReactElement, useCallback, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import classNames from 'classnames';
+import type { Immutable } from 'immer';
 import {
 	AssertNever,
 	Asset,
-	IsObject,
 	Item,
-	ItemId,
+	ItemIdSchema,
 	type ActionTargetSelector,
 } from 'pandora-common';
 import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
-import React, { ReactElement, useCallback, useEffect, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
 import { useAssetManager } from '../../assets/assetManager';
 import { useObservable } from '../../observable';
 import { Tab, TabContainer } from '../common/tabs/tabs';
@@ -24,9 +24,10 @@ import { SecondaryInventoryView } from './views/wardrobeSecondaryInventoryView';
 import { useWardrobeContext } from './wardrobeContext';
 import { WardrobeFocus } from './wardrobeTypes';
 import { WardrobeFocusesItem, useWardrobeTargetItem, useWardrobeTargetItems } from './wardrobeUtils';
+import { z } from 'zod';
 
 /** This hook doesn't generate or use a global state and shouldn't be used recursively */
-export function useWardrobeItems(currentFocus: WardrobeFocus): {
+export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
 	preFilter: (item: Item | Asset) => boolean;
 	containerContentsFilter: (asset: Asset) => boolean;
 	assetFilterAttributes: readonly string[];
@@ -100,20 +101,24 @@ export function useWardrobeItems(currentFocus: WardrobeFocus): {
 	};
 }
 
+export const WardrobeDeviceLocationStateSchema = z.object({
+	deviceId: ItemIdSchema,
+}).passthrough();
+
 export function WardrobeItemManipulation(): ReactElement {
-	const { target, targetSelector, assetList, heldItem, setHeldItem, focus, setScrollToItem } = useWardrobeContext();
+	const { target, targetSelector, assetList, heldItem, setHeldItem, focuser, setScrollToItem } = useWardrobeContext();
 
 	const location = useLocation();
 	useEffect(() => {
-		if (IsObject(location.state) && 'deviceId' in location.state) {
-			const focusItemId: ItemId = location.state.deviceId as ItemId;
-
-			focus.value = { container: [], itemId: focusItemId };
-			setScrollToItem(focusItemId);
+		const locationState = WardrobeDeviceLocationStateSchema.safeParse(location.state);
+		if (locationState.success) {
+			const { deviceId } = locationState.data;
+			focuser.focus({ container: [], itemId: deviceId }, target);
+			setScrollToItem(deviceId);
 			location.state = {};
 		}
-	}, [focus, location, setScrollToItem]);
-	const currentFocus = useObservable(focus);
+	}, [focuser, location, setScrollToItem, target]);
+	const currentFocus = useObservable(focuser.current);
 
 	const { preFilter, containerContentsFilter, assetFilterAttributes } = useWardrobeItems(currentFocus);
 
@@ -146,8 +151,6 @@ export function WardrobeItemManipulation(): ReactElement {
 			<InventoryItemView
 				title={ title }
 				filter={ preFilter }
-				focus={ currentFocus }
-				setFocus={ (newFocus) => focus.value = newFocus }
 			/>
 			<TabContainer className={ classNames('flex-1', focusType !== 'nothing' ? 'hidden' : null) }>
 				{
@@ -185,7 +188,6 @@ export function WardrobeItemManipulation(): ReactElement {
 						<WardrobeItemConfigMenu
 							key={ currentFocus.itemId }
 							item={ currentFocus }
-							setFocus={ (newFocus) => focus.value = newFocus }
 						/>
 					</div>
 				) :

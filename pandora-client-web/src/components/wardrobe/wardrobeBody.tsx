@@ -1,17 +1,14 @@
 import classNames from 'classnames';
 import {
-	Assert,
 	Asset,
 	AssetFrameworkCharacterState,
 	EMPTY_ARRAY,
 	Item,
-	ItemId,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useLayoutEffect, useMemo, useState } from 'react';
+import React, { ReactElement, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { ICharacter } from '../../character/character';
 import { Tab, TabContainer } from '../common/tabs/tabs';
-import { WardrobeFocus } from './wardrobeTypes';
 import { useWardrobeContext } from './wardrobeContext';
 import { InventoryItemView } from './views/wardrobeItemView';
 import { InventoryAssetView } from './views/wardrobeAssetView';
@@ -19,13 +16,15 @@ import { WardrobeFocusesItem } from './wardrobeUtils';
 import { WardrobeItemConfigMenu } from './itemDetail/_wardrobeItemDetail';
 import { WardrobeBodySizeEditor } from './views/wardrobeBodySizeView';
 import { InventoryOutfitView } from './views/wardrobeOutfitView';
+import { useObservable } from '../../observable';
 
 export function WardrobeBodyManipulation({ className, character, characterState }: {
 	className?: string;
 	character: ICharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const { assetList } = useWardrobeContext();
+	const { assetList, focuser } = useWardrobeContext();
+	const currentFocus = useObservable(focuser.current);
 	const assetManager = useAssetManager();
 
 	const filter = (item: Item | Asset) => {
@@ -34,22 +33,12 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 	};
 
 	const title = `Currently worn items`;
-
-	const [selectedItemId, setSelectedItemId] = useState<ItemId | null>(null);
-	const currentFocus = useMemo<WardrobeFocus>(() => ({
-		container: [],
-		itemId: selectedItemId,
-	}), [selectedItemId]);
-
 	// Reset selected item each time screen opens
 	useLayoutEffect(() => {
-		setSelectedItemId(null);
-	}, []);
+		focuser.reset();
+	}, [focuser]);
 
-	const setFocus = useCallback((newFocus: WardrobeFocus) => {
-		Assert(newFocus.container.length === 0, 'Body cannot have containers');
-		setSelectedItemId(newFocus.itemId);
-	}, []);
+	useEffect(() => focuser.disableContainers('Body cannot have containers'), [focuser]);
 
 	const bodyFilterAttributes = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
 		.filter((a) => a[1].useAsWardrobeFilter?.tabs.includes('body'))
@@ -58,7 +47,7 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
-			<InventoryItemView title={ title } filter={ filter } focus={ currentFocus } setFocus={ setFocus } />
+			<InventoryItemView title={ title } filter={ filter } />
 			<TabContainer className={ classNames('flex-1', WardrobeFocusesItem(currentFocus) && 'hidden') }>
 				<Tab name='Change body parts'>
 					<InventoryAssetView
@@ -81,7 +70,7 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 			{
 				WardrobeFocusesItem(currentFocus) &&
 				<div className='flex-col flex-1'>
-					<WardrobeItemConfigMenu key={ currentFocus.itemId } item={ currentFocus } setFocus={ setFocus } />
+					<WardrobeItemConfigMenu key={ currentFocus.itemId } item={ currentFocus } />
 				</div>
 			}
 		</div>

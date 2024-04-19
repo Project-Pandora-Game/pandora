@@ -1,3 +1,6 @@
+import { ReactElement } from 'react';
+import type { Immutable } from 'immer';
+import { omit } from 'lodash';
 import {
 	AppearanceAction,
 	AppearanceActionContext,
@@ -12,11 +15,9 @@ import {
 	ModuleType,
 	ActionTargetSelector,
 } from 'pandora-common';
-import { ReactElement } from 'react';
 import { ICharacter, IChatroomCharacter } from '../../character/character';
-import { Observable } from '../../observable';
+import { Observable, type ReadonlyObservable } from '../../observable';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
-import { Immutable } from 'immer';
 
 export type WardrobeContextExtraItemActionComponent = (props: { target: ActionTargetSelector; item: ItemPath; }) => ReactElement | null;
 export type WardrobeTarget = IChatroomCharacter | { type: 'room'; };
@@ -42,7 +43,7 @@ export interface WardrobeContext {
 	setHeldItem: (newHeldItem: WardrobeHeldItem) => void;
 	scrollToItem: ItemId | null;
 	setScrollToItem: (newScrollToItem: ItemId | null) => void;
-	focus: Observable<Immutable<WardrobeFocus>>;
+	focuser: WardrobeFocuser;
 	extraItemActions: Observable<readonly WardrobeContextExtraItemActionComponent[]>;
 	actions: AppearanceActionContext;
 	execute: (action: AppearanceAction) => IClientShardResult['appearanceAction'] | undefined;
@@ -64,7 +65,6 @@ export interface WardrobeModuleProps<Module extends IItemModule> {
 	item: ItemPath;
 	moduleName: string;
 	m: Module;
-	setFocus: (newFocus: WardrobeFocus) => void;
 }
 
 export interface WardrobeModuleTemplateProps<TType extends ModuleType = ModuleType> {
@@ -72,4 +72,91 @@ export interface WardrobeModuleTemplateProps<TType extends ModuleType = ModuleTy
 	template: Immutable<IAssetModuleTypes<unknown>[TType]['template']> | undefined;
 	onTemplateChange: (newTemplate: Immutable<IAssetModuleTypes<unknown>[TType]['template']>) => void;
 	moduleName: string;
+}
+
+export class WardrobeFocuser {
+	private readonly _stack: { container: ItemContainerPath; itemId: ItemId | null; inRoom: boolean; }[] = [];
+	private readonly _current = new Observable<WardrobeFocus>({ container: [], itemId: null });
+	private readonly _inRoom = new Observable<boolean>(false);
+	private _disabled: string | null = null;
+	private _disabledContainers: string | null = null;
+
+	public get current(): ReadonlyObservable<Immutable<WardrobeFocus>> {
+		return this._current;
+	}
+
+	public get inRoom(): ReadonlyObservable<boolean> {
+		return this._inRoom;
+	}
+
+	public reset(): void {
+		this._inRoom.value = false;
+		const current = this._current.value;
+		if (current.container.length === 0 && current.itemId == null) {
+			return;
+		}
+		this._current.value = { container: [], itemId: null };
+	}
+
+	public previous(): void {
+		if (this._disabled != null)
+			throw new Error(this._disabled);
+
+		const popped = this._stack.pop();
+		if (popped == null) {
+			return;
+		}
+		this._current.value = omit(popped, 'inRoom');
+		this._inRoom.value = popped.inRoom;
+	}
+
+	public focus(newFocus: WardrobeFocus, target: WardrobeTarget): void {
+		if (this._disabled != null)
+			throw new Error(this._disabled);
+		if (this._disabledContainers && newFocus.container.length > 0)
+			throw new Error(this._disabledContainers);
+
+		this._stack.push({
+			container: this._current.value.container,
+			itemId: this._current.value.itemId,
+			inRoom: this._inRoom.value,
+		});
+
+		this._current.value = newFocus;
+		this._inRoom.value = target?.type === 'room';
+	}
+
+	public focusItemId(itemId: ItemId | null): void {
+		if (this._disabled != null)
+			throw new Error(this._disabled);
+
+		const current = this._current.value;
+		if (current.itemId === itemId) {
+			return;
+		}
+		this._current.value = ({ ...current, itemId });
+	}
+
+	public focusItemModule(item: ItemPath, moduleName: string, target: WardrobeTarget): void {
+		this.focus({
+			container: [...item.container, { item: item.itemId, module: moduleName }],
+			itemId: null,
+		}, target);
+	}
+
+	public disable(message: string): () => void {
+		const old = this._disabled;
+		this._disabled = message;
+		return () => {
+			this._disabled = old;
+		};
+	}
+
+	public disableContainers(message: string): () => void {
+		const old = this._disabledContainers;
+		this._disabledContainers = message;
+		return () => {
+			this._disabledContainers = old;
+		};
+	}
 }

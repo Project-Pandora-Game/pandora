@@ -10,7 +10,7 @@ import {
 import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
-import React, { ReactElement, useCallback, useMemo } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAssetManager } from '../../assets/assetManager';
 import { useObservable } from '../../observable';
@@ -104,13 +104,15 @@ export function WardrobeItemManipulation(): ReactElement {
 	const { target, targetSelector, assetList, heldItem, setHeldItem, focus, setScrollToItem } = useWardrobeContext();
 
 	const location = useLocation();
-	if (IsObject(location.state) && 'deviceId' in location.state) {
-		const focusItemId: ItemId = location.state.deviceId as ItemId;
+	useEffect(() => {
+		if (IsObject(location.state) && 'deviceId' in location.state) {
+			const focusItemId: ItemId = location.state.deviceId as ItemId;
 
-		focus.value = { container: [], itemId: focusItemId };
-		setScrollToItem(focusItemId);
-		location.state = {};
-	}
+			focus.value = { container: [], itemId: focusItemId };
+			setScrollToItem(focusItemId);
+			location.state = {};
+		}
+	}, [focus, location, setScrollToItem]);
 	const currentFocus = useObservable(focus);
 
 	const { preFilter, containerContentsFilter, assetFilterAttributes } = useWardrobeItems(currentFocus);

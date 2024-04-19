@@ -262,7 +262,7 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 			ref.current?.scrollIntoView({ behavior: 'smooth' });
 			setScrollToItem(null);
 		}
-	});
+	}, [item.itemId, scrollToItem, setScrollToItem]);
 
 	const ribbonColor = useItemColorRibbon([], wornItem ?? null);
 

@@ -103,7 +103,7 @@ export function IsValidRoomPosition(roomBackground: Immutable<RoomBackgroundData
 
 export function GenerateInitialRoomPosition(roomBackground: Immutable<RoomBackgroundData>): CharacterRoomPosition {
 	// Random spread to use for the positioning
-	const spreadX = 200;
+	const spreadX = 1000;
 	const spreadY = 100;
 
 	// Absolute bounds of the background

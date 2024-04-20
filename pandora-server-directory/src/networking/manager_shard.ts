@@ -28,6 +28,7 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 			shardRegister: this.handleShardRegister.bind(this),
 			shardRequestStop: this.handleShardRequestStop.bind(this),
 			characterClientDisconnect: this.handleCharacterClientDisconnect.bind(this),
+			characterAutomod: this.handleCharacterAutomod.bind(this),
 			characterError: this.handleCharacterError.bind(this),
 			spaceError: this.handleSpaceError.bind(this),
 			createCharacter: this.createCharacter.bind(this),
@@ -75,6 +76,20 @@ export const ConnectionManagerShard = new class ConnectionManagerShard implement
 			throw new BadMessageError();
 
 		await character.disconnect();
+	}
+
+	private async handleCharacterAutomod({ id, action, reason }: IShardDirectoryArgument['characterAutomod'], connection: IConnectionShard): Promise<void> {
+		const shard = connection.shard;
+		if (!shard)
+			throw new BadMessageError();
+		const character = shard.getConnectedCharacter(id);
+		if (!character)
+			throw new BadMessageError();
+
+		const space = character.space;
+		if (space != null) {
+			await space.automodAction(id, action, reason);
+		}
 	}
 
 	private async handleCharacterError({ id }: IShardDirectoryArgument['characterError'], connection: IConnectionShard): Promise<void> {

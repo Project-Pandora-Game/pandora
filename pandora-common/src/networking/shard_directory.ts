@@ -39,6 +39,14 @@ export const ShardDirectorySchema = {
 		}),
 		response: null,
 	},
+	characterAutomod: {
+		request: z.object({
+			id: CharacterIdSchema,
+			action: z.enum(['kick']),
+			reason: z.enum(['ghostManagement']),
+		}),
+		response: null,
+	},
 	characterError: {
 		request: z.object({
 			id: CharacterIdSchema,

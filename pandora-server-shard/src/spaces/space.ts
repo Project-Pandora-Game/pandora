@@ -1,48 +1,48 @@
+import _, { isEqual, omit } from 'lodash';
 import {
-	CharacterId,
-	IChatMessage,
-	Logger,
-	SpaceClientInfo,
-	SpaceId,
-	AssertNever,
-	IChatMessageDirectoryAction,
-	GameStateUpdate,
-	ServerRoom,
-	IShardClient,
-	IClientMessage,
-	IChatSegment,
-	ChatCharacterStatus,
-	IChatMessageActionTargetCharacter,
+	AccountId,
 	ActionHandlerMessage,
 	ActionSpaceContext,
-	ResolveBackground,
-	AccountId,
-	AssetManager,
-	AssetFrameworkGlobalStateContainer,
-	AssetFrameworkGlobalState,
-	AssetFrameworkRoomState,
 	AppearanceBundle,
-	AssetFrameworkCharacterState,
+	AssertNever,
 	AssertNotNullable,
-	RoomInventory,
+	AssetFrameworkCharacterState,
+	AssetFrameworkGlobalState,
+	AssetFrameworkGlobalStateContainer,
+	AssetFrameworkRoomState,
+	AssetManager,
+	CharacterId,
 	CharacterRoomPosition,
-	RoomInventoryBundle,
-	SpaceDirectoryConfig,
-	SpaceLoadData,
+	ChatCharacterStatus,
 	CloneDeepMutable,
-	IsValidRoomPosition,
+	GameStateUpdate,
 	GenerateInitialRoomPosition,
+	IChatMessage,
+	IChatMessageActionTargetCharacter,
+	IChatMessageDirectoryAction,
+	IChatSegment,
+	IClientMessage,
+	IShardClient,
+	IsValidRoomPosition,
+	Logger,
+	ResolveBackground,
+	RoomInventory,
+	RoomInventoryBundle,
+	ServerRoom,
+	SpaceClientInfo,
+	SpaceDirectoryConfig,
+	SpaceId,
+	SpaceLoadData,
 	type IChatMessageAction,
 } from 'pandora-common';
-import type { Character } from '../character/character';
-import _, { isEqual, omit } from 'lodash';
 import { assetManager } from '../assets/assetManager';
+import type { Character } from '../character/character';
 
 const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 20; // 20 minutes
 const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
 
 /** Time (in ms) as interval for space's periodic actions (like saving of modified data or message cleanup) happen */
-export const SPACE_TICK_INTERVAL = 120_000;
+export const SPACE_TICK_INTERVAL = 60_000;
 
 export abstract class Space extends ServerRoom<IShardClient> {
 
@@ -186,14 +186,29 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		};
 	}
 
+	public isOwner(character: Character): boolean {
+		return this.owners.includes(character.accountId);
+	}
+
 	public isAdmin(character: Character): boolean {
-		if (this.owners.includes(character.accountId))
+		if (this.isOwner(character))
 			return true;
 
 		if (this.config.admin.includes(character.accountId))
 			return true;
 
 		if (this.config.development?.autoAdmin && character.isAuthorized('developer'))
+			return true;
+
+		return false;
+	}
+
+	/** Checks if the specified character is on the allowlist */
+	public isAllowed(character: Character): boolean {
+		if (this.isAdmin(character))
+			return true;
+
+		if (this.config.allow.includes(character.accountId))
 			return true;
 
 		return false;

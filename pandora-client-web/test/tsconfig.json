@@ -7,12 +7,17 @@
 		],
 		"types": [
 			"@types/jest",
+			"@testing-library/jest-dom",
 			"offscreencanvas"
 		],
 		"jsx": "react"
 	},
 	"include": [
 		"../src/**/*.d.ts",
-		"./**/*"
+		"../src/**/*.ts",
+		"./**/*.ts"
+	],
+	"exclude": [
+		"./setup.ts"
 	]
 }

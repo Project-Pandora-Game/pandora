@@ -11,6 +11,7 @@ const TEST_SPACE_DEFAULTS: Readonly<SpaceDirectoryConfig> = {
 	public: true,
 	features: [],
 	background: CloneDeepMutable(DEFAULT_BACKGROUND),
+	ghostManagement: null,
 };
 
 export const TEST_SPACE: Readonly<SpaceDirectoryConfig> = {

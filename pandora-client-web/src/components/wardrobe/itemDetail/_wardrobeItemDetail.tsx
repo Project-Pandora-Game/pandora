@@ -1,7 +1,7 @@
 import {
 	ItemPath,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect } from 'react';
+import React, { ReactElement, useCallback, useEffect, useRef } from 'react';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { Column, Row } from '../../common/container/container';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
@@ -21,6 +21,7 @@ export function WardrobeItemConfigMenu({
 }): ReactElement {
 	const { targetSelector, target, focuser } = useWardrobeContext();
 	const wornItem = useWardrobeTargetItem(target, item);
+	const wornItemRef = useRef(wornItem);
 
 	const containerPath = SplitContainerPath(item.container);
 	const containerItem = useWardrobeTargetItem(target, containerPath?.itemPath);
@@ -33,10 +34,15 @@ export function WardrobeItemConfigMenu({
 	}, [focuser]);
 
 	useEffect(() => {
-		if (!wornItem) {
-			close();
-		}
-	}, [wornItem, close]);
+		if (wornItemRef.current === wornItem)
+			return;
+
+		wornItemRef.current = wornItem;
+		if (wornItem)
+			return;
+
+		focuser.previous();
+	}, [wornItem, focuser]);
 
 	if (!wornItem) {
 		return (

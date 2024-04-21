@@ -96,16 +96,24 @@ export const GitHubVerifier = new class GitHubVerifier implements Service {
 	}
 
 	public async getGitHubRole({ id, login }: Pick<GitHubInfo, 'id' | 'login'>): Promise<Pick<GitHubInfo, 'role' | 'teams'>> {
-		const org = await octokitOrg.orgs.getMembershipForUser({ org: GITHUB_ORG_NAME, username: login });
-		if (org.status === 200 && org.data.state === 'active' && org.data.user?.id === id) {
-			return {
-				role: org.data.role === 'admin' ? 'admin' : 'member',
-				teams: await this.getTeamMemberships(login),
-			};
+		try {
+			const org = await octokitOrg.orgs.getMembershipForUser({ org: GITHUB_ORG_NAME, username: login });
+			if (org.status === 200 && org.data.state === 'active' && org.data.user?.id === id) {
+				return {
+					role: org.data.role === 'admin' ? 'admin' : 'member',
+					teams: await this.getTeamMemberships(login),
+				};
+			}
+		} catch (e) {
+			logger.info('Failed to get GitHub member', e);
 		}
-		const outside = await octokitOrg.orgs.listOutsideCollaborators({ org: GITHUB_ORG_NAME });
-		if (outside.status === 200 && outside.data.some((user) => user.id === id && user.login === login)) {
-			return { role: 'collaborator' };
+		try {
+			const outside = await octokitOrg.orgs.listOutsideCollaborators({ org: GITHUB_ORG_NAME });
+			if (outside.status === 200 && outside.data.some((user) => user.id === id && user.login === login)) {
+				return { role: 'collaborator' };
+			}
+		} catch (e) {
+			logger.info('Failed to get GitHub outside collaborator', e);
 		}
 		return { role: 'none' };
 	}

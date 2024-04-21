@@ -37,7 +37,7 @@ import { IRoomSceneMode, RoomProjectionResolver, useCharacterDisplayFilters, use
 import { useRoomCharacterOffsets } from './roomCharacter';
 import { RoomDeviceRenderContext } from './roomDeviceContext';
 import { EvaluateCondition } from '../utility';
-import { useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator';
+import { useAppearanceConditionEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator';
 import { MovementHelperGraphics } from '../movementHelper';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
@@ -606,7 +606,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 
 	const devicePivot = item.asset.definition.pivot;
 
-	const evaluator = useStandaloneConditionEvaluator(item.assetManager);
+	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	const effectiveCharacterPosition = useMemo<IRoomDeviceGraphicsCharacterPosition>(() => {
 		return layer.characterPositionOverrides

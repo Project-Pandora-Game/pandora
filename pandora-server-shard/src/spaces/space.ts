@@ -35,9 +35,9 @@ import {
 	SpaceLoadData,
 	type IChatMessageAction,
 } from 'pandora-common';
+import { AssetFrameworkGlobalStateManipulator } from 'pandora-common/dist/assets/manipulators/globalStateManipulator';
 import { assetManager } from '../assets/assetManager';
 import type { Character } from '../character/character';
-import { AssetFrameworkGlobalStateManipulator } from 'pandora-common/dist/assets/manipulators/globalStateManipulator';
 
 const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 20; // 20 minutes
 const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
@@ -317,23 +317,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 			this.characters.delete(character);
 			newState = newState.withCharacter(character.id, null);
-			const roomManipulator = new AssetFrameworkGlobalStateManipulator(newState).getManipulatorFor({ type: 'roomInventory' });
-			roomManipulator.modifyItems((item) => {
-				if (!item.isType('roomDevice')) {
-					return null;
-				}
-				let newItem = item;
-				for (const [slot, characterId] of newItem.slotOccupancy) {
-					if (characterId === character.id) {
-						newItem = newItem.changeSlotOccupancy(slot, null) ?? newItem;
-					}
-				}
-				if (item === newItem) {
-					return null;
-				}
-				return item;
-			});
-			newState = roomManipulator.currentState;
+			newState = ClearOccupiedSlotsByCharacter(newState, character.id);
 
 			// Update the target character
 			character.setSpace(null, characterAppearance);
@@ -571,4 +555,24 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 function IsTargeted(message: IClientMessage): message is { type: 'chat' | 'ooc'; parts: IChatSegment[]; to: CharacterId; } {
 	return (message.type === 'chat' || message.type === 'ooc') && message.to !== undefined;
+}
+
+function ClearOccupiedSlotsByCharacter(globalState: AssetFrameworkGlobalState, characterId: CharacterId): AssetFrameworkGlobalState {
+	const roomManipulator = new AssetFrameworkGlobalStateManipulator(globalState).getManipulatorFor({ type: 'roomInventory' });
+	roomManipulator.modifyItems((item) => {
+		if (!item.isType('roomDevice')) {
+			return null;
+		}
+		const originalItem = item;
+		for (const [slot, slotCharacterId] of item.slotOccupancy) {
+			if (slotCharacterId === characterId) {
+				item = item.changeSlotOccupancy(slot, null) ?? item;
+			}
+		}
+		if (item === originalItem) {
+			return null;
+		}
+		return item;
+	});
+	return roomManipulator.currentState;
 }

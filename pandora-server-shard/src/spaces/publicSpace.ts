@@ -1,24 +1,26 @@
+import { diffString } from 'json-diff';
+import _, { omit, pick } from 'lodash';
 import {
 	AccountId,
+	AssertNever,
 	AsyncSynchronized,
-	SPACE_SHARD_UPDATEABLE_PROPERTIES,
-	SpaceDataSchema,
+	GameStateUpdate,
+	GenerateInitialRoomPosition,
 	GetLogger,
+	IShardSpaceDefinition,
+	IsValidRoomPosition,
+	ResolveBackground,
+	SPACE_SHARD_UPDATEABLE_PROPERTIES,
 	SpaceData,
+	SpaceDataSchema,
 	SpaceDataShardUpdate,
 	SpaceDirectoryConfig,
-	GameStateUpdate,
-	IShardSpaceDefinition,
-	ResolveBackground,
 	SpaceId,
-	IsValidRoomPosition,
-	GenerateInitialRoomPosition,
 } from 'pandora-common';
-import { Space } from './space';
 import { assetManager } from '../assets/assetManager';
 import { GetDatabase } from '../database/databaseProvider';
-import _, { omit, pick } from 'lodash';
-import { diffString } from 'json-diff';
+import { DirectoryConnector } from '../networking/socketio_directory_connector';
+import { Space } from './space';
 
 export class PublicSpace extends Space {
 	private readonly data: IShardSpaceDefinition;
@@ -84,6 +86,53 @@ export class PublicSpace extends Space {
 		this.save().catch((err) => {
 			this.logger.error('Periodic save failed:', err);
 		});
+
+		// Automod characters
+		if (this.config.ghostManagement != null) {
+			for (const character of this.characters) {
+				if (character.isOnline)
+					continue;
+
+				let ignore: boolean;
+
+				switch (this.config.ghostManagement.ignore) {
+					case 'allowed':
+						ignore = this.isAllowed(character);
+						break;
+					case 'admin':
+						ignore = this.isAdmin(character);
+						break;
+					case 'owner':
+						ignore = this.isOwner(character);
+						break;
+					case 'none':
+						ignore = false;
+						break;
+					default:
+						AssertNever(this.config.ghostManagement.ignore);
+				}
+
+				if (ignore)
+					continue;
+
+				// Check if the character is in a room device
+				if (!this.config.ghostManagement.affectCharactersInRoomDevice) {
+					const restrictionManager = character.getRestrictionManager();
+
+					if (restrictionManager.getRoomDeviceLink() != null)
+						continue;
+				}
+
+				// Check if the character has been offline for long enough
+				if (Date.now() > (character.lastOnline + (this.config.ghostManagement.timer * 60_000))) {
+					DirectoryConnector.sendMessage('characterAutomod', {
+						id: character.id,
+						action: 'kick',
+						reason: 'ghostManagement',
+					});
+				}
+			}
+		}
 	}
 
 	protected override _onDataModified(data: 'inventory'): void {

@@ -1,8 +1,8 @@
-import { Space } from './space';
-import { Character } from '../character/character';
-import { AccountId, DEFAULT_BACKGROUND, GetLogger, SpaceDirectoryConfig, RoomInventoryBundle } from 'pandora-common';
 import { cloneDeep } from 'lodash';
+import { AccountId, DEFAULT_BACKGROUND, GetLogger, RoomInventoryBundle, SpaceDirectoryConfig } from 'pandora-common';
 import { assetManager } from '../assets/assetManager';
+import { Character } from '../character/character';
+import { Space } from './space';
 
 export class PersonalSpace extends Space {
 	private readonly _character: Character;
@@ -29,6 +29,7 @@ export class PersonalSpace extends Space {
 			// Try to use the first background (if there is some)
 			// otherwise default to the default, solid-color background (important for tests that don't have any assets).
 			background: assetManager.getBackgrounds()[0].id ?? cloneDeep(DEFAULT_BACKGROUND),
+			ghostManagement: null,
 		};
 	}
 

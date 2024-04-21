@@ -14,7 +14,12 @@
 		{
 			"files": ["*.ts", "*.tsx"],
 			"parserOptions": {
-				"project": ["./tsconfig.json", "./test/tsconfig.json", "./tsconfig.webpack.json"],
+				"project": [
+					"./tsconfig.json",
+					"./test/tsconfig.json",
+					"./test/tsconfig.setup.json",
+					"./tsconfig.webpack.json"
+				],
 				"sourceType": "module"
 			},
 			"rules": {

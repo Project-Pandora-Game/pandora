@@ -8,6 +8,7 @@ const CHAT_ACTIONS_DEF = {
 	characterDisconnected: 'SOURCE_CHARACTER disconnected.',
 	characterReconnected: 'SOURCE_CHARACTER reconnected.',
 	characterKicked: 'TARGET_CHARACTER has been kicked by SOURCE_CHARACTER.',
+	characterAutoKicked: `TARGET_CHARACTER left with the help of Pandora's Space Service.`,
 	characterBanned: 'TARGET_CHARACTER has been banned by SOURCE_CHARACTER.',
 
 	spaceUpdatedSingle: `SOURCE_CHARACTER changed the spaces's CHANGE.`,

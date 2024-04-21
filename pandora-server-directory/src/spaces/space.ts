@@ -1,12 +1,12 @@
-import { GetLogger, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceListInfo, SpaceId, SpaceLeaveReason, AssertNever, IChatMessageDirectoryAction, SpaceListExtendedInfo, IClientDirectoryArgument, Assert, AccountId, AsyncSynchronized, CharacterId, ChatActionId, SpaceInvite, SpaceInviteId, SpaceInviteCreate, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, TimeSpanMs, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS } from 'pandora-common';
-import { Character, CharacterInfo } from '../account/character';
-import { Shard } from '../shard/shard';
-import { ConnectionManagerClient } from '../networking/manager_client';
 import { clamp, cloneDeep, pick, uniq } from 'lodash';
-import { ShardManager } from '../shard/shardManager';
-import { GetDatabase } from '../database/databaseProvider';
-import { Account } from '../account/account';
 import { nanoid } from 'nanoid';
+import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IChatMessageDirectoryAction, IClientDirectoryArgument, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, TimeSpanMs, type IShardDirectoryArgument } from 'pandora-common';
+import { Account } from '../account/account';
+import { Character, CharacterInfo } from '../account/character';
+import { GetDatabase } from '../database/databaseProvider';
+import { ConnectionManagerClient } from '../networking/manager_client';
+import { Shard } from '../shard/shard';
+import { ShardManager } from '../shard/shardManager';
 
 export class Space {
 	/** Time when this space was last requested */
@@ -199,6 +199,9 @@ export class Space {
 		if (changes.background) {
 			this.config.background = changes.background;
 		}
+		if (changes.ghostManagement !== undefined) {
+			this.config.ghostManagement = cloneDeep(changes.ghostManagement);
+		}
 
 		// Features and development fields are intentionally ignored
 
@@ -221,6 +224,8 @@ export class Space {
 				changeList.push('allow list');
 			if (changes.background)
 				changeList.push('background');
+			if (changes.ghostManagement !== undefined)
+				changeList.push('offline character management settings');
 
 			this._sendUpdatedMessage(source, ...changeList);
 		}
@@ -338,6 +343,32 @@ export class Space {
 
 				break;
 			}
+			default:
+				AssertNever(action);
+		}
+		if (updated) {
+			ConnectionManagerClient.onSpaceListChange();
+			await this._assignedShard?.update('spaces');
+		}
+	}
+
+	@AsyncSynchronized('object')
+	public async automodAction(target: CharacterId, action: IShardDirectoryArgument['characterAutomod']['action'], _reason: IShardDirectoryArgument['characterAutomod']['reason']): Promise<void> {
+		// Ignore if the space is invalidated
+		if (!this.isValid) {
+			return;
+		}
+		// Find the targetted character
+		const character = Array.from(this.characters).find((c) => c.baseInfo.id === target);
+		if (character == null)
+			return;
+
+		let updated = false;
+		switch (action) {
+			case 'kick':
+				updated = true;
+				await this._removeCharacter(character, 'automodKick', null);
+				break;
 			default:
 				AssertNever(action);
 		}
@@ -687,6 +718,8 @@ export class Space {
 			action = 'characterDisconnected';
 		} else if (reason === 'destroy') {
 			// Do not report space being destroyed, everyone is removed anyway
+		} else if (reason === 'automodKick') {
+			action = 'characterAutoKicked';
 		} else {
 			AssertNever(reason);
 		}

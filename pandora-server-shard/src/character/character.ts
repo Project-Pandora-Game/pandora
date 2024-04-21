@@ -1,57 +1,57 @@
 import {
+	AccountRole,
 	AppearanceActionContext,
+	AppearanceBundle,
+	Assert,
 	AssertNever,
+	AssertNotNullable,
+	AssetFrameworkCharacterState,
+	AssetFrameworkGlobalStateContainer,
 	AssetManager,
+	AssetPreferencesPublic,
+	AsyncSynchronized,
+	CHARACTER_SHARD_UPDATEABLE_PROPERTIES,
+	CharacterDataSchema,
 	CharacterId,
+	CharacterRestrictionsManager,
+	CharacterRoomPosition,
+	CleanupAssetPreferences,
+	CloneDeepMutable,
+	GameLogicCharacterServer,
+	GenerateInitialRoomPosition,
+	GetDefaultAppearanceBundle,
 	GetLogger,
 	ICharacterData,
 	ICharacterDataShardUpdate,
+	ICharacterPrivateData,
 	ICharacterPublicData,
 	ICharacterPublicSettings,
-	IChatMessage,
-	IShardCharacterDefinition,
-	Logger,
-	SpaceId,
-	IsAuthorized,
-	AccountRole,
-	IShardAccountDefinition,
-	CharacterDataSchema,
-	AssetFrameworkGlobalStateContainer,
-	AssetFrameworkCharacterState,
-	AppearanceBundle,
-	Assert,
-	AssertNotNullable,
-	ICharacterPrivateData,
-	CharacterRestrictionsManager,
-	AsyncSynchronized,
-	GetDefaultAppearanceBundle,
-	CharacterRoomPosition,
-	GameLogicCharacterServer,
-	IShardClientChangeEvents,
-	NOT_NARROWING_FALSE,
-	AssetPreferencesPublic,
-	ResolveAssetPreference,
-	KnownObject,
-	CleanupAssetPreferences,
-	CHARACTER_SHARD_UPDATEABLE_PROPERTIES,
-	CloneDeepMutable,
-	ROOM_INVENTORY_BUNDLE_DEFAULT,
 	ICharacterRoomData,
-	RoomBackgroundData,
+	IChatMessage,
+	IShardAccountDefinition,
+	IShardCharacterDefinition,
+	IShardClientChangeEvents,
+	IsAuthorized,
 	IsValidRoomPosition,
-	GenerateInitialRoomPosition,
+	KnownObject,
+	Logger,
+	NOT_NARROWING_FALSE,
+	ROOM_INVENTORY_BUNDLE_DEFAULT,
+	ResolveAssetPreference,
+	RoomBackgroundData,
+	SpaceId,
 } from 'pandora-common';
-import { DirectoryConnector } from '../networking/socketio_directory_connector';
-import type { Space } from '../spaces/space';
-import { SpaceManager } from '../spaces/spaceManager';
+import { assetManager } from '../assets/assetManager';
 import { GetDatabase } from '../database/databaseProvider';
 import { ClientConnection } from '../networking/connection_client';
+import { DirectoryConnector } from '../networking/socketio_directory_connector';
 import { PersonalSpace } from '../spaces/personalSpace';
-import { assetManager } from '../assets/assetManager';
+import type { Space } from '../spaces/space';
+import { SpaceManager } from '../spaces/spaceManager';
 
-import _, { isEqual } from 'lodash';
-import { diffString } from 'json-diff';
 import { Immutable } from 'immer';
+import { diffString } from 'json-diff';
+import _, { isEqual } from 'lodash';
 
 /** Time (in ms) after which manager prunes character without any active connection */
 export const CHARACTER_TIMEOUT = 30_000;
@@ -73,6 +73,7 @@ export class Character {
 	private readonly data: Omit<ICharacterData, ManuallyGeneratedKeys>;
 	public accountData: IShardAccountDefinition;
 	public connectSecret: string | null;
+	public lastOnline: number;
 
 	private readonly _personalSpace: PersonalSpace;
 
@@ -192,6 +193,7 @@ export class Character {
 		this.data = data;
 		this.accountData = account;
 		this.connectSecret = connectSecret;
+		this.lastOnline = Date.now();
 
 		this._personalSpace = new PersonalSpace(this, data.personalRoom?.inventory ?? CloneDeepMutable(ROOM_INVENTORY_BUNDLE_DEFAULT));
 
@@ -271,6 +273,9 @@ export class Character {
 			if (data.connectSecret == null && this._clientTimeout != null) {
 				clearInterval(this._clientTimeout);
 				this._clientTimeout = null;
+			}
+			if (oldOnline || this.isOnline) {
+				this.lastOnline = Date.now();
 			}
 			if (this.isOnline !== oldOnline) {
 				// Clear waiting messages when going offline

@@ -32,7 +32,6 @@ export type GitHubTeam = z.infer<typeof GitHubTeamSchema>;
 const invalidTeams = new Set<string>();
 
 let octokitOrg!: Octokit;
-let octokitApp!: Octokit;
 
 export const GitHubVerifier = new class GitHubVerifier implements Service {
 	private _active = false;
@@ -57,14 +56,14 @@ export const GitHubVerifier = new class GitHubVerifier implements Service {
 			logger.warning('Personal access token is invalid, GitHub OAuth is disabled');
 			return;
 		}
-		octokitApp = new Octokit({
+		const octokitTestClient = new Octokit({
 			authStrategy: createOAuthAppAuth,
 			auth: {
 				clientId: GITHUB_CLIENT_ID,
 				clientSecret: GITHUB_CLIENT_SECRET,
 			},
 		});
-		if (!await GitHubCheckSecret(octokitApp)) {
+		if (!await GitHubCheckSecret(octokitTestClient)) {
 			logger.warning('Client secret is invalid, GitHub OAuth is disabled');
 			return;
 		}

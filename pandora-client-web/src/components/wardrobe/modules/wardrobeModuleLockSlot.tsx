@@ -21,21 +21,12 @@ import { WardrobeActionButton } from '../wardrobeComponents';
 import type { Immutable } from 'immer';
 import { useAssetManager } from '../../../assets/assetManager';
 
-export function WardrobeModuleConfigLockSlot({ item, moduleName, m, setFocus }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement {
-	const { targetSelector } = useWardrobeContext();
+export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement {
+	const { targetSelector, target, focuser } = useWardrobeContext();
 	const onFocus = useCallback((e: React.MouseEvent) => {
 		e.stopPropagation();
-		setFocus({
-			container: [
-				...item.container,
-				{
-					item: item.itemId,
-					module: moduleName,
-				},
-			],
-			itemId: null,
-		});
-	}, [item, moduleName, setFocus]);
+		focuser.focusItemModule(item, moduleName, target);
+	}, [item, target, moduleName, focuser]);
 
 	if (m.lock == null) {
 		return (

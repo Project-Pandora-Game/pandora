@@ -19,11 +19,11 @@ import { useObservable } from '../../../observable';
 import { isEqual } from 'lodash';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
-import { EvalContainerPath, SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import { EvalContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { WardrobeFocus, WardrobeHeldItem } from '../wardrobeTypes';
+import { WardrobeHeldItem } from '../wardrobeTypes';
 import { useWardrobeContext } from '../wardrobeContext';
 import { useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
 import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
@@ -34,16 +34,13 @@ export function InventoryItemView({
 	className,
 	title,
 	filter,
-	focus = { container: [], itemId: null },
-	setFocus,
 }: {
 	className?: string;
 	title: string;
 	filter?: (item: Item) => boolean;
-	focus?: WardrobeFocus;
-	setFocus?: (newFocus: WardrobeFocus) => void;
 }): ReactElement | null {
-	const { target, targetSelector, heldItem } = useWardrobeContext();
+	const { target, targetSelector, heldItem, focuser } = useWardrobeContext();
+	const focus = useObservable(focuser.current);
 	const appearance = useWardrobeTargetItems(target);
 	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(appearance), [appearance]);
 	const navigate = useNavigate();
@@ -68,22 +65,18 @@ export function InventoryItemView({
 	useEffect(() => {
 		// Locks have special GUI on higher level, so be friendly and focus on that when there is a lock
 		if (containerModule?.type === 'lockSlot' && displayedItems.length === 1) {
-			const prev = SplitContainerPath(focus.container)?.itemPath;
-			if (prev) {
-				setFocus?.(prev);
-				return;
-			}
+			focuser.focusPrevious();
 		}
 
 		if (!singleItemContainer)
 			return;
 
 		if (displayedItems.length === 1 && focus.itemId == null) {
-			setFocus?.({ ...focus, itemId: displayedItems[0].id });
-		} else if (displayedItems.length === 0 && focus.itemId != null) {
-			setFocus?.({ ...focus, itemId: null });
+			focuser.focusItemId(displayedItems[0].id);
+		} else if (displayedItems.length === 0) {
+			focuser.focusItemId(null);
 		}
-	}, [focus, setFocus, containerModule, singleItemContainer, displayedItems]);
+	}, [focus, focuser, containerModule, singleItemContainer, displayedItems]);
 
 	return (
 		<div className={ classNames('inventoryView', className) }>
@@ -91,10 +84,7 @@ export function InventoryItemView({
 				{
 					focus.container.length > 0 ? (
 						<>
-							<button className='modeButton' onClick={ () => {
-								const prev = SplitContainerPath(focus.container)?.itemPath;
-								setFocus?.(prev ?? { container: [], itemId: null });
-							} } >
+							<button className='modeButton' onClick={ () => focuser?.previous() } >
 								Close
 							</button>
 							<div className='center-flex'>
@@ -107,11 +97,13 @@ export function InventoryItemView({
 				}
 				<div className='flex-1' />
 				{ target.type === 'room' ?
-					<Button className='slim' onClick={ () =>
-						navigate('/wardrobe') } >
+					<Button className='slim' onClick={ () => {
+						focuser.reset();
+						navigate('/wardrobe');
+					} } >
 						Switch to your wardrobe
 					</Button>
-				: '' }
+					: '' }
 			</div>
 			<Scrollbar color='dark'>
 				<div className='list reverse withDropButtons'>
@@ -137,7 +129,6 @@ export function InventoryItemView({
 								<InventoryItemViewList
 									item={ { container: focus.container, itemId: i.id } }
 									selected={ i.id === focus.itemId }
-									setFocus={ setFocus }
 									singleItemContainer={ singleItemContainer }
 								/>
 							</React.Fragment>
@@ -246,13 +237,12 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 	);
 }
 
-function InventoryItemViewList({ item, selected = false, setFocus, singleItemContainer = false }: {
+function InventoryItemViewList({ item, selected = false, singleItemContainer = false }: {
 	item: ItemPath;
 	selected?: boolean;
-	setFocus?: (newFocus: WardrobeFocus) => void;
 	singleItemContainer?: boolean;
 }): ReactElement {
-	const { targetSelector, target, extraItemActions, heldItem, setHeldItem, scrollToItem, setScrollToItem } = useWardrobeContext();
+	const { targetSelector, target, extraItemActions, heldItem, focuser, setHeldItem, scrollToItem, setScrollToItem } = useWardrobeContext();
 	const wornItem = useWardrobeTargetItem(target, item);
 	const extraActions = useObservable(extraItemActions);
 
@@ -285,10 +275,11 @@ function InventoryItemViewList({ item, selected = false, setFocus, singleItemCon
 		<div ref={ ref } tabIndex={ 0 } className={ classNames('inventoryViewItem', 'listMode', selected && 'selected', singleItemContainer ? 'static' : 'allowed') } onClick={ () => {
 			if (singleItemContainer)
 				return;
-			setFocus?.({
+
+			focuser.focus({
 				container: item.container,
 				itemId: selected ? null : item.itemId,
-			});
+			}, target);
 		} }>
 			{
 				ribbonColor ?

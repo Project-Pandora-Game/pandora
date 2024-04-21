@@ -3,26 +3,17 @@ import React, { ReactElement } from 'react';
 import { Row } from '../../common/container/container';
 import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
 import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
+import { useWardrobeContext } from '../wardrobeContext';
 
-export function WardrobeModuleConfigStorage({ item, moduleName, m, setFocus }: WardrobeModuleProps<ItemModuleStorage>): ReactElement {
+export function WardrobeModuleConfigStorage({ item, moduleName, m }: WardrobeModuleProps<ItemModuleStorage>): ReactElement {
+	const { target, focuser } = useWardrobeContext();
+	const onClick = React.useCallback((ev: React.MouseEvent) => {
+		ev.stopPropagation();
+		focuser.focusItemModule(item, moduleName, target);
+	}, [item, moduleName, focuser, target]);
 	return (
 		<Row padding='medium' wrap>
-			<button
-				className={ classNames('wardrobeActionButton', 'allowed') }
-				onClick={ (ev) => {
-					ev.stopPropagation();
-					setFocus({
-						container: [
-							...item.container,
-							{
-								item: item.itemId,
-								module: moduleName,
-							},
-						],
-						itemId: null,
-					});
-				} }
-			>
+			<button className={ classNames('wardrobeActionButton', 'allowed') } onClick={ onClick }>
 				Open
 			</button>
 			<Row padding='medium' alignY='center'>

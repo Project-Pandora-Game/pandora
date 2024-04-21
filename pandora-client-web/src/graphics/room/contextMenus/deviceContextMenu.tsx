@@ -1,6 +1,7 @@
+import React, { useMemo, useState, ReactElement, useEffect, useCallback } from 'react';
+import type { z } from 'zod';
 import { nanoid } from 'nanoid';
 import { ItemRoomDevice, AppearanceAction, ItemId, ICharacterRoomData } from 'pandora-common';
-import React, { useMemo, useState, ReactElement, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import { Character, ICharacter, useCharacterData } from '../../../character/character';
 import { ChildrenProps } from '../../../common/reactTypes';
@@ -19,6 +20,7 @@ import { ActionWarningContent } from '../../../components/wardrobe/wardrobeCompo
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 import { omit } from 'lodash';
 import { useIsRoomConstructionModeEnabled } from '../roomDevice';
+import type { WardrobeDeviceLocationStateSchema } from '../../../components/wardrobe/wardrobeItems';
 
 function StoreDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;
@@ -279,7 +281,7 @@ function DeviceContextMenuCurrent({ device, position, setRoomSceneMode, onClose 
 			<WardrobeContextProvider target={ WARDROBE_TARGET_ROOM } player={ player }>
 				<button onClick={ () => {
 					onCloseActual();
-					navigate('/wardrobe/room-inventory', { state: { deviceId: device.id } });
+					navigate('/wardrobe/room-inventory', { state: { deviceId: device.id } satisfies z.infer<typeof WardrobeDeviceLocationStateSchema> });
 				} }>
 					{ device.asset.definition.name }
 				</button>

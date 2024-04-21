@@ -96,6 +96,10 @@ export const SpaceGhostManagementConfigSchema = z.object({
 	 * This timer might reset itself seemingly sporadically.
 	 */
 	timer: z.number().nonnegative(),
+	/**
+	 * Whether the mechanism should affect characters that are in room devices or not.
+	 */
+	affectCharactersInRoomDevice: z.boolean().default(false),
 });
 
 export type SpaceGhostManagementConfig = z.infer<typeof SpaceGhostManagementConfigSchema>;

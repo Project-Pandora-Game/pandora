@@ -412,7 +412,11 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 										checked={ currentConfig.ghostManagement != null }
 										onChange={ (event) => {
 											setModifiedData({
-												ghostManagement: event.target.checked ? { ignore: 'admin', timer: 2 } : null,
+												ghostManagement: event.target.checked ? {
+													ignore: 'admin',
+													timer: 2,
+													affectCharactersInRoomDevice: false,
+												} : null,
 											});
 										} }
 										readOnly={ !canEdit }
@@ -448,6 +452,8 @@ function GhostManagement({ config, setConfig, canEdit }: {
 	setConfig: (newConfig: SpaceGhostManagementConfig) => void;
 	canEdit: boolean;
 }): ReactElement {
+	const idPrefix = useId();
+
 	return (
 		<>
 			<Column>
@@ -483,6 +489,21 @@ function GhostManagement({ config, setConfig, canEdit }: {
 					allowed: 'Owner, Admin, or on the Allowlist',
 				} }
 			/>
+			<Row>
+				<input
+					id={ `${idPrefix}-ghostmanagement-room-devices` }
+					type='checkbox'
+					checked={ config.affectCharactersInRoomDevice }
+					onChange={ (event) => {
+						setConfig({
+							...config,
+							affectCharactersInRoomDevice: event.target.checked,
+						});
+					} }
+					readOnly={ !canEdit }
+				/>
+				<label htmlFor={ `${idPrefix}-ghostmanagement-room-devices` }>Also affect characters in the slots of room-level items</label>
+			</Row>
 		</>
 	);
 }

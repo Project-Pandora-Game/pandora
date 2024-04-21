@@ -115,6 +115,14 @@ export class PublicSpace extends Space {
 				if (ignore)
 					continue;
 
+				// Check if the character is in a room device
+				if (!this.config.ghostManagement.affectCharactersInRoomDevice) {
+					const restrictionManager = character.getRestrictionManager();
+
+					if (restrictionManager.getRoomDeviceLink() != null)
+						continue;
+				}
+
 				// Check if the character has been offline for long enough
 				if (Date.now() > (character.lastOnline + (this.config.ghostManagement.timer * 60_000))) {
 					DirectoryConnector.sendMessage('characterAutomod', {

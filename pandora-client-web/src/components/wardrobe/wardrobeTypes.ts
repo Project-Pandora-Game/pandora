@@ -144,6 +144,25 @@ export class WardrobeFocuser {
 		}, target);
 	}
 
+	public focusPrevious(): void {
+		if (this._disabled != null)
+			throw new Error(this._disabled);
+
+		if (this._stack.length === 0) {
+			return;
+		}
+
+		const last = this._stack[this._stack.length - 1];
+		this._stack.push({
+			container: this._current.value.container,
+			itemId: this._current.value.itemId,
+			inRoom: this._inRoom.value,
+		});
+
+		this._current.value = omit(last, 'inRoom');
+		this._inRoom.value = last.inRoom;
+	}
+
 	public disable(message: string): () => void {
 		const old = this._disabled;
 		this._disabled = message;

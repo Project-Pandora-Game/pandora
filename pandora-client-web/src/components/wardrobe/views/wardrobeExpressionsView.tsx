@@ -1,22 +1,20 @@
 import {
-	Assert,
 	AssetFrameworkCharacterState,
 } from 'pandora-common';
-import React, { ReactElement, useCallback } from 'react';
+import React, { ReactElement, useEffect } from 'react';
 import { ICharacter, useCharacterAppearanceItems } from '../../../character/character';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { Column } from '../../common/container/container';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
+import { useWardrobeContext } from '../wardrobeContext';
 
 export function WardrobeExpressionGui({ characterState }: {
 	character: ICharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const appearance = useCharacterAppearanceItems(characterState);
-
-	const setFocus = useCallback(() => {
-		Assert(false, 'Expressions cannot focus container!');
-	}, []);
+	const { focuser } = useWardrobeContext();
+	useEffect(() => focuser.disable('Expressions cannot focus container!'), [focuser]);
 
 	return (
 		<div className='inventoryView'>
@@ -32,7 +30,6 @@ export function WardrobeExpressionGui({ characterState }: {
 											item={ { container: [], itemId: item.id } }
 											moduleName={ moduleName }
 											m={ m }
-											setFocus={ setFocus }
 										/>
 									</FieldsetToggle>
 								))
@@ -42,4 +39,3 @@ export function WardrobeExpressionGui({ characterState }: {
 		</div>
 	);
 }
-

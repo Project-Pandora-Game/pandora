@@ -16,9 +16,10 @@ import { Column, Row } from '../../common/container/container';
 import { Select } from '../../common/select/select';
 import { Immutable } from 'immer';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
-import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
+import { WardrobeContextSelectRoomInventoryProvider, useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
 import { WardrobeActionButton } from '../wardrobeComponents';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
+import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
 
 export function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
 	roomDevice: Item<'roomDevice'>;
@@ -247,31 +248,50 @@ export function WardrobeRoomDeviceWearable({ roomDeviceWearable }: {
 	roomDeviceWearable: Item<'roomDeviceWearablePart'>;
 	item: ItemPath;
 }): ReactElement | null {
-	let contents: ReactNode;
+	const roomDeviceLink = roomDeviceWearable.roomDeviceLink;
+	const { globalState } = useWardrobeContext();
+	const roomDevice = useMemo(() => (roomDeviceLink != null
+		? globalState.getItems({ type: 'roomInventory' })?.find((it) => it.id === roomDeviceLink.device)
+		: undefined
+	), [globalState, roomDeviceLink]);
 
-	if (roomDeviceWearable.roomDeviceLink != null) {
-		contents = (
-			<WardrobeActionButton action={ {
-				type: 'roomDeviceLeave',
-				target: { type: 'roomInventory' },
-				item: {
-					container: [],
-					itemId: roomDeviceWearable.roomDeviceLink.device,
-				},
-				slot: roomDeviceWearable.roomDeviceLink.slot,
-			} }>
-				Exit the device
-			</WardrobeActionButton>
+	if (roomDeviceLink == null || roomDevice == null) {
+		return (
+			<FieldsetToggle legend='Slots'>
+				<Column padding='medium'>
+					[ERROR]
+				</Column>
+			</FieldsetToggle>
 		);
-	} else {
-		contents = '[ERROR]';
 	}
 
 	return (
-		<FieldsetToggle legend='Slots'>
-			<Column padding='medium'>
-				{ contents }
-			</Column>
-		</FieldsetToggle>
+		<>
+			<FieldsetToggle legend='Slots'>
+				<Column padding='medium'>
+					<WardrobeActionButton action={ {
+						type: 'roomDeviceLeave',
+						target: { type: 'roomInventory' },
+						item: {
+							container: [],
+							itemId: roomDeviceLink.device,
+						},
+						slot: roomDeviceLink.slot,
+					} }>
+						Exit the device
+					</WardrobeActionButton>
+				</Column>
+			</FieldsetToggle>
+			<WardrobeContextSelectRoomInventoryProvider>
+				{
+					Array.from(roomDevice.getModules().entries())
+						.map(([moduleName, m]) => (
+							<FieldsetToggle legend={ `Device module: ${m.config.name}` } key={ moduleName }>
+								<WardrobeModuleConfig item={ { container: [], itemId: roomDeviceLink.device } } moduleName={ moduleName } m={ m } />
+							</FieldsetToggle>
+						))
+				}
+			</WardrobeContextSelectRoomInventoryProvider>
+		</>
 	);
 }

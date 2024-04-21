@@ -8,18 +8,19 @@ import {
 	AssetFrameworkGlobalState,
 	EMPTY_ARRAY,
 	GetLogger,
+	ItemId,
 	Nullable,
 	ActionTargetSelector,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
-import { Observable } from '../../observable';
+import { Observable, useObservable } from '../../observable';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { useActionSpaceContext, useSpaceCharacters, useGameState, useGlobalState } from '../gameContext/gameStateContextProvider';
 import type { PlayerCharacter } from '../../character/player';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { useAccountSettings } from '../gameContext/directoryConnectorContextProvider';
-import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocus, WardrobeHeldItem, WardrobeTarget } from './wardrobeTypes';
+import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocuser, WardrobeHeldItem, WardrobeTarget } from './wardrobeTypes';
 import { useAsyncEvent } from '../../common/useEvent';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast';
@@ -28,7 +29,7 @@ import { Column } from '../common/container/container';
 import { useConfirmDialog } from '../dialog/dialog';
 import { WardrobeCheckResultForConfirmationWarnings } from './wardrobeUtils';
 import { ActionWarningContent } from './wardrobeComponents';
-import { Immutable, freeze } from 'immer';
+import { freeze } from 'immer';
 
 export const wardrobeContext = createContext<WardrobeContext | null>(null);
 
@@ -43,11 +44,13 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 	const shardConnector = useShardConnector();
 	const characters = useSpaceCharacters();
 
-	const focus = useMemo(() => new Observable<Immutable<WardrobeFocus>>({ container: [], itemId: null }), []);
+	const focuser = useMemo(() => new WardrobeFocuser(), []);
+	const actualTarget = useObservable(focuser.inRoom) ? WARDROBE_TARGET_ROOM : target;
 	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
 	const actionPreviewState = useMemo(() => new Observable<AssetFrameworkGlobalState | null>(null), []);
 
 	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
+	const [scrollToItem, setScrollToItem] = useState<ItemId | null>(null);
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
 		player: player.gameLogicCharacter,
@@ -64,18 +67,18 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 	}), [player, globalStateContainer, spaceContext, characters]);
 
 	const targetSelector = useMemo((): ActionTargetSelector => {
-		if (target.type === 'character') {
+		if (actualTarget.type === 'character') {
 			return {
 				type: 'character',
-				characterId: target.id,
+				characterId: actualTarget.id,
 			};
-		} else if (target.type === 'room') {
+		} else if (actualTarget.type === 'room') {
 			return {
 				type: 'roomInventory',
 			};
 		}
-		AssertNever(target);
-	}, [target]);
+		AssertNever(actualTarget);
+	}, [actualTarget]);
 
 	const globalState = useGlobalState(gameState);
 
@@ -90,21 +93,23 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 	}, [heldItem, globalState]);
 
 	const context = useMemo<WardrobeContext>(() => ({
-		target,
+		target: actualTarget,
 		targetSelector,
 		player,
 		globalState,
 		assetList,
 		heldItem,
 		setHeldItem,
-		focus,
+		scrollToItem,
+		setScrollToItem,
+		focuser,
 		extraItemActions,
 		actions,
 		execute: (action) => shardConnector?.awaitResponse('appearanceAction', action),
 		actionPreviewState,
 		showExtraActionButtons: settings.wardrobeExtraActionButtons,
 		showHoverPreview: settings.wardrobeHoverPreview,
-	}), [target, targetSelector, player, globalState, assetList, heldItem, focus, extraItemActions, actions, shardConnector, actionPreviewState, settings]);
+	}), [actualTarget, targetSelector, player, globalState, assetList, heldItem, scrollToItem, focuser, extraItemActions, actions, actionPreviewState, settings.wardrobeExtraActionButtons, settings.wardrobeHoverPreview, shardConnector]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -211,7 +216,7 @@ export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, re
 					if (confirmResult) {
 						execute(action);
 					}
-				}).catch(() => {/* NOOP */});
+				}).catch(() => { /* NOOP */ });
 			} else {
 				execute(action);
 			}
@@ -219,4 +224,21 @@ export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, re
 		}, [execute, confirm, player, spaceContext, action, result]),
 		processing,
 	] as const;
+}
+
+export function WardrobeContextSelectRoomInventoryProvider({ children }: { children: ReactNode; }): ReactElement {
+	const ctx = useWardrobeContext();
+	const value = useMemo<WardrobeContext>(() => ({
+		...ctx,
+		target: WARDROBE_TARGET_ROOM,
+		targetSelector: {
+			type: 'roomInventory',
+		},
+	}), [ctx]);
+
+	return (
+		<wardrobeContext.Provider value={ value }>
+			{ children }
+		</wardrobeContext.Provider>
+	);
 }

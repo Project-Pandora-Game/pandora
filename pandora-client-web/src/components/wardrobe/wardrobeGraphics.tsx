@@ -183,8 +183,8 @@ export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }
 	info: SpaceClientInfo;
 	isPreview?: boolean;
 }): ReactElement {
-	const { focus } = useWardrobeContext();
-	const currentFocus = useObservable(focus);
+	const { focuser } = useWardrobeContext();
+	const currentFocus = useObservable(focuser.current);
 
 	const overlay = (
 		<Row gap='medium' padding='medium' alignX='end' className='overlay pointer-events-disable'>

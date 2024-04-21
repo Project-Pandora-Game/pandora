@@ -6,7 +6,6 @@ import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { Column, Row } from '../../common/container/container';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
 import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
-import { WardrobeFocus } from '../wardrobeTypes';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import { useWardrobeContext } from '../wardrobeContext';
 import { useWardrobeTargetItem } from '../wardrobeUtils';
@@ -17,12 +16,10 @@ import { WardrobeRoomDeviceDeployment, WardrobeRoomDeviceSlots, WardrobeRoomDevi
 
 export function WardrobeItemConfigMenu({
 	item,
-	setFocus,
 }: {
 	item: ItemPath;
-	setFocus: (newFocus: WardrobeFocus) => void;
 }): ReactElement {
-	const { targetSelector, target } = useWardrobeContext();
+	const { targetSelector, target, focuser } = useWardrobeContext();
 	const wornItem = useWardrobeTargetItem(target, item);
 
 	const containerPath = SplitContainerPath(item.container);
@@ -32,11 +29,8 @@ export function WardrobeItemConfigMenu({
 	const isRoomInventory = target.type === 'room' && item.container.length === 0;
 
 	const close = useCallback(() => {
-		setFocus({
-			container: item.container,
-			itemId: null,
-		});
-	}, [item, setFocus]);
+		focuser.previous();
+	}, [focuser]);
 
 	useEffect(() => {
 		if (!wornItem) {
@@ -138,7 +132,7 @@ export function WardrobeItemConfigMenu({
 					Array.from(wornItem.getModules().entries())
 						.map(([moduleName, m]) => (
 							<FieldsetToggle legend={ `Module: ${m.config.name}` } key={ moduleName }>
-								<WardrobeModuleConfig item={ item } moduleName={ moduleName } m={ m } setFocus={ setFocus } />
+								<WardrobeModuleConfig item={ item } moduleName={ moduleName } m={ m } />
 							</FieldsetToggle>
 						))
 				}

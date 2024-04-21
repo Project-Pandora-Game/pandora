@@ -1,9 +1,11 @@
 import {
 	ActionSpaceContext,
 	AppearanceActionContext,
+	Assert,
 	AssetFrameworkGlobalState,
 	DoAppearanceAction,
 	EMPTY_ARRAY,
+	ItemId,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
@@ -14,7 +16,7 @@ import { InventoryAssetView } from '../../../components/wardrobe/views/wardrobeA
 import { InventoryItemView } from '../../../components/wardrobe/views/wardrobeItemView';
 import { useWardrobeContext, wardrobeContext } from '../../../components/wardrobe/wardrobeContext';
 import { useWardrobeItems } from '../../../components/wardrobe/wardrobeItems';
-import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocus, WardrobeHeldItem } from '../../../components/wardrobe/wardrobeTypes';
+import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocuser, WardrobeHeldItem } from '../../../components/wardrobe/wardrobeTypes';
 import { WardrobeFocusesItem } from '../../../components/wardrobe/wardrobeUtils';
 import { WardrobeItemConfigMenu } from '../../../components/wardrobe/itemDetail/_wardrobeItemDetail';
 import { Observable, useObservable } from '../../../observable';
@@ -45,10 +47,13 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	const character = editor.character;
 	const assetList = assetManager.assetList;
 
-	const focus = useMemo(() => new Observable<Immutable<WardrobeFocus>>({ container: [], itemId: null }), []);
+	const focuser = useMemo(() => new WardrobeFocuser(), []);
+	const focusedInRoom = useObservable(focuser.inRoom);
+	Assert(!focusedInRoom, 'EditorWardrobeContextProvider does not support in-room focus');
 	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
 	const actionPreviewState = useMemo(() => new Observable<AssetFrameworkGlobalState | null>(null), []);
 	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
+	const [scrollToItem, setScrollToItem] = useState<ItemId | null>(null);
 
 	const actions = useMemo<AppearanceActionContext>(() => ({
 		player: character.gameLogicCharacter,
@@ -83,7 +88,9 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		assetList,
 		heldItem,
 		setHeldItem,
-		focus,
+		scrollToItem,
+		setScrollToItem,
+		focuser,
 		extraItemActions,
 		actions,
 		actionPreviewState,
@@ -107,7 +114,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		},
 		showExtraActionButtons: true,
 		showHoverPreview: true,
-	}), [character, globalState, assetList, heldItem, focus, extraItemActions, actions, actionPreviewState, assetManager, editor]);
+	}), [character, globalState, assetList, heldItem, scrollToItem, focuser, extraItemActions, actions, actionPreviewState, assetManager, editor]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -117,8 +124,8 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 }
 
 export function EditorWardrobeUI(): ReactElement {
-	const { assetList, focus } = useWardrobeContext();
-	const currentFocus = useObservable(focus);
+	const { assetList, focuser } = useWardrobeContext();
+	const currentFocus = useObservable(focuser.current);
 
 	const character = useEditor().character;
 	const characterState = useEditorCharacterState();
@@ -151,11 +158,7 @@ export function EditorWardrobeUI(): ReactElement {
 						} }
 					/>
 				</div>
-				<InventoryItemView
-					title='Currently worn items'
-					focus={ currentFocus }
-					setFocus={ (newFocus) => focus.value = newFocus }
-				/>
+				<InventoryItemView title='Currently worn items' />
 				{
 					WardrobeFocusesItem(currentFocus) && (
 						<>
@@ -164,7 +167,6 @@ export function EditorWardrobeUI(): ReactElement {
 								<WardrobeItemConfigMenu
 									key={ currentFocus.itemId }
 									item={ currentFocus }
-									setFocus={ (newFocus) => focus.value = newFocus }
 								/>
 							</div>
 						</>

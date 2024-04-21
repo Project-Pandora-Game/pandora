@@ -82,6 +82,28 @@ export const SpaceDevelopmentConfigSchema = z.object({
 });
 export type SpaceDevelopmentConfig = z.infer<typeof SpaceDevelopmentConfigSchema>;
 
+export const SpaceGhostManagementConfigSchema = z.object({
+	/**
+	 * Which characters to exclude from automatic ghost management.
+	 * - `none` = applies to all characters
+	 * - `owner` = Owners are excluded
+	 * - `admin` = Owners and admins are excluded
+	 * - `allowed` = Owners, admins, and people on allowlist are excluded
+	 */
+	ignore: z.enum(['none', 'owner', 'admin', 'allowed']),
+	/**
+	 * Time to kick ghost characters in minutes.
+	 * This timer might reset itself seemingly sporadically.
+	 */
+	timer: z.number().nonnegative(),
+	/**
+	 * Whether the mechanism should affect characters that are in room devices or not.
+	 */
+	affectCharactersInRoomDevice: z.boolean().default(false),
+});
+
+export type SpaceGhostManagementConfig = z.infer<typeof SpaceGhostManagementConfigSchema>;
+
 export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 	/** The requested features */
 	features: z.array(SpaceFeatureSchema).max(SpaceFeatureSchema.options.length),
@@ -97,6 +119,8 @@ export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 	allow: AccountIdSchema.array().default([]),
 	/** The ID of the background or custom data */
 	background: z.union([z.string(), RoomBackgroundDataSchema.extend({ image: HexColorStringSchema.catch('#1099bb') })]).catch(CloneDeepMutable(DEFAULT_BACKGROUND)),
+	/** Automatic space ghost management settings. `null` if disabled completely. */
+	ghostManagement: SpaceGhostManagementConfigSchema.nullable().default(null),
 });
 export type SpaceDirectoryConfig = z.infer<typeof SpaceDirectoryConfigSchema>;
 
@@ -164,4 +188,4 @@ export const SpaceDirectoryDataSchema = SpaceDataSchema.pick(ArrayToRecordKeys(S
 export type SpaceDirectoryData = z.infer<typeof SpaceDirectoryDataSchema>;
 
 /** Reason for why a character left (was removed from) a space */
-export type SpaceLeaveReason = 'leave' | 'disconnect' | 'destroy' | 'error' | 'kick' | 'ban';
+export type SpaceLeaveReason = 'leave' | 'disconnect' | 'destroy' | 'error' | 'kick' | 'ban' | 'automodKick';

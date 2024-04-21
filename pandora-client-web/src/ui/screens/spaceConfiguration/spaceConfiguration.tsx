@@ -1,59 +1,62 @@
+import { Immutable } from 'immer';
 import { noop, uniq } from 'lodash';
 import {
-	SpaceFeature,
-	EMPTY,
-	GetLogger,
-	SpaceDirectoryConfig,
-	IDirectoryShardInfo,
-	SpaceBaseInfoSchema,
-	ZodMatcher,
-	DEFAULT_BACKGROUND,
-	IsObject,
 	AccountId,
-	AssertNotNullable,
-	SpaceId,
-	RoomBackgroundTagDefinition,
-	AssetManager,
-	RoomBackgroundInfo,
-	LIMIT_SPACE_DESCRIPTION_LENGTH,
-	LIMIT_SPACE_NAME_LENGTH,
-	LIMIT_SPACE_MAX_CHARACTER_NUMBER,
-	CloneDeepMutable,
-	SpaceInvite,
-	FormatTimeInterval,
 	AssertNever,
+	AssertNotNullable,
+	AssetManager,
+	CloneDeepMutable,
+	DEFAULT_BACKGROUND,
+	EMPTY,
+	FormatTimeInterval,
+	GetLogger,
+	IDirectoryShardInfo,
 	IsAuthorized,
+	IsObject,
+	LIMIT_SPACE_DESCRIPTION_LENGTH,
+	LIMIT_SPACE_MAX_CHARACTER_NUMBER,
+	LIMIT_SPACE_NAME_LENGTH,
+	RoomBackgroundInfo,
+	RoomBackgroundTagDefinition,
+	SpaceBaseInfoSchema,
+	SpaceDirectoryConfig,
+	SpaceFeature,
+	SpaceGhostManagementConfigSchema,
+	SpaceId,
+	SpaceInvite,
+	ZodMatcher,
+	type SpaceGhostManagementConfig,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
-import { DirectoryConnector } from '../../../networking/directoryConnector';
-import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { toast } from 'react-toastify';
+import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
+import { CopyToClipboard } from '../../../common/clipboard';
+import { useCurrentTime } from '../../../common/useCurrentTime';
+import { useAsyncEvent } from '../../../common/useEvent';
+import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
 import { Button } from '../../../components/common/button/button';
+import { ColorInput } from '../../../components/common/colorInput/colorInput';
+import { Column, Row } from '../../../components/common/container/container';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
+import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
+import { Select } from '../../../components/common/select/select';
+import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator';
+import { Tab, TabContainer } from '../../../components/common/tabs/tabs';
+import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
 import {
 	useCurrentAccount,
 	useDirectoryChangeListener,
 	useDirectoryConnector,
 } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { CurrentSpaceInfo, IsSpaceAdmin, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
-import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
-import { Select } from '../../../components/common/select/select';
-import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
-import { Column, Row } from '../../../components/common/container/container';
+import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs';
 import bodyChange from '../../../icons/body-change.svg';
 import devMode from '../../../icons/developer.svg';
 import pronounChange from '../../../icons/male-female.svg';
-import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
+import { DirectoryConnector } from '../../../networking/directoryConnector';
+import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import './spaceConfiguration.scss';
-import { ColorInput } from '../../../components/common/colorInput/colorInput';
-import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { Immutable } from 'immer';
-import { useAsyncEvent } from '../../../common/useEvent';
-import { useCurrentTime } from '../../../common/useCurrentTime';
-import { toast } from 'react-toastify';
-import { CopyToClipboard } from '../../../common/clipboard';
-import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
-import { Tab, TabContainer } from '../../../components/common/tabs/tabs';
 
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
 const IsValidDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
@@ -69,6 +72,7 @@ function DefaultConfig(): SpaceDirectoryConfig {
 		public: false,
 		features: [],
 		background: CloneDeepMutable(DEFAULT_BACKGROUND),
+		ghostManagement: null,
 	};
 }
 
@@ -399,6 +403,39 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 								<NumberListArea values={ currentConfig.allow } setValues={ (allow) => setModifiedData({ allow }) } readOnly={ !canEdit } invalid={ invalidAllow } />
 							</div>
 						</FieldsetToggle>
+						<FieldsetToggle legend='Offline character management'>
+							<Column>
+								<Row>
+									<input
+										id={ `${idPrefix}-ghostmanagement-enable` }
+										type='checkbox'
+										checked={ currentConfig.ghostManagement != null }
+										onChange={ (event) => {
+											setModifiedData({
+												ghostManagement: event.target.checked ? {
+													ignore: 'admin',
+													timer: 2,
+													affectCharactersInRoomDevice: false,
+												} : null,
+											});
+										} }
+										readOnly={ !canEdit }
+									/>
+									<label htmlFor={ `${idPrefix}-ghostmanagement-enable` }>Enable automatic offline character removal</label>
+								</Row>
+								{
+									currentConfig.ghostManagement != null ? (
+										<GhostManagement
+											config={ currentConfig.ghostManagement }
+											setConfig={ (newConfig) => {
+												setModifiedData({ ghostManagement: newConfig });
+											} }
+											canEdit={ canEdit }
+										/>
+									) : null
+								}
+							</Column>
+						</FieldsetToggle>
 						{ (!creation && currentSpaceId != null) && <SpaceInvites spaceId={ currentSpaceId } isPlayerAdmin={ isPlayerAdmin } /> }
 						<br />
 						{ canEdit && <Button className='fill-x' onClick={ () => UpdateSpace(directoryConnector, modifiedData, () => navigate('/room')) }>Update space</Button> }
@@ -407,6 +444,67 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 				<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/room') } />
 			</TabContainer>
 		</div>
+	);
+}
+
+function GhostManagement({ config, setConfig, canEdit }: {
+	config: SpaceGhostManagementConfig;
+	setConfig: (newConfig: SpaceGhostManagementConfig) => void;
+	canEdit: boolean;
+}): ReactElement {
+	const idPrefix = useId();
+
+	return (
+		<>
+			<Column>
+				<label>Autokick offline characters after (minutes)</label>
+				<input
+					type='number'
+					min={ 0 }
+					value={ config.timer }
+					onChange={ (e) => {
+						setConfig({
+							...config,
+							timer: e.target.valueAsNumber,
+						});
+					} }
+					readOnly={ !canEdit }
+				/>
+			</Column>
+			<SelectSettingInput<SpaceGhostManagementConfig['ignore']>
+				currentValue={ config.ignore }
+				defaultValue='admin'
+				label='Ignore characters that are'
+				onChange={ (newValue) => {
+					setConfig({
+						...config,
+						ignore: newValue,
+					});
+				} }
+				schema={ SpaceGhostManagementConfigSchema.shape.ignore }
+				stringify={ {
+					none: '[None] (all characters are affected)',
+					owner: 'Owner',
+					admin: 'Owner or Admin',
+					allowed: 'Owner, Admin, or on the Allowlist',
+				} }
+			/>
+			<Row>
+				<input
+					id={ `${idPrefix}-ghostmanagement-room-devices` }
+					type='checkbox'
+					checked={ config.affectCharactersInRoomDevice }
+					onChange={ (event) => {
+						setConfig({
+							...config,
+							affectCharactersInRoomDevice: event.target.checked,
+						});
+					} }
+					readOnly={ !canEdit }
+				/>
+				<label htmlFor={ `${idPrefix}-ghostmanagement-room-devices` }>Also affect characters in the slots of room-level items</label>
+			</Row>
+		</>
 	);
 }
 

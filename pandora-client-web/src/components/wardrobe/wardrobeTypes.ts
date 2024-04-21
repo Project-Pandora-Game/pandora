@@ -40,6 +40,8 @@ export interface WardrobeContext {
 	assetList: readonly Asset[];
 	heldItem: WardrobeHeldItem;
 	setHeldItem: (newHeldItem: WardrobeHeldItem) => void;
+	scrollToItem: ItemId | null;
+	setScrollToItem: (newScrollToItem: ItemId | null) => void;
 	focus: Observable<Immutable<WardrobeFocus>>;
 	extraItemActions: Observable<readonly WardrobeContextExtraItemActionComponent[]>;
 	actions: AppearanceActionContext;

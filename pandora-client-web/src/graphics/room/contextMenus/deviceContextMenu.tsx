@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid';
 import { ItemRoomDevice, AppearanceAction, ItemId, ICharacterRoomData } from 'pandora-common';
 import React, { useMemo, useState, ReactElement, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router';
 import { Character, ICharacter, useCharacterData } from '../../../character/character';
 import { ChildrenProps } from '../../../common/reactTypes';
 import { PointLike } from '../../../graphics/graphicsCharacter';
@@ -262,6 +263,12 @@ function DeviceContextMenuCurrent({ device, position, setRoomSceneMode, onClose 
 	const player = usePlayer();
 	const gameState = useGameStateOptional();
 	const [menu, setMenu] = useState<'main' | 'slots'>('main');
+	const navigate = useNavigate();
+
+	const onCloseActual = useCallback(() => {
+		setMenu('main');
+		onClose();
+	}, [onClose]);
 
 	if (!player || !gameState) {
 		return null;
@@ -269,10 +276,13 @@ function DeviceContextMenuCurrent({ device, position, setRoomSceneMode, onClose 
 
 	return (
 		<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
-			<span>
-				{ device.asset.definition.name }
-			</span>
 			<WardrobeContextProvider target={ WARDROBE_TARGET_ROOM } player={ player }>
+				<button onClick={ () => {
+					onCloseActual();
+					navigate('/wardrobe/room-inventory', { state: { deviceId: device.id } });
+				} }>
+					{ device.asset.definition.name }
+				</button>
 				{ menu === 'main' && (
 					<>
 						<LeaveDeviceMenu device={ device } close={ onClose } />

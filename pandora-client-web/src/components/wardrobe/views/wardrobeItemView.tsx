@@ -66,6 +66,7 @@ export function InventoryItemView({
 		// Locks have special GUI on higher level, so be friendly and focus on that when there is a lock
 		if (containerModule?.type === 'lockSlot' && displayedItems.length === 1) {
 			focuser.focusPrevious();
+			return;
 		}
 
 		if (!singleItemContainer)

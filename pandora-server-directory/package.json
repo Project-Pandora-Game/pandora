@@ -79,7 +79,7 @@
 		"ts-mockito": "2.6.1",
 		"tsc-watch": "6.2.0",
 		"tslib": "2.6.2",
-		"type-fest": "4.15.0",
+		"type-fest": "4.16.0",
 		"typescript": "5.4.5"
 	}
 }

@@ -161,9 +161,11 @@ export class AssetFrameworkGlobalState {
 
 	public withCharacter(characterId: CharacterId, characterState: AssetFrameworkCharacterState | null): AssetFrameworkGlobalState {
 		const newCharacters = new Map(this.characters);
+		let newRoom = this.room;
 
 		if (characterState == null) {
 			newCharacters.delete(characterId);
+			newRoom = newRoom.clearSlotsOccupiedByCharacter(characterId);
 		} else {
 			Assert(characterId === characterState.id);
 			newCharacters.set(characterId, characterState);
@@ -172,7 +174,7 @@ export class AssetFrameworkGlobalState {
 		return new AssetFrameworkGlobalState(
 			this.assetManager,
 			newCharacters,
-			this.room,
+			newRoom,
 		);
 	}
 

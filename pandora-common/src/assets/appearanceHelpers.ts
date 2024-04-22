@@ -109,31 +109,14 @@ export abstract class AppearanceManipulator {
 	}
 
 	public modifyItem(id: ItemId, mutator: (item: Item) => (Item | null)): boolean {
-		return this.modifyItems((item) => {
-			if (item.id !== id) {
-				return null;
-			}
-			const result = mutator(item);
-			if (result?.id !== id) {
-				return null;
-			}
-			return result;
-		});
-	}
-
-	public modifyItems(mutator: (item: Item) => (Item | null)): boolean {
 		const items = this.getItems().slice();
-		let changed = false;
-		for (let i = 0; i < items.length; i++) {
-			const result = mutator(items[i]);
-			if (result && result.asset === result.asset) {
-				items[i] = result;
-				changed = true;
-			}
-		}
-		if (!changed) {
+		const index = items.findIndex((i) => i.id === id);
+		if (index < 0)
 			return false;
-		}
+		const result = mutator(items[index]);
+		if (!result || result.id !== id || result.asset !== result.asset)
+			return false;
+		items[index] = result;
 		return this._applyItemsWithChange(items);
 	}
 

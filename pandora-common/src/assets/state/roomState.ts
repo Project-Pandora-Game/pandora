@@ -11,6 +11,7 @@ import type { IExportOptions } from '../modules/common';
 import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation';
 
 // Fix for pnpm resolution weirdness
+import type { CharacterId } from '../../character';
 import type { } from '../item/base';
 
 export const RoomInventoryBundleSchema = z.object({
@@ -78,6 +79,23 @@ export class AssetFrameworkRoomState {
 			this.assetManager,
 			newItems,
 		);
+	}
+
+	public clearSlotsOccupiedByCharacter(characterId: CharacterId): AssetFrameworkRoomState {
+		let changed = false;
+		const newItems = this.items.map((item) => {
+			if (!item.isType('roomDevice')) {
+				return item;
+			}
+			for (const [slot, slotCharacterId] of item.slotOccupancy) {
+				if (slotCharacterId === characterId) {
+					item = item.changeSlotOccupancy(slot, null) ?? item;
+					changed = true;
+				}
+			}
+			return item;
+		});
+		return changed ? this.produceWithItems(newItems) : this;
 	}
 
 	public static createDefault(assetManager: AssetManager): AssetFrameworkRoomState {

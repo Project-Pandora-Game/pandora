@@ -1,13 +1,13 @@
 import { enableMapSet } from 'immer';
 import { isEqual } from 'lodash';
-import { z, ZodObject, ZodString, ZodType, ZodTypeAny, ZodTypeDef, RefinementCtx, ZodEffects } from 'zod';
+import { z, ZodObject, ZodString, ZodType, ZodTypeAny, ZodTypeDef, RefinementCtx, ZodEffects, type ZodStringDef } from 'zod';
 import { LIMIT_ACCOUNT_NAME_LENGTH, LIMIT_CHARACTER_NAME_LENGTH, LIMIT_CHARACTER_NAME_MIN_LENGTH, LIMIT_MAIL_LENGTH } from './inputLimits';
 import { Assert } from './utility';
 
 enableMapSet();
 
-export function ZodTemplateString<T extends string>(validator: ZodString, regex: RegExp): ZodType<T> & ZodString {
-	return validator.regex(regex) as unknown as ZodType<T> & ZodString;
+export function ZodTemplateString<T extends string>(validator: ZodString, regex: RegExp): ZodType<T, ZodStringDef, T> & ZodString {
+	return validator.regex(regex) as unknown as ZodType<T, ZodStringDef, T> & ZodString;
 }
 
 /** ZodString .trim method doesn't do actual validation, we need to use regex */

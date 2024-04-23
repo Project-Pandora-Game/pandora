@@ -3,6 +3,8 @@ import { Resource, Texture } from 'pixi.js';
 import { useState, useEffect } from 'react';
 import { Observable, useObservable } from '../observable';
 import { AssetGraphics } from './assetGraphics';
+import { BrowserStorage } from '../browserStorage';
+import { z } from 'zod';
 
 export interface IGraphicsLoader {
 	getCachedTexture(path: string): Texture | null;
@@ -25,6 +27,106 @@ export interface IGraphicsLoader {
 	pathToUrl(path: string): Promise<string>;
 }
 
+class AlternateImageFormatGraphicsLoader implements IGraphicsLoader {
+	private readonly _loader: IGraphicsLoader;
+	private readonly _acceptedFormats: readonly string[];
+	private readonly _newFormat: string;
+	private readonly _suffix: string;
+
+	constructor(loader: IGraphicsLoader, acceptedFormats: readonly string[], newFormat: string, suffix: string) {
+		this._loader = loader;
+		this._acceptedFormats = acceptedFormats.map((f) => `.${f}`);
+		this._newFormat = newFormat;
+		this._suffix = suffix ? `_${suffix}` : '';
+	}
+
+	private _transformPath(path: string): string {
+		for (const format of this._acceptedFormats) {
+			if (path.endsWith(format)) {
+				return path.slice(0, -format.length) + this._suffix + '.' + this._newFormat;
+			}
+		}
+		return path;
+	}
+
+	public getCachedTexture(path: string): Texture | null {
+		return this._loader.getCachedTexture(this._transformPath(path));
+	}
+
+	public useTexture(path: string, listener: (texture: Texture) => void): () => void {
+		return this._loader.useTexture(this._transformPath(path), listener);
+	}
+
+	public loadResource(path: string): Promise<Resource> {
+		return this._loader.loadResource(this._transformPath(path));
+	}
+
+	public loadTextFile(path: string): Promise<string> {
+		return this._loader.loadTextFile(this._transformPath(path));
+	}
+
+	public loadFileArrayBuffer(path: string, type?: string): Promise<ArrayBuffer> {
+		return this._loader.loadFileArrayBuffer(this._transformPath(path), type);
+	}
+
+	public pathToUrl(path: string): Promise<string> {
+		return this._loader.pathToUrl(this._transformPath(path));
+	}
+}
+
+const TransformGraphicsLoader = (() => {
+	const acceptedFormats = ['png', 'jpg', 'jpeg'];
+	const formatTests: Readonly<Record<string, string>> = {
+		'avif': 'data:image/avif;base64,AAAAHGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZgAAAPBtZXRhAAAAAAAAAChoZGxyAAAAAAAAAABwaWN0AAAAAAAAAAAAAAAAbGliYXZpZgAAAAAOcGl0bQAAAAAAAQAAAB5pbG9jAAAAAEQAAAEAAQAAAAEAAAEUAAAAFQAAAChpaW5mAAAAAAABAAAAGmluZmUCAAAAAAEAAGF2MDFDb2xvcgAAAABoaXBycAAAAElpcGNvAAAAFGlzcGUAAAAAAAAAAQAAAAEAAAAOcGl4aQAAAAABCAAAAAxhdjFDgQAcAAAAABNjb2xybmNseAABAAEAAQAAAAAXaXBtYQAAAAAAAAABAAEEAQKDBAAAAB1tZGF0EgAKBxgADlgICAkyCB/xgAAghQm0',
+		'webp': 'data:image/webp;base64,UklGRhYAAABXRUJQVlA4TAoAAAAvAAAAAEX/I/of',
+	};
+
+	const support = BrowserStorage.create('imageFormatSupport', { supported: [], unsupported: [] }, z.object({
+		supported: z.array(z.string()),
+		unsupported: z.array(z.string()),
+	}));
+
+	return async (loader: IGraphicsLoader, { imageFormats }: AssetsGraphicsDefinitionFile): Promise<IGraphicsLoader> => {
+		const promises: Promise<IGraphicsLoader | null>[] = [];
+		for (const [format, suffix] of Object.entries(imageFormats)) {
+			const test = formatTests[format];
+			if (!test) {
+				continue;
+			}
+			if (support.value.supported.includes(format)) {
+				return new AlternateImageFormatGraphicsLoader(loader, acceptedFormats, format, suffix);
+			}
+			if (support.value.unsupported.includes(format)) {
+				continue;
+			}
+			promises.push(new Promise((resolve) => {
+				const image = new Image();
+				image.onload = () => {
+					support.value = {
+						supported: [...support.value.supported, format],
+						unsupported: support.value.unsupported,
+					};
+					resolve(new AlternateImageFormatGraphicsLoader(loader, acceptedFormats, format, suffix));
+				};
+				image.onerror = () => {
+					support.value = {
+						supported: support.value.supported,
+						unsupported: [...support.value.unsupported, format],
+					};
+					resolve(null);
+				};
+				image.src = test;
+			}));
+		}
+		for (const res of await Promise.allSettled(promises)) {
+			if (res.status === 'fulfilled' && res.value) {
+				return res.value;
+			}
+		}
+		return loader;
+	};
+})();
+
 export class GraphicsManager {
 	private readonly _assetGraphics: Map<AssetId, AssetGraphics> = new Map();
 	private readonly _pointTemplates: Map<string, PointTemplate> = new Map();
@@ -33,11 +135,16 @@ export class GraphicsManager {
 	public readonly definitionsHash: string;
 	public readonly loader: IGraphicsLoader;
 
-	constructor(loader: IGraphicsLoader, definitionsHash: string, data: AssetsGraphicsDefinitionFile) {
+	private constructor(loader: IGraphicsLoader, definitionsHash: string, data: AssetsGraphicsDefinitionFile) {
 		this.loader = loader;
 		this.definitionsHash = definitionsHash;
 		this.loadPointTemplates(data.pointTemplates);
 		this.loadAssets(data.assets);
+	}
+
+	public static async create(loader: IGraphicsLoader, definitionsHash: string, data: AssetsGraphicsDefinitionFile): Promise<GraphicsManager> {
+		const newLoader = await TransformGraphicsLoader(loader, data);
+		return new GraphicsManager(newLoader, definitionsHash, data);
 	}
 
 	public getAllAssetsGraphics(): AssetGraphics[] {

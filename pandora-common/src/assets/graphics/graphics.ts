@@ -254,4 +254,5 @@ export type AssetGraphicsDefinition = z.infer<typeof AssetGraphicsDefinitionSche
 export interface AssetsGraphicsDefinitionFile {
 	assets: Record<AssetId, AssetGraphicsDefinition>;
 	pointTemplates: Record<string, PointTemplate>;
+	imageFormats: Partial<Record<'avif' | 'webp', string>>;
 }

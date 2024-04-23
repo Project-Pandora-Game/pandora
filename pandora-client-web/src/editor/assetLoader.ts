@@ -38,7 +38,7 @@ async function Load(loader: IGraphicsLoader): Promise<[AssetManagerEditor, Graph
 	const graphicsHash = assetManager.graphicsId;
 	const graphicsDefinitions = JSON.parse(await loader.loadTextFile(`graphics_${graphicsHash}.json`)) as AssetsGraphicsDefinitionFile;
 
-	const graphicsManager = new GraphicsManager(loader, graphicsHash, graphicsDefinitions);
+	const graphicsManager = await GraphicsManager.create(loader, graphicsHash, graphicsDefinitions);
 	GraphicsManagerInstance.value = graphicsManager;
 
 	return [assetManager, graphicsManager];

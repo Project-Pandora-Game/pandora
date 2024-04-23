@@ -56,11 +56,14 @@ export function LoadAssetDefinitions(definitionsHash: string, data: Immutable<As
 		loader = new URLGraphicsLoader(assetsSource);
 	}
 	const currentLoader = loader;
-	currentLoader.loadTextFile(`graphics_${lastGraphicsHash}.json`).then((json) => {
-		const graphics = JSON.parse(json) as AssetsGraphicsDefinitionFile;
-		GraphicsManagerInstance.value = new GraphicsManager(currentLoader, data.graphicsId, graphics);
-		logger.info(`Loaded graphics, version: ${data.graphicsId}`);
-	}).catch((err) => {
-		logger.error('Failed to load graphics', err);
-	});
+	void (async () => {
+		try {
+			const json = await currentLoader.loadTextFile(`graphics_${lastGraphicsHash}.json`);
+			const graphics = JSON.parse(json) as AssetsGraphicsDefinitionFile;
+			GraphicsManagerInstance.value = await GraphicsManager.create(currentLoader, data.graphicsId, graphics);
+			logger.info(`Loaded graphics, version: ${data.graphicsId}`);
+		} catch (err) {
+			logger.error('Failed to load graphics', err);
+		}
+	})();
 }

@@ -145,12 +145,7 @@ export class AssetFrameworkGlobalState {
 
 	public withRoomState(newState: AssetFrameworkRoomState): AssetFrameworkGlobalState {
 		const newCharacters = new Map(this.characters);
-		for (const [id, character] of newCharacters) {
-			newCharacters.set(
-				id,
-				character.updateRoomStateLink(newState, false),
-			);
-		}
+		this._updateRoomStateLinkOnCharacters(newCharacters, newState);
 
 		return new AssetFrameworkGlobalState(
 			this.assetManager,
@@ -166,6 +161,9 @@ export class AssetFrameworkGlobalState {
 		if (characterState == null) {
 			newCharacters.delete(characterId);
 			newRoom = newRoom.clearSlotsOccupiedByCharacter(characterId);
+			if (newRoom !== this.room) {
+				this._updateRoomStateLinkOnCharacters(newCharacters, newRoom);
+			}
 		} else {
 			Assert(characterId === characterState.id);
 			newCharacters.set(characterId, characterState);
@@ -238,6 +236,15 @@ export class AssetFrameworkGlobalState {
 		Assert(resultState.isValid(), 'State is invalid after load');
 
 		return resultState;
+	}
+
+	private _updateRoomStateLinkOnCharacters(characters: Map<CharacterId, AssetFrameworkCharacterState>, roomState: AssetFrameworkRoomState) {
+		for (const [id, character] of characters) {
+			characters.set(
+				id,
+				character.updateRoomStateLink(roomState, false),
+			);
+		}
 	}
 }
 

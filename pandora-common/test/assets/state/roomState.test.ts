@@ -1,4 +1,5 @@
-import { AssetFrameworkRoomState, AssetManager, type ItemBundle, type ItemRoomDevice } from '../../../src';
+import { AssetFrameworkRoomState, type ItemRoomDevice } from '../../../src';
+import { CreateAssetManager, CreateItemBundle, CreateRoomDeviceAssetDefinition, CreateRoomState } from '../../stateUtils';
 
 describe('AssetFrameworkRoomState', () => {
 	describe('clearSlotsOccupiedByCharacter()', () => {
@@ -8,55 +9,49 @@ describe('AssetFrameworkRoomState', () => {
 			const newRoomState = roomState.clearSlotsOccupiedByCharacter('c3');
 
 			expect(newRoomState).toBe(roomState);
-			expect((newRoomState.items[0] as ItemRoomDevice).slotOccupancy).toEqual(new Map([
-				['character_slot_1', 'c1'],
-				['character_slot_2', 'c2'],
+			expect((newRoomState.items.find((item) => item.id === 'i/room_device') as ItemRoomDevice).slotOccupancy).toEqual(new Map([
+				['slot_1', 'c1'],
+				['slot_2', 'c2'],
 			]));
 		});
 
 		it('should clear slot if slot was occupied by character', () => {
-			const roomState = createRoomStateWithRoomDeviceWithOccupiedSlots();
+			let roomState = createRoomStateWithRoomDeviceWithOccupiedSlots();
 
-			const newRoomState = roomState.clearSlotsOccupiedByCharacter('c2');
-			expect((newRoomState.items[0] as ItemRoomDevice).slotOccupancy).toEqual(new Map([
-				['character_slot_1', 'c1'],
+			roomState = roomState.clearSlotsOccupiedByCharacter('c2');
+
+			expect((roomState.items.find((item) => item.id === 'i/room_device') as ItemRoomDevice).slotOccupancy).toEqual(new Map([
+				['slot_1', 'c1'],
 			]));
 		});
 
 		function createRoomStateWithRoomDeviceWithOccupiedSlots(): AssetFrameworkRoomState {
-			const assetManager = new AssetManager('', {
-				assets: {
-					'a/1': {
-						type: 'roomDevice',
-						id: 'a/1',
-						name: '',
-						size: 'huge',
-						pivot: { x: 0, y: 0 },
-						slots: {
-							character_slot_1: { name: '', wearableAsset: 'a/2' },
-							character_slot_2: { name: '', wearableAsset: 'a/2' },
+			return CreateRoomState({
+				assetManager: CreateAssetManager({
+					assets: [
+						CreateRoomDeviceAssetDefinition({
+							id: 'a/room_device',
+							slots: {
+								slot_1: { wearableAsset: 'a/slot_1' },
+								slot_2: { wearableAsset: 'a/slot_2' },
+							},
+						}),
+					],
+				}),
+				items: [
+					CreateItemBundle({
+						id: 'i/room_device',
+						asset: 'a/room_device',
+						roomDeviceData: {
+							deployed: true,
+							slotOccupancy: {
+								slot_1: 'c1',
+								slot_2: 'c2',
+							},
 						},
-						graphicsLayers: [],
-					},
-				},
+					}),
+				],
 			});
-			const itemBundle: ItemBundle = {
-				id: 'i/1',
-				asset: 'a/1',
-				roomDeviceData: {
-					deployment: {
-						deployed: true,
-						x: 0,
-						y: 0,
-						yOffset: 0,
-					},
-					slotOccupancy: {
-						character_slot_1: 'c1',
-						character_slot_2: 'c2',
-					},
-				},
-			};
-			return AssetFrameworkRoomState.loadFromBundle(assetManager, { items: [itemBundle] }, undefined);
 		}
 	});
 });

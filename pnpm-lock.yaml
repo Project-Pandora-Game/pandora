@@ -89,11 +89,11 @@ importers:
         specifier: 10.4.1
         version: 10.4.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react-router:
-        specifier: 6.22.3
-        version: 6.22.3(react@18.2.0)
+        specifier: 6.23.0
+        version: 6.23.0(react@18.2.0)
       react-router-dom:
-        specifier: 6.22.3
-        version: 6.22.3(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        specifier: 6.23.0
+        version: 6.23.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react-toastify:
         specifier: 10.0.5
         version: 10.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -109,7 +109,7 @@ importers:
         version: 7.24.4(@babel/core@7.24.4)
       '@pmmmwh/react-refresh-webpack-plugin':
         specifier: 0.5.11
-        version: 0.5.11(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))(react-refresh@0.14.0)(type-fest@4.16.0)(webpack-dev-server@4.15.2(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))
+        version: 0.5.11(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))(react-refresh@0.14.0)(type-fest@4.17.0)(webpack-dev-server@4.15.2(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))
       '@project-pandora-game/sass-loader':
         specifier: 13.2.0
         version: 13.2.0(sass@1.75.0)(webpack@5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))
@@ -258,8 +258,8 @@ importers:
         specifier: 2.6.2
         version: 2.6.2
       type-fest:
-        specifier: 4.16.0
-        version: 4.16.0
+        specifier: 4.17.0
+        version: 4.17.0
       typescript:
         specifier: 5.4.5
         version: 5.4.5
@@ -464,8 +464,8 @@ importers:
         specifier: 2.6.2
         version: 2.6.2
       type-fest:
-        specifier: 4.16.0
-        version: 4.16.0
+        specifier: 4.17.0
+        version: 4.17.0
       typescript:
         specifier: 5.4.5
         version: 5.4.5
@@ -2166,8 +2166,8 @@ packages:
       sass-embedded:
         optional: true
 
-  '@remix-run/router@1.15.3':
-    resolution: {integrity: sha512-Oy8rmScVrVxWZVOpEF57ovlnhpZ8CCPlnIIumVcV9nFdiSIrus99+Lw78ekXyGvVDlIsFJbSfmSovJUhCWYV3w==}
+  '@remix-run/router@1.16.0':
+    resolution: {integrity: sha512-Quz1KOffeEf/zwkCBM3kBtH4ZoZ+pT3xIXBG4PPW/XFtDP7EGhtTiC2+gpL9GnR7+Qdet5Oa6cYSvwKYg6kN9Q==}
     engines: {node: '>=14.0.0'}
 
   '@sapphire/async-queue@1.5.2':
@@ -6126,15 +6126,15 @@ packages:
       react: '>=16.3.0'
       react-dom: '>=16.3.0'
 
-  react-router-dom@6.22.3:
-    resolution: {integrity: sha512-7ZILI7HjcE+p31oQvwbokjk6OA/bnFxrhJ19n82Ex9Ph8fNAq+Hm/7KchpMGlTgWhUxRHMMCut+vEtNpWpowKw==}
+  react-router-dom@6.23.0:
+    resolution: {integrity: sha512-Q9YaSYvubwgbal2c9DJKfx6hTNoBp3iJDsl+Duva/DwxoJH+OTXkxGpql4iUK2sla/8z4RpjAm6EWx1qUDuopQ==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: '>=16.8'
       react-dom: '>=16.8'
 
-  react-router@6.22.3:
-    resolution: {integrity: sha512-dr2eb3Mj5zK2YISHK++foM9w4eBnO23eKnZEDs7c880P6oKbrjz/Svg9+nxqtHQK+oMW4OtjZca0RqPglXxguQ==}
+  react-router@6.23.0:
+    resolution: {integrity: sha512-wPMZ8S2TuPadH0sF5irFGjkNLIcRvOSaEe7v+JER8508dyJumm6XZB1u5kztlX0RVq6AzRVndzqcUh6sFIauzA==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: '>=16.8'
@@ -6814,8 +6814,8 @@ packages:
     resolution: {integrity: sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==}
     engines: {node: '>=8'}
 
-  type-fest@4.16.0:
-    resolution: {integrity: sha512-z7Rf5PXxIhbI6eJBTwdqe5bO02nUUmctq4WqviFSstBAWV0YNtEQRhEnZw73WJ8sZOqgFG6Jdl8gYZu7NBJZnA==}
+  type-fest@4.17.0:
+    resolution: {integrity: sha512-9flrz1zkfLRH3jO3bLflmTxryzKMxVa7841VeMgBaNQGY6vH4RCcpN/sQLB7mQQYh1GZ5utT2deypMuCy4yicw==}
     engines: {node: '>=16'}
 
   type-is@1.6.18:
@@ -9253,7 +9253,7 @@ snapshots:
     dependencies:
       playwright: 1.43.1
 
-  '@pmmmwh/react-refresh-webpack-plugin@0.5.11(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))(react-refresh@0.14.0)(type-fest@4.16.0)(webpack-dev-server@4.15.2(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))':
+  '@pmmmwh/react-refresh-webpack-plugin@0.5.11(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))(react-refresh@0.14.0)(type-fest@4.17.0)(webpack-dev-server@4.15.2(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))':
     dependencies:
       ansi-html-community: 0.0.8
       common-path-prefix: 3.0.0
@@ -9268,7 +9268,7 @@ snapshots:
       webpack: 5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0))
     optionalDependencies:
       '@types/webpack': 5.28.5(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0))
-      type-fest: 4.16.0
+      type-fest: 4.17.0
       webpack-dev-server: 4.15.2(webpack-cli@5.1.4)(webpack@5.91.0)
 
   '@pnpm/config.env-replace@1.1.0': {}
@@ -9291,7 +9291,7 @@ snapshots:
     optionalDependencies:
       sass: 1.75.0
 
-  '@remix-run/router@1.15.3': {}
+  '@remix-run/router@1.16.0': {}
 
   '@sapphire/async-queue@1.5.2': {}
 
@@ -13981,16 +13981,16 @@ snapshots:
       react-draggable: 4.4.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       tslib: 2.3.1
 
-  react-router-dom@6.22.3(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
+  react-router-dom@6.23.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
-      '@remix-run/router': 1.15.3
+      '@remix-run/router': 1.16.0
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      react-router: 6.22.3(react@18.2.0)
+      react-router: 6.23.0(react@18.2.0)
 
-  react-router@6.22.3(react@18.2.0):
+  react-router@6.23.0(react@18.2.0):
     dependencies:
-      '@remix-run/router': 1.15.3
+      '@remix-run/router': 1.16.0
       react: 18.2.0
 
   react-toastify@10.0.5(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
@@ -14799,7 +14799,7 @@ snapshots:
 
   type-fest@0.8.1: {}
 
-  type-fest@4.16.0: {}
+  type-fest@4.17.0: {}
 
   type-is@1.6.18:
     dependencies:

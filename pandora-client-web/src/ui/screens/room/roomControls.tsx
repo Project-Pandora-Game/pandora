@@ -1,5 +1,5 @@
 import React, {
-	ReactElement, useEffect,
+	ReactElement, useEffect, useMemo,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../../../components/common/button/button';
@@ -22,12 +22,51 @@ import storageIcon from '../../../assets/icons/storage.svg';
 import listIcon from '../../../assets/icons/list.svg';
 import toolsIcon from '../../../assets/icons/tools.svg';
 import { SettingDisplayCharacterName } from '../../../graphics/room/roomCharacter';
+import { useFriendStatus } from '../../../components/accountContacts/accountContactContext';
 
 export function RoomControls(): ReactElement | null {
 	const spaceConfig = useSpaceInfo().config;
 	const characters = useSpaceCharacters();
 	const player = usePlayer();
 	const navigate = useNavigate();
+
+	const friends = useFriendStatus();
+	const sortedCharacters = useMemo(() => {
+		const enum CharOrder {
+			PLAYER,
+			ONLINE_FRIEND,
+			ONLINE,
+			FRIEND,
+			OFFLINE,
+		}
+
+		const getCharOrder = (character: Character<ICharacterRoomData>) => {
+			const isPlayer = character.isPlayer();
+			const isSameAccount = character.data.accountId === player?.data.accountId;
+			const isOnline = character.data.isOnline;
+			const isFriend = friends.some((friend) => friend.id === character.data.accountId);
+
+			if (isPlayer)
+				return CharOrder.PLAYER;
+
+			if (isOnline && (isFriend || isSameAccount))
+				return CharOrder.ONLINE_FRIEND;
+
+			if (isOnline)
+				return CharOrder.ONLINE;
+
+			if (isFriend || isSameAccount)
+				return CharOrder.FRIEND;
+
+			return CharOrder.OFFLINE;
+		};
+
+		const charactersSortFunction = (character1: Character<ICharacterRoomData>, character2: Character<ICharacterRoomData>) => {
+			return getCharOrder(character1) - getCharOrder(character2);
+		};
+
+		return characters.toReversed().sort(charactersSortFunction);
+	}, [characters, friends, player?.data.accountId]);
 
 	if (!characters || !player) {
 		return null;
@@ -48,10 +87,8 @@ export function RoomControls(): ReactElement | null {
 				These characters are in the space <b>{ spaceConfig.name }</b>:
 			</span>
 			<div className='character-info'>
-				<DisplayCharacter char={ player } />
 				{
-					characters
-						.filter((c) => c !== player)
+					sortedCharacters
 						.map((c) => <DisplayCharacter key={ c.data.id } char={ c } />)
 				}
 			</div>

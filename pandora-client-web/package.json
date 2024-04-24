@@ -99,7 +99,7 @@
 		"ts-mockito": "2.6.1",
 		"ts-node": "10.9.2",
 		"tslib": "2.6.2",
-		"type-fest": "4.16.0",
+		"type-fest": "4.17.0",
 		"typescript": "5.4.5",
 		"url-loader": "4.1.1",
 		"webpack": "5.91.0",

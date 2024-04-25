@@ -347,10 +347,21 @@ export class CharacterRestrictionsManager {
 			};
 
 		// To add or remove the item, we need to have access to all contained items
-		if (interaction === ItemInteractionType.ADD_REMOVE) {
+		if (interaction === ItemInteractionType.ADD_REMOVE || interaction === ItemInteractionType.DEVICE_ENTER_LEAVE) {
 			r = this.hasPermissionForItemContents(context, target, item);
 			if (!r.allowed)
 				return r;
+		}
+
+		// Enter/Leave interaction is only allowed on room devices and their wearable parts
+		if (interaction === ItemInteractionType.DEVICE_ENTER_LEAVE) {
+			if (!item.asset.isType('roomDevice') && !item.asset.isType('roomDeviceWearablePart'))
+				return {
+					allowed: false,
+					restriction: {
+						type: 'invalid',
+					},
+				};
 		}
 
 		// Styling the item is a "color"-like interaction
@@ -362,8 +373,8 @@ export class CharacterRestrictionsManager {
 
 		const properties = item.getProperties();
 
-		// If equipping there are further checks
-		if (interaction === ItemInteractionType.ADD_REMOVE && isPhysicallyEquipped) {
+		// If equipping (or entering a device) there are further checks
+		if ((interaction === ItemInteractionType.ADD_REMOVE || interaction === ItemInteractionType.DEVICE_ENTER_LEAVE) && isPhysicallyEquipped) {
 			// If item blocks add/remove, fail
 			if (properties.blockAddRemove && !forceAllowItemActions)
 				return {
@@ -405,14 +416,20 @@ export class CharacterRestrictionsManager {
 			}
 		}
 
-		// Must be able to use hands
-		if (!this.canUseHands() && !forceAllowItemActions)
-			return {
-				allowed: false,
-				restriction: {
-					type: 'blockedHands',
-				},
-			};
+		// Must be able to use hands (for most interaction types)
+		if (
+			interaction === ItemInteractionType.STYLING ||
+			interaction === ItemInteractionType.MODIFY ||
+			interaction === ItemInteractionType.ADD_REMOVE
+		) {
+			if (!this.canUseHands() && !forceAllowItemActions)
+				return {
+					allowed: false,
+					restriction: {
+						type: 'blockedHands',
+					},
+				};
+		}
 
 		return { allowed: true };
 	}

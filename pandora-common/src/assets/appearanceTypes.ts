@@ -61,18 +61,21 @@ export type ActionHandler = (message: ActionHandlerMessage) => void;
 
 interface ActionTargetBase {
 	getItem(path: ItemPath): Item | undefined;
+	withNoReTargeting(): ActionTarget;
 }
 
 export interface ActionTargetCharacter extends ActionTargetBase {
 	readonly type: 'character';
 	readonly character: GameLogicCharacter;
 	readonly characterState: AssetFrameworkCharacterState;
+	readonly allowReTargeting: false;
 
 	getRestrictionManager(spaceContext: ActionSpaceContext): CharacterRestrictionsManager;
 }
 
 export interface ActionTargetRoomInventory extends ActionTargetBase {
 	readonly type: 'roomInventory';
+	readonly allowReTargeting: boolean;
 }
 
 export type ActionTarget = ActionTargetCharacter | ActionTargetRoomInventory;

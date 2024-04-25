@@ -8,13 +8,17 @@ import type { IAssetModuleTypes, ModuleType } from '../modules';
 import type { Immutable } from 'immer';
 import type { InteractionId } from '../../gameLogic/interactions';
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface IModuleConfigCommon<Type extends ModuleType, TProperties = unknown> {
 	type: Type;
 	/** The display name of this module */
 	name: string;
 	/** If this module is hoisted to expressions */
 	expression?: string;
+	/**
+	 * The name of the room device slot to bind character permission
+	 * When a character occupies this slot permission checks will be performed against the character
+	 */
+	slotName: TProperties extends { slotProperties: { /**/ } | undefined; } ? (string | null) : never;
 }
 
 export interface IModuleItemDataCommon<Type extends ModuleType> {

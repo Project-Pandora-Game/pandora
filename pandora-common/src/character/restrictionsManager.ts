@@ -258,6 +258,7 @@ export class CharacterRestrictionsManager {
 	 * @param insertBeforeRootItem - Simulate the item being positioned before (under) this item. Undefined means that it either is currently present or that it is to be inserted to the end.
 	 */
 	public canUseItemDirect(context: AppearanceActionProcessingContext, target: ActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): RestrictionResult {
+
 		// Must validate insertBeforeRootItem, if present
 		if (insertBeforeRootItem && target.getItem({ container: [], itemId: insertBeforeRootItem }) == null)
 			return {
@@ -267,13 +268,15 @@ export class CharacterRestrictionsManager {
 				},
 			};
 
+		target = context.reTargetAction(target, container, item, null);
+
 		// Must be able to use item's asset
 		let r = this.canUseAsset(context, target, item.asset);
 		if (!r.allowed)
 			return r;
 
 		const isCharacter = target.type === 'character';
-		const isSelfAction = isCharacter && target.character.id === this.character.id;
+		const isSelfAction = target.type === 'character' && target.character.id === this.character.id;
 		const forceAllowItemActions = this.forceAllowItemActions();
 		let isPhysicallyEquipped = isCharacter;
 
@@ -398,7 +401,7 @@ export class CharacterRestrictionsManager {
 				};
 		}
 
-		if (isCharacter && isPhysicallyEquipped && !forceAllowItemActions) {
+		if (isCharacter && isPhysicallyEquipped && !forceAllowItemActions && target.type === 'character') {
 			const targetProperties = target.getRestrictionManager(this.spaceContext).getLimitedProperties({
 				from: insertBeforeRootItem ?? (container.length > 0 ? container[0].item : item.id),
 				exclude: container.length > 0 ? container[0].item : item.id,
@@ -458,6 +461,8 @@ export class CharacterRestrictionsManager {
 					type: 'invalid',
 				},
 			};
+
+		target = context.reTargetAction(target, container, item, moduleName);
 
 		const isSelfAction = target.type === 'character' && target.character.id === this.character.id;
 

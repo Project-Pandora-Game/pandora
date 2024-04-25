@@ -10,6 +10,7 @@ import type { Item, ItemId } from './item';
 import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
 import { RoomInventory } from './roomInventory';
 import type { AssetFrameworkGlobalState } from './state/globalState';
+import { SplitContainerPath } from './appearanceHelpers';
 
 export class AppearanceActionProcessingContext {
 	private readonly _context: AppearanceActionContext;
@@ -190,6 +191,49 @@ export class AppearanceActionProcessingContext {
 			return new AppearanceActionProcessingResultInvalid(this);
 
 		return new AppearanceActionProcessingResultValid(this, this.manipulator.currentState);
+	}
+
+	/**
+	 * Re-targets the action target if the action is against a room device with a character in a slot.
+	 */
+	public reTargetAction(target: ActionTarget, container: ItemContainerPath, item: Item, moduleName: string | null): ActionTarget {
+		if (!target.allowReTargeting)
+			return target;
+
+		while (true as boolean) {
+			if (item.isType('roomDevice')) {
+				break;
+			}
+			const parent = SplitContainerPath(container);
+			if (parent == null) {
+				return target.withNoReTargeting();
+			}
+			const parentItem = target.getItem(parent.itemPath);
+			AssertNotNullable(parentItem);
+			container = parent.itemPath.container;
+			moduleName = parent.module;
+			item = parentItem;
+		}
+
+		if (moduleName == null) {
+			return target.withNoReTargeting();
+		}
+
+		Assert(item.isType('roomDevice'));
+		const itemModule = item.getModules().get(moduleName);
+		AssertNotNullable(itemModule);
+
+		const slotName = itemModule.config.slotName;
+		if (slotName == null) {
+			return target.withNoReTargeting();
+		}
+		const characterId = item.slotOccupancy.get(slotName);
+		if (!characterId) {
+			return target.withNoReTargeting();
+		}
+
+		// TODO: re-targeting to characters
+		return target.withNoReTargeting();
 	}
 }
 

@@ -1,26 +1,26 @@
-import { IDirectoryAccountInfo, IDirectoryDirectMessageAccount, LIMIT_DIRECT_MESSAGE_LENGTH } from 'pandora-common';
+import classNames from 'classnames';
+import { GetLogger, IDirectoryAccountInfo, IDirectoryDirectMessageAccount, LIMIT_DIRECT_MESSAGE_LENGTH } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
+import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { useAutoScroll } from '../../common/useAutoScroll';
 import { useEvent } from '../../common/useEvent';
+import { useTextFormattingOnKeyboardEvent } from '../../common/useTextFormattingOnKeyboardEvent';
+import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus';
 import { DirectMessage } from '../../networking/directMessageManager';
 import { useObservable } from '../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { AutoCompleteHint, IChatInputHandler, chatInputContext, useChatInput } from '../../ui/components/chat/chatInput';
 import { RenderChatPart } from '../../ui/components/chat/chatMessages';
+import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, ICommandInvokeContext, RunCommand } from '../../ui/components/chat/commandsProcessor';
+import { Column } from '../common/container/container';
 import { Scrollable } from '../common/scrollbar/scrollbar';
 import { DirectMessageChannelProvider, useDirectMessageChannel } from '../gameContext/directMessageChannelProvieder';
-import { useCurrentAccount, useDirectoryConnector, useAccountSettings } from '../gameContext/directoryConnectorContextProvider';
-import './directMessage.scss';
-import { useTextFormattingOnKeyboardEvent } from '../../common/useTextFormattingOnKeyboardEvent';
-import classNames from 'classnames';
-import { AutoCompleteHint, IChatInputHandler, chatInputContext, useChatInput } from '../../ui/components/chat/chatInput';
-import { DIRECT_MESSAGE_COMMANDS, DirectMessageCommandExecutionContext } from './directMessageCommandContext';
-import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import { useAccountSettings, useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useGameStateOptional } from '../gameContext/gameStateContextProvider';
-import { useNavigate } from 'react-router';
-import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, ICommandInvokeContext, RunCommand } from '../../ui/components/chat/commandsProcessor';
-import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus';
-import { Column } from '../common/container/container';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import './directMessage.scss';
+import { DIRECT_MESSAGE_COMMANDS, DirectMessageCommandExecutionContext } from './directMessageCommandContext';
 
 export function DirectMessage({ accountId }: { accountId: number; }): ReactElement {
 	const ref = React.useRef<HTMLTextAreaElement>(null);
@@ -176,7 +176,10 @@ function DirectChannelInputImpl(_: unknown, ref: React.ForwardedRef<HTMLTextArea
 				return false;
 			}
 			channel.sendMessage(input, editing?.target)
-				.catch((e) => toast(`Failed to send message: ${e as string}`, TOAST_OPTIONS_ERROR));
+				.catch((e) => {
+					toast(`Failed to send message: ${String(e)}`, TOAST_OPTIONS_ERROR);
+					GetLogger('DirectMessage').error('Failed to send message:', e);
+				});
 
 			return true;
 		}

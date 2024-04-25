@@ -11,6 +11,7 @@ import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalState
 import { RoomInventory } from './roomInventory';
 import type { AssetFrameworkGlobalState } from './state/globalState';
 import { SplitContainerPath } from './appearanceHelpers';
+import { ReTargetedCharacter } from './reTargetedCharacter';
 
 export class AppearanceActionProcessingContext {
 	private readonly _context: AppearanceActionContext;
@@ -232,8 +233,13 @@ export class AppearanceActionProcessingContext {
 			return target.withNoReTargeting();
 		}
 
-		// TODO: re-targeting to characters
-		return target.withNoReTargeting();
+		const roomState = this.manipulator.currentState.room;
+		const characterState = this.manipulator.currentState.getCharacterState(characterId);
+		AssertNotNullable(characterState);
+		const characterAppearance = this._context.getCharacter(characterId)?.getAppearance(characterState);
+		AssertNotNullable(characterAppearance);
+
+		return new ReTargetedCharacter(roomState, characterAppearance);
 	}
 }
 

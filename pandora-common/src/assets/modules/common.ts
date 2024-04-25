@@ -7,6 +7,7 @@ import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { IAssetModuleTypes, ModuleType } from '../modules';
 import type { Immutable } from 'immer';
 import type { InteractionId } from '../../gameLogic/interactions';
+import type { RoomDeviceProperties } from '../roomDeviceProperties';
 
 export interface IModuleConfigCommon<Type extends ModuleType, TProperties = unknown> {
 	type: Type;
@@ -14,11 +15,14 @@ export interface IModuleConfigCommon<Type extends ModuleType, TProperties = unkn
 	name: string;
 	/** If this module is hoisted to expressions */
 	expression?: string;
-	/**
-	 * The name of the room device slot to bind character permission
-	 * When a character occupies this slot permission checks will be performed against the character
-	 */
-	slotName: TProperties extends { slotProperties: { /**/ } | undefined; } ? (string | null) : never;
+	/** Asset type specific properties */
+	assetSpecific: Required<TProperties> extends Required<RoomDeviceProperties> ? {
+		/**
+		 * The name of the room device slot to bind character permission
+		 * When a character occupies this slot permission checks will be performed against the character
+		 */
+		slotName: string | null;
+	} : undefined;
 }
 
 export interface IModuleItemDataCommon<Type extends ModuleType> {

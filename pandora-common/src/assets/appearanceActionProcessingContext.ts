@@ -224,7 +224,7 @@ export class AppearanceActionProcessingContext {
 		const itemModule = item.getModules().get(moduleName);
 		AssertNotNullable(itemModule);
 
-		const slotName = itemModule.config.slotName;
+		const slotName = itemModule.config.assetSpecific.slotName;
 		if (slotName == null) {
 			return target.withNoReTargeting();
 		}

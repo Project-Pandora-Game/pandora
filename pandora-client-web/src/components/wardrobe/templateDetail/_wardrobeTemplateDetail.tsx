@@ -68,7 +68,7 @@ export function WardrobeTemplateEditMenu({
 				}
 				{
 					(asset.isType('personal') || asset.isType('roomDevice')) ? (
-						Array.from(Object.entries<Immutable<AssetModuleDefinition<unknown>>>(asset.definition.modules ?? {}))
+						Array.from(Object.entries<Immutable<AssetModuleDefinition<unknown>>>(asset.definition.modules as Record<string, AssetModuleDefinition<unknown>> ?? {}))
 							.map(([moduleName, m]) => (
 								<FieldsetToggle legend={ `Module: ${m.name}` } key={ moduleName }>
 									<WardrobeModuleTemplateConfig

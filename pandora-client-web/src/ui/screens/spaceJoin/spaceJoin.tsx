@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { SpaceDetails, useSpaceExtendedInfo } from '../spacesSearch/spacesSearch';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import './spaceJoin.scss';
+import { UntrustedLink } from '../../../components/common/link/externalLink';
 
 export function SpaceJoin(): ReactElement {
 	const { pathname, search } = useLocation();
@@ -69,5 +70,26 @@ export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: string; invite?
 				)
 			}
 		</div>
+	);
+}
+
+export function RenderedLink({ url, index }: { url: URL; index: number; }): ReactElement {
+	switch (url.hostname) {
+		case 'project-pandora.com':
+		case 'www.project-pandora.com':
+			if (url.pathname.startsWith('/space/join/')) {
+				const invite = url.searchParams.get('invite') ?? undefined;
+				const spaceId = url.pathname.split('/').pop();
+				if (!spaceId)
+					break;
+
+				return <SpaceInviteEmbed key={ index } spaceId={ spaceId } invite={ invite } />;
+			}
+			break;
+	}
+	return (
+		<UntrustedLink key={ index } href={ url.href }>
+			{ url.href }
+		</UntrustedLink>
 	);
 }

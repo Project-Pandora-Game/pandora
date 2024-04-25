@@ -34,9 +34,9 @@ export const IAssetModuleTypesSchemas = {
 
 export type IAssetModuleConfigs<TProperties> = Satisfies<{
 	typed: IModuleConfigTyped<TProperties>;
-	storage: IModuleConfigStorage;
+	storage: IModuleConfigStorage<TProperties>;
 	lockSlot: IModuleConfigLockSlot<TProperties>;
-}, { [Type in ModuleType]: IModuleConfigCommon<Type> }>;
+}, { [Type in ModuleType]: IModuleConfigCommon<Type, TProperties> }>;
 
 export const MODULE_TYPES: { [Type in ModuleType]: IAssetModuleDefinition<Type>; } = {
 	typed: new TypedModuleDefinition(),
@@ -113,7 +113,7 @@ export type ItemModuleAction = z.infer<typeof ItemModuleActionSchema>;
 
 export type AssetModuleDefinition<TProperties> = IAssetModuleTypes<TProperties>[ModuleType]['config'];
 
-export function GetModuleStaticAttributes<TProperties>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties>>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string> {
+export function GetModuleStaticAttributes<TProperties>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties>>, staticAttributesExtractor: (properties: Immutable<TProperties>) => ReadonlySet<string>): ReadonlySet<string> {
 	switch (moduleDefinition.type) {
 		case 'typed':
 			return MODULE_TYPES.typed.getStaticAttributes(moduleDefinition, staticAttributesExtractor);

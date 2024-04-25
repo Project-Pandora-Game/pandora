@@ -16,7 +16,7 @@ import type { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleAction
 // Fix for pnpm resolution weirdness
 import type { } from '../item/base';
 
-export interface IModuleConfigLockSlot<TProperties> extends IModuleConfigCommon<'lockSlot'> {
+export interface IModuleConfigLockSlot<TProperties> extends IModuleConfigCommon<'lockSlot', TProperties> {
 	/** Properties applied when this slot isn't occupied by a lock */
 	emptyProperties?: TProperties;
 	/** Properties applied when this slot is occupied by a lock */
@@ -44,14 +44,14 @@ export const ItemModuleLockSlotActionSchema = z.object({
 export type ItemModuleLockSlotAction = Satisfies<z.infer<typeof ItemModuleLockSlotActionSchema>, IModuleActionCommon<'lockSlot'>>;
 
 export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlot'> {
-	public makeDefaultData(_config: IModuleConfigLockSlot<unknown>): IModuleItemDataLockSlot {
+	public makeDefaultData<TProperties>(_config: Immutable<IModuleConfigLockSlot<TProperties>>): IModuleItemDataLockSlot {
 		return {
 			type: 'lockSlot',
 			lock: null,
 		};
 	}
 
-	public makeDataFromTemplate<TProperties>(_config: IModuleConfigLockSlot<TProperties>, template: IModuleItemTemplateLockSlot, context: IItemCreationContext): IModuleItemDataLockSlot {
+	public makeDataFromTemplate<TProperties>(_config: Immutable<IModuleConfigLockSlot<TProperties>>, template: IModuleItemTemplateLockSlot, context: IItemCreationContext): IModuleItemDataLockSlot {
 		return {
 			type: 'lockSlot',
 			lock: template.lock != null ? (context.createItemBundleFromTemplate(template.lock, context) ?? null) : null,
@@ -62,7 +62,7 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 		return ItemModuleLockSlot.loadFromData(config, data, context);
 	}
 
-	public getStaticAttributes<TProperties>(config: IModuleConfigLockSlot<TProperties>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string> {
+	public getStaticAttributes<TProperties>(config: Immutable<IModuleConfigLockSlot<TProperties>>, staticAttributesExtractor: (properties: Immutable<TProperties>) => ReadonlySet<string>): ReadonlySet<string> {
 		const result = new Set<string>();
 		if (config.emptyProperties != null) {
 			staticAttributesExtractor(config.emptyProperties).forEach((a) => result.add(a));

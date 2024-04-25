@@ -12,7 +12,7 @@ import { __internal_ItemBundleSchemaRecursive, __internal_ItemTemplateSchemaRecu
 import { IItemCreationContext, IItemLoadContext, IItemValidationContext, Item, ItemId } from '../item/base';
 import { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common';
 
-export interface IModuleConfigStorage extends IModuleConfigCommon<'storage'> {
+export interface IModuleConfigStorage<TProperties> extends IModuleConfigCommon<'storage', TProperties> {
 	maxCount: number;
 	maxAcceptedSize: AssetSize;
 }
@@ -36,40 +36,40 @@ export const ItemModuleStorageActionSchema = z.object({
 export type ItemModuleStorageAction = Satisfies<z.infer<typeof ItemModuleStorageActionSchema>, IModuleActionCommon<'storage'>>;
 
 export class StorageModuleDefinition implements IAssetModuleDefinition<'storage'> {
-	public makeDefaultData(_config: IModuleConfigStorage): IModuleItemDataStorage {
+	public makeDefaultData<TProperties>(_config: Immutable<IModuleConfigStorage<TProperties>>): IModuleItemDataStorage {
 		return {
 			type: 'storage',
 			contents: [],
 		};
 	}
 
-	public makeDataFromTemplate(_config: IModuleConfigStorage, template: IModuleItemTemplateStorage, context: IItemCreationContext): IModuleItemDataStorage {
+	public makeDataFromTemplate<TProperties>(_config: Immutable<IModuleConfigStorage<TProperties>>, template: IModuleItemTemplateStorage, context: IItemCreationContext): IModuleItemDataStorage {
 		return {
 			type: 'storage',
 			contents: template.contents.map((contentTemplate) => context.createItemBundleFromTemplate(contentTemplate, context)).filter(IsNotNullable),
 		};
 	}
 
-	public loadModule<TProperties>(config: IModuleConfigStorage, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage<TProperties> {
+	public loadModule<TProperties>(config: Immutable<IModuleConfigStorage<TProperties>>, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage<TProperties> {
 		return ItemModuleStorage.loadFromData<TProperties>(config, data, context);
 	}
 
-	public getStaticAttributes(_config: IModuleConfigStorage): ReadonlySet<string> {
+	public getStaticAttributes<TProperties>(_config: Immutable<IModuleConfigStorage<TProperties>>): ReadonlySet<string> {
 		return new Set<string>();
 	}
 }
 
-interface ItemModuleStorageProps {
+interface ItemModuleStorageProps<TProperties> {
 	readonly assetManager: AssetManager;
-	readonly config: IModuleConfigStorage;
+	readonly config: Immutable<IModuleConfigStorage<TProperties>>;
 	readonly contents: AppearanceItems;
 }
 
-export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TProperties, 'storage'>, ItemModuleStorageProps {
+export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TProperties, 'storage'>, ItemModuleStorageProps<TProperties> {
 	public readonly type = 'storage';
 
 	public readonly assetManager: AssetManager;
-	public readonly config: IModuleConfigStorage;
+	public readonly config: Immutable<IModuleConfigStorage<TProperties>>;
 	public readonly contents: AppearanceItems;
 
 	public get interactionType(): ItemInteractionType {
@@ -78,17 +78,17 @@ export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TPr
 
 	public readonly interactionId: InteractionId = 'useStorageModule';
 
-	protected constructor(props: ItemModuleStorageProps, overrideProps?: Partial<ItemModuleStorageProps>) {
+	protected constructor(props: ItemModuleStorageProps<TProperties>, overrideProps?: Partial<ItemModuleStorageProps<TProperties>>) {
 		this.assetManager = overrideProps?.assetManager ?? props.assetManager;
 		this.config = overrideProps?.config ?? props.config;
 		this.contents = overrideProps?.contents ?? props.contents;
 	}
 
-	protected withProps(overrideProps: Partial<ItemModuleStorageProps>): ItemModuleStorage<TProperties> {
+	protected withProps(overrideProps: Partial<ItemModuleStorageProps<TProperties>>): ItemModuleStorage<TProperties> {
 		return new ItemModuleStorage(this, overrideProps);
 	}
 
-	public static loadFromData<TProperties>(config: IModuleConfigStorage, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage<TProperties> {
+	public static loadFromData<TProperties>(config: Immutable<IModuleConfigStorage<TProperties>>, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage<TProperties> {
 		const contents: Item[] = [];
 		const limitSize = AssetSizeMapping[config.maxAcceptedSize] ?? 0;
 		for (const itemBundle of data.contents) {

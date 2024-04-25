@@ -8,7 +8,8 @@ import type { IAssetModuleTypes, ModuleType } from '../modules';
 import type { Immutable } from 'immer';
 import type { InteractionId } from '../../gameLogic/interactions';
 
-export interface IModuleConfigCommon<Type extends ModuleType> {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export interface IModuleConfigCommon<Type extends ModuleType, TProperties = unknown> {
 	type: Type;
 	/** The display name of this module */
 	name: string;
@@ -25,10 +26,10 @@ export interface IModuleActionCommon<Type extends ModuleType> {
 }
 
 export interface IAssetModuleDefinition<Type extends ModuleType> {
-	makeDefaultData(config: Immutable<IAssetModuleTypes<unknown>[Type]['config']>): IAssetModuleTypes<unknown>[Type]['data'];
+	makeDefaultData<TProperties>(config: Immutable<IAssetModuleTypes<TProperties>[Type]['config']>): IAssetModuleTypes<TProperties>[Type]['data'];
 	makeDataFromTemplate<TProperties>(config: Immutable<IAssetModuleTypes<TProperties>[Type]['config']>, template: IAssetModuleTypes<TProperties>[Type]['template'], context: IItemCreationContext): IAssetModuleTypes<TProperties>[Type]['data'] | undefined;
 	loadModule<TProperties>(config: Immutable<IAssetModuleTypes<TProperties>[Type]['config']>, data: IAssetModuleTypes<TProperties>[Type]['data'], context: IItemLoadContext): IItemModule<TProperties, Type>;
-	getStaticAttributes<TProperties>(config: Immutable<IAssetModuleTypes<unknown>[Type]['config']>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string>;
+	getStaticAttributes<TProperties>(config: Immutable<IAssetModuleTypes<TProperties>[Type]['config']>, staticAttributesExtractor: (properties: Immutable<TProperties>) => ReadonlySet<string>): ReadonlySet<string>;
 }
 
 export interface IExportOptions {

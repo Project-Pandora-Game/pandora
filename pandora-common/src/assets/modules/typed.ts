@@ -52,7 +52,7 @@ export interface IModuleTypedOption<TProperties> {
 	customText?: string[];
 }
 
-export interface IModuleConfigTyped<TProperties> extends IModuleConfigCommon<'typed'> {
+export interface IModuleConfigTyped<TProperties> extends IModuleConfigCommon<'typed', TProperties> {
 	/**
 	 * The kind of interaction this module provides, affects prerequisites for changing it.
 	 * @default ItemInteractionType.MODIFY
@@ -87,13 +87,13 @@ export const ItemModuleTypedActionSchema = z.object({
 export type ItemModuleTypedAction = Satisfies<z.infer<typeof ItemModuleTypedActionSchema>, IModuleActionCommon<'typed'>>;
 
 export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
-	public makeDefaultData(_config: IModuleConfigTyped<unknown>): IModuleItemDataTyped {
+	public makeDefaultData<TProperties>(_config: Immutable<IModuleConfigTyped<TProperties>>): IModuleItemDataTyped {
 		return {
 			type: 'typed',
 		};
 	}
 
-	public makeDataFromTemplate<TProperties>(config: IModuleConfigTyped<TProperties>, template: IModuleItemTemplateTyped, context: IItemCreationContext): IModuleItemDataTyped | undefined {
+	public makeDataFromTemplate<TProperties>(config: Immutable<IModuleConfigTyped<TProperties>>, template: IModuleItemTemplateTyped, context: IItemCreationContext): IModuleItemDataTyped | undefined {
 		// Find which variant would be selected
 		const variant = config.variants.find((v) => v.id === template.variant);
 		if (variant == null)
@@ -123,7 +123,7 @@ export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
 		return ItemModuleTyped.loadFromData(config, data, context);
 	}
 
-	public getStaticAttributes<TProperties>(config: IModuleConfigTyped<TProperties>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string> {
+	public getStaticAttributes<TProperties>(config: Immutable<IModuleConfigTyped<TProperties>>, staticAttributesExtractor: (properties: Immutable<TProperties>) => ReadonlySet<string>): ReadonlySet<string> {
 		const result = new Set<string>();
 		for (const option of config.variants) {
 			if (option.properties != null) {

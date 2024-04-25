@@ -1,19 +1,20 @@
+import express from 'express';
+import { readFileSync, statSync } from 'fs';
 import { AssetManager, AssetsDefinitionFile, GetLogger, IsObject } from 'pandora-common';
 import { join } from 'path';
-import { readFileSync, statSync } from 'fs';
-import { ENV } from '../config';
-const { ASSETS_DEFINITION_PATH } = ENV;
-import express from 'express';
-import { ConnectionManagerClient } from '../networking/manager_client';
 import { CharacterManager } from '../character/characterManager';
+import { ENV } from '../config';
+import { ConnectionManagerClient } from '../networking/manager_client';
 import { SpaceManager } from '../spaces/spaceManager';
+
+const { ASSETS_DEFINITION_PATH, SHARD_DEVELOPMENT_MODE } = ENV;
 
 const logger = GetLogger('AssetManager');
 
 export let assetManager = new AssetManager();
 
-// Checks asset definitions for changes every 2 seconds, if in development mode
-const ASSET_DEFINITIONS_WATCH_INTERVAL = 2_000;
+// Checks asset definitions for changes every 2 seconds, if in development mode, every 15 seconds otherwise
+const ASSET_DEFINITIONS_WATCH_INTERVAL = SHARD_DEVELOPMENT_MODE ? 2_000 : 15_000;
 let watcher: NodeJS.Timeout | undefined;
 
 // This function is intentionally using synchronous calls to make sure that during reload it won't be interrupted with any other event
@@ -54,6 +55,10 @@ function WatchAssetDefinitionsTick(): void {
 		if (!statSync(currentFilePath).isFile())
 			return;
 		const currentHash = readFileSync(currentFilePath, { encoding: 'utf8' }).trim();
+		// Avoid race conditions by checking the file is not empty and points to a valid file
+		if (!currentHash || !statSync(join(ASSETS_DEFINITION_PATH, `assets_${currentHash}.json`)).isFile())
+			return;
+
 		if (currentHash !== assetManager.definitionsHash) {
 			logger.alert(`Detected asset definitions change: ${assetManager.definitionsHash} -> ${currentHash}`);
 			LoadAssetDefinitions();

@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast';
 import { Scrollable } from '../common/scrollbar/scrollbar';
 import { Link } from 'react-router-dom';
+import { ProfileDescriptionLine } from './profileDescription';
 
 export function AccountProfile({ accountId }: { accountId: AccountId; }): ReactElement {
 	const accountData = useAccountProfileData(accountId);
@@ -146,7 +147,7 @@ function AccountProfileDescription({ profileDescription, allowEdit }: { profileD
 				}
 			</Row>
 			<div className='flex-1 profileDescriptionContent'>
-				{ editedDescription.trim() }
+				{ editedDescription.trim().split('\n').map((line, i) => (<ProfileDescriptionLine key={ i } line={ line } index={ i } />)) }
 			</div>
 		</Column>
 	);

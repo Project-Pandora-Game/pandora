@@ -60,6 +60,17 @@ export enum ItemInteractionType {
 	 *   - If asset has `blockSelfAddRemove`, then cannot happen on self
 	 */
 	ADD_REMOVE = 'ADD_REMOVE',
+	/**
+	 * Character is entering or leaving a room device.
+	 * This action happens on _both_ the device itself and the wearable part.
+	 *
+	 * Requirements:
+	 * - Requires all `ACCESS_ONLY` requirements
+	 * - Asset is room device or its wearable part
+	 * - If item has `blockAddRemove`, then denied
+	 * - If item has `blockSelfAddRemove`, then cannot happen on self
+	 */
+	DEVICE_ENTER_LEAVE = 'DEVICE_ENTER_LEAVE',
 }
 
 export type PermissionRestriction = {

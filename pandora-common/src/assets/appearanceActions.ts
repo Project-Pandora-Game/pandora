@@ -938,7 +938,7 @@ export function ActionRoomDeviceEnter({
 		return processingContext.invalid();
 
 	// Player must be able to interact with the device
-	processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.MODIFY);
+	processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.DEVICE_ENTER_LEAVE);
 
 	// We must have target character
 	const targetCharacter = processingContext.getTarget(action.character);
@@ -951,8 +951,8 @@ export function ActionRoomDeviceEnter({
 	const wearableItem = assetManager
 		.createItem(action.itemId, asset)
 		.withLink(item, action.slot);
-	// Player adding the item must be able to use it
-	processingContext.checkCanUseItemDirect(targetCharacter, [], wearableItem, ItemInteractionType.ADD_REMOVE);
+	// Player adding the wearable part must be able to use it
+	processingContext.checkCanUseItemDirect(targetCharacter, [], wearableItem, ItemInteractionType.DEVICE_ENTER_LEAVE);
 
 	// Actual action
 
@@ -1022,7 +1022,7 @@ export function ActionRoomDeviceLeave({
 		return processingContext.invalid();
 
 	// Player must be able to interact with the device
-	processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.MODIFY);
+	processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.DEVICE_ENTER_LEAVE);
 
 	const roomManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 
@@ -1050,11 +1050,11 @@ export function ActionRoomDeviceLeave({
 		// If we have a part to remove this is a free, not just cleanup
 		if (wearablePart != null) {
 
-			// Player must be able to remove the item
+			// Player must be able to remove the wearable part
 			processingContext.checkCanUseItem(targetCharacter, {
 				container: [],
 				itemId: wearablePart.id,
-			}, ItemInteractionType.ADD_REMOVE);
+			}, ItemInteractionType.DEVICE_ENTER_LEAVE);
 
 			// Actually remove the item
 			const removed = characterManipulator.removeMatchingItems((i) => i.asset === asset);

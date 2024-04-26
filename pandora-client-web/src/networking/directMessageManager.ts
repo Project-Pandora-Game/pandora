@@ -1,14 +1,28 @@
-import { AccountId, AssertNotNullable, EMPTY, IAccountCryptoKey, IChatSegment, IDirectoryClientArgument, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64, PromiseOnce, TypedEventEmitter } from 'pandora-common';
-import type { SymmetricEncryption } from '../crypto/symmetric';
-import type { DirectoryConnector } from './directoryConnector';
-import { KeyExchange } from '../crypto/keyExchange';
-import { BrowserStorage } from '../browserStorage';
-import { Observable, ReadonlyObservable } from '../observable';
-import { ChatParser } from '../ui/components/chat/chatParser';
-import { HashSHA256Base64 } from '../crypto/helpers';
+import {
+	AccountId,
+	Assert,
+	AssertNotNullable,
+	EMPTY,
+	IAccountCryptoKey,
+	IChatSegment,
+	IDirectoryClientArgument,
+	IDirectoryDirectMessage,
+	IDirectoryDirectMessageAccount,
+	IDirectoryDirectMessageInfo,
+	LIMIT_DIRECT_MESSAGE_LENGTH_BASE64,
+	PromiseOnce,
+	TypedEventEmitter,
+} from 'pandora-common';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../persistentToast';
 import { z } from 'zod';
+import { BrowserStorage } from '../browserStorage';
+import { HashSHA256Base64 } from '../crypto/helpers';
+import { KeyExchange } from '../crypto/keyExchange';
+import type { SymmetricEncryption } from '../crypto/symmetric';
+import { Observable, ReadonlyObservable } from '../observable';
+import { TOAST_OPTIONS_ERROR } from '../persistentToast';
+import { ChatParser } from '../ui/components/chat/chatParser';
+import type { DirectoryConnector } from './directoryConnector';
 
 export class DirectMessageManager extends TypedEventEmitter<{ newMessage: DirectMessageChannel; close: AccountId; }> {
 	public readonly connector: DirectoryConnector;
@@ -189,7 +203,7 @@ export class DirectMessageChannel {
 	private _account?: IDirectoryDirectMessageAccount;
 	private _mounts = 0;
 	private _failed?: 'notFound' | 'denied';
-	#encryption!: SymmetricEncryption;
+	#encryption: SymmetricEncryption | null = null;
 
 	public readonly connector: DirectoryConnector;
 
@@ -237,6 +251,7 @@ export class DirectMessageChannel {
 		if (!this._loaded) {
 			throw new Error('Channel not loaded');
 		}
+		Assert(this.#encryption != null, 'Send message: Channel is loaded, but encryption helper is not.');
 		const encrypted = message.length === 0 ? '' : await this.#encryption.encrypt(message);
 		if (encrypted.length > LIMIT_DIRECT_MESSAGE_LENGTH_BASE64) {
 			toast(`Encrypted message too long: ${encrypted.length} > ${LIMIT_DIRECT_MESSAGE_LENGTH_BASE64}`, TOAST_OPTIONS_ERROR);
@@ -256,6 +271,7 @@ export class DirectMessageChannel {
 			await this._loadKey(data.account.publicKeyData);
 			this._account = data.account;
 		}
+		Assert(this.#encryption != null, 'Load message: Encryption helper is not loaded.');
 		this._loadSingle({
 			time,
 			message: await this.#encryption.decrypt(content),
@@ -316,6 +332,7 @@ export class DirectMessageChannel {
 		if (keyHash !== this._keyHash) {
 			return undefined;
 		}
+		Assert(this.#encryption != null, 'Decrypt: key hash is valid, but encryption helper is not loaded.');
 		return {
 			time,
 			message: ChatParser.parseStyle(await this.#encryption.decrypt(content), true),

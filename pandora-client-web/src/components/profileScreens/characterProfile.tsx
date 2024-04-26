@@ -12,6 +12,7 @@ import { Button } from '../common/button/button';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast';
 import { Link } from 'react-router-dom';
+import { ProfileDescription } from './profileDescription';
 
 export function CharacterProfile({ characterId }: { characterId: CharacterId; }): ReactElement {
 	const characters = useSpaceCharacters();
@@ -146,7 +147,7 @@ function CharacterProfileDescription({ profileDescription, allowEdit }: { profil
 				}
 			</Row>
 			<div className='flex-1 profileDescriptionContent'>
-				{ profileDescription }
+				<ProfileDescription contents={ profileDescription } />
 			</div>
 		</Column>
 	);

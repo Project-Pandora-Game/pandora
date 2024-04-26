@@ -241,6 +241,14 @@ export class AppearanceActionProcessingContext {
 
 		return new ReTargetedCharacter(roomState, characterAppearance);
 	}
+
+	public reTargetActionIndirect(target: ActionTarget, itemPath: ItemPath, moduleName: string | null): ActionTarget {
+		const item = target.getItem(itemPath);
+		if (!item)
+			return target;
+
+		return this.reTargetAction(target, itemPath.container, item, moduleName);
+	}
 }
 
 abstract class AppearanceActionProcessingResultBase {

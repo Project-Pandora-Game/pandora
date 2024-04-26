@@ -664,11 +664,13 @@ export function ActionModuleAction({
 
 	let rejectionReason: ModuleActionError | undefined;
 
+	const newTarget = processingContext.reTargetActionIndirect(target, action.item, action.module);
+
 	// Do change and store chat messages
 	if (!containerManipulator.modifyItem(itemId, (it) => {
 		const actionContext: AppearanceModuleActionContext = {
 			processingContext,
-			target,
+			target: newTarget,
 			messageHandler: (m) => {
 				processingContext.queueMessage(
 					containerManipulator.makeMessage({

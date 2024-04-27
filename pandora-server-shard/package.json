@@ -62,7 +62,7 @@
 		"@types/wtfnode": "0.7.3",
 		"@typescript-eslint/eslint-plugin": "7.7.1",
 		"@typescript-eslint/parser": "7.7.1",
-		"discord-api-types": "0.37.82",
+		"discord-api-types": "0.37.83",
 		"eslint": "8.57.0",
 		"eslint-plugin-import": "2.29.1",
 		"immer": "10.0.4",

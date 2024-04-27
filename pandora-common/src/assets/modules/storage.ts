@@ -12,10 +12,10 @@ import { __internal_ItemBundleSchemaRecursive, __internal_ItemTemplateSchemaRecu
 import { IItemCreationContext, IItemLoadContext, IItemValidationContext, Item, ItemId } from '../item/base';
 import { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common';
 
-export interface IModuleConfigStorage<TProperties> extends IModuleConfigCommon<'storage', TProperties> {
+export type IModuleConfigStorage<TProperties, TStaticData> = IModuleConfigCommon<'storage', TProperties, TStaticData> & {
 	maxCount: number;
 	maxAcceptedSize: AssetSize;
-}
+};
 
 export const ModuleItemDataStorageSchema = z.object({
 	type: z.literal('storage'),
@@ -36,40 +36,40 @@ export const ItemModuleStorageActionSchema = z.object({
 export type ItemModuleStorageAction = Satisfies<z.infer<typeof ItemModuleStorageActionSchema>, IModuleActionCommon<'storage'>>;
 
 export class StorageModuleDefinition implements IAssetModuleDefinition<'storage'> {
-	public makeDefaultData<TProperties>(_config: Immutable<IModuleConfigStorage<TProperties>>): IModuleItemDataStorage {
+	public makeDefaultData<TProperties, TStaticData>(_config: Immutable<IModuleConfigStorage<TProperties, TStaticData>>): IModuleItemDataStorage {
 		return {
 			type: 'storage',
 			contents: [],
 		};
 	}
 
-	public makeDataFromTemplate<TProperties>(_config: Immutable<IModuleConfigStorage<TProperties>>, template: IModuleItemTemplateStorage, context: IItemCreationContext): IModuleItemDataStorage {
+	public makeDataFromTemplate<TProperties, TStaticData>(_config: Immutable<IModuleConfigStorage<TProperties, TStaticData>>, template: IModuleItemTemplateStorage, context: IItemCreationContext): IModuleItemDataStorage {
 		return {
 			type: 'storage',
 			contents: template.contents.map((contentTemplate) => context.createItemBundleFromTemplate(contentTemplate, context)).filter(IsNotNullable),
 		};
 	}
 
-	public loadModule<TProperties>(config: Immutable<IModuleConfigStorage<TProperties>>, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage<TProperties> {
-		return ItemModuleStorage.loadFromData<TProperties>(config, data, context);
+	public loadModule<TProperties, TStaticData>(config: Immutable<IModuleConfigStorage<TProperties, TStaticData>>, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage<TProperties, TStaticData> {
+		return ItemModuleStorage.loadFromData<TProperties, TStaticData>(config, data, context);
 	}
 
-	public getStaticAttributes<TProperties>(_config: Immutable<IModuleConfigStorage<TProperties>>): ReadonlySet<string> {
+	public getStaticAttributes<TProperties, TStaticData>(_config: Immutable<IModuleConfigStorage<TProperties, TStaticData>>): ReadonlySet<string> {
 		return new Set<string>();
 	}
 }
 
-interface ItemModuleStorageProps<TProperties> {
+interface ItemModuleStorageProps<TProperties, TStaticData> {
 	readonly assetManager: AssetManager;
-	readonly config: Immutable<IModuleConfigStorage<TProperties>>;
+	readonly config: Immutable<IModuleConfigStorage<TProperties, TStaticData>>;
 	readonly contents: AppearanceItems;
 }
 
-export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TProperties, 'storage'>, ItemModuleStorageProps<TProperties> {
+export class ItemModuleStorage<TProperties = unknown, TStaticData = unknown> implements IItemModule<TProperties, TStaticData, 'storage'>, ItemModuleStorageProps<TProperties, TStaticData> {
 	public readonly type = 'storage';
 
 	public readonly assetManager: AssetManager;
-	public readonly config: Immutable<IModuleConfigStorage<TProperties>>;
+	public readonly config: Immutable<IModuleConfigStorage<TProperties, TStaticData>>;
 	public readonly contents: AppearanceItems;
 
 	public get interactionType(): ItemInteractionType {
@@ -78,17 +78,17 @@ export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TPr
 
 	public readonly interactionId: InteractionId = 'useStorageModule';
 
-	protected constructor(props: ItemModuleStorageProps<TProperties>, overrideProps?: Partial<ItemModuleStorageProps<TProperties>>) {
+	protected constructor(props: ItemModuleStorageProps<TProperties, TStaticData>, overrideProps?: Partial<ItemModuleStorageProps<TProperties, TStaticData>>) {
 		this.assetManager = overrideProps?.assetManager ?? props.assetManager;
 		this.config = overrideProps?.config ?? props.config;
 		this.contents = overrideProps?.contents ?? props.contents;
 	}
 
-	protected withProps(overrideProps: Partial<ItemModuleStorageProps<TProperties>>): ItemModuleStorage<TProperties> {
+	protected withProps(overrideProps: Partial<ItemModuleStorageProps<TProperties, TStaticData>>): ItemModuleStorage<TProperties, TStaticData> {
 		return new ItemModuleStorage(this, overrideProps);
 	}
 
-	public static loadFromData<TProperties>(config: Immutable<IModuleConfigStorage<TProperties>>, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage<TProperties> {
+	public static loadFromData<TProperties, TStaticData>(config: Immutable<IModuleConfigStorage<TProperties, TStaticData>>, data: IModuleItemDataStorage, context: IItemLoadContext): ItemModuleStorage<TProperties, TStaticData> {
 		const contents: Item[] = [];
 		const limitSize = AssetSizeMapping[config.maxAcceptedSize] ?? 0;
 		for (const itemBundle of data.contents) {
@@ -202,7 +202,7 @@ export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TPr
 		return false;
 	}
 
-	public doAction(_context: AppearanceModuleActionContext, _action: ItemModuleStorageAction): ItemModuleStorage<TProperties> | null {
+	public doAction(_context: AppearanceModuleActionContext, _action: ItemModuleStorageAction): ItemModuleStorage<TProperties, TStaticData> | null {
 		return null;
 	}
 
@@ -212,7 +212,7 @@ export class ItemModuleStorage<TProperties = unknown> implements IItemModule<TPr
 		return this.contents;
 	}
 
-	public setContents(items: AppearanceItems): ItemModuleStorage<TProperties> | null {
+	public setContents(items: AppearanceItems): ItemModuleStorage<TProperties, TStaticData> | null {
 		return this.withProps({
 			contents: items,
 		});

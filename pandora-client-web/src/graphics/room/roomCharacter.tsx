@@ -1,4 +1,5 @@
 import {
+	AssertNever,
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
 	CharacterRoomPosition,
@@ -301,14 +302,15 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 
 	const showName = useObservable(SettingDisplayCharacterName);
 
-	// NOTE: Can this be done in a cleaner way?
-	let fontScale: number = 1.0;
+	let fontScale: number;
 	switch (interfaceChatroomCharacterNameFontSize) {
 		case 'xs': fontScale = 0.6; break;
 		case 's': fontScale = 1.0; break;
+		case 'm': fontScale = 1.4; break;
 		case 'l': fontScale = 1.8; break;
 		case 'xl': fontScale = 2.2; break;
-		default: fontScale = 1.4; break;
+		default:
+			AssertNever(interfaceChatroomCharacterNameFontSize);
 	}
 
 	useEffect(() => {

@@ -56,8 +56,8 @@ importers:
         specifier: 5.3.0
         version: 5.3.0
       immer:
-        specifier: 10.0.4
-        version: 10.0.4
+        specifier: 10.1.1
+        version: 10.1.1
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -291,8 +291,8 @@ importers:
         specifier: 1.4.1
         version: 1.4.1
       immer:
-        specifier: 10.0.4
-        version: 10.0.4
+        specifier: 10.1.1
+        version: 10.1.1
       lodash:
         specifier: 4.17.21
         version: 4.17.21
@@ -549,8 +549,8 @@ importers:
         specifier: 2.29.1
         version: 2.29.1(@typescript-eslint/parser@7.7.1(eslint@8.57.0)(typescript@5.4.5))(eslint@8.57.0)
       immer:
-        specifier: 10.0.4
-        version: 10.0.4
+        specifier: 10.1.1
+        version: 10.1.1
       jest:
         specifier: 29.7.0
         version: 29.7.0(@types/node@20.12.7)(ts-node@10.9.2(@types/node@20.12.7)(typescript@5.4.5))
@@ -4411,8 +4411,8 @@ packages:
     resolution: {integrity: sha512-5Fytz/IraMjqpwfd34ke28PTVMjZjJG2MPn5t7OE4eUCUNf8BAa7b5WUS9/Qvr6mwOQS7Mk6vdsMno5he+T8Xw==}
     engines: {node: '>= 4'}
 
-  immer@10.0.4:
-    resolution: {integrity: sha512-cuBuGK40P/sk5IzWa9QPUaAdvPHjkk1c+xYsd9oZw+YQQEV+10G0P5uMpGctZZKnyQ+ibRO08bD25nWLmYi2pw==}
+  immer@10.1.1:
+    resolution: {integrity: sha512-s2MPrmjovJcoMaHtx6K11Ra7oD05NT97w1IC5zpMkT6Atjr7H8LjaDd81iIxUYpMKSRRNMJE703M1Fhr/TctHw==}
 
   immutable@4.3.5:
     resolution: {integrity: sha512-8eabxkth9gZatlwl5TBuJnCsoTADlL6ftEr7A4qgdaTsPyreilDSnUk57SO+jfKcNtxPa22U5KK6DSeAYhpBJw==}
@@ -12004,7 +12004,7 @@ snapshots:
 
   ignore@5.3.1: {}
 
-  immer@10.0.4: {}
+  immer@10.1.1: {}
 
   immutable@4.3.5: {}
 

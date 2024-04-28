@@ -49,6 +49,7 @@ function Start(): void {
 									position: 'absolute',
 								} }
 								toastStyle={ { backgroundColor: '#333' } }
+								position='top-left'
 							/>
 							<div className='main'>
 								<PandoraRoutes />

@@ -38,7 +38,14 @@ async function Start(): Promise<void> {
 			<EulaGate>
 				<BrowserRouter basename='/editor'>
 					<EditorContextProvider>
-						<ToastContainer theme='dark' />
+						<ToastContainer
+							theme='dark'
+							style={ {
+								position: 'absolute',
+							} }
+							toastStyle={ { backgroundColor: '#333' } }
+							position='top-left'
+						/>
 						<AssetLoaderElement />
 					</EditorContextProvider>
 				</BrowserRouter>

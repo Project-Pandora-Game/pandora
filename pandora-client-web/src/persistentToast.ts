@@ -9,6 +9,7 @@ export const TOAST_OPTIONS_SUCCESS: ToastOptions = {
 	closeOnClick: true,
 	closeButton: true,
 	draggable: true,
+	position: 'top-left',
 };
 export const TOAST_OPTIONS_WARNING: ToastOptions = {
 	type: 'warning',
@@ -17,6 +18,7 @@ export const TOAST_OPTIONS_WARNING: ToastOptions = {
 	closeOnClick: true,
 	closeButton: true,
 	draggable: true,
+	position: 'top-left',
 };
 export const TOAST_OPTIONS_ERROR: ToastOptions = {
 	type: 'error',
@@ -25,6 +27,7 @@ export const TOAST_OPTIONS_ERROR: ToastOptions = {
 	closeOnClick: true,
 	closeButton: true,
 	draggable: true,
+	position: 'top-left',
 };
 export const TOAST_OPTIONS_PENDING: ToastOptions = {
 	type: 'default',
@@ -33,6 +36,7 @@ export const TOAST_OPTIONS_PENDING: ToastOptions = {
 	closeOnClick: false,
 	closeButton: false,
 	draggable: false,
+	position: 'top-left',
 };
 
 export class PersistentToast {

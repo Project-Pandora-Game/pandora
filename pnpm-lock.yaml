@@ -108,8 +108,8 @@ importers:
         specifier: 7.24.4
         version: 7.24.4(@babel/core@7.24.4)
       '@pmmmwh/react-refresh-webpack-plugin':
-        specifier: 0.5.11
-        version: 0.5.11(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))(react-refresh@0.14.2)(type-fest@4.17.0)(webpack-dev-server@4.15.2(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))
+        specifier: 0.5.13
+        version: 0.5.13(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))(react-refresh@0.14.2)(type-fest@4.17.0)(webpack-dev-server@4.15.2(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))
       '@project-pandora-game/sass-loader':
         specifier: 13.2.0
         version: 13.2.0(sass@1.75.0)(webpack@5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))
@@ -2109,8 +2109,8 @@ packages:
     engines: {node: '>=16'}
     hasBin: true
 
-  '@pmmmwh/react-refresh-webpack-plugin@0.5.11':
-    resolution: {integrity: sha512-7j/6vdTym0+qZ6u4XbSAxrWBGYSdCfTzySkj7WAFgDLmSyWlOrWvpyzxlFh5jtw9dn0oL/jtW+06XfFiisN3JQ==}
+  '@pmmmwh/react-refresh-webpack-plugin@0.5.13':
+    resolution: {integrity: sha512-odZVYXly+JwzYri9rKqqUAk0cY6zLpv4dxoKinhoJNShV36Gpxf+CyDIILJ4tYsJ1ZxIWs233Y39iVnynvDA/g==}
     engines: {node: '>= 10.13'}
     peerDependencies:
       '@types/webpack': 4.x || 5.x
@@ -2118,7 +2118,7 @@ packages:
       sockjs-client: ^1.4.0
       type-fest: '>=0.17.0 <5.0.0'
       webpack: '>=4.43.0 <6.0.0'
-      webpack-dev-server: 3.x || 4.x
+      webpack-dev-server: 3.x || 4.x || 5.x
       webpack-hot-middleware: 2.x
       webpack-plugin-serve: 0.x || 1.x
     peerDependenciesMeta:
@@ -3306,9 +3306,6 @@ packages:
   commander@8.3.0:
     resolution: {integrity: sha512-OkTL9umf+He2DZkUq8f8J9of7yL6RJKI24dVITBmNfZBmri9zYZQrKkuXiKhyfPSu8tUhnVBB1iKXevvnlR4Ww==}
     engines: {node: '>= 12'}
-
-  common-path-prefix@3.0.0:
-    resolution: {integrity: sha512-QE33hToZseCH3jS0qN96O/bSh3kaw/h+Tq7ngyY9eWDUnTlTNUyqfqvCXioLe5Na5jFsL78ra/wuBU4iuEgd4w==}
 
   commondir@1.0.1:
     resolution: {integrity: sha512-W9pAhw0ja1Edb5GVdIF1mjZw/ASI0AlShXM83UUGe2DVr5TdAPEA1OA8m/g8zWp9x6On7gqufY+FatDbC3MDQg==}
@@ -9245,13 +9242,11 @@ snapshots:
     dependencies:
       playwright: 1.43.1
 
-  '@pmmmwh/react-refresh-webpack-plugin@0.5.11(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))(react-refresh@0.14.2)(type-fest@4.17.0)(webpack-dev-server@4.15.2(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))':
+  '@pmmmwh/react-refresh-webpack-plugin@0.5.13(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))(react-refresh@0.14.2)(type-fest@4.17.0)(webpack-dev-server@4.15.2(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))':
     dependencies:
       ansi-html-community: 0.0.8
-      common-path-prefix: 3.0.0
       core-js-pure: 3.36.1
       error-stack-parser: 2.1.4
-      find-up: 5.0.0
       html-entities: 2.5.2
       loader-utils: 2.0.4
       react-refresh: 0.14.2
@@ -10680,8 +10675,6 @@ snapshots:
   commander@7.2.0: {}
 
   commander@8.3.0: {}
-
-  common-path-prefix@3.0.0: {}
 
   commondir@1.0.1: {}
 

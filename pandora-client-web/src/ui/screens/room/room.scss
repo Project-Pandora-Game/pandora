@@ -146,11 +146,11 @@
 		}
 
 		a {
-			color: $white;
+			color: $theme-link-light;
 			text-decoration: underline;
 
 			&:hover {
-				color: $grey-mid;
+				color: $grey-light;
 			}
 		}
 

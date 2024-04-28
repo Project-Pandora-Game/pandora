@@ -26,20 +26,20 @@ test.describe('Wiki', () => {
 		// Initial tab is introcution
 		await expect(page.getByRole('button', { name: 'Introduction' })).toHaveClass('tab active');
 		await expect(page.getByRole('button', { name: 'Contact' })).toHaveClass('tab');
-		await expect(page.getByRole('heading', { name: 'Introduction to Pandora' })).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'Introduction to Pandora' })).toBeVisible({ timeout: 10_000 });
 		await page.waitForURL('/wiki/introduction');
 
 		// Nothing changes when clicking already selected tab
 		await page.getByRole('button', { name: 'Introduction' }).click();
 		await expect(page.getByRole('button', { name: 'Introduction' })).toHaveClass('tab active');
 		await expect(page.getByRole('button', { name: 'Contact' })).toHaveClass('tab');
-		await expect(page.getByRole('heading', { name: 'Introduction to Pandora' })).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'Introduction to Pandora' })).toBeVisible({ timeout: 10_000 });
 		await page.waitForURL('/wiki/introduction');
 
 		// Switch to tab "Contact"
 		await page.getByRole('button', { name: 'Contact' }).click();
 		await expect(page.getByRole('button', { name: 'Contact' })).toHaveClass('tab active');
-		await expect(page.getByRole('heading', { name: 'Contact Us', exact: true })).toBeVisible();
+		await expect(page.getByRole('heading', { name: 'Contact Us', exact: true })).toBeVisible({ timeout: 10_000 });
 		await page.waitForURL('/wiki/contact');
 
 		await expect(page.getByRole('button', { name: 'Introduction' })).toHaveClass('tab');

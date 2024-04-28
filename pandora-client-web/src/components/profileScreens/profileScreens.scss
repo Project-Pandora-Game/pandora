@@ -4,7 +4,6 @@
 	display: flex;
 	padding: 0.5em !important;
 	overflow-y: hidden;
-
 }
 
 .profileView {
@@ -55,6 +54,17 @@
 		border: 1px solid black;
 		font-family: Arial, Helvetica, sans-serif;
 		white-space: pre-wrap;
+		word-wrap: break-word;
+		word-break: break-word;
+
+		a {
+			color: $theme-link-light;
+			text-decoration: underline;
+
+			&:hover {
+				color: $grey-light;
+			}
+		}
 	}
 
 	.profileEdit {

@@ -1,7 +1,12 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { SetupTestingEnv, TestOpenPandora } from './utils/helpers';
+import { TestStartDirectory } from './utils/server';
 
 SetupTestingEnv();
+
+test.beforeAll(async () => {
+	await TestStartDirectory({ keepActive: true });
+});
 
 test.describe('Wiki', () => {
 	test('Selects default tab', async ({ page }) => {

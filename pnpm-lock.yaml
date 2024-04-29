@@ -109,7 +109,7 @@ importers:
         version: 7.24.4(@babel/core@7.24.4)
       '@pmmmwh/react-refresh-webpack-plugin':
         specifier: 0.5.13
-        version: 0.5.13(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))(react-refresh@0.14.2)(type-fest@4.17.0)(webpack-dev-server@4.15.2(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))
+        version: 0.5.13(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))(react-refresh@0.14.2)(type-fest@4.18.0)(webpack-dev-server@4.15.2(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))
       '@project-pandora-game/sass-loader':
         specifier: 13.2.0
         version: 13.2.0(sass@1.75.0)(webpack@5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))
@@ -258,8 +258,8 @@ importers:
         specifier: 2.6.2
         version: 2.6.2
       type-fest:
-        specifier: 4.17.0
-        version: 4.17.0
+        specifier: 4.18.0
+        version: 4.18.0
       typescript:
         specifier: 5.4.5
         version: 5.4.5
@@ -464,8 +464,8 @@ importers:
         specifier: 2.6.2
         version: 2.6.2
       type-fest:
-        specifier: 4.17.0
-        version: 4.17.0
+        specifier: 4.18.0
+        version: 4.18.0
       typescript:
         specifier: 5.4.5
         version: 5.4.5
@@ -6805,8 +6805,8 @@ packages:
     resolution: {integrity: sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==}
     engines: {node: '>=8'}
 
-  type-fest@4.17.0:
-    resolution: {integrity: sha512-9flrz1zkfLRH3jO3bLflmTxryzKMxVa7841VeMgBaNQGY6vH4RCcpN/sQLB7mQQYh1GZ5utT2deypMuCy4yicw==}
+  type-fest@4.18.0:
+    resolution: {integrity: sha512-+dbmiyliDY/2TTcjCS7NpI9yV2iEFlUDk5TKnsbkN7ZoRu5s7bT+zvYtNFhFXC2oLwURGT2frACAZvbbyNBI+w==}
     engines: {node: '>=16'}
 
   type-is@1.6.18:
@@ -9242,7 +9242,7 @@ snapshots:
     dependencies:
       playwright: 1.43.1
 
-  '@pmmmwh/react-refresh-webpack-plugin@0.5.13(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))(react-refresh@0.14.2)(type-fest@4.17.0)(webpack-dev-server@4.15.2(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))':
+  '@pmmmwh/react-refresh-webpack-plugin@0.5.13(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))(react-refresh@0.14.2)(type-fest@4.18.0)(webpack-dev-server@4.15.2(webpack-cli@5.1.4)(webpack@5.91.0))(webpack@5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0)))':
     dependencies:
       ansi-html-community: 0.0.8
       core-js-pure: 3.36.1
@@ -9255,7 +9255,7 @@ snapshots:
       webpack: 5.91.0(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0))
     optionalDependencies:
       '@types/webpack': 5.28.5(webpack-cli@5.1.4(webpack-dev-server@4.15.2)(webpack@5.91.0))
-      type-fest: 4.17.0
+      type-fest: 4.18.0
       webpack-dev-server: 4.15.2(webpack-cli@5.1.4)(webpack@5.91.0)
 
   '@pnpm/config.env-replace@1.1.0': {}
@@ -14779,7 +14779,7 @@ snapshots:
 
   type-fest@0.8.1: {}
 
-  type-fest@4.17.0: {}
+  type-fest@4.18.0: {}
 
   type-is@1.6.18:
     dependencies:

@@ -45,10 +45,10 @@
 		"react-router-dom": "6.23.0",
 		"react-toastify": "10.0.5",
 		"socket.io-client": "4.6.1",
-		"zod": "3.23.4"
+		"zod": "3.23.5"
 	},
 	"devDependencies": {
-		"@babel/preset-env": "7.24.4",
+		"@babel/preset-env": "7.24.5",
 		"@pmmmwh/react-refresh-webpack-plugin": "0.5.13",
 		"@project-pandora-game/sass-loader": "13.2.0",
 		"@testing-library/jest-dom": "6.4.2",

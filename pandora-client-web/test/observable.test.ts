@@ -1,4 +1,5 @@
-import { act, renderHook, RenderHookResult } from '@testing-library/react';
+import { act } from 'react';
+import { renderHook, RenderHookResult } from '@testing-library/react';
 import { ObservableProperty, Observable, useObservable } from '../src/observable';
 import { TypedEventEmitter } from 'pandora-common';
 

@@ -1,4 +1,5 @@
-import { act, RenderHookResult } from '@testing-library/react';
+import { act } from 'react';
+import { RenderHookResult } from '@testing-library/react';
 import { IDirectoryClientChangeEvents } from 'pandora-common';
 import {
 	useAuthToken,

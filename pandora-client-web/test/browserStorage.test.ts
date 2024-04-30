@@ -1,4 +1,5 @@
-import { act, renderHook, RenderHookResult } from '@testing-library/react';
+import { act } from 'react';
+import { renderHook, RenderHookResult } from '@testing-library/react';
 import { BrowserStorage, useBrowserStorage } from '../src/browserStorage';
 import { z } from 'zod';
 

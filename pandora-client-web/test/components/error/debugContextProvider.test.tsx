@@ -1,4 +1,5 @@
-import { act, renderHook } from '@testing-library/react';
+import { act } from 'react';
+import { renderHook } from '@testing-library/react';
 import { DebugContextProvider, useDebugContext } from '../../../src/components/error/debugContextProvider';
 import { DirectoryConnectionState } from '../../../src/networking/directoryConnector';
 import { ShardConnectionState } from '../../../src/networking/shardConnector';

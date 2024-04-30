@@ -1,6 +1,6 @@
-import { act, renderHook, RenderHookResult } from '@testing-library/react';
+import { act, useContext } from 'react';
+import { renderHook, RenderHookResult } from '@testing-library/react';
 import { IDirectoryCharacterConnectionInfo } from 'pandora-common';
-import { useContext } from 'react';
 import {
 	shardConnectorContext,
 	ShardConnectorContextData,

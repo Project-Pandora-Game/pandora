@@ -164,7 +164,7 @@ export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = As
 	/**
 	 * Modules this asset has
 	 */
-	modules?: Record<string, AssetModuleDefinition<AssetProperties<A>>>;
+	modules?: Record<string, AssetModuleDefinition<AssetProperties<A>, undefined>>;
 
 	/** If this item has any graphics to be loaded or is only virtual */
 	hasGraphics: boolean;
@@ -235,6 +235,14 @@ export type IRoomDeviceGraphicsLayerSlot = {
 
 export type IRoomDeviceGraphicsLayer = IRoomDeviceGraphicsLayerSprite | IRoomDeviceGraphicsLayerSlot;
 
+export interface RoomDeviceModuleStaticData {
+	/**
+	 * The name of the room device slot to bind character permission
+	 * When a character occupies this slot permission checks will be performed against the character
+	 */
+	slotName: string | null;
+}
+
 export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetBaseDefinition<'roomDevice', A> {
 	/** Configuration of user-configurable asset colorization */
 	colorization?: Record<string, Omit<AssetColorization<A>, 'group'>>;
@@ -245,7 +253,7 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 	/** Slots that can be entered by characters */
 	slots: Record<string, RoomDeviceSlot<A>>;
 	/** Modules this device has */
-	modules?: Record<string, AssetModuleDefinition<RoomDeviceProperties<A>>>;
+	modules?: Record<string, AssetModuleDefinition<RoomDeviceProperties<A>, RoomDeviceModuleStaticData>>;
 	/** The graphical display of the device */
 	graphicsLayers: IRoomDeviceGraphicsLayer[];
 	/** Attributes that are used strictly for filtering, no effect on character */

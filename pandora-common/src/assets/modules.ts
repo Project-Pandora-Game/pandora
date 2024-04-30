@@ -32,11 +32,11 @@ export const IAssetModuleTypesSchemas = {
 	},
 } as const satisfies Readonly<Record<string, IModuleTypeBaseSchema>>;
 
-export type IAssetModuleConfigs<TProperties> = Satisfies<{
-	typed: IModuleConfigTyped<TProperties>;
-	storage: IModuleConfigStorage;
-	lockSlot: IModuleConfigLockSlot<TProperties>;
-}, { [Type in ModuleType]: IModuleConfigCommon<Type> }>;
+export type IAssetModuleConfigs<out TProperties, out TStaticData> = Satisfies<{
+	typed: IModuleConfigTyped<TProperties, TStaticData>;
+	storage: IModuleConfigStorage<TProperties, TStaticData>;
+	lockSlot: IModuleConfigLockSlot<TProperties, TStaticData>;
+}, { [Type in ModuleType]: IModuleConfigCommon<Type, TProperties, TStaticData> }>;
 
 export const MODULE_TYPES: { [Type in ModuleType]: IAssetModuleDefinition<Type>; } = {
 	typed: new TypedModuleDefinition(),
@@ -75,9 +75,9 @@ export type ModuleActionFailure =
 export type ModuleType = keyof typeof IAssetModuleTypesSchemas;
 export const ModuleTypeSchema = z.enum(Object.keys(MODULE_TYPES) as [ModuleType, ...ModuleType[]]);
 
-export type IAssetModuleTypes<TProperties> = {
+export type IAssetModuleTypes<out TProperties, out TStaticData> = {
 	[Type in ModuleType]: {
-		config: IAssetModuleConfigs<TProperties>[Type];
+		config: IAssetModuleConfigs<TProperties, TStaticData>[Type];
 		data: z.infer<(typeof IAssetModuleTypesSchemas)[Type]['data']>;
 		template: z.infer<(typeof IAssetModuleTypesSchemas)[Type]['template']>;
 		actions: z.infer<(typeof IAssetModuleTypesSchemas)[Type]['actions']>;
@@ -111,9 +111,9 @@ export const ItemModuleActionSchema = z.discriminatedUnion('moduleType', ParseAr
 ));
 export type ItemModuleAction = z.infer<typeof ItemModuleActionSchema>;
 
-export type AssetModuleDefinition<TProperties> = IAssetModuleTypes<TProperties>[ModuleType]['config'];
+export type AssetModuleDefinition<TProperties, TStaticData> = IAssetModuleTypes<TProperties, TStaticData>[ModuleType]['config'];
 
-export function GetModuleStaticAttributes<TProperties>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties>>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string> {
+export function GetModuleStaticAttributes<TProperties, TStaticData>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties, TStaticData>>, staticAttributesExtractor: (properties: Immutable<TProperties>) => ReadonlySet<string>): ReadonlySet<string> {
 	switch (moduleDefinition.type) {
 		case 'typed':
 			return MODULE_TYPES.typed.getStaticAttributes(moduleDefinition, staticAttributesExtractor);
@@ -126,7 +126,7 @@ export function GetModuleStaticAttributes<TProperties>(moduleDefinition: Immutab
 	}
 }
 
-export function CreateModuleDataFromTemplate(moduleDefinition: Immutable<AssetModuleDefinition<unknown>>, template: ItemModuleTemplate, context: IItemCreationContext): ItemModuleData | undefined {
+export function CreateModuleDataFromTemplate<TProperties, TStaticData>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties, TStaticData>>, template: ItemModuleTemplate, context: IItemCreationContext): ItemModuleData | undefined {
 	if (moduleDefinition.type !== template.type) {
 		// Fail if the types don't match
 		return undefined;
@@ -159,7 +159,7 @@ export function CreateModuleDataFromTemplate(moduleDefinition: Immutable<AssetMo
 	}
 }
 
-export function LoadItemModule<TProperties>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties>>, data: ItemModuleData | undefined, context: IItemLoadContext): IItemModule<TProperties> {
+export function LoadItemModule<TProperties, TStaticData>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties, TStaticData>>, data: ItemModuleData | undefined, context: IItemLoadContext): IItemModule<TProperties, TStaticData> {
 	if (data !== undefined && data.type !== moduleDefinition.type) {
 		data = undefined;
 	}

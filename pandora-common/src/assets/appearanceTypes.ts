@@ -4,6 +4,7 @@ import type { CharacterRestrictionsManager } from '../character/restrictionsMana
 import type { ChatActionId, IChatMessageAction, IChatMessageActionTargetCharacter, IChatMessageActionTargetRoomInventory } from '../chat';
 import type { GameLogicCharacter } from '../gameLogic/character';
 import type { ActionSpaceContext } from '../space/space';
+import type { AppearanceItems } from './appearanceValidation';
 import { ItemIdSchema, type Item } from './item/base';
 import type { AssetFrameworkCharacterState } from './state/characterState';
 
@@ -28,11 +29,13 @@ export const CharacterSelectorSchema = z.object({
 	type: z.literal('character'),
 	characterId: CharacterIdSchema,
 });
+export type ActionCharacterSelector = z.infer<typeof CharacterSelectorSchema>;
 
 export const RoomInventorySelectorSchema = z.object({
 	/** The item is to be found in room inventory */
 	type: z.literal('roomInventory'),
 });
+export type ActionRoomInventorySelector = z.infer<typeof RoomInventorySelectorSchema>;
 
 export const ActionTargetSelectorSchema = z.discriminatedUnion('type', [CharacterSelectorSchema, RoomInventorySelectorSchema]);
 export type ActionTargetSelector = z.infer<typeof ActionTargetSelectorSchema>;
@@ -61,6 +64,7 @@ export type ActionHandler = (message: ActionHandlerMessage) => void;
 
 interface ActionTargetBase {
 	getItem(path: ItemPath): Item | undefined;
+	getAllItems(): AppearanceItems;
 }
 
 export interface ActionTargetCharacter extends ActionTargetBase {

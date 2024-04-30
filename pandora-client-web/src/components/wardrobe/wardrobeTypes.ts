@@ -68,9 +68,9 @@ export interface WardrobeModuleProps<Module extends IItemModule> {
 }
 
 export interface WardrobeModuleTemplateProps<TType extends ModuleType = ModuleType> {
-	definition: Immutable<IAssetModuleTypes<unknown>[TType]['config']>;
-	template: Immutable<IAssetModuleTypes<unknown>[TType]['template']> | undefined;
-	onTemplateChange: (newTemplate: Immutable<IAssetModuleTypes<unknown>[TType]['template']>) => void;
+	definition: Immutable<IAssetModuleTypes<unknown, unknown>[TType]['config']>;
+	template: Immutable<IAssetModuleTypes<unknown, unknown>[TType]['template']> | undefined;
+	onTemplateChange: (newTemplate: Immutable<IAssetModuleTypes<unknown, unknown>[TType]['template']>) => void;
 	moduleName: string;
 }
 

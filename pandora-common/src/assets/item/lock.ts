@@ -178,7 +178,9 @@ export class ItemLock extends ItemBase<'lock'> {
 
 	public lockAction(context: AppearanceModuleActionContext, action: IItemLockAction): ItemLock | null {
 		const playerRestrictionManager = context.processingContext.getPlayerRestrictionManager();
-		const isSelfAction = context.target.type === 'character' && context.target.character.id === context.processingContext.player.id;
+
+		/** If the action should be considered as "manipulating themselves" for the purpose of self-blocking checks */
+		const isSelfAction = context.targetCharacter != null && context.targetCharacter.character.id === context.processingContext.player.id;
 		const properties = this.getLockProperties();
 
 		if (action.password != null && !ItemLock._validatePassword(this.asset, action.password)) {

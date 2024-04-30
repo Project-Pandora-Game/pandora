@@ -110,13 +110,14 @@ function Modules({ modules }: { modules: Immutable<AssetDefinition<'personal'>>[
 	return (
 		<FieldsetToggle legend='Modules' className='slim-padding-inner'>
 			{ Object.entries(modules).map(([name, module]) => (
+				// @ts-expect-error: Generalized module data (and I don't care as this is just Editor anyway)
 				<Module key={ name } name={ name } module={ module } />
 			)) }
 		</FieldsetToggle>
 	);
 }
 
-function Module({ name, module }: { name: string; module: Immutable<AssetModuleDefinition<unknown>>; }): ReactElement {
+function Module({ name, module }: { name: string; module: Immutable<AssetModuleDefinition<unknown, unknown>>; }): ReactElement {
 	const moduleInfo = useMemo(() => {
 		switch (module.type) {
 			case 'typed':
@@ -145,7 +146,7 @@ function UnknownModule({ module }: { module: Immutable<IModuleConfigCommon<Modul
 	);
 }
 
-function TypedModule({ module }: { module: Immutable<IModuleConfigTyped<unknown>>; }): ReactElement {
+function TypedModule({ module }: { module: Immutable<IModuleConfigTyped<unknown, unknown>>; }): ReactElement {
 	return (
 		<FieldsetToggle legend='Variants' className='slim-padding-inner'>
 			{ module.variants.map((variant, index) => (

@@ -16,14 +16,14 @@ import type { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleAction
 // Fix for pnpm resolution weirdness
 import type { } from '../item/base';
 
-export interface IModuleConfigLockSlot<TProperties> extends IModuleConfigCommon<'lockSlot'> {
+export type IModuleConfigLockSlot<TProperties, TStaticData> = IModuleConfigCommon<'lockSlot', TProperties, TStaticData> & {
 	/** Properties applied when this slot isn't occupied by a lock */
 	emptyProperties?: TProperties;
 	/** Properties applied when this slot is occupied by a lock */
 	occupiedProperties?: TProperties;
 	/** Properties applied when the slot is occupied and locked, default to occupiedEffects */
 	lockedProperties?: TProperties;
-}
+};
 
 export const ModuleItemDataLockSlotSchema = z.object({
 	type: z.literal('lockSlot'),
@@ -44,25 +44,25 @@ export const ItemModuleLockSlotActionSchema = z.object({
 export type ItemModuleLockSlotAction = Satisfies<z.infer<typeof ItemModuleLockSlotActionSchema>, IModuleActionCommon<'lockSlot'>>;
 
 export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlot'> {
-	public makeDefaultData(_config: IModuleConfigLockSlot<unknown>): IModuleItemDataLockSlot {
+	public makeDefaultData<TProperties, TStaticData>(_config: Immutable<IModuleConfigLockSlot<TProperties, TStaticData>>): IModuleItemDataLockSlot {
 		return {
 			type: 'lockSlot',
 			lock: null,
 		};
 	}
 
-	public makeDataFromTemplate<TProperties>(_config: IModuleConfigLockSlot<TProperties>, template: IModuleItemTemplateLockSlot, context: IItemCreationContext): IModuleItemDataLockSlot {
+	public makeDataFromTemplate<TProperties, TStaticData>(_config: Immutable<IModuleConfigLockSlot<TProperties, TStaticData>>, template: IModuleItemTemplateLockSlot, context: IItemCreationContext): IModuleItemDataLockSlot {
 		return {
 			type: 'lockSlot',
 			lock: template.lock != null ? (context.createItemBundleFromTemplate(template.lock, context) ?? null) : null,
 		};
 	}
 
-	public loadModule<TProperties>(config: Immutable<IModuleConfigLockSlot<TProperties>>, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot<TProperties> {
+	public loadModule<TProperties, TStaticData>(config: Immutable<IModuleConfigLockSlot<TProperties, TStaticData>>, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot<TProperties, TStaticData> {
 		return ItemModuleLockSlot.loadFromData(config, data, context);
 	}
 
-	public getStaticAttributes<TProperties>(config: IModuleConfigLockSlot<TProperties>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string> {
+	public getStaticAttributes<TProperties, TStaticData>(config: Immutable<IModuleConfigLockSlot<TProperties, TStaticData>>, staticAttributesExtractor: (properties: Immutable<TProperties>) => ReadonlySet<string>): ReadonlySet<string> {
 		const result = new Set<string>();
 		if (config.emptyProperties != null) {
 			staticAttributesExtractor(config.emptyProperties).forEach((a) => result.add(a));
@@ -77,17 +77,17 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 	}
 }
 
-interface ItemModuleLockSlotProps<TProperties = unknown> {
+interface ItemModuleLockSlotProps<TProperties, TStaticData> {
 	readonly assetManager: AssetManager;
-	readonly config: Immutable<IModuleConfigLockSlot<TProperties>>;
+	readonly config: Immutable<IModuleConfigLockSlot<TProperties, TStaticData>>;
 	readonly lock: ItemLock | null;
 }
 
-export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TProperties, 'lockSlot'>, ItemModuleLockSlotProps<TProperties> {
+export class ItemModuleLockSlot<out TProperties = unknown, out TStaticData = unknown> implements IItemModule<TProperties, TStaticData, 'lockSlot'>, ItemModuleLockSlotProps<TProperties, TStaticData> {
 	public readonly type = 'lockSlot';
 
 	public readonly assetManager: AssetManager;
-	public readonly config: Immutable<IModuleConfigLockSlot<TProperties>>;
+	public readonly config: Immutable<IModuleConfigLockSlot<TProperties, TStaticData>>;
 	public readonly lock: ItemLock | null;
 
 	public get interactionType(): ItemInteractionType {
@@ -96,18 +96,18 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 
 	public readonly interactionId: InteractionId = 'useLockSlotModule';
 
-	protected constructor(props: ItemModuleLockSlotProps<TProperties>, overrideProps?: Partial<ItemModuleLockSlotProps<TProperties>>) {
+	protected constructor(props: ItemModuleLockSlotProps<TProperties, TStaticData>, overrideProps?: Partial<ItemModuleLockSlotProps<TProperties, TStaticData>>) {
 		this.assetManager = overrideProps?.assetManager ?? props.assetManager;
 		this.config = overrideProps?.config ?? props.config;
 		this.lock = overrideProps?.lock !== undefined ? overrideProps.lock : props.lock;
 	}
 
-	protected withProps(overrideProps: Partial<ItemModuleLockSlotProps<TProperties>>): ItemModuleLockSlot<TProperties> {
+	protected withProps(overrideProps: Partial<ItemModuleLockSlotProps<TProperties, TStaticData>>): ItemModuleLockSlot<TProperties, TStaticData> {
 		return new ItemModuleLockSlot(this, overrideProps);
 	}
 
-	public static loadFromData<TProperties>(config: Immutable<IModuleConfigLockSlot<TProperties>>, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot<TProperties> {
-		let lock: ItemModuleLockSlotProps<TProperties>['lock'];
+	public static loadFromData<TProperties, TStaticData>(config: Immutable<IModuleConfigLockSlot<TProperties, TStaticData>>, data: IModuleItemDataLockSlot, context: IItemLoadContext): ItemModuleLockSlot<TProperties, TStaticData> {
+		let lock: ItemModuleLockSlotProps<TProperties, TStaticData>['lock'];
 
 		if (data.lock) {
 			// Load asset and skip if unknown
@@ -189,7 +189,7 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 		return false;
 	}
 
-	public doAction(context: AppearanceModuleActionContext, { lockAction }: ItemModuleLockSlotAction): ItemModuleLockSlot<TProperties> | null {
+	public doAction(context: AppearanceModuleActionContext, { lockAction }: ItemModuleLockSlotAction): ItemModuleLockSlot<TProperties, TStaticData> | null {
 		if (this.lock == null)
 			return null;
 
@@ -211,7 +211,7 @@ export class ItemModuleLockSlot<TProperties = unknown> implements IItemModule<TP
 		return this.lock ? [this.lock] : [];
 	}
 
-	public setContents(items: AppearanceItems): ItemModuleLockSlot<TProperties> | null {
+	public setContents(items: AppearanceItems): ItemModuleLockSlot<TProperties, TStaticData> | null {
 		if (items.length > 1)
 			return null;
 

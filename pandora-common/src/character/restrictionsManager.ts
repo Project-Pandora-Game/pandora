@@ -3,17 +3,17 @@ import _ from 'lodash';
 import type { CharacterAppearance } from '../assets/appearance';
 import type { AppearanceActionProcessingContext } from '../assets/appearanceActionProcessingContext';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
-import type { ActionTarget, ItemContainerPath, ItemPath } from '../assets/appearanceTypes';
+import type { ActionTarget, ActionTargetCharacter, ItemContainerPath, ItemPath } from '../assets/appearanceTypes';
 import { AppearanceItemProperties } from '../assets/appearanceValidation';
 import { Asset } from '../assets/asset';
 import { EffectsDefinition } from '../assets/effects';
-import type { Item, ItemId, RoomDeviceLink } from '../assets/item';
+import { FilterItemType, type Item, type ItemId, type RoomDeviceLink } from '../assets/item';
 import { AssetPropertiesResult, CreateAssetPropertiesResult } from '../assets/properties';
 import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes';
 import { HearingImpairment, Muffler } from '../character/speech';
 import type { GameLogicCharacter } from '../gameLogic/character/character';
 import type { ActionSpaceContext } from '../space/space';
-import { AssertNever } from '../utility';
+import { Assert, AssertNever } from '../utility';
 import { ItemInteractionType, type RestrictionResult } from './restrictionTypes';
 
 /**
@@ -139,88 +139,92 @@ export class CharacterRestrictionsManager {
 		return false;
 	}
 
-	public canInteractWithTarget(context: AppearanceActionProcessingContext, target: ActionTarget): RestrictionResult {
-		// Room inventory can always be interacted with
-		if (target.type === 'roomInventory')
+	public canInteractWithTarget(context: AppearanceActionProcessingContext, target: ActionTargetCharacter | null): RestrictionResult {
+		// Non-character inventories can always be interacted with
+		if (target == null)
 			return { allowed: true };
 
-		if (target.type === 'character') {
-			// Have all permissions on self
-			if (target.character.id === this.character.id)
-				return { allowed: true };
+		// Have all permissions on self
+		if (target.character.id === this.character.id)
+			return { allowed: true };
 
-			const targetCharacter = target.getRestrictionManager(this.spaceContext);
+		const targetCharacter = target.getRestrictionManager(this.spaceContext);
 
-			// Mark as interaction
-			context.addInteraction(target.character, 'interact');
+		// Mark as interaction
+		context.addInteraction(target.character, 'interact');
 
-			// Check interaction block (safe mode, timeout)
-			if (this.isInteractionBlocked() || targetCharacter.isInteractionBlocked())
-				return {
-					allowed: false,
-					restriction: {
-						type: 'safemodeInteractOther',
-					},
-				};
-		}
+		// Check interaction block (safe mode, timeout)
+		if (this.isInteractionBlocked() || targetCharacter.isInteractionBlocked())
+			return {
+				allowed: false,
+				restriction: {
+					type: 'safemodeInteractOther',
+				},
+			};
 
 		return { allowed: true };
 	}
 
-	public canUseAsset(context: AppearanceActionProcessingContext, target: ActionTarget, asset: Asset): RestrictionResult {
+	public canUseAsset(context: AppearanceActionProcessingContext, targetCharacter: ActionTargetCharacter | null, asset: Asset): RestrictionResult {
 		// Must be able to interact with character
-		const r = this.canInteractWithTarget(context, target);
+		const r = this.canInteractWithTarget(context, targetCharacter);
 		if (!r.allowed)
 			return r;
 
-		if (target.type === 'character') {
-			// Can do all on self
-			if (target.character.id === this.character.id)
-				return { allowed: true };
+		// Non-character inventories have no other restrictions
+		if (targetCharacter == null)
+			return { allowed: true };
 
-			const resolution = target.character.assetPreferences.resolveAssetPreference(asset, this.character.id);
-			switch (resolution.preference) {
-				case 'doNotRender':
-				case 'prevent':
-					return {
-						allowed: false,
-						restriction: {
-							type: 'missingAssetPermission',
-							target: target.character.id,
-							resolution,
-						},
-					};
-				case 'maybe':
-					context.addRequiredPermission(
-						target.character.assetPreferences.getPreferencePermission('maybe'),
-					);
-				// Fallthrough
-				case 'normal':
-					context.addRequiredPermission(
-						target.character.assetPreferences.getPreferencePermission('normal'),
-					);
-				// Fallthrough
-				case 'favorite':
-					context.addRequiredPermission(
-						target.character.assetPreferences.getPreferencePermission('favorite'),
-					);
-					break;
-				default:
-					AssertNever(resolution.preference);
-			}
+		// Can do all on self
+		if (targetCharacter.character.id === this.character.id)
+			return { allowed: true };
+
+		const resolution = targetCharacter.character.assetPreferences.resolveAssetPreference(asset, this.character.id);
+		switch (resolution.preference) {
+			case 'doNotRender':
+			case 'prevent':
+				return {
+					allowed: false,
+					restriction: {
+						type: 'missingAssetPermission',
+						target: targetCharacter.character.id,
+						resolution,
+					},
+				};
+			case 'maybe':
+				context.addRequiredPermission(
+					targetCharacter.character.assetPreferences.getPreferencePermission('maybe'),
+				);
+			// Fallthrough
+			case 'normal':
+				context.addRequiredPermission(
+					targetCharacter.character.assetPreferences.getPreferencePermission('normal'),
+				);
+			// Fallthrough
+			case 'favorite':
+				context.addRequiredPermission(
+					targetCharacter.character.assetPreferences.getPreferencePermission('favorite'),
+				);
+				break;
+			default:
+				AssertNever(resolution.preference);
 		}
 
 		return { allowed: true };
 	}
 
-	public hasPermissionForItemContents(context: AppearanceActionProcessingContext, target: ActionTarget, item: Item): RestrictionResult {
+	public hasPermissionForItemContents(context: AppearanceActionProcessingContext, targetCharacter: ActionTargetCharacter | null, item: Item): RestrictionResult {
+		// Permission on the item itself is intentionally not checked
+
 		// Iterate over whole content
 		for (const module of item.getModules().keys()) {
 			for (const innerItem of item.getModuleItems(module)) {
-				let r = this.canUseItemDirect(context, target, [], innerItem, ItemInteractionType.ACCESS_ONLY);
+				// Check the item can be used
+				let r = this.canUseAsset(context, targetCharacter, innerItem.asset);
 				if (!r.allowed)
 					return r;
-				r = this.hasPermissionForItemContents(context, target, innerItem);
+				// Check its content can be used
+				r = this.hasPermissionForItemContents(context, targetCharacter, innerItem);
 				if (!r.allowed)
 					return r;
 			}
@@ -258,6 +262,7 @@ export class CharacterRestrictionsManager {
 	 * @param insertBeforeRootItem - Simulate the item being positioned before (under) this item. Undefined means that it either is currently present or that it is to be inserted to the end.
 	 */
 	public canUseItemDirect(context: AppearanceActionProcessingContext, target: ActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): RestrictionResult {
+
 		// Must validate insertBeforeRootItem, if present
 		if (insertBeforeRootItem && target.getItem({ container: [], itemId: insertBeforeRootItem }) == null)
 			return {
@@ -267,15 +272,19 @@ export class CharacterRestrictionsManager {
 				},
 			};
 
+		const targetCharacter = context.resolveTargetCharacter(target, container);
+		Assert(target.type !== 'character' || target === targetCharacter);
+
 		// Must be able to use item's asset
-		let r = this.canUseAsset(context, target, item.asset);
+		let r = this.canUseAsset(context, targetCharacter, item.asset);
 		if (!r.allowed)
 			return r;
 
-		const isCharacter = target.type === 'character';
-		const isSelfAction = isCharacter && target.character.id === this.character.id;
+		/** If the action should be considered as "manipulating themselves" for the purpose of self-blocking checks */
+		const isSelfAction = targetCharacter != null && targetCharacter.character.id === this.character.id;
 		const forceAllowItemActions = this.forceAllowItemActions();
-		let isPhysicallyEquipped = isCharacter;
+		/** Whether the item is physically equipped (on a character, or on some item; in contrast to simply being stored e.g. in a bag) */
+		let isPhysicallyEquipped = target.type === 'character';
 
 		// Must be able to access all upper items
 		const upperPath = SplitContainerPath(container);
@@ -348,7 +357,7 @@ export class CharacterRestrictionsManager {
 
 		// To add or remove the item, we need to have access to all contained items
 		if (interaction === ItemInteractionType.ADD_REMOVE || interaction === ItemInteractionType.DEVICE_ENTER_LEAVE) {
-			r = this.hasPermissionForItemContents(context, target, item);
+			r = this.hasPermissionForItemContents(context, targetCharacter, item);
 			if (!r.allowed)
 				return r;
 		}
@@ -366,8 +375,8 @@ export class CharacterRestrictionsManager {
 
 		// Styling the item is a "color"-like interaction
 		if (interaction === ItemInteractionType.STYLING) {
-			if (target.type === 'character') {
-				context.addInteraction(target.character, 'changeItemColor');
+			if (targetCharacter != null) {
+				context.addInteraction(targetCharacter.character, 'changeItemColor');
 			}
 		}
 
@@ -398,7 +407,7 @@ export class CharacterRestrictionsManager {
 				};
 		}
 
-		if (isCharacter && isPhysicallyEquipped && !forceAllowItemActions) {
+		if (isPhysicallyEquipped && !forceAllowItemActions && target.type === 'character') {
 			const targetProperties = target.getRestrictionManager(this.spaceContext).getLimitedProperties({
 				from: insertBeforeRootItem ?? (container.length > 0 ? container[0].item : item.id),
 				exclude: container.length > 0 ? container[0].item : item.id,
@@ -459,22 +468,48 @@ export class CharacterRestrictionsManager {
 				},
 			};
 
-		const isSelfAction = target.type === 'character' && target.character.id === this.character.id;
+		const targetCharacter = context.resolveTargetCharacter(target, [...container, { item: item.id, module: moduleName }]);
+		Assert(target.type !== 'character' || target === targetCharacter);
+
+		/** If the action should be considered as "manipulating themselves" for the purpose of self-blocking checks */
+		const isSelfAction = targetCharacter != null && targetCharacter.character.id === this.character.id;
 
 		// The module can specify what kind of interaction it provides, unless asking for specific one
 		interaction ??= module.interactionType;
 
 		// Must be able to interact with this item in that way
-		const r = this.canUseItemDirect(context, target, container, item, interaction);
-		if (!r.allowed)
-			return r;
+		{
+			const r = this.canUseItemDirect(context, target, container, item, interaction);
+			if (!r.allowed)
+				return r;
+		}
+
+		// If the target is a room device, then must be able to interact with the wearable part as well (if there is a target character)
+		if (item.isType('roomDevice') && targetCharacter != null) {
+			const wearablePart = targetCharacter.getAllItems()
+				.filter(FilterItemType('roomDeviceWearablePart'))
+				.find((it) => it.roomDeviceLink != null && it.roomDeviceLink.device === item.id);
+
+			if (wearablePart == null) {
+				return {
+					allowed: false,
+					restriction: {
+						type: 'invalid',
+					},
+				};
+			}
+
+			const r = this.canUseItemDirect(context, targetCharacter, [], wearablePart, interaction);
+			if (!r.allowed)
+				return r;
+		}
 
 		// If access is all we needed, then success
 		if (interaction === ItemInteractionType.ACCESS_ONLY)
 			return { allowed: true };
 
-		if (target.type === 'character') {
-			context.addInteraction(target.character, module.interactionId);
+		if (targetCharacter != null) {
+			context.addInteraction(targetCharacter.character, module.interactionId);
 		}
 
 		const properties = item.isType('roomDevice') ? item.getRoomDeviceProperties() : item.getProperties();

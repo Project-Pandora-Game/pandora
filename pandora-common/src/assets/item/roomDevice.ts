@@ -6,6 +6,7 @@ import type { HexRGBAColorString } from '../../validation';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { Asset } from '../asset';
+import type { RoomDeviceModuleStaticData } from '../definitions';
 import type { IExportOptions, IItemModule } from '../modules/common';
 import type { AssetProperties } from '../properties';
 import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base';
@@ -61,13 +62,13 @@ export type RoomDeviceBundle = z.infer<typeof RoomDeviceBundleSchema>;
 interface ItemRoomDeviceProps extends ItemBaseProps<'roomDevice'> {
 	readonly deployment: Immutable<RoomDeviceDeployment>;
 	readonly slotOccupancy: ReadonlyMap<string, CharacterId>;
-	readonly modules: ReadonlyMap<string, IItemModule<RoomDeviceProperties>>;
+	readonly modules: ReadonlyMap<string, IItemModule<RoomDeviceProperties, RoomDeviceModuleStaticData>>;
 }
 
 export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDeviceProps {
 	public readonly deployment: Immutable<RoomDeviceDeployment>;
 	public readonly slotOccupancy: ReadonlyMap<string, CharacterId>;
-	public readonly modules: ReadonlyMap<string, IItemModule<RoomDeviceProperties>>;
+	public readonly modules: ReadonlyMap<string, IItemModule<RoomDeviceProperties, RoomDeviceModuleStaticData>>;
 
 	protected constructor(props: ItemRoomDeviceProps, overrideProps: Partial<ItemRoomDeviceProps> = {}) {
 		super(props, overrideProps);
@@ -86,9 +87,9 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 
 	public static loadFromBundle(asset: Asset<'roomDevice'>, bundle: ItemBundle, context: IItemLoadContext): ItemRoomDevice {
 		// Load modules
-		const modules = new Map<string, IItemModule<RoomDeviceProperties>>();
+		const modules = new Map<string, IItemModule<RoomDeviceProperties, RoomDeviceModuleStaticData>>();
 		for (const [moduleName, moduleConfig] of Object.entries(asset.definition.modules ?? {})) {
-			modules.set(moduleName, LoadItemModule<RoomDeviceProperties>(moduleConfig, bundle.moduleData?.[moduleName], context));
+			modules.set(moduleName, LoadItemModule<RoomDeviceProperties, RoomDeviceModuleStaticData>(moduleConfig, bundle.moduleData?.[moduleName], context));
 		}
 
 		// Load device-specific data
@@ -239,7 +240,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 		);
 	}
 
-	public override getModules(): ReadonlyMap<string, IItemModule<RoomDeviceProperties>> {
+	public override getModules(): ReadonlyMap<string, IItemModule<RoomDeviceProperties, RoomDeviceModuleStaticData>> {
 		return this.modules;
 	}
 

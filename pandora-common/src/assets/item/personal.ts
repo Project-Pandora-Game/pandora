@@ -21,11 +21,11 @@ declare module './_internal' {
 }
 
 interface ItemPersonalProps extends ItemBaseProps<'personal'> {
-	readonly modules: ReadonlyMap<string, IItemModule<AssetProperties>>;
+	readonly modules: ReadonlyMap<string, IItemModule<AssetProperties, undefined>>;
 }
 
 export class ItemPersonal extends ItemBase<'personal'> implements ItemPersonalProps {
-	public readonly modules: ReadonlyMap<string, IItemModule<AssetProperties>>;
+	public readonly modules: ReadonlyMap<string, IItemModule<AssetProperties, undefined>>;
 
 	protected constructor(props: ItemPersonalProps, overrideProps?: Partial<ItemPersonalProps>) {
 		super(props, overrideProps);
@@ -38,9 +38,9 @@ export class ItemPersonal extends ItemBase<'personal'> implements ItemPersonalPr
 
 	public static loadFromBundle(asset: Asset<'personal'>, bundle: ItemBundle, context: IItemLoadContext): ItemPersonal {
 		// Load modules
-		const modules = new Map<string, IItemModule<AssetProperties>>();
+		const modules = new Map<string, IItemModule<AssetProperties, undefined>>();
 		for (const [moduleName, moduleConfig] of Object.entries(asset.definition.modules ?? {})) {
-			modules.set(moduleName, LoadItemModule<AssetProperties>(moduleConfig, bundle.moduleData?.[moduleName], context));
+			modules.set(moduleName, LoadItemModule<AssetProperties, undefined>(moduleConfig, bundle.moduleData?.[moduleName], context));
 		}
 
 		return new ItemPersonal({
@@ -70,7 +70,7 @@ export class ItemPersonal extends ItemBase<'personal'> implements ItemPersonalPr
 		);
 	}
 
-	public override getModules(): ReadonlyMap<string, IItemModule<AssetProperties>> {
+	public override getModules(): ReadonlyMap<string, IItemModule<AssetProperties, undefined>> {
 		return this.modules;
 	}
 

@@ -52,7 +52,7 @@ export interface IModuleTypedOption<TProperties> {
 	customText?: string[];
 }
 
-export interface IModuleConfigTyped<TProperties> extends IModuleConfigCommon<'typed'> {
+export type IModuleConfigTyped<TProperties, TStaticData> = IModuleConfigCommon<'typed', TProperties, TStaticData> & {
 	/**
 	 * The kind of interaction this module provides, affects prerequisites for changing it.
 	 * @default ItemInteractionType.MODIFY
@@ -61,7 +61,7 @@ export interface IModuleConfigTyped<TProperties> extends IModuleConfigCommon<'ty
 
 	/** List of variants this typed module has */
 	variants: [IModuleTypedOption<TProperties>, ...IModuleTypedOption<TProperties>[]];
-}
+};
 
 export const ModuleItemDataTypedSchema = z.object({
 	type: z.literal('typed'),
@@ -87,13 +87,13 @@ export const ItemModuleTypedActionSchema = z.object({
 export type ItemModuleTypedAction = Satisfies<z.infer<typeof ItemModuleTypedActionSchema>, IModuleActionCommon<'typed'>>;
 
 export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
-	public makeDefaultData(_config: IModuleConfigTyped<unknown>): IModuleItemDataTyped {
+	public makeDefaultData<TProperties, TStaticData>(_config: Immutable<IModuleConfigTyped<TProperties, TStaticData>>): IModuleItemDataTyped {
 		return {
 			type: 'typed',
 		};
 	}
 
-	public makeDataFromTemplate<TProperties>(config: IModuleConfigTyped<TProperties>, template: IModuleItemTemplateTyped, context: IItemCreationContext): IModuleItemDataTyped | undefined {
+	public makeDataFromTemplate<TProperties, TStaticData>(config: Immutable<IModuleConfigTyped<TProperties, TStaticData>>, template: IModuleItemTemplateTyped, context: IItemCreationContext): IModuleItemDataTyped | undefined {
 		// Find which variant would be selected
 		const variant = config.variants.find((v) => v.id === template.variant);
 		if (variant == null)
@@ -119,11 +119,11 @@ export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
 		return result;
 	}
 
-	public loadModule<TProperties>(config: Immutable<IModuleConfigTyped<TProperties>>, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped<TProperties> {
+	public loadModule<TProperties, TStaticData>(config: Immutable<IModuleConfigTyped<TProperties, TStaticData>>, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped<TProperties, TStaticData> {
 		return ItemModuleTyped.loadFromData(config, data, context);
 	}
 
-	public getStaticAttributes<TProperties>(config: IModuleConfigTyped<TProperties>, staticAttributesExtractor: (properties: TProperties) => ReadonlySet<string>): ReadonlySet<string> {
+	public getStaticAttributes<TProperties, TStaticData>(config: Immutable<IModuleConfigTyped<TProperties, TStaticData>>, staticAttributesExtractor: (properties: Immutable<TProperties>) => ReadonlySet<string>): ReadonlySet<string> {
 		const result = new Set<string>();
 		for (const option of config.variants) {
 			if (option.properties != null) {
@@ -135,18 +135,18 @@ export class TypedModuleDefinition implements IAssetModuleDefinition<'typed'> {
 	}
 }
 
-interface ItemModuleTypedProps<TProperties = unknown> {
+interface ItemModuleTypedProps<TProperties, TStaticData> {
 	readonly assetManager: AssetManager;
-	readonly config: Immutable<IModuleConfigTyped<TProperties>>;
+	readonly config: Immutable<IModuleConfigTyped<TProperties, TStaticData>>;
 	readonly activeVariant: Immutable<IModuleTypedOption<TProperties>>;
 	readonly data: Readonly<Pick<IModuleItemDataTyped, 'selectedAt' | 'selectedBy'>>;
 }
 
-export class ItemModuleTyped<out TProperties = unknown> implements IItemModule<TProperties, 'typed'>, ItemModuleTypedProps<TProperties> {
+export class ItemModuleTyped<out TProperties = unknown, out TStaticData = unknown> implements IItemModule<TProperties, TStaticData, 'typed'>, ItemModuleTypedProps<TProperties, TStaticData> {
 	public readonly type = 'typed';
 
 	public readonly assetManager: AssetManager;
-	public readonly config: Immutable<IModuleConfigTyped<TProperties>>;
+	public readonly config: Immutable<IModuleConfigTyped<TProperties, TStaticData>>;
 	public readonly activeVariant: Immutable<IModuleTypedOption<TProperties>>;
 	public readonly data: Readonly<Pick<IModuleItemDataTyped, 'selectedAt' | 'selectedBy'>>;
 
@@ -158,18 +158,18 @@ export class ItemModuleTyped<out TProperties = unknown> implements IItemModule<T
 
 	public readonly interactionId: InteractionId = 'useTypedModule';
 
-	protected constructor(props: ItemModuleTypedProps<TProperties>, overrideProps?: Partial<ItemModuleTypedProps<TProperties>>) {
+	protected constructor(props: ItemModuleTypedProps<TProperties, TStaticData>, overrideProps?: Partial<ItemModuleTypedProps<TProperties, TStaticData>>) {
 		this.assetManager = overrideProps?.assetManager ?? props.assetManager;
 		this.config = overrideProps?.config ?? props.config;
 		this.activeVariant = overrideProps?.activeVariant ?? props.activeVariant;
 		this.data = overrideProps?.data ?? props.data;
 	}
 
-	protected withProps(overrideProps: Partial<ItemModuleTypedProps<TProperties>>): ItemModuleTyped<TProperties> {
+	protected withProps(overrideProps: Partial<ItemModuleTypedProps<TProperties, TStaticData>>): ItemModuleTyped<TProperties, TStaticData> {
 		return new ItemModuleTyped(this, overrideProps);
 	}
 
-	public static loadFromData<TProperties>(config: Immutable<IModuleConfigTyped<TProperties>>, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped<TProperties> {
+	public static loadFromData<TProperties, TStaticData>(config: Immutable<IModuleConfigTyped<TProperties, TStaticData>>, data: IModuleItemDataTyped, context: IItemLoadContext): ItemModuleTyped<TProperties, TStaticData> {
 		// Get currently selected module
 		const activeVariant: Immutable<IModuleTypedOption<TProperties>> | undefined = data.variant != null ? config.variants.find((v) => v.id === data.variant) : undefined;
 		// Warn if we were trying to find variant
@@ -181,7 +181,7 @@ export class ItemModuleTyped<out TProperties = unknown> implements IItemModule<T
 			assetManager: context.assetManager,
 			config,
 			// Use the default variant if not found
-			activeVariant: activeVariant ?? ItemModuleTyped._getDefaultVariant<TProperties>(config),
+			activeVariant: activeVariant ?? ItemModuleTyped._getDefaultVariant<TProperties, TStaticData>(config),
 			data: {
 				selectedAt: activeVariant?.storeTime ? data.selectedAt : undefined,
 				selectedBy: activeVariant?.storeCharacter ? data.selectedBy : undefined,
@@ -223,7 +223,7 @@ export class ItemModuleTyped<out TProperties = unknown> implements IItemModule<T
 				false;
 	}
 
-	public doAction({ messageHandler, processingContext }: AppearanceModuleActionContext, action: ItemModuleTypedAction): ItemModuleTyped<TProperties> | null {
+	public doAction({ messageHandler, processingContext }: AppearanceModuleActionContext, action: ItemModuleTypedAction): ItemModuleTyped<TProperties, TStaticData> | null {
 		const newVariant = this.config.variants.find((v) => v.id === action.setVariant);
 		if (!newVariant)
 			return null;
@@ -262,11 +262,11 @@ export class ItemModuleTyped<out TProperties = unknown> implements IItemModule<T
 		return [];
 	}
 
-	public setContents(_items: AppearanceItems): ItemModuleTyped<TProperties> | null {
+	public setContents(_items: AppearanceItems): ItemModuleTyped<TProperties, TStaticData> | null {
 		return null;
 	}
 
-	private static _getDefaultVariant<TProperties>(config: Immutable<IModuleConfigTyped<TProperties>>): Immutable<IModuleTypedOption<TProperties>> {
+	private static _getDefaultVariant<TProperties, TStaticData>(config: Immutable<IModuleConfigTyped<TProperties, TStaticData>>): Immutable<IModuleTypedOption<TProperties>> {
 		return config.variants.find((v) => v.default) ?? config.variants[0];
 	}
 }

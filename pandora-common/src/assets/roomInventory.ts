@@ -9,7 +9,6 @@ export class RoomInventory implements ActionTargetRoomInventory {
 	public readonly roomState: AssetFrameworkRoomState;
 
 	public readonly type = 'roomInventory';
-	public readonly allowReTargeting: boolean;
 
 	protected get assetManager(): AssetManager {
 		return this.roomState.assetManager;
@@ -19,9 +18,8 @@ export class RoomInventory implements ActionTargetRoomInventory {
 		return this.roomState.items;
 	}
 
-	constructor(roomState: AssetFrameworkRoomState, allowReTargeting: boolean = true) {
+	constructor(roomState: AssetFrameworkRoomState) {
 		this.roomState = roomState;
-		this.allowReTargeting = allowReTargeting;
 	}
 
 	public getAssetManager(): AssetManager {
@@ -30,10 +28,6 @@ export class RoomInventory implements ActionTargetRoomInventory {
 
 	public getItem(path: ItemPath): Item | undefined {
 		return EvalItemPath(this._items, path);
-	}
-
-	public withNoReTargeting(): RoomInventory {
-		return this.allowReTargeting ? new RoomInventory(this.roomState, false) : this;
 	}
 
 	public getAllItems(): readonly Item[] {

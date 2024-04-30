@@ -22,7 +22,6 @@ export class CharacterAppearance implements ActionTargetCharacter {
 	public readonly characterState: AssetFrameworkCharacterState;
 
 	public readonly type = 'character';
-	public readonly allowReTargeting = false;
 	public readonly id: CharacterId;
 	public readonly character: GameLogicCharacter;
 
@@ -51,10 +50,6 @@ export class CharacterAppearance implements ActionTargetCharacter {
 
 	public getItem(path: ItemPath): Item | undefined {
 		return EvalItemPath(this._items, path);
-	}
-
-	public withNoReTargeting(): this {
-		return this;
 	}
 
 	public listItemsByAsset(asset: AssetId) {

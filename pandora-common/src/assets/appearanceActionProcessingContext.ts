@@ -5,13 +5,22 @@ import type { GameLogicCharacter, GameLogicPermission, InteractionId } from '../
 import { Assert, AssertNever, AssertNotNullable } from '../utility';
 import type { AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
 import type { AppearanceActionContext } from './appearanceActions';
-import type { ActionHandlerMessage, ActionHandlerMessageWithTarget, ActionTarget, ActionTargetSelector, ItemContainerPath, ItemPath } from './appearanceTypes';
+import { SplitContainerPath } from './appearanceHelpers';
+import type {
+	ActionCharacterSelector,
+	ActionHandlerMessage,
+	ActionHandlerMessageWithTarget,
+	ActionTarget,
+	ActionTargetCharacter,
+	ActionTargetRoomInventory,
+	ActionTargetSelector,
+	ItemContainerPath,
+	ItemPath,
+} from './appearanceTypes';
 import type { Item, ItemId } from './item';
 import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
 import { RoomInventory } from './roomInventory';
 import type { AssetFrameworkGlobalState } from './state/globalState';
-import { SplitContainerPath } from './appearanceHelpers';
-import { ReTargetedCharacter } from './reTargetedCharacter';
 
 export class AppearanceActionProcessingContext {
 	private readonly _context: AppearanceActionContext;
@@ -63,21 +72,28 @@ export class AppearanceActionProcessingContext {
 		return char.getRestrictionManager(charState, this._context.spaceContext);
 	}
 
+	public getTargetCharacter(target: ActionCharacterSelector): ActionTargetCharacter | null {
+		const char = this._context.getCharacter(target.characterId);
+		const charState = this.manipulator.currentState.getCharacterState(target.characterId);
+		Assert((char == null) === (charState == null));
+
+		if (char == null || charState == null)
+			return null;
+
+		return char.getAppearance(charState);
+	}
+
+	public getTargetRoomInventory(): ActionTargetRoomInventory {
+		return new RoomInventory(this.manipulator.currentState.room);
+	}
+
 	public getTarget(target: ActionTargetSelector): ActionTarget | null {
 		if (target.type === 'character') {
-			const char = this._context.getCharacter(target.characterId);
-			const charState = this.manipulator.currentState.getCharacterState(target.characterId);
-			Assert((char == null) === (charState == null));
-
-			if (char == null || charState == null)
-				return null;
-
-			return char.getAppearance(charState);
+			return this.getTargetCharacter(target);
 		}
 
 		if (target.type === 'roomInventory') {
-			const state = this.manipulator.currentState.room;
-			return state != null ? new RoomInventory(state) : null;
+			return this.getTargetRoomInventory();
 		}
 
 		AssertNever(target);
@@ -143,7 +159,7 @@ export class AppearanceActionProcessingContext {
 		}
 	}
 
-	public checkInteractWithTarget(target: ActionTarget): void {
+	public checkInteractWithTarget(target: ActionTargetCharacter | null): void {
 		const restrictionManager = this.getPlayerRestrictionManager();
 		this.addRestriction(restrictionManager.canInteractWithTarget(this, target));
 	}
@@ -195,59 +211,54 @@ export class AppearanceActionProcessingContext {
 	}
 
 	/**
-	 * Re-targets the action target if the action is against a room device with a character in a slot.
+	 * Resolves target container to a character that should be checked for manipulation permissions
+	 * @param target - The physical target of the action
+	 * @param container - The container path to the container the action is being performed on
+	 * @returns The character that should be checked for permission, or `null` if the action doesn't need permissions from a character
 	 */
-	public reTargetAction(target: ActionTarget, container: ItemContainerPath, item: Item, moduleName: string | null): ActionTarget {
-		if (!target.allowReTargeting)
+	public resolveTargetCharacter(target: ActionTarget, container: ItemContainerPath): ActionTargetCharacter | null {
+		// If we are already targetting a character, the result will be this character
+		if (target.type === 'character')
 			return target;
 
-		while (true as boolean) {
-			if (item.isType('roomDevice')) {
-				break;
+		const parent = SplitContainerPath(container);
+		if (parent == null)
+			return null;
+
+		// If the target container is nested, then check the parent first (parent takes priority)
+		const parentTarget = this.resolveTargetCharacter(target, parent.itemPath.container);
+		if (parentTarget != null)
+			return parentTarget;
+
+		const item = target.getItem(parent.itemPath);
+		if (item == null)
+			return null;
+
+		// Room device modules can choose different target character
+		if (item.isType('roomDevice')) {
+			const itemModule = item.getModules().get(parent.module);
+			if (itemModule == null)
+				return null;
+
+			const slotName = itemModule.config.staticConfig.slotName;
+			if (slotName == null) {
+				return null;
 			}
-			const parent = SplitContainerPath(container);
-			if (parent == null) {
-				return target.withNoReTargeting();
+
+			const characterId = item.slotOccupancy.get(slotName);
+			if (characterId == null) {
+				return null;
 			}
-			const parentItem = target.getItem(parent.itemPath);
-			AssertNotNullable(parentItem);
-			container = parent.itemPath.container;
-			moduleName = parent.module;
-			item = parentItem;
+
+			// We have a character id to target, resolve it into the character
+			return this.getTargetCharacter({
+				type: 'character',
+				characterId,
+			});
 		}
 
-		if (moduleName == null) {
-			return target.withNoReTargeting();
-		}
-
-		Assert(item.isType('roomDevice'));
-		const itemModule = item.getModules().get(moduleName);
-		AssertNotNullable(itemModule);
-
-		const slotName = itemModule.config.staticConfig.slotName;
-		if (slotName == null) {
-			return target.withNoReTargeting();
-		}
-		const characterId = item.slotOccupancy.get(slotName);
-		if (!characterId) {
-			return target.withNoReTargeting();
-		}
-
-		const roomState = this.manipulator.currentState.room;
-		const characterState = this.manipulator.currentState.getCharacterState(characterId);
-		AssertNotNullable(characterState);
-		const characterAppearance = this._context.getCharacter(characterId)?.getAppearance(characterState);
-		AssertNotNullable(characterAppearance);
-
-		return new ReTargetedCharacter(roomState, characterAppearance);
-	}
-
-	public reTargetActionIndirect(target: ActionTarget, itemPath: ItemPath, moduleName: string | null): ActionTarget {
-		const item = target.getItem(itemPath);
-		if (!item)
-			return target;
-
-		return this.reTargetAction(target, itemPath.container, item, moduleName);
+		// Nothing to re-target
+		return null;
 	}
 }
 

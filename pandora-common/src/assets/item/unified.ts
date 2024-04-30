@@ -96,7 +96,6 @@ export function CreateItemBundleFromTemplate(template: ItemTemplate, context: II
 				continue;
 
 			// Actually create the module from template
-			// @ts-expect-error: Type specialized manually
 			const loadedData = CreateModuleDataFromTemplate(moduleConfig, moduleTemplate, context);
 			if (loadedData == null)
 				continue;

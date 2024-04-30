@@ -126,7 +126,7 @@ export function GetModuleStaticAttributes<TProperties, TStaticData>(moduleDefini
 	}
 }
 
-export function CreateModuleDataFromTemplate(moduleDefinition: Immutable<AssetModuleDefinition<unknown, unknown>>, template: ItemModuleTemplate, context: IItemCreationContext): ItemModuleData | undefined {
+export function CreateModuleDataFromTemplate<TProperties, TStaticData>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties, TStaticData>>, template: ItemModuleTemplate, context: IItemCreationContext): ItemModuleData | undefined {
 	if (moduleDefinition.type !== template.type) {
 		// Fail if the types don't match
 		return undefined;

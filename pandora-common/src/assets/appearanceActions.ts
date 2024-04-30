@@ -9,7 +9,7 @@ import type { ActionSpaceContext } from '../space/space';
 import { Assert, AssertNever, ShuffleArray } from '../utility';
 import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
 import { AppearanceRootManipulator } from './appearanceHelpers';
-import { ActionMessageTemplateHandler, ActionTarget, ActionTargetSelectorSchema, CharacterSelectorSchema, ItemContainerPath, ItemContainerPathSchema, ItemPath, ItemPathSchema } from './appearanceTypes';
+import { ActionMessageTemplateHandler, ActionTarget, ActionTargetSelectorSchema, CharacterSelectorSchema, ItemContainerPath, ItemContainerPathSchema, ItemPath, ItemPathSchema, type ActionTargetCharacter } from './appearanceTypes';
 import { AppearanceItems, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
 import type { Asset } from './asset';
 import type { AssetManager } from './assetManager';
@@ -192,7 +192,10 @@ export interface AppearanceActionContext {
 /** Context for performing module actions */
 export interface AppearanceModuleActionContext {
 	processingContext: AppearanceActionProcessingContext;
+	/** The physical target of the action */
 	target: ActionTarget;
+	/** Character that should be checked for manipulation permissions */
+	targetCharacter: ActionTargetCharacter | null;
 
 	messageHandler: ActionMessageTemplateHandler;
 	reject: (reason: ModuleActionError) => void;
@@ -363,7 +366,7 @@ export function DoAppearanceAction(
 			// falls through
 		}
 		case 'pose': {
-			const target = processingContext.getTarget({ type: 'character', characterId: action.target });
+			const target = processingContext.getTargetCharacter({ type: 'character', characterId: action.target });
 			if (!target)
 				return processingContext.invalid();
 
@@ -379,7 +382,7 @@ export function DoAppearanceAction(
 		}
 		// Changes view of the character - front or back
 		case 'setView': {
-			const target = processingContext.getTarget({ type: 'character', characterId: action.target });
+			const target = processingContext.getTargetCharacter({ type: 'character', characterId: action.target });
 			if (!target)
 				return processingContext.invalid();
 
@@ -664,13 +667,15 @@ export function ActionModuleAction({
 
 	let rejectionReason: ModuleActionError | undefined;
 
-	const newTarget = processingContext.reTargetActionIndirect(target, action.item, action.module);
+	const targetCharacter = processingContext.resolveTargetCharacter(target, [...container, { item: itemId, module: action.module }]);
+	Assert(target.type !== 'character' || target === targetCharacter);
 
 	// Do change and store chat messages
 	if (!containerManipulator.modifyItem(itemId, (it) => {
 		const actionContext: AppearanceModuleActionContext = {
 			processingContext,
-			target: newTarget,
+			target,
+			targetCharacter,
 			messageHandler: (m) => {
 				processingContext.queueMessage(
 					containerManipulator.makeMessage({

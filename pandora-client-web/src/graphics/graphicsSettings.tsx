@@ -1,10 +1,13 @@
 import { CloneDeepMutable } from 'pandora-common';
-import React, { ReactElement, useMemo } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { BrowserStorage } from '../browserStorage';
 import { ContextHelpButton } from '../components/help/contextHelpButton';
 import { SelectSettingInput } from '../components/settings/helpers/settingsInputs';
 import { useObservable } from '../observable';
+import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../assets/graphicsManager';
+import { Button } from '../components/common/button/button';
+import { Column, Row } from '../components/common/container/container';
 
 export const GraphicsSettingsSchema = z.object({
 	renderResolution: z.number().int().min(0).max(100),
@@ -48,7 +51,10 @@ function ResetGraphicsSettings(settings: readonly (keyof GraphicsSettings)[]): v
 
 export function GraphicsSettings(): ReactElement | null {
 	return (
+<>
 		<QualitySettings />
+<GraphicsDebug />
+		</>
 	);
 }
 
@@ -135,6 +141,66 @@ function QualitySettings(): ReactElement {
 				onChange={ (v) => SetGraphicsSettings({ alphamaskEngine: v }) }
 				onReset={ () => ResetGraphicsSettings(['alphamaskEngine']) }
 			/>
+		</fieldset>
+	);
+}
+
+function GraphicsDebug(): ReactElement {
+	const graphicsManger = useObservable(GraphicsManagerInstance);
+
+	const [stats, setStats] = useState<IGraphicsLoaderStats>(() => ({
+		inUseTextures: 0,
+		loadedTextures: 0,
+		trackedTextures: 0,
+	}));
+
+	const refreshStats = useCallback(() => {
+		if (graphicsManger == null)
+			return;
+
+		setStats(graphicsManger.loader.getDebugStats());
+	}, [graphicsManger]);
+
+	useEffect(() => {
+		if (graphicsManger == null)
+			return;
+
+		refreshStats();
+
+		return graphicsManger.loader.on('storeChaged', () => {
+			refreshStats();
+		});
+	}, [graphicsManger, refreshStats]);
+
+	if (graphicsManger == null) {
+		return (
+			<fieldset>
+				<legend>Graphics manager debug</legend>
+				Graphics manager is not loaded
+			</fieldset>
+		);
+	}
+
+	return (
+		<fieldset>
+			<legend>Graphics manager debug</legend>
+			<Column>
+				<Row>
+					<Button onClick={ refreshStats } slim>Refresh</Button>
+				</Row>
+				<span>Tracked textures: { stats.trackedTextures }</span>
+				<span>Loaded textures: { stats.loadedTextures }</span>
+				<span>Used textures: { stats.inUseTextures }</span>
+				<hr className='fill-x' />
+				<Row>
+					<Button onClick={ () => {
+						graphicsManger.loader.gc();
+						refreshStats();
+					} } slim>
+						Purge unused textures
+					</Button>
+				</Row>
+			</Column>
 		</fieldset>
 	);
 }

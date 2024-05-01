@@ -7,13 +7,13 @@ import { useObservable } from '../observable';
 import { ContextHelpButton } from '../components/help/contextHelpButton';
 
 export const GraphicsSettingsSchema = z.object({
-	resolution: z.number().int().min(0).max(100),
+	renderResolution: z.number().int().min(0).max(100),
 	alphamaskEngine: z.enum(['pixi', 'customShader', 'disabled']),
 });
 export type GraphicsSettings = z.infer<typeof GraphicsSettingsSchema>;
 
 const GRAPHICS_SETTINGS_DEFAULT: GraphicsSettings = {
-	resolution: 100,
+	renderResolution: 100,
 	alphamaskEngine: 'disabled',
 };
 
@@ -51,7 +51,7 @@ export function GraphicsSettings(): ReactElement | null {
 }
 
 function QualitySettings(): ReactElement {
-	const { resolution, alphamaskEngine } = useObservable(storage);
+	const { renderResolution, alphamaskEngine } = useObservable(storage);
 
 	const ALPHAMASK_ENGINES_DESCRIPTIONS: Record<GraphicsSettings['alphamaskEngine'], string> = {
 		pixi: 'Pixi.js',
@@ -63,8 +63,8 @@ function QualitySettings(): ReactElement {
 		<fieldset>
 			<legend>Quality</legend>
 			<SelectSettingInput<string>
-				currentValue={ resolution?.toString() }
-				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.resolution.toString() }
+				currentValue={ renderResolution?.toString() }
+				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.renderResolution.toString() }
 				label='Resolution'
 				stringify={
 					Object.fromEntries(
@@ -74,10 +74,10 @@ function QualitySettings(): ReactElement {
 				}
 				schema={ z.string() }
 				onChange={ (v) => {
-					const newValue = GraphicsSettingsSchema.shape.resolution.parse(Number.parseInt(v, 10));
-					SetGraphicsSettings({ resolution: newValue });
+					const newValue = GraphicsSettingsSchema.shape.renderResolution.parse(Number.parseInt(v, 10));
+					SetGraphicsSettings({ renderResolution: newValue });
 				} }
-				onReset={ () => ResetGraphicsSettings(['resolution']) }
+				onReset={ () => ResetGraphicsSettings(['renderResolution']) }
 			/>
 			<SelectSettingInput<GraphicsSettings['alphamaskEngine']>
 				currentValue={ alphamaskEngine }

@@ -207,16 +207,16 @@ export function GraphicsScene({
 	sceneOptions?: GraphicsSceneProps;
 	divChildren?: ReactNode;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>): ReactElement {
-	const { resolution } = useGraphicsSettings();
+	const { renderResolution } = useGraphicsSettings();
 
 	const [div, setDiv] = useState<HTMLDivElement | null>(null);
 
 	return (
 		<LocalErrorBoundary errorOverlayClassName={ className }>
-			<div className={ classNames({ disabled: resolution <= 0 }, className) } { ...divProps } ref={ setDiv }>
+			<div className={ classNames({ disabled: renderResolution <= 0 }, className) } { ...divProps } ref={ setDiv }>
 				{
-					div && resolution > 0 ? (
-						<GraphicsSceneCore { ...sceneOptions } div={ div } resolution={ resolution / 100 }>
+					div && renderResolution > 0 ? (
+						<GraphicsSceneCore { ...sceneOptions } div={ div } resolution={ renderResolution / 100 }>
 							{ children }
 						</GraphicsSceneCore>
 					) : null

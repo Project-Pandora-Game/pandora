@@ -46,6 +46,8 @@ export type ItemBundle = {
 	id: ItemId;
 	asset: AssetId;
 	color?: ItemColorBundle | HexRGBAColorString[];
+	name?: string;
+	description?: string;
 	moduleData?: Record<string, ItemModuleData>;
 	/** Room device specific data */
 	roomDeviceData?: RoomDeviceBundle;

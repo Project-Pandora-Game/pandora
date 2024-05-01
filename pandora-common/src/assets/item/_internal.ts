@@ -22,6 +22,8 @@ export interface ItemBaseProps<Type extends AssetType = AssetType> {
 	readonly id: ItemId;
 	readonly asset: Asset<Type>;
 	readonly color: Immutable<ItemColorBundle>;
+	readonly name?: string;
+	readonly description?: string;
 }
 
 /**
@@ -34,6 +36,8 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 	public readonly id: ItemId;
 	public readonly asset: Asset<Type>;
 	public readonly color: Immutable<ItemColorBundle>;
+	public readonly name?: string;
+	public readonly description?: string;
 
 	public get type(): Type {
 		return this.asset.type;
@@ -61,6 +65,8 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			id: bundle.id,
 			asset,
 			color: ItemBase._loadColorBundle(asset, bundle.color),
+			name: bundle.name,
+			description: bundle.description,
 		};
 	}
 
@@ -95,6 +101,8 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			id: this.id,
 			asset: this.asset.id,
 			color: this.exportColorToBundle(),
+			name: this.name,
+			description: this.description,
 			moduleData,
 		};
 	}
@@ -205,7 +213,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 
 	/** Returns if this item can be transferred between inventories */
 	public canBeTransferred(): boolean {
-		// No transfering bodyparts, thank you
+		// No transferring bodyparts, thank you
 		if (this.isType('personal') && this.asset.definition.bodypart)
 			return false;
 

@@ -49,10 +49,10 @@ export const LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 = LIMIT_DIRECT_MESSAGE_LENGTH * 
 
 export const LIMIT_DIRECT_MESSAGE_STORE_COUNT = 50;
 
-/** The maximum length of a custom item name (not yet implemented)*/
+/** The maximum length of a custom item name */
 export const LIMIT_ITEM_NAME_LENGTH = 40;
 
-/** The maximum length of a custom item description (not yet implemented) */
+/** The maximum length of a custom item description */
 export const LIMIT_ITEM_DESCRIPTION_LENGTH = 1_000;
 
 /** The maximum length of an account profile description */

@@ -13,6 +13,7 @@ import { WardrobeActionButton } from '../wardrobeComponents';
 import { WardrobeItemColorization } from './wardrobeItemColor';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
 import { WardrobeRoomDeviceDeployment, WardrobeRoomDeviceSlots, WardrobeRoomDeviceWearable } from './wardrobeItemRoomDevice';
+import { WardrobeItemName } from './wardrobeItemName';
 
 export function WardrobeItemConfigMenu({
 	item,
@@ -58,7 +59,7 @@ export function WardrobeItemConfigMenu({
 	return (
 		<div className='inventoryView'>
 			<div className='toolbar'>
-				<span>Editing item: { wornItem.asset.definition.name }</span>
+				<span>Editing item:&nbsp;<WardrobeItemName item={ wornItem } /></span>
 				{ !singleItemContainer && <button className='modeButton' onClick={ close }>✖️</button> }
 			</div>
 			<Column padding='medium' overflowX='hidden' overflowY='auto'>

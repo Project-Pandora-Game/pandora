@@ -20,6 +20,7 @@ import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeActionButton } from '../wardrobeComponents';
 import type { Immutable } from 'immer';
 import { useAssetManager } from '../../../assets/assetManager';
+import { WardrobeItemName } from '../itemDetail/wardrobeItemName';
 
 export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement {
 	const { targetSelector, target, focuser } = useWardrobeContext();
@@ -49,7 +50,7 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeMo
 				<Row padding='medium' wrap>
 					<img width='21' height='33' src={ openLock } />
 					<Row padding='medium' alignY='center'>
-						Lock: { m.lock.asset.definition.name } (unlocked)
+						Lock:&nbsp;<WardrobeItemName item={ m.lock } /> (unlocked)
 					</Row>
 				</Row>
 				<Row wrap>
@@ -104,7 +105,7 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeMo
 			<Row padding='medium' wrap>
 				<img width='21' height='33' src={ closedLock } />
 				<Row padding='medium' alignY='center'>
-					Locked with: { m.lock.asset.definition.name }
+					Locked with:&nbsp;<WardrobeItemName item={ m.lock } />
 				</Row>
 			</Row>
 			<WardrobeLockSlotLocked item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />

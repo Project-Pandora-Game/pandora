@@ -29,6 +29,7 @@ import { useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils'
 import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
 import { useNavigate } from 'react-router';
 import { Button } from '../../common/button/button';
+import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobeItemName';
 
 export function InventoryItemView({
 	className,
@@ -39,7 +40,7 @@ export function InventoryItemView({
 	title: string;
 	filter?: (item: Item) => boolean;
 }): ReactElement | null {
-	const { target, targetSelector, heldItem, focuser } = useWardrobeContext();
+	const { target, targetSelector, heldItem, focuser, itemDisplayNameType } = useWardrobeContext();
 	const focus = useObservable(focuser.current);
 	const appearance = useWardrobeTargetItems(target);
 	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(appearance), [appearance]);
@@ -54,12 +55,12 @@ export function InventoryItemView({
 			const module = item?.getModules().get(step.module);
 			if (!item || !module)
 				return [[], undefined, []];
-			steps.push(`${item.asset.definition.name} (${module.config.name})`);
+			steps.push(`${ResolveItemDisplayName(item, itemDisplayNameType)} (${module.config.name})`);
 			container = module;
 			items = item.getModuleItems(step.module);
 		}
 		return [items, container, steps];
-	}, [appearance, filter, focus]);
+	}, [appearance, filter, focus, itemDisplayNameType]);
 
 	const singleItemContainer = containerModule != null && containerModule instanceof ItemModuleLockSlot;
 	useEffect(() => {
@@ -292,7 +293,7 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 					/> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
-			<span className='itemName'>{ asset.definition.name }</span>
+			<span className='itemName'><WardrobeItemName item={ wornItem } /></span>
 			<div className='quickActions'>
 				{
 					singleItemContainer ? null : (

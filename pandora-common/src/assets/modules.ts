@@ -50,12 +50,14 @@ export type ModuleActionError =
 		moduleAction: 'lock' | 'unlock';
 		reason: 'blockSelf';
 		asset: AssetId;
+		itemName: string;
 	}
 	| {
 		type: 'lockInteractionPrevented';
 		moduleAction: 'lock';
 		reason: 'noStoredPassword';
 		asset: AssetId;
+		itemName: string;
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
 	| {
@@ -68,6 +70,7 @@ export type ModuleActionFailure =
 		moduleAction: 'unlock';
 		reason: 'wrongPassword';
 		asset: AssetId;
+		itemName: string;
 	};
 
 //#endregion

@@ -132,7 +132,7 @@ type ExecuteCallbackOptions = {
 
 export function useWardrobeExecuteCallback({ onSuccess, onFailure }: ExecuteCallbackOptions = {}) {
 	const assetManager = useAssetManager();
-	const { execute } = useWardrobeContext();
+	const { execute, itemDisplayNameType } = useWardrobeContext();
 	return useAsyncEvent(
 		async (action: AppearanceAction) => await execute(action),
 		(result) => {
@@ -156,7 +156,7 @@ export function useWardrobeExecuteCallback({ onSuccess, onFailure }: ExecuteCall
 							<ul>
 								{
 									result.problems.map((problem, i) => (
-										<li key={ i } className='display-linebreak'>{ RenderAppearanceActionProblem(assetManager, problem) }</li>
+										<li key={ i } className='display-linebreak'>{ RenderAppearanceActionProblem(assetManager, problem, itemDisplayNameType) }</li>
 									))
 								}
 							</ul>

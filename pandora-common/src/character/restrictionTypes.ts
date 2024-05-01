@@ -92,17 +92,20 @@ export type Restriction =
 	| {
 		type: 'blockedAddRemove';
 		asset: AssetId;
+		itemName: string;
 		self: boolean;
 	}
 	| {
 		type: 'blockedModule';
 		asset: AssetId;
+		itemName: string;
 		module: string;
 		self: boolean;
 	}
 	| {
 		type: 'covered';
 		asset: AssetId;
+		itemName: string;
 		attribute: string;
 	}
 	| {
@@ -129,4 +132,3 @@ export type RestrictionResult = {
 	allowed: false;
 	restriction: Restriction;
 };
-

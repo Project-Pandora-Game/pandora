@@ -67,6 +67,7 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 				error: {
 					problem: 'contentNotAllowed',
 					asset: this.asset.id,
+					itemName: this.name ?? '',
 				},
 			};
 

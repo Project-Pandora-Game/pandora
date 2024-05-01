@@ -28,14 +28,15 @@ import { useObservable } from '../../observable';
 import { Column } from '../common/container/container';
 
 export function ActionWarningContent({ problems, prompt }: { problems: readonly AppearanceActionProblem[]; prompt: boolean; }): ReactElement {
+	const { wardrobeItemDisplayNameType } = useAccountSettings();
 	const assetManager = useAssetManager();
 	const reasons = useMemo(() => (
 		_.uniq(
 			problems
-				.map((problem) => RenderAppearanceActionProblem(assetManager, problem))
+				.map((problem) => RenderAppearanceActionProblem(assetManager, problem, wardrobeItemDisplayNameType))
 				.filter(Boolean),
 		)
-	), [assetManager, problems]);
+	), [assetManager, problems, wardrobeItemDisplayNameType]);
 
 	if (reasons.length === 0) {
 		return (

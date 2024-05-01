@@ -391,6 +391,7 @@ export class CharacterRestrictionsManager {
 					restriction: {
 						type: 'blockedAddRemove',
 						asset: item.asset.id,
+						itemName: item.name ?? '',
 						self: false,
 					},
 				};
@@ -402,6 +403,7 @@ export class CharacterRestrictionsManager {
 					restriction: {
 						type: 'blockedAddRemove',
 						asset: item.asset.id,
+						itemName: item.name ?? '',
 						self: true,
 					},
 				};
@@ -419,6 +421,7 @@ export class CharacterRestrictionsManager {
 					restriction: {
 						type: 'covered',
 						asset: item.asset.id,
+						itemName: item.name ?? '',
 						attribute: coveredAttribute,
 					},
 				};
@@ -521,6 +524,7 @@ export class CharacterRestrictionsManager {
 				restriction: {
 					type: 'blockedModule',
 					asset: item.asset.id,
+					itemName: item.name ?? '',
 					module: moduleName,
 					self: false,
 				},
@@ -533,6 +537,7 @@ export class CharacterRestrictionsManager {
 				restriction: {
 					type: 'blockedModule',
 					asset: item.asset.id,
+					itemName: item.name ?? '',
 					module: moduleName,
 					self: true,
 				},

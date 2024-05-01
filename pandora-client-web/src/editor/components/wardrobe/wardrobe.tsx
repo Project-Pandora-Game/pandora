@@ -114,6 +114,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		},
 		showExtraActionButtons: true,
 		showHoverPreview: true,
+		itemDisplayNameType: 'custom_with_original_in_brackets',
 	}), [character, globalState, assetList, heldItem, scrollToItem, focuser, extraItemActions, actions, actionPreviewState, assetManager, editor]);
 
 	return (

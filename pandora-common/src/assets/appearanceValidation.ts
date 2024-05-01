@@ -20,12 +20,14 @@ export type AppearanceValidationError =
 	| {
 		problem: 'unsatisfiedRequirement';
 		asset: AssetId | null;
+		itemName: string | null;
 		requirement: string;
 	}
 	| {
 		// The item's internal state is invalid (e.g. from unsatisfied stateFlags requirements)
 		problem: 'invalidState';
 		asset: AssetId | null;
+		itemName: string | null;
 		reason: string;
 	}
 	| {
@@ -35,11 +37,13 @@ export type AppearanceValidationError =
 	| {
 		problem: 'tooManyItems';
 		asset: AssetId | null;
+		itemName: string | null;
 		limit: number;
 	}
 	| {
 		problem: 'contentNotAllowed';
 		asset: AssetId;
+		itemName: string;
 	}
 	| {
 		problem: 'canOnlyBeInOneDevice';
@@ -79,7 +83,7 @@ export function AppearanceItemProperties(items: AppearanceItems): AssetPropertie
 		.reduce(MergeAssetProperties, CreateAssetPropertiesResult());
 }
 
-export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, requirements: ReadonlySet<string>, asset: AssetId | null): AppearanceValidationResult {
+export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, requirements: ReadonlySet<string>, item: Item): AppearanceValidationResult {
 	return Array.from(requirements)
 		.map((r): AppearanceValidationResult => {
 			if (r.startsWith('!') ? !attributes.has(r.substring(1)) : attributes.has(r)) {
@@ -89,7 +93,8 @@ export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, 
 				success: false,
 				error: {
 					problem: 'unsatisfiedRequirement',
-					asset,
+					asset: item.asset.id,
+					itemName: item.name ?? '',
 					requirement: r,
 				},
 			};
@@ -144,6 +149,7 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 				error: {
 					problem: 'tooManyItems',
 					asset: item.asset.id,
+					itemName: item.name ?? '',
 					limit,
 				},
 			};
@@ -165,7 +171,7 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 		const properties = item.getProperties();
 
 		// Item's attributes don't count into its own requirements
-		const r = AppearanceValidateRequirements(globalProperties.attributes, properties.attributeRequirements, item.asset.id);
+		const r = AppearanceValidateRequirements(globalProperties.attributes, properties.attributeRequirements, item);
 		if (!r.success)
 			return r;
 

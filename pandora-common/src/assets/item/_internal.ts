@@ -178,6 +178,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 					error: {
 						problem: 'invalidState',
 						asset: this.asset.id,
+						itemName: this.name ?? '',
 						reason,
 					},
 				};
@@ -191,6 +192,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 				error: {
 					problem: 'contentNotAllowed',
 					asset: this.asset.id,
+					itemName: this.name ?? '',
 				},
 			};
 
@@ -201,6 +203,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 				error: {
 					problem: 'contentNotAllowed',
 					asset: this.asset.id,
+					itemName: this.name ?? '',
 				},
 			};
 

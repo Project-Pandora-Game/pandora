@@ -170,6 +170,7 @@ export class ItemModuleStorage<TProperties = unknown, TStaticData = unknown> imp
 				error: {
 					problem: 'tooManyItems',
 					asset: null,
+					itemName: null,
 					limit: this.config.maxCount,
 				},
 			};
@@ -183,6 +184,7 @@ export class ItemModuleStorage<TProperties = unknown, TStaticData = unknown> imp
 				error: {
 					problem: 'contentNotAllowed',
 					asset: problematic.asset.id,
+					itemName: problematic.name ?? '',
 				},
 			};
 

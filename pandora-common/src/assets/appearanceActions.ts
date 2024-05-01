@@ -22,6 +22,7 @@ import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties'
 import { AppearanceArmPoseSchema, AppearanceArmsOrderSchema, AppearancePoseSchema } from './state/characterStatePose';
 import { RestrictionOverride } from './state/characterStateTypes';
 import { AssetFrameworkGlobalStateContainer } from './state/globalState';
+import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH } from '../inputLimits';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../validation';
@@ -104,6 +105,18 @@ export const AppearanceActionColor = z.object({
 	color: ItemColorBundleSchema,
 });
 
+export const AppearanceActionCustomize = z.object({
+	type: z.literal('customize'),
+	/** Target with the item to change */
+	target: ActionTargetSelectorSchema,
+	/** Path to the item to change */
+	item: ItemPathSchema,
+	/** New custom name */
+	name: z.string().max(LIMIT_ITEM_NAME_LENGTH),
+	/** New description */
+	description: z.string().max(LIMIT_ITEM_DESCRIPTION_LENGTH),
+});
+
 export const AppearanceActionModuleAction = z.object({
 	type: z.literal('moduleAction'),
 	/** Target with the item to color */
@@ -173,6 +186,7 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionSetView,
 	AppearanceActionMove,
 	AppearanceActionColor,
+	AppearanceActionCustomize,
 	AppearanceActionModuleAction,
 	AppearanceActionRestrictionOverrideChange,
 	AppearanceActionRandomize,
@@ -348,6 +362,12 @@ export function DoAppearanceAction(
 				return processingContext.invalid();
 
 			return processingContext.finalize();
+		}
+		case 'customize': {
+			return ActionAppearanceCustomize({
+				...arg,
+				action,
+			});
 		}
 		// Module-specific action
 		case 'moduleAction': {
@@ -648,6 +668,37 @@ export function ActionColorItem(rootManipulator: AppearanceRootManipulator, item
 	// Will need mechanism to rate-limit the messages not to send every color change
 
 	return true;
+}
+
+export function ActionAppearanceCustomize({ action, processingContext }: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionCustomize>>): AppearanceActionProcessingResult {
+	const target = processingContext.getTarget(action.target);
+	if (!target)
+		return processingContext.invalid();
+
+	if (target.type === 'character' && target.character.id !== processingContext.player.id) {
+		// TODO: change this: only the player can customize their own items for now
+		return processingContext.invalid();
+	}
+
+	const item = target.getItem(action.item);
+	if (item == null || item.isType('roomDeviceWearablePart')) {
+		return processingContext.invalid();
+	}
+
+	// To manipulate the color of room devices, player must be an admin
+	if (item.isType('roomDevice')) {
+		processingContext.checkPlayerIsSpaceAdmin();
+	}
+
+	// Player doing the action must be able to interact with the item
+	processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.STYLING);
+
+	const manipulator = processingContext.manipulator.getManipulatorFor(action.target);
+	if (!manipulator.modifyItem(action.item.itemId, (it) => it.customize(action.name, action.description))) {
+		return processingContext.invalid();
+	}
+
+	return processingContext.finalize();
 }
 
 export function ActionModuleAction({

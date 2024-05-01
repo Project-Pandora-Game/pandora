@@ -56,6 +56,8 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		this.id = overrideProps?.id ?? props.id;
 		this.asset = overrideProps?.asset ?? props.asset;
 		this.color = overrideProps?.color ?? props.color;
+		this.name = overrideProps?.name ?? props.name;
+		this.description = overrideProps?.description ?? props.description;
 	}
 
 	protected static _parseBundle<Type extends AssetType = AssetType>(asset: Asset<Type>, bundle: ItemBundle, context: IItemLoadContext): ItemBaseProps<Type> {
@@ -225,6 +227,19 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		return this.withProps({
 			color: ItemBase._loadColorBundle(this.asset, color),
 		});
+	}
+
+	/** Returns a new item with the passed name and description */
+	public customize(newName: string, newDescription: string): Item<Type> {
+		let name: string | undefined = newName.trim();
+		if (name === '' || name === this.asset.definition.name)
+			name = undefined;
+
+		let description: string | undefined = newDescription.trim();
+		if (description === '')
+			description = undefined;
+
+		return this.withProps({ name, description });
 	}
 
 	@MemoizeNoArg

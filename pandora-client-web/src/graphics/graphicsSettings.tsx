@@ -2,18 +2,20 @@ import { CloneDeepMutable } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
 import { z } from 'zod';
 import { BrowserStorage } from '../browserStorage';
+import { ContextHelpButton } from '../components/help/contextHelpButton';
 import { SelectSettingInput } from '../components/settings/helpers/settingsInputs';
 import { useObservable } from '../observable';
-import { ContextHelpButton } from '../components/help/contextHelpButton';
 
 export const GraphicsSettingsSchema = z.object({
 	renderResolution: z.number().int().min(0).max(100),
+	textureResolution: z.enum(['1', '0.5', '0.25']),
 	alphamaskEngine: z.enum(['pixi', 'customShader', 'disabled']),
 });
 export type GraphicsSettings = z.infer<typeof GraphicsSettingsSchema>;
 
 const GRAPHICS_SETTINGS_DEFAULT: GraphicsSettings = {
 	renderResolution: 100,
+	textureResolution: '1',
 	alphamaskEngine: 'disabled',
 };
 
@@ -50,8 +52,20 @@ export function GraphicsSettings(): ReactElement | null {
 	);
 }
 
+const GRAPHICS_TEXTURE_RESOLUTION_DESCRIPTIONS: Record<GraphicsSettings['textureResolution'], string> = {
+	'1': 'Full',
+	'0.5': '50%',
+	'0.25': '25%',
+};
+
+export const GRAPHICS_TEXTURE_RESOLUTION_SCALE: Record<GraphicsSettings['textureResolution'], number> = {
+	'1': 1,
+	'0.5': 2,
+	'0.25': 4,
+};
+
 function QualitySettings(): ReactElement {
-	const { renderResolution, alphamaskEngine } = useObservable(storage);
+	const { renderResolution, textureResolution, alphamaskEngine } = useObservable(storage);
 
 	const ALPHAMASK_ENGINES_DESCRIPTIONS: Record<GraphicsSettings['alphamaskEngine'], string> = {
 		pixi: 'Pixi.js',
@@ -65,7 +79,7 @@ function QualitySettings(): ReactElement {
 			<SelectSettingInput<string>
 				currentValue={ renderResolution?.toString() }
 				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.renderResolution.toString() }
-				label='Resolution'
+				label='Render resolution'
 				stringify={
 					Object.fromEntries(
 						([100, 90, 80, 65, 50, 25, 0])
@@ -78,6 +92,15 @@ function QualitySettings(): ReactElement {
 					SetGraphicsSettings({ renderResolution: newValue });
 				} }
 				onReset={ () => ResetGraphicsSettings(['renderResolution']) }
+			/>
+			<SelectSettingInput<GraphicsSettings['textureResolution']>
+				currentValue={ textureResolution }
+				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.textureResolution }
+				label='Texture resolution'
+				stringify={ GRAPHICS_TEXTURE_RESOLUTION_DESCRIPTIONS }
+				schema={ GraphicsSettingsSchema.shape.textureResolution }
+				onChange={ (v) => SetGraphicsSettings({ textureResolution: v }) }
+				onReset={ () => ResetGraphicsSettings(['textureResolution']) }
 			/>
 			<SelectSettingInput<GraphicsSettings['alphamaskEngine']>
 				currentValue={ alphamaskEngine }

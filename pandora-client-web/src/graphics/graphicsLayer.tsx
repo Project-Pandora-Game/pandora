@@ -1,19 +1,19 @@
 import { Container, Sprite, useApp } from '@pixi/react';
 import Delaunator from 'delaunator';
-import { AppearanceItems, Assert, BoneName, CharacterSize, CoordinatesCompressed, Item, LayerMirror, PointDefinition, Rectangle as PandoraRectangle, HexColorString, AssertNever, AssetFrameworkCharacterState } from 'pandora-common';
+import { AppearanceItems, Assert, AssertNever, AssetFrameworkCharacterState, BoneName, CharacterSize, CoordinatesCompressed, HexColorString, Item, LayerMirror, Rectangle as PandoraRectangle, PointDefinition } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
-import React, { createContext, ReactElement, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AssetGraphicsLayer, PointDefinitionCalculated, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource } from '../assets/assetGraphics';
+import React, { ReactElement, createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { AssetGraphicsLayer, PointDefinitionCalculated, useImageResolutionAlternative, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource } from '../assets/assetGraphics';
 import { ChildrenProps } from '../common/reactTypes';
 import { ConditionEvaluatorBase, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator';
 import { LayerStateOverrides } from './def';
 import { GraphicsMaskLayer } from './graphicsMaskLayer';
 import { useGraphicsSettings } from './graphicsSettings';
 import { PixiMesh } from './pixiMesh';
+import { RoomDeviceRenderContext } from './room/roomDeviceContext';
 import { useTexture } from './useTexture';
 import { EvaluateCondition, useAppOptional } from './utility';
-import { RoomDeviceRenderContext } from './room/roomDeviceContext';
 
 export function useLayerPoints(layer: AssetGraphicsLayer): {
 	points: readonly PointDefinitionCalculated[];
@@ -166,7 +166,7 @@ export function GraphicsLayer({
 		indices: triangles,
 	}), [vertices, uv, triangles]);
 
-	const texture = useTexture(image, undefined, getTexture);
+	const texture = useTexture(useImageResolutionAlternative(image).image, undefined, getTexture);
 
 	const { color, alpha } = useItemColor(characterState.items, item, colorizationKey, state);
 

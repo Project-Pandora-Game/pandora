@@ -1,4 +1,4 @@
-import { AssetGraphicsDefinition, AssetId, AssetsGraphicsDefinitionFile, PointTemplate } from 'pandora-common';
+import { AssetGraphicsDefinition, AssetId, AssetsGraphicsDefinitionFile, PointTemplate, TypedEventEmitter, type ITypedEventEmitter } from 'pandora-common';
 import { Resource, Texture } from 'pixi.js';
 import { useState, useEffect } from 'react';
 import { Observable, useObservable } from '../observable';
@@ -6,7 +6,19 @@ import { AssetGraphics } from './assetGraphics';
 import { BrowserStorage } from '../browserStorage';
 import { z } from 'zod';
 
-export interface IGraphicsLoader {
+export interface IGraphicsLoaderStats {
+	inUseTextures: number;
+	loadedTextures: number;
+	trackedTextures: number;
+}
+
+export type IGraphicsLoaderEvents = {
+	storeChaged: void;
+};
+
+export type TextureUpdateListener = (texture: Texture<Resource>, lock: () => (() => void)) => void;
+
+export interface IGraphicsLoader extends ITypedEventEmitter<IGraphicsLoaderEvents> {
 	getCachedTexture(path: string): Texture | null;
 	/**
 	 * Requests a texture to be loaded and marks the texture as in-use
@@ -14,7 +26,7 @@ export interface IGraphicsLoader {
 	 * @param listener - Listener for when the texture is successfully loaded
 	 * @returns A callback to release the texture
 	 */
-	useTexture(path: string, listener: (texture: Texture) => void): () => void;
+	useTexture(path: string, listener: TextureUpdateListener): () => void;
 	loadResource(path: string): Promise<Resource>;
 	loadTextFile(path: string): Promise<string>;
 	loadFileArrayBuffer(path: string, type?: string): Promise<ArrayBuffer>;
@@ -25,19 +37,30 @@ export interface IGraphicsLoader {
 	 * @param path - Path to file
 	 */
 	pathToUrl(path: string): Promise<string>;
+
+	/** Garbage collect unused textures */
+	gc(): void;
+
+	/** Collects current statistics from the graphics loader */
+	getDebugStats(): IGraphicsLoaderStats;
 }
 
-class AlternateImageFormatGraphicsLoader implements IGraphicsLoader {
+class AlternateImageFormatGraphicsLoader extends TypedEventEmitter<IGraphicsLoaderEvents> implements IGraphicsLoader {
 	private readonly _loader: IGraphicsLoader;
 	private readonly _acceptedFormats: readonly string[];
 	private readonly _newFormat: string;
 	private readonly _suffix: string;
 
 	constructor(loader: IGraphicsLoader, acceptedFormats: readonly string[], newFormat: string, suffix: string) {
+		super();
 		this._loader = loader;
 		this._acceptedFormats = acceptedFormats.map((f) => `.${f}`);
 		this._newFormat = newFormat;
 		this._suffix = suffix ? `_${suffix}` : '';
+
+		this._loader.on('storeChaged', () => {
+			this.emit('storeChaged', undefined);
+		});
 	}
 
 	private _transformPath(path: string): string {
@@ -53,7 +76,7 @@ class AlternateImageFormatGraphicsLoader implements IGraphicsLoader {
 		return this._loader.getCachedTexture(this._transformPath(path));
 	}
 
-	public useTexture(path: string, listener: (texture: Texture) => void): () => void {
+	public useTexture(path: string, listener: TextureUpdateListener): () => void {
 		return this._loader.useTexture(this._transformPath(path), listener);
 	}
 
@@ -71,6 +94,14 @@ class AlternateImageFormatGraphicsLoader implements IGraphicsLoader {
 
 	public pathToUrl(path: string): Promise<string> {
 		return this._loader.pathToUrl(this._transformPath(path));
+	}
+
+	public gc(): void {
+		this._loader.gc();
+	}
+
+	public getDebugStats(): IGraphicsLoaderStats {
+		return this._loader.getDebugStats();
 	}
 }
 

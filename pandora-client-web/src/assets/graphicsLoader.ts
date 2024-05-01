@@ -1,7 +1,8 @@
-import { Assert, GetLogger, Logger } from 'pandora-common';
+import { noop } from 'lodash';
+import { Assert, GetLogger, Logger, TypedEventEmitter } from 'pandora-common';
 import { BaseTexture, IImageResourceOptions, Resource, Texture, autoDetectResource } from 'pixi.js';
 import { PersistentToast } from '../persistentToast';
-import { IGraphicsLoader } from './graphicsManager';
+import { IGraphicsLoader, type IGraphicsLoaderEvents, type IGraphicsLoaderStats, type TextureUpdateListener } from './graphicsManager';
 
 /**
  * Interval after which texture load is retried, if the texture is still being requested.
@@ -11,14 +12,13 @@ const RETRY_INTERVALS = [100, 500, 500, 1000, 1000, 5000];
 
 export const ERROR_TEXTURE = Texture.EMPTY;
 
-type TextureUpdateListener = (texture: Texture<Resource>) => void;
-
 class TextureData {
 	public readonly path: string;
 	public readonly loader: IGraphicsLoader;
 	private readonly logger: Logger;
 
 	private readonly _listeners = new Set<TextureUpdateListener>;
+	private _locks: number = 0;
 
 	private _loadedResource: Resource | null = null;
 	private _loadedTexture: Texture | null = null;
@@ -35,11 +35,27 @@ class TextureData {
 		this.logger = logger;
 	}
 
+	public isInUse(): boolean {
+		return this._pendingLoad || this._locks > 0 || this._listeners.size > 0;
+	}
+
 	public registerListener(listener: TextureUpdateListener): () => void {
 		this._listeners.add(listener);
 		this.load();
 		return () => {
 			this._listeners.delete(listener);
+		};
+	}
+
+	private _lock(): (() => void) {
+		let locked = true;
+		this._locks++;
+
+		return () => {
+			if (locked) {
+				locked = false;
+				this._locks--;
+			}
 		};
 	}
 
@@ -68,7 +84,7 @@ class TextureData {
 				this._pendingLoad = false;
 
 				// Notify all listeners about load finishing
-				this._listeners.forEach((listener) => listener(texture));
+				this._listeners.forEach((listener) => listener(texture, this._lock.bind(this)));
 			})
 			.catch((err) => {
 				Assert(this._pendingLoad);
@@ -92,18 +108,33 @@ class TextureData {
 				}
 
 				// Send an error texture to all listeners
-				this._listeners.forEach((listener) => listener(ERROR_TEXTURE));
+				this._listeners.forEach((listener) => listener(ERROR_TEXTURE, () => noop));
 			});
+	}
+
+	public destroy() {
+		Assert(!this.isInUse());
+
+		if (this._loadedTexture != null) {
+			this._loadedTexture.destroy(true);
+			this._loadedTexture = null;
+		}
+
+		if (this._loadedResource != null) {
+			this._loadedResource.destroy();
+			this._loadedResource = null;
+		}
 	}
 }
 
-export abstract class GraphicsLoaderBase implements IGraphicsLoader {
+export abstract class GraphicsLoaderBase extends TypedEventEmitter<IGraphicsLoaderEvents> implements IGraphicsLoader {
 	private readonly store = new Map<string, TextureData>();
 
 	private readonly textureLoadingProgress = new PersistentToast();
 	protected readonly logger: Logger;
 
 	constructor(logger: Logger) {
+		super();
 		this.logger = logger;
 	}
 
@@ -112,6 +143,10 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 			return Texture.EMPTY;
 
 		return this.store.get(path)?.loadedTexture ?? null;
+	}
+
+	public getTexture(path: string): TextureData {
+		return this._initTexture(path);
 	}
 
 	public useTexture(path: string, listener: TextureUpdateListener): () => void {
@@ -128,7 +163,45 @@ export abstract class GraphicsLoaderBase implements IGraphicsLoader {
 
 		data.load();
 
+		this.emit('storeChaged', undefined);
+
 		return data;
+	}
+
+	public gc(): void {
+		let unloaded = 0;
+		for (const [k, texture] of this.store) {
+			if (!texture.isInUse()) {
+				texture.destroy();
+				this.store.delete(k);
+				unloaded++;
+			}
+		}
+
+		this.logger.verbose(`Finished textures GC, ${unloaded} textures unloaded, ${this.store.size} in use`);
+
+		if (unloaded > 0) {
+			this.emit('storeChaged', undefined);
+		}
+	}
+
+	public getDebugStats(): IGraphicsLoaderStats {
+		const result: IGraphicsLoaderStats = {
+			inUseTextures: 0,
+			loadedTextures: 0,
+			trackedTextures: this.store.size,
+		};
+
+		for (const texture of this.store.values()) {
+			if (texture.isInUse()) {
+				result.inUseTextures++;
+			}
+			if (texture.loadedTexture != null) {
+				result.loadedTextures++;
+			}
+		}
+
+		return result;
 	}
 
 	private readonly _pendingPromises = new Set<Promise<unknown>>();

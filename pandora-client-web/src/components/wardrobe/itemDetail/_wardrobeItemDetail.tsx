@@ -190,11 +190,11 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit }: { i
 		<FieldsetToggle legend='Item'>
 			<Column>
 				<Row>
-					<label htmlFor='original-name'>Original name:</label>
+					<label className='margin-auto-vertical' htmlFor='original-name'>Original name:</label>
 					<input id='original-name' type='text' value={ item.asset.definition.name } readOnly />
 				</Row>
 				<Row>
-					<label htmlFor='custom-name'>Custom name:</label>
+					<label className='margin-auto-vertical' htmlFor='custom-name'>Custom name:</label>
 					<input id='custom-name' type='text' value={ item.name ?? '' } readOnly />
 				</Row>
 				<label>Description:</label>
@@ -231,11 +231,11 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 		<FieldsetToggle legend='Item'>
 			<Column>
 				<Row>
-					<label htmlFor='original-name'>Original name:</label>
+					<label className='margin-auto-vertical' htmlFor='original-name'>Original name:</label>
 					<input id='original-name' type='text' value={ item.asset.definition.name } readOnly />
 				</Row>
 				<Row>
-					<label htmlFor='custom-name'>Custom name:</label>
+					<label className='margin-auto-vertical' htmlFor='custom-name'>Custom name:</label>
 					<input id='custom-name' type='text' value={ name } onChange={ (e) => setName(e.target.value) } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
 				</Row>
 				<label htmlFor='custom-description'>Description:</label>

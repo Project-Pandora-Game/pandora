@@ -534,9 +534,11 @@ export function ActionAddItem(processingContext: AppearanceActionProcessingConte
 				id: 'itemReplace',
 				item: {
 					assetId: item.asset.id,
+					itemName: item.name ?? '',
 				},
 				itemPrevious: {
 					assetId: removed[0].asset.id,
+					itemName: removed[0].name ?? '',
 				},
 			}),
 		);
@@ -547,6 +549,7 @@ export function ActionAddItem(processingContext: AppearanceActionProcessingConte
 				id: (!manipulatorContainer && rootManipulator.isCharacter()) ? 'itemAddCreate' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
 				item: {
 					assetId: item.asset.id,
+					itemName: item.name ?? '',
 				},
 			}),
 		);
@@ -573,6 +576,7 @@ export function ActionRemoveItem(processingContext: AppearanceActionProcessingCo
 			id: (!manipulatorContainer && rootManipulator.isCharacter()) ? 'itemRemoveDelete' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
 			item: {
 				assetId: removedItems[0].asset.id,
+				itemName: removedItems[0].name ?? '',
 			},
 		}),
 	);
@@ -621,6 +625,7 @@ export function ActionTransferItem(processingContext: AppearanceActionProcessing
 				id: !manipulatorContainer ? 'itemRemove' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
 				item: {
 					assetId: item.asset.id,
+					itemName: item.name ?? '',
 				},
 			}),
 		);
@@ -632,6 +637,7 @@ export function ActionTransferItem(processingContext: AppearanceActionProcessing
 				id: !manipulatorContainer ? 'itemAdd' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
 				item: {
 					assetId: removedItems[0].asset.id,
+					itemName: removedItems[0].name ?? '',
 				},
 			}),
 		);
@@ -732,6 +738,7 @@ export function ActionModuleAction({
 					containerManipulator.makeMessage({
 						item: {
 							assetId: it.asset.id,
+							itemName: it.name ?? '',
 						},
 						...m,
 					}),
@@ -963,6 +970,7 @@ export function ActionRoomDeviceDeploy(processingContext: AppearanceActionProces
 				id: (deployment != null) ? 'roomDeviceDeploy' : 'roomDeviceStore',
 				item: {
 					assetId: previousDeviceState.asset.id,
+					itemName: previousDeviceState.name ?? '',
 				},
 			}),
 		);
@@ -1044,6 +1052,7 @@ export function ActionRoomDeviceEnter({
 			id: 'roomDeviceSlotEnter',
 			item: {
 				assetId: item.asset.id,
+				itemName: item.name ?? '',
 			},
 			dictionary: {
 				ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
@@ -1125,6 +1134,7 @@ export function ActionRoomDeviceLeave({
 					id: 'roomDeviceSlotLeave',
 					item: {
 						assetId: item.asset.id,
+						itemName: item.name ?? '',
 					},
 					dictionary: {
 						ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
@@ -1150,6 +1160,7 @@ export function ActionRoomDeviceLeave({
 				id: 'roomDeviceSlotClear',
 				item: {
 					assetId: item.asset.id,
+					itemName: item.name ?? '',
 				},
 				dictionary: {
 					ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',

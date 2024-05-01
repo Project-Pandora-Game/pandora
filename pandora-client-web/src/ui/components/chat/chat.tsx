@@ -269,9 +269,10 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 
 export function ActionMessage({ message, ignoreColor = false }: { message: IChatMessageProcessed<IChatMessageAction>; ignoreColor?: boolean; }): ReactElement | null {
 	const assetManager = useAssetManager();
+	const { interfaceChatroomItemDisplayNameType } = useAccountSettings();
 	const [folded, setFolded] = useState(true);
 
-	const [content, extraContent] = useMemo(() => RenderActionContent(message, assetManager), [message, assetManager]);
+	const [content, extraContent] = useMemo(() => RenderActionContent(message, assetManager, interfaceChatroomItemDisplayNameType), [message, assetManager, interfaceChatroomItemDisplayNameType]);
 
 	// If there is nothing to display, hide this message
 	if (content.length === 0 && extraContent == null)

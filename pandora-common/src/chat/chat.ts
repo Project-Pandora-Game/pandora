@@ -74,9 +74,11 @@ export type IChatMessageActionTargetCharacter = {
 };
 export type IChatMessageActionItem = {
 	assetId: AssetId;
+	itemName: string;
 };
 export type IChatMessageActionContainerPath = {
 	assetId: AssetId;
+	itemName: string;
 	module: string;
 }[];
 

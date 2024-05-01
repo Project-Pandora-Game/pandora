@@ -18,6 +18,12 @@ export const ConfigServerIndex: Observable<number> = BrowserStorage.createSessio
 	z.number().int().nonnegative(),
 );
 
+export const ConfigShowGitHubIntegration: Observable<boolean> = BrowserStorage.createSession(
+	'config-show-github-integration',
+	false,
+	z.boolean(),
+);
+
 const logger = GetLogger('SearchArgs');
 
 export function LoadSearchArgs(): void {
@@ -67,5 +73,10 @@ export function LoadSearchArgs(): void {
 		} else {
 			logger.warning('Server index has invalid value', serverIndex);
 		}
+	}
+
+	if (search.has('show-github-integration')) {
+		const showGitHubIntegration = search.get('show-github-integration')?.trim() || '';
+		ConfigShowGitHubIntegration.value = showGitHubIntegration === 'true';
 	}
 }

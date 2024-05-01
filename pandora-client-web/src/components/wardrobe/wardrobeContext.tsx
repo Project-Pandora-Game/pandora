@@ -109,7 +109,8 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		actionPreviewState,
 		showExtraActionButtons: settings.wardrobeExtraActionButtons,
 		showHoverPreview: settings.wardrobeHoverPreview,
-	}), [actualTarget, targetSelector, player, globalState, assetList, heldItem, scrollToItem, focuser, extraItemActions, actions, actionPreviewState, settings.wardrobeExtraActionButtons, settings.wardrobeHoverPreview, shardConnector]);
+		itemDisplayNameType: settings.wardrobeItemDisplayNameType,
+	}), [actualTarget, targetSelector, player, globalState, assetList, heldItem, scrollToItem, focuser, extraItemActions, actions, actionPreviewState, settings.wardrobeExtraActionButtons, settings.wardrobeHoverPreview, settings.wardrobeItemDisplayNameType, shardConnector]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

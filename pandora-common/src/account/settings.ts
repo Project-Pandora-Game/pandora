@@ -5,6 +5,9 @@ import { DisplayNameSchema, HexColorStringSchema } from '../validation';
 
 //#region Settings declarations
 
+const ItemDisplayNameTypeSchema = z.enum(['original', 'custom', 'custom_with_original_in_brackets']);
+export type ItemDisplayNameType = z.infer<typeof ItemDisplayNameTypeSchema>;
+
 export const AccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema).max(AccountRoleSchema.options.length),
 	labelColor: HexColorStringSchema,
@@ -39,6 +42,10 @@ export const AccountSettingsSchema = z.object({
 	 * Controls whether to show the attribute icons or preview images in big preview.
 	 */
 	wardrobeBigPreview: z.enum(['icon', 'image']),
+	/**
+	 * Controls how item names appear in wardrobe
+	 */
+	wardrobeItemDisplayNameType: ItemDisplayNameTypeSchema,
 	/**
 	 * Controls how many parts (of 10 total) the room graphics takes, while in horizontal mode
 	 */
@@ -77,6 +84,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	wardrobeOutfitsPreview: 'small',
 	wardrobeSmallPreview: 'image',
 	wardrobeBigPreview: 'image',
+	wardrobeItemDisplayNameType: 'custom_with_original_in_brackets',
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,
 	interfaceChatroomOfflineCharacterFilter: 'ghost',

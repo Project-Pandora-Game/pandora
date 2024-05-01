@@ -23,6 +23,14 @@ const GRAPHICS_SETTINGS_DEFAULT: GraphicsSettings = {
 };
 
 const storage = BrowserStorage.create<Partial<GraphicsSettings>>('settings.graphics', {}, GraphicsSettingsSchema.partial());
+// Add a hook to purge the current graphics loader cache when the graphics settins change in any way
+// (most of the changes cause different textures to be loaded, so get rid of old ones)
+storage.subscribe(() => {
+	// Do the cleanup asynchronously so things have time to unload if they were loaded
+	setTimeout(() => {
+		GraphicsManagerInstance.value?.loader.gc();
+	}, 500);
+});
 
 export function useGraphicsSettings(): GraphicsSettings {
 	const overrides = useObservable(storage);
@@ -51,9 +59,9 @@ function ResetGraphicsSettings(settings: readonly (keyof GraphicsSettings)[]): v
 
 export function GraphicsSettings(): ReactElement | null {
 	return (
-<>
-		<QualitySettings />
-<GraphicsDebug />
+		<>
+			<QualitySettings />
+			<GraphicsDebug />
 		</>
 	);
 }

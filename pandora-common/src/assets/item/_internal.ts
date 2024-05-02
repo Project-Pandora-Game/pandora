@@ -10,6 +10,7 @@ import type { AssetColorization, AssetType, WearableAssetType } from '../definit
 import type { ItemModuleAction } from '../modules';
 import type { IExportOptions, IItemModule } from '../modules/common';
 import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, Item, ItemBundle, ItemColorBundle, ItemId, ItemTemplate } from './base';
+import type { CharacterId } from '../../character';
 
 import { Assert, MemoizeNoArg } from '../../utility';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from '../properties';
@@ -21,6 +22,7 @@ export interface ItemBaseProps<Type extends AssetType = AssetType> {
 	readonly assetManager: AssetManager;
 	readonly id: ItemId;
 	readonly asset: Asset<Type>;
+	readonly spawnedBy: CharacterId;
 	readonly color: Immutable<ItemColorBundle>;
 	readonly name?: string;
 	readonly description?: string;
@@ -35,6 +37,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 	public readonly assetManager: AssetManager;
 	public readonly id: ItemId;
 	public readonly asset: Asset<Type>;
+	public readonly spawnedBy: CharacterId;
 	public readonly color: Immutable<ItemColorBundle>;
 	public readonly name?: string;
 	public readonly description?: string;
@@ -55,6 +58,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		this.assetManager = overrideProps?.assetManager ?? props.assetManager;
 		this.id = overrideProps?.id ?? props.id;
 		this.asset = overrideProps?.asset ?? props.asset;
+		this.spawnedBy = overrideProps?.spawnedBy ?? props.spawnedBy;
 		this.color = overrideProps?.color ?? props.color;
 		this.name = (overrideProps && 'name' in overrideProps) ? overrideProps.name : props.name;
 		this.description = (overrideProps && 'description' in overrideProps) ? overrideProps.description : props.description;
@@ -66,6 +70,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			assetManager: context.assetManager,
 			id: bundle.id,
 			asset,
+			spawnedBy: bundle.spawnedBy,
 			color: ItemBase._loadColorBundle(asset, bundle.color),
 			name: bundle.name,
 			description: bundle.description,
@@ -102,6 +107,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		return {
 			id: this.id,
 			asset: this.asset.id,
+			spawnedBy: this.spawnedBy,
 			color: this.exportColorToBundle(),
 			name: this.name,
 			description: this.description,

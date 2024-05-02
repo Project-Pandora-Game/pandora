@@ -8,6 +8,7 @@ import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, A
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 import { CreateItemBundleFromTemplate, Item, ItemBundle, ItemTemplate, LoadItemFromBundle, type ItemId } from './item';
 import type { AssetsPosePresets } from './state/characterStatePose';
+import type { CharacterId } from '../character/characterTypes';
 
 export class AssetManager {
 	protected readonly _assets: ReadonlyMap<AssetId, Asset>;
@@ -175,12 +176,13 @@ export class AssetManager {
 		return res;
 	}
 
-	public createItem<T extends AssetType>(id: ItemId, asset: Asset<T>, logger?: Logger): Item<T> {
+	public createItem<T extends AssetType>(id: ItemId, asset: Asset<T>, creator: { id: CharacterId; }, logger?: Logger): Item<T> {
 		Assert(this._assets.get(asset.id) === asset);
 
 		return LoadItemFromBundle<T>(asset, {
 			id,
 			asset: asset.id,
+			spawnedBy: creator.id,
 		}, {
 			assetManager: this,
 			doLoadTimeCleanup: false,

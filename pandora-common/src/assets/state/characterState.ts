@@ -202,7 +202,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 
 		if (revalidate) {
 			// Re-validate items as forceful removal might have broken dependencies
-			updatedItems = CharacterAppearanceLoadAndValidate(this.assetManager, updatedItems, roomInventory);
+			updatedItems = CharacterAppearanceLoadAndValidate(this.assetManager, updatedItems, this, roomInventory);
 			Assert(ValidateAppearanceItems(this.assetManager, updatedItems, roomInventory).success);
 		}
 
@@ -243,7 +243,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		}
 
 		// Validate and add all items
-		const newItems = CharacterAppearanceLoadAndValidate(assetManager, loadedItems, roomState, logger);
+		const newItems = CharacterAppearanceLoadAndValidate(assetManager, loadedItems, { id: characterId }, roomState, logger);
 
 		// Load pose
 		const requestedPose = _.cloneDeep(bundle.requestedPose);

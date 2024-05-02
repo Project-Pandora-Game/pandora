@@ -28,6 +28,7 @@ function ChatroomSettings(): ReactElement {
 			<ChatroomChatFontSize />
 			<ChatroomCharacterNameFontSize />
 			<ChatroomOfflineCharacters />
+			<SelectAccountSettings setting='interfaceChatroomItemDisplayNameType' label='Item name display' stringify={ ITEM_DISPLAY_NAME_TYPE_DESCRIPTION } />
 		</fieldset>
 	);
 }
@@ -133,6 +134,7 @@ function WardrobeSettings(): ReactElement {
 			<SelectAccountSettings setting='wardrobeOutfitsPreview' label='Saved item collection previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
 			<SelectAccountSettings setting='wardrobeSmallPreview' label='Item previews: List mode with small previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
 			<SelectAccountSettings setting='wardrobeBigPreview' label='Item previews: Grid mode with big previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
+			<SelectAccountSettings setting='wardrobeItemDisplayNameType' label='Item name display' stringify={ ITEM_DISPLAY_NAME_TYPE_DESCRIPTION } />
 		</fieldset>
 	);
 }
@@ -154,4 +156,10 @@ const WARDROBE_PREVIEWS_DESCRIPTION: Record<AccountSettings['wardrobeOutfitsPrev
 const WARDROBE_PREVIEW_TYPE_DESCRIPTION: Record<AccountSettings['wardrobeSmallPreview'], string> = {
 	icon: 'Show attribute icon',
 	image: 'Show preview image',
+};
+
+const ITEM_DISPLAY_NAME_TYPE_DESCRIPTION: Record<AccountSettings['wardrobeItemDisplayNameType'], string> = {
+	custom: 'Custom name',
+	original: 'Original name',
+	custom_with_original_in_brackets: 'Custom name [Original name]',
 };

@@ -150,6 +150,7 @@ export class ItemLock extends ItemBase<'lock'> {
 				error: {
 					problem: 'contentNotAllowed',
 					asset: this.asset.id,
+					itemName: this.name ?? '',
 				},
 			};
 		}
@@ -194,6 +195,7 @@ export class ItemLock extends ItemBase<'lock'> {
 				moduleAction: action.action,
 				reason: 'blockSelf',
 				asset: this.asset.id,
+				itemName: this.name ?? '',
 			});
 			return null;
 		}
@@ -217,6 +219,7 @@ export class ItemLock extends ItemBase<'lock'> {
 				moduleAction: 'lock',
 				reason: 'noStoredPassword',
 				asset: this.asset.id,
+				itemName: this.name ?? '',
 			});
 			return null;
 		};
@@ -278,6 +281,7 @@ export class ItemLock extends ItemBase<'lock'> {
 					moduleAction: 'unlock',
 					reason: 'wrongPassword',
 					asset: this.asset.id,
+					itemName: this.name ?? '',
 				});
 			}
 		}

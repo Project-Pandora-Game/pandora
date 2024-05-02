@@ -9,6 +9,7 @@ import {
 	IChatSegment,
 	MessageSubstitute,
 	SpaceId,
+	type ItemDisplayNameType,
 } from 'pandora-common';
 import React, {
 	ReactElement,
@@ -16,6 +17,7 @@ import React, {
 import { AssetManagerClient } from '../../../assets/assetManager';
 import { ChatParser } from './chatParser';
 import { RenderedLink } from '../../screens/spaceJoin/spaceJoin';
+import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName';
 
 export type IChatMessageProcessed<T extends IChatMessageBase = IChatMessageBase> = T & {
 	/** Time the message was sent, guaranteed to be unique */
@@ -31,13 +33,14 @@ export function IsActionMessage(message: IChatMessageProcessed): message is ICha
 function ActionMessagePrepareDictionary(
 	message: IChatMessageProcessed<IChatMessageAction>,
 	assetManager: AssetManagerClient,
+	itemDisplayNameType: ItemDisplayNameType,
 ): IChatMessageProcessed<IChatMessageAction> {
 	const metaDictionary: Partial<Record<ChatActionDictionaryMetaEntry, string>> = {};
 
 	const source = message.data?.character;
 	const target = message.data?.target ?? source;
 
-	const describeAsset = (assetId: AssetId) => ChatParser.escapeStyle(DescribeAsset(assetManager, assetId));
+	const describeAsset = ({ assetId, itemName }: { assetId: AssetId; itemName: string; }) => ChatParser.escapeStyle(ResolveItemDisplayNameType(DescribeAsset(assetManager, assetId), itemName, itemDisplayNameType));
 
 	if (source) {
 		const { id, name, pronoun } = source;
@@ -73,11 +76,11 @@ function ActionMessagePrepareDictionary(
 	const itemContainerPath = message.data?.itemContainerPath;
 
 	if (item) {
-		metaDictionary.ITEM_ASSET_NAME = describeAsset(item.assetId);
+		metaDictionary.ITEM_ASSET_NAME = describeAsset(item);
 	}
 
 	if (itemPrevious) {
-		metaDictionary.ITEM_ASSET_NAME_PREVIOUS = describeAsset(itemPrevious.assetId);
+		metaDictionary.ITEM_ASSET_NAME_PREVIOUS = describeAsset(itemPrevious);
 	}
 
 	if (itemContainerPath) {
@@ -90,7 +93,7 @@ function ActionMessagePrepareDictionary(
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.TARGET_CHARACTER_DYNAMIC_REFLEXIVE;
 			}
 		} else if (itemContainerPath.length === 1) {
-			const asset = describeAsset(itemContainerPath[0].assetId);
+			const asset = describeAsset(itemContainerPath[0]);
 
 			if (target?.type === 'roomInventory') {
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
@@ -100,8 +103,8 @@ function ActionMessagePrepareDictionary(
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${asset}`;
 			}
 		} else {
-			const assetFirst = describeAsset(itemContainerPath[0].assetId);
-			const assetLast = describeAsset(itemContainerPath[itemContainerPath.length - 1].assetId);
+			const assetFirst = describeAsset(itemContainerPath[0]);
+			const assetLast = describeAsset(itemContainerPath[itemContainerPath.length - 1]);
 
 			if (target?.type === 'roomInventory') {
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
@@ -202,9 +205,9 @@ function GetActionText(action: IChatMessageProcessed<IChatMessageAction>, assetM
 	return defaultMessage;
 }
 
-export function RenderActionContent(action: IChatMessageProcessed<IChatMessageAction>, assetManager: AssetManagerClient): [IChatSegment[], IChatSegment[] | null] {
+export function RenderActionContent(action: IChatMessageProcessed<IChatMessageAction>, assetManager: AssetManagerClient, itemDisplayNameType: ItemDisplayNameType): [IChatSegment[], IChatSegment[] | null] {
 	// Append implicit dictionary entries
-	action = ActionMessagePrepareDictionary(action, assetManager);
+	action = ActionMessagePrepareDictionary(action, assetManager, itemDisplayNameType);
 	let actionText = GetActionText(action, assetManager);
 	if (actionText === undefined) {
 		return [ChatParser.parseStyle(`( ERROR UNKNOWN ACTION '${action.id}' )`), null];

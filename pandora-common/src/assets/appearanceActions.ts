@@ -22,6 +22,7 @@ import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties'
 import { AppearanceArmPoseSchema, AppearanceArmsOrderSchema, AppearancePoseSchema } from './state/characterStatePose';
 import { RestrictionOverride } from './state/characterStateTypes';
 import { AssetFrameworkGlobalStateContainer } from './state/globalState';
+import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH } from '../inputLimits';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../validation';
@@ -104,6 +105,18 @@ export const AppearanceActionColor = z.object({
 	color: ItemColorBundleSchema,
 });
 
+export const AppearanceActionCustomize = z.object({
+	type: z.literal('customize'),
+	/** Target with the item to change */
+	target: ActionTargetSelectorSchema,
+	/** Path to the item to change */
+	item: ItemPathSchema,
+	/** New custom name */
+	name: z.string().max(LIMIT_ITEM_NAME_LENGTH),
+	/** New description */
+	description: z.string().max(LIMIT_ITEM_DESCRIPTION_LENGTH),
+});
+
 export const AppearanceActionModuleAction = z.object({
 	type: z.literal('moduleAction'),
 	/** Target with the item to color */
@@ -173,6 +186,7 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionSetView,
 	AppearanceActionMove,
 	AppearanceActionColor,
+	AppearanceActionCustomize,
 	AppearanceActionModuleAction,
 	AppearanceActionRestrictionOverrideChange,
 	AppearanceActionRandomize,
@@ -349,6 +363,12 @@ export function DoAppearanceAction(
 
 			return processingContext.finalize();
 		}
+		case 'customize': {
+			return ActionAppearanceCustomize({
+				...arg,
+				action,
+			});
+		}
 		// Module-specific action
 		case 'moduleAction': {
 			return ActionModuleAction({
@@ -514,9 +534,11 @@ export function ActionAddItem(processingContext: AppearanceActionProcessingConte
 				id: 'itemReplace',
 				item: {
 					assetId: item.asset.id,
+					itemName: item.name ?? '',
 				},
 				itemPrevious: {
 					assetId: removed[0].asset.id,
+					itemName: removed[0].name ?? '',
 				},
 			}),
 		);
@@ -527,6 +549,7 @@ export function ActionAddItem(processingContext: AppearanceActionProcessingConte
 				id: (!manipulatorContainer && rootManipulator.isCharacter()) ? 'itemAddCreate' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
 				item: {
 					assetId: item.asset.id,
+					itemName: item.name ?? '',
 				},
 			}),
 		);
@@ -553,6 +576,7 @@ export function ActionRemoveItem(processingContext: AppearanceActionProcessingCo
 			id: (!manipulatorContainer && rootManipulator.isCharacter()) ? 'itemRemoveDelete' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
 			item: {
 				assetId: removedItems[0].asset.id,
+				itemName: removedItems[0].name ?? '',
 			},
 		}),
 	);
@@ -601,6 +625,7 @@ export function ActionTransferItem(processingContext: AppearanceActionProcessing
 				id: !manipulatorContainer ? 'itemRemove' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
 				item: {
 					assetId: item.asset.id,
+					itemName: item.name ?? '',
 				},
 			}),
 		);
@@ -612,6 +637,7 @@ export function ActionTransferItem(processingContext: AppearanceActionProcessing
 				id: !manipulatorContainer ? 'itemAdd' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
 				item: {
 					assetId: removedItems[0].asset.id,
+					itemName: removedItems[0].name ?? '',
 				},
 			}),
 		);
@@ -650,6 +676,37 @@ export function ActionColorItem(rootManipulator: AppearanceRootManipulator, item
 	return true;
 }
 
+export function ActionAppearanceCustomize({ action, processingContext }: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionCustomize>>): AppearanceActionProcessingResult {
+	const target = processingContext.getTarget(action.target);
+	if (!target)
+		return processingContext.invalid();
+
+	if (target.type === 'character' && target.character.id !== processingContext.player.id) {
+		// TODO: change this: only the player can customize their own items for now
+		return processingContext.invalid();
+	}
+
+	const item = target.getItem(action.item);
+	if (item == null || item.isType('roomDeviceWearablePart')) {
+		return processingContext.invalid();
+	}
+
+	// To manipulate the color of room devices, player must be an admin
+	if (item.isType('roomDevice')) {
+		processingContext.checkPlayerIsSpaceAdmin();
+	}
+
+	// Player doing the action must be able to interact with the item
+	processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.STYLING);
+
+	const manipulator = processingContext.manipulator.getManipulatorFor(action.target);
+	if (!manipulator.modifyItem(action.item.itemId, (it) => it.customize(action.name, action.description))) {
+		return processingContext.invalid();
+	}
+
+	return processingContext.finalize();
+}
+
 export function ActionModuleAction({
 	action,
 	processingContext,
@@ -681,6 +738,7 @@ export function ActionModuleAction({
 					containerManipulator.makeMessage({
 						item: {
 							assetId: it.asset.id,
+							itemName: it.name ?? '',
 						},
 						...m,
 					}),
@@ -912,6 +970,7 @@ export function ActionRoomDeviceDeploy(processingContext: AppearanceActionProces
 				id: (deployment != null) ? 'roomDeviceDeploy' : 'roomDeviceStore',
 				item: {
 					assetId: previousDeviceState.asset.id,
+					itemName: previousDeviceState.name ?? '',
 				},
 			}),
 		);
@@ -993,6 +1052,7 @@ export function ActionRoomDeviceEnter({
 			id: 'roomDeviceSlotEnter',
 			item: {
 				assetId: item.asset.id,
+				itemName: item.name ?? '',
 			},
 			dictionary: {
 				ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
@@ -1074,6 +1134,7 @@ export function ActionRoomDeviceLeave({
 					id: 'roomDeviceSlotLeave',
 					item: {
 						assetId: item.asset.id,
+						itemName: item.name ?? '',
 					},
 					dictionary: {
 						ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
@@ -1099,6 +1160,7 @@ export function ActionRoomDeviceLeave({
 				id: 'roomDeviceSlotClear',
 				item: {
 					assetId: item.asset.id,
+					itemName: item.name ?? '',
 				},
 				dictionary: {
 					ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',

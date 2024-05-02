@@ -22,6 +22,8 @@ export interface ItemBaseProps<Type extends AssetType = AssetType> {
 	readonly id: ItemId;
 	readonly asset: Asset<Type>;
 	readonly color: Immutable<ItemColorBundle>;
+	readonly name?: string;
+	readonly description?: string;
 }
 
 /**
@@ -34,6 +36,8 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 	public readonly id: ItemId;
 	public readonly asset: Asset<Type>;
 	public readonly color: Immutable<ItemColorBundle>;
+	public readonly name?: string;
+	public readonly description?: string;
 
 	public get type(): Type {
 		return this.asset.type;
@@ -52,6 +56,8 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		this.id = overrideProps?.id ?? props.id;
 		this.asset = overrideProps?.asset ?? props.asset;
 		this.color = overrideProps?.color ?? props.color;
+		this.name = overrideProps?.name ?? props.name;
+		this.description = overrideProps?.description ?? props.description;
 	}
 
 	protected static _parseBundle<Type extends AssetType = AssetType>(asset: Asset<Type>, bundle: ItemBundle, context: IItemLoadContext): ItemBaseProps<Type> {
@@ -61,6 +67,8 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			id: bundle.id,
 			asset,
 			color: ItemBase._loadColorBundle(asset, bundle.color),
+			name: bundle.name,
+			description: bundle.description,
 		};
 	}
 
@@ -95,6 +103,8 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			id: this.id,
 			asset: this.asset.id,
 			color: this.exportColorToBundle(),
+			name: this.name,
+			description: this.description,
 			moduleData,
 		};
 	}
@@ -168,6 +178,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 					error: {
 						problem: 'invalidState',
 						asset: this.asset.id,
+						itemName: this.name ?? '',
 						reason,
 					},
 				};
@@ -181,6 +192,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 				error: {
 					problem: 'contentNotAllowed',
 					asset: this.asset.id,
+					itemName: this.name ?? '',
 				},
 			};
 
@@ -191,6 +203,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 				error: {
 					problem: 'contentNotAllowed',
 					asset: this.asset.id,
+					itemName: this.name ?? '',
 				},
 			};
 
@@ -205,7 +218,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 
 	/** Returns if this item can be transferred between inventories */
 	public canBeTransferred(): boolean {
-		// No transfering bodyparts, thank you
+		// No transferring bodyparts, thank you
 		if (this.isType('personal') && this.asset.definition.bodypart)
 			return false;
 
@@ -217,6 +230,19 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		return this.withProps({
 			color: ItemBase._loadColorBundle(this.asset, color),
 		});
+	}
+
+	/** Returns a new item with the passed name and description */
+	public customize(newName: string, newDescription: string): Item<Type> {
+		let name: string | undefined = newName.trim();
+		if (name === '' || name === this.asset.definition.name)
+			name = undefined;
+
+		let description: string | undefined = newDescription.trim();
+		if (description === '')
+			description = undefined;
+
+		return this.withProps({ name, description });
 	}
 
 	@MemoizeNoArg

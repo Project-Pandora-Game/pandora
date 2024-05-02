@@ -109,7 +109,8 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		actionPreviewState,
 		showExtraActionButtons: settings.wardrobeExtraActionButtons,
 		showHoverPreview: settings.wardrobeHoverPreview,
-	}), [actualTarget, targetSelector, player, globalState, assetList, heldItem, scrollToItem, focuser, extraItemActions, actions, actionPreviewState, settings.wardrobeExtraActionButtons, settings.wardrobeHoverPreview, shardConnector]);
+		itemDisplayNameType: settings.wardrobeItemDisplayNameType,
+	}), [actualTarget, targetSelector, player, globalState, assetList, heldItem, scrollToItem, focuser, extraItemActions, actions, actionPreviewState, settings.wardrobeExtraActionButtons, settings.wardrobeHoverPreview, settings.wardrobeItemDisplayNameType, shardConnector]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -131,7 +132,7 @@ type ExecuteCallbackOptions = {
 
 export function useWardrobeExecuteCallback({ onSuccess, onFailure }: ExecuteCallbackOptions = {}) {
 	const assetManager = useAssetManager();
-	const { execute } = useWardrobeContext();
+	const { execute, itemDisplayNameType } = useWardrobeContext();
 	return useAsyncEvent(
 		async (action: AppearanceAction) => await execute(action),
 		(result) => {
@@ -155,7 +156,7 @@ export function useWardrobeExecuteCallback({ onSuccess, onFailure }: ExecuteCall
 							<ul>
 								{
 									result.problems.map((problem, i) => (
-										<li key={ i } className='display-linebreak'>{ RenderAppearanceActionProblem(assetManager, problem) }</li>
+										<li key={ i } className='display-linebreak'>{ RenderAppearanceActionProblem(assetManager, problem, itemDisplayNameType) }</li>
 									))
 								}
 							</ul>

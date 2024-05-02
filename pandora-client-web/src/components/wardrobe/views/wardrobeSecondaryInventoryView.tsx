@@ -18,6 +18,7 @@ import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponen
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeContextExtraItemActionComponent, WardrobeHeldItem } from '../wardrobeTypes';
 import { InventoryItemViewDropArea } from './wardrobeItemView';
+import { WardrobeItemName } from '../itemDetail/wardrobeItemName';
 
 export function SecondaryInventoryView({ title, secondaryTarget, secondaryTargetContainer = EMPTY_ARRAY, quickActionTarget, quickActionTargetContainer }: {
 	title: string;
@@ -161,7 +162,7 @@ function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickA
 					/> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
-			<span className='itemName'>{ asset.definition.name }</span>
+			<span className='itemName'><WardrobeItemName item={ item } /></span>
 			<div className='quickActions'>
 				{ showExtraActionButtons ? (
 					<>

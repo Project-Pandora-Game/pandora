@@ -14,6 +14,7 @@ import {
 	ItemTemplate,
 	ModuleType,
 	ActionTargetSelector,
+	type ItemDisplayNameType,
 } from 'pandora-common';
 import { ICharacter, IChatroomCharacter } from '../../character/character';
 import { Observable, type ReadonlyObservable } from '../../observable';
@@ -54,6 +55,7 @@ export interface WardrobeContext {
 	// Settings
 	showExtraActionButtons: boolean;
 	showHoverPreview: boolean;
+	itemDisplayNameType: ItemDisplayNameType;
 }
 
 export interface WardrobeFocus {

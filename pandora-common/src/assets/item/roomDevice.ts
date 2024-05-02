@@ -140,6 +140,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 					error: {
 						problem: 'invalidState',
 						asset: this.asset.id,
+						itemName: this.name ?? '',
 						reason,
 					},
 				};
@@ -153,6 +154,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 				error: {
 					problem: 'contentNotAllowed',
 					asset: this.asset.id,
+					itemName: this.name ?? '',
 				},
 			};
 

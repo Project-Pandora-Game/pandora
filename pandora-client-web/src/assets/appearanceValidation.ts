@@ -1,6 +1,7 @@
-import { AppearanceActionProblem, AssertNever } from 'pandora-common';
+import { AppearanceActionProblem, AssertNever, type AssetId, type ItemDisplayNameType } from 'pandora-common';
 import { DescribeAsset, DescribeAttribute } from '../ui/components/chat/chatMessages';
 import { AssetManagerClient } from './assetManager';
+import { ResolveItemDisplayNameType } from '../components/wardrobe/itemDetail/wardrobeItemName';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */
 export function AppearanceActionProblemShouldHide(result: AppearanceActionProblem): boolean {
@@ -17,7 +18,9 @@ export function AppearanceActionProblemShouldHide(result: AppearanceActionProble
 	return false;
 }
 
-export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, result: AppearanceActionProblem): string {
+export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, result: AppearanceActionProblem, itemDisplayNameType: ItemDisplayNameType): string {
+	const describeItem = (asset: AssetId, itemName: string | null) => ResolveItemDisplayNameType(DescribeAsset(assetManager, asset), itemName, itemDisplayNameType);
+
 	if (result.result === 'invalidAction') {
 		if (result.reason != null) {
 			switch (result.reason) {
@@ -40,9 +43,9 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 
 				switch (e.reason) {
 					case 'blockSelf':
-						return `The ${DescribeAsset(assetManager, e.asset)} cannot be ${actionDescription[e.moduleAction]} on yourself.`;
+						return `The ${describeItem(e.asset, e.itemName)} cannot be ${actionDescription[e.moduleAction]} on yourself.`;
 					case 'noStoredPassword':
-						return `The ${DescribeAsset(assetManager, e.asset)} cannot be ${actionDescription[e.moduleAction]} because it has no stored password.`;
+						return `The ${describeItem(e.asset, e.itemName)} cannot be ${actionDescription[e.moduleAction]} because it has no stored password.`;
 				}
 
 				AssertNever(e);
@@ -68,17 +71,17 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				AssertNever(e.resolution);
 				break;
 			case 'blockedAddRemove':
-				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added or removed${e.self ? ' on yourself' : ''}.`;
+				return `The ${describeItem(e.asset, e.itemName)} cannot be added or removed${e.self ? ' on yourself' : ''}.`;
 			case 'blockedModule': {
 				const asset = assetManager.getAssetById(e.asset);
 				const visibleModuleName: string =
 					(asset?.isType('personal') && asset.definition.modules?.[e.module]?.name) ||
 					(asset?.isType('roomDevice') && asset.definition.modules?.[e.module]?.name) ||
 					`[UNKNOWN MODULE '${e.module}']`;
-				return `The ${DescribeAsset(assetManager, e.asset)}'s ${visibleModuleName} cannot be modified${e.self ? ' on yourself' : ''}.`;
+				return `The ${describeItem(e.asset, e.itemName)}'s ${visibleModuleName} cannot be modified${e.self ? ' on yourself' : ''}.`;
 			}
 			case 'covered':
-				return `The ${DescribeAsset(assetManager, e.asset)} cannot be added, removed, or modified, because "${DescribeAttribute(assetManager, e.attribute)}" is covered by another item.`;
+				return `The ${describeItem(e.asset, e.itemName)} cannot be added, removed, or modified, because "${DescribeAttribute(assetManager, e.attribute)}" is covered by another item.`;
 			case 'blockedHands':
 				return `You need to be able to use hands to do this.`;
 			case 'safemodeInteractOther':
@@ -115,14 +118,14 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				const attributeName = negative ? e.requirement.substring(1) : e.requirement;
 				const description = DescribeAttribute(assetManager, attributeName);
 				if (e.asset) {
-					return `The ${DescribeAsset(assetManager, e.asset)} ${negative ? 'conflicts with' : 'requires'} "${description}" (${negative ? 'must not' : 'must'} be worn under the ${DescribeAsset(assetManager, e.asset)}).`;
+					return `The ${describeItem(e.asset, e.itemName)} ${negative ? 'conflicts with' : 'requires'} "${description}" (${negative ? 'must not' : 'must'} be worn under the ${describeItem(e.asset, e.itemName)}).`;
 				} else {
 					return `The item ${negative ? 'must not' : 'must'} be "${description}".`;
 				}
 			}
 			case 'invalidState': {
 				if (e.asset) {
-					return `The ${DescribeAsset(assetManager, e.asset)} is in an invalid state:\n${e.reason}`;
+					return `The ${describeItem(e.asset, e.itemName)} is in an invalid state:\n${e.reason}`;
 				} else {
 					return e.reason;
 				}
@@ -131,10 +134,10 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `This item requires a pose conflicting with the added items.`;
 			case 'tooManyItems':
 				return e.asset ?
-					`At most ${e.limit} "${DescribeAsset(assetManager, e.asset)}" can be equipped.` :
+					`At most ${e.limit} "${describeItem(e.asset, e.itemName)}" can be equipped.` :
 					`At most ${e.limit} items can be present.`;
 			case 'contentNotAllowed':
-				return `The ${DescribeAsset(assetManager, e.asset)} cannot be used in that way.`;
+				return `The ${describeItem(e.asset, e.itemName)} cannot be used in that way.`;
 			case 'canOnlyBeInOneDevice':
 				return `Character can only be in a single device at a time.`;
 			case 'invalid':

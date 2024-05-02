@@ -5,6 +5,9 @@ import { DisplayNameSchema, HexColorStringSchema } from '../validation';
 
 //#region Settings declarations
 
+const ItemDisplayNameTypeSchema = z.enum(['original', 'custom', 'custom_with_original_in_brackets']);
+export type ItemDisplayNameType = z.infer<typeof ItemDisplayNameTypeSchema>;
+
 export const AccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema).max(AccountRoleSchema.options.length),
 	labelColor: HexColorStringSchema,
@@ -40,6 +43,10 @@ export const AccountSettingsSchema = z.object({
 	 */
 	wardrobeBigPreview: z.enum(['icon', 'image']),
 	/**
+	 * Controls how item names appear in wardrobe
+	 */
+	wardrobeItemDisplayNameType: ItemDisplayNameTypeSchema,
+	/**
 	 * Controls how many parts (of 10 total) the room graphics takes, while in horizontal mode
 	 */
 	interfaceChatroomGraphicsRatioHorizontal: z.number().int().min(1).max(9),
@@ -63,6 +70,8 @@ export const AccountSettingsSchema = z.object({
 	 * Controls how big the font size used for the name of the character is
 	 */
 	interfaceChatroomCharacterNameFontSize: z.enum(['xs', 's', 'm', 'l', 'xl']),
+	/** Controls how item names appear in chat action messages */
+	interfaceChatroomItemDisplayNameType: ItemDisplayNameTypeSchema,
 });
 export type AccountSettings = z.infer<typeof AccountSettingsSchema>;
 
@@ -77,11 +86,13 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	wardrobeOutfitsPreview: 'small',
 	wardrobeSmallPreview: 'image',
 	wardrobeBigPreview: 'image',
+	wardrobeItemDisplayNameType: 'custom_with_original_in_brackets',
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,
 	interfaceChatroomOfflineCharacterFilter: 'ghost',
 	interfaceChatroomChatFontSize: 'm',
 	interfaceChatroomCharacterNameFontSize: 'm',
+	interfaceChatroomItemDisplayNameType: 'custom_with_original_in_brackets',
 });
 
 export const ACCOUNT_SETTINGS_LIMITED_LIMITS = Object.freeze({

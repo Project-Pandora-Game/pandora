@@ -52,6 +52,7 @@ export function ValidateItemsPrefix(
 			error: {
 				problem: 'tooManyItems',
 				asset: null,
+				itemName: null,
 				limit,
 			},
 		};

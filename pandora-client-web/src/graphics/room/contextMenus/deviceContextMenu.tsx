@@ -244,9 +244,11 @@ function DeviceSlotsMenu({ device, position, close }: {
 			<span>
 				Enter:
 			</span>
-			{ characters.map((char) => (
-				<OccupyDeviceSlotMenu key={ char.id } device={ device } slot={ slot } character={ char } close={ close } />
-			)) }
+			<div className='Scrollbar fill scrollable-vertical dark'>
+				{ characters.map((char) => (
+					<OccupyDeviceSlotMenu key={ char.id } device={ device } slot={ slot } character={ char } close={ close } />
+				)) }
+			</div>
 			<button onClick={ () => setSlot(null) }>
 				Back to slots
 			</button>

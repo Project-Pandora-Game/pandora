@@ -306,38 +306,52 @@ function PasswordInput({
 
 	const id = useId();
 
-	const onInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+	const [inputCharacterType, replaceFunc] = useMemo(() => {
+		let ict: string;
+		let rf: ((_: string) => string);
+
 		switch (password.format) {
 			case 'numeric':
-				setValue(e.target.value.replace(/[^0-9]/g, ''));
+				ict = 'digits';
+				rf = (v) => v.replace(/[^0-9]/g, '');
 				break;
 			case 'letters':
-				setValue(e.target.value.replace(/[^a-zA-Z]/g, ''));
+				ict = 'letters';
+				rf = (v) => v.replace(/[^a-zA-Z]/g, '');
 				break;
 			case 'alphanumeric':
-				setValue(e.target.value.replace(/[^a-zA-Z0-9]/g, ''));
+				ict = 'digits or letters';
+				rf = (v) => v.replace(/[^a-zA-Z0-9]/g, '');
 				break;
 			case 'text':
-				setValue(e.target.value);
+				ict = 'characters';
+				rf = (v) => v;
 				break;
 			default:
 				AssertNever(password.format);
 		}
+		return [ict, rf];
 	}, [password.format]);
+
+	const onInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+		setValue(replaceFunc(e.target.value));
+	}, [replaceFunc]);
 
 	const error = useMemo(() => {
 		if (disabled)
 			return null;
 
+		if (value.length < min && min === max)
+			return `Must be ${min} ${inputCharacterType}`;
 		if (value.length < min)
-			return `Must be at least ${min} characters`;
+			return `Must be at least ${min} ${inputCharacterType}`;
 		if (value.length > max)
-			return `Must be at most ${max} characters`;
+			return `Must be at most ${max} ${inputCharacterType}`;
 		if (showInvalidWarning)
 			return 'Invalid password';
 
 		return null;
-	}, [disabled, value, min, max, showInvalidWarning]);
+	}, [disabled, value, min, max, showInvalidWarning, inputCharacterType]);
 
 	useEffect(() => {
 		if (setAllowExecute == null)

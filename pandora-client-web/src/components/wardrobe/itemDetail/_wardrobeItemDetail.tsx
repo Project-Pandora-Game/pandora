@@ -123,11 +123,6 @@ export function WardrobeItemConfigMenu({
 					}
 				</Row>
 				{
-					(!wornItem.isType('roomDeviceWearablePart')) ? (
-						<WardrobeItemNameAndDescription item={ wornItem } itemPath={ item } />
-					) : null
-				}
-				{
 					(wornItem.isType('personal') || wornItem.isType('roomDevice')) ? (
 						<WardrobeItemColorization wornItem={ wornItem } item={ item } />
 					) : null
@@ -154,6 +149,11 @@ export function WardrobeItemConfigMenu({
 								<WardrobeModuleConfig item={ item } moduleName={ moduleName } m={ m } />
 							</FieldsetToggle>
 						))
+				}
+				{
+					(!wornItem.isType('roomDeviceWearablePart')) ? (
+						<WardrobeItemNameAndDescription item={ wornItem } itemPath={ item } />
+					) : null
 				}
 			</Column>
 		</div>
@@ -197,8 +197,8 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit }: { i
 					<label className='margin-auto-vertical' htmlFor='custom-name'>Custom name:</label>
 					<input id='custom-name' type='text' value={ item.name ?? '' } readOnly />
 				</Row>
-				<label>Description:</label>
-				<textarea id='custom-description' value={ item.description ?? '' } readOnly />
+				<label>Description ({ item.description ? item.description.length : 0 } characters):</label>
+				<textarea id='custom-description' value={ item.description ?? '' } rows={ 10 } readOnly />
 				{
 					available ? (
 						<Row>
@@ -238,8 +238,8 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 					<label className='margin-auto-vertical' htmlFor='custom-name'>Custom name:</label>
 					<input id='custom-name' type='text' value={ name } onChange={ (e) => setName(e.target.value) } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
 				</Row>
-				<label htmlFor='custom-description'>Description:</label>
-				<textarea id='custom-description' value={ description } onChange={ (e) => setDescription(e.target.value) } maxLength={ LIMIT_ITEM_DESCRIPTION_LENGTH } />
+				<label htmlFor='custom-description'>Description ({ description.length }/{ LIMIT_ITEM_DESCRIPTION_LENGTH } characters):</label>
+				<textarea id='custom-description' value={ description } rows={ 10 } onChange={ (e) => setDescription(e.target.value) } maxLength={ LIMIT_ITEM_DESCRIPTION_LENGTH } />
 				<Row>
 					<Button onClick={ onEndEdit } disabled={ processing }>Cancel</Button>
 					<Button onClick={ onSave } disabled={ processing }>Save</Button>

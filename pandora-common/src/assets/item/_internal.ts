@@ -56,8 +56,8 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		this.id = overrideProps?.id ?? props.id;
 		this.asset = overrideProps?.asset ?? props.asset;
 		this.color = overrideProps?.color ?? props.color;
-		this.name = overrideProps?.name ?? props.name;
-		this.description = overrideProps?.description ?? props.description;
+		this.name = (overrideProps && 'name' in overrideProps) ? overrideProps.name : props.name;
+		this.description = (overrideProps && 'description' in overrideProps) ? overrideProps.description : props.description;
 	}
 
 	protected static _parseBundle<Type extends AssetType = AssetType>(asset: Asset<Type>, bundle: ItemBundle, context: IItemLoadContext): ItemBaseProps<Type> {

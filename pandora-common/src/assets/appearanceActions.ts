@@ -22,7 +22,7 @@ import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties'
 import { AppearanceArmPoseSchema, AppearanceArmsOrderSchema, AppearancePoseSchema } from './state/characterStatePose';
 import { RestrictionOverride } from './state/characterStateTypes';
 import { AssetFrameworkGlobalStateContainer } from './state/globalState';
-import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH } from '../inputLimits';
+import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN } from '../inputLimits';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../validation';
@@ -112,7 +112,7 @@ export const AppearanceActionCustomize = z.object({
 	/** Path to the item to change */
 	item: ItemPathSchema,
 	/** New custom name */
-	name: z.string().max(LIMIT_ITEM_NAME_LENGTH),
+	name: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN),
 	/** New description */
 	description: z.string().max(LIMIT_ITEM_DESCRIPTION_LENGTH),
 });

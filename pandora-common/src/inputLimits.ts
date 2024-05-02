@@ -51,6 +51,8 @@ export const LIMIT_DIRECT_MESSAGE_STORE_COUNT = 50;
 
 /** The maximum length of a custom item name */
 export const LIMIT_ITEM_NAME_LENGTH = 40;
+/** The pattern used for validating item custom names */
+export const LIMIT_ITEM_NAME_PATTERN = /^[a-zA-Z0-9_\- ]+$/;
 
 /** The maximum length of a custom item description */
 export const LIMIT_ITEM_DESCRIPTION_LENGTH = 1_000;

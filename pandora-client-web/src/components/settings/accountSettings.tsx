@@ -13,6 +13,8 @@ import { useConfirmDialog } from '../dialog/dialog';
 import { useNavigate } from 'react-router-dom';
 import { useCurrentTime } from '../../common/useCurrentTime';
 import { ExternalLink } from '../common/link/externalLink';
+import { useObservable } from '../../observable';
+import { ConfigShowGitHubIntegration } from '../../config/searchArgs';
 
 export function AccountSettings(): ReactElement | null {
 	const navigate = useNavigate();
@@ -40,7 +42,14 @@ export function AccountSettings(): ReactElement | null {
 	);
 }
 
-function GitHubIntegration({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
+function GitHubIntegration({ account }: { account: IDirectoryAccountInfo; }): ReactElement | null {
+	if (!useObservable(ConfigShowGitHubIntegration) && account.github == null)
+		return null;
+
+	return <GitHubIntegrationInner account={ account } />;
+}
+
+function GitHubIntegrationInner({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
 	const [login, setLogin] = useState('');
 	const [githubUrl, setUrl] = useState('');
 	const mounted = useMounted();

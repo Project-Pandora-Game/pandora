@@ -306,29 +306,32 @@ function PasswordInput({
 
 	const id = useId();
 
-	let inputCharacterType: string;
-	let replaceFunc: ((_: string) => string);
+	const [inputCharacterType, replaceFunc] = useMemo(() => {
+		let ict: string;
+		let rf: ((_: string) => string);
 
-	switch (password.format) {
-		case 'numeric':
-			inputCharacterType = 'digits';
-			replaceFunc = (v) => v.replace(/[^0-9]/g, '');
-			break;
-		case 'letters':
-			inputCharacterType = 'letters';
-			replaceFunc = (v) => v.replace(/[^a-zA-Z]/g, '');
-			break;
-		case 'alphanumeric':
-			inputCharacterType = 'digits or letters';
-			replaceFunc = (v) => v.replace(/[^a-zA-Z0-9]/g, '');
-			break;
-		case 'text':
-			inputCharacterType = 'characters';
-			replaceFunc = (v) => v;
-			break;
-		default:
-			AssertNever(password.format);
-	}
+		switch (password.format) {
+			case 'numeric':
+				ict = 'digits';
+				rf = (v) => v.replace(/[^0-9]/g, '');
+				break;
+			case 'letters':
+				ict = 'letters';
+				rf = (v) => v.replace(/[^a-zA-Z]/g, '');
+				break;
+			case 'alphanumeric':
+				ict = 'digits or letters';
+				rf = (v) => v.replace(/[^a-zA-Z0-9]/g, '');
+				break;
+			case 'text':
+				ict = 'characters';
+				rf = (v) => v;
+				break;
+			default:
+				AssertNever(password.format);
+		}
+		return [ict, rf];
+	}, [password.format]);
 
 	const onInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
 		setValue(replaceFunc(e.target.value));

@@ -3,7 +3,7 @@ import { z, ZodTypeDef } from 'zod';
 import type { Asset } from '../asset';
 import type { AssetType } from '../definitions';
 
-import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_OUTFIT_NAME_LENGTH, LIMIT_POSE_PRESET_NAME_LENGTH } from '../../inputLimits';
+import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN, LIMIT_OUTFIT_NAME_LENGTH, LIMIT_POSE_PRESET_NAME_LENGTH } from '../../inputLimits';
 import { Assert, AssertNever } from '../../utility';
 import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop, ZodTruncate } from '../../validation';
 import { AssetIdSchema } from '../base';
@@ -26,7 +26,7 @@ export const ItemBundleSchema: z.ZodType<ItemBundle, ZodTypeDef, unknown> = z.ob
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
 	color: ItemColorBundleSchema.or(z.array(HexRGBAColorStringSchema)).optional(),
-	name: z.string().transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
+	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
 	moduleData: z.record(z.lazy(() => ItemModuleDataSchema)).optional(),
 	/** Room device specific data */

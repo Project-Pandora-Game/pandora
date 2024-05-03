@@ -692,3 +692,33 @@ $drop-overlay-gap: 0.3em;
 		}
 	}
 }
+
+.wardrobeItemCustomizationView {
+	.name {
+	    display: inline-block;
+		border: solid black 1px;
+		font-size: 1em;
+		padding: 0.5em;
+		border: 0.1em solid;
+		background-color: #aaa;
+		flex-grow: 1;
+	}
+
+	.description {
+		padding: 0.5em;
+		border: 1px solid black;
+		font-family: Arial, Helvetica, sans-serif;
+		white-space: pre-wrap;
+		word-wrap: break-word;
+		word-break: break-word;
+		min-height: 12em;
+	}
+
+	.error {
+		color: $theme-error;
+	}
+
+	input {
+		flex-grow: 1;
+	}
+}

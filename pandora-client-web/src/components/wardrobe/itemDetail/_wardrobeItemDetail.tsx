@@ -201,17 +201,19 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit }: { i
 
 	return (
 		<FieldsetToggle legend='Item'>
-			<Column>
+			<Column className='wardrobeItemCustomizationView'>
 				<Row alignY='center'>
 					<label htmlFor='original-name'>Original name:</label>
-					<input id='original-name' type='text' value={ item.asset.definition.name } readOnly />
+					<span className='name'>{ item.asset.definition.name }</span>
 				</Row>
 				<Row alignY='center'>
 					<label htmlFor='custom-name'>Custom name:</label>
-					<input id='custom-name' type='text' value={ item.name ?? '' } readOnly />
+					<span className='name'>{ item.name ?? ' ' }</span>
 				</Row>
 				<label>Description ({ item.description ? item.description.length : 0 } characters):</label>
-				<textarea id='custom-description' value={ item.description ?? '' } rows={ 10 } readOnly />
+				<div className='flex-1 description'>
+					{ item.description ?? '' }
+				</div>
 				<Row>
 					<Button onClick={ onClick } className={ available ? '' : 'text-strikethrough' }>Edit</Button>
 				</Row>
@@ -242,24 +244,24 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 
 	return (
 		<FieldsetToggle legend='Item'>
-			<Column>
+			<Column className='wardrobeItemCustomizationView'>
 				<Row alignY='center'>
 					<label htmlFor='original-name'>Original name:</label>
 					<input id='original-name' type='text' value={ item.asset.definition.name } readOnly />
 				</Row>
-				{
-					nameError && (
-						<Row>
-							<span className='FormFieldError'>{ nameError }</span>
-						</Row>
-					)
-				}
 				<Row alignY='center'>
 					<label htmlFor='custom-name'>Custom name:</label>
 					<input id='custom-name' type='text' value={ name } onChange={ (e) => setName(e.target.value) } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
 				</Row>
+				{
+					nameError && (
+						<Row>
+							<span className='error'>{ nameError }</span>
+						</Row>
+					)
+				}
 				<label htmlFor='custom-description'>Description ({ description.length }/{ LIMIT_ITEM_DESCRIPTION_LENGTH } characters):</label>
-				<textarea id='custom-description' value={ description } rows={ 10 } onChange={ (e) => setDescription(e.target.value) } maxLength={ LIMIT_ITEM_DESCRIPTION_LENGTH } />
+				<textarea id='custom-description' className='description' value={ description } rows={ 10 } onChange={ (e) => setDescription(e.target.value) } maxLength={ LIMIT_ITEM_DESCRIPTION_LENGTH } />
 				<Row>
 					<Button onClick={ onEndEdit } className='fadeDisabled' disabled={ processing }>Cancel</Button>
 					<Button onClick={ onSave } className='fadeDisabled' disabled={ processing || !!nameError }>Save</Button>

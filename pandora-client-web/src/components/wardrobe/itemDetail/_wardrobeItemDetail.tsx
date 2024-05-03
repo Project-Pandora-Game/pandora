@@ -2,10 +2,12 @@ import {
 	ItemPath,
 	LIMIT_ITEM_DESCRIPTION_LENGTH,
 	LIMIT_ITEM_NAME_LENGTH,
+	LIMIT_ITEM_NAME_PATTERN,
 	type AppearanceAction,
 	type Item,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useRef } from 'react';
+import { z } from 'zod';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { Column, Row } from '../../common/container/container';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
@@ -23,6 +25,7 @@ import { useEvent } from '../../../common/useEvent';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
+import { FormCreateStringValidator } from '../../common/form/form';
 
 export function WardrobeItemConfigMenu({
 	item,
@@ -223,6 +226,10 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 	const [name, setName] = React.useState(item.name ?? '');
 	const [description, setDescription] = React.useState(item.description ?? '');
 
+	const nameError = React.useMemo(() => (
+		FormCreateStringValidator(z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN), 'name')(name)
+	), [name]);
+
 	const onSave = useEvent(() => {
 		execute({
 			type: 'customize',
@@ -240,6 +247,13 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 					<label htmlFor='original-name'>Original name:</label>
 					<input id='original-name' type='text' value={ item.asset.definition.name } readOnly />
 				</Row>
+				{
+					nameError && (
+						<Row>
+							<span className='FormFieldError'>{ nameError }</span>
+						</Row>
+					)
+				}
 				<Row alignY='center'>
 					<label htmlFor='custom-name'>Custom name:</label>
 					<input id='custom-name' type='text' value={ name } onChange={ (e) => setName(e.target.value) } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
@@ -247,8 +261,8 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 				<label htmlFor='custom-description'>Description ({ description.length }/{ LIMIT_ITEM_DESCRIPTION_LENGTH } characters):</label>
 				<textarea id='custom-description' value={ description } rows={ 10 } onChange={ (e) => setDescription(e.target.value) } maxLength={ LIMIT_ITEM_DESCRIPTION_LENGTH } />
 				<Row>
-					<Button onClick={ onEndEdit } disabled={ processing }>Cancel</Button>
-					<Button onClick={ onSave } disabled={ processing }>Save</Button>
+					<Button onClick={ onEndEdit } className='fadeDisabled' disabled={ processing }>Cancel</Button>
+					<Button onClick={ onSave } className='fadeDisabled' disabled={ processing || !!nameError }>Save</Button>
 				</Row>
 			</Column>
 		</FieldsetToggle>

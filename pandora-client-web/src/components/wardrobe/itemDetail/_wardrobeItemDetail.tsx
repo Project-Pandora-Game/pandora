@@ -71,7 +71,7 @@ export function WardrobeItemConfigMenu({
 	return (
 		<div className='inventoryView'>
 			<div className='toolbar'>
-				<span>Editing item:&nbsp;<WardrobeItemName item={ wornItem } /></span>
+				<span>Editing item:&#x20;<WardrobeItemName item={ wornItem } /></span>
 				{ !singleItemContainer && <button className='modeButton' onClick={ close }>✖️</button> }
 			</div>
 			<Column padding='medium' overflowX='hidden' overflowY='auto'>

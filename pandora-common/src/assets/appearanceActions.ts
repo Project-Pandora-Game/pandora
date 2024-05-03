@@ -699,7 +699,7 @@ export function ActionAppearanceCustomize({ action, processingContext }: Appeara
 	// Player doing the action must be able to interact with the item
 	processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.STYLING);
 
-	const manipulator = processingContext.manipulator.getManipulatorFor(action.target);
+	const manipulator = processingContext.manipulator.getManipulatorFor(action.target).getContainer(action.item.container);
 	if (!manipulator.modifyItem(action.item.itemId, (it) => it.customize(action.name, action.description))) {
 		return processingContext.invalid();
 	}

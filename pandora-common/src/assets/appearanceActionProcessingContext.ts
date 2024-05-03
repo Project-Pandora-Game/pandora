@@ -1,6 +1,6 @@
 import { isEqual, uniqWith } from 'lodash';
 import type { CharacterId, CharacterRestrictionsManager } from '../character';
-import type { ItemInteractionType, RestrictionResult } from '../character/restrictionTypes';
+import type { ItemInteractionType, Restriction, RestrictionResult } from '../character/restrictionTypes';
 import type { GameLogicCharacter, GameLogicPermission, InteractionId } from '../gameLogic';
 import { Assert, AssertNever, AssertNotNullable } from '../utility';
 import type { AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
@@ -161,31 +161,35 @@ export class AppearanceActionProcessingContext {
 
 	public checkInteractWithTarget(target: ActionTargetCharacter | null): void {
 		const restrictionManager = this.getPlayerRestrictionManager();
-		this.addRestriction(restrictionManager.canInteractWithTarget(this, target));
+		this.addRestrictionResult(restrictionManager.canInteractWithTarget(this, target));
 	}
 
 	public checkCanUseItem(target: ActionTarget, itemPath: ItemPath, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): void {
 		const restrictionManager = this.getPlayerRestrictionManager();
-		this.addRestriction(restrictionManager.canUseItem(this, target, itemPath, interaction, insertBeforeRootItem));
+		this.addRestrictionResult(restrictionManager.canUseItem(this, target, itemPath, interaction, insertBeforeRootItem));
 	}
 
 	public checkCanUseItemDirect(target: ActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): void {
 		const restrictionManager = this.getPlayerRestrictionManager();
-		this.addRestriction(restrictionManager.canUseItemDirect(this, target, container, item, interaction, insertBeforeRootItem));
+		this.addRestrictionResult(restrictionManager.canUseItemDirect(this, target, container, item, interaction, insertBeforeRootItem));
 	}
 
 	public checkCanUseItemModule(target: ActionTarget, itemPath: ItemPath, moduleName: string, interaction?: ItemInteractionType): void {
 		const restrictionManager = this.getPlayerRestrictionManager();
-		this.addRestriction(restrictionManager.canUseItemModule(this, target, itemPath, moduleName, interaction));
+		this.addRestrictionResult(restrictionManager.canUseItemModule(this, target, itemPath, moduleName, interaction));
 	}
 
-	private addRestriction(result: RestrictionResult): void {
+	private addRestrictionResult(result: RestrictionResult): void {
 		if (!result.allowed) {
-			this.addProblem({
-				result: 'restrictionError',
-				restriction: result.restriction,
-			});
+			this.addRestriction(result.restriction);
 		}
+	}
+
+	public addRestriction(restriction: Restriction): void {
+		this.addProblem({
+			result: 'restrictionError',
+			restriction,
+		});
 	}
 
 	public invalid(invalidReason?: InvalidActionReason): AppearanceActionProcessingResultInvalid {

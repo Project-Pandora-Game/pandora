@@ -683,6 +683,7 @@ export function ActionAppearanceCustomize({ action, processingContext }: Appeara
 
 	if (target.type === 'character' && target.character.id !== processingContext.player.id) {
 		// TODO: change this: only the player can customize their own items for now
+		processingContext.addRestriction({ type: 'itemCustomizeOther' });
 		return processingContext.invalid();
 	}
 

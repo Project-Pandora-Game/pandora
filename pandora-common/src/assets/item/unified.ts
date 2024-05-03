@@ -23,10 +23,10 @@ import { CharacterIdSchema } from '../../character/characterTypes';
  * Used for storing appearance or room data in database and for transferring it to the clients.
  * @note The schema is duplicated because of TS limitation on inferring type that contains recursion (through storage/lock modules)
  */
-export const ItemBundleSchema: z.ZodType<ItemBundle, ZodTypeDef, unknown> = z.object({
+export const ItemBundleSchema = z.object({
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
-	spawnedBy: CharacterIdSchema,
+	spawnedBy: CharacterIdSchema.default('c0'),
 	color: ItemColorBundleSchema.or(z.array(HexRGBAColorStringSchema)).optional(),
 	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
@@ -37,7 +37,7 @@ export const ItemBundleSchema: z.ZodType<ItemBundle, ZodTypeDef, unknown> = z.ob
 	roomDeviceLink: RoomDeviceLinkSchema.optional(),
 	/** Lock specific data */
 	lockData: LockBundleSchema.optional(),
-});
+}) satisfies z.ZodType<ItemBundle, ZodTypeDef, unknown>;
 
 /**
  * Data describing an item configuration as a template.

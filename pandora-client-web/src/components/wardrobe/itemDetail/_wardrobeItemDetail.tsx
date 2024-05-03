@@ -13,7 +13,7 @@ import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers
 import deleteIcon from '../../../assets/icons/delete.svg';
 import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
 import { useWardrobeTargetItem } from '../wardrobeUtils';
-import { WardrobeActionButton } from '../wardrobeComponents';
+import { ActionWarningContent, WardrobeActionButton } from '../wardrobeComponents';
 import { WardrobeItemColorization } from './wardrobeItemColor';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
 import { WardrobeRoomDeviceDeployment, WardrobeRoomDeviceSlots, WardrobeRoomDeviceWearable } from './wardrobeItemRoomDevice';
@@ -21,6 +21,8 @@ import { WardrobeItemName } from './wardrobeItemName';
 import { Button } from '../../common/button/button';
 import { useEvent } from '../../../common/useEvent';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 
 export function WardrobeItemConfigMenu({
 	item,
@@ -186,6 +188,14 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit }: { i
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.problems.length === 0;
 
+	const onClick = useCallback(() => {
+		if (checkResult != null && !checkResult.valid && checkResult.prompt == null) {
+			toast(<ActionWarningContent problems={ checkResult.problems } prompt={ false } />, TOAST_OPTIONS_WARNING);
+			return;
+		}
+		onStartEdit();
+	}, [checkResult, onStartEdit]);
+
 	return (
 		<FieldsetToggle legend='Item'>
 			<Column>
@@ -199,13 +209,9 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit }: { i
 				</Row>
 				<label>Description ({ item.description ? item.description.length : 0 } characters):</label>
 				<textarea id='custom-description' value={ item.description ?? '' } rows={ 10 } readOnly />
-				{
-					available ? (
-						<Row>
-							<Button onClick={ onStartEdit }>Edit</Button>
-						</Row>
-					) : null
-				}
+				<Row>
+					<Button onClick={ onClick } className={ available ? '' : 'text-strikethrough' }>Edit</Button>
+				</Row>
 			</Column>
 		</FieldsetToggle>
 	);

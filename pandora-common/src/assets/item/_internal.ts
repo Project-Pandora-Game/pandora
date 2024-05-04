@@ -10,7 +10,7 @@ import type { AssetColorization, AssetType, WearableAssetType } from '../definit
 import type { ItemModuleAction } from '../modules';
 import type { IExportOptions, IItemModule } from '../modules/common';
 import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, Item, ItemBundle, ItemColorBundle, ItemId, ItemTemplate } from './base';
-import type { CharacterId } from '../../character';
+import type { CharacterId, ItemInteractionType } from '../../character';
 
 import { Assert, MemoizeNoArg } from '../../utility';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from '../properties';
@@ -262,6 +262,17 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 
 	public moduleAction(_context: AppearanceModuleActionContext, _moduleName: string, _action: ItemModuleAction): Item<Type> | null {
 		return null;
+	}
+
+	public moduleActionGetInteractionType(moduleName: string, action: ItemModuleAction): ItemInteractionType | undefined {
+		const module = this.getModules().get(moduleName);
+		if (!module || module.type !== action.moduleType)
+			return undefined;
+
+		if (module.getActionInteractionType)
+			return module.getActionInteractionType(action);
+
+		return module.interactionType;
 	}
 
 	public setModuleItems(_moduleName: string, _items: AppearanceItems): Item<Type> | null {

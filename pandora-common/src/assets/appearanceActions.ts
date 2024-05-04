@@ -715,8 +715,13 @@ export function ActionModuleAction({
 	const target = processingContext.getTarget(action.target);
 	if (!target)
 		return processingContext.invalid();
+
+	const item = target.getItem(action.item);
+	if (!item)
+		return processingContext.invalid();
+
 	// Player doing the action must be able to interact with the item
-	processingContext.checkCanUseItemModule(target, action.item, action.module);
+	processingContext.checkCanUseItemModule(target, action.item, action.module, item.moduleActionGetInteractionType(action.module, action.action));
 
 	const rootManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 

@@ -26,7 +26,7 @@ import { CharacterIdSchema } from '../../character/characterTypes';
 export const ItemBundleSchema = z.object({
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
-	spawnedBy: CharacterIdSchema.default('c0'),
+	spawnedBy: CharacterIdSchema.optional(),
 	color: ItemColorBundleSchema.or(z.array(HexRGBAColorStringSchema)).optional(),
 	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),

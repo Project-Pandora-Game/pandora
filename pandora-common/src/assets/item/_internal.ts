@@ -22,7 +22,7 @@ export interface ItemBaseProps<Type extends AssetType = AssetType> {
 	readonly assetManager: AssetManager;
 	readonly id: ItemId;
 	readonly asset: Asset<Type>;
-	readonly spawnedBy: CharacterId;
+	readonly spawnedBy?: CharacterId;
 	readonly color: Immutable<ItemColorBundle>;
 	readonly name?: string;
 	readonly description?: string;
@@ -37,7 +37,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 	public readonly assetManager: AssetManager;
 	public readonly id: ItemId;
 	public readonly asset: Asset<Type>;
-	public readonly spawnedBy: CharacterId;
+	public readonly spawnedBy?: CharacterId;
 	public readonly color: Immutable<ItemColorBundle>;
 	public readonly name?: string;
 	public readonly description?: string;
@@ -107,7 +107,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		return {
 			id: this.id,
 			asset: this.asset.id,
-			spawnedBy: this.spawnedBy,
+			spawnedBy: options.clientOnly ? undefined : this.spawnedBy,
 			color: this.exportColorToBundle(),
 			name: this.name,
 			description: this.description,

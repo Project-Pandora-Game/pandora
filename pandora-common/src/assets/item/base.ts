@@ -46,7 +46,7 @@ export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
 export type ItemBundle = {
 	id: ItemId;
 	asset: AssetId;
-	spawnedBy: CharacterId;
+	spawnedBy?: CharacterId;
 	color?: ItemColorBundle | HexRGBAColorString[];
 	name?: string;
 	description?: string;

@@ -96,6 +96,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 						return `You must be holding 'Room Construction Tools' to do this.`;
 				}
 				break;
+			case 'itemCustomizeOther':
+				return `You cannot customize other people's items.`;
 			case 'invalid':
 				return '';
 		}

@@ -71,6 +71,12 @@ export type ModuleActionFailure =
 		reason: 'wrongPassword';
 		asset: AssetId;
 		itemName: string;
+	} | {
+		type: 'lockInteractionPrevented';
+		moduleAction: 'showPassword';
+		reason: 'notAllowed';
+		asset: AssetId;
+		itemName: string;
 	};
 
 //#endregion

@@ -56,6 +56,9 @@ export const ItemLockActionSchema = z.discriminatedUnion('action', [
 		password: z.string().optional(),
 		clearLastPassword: z.boolean().optional(),
 	}),
+	z.object({
+		action: z.literal('showPassword'),
+	}),
 ]);
 export type IItemLockAction = z.infer<typeof ItemLockActionSchema>;
 
@@ -184,6 +187,11 @@ export class ItemLock extends ItemBase<'lock'> {
 	}
 
 	public lockAction(context: AppearanceModuleActionContext, action: IItemLockAction): ItemLock | null {
+		if (action.action === 'showPassword') {
+			// 'blockSelf' has no meaning for showPassword
+			return this.showPassword(context);
+		}
+
 		const playerRestrictionManager = context.processingContext.getPlayerRestrictionManager();
 
 		/** If the action should be considered as "manipulating themselves" for the purpose of self-blocking checks */
@@ -331,6 +339,33 @@ export class ItemLock extends ItemBase<'lock'> {
 		return this.withProps({
 			lockData,
 		});
+	}
+
+	public showPassword({ failure, processingContext }: AppearanceModuleActionContext): ItemLock | null {
+		if (!this.isLocked() || this.lockData == null) {
+			return null;
+		}
+		if (this.lockData.hidden?.side !== 'server') {
+			return this;
+		}
+
+		AssertNotNullable(this.lockData.hidden.password);
+
+		if (this.lockData.hidden.passwordSetBy !== processingContext.player.id) {
+			failure({
+				type: 'lockInteractionPrevented',
+				moduleAction: 'showPassword',
+				reason: 'notAllowed',
+				asset: this.asset.id,
+				itemName: this.name ?? '',
+			});
+			return this;
+		}
+
+		// TODO - return password in the context
+
+		return this;
+
 	}
 
 	@MemoizeNoArg

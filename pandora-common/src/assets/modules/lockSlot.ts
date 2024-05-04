@@ -2,7 +2,7 @@ import { Immutable } from 'immer';
 import { z } from 'zod';
 import { ItemInteractionType } from '../../character/restrictionTypes';
 import type { InteractionId } from '../../gameLogic/interactions';
-import { Satisfies } from '../../utility';
+import { AssertNever, Satisfies } from '../../utility';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { Asset } from '../asset';
@@ -203,6 +203,18 @@ export class ItemModuleLockSlot<out TProperties = unknown, out TStaticData = unk
 		return this.withProps({
 			lock: result,
 		});
+	}
+
+	public getActionInteractionType({ lockAction }: ItemModuleLockSlotAction): ItemInteractionType {
+		switch (lockAction.action) {
+			case 'lock':
+			case 'unlock':
+				return this.interactionType;
+			case 'showPassword':
+				return ItemInteractionType.ACCESS_ONLY;
+			default:
+				AssertNever(lockAction);
+		}
 	}
 
 	public readonly contentsPhysicallyEquipped: boolean = true;

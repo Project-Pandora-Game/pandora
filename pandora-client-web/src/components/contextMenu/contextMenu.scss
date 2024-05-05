@@ -26,6 +26,7 @@ $context-menu-themes: (
 	gap: 0.3em;
 	user-select: none;
 	isolation: isolate;
+	max-height: 100vh;
 
 	span, button {
 		@include center-flex;

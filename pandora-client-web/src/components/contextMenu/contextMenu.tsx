@@ -5,6 +5,8 @@ import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { useMounted } from '../../common/useMounted';
 import './contextMenu.scss';
+import { Scrollable } from '../common/scrollbar/scrollbar';
+import { Column } from '../common/container/container';
 
 type ContextMenuHandle = {
 	onContextMenu: (event: React.MouseEvent<HTMLDivElement>) => void;
@@ -72,7 +74,11 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 
 	return (
 		<div className={ classNames('context-menu', className) } ref={ finalRef }>
-			{ children }
+			<Scrollable color='lighter'>
+				<Column>
+					{ children }
+				</Column>
+			</Scrollable>
 		</div>
 	);
 }

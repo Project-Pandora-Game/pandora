@@ -21,6 +21,8 @@ import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 import { omit } from 'lodash';
 import { useIsRoomConstructionModeEnabled } from '../roomDevice';
 import type { WardrobeDeviceLocationStateSchema } from '../../../components/wardrobe/wardrobeItems';
+import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
+import { Column } from '../../../components/common/container/container';
 
 function StoreDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;
@@ -244,11 +246,9 @@ function DeviceSlotsMenu({ device, position, close }: {
 			<span>
 				Enter:
 			</span>
-			<div className='Scrollbar fill scrollable-vertical dark'>
-				{ characters.map((char) => (
-					<OccupyDeviceSlotMenu key={ char.id } device={ device } slot={ slot } character={ char } close={ close } />
-				)) }
-			</div>
+			{ characters.map((char) => (
+				<OccupyDeviceSlotMenu key={ char.id } device={ device } slot={ slot } character={ char } close={ close } />
+			)) }
 			<button onClick={ () => setSlot(null) }>
 				Back to slots
 			</button>
@@ -280,35 +280,39 @@ function DeviceContextMenuCurrent({ device, position, setRoomSceneMode, onClose 
 
 	return (
 		<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
-			<WardrobeContextProvider target={ WARDROBE_TARGET_ROOM } player={ player }>
-				<button onClick={ () => {
-					onCloseActual();
-					navigate('/wardrobe/room-inventory', { state: { deviceId: device.id } satisfies z.infer<typeof WardrobeDeviceLocationStateSchema> });
-				} }>
-					{ device.asset.definition.name }
-				</button>
-				{ menu === 'main' && (
-					<>
-						<LeaveDeviceMenu device={ device } close={ onClose } />
-						<button onClick={ () => setMenu('slots') }>
-							Slots
+			<Scrollable color='lighter'>
+				<Column>
+					<WardrobeContextProvider target={ WARDROBE_TARGET_ROOM } player={ player }>
+						<button onClick={ () => {
+							onCloseActual();
+							navigate('/wardrobe/room-inventory', { state: { deviceId: device.id } satisfies z.infer<typeof WardrobeDeviceLocationStateSchema> });
+						} }>
+							{ device.asset.definition.name }
 						</button>
-						<MoveDeviceMenu device={ device } setRoomSceneMode={ setRoomSceneMode } close={ onClose } />
-						<StoreDeviceMenu device={ device } close={ onClose } />
-					</>
-				) }
-				{ menu === 'slots' && (
-					<>
-						<DeviceSlotsMenu device={ device } position={ position } close={ onClose } />
-						<button onClick={ () => setMenu('main') }>
-							Back
-						</button>
-					</>
-				) }
-			</WardrobeContextProvider>
-			<button onClick={ onClose } >
-				Close
-			</button>
+						{ menu === 'main' && (
+							<>
+								<LeaveDeviceMenu device={ device } close={ onClose } />
+								<button onClick={ () => setMenu('slots') }>
+									Slots
+								</button>
+								<MoveDeviceMenu device={ device } setRoomSceneMode={ setRoomSceneMode } close={ onClose } />
+								<StoreDeviceMenu device={ device } close={ onClose } />
+							</>
+						) }
+						{ menu === 'slots' && (
+							<>
+								<DeviceSlotsMenu device={ device } position={ position } close={ onClose } />
+								<button onClick={ () => setMenu('main') }>
+									Back
+								</button>
+							</>
+						) }
+					</WardrobeContextProvider>
+					<button onClick={ onClose } >
+						Close
+					</button>
+				</Column>
+			</Scrollable>
 		</div>
 	);
 }

@@ -71,8 +71,8 @@ importers:
         specifier: workspace:*
         version: link:../pandora-common
       pixi-viewport:
-        specifier: 5.0.2
-        version: 5.0.2
+        specifier: 5.0.3
+        version: 5.0.3
       pixi.js:
         specifier: 7.4.2
         version: 7.4.2
@@ -5602,8 +5602,8 @@ packages:
     resolution: {integrity: sha512-saLsH7WeYYPiD25LDuLRRY/i+6HaPYr6G1OUlN39otzkSTxKnubR9RTxS3/Kk50s1g2JTgFwWQDQyplC5/SHZg==}
     engines: {node: '>= 6'}
 
-  pixi-viewport@5.0.2:
-    resolution: {integrity: sha512-U77KnCTl81xEgxEQRFEuI7MYVySWwCVkA41EnM8KiOYwgVOwdBUa7318O+u61IOnTwnoYLzaihy/kpoONKU13Q==}
+  pixi-viewport@5.0.3:
+    resolution: {integrity: sha512-DGG7cg2vUltAiL2fanzYPLR+L6qBeoskPfbUXxN6CYKW+fkni5cF9J1t2WBTmyBnC3kVq3ATFE2KDi7zy2FY8A==}
 
   pixi.js@7.4.2:
     resolution: {integrity: sha512-TifqgHGNofO7UCEbdZJOpUu7dUnpu4YZ0o76kfCqxDa4RS8ITc9zjECCbtalmuNXkVhSEZmBKQvE7qhHMqw/xg==}
@@ -13544,7 +13544,7 @@ snapshots:
 
   pirates@4.0.6: {}
 
-  pixi-viewport@5.0.2: {}
+  pixi-viewport@5.0.3: {}
 
   pixi.js@7.4.2:
     dependencies:

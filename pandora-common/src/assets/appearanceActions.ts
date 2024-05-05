@@ -860,7 +860,7 @@ export function ActionAppearanceRandomize({
 			// Pick one and add it to the appearance
 			const asset = sample(possibleAssets);
 			if (asset && asset.isType('personal') && asset.definition.bodypart != null) {
-				const item = assetManager.createItem(`i/${nanoid()}`, asset);
+				const item = assetManager.createItem(`i/${nanoid()}`, asset, processingContext.player);
 				newAppearance.push(item);
 				usedAssets.add(asset);
 				properties = item.getPropertiesParts().reduce(MergeAssetProperties, properties);
@@ -871,7 +871,7 @@ export function ActionAppearanceRandomize({
 		}
 
 		// Re-load the appearance we have to make sure body is valid
-		newAppearance = CharacterAppearanceLoadAndValidate(assetManager, newAppearance, room).slice();
+		newAppearance = CharacterAppearanceLoadAndValidate(assetManager, newAppearance, processingContext.player, room).slice();
 	}
 
 	// Make sure the appearance is valid (required for items step)
@@ -910,7 +910,7 @@ export function ActionAppearanceRandomize({
 
 		// Try them one by one, stopping at first successful (if we skip all, nothing bad happens)
 		for (const asset of possibleAssets) {
-			const item = assetManager.createItem(`i/${nanoid()}`, asset);
+			const item = assetManager.createItem(`i/${nanoid()}`, asset, processingContext.player);
 			const newItems: Item<WearableAssetType>[] = [...newAppearance, item];
 
 			r = ValidateAppearanceItemsPrefix(assetManager, newItems, room);
@@ -1016,7 +1016,7 @@ export function ActionRoomDeviceEnter({
 		processingContext.addInteraction(targetCharacter.character, 'deviceEnterLeave');
 
 	const wearableItem = assetManager
-		.createItem(action.itemId, asset)
+		.createItem(action.itemId, asset, processingContext.player)
 		.withLink(item, action.slot);
 	// Player adding the wearable part must be able to use it
 	processingContext.checkCanUseItemDirect(targetCharacter, [], wearableItem, ItemInteractionType.DEVICE_ENTER_LEAVE);

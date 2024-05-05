@@ -16,15 +16,17 @@ import { ItemLock, LockBundleSchema } from './lock';
 import { ItemPersonal } from './personal';
 import { ItemRoomDevice, RoomDeviceBundleSchema } from './roomDevice';
 import { ItemRoomDeviceWearablePart, RoomDeviceLinkSchema } from './roomDeviceWearablePart';
+import { CharacterIdSchema } from '../../character/characterTypes';
 
 /**
  * Serializable data bundle containing information about an item.
  * Used for storing appearance or room data in database and for transferring it to the clients.
  * @note The schema is duplicated because of TS limitation on inferring type that contains recursion (through storage/lock modules)
  */
-export const ItemBundleSchema: z.ZodType<ItemBundle, ZodTypeDef, unknown> = z.object({
+export const ItemBundleSchema = z.object({
 	id: ItemIdSchema,
 	asset: AssetIdSchema,
+	spawnedBy: CharacterIdSchema.optional(),
 	color: ItemColorBundleSchema.or(z.array(HexRGBAColorStringSchema)).optional(),
 	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
@@ -35,7 +37,7 @@ export const ItemBundleSchema: z.ZodType<ItemBundle, ZodTypeDef, unknown> = z.ob
 	roomDeviceLink: RoomDeviceLinkSchema.optional(),
 	/** Lock specific data */
 	lockData: LockBundleSchema.optional(),
-});
+}) satisfies z.ZodType<ItemBundle, ZodTypeDef, unknown>;
 
 /**
  * Data describing an item configuration as a template.
@@ -85,6 +87,7 @@ export function CreateItemBundleFromTemplate(template: ItemTemplate, context: II
 	const bundle: ItemBundle = {
 		id: GenerateRandomItemId(),
 		asset: asset.id,
+		spawnedBy: context.creator.id,
 		color: template.color,
 	};
 

@@ -33,7 +33,7 @@
 	},
 	"dependencies": {
 		"@types/async-lock": "1.4.2",
-		"@types/lodash": "4.17.0",
+		"@types/lodash": "4.17.1",
 		"@types/node": "20.12.8",
 		"async-lock": "1.4.1",
 		"immer": "10.1.1",

@@ -683,6 +683,7 @@ export function ActionAppearanceCustomize({ action, processingContext }: Appeara
 
 	if (target.type === 'character' && target.character.id !== processingContext.player.id) {
 		// TODO: change this: only the player can customize their own items for now
+		processingContext.addRestriction({ type: 'itemCustomizeOther' });
 		return processingContext.invalid();
 	}
 
@@ -699,7 +700,7 @@ export function ActionAppearanceCustomize({ action, processingContext }: Appeara
 	// Player doing the action must be able to interact with the item
 	processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.STYLING);
 
-	const manipulator = processingContext.manipulator.getManipulatorFor(action.target);
+	const manipulator = processingContext.manipulator.getManipulatorFor(action.target).getContainer(action.item.container);
 	if (!manipulator.modifyItem(action.item.itemId, (it) => it.customize(action.name, action.description))) {
 		return processingContext.invalid();
 	}
@@ -859,7 +860,7 @@ export function ActionAppearanceRandomize({
 			// Pick one and add it to the appearance
 			const asset = sample(possibleAssets);
 			if (asset && asset.isType('personal') && asset.definition.bodypart != null) {
-				const item = assetManager.createItem(`i/${nanoid()}`, asset);
+				const item = assetManager.createItem(`i/${nanoid()}`, asset, processingContext.player);
 				newAppearance.push(item);
 				usedAssets.add(asset);
 				properties = item.getPropertiesParts().reduce(MergeAssetProperties, properties);
@@ -870,7 +871,7 @@ export function ActionAppearanceRandomize({
 		}
 
 		// Re-load the appearance we have to make sure body is valid
-		newAppearance = CharacterAppearanceLoadAndValidate(assetManager, newAppearance, room).slice();
+		newAppearance = CharacterAppearanceLoadAndValidate(assetManager, newAppearance, processingContext.player, room).slice();
 	}
 
 	// Make sure the appearance is valid (required for items step)
@@ -909,7 +910,7 @@ export function ActionAppearanceRandomize({
 
 		// Try them one by one, stopping at first successful (if we skip all, nothing bad happens)
 		for (const asset of possibleAssets) {
-			const item = assetManager.createItem(`i/${nanoid()}`, asset);
+			const item = assetManager.createItem(`i/${nanoid()}`, asset, processingContext.player);
 			const newItems: Item<WearableAssetType>[] = [...newAppearance, item];
 
 			r = ValidateAppearanceItemsPrefix(assetManager, newItems, room);
@@ -1015,7 +1016,7 @@ export function ActionRoomDeviceEnter({
 		processingContext.addInteraction(targetCharacter.character, 'deviceEnterLeave');
 
 	const wearableItem = assetManager
-		.createItem(action.itemId, asset)
+		.createItem(action.itemId, asset, processingContext.player)
 		.withLink(item, action.slot);
 	// Player adding the wearable part must be able to use it
 	processingContext.checkCanUseItemDirect(targetCharacter, [], wearableItem, ItemInteractionType.DEVICE_ENTER_LEAVE);

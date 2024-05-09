@@ -43,7 +43,7 @@ export function WardrobeItemConfigMenu({
 	const isRoomInventory = target.type === 'room' && item.container.length === 0;
 
 	const close = useCallback(() => {
-		focuser.previous();
+		focuser.reset();
 	}, [focuser]);
 
 	useEffect(() => {

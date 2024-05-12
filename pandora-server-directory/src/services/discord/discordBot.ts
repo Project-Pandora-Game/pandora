@@ -54,7 +54,10 @@ export const DiscordBot = new class DiscordBot implements Service {
 			intents: GATEWAY_INTENTS,
 		});
 
-		this._client.on(Events.InteractionCreate, this._handleInteractionCreate.bind(this));
+		this._client.on(Events.InteractionCreate, (interaction) => {
+			this._handleInteractionCreate(interaction)
+				.catch((error) => logger.error('Error handling interaction:', error));
+		});
 
 		const result = await this._client.login(DISCORD_BOT_TOKEN);
 		if (result !== DISCORD_BOT_TOKEN) {

@@ -1,7 +1,9 @@
 import type { Immutable } from 'immer';
-import type { GraphicsSettings } from '../../graphics/graphicsSettings';
 import { CharacterSize, GetLogger, TypedEventEmitter } from 'pandora-common';
 import { useCallback, useSyncExternalStore } from 'react';
+import { z } from 'zod';
+import { BrowserStorage } from '../../browserStorage';
+import type { GraphicsSettings } from '../../graphics/graphicsSettings';
 
 /**
  * List of resolutions to try in format [width, height, textureResolution].
@@ -34,18 +36,28 @@ export const ScreenResolutionSerice = new class ScreenResolutionSerice extends T
 	private readonly _screenSizeObserver: ResizeObserver;
 
 	public get automaticTextureResolution(): Exclude<GraphicsSettings['textureResolution'], 'auto'> {
-		return AUTOMATIC_TEXTURE_RESOLUTIONS[this._automaticResolutionIndex]?.[2] ?? '1';
+		return AUTOMATIC_TEXTURE_RESOLUTIONS[this._automaticResolutionIndex.value]?.[2] ?? '1';
 	}
 
 	private _screenWidth = 0;
 	private _screenHeight = 0;
-	private _automaticResolutionIndex = AUTOMATIC_TEXTURE_RESOLUTIONS.length - 1;
+	private readonly _automaticResolutionIndex = BrowserStorage.create<number>(
+		'screen-resolution.auto-resolution-index',
+		AUTOMATIC_TEXTURE_RESOLUTIONS.length - 1,
+		z.number().int().min(0).max(AUTOMATIC_TEXTURE_RESOLUTIONS.length - 1),
+	);
 
 	constructor() {
 		super();
 		this._screenSizeObserver = new ResizeObserver(() => this._onUpdate());
 		this._screenSizeObserver.observe(window.document.body);
 		this._onUpdate();
+		logger.verbose('Loaded; selected automatic texture resolution:', this.automaticTextureResolution);
+
+		this._automaticResolutionIndex.subscribe(() => {
+			logger.verbose('Automatic texture resolution changed:', this.automaticTextureResolution);
+			this.emit('automaticResolutionChanged', this.automaticTextureResolution);
+		});
 	}
 
 	private _onUpdate(): void {
@@ -56,11 +68,8 @@ export const ScreenResolutionSerice = new class ScreenResolutionSerice extends T
 
 		const resolutionIndex = AUTOMATIC_TEXTURE_RESOLUTIONS
 			.findIndex(([width, height]) => this._screenWidth >= width || this._screenHeight >= height);
-		if (resolutionIndex >= 0 && resolutionIndex < this._automaticResolutionIndex) {
-			this._automaticResolutionIndex = resolutionIndex;
-			this.emit('automaticResolutionChanged', this.automaticTextureResolution);
-
-			logger.verbose('Selected automatic texture resolution:', this.automaticTextureResolution);
+		if (resolutionIndex >= 0 && resolutionIndex < this._automaticResolutionIndex.value) {
+			this._automaticResolutionIndex.value = resolutionIndex;
 		}
 	}
 };

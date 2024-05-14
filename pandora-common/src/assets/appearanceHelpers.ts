@@ -114,6 +114,8 @@ export abstract class AppearanceManipulator {
 		if (index < 0)
 			return false;
 		const result = mutator(items[index]);
+		if (result === items[index])
+			return true;
 		if (!result || result.id !== id || result.asset !== result.asset)
 			return false;
 		items[index] = result;

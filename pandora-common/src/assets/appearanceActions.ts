@@ -17,7 +17,7 @@ import { WearableAssetType } from './definitions';
 import { CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
 import { ItemRoomDevice, ItemTemplateSchema, RoomDeviceDeploymentChange, RoomDeviceDeploymentChangeSchema } from './item';
 import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemId, ItemIdSchema } from './item/base';
-import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure } from './modules';
+import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure, type ModuleActionData } from './modules';
 import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 import { AppearanceArmPoseSchema, AppearanceArmsOrderSchema, AppearancePoseSchema } from './state/characterStatePose';
 import { RestrictionOverride } from './state/characterStateTypes';
@@ -214,6 +214,7 @@ export interface AppearanceModuleActionContext {
 	messageHandler: ActionMessageTemplateHandler;
 	reject: (reason: ModuleActionError) => void;
 	failure: (reason: ModuleActionFailure) => void;
+	addData: (data: ModuleActionData) => void;
 }
 
 export interface AppearanceActionHandlerArg<Action extends AppearanceAction = AppearanceAction> {
@@ -760,6 +761,12 @@ export function ActionModuleAction({
 						type: 'moduleActionFailure',
 						reason,
 					},
+				});
+			},
+			addData: (data) => {
+				processingContext.addData({
+					type: 'moduleActionData',
+					data,
 				});
 			},
 		};

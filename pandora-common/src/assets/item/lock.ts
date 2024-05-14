@@ -9,7 +9,7 @@ import type { AssetLockProperties, AssetProperties } from '../properties';
 import type { AppearanceValidationResult, AppearanceItems } from '../appearanceValidation';
 
 import { Logger } from '../../logging';
-import { AssertNever, MemoizeNoArg } from '../../utility';
+import { AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility';
 import { CharacterIdSchema } from '../../character/characterTypes';
 
 import { ItemBaseProps, ItemBase } from './_internal';
@@ -341,7 +341,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		});
 	}
 
-	public showPassword({ failure, processingContext }: AppearanceModuleActionContext): ItemLock | null {
+	public showPassword({ failure, addData, processingContext }: AppearanceModuleActionContext): ItemLock | null {
 		if (!this.isLocked() || this.lockData == null) {
 			return null;
 		}
@@ -362,7 +362,10 @@ export class ItemLock extends ItemBase<'lock'> {
 			return this;
 		}
 
-		// TODO - return password in the context
+		addData({
+			moduleAction: 'showPassword',
+			password: this.lockData.hidden.password,
+		});
 
 		return this;
 

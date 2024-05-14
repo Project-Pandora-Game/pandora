@@ -79,6 +79,12 @@ export type ModuleActionFailure =
 		itemName: string;
 	};
 
+export type ModuleActionData =
+	| {
+		moduleAction: 'showPassword';
+		password: string;
+	};
+
 //#endregion
 
 export type ModuleType = keyof typeof IAssetModuleTypesSchemas;

@@ -8,17 +8,18 @@ import { useObservable } from '../observable';
 import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../assets/graphicsManager';
 import { Button } from '../components/common/button/button';
 import { Column, Row } from '../components/common/container/container';
+import { useAutomaticResolution } from '../services/screenResolution/screenResolution';
 
 export const GraphicsSettingsSchema = z.object({
 	renderResolution: z.number().int().min(0).max(100),
-	textureResolution: z.enum(['1', '0.5', '0.25']),
+	textureResolution: z.enum(['auto', '1', '0.5', '0.25']),
 	alphamaskEngine: z.enum(['pixi', 'customShader', 'disabled']),
 });
 export type GraphicsSettings = z.infer<typeof GraphicsSettingsSchema>;
 
 const GRAPHICS_SETTINGS_DEFAULT: GraphicsSettings = {
 	renderResolution: 100,
-	textureResolution: '1',
+	textureResolution: 'auto',
 	alphamaskEngine: 'disabled',
 };
 
@@ -66,13 +67,7 @@ export function GraphicsSettings(): ReactElement | null {
 	);
 }
 
-const GRAPHICS_TEXTURE_RESOLUTION_DESCRIPTIONS: Record<GraphicsSettings['textureResolution'], string> = {
-	'1': 'Full',
-	'0.5': '50%',
-	'0.25': '25%',
-};
-
-export const GRAPHICS_TEXTURE_RESOLUTION_SCALE: Record<GraphicsSettings['textureResolution'], number> = {
+export const GRAPHICS_TEXTURE_RESOLUTION_SCALE: Record<Exclude<GraphicsSettings['textureResolution'], 'auto'>, number> = {
 	'1': 1,
 	'0.5': 2,
 	'0.25': 4,
@@ -87,6 +82,15 @@ function QualitySettings(): ReactElement {
 		disabled: 'Ignore masks (recommended for avoiding lag)',
 	};
 
+	const automaticTextureResolution = useAutomaticResolution();
+
+	const GRAPHICS_TEXTURE_RESOLUTION_DESCRIPTIONS = useMemo((): Record<GraphicsSettings['textureResolution'], string | (() => string)> => ({
+		'auto': () => `Automatic (currently: ${ String(GRAPHICS_TEXTURE_RESOLUTION_DESCRIPTIONS[automaticTextureResolution]) })`,
+		'1': 'Full',
+		'0.5': '50%',
+		'0.25': '25%',
+	}), [automaticTextureResolution]);
+
 	return (
 		<fieldset>
 			<legend>Quality</legend>
@@ -100,6 +104,7 @@ function QualitySettings(): ReactElement {
 							.map((v) => [v.toString(), `${v}%`]),
 					)
 				}
+				optionOrder={ [100, 90, 80, 65, 50, 25, 0].map(String) }
 				schema={ z.string() }
 				onChange={ (v) => {
 					const newValue = GraphicsSettingsSchema.shape.renderResolution.parse(Number.parseInt(v, 10));
@@ -112,6 +117,7 @@ function QualitySettings(): ReactElement {
 				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.textureResolution }
 				label='Texture resolution'
 				stringify={ GRAPHICS_TEXTURE_RESOLUTION_DESCRIPTIONS }
+				optionOrder={ ['auto', '1', '0.5', '0.25'] }
 				schema={ GraphicsSettingsSchema.shape.textureResolution }
 				onChange={ (v) => SetGraphicsSettings({ textureResolution: v }) }
 				onReset={ () => ResetGraphicsSettings(['textureResolution']) }

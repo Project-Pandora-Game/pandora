@@ -1,0 +1,73 @@
+import type { Immutable } from 'immer';
+import type { GraphicsSettings } from '../../graphics/graphicsSettings';
+import { CharacterSize, GetLogger, TypedEventEmitter } from 'pandora-common';
+import { useCallback, useSyncExternalStore } from 'react';
+
+/**
+ * List of resolutions to try in format [width, height, textureResolution].
+ * The first for which (screenWidth >= width || screenHeight >= height) is true is used.
+ * When a screen gets bigger, the resolution might change to a better one,
+ * but it never returns to a worse one.
+ */
+const AUTOMATIC_TEXTURE_RESOLUTIONS: Immutable<[number, number, Exclude<GraphicsSettings['textureResolution'], 'auto'>][]> = [
+	[
+		2 * CharacterSize.WIDTH,
+		1.6 * CharacterSize.HEIGHT,
+		'1',
+	],
+	[
+		2 * 0.5 * CharacterSize.WIDTH,
+		1.6 * 0.5 * CharacterSize.HEIGHT,
+		'0.5',
+	],
+	[0, 0, '0.25'],
+] as const;
+
+export type ScreenResolutionSericeEvents = {
+	resolutionChanged: readonly [number, number];
+	automaticResolutionChanged: GraphicsSettings['textureResolution'];
+};
+
+const logger = GetLogger('ScreenResolutionSerice');
+
+export const ScreenResolutionSerice = new class ScreenResolutionSerice extends TypedEventEmitter<ScreenResolutionSericeEvents> {
+	private readonly _screenSizeObserver: ResizeObserver;
+
+	public get automaticTextureResolution(): Exclude<GraphicsSettings['textureResolution'], 'auto'> {
+		return AUTOMATIC_TEXTURE_RESOLUTIONS[this._automaticResolutionIndex]?.[2] ?? '1';
+	}
+
+	private _screenWidth = 0;
+	private _screenHeight = 0;
+	private _automaticResolutionIndex = AUTOMATIC_TEXTURE_RESOLUTIONS.length - 1;
+
+	constructor() {
+		super();
+		this._screenSizeObserver = new ResizeObserver(() => this._onUpdate());
+		this._screenSizeObserver.observe(window.document.body);
+		this._onUpdate();
+	}
+
+	private _onUpdate(): void {
+		this._screenWidth = Math.ceil(window.innerWidth * window.devicePixelRatio);
+		this._screenHeight = Math.ceil(window.innerHeight * window.devicePixelRatio);
+
+		this.emit('resolutionChanged', [this._screenWidth, this._screenHeight]);
+
+		const resolutionIndex = AUTOMATIC_TEXTURE_RESOLUTIONS
+			.findIndex(([width, height]) => this._screenWidth >= width || this._screenHeight >= height);
+		if (resolutionIndex >= 0 && resolutionIndex < this._automaticResolutionIndex) {
+			this._automaticResolutionIndex = resolutionIndex;
+			this.emit('automaticResolutionChanged', this.automaticTextureResolution);
+
+			logger.verbose('Selected automatic texture resolution:', this.automaticTextureResolution);
+		}
+	}
+};
+
+export function useAutomaticResolution(): Exclude<GraphicsSettings['textureResolution'], 'auto'> {
+	return useSyncExternalStore(
+		useCallback((change) => ScreenResolutionSerice.on('automaticResolutionChanged', change), []),
+		useCallback(() => ScreenResolutionSerice.automaticTextureResolution, []),
+	);
+}

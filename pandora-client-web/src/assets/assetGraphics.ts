@@ -10,6 +10,7 @@ import { EvaluateCondition } from '../graphics/utility';
 import { Observable, ReadonlyObservable, useObservable } from '../observable';
 import { useAssetManager } from './assetManager';
 import { GraphicsManagerInstance } from './graphicsManager';
+import { useAutomaticResolution } from '../services/screenResolution/screenResolution';
 
 export interface PointDefinitionCalculated extends PointDefinition {
 	index: number;
@@ -417,16 +418,19 @@ export function useImageResolutionAlternative(image: string): {
 	scale: number;
 } {
 	const { textureResolution } = useGraphicsSettings();
+	const automaticResolution = useAutomaticResolution();
+
+	const finalTextureResolution = textureResolution === 'auto' ? automaticResolution : textureResolution;
 
 	const EXTENSIONS = ['.png', '.jpg'];
 
 	for (const ext of EXTENSIONS) {
 		if (image.endsWith(ext)) {
-			if (textureResolution !== '1') {
+			if (finalTextureResolution !== '1') {
 				return {
-					image: image.substring(0, image.length - ext.length) + `_r${textureResolution}${ext}`,
-					resolution: 1 / GRAPHICS_TEXTURE_RESOLUTION_SCALE[textureResolution],
-					scale: GRAPHICS_TEXTURE_RESOLUTION_SCALE[textureResolution],
+					image: image.substring(0, image.length - ext.length) + `_r${finalTextureResolution}${ext}`,
+					resolution: 1 / GRAPHICS_TEXTURE_RESOLUTION_SCALE[finalTextureResolution],
+					scale: GRAPHICS_TEXTURE_RESOLUTION_SCALE[finalTextureResolution],
 				};
 			}
 		}

@@ -59,8 +59,6 @@ function ActiveTutorialStageUi({ stage }: {
 
 	return (
 		<>
-			<span>{ stage.config.text }</span>
-			<hr className='fill-x' />
 			{
 				stage.config.steps
 					.slice(0, activeStepIndex + 1)

@@ -6,3 +6,26 @@
 		font-style: italic;
 	}
 }
+
+.tutorial-highlight-overlay {
+	position: absolute;
+	overflow: hidden;
+	margin: 0;
+	z-index: 90000;
+	pointer-events: none;
+
+	background-color: transparent;
+	border: solid red 0.3em;
+	border-radius: 0.5em;
+
+	animation: tutorial-highlight-overlay-blink 1s infinite alternate-reverse;
+}
+
+@keyframes tutorial-highlight-overlay-blink {
+	from {
+		border-color: darkred;
+	}
+	to {
+		border-color: orange;
+	}
+}

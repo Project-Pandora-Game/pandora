@@ -43,7 +43,11 @@ export const TUTORIAL_RANDOMIZE_APPEARANCE: TutorialConfig = {
 					conditions: [{
 						type: 'elementQuery',
 						query: '.roomScreen .tab.active',
-						filter: (e) => e instanceof HTMLElement && e.innerText.includes('Personal space'),
+						filter: (e) => e.innerText.includes('Personal space'),
+					}],
+					highlight: [{
+						query: '.roomScreen .tab',
+						filter: (e) => e.innerText.includes('Personal space'),
 					}],
 				},
 				{
@@ -54,6 +58,15 @@ export const TUTORIAL_RANDOMIZE_APPEARANCE: TutorialConfig = {
 							For now click the "Wardrobe" button to go to your character's wardrobe.
 						</>),
 					conditions: [{ type: 'never' }],
+					highlight: [
+						{
+							query: '.character-info fieldset:has(legend.player)',
+						},
+						{
+							query: '.character-info fieldset:has(legend.player) .Button',
+							filter: (e) => e.innerText.includes('Wardrobe'),
+						},
+					],
 				},
 			],
 			advanceConditions: [
@@ -90,7 +103,11 @@ export const TUTORIAL_RANDOMIZE_APPEARANCE: TutorialConfig = {
 					conditions: [{
 						type: 'elementQuery',
 						query: '.wardrobe .tab.active',
-						filter: (e) => e instanceof HTMLElement && e.innerText.includes('Randomization'),
+						filter: (e) => e.innerText.includes('Randomization'),
+					}],
+					highlight: [{
+						query: '.wardrobe .tab',
+						filter: (e) => e.innerText.includes('Randomization'),
 					}],
 				},
 				{
@@ -103,7 +120,11 @@ export const TUTORIAL_RANDOMIZE_APPEARANCE: TutorialConfig = {
 					conditions: [{
 						type: 'elementQuery',
 						query: '.inventoryView .open.fieldset-toggle-legend',
-						filter: (e) => e instanceof HTMLElement && e.innerText.includes('Character randomization'),
+						filter: (e) => e.innerText.includes('Character randomization'),
+					}],
+					highlight: [{
+						query: '.inventoryView .fieldset-toggle-legend',
+						filter: (e) => e.innerText.includes('Character randomization'),
 					}],
 				},
 				{
@@ -120,6 +141,9 @@ export const TUTORIAL_RANDOMIZE_APPEARANCE: TutorialConfig = {
 						</>
 					),
 					conditions: [{ type: 'next' }],
+					highlight: [{
+						query: '.inventoryView .fieldset-toggle .div-container.direction-row > .wardrobeActionButton',
+					}],
 				},
 			],
 		},
@@ -134,6 +158,10 @@ export const TUTORIAL_RANDOMIZE_APPEARANCE: TutorialConfig = {
 				conditions: [{
 					type: 'url',
 					url: '/room',
+				}],
+				highlight: [{
+					query: '.tab-container > .header .tab',
+					filter: (e) => e.innerText.includes('Back'),
 				}],
 			}],
 		},

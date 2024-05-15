@@ -15,7 +15,13 @@ export interface TutorialStep {
 	text: string | ReactNode;
 	hideWhenCompleted?: true;
 	conditions: TutorialCondition[];
+	highlight?: TutorialHighlightSelector[];
 }
+
+export type TutorialHighlightSelector = {
+	query: string;
+	filter?: (element: HTMLElement) => boolean;
+};
 
 export type TutorialConditionUrl = {
 	type: 'url';
@@ -29,7 +35,7 @@ export type TutorialConditionNext = {
 export type TutorialConditionElementExists = {
 	type: 'elementQuery';
 	query: string;
-	filter?: (element: Element) => boolean;
+	filter?: (element: HTMLElement) => boolean;
 };
 
 /** Special condition that is never true - useable for making sure the stage advancement triggers instead. */

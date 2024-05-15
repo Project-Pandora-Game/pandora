@@ -95,6 +95,9 @@ export class TutorialStageRunner {
 		} else if (condition.type === 'elementQuery') {
 			const elements = Array.from(document.querySelectorAll(condition.query))
 				.filter((e) => {
+					if (!(e instanceof HTMLElement))
+						return false;
+
 					if (condition.filter == null)
 						return true;
 

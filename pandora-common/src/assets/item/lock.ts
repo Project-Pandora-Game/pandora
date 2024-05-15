@@ -34,6 +34,8 @@ export const LockBundleSchema = z.object({
 			side: z.literal('server'),
 			/** Password used to lock the item */
 			password: z.string().optional(),
+			/** Id of the character who set the password last time */
+			passwordSetBy: CharacterIdSchema.optional(),
 		}),
 		z.object({
 			side: z.literal('client'),
@@ -103,6 +105,10 @@ export class ItemLock extends ItemBase<'lock'> {
 					if (asset.definition.password != null && lockData.hidden?.password == null && lockData.locked != null) {
 						context.logger?.warning(`Lock ${bundle.id} is locked but has no hidden password`);
 						delete lockData.locked;
+					}
+					if (lockData.hidden.password == null && lockData.hidden.passwordSetBy != null) {
+						context.logger?.warning(`Lock ${bundle.id} has password set by but no password`);
+						delete lockData.hidden.passwordSetBy;
 					}
 					break;
 			}
@@ -234,16 +240,24 @@ export class ItemLock extends ItemBase<'lock'> {
 					hidden = { side: 'client', hasPassword: true };
 					break;
 				case 'server':
-					if (this.lockData.hidden.password == null) {
+					if (this.lockData.hidden.password == null || this.lockData.hidden.passwordSetBy == null) {
 						return rejectMissingPassword();
 					}
-					hidden = { side: 'server', password: this.lockData.hidden.password };
+					hidden = {
+						side: 'server',
+						password: this.lockData.hidden.password,
+						passwordSetBy: this.lockData.hidden.passwordSetBy,
+					};
 					break;
 				default:
 					return rejectMissingPassword();
 			}
 		} else if (password != null) {
-			hidden = { side: 'server', password };
+			hidden = {
+				side: 'server',
+				password,
+				passwordSetBy: processingContext.player.id,
+			};
 		}
 
 		if (this.asset.definition.chat?.actionLock) {
@@ -305,6 +319,7 @@ export class ItemLock extends ItemBase<'lock'> {
 					break;
 				case 'server':
 					delete lockData.hidden.password;
+					delete lockData.hidden.passwordSetBy;
 					break;
 			}
 			// remove hidden if only it has side

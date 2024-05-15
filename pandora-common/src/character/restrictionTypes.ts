@@ -121,6 +121,9 @@ export type Restriction =
 		type: 'modifyRoomRestriction';
 		reason: 'notAdmin' | 'missingConstructionTools';
 	}
+	| {
+		type: 'itemCustomizeOther';
+	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
 	| {
 		type: 'invalid';

@@ -33,7 +33,7 @@
 	},
 	"dependencies": {
 		"@types/async-lock": "1.4.2",
-		"@types/lodash": "4.17.0",
+		"@types/lodash": "4.17.1",
 		"@types/node": "20.12.8",
 		"async-lock": "1.4.1",
 		"immer": "10.1.1",
@@ -46,8 +46,8 @@
 	},
 	"devDependencies": {
 		"@types/jest": "29.5.12",
-		"@typescript-eslint/eslint-plugin": "7.8.0",
-		"@typescript-eslint/parser": "7.8.0",
+		"@typescript-eslint/eslint-plugin": "7.9.0",
+		"@typescript-eslint/parser": "7.9.0",
 		"eslint": "8.57.0",
 		"eslint-plugin-deprecation": "2.0.0",
 		"eslint-plugin-import": "2.29.1",

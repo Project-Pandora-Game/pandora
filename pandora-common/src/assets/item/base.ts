@@ -12,11 +12,12 @@ import type { InternalItemTypeMap, ItemBase } from './_internal';
 import type { LockBundle } from './lock';
 import type { RoomDeviceBundle } from './roomDevice';
 import type { RoomDeviceLink } from './roomDeviceWearablePart';
+import type { AssetId } from '../base';
+import type { ItemModuleData, ItemModuleTemplate } from '../modules';
+import type { CharacterId } from '../../character';
 
 import { Logger } from '../../logging';
 import { HexRGBAColorString, HexRGBAColorStringSchema, ZodTemplateString } from '../../validation';
-import type { AssetId } from '../base';
-import type { ItemModuleData, ItemModuleTemplate } from '../modules';
 
 export const ItemIdSchema = ZodTemplateString<`i/${string}`>(z.string(), /^i\//);
 export type ItemId = z.infer<typeof ItemIdSchema>;
@@ -45,6 +46,7 @@ export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
 export type ItemBundle = {
 	id: ItemId;
 	asset: AssetId;
+	spawnedBy?: CharacterId;
 	color?: ItemColorBundle | HexRGBAColorString[];
 	name?: string;
 	description?: string;

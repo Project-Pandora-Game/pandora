@@ -2,10 +2,12 @@ import {
 	ItemPath,
 	LIMIT_ITEM_DESCRIPTION_LENGTH,
 	LIMIT_ITEM_NAME_LENGTH,
+	LIMIT_ITEM_NAME_PATTERN,
 	type AppearanceAction,
 	type Item,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useRef } from 'react';
+import { z } from 'zod';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { Column, Row } from '../../common/container/container';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
@@ -13,7 +15,7 @@ import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers
 import deleteIcon from '../../../assets/icons/delete.svg';
 import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
 import { useWardrobeTargetItem } from '../wardrobeUtils';
-import { WardrobeActionButton } from '../wardrobeComponents';
+import { ActionWarningContent, WardrobeActionButton } from '../wardrobeComponents';
 import { WardrobeItemColorization } from './wardrobeItemColor';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
 import { WardrobeRoomDeviceDeployment, WardrobeRoomDeviceSlots, WardrobeRoomDeviceWearable } from './wardrobeItemRoomDevice';
@@ -21,6 +23,9 @@ import { WardrobeItemName } from './wardrobeItemName';
 import { Button } from '../../common/button/button';
 import { useEvent } from '../../../common/useEvent';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
+import { toast } from 'react-toastify';
+import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
+import { FormCreateStringValidator } from '../../common/form/form';
 
 export function WardrobeItemConfigMenu({
 	item,
@@ -38,7 +43,7 @@ export function WardrobeItemConfigMenu({
 	const isRoomInventory = target.type === 'room' && item.container.length === 0;
 
 	const close = useCallback(() => {
-		focuser.previous();
+		focuser.reset();
 	}, [focuser]);
 
 	useEffect(() => {
@@ -66,7 +71,7 @@ export function WardrobeItemConfigMenu({
 	return (
 		<div className='inventoryView'>
 			<div className='toolbar'>
-				<span>Editing item:&nbsp;<WardrobeItemName item={ wornItem } /></span>
+				<span>Editing item:&#x20;<WardrobeItemName item={ wornItem } /></span>
 				{ !singleItemContainer && <button className='modeButton' onClick={ close }>✖️</button> }
 			</div>
 			<Column padding='medium' overflowX='hidden' overflowY='auto'>
@@ -186,26 +191,32 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit }: { i
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.problems.length === 0;
 
+	const onClick = useCallback(() => {
+		if (checkResult != null && !checkResult.valid && checkResult.prompt == null) {
+			toast(<ActionWarningContent problems={ checkResult.problems } prompt={ false } />, TOAST_OPTIONS_WARNING);
+			return;
+		}
+		onStartEdit();
+	}, [checkResult, onStartEdit]);
+
 	return (
 		<FieldsetToggle legend='Item'>
-			<Column>
-				<Row>
-					<label className='margin-auto-vertical' htmlFor='original-name'>Original name:</label>
-					<input id='original-name' type='text' value={ item.asset.definition.name } readOnly />
+			<Column className='wardrobeItemCustomizationView'>
+				<Row alignY='center'>
+					<label htmlFor='original-name'>Original name:</label>
+					<span className='name'>{ item.asset.definition.name }</span>
 				</Row>
-				<Row>
-					<label className='margin-auto-vertical' htmlFor='custom-name'>Custom name:</label>
-					<input id='custom-name' type='text' value={ item.name ?? '' } readOnly />
+				<Row alignY='center'>
+					<label htmlFor='custom-name'>Custom name:</label>
+					<span className='name'>{ item.name ?? ' ' }</span>
 				</Row>
 				<label>Description ({ item.description ? item.description.length : 0 } characters):</label>
-				<textarea id='custom-description' value={ item.description ?? '' } rows={ 10 } readOnly />
-				{
-					available ? (
-						<Row>
-							<Button onClick={ onStartEdit }>Edit</Button>
-						</Row>
-					) : null
-				}
+				<div className='flex-1 description'>
+					{ item.description ?? '' }
+				</div>
+				<Row>
+					<Button onClick={ onClick } className={ available ? '' : 'text-strikethrough' }>Edit</Button>
+				</Row>
 			</Column>
 		</FieldsetToggle>
 	);
@@ -216,6 +227,10 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 	const [execute, processing] = useWardrobeExecuteCallback({ onSuccess: onEndEdit });
 	const [name, setName] = React.useState(item.name ?? '');
 	const [description, setDescription] = React.useState(item.description ?? '');
+
+	const nameError = React.useMemo(() => (
+		FormCreateStringValidator(z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN), 'name')(name)
+	), [name]);
 
 	const onSave = useEvent(() => {
 		execute({
@@ -229,20 +244,27 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 
 	return (
 		<FieldsetToggle legend='Item'>
-			<Column>
-				<Row>
-					<label className='margin-auto-vertical' htmlFor='original-name'>Original name:</label>
+			<Column className='wardrobeItemCustomizationView'>
+				<Row alignY='center'>
+					<label htmlFor='original-name'>Original name:</label>
 					<input id='original-name' type='text' value={ item.asset.definition.name } readOnly />
 				</Row>
-				<Row>
-					<label className='margin-auto-vertical' htmlFor='custom-name'>Custom name:</label>
+				<Row alignY='center'>
+					<label htmlFor='custom-name'>Custom name:</label>
 					<input id='custom-name' type='text' value={ name } onChange={ (e) => setName(e.target.value) } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
 				</Row>
+				{
+					nameError && (
+						<Row>
+							<span className='error'>{ nameError }</span>
+						</Row>
+					)
+				}
 				<label htmlFor='custom-description'>Description ({ description.length }/{ LIMIT_ITEM_DESCRIPTION_LENGTH } characters):</label>
-				<textarea id='custom-description' value={ description } rows={ 10 } onChange={ (e) => setDescription(e.target.value) } maxLength={ LIMIT_ITEM_DESCRIPTION_LENGTH } />
+				<textarea id='custom-description' className='description' value={ description } rows={ 10 } onChange={ (e) => setDescription(e.target.value) } maxLength={ LIMIT_ITEM_DESCRIPTION_LENGTH } />
 				<Row>
-					<Button onClick={ onEndEdit } disabled={ processing }>Cancel</Button>
-					<Button onClick={ onSave } disabled={ processing }>Save</Button>
+					<Button onClick={ onEndEdit } className='fadeDisabled' disabled={ processing }>Cancel</Button>
+					<Button onClick={ onSave } className='fadeDisabled' disabled={ processing || !!nameError }>Save</Button>
 				</Row>
 			</Column>
 		</FieldsetToggle>

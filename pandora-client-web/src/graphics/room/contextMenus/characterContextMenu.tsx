@@ -15,6 +15,8 @@ import { useConfirmDialog } from '../../../components/dialog/dialog';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { useGoToDM } from '../../../components/accountContacts/accountContacts';
 import { Immutable } from 'immer';
+import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
+import { Column } from '../../../components/common/container/container';
 
 type MenuType = 'main' | 'admin' | 'contacts';
 
@@ -284,7 +286,11 @@ export function CharacterContextMenu({ character, position, onClose, closeText =
 	const ref = useContextMenuPosition(position);
 	return (
 		<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
-			<CharacterContextMenuContent character={ character } onClose={ onClose } closeText={ closeText } />
+			<Scrollable color='lighter'>
+				<Column>
+					<CharacterContextMenuContent character={ character } onClose={ onClose } closeText={ closeText } />
+				</Column>
+			</Scrollable>
 		</div>
 	);
 }

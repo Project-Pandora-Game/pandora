@@ -1,3 +1,4 @@
+import type { CharacterId } from '../character';
 import { Logger } from '../logging';
 import { Assert, ShuffleArray } from '../utility';
 import type { Asset } from './asset';
@@ -216,7 +217,7 @@ export function ValidateAppearanceItems(assetManager: AssetManager, items: Appea
 	return { success: true };
 }
 
-export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, roomState: AssetFrameworkRoomState | null, logger?: Logger): AppearanceItems<WearableAssetType> {
+export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, owner: { id: CharacterId; }, roomState: AssetFrameworkRoomState | null, logger?: Logger): AppearanceItems<WearableAssetType> {
 	// First sort input so bodyparts are ordered correctly work
 	const input = AppearanceItemsFixBodypartOrder(assetManager, originalInput);
 
@@ -248,7 +249,7 @@ export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, o
 				ShuffleArray(possibleAssets);
 
 				for (const asset of possibleAssets) {
-					const tryFix = [...resultItems, assetManager.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, logger)];
+					const tryFix = [...resultItems, assetManager.createItem(`i/requiredbodypart/${bodypart.name}` as const, asset, owner, logger)];
 					if (ValidateAppearanceItemsPrefix(assetManager, tryFix, roomState).success) {
 						resultItems = tryFix;
 						break;

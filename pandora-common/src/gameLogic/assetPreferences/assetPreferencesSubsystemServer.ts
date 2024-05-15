@@ -1,7 +1,7 @@
 import { Immutable, freeze } from 'immer';
 import type { AssetManager } from '../../assets/assetManager';
 import { AssetPreferenceType, AssetPreferencesPublic, AssetPreferencesServer, CleanupAssetPreferences, IsAssetPreferenceType } from '../../character/assetPreferences';
-import { KnownObject } from '../../utility';
+import { CloneDeepMutable, KnownObject } from '../../utility';
 import type { GameLogicCharacterServer } from '../character/characterServer';
 import { GameLogicPermissionServer, IPermissionProvider } from '../permissions';
 import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferencesSubsystem } from './assetPreferencesSubsystem';
@@ -18,11 +18,12 @@ export class AssetPreferencesSubsystemServer extends AssetPreferencesSubsystem i
 	constructor(character: GameLogicCharacterServer, data: AssetPreferencesServer, assetManager: AssetManager) {
 		super();
 		// Load and cleanup preferences data
-		this._publicPreferences = freeze({
+		this._publicPreferences = CloneDeepMutable({
 			assets: data.assets,
 			attributes: data.attributes,
-		}, true);
+		});
 		CleanupAssetPreferences(assetManager, this._publicPreferences);
+		freeze(this._publicPreferences, true);
 
 		// Load permissions
 		const permissions = new Map<AssetPreferenceType, GameLogicPermissionServer>();

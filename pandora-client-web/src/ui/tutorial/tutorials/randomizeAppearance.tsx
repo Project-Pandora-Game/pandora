@@ -6,24 +6,20 @@ export const TUTORIAL_RANDOMIZE_APPEARANCE: TutorialConfig = {
 	name: `Character appearance randomization`,
 	stages: [
 		{
-			text: (
-				<>
-					Hi and welcome to the tutorial on how to randomize your character's appearance! <br />
-					In this tutorial you will learn how to enter your character's wardrobe and create <br />
-					a new, random look for your character.
-				</>
-			),
 			steps: [
-				{ conditions: [{ type: 'next' }] },
+				{
+					text: (
+						<>
+							Hi and welcome to the tutorial on how to randomize your character's appearance! <br />
+							In this tutorial you will learn how to enter your character's wardrobe and create <br />
+							a new, random look for your character.
+						</>
+					),
+					conditions: [{ type: 'next' }],
+				},
 			],
 		},
 		{
-			text: (
-				<>
-					Let's start by opening your character's wardrobe. <br />
-					That is a place where you can freely edit your character's appearance.
-				</>
-			),
 			steps: [
 				{
 					text: <>Please switch back to the room screen.</>,
@@ -32,6 +28,15 @@ export const TUTORIAL_RANDOMIZE_APPEARANCE: TutorialConfig = {
 						type: 'url',
 						url: '/room',
 					}],
+				},
+				{
+					text: (
+						<>
+							Let's start by opening your character's wardrobe. <br />
+							That is a place where you can freely edit your character's appearance.
+						</>
+					),
+					conditions: [{ type: 'next' }],
 				},
 				{
 					text: <>Open the "Personal Space" tab.</>,
@@ -59,15 +64,6 @@ export const TUTORIAL_RANDOMIZE_APPEARANCE: TutorialConfig = {
 			],
 		},
 		{
-			text: (
-				<>
-					You are now successfully in your character's wardrobe! <br />
-					In Pandora the wardrobe is a powerful tool, so don't be scared about it looking so complex - <br />
-					more of it will be covered in later tutorials. <br />
-					<br />
-					Our next step is going to the randomization menu, which will allow you to create a new, random appearance for your character.
-				</>
-			),
 			steps: [
 				{
 					text: <>Please switch back to the wardrobe screen for your character.</>,
@@ -76,6 +72,18 @@ export const TUTORIAL_RANDOMIZE_APPEARANCE: TutorialConfig = {
 						type: 'url',
 						url: /^\/wardrobe($|\/character\/c)/,
 					}],
+				},
+				{
+					text: (
+						<>
+							You are now successfully in your character's wardrobe! <br />
+							In Pandora the wardrobe is a powerful tool, so don't be scared about it looking so complex - <br />
+							more of it will be covered in later tutorials. <br />
+							<br />
+							Our next step is going to the randomization menu, which will allow you to create a new, random appearance for your character.
+						</>
+					),
+					conditions: [{ type: 'next' }],
 				},
 				{
 					text: <>First switch to the "Randomization" tab.</>,
@@ -102,10 +110,11 @@ export const TUTORIAL_RANDOMIZE_APPEARANCE: TutorialConfig = {
 					text: (
 						<>
 							Great! Now you can click the buttons "Randomize clothes" or even "Randomize everything" to randomize your character's look.<br />
-							Once you are happy with your character's look, click the "Next" button to continue.
+							Once you are happy with your character's look, click the "Next" button to continue.<br />
 							<br />
-							<i>Note, that in some cases (such as when you are restrained) the buttons might be red.<br />
-								This indicates, that you cannot currently randomize your character's appearance,
+							Note:&#32;
+							<i>In some cases (such as when you are restrained) the buttons might be red.<br />
+								This indicates, that you cannot currently randomize your character's appearance,<br />
 								as you are not allowed to do actions needed for that (such as being able to remove all items).
 							</i>
 						</>
@@ -115,13 +124,13 @@ export const TUTORIAL_RANDOMIZE_APPEARANCE: TutorialConfig = {
 			],
 		},
 		{
-			text: (
-				<>
-					Now you can exit the wardrobe by clicking the "Back" button in the top-right corner of the screen.<br />
-					This will take you back to the most-relevant view for your current situation (in most cases that is the room view).
-				</>
-			),
 			steps: [{
+				text: (
+					<>
+						Now you can exit the wardrobe by clicking the "Back" button in the top-right corner of the screen.<br />
+						This will take you back to the most-relevant view for your current situation (in most cases that is the room view).
+					</>
+				),
 				conditions: [{
 					type: 'url',
 					url: '/room',

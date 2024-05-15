@@ -1,0 +1,8 @@
+.tutorialDialog {
+	max-width: max(50vw, min(95vw, 50em));
+
+	.finishedStep {
+		color: darkgrey;
+		font-style: italic;
+	}
+}

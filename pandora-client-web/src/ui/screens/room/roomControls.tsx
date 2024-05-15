@@ -25,6 +25,7 @@ import { SettingDisplayCharacterName } from '../../../graphics/room/roomCharacte
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState } from '../../../graphics/room/roomDevice';
 import { useObservable } from '../../../observable';
 import { useChatInput } from '../../components/chat/chatInput';
+import { PrivateRoomTutorialList } from '../../tutorial/privateTutorials';
 import { useRoomScreenContext } from './roomContext';
 import { ChatroomDebugConfigView } from './roomDebug';
 
@@ -158,6 +159,8 @@ export function PersonalSpaceControls(): ReactElement {
 					<img src={ listIcon } />List of spaces
 				</Button>
 			</Row>
+			&nbsp;
+			<PrivateRoomTutorialList />
 			&nbsp;
 			<DeviceOverlaySelector />
 			&nbsp;

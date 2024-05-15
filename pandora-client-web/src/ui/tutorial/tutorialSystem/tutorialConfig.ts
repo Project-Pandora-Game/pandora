@@ -7,13 +7,12 @@ export interface TutorialConfig {
 }
 
 export interface TutorialStage {
-	text: string | ReactNode;
 	advanceConditions?: TutorialCondition[];
 	steps: TutorialStep[];
 }
 
 export interface TutorialStep {
-	text?: string | ReactNode;
+	text: string | ReactNode;
 	hideWhenCompleted?: true;
 	conditions: TutorialCondition[];
 }

@@ -1,5 +1,5 @@
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
-import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, AccountIdSchema, CommandStepProcessor, AccountId, CommandStepOptional, FilterItemType } from 'pandora-common';
+import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, AccountIdSchema, CommandStepProcessor, AccountId, CommandStepOptional, FilterItemType, AssertNever } from 'pandora-common';
 import { CommandSelectorCharacter, CommandSelectorEnum } from './commandsHelpers';
 import { ChatMode } from './chatInput';
 import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider';
@@ -381,7 +381,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		*/
 		description: 'Increase or decrease your blushing',
 		longDescription: '',
-		usage: 'blush + | - | min | max',
+		usage: '+ | - | min | max',
 		handler: CreateClientCommand()
 			.argument('options', CommandSelectorEnum(['+', '-', 'min', 'max']))
 			.handler(({ shardConnector, gameState, player }, { options }) => {
@@ -417,7 +417,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 							newBlush = variants[variants.length - 1].id;
 							break;
 						default: // This shouldn't happen, but hey...
-							return false;
+							AssertNever(options);
 					} // switch
 				} else
 					return false;

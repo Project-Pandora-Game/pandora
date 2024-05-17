@@ -1,11 +1,12 @@
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
-import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, AccountIdSchema, CommandStepProcessor, AccountId, CommandStepOptional } from 'pandora-common';
+import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, AccountIdSchema, CommandStepProcessor, AccountId, CommandStepOptional, FilterItemType, AssertNever } from 'pandora-common';
 import { CommandSelectorCharacter, CommandSelectorEnum } from './commandsHelpers';
 import { ChatMode } from './chatInput';
 import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider';
 import { capitalize } from 'lodash';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
+import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
 
 function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
 	return CreateCommand<ICommandExecutionContextClient>();
@@ -368,4 +369,78 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 			}),
 	},
 	//#endregion
+	//#region Commands for expression changes
+	{
+		key: ['blush'],
+		/*
+			This manipulates the blushing of a player. The main challenge here was the incredilble flexible way,
+			pandora handles assets. Currently we only have one blushing variant, but it may be that we will have
+			other variants with more or less levels than the current one. So this flexibility had to be dealt with
+			when the item was selected. Hopefully the way how 'blush' is extracted from the player can work
+			as a blueprint for others.
+		*/
+		description: 'Increase or decrease your blushing',
+		longDescription: '',
+		usage: '+ | - | min | max',
+		handler: CreateClientCommand()
+			.argument('options', CommandSelectorEnum(['+', '-', 'min', 'max']))
+			.handler(({ shardConnector, gameState, player }, { options }) => {
+				// Get the current player so that we can access their worn items
+				const playerState = gameState.globalState.currentState.characters.get(player.id);
+				if (!playerState)
+					return false;
+
+				//Get the actual blush item of the current player to get the current blush level
+				const blush = playerState.items.filter(FilterItemType('personal')).find((it) => it.asset.definition.bodypart === 'blush');
+				if (!blush)
+					return false;
+
+				// Get the actual module that we want to manipulate
+				const blushModule = blush?.modules.get('blush');
+
+				let newBlush = ''; // The name of the new blush level
+				if (blushModule != null && blushModule instanceof ItemModuleTyped) {
+					const variants = blushModule.config.variants; //The different options of the chosen blush asset
+					const currentBlush = variants.findIndex((v) => v.id === blushModule.activeVariant.id);
+
+					switch (options) {
+						case '+':
+							newBlush = currentBlush < variants.length - 1 ? variants[currentBlush + 1].id : variants[currentBlush].id;
+							break;
+						case '-':
+							newBlush = currentBlush > 0 ? variants[currentBlush - 1].id : variants[currentBlush].id;
+							break;
+						case 'min':
+							newBlush = variants[0].id;
+							break;
+						case 'max':
+							newBlush = variants[variants.length - 1].id;
+							break;
+						default: // This shouldn't happen, but hey...
+							AssertNever(options);
+					} // switch
+				} else
+					return false;
+
+				shardConnector.awaitResponse('appearanceAction', {
+					type: 'moduleAction',
+					target: {
+						type: 'character',
+						characterId: player.data.id,
+					},
+					item: {
+						container: [],
+						itemId: blush.id,
+					},
+					module: 'blush',
+					action: {
+						moduleType: 'typed',
+						setVariant: newBlush,
+					},
+				}).catch(() => { /** TODO  **/ });
+				return true;
+			}),
+	},
+	//#endregion
+
 ];

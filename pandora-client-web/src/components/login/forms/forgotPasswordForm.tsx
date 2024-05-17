@@ -4,7 +4,8 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useDirectoryPasswordReset } from '../../../networking/account_manager';
 import { Button } from '../../common/button/button';
-import { Form, FormCreateStringValidator, FormField, FormFieldCaptcha, FormFieldError, FormLink } from '../../common/form/form';
+import { Form, FormCreateStringValidator, FormField, FormFieldError, FormLink } from '../../common/form/form';
+import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha';
 
 export interface ForgotPasswordFormData {
 	email: string;

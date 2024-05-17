@@ -4,7 +4,8 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useDirectoryResendVerification } from '../../../networking/account_manager';
 import { Button } from '../../common/button/button';
-import { Form, FormField, FormFieldCaptcha, FormFieldError, FormLink } from '../../common/form/form';
+import { Form, FormField, FormFieldError, FormLink } from '../../common/form/form';
+import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha';
 
 export interface ResendVerificationFormData {
 	email: string;

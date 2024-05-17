@@ -4,10 +4,11 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { useDirectoryResendVerificationAdvanced } from '../../../networking/account_manager';
 import { Button } from '../../common/button/button';
-import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldCaptcha, FormFieldError, FormLink } from '../../common/form/form';
+import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
 import { Row } from '../../common/container/container';
+import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha';
 
 export interface ResendVerificationAdvancedFormData {
 	username: string;

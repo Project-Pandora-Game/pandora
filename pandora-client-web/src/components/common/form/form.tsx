@@ -1,4 +1,3 @@
-import HCaptcha from '@hcaptcha/react-hcaptcha';
 import classNames from 'classnames';
 import { capitalize } from 'lodash';
 import { GetLogger } from 'pandora-common';
@@ -8,8 +7,6 @@ import { Link, LinkProps } from 'react-router-dom';
 import type { Promisable } from 'type-fest';
 import { z } from 'zod';
 import { CommonProps } from '../../../common/reactTypes';
-import { useObservable } from '../../../observable';
-import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import './form.scss';
 
 export interface AuthFormProps extends CommonProps {
@@ -93,37 +90,4 @@ export function FormError(props: FormErrorProps): ReactElement {
 export function FormLink(props: LinkProps & RefAttributes<HTMLAnchorElement>): ReactElement {
 	const { className } = props;
 	return <Link { ...props } className={ classNames('FormLink', className) } />;
-}
-
-export function FormFieldCaptcha({
-	setCaptchaToken,
-	invalidCaptcha,
-}: {
-	setCaptchaToken: (token: string) => void;
-	invalidCaptcha: boolean;
-}): ReactElement | null {
-	const directoryConnector = useDirectoryConnector();
-	const captchaSiteKey = useObservable(directoryConnector.directoryStatus).captchaSiteKey;
-
-	const clear = useCallback(() => {
-		setCaptchaToken('');
-	}, [setCaptchaToken]);
-
-	if (!captchaSiteKey) {
-		return null;
-	}
-
-	return (
-		<FormField>
-			<HCaptcha
-				sitekey={ captchaSiteKey }
-				onVerify={ setCaptchaToken }
-				onExpire={ clear }
-				onError={ clear }
-				reCaptchaCompat={ false }
-				theme='dark'
-			/>
-			<FormFieldError error={ invalidCaptcha ? { type: 'invalidCaptcha', message: 'Invalid captcha' } : undefined } />
-		</FormField>
-	);
 }

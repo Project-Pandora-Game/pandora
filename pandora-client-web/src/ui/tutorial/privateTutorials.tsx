@@ -8,9 +8,11 @@ import type { TutorialConfig } from './tutorialSystem/tutorialConfig';
 import { TutorialRunner } from './tutorialSystem/tutorialRunner';
 import { ActiveTutorial } from './tutorialSystem/tutorialService';
 import { TUTORIAL_RANDOMIZE_APPEARANCE } from './tutorials/randomizeAppearance';
+import { TUTORIAL_SWITCHING_SPACES } from './tutorials/switchingSpaces';
 
 export const PRIVATE_TUTORIALS: TutorialConfig[] = [
 	TUTORIAL_RANDOMIZE_APPEARANCE,
+	TUTORIAL_SWITCHING_SPACES,
 ];
 Assert(new Set(PRIVATE_TUTORIALS.map((t) => t.id)).size === PRIVATE_TUTORIALS.length, 'Private tutorials need to have a unique id');
 

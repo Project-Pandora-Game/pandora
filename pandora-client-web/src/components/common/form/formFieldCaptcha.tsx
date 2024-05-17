@@ -35,6 +35,7 @@ export function FormFieldCaptcha({
 					onError={ clear }
 					reCaptchaCompat={ false }
 					theme='dark'
+					sentry={ false }
 				/>
 				<FormFieldError error={ invalidCaptcha ? { type: 'invalidCaptcha', message: 'Invalid captcha' } : undefined } />
 			</Suspense>

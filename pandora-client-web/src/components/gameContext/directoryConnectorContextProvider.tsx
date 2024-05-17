@@ -22,8 +22,9 @@ import { SocketIODirectoryConnector } from '../../networking/socketio_directory_
 import { Observable, useNullableObservable, useObservable } from '../../observable';
 import { Button } from '../common/button/button';
 import { Row } from '../common/container/container';
-import { Form, FormFieldCaptcha } from '../common/form/form';
+import { Form } from '../common/form/form';
 import { ModalDialog } from '../dialog/dialog';
+import { FormFieldCaptcha } from '../common/form/formFieldCaptcha';
 
 const DirectoryConnector = new Observable<DirectoryConnector | undefined>(undefined);
 

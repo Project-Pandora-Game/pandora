@@ -5,9 +5,10 @@ import { useNavigate } from 'react-router';
 import { useDirectoryRegister } from '../../../networking/account_manager';
 import { useObservable } from '../../../observable';
 import { Button } from '../../common/button/button';
-import { Form, FormCreateStringValidator, FormField, FormFieldCaptcha, FormFieldError, FormLink } from '../../common/form/form';
+import { Form, FormCreateStringValidator, FormField, FormFieldError, FormLink } from '../../common/form/form';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import { useAuthFormData } from '../authFormDataProvider';
+import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha';
 
 export interface RegistrationFormData {
 	username: string;

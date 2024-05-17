@@ -36,8 +36,13 @@ export const ScreenResolutionSerice = new class ScreenResolutionSerice extends T
 	private readonly _screenSizeObserver: ResizeObserver;
 
 	public get automaticTextureResolution(): Exclude<GraphicsSettings['textureResolution'], 'auto'> {
+		if (this.forceFullResolution)
+			return '1';
+
 		return AUTOMATIC_TEXTURE_RESOLUTIONS[this._automaticResolutionIndex.value]?.[2] ?? '1';
 	}
+
+	public forceFullResolution: boolean = false;
 
 	private _screenWidth = 0;
 	private _screenHeight = 0;

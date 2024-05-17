@@ -1,15 +1,16 @@
-import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Application, Filter } from 'pixi.js';
 import { Sprite } from '@pixi/react';
+import classNames from 'classnames';
+import { CharacterSize } from 'pandora-common';
+import { Application, Filter } from 'pixi.js';
+import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useImageResolutionAlternative } from '../assets/assetGraphics';
 import { ChildrenProps } from '../common/reactTypes';
 import { useEvent } from '../common/useEvent';
-import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback } from './pixiViewport';
-import { CharacterSize } from 'pandora-common';
-import { GraphicsSceneRendererDirect, GraphicsSceneRendererShared } from './graphicsSceneRenderer';
-import classNames from 'classnames';
-import { useGraphicsSettings } from './graphicsSettings';
-import { useTexture } from './useTexture';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
+import { GraphicsSceneRendererDirect, GraphicsSceneRendererShared } from './graphicsSceneRenderer';
+import { useGraphicsSettings } from './graphicsSettings';
+import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback } from './pixiViewport';
+import { useTexture } from './useTexture';
 
 export type GraphicsSceneProps = {
 	viewportConfig?: PixiViewportSetupCallback;
@@ -180,7 +181,7 @@ export function GraphicsBackground({
 		};
 	}, [background]);
 
-	const backgroundTexture = useTexture(backgroundResult.backgroundImage, true);
+	const backgroundTexture = useTexture(useImageResolutionAlternative(backgroundResult.backgroundImage).image, true);
 
 	return (
 		<Sprite
@@ -207,16 +208,16 @@ export function GraphicsScene({
 	sceneOptions?: GraphicsSceneProps;
 	divChildren?: ReactNode;
 } & React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>): ReactElement {
-	const { resolution } = useGraphicsSettings();
+	const { renderResolution } = useGraphicsSettings();
 
 	const [div, setDiv] = useState<HTMLDivElement | null>(null);
 
 	return (
 		<LocalErrorBoundary errorOverlayClassName={ className }>
-			<div className={ classNames({ disabled: resolution <= 0 }, className) } { ...divProps } ref={ setDiv }>
+			<div className={ classNames({ disabled: renderResolution <= 0 }, className) } { ...divProps } ref={ setDiv }>
 				{
-					div && resolution > 0 ? (
-						<GraphicsSceneCore { ...sceneOptions } div={ div } resolution={ resolution / 100 }>
+					div && renderResolution > 0 ? (
+						<GraphicsSceneCore { ...sceneOptions } div={ div } resolution={ renderResolution / 100 }>
 							{ children }
 						</GraphicsSceneCore>
 					) : null

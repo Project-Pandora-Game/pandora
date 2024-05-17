@@ -12,6 +12,7 @@ import { LoadSearchArgs } from '../config/searchArgs';
 import { ConfigurePixiSettings } from '../graphics/pixiSettings';
 import '../index.scss';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast';
+import { ScreenResolutionSerice } from '../services/screenResolution/screenResolution';
 import '../styles/globalUtils.scss';
 import { LoadAssetsFromAssetDevServer, LoadAssetsFromFileSystem, LoadAssetsFromOfficialLink } from './assetLoader';
 import { AssetManagerEditor } from './assets/assetManager';
@@ -32,7 +33,9 @@ async function Start(): Promise<void> {
 	LoadSearchArgs();
 	SetupLogging();
 	ConfigurePixiSettings();
-	logger.info('Starting...');
+	// Force full resolution for all textures
+	ScreenResolutionSerice.forceFullResolution = true;
+	logger.info('Starting editor...');
 	createRoot(document.querySelector('#editor-root') as HTMLElement).render(
 		<React.StrictMode>
 			<EulaGate>

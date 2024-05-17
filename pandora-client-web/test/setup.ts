@@ -1,4 +1,5 @@
 /// <reference types="@types/node" />
+/// <reference types="@types/jest" />
 import '@testing-library/jest-dom';
 import { Assert, logConfig, LogLevel, SetConsoleOutput } from 'pandora-common';
 import { webcrypto } from 'crypto';
@@ -33,6 +34,14 @@ globalThis.Worker = class Worker {
 		throw new Error('Not implemented');
 	}
 };
+
+// Polyfill ResizeObserver as JSDom doesn't support it
+Assert(typeof globalThis.ResizeObserver === 'undefined');
+globalThis.ResizeObserver = jest.fn().mockImplementation(() => ({
+	observe: jest.fn(),
+	unobserve: jest.fn(),
+	disconnect: jest.fn(),
+}));
 
 // Logging setup
 SetConsoleOutput(LogLevel.FATAL);

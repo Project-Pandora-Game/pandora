@@ -1,23 +1,37 @@
 import { CloneDeepMutable } from 'pandora-common';
-import React, { ReactElement, useMemo } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { BrowserStorage } from '../browserStorage';
+import { ContextHelpButton } from '../components/help/contextHelpButton';
 import { SelectSettingInput } from '../components/settings/helpers/settingsInputs';
 import { useObservable } from '../observable';
-import { ContextHelpButton } from '../components/help/contextHelpButton';
+import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../assets/graphicsManager';
+import { Button } from '../components/common/button/button';
+import { Column, Row } from '../components/common/container/container';
+import { useAutomaticResolution } from '../services/screenResolution/screenResolution';
 
 export const GraphicsSettingsSchema = z.object({
-	resolution: z.number().int().min(0).max(100),
+	renderResolution: z.number().int().min(0).max(100),
+	textureResolution: z.enum(['auto', '1', '0.5', '0.25']),
 	alphamaskEngine: z.enum(['pixi', 'customShader', 'disabled']),
 });
 export type GraphicsSettings = z.infer<typeof GraphicsSettingsSchema>;
 
 const GRAPHICS_SETTINGS_DEFAULT: GraphicsSettings = {
-	resolution: 100,
+	renderResolution: 100,
+	textureResolution: 'auto',
 	alphamaskEngine: 'disabled',
 };
 
 const storage = BrowserStorage.create<Partial<GraphicsSettings>>('settings.graphics', {}, GraphicsSettingsSchema.partial());
+// Add a hook to purge the current graphics loader cache when the graphics settins change in any way
+// (most of the changes cause different textures to be loaded, so get rid of old ones)
+storage.subscribe(() => {
+	// Do the cleanup asynchronously so things have time to unload if they were loaded
+	setTimeout(() => {
+		GraphicsManagerInstance.value?.loader.gc();
+	}, 500);
+});
 
 export function useGraphicsSettings(): GraphicsSettings {
 	const overrides = useObservable(storage);
@@ -46,12 +60,21 @@ function ResetGraphicsSettings(settings: readonly (keyof GraphicsSettings)[]): v
 
 export function GraphicsSettings(): ReactElement | null {
 	return (
-		<QualitySettings />
+		<>
+			<QualitySettings />
+			<GraphicsDebug />
+		</>
 	);
 }
 
+export const GRAPHICS_TEXTURE_RESOLUTION_SCALE: Record<Exclude<GraphicsSettings['textureResolution'], 'auto'>, number> = {
+	'1': 1,
+	'0.5': 2,
+	'0.25': 4,
+};
+
 function QualitySettings(): ReactElement {
-	const { resolution, alphamaskEngine } = useObservable(storage);
+	const { renderResolution, textureResolution, alphamaskEngine } = useObservable(storage);
 
 	const ALPHAMASK_ENGINES_DESCRIPTIONS: Record<GraphicsSettings['alphamaskEngine'], string> = {
 		pixi: 'Pixi.js',
@@ -59,25 +82,45 @@ function QualitySettings(): ReactElement {
 		disabled: 'Ignore masks (recommended for avoiding lag)',
 	};
 
+	const automaticTextureResolution = useAutomaticResolution();
+
+	const GRAPHICS_TEXTURE_RESOLUTION_DESCRIPTIONS = useMemo((): Record<GraphicsSettings['textureResolution'], string | (() => string)> => ({
+		'auto': () => `Automatic (currently: ${ String(GRAPHICS_TEXTURE_RESOLUTION_DESCRIPTIONS[automaticTextureResolution]) })`,
+		'1': 'Full',
+		'0.5': '50%',
+		'0.25': '25%',
+	}), [automaticTextureResolution]);
+
 	return (
 		<fieldset>
 			<legend>Quality</legend>
 			<SelectSettingInput<string>
-				currentValue={ resolution?.toString() }
-				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.resolution.toString() }
-				label='Resolution'
+				currentValue={ renderResolution?.toString() }
+				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.renderResolution.toString() }
+				label='Render resolution'
 				stringify={
 					Object.fromEntries(
 						([100, 90, 80, 65, 50, 25, 0])
 							.map((v) => [v.toString(), `${v}%`]),
 					)
 				}
+				optionOrder={ [100, 90, 80, 65, 50, 25, 0].map(String) }
 				schema={ z.string() }
 				onChange={ (v) => {
-					const newValue = GraphicsSettingsSchema.shape.resolution.parse(Number.parseInt(v, 10));
-					SetGraphicsSettings({ resolution: newValue });
+					const newValue = GraphicsSettingsSchema.shape.renderResolution.parse(Number.parseInt(v, 10));
+					SetGraphicsSettings({ renderResolution: newValue });
 				} }
-				onReset={ () => ResetGraphicsSettings(['resolution']) }
+				onReset={ () => ResetGraphicsSettings(['renderResolution']) }
+			/>
+			<SelectSettingInput<GraphicsSettings['textureResolution']>
+				currentValue={ textureResolution }
+				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.textureResolution }
+				label='Texture resolution'
+				stringify={ GRAPHICS_TEXTURE_RESOLUTION_DESCRIPTIONS }
+				optionOrder={ ['auto', '1', '0.5', '0.25'] }
+				schema={ GraphicsSettingsSchema.shape.textureResolution }
+				onChange={ (v) => SetGraphicsSettings({ textureResolution: v }) }
+				onReset={ () => ResetGraphicsSettings(['textureResolution']) }
 			/>
 			<SelectSettingInput<GraphicsSettings['alphamaskEngine']>
 				currentValue={ alphamaskEngine }
@@ -112,6 +155,66 @@ function QualitySettings(): ReactElement {
 				onChange={ (v) => SetGraphicsSettings({ alphamaskEngine: v }) }
 				onReset={ () => ResetGraphicsSettings(['alphamaskEngine']) }
 			/>
+		</fieldset>
+	);
+}
+
+function GraphicsDebug(): ReactElement {
+	const graphicsManger = useObservable(GraphicsManagerInstance);
+
+	const [stats, setStats] = useState<IGraphicsLoaderStats>(() => ({
+		inUseTextures: 0,
+		loadedTextures: 0,
+		trackedTextures: 0,
+	}));
+
+	const refreshStats = useCallback(() => {
+		if (graphicsManger == null)
+			return;
+
+		setStats(graphicsManger.loader.getDebugStats());
+	}, [graphicsManger]);
+
+	useEffect(() => {
+		if (graphicsManger == null)
+			return;
+
+		refreshStats();
+
+		return graphicsManger.loader.on('storeChaged', () => {
+			refreshStats();
+		});
+	}, [graphicsManger, refreshStats]);
+
+	if (graphicsManger == null) {
+		return (
+			<fieldset>
+				<legend>Graphics manager debug</legend>
+				Graphics manager is not loaded
+			</fieldset>
+		);
+	}
+
+	return (
+		<fieldset>
+			<legend>Graphics manager debug</legend>
+			<Column>
+				<Row>
+					<Button onClick={ refreshStats } slim>Refresh</Button>
+				</Row>
+				<span>Tracked textures: { stats.trackedTextures }</span>
+				<span>Loaded textures: { stats.loadedTextures }</span>
+				<span>Used textures: { stats.inUseTextures }</span>
+				<hr className='fill-x' />
+				<Row>
+					<Button onClick={ () => {
+						graphicsManger.loader.gc();
+						refreshStats();
+					} } slim>
+						Purge unused textures
+					</Button>
+				</Row>
+			</Column>
 		</fieldset>
 	);
 }

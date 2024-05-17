@@ -36,6 +36,7 @@ export function useTexture(
 	const [texture, setTexture] = useState<{
 		readonly image: string;
 		readonly texture: Texture;
+		readonly lock?: () => (() => void);
 	}>(RESULT_NO_TEXTURE);
 
 	useEffect(() => {
@@ -58,11 +59,12 @@ export function useTexture(
 			return;
 		}
 
-		const unregister = loader.useTexture(image, (t) => {
+		const unregister = loader.useTexture(image, (t, lock) => {
 			if (wanted.current === image) {
 				setTexture({
 					image,
 					texture: t,
+					lock,
 				});
 			}
 		});
@@ -75,6 +77,10 @@ export function useTexture(
 	}, [manager, image, customGetTexture]);
 
 	const suspenseAsset = useRegisterSuspenseAsset();
+
+	useEffect(() => {
+		return texture.lock?.();
+	}, [texture]);
 
 	// Special cases of textures
 

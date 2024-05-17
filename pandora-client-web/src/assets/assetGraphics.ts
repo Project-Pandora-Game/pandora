@@ -1,14 +1,16 @@
+import { Draft, Immutable, freeze, produce } from 'immer';
+import { cloneDeep, maxBy, minBy } from 'lodash';
 import { Assert, Asset, AssetGraphicsDefinition, AssetId, BoneName, CharacterSize, Item, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, LayerPriority, PointDefinition } from 'pandora-common';
+import { useMemo } from 'react';
+import { AppearanceConditionEvaluator } from '../graphics/appearanceConditionEvaluator';
+import { MirrorPriority } from '../graphics/def';
+import { GRAPHICS_TEXTURE_RESOLUTION_SCALE, useGraphicsSettings } from '../graphics/graphicsSettings';
 import { MakeMirroredPoints, MirrorBoneLike, MirrorImageOverride, MirrorLayerImageSetting, MirrorPoint } from '../graphics/mirroring';
+import { EvaluateCondition } from '../graphics/utility';
 import { Observable, ReadonlyObservable, useObservable } from '../observable';
 import { useAssetManager } from './assetManager';
 import { GraphicsManagerInstance } from './graphicsManager';
-import { produce, Immutable, Draft, freeze } from 'immer';
-import { useMemo } from 'react';
-import { cloneDeep, maxBy, minBy } from 'lodash';
-import { MirrorPriority } from '../graphics/def';
-import { AppearanceConditionEvaluator } from '../graphics/appearanceConditionEvaluator';
-import { EvaluateCondition } from '../graphics/utility';
+import { useAutomaticResolution } from '../services/screenResolution/screenResolution';
 
 export interface PointDefinitionCalculated extends PointDefinition {
 	index: number;
@@ -408,4 +410,35 @@ export function useLayerImageSettingsForScalingStop(layer: AssetGraphicsLayer, s
 		throw new Error('Failed to get stop');
 	}
 	return res;
+}
+
+export function useImageResolutionAlternative(image: string): {
+	image: string;
+	resolution: number;
+	scale: number;
+} {
+	const { textureResolution } = useGraphicsSettings();
+	const automaticResolution = useAutomaticResolution();
+
+	const finalTextureResolution = textureResolution === 'auto' ? automaticResolution : textureResolution;
+
+	const EXTENSIONS = ['.png', '.jpg'];
+
+	for (const ext of EXTENSIONS) {
+		if (image.endsWith(ext)) {
+			if (finalTextureResolution !== '1') {
+				return {
+					image: image.substring(0, image.length - ext.length) + `_r${finalTextureResolution}${ext}`,
+					resolution: 1 / GRAPHICS_TEXTURE_RESOLUTION_SCALE[finalTextureResolution],
+					scale: GRAPHICS_TEXTURE_RESOLUTION_SCALE[finalTextureResolution],
+				};
+			}
+		}
+	}
+
+	return {
+		image,
+		resolution: 1,
+		scale: 1,
+	};
 }

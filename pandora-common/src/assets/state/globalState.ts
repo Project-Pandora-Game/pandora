@@ -276,6 +276,9 @@ export class AssetFrameworkGlobalStateContainer {
 
 	public setState(newState: AssetFrameworkGlobalState): void {
 		Assert(newState.isValid(), 'Attempt to set invalid state');
+		if (this._currentState === newState)
+			return;
+
 		const oldState = this._currentState;
 		this._currentState = newState;
 		this._onChange(newState, oldState);

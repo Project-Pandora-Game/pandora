@@ -8,6 +8,7 @@ import {
 	Asset,
 	EMPTY_ARRAY,
 	IsNotNullable,
+	type AppearanceActionData,
 } from 'pandora-common';
 import React, { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
 import { z } from 'zod';
@@ -96,7 +97,7 @@ export function WardrobeActionButton({
 	/** Makes the button hide if it should in a way, that occupied space is preserved */
 	hideReserveSpace?: boolean;
 	showActionBlockedExplanation?: boolean;
-	onExecute?: () => void;
+	onExecute?: (data: readonly AppearanceActionData[]) => void;
 	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
 	disabled?: boolean;
 }): ReactElement {

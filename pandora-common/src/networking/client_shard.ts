@@ -1,7 +1,7 @@
 import { CharacterIdSchema } from '../character/characterTypes';
 import { CharacterPublicSettingsSchema, CharacterRoomPositionSchema } from '../character/characterData';
 import { AppearanceActionSchema } from '../assets/appearanceActions';
-import { AppearanceActionProblem } from '../assets/appearanceActionProblems';
+import { AppearanceActionProblem, AppearanceActionData } from '../assets/appearanceActionProblems';
 import { ClientChatMessagesSchema, ChatCharacterStatusSchema } from '../chat/chat';
 import { z } from 'zod';
 import { CharacterInputNameSchema, ZodCast } from '../validation';
@@ -58,6 +58,7 @@ export const ClientShardSchema = {
 		response: z.discriminatedUnion('result', [
 			z.object({
 				result: z.literal('success'),
+				data: ZodCast<AppearanceActionData>().array().readonly(),
 			}),
 			z.object({
 				result: z.literal('promptSent'),

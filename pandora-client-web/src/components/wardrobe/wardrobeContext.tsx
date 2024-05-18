@@ -11,6 +11,7 @@ import {
 	ItemId,
 	Nullable,
 	ActionTargetSelector,
+	type AppearanceActionData,
 } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
@@ -126,7 +127,7 @@ export function useWardrobeContext(): Readonly<WardrobeContext> {
 }
 
 type ExecuteCallbackOptions = {
-	onSuccess?: () => void;
+	onSuccess?: (data: readonly AppearanceActionData[]) => void;
 	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
 };
 
@@ -138,7 +139,7 @@ export function useWardrobeExecuteCallback({ onSuccess, onFailure }: ExecuteCall
 		(result) => {
 			switch (result?.result) {
 				case 'success':
-					onSuccess?.();
+					onSuccess?.(result.data);
 					break;
 				case 'promptSent':
 					toast('Prompt sent', TOAST_OPTIONS_WARNING);

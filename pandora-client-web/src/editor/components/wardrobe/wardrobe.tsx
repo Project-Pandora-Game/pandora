@@ -110,6 +110,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 
 			return {
 				result: 'success',
+				data: result.actionData,
 			};
 		},
 		showExtraActionButtons: true,

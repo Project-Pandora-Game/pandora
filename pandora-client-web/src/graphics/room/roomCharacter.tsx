@@ -332,8 +332,8 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 		}
 
 		g.clear()
-			.beginFill(0xff0000, 0.25)
-			.drawRect(hitArea.x, hitArea.y, hitArea.width, hitArea.height);
+			.rect(hitArea.x, hitArea.y, hitArea.width, hitArea.height)
+			.fill({ color: 0xff0000, alpha: 0.25 });
 	}, [hitArea]);
 
 	// If character is in a device, do not render it here, it will be rendered by the device
@@ -373,19 +373,18 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 								zIndex={ 99999 }
 							>
 								<Graphics
-									draw={ (g) => {
+									draw={ (g: PIXI.Graphics) => {
 										g.clear()
 											// Pivot point (with extra Y offset)
-											.beginFill(0xffaa00)
-											.lineStyle({ color: 0x000000, width: 1 })
-											.drawCircle(pivot.x, pivot.y, 5)
-											.endFill()
+											.circle(pivot.x, pivot.y, 5)
+											.fill(0xffaa00)
+											.stroke({ color: 0x000000, width: 1 })
 											// Mask area
-											.lineStyle({ color: 0xffff00, width: 2 })
-											.drawRect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
+											.rect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
+											.stroke({ color: 0xffff00, width: 2 })
 											// Character canvas standard area
-											.lineStyle({ color: 0x00ff00, width: 2 })
-											.drawRect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT);
+											.rect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
+											.stroke({ color: 0x00ff00, width: 2 });
 									} }
 								/>
 							</Container>
@@ -410,15 +409,15 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 					) : null
 				}
 				{
-						!showDisconnectedIcon ? null : (
-							<Sprite
-								anchor={ { x: 0.5, y: 0.5 } }
-								texture={ disconnectedIconTexture }
-								position={ { x: labelX, y: disconnectedIconY } }
-								width={ 64 }
-								height={ 64 }
-							/>
-						)
+					!showDisconnectedIcon ? null : (
+						<Sprite
+							anchor={ { x: 0.5, y: 0.5 } }
+							texture={ disconnectedIconTexture }
+							position={ { x: labelX, y: disconnectedIconY } }
+							width={ 64 }
+							height={ 64 }
+						/>
+					)
 				}
 				{
 					!debugConfig?.characterDebugOverlay ? null : (
@@ -426,12 +425,12 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 							zIndex={ 99999 }
 						>
 							<Graphics
-								draw={ (g) => {
+								draw={ (g: PIXI.Graphics) => {
 									g.clear()
 										// Pivot point (wanted)
-										.beginFill(0xffff00)
-										.lineStyle({ color: 0x000000, width: 1 })
-										.drawCircle(pivot.x, pivot.y, 5);
+										.circle(pivot.x, pivot.y, 5)
+										.fill(0xffff00)
+										.stroke({ color: 0x000000, width: 1 });
 								} }
 							/>
 							<Graphics draw={ hotboxDebugDraw } />

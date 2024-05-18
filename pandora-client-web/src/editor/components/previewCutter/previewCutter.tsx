@@ -57,8 +57,8 @@ function PreviewCutterRectangleInner({
 		const color = dragging ? 0x00ff00 : 0x333333;
 		g
 			.clear()
-			.lineStyle(PREVIRE_CUTTER_LINE_WIDTH, color, 1)
-			.drawRect(x - PREVIRE_CUTTER_LINE_WIDTH / 2, y - PREVIRE_CUTTER_LINE_WIDTH / 2, size + PREVIRE_CUTTER_LINE_WIDTH, size + PREVIRE_CUTTER_LINE_WIDTH);
+			.rect(x - PREVIRE_CUTTER_LINE_WIDTH / 2, y - PREVIRE_CUTTER_LINE_WIDTH / 2, size + PREVIRE_CUTTER_LINE_WIDTH, size + PREVIRE_CUTTER_LINE_WIDTH)
+			.stroke({ width: PREVIRE_CUTTER_LINE_WIDTH, color, alpha: 1 });
 	}, [dragging, x, y, size]);
 	const onPointerDown = React.useCallback((ev: PIXI.FederatedPointerEvent) => {
 		ev.stopPropagation();

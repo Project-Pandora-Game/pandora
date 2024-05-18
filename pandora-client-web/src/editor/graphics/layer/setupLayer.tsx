@@ -72,20 +72,22 @@ export function SetupLayerSelected({
 	const uv = useLayerVertices(evaluator, points, layer, item, true, imageUv);
 
 	const drawWireFrame = useCallback((g: PIXI.Graphics) => {
-		g.clear().lineStyle(1, 0x333333, 0.2);
+		g.clear();
 		// Draw triangles
 		for (let i = 0; i < triangles.length; i += 3) {
 			const poly = [0, 1, 2]
 				.map((p) => triangles[i + p])
 				.flatMap((p) => [uv[2 * p] * width + x, uv[2 * p + 1] * height + y]);
-			g.drawPolygon(poly);
+			g
+				.poly(poly)
+				.stroke({ width: 1, color: 0x333333, alpha: 0.2 });
 		}
 		// Draw nice points on top of triangles
-		g.lineStyle(1, 0x000000, 0.8);
 		for (const point of points) {
-			g.beginFill(0xcccccc, 0.8)
-				.drawCircle(point.pos[0], point.pos[1], 2.5)
-				.endFill();
+			g
+				.circle(point.pos[0], point.pos[1], 2.5)
+				.fill({ color: 0xcccccc, alpha: 0.8 })
+				.stroke({ width: 1, color: 0x000000, alpha: 0.8 });
 		}
 	}, [points, triangles, uv, x, y, width, height]);
 

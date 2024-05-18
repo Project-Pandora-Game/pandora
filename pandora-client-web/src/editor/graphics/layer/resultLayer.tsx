@@ -33,8 +33,7 @@ export function ResultLayer({
 	const vertices = useLayerVertices(evaluator, points, layer, item);
 
 	const drawWireFrame = useCallback((g: PIXI.Graphics) => {
-		const NORMAL_COLOR = 0x333333;
-		g.clear().lineStyle(1, NORMAL_COLOR, 0.2);
+		g.clear();
 		for (let i = 0; i < triangles.length; i += 3) {
 			const poly = [0, 1, 2]
 				.map((p) => triangles[i + p])
@@ -43,15 +42,16 @@ export function ResultLayer({
 
 			// Highlight any faces that got reversed - they signify potential problems
 			const isCCW = !MeshFaceIsCW(...(poly as [number, number, number, number, number, number]));
-			if (isCCW) {
-				g.lineStyle(2, 0xff0000, 0.8).beginFill(0xff4444, 0.8);
-			}
 
-			g.drawPolygon(poly);
+			g.poly(poly);
 
 			if (isCCW) {
-				g.endFill();
-				g.lineStyle(1, NORMAL_COLOR, 0.2);
+				g
+					.fill({ color: 0xff4444, alpha: 0.8 })
+					.stroke({ width: 2, color: 0xff0000, alpha: 0.8 });
+			} else {
+				g
+					.stroke({ width: 1, color: 0x333333, alpha: 0.2 });
 			}
 		}
 	}, [triangles, vertices]);

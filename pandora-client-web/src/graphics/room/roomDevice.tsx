@@ -319,17 +319,17 @@ export function RoomDeviceInteractive({
 		}
 
 		g.clear()
-			.beginFill(roomConstructionMode ? 0xff0000 : 0x000075, roomConstructionMode ? 0.7 : 0.2)
-			.drawCircle(0, 0, hitAreaRadius)
-			.beginFill(roomConstructionMode ? 0x000000 : 0x0000ff, roomConstructionMode ? 0.8 : 0.4)
-			.drawPolygon([
+			.circle(0, 0, hitAreaRadius)
+			.fill({ color: roomConstructionMode ? 0xff0000 : 0x000075, alpha: roomConstructionMode ? 0.7 : 0.2 })
+			.poly([
 				-30, 10,
 				5, -40,
 				5, -5,
 				30, -5,
 				-5, 40,
 				-5, 10,
-			]);
+			])
+			.fill({ color: roomConstructionMode ? 0x000000 : 0x0000ff, alpha: roomConstructionMode ? 0.8 : 0.4 });
 	}, [showMenuHelper, roomConstructionMode, hitAreaRadius]);
 
 	return (
@@ -413,17 +413,17 @@ export function RoomDevice({
 								draw={ (g) => {
 									g.clear()
 										// Vertical guide line
-										.lineStyle({ color: 0xffff00, width: 2, alpha: 0.5 })
 										.moveTo(pivot.x, pivot.y - Math.max(100, pivot.y))
 										.lineTo(pivot.x, pivot.y + 100)
+										.stroke({ color: 0xffff00, width: 2, alpha: 0.5 })
 										// Ground line
-										.lineStyle({ color: 0xffff00, width: 2, alpha: 1 })
 										.moveTo(pivot.x - Math.max(100, pivot.x), pivot.y)
 										.lineTo(pivot.x + Math.max(100, pivot.x), pivot.y)
+										.stroke({ color: 0xffff00, width: 2, alpha: 1 })
 										// Pivot point (wanted)
-										.beginFill(0xffff00)
-										.lineStyle({ color: 0x000000, width: 1 })
-										.drawCircle(pivot.x, pivot.y, 5);
+										.circle(pivot.x, pivot.y, 5)
+										.fill(0xffff00)
+										.stroke({ color: 0x000000, width: 1 });
 								} }
 							/>
 						</Container>
@@ -662,15 +662,15 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 							draw={ (g) => {
 								g.clear()
 									// Mask area
-									.lineStyle({ color: 0xffff00, width: 2 })
-									.drawRect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
+									.rect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
+									.stroke({ color: 0xffff00, width: 2 })
 									// Character canvas standard area
-									.lineStyle({ color: 0x00ff00, width: 2 })
-									.drawRect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
+									.rect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
+									.stroke({ color: 0x00ff00, width: 2 })
 									// Pivot point
-									.beginFill(0xffaa00)
-									.lineStyle({ color: 0x000000, width: 1 })
-									.drawCircle(actualPivot.x, actualPivot.y, 5);
+									.circle(actualPivot.x, actualPivot.y, 5)
+									.fill(0xffaa00)
+									.stroke({ color: 0x000000, width: 1 });
 							} }
 						/>
 					</Container>

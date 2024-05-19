@@ -3,7 +3,7 @@ import { GAME_VERSION } from '../../config/Environment';
 import { DirectoryConnectionState } from '../../networking/directoryConnector';
 import { ShardConnectionState } from '../../networking/shardConnector';
 import { DebugData } from './debugContextProvider';
-import { utils } from 'pixi.js';
+import { isWebGLSupported, isWebGPUSupported } from 'pixi.js';
 import bowser from 'bowser';
 import { IsNotNullable } from 'pandora-common';
 
@@ -97,7 +97,8 @@ function BuildDiagnosticsSection(): ReportSection {
 		`User agent: ${window.navigator.userAgent}`,
 		`Game version: ${GAME_VERSION}`,
 		`Local time: ${new Date().toISOString()}`,
-		`WebGL supported: ${String(utils.isWebGLSupported())}`,
+		`WebGL supported: ${String(isWebGLSupported())}`,
+		`WebGPU supported: ${String(isWebGPUSupported())}`,
 	].join('\n');
 	return { heading: 'Additional Diagnostics', details };
 }

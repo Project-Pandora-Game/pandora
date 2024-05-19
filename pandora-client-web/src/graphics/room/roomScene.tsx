@@ -424,7 +424,7 @@ export function useCharacterDisplayFilters(character: Character<ICharacterRoomDa
 		} else if (interfaceChatroomOfflineCharacterFilter === 'ghost') {
 			const colorFilter = new PIXI.ColorMatrixFilter();
 			colorFilter.brightness(0.4, true);
-			const alphaFilter = new PIXI.AlphaFilter(0.8);
+			const alphaFilter = new PIXI.AlphaFilter({ alpha: 0.8 });
 			return [colorFilter, alphaFilter];
 		}
 		AssertNever(interfaceChatroomOfflineCharacterFilter);

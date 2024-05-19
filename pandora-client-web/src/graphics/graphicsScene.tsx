@@ -133,7 +133,7 @@ export function GraphicsBackground({
 }: {
 	background?: string | number;
 	backgroundSize?: readonly [number, number];
-	backgroundFilters?: Filter[] | null;
+	backgroundFilters?: Filter[];
 	zIndex?: number;
 	x?: number;
 	y?: number;
@@ -186,7 +186,7 @@ export function GraphicsBackground({
 			zIndex={ zIndex }
 			texture={ backgroundTexture }
 			tint={ backgroundResult.backgroundTint }
-			filters={ backgroundFilters ?? null }
+			filters={ backgroundFilters }
 		/>
 	);
 }

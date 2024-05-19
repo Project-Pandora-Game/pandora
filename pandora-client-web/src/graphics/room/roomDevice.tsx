@@ -551,7 +551,7 @@ function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
 	const { color, alpha } = useItemColor(EMPTY_ARRAY, item, layer.colorizationKey);
 
 	const filters = usePlayerVisionFilters(false);
-	const actualFilters = useMemo<PIXI.Filter[] | null>(() => filters?.slice() ?? null, [filters]);
+	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => filters?.slice(), [filters]);
 
 	return (
 		<Sprite

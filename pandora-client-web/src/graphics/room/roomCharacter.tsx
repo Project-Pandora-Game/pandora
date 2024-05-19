@@ -390,8 +390,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 								fontSize: 32 * fontScale,
 								fill: settings.labelColor,
 								align: 'center',
-								dropShadow: true,
-								dropShadowBlur: 4,
+								dropShadow: { blur: 4 },
 							}) }
 							text={ name }
 						/>

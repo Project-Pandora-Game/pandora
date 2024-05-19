@@ -1,18 +1,18 @@
 import type { Immutable } from 'immer';
 import { AppearanceItems, Assert, AssertNever, AssetFrameworkCharacterState, BoneName, CharacterSize, CoordinatesCompressed, HexColorString, Item, LayerMirror, Rectangle as PandoraRectangle, PointDefinition } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
+import { Rectangle, Texture } from 'pixi.js';
 import React, { ReactElement, createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../assets/assetGraphics';
 import { CalculatePointsTriangles, useImageResolutionAlternative, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource } from '../assets/assetGraphicsCalculations';
 import { ChildrenProps } from '../common/reactTypes';
 import { ConditionEvaluatorBase, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator';
 import { Container } from './baseComponents/container';
+import { PixiMesh, type PixiMeshProps } from './baseComponents/mesh';
 import { Sprite } from './baseComponents/sprite';
 import { LayerStateOverrides } from './def';
 import { GraphicsMaskLayer } from './graphicsMaskLayer';
 import { useGraphicsSettings } from './graphicsSettings';
-import { PixiMesh } from './baseComponents/mesh';
 import { usePixiApp, usePixiAppOptional } from './reconciler/appContext';
 import { RoomDeviceRenderContext } from './room/roomDeviceContext';
 import { useTexture } from './useTexture';
@@ -20,7 +20,7 @@ import { EvaluateCondition } from './utility';
 
 export function useLayerPoints(layer: AssetGraphicsLayer): {
 	points: readonly PointDefinitionCalculated[];
-	triangles: Uint16Array;
+	triangles: Uint32Array;
 } {
 	// Note: The points should NOT be filtered before Delaunator step!
 	// Doing so would cause body and arms not to have exactly matching triangles,
@@ -31,7 +31,7 @@ export function useLayerPoints(layer: AssetGraphicsLayer): {
 	Assert(points.length < 65535, 'Points do not fit into indices');
 
 	const { pointType } = useLayerDefinition(layer);
-	const triangles = useMemo<Uint16Array>(() => {
+	const triangles = useMemo<Uint32Array>(() => {
 		return CalculatePointsTriangles(points, pointType);
 	}, [pointType, points]);
 	return { points, triangles };
@@ -271,11 +271,7 @@ export const MASK_SIZE: Readonly<PandoraRectangle> = {
 };
 interface MaskContainerProps extends ChildrenProps {
 	maskImage: string;
-	maskMesh?: {
-		vertices: IArrayBuffer;
-		uvs: IArrayBuffer;
-		indices: IArrayBuffer;
-	};
+	maskMesh?: Pick<PixiMeshProps, 'vertices' | 'uvs' | 'indices'>;
 	zIndex?: number;
 	getTexture?: (path: string) => Texture;
 }
@@ -338,7 +334,12 @@ function MaskContainerPixi({
 		textureContainer.addChild(background);
 		let mask: PIXI.Container;
 		if (maskMesh) {
-			mask = new PIXI.SimpleMesh(alphaTexture, maskMesh.vertices, maskMesh.uvs, maskMesh.indices);
+			mask = new PIXI.MeshSimple({
+				texture: alphaTexture,
+				vertices: maskMesh.vertices,
+				uvs: maskMesh.uvs,
+				indices: maskMesh.indices,
+			});
 		} else {
 			mask = new PIXI.Sprite(alphaTexture);
 		}
@@ -348,11 +349,13 @@ function MaskContainerPixi({
 
 		// Render mask texture
 		const bounds = new Rectangle(0, 0, MASK_SIZE.width, MASK_SIZE.height);
-		const texture = app.renderer.generateTexture(textureContainer, {
+		const texture = app.renderer.generateTexture({
+			target: textureContainer,
 			resolution: 1,
-			region: bounds,
-			scaleMode: PIXI.SCALE_MODES.NEAREST,
-			multisample: PIXI.MSAA_QUALITY.NONE,
+			frame: bounds,
+			textureSourceOptions: {
+				scaleMode: 'nearest',
+			},
 		});
 		finalAlphaTexture.current = texture;
 		update();
@@ -406,7 +409,7 @@ function MaskContainerCustom({
 		if (maskLayer.current !== null) {
 			maskContainer.current.filters = [maskLayer.current.filter];
 		} else {
-			maskContainer.current.filters = null;
+			maskContainer.current.filters = [];
 		}
 	}, []);
 
@@ -419,7 +422,11 @@ function MaskContainerCustom({
 	}, [maskImageTexture]);
 
 	useLayoutEffect(() => {
-		const g = maskGeometryFinal.current = maskMesh ? new PIXI.MeshGeometry(maskMesh.vertices, maskMesh.uvs, maskMesh.indices) : undefined;
+		const g = maskGeometryFinal.current = maskMesh ? new PIXI.MeshGeometry({
+			positions: maskMesh.vertices,
+			uvs: maskMesh.uvs,
+			indices: maskMesh.indices,
+		}) : undefined;
 		maskLayer.current?.updateGeometry(g);
 		return () => {
 			maskLayer.current?.updateGeometry(undefined);

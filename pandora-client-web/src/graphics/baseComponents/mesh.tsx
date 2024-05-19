@@ -5,10 +5,9 @@ import { RegisterPixiComponent } from '../reconciler/component';
 export interface PixiMeshProps {
 	vertices: Float32Array;
 	uvs: Float32Array;
-	indices: Uint16Array;
+	indices: Uint32Array;
 	texture: Texture;
 	state?: State;
-	drawMode?: DRAW_MODES;
 	tint?: number;
 	alpha?: number;
 }
@@ -35,7 +34,6 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, DisplayObjectEventMap
 			indices,
 			texture,
 			state,
-			drawMode,
 			tint,
 			alpha,
 		} = props;
@@ -50,7 +48,7 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, DisplayObjectEventMap
 			material.batchable = false;
 		}
 
-		const mesh = new Mesh(geometry, material, state, drawMode);
+		const mesh = new Mesh(geometry, material, state);
 		mesh.tint = tint ?? 0xffffff;
 		mesh.alpha = alpha ?? 1;
 
@@ -63,7 +61,6 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, DisplayObjectEventMap
 			indices: oldIndices,
 			texture: oldTexture,
 			state: oldState,
-			drawMode: oldDrawMode,
 			tint: oldTint,
 			alpha: oldAlpha,
 		} = oldProps as Partial<typeof newProps>;
@@ -73,7 +70,6 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, DisplayObjectEventMap
 			indices,
 			texture,
 			state,
-			drawMode,
 			tint,
 			alpha,
 		} = newProps;
@@ -106,11 +102,6 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, DisplayObjectEventMap
 			if (state) {
 				mesh.material.batchable = false;
 			}
-			updated = true;
-		}
-
-		if (drawMode !== oldDrawMode) {
-			mesh.drawMode = drawMode ?? DRAW_MODES.TRIANGLES;
 			updated = true;
 		}
 

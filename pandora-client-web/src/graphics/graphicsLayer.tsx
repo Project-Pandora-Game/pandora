@@ -2,7 +2,7 @@ import { Container, Sprite, useApp } from '@pixi/react';
 import Delaunator from 'delaunator';
 import { AppearanceItems, Assert, AssertNever, AssetFrameworkCharacterState, BoneName, CharacterSize, CoordinatesCompressed, HexColorString, Item, LayerMirror, Rectangle as PandoraRectangle, PointDefinition } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
+import { Rectangle, Texture } from 'pixi.js';
 import React, { ReactElement, createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AssetGraphicsLayer, PointDefinitionCalculated, useImageResolutionAlternative, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource } from '../assets/assetGraphics';
 import { ChildrenProps } from '../common/reactTypes';
@@ -17,7 +17,7 @@ import { EvaluateCondition, useAppOptional } from './utility';
 
 export function useLayerPoints(layer: AssetGraphicsLayer): {
 	points: readonly PointDefinitionCalculated[];
-	triangles: Uint16Array;
+	triangles: Uint32Array;
 } {
 	// Note: The points should NOT be filtered before Delaunator step!
 	// Doing so would cause body and arms not to have exactly matching triangles,
@@ -28,7 +28,7 @@ export function useLayerPoints(layer: AssetGraphicsLayer): {
 	Assert(points.length < 65535, 'Points do not fit into indices');
 
 	const { pointType } = useLayerDefinition(layer);
-	const triangles = useMemo<Uint16Array>(() => {
+	const triangles = useMemo<Uint32Array>(() => {
 		const result: number[] = [];
 		const delaunator = new Delaunator(points.flatMap((point) => point.pos));
 		for (let i = 0; i < delaunator.triangles.length; i += 3) {
@@ -37,7 +37,7 @@ export function useLayerPoints(layer: AssetGraphicsLayer): {
 				result.push(...t);
 			}
 		}
-		return new Uint16Array(result);
+		return new Uint32Array(result);
 	}, [pointType, points]);
 	return { points, triangles };
 }
@@ -276,11 +276,7 @@ export const MASK_SIZE: Readonly<PandoraRectangle> = {
 };
 interface MaskContainerProps extends ChildrenProps {
 	maskImage: string;
-	maskMesh?: {
-		vertices: IArrayBuffer;
-		uvs: IArrayBuffer;
-		indices: IArrayBuffer;
-	};
+	maskMesh?: Omit<PIXI.SimpleMeshOptions, 'texture'>;
 	zIndex?: number;
 	getTexture?: (path: string) => Texture;
 }
@@ -343,7 +339,7 @@ function MaskContainerPixi({
 		textureContainer.addChild(background);
 		let mask: PIXI.Container;
 		if (maskMesh) {
-			mask = new PIXI.SimpleMesh(alphaTexture, maskMesh.vertices, maskMesh.uvs, maskMesh.indices);
+			mask = new PIXI.MeshSimple({ ...maskMesh, texture: alphaTexture });
 		} else {
 			mask = new PIXI.Sprite(alphaTexture);
 		}
@@ -353,11 +349,13 @@ function MaskContainerPixi({
 
 		// Render mask texture
 		const bounds = new Rectangle(0, 0, MASK_SIZE.width, MASK_SIZE.height);
-		const texture = app.renderer.generateTexture(textureContainer, {
+		const texture = app.renderer.generateTexture({
+			target: textureContainer,
 			resolution: 1,
-			region: bounds,
-			scaleMode: PIXI.SCALE_MODES.NEAREST,
-			multisample: PIXI.MSAA_QUALITY.NONE,
+			frame: bounds,
+			// TODO PIXI ???
+			// scaleMode: PIXI.SCALE_MODES.NEAREST,
+			// multisample: PIXI.MSAA_QUALITY.NONE,
 		});
 		finalAlphaTexture.current = texture;
 		update();
@@ -411,7 +409,7 @@ function MaskContainerCustom({
 		if (maskLayer.current !== null) {
 			maskContainer.current.filters = [maskLayer.current.filter];
 		} else {
-			maskContainer.current.filters = null;
+			maskContainer.current.filters = [];
 		}
 	}, []);
 
@@ -424,7 +422,7 @@ function MaskContainerCustom({
 	}, [maskImageTexture]);
 
 	useLayoutEffect(() => {
-		const g = maskGeometryFinal.current = maskMesh ? new PIXI.MeshGeometry(maskMesh.vertices, maskMesh.uvs, maskMesh.indices) : undefined;
+		const g = maskGeometryFinal.current = maskMesh ? new PIXI.MeshGeometry(maskMesh) : undefined;
 		maskLayer.current?.updateGeometry(g);
 		return () => {
 			maskLayer.current?.updateGeometry(undefined);

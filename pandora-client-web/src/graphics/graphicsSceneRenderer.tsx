@@ -110,10 +110,10 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 			return;
 
 		this.app = app;
-		Assert(app.view instanceof HTMLCanvasElement, 'Expected app.view to be an HTMLCanvasElement');
+		Assert(app.canvas instanceof HTMLCanvasElement, 'Expected app.view to be an HTMLCanvasElement');
 
 		app.renderer.resolution = resolution;
-		container.appendChild(app.view);
+		container.appendChild(app.canvas);
 		this.app.resizeTo = container;
 		this.app.resize();
 
@@ -148,8 +148,8 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		const { container: oldContainer, resolution: oldResolution } = oldProps;
 
 		if (container !== oldContainer) {
-			this.app.view.remove();
-			container.appendChild(this.app.view);
+			this.app.canvas.remove();
+			container.appendChild(this.app.canvas);
 			this.app.resizeTo = container;
 			this.app.resize();
 		}
@@ -193,7 +193,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 				children: true,
 			}));
 
-		this.app.view.remove();
+		this.app.canvas.remove();
 		AvailableApps.push(this.app);
 		this.app = null;
 	}
@@ -380,7 +380,7 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 		const outContext = this._canvasRef.getContext('2d');
 		if (outContext) {
 			outContext.clearRect(0, 0, this._canvasRef.width, this._canvasRef.height);
-			outContext.drawImage(this._app.view, 0, 0, this._canvasRef.width, this._canvasRef.height);
+			outContext.drawImage(this._app.canvas, 0, 0, this._canvasRef.width, this._canvasRef.height);
 		} else {
 			this.logger.warning('Failed to get output 2d context');
 		}
@@ -407,7 +407,7 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 			return false;
 
 		this._app = app;
-		Assert(app.view instanceof HTMLCanvasElement, 'Expected app.view to be an HTMLCanvasElement');
+		Assert(app.canvas instanceof HTMLCanvasElement, 'Expected app.view to be an HTMLCanvasElement');
 
 		app.renderer.resolution = resolution;
 		app.renderer.resize(renderArea.width, renderArea.height);

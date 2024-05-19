@@ -1,30 +1,33 @@
 import { Size, Rectangle, CharacterSize } from 'pandora-common/dist/assets';
-import { Application, Container, IExtract, Texture, Mesh, MeshGeometry, MeshMaterial, RenderTexture, IRenderableObject, DisplayObject, Shader, Matrix } from 'pixi.js';
+import { Application, Container, Texture, Mesh, MeshGeometry, RenderTexture, Matrix } from 'pixi.js';
 import Delaunator from 'delaunator';
 import { DataString, AssertDataString } from '../../../common/downloadHelper';
+import { PromiseOnce } from 'pandora-common';
 
 type ImageFormat = 'png' | 'jpg' | 'webp';
 
 export class ImageExporter {
-	private readonly _app: Application;
-
-	private get _extract(): IExtract {
-		return this._app.renderer.extract;
-	}
+	private readonly _getApp: () => Promise<Application>;
 
 	constructor() {
-		this._app = new Application({
-			backgroundAlpha: 0,
-			resolution: 1,
-			antialias: true,
+		this._getApp = PromiseOnce(async () => {
+			const app = new Application();
+			await app.init({
+				backgroundAlpha: 0,
+				resolution: 1,
+				antialias: true,
+			});
+			return app;
 		});
 	}
 
 	public async export(target: Container, format: ImageFormat): Promise<DataString> {
-		this._app.renderer.resize(target.width, target.height);
-		const child = this._app.stage.addChild(target);
-		const result = await this._extract.base64(target, `image/${format}`);
-		this._app.stage.removeChild(child);
+		const app = await this._getApp();
+
+		app.renderer.resize(target.width, target.height);
+		const child = app.stage.addChild(target);
+		const result = await app.renderer.extract.base64({ target, format });
+		app.stage.removeChild(child);
 		AssertDataString(result);
 		return result;
 	}
@@ -34,17 +37,20 @@ export class ImageExporter {
 		return await this.export(cutter, format);
 	}
 
-	public async imageCut(object: IRenderableObject, rect: Rectangle, format: ImageFormat, resultSize: Readonly<Size> = { width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT }): Promise<DataString> {
+	public async imageCut(container: Container, rect: Rectangle, format: ImageFormat, resultSize: Readonly<Size> = { width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT }): Promise<DataString> {
+		const app = await this._getApp();
+
 		const renderTexture = RenderTexture.create(resultSize);
-		WithCullingDisabled(object, () => {
-			this._app.renderer.render(object, {
-				renderTexture,
+		WithCullingDisabled(container, () => {
+			app.renderer.render({
+				container,
+				target: renderTexture,
 				transform: Matrix.IDENTITY
 					.translate(-rect.x, -rect.y)
 					.scale(resultSize.width / rect.width, resultSize.height / rect.height),
 			});
 		});
-		const result = await this._extract.base64(renderTexture, `image/${format}`);
+		const result = await app.renderer.extract.base64({ target: renderTexture, format });
 		renderTexture.destroy(true);
 		AssertDataString(result);
 		return result;
@@ -60,12 +66,12 @@ class TextureCutter extends Container {
 			point[1] / height,
 		])));
 		const triangles = new Delaunator(points.flat()).triangles;
-		const geometry = new MeshGeometry(
-			vertices,
-			uv,
-			triangles,
-		);
-		const mesh = new Mesh(geometry, new MeshMaterial(texture));
+		const geometry = new MeshGeometry({
+			positions: vertices,
+			uvs: uv,
+			indices: triangles,
+		});
+		const mesh = new Mesh({ geometry, texture });
 		this.addChild(mesh);
 
 		mesh.x = points.reduce((x, point) => Math.min(x, point[0]), Infinity) * -1;
@@ -79,17 +85,17 @@ class TextureCutter extends Container {
  * TODO: Remove this function when pixi.js fixes the bug or if we find a better way to do this.
  */
 function WithCullingDisabled(object: unknown, action: () => void) {
-	const visited = new Set<DisplayObject>();
-	const restore: Mesh<Shader>[] = [];
+	const visited = new Set<Container>();
+	const restore: Mesh[] = [];
 	const disableCulling = (target: unknown) => {
-		if (target instanceof DisplayObject) {
-			if (visited.has(target)) {
+		if (target instanceof Container) {
+			if (visited.has(target as Container)) {
 				return;
 			}
-			visited.add(target);
+			visited.add(target as Container);
 			if (target instanceof Mesh) {
 				if (target.state.culling) {
-					restore.push(target as Mesh<Shader>);
+					restore.push(target as Mesh);
 					target.state.culling = false;
 				}
 			}

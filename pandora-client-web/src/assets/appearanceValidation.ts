@@ -98,6 +98,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				break;
 			case 'itemCustomizeOther':
 				return `You cannot customize other people's items.`;
+			case 'inRoomDevice':
+				return `You cannot do this while in a room device.`;
 			case 'invalid':
 				return '';
 		}

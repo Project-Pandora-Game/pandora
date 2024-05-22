@@ -824,6 +824,15 @@ export function ActionAppearanceRandomize({
 		});
 	}
 
+	if (character.getRoomDeviceLink() != null) {
+		processingContext.addProblem({
+			result: 'restrictionError',
+			restriction: {
+				type: 'inRoomDevice',
+			},
+		});
+	}
+
 	// Filter appearance to get either body or nothing
 	let newAppearance: Item<WearableAssetType>[] = kind === 'items' ? oldItems.filter((i) => !i.isType('personal') || i.asset.definition.bodypart != null) : [];
 	// Collect info about already present items

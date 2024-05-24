@@ -141,8 +141,6 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 	const assetCounts = new Map<AssetId, number>();
 	let globalProperties = CreateAssetPropertiesResult();
 	for (const item of items) {
-		// TODO: Let assets specify count
-		// const limit = 1;
 		const limit = item.asset.definition.attributes?.limit ?? 1;
 		const currentCount = assetCounts.get(item.asset.id) ?? 0;
 		if (currentCount >= limit) {

@@ -51,12 +51,6 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 		 * ['Hair', 'Ears']
 		 */
 		hides?: (A['attributes'])[];
-
-		/**
-		 * How many items of this kind can be worn at the same time.
-		 * Defaults to 1
-		 */
-		limit?: number;
 	};
 
 	/**

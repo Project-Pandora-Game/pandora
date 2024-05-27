@@ -139,19 +139,18 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 	// Check requirements are met, and check asset count limits
 	let hasDevicePart = false;
 	const assetCounts = new Map<AssetId, number>();
+	const maxItemLimit = 1; // All personal items have no limit. If we want to change this later, here is the place
 	let globalProperties = CreateAssetPropertiesResult();
 	for (const item of items) {
-		// TODO: Let assets specify count
-		const limit = 1;
 		const currentCount = assetCounts.get(item.asset.id) ?? 0;
-		if (currentCount >= limit) {
+		if (!item.asset.isType('personal') && currentCount >= maxItemLimit) {
 			return {
 				success: false,
 				error: {
 					problem: 'tooManyItems',
 					asset: item.asset.id,
 					itemName: item.name ?? '',
-					limit,
+					limit: maxItemLimit,
 				},
 			};
 		}

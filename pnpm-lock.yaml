@@ -376,8 +376,8 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
       mongodb:
-        specifier: 6.6.0
-        version: 6.6.0(socks@2.8.3)
+        specifier: 6.7.0
+        version: 6.7.0(socks@2.8.3)
       mongodb-memory-server-core:
         specifier: 9.2.0
         version: 9.2.0
@@ -488,8 +488,8 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
       mongodb:
-        specifier: 6.6.0
-        version: 6.6.0(socks@2.8.3)
+        specifier: 6.7.0
+        version: 6.7.0(socks@2.8.3)
       nanoid:
         specifier: 3.3.7
         version: 3.3.7
@@ -5251,8 +5251,8 @@ packages:
       snappy:
         optional: true
 
-  mongodb@6.6.0:
-    resolution: {integrity: sha512-LoR0hel6y1i7pubPOzbflccdc89RDOapIGqwce4aenOfhhLKOqiQ2F4yQHP+Hqa7TuPhpVqDVjixbvUSx7R0rQ==}
+  mongodb@6.7.0:
+    resolution: {integrity: sha512-TMKyHdtMcO0fYBNORiYdmM25ijsHs+Njs963r4Tro4OQZzqYigAzYQouwWRg4OIaiLRUEGUh/1UAcH5lxdSLIA==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
       '@aws-sdk/credential-providers': ^3.188.0
@@ -13156,7 +13156,7 @@ snapshots:
     optionalDependencies:
       '@mongodb-js/saslprep': 1.1.5
 
-  mongodb@6.6.0(socks@2.8.3):
+  mongodb@6.7.0(socks@2.8.3):
     dependencies:
       '@mongodb-js/saslprep': 1.1.5
       bson: 6.7.0

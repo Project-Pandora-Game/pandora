@@ -3,7 +3,7 @@ import type { CharacterId, CharacterRestrictionsManager } from '../character';
 import type { ItemInteractionType, Restriction, RestrictionResult } from '../character/restrictionTypes';
 import type { GameLogicCharacter, GameLogicPermission, InteractionId } from '../gameLogic';
 import { Assert, AssertNever, AssertNotNullable } from '../utility';
-import type { AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
+import type { AppearanceActionProblem, AppearanceActionData, InvalidActionReason } from './appearanceActionProblems';
 import type { AppearanceActionContext } from './appearanceActions';
 import { SplitContainerPath } from './appearanceHelpers';
 import type {
@@ -46,6 +46,11 @@ export class AppearanceActionProcessingContext {
 	private readonly _requiredPermissions = new Set<GameLogicPermission>();
 	public get requiredPermissions(): ReadonlySet<GameLogicPermission> {
 		return this._requiredPermissions;
+	}
+
+	private readonly _actionData: AppearanceActionData[] = [];
+	public get actionData(): readonly AppearanceActionData[] {
+		return this._actionData;
 	}
 
 	constructor(context: AppearanceActionContext) {
@@ -115,6 +120,14 @@ export class AppearanceActionProcessingContext {
 			return;
 
 		this._actionProblems.push(problem);
+	}
+
+	public addData(data: AppearanceActionData): void {
+		// Avoid adding duplicate data
+		if (this._actionData.some((existingData) => isEqual(existingData, data)))
+			return;
+
+		this._actionData.push(data);
 	}
 
 	public addInteraction(target: GameLogicCharacter, interaction: InteractionId): void {
@@ -323,11 +336,13 @@ export class AppearanceActionProcessingResultValid extends AppearanceActionProce
 	public readonly problems: readonly AppearanceActionProblem[] = [];
 	public readonly resultState: AssetFrameworkGlobalState;
 	public readonly pendingMessages: readonly ActionHandlerMessage[];
+	public readonly actionData: readonly AppearanceActionData[];
 
 	constructor(processingContext: AppearanceActionProcessingContext, resultState: AssetFrameworkGlobalState) {
 		super(processingContext);
 		this.resultState = resultState;
 		this.pendingMessages = processingContext.pendingMessages;
+		this.actionData = processingContext.actionData;
 		Assert(processingContext.actionProblems.length === 0);
 		Assert(this.resultState.isValid());
 	}

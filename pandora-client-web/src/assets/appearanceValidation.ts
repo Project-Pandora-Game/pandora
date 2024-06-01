@@ -152,10 +152,13 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 		const f = result.failure;
 		if (f.type === 'moduleActionFailure') {
 			if (f.reason.type === 'lockInteractionPrevented') {
-				if (f.reason.reason === 'wrongPassword') {
-					return `The password is incorrect.`;
+				switch (f.reason.reason) {
+					case 'wrongPassword':
+						return `The password is incorrect.`;
+					case 'notAllowed':
+						return `You are not allowed to view the password.`;
 				}
-				AssertNever(f.reason.reason);
+				AssertNever(f.reason);
 			}
 			AssertNever(f.reason.type);
 		}

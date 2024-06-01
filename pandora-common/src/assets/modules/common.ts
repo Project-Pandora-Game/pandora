@@ -60,6 +60,7 @@ export interface IItemModule<out TProperties = unknown, out TStaticData = unknow
 
 	evalCondition(operator: ConditionOperator, value: string): boolean;
 	doAction(context: AppearanceModuleActionContext, action: IAssetModuleTypes<TProperties, TStaticData>[Type]['actions']): IItemModule<TProperties, TStaticData, Type> | null;
+	getActionInteractionType?(action: IAssetModuleTypes<TProperties, TStaticData>[Type]['actions']): ItemInteractionType;
 
 	/** If the contained items are physically equipped (meaning they are cheked for 'allow add/remove' when being added and removed) */
 	readonly contentsPhysicallyEquipped: boolean;

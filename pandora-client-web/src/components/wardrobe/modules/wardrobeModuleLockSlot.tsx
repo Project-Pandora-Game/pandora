@@ -1,11 +1,13 @@
 import classNames from 'classnames';
 import {
+	AppearanceAction,
 	Assert,
 	AssertNever,
 	FormatTimeInterval,
 	ItemLock,
 	LockAssetDefinition,
 	MessageSubstitute,
+	type AppearanceActionData,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { Column, Row } from '../../common/container/container';
@@ -199,6 +201,8 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 							<input type='checkbox' checked={ clearLastPassword } onChange={ (e) => setClearLastPassword(e.target.checked) } />
 						</Row>
 						<PasswordInput
+							item={ item }
+							moduleName={ moduleName }
 							password={ lock.asset.definition.password }
 							showInvalidWarning={ showInvalidWarning }
 							setAllowExecute={ (allow, value) => {
@@ -258,6 +262,8 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 							) : null
 						}
 						<PasswordInput
+							item={ item }
+							moduleName={ moduleName }
 							password={ lock.asset.definition.password }
 							disabled={ useOldPassword && lock.hasPassword }
 							setAllowExecute={ (allow, value) => {
@@ -291,17 +297,20 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 }
 
 function PasswordInput({
+	item,
+	moduleName,
 	password,
 	showInvalidWarning,
 	setAllowExecute,
 	disabled,
-}: {
+}: Pick<WardrobeModuleProps<ItemModuleLockSlot>, 'item' | 'moduleName'> & {
 	password: Immutable<NonNullable<LockAssetDefinition['password']>>;
 	showInvalidWarning?: boolean;
 	setAllowExecute?: (...args: [false, null] | [true, string]) => void;
 	disabled?: boolean;
 
 }) {
+	const { targetSelector } = useWardrobeContext();
 	const [min, max] = typeof password.length === 'number' ? [password.length, password.length] : password.length;
 	const [value, setValue] = useState('');
 
@@ -354,6 +363,28 @@ function PasswordInput({
 		return null;
 	}, [disabled, value, min, max, showInvalidWarning, inputCharacterType]);
 
+	const showPasswordAction = useMemo<AppearanceAction>(() => ({
+		type: 'moduleAction',
+		target: targetSelector,
+		item,
+		module: moduleName,
+		action: {
+			moduleType: 'lockSlot',
+			lockAction: {
+				action: 'showPassword',
+			},
+		},
+	}), [targetSelector, item, moduleName]);
+
+	const onPasswordShown = useCallback((data: readonly AppearanceActionData[]) => {
+		for (const d of data) {
+			if (d.type === 'moduleActionData' && d.data.moduleAction === 'showPassword') {
+				setValue(d.data.password);
+				break;
+			}
+		}
+	}, []);
+
 	useEffect(() => {
 		if (setAllowExecute == null)
 			return;
@@ -391,6 +422,9 @@ function PasswordInput({
 				<label htmlFor={ id }>
 					Password
 				</label>
+				<WardrobeActionButton action={ showPasswordAction } onExecute={ onPasswordShown }>
+					Show
+				</WardrobeActionButton>
 				<input
 					id={ id }
 					type='text'

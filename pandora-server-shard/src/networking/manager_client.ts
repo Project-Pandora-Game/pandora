@@ -206,6 +206,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 		return {
 			result: 'success',
+			data: result.actionData,
 		};
 	}
 

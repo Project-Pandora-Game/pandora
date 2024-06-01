@@ -9,7 +9,7 @@ import type { AssetLockProperties, AssetProperties } from '../properties';
 import type { AppearanceValidationResult, AppearanceItems } from '../appearanceValidation';
 
 import { Logger } from '../../logging';
-import { AssertNever, MemoizeNoArg } from '../../utility';
+import { AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility';
 import { CharacterIdSchema } from '../../character/characterTypes';
 
 import { ItemBaseProps, ItemBase } from './_internal';
@@ -55,6 +55,9 @@ export const ItemLockActionSchema = z.discriminatedUnion('action', [
 		action: z.literal('unlock'),
 		password: z.string().optional(),
 		clearLastPassword: z.boolean().optional(),
+	}),
+	z.object({
+		action: z.literal('showPassword'),
 	}),
 ]);
 export type IItemLockAction = z.infer<typeof ItemLockActionSchema>;
@@ -184,6 +187,11 @@ export class ItemLock extends ItemBase<'lock'> {
 	}
 
 	public lockAction(context: AppearanceModuleActionContext, action: IItemLockAction): ItemLock | null {
+		if (action.action === 'showPassword') {
+			// 'blockSelf' has no meaning for showPassword
+			return this.showPassword(context);
+		}
+
 		const playerRestrictionManager = context.processingContext.getPlayerRestrictionManager();
 
 		/** If the action should be considered as "manipulating themselves" for the purpose of self-blocking checks */
@@ -331,6 +339,36 @@ export class ItemLock extends ItemBase<'lock'> {
 		return this.withProps({
 			lockData,
 		});
+	}
+
+	public showPassword({ failure, addData, processingContext }: AppearanceModuleActionContext): ItemLock | null {
+		if (!this.isLocked() || this.lockData == null) {
+			return null;
+		}
+		if (this.lockData.hidden?.side !== 'server') {
+			return this;
+		}
+
+		AssertNotNullable(this.lockData.hidden.password);
+
+		if (this.lockData.hidden.passwordSetBy !== processingContext.player.id) {
+			failure({
+				type: 'lockInteractionPrevented',
+				moduleAction: 'showPassword',
+				reason: 'notAllowed',
+				asset: this.asset.id,
+				itemName: this.name ?? '',
+			});
+			return this;
+		}
+
+		addData({
+			moduleAction: 'showPassword',
+			password: this.lockData.hidden.password,
+		});
+
+		return this;
+
 	}
 
 	@MemoizeNoArg

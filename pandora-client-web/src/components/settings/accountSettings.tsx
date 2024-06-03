@@ -1,7 +1,7 @@
 import React, { ReactElement, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { AccountRole, ACCOUNT_ROLES_CONFIG, EMPTY, IDirectoryAccountInfo, IsAuthorized, TimeSpanMs, ACCOUNT_SETTINGS_LIMITED_LIMITS, FormatTimeInterval } from 'pandora-common';
+import { AccountRole, ACCOUNT_ROLES_CONFIG, EMPTY, IDirectoryAccountInfo, IsAuthorized, TimeSpanMs, ACCOUNT_SETTINGS_LIMITED_LIMITS, FormatTimeInterval, DisplayNameSchema } from 'pandora-common';
 import { useEvent } from '../../common/useEvent';
 import { useMounted } from '../../common/useMounted';
 import { Button } from '../common/button/button';
@@ -15,6 +15,7 @@ import { useCurrentTime } from '../../common/useCurrentTime';
 import { ExternalLink } from '../common/link/externalLink';
 import { useObservable } from '../../observable';
 import { ConfigShowGitHubIntegration } from '../../config/searchArgs';
+import { FormCreateStringValidator } from '../common/form/form';
 
 export function AccountSettings(): ReactElement | null {
 	const navigate = useNavigate();
@@ -235,6 +236,14 @@ function DisplayName({ account }: { account: IDirectoryAccountInfo; }): ReactEle
 			toast(`You can change your display name again in ${FormatTimeInterval(nextAllowedChange - Date.now())}`, TOAST_OPTIONS_ERROR);
 			return;
 		}
+
+		const displayNameValidator = FormCreateStringValidator(DisplayNameSchema, 'Display name');
+		const result = displayNameValidator(name);
+		if (result) {
+			toast(result, TOAST_OPTIONS_ERROR);
+			return;
+		}
+
 		const displayName = account.username === name ? null : name;
 		directory.sendMessage('changeSettings', {
 			type: 'set',

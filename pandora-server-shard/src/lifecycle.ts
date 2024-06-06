@@ -25,6 +25,8 @@ function DestroyService(service: Service): Promise<void> | void {
 }
 
 async function StopGracefully(): Promise<IEmpty> {
+	// Stop listening for IPC
+	process.off('message', IPCMessageListener);
 	// Disconnect all characters
 	destroying = 'CharacterManager';
 	await CharacterManager.removeAllCharacters();
@@ -84,6 +86,13 @@ export function RequestStop(): void {
 	}
 }
 
+function IPCMessageListener(message: unknown) {
+	if (message === 'STOP') {
+		logger.info('Received STOP message');
+		void Stop();
+	}
+}
+
 export function SetupSignalHandling(): void {
 	process.on('SIGINT', () => {
 		logger.info('Received SIGINT');
@@ -94,6 +103,8 @@ export function SetupSignalHandling(): void {
 		logger.info('Received SIGTERM');
 		RequestStop();
 	});
+
+	process.on('message', IPCMessageListener);
 
 	process.on('exit', () => {
 		logger.alert('Stopped.');

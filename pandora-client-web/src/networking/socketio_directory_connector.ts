@@ -1,31 +1,34 @@
+import { freeze } from 'immer';
 import {
+	Assert,
+	AsyncSynchronized,
+	CharacterId,
+	CharacterIdSchema,
+	ClientDirectorySchema,
 	ConnectionBase,
+	CreateDefaultDirectoryStatus,
+	DirectoryClientSchema,
+	EMPTY,
 	GetLogger,
 	HTTP_HEADER_CLIENT_REQUEST_SHARD,
-	IClientDirectoryAuthMessage,
 	IClientDirectory,
+	IClientDirectoryArgument,
+	IClientDirectoryAuthMessage,
 	IDirectoryAccountInfo,
 	IDirectoryCharacterConnectionInfo,
-	IDirectoryClientArgument,
 	IDirectoryClient,
+	IDirectoryClientArgument,
 	IDirectoryClientChangeEvents,
 	IDirectoryStatus,
 	MessageHandler,
-	ClientDirectorySchema,
-	DirectoryClientSchema,
-	TypedEventEmitter,
-	CreateDefaultDirectoryStatus,
-	CharacterIdSchema,
-	CharacterId,
-	EMPTY,
-	AsyncSynchronized,
-	SecondFactorResponse,
-	IClientDirectoryArgument,
 	SecondFactorData,
-	Assert,
+	SecondFactorResponse,
+	TypedEventEmitter,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
-import { connect, Socket } from 'socket.io-client';
+import { toast } from 'react-toastify';
+import { Socket, connect } from 'socket.io-client';
+import { z } from 'zod';
 import { BrowserStorage } from '../browserStorage';
 import { AccountContactContext } from '../components/accountContacts/accountContactContext';
 import { PrehashPassword } from '../crypto/helpers';
@@ -33,9 +36,7 @@ import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../persistentToast';
 import { DirectMessageManager } from './directMessageManager';
 import { AuthToken, DirectoryConnectionState, DirectoryConnector, LoginResponse } from './directoryConnector';
-import { freeze } from 'immer';
-import { z } from 'zod';
-import { toast } from 'react-toastify';
+import { GetSocketIoUrl } from './socketio_shard_connector';
 
 type SocketAuthCallback = (data?: IClientDirectoryAuthMessage) => void;
 
@@ -168,7 +169,9 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 		// eslint-disable-next-line prefer-const
 		let directoryConnector: SocketIODirectoryConnector;
 		// Create the connection without connecting
-		const socket = connect(uri, {
+		const { origin, path } = GetSocketIoUrl(uri);
+		const socket = connect(origin, {
+			path,
 			autoConnect: false,
 			auth: (callback: SocketAuthCallback) => callback(directoryConnector.getAuthData()),
 			withCredentials: true,

@@ -66,6 +66,20 @@ export default function (env: WebpackEnv): Configuration {
 				writeToDisk: true,
 			},
 			port: WEBPACK_DEV_SERVER_PORT,
+			proxy: [
+				{
+					context: '/server-proxy/directory',
+					pathRewrite: { '^/server-proxy/directory': '' },
+					target: 'http://localhost:25560',
+					secure: false,
+				},
+				{
+					context: '/server-proxy/shard',
+					pathRewrite: { '^/server-proxy/shard': '' },
+					target: 'http://localhost:25561',
+					secure: false,
+				},
+			],
 		},
 		devtool: env.prod ? 'source-map' : 'inline-source-map',
 		entry: {

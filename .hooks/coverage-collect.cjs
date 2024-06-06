@@ -40,7 +40,11 @@ async function collectCoverage() {
 
 	console.log("\n\nCollecting overall coverage from all tests...\n\n")
 
-	const { error } = spawnSync('pnpm', [
+	if (process.platform === 'win32') {
+		console.log('!!! WARNING !!!\nRunning on Windows - coverage will be imprecise.\n\n');
+	}
+
+	const { error } = spawnSync(process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm', [
 		'exec',
 		'nyc',
 		'report',
@@ -51,6 +55,7 @@ async function collectCoverage() {
 		'--reporter=json',
 		'--reporter=text-summary',
 	], {
+		shell: true,
 		stdio: 'inherit',
 	});
 	if (error)

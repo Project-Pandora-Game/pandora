@@ -1,5 +1,7 @@
 import * as path from 'path';
 
+export const PNPM_EXECUTABLE = process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm';
+
 // Ports and addresses
 export const TEST_DIRECTORY_PORT = 25560;
 export const TEST_HTTP_SERVER_PORT = 10269;

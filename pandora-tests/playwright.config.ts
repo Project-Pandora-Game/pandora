@@ -33,7 +33,7 @@ export default defineConfig({
 	},
 
 	webServer: {
-		command: `pnpm exec superstatic serve -p ${TEST_HTTP_SERVER_PORT} --host 127.0.0.1 '${path.relative(process.cwd(), TEST_CLIENT_DIST_DIR)}'`,
+		command: `pnpm exec superstatic serve -p ${TEST_HTTP_SERVER_PORT} --host 127.0.0.1 "${path.relative(process.cwd(), TEST_CLIENT_DIST_DIR)}"`,
 		port: TEST_HTTP_SERVER_PORT,
 		reuseExistingServer: false,
 	},

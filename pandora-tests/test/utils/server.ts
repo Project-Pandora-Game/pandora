@@ -8,6 +8,8 @@ import type { ENV } from 'pandora-server-directory/src/config';
 
 export type DirectoryEnvSetup = Partial<typeof ENV>;
 
+const DEBUG_DIRECT_PRINT = true;
+
 const DIRECTORY_ENV_DEFAULTS: DirectoryEnvSetup = {
 	SERVER_PORT: TEST_DIRECTORY_PORT,
 	SERVER_HTTPS_CERT: '',
@@ -115,7 +117,7 @@ export function TestStartDirectory(options: Partial<TestStartDirectoryOptions> =
 				...DIRECTORY_ENV_DEFAULTS,
 				...options.configOverrides,
 			}),
-			stdio: 'pipe',
+			stdio: DEBUG_DIRECT_PRINT ? 'inherit' : 'pipe',
 		});
 	} else {
 		directoryProcess = spawn(PNPM_EXECUTABLE, [
@@ -136,7 +138,7 @@ export function TestStartDirectory(options: Partial<TestStartDirectoryOptions> =
 				...options.configOverrides,
 			}),
 			shell: true,
-			stdio: 'pipe',
+			stdio: DEBUG_DIRECT_PRINT ? 'inherit' : 'pipe',
 		});
 	}
 

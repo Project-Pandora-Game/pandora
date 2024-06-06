@@ -8,7 +8,7 @@ import type { ENV } from 'pandora-server-directory/src/config';
 
 export type DirectoryEnvSetup = Partial<typeof ENV>;
 
-const DEBUG_DIRECT_PRINT = true;
+const DEBUG_DIRECT_PRINT = false;
 
 const DIRECTORY_ENV_DEFAULTS: DirectoryEnvSetup = {
 	SERVER_PORT: TEST_DIRECTORY_PORT,
@@ -137,7 +137,6 @@ export function TestStartDirectory(options: Partial<TestStartDirectoryOptions> =
 				...DIRECTORY_ENV_DEFAULTS,
 				...options.configOverrides,
 			}),
-			shell: true,
 			stdio: DEBUG_DIRECT_PRINT ? 'inherit' : 'pipe',
 		});
 	}

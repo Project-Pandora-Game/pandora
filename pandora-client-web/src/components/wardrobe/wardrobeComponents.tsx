@@ -1,4 +1,6 @@
 import classNames from 'classnames';
+import _ from 'lodash';
+import { nanoid } from 'nanoid';
 import {
 	AppearanceAction,
 	AppearanceActionProblem,
@@ -12,21 +14,20 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
 import { z } from 'zod';
-import { nanoid } from 'nanoid';
-import { useAssetManager } from '../../assets/assetManager';
-import { Button, ButtonProps, IconButton } from '../common/button/button';
-import { CommonProps } from '../../common/reactTypes';
 import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem } from '../../assets/appearanceValidation';
-import { HoverElement } from '../hoverElement/hoverElement';
+import { useAssetManager } from '../../assets/assetManager';
 import { useGraphicsUrl } from '../../assets/graphicsManager';
-import { useWardrobeContext, useWardrobeExecuteChecked } from './wardrobeContext';
-import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
-import _ from 'lodash';
-import { useAccountSettings } from '../gameContext/directoryConnectorContextProvider';
-import { useAssetPreferenceVisibilityCheck } from '../../graphics/graphicsCharacter';
 import { BrowserStorage } from '../../browserStorage';
+import { CommonProps } from '../../common/reactTypes';
+import { USER_DEBUG } from '../../config/Environment';
+import { useAssetPreferenceVisibilityCheck } from '../../graphics/graphicsCharacter';
 import { useObservable } from '../../observable';
+import { Button, ButtonProps, IconButton } from '../common/button/button';
 import { Column } from '../common/container/container';
+import { useAccountSettings } from '../gameContext/directoryConnectorContextProvider';
+import { HoverElement } from '../hoverElement/hoverElement';
+import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
+import { useWardrobeContext, useWardrobeExecuteChecked } from './wardrobeContext';
 
 export function ActionWarningContent({ problems, prompt }: { problems: readonly AppearanceActionProblem[]; prompt: boolean; }): ReactElement {
 	const { wardrobeItemDisplayNameType } = useAccountSettings();
@@ -151,6 +152,8 @@ export function WardrobeActionButton({
 				setIsHovering(false);
 			} }
 			disabled={ processing || disabled }
+			data-action={ USER_DEBUG ? JSON.stringify(action, undefined, '\t') : undefined }
+			data-action-localproblems={ (USER_DEBUG && check != null) ? JSON.stringify(check.problems, undefined, '\t') : undefined }
 		>
 			{
 				showActionBlockedExplanation && check != null ? (

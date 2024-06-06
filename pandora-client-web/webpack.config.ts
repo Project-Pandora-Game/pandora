@@ -1,17 +1,18 @@
+import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
+import { execSync } from 'child_process';
 import { CleanWebpackPlugin } from 'clean-webpack-plugin';
 import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import { config } from 'dotenv';
+import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
 import MiniCssExtractPlugin, { loader as miniCssExtractLoader } from 'mini-css-extract-plugin';
-import ReactRefreshWebpackPlugin from '@pmmmwh/react-refresh-webpack-plugin';
-import ReactRefreshTypeScript from 'react-refresh-typescript';
 import { join } from 'path';
 import postcssFlexbugsFixes from 'postcss-flexbugs-fixes';
 import postcssPresetEnv from 'postcss-preset-env';
+import ReactRefreshTypeScript from 'react-refresh-typescript';
 import { Compilation, Compiler, Configuration, DefinePlugin, RuleSetRule, RuleSetUseItem, WebpackPluginInstance } from 'webpack';
 import 'webpack-dev-server';
 import packageJson from './package.json';
-import { execSync } from 'child_process';
 
 import { CreateEnvParser, type EnvInputJson } from 'pandora-common';
 import { WEBPACK_CONFIG, type CLIENT_CONFIG } from './src/config/definition';
@@ -124,6 +125,19 @@ export default function (env: WebpackEnv): Configuration {
 function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 	const plugins: WebpackPluginInstance[] = [
 		new CleanWebpackPlugin({ verbose: true }),
+		new ForkTsCheckerWebpackPlugin({
+			async: false,
+			typescript: {
+				configOverwrite: {
+					compilerOptions: {
+						skipLibCheck: false,
+						sourceMap: false,
+						inlineSourceMap: false,
+						declarationMap: false,
+					},
+				},
+			},
+		}),
 		new DefinePlugin({
 			'process.env': JSON.stringify({
 				NODE_ENV: env.prod ? 'production' : 'development',

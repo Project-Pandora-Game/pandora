@@ -7,7 +7,7 @@
 	"scripts": {
 		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
 		"lint:fix": "eslint --fix .",
-		"type-check": "pnpm run '/type-check:.*/'",
+		"type-check": "pnpm run \"/type-check:.*/\"",
 		"type-check:test-e2e": "tsc -p ./test/tsconfig.json --noEmit",
 		"type-check:test-config": "tsc -p ./tsconfig.json --noEmit",
 		"test-e2e": "playwright test",

@@ -30,6 +30,7 @@ const {
 	EDITOR_ASSETS_OFFICIAL_ADDRESS,
 	EXTRA_ASSETS_ADDRESS,
 	WEBPACK_DEV_SERVER_PORT,
+	WEBPACK_DEV_SERVER_SECURE,
 	USER_DEBUG,
 	DIST_DIR_OVERRIDE,
 } = CreateEnvParser(WEBPACK_CONFIG)();
@@ -48,6 +49,7 @@ export default function (env: WebpackEnv): Configuration {
 	const mode = env.prod ? 'production' : 'development';
 	return {
 		devServer: {
+			server: WEBPACK_DEV_SERVER_SECURE ? 'https' : 'http',
 			historyApiFallback: {
 				rewrites: [
 					{ from: /^\/editor/, to: '/editor/index.html' },

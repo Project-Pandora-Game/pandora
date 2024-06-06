@@ -1,6 +1,6 @@
 import { Assert, AssertNotNullable, EnvStringify } from './utils';
 import { ChildProcessWithoutNullStreams, spawn } from 'child_process';
-import { TEST_COVERAGE_TEMP, TEST_DIRECTORY_PORT, TEST_PROJECT_PANDORA_DIR, TEST_SERVER_DIRECTORY_ENTRYPOINT, TEST_SERVER_DIRECTORY_TEST_DIR, TEST_TEMP } from '../_setup/config';
+import { PNPM_EXECUTABLE, TEST_COVERAGE_TEMP, TEST_DIRECTORY_PORT, TEST_PROJECT_PANDORA_DIR, TEST_SERVER_DIRECTORY_ENTRYPOINT, TEST_SERVER_DIRECTORY_TEST_DIR, TEST_TEMP } from '../_setup/config';
 import { test } from '@playwright/test';
 import path from 'path';
 
@@ -82,22 +82,24 @@ export function TestStopDirectory(): Promise<void> {
 	});
 }
 
-test.afterEach(async () => {
-	if (DirectoryServer != null && !DirectoryServer.keepActive) {
-		await TestStopDirectory();
-	}
-});
+export function InternalSetupTestingEnvDirectory(): void {
+	test.afterEach(async () => {
+		if (DirectoryServer != null && !DirectoryServer.keepActive) {
+			await TestStopDirectory();
+		}
+	});
 
-test.afterAll(async () => {
-	if (DirectoryServer != null) {
-		await TestStopDirectory();
-	}
-});
+	test.afterAll(async () => {
+		if (DirectoryServer != null) {
+			await TestStopDirectory();
+		}
+	});
+}
 
 export function TestStartDirectory(options: Partial<TestStartDirectoryOptions> = {}): Promise<void> {
 	Assert(DirectoryServer == null);
 
-	const directoryProcess = spawn('pnpm', [
+	const directoryProcess = spawn(PNPM_EXECUTABLE, [
 		'exec',
 		'nyc',
 		'--silent',
@@ -114,6 +116,7 @@ export function TestStartDirectory(options: Partial<TestStartDirectoryOptions> =
 			...DIRECTORY_ENV_DEFAULTS,
 			...options.configOverrides,
 		}),
+		shell: true,
 		stdio: 'pipe',
 	});
 

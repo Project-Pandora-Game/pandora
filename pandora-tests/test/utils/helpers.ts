@@ -1,5 +1,6 @@
 import { ConsoleMessage, Page, expect, test } from '@playwright/test';
 import { CoverageProcessPage } from './coverage';
+import { InternalSetupTestingEnvDirectory } from './server';
 
 const handleLog = (message: ConsoleMessage) => {
 	if (message.type() === 'error') {
@@ -58,6 +59,8 @@ export function SetupTestingEnv(): void {
 			await CoverageProcessPage(page, baseURL);
 		}
 	});
+
+	InternalSetupTestingEnvDirectory();
 }
 
 // EULA helper

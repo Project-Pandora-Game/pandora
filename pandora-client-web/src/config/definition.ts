@@ -11,6 +11,7 @@ export const WEBPACK_BASE_CONFIG = {
 export const WEBPACK_CONFIG = {
 	...WEBPACK_BASE_CONFIG,
 	WEBPACK_DEV_SERVER_PORT: z.number().default(6969),
+	WEBPACK_DEV_SERVER_SECURE: z.boolean().default(false),
 	DIST_DIR_OVERRIDE: z.string().optional(),
 } as const;
 

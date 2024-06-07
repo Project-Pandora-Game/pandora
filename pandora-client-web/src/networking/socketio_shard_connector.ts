@@ -1,25 +1,25 @@
 import {
+	Assert,
+	ClientShardSchema,
 	ConnectionBase,
 	GetLogger,
 	IClientShard,
 	IDirectoryCharacterConnectionInfo,
-	IShardClientArgument,
 	IShardClient,
+	IShardClientArgument,
+	IShardClientChangeEvents,
 	MessageHandler,
-	ClientShardSchema,
 	ShardClientSchema,
 	TypedEventEmitter,
-	IShardClientChangeEvents,
-	Assert,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
-import { connect, Socket } from 'socket.io-client';
+import { Socket, connect } from 'socket.io-client';
 import { LoadAssetDefinitions } from '../assets/assetManager';
 import { GameState } from '../components/gameContext/gameStateContextProvider';
+import { ConfigServerIndex } from '../config/searchArgs';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
-import { ShardConnector, ShardConnectionState } from './shardConnector';
-import { ConfigServerIndex } from '../config/searchArgs';
+import { ShardConnectionState, ShardConnector } from './shardConnector';
 
 const logger = GetLogger('ShardConn');
 
@@ -29,13 +29,29 @@ export class ShardChangeEventEmitter extends TypedEventEmitter<Record<IShardClie
 	}
 }
 
+export function GetSocketIoUrl(uri: string): {
+	origin: string;
+	path: string;
+} {
+	// Parse the uri into full URL
+	const url = new URL(uri.startsWith('/') ? (window.location.origin + uri) : uri);
+	// Return origin and updated path
+	return {
+		origin: url.origin,
+		path: url.pathname + (url.pathname.endsWith('/') ? '' : '/') + 'socket.io',
+	};
+}
+
 function CreateConnection({ publicURL, secret, characterId }: IDirectoryCharacterConnectionInfo): Socket {
 	// Find which public URL we should actually use
 	const publicURLOptions = publicURL.split(';').map((a) => a.trim());
 	publicURL = publicURLOptions[ConfigServerIndex.value % publicURLOptions.length];
 
+	// Parse the uri into full URL
+	const { origin, path } = GetSocketIoUrl(publicURL);
 	// Create the connection without connecting
-	return connect(publicURL, {
+	return connect(origin, {
+		path,
 		autoConnect: false,
 		withCredentials: true,
 		extraHeaders: {

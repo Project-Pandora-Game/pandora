@@ -6,8 +6,8 @@
 	"license": "LGPL-3.0-or-later",
 	"scripts": {
 		"clean": "rimraf dist",
-		"build": "pnpm run --silent clean && cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --env prod --fail-on-warnings",
-		"dev": "pnpm run --silent clean && cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack serve",
+		"build": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack --env prod --fail-on-warnings",
+		"dev": "cross-env TS_NODE_PROJECT=\"tsconfig.webpack.json\" webpack serve",
 		"dev:progress": "pnpm run --silent dev --progress",
 		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
 		"lint:fix": "eslint --fix .",
@@ -79,6 +79,7 @@
 		"eslint-plugin-react": "7.34.1",
 		"eslint-plugin-react-hooks": "4.6.2",
 		"file-loader": "6.2.0",
+		"fork-ts-checker-webpack-plugin": "^9.0.2",
 		"html-webpack-plugin": "5.6.0",
 		"jest": "29.7.0",
 		"jest-environment-jsdom": "29.7.0",

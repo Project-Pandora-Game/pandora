@@ -14,7 +14,7 @@ import { AppearanceItems, CharacterAppearanceLoadAndValidate, ValidateAppearance
 import type { Asset } from './asset';
 import type { AssetManager } from './assetManager';
 import { WearableAssetType } from './definitions';
-import { CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
+import { CharacterViewSchema, LegsPoseSchema } from './graphics/conditions';
 import { ItemRoomDevice, ItemTemplateSchema, RoomDeviceDeploymentChange, RoomDeviceDeploymentChangeSchema } from './item';
 import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemId, ItemIdSchema } from './item/base';
 import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure, type ModuleActionData } from './modules';

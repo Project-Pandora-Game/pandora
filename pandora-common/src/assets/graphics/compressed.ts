@@ -1,5 +1,8 @@
 import type { ArrayCompressType } from '../../utility';
-import type { BoneType, Condition, ConditionOperator, CoordinatesCompressed, LayerImageOverride, LayerMirror, LayerPriority, PointDefinition, Size, TransformDefinition } from './graphics';
+import type { CoordinatesCompressed, Size } from './common';
+import type { BoneType, Condition, ConditionOperator } from './conditions';
+import type { LayerImageOverride, LayerMirror, LayerPriority } from './graphics';
+import type { PointDefinition, TransformDefinition } from './points';
 
 export type SizeCompressed = ArrayCompressType<Size, ['width', 'height']>;
 

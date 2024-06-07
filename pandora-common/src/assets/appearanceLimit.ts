@@ -3,7 +3,7 @@ import _ from 'lodash';
 import { ZodEnum } from 'zod';
 import { CloneDeepMutable, IntervalSetIntersection } from '../utility';
 import type { AssetDefinitionPoseLimit, AssetDefinitionPoseLimits } from './definitions';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, CharacterViewSchema, LegsPoseSchema } from './graphics/graphics';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, CharacterViewSchema, LegsPoseSchema } from './graphics';
 import type { AppearanceArmPose, AppearanceArmsOrder, AppearancePose } from './state/characterStatePose';
 import { PartialAppearancePose, GetDefaultAppearancePose } from './state/characterStatePose';
 

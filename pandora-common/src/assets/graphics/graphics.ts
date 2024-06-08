@@ -4,6 +4,9 @@ import { RectangleSchema } from './common';
 import { PointDefinitionSchema, type PointTemplate } from './points';
 import { BoneNameSchema, ConditionSchema, type BoneType } from './conditions';
 
+// Fix for pnpm resolution weirdness
+import type { } from '../../validation';
+
 export const CharacterSize = {
 	WIDTH: 1000,
 	HEIGHT: 1500,

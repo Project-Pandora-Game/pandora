@@ -5,6 +5,9 @@ import { CloneDeepMutable } from '../../utility';
 import { CoordinatesCompressedSchema } from './common';
 import { PointDefinitionSchema, type PointTemplate } from './points';
 
+// Fix for pnpm resolution weirdness
+import type { } from '../../validation';
+
 export const PointTemplateDeltaSchema = z.object({
 	removed: CoordinatesCompressedSchema.array().optional(),
 	added: PointDefinitionSchema.array().optional(),

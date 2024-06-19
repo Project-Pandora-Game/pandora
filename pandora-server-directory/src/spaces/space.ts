@@ -100,6 +100,7 @@ export class Space {
 		return ({
 			name: this.config.name,
 			description: this.config.description,
+			fluffText: this.config.fluffText,
 			public: this.config.public,
 			maxUsers: this.config.maxUsers,
 		});
@@ -179,6 +180,9 @@ export class Space {
 		}
 		if (changes.description !== undefined) {
 			this.config.description = changes.description;
+		}
+		if (changes.fluffText !== undefined) {
+			this.config.fluffText = changes.fluffText;
 		}
 		if (changes.maxUsers !== undefined) {
 			this.config.maxUsers = changes.maxUsers;
@@ -655,13 +659,23 @@ export class Space {
 			},
 		});
 
+		// send fluff text, if there is any
+		// TODO: Must be changed later to send room and not space specific fluff text
+		if (this.config.fluffText)
+		this.sendMessage({
+			type: 'action',
+			sendTo: [character.baseInfo.id],
+			id: 'custom',
+			customText: this.config.fluffText,
+		});
+
 		ConnectionManagerClient.onSpaceListChange();
 		await Promise.all([
 			this._assignedShard?.update('characters'),
 			character.baseInfo.updateDirectoryData({ currentSpace: this.id }),
 			this._useInvite(character, invite),
 		]);
-	}
+	} // addCharacter
 
 	private async _useInvite(character: Character, id?: SpaceInviteId): Promise<void> {
 		const invite = id ? this._getValidInvite(character, id) : undefined;

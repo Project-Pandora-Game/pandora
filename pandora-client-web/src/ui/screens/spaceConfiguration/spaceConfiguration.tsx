@@ -14,6 +14,7 @@ import {
 	IsAuthorized,
 	IsObject,
 	LIMIT_SPACE_DESCRIPTION_LENGTH,
+	LIMIT_SPACE_FLUFFTEXT_LENGTH,
 	LIMIT_SPACE_MAX_CHARACTER_NUMBER,
 	LIMIT_SPACE_NAME_LENGTH,
 	RoomBackgroundInfo,
@@ -60,11 +61,13 @@ import './spaceConfiguration.scss';
 
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
 const IsValidDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
+const IsValidFluffText = ZodMatcher(SpaceBaseInfoSchema.shape.fluffText);
 
 function DefaultConfig(): SpaceDirectoryConfig {
 	return {
 		name: '',
 		description: '',
+		fluffText: '',
 		maxUsers: 10,
 		admin: [],
 		banned: [],
@@ -208,9 +211,19 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						value={ currentConfig.description }
 						onChange={ (event) => setModifiedData({ description: event.target.value }) }
 						readOnly={ !canEdit }
-						rows={ 16 }
+						rows={ 8 }
 					/>
 					{ canEdit && !IsValidDescription(currentConfig.description) ? (<div className='error'>Invalid description</div>) : null }
+				</div>
+				<div className='input-container'>
+					<label>Initial text (being shown, when the space is entered) ({ currentConfig.fluffText.length }/{ LIMIT_SPACE_FLUFFTEXT_LENGTH } characters)</label>
+					<textarea
+						value={ currentConfig.fluffText }
+						onChange={ (event) => setModifiedData({ fluffText: event.target.value }) }
+						readOnly={ !canEdit }
+						rows={ 8 }
+					/>
+					{ canEdit && !IsValidFluffText(currentConfig.fluffText) ? (<div className='error'>Invalid initial text</div>) : null }
 				</div>
 				<div className='input-container'>
 					<label>Public</label>

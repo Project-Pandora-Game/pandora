@@ -21,7 +21,7 @@
 		"@typescript-eslint/eslint-plugin": "7.13.0",
 		"@typescript-eslint/parser": "7.13.0",
 		"eslint": "8.57.0",
-		"nyc": "15.1.0",
+		"nyc": "17.0.0",
 		"pandora-common": "workspace:*",
 		"pandora-server-directory": "workspace:*",
 		"pandora-server-shard": "workspace:*",

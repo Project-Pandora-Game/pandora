@@ -661,13 +661,14 @@ export class Space {
 
 		// send fluff text, if there is any
 		// TODO: Must be changed later to send room and not space specific fluff text
-		if (this.config.fluffText)
-		this.sendMessage({
-			type: 'action',
-			sendTo: [character.baseInfo.id],
-			id: 'custom',
-			customText: this.config.fluffText,
-		});
+		if (this.config.fluffText) {
+			this.sendMessage({
+				type: 'action',
+				sendTo: [character.baseInfo.id],
+				id: 'custom',
+				customText: this.config.fluffText,
+			});
+		}
 
 		ConnectionManagerClient.onSpaceListChange();
 		await Promise.all([

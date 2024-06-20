@@ -4,6 +4,7 @@ import { ACTOR_PANDORA } from '../../src/account/actorPandora';
 const TEST_SPACE_DEFAULTS: Readonly<SpaceDirectoryConfig> = {
 	name: '',
 	description: '',
+	fluffText: '',
 	maxUsers: 10,
 	admin: [],
 	banned: [],

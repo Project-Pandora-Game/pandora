@@ -19,6 +19,7 @@ export const TEST_SPACE: Readonly<SpaceDirectoryConfig> = {
 	...TEST_SPACE_DEFAULTS,
 	name: 'test',
 	description: 'Some description',
+	fluffText: 'Some fluff text',
 	admin: [1],
 	banned: [2],
 };
@@ -27,6 +28,7 @@ export const TEST_SPACE2: Readonly<SpaceDirectoryConfig> = {
 	...TEST_SPACE_DEFAULTS,
 	name: 'test2',
 	description: 'Another description',
+	fluffText: 'More text to read',
 	maxUsers: 7,
 	admin: [2],
 	banned: [22, 13],
@@ -36,6 +38,7 @@ export const TEST_SPACE_DEV: Readonly<SpaceDirectoryConfig> = {
 	...TEST_SPACE_DEFAULTS,
 	name: 'test-dev',
 	description: 'Development space',
+	fluffText: 'Upon entering you see the future of Pandora',
 	admin: [1],
 	features: ['development'],
 	development: {

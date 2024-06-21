@@ -100,7 +100,7 @@ export class Space {
 		return ({
 			name: this.config.name,
 			description: this.config.description,
-			fluffText: this.config.fluffText,
+			entryText: this.config.entryText,
 			public: this.config.public,
 			maxUsers: this.config.maxUsers,
 		});
@@ -181,8 +181,8 @@ export class Space {
 		if (changes.description !== undefined) {
 			this.config.description = changes.description;
 		}
-		if (changes.fluffText !== undefined) {
-			this.config.fluffText = changes.fluffText;
+		if (changes.entryText !== undefined) {
+			this.config.entryText = changes.entryText;
 		}
 		if (changes.maxUsers !== undefined) {
 			this.config.maxUsers = changes.maxUsers;
@@ -661,12 +661,12 @@ export class Space {
 
 		// send fluff text, if there is any
 		// TODO: Must be changed later to send room and not space specific fluff text
-		if (this.config.fluffText) {
+		if (this.config.entryText) {
 			this.sendMessage({
 				type: 'action',
 				sendTo: [character.baseInfo.id],
 				id: 'custom',
-				customText: this.config.fluffText,
+				customText: this.config.entryText,
 			});
 		}
 

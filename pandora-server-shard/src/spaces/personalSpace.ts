@@ -16,7 +16,7 @@ export class PersonalSpace extends Space {
 	public override get config(): SpaceDirectoryConfig {
 		return {
 			name: `${this._character.name}'s personal space`,
-			fluffText: '',
+			entryText: '',
 			description: '',
 			public: false,
 			maxUsers: 1,

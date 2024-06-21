@@ -178,31 +178,33 @@ function ShowFriends() {
 	}, [friends, status]);
 
 	return (
-		<table>
-			<colgroup>
-				<col style={ { width: '1%' } } />
-				<col />
-				<col />
-				<col />
-				<col style={ { width: '1%' } } />
-				<col style={ { width: '1%' } } />
-			</colgroup>
-			<thead>
-				<tr>
-					<th>ID</th>
-					<th>Name</th>
-					<th>Status</th>
-					<th>Online Characters</th>
-					<th>Since</th>
-					<th>Actions</th>
-				</tr>
-			</thead>
-			<tbody>
-				{ friendsWithStatus.map((friend) => (
-					<FriendRow key={ friend.id } { ...friend } />
-				)) }
-			</tbody>
-		</table>
+		<div style={ { overflow: 'auto', height: '100%' } }>
+			<table>
+				<colgroup>
+					<col style={ { width: '1%' } } />
+					<col />
+					<col />
+					<col />
+					<col style={ { width: '1%' } } />
+					<col style={ { width: '1%' } } />
+				</colgroup>
+				<thead>
+					<tr>
+						<th>ID</th>
+						<th>Name</th>
+						<th>Status</th>
+						<th>Online Characters</th>
+						<th>Since</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					{ friendsWithStatus.map((friend) => (
+						<FriendRow key={ friend.id } { ...friend } />
+					)) }
+				</tbody>
+			</table>
+		</div>
 	);
 }
 

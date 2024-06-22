@@ -12,6 +12,7 @@ import { DivContainer, Row } from '../common/container/container';
 import { AccountContactChangeHandleResult, useFriendStatus, useAccountContacts } from './accountContactContext';
 import { useConfirmDialog } from '../dialog/dialog';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
+import { Scrollable } from '../common/scrollbar/scrollbar';
 import './accountContacts.scss';
 
 export function AccountContacts() {
@@ -178,7 +179,7 @@ function ShowFriends() {
 	}, [friends, status]);
 
 	return (
-		<div style={ { overflow: 'auto', height: '100%' } }>
+		<Scrollable direction='vertical' color='lighter'>
 			<table>
 				<colgroup>
 					<col style={ { width: '1%' } } />
@@ -204,7 +205,7 @@ function ShowFriends() {
 					)) }
 				</tbody>
 			</table>
-		</div>
+		</Scrollable>
 	);
 }
 

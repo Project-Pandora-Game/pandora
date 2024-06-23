@@ -16,10 +16,10 @@
 		}
 
 		ul {
-			padding: 0 0.5em;
+			margin: 0;
+			padding: 0.5em;
 			list-style-type: none;
-			overflow-x: hidden;
-			overflow-y: scroll;
+			flex: 1;
 		}
 
 		li {
@@ -45,13 +45,6 @@
 				background-color: $grey-mid;
 				font-style: italic;
 			}
-		}
-
-		.input-line {
-			display: flex;
-			flex-flow: row;
-			position: absolute;
-			bottom: 0;
 		}
 	}
 

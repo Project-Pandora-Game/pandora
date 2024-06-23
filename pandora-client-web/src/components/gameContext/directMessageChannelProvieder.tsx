@@ -1,4 +1,4 @@
-import { AssertNotNullable } from 'pandora-common';
+import { AssertNever, AssertNotNullable } from 'pandora-common';
 import React, { createContext, ReactElement, useContext, useMemo, Suspense, useEffect, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { DirectMessageChannel } from '../../networking/directMessageManager';
@@ -51,6 +51,11 @@ function DirectMessageChannelFallback({ channel, message = 'Unknown error' }: { 
 			case 'denied':
 				message = 'Denied';
 				break;
+			case 'error':
+				message = 'Error loading the chat';
+				break;
+			default:
+				AssertNever(channel.failed);
 		}
 	}
 	return (

@@ -66,21 +66,23 @@ function ClearIncoming() {
 function ShowAccountContacts({ type }: { type: IAccountContact['type']; }) {
 	const rel = useAccountContacts(type);
 	return (
-		<table>
-			<thead>
-				<tr>
-					<th>ID</th>
-					<th>Name</th>
-					<th>Created</th>
-					<th>Actions</th>
-				</tr>
-			</thead>
-			<tbody>
-				{ rel.map((r) => (
-					<AccountContactsRow key={ r.id } { ...r } />
-				)) }
-			</tbody>
-		</table>
+		<Scrollable color='dark'>
+			<table className='fill-x'>
+				<thead>
+					<tr>
+						<th>ID</th>
+						<th>Name</th>
+						<th>Created</th>
+						<th>Actions</th>
+					</tr>
+				</thead>
+				<tbody>
+					{ rel.map((r) => (
+						<AccountContactsRow key={ r.id } { ...r } />
+					)) }
+				</tbody>
+			</table>
+		</Scrollable>
 	);
 }
 

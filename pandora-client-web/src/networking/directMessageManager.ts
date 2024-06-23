@@ -28,6 +28,7 @@ import { ChatParser } from '../ui/components/chat/chatParser';
 import type { DirectoryConnector } from './directoryConnector';
 
 export class DirectMessageManager extends TypedEventEmitter<{ newMessage: DirectMessageChannel; close: AccountId; }> {
+	private readonly logger: Logger;
 	public readonly connector: DirectoryConnector;
 	private readonly _cryptoPassword = BrowserStorage.create<string | undefined>('crypto-handler-password', undefined, z.string().optional());
 	private readonly _chats: Map<AccountId, DirectMessageChannel> = new Map();
@@ -50,6 +51,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 
 	constructor(connector: DirectoryConnector) {
 		super();
+		this.logger = GetLogger('DirectMessageManager');
 		this.connector = connector;
 	}
 
@@ -67,7 +69,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 
 	public async passwordChange(username: string, password: string): Promise<{ cryptoKey: IAccountCryptoKey; onSuccess: () => void; }> {
 		if (this.#crypto == null) {
-			throw new Error('Not logged in');
+			throw new Error('Crypto not loaded');
 		}
 
 		const cryptoPassword = await KeyExchange.generateKeyPassword(username, password);
@@ -82,6 +84,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 		};
 	}
 
+	@AsyncSynchronized()
 	public async accountChanged() {
 		const account = this.connector.currentAccount.value;
 		if (!account) {
@@ -91,32 +94,60 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 		if (this.#crypto && this._lastCryptoKey === account.cryptoKey) {
 			return;
 		}
+		this.logger.debug('Account or key changed, reloading crypto');
+		// Clear the existing info, it will be re-fetched anyway
+		this._info.value = [];
+
 		const cryptoPassword = this._cryptoPassword.value;
-		AssertNotNullable(cryptoPassword);
-		if (account.cryptoKey) {
-			this.#crypto = await KeyExchange.import(account.cryptoKey, cryptoPassword);
-			this._lastCryptoKey = account.cryptoKey;
-		} else {
-			this.#crypto = await KeyExchange.generate();
-			this._lastCryptoKey = await this.#crypto.export(cryptoPassword);
-			const { result } = await this.connector.awaitResponse('setInitialCryptoKey', { cryptoKey: this._lastCryptoKey });
-			if (result !== 'ok') {
-				throw new Error(`Failed to set crypto key: ${result}`);
+		if (cryptoPassword != null) {
+			if (account.cryptoKey) {
+				try {
+					this.#crypto = await KeyExchange.import(account.cryptoKey, cryptoPassword);
+					this._lastCryptoKey = account.cryptoKey;
+					this.logger.debug('Successfully loaded existing crypto key');
+				} catch (error) {
+					this.logger.error('Failed to load existing crypto key:', error);
+					this._lastCryptoKey = undefined;
+					this.#crypto = undefined;
+				}
+			} else {
+				try {
+					this.#crypto = await KeyExchange.generate();
+					this._lastCryptoKey = await this.#crypto.export(cryptoPassword);
+					const { result } = await this.connector.awaitResponse('setInitialCryptoKey', { cryptoKey: this._lastCryptoKey });
+					if (result !== 'ok') {
+						throw new Error(`Failed to set crypto key: ${result}`);
+					}
+					this.logger.info('Successfully generated and saved new crypto key');
+				} catch (error) {
+					this.logger.error('Failed to generate a new crypto key:', error);
+					this._lastCryptoKey = undefined;
+					this.#crypto = undefined;
+				}
 			}
+		} else {
+			this.logger.error('Failed to load crypto: We have an account, but no crypto password');
+			this._lastCryptoKey = undefined;
+			this.#crypto = undefined;
 		}
-		await this._loadInfo();
+
+		try {
+			await this._loadInfo();
+		} catch (error) {
+			this.logger.error('Failed to load DM info:', error);
+		}
 	}
 
 	public deriveKey(publicKeyData: string): Promise<SymmetricEncryption> {
 		if (!this.#crypto) {
-			throw new Error('Not logged in');
+			throw new Error('Crypto not loaded');
 		}
 		return this.#crypto.deriveKey(publicKeyData);
 	}
 
 	public publicKey(): Promise<string> {
 		if (!this.#crypto) {
-			throw new Error('Not logged in');
+			throw new Error('Crypto not loaded');
 		}
 		return this.#crypto.exportPublicKey();
 	}
@@ -185,6 +216,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 
 	private async _loadInfo(): Promise<void> {
 		const { info } = await this.connector.awaitResponse('getDirectMessageInfo', EMPTY);
+		this.logger.debug('Loaded DM info');
 		this._info.value = info;
 	}
 }

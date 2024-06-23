@@ -2,7 +2,9 @@ import {
 	AccountId,
 	Assert,
 	AssertNotNullable,
+	AsyncSynchronized,
 	EMPTY,
+	GetLogger,
 	IAccountCryptoKey,
 	IChatSegment,
 	IDirectoryClientArgument,
@@ -12,6 +14,7 @@ import {
 	LIMIT_DIRECT_MESSAGE_LENGTH_BASE64,
 	PromiseOnce,
 	TypedEventEmitter,
+	type Logger,
 } from 'pandora-common';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
@@ -193,6 +196,8 @@ export type DirectMessage = {
 	edited?: number;
 };
 
+export type DirectMessageChannelLoadError = 'notFound' | 'denied' | 'error';
+
 export class DirectMessageChannel {
 	private readonly _manager: DirectMessageManager;
 	private readonly _id: number;
@@ -202,10 +207,11 @@ export class DirectMessageChannel {
 	private _keyHash?: string;
 	private _account?: IDirectoryDirectMessageAccount;
 	private _mounts = 0;
-	private _failed?: 'notFound' | 'denied';
+	private _failed?: DirectMessageChannelLoadError;
 	#encryption: SymmetricEncryption | null = null;
 
 	public readonly connector: DirectoryConnector;
+	private readonly logger: Logger;
 
 	public get id(): number {
 		return this._id;
@@ -227,11 +233,12 @@ export class DirectMessageChannel {
 		return this._mounts > 0;
 	}
 
-	public get failed(): 'notFound' | 'denied' | undefined {
+	public get failed(): DirectMessageChannelLoadError | undefined {
 		return this._failed;
 	}
 
 	constructor(manager: DirectMessageManager, id: number) {
+		this.logger = GetLogger('DirectMessageChannel', `[DirectMessageChannel ${id}]`);
 		this._manager = manager;
 		this._id = id;
 		this.connector = manager.connector;
@@ -307,19 +314,29 @@ export class DirectMessageChannel {
 			return;
 		}
 		const response = await this.connector.awaitResponse('getDirectMessages', { id: this._id });
+		this.logger.debug(`Got response to 'getDirectMessages': ${response.result}`);
 		if (response.result !== 'ok') {
 			this._failed = response.result;
 			return;
 		}
-		this._account = response.account;
-		await this._loadKey(response.account.publicKeyData);
-		this._loaded = true;
-		this._failed = undefined;
-		this._messages.value = [
-			...this.messages.value.filter((old) => !response.messages.some((message) => message.time === old.time)),
-			...await this._decryptMany(response.messages),
-		]
-			.sort((a, b) => a.time - b.time);
+		try {
+			this._account = response.account;
+			await this._loadKey(response.account.publicKeyData);
+			Assert(this.#encryption != null);
+			this.logger.debug(`Successfully loaded encryption`);
+			this._loaded = true;
+			this._failed = undefined;
+			this._messages.value = [
+				...this.messages.value.filter((old) => !response.messages.some((message) => message.time === old.time)),
+				...await this._decryptMany(response.messages),
+			]
+				.sort((a, b) => a.time - b.time);
+			this.logger.debug(`Decrypted old messages`);
+		} catch (error) {
+			this.logger.error('Error decrypting existing messages: ', error);
+			this._loaded = false;
+			this._failed = 'error';
+		}
 	}
 
 	private async _decryptMany(messages: IDirectoryDirectMessage[]): Promise<DirectMessage[]> {
@@ -373,15 +390,20 @@ export class DirectMessageChannel {
 		}];
 	}
 
+	@AsyncSynchronized()
 	private async _loadKey(publicKeyData: string): Promise<void> {
 		if (this._publicKeyData === publicKeyData) {
 			return;
 		}
-		const keyA = this._publicKeyData = publicKeyData;
+		const keyA = publicKeyData;
 		const keyB = await this._manager.publicKey();
 		const text = keyA.localeCompare(keyB) < 0 ? `${keyA}-${keyB}` : `${keyB}-${keyA}`;
-		this._keyHash = await HashSHA256Base64(text);
+		const keyHash = await HashSHA256Base64(text);
+		const encryption = await this._manager.deriveKey(publicKeyData);
+		// Set the properties atomically in a way that can't throw in the middle
 		this._messages.value = [];
-		this.#encryption = await this._manager.deriveKey(publicKeyData);
+		this._publicKeyData = publicKeyData;
+		this._keyHash = keyHash;
+		this.#encryption = encryption;
 	}
 }

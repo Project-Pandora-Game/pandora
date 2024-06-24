@@ -60,10 +60,11 @@ import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import './spaceConfiguration.scss';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 
+export const DESCRIPTION_TEXTBOX_SIZE = 16;
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
 const IsValidDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
 const IsValidEntryText = ZodMatcher(SpaceBaseInfoSchema.shape.entryText);
-const TEXT_TEXTBOX_SIZE = 8;
+const ENTRY_TEXT_TEXTBOX_SIZE = 8;
 
 function DefaultConfig(): SpaceDirectoryConfig {
 	return {
@@ -213,7 +214,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						value={ currentConfig.description }
 						onChange={ (event) => setModifiedData({ description: event.target.value }) }
 						readOnly={ !canEdit }
-						rows={ TEXT_TEXTBOX_SIZE }
+						rows={ DESCRIPTION_TEXTBOX_SIZE }
 					/>
 					{ canEdit && !IsValidDescription(currentConfig.description) ? (<div className='error'>Invalid description</div>) : null }
 				</div>
@@ -233,7 +234,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						value={ currentConfig.entryText }
 						onChange={ (event) => setModifiedData({ entryText: event.target.value }) }
 						readOnly={ !canEdit }
-						rows={ TEXT_TEXTBOX_SIZE }
+						rows={ ENTRY_TEXT_TEXTBOX_SIZE }
 					/>
 					{ canEdit && !IsValidEntryText(currentConfig.entryText) ? (<div className='error'>Invalid entry text</div>) : null }
 				</div>

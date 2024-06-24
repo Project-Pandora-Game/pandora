@@ -219,7 +219,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 				</div>
 				<div className='input-container'>
 					<label>
-						Entry text({ currentConfig.entryText.length }/{ LIMIT_SPACE_ENTRYTEXT_LENGTH } characters)
+						Entry text
 						<ContextHelpButton>
 							<p>
 								This text is shown to a new player entering the space.<br />
@@ -227,6 +227,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 								like things that are not shown, smells, temperature and so on.
 							</p>
 						</ContextHelpButton>
+						({ currentConfig.entryText.length }/{ LIMIT_SPACE_ENTRYTEXT_LENGTH } characters)
 					</label>
 					<textarea
 						value={ currentConfig.entryText }

@@ -659,8 +659,8 @@ export class Space {
 			},
 		});
 
-		// send fluff text, if there is any
-		// TODO: Must be changed later to send room and not space specific fluff text
+		// send entry text, if there is any
+		// TODO: Must be changed later to send room and not space specific entry texts
 		if (this.config.entryText) {
 			this.sendMessage({
 				type: 'action',

@@ -19,7 +19,7 @@ export const TEST_SPACE: Readonly<SpaceDirectoryConfig> = {
 	...TEST_SPACE_DEFAULTS,
 	name: 'test',
 	description: 'Some description',
-	entryText: 'Some fluff text',
+	entryText: 'Some entry text',
 	admin: [1],
 	banned: [2],
 };

@@ -36,7 +36,7 @@ export const LIMIT_SPACE_NAME_PATTERN = /^[a-zA-Z0-9_+\-:'"& ]+$/;
 /** The maximum length of a spaces's description */
 export const LIMIT_SPACE_DESCRIPTION_LENGTH = 10_000;
 
-/** The maximum length of a spaces's fluff text */
+/** The maximum length of a spaces's entry text */
 export const LIMIT_SPACE_ENTRYTEXT_LENGTH = 10_000;
 
 /** The maximum length of a chat message */

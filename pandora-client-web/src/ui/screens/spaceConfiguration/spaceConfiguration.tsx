@@ -58,10 +58,12 @@ import pronounChange from '../../../icons/male-female.svg';
 import { DirectoryConnector } from '../../../networking/directoryConnector';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import './spaceConfiguration.scss';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
 const IsValidDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
 const IsValidEntryText = ZodMatcher(SpaceBaseInfoSchema.shape.entryText);
+const TEXT_TEXTBOX_SIZE = 8;
 
 function DefaultConfig(): SpaceDirectoryConfig {
 	return {
@@ -211,19 +213,28 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						value={ currentConfig.description }
 						onChange={ (event) => setModifiedData({ description: event.target.value }) }
 						readOnly={ !canEdit }
-						rows={ 8 }
+						rows={ TEXT_TEXTBOX_SIZE }
 					/>
 					{ canEdit && !IsValidDescription(currentConfig.description) ? (<div className='error'>Invalid description</div>) : null }
 				</div>
 				<div className='input-container'>
-					<label>Initial text (being shown, when the space is entered) ({ currentConfig.entryText.length }/{ LIMIT_SPACE_ENTRYTEXT_LENGTH } characters)</label>
+					<label>
+						Entry text({ currentConfig.entryText.length }/{ LIMIT_SPACE_ENTRYTEXT_LENGTH } characters)
+						<ContextHelpButton>
+							<p>
+								This text is shown to a new player entering the space.<br />
+								Use it to describe special features of the room, <br />
+								like things that are not shown, smells, temperature and so on.
+							</p>
+						</ContextHelpButton>
+					</label>
 					<textarea
 						value={ currentConfig.entryText }
 						onChange={ (event) => setModifiedData({ entryText: event.target.value }) }
 						readOnly={ !canEdit }
-						rows={ 8 }
+						rows={ TEXT_TEXTBOX_SIZE }
 					/>
-					{ canEdit && !IsValidEntryText(currentConfig.entryText) ? (<div className='error'>Invalid initial text</div>) : null }
+					{ canEdit && !IsValidEntryText(currentConfig.entryText) ? (<div className='error'>Invalid entry text</div>) : null }
 				</div>
 				<div className='input-container'>
 					<label>Public</label>

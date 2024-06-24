@@ -38,8 +38,8 @@ export const SpaceBaseInfoSchema = z.object({
 	name: z.string().min(3).max(LIMIT_SPACE_NAME_LENGTH).regex(LIMIT_SPACE_NAME_PATTERN).regex(ZodTrimedRegex),
 	/** The description of the space */
 	description: z.string().max(LIMIT_SPACE_DESCRIPTION_LENGTH),
-	/** The fluff text of the space */
-	entryText: z.string().max(LIMIT_SPACE_ENTRYTEXT_LENGTH),
+	/** The entry text of the space, shown to players when they enter */
+	entryText: z.string().max(LIMIT_SPACE_ENTRYTEXT_LENGTH).catch(''),
 	/** Spaces are private by default and can be published to be seen in public space search. */
 	public: z.boolean(),
 	/** The maximum amount of characters that can be present at once in the space */

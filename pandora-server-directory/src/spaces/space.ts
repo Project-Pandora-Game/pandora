@@ -676,7 +676,7 @@ export class Space {
 			character.baseInfo.updateDirectoryData({ currentSpace: this.id }),
 			this._useInvite(character, invite),
 		]);
-	} // addCharacter
+	}
 
 	private async _useInvite(character: Character, id?: SpaceInviteId): Promise<void> {
 		const invite = id ? this._getValidInvite(character, id) : undefined;

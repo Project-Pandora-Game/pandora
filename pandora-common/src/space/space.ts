@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { AccountId, AccountIdSchema } from '../account/account';
 import { ROOM_INVENTORY_BUNDLE_DEFAULT, RoomInventoryBundleSchema } from '../assets/state/roomState';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
-import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits';
+import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_ENTRYTEXT_LENGTH, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits';
 import { ArrayToRecordKeys, CloneDeepMutable } from '../utility';
 import { HexColorStringSchema, ZodArrayWithInvalidDrop, ZodTemplateString, ZodTrimedRegex } from '../validation';
 import { DEFAULT_BACKGROUND, RoomBackgroundDataSchema } from './room';
@@ -38,6 +38,8 @@ export const SpaceBaseInfoSchema = z.object({
 	name: z.string().min(3).max(LIMIT_SPACE_NAME_LENGTH).regex(LIMIT_SPACE_NAME_PATTERN).regex(ZodTrimedRegex),
 	/** The description of the space */
 	description: z.string().max(LIMIT_SPACE_DESCRIPTION_LENGTH),
+	/** The entry text of the space, shown to players when they enter */
+	entryText: z.string().max(LIMIT_SPACE_ENTRYTEXT_LENGTH).catch(''),
 	/** Spaces are private by default and can be published to be seen in public space search. */
 	public: z.boolean(),
 	/** The maximum amount of characters that can be present at once in the space */

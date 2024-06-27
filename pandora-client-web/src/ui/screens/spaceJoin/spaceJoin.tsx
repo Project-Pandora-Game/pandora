@@ -42,7 +42,6 @@ function QuerySpaceInfo({ spaceId, invite }: { spaceId: SpaceId; invite?: SpaceI
 			<p>Space ({ spaceId }) not found</p>
 		);
 	}
-
 	return (
 		<SpaceDetails info={ info.data } invite={ info.invite } hide={ () => navigate('/room') } closeText='Back to room' />
 	);

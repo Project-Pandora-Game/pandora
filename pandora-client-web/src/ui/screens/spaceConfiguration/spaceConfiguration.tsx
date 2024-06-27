@@ -14,6 +14,7 @@ import {
 	IsAuthorized,
 	IsObject,
 	LIMIT_SPACE_DESCRIPTION_LENGTH,
+	LIMIT_SPACE_ENTRYTEXT_LENGTH,
 	LIMIT_SPACE_MAX_CHARACTER_NUMBER,
 	LIMIT_SPACE_NAME_LENGTH,
 	RoomBackgroundInfo,
@@ -57,14 +58,19 @@ import pronounChange from '../../../icons/male-female.svg';
 import { DirectoryConnector } from '../../../networking/directoryConnector';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import './spaceConfiguration.scss';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 
+export const DESCRIPTION_TEXTBOX_SIZE = 16;
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
 const IsValidDescription = ZodMatcher(SpaceBaseInfoSchema.shape.description);
+const IsValidEntryText = ZodMatcher(SpaceBaseInfoSchema.shape.entryText);
+const ENTRY_TEXT_TEXTBOX_SIZE = 8;
 
 function DefaultConfig(): SpaceDirectoryConfig {
 	return {
 		name: '',
 		description: '',
+		entryText: '',
 		maxUsers: 10,
 		admin: [],
 		banned: [],
@@ -208,9 +214,29 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						value={ currentConfig.description }
 						onChange={ (event) => setModifiedData({ description: event.target.value }) }
 						readOnly={ !canEdit }
-						rows={ 16 }
+						rows={ DESCRIPTION_TEXTBOX_SIZE }
 					/>
 					{ canEdit && !IsValidDescription(currentConfig.description) ? (<div className='error'>Invalid description</div>) : null }
+				</div>
+				<div className='input-container'>
+					<label>
+						Entry text
+						<ContextHelpButton>
+							<p>
+								This text is shown to a new player entering the space.<br />
+								Use it to describe special features of the room, <br />
+								like things that are not shown, smells, temperature and so on.
+							</p>
+						</ContextHelpButton>
+						({ currentConfig.entryText.length }/{ LIMIT_SPACE_ENTRYTEXT_LENGTH } characters)
+					</label>
+					<textarea
+						value={ currentConfig.entryText }
+						onChange={ (event) => setModifiedData({ entryText: event.target.value }) }
+						readOnly={ !canEdit }
+						rows={ ENTRY_TEXT_TEXTBOX_SIZE }
+					/>
+					{ canEdit && !IsValidEntryText(currentConfig.entryText) ? (<div className='error'>Invalid entry text</div>) : null }
 				</div>
 				<div className='input-container'>
 					<label>Public</label>

@@ -100,6 +100,7 @@ export class Space {
 		return ({
 			name: this.config.name,
 			description: this.config.description,
+			entryText: this.config.entryText,
 			public: this.config.public,
 			maxUsers: this.config.maxUsers,
 		});
@@ -179,6 +180,9 @@ export class Space {
 		}
 		if (changes.description !== undefined) {
 			this.config.description = changes.description;
+		}
+		if (changes.entryText !== undefined) {
+			this.config.entryText = changes.entryText;
 		}
 		if (changes.maxUsers !== undefined) {
 			this.config.maxUsers = changes.maxUsers;
@@ -654,6 +658,17 @@ export class Space {
 				character: character.baseInfo.id,
 			},
 		});
+
+		// send entry text, if there is any
+		// TODO: Must be changed later to send room and not space specific entry texts
+		if (this.config.entryText) {
+			this.sendMessage({
+				type: 'action',
+				sendTo: [character.baseInfo.id],
+				id: 'custom',
+				customText: this.config.entryText,
+			});
+		}
 
 		ConnectionManagerClient.onSpaceListChange();
 		await Promise.all([

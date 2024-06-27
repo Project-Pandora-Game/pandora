@@ -21,7 +21,7 @@ import { ModalDialog } from '../../../components/dialog/dialog';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { SPACE_FEATURES, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration';
+import { SPACE_FEATURES, DESCRIPTION_TEXTBOX_SIZE, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration';
 import './spacesSearch.scss';
 import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../../common/useEvent';
@@ -313,7 +313,7 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 				}
 			</Row>
 			<div className='description-title'>Description:</div>
-			<textarea className='widebox' value={ info.description } rows={ 16 } readOnly />
+			<textarea className='widebox' value={ info.description } rows={ DESCRIPTION_TEXTBOX_SIZE } readOnly />
 			{
 				info.characters.length > 0 && (
 					<div className='title'>Characters currently in this space:

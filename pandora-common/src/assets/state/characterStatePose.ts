@@ -2,9 +2,9 @@ import { Immutable, freeze, produce } from 'immer';
 import _ from 'lodash';
 import { z } from 'zod';
 import type { AssetManager } from '../assetManager';
-import type { BoneType, CharacterView, LegsPose } from '../graphics/graphics';
+import type { BoneType, CharacterView, LegsOrder, LegsPose } from '../graphics/graphics';
 import type { Satisfies } from '../../utility';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, BoneState, CharacterViewSchema, LegsPoseSchema } from '../graphics/graphics';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, BoneState, CharacterViewSchema, LegsOrderSchema, LegsPoseSchema } from '../graphics/graphics';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../../validation';
@@ -29,6 +29,7 @@ export const AppearancePoseSchema = z.object({
 	leftArm: AppearanceArmPoseSchema.default({}),
 	rightArm: AppearanceArmPoseSchema.default({}),
 	armsOrder: AppearanceArmsOrderSchema.default({}),
+	legsOrder: LegsOrderSchema.catch('left'),
 	legs: LegsPoseSchema.default('standing'),
 	view: CharacterViewSchema.catch('front'),
 });
@@ -50,6 +51,7 @@ export function GetDefaultAppearancePose(): AppearancePose {
 		leftArm: GetDefaultAppearanceArmPose(),
 		rightArm: GetDefaultAppearanceArmPose(),
 		armsOrder: { upper: 'left' },
+		legsOrder: 'left',
 		legs: 'standing',
 		view: 'front',
 	};
@@ -61,6 +63,7 @@ export type PartialAppearancePose<Bones extends BoneName = BoneName> = {
 	leftArm?: Partial<AppearanceArmPose>;
 	rightArm?: Partial<AppearanceArmPose>;
 	armsOrder?: Partial<AppearanceArmsOrder>;
+	legsOrder?: LegsOrder;
 	legs?: LegsPose;
 	view?: CharacterView;
 };
@@ -96,6 +99,7 @@ export function MergePartialAppearancePoses(base: Immutable<PartialAppearancePos
 		leftArm: { ...base.leftArm, ...extend.leftArm },
 		rightArm: { ...base.rightArm, ...extend.rightArm },
 		armsOrder: { ...base.armsOrder, ...extend.armsOrder },
+		legsOrder: base.legsOrder ?? extend.legsOrder,
 		legs: base.legs ?? extend.legs,
 		view: base.view ?? extend.view,
 	};
@@ -145,6 +149,9 @@ export function ProduceAppearancePose(
 		// Update legs
 		if (pose.legs != null) {
 			draft.legs = pose.legs;
+		}
+		if (pose.legsOrder != null) {
+			draft.legsOrder = pose.legsOrder;
 		}
 
 		// Update bones

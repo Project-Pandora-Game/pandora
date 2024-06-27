@@ -243,6 +243,28 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 			</Row>
 		</td>
 	), [characterState, setPose]);
+	const LegOrder = useCallback(({ colSpan }: { colSpan?: number; }): ReactElement => (
+		<td colSpan={ colSpan }>
+			<Row gap='tiny' wrap>
+				<PoseButton
+					preset={ {
+						name: 'Left first',
+						legsOrder: 'left',
+					} }
+					characterState={ characterState }
+					setPose={ setPose }
+				/>
+				<PoseButton
+					preset={ {
+						name: 'Right first',
+						legsOrder: 'right',
+					} }
+					characterState={ characterState }
+					setPose={ setPose }
+				/>
+			</Row>
+		</td>
+	), [characterState, setPose]);
 	return (
 		<>
 			<strong>Arms</strong>
@@ -283,6 +305,10 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 								<td>Upper arm order</td>
 								<ArmSegmentOrder segment='upper' />
 							</tr>
+							<tr>
+								<td>Leg order</td>
+								<LegOrder />
+							</tr>
 						</tbody>
 					</table>
 				) : (
@@ -313,6 +339,10 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 							<tr>
 								<td>Upper arm order</td>
 								<ArmSegmentOrder segment='upper' colSpan={ 2 } />
+							</tr>
+							<tr>
+								<td>Leg order</td>
+								<LegOrder colSpan={ 2 } />
 							</tr>
 						</tbody>
 					</table>

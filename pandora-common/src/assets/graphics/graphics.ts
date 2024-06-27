@@ -39,6 +39,9 @@ export type ArmFingers = z.infer<typeof ArmFingersSchema>;
 export const ArmSegmentOrderSchema = z.enum(['left', 'right']);
 export type ArmSegmentOrder = z.infer<typeof ArmSegmentOrderSchema>;
 
+export const LegsOrderSchema = z.enum(['left', 'right']);
+export type LegsOrder = z.infer<typeof LegsOrderSchema>;
+
 export const LegsPoseSchema = z.enum(['standing', 'sitting', 'kneeling']);
 export type LegsPose = z.infer<typeof LegsPoseSchema>;
 
@@ -178,8 +181,18 @@ export const LAYER_PRIORITIES = [
 	'BELOW_BACK_HAIR',
 	'BACK_HAIR',
 
-	'BELOW_BODY_SOLES',
-	'BODY_SOLES',
+	'BELOW_LEG_SOLE_LEFT',
+	'LEG_SOLE_LEFT',
+	'BELOW_LEG_LEFT',
+	'LEG_LEFT',
+	'ABOVE_LEG_LEFT',
+
+	'BELOW_LEG_SOLE_RIGHT',
+	'LEG_SOLE_RIGHT',
+	'BELOW_LEG_RIGHT',
+	'LEG_RIGHT',
+	'ABOVE_LEG_RIGHT',
+
 	'BELOW_BODY',
 	'BODY',
 	'BELOW_BREASTS',

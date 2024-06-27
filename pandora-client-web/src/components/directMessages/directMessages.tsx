@@ -5,7 +5,8 @@ import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directo
 import { DirectMessage } from '../directMessage/directMessage';
 import './directMessages.scss';
 import { Button } from '../common/button/button';
-import { Scrollbar } from '../common/scrollbar/scrollbar';
+import { Scrollable } from '../common/scrollbar/scrollbar';
+import { Column, Row } from '../common/container/container';
 
 export function DirectMessages(): React.ReactElement {
 	const directory = useDirectoryConnector();
@@ -26,18 +27,18 @@ export function DirectMessages(): React.ReactElement {
 
 	return (
 		<div className='direct-messages'>
-			<div className='direct-messages__list'>
+			<Column className='direct-messages__list' gap='none'>
 				<input type='text' value={ filter } onChange={ (e) => setFilter(e.target.value) } placeholder='Filter' />
-				<Scrollbar color='dark' tag='ul'>
+				<Scrollable color='dark' tag='ul'>
 					{ selected == null ? null : (
 						<Suspense>
 							<DirectMessageTempInfo selected={ selected } filtered={ filtered } />
 						</Suspense>
 					) }
 					{ filtered.map((i) => <DirectMessageInfo key={ i.id } info={ i } selected={ i.id === selected } />) }
-				</Scrollbar>
+				</Scrollable>
 				<OpenConversation />
-			</div>
+			</Column>
 			{ selected != null && <DirectMessage accountId={ selected } key={ selected } /> }
 		</div>
 	);
@@ -97,9 +98,9 @@ function OpenConversation(): React.ReactElement {
 	}, [onClick]);
 
 	return (
-		<div className='input-line'>
+		<Row gap='none'>
 			<input type='text' inputMode='numeric' pattern='\d*' ref={ ref } onKeyDown={ onKeyDown } placeholder='Account ID' />
 			<Button className='slim' onClick={ onClick }>Start</Button>
-		</div>
+		</Row>
 	);
 }

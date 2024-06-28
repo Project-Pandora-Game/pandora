@@ -37,7 +37,7 @@
 		]
 	},
 	"dependencies": {
-		"@aws-sdk/client-ses": "3.600.0",
+		"@aws-sdk/client-ses": "3.606.0",
 		"@aws-sdk/credential-provider-node": "3.600.0",
 		"@octokit/auth-oauth-app": "7.1.0",
 		"@octokit/rest": "20.1.1",

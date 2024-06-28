@@ -1,6 +1,7 @@
 import type { IClientShard, IConnectionBase, IDirectoryCharacterConnectionInfo, IShardClientChangeEvents, TypedEventEmitter } from 'pandora-common';
 import type { GameState } from '../components/gameContext/gameStateContextProvider';
 import type { ReadonlyObservable } from '../observable';
+import type { DirectoryConnector } from './directoryConnector';
 
 /** State of connection to Shard */
 export enum ShardConnectionState {
@@ -23,6 +24,7 @@ export interface ShardConnector extends IConnectionBase<IClientShard> {
 	readonly state: ReadonlyObservable<ShardConnectionState>;
 	readonly gameState: ReadonlyObservable<GameState | null>;
 
+	readonly directoryConnector: DirectoryConnector;
 	readonly connectionInfo: ReadonlyObservable<Readonly<IDirectoryCharacterConnectionInfo>>;
 
 	/** Event emitter for shard change events */

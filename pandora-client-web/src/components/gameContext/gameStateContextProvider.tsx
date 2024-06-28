@@ -327,6 +327,10 @@ export class GameState extends TypedEventEmitter<{
 					continue;
 				}
 			} else {
+				if (message.type === 'serverMessage' && message.id === 'characterEntered'
+					&& message.data?.character?.type === 'character') {
+					// TODO: Access the player's settings
+				}
 				nextMessages.push(message);
 				if (!notified) {
 					this.emit('messageNotify', { time: Date.now() });

@@ -3,6 +3,7 @@ import { useDebugExpose } from '../../common/useDebugExpose';
 import { Observable, ReadonlyObservable, useObservable } from '../../observable';
 import { VersionCheck } from '../versionCheck/versionCheck';
 import { useDocumentVisibility } from '../../common/useDocumentVisibility';
+import audioBing from '../../audio/bing.mp3';
 
 type NotificationHeader<T extends ReadonlyObservable<readonly unknown[]> = ReadonlyObservable<readonly unknown[]>> = {
 	readonly notifications: T;
@@ -14,6 +15,7 @@ export enum NotificationSource {
 	DIRECT_MESSAGE = 'DIRECT_MESSAGE',
 	VERSION_CHANGED = 'VERSION_CHANGED',
 	INCOMING_FRIEND_REQUEST = 'INCOMING_FRIEND_REQUEST',
+	ROOM_ENTRY = 'ROOM_ENTRY',
 }
 
 export const NOTIFICATION_KEY: Readonly<Record<NotificationSource, NotificationHeaderKeys | null>> = {
@@ -21,6 +23,7 @@ export const NOTIFICATION_KEY: Readonly<Record<NotificationSource, NotificationH
 	[NotificationSource.VERSION_CHANGED]: 'notifications',
 	[NotificationSource.DIRECT_MESSAGE]: null,
 	[NotificationSource.INCOMING_FRIEND_REQUEST]: null,
+	[NotificationSource.ROOM_ENTRY]: 'notifications',
 };
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
@@ -39,6 +42,7 @@ enum NotificationAlert {
 	TITLE = 1,
 	FAVICO = 2,
 	POPUP = 3,
+	AUDIO = 4,
 }
 
 enum NotificationAudio {
@@ -111,6 +115,9 @@ class NotificationHandler extends NotificationHandlerBase {
 		this._updateNotifications();
 		if (alert.has(NotificationAlert.POPUP)) {
 			this._risePopup(full, audio);
+		} else if (alert.has(NotificationAlert.AUDIO)) {
+			/* TODO: Make the sound being played configurable */
+			new Audio(audioBing).play().catch(() => { /* ignore */ });
 		}
 	}
 
@@ -123,11 +130,15 @@ class NotificationHandler extends NotificationHandlerBase {
 		// NOOP
 	}
 
-	private _getSettings(_source: NotificationSource): { alert: ReadonlySet<NotificationAlert>; audio: NotificationAudio; } {
+	private _getSettings(source: NotificationSource): { alert: ReadonlySet<NotificationAlert>; audio: NotificationAudio; } {
 		if (document.visibilityState === 'visible') {
 			return { alert: new Set([NotificationAlert.HEADER]), audio: NotificationAudio.NONE };
 		}
-		return { alert: new Set([NotificationAlert.HEADER, NotificationAlert.TITLE, NotificationAlert.POPUP]), audio: NotificationAudio.ALWAYS };
+		if (source === NotificationSource.ROOM_ENTRY) {
+			return { alert: new Set([NotificationAlert.AUDIO]), audio: NotificationAudio.ALWAYS };
+		} else {
+			return { alert: new Set([NotificationAlert.HEADER, NotificationAlert.TITLE/*, NotificationAlert.POPUP*/]), audio: NotificationAudio.ALWAYS };
+		}
 	}
 
 	private _updateNotifications() {

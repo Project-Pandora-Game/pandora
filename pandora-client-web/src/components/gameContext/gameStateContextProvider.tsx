@@ -49,7 +49,7 @@ import { ShardConnectionState, ShardConnector } from '../../networking/shardConn
 import { Observable, useNullableObservable, useObservable } from '../../observable';
 import { IChatMessageProcessed } from '../../ui/components/chat/chatMessages';
 import { ChatParser } from '../../ui/components/chat/chatParser';
-import { useCurrentAccount } from './directoryConnectorContextProvider';
+import { GetAccountSettings, useCurrentAccount } from './directoryConnectorContextProvider';
 import { NotificationData } from './notificationContextProvider';
 import { useShardConnector } from './shardConnectorContextProvider';
 
@@ -327,6 +327,16 @@ export class GameState extends TypedEventEmitter<{
 					continue;
 				}
 			} else {
+				if (message.type === 'serverMessage' && message.id === 'characterEntered'
+					&& message.data?.character?.type === 'character') {
+					const {
+						notificationRoomEntry,
+					} = GetAccountSettings(this._shard.directoryConnector);
+					if (notificationRoomEntry) {
+						// TODO: Notify
+						logger.alert(`TEST: I should notify that character ${message.data.character.id} entered.`);
+					}
+				}
 				nextMessages.push(message);
 				if (!notified) {
 					this.emit('messageNotify', { time: Date.now() });

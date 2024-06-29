@@ -19,6 +19,7 @@ import { GameState } from '../components/gameContext/gameStateContextProvider';
 import { ConfigServerIndex } from '../config/searchArgs';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast } from '../persistentToast';
+import type { DirectoryConnector } from './directoryConnector';
 import { ShardConnectionState, ShardConnector } from './shardConnector';
 
 const logger = GetLogger('ShardConn');
@@ -73,6 +74,8 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 
 	private loadResolver: ((arg: this) => void) | null = null;
 
+	public readonly directoryConnector: DirectoryConnector;
+
 	/** Current state of the connection */
 	public get state(): ReadonlyObservable<ShardConnectionState> {
 		return this._state;
@@ -91,10 +94,11 @@ export class SocketIOShardConnector extends ConnectionBase<IClientShard, IShardC
 		return this._changeEventEmitter;
 	}
 
-	constructor(info: IDirectoryCharacterConnectionInfo) {
+	constructor(info: IDirectoryCharacterConnectionInfo, directoryConnector: DirectoryConnector) {
 		super(CreateConnection(info), [ClientShardSchema, ShardClientSchema], logger);
 		this._connectionInfo = new Observable<IDirectoryCharacterConnectionInfo>(info);
 		this._gameState = new Observable<GameState | null>(null);
+		this.directoryConnector = directoryConnector;
 
 		// Setup event handlers
 		this.socket.on('connect', this.onConnect.bind(this));

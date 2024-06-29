@@ -1,9 +1,10 @@
+import { noop } from 'lodash';
 import { AppearanceAction, GetLogger, IClientShardNormalResult, IDirectoryCharacterConnectionInfo, IShardClientChangeEvents } from 'pandora-common';
 import React, {
-	createContext,
 	Dispatch,
 	ReactElement,
 	SetStateAction,
+	createContext,
 	useCallback,
 	useContext,
 	useEffect,
@@ -14,14 +15,13 @@ import React, {
 import { ChildrenProps } from '../../common/reactTypes';
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { useErrorHandler } from '../../common/useErrorHandler';
+import { useAsyncEvent } from '../../common/useEvent';
 import { ShardConnector } from '../../networking/shardConnector';
 import { SocketIOShardConnector } from '../../networking/socketio_shard_connector';
 import { useNullableObservable, useObservable } from '../../observable';
 import { useDebugContext } from '../error/debugContextProvider';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
 import { NotificationSource, useNotification } from './notificationContextProvider';
-import { useAsyncEvent } from '../../common/useEvent';
-import { noop } from 'lodash';
 
 export interface ShardConnectorContextData {
 	shardConnector: ShardConnector | null;
@@ -49,6 +49,7 @@ export const connectorFactoryContext = createContext<ConnectorFactoryContext>({
 
 export function ShardConnectorContextProvider({ children }: ChildrenProps): ReactElement {
 	const notify = useNotification(NotificationSource.CHAT_MESSAGE);
+	const directoryConnector = useDirectoryConnector();
 
 	const [shardConnector, setShardConnector] = useState<ShardConnector | null>(null);
 
@@ -58,8 +59,8 @@ export function ShardConnectorContextProvider({ children }: ChildrenProps): Reac
 	}), [shardConnector]);
 
 	const context = useMemo<ConnectorFactoryContext>(() => ({
-		shardConnectorFactory: (info) => new SocketIOShardConnector(info),
-	}), []);
+		shardConnectorFactory: (info) => new SocketIOShardConnector(info, directoryConnector),
+	}), [directoryConnector]);
 
 	const gameState = useNullableObservable(shardConnector?.gameState);
 

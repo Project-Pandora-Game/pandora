@@ -1,8 +1,12 @@
-import type { IAccountCryptoKey } from 'pandora-common';
+import { Assert, type IAccountCryptoKey } from 'pandora-common';
 import { ArrayToBase64, Base64ToArray, HashSHA512Base64 } from './helpers';
 import { SymmetricEncryption } from './symmetric';
 
-const subtle = globalThis.crypto.subtle;
+function GetSubtle(): SubtleCrypto {
+	const subtle = globalThis.crypto.subtle;
+	Assert(subtle != null, 'Missing crypto.subtle support');
+	return subtle;
+}
 
 const ENCRYPTION_SALT = 'pandora-encryption-salt';
 const ECDH_PARAMS = { name: 'ECDH', namedCurve: 'P-256' } as const;
@@ -25,7 +29,7 @@ export class KeyExchange {
 	}
 
 	public async exportPublicKey(): Promise<string> {
-		const publicKey = await subtle.exportKey('spki', this.#publicKey);
+		const publicKey = await GetSubtle().exportKey('spki', this.#publicKey);
 		return ArrayToBase64(new Uint8Array(publicKey));
 	}
 
@@ -41,6 +45,24 @@ export class KeyExchange {
 		};
 	}
 
+	/** Tests that the public and private key pairs match */
+	public async selfTest(): Promise<boolean> {
+		// Generate another random keypair
+		const otherCrypto = await KeyExchange.generate();
+
+		// Generate symmetric keys the two ways
+		const myKey = await this.deriveKey(await otherCrypto.exportPublicKey());
+		const theirKey = await otherCrypto.deriveKey(await this.exportPublicKey());
+
+		const testData = 'test-data';
+
+		// Encrypt and decrypt
+		const encrypted = await myKey.encrypt(testData);
+		const decrypted = await theirKey.decrypt(encrypted);
+
+		return decrypted === testData;
+	}
+
 	public static async import({ publicKey, iv, salt, encryptedPrivateKey }: IAccountCryptoKey, password: string): Promise<KeyExchange> {
 		const enc = await SymmetricEncryption.generate({ password, salt: Base64ToArray(salt) });
 		const privateKey = await enc.unwrapKey(iv, encryptedPrivateKey, ECDH_PARAMS, [...ECDH_KEY_PRIVATE_USAGES]);
@@ -48,7 +70,7 @@ export class KeyExchange {
 	}
 
 	public static async generate(): Promise<KeyExchange> {
-		const keyPair = await subtle.generateKey(ECDH_PARAMS, true, ECDH_KEY_USAGES);
+		const keyPair = await GetSubtle().generateKey(ECDH_PARAMS, true, ECDH_KEY_USAGES);
 		return new KeyExchange(keyPair.privateKey, keyPair.publicKey);
 	}
 
@@ -58,5 +80,5 @@ export class KeyExchange {
 }
 
 async function ImportSpki(publicKey: string): Promise<CryptoKey> {
-	return await subtle.importKey('spki', Base64ToArray(publicKey), ECDH_PARAMS, true, [...ECDH_KEY_PUBLIC_USAGES]);
+	return await GetSubtle().importKey('spki', Base64ToArray(publicKey), ECDH_PARAMS, true, [...ECDH_KEY_PUBLIC_USAGES]);
 }

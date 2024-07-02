@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import _ from 'lodash';
 import {
 	AppearanceItemProperties,
 	AppearanceItems,
@@ -16,21 +17,22 @@ import {
 	ProduceAppearancePose,
 	type ItemDisplayNameType,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useId, useMemo } from 'react';
+import { z } from 'zod';
+import { useBrowserStorage } from '../../../browserStorage';
 import { IChatroomCharacter, useCharacterData } from '../../../character/character';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
-import { Button } from '../../common/button/button';
-import _ from 'lodash';
-import { useEvent } from '../../../common/useEvent';
-import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
-import { Column, Row } from '../../common/container/container';
-import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
-import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
-import { SelectionIndicator } from '../../common/selectionIndicator/selectionIndicator';
-import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
 import { useDebouncedValue } from '../../../common/useDebounceValue';
-import { WardrobeStoredPosePresets } from '../poseDetail/storedPosePresets';
+import { useEvent } from '../../../common/useEvent';
+import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
+import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
+import { Button } from '../../common/button/button';
+import { Column, Row } from '../../common/container/container';
+import { FieldsetToggle } from '../../common/fieldsetToggle';
+import { SelectionIndicator } from '../../common/selectionIndicator/selectionIndicator';
+import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
 import { ResolveItemDisplayName } from '../itemDetail/wardrobeItemName';
+import { WardrobeStoredPosePresets } from '../poseDetail/storedPosePresets';
+import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
 
 type CheckedPosePreset = {
 	active: boolean;
@@ -142,7 +144,7 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 	characterState: AssetFrameworkCharacterState;
 	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
 }): ReactElement {
-	const [controlIndividually, setControlIndividually] = useState<boolean>(false);
+	const [controlIndividually, setControlIndividually] = useBrowserStorage<boolean>('posing.arms-control-individually', false, z.boolean());
 
 	const ArmPosition = useCallback(({ arm }: { arm: 'leftArm' | 'rightArm' | 'arms'; }): ReactElement => (
 		<td>

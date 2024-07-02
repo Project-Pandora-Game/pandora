@@ -213,9 +213,8 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		usage: '<target>',
 		handler: CreateClientCommand()
 			.argument('target', CommandSelectorCharacter({ allowSelf: 'none' }))
-			.handler(({ directoryConnector, navigate }, { target }) => {
-				directoryConnector.directMessageHandler.setSelected(target.data.accountId);
-				navigate('/contacts/dm');
+			.handler(({ navigate }, { target }) => {
+				navigate(`/contacts/dm/${target.data.accountId}`);
 				return true;
 			}),
 	},

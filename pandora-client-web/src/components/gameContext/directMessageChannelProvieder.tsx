@@ -1,63 +1,104 @@
-import { AssertNever, AssertNotNullable } from 'pandora-common';
-import React, { createContext, ReactElement, useContext, useMemo, Suspense, useEffect, useState } from 'react';
+import { AssertNever, AssertNotNullable, GetLogger } from 'pandora-common';
+import React, { ReactElement, Suspense, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
-import { DirectMessageChannel } from '../../networking/directMessageManager';
+import { useNullableObservable } from '../../observable';
+import type { ChatEncryption, DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
 
-const directMessageContext = createContext<DirectMessageChannel | null>(null);
+export type DirectMessageChatContext = {
+	chat: DirectMessageChat;
+	encryption: ChatEncryption;
+};
 
-function DirectMessageChannelProviderImpl({ accountId, children }: ChildrenProps & { accountId: number; }): ReactElement {
-	const directoryConnector = useDirectoryConnector();
+const directMessageContext = createContext<DirectMessageChatContext | null>(null);
+
+export function DirectMessageChannelProvider({ accountId, children }: ChildrenProps & { accountId: number; }): ReactElement {
+	const directMessageHandler = useDirectoryConnector().directMessageHandler;
 	const [closed, setClosed] = useState(false);
-	const channel = useMemo(() => {
+
+	const chat = useMemo(() => {
 		if (closed)
 			return null;
 
-		return directoryConnector.directMessageHandler.loadChat(accountId);
-	}, [directoryConnector, accountId, closed]);
+		return directMessageHandler.getChat(accountId);
+	}, [directMessageHandler, accountId, closed]);
 
-	useEffect(() => channel?.addMount(), [channel]);
-	useEffect(() => directoryConnector.directMessageHandler.on('close', (id) => {
+	const state = useNullableObservable(chat?.state);
+	const encryption = useNullableObservable(chat?.encryption);
+	const info = useNullableObservable(chat?.displayInfo);
+
+	useEffect(() => {
+		if (chat != null && info != null && info.hasUnread && state === 'ready') {
+			chat.manager.connector.sendMessage('directMessage', { id: chat.id, action: 'read' });
+		}
+	}, [chat, info, state]);
+
+	useEffect(() => directMessageHandler.on('close', (id) => {
 		if (id === accountId) {
 			setClosed(true);
 		}
-	}), [directoryConnector.directMessageHandler, accountId]);
+	}), [directMessageHandler, accountId]);
 
-	if (!channel) {
+	useEffect(() => {
+		if (chat != null && chat.state.value !== 'ready') {
+			chat.load()
+				.catch((err) => {
+					GetLogger('DirectMessageChannelProvider')
+						.error('Failed to load chat:', err);
+				});
+		}
+	}, [chat]);
+
+	const ctx = useMemo((): DirectMessageChatContext | null => {
+		if (chat == null || state !== 'ready' || encryption == null)
+			return null;
+
+		return {
+			chat,
+			encryption,
+		};
+	}, [chat, encryption, state]);
+
+	if (chat == null || state == null) {
+		return <DirectMessageChannelError message='Chat closed' />;
+	} else if (state === 'notLoaded') {
 		return (
-			<DirectMessageChannelFallback message='Chat closed' />
+			<span className='loading'>
+				Account: { chat?.id ?? 'unknown' }
+				<br />
+				Loading...
+			</span>
+		);
+	} else if (state === 'error') {
+		return <DirectMessageChannelError message='Error loading the chat' />;
+	} else if (state === 'errorNotFound') {
+		return <DirectMessageChannelError message='Not found' />;
+	} else if (state === 'errorDenied') {
+		return <DirectMessageChannelError message='Denied' />;
+	} else if (state === 'ready') {
+		if (ctx == null) {
+			return <DirectMessageChannelError message='Error decrypting chat' />;
+		}
+
+		return (
+			<directMessageContext.Provider value={ ctx }>
+				<Suspense fallback={
+					<span className='loading'>
+						Account: { chat?.id ?? 'unknown' }
+						<br />
+						Decrypting...
+					</span>
+				}>
+					{ children }
+				</Suspense>
+			</directMessageContext.Provider>
 		);
 	}
 
-	if (channel.failed) {
-		return (
-			<DirectMessageChannelFallback channel={ channel } />
-		);
-	}
-
-	return (
-		<directMessageContext.Provider value={ channel }>
-			{ children }
-		</directMessageContext.Provider>
-	);
+	AssertNever(state);
 }
 
-function DirectMessageChannelFallback({ channel, message = 'Unknown error' }: { channel?: DirectMessageChannel; message?: string; }): ReactElement {
-	if (channel?.failed) {
-		switch (channel.failed) {
-			case 'notFound':
-				message = 'Not found';
-				break;
-			case 'denied':
-				message = 'Denied';
-				break;
-			case 'error':
-				message = 'Error loading the chat';
-				break;
-			default:
-				AssertNever(channel.failed);
-		}
-	}
+function DirectMessageChannelError({ channel, message = 'Unknown error' }: { channel?: DirectMessageChat; message?: string; }): ReactElement {
 	return (
 		<span className='error'>
 			Account: { channel?.id ?? 'unknown' }
@@ -67,17 +108,7 @@ function DirectMessageChannelFallback({ channel, message = 'Unknown error' }: { 
 	);
 }
 
-export function DirectMessageChannelProvider({ accountId, children }: ChildrenProps & { accountId: number; }): ReactElement {
-	return (
-		<Suspense fallback={ <DirectMessageChannelFallback message='Loading...' /> }>
-			<DirectMessageChannelProviderImpl accountId={ accountId }>
-				{ children }
-			</DirectMessageChannelProviderImpl>
-		</Suspense>
-	);
-}
-
-export function useDirectMessageChannel(): DirectMessageChannel {
+export function useDirectMessageChat(): DirectMessageChatContext {
 	const channel = useContext(directMessageContext);
 	AssertNotNullable(channel);
 	return channel;

@@ -1,10 +1,10 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
-import { AccountId, IAccountRoleInfo, type AccountSettingsCooldowns, type AccountSettings } from '../account';
+import { AccountId, AccountIdSchema, IAccountRoleInfo, type AccountSettings, type AccountSettingsCooldowns } from '../account';
 import type { CharacterId } from '../character';
 import type { ShardFeature } from '../space/space';
 import { Satisfies } from '../utility';
-import { ZodCast } from '../validation';
+import { ZodCast, type HexColorString } from '../validation';
 import type { IAccountContact, IAccountFriendStatus } from './client_directory';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 
@@ -93,7 +93,7 @@ export type IDirectoryDirectMessageAccount = {
 	/** Display name of the account */
 	displayName: string;
 	/** Label color of the account */
-	labelColor: string;
+	labelColor: HexColorString;
 	/** Public key of the account */
 	publicKeyData: string;
 };
@@ -139,20 +139,14 @@ export const DirectoryClientSchema = {
 		response: null,
 	},
 
-	/** Broadcast message to for account's connections when a DM is sent */
-	directMessageSent: {
-		request: ZodCast<IDirectoryDirectMessage & {
-			/** Target accountId */
-			target: AccountId;
-		}>(),
-		response: null,
-	},
-	/** Broadcast message to for account's connections when a DM is received */
-	directMessageGet: {
-		request: ZodCast<IDirectoryDirectMessage & {
-			/** Account info for the sender */
-			account: IDirectoryDirectMessageAccount;
-		}>(),
+	/** Broadcast message to for account's connections when a new DM message is sent/received */
+	directMessageNew: {
+		request: z.object({
+			/** The other account Id */
+			target: AccountIdSchema,
+			/** The message itself */
+			message: ZodCast<IDirectoryDirectMessage>(),
+		}),
 		response: null,
 	},
 	directMessageAction: {

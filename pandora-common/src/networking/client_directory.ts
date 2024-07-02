@@ -222,9 +222,14 @@ export const ClientDirectorySchema = {
 		]),
 		response: null,
 	},
-	setInitialCryptoKey: {
+	setCryptoKey: {
 		request: z.object({
 			cryptoKey: AccountCryptoKeySchema,
+			/**
+			 * Whether to allow setting a new crypto key if one is set already.
+			 * @default false
+			 */
+			allowReset: z.boolean().optional(),
 		}),
 		response: ZodCast<{ result: 'ok' | 'invalid' | 'keyAlreadySet'; }>(),
 	},

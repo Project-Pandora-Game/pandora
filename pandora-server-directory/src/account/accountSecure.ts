@@ -253,8 +253,8 @@ export default class AccountSecure {
 		return this.#secure.cryptoKey?.publicKey;
 	}
 
-	public async setInitialCryptoKey(key: IAccountCryptoKey): Promise<'ok' | 'invalid' | 'keyAlreadySet'> {
-		if (this.#secure.cryptoKey != null)
+	public async setCryptoKey(key: IAccountCryptoKey, allowReset: boolean = false): Promise<'ok' | 'invalid' | 'keyAlreadySet'> {
+		if (this.#secure.cryptoKey != null && !allowReset)
 			return 'keyAlreadySet';
 
 		if (!await this.#validateCryptoKey(key))

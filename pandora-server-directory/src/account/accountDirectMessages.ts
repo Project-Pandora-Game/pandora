@@ -1,9 +1,17 @@
 import { createHash } from 'crypto';
-import { LIMIT_DIRECT_MESSAGE_STORE_COUNT, IClientDirectoryArgument, IClientDirectoryPromiseResult, IDirectoryClientArgument, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo } from 'pandora-common';
+import {
+	IClientDirectoryArgument,
+	IClientDirectoryPromiseResult,
+	IDirectoryDirectMessageAccount,
+	IDirectoryDirectMessageInfo,
+	LIMIT_DIRECT_MESSAGE_STORE_COUNT,
+	type AccountId,
+	type IDirectoryDirectMessage,
+} from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider';
+import type { DatabaseDirectMessage, DatabaseDirectMessageInfo } from '../database/databaseStructure';
 import { Account, GetDirectMessageId } from './account';
 import { accountManager } from './accountManager';
-import type { DatabaseDirectMessageInfo, DatabaseDirectMessage } from '../database/databaseStructure';
 
 let lastMessageTime = 0;
 /** TODO: handle host machine time jumping backwards */
@@ -111,17 +119,22 @@ export class AccountDirectMessages {
 			await this.action(target, 'open', { notifyClients: false, time });
 			await target.directMessages.action(this._account, 'new', { notifyClients: false, time });
 		}
-		target.directMessages.directMessageGet({ ...message, keyHash, account: this._getAccountInfo() });
-		this.directMessageSent({ ...message, keyHash, target: target.id });
+		target.directMessages.directMessageNew({
+			...message,
+			keyHash,
+		}, this._account.id);
+		this.directMessageNew({
+			...message,
+			keyHash,
+		}, target.id);
 		return { result: 'ok' };
 	}
 
-	private directMessageGet(message: IDirectoryClientArgument['directMessageGet']): void {
-		this._account.associatedConnections.sendMessage('directMessageGet', message);
-	}
-
-	private directMessageSent(message: IDirectoryClientArgument['directMessageSent']): void {
-		this._account.associatedConnections.sendMessage('directMessageSent', message);
+	private directMessageNew(message: IDirectoryDirectMessage, otherAccount: AccountId): void {
+		this._account.associatedConnections.sendMessage('directMessageNew', {
+			target: otherAccount,
+			message,
+		});
 	}
 
 	public async getMessages(id: number): IClientDirectoryPromiseResult['getDirectMessages'] {

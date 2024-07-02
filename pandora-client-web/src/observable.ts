@@ -1,7 +1,7 @@
+import { Draft, freeze, produce } from 'immer';
 import { noop } from 'lodash';
-import { useSyncExternalStore } from 'react';
-import { ClassNamedAccessorDecoratorContext, GetLogger, TypedEvent, TypedEventEmitter } from 'pandora-common';
-import { produce, Draft } from 'immer';
+import { Assert, ClassNamedAccessorDecoratorContext, GetLogger, TypedEvent, TypedEventEmitter } from 'pandora-common';
+import { useCallback, useSyncExternalStore } from 'react';
 import { NODE_ENV, USER_DEBUG } from './config/Environment';
 
 export type Observer<T> = (value: T) => void;
@@ -126,6 +126,40 @@ export const NULL_OBSERVABLE: ReadonlyObservable<null> = new StaticObservable(nu
 
 export function useObservable<T>(obs: ReadonlyObservable<T>): T {
 	return useSyncExternalStore((cb) => obs.subscribe(cb), () => obs.value);
+}
+
+const MULTIPLE_OBSERVABLE_CACHE = new WeakMap<readonly ReadonlyObservable<unknown>[], readonly unknown[]>();
+/**
+ * Get current value of all observables passed using the argument
+ * @param obs - The observables to monitor
+ * @returns Collected values of all observables, in matching order
+ * @note The observables should be of the same time. If not, use this hook multiple times. Prefer simpler `useObservable` hook if possible.
+ */
+export function useObservableMultiple<T>(obs: readonly ReadonlyObservable<T>[]): readonly T[] {
+	freeze(obs, false);
+
+	const subscribe = useCallback((cb: () => void): (() => void) => {
+		const cleanup = obs.map((o) => o.subscribe(cb));
+		return () => {
+			cleanup.forEach((cln) => cln());
+		};
+	}, [obs]);
+
+	const getSnapshot = useCallback((): readonly T[] => {
+		const existingValue = MULTIPLE_OBSERVABLE_CACHE.get(obs);
+		if (existingValue != null) {
+			// The `obs` array should never mutate
+			Assert(existingValue.length === obs.length);
+			if (existingValue.every((v, i) => obs[i].value === v))
+				return existingValue as (readonly T[]);
+		}
+
+		const value = obs.map((o) => o.value);
+		MULTIPLE_OBSERVABLE_CACHE.set(obs, value);
+		return value;
+	}, [obs]);
+
+	return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 export function useNullableObservable<T>(obs: ReadonlyObservable<T> | null | undefined): T | null {

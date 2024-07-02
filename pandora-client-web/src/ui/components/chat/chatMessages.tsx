@@ -18,6 +18,7 @@ import { AssetManagerClient } from '../../../assets/assetManager';
 import { ChatParser } from './chatParser';
 import { RenderedLink } from '../../screens/spaceJoin/spaceJoin';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName';
+import type { Immutable } from 'immer';
 
 export type IChatMessageProcessed<T extends IChatMessageBase = IChatMessageBase> = T & {
 	/** Time the message was sent, guaranteed to be unique */
@@ -141,7 +142,7 @@ export function DescribeAttribute(assetManager: AssetManagerClient, attributeNam
 	return attribute != null ? `${attribute.description}` : `[UNKNOWN ATTRIBUTE '${attributeName}']`;
 }
 
-export function RenderChatPart([type, contents]: IChatSegment, index: number, allowLinkInNormal: boolean): ReactElement {
+export function RenderChatPart([type, contents]: Immutable<IChatSegment>, index: number, allowLinkInNormal: boolean): ReactElement {
 	if (type === 'normal' && allowLinkInNormal && contents.match(/^https?:\/\//) && URL.canParse(contents)) {
 		const url = new URL(contents);
 		return (

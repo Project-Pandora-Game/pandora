@@ -75,6 +75,11 @@ export class KeyExchange {
 	}
 
 	public static async generateKeyPassword(username: string, password: string): Promise<string> {
+		return await HashSHA512Base64(`${ENCRYPTION_SALT}:${username.toLowerCase()}:${password}`);
+	}
+
+	/** Old variant only for unlocking old keys. */
+	public static async generateKeyPasswordOld(username: string, password: string): Promise<string> {
 		return await HashSHA512Base64(ENCRYPTION_SALT + username + password);
 	}
 }

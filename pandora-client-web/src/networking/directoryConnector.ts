@@ -12,7 +12,7 @@ import type {
 	TypedEventEmitter,
 } from 'pandora-common';
 import type { ReadonlyObservable } from '../observable';
-import type { DirectMessageManager } from './directMessageManager';
+import type { DirectMessageManager } from '../services/accountLogic/directMessages/directMessageManager';
 
 export type LoginResponse = 'ok' | 'verificationRequired' | 'invalidToken' | 'unknownCredentials' | 'invalidSecondFactor';
 

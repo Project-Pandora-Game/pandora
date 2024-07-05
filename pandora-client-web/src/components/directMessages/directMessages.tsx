@@ -34,7 +34,7 @@ function DirectMessagesInner(): ReactElement {
 
 	const { accountId } = useParams();
 	const selected = useMemo((): AccountId | null => {
-		if (typeof accountId !== 'string' || !/^[0-9]$/.test(accountId))
+		if (typeof accountId !== 'string' || !/^[0-9]+$/.test(accountId))
 			return null;
 
 		const parsed = AccountIdSchema.safeParse(Number.parseInt(accountId));

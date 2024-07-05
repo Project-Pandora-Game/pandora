@@ -10,9 +10,9 @@ import {
 	TypedEvent,
 	TypedEventEmitter,
 } from 'pandora-common';
-import { DirectMessageManager } from '../../../src/networking/directMessageManager';
 import { AuthToken, DirectoryConnectionState, DirectoryConnector } from '../../../src/networking/directoryConnector';
 import { Observable } from '../../../src/observable';
+import { DirectMessageManager } from '../../../src/services/accountLogic/directMessages/directMessageManager';
 
 /** Event emitter implementation for testing which allows events to be manually emitted */
 export class TestEventEmitter<T extends TypedEvent> extends TypedEventEmitter<T> {

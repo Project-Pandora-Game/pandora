@@ -34,7 +34,7 @@ import { AccountContactContext } from '../components/accountContacts/accountCont
 import { PrehashPassword } from '../crypto/helpers';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../persistentToast';
-import { DirectMessageManager } from './directMessageManager';
+import { DirectMessageManager } from '../services/accountLogic/directMessages/directMessageManager';
 import { AuthToken, DirectoryConnectionState, DirectoryConnector, LoginResponse } from './directoryConnector';
 import { GetSocketIoUrl } from './socketio_shard_connector';
 
@@ -143,11 +143,8 @@ export class SocketIODirectoryConnector extends ConnectionBase<IClientDirectory,
 				};
 			},
 			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
-			directMessageSent: async (data) => {
-				await this.directMessageHandler.handleDirectMessageSent(data);
-			},
-			directMessageGet: async (data) => {
-				await this.directMessageHandler.handleDirectMessageGet(data);
+			directMessageNew: ({ target, message }) => {
+				this.directMessageHandler.handleNewDirectMessage(target, message);
 			},
 			directMessageAction: (data) => {
 				this.directMessageHandler.handleDirectMessageAction(data);

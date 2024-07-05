@@ -1,17 +1,18 @@
 import { CommandBuilder, CreateCommand, ICommandExecutionContext, IEmpty } from 'pandora-common';
-import type { DirectoryConnector } from '../../networking/directoryConnector';
 import type { useNavigate } from 'react-router';
-import type { IClientCommand } from '../../ui/components/chat/commandsProcessor';
-import type { DirectMessageChannel } from '../../networking/directMessageManager';
-import type { GameState } from '../gameContext/gameStateContextProvider';
+import type { DirectoryConnector } from '../../networking/directoryConnector';
 import type { ShardConnector } from '../../networking/shardConnector';
+import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat';
+import type { IClientCommand } from '../../ui/components/chat/commandsProcessor';
+import type { GameState } from '../gameContext/gameStateContextProvider';
 
 export interface DirectMessageCommandExecutionContext extends ICommandExecutionContext {
 	directoryConnector: DirectoryConnector;
 	shardConnector: ShardConnector | null;
 	gameState: GameState | null;
-	channel: DirectMessageChannel;
+	chat: DirectMessageChat;
 	navigate: ReturnType<typeof useNavigate>;
+	sendMessage: (message: string, editing?: number) => Promise<void>;
 }
 
 function CreateDMCommand(): CommandBuilder<DirectMessageCommandExecutionContext, IEmpty, IEmpty> {
@@ -25,14 +26,10 @@ export const DIRECT_MESSAGE_COMMANDS: readonly IClientCommand<DirectMessageComma
 		description: 'Creates an invite link to your current space',
 		longDescription: 'Creates an invite link to your current space, this invite is limited to the account and has a single use.',
 		handler: CreateDMCommand()
-			.handler(({ directoryConnector, gameState, channel, displayError }) => {
+			.handler(({ directoryConnector, gameState, chat, displayError, sendMessage }) => {
 				(async () => {
 					if (gameState?.currentSpace.value.id == null) {
 						displayError?.('You are not in a space');
-						return;
-					}
-					if (channel.account == null) {
-						displayError?.('Direct message channel is not valid');
 						return;
 					}
 
@@ -41,11 +38,11 @@ export const DIRECT_MESSAGE_COMMANDS: readonly IClientCommand<DirectMessageComma
 						action: 'create',
 						data: {
 							type: 'joinMe',
-							accountId: channel.account.id,
+							accountId: chat.id,
 						},
 					});
 					if (resp.result === 'created') {
-						await channel.sendMessage(`https://project-pandora.com/space/join/${spaceId}?invite=${resp.invite.id}`);
+						await sendMessage(`https://project-pandora.com/space/join/${spaceId}?invite=${resp.invite.id}`);
 					} else {
 						displayError?.('Failed to create invite: ' + resp.result);
 					}

@@ -253,9 +253,15 @@ export default class AccountSecure {
 		return this.#secure.cryptoKey?.publicKey;
 	}
 
-	public async setInitialCryptoKey(key: IAccountCryptoKey): Promise<'ok' | 'invalid' | 'keyAlreadySet'> {
-		if (this.#secure.cryptoKey != null)
-			return 'keyAlreadySet';
+	public async setCryptoKey(key: IAccountCryptoKey, allowReset?: 'same-key' | 'replace-deleting-dms'): Promise<'ok' | 'invalid' | 'keyAlreadySet'> {
+		if (this.#secure.cryptoKey != null) {
+			if (
+				allowReset !== 'replace-deleting-dms' &&
+				(allowReset !== 'same-key' || this.#secure.cryptoKey.publicKey !== key.publicKey)
+			) {
+				return 'keyAlreadySet';
+			}
+		}
 
 		if (!await this.#validateCryptoKey(key))
 			return 'invalid';

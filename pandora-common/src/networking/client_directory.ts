@@ -227,9 +227,13 @@ export const ClientDirectorySchema = {
 			cryptoKey: AccountCryptoKeySchema,
 			/**
 			 * Whether to allow setting a new crypto key if one is set already.
-			 * @default false
+			 * Has three possible values:
+			 * - `undefined` - Doesn't allow reseting key if it has already been set
+			 * - `'same-key'` - Only allows replacing the key if the new one has same public key (re-encrypted private key)
+			 * - `'replace-deleting-dms'` - Allows replacing the key completely. This will cause existing DMs to be lost.
+			 * @default undefined
 			 */
-			allowReset: z.boolean().optional(),
+			allowReset: z.enum(['same-key', 'replace-deleting-dms']).optional(),
 		}),
 		response: ZodCast<{ result: 'ok' | 'invalid' | 'keyAlreadySet'; }>(),
 	},

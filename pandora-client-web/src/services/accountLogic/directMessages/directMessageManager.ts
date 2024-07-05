@@ -139,7 +139,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 
 		const { result } = await this.connector.awaitResponse('setCryptoKey', {
 			cryptoKey: await this.#crypto.export(password),
-			allowReset: true,
+			allowReset: 'same-key',
 		});
 		if (result !== 'ok') {
 			this.logger.warning('Failed to update cryptokey:', result);

@@ -818,7 +818,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.account)
 			throw new BadMessageError();
 
-		const result = await connection.account.secure.setCryptoKey(cryptoKey, allowReset === true);
+		const result = await connection.account.secure.setCryptoKey(cryptoKey, allowReset);
 
 		return { result };
 	}

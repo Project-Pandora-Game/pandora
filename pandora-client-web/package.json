@@ -95,7 +95,7 @@
 		"sass": "1.77.0",
 		"source-map-loader": "5.0.0",
 		"style-loader": "4.0.0",
-		"ts-jest": "29.1.2",
+		"ts-jest": "29.2.0",
 		"ts-loader": "9.5.1",
 		"ts-mockito": "2.6.1",
 		"ts-node": "10.9.2",

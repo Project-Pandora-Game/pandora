@@ -25,7 +25,7 @@
 		"pandora-common": "workspace:*",
 		"pandora-server-directory": "workspace:*",
 		"pandora-server-shard": "workspace:*",
-		"rimraf": "5.0.5",
+		"rimraf": "6.0.0",
 		"superstatic": "9.0.3",
 		"tslib": "2.6.2",
 		"typescript": "5.4.5",

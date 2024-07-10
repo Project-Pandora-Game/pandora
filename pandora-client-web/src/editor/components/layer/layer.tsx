@@ -1,23 +1,23 @@
 import { capitalize } from 'lodash';
-import { Assert, LayerPriority, LAYER_PRIORITIES } from 'pandora-common';
+import { Assert, LAYER_PRIORITIES, LayerPriority } from 'pandora-common';
 import React, { ReactElement, useMemo, useState, useSyncExternalStore } from 'react';
-import { AssetGraphicsLayer, useLayerImageSettingsForScalingStop, useLayerDefinition, useLayerName, useGraphicsAsset } from '../../../assets/assetGraphics';
+import { AssetGraphicsLayer, useGraphicsAsset, useLayerDefinition, useLayerImageSettingsForScalingStop, useLayerName } from '../../../assets/assetGraphics';
 import { useAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
 import { useEvent } from '../../../common/useEvent';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/button/button';
-import { Select } from '../../../components/common/select/select';
+import { Row } from '../../../components/common/container/container';
+import { ExternalLink } from '../../../components/common/link/externalLink';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
+import { Select } from '../../../components/common/select/select';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
+import { useEditorLayerTint } from '../../editor';
 import { useEditor } from '../../editorContextProvider';
 import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
 import { ParseLayerImageOverrides, SerializeLayerImageOverrides } from '../../parsing';
-import { useEditorLayerTint } from '../../editor';
-import { Row } from '../../../components/common/container/container';
-import { ExternalLink } from '../../../components/common/link/externalLink';
 
 export function LayerUI(): ReactElement {
 	const editor = useEditor();
@@ -52,7 +52,7 @@ export function LayerUI(): ReactElement {
 			<LayerOffsetSetting layer={ selectedLayer } _asset={ asset } />
 			<hr />
 			<LayerPrioritySelect layer={ selectedLayer } asset={ asset } />
-			<LayerTemplateSelect layer={ selectedLayer } asset={ asset } />
+			<LayerTemplateSelect layer={ selectedLayer } />
 			<LayerPointsFilterEdit layer={ selectedLayer } />
 			<hr />
 			<LayerImageSelect layer={ selectedLayer } asset={ asset } />
@@ -459,7 +459,7 @@ function LayerPrioritySelect({ layer }: { layer: AssetGraphicsLayer; asset: Edit
 	);
 }
 
-function LayerTemplateSelect({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
+function LayerTemplateSelect({ layer }: { layer: AssetGraphicsLayer; }): ReactElement | null {
 	const { points } = useLayerDefinition(layer);
 	const graphicsManger = useObservable(GraphicsManagerInstance);
 
@@ -505,20 +505,19 @@ function LayerTemplateSelect({ layer, asset }: { layer: AssetGraphicsLayer; asse
 			<Select
 				id='layer-template-select'
 				className='flex-1'
-				value={ typeof points === 'string' ? `t/${points}` : (Array.isArray(points) && points.length === 0) ? 't/' : '' }
+				value={ `t/${points}` }
 				onChange={ (event) => {
-					let source: number | string | null = null;
-					if (event.target.value.startsWith('t/')) {
-						source = event.target.value.substring(2);
-					} else if (event.target.value) {
-						source = Number.parseInt(event.target.value);
-					}
-					asset.layerMirrorFrom(layer, source);
+					Assert(event.target.value.startsWith('t/'));
+					const source = event.target.value.substring(2);
+					const template = graphicsManger?.getTemplate(source);
+					Assert(template != null, 'Unknown point template');
+					layer._modifyDefinition((d) => {
+						d.points = source;
+					});
 				} }
 			>
 				<option value='t/' key='t/'>[ No points ]</option>
 				{ elements }
-				<option value='' key=''>[ Custom points ]</option>
 			</Select>
 		</Row>
 	);

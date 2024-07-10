@@ -1,20 +1,19 @@
-import * as PIXI from 'pixi.js';
-import { Texture, FederatedPointerEvent } from 'pixi.js';
-import { Assert, AssetFrameworkCharacterState, BoneDefinition, CharacterSize, LayerDefinition, PointDefinition } from 'pandora-common';
-import { GetAngle, RotateVector } from '../../graphics/utility';
-import { AssetGraphicsLayer, PointDefinitionCalculated } from '../../assets/assetGraphics';
-import dotTexture from '../../assets/editor/dotTexture.png';
-import { GraphicsManagerInstance } from '../../assets/graphicsManager';
-import _, { cloneDeep } from 'lodash';
-import React, { ReactElement, useEffect, useMemo, useRef } from 'react';
-import { useEvent } from '../../common/useEvent';
 import { Sprite, useApp } from '@pixi/react';
-import { useEditor } from '../editorContextProvider';
-import { Observable, ReadonlyObservable, useObservable } from '../../observable';
-import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { Draft, Immutable } from 'immer';
-import { EditorCharacter } from './character/appearanceEditor';
+import _, { cloneDeep } from 'lodash';
+import { Assert, AssetFrameworkCharacterState, BoneDefinition, CharacterSize, PointDefinition } from 'pandora-common';
+import * as PIXI from 'pixi.js';
+import { FederatedPointerEvent, Texture } from 'pixi.js';
+import React, { ReactElement, useEffect, useMemo, useRef } from 'react';
+import { PointDefinitionCalculated } from '../../assets/assetGraphics';
+import dotTexture from '../../assets/editor/dotTexture.png';
+import { useEvent } from '../../common/useEvent';
+import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { useTexture } from '../../graphics/useTexture';
+import { GetAngle, RotateVector } from '../../graphics/utility';
+import { Observable, ReadonlyObservable, useObservable } from '../../observable';
+import { EditorCharacter } from './character/appearanceEditor';
+import type { PointTemplateEditor } from './pointTemplateEditor';
 
 type DraggableProps = {
 	x: number;
@@ -84,12 +83,13 @@ export function Draggable({
 }
 
 export function DraggablePointDisplay({
+	templateEditor,
 	draggablePoint,
 }: {
+	templateEditor: PointTemplateEditor;
 	draggablePoint: DraggablePoint;
 }): ReactElement {
-	const editor = useEditor();
-	const selectedPoint = useObservable(editor.targetPoint);
+	const selectedPoint = useObservable(templateEditor.targetPoint);
 	const { pos, isMirror } = useDraggablePointDefinition(draggablePoint);
 	const pointTexture = useTexture(dotTexture);
 	const isSelected = draggablePoint === selectedPoint;
@@ -102,14 +102,11 @@ export function DraggablePointDisplay({
 				(isMirror ? 0xaaff00 : 0xffff00) :
 				(isMirror ? 0x00ff00 : 0xffffff) }
 			dragStart={ () => {
-				// Cannot drag template point
-				if (typeof draggablePoint.getDefinitionLocation() === 'string')
-					return false;
 				// Only allow drag if the point is already selected
-				if (editor.targetPoint.value === draggablePoint)
+				if (templateEditor.targetPoint.value === draggablePoint)
 					return true;
 				// Select the point on click
-				editor.targetPoint.value = draggablePoint;
+				templateEditor.targetPoint.value = draggablePoint;
 				return false;
 			} }
 			createTexture={ () => pointTexture }
@@ -120,14 +117,14 @@ export function DraggablePointDisplay({
 
 export class DraggablePoint {
 	private readonly _definition: Observable<PointDefinitionCalculated>;
-	public readonly layer: AssetGraphicsLayer;
+	public readonly template: PointTemplateEditor;
 
 	public get definition(): ReadonlyObservable<Immutable<PointDefinitionCalculated>> {
 		return this._definition;
 	}
 
-	constructor(layer: AssetGraphicsLayer, point: PointDefinitionCalculated) {
-		this.layer = layer;
+	constructor(template: PointTemplateEditor, point: PointDefinitionCalculated) {
+		this.template = template;
 		this._definition = new Observable(point);
 	}
 
@@ -139,53 +136,12 @@ export class DraggablePoint {
 		this._definition.value = point;
 	}
 
-	public getDefinitionLocation(): AssetGraphicsLayer | string {
-		let layer = this.layer;
-		const index = this.index;
-		if (layer.mirror && layer.isMirror) {
-			layer = layer.mirror;
-		}
-		let d: Immutable<LayerDefinition> = layer.definition.value;
-		if (typeof d.points === 'number') {
-			layer = layer.asset.layers[d.points];
-			d = layer.definition.value;
-			if (typeof d.points === 'number' || typeof d.points === 'string') {
-				throw new Error('More than one jump in points reference');
-			}
-		}
-		if (typeof d.points === 'string') {
-			const template = GraphicsManagerInstance.value?.getTemplate(d.points);
-			if (!template) {
-				throw new Error(`Unknown template '${d.points}'`);
-			}
-			if (template.length <= index) {
-				throw new Error('Invalid attempt to set point position');
-			}
-			return d.points;
-		}
-		if (d.points.length <= index) {
-			throw new Error('Invalid attempt to set point position');
-		}
-		return layer;
-	}
-
 	private _modifyPoint(producer: (draft: Draft<Immutable<PointDefinition>>) => void): void {
-		let layer = this.layer;
 		const index = this.index;
-		if (layer.mirror && layer.isMirror) {
-			layer = layer.mirror;
-		}
-		let def: Immutable<LayerDefinition> = layer.definition.value;
-		if (typeof def.points === 'number') {
-			layer = layer.asset.layers[def.points];
-			def = layer.definition.value;
-			if (typeof def.points === 'number' || typeof def.points === 'string') {
-				throw new Error('More than one jump in points reference');
-			}
-		}
-		layer._modifyDefinition((d) => {
-			Assert(typeof d.points !== 'number' && typeof d.points !== 'string' && d.points.length > index);
-			producer(d.points[index]);
+
+		this.template.modifyTemplate((d) => {
+			Assert(d.length > index);
+			producer(d[index]);
 		});
 	}
 
@@ -217,15 +173,11 @@ export class DraggablePoint {
 	}
 
 	public deletePoint(): void {
-		const layer = this.getDefinitionLocation();
-		if (typeof layer === 'string') {
-			throw new Error('Cannot modify template');
-		}
 		const index = this.index;
 		// TODO: Make idempotent
-		layer._modifyDefinition((d) => {
-			Assert(typeof d.points !== 'number' && typeof d.points !== 'string' && d.points.length > index);
-			d.points.splice(index, 1);
+		this.template.modifyTemplate((d) => {
+			Assert(d.length > index);
+			d.splice(index, 1);
 		});
 	}
 }

@@ -1,16 +1,24 @@
+import Delaunator from 'delaunator';
 import { Draft, Immutable, freeze, produce } from 'immer';
-import { cloneDeep, maxBy, minBy } from 'lodash';
-import { Assert, Asset, AssetGraphicsDefinition, AssetId, BoneName, CharacterSize, Item, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, LayerPriority, PointDefinition } from 'pandora-common';
-import { useMemo } from 'react';
+import { maxBy, minBy } from 'lodash';
+import { Assert, Asset, AssetGraphicsDefinition, AssetId, BoneName, CharacterSize, CloneDeepMutable, Item, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, LayerPriority, PointDefinition, type PointTemplate } from 'pandora-common';
+import { createContext, useContext, useMemo } from 'react';
 import { AppearanceConditionEvaluator } from '../graphics/appearanceConditionEvaluator';
 import { MirrorPriority } from '../graphics/def';
+import { SelectPoints } from '../graphics/graphicsLayer';
 import { GRAPHICS_TEXTURE_RESOLUTION_SCALE, useGraphicsSettings } from '../graphics/graphicsSettings';
 import { MakeMirroredPoints, MirrorBoneLike, MirrorImageOverride, MirrorLayerImageSetting, MirrorPoint } from '../graphics/mirroring';
 import { EvaluateCondition } from '../graphics/utility';
-import { Observable, ReadonlyObservable, useObservable } from '../observable';
+import { Observable, ReadonlyObservable, useNullableObservable, useObservable } from '../observable';
+import { useAutomaticResolution } from '../services/screenResolution/screenResolution';
 import { useAssetManager } from './assetManager';
 import { GraphicsManagerInstance } from './graphicsManager';
-import { useAutomaticResolution } from '../services/screenResolution/screenResolution';
+
+export type AssetGraphicsResolverOverride = {
+	pointTemplates?: ReadonlyObservable<ReadonlyMap<string, Immutable<PointTemplate>>>;
+};
+
+export const AssetGraphicsResolverOverrideContext = createContext<AssetGraphicsResolverOverride | null>(null);
 
 export interface PointDefinitionCalculated extends PointDefinition {
 	index: number;
@@ -200,27 +208,6 @@ export class AssetGraphicsLayer {
 		});
 	}
 
-	public createNewPoint(x: number, y: number): void {
-		if (this.mirror && this.isMirror)
-			return this.mirror.createNewPoint(x, y);
-
-		x = Math.round(x);
-		y = Math.round(y);
-
-		const definition = this._definition.value;
-		const sourceLayer = typeof definition.points === 'number' ? this.asset.layers[definition.points] : this;
-
-		sourceLayer._modifyDefinition((d) => {
-			Assert(typeof d.points !== 'number', 'More than one jump in points reference');
-			Assert(typeof d.points !== 'string', 'Cannot create new point in template');
-			d.points.push({
-				pos: [x, y],
-				mirror: false,
-				transforms: [],
-			});
-		});
-	}
-
 	public setName(name: string | undefined): void {
 		if (this.mirror && this.isMirror)
 			return this.mirror.setName(name);
@@ -336,61 +323,47 @@ export function useLayerName(layer: AssetGraphicsLayer): string {
 	return name;
 }
 
-export function CalculateImmediateLayerPointDefinition(layer: AssetGraphicsLayer): PointDefinitionCalculated[] {
-	const d = layer.definition.value;
-	const sourceLayer = typeof d.points === 'number' ? layer.asset.layers[d.points] : layer;
-	let { points } = sourceLayer.definition.value;
-	Assert(typeof points !== 'number', 'More than one jump in points reference');
+export function CalculatePointDefinitionsFromTemplate(template: Immutable<PointTemplate>, mirrorPoints: boolean = false): PointDefinitionCalculated[] {
+	let points: Immutable<PointDefinition[]> = template;
 
-	if (typeof points === 'string') {
-		const template = GraphicsManagerInstance.value?.getTemplate(points);
-		if (!template) {
-			throw new Error(`Unknown template '${points}'`);
-		}
-		points = template;
-	}
-
-	if (layer.isMirror && d.mirror === LayerMirror.FULL) {
+	if (mirrorPoints) {
 		points = points.map(MirrorPoint);
 	}
+
 	const calculatedPoints = points.map<PointDefinitionCalculated>((point, index) => ({
-		...cloneDeep(point) as PointDefinition,
-		pos: [...point.pos],
+		...CloneDeepMutable(point),
 		index,
 		isMirror: false,
 	}));
 	return calculatedPoints.flatMap(MakeMirroredPoints);
 }
 
+export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalculated[]>, pointType?: readonly string[]): Uint16Array {
+	const result: number[] = [];
+	const delaunator = new Delaunator(points.flatMap((point) => point.pos));
+	for (let i = 0; i < delaunator.triangles.length; i += 3) {
+		const t = [i, i + 1, i + 2].map((tp) => delaunator.triangles[tp]);
+		if (t.every((tp) => SelectPoints(points[tp], pointType))) {
+			result.push(...t);
+		}
+	}
+	return new Uint16Array(result);
+}
+
 export function useLayerCalculatedPoints(layer: AssetGraphicsLayer): PointDefinitionCalculated[] {
-	const d = useLayerDefinition(layer);
-	const sourceLayer = typeof d.points === 'number' ? layer.asset.layers[d.points] : layer;
-	const { points } = useLayerDefinition(sourceLayer);
-	Assert(typeof points !== 'number', 'More than one jump in points reference');
+	const { points, mirror } = useLayerDefinition(layer);
 
 	const manager = useObservable(GraphicsManagerInstance);
+	const templateOverrides = useNullableObservable(useContext(AssetGraphicsResolverOverrideContext)?.pointTemplates);
 
-	return useMemo(() => {
-		let p = points;
-		if (typeof p === 'string') {
-			const template = manager?.getTemplate(p);
-			if (!template) {
-				throw new Error(`Unknown template '${p}'`);
-			}
-			p = template;
+	return useMemo((): PointDefinitionCalculated[] => {
+		const p = templateOverrides?.get(points) ?? manager?.getTemplate(points);
+		if (!p) {
+			throw new Error(`Unknown template '${p}'`);
 		}
 
-		if (layer.isMirror && d.mirror === LayerMirror.FULL) {
-			p = p.map(MirrorPoint);
-		}
-		const calculatedPoints = p.map<PointDefinitionCalculated>((point, index) => ({
-			...cloneDeep(point) as PointDefinition,
-			pos: [...point.pos],
-			index,
-			isMirror: false,
-		}));
-		return calculatedPoints.flatMap(MakeMirroredPoints);
-	}, [d, layer, manager, points]);
+		return CalculatePointDefinitionsFromTemplate(p, (layer.isMirror && mirror === LayerMirror.FULL));
+	}, [layer, manager, templateOverrides, points, mirror]);
 }
 
 export function useLayerHasAlphaMasks(layer: AssetGraphicsLayer): boolean {

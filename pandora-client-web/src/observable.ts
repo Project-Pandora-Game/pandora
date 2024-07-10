@@ -1,8 +1,11 @@
-import { Draft, freeze, produce } from 'immer';
+import { Draft, enableMapSet, freeze, produce } from 'immer';
 import { noop } from 'lodash';
 import { Assert, ClassNamedAccessorDecoratorContext, GetLogger, TypedEvent, TypedEventEmitter } from 'pandora-common';
 import { useCallback, useSyncExternalStore } from 'react';
 import { NODE_ENV, USER_DEBUG } from './config/Environment';
+
+// Enable "Map" and "Set" support from immer, so they can be easily used in observables
+enableMapSet();
 
 export type Observer<T> = (value: T) => void;
 export type UnsubscribeCallback = () => void;

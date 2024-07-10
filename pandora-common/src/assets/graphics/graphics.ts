@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { AssetId } from '../base';
 import { RectangleSchema } from './common';
-import { PointDefinitionSchema, type PointTemplate } from './points';
+import { type PointTemplate } from './points';
 import { BoneNameSchema, ConditionSchema, type BoneType } from './conditions';
 
 // Fix for pnpm resolution weirdness
@@ -100,7 +100,7 @@ export type LayerImageSetting = z.infer<typeof LayerImageSettingSchema>;
 export const LayerDefinitionSchema = RectangleSchema.extend({
 	name: z.string().optional(),
 	priority: LayerPrioritySchema,
-	points: z.union([z.array(PointDefinitionSchema), z.string(), z.number()]),
+	points: z.string(),
 	pointType: z.array(z.string()).optional(),
 	mirror: LayerMirrorSchema,
 	colorizationKey: z.string().optional(),

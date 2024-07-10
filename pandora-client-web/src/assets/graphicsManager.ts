@@ -1,10 +1,10 @@
 import { AssetGraphicsDefinition, AssetId, AssetsGraphicsDefinitionFile, PointTemplate, TypedEventEmitter, type ITypedEventEmitter } from 'pandora-common';
 import { Resource, Texture } from 'pixi.js';
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { z } from 'zod';
+import { BrowserStorage } from '../browserStorage';
 import { Observable, useObservable } from '../observable';
 import { AssetGraphics } from './assetGraphics';
-import { BrowserStorage } from '../browserStorage';
-import { z } from 'zod';
 
 export interface IGraphicsLoaderStats {
 	inUseTextures: number;
@@ -191,6 +191,9 @@ export class GraphicsManager {
 	}
 
 	public getTemplate(name: string): PointTemplate | undefined {
+		if (!name)
+			return [];
+
 		return this._pointTemplates.get(name);
 	}
 

@@ -1,42 +1,30 @@
+import { Assert, CanonizePointTemplate, GetLogger } from 'pandora-common';
 import React, { ReactElement, useCallback, useState } from 'react';
-import { AssetGraphicsLayer, LayerToImmediateName, useLayerDefinition, useLayerName } from '../../../assets/assetGraphics';
+import { toast } from 'react-toastify';
+import { AssetGraphicsLayer, useLayerName } from '../../../assets/assetGraphics';
 import { useAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/button/button';
-import { Select } from '../../../components/common/select/select';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { StripAssetIdPrefix } from '../../../graphics/utility';
-import { useObservable } from '../../../observable';
-import { useEditorAssetLayers } from '../../editor';
-import { useEditor } from '../../editorContextProvider';
-import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
-import { DraggablePoint, useDraggablePointDefinition } from '../../graphics/draggable';
-import { ParseTransforms, SerializeTransforms } from '../../parsing';
 import { Row } from '../../../components/common/container/container';
+import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
+import { Select } from '../../../components/common/select/select';
+import { useNullableObservable, useObservable } from '../../../observable';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
+import { useEditor } from '../../editorContextProvider';
+import { DraggablePoint, useDraggablePointDefinition } from '../../graphics/draggable';
+import { PointTemplateEditor } from '../../graphics/pointTemplateEditor';
+import { ParseTransforms, SerializeTransforms } from '../../parsing';
 
 export function PointsUI(): ReactElement {
-	const editor = useEditor();
-	const selectedLayer = useObservable(editor.targetLayer);
-	const asset = selectedLayer?.asset;
-
-	const advancedWarning = <h3 className='error'>This menu is intended for advanced users and is not necessary for the vast majority of assets.</h3>;
-
-	if (!selectedLayer || !asset || !(asset instanceof EditorAssetGraphics)) {
-		return (
-			<div className='editor-setupui'>
-				{ advancedWarning }
-				<h3>Select an layer to edit its points</h3>
-			</div>
-		);
-	}
+	const advancedWarning = <h4 className='error'>This menu is intended for advanced users and is not necessary for the vast majority of assets.</h4>;
 
 	return (
 		<Scrollbar color='lighter' className='editor-setupui slim'>
+			<h3>Template editing</h3>
 			{ advancedWarning }
-			<h3>Editing: { StripAssetIdPrefix(selectedLayer.asset.id) } &gt; <LayerName layer={ selectedLayer } /></h3>
-			<MirrorPointsFromLayer layer={ selectedLayer } asset={ asset } />
-			<PointsEditUi layer={ selectedLayer } />
+			<SelectTemplateToEdit />
+			<PointsEditUi />
 		</Scrollbar>
 	);
 }
@@ -45,21 +33,36 @@ export function LayerName({ layer }: { layer: AssetGraphicsLayer; }): ReactEleme
 	return <>{ useLayerName(layer) }</>;
 }
 
-export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
+export function PointsEditUi(): ReactElement | null {
 	const editor = useEditor();
 	const getCenter = useObservable(editor.getCenter);
-	const selectedPoint = useObservable(editor.targetPoint);
-	const { points } = useLayerDefinition(layer);
+	const selectedTemplate = useObservable(editor.targetTemplate);
+	const selectedPoint = useNullableObservable(selectedTemplate?.targetPoint);
 
-	if (typeof points === 'string') {
-		return <div>Template cannot be edited</div>;
-	}
+	const exportToClipboard = useCallback(() => {
+		if (selectedTemplate == null)
+			return;
+
+		const result = JSON.stringify(CanonizePointTemplate(selectedTemplate.getCurrent()), undefined, '\t').trim() + '\n';
+		navigator.clipboard.writeText(result)
+			.then(() => {
+				toast(`Copied to clipboard`, TOAST_OPTIONS_SUCCESS);
+			})
+			.catch((err) => {
+				GetLogger('PointsEditUi').error('Error exporing to clipboard:', err);
+				toast(`Error exporting to clipboard:\n${err}`, TOAST_OPTIONS_ERROR);
+			});
+	}, [selectedTemplate]);
+
+	if (!selectedTemplate)
+		return null;
 
 	return (
 		<>
+			<Button onClick={ exportToClipboard }>Export definition to clipboard</Button>
 			<Button onClick={ () => {
 				const pos = getCenter();
-				layer.createNewPoint(pos.x, pos.y);
+				selectedTemplate.createNewPoint(pos.x, pos.y);
 			} }>
 				Add new point
 			</Button>
@@ -73,75 +76,38 @@ export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactEl
 	);
 }
 
-function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
-	const layers = useEditorAssetLayers(asset, false);
-	const { points } = useLayerDefinition(layer);
+function SelectTemplateToEdit(): ReactElement | null {
+	const editor = useEditor();
+	const selectedTemplate = useObservable(editor.targetTemplate);
 	const graphicsManger = useObservable(GraphicsManagerInstance);
-	const pointSourceLayer = typeof points === 'number' ? asset.layers[points] : layer;
-	const pointSourceLayerName = useLayerName(pointSourceLayer);
 
 	if (!graphicsManger)
 		return null;
 
-	const elements: ReactElement[] = [<option value='' key=''>[ None ]</option>];
-	for (const l of layers) {
-		if (Array.isArray(l.definition.value.points) && l !== layer) {
-			elements.push(
-				<option value={ l.index } key={ l.index }>{ LayerToImmediateName(l) }</option>,
-			);
-		}
-	}
-	// Add point template options
-	for (const t of graphicsManger.pointTemplateList) {
-		const id = `t/${t}`;
-		elements.push(
-			<option value={ id } key={ id }>Template: { t }</option>,
-		);
-	}
 	return (
-		<>
-			<Row alignY='center'>
-				<label htmlFor='mirror-points-from-layer'>Mirror all points from selected layer:</label>
-				<br />
-				<Select
-					id='mirror-points-from-layer'
-					value={ typeof points === 'number' ? `${points}` : typeof points === 'string' ? `t/${points}` : '' }
-					onChange={ (event) => {
-						let source: number | string | null = null;
-						if (event.target.value.startsWith('t/')) {
-							source = event.target.value.substring(2);
-						} else if (event.target.value) {
-							source = Number.parseInt(event.target.value);
-						}
-						asset.layerMirrorFrom(layer, source);
-					} }
-				>
-					{ elements }
-				</Select>
-			</Row>
-			{
-				typeof points === 'number' &&
-				<>
-					<Row alignY='center'>Points are mirrored from layer: { pointSourceLayerName }</Row>
-					<Button onClick={ () => {
-						asset.layerMirrorFrom(layer, null);
-					} }>
-						Unlink mirrored points
-					</Button>
-				</>
-			}
-			{
-				typeof points === 'string' &&
-				<>
-					<Row alignY='center'>Points are from template: { points }</Row>
-					<Button onClick={ () => {
-						asset.layerMirrorFrom(layer, null);
-					} }>
-						Unlink point template
-					</Button>
-				</>
-			}
-		</>
+		<Row alignY='center'>
+			<label htmlFor='template-edit-select'>Select template to edit:</label>
+			<Select
+				id='template-edit-select'
+				className='flex-1'
+				value={ selectedTemplate != null ? `t/${selectedTemplate.templateName}` : '' }
+				onChange={ (event) => {
+					if (!event.target.value) {
+						editor.targetTemplate.value = null;
+					} else {
+						Assert(event.target.value.startsWith('t/'));
+						editor.targetTemplate.value = new PointTemplateEditor(event.target.value.substring(2), editor);
+					}
+				} }
+			>
+				<option value='' key=''>[ None ]</option>
+				{
+					graphicsManger.pointTemplateList.map((t) => (
+						<option value={ `t/${t}` } key={ `t/${t}` }>{ t }</option>
+					))
+				}
+			</Select>
+		</Row>
 	);
 }
 

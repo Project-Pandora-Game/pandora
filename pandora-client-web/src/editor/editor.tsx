@@ -1,8 +1,9 @@
+import type { Immutable } from 'immer';
 import { noop } from 'lodash';
-import { Assert, AssertNotNullable, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkRoomState, AssetId, CharacterSize, GetLogger, HexColorString, ParseArrayNotEmpty, TypedEventEmitter } from 'pandora-common';
+import { Assert, AssertNotNullable, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkRoomState, AssetId, CharacterSize, GetLogger, HexColorString, ParseArrayNotEmpty, TypedEventEmitter, type PointTemplate } from 'pandora-common';
 import React, { createContext, ReactElement, useContext, useMemo, useSyncExternalStore } from 'react';
 import z from 'zod';
-import { AssetGraphics, AssetGraphicsLayer, CalculateImmediateLayerPointDefinition, useGraphicsAsset, useLayerDefinition } from '../assets/assetGraphics';
+import { AssetGraphics, AssetGraphicsLayer, useGraphicsAsset, useLayerDefinition } from '../assets/assetGraphics';
 import { GetCurrentAssetManager } from '../assets/assetManager';
 import { GraphicsManager } from '../assets/graphicsManager';
 import { useBrowserStorage } from '../browserStorage';
@@ -23,8 +24,8 @@ import { EditorWardrobeUI } from './components/wardrobe/wardrobe';
 import './editor.scss';
 import { useEditor } from './editorContextProvider';
 import { EDITOR_CHARACTER_ID, EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor';
-import { DraggablePoint } from './graphics/draggable';
 import { EditorResultScene, EditorSetupScene } from './graphics/editorScene';
+import type { PointTemplateEditor } from './graphics/pointTemplateEditor';
 
 const logger = GetLogger('Editor');
 
@@ -44,13 +45,15 @@ export class Editor extends TypedEventEmitter<{
 
 	public readonly targetAsset = new Observable<EditorAssetGraphics | null>(null);
 	public readonly targetLayer = new Observable<AssetGraphicsLayer | null>(null);
-	public readonly targetLayerPoints = new Observable<readonly DraggablePoint[]>([]);
-	public readonly targetPoint = new Observable<DraggablePoint | null>(null);
+
+	public readonly targetTemplate = new Observable<PointTemplateEditor | null>(null);
 
 	public readonly backgroundColor = new Observable<HexColorString>('#1099bb');
 	public readonly getCenter = new Observable<() => { x: number; y: number; }>(
 		() => ({ x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT / 2 }),
 	);
+
+	public readonly modifiedPointTemplates = new Observable<ReadonlyMap<string, Immutable<PointTemplate>>>(new Map());
 
 	constructor(assetManager: AssetManagerEditor, graphicsManager: GraphicsManager) {
 		super();
@@ -61,36 +64,11 @@ export class Editor extends TypedEventEmitter<{
 			}
 		});
 
-		let targetLayerUpdateCleanup: (() => void) | undefined;
 		this.targetLayer.subscribe((layer) => {
-			targetLayerUpdateCleanup?.();
-			targetLayerUpdateCleanup = undefined;
 			if (layer && this.targetAsset.value !== layer.asset) {
 				logger.error('Set target layer with non-matching target asset', layer, this.targetAsset.value);
 				this.targetLayer.value = null;
 				layer = null;
-			}
-			if (this.targetPoint.value?.layer !== layer) {
-				this.targetPoint.value = null;
-			}
-			this.targetLayerPoints.value = [];
-			if (layer) {
-				const targetLayer = layer;
-				this.targetPoint.value = null;
-				targetLayerUpdateCleanup = targetLayer.definition.subscribe(() => {
-					const points = CalculateImmediateLayerPointDefinition(targetLayer);
-					const currentPoints = this.targetLayerPoints.value;
-					if (currentPoints.length === points.length) {
-						for (let i = 0; i < points.length; i++) {
-							currentPoints[i].updatePoint(points[i]);
-						}
-						return;
-					}
-					this.targetPoint.value = null;
-					this.targetLayerPoints.value = points.map((definition) => new DraggablePoint(targetLayer, definition));
-				}, true);
-			} else {
-				this.targetPoint.value = null;
 			}
 		});
 

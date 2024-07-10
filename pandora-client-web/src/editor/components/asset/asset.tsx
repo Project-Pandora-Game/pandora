@@ -2,9 +2,11 @@ import classNames from 'classnames';
 import { AssetGraphicsDefinition, AssetGraphicsDefinitionSchema, GetLogger, ZodMatcher } from 'pandora-common';
 import React, { ReactElement, useState, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
-import { AssetGraphicsLayer, useLayerHasAlphaMasks, useLayerName } from '../../../assets/assetGraphics';
+import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
+import { useLayerHasAlphaMasks, useLayerName } from '../../../assets/assetGraphicsCalculations';
 import { useEvent } from '../../../common/useEvent';
 import { Button } from '../../../components/common/button/button';
+import { Column, Row } from '../../../components/common/container/container';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
@@ -14,7 +16,6 @@ import { EDITOR_ALPHA_ICONS, useEditorAssetLayers } from '../../editor';
 import { useEditor } from '../../editorContextProvider';
 import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
 import './asset.scss';
-import { Column, Row } from '../../../components/common/container/container';
 
 const IsAssetGraphicsDefinition = ZodMatcher(AssetGraphicsDefinitionSchema);
 

@@ -4,7 +4,7 @@ import { cloneDeep } from 'lodash';
 import { EMPTY_ARRAY, type PointTemplate } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useMemo } from 'react';
-import { CalculatePointDefinitionsFromTemplate, CalculatePointsTriangles } from '../../assets/assetGraphics';
+import { CalculatePointDefinitionsFromTemplate, CalculatePointsTriangles } from '../../assets/assetGraphicsCalculations';
 import { Observable, useObservable } from '../../observable';
 import type { Editor } from '../editor';
 import { useEditor } from '../editorContextProvider';

@@ -1,7 +1,8 @@
 import { Assert, CanonizePointTemplate, GetLogger } from 'pandora-common';
 import React, { ReactElement, useCallback, useState } from 'react';
 import { toast } from 'react-toastify';
-import { AssetGraphicsLayer, useLayerName } from '../../../assets/assetGraphics';
+import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
+import { useLayerName } from '../../../assets/assetGraphicsCalculations';
 import { useAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';

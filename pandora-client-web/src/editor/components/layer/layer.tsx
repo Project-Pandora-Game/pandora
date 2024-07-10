@@ -1,7 +1,8 @@
 import { capitalize } from 'lodash';
 import { Assert, LAYER_PRIORITIES, LayerPriority } from 'pandora-common';
 import React, { ReactElement, useMemo, useState, useSyncExternalStore } from 'react';
-import { AssetGraphicsLayer, useGraphicsAsset, useLayerDefinition, useLayerImageSettingsForScalingStop, useLayerName } from '../../../assets/assetGraphics';
+import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
+import { useGraphicsAsset, useLayerDefinition, useLayerImageSettingsForScalingStop, useLayerName } from '../../../assets/assetGraphicsCalculations';
 import { useAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
 import { useEvent } from '../../../common/useEvent';

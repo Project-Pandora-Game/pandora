@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { AssertNotNullable, CharacterSize, GetLogger, HexColorStringSchema } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
-import { AssetGraphicsResolverOverrideContext, type AssetGraphicsResolverOverride } from '../../assets/assetGraphics';
+import { AssetGraphicsResolverOverrideContext, type AssetGraphicsResolverOverride } from '../../assets/assetGraphicsCalculations';
 import { DownloadAsFile } from '../../common/downloadHelper';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';

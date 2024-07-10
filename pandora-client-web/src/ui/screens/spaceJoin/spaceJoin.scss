@@ -8,10 +8,7 @@
 	flex-flow: row;
 	background-color: #222;
 	font-weight: bold;
-
-	span {
-		margin: 1em auto;
-	}
+	padding: 1em;
 
 	&.active:hover {
 		cursor: pointer;

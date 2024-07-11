@@ -1,17 +1,17 @@
 import { Immutable } from 'immer';
 import { AssetDefinition, AssetModuleDefinition, ModuleType } from 'pandora-common';
-import { EffectsDefinition, EFFECTS_DEFAULT } from 'pandora-common/dist/assets/effects';
+import { EFFECTS_DEFAULT, EffectsDefinition } from 'pandora-common/dist/assets/effects';
 import { IModuleConfigCommon } from 'pandora-common/dist/assets/modules/common';
 import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/dist/assets/modules/typed';
 import React, { ReactElement, useId, useMemo } from 'react';
-import { useGraphicsAsset } from '../../../assets/assetGraphics';
+import { useGraphicsAsset } from '../../../assets/assetGraphicsCalculations';
+import { Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
-import { Row } from '../../../components/common/container/container';
 
 export function AssetInfoUI(): ReactElement {
 	const editor = useEditor();

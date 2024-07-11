@@ -1,19 +1,18 @@
-import * as PIXI from 'pixi.js';
-import { DraggablePointDisplay } from '../draggable';
-import { EditorLayer, EDITOR_LAYER_Z_INDEX_EXTRA } from './editorLayer';
-import { AssetFrameworkCharacterState } from 'pandora-common';
-import { GraphicsLayerProps, useItemColor, useLayerPoints, useLayerVertices } from '../../../graphics/graphicsLayer';
-import React, { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react';
-import { useEditor } from '../../editorContextProvider';
-import { useObservable } from '../../../observable';
 import { Container, Graphics, Sprite } from '@pixi/react';
-import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
-import { AssetGraphicsLayer, useLayerDefinition, useLayerImageSource } from '../../../assets/assetGraphics';
-import { useCharacterAppearanceItems } from '../../../character/character';
+import { AssetFrameworkCharacterState } from 'pandora-common';
+import * as PIXI from 'pixi.js';
 import { Texture } from 'pixi.js';
-import { EditorAssetGraphics } from '../character/appearanceEditor';
+import React, { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react';
+import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
+import { useLayerDefinition, useLayerImageSource } from '../../../assets/assetGraphicsCalculations';
+import { useCharacterAppearanceItems } from '../../../character/character';
+import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
+import { GraphicsLayerProps, useItemColor, useLayerPoints, useLayerVertices } from '../../../graphics/graphicsLayer';
 import { useTexture } from '../../../graphics/useTexture';
 import { useEditorLayerStateOverride } from '../../editor';
+import { useEditor } from '../../editorContextProvider';
+import { EditorAssetGraphics } from '../character/appearanceEditor';
+import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer';
 
 export function SetupLayer({
 	layer,
@@ -72,15 +71,21 @@ export function SetupLayerSelected({
 
 	const drawWireFrame = useCallback((g: PIXI.Graphics) => {
 		g.clear().lineStyle(1, 0x333333, 0.2);
+		// Draw triangles
 		for (let i = 0; i < triangles.length; i += 3) {
 			const poly = [0, 1, 2]
 				.map((p) => triangles[i + p])
 				.flatMap((p) => [uv[2 * p] * width + x, uv[2 * p + 1] * height + y]);
 			g.drawPolygon(poly);
 		}
-	}, [triangles, uv, x, y, width, height]);
-
-	const displayPoints = useObservable(editor.targetLayerPoints);
+		// Draw nice points on top of triangles
+		g.lineStyle(1, 0x000000, 0.8);
+		for (const point of points) {
+			g.beginFill(0xcccccc, 0.8)
+				.drawCircle(point.pos[0], point.pos[1], 2.5)
+				.endFill();
+		}
+	}, [points, triangles, uv, x, y, width, height]);
 
 	const [editorGettersVersion, editorGettersUpdate] = useReducer((s: number) => s + 1, 0);
 
@@ -123,11 +128,6 @@ export function SetupLayerSelected({
 				zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
 				draw={ drawWireFrame }
 			/>
-			<Container
-				zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
-			>
-				{ displayPoints.map((p, i) => <DraggablePointDisplay draggablePoint={ p } key={ i } />) }
-			</Container>
 		</Container>
 	);
 }

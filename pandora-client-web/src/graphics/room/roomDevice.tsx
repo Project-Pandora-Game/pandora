@@ -21,7 +21,7 @@ import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
 import { z } from 'zod';
-import { useImageResolutionAlternative } from '../../assets/assetGraphics';
+import { useImageResolutionAlternative } from '../../assets/assetGraphicsCalculations';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { BrowserStorage } from '../../browserStorage';
 import { Character } from '../../character/character';

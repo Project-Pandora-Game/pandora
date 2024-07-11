@@ -3,7 +3,7 @@ import classNames from 'classnames';
 import { CharacterSize } from 'pandora-common';
 import { Application, Filter } from 'pixi.js';
 import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useImageResolutionAlternative } from '../assets/assetGraphics';
+import { useImageResolutionAlternative } from '../assets/assetGraphicsCalculations';
 import { ChildrenProps } from '../common/reactTypes';
 import { useEvent } from '../common/useEvent';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary';

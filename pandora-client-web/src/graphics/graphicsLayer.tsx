@@ -1,10 +1,11 @@
 import { Container, Sprite, useApp } from '@pixi/react';
-import Delaunator from 'delaunator';
+import type { Immutable } from 'immer';
 import { AppearanceItems, Assert, AssertNever, AssetFrameworkCharacterState, BoneName, CharacterSize, CoordinatesCompressed, HexColorString, Item, LayerMirror, Rectangle as PandoraRectangle, PointDefinition } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { IArrayBuffer, Rectangle, Texture } from 'pixi.js';
 import React, { ReactElement, createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AssetGraphicsLayer, PointDefinitionCalculated, useImageResolutionAlternative, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource } from '../assets/assetGraphics';
+import { AssetGraphicsLayer, PointDefinitionCalculated } from '../assets/assetGraphics';
+import { CalculatePointsTriangles, useImageResolutionAlternative, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource } from '../assets/assetGraphicsCalculations';
 import { ChildrenProps } from '../common/reactTypes';
 import { ConditionEvaluatorBase, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator';
 import { LayerStateOverrides } from './def';
@@ -29,20 +30,12 @@ export function useLayerPoints(layer: AssetGraphicsLayer): {
 
 	const { pointType } = useLayerDefinition(layer);
 	const triangles = useMemo<Uint16Array>(() => {
-		const result: number[] = [];
-		const delaunator = new Delaunator(points.flatMap((point) => point.pos));
-		for (let i = 0; i < delaunator.triangles.length; i += 3) {
-			const t = [i, i + 1, i + 2].map((tp) => delaunator.triangles[tp]);
-			if (t.every((tp) => SelectPoints(points[tp], pointType))) {
-				result.push(...t);
-			}
-		}
-		return new Uint16Array(result);
+		return CalculatePointsTriangles(points, pointType);
 	}, [pointType, points]);
 	return { points, triangles };
 }
 
-export function SelectPoints({ pointType }: PointDefinition, pointTypes?: readonly string[]): boolean {
+export function SelectPoints({ pointType }: Immutable<PointDefinition>, pointTypes?: readonly string[]): boolean {
 	// If point has no type, include it
 	return !pointType ||
 		// If there is no requirement on point types, include all

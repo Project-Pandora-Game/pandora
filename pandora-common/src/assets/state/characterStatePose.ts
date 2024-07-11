@@ -1,10 +1,10 @@
 import { Immutable, freeze, produce } from 'immer';
 import _ from 'lodash';
 import { z } from 'zod';
-import type { AssetManager } from '../assetManager';
-import type { BoneType, CharacterView, LegsPose } from '../graphics/graphics';
 import type { Satisfies } from '../../utility';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, BoneState, CharacterViewSchema, LegsPoseSchema } from '../graphics/graphics';
+import type { AssetManager } from '../assetManager';
+import type { BoneType, CharacterView, LegsPose } from '../graphics';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, BoneState, CharacterViewSchema, LegsPoseSchema } from '../graphics';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../../validation';

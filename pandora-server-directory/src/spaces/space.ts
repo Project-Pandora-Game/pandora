@@ -471,9 +471,7 @@ export class Space {
 		const invite = this._invites.find((i) => i.id === id);
 		if (!invite || !this._isValidInvite(invite))
 			return undefined;
-		if (invite.accountId != null && invite.accountId !== character.baseInfo.account.id)
-			return undefined;
-		if (invite.characterId != null && invite.characterId !== character.baseInfo.id)
+		if (!this._isAllowedToUseInvite(character, invite))
 			return undefined;
 
 		return invite;
@@ -485,6 +483,20 @@ export class Space {
 		if (invite.maxUses != null && invite.uses >= invite.maxUses)
 			return false;
 		if (invite.type === 'joinMe' && [...this.characters].every((c) => c.baseInfo.id !== invite.createdBy.characterId))
+			return false;
+
+		return true;
+	}
+
+	private _isAllowedToUseInvite(character: Character, invite: SpaceInvite): boolean {
+		// Author can use the invite (mainly used for letting them see info about the invite)
+		if (invite.createdBy.accountId === character.baseInfo.account.id)
+			return true;
+		// If filtered to a specific account, check it
+		if (invite.accountId != null && invite.accountId !== character.baseInfo.account.id)
+			return false;
+		// If filtered to a specific character, check it
+		if (invite.characterId != null && invite.characterId !== character.baseInfo.id)
 			return false;
 
 		return true;

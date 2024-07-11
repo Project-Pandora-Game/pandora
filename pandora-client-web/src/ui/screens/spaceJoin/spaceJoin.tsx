@@ -1,10 +1,10 @@
-import { SpaceId, SpaceIdSchema, SpaceInviteId, SpaceInviteIdSchema } from 'pandora-common';
+import { SpaceId, SpaceIdSchema, SpaceInviteId, SpaceInviteIdSchema, type SpaceExtendedInfoResponse } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { SpaceDetails, useSpaceExtendedInfo } from '../spacesSearch/spacesSearch';
+import { ExternalLink, UntrustedLink } from '../../../components/common/link/externalLink';
 import { ModalDialog } from '../../../components/dialog/dialog';
+import { SpaceDetails, useSpaceExtendedInfo } from '../spacesSearch/spacesSearch';
 import './spaceJoin.scss';
-import { UntrustedLink } from '../../../components/common/link/externalLink';
 
 export function SpaceJoin(): ReactElement {
 	const { pathname, search } = useLocation();
@@ -47,20 +47,32 @@ function QuerySpaceInfo({ spaceId, invite }: { spaceId: SpaceId; invite?: SpaceI
 	);
 }
 
+const INVALID_INVITE_MESSAGES: Record<Exclude<SpaceExtendedInfoResponse['result'], 'success'>, string> = {
+	notFound: 'Unknown space.',
+	noAccess: `Invite expired or you don't have access to this space.`,
+	noCharacter: 'You need to have a character selected to view invite details.',
+};
+
 export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: string; invite?: string; }): ReactElement {
 	const inviteResult = SpaceInviteIdSchema.safeParse(invite);
 	const [open, setOpen] = React.useState(false);
 	const info = useSpaceExtendedInfo(`s/${spaceId}`, inviteResult.success ? inviteResult.data : undefined);
 
-	if (info?.result !== 'success') {
+	if (info == null) {
 		return (
-			<div className='spaceInvite'>Space ({ spaceId }) not found</div>
+			<div className='spaceInvite'>Loading Invitation info...</div>
+		);
+	}
+
+	if (info.result !== 'success') {
+		return (
+			<div className='spaceInvite'>Invalid Invitation: { INVALID_INVITE_MESSAGES[info.result] }</div>
 		);
 	}
 
 	return (
 		<div className='spaceInvite active' onClick={ () => setOpen((s) => !s) }>
-			<span>Space Invite to: { info.data.name }</span>
+			<span>Space Invitation to: { info.data.name }</span>
 			{
 				!open ? null : (
 					<ModalDialog>
@@ -82,7 +94,14 @@ export function RenderedLink({ url, index }: { url: URL; index: number; }): Reac
 				if (!spaceId)
 					break;
 
-				return <SpaceInviteEmbed key={ index } spaceId={ spaceId } invite={ invite } />;
+				return (
+					<>
+						<ExternalLink href={ url.href }>
+							{ url.href }
+						</ExternalLink>
+						<SpaceInviteEmbed key={ index } spaceId={ spaceId } invite={ invite } />
+					</>
+				);
 			}
 			break;
 	}

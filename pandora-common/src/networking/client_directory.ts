@@ -55,7 +55,7 @@ export type IBetaKeyInfo = IBaseTokenInfo & {
 };
 
 export type SpaceExtendedInfoResponse = {
-	result: 'notFound' | 'noAccess';
+	result: 'notFound' | 'noAccess' | 'noCharacter';
 } | {
 	result: 'success';
 	data: SpaceListExtendedInfo;

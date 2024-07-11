@@ -455,8 +455,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private async handleSpaceGetInfo({ id, invite }: IClientDirectoryArgument['spaceGetInfo'], connection: ClientConnection): IClientDirectoryPromiseResult['spaceGetInfo'] {
-		if (!connection.isLoggedIn() || !connection.character)
-			throw new BadMessageError();
+		if (!connection.isLoggedIn() || !connection.character) {
+			return { result: 'noCharacter' };
+		}
 
 		const space = await SpaceManager.loadSpace(id);
 

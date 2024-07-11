@@ -201,7 +201,7 @@ export class DirectMessageChat {
 		if (this.encryption.value == null)
 			return false;
 
-		const decryptedContent = ChatParser.parseStyle(await this.encryption.value.service.decrypt(message.content));
+		const decryptedContent = ChatParser.parseStyle(await this.encryption.value.service.decrypt(message.content), true);
 
 		const index = this._messages.value.findIndex((m) => m.time === message.time);
 		this._messages.produceImmer((messages) => {

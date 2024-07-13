@@ -81,6 +81,9 @@ importers:
       react-hook-form:
         specifier: 7.52.0
         version: 7.52.0(react@18.3.1)
+      react-reconciler:
+        specifier: 0.29.2
+        version: 0.29.2(react@18.3.1)
       react-rnd:
         specifier: 10.4.10
         version: 10.4.10(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -145,6 +148,9 @@ importers:
       '@types/react-dom':
         specifier: 18.3.0
         version: 18.3.0
+      '@types/react-reconciler':
+        specifier: 0.28.8
+        version: 0.28.8
       '@types/react-router-dom':
         specifier: 5.3.3
         version: 5.3.3
@@ -2578,6 +2584,9 @@ packages:
 
   '@types/react-dom@18.3.0':
     resolution: {integrity: sha512-EhwApuTmMBmXuFOikhQLIBUn6uFg81SwLMOAUgodJF14SOBOCMdU04gDoYi0WOJJHD144TL32z4yDqCW3dnkQg==}
+
+  '@types/react-reconciler@0.28.8':
+    resolution: {integrity: sha512-SN9c4kxXZonFhbX4hJrZy37yw9e7EIxcpHCxQv5JUS18wDE5ovkQKlqQEkufdJCCMfuI9BnjUJvhYeJ9x5Ra7g==}
 
   '@types/react-router-dom@5.3.3':
     resolution: {integrity: sha512-kpqnYK4wcdm5UaWI3fLcELopqLrHgLqNsdpHauzlQktfkHL3npOSwtj1Uz9oKBAzs7lFtVkV8j83voAz2D8fhw==}
@@ -6162,6 +6171,12 @@ packages:
 
   react-is@18.3.1:
     resolution: {integrity: sha512-/LLMVyas0ljjAtoYiPqYiL8VWXzUUdThrmU5+n20DZv+a+ClRoevUzw5JxU+Ieh5/c87ytoTBV9G1FiKfNJdmg==}
+
+  react-reconciler@0.29.2:
+    resolution: {integrity: sha512-zZQqIiYgDCTP/f1N/mAR10nJGrPD2ZR+jDSEsKWJHYC7Cm2wodlwbR3upZRdC3cjIjSlTLNVyO7Iu0Yy7t2AYg==}
+    engines: {node: '>=0.10.0'}
+    peerDependencies:
+      react: ^18.3.1
 
   react-refresh-typescript@2.0.9:
     resolution: {integrity: sha512-chAnOO4vpxm/3WkgOVmti+eN8yUtkJzeGkOigV6UA9eDFz12W34e/SsYe2H5+RwYJ3+sfSZkVbiXcG1chEBxlg==}
@@ -9880,6 +9895,10 @@ snapshots:
   '@types/range-parser@1.2.7': {}
 
   '@types/react-dom@18.3.0':
+    dependencies:
+      '@types/react': 18.3.1
+
+  '@types/react-reconciler@0.28.8':
     dependencies:
       '@types/react': 18.3.1
 
@@ -14110,6 +14129,12 @@ snapshots:
   react-is@17.0.2: {}
 
   react-is@18.3.1: {}
+
+  react-reconciler@0.29.2(react@18.3.1):
+    dependencies:
+      loose-envify: 1.4.0
+      react: 18.3.1
+      scheduler: 0.23.2
 
   react-refresh-typescript@2.0.9(react-refresh@0.14.2)(typescript@5.4.5):
     dependencies:

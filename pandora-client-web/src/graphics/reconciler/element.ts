@@ -1,6 +1,6 @@
 import { Assert, AssertNever, TypedEventEmitter } from 'pandora-common';
 import { Container, DisplayObject, utils } from 'pixi.js';
-import { PixiComponentIsPrivateProperty, PixiComponentIsSpecialProperty, type PixiComponentConfig, type PixiComponentProps, type PixiDisplayObjectWriteableProps } from './component';
+import { ParsePixiPointLike, PixiComponentIsPrivateProperty, PixiComponentIsSpecialProperty, type PixiComponentConfig, type PixiComponentProps, type PixiDisplayObjectWriteableProps } from './component';
 
 function ElementSupportsChildren(element: DisplayObject): element is Container {
 	return 'addChild' in element && typeof element.addChild === 'function';
@@ -135,16 +135,16 @@ export class PixiInternalElementInstance<
 						this.instance.visible = nextProps.visible !== false && !this._fiberHidden;
 						break;
 					case 'pivot':
-						this.instance.pivot.set(nextProps.pivot?.x ?? 0, nextProps.pivot?.y ?? 0);
+						this.instance.pivot.set(...ParsePixiPointLike(nextProps.pivot, 0, 0));
 						break;
 					case 'position':
-						this.instance.position.set(nextProps.position?.x ?? 0, nextProps.position?.y ?? 0);
+						this.instance.position.set(...ParsePixiPointLike(nextProps.position, 0, 0));
 						break;
 					case 'scale':
-						this.instance.scale.set(nextProps.scale?.x ?? 1, nextProps.scale?.y ?? 1);
+						this.instance.scale.set(...ParsePixiPointLike(nextProps.scale, 1, 1));
 						break;
 					case 'skew':
-						this.instance.skew.set(nextProps.skew?.x ?? 0, nextProps.skew?.y ?? 0);
+						this.instance.skew.set(...ParsePixiPointLike(nextProps.skew, 0, 0));
 						break;
 					default:
 						AssertNever(key);

@@ -1,3 +1,5 @@
+import { Immutable } from 'immer';
+import { throttle } from 'lodash';
 import {
 	AssertNever,
 	AssetFrameworkCharacterState,
@@ -5,30 +7,31 @@ import {
 	CharacterRoomPosition,
 	CharacterSize,
 	ICharacterRoomData,
-	SpaceClientInfo,
 	LegsPose,
+	SpaceClientInfo,
 } from 'pandora-common';
 import PIXI, { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
-import { Character, useCharacterData } from '../../character/character';
-import { ShardConnector } from '../../networking/shardConnector';
-import { throttle } from 'lodash';
-import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug';
-import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
-import { Container, Graphics, Sprite, Text } from '@pixi/react';
-import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
-import { useEvent } from '../../common/useEvent';
-import { MASK_SIZE, SwapCullingDirection } from '../graphicsLayer';
-import { useCharacterRestrictionsManager } from '../../components/gameContext/gameStateContextProvider';
-import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
-import { useAccountSettings } from '../../components/gameContext/directoryConnectorContextProvider';
-import { useTexture } from '../useTexture';
-import disconnectedIcon from '../../assets/icons/disconnected.svg';
-import { useAppOptional } from '../utility';
-import { Immutable } from 'immer';
 import { z } from 'zod';
+import disconnectedIcon from '../../assets/icons/disconnected.svg';
 import { BrowserStorage } from '../../browserStorage';
+import { Character, useCharacterData } from '../../character/character';
+import { useEvent } from '../../common/useEvent';
+import { useAccountSettings } from '../../components/gameContext/directoryConnectorContextProvider';
+import { useCharacterRestrictionsManager } from '../../components/gameContext/gameStateContextProvider';
+import { ShardConnector } from '../../networking/shardConnector';
 import { useObservable } from '../../observable';
+import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug';
+import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
+import { Container } from '../baseComponents/container';
+import { Graphics } from '../baseComponents/graphics';
+import { Sprite } from '../baseComponents/sprite';
+import { Text } from '../baseComponents/text';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
+import { MASK_SIZE, SwapCullingDirection } from '../graphicsLayer';
+import { usePixiAppOptional } from '../reconciler/appContext';
+import { useTexture } from '../useTexture';
+import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
 
 type RoomCharacterInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
@@ -265,7 +268,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 	onPointerMove,
 	onPointerUp,
 }: RoomCharacterDisplayProps & CharacterStateProps, ref?: React.ForwardedRef<PIXI.Container>): ReactElement | null {
-	const app = useAppOptional();
+	const app = usePixiAppOptional();
 
 	const {
 		name,
@@ -354,10 +357,10 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 			eventMode={ eventMode ?? 'auto' }
 			cursor={ cursor ?? 'default' }
 			hitArea={ hitArea ?? null }
-			pointerdown={ onPointerDown }
-			pointerup={ onPointerUp }
-			pointerupoutside={ onPointerUp }
-			pointermove={ onPointerMove }
+			onpointerdown={ onPointerDown }
+			onpointerup={ onPointerUp }
+			onpointerupoutside={ onPointerUp }
+			onpointermove={ onPointerMove }
 		>
 			<SwapCullingDirection uniqueKey='filter' swap={ filters.length > 0 }>
 				<GraphicsCharacter

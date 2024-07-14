@@ -1,4 +1,3 @@
-import { Container, Graphics, Sprite, useApp } from '@pixi/react';
 import { Immutable } from 'immer';
 import { throttle } from 'lodash';
 import {
@@ -32,9 +31,13 @@ import { ShardConnector } from '../../networking/shardConnector';
 import { useObservable } from '../../observable';
 import { useDebugConfig } from '../../ui/screens/room/roomDebug';
 import { useAppearanceConditionEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator';
+import { Container } from '../baseComponents/container';
+import { Graphics } from '../baseComponents/graphics';
+import { Sprite } from '../baseComponents/sprite';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
 import { MASK_SIZE, SwapCullingDirection, useItemColor } from '../graphicsLayer';
 import { MovementHelperGraphics } from '../movementHelper';
+import { usePixiApp } from '../reconciler/appContext';
 import { useTexture } from '../useTexture';
 import { EvaluateCondition } from '../utility';
 import { useRoomCharacterOffsets } from './roomCharacter';
@@ -99,7 +102,7 @@ export function RoomDeviceMovementTool({
 	shard,
 }: RoomDeviceInteractiveProps): ReactElement | null {
 	const asset = item.asset;
-	const app = useApp();
+	const app = usePixiApp();
 
 	const [setPositionRaw] = useAsyncEvent(async (newX: number, newY: number, newYOffset: number) => {
 		if (!shard) {
@@ -249,9 +252,9 @@ export function RoomDeviceMovementTool({
 				hitArea={ hitArea }
 				eventMode='static'
 				cursor='move'
-				pointerdown={ onPointerDownPos }
-				pointerup={ onPointerUp }
-				pointerupoutside={ onPointerUp }
+				onpointerdown={ onPointerDownPos }
+				onpointerup={ onPointerUp }
+				onpointerupoutside={ onPointerUp }
 			/>
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
@@ -260,9 +263,9 @@ export function RoomDeviceMovementTool({
 				hitArea={ hitArea }
 				eventMode='static'
 				cursor='ns-resize'
-				pointerdown={ onPointerDownOffset }
-				pointerup={ onPointerUp }
-				pointerupoutside={ onPointerUp }
+				onpointerdown={ onPointerDownOffset }
+				onpointerup={ onPointerUp }
+				onpointerupoutside={ onPointerUp }
 			/>
 		</Container>
 	);
@@ -493,10 +496,10 @@ function RoomDeviceGraphicsWithManagerImpl({
 			cursor={ cursor ?? 'default' }
 			eventMode={ eventMode ?? 'auto' }
 			hitArea={ hitArea ?? null }
-			pointerdown={ onPointerDown }
-			pointerup={ onPointerUp }
-			pointerupoutside={ onPointerUpOutside }
-			pointermove={ onPointerMove }
+			onpointerdown={ onPointerDown }
+			onpointerup={ onPointerUp }
+			onpointerupoutside={ onPointerUpOutside }
+			onpointermove={ onPointerMove }
 		>
 			<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
 				{

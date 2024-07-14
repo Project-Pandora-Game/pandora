@@ -1,13 +1,13 @@
-import { Container } from '@pixi/react';
 import React, { ReactElement, useMemo } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
+import { Container } from '../../../graphics/baseComponents/container';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 import { DraggableBone } from '../draggable';
 import { ResultLayer } from '../layer';
 import { EDITOR_LAYER_Z_INDEX_EXTRA } from '../layer/editorLayer';
-import { GraphicsCharacterEditor } from './editorCharacter';
 import { useEditorCharacterState } from './appearanceEditor';
+import { GraphicsCharacterEditor } from './editorCharacter';
 
 export function ResultCharacter(): ReactElement {
 	const editor = useEditor();

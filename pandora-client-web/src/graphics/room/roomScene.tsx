@@ -1,4 +1,3 @@
-import { Container, Graphics } from '@pixi/react';
 import { Immutable } from 'immer';
 import { clamp } from 'lodash';
 import {
@@ -18,7 +17,7 @@ import {
 import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
-import React, { ReactElement, useCallback, useEffect, useMemo, useState, useRef } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterData } from '../../character/character';
 import { CommonProps } from '../../common/reactTypes';
@@ -29,9 +28,11 @@ import { usePlayer, usePlayerState } from '../../components/gameContext/playerCo
 import { shardConnectorContext, useShardConnector } from '../../components/gameContext/shardConnectorContextProvider';
 import { ShardConnector } from '../../networking/shardConnector';
 import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomDebug';
+import { Container } from '../baseComponents/container';
+import { Graphics } from '../baseComponents/graphics';
 import { PointLike } from '../graphicsCharacter';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphicsScene';
-import { PixiViewportSetupCallback, PixiViewportRef } from '../pixiViewport';
+import { PixiViewportRef, PixiViewportSetupCallback } from '../pixiViewport';
 import { CharacterContextMenu } from './contextMenus/characterContextMenu';
 import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
 import { RoomCharacterInteractive } from './roomCharacter';

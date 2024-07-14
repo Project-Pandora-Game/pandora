@@ -1,10 +1,11 @@
-import { Container, Graphics } from '@pixi/react';
 import { type Draft, type Immutable } from 'immer';
 import { cloneDeep } from 'lodash';
 import { EMPTY_ARRAY, type PointTemplate } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useMemo } from 'react';
 import { CalculatePointDefinitionsFromTemplate, CalculatePointsTriangles } from '../../assets/assetGraphicsCalculations';
+import { Container } from '../../graphics/baseComponents/container';
+import { Graphics } from '../../graphics/baseComponents/graphics';
 import { Observable, useObservable } from '../../observable';
 import type { Editor } from '../editor';
 import { useEditor } from '../editorContextProvider';

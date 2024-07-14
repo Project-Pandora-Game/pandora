@@ -1,14 +1,16 @@
 import * as PIXI from 'pixi.js';
-import { EditorLayer, EDITOR_LAYER_Z_INDEX_EXTRA } from './editorLayer';
-import dotTexture from '../../../assets/editor/dotTexture.png';
-import { GraphicsLayerProps, useLayerPoints, useLayerVertices } from '../../../graphics/graphicsLayer';
 import React, { ReactElement, useCallback, useMemo } from 'react';
-import { useEditor } from '../../editorContextProvider';
-import { useObservable } from '../../../observable';
-import { Container, Graphics, Sprite } from '@pixi/react';
+import dotTexture from '../../../assets/editor/dotTexture.png';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
+import { Container } from '../../../graphics/baseComponents/container';
+import { Graphics } from '../../../graphics/baseComponents/graphics';
+import { Sprite } from '../../../graphics/baseComponents/sprite';
+import { GraphicsLayerProps, useLayerPoints, useLayerVertices } from '../../../graphics/graphicsLayer';
 import { useTexture } from '../../../graphics/useTexture';
+import { useObservable } from '../../../observable';
 import { PreviewCutterRectangle } from '../../components/previewCutter/previewCutter';
+import { useEditor } from '../../editorContextProvider';
+import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer';
 
 export function ResultLayer({
 	layer,

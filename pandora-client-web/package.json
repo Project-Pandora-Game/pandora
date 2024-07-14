@@ -22,7 +22,6 @@
 	},
 	"dependencies": {
 		"@hcaptcha/react-hcaptcha": "1.10.1",
-		"@pixi/react": "7.1.2",
 		"@pixi/unsafe-eval": "7.4.2",
 		"bowser": "2.11.0",
 		"classnames": "2.5.1",

@@ -1,16 +1,16 @@
-import React, { Context, ReactElement, ReactNode, useMemo } from 'react';
-import * as PIXI from 'pixi.js';
-import { Application, Container, IApplicationOptions, Ticker } from 'pixi.js';
-import { Assert, AssertNotNullable, GetLogger, IsObject, Rectangle } from 'pandora-common';
-import { AppProvider, createRoot, ReactPixiRoot, Stage } from '@pixi/react';
 import { cloneDeep } from 'lodash';
+import { Assert, AssertNotNullable, GetLogger, Rectangle } from 'pandora-common';
+import { Application, Container, IApplicationOptions, Ticker } from 'pixi.js';
+import React, { Context, ReactElement, ReactNode } from 'react';
+import { CalculationQueue } from '../common/calculationQueue';
 import { ChildrenProps } from '../common/reactTypes';
+import { useErrorHandler } from '../common/useErrorHandler';
+import { ForwardingErrorBoundary } from '../components/error/forwardingErrorBoundary';
+import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
 import { USER_DEBUG } from '../config/Environment';
 import { DEFAULT_BACKGROUND_COLOR } from './graphicsScene';
-import { CalculationQueue } from '../common/calculationQueue';
-import { ForwardingErrorBoundary } from '../components/error/forwardingErrorBoundary';
-import { useErrorHandler } from '../common/useErrorHandler';
-import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
+import { PixiAppContext } from './reconciler/appContext';
+import { CreatePixiRoot, type PixiRoot } from './reconciler/reconciler';
 
 const SHARED_APP_MAX_COUNT = 2;
 
@@ -38,41 +38,6 @@ export interface GraphicsSceneRendererProps extends ChildrenProps {
 	forwardContexts?: readonly Context<any>[];
 }
 
-export function GraphicsSceneRendererDirect({
-	children,
-	resolution,
-	onMount,
-	onUnmount,
-	forwardContexts = [],
-}: GraphicsSceneRendererProps): ReactElement {
-	const options = useMemo<Partial<IApplicationOptions>>(() => ({
-		...cloneDeep(PIXI_APPLICATION_OPTIONS),
-		resolution,
-	}), [resolution]);
-
-	const errorHandler = useErrorHandler();
-
-	return (
-		<ContextBridge contexts={ forwardContexts } render={ (c) => (
-			<Stage
-				onMount={ onMount }
-				onUnmount={ onUnmount }
-				options={ options }
-				raf={ false }
-				renderOnComponentChange={ true }
-			>
-				<ForwardingErrorBoundary errorHandler={ errorHandler }>
-					{ c }
-				</ForwardingErrorBoundary>
-			</Stage>
-		) }>
-			<React.StrictMode>
-				{ children }
-			</React.StrictMode>
-		</ContextBridge>
-	);
-}
-
 // This actually has more effect than just exposing for debugging purposes:
 // It allows hot reload to reuse existing apps instead of having leak during development
 interface WindowWithSharedApps extends Window {
@@ -91,7 +56,8 @@ if (USER_DEBUG) {
 class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsSceneRendererProps, 'forwardContexts'>> {
 	private _ticker: Ticker | null = null;
 	private _needsUpdate: boolean = true;
-	private root: ReactPixiRoot | null = null;
+	private _cleanupUpdateCallback: undefined | (() => void);
+	private root: PixiRoot | null = null;
 	private app: Application<HTMLCanvasElement> | null = null;
 
 	public override render(): React.ReactNode {
@@ -123,7 +89,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		// @see - https://github.com/wisebits-tech/react-pixi/blob/react-18/src/stage/index.jsx#L127
 		// @ts-expect-error: Private shim
 		app.stage.__reactpixi = { root: this.app.stage };
-		this.root = createRoot(this.app.stage);
+		this.root = CreatePixiRoot(this.app.stage);
 		this.root.render(this.getChildren());
 
 		onMount?.(this.app);
@@ -132,7 +98,8 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		this._ticker = new Ticker();
 		this._ticker.autoStart = true;
 		this._ticker.add(this.renderStage);
-		this.app.stage.on('__REACT_PIXI_REQUEST_RENDER__', this.needsRenderUpdate);
+		Assert(this._cleanupUpdateCallback == null);
+		this._cleanupUpdateCallback = this.root.updateEmitter.on('needsUpdate', this.needsRenderUpdate);
 
 		this._needsUpdate = true;
 		this.renderStage();
@@ -172,7 +139,8 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		AssertNotNullable(this.app);
 		AssertNotNullable(this.root);
 
-		this.app.stage.off('__REACT_PIXI_REQUEST_RENDER__', this.needsRenderUpdate);
+		this._cleanupUpdateCallback?.();
+		this._cleanupUpdateCallback = undefined;
 		if (this._ticker) {
 			this._ticker.remove(this.renderStage);
 			this._ticker.destroy();
@@ -181,8 +149,6 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 
 		onUnmount?.(this.app);
 
-		// We need to render empty stage, otherwise we have a leak as we don't destroy app, as react-pixi expects
-		this.root.render(<AppProvider value={ this.app } />);
 		this.root.unmount();
 		this.root = null;
 
@@ -213,7 +179,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 	public getChildren() {
 		const { children } = this.props;
 		AssertNotNullable(this.app);
-		return <AppProvider value={ this.app }>{ children }</AppProvider>;
+		return <PixiAppContext.Provider value={ this.app }>{ children }</PixiAppContext.Provider>;
 	}
 
 	public override componentDidCatch(error: unknown, errorInfo: unknown) {
@@ -265,9 +231,10 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 	private readonly logger = GetLogger('BackgroundRenderer');
 
 	private _needsUpdate: boolean = false;
+	private _cleanupUpdateCallback: undefined | (() => void);
 
 	private _canvasRef: HTMLCanvasElement | null = null;
-	private _root: ReactPixiRoot | null = null;
+	private _root: PixiRoot | null = null;
 	private _stage: Container | null = null;
 
 	private _app: Application<HTMLCanvasElement> | null = null;
@@ -310,10 +277,11 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 
 		// @ts-expect-error: Private shim
 		this._stage.__reactpixi = { root: this._stage };
-		this._root = createRoot(this._stage);
+		this._root = CreatePixiRoot(this._stage);
 		this._root.render(this.getChildren());
 
-		this._stage.on('__REACT_PIXI_REQUEST_RENDER__', this.needsRenderUpdate);
+		Assert(this._cleanupUpdateCallback == null);
+		this._cleanupUpdateCallback = this._root.updateEmitter.on('needsUpdate', this.needsRenderUpdate);
 		this.needsRenderUpdate();
 	}
 
@@ -340,7 +308,8 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 		AssertNotNullable(this._root);
 		AssertNotNullable(this._stage);
 
-		this._stage.off('__REACT_PIXI_REQUEST_RENDER__', this.needsRenderUpdate);
+		this._cleanupUpdateCallback?.();
+		this._cleanupUpdateCallback = undefined;
 
 		// We need to render empty stage, otherwise we have a leak as we don't destroy app, as react-pixi expects
 		// eslint-disable-next-line react/jsx-no-useless-fragment
@@ -505,19 +474,4 @@ export function ContextBridge({ children, contexts, render }: {
 			) }
 		</Consumer>
 	);
-}
-
-export function PixiElementRequestUpdate(element: PIXI.Container): void {
-	const unknownCastElement: unknown = element;
-
-	if (
-		!IsObject(unknownCastElement) ||
-		!IsObject(unknownCastElement.__reactpixi) ||
-		!IsObject(unknownCastElement.__reactpixi.root) ||
-		!(unknownCastElement.__reactpixi.root instanceof PIXI.Container)
-	) {
-		throw new Error('Attempt to request update on a PIXI container outside of @pixi/react tree');
-	}
-
-	unknownCastElement.__reactpixi.root.emit(`__REACT_PIXI_REQUEST_RENDER__`);
 }

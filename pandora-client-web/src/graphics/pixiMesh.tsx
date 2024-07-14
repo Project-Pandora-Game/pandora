@@ -1,5 +1,6 @@
-import { PixiComponent } from '@pixi/react';
 import { DRAW_MODES, Mesh, MeshGeometry, MeshMaterial, State, Texture } from 'pixi.js';
+import { DISPLAY_OBJECT_EVENTS, type DisplayObjectEventMap } from './baseComponents/container';
+import { RegisterPixiComponent } from './reconciler/component';
 
 export interface PixiMeshProps {
 	vertices: Float32Array;
@@ -15,7 +16,7 @@ export interface PixiMeshProps {
 /**
  * Wrapper around Pixi.js's Mesh that properly propagates changes to all properties
  */
-export const PixiMesh = PixiComponent<PixiMeshProps, Mesh>('PixiMesh', {
+export const PixiMesh = RegisterPixiComponent<Mesh, never, DisplayObjectEventMap, PixiMeshProps>('PixiMesh', {
 	create(props) {
 		const {
 			vertices,
@@ -44,7 +45,7 @@ export const PixiMesh = PixiComponent<PixiMeshProps, Mesh>('PixiMesh', {
 
 		return mesh;
 	},
-	applyProps(mesh, oldProps, newProps) {
+	applyCustomProps(mesh, oldProps, newProps) {
 		const {
 			vertices: oldVertices,
 			uvs: oldUvs,
@@ -114,8 +115,6 @@ export const PixiMesh = PixiComponent<PixiMeshProps, Mesh>('PixiMesh', {
 
 		return updated;
 	},
-	config: {
-		destroy: true,
-		destroyChildren: false,
-	},
+	autoProps: {},
+	events: DISPLAY_OBJECT_EVENTS,
 });

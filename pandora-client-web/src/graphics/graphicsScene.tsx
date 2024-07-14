@@ -1,4 +1,3 @@
-import { Sprite } from '@pixi/react';
 import classNames from 'classnames';
 import { CharacterSize } from 'pandora-common';
 import { Application, Filter } from 'pixi.js';
@@ -7,10 +6,11 @@ import { useImageResolutionAlternative } from '../assets/assetGraphicsCalculatio
 import { ChildrenProps } from '../common/reactTypes';
 import { useEvent } from '../common/useEvent';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
-import { GraphicsSceneRendererDirect, GraphicsSceneRendererShared } from './graphicsSceneRenderer';
+import { GraphicsSceneRendererShared } from './graphicsSceneRenderer';
 import { useGraphicsSettings } from './graphicsSettings';
 import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback } from './pixiViewport';
 import { useTexture } from './useTexture';
+import { Sprite } from './baseComponents/sprite';
 
 export type GraphicsSceneProps = {
 	viewportConfig?: PixiViewportSetupCallback;
@@ -21,9 +21,6 @@ export type GraphicsSceneProps = {
 	backgroundAlpha?: number;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	forwardContexts?: readonly Context<any>[];
-
-	/** If this scene should create private (non-shared) pixi instance. Impacts performance! */
-	createPrivatePixiInstance?: boolean;
 };
 
 export const DEFAULT_BACKGROUND_COLOR = 0xaaaaaa;
@@ -39,7 +36,6 @@ function GraphicsSceneCore({
 	backgroundColor = DEFAULT_BACKGROUND_COLOR,
 	backgroundAlpha = 1,
 	forwardContexts = [],
-	createPrivatePixiInstance,
 }: ChildrenProps & GraphicsSceneProps & {
 	div: HTMLDivElement;
 	resolution: number;
@@ -105,10 +101,8 @@ function GraphicsSceneCore({
 		appRef.current = null;
 	}, []);
 
-	const PixiRenderer = createPrivatePixiInstance ? GraphicsSceneRendererDirect : GraphicsSceneRendererShared;
-
 	return (
-		<PixiRenderer
+		<GraphicsSceneRendererShared
 			container={ div }
 			forwardContexts={ forwardContexts }
 			onMount={ onMount }
@@ -125,7 +119,7 @@ function GraphicsSceneCore({
 			>
 				{ children }
 			</PixiViewport>
-		</PixiRenderer>
+		</GraphicsSceneRendererShared>
 	);
 }
 

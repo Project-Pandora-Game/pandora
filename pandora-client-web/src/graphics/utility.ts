@@ -1,8 +1,6 @@
-import { AppContext } from '@pixi/react';
 import type { Immutable } from 'immer';
-import type { Condition, AtomicCondition, AssetId } from 'pandora-common';
-import { Application, ImageResource, Resource } from 'pixi.js';
-import { useContext } from 'react';
+import type { AssetId, AtomicCondition, Condition } from 'pandora-common';
+import { ImageResource, Resource } from 'pixi.js';
 
 export function GetAngle(x: number, y: number): number {
 	const angle = Math.atan2(y, x);
@@ -48,8 +46,4 @@ export function LoadArrayBufferImageResource(buffer: ArrayBuffer): Promise<Resou
 		};
 		image.src = URL.createObjectURL(blob);
 	});
-}
-
-export function useAppOptional(): Application | null {
-	return useContext(AppContext) as (Application | null);
 }

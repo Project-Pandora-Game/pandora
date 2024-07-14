@@ -1,8 +1,11 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
-import { PixiComponent, useApp, useTick } from '@pixi/react';
 import { Viewport } from 'pixi-viewport';
 import { Application, Point } from 'pixi.js';
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
 import { ChildrenProps } from '../common/reactTypes';
+import { DISPLAY_OBJECT_EVENTS, type DisplayObjectEventMap } from './baseComponents/container';
+import { usePixiApp } from './reconciler/appContext';
+import { RegisterPixiComponent } from './reconciler/component';
+import { usePixiTick } from './reconciler/tick';
 
 export type PixiViewportSetupCallback = (viewport: Viewport, params: {
 	width: number;
@@ -20,7 +23,7 @@ export interface PixiViewportProps extends ChildrenProps {
 	setup?: PixiViewportSetupCallback;
 }
 
-const PixiViewportComponent = PixiComponent<PixiViewportProps & { app: Application; }, Viewport>('Viewport', {
+const PixiViewportComponent = RegisterPixiComponent<Viewport, never, DisplayObjectEventMap, PixiViewportProps & { app: Application; }>('Viewport', {
 	create(props) {
 		const {
 			app,
@@ -52,7 +55,7 @@ const PixiViewportComponent = PixiComponent<PixiViewportProps & { app: Applicati
 
 		return viewport;
 	},
-	applyProps(viewport, oldProps, newProps) {
+	applyCustomProps(viewport, oldProps, newProps) {
 		const {
 			app: oldApp,
 			width: oldWidth,
@@ -99,9 +102,8 @@ const PixiViewportComponent = PixiComponent<PixiViewportProps & { app: Applicati
 			});
 		}
 	},
-	config: {
-		destroy: false,
-	},
+	autoProps: {},
+	events: DISPLAY_OBJECT_EVENTS,
 });
 
 export type PixiViewportRef = {
@@ -111,7 +113,7 @@ export type PixiViewportRef = {
 
 export const PixiViewport = forwardRef<PixiViewportRef, PixiViewportProps>((props, ref) => {
 	const [viewPort, setViewPort] = useState<Viewport | null>(null);
-	const app = useApp();
+	const app = usePixiApp();
 
 	const [update, cancelUpdate] = useMemo(() => {
 		let request: number | undefined;
@@ -145,7 +147,7 @@ export const PixiViewport = forwardRef<PixiViewportRef, PixiViewportProps>((prop
 		},
 	}), [update, viewPort]);
 
-	useTick((_delta, ticker) => {
+	usePixiTick((_delta, ticker) => {
 		viewPort?.update(ticker.elapsedMS);
 	});
 
@@ -166,6 +168,6 @@ export const PixiViewport = forwardRef<PixiViewportRef, PixiViewportProps>((prop
 		};
 	}, [update, cancelUpdate, viewPort]);
 
-	return <PixiViewportComponent ref={ setViewPort } app={ useApp() } { ...props } />;
+	return <PixiViewportComponent ref={ setViewPort } app={ app } { ...props } />;
 });
 PixiViewport.displayName = 'PixiViewport';

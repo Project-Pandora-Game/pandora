@@ -62,6 +62,14 @@ export class PixiUpdateEmitter extends TypedEventEmitter<{ needsUpdate: DisplayO
 export class PixiRootContainer extends PixiInternalContainerInstance<Container> {
 	public readonly updateEmitter: PixiUpdateEmitter = new PixiUpdateEmitter();
 
+	/**
+	 * List of all elements that were created under this root.
+	 * It is used to make sure all created elements are definitely cleaned up when the root unmounts,
+	 * avoiding any potential leaks when screens change.
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	public readonly instantiatedElements = new Set<PixiInternalElementInstance<any, any, any, any>>();
+
 	constructor(instance: Container) {
 		super(instance);
 	}
@@ -96,6 +104,8 @@ export class PixiInternalElementInstance<
 		this.type = type;
 		this.config = config;
 		this.root = root;
+		// Track the created element
+		this.root.instantiatedElements.add(this);
 		// Apply initial props (we expect create to apply custom ones first)
 		this._applyAutoProps(null, initialProps, Object.keys(initialProps));
 	}
@@ -141,6 +151,7 @@ export class PixiInternalElementInstance<
 			if (!this._destroyed) {
 				this._getLogger().warning('Attempt to destroy already destroyed instance. The instance was not destroyed by the fiber!');
 				this._destroyed = true;
+				this.root.instantiatedElements.delete(this);
 			} else {
 				// We get called twice here, for some reason...
 				// We can safely ignore this, as it doesn't seem to be causing any issues.
@@ -154,7 +165,10 @@ export class PixiInternalElementInstance<
 			}
 		}
 
+		// Mark us as destroyed and remove us from alive elements tracking
 		this._destroyed = true;
+		this.root.instantiatedElements.delete(this);
+
 		this.instance.destroy({
 			baseTexture: false,
 			texture: false,

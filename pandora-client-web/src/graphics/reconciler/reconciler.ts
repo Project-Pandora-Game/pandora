@@ -1,4 +1,4 @@
-import { GetLogger } from 'pandora-common';
+import { Assert, GetLogger } from 'pandora-common';
 import type { Container } from 'pixi.js';
 import type { ReactNode } from 'react';
 import ReactReconciler from 'react-reconciler';
@@ -28,6 +28,7 @@ export type PixiRoot = {
  * @returns {{ render: Function, unmount: Function}}
  */
 export function CreatePixiRoot(rootContainer: Container): PixiRoot {
+	Assert(rootContainer.children.length === 0, 'Cannot create PixiRoot on a container that already has children. React must manage all the children itself.');
 	const root = new PixiRootContainer(rootContainer);
 
 	const container: unknown = PixiFiber.createContainer(
@@ -48,9 +49,22 @@ export function CreatePixiRoot(rootContainer: Container): PixiRoot {
 			PixiFiber.updateContainer(element, container);
 		},
 		unmount() {
+			// Clear all children of the container
 			PixiFiber.flushSync(() => {
 				PixiFiber.updateContainer(null, container);
 			});
+			// Flush any pending "passive" work
+			PixiFiber.flushPassiveEffects();
+			// Cleanup any potentially forgotten instances
+			const logger = GetLogger('PixiRoot');
+			for (const instance of Array.from(root.instantiatedElements)) {
+				logger.warning(`Cleaning up forgotten instance '${instance.type}':`, instance);
+				instance.destroy();
+			}
+
+			// By now everything should definitely be cleaned up
+			Assert(root.instantiatedElements.size === 0);
+			Assert(root.instance.children.length === 0);
 		},
 		updateEmitter: root.updateEmitter,
 	};

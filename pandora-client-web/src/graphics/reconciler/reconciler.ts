@@ -48,8 +48,9 @@ export function CreatePixiRoot(rootContainer: Container): PixiRoot {
 			PixiFiber.updateContainer(element, container);
 		},
 		unmount() {
-			PixiFiber.updateContainer(null, container);
-			PixiFiber.flushSync();
+			PixiFiber.flushSync(() => {
+				PixiFiber.updateContainer(null, container);
+			});
 		},
 		updateEmitter: root.updateEmitter,
 	};

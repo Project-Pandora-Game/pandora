@@ -7,7 +7,7 @@ import { PixiInternalElementInstance, type PixiRootContainer } from './element';
 
 // This file extensively ignores types. This is done because react-reconciler typings don't support mapping Props per specific type.
 // We depend on things being declarated using `RegisterPixiComponent` to keep things type-safe.
-/* eslint-disable @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
 
 export type PixiHostConfig = ReactReconciler.HostConfig<
 	string, // Type

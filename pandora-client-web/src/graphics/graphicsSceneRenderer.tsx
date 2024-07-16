@@ -1,6 +1,6 @@
 import { cloneDeep } from 'lodash';
 import { Assert, AssertNotNullable, GetLogger, Rectangle } from 'pandora-common';
-import { Application, Container, IApplicationOptions, Ticker } from 'pixi.js';
+import { Application, Container, IApplicationOptions } from 'pixi.js';
 import React, { Context, ReactElement, ReactNode } from 'react';
 import { CalculationQueue } from '../common/calculationQueue';
 import { ChildrenProps } from '../common/reactTypes';
@@ -54,8 +54,8 @@ if (USER_DEBUG) {
 }
 
 class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsSceneRendererProps, 'forwardContexts'>> {
-	private _ticker: Ticker | null = null;
 	private _needsUpdate: boolean = true;
+	private _animationFrameRequest: number | null = null;
 	private _cleanupUpdateCallback: undefined | (() => void);
 	private root: PixiRoot | null = null;
 	private app: Application<HTMLCanvasElement> | null = null;
@@ -94,10 +94,6 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 
 		onMount?.(this.app);
 
-		// listen for reconciler changes
-		this._ticker = new Ticker();
-		this._ticker.autoStart = true;
-		this._ticker.add(this.renderStage);
 		Assert(this._cleanupUpdateCallback == null);
 		this._cleanupUpdateCallback = this.root.updateEmitter.on('needsUpdate', this.needsRenderUpdate);
 
@@ -141,11 +137,6 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 
 		this._cleanupUpdateCallback?.();
 		this._cleanupUpdateCallback = undefined;
-		if (this._ticker) {
-			this._ticker.remove(this.renderStage);
-			this._ticker.destroy();
-			this._ticker = null;
-		}
 
 		onUnmount?.(this.app);
 
@@ -164,8 +155,21 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		this.app = null;
 	}
 
+	private _requestAnimationFrame() {
+		if (this._animationFrameRequest != null) {
+			return;
+		}
+		this._animationFrameRequest = requestAnimationFrame(this._onAnimationFrame);
+	}
+
+	private _onAnimationFrame: FrameRequestCallback = () => {
+		this._animationFrameRequest = null;
+		this.renderStage();
+	};
+
 	public needsRenderUpdate = () => {
 		this._needsUpdate = true;
+		this._requestAnimationFrame();
 	};
 
 	public renderStage = () => {

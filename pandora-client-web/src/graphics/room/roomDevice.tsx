@@ -18,7 +18,7 @@ import {
 } from 'pandora-common';
 import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
-import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { ReactElement, ReactNode, useCallback, useMemo, useRef } from 'react';
 import { z } from 'zod';
 import { useImageResolutionAlternative } from '../../assets/assetGraphicsCalculations';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
@@ -37,7 +37,6 @@ import { Sprite } from '../baseComponents/sprite';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
 import { MASK_SIZE, SwapCullingDirection, useItemColor } from '../graphicsLayer';
 import { MovementHelperGraphics } from '../movementHelper';
-import { usePixiApp } from '../reconciler/appContext';
 import { useTexture } from '../useTexture';
 import { EvaluateCondition } from '../utility';
 import { useRoomCharacterOffsets } from './roomCharacter';
@@ -102,7 +101,6 @@ export function RoomDeviceMovementTool({
 	shard,
 }: RoomDeviceInteractiveProps): ReactElement | null {
 	const asset = item.asset;
-	const app = usePixiApp();
 
 	const [setPositionRaw] = useAsyncEvent(async (newX: number, newY: number, newYOffset: number) => {
 		if (!shard) {
@@ -227,15 +225,6 @@ export function RoomDeviceMovementTool({
 		}
 	}, [onDragMove, onDragStart]);
 
-	useEffect(() => {
-		// TODO: Move to globalpointermove once @pixi/react supports them
-		app.stage.eventMode = 'static';
-		app.stage.on('pointermove', onPointerMove);
-		return () => {
-			app.stage?.off('pointermove', onPointerMove);
-		};
-	}, [app, onPointerMove]);
-
 	return (
 		<Container
 			ref={ roomDeviceContainer }
@@ -255,6 +244,7 @@ export function RoomDeviceMovementTool({
 				onpointerdown={ onPointerDownPos }
 				onpointerup={ onPointerUp }
 				onpointerupoutside={ onPointerUp }
+				onglobalpointermove={ onPointerMove }
 			/>
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
@@ -266,6 +256,7 @@ export function RoomDeviceMovementTool({
 				onpointerdown={ onPointerDownOffset }
 				onpointerup={ onPointerUp }
 				onpointerupoutside={ onPointerUp }
+				onglobalpointermove={ onPointerMove }
 			/>
 		</Container>
 	);

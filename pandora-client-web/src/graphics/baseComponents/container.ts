@@ -19,6 +19,7 @@ export const DISPLAY_OBJECT_EVENTS = {
 	pointerup: true,
 	pointerupoutside: true,
 	pointermove: true,
+	globalpointermove: true,
 } as const satisfies Readonly<Partial<Record<DisplayObjectEventNames<DisplayObject>, true>>>;
 export type DisplayObjectEventMap = Pick<DisplayObjectEvents, keyof typeof DISPLAY_OBJECT_EVENTS>;
 

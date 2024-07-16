@@ -3,13 +3,12 @@ import _, { cloneDeep } from 'lodash';
 import { Assert, AssetFrameworkCharacterState, BoneDefinition, CharacterSize, PointDefinition } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Texture } from 'pixi.js';
-import React, { ReactElement, useEffect, useMemo, useRef } from 'react';
+import React, { ReactElement, useMemo, useRef } from 'react';
 import { PointDefinitionCalculated } from '../../assets/assetGraphics';
 import dotTexture from '../../assets/editor/dotTexture.png';
 import { useEvent } from '../../common/useEvent';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { Sprite } from '../../graphics/baseComponents/sprite';
-import { usePixiApp } from '../../graphics/reconciler/appContext';
 import { useTexture } from '../../graphics/useTexture';
 import { GetAngle, RotateVector } from '../../graphics/utility';
 import { Observable, ReadonlyObservable, useObservable } from '../../observable';
@@ -30,7 +29,6 @@ export function Draggable({
 	dragStart,
 	...spriteProps
 }: DraggableProps): ReactElement {
-	const app = usePixiApp();
 	const dragging = useRef<boolean>(false);
 	const sprite = useRef<PIXI.Sprite>(null);
 
@@ -56,15 +54,6 @@ export function Draggable({
 		);
 	});
 
-	useEffect(() => {
-		// TODO: Move to globalpointermove once @pixi/react supports them
-		app.stage.eventMode = 'static';
-		app.stage.on('pointermove', onDragMove);
-		return () => {
-			app.stage?.off('pointermove', onDragMove);
-		};
-	}, [app, onDragMove]);
-
 	const texture = useMemo(() => (createTexture?.() ?? Texture.WHITE), [createTexture]);
 
 	return (
@@ -79,6 +68,7 @@ export function Draggable({
 			onpointerdown={ onDragStart }
 			onpointerup={ onDragEnd }
 			onpointerupoutside={ onDragEnd }
+			onglobalpointermove={ onDragMove }
 		/>
 	);
 }

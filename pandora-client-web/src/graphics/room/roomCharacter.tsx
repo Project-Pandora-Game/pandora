@@ -11,7 +11,7 @@ import {
 	SpaceClientInfo,
 } from 'pandora-common';
 import PIXI, { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle } from 'pixi.js';
-import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { z } from 'zod';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
 import { BrowserStorage } from '../../browserStorage';
@@ -29,7 +29,6 @@ import { Sprite } from '../baseComponents/sprite';
 import { Text } from '../baseComponents/text';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
 import { MASK_SIZE, SwapCullingDirection } from '../graphicsLayer';
-import { usePixiAppOptional } from '../reconciler/appContext';
 import { useTexture } from '../useTexture';
 import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
 
@@ -268,8 +267,6 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 	onPointerMove,
 	onPointerUp,
 }: RoomCharacterDisplayProps & CharacterStateProps, ref?: React.ForwardedRef<PIXI.Container>): ReactElement | null {
-	const app = usePixiAppOptional();
-
 	const {
 		name,
 		position: dataPosition,
@@ -316,17 +313,6 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 			AssertNever(interfaceChatroomCharacterNameFontSize);
 	}
 
-	useEffect(() => {
-		if (app == null || onPointerMove == null)
-			return;
-		// TODO: Move to globalpointermove once @pixi/react supports them
-		app.stage.eventMode = 'static';
-		app.stage.on('pointermove', onPointerMove);
-		return () => {
-			app.stage?.off('pointermove', onPointerMove);
-		};
-	}, [app, onPointerMove]);
-
 	// Debug graphics
 	const hotboxDebugDraw = useCallback((g: PIXI.Graphics) => {
 		if (hitArea == null) {
@@ -360,7 +346,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 			onpointerdown={ onPointerDown }
 			onpointerup={ onPointerUp }
 			onpointerupoutside={ onPointerUp }
-			onpointermove={ onPointerMove }
+			onglobalpointermove={ onPointerMove }
 		>
 			<SwapCullingDirection uniqueKey='filter' swap={ filters.length > 0 }>
 				<GraphicsCharacter

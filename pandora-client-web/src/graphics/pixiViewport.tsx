@@ -1,10 +1,11 @@
 import { Viewport } from 'pixi-viewport';
 import { Application, Point } from 'pixi.js';
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { ChildrenProps } from '../common/reactTypes';
 import { DISPLAY_OBJECT_EVENTS, type DisplayObjectEventMap } from './baseComponents/container';
 import { usePixiApp } from './reconciler/appContext';
 import { RegisterPixiComponent } from './reconciler/component';
+import { PixiElementRequestUpdate } from './reconciler/element';
 import { usePixiTick } from './reconciler/tick';
 
 export type PixiViewportSetupCallback = (viewport: Viewport, params: {
@@ -115,27 +116,6 @@ export const PixiViewport = forwardRef<PixiViewportRef, PixiViewportProps>((prop
 	const [viewPort, setViewPort] = useState<Viewport | null>(null);
 	const app = usePixiApp();
 
-	const [update, cancelUpdate] = useMemo(() => {
-		let request: number | undefined;
-
-		return [
-			() => {
-				if (request !== undefined)
-					return;
-				request = requestAnimationFrame(() => {
-					request = undefined;
-					app.ticker.update();
-				});
-			},
-			() => {
-				if (request !== undefined) {
-					cancelAnimationFrame(request);
-					request = undefined;
-				}
-			},
-		];
-	}, [app]);
-
 	useImperativeHandle(ref, () => ({
 		getCenter: () => viewPort?.center,
 		center: () => {
@@ -143,9 +123,9 @@ export const PixiViewport = forwardRef<PixiViewportRef, PixiViewportProps>((prop
 				return;
 			viewPort.fit();
 			viewPort.moveCenter(viewPort.worldWidth / 2, viewPort.worldHeight / 2);
-			update();
+			PixiElementRequestUpdate(viewPort);
 		},
-	}), [update, viewPort]);
+	}), [viewPort]);
 
 	usePixiTick((_delta, ticker) => {
 		viewPort?.update(ticker.elapsedMS);
@@ -157,6 +137,10 @@ export const PixiViewport = forwardRef<PixiViewportRef, PixiViewportProps>((prop
 
 		const events = ['moved', 'zoomed'] as const;
 
+		const update = () => {
+			PixiElementRequestUpdate(viewPort);
+		};
+
 		for (const e of events) {
 			viewPort.on(e, update);
 		}
@@ -164,9 +148,8 @@ export const PixiViewport = forwardRef<PixiViewportRef, PixiViewportProps>((prop
 			for (const e of events) {
 				viewPort.off(e, update);
 			}
-			cancelUpdate();
 		};
-	}, [update, cancelUpdate, viewPort]);
+	}, [viewPort]);
 
 	return <PixiViewportComponent ref={ setViewPort } app={ app } { ...props } />;
 });

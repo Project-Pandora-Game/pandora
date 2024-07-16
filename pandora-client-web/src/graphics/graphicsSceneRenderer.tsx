@@ -128,7 +128,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 
 		// flush fiber
 		this.root.render(this.getChildren());
-		this.app.render();
+		this.app.ticker.update();
 	}
 
 	public override componentWillUnmount() {
@@ -172,7 +172,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		AssertNotNullable(this.app);
 		if (this._needsUpdate) {
 			this._needsUpdate = false;
-			this.app.render();
+			this.app.ticker.update();
 		}
 	};
 
@@ -311,9 +311,6 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 		this._cleanupUpdateCallback?.();
 		this._cleanupUpdateCallback = undefined;
 
-		// We need to render empty stage, otherwise we have a leak as we don't destroy app, as react-pixi expects
-		// eslint-disable-next-line react/jsx-no-useless-fragment
-		this._root.render(<></>);
 		this._root.unmount();
 		this._root = null;
 
@@ -344,7 +341,7 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 
 		AssertNotNullable(this._app);
 
-		this._app.render();
+		this._app.ticker.update();
 
 		const outContext = this._canvasRef.getContext('2d');
 		if (outContext) {

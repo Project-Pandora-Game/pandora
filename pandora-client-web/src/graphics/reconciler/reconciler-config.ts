@@ -37,7 +37,7 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 		const componentConfig = PIXI_REGISTERED_COMPONENTS.get(type);
 		Assert(componentConfig != null, `Unknown component '${type}'`);
 
-		return new PixiInternalElementInstance(componentConfig, props, rootContainer);
+		return new PixiInternalElementInstance(type, componentConfig, props, rootContainer);
 	},
 	appendInitialChild(parentInstance, child) {
 		parentInstance.addChild(child.instance);
@@ -189,7 +189,7 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 	getInstanceFromScope(_scopeInstance) {
 		throw new Error('Not yet implemented');
 	},
-	detachDeletedInstance(_node) {
-		// Noop
+	detachDeletedInstance(node) {
+		node.destroy();
 	},
 };

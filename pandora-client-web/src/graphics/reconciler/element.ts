@@ -1,4 +1,4 @@
-import { Assert, AssertNever, TypedEventEmitter } from 'pandora-common';
+import { Assert, AssertNever, GetLogger, TypedEventEmitter, type Logger } from 'pandora-common';
 import { Container, DisplayObject, utils } from 'pixi.js';
 import { ParsePixiPointLike, PixiComponentIsPrivateProperty, PixiComponentIsSpecialProperty, type PixiComponentConfig, type PixiComponentProps, type PixiDisplayObjectWriteableProps } from './component';
 
@@ -78,22 +78,30 @@ export class PixiInternalElementInstance<
 	EventMap extends (utils.EventEmitter.ValidEventTypes),
 	CustomProps,
 > extends PixiInternalContainerInstance<Element> {
+	public readonly type: string;
 	public readonly config: PixiComponentConfig<Element, AutoPropKeys, EventMap, CustomProps>;
 	public readonly root: PixiRootContainer;
 
 	private readonly _originalValues = new Map<AutoPropKeys, unknown>();
 	private _fiberHidden: boolean = false;
+	private _destroyed: boolean = false;
 
 	constructor(
+		type: string,
 		config: PixiComponentConfig<Element, AutoPropKeys, EventMap, CustomProps>,
 		initialProps: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>>,
 		root: PixiRootContainer,
 	) {
 		super(config.create(initialProps));
+		this.type = type;
 		this.config = config;
 		this.root = root;
 		// Apply initial props (we expect create to apply custom ones first)
 		this._applyAutoProps(null, initialProps, Object.keys(initialProps));
+	}
+
+	private _getLogger(): Logger {
+		return GetLogger('PixiElementInstance', `[PixiElementInstance ${this.type}]`);
 	}
 
 	public emitNeedsUpdate() {
@@ -105,6 +113,15 @@ export class PixiInternalElementInstance<
 		nextProps: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>>,
 		updatePayload: string[],
 	): void {
+		if (this.instance.destroyed) {
+			if (!this._destroyed) {
+				this._getLogger().error('Attempt to commit update on a destroyed instance. The instance was not destroyed by the fiber!');
+			} else {
+				this._getLogger().error('Attempt to commit update on a destroyed instance.');
+			}
+			throw new Error('Attempt to commit update on a destroyed instance');
+		}
+
 		this.config.applyCustomProps?.(this.instance, prevProps, nextProps);
 		this._applyAutoProps(prevProps, nextProps, updatePayload);
 	}
@@ -117,6 +134,33 @@ export class PixiInternalElementInstance<
 	public unhide(props: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>>) {
 		this._fiberHidden = false;
 		this.instance.visible = props.visible !== false;
+	}
+
+	public destroy() {
+		if (this.instance.destroyed) {
+			if (!this._destroyed) {
+				this._getLogger().warning('Attempt to destroy already destroyed instance. The instance was not destroyed by the fiber!');
+				this._destroyed = true;
+			} else {
+				// We get called twice here, for some reason...
+				// We can safely ignore this, as it doesn't seem to be causing any issues.
+			}
+			return;
+		}
+
+		if (ElementSupportsChildren(this.instance)) {
+			if (this.instance.children.length > 0) {
+				this._getLogger().warning('Destroying instance that has children!');
+			}
+		}
+
+		this._destroyed = true;
+		this.instance.destroy({
+			baseTexture: false,
+			texture: false,
+			children: false,
+		});
+		Assert(this.instance.destroyed);
 	}
 
 	private _applyAutoProps(

@@ -11,7 +11,7 @@ import { Button } from '../../components/common/button/button';
 import { Container } from '../../graphics/baseComponents/container';
 import { Graphics } from '../../graphics/baseComponents/graphics';
 import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
-import { PixiViewportRef, PixiViewportSetupCallback } from '../../graphics/pixiViewport';
+import { PixiViewportRef, PixiViewportSetupCallback } from '../../graphics/baseComponents/pixiViewport';
 import { useObservable } from '../../observable';
 import { EditorContext, useEditor } from '../editorContextProvider';
 import { ResultCharacter, SetupCharacter } from './character';

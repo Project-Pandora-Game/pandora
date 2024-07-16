@@ -1,6 +1,6 @@
 import { DRAW_MODES, Mesh, MeshGeometry, MeshMaterial, State, Texture } from 'pixi.js';
-import { DISPLAY_OBJECT_EVENTS, type DisplayObjectEventMap } from './baseComponents/container';
-import { RegisterPixiComponent } from './reconciler/component';
+import { DISPLAY_OBJECT_EVENTS, type DisplayObjectEventMap } from './container';
+import { RegisterPixiComponent } from '../reconciler/component';
 
 export interface PixiMeshProps {
 	vertices: Float32Array;

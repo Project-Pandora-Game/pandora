@@ -12,7 +12,7 @@ import { Sprite } from './baseComponents/sprite';
 import { LayerStateOverrides } from './def';
 import { GraphicsMaskLayer } from './graphicsMaskLayer';
 import { useGraphicsSettings } from './graphicsSettings';
-import { PixiMesh } from './pixiMesh';
+import { PixiMesh } from './baseComponents/mesh';
 import { usePixiApp, usePixiAppOptional } from './reconciler/appContext';
 import { RoomDeviceRenderContext } from './room/roomDeviceContext';
 import { useTexture } from './useTexture';

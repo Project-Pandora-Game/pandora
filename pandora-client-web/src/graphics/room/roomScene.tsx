@@ -32,7 +32,7 @@ import { Container } from '../baseComponents/container';
 import { Graphics } from '../baseComponents/graphics';
 import { PointLike } from '../graphicsCharacter';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphicsScene';
-import { PixiViewportRef, PixiViewportSetupCallback } from '../pixiViewport';
+import { PixiViewportRef, PixiViewportSetupCallback } from '../baseComponents/pixiViewport';
 import { CharacterContextMenu } from './contextMenus/characterContextMenu';
 import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
 import { RoomCharacterInteractive } from './roomCharacter';

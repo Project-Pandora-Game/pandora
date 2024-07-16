@@ -8,7 +8,7 @@ import { useEvent } from '../common/useEvent';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
 import { GraphicsSceneRendererShared } from './graphicsSceneRenderer';
 import { useGraphicsSettings } from './graphicsSettings';
-import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback } from './pixiViewport';
+import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback } from './baseComponents/pixiViewport';
 import { useTexture } from './useTexture';
 import { Sprite } from './baseComponents/sprite';
 

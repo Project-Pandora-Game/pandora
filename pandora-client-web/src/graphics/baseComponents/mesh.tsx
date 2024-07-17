@@ -14,7 +14,18 @@ export interface PixiMeshProps {
 }
 
 /**
- * Wrapper around Pixi.js's Mesh that properly propagates changes to all properties
+ * Base mesh class.
+ *
+ * This class empowers you to have maximum flexibility to render any kind of WebGL visuals you can think of.
+ * This class assumes a certain level of WebGL knowledge.
+ * If you know a bit this should abstract enough away to make your life easier!
+ *
+ * Pretty much ALL WebGL can be broken down into the following:
+ * - Geometry - The structure and data for the mesh. This can include anything from positions, uvs, normals, colors etc..
+ * - Shader - This is the shader that PixiJS will render the geometry with (attributes in the shader must match the geometry)
+ * - State - This is the state of WebGL required to render the mesh.
+ *
+ * Through a combination of the above elements you can render anything you want, 2D or 3D!
  */
 export const PixiMesh = RegisterPixiComponent<Mesh, never, DisplayObjectEventMap, PixiMeshProps>('PixiMesh', {
 	create(props) {

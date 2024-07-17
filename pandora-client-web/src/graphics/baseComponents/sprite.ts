@@ -20,6 +20,9 @@ export type SpriteCustomProps = {
 	anchor?: PixiPointLike;
 };
 
+/**
+ * The Sprite object is the base for all textured objects that are rendered to the screen.
+ */
 export const Sprite = RegisterPixiComponent<PixiSprite, SpriteAutoProps, DisplayObjectEventMap, SpriteCustomProps>('Sprite', {
 	create(props) {
 		const instance = new PixiSprite();

@@ -21,6 +21,7 @@ export const PIXI_COMPONENT_PRIVATE_PROPERTIES = [
 /** Keys of black-listed properties that shouldn't ever be visible (mainly those that we depend on with our internal state) */
 type DisplayObjectPrivateProps = (typeof PIXI_COMPONENT_PRIVATE_PROPERTIES)[number];
 
+/** Check if DisplayObject key is one of a private property. */
 export function PixiComponentIsPrivateProperty(key: string): key is DisplayObjectPrivateProps {
 	return (PIXI_COMPONENT_PRIVATE_PROPERTIES as readonly string[]).includes(key);
 }
@@ -36,6 +37,7 @@ export const PIXI_COMPONENT_SPECIAL_PROPERTIES = [
 	'skew',
 ] as const satisfies (readonly (keyof DisplayObjectAllProps<DisplayObject>)[]);
 
+/** Check if DisplayObject key is one of a property with special handling. */
 export function PixiComponentIsSpecialProperty(key: string): key is DisplayObjectSpecialPropKeys {
 	return (PIXI_COMPONENT_SPECIAL_PROPERTIES as readonly string[]).includes(key);
 }
@@ -43,9 +45,17 @@ export function PixiComponentIsSpecialProperty(key: string): key is DisplayObjec
 /** Keys of black-listed properties that shouldn't ever be visible (mainly those that we depend on with our internal state) */
 type DisplayObjectSpecialPropKeys = (typeof PIXI_COMPONENT_SPECIAL_PROPERTIES)[number];
 
+/** A generic type that can be transformed into a point. */
 export type PixiPointLike = IPointData | readonly [number, number] | number;
 
-export function ParsePixiPointLike(data: PixiPointLike | undefined, defaultX: number, defaultY: number): readonly [number, number] {
+/**
+ * Parse a `PixiPointLike` data into X and Y numbers.
+ * @param data - The data to parse
+ * @param defaultX - Value of `X` used if data is undefined.
+ * @param defaultY - Value of `Y` used if data is undefined.
+ * @returns The X and Y coordinates
+ */
+export function ParsePixiPointLike(data: PixiPointLike | undefined, defaultX: number, defaultY: number): readonly [x: number, y: number] {
 	if (Array.isArray(data)) {
 		Assert(data.length === 2);
 		return [data[0], data[1]];
@@ -61,6 +71,7 @@ export function ParsePixiPointLike(data: PixiPointLike | undefined, defaultX: nu
 	return [defaultX, defaultY];
 }
 
+/** Property typings for special props. */
 export type DisplayObjectSpecialProps = Satisfies<{
 	visible: boolean;
 	scale: PixiPointLike;
@@ -72,6 +83,7 @@ export type DisplayObjectSpecialProps = Satisfies<{
 /** List of writeable props, excluding any black-listed ones. */
 export type PixiDisplayObjectWriteableProps<Component extends DisplayObject> = Omit<DisplayObjectAllProps<Component>, DisplayObjectPrivateProps | DisplayObjectSpecialPropKeys>;
 
+/** Helper for extracting valid event names for `pixi.utils.EventEmitter` class. */
 export type DisplayObjectEventNames<Component extends utils.EventEmitter<any>> = ReturnType<Component['eventNames']>[number];
 
 /** Utility for extracting event mappings from an object. */
@@ -91,9 +103,13 @@ export type PixiComponentProps<
 	EventMap extends (utils.EventEmitter.ValidEventTypes) = DisplayObjectEventNames<Element>,
 	CustomProps = {},
 > =
+	// Any properties defined by the component
 	CustomProps
+	// All properties that are auto-assigned
 	& Partial<Pick<PixiDisplayObjectWriteableProps<Element>, AutoPropKeys>>
+	// Special properties can be used on any object
 	& Partial<DisplayObjectSpecialProps>
+	// Event listeners, with `on` prefix
 	& Partial<DisplayObjectListenersMap<EventMap>>;
 
 /** Config for a specific component, allowing it to be used generically by out Fiber. */
@@ -103,9 +119,21 @@ export type PixiComponentConfig<
 	EventMap extends (utils.EventEmitter.ValidEventTypes) = DisplayObjectEventNames<Element>,
 	CustomProps = {},
 > = {
+	/**
+	 * Create an element given initial props.
+	 * This method is expected to apply any custom props right after creating the element.
+	 *
+	 * After this function returns, `autoProps` will be assigned to the element.
+	 */
 	create(props: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>>): Element;
+	/** Map of valid event names, where each event name should be set to `true`. */
 	events: Record<keyof DisplayObjectListenersMapRaw<EventMap>, true>;
+	/** Map of automatically managed properties, where each such property name should be set to `true`. */
 	autoProps: Record<AutoPropKeys, true>;
+	/**
+	 * Optional function for updating any custom properties.
+	 * It is called _before_ `autoProps` are updated.
+	 */
 	applyCustomProps?(
 		instance: Element,
 		oldProps: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>>,
@@ -113,14 +141,18 @@ export type PixiComponentConfig<
 	): void;
 };
 
+/** Full props of a component defining how the component can be used by client code. */
 export type PixiComponentFullProps<
 	Element extends DisplayObject,
 	AutoPropKeys extends (keyof PixiDisplayObjectWriteableProps<Element>) = never,
 	EventMap extends (utils.EventEmitter.ValidEventTypes) = DisplayObjectEventNames<Element>,
 	CustomProps = {},
 > =
+	// The props visible to the component itself
 	React.PropsWithoutRef<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>> &
+	// The `ref`
 	React.RefAttributes<Element> &
+	// Children, if allowed
 	{ children?: Element extends Container ? ReactNode : undefined; };
 
 /**

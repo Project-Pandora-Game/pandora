@@ -2,19 +2,20 @@ import { Assert, AssertNever, GetLogger, TypedEventEmitter, type Logger } from '
 import { Container, DisplayObject, utils } from 'pixi.js';
 import { ParsePixiPointLike, PixiComponentIsPrivateProperty, PixiComponentIsSpecialProperty, type PixiComponentConfig, type PixiComponentProps, type PixiDisplayObjectWriteableProps } from './component';
 
+/** Checks if `DisplayObject` supports children - implementing the `Container` interface. */
 function ElementSupportsChildren(element: DisplayObject): element is Container {
 	return 'addChild' in element && typeof element.addChild === 'function';
 }
 
-export interface PixiContainerHandle {
-	addChild(child: DisplayObject, beforeChild?: DisplayObject): void;
-	removeChild(child: DisplayObject): void;
-	clearChildren(): void;
-}
-
+/** Weak map for getting the internal instance given a managed Pixi display object. */
 const PixiInstanceMap = new WeakMap<DisplayObject, PixiInternalContainerInstance<DisplayObject>>();
 
-export abstract class PixiInternalContainerInstance<Element extends DisplayObject> implements PixiContainerHandle {
+/**
+ * A management class for containing objects that can potentially be used as containers.
+ *
+ * Note, that it can be used with non-container object too - it checks whether children are allowed or not when one does try to add children.
+ */
+export abstract class PixiInternalContainerInstance<Element extends DisplayObject> {
 	public readonly instance: Element;
 
 	constructor(instance: Element) {
@@ -22,6 +23,11 @@ export abstract class PixiInternalContainerInstance<Element extends DisplayObjec
 		PixiInstanceMap.set(instance, this);
 	}
 
+	/**
+	 * Add a child to the container
+	 * @param child - The child to add
+	 * @param beforeChild - Existing child that should be used for positioning the `child` - `child` should be places right before it.
+	 */
 	public addChild(child: DisplayObject, beforeChild?: DisplayObject): void {
 		Assert(ElementSupportsChildren(this.instance), 'This element does not support children');
 
@@ -40,25 +46,38 @@ export abstract class PixiInternalContainerInstance<Element extends DisplayObjec
 		}
 	}
 
+	/**
+	 * Remove a child from the container
+	 * @param child - The child to remove
+	 */
 	public removeChild(child: DisplayObject): void {
 		this.instance.removeChild(child);
 	}
 
+	/**
+	 * Remove all children from the container
+	 */
 	public clearChildren(): void {
 		Assert(ElementSupportsChildren(this.instance), 'This element does not support children');
 
 		this.instance.removeChildren();
 	}
 
+	/** Signal that this element needs to be rendered */
 	public abstract emitNeedsUpdate(): void;
 }
 
+/** A helper class for emitting update requests. */
 export class PixiUpdateEmitter extends TypedEventEmitter<{ needsUpdate: DisplayObject; }> {
 	public emitNeedsUpdate(object: DisplayObject): void {
 		this.emit('needsUpdate', object);
 	}
 }
 
+/**
+ * Class for cotaning an _externally managed_ pixi instance.
+ * This class is used to wrap the root everything is attached to.
+ */
 export class PixiRootContainer extends PixiInternalContainerInstance<Container> {
 	public readonly updateEmitter: PixiUpdateEmitter = new PixiUpdateEmitter();
 
@@ -86,12 +105,18 @@ export class PixiInternalElementInstance<
 	EventMap extends (utils.EventEmitter.ValidEventTypes),
 	CustomProps,
 > extends PixiInternalContainerInstance<Element> {
+	/** The type of the element - the string passed to `uniqueName` of `RegisterPixiComponent`. */
 	public readonly type: string;
+	/** The config for working with this element - as passed to `RegisterPixiComponent`. */
 	public readonly config: PixiComponentConfig<Element, AutoPropKeys, EventMap, CustomProps>;
+	/** Root container for which this element was created. Used for signaling that it needs an update. */
 	public readonly root: PixiRootContainer;
 
+	/** Map of original values to be restored if auto-prop that was set before changes to `undefined` */
 	private readonly _originalValues = new Map<AutoPropKeys, unknown>();
+	/** If fiber is signaling us that this instance should be hidden */
 	private _fiberHidden: boolean = false;
+	/** If this instance has already been destroyed */
 	private _destroyed: boolean = false;
 
 	constructor(
@@ -118,6 +143,12 @@ export class PixiInternalElementInstance<
 		this.root.emitNeedsUpdate(this.instance);
 	}
 
+	/**
+	 * Apply modified props
+	 * @param prevProps - The props that were used the last time
+	 * @param nextProps - The new props to update to
+	 * @param updatePayload - List of changed prop keys
+	 */
 	public commitUpdate(
 		prevProps: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>>,
 		nextProps: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>>,
@@ -136,16 +167,26 @@ export class PixiInternalElementInstance<
 		this._applyAutoProps(prevProps, nextProps, updatePayload);
 	}
 
+	/** Hide this instance, marking it as "hidden by fiber" */
 	public hide() {
 		this._fiberHidden = true;
 		this.instance.visible = false;
 	}
 
+	/**
+	 * Undo instance hide.
+	 * @param props - Props that were used as part of last update
+	 */
 	public unhide(props: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>>) {
 		this._fiberHidden = false;
 		this.instance.visible = props.visible !== false;
 	}
 
+	/**
+	 * Destroy this instance, cleaning up anything that needs that.
+	 * It is safe to call this method multiple times.
+	 * After destroy the object can never be used again.
+	 */
 	public destroy() {
 		if (this.instance.destroyed) {
 			if (!this._destroyed) {
@@ -159,6 +200,7 @@ export class PixiInternalElementInstance<
 			return;
 		}
 
+		// By now children should have been removed by the fiber
 		if (ElementSupportsChildren(this.instance)) {
 			if (this.instance.children.length > 0) {
 				this._getLogger().warning('Destroying instance that has children!');
@@ -177,6 +219,7 @@ export class PixiInternalElementInstance<
 		Assert(this.instance.destroyed);
 	}
 
+	/** Automatic updates of autoProps */
 	private _applyAutoProps(
 		prevProps: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>> | null,
 		nextProps: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>>,
@@ -247,6 +290,11 @@ export class PixiInternalElementInstance<
 	}
 }
 
+/**
+ * Manually request a render of a specific element.
+ * The element must be one managed by a Pixi Fiber.
+ * @param element - The element that needs to be updated
+ */
 export function PixiElementRequestUpdate(element: DisplayObject): void {
 	const instance = PixiInstanceMap.get(element);
 	Assert(instance != null, 'Attempt to request update on a PIXI DisplayObject outside of React tree');

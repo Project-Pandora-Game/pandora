@@ -1,5 +1,5 @@
 import { Text as PixiText, type IPointData } from 'pixi.js';
-import { RegisterPixiComponent, type DisplayObjectEventNames, type PixiDisplayObjectWriteableProps } from '../reconciler/component';
+import { ParsePixiPointLike, RegisterPixiComponent, type DisplayObjectEventNames, type PixiDisplayObjectWriteableProps } from '../reconciler/component';
 import { DISPLAY_OBJECT_AUTO_PROPS, DISPLAY_OBJECT_EVENTS, type DisplayObjectEventMap } from './container';
 
 const TEXT_AUTO_PROPS = {
@@ -22,13 +22,13 @@ export const Text = RegisterPixiComponent<PixiText, TextAutoProps, DisplayObject
 	create(props) {
 		const instance = new PixiText();
 		if (props.anchor != null) {
-			instance.anchor.set(props.anchor.x, props.anchor.y);
+			instance.anchor.set(...ParsePixiPointLike(props.anchor, 0, 0));
 		}
 		return instance;
 	},
 	applyCustomProps(instance, oldProps, newProps) {
 		if (oldProps.anchor !== newProps.anchor) {
-			instance.anchor.set(newProps.anchor?.x ?? 0, newProps.anchor?.y ?? 0);
+			instance.anchor.set(...ParsePixiPointLike(newProps.anchor, 0, 0));
 		}
 	},
 	autoProps: TEXT_AUTO_PROPS,

@@ -1,8 +1,12 @@
-import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from 'react';
-import { PixiComponent, useApp, useTick } from '@pixi/react';
 import { Viewport } from 'pixi-viewport';
 import { Application, Point } from 'pixi.js';
-import { ChildrenProps } from '../common/reactTypes';
+import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import { ChildrenProps } from '../../common/reactTypes';
+import { usePixiApp } from '../reconciler/appContext';
+import { RegisterPixiComponent } from '../reconciler/component';
+import { PixiElementRequestUpdate } from '../reconciler/element';
+import { usePixiTick } from '../reconciler/tick';
+import { DISPLAY_OBJECT_EVENTS, type DisplayObjectEventMap } from './container';
 
 export type PixiViewportSetupCallback = (viewport: Viewport, params: {
 	width: number;
@@ -20,7 +24,7 @@ export interface PixiViewportProps extends ChildrenProps {
 	setup?: PixiViewportSetupCallback;
 }
 
-const PixiViewportComponent = PixiComponent<PixiViewportProps & { app: Application; }, Viewport>('Viewport', {
+const PixiViewportComponent = RegisterPixiComponent<Viewport, never, DisplayObjectEventMap, PixiViewportProps & { app: Application; }>('Viewport', {
 	create(props) {
 		const {
 			app,
@@ -52,7 +56,7 @@ const PixiViewportComponent = PixiComponent<PixiViewportProps & { app: Applicati
 
 		return viewport;
 	},
-	applyProps(viewport, oldProps, newProps) {
+	applyCustomProps(viewport, oldProps, newProps) {
 		const {
 			app: oldApp,
 			width: oldWidth,
@@ -99,9 +103,8 @@ const PixiViewportComponent = PixiComponent<PixiViewportProps & { app: Applicati
 			});
 		}
 	},
-	config: {
-		destroy: false,
-	},
+	autoProps: {},
+	events: DISPLAY_OBJECT_EVENTS,
 });
 
 export type PixiViewportRef = {
@@ -111,28 +114,7 @@ export type PixiViewportRef = {
 
 export const PixiViewport = forwardRef<PixiViewportRef, PixiViewportProps>((props, ref) => {
 	const [viewPort, setViewPort] = useState<Viewport | null>(null);
-	const app = useApp();
-
-	const [update, cancelUpdate] = useMemo(() => {
-		let request: number | undefined;
-
-		return [
-			() => {
-				if (request !== undefined)
-					return;
-				request = requestAnimationFrame(() => {
-					request = undefined;
-					app.ticker.update();
-				});
-			},
-			() => {
-				if (request !== undefined) {
-					cancelAnimationFrame(request);
-					request = undefined;
-				}
-			},
-		];
-	}, [app]);
+	const app = usePixiApp();
 
 	useImperativeHandle(ref, () => ({
 		getCenter: () => viewPort?.center,
@@ -141,11 +123,11 @@ export const PixiViewport = forwardRef<PixiViewportRef, PixiViewportProps>((prop
 				return;
 			viewPort.fit();
 			viewPort.moveCenter(viewPort.worldWidth / 2, viewPort.worldHeight / 2);
-			update();
+			PixiElementRequestUpdate(viewPort);
 		},
-	}), [update, viewPort]);
+	}), [viewPort]);
 
-	useTick((_delta, ticker) => {
+	usePixiTick((_delta, ticker) => {
 		viewPort?.update(ticker.elapsedMS);
 	});
 
@@ -155,6 +137,10 @@ export const PixiViewport = forwardRef<PixiViewportRef, PixiViewportProps>((prop
 
 		const events = ['moved', 'zoomed'] as const;
 
+		const update = () => {
+			PixiElementRequestUpdate(viewPort);
+		};
+
 		for (const e of events) {
 			viewPort.on(e, update);
 		}
@@ -162,10 +148,9 @@ export const PixiViewport = forwardRef<PixiViewportRef, PixiViewportProps>((prop
 			for (const e of events) {
 				viewPort.off(e, update);
 			}
-			cancelUpdate();
 		};
-	}, [update, cancelUpdate, viewPort]);
+	}, [viewPort]);
 
-	return <PixiViewportComponent ref={ setViewPort } app={ useApp() } { ...props } />;
+	return <PixiViewportComponent ref={ setViewPort } app={ app } { ...props } />;
 });
 PixiViewport.displayName = 'PixiViewport';

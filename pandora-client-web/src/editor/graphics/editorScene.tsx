@@ -1,4 +1,3 @@
-import { Container, Graphics } from '@pixi/react';
 import classNames from 'classnames';
 import _ from 'lodash';
 import { AssertNotNullable, CharacterSize, GetLogger, HexColorStringSchema } from 'pandora-common';
@@ -9,8 +8,10 @@ import { DownloadAsFile } from '../../common/downloadHelper';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { Button } from '../../components/common/button/button';
+import { Container } from '../../graphics/baseComponents/container';
+import { Graphics } from '../../graphics/baseComponents/graphics';
 import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
-import { PixiViewportRef, PixiViewportSetupCallback } from '../../graphics/pixiViewport';
+import { PixiViewportRef, PixiViewportSetupCallback } from '../../graphics/baseComponents/pixiViewport';
 import { useObservable } from '../../observable';
 import { EditorContext, useEditor } from '../editorContextProvider';
 import { ResultCharacter, SetupCharacter } from './character';
@@ -78,7 +79,6 @@ export function EditorScene({
 		worldHeight: CharacterSize.HEIGHT,
 		worldWidth: CharacterSize.WIDTH,
 		backgroundColor,
-		createPrivatePixiInstance: true,
 	}), [viewportConfig, backgroundColor]);
 
 	const getCenter = useCallback(() => (viewportRef.current?.getCenter() ?? { x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT / 2 }), []);

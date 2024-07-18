@@ -1,4 +1,3 @@
-import { Container, Graphics, Sprite } from '@pixi/react';
 import { AssetFrameworkCharacterState } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { Texture } from 'pixi.js';
@@ -7,6 +6,9 @@ import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { useLayerDefinition, useLayerImageSource } from '../../../assets/assetGraphicsCalculations';
 import { useCharacterAppearanceItems } from '../../../character/character';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
+import { Container } from '../../../graphics/baseComponents/container';
+import { Graphics } from '../../../graphics/baseComponents/graphics';
+import { Sprite } from '../../../graphics/baseComponents/sprite';
 import { GraphicsLayerProps, useItemColor, useLayerPoints, useLayerVertices } from '../../../graphics/graphicsLayer';
 import { useTexture } from '../../../graphics/useTexture';
 import { useEditorLayerStateOverride } from '../../editor';

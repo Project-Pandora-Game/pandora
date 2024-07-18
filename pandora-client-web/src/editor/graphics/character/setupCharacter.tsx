@@ -1,6 +1,6 @@
-import { Container } from '@pixi/react';
 import React, { ReactElement, useMemo } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
+import { Container } from '../../../graphics/baseComponents/container';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 import { DraggableBone } from '../draggable';

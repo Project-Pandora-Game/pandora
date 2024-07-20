@@ -9,6 +9,7 @@ export const DISPLAY_OBJECT_AUTO_PROPS = {
 	zIndex: true,
 	x: true,
 	y: true,
+	angle: true,
 	alpha: true,
 	filters: true,
 	cursor: true,

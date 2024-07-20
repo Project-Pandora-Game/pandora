@@ -150,6 +150,12 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 				children: true,
 			}));
 
+		// Cancel any pending frame request
+		if (this._animationFrameRequest != null) {
+			cancelAnimationFrame(this._animationFrameRequest);
+			this._animationFrameRequest = null;
+		}
+
 		this.app.view.remove();
 		AvailableApps.push(this.app);
 		this.app = null;
@@ -173,8 +179,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 	};
 
 	public renderStage = () => {
-		AssertNotNullable(this.app);
-		if (this._needsUpdate) {
+		if (this._needsUpdate && this.app != null) {
 			this._needsUpdate = false;
 			this.app.ticker.update();
 		}

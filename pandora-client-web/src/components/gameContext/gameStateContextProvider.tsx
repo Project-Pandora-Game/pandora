@@ -38,6 +38,7 @@ import {
 	SpaceIdSchema,
 	TypedEventEmitter,
 	ZodCast,
+	type IChatMessageActionTargetCharacter,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { z } from 'zod';
@@ -49,7 +50,7 @@ import { ShardConnectionState, ShardConnector } from '../../networking/shardConn
 import { Observable, useNullableObservable, useObservable } from '../../observable';
 import { IChatMessageProcessed } from '../../ui/components/chat/chatMessages';
 import { ChatParser } from '../../ui/components/chat/chatParser';
-import { GetAccountSettings, useCurrentAccount } from './directoryConnectorContextProvider';
+import { useCurrentAccount } from './directoryConnectorContextProvider';
 import { NotificationData } from './notificationContextProvider';
 import { useShardConnector } from './shardConnectorContextProvider';
 
@@ -96,6 +97,7 @@ export type PermissionPromptData = {
 export class GameState extends TypedEventEmitter<{
 	globalStateChange: true;
 	messageNotify: NotificationData;
+	characterEntered: IChatMessageActionTargetCharacter;
 	permissionPrompt: PermissionPromptData;
 }> implements IChatMessageSender {
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
@@ -327,16 +329,11 @@ export class GameState extends TypedEventEmitter<{
 					continue;
 				}
 			} else {
-				if (message.type === 'serverMessage' && message.id === 'characterEntered'
-					&& message.data?.character?.type === 'character') {
-					const {
-						notificationRoomEntry,
-					} = GetAccountSettings(this._shard.directoryConnector);
-					if (notificationRoomEntry) {
-						// TODO: Notify
-						logger.alert(`TEST: I should notify that character ${message.data.character.id} entered.`);
-					}
+				// Emit events for some message types
+				if (message.type === 'serverMessage' && message.id === 'characterEntered' && message.data?.character?.type === 'character') {
+					this.emit('characterEntered', message.data.character);
 				}
+				// Add the message to chat
 				nextMessages.push(message);
 				if (!notified) {
 					this.emit('messageNotify', { time: Date.now() });

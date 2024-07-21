@@ -20,7 +20,7 @@ import { ShardConnector } from '../../networking/shardConnector';
 import { SocketIOShardConnector } from '../../networking/socketio_shard_connector';
 import { useNullableObservable, useObservable } from '../../observable';
 import { useDebugContext } from '../error/debugContextProvider';
-import { useDirectoryConnector } from './directoryConnectorContextProvider';
+import { useAccountSettings, useDirectoryConnector } from './directoryConnectorContextProvider';
 import { NotificationSource, useNotification } from './notificationContextProvider';
 
 export interface ShardConnectorContextData {
@@ -48,8 +48,13 @@ export const connectorFactoryContext = createContext<ConnectorFactoryContext>({
 });
 
 export function ShardConnectorContextProvider({ children }: ChildrenProps): ReactElement {
-	const notify = useNotification(NotificationSource.CHAT_MESSAGE);
+	const notifyChatMessage = useNotification(NotificationSource.CHAT_MESSAGE);
+	const notifyCharacterEntered = useNotification(NotificationSource.ROOM_ENTRY);
 	const directoryConnector = useDirectoryConnector();
+
+	const {
+		notificationRoomEntry,
+	} = useAccountSettings();
 
 	const [shardConnector, setShardConnector] = useState<ShardConnector | null>(null);
 
@@ -65,8 +70,16 @@ export function ShardConnectorContextProvider({ children }: ChildrenProps): Reac
 	const gameState = useNullableObservable(shardConnector?.gameState);
 
 	useEffect(() => {
-		return gameState?.on('messageNotify', notify);
-	}, [gameState, notify]);
+		return gameState?.on('messageNotify', notifyChatMessage);
+	}, [gameState, notifyChatMessage]);
+
+	useEffect(() => {
+		return gameState?.on('characterEntered', () => {
+			if (notificationRoomEntry) {
+				notifyCharacterEntered({});
+			}
+		});
+	}, [gameState, notificationRoomEntry, notifyCharacterEntered]);
 
 	useDebugExpose('shardConnector', shardConnector);
 	useDebugExpose('player', gameState?.player);

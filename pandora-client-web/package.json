@@ -48,7 +48,7 @@
 		"zod": "3.23.6"
 	},
 	"devDependencies": {
-		"@babel/preset-env": "7.24.5",
+		"@babel/preset-env": "7.25.0",
 		"@pmmmwh/react-refresh-webpack-plugin": "0.5.13",
 		"@project-pandora-game/sass-loader": "13.2.0",
 		"@testing-library/jest-dom": "6.4.5",

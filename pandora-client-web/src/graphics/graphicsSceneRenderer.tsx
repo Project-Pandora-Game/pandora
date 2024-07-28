@@ -83,12 +83,6 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		this.app.resizeTo = container;
 		this.app.resize();
 
-		// We are trying to simulate how `Stage` component works, only differently handing the Application instance
-		// For that we need to add this private shim `react-pixi` normally adds inside `Stage`,
-		// Which is used to propagate change events all the way up to the stage quickly, so application knows to render another frame
-		// @see - https://github.com/wisebits-tech/react-pixi/blob/react-18/src/stage/index.jsx#L127
-		// @ts-expect-error: Private shim
-		app.stage.__reactpixi = { root: this.app.stage };
 		this.root = CreatePixiRoot(this.app.stage);
 		this.root.render(this.getChildren());
 
@@ -97,8 +91,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		Assert(this._cleanupUpdateCallback == null);
 		this._cleanupUpdateCallback = this.root.updateEmitter.on('needsUpdate', this.needsRenderUpdate);
 
-		this._needsUpdate = true;
-		this.renderStage();
+		this.needsRenderUpdate();
 	}
 
 	public override componentDidUpdate(oldProps: Readonly<Omit<GraphicsSceneRendererProps, 'forwardContexts'>>) {
@@ -110,21 +103,28 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		const { container, resolution } = this.props;
 		const { container: oldContainer, resolution: oldResolution } = oldProps;
 
+		let needsUpdate = false;
+
 		if (container !== oldContainer) {
 			this.app.view.remove();
 			container.appendChild(this.app.view);
 			this.app.resizeTo = container;
 			this.app.resize();
+			needsUpdate = true;
 		}
 
 		if (resolution !== oldResolution) {
 			this.app.renderer.resolution = resolution;
 			this.app.resize();
+			needsUpdate = true;
 		}
 
 		// flush fiber
 		this.root.render(this.getChildren());
-		this.app.ticker.update();
+
+		if (needsUpdate) {
+			this.needsRenderUpdate();
+		}
 	}
 
 	public override componentWillUnmount() {
@@ -273,19 +273,12 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 
 		const { renderArea } = this.props;
 
-		// We are trying to simulate how `Stage` component works, only differently handing the Application instance
-		// For that we need to add this private shim `react-pixi` normally adds inside `Stage`,
-		// Which is used to propagate change events all the way up to the stage quickly, so application knows to render another frame
-		// @see - https://github.com/wisebits-tech/react-pixi/blob/react-18/src/stage/index.jsx#L127
-
 		this._stage = new Container();
 		this._stage.position = {
 			x: -renderArea.x,
 			y: -renderArea.y,
 		};
 
-		// @ts-expect-error: Private shim
-		this._stage.__reactpixi = { root: this._stage };
 		this._root = CreatePixiRoot(this._stage);
 		this._root.render(this.getChildren());
 

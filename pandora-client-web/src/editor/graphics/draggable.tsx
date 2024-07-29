@@ -14,6 +14,7 @@ import { GetAngle, RotateVector } from '../../graphics/utility';
 import { Observable, ReadonlyObservable, useObservable } from '../../observable';
 import { EditorCharacter } from './character/appearanceEditor';
 import type { PointTemplateEditor } from './pointTemplateEditor';
+import { MirrorBoneLike, MirrorTransform } from '../../graphics/mirroring';
 
 type DraggableProps = {
 	x: number;
@@ -154,6 +155,14 @@ export class DraggablePoint {
 	public setMirror(value: boolean): void {
 		this._modifyPoint((p) => {
 			p.mirror = value;
+		});
+	}
+
+	public mirrorSwap(): void {
+		this._modifyPoint((p) => {
+			p.pos[0] = CharacterSize.WIDTH - p.pos[0];
+			p.transforms = p.transforms.map(MirrorTransform);
+			p.pointType = MirrorBoneLike(p.pointType);
 		});
 	}
 

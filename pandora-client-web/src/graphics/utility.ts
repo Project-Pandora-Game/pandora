@@ -47,3 +47,10 @@ export function LoadArrayBufferImageResource(buffer: ArrayBuffer): Promise<Resou
 		image.src = URL.createObjectURL(blob);
 	});
 }
+
+/** Calculate if mesh face is defined clockwise */
+export function MeshFaceIsCW(...points: readonly [number, number, number, number, number, number]): boolean {
+	// This is shortened form of a determinant of a matrix of the points in rows
+	const shoelaceArea = (points[2] - points[0]) * (points[5] - points[1]) - (points[4] - points[0]) * (points[3] - points[1]);
+	return shoelaceArea < 0;
+}

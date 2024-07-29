@@ -1,31 +1,47 @@
 import { Assert, CanonizePointTemplate, GetLogger } from 'pandora-common';
-import React, { ReactElement, useCallback, useState } from 'react';
+import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import { z } from 'zod';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { useLayerName } from '../../../assets/assetGraphicsCalculations';
 import { useAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
+import { useBrowserSessionStorage, useBrowserStorage } from '../../../browserStorage';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/button/button';
-import { Row } from '../../../components/common/container/container';
+import { Column, Row } from '../../../components/common/container/container';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { Select } from '../../../components/common/select/select';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
+import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
 import { useNullableObservable, useObservable } from '../../../observable';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
 import { useEditor } from '../../editorContextProvider';
+import { useEditorCharacterState } from '../../graphics/character/appearanceEditor';
 import { DraggablePoint, useDraggablePointDefinition } from '../../graphics/draggable';
 import { PointTemplateEditor } from '../../graphics/pointTemplateEditor';
 import { ParseTransforms, SerializeTransforms } from '../../parsing';
 
 export function PointsUI(): ReactElement {
-	const advancedWarning = <h4 className='error'>This menu is intended for advanced users and is not necessary for the vast majority of assets.</h4>;
+	const [editingEnabled, setEditingEnabled] = useBrowserStorage('editor.point-edit.enable', false, z.boolean());
+
+	if (!editingEnabled) {
+		return (
+			<Scrollbar color='lighter' className='editor-setupui slim'>
+				<h3>Template editing</h3>
+				<h4>This menu is intended for advanced users and is not necessary for the vast majority of assets.</h4>
+				<h4 className='error'>Editing points without being aware of how assets use them <u>will</u> lead to graphical problems, including breaking existing assets.</h4>
+				<Button onClick={ () => setEditingEnabled(true) }>I understand, enable point editing</Button>
+			</Scrollbar>
+		);
+	}
 
 	return (
 		<Scrollbar color='lighter' className='editor-setupui slim'>
 			<h3>Template editing</h3>
-			{ advancedWarning }
 			<SelectTemplateToEdit />
 			<PointsEditUi />
+			<PointsHelperMathUi />
 		</Scrollbar>
 	);
 }
@@ -73,6 +89,171 @@ export function PointsEditUi(): ReactElement | null {
 					<PointConfiguration point={ selectedPoint } /> :
 					<Row alignY='center'>No point selected</Row>
 			}
+		</>
+	);
+}
+
+export function PointsHelperMathUi(): ReactElement | null {
+	const editor = useEditor();
+	const selectedTemplate = useObservable(editor.targetTemplate);
+	const selectedPoint = useNullableObservable(selectedTemplate?.targetPoint);
+	const selectedPointDefinition = useNullableObservable(selectedPoint?.definition);
+
+	const characterState = useEditorCharacterState();
+	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const selectedPointFinal = useMemo((): (readonly [number, number]) | undefined => {
+		if (selectedPointDefinition == null)
+			return undefined;
+
+		return evaluator.evalTransform(
+			selectedPointDefinition.pos,
+			selectedPointDefinition.transforms,
+			selectedPointDefinition.mirror,
+			null,
+		);
+	}, [selectedPointDefinition, evaluator]);
+
+	const [targetBase, setTargetBase] = useBrowserSessionStorage('editor.point-edit.helper-target.base', [0, 0], z.tuple([z.number(), z.number()]).readonly());
+	const [targetOffset, setTargetOffset] = useBrowserSessionStorage('editor.point-edit.helper-target.offset', [0, 0], z.tuple([z.number(), z.number()]).readonly());
+	const [adjustmentFactor, setAdjustmentFactor] = useBrowserSessionStorage('editor.point-edit.adjustment-factor', 1, z.number());
+
+	const targetCoords: readonly [number, number] = [
+		targetBase[0] + targetOffset[0],
+		targetBase[1] + targetOffset[1],
+	];
+
+	if (!selectedTemplate)
+		return null;
+
+	return (
+		<>
+			<h4>Helper math <ContextHelpButton>This part of the menu provides additional mathematical tools for more easily making points.</ContextHelpButton></h4>
+			{
+				(selectedPoint != null && selectedPointDefinition != null && selectedPointFinal != null) ? (
+					<Column>
+						<table className='with-border'>
+							<thead>
+								<tr>
+									<td></td>
+									<td>Value</td>
+									<td>Adjusted</td>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>&#916;X</td>
+									<td>{ selectedPointDefinition.pos[0] - targetCoords[0] }</td>
+									<td>{ (adjustmentFactor * (selectedPointDefinition.pos[0] - targetCoords[0])).toFixed(2) }</td>
+								</tr>
+								<tr>
+									<td>&#916;Y</td>
+									<td>{ selectedPointDefinition.pos[1] - targetCoords[1] }</td>
+									<td>{ (adjustmentFactor * (selectedPointDefinition.pos[1] - targetCoords[1])).toFixed(2) }</td>
+								</tr>
+								<tr>
+									<td>Angle</td>
+									<td>{ (Math.atan2(selectedPointDefinition.pos[1] - targetCoords[1], selectedPointDefinition.pos[0] - targetCoords[0]) * 180 / Math.PI).toFixed(1) }°</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>[Final] &#916;X</td>
+									<td>{ selectedPointFinal[0] - targetCoords[0] }</td>
+									<td>{ (adjustmentFactor * (selectedPointFinal[0] - targetCoords[0])).toFixed(2) }</td>
+								</tr>
+								<tr>
+									<td>[Final] &#916;Y</td>
+									<td>{ selectedPointFinal[1] - targetCoords[1] }</td>
+									<td>{ (adjustmentFactor * (selectedPointFinal[1] - targetCoords[1])).toFixed(2) }</td>
+								</tr>
+								<tr>
+									<td>[Final] Angle</td>
+									<td>{ (Math.atan2(selectedPointFinal[1] - targetCoords[1], selectedPointFinal[0] - targetCoords[0]) * 180 / Math.PI).toFixed(1) }°</td>
+									<td></td>
+								</tr>
+							</tbody>
+						</table>
+						<Row>
+							<Button className='flex-1' slim onClick={ () => {
+								setTargetBase(selectedPointDefinition.pos);
+								setTargetOffset([0, 0]);
+							} }>
+								Current to target
+							</Button>
+							<Button className='flex-1' slim onClick={ () => {
+								setTargetBase(selectedPointDefinition.pos);
+								setTargetOffset([selectedPointFinal[0] - selectedPointDefinition.pos[0], selectedPointFinal[1] - selectedPointDefinition.pos[1]]);
+							} }>
+								Final to target
+							</Button>
+						</Row>
+					</Column>
+				) : null
+			}
+			<Column alignX='start'>
+				<h5>Target</h5>
+				<table>
+					<tr>
+						<td>X:</td>
+						<td>{ targetCoords[0] } =</td>
+						<td>
+							<input
+								type='number'
+								value={ targetBase[0] }
+								size={ 5 }
+								onChange={ (e) => {
+									setTargetBase([Number.parseInt(e.target.value) || 0, targetCoords[1]]);
+								} }
+							/>
+						</td>
+						<td>
+							+
+							<input
+								type='number'
+								value={ targetOffset[0] }
+								size={ 5 }
+								onChange={ (e) => {
+									setTargetOffset([Number.parseInt(e.target.value) || 0, targetOffset[1]]);
+								} }
+							/>
+						</td>
+					</tr>
+					<tr>
+						<td>Y:</td>
+						<td>{ targetCoords[1] } =</td>
+						<td>
+							<input
+								type='number'
+								value={ targetBase[1] }
+								size={ 5 }
+								onChange={ (e) => {
+									setTargetBase([targetCoords[0], Number.parseInt(e.target.value) || 0]);
+								} }
+							/>
+						</td>
+						<td>
+							+
+							<input
+								type='number'
+								value={ targetOffset[1] }
+								size={ 5 }
+								onChange={ (e) => {
+									setTargetOffset([targetOffset[0], Number.parseInt(e.target.value) || 0]);
+								} }
+							/>
+						</td>
+					</tr>
+				</table>
+				<Row alignY='center'>
+					<label>Adjustment</label>
+					<input
+						type='number'
+						value={ adjustmentFactor }
+						onChange={ (e) => {
+							setAdjustmentFactor(Number.isNaN(e.target.valueAsNumber) ? 1 : e.target.valueAsNumber);
+						} }
+					/>
+				</Row>
+			</Column>
 		</>
 	);
 }
@@ -153,6 +334,13 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 					} }
 				/>
 			</div>
+			<Row>
+				<Button slim onClick={ () => {
+					point.mirrorSwap();
+				} }>
+					Swap point and mirror
+				</Button>
+			</Row>
 			<div>
 				<label htmlFor='point-type'>Point type:</label>
 				<input

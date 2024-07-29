@@ -153,6 +153,13 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 					} }
 				/>
 			</div>
+			<Row>
+				<Button slim onClick={ () => {
+					point.mirrorSwap();
+				} }>
+					Swap point and mirror
+				</Button>
+			</Row>
 			<div>
 				<label htmlFor='point-type'>Point type:</label>
 				<input

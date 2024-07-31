@@ -331,7 +331,8 @@ export class GameState extends TypedEventEmitter<{
 			} else {
 				// Emit events for some message types
 				if (message.type === 'serverMessage' && message.id === 'characterEntered' && message.data?.character?.type === 'character') {
-					this.emit('characterEntered', message.data.character);
+					if (message.data.character.id !== this.playerId)
+						this.emit('characterEntered', message.data.character);
 				}
 				// Add the message to chat
 				nextMessages.push(message);

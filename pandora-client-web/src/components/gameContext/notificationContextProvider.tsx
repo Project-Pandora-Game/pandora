@@ -131,11 +131,10 @@ class NotificationHandler extends NotificationHandlerBase {
 	}
 
 	private _getSettings(source: NotificationSource): { alert: ReadonlySet<NotificationAlert>; audio: NotificationAudio; } {
-		if (document.visibilityState === 'visible') {
-			return { alert: new Set([NotificationAlert.HEADER]), audio: NotificationAudio.NONE };
-		}
 		if (source === NotificationSource.ROOM_ENTRY) {
 			return { alert: new Set([NotificationAlert.AUDIO]), audio: NotificationAudio.ALWAYS };
+		} if (document.visibilityState === 'visible') {
+			return { alert: new Set([NotificationAlert.HEADER]), audio: NotificationAudio.NONE };
 		} else {
 			return { alert: new Set([NotificationAlert.HEADER, NotificationAlert.TITLE/*, NotificationAlert.POPUP*/]), audio: NotificationAudio.ALWAYS };
 		}

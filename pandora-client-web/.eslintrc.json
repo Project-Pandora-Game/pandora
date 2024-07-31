@@ -180,6 +180,14 @@
 					}
 				]
 			}
+		],
+		"react/forbid-elements": [
+			"warn",
+			{
+				"forbid": [
+					{ "element": "select", "message": "use <Select> instead" }
+				]
+			}
 		]
 	}
 }

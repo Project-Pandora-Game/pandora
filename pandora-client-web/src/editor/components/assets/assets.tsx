@@ -10,7 +10,7 @@ import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
 import { Form, FormField, FormFieldError } from '../../../components/common/form/form';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { Select } from '../../../components/common/select/select';
+import { Select } from '../../../common/userInteraction/select/select';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';

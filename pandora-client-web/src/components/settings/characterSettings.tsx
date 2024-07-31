@@ -6,7 +6,7 @@ import { useShardConnector } from '../gameContext/shardConnectorContextProvider'
 import { ColorInput } from '../common/colorInput/colorInput';
 import { PronounKey, PRONOUNS } from 'pandora-common/dist/character/pronouns';
 import { useSpaceFeatures } from '../gameContext/gameStateContextProvider';
-import { Select } from '../common/select/select';
+import { Select } from '../../common/userInteraction/select/select';
 import { useColorInput } from '../../common/useColorInput';
 import { useNavigate } from 'react-router-dom';
 import { ModalDialog } from '../dialog/dialog';

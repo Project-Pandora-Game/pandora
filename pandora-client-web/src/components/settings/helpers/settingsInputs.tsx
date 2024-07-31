@@ -3,7 +3,7 @@ import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedU
 import { EMPTY_ARRAY, KnownObject } from 'pandora-common';
 import { Button } from '../../common/button/button';
 import type { ZodSchema, ZodTypeDef } from 'zod';
-import { Select } from '../../common/select/select';
+import { Select } from '../../../common/userInteraction/select/select';
 import { Row } from '../../common/container/container';
 
 export function ToggleSettingInput({ currentValue, defaultValue, label, onChange, onReset, deps = EMPTY_ARRAY }: {

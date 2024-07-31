@@ -13,7 +13,7 @@ import { noop } from 'lodash';
 import { Scrollable, Scrollbar } from '../common/scrollbar/scrollbar';
 import { Immutable } from 'immer';
 import { Column, Row } from '../common/container/container';
-import { Select } from '../common/select/select';
+import { Select } from '../../common/userInteraction/select/select';
 import { useBrowserStorage } from '../../browserStorage';
 import { z } from 'zod';
 import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus';

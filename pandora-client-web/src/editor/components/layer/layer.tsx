@@ -11,7 +11,7 @@ import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
 import { ExternalLink } from '../../../components/common/link/externalLink';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { Select } from '../../../components/common/select/select';
+import { Select } from '../../../common/userInteraction/select/select';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';

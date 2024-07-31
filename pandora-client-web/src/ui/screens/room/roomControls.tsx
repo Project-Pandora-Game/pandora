@@ -14,7 +14,7 @@ import { CharacterRestrictionOverrideWarningContent, useRestrictionOverrideDialo
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState } from '../../../graphics/room/roomDevice';
 import { useObservable } from '../../../observable';
 import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
-import { Select } from '../../../components/common/select/select';
+import { Select } from '../../../common/userInteraction/select/select';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { useCurrentAccount } from '../../../components/gameContext/directoryConnectorContextProvider';
 import settingIcon from '../../../assets/icons/setting.svg';

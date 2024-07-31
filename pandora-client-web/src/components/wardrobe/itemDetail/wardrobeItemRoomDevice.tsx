@@ -13,7 +13,7 @@ import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import _ from 'lodash';
 import { Column, Row } from '../../common/container/container';
-import { Select } from '../../common/select/select';
+import { Select } from '../../../common/userInteraction/select/select';
 import { Immutable } from 'immer';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { WardrobeContextSelectRoomInventoryProvider, useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';

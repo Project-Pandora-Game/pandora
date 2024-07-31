@@ -15,7 +15,7 @@ import classNames from 'classnames';
 import { Column, Row } from '../../../components/common/container/container';
 import { COMMANDS, GetChatModeDescription } from './commands';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
-import { Select } from '../../../components/common/select/select';
+import { Select } from '../../../common/userInteraction/select/select';
 import settingsIcon from '../../../assets/icons/setting.svg';
 import { z } from 'zod';
 import { useNavigate } from 'react-router';

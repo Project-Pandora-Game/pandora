@@ -11,7 +11,7 @@ import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { Select } from '../../../components/common/select/select';
+import { Select } from '../../../common/userInteraction/select/select';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
 import { useNullableObservable, useObservable } from '../../../observable';

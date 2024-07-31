@@ -5,7 +5,7 @@ import { useCurrentTime } from '../../../common/useCurrentTime';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
 import { Button } from '../../common/button/button';
-import { Select } from '../../common/select/select';
+import { Select } from '../../../common/userInteraction/select/select';
 import { useCurrentAccount, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import './shards.scss';
 import { useConfirmDialog } from '../../dialog/dialog';

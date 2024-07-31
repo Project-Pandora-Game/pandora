@@ -10,7 +10,7 @@ import { GraphicsManager } from '../assets/graphicsManager';
 import { useBrowserStorage } from '../browserStorage';
 import { useEvent } from '../common/useEvent';
 import { Button } from '../components/common/button/button';
-import { Select } from '../components/common/select/select';
+import { Select } from '../common/userInteraction/select/select';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
 import { LayerStateOverrides } from '../graphics/def';
 import { Observable } from '../observable';

@@ -41,7 +41,7 @@ import { ColorInput } from '../../../components/common/colorInput/colorInput';
 import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { Select } from '../../../components/common/select/select';
+import { Select } from '../../../common/userInteraction/select/select';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator';
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs';
 import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';

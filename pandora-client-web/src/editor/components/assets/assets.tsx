@@ -6,11 +6,11 @@ import { toast } from 'react-toastify';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { useLayerName } from '../../../assets/assetGraphicsCalculations';
 import { useCharacterAppearanceItems } from '../../../character/character';
+import { SelectRaw } from '../../../common/userInteraction/select/selectRaw';
 import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
 import { Form, FormField, FormFieldError } from '../../../components/common/form/form';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { Select } from '../../../common/userInteraction/select/select';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
@@ -388,12 +388,12 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): React
 					ID:
 					<Row padding='medium' alignY='center' gap='none'>
 						a/
-						<Select
+						<SelectRaw
 							{ ...register('category', { deps: 'id' }) }
 						>
 							<option value=''>[ Select category ]</option>
 							{ view.categories.map((c) => <option key={ c.name } value={ c.name }>{ c.name }</option>) }
-						</Select>
+						</SelectRaw>
 						/
 						<input type='text'
 							{ ...register('id', { required: 'ID is required', validate: validateId }) }
@@ -412,12 +412,12 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): React
 				</FormField>
 				<FormField>
 					Bodypart:
-					<Select
+					<SelectRaw
 						{ ...register('bodypart') }
 					>
 						<option value=''>[ Not a bodypart ]</option>
 						{ assetManager.bodyparts.map((b) => <option key={ b.name } value={ b.name }>{ b.name }</option>) }
-					</Select>
+					</SelectRaw>
 					<FormFieldError error={ errors.bodypart } />
 				</FormField>
 				<Row padding='medium' alignX='space-between' className='fill-x'>

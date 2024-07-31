@@ -1,0 +1,69 @@
+import { Assert } from 'pandora-common';
+import React, { DetailedHTMLProps, ReactElement, SelectHTMLAttributes, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
+
+export interface SelectRawProps extends Omit<DetailedHTMLProps<SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>, 'onChange'> {
+	onChange?(ev: {
+		target: HTMLSelectElement;
+	}): void;
+	noScrollChange?: boolean;
+}
+
+export const SelectRaw = React.forwardRef<HTMLSelectElement, SelectRawProps>(function Select({
+	children,
+	onChange,
+	noScrollChange = false,
+	...props
+}, ref): ReactElement {
+	const innerRef = useRef<HTMLSelectElement>(null);
+
+	useImperativeHandle(ref, () => innerRef.current as HTMLSelectElement);
+
+	const readonly = !!(props.disabled || props['aria-disabled'] || props['aria-readonly']);
+
+	const onWheelHandler = useCallback((ev: WheelEvent) => {
+		// Handle wheel changing element
+		const el = ev.currentTarget;
+		Assert(el instanceof HTMLSelectElement);
+		if (el === document.activeElement || readonly || noScrollChange)
+			return;
+		if (ev.deltaY < 0) {
+			ev.stopPropagation();
+			ev.preventDefault();
+			const newIndex = Math.max(el.selectedIndex - 1, 0);
+			if (el.selectedIndex !== newIndex) {
+				el.selectedIndex = newIndex;
+				onChange?.({
+					target: el,
+				});
+			}
+		} else if (ev.deltaY > 0) {
+			ev.stopPropagation();
+			ev.preventDefault();
+			const newIndex = Math.min(el.selectedIndex + 1, el.length - 1);
+			if (el.selectedIndex !== newIndex) {
+				el.selectedIndex = newIndex;
+				onChange?.({
+					target: el,
+				});
+			}
+		}
+	}, [onChange, readonly, noScrollChange]);
+
+	useEffect(() => {
+		const el = innerRef.current;
+		if (el) {
+			el.addEventListener('wheel', onWheelHandler, { passive: false });
+			return () => {
+				el.removeEventListener('wheel', onWheelHandler);
+			};
+		}
+		return undefined;
+	}, [innerRef, onWheelHandler]);
+
+	return (
+		// eslint-disable-next-line react/forbid-elements
+		<select { ...props } onChange={ onChange } ref={ innerRef }>
+			{ children }
+		</select>
+	);
+});

@@ -9,8 +9,8 @@ import { GetCurrentAssetManager } from '../assets/assetManager';
 import { GraphicsManager } from '../assets/graphicsManager';
 import { useBrowserStorage } from '../browserStorage';
 import { useEvent } from '../common/useEvent';
+import { SelectRaw } from '../common/userInteraction/select/selectRaw';
 import { Button } from '../components/common/button/button';
-import { Select } from '../common/userInteraction/select/select';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
 import { LayerStateOverrides } from '../graphics/def';
 import { Observable } from '../observable';
@@ -308,7 +308,7 @@ function Tab({ tab, index }: { tab: TabsName; index: number; }): ReactElement {
 		<div className={ currentTab[1] }>
 			<div className='ui-selector'>
 				<div className='flex-1 center-flex'>
-					<Select
+					<SelectRaw
 						value={ currentTab[0] }
 						onChange={ (ev) => {
 							Assert(TABS.some((t) => t[0] === ev.target.value));
@@ -320,7 +320,7 @@ function Tab({ tab, index }: { tab: TabsName; index: number; }): ReactElement {
 								<option value={ t[0] } key={ t[0] }>{ t[0] }</option>
 							))
 						}
-					</Select>
+					</SelectRaw>
 					{
 						(activeTabs.length > 1) && (
 							<Button

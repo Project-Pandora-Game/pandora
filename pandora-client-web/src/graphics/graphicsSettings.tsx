@@ -105,7 +105,6 @@ function QualitySettings(): ReactElement {
 					)
 				}
 				optionOrder={ [100, 90, 80, 65, 50, 25, 0].map(String) }
-				schema={ z.string() }
 				onChange={ (v) => {
 					const newValue = GraphicsSettingsSchema.shape.renderResolution.parse(Number.parseInt(v, 10));
 					SetGraphicsSettings({ renderResolution: newValue });
@@ -118,7 +117,6 @@ function QualitySettings(): ReactElement {
 				label='Texture resolution'
 				stringify={ GRAPHICS_TEXTURE_RESOLUTION_DESCRIPTIONS }
 				optionOrder={ ['auto', '1', '0.5', '0.25'] }
-				schema={ GraphicsSettingsSchema.shape.textureResolution }
 				onChange={ (v) => SetGraphicsSettings({ textureResolution: v }) }
 				onReset={ () => ResetGraphicsSettings(['textureResolution']) }
 			/>
@@ -151,7 +149,6 @@ function QualitySettings(): ReactElement {
 					</>
 				}
 				stringify={ ALPHAMASK_ENGINES_DESCRIPTIONS }
-				schema={ GraphicsSettingsSchema.shape.alphamaskEngine }
 				onChange={ (v) => SetGraphicsSettings({ alphamaskEngine: v }) }
 				onReset={ () => ResetGraphicsSettings(['alphamaskEngine']) }
 			/>

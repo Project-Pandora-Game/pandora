@@ -1,3 +1,5 @@
+import { Immutable } from 'immer';
+import _ from 'lodash';
 import { nanoid } from 'nanoid';
 import {
 	CharacterId,
@@ -9,17 +11,15 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react';
 import { ICharacter } from '../../../character/character';
-import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
-import _ from 'lodash';
-import { Column, Row } from '../../common/container/container';
-import { Select } from '../../../common/userInteraction/select/select';
-import { Immutable } from 'immer';
+import { SelectRaw } from '../../../common/userInteraction/select/selectRaw';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
-import { WardrobeContextSelectRoomInventoryProvider, useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
-import { WardrobeActionButton } from '../wardrobeComponents';
-import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
+import { Column, Row } from '../../common/container/container';
+import { FieldsetToggle } from '../../common/fieldsetToggle';
+import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
+import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
+import { WardrobeActionButton } from '../wardrobeComponents';
+import { WardrobeContextSelectRoomInventoryProvider, useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
 
 export function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
 	roomDevice: Item<'roomDevice'>;
@@ -190,7 +190,7 @@ function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
 		contents = (
 			<>
 				<span>Empty</span>
-				<Select value={ selectedCharacter } onChange={
+				<SelectRaw value={ selectedCharacter } onChange={
 					(event) => {
 						const characterId = CharacterIdSchema.parse(event.target.value);
 						setSelectedCharacter(characterId);
@@ -199,7 +199,7 @@ function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
 					{
 						characters.map((character) => <option key={ character.id } value={ character.id }>{ character.name } ({ character.id })</option>)
 					}
-				</Select>
+				</SelectRaw>
 				<WardrobeActionButton action={ {
 					type: 'roomDeviceEnter',
 					target: targetSelector,

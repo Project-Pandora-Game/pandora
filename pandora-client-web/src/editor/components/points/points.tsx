@@ -7,11 +7,11 @@ import { useLayerName } from '../../../assets/assetGraphicsCalculations';
 import { useAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
 import { useBrowserSessionStorage, useBrowserStorage } from '../../../browserStorage';
+import { SelectRaw } from '../../../common/userInteraction/select/selectRaw';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { Select } from '../../../common/userInteraction/select/select';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
 import { useNullableObservable, useObservable } from '../../../observable';
@@ -269,7 +269,7 @@ function SelectTemplateToEdit(): ReactElement | null {
 	return (
 		<Row alignY='center'>
 			<label htmlFor='template-edit-select'>Select template to edit:</label>
-			<Select
+			<SelectRaw
 				id='template-edit-select'
 				className='flex-1'
 				value={ selectedTemplate != null ? `t/${selectedTemplate.templateName}` : '' }
@@ -288,7 +288,7 @@ function SelectTemplateToEdit(): ReactElement | null {
 						<option value={ `t/${t}` } key={ `t/${t}` }>{ t }</option>
 					))
 				}
-			</Select>
+			</SelectRaw>
 		</Row>
 	);
 }

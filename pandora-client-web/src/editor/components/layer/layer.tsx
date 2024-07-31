@@ -6,12 +6,12 @@ import { useGraphicsAsset, useLayerDefinition, useLayerImageSettingsForScalingSt
 import { useAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
 import { useEvent } from '../../../common/useEvent';
+import { SelectRaw } from '../../../common/userInteraction/select/selectRaw';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
 import { ExternalLink } from '../../../components/common/link/externalLink';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { Select } from '../../../common/userInteraction/select/select';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
@@ -133,7 +133,7 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 					</p>
 				</ContextHelpButton>
 			</label>
-			<Select
+			<SelectRaw
 				id='layer-image-select'
 				className='flex'
 				value={ layerImage }
@@ -146,7 +146,7 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 				} }
 			>
 				{ elements }
-			</Select>
+			</SelectRaw>
 		</Row>
 	);
 }
@@ -446,7 +446,7 @@ function LayerPrioritySelect({ layer }: { layer: AssetGraphicsLayer; asset: Edit
 					</p>
 				</ContextHelpButton>
 			</label>
-			<Select
+			<SelectRaw
 				id='layer-priority-select'
 				className='flex-1'
 				value={ layerPriority }
@@ -455,7 +455,7 @@ function LayerPrioritySelect({ layer }: { layer: AssetGraphicsLayer; asset: Edit
 				} }
 			>
 				{ elements }
-			</Select>
+			</SelectRaw>
 		</Row>
 	);
 }
@@ -503,7 +503,7 @@ function LayerTemplateSelect({ layer }: { layer: AssetGraphicsLayer; }): ReactEl
 					</p>
 				</ContextHelpButton>
 			</label>
-			<Select
+			<SelectRaw
 				id='layer-template-select'
 				className='flex-1'
 				value={ `t/${points}` }
@@ -519,7 +519,7 @@ function LayerTemplateSelect({ layer }: { layer: AssetGraphicsLayer; }): ReactEl
 			>
 				<option value='t/' key='t/'>[ No points ]</option>
 				{ elements }
-			</Select>
+			</SelectRaw>
 		</Row>
 	);
 }
@@ -732,7 +732,7 @@ function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset
 						</p>
 					</ContextHelpButton>
 				</label>
-				<Select
+				<SelectRaw
 					id='layer-scaling-bone-select'
 					className='flex'
 					value={ layerScaling?.scaleBone ?? '' }
@@ -741,7 +741,7 @@ function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset
 					} }
 				>
 					{ elements }
-				</Select>
+				</SelectRaw>
 			</Row>
 			{
 				layerScaling && <LayerScalingList layer={ layer } asset={ asset } />
@@ -789,7 +789,7 @@ function LayerScalingList({ layer, asset }: { layer: AssetGraphicsLayer; asset: 
 		<>
 			<Row alignY='center'>
 				<label htmlFor='layer-scaling-add-point-select'>Add stop point:</label>
-				<Select
+				<SelectRaw
 					id='layer-scaling-add-point-select'
 					className='flex'
 					value={ toAdd }
@@ -798,7 +798,7 @@ function LayerScalingList({ layer, asset }: { layer: AssetGraphicsLayer; asset: 
 					} }
 				>
 					{ optionsToAdd }
-				</Select>
+				</SelectRaw>
 				<Button className='slim' onClick={ doAdd }>Add</Button>
 			</Row>
 			{ scalingStops?.map((stop) => (

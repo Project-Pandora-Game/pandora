@@ -1,14 +1,14 @@
-import { EMPTY, IsAuthorized, IShardTokenType, IShardTokenConnectInfo } from 'pandora-common';
-import React, { createContext, ReactElement, useState, useMemo, useEffect, useContext } from 'react';
+import { EMPTY, IsAuthorized, IShardTokenConnectInfo, IShardTokenType } from 'pandora-common';
+import React, { createContext, ReactElement, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { useAsyncEvent } from '../../../common/useEvent';
+import { SelectRaw } from '../../../common/userInteraction/select/selectRaw';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
 import { Button } from '../../common/button/button';
-import { Select } from '../../../common/userInteraction/select/select';
+import { useConfirmDialog } from '../../dialog/dialog';
 import { useCurrentAccount, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import './shards.scss';
-import { useConfirmDialog } from '../../dialog/dialog';
 
 const ShardListContext = createContext({
 	reload: () => { /** noop */ },
@@ -145,7 +145,7 @@ function ShardCreate(): ReactElement {
 			<legend>Create Shard Token</legend>
 			<div className='input-row'>
 				<label>Production</label>
-				<Select value={ type } onChange={ (e) => setType(e.target.value as IShardTokenType) }>
+				<SelectRaw value={ type } onChange={ (e) => setType(e.target.value as IShardTokenType) }>
 					{ isAdmin ? (
 						<>
 							<option key='stable' value='stable'>Stable</option>
@@ -154,7 +154,7 @@ function ShardCreate(): ReactElement {
 					) : null }
 					<option value='testing'>Testing</option>
 					<option value='development'>Development</option>
-				</Select>
+				</SelectRaw>
 			</div>
 			<div className='input-row'>
 				<label>Expires</label>

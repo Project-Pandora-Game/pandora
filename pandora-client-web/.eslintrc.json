@@ -175,7 +175,7 @@
 			"warn",
 			{
 				"forbid": [
-					{ "element": "select", "message": "use <Select> instead" }
+					{ "element": "select", "message": "use <Select> or <SelectRaw> instead" }
 				]
 			}
 		]

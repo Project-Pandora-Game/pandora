@@ -22,7 +22,6 @@ import {
 	SpaceBaseInfoSchema,
 	SpaceDirectoryConfig,
 	SpaceFeature,
-	SpaceGhostManagementConfigSchema,
 	SpaceId,
 	SpaceInvite,
 	ZodMatcher,
@@ -36,12 +35,12 @@ import { CopyToClipboard } from '../../../common/clipboard';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
+import { SelectRaw } from '../../../common/userInteraction/select/selectRaw';
 import { Button } from '../../../components/common/button/button';
 import { ColorInput } from '../../../components/common/colorInput/colorInput';
 import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { Select } from '../../../common/userInteraction/select/select';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator';
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs';
 import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
@@ -51,6 +50,7 @@ import {
 	useDirectoryConnector,
 } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { CurrentSpaceInfo, IsSpaceAdmin, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs';
 import bodyChange from '../../../icons/body-change.svg';
 import devMode from '../../../icons/developer.svg';
@@ -58,7 +58,6 @@ import pronounChange from '../../../icons/male-female.svg';
 import { DirectoryConnector } from '../../../networking/directoryConnector';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import './spaceConfiguration.scss';
-import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 
 export const DESCRIPTION_TEXTBOX_SIZE = 16;
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
@@ -333,7 +332,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 					<div className='input-container'>
 						<h3>Development settings</h3>
 						<label>Shard for space</label>
-						<Select disabled={ !shards } value={ currentConfig.development?.shardId ?? '[Auto]' } onChange={
+						<SelectRaw disabled={ !shards } value={ currentConfig.development?.shardId ?? '[Auto]' } onChange={
 							(event) => {
 								const value = event.target.value;
 								setModifiedData({
@@ -354,7 +353,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 										}
 									</>
 							}
-						</Select>
+						</SelectRaw>
 						<div className='input-line'>
 							<label>Auto admin for developers</label>
 							<input type='checkbox' checked={ currentConfig.development?.autoAdmin ?? false } onChange={
@@ -507,7 +506,6 @@ function GhostManagement({ config, setConfig, canEdit }: {
 						ignore: newValue,
 					});
 				} }
-				schema={ SpaceGhostManagementConfigSchema.shape.ignore }
 				stringify={ {
 					none: '[None] (all characters are affected)',
 					owner: 'Owner',

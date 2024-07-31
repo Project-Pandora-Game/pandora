@@ -71,7 +71,6 @@ export function SelectAccountSettings<const Setting extends StringSettings>({ se
 			defaultValue={ ACCOUNT_SETTINGS_DEFAULT[setting] }
 			label={ label }
 			stringify={ stringify }
-			schema={ schema }
 			onChange={ onChange }
 			onReset={ onReset }
 		/>

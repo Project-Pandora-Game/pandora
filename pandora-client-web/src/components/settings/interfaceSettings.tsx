@@ -1,7 +1,6 @@
 import { range } from 'lodash';
 import { ACCOUNT_SETTINGS_DEFAULT, AccountSettings, AccountSettingsSchema } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
-import { z } from 'zod';
 import { useCurrentAccount, useDirectoryConnector, useModifiedAccountSettings } from '../gameContext/directoryConnectorContextProvider';
 import { SelectAccountSettings, ToggleAccountSetting } from './helpers/accountSettings';
 import { SelectSettingInput } from './helpers/settingsInputs';
@@ -66,7 +65,6 @@ function ChatroomGraphicsRatio(): ReactElement {
 						).map((v) => [v.toString(), `${v}:${10 - v}`]),
 					)
 				}
-				schema={ z.string() }
 				onChange={ (v) => onChange('interfaceChatroomGraphicsRatioHorizontal', v) }
 				onReset={ () => onReset('interfaceChatroomGraphicsRatioHorizontal') }
 			/>
@@ -82,7 +80,6 @@ function ChatroomGraphicsRatio(): ReactElement {
 						).map((v) => [v.toString(), `${v}:${10 - v}`]),
 					)
 				}
-				schema={ z.string() }
 				onChange={ (v) => onChange('interfaceChatroomGraphicsRatioVertical', v) }
 				onReset={ () => onReset('interfaceChatroomGraphicsRatioVertical') }
 			/>

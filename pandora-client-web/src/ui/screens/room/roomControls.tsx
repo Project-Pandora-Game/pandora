@@ -1,28 +1,28 @@
+import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
 import React, {
 	ReactElement, useEffect, useMemo,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Button } from '../../../components/common/button/button';
-import { useSpaceCharacters, useCharacterState, useSpaceInfo, useGameState, IsSpaceAdmin, useActionSpaceContext } from '../../../components/gameContext/gameStateContextProvider';
-import { usePlayerId, usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
-import { useChatInput } from '../../components/chat/chatInput';
-import { USER_DEBUG } from '../../../config/Environment';
-import { ChatroomDebugConfigView } from './roomDebug';
-import { Column, Row } from '../../../components/common/container/container';
-import { Character, useCharacterData, useCharacterRestrictionManager } from '../../../character/character';
-import { CharacterRestrictionOverrideWarningContent, useRestrictionOverrideDialogContext, GetRestrictionOverrideText } from '../../../components/characterRestrictionOverride/characterRestrictionOverride';
-import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState } from '../../../graphics/room/roomDevice';
-import { useObservable } from '../../../observable';
-import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
-import { Select } from '../../../common/userInteraction/select/select';
-import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import { useCurrentAccount } from '../../../components/gameContext/directoryConnectorContextProvider';
+import listIcon from '../../../assets/icons/list.svg';
 import settingIcon from '../../../assets/icons/setting.svg';
 import storageIcon from '../../../assets/icons/storage.svg';
-import listIcon from '../../../assets/icons/list.svg';
 import toolsIcon from '../../../assets/icons/tools.svg';
-import { SettingDisplayCharacterName } from '../../../graphics/room/roomCharacter';
+import { Character, useCharacterData, useCharacterRestrictionManager } from '../../../character/character';
+import { SelectRaw } from '../../../common/userInteraction/select/selectRaw';
 import { useFriendStatus } from '../../../components/accountContacts/accountContactContext';
+import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText, useRestrictionOverrideDialogContext } from '../../../components/characterRestrictionOverride/characterRestrictionOverride';
+import { Button } from '../../../components/common/button/button';
+import { Column, Row } from '../../../components/common/container/container';
+import { useCurrentAccount } from '../../../components/gameContext/directoryConnectorContextProvider';
+import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { usePlayer, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
+import { USER_DEBUG } from '../../../config/Environment';
+import { SettingDisplayCharacterName } from '../../../graphics/room/roomCharacter';
+import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState } from '../../../graphics/room/roomDevice';
+import { useObservable } from '../../../observable';
+import { useChatInput } from '../../components/chat/chatInput';
+import { ChatroomDebugConfigView } from './roomDebug';
 
 export function RoomControls(): ReactElement | null {
 	const spaceConfig = useSpaceInfo().config;
@@ -235,7 +235,7 @@ function DeviceOverlaySelector(): ReactElement {
 			<div >
 				<label htmlFor='chatroom-device-overlay'>Show device movement area overlay</label>
 				{ ' ' }
-				<Select
+				<SelectRaw
 					value={ defaultView }
 					onChange={ onSelectionChange }
 				>
@@ -248,7 +248,7 @@ function DeviceOverlaySelector(): ReactElement {
 					<option value='always'>
 						For all devices
 					</option>
-				</Select>
+				</SelectRaw>
 			</div>
 			<div>
 				<label htmlFor='chatroom-character-name-display'>Show name under characters </label>

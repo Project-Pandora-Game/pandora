@@ -1,22 +1,22 @@
 import classNames from 'classnames';
-import React, { ReactElement, createContext, useCallback, useContext, useId, useMemo, useRef, useState } from 'react';
-import { Tab, TabContainer } from '../common/tabs/tabs';
-import { useAssetManager } from '../../assets/assetManager';
-import { WardrobeAssetList, useAssetPreference, useAssetPreferenceResolver, useAssetPreferences } from './views/wardrobeAssetView';
-import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, CloneDeepMutable, EMPTY_ARRAY, KnownObject, ResolveAssetPreference } from 'pandora-common';
-import { useWardrobeContext } from './wardrobeContext';
-import { InventoryAssetPreview, InventoryAttributePreview } from './wardrobeComponents';
-import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { noop } from 'lodash';
-import { Scrollable, Scrollbar } from '../common/scrollbar/scrollbar';
 import { Immutable } from 'immer';
-import { Column, Row } from '../common/container/container';
-import { Select } from '../../common/userInteraction/select/select';
-import { useBrowserStorage } from '../../browserStorage';
+import { noop } from 'lodash';
+import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, CloneDeepMutable, EMPTY_ARRAY, KnownObject, ResolveAssetPreference } from 'pandora-common';
+import React, { ReactElement, createContext, useCallback, useContext, useId, useMemo, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
 import { z } from 'zod';
+import { useAssetManager } from '../../assets/assetManager';
+import { useBrowserStorage } from '../../browserStorage';
 import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus';
+import { SelectRaw } from '../../common/userInteraction/select/selectRaw';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { Column, Row } from '../common/container/container';
+import { Scrollable, Scrollbar } from '../common/scrollbar/scrollbar';
+import { Tab, TabContainer } from '../common/tabs/tabs';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import { WardrobeAssetList, useAssetPreference, useAssetPreferenceResolver, useAssetPreferences } from './views/wardrobeAssetView';
+import { InventoryAssetPreview, InventoryAttributePreview } from './wardrobeComponents';
+import { useWardrobeContext } from './wardrobeContext';
 
 type ItemPreferencesFocus = {
 	type: 'none';
@@ -345,7 +345,7 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 			<Scrollable color='dark'>
 				<Column padding='large'>
 					<label htmlFor={ `${idBase}-select` }>Item preference:</label>
-					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAssetPreference?.base ?? '' } noScrollChange>
+					<SelectRaw id={ `${idBase}-select` } onChange={ onChange } value={ currentAssetPreference?.base ?? '' } noScrollChange>
 						<option value='' title='Select the preference for the item based on the most limited attribute'>
 							Based on attributes ({ ASSET_PREFERENCE_DESCRIPTIONS[attributeBasedPreference.preference].name })
 						</option>
@@ -356,7 +356,7 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 								</option>
 							))
 						}
-					</Select>
+					</SelectRaw>
 				</Column>
 
 				<fieldset>
@@ -474,7 +474,7 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 			<Scrollable color='dark'>
 				<Column padding='large'>
 					<label htmlFor={ `${idBase}-select` }>Attribute preference:</label>
-					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAttributePreference?.base ?? 'normal' } noScrollChange disabled={ !isConfigurable }>
+					<SelectRaw id={ `${idBase}-select` } onChange={ onChange } value={ currentAttributePreference?.base ?? 'normal' } noScrollChange disabled={ !isConfigurable }>
 						{
 							KnownObject.entries(ATTRIBUTE_PREFERENCE_DESCRIPTIONS).map(([key, { name, description }]) => (
 								<option key={ key } value={ key } title={ description }>
@@ -482,7 +482,7 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 								</option>
 							))
 						}
-					</Select>
+					</SelectRaw>
 				</Column>
 				<Column padding='large'>
 					<span>Description:</span>

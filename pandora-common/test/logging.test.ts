@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { GetLogger, Logger, LogLevel, logConfig, SetConsoleOutput, LogOutputDefinition } from '../src/logging';
+import { GetLogger, Logger, LogLevel, logConfig, SetConsoleOutput, LogOutputDefinition, AnyToString } from '../src/logging';
 
 describe('GetLogger()', () => {
 	it('should return an instance of Logger', () => {
@@ -127,5 +127,77 @@ describe('Logger', () => {
 			expect(mockOnMessage).toHaveBeenCalledTimes(1);
 			expect(mockOnMessage).toHaveBeenNthCalledWith(1, expect.stringContaining('[mock] yay prefixed'), expect.arrayContaining(['something']), LogLevel.INFO);
 		});
+	});
+});
+
+describe('AnyToString()', () => {
+	it('returns strings as-is', () => {
+		expect(AnyToString('Test string')).toBe('Test string');
+	});
+
+	it('prints undefined', () => {
+		expect(AnyToString(undefined)).toBe('undefined');
+	});
+
+	it('prints null', () => {
+		expect(AnyToString(null)).toBe('null');
+	});
+
+	it('formats Error', () => {
+		const error1 = new SyntaxError('Error message');
+		const result = AnyToString(error1);
+		// Name the error
+		expect(result).toContain(error1.name);
+		// Message of the error
+		expect(result).toContain(error1.message);
+		// Stack of the error
+		expect(result).toContain(error1.stack);
+	});
+
+	it('formats Error without stack', () => {
+		const error1 = new SyntaxError('Error message');
+		delete error1.stack;
+		const result = AnyToString(error1);
+		// Name the error
+		expect(result).toContain(error1.name);
+		// Message of the error
+		expect(result).toContain(error1.message);
+	});
+
+	it('uses custom toString in object', () => {
+		const result = AnyToString({
+			toString: () => 'Custom toString string',
+		});
+		expect(result).toBe('Custom toString string');
+	});
+
+	it('formats object with null prototype', () => {
+		const obj = {};
+		Object.setPrototypeOf(obj, null);
+		expect(AnyToString(obj)).toBe('[object null]');
+	});
+
+	it('formats array', () => {
+		expect(AnyToString([1, 2, 3])).toBe(JSON.stringify([1, 2, 3]));
+	});
+
+	it('skips over inner array', () => {
+		const result = AnyToString([1, ['test'], 3]);
+		expect(result).not.toContain('test');
+		expect(result).toBe(JSON.stringify([1, '[object Array]', 3]));
+	});
+
+	it('uses custom toString in nested object', () => {
+		const result = AnyToString([1, {
+			toString: () => 'Custom toString string',
+		}, 2]);
+		expect(result).toBe(JSON.stringify([1, 'Custom toString string', 2]));
+	});
+
+	it('formats object with null prototype in nested object', () => {
+		const obj = {};
+		Object.setPrototypeOf(obj, null);
+		const result = AnyToString([1, obj, 2]);
+		expect(result).toBe(JSON.stringify([1, '[object null]', 2]));
 	});
 });

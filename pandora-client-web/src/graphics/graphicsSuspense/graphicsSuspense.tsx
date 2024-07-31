@@ -1,9 +1,10 @@
-import * as PIXI from 'pixi.js';
-import { Container, Graphics } from '@pixi/react';
 import { TypedEventEmitter } from 'pandora-common';
+import * as PIXI from 'pixi.js';
 import React, { ReactElement, ReactNode, createContext, useContext, useLayoutEffect, useMemo } from 'react';
+import { Container } from '../baseComponents/container';
+import { Graphics } from '../baseComponents/graphics';
 import { PointLike } from '../graphicsCharacter';
-import { PixiElementRequestUpdate } from '../graphicsSceneRenderer';
+import { PixiElementRequestUpdate } from '../reconciler/element';
 
 /** Time after which a new asset appearing won't hide the container again */
 const CREATION_STABILIZATION_PERIOD = 1_000;

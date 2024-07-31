@@ -55,7 +55,7 @@ export type IBetaKeyInfo = IBaseTokenInfo & {
 };
 
 export type SpaceExtendedInfoResponse = {
-	result: 'notFound' | 'noAccess';
+	result: 'notFound' | 'noAccess' | 'noCharacter';
 } | {
 	result: 'success';
 	data: SpaceListExtendedInfo;
@@ -222,9 +222,18 @@ export const ClientDirectorySchema = {
 		]),
 		response: null,
 	},
-	setInitialCryptoKey: {
+	setCryptoKey: {
 		request: z.object({
 			cryptoKey: AccountCryptoKeySchema,
+			/**
+			 * Whether to allow setting a new crypto key if one is set already.
+			 * Has three possible values:
+			 * - `undefined` - Doesn't allow reseting key if it has already been set
+			 * - `'same-key'` - Only allows replacing the key if the new one has same public key (re-encrypted private key)
+			 * - `'replace-deleting-dms'` - Allows replacing the key completely. This will cause existing DMs to be lost.
+			 * @default undefined
+			 */
+			allowReset: z.enum(['same-key', 'replace-deleting-dms']).optional(),
 		}),
 		response: ZodCast<{ result: 'ok' | 'invalid' | 'keyAlreadySet'; }>(),
 	},

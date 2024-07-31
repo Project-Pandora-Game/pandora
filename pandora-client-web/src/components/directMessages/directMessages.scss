@@ -57,5 +57,26 @@
 			text-align: center;
 			margin: auto;
 		}
+
+		.loading {
+			font-weight: bold;
+			text-align: center;
+			margin: auto;
+		}
+	}
+
+	>.direct-message-crypto-dialog {
+		flex: 1;
+		height: 100%;
+		background-color: $grey-darker;
+
+		.dialog-content {
+			background-color: $grey-light;
+			border-radius: 0.5em;
+
+			hr {
+				width: 100%;
+			}
+		}
 	}
 }

@@ -212,12 +212,10 @@ function ShowFriends() {
 }
 
 export function useGoToDM(id: AccountId) {
-	const directory = useDirectoryConnector();
 	const navigate = useNavigate();
-	return React.useCallback(() => {
-		directory.directMessageHandler.setSelected(id);
-		navigate('/contacts/dm');
-	}, [directory.directMessageHandler, id, navigate]);
+	return useCallback(() => {
+		navigate(`/contacts/dm/${id}`);
+	}, [id, navigate]);
 }
 
 function FriendRow({

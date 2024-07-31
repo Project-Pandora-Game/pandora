@@ -1,19 +1,21 @@
-import { Container, Graphics } from '@pixi/react';
 import classNames from 'classnames';
 import _ from 'lodash';
 import { AssertNotNullable, CharacterSize, GetLogger, HexColorStringSchema } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
+import { AssetGraphicsResolverOverrideContext, type AssetGraphicsResolverOverride } from '../../assets/assetGraphicsCalculations';
+import { DownloadAsFile } from '../../common/downloadHelper';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { Button } from '../../components/common/button/button';
+import { Container } from '../../graphics/baseComponents/container';
+import { Graphics } from '../../graphics/baseComponents/graphics';
 import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
-import { PixiViewportRef, PixiViewportSetupCallback } from '../../graphics/pixiViewport';
+import { PixiViewportRef, PixiViewportSetupCallback } from '../../graphics/baseComponents/pixiViewport';
 import { useObservable } from '../../observable';
 import { EditorContext, useEditor } from '../editorContextProvider';
 import { ResultCharacter, SetupCharacter } from './character';
 import { ImageExporter } from './export/imageExporter';
-import { DownloadAsFile } from '../../common/downloadHelper';
 
 function EditorColorPicker({ throttle }: { throttle: number; }): ReactElement {
 	const editor = useEditor();
@@ -34,22 +36,24 @@ export type EditorSceneContext = {
 	contentRef: React.RefObject<PIXI.Container>;
 };
 
-const editorSceneContext = React.createContext<EditorSceneContext | null>(null);
+const EditorSceneContext = React.createContext<EditorSceneContext | null>(null);
 
 export function EditorScene({
 	id,
 	className,
 	children,
 }: CommonProps): ReactElement {
+	const editor = useEditor();
 	const contentRef = useRef<PIXI.Container>(null);
 
-	const context = useMemo(() => ({
+	const sceneContext = useMemo((): EditorSceneContext => ({
 		contentRef,
 	}), []);
+	const graphicsOverridesContext = useMemo((): AssetGraphicsResolverOverride => ({
+		pointTemplates: editor.modifiedPointTemplates,
+	}), [editor]);
 
-	const editor = useEditor();
 	const backgroundColor = Number.parseInt(useObservable(editor.backgroundColor).substring(1, 7), 16);
-
 	const character = editor.character;
 
 	const borderDraw = useCallback((g: PIXI.Graphics) => {
@@ -75,7 +79,6 @@ export function EditorScene({
 		worldHeight: CharacterSize.HEIGHT,
 		worldWidth: CharacterSize.WIDTH,
 		backgroundColor,
-		createPrivatePixiInstance: true,
 	}), [viewportConfig, backgroundColor]);
 
 	const getCenter = useCallback(() => (viewportRef.current?.getCenter() ?? { x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT / 2 }), []);
@@ -149,11 +152,13 @@ export function EditorScene({
 				zIndex={ 2 }
 				draw={ borderDraw }
 			/>
-			<editorSceneContext.Provider value={ context }>
-				<Container zIndex={ 10 } ref={ contentRef }>
-					{ children }
-				</Container>
-			</editorSceneContext.Provider>
+			<EditorSceneContext.Provider value={ sceneContext }>
+				<AssetGraphicsResolverOverrideContext.Provider value={ graphicsOverridesContext }>
+					<Container zIndex={ 10 } ref={ contentRef }>
+						{ children }
+					</Container>
+				</AssetGraphicsResolverOverrideContext.Provider>
+			</EditorSceneContext.Provider>
 		</GraphicsScene>
 	);
 }
@@ -175,7 +180,7 @@ export function EditorResultScene(): ReactElement {
 }
 
 export function useEditorSceneContext(): EditorSceneContext {
-	const context = React.useContext(editorSceneContext);
+	const context = React.useContext(EditorSceneContext);
 	AssertNotNullable(context);
 	return context;
 }

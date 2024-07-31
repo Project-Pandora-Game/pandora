@@ -1,17 +1,17 @@
-import { Container } from '@pixi/react';
-import { ASSET_PREFERENCES_DEFAULT, AssertNotNullable, Asset, AssetFrameworkCharacterState, AssetId, CharacterArmsPose, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties, ResolveAssetPreference } from 'pandora-common';
-import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
+import { AssertNotNullable, Asset, ASSET_PREFERENCES_DEFAULT, AssetFrameworkCharacterState, AssetId, CharacterArmsPose, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties, ResolveAssetPreference } from 'pandora-common';
 import * as PIXI from 'pixi.js';
+import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { useCharacterAppearanceItems } from '../character/character';
 import { ChildrenProps } from '../common/reactTypes';
-import { useObservable } from '../observable';
-import { ComputedLayerPriority, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def';
-import { GraphicsLayerProps, GraphicsLayer, SwapCullingDirection } from './graphicsLayer';
-import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense';
 import { usePlayerData } from '../components/gameContext/playerContextProvider';
+import { useObservable } from '../observable';
+import { Container } from './baseComponents/container';
+import { ComputedLayerPriority, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def';
+import { GraphicsLayer, GraphicsLayerProps, SwapCullingDirection } from './graphicsLayer';
+import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense';
 
 export type PointLike = {
 	x: number;
@@ -191,10 +191,10 @@ function GraphicsCharacterWithManagerImpl({
 			scale={ scale }
 			sortableChildren
 			filters={ actualFilters }
-			pointerdown={ onPointerDown }
-			pointerup={ onPointerUp }
-			pointerupoutside={ onPointerUpOutside }
-			pointermove={ onPointerMove }
+			onpointerdown={ onPointerDown }
+			onpointerup={ onPointerUp }
+			onpointerupoutside={ onPointerUpOutside }
+			onpointermove={ onPointerMove }
 			cursor='pointer'
 		>
 			<GraphicsSuspense loadingCirclePosition={ { x: 500, y: 750 } } sortableChildren>

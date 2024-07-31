@@ -2,27 +2,27 @@ import classNames from 'classnames';
 import { IsAuthorized } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import friendsIcon from '../../assets/icons/friends.svg';
+import managementIcon from '../../assets/icons/management.svg';
 import notificationsIcon from '../../assets/icons/notification.svg';
 import settingsIcon from '../../assets/icons/setting.svg';
 import wikiIcon from '../../assets/icons/wiki.svg';
-import managementIcon from '../../assets/icons/management.svg';
-import { usePlayerData } from '../gameContext/playerContextProvider';
-import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
-import './header.scss';
-import { HeaderButton } from './HeaderButton';
-import { NotificationHeaderKeys, NotificationSource, useNotification, useNotificationHeader } from '../gameContext/notificationContextProvider';
-import { toast } from 'react-toastify';
+import { useObservable, useObservableMultiple } from '../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { DirectMessageChannel } from '../../networking/directMessageManager';
-import { AccountContactContext, useAccountContacts } from '../accountContacts/accountContactContext';
-import { useObservable } from '../../observable';
-import { LeaveButton } from './leaveButton';
+import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat';
 import { useIsNarrowScreen } from '../../styles/mediaQueries';
+import { AccountContactContext, useAccountContacts } from '../accountContacts/accountContactContext';
+import { IconHamburger } from '../common/button/domIcons';
 import { Column, Row } from '../common/container/container';
 import { DialogInPortal } from '../dialog/dialog';
-import { IconHamburger } from '../common/button/domIcons';
+import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { NotificationHeaderKeys, NotificationSource, useNotification, useNotificationHeader } from '../gameContext/notificationContextProvider';
+import { usePlayerData } from '../gameContext/playerContextProvider';
+import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
+import { HeaderButton } from './HeaderButton';
+import './header.scss';
+import { LeaveButton } from './leaveButton';
 
 function LeftHeader(): ReactElement {
 	const connectionInfo = useShardConnectionInfo();
@@ -145,14 +145,14 @@ function FriendsHeaderButton({ onClickExtra }: {
 	const navigate = useNavigate();
 	const handler = useDirectoryConnector().directMessageHandler;
 	const notifyDirectMessage = useNotification(NotificationSource.DIRECT_MESSAGE);
-	const unreadDirectMessageCount = useObservable(handler.info).filter((info) => info.hasUnread).length;
+	const unreadDirectMessageCount = useObservableMultiple(
+		useObservable(handler.chats)
+			.map((c) => c.displayInfo),
+	).filter((c) => c.hasUnread).length;
 	const incomingFriendRequestCount = useAccountContacts('incoming').length;
 	const notificationCount = unreadDirectMessageCount + incomingFriendRequestCount;
 
-	useEffect(() => handler.on('newMessage', (channel: DirectMessageChannel) => {
-		if (channel.mounted && document.visibilityState === 'visible')
-			return;
-
+	useEffect(() => handler.on('newMessage', (_chat: DirectMessageChat) => {
 		notifyDirectMessage({
 			// TODO: notification
 		});

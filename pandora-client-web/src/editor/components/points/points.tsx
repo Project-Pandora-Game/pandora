@@ -1,42 +1,47 @@
-import React, { ReactElement, useCallback, useState } from 'react';
-import { AssetGraphicsLayer, LayerToImmediateName, useLayerDefinition, useLayerName } from '../../../assets/assetGraphics';
+import { Assert, CanonizePointTemplate, GetLogger } from 'pandora-common';
+import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import { toast } from 'react-toastify';
+import { z } from 'zod';
+import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
+import { useLayerName } from '../../../assets/assetGraphicsCalculations';
 import { useAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
+import { useBrowserSessionStorage, useBrowserStorage } from '../../../browserStorage';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/button/button';
-import { Select } from '../../../components/common/select/select';
+import { Column, Row } from '../../../components/common/container/container';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { StripAssetIdPrefix } from '../../../graphics/utility';
-import { useObservable } from '../../../observable';
-import { useEditorAssetLayers } from '../../editor';
+import { Select } from '../../../components/common/select/select';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
+import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
+import { useNullableObservable, useObservable } from '../../../observable';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
 import { useEditor } from '../../editorContextProvider';
-import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
+import { useEditorCharacterState } from '../../graphics/character/appearanceEditor';
 import { DraggablePoint, useDraggablePointDefinition } from '../../graphics/draggable';
+import { PointTemplateEditor } from '../../graphics/pointTemplateEditor';
 import { ParseTransforms, SerializeTransforms } from '../../parsing';
-import { Row } from '../../../components/common/container/container';
 
 export function PointsUI(): ReactElement {
-	const editor = useEditor();
-	const selectedLayer = useObservable(editor.targetLayer);
-	const asset = selectedLayer?.asset;
+	const [editingEnabled, setEditingEnabled] = useBrowserStorage('editor.point-edit.enable', false, z.boolean());
 
-	const advancedWarning = <h3 className='error'>This menu is intended for advanced users and is not necessary for the vast majority of assets.</h3>;
-
-	if (!selectedLayer || !asset || !(asset instanceof EditorAssetGraphics)) {
+	if (!editingEnabled) {
 		return (
-			<div className='editor-setupui'>
-				{ advancedWarning }
-				<h3>Select an layer to edit its points</h3>
-			</div>
+			<Scrollbar color='lighter' className='editor-setupui slim'>
+				<h3>Template editing</h3>
+				<h4>This menu is intended for advanced users and is not necessary for the vast majority of assets.</h4>
+				<h4 className='error'>Editing points without being aware of how assets use them <u>will</u> lead to graphical problems, including breaking existing assets.</h4>
+				<Button onClick={ () => setEditingEnabled(true) }>I understand, enable point editing</Button>
+			</Scrollbar>
 		);
 	}
 
 	return (
 		<Scrollbar color='lighter' className='editor-setupui slim'>
-			{ advancedWarning }
-			<h3>Editing: { StripAssetIdPrefix(selectedLayer.asset.id) } &gt; <LayerName layer={ selectedLayer } /></h3>
-			<MirrorPointsFromLayer layer={ selectedLayer } asset={ asset } />
-			<PointsEditUi layer={ selectedLayer } />
+			<h3>Template editing</h3>
+			<SelectTemplateToEdit />
+			<PointsEditUi />
+			<PointsHelperMathUi />
 		</Scrollbar>
 	);
 }
@@ -45,21 +50,36 @@ export function LayerName({ layer }: { layer: AssetGraphicsLayer; }): ReactEleme
 	return <>{ useLayerName(layer) }</>;
 }
 
-export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
+export function PointsEditUi(): ReactElement | null {
 	const editor = useEditor();
 	const getCenter = useObservable(editor.getCenter);
-	const selectedPoint = useObservable(editor.targetPoint);
-	const { points } = useLayerDefinition(layer);
+	const selectedTemplate = useObservable(editor.targetTemplate);
+	const selectedPoint = useNullableObservable(selectedTemplate?.targetPoint);
 
-	if (typeof points === 'string') {
-		return <div>Template cannot be edited</div>;
-	}
+	const exportToClipboard = useCallback(() => {
+		if (selectedTemplate == null)
+			return;
+
+		const result = JSON.stringify(CanonizePointTemplate(selectedTemplate.getCurrent()), undefined, '\t').trim() + '\n';
+		navigator.clipboard.writeText(result)
+			.then(() => {
+				toast(`Copied to clipboard`, TOAST_OPTIONS_SUCCESS);
+			})
+			.catch((err) => {
+				GetLogger('PointsEditUi').error('Error exporing to clipboard:', err);
+				toast(`Error exporting to clipboard:\n${err}`, TOAST_OPTIONS_ERROR);
+			});
+	}, [selectedTemplate]);
+
+	if (!selectedTemplate)
+		return null;
 
 	return (
 		<>
+			<Button onClick={ exportToClipboard }>Export definition to clipboard</Button>
 			<Button onClick={ () => {
 				const pos = getCenter();
-				layer.createNewPoint(pos.x, pos.y);
+				selectedTemplate.createNewPoint(pos.x, pos.y);
 			} }>
 				Add new point
 			</Button>
@@ -73,75 +93,203 @@ export function PointsEditUi({ layer }: { layer: AssetGraphicsLayer; }): ReactEl
 	);
 }
 
-function MirrorPointsFromLayer({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
-	const layers = useEditorAssetLayers(asset, false);
-	const { points } = useLayerDefinition(layer);
+export function PointsHelperMathUi(): ReactElement | null {
+	const editor = useEditor();
+	const selectedTemplate = useObservable(editor.targetTemplate);
+	const selectedPoint = useNullableObservable(selectedTemplate?.targetPoint);
+	const selectedPointDefinition = useNullableObservable(selectedPoint?.definition);
+
+	const characterState = useEditorCharacterState();
+	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const selectedPointFinal = useMemo((): (readonly [number, number]) | undefined => {
+		if (selectedPointDefinition == null)
+			return undefined;
+
+		return evaluator.evalTransform(
+			selectedPointDefinition.pos,
+			selectedPointDefinition.transforms,
+			selectedPointDefinition.mirror,
+			null,
+		);
+	}, [selectedPointDefinition, evaluator]);
+
+	const [targetBase, setTargetBase] = useBrowserSessionStorage('editor.point-edit.helper-target.base', [0, 0], z.tuple([z.number(), z.number()]).readonly());
+	const [targetOffset, setTargetOffset] = useBrowserSessionStorage('editor.point-edit.helper-target.offset', [0, 0], z.tuple([z.number(), z.number()]).readonly());
+	const [adjustmentFactor, setAdjustmentFactor] = useBrowserSessionStorage('editor.point-edit.adjustment-factor', 1, z.number());
+
+	const targetCoords: readonly [number, number] = [
+		targetBase[0] + targetOffset[0],
+		targetBase[1] + targetOffset[1],
+	];
+
+	if (!selectedTemplate)
+		return null;
+
+	return (
+		<>
+			<h4>Helper math <ContextHelpButton>This part of the menu provides additional mathematical tools for more easily making points.</ContextHelpButton></h4>
+			{
+				(selectedPoint != null && selectedPointDefinition != null && selectedPointFinal != null) ? (
+					<Column>
+						<table className='with-border'>
+							<thead>
+								<tr>
+									<td></td>
+									<td>Value</td>
+									<td>Adjusted</td>
+								</tr>
+							</thead>
+							<tbody>
+								<tr>
+									<td>&#916;X</td>
+									<td>{ selectedPointDefinition.pos[0] - targetCoords[0] }</td>
+									<td>{ (adjustmentFactor * (selectedPointDefinition.pos[0] - targetCoords[0])).toFixed(2) }</td>
+								</tr>
+								<tr>
+									<td>&#916;Y</td>
+									<td>{ selectedPointDefinition.pos[1] - targetCoords[1] }</td>
+									<td>{ (adjustmentFactor * (selectedPointDefinition.pos[1] - targetCoords[1])).toFixed(2) }</td>
+								</tr>
+								<tr>
+									<td>Angle</td>
+									<td>{ (Math.atan2(selectedPointDefinition.pos[1] - targetCoords[1], selectedPointDefinition.pos[0] - targetCoords[0]) * 180 / Math.PI).toFixed(1) }°</td>
+									<td></td>
+								</tr>
+								<tr>
+									<td>[Final] &#916;X</td>
+									<td>{ selectedPointFinal[0] - targetCoords[0] }</td>
+									<td>{ (adjustmentFactor * (selectedPointFinal[0] - targetCoords[0])).toFixed(2) }</td>
+								</tr>
+								<tr>
+									<td>[Final] &#916;Y</td>
+									<td>{ selectedPointFinal[1] - targetCoords[1] }</td>
+									<td>{ (adjustmentFactor * (selectedPointFinal[1] - targetCoords[1])).toFixed(2) }</td>
+								</tr>
+								<tr>
+									<td>[Final] Angle</td>
+									<td>{ (Math.atan2(selectedPointFinal[1] - targetCoords[1], selectedPointFinal[0] - targetCoords[0]) * 180 / Math.PI).toFixed(1) }°</td>
+									<td></td>
+								</tr>
+							</tbody>
+						</table>
+						<Row>
+							<Button className='flex-1' slim onClick={ () => {
+								setTargetBase(selectedPointDefinition.pos);
+								setTargetOffset([0, 0]);
+							} }>
+								Current to target
+							</Button>
+							<Button className='flex-1' slim onClick={ () => {
+								setTargetBase(selectedPointDefinition.pos);
+								setTargetOffset([selectedPointFinal[0] - selectedPointDefinition.pos[0], selectedPointFinal[1] - selectedPointDefinition.pos[1]]);
+							} }>
+								Final to target
+							</Button>
+						</Row>
+					</Column>
+				) : null
+			}
+			<Column alignX='start'>
+				<h5>Target</h5>
+				<table>
+					<tr>
+						<td>X:</td>
+						<td>{ targetCoords[0] } =</td>
+						<td>
+							<input
+								type='number'
+								value={ targetBase[0] }
+								size={ 5 }
+								onChange={ (e) => {
+									setTargetBase([Number.parseInt(e.target.value) || 0, targetCoords[1]]);
+								} }
+							/>
+						</td>
+						<td>
+							+
+							<input
+								type='number'
+								value={ targetOffset[0] }
+								size={ 5 }
+								onChange={ (e) => {
+									setTargetOffset([Number.parseInt(e.target.value) || 0, targetOffset[1]]);
+								} }
+							/>
+						</td>
+					</tr>
+					<tr>
+						<td>Y:</td>
+						<td>{ targetCoords[1] } =</td>
+						<td>
+							<input
+								type='number'
+								value={ targetBase[1] }
+								size={ 5 }
+								onChange={ (e) => {
+									setTargetBase([targetCoords[0], Number.parseInt(e.target.value) || 0]);
+								} }
+							/>
+						</td>
+						<td>
+							+
+							<input
+								type='number'
+								value={ targetOffset[1] }
+								size={ 5 }
+								onChange={ (e) => {
+									setTargetOffset([targetOffset[0], Number.parseInt(e.target.value) || 0]);
+								} }
+							/>
+						</td>
+					</tr>
+				</table>
+				<Row alignY='center'>
+					<label>Adjustment</label>
+					<input
+						type='number'
+						value={ adjustmentFactor }
+						onChange={ (e) => {
+							setAdjustmentFactor(Number.isNaN(e.target.valueAsNumber) ? 1 : e.target.valueAsNumber);
+						} }
+					/>
+				</Row>
+			</Column>
+		</>
+	);
+}
+
+function SelectTemplateToEdit(): ReactElement | null {
+	const editor = useEditor();
+	const selectedTemplate = useObservable(editor.targetTemplate);
 	const graphicsManger = useObservable(GraphicsManagerInstance);
-	const pointSourceLayer = typeof points === 'number' ? asset.layers[points] : layer;
-	const pointSourceLayerName = useLayerName(pointSourceLayer);
 
 	if (!graphicsManger)
 		return null;
 
-	const elements: ReactElement[] = [<option value='' key=''>[ None ]</option>];
-	for (const l of layers) {
-		if (Array.isArray(l.definition.value.points) && l !== layer) {
-			elements.push(
-				<option value={ l.index } key={ l.index }>{ LayerToImmediateName(l) }</option>,
-			);
-		}
-	}
-	// Add point template options
-	for (const t of graphicsManger.pointTemplateList) {
-		const id = `t/${t}`;
-		elements.push(
-			<option value={ id } key={ id }>Template: { t }</option>,
-		);
-	}
 	return (
-		<>
-			<Row alignY='center'>
-				<label htmlFor='mirror-points-from-layer'>Mirror all points from selected layer:</label>
-				<br />
-				<Select
-					id='mirror-points-from-layer'
-					value={ typeof points === 'number' ? `${points}` : typeof points === 'string' ? `t/${points}` : '' }
-					onChange={ (event) => {
-						let source: number | string | null = null;
-						if (event.target.value.startsWith('t/')) {
-							source = event.target.value.substring(2);
-						} else if (event.target.value) {
-							source = Number.parseInt(event.target.value);
-						}
-						asset.layerMirrorFrom(layer, source);
-					} }
-				>
-					{ elements }
-				</Select>
-			</Row>
-			{
-				typeof points === 'number' &&
-				<>
-					<Row alignY='center'>Points are mirrored from layer: { pointSourceLayerName }</Row>
-					<Button onClick={ () => {
-						asset.layerMirrorFrom(layer, null);
-					} }>
-						Unlink mirrored points
-					</Button>
-				</>
-			}
-			{
-				typeof points === 'string' &&
-				<>
-					<Row alignY='center'>Points are from template: { points }</Row>
-					<Button onClick={ () => {
-						asset.layerMirrorFrom(layer, null);
-					} }>
-						Unlink point template
-					</Button>
-				</>
-			}
-		</>
+		<Row alignY='center'>
+			<label htmlFor='template-edit-select'>Select template to edit:</label>
+			<Select
+				id='template-edit-select'
+				className='flex-1'
+				value={ selectedTemplate != null ? `t/${selectedTemplate.templateName}` : '' }
+				onChange={ (event) => {
+					if (!event.target.value) {
+						editor.targetTemplate.value = null;
+					} else {
+						Assert(event.target.value.startsWith('t/'));
+						editor.targetTemplate.value = new PointTemplateEditor(event.target.value.substring(2), editor);
+					}
+				} }
+			>
+				<option value='' key=''>[ None ]</option>
+				{
+					graphicsManger.pointTemplateList.map((t) => (
+						<option value={ `t/${t}` } key={ `t/${t}` }>{ t }</option>
+					))
+				}
+			</Select>
+		</Row>
 	);
 }
 
@@ -186,6 +334,13 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 					} }
 				/>
 			</div>
+			<Row>
+				<Button slim onClick={ () => {
+					point.mirrorSwap();
+				} }>
+					Swap point and mirror
+				</Button>
+			</Row>
 			<div>
 				<label htmlFor='point-type'>Point type:</label>
 				<input

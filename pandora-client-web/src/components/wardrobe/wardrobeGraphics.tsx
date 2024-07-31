@@ -1,4 +1,3 @@
-import { Container, Graphics } from '@pixi/react';
 import { Immutable } from 'immer';
 import { min } from 'lodash';
 import {
@@ -18,8 +17,11 @@ import * as PIXI from 'pixi.js';
 import React, { ReactElement, ReactNode, useCallback, useMemo, useRef } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { Character, IChatroomCharacter } from '../../character/character';
+import { Container } from '../../graphics/baseComponents/container';
+import { Graphics } from '../../graphics/baseComponents/graphics';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
+import { PixiViewportSetupCallback, type PixiViewportRef } from '../../graphics/baseComponents/pixiViewport';
 import { RoomCharacter, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter';
 import { RoomDevice } from '../../graphics/room/roomDevice';
 import { RoomProjectionResolver, usePlayerVisionFilters, useRoomViewProjection } from '../../graphics/room/roomScene';
@@ -30,7 +32,6 @@ import { directoryConnectorContext } from '../gameContext/directoryConnectorCont
 import { useSpaceInfo } from '../gameContext/gameStateContextProvider';
 import { shardConnectorContext, useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { useWardrobeContext } from './wardrobeContext';
-import { PixiViewportSetupCallback, type PixiViewportRef } from '../../graphics/pixiViewport';
 
 export function WardrobeCharacterPreview({ character, characterState, isPreview = false }: {
 	character: IChatroomCharacter;

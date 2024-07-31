@@ -39,7 +39,7 @@ export abstract class ConditionEvaluatorBase {
 		AssertNever(operator);
 	}
 
-	public evalTransform([x, y]: [number, number], transforms: readonly TransformDefinition[], _mirror: boolean, item: Item | null, valueOverrides?: Record<BoneName, number>): [number, number] {
+	public evalTransform([x, y]: readonly [number, number], transforms: Immutable<TransformDefinition[]>, _mirror: boolean, item: Item | null, valueOverrides?: Record<BoneName, number>): [number, number] {
 		let [resX, resY] = [x, y];
 		for (const transform of transforms) {
 			const { type, condition } = transform;

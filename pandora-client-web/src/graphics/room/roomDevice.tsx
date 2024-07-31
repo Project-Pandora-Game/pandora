@@ -1,4 +1,3 @@
-import { Container, Graphics, Sprite, useApp } from '@pixi/react';
 import { Immutable } from 'immer';
 import { throttle } from 'lodash';
 import {
@@ -19,9 +18,9 @@ import {
 } from 'pandora-common';
 import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
-import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRef } from 'react';
+import React, { ReactElement, ReactNode, useCallback, useMemo, useRef } from 'react';
 import { z } from 'zod';
-import { useImageResolutionAlternative } from '../../assets/assetGraphics';
+import { useImageResolutionAlternative } from '../../assets/assetGraphicsCalculations';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { BrowserStorage } from '../../browserStorage';
 import { Character } from '../../character/character';
@@ -32,6 +31,9 @@ import { ShardConnector } from '../../networking/shardConnector';
 import { useObservable } from '../../observable';
 import { useDebugConfig } from '../../ui/screens/room/roomDebug';
 import { useAppearanceConditionEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator';
+import { Container } from '../baseComponents/container';
+import { Graphics } from '../baseComponents/graphics';
+import { Sprite } from '../baseComponents/sprite';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
 import { MASK_SIZE, SwapCullingDirection, useItemColor } from '../graphicsLayer';
 import { MovementHelperGraphics } from '../movementHelper';
@@ -99,7 +101,6 @@ export function RoomDeviceMovementTool({
 	shard,
 }: RoomDeviceInteractiveProps): ReactElement | null {
 	const asset = item.asset;
-	const app = useApp();
 
 	const [setPositionRaw] = useAsyncEvent(async (newX: number, newY: number, newYOffset: number) => {
 		if (!shard) {
@@ -224,15 +225,6 @@ export function RoomDeviceMovementTool({
 		}
 	}, [onDragMove, onDragStart]);
 
-	useEffect(() => {
-		// TODO: Move to globalpointermove once @pixi/react supports them
-		app.stage.eventMode = 'static';
-		app.stage.on('pointermove', onPointerMove);
-		return () => {
-			app.stage?.off('pointermove', onPointerMove);
-		};
-	}, [app, onPointerMove]);
-
 	return (
 		<Container
 			ref={ roomDeviceContainer }
@@ -249,9 +241,10 @@ export function RoomDeviceMovementTool({
 				hitArea={ hitArea }
 				eventMode='static'
 				cursor='move'
-				pointerdown={ onPointerDownPos }
-				pointerup={ onPointerUp }
-				pointerupoutside={ onPointerUp }
+				onpointerdown={ onPointerDownPos }
+				onpointerup={ onPointerUp }
+				onpointerupoutside={ onPointerUp }
+				onglobalpointermove={ onPointerMove }
 			/>
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
@@ -260,9 +253,10 @@ export function RoomDeviceMovementTool({
 				hitArea={ hitArea }
 				eventMode='static'
 				cursor='ns-resize'
-				pointerdown={ onPointerDownOffset }
-				pointerup={ onPointerUp }
-				pointerupoutside={ onPointerUp }
+				onpointerdown={ onPointerDownOffset }
+				onpointerup={ onPointerUp }
+				onpointerupoutside={ onPointerUp }
+				onglobalpointermove={ onPointerMove }
 			/>
 		</Container>
 	);
@@ -493,10 +487,10 @@ function RoomDeviceGraphicsWithManagerImpl({
 			cursor={ cursor ?? 'default' }
 			eventMode={ eventMode ?? 'auto' }
 			hitArea={ hitArea ?? null }
-			pointerdown={ onPointerDown }
-			pointerup={ onPointerUp }
-			pointerupoutside={ onPointerUpOutside }
-			pointermove={ onPointerMove }
+			onpointerdown={ onPointerDown }
+			onpointerup={ onPointerUp }
+			onpointerupoutside={ onPointerUpOutside }
+			onpointermove={ onPointerMove }
 		>
 			<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
 				{

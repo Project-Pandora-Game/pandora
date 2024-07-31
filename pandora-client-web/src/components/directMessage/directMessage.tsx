@@ -1,21 +1,22 @@
 import classNames from 'classnames';
-import { GetLogger, IDirectoryAccountInfo, IDirectoryDirectMessageAccount, LIMIT_DIRECT_MESSAGE_LENGTH } from 'pandora-common';
-import React, { ReactElement, useMemo } from 'react';
+import type { Immutable } from 'immer';
+import { GetLogger, IDirectoryAccountInfo, LIMIT_DIRECT_MESSAGE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from 'pandora-common';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { useAutoScroll } from '../../common/useAutoScroll';
 import { useEvent } from '../../common/useEvent';
 import { useTextFormattingOnKeyboardEvent } from '../../common/useTextFormattingOnKeyboardEvent';
 import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus';
-import { DirectMessage } from '../../networking/directMessageManager';
 import { useObservable } from '../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import type { LoadedDirectMessage } from '../../services/accountLogic/directMessages/directMessageChat';
 import { AutoCompleteHint, IChatInputHandler, chatInputContext, useChatInput } from '../../ui/components/chat/chatInput';
 import { RenderChatPart } from '../../ui/components/chat/chatMessages';
 import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, ICommandInvokeContext, RunCommand } from '../../ui/components/chat/commandsProcessor';
 import { Column } from '../common/container/container';
 import { Scrollable } from '../common/scrollbar/scrollbar';
-import { DirectMessageChannelProvider, useDirectMessageChannel } from '../gameContext/directMessageChannelProvieder';
+import { DirectMessageChannelProvider, useDirectMessageChat } from '../gameContext/directMessageChannelProvieder';
 import { useAccountSettings, useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useGameStateOptional } from '../gameContext/gameStateContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
@@ -61,13 +62,12 @@ export function DirectMessage({ accountId }: { accountId: number; }): ReactEleme
 
 function DirectMessageList(): ReactElement | null {
 	const { interfaceChatroomChatFontSize } = useAccountSettings();
-	const channel = useDirectMessageChannel();
-	const channelAccount = channel.account;
-	const messages = useObservable(channel.messages);
+	const { chat } = useDirectMessageChat();
+	const encryptedMessages = useObservable(chat.messages);
 	const account = useCurrentAccount();
-	const [ref] = useAutoScroll<HTMLDivElement>([messages]);
+	const [ref] = useAutoScroll<HTMLDivElement>([encryptedMessages]);
 
-	if (!account || !channelAccount) {
+	if (!account) {
 		return null;
 	}
 
@@ -85,8 +85,12 @@ function DirectMessageList(): ReactElement | null {
 				tabIndex={ 1 }
 			>
 				<Column gap='none'>
-					{ messages.map((message) => (
-						<DirectMessageElement key={ message.time } message={ message } channel={ channelAccount } account={ account } />
+					{ encryptedMessages.map((message) => (
+						<DirectMessageElement
+							key={ message.time }
+							message={ message }
+							currentAccount={ account }
+						/>
 					)) }
 				</Column>
 			</Scrollable>
@@ -98,17 +102,30 @@ function useDirectMessageCommandContext(displayError: boolean): ICommandInvokeCo
 	const directoryConnector = useDirectoryConnector();
 	const shardConnector = useShardConnector();
 	const gameState = useGameStateOptional();
-	const channel = useDirectMessageChannel();
+	const { chat, encryption } = useDirectMessageChat();
 	const navigate = useNavigate();
 
-	return useMemo(() => ({
+	const sendMessage = useCallback<DirectMessageCommandExecutionContext['sendMessage']>(async (message, editing) => {
+		const encrypted = message.length === 0 ? '' : await encryption.service.encrypt(message);
+		if (encrypted.length > LIMIT_DIRECT_MESSAGE_LENGTH_BASE64) {
+			toast(`Encrypted message too long: ${encrypted.length} > ${LIMIT_DIRECT_MESSAGE_LENGTH_BASE64}`, TOAST_OPTIONS_ERROR);
+			return;
+		}
+		const response = await directoryConnector.awaitResponse('sendDirectMessage', { id: chat.id, content: encrypted, editing });
+		if (response.result !== 'ok') {
+			toast(`Failed to send message: ${response.result}`, TOAST_OPTIONS_ERROR);
+		}
+	}, [directoryConnector, chat, encryption]);
+
+	return useMemo((): ICommandInvokeContext<DirectMessageCommandExecutionContext> => ({
 		directoryConnector,
 		shardConnector,
 		gameState,
-		channel,
+		chat,
 		navigate,
+		sendMessage,
 		displayError: displayError ? (message) => toast(message, TOAST_OPTIONS_ERROR) : undefined,
-	}), [directoryConnector, shardConnector, gameState, channel, navigate, displayError]);
+	}), [directoryConnector, shardConnector, gameState, chat, navigate, sendMessage, displayError]);
 }
 
 function DirectMessageAutoCompleteHint(): ReactElement | null {
@@ -119,11 +136,21 @@ function DirectMessageAutoCompleteHint(): ReactElement | null {
 	);
 }
 
-function DirectMessageElement({ message, channel, account }: { message: DirectMessage; channel: Readonly<IDirectoryDirectMessageAccount>; account: IDirectoryAccountInfo; }): ReactElement {
+function DirectMessageElement({ message, currentAccount }: {
+	message: Immutable<LoadedDirectMessage>;
+	currentAccount: IDirectoryAccountInfo;
+}): ReactElement {
+	const { chat } = useDirectMessageChat();
+	const displayInfo = useObservable(chat.displayInfo);
+	const { labelColor: accountLabelColor } = useAccountSettings();
+
 	const displayNameElement = useMemo(() => {
-		const { labelColor, displayName } = !message.sent ? channel : {
-			labelColor: account.settings.labelColor,
-			displayName: account.displayName,
+		const { labelColor, displayName } = message.source === currentAccount.id ? {
+			displayName: currentAccount.displayName,
+			labelColor: accountLabelColor,
+		} : {
+			labelColor: displayInfo.labelColor,
+			displayName: displayInfo.displayName,
 		};
 
 		return (
@@ -131,7 +158,7 @@ function DirectMessageElement({ message, channel, account }: { message: DirectMe
 				{ displayName }
 			</span>
 		);
-	}, [message, account, channel]);
+	}, [message, currentAccount, accountLabelColor, displayInfo]);
 	const time = useMemo(() => new Date(message.time), [message.time]);
 
 	return (
@@ -145,16 +172,70 @@ function DirectMessageElement({ message, channel, account }: { message: DirectMe
 			</span>
 			{ displayNameElement }
 			{ ': ' }
-			<span className='direct-message-entry__content'>
-				{ ...message.message.map((c, i) => RenderChatPart(c, i, true)) }
-			</span>
+			<DirectMessageContents message={ message } />
 		</div>
+	);
+}
+
+function DirectMessageContents({ message }: { message: Immutable<LoadedDirectMessage>; }): ReactElement {
+	const { chat, encryption } = useDirectMessageChat();
+
+	const [error, setError] = useState<null | 'invalidKey' | 'error'>(null);
+
+	useEffect(() => {
+		if (message.decrypted != null) {
+			setError(null);
+			return;
+		}
+
+		if (message.keyHash !== encryption.keyHash) {
+			setError('invalidKey');
+			return;
+		}
+
+		chat.decryptMessage(message)
+			.then((result) => {
+				setError(result ? null : 'error');
+			})
+			.catch((err) => {
+				setError('error');
+				GetLogger('DirectMessageContents')
+					.error('Failed to decrypt message:', err);
+			});
+	}, [message, encryption, chat]);
+
+	if (error === 'invalidKey') {
+		return (
+			<span className='direct-message-entry__content'>
+				<span className='error'>[ Unable to decrypt message created with a different key ]</span>
+			</span>
+		);
+	} else if (error === 'error') {
+		return (
+			<span className='direct-message-entry__content'>
+				<span className='error'>[ ERROR: Failed to decrypt the message ]</span>
+			</span>
+		);
+	} else if (message.decrypted == null) {
+		return (
+			<span className='direct-message-entry__content'>
+				[ <i>Decrypting...</i> ] <br />
+				{ message.content }
+			</span>
+		);
+	}
+
+	return (
+		<span className='direct-message-entry__content'>
+			{ ...message.decrypted.map((c, i) => RenderChatPart(c, i, true)) }
+		</span>
 	);
 }
 
 function DirectChannelInputImpl(_: unknown, ref: React.ForwardedRef<HTMLTextAreaElement>): ReactElement | null {
 	const ctx = useDirectMessageCommandContext(true);
-	const channel = ctx.channel;
+	const chat = ctx.chat;
+	const info = useObservable(chat.displayInfo);
 	const { editing, setEditing, setAutocompleteHint, allowCommands } = useChatInput();
 
 	const handleSend = (input: string) => {
@@ -175,7 +256,7 @@ function DirectChannelInputImpl(_: unknown, ref: React.ForwardedRef<HTMLTextArea
 			if (editing == null && !input) {
 				return false;
 			}
-			channel.sendMessage(input, editing?.target)
+			ctx.sendMessage(input, editing?.target)
 				.catch((e) => {
 					toast(`Failed to send message: ${String(e)}`, TOAST_OPTIONS_ERROR);
 					GetLogger('DirectMessage').error('Failed to send message:', e);
@@ -250,17 +331,13 @@ function DirectChannelInputImpl(_: unknown, ref: React.ForwardedRef<HTMLTextArea
 	const actualRef = useTextFormattingOnKeyboardEvent(ref);
 	useInputAutofocus(actualRef);
 
-	if (!channel.account) {
-		return null;
-	}
-
 	return (
 		<textarea
 			ref={ actualRef }
 			onKeyDown={ onKeyDown }
 			onChange={ onChange }
 			maxLength={ LIMIT_DIRECT_MESSAGE_LENGTH }
-			placeholder={ `> Send message to ${channel.account.displayName} (${channel.account.id}) or /command` }
+			placeholder={ `> Send message to ${info.displayName ?? '[Loading ...]'} (${chat.id}) or use a /command` }
 		/>
 	);
 }

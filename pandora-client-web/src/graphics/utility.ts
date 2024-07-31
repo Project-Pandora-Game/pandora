@@ -1,8 +1,6 @@
-import { AppContext } from '@pixi/react';
 import type { Immutable } from 'immer';
-import type { Condition, AtomicCondition, AssetId } from 'pandora-common';
-import { Application, ImageResource, Resource } from 'pixi.js';
-import { useContext } from 'react';
+import type { AssetId, AtomicCondition, Condition } from 'pandora-common';
+import { ImageResource, Resource } from 'pixi.js';
 
 export function GetAngle(x: number, y: number): number {
 	const angle = Math.atan2(y, x);
@@ -50,6 +48,9 @@ export function LoadArrayBufferImageResource(buffer: ArrayBuffer): Promise<Resou
 	});
 }
 
-export function useAppOptional(): Application | null {
-	return useContext(AppContext) as (Application | null);
+/** Calculate if mesh face is defined clockwise */
+export function MeshFaceIsCW(...points: readonly [number, number, number, number, number, number]): boolean {
+	// This is shortened form of a determinant of a matrix of the points in rows
+	const shoelaceArea = (points[2] - points[0]) * (points[5] - points[1]) - (points[4] - points[0]) * (points[3] - points[1]);
+	return shoelaceArea < 0;
 }

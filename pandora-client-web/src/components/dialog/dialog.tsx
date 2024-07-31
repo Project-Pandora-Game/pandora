@@ -83,7 +83,7 @@ export function DialogInPortal({ children, priority, location = 'global' }: {
 	);
 }
 
-export function ModalDialog({ children, priority, position = 'center' }: ChildrenProps & {
+export function ModalDialog({ children, priority, position = 'center', allowClickBubbling = false }: ChildrenProps & {
 	/**
 	 * Priority of this dialog for ordering the dialogs on screen.
 	 * Higher priority dialogs cover lower priority dialogs.
@@ -91,10 +91,23 @@ export function ModalDialog({ children, priority, position = 'center' }: Childre
 	 */
 	priority?: number;
 	position?: 'center' | 'top';
+	/**
+	 * Whether to allow click events to bubble through to the parent or not.
+	 * @default false
+	 */
+	allowClickBubbling?: boolean;
 }): ReactElement {
+
+	const clickSink = useCallback((ev: React.MouseEvent) => {
+		if (allowClickBubbling)
+			return;
+
+		ev.stopPropagation();
+	}, [allowClickBubbling]);
+
 	return (
 		<DialogInPortal priority={ priority }>
-			<div className={ classNames('dialog', position) }>
+			<div className={ classNames('dialog', position) } onClick={ clickSink } onPointerDown={ clickSink } onPointerUp={ clickSink }>
 				<div className='dialog-content'>
 					{ children }
 				</div>

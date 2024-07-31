@@ -1,18 +1,18 @@
-import React from 'react';
-import { Graphics } from '@pixi/react';
-import * as PIXI from 'pixi.js';
-import { CharacterSize, GetLogger } from 'pandora-common';
-import { Observable, useObservable } from '../../../observable';
-import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { clamp } from 'lodash';
-import { Button } from '../../../components/common/button/button';
-import { useEvent } from '../../../common/useEvent';
-import { ImageExporter } from '../../graphics/export/imageExporter';
+import { CharacterSize, GetLogger } from 'pandora-common';
+import * as PIXI from 'pixi.js';
+import React from 'react';
 import { DownloadAsFile } from '../../../common/downloadHelper';
-import { EditorSceneContext, useEditorSceneContext } from '../../graphics/editorScene';
-import { InputNumber } from '../../../components/input/numberInput';
-import './previewCutter.scss';
+import { useEvent } from '../../../common/useEvent';
+import { Button } from '../../../components/common/button/button';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
+import { InputNumber } from '../../../components/input/numberInput';
+import { Graphics } from '../../../graphics/baseComponents/graphics';
+import { Observable, useObservable } from '../../../observable';
+import { EditorSceneContext, useEditorSceneContext } from '../../graphics/editorScene';
+import { ImageExporter } from '../../graphics/export/imageExporter';
+import './previewCutter.scss';
 
 type PreviewCutterState = Readonly<{
 	enabled: boolean;

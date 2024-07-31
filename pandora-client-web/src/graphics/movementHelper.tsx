@@ -1,8 +1,8 @@
-import { Graphics, _ReactPixi } from '@pixi/react';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback } from 'react';
+import { Graphics, type GraphicsProps } from './baseComponents/graphics';
 
-export interface MovementHelperGraphicsProps extends Omit<_ReactPixi.IGraphics, 'draw'> {
+export interface MovementHelperGraphicsProps extends Omit<GraphicsProps, 'draw'> {
 	radius: number;
 	colorUpDown?: number;
 	colorLeftRight?: number;

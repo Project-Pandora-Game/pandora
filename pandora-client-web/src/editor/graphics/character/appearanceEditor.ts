@@ -1,47 +1,45 @@
+import { downloadZip, InputWithSizeMeta } from 'client-zip';
+import { Immutable } from 'immer';
+import { cloneDeep } from 'lodash';
 import {
-	CharacterAppearance,
+	ActionSpaceContext,
+	AppearanceAction,
+	AppearanceActionContext,
 	Assert,
+	AssertNotNullable,
+	Asset,
+	ASSET_PREFERENCES_DEFAULT,
+	AssetFrameworkCharacterState,
+	AssetFrameworkGlobalStateContainer,
 	AssetGraphicsDefinition,
+	AssetGraphicsDefinitionSchema,
 	AssetId,
+	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
+	CharacterAppearance,
+	CharacterId,
+	CharacterRestrictionsManager,
 	CharacterSize,
+	CharacterView,
+	DoAppearanceAction,
+	GameLogicCharacter,
+	GameLogicCharacterClient,
+	GetLogger,
+	ICharacterRoomData,
+	ItemId,
 	LayerDefinition,
 	LayerImageSetting,
 	LayerMirror,
-	Asset,
-	ItemId,
-	ActionSpaceContext,
-	CharacterRestrictionsManager,
-	CloneDeepMutable,
-	GetLogger,
-	CharacterId,
-	AssetFrameworkCharacterState,
-	AssetFrameworkGlobalStateContainer,
-	AssertNotNullable,
-	CharacterView,
-	ICharacterRoomData,
-	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
 	TypedEventEmitter,
-	GameLogicCharacter,
-	GameLogicCharacterClient,
-	DoAppearanceAction,
-	AppearanceAction,
-	AppearanceActionContext,
-	ASSET_PREFERENCES_DEFAULT,
 } from 'pandora-common';
 import { BaseTexture, Texture } from 'pixi.js';
-import { toast } from 'react-toastify';
-import { AssetGraphics, AssetGraphicsLayer, LayerToImmediateName } from '../../../assets/assetGraphics';
-import { GraphicsManagerInstance, IGraphicsLoader } from '../../../assets/graphicsManager';
-import { LoadArrayBufferImageResource, StripAssetHash } from '../../../graphics/utility';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { Editor } from '../../editor';
-import { cloneDeep } from 'lodash';
-import { downloadZip, InputWithSizeMeta } from 'client-zip';
-import { ICharacter, CharacterEvents } from '../../../character/character';
-import { Immutable } from 'immer';
-import { useEditorState } from '../../editorContextProvider';
-import { EDITOR_SPACE_CONTEXT } from '../../components/wardrobe/wardrobe';
+import { AssetGraphics, AssetGraphicsLayer } from '../../../assets/assetGraphics';
+import { IGraphicsLoader } from '../../../assets/graphicsManager';
+import { CharacterEvents, ICharacter } from '../../../character/character';
 import { DownloadAsFile } from '../../../common/downloadHelper';
+import { LoadArrayBufferImageResource, StripAssetHash } from '../../../graphics/utility';
+import { EDITOR_SPACE_CONTEXT } from '../../components/wardrobe/wardrobe';
+import { Editor } from '../../editor';
+import { useEditorState } from '../../editorContextProvider';
 
 export interface EditorActionContext {
 	dryRun?: boolean;
@@ -236,7 +234,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 			width: CharacterSize.WIDTH,
 			height: CharacterSize.HEIGHT,
 			priority: 'OVERLAY',
-			points: [],
+			points: '',
 			mirror: LayerMirror.NONE,
 			colorizationKey: undefined,
 			image: {
@@ -253,19 +251,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		if (index < 0)
 			return;
 
-		// Prevent deletion if the layer has dependants
-		const dependant = this.layers.find((l) => l !== layer && l.definition.value.points === index);
-		if (dependant) {
-			toast(`Failed to delete layer, because layer '${LayerToImmediateName(dependant)}' depends on it`, TOAST_OPTIONS_ERROR);
-			return;
-		}
-
-		const pointsMap = this.makePointDependenciesMap();
-		pointsMap.delete(layer);
-
 		this.layers = this.layers.filter((l) => l !== layer);
-
-		this.applyPointDependenciesMap(pointsMap);
 
 		this.onChange();
 	}
@@ -279,14 +265,10 @@ export class EditorAssetGraphics extends AssetGraphics {
 		if (newPos < 0 && newPos >= this.layers.length)
 			return;
 
-		const pointsMap = this.makePointDependenciesMap();
-
 		const newLayers = this.layers.slice();
 		newLayers.splice(currentPos, 1);
 		newLayers.splice(newPos, 0, layer);
 		this.layers = newLayers;
-
-		this.applyPointDependenciesMap(pointsMap);
 
 		this.onChange();
 	}
@@ -338,89 +320,6 @@ export class EditorAssetGraphics extends AssetGraphics {
 
 			d.scaling.stops = d.scaling.stops.filter((s) => s[0] !== stop);
 		});
-	}
-
-	public layerMirrorFrom(layer: AssetGraphicsLayer, source: number | string | null): void {
-		if (layer.mirror && layer.isMirror)
-			return this.layerMirrorFrom(layer.mirror, source);
-
-		if (!this.layers.includes(layer)) {
-			throw new Error('Cannot configure unknown layer');
-		}
-
-		layer._modifyDefinition((d) => {
-			if (source === null) {
-				if (typeof d.points === 'number') {
-					const points = this.layers[d.points].definition.value.points;
-					if (!Array.isArray(points)) {
-						throw new Error('More than one jump in points reference');
-					}
-					d.points = CloneDeepMutable(points);
-				}
-				if (typeof d.points === 'string') {
-					const manager = GraphicsManagerInstance.value;
-					const template = manager?.getTemplate(d.points);
-					if (!template) {
-						throw new Error('Unknown point template');
-					}
-					d.points = cloneDeep(template);
-				}
-				return;
-			}
-
-			if (source === '') {
-				d.points = [];
-				return;
-			}
-			if (typeof source === 'string') {
-				const manager = GraphicsManagerInstance.value;
-				const template = manager?.getTemplate(source);
-				if (!template) {
-					throw new Error('Unknown point template');
-				}
-				d.points = source;
-				return;
-			}
-
-			if (source === layer.index) {
-				throw new Error('Cannot mirror layer from itself');
-			}
-
-			const sourceLayer = this.layers[source];
-			if (!Array.isArray(sourceLayer?.definition.value.points)) {
-				throw new Error('Cannot mirror from layer that doesn\'t have own points');
-			}
-
-			d.points = source;
-		});
-	}
-
-	private makePointDependenciesMap(): Map<AssetGraphicsLayer, AssetGraphicsLayer> {
-		const result = new Map<AssetGraphicsLayer, AssetGraphicsLayer>();
-		for (const layer of this.layers) {
-			if (typeof layer.definition.value.points === 'number') {
-				result.set(layer, this.layers[layer.definition.value.points]);
-			}
-		}
-		return result;
-	}
-
-	private applyPointDependenciesMap(map: Map<AssetGraphicsLayer, AssetGraphicsLayer>) {
-		for (const layer of this.layers) {
-			layer._modifyDefinition((d) => {
-				if (typeof d.points === 'number') {
-					const sourceLayer = map.get(layer);
-					if (!sourceLayer) {
-						throw new Error(`Failed to apply point map, layer '${LayerToImmediateName(layer)}' not found in map`);
-					}
-					const sourceIndex = this.layers.indexOf(sourceLayer);
-					if (sourceIndex < 0) {
-						throw new Error(`Failed to apply point map, depencency layer '${LayerToImmediateName(sourceLayer)}' for '${LayerToImmediateName(layer)}' not found`);
-					}
-					d.points = sourceIndex;
-				}
-			});
-		}
 	}
 
 	private readonly fileContents = new Map<string, ArrayBuffer>();
@@ -507,7 +406,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 
 	public createDefinitionString(): string {
 		return `// THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.\n` +
-			JSON.stringify(this.export(), undefined, '\t').trim() +
+			JSON.stringify(AssetGraphicsDefinitionSchema.parse(this.export()), undefined, '\t').trim() +
 			'\n';
 	}
 

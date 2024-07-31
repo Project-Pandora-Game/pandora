@@ -1,22 +1,22 @@
 import { AssertNever, ICharacterPrivateData } from 'pandora-common';
+import { PronounKey, PRONOUNS } from 'pandora-common/dist/character/pronouns';
 import React, { ReactElement } from 'react';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { useColorInput } from '../../common/useColorInput';
+import { Select } from '../../common/userInteraction/select/select';
+import { PrehashPassword } from '../../crypto/helpers';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast';
 import { Button } from '../common/button/button';
+import { ColorInput } from '../common/colorInput/colorInput';
+import { Column, Row } from '../common/container/container';
+import { Form, FormField, FormFieldError } from '../common/form/form';
+import { ModalDialog } from '../dialog/dialog';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useSpaceFeatures } from '../gameContext/gameStateContextProvider';
 import { usePlayerData } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { ColorInput } from '../common/colorInput/colorInput';
-import { PronounKey, PRONOUNS } from 'pandora-common/dist/character/pronouns';
-import { useSpaceFeatures } from '../gameContext/gameStateContextProvider';
-import { Select } from '../common/select/select';
-import { useColorInput } from '../../common/useColorInput';
-import { useNavigate } from 'react-router-dom';
-import { ModalDialog } from '../dialog/dialog';
-import { Form, FormField, FormFieldError } from '../common/form/form';
-import { Column, Row } from '../common/container/container';
-import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { PrehashPassword } from '../../crypto/helpers';
-import { useForm } from 'react-hook-form';
-import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast';
 
 export function CharacterSettings(): ReactElement | null {
 	const navigate = useNavigate();

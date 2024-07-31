@@ -3,10 +3,10 @@ import React, { createContext, ReactElement, useContext, useEffect, useMemo, use
 import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { useAsyncEvent } from '../../../common/useEvent';
+import { Select } from '../../../common/userInteraction/select/select';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { Button } from '../../common/button/button';
-import { Select } from '../../common/select/select';
 import { useConfirmDialog } from '../../dialog/dialog';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import './shards.scss';

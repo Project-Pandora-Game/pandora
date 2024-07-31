@@ -2,9 +2,9 @@ import { AccountRole, ConfiguredAccountRole, ConfiguredAccountRoleSchema, IAccou
 import React, { createContext, ReactElement, useContext, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../../common/useEvent';
+import { Select } from '../../../common/userInteraction/select/select';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Button } from '../../common/button/button';
-import { Select } from '../../common/select/select';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import './roles.scss';
 

@@ -143,6 +143,13 @@ export function useAccountSettings(): Immutable<AccountSettings> {
 	}), [modifiedSettings]);
 }
 
+export function GetAccountSettings(directoryConnector: DirectoryConnector): Immutable<AccountSettings> {
+	return {
+		...ACCOUNT_SETTINGS_DEFAULT,
+		...(directoryConnector.currentAccount?.value?.settings),
+	};
+}
+
 export function useAuthToken(): AuthToken | undefined {
 	const directoryConnector = useDirectoryConnector();
 	return useObservable(directoryConnector.authToken);

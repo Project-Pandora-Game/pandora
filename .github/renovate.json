@@ -33,11 +33,11 @@
 		{
 			"groupName": "all patched dependencies",
 			"groupSlug": "all-patch",
-			"matchPackagePatterns": [
-				"*"
-			],
 			"matchUpdateTypes": [
 				"patch"
+			],
+			"matchPackageNames": [
+				"*"
 			]
 		}
 	]

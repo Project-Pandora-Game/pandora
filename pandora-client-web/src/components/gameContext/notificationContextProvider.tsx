@@ -23,7 +23,7 @@ export const NOTIFICATION_KEY: Readonly<Record<NotificationSource, NotificationH
 	[NotificationSource.INCOMING_FRIEND_REQUEST]: null,
 };
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface NotificationData {
 	//
 }

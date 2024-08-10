@@ -3,7 +3,7 @@ import { CommandArgumentNeedsQuotes, CommandArgumentQuote, CommandParseQuotedStr
 
 export interface ICommandExecutionContext {
 	executionType: 'help' | 'run' | 'autocomplete';
-	displayError?(error: string): void;
+	displayError?: (error: string) => void;
 	commandName: string;
 }
 

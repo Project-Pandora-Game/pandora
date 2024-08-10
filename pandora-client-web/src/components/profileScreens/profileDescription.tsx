@@ -12,7 +12,7 @@ export function ProfileDescription({ contents }: { contents: string; }): ReactEl
 }
 
 function DescriptionSegment({ segment, index }: { segment: string; index: number; }): ReactElement {
-	if (segment.match(/^https?:\/\//) && URL.canParse(segment)) {
+	if ((/^https?:\/\//.exec(segment)) && URL.canParse(segment)) {
 		const url = new URL(segment);
 		return (
 			<RenderedLink key={ index } index={ index } url={ url } />

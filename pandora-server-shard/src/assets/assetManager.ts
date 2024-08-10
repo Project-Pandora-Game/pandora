@@ -64,7 +64,7 @@ function WatchAssetDefinitionsTick(): void {
 			LoadAssetDefinitions();
 			logger.info('Done sending new definitions');
 		}
-	} catch (error) {
+	} catch (_error) {
 		// Ignore
 	}
 }

@@ -5,7 +5,7 @@ import { InternalSetupTestingEnvDirectory } from './server';
 const handleLog = (message: ConsoleMessage) => {
 	if (message.type() === 'error') {
 		// Ignore socket.io errors (some tests test non-working server connection)
-		if (/\/socket\.io\//.test(message.location().url))
+		if (message.location().url.includes('/socket.io/'))
 			return;
 
 		// eslint-disable-next-line no-console

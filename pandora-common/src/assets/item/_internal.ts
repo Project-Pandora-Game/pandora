@@ -15,7 +15,7 @@ import type { CharacterId, ItemInteractionType } from '../../character';
 import { Assert, MemoizeNoArg } from '../../utility';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from '../properties';
 
-// eslint-disable-next-line @typescript-eslint/no-empty-interface
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface InternalItemTypeMap { }
 
 export interface ItemBaseProps<Type extends AssetType = AssetType> {

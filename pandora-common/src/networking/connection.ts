@@ -97,14 +97,14 @@ export abstract class ConnectionBase<
 		if (this.schema) {
 			if (!Object.hasOwn(this.schema.outbound, messageType) || this.schema.outbound[messageType].response === null) {
 				this.logger.error(`Attempt to send unknown message type '${messageType}', dropped.\n`, new Error());
-				return Promise.reject('Invalid message');
+				return Promise.reject(new Error('Invalid message'));
 			}
 
 			const result = this.schema.outbound[messageType].request.safeParse(message);
 
 			if (!result.success) {
 				this.logger.error(`Attempt to send invalid message '${messageType}', dropped.\n`, new Error(), '\n', result.error.toString());
-				return Promise.reject('Invalid message');
+				return Promise.reject(new Error('Invalid message'));
 			}
 			// Replace message with parsed result, as it might have stripped some data
 			message = result.data;

@@ -147,7 +147,7 @@ export function EnvTimeInterval() {
 		if (typeof arg !== 'string') {
 			return arg;
 		}
-		const match = arg.match(/^(\d+)([smhdw])?$/);
+		const match = /^(\d+)([smhdw])?$/.exec(arg);
 		if (!match) {
 			ctx.addIssue({
 				code: ZodIssueCode.custom,

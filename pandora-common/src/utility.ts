@@ -107,8 +107,8 @@ export function ParseArrayNotEmpty<T>(value: T[]): [T, ...T[]] {
  * @template K an array of the keys of the object
  * @template Transform optional transform object overrides the type of the values
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type ArrayCompressType<T, K extends readonly (keyof T)[], Transform extends Partial<Record<keyof T, any>> = { /* empty */ }> = {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-object-type
+export type ArrayCompressType<T, K extends readonly (keyof T)[], Transform extends Partial<Record<keyof T, any>> = {}> = {
 	[N in keyof K]: K[N] extends keyof Transform ? Transform[K[N]] : K[N] extends keyof T ? T[K[N]] : never;
 };
 

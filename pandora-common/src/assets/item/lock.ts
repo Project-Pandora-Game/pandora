@@ -404,19 +404,19 @@ export class ItemLock extends ItemBase<'lock'> {
 		}
 		switch (def.format) {
 			case 'numeric':
-				if (password.match(/[^0-9]/)) {
+				if (/[^0-9]/.exec(password)) {
 					logger?.warning(`has a hidden password that is not numeric`);
 					return false;
 				}
 				break;
 			case 'letters':
-				if (password.match(/[^a-zA-Z]/)) {
+				if (/[^a-zA-Z]/.exec(password)) {
 					logger?.warning(`has a hidden password that is not letters`);
 					return false;
 				}
 				break;
 			case 'alphanumeric':
-				if (password.match(/[^a-zA-Z0-9]/)) {
+				if (/[^a-zA-Z0-9]/.exec(password)) {
 					logger?.warning(`has a hidden password that is not alphanumeric`);
 					return false;
 				}

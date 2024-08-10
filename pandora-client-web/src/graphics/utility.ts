@@ -42,7 +42,7 @@ export function LoadArrayBufferImageResource(buffer: ArrayBuffer): Promise<Resou
 		};
 		image.onerror = () => {
 			URL.revokeObjectURL(image.src);
-			reject();
+			reject(new Error('Load failed'));
 		};
 		image.src = URL.createObjectURL(blob);
 	});

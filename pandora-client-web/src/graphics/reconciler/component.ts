@@ -7,7 +7,7 @@ import type { ConditionalKeys, ReadonlyKeysOf } from 'type-fest';
 
 // This file extensively does type trickery - attempting to concentrate all type tricks to this file,
 // in hopes that usage outside will be fully type-safe
-/* eslint-disable @typescript-eslint/ban-types, @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unsafe-function-type, @typescript-eslint/no-empty-object-type, @typescript-eslint/no-explicit-any */
 
 /** Writeable non-function props of the component */
 type DisplayObjectAllProps<Component extends DisplayObject> = Omit<Component, ConditionalKeys<Component, Function> | ReadonlyKeysOf<Component>>;

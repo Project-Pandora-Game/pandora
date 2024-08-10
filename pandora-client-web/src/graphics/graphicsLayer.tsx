@@ -45,7 +45,7 @@ export function SelectPoints({ pointType }: Immutable<PointDefinition>, pointTyp
 		// If the point type is included exactly, include it
 		pointTypes.includes(pointType) ||
 		// If the point type doesn't have side, include it if wanted types have sided one
-		!pointType.match(/_[lr]$/) && (
+		!(/_[lr]$/.exec(pointType)) && (
 			pointTypes.includes(pointType + '_r') ||
 			pointTypes.includes(pointType + '_l')
 		) ||

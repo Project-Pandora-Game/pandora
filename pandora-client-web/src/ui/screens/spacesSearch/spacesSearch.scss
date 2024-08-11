@@ -88,6 +88,10 @@
 		height: 2.5em;
 		border: 1px solid black;
 		padding: 0.1em;
+
+		&.warning {
+			background-color: $theme-warning;
+		}
 	}
 
 	.description-title {

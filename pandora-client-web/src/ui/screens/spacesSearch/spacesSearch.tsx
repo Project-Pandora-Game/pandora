@@ -315,7 +315,7 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 				}
 				{
 					hasOnlineAdmin ? null : (
-						<img className='features-img' src={ shieldSlashedIcon } title='No admin is currently hosting this space' alt='No admin is currently hosting this space' />
+						<img className='features-img warning' src={ shieldSlashedIcon } title='No admin is currently hosting this space' alt='No admin is currently hosting this space' />
 					)
 				}
 			</Row>

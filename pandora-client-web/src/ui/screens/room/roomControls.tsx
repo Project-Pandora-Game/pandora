@@ -9,7 +9,7 @@ import settingIcon from '../../../assets/icons/setting.svg';
 import shieldIcon from '../../../assets/icons/shield.svg';
 import storageIcon from '../../../assets/icons/storage.svg';
 import toolsIcon from '../../../assets/icons/tools.svg';
-import { Character, useCharacterData, useCharacterRestrictionManager } from '../../../character/character';
+import { Character, useCharacterData, useCharacterDataMultiple, useCharacterRestrictionManager } from '../../../character/character';
 import { useFriendStatus } from '../../../components/accountContacts/accountContactContext';
 import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText, useRestrictionOverrideDialogContext } from '../../../components/characterRestrictionOverride/characterRestrictionOverride';
 import { Button } from '../../../components/common/button/button';
@@ -85,6 +85,7 @@ export function RoomControls(): ReactElement | null {
 				</Button>
 			</Row>
 			&nbsp;
+			<SpaceVisibilityWarning />
 			<span>
 				These characters are in the space <b>{ spaceConfig.name }</b>:
 			</span>
@@ -161,6 +162,29 @@ export function PersonalSpaceControls(): ReactElement {
 			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
 		</Column>
 	);
+}
+
+function SpaceVisibilityWarning(): ReactElement | null {
+	const spaceConfig = useSpaceInfo().config;
+	const characters = useSpaceCharacters();
+	const characterData = useCharacterDataMultiple(characters);
+	const ctx = useActionSpaceContext();
+
+	// Show warning if the space is marked as "public with admin inside", but there is none
+	// In all other cases it is either intentionally private or public because of this user
+	if (
+		spaceConfig.public === 'public-with-admin' &&
+		!characterData.some((c) => c.isOnline && ctx.isAdmin(c.accountId))
+	) {
+		return (
+			<span className='space-warning'>
+				Note: This space is currently not publicly listed, since no admin is online inside it.
+				Users inside can still invite their contacts.
+			</span>
+		);
+	}
+
+	return null;
 }
 
 export function useRoomConstructionModeCheck() {

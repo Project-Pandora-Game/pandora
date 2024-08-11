@@ -25,6 +25,13 @@
 	border: solid $black 2px;
 }
 
+.space-warning {
+	background-color: $theme-warning;
+	border: 1px solid $black;
+	border-radius: 0.5em;
+	padding: 0.2em 0.5em;
+}
+
 .character-info {
 	margin-bottom: spacing('large');
 

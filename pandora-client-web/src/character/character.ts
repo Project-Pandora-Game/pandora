@@ -1,27 +1,28 @@
+import { freeze } from 'immer';
+import { noop } from 'lodash';
 import {
-	TypedEventEmitter,
+	ActionSpaceContext,
+	AppearanceItems,
+	Assert,
+	AssetFrameworkCharacterState,
 	CharacterAppearance,
+	CharacterId,
+	CharacterRestrictionsManager,
+	GameLogicCharacter,
+	GameLogicCharacterClient,
 	GetLogger,
 	ICharacterPublicData,
-	Item,
-	Logger,
-	CharacterRestrictionsManager,
-	ActionSpaceContext,
-	ItemPath,
-	CharacterId,
-	AppearanceItems,
-	WearableAssetType,
-	AssetFrameworkCharacterState,
-	Assert,
-	ITypedEventEmitter,
 	ICharacterRoomData,
-	GameLogicCharacterClient,
-	GameLogicCharacter,
+	Item,
+	ItemPath,
+	ITypedEventEmitter,
+	Logger,
+	TypedEventEmitter,
+	WearableAssetType,
 } from 'pandora-common';
-import { useMemo, useSyncExternalStore } from 'react';
-import type { PlayerCharacter } from './player';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
-import { noop } from 'lodash';
+import { useCallback, useMemo, useSyncExternalStore } from 'react';
+import type { PlayerCharacter } from './player';
 
 export interface ICharacter<T extends ICharacterPublicData = ICharacterPublicData> extends ITypedEventEmitter<CharacterEvents<T>> {
 	readonly type: 'character';
@@ -98,6 +99,34 @@ export function useCharacterDataOptional<T extends ICharacterPublicData>(charact
 	const subscriber = useMemo(() => (character?.getSubscriber('update') ?? (() => noop)), [character]);
 
 	return useSyncExternalStore(subscriber, () => (character?.data ?? null));
+}
+
+const MULTIPLE_DATA_CACHE = new WeakMap<readonly ICharacter<ICharacterPublicData>[], readonly Readonly<ICharacterPublicData>[]>();
+export function useCharacterDataMultiple<T extends ICharacterPublicData>(characters: readonly ICharacter<T>[]): readonly Readonly<T>[] {
+	freeze(characters, false);
+
+	const subscribe = useCallback((cb: () => void): (() => void) => {
+		const cleanup = characters.map((c) => c.on('update', cb));
+		return () => {
+			cleanup.forEach((cln) => cln());
+		};
+	}, [characters]);
+
+	const getSnapshot = useCallback((): readonly Readonly<T>[] => {
+		const existingValue = MULTIPLE_DATA_CACHE.get(characters);
+		if (existingValue != null) {
+			// The `characters` array should never mutate
+			Assert(existingValue.length === characters.length);
+			if (existingValue.every((v, i) => characters[i].data === v))
+				return existingValue as (readonly Readonly<T>[]);
+		}
+
+		const value = characters.map((o) => o.data);
+		MULTIPLE_DATA_CACHE.set(characters, value);
+		return value;
+	}, [characters]);
+
+	return useSyncExternalStore(subscribe, getSnapshot);
 }
 
 export function useCharacterAppearance(characterState: AssetFrameworkCharacterState, character: Character): CharacterAppearance {

@@ -63,7 +63,7 @@ export function WikiIntroduction(): ReactElement {
 				(settings, <Link to='/wiki/spaces#SP_Room_inventory'>inventory</Link>,
 				and <Link to='/wiki/items#IT_Room-level_items'>room devices</Link> remain even after everyone has left). Every account can own a
 				limited amount of spaces. A space only gets deleted when it no longer has any owners.<br />
-				Spaces set to public are visible to everyone, while at least one admin is online inside the room.
+				Spaces set to public are visible if the configured condition is met (either someone is online inside or an admin is online inside).
 				You can always see spaces where you are either owner, admin, or on the allow list (even if they are private or empty).
 			</p>
 			<p>

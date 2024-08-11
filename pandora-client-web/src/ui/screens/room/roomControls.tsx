@@ -1,10 +1,12 @@
 import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
 import React, {
 	ReactElement, useEffect, useMemo,
+	type ReactNode,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import listIcon from '../../../assets/icons/list.svg';
 import settingIcon from '../../../assets/icons/setting.svg';
+import shieldIcon from '../../../assets/icons/shield.svg';
 import storageIcon from '../../../assets/icons/storage.svg';
 import toolsIcon from '../../../assets/icons/tools.svg';
 import { Character, useCharacterData, useCharacterRestrictionManager } from '../../../character/character';
@@ -266,6 +268,7 @@ function DeviceOverlaySelector(): ReactElement {
 }
 
 function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): ReactElement {
+	const spaceInfo = useSpaceInfo();
 	const playerId = usePlayerId();
 	const { setTarget } = useChatInput();
 	const navigate = useNavigate();
@@ -276,8 +279,17 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 	const data = useCharacterData(char);
 	const state = useCharacterState(gameState, char.id);
 	const isOnline = data.isOnline;
+	const isAdmin = IsSpaceAdmin(spaceInfo.config, { id: data.accountId });
 
 	const isPlayer = char.id === playerId;
+
+	const icons = useMemo((): ReactNode[] => {
+		const result: ReactNode[] = [];
+		if (isAdmin) {
+			result.push(<img className='character-icon' src={ shieldIcon } alt='Space admin' title='Space admin' />);
+		}
+		return result;
+	}, [isAdmin]);
 
 	return (
 		<fieldset>
@@ -289,6 +301,13 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 						<span> / { data.id } / { data.accountId }</span>
 					</span>
 				</span>
+				{
+					icons.length > 0 ? (
+						<span>
+							{ icons }
+						</span>
+					) : null
+				}
 				{ isOnline ? null : (
 					<span className='offline'>
 						Offline

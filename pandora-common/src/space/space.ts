@@ -176,6 +176,7 @@ export type SpaceListExtendedInfo = SpaceListInfo & Pick<SpaceDirectoryConfig, '
 		accountId: number;
 		name: string;
 		isOnline: boolean;
+		isAdmin: boolean;
 	}[];
 };
 

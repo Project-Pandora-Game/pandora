@@ -139,6 +139,7 @@ export class Space {
 				accountId: c.baseInfo.account.id,
 				name: c.baseInfo.data.name,
 				isOnline: c.isOnline(),
+				isAdmin: this.isAdmin(c.baseInfo.account),
 			})),
 		});
 	}

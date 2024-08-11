@@ -432,7 +432,8 @@ export class CharacterRestrictionsManager {
 		if (
 			interaction === ItemInteractionType.STYLING ||
 			interaction === ItemInteractionType.MODIFY ||
-			interaction === ItemInteractionType.ADD_REMOVE
+			interaction === ItemInteractionType.ADD_REMOVE ||
+			interaction === ItemInteractionType.REORDER
 		) {
 			if (!this.canUseHands() && !forceAllowItemActions)
 				return {

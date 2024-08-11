@@ -33,6 +33,26 @@ export type ActionSpaceContext = {
 	isAdmin(account: AccountId): boolean;
 };
 
+/**
+ * Spaces are private by default and can be published to be seen in public space search.
+ * There are three levels of publishing of a space:
+ * - `private` - the space is only visible to Allow-listed accounts, admins and owners
+ * - `public-with-admin` - the space is visible to anyone while there is an online admin inside
+ * - `public-with-anyone` - the space is visible to anyone while there is anyone online inside
+ */
+export const SpacePublicSettingSchema = z.preprocess(
+	(arg, _ctx) => {
+		// Migrate from old values
+		if (arg === false)
+			return 'private';
+		if (arg === true)
+			return 'public-with-admin';
+		return arg;
+	},
+	// The actual schema
+	z.enum(['private', 'public-with-admin', 'public-with-anyone']),
+);
+
 export const SpaceBaseInfoSchema = z.object({
 	/** The name of the space */
 	name: z.string().min(3).max(LIMIT_SPACE_NAME_LENGTH).regex(LIMIT_SPACE_NAME_PATTERN).regex(ZodTrimedRegex),
@@ -40,8 +60,11 @@ export const SpaceBaseInfoSchema = z.object({
 	description: z.string().max(LIMIT_SPACE_DESCRIPTION_LENGTH),
 	/** The entry text of the space, shown to players when they enter */
 	entryText: z.string().max(LIMIT_SPACE_ENTRYTEXT_LENGTH).catch(''),
-	/** Spaces are private by default and can be published to be seen in public space search. */
-	public: z.boolean(),
+	/**
+	 * Whether the space is private or public (under some conditions)
+	 * @see SpacePublicSettingSchema
+	 */
+	public: SpacePublicSettingSchema,
 	/** The maximum amount of characters that can be present at once in the space */
 	maxUsers: z.number().int().min(1).max(LIMIT_SPACE_MAX_CHARACTER_NUMBER).catch(10),
 });

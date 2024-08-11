@@ -25,6 +25,7 @@ import {
 	SpaceGhostManagementConfigSchema,
 	SpaceId,
 	SpaceInvite,
+	SpacePublicSettingSchema,
 	ZodMatcher,
 	type SpaceGhostManagementConfig,
 } from 'pandora-common';
@@ -51,6 +52,7 @@ import {
 	useDirectoryConnector,
 } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { CurrentSpaceInfo, IsSpaceAdmin, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs';
 import bodyChange from '../../../icons/body-change.svg';
 import devMode from '../../../icons/developer.svg';
@@ -58,7 +60,6 @@ import pronounChange from '../../../icons/male-female.svg';
 import { DirectoryConnector } from '../../../networking/directoryConnector';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import './spaceConfiguration.scss';
-import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 
 export const DESCRIPTION_TEXTBOX_SIZE = 16;
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
@@ -75,7 +76,7 @@ function DefaultConfig(): SpaceDirectoryConfig {
 		admin: [],
 		banned: [],
 		allow: [],
-		public: false,
+		public: 'private',
 		features: [],
 		background: CloneDeepMutable(DEFAULT_BACKGROUND),
 		ghostManagement: null,
@@ -239,8 +240,16 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 					{ canEdit && !IsValidEntryText(currentConfig.entryText) ? (<div className='error'>Invalid entry text</div>) : null }
 				</div>
 				<div className='input-container'>
-					<label>Public</label>
-					<Button onClick={ () => setModifiedData({ public: !currentConfig.public }) } disabled={ !canEdit } className='fadeDisabled'>{ currentConfig.public ? 'Yes' : 'No' }</Button>
+					<label>Space visibility</label>
+					<Select
+						value={ currentConfig.public }
+						onChange={ (e) => setModifiedData({ public: SpacePublicSettingSchema.parse(e.target.value) }) }
+						noScrollChange
+					>
+						<option value='private'>Private (only visible to Allowed users, Admins and Owners)</option>
+						<option value='public-with-admin'>Public only while an admin is inside and online</option>
+						<option value='public-with-anyone'>Public only while someone is inside and online</option>
+					</Select>
 				</div>
 			</FieldsetToggle>
 			<FieldsetToggle legend='Ownership'>

@@ -38,7 +38,18 @@ export class Space {
 	}
 
 	public get isPublic(): boolean {
-		return this.config.public && this.hasAdminInside(true) && this._assignedShard?.type === 'stable';
+		if (this._assignedShard?.type !== 'stable')
+			return false;
+
+		switch (this.config.public) {
+			case 'private':
+				return false;
+			case 'public-with-admin':
+				return this.hasAdminInside(true);
+			case 'public-with-anyone':
+				return Array.from(this.characters).some((c) => c.isOnline());
+		}
+		AssertNever(this.config.public);
 	}
 
 	private readonly logger: Logger;
@@ -216,8 +227,14 @@ export class Space {
 				changeList.push(`name to '${changes.name}'`);
 			if (changes.maxUsers !== undefined)
 				changeList.push(`character limit to '${changes.maxUsers}'`);
-			if (changes.public !== undefined)
-				changeList.push(`visibility to '${this.config.public ? 'public' : 'private'}'`);
+			if (changes.public !== undefined) {
+				const NAME_MAP: Record<typeof this.config.public, string> = {
+					'private': 'private',
+					'public-with-admin': 'public (while an admin is present)',
+					'public-with-anyone': 'public',
+				};
+				changeList.push(`visibility to '${NAME_MAP[this.config.public]}'`);
+			}
 			if (changes.description !== undefined)
 				changeList.push('description');
 			if (changes.admin)
@@ -440,18 +457,23 @@ export class Space {
 			return 'ok';
 
 		// If the space is public, you can enter it
-		if (this.config.public && this.hasAdminInside(true))
+		if (this.isPublic)
 			return 'ok';
 
+		// If invite is presented, check it
 		if (inviteId != null) {
 			const invite = this._getValidInvite(character, inviteId);
+			// The invite must exist
 			if (!invite)
 				return 'invalidInvite';
+			// "Join-me" invite has more restrictions
 			if (invite.type === 'joinMe') {
 				const creator = [...this.characters].find((c) => c.baseInfo.id === invite.createdBy.characterId);
+				// Creator of "Join-me" invite needs to be present inside
 				if (!creator?.isOnline())
 					return 'invalidInvite';
-				if (!this.config.public && !this.isAdmin(creator.baseInfo.account))
+				// If the room is marked as private, then only admins can invite inside
+				if (this.config.public === 'private' && !this.isAdmin(creator.baseInfo.account))
 					return 'invalidInvite';
 			}
 			return 'ok';

@@ -245,6 +245,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						value={ currentConfig.public }
 						onChange={ (e) => setModifiedData({ public: SpacePublicSettingSchema.parse(e.target.value) }) }
 						noScrollChange
+						disabled={ !canEdit }
 					>
 						<option value='private'>Private (only visible to Allowed users, Admins and Owners)</option>
 						<option value='public-with-admin'>Public only while an admin is inside and online</option>
@@ -454,7 +455,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 												} : null,
 											});
 										} }
-										readOnly={ !canEdit }
+										disabled={ !canEdit }
 									/>
 									<label htmlFor={ `${idPrefix}-ghostmanagement-enable` }>Enable automatic offline character removal</label>
 								</Row>

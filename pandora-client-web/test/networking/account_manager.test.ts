@@ -21,7 +21,7 @@ describe('Account Manager', () => {
 
 	beforeEach(() => {
 		directoryConnector = new MockDirectoryConnector();
-		shardConnector = new MockShardConnector();
+		shardConnector = new MockShardConnector(directoryConnector);
 	});
 
 	describe('useLogin', () => {

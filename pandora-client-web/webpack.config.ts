@@ -202,7 +202,7 @@ function GenerateRules(env: WebpackEnv): RuleSetRule[] {
 			}],
 		},
 		{
-			test: /\.(png|jpe?g|gif|svg|eot|ttf|woff2?)$/i,
+			test: /\.(png|jpe?g|gif|svg|eot|ttf|woff2?|mp3|wav)$/i,
 			loader: 'url-loader',
 			issuer: /\.[jt]sx?$/,
 			options: {

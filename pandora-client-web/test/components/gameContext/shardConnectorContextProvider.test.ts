@@ -19,7 +19,7 @@ describe('ShardConnectorContextProvider', () => {
 
 	beforeEach(() => {
 		directoryConnector = new MockDirectoryConnector();
-		shardConnector = new MockShardConnector();
+		shardConnector = new MockShardConnector(directoryConnector);
 	});
 
 	describe('shardConnectorContext', () => {

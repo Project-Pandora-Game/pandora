@@ -80,11 +80,12 @@ function CreateCurriedProviders(propOverrides?: Partial<Omit<ProvidersProps, 'ch
 }
 
 function MockProvidersProps(overrides?: Partial<Omit<ProvidersProps, 'children'>>): Omit<ProvidersProps, 'children'> {
+	const directoryConnector = new MockDirectoryConnector();
 	return {
 		debugData: MockDebugData(),
 		setDebugData: jest.fn(),
-		directoryConnector: new MockDirectoryConnector(),
-		shardConnector: new MockShardConnector(),
+		directoryConnector,
+		shardConnector: new MockShardConnector(directoryConnector),
 		setShardConnector: jest.fn(),
 		...overrides,
 	};
@@ -129,8 +130,8 @@ export function Providers({
 	const debugContextData = useMemo<DebugContext>(() => ({ debugData, setDebugData }), [debugData, setDebugData]);
 
 	const connectorFactoryContextData = useMemo<ConnectorFactoryContext>(() => ({
-		shardConnectorFactory: (info) => new MockShardConnector(info),
-	}), []);
+		shardConnectorFactory: (info) => new MockShardConnector(directoryConnector, info),
+	}), [directoryConnector]);
 
 	const shardConnectorContextData = useMemo<ShardConnectorContextData>(() => ({
 		shardConnector,

@@ -3,6 +3,7 @@ import './settings.scss';
 import { GIT_DESCRIBE } from '../../config/Environment';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
 import { AccountSettings } from './accountSettings';
+import { NotificationSettings } from './notificationSettings';
 import { useNavigate } from 'react-router-dom';
 import { CharacterSettings } from './characterSettings';
 import { GraphicsSettings } from '../../graphics/graphicsSettings';
@@ -25,6 +26,9 @@ export function Settings(): ReactElement | null {
 					</UrlTab>
 					<UrlTab name='Account' urlChunk='account'>
 						<SettingsTab element={ AccountSettings } />
+					</UrlTab>
+					<UrlTab name='Notificaions' urlChunk='norifications'>
+						<SettingsTab element={ NotificationSettings } />
 					</UrlTab>
 					<UrlTab name='Security' urlChunk='security'>
 						<SettingsTab element={ SecuritySettings } />

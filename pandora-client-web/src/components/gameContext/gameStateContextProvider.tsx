@@ -38,6 +38,7 @@ import {
 	SpaceIdSchema,
 	TypedEventEmitter,
 	ZodCast,
+	type IChatMessageActionTargetCharacter,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { z } from 'zod';
@@ -96,6 +97,7 @@ export type PermissionPromptData = {
 export class GameState extends TypedEventEmitter<{
 	globalStateChange: true;
 	messageNotify: NotificationData;
+	characterEntered: IChatMessageActionTargetCharacter;
 	permissionPrompt: PermissionPromptData;
 }> implements IChatMessageSender {
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
@@ -327,6 +329,12 @@ export class GameState extends TypedEventEmitter<{
 					continue;
 				}
 			} else {
+				// Emit events for some message types
+				if (message.type === 'serverMessage' && message.id === 'characterEntered' && message.data?.character?.type === 'character') {
+					if (message.data.character.id !== this.playerId)
+						this.emit('characterEntered', message.data.character);
+				}
+				// Add the message to chat
 				nextMessages.push(message);
 				if (!notified) {
 					this.emit('messageNotify', { time: Date.now() });

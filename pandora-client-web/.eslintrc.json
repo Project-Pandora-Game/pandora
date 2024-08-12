@@ -9,7 +9,7 @@
 	},
 	"ignorePatterns": [".git", "node_modules", "dist"],
 	"root": true,
-	"plugins": ["@typescript-eslint", "react", "react-hooks"],
+	"plugins": ["@typescript-eslint", "@stylistic", "react", "react-hooks"],
 	"overrides": [
 		{
 			"files": ["*.ts", "*.tsx"],
@@ -120,6 +120,7 @@
 	"rules": {
 		// Disabled recommended rules
 		"import/no-cycle": "off",
+		"react/prop-types": "off",
 		// NOs
 		"react/no-unsafe": ["error", { "checkAliases": true }],
 		"react/no-unstable-nested-components": "error",
@@ -133,18 +134,16 @@
 		"react/void-dom-elements-no-children": "warn",
 		"react/jsx-no-constructed-context-values": "warn",
 		"react/jsx-no-useless-fragment": ["warn", { "allowExpressions": true }],
-		// Style rules
-		"react/destructuring-assignment": ["warn", "always"],
-		"react/jsx-closing-tag-location": "warn",
-		"react/jsx-curly-newline": ["warn", "consistent"],
-		"react/jsx-curly-spacing": ["warn", { "when": "always", "children": true }],
-		"react/jsx-equals-spacing": ["warn", "never"],
-		"react/jsx-filename-extension": ["warn", { "extensions": [".jsx", ".tsx"] }],
-		"react/jsx-indent": ["warn", "tab"],
-		"react/jsx-pascal-case": "warn",
-		"react/jsx-props-no-multi-spaces": "warn",
-		"react/jsx-tag-spacing": "warn",
-		"react/jsx-wrap-multilines": [
+		// Stylistic rules
+		"@stylistic/jsx-closing-tag-location": "warn",
+		"@stylistic/jsx-curly-newline": ["warn", "consistent"],
+		"@stylistic/jsx-curly-spacing": ["warn", { "when": "always", "children": true }],
+		"@stylistic/jsx-equals-spacing": ["warn", "never"],
+		"@stylistic/jsx-indent": ["warn", "tab"],
+		"@stylistic/jsx-pascal-case": "warn",
+		"@stylistic/jsx-props-no-multi-spaces": "warn",
+		"@stylistic/jsx-tag-spacing": "warn",
+		"@stylistic/jsx-wrap-multilines": [
 			"warn",
 			{
 				"declaration": "parens-new-line",
@@ -156,6 +155,9 @@
 				"prop": "ignore"
 			}
 		],
+		// Other style rules
+		"react/destructuring-assignment": ["warn", "always"],
+		"react/jsx-filename-extension": ["warn", { "extensions": [".jsx", ".tsx"] }],
 		"react/no-unescaped-entities": [
 			"warn",
 			{

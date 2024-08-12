@@ -79,6 +79,7 @@ export class AsyncInterval {
 					this.createExecutionPromise().then(resolve, reject);
 				}, (error) => {
 					this.immediatePromise = null;
+					// eslint-disable-next-line @typescript-eslint/prefer-promise-reject-errors
 					reject(error);
 				});
 		});

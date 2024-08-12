@@ -1,22 +1,22 @@
 import classNames from 'classnames';
-import React, { ReactElement, createContext, useCallback, useContext, useId, useMemo, useRef, useState } from 'react';
-import { Tab, TabContainer } from '../common/tabs/tabs';
-import { useAssetManager } from '../../assets/assetManager';
-import { WardrobeAssetList, useAssetPreference, useAssetPreferenceResolver, useAssetPreferences } from './views/wardrobeAssetView';
-import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, CloneDeepMutable, EMPTY_ARRAY, KnownObject, ResolveAssetPreference } from 'pandora-common';
-import { useWardrobeContext } from './wardrobeContext';
-import { InventoryAssetPreview, InventoryAttributePreview } from './wardrobeComponents';
-import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { noop } from 'lodash';
-import { Scrollable, Scrollbar } from '../common/scrollbar/scrollbar';
 import { Immutable } from 'immer';
-import { Column, Row } from '../common/container/container';
-import { Select } from '../common/select/select';
-import { useBrowserStorage } from '../../browserStorage';
+import { noop } from 'lodash';
+import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, CloneDeepMutable, EMPTY_ARRAY, KnownObject, ResolveAssetPreference } from 'pandora-common';
+import React, { ReactElement, createContext, useCallback, useContext, useId, useMemo, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
 import { z } from 'zod';
+import { useAssetManager } from '../../assets/assetManager';
+import { useBrowserStorage } from '../../browserStorage';
 import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { Column, Row } from '../common/container/container';
+import { Scrollable, Scrollbar } from '../common/scrollbar/scrollbar';
+import { Select, type SelectProps } from '../common/select/select';
+import { Tab, TabContainer } from '../common/tabs/tabs';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import { WardrobeAssetList, useAssetPreference, useAssetPreferenceResolver, useAssetPreferences } from './views/wardrobeAssetView';
+import { InventoryAssetPreview, InventoryAttributePreview } from './wardrobeComponents';
+import { useWardrobeContext } from './wardrobeContext';
 
 type ItemPreferencesFocus = {
 	type: 'none';
@@ -310,7 +310,7 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 		}, asset);
 	}, [asset, currentPreferences]);
 
-	const onChange = useCallback((ev: React.ChangeEvent<HTMLSelectElement>) => {
+	const onChange = useCallback<NonNullable<SelectProps['onChange']>>((ev) => {
 		const value: AssetPreferenceType | null = ev.target.value ? AssetPreferenceTypeSchema.parse(ev.target.value) : null;
 		if (value === (currentAssetPreference?.base ?? null))
 			return;
@@ -439,7 +439,7 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 
 	const isConfigurable = definition.useAsAssetPreference ?? true;
 
-	const onChange = useCallback((ev: React.ChangeEvent<HTMLSelectElement>) => {
+	const onChange = useCallback<NonNullable<SelectProps['onChange']>>((ev) => {
 		const value: AssetPreferenceType = AttributePreferenceTypeSchema.parse(ev.target.value);
 		if (value === (currentAttributePreference?.base ?? 'normal') || !isConfigurable)
 			return;

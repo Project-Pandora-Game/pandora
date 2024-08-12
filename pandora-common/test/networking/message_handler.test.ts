@@ -3,7 +3,7 @@ import { Satisfies } from '../../src';
 import { SocketInterfaceDefinition, SocketInterfaceHandlerResult, SocketInterfaceRequest } from '../../src/networking/helpers';
 import { MessageHandler } from '../../src/networking/message_handler';
 
-const TestSchema = {
+export const TestSchema = {
 	message1: {
 		request: z.object({
 			test: z.number(),

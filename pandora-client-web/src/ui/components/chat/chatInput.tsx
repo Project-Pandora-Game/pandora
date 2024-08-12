@@ -1,28 +1,28 @@
-import { AssertNotNullable, CharacterId, EMPTY_ARRAY, ChatCharacterStatus, IChatType, ZodTransformReadonly, SpaceIdSchema, ICommandExecutionContext } from 'pandora-common';
-import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { clamp } from 'lodash';
-import { Character } from '../../../character/character';
-import { IMessageParseOptions, useGameStateOptional, useSpaceCharacters, useChatMessageSender, useGameState, useChatSetPlayerStatus, useChatCharacterStatus } from '../../../components/gameContext/gameStateContextProvider';
-import { useEvent } from '../../../common/useEvent';
-import { AutocompleteDisplayData, CommandAutocomplete, CommandAutocompleteCycle, COMMAND_KEY, RunCommand, ICommandInvokeContext, ICommandExecutionContextClient, IClientCommand } from './commandsProcessor';
-import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { Button } from '../../../components/common/button/button';
-import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
-import { BrowserStorage } from '../../../browserStorage';
-import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider';
 import classNames from 'classnames';
-import { Column, Row } from '../../../components/common/container/container';
-import { COMMANDS, GetChatModeDescription } from './commands';
-import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
-import { Select } from '../../../components/common/select/select';
-import settingsIcon from '../../../assets/icons/setting.svg';
-import { z } from 'zod';
+import { clamp } from 'lodash';
+import { AssertNotNullable, CharacterId, ChatCharacterStatus, EMPTY_ARRAY, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly } from 'pandora-common';
+import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useNullableObservable } from '../../../observable';
-import { useTextFormattingOnKeyboardEvent } from '../../../common/useTextFormattingOnKeyboardEvent';
-import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
+import { toast } from 'react-toastify';
+import { z } from 'zod';
+import settingsIcon from '../../../assets/icons/setting.svg';
+import { BrowserStorage } from '../../../browserStorage';
+import { Character } from '../../../character/character';
+import { useEvent } from '../../../common/useEvent';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
+import { useTextFormattingOnKeyboardEvent } from '../../../common/useTextFormattingOnKeyboardEvent';
+import { Button } from '../../../components/common/button/button';
+import { Column, Row } from '../../../components/common/container/container';
+import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
+import { Select, type SelectProps } from '../../../components/common/select/select';
+import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
+import { IMessageParseOptions, useChatCharacterStatus, useChatMessageSender, useChatSetPlayerStatus, useGameState, useGameStateOptional, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
+import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
+import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider';
+import { useNullableObservable } from '../../../observable';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { COMMANDS, GetChatModeDescription } from './commands';
+import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, IClientCommand, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor';
 
 type Editing = {
 	target: number;
@@ -700,7 +700,7 @@ function ChatModeSelector(): ReactElement | null {
 	const ref = useRef<HTMLSelectElement>(null);
 	const hasTarget = target !== null;
 
-	const onChange = useCallback((ev: React.ChangeEvent<HTMLSelectElement>) => {
+	const onChange = useCallback<NonNullable<SelectProps['onChange']>>((ev) => {
 		let value = ev.target.value;
 		if (value === '') {
 			setMode(null);

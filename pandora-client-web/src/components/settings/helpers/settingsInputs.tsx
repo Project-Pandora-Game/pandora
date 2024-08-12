@@ -1,10 +1,10 @@
-import React, { useId, type DependencyList, type ReactElement, useCallback, useMemo, type ReactNode } from 'react';
-import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
 import { EMPTY_ARRAY, KnownObject } from 'pandora-common';
-import { Button } from '../../common/button/button';
+import React, { useCallback, useId, useMemo, type DependencyList, type ReactElement, type ReactNode } from 'react';
 import type { ZodSchema, ZodTypeDef } from 'zod';
-import { Select } from '../../common/select/select';
+import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
+import { Button } from '../../common/button/button';
 import { Row } from '../../common/container/container';
+import { Select, type SelectProps } from '../../common/select/select';
 
 export function ToggleSettingInput({ currentValue, defaultValue, label, onChange, onReset, deps = EMPTY_ARRAY }: {
 	currentValue: boolean | undefined;
@@ -87,7 +87,7 @@ export function SelectSettingInput<TValue extends string>({ currentValue, defaul
 
 	const id = `setting-${useId()}`;
 
-	const onInputChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+	const onInputChange = useCallback<NonNullable<SelectProps['onChange']>>((e) => {
 		const newValue = schema.parse(e.target.value);
 		setValue(newValue);
 	}, [schema, setValue]);

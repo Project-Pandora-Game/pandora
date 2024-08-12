@@ -1074,7 +1074,7 @@ async function TestCaptcha(token?: string): Promise<boolean> {
  * @template TParams - The type of the parameters passed to the original function.
  * @template TReturn - The type of the return value of the original function.
  */
-function WithConstantTime<TParams extends unknown[], TReturn extends { /** only messages with actual response */ }>(fn: (...args: TParams) => Awaitable<TReturn>, delay: number): (...args: TParams) => Promise<Awaited<TReturn>> {
+function WithConstantTime<TParams extends unknown[], TReturn extends object>(fn: (...args: TParams) => Awaitable<TReturn>, delay: number): (...args: TParams) => Promise<Awaited<TReturn>> {
 	return async (...args: TParams): Promise<Awaited<TReturn>> => {
 		const before = Date.now();
 		let result: [true, Awaited<TReturn>] | [false, unknown];

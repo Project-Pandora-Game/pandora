@@ -2,10 +2,10 @@ import { Assert } from 'pandora-common';
 import React, { DetailedHTMLProps, ReactElement, SelectHTMLAttributes, useCallback, useEffect, useImperativeHandle, useRef } from 'react';
 
 export interface SelectProps extends Omit<DetailedHTMLProps<SelectHTMLAttributes<HTMLSelectElement>, HTMLSelectElement>, 'onChange'> {
-	onChange?(ev: {
+	onChange?: (ev: {
 		currentTarget: HTMLSelectElement;
 		target: HTMLSelectElement;
-	}): void;
+	}) => void;
 	noScrollChange?: boolean;
 }
 

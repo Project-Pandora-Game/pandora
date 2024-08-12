@@ -98,7 +98,7 @@ export class SegmentParser {
 		text = text.trim();
 		const result: IChatSegment[] = [];
 		if (allowLinks) {
-			const match = text.match(/^\s*(https?:\/\/[^\s]+)/);
+			const match = /^\s*(https?:\/\/[^\s]+)/.exec(text);
 			if (match) {
 				result.push(['normal', match[0]]);
 				text = text.substring(match[0].length);

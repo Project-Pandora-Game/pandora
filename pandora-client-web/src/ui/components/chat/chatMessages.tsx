@@ -143,7 +143,7 @@ export function DescribeAttribute(assetManager: AssetManagerClient, attributeNam
 }
 
 export function RenderChatPart([type, contents]: Immutable<IChatSegment>, index: number, allowLinkInNormal: boolean): ReactElement {
-	if (type === 'normal' && allowLinkInNormal && contents.match(/^https?:\/\//) && URL.canParse(contents)) {
+	if (type === 'normal' && allowLinkInNormal && (/^https?:\/\//.exec(contents)) && URL.canParse(contents)) {
 		const url = new URL(contents);
 		return (
 			<RenderedLink key={ index } index={ index } url={ url } />

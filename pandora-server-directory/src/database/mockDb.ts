@@ -306,7 +306,7 @@ export class MockDatabase implements PandoraDatabase {
 		const space = CreateSpace(data, id);
 
 		if (this.spacesDb.has(space.id)) {
-			return Promise.reject('Duplicate ID');
+			return Promise.reject(new Error('Duplicate ID'));
 		}
 		this.spacesDb.set(space.id, space);
 		return Promise.resolve(_.cloneDeep(space));
@@ -317,7 +317,7 @@ export class MockDatabase implements PandoraDatabase {
 
 		const info = this.spacesDb.get(id);
 		if (!info)
-			return Promise.reject();
+			return Promise.reject(new Error('Unknown space'));
 
 		if ((accessId !== null) && (accessId !== info.accessId)) {
 			return Promise.resolve(false);

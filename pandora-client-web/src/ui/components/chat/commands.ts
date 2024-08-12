@@ -267,7 +267,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 					}
 					if (input !== '') {
 						// Accept options like 100, 1d6, 1 d 6 or 1d 6. Also sides and dice can be omitted
-						const match = input.match(/^(?:(\d+)\s*D)?\s*(\d+)$/i);
+						const match = /^(?:(\d+)\s*D)?\s*(\d+)$/i.exec(input);
 						if (match) {
 							dice = match[1] ? parseInt(match[1]) : 1;
 							sides = parseInt(match[2]);

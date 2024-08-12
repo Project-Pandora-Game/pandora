@@ -123,7 +123,7 @@ export class SocketIODirectoryConnector extends ConnectionBase<IShardDirectory, 
 			if (!SHARD_DEVELOPMENT_MODE) {
 				timeout = setTimeout(() => {
 					this.disconnect();
-					reject('Connection timed out');
+					reject(new Error('Connection timed out'));
 				}, INITIAL_CONNECT_TIMEOUT).unref();
 			}
 			this.socket.once('connect', () => {

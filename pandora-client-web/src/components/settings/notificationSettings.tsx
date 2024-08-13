@@ -1,6 +1,8 @@
 import React, { ReactElement } from 'react';
-import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
-import { ToggleAccountSetting } from './helpers/accountSettings';
+import { useCurrentAccount, useAccountSettings } from '../gameContext/directoryConnectorContextProvider';
+import { SelectAccountSettings } from './helpers/accountSettings';
+import { Button } from '../common/button/button';
+import { NOTIFICATION_AUDIO_SOUNDS, NOTIFICATION_AUDIO_NAMES } from '../gameContext/notificationContextProvider';
 
 export function NotificationSettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -23,10 +25,21 @@ function NotificationsSettings(): ReactElement {
 }
 
 function RoomEntrySettings(): ReactElement {
-	/* TODO: Add a sound selector */
+	const { notificationRoomEntryNew } = useAccountSettings();
 	return (
 		<p>
-			<ToggleAccountSetting setting='notificationRoomEntry' label='Play audio if someone enters your room' />
+			<Button
+				className='slim fadeDisabled'
+				disabled={ notificationRoomEntryNew === '' }
+				onClick={ () => {
+					const sound = NOTIFICATION_AUDIO_SOUNDS[notificationRoomEntryNew];
+					if (sound != null)
+						new Audio(sound).play().catch(() => { /*ignore*/ });
+				} }
+			>
+				Test the sound
+			</Button>
+			<SelectAccountSettings setting='notificationRoomEntryNew' label='Which audio to play, if someone enters your room' stringify={ NOTIFICATION_AUDIO_NAMES } />
 		</p>
 	);
 }

@@ -73,10 +73,13 @@ export const AccountSettingsSchema = z.object({
 	/** Controls how item names appear in chat action messages */
 	interfaceChatroomItemDisplayNameType: ItemDisplayNameTypeSchema,
 	/**
-	 * Sets wether a sound should be played, when someone enters the room
-	 * TODO:
-	 * This should be replaced with a more differentiated way to notify
-	 * playes in the future
+	 * Sets what sound should be played, when someone enters the room
+	 * Defaults to ''
+	 */
+	notificationRoomEntryNew: z.enum(['', 'alert', 'bell', 'bing', 'dingding']),
+	/**
+	 * Have to keep that one for legacy reasons
+	 * TODO: Needs to be removed later
 	 */
 	notificationRoomEntry: z.boolean(),
 });
@@ -100,6 +103,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceChatroomChatFontSize: 'm',
 	interfaceChatroomCharacterNameFontSize: 'm',
 	interfaceChatroomItemDisplayNameType: 'custom_with_original_in_brackets',
+	notificationRoomEntryNew: '',
 	notificationRoomEntry: false,
 });
 

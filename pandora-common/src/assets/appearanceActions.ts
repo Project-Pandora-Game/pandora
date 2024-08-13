@@ -287,64 +287,17 @@ export function DoAppearanceAction(
 			return processingContext.finalize();
 		}
 		// Unequip item and equip on another target
-		case 'transfer': {
-			const source = processingContext.getTarget(action.source);
-			const target = processingContext.getTarget(action.target);
-			if (!source || !target)
-				return processingContext.invalid();
-
-			// The item must exist
-			const item = source.getItem(action.item);
-			if (!item)
-				return processingContext.invalid();
-
-			// Player removing the item must be able to use it on source
-			processingContext.checkCanUseItemDirect(source, action.item.container, item, ItemInteractionType.ADD_REMOVE);
-
-			// Player adding the item must be able to use it on target
-			processingContext.checkCanUseItemDirect(
-				target,
-				action.container,
-				item,
-				ItemInteractionType.ADD_REMOVE,
-				action.container.length === 0 ? action.insertBefore : undefined,
-			);
-
-			const sourceManipulator = processingContext.manipulator.getManipulatorFor(action.source);
-			const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
-
-			// Preform the transfer in manipulators
-			if (!ActionTransferItem(processingContext, sourceManipulator, action.item, targetManipulator, action.container, action.insertBefore ?? null))
-				return processingContext.invalid();
-
-			return processingContext.finalize();
-		}
+		case 'transfer':
+			return ActionTransferItem({
+				...arg,
+				action,
+			});
 		// Moves an item within inventory, reordering the worn order
-		case 'move': {
-			const target = processingContext.getTarget(action.target);
-			if (!target)
-				return processingContext.invalid();
-			// Player moving the item must be able to interact with the item
-			processingContext.checkCanUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
-
-			const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
-
-			// Player moving the item must be able to interact with the item on target position (if it is being moved in root)
-			if (action.item.container.length === 0) {
-				const items = targetManipulator.getRootItems();
-				const currentPos = items.findIndex((item) => item.id === action.item.itemId);
-				const newPos = currentPos + action.shift;
-
-				if (newPos >= 0 && newPos < items.length) {
-					processingContext.checkCanUseItem(target, action.item, ItemInteractionType.ADD_REMOVE, items[newPos].id);
-				}
-			}
-
-			if (!ActionMoveItem(targetManipulator, action.item, action.shift))
-				return processingContext.invalid();
-
-			return processingContext.finalize();
-		}
+		case 'move':
+			return ActionMoveItem({
+				...arg,
+				action,
+			});
 		// Changes the color of an item
 		case 'color': {
 			const target = processingContext.getTarget(action.target);
@@ -585,26 +538,55 @@ export function ActionRemoveItem(processingContext: AppearanceActionProcessingCo
 	return true;
 }
 
-export function ActionTransferItem(processingContext: AppearanceActionProcessingContext, sourceManipulator: AppearanceRootManipulator, itemPath: ItemPath, targetManipulator: AppearanceRootManipulator, targetContainer: ItemContainerPath, insertBefore: ItemId | null): boolean {
-	const { container, itemId } = itemPath;
+export function ActionTransferItem({
+	action,
+	processingContext,
+}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionTransferSchema>>): AppearanceActionProcessingResult {
+	const source = processingContext.getTarget(action.source);
+	const target = processingContext.getTarget(action.target);
+	if (!source || !target)
+		return processingContext.invalid();
+
+	const { container, itemId } = action.item;
+	const targetContainer = action.container;
+	const insertBefore: ItemId | null = action.insertBefore ?? null;
+
+	// Preform the transfer in manipulators
+	const sourceManipulator = processingContext.manipulator.getManipulatorFor(action.source);
+	const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
+
 	const sourceContainerManipulator = sourceManipulator.getContainer(container);
 	const targetContainerManipulator = targetManipulator.getContainer(targetContainer);
 
-	// Do change
+	// If the source and target container are the same, the action is only a reorder and has lesser requirements
+	const isReorder = isEqual(sourceManipulator.target, targetManipulator.target) && isEqual(container, targetContainer);
+	const interactionType: ItemInteractionType = isReorder ? ItemInteractionType.REORDER : ItemInteractionType.ADD_REMOVE;
+
+	// Player removing the item must be able to use it on source
+	processingContext.checkCanUseItem(source, action.item, interactionType);
+
+	// Remove from original location
 	const removedItems = sourceContainerManipulator.removeMatchingItems((i) => i.id === itemId);
 
 	if (removedItems.length !== 1)
-		return false;
+		return processingContext.invalid();
 
 	const item = removedItems[0];
+
+	// Player adding the item must be able to use it on target
+	processingContext.checkCanUseItemDirect(
+		target,
+		action.container,
+		item,
+		interactionType,
+		action.container.length === 0 ? action.insertBefore : undefined,
+	);
 
 	// Check if item allows being transferred
 	if (!item.canBeTransferred()) {
 		// If not, then check this is actually a transfer (moving not between targets nor containers is fine, as then it is essentially a move)
-		if (!isEqual(sourceManipulator.target, targetManipulator.target) ||
-			!isEqual(itemPath.container, targetContainer)
-		) {
-			return false;
+		if (!isReorder) {
+			return processingContext.invalid();
 		}
 	}
 
@@ -612,11 +594,11 @@ export function ActionTransferItem(processingContext: AppearanceActionProcessing
 	if (insertBefore != null) {
 		targetIndex = targetContainerManipulator.getItems().findIndex((anchor) => anchor.id === insertBefore);
 		if (targetIndex < 0)
-			return false;
+			return processingContext.invalid();
 	}
 
 	if (!targetContainerManipulator.addItem(item, targetIndex))
-		return false;
+		return processingContext.invalid();
 
 	// Change message to chat
 	if (sourceManipulator.isCharacter() && (!targetManipulator.isCharacter() || sourceManipulator.characterId !== targetManipulator.characterId)) {
@@ -644,22 +626,46 @@ export function ActionTransferItem(processingContext: AppearanceActionProcessing
 		);
 	}
 
-	return true;
+	return processingContext.finalize();
 }
 
-export function ActionMoveItem(rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, shift: number): boolean {
-	const { container, itemId } = itemPath;
-	const manipulator = rootManipulator.getContainer(container);
+export function ActionMoveItem({
+	action,
+	processingContext,
+}: AppearanceActionHandlerArg<z.infer<typeof AppearanceActionMove>>): AppearanceActionProcessingResult {
+	const target = processingContext.getTarget(action.target);
+	if (!target)
+		return processingContext.invalid();
+
+	// Player moving the item must be able to interact with the item
+	processingContext.checkCanUseItem(target, action.item, ItemInteractionType.REORDER);
+
+	const { container, itemId } = action.item;
+	const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
+	const manipulator = targetManipulator.getContainer(container);
+
+	// Player moving the item must be able to interact with the item after moving it to target position
+	// This check happens only if it is being moved in root (otherwise we shouldn't pass insertBeforeRootItem and so it is equivalent to the check above)
+	if (action.item.container.length === 0) {
+		const items = targetManipulator.getRootItems();
+		const currentPos = items.findIndex((item) => item.id === action.item.itemId);
+		const newPos = currentPos + action.shift;
+
+		if (newPos < 0 || newPos > items.length)
+			return processingContext.invalid();
+
+		processingContext.checkCanUseItem(target, action.item, ItemInteractionType.REORDER, newPos < items.length ? items[newPos].id : undefined);
+	}
 
 	// Do change
-	if (!manipulator.moveItem(itemId, shift))
-		return false;
+	if (!manipulator.moveItem(itemId, action.shift))
+		return processingContext.invalid();
 
 	// Change message to chat
 	// TODO: Message to chat that items were reordered
 	// Will need mechanism to rate-limit the messages not to send every reorder
 
-	return true;
+	return processingContext.finalize();
 }
 
 export function ActionColorItem(rootManipulator: AppearanceRootManipulator, itemPath: ItemPath, color: ItemColorBundle): boolean {

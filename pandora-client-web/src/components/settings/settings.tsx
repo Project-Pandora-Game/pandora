@@ -27,7 +27,7 @@ export function Settings(): ReactElement | null {
 					<UrlTab name='Account' urlChunk='account'>
 						<SettingsTab element={ AccountSettings } />
 					</UrlTab>
-					<UrlTab name='Notificaions' urlChunk='norifications'>
+					<UrlTab name='Notifications' urlChunk='notifications'>
 						<SettingsTab element={ NotificationSettings } />
 					</UrlTab>
 					<UrlTab name='Security' urlChunk='security'>

@@ -14,21 +14,22 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
+import { useAsyncEvent } from '../../../common/useEvent';
 import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
+import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
-import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { SPACE_FEATURES, DESCRIPTION_TEXTBOX_SIZE, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration';
-import './spacesSearch.scss';
-import { toast } from 'react-toastify';
-import { useAsyncEvent } from '../../../common/useEvent';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
+import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration';
+import './spacesSearch.scss';
 // import closedDoor from '../../../icons/closed-door.svg';
+import shieldSlashedIcon from '../../../assets/icons/shield-slashed.svg';
 import privateDoor from '../../../icons/private-door.svg';
 import publicDoor from '../../../icons/public-door.svg';
 import { useObservable } from '../../../observable';
@@ -184,9 +185,9 @@ function SpaceSearchEntry({ baseInfo }: {
 			<a className='spacesSearchGrid' onClick={ () => setShow(true) } >
 				<div className='icon'>
 					<img
-						src={ baseInfo.public ? publicDoor : privateDoor }
-						title={ baseInfo.public ? 'Public space' : 'Private space' }
-						alt={ baseInfo.public ? 'Public space' : 'Private space' } />
+						src={ baseInfo.public !== 'private' ? publicDoor : privateDoor }
+						title={ baseInfo.public !== 'private' ? 'Public space' : 'Private space' }
+						alt={ baseInfo.public !== 'private' ? 'Public space' : 'Private space' } />
 				</div>
 				<div className='entry'>
 					{ `${name} ( ${onlineCharacters} ` }
@@ -292,11 +293,12 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 	const background = info.background ? ResolveBackground(assetManager, info.background, GetAssetsSourceUrl()).image : '';
 
 	const userIsOwner = !!info.isOwner;
+	const hasOnlineAdmin = info.characters.some((c) => c.isAdmin && c.isOnline);
 
 	return (
 		<div className='spacesSearchSpaceDetails'>
 			<div>
-				Details for { info?.public ? 'public' : 'private' } space <b>{ info.name }</b><br />
+				Details for { (info.public !== 'private') ? 'public' : 'private' } space <b>{ info.name }</b><br />
 			</div>
 			<Row className='ownership' alignY='center'>
 				Owned by: { info.owners.join(', ') }
@@ -310,6 +312,11 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 						.map((f) => (
 							<img key={ f.id } className='features-img' src={ f.icon } title={ f.name } alt={ f.name } />
 						))
+				}
+				{
+					hasOnlineAdmin ? null : (
+						<img className='features-img warning' src={ shieldSlashedIcon } title='No admin is currently hosting this space' alt='No admin is currently hosting this space' />
+					)
 				}
 			</Row>
 			<div className='description-title'>Description:</div>

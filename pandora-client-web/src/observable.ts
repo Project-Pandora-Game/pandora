@@ -136,7 +136,7 @@ const MULTIPLE_OBSERVABLE_CACHE = new WeakMap<readonly ReadonlyObservable<unknow
  * Get current value of all observables passed using the argument
  * @param obs - The observables to monitor
  * @returns Collected values of all observables, in matching order
- * @note The observables should be of the same time. If not, use this hook multiple times. Prefer simpler `useObservable` hook if possible.
+ * @note The observables should be of the same type. If not, use this hook multiple times. Prefer simpler `useObservable` hook if possible.
  */
 export function useObservableMultiple<T>(obs: readonly ReadonlyObservable<T>[]): readonly T[] {
 	freeze(obs, false);

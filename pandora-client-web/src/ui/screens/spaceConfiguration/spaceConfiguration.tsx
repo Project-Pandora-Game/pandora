@@ -240,17 +240,53 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 					{ canEdit && !IsValidEntryText(currentConfig.entryText) ? (<div className='error'>Invalid entry text</div>) : null }
 				</div>
 				<div className='input-container'>
-					<label>Space visibility</label>
+					<label>
+						Space visibility
+						<ContextHelpButton>
+							<p>
+								This setting affects who can see and enter this space.<br />
+								It has the following options:
+							</p>
+							<h3>Locked</h3>
+							<ul>
+								<li>Owners, Admins and Allow-listed users can see this space.</li>
+								<li>Owners and Admins can join at any time. They are asked for confirmation before entering.</li>
+								<li>"Join-me" invitations can be created only by Owners and Admins. Anyone can join using them.</li>
+								<li>"Space-bound" invitations cannot be used. Existing space-bound invitations are kept for when the space is unlocked.</li>
+							</ul>
+							<h3>Private</h3>
+							<ul>
+								<li>Owners, Admins and Allow-listed users can see this space.</li>
+								<li>Owners, Admins and Allow-listed users can join at any time.</li>
+								<li>"Join-me" invitations can be created only by Owners and Admins. Anyone can join using them.</li>
+								<li>"Space-bound" invitations can be used to join.</li>
+							</ul>
+							<h3>Public while an admin is inside</h3>
+							<ul>
+								<li>Anyone can see this space while there currently is an <strong>online admin</strong> inside. Otherwise only Owners, Admins and Allow-listed users can see it.</li>
+								<li>Anyone non-banned who can see this space can join at any time.</li>
+								<li>"Join-me" invitations can be created and used by anyone.</li>
+								<li>"Space-bound" invitations can be used to join.</li>
+							</ul>
+							<h3>Public</h3>
+							<ul>
+								<li>Anyone can see this space while there currently is <strong>any online character</strong> inside. Otherwise only Owners, Admins and Allow-listed users can see it.</li>
+								<li>Anyone non-banned who can see this space can join at any time.</li>
+								<li>"Join-me" invitations can be created and used by anyone.</li>
+								<li>"Space-bound" invitations can be used to join.</li>
+							</ul>
+						</ContextHelpButton>
+					</label>
 					<Select
 						value={ currentConfig.public }
 						onChange={ (e) => setModifiedData({ public: SpacePublicSettingSchema.parse(e.target.value) }) }
 						noScrollChange
 						disabled={ !canEdit }
 					>
-						<option value='locked'>Locked (only Admins and Owners can join)</option>
-						<option value='private'>Private (only visible to Allowed users, Admins and Owners)</option>
-						<option value='public-with-admin'>Public only while an admin is inside and online</option>
-						<option value='public-with-anyone'>Public only while someone is inside and online</option>
+						<option value='locked'>Locked</option>
+						<option value='private'>Private</option>
+						<option value='public-with-admin'>Public while an admin is inside</option>
+						<option value='public-with-anyone'>Public</option>
 					</Select>
 				</div>
 			</FieldsetToggle>

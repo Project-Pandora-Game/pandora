@@ -479,6 +479,13 @@ export class Space {
 				const isPublic = (this.config.public === 'public-with-admin' || this.config.public === 'public-with-anyone');
 				if (!isPublic && !this.isAdmin(creator.baseInfo.account))
 					return 'invalidInvite';
+			} else if (invite.type === 'spaceBound') {
+				// If the space is locked, persistent invitations are temporarily blocked
+				// (we consider them of same level as allow-listed users)
+				if (this.config.public === 'locked')
+					return 'invalidInvite';
+			} else {
+				AssertNever(invite.type);
 			}
 			return 'ok';
 		}

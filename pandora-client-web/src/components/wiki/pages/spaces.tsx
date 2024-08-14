@@ -91,11 +91,16 @@ export function WikiSpaces(): ReactElement {
 
 			<h4 id='SP_Space_visibility'>Space visibility</h4>
 			<p>
-				Spaces in Pandora can be public or private, which affects who can see them. There are two different public space visibility settings: "Public only while an
-				admin is inside and online" and "Public only while someone is inside and online". If the public condition is no longer fulfilled, the space is temporarily no longer
-				publicly listed in the list of spaces. Despite that, everyone inside can still directly invite other users from their contacts list to the unlisted public
-				space (see <Link to='#SP_Space_invites'>"Space invites"</Link> section).<br />
-				The public-only-with-admin setting is useful for making sure your space does not diverge from its intended purpose while there is no owner/admin inside.
+				Spaces in Pandora can be public or private, which affects who can see them.
+				There are two different public space visibility settings: "Public while an admin is inside" and simply "Public".
+				Note, that the "Public" setting still requires anyone online to be currently inside the space.
+				If the public condition is no longer fulfilled, the space is temporarily no longer publicly listed in the list of spaces.
+				Despite that, everyone inside can still directly invite other users from their contacts list to the unlisted public space (see <Link to='#SP_Space_invites'>"Space invites"</Link> section).<br />
+				The "Public while an admin is inside" setting is useful for making sure your space does not diverge from its intended purpose while there is no owner/admin inside.<br />
+				<br />
+				Spaces can also be locked, which behaves similar to a private space, but prevents anyone except owners and admins from entering the space (leaving the space isn't limited). This also asks owners and admins for confirmation before entering.
+				Allow-listed users can still see locked spaces, but not who is inside them and cannot enter them.
+				"Join-me" invitations work the same as for private spaces, but "Space-bound" invitations are blocked.
 			</p>
 			<ul>
 				<li>The default when creating a new space is private.</li>

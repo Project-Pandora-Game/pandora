@@ -115,7 +115,7 @@ class NotificationHandler extends NotificationHandlerBase {
 		this._updateNotifications();
 		if (alert.has(NotificationAlert.POPUP)) {
 			this._risePopup(full, audio);
-		} else if (alert.has(NotificationAlert.AUDIO)) {
+		} else if (alert.has(NotificationAlert.AUDIO) && document.visibilityState === 'hidden') {
 			/* TODO: Make the sound being played configurable */
 			new Audio(audioBing).play().catch(() => { /* ignore */ });
 		}

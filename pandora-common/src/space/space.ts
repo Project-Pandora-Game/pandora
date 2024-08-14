@@ -164,6 +164,8 @@ export type SpaceListInfo = SpaceBaseInfo & {
 	totalCharacters: number;
 	/** Whether the account that requested the info is owner of this room */
 	isOwner: boolean;
+	/** Whether there is a friend contact inside this space. Not filled if this account cannot see extended info of this space. */
+	hasFriend?: boolean;
 };
 
 /** Info sent to client when displaying details about a space */

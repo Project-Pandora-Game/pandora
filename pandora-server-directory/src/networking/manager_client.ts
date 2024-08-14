@@ -448,8 +448,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
+		const accountFriends = await connection.account.contacts.getFriendsIds();
+
 		const spaces = (await SpaceManager.listSpacesVisibleTo(connection.account))
-			.map((r) => r.getListInfo(connection.account));
+			.map((r) => r.getListInfo(connection.account, accountFriends));
 
 		return { spaces };
 	}
@@ -465,15 +467,21 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return { result: 'notFound' };
 		}
 
-		const allowResult = space.checkAllowEnter(connection.character, invite, { characterLimit: true });
+		// Check if the account is allowed to see the details
+		if (!space.checkExtendedInfoVisibleTo(connection.account)) {
+			// Show details if the character can enter anyway (an invite is presented, it might still succeed)
+			const allowResult = space.checkAllowEnter(connection.character, invite, { characterLimit: true });
 
-		if (allowResult !== 'ok') {
-			return { result: 'noAccess' };
+			if (allowResult !== 'ok') {
+				return { result: 'noAccess' };
+			}
 		}
+
+		const accountFriends = await connection.account.contacts.getFriendsIds();
 
 		return {
 			result: 'success',
-			data: space.getListExtendedInfo(connection.account),
+			data: space.getListExtendedInfo(connection.account, accountFriends),
 			invite: space.getInvite(connection.character, invite),
 		};
 	}

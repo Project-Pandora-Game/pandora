@@ -197,7 +197,14 @@ function SpaceSearchEntry({ baseInfo }: {
 
 	const [show, setShow] = useState(false);
 
-	const { name, onlineCharacters, totalCharacters, maxUsers, description } = baseInfo;
+	const {
+		name,
+		onlineCharacters,
+		totalCharacters,
+		maxUsers,
+		description,
+		hasFriend,
+	} = baseInfo;
 	const isEmpty = onlineCharacters === 0;
 	const isFull = totalCharacters >= maxUsers;
 
@@ -230,6 +237,16 @@ function SpaceSearchEntry({ baseInfo }: {
 						src={ ICON_MAP[baseInfo.public] }
 						title={ ICON_TITLE_MAP[baseInfo.public] }
 						alt={ ICON_TITLE_MAP[baseInfo.public] } />
+				</div>
+				<div className='icons-extra'>
+					{
+						hasFriend === true ? (
+							<img
+								src={ friendsIcon }
+								title='A contact of yours is in this space'
+								alt='A contact of yours is in this space' />
+						) : null
+					}
 				</div>
 				<div className='entry'>
 					{ `${name} (` }

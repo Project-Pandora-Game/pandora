@@ -118,19 +118,40 @@ export class Space {
 		});
 	}
 
-	public getListInfo(queryingAccount: Account): SpaceListInfo {
+	/**
+	 * Get basic info about this space to be displayed in the space list when searching for spaces.
+	 * @param queryingAccount - The account for which to return info for
+	 * @param accountFriends - Queryset of the account's friends, for resolving extra data
+	 * @returns The basic list info
+	 */
+	public getListInfo(queryingAccount: Account, accountFriends: ReadonlySet<AccountId>): SpaceListInfo {
+		const canSeeExtendedInfo = this.checkExtendedInfoVisibleTo(queryingAccount);
+
+		let onlineCharacters = 0;
+		let hasFriend: boolean | undefined = canSeeExtendedInfo ? false : undefined;
+		for (const character of this.characters) {
+			if (character.isOnline()) {
+				onlineCharacters++;
+
+				if (canSeeExtendedInfo && !hasFriend && accountFriends.has(character.baseInfo.account.id)) {
+					hasFriend = true;
+				}
+			}
+		}
+
 		return ({
 			...this.getBaseInfo(),
 			id: this.id,
-			onlineCharacters: Array.from(this.characters).reduce((current, character) => current + (character.isOnline() ? 1 : 0), 0),
+			onlineCharacters,
 			totalCharacters: this.characterCount,
 			isOwner: this.isOwner(queryingAccount),
+			hasFriend,
 		});
 	}
 
-	public getListExtendedInfo(queryingAccount: Account): SpaceListExtendedInfo {
+	public getListExtendedInfo(queryingAccount: Account, accountFriends: ReadonlySet<AccountId>): SpaceListExtendedInfo {
 		return ({
-			...this.getListInfo(queryingAccount),
+			...this.getListInfo(queryingAccount, accountFriends),
 			...pick(this.config, ['features', 'admin', 'background']),
 			owners: Array.from(this._owners),
 			isAdmin: this.isAdmin(queryingAccount),
@@ -620,6 +641,32 @@ export class Space {
 	/** Returns if this space is visible to the specific account when searching in space search */
 	public checkVisibleTo(account: Account): boolean {
 		return this.isValid && (this.isPublic || this.isAllowed(account));
+	}
+
+	/** Returns if this space's extended info should be visible to the specified account, checking invite if given */
+	public checkExtendedInfoVisibleTo(account: Account): boolean {
+		// If space isn't in a valid state or the account is valid, then show no info
+		if (!this.isValid || this.isBanned(account))
+			return false;
+
+		// Allow if there already is some character of this account inside this space (they can see it anyway)
+		if (Array.from(account.characters.values()).map((c) => c.loadedCharacter?.space === this))
+			return true;
+
+		// Owners and admins can see the info at all times
+		if (this.isAdmin(account))
+			return true;
+
+		// Allow-listed users can see it unless it is locked
+		if (this.isAllowed(account) && this.config.public !== 'locked')
+			return true;
+
+		// If the space is public, anyone can see the details
+		if (this.isPublic)
+			return true;
+
+		// Otherwise no details for you! (can still be overriden through invite if the character checking can enter)
+		return false;
 	}
 
 	public isOwner(account: Account): boolean {

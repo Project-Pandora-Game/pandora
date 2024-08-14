@@ -305,12 +305,12 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 
 			if (info.public === 'locked') {
 				if (!await confirm(
-					'The space is locked',
+					'This space is locked',
 					(
 						<>
-							This space appears to be locked from the inside.
-							This usually happens when someone is having fun and doesn't want to be disturbed.<br />
-							Are you sure you want to use your key to enter anyway?
+							This space appears to be locked from the inside. <br />
+							This is usually done when people inside do not want to be disturbed.<br />
+							Are you sure you want to use your key and enter anyway?
 						</>
 					),
 				)) {

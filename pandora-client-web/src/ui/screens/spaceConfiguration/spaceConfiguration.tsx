@@ -83,7 +83,7 @@ function DefaultConfig(): SpaceDirectoryConfig {
 	};
 }
 
-export const SPACE_FEATURES: { id: SpaceFeature; name: string; icon?: string; }[] = [
+export const SPACE_FEATURES: { id: SpaceFeature; name: string; icon: string; }[] = [
 	{
 		id: 'allowBodyChanges',
 		name: 'Allow changes to character bodies',

@@ -156,9 +156,23 @@
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 
-		.offline {
-			color: $theme-normal-text-dim;
-			font-style: italic;
+		div {
+			display: flex;
+			align-items: center;
+
+			&.offline {
+				color: $theme-normal-text-dim;
+				font-style: italic;
+			}
+
+			span {
+				padding: 0 0.25em;
+			}
+
+			img {
+				height: 1em;
+				width: 1em;
+			}
 		}
 	}
 

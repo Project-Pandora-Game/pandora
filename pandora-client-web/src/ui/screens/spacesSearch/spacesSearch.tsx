@@ -31,10 +31,14 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import closedDoorLocked from '../../../icons/closed-door-locked.svg';
 import closedDoor from '../../../icons/closed-door.svg';
 import publicDoor from '../../../icons/public-door.svg';
+import lockIcon from '../../../assets/icons/lock.svg';
+import shieldIcon from '../../../assets/icons/shield.svg';
+import friendsIcon from '../../../assets/icons/friends.svg';
 import { useObservable } from '../../../observable';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration';
 import './spacesSearch.scss';
+import { useAccountContacts } from '../../../components/accountContacts/accountContactContext';
 
 const TIPS: readonly string[] = [
 	`You can move your character inside a room by dragging the character name below her.`,
@@ -298,6 +302,7 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 	const assetManager = useAssetManager();
 	const directoryConnector = useDirectoryConnector();
 	const confirm = useConfirmDialog();
+	const contacts = useAccountContacts('friend');
 
 	const [join, processing] = useAsyncEvent(
 		async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -364,6 +369,26 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 	const hasOnlineAdmin = info.characters.some((c) => c.isAdmin && c.isOnline);
 	const isPublic = info.public === 'public-with-admin' || info.public === 'public-with-anyone';
 
+	const featureIcons = useMemo((): [icon: string, name: string, extraClassNames?: string][] => {
+		const result = SPACE_FEATURES
+			.filter((f) => info.features.includes(f.id))
+			.map((f): [icon: string, name: string, extraClassNames?: string] => ([f.icon, f.name]));
+
+		if (info.isAdmin) {
+			result.push([shieldIcon, 'You are an admin of this space']);
+		}
+
+		if (!hasOnlineAdmin && hasFullInfo) {
+			result.push([shieldSlashedIcon, 'No admin is currently hosting this space', 'warning']);
+		}
+
+		if (info.public === 'locked') {
+			result.push([lockIcon, 'This space is locked', 'warning']);
+		}
+
+		return result;
+	}, [hasFullInfo, hasOnlineAdmin, info]);
+
 	return (
 		<div className='spacesSearchSpaceDetails'>
 			<div>
@@ -376,16 +401,9 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 				<img className='preview' src={ background } width='200px' height='100px' /> }
 			<Row className='features'>
 				{
-					SPACE_FEATURES
-						.filter((f) => info.features.includes(f.id))
-						.map((f) => (
-							<img key={ f.id } className='features-img' src={ f.icon } title={ f.name } alt={ f.name } />
-						))
-				}
-				{
-					(hasOnlineAdmin || !hasFullInfo) ? null : (
-						<img className='features-img warning' src={ shieldSlashedIcon } title='No admin is currently hosting this space' alt='No admin is currently hosting this space' />
-					)
+					featureIcons.map(([icon, name, extraClassNames], i) => (
+						<img key={ i } className={ classNames('features-img', extraClassNames) } src={ icon } title={ name } alt={ name } />
+					))
 				}
 			</Row>
 			<div className='description-title'>Description:</div>
@@ -408,9 +426,29 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 									})
 									.map((char) => (
 										<div key={ char.id } className={ char.isOnline ? '' : 'offline' }>
-											{ char.isOnline ? '' : '( ' }
-											{ char.name } ({ char.id })
-											{ char.isOnline ? '' : ' )' }
+											<span>
+												{ char.isOnline ? '' : '( ' }
+												{ char.name } ({ char.id })
+												{ char.isOnline ? '' : ' )' }
+											</span>
+											{
+												contacts.some((a) => a.id === char.accountId) ? (
+													<img
+														src={ friendsIcon }
+														title='This character is on your contacts list'
+														alt='This character is on your contacts list'
+													/>
+												) : null
+											}
+											{
+												char.isAdmin ? (
+													<img
+														src={ shieldIcon }
+														title='This character is an admin of this space'
+														alt='This character is an admin of this space'
+													/>
+												) : null
+											}
 										</div>
 									))
 							}

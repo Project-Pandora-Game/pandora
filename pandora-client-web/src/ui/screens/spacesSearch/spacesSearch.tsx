@@ -11,28 +11,29 @@ import {
 	SpaceInviteId,
 	SpaceListExtendedInfo,
 	SpaceListInfo,
+	type SpacePublicSetting,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
+import shieldSlashedIcon from '../../../assets/icons/shield-slashed.svg';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { ModalDialog } from '../../../components/dialog/dialog';
+import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
+import closedDoorLocked from '../../../icons/closed-door-locked.svg';
+import closedDoor from '../../../icons/closed-door.svg';
+import publicDoor from '../../../icons/public-door.svg';
+import { useObservable } from '../../../observable';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration';
 import './spacesSearch.scss';
-// import closedDoor from '../../../icons/closed-door.svg';
-import shieldSlashedIcon from '../../../assets/icons/shield-slashed.svg';
-import privateDoor from '../../../icons/private-door.svg';
-import publicDoor from '../../../icons/public-door.svg';
-import { useObservable } from '../../../observable';
 
 const TIPS: readonly string[] = [
 	`You can move your character inside a room by dragging the character name below her.`,
@@ -180,14 +181,27 @@ function SpaceSearchEntry({ baseInfo }: {
 
 	const { name, onlineCharacters, totalCharacters, maxUsers, description } = baseInfo;
 
+	const ICON_MAP: Record<SpacePublicSetting, string> = {
+		'locked': closedDoorLocked,
+		'private': closedDoor,
+		'public-with-admin': publicDoor,
+		'public-with-anyone': publicDoor,
+	};
+	const ICON_TITLE_MAP: Record<SpacePublicSetting, string> = {
+		'locked': 'Locked private space',
+		'private': 'Private space',
+		'public-with-admin': 'Public space',
+		'public-with-anyone': 'Public space',
+	};
+
 	return (
 		<>
 			<a className='spacesSearchGrid' onClick={ () => setShow(true) } >
 				<div className='icon'>
 					<img
-						src={ baseInfo.public !== 'private' ? publicDoor : privateDoor }
-						title={ baseInfo.public !== 'private' ? 'Public space' : 'Private space' }
-						alt={ baseInfo.public !== 'private' ? 'Public space' : 'Private space' } />
+						src={ ICON_MAP[baseInfo.public] }
+						title={ ICON_TITLE_MAP[baseInfo.public] }
+						alt={ ICON_TITLE_MAP[baseInfo.public] } />
 				</div>
 				<div className='entry'>
 					{ `${name} ( ${onlineCharacters} ` }
@@ -241,22 +255,49 @@ function SpaceDetailsDialog({ baseInfo, hide }: {
 
 	return (
 		<ModalDialog>
-			<SpaceDetails info={ info } hide={ hide } />
+			<SpaceDetails info={ info } hasFullInfo={ extendedInfo?.result === 'success' } hide={ hide } />
 		</ModalDialog>
 	);
 }
 
-export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeText = 'Close' }: { info: SpaceListExtendedInfo; hide?: () => void; invite?: SpaceInvite; redirectBeforeLeave?: boolean; closeText?: string; }): ReactElement {
+export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLeave, closeText = 'Close' }: {
+	info: SpaceListExtendedInfo;
+	hasFullInfo: boolean;
+	hide?: () => void;
+	invite?: SpaceInvite;
+	redirectBeforeLeave?: boolean;
+	closeText?: string;
+}): ReactElement {
 	const assetManager = useAssetManager();
 	const directoryConnector = useDirectoryConnector();
+	const confirm = useConfirmDialog();
 
 	const [join, processing] = useAsyncEvent(
-		(e: React.MouseEvent<HTMLButtonElement>) => {
+		async (e: React.MouseEvent<HTMLButtonElement>) => {
 			e.stopPropagation();
+
+			if (info.public === 'locked') {
+				if (!await confirm(
+					'The space is locked',
+					(
+						<>
+							This space appears to be locked from the inside.
+							This usually happens when someone is having fun and doesn't want to be disturbed.<br />
+							Are you sure you want to use your key to enter anyway?
+						</>
+					),
+				)) {
+					return null;
+				}
+			}
+
 			SpaceJoinProgress.show('progress', 'Joining space...');
 			return directoryConnector.awaitResponse('spaceEnter', { id: info.id, invite: invite?.id });
 		},
 		(resp) => {
+			if (resp == null)
+				return;
+
 			switch (resp.result) {
 				case 'ok':
 					SpaceJoinProgress.show('success', 'Space joined!');
@@ -294,11 +335,12 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 
 	const userIsOwner = !!info.isOwner;
 	const hasOnlineAdmin = info.characters.some((c) => c.isAdmin && c.isOnline);
+	const isPublic = info.public === 'public-with-admin' || info.public === 'public-with-anyone';
 
 	return (
 		<div className='spacesSearchSpaceDetails'>
 			<div>
-				Details for { (info.public !== 'private') ? 'public' : 'private' } space <b>{ info.name }</b><br />
+				Details for { isPublic ? 'public' : 'private' } space <b>{ info.name }</b><br />
 			</div>
 			<Row className='ownership' alignY='center'>
 				Owned by: { info.owners.join(', ') }
@@ -314,7 +356,7 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 						))
 				}
 				{
-					hasOnlineAdmin ? null : (
+					(hasOnlineAdmin || !hasFullInfo) ? null : (
 						<img className='features-img warning' src={ shieldSlashedIcon } title='No admin is currently hosting this space' alt='No admin is currently hosting this space' />
 					)
 				}

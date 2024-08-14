@@ -43,7 +43,7 @@ function QuerySpaceInfo({ spaceId, invite }: { spaceId: SpaceId; invite?: SpaceI
 		);
 	}
 	return (
-		<SpaceDetails info={ info.data } invite={ info.invite } hide={ () => navigate('/room') } closeText='Back to room' />
+		<SpaceDetails info={ info.data } hasFullInfo invite={ info.invite } hide={ () => navigate('/room') } closeText='Back to room' />
 	);
 }
 
@@ -76,7 +76,7 @@ export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: string; invite?
 			{
 				!open ? null : (
 					<ModalDialog>
-						<SpaceDetails info={ info.data } invite={ info.invite } hide={ () => setOpen(false) } redirectBeforeLeave />
+						<SpaceDetails info={ info.data } hasFullInfo invite={ info.invite } hide={ () => setOpen(false) } redirectBeforeLeave />
 					</ModalDialog>
 				)
 			}

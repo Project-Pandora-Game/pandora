@@ -247,6 +247,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						noScrollChange
 						disabled={ !canEdit }
 					>
+						<option value='locked'>Locked (only Admins and Owners can join)</option>
 						<option value='private'>Private (only visible to Allowed users, Admins and Owners)</option>
 						<option value='public-with-admin'>Public only while an admin is inside and online</option>
 						<option value='public-with-anyone'>Public only while someone is inside and online</option>

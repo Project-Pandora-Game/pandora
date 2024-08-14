@@ -42,6 +42,7 @@ export class Space {
 			return false;
 
 		switch (this.config.public) {
+			case 'locked':
 			case 'private':
 				return false;
 			case 'public-with-admin':
@@ -230,6 +231,7 @@ export class Space {
 				changeList.push(`character limit to '${changes.maxUsers}'`);
 			if (changes.public !== undefined) {
 				const NAME_MAP: Record<typeof this.config.public, string> = {
+					'locked': 'private (locked)',
 					'private': 'private',
 					'public-with-admin': 'public (while an admin is present)',
 					'public-with-anyone': 'public',
@@ -453,8 +455,8 @@ export class Space {
 		if (this.isBanned(character.baseInfo.account))
 			return 'noAccess';
 
-		// If you are on the allow list, you can enter the space
-		if (this.isAllowed(character.baseInfo.account))
+		// If you are on the allow list, you can enter the space unless it is locked
+		if (this.isAllowed(character.baseInfo.account) && this.config.public !== 'locked')
 			return 'ok';
 
 		// If the space is public, you can enter it
@@ -473,8 +475,9 @@ export class Space {
 				// Creator of "Join-me" invite needs to be present inside
 				if (!creator?.isOnline())
 					return 'invalidInvite';
-				// If the room is marked as private, then only admins can invite inside
-				if (this.config.public === 'private' && !this.isAdmin(creator.baseInfo.account))
+				// If the room is not marked as public, then only admins can invite inside
+				const isPublic = (this.config.public === 'public-with-admin' || this.config.public === 'public-with-anyone');
+				if (!isPublic && !this.isAdmin(creator.baseInfo.account))
 					return 'invalidInvite';
 			}
 			return 'ok';

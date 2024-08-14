@@ -36,6 +36,7 @@ export type ActionSpaceContext = {
 /**
  * Spaces are private by default and can be published to be seen in public space search.
  * There are three levels of publishing of a space:
+ * - `locked` - same visibility as `private`, but only admins and owners can join (they also get confirmation dialog)
  * - `private` - the space is only visible to Allow-listed accounts, admins and owners
  * - `public-with-admin` - the space is visible to anyone while there is an online admin inside
  * - `public-with-anyone` - the space is visible to anyone while there is anyone online inside
@@ -50,8 +51,9 @@ export const SpacePublicSettingSchema = z.preprocess(
 		return arg;
 	},
 	// The actual schema
-	z.enum(['private', 'public-with-admin', 'public-with-anyone']),
+	z.enum(['locked', 'private', 'public-with-admin', 'public-with-anyone']),
 );
+export type SpacePublicSetting = z.infer<typeof SpacePublicSettingSchema>;
 
 export const SpaceBaseInfoSchema = z.object({
 	/** The name of the space */

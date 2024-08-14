@@ -643,14 +643,14 @@ export class Space {
 		return this.isValid && (this.isPublic || this.isAllowed(account));
 	}
 
-	/** Returns if this space's extended info should be visible to the specified account, checking invite if given */
+	/** Returns if this space's extended info should be visible to the specified account */
 	public checkExtendedInfoVisibleTo(account: Account): boolean {
-		// If space isn't in a valid state or the account is valid, then show no info
+		// Deny if space isn't in a valid state or the account is banned
 		if (!this.isValid || this.isBanned(account))
 			return false;
 
 		// Allow if there already is some character of this account inside this space (they can see it anyway)
-		if (Array.from(account.characters.values()).map((c) => c.loadedCharacter?.space === this))
+		if (Array.from(account.characters.values()).some((c) => c.loadedCharacter?.space === this))
 			return true;
 
 		// Owners and admins can see the info at all times

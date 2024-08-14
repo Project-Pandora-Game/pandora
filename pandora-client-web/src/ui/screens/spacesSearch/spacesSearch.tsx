@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { noop } from 'lodash';
 import {
 	AssertNever,
@@ -124,8 +125,20 @@ function SpaceSearchList({ list }: {
 	const account = useCurrentAccount();
 	AssertNotNullable(account);
 
-	const ownSpaces = list.filter((r) => r.isOwner);
-	const otherSpaces = list.filter((r) => !r.isOwner);
+	const ownSpaces = list.filter((s) => s.isOwner);
+	const otherSpaces = useMemo((): readonly SpaceListInfo[] => {
+		return list
+			.filter((s) => !s.isOwner)
+			.sort((a, b) => {
+				// Sort spaces with someone online before those where people are offline
+				if ((a.onlineCharacters > 0) !== (b.onlineCharacters > 0)) {
+					return (a.onlineCharacters > 0) ? -1 : 1;
+				}
+
+				// Sort remaining spaces by name
+				return a.name.localeCompare(b.name);
+			});
+	}, [list]);
 
 	return (
 		<>
@@ -180,6 +193,8 @@ function SpaceSearchEntry({ baseInfo }: {
 	const [show, setShow] = useState(false);
 
 	const { name, onlineCharacters, totalCharacters, maxUsers, description } = baseInfo;
+	const isEmpty = onlineCharacters === 0;
+	const isFull = totalCharacters >= maxUsers;
 
 	const ICON_MAP: Record<SpacePublicSetting, string> = {
 		'locked': closedDoorLocked,
@@ -196,7 +211,15 @@ function SpaceSearchEntry({ baseInfo }: {
 
 	return (
 		<>
-			<a className='spacesSearchGrid' onClick={ () => setShow(true) } >
+			<a
+				className={ classNames(
+					'spacesSearchGrid',
+					isEmpty ? 'empty' : null,
+					isFull ? 'full' : null,
+					show ? 'selected' : null,
+				) }
+				onClick={ () => setShow(true) }
+			>
 				<div className='icon'>
 					<img
 						src={ ICON_MAP[baseInfo.public] }
@@ -204,9 +227,13 @@ function SpaceSearchEntry({ baseInfo }: {
 						alt={ ICON_TITLE_MAP[baseInfo.public] } />
 				</div>
 				<div className='entry'>
-					{ `${name} ( ${onlineCharacters} ` }
-					<span className='offlineCount'>(+{ totalCharacters - onlineCharacters })</span>
-					{ ` / ${maxUsers} )` }
+					{ `${name} (` }
+					<span className='userCount'>
+						{ `${onlineCharacters} ` }
+						<span className='offlineCount'>(+{ totalCharacters - onlineCharacters })</span>
+						{ ` / ${maxUsers}` }
+					</span>
+					{ `)` }
 				</div>
 				<div className='description-preview'>{ `${description}` }</div>
 			</a>
@@ -368,13 +395,24 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 					<div className='title'>Characters currently in this space:
 						<div className='users-list'>
 							{
-								info.characters.map((char) => (
-									<div key={ char.id } className={ char.isOnline ? '' : 'offline' }>
-										{ char.isOnline ? '' : '( ' }
-										{ char.name } ({ char.id })
-										{ char.isOnline ? '' : ' )' }
-									</div>
-								))
+								info.characters
+									.slice()
+									.sort((a, b) => {
+										// Sort offline characters last
+										if (a.isOnline !== b.isOnline) {
+											return a.isOnline ? -1 : 1;
+										}
+
+										// Keep original order otherwise
+										return 0;
+									})
+									.map((char) => (
+										<div key={ char.id } className={ char.isOnline ? '' : 'offline' }>
+											{ char.isOnline ? '' : '( ' }
+											{ char.name } ({ char.id })
+											{ char.isOnline ? '' : ' )' }
+										</div>
+									))
 							}
 						</div>
 					</div>

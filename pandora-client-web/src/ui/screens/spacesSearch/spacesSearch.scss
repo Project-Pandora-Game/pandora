@@ -9,17 +9,48 @@
 	grid-template-rows: auto;
 	align-items: center;
 	padding: 0.5em;
-	background-color: $grey-light;
-	color: black;
-	border: 0.2em solid black;
+	background-color: $theme-normal-background;
+	color: $theme-normal-text;
+	border: 0.15em solid black;
 
-	&:hover {
-		color: white;
-		background-color: $grey-darker;
+	&.selected {
+		background-color: $theme-active-background;
+		color: $theme-active-text;
+		.entry .offlineCount {
+			color: $theme-active-text-dim;
+		}
+	}
+
+	&:nth-child(even):not(:hover):not(.selected) {
+		background-color: $theme-normal-background-secondary;
+	}
+
+	&:hover:not(.selected) {
+		color: $theme-hover-text;
+		background-color: $theme-hover-background;
 
 		.entry .offlineCount {
-			color: #ccc;
+			color: $theme-hover-text-dim;
 		}
+	}
+
+	&.empty {
+		&:not(:hover):not(.selected) {
+			color: $theme-normal-text-dim;
+
+			.entry .offlineCount {
+				color: $theme-normal-text-dim;
+			}
+		}
+
+		.entry {
+			font-style: italic;
+		}
+	}
+
+	&.full .userCount {
+		background-color: color-mix(in srgb, transparent, $theme-error 40%);
+		border-radius: 0.5em;
 	}
 
 	.icon {
@@ -44,7 +75,7 @@
 		white-space: nowrap;
 
 		.offlineCount {
-			color: #444;
+			color: $theme-normal-text-dim;
 			transition: all 150ms linear;
 		}
 	}
@@ -57,6 +88,10 @@
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
+	}
+
+	.userCount {
+		padding: 0 0.25em;
 	}
 }
 
@@ -90,7 +125,8 @@
 		padding: 0.1em;
 
 		&.warning {
-			background-color: $theme-warning;
+			background-color: $theme-warningbox-background;
+			color: $theme-warningbox-text;
 		}
 	}
 
@@ -104,7 +140,8 @@
 		padding: 0.2em;
 		min-width: min(70em, 95vw);
 		max-width: 95vw;
-		background-color: $grey-lighter;
+		background-color: $theme-textbox-background;
+		color: $theme-textbox-text;
 	}
 
 	.title {
@@ -120,7 +157,8 @@
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 
 		.offline {
-			color: #666;
+			color: $theme-normal-text-dim;
+			font-style: italic;
 		}
 	}
 

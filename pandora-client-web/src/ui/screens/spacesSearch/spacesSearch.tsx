@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { noop } from 'lodash';
 import {
 	AssertNever,
@@ -11,28 +12,34 @@ import {
 	SpaceInviteId,
 	SpaceListExtendedInfo,
 	SpaceListInfo,
+	type SpacePublicSetting,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
+import forbiddenIcon from '../../../assets/icons/forbidden.svg';
+import friendsIcon from '../../../assets/icons/friends.svg';
+import lockIcon from '../../../assets/icons/lock.svg';
+import shieldSlashedIcon from '../../../assets/icons/shield-slashed.svg';
+import shieldIcon from '../../../assets/icons/shield.svg';
 import { useAsyncEvent } from '../../../common/useEvent';
+import { useAccountContacts } from '../../../components/accountContacts/accountContactContext';
 import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { ModalDialog } from '../../../components/dialog/dialog';
+import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
 import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
+import closedDoorLocked from '../../../icons/closed-door-locked.svg';
+import closedDoor from '../../../icons/closed-door.svg';
+import publicDoor from '../../../icons/public-door.svg';
+import { useObservable } from '../../../observable';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration';
 import './spacesSearch.scss';
-// import closedDoor from '../../../icons/closed-door.svg';
-import shieldSlashedIcon from '../../../assets/icons/shield-slashed.svg';
-import privateDoor from '../../../icons/private-door.svg';
-import publicDoor from '../../../icons/public-door.svg';
-import { useObservable } from '../../../observable';
 
 const TIPS: readonly string[] = [
 	`You can move your character inside a room by dragging the character name below her.`,
@@ -123,8 +130,20 @@ function SpaceSearchList({ list }: {
 	const account = useCurrentAccount();
 	AssertNotNullable(account);
 
-	const ownSpaces = list.filter((r) => r.isOwner);
-	const otherSpaces = list.filter((r) => !r.isOwner);
+	const ownSpaces = list.filter((s) => s.isOwner);
+	const otherSpaces = useMemo((): readonly SpaceListInfo[] => {
+		return list
+			.filter((s) => !s.isOwner)
+			.sort((a, b) => {
+				// Sort spaces with someone online before those where people are offline
+				if ((a.onlineCharacters > 0) !== (b.onlineCharacters > 0)) {
+					return (a.onlineCharacters > 0) ? -1 : 1;
+				}
+
+				// Sort remaining spaces by name
+				return a.name.localeCompare(b.name);
+			});
+	}, [list]);
 
 	return (
 		<>
@@ -178,21 +197,65 @@ function SpaceSearchEntry({ baseInfo }: {
 
 	const [show, setShow] = useState(false);
 
-	const { name, onlineCharacters, totalCharacters, maxUsers, description } = baseInfo;
+	const {
+		name,
+		onlineCharacters,
+		totalCharacters,
+		maxUsers,
+		description,
+		hasFriend,
+	} = baseInfo;
+	const isEmpty = onlineCharacters === 0;
+	const isFull = totalCharacters >= maxUsers;
+
+	const ICON_MAP: Record<SpacePublicSetting, string> = {
+		'locked': closedDoorLocked,
+		'private': closedDoor,
+		'public-with-admin': publicDoor,
+		'public-with-anyone': publicDoor,
+	};
+	const ICON_TITLE_MAP: Record<SpacePublicSetting, string> = {
+		'locked': 'Locked private space',
+		'private': 'Private space',
+		'public-with-admin': 'Public space',
+		'public-with-anyone': 'Public space',
+	};
 
 	return (
 		<>
-			<a className='spacesSearchGrid' onClick={ () => setShow(true) } >
+			<a
+				className={ classNames(
+					'spacesSearchGrid',
+					isEmpty ? 'empty' : null,
+					isFull ? 'full' : null,
+					show ? 'selected' : null,
+				) }
+				onClick={ () => setShow(true) }
+			>
 				<div className='icon'>
 					<img
-						src={ baseInfo.public !== 'private' ? publicDoor : privateDoor }
-						title={ baseInfo.public !== 'private' ? 'Public space' : 'Private space' }
-						alt={ baseInfo.public !== 'private' ? 'Public space' : 'Private space' } />
+						src={ ICON_MAP[baseInfo.public] }
+						title={ ICON_TITLE_MAP[baseInfo.public] }
+						alt={ ICON_TITLE_MAP[baseInfo.public] } />
+				</div>
+				<div className='icons-extra'>
+					{
+						hasFriend === true ? (
+							<img
+								src={ friendsIcon }
+								title='A contact of yours is in this space'
+								alt='A contact of yours is in this space' />
+						) : null
+					}
 				</div>
 				<div className='entry'>
-					{ `${name} ( ${onlineCharacters} ` }
-					<span className='offlineCount'>(+{ totalCharacters - onlineCharacters })</span>
-					{ ` / ${maxUsers} )` }
+					{ `${name} (` }
+					<span className='userCount'>
+						{ `${onlineCharacters} ` }
+						<span className='offlineCount'>(+{ totalCharacters - onlineCharacters })</span>
+						{ ` / ${maxUsers}` }
+					</span>
+					{ `)` }
 				</div>
 				<div className='description-preview'>{ `${description}` }</div>
 			</a>
@@ -241,22 +304,51 @@ function SpaceDetailsDialog({ baseInfo, hide }: {
 
 	return (
 		<ModalDialog>
-			<SpaceDetails info={ info } hide={ hide } />
+			<SpaceDetails info={ info } hasFullInfo={ extendedInfo?.result === 'success' } hide={ hide } />
 		</ModalDialog>
 	);
 }
 
-export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeText = 'Close' }: { info: SpaceListExtendedInfo; hide?: () => void; invite?: SpaceInvite; redirectBeforeLeave?: boolean; closeText?: string; }): ReactElement {
+export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLeave, closeText = 'Close' }: {
+	info: SpaceListExtendedInfo;
+	hasFullInfo: boolean;
+	hide?: () => void;
+	invite?: SpaceInvite;
+	redirectBeforeLeave?: boolean;
+	closeText?: string;
+}): ReactElement {
 	const assetManager = useAssetManager();
 	const directoryConnector = useDirectoryConnector();
+	const confirm = useConfirmDialog();
+	const contacts = useAccountContacts('friend');
+	const blockedAccounts = useAccountContacts('blocked');
 
 	const [join, processing] = useAsyncEvent(
-		(e: React.MouseEvent<HTMLButtonElement>) => {
+		async (e: React.MouseEvent<HTMLButtonElement>) => {
 			e.stopPropagation();
+
+			if (info.public === 'locked') {
+				if (!await confirm(
+					'This space is locked',
+					(
+						<>
+							This space appears to be locked from the inside. <br />
+							This is usually done when people inside do not want to be disturbed.<br />
+							Are you sure you want to use your key and enter anyway?
+						</>
+					),
+				)) {
+					return null;
+				}
+			}
+
 			SpaceJoinProgress.show('progress', 'Joining space...');
 			return directoryConnector.awaitResponse('spaceEnter', { id: info.id, invite: invite?.id });
 		},
 		(resp) => {
+			if (resp == null)
+				return;
+
 			switch (resp.result) {
 				case 'ok':
 					SpaceJoinProgress.show('success', 'Space joined!');
@@ -294,11 +386,32 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 
 	const userIsOwner = !!info.isOwner;
 	const hasOnlineAdmin = info.characters.some((c) => c.isAdmin && c.isOnline);
+	const isPublic = info.public === 'public-with-admin' || info.public === 'public-with-anyone';
+
+	const featureIcons = useMemo((): [icon: string, name: string, extraClassNames?: string][] => {
+		const result = SPACE_FEATURES
+			.filter((f) => info.features.includes(f.id))
+			.map((f): [icon: string, name: string, extraClassNames?: string] => ([f.icon, f.name]));
+
+		if (info.isAdmin) {
+			result.push([shieldIcon, 'You are an admin of this space']);
+		}
+
+		if (!hasOnlineAdmin && hasFullInfo) {
+			result.push([shieldSlashedIcon, 'No admin is currently hosting this space', 'warning']);
+		}
+
+		if (info.public === 'locked') {
+			result.push([lockIcon, 'This space is locked', 'warning']);
+		}
+
+		return result;
+	}, [hasFullInfo, hasOnlineAdmin, info]);
 
 	return (
 		<div className='spacesSearchSpaceDetails'>
 			<div>
-				Details for { (info.public !== 'private') ? 'public' : 'private' } space <b>{ info.name }</b><br />
+				Details for { isPublic ? 'public' : 'private' } space <b>{ info.name }</b><br />
 			</div>
 			<Row className='ownership' alignY='center'>
 				Owned by: { info.owners.join(', ') }
@@ -307,16 +420,9 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 				<img className='preview' src={ background } width='200px' height='100px' /> }
 			<Row className='features'>
 				{
-					SPACE_FEATURES
-						.filter((f) => info.features.includes(f.id))
-						.map((f) => (
-							<img key={ f.id } className='features-img' src={ f.icon } title={ f.name } alt={ f.name } />
-						))
-				}
-				{
-					hasOnlineAdmin ? null : (
-						<img className='features-img warning' src={ shieldSlashedIcon } title='No admin is currently hosting this space' alt='No admin is currently hosting this space' />
-					)
+					featureIcons.map(([icon, name, extraClassNames], i) => (
+						<img key={ i } className={ classNames('features-img', extraClassNames) } src={ icon } title={ name } alt={ name } />
+					))
 				}
 			</Row>
 			<div className='description-title'>Description:</div>
@@ -326,13 +432,53 @@ export function SpaceDetails({ info, hide, invite, redirectBeforeLeave, closeTex
 					<div className='title'>Characters currently in this space:
 						<div className='users-list'>
 							{
-								info.characters.map((char) => (
-									<div key={ char.id } className={ char.isOnline ? '' : 'offline' }>
-										{ char.isOnline ? '' : '( ' }
-										{ char.name } ({ char.id })
-										{ char.isOnline ? '' : ' )' }
-									</div>
-								))
+								info.characters
+									.slice()
+									.sort((a, b) => {
+										// Sort offline characters last
+										if (a.isOnline !== b.isOnline) {
+											return a.isOnline ? -1 : 1;
+										}
+
+										// Keep original order otherwise
+										return 0;
+									})
+									.map((char) => (
+										<div key={ char.id } className={ char.isOnline ? '' : 'offline' }>
+											<span>
+												{ char.isOnline ? '' : '( ' }
+												{ char.name } ({ char.id })
+												{ char.isOnline ? '' : ' )' }
+											</span>
+											{
+												contacts.some((a) => a.id === char.accountId) ? (
+													<img
+														src={ friendsIcon }
+														title='This character is on your contacts list'
+														alt='This character is on your contacts list'
+													/>
+												) : null
+											}
+											{
+												blockedAccounts.some((a) => a.id === char.accountId) ? (
+													<img
+														src={ forbiddenIcon }
+														title='This character is from an account you blocked'
+														alt='This character is from an account you blocked'
+													/>
+												) : null
+											}
+											{
+												char.isAdmin ? (
+													<img
+														src={ shieldIcon }
+														title='This character is an admin of this space'
+														alt='This character is an admin of this space'
+													/>
+												) : null
+											}
+										</div>
+									))
 							}
 						</div>
 					</div>

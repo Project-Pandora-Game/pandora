@@ -18,8 +18,13 @@ import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRed
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
+import forbiddenIcon from '../../../assets/icons/forbidden.svg';
+import friendsIcon from '../../../assets/icons/friends.svg';
+import lockIcon from '../../../assets/icons/lock.svg';
 import shieldSlashedIcon from '../../../assets/icons/shield-slashed.svg';
+import shieldIcon from '../../../assets/icons/shield.svg';
 import { useAsyncEvent } from '../../../common/useEvent';
+import { useAccountContacts } from '../../../components/accountContacts/accountContactContext';
 import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
@@ -31,14 +36,10 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import closedDoorLocked from '../../../icons/closed-door-locked.svg';
 import closedDoor from '../../../icons/closed-door.svg';
 import publicDoor from '../../../icons/public-door.svg';
-import lockIcon from '../../../assets/icons/lock.svg';
-import shieldIcon from '../../../assets/icons/shield.svg';
-import friendsIcon from '../../../assets/icons/friends.svg';
 import { useObservable } from '../../../observable';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration';
 import './spacesSearch.scss';
-import { useAccountContacts } from '../../../components/accountContacts/accountContactContext';
 
 const TIPS: readonly string[] = [
 	`You can move your character inside a room by dragging the character name below her.`,
@@ -303,6 +304,7 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 	const directoryConnector = useDirectoryConnector();
 	const confirm = useConfirmDialog();
 	const contacts = useAccountContacts('friend');
+	const blockedAccounts = useAccountContacts('blocked');
 
 	const [join, processing] = useAsyncEvent(
 		async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -437,6 +439,15 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 														src={ friendsIcon }
 														title='This character is on your contacts list'
 														alt='This character is on your contacts list'
+													/>
+												) : null
+											}
+											{
+												blockedAccounts.some((a) => a.id === char.accountId) ? (
+													<img
+														src={ forbiddenIcon }
+														title='This character is from an account you blocked'
+														alt='This character is from an account you blocked'
 													/>
 												) : null
 											}

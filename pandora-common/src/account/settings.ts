@@ -82,7 +82,13 @@ export const AccountSettingsSchema = z.object({
 	 * TODO: Needs to be removed later
 	 */
 	notificationRoomEntry: z.boolean(),
+	/**
+	 * Volume of the notification. Stored as int, but will be divided by 100 later
+	 * Defaults to 100
+	 */
+	notificationVolume: z.enum(['0', '25', '50', '75', '100']),
 });
+
 export type AccountSettings = z.infer<typeof AccountSettingsSchema>;
 
 export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
@@ -105,6 +111,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceChatroomItemDisplayNameType: 'custom_with_original_in_brackets',
 	notificationRoomEntryNew: '',
 	notificationRoomEntry: false,
+	notificationVolume: '100',
 });
 
 export const ACCOUNT_SETTINGS_LIMITED_LIMITS = Object.freeze({

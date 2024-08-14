@@ -25,6 +25,14 @@ export enum NotificationSource {
 	ROOM_ENTRY = 'ROOM_ENTRY',
 }
 
+export const NOTIFICATION_AUDIO_VOLUME: Readonly<Record<AccountSettings['notificationVolume'], string>> = {
+	'0': '0%',
+	'25': '25%',
+	'50': '50%',
+	'75': '75%',
+	'100': '100%',
+};
+
 export const NOTIFICATION_AUDIO_NAMES: Readonly<Record<AccountSettings['notificationRoomEntryNew'], string>> = {
 	'': '<None>',
 	'alert': 'Alert',
@@ -139,10 +147,10 @@ class NotificationHandler extends NotificationHandlerBase {
 		if (alert.has(NotificationAlert.POPUP)) {
 			this._risePopup(full, audio);
 		} else if (alert.has(NotificationAlert.AUDIO)) {
-			const notificationRoomEntryNew = this._getSettings('notificationRoomEntryNew');
-			const sound = NOTIFICATION_AUDIO_SOUNDS[notificationRoomEntryNew];
-			if (sound != null)
-				new Audio(sound).play().catch(() => { /* ignore */ });
+			//const notificationRoomEntryNew = this._getSettings('notificationRoomEntryNew');
+			//const sound = NOTIFICATION_AUDIO_SOUNDS[notificationRoomEntryNew];
+			//if (sound != null)
+			//new Audio(sound).play().catch(() => { /* ignore */ });
 		}
 	}
 

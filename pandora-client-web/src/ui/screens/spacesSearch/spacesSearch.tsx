@@ -176,7 +176,9 @@ function SpaceSearchList({ list }: {
 					ownSpaces.length >= account.spaceOwnershipLimit ? null : (
 						<a className='spacesSearchGrid' onClick={ () => navigate('/spaces/create') } >
 							<div className='icon'>➕</div>
+							<div className='icons-extra' />
 							<div className='entry'>Create a new space</div>
+							<div className='description-preview' />
 						</a>
 					)
 				}

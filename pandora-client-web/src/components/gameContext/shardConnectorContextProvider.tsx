@@ -53,7 +53,7 @@ export function ShardConnectorContextProvider({ children }: ChildrenProps): Reac
 	const directoryConnector = useDirectoryConnector();
 
 	const {
-		notificationRoomEntryNew,
+		notificationRoomEntrySound,
 	} = useAccountSettings();
 
 	const [shardConnector, setShardConnector] = useState<ShardConnector | null>(null);
@@ -75,11 +75,11 @@ export function ShardConnectorContextProvider({ children }: ChildrenProps): Reac
 
 	useEffect(() => {
 		return gameState?.on('characterEntered', () => {
-			if (notificationRoomEntryNew !== '') {
+			if (notificationRoomEntrySound !== '') {
 				notifyCharacterEntered({});
 			}
 		});
-	}, [gameState, notificationRoomEntryNew, notifyCharacterEntered]);
+	}, [gameState, notificationRoomEntrySound, notifyCharacterEntered]);
 
 	useDebugExpose('shardConnector', shardConnector);
 	useDebugExpose('player', gameState?.player);

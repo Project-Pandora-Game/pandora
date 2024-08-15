@@ -33,7 +33,7 @@ export const NOTIFICATION_AUDIO_VOLUME: Readonly<Record<AccountSettings['notific
 	'100': '100%',
 };
 
-export const NOTIFICATION_AUDIO_NAMES: Readonly<Record<AccountSettings['notificationRoomEntryNew'], string>> = {
+export const NOTIFICATION_AUDIO_NAMES: Readonly<Record<AccountSettings['notificationRoomEntrySound'], string>> = {
 	'': '<None>',
 	'alert': 'Alert',
 	'bell': 'Bell',
@@ -41,7 +41,7 @@ export const NOTIFICATION_AUDIO_NAMES: Readonly<Record<AccountSettings['notifica
 	'dingding': 'Ding-Ding',
 };
 
-export const NOTIFICATION_AUDIO_SOUNDS: Readonly<Record<AccountSettings['notificationRoomEntryNew'], string | null>> = {
+export const NOTIFICATION_AUDIO_SOUNDS: Readonly<Record<AccountSettings['notificationRoomEntrySound'], string | null>> = {
 	'': null,
 	'alert': audioAlert,
 	'bell': audioBell,
@@ -147,10 +147,10 @@ class NotificationHandler extends NotificationHandlerBase {
 		if (alert.has(NotificationAlert.POPUP)) {
 			this._risePopup(full, audio);
 		} else if (alert.has(NotificationAlert.AUDIO)) {
-			//const notificationRoomEntryNew = this._getSettings('notificationRoomEntryNew');
-			//const sound = NOTIFICATION_AUDIO_SOUNDS[notificationRoomEntryNew];
-			//if (sound != null)
-			//new Audio(sound).play().catch(() => { /* ignore */ });
+			const notificationRoomEntrySound = this._getSettings('notificationRoomEntrySound');
+			const sound = NOTIFICATION_AUDIO_SOUNDS[notificationRoomEntrySound];
+			if (sound != null)
+				new Audio(sound).play().catch(() => { /* ignore */ });
 		}
 	}
 

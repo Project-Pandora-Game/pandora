@@ -35,16 +35,16 @@ function VolumeSettings(): ReactElement {
 }
 
 function RoomEntrySettings(): ReactElement {
-	const { notificationRoomEntryNew, notificationVolume } = useAccountSettings();
+	const { notificationRoomEntrySound, notificationVolume } = useAccountSettings();
 	return (
 		<FieldsetToggle legend='Room entry notifications'>
-			<SelectAccountSettings setting='notificationRoomEntryNew' label='Which audio to play, if someone enters your room' stringify={ NOTIFICATION_AUDIO_NAMES } />
+			<SelectAccountSettings setting='notificationRoomEntrySound' label='Which audio to play, if someone enters your room' stringify={ NOTIFICATION_AUDIO_NAMES } />
 			<div>
 				<Button
 					className='slim fadeDisabled'
-					disabled={ notificationRoomEntryNew === '' }
+					disabled={ notificationRoomEntrySound === '' }
 					onClick={ () => {
-						const sound = NOTIFICATION_AUDIO_SOUNDS[notificationRoomEntryNew];
+						const sound = NOTIFICATION_AUDIO_SOUNDS[notificationRoomEntrySound];
 						if (sound != null) {
 							const audio = new Audio(sound);
 							audio.volume = Number(notificationVolume) / 100;

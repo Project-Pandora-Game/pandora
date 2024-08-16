@@ -65,7 +65,7 @@
 		"@types/jest": "29.5.12",
 		"@types/json-diff": "1.0.3",
 		"@types/lodash": "4.17.1",
-		"@types/node": "20.14.0",
+		"@types/node": "20.15.0",
 		"@types/nodemailer": "6.4.15",
 		"@types/semver": "7.5.8",
 		"@types/wtfnode": "0.7.3",

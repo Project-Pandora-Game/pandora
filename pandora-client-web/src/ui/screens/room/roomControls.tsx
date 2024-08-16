@@ -310,7 +310,7 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 	const icons = useMemo((): ReactNode[] => {
 		const result: ReactNode[] = [];
 		if (isAdmin) {
-			result.push(<img className='character-icon' src={ shieldIcon } alt='Space admin' title='Space admin' />);
+			result.push(<img key='space-admin' className='character-icon' src={ shieldIcon } alt='Space admin' title='Space admin' />);
 		}
 		return result;
 	}, [isAdmin]);

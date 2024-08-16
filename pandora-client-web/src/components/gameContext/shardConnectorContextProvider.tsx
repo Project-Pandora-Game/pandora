@@ -17,7 +17,7 @@ import { useDebugExpose } from '../../common/useDebugExpose';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { useAsyncEvent } from '../../common/useEvent';
 import { ShardConnector } from '../../networking/shardConnector';
-import { SocketIOShardConnector } from '../../networking/socketio_shard_connector';
+import { SocketIOConnector } from '../../networking/socketio_connector';
 import { useNullableObservable, useObservable } from '../../observable';
 import { useDebugContext } from '../error/debugContextProvider';
 import { useAccountSettings, useDirectoryConnector } from './directoryConnectorContextProvider';
@@ -64,7 +64,7 @@ export function ShardConnectorContextProvider({ children }: ChildrenProps): Reac
 	}), [shardConnector]);
 
 	const context = useMemo<ConnectorFactoryContext>(() => ({
-		shardConnectorFactory: (info) => new SocketIOShardConnector(info, directoryConnector),
+		shardConnectorFactory: (info) => new ShardConnector(info, directoryConnector),
 	}), [directoryConnector]);
 
 	const gameState = useNullableObservable(shardConnector?.gameState);
@@ -198,8 +198,9 @@ export function useConnectToShard(): (info: IDirectoryCharacterConnectionInfo) =
 
 			setDebugData({ shardConnectionInfo: info });
 			const newShardConnector = shardConnectorFactory(info);
+			const connectPromise = newShardConnector.connect(SocketIOConnector);
 			setShardConnector(newShardConnector);
-			await newShardConnector.connect();
+			await connectPromise;
 		},
 		[directoryConnector, shardConnector, disconnectFromShard, setShardConnector, shardConnectorFactory, setDebugData],
 	);

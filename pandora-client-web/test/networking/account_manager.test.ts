@@ -10,18 +10,19 @@ import {
 	useLogin,
 	useLogout,
 } from '../../src/networking/account_manager';
-import { MockDirectoryConnector } from '../mocks/networking/mockDirectoryConnector';
-import { MockShardConnector } from '../mocks/networking/mockShardConnector';
+import { DirectoryConnector } from '../../src/networking/directoryConnector';
+import { ShardConnector } from '../../src/networking/shardConnector';
+import { MockConnectionInfo } from '../mocks/networking/mockShardConnector';
 import { ProvidersProps, RenderHookWithProviders } from '../testUtils';
 
 describe('Account Manager', () => {
 	const setShardConnector = jest.fn();
-	let directoryConnector: MockDirectoryConnector;
-	let shardConnector: MockShardConnector;
+	let directoryConnector: DirectoryConnector;
+	let shardConnector: ShardConnector;
 
 	beforeEach(() => {
-		directoryConnector = new MockDirectoryConnector();
-		shardConnector = new MockShardConnector(directoryConnector);
+		directoryConnector = new DirectoryConnector();
+		shardConnector = new ShardConnector(MockConnectionInfo(), directoryConnector);
 	});
 
 	describe('useLogin', () => {
@@ -34,22 +35,25 @@ describe('Account Manager', () => {
 		});
 
 		async function testLogin(username: string, password: string, verificationToken?: string): Promise<void> {
-			directoryConnector.login.mockResolvedValue('ok');
+			const loginMock = jest.spyOn(directoryConnector, 'login')
+				.mockResolvedValue('ok');
+
 			const { result } = renderHookWithTestProviders(useLogin);
-			expect(directoryConnector.login).not.toHaveBeenCalled();
+			expect(loginMock).not.toHaveBeenCalled();
 
 			const loginResponse = await result.current(username, password, verificationToken);
 
-			expect(directoryConnector.login).toHaveBeenCalledTimes(1);
-			expect(directoryConnector.login).toHaveBeenCalledWith(username, password, verificationToken);
+			expect(loginMock).toHaveBeenCalledTimes(1);
+			expect(loginMock).toHaveBeenCalledWith(username, password, verificationToken);
 			expect(loginResponse).toBe('ok');
 		}
 	});
 
 	describe('useLogout', () => {
 		it('should logout from the directory', () => {
+			const logoutMock = jest.spyOn(directoryConnector, 'logout');
 			const { result } = renderHookWithTestProviders(useLogout);
-			expect(directoryConnector.logout).not.toHaveBeenCalled();
+			expect(logoutMock).not.toHaveBeenCalled();
 
 			const original = window.location;
 			const reload = jest.fn();
@@ -61,7 +65,7 @@ describe('Account Manager', () => {
 			});
 
 			result.current();
-			expect(directoryConnector.logout).toHaveBeenCalledTimes(1);
+			expect(logoutMock).toHaveBeenCalledTimes(1);
 			// It triggers window reload
 			expect(reload).toHaveBeenCalledTimes(1);
 
@@ -75,19 +79,20 @@ describe('Account Manager', () => {
 
 	describe('useCreateNewCharacter', () => {
 		it('should return false if character creation was not successful', async () => {
-			directoryConnector.awaitResponse.mockResolvedValue({ result: 'failed' });
+			jest.spyOn(directoryConnector, 'awaitResponse').mockResolvedValue({ result: 'failed' });
 			const { result } = renderHookWithTestProviders(useCreateNewCharacter);
 			expect(await result.current()).toBe(false);
 		});
 
 		it('should create a new character successfully', async () => {
-			directoryConnector.awaitResponse.mockResolvedValue({ result: 'ok' });
+			const awaitResponseMock = jest.spyOn(directoryConnector, 'awaitResponse')
+				.mockResolvedValue({ result: 'ok' });
 			const { result } = renderHookWithTestProviders(useCreateNewCharacter, { setShardConnector });
 
 			const success = await result.current();
 			expect(success).toBe(true);
-			expect(directoryConnector.awaitResponse).toHaveBeenCalledTimes(1);
-			expect(directoryConnector.awaitResponse).toHaveBeenCalledWith('createCharacter', EMPTY);
+			expect(awaitResponseMock).toHaveBeenCalledTimes(1);
+			expect(awaitResponseMock).toHaveBeenCalledWith('createCharacter', EMPTY);
 		});
 	});
 
@@ -137,13 +142,14 @@ describe('Account Manager', () => {
 			expectedResponse: RegisterResponse,
 			betaKey?: string,
 		): Promise<void> {
-			directoryConnector.awaitResponse.mockResolvedValue({ result: expectedResponse });
+			const awaitResponseMock = jest.spyOn(directoryConnector, 'awaitResponse')
+				.mockResolvedValue({ result: expectedResponse });
 			const { result } = renderHookWithTestProviders(useDirectoryRegister);
 
 			const response = await result.current(username, displayName, password, email, betaKey);
 			expect(response).toBe(expectedResponse);
-			expect(directoryConnector.awaitResponse).toHaveBeenCalledTimes(1);
-			expect(directoryConnector.awaitResponse).toHaveBeenCalledWith('register', {
+			expect(awaitResponseMock).toHaveBeenCalledTimes(1);
+			expect(awaitResponseMock).toHaveBeenCalledWith('register', {
 				username, displayName, passwordSha512, email, betaKey,
 			});
 		}
@@ -151,13 +157,14 @@ describe('Account Manager', () => {
 
 	describe('useDirectoryResendVerification', () => {
 		it('should make a request to the directory to resend a verification email', async () => {
-			directoryConnector.awaitResponse.mockResolvedValue({ result: 'maybeSent' });
+			const awaitResponseMock = jest.spyOn(directoryConnector, 'awaitResponse')
+				.mockResolvedValue({ result: 'maybeSent' });
 			const { result } = renderHookWithTestProviders(useDirectoryResendVerification);
 
 			const response = await result.current('test@test.com');
 			expect(response).toBe('maybeSent');
-			expect(directoryConnector.awaitResponse).toHaveBeenCalledTimes(1);
-			expect(directoryConnector.awaitResponse).toHaveBeenCalledWith(
+			expect(awaitResponseMock).toHaveBeenCalledTimes(1);
+			expect(awaitResponseMock).toHaveBeenCalledWith(
 				'resendVerificationEmail',
 				{ email: 'test@test.com' },
 			);
@@ -166,13 +173,14 @@ describe('Account Manager', () => {
 
 	describe('useDirectoryPasswordReset', () => {
 		it('should make a password reset request to the directory', async () => {
-			directoryConnector.awaitResponse.mockResolvedValue({ result: 'maybeSent' });
+			const awaitResponseMock = jest.spyOn(directoryConnector, 'awaitResponse')
+				.mockResolvedValue({ result: 'maybeSent' });
 			const { result } = renderHookWithTestProviders(useDirectoryPasswordReset);
 
 			const response = await result.current('test@test.com');
 			expect(response).toBe('maybeSent');
-			expect(directoryConnector.awaitResponse).toHaveBeenCalledTimes(1);
-			expect(directoryConnector.awaitResponse).toHaveBeenCalledWith(
+			expect(awaitResponseMock).toHaveBeenCalledTimes(1);
+			expect(awaitResponseMock).toHaveBeenCalledWith(
 				'passwordReset',
 				{ email: 'test@test.com' },
 			);
@@ -180,16 +188,17 @@ describe('Account Manager', () => {
 	});
 
 	describe('useDirectoryPasswordResetConfirm', () => {
-		it.each(['ok', 'unknownCredentials'])(
+		it.each(['ok', 'unknownCredentials'] as const)(
 			'should make a password reset confirmation request to the directory',
 			async (directoryResponse) => {
-				directoryConnector.awaitResponse.mockResolvedValue({ result: directoryResponse });
+				const awaitResponseMock = jest.spyOn(directoryConnector, 'awaitResponse')
+					.mockResolvedValue({ result: directoryResponse });
 				const { result } = renderHookWithTestProviders(useDirectoryPasswordResetConfirm);
 
 				const response = await result.current('test-user', '123456', 'qwerty');
 				expect(response).toBe(directoryResponse);
-				expect(directoryConnector.awaitResponse).toHaveBeenCalledTimes(1);
-				expect(directoryConnector.awaitResponse).toHaveBeenCalledWith('passwordResetConfirm', {
+				expect(awaitResponseMock).toHaveBeenCalledTimes(1);
+				expect(awaitResponseMock).toHaveBeenCalledWith('passwordResetConfirm', {
 					username: 'test-user',
 					token: '123456',
 					passwordSha512: '3pxNDzPgVbuz9CUcrKZkup3gCVgXvECda7tiSrTHaoUiDf7E7hjtAtJEFm4tdnlgGV17x+Gm6AxkisMHP3iNrA==',

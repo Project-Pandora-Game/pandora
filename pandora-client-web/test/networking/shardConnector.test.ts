@@ -1,10 +1,9 @@
-import { ShardConnectionState } from '../../src/networking/shardConnector';
-import { SocketIOShardConnector } from '../../src/networking/socketio_shard_connector';
-import { MockDirectoryConnector } from '../mocks/networking/mockDirectoryConnector';
+import { DirectoryConnector } from '../../src/networking/directoryConnector';
+import { ShardConnectionState, ShardConnector } from '../../src/networking/shardConnector';
 import { MockConnectionInfo } from '../mocks/networking/mockShardConnector';
 
-describe('SocketIOShardConnector', () => {
-	const mockShardConnector = new SocketIOShardConnector(MockConnectionInfo(), new MockDirectoryConnector());
+describe('ShardConnector', () => {
+	const mockShardConnector = new ShardConnector(MockConnectionInfo(), new DirectoryConnector());
 
 	it('default state should be NONE', () => {
 		expect(mockShardConnector.state.value).toBe(ShardConnectionState.NONE);

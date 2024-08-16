@@ -15,8 +15,7 @@ import {
 import { DirectoryConnector } from '../src/networking/directoryConnector';
 import { ShardConnector } from '../src/networking/shardConnector';
 import { MockDebugData } from './mocks/error/errorMocks';
-import { MockDirectoryConnector } from './mocks/networking/mockDirectoryConnector';
-import { MockShardConnector } from './mocks/networking/mockShardConnector';
+import { MockConnectionInfo } from './mocks/networking/mockShardConnector';
 
 export function RenderWithRouter(
 	element: ReactElement,
@@ -80,12 +79,12 @@ function CreateCurriedProviders(propOverrides?: Partial<Omit<ProvidersProps, 'ch
 }
 
 function MockProvidersProps(overrides?: Partial<Omit<ProvidersProps, 'children'>>): Omit<ProvidersProps, 'children'> {
-	const directoryConnector = new MockDirectoryConnector();
+	const directoryConnector = new DirectoryConnector();
 	return {
 		debugData: MockDebugData(),
 		setDebugData: jest.fn(),
 		directoryConnector,
-		shardConnector: new MockShardConnector(directoryConnector),
+		shardConnector: new ShardConnector(MockConnectionInfo(), directoryConnector),
 		setShardConnector: jest.fn(),
 		...overrides,
 	};
@@ -130,7 +129,7 @@ export function Providers({
 	const debugContextData = useMemo<DebugContext>(() => ({ debugData, setDebugData }), [debugData, setDebugData]);
 
 	const connectorFactoryContextData = useMemo<ConnectorFactoryContext>(() => ({
-		shardConnectorFactory: (info) => new MockShardConnector(directoryConnector, info),
+		shardConnectorFactory: (info) => new ShardConnector(info, directoryConnector),
 	}), [directoryConnector]);
 
 	const shardConnectorContextData = useMemo<ShardConnectorContextData>(() => ({

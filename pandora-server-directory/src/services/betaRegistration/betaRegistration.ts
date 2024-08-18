@@ -1,4 +1,4 @@
-import { Assert, AsyncSynchronized, GetLogger, type Service } from 'pandora-common';
+import { Assert, AsyncSynchronized, GetLogger, type ServerService } from 'pandora-common';
 import promClient from 'prom-client';
 import { GetDatabase } from '../../database/databaseProvider';
 import type { DatabaseBetaRegistration } from '../../database/databaseStructure';
@@ -13,7 +13,7 @@ const betaRegistrationPending = new promClient.Gauge({
 	help: 'Current count of pending registrations for beta',
 });
 
-export const BetaRegistrationService = new class BetaRegistrationService implements Service {
+export const BetaRegistrationService = new class BetaRegistrationService implements ServerService {
 	private _betaRegistrations: DatabaseBetaRegistration[] | null = null;
 	private readonly logger = GetLogger('BetaRegistration');
 

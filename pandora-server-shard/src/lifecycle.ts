@@ -1,4 +1,4 @@
-import { GetLogger, IEmpty, Service, logConfig } from 'pandora-common';
+import { GetLogger, IEmpty, ServerService, logConfig } from 'pandora-common';
 import { CharacterManager } from './character/characterManager';
 import { HttpServer } from './networking/httpServer';
 import { DirectoryConnector } from './networking/socketio_directory_connector';
@@ -19,7 +19,7 @@ let destroying = 'unknown service';
 let stopping: Promise<IEmpty> | undefined;
 const STOP_TIMEOUT = 10_000;
 
-function DestroyService(service: Service): Promise<void> | void {
+function DestroyService(service: ServerService): Promise<void> | void {
 	destroying = service.constructor.name;
 	return service.onDestroy?.();
 }

@@ -1,4 +1,4 @@
-import { GetLogger, Service } from 'pandora-common';
+import { GetLogger, ServerService } from 'pandora-common';
 import { ENV } from '../config';
 const { SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT, TRUSTED_REVERSE_PROXY_HOPS } = ENV;
 import { Server as NodeHttpServer } from 'node:http';
@@ -11,7 +11,7 @@ import express from 'express';
 import { MetricsServe } from '../metrics';
 import { GitHubVerifierAPI } from '../services/github/githubVerify';
 
-export const HttpServer = new class HttpServer implements Service {
+export const HttpServer = new class HttpServer implements ServerService {
 	private _server?: NodeHttpServer;
 	private readonly _logger = GetLogger('Server');
 	private readonly _activeConnections = new Set<Socket>();

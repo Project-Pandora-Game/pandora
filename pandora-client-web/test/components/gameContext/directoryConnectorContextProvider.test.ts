@@ -1,5 +1,5 @@
 import { RenderHookResult } from '@testing-library/react';
-import { IDirectoryClientChangeEvents } from 'pandora-common';
+import { Assert, IDirectoryClientChangeEvents, type ServiceManager } from 'pandora-common';
 import {
 	useAuthToken,
 	useCurrentAccount,
@@ -7,7 +7,7 @@ import {
 	useDirectoryConnector,
 } from '../../../src/components/gameContext/directoryConnectorContextProvider';
 import { DirectoryConnector } from '../../../src/networking/directoryConnector';
-import { ProvidersProps, RenderHookWithProviders } from '../../testUtils';
+import { MockServiceManager, ProvidersProps, RenderHookWithProviders } from '../../testUtils';
 
 const directoryChangeEvents: IDirectoryClientChangeEvents[] = [
 	'characterList',
@@ -16,10 +16,13 @@ const directoryChangeEvents: IDirectoryClientChangeEvents[] = [
 ];
 
 describe('DirectoryConnectorContextProvider', () => {
+	let serviceManager: ServiceManager<ClientServices>;
 	let directoryConnector: DirectoryConnector;
 
 	beforeEach(() => {
-		directoryConnector = new DirectoryConnector();
+		serviceManager = MockServiceManager();
+		Assert(serviceManager.services.directoryConnector != null);
+		directoryConnector = serviceManager.services.directoryConnector;
 	});
 
 	describe('useDirectoryConnector', () => {
@@ -68,7 +71,7 @@ describe('DirectoryConnectorContextProvider', () => {
 		hook: (initialProps?: Props) => Result,
 		providerPropOverrides?: Partial<Omit<ProvidersProps, 'children'>>,
 	): RenderHookResult<Result, Props> {
-		const props = { directoryConnector, ...providerPropOverrides };
+		const props = { serviceManager, directoryConnector, ...providerPropOverrides };
 		return RenderHookWithProviders(hook, props);
 	}
 });

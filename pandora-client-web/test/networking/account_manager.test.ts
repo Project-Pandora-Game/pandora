@@ -1,5 +1,5 @@
 import { RenderHookResult } from '@testing-library/react';
-import { EMPTY } from 'pandora-common';
+import { Assert, EMPTY, type ServiceManager } from 'pandora-common';
 import {
 	RegisterResponse,
 	useCreateNewCharacter,
@@ -13,15 +13,18 @@ import {
 import { DirectoryConnector } from '../../src/networking/directoryConnector';
 import { ShardConnector } from '../../src/networking/shardConnector';
 import { MockConnectionInfo } from '../mocks/networking/mockShardConnector';
-import { ProvidersProps, RenderHookWithProviders } from '../testUtils';
+import { MockServiceManager, ProvidersProps, RenderHookWithProviders } from '../testUtils';
 
 describe('Account Manager', () => {
 	const setShardConnector = jest.fn();
+	let serviceManager: ServiceManager<ClientServices>;
 	let directoryConnector: DirectoryConnector;
 	let shardConnector: ShardConnector;
 
 	beforeEach(() => {
-		directoryConnector = new DirectoryConnector();
+		serviceManager = MockServiceManager();
+		Assert(serviceManager.services.directoryConnector != null);
+		directoryConnector = serviceManager.services.directoryConnector;
 		shardConnector = new ShardConnector(MockConnectionInfo(), directoryConnector);
 	});
 
@@ -211,7 +214,7 @@ describe('Account Manager', () => {
 		hook: (initialProps?: Props) => Result,
 		providerPropOverrides?: Partial<Omit<ProvidersProps, 'children'>>,
 	): RenderHookResult<Result, Props> {
-		const props = { directoryConnector, shardConnector, setShardConnector, ...providerPropOverrides };
+		const props = { serviceManager, directoryConnector, shardConnector, setShardConnector, ...providerPropOverrides };
 		return RenderHookWithProviders(hook, props);
 	}
 });

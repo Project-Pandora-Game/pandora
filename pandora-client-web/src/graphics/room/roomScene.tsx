@@ -22,17 +22,18 @@ import { useAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterData } from '../../character/character';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
-import { directoryConnectorContext, useAccountSettings } from '../../components/gameContext/directoryConnectorContextProvider';
+import { useAccountSettings } from '../../components/gameContext/directoryConnectorContextProvider';
 import { useCharacterRestrictionsManager, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../components/gameContext/gameStateContextProvider';
 import { usePlayer, usePlayerState } from '../../components/gameContext/playerContextProvider';
 import { shardConnectorContext, useShardConnector } from '../../components/gameContext/shardConnectorContextProvider';
 import { ShardConnector } from '../../networking/shardConnector';
+import { serviceManagerContext } from '../../services/serviceProvider';
 import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomDebug';
 import { Container } from '../baseComponents/container';
 import { Graphics } from '../baseComponents/graphics';
+import { PixiViewportRef, PixiViewportSetupCallback } from '../baseComponents/pixiViewport';
 import { PointLike } from '../graphicsCharacter';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphicsScene';
-import { PixiViewportRef, PixiViewportSetupCallback } from '../baseComponents/pixiViewport';
 import { CharacterContextMenu } from './contextMenus/characterContextMenu';
 import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
 import { RoomCharacterInteractive } from './roomCharacter';
@@ -165,7 +166,7 @@ export function RoomGraphicsScene({
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
 		viewportRef,
-		forwardContexts: [directoryConnectorContext, shardConnectorContext],
+		forwardContexts: [serviceManagerContext, shardConnectorContext],
 		worldWidth: roomBackground.imageSize[0],
 		worldHeight: roomBackground.imageSize[1],
 		backgroundColor: 0x000000,

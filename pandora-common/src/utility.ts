@@ -1,6 +1,7 @@
 import AsyncLock, { AsyncLockOptions } from 'async-lock';
 import { castDraft, Draft } from 'immer';
 import { cloneDeep } from 'lodash';
+import type { SetRequired } from 'type-fest';
 
 /** Checks if the two types are equal */
 export type Equals<X, Y> =
@@ -465,4 +466,14 @@ export class KnownObject {
 	public static fromEntries<T extends object, K extends keyof T>(entries: ObjectEntry<T, K>[]): T {
 		return Object.fromEntries(entries) as T;
 	}
+}
+
+export function CheckPropertiesNotNullable<TObject extends object, TKeys extends (keyof TObject & string)>(object: Partial<TObject>, keys: Record<TKeys, true>): object is TObject & (SetRequired<TObject, TKeys>) {
+	for (const key of KnownObject.keys(keys)) {
+		Assert(keys[key] === true);
+		if (object[key] == null)
+			return false;
+	}
+
+	return true;
 }

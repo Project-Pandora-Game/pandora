@@ -23,7 +23,11 @@ import {
 	MessageHandler,
 	SecondFactorData,
 	SecondFactorResponse,
+	Service,
 	TypedEventEmitter,
+	type Satisfies,
+	type ServiceConfigBase,
+	type ServiceProviderDefinition,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceOneshotMessages, type SocketInterfaceRespondedMessages } from 'pandora-common/dist/networking/helpers';
 import { toast } from 'react-toastify';
@@ -78,8 +82,12 @@ const AuthTokenSchema = z.object({
 	expires: z.number().refine((n) => n > Date.now(), { message: 'Token has expired' }),
 }).optional();
 
+type DirectoryConnectorServiceConfig = Satisfies<{
+	dependencies: Pick<ClientServices, never>;
+}, ServiceConfigBase>;
+
 /** Class housing connection from Shard to Directory */
-export class DirectoryConnector implements IConnectionBase<IClientDirectory> {
+export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig> implements IConnectionBase<IClientDirectory> {
 	private readonly _state = new Observable<DirectoryConnectionState>(DirectoryConnectionState.NONE);
 	private readonly _directoryStatus = new Observable<IDirectoryStatus>(CreateDefaultDirectoryStatus());
 	private readonly _currentAccount = new Observable<IDirectoryAccountInfo | null>(null);
@@ -96,8 +104,34 @@ export class DirectoryConnector implements IConnectionBase<IClientDirectory> {
 
 	private _shardConnectionInfo: IDirectoryCharacterConnectionInfo | null = null;
 
-	private readonly _messageHandler: MessageHandler<IDirectoryClient>;
-	public readonly directMessageHandler: DirectMessageManager;
+	private readonly _messageHandler: MessageHandler<IDirectoryClient> = new MessageHandler<IDirectoryClient>({
+		serverStatus: (status) => {
+			this._directoryStatus.value = status;
+		},
+		connectionState: async (message: IDirectoryClientArgument['connectionState']) => {
+			this._connectionStateEventEmitter.onStateChanged(message);
+			await this.handleAccountChange(message);
+			await this.directMessageHandler.accountChanged();
+		},
+		loginTokenChanged: (data) => {
+			Assert(this._authToken.value);
+			this._authToken.value = {
+				value: data.value,
+				expires: data.expires,
+				username: this._authToken.value.username,
+			};
+		},
+		somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
+		directMessageNew: ({ target, message }) => {
+			this.directMessageHandler.handleNewDirectMessage(target, message);
+		},
+		directMessageAction: (data) => {
+			this.directMessageHandler.handleDirectMessageAction(data);
+		},
+		friendStatus: (data) => AccountContactContext.handleFriendStatus(data),
+		accountContactUpdate: (data) => AccountContactContext.handleAccountContactUpdate(data),
+	});
+	public readonly directMessageHandler: DirectMessageManager = new DirectMessageManager(this);
 
 	/** Current state of the connection */
 	public get state(): ReadonlyObservable<DirectoryConnectionState> {
@@ -135,39 +169,6 @@ export class DirectoryConnector implements IConnectionBase<IClientDirectory> {
 	}
 
 	private _connector: Connector<IClientDirectory> | null = null;
-
-	constructor() {
-		this.directMessageHandler = new DirectMessageManager(this);
-
-		// Setup message handler
-		this._messageHandler = new MessageHandler<IDirectoryClient>({
-			serverStatus: (status) => {
-				this._directoryStatus.value = status;
-			},
-			connectionState: async (message: IDirectoryClientArgument['connectionState']) => {
-				this._connectionStateEventEmitter.onStateChanged(message);
-				await this.handleAccountChange(message);
-				await this.directMessageHandler.accountChanged();
-			},
-			loginTokenChanged: (data) => {
-				Assert(this._authToken.value);
-				this._authToken.value = {
-					value: data.value,
-					expires: data.expires,
-					username: this._authToken.value.username,
-				};
-			},
-			somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
-			directMessageNew: ({ target, message }) => {
-				this.directMessageHandler.handleNewDirectMessage(target, message);
-			},
-			directMessageAction: (data) => {
-				this.directMessageHandler.handleDirectMessageAction(data);
-			},
-			friendStatus: (data) => AccountContactContext.handleFriendStatus(data),
-			accountContactUpdate: (data) => AccountContactContext.handleAccountContactUpdate(data),
-		});
-	}
 
 	public sendMessage<K extends SocketInterfaceOneshotMessages<IClientDirectory>>(messageType: K, message: SocketInterfaceRequest<IClientDirectory>[K]): void {
 		if (this._connector == null) {
@@ -415,3 +416,9 @@ export class DirectoryConnector implements IConnectionBase<IClientDirectory> {
 		this._lastSelectedCharacter.value = undefined;
 	}
 }
+
+export const DirectoryConnectorServiceProvider: ServiceProviderDefinition<ClientServices, 'directoryConnector', DirectoryConnectorServiceConfig> = {
+	name: 'directoryConnector',
+	ctor: DirectoryConnector,
+	dependencies: {},
+};

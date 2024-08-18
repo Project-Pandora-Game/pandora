@@ -5,17 +5,18 @@ import React, { ComponentType, Dispatch, ReactElement, SetStateAction, useEffect
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { ChildrenProps } from '../src/common/reactTypes';
 import { DebugContext, debugContext, DebugData } from '../src/components/error/debugContextProvider';
-import { directoryConnectorContext } from '../src/components/gameContext/directoryConnectorContextProvider';
 import {
 	connectorFactoryContext,
 	ConnectorFactoryContext,
 	shardConnectorContext,
 	ShardConnectorContextData,
 } from '../src/components/gameContext/shardConnectorContextProvider';
-import { DirectoryConnector } from '../src/networking/directoryConnector';
+import { DirectoryConnectorServiceProvider } from '../src/networking/directoryConnector';
 import { ShardConnector } from '../src/networking/shardConnector';
 import { MockDebugData } from './mocks/error/errorMocks';
 import { MockConnectionInfo } from './mocks/networking/mockShardConnector';
+import { Assert, ServiceManager } from 'pandora-common';
+import { ServiceManagerContextProvider } from '../src/services/serviceProvider';
 
 export function RenderWithRouter(
 	element: ReactElement,
@@ -78,12 +79,20 @@ function CreateCurriedProviders(propOverrides?: Partial<Omit<ProvidersProps, 'ch
 	};
 }
 
+export function MockServiceManager(): ServiceManager<ClientServices> {
+	return new ServiceManager<ClientServices>()
+		.registerService(DirectoryConnectorServiceProvider);
+}
+
 function MockProvidersProps(overrides?: Partial<Omit<ProvidersProps, 'children'>>): Omit<ProvidersProps, 'children'> {
-	const directoryConnector = new DirectoryConnector();
+	const serviceManager = overrides?.serviceManager ?? MockServiceManager();
+	const directoryConnector = serviceManager.services.directoryConnector;
+	Assert(directoryConnector != null);
+
 	return {
 		debugData: MockDebugData(),
 		setDebugData: jest.fn(),
-		directoryConnector,
+		serviceManager,
 		shardConnector: new ShardConnector(MockConnectionInfo(), directoryConnector),
 		setShardConnector: jest.fn(),
 		...overrides,
@@ -118,15 +127,25 @@ function LocationTracker({ onPathnameUpdate = noop }: LocationTrackerProps = {})
 export interface ProvidersProps extends ChildrenProps {
 	debugData: DebugData;
 	setDebugData: (debugData: DebugData) => void;
-	directoryConnector: DirectoryConnector;
+	serviceManager: ServiceManager<ClientServices>;
 	shardConnector: ShardConnector | null;
 	setShardConnector: Dispatch<SetStateAction<ShardConnector | null>>;
 }
 
 export function Providers({
-	children, debugData, setDebugData, directoryConnector, shardConnector, setShardConnector,
+	children, debugData, setDebugData, shardConnector, setShardConnector, serviceManager,
 }: ProvidersProps): ReactElement {
 	const debugContextData = useMemo<DebugContext>(() => ({ debugData, setDebugData }), [debugData, setDebugData]);
+
+	const finalServiceManager = useMemo((): ServiceManager<ClientServices> => {
+		if (serviceManager != null)
+			return serviceManager;
+
+		return new ServiceManager<ClientServices>()
+			.registerService(DirectoryConnectorServiceProvider);
+	}, [serviceManager]);
+	const directoryConnector = finalServiceManager.services.directoryConnector;
+	Assert(directoryConnector != null);
 
 	const connectorFactoryContextData = useMemo<ConnectorFactoryContext>(() => ({
 		shardConnectorFactory: (info) => new ShardConnector(info, directoryConnector),
@@ -139,13 +158,13 @@ export function Providers({
 
 	return (
 		<debugContext.Provider value={ debugContextData }>
-			<connectorFactoryContext.Provider value={ connectorFactoryContextData }>
-				<directoryConnectorContext.Provider value={ directoryConnector }>
+			<ServiceManagerContextProvider serviceManager={ finalServiceManager } >
+				<connectorFactoryContext.Provider value={ connectorFactoryContextData }>
 					<shardConnectorContext.Provider value={ shardConnectorContextData }>
 						{ children }
 					</shardConnectorContext.Provider>
-				</directoryConnectorContext.Provider>
-			</connectorFactoryContext.Provider>
+				</connectorFactoryContext.Provider>
+			</ServiceManagerContextProvider>
 		</debugContext.Provider>
 	);
 }

@@ -9,15 +9,19 @@ import {
 import { DirectoryConnector } from '../../../src/networking/directoryConnector';
 import { ShardConnector } from '../../../src/networking/shardConnector';
 import { MockConnectionInfo } from '../../mocks/networking/mockShardConnector';
-import { ProvidersProps, RenderHookWithProviders } from '../../testUtils';
+import { MockServiceManager, ProvidersProps, RenderHookWithProviders } from '../../testUtils';
+import { Assert, type ServiceManager } from 'pandora-common';
 
 describe('ShardConnectorContextProvider', () => {
+	let serviceManager: ServiceManager<ClientServices>;
 	let directoryConnector: DirectoryConnector;
 	let shardConnector: ShardConnector;
 	const setShardConnector = jest.fn();
 
 	beforeEach(() => {
-		directoryConnector = new DirectoryConnector();
+		serviceManager = MockServiceManager();
+		Assert(serviceManager.services.directoryConnector != null);
+		directoryConnector = serviceManager.services.directoryConnector;
 		shardConnector = new ShardConnector(MockConnectionInfo(), directoryConnector);
 	});
 
@@ -61,7 +65,7 @@ describe('ShardConnectorContextProvider', () => {
 		hook: (initialProps?: Props) => Result,
 		providerPropOverrides?: Partial<Omit<ProvidersProps, 'children'>>,
 	): RenderHookResult<Result, Props> {
-		const props = { directoryConnector, shardConnector, setShardConnector, ...providerPropOverrides };
+		const props = { serviceManager, directoryConnector, shardConnector, setShardConnector, ...providerPropOverrides };
 		return RenderHookWithProviders(hook, props);
 	}
 });

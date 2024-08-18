@@ -1,9 +1,12 @@
-import { DirectoryConnector } from '../../src/networking/directoryConnector';
+import { Assert } from 'pandora-common';
 import { ShardConnectionState, ShardConnector } from '../../src/networking/shardConnector';
 import { MockConnectionInfo } from '../mocks/networking/mockShardConnector';
+import { MockServiceManager } from '../testUtils';
 
 describe('ShardConnector', () => {
-	const mockShardConnector = new ShardConnector(MockConnectionInfo(), new DirectoryConnector());
+	const serviceManager = MockServiceManager();
+	Assert(serviceManager.services.directoryConnector != null);
+	const mockShardConnector = new ShardConnector(MockConnectionInfo(), serviceManager.services.directoryConnector);
 
 	it('default state should be NONE', () => {
 		expect(mockShardConnector.state.value).toBe(ShardConnectionState.NONE);

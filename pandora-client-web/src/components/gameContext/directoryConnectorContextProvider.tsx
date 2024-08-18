@@ -11,22 +11,20 @@ import {
 	SecondFactorType,
 	type AccountSettings,
 } from 'pandora-common';
-import React, { ReactElement, createContext, useContext, useEffect, useMemo, useRef } from 'react';
-import { ChildrenProps } from '../../common/reactTypes';
+import React, { ReactElement, useEffect, useMemo, useRef } from 'react';
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { DIRECTORY_ADDRESS } from '../../config/Environment';
 import { ConfigServerIndex } from '../../config/searchArgs';
 import { AuthToken, DirectoryConnector } from '../../networking/directoryConnector';
 import { SocketIOConnector } from '../../networking/socketio_connector';
-import { Observable, useNullableObservable, useObservable } from '../../observable';
+import { useNullableObservable, useObservable } from '../../observable';
+import { useService, useServiceOptional } from '../../services/serviceProvider';
 import { Button } from '../common/button/button';
 import { Row } from '../common/container/container';
 import { Form } from '../common/form/form';
 import { FormFieldCaptcha } from '../common/form/formFieldCaptcha';
 import { ModalDialog } from '../dialog/dialog';
-
-const DirectoryConnectorInstance = new Observable<DirectoryConnector | undefined>(undefined);
 
 let connectionPromise: Promise<DirectoryConnector> | undefined;
 
@@ -42,21 +40,17 @@ function GetDirectoryAddress(): string {
 	return directoryAddress;
 }
 
-export const directoryConnectorContext = createContext<DirectoryConnector | undefined>(undefined);
+const logger = GetLogger('DirectoryConnectorServices');
 
-const logger = GetLogger('DirectoryConnectorContextProvider');
-
-export function DirectoryConnectorContextProvider({ children }: ChildrenProps): ReactElement | null {
+export function DirectoryConnectorServices(): ReactElement | null {
 	const errorHandler = useErrorHandler();
+	const directoryConnector = useService('directoryConnector');
 
 	useEffect(() => {
 		void (async () => {
 			try {
-				if (DirectoryConnectorInstance.value === undefined) {
-					DirectoryConnectorInstance.value = new DirectoryConnector();
-				}
 				if (connectionPromise === undefined) {
-					connectionPromise = DirectoryConnectorInstance.value?.connect(GetDirectoryAddress(), SocketIOConnector);
+					connectionPromise = directoryConnector.connect(GetDirectoryAddress(), SocketIOConnector);
 				}
 				await connectionPromise;
 			} catch (error) {
@@ -64,20 +58,12 @@ export function DirectoryConnectorContextProvider({ children }: ChildrenProps): 
 				errorHandler(error);
 			}
 		})();
-	}, [errorHandler]);
+	}, [errorHandler, directoryConnector]);
 
-	const directoryConnectorInstance = useObservable(DirectoryConnectorInstance);
-
-	useDebugExpose('directoryConnector', directoryConnectorInstance);
-
-	if (!directoryConnectorInstance)
-		return null;
+	useDebugExpose('directoryConnector', directoryConnector);
 
 	return (
-		<directoryConnectorContext.Provider value={ directoryConnectorInstance }>
-			<SecondFactorDialog />
-			{ children }
-		</directoryConnectorContext.Provider>
+		<SecondFactorDialog />
 	);
 }
 
@@ -85,8 +71,8 @@ export function DirectoryConnectorContextProvider({ children }: ChildrenProps): 
  * Uses directory connector in an optional way.
  * This should only be used for things that can be accessed from editor - in other cases the connector should exist.
  */
-function useDirectoryConnectorOptional(): DirectoryConnector | undefined {
-	return useContext(directoryConnectorContext);
+function useDirectoryConnectorOptional(): DirectoryConnector | null {
+	return useServiceOptional('directoryConnector');
 }
 
 export function useDirectoryConnector(): DirectoryConnector {

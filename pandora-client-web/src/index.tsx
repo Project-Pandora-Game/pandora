@@ -1,4 +1,4 @@
-import { GetLogger, SetConsoleOutput } from 'pandora-common';
+import { GetLogger, ServiceManager, SetConsoleOutput } from 'pandora-common';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -15,11 +15,15 @@ import { Dialogs } from './components/dialog/dialog';
 import { HoverElementsPortal } from './components/hoverElement/hoverElement';
 import { ConfigurePixiSettings } from './graphics/pixiSettings';
 import { ConfigLogLevel, LoadSearchArgs } from './config/searchArgs';
+import { DirectoryConnectorServiceProvider } from './networking/directoryConnector';
 
 const logger = GetLogger('init');
 
 try {
-	Start();
+	Start()
+		.catch((error) => {
+			logger.fatal('Init failed:', error);
+		});
 } catch (error) {
 	logger.fatal('Init failed:', error);
 }
@@ -27,19 +31,26 @@ try {
 /**
  * Starts the application.
  */
-function Start(): void {
+async function Start(): Promise<void> {
 	LoadSearchArgs();
 	SetupLogging();
 	ConfigurePixiSettings();
 	logger.info('Starting...');
 	logger.verbose('Build mode:', (NODE_ENV === 'production' && USER_DEBUG) ? 'userdebug' : NODE_ENV);
+
+	// Construct service manager
+	const serviceManager = new ServiceManager<ClientServices>()
+		.registerService(DirectoryConnectorServiceProvider);
+
+	await serviceManager.load();
+
 	createRoot(document.querySelector('#pandora-root') as HTMLElement).render(
 		<React.StrictMode>
 			<Dialogs location='global' />
 			<HoverElementsPortal />
 			<EulaGate>
 				<BrowserRouter>
-					<GameContextProvider>
+					<GameContextProvider serviceManager={ serviceManager }>
 						<Header />
 						<div className='main-container'>
 							<Dialogs location='mainOverlay' />

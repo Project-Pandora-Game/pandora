@@ -7,8 +7,12 @@ import {
 	IAccountCryptoKey,
 	IDirectoryClientArgument,
 	IDirectoryDirectMessage,
-	TypedEventEmitter,
+	Service,
+	type IDirectoryAccountInfo,
 	type Logger,
+	type Satisfies,
+	type ServiceConfigBase,
+	type ServiceProviderDefinition,
 } from 'pandora-common';
 import { z } from 'zod';
 import { BrowserStorage } from '../../../browserStorage';
@@ -16,16 +20,29 @@ import { KeyExchange } from '../../../crypto/keyExchange';
 import type { SymmetricEncryption } from '../../../crypto/symmetric';
 import type { DirectoryConnector } from '../../../networking/directoryConnector';
 import { Observable, type ReadonlyObservable } from '../../../observable';
+import type { ClientServices } from '../../clientServices';
 import { DirectMessageChat } from './directMessageChat';
 
 export type DirectMessageCryptoState = 'notLoaded' | 'ready' | 'noPassword' | 'loadError' | 'generateError';
 
-export class DirectMessageManager extends TypedEventEmitter<{ newMessage: DirectMessageChat; close: AccountId; }> {
-	private readonly logger: Logger;
-	public readonly connector: DirectoryConnector;
+type DirectMessageManagerServiceConfig = Satisfies<{
+	dependencies: Pick<ClientServices, 'directoryConnector'>;
+	events: {
+		newMessage: DirectMessageChat;
+		close: AccountId;
+	};
+}, ServiceConfigBase>;
+
+const dmCryptoPassword = BrowserStorage.create<string | undefined>('crypto-handler-password', undefined, z.string().optional());
+
+export async function InitDirectMessageCrypotPassword(username: string, password: string): Promise<void> {
+	dmCryptoPassword.value = await KeyExchange.generateKeyPassword(username, password);
+}
+
+export class DirectMessageManager extends Service<DirectMessageManagerServiceConfig> {
+	private readonly logger: Logger = GetLogger('DirectMessageManager');
 	private readonly _chats = new Observable<readonly DirectMessageChat[]>([]);
 
-	private readonly _cryptoPassword = BrowserStorage.create<string | undefined>('crypto-handler-password', undefined, z.string().optional());
 	private readonly _cryptoState = new Observable<DirectMessageCryptoState>('notLoaded');
 	#crypto?: KeyExchange;
 
@@ -37,21 +54,34 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 		return this._cryptoState;
 	}
 
-	constructor(connector: DirectoryConnector) {
-		super();
-		this.logger = GetLogger('DirectMessageManager');
-		this.connector = connector;
+	public get connector(): DirectoryConnector {
+		return this.serviceDeps.directoryConnector;
+	}
+
+	protected override serviceInit(): void {
+		// Register handlers to directoryConnector
+		this.connector.on('logout', () => {
+			this.clear();
+		});
+		this.connector.on('accountChanged', ({ account }) => {
+			this.accountChanged(account)
+				.catch((error) => {
+					this.logger.error('Error processing account change:', error);
+				});
+		});
+		this.connector.messageHandlers.directMessageNew = ({ target, message }) => {
+			this.handleNewDirectMessage(target, message);
+		};
+		this.connector.messageHandlers.directMessageAction = (data) => {
+			this.handleDirectMessageAction(data);
+		};
 	}
 
 	public clear() {
-		this._cryptoPassword.value = undefined;
+		dmCryptoPassword.value = undefined;
 		this._chats.value = [];
 		this.#crypto = undefined;
 		this._cryptoState.value = 'notLoaded';
-	}
-
-	public async initCryptoPassword(username: string, password: string) {
-		this._cryptoPassword.value = await KeyExchange.generateKeyPassword(username, password);
 	}
 
 	public async passwordChange(username: string, password: string): Promise<{ cryptoKey: IAccountCryptoKey; onSuccess: () => void; }> {
@@ -65,14 +95,13 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 		return {
 			cryptoKey,
 			onSuccess: () => {
-				this._cryptoPassword.value = cryptoPassword;
+				dmCryptoPassword.value = cryptoPassword;
 			},
 		};
 	}
 
 	@AsyncSynchronized()
-	public async accountChanged() {
-		const account = this.connector.currentAccount.value;
+	private async accountChanged(account: IDirectoryAccountInfo | null) {
 		if (!account) {
 			this.logger.debug('No account, clear');
 			this.clear();
@@ -85,7 +114,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 		this.#crypto = undefined;
 		this._cryptoState.value = 'notLoaded';
 
-		const cryptoPassword = this._cryptoPassword.value;
+		const cryptoPassword = dmCryptoPassword.value;
 		if (cryptoPassword != null) {
 			if (account.cryptoKey) {
 				const loadResult = await this.loadKey(account.cryptoKey, cryptoPassword);
@@ -133,7 +162,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 	/** Update key stored on server. Mainly for the purpose of migrating off of old key formats. */
 	public async updateSavedKey(): Promise<void> {
 		this.logger.verbose('Uploading current key to server...');
-		const password = this._cryptoPassword.value;
+		const password = dmCryptoPassword.value;
 		Assert(password != null, 'Missing password while updating saved key');
 		Assert(this.#crypto != null, 'Missing crypto while updating saved key');
 
@@ -164,7 +193,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 	@AsyncSynchronized()
 	public async regenerateKey(password?: string): Promise<boolean> {
 		if (password == null) {
-			password = this._cryptoPassword.value;
+			password = dmCryptoPassword.value;
 		}
 		if (password == null) {
 			this.logger.error('Unable to regenerate key with no crypto password.');
@@ -183,7 +212,7 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 				this.logger.warning('Failed to set cryptokey:', result);
 				return false;
 			}
-			this._cryptoPassword.value = password;
+			dmCryptoPassword.value = password;
 			this.#crypto = newCrypto;
 			this._cryptoState.value = 'ready';
 			await this._refreshChatCrypto();
@@ -260,3 +289,11 @@ export class DirectMessageManager extends TypedEventEmitter<{ newMessage: Direct
 		);
 	}
 }
+
+export const DirectMessageManagerServiceProvider: ServiceProviderDefinition<ClientServices, 'directMessageManager', DirectMessageManagerServiceConfig> = {
+	name: 'directMessageManager',
+	ctor: DirectMessageManager,
+	dependencies: {
+		directoryConnector: true,
+	},
+};

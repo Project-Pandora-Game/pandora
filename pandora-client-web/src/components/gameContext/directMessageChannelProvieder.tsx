@@ -3,7 +3,7 @@ import React, { ReactElement, Suspense, createContext, useContext, useEffect, us
 import { ChildrenProps } from '../../common/reactTypes';
 import { useNullableObservable } from '../../observable';
 import type { ChatEncryption, DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat';
-import { useDirectoryConnector } from './directoryConnectorContextProvider';
+import { useService } from '../../services/serviceProvider';
 
 export type DirectMessageChatContext = {
 	chat: DirectMessageChat;
@@ -13,15 +13,15 @@ export type DirectMessageChatContext = {
 const directMessageContext = createContext<DirectMessageChatContext | null>(null);
 
 export function DirectMessageChannelProvider({ accountId, children }: ChildrenProps & { accountId: number; }): ReactElement {
-	const directMessageHandler = useDirectoryConnector().directMessageHandler;
+	const directMessageManager = useService('directMessageManager');
 	const [closed, setClosed] = useState(false);
 
 	const chat = useMemo(() => {
 		if (closed)
 			return null;
 
-		return directMessageHandler.getChat(accountId);
-	}, [directMessageHandler, accountId, closed]);
+		return directMessageManager.getChat(accountId);
+	}, [directMessageManager, accountId, closed]);
 
 	const state = useNullableObservable(chat?.state);
 	const encryption = useNullableObservable(chat?.encryption);
@@ -33,11 +33,11 @@ export function DirectMessageChannelProvider({ accountId, children }: ChildrenPr
 		}
 	}, [chat, info, state]);
 
-	useEffect(() => directMessageHandler.on('close', (id) => {
+	useEffect(() => directMessageManager.on('close', (id) => {
 		if (id === accountId) {
 			setClosed(true);
 		}
-	}), [directMessageHandler, accountId]);
+	}), [directMessageManager, accountId]);
 
 	useEffect(() => {
 		if (chat != null && chat.state.value !== 'ready') {

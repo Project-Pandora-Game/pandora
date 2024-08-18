@@ -7,12 +7,13 @@ import { KeyExchange } from '../../crypto/keyExchange';
 import { useObservable } from '../../observable';
 import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat';
 import type { DirectMessageCryptoState } from '../../services/accountLogic/directMessages/directMessageManager';
+import { useService } from '../../services/serviceProvider';
 import { Sleep } from '../../utility';
 import { Button } from '../common/button/button';
 import { Column, Row } from '../common/container/container';
 import { Scrollable } from '../common/scrollbar/scrollbar';
 import { DirectMessage } from '../directMessage/directMessage';
-import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
 import { NotificationSource, useNotificationSuppressed } from '../gameContext/notificationContextProvider';
 import './directMessages.scss';
 
@@ -27,10 +28,10 @@ export function DirectMessages(): React.ReactElement {
 }
 
 function DirectMessagesInner(): ReactElement {
-	const directory = useDirectoryConnector();
+	const directMessageManager = useService('directMessageManager');
 	const [filter, setFilter] = React.useState('');
-	const chats = useObservable(directory.directMessageHandler.chats);
-	const cryptoState = useObservable(directory.directMessageHandler.cryptoState);
+	const chats = useObservable(directMessageManager.chats);
+	const cryptoState = useObservable(directMessageManager.cryptoState);
 
 	const { accountId } = useParams();
 	const selected = useMemo((): AccountId | null => {
@@ -130,13 +131,13 @@ function DirectMessageCryptoWarning({ state }: {
 }
 
 function DirectMessageCryptoWarningGenerateError(): ReactElement {
-	const directMessageHandler = useDirectoryConnector().directMessageHandler;
+	const directMessageManager = useService('directMessageManager');
 
 	const [generate, processing] = useAsyncEvent(async () => {
 		// Sleep a short while to make it look like something happened, even if it fails immediately
 		// This lets the error disappear and reappear again.
 		await Sleep(400);
-		await directMessageHandler.regenerateKey();
+		await directMessageManager.regenerateKey();
 	}, noop);
 
 	return (
@@ -154,7 +155,7 @@ function DirectMessageCryptoWarningGenerateError(): ReactElement {
 
 function DirectMessageCryptoWarningLoadError(): ReactElement {
 	const account = useCurrentAccount();
-	const directMessageHandler = useDirectoryConnector().directMessageHandler;
+	const directMessageManager = useService('directMessageManager');
 
 	const [unlockUsername, setUnlockUsername] = useState(account?.username ?? '');
 	const [unlockPassword, setUnlockPassword] = useState('');
@@ -171,7 +172,7 @@ function DirectMessageCryptoWarningLoadError(): ReactElement {
 		await Sleep(400);
 
 		const wrapPassword = await KeyExchange.generateKeyPassword(unlockUsername, unlockPassword);
-		const result = await directMessageHandler.loadKey(key, wrapPassword);
+		const result = await directMessageManager.loadKey(key, wrapPassword);
 
 		if (result !== 'ok') {
 			// Try old likely variants automatically
@@ -182,10 +183,10 @@ function DirectMessageCryptoWarningLoadError(): ReactElement {
 			];
 			for (const [u, p] of variants) {
 				const oldPassword = await KeyExchange.generateKeyPasswordOld(u, p);
-				const oldResult = await directMessageHandler.loadKey(key, oldPassword);
+				const oldResult = await directMessageManager.loadKey(key, oldPassword);
 				// If successful, force re-sync to the server
 				if (oldResult === 'ok') {
-					await directMessageHandler.updateSavedKey();
+					await directMessageManager.updateSavedKey();
 					return;
 				}
 			}
@@ -253,7 +254,7 @@ function DirectMessageInfo({ chat, selected, select }: { chat: DirectMessageChat
 }
 
 function OpenConversation({ select }: { select: (id: AccountId) => void; }): React.ReactElement {
-	const directory = useDirectoryConnector();
+	const directMessageManager = useService('directMessageManager');
 	const accountId = useCurrentAccount()?.id;
 	const ref = React.useRef<HTMLInputElement>(null);
 	const onClick = React.useCallback(() => {
@@ -262,10 +263,10 @@ function OpenConversation({ select }: { select: (id: AccountId) => void; }): Rea
 
 		const parsed = parseInt(ref.current.value, 10);
 		if (Number.isInteger(parsed) && parsed > 0 && parsed !== accountId) {
-			const chat = directory.directMessageHandler.getChat(parsed);
+			const chat = directMessageManager.getChat(parsed);
 			select(chat.id);
 		}
-	}, [accountId, directory.directMessageHandler, select]);
+	}, [accountId, directMessageManager, select]);
 	const onKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === 'Enter') {
 			e.preventDefault();

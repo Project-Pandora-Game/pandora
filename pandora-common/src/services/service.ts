@@ -1,3 +1,4 @@
+import { TypedEventEmitter, type TypedEvent } from '../event';
 import { Assert } from '../utility';
 import type { BaseServicesDefinition } from './serviceDefinitions';
 
@@ -7,6 +8,7 @@ import type { BaseServicesDefinition } from './serviceDefinitions';
  */
 export type ServiceConfigBase = {
 	dependencies: BaseServicesDefinition;
+	events: false | TypedEvent;
 };
 
 /** Definition of the service's provider that will be passed to the service manager. */
@@ -16,13 +18,14 @@ export type ServiceProviderDefinition<TServices extends BaseServicesDefinition, 
 	dependencies: Record<keyof TConfig['dependencies'] & string, true>;
 };
 
-export abstract class Service<TConfig extends ServiceConfigBase> {
+export abstract class Service<TConfig extends ServiceConfigBase> extends TypedEventEmitter<TConfig['events'] extends object ? TConfig['events'] : Record<never, never>> {
 	/** Name the service was registered under. */
 	protected readonly serviceName: string;
 	/** Dependencies of this service, available for use. */
 	protected readonly serviceDeps: Readonly<TConfig['dependencies']>;
 
 	constructor(serviceInitArgs: ServiceInitArgs<TConfig>) {
+		super();
 		this.serviceName = serviceInitArgs.serviceName;
 		this.serviceDeps = serviceInitArgs.serviceDeps;
 
@@ -96,4 +99,5 @@ export type ServiceInitArgs<TConfig extends ServiceConfigBase> = {
  */
 export type ServiceConfigFixupDependencies<TServices extends BaseServicesDefinition, TConfig extends ServiceConfigBase> = {
 	dependencies: Pick<TServices, keyof TConfig['dependencies'] & string>;
+	events: TConfig['events'];
 };

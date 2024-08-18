@@ -1,16 +1,17 @@
+import type { ServiceManager } from 'pandora-common';
 import React, { ReactElement } from 'react';
+import { AnchorAutoscroll } from '../../common/anchorAutoscroll';
 import { ChildrenProps } from '../../common/reactTypes';
+import type { ClientServices } from '../../services/clientServices';
+import { ServiceManagerContextProvider } from '../../services/serviceProvider';
+import { ChatInputContextProvider } from '../../ui/components/chat/chatInput';
+import { CharacterRestrictionOverrideDialogContext } from '../characterRestrictionOverride/characterRestrictionOverride';
 import { DebugContextProvider } from '../error/debugContextProvider';
 import { RootErrorBoundary } from '../error/rootErrorBoundary';
 import { DirectoryConnectorServices } from './directoryConnectorContextProvider';
 import { NotificationContextProvider } from './notificationContextProvider';
-import { ShardConnectorContextProvider } from './shardConnectorContextProvider';
-import { CharacterRestrictionOverrideDialogContext } from '../characterRestrictionOverride/characterRestrictionOverride';
-import { ChatInputContextProvider } from '../../ui/components/chat/chatInput';
 import { PermissionCheckServiceProvider } from './permissionCheckProvider';
-import { AnchorAutoscroll } from '../../common/anchorAutoscroll';
-import type { ServiceManager } from 'pandora-common';
-import { ServiceManagerContextProvider } from '../../services/serviceProvider';
+import { ShardConnectorContextProvider } from './shardConnectorContextProvider';
 
 export interface GameContextProviderProps extends ChildrenProps {
 	serviceManager: ServiceManager<ClientServices>;

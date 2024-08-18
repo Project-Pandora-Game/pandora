@@ -4,7 +4,7 @@ import { SocketInterfaceDefinition, SocketInterfaceHandlerResult, SocketInterfac
 type MessageHandlerFunction<T extends SocketInterfaceDefinition, Context, Message extends SocketInterfaceMessages<T> = SocketInterfaceMessages<T>> =
 	(arg: SocketInterfaceRequest<T>[Message], context: Context) => SocketInterfaceHandlerResult<T>[Message];
 
-type MessageHandlers<T extends SocketInterfaceDefinition, Context> = {
+export type MessageHandlers<T extends SocketInterfaceDefinition, Context = undefined> = {
 	[K in SocketInterfaceMessages<T>]: MessageHandlerFunction<T, Context, K>;
 };
 

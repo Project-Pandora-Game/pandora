@@ -4,18 +4,20 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Dialogs } from './components/dialog/dialog';
 import { EulaGate } from './components/Eula';
 import { GameContextProvider } from './components/gameContext/gameContextProvider';
 import { Header } from './components/header/Header';
-import { NODE_ENV, USER_DEBUG } from './config/Environment';
-import './index.scss';
-import './styles/globalUtils.scss';
-import { PandoraRoutes } from './routing/Routes';
-import { Dialogs } from './components/dialog/dialog';
 import { HoverElementsPortal } from './components/hoverElement/hoverElement';
-import { ConfigurePixiSettings } from './graphics/pixiSettings';
+import { NODE_ENV, USER_DEBUG } from './config/Environment';
 import { ConfigLogLevel, LoadSearchArgs } from './config/searchArgs';
+import { ConfigurePixiSettings } from './graphics/pixiSettings';
+import './index.scss';
 import { DirectoryConnectorServiceProvider } from './networking/directoryConnector';
+import { PandoraRoutes } from './routing/Routes';
+import { DirectMessageManagerServiceProvider } from './services/accountLogic/directMessages/directMessageManager';
+import type { ClientServices } from './services/clientServices';
+import './styles/globalUtils.scss';
 
 const logger = GetLogger('init');
 
@@ -40,7 +42,8 @@ async function Start(): Promise<void> {
 
 	// Construct service manager
 	const serviceManager = new ServiceManager<ClientServices>()
-		.registerService(DirectoryConnectorServiceProvider);
+		.registerService(DirectoryConnectorServiceProvider)
+		.registerService(DirectMessageManagerServiceProvider);
 
 	await serviceManager.load();
 

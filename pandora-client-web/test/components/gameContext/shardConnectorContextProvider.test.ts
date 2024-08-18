@@ -1,4 +1,5 @@
 import { renderHook, RenderHookResult } from '@testing-library/react';
+import { Assert, type ServiceManager } from 'pandora-common';
 import { useContext } from 'react';
 import {
 	shardConnectorContext,
@@ -8,9 +9,9 @@ import {
 } from '../../../src/components/gameContext/shardConnectorContextProvider';
 import { DirectoryConnector } from '../../../src/networking/directoryConnector';
 import { ShardConnector } from '../../../src/networking/shardConnector';
+import type { ClientServices } from '../../../src/services/clientServices';
 import { MockConnectionInfo } from '../../mocks/networking/mockShardConnector';
 import { MockServiceManager, ProvidersProps, RenderHookWithProviders } from '../../testUtils';
-import { Assert, type ServiceManager } from 'pandora-common';
 
 describe('ShardConnectorContextProvider', () => {
 	let serviceManager: ServiceManager<ClientServices>;

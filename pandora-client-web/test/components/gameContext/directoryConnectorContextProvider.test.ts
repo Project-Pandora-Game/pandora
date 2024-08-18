@@ -7,6 +7,7 @@ import {
 	useDirectoryConnector,
 } from '../../../src/components/gameContext/directoryConnectorContextProvider';
 import { DirectoryConnector } from '../../../src/networking/directoryConnector';
+import type { ClientServices } from '../../../src/services/clientServices';
 import { MockServiceManager, ProvidersProps, RenderHookWithProviders } from '../../testUtils';
 
 const directoryChangeEvents: IDirectoryClientChangeEvents[] = [

@@ -4,6 +4,7 @@ import {
 	AsyncSynchronized,
 	CharacterId,
 	CharacterIdSchema,
+	CheckPropertiesNotNullable,
 	ClientDirectorySchema,
 	CreateDefaultDirectoryStatus,
 	DirectoryClientSchema,
@@ -20,11 +21,13 @@ import {
 	IDirectoryClientArgument,
 	IDirectoryClientChangeEvents,
 	IDirectoryStatus,
+	KnownObject,
 	MessageHandler,
 	SecondFactorData,
 	SecondFactorResponse,
 	Service,
 	TypedEventEmitter,
+	type MessageHandlers,
 	type Satisfies,
 	type ServiceConfigBase,
 	type ServiceProviderDefinition,
@@ -37,7 +40,8 @@ import { AccountContactContext } from '../components/accountContacts/accountCont
 import { PrehashPassword } from '../crypto/helpers';
 import { Observable, ReadonlyObservable } from '../observable';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../persistentToast';
-import { DirectMessageManager } from '../services/accountLogic/directMessages/directMessageManager';
+import { InitDirectMessageCrypotPassword } from '../services/accountLogic/directMessages/directMessageManager';
+import type { ClientServices } from '../services/clientServices';
 import type { Connector, SocketIOConnectorFactory } from './socketio_connector';
 
 export type LoginResponse = 'ok' | 'verificationRequired' | 'invalidToken' | 'unknownCredentials' | 'invalidSecondFactor';
@@ -84,6 +88,10 @@ const AuthTokenSchema = z.object({
 
 type DirectoryConnectorServiceConfig = Satisfies<{
 	dependencies: Pick<ClientServices, never>;
+	events: {
+		logout: undefined;
+		accountChanged: { account: IDirectoryAccountInfo | null; character: IDirectoryCharacterConnectionInfo | null; };
+	};
 }, ServiceConfigBase>;
 
 /** Class housing connection from Shard to Directory */
@@ -104,14 +112,14 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 
 	private _shardConnectionInfo: IDirectoryCharacterConnectionInfo | null = null;
 
-	private readonly _messageHandler: MessageHandler<IDirectoryClient> = new MessageHandler<IDirectoryClient>({
+	/** Handlers for server messages. Dependent services are expected to fill those in. */
+	public readonly messageHandlers: Partial<MessageHandlers<IDirectoryClient>> = {
 		serverStatus: (status) => {
 			this._directoryStatus.value = status;
 		},
 		connectionState: async (message: IDirectoryClientArgument['connectionState']) => {
 			this._connectionStateEventEmitter.onStateChanged(message);
 			await this.handleAccountChange(message);
-			await this.directMessageHandler.accountChanged();
 		},
 		loginTokenChanged: (data) => {
 			Assert(this._authToken.value);
@@ -122,16 +130,11 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 			};
 		},
 		somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
-		directMessageNew: ({ target, message }) => {
-			this.directMessageHandler.handleNewDirectMessage(target, message);
-		},
-		directMessageAction: (data) => {
-			this.directMessageHandler.handleDirectMessageAction(data);
-		},
 		friendStatus: (data) => AccountContactContext.handleFriendStatus(data),
 		accountContactUpdate: (data) => AccountContactContext.handleAccountContactUpdate(data),
-	});
-	public readonly directMessageHandler: DirectMessageManager = new DirectMessageManager(this);
+	};
+
+	private _messageHandler: MessageHandler<IDirectoryClient> | null = null;
 
 	/** Current state of the connection */
 	public get state(): ReadonlyObservable<DirectoryConnectionState> {
@@ -170,6 +173,33 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 
 	private _connector: Connector<IClientDirectory> | null = null;
 
+	protected override serviceLoad(): void | Promise<void> {
+		// Check that all dependent services registered their message handlers during init.
+		freeze(this.messageHandlers, false);
+		// If you are adding directory->client message you are expected to add an entry here.
+		// After doing that you should either:
+		// 1) Add the handler above directly to `messageHandlers`
+		// 2) Register into `messageHandlers` from `serviceInit` of a service that should be handling this message
+		const requiredHandlers: Record<keyof IDirectoryClient, true> = {
+			serverStatus: true,
+			connectionState: true,
+			loginTokenChanged: true,
+			somethingChanged: true,
+			directMessageNew: true,
+			directMessageAction: true,
+			friendStatus: true,
+			accountContactUpdate: true,
+		};
+
+		if (!CheckPropertiesNotNullable(this.messageHandlers, requiredHandlers)) {
+			const missingHandlers = KnownObject.keys(requiredHandlers).filter((h) => this.messageHandlers[h] == null);
+			throw new Error(`Not all message handlers were registered during init. Missing handlers: ${missingHandlers.join(', ')}`);
+		}
+
+		// Create message handler from these
+		this._messageHandler = new MessageHandler<IDirectoryClient>(this.messageHandlers);
+	}
+
 	public sendMessage<K extends SocketInterfaceOneshotMessages<IClientDirectory>>(messageType: K, message: SocketInterfaceRequest<IClientDirectory>[K]): void {
 		if (this._connector == null) {
 			logger.warning(`Dropping outbound message '${messageType}': Not connected`);
@@ -199,6 +229,8 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 		if (this._state.value !== DirectoryConnectionState.NONE || this._connector != null) {
 			throw new Error('connect can only be called once');
 		}
+
+		Assert(this._messageHandler != null); // Should be filled ruing `load` - way before connect attempt.
 
 		this.setState(DirectoryConnectionState.INITIAL_CONNECTION_PENDING);
 		this._connector = new connectorFactory({
@@ -238,14 +270,13 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 	 * @returns Promise of response from Directory
 	 */
 	public async login(username: string, password: string, verificationToken?: string): Promise<LoginResponse> {
+		// Init DM crypto password before attempting login, so it can load directly at login
+		await InitDirectMessageCrypotPassword(username, password);
 		const passwordSha512 = await PrehashPassword(password);
 		const result = await this.loginDirect({ username, passwordSha512, verificationToken });
-		if (result === 'ok') {
-			await this.directMessageHandler.initCryptoPassword(username, password);
-		} else {
+		if (result !== 'ok') {
 			await this.handleAccountChange({ account: null, character: null });
 		}
-		await this.directMessageHandler.accountChanged();
 		return result;
 	}
 
@@ -273,7 +304,7 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 	public logout(): void {
 		this.sendMessage('logout', { type: 'self' });
 		this._connectionStateEventEmitter.onStateChanged({ account: null, character: null });
-		this.directMessageHandler.clear();
+		this.emit('logout', undefined);
 		AccountContactContext.handleLogout();
 		this._lastSelectedCharacter.value = undefined;
 		this._authToken.value = undefined;
@@ -364,6 +395,7 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 				this._lastSelectedCharacter.value = character.characterId;
 			}
 		}
+		this.emit('accountChanged', { account, character });
 	}
 
 	/**

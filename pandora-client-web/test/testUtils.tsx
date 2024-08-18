@@ -1,6 +1,7 @@
 import { render, renderHook, RenderHookResult, RenderOptions, RenderResult } from '@testing-library/react';
 import { InitialEntry } from 'history';
 import { noop } from 'lodash';
+import { Assert, ServiceManager } from 'pandora-common';
 import React, { ComponentType, Dispatch, ReactElement, SetStateAction, useEffect, useMemo } from 'react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { ChildrenProps } from '../src/common/reactTypes';
@@ -13,10 +14,10 @@ import {
 } from '../src/components/gameContext/shardConnectorContextProvider';
 import { DirectoryConnectorServiceProvider } from '../src/networking/directoryConnector';
 import { ShardConnector } from '../src/networking/shardConnector';
+import type { ClientServices } from '../src/services/clientServices';
+import { ServiceManagerContextProvider } from '../src/services/serviceProvider';
 import { MockDebugData } from './mocks/error/errorMocks';
 import { MockConnectionInfo } from './mocks/networking/mockShardConnector';
-import { Assert, ServiceManager } from 'pandora-common';
-import { ServiceManagerContextProvider } from '../src/services/serviceProvider';
 
 export function RenderWithRouter(
 	element: ReactElement,

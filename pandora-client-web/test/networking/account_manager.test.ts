@@ -12,6 +12,7 @@ import {
 } from '../../src/networking/account_manager';
 import { DirectoryConnector } from '../../src/networking/directoryConnector';
 import { ShardConnector } from '../../src/networking/shardConnector';
+import type { ClientServices } from '../../src/services/clientServices';
 import { MockConnectionInfo } from '../mocks/networking/mockShardConnector';
 import { MockServiceManager, ProvidersProps, RenderHookWithProviders } from '../testUtils';
 

@@ -26,7 +26,6 @@ import {
 	SecondFactorData,
 	SecondFactorResponse,
 	Service,
-	TypedEventEmitter,
 	type MessageHandlers,
 	type Satisfies,
 	type ServiceConfigBase,
@@ -68,18 +67,6 @@ export interface AuthToken {
 
 const logger = GetLogger('DirectoryConnector');
 
-class DirectoryChangeEventEmitter extends TypedEventEmitter<Record<IDirectoryClientChangeEvents, true>> {
-	public onSomethingChanged(changes: IDirectoryClientChangeEvents[]): void {
-		changes.forEach((change) => this.emit(change, true));
-	}
-}
-
-class ConnectionStateEventEmitter extends TypedEventEmitter<Pick<IDirectoryClientArgument, 'connectionState'>> {
-	public onStateChanged(data: IDirectoryClientArgument['connectionState']): void {
-		this.emit('connectionState', data);
-	}
-}
-
 const AuthTokenSchema = z.object({
 	value: z.string(),
 	username: z.string(),
@@ -91,6 +78,10 @@ type DirectoryConnectorServiceConfig = Satisfies<{
 	events: {
 		logout: undefined;
 		accountChanged: { account: IDirectoryAccountInfo | null; character: IDirectoryCharacterConnectionInfo | null; };
+		/** Directory connection state change event. */
+		connectionState: IDirectoryClientArgument['connectionState'];
+		/** Emitted when we receive a `somethingChanged` message from directory. */
+		somethingChanged: readonly IDirectoryClientChangeEvents[];
 	};
 }, ServiceConfigBase>;
 
@@ -99,9 +90,6 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 	private readonly _state = new Observable<DirectoryConnectionState>(DirectoryConnectionState.NONE);
 	private readonly _directoryStatus = new Observable<IDirectoryStatus>(CreateDefaultDirectoryStatus());
 	private readonly _currentAccount = new Observable<IDirectoryAccountInfo | null>(null);
-
-	private readonly _changeEventEmitter = new DirectoryChangeEventEmitter();
-	private readonly _connectionStateEventEmitter = new ConnectionStateEventEmitter();
 
 	private readonly _directoryConnectionProgress = new PersistentToast();
 	private readonly _authToken = BrowserStorage.create<AuthToken | undefined>('authToken', undefined, AuthTokenSchema);
@@ -118,7 +106,7 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 			this._directoryStatus.value = status;
 		},
 		connectionState: async (message: IDirectoryClientArgument['connectionState']) => {
-			this._connectionStateEventEmitter.onStateChanged(message);
+			this.emit('connectionState', message);
 			await this.handleAccountChange(message);
 		},
 		loginTokenChanged: (data) => {
@@ -129,7 +117,9 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 				username: this._authToken.value.username,
 			};
 		},
-		somethingChanged: ({ changes }) => this._changeEventEmitter.onSomethingChanged(changes),
+		somethingChanged: ({ changes }) => {
+			this.emit('somethingChanged', changes);
+		},
 		friendStatus: (data) => AccountContactContext.handleFriendStatus(data),
 		accountContactUpdate: (data) => AccountContactContext.handleAccountContactUpdate(data),
 	};
@@ -159,16 +149,6 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 	/** The Id of the last selected character for this session. On reconnect this character will be re-selected. */
 	public get lastSelectedCharacter(): ReadonlyObservable<CharacterId | undefined> {
 		return this._lastSelectedCharacter;
-	}
-
-	/** Event emitter for directory change events */
-	public get changeEventEmitter(): TypedEventEmitter<Record<IDirectoryClientChangeEvents, true>> {
-		return this._changeEventEmitter;
-	}
-
-	/** Event emitter for directory connection state change events */
-	public get connectionStateEventEmitter(): TypedEventEmitter<Pick<IDirectoryClientArgument, 'connectionState'>> {
-		return this._connectionStateEventEmitter;
 	}
 
 	private _connector: Connector<IClientDirectory> | null = null;
@@ -303,7 +283,7 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 
 	public logout(): void {
 		this.sendMessage('logout', { type: 'self' });
-		this._connectionStateEventEmitter.onStateChanged({ account: null, character: null });
+		this.emit('connectionState', { account: null, character: null });
 		this.emit('logout', undefined);
 		AccountContactContext.handleLogout();
 		this._lastSelectedCharacter.value = undefined;

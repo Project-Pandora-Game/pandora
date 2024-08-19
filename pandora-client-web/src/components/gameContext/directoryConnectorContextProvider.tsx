@@ -99,8 +99,12 @@ export function useDirectoryChangeListener(
 		if (runImmediate) {
 			callbackRef.current();
 		}
-		return directoryConnector.changeEventEmitter.on(event, () => callbackRef.current());
-	}, [directoryConnector.changeEventEmitter, event, callbackRef, runImmediate]);
+		return directoryConnector.on('somethingChanged', (changes) => {
+			if (changes.includes(event)) {
+				callbackRef.current();
+			}
+		});
+	}, [directoryConnector, event, callbackRef, runImmediate]);
 }
 
 export function useCurrentAccount(): IDirectoryAccountInfo | null {

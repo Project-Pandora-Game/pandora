@@ -116,7 +116,7 @@ function ConnectionStateManager({ children }: ChildrenProps): ReactElement {
 	}, [directoryState, directoryStatus, shardState, setDebugData]);
 
 	useEffect(() => {
-		return directoryConnector.connectionStateEventEmitter.on('connectionState', ({ character }) => {
+		return directoryConnector.on('connectionState', ({ character }) => {
 			void (async () => {
 				try {
 					if (character) {

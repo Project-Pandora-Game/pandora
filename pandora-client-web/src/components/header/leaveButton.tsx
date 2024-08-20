@@ -1,23 +1,25 @@
-import React, { ReactElement, createContext, useCallback, useContext, useState } from 'react';
-import peopleIcon from '../../assets/icons/people-arrows.svg';
-import onoffIcon from '../../assets/icons/on-off.svg';
-import logoutIcon from '../../assets/icons/logout.svg';
-import { HeaderButton } from './HeaderButton';
-import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
-import { usePlayer, usePlayerData, usePlayerState } from '../gameContext/playerContextProvider';
-import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { EMPTY, GetLogger, SpaceClientInfo, SpaceId } from 'pandora-common';
-import { Button } from '../common/button/button';
-import { useLogout } from '../../networking/account_manager';
-import { useCharacterRestrictionsManager, useSpaceInfoOptional } from '../gameContext/gameStateContextProvider';
-import { PlayerCharacter } from '../../character/player';
-import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { ModalDialog } from '../dialog/dialog';
-import { Column, Row } from '../common/container/container';
-import './leaveButton.scss';
 import { Immutable } from 'immer';
+import { EMPTY, GetLogger, SpaceClientInfo, SpaceId } from 'pandora-common';
+import React, { ReactElement, createContext, useCallback, useContext, useState } from 'react';
+import { toast } from 'react-toastify';
+import logoutIcon from '../../assets/icons/logout.svg';
+import onoffIcon from '../../assets/icons/on-off.svg';
+import peopleIcon from '../../assets/icons/people-arrows.svg';
+import { PlayerCharacter } from '../../character/player';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
+import { useLogout } from '../../networking/account_manager';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
+import { useService } from '../../services/serviceProvider';
+import { Button } from '../common/button/button';
+import { Column, Row } from '../common/container/container';
+import { ModalDialog } from '../dialog/dialog';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useCharacterRestrictionsManager, useSpaceInfoOptional } from '../gameContext/gameStateContextProvider';
+import { usePlayer, usePlayerData, usePlayerState } from '../gameContext/playerContextProvider';
+import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
+import { HeaderButton } from './HeaderButton';
+import './leaveButton.scss';
 
 const leaveButtonContext = createContext((): boolean => false);
 
@@ -149,7 +151,7 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 }
 
 function CharacterLeave(): ReactElement {
-	const directoryConnector = useDirectoryConnector();
+	const accountManager = useService('accountManager');
 	const connectionInfo = useShardConnectionInfo();
 	const characterData = usePlayerData();
 	const characterName = (characterData && !characterData.inCreation) ? characterData.name : null;
@@ -158,9 +160,9 @@ function CharacterLeave(): ReactElement {
 	const onClick = useCallback((e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
 		e.preventDefault();
 		e.stopPropagation();
-		directoryConnector.disconnectFromCharacter();
+		accountManager.disconnectFromCharacter();
 		closeDialog();
-	}, [directoryConnector, closeDialog]);
+	}, [accountManager, closeDialog]);
 
 	return (
 		<fieldset>

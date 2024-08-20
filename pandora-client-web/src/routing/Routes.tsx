@@ -1,27 +1,29 @@
 import { IsAuthorized, IsObject } from 'pandora-common';
-import React, { ComponentType, ReactElement, useEffect, lazy, Suspense } from 'react';
+import React, { ComponentType, lazy, ReactElement, Suspense, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Navigate, NavigateOptions, Route, Routes, useLocation } from 'react-router-dom';
-import { usePlayerData } from '../components/gameContext/playerContextProvider';
-import { Settings } from '../components/settings/settings';
+import { AccountContacts } from '../components/accountContacts/accountContacts';
 import { CharacterCreate } from '../components/characterCreate/characterCreate';
 import { CharacterSelect } from '../components/characterSelect/characterSelect';
-import { RoomScreen } from '../ui/screens/room/room';
-import { SpaceConfiguration, SpaceCreate } from '../ui/screens/spaceConfiguration/spaceConfiguration';
-import { SpacesSearch } from '../ui/screens/spacesSearch/spacesSearch';
-import { useAuthTokenIsValid, useCurrentAccount, useDirectoryConnector } from '../components/gameContext/directoryConnectorContextProvider';
+import { ModalDialog } from '../components/dialog/dialog';
+import { useAuthTokenIsValid } from '../components/gameContext/directoryConnectorContextProvider';
+import { useGameStateOptional } from '../components/gameContext/gameStateContextProvider';
+import { usePlayerData } from '../components/gameContext/playerContextProvider';
 import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
 import { AuthPage } from '../components/login/authPage';
-import { WardrobeRouter } from '../components/wardrobe/wardrobe';
-import { authPagePathsAndComponents } from './authRoutingData';
-import { AccountContacts } from '../components/accountContacts/accountContacts';
 import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens';
-import { ModalDialog } from '../components/dialog/dialog';
-import { useNullableObservable, useObservable } from '../observable';
-import { SpaceJoin } from '../ui/screens/spaceJoin/spaceJoin';
-import { Freeze } from '../ui/components/common/freeze';
+import { Settings } from '../components/settings/settings';
+import { WardrobeRouter } from '../components/wardrobe/wardrobe';
 import { ShardConnectionState } from '../networking/shardConnector';
-import { useGameStateOptional } from '../components/gameContext/gameStateContextProvider';
+import { useNullableObservable, useObservable } from '../observable';
+import { useCurrentAccount } from '../services/accountLogic/accountManagerHooks';
+import { useService } from '../services/serviceProvider';
+import { Freeze } from '../ui/components/common/freeze';
+import { RoomScreen } from '../ui/screens/room/room';
+import { SpaceConfiguration, SpaceCreate } from '../ui/screens/spaceConfiguration/spaceConfiguration';
+import { SpaceJoin } from '../ui/screens/spaceJoin/spaceJoin';
+import { SpacesSearch } from '../ui/screens/spacesSearch/spacesSearch';
+import { authPagePathsAndComponents } from './authRoutingData';
 
 // Lazily loaded screens
 const Management = lazy(() => import('../components/management'));
@@ -106,7 +108,7 @@ function RequiresLogin<TProps extends object>({ element: Element, preserveLocati
 
 function RequiresCharacterImpl({ characterElement: Element, allowUnfinished }: { characterElement: ComponentType<Record<string, never>>; allowUnfinished?: boolean; }): ReactElement {
 	const shardConnector = useShardConnector();
-	const lastSelectedCharacter = useObservable(useDirectoryConnector().lastSelectedCharacter);
+	const lastSelectedCharacter = useObservable(useService('accountManager').lastSelectedCharacter);
 	const playerData = usePlayerData();
 	const hasCharacter = shardConnector != null && playerData != null;
 

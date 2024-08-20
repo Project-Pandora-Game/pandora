@@ -92,11 +92,19 @@ export function WikiSpaces(): ReactElement {
 			<h4 id='SP_Space_visibility'>Space visibility</h4>
 			<p>
 				Spaces in Pandora can be public or private, which affects who can see them.
+				There are two different public space visibility settings: "Public while an admin is inside" and simply "Public".
+				Note, that the "Public" setting still requires anyone online to be currently inside the space.
+				If the public condition is no longer fulfilled, the space is temporarily no longer publicly listed in the list of spaces.
+				Despite that, everyone inside can still directly invite other users from their contacts list to the unlisted public space (see <Link to='#SP_Space_invites'>"Space invites"</Link> section).<br />
+				The "Public while an admin is inside" setting is useful for making sure your space does not diverge from its intended purpose while there is no owner/admin inside.<br />
+				<br />
+				Spaces can also be locked, which behaves similar to a private space, but prevents anyone except owners and admins from entering the space (leaving the space isn't limited). This also asks owners and admins for confirmation before entering.
+				Allow-listed users can still see locked spaces, but not who is inside them and cannot enter them.
+				"Join-me" invitations work the same as for private spaces, but "Space-bound" invitations are blocked.
 			</p>
 			<ul>
 				<li>The default when creating a new space is private.</li>
-				<li>Public spaces are only visible for other players when there is an admin online inside the space.</li>
-				<li>Private spaces are currently only visible in the space search for owners and admins of that space as well as users whose account is on the allow list of the space.</li>
+				<li>Private spaces only show in the list of spaces for owners and admins of that space as well as users whose account is on the "allowed users" list of the space.</li>
 				<li>Accounts can still see spaces they are banned from</li>
 				<li>
 					Certain information about a space can be seen in the space preview popup by anyone able to enter the space even without actually entering it.
@@ -106,7 +114,7 @@ export function WikiSpaces(): ReactElement {
 
 			<h4 id='SP_Space_access'>Space access</h4>
 			<p>
-				Spaces in Pandora that are public and visible can be joined unless a user is banned from it or the space is full.
+				Spaces in Pandora that are publicly listed can be joined unless a user is banned from it or the space is full.
 				A private space can only be seen and joined by owners, admins and people on the allow list of said space. To invite other users to a private space,
 				they have to either be added to one of these lists or be invited by an admin in order to join.
 				The admin and "allowed users" lists can be found in the "visitor management"-tab of the space configuration view. Note that these lists
@@ -186,7 +194,7 @@ export function WikiSpaces(): ReactElement {
 			<ul>
 				<li>You can set the space name and a long space description that both are visible from the outside, to accounts that can see the space.</li>
 				<li>The default number of characters that can join a space is 10, but the possible upper limit is 100.</li>
-				<li>You can set if the space should be public and visible to everyone, as long as there is an admin online inside. The default is "no", which means the space is private.</li>
+				<li>You can set the space's visibility. The default is that the space is private.</li>
 				<li>You can give up space ownership, which deletes the space permanently, if you are the only owner.</li>
 				<li>The admin, ban, and allowed users lists are comma separated and require the player account id, as they are account-wide.<br />
 					The player account id number can be looked up in the account profile of the player.<br />

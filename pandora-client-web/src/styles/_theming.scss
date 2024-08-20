@@ -1,0 +1,25 @@
+@import 'constants';
+
+$theme-accent-color: #939393;
+
+$theme-normal-background: #aaa;
+$theme-normal-background-secondary: #a0a0a0;
+$theme-normal-text: #000;
+$theme-normal-text-dim: #444;
+
+$theme-hover-background: color-mix(in srgb, #797979, $theme-accent-color 35%);
+$theme-hover-text: $theme-normal-text;
+$theme-hover-text-dim: $theme-normal-text-dim;
+
+$theme-active-background: color-mix(in srgb, black, $theme-accent-color 35%);
+$theme-active-text: #fff;
+$theme-active-text-dim: #ccc;
+
+$theme-warningbox-background: $theme-warning;
+$theme-warningbox-text: $theme-normal-text;
+
+$theme-errorbox-background: $theme-error;
+$theme-errorbox-text: $theme-normal-text;
+
+$theme-textbox-background: #ccc;
+$theme-textbox-text: #000;

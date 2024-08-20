@@ -10,9 +10,10 @@ import { useEvent } from '../../common/useEvent';
 import { Button } from '../../components/common/button/button';
 import { Container } from '../../graphics/baseComponents/container';
 import { Graphics } from '../../graphics/baseComponents/graphics';
-import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { PixiViewportRef, PixiViewportSetupCallback } from '../../graphics/baseComponents/pixiViewport';
+import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { useObservable } from '../../observable';
+import { serviceManagerContext } from '../../services/serviceProvider';
 import { EditorContext, useEditor } from '../editorContextProvider';
 import { ResultCharacter, SetupCharacter } from './character';
 import { ImageExporter } from './export/imageExporter';
@@ -75,7 +76,7 @@ export function EditorScene({
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
 		viewportRef,
-		forwardContexts: [EditorContext],
+		forwardContexts: [serviceManagerContext, EditorContext],
 		worldHeight: CharacterSize.HEIGHT,
 		worldWidth: CharacterSize.WIDTH,
 		backgroundColor,

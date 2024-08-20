@@ -25,6 +25,7 @@ import {
 	SpaceGhostManagementConfigSchema,
 	SpaceId,
 	SpaceInvite,
+	SpacePublicSettingSchema,
 	ZodMatcher,
 	type SpaceGhostManagementConfig,
 } from 'pandora-common';
@@ -46,19 +47,19 @@ import { SelectionIndicator } from '../../../components/common/selectionIndicato
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs';
 import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
 import {
-	useCurrentAccount,
 	useDirectoryChangeListener,
 	useDirectoryConnector,
 } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { CurrentSpaceInfo, IsSpaceAdmin, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs';
 import bodyChange from '../../../icons/body-change.svg';
 import devMode from '../../../icons/developer.svg';
 import pronounChange from '../../../icons/male-female.svg';
 import { DirectoryConnector } from '../../../networking/directoryConnector';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import './spaceConfiguration.scss';
-import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 
 export const DESCRIPTION_TEXTBOX_SIZE = 16;
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
@@ -75,14 +76,14 @@ function DefaultConfig(): SpaceDirectoryConfig {
 		admin: [],
 		banned: [],
 		allow: [],
-		public: false,
+		public: 'private',
 		features: [],
 		background: CloneDeepMutable(DEFAULT_BACKGROUND),
 		ghostManagement: null,
 	};
 }
 
-export const SPACE_FEATURES: { id: SpaceFeature; name: string; icon?: string; }[] = [
+export const SPACE_FEATURES: { id: SpaceFeature; name: string; icon: string; }[] = [
 	{
 		id: 'allowBodyChanges',
 		name: 'Allow changes to character bodies',
@@ -239,8 +240,54 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 					{ canEdit && !IsValidEntryText(currentConfig.entryText) ? (<div className='error'>Invalid entry text</div>) : null }
 				</div>
 				<div className='input-container'>
-					<label>Public</label>
-					<Button onClick={ () => setModifiedData({ public: !currentConfig.public }) } disabled={ !canEdit } className='fadeDisabled'>{ currentConfig.public ? 'Yes' : 'No' }</Button>
+					<label>
+						Space visibility
+						<ContextHelpButton>
+							<p>
+								This setting affects who can see and enter this space.<br />
+								It has the following options:
+							</p>
+							<h3>Locked</h3>
+							<ul>
+								<li>Owners, Admins and Allow-listed users can see this space.</li>
+								<li>Owners and Admins can join at any time. They are asked for confirmation before entering.</li>
+								<li>"Join-me" invitations can be created only by Owners and Admins. Anyone can join using them.</li>
+								<li>"Space-bound" invitations cannot be used. Existing space-bound invitations are kept for when the space is unlocked.</li>
+							</ul>
+							<h3>Private</h3>
+							<ul>
+								<li>Owners, Admins and Allow-listed users can see this space.</li>
+								<li>Owners, Admins and Allow-listed users can join at any time.</li>
+								<li>"Join-me" invitations can be created only by Owners and Admins. Anyone can join using them.</li>
+								<li>"Space-bound" invitations can be used to join.</li>
+							</ul>
+							<h3>Public while an admin is inside</h3>
+							<ul>
+								<li>Anyone can see this space while there currently is an <strong>online admin</strong> inside. Otherwise only Owners, Admins and Allow-listed users can see it.</li>
+								<li>Anyone non-banned who can see this space can join at any time.</li>
+								<li>"Join-me" invitations can be created and used by anyone.</li>
+								<li>"Space-bound" invitations can be used to join.</li>
+							</ul>
+							<h3>Public</h3>
+							<ul>
+								<li>Anyone can see this space while there currently is <strong>any online character</strong> inside. Otherwise only Owners, Admins and Allow-listed users can see it.</li>
+								<li>Anyone non-banned who can see this space can join at any time.</li>
+								<li>"Join-me" invitations can be created and used by anyone.</li>
+								<li>"Space-bound" invitations can be used to join.</li>
+							</ul>
+						</ContextHelpButton>
+					</label>
+					<Select
+						value={ currentConfig.public }
+						onChange={ (e) => setModifiedData({ public: SpacePublicSettingSchema.parse(e.target.value) }) }
+						noScrollChange
+						disabled={ !canEdit }
+					>
+						<option value='locked'>Locked</option>
+						<option value='private'>Private</option>
+						<option value='public-with-admin'>Public while an admin is inside</option>
+						<option value='public-with-anyone'>Public</option>
+					</Select>
 				</div>
 			</FieldsetToggle>
 			<FieldsetToggle legend='Ownership'>
@@ -445,7 +492,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 												} : null,
 											});
 										} }
-										readOnly={ !canEdit }
+										disabled={ !canEdit }
 									/>
 									<label htmlFor={ `${idPrefix}-ghostmanagement-enable` }>Enable automatic offline character removal</label>
 								</Row>

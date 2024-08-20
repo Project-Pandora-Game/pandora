@@ -1,4 +1,4 @@
-import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
 import { usePlayerData } from '../gameContext/playerContextProvider';
 
 export function useHelpUserName(): string {

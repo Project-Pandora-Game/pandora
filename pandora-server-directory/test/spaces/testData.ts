@@ -9,7 +9,7 @@ const TEST_SPACE_DEFAULTS: Readonly<SpaceDirectoryConfig> = {
 	admin: [],
 	banned: [],
 	allow: [],
-	public: true,
+	public: 'public-with-admin',
 	features: [],
 	background: CloneDeepMutable(DEFAULT_BACKGROUND),
 	ghostManagement: null,

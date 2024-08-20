@@ -37,8 +37,8 @@
 		]
 	},
 	"dependencies": {
-		"@aws-sdk/client-ses": "3.629.0",
-		"@aws-sdk/credential-provider-node": "3.629.0",
+		"@aws-sdk/client-ses": "3.632.0",
+		"@aws-sdk/credential-provider-node": "3.632.0",
 		"@octokit/auth-oauth-app": "7.1.0",
 		"@octokit/rest": "20.1.1",
 		"argon2": "0.40.1",
@@ -65,12 +65,12 @@
 		"@types/jest": "29.5.12",
 		"@types/json-diff": "1.0.3",
 		"@types/lodash": "4.17.1",
-		"@types/node": "20.14.0",
+		"@types/node": "20.16.0",
 		"@types/nodemailer": "6.4.15",
 		"@types/semver": "7.5.8",
 		"@types/wtfnode": "0.7.3",
-		"@typescript-eslint/eslint-plugin": "8.1.0",
-		"@typescript-eslint/parser": "8.1.0",
+		"@typescript-eslint/eslint-plugin": "8.2.0",
+		"@typescript-eslint/parser": "8.2.0",
 		"discord-api-types": "0.37.83",
 		"eslint": "8.57.0",
 		"eslint-plugin-import": "2.29.1",
@@ -81,7 +81,7 @@
 		"ts-mockito": "2.6.1",
 		"tsc-watch": "6.2.0",
 		"tslib": "2.6.2",
-		"type-fest": "4.24.0",
+		"type-fest": "4.25.0",
 		"typescript": "5.4.5"
 	}
 }

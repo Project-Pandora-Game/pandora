@@ -1,19 +1,21 @@
+import { AssertNever, FormatTimeInterval, IClientDirectoryNormalResult, IDirectoryAccountInfo, PasswordSchema } from 'pandora-common';
 import React, { ReactElement, useEffect } from 'react';
-import { AssertNever, FormatTimeInterval, PasswordSchema, IDirectoryAccountInfo, IClientDirectoryNormalResult } from 'pandora-common';
 import { useForm } from 'react-hook-form';
-import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { PrehashPassword } from '../../crypto/helpers';
-import { Form, FormCreateStringValidator, FormField, FormFieldError } from '../common/form/form';
-import { Button } from '../common/button/button';
-import { useAsyncEvent } from '../../common/useEvent';
-import { ModalDialog, useConfirmDialog } from '../dialog/dialog';
-import { useObservable } from '../../observable';
-import type { AuthToken } from '../../networking/directoryConnector';
-import { useCurrentTime } from '../../common/useCurrentTime';
-import { useKeyDownEvent } from '../../common/useKeyDownEvent';
-import { Column, Row } from '../common/container/container';
 import { toast } from 'react-toastify';
+import { useCurrentTime } from '../../common/useCurrentTime';
+import { useAsyncEvent } from '../../common/useEvent';
+import { useKeyDownEvent } from '../../common/useKeyDownEvent';
+import { PrehashPassword } from '../../crypto/helpers';
+import type { AuthToken } from '../../networking/directoryConnector';
+import { useObservable } from '../../observable';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
+import { useService } from '../../services/serviceProvider';
+import { Button } from '../common/button/button';
+import { Column, Row } from '../common/container/container';
+import { Form, FormCreateStringValidator, FormField, FormFieldError } from '../common/form/form';
+import { ModalDialog, useConfirmDialog } from '../dialog/dialog';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 
 export function SecuritySettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -235,6 +237,7 @@ interface PasswordChangeFormData {
 
 function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
+	const directMessageManager = useService('directMessageManager');
 	const [invalidPassword, setInvalidPassword] = React.useState('');
 
 	const {
@@ -255,7 +258,7 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 	const onSubmit = handleSubmit(async ({ oldPassword, newPassword }) => {
 		const passwordSha512Old = await PrehashPassword(oldPassword);
 		const passwordSha512New = await PrehashPassword(newPassword);
-		const { cryptoKey, onSuccess } = await directoryConnector.directMessageHandler.passwordChange(account.username, newPassword);
+		const { cryptoKey, onSuccess } = await directMessageManager.passwordChange(account.username, newPassword);
 
 		const resp = await directoryConnector.awaitResponse('passwordChange', {
 			passwordSha512Old,

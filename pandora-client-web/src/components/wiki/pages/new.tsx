@@ -184,8 +184,7 @@ export function WikiNew(): ReactElement {
 				even host your own space. You can do that by clicking the "List of spaces" button, and then pressing the last row
 				"Create a new space". This brings you to a screen where you can enter the properties of your new space, such as name, description,
 				and background image.<br />
-				The default setting of a new space is private, so if you want it to be public, you need to switch this default setting
-				to "Yes".
+				The default setting of a new space is private, so if you want it to be public, you need to switch the space visibility to one of the two public settings.
 			</p>
 			<p>
 				Spaces in Pandora are persistent. This means that all settings, items in the room inventory, and all deployed furniture

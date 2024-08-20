@@ -3,9 +3,9 @@ const { EMAIL_SENDER_TYPE } = ENV;
 import { MockEmailSender } from './mockEmail';
 import { SmtpEmail } from './smtpEmail';
 import { SesEmail } from './sesEmail';
-import { Service } from 'pandora-common';
+import { ServerService } from 'pandora-common';
 
-export interface IEmailSender extends Service {
+export interface IEmailSender extends ServerService {
 	sendPasswordReset(email: string, username: string, token: string): Promise<void>;
 	sendRegistrationConfirmation(email: string, username: string, token: string): Promise<void>;
 }

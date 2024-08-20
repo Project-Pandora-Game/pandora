@@ -10,14 +10,16 @@ import settingsIcon from '../../assets/icons/setting.svg';
 import wikiIcon from '../../assets/icons/wiki.svg';
 import { useObservable, useObservableMultiple } from '../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
 import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat';
+import { NotificationSource, useNotification, type NotificationHeaderKeys } from '../../services/notificationHandler';
+import { useService } from '../../services/serviceProvider';
 import { useIsNarrowScreen } from '../../styles/mediaQueries';
 import { AccountContactContext, useAccountContacts } from '../accountContacts/accountContactContext';
 import { IconHamburger } from '../common/button/domIcons';
 import { Column, Row } from '../common/container/container';
 import { DialogInPortal } from '../dialog/dialog';
-import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { NotificationHeaderKeys, NotificationSource, useNotification, useNotificationHeader } from '../gameContext/notificationContextProvider';
+import { useNotificationHeader } from '../gameContext/notificationProvider';
 import { usePlayerData } from '../gameContext/playerContextProvider';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
 import { HeaderButton } from './HeaderButton';
@@ -143,20 +145,20 @@ function FriendsHeaderButton({ onClickExtra }: {
 	onClickExtra?: () => void;
 }): ReactElement {
 	const navigate = useNavigate();
-	const handler = useDirectoryConnector().directMessageHandler;
+	const directMessageManager = useService('directMessageManager');
 	const notifyDirectMessage = useNotification(NotificationSource.DIRECT_MESSAGE);
 	const unreadDirectMessageCount = useObservableMultiple(
-		useObservable(handler.chats)
+		useObservable(directMessageManager.chats)
 			.map((c) => c.displayInfo),
 	).filter((c) => c.hasUnread).length;
 	const incomingFriendRequestCount = useAccountContacts('incoming').length;
 	const notificationCount = unreadDirectMessageCount + incomingFriendRequestCount;
 
-	useEffect(() => handler.on('newMessage', (_chat: DirectMessageChat) => {
+	useEffect(() => directMessageManager.on('newMessage', (_chat: DirectMessageChat) => {
 		notifyDirectMessage({
 			// TODO: notification
 		});
-	}), [handler, notifyDirectMessage]);
+	}), [directMessageManager, notifyDirectMessage]);
 
 	const notifyFriendRequest = useNotification(NotificationSource.INCOMING_FRIEND_REQUEST);
 	useEffect(() => AccountContactContext.on('incoming', () => notifyFriendRequest({

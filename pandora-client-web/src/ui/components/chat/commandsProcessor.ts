@@ -1,16 +1,18 @@
 import { CommandAutocompleteResult, CommandRunner, ICommandExecutionContext, IEmpty, LongestCommonPrefix } from 'pandora-common';
-import { DirectoryConnector } from '../../../networking/directoryConnector';
-import type { ShardConnector } from '../../../networking/shardConnector';
-import type { GameState, IChatMessageSender } from '../../../components/gameContext/gameStateContextProvider';
-import type { IChatInputHandler } from './chatInput';
 import type { useNavigate } from 'react-router';
 import type { PlayerCharacter } from '../../../character/player';
+import type { GameState, IChatMessageSender } from '../../../components/gameContext/gameStateContextProvider';
+import { DirectoryConnector } from '../../../networking/directoryConnector';
+import type { ShardConnector } from '../../../networking/shardConnector';
+import type { AccountManager } from '../../../services/accountLogic/accountManager';
+import type { IChatInputHandler } from './chatInput';
 
 export const COMMAND_KEY = '/';
 
 export interface ICommandExecutionContextClient extends ICommandExecutionContext {
 	shardConnector: ShardConnector;
 	directoryConnector: DirectoryConnector;
+	accountManager: AccountManager;
 	gameState: GameState;
 	player: PlayerCharacter;
 	messageSender: IChatMessageSender;

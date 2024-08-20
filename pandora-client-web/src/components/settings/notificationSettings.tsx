@@ -1,9 +1,9 @@
 import React, { ReactElement } from 'react';
-import { useCurrentAccount, useAccountSettings } from '../gameContext/directoryConnectorContextProvider';
-import { SelectAccountSettings } from './helpers/accountSettings';
+import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
+import { NOTIFICATION_AUDIO_NAMES, NOTIFICATION_AUDIO_SOUNDS, NOTIFICATION_AUDIO_VOLUME } from '../../services/notificationHandler';
 import { Button } from '../common/button/button';
-import { NOTIFICATION_AUDIO_SOUNDS, NOTIFICATION_AUDIO_NAMES, NOTIFICATION_AUDIO_VOLUME } from '../gameContext/notificationContextProvider';
 import { FieldsetToggle } from '../common/fieldsetToggle';
+import { SelectAccountSettings } from './helpers/accountSettings';
 
 export function NotificationSettings(): ReactElement | null {
 	const account = useCurrentAccount();

@@ -18,7 +18,7 @@ export class PersonalSpace extends Space {
 			name: `${this._character.name}'s personal space`,
 			entryText: '',
 			description: '',
-			public: false,
+			public: 'private',
 			maxUsers: 1,
 			features: [
 				'allowBodyChanges',

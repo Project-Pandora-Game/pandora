@@ -69,6 +69,18 @@ export class AccountContacts {
 			.map((contact) => this.cacheToClientData(contact, ids[contact.id]));
 	}
 
+	/**
+	 * Returns a queryable set of all accounts that are friends of this account.
+	 */
+	public async getFriendsIds(): Promise<ReadonlySet<AccountId>> {
+		await this.load();
+		return new Set(
+			[...this.contacts.values()]
+				.filter((contact) => contact.contact.type === 'friend')
+				.map((contact) => contact.id),
+		);
+	}
+
 	public async getFriendsStatus(): Promise<IAccountFriendStatus[]> {
 		await this.load();
 		return [...this.contacts.values()]

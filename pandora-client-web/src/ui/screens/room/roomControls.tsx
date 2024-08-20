@@ -1,19 +1,20 @@
 import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
 import React, {
 	ReactElement, useEffect, useMemo,
+	type ReactNode,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import listIcon from '../../../assets/icons/list.svg';
 import settingIcon from '../../../assets/icons/setting.svg';
+import shieldIcon from '../../../assets/icons/shield.svg';
 import storageIcon from '../../../assets/icons/storage.svg';
 import toolsIcon from '../../../assets/icons/tools.svg';
-import { Character, useCharacterData, useCharacterRestrictionManager } from '../../../character/character';
+import { Character, useCharacterData, useCharacterDataMultiple, useCharacterRestrictionManager } from '../../../character/character';
 import { useFriendStatus } from '../../../components/accountContacts/accountContactContext';
 import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText, useRestrictionOverrideDialogContext } from '../../../components/characterRestrictionOverride/characterRestrictionOverride';
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
 import { Select, type SelectProps } from '../../../components/common/select/select';
-import { useCurrentAccount } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayer, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
@@ -21,6 +22,7 @@ import { USER_DEBUG } from '../../../config/Environment';
 import { SettingDisplayCharacterName } from '../../../graphics/room/roomCharacter';
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState } from '../../../graphics/room/roomDevice';
 import { useObservable } from '../../../observable';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { useChatInput } from '../../components/chat/chatInput';
 import { ChatroomDebugConfigView } from './roomDebug';
 
@@ -83,6 +85,7 @@ export function RoomControls(): ReactElement | null {
 				</Button>
 			</Row>
 			&nbsp;
+			<SpaceVisibilityWarning />
 			<span>
 				These characters are in the space <b>{ spaceConfig.name }</b>:
 			</span>
@@ -159,6 +162,29 @@ export function PersonalSpaceControls(): ReactElement {
 			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
 		</Column>
 	);
+}
+
+function SpaceVisibilityWarning(): ReactElement | null {
+	const spaceConfig = useSpaceInfo().config;
+	const characters = useSpaceCharacters();
+	const characterData = useCharacterDataMultiple(characters);
+	const ctx = useActionSpaceContext();
+
+	// Show warning if the space is marked as "public with admin inside", but there is none
+	// In all other cases it is either intentionally private or public because of this user
+	if (
+		spaceConfig.public === 'public-with-admin' &&
+		!characterData.some((c) => c.isOnline && ctx.isAdmin(c.accountId))
+	) {
+		return (
+			<span className='space-warning'>
+				Note: This space is currently not publicly listed, since no admin is online inside it.
+				Users inside can still invite their contacts.
+			</span>
+		);
+	}
+
+	return null;
 }
 
 export function useRoomConstructionModeCheck() {
@@ -266,6 +292,7 @@ function DeviceOverlaySelector(): ReactElement {
 }
 
 function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): ReactElement {
+	const spaceInfo = useSpaceInfo();
 	const playerId = usePlayerId();
 	const { setTarget } = useChatInput();
 	const navigate = useNavigate();
@@ -276,8 +303,17 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 	const data = useCharacterData(char);
 	const state = useCharacterState(gameState, char.id);
 	const isOnline = data.isOnline;
+	const isAdmin = IsSpaceAdmin(spaceInfo.config, { id: data.accountId });
 
 	const isPlayer = char.id === playerId;
+
+	const icons = useMemo((): ReactNode[] => {
+		const result: ReactNode[] = [];
+		if (isAdmin) {
+			result.push(<img key='space-admin' className='character-icon' src={ shieldIcon } alt='Space admin' title='Space admin' />);
+		}
+		return result;
+	}, [isAdmin]);
 
 	return (
 		<fieldset>
@@ -289,6 +325,13 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 						<span> / { data.id } / { data.accountId }</span>
 					</span>
 				</span>
+				{
+					icons.length > 0 ? (
+						<span>
+							{ icons }
+						</span>
+					) : null
+				}
 				{ isOnline ? null : (
 					<span className='offline'>
 						Offline

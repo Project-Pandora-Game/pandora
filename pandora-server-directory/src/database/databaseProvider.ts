@@ -4,7 +4,7 @@ import type {
 	ICharacterData,
 	ICharacterDataDirectoryUpdate,
 	ICharacterDataShardUpdate,
-	Service,
+	ServerService,
 	SpaceData,
 	SpaceDataDirectoryUpdate,
 	SpaceDataShardUpdate,
@@ -19,7 +19,7 @@ import { MockDatabase } from './mockDb';
 import MongoDatabase from './mongoDb';
 const { DATABASE_TYPE } = ENV;
 
-export interface PandoraDatabase extends Service {
+export interface PandoraDatabase extends ServerService {
 	/** The id in numeric form that will be assigned to next created account */
 	readonly nextAccountId: number;
 

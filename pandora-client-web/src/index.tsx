@@ -15,6 +15,7 @@ import { ConfigurePixiSettings } from './graphics/pixiSettings';
 import './index.scss';
 import { DirectoryConnectorServiceProvider } from './networking/directoryConnector';
 import { PandoraRoutes } from './routing/Routes';
+import { AccountManagerServiceProvider } from './services/accountLogic/accountManager';
 import { DirectMessageManagerServiceProvider } from './services/accountLogic/directMessages/directMessageManager';
 import type { ClientServices } from './services/clientServices';
 import './styles/globalUtils.scss';
@@ -43,6 +44,7 @@ async function Start(): Promise<void> {
 	// Construct service manager
 	const serviceManager = new ServiceManager<ClientServices>()
 		.registerService(DirectoryConnectorServiceProvider)
+		.registerService(AccountManagerServiceProvider)
 		.registerService(DirectMessageManagerServiceProvider);
 
 	await serviceManager.load();

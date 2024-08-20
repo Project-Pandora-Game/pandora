@@ -19,8 +19,10 @@ import { useAsyncEvent } from '../../common/useEvent';
 import { ShardConnector } from '../../networking/shardConnector';
 import { SocketIOConnector } from '../../networking/socketio_connector';
 import { useNullableObservable, useObservable } from '../../observable';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
+import { useService } from '../../services/serviceProvider';
 import { useDebugContext } from '../error/debugContextProvider';
-import { useAccountSettings, useDirectoryConnector } from './directoryConnectorContextProvider';
+import { useDirectoryConnector } from './directoryConnectorContextProvider';
 import { NotificationSource, useNotification } from './notificationContextProvider';
 
 export interface ShardConnectorContextData {
@@ -98,6 +100,7 @@ export function ShardConnectorContextProvider({ children }: ChildrenProps): Reac
 
 function ConnectionStateManager({ children }: ChildrenProps): ReactElement {
 	const directoryConnector = useDirectoryConnector();
+	const accountManager = useService('accountManager');
 	const shardConnector = useShardConnector();
 	const connectToShard = useConnectToShard();
 	const handleError = useErrorHandler();
@@ -116,7 +119,7 @@ function ConnectionStateManager({ children }: ChildrenProps): ReactElement {
 	}, [directoryState, directoryStatus, shardState, setDebugData]);
 
 	useEffect(() => {
-		return directoryConnector.on('connectionState', ({ character }) => {
+		return accountManager.on('accountChanged', ({ character }) => {
 			void (async () => {
 				try {
 					if (character) {
@@ -130,7 +133,7 @@ function ConnectionStateManager({ children }: ChildrenProps): ReactElement {
 				}
 			})();
 		});
-	}, [directoryConnector, connectToShard, handleError, disconnectFromShard]);
+	}, [accountManager, connectToShard, handleError, disconnectFromShard]);
 
 	return <>{ children }</>;
 }
@@ -181,7 +184,6 @@ function useShardConnectorFactory(): ShardConnectorFactory {
 }
 
 export function useConnectToShard(): (info: IDirectoryCharacterConnectionInfo) => Promise<void> {
-	const directoryConnector = useDirectoryConnector();
 	const shardConnector = useShardConnector();
 	const disconnectFromShard = useDisconnectFromShard();
 	const setShardConnector = useSetShardConnector();
@@ -194,7 +196,6 @@ export function useConnectToShard(): (info: IDirectoryCharacterConnectionInfo) =
 				return;
 			}
 			disconnectFromShard();
-			directoryConnector.setShardConnectionInfo(info);
 
 			setDebugData({ shardConnectionInfo: info });
 			const newShardConnector = shardConnectorFactory(info);
@@ -202,7 +203,7 @@ export function useConnectToShard(): (info: IDirectoryCharacterConnectionInfo) =
 			setShardConnector(newShardConnector);
 			await connectPromise;
 		},
-		[directoryConnector, shardConnector, disconnectFromShard, setShardConnector, shardConnectorFactory, setDebugData],
+		[shardConnector, disconnectFromShard, setShardConnector, shardConnectorFactory, setDebugData],
 	);
 }
 

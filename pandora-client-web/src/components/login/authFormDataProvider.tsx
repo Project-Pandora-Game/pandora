@@ -2,7 +2,7 @@ import { produce } from 'immer';
 import { noop } from 'lodash';
 import React, { createContext, ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
-import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
 
 export interface AuthFormDataState {
 	username?: string;

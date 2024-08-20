@@ -1,14 +1,15 @@
-import { EMPTY, IsAuthorized, IShardTokenType, IShardTokenConnectInfo } from 'pandora-common';
-import React, { createContext, ReactElement, useState, useMemo, useEffect, useContext } from 'react';
+import { EMPTY, IsAuthorized, IShardTokenConnectInfo, IShardTokenType } from 'pandora-common';
+import React, { createContext, ReactElement, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { Button } from '../../common/button/button';
 import { Select } from '../../common/select/select';
-import { useCurrentAccount, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
-import './shards.scss';
 import { useConfirmDialog } from '../../dialog/dialog';
+import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
+import './shards.scss';
 
 const ShardListContext = createContext({
 	reload: () => { /** noop */ },

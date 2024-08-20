@@ -15,7 +15,6 @@ import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText,
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
 import { Select, type SelectProps } from '../../../components/common/select/select';
-import { useCurrentAccount } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayer, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
@@ -23,6 +22,7 @@ import { USER_DEBUG } from '../../../config/Environment';
 import { SettingDisplayCharacterName } from '../../../graphics/room/roomCharacter';
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState } from '../../../graphics/room/roomDevice';
 import { useObservable } from '../../../observable';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { useChatInput } from '../../components/chat/chatInput';
 import { ChatroomDebugConfigView } from './roomDebug';
 

@@ -1,30 +1,21 @@
 import { freeze } from 'immer';
 import {
 	Assert,
-	AsyncSynchronized,
-	CharacterId,
-	CharacterIdSchema,
 	CheckPropertiesNotNullable,
 	ClientDirectorySchema,
 	CreateDefaultDirectoryStatus,
 	DirectoryClientSchema,
-	EMPTY,
 	GetLogger,
 	HTTP_HEADER_CLIENT_REQUEST_SHARD,
 	IClientDirectory,
-	IClientDirectoryArgument,
 	IClientDirectoryAuthMessage,
 	IConnectionBase,
-	IDirectoryAccountInfo,
 	IDirectoryCharacterConnectionInfo,
 	IDirectoryClient,
-	IDirectoryClientArgument,
 	IDirectoryClientChangeEvents,
 	IDirectoryStatus,
 	KnownObject,
 	MessageHandler,
-	SecondFactorData,
-	SecondFactorResponse,
 	Service,
 	type MessageHandlers,
 	type Satisfies,
@@ -32,14 +23,11 @@ import {
 	type ServiceProviderDefinition,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceOneshotMessages, type SocketInterfaceRespondedMessages } from 'pandora-common/dist/networking/helpers';
-import { toast } from 'react-toastify';
 import { z } from 'zod';
 import { BrowserStorage } from '../browserStorage';
 import { AccountContactContext } from '../components/accountContacts/accountContactContext';
-import { PrehashPassword } from '../crypto/helpers';
 import { Observable, ReadonlyObservable } from '../observable';
-import { PersistentToast, TOAST_OPTIONS_ERROR } from '../persistentToast';
-import { InitDirectMessageCrypotPassword } from '../services/accountLogic/directMessages/directMessageManager';
+import { PersistentToast } from '../persistentToast';
 import type { ClientServices } from '../services/clientServices';
 import type { Connector, SocketIOConnectorFactory } from './socketio_connector';
 
@@ -76,10 +64,6 @@ const AuthTokenSchema = z.object({
 type DirectoryConnectorServiceConfig = Satisfies<{
 	dependencies: Pick<ClientServices, never>;
 	events: {
-		logout: undefined;
-		accountChanged: { account: IDirectoryAccountInfo | null; character: IDirectoryCharacterConnectionInfo | null; };
-		/** Directory connection state change event. */
-		connectionState: IDirectoryClientArgument['connectionState'];
 		/** Emitted when we receive a `somethingChanged` message from directory. */
 		somethingChanged: readonly IDirectoryClientChangeEvents[];
 	};
@@ -88,33 +72,23 @@ type DirectoryConnectorServiceConfig = Satisfies<{
 /** Class housing connection from Shard to Directory */
 export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig> implements IConnectionBase<IClientDirectory> {
 	private readonly _state = new Observable<DirectoryConnectionState>(DirectoryConnectionState.NONE);
-	private readonly _directoryStatus = new Observable<IDirectoryStatus>(CreateDefaultDirectoryStatus());
-	private readonly _currentAccount = new Observable<IDirectoryAccountInfo | null>(null);
-
 	private readonly _directoryConnectionProgress = new PersistentToast();
-	private readonly _authToken = BrowserStorage.create<AuthToken | undefined>('authToken', undefined, AuthTokenSchema);
-	private readonly _lastSelectedCharacter = BrowserStorage.createSession<CharacterId | undefined>('lastSelectedCharacter', undefined, CharacterIdSchema.optional());
+	private readonly _directoryStatus = new Observable<IDirectoryStatus>(CreateDefaultDirectoryStatus());
 
-	/** Handler for second factor authentication */
-	public secondFactorHandler: ((response: SecondFactorResponse) => Promise<SecondFactorData | null>) | null = null;
-
-	private _shardConnectionInfo: IDirectoryCharacterConnectionInfo | null = null;
+	public readonly authToken = BrowserStorage.create<AuthToken | undefined>('authToken', undefined, AuthTokenSchema);
+	private _activeCharacterInfo: IDirectoryCharacterConnectionInfo | null = null;
 
 	/** Handlers for server messages. Dependent services are expected to fill those in. */
 	public readonly messageHandlers: Partial<MessageHandlers<IDirectoryClient>> = {
 		serverStatus: (status) => {
 			this._directoryStatus.value = status;
 		},
-		connectionState: async (message: IDirectoryClientArgument['connectionState']) => {
-			this.emit('connectionState', message);
-			await this.handleAccountChange(message);
-		},
 		loginTokenChanged: (data) => {
-			Assert(this._authToken.value);
-			this._authToken.value = {
+			Assert(this.authToken.value);
+			this.authToken.value = {
 				value: data.value,
 				expires: data.expires,
-				username: this._authToken.value.username,
+				username: this.authToken.value.username,
 			};
 		},
 		somethingChanged: ({ changes }) => {
@@ -134,21 +108,6 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 	/** Directory status data */
 	public get directoryStatus(): ReadonlyObservable<IDirectoryStatus> {
 		return this._directoryStatus;
-	}
-
-	/** Currently logged in account data or null if not logged in */
-	public get currentAccount(): ReadonlyObservable<IDirectoryAccountInfo | null> {
-		return this._currentAccount;
-	}
-
-	/** Current auth token or undefined if not logged in */
-	public get authToken(): ReadonlyObservable<AuthToken | undefined> {
-		return this._authToken;
-	}
-
-	/** The Id of the last selected character for this session. On reconnect this character will be re-selected. */
-	public get lastSelectedCharacter(): ReadonlyObservable<CharacterId | undefined> {
-		return this._lastSelectedCharacter;
 	}
 
 	private _connector: Connector<IClientDirectory> | null = null;
@@ -243,54 +202,6 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 	}
 
 	/**
-	 * Attempt to login to Directory and handle response
-	 * @param username - The username to use for login
-	 * @param password - The plaintext password to use for login
-	 * @param verificationToken - Verification token to verify email
-	 * @returns Promise of response from Directory
-	 */
-	public async login(username: string, password: string, verificationToken?: string): Promise<LoginResponse> {
-		// Init DM crypto password before attempting login, so it can load directly at login
-		await InitDirectMessageCrypotPassword(username, password);
-		const passwordSha512 = await PrehashPassword(password);
-		const result = await this.loginDirect({ username, passwordSha512, verificationToken });
-		if (result !== 'ok') {
-			await this.handleAccountChange({ account: null, character: null });
-		}
-		return result;
-	}
-
-	private async loginDirect(data: IClientDirectoryArgument['login']): Promise<LoginResponse> {
-		const result = await this.awaitResponse('login', data);
-		switch (result.result) {
-			case 'ok':
-				this._authToken.value = { ...result.token, username: result.account.username };
-				await this.handleAccountChange({ account: result.account, character: null });
-				return 'ok';
-			case 'secondFactorRequired':
-			case 'secondFactorInvalid':
-				if (this.secondFactorHandler) {
-					const secondFactor = await this.secondFactorHandler(result);
-					if (secondFactor) {
-						return this.loginDirect({ ...data, secondFactor });
-					}
-				}
-				return 'invalidSecondFactor';
-			default:
-				return result.result;
-		}
-	}
-
-	public logout(): void {
-		this.sendMessage('logout', { type: 'self' });
-		this.emit('connectionState', { account: null, character: null });
-		this.emit('logout', undefined);
-		AccountContactContext.handleLogout();
-		this._lastSelectedCharacter.value = undefined;
-		this._authToken.value = undefined;
-	}
-
-	/**
 	 * Sets a new state, updating all dependent things
 	 * @param newState The state to set
 	 */
@@ -342,90 +253,33 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 		logger.warning('Connection to Directory failed:', err.message);
 	}
 
-	public setShardConnectionInfo(info: IDirectoryCharacterConnectionInfo): void {
-		this._shardConnectionInfo = info;
-		this.setActiveShardId(info.id);
-	}
-
-	private setActiveShardId(id?: string): void {
+	public setActiveCharacterInfo(character: IDirectoryCharacterConnectionInfo | null): void {
 		Assert(this._connector != null);
+		this._activeCharacterInfo = character;
 		const extraHeaders = {
-			[HTTP_HEADER_CLIENT_REQUEST_SHARD]: id || undefined,
+			[HTTP_HEADER_CLIENT_REQUEST_SHARD]: character?.id || undefined,
 		};
 		this._connector.setExtraHeaders(extraHeaders);
-	}
-
-	private async handleAccountChange({ account, character }: { account: IDirectoryAccountInfo | null; character: IDirectoryCharacterConnectionInfo | null; }): Promise<void> {
-		// Update current account
-		this._currentAccount.value = account ? freeze(account) : null;
-		// Clear saved token if no account
-		if (!account) {
-			this._authToken.value = undefined;
-		} else {
-			await AccountContactContext.initStatus(this);
-			if (character === null) {
-				// If we already have a character and we are requested to unload it, clear the last character
-				if (this._shardConnectionInfo != null) {
-					this._lastSelectedCharacter.value = undefined;
-				} else {
-					// Otherwise try to autoconnect
-					await this.autoConnectCharacter();
-				}
-			} else {
-				this._lastSelectedCharacter.value = character.characterId;
-			}
-		}
-		this.emit('accountChanged', { account, character });
 	}
 
 	/**
 	 * Get data to use to authenticate to Directory using socket.io auth mechanism
 	 */
 	private getAuthData(): IClientDirectoryAuthMessage | undefined {
-		const token = this._authToken.value;
-		const connectionInfo = this._shardConnectionInfo;
+		const token = this.authToken.value;
+		const characterInfo = this._activeCharacterInfo;
 		if (token && token.expires > Date.now()) {
 			return {
 				username: token.username,
 				token: token.value,
-				character: connectionInfo ? {
-					id: connectionInfo.characterId,
-					secret: connectionInfo.secret,
+				character: characterInfo ? {
+					id: characterInfo.characterId,
+					secret: characterInfo.secret,
 				} : null,
 			};
 		} else {
 			return undefined;
 		}
-	}
-
-	@AsyncSynchronized()
-	private async autoConnectCharacter(): Promise<void> {
-		const characterId = this._lastSelectedCharacter.value;
-		if (characterId == null || this._shardConnectionInfo != null) {
-			return;
-		}
-		// Try to directly connect to the last selected character
-		const data = await this.awaitResponse('connectCharacter', { id: characterId });
-		if (data.result !== 'ok') {
-			logger.alert('Failed to auto-connect to previous character:', data);
-			this._lastSelectedCharacter.value = undefined;
-		}
-	}
-
-	public async connectToCharacter(id: CharacterId): Promise<boolean> {
-		const data = await this.awaitResponse('connectCharacter', { id });
-		if (data.result !== 'ok') {
-			logger.error('Failed to connect to character:', data);
-			toast(`Failed to connect to character:\n${data.result}`, TOAST_OPTIONS_ERROR);
-			this._lastSelectedCharacter.value = undefined;
-			return false;
-		}
-		return true;
-	}
-
-	public disconnectFromCharacter(): void {
-		this.sendMessage('disconnectCharacter', EMPTY);
-		this._lastSelectedCharacter.value = undefined;
 	}
 }
 

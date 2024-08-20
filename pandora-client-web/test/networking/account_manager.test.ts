@@ -12,6 +12,7 @@ import {
 } from '../../src/networking/account_manager';
 import { DirectoryConnector } from '../../src/networking/directoryConnector';
 import { ShardConnector } from '../../src/networking/shardConnector';
+import type { AccountManager } from '../../src/services/accountLogic/accountManager';
 import type { ClientServices } from '../../src/services/clientServices';
 import { MockConnectionInfo } from '../mocks/networking/mockShardConnector';
 import { MockServiceManager, ProvidersProps, RenderHookWithProviders } from '../testUtils';
@@ -20,12 +21,15 @@ describe('Account Manager', () => {
 	const setShardConnector = jest.fn();
 	let serviceManager: ServiceManager<ClientServices>;
 	let directoryConnector: DirectoryConnector;
+	let accountManager: AccountManager;
 	let shardConnector: ShardConnector;
 
 	beforeEach(() => {
 		serviceManager = MockServiceManager();
 		Assert(serviceManager.services.directoryConnector != null);
 		directoryConnector = serviceManager.services.directoryConnector;
+		Assert(serviceManager.services.accountManager != null);
+		accountManager = serviceManager.services.accountManager;
 		shardConnector = new ShardConnector(MockConnectionInfo(), directoryConnector);
 	});
 
@@ -39,7 +43,7 @@ describe('Account Manager', () => {
 		});
 
 		async function testLogin(username: string, password: string, verificationToken?: string): Promise<void> {
-			const loginMock = jest.spyOn(directoryConnector, 'login')
+			const loginMock = jest.spyOn(accountManager, 'login')
 				.mockResolvedValue('ok');
 
 			const { result } = renderHookWithTestProviders(useLogin);
@@ -55,7 +59,7 @@ describe('Account Manager', () => {
 
 	describe('useLogout', () => {
 		it('should logout from the directory', () => {
-			const logoutMock = jest.spyOn(directoryConnector, 'logout');
+			const logoutMock = jest.spyOn(accountManager, 'logout');
 			const { result } = renderHookWithTestProviders(useLogout);
 			expect(logoutMock).not.toHaveBeenCalled();
 

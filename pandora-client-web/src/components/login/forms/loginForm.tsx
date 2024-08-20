@@ -1,11 +1,12 @@
 import { UserNameSchema } from 'pandora-common';
 import React, { ReactElement } from 'react';
+import pandoraLogo from '../../../assets/icons/pandora.svg';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { Button } from '../../common/button/button';
 import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
 import { LocationStateMessage } from '../../common/locationStateMessage/locationStateMessage';
-import { useAuthToken, useCurrentAccount } from '../../gameContext/directoryConnectorContextProvider';
+import { useAuthToken } from '../../gameContext/directoryConnectorContextProvider';
 import { useLoginForm } from './useLoginForm';
-import pandoraLogo from '../../../assets/icons/pandora.svg';
 
 export function LoginForm(): ReactElement {
 	const auth = useAuthToken();

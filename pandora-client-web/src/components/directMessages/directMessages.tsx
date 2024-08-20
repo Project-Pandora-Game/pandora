@@ -5,6 +5,7 @@ import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router';
 import { useAsyncEvent } from '../../common/useEvent';
 import { KeyExchange } from '../../crypto/keyExchange';
 import { useObservable } from '../../observable';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
 import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat';
 import type { DirectMessageCryptoState } from '../../services/accountLogic/directMessages/directMessageManager';
 import { useService } from '../../services/serviceProvider';
@@ -13,7 +14,6 @@ import { Button } from '../common/button/button';
 import { Column, Row } from '../common/container/container';
 import { Scrollable } from '../common/scrollbar/scrollbar';
 import { DirectMessage } from '../directMessage/directMessage';
-import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
 import { NotificationSource, useNotificationSuppressed } from '../gameContext/notificationContextProvider';
 import './directMessages.scss';
 

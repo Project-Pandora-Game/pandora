@@ -11,6 +11,7 @@ import { RootErrorBoundary } from '../error/rootErrorBoundary';
 import { DirectoryConnectorServices } from './directoryConnectorContextProvider';
 import { NotificationContextProvider } from './notificationContextProvider';
 import { PermissionCheckServiceProvider } from './permissionCheckProvider';
+import { SecondFactorProvider } from './secondFactorProvider';
 import { ShardConnectorContextProvider } from './shardConnectorContextProvider';
 
 export interface GameContextProviderProps extends ChildrenProps {
@@ -43,6 +44,7 @@ function MiscProviders({ children }: ChildrenProps): ReactElement {
 			<PermissionCheckServiceProvider>
 				<AnchorAutoscroll />
 				<DirectoryConnectorServices />
+				<SecondFactorProvider />
 
 				{ children }
 			</PermissionCheckServiceProvider>

@@ -26,7 +26,7 @@ import { DirectMessageChat } from './directMessageChat';
 export type DirectMessageCryptoState = 'notLoaded' | 'ready' | 'noPassword' | 'loadError' | 'generateError';
 
 type DirectMessageManagerServiceConfig = Satisfies<{
-	dependencies: Pick<ClientServices, 'directoryConnector'>;
+	dependencies: Pick<ClientServices, 'directoryConnector' | 'accountManager'>;
 	events: {
 		newMessage: DirectMessageChat;
 		close: AccountId;
@@ -59,22 +59,26 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 	}
 
 	protected override serviceInit(): void {
+		const { directoryConnector, accountManager } = this.serviceDeps;
+
 		// Register handlers to directoryConnector
-		this.connector.on('logout', () => {
+		directoryConnector.messageHandlers.directMessageNew = ({ target, message }) => {
+			this.handleNewDirectMessage(target, message);
+		};
+		directoryConnector.messageHandlers.directMessageAction = (data) => {
+			this.handleDirectMessageAction(data);
+		};
+		// Register handlers to accountManager
+		accountManager.on('logout', () => {
 			this.clear();
 		});
-		this.connector.on('accountChanged', ({ account }) => {
+		accountManager.on('accountChanged', ({ account }) => {
 			this.accountChanged(account)
 				.catch((error) => {
 					this.logger.error('Error processing account change:', error);
 				});
 		});
-		this.connector.messageHandlers.directMessageNew = ({ target, message }) => {
-			this.handleNewDirectMessage(target, message);
-		};
-		this.connector.messageHandlers.directMessageAction = (data) => {
-			this.handleDirectMessageAction(data);
-		};
+
 	}
 
 	public clear() {
@@ -161,12 +165,14 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 
 	/** Update key stored on server. Mainly for the purpose of migrating off of old key formats. */
 	public async updateSavedKey(): Promise<void> {
+		const { directoryConnector } = this.serviceDeps;
+
 		this.logger.verbose('Uploading current key to server...');
 		const password = dmCryptoPassword.value;
 		Assert(password != null, 'Missing password while updating saved key');
 		Assert(this.#crypto != null, 'Missing crypto while updating saved key');
 
-		const { result } = await this.connector.awaitResponse('setCryptoKey', {
+		const { result } = await directoryConnector.awaitResponse('setCryptoKey', {
 			cryptoKey: await this.#crypto.export(password),
 			allowReset: 'same-key',
 		});
@@ -192,6 +198,8 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 	 */
 	@AsyncSynchronized()
 	public async regenerateKey(password?: string): Promise<boolean> {
+		const { directoryConnector } = this.serviceDeps;
+
 		if (password == null) {
 			password = dmCryptoPassword.value;
 		}
@@ -205,7 +213,7 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 			const newCrypto = await KeyExchange.generate();
 			Assert(await newCrypto.selfTest(), 'Selftest failed');
 
-			const { result } = await this.connector.awaitResponse('setCryptoKey', {
+			const { result } = await directoryConnector.awaitResponse('setCryptoKey', {
 				cryptoKey: await newCrypto.export(password),
 			});
 			if (result !== 'ok') {
@@ -239,8 +247,10 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 	}
 
 	public handleNewDirectMessage(target: AccountId, message: IDirectoryDirectMessage): void {
+		const { accountManager } = this.serviceDeps;
+
 		const chat = this.getChat(target);
-		const newMessage = message.edited == null && message.source !== this.connector.currentAccount.value?.id;
+		const newMessage = message.edited == null && message.source !== accountManager.currentAccount.value?.id;
 		chat.addMessage(message, newMessage);
 		this._sortChats();
 		this.emit('newMessage', chat);
@@ -273,7 +283,9 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 	}
 
 	private async _loadExistingChats(): Promise<void> {
-		const { info } = await this.connector.awaitResponse('getDirectMessageInfo', EMPTY);
+		const { directoryConnector } = this.serviceDeps;
+
+		const { info } = await directoryConnector.awaitResponse('getDirectMessageInfo', EMPTY);
 		for (const chatInfo of info) {
 			const chat = this.getChat(chatInfo.id);
 			chat.loadInfo(chatInfo);
@@ -295,5 +307,6 @@ export const DirectMessageManagerServiceProvider: ServiceProviderDefinition<Clie
 	ctor: DirectMessageManager,
 	dependencies: {
 		directoryConnector: true,
+		accountManager: true,
 	},
 };

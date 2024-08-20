@@ -1,5 +1,5 @@
 import React, { ReactElement } from 'react';
-import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
 import { ToggleAccountSetting } from './helpers/accountSettings';
 
 export function NotificationSettings(): ReactElement | null {

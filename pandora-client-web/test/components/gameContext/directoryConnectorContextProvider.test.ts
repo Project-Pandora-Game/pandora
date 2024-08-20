@@ -2,7 +2,6 @@ import { RenderHookResult } from '@testing-library/react';
 import { Assert, IDirectoryClientChangeEvents, type ServiceManager } from 'pandora-common';
 import {
 	useAuthToken,
-	useCurrentAccount,
 	useDirectoryChangeListener,
 	useDirectoryConnector,
 } from '../../../src/components/gameContext/directoryConnectorContextProvider';
@@ -52,13 +51,6 @@ describe('DirectoryConnectorContextProvider', () => {
 				renderHookWithTestProviders(() => useDirectoryChangeListener(event, callback, false));
 				expect(callback).not.toHaveBeenCalled();
 			});
-	});
-
-	describe('useCurrentAccount', () => {
-		it('should return the directory connector\'s current account information', () => {
-			const { result } = renderHookWithTestProviders(useCurrentAccount);
-			expect(result.current).toBe(directoryConnector.currentAccount.value);
-		});
 	});
 
 	describe('useAuthToken', () => {

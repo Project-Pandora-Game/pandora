@@ -1,21 +1,22 @@
+import _, { uniq } from 'lodash';
+import { ACCOUNT_ROLES_CONFIG, ACCOUNT_SETTINGS_LIMITED_LIMITS, AccountRole, DisplayNameSchema, EMPTY, FormatTimeInterval, IDirectoryAccountInfo, IsAuthorized, TimeSpanMs } from 'pandora-common';
 import React, { ReactElement, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { AccountRole, ACCOUNT_ROLES_CONFIG, EMPTY, IDirectoryAccountInfo, IsAuthorized, TimeSpanMs, ACCOUNT_SETTINGS_LIMITED_LIMITS, FormatTimeInterval, DisplayNameSchema } from 'pandora-common';
+import { useColorInput } from '../../common/useColorInput';
+import { useCurrentTime } from '../../common/useCurrentTime';
 import { useEvent } from '../../common/useEvent';
 import { useMounted } from '../../common/useMounted';
-import { Button } from '../common/button/button';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import _, { uniq } from 'lodash';
-import { ColorInput } from '../common/colorInput/colorInput';
-import { useColorInput } from '../../common/useColorInput';
-import { useConfirmDialog } from '../dialog/dialog';
-import { useNavigate } from 'react-router-dom';
-import { useCurrentTime } from '../../common/useCurrentTime';
-import { ExternalLink } from '../common/link/externalLink';
-import { useObservable } from '../../observable';
 import { ConfigShowGitHubIntegration } from '../../config/searchArgs';
+import { useObservable } from '../../observable';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
+import { Button } from '../common/button/button';
+import { ColorInput } from '../common/colorInput/colorInput';
 import { FormCreateStringValidator } from '../common/form/form';
+import { ExternalLink } from '../common/link/externalLink';
+import { useConfirmDialog } from '../dialog/dialog';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 
 export function AccountSettings(): ReactElement | null {
 	const navigate = useNavigate();

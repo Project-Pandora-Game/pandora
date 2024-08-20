@@ -10,6 +10,7 @@ import settingsIcon from '../../assets/icons/setting.svg';
 import wikiIcon from '../../assets/icons/wiki.svg';
 import { useObservable, useObservableMultiple } from '../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
 import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat';
 import { useService } from '../../services/serviceProvider';
 import { useIsNarrowScreen } from '../../styles/mediaQueries';
@@ -17,7 +18,6 @@ import { AccountContactContext, useAccountContacts } from '../accountContacts/ac
 import { IconHamburger } from '../common/button/domIcons';
 import { Column, Row } from '../common/container/container';
 import { DialogInPortal } from '../dialog/dialog';
-import { useCurrentAccount } from '../gameContext/directoryConnectorContextProvider';
 import { NotificationHeaderKeys, NotificationSource, useNotification, useNotificationHeader } from '../gameContext/notificationContextProvider';
 import { usePlayerData } from '../gameContext/playerContextProvider';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';

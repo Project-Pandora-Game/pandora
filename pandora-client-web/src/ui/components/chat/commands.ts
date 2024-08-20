@@ -89,8 +89,8 @@ function CreateSpaceAdminAction(action: IClientDirectoryArgument['spaceAdminActi
 		handler: CreateClientCommand()
 			// TODO make this accept multiple targets and accountIds
 			.argument('target', CommandSelectorCharacter({ allowSelf: 'none' }))
-			.handler(({ gameState, directoryConnector }, { target }) => {
-				if (!IsSpaceAdmin(gameState.currentSpace.value.config, directoryConnector.currentAccount.value))
+			.handler(({ gameState, directoryConnector, accountManager }, { target }) => {
+				if (!IsSpaceAdmin(gameState.currentSpace.value.config, accountManager.currentAccount.value))
 					return;
 
 				if (['kick', 'ban'].includes(action) && IsSpaceAdmin(gameState.currentSpace.value.config, { id: target.data.accountId })) {
@@ -108,12 +108,12 @@ function CreateSpaceAdminAction(action: IClientDirectoryArgument['spaceAdminActi
 
 const ACCOUNT_ID_PARSER: CommandStepProcessor<AccountId, ICommandExecutionContextClient> = {
 	preparse: 'allTrimmed',
-	parse: (input, { directoryConnector }) => {
+	parse: (input, { accountManager }) => {
 		const number = parseInt(input);
 		const result = AccountIdSchema.safeParse(number);
 		if (!result.success)
 			return { success: false, error: 'Invalid account id' };
-		if (directoryConnector.currentAccount.value?.id === result.data)
+		if (accountManager.currentAccount.value?.id === result.data)
 			return { success: false, error: 'You cannot use this command on yourself' };
 
 		return { success: true, value: result.data };

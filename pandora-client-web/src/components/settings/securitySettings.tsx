@@ -9,12 +9,13 @@ import { PrehashPassword } from '../../crypto/helpers';
 import type { AuthToken } from '../../networking/directoryConnector';
 import { useObservable } from '../../observable';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
 import { useService } from '../../services/serviceProvider';
 import { Button } from '../common/button/button';
 import { Column, Row } from '../common/container/container';
 import { Form, FormCreateStringValidator, FormField, FormFieldError } from '../common/form/form';
 import { ModalDialog, useConfirmDialog } from '../dialog/dialog';
-import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 
 export function SecuritySettings(): ReactElement | null {
 	const account = useCurrentAccount();

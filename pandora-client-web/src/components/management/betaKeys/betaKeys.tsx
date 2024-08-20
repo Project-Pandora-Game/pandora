@@ -5,10 +5,11 @@ import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { Button } from '../../common/button/button';
-import { useCurrentAccount, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
-import '../shards/shards.scss';
 import { useConfirmDialog } from '../../dialog/dialog';
+import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
+import '../shards/shards.scss';
 
 const ONE_DAY = 1000 * 60 * 60 * 24;
 

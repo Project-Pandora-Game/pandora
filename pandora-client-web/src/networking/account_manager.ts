@@ -3,8 +3,9 @@ import { useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { useDirectoryConnector } from '../components/gameContext/directoryConnectorContextProvider';
 import { PrehashPassword } from '../crypto/helpers';
-import { LoginResponse } from './directoryConnector';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast';
+import { useService } from '../services/serviceProvider';
+import { LoginResponse } from './directoryConnector';
 
 //#region Callback type definitions
 
@@ -84,18 +85,18 @@ type PasswordResetConfirmCallback = (username: string,
 //#endregion
 
 export function useLogin(): LoginCallback {
-	const directoryConnector = useDirectoryConnector();
+	const accountManager = useService('accountManager');
 	return useCallback((username, password, verificationToken) => {
-		return directoryConnector.login(username, password, verificationToken);
-	}, [directoryConnector]);
+		return accountManager.login(username, password, verificationToken);
+	}, [accountManager]);
 }
 
 export function useLogout(): () => void {
-	const directoryConnector = useDirectoryConnector();
+	const accountManager = useService('accountManager');
 	return useCallback(() => {
-		directoryConnector.logout();
+		accountManager.logout();
 		window.location.reload();
-	}, [directoryConnector]);
+	}, [accountManager]);
 }
 
 export function useCreateNewCharacter(): CreateNewCharacterCallback {

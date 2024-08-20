@@ -1,9 +1,10 @@
 import { ACCOUNT_SETTINGS_DEFAULT, AccountSettingsSchema, type AccountSettings } from 'pandora-common';
 import React, { type ReactElement } from 'react';
 import type { ConditionalKeys } from 'type-fest';
-import { useDirectoryConnector, useModifiedAccountSettings } from '../../gameContext/directoryConnectorContextProvider';
-import { SelectSettingInput, ToggleSettingInput } from './settingsInputs';
 import type { ZodType } from 'zod';
+import { useModifiedAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
+import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
+import { SelectSettingInput, ToggleSettingInput } from './settingsInputs';
 
 type BooleanSettings = ConditionalKeys<AccountSettings, boolean>;
 export function ToggleAccountSetting<const Setting extends BooleanSettings>({ setting, label }: {

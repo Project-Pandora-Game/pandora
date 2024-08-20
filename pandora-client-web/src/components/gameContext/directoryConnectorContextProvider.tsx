@@ -1,30 +1,17 @@
-import { Immutable } from 'immer';
 import { noop } from 'lodash';
 import {
-	ACCOUNT_SETTINGS_DEFAULT,
-	AssertNever,
 	GetLogger,
-	IDirectoryAccountInfo,
 	IDirectoryClientChangeEvents,
-	SecondFactorData,
-	SecondFactorResponse,
-	SecondFactorType,
-	type AccountSettings,
 } from 'pandora-common';
-import React, { ReactElement, useEffect, useMemo, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { DIRECTORY_ADDRESS } from '../../config/Environment';
 import { ConfigServerIndex } from '../../config/searchArgs';
 import { AuthToken, DirectoryConnector } from '../../networking/directoryConnector';
 import { SocketIOConnector } from '../../networking/socketio_connector';
-import { useNullableObservable, useObservable } from '../../observable';
-import { useService, useServiceOptional } from '../../services/serviceProvider';
-import { Button } from '../common/button/button';
-import { Row } from '../common/container/container';
-import { Form } from '../common/form/form';
-import { FormFieldCaptcha } from '../common/form/formFieldCaptcha';
-import { ModalDialog } from '../dialog/dialog';
+import { useObservable } from '../../observable';
+import { useService } from '../../services/serviceProvider';
 
 let connectionPromise: Promise<DirectoryConnector> | undefined;
 
@@ -42,7 +29,7 @@ function GetDirectoryAddress(): string {
 
 const logger = GetLogger('DirectoryConnectorServices');
 
-export function DirectoryConnectorServices(): ReactElement | null {
+export function DirectoryConnectorServices(): null {
 	const errorHandler = useErrorHandler();
 	const directoryConnector = useService('directoryConnector');
 
@@ -62,25 +49,11 @@ export function DirectoryConnectorServices(): ReactElement | null {
 
 	useDebugExpose('directoryConnector', directoryConnector);
 
-	return (
-		<SecondFactorDialog />
-	);
-}
-
-/**
- * Uses directory connector in an optional way.
- * This should only be used for things that can be accessed from editor - in other cases the connector should exist.
- */
-function useDirectoryConnectorOptional(): DirectoryConnector | null {
-	return useServiceOptional('directoryConnector');
+	return null;
 }
 
 export function useDirectoryConnector(): DirectoryConnector {
-	const connector = useDirectoryConnectorOptional();
-	if (connector == null) {
-		throw new Error('Attempt to access DirectoryConnector outside of context');
-	}
-	return connector;
+	return useService('directoryConnector');
 }
 
 export function useDirectoryChangeListener(
@@ -105,39 +78,6 @@ export function useDirectoryChangeListener(
 			}
 		});
 	}, [directoryConnector, event, callbackRef, runImmediate]);
-}
-
-export function useCurrentAccount(): IDirectoryAccountInfo | null {
-	const directoryConnector = useDirectoryConnector();
-	return useObservable(directoryConnector.currentAccount);
-}
-
-/**
- * Gets modified settings for the current account.
- * @returns The partial settings object, or `undefined` if no account is loaded.
- */
-export function useModifiedAccountSettings(): Immutable<Partial<AccountSettings>> | undefined {
-	// Get account manually to avoid error in the editor
-	return useNullableObservable(useDirectoryConnectorOptional()?.currentAccount)?.settings;
-}
-
-/**
- * Resolves full account settings to their effective values.
- * @returns The settings that apply to this account.
- */
-export function useAccountSettings(): Immutable<AccountSettings> {
-	const modifiedSettings = useModifiedAccountSettings();
-	return useMemo((): Immutable<AccountSettings> => ({
-		...ACCOUNT_SETTINGS_DEFAULT,
-		...modifiedSettings,
-	}), [modifiedSettings]);
-}
-
-export function GetAccountSettings(directoryConnector: DirectoryConnector): Immutable<AccountSettings> {
-	return {
-		...ACCOUNT_SETTINGS_DEFAULT,
-		...(directoryConnector.currentAccount?.value?.settings),
-	};
 }
 
 export function useAuthToken(): AuthToken | undefined {
@@ -169,81 +109,4 @@ export function useAuthTokenIsValid(): boolean {
 	}, [authToken]);
 
 	return authToken != null && isValid;
-}
-
-type SecondFactorState = {
-	types: SecondFactorType[];
-	invalid: SecondFactorType[] | null;
-	resolve: (data: SecondFactorData | PromiseLike<SecondFactorData> | null) => void;
-	reject: (reason?: Error) => void;
-};
-
-function SecondFactorDialog() {
-	const directoryConnector = useDirectoryConnector();
-	const [state, setState] = React.useState<SecondFactorState | null>(null);
-
-	const secondFactorHandler = React.useCallback((response: SecondFactorResponse) => {
-		return new Promise<SecondFactorData | null>((resolve, reject) => {
-			setState({
-				types: response.types,
-				invalid: response.result === 'secondFactorInvalid' ? response.invalid : null,
-				resolve,
-				reject,
-			});
-		}).finally(() => {
-			setState(null);
-		});
-	}, [setState]);
-
-	React.useEffect(() => {
-		directoryConnector.secondFactorHandler = secondFactorHandler;
-		return () => {
-			state?.resolve(null);
-			directoryConnector.secondFactorHandler = null;
-		};
-	}, [directoryConnector, state, secondFactorHandler]);
-
-	if (state == null) {
-		return null;
-	}
-
-	return <SecondFactorDialogImpl { ...state } />;
-}
-
-function SecondFactorDialogImpl({ types, invalid, resolve }: SecondFactorState): ReactElement {
-	const [captcha, setCaptcha] = React.useState('');
-
-	const elements = React.useMemo(() => types.map((type) => {
-		switch (type) {
-			case 'captcha':
-				return <FormFieldCaptcha key='captcha' setCaptchaToken={ setCaptcha } invalidCaptcha={ invalid != null && invalid.includes('captcha') } />;
-			default:
-				AssertNever(type);
-		}
-	}), [types, invalid, setCaptcha]);
-
-	const onSubmit = React.useCallback(() => {
-		const data: SecondFactorData = {};
-		if (types.includes('captcha')) {
-			data.captcha = captcha;
-		}
-		resolve(data);
-	}, [types, captcha, resolve]);
-
-	const onCancel = React.useCallback(() => {
-		resolve(null);
-	}, [resolve]);
-
-	return (
-		<ModalDialog>
-			<Form onSubmit={ onSubmit }>
-				<h3>Second factor required</h3>
-				{ elements }
-				<Row>
-					<Button type='submit'>Submit</Button>
-					<Button onClick={ onCancel }>Cancel</Button>
-				</Row>
-			</Form>
-		</ModalDialog>
-	);
 }

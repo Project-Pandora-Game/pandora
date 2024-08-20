@@ -29,7 +29,7 @@ import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
-import { useCurrentAccount, useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
+import { useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
@@ -38,6 +38,7 @@ import closedDoor from '../../../icons/closed-door.svg';
 import publicDoor from '../../../icons/public-door.svg';
 import { useObservable } from '../../../observable';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration';
 import './spacesSearch.scss';
 

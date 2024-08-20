@@ -48,9 +48,9 @@ import { Character } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
 import { ShardConnectionState, ShardConnector } from '../../networking/shardConnector';
 import { Observable, useNullableObservable, useObservable } from '../../observable';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
 import { IChatMessageProcessed } from '../../ui/components/chat/chatMessages';
 import { ChatParser } from '../../ui/components/chat/chatParser';
-import { useCurrentAccount } from './directoryConnectorContextProvider';
 import { NotificationData } from './notificationContextProvider';
 import { useShardConnector } from './shardConnectorContextProvider';
 

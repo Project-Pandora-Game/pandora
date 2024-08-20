@@ -10,17 +10,17 @@ import React, {
 	useState,
 } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
+import { useAutoScroll } from '../../../common/useAutoScroll';
+import { Column } from '../../../components/common/container/container';
+import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
 import { ContextMenu, useContextMenu } from '../../../components/contextMenu';
 import { useChatMessages, useChatMessageSender } from '../../../components/gameContext/gameStateContextProvider';
-import { NotificationSource, useNotificationSuppressed } from '../../../components/gameContext/notificationContextProvider';
 import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
+import { NotificationSource, useNotificationSuppressed } from '../../../services/notificationHandler';
 import { AutoCompleteHint, ChatInputArea, useChatCommandContext, useChatInput } from './chatInput';
-import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
-import { useAutoScroll } from '../../../common/useAutoScroll';
 import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatMessages';
-import { useAccountSettings } from '../../../components/gameContext/directoryConnectorContextProvider';
-import { Column } from '../../../components/common/container/container';
 import { COMMANDS } from './commands';
 
 export function Chat(): ReactElement | null {

@@ -1,6 +1,6 @@
 import Discord, { BitFieldResolvable, Events, GatewayIntentsString, GuildChannel, REST, Routes, type Interaction } from 'discord.js';
 import _ from 'lodash';
-import { Assert, GetLogger, Service } from 'pandora-common';
+import { Assert, GetLogger, ServerService } from 'pandora-common';
 import promClient from 'prom-client';
 import { ENV } from '../../config';
 import type { DiscordButtonDescriptor, DiscordCommandDescriptor } from './commands/_common';
@@ -39,7 +39,7 @@ type Status<T> = {
 
 export type DiscordBotStatus = Status<number>;
 
-export const DiscordBot = new class DiscordBot implements Service {
+export const DiscordBot = new class DiscordBot implements ServerService {
 	private _client?: Discord.Client;
 	private _statusChannels?: Partial<Status<GuildChannel>>;
 	private _destroyed = false;

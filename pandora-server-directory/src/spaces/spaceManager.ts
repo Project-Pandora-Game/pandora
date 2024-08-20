@@ -1,6 +1,6 @@
 import { diffString } from 'json-diff';
 import { isEqual, pick } from 'lodash';
-import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPACE_DIRECTORY_PROPERTIES, Service, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId } from 'pandora-common';
+import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPACE_DIRECTORY_PROPERTIES, ServerService, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId } from 'pandora-common';
 import promClient from 'prom-client';
 import { Account } from '../account/account';
 import { accountManager } from '../account/accountManager';
@@ -34,7 +34,7 @@ const inUseSpacesMetric = new promClient.Gauge({
 });
 
 /** Class that stores all currently or recently used spaces, removing them when needed */
-export const SpaceManager = new class SpaceManagerClass implements Service {
+export const SpaceManager = new class SpaceManagerClass implements ServerService {
 	private readonly loadedSpaces: Map<SpaceId, Space> = new Map();
 
 	/** Init the manager */

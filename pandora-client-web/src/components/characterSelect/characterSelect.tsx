@@ -1,13 +1,14 @@
 import { noop } from 'lodash';
-import { EMPTY, GetLogger, CharacterSelfInfo, IClientDirectoryNormalResult } from 'pandora-common';
+import { CharacterSelfInfo, EMPTY, GetLogger, IClientDirectoryNormalResult } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { usePlayerData } from '../gameContext/playerContextProvider';
-import { useCreateNewCharacter } from '../../networking/account_manager';
-import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import './characterSelect.scss';
 import { toast } from 'react-toastify';
+import { useCreateNewCharacter } from '../../networking/account_manager';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { useService } from '../../services/serviceProvider';
+import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { usePlayerData } from '../gameContext/playerContextProvider';
+import './characterSelect.scss';
 
 /**
  * @todo
@@ -28,7 +29,7 @@ export function CharacterSelect(): ReactElement {
 	const { data, fetchCharacterList } = useCharacterList();
 	const playerData = usePlayerData();
 	const createNewCharacter = useCreateNewCharacter();
-	const directoryConnector = useDirectoryConnector();
+	const accountManager = useService('accountManager');
 
 	const navigate = useNavigate();
 
@@ -66,7 +67,7 @@ export function CharacterSelect(): ReactElement {
 						key={ character.id }
 						{ ...character }
 						onClick={ () => {
-							directoryConnector.connectToCharacter(character.id).catch((err) => {
+							accountManager.connectToCharacter(character.id).catch((err) => {
 								GetLogger('connectToCharacter').error('Error connecting to character:', err);
 								toast(`Error connecting to character`, TOAST_OPTIONS_ERROR);
 							});
@@ -143,13 +144,14 @@ function Preview({ name, preview }: PreviewProps): ReactElement | null {
 function useCharacterList(): UseCharacterListResult {
 	const [data, setData] = useState<IClientDirectoryNormalResult['listCharacters']>();
 	const directoryConnector = useDirectoryConnector();
+	const accountManager = useService('accountManager');
 
 	const fetchCharacterList = useCallback(async () => {
-		if (directoryConnector.currentAccount.value) {
+		if (accountManager.currentAccount.value) {
 			const result = await directoryConnector.awaitResponse('listCharacters', EMPTY);
 			setData(result);
 		}
-	}, [directoryConnector]);
+	}, [accountManager, directoryConnector]);
 
 	useDirectoryChangeListener('characterList', () => {
 		fetchCharacterList().catch(noop);

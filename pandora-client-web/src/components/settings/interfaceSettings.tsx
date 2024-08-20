@@ -2,7 +2,8 @@ import { range } from 'lodash';
 import { ACCOUNT_SETTINGS_DEFAULT, AccountSettings, AccountSettingsSchema } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
 import { z } from 'zod';
-import { useCurrentAccount, useDirectoryConnector, useModifiedAccountSettings } from '../gameContext/directoryConnectorContextProvider';
+import { useCurrentAccount, useModifiedAccountSettings } from '../../services/accountLogic/accountManagerHooks';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { SelectAccountSettings, ToggleAccountSetting } from './helpers/accountSettings';
 import { SelectSettingInput } from './helpers/settingsInputs';
 

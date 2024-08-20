@@ -1,30 +1,36 @@
+import type { ServiceManager } from 'pandora-common';
 import React, { ReactElement } from 'react';
+import { AnchorAutoscroll } from '../../common/anchorAutoscroll';
 import { ChildrenProps } from '../../common/reactTypes';
+import type { ClientServices } from '../../services/clientServices';
+import { ServiceManagerContextProvider } from '../../services/serviceProvider';
+import { ChatInputContextProvider } from '../../ui/components/chat/chatInput';
+import { CharacterRestrictionOverrideDialogContext } from '../characterRestrictionOverride/characterRestrictionOverride';
 import { DebugContextProvider } from '../error/debugContextProvider';
 import { RootErrorBoundary } from '../error/rootErrorBoundary';
-import { DirectoryConnectorContextProvider } from './directoryConnectorContextProvider';
-import { NotificationContextProvider } from './notificationContextProvider';
-import { ShardConnectorContextProvider } from './shardConnectorContextProvider';
-import { CharacterRestrictionOverrideDialogContext } from '../characterRestrictionOverride/characterRestrictionOverride';
-import { ChatInputContextProvider } from '../../ui/components/chat/chatInput';
+import { DirectoryConnectorServices } from './directoryConnectorContextProvider';
+import { NotificationProvider } from './notificationProvider';
 import { PermissionCheckServiceProvider } from './permissionCheckProvider';
-import { AnchorAutoscroll } from '../../common/anchorAutoscroll';
+import { SecondFactorProvider } from './secondFactorProvider';
+import { ShardConnectorContextProvider } from './shardConnectorContextProvider';
 
-export function GameContextProvider({ children }: ChildrenProps): ReactElement {
+export interface GameContextProviderProps extends ChildrenProps {
+	serviceManager: ServiceManager<ClientServices>;
+}
+
+export function GameContextProvider({ children, serviceManager }: GameContextProviderProps): ReactElement {
 	return (
 		<DebugContextProvider>
 			<RootErrorBoundary>
-				<NotificationContextProvider>
-					<DirectoryConnectorContextProvider>
-						<ShardConnectorContextProvider>
-							<ChatInputContextProvider>
-								<MiscProviders>
-									{ children }
-								</MiscProviders>
-							</ChatInputContextProvider>
-						</ShardConnectorContextProvider>
-					</DirectoryConnectorContextProvider>
-				</NotificationContextProvider>
+				<ServiceManagerContextProvider serviceManager={ serviceManager }>
+					<ShardConnectorContextProvider>
+						<ChatInputContextProvider>
+							<MiscProviders>
+								{ children }
+							</MiscProviders>
+						</ChatInputContextProvider>
+					</ShardConnectorContextProvider>
+				</ServiceManagerContextProvider>
 			</RootErrorBoundary>
 		</DebugContextProvider>
 	);
@@ -35,6 +41,9 @@ function MiscProviders({ children }: ChildrenProps): ReactElement {
 		<CharacterRestrictionOverrideDialogContext>
 			<PermissionCheckServiceProvider>
 				<AnchorAutoscroll />
+				<DirectoryConnectorServices />
+				<SecondFactorProvider />
+				<NotificationProvider />
 
 				{ children }
 			</PermissionCheckServiceProvider>

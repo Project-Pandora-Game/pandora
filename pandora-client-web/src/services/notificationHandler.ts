@@ -1,9 +1,10 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo } from 'react';
-import { useDebugExpose } from '../../common/useDebugExpose';
-import { Observable, ReadonlyObservable, useObservable } from '../../observable';
-import { VersionCheck } from '../versionCheck/versionCheck';
-import { useDocumentVisibility } from '../../common/useDocumentVisibility';
-import audioBing from '../../audio/bing.mp3';
+import { Service, type Satisfies, type ServiceConfigBase, type ServiceProviderDefinition } from 'pandora-common';
+import { useCallback, useEffect } from 'react';
+import audioBing from '../audio/bing.mp3';
+import { useDocumentVisibility } from '../common/useDocumentVisibility';
+import { Observable, type ReadonlyObservable } from '../observable';
+import type { ClientServices } from './clientServices';
+import { useService } from './serviceProvider';
 
 type NotificationHeader<T extends ReadonlyObservable<readonly unknown[]> = ReadonlyObservable<readonly unknown[]>> = {
 	readonly notifications: T;
@@ -52,47 +53,27 @@ enum NotificationAudio {
 	REPEAT = 3,
 }
 
-class NotificationHandlerBase {
-	public get header(): NotificationHeader<ReadonlyObservable<readonly NotificationFullData[]>> {
-		throw new Error('Not implemented');
-	}
-	public get title(): ReadonlyObservable<string> {
-		throw new Error('Not implemented');
-	}
-	public readonly suppress = new Set<NotificationSource>();
-	public clearHeader() {
-		throw new Error('Not implemented');
-	}
-	public rise(_source: NotificationSource, _data: unknown) {
-		throw new Error('Not implemented');
-	}
-	public clear(_source: NotificationSource) {
-		throw new Error('Not implemented');
-	}
-	public onWindowFocus(): void {
-		throw new Error('Not implemented');
-	}
-	public popupCheckEnabled(_userAction = false): Promise<boolean> {
-		throw new Error('Not implemented');
-	}
-}
-
 const BASE_TITLE = 'Pandora';
 
-class NotificationHandler extends NotificationHandlerBase {
+type NotificationHandlerServiceConfig = Satisfies<{
+	dependencies: Pick<ClientServices, never>;
+	events: false;
+}, ServiceConfigBase>;
 
+export class NotificationHandler extends Service<NotificationHandlerServiceConfig> {
 	private readonly _notifications = new Observable<readonly NotificationFullData[]>([]);
 	private readonly _header: NotificationHeader<Observable<readonly NotificationFullData[]>> = {
 		notifications: new Observable<readonly NotificationFullData[]>([]),
 	};
 	private readonly _title = new Observable<string>(BASE_TITLE);
 	private readonly _favico = new Observable<string>('');
+	public readonly suppress = new Set<NotificationSource>();
 
-	public override get header(): NotificationHeader<ReadonlyObservable<readonly NotificationFullData[]>> {
+	public get header(): NotificationHeader<ReadonlyObservable<readonly NotificationFullData[]>> {
 		return this._header;
 	}
 
-	public override get title(): ReadonlyObservable<string> {
+	public get title(): ReadonlyObservable<string> {
 		return this._title;
 	}
 
@@ -100,12 +81,12 @@ class NotificationHandler extends NotificationHandlerBase {
 		return this._favico;
 	}
 
-	public override clearHeader() {
+	public clearHeader() {
 		this._notifications.value = [];
 		this._updateNotifications();
 	}
 
-	public override rise(source: NotificationSource, data: NotificationData) {
+	public rise(source: NotificationSource, data: NotificationData) {
 		if (this.suppress.has(source) && document.visibilityState === 'visible') {
 			return;
 		}
@@ -121,12 +102,12 @@ class NotificationHandler extends NotificationHandlerBase {
 		}
 	}
 
-	public override clear(clearSource: NotificationSource) {
+	public clear(clearSource: NotificationSource) {
 		this._notifications.value = this._notifications.value.filter(({ source }) => source !== clearSource);
 		this._updateNotifications();
 	}
 
-	public override onWindowFocus(): void {
+	public onWindowFocus(): void {
 		// NOOP
 	}
 
@@ -182,7 +163,7 @@ class NotificationHandler extends NotificationHandlerBase {
 		};
 	}
 
-	public override async popupCheckEnabled(userAction = false): Promise<boolean> {
+	public async popupCheckEnabled(userAction = false): Promise<boolean> {
 		if (!Notification) {
 			return false;
 		}
@@ -195,71 +176,28 @@ class NotificationHandler extends NotificationHandlerBase {
 	}
 }
 
-const notificationContext = createContext(new NotificationHandlerBase());
-
-export function NotificationContextProvider({ children }: { children: React.ReactNode; }) {
-	const context = useMemo(() => new NotificationHandler(), []);
-
-	useDebugExpose('notificationHandler', context);
-
-	useEffect(() => {
-		const listener = () => {
-			context.onWindowFocus();
-		};
-		window.addEventListener('focus', listener);
-		return () => window.removeEventListener('focus', listener);
-	}, [context]);
-
-	return (
-		<notificationContext.Provider value={ context }>
-			<VersionCheck />
-			<NotificationTitleUpdater />
-			{ children }
-		</notificationContext.Provider>
-	);
-}
-
-function NotificationTitleUpdater(): null {
-	const { title } = useContext(notificationContext);
-	const currentTitle = useObservable(title);
-
-	useEffect(() => {
-		window.document.title = currentTitle;
-	}, [currentTitle]);
-
-	return null;
-}
+export const NotificationHandlerServiceProvider: ServiceProviderDefinition<ClientServices, 'notificationHandler', NotificationHandlerServiceConfig> = {
+	name: 'notificationHandler',
+	ctor: NotificationHandler,
+	dependencies: {
+	},
+};
 
 export function useNotification(source: NotificationSource): (data: NotificationData) => void {
-	const context = useContext(notificationContext);
-	return useCallback((data) => context.rise(source, data), [context, source]);
+	const notificationHandler = useService('notificationHandler');
+	return useCallback((data) => notificationHandler.rise(source, data), [notificationHandler, source]);
 }
 
 export function useNotificationSuppressed(source: NotificationSource, suppressNotification = true): void {
-	const context = useContext(notificationContext);
+	const notificationHandler = useService('notificationHandler');
 	const visible = useDocumentVisibility();
 	useEffect(() => {
 		if (visible && suppressNotification) {
-			context.suppress.add(source);
-			context.clear(source);
+			notificationHandler.suppress.add(source);
+			notificationHandler.clear(source);
 		}
 		return () => {
-			context.suppress.delete(source);
+			notificationHandler.suppress.delete(source);
 		};
-	}, [context, source, visible, suppressNotification]);
-}
-
-export function useNotificationHeader(type: NotificationHeaderKeys): [readonly NotificationFullData[], () => void] {
-	const context = useContext(notificationContext);
-	return [
-		useObservable(context.header[type]),
-		useCallback(() => context.clearHeader(), [context]),
-	];
-}
-
-export function useNotificationPermissionCheck(): () => void {
-	const context = useContext(notificationContext);
-	return useCallback(() => {
-		context.popupCheckEnabled(true).catch(() => { /** noop */ });
-	}, [context]);
+	}, [notificationHandler, source, visible, suppressNotification]);
 }

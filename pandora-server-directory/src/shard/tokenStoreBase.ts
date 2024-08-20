@@ -1,5 +1,5 @@
 import { cloneDeep, debounce, omit } from 'lodash';
-import { Service, type IBaseTokenInfo, type Logger } from 'pandora-common';
+import { ServerService, type IBaseTokenInfo, type Logger } from 'pandora-common';
 import { nanoid } from 'nanoid';
 import type { ActorIdentity } from '../account/actorIdentity';
 
@@ -9,7 +9,7 @@ const CLEANUPS = new Set<() => void>();
 
 const SAVE_DEBOUNCE = 1000; // 1 second
 
-export abstract class TokenStoreBase<Token extends IBaseTokenInfo> implements Service {
+export abstract class TokenStoreBase<Token extends IBaseTokenInfo> implements ServerService {
 	/** @internal */
 	readonly #tokens = new Map<string, Full<Token>>();
 	protected readonly logger: Logger;

@@ -10,6 +10,7 @@ import { useTextFormattingOnKeyboardEvent } from '../../common/useTextFormatting
 import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus';
 import { useObservable } from '../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
 import type { LoadedDirectMessage } from '../../services/accountLogic/directMessages/directMessageChat';
 import { AutoCompleteHint, IChatInputHandler, chatInputContext, useChatInput } from '../../ui/components/chat/chatInput';
 import { RenderChatPart } from '../../ui/components/chat/chatMessages';
@@ -17,7 +18,7 @@ import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutoc
 import { Column } from '../common/container/container';
 import { Scrollable } from '../common/scrollbar/scrollbar';
 import { DirectMessageChannelProvider, useDirectMessageChat } from '../gameContext/directMessageChannelProvieder';
-import { useAccountSettings, useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useGameStateOptional } from '../gameContext/gameStateContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import './directMessage.scss';

@@ -47,7 +47,6 @@ import { SelectionIndicator } from '../../../components/common/selectionIndicato
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs';
 import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
 import {
-	useCurrentAccount,
 	useDirectoryChangeListener,
 	useDirectoryConnector,
 } from '../../../components/gameContext/directoryConnectorContextProvider';
@@ -59,6 +58,7 @@ import devMode from '../../../icons/developer.svg';
 import pronounChange from '../../../icons/male-female.svg';
 import { DirectoryConnector } from '../../../networking/directoryConnector';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import './spaceConfiguration.scss';
 
 export const DESCRIPTION_TEXTBOX_SIZE = 16;

@@ -28,10 +28,10 @@ import { RoomProjectionResolver, usePlayerVisionFilters, useRoomViewProjection }
 import { useObservable } from '../../observable';
 import { Button } from '../common/button/button';
 import { Row } from '../common/container/container';
-import { directoryConnectorContext } from '../gameContext/directoryConnectorContextProvider';
 import { useSpaceInfo } from '../gameContext/gameStateContextProvider';
 import { shardConnectorContext, useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { useWardrobeContext } from './wardrobeContext';
+import { serviceManagerContext } from '../../services/serviceProvider';
 
 export function WardrobeCharacterPreview({ character, characterState, isPreview = false }: {
 	character: IChatroomCharacter;
@@ -121,7 +121,7 @@ export function CharacterPreview({ character, characterState, overlay, viewportR
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
 		viewportConfig,
 		viewportRef,
-		forwardContexts: [directoryConnectorContext, shardConnectorContext],
+		forwardContexts: [serviceManagerContext, shardConnectorContext],
 		backgroundColor: 0x000000,
 	}), [viewportRef, viewportConfig]);
 
@@ -309,7 +309,7 @@ export function RoomPreview({
 	}, [focusDevice, projectionResolver]);
 
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
-		forwardContexts: [directoryConnectorContext, shardConnectorContext],
+		forwardContexts: [serviceManagerContext, shardConnectorContext],
 		worldWidth: focusArea?.width ?? roomBackground.imageSize[0],
 		worldHeight: focusArea?.height ?? roomBackground.imageSize[1],
 		backgroundColor: 0x000000,

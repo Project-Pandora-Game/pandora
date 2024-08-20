@@ -21,6 +21,7 @@ import { usePlayerId } from '../../../components/gameContext/playerContextProvid
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider';
 import { useNullableObservable } from '../../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { useService } from '../../../services/serviceProvider';
 import { COMMANDS, GetChatModeDescription } from './commands';
 import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, IClientCommand, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor';
 
@@ -209,6 +210,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 	const { target, editing, setEditing, setValue, setAutocompleteHint, mode, allowCommands } = chatInput;
 
 	const directoryConnector = useDirectoryConnector();
+	const accountManager = useService('accountManager');
 	const shardConnector = useShardConnector();
 	const navigate = useNavigate();
 	AssertNotNullable(shardConnector);
@@ -226,12 +228,13 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 		},
 		shardConnector,
 		directoryConnector,
+		accountManager,
 		gameState,
 		player: gameState.player,
 		messageSender: sender,
 		inputHandlerContext: chatInput,
 		navigate,
-	}), [chatInput, gameState, directoryConnector, navigate, sender, shardConnector]);
+	}), [chatInput, gameState, directoryConnector, accountManager, navigate, sender, shardConnector]);
 
 	const inputEnd = useEvent(() => {
 		if (timeout.current) {
@@ -593,6 +596,7 @@ export function useChatCommandContext(): ICommandInvokeContext<ICommandExecution
 	const chatInput = useChatInput();
 
 	const directoryConnector = useDirectoryConnector();
+	const accountManager = useService('accountManager');
 	const shardConnector = useShardConnector();
 	const navigate = useNavigate();
 	AssertNotNullable(shardConnector);
@@ -600,12 +604,13 @@ export function useChatCommandContext(): ICommandInvokeContext<ICommandExecution
 	return useMemo(() => ({
 		shardConnector,
 		directoryConnector,
+		accountManager,
 		gameState,
 		player: gameState.player,
 		messageSender: sender,
 		inputHandlerContext: chatInput,
 		navigate,
-	}), [chatInput, gameState, directoryConnector, navigate, sender, shardConnector]);
+	}), [chatInput, gameState, directoryConnector, accountManager, navigate, sender, shardConnector]);
 }
 
 export function AutoCompleteHint<TCommandExecutionContext extends ICommandExecutionContext>({ ctx, commands }: {

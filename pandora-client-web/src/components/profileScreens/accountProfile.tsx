@@ -1,13 +1,14 @@
-import React, { ReactElement, useCallback, useEffect, useState } from 'react';
-import { AccountId, AccountPublicInfo, AccountRoleSchema, AssertNever, GetLogger, IClientDirectoryNormalResult, LIMIT_ACCOUNT_PROFILE_LENGTH } from 'pandora-common';
-import { Column, Row } from '../common/container/container';
 import _, { noop } from 'lodash';
-import { useCurrentAccount, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { Button } from '../common/button/button';
+import { AccountId, AccountPublicInfo, AccountRoleSchema, AssertNever, GetLogger, IClientDirectoryNormalResult, LIMIT_ACCOUNT_PROFILE_LENGTH } from 'pandora-common';
+import React, { ReactElement, useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
+import { Button } from '../common/button/button';
+import { Column, Row } from '../common/container/container';
 import { Scrollable } from '../common/scrollbar/scrollbar';
-import { Link } from 'react-router-dom';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { ProfileDescription } from './profileDescription';
 
 export function AccountProfile({ accountId }: { accountId: AccountId; }): ReactElement {

@@ -1,9 +1,6 @@
-import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
-import diskIcon from '../../../assets/icons/disk.svg';
-import deleteIcon from '../../../assets/icons/delete.svg';
-import editIcon from '../../../assets/icons/edit.svg';
-import { Button } from '../../common/button/button';
-import { Scrollbar } from '../../common/scrollbar/scrollbar';
+import classNames from 'classnames';
+import _, { clamp, first, noop } from 'lodash';
+import { nanoid } from 'nanoid';
 import {
 	AppearanceBundle,
 	AssetFrameworkCharacterState,
@@ -15,31 +12,35 @@ import {
 	CloneDeepMutable,
 	CreateItemBundleFromTemplate,
 	GetLogger,
+	ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE,
 	ItemContainerPath,
 	ItemTemplate,
-	ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE,
 	LIMIT_OUTFIT_NAME_LENGTH,
 	OutfitMeasureCost,
 } from 'pandora-common';
-import { useAccountSettings, useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
-import _, { clamp, first, noop } from 'lodash';
-import { Column, DivContainer, Row } from '../../common/container/container';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { useConfirmDialog } from '../../dialog/dialog';
-import { nanoid } from 'nanoid';
-import { OutfitEditView } from './wardrobeOutfitEditView';
 import { useAssetManager } from '../../../assets/assetManager';
-import { useWardrobeContext } from '../wardrobeContext';
-import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
-import { ImportDialog } from '../../exportImport/importDialog';
-import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer';
+import deleteIcon from '../../../assets/icons/delete.svg';
+import diskIcon from '../../../assets/icons/disk.svg';
+import editIcon from '../../../assets/icons/edit.svg';
+import { useBrowserSessionStorage } from '../../../browserStorage';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../../graphics/graphicsCharacter';
-import { usePlayerState } from '../../gameContext/playerContextProvider';
+import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer';
 import { useRoomCharacterOffsets } from '../../../graphics/room/roomCharacter';
 import { usePlayerVisionFilters } from '../../../graphics/room/roomScene';
-import classNames from 'classnames';
-import { useBrowserSessionStorage } from '../../../browserStorage';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
+import { Button } from '../../common/button/button';
+import { Column, DivContainer, Row } from '../../common/container/container';
+import { Scrollbar } from '../../common/scrollbar/scrollbar';
+import { useConfirmDialog } from '../../dialog/dialog';
+import { ImportDialog } from '../../exportImport/importDialog';
+import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
+import { usePlayerState } from '../../gameContext/playerContextProvider';
+import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
+import { useWardrobeContext } from '../wardrobeContext';
+import { OutfitEditView } from './wardrobeOutfitEditView';
 
 export function InventoryOutfitView({ targetContainer }: {
 	targetContainer: ItemContainerPath;

@@ -1,4 +1,4 @@
-import { GetLogger, Service, logConfig } from 'pandora-common';
+import { GetLogger, ServerService, logConfig } from 'pandora-common';
 import wtfnode from 'wtfnode';
 import { accountManager } from './account/accountManager';
 import { GetDatabaseService } from './database/databaseProvider';
@@ -23,7 +23,7 @@ let destroying: string | undefined;
 let stopping: Promise<void> | undefined;
 const STOP_TIMEOUT = 15_000;
 
-function DestroyService(service: Service): Promise<void> | void {
+function DestroyService(service: ServerService): Promise<void> | void {
 	destroying = service.constructor.name;
 	return service.onDestroy?.();
 }

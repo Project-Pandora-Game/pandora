@@ -5,14 +5,14 @@ import type {
 	SpaceData,
 	SpaceDataShardUpdate,
 	SpaceId,
-	Service,
+	ServerService,
 } from 'pandora-common';
 import { ENV } from '../config';
 const { DATABASE_TYPE } = ENV;
 import DirectoryDatabase from './directoryDb';
 import MongoDatabase from './mongoDb';
 
-export interface ShardDatabase extends Service {
+export interface ShardDatabase extends ServerService {
 	/**
 	 * Get a character's data
 	 * @param id - Id of character

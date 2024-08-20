@@ -14,9 +14,7 @@ import {
 } from '../src/components/gameContext/shardConnectorContextProvider';
 import { DirectoryConnectorServiceProvider } from '../src/networking/directoryConnector';
 import { ShardConnector } from '../src/networking/shardConnector';
-import { AccountManagerServiceProvider } from '../src/services/accountLogic/accountManager';
-import { DirectMessageManagerServiceProvider } from '../src/services/accountLogic/directMessages/directMessageManager';
-import type { ClientServices } from '../src/services/clientServices';
+import { GenerateClientUsermodeServices, type ClientServices } from '../src/services/clientServices';
 import { ServiceManagerContextProvider } from '../src/services/serviceProvider';
 import { MockDebugData } from './mocks/error/errorMocks';
 import { MockConnectionInfo } from './mocks/networking/mockShardConnector';
@@ -83,10 +81,7 @@ function CreateCurriedProviders(propOverrides?: Partial<Omit<ProvidersProps, 'ch
 }
 
 export function MockServiceManager(): ServiceManager<ClientServices> {
-	return new ServiceManager<ClientServices>()
-		.registerService(DirectoryConnectorServiceProvider)
-		.registerService(AccountManagerServiceProvider)
-		.registerService(DirectMessageManagerServiceProvider);
+	return GenerateClientUsermodeServices();
 }
 
 function MockProvidersProps(overrides?: Partial<Omit<ProvidersProps, 'children'>>): Omit<ProvidersProps, 'children'> {

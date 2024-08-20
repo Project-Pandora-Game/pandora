@@ -1,4 +1,4 @@
-import { GetLogger, ServiceManager, SetConsoleOutput } from 'pandora-common';
+import { GetLogger, SetConsoleOutput } from 'pandora-common';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -13,11 +13,8 @@ import { NODE_ENV, USER_DEBUG } from './config/Environment';
 import { ConfigLogLevel, LoadSearchArgs } from './config/searchArgs';
 import { ConfigurePixiSettings } from './graphics/pixiSettings';
 import './index.scss';
-import { DirectoryConnectorServiceProvider } from './networking/directoryConnector';
 import { PandoraRoutes } from './routing/Routes';
-import { AccountManagerServiceProvider } from './services/accountLogic/accountManager';
-import { DirectMessageManagerServiceProvider } from './services/accountLogic/directMessages/directMessageManager';
-import type { ClientServices } from './services/clientServices';
+import { GenerateClientUsermodeServices } from './services/clientServices';
 import './styles/globalUtils.scss';
 
 const logger = GetLogger('init');
@@ -41,12 +38,8 @@ async function Start(): Promise<void> {
 	logger.info('Starting...');
 	logger.verbose('Build mode:', (NODE_ENV === 'production' && USER_DEBUG) ? 'userdebug' : NODE_ENV);
 
-	// Construct service manager
-	const serviceManager = new ServiceManager<ClientServices>()
-		.registerService(DirectoryConnectorServiceProvider)
-		.registerService(AccountManagerServiceProvider)
-		.registerService(DirectMessageManagerServiceProvider);
-
+	// Load services
+	const serviceManager = GenerateClientUsermodeServices();
 	await serviceManager.load();
 
 	createRoot(document.querySelector('#pandora-root') as HTMLElement).render(

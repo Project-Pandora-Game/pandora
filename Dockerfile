@@ -2,7 +2,7 @@ FROM docker.io/node:20-alpine AS builder
 
 RUN corepack enable
 WORKDIR /app
-ENV CI true
+ENV CI=true
 
 # Files required by pnpm to fetch dependencies
 COPY .npmrc package.json pnpm-lock.yaml ./

@@ -49,9 +49,9 @@ import { PlayerCharacter } from '../../character/player';
 import { ShardConnectionState, ShardConnector } from '../../networking/shardConnector';
 import { Observable, useNullableObservable, useObservable } from '../../observable';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
+import type { NotificationData } from '../../services/notificationHandler';
 import { IChatMessageProcessed } from '../../ui/components/chat/chatMessages';
 import { ChatParser } from '../../ui/components/chat/chatParser';
-import { NotificationData } from './notificationContextProvider';
 import { useShardConnector } from './shardConnectorContextProvider';
 
 const logger = GetLogger('GameState');

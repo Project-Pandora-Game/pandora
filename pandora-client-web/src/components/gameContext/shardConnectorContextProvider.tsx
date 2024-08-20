@@ -20,10 +20,10 @@ import { ShardConnector } from '../../networking/shardConnector';
 import { SocketIOConnector } from '../../networking/socketio_connector';
 import { useNullableObservable, useObservable } from '../../observable';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
+import { NotificationSource, useNotification } from '../../services/notificationHandler';
 import { useService } from '../../services/serviceProvider';
 import { useDebugContext } from '../error/debugContextProvider';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
-import { NotificationSource, useNotification } from './notificationContextProvider';
 
 export interface ShardConnectorContextData {
 	shardConnector: ShardConnector | null;

@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useMounted } from '../../common/useMounted';
 import { GIT_COMMIT_HASH, NODE_ENV, USER_DEBUG } from '../../config/Environment';
+import { NotificationSource, useNotification } from '../../services/notificationHandler';
 import { Button } from '../common/button/button';
 import { Row } from '../common/container/container';
 import { ModalDialog } from '../dialog/dialog';
-import { NotificationSource, useNotification } from '../gameContext/notificationContextProvider';
 
 // In debug mode 30 seconds, otherwise 5 minutes per new version check
 const VERSION_CHECK_INTERVAL = USER_DEBUG ? 30_000 : (5 * 60_000);

@@ -1,18 +1,18 @@
+import _ from 'lodash';
+import { AccountId, IAccountContact, IAccountFriendStatus } from 'pandora-common';
 import React, { useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { AccountId, IAccountFriendStatus, IAccountContact } from 'pandora-common';
-import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
-import { DirectMessages } from '../directMessages/directMessages';
-import { Button } from '../common/button/button';
-import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { NotificationSource, useNotificationSuppressed } from '../gameContext/notificationContextProvider';
 import { useAsyncEvent } from '../../common/useEvent';
-import _ from 'lodash';
-import { DivContainer, Row } from '../common/container/container';
-import { AccountContactChangeHandleResult, useFriendStatus, useAccountContacts } from './accountContactContext';
-import { useConfirmDialog } from '../dialog/dialog';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
+import { NotificationSource, useNotificationSuppressed } from '../../services/notificationHandler';
+import { Button } from '../common/button/button';
+import { DivContainer, Row } from '../common/container/container';
 import { Scrollable } from '../common/scrollbar/scrollbar';
+import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
+import { useConfirmDialog } from '../dialog/dialog';
+import { DirectMessages } from '../directMessages/directMessages';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { AccountContactChangeHandleResult, useAccountContacts, useFriendStatus } from './accountContactContext';
 import './accountContacts.scss';
 
 export function AccountContacts() {

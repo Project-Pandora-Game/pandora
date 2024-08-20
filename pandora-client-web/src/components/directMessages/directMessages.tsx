@@ -8,13 +8,13 @@ import { useObservable } from '../../observable';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
 import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat';
 import type { DirectMessageCryptoState } from '../../services/accountLogic/directMessages/directMessageManager';
+import { NotificationSource, useNotificationSuppressed } from '../../services/notificationHandler';
 import { useService } from '../../services/serviceProvider';
 import { Sleep } from '../../utility';
 import { Button } from '../common/button/button';
 import { Column, Row } from '../common/container/container';
 import { Scrollable } from '../common/scrollbar/scrollbar';
 import { DirectMessage } from '../directMessage/directMessage';
-import { NotificationSource, useNotificationSuppressed } from '../gameContext/notificationContextProvider';
 import './directMessages.scss';
 
 export function DirectMessages(): React.ReactElement {

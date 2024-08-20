@@ -9,7 +9,7 @@ import { CharacterRestrictionOverrideDialogContext } from '../characterRestricti
 import { DebugContextProvider } from '../error/debugContextProvider';
 import { RootErrorBoundary } from '../error/rootErrorBoundary';
 import { DirectoryConnectorServices } from './directoryConnectorContextProvider';
-import { NotificationContextProvider } from './notificationContextProvider';
+import { NotificationProvider } from './notificationProvider';
 import { PermissionCheckServiceProvider } from './permissionCheckProvider';
 import { SecondFactorProvider } from './secondFactorProvider';
 import { ShardConnectorContextProvider } from './shardConnectorContextProvider';
@@ -23,15 +23,13 @@ export function GameContextProvider({ children, serviceManager }: GameContextPro
 		<DebugContextProvider>
 			<RootErrorBoundary>
 				<ServiceManagerContextProvider serviceManager={ serviceManager }>
-					<NotificationContextProvider>
-						<ShardConnectorContextProvider>
-							<ChatInputContextProvider>
-								<MiscProviders>
-									{ children }
-								</MiscProviders>
-							</ChatInputContextProvider>
-						</ShardConnectorContextProvider>
-					</NotificationContextProvider>
+					<ShardConnectorContextProvider>
+						<ChatInputContextProvider>
+							<MiscProviders>
+								{ children }
+							</MiscProviders>
+						</ChatInputContextProvider>
+					</ShardConnectorContextProvider>
 				</ServiceManagerContextProvider>
 			</RootErrorBoundary>
 		</DebugContextProvider>
@@ -45,6 +43,7 @@ function MiscProviders({ children }: ChildrenProps): ReactElement {
 				<AnchorAutoscroll />
 				<DirectoryConnectorServices />
 				<SecondFactorProvider />
+				<NotificationProvider />
 
 				{ children }
 			</PermissionCheckServiceProvider>

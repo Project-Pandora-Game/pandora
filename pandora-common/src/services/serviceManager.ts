@@ -3,15 +3,51 @@ import { Assert, CheckPropertiesNotNullable, KnownObject } from '../utility';
 import type { ServiceConfigBase, ServiceConfigFixupDependencies, ServiceInitArgs, ServiceManagementInterface, ServiceProviderDefinition } from './service';
 import type { BaseServicesDefinition } from './serviceDefinitions';
 
+/** Lifecycle phases of the ServiceManager */
 export enum ServiceManagerInitState {
+	/**
+	 * The initial phase - construction.
+	 * During this phase new services can be registered.
+	 * It is expected that the services are being registered in order that satisfies their dependencies.
+	 */
 	CONSTRUCT,
+	/**
+	 * The init phase.
+	 * During this phase all wanted services must already be registered, as they cannot be added by this point.
+	 * The registered servies should perform their internal setup and registrations to other services during it.
+	 * Services shouldn't interact with the world (anything except other services) during init.
+	 * Called in the same order as the services were registered.
+	 */
 	INIT,
+	/**
+	 * The load phase.
+	 * During this phase all services can start interacting with the world, potentially asynchronously.
+	 * They can expect that all services have been initialized by this point and no more init actions will happen on the service.
+	 * Services are loaded one at a time, in the same order as the services were registered,
+	 * waiting for each load to complete before continuing to the next service.
+	 */
 	LOAD,
+	/** The service manager's load finished and all services are ready and active. */
 	READY,
+	/**
+	 * The unload phase is triggered by calling `destroy` on a `READY` service manager.
+	 * During this phase all services are unloaded in the reverse order they were loaded in.
+	 * The services are expected to unload and cleanup any external interactions.
+	 * When a service gets unloaded all dependant services will have finished unload by that point.
+	 */
 	UNLOAD,
+	/**
+	 * The service manager's unload phase finished and all services have been unloaded and freed.
+	 * The service manager or its services cannot be used again.
+	 */
 	DESTROY,
 }
 
+/**
+ * Service manager contains, manages and provices all services the platform uses.
+ * If there is a code that is independent from UI and doesn't have multiple instances,
+ * it most likely runs as a service.
+ */
 export class ServiceManager<TServices extends BaseServicesDefinition> {
 	/** Services registered to the manager */
 	private readonly _services: Partial<TServices> = {};

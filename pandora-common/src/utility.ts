@@ -468,6 +468,12 @@ export class KnownObject {
 	}
 }
 
+/**
+ * Type-safely checks that all keys defined by `keys` parameter are not nullish in the `object` parameter.
+ * @param object - The object that is being checked
+ * @param keys - Record containing `true` for each required property
+ * @returns - `true` if all required properties are not nullish, `false` otherwise
+ */
 export function CheckPropertiesNotNullable<TObject extends object, TKeys extends (keyof TObject & string)>(object: Partial<TObject>, keys: Record<TKeys, true>): object is TObject & (SetRequired<TObject, TKeys>) {
 	for (const key of KnownObject.keys(keys)) {
 		Assert(keys[key] === true);

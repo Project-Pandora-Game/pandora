@@ -33,10 +33,10 @@ type DirectMessageManagerServiceConfig = Satisfies<{
 	};
 }, ServiceConfigBase>;
 
-const dmCryptoPassword = BrowserStorage.create<string | undefined>('crypto-handler-password', undefined, z.string().optional());
+const DmCryptoPassword = BrowserStorage.create<string | undefined>('crypto-handler-password', undefined, z.string().optional());
 
-export async function InitDirectMessageCrypotPassword(username: string, password: string): Promise<void> {
-	dmCryptoPassword.value = await KeyExchange.generateKeyPassword(username, password);
+export async function InitDirectMessageCryptoPassword(username: string, password: string): Promise<void> {
+	DmCryptoPassword.value = await KeyExchange.generateKeyPassword(username, password);
 }
 
 export class DirectMessageManager extends Service<DirectMessageManagerServiceConfig> {
@@ -82,7 +82,7 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 	}
 
 	public clear() {
-		dmCryptoPassword.value = undefined;
+		DmCryptoPassword.value = undefined;
 		this._chats.value = [];
 		this.#crypto = undefined;
 		this._cryptoState.value = 'notLoaded';
@@ -99,7 +99,7 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 		return {
 			cryptoKey,
 			onSuccess: () => {
-				dmCryptoPassword.value = cryptoPassword;
+				DmCryptoPassword.value = cryptoPassword;
 			},
 		};
 	}
@@ -118,7 +118,7 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 		this.#crypto = undefined;
 		this._cryptoState.value = 'notLoaded';
 
-		const cryptoPassword = dmCryptoPassword.value;
+		const cryptoPassword = DmCryptoPassword.value;
 		if (cryptoPassword != null) {
 			if (account.cryptoKey) {
 				const loadResult = await this.loadKey(account.cryptoKey, cryptoPassword);
@@ -168,7 +168,7 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 		const { directoryConnector } = this.serviceDeps;
 
 		this.logger.verbose('Uploading current key to server...');
-		const password = dmCryptoPassword.value;
+		const password = DmCryptoPassword.value;
 		Assert(password != null, 'Missing password while updating saved key');
 		Assert(this.#crypto != null, 'Missing crypto while updating saved key');
 
@@ -201,7 +201,7 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 		const { directoryConnector } = this.serviceDeps;
 
 		if (password == null) {
-			password = dmCryptoPassword.value;
+			password = DmCryptoPassword.value;
 		}
 		if (password == null) {
 			this.logger.error('Unable to regenerate key with no crypto password.');
@@ -220,7 +220,7 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 				this.logger.warning('Failed to set cryptokey:', result);
 				return false;
 			}
-			dmCryptoPassword.value = password;
+			DmCryptoPassword.value = password;
 			this.#crypto = newCrypto;
 			this._cryptoState.value = 'ready';
 			await this._refreshChatCrypto();

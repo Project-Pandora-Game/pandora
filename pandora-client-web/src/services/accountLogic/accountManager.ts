@@ -24,7 +24,7 @@ import type { LoginResponse } from '../../networking/directoryConnector';
 import { Observable, type ReadonlyObservable } from '../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import type { ClientServices } from '../clientServices';
-import { InitDirectMessageCrypotPassword } from './directMessages/directMessageManager';
+import { InitDirectMessageCryptoPassword } from './directMessages/directMessageManager';
 
 type AccountManagerServiceConfig = Satisfies<{
 	dependencies: Pick<ClientServices, 'directoryConnector'>;
@@ -74,7 +74,7 @@ export class AccountManager extends Service<AccountManagerServiceConfig> {
 	 */
 	public async login(username: string, password: string, verificationToken?: string): Promise<LoginResponse> {
 		// Init DM crypto password before attempting login, so it can load directly at login
-		await InitDirectMessageCrypotPassword(username, password);
+		await InitDirectMessageCryptoPassword(username, password);
 		const passwordSha512 = await PrehashPassword(password);
 		const result = await this.loginDirect({ username, passwordSha512, verificationToken });
 		if (result !== 'ok') {

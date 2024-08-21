@@ -195,6 +195,7 @@ export function useConnectToShard(): (info: IDirectoryCharacterConnectionInfo) =
 			if (shardConnector?.connectionInfoMatches(info)) {
 				return;
 			}
+			GetLogger('useConnectToShard').debug('Requesting connect to shard: ', info);
 			disconnectFromShard();
 
 			setDebugData({ shardConnectionInfo: info });

@@ -136,16 +136,18 @@ export class AccountManager extends Service<AccountManagerServiceConfig> {
 			this._shardConnectionInfo = character;
 			directoryConnector.setActiveCharacterInfo(character);
 		} else {
+			directoryConnector.setActiveCharacterInfo(null);
+
 			// If we already have a character and we are requested to unload it, clear the last character
 			if (this._shardConnectionInfo != null) {
 				this._lastSelectedCharacter.value = undefined;
+				this._shardConnectionInfo = null;
 			} else {
-				// Otherwise try to autoconnect
-				await this.autoConnectCharacter();
+				// Otherwise try to autoconnect (if we do have account)
+				if (account != null) {
+					await this.autoConnectCharacter();
+				}
 			}
-
-			this._shardConnectionInfo = null;
-			directoryConnector.setActiveCharacterInfo(null);
 		}
 
 		this.emit('accountChanged', { account, character });

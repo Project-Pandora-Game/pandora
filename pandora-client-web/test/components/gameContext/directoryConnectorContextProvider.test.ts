@@ -64,7 +64,6 @@ describe('DirectoryConnectorContextProvider', () => {
 		hook: (initialProps?: Props) => Result,
 		providerPropOverrides?: Partial<Omit<ProvidersProps, 'children'>>,
 	): RenderHookResult<Result, Props> {
-		const props = { serviceManager, directoryConnector, ...providerPropOverrides };
-		return RenderHookWithProviders(hook, props);
+		return RenderHookWithProviders(hook, { serviceManager, ...providerPropOverrides });
 	}
 });

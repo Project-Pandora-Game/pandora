@@ -155,6 +155,7 @@ export class CharacterInfo {
 			return;
 
 		this._loadedCharacter = new Character(this, space);
+		this.logger.debug(`Loaded`);
 	}
 
 	public trackedSpaceUnload(space: Space): void {
@@ -174,6 +175,7 @@ export class CharacterInfo {
 
 		// Finish unload
 		this._loadedCharacter = null;
+		this.logger.debug(`Unloaded (trackedSpaceUnload)`);
 	}
 
 	@AsyncSynchronized('object')
@@ -236,6 +238,7 @@ export class CharacterInfo {
 
 			// Finish unload
 			this._loadedCharacter = null;
+			this.logger.debug(`Unloaded (forceUnload)`);
 		}
 
 		// If the unload was successful and invalidation was requested, mark this character as invalid

@@ -8,7 +8,7 @@ import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceDe
 import { Socket, connect } from 'socket.io-client';
 
 export interface Connector<OutboundT extends SocketInterfaceDefinition> extends IConnectionBase<OutboundT> {
-	connect(): Promise<this>;
+	connect(): void;
 	disconnect(): void;
 	setExtraHeaders(headers: Record<string, string | undefined>): void;
 }
@@ -80,18 +80,9 @@ export class SocketIOConnector<OutboundT extends SocketInterfaceDefinition, Inco
 
 	/**
 	 * Attempt a connection
-	 *
-	 * **can only be used once**
-	 * @returns Promise of the connection
 	 */
-	public connect(): Promise<this> {
-		return new Promise((resolve) => {
-			this.socket.once('connect', () => {
-				resolve(this);
-			});
-			// Attempt to connect
-			this.socket.connect();
-		});
+	public connect(): void {
+		this.socket.connect();
 	}
 
 	/** Disconnect from Directory */

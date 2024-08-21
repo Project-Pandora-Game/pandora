@@ -57,8 +57,6 @@ export class ShardConnector implements IConnectionBase<IClientShard> {
 	private readonly _changeEventEmitter = new ShardChangeEventEmitter();
 	private readonly _messageHandler: MessageHandler<IShardClient>;
 
-	private loadResolver: ((arg: this) => void) | null = null;
-
 	public readonly directoryConnector: DirectoryConnector;
 
 	/** Current state of the connection */
@@ -162,9 +160,8 @@ export class ShardConnector implements IConnectionBase<IClientShard> {
 	 * Attempt a connection
 	 *
 	 * **can only be used once**
-	 * @returns Promise of the connection
 	 */
-	public connect(connectorFactory: SocketIOConnectorFactory<IClientShard, IShardClient>): Promise<this> {
+	public connect(connectorFactory: SocketIOConnectorFactory<IClientShard, IShardClient>): void {
 		if (this._state.value !== ShardConnectionState.NONE || this._connector != null) {
 			throw new Error('connect can only be called once');
 		}
@@ -174,24 +171,22 @@ export class ShardConnector implements IConnectionBase<IClientShard> {
 		const publicURLOptions = publicURL.split(';').map((a) => a.trim());
 		const finalUrl = publicURLOptions[ConfigServerIndex.value % publicURLOptions.length];
 
-		return new Promise((resolve) => {
-			this.setState(ShardConnectionState.INITIAL_CONNECTION_PENDING);
-			this.loadResolver = resolve;
-			// Attempt to connect
-			this._connector = new connectorFactory({
-				uri: finalUrl,
-				extraHeaders: {
-					authorization: `${characterId} ${secret}`,
-				},
-				schema: [ClientShardSchema, ShardClientSchema],
-				messageHandler: this._messageHandler,
-				onConnect: this.onConnect.bind(this),
-				onDisconnect: this.onDisconnect.bind(this),
-				onConnectError: this.onConnectError.bind(this),
-				logger,
-			});
-			void this._connector.connect();
+		this.setState(ShardConnectionState.INITIAL_CONNECTION_PENDING);
+		// Attempt to connect
+		this._connector = new connectorFactory({
+			uri: finalUrl,
+			extraHeaders: {
+				authorization: `${characterId} ${secret}`,
+			},
+			schema: [ClientShardSchema, ShardClientSchema],
+			messageHandler: this._messageHandler,
+			onConnect: this.onConnect.bind(this),
+			onDisconnect: this.onDisconnect.bind(this),
+			onConnectError: this.onConnectError.bind(this),
+			logger,
 		});
+
+		this._connector.connect();
 	}
 
 	/** Disconnect from Shard */
@@ -277,10 +272,6 @@ export class ShardConnector implements IConnectionBase<IClientShard> {
 			// Ignore reloads from shard
 		} else if (currentState === ShardConnectionState.WAIT_FOR_DATA) {
 			this.setState(ShardConnectionState.CONNECTED);
-			if (this.loadResolver) {
-				this.loadResolver(this);
-				this.loadResolver = null;
-			}
 			logger.info('Received initial character data');
 		} else {
 			logger.fatal('Assertion failed: received \'load\' event when in state:', ShardConnectionState[currentState]);

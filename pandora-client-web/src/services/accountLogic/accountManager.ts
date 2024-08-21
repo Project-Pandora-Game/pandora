@@ -151,7 +151,7 @@ export class AccountManager extends Service<AccountManagerServiceConfig> {
 		this.emit('accountChanged', { account, character });
 	}
 
-	@AsyncSynchronized()
+	@AsyncSynchronized('object')
 	private async autoConnectCharacter(): Promise<void> {
 		const { directoryConnector } = this.serviceDeps;
 
@@ -160,20 +160,35 @@ export class AccountManager extends Service<AccountManagerServiceConfig> {
 			return;
 		}
 		// Try to directly connect to the last selected character
-		const data = await directoryConnector.awaitResponse('connectCharacter', { id: characterId });
-		if (data.result !== 'ok') {
-			this.logger.alert('Failed to auto-connect to previous character:', data);
+		this.logger.verbose('Requesting auto-connect to character', characterId);
+		try {
+			const data = await directoryConnector.awaitResponse('connectCharacter', { id: characterId });
+			if (data.result !== 'ok') {
+				this.logger.alert('Failed to auto-connect to previous character:', data);
+				this._lastSelectedCharacter.value = undefined;
+			}
+		} catch (error) {
+			this.logger.warning('Error auto-connecting to previous character:', error);
 			this._lastSelectedCharacter.value = undefined;
 		}
 	}
 
+	@AsyncSynchronized('object')
 	public async connectToCharacter(id: CharacterId): Promise<boolean> {
 		const { directoryConnector } = this.serviceDeps;
 
-		const data = await directoryConnector.awaitResponse('connectCharacter', { id });
-		if (data.result !== 'ok') {
-			this.logger.error('Failed to connect to character:', data);
-			toast(`Failed to connect to character:\n${data.result}`, TOAST_OPTIONS_ERROR);
+		this.logger.verbose('Requesting connect to character', id);
+		try {
+			const data = await directoryConnector.awaitResponse('connectCharacter', { id });
+			if (data.result !== 'ok') {
+				this.logger.warning('Failed to connect to character:', data);
+				toast(`Failed to connect to character:\n${data.result}`, TOAST_OPTIONS_ERROR);
+				this._lastSelectedCharacter.value = undefined;
+				return false;
+			}
+		} catch (error) {
+			this.logger.warning('Error connecting to character:', error);
+			toast(`Error connecting to character.`, TOAST_OPTIONS_ERROR);
 			this._lastSelectedCharacter.value = undefined;
 			return false;
 		}

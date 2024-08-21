@@ -328,6 +328,7 @@ export function InventoryAttributePreview({ attribute }: {
 					src={ icon }
 					alt='Attribute icon'
 					crossOrigin='anonymous'
+					decoding='async'
 				/>
 			</div>
 		);

@@ -8,12 +8,10 @@ import { useDebugExpose } from '../../common/useDebugExpose';
 import { useErrorHandler } from '../../common/useErrorHandler';
 import { DIRECTORY_ADDRESS } from '../../config/Environment';
 import { ConfigServerIndex } from '../../config/searchArgs';
-import { AuthToken, DirectoryConnector } from '../../networking/directoryConnector';
+import { AuthToken, DirectoryConnectionState, DirectoryConnector } from '../../networking/directoryConnector';
 import { SocketIOConnector } from '../../networking/socketio_connector';
 import { useObservable } from '../../observable';
 import { useService } from '../../services/serviceProvider';
-
-let connectionPromise: Promise<DirectoryConnector> | undefined;
 
 /** Factory function responsible for providing the concrete directory connector implementation to the application */
 function GetDirectoryAddress(): string {
@@ -34,17 +32,14 @@ export function DirectoryConnectorServices(): null {
 	const directoryConnector = useService('directoryConnector');
 
 	useEffect(() => {
-		void (async () => {
-			try {
-				if (connectionPromise === undefined) {
-					connectionPromise = directoryConnector.connect(GetDirectoryAddress(), SocketIOConnector);
-				}
-				await connectionPromise;
-			} catch (error) {
-				logger.fatal('Directory connection failed:', error);
-				errorHandler(error);
+		try {
+			if (directoryConnector.state.value === DirectoryConnectionState.NONE) {
+				directoryConnector.connect(GetDirectoryAddress(), SocketIOConnector);
 			}
-		})();
+		} catch (error) {
+			logger.fatal('Directory connection failed:', error);
+			errorHandler(error);
+		}
 	}, [errorHandler, directoryConnector]);
 
 	useDebugExpose('directoryConnector', directoryConnector);

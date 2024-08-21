@@ -142,15 +142,15 @@ export class AccountManager extends Service<AccountManagerServiceConfig> {
 			if (this._shardConnectionInfo != null) {
 				this._lastSelectedCharacter.value = undefined;
 				this._shardConnectionInfo = null;
-			} else {
-				// Otherwise try to autoconnect (if we do have account)
-				if (account != null) {
-					await this.autoConnectCharacter();
-				}
 			}
 		}
 
 		this.emit('accountChanged', { account, character });
+
+		// If we have account, but not character, then try doing auto-connect
+		if (account != null && character == null) {
+			await this.autoConnectCharacter();
+		}
 	}
 
 	@AsyncSynchronized('object')

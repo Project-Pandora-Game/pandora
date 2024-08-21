@@ -3,6 +3,7 @@ import { DirectoryConnectorServiceProvider, type DirectoryConnector } from '../n
 import { AccountManagerServiceProvider, type AccountManager } from './accountLogic/accountManager';
 import { DirectMessageManagerServiceProvider, type DirectMessageManager } from './accountLogic/directMessages/directMessageManager';
 import { NotificationHandlerServiceProvider, type NotificationHandler } from './notificationHandler';
+import { ShardConnectionManagerServiceProvider, type ShardConnectionManager } from './shardConnectionManager';
 
 /** Services available on Padora's client, when running in normal user mode. */
 export type ClientServices = Satisfies<
@@ -11,6 +12,7 @@ export type ClientServices = Satisfies<
 		accountManager: AccountManager;
 		notificationHandler: NotificationHandler;
 		directMessageManager: DirectMessageManager;
+		shardConnectionManager: ShardConnectionManager;
 	},
 	BaseServicesDefinition
 >;
@@ -23,5 +25,6 @@ export function GenerateClientUsermodeServices(): ServiceManager<ClientServices>
 		.registerService(DirectoryConnectorServiceProvider)
 		.registerService(AccountManagerServiceProvider)
 		.registerService(NotificationHandlerServiceProvider)
-		.registerService(DirectMessageManagerServiceProvider);
+		.registerService(DirectMessageManagerServiceProvider)
+		.registerService(ShardConnectionManagerServiceProvider);
 }

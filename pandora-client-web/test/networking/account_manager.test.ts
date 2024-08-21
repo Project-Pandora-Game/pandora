@@ -11,18 +11,14 @@ import {
 	useLogout,
 } from '../../src/networking/account_manager';
 import { DirectoryConnector } from '../../src/networking/directoryConnector';
-import { ShardConnector } from '../../src/networking/shardConnector';
 import type { AccountManager } from '../../src/services/accountLogic/accountManager';
 import type { ClientServices } from '../../src/services/clientServices';
-import { MockConnectionInfo } from '../mocks/networking/mockShardConnector';
 import { MockServiceManager, ProvidersProps, RenderHookWithProviders } from '../testUtils';
 
 describe('Account Manager', () => {
-	const setShardConnector = jest.fn();
 	let serviceManager: ServiceManager<ClientServices>;
 	let directoryConnector: DirectoryConnector;
 	let accountManager: AccountManager;
-	let shardConnector: ShardConnector;
 
 	beforeEach(() => {
 		serviceManager = MockServiceManager();
@@ -30,7 +26,6 @@ describe('Account Manager', () => {
 		directoryConnector = serviceManager.services.directoryConnector;
 		Assert(serviceManager.services.accountManager != null);
 		accountManager = serviceManager.services.accountManager;
-		shardConnector = new ShardConnector(MockConnectionInfo(), directoryConnector);
 	});
 
 	describe('useLogin', () => {
@@ -95,7 +90,7 @@ describe('Account Manager', () => {
 		it('should create a new character successfully', async () => {
 			const awaitResponseMock = jest.spyOn(directoryConnector, 'awaitResponse')
 				.mockResolvedValue({ result: 'ok' });
-			const { result } = renderHookWithTestProviders(useCreateNewCharacter, { setShardConnector });
+			const { result } = renderHookWithTestProviders(useCreateNewCharacter);
 
 			const success = await result.current();
 			expect(success).toBe(true);
@@ -219,7 +214,6 @@ describe('Account Manager', () => {
 		hook: (initialProps?: Props) => Result,
 		providerPropOverrides?: Partial<Omit<ProvidersProps, 'children'>>,
 	): RenderHookResult<Result, Props> {
-		const props = { serviceManager, directoryConnector, shardConnector, setShardConnector, ...providerPropOverrides };
-		return RenderHookWithProviders(hook, props);
+		return RenderHookWithProviders(hook, { serviceManager, ...providerPropOverrides });
 	}
 });

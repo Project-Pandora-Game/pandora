@@ -1,6 +1,6 @@
 import { noop } from 'lodash';
 import { Assert, GetLogger, Logger, TypedEventEmitter } from 'pandora-common';
-import { BaseTexture, IImageResourceOptions, Resource, Texture, autoDetectResource } from 'pixi.js';
+import { BaseImageResource, BaseTexture, IImageResourceOptions, Resource, Texture, autoDetectResource } from 'pixi.js';
 import { PersistentToast } from '../persistentToast';
 import { IGraphicsLoader, type IGraphicsLoaderEvents, type IGraphicsLoaderStats, type TextureUpdateListener } from './graphicsManager';
 
@@ -65,6 +65,19 @@ class TextureData {
 		this._pendingLoad = true;
 
 		this.loader.loadResource(this.path)
+			.then((resource) => {
+				// For some resources we can do a bit more work ahead of time
+				// this smooths out the rendering pass, reducing the major source of lag on load
+				if (resource instanceof BaseImageResource) {
+					const img = resource.source;
+					// If the source is image element and `decode` is supported, then make use of it
+					if (img instanceof HTMLImageElement && typeof img.decode === 'function') {
+						return img.decode()
+							.then(() => resource);
+					}
+				}
+				return resource;
+			})
 			.then((resource) => {
 				Assert(this._pendingLoad);
 				Assert(this._loadedResource == null);

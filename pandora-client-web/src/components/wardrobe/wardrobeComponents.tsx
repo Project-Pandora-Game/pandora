@@ -293,6 +293,7 @@ export function InventoryAssetPreview({ asset, small }: {
 					src={ icon }
 					alt='Item preview'
 					crossOrigin='anonymous'
+					decoding='async'
 				/>
 			</div>
 		);
@@ -328,7 +329,6 @@ export function InventoryAttributePreview({ attribute }: {
 					src={ icon }
 					alt='Attribute icon'
 					crossOrigin='anonymous'
-					decoding='async'
 				/>
 			</div>
 		);

@@ -1,10 +1,11 @@
-import type { Socket } from 'socket.io';
-import type { IncomingMessage, Server as HttpServer } from 'http';
+import type { Server as HttpServer, IncomingMessage } from 'http';
 import { GetLogger, IIncomingConnection, IsCharacterId, IServerSocket, IShardClient } from 'pandora-common';
 import type { SocketInterfaceOneshotMessages, SocketInterfaceRequest } from 'pandora-common/dist/networking/helpers';
-import { SocketIOServer } from './socketio_common_server';
+import type { Socket } from 'socket.io';
+import { CharacterManager } from '../character/characterManager';
 import { ClientConnection } from './connection_client';
 import { ConnectionManagerClient } from './manager_client';
+import { SocketIOServer } from './socketio_common_server';
 import { SocketIOSocket } from './socketio_common_socket';
 
 const logger = GetLogger('SIO-Server-Client');
@@ -30,6 +31,16 @@ export class SocketIOServerClient extends SocketIOServer implements IServerSocke
 	protected override allowRequest(req: IncomingMessage, next: (err: string | null | undefined, success: boolean) => void): void {
 		const [characterId, secret] = (req.headers.authorization || '').split(' ');
 		if (!IsCharacterId(characterId) || !secret || !ConnectionManagerClient.isAuthorized(characterId, secret)) {
+			const character = IsCharacterId(characterId) ? CharacterManager.getCharacter(characterId) : null;
+
+			logger.debug(`Rejecting connection request for character '${characterId}':`,
+				!IsCharacterId(characterId) ? 'Invalid character id' :
+					!secret ? 'No secret provided' :
+						(character == null) ? 'Character not loaded' :
+							!character.isValid ? 'Character is in invalid state' :
+								'Unauthorized secret',
+			);
+
 			next('Invalid authorization header', false);
 			return;
 		}

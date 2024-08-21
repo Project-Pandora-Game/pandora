@@ -24,9 +24,9 @@ import promClient from 'prom-client';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 
 /** Time in milliseconds after which should attempt to connect to Directory fail */
-const INITIAL_CONNECT_TIMEOUT = 10_000;
+const INITIAL_CONNECT_TIMEOUT = 60_000;
 
-const logger = GetLogger('DirConn');
+const logger = GetLogger('DirectoryConnector');
 
 /** State of connection to Directory */
 export enum DirectoryConnectionState {

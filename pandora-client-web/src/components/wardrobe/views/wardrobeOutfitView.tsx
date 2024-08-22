@@ -586,7 +586,6 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 		]
 	) : undefined;
 
-	//const visibleName = (itemTemplate.name) ? itemTemplate.name : asset.definition.name;
 	const visibleName = ResolveItemDisplayNameType(asset.definition.name, itemTemplate.name, itemDisplayNameType);
 
 	if (!asset.canBeSpawned()) {

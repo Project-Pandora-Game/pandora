@@ -19,7 +19,7 @@ import { useTexture } from './useTexture';
 import { EvaluateCondition } from './utility';
 
 export function useLayerPoints(layer: AssetGraphicsLayer): {
-	points: readonly PointDefinitionCalculated[];
+	points: Immutable<PointDefinitionCalculated[]>;
 	triangles: Uint16Array;
 } {
 	// Note: The points should NOT be filtered before Delaunator step!
@@ -53,7 +53,7 @@ export function SelectPoints({ pointType }: Immutable<PointDefinition>, pointTyp
 		pointTypes.includes(pointType.replace(/_[lr]$/, ''));
 }
 
-export function MirrorPoint([x, y]: CoordinatesCompressed, mirror: LayerMirror, width: number): CoordinatesCompressed {
+export function MirrorPoint([x, y]: Immutable<CoordinatesCompressed>, mirror: LayerMirror, width: number): CoordinatesCompressed {
 	if (mirror === LayerMirror.FULL)
 		return [x - width, y];
 
@@ -62,7 +62,7 @@ export function MirrorPoint([x, y]: CoordinatesCompressed, mirror: LayerMirror, 
 
 export function useLayerVertices(
 	evaluator: ConditionEvaluatorBase,
-	points: readonly PointDefinitionCalculated[],
+	points: Immutable<PointDefinitionCalculated[]>,
 	layer: AssetGraphicsLayer,
 	item: Item | null,
 	normalize: boolean = false,

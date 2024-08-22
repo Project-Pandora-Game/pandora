@@ -108,23 +108,23 @@ export function DraggablePointDisplay({
 }
 
 export class DraggablePoint {
-	private readonly _definition: Observable<PointDefinitionCalculated>;
+	private readonly _definition: Observable<Immutable<PointDefinitionCalculated>>;
 	public readonly template: PointTemplateEditor;
 
 	public get definition(): ReadonlyObservable<Immutable<PointDefinitionCalculated>> {
 		return this._definition;
 	}
 
-	constructor(template: PointTemplateEditor, point: PointDefinitionCalculated) {
+	constructor(template: PointTemplateEditor, point: Immutable<PointDefinitionCalculated>) {
 		this.template = template;
-		this._definition = new Observable(point);
+		this._definition = new Observable<Immutable<PointDefinitionCalculated>>(point);
 	}
 
 	private get index(): number {
 		return this._definition.value.index;
 	}
 
-	public updatePoint(point: PointDefinitionCalculated) {
+	public updatePoint(point: Immutable<PointDefinitionCalculated>) {
 		this._definition.value = point;
 	}
 

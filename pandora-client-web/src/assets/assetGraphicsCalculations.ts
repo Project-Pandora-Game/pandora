@@ -1,12 +1,12 @@
 import Delaunator from 'delaunator';
-import { Immutable } from 'immer';
+import { freeze, Immutable } from 'immer';
 import { maxBy, minBy } from 'lodash';
 import { Assert, Asset, BoneName, CloneDeepMutable, Item, LayerDefinition, LayerImageSetting, LayerMirror, PointDefinition, type PointTemplate } from 'pandora-common';
 import { createContext, useContext, useMemo } from 'react';
 import { AppearanceConditionEvaluator } from '../graphics/appearanceConditionEvaluator';
 import { SelectPoints } from '../graphics/graphicsLayer';
 import { GRAPHICS_TEXTURE_RESOLUTION_SCALE, useGraphicsSettings } from '../graphics/graphicsSettings';
-import { MakeMirroredPoints, MirrorPoint } from '../graphics/mirroring';
+import { MakeMirroredPoints, MirrorTemplate } from '../graphics/mirroring';
 import { EvaluateCondition } from '../graphics/utility';
 import { useNullableObservable, useObservable, type ReadonlyObservable } from '../observable';
 import { useAutomaticResolution } from '../services/screenResolution/screenResolution';
@@ -97,11 +97,13 @@ export function useLayerName(layer: AssetGraphicsLayer): string {
 	return name;
 }
 
-export function CalculatePointDefinitionsFromTemplate(template: Immutable<PointTemplate>, mirrorPoints: boolean = false): PointDefinitionCalculated[] {
-	let points: Immutable<PointDefinition[]> = template;
+const TEMPLATE_CALCULATION_CACHE = new WeakMap<Immutable<PointDefinition[]>, Immutable<PointDefinitionCalculated[]>>();
+export function CalculatePointDefinitionsFromTemplate(template: Immutable<PointTemplate>, mirrorPoints: boolean = false): Immutable<PointDefinitionCalculated[]> {
+	const points: Immutable<PointDefinition[]> = mirrorPoints ? MirrorTemplate(template) : template;
 
-	if (mirrorPoints) {
-		points = points.map(MirrorPoint);
+	const cache = TEMPLATE_CALCULATION_CACHE.get(points);
+	if (cache) {
+		return cache;
 	}
 
 	const calculatedPoints = points.map<PointDefinitionCalculated>((point, index) => ({
@@ -109,7 +111,14 @@ export function CalculatePointDefinitionsFromTemplate(template: Immutable<PointT
 		index,
 		isMirror: false,
 	}));
-	return calculatedPoints.flatMap(MakeMirroredPoints);
+	const result = calculatedPoints.flatMap(MakeMirroredPoints);
+
+	// Freeze source and result so cache is not broken
+	freeze(points, true);
+	freeze(result, true);
+	TEMPLATE_CALCULATION_CACHE.set(points, result);
+
+	return result;
 }
 
 export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalculated[]>, pointType?: readonly string[]): Uint16Array {
@@ -124,13 +133,13 @@ export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalcul
 	return new Uint16Array(result);
 }
 
-export function useLayerCalculatedPoints(layer: AssetGraphicsLayer): PointDefinitionCalculated[] {
+export function useLayerCalculatedPoints(layer: AssetGraphicsLayer): Immutable<PointDefinitionCalculated[]> {
 	const { points, mirror } = useLayerDefinition(layer);
 
 	const manager = useObservable(GraphicsManagerInstance);
 	const templateOverrides = useNullableObservable(useContext(AssetGraphicsResolverOverrideContext)?.pointTemplates);
 
-	return useMemo((): PointDefinitionCalculated[] => {
+	return useMemo((): Immutable<PointDefinitionCalculated[]> => {
 		const p = templateOverrides?.get(points) ?? manager?.getTemplate(points);
 		if (!p) {
 			throw new Error(`Unknown template '${p}'`);

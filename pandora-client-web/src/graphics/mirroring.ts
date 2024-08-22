@@ -1,5 +1,5 @@
-import { Immutable } from 'immer';
-import { Assert, AssertNever, CharacterSize, Condition, LayerImageOverride, LayerImageSetting, PointDefinition, TransformDefinition } from 'pandora-common';
+import { freeze, Immutable } from 'immer';
+import { Assert, AssertNever, CharacterSize, Condition, LayerImageOverride, LayerImageSetting, PointDefinition, TransformDefinition, type PointTemplate } from 'pandora-common';
 import { PointDefinitionCalculated } from '../assets/assetGraphics';
 
 /** formatting for `<T extends (...)>` is different for ESLint and VS Code */
@@ -98,6 +98,21 @@ export function MirrorPoint(point: Immutable<PointDefinition>): PointDefinition 
 		transforms: point.transforms.map(MirrorTransform),
 		pointType: MirrorBoneLike(point.pointType),
 	};
+}
+
+const MIRROR_TEMPLATE_CACHE = new WeakMap<Immutable<PointTemplate>, Immutable<PointTemplate>>();
+export function MirrorTemplate(template: Immutable<PointTemplate>): Immutable<PointTemplate> {
+	const cached = MIRROR_TEMPLATE_CACHE.get(template);
+	if (cached != null)
+		return cached;
+
+	const result = template.map(MirrorPoint);
+	// Freeze source and result so cache is not broken
+	freeze(template, true);
+	freeze(result, true);
+	MIRROR_TEMPLATE_CACHE.set(template, result);
+
+	return result;
 }
 
 export function MakeMirroredPoints(point: PointDefinitionCalculated): [PointDefinitionCalculated] | [PointDefinitionCalculated, PointDefinitionCalculated] {

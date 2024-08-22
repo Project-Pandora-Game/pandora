@@ -35,7 +35,7 @@ export interface GraphicsSceneRendererProps extends ChildrenProps {
 	onMount?: (app: Application) => void;
 	onUnmount?: (app: Application) => void;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	forwardContexts?: readonly Context<any>[];
+	forwardContexts: readonly Context<any>[];
 }
 
 // This actually has more effect than just exposing for debugging purposes:
@@ -202,7 +202,7 @@ export function GraphicsSceneRendererShared({
 	onMount,
 	onUnmount,
 	container,
-	forwardContexts = [],
+	forwardContexts,
 }: GraphicsSceneRendererProps): ReactElement {
 	const errorHandler = useErrorHandler();
 
@@ -417,7 +417,7 @@ function GraphicsSceneBackgroundRendererUnsafe({
 	backgroundAlpha,
 	onMount,
 	onUnmount,
-	forwardContexts = [],
+	forwardContexts,
 }: GraphicsSceneBackgroundRendererProps): ReactElement {
 	const errorHandler = useErrorHandler();
 

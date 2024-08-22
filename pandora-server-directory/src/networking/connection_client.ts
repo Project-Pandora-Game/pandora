@@ -64,6 +64,7 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	public setAccount(account: Account | null, token?: AccountToken): void {
 		if (this._account === account)
 			return;
+		this.logger.debug(`Set account ${account ? account.id : '[none]'}`);
 		if (this._account) {
 			Assert(this.rooms.has(this._account.associatedConnections));
 			this.setCharacter(null);
@@ -116,6 +117,7 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 	public setCharacter(character: Character | null): void {
 		if (this._character === character)
 			return;
+		this.logger.debug(`Set character ${character ? character.baseInfo.id : '[none]'}`);
 		if (this._character) {
 			Assert(this._character.assignedClient === this);
 			this._character.assignedClient = null;

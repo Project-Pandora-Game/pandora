@@ -24,7 +24,7 @@ import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { useCharacterRestrictionsManager, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../components/gameContext/gameStateContextProvider';
 import { usePlayer, usePlayerState } from '../../components/gameContext/playerContextProvider';
-import { shardConnectorContext, useShardConnector } from '../../components/gameContext/shardConnectorContextProvider';
+import { useShardConnector } from '../../components/gameContext/shardConnectorContextProvider';
 import { ShardConnector } from '../../networking/shardConnector';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
 import { serviceManagerContext } from '../../services/serviceProvider';
@@ -166,7 +166,7 @@ export function RoomGraphicsScene({
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
 		viewportRef,
-		forwardContexts: [serviceManagerContext, shardConnectorContext],
+		forwardContexts: [serviceManagerContext],
 		worldWidth: roomBackground.imageSize[0],
 		worldHeight: roomBackground.imageSize[1],
 		backgroundColor: 0x000000,

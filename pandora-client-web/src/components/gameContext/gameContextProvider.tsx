@@ -23,13 +23,11 @@ export function GameContextProvider({ children, serviceManager }: GameContextPro
 		<DebugContextProvider>
 			<RootErrorBoundary>
 				<ServiceManagerContextProvider serviceManager={ serviceManager }>
-					<ShardConnectorContextProvider>
-						<ChatInputContextProvider>
-							<MiscProviders>
-								{ children }
-							</MiscProviders>
-						</ChatInputContextProvider>
-					</ShardConnectorContextProvider>
+					<ChatInputContextProvider>
+						<MiscProviders>
+							{ children }
+						</MiscProviders>
+					</ChatInputContextProvider>
 				</ServiceManagerContextProvider>
 			</RootErrorBoundary>
 		</DebugContextProvider>
@@ -44,6 +42,7 @@ function MiscProviders({ children }: ChildrenProps): ReactElement {
 				<DirectoryConnectorServices />
 				<SecondFactorProvider />
 				<NotificationProvider />
+				<ShardConnectorContextProvider />
 
 				{ children }
 			</PermissionCheckServiceProvider>

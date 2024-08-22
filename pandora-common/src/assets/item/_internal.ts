@@ -91,6 +91,8 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		return {
 			asset: this.asset.id,
 			color: this.exportColorToBundle(),
+			name: this.name,
+			description: this.description,
 			modules,
 		};
 	}

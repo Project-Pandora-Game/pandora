@@ -162,9 +162,8 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 	 * Attempt a connection
 	 *
 	 * **can only be used once**
-	 * @returns Promise of the connection
 	 */
-	public async connect(uri: string, connectorFactory: SocketIOConnectorFactory<IClientDirectory, IDirectoryClient, IClientDirectoryAuthMessage | undefined>): Promise<this> {
+	public connect(uri: string, connectorFactory: SocketIOConnectorFactory<IClientDirectory, IDirectoryClient, IClientDirectoryAuthMessage | undefined>): void {
 		if (this._state.value !== DirectoryConnectionState.NONE || this._connector != null) {
 			throw new Error('connect can only be called once');
 		}
@@ -183,8 +182,7 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 			logger,
 		});
 
-		await this._connector.connect();
-		return this;
+		this._connector.connect();
 	}
 
 	/** Disconnect from Directory */

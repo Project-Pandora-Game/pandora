@@ -31,11 +31,12 @@ export const DebugContextProvider = ({ children }: ChildrenProps): ReactElement 
 
 	const setDebugData = useCallback((additionalData: DebugData) => {
 		const sanitized = SanitizeDebugData(additionalData);
-		const newData = produce(debugData, (draft) => {
-			Object.assign(draft, sanitized);
+		setDebugDataInternal((oldData) => {
+			return produce(oldData, (draft) => {
+				Object.assign(draft, sanitized);
+			});
 		});
-		setDebugDataInternal(newData);
-	}, [debugData, setDebugDataInternal]);
+	}, [setDebugDataInternal]);
 
 	const contextData = useMemo(() => ({
 		debugData,

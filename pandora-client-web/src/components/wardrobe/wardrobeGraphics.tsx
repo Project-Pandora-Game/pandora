@@ -19,19 +19,19 @@ import { useAssetManager } from '../../assets/assetManager';
 import { Character, IChatroomCharacter } from '../../character/character';
 import { Container } from '../../graphics/baseComponents/container';
 import { Graphics } from '../../graphics/baseComponents/graphics';
+import { PixiViewportSetupCallback, type PixiViewportRef } from '../../graphics/baseComponents/pixiViewport';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../graphics/graphicsCharacter';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
-import { PixiViewportSetupCallback, type PixiViewportRef } from '../../graphics/baseComponents/pixiViewport';
 import { RoomCharacter, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter';
 import { RoomDevice } from '../../graphics/room/roomDevice';
 import { RoomProjectionResolver, usePlayerVisionFilters, useRoomViewProjection } from '../../graphics/room/roomScene';
 import { useObservable } from '../../observable';
+import { serviceManagerContext } from '../../services/serviceProvider';
 import { Button } from '../common/button/button';
 import { Row } from '../common/container/container';
 import { useSpaceInfo } from '../gameContext/gameStateContextProvider';
-import { shardConnectorContext, useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
+import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { useWardrobeContext } from './wardrobeContext';
-import { serviceManagerContext } from '../../services/serviceProvider';
 
 export function WardrobeCharacterPreview({ character, characterState, isPreview = false }: {
 	character: IChatroomCharacter;
@@ -121,7 +121,7 @@ export function CharacterPreview({ character, characterState, overlay, viewportR
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
 		viewportConfig,
 		viewportRef,
-		forwardContexts: [serviceManagerContext, shardConnectorContext],
+		forwardContexts: [serviceManagerContext],
 		backgroundColor: 0x000000,
 	}), [viewportRef, viewportConfig]);
 
@@ -309,7 +309,7 @@ export function RoomPreview({
 	}, [focusDevice, projectionResolver]);
 
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
-		forwardContexts: [serviceManagerContext, shardConnectorContext],
+		forwardContexts: [serviceManagerContext],
 		worldWidth: focusArea?.width ?? roomBackground.imageSize[0],
 		worldHeight: focusArea?.height ?? roomBackground.imageSize[1],
 		backgroundColor: 0x000000,

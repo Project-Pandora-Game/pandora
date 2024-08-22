@@ -31,6 +31,7 @@ import { useRoomCharacterOffsets } from '../../../graphics/room/roomCharacter';
 import { usePlayerVisionFilters } from '../../../graphics/room/roomScene';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
+import { serviceManagerContext } from '../../../services/serviceProvider';
 import { Button } from '../../common/button/button';
 import { Column, DivContainer, Row } from '../../common/container/container';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
@@ -41,6 +42,7 @@ import { usePlayerState } from '../../gameContext/playerContextProvider';
 import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { OutfitEditView } from './wardrobeOutfitEditView';
+import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName';
 
 export function InventoryOutfitView({ targetContainer }: {
 	targetContainer: ItemContainerPath;
@@ -388,6 +390,7 @@ function OutfitPreview({ outfit }: {
 				renderArea={ { x: 97, y: 145, width: 806, height: 1210 } }
 				resolution={ 1 }
 				backgroundColor={ 0xcccccc }
+				forwardContexts={ [serviceManagerContext] }
 			>
 				<GraphicsCharacter
 					position={ { x: CHARACTER_PIVOT_POSITION.x, y: CHARACTER_PIVOT_POSITION.y } }
@@ -560,7 +563,7 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 	targetContainer: ItemContainerPath;
 }): ReactElement {
 	const assetManager = useAssetManager();
-	const { setHeldItem, targetSelector } = useWardrobeContext();
+	const { setHeldItem, targetSelector, itemDisplayNameType } = useWardrobeContext();
 
 	const asset = assetManager.getAssetById(itemTemplate.asset);
 
@@ -582,7 +585,7 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 		]
 	) : undefined;
 
-	const visibleName = asset.definition.name;
+	const visibleName = ResolveItemDisplayNameType(asset.definition.name, itemTemplate.name, itemDisplayNameType);
 
 	if (!asset.canBeSpawned()) {
 		return (

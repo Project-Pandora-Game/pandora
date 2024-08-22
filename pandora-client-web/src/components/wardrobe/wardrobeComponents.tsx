@@ -292,6 +292,8 @@ export function InventoryAssetPreview({ asset, small }: {
 					className={ previewType === 'image' ? '' : 'black' }
 					src={ icon }
 					alt='Item preview'
+					crossOrigin='anonymous'
+					decoding='async'
 				/>
 			</div>
 		);
@@ -326,6 +328,7 @@ export function InventoryAttributePreview({ attribute }: {
 					className='black'
 					src={ icon }
 					alt='Attribute icon'
+					crossOrigin='anonymous'
 				/>
 			</div>
 		);

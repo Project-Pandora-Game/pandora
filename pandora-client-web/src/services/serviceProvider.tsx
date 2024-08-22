@@ -55,7 +55,7 @@ export function useServiceOptional<const TService extends (keyof ClientServices 
  * @param serviceName - The service to get
  */
 export function useService<const TService extends (keyof ClientServices & string)>(serviceName: TService): ClientServices[TService] {
-	const service = useServiceOptional(serviceName);
+	const service = useServiceManager().services[serviceName];
 	if (service == null) {
 		throw new Error(`Attempt to access non-registered service '${serviceName}'`);
 	}

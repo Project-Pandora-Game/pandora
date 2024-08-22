@@ -43,7 +43,6 @@ import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '
 import { useWardrobeContext } from '../wardrobeContext';
 import { OutfitEditView } from './wardrobeOutfitEditView';
 import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName';
-// import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName';
 
 export function InventoryOutfitView({ targetContainer }: {
 	targetContainer: ItemContainerPath;

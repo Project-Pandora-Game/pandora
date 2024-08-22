@@ -48,6 +48,8 @@ export const ItemTemplateSchema: z.ZodType<ItemTemplate, ZodTypeDef, unknown> = 
 	asset: AssetIdSchema,
 	templateName: z.string().optional(),
 	color: ItemColorBundleSchema.optional(),
+	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
+	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
 	modules: z.record(z.lazy(() => ItemModuleTemplateSchema)).optional(),
 });
 
@@ -89,6 +91,8 @@ export function CreateItemBundleFromTemplate(template: ItemTemplate, context: II
 		asset: asset.id,
 		spawnedBy: context.creator.id,
 		color: template.color,
+		name: template.name,
+		description: template.description,
 	};
 
 	// Load modules

@@ -42,6 +42,7 @@ import { usePlayerState } from '../../gameContext/playerContextProvider';
 import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { OutfitEditView } from './wardrobeOutfitEditView';
+import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName';
 
 export function InventoryOutfitView({ targetContainer }: {
 	targetContainer: ItemContainerPath;
@@ -562,7 +563,7 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 	targetContainer: ItemContainerPath;
 }): ReactElement {
 	const assetManager = useAssetManager();
-	const { setHeldItem, targetSelector } = useWardrobeContext();
+	const { setHeldItem, targetSelector, itemDisplayNameType } = useWardrobeContext();
 
 	const asset = assetManager.getAssetById(itemTemplate.asset);
 
@@ -584,7 +585,7 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 		]
 	) : undefined;
 
-	const visibleName = asset.definition.name;
+	const visibleName = ResolveItemDisplayNameType(asset.definition.name, itemTemplate.name, itemDisplayNameType);
 
 	if (!asset.canBeSpawned()) {
 		return (

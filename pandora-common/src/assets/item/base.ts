@@ -67,6 +67,8 @@ export type ItemTemplate = {
 	asset: AssetId;
 	templateName?: string;
 	color?: ItemColorBundle;
+	name?: string;
+	description?: string;
 	modules?: Record<string, ItemModuleTemplate>;
 };
 

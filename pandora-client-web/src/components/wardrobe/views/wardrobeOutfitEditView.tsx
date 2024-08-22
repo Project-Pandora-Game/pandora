@@ -6,9 +6,6 @@ import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { useWardrobeContext } from '../wardrobeContext';
 import { useAssetManager } from '../../../assets/assetManager';
 import { InventoryAssetPreview } from '../wardrobeComponents';
-import diskIcon from '../../../assets/icons/disk.svg';
-import deleteIcon from '../../../assets/icons/delete.svg';
-import exportIcon from '../../../assets/icons/export.svg';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
@@ -17,6 +14,12 @@ import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
 import { useConfirmDialog } from '../../dialog/dialog';
 import { WardrobeTemplateEditMenu } from '../templateDetail/_wardrobeTemplateDetail';
 import { ExportDialog } from '../../exportImport/exportDialog';
+import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName';
+
+/* images */
+import diskIcon from '../../../assets/icons/disk.svg';
+import deleteIcon from '../../../assets/icons/delete.svg';
+import exportIcon from '../../../assets/icons/export.svg';
 
 export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary = false }: {
 	extraActions?: ReactNode;
@@ -340,6 +343,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 }): ReactElement {
 	const confirm = useConfirmDialog();
 	const assetManager = useAssetManager();
+	const { itemDisplayNameType } = useWardrobeContext();
 
 	const asset = assetManager.getAssetById(itemTemplate.asset);
 
@@ -371,7 +375,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 		]
 	) : undefined;
 
-	const visibleName = asset.definition.name;
+	const visibleName = ResolveItemDisplayNameType(asset.definition.name, itemTemplate.name, itemDisplayNameType);
 
 	if (!asset.canBeSpawned()) {
 		return (

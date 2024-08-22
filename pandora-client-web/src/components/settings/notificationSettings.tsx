@@ -2,7 +2,6 @@ import React, { ReactElement } from 'react';
 import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
 import { NOTIFICATION_AUDIO_NAMES, NOTIFICATION_AUDIO_SOUNDS, NOTIFICATION_AUDIO_VOLUME } from '../../services/notificationHandler';
 import { Button } from '../common/button/button';
-import { FieldsetToggle } from '../common/fieldsetToggle';
 import { SelectAccountSettings } from './helpers/accountSettings';
 
 export function NotificationSettings(): ReactElement | null {
@@ -18,28 +17,37 @@ export function NotificationSettings(): ReactElement | null {
 
 function NotificationsSettings(): ReactElement {
 	return (
-		<fieldset>
-			<legend>Notifications Setting</legend>
+		<>
 			<VolumeSettings />
 			<RoomEntrySettings />
-		</fieldset>
+		</>
 	);
 }
 
 function VolumeSettings(): ReactElement {
 	return (
-		<FieldsetToggle legend='Volume settings'>
-			<SelectAccountSettings setting='notificationVolume' label='Select the volume of the notifications' stringify={ NOTIFICATION_AUDIO_VOLUME } />
-		</FieldsetToggle>
+		<fieldset>
+			<legend>Volume settings</legend>
+			<SelectAccountSettings
+				setting='notificationVolume'
+				label='Select the volume of the notifications'
+				stringify={ NOTIFICATION_AUDIO_VOLUME }
+				optionOrder={ ['100', '75', '50', '25', '0'] }
+			/>
+		</fieldset>
 	);
 }
 
 function RoomEntrySettings(): ReactElement {
 	const { notificationRoomEntrySound, notificationVolume } = useAccountSettings();
 	return (
-		<FieldsetToggle legend='Room entry notifications'>
-			<SelectAccountSettings setting='notificationRoomEntrySound' label='Which audio to play, if someone enters your room' stringify={ NOTIFICATION_AUDIO_NAMES } />
-			<div>
+		<fieldset>
+			<legend>Notifications</legend>
+			<SelectAccountSettings
+				setting='notificationRoomEntrySound'
+				label='Someone enters the current space'
+				stringify={ NOTIFICATION_AUDIO_NAMES }
+			>
 				<Button
 					className='slim fadeDisabled'
 					disabled={ notificationRoomEntrySound === '' }
@@ -52,9 +60,9 @@ function RoomEntrySettings(): ReactElement {
 						}
 					} }
 				>
-					Test the sound
+					Test
 				</Button>
-			</div>
-		</FieldsetToggle>
+			</SelectAccountSettings>
+		</fieldset>
 	);
 }

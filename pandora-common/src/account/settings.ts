@@ -74,17 +74,12 @@ export const AccountSettingsSchema = z.object({
 	interfaceChatroomItemDisplayNameType: ItemDisplayNameTypeSchema,
 	/**
 	 * Sets what sound should be played, when someone enters the room
-	 * Defaults to ''
+	 * @default ''
 	 */
 	notificationRoomEntrySound: z.enum(['', 'alert', 'bell', 'bing', 'dingding']),
 	/**
-	 * Have to keep that one for legacy reasons
-	 * TODO: Needs to be removed later
-	 */
-	notificationRoomEntry: z.boolean(),
-	/**
 	 * Volume of the notification. Stored as int, but will be divided by 100 later
-	 * Defaults to 100
+	 * @default 100
 	 */
 	notificationVolume: z.enum(['0', '25', '50', '75', '100']),
 });
@@ -110,7 +105,6 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceChatroomCharacterNameFontSize: 'm',
 	interfaceChatroomItemDisplayNameType: 'custom_with_original_in_brackets',
 	notificationRoomEntrySound: '',
-	notificationRoomEntry: false,
 	notificationVolume: '100',
 });
 

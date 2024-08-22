@@ -1,6 +1,8 @@
 import React, { ReactElement } from 'react';
-import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
-import { ToggleAccountSetting } from './helpers/accountSettings';
+import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
+import { NOTIFICATION_AUDIO_NAMES, NOTIFICATION_AUDIO_SOUNDS, NOTIFICATION_AUDIO_VOLUME } from '../../services/notificationHandler';
+import { Button } from '../common/button/button';
+import { SelectAccountSettings } from './helpers/accountSettings';
 
 export function NotificationSettings(): ReactElement | null {
 	const account = useCurrentAccount();
@@ -15,18 +17,52 @@ export function NotificationSettings(): ReactElement | null {
 
 function NotificationsSettings(): ReactElement {
 	return (
-		<fieldset>
-			<legend>Notifications Setting</legend>
+		<>
+			<VolumeSettings />
 			<RoomEntrySettings />
+		</>
+	);
+}
+
+function VolumeSettings(): ReactElement {
+	return (
+		<fieldset>
+			<legend>Volume settings</legend>
+			<SelectAccountSettings
+				setting='notificationVolume'
+				label='Select the volume of the notifications'
+				stringify={ NOTIFICATION_AUDIO_VOLUME }
+				optionOrder={ ['100', '75', '50', '25', '0'] }
+			/>
 		</fieldset>
 	);
 }
 
 function RoomEntrySettings(): ReactElement {
-	/* TODO: Add a sound selector */
+	const { notificationRoomEntrySound, notificationVolume } = useAccountSettings();
 	return (
-		<p>
-			<ToggleAccountSetting setting='notificationRoomEntry' label='Play audio if someone enters your room' />
-		</p>
+		<fieldset>
+			<legend>Notifications</legend>
+			<SelectAccountSettings
+				setting='notificationRoomEntrySound'
+				label='Someone enters the current space'
+				stringify={ NOTIFICATION_AUDIO_NAMES }
+			>
+				<Button
+					className='slim fadeDisabled'
+					disabled={ notificationRoomEntrySound === '' }
+					onClick={ () => {
+						const sound = NOTIFICATION_AUDIO_SOUNDS[notificationRoomEntrySound];
+						if (sound != null) {
+							const audio = new Audio(sound);
+							audio.volume = Number(notificationVolume) / 100;
+							audio.play().catch(() => { /*ignore*/ });
+						}
+					} }
+				>
+					Test
+				</Button>
+			</SelectAccountSettings>
+		</fieldset>
 	);
 }

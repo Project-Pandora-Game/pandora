@@ -60,7 +60,7 @@ export function ToggleSettingInput({ currentValue, defaultValue, label, onChange
 	);
 }
 
-export function SelectSettingInput<TValue extends string>({ currentValue, defaultValue, label, stringify, optionOrder, schema, onChange, onReset, deps }: {
+export function SelectSettingInput<TValue extends string>({ currentValue, defaultValue, label, stringify, optionOrder, schema, onChange, onReset, deps, children }: {
 	currentValue: TValue | undefined;
 	defaultValue: TValue;
 	label: ReactNode;
@@ -70,6 +70,7 @@ export function SelectSettingInput<TValue extends string>({ currentValue, defaul
 	onChange: (newValue: TValue) => void;
 	onReset?: () => void;
 	deps?: DependencyList;
+	children?: ReactNode;
 }): ReactElement {
 	const [value, setValue] = useRemotelyUpdatedUserInput<TValue | undefined>(currentValue, deps, {
 		updateCallback(newValue) {
@@ -125,6 +126,7 @@ export function SelectSettingInput<TValue extends string>({ currentValue, defaul
 				>
 					↺
 				</Button>
+				{ children }
 			</Row>
 		</div>
 	);

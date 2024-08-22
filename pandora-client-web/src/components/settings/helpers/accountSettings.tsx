@@ -1,5 +1,5 @@
 import { ACCOUNT_SETTINGS_DEFAULT, AccountSettingsSchema, type AccountSettings } from 'pandora-common';
-import React, { type ReactElement } from 'react';
+import React, { type ReactElement, type ReactNode } from 'react';
 import type { ConditionalKeys } from 'type-fest';
 import type { ZodType } from 'zod';
 import { useModifiedAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
@@ -40,10 +40,12 @@ export function ToggleAccountSetting<const Setting extends BooleanSettings>({ se
 }
 
 type StringSettings = ConditionalKeys<AccountSettings, string>;
-export function SelectAccountSettings<const Setting extends StringSettings>({ setting, label, stringify }: {
+export function SelectAccountSettings<const Setting extends StringSettings>({ setting, label, stringify, optionOrder, children }: {
 	setting: Setting;
 	label: string;
 	stringify: Readonly<Record<AccountSettings[Setting], string>>;
+	optionOrder?: readonly AccountSettings[Setting][];
+	children?: ReactNode;
 }): ReactElement {
 	const modifiedSettings = useModifiedAccountSettings();
 	const directory = useDirectoryConnector();
@@ -72,9 +74,12 @@ export function SelectAccountSettings<const Setting extends StringSettings>({ se
 			defaultValue={ ACCOUNT_SETTINGS_DEFAULT[setting] }
 			label={ label }
 			stringify={ stringify }
+			optionOrder={ optionOrder }
 			schema={ schema }
 			onChange={ onChange }
 			onReset={ onReset }
-		/>
+		>
+			{ children }
+		</SelectSettingInput>
 	);
 }

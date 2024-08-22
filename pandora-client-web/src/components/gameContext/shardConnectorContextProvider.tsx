@@ -28,7 +28,7 @@ export function ShardConnectorContextProvider(): null {
 	const notifyCharacterEntered = useNotification(NotificationSource.ROOM_ENTRY);
 
 	const {
-		notificationRoomEntry,
+		notificationRoomEntrySound,
 	} = useAccountSettings();
 
 	const gameState = useNullableObservable(shardConnector?.gameState);
@@ -39,11 +39,11 @@ export function ShardConnectorContextProvider(): null {
 
 	useEffect(() => {
 		return gameState?.on('characterEntered', () => {
-			if (notificationRoomEntry) {
+			if (notificationRoomEntrySound !== '') {
 				notifyCharacterEntered({});
 			}
 		});
-	}, [gameState, notificationRoomEntry, notifyCharacterEntered]);
+	}, [gameState, notificationRoomEntrySound, notifyCharacterEntered]);
 
 	useEffect(() => {
 		setDebugData({

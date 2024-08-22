@@ -1,10 +1,16 @@
-import { Service, type Satisfies, type ServiceConfigBase, type ServiceProviderDefinition } from 'pandora-common';
+import { Service, type AccountSettings, type Satisfies, type ServiceConfigBase, type ServiceProviderDefinition } from 'pandora-common';
 import { useCallback, useEffect } from 'react';
-import audioBing from '../audio/bing.mp3';
 import { useDocumentVisibility } from '../common/useDocumentVisibility';
-import { Observable, type ReadonlyObservable } from '../observable';
+import { Observable, ReadonlyObservable } from '../observable';
 import type { ClientServices } from './clientServices';
 import { useService } from './serviceProvider';
+import { GetAccountSettings } from './accountLogic/accountManagerHooks';
+
+/* The audio files that can be played */
+import audioBing from '../audio/bing.mp3';
+import audioAlert from '../audio/alert.mp3';
+import audioBell from '../audio/bell.mp3';
+import audioDingDing from '../audio/ding-ding.mp3';
 
 type NotificationHeader<T extends ReadonlyObservable<readonly unknown[]> = ReadonlyObservable<readonly unknown[]>> = {
 	readonly notifications: T;
@@ -18,6 +24,30 @@ export enum NotificationSource {
 	INCOMING_FRIEND_REQUEST = 'INCOMING_FRIEND_REQUEST',
 	ROOM_ENTRY = 'ROOM_ENTRY',
 }
+
+export const NOTIFICATION_AUDIO_VOLUME: Readonly<Record<AccountSettings['notificationVolume'], string>> = {
+	'0': '0%',
+	'25': '25%',
+	'50': '50%',
+	'75': '75%',
+	'100': '100%',
+};
+
+export const NOTIFICATION_AUDIO_NAMES: Readonly<Record<AccountSettings['notificationRoomEntrySound'], string>> = {
+	'': '<None>',
+	'alert': 'Alert',
+	'bell': 'Bell',
+	'bing': 'Bing',
+	'dingding': 'Ding-Ding',
+};
+
+export const NOTIFICATION_AUDIO_SOUNDS: Readonly<Record<AccountSettings['notificationRoomEntrySound'], string | null>> = {
+	'': null,
+	'alert': audioAlert,
+	'bell': audioBell,
+	'bing': audioBing,
+	'dingding': audioDingDing,
+};
 
 export const NOTIFICATION_KEY: Readonly<Record<NotificationSource, NotificationHeaderKeys | null>> = {
 	[NotificationSource.CHAT_MESSAGE]: 'notifications',
@@ -56,7 +86,7 @@ enum NotificationAudio {
 const BASE_TITLE = 'Pandora';
 
 type NotificationHandlerServiceConfig = Satisfies<{
-	dependencies: Pick<ClientServices, never>;
+	dependencies: Pick<ClientServices, 'accountManager'>;
 	events: false;
 }, ServiceConfigBase>;
 
@@ -87,6 +117,8 @@ export class NotificationHandler extends Service<NotificationHandlerServiceConfi
 	}
 
 	public rise(source: NotificationSource, data: NotificationData) {
+		const { accountManager } = this.serviceDeps;
+
 		if (this.suppress.has(source) && document.visibilityState === 'visible') {
 			return;
 		}
@@ -97,8 +129,15 @@ export class NotificationHandler extends Service<NotificationHandlerServiceConfi
 		if (alert.has(NotificationAlert.POPUP)) {
 			this._risePopup(full, audio);
 		} else if (alert.has(NotificationAlert.AUDIO)) {
-			/* TODO: Make the sound being played configurable */
-			new Audio(audioBing).play().catch(() => { /* ignore */ });
+			const notificationRoomEntrySound = GetAccountSettings(accountManager).notificationRoomEntrySound;
+			const sound = NOTIFICATION_AUDIO_SOUNDS[notificationRoomEntrySound];
+			if (sound != null) {
+				const playAudio = new Audio(sound);
+				// Calculate the volume percentage
+				playAudio.volume = Number(GetAccountSettings(accountManager).notificationVolume) / 100;
+				// Play the selected audio file
+				playAudio.play().catch(() => { /* ignore */ });
+			}
 		}
 	}
 
@@ -180,6 +219,7 @@ export const NotificationHandlerServiceProvider: ServiceProviderDefinition<Clien
 	name: 'notificationHandler',
 	ctor: NotificationHandler,
 	dependencies: {
+		accountManager: true,
 	},
 };
 

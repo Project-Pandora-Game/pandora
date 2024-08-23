@@ -4,10 +4,14 @@
 		"types": [
 			"@types/node",
 			"@types/jest"
-		]
+		],
+		"rootDir": ".."
 	},
 	"include": [
 		"../src/**/*.d.ts",
 		"./**/*"
-	]
+	],
+	"references": [
+		{ "path": "../../pandora-common" },
+	],
 }

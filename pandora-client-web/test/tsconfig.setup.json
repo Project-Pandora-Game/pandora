@@ -11,9 +11,13 @@
 			"@types/node",
 			"offscreencanvas"
 		],
-		"jsx": "react"
+		"jsx": "react",
+		"rootDir": "."
 	},
 	"include": [
 		"./setup.ts"
+	],
+	"references": [
+		{ "path": "../../pandora-common" },
 	]
 }

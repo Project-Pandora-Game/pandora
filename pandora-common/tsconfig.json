@@ -3,8 +3,10 @@
 	"compilerOptions": {
 		"noEmit": false,
 		"outDir": "./dist",
-		"isolatedModules": true,
+		"tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
+		"rootDir": "./src",
 		"incremental": true,
+		"composite": true,
 		"declaration": true,
 		"declarationMap": true,
 		"removeComments": false

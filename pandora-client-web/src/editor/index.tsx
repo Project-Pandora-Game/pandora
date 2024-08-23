@@ -8,6 +8,7 @@ import { GraphicsManager } from '../assets/graphicsManager';
 import { useEvent } from '../common/useEvent';
 import { EulaGate } from '../components/Eula';
 import { Button } from '../components/common/button/button';
+import { NODE_ENV, USER_DEBUG } from '../config/Environment';
 import { LoadSearchArgs } from '../config/searchArgs';
 import { ConfigurePixiSettings } from '../graphics/pixiSettings';
 import '../index.scss';
@@ -19,12 +20,18 @@ import { AssetManagerEditor } from './assets/assetManager';
 import { EditorWardrobeContextProvider } from './components/wardrobe/wardrobe';
 import { Editor, EditorView } from './editor';
 import { EditorContextProvider, useMaybeEditor, useSetEditor } from './editorContextProvider';
+import { GenerateClientEditorServices } from './services/editorServices';
 
 const logger = GetLogger('init');
 
-Start().catch((error) => {
+try {
+	Start()
+		.catch((error) => {
+			logger.fatal('Init failed:', error);
+		});
+} catch (error) {
 	logger.fatal('Init failed:', error);
-});
+}
 
 /**
  * Starts the application.
@@ -36,11 +43,17 @@ async function Start(): Promise<void> {
 	// Force full resolution for all textures
 	ScreenResolutionSerice.forceFullResolution = true;
 	logger.info('Starting editor...');
+	logger.verbose('Build mode:', (NODE_ENV === 'production' && USER_DEBUG) ? 'userdebug' : NODE_ENV);
+
+	// Load services
+	const serviceManager = GenerateClientEditorServices();
+	await serviceManager.load();
+
 	createRoot(document.querySelector('#editor-root') as HTMLElement).render(
 		<React.StrictMode>
 			<EulaGate>
 				<BrowserRouter basename='/editor'>
-					<EditorContextProvider>
+					<EditorContextProvider serviceManager={ serviceManager }>
 						<ToastContainer
 							theme='dark'
 							style={ {

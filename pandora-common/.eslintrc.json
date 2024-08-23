@@ -24,7 +24,7 @@
 			"files": ["*.ts", "*.tsx"],
 			"parser": "@typescript-eslint/parser",
 			"parserOptions": {
-				"project": ["./tsconfig.json", "./test/tsconfig.json"],
+				"projectService": true,
 				"sourceType": "module"
 			},
 			"rules": {
@@ -179,6 +179,9 @@
 		"operator-assignment": "warn",
 		"prefer-object-spread": "warn",
 		"import/no-cycle": "warn",
+		"import/no-unresolved": ["warn", {
+			"ignore": ["^pandora-common($|/dist)"]
+		}],
 		// Stylistic rules
 		"@stylistic/semi": ["warn", "always"],
 		"@stylistic/semi-style": ["warn", "last"],

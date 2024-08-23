@@ -1,4 +1,4 @@
-import { TypedEventEmitter, type TypedEvent } from '../event';
+import { TypedEventEmitter, type ITypedEventEmitter, type TypedEvent } from '../event';
 import { Assert } from '../utility';
 import type { BaseServicesDefinition } from './serviceDefinitions';
 
@@ -18,7 +18,12 @@ export type ServiceProviderDefinition<TServices extends BaseServicesDefinition, 
 	dependencies: Record<keyof TConfig['dependencies'] & string, true>;
 };
 
-export abstract class Service<TConfig extends ServiceConfigBase> extends TypedEventEmitter<TConfig['events'] extends object ? TConfig['events'] : Record<never, never>> {
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface IService<TConfig extends ServiceConfigBase> extends ITypedEventEmitter<TConfig['events'] extends object ? TConfig['events'] : Record<never, never>> {
+
+}
+
+export abstract class Service<TConfig extends ServiceConfigBase> extends TypedEventEmitter<TConfig['events'] extends object ? TConfig['events'] : Record<never, never>> implements IService<TConfig> {
 	/** Name the service was registered under. */
 	protected readonly serviceName: string;
 	/** Dependencies of this service, available for use. */

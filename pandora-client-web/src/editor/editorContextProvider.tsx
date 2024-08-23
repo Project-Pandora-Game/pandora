@@ -6,17 +6,23 @@ import { Dialogs } from '../components/dialog/dialog';
 import { DebugContextProvider, useDebugContext } from '../components/error/debugContextProvider';
 import { RootErrorBoundary } from '../components/error/rootErrorBoundary';
 import { Editor } from './editor';
-import { AssetFrameworkGlobalState } from 'pandora-common';
+import { AssetFrameworkGlobalState, type ServiceManager } from 'pandora-common';
 import { HoverElementsPortal } from '../components/hoverElement/hoverElement';
 import { permissionCheckContext, PermissionCheckServiceBase } from '../components/gameContext/permissionCheckProvider';
 import { AnchorAutoscroll } from '../common/anchorAutoscroll';
+import type { ClientServices } from '../services/clientServices';
+import { ServiceManagerContextProvider } from '../services/serviceProvider';
 
 export const EditorContext = createContext({
 	editor: null as Editor | null,
 	setEditor: noop as (editor: Editor | null) => void,
 });
 
-export function EditorContextProvider({ children }: ChildrenProps): ReactElement {
+export interface EditorContextProviderProps extends ChildrenProps {
+	serviceManager: ServiceManager<ClientServices>;
+}
+
+export function EditorContextProvider({ children, serviceManager }: EditorContextProviderProps): ReactElement {
 	const [editor, setEditor] = useState<Editor | null>(null);
 	const context = useMemo(() => ({
 		editor,
@@ -28,15 +34,17 @@ export function EditorContextProvider({ children }: ChildrenProps): ReactElement
 	return (
 		<DebugContextProvider>
 			<EditorErrorBoundary>
-				<Dialogs location='global' />
-				<Dialogs location='mainOverlay' />
-				<AnchorAutoscroll />
-				<HoverElementsPortal />
-				<EditorContext.Provider value={ context }>
-					<PermissionCheckServiceProvider>
-						{ children }
-					</PermissionCheckServiceProvider>
-				</EditorContext.Provider>
+				<ServiceManagerContextProvider serviceManager={ serviceManager }>
+					<Dialogs location='global' />
+					<Dialogs location='mainOverlay' />
+					<AnchorAutoscroll />
+					<HoverElementsPortal />
+					<EditorContext.Provider value={ context }>
+						<PermissionCheckServiceProvider>
+							{ children }
+						</PermissionCheckServiceProvider>
+					</EditorContext.Provider>
+				</ServiceManagerContextProvider>
 			</EditorErrorBoundary>
 		</DebugContextProvider>
 	);

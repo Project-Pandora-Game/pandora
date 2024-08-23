@@ -24,14 +24,6 @@ export function ServiceManagerContextProvider({ children, serviceManager }: Serv
  * Get access to the client service manager.
  * @note If possible you should prefer using `useService` or `useServiceOptional`.
  */
-export function useServiceManagerOptional(): ServiceManager<ClientServices> | null {
-	return useContext(serviceManagerContext) ?? null;
-}
-
-/**
- * Get access to the client service manager.
- * @note If possible you should prefer using `useService` or `useServiceOptional`.
- */
 export function useServiceManager(): ServiceManager<ClientServices> {
 	const serviceManager = useContext(serviceManagerContext);
 	if (serviceManager == null) {
@@ -45,7 +37,7 @@ export function useServiceManager(): ServiceManager<ClientServices> {
  * @param serviceName - The service to get
  */
 export function useServiceOptional<const TService extends (keyof ClientServices & string)>(serviceName: TService): ClientServices[TService] | null {
-	const serviceManager = useServiceManagerOptional();
+	const serviceManager = useServiceManager();
 	const service = serviceManager?.services[serviceName];
 	return service ?? null;
 }
@@ -55,7 +47,7 @@ export function useServiceOptional<const TService extends (keyof ClientServices 
  * @param serviceName - The service to get
  */
 export function useService<const TService extends (keyof ClientServices & string)>(serviceName: TService): ClientServices[TService] {
-	const service = useServiceManager().services[serviceName];
+	const service = useServiceOptional(serviceName);
 	if (service == null) {
 		throw new Error(`Attempt to access non-registered service '${serviceName}'`);
 	}

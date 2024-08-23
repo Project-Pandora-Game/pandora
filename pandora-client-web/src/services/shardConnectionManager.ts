@@ -2,6 +2,7 @@ import {
 	GetLogger,
 	Service,
 	type IDirectoryCharacterConnectionInfo,
+	type IService,
 	type Satisfies,
 	type ServiceConfigBase,
 	type ServiceProviderDefinition,
@@ -16,10 +17,14 @@ type ShardConnectionManagerServiceConfig = Satisfies<{
 	events: false;
 }, ServiceConfigBase>;
 
+export interface IShardConnectionManager extends IService<ShardConnectionManagerServiceConfig> {
+	readonly shardConnector: ReadonlyObservable<ShardConnector | null>;
+}
+
 /**
  * Service containing the current shard connector.
  */
-export class ShardConnectionManager extends Service<ShardConnectionManagerServiceConfig> {
+export class ShardConnectionManager extends Service<ShardConnectionManagerServiceConfig> implements IShardConnectionManager {
 	private readonly logger = GetLogger('ShardConnectionManager');
 
 	private readonly _shardConnector = new Observable<ShardConnector | null>(null);

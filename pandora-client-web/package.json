@@ -38,7 +38,7 @@
 		"pixi.js": "7.4.2",
 		"react": "18.3.1",
 		"react-dom": "18.3.1",
-		"react-hook-form": "7.52.0",
+		"react-hook-form": "7.53.0",
 		"react-reconciler": "0.29.2",
 		"react-rnd": "10.4.10",
 		"react-router": "6.26.0",

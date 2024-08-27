@@ -67,7 +67,7 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup
 	const check = useStaggeredAppearanceActionResult(checkAction);
 	const disabled = check == null || !check.valid || check.problems.length > 0;
 
-	const [execute] = useWardrobeExecuteCallback();
+	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 
 	if (!colorDefinition.name || !bundle)
 		return null;

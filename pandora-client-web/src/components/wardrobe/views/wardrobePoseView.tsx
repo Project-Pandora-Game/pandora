@@ -363,7 +363,7 @@ export function WardrobePoseGui({ character, characterState }: {
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const [execute] = useWardrobeExecuteCallback();
+	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 	const { globalState, itemDisplayNameType } = useWardrobeContext();
 	const roomItems = globalState.getItems({ type: 'roomInventory' });
 	const assetManager = characterState.assetManager;

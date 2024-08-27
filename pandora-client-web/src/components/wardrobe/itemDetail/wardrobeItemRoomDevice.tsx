@@ -72,7 +72,7 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 	const throttle = 100;
 
 	const { targetSelector } = useWardrobeContext();
-	const [execute] = useWardrobeExecuteCallback();
+	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 
 	const [positionX, setPositionX] = useUpdatedUserInput(deployment.x, [item]);
 	const [positionY, setPositionY] = useUpdatedUserInput(deployment.y, [item]);

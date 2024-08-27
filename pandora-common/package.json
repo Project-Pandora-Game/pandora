@@ -11,10 +11,8 @@
 	"types": "./dist/index.d.ts",
 	"files": [
 		"/dist/**/*",
-		"/src/**/*",
 		".eslintrc.json",
-		"tsconfig.base.json",
-		"tsconfig.json"
+		"tsconfig.base.json"
 	],
 	"scripts": {
 		"clean": "rimraf dist",
@@ -28,8 +26,7 @@
 		"test": "jest",
 		"test:coverage": "jest --coverage",
 		"test:watch": "jest --watch",
-		"prepack": "pnpm run build",
-		"install": "pnpm run --silent build"
+		"prepack": "pnpm run build"
 	},
 	"dependencies": {
 		"@types/async-lock": "1.4.2",

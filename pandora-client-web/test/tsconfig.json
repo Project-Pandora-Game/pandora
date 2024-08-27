@@ -10,7 +10,8 @@
 			"@testing-library/jest-dom",
 			"offscreencanvas"
 		],
-		"jsx": "react"
+		"jsx": "react",
+		"rootDir": ".."
 	},
 	"include": [
 		"../src/**/*.d.ts",
@@ -21,5 +22,8 @@
 	],
 	"exclude": [
 		"./setup.ts"
+	],
+	"references": [
+		{ "path": "../../pandora-common" },
 	]
 }

@@ -1,5 +1,15 @@
 import _, { uniq } from 'lodash';
-import { ACCOUNT_ROLES_CONFIG, ACCOUNT_SETTINGS_LIMITED_LIMITS, AccountRole, DisplayNameSchema, EMPTY, FormatTimeInterval, IDirectoryAccountInfo, IsAuthorized, TimeSpanMs } from 'pandora-common';
+import {
+	ACCOUNT_ROLES_CONFIG,
+	ACCOUNT_SETTINGS_LIMITED_LIMITS,
+	type AccountRole,
+	DisplayNameSchema,
+	EMPTY,
+	FormatTimeInterval,
+	IDirectoryAccountInfo,
+	IsAuthorized,
+	TimeSpanMs,
+} from 'pandora-common';
 import React, { ReactElement, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';

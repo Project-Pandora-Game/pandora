@@ -61,7 +61,18 @@ function CharacterProfileContent({ character, gameState }: { character: Characte
 				<Scrollable className='flex-1' color='dark'>
 					<Column className='profileContent' padding='medium'>
 						<span>Character id: <span className='selectable-all'>{ characterData.id }</span></span>
-						<span>Pronouns: { pronouns.subjective }/{ pronouns.objective }</span>
+						<Row alignY='center'>
+							<span>Pronouns: </span>
+							{
+								isPlayer ? (
+									<Link to='/settings/character' className='center-flex'>
+										<span>{ pronouns.subjective }/{ pronouns.objective }</span>
+									</Link>
+								) : (
+									<span>{ pronouns.subjective }/{ pronouns.objective }</span>
+								)
+							}
+						</Row>
 						<Row alignY='center'>
 							<span>Label color:</span>
 							{

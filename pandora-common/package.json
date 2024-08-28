@@ -11,10 +11,8 @@
 	"types": "./dist/index.d.ts",
 	"files": [
 		"/dist/**/*",
-		"/src/**/*",
 		".eslintrc.json",
-		"tsconfig.base.json",
-		"tsconfig.json"
+		"tsconfig.base.json"
 	],
 	"scripts": {
 		"clean": "rimraf dist",
@@ -28,8 +26,7 @@
 		"test": "jest",
 		"test:coverage": "jest --coverage",
 		"test:watch": "jest --watch",
-		"prepack": "pnpm run build",
-		"install": "pnpm run --silent build"
+		"prepack": "pnpm run build"
 	},
 	"dependencies": {
 		"@types/async-lock": "1.4.2",
@@ -48,8 +45,8 @@
 	"devDependencies": {
 		"@stylistic/eslint-plugin": "2.6.2",
 		"@types/jest": "29.5.12",
-		"@typescript-eslint/eslint-plugin": "8.2.0",
-		"@typescript-eslint/parser": "8.2.0",
+		"@typescript-eslint/eslint-plugin": "8.3.0",
+		"@typescript-eslint/parser": "8.3.0",
 		"eslint": "8.57.0",
 		"eslint-plugin-deprecation": "3.0.0",
 		"eslint-plugin-import": "2.29.1",

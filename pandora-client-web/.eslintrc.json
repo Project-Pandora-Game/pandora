@@ -14,14 +14,22 @@
 		{
 			"files": ["*.ts", "*.tsx"],
 			"parserOptions": {
-				"project": [
-					"./tsconfig.json",
-					"./test/tsconfig.json",
-					"./test/tsconfig.setup.json",
-					"./tsconfig.webpack.json"
-				],
 				"sourceType": "module"
 			},
+			"overrides": [
+				{
+					// Some of our files cannot have their projects resolved by project service,
+					// but still have valid config that should be used
+					"files": ["webpack.config.ts", "test/setup.ts"],
+					"parserOptions": {
+						"projectService": false,
+						"project": [
+							"./test/tsconfig.setup.json",
+							"./tsconfig.webpack.json"
+						]
+					}
+				}
+			],
 			"rules": {
 				"@typescript-eslint/naming-convention": [
 					"warn",

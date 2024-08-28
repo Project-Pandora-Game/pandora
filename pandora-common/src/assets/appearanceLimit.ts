@@ -56,7 +56,7 @@ class TreeLimit {
 				}
 			}
 
-			totalDiff += minDiff;
+			totalDiff += minDiff * PoseChangeWeight(key);
 			newData.set(key, minDiffValue);
 		}
 		return [totalDiff, newData];
@@ -368,6 +368,17 @@ function ToPose(data: ReadonlyMap<string, number>): AppearancePose {
 	}
 
 	return pose;
+}
+
+/** Gets a key and returns multiplier for cost of changing it */
+function PoseChangeWeight(key: string): number {
+	// Bones have base value
+	if (key.startsWith('bones.')) {
+		return 1;
+	}
+
+	// Everything else is considered the same as moving right angle
+	return 90;
 }
 
 function EnumToIndex<E extends [string, ...string[]], Z extends ZodEnum<E>>(schema: Z, value: Z['options'][number] | undefined, set: (index: number) => void): void {

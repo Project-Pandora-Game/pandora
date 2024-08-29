@@ -4,8 +4,10 @@ import { Row } from '../../common/container/container';
 import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
 import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
 import { useWardrobeContext } from '../wardrobeContext';
-import { AppearanceActionProcessingContext } from '../../../../../pandora-common/src/assets/appearanceActionProcessingContext';
-import { ItemInteractionType } from '../../../../../pandora-common/src/character/restrictionTypes';
+import {
+	AppearanceActionProcessingContext,
+	ItemInteractionType,
+} from 'pandora-common';
 
 export function WardrobeModuleConfigStorage({ item, moduleName, m }: WardrobeModuleProps<ItemModuleStorage>): ReactElement {
 	const { target, targetSelector, focuser, actions } = useWardrobeContext();

@@ -105,7 +105,7 @@ importers:
         version: 7.25.0(@babel/core@7.25.2)
       '@pmmmwh/react-refresh-webpack-plugin':
         specifier: 0.5.13
-        version: 0.5.13(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@5.0.4)(webpack@5.94.0)))(react-refresh@0.14.2)(type-fest@4.25.0)(webpack-dev-server@5.0.4(webpack-cli@5.1.4)(webpack@5.94.0))(webpack@5.94.0(webpack-cli@5.1.4(webpack-dev-server@5.0.4)(webpack@5.94.0)))
+        version: 0.5.13(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@5.0.4)(webpack@5.94.0)))(react-refresh@0.14.2)(type-fest@4.26.0)(webpack-dev-server@5.0.4(webpack-cli@5.1.4)(webpack@5.94.0))(webpack@5.94.0(webpack-cli@5.1.4(webpack-dev-server@5.0.4)(webpack@5.94.0)))
       '@project-pandora-game/sass-loader':
         specifier: 13.2.0
         version: 13.2.0(sass@1.77.0)(webpack@5.94.0(webpack-cli@5.1.4(webpack-dev-server@5.0.4)(webpack@5.94.0)))
@@ -263,8 +263,8 @@ importers:
         specifier: 2.7.0
         version: 2.7.0
       type-fest:
-        specifier: 4.25.0
-        version: 4.25.0
+        specifier: 4.26.0
+        version: 4.26.0
       typescript:
         specifier: 5.4.5
         version: 5.4.5
@@ -311,8 +311,8 @@ importers:
         specifier: 2.7.0
         version: 2.7.0
       type-fest:
-        specifier: 4.25.0
-        version: 4.25.0
+        specifier: 4.26.0
+        version: 4.26.0
       typescript:
         specifier: 5.4.5
         version: 5.4.5
@@ -481,8 +481,8 @@ importers:
         specifier: 2.7.0
         version: 2.7.0
       type-fest:
-        specifier: 4.25.0
-        version: 4.25.0
+        specifier: 4.26.0
+        version: 4.26.0
       typescript:
         specifier: 5.4.5
         version: 5.4.5
@@ -6895,8 +6895,8 @@ packages:
     resolution: {integrity: sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==}
     engines: {node: '>=8'}
 
-  type-fest@4.25.0:
-    resolution: {integrity: sha512-bRkIGlXsnGBRBQRAY56UXBm//9qH4bmJfFvq83gSz41N282df+fjy8ofcEgc1sM8geNt5cl6mC2g9Fht1cs8Aw==}
+  type-fest@4.26.0:
+    resolution: {integrity: sha512-OduNjVJsFbifKb57UqZ2EMP1i4u64Xwow3NYXUtBbD4vIwJdQd4+xl8YDou1dlm4DVrtwT/7Ky8z8WyCULVfxw==}
     engines: {node: '>=16'}
 
   type-is@1.6.18:
@@ -9371,7 +9371,7 @@ snapshots:
     dependencies:
       playwright: 1.46.0
 
-  '@pmmmwh/react-refresh-webpack-plugin@0.5.13(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@5.0.4)(webpack@5.94.0)))(react-refresh@0.14.2)(type-fest@4.25.0)(webpack-dev-server@5.0.4(webpack-cli@5.1.4)(webpack@5.94.0))(webpack@5.94.0(webpack-cli@5.1.4(webpack-dev-server@5.0.4)(webpack@5.94.0)))':
+  '@pmmmwh/react-refresh-webpack-plugin@0.5.13(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@5.0.4)(webpack@5.94.0)))(react-refresh@0.14.2)(type-fest@4.26.0)(webpack-dev-server@5.0.4(webpack-cli@5.1.4)(webpack@5.94.0))(webpack@5.94.0(webpack-cli@5.1.4(webpack-dev-server@5.0.4)(webpack@5.94.0)))':
     dependencies:
       ansi-html-community: 0.0.8
       core-js-pure: 3.38.1
@@ -9384,7 +9384,7 @@ snapshots:
       webpack: 5.94.0(webpack-cli@5.1.4(webpack-dev-server@5.0.4)(webpack@5.94.0))
     optionalDependencies:
       '@types/webpack': 5.28.5(webpack-cli@5.1.4(webpack-dev-server@5.0.4)(webpack@5.94.0))
-      type-fest: 4.25.0
+      type-fest: 4.26.0
       webpack-dev-server: 5.0.4(webpack-cli@5.1.4)(webpack@5.94.0)
 
   '@pnpm/config.env-replace@1.1.0': {}
@@ -15039,7 +15039,7 @@ snapshots:
 
   type-fest@0.8.1: {}
 
-  type-fest@4.25.0: {}
+  type-fest@4.26.0: {}
 
   type-is@1.6.18:
     dependencies:

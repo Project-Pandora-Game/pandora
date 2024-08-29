@@ -9,7 +9,6 @@ import { useEvent } from '../../../common/useEvent';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
-import { ExternalLink } from '../../../components/common/link/externalLink';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { Select } from '../../../components/common/select/select';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
@@ -711,7 +710,7 @@ function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset
 						</p>
 						<p>
 							In other words and for the breast example:<br />
-							You could create up to 6 images showing the item (e.g. a t-shirt) with different<br />
+							You could create up to 5 images showing the item (e.g. a t-shirt) with different<br />
 							breast sizes and then set the images here for the corresponding stop points.
 						</p>
 						<p>
@@ -721,14 +720,9 @@ function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset
 							quality results.
 						</p>
 						<p>
-							As a rule of thumb, you likely need two additional images for the stop points<br />
-							'small' and 'extreme' besides the default layer image (which is implicitly<br />
-							a stop point that is called 'large' in the body templates).
-						</p>
-						<p>
-							For more information on stop points, corresponding slider state values, and<br />
-							full body templates to draw over, see this Discord post:<br />
-							<ExternalLink href='https://discord.com/channels/872284471611760720/873309624441401404/1019125393774620692'>Link to Discord</ExternalLink>
+							As a rule of thumb, you likely only need two images for the stop points<br />
+							'flat' and 'small' besides the default layer image (which is implicitly<br />
+							a stop point that is called 'medium' in the body templates).
 						</p>
 					</ContextHelpButton>
 				</label>
@@ -754,11 +748,10 @@ function LayerScalingList({ layer, asset }: { layer: AssetGraphicsLayer; asset: 
 	// TODO: Base on actual stops; right now temporary for breasts
 	const possibleStops: [string, number][] = useMemo(() => [
 		['flat', -180],
-		['small', -150],
-		['medium', - 70],
-		// ['large', 0],
-		['huge', 100],
-		['extreme', 180],
+		['small', - 70],
+		// ['medium', 0],
+		['large', 100],
+		['huge', 180],
 	], []);
 
 	const [toAdd, setToAdd] = useState('');

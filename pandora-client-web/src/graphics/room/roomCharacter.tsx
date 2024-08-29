@@ -90,11 +90,11 @@ export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterS
 	const legEffectMap: Record<LegsPose, number> = {
 		standing: 600,
 		sitting: 0,
-		kneeling: 300,
+		kneeling: 242,
 	};
 	const legEffectCharacterOffsetBase = evaluator.pose.legs === 'sitting' ? 135 : legEffectMap.standing;
 	const legEffect = legEffectMap[evaluator.pose.legs]
-		+ (evaluator.pose.legs !== 'kneeling' ? 0.2 : 0) * evaluator.getBoneLikeValue('tiptoeing');
+		+ (evaluator.pose.legs !== 'kneeling' ? 0.11 : 0) * evaluator.getBoneLikeValue('tiptoeing');
 
 	const effectiveLegAngle = Math.min(Math.abs(evaluator.getBoneLikeValue('leg_l')), Math.abs(evaluator.getBoneLikeValue('leg_r')), 90);
 

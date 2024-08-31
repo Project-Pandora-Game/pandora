@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import { Immutable } from 'immer';
 import {
 	ASSET_PREFERENCES_DEFAULT,
 	AppearanceAction,
@@ -14,18 +15,18 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
-import { IconButton } from '../../common/button/button';
-import listIcon from '../../../assets/icons/list.svg';
-import gridIcon from '../../../assets/icons/grid.svg';
 import deleteIcon from '../../../assets/icons/delete.svg';
+import gridIcon from '../../../assets/icons/grid.svg';
+import listIcon from '../../../assets/icons/list.svg';
+import { useCharacterDataOptional } from '../../../character/character';
+import { TextInput } from '../../../common/userInteraction/input/textInput';
+import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
+import { IconButton } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
+import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
+import { ActionWarning, AttributeButton, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
 import { useWardrobeContext, useWardrobeExecuteChecked } from '../wardrobeContext';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
-import { ActionWarning, AttributeButton, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
-import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
-import { useCharacterDataOptional } from '../../../character/character';
-import { Immutable } from 'immer';
-import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
 
 export function InventoryAssetView({ className, title, children, assets, container, attributesFilterOptions, spawnStyle }: {
 	className?: string;
@@ -126,7 +127,7 @@ export function WardrobeAssetList({ className, title, children, overlay, assets,
 		}
 	}, [attribute, attributesFilterOptions]);
 
-	const filterInput = useRef<HTMLInputElement>(null);
+	const filterInput = useRef<TextInput>(null);
 	useInputAutofocus(filterInput);
 
 	// Clear filter when looking from different focus
@@ -138,11 +139,10 @@ export function WardrobeAssetList({ className, title, children, overlay, assets,
 		<div className={ classNames('inventoryView', className) }>
 			<div className='toolbar'>
 				<span>{ title }</span>
-				<input ref={ filterInput }
-					type='text'
+				<TextInput ref={ filterInput }
 					placeholder='Filter by name'
 					value={ filter }
-					onChange={ (e) => setFilter(e.target.value) }
+					onChange={ setFilter }
 				/>
 				<IconButton
 					onClick={ () => setListMode(false) }

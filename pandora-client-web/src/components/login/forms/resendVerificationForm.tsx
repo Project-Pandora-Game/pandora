@@ -47,6 +47,7 @@ export function ResendVerificationForm(): ReactElement {
 			<h1>Resend email</h1>
 			<FormField>
 				<label htmlFor='forgot-password-email'>Enter your email</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='email'
 					id='forgot-password-email'

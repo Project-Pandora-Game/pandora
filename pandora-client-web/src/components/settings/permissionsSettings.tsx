@@ -1,36 +1,37 @@
+import type { Immutable } from 'immer';
+import { capitalize, noop } from 'lodash';
+import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, CharacterIdSchema, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
-import onOff from '../../assets/icons/on-off.svg';
+import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import arrowRight from '../../assets/icons/arrow-right.svg';
 import body from '../../assets/icons/body.svg';
 import color from '../../assets/icons/color.svg';
+import deviceSvg from '../../assets/icons/device.svg';
+import forbid from '../../assets/icons/forbidden.svg';
 import lock from '../../assets/icons/lock.svg';
+import onOff from '../../assets/icons/on-off.svg';
+import prompt from '../../assets/icons/prompt.svg';
+import allow from '../../assets/icons/public.svg';
+import questionmark from '../../assets/icons/questionmark.svg';
+import star from '../../assets/icons/star.svg';
 import storage from '../../assets/icons/storage.svg';
 import toggle from '../../assets/icons/toggle.svg';
-import star from '../../assets/icons/star.svg';
-import arrowRight from '../../assets/icons/arrow-right.svg';
-import questionmark from '../../assets/icons/questionmark.svg';
-import forbid from '../../assets/icons/forbidden.svg';
-import allow from '../../assets/icons/public.svg';
-import prompt from '../../assets/icons/prompt.svg';
-import deviceSvg from '../../assets/icons/device.svg';
 import wikiIcon from '../../assets/icons/wiki.svg';
-import { Button } from '../common/button/button';
-import { usePlayer } from '../gameContext/playerContextProvider';
-import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, CharacterIdSchema, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
-import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { ButtonConfirm, DraggableDialog, ModalDialog } from '../dialog/dialog';
-import { Column, Row } from '../common/container/container';
-import { capitalize, noop } from 'lodash';
-import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator';
-import { HoverElement } from '../hoverElement/hoverElement';
-import { PermissionPromptData, useGameStateOptional } from '../gameContext/gameStateContextProvider';
-import type { Immutable } from 'immer';
 import { useFunctionBind } from '../../common/useFunctionBind';
-import { ActionMessage } from '../../ui/components/chat/chat';
-import { StorageUsageMeter } from '../wardrobe/wardrobeComponents';
-import { Link } from 'react-router-dom';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
+import { TextInput } from '../../common/userInteraction/input/textInput';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { ActionMessage } from '../../ui/components/chat/chat';
+import { Button } from '../common/button/button';
+import { Column, Row } from '../common/container/container';
+import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator';
+import { ButtonConfirm, DraggableDialog, ModalDialog } from '../dialog/dialog';
+import { PermissionPromptData, useGameStateOptional } from '../gameContext/gameStateContextProvider';
+import { usePlayer } from '../gameContext/playerContextProvider';
+import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import { HoverElement } from '../hoverElement/hoverElement';
+import { StorageUsageMeter } from '../wardrobe/wardrobeComponents';
 
 export function PermissionsSettings(): ReactElement | null {
 	const player = usePlayer();
@@ -393,7 +394,7 @@ function PermissionConfigOverrideType({ type, content, setConfig }: { type: Perm
 			<span>{ capitalize(type as string) }:</span>
 			<textarea value={ content.join(', ') } readOnly />
 			<Row className='input-row'>
-				<input type='text' placeholder='Character ID' value={ id } onChange={ (e) => setId(e.target.value.trim()) } />
+				<TextInput placeholder='Character ID' value={ id } onChange={ (newValue) => setId(newValue.trim()) } />
 				<Button slim onClick={ onAdd } disabled={ !result.success || content.includes(result.data) }>Add</Button>
 				<Button slim onClick={ onRemove } disabled={ !result.success || !content.includes(result.data) }>Remove</Button>
 				<ButtonConfirm slim onClick={ () => setConfig('clearOverridesWith', type) }

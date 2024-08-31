@@ -6,9 +6,9 @@ import { useDirectoryRegister } from '../../../networking/account_manager';
 import { useObservable } from '../../../observable';
 import { Button } from '../../common/button/button';
 import { Form, FormCreateStringValidator, FormField, FormFieldError, FormLink } from '../../common/form/form';
+import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import { useAuthFormData } from '../authFormDataProvider';
-import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha';
 
 export interface RegistrationFormData {
 	username: string;
@@ -111,6 +111,7 @@ export function RegistrationForm(): ReactElement {
 			<h1>Sign up</h1>
 			<FormField>
 				<label htmlFor='registration-username'>Username</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='text'
 					id='registration-username'
@@ -124,6 +125,7 @@ export function RegistrationForm(): ReactElement {
 			</FormField>
 			<FormField>
 				<label htmlFor='registration-display-name'>User display name (shown to others)</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='text'
 					id='registration-display-name'
@@ -137,6 +139,7 @@ export function RegistrationForm(): ReactElement {
 			</FormField>
 			<FormField>
 				<label htmlFor='registration-email'>Email</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='email'
 					id='registration-email'
@@ -150,6 +153,7 @@ export function RegistrationForm(): ReactElement {
 			</FormField>
 			<FormField>
 				<label htmlFor='registration-password'>Password</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='password'
 					id='registration-password'
@@ -163,6 +167,7 @@ export function RegistrationForm(): ReactElement {
 			</FormField>
 			<FormField>
 				<label htmlFor='registration-passwordConfirm'>Confirm password</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='password'
 					id='registration-passwordConfirm'
@@ -180,6 +185,7 @@ export function RegistrationForm(): ReactElement {
 			{ betaKeyRequired &&
 				<FormField>
 					<label htmlFor='registration-beta-key'>Beta key</label>
+					{ /* eslint-disable-next-line react/forbid-elements */ }
 					<input
 						type='text'
 						id='registration-beta-key'

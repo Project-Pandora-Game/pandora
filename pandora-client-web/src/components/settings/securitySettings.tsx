@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../common/useCurrentTime';
 import { useAsyncEvent } from '../../common/useEvent';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
+import { TextInput } from '../../common/userInteraction/input/textInput';
 import { PrehashPassword } from '../../crypto/helpers';
 import type { AuthToken } from '../../networking/directoryConnector';
 import { useObservable } from '../../observable';
@@ -211,12 +212,12 @@ function ExtendCurrentSessionDialog({ token, hide }: { token: AuthToken; hide: (
 				<SessionExpire token={ token } />
 				<FormField>
 					<label htmlFor='extend-current-session-password'>Password</label>
-					<input
-						type='password'
+					<TextInput
+						password
 						id='extend-current-session-password'
 						autoComplete='current-password'
 						value={ password }
-						onChange={ (e) => setPassword(e.target.value) }
+						onChange={ setPassword }
 					/>
 				</FormField>
 				<br />
@@ -285,6 +286,7 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 			<Form dirty={ submitCount > 0 } onSubmit={ onSubmit }>
 				<FormField>
 					<label htmlFor='password-change-old'>Old password</label>
+					{ /* eslint-disable-next-line react/forbid-elements */ }
 					<input
 						type='password'
 						id='password-change-old'
@@ -298,6 +300,7 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 				</FormField>
 				<FormField>
 					<label htmlFor='password-change-new'>New password</label>
+					{ /* eslint-disable-next-line react/forbid-elements */ }
 					<input
 						type='password'
 						id='password-change-new'
@@ -311,6 +314,7 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 				</FormField>
 				<FormField>
 					<label htmlFor='password-change-new-confirm'>Confirm new password</label>
+					{ /* eslint-disable-next-line react/forbid-elements */ }
 					<input
 						type='password'
 						id='password-change-new-confirm'

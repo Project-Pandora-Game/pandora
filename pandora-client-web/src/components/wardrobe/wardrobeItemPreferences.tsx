@@ -7,6 +7,8 @@ import { toast } from 'react-toastify';
 import { z } from 'zod';
 import { useAssetManager } from '../../assets/assetManager';
 import { useBrowserStorage } from '../../browserStorage';
+import { Checkbox } from '../../common/userInteraction/checkbox';
+import { TextInput } from '../../common/userInteraction/input/textInput';
 import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus';
 import { Select, type SelectProps } from '../../common/userInteraction/select/select';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
@@ -140,18 +142,17 @@ export function WardrobePreferencesAttributePicker({ title }: {
 			}))
 	), [assetManager, flt]);
 
-	const filterInput = useRef<HTMLInputElement>(null);
+	const filterInput = useRef<TextInput>(null);
 	useInputAutofocus(filterInput);
 
 	return (
 		<div className='inventoryView'>
 			<div className='toolbar'>
 				<span>{ title }</span>
-				<input ref={ filterInput }
-					type='text'
+				<TextInput ref={ filterInput }
 					placeholder='Filter by name'
 					value={ filter }
-					onChange={ (e) => setFilter(e.target.value) }
+					onChange={ setFilter }
 				/>
 			</div>
 			<div className='listContainer'>
@@ -362,11 +363,10 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 				<fieldset>
 					<legend>Attributes this item has (in at least one configuration)</legend>
 					<Row>
-						<input
+						<Checkbox
 							id={ `${idBase}-allAttributesToggle` }
-							type='checkbox'
 							checked={ showNonFilterableAttributes }
-							onChange={ (e) => setShowNonFilterableAttributes(e.target.checked) }
+							onChange={ setShowNonFilterableAttributes }
 						/>
 						<label htmlFor={ `${idBase}-allAttributesToggle` }>Show attributes that cannot be used for limits</label>
 					</Row>

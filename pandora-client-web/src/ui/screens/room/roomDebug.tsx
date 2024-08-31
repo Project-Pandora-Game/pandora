@@ -1,16 +1,18 @@
+import { Draft } from 'immer';
 import { AssertNotNullable, CloneDeepMutable, ICharacterRoomData, ResolveBackground, RoomBackgroundCalibrationDataSchema } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
 import z from 'zod';
+import { useAssetManager } from '../../../assets/assetManager';
 import { BrowserStorage } from '../../../browserStorage';
+import { Character, useCharacterData } from '../../../character/character';
 import { useEvent } from '../../../common/useEvent';
-import { USER_DEBUG } from '../../../config/Environment';
-import { useObservable } from '../../../observable';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput';
+import { Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { useGameState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
-import { Character, useCharacterData } from '../../../character/character';
-import { Row } from '../../../components/common/container/container';
-import { Draft } from 'immer';
-import { useAssetManager } from '../../../assets/assetManager';
+import { USER_DEBUG } from '../../../config/Environment';
+import { useObservable } from '../../../observable';
 
 const ChatroomDebugConfigSchema = z.object({
 	enabled: z.boolean().catch(false),
@@ -68,13 +70,12 @@ export function ChatroomDebugConfigView(): ReactElement {
 		<FieldsetToggle legend='[DEV] Debug options' forceOpen={ chatroomDebugConfig.enabled } onChange={ setOpen }>
 			<div>
 				<label htmlFor='chatroom-debug-room-scaling-helper'>Show scaling helper line </label>
-				<input
+				<Checkbox
 					id='chatroom-debug-room-scaling-helper'
-					type='checkbox'
 					checked={ chatroomDebugConfig.roomScalingHelper }
-					onChange={ (e) => {
+					onChange={ (newValue) => {
 						applyChange({
-							roomScalingHelper: e.target.checked,
+							roomScalingHelper: newValue,
 						});
 					} }
 				/>
@@ -82,10 +83,10 @@ export function ChatroomDebugConfigView(): ReactElement {
 			<fieldset>
 				<Row alignY='center'>
 					<span>Custom calibration </span>
-					<input type='checkbox'
+					<Checkbox
 						checked={ chatroomDebugConfig.roomScalingHelperData != null && spaceConfig.features.includes('development') }
-						onChange={ (e) => {
-							if (e.target.checked) {
+						onChange={ (newValue) => {
+							if (newValue) {
 								const renderedAreaWidth = Math.floor(roomBackground.floorArea[0] / roomBackground.areaCoverage);
 								const baseScale = Math.round(100 * roomBackground.imageSize[0] / renderedAreaWidth) / 100;
 								const areaDepthRatio = Math.round(100 * roomBackground.floorArea[1] / renderedAreaWidth) / 100;
@@ -114,69 +115,64 @@ export function ChatroomDebugConfigView(): ReactElement {
 						<>
 							<Row alignY='center'>
 								<span>Image size</span>
-								<input
-									type='number'
+								<NumberInput
 									value={ roomBackground.imageSize[0] }
 									disabled
 								/>
-								<input
-									type='number'
+								<NumberInput
 									value={ roomBackground.imageSize[1] }
 									disabled
 								/>
 							</Row>
 							<Row alignY='center'>
 								<span>Camera center offset</span>
-								<input
-									type='number'
+								<NumberInput
 									value={ chatroomDebugConfig.roomScalingHelperData.cameraCenterOffset[0] }
-									onChange={ (e) => {
+									onChange={ (newValue) => {
 										applyChange((draft) => {
 											AssertNotNullable(draft.roomScalingHelperData);
-											draft.roomScalingHelperData.cameraCenterOffset[0] = e.target.valueAsNumber;
+											draft.roomScalingHelperData.cameraCenterOffset[0] = newValue;
 										});
 									} }
 								/>
-								<input
-									type='number'
+								<NumberInput
 									value={ chatroomDebugConfig.roomScalingHelperData.cameraCenterOffset[1] }
-									onChange={ (e) => {
+									onChange={ (newValue) => {
 										applyChange((draft) => {
 											AssertNotNullable(draft.roomScalingHelperData);
-											draft.roomScalingHelperData.cameraCenterOffset[1] = e.target.valueAsNumber;
+											draft.roomScalingHelperData.cameraCenterOffset[1] = newValue;
 										});
 									} }
 								/>
 							</Row>
 							<Row alignY='center'>
 								<span>Area coverage</span>
-								<input
-									type='range'
+								<NumberInput
+									rangeSlider
 									className='flex-1'
 									min={ 0.01 }
 									max={ 2 }
 									step={ 0.01 }
 									value={ chatroomDebugConfig.roomScalingHelperData.areaCoverage }
-									onChange={ (e) => {
-										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+									onChange={ (newValue) => {
+										if (Number.isFinite(newValue) && newValue > 0) {
 											applyChange((draft) => {
 												AssertNotNullable(draft.roomScalingHelperData);
-												draft.roomScalingHelperData.areaCoverage = e.target.valueAsNumber;
+												draft.roomScalingHelperData.areaCoverage = newValue;
 											});
 										}
 									} }
 								/>
-								<input
-									type='number'
+								<NumberInput
 									min={ 0.01 }
 									max={ 2 }
 									step={ 0.01 }
 									value={ chatroomDebugConfig.roomScalingHelperData.areaCoverage }
-									onChange={ (e) => {
-										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+									onChange={ (newValue) => {
+										if (Number.isFinite(newValue) && newValue > 0) {
 											applyChange((draft) => {
 												AssertNotNullable(draft.roomScalingHelperData);
-												draft.roomScalingHelperData.areaCoverage = e.target.valueAsNumber;
+												draft.roomScalingHelperData.areaCoverage = newValue;
 											});
 										}
 									} }
@@ -184,61 +180,59 @@ export function ChatroomDebugConfigView(): ReactElement {
 							</Row>
 							<Row alignY='center'>
 								<span>Ceiling</span>
-								<input
-									type='range'
+								<NumberInput
+									rangeSlider
 									className='flex-1'
 									min={ 0 }
 									max={ 4 * roomBackground.imageSize[1] }
 									step={ 1 }
 									value={ chatroomDebugConfig.roomScalingHelperData.ceiling }
-									onChange={ (e) => {
+									onChange={ (newValue) => {
 										applyChange((draft) => {
 											AssertNotNullable(draft.roomScalingHelperData);
-											draft.roomScalingHelperData.ceiling = e.target.valueAsNumber;
+											draft.roomScalingHelperData.ceiling = newValue;
 										});
 									} }
 								/>
-								<input
-									type='number'
+								<NumberInput
 									min={ 0 }
 									step={ 1 }
 									value={ chatroomDebugConfig.roomScalingHelperData.ceiling }
-									onChange={ (e) => {
+									onChange={ (newValue) => {
 										applyChange((draft) => {
 											AssertNotNullable(draft.roomScalingHelperData);
-											draft.roomScalingHelperData.ceiling = e.target.valueAsNumber;
+											draft.roomScalingHelperData.ceiling = newValue;
 										});
 									} }
 								/>
 							</Row>
 							<Row alignY='center'>
 								<span>Area depth ratio</span>
-								<input
-									type='range'
+								<NumberInput
+									rangeSlider
 									className='flex-1'
 									min={ 0.01 }
 									max={ 20 }
 									step={ 0.01 }
 									value={ chatroomDebugConfig.roomScalingHelperData.areaDepthRatio }
-									onChange={ (e) => {
-										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+									onChange={ (newValue) => {
+										if (Number.isFinite(newValue) && newValue > 0) {
 											applyChange((draft) => {
 												AssertNotNullable(draft.roomScalingHelperData);
-												draft.roomScalingHelperData.areaDepthRatio = e.target.valueAsNumber;
+												draft.roomScalingHelperData.areaDepthRatio = newValue;
 											});
 										}
 									} }
 								/>
-								<input
-									type='number'
+								<NumberInput
 									min={ 0.01 }
 									step={ 0.01 }
 									value={ chatroomDebugConfig.roomScalingHelperData.areaDepthRatio }
-									onChange={ (e) => {
-										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+									onChange={ (newValue) => {
+										if (Number.isFinite(newValue) && newValue > 0) {
 											applyChange((draft) => {
 												AssertNotNullable(draft.roomScalingHelperData);
-												draft.roomScalingHelperData.areaDepthRatio = e.target.valueAsNumber;
+												draft.roomScalingHelperData.areaDepthRatio = newValue;
 											});
 										}
 									} }
@@ -246,32 +240,31 @@ export function ChatroomDebugConfigView(): ReactElement {
 							</Row>
 							<Row alignY='center'>
 								<span>Base scale</span>
-								<input
-									type='range'
+								<NumberInput
+									rangeSlider
 									className='flex-1'
 									min={ 0.01 }
 									max={ 10 }
 									step={ 0.01 }
 									value={ chatroomDebugConfig.roomScalingHelperData.baseScale }
-									onChange={ (e) => {
-										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+									onChange={ (newValue) => {
+										if (Number.isFinite(newValue) && newValue > 0) {
 											applyChange((draft) => {
 												AssertNotNullable(draft.roomScalingHelperData);
-												draft.roomScalingHelperData.baseScale = e.target.valueAsNumber;
+												draft.roomScalingHelperData.baseScale = newValue;
 											});
 										}
 									} }
 								/>
-								<input
-									type='number'
+								<NumberInput
 									min={ 0.01 }
 									step={ 0.01 }
 									value={ chatroomDebugConfig.roomScalingHelperData.baseScale }
-									onChange={ (e) => {
-										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+									onChange={ (newValue) => {
+										if (Number.isFinite(newValue) && newValue > 0) {
 											applyChange((draft) => {
 												AssertNotNullable(draft.roomScalingHelperData);
-												draft.roomScalingHelperData.baseScale = e.target.valueAsNumber;
+												draft.roomScalingHelperData.baseScale = newValue;
 											});
 										}
 									} }
@@ -279,33 +272,32 @@ export function ChatroomDebugConfigView(): ReactElement {
 							</Row>
 							<Row alignY='center'>
 								<span>FOV</span>
-								<input
-									type='range'
+								<NumberInput
+									rangeSlider
 									className='flex-1'
 									min={ 0.1 }
 									max={ 135 }
 									step={ 0.1 }
 									value={ chatroomDebugConfig.roomScalingHelperData.fov }
-									onChange={ (e) => {
-										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+									onChange={ (newValue) => {
+										if (Number.isFinite(newValue) && newValue > 0) {
 											applyChange((draft) => {
 												AssertNotNullable(draft.roomScalingHelperData);
-												draft.roomScalingHelperData.fov = e.target.valueAsNumber;
+												draft.roomScalingHelperData.fov = newValue;
 											});
 										}
 									} }
 								/>
-								<input
-									type='number'
+								<NumberInput
 									min={ 0.1 }
 									max={ 135 }
 									step={ 0.1 }
 									value={ chatroomDebugConfig.roomScalingHelperData.fov }
-									onChange={ (e) => {
-										if (Number.isFinite(e.target.valueAsNumber) && e.target.valueAsNumber > 0) {
+									onChange={ (newValue) => {
+										if (Number.isFinite(newValue) && newValue > 0) {
 											applyChange((draft) => {
 												AssertNotNullable(draft.roomScalingHelperData);
-												draft.roomScalingHelperData.fov = e.target.valueAsNumber;
+												draft.roomScalingHelperData.fov = newValue;
 											});
 										}
 									} }
@@ -317,26 +309,24 @@ export function ChatroomDebugConfigView(): ReactElement {
 			</fieldset>
 			<div>
 				<label htmlFor='chatroom-debug-character-overlay'>Show character debug overlay </label>
-				<input
+				<Checkbox
 					id='chatroom-debug-character-overlay'
-					type='checkbox'
 					checked={ chatroomDebugConfig.characterDebugOverlay }
-					onChange={ (e) => {
+					onChange={ (newValue) => {
 						applyChange({
-							characterDebugOverlay: e.target.checked,
+							characterDebugOverlay: newValue,
 						});
 					} }
 				/>
 			</div>
 			<div>
 				<label htmlFor='chatroom-debug-device-overlay'>Show chatroom device debug overlay </label>
-				<input
+				<Checkbox
 					id='chatroom-debug-device-overlay'
-					type='checkbox'
 					checked={ chatroomDebugConfig.deviceDebugOverlay }
-					onChange={ (e) => {
+					onChange={ (newValue) => {
 						applyChange({
-							deviceDebugOverlay: e.target.checked,
+							deviceDebugOverlay: newValue,
 						});
 					} }
 				/>

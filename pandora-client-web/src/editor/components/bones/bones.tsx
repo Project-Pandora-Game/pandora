@@ -1,17 +1,18 @@
 import { AppearanceArmPose, AssetFrameworkCharacterState, CharacterArmsPose, PartialAppearancePose } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
+import { ExternalLink } from '../../../components/common/link/externalLink';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import { BoneRowElement, WardrobeArmPoses, WardrobeLegsPose, WardrobePoseCategories } from '../../../components/wardrobe/views/wardrobePoseView';
 import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardrobeExpressionsView';
+import { BoneRowElement, WardrobeArmPoses, WardrobeLegsPose, WardrobePoseCategories } from '../../../components/wardrobe/views/wardrobePoseView';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
 import { EditorCharacter, useEditorCharacterState } from '../../graphics/character/appearanceEditor';
-import { ExternalLink } from '../../../components/common/link/externalLink';
 
 export function BoneUI(): ReactElement {
 	const editor = useEditor();
@@ -37,12 +38,11 @@ export function BoneUI(): ReactElement {
 		<Scrollbar color='lighter' className='bone-ui slim'>
 			<div>
 				<label htmlFor='show-bones-toggle'>Show bone points</label>
-				<input
+				<Checkbox
 					id='show-bones-toggle'
-					type='checkbox'
 					checked={ showBones }
-					onChange={ (e) => {
-						editor.showBones.value = e.target.checked;
+					onChange={ (newValue) => {
+						editor.showBones.value = newValue;
 					} }
 				/>
 			</div>
@@ -50,12 +50,11 @@ export function BoneUI(): ReactElement {
 			<WardrobeLegsPose characterState={ characterState } setPose={ setPose } />
 			<div>
 				<label htmlFor='back-view-toggle'>Show back view</label>
-				<input
+				<Checkbox
 					id='back-view-toggle'
-					type='checkbox'
 					checked={ characterState.requestedPose.view === 'back' }
-					onChange={ (e) => {
-						character.getAppearance().setView(e.target.checked ? 'back' : 'front');
+					onChange={ (newValue) => {
+						character.getAppearance().setView(newValue ? 'back' : 'front');
 					} }
 				/>
 			</div>

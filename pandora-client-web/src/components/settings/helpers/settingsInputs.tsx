@@ -2,6 +2,7 @@ import { EMPTY_ARRAY, KnownObject } from 'pandora-common';
 import React, { useCallback, useId, useMemo, type DependencyList, type ReactElement, type ReactNode } from 'react';
 import type { ZodSchema, ZodTypeDef } from 'zod';
 import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select';
 import { Button } from '../../common/button/button';
 import { Row } from '../../common/container/container';
@@ -28,8 +29,7 @@ export function ToggleSettingInput({ currentValue, defaultValue, label, onChange
 		},
 	});
 
-	const onInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const newValue = e.target.checked;
+	const onInputChange = (newValue: boolean) => {
 		setValue(newValue);
 	};
 
@@ -37,9 +37,8 @@ export function ToggleSettingInput({ currentValue, defaultValue, label, onChange
 
 	return (
 		<div className='input-row'>
-			<input
+			<Checkbox
 				id={ id }
-				type='checkbox'
 				checked={ value ?? defaultValue }
 				onChange={ onInputChange }
 			/>

@@ -6,9 +6,12 @@ import { useGraphicsAsset, useLayerDefinition, useLayerImageSettingsForScalingSt
 import { useAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
 import { useEvent } from '../../../common/useEvent';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput';
+import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { Select } from '../../../common/userInteraction/select/select';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/button/button';
+import { ColorInput } from '../../../components/common/colorInput/colorInput';
 import { Row } from '../../../components/common/container/container';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
@@ -87,13 +90,12 @@ function LayerName({ layer }: { layer: AssetGraphicsLayer; }): ReactElement | nu
 						It affects nothing else and is purely for identifying layers later on.
 					</ContextHelpButton>
 				</label>
-				<input
-					type='text'
+				<TextInput
 					id='layer-name'
 					className='flex'
 					value={ name ?? '' }
-					onChange={ (event) => {
-						layer.setName(event.target.value || undefined);
+					onChange={ (newValue) => {
+						layer.setName(newValue.trim() || undefined);
 					} }
 				/>
 			</Row>
@@ -172,8 +174,8 @@ function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; g
 		return name;
 	}, [value, colorization]);
 
-	const onChange = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
-		const trimmed = e.target.value.trim();
+	const onChange = useEvent((newValue: string) => {
+		const trimmed = newValue.trim();
 		setValue(trimmed ? trimmed : undefined);
 		layer.setColorizationKey(trimmed ? trimmed : null);
 	});
@@ -203,9 +205,8 @@ function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; g
 						</p>
 					</ContextHelpButton>
 				</label>
-				<input
+				<TextInput
 					id='layer-colorization'
-					type='text'
 					value={ value ?? '' }
 					onChange={ onChange }
 					className='flex-1'
@@ -238,9 +239,8 @@ function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; g
 						</p>
 					</ContextHelpButton>
 				</label>
-				<input
+				<TextInput
 					id='layer-colorization-name'
-					type='text'
 					value={ colorLayerName }
 					readOnly
 					className='flex-1'
@@ -253,11 +253,12 @@ function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; g
 function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
 	const editor = asset.editor;
 
+	const visibleName = useLayerName(layer);
 	const tint = useEditorLayerTint(layer);
 
 	return (
 		<Row alignY='center'>
-			<label htmlFor='layer-tint'>
+			<label>
 				Layer tint:
 				<ContextHelpButton>
 					<p>
@@ -271,13 +272,12 @@ function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: Edito
 					</p>
 				</ContextHelpButton>
 			</label>
-			<input
-				type='color'
-				className='flex'
-				id='layer-tint'
-				value={ '#' + tint.toString(16).padStart(6, '0') }
-				onChange={ (event) => {
-					editor.setLayerTint(layer, Number.parseInt(event.target.value.replace(/^#/, ''), 16));
+			<ColorInput
+				hideTextInput
+				title={ `Layer '${visibleName}' tint` }
+				initialValue={ `#${tint.toString(16).padStart(6, '0')}` }
+				onChange={ (newValue) => {
+					editor.setLayerTint(layer, Number.parseInt(newValue.replace(/^#/, ''), 16));
 				} }
 			/>
 			<Button className='slim' onClick={ () => editor.setLayerTint(layer, undefined) } >↺</Button>
@@ -289,12 +289,12 @@ function LayerHeightAndWidthSetting({ layer, _asset }: { layer: AssetGraphicsLay
 	const height = useLayerDefinition(layer).height;
 	const width = useLayerDefinition(layer).width;
 
-	const onChangeHeight = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
-		layer.setHeight(e.target.valueAsNumber);
+	const onChangeHeight = useEvent((newValue: number) => {
+		layer.setHeight(newValue);
 	});
 
-	const onChangeWidth = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
-		layer.setWidth(e.target.valueAsNumber);
+	const onChangeWidth = useEvent((newValue: number) => {
+		layer.setWidth(newValue);
 	});
 
 	return (
@@ -319,9 +319,8 @@ function LayerHeightAndWidthSetting({ layer, _asset }: { layer: AssetGraphicsLay
 						</p>
 					</ContextHelpButton>
 				</label>
-				<input
+				<NumberInput
 					id='width'
-					type='number'
 					value={ width }
 					onChange={ onChangeWidth }
 					className='flex-1'
@@ -336,9 +335,8 @@ function LayerHeightAndWidthSetting({ layer, _asset }: { layer: AssetGraphicsLay
 						</p>
 					</ContextHelpButton>
 				</label>
-				<input
+				<NumberInput
 					id='height'
-					type='number'
 					value={ height }
 					onChange={ onChangeHeight }
 					className='flex-1'
@@ -353,12 +351,12 @@ function LayerOffsetSetting({ layer, _asset }: { layer: AssetGraphicsLayer; _ass
 	const layerXOffset = useLayerDefinition(layer).x;
 	const layerYOffset = useLayerDefinition(layer).y;
 
-	const onChangeX = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
-		layer.setXOffset(e.target.valueAsNumber);
+	const onChangeX = useEvent((newValue: number) => {
+		layer.setXOffset(newValue);
 	});
 
-	const onChangeY = useEvent((e: React.ChangeEvent<HTMLInputElement>) => {
-		layer.setYOffset(e.target.valueAsNumber);
+	const onChangeY = useEvent((newValue: number) => {
+		layer.setYOffset(newValue);
 	});
 
 	return (
@@ -384,9 +382,8 @@ function LayerOffsetSetting({ layer, _asset }: { layer: AssetGraphicsLayer; _ass
 						</p>
 					</ContextHelpButton>
 				</label>
-				<input
+				<NumberInput
 					id='layer-offset-x'
-					type='number'
 					value={ layerXOffset }
 					onChange={ onChangeX }
 					className='flex-1'
@@ -401,9 +398,8 @@ function LayerOffsetSetting({ layer, _asset }: { layer: AssetGraphicsLayer; _ass
 						</p>
 					</ContextHelpButton>
 				</label>
-				<input
+				<NumberInput
 					id='layer-offset-y'
-					type='number'
 					value={ layerYOffset }
 					onChange={ onChangeY }
 					className='flex-1'

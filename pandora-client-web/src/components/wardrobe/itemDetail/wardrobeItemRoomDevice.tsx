@@ -11,6 +11,7 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react';
 import { ICharacter } from '../../../character/character';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput';
 import { Select } from '../../../common/userInteraction/select/select';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Column, Row } from '../../common/container/container';
@@ -111,31 +112,31 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 		<Column padding='medium' alignY='center'>
 			<Row alignY='center'>
 				<label>X:</label>
-				<input type='number'
+				<NumberInput
 					className='positioning-input flex-1'
 					value={ positionX }
-					onChange={ (ev) => {
-						changeCallback({ x: ev.target.valueAsNumber });
+					onChange={ (newValue) => {
+						changeCallback({ x: newValue });
 					} }
 					disabled={ disabled }
 				/>
 				<label>Y:</label>
-				<input type='number'
+				<NumberInput
 					className='positioning-input flex-1'
 					value={ positionY }
-					onChange={ (ev) => {
-						changeCallback({ y: ev.target.valueAsNumber });
+					onChange={ (newValue) => {
+						changeCallback({ y: newValue });
 					} }
 					disabled={ disabled }
 				/>
 			</Row>
 			<Row alignY='center'>
 				<label>Y offset:</label>
-				<input type='number'
+				<NumberInput
 					className='positioning-input flex-1'
 					value={ positionYOffset }
-					onChange={ (ev) => {
-						changeCallback({ yOffset: ev.target.valueAsNumber });
+					onChange={ (newValue) => {
+						changeCallback({ yOffset: newValue });
 					} }
 					disabled={ disabled }
 				/>

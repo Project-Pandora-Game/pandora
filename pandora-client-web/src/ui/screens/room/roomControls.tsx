@@ -10,6 +10,7 @@ import shieldIcon from '../../../assets/icons/shield.svg';
 import storageIcon from '../../../assets/icons/storage.svg';
 import toolsIcon from '../../../assets/icons/tools.svg';
 import { Character, useCharacterData, useCharacterDataMultiple, useCharacterRestrictionManager } from '../../../character/character';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select';
 import { useFriendStatus } from '../../../components/accountContacts/accountContactContext';
 import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText, useRestrictionOverrideDialogContext } from '../../../components/characterRestrictionOverride/characterRestrictionOverride';
@@ -278,12 +279,11 @@ function DeviceOverlaySelector(): ReactElement {
 			</div>
 			<div>
 				<label htmlFor='chatroom-character-name-display'>Show name under characters </label>
-				<input
+				<Checkbox
 					id='chatroom-character-name-display'
-					type='checkbox'
 					checked={ showName }
-					onChange={ (e) => {
-						SettingDisplayCharacterName.value = e.target.checked;
+					onChange={ (newValue) => {
+						SettingDisplayCharacterName.value = newValue;
 					} }
 				/>
 			</div>

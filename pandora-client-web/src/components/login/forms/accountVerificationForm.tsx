@@ -2,7 +2,7 @@ import { GetLogger, IsSimpleToken, IsString, IsUsername } from 'pandora-common';
 import React, { ReactElement, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Button } from '../../common/button/button';
-import { FormErrorMessage, Form, FormField, FormFieldError, FormLink } from '../../common/form/form';
+import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
 import { useAuthFormData } from '../authFormDataProvider';
 import { useLoginForm } from './useLoginForm';
 
@@ -31,6 +31,7 @@ export function AccountVerificationForm(): ReactElement {
 			</p>
 			<FormField>
 				<label htmlFor='verify-token'>Verification code</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='text'
 					id='verify-token'

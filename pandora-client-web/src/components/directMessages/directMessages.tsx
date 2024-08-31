@@ -3,6 +3,7 @@ import { AccountId, AccountIdSchema, AssertNever, GetLogger } from 'pandora-comm
 import React, { useCallback, useMemo, useState, type ReactElement } from 'react';
 import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router';
 import { useAsyncEvent } from '../../common/useEvent';
+import { TextInput } from '../../common/userInteraction/input/textInput';
 import { KeyExchange } from '../../crypto/keyExchange';
 import { useObservable } from '../../observable';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
@@ -72,7 +73,7 @@ function DirectMessagesInner(): ReactElement {
 	return (
 		<div className='direct-messages'>
 			<Column className='direct-messages__list' gap='none'>
-				<input type='text' value={ filter } onChange={ (e) => setFilter(e.target.value) } placeholder='Filter' />
+				<TextInput value={ filter } onChange={ setFilter } placeholder='Filter' />
 				<Scrollable color='dark' tag='ul'>
 					{ filtered.map((c) => <DirectMessageInfo key={ c.id } chat={ c } selected={ c.id === selected } select={ select } />) }
 				</Scrollable>
@@ -209,16 +210,15 @@ function DirectMessageCryptoWarningLoadError(): ReactElement {
 			<span>Enter username and password below to unlock it.</span>
 			<hr />
 			<label>Username (<strong>case sensitive</strong> for old key formats)</label>
-			<input
-				type='text'
+			<TextInput
 				value={ unlockUsername }
-				onChange={ (ev) => setUnlockUsername(ev.target.value) }
+				onChange={ setUnlockUsername }
 			/>
 			<label>Password</label>
-			<input
-				type='password'
+			<TextInput
+				password
 				value={ unlockPassword }
-				onChange={ (ev) => setUnlockPassword(ev.target.value) }
+				onChange={ setUnlockPassword }
 			/>
 			<Button
 				onClick={ unlock }
@@ -256,17 +256,15 @@ function DirectMessageInfo({ chat, selected, select }: { chat: DirectMessageChat
 function OpenConversation({ select }: { select: (id: AccountId) => void; }): React.ReactElement {
 	const directMessageManager = useService('directMessageManager');
 	const accountId = useCurrentAccount()?.id;
-	const ref = React.useRef<HTMLInputElement>(null);
-	const onClick = React.useCallback(() => {
-		if (!ref.current)
-			return;
+	const [value, setValue] = useState('');
 
-		const parsed = parseInt(ref.current.value, 10);
+	const onClick = React.useCallback(() => {
+		const parsed = parseInt(value, 10);
 		if (Number.isInteger(parsed) && parsed > 0 && parsed !== accountId) {
 			const chat = directMessageManager.getChat(parsed);
 			select(chat.id);
 		}
-	}, [accountId, directMessageManager, select]);
+	}, [accountId, directMessageManager, select, value]);
 	const onKeyDown = React.useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === 'Enter') {
 			e.preventDefault();
@@ -276,7 +274,7 @@ function OpenConversation({ select }: { select: (id: AccountId) => void; }): Rea
 
 	return (
 		<Row gap='none'>
-			<input type='text' inputMode='numeric' pattern='\d*' ref={ ref } onKeyDown={ onKeyDown } placeholder='Account ID' />
+			<TextInput inputMode='numeric' pattern='\d*' value={ value } onChange={ setValue } onKeyDown={ onKeyDown } placeholder='Account ID' />
 			<Button className='slim' onClick={ onClick }>Start</Button>
 		</Row>
 	);

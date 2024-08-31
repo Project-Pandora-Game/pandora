@@ -1,6 +1,7 @@
 import { UserNameSchema } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import pandoraLogo from '../../../assets/icons/pandora.svg';
+import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { Button } from '../../common/button/button';
 import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
@@ -20,8 +21,12 @@ export function LoginForm(): ReactElement {
 			<form>
 				<div className='input-container'>
 					<label htmlFor='login-uname'>Username</label>
-					<input autoComplete='username' type='text' id='login-uname' value={ auth.username }
-						disabled={ true } />
+					<TextInput
+						autoComplete='username'
+						id='login-uname'
+						value={ auth.username }
+						disabled={ true }
+					/>
 				</div>
 				<div className='message'>
 					Awaiting automatic login...
@@ -38,6 +43,7 @@ export function LoginForm(): ReactElement {
 			<LocationStateMessage />
 			<FormField>
 				<label htmlFor='login-username'>Username</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='text'
 					id='login-username'
@@ -51,6 +57,7 @@ export function LoginForm(): ReactElement {
 			</FormField>
 			<FormField>
 				<label htmlFor='login-password'>Password</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='password'
 					id='login-password'

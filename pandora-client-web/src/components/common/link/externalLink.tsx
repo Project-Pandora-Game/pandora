@@ -1,6 +1,7 @@
 import React, { ReactElement, ReactNode } from 'react';
 import { z } from 'zod';
 import { BrowserStorage } from '../../../browserStorage';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { ModalDialog } from '../../dialog/dialog';
 import { Button } from '../button/button';
 import { Column, Row } from '../container/container';
@@ -93,12 +94,9 @@ function PromptUntrustedLink({ href, close }: {
 				</p>
 				<p>
 					<label>
-						<input
-							type='checkbox'
+						<Checkbox
 							checked={ remember }
-							onChange={ (ev) => {
-								setRemember(ev.target.checked);
-							} }
+							onChange={ setRemember }
 						/>
 						Trust links to <b>{ parsedLink.hostname }</b> in the future
 					</label>

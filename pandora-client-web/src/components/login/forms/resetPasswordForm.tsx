@@ -50,6 +50,7 @@ export function ResetPasswordForm(): ReactElement {
 			<LocationStateMessage />
 			<FormField>
 				<label htmlFor='reset-password-username'>Username</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='text'
 					id='reset-password-username'
@@ -63,6 +64,7 @@ export function ResetPasswordForm(): ReactElement {
 			</FormField>
 			<FormField>
 				<label htmlFor='reset-password-token'>Reset code</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='text'
 					id='reset-password-token'
@@ -84,6 +86,7 @@ export function ResetPasswordForm(): ReactElement {
 			</FormField>
 			<FormField>
 				<label htmlFor='registration-password'>Password</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='password'
 					id='registration-password'
@@ -97,6 +100,7 @@ export function ResetPasswordForm(): ReactElement {
 			</FormField>
 			<FormField>
 				<label htmlFor='registration-passwordConfirm'>Confirm password</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='password'
 					id='registration-passwordConfirm'

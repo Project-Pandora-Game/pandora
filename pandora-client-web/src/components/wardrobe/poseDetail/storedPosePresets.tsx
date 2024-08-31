@@ -1,5 +1,3 @@
-import React, { type ReactNode } from 'react';
-import { toast } from 'react-toastify';
 import { capitalize, clamp, cloneDeep, noop, omit } from 'lodash';
 import { nanoid } from 'nanoid';
 import {
@@ -15,21 +13,25 @@ import {
 	type BoneDefinition,
 	type PartialAppearancePose,
 } from 'pandora-common';
+import React, { type ReactNode } from 'react';
+import { toast } from 'react-toastify';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
+import { TextInput } from '../../../common/userInteraction/input/textInput';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { Button } from '../../common/button/button';
 import { Column, DivContainer, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle/fieldsetToggle';
-import { Button } from '../../common/button/button';
-import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { DraggableDialog } from '../../dialog/dialog';
 import { ExportDialog } from '../../exportImport/exportDialog';
 import { ImportDialog } from '../../exportImport/importDialog';
+import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import { GetVisibleBoneName } from '../views/wardrobePoseView';
 
 import deleteIcon from '../../../assets/icons/delete.svg';
 import editIcon from '../../../assets/icons/edit.svg';
-import triangleUp from '../../../assets/icons/triangle_up.svg';
-import triangleDown from '../../../assets/icons/triangle_down.svg';
 import exportIcon from '../../../assets/icons/export.svg';
+import triangleDown from '../../../assets/icons/triangle_down.svg';
+import triangleUp from '../../../assets/icons/triangle_up.svg';
 
 import './storedPosePresets.scss';
 
@@ -266,8 +268,8 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 	const assetManager = characterState.assetManager;
 	const allBones = React.useMemo(() => assetManager.getAllBones(), [assetManager]);
 	const { setEdit } = usePosePresetContext();
-	const onNameChange = React.useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
-		setEdit({ ...preset, name: ev.target.value });
+	const onNameChange = React.useCallback((newValue: string) => {
+		setEdit({ ...preset, name: newValue });
 	}, [preset, setEdit]);
 
 	const onSave = React.useCallback(() => {
@@ -323,7 +325,7 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 		<DraggableDialog title={ title } close={ close }>
 			<Column gap='small'>
 				<label htmlFor='pose-preset-name'>Name:</label>
-				<input id='pose-preset-name' type='text' value={ preset.name } onChange={ onNameChange } maxLength={ LIMIT_POSE_PRESET_NAME_LENGTH } />
+				<TextInput id='pose-preset-name' value={ preset.name } onChange={ onNameChange } maxLength={ LIMIT_POSE_PRESET_NAME_LENGTH } />
 			</Column>
 			<br />
 			<table>
@@ -400,11 +402,9 @@ function PosePresetArmPoses({ preset }: { preset: AssetFrameworkPosePresetWithId
 	const Arm = React.useCallback(<TArmKey extends keyof AppearanceArmPose>({ side, part }: { side: 'left' | 'right'; part: TArmKey; }): ReactNode => (
 		<tr>
 			<td>
-				<input
-					type='checkbox'
+				<Checkbox
 					checked={ preset.pose[`${side}Arm`]?.[part] != null || preset.pose.arms?.[part] != null }
-					onChange={ (ev) => {
-						const checked = ev.target.checked;
+					onChange={ (checked) => {
 						if (checked) {
 							setEdit({ ...preset, pose: { ...preset.pose, [`${side}Arm`]: { ...preset.pose[`${side}Arm`], [part]: characterState.actualPose[`${side}Arm`][part] } } });
 						} else {
@@ -443,11 +443,9 @@ function PosePresetArmsOrder({ preset }: { preset: AssetFrameworkPosePresetWithI
 	const Arm = React.useCallback(({ part }: { part: keyof AppearanceArmsOrder; }): ReactNode => (
 		<tr>
 			<td>
-				<input
-					type='checkbox'
+				<Checkbox
 					checked={ preset.pose.armsOrder?.[part] != null }
-					onChange={ (ev) => {
-						const checked = ev.target.checked;
+					onChange={ (checked) => {
 						if (checked) {
 							setEdit({ ...preset, pose: { ...preset.pose, armsOrder: { ...preset.pose.armsOrder, [part]: characterState.actualPose.armsOrder[part] } } });
 						} else {
@@ -473,8 +471,7 @@ function PosePresetArmsOrder({ preset }: { preset: AssetFrameworkPosePresetWithI
 
 function PosePresetLegPoses({ preset }: { preset: AssetFrameworkPosePresetWithId; }): ReactNode {
 	const { characterState, setEdit } = usePosePresetContext();
-	const onChange = React.useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
-		const checked = ev.target.checked;
+	const onChange = React.useCallback((checked: boolean) => {
 		if (checked) {
 			setEdit({ ...preset, pose: { ...preset.pose, legs: characterState.actualPose.legs } });
 		} else {
@@ -487,7 +484,7 @@ function PosePresetLegPoses({ preset }: { preset: AssetFrameworkPosePresetWithId
 	return (
 		<tr>
 			<td>
-				<input type='checkbox' checked={ preset.pose.legs != null } onChange={ onChange } />
+				<Checkbox checked={ preset.pose.legs != null } onChange={ onChange } />
 			</td>
 			<td>Legs</td>
 			<td>{ preset.pose.legs ?? characterState.actualPose.legs }</td>
@@ -498,8 +495,7 @@ function PosePresetLegPoses({ preset }: { preset: AssetFrameworkPosePresetWithId
 
 function PosePresetBoneRow({ preset, bone, storedValue, currentValue }: { preset: AssetFrameworkPosePresetWithId; bone: BoneDefinition; storedValue?: number; currentValue: number; }): ReactNode {
 	const { setEdit } = usePosePresetContext();
-	const onChange = React.useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
-		const checked = ev.target.checked;
+	const onChange = React.useCallback((checked: boolean) => {
 		if (checked) {
 			setEdit({ ...preset, pose: { ...preset.pose, bones: { ...preset.pose.bones, [bone.name]: currentValue } } });
 		} else {
@@ -512,7 +508,7 @@ function PosePresetBoneRow({ preset, bone, storedValue, currentValue }: { preset
 	return (
 		<tr>
 			<td>
-				<input type='checkbox' checked={ storedValue != null } onChange={ onChange } />
+				<Checkbox checked={ storedValue != null } onChange={ onChange } />
 			</td>
 			<td>
 				{ GetVisibleBoneName(bone.name) }

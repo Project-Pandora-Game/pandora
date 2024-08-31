@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useColorInput } from '../../common/useColorInput';
+import { TextInput } from '../../common/userInteraction/input/textInput';
 import { Select } from '../../common/userInteraction/select/select';
 import { PrehashPassword } from '../../crypto/helpers';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast';
@@ -194,12 +195,11 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 					</span>
 					<br />
 					<label htmlFor='character'>Enter your character name:</label>
-					<input
+					<TextInput
 						id='character'
-						name='character'
-						type='text' aria-haspopup='false' autoCapitalize='off' autoComplete='off' autoCorrect='off' autoFocus spellCheck='false'
+						aria-haspopup='false' autoCapitalize='off' autoComplete='off' autoCorrect='off' autoFocus spellCheck='false'
 						value={ character }
-						onChange={ (ev) => setCharacter(ev.target.value) }
+						onChange={ setCharacter }
 					/>
 					<br />
 					<Row>
@@ -228,6 +228,7 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 			<Form dirty={ submitCount > 0 } onSubmit={ onSubmit }>
 				<FormField>
 					<label htmlFor='password'>Current password</label>
+					{ /* eslint-disable-next-line react/forbid-elements */ }
 					<input
 						type='password'
 						id='password'

@@ -29,6 +29,7 @@ function EditorColorPicker({ throttle }: { throttle: number; }): ReactElement {
 	const onChangeThrottled = useMemo(() => _.throttle(onChange, throttle), [onChange, throttle]);
 
 	return (
+		// eslint-disable-next-line react/forbid-elements
 		<input type='color' value={ color } onChange={ onChangeThrottled } />
 	);
 }

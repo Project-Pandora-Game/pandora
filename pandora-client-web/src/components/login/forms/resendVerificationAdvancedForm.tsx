@@ -2,12 +2,13 @@ import { AssertNever, FormatTimeInterval, IsEmail, UserNameSchema } from 'pandor
 import React, { ReactElement, useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { useDirectoryResendVerificationAdvanced } from '../../../networking/account_manager';
-import { Button } from '../../common/button/button';
-import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
 import { toast } from 'react-toastify';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
+import { useDirectoryResendVerificationAdvanced } from '../../../networking/account_manager';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
+import { Button } from '../../common/button/button';
 import { Row } from '../../common/container/container';
+import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
 import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha';
 
 export interface ResendVerificationAdvancedFormData {
@@ -80,6 +81,7 @@ export function ResendVerificationAdvancedForm(): ReactElement {
 			<h1>Resend activation email</h1>
 			<FormField>
 				<label htmlFor='forgot-activation-username'>Username</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='text'
 					id='forgot-activation-username'
@@ -93,6 +95,7 @@ export function ResendVerificationAdvancedForm(): ReactElement {
 			</FormField>
 			<FormField>
 				<label htmlFor='forgot-activation-password'>Password</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='password'
 					id='forgot-activation-password'
@@ -103,6 +106,7 @@ export function ResendVerificationAdvancedForm(): ReactElement {
 			</FormField>
 			<FormField>
 				<label htmlFor='forgot-activation-email'>Enter your email</label>
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input
 					type='email'
 					id='forgot-activation-email'
@@ -116,11 +120,10 @@ export function ResendVerificationAdvancedForm(): ReactElement {
 			</FormField>
 			<FormField>
 				<Row>
-					<input
-						type='checkbox'
+					<Checkbox
 						id='forgot-activation-override-email'
 						checked={ overrideEmail }
-						onChange={ (e) => setOverrideEmail(e.target.checked) }
+						onChange={ setOverrideEmail }
 					/>
 					<label htmlFor='forgot-activation-override-email'>Override email</label>
 				</Row>

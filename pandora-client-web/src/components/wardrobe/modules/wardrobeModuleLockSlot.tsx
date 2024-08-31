@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import type { Immutable } from 'immer';
 import {
 	AppearanceAction,
 	Assert,
@@ -9,20 +10,21 @@ import {
 	MessageSubstitute,
 	type AppearanceActionData,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useId, useMemo, useState } from 'react';
-import { Column, Row } from '../../common/container/container';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
-import emptyLock from '../../../assets/icons/lock_empty.svg';
-import closedLock from '../../../assets/icons/lock_closed.svg';
-import openLock from '../../../assets/icons/lock_open.svg';
-import deleteIcon from '../../../assets/icons/delete.svg';
-import { useCurrentTime } from '../../../common/useCurrentTime';
-import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
-import { useWardrobeContext } from '../wardrobeContext';
-import { WardrobeActionButton } from '../wardrobeComponents';
-import type { Immutable } from 'immer';
+import React, { ReactElement, useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
+import deleteIcon from '../../../assets/icons/delete.svg';
+import closedLock from '../../../assets/icons/lock_closed.svg';
+import emptyLock from '../../../assets/icons/lock_empty.svg';
+import openLock from '../../../assets/icons/lock_open.svg';
+import { useCurrentTime } from '../../../common/useCurrentTime';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
+import { TextInput } from '../../../common/userInteraction/input/textInput';
+import { Column, Row } from '../../common/container/container';
 import { WardrobeItemName } from '../itemDetail/wardrobeItemName';
+import { WardrobeActionButton } from '../wardrobeComponents';
+import { useWardrobeContext } from '../wardrobeContext';
+import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
 
 export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement {
 	const { targetSelector, target, focuser } = useWardrobeContext();
@@ -198,7 +200,7 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 					<Column className='WardrobeLockPassword'>
 						<Row className='WardrobeInputRow'>
 							<label>Remove password</label>
-							<input type='checkbox' checked={ clearLastPassword } onChange={ (e) => setClearLastPassword(e.target.checked) } />
+							<Checkbox checked={ clearLastPassword } onChange={ setClearLastPassword } />
 						</Row>
 						<PasswordInput
 							item={ item }
@@ -257,7 +259,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 							lock.hasPassword ? (
 								<Row className='WardrobeInputRow'>
 									<label>Use old password</label>
-									<input type='checkbox' checked={ useOldPassword } onChange={ () => setUseOldPassword(!useOldPassword) } />
+									<Checkbox checked={ useOldPassword } onChange={ setUseOldPassword } />
 								</Row>
 							) : null
 						}
@@ -343,8 +345,8 @@ function PasswordInput({
 		return [ict, rf];
 	}, [password.format]);
 
-	const onInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-		setValue(replaceFunc(e.target.value));
+	const onInput = useCallback((newValue: string) => {
+		setValue(replaceFunc(newValue));
 	}, [replaceFunc]);
 
 	const error = useMemo(() => {
@@ -425,12 +427,11 @@ function PasswordInput({
 				<WardrobeActionButton action={ showPasswordAction } onExecute={ onPasswordShown }>
 					Show
 				</WardrobeActionButton>
-				<input
+				<TextInput
 					id={ id }
-					type='text'
 					value={ value }
 					maxLength={ max }
-					onInput={ onInput }
+					onChange={ onInput }
 					disabled={ disabled }
 				/>
 			</Row>

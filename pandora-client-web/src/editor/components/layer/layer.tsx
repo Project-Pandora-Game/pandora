@@ -45,7 +45,7 @@ export function LayerUI(): ReactElement {
 	Assert(asset === selectedLayer.asset);
 
 	return (
-		<Scrollbar color='lighter' className='editor-setupui slim'>
+		<Scrollbar color='lighter' className='editor-setupui slim' key={ `${asset.id}/${selectedLayer.index}:${selectedLayer.isMirror ? 'mirror' : ''}` }>
 			<LayerName layer={ selectedLayer } />
 			<hr />
 			<ColorizationSetting layer={ selectedLayer } graphics={ asset } />

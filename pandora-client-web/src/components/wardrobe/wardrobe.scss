@@ -63,18 +63,6 @@ $header-height: 2em;
 					padding: 0.25em 0.5em;
 				}
 			}
-
-			input[type='color'] {
-				width: 2em;
-				height: 2em;
-				border-radius: 0.2em;
-				cursor: pointer;
-				background-color: $grey-darkest;
-
-				&:hover {
-					background-color: $grey-lightest;
-				}
-			}
 		}
 	}
 }

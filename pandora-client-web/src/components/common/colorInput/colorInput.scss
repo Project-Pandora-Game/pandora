@@ -108,17 +108,11 @@
 	}
 }
 
-.color-input-button{
+.color-input-button {
 	border: 2px solid black;
 	border-radius: 0;
 	display: flex;
+	width: 4em;
+	height: 2em;
 	padding: 0;
-	background-color: #aaa;
-}
-
-.color-view{
-	margin: 4px;
-	width: 40px;
-	height: 20px;
-	border: 1px solid gray;
 }

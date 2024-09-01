@@ -329,14 +329,15 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						<>
 							<div className='input-container'>
 								<label>Background color</label>
-								<div className='row-first'>
+								<Row alignY='center'>
 									<ColorInput
 										initialValue={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
 										onChange={ (color) => setModifiedData({ background: { ...currentConfigBackground, image: color } }) }
 										disabled={ !canEdit }
 										title='Background'
+										classNameTextInput='flex-1'
 									/>
-								</div>
+								</Row>
 							</div>
 							<br />
 							<Button

@@ -53,16 +53,10 @@
 						min-height: 2em;
 					}
 
-					input[type='color'] {
+					.color-input-button {
 						width: 2em;
 						height: 2em;
 						border-radius: 0.2em;
-						cursor: pointer;
-						background-color: $grey-darkest;
-
-						&:hover {
-							background-color: $grey-lightest;
-						}
 					}
 				}
 			}
@@ -104,6 +98,10 @@
 			white-space: nowrap;
 			border: 1px solid black;
 		}
+	}
+
+	hr {
+		width: 100%;
 	}
 }
 

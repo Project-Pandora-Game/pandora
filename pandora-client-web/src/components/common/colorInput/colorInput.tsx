@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import parse from 'color-parse';
 import _ from 'lodash';
 import { type HexColorString, HexColorStringSchema, HexRGBAColorString, HexRGBAColorStringSchema } from 'pandora-common';
@@ -18,6 +19,8 @@ type ColorInputProps<THexString extends `#${string}`> = {
 	throttle?: number;
 	disabled?: boolean;
 	hideTextInput?: boolean;
+	classNameTextInput?: string;
+	classNameColorButton?: string;
 };
 
 export function ColorInput(props: ColorInputProps<HexColorString>): ReactElement {
@@ -31,7 +34,16 @@ type ColorInputRGBAProps = ColorInputProps<HexRGBAColorString> & {
 };
 
 export function ColorInputRGBA({
-	title, initialValue, resetValue, onChange, throttle = 0, disabled = false, hideTextInput = false, minAlpha = 255,
+	title,
+	initialValue,
+	resetValue,
+	onChange,
+	throttle = 0,
+	disabled = false,
+	hideTextInput = false,
+	minAlpha = 255,
+	classNameTextInput,
+	classNameColorButton,
 }: ColorInputRGBAProps): ReactElement {
 	const [value, setInput] = useState<HexRGBAColorString>(initialValue.toUpperCase() as HexRGBAColorString);
 	const [showEditor, setShowEditor] = useState(false);
@@ -65,12 +77,24 @@ export function ColorInputRGBA({
 	return (
 		<>
 			{
-				!hideTextInput &&
-				<TextInput value={ value } onChange={ changeCallback } disabled={ disabled } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } onPaste={ onPaste } />
+				hideTextInput ? null : (
+					<TextInput
+						value={ value }
+						onChange={ changeCallback }
+						disabled={ disabled }
+						maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 }
+						onPaste={ onPaste }
+						className={ classNameTextInput }
+					/>
+
+				)
 			}
-			<button className='color-input-button' disabled={ disabled } onClick={ onClick } >
-				<div className='color-view' style={ { backgroundColor: value } } />
-			</button>
+			<button
+				className={ classNames('color-input-button', classNameColorButton) }
+				disabled={ disabled }
+				onClick={ onClick }
+				style={ { backgroundColor: value } }
+			/>
 			{
 				resetValue != null &&
 				<Button className='slim' onClick={ () => changeCallback(resetValue) } disabled={ disabled }>↺</Button>

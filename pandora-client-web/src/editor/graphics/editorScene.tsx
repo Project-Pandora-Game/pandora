@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import _ from 'lodash';
-import { AssertNotNullable, CharacterSize, GetLogger, HexColorStringSchema } from 'pandora-common';
+import { AssertNotNullable, CharacterSize, GetLogger, type HexColorString } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { AssetGraphicsResolverOverrideContext, type AssetGraphicsResolverOverride } from '../../assets/assetGraphicsCalculations';
@@ -8,6 +8,7 @@ import { DownloadAsFile } from '../../common/downloadHelper';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { Button } from '../../components/common/button/button';
+import { ColorInput } from '../../components/common/colorInput/colorInput';
 import { Container } from '../../graphics/baseComponents/container';
 import { Graphics } from '../../graphics/baseComponents/graphics';
 import { PixiViewportRef, PixiViewportSetupCallback } from '../../graphics/baseComponents/pixiViewport';
@@ -22,15 +23,19 @@ function EditorColorPicker({ throttle }: { throttle: number; }): ReactElement {
 	const editor = useEditor();
 	const color = useObservable(editor.backgroundColor);
 
-	const onChange = useEvent((ev: React.ChangeEvent<HTMLInputElement>) => {
-		editor.setBackgroundColor(HexColorStringSchema.parse(ev.target.value));
+	const onChange = useEvent((newValue: HexColorString) => {
+		editor.setBackgroundColor(newValue);
 	});
 
 	const onChangeThrottled = useMemo(() => _.throttle(onChange, throttle), [onChange, throttle]);
 
 	return (
-		// eslint-disable-next-line react/forbid-elements
-		<input type='color' value={ color } onChange={ onChangeThrottled } />
+		<ColorInput
+			initialValue={ color }
+			onChange={ onChangeThrottled }
+			title='Background color'
+			hideTextInput
+		/>
 	);
 }
 

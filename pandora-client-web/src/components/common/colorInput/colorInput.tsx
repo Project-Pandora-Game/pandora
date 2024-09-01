@@ -86,7 +86,6 @@ export function ColorInputRGBA({
 						onPaste={ onPaste }
 						className={ classNameTextInput }
 					/>
-
 				)
 			}
 			<button

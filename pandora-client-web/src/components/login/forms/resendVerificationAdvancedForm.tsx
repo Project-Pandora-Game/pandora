@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { Checkbox } from '../../../common/userInteraction/checkbox';
+import { FormInput } from '../../../common/userInteraction/input/formInput';
 import { useDirectoryResendVerificationAdvanced } from '../../../networking/account_manager';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
 import { Button } from '../../common/button/button';
@@ -81,40 +82,43 @@ export function ResendVerificationAdvancedForm(): ReactElement {
 			<h1>Resend activation email</h1>
 			<FormField>
 				<label htmlFor='forgot-activation-username'>Username</label>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
-				<input
+				<FormInput
 					type='text'
 					id='forgot-activation-username'
 					autoComplete='username'
-					{ ...register('username', {
+					register={ register }
+					name='username'
+					options={ {
 						required: 'Username is required',
 						validate: FormCreateStringValidator(UserNameSchema, 'username'),
-					}) }
+					} }
 				/>
 				<FormFieldError error={ errors.username } />
 			</FormField>
 			<FormField>
 				<label htmlFor='forgot-activation-password'>Password</label>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
-				<input
+				<FormInput
 					type='password'
 					id='forgot-activation-password'
 					autoComplete='current-password'
-					{ ...register('password', { required: 'Password is required' }) }
+					register={ register }
+					name='password'
+					options={ { required: 'Password is required' } }
 				/>
 				<FormFieldError error={ errors.password } />
 			</FormField>
 			<FormField>
 				<label htmlFor='forgot-activation-email'>Enter your email</label>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
-				<input
+				<FormInput
 					type='email'
 					id='forgot-activation-email'
 					autoComplete='email'
-					{ ...register('email', {
+					register={ register }
+					name='email'
+					options={ {
 						required: 'Email is required',
 						validate: (email) => IsEmail(email) || 'Invalid email format',
-					}) }
+					} }
 				/>
 				<FormFieldError error={ errors.email } />
 			</FormField>

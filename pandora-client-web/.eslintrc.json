@@ -186,7 +186,7 @@
 			{
 				"forbid": [
 					{ "element": "select", "message": "use <Select> instead" },
-					{ "element": "input", "message": "use one of the following instead: <Checkbox>, <TextInput>, <NumberInput>, <ColorInput>" }
+					{ "element": "input", "message": "use one of the following instead: <Checkbox>, <TextInput>, <NumberInput>, <ColorInput>, <FormInput>" }
 				]
 			}
 		]

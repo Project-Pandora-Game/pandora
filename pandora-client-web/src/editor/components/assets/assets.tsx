@@ -6,6 +6,7 @@ import { toast } from 'react-toastify';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { useLayerName } from '../../../assets/assetGraphicsCalculations';
 import { useCharacterAppearanceItems } from '../../../character/character';
+import { FormInput } from '../../../common/userInteraction/input/formInput';
 import { Select } from '../../../common/userInteraction/select/select';
 import { Button } from '../../../components/common/button/button';
 import { ColorInput } from '../../../components/common/colorInput/colorInput';
@@ -398,9 +399,10 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): React
 							{ view.categories.map((c) => <option key={ c.name } value={ c.name }>{ c.name }</option>) }
 						</Select>
 						/
-						{ /* eslint-disable-next-line react/forbid-elements */ }
-						<input type='text'
-							{ ...register('id', { required: 'ID is required', validate: validateId }) }
+						<FormInput type='text'
+							register={ register }
+							name='id'
+							options={ { required: 'ID is required', validate: validateId } }
 							placeholder='Enter identifier of the asset'
 						/>
 					</Row>
@@ -408,9 +410,12 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): React
 				</FormField>
 				<FormField>
 					Name:
-					{ /* eslint-disable-next-line react/forbid-elements */ }
-					<input type='text'
-						{ ...register('name', { required: 'Name is required' }) }
+					<FormInput type='text'
+						register={ register }
+						name='name'
+						options={ {
+							required: 'Name is required',
+						} }
 						placeholder='Visible name of your asset'
 					/>
 					<FormFieldError error={ errors.name } />

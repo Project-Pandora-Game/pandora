@@ -1,6 +1,7 @@
 import { UserNameSchema } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import pandoraLogo from '../../../assets/icons/pandora.svg';
+import { FormInput } from '../../../common/userInteraction/input/formInput';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { Button } from '../../common/button/button';
@@ -43,26 +44,28 @@ export function LoginForm(): ReactElement {
 			<LocationStateMessage />
 			<FormField>
 				<label htmlFor='login-username'>Username</label>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
-				<input
+				<FormInput
 					type='text'
 					id='login-username'
 					autoComplete='username'
-					{ ...register('username', {
+					register={ register }
+					name='username'
+					options={ {
 						required: 'Username is required',
 						validate: FormCreateStringValidator(UserNameSchema, 'username'),
-					}) }
+					} }
 				/>
 				<FormFieldError error={ errors.username } />
 			</FormField>
 			<FormField>
 				<label htmlFor='login-password'>Password</label>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
-				<input
+				<FormInput
 					type='password'
 					id='login-password'
 					autoComplete='current-password'
-					{ ...register('password', { required: 'Password is required' }) }
+					register={ register }
+					name='password'
+					options={ { required: 'Password is required' } }
 				/>
 				<FormFieldError error={ errors.password } />
 			</FormField>

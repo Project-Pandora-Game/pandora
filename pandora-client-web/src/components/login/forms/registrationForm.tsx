@@ -2,6 +2,7 @@ import { AssertNever, DisplayNameSchema, EmailAddressSchema, PasswordSchema, Use
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { useNavigate } from 'react-router';
+import { FormInput } from '../../../common/userInteraction/input/formInput';
 import { useDirectoryRegister } from '../../../networking/account_manager';
 import { useObservable } from '../../../observable';
 import { Button } from '../../common/button/button';
@@ -111,89 +112,95 @@ export function RegistrationForm(): ReactElement {
 			<h1>Sign up</h1>
 			<FormField>
 				<label htmlFor='registration-username'>Username</label>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
-				<input
+				<FormInput
 					type='text'
 					id='registration-username'
 					autoComplete='username'
-					{ ...register('username', {
+					register={ register }
+					name='username'
+					options={ {
 						required: 'Username is required',
 						validate: validateUsername,
-					}) }
+					} }
 				/>
 				<FormFieldError error={ errors.username } />
 			</FormField>
 			<FormField>
 				<label htmlFor='registration-display-name'>User display name (shown to others)</label>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
-				<input
+				<FormInput
 					type='text'
 					id='registration-display-name'
 					autoComplete='off'
-					{ ...register('displayName', {
+					register={ register }
+					name='displayName'
+					options={ {
 						required: 'User display name is required',
 						validate: validateDisplayName,
-					}) }
+					} }
 				/>
 				<p />
 			</FormField>
 			<FormField>
 				<label htmlFor='registration-email'>Email</label>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
-				<input
+				<FormInput
 					type='email'
 					id='registration-email'
 					autoComplete='email'
-					{ ...register('email', {
+					register={ register }
+					name='email'
+					options={ {
 						required: 'Email is required',
 						validate: validateEmail,
-					}) }
+					} }
 				/>
 				<FormFieldError error={ errors.email } />
 			</FormField>
 			<FormField>
 				<label htmlFor='registration-password'>Password</label>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
-				<input
+				<FormInput
 					type='password'
 					id='registration-password'
 					autoComplete='new-password'
-					{ ...register('password', {
+					register={ register }
+					name='password'
+					options={ {
 						required: 'Password is required',
 						validate: FormCreateStringValidator(PasswordSchema, 'password'),
-					}) }
+					} }
 				/>
 				<FormFieldError error={ errors.password } />
 			</FormField>
 			<FormField>
 				<label htmlFor='registration-passwordConfirm'>Confirm password</label>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
-				<input
+				<FormInput
 					type='password'
 					id='registration-passwordConfirm'
 					autoComplete='new-password'
-					{ ...register('passwordConfirm', {
+					register={ register }
+					name='passwordConfirm'
+					options={ {
 						required: 'Please confirm your password',
 						validate: (passwordConfirm) => {
 							const password = getValues('password');
 							return (passwordConfirm === password) || 'Passwords do not match';
 						},
-					}) }
+					} }
 				/>
 				<FormFieldError error={ errors.passwordConfirm } />
 			</FormField>
 			{ betaKeyRequired &&
 				<FormField>
 					<label htmlFor='registration-beta-key'>Beta key</label>
-					{ /* eslint-disable-next-line react/forbid-elements */ }
-					<input
+					<FormInput
 						type='text'
 						id='registration-beta-key'
 						autoComplete='off'
-						{ ...register('betaKey', {
+						register={ register }
+						name='betaKey'
+						options={ {
 							required: 'Beta key is required',
 							validate: (betaKey) => (betaKey !== invalidBetaKey) || 'Invalid beta key provided',
-						}) }
+						} }
 					/>
 					<FormFieldError error={ errors.betaKey } />
 				</FormField> }

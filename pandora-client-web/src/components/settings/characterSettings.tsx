@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useColorInput } from '../../common/useColorInput';
+import { FormInput } from '../../common/userInteraction/input/formInput';
 import { TextInput } from '../../common/userInteraction/input/textInput';
 import { Select } from '../../common/userInteraction/select/select';
 import { PrehashPassword } from '../../crypto/helpers';
@@ -228,15 +229,16 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 			<Form dirty={ submitCount > 0 } onSubmit={ onSubmit }>
 				<FormField>
 					<label htmlFor='password'>Current password</label>
-					{ /* eslint-disable-next-line react/forbid-elements */ }
-					<input
+					<FormInput
 						type='password'
 						id='password'
 						autoComplete='current-password'
-						{ ...register('password', {
+						register={ register }
+						name='password'
+						options={ {
 							required: 'Password is required',
 							validate: (pwd) => (invalidPassword === pwd) ? 'Invalid password' : true,
-						}) }
+						} }
 					/>
 					<FormFieldError error={ errors.password } />
 				</FormField>

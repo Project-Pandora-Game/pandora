@@ -2,6 +2,7 @@ import { AssertNever, IsSimpleToken, PasswordSchema, SIMPLE_TOKEN_LENGTH, UserNa
 import React, { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
+import { FormInput } from '../../../common/userInteraction/input/formInput';
 import { useDirectoryPasswordResetConfirm } from '../../../networking/account_manager';
 import { Button } from '../../common/button/button';
 import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
@@ -50,26 +51,28 @@ export function ResetPasswordForm(): ReactElement {
 			<LocationStateMessage />
 			<FormField>
 				<label htmlFor='reset-password-username'>Username</label>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
-				<input
+				<FormInput
 					type='text'
 					id='reset-password-username'
 					autoComplete='username'
-					{ ...register('username', {
+					register={ register }
+					name='username'
+					options={ {
 						required: 'Username is required',
 						validate: FormCreateStringValidator(UserNameSchema, 'username'),
-					}) }
+					} }
 				/>
 				<FormFieldError error={ errors.username } />
 			</FormField>
 			<FormField>
 				<label htmlFor='reset-password-token'>Reset code</label>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
-				<input
+				<FormInput
 					type='text'
 					id='reset-password-token'
 					autoComplete='one-time-code'
-					{ ...register('token', {
+					register={ register }
+					name='token'
+					options={ {
 						required: 'Reset code is required',
 						minLength: {
 							message: `Reset code must be exactly ${ SIMPLE_TOKEN_LENGTH } characters`,
@@ -80,38 +83,40 @@ export function ResetPasswordForm(): ReactElement {
 							value: SIMPLE_TOKEN_LENGTH,
 						},
 						validate: (token) => IsSimpleToken(token) || 'Invalid reset code format',
-					}) }
+					} }
 				/>
 				<FormFieldError error={ errors.token } />
 			</FormField>
 			<FormField>
 				<label htmlFor='registration-password'>Password</label>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
-				<input
+				<FormInput
 					type='password'
 					id='registration-password'
 					autoComplete='new-password'
-					{ ...register('password', {
+					register={ register }
+					name='password'
+					options={ {
 						required: 'Password is required',
 						validate: FormCreateStringValidator(PasswordSchema, 'password'),
-					}) }
+					} }
 				/>
 				<FormFieldError error={ errors.password } />
 			</FormField>
 			<FormField>
 				<label htmlFor='registration-passwordConfirm'>Confirm password</label>
-				{ /* eslint-disable-next-line react/forbid-elements */ }
-				<input
+				<FormInput
 					type='password'
 					id='registration-passwordConfirm'
 					autoComplete='new-password'
-					{ ...register('passwordConfirm', {
+					register={ register }
+					name='passwordConfirm'
+					options={ {
 						required: 'Please confirm your password',
 						validate: (passwordConfirm) => {
 							const password = getValues('password');
 							return (passwordConfirm === password) || 'Passwords do not match';
 						},
-					}) }
+					} }
 				/>
 				<FormFieldError error={ errors.passwordConfirm } />
 			</FormField>

@@ -5,6 +5,7 @@ import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../common/useCurrentTime';
 import { useAsyncEvent } from '../../common/useEvent';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
+import { FormInput } from '../../common/userInteraction/input/formInput';
 import { TextInput } from '../../common/userInteraction/input/textInput';
 import { PrehashPassword } from '../../crypto/helpers';
 import type { AuthToken } from '../../networking/directoryConnector';
@@ -286,46 +287,49 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 			<Form dirty={ submitCount > 0 } onSubmit={ onSubmit }>
 				<FormField>
 					<label htmlFor='password-change-old'>Old password</label>
-					{ /* eslint-disable-next-line react/forbid-elements */ }
-					<input
+					<FormInput
 						type='password'
 						id='password-change-old'
 						autoComplete='current-password'
-						{ ...register('oldPassword', {
+						register={ register }
+						name='oldPassword'
+						options={ {
 							required: 'Old password is required',
 							validate: (oldPassword) => (invalidPassword === oldPassword) ? 'Invalid password' : true,
-						}) }
+						} }
 					/>
 					<FormFieldError error={ errors.oldPassword } />
 				</FormField>
 				<FormField>
 					<label htmlFor='password-change-new'>New password</label>
-					{ /* eslint-disable-next-line react/forbid-elements */ }
-					<input
+					<FormInput
 						type='password'
 						id='password-change-new'
 						autoComplete='new-password'
-						{ ...register('newPassword', {
+						register={ register }
+						name='newPassword'
+						options={ {
 							required: 'New password is required',
 							validate: FormCreateStringValidator(PasswordSchema, 'password'),
-						}) }
+						} }
 					/>
 					<FormFieldError error={ errors.newPassword } />
 				</FormField>
 				<FormField>
 					<label htmlFor='password-change-new-confirm'>Confirm new password</label>
-					{ /* eslint-disable-next-line react/forbid-elements */ }
-					<input
+					<FormInput
 						type='password'
 						id='password-change-new-confirm'
 						autoComplete='new-password'
-						{ ...register('newPasswordConfirm', {
+						register={ register }
+						name='newPasswordConfirm'
+						options={ {
 							required: 'New password confirmation is required',
 							validate: (newPasswordConfirm) => {
 								const newPassword = getValues('newPassword');
 								return (newPasswordConfirm === newPassword) || 'Passwords do not match';
 							},
-						}) }
+						} }
 					/>
 					<FormFieldError error={ errors.newPasswordConfirm } />
 				</FormField>

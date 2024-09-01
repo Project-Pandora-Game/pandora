@@ -1,43 +1,8 @@
 import type { RESTPostAPIWebhookWithTokenJSONBody } from 'discord-api-types/v10';
 import fsPromises from 'fs/promises';
-import { GetLogger, logConfig, LogLevel } from 'pandora-common';
+import { AnyToString, GetLogger, logConfig, LogLevel } from 'pandora-common';
 
 export const AUDIT_LOG = GetLogger('audit', '[Audit]');
-
-/** Custom function for stringifying data when logging into file */
-export function AnyToString(data: unknown): string {
-	if (typeof data === 'string') {
-		return data;
-	}
-
-	if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
-		if (data instanceof Error) {
-			return data.stack ? `[${data.stack}\n]` : `[Error ${data.name}: ${data.message}]`;
-		}
-		if ('toString' in data) {
-			const customString = String(data);
-			if (customString !== '[object Object]') {
-				return customString;
-			}
-		} else {
-			return '[object null]';
-		}
-	}
-
-	return (
-		JSON.stringify(data, (_k, v) => {
-			if (typeof v === 'object' && v !== null && v !== data) {
-				if (Array.isArray(v))
-					return '[object Array]';
-				if ('toString' in v)
-					return String(v);
-				return '[object null]';
-			}
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-return
-			return v;
-		}) ?? 'undefined'
-	);
-}
 
 export async function AddFileOutput(fileName: string, append: boolean, logLevel: LogLevel | false, logLevelOverrides: Record<string, LogLevel | false> = {}): Promise<void> {
 	const writeStream = (await fsPromises.open(fileName, append ? 'a' : 'w'))

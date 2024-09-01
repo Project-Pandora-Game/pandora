@@ -1,3 +1,5 @@
+import { Immutable } from 'immer';
+import _ from 'lodash';
 import { nanoid } from 'nanoid';
 import {
 	CharacterId,
@@ -9,17 +11,16 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react';
 import { ICharacter } from '../../../character/character';
-import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
-import _ from 'lodash';
-import { Column, Row } from '../../common/container/container';
-import { Select } from '../../common/select/select';
-import { Immutable } from 'immer';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput';
+import { Select } from '../../../common/userInteraction/select/select';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
-import { WardrobeContextSelectRoomInventoryProvider, useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
-import { WardrobeActionButton } from '../wardrobeComponents';
-import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
+import { Column, Row } from '../../common/container/container';
+import { FieldsetToggle } from '../../common/fieldsetToggle';
+import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
+import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
+import { WardrobeActionButton } from '../wardrobeComponents';
+import { WardrobeContextSelectRoomInventoryProvider, useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
 
 export function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
 	roomDevice: Item<'roomDevice'>;
@@ -72,7 +73,7 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 	const throttle = 100;
 
 	const { targetSelector } = useWardrobeContext();
-	const [execute] = useWardrobeExecuteCallback();
+	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 
 	const [positionX, setPositionX] = useUpdatedUserInput(deployment.x, [item]);
 	const [positionY, setPositionY] = useUpdatedUserInput(deployment.y, [item]);
@@ -111,31 +112,31 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 		<Column padding='medium' alignY='center'>
 			<Row alignY='center'>
 				<label>X:</label>
-				<input type='number'
+				<NumberInput
 					className='positioning-input flex-1'
 					value={ positionX }
-					onChange={ (ev) => {
-						changeCallback({ x: ev.target.valueAsNumber });
+					onChange={ (newValue) => {
+						changeCallback({ x: newValue });
 					} }
 					disabled={ disabled }
 				/>
 				<label>Y:</label>
-				<input type='number'
+				<NumberInput
 					className='positioning-input flex-1'
 					value={ positionY }
-					onChange={ (ev) => {
-						changeCallback({ y: ev.target.valueAsNumber });
+					onChange={ (newValue) => {
+						changeCallback({ y: newValue });
 					} }
 					disabled={ disabled }
 				/>
 			</Row>
 			<Row alignY='center'>
 				<label>Y offset:</label>
-				<input type='number'
+				<NumberInput
 					className='positioning-input flex-1'
 					value={ positionYOffset }
-					onChange={ (ev) => {
-						changeCallback({ yOffset: ev.target.valueAsNumber });
+					onChange={ (newValue) => {
+						changeCallback({ yOffset: newValue });
 					} }
 					disabled={ disabled }
 				/>

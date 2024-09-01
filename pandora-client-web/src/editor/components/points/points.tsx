@@ -7,11 +7,14 @@ import { useLayerName } from '../../../assets/assetGraphicsCalculations';
 import { useAssetManager } from '../../../assets/assetManager';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager';
 import { useBrowserSessionStorage, useBrowserStorage } from '../../../browserStorage';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput';
+import { TextInput } from '../../../common/userInteraction/input/textInput';
+import { Select } from '../../../common/userInteraction/select/select';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { Select } from '../../../components/common/select/select';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
 import { useNullableObservable, useObservable } from '../../../observable';
@@ -196,23 +199,21 @@ export function PointsHelperMathUi(): ReactElement | null {
 						<td>X:</td>
 						<td>{ targetCoords[0] } =</td>
 						<td>
-							<input
-								type='number'
+							<NumberInput
 								value={ targetBase[0] }
 								size={ 5 }
-								onChange={ (e) => {
-									setTargetBase([Number.parseInt(e.target.value) || 0, targetCoords[1]]);
+								onChange={ (newValue) => {
+									setTargetBase([newValue, targetCoords[1]]);
 								} }
 							/>
 						</td>
 						<td>
 							+
-							<input
-								type='number'
+							<NumberInput
 								value={ targetOffset[0] }
 								size={ 5 }
-								onChange={ (e) => {
-									setTargetOffset([Number.parseInt(e.target.value) || 0, targetOffset[1]]);
+								onChange={ (newValue) => {
+									setTargetOffset([newValue, targetOffset[1]]);
 								} }
 							/>
 						</td>
@@ -221,23 +222,21 @@ export function PointsHelperMathUi(): ReactElement | null {
 						<td>Y:</td>
 						<td>{ targetCoords[1] } =</td>
 						<td>
-							<input
-								type='number'
+							<NumberInput
 								value={ targetBase[1] }
 								size={ 5 }
-								onChange={ (e) => {
-									setTargetBase([targetCoords[0], Number.parseInt(e.target.value) || 0]);
+								onChange={ (newValue) => {
+									setTargetBase([targetCoords[0], newValue]);
 								} }
 							/>
 						</td>
 						<td>
 							+
-							<input
-								type='number'
+							<NumberInput
 								value={ targetOffset[1] }
 								size={ 5 }
-								onChange={ (e) => {
-									setTargetOffset([targetOffset[0], Number.parseInt(e.target.value) || 0]);
+								onChange={ (newValue) => {
+									setTargetOffset([targetOffset[0], newValue]);
 								} }
 							/>
 						</td>
@@ -245,12 +244,9 @@ export function PointsHelperMathUi(): ReactElement | null {
 				</table>
 				<Row alignY='center'>
 					<label>Adjustment</label>
-					<input
-						type='number'
+					<NumberInput
 						value={ adjustmentFactor }
-						onChange={ (e) => {
-							setAdjustmentFactor(Number.isNaN(e.target.valueAsNumber) ? 1 : e.target.valueAsNumber);
-						} }
+						onChange={ setAdjustmentFactor }
 					/>
 				</Row>
 			</Column>
@@ -302,23 +298,21 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 		<>
 			<div>
 				<label htmlFor='x-coord'>X:</label>
-				<input
+				<NumberInput
 					id='x-coord'
-					type='number'
 					value={ pointX }
-					onChange={ (e) => {
-						point.setPos(Number.parseInt(e.target.value) || 0, pointY);
+					onChange={ (newValue) => {
+						point.setPos(newValue, pointY);
 					} }
 				/>
 			</div>
 			<div>
 				<label htmlFor='y-coord'>Y:</label>
-				<input
+				<NumberInput
 					id='y-coord'
-					type='number'
 					value={ pointY }
-					onChange={ (e) => {
-						point.setPos(pointX, Number.parseInt(e.target.value) || 0);
+					onChange={ (newValue) => {
+						point.setPos(pointX, newValue);
 					} }
 				/>
 			</div>
@@ -326,11 +320,10 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 			<PointTransformationsTextarea point={ point } />
 			<div>
 				<label>Mirror point to the opposing character half</label>
-				<input
-					type='checkbox'
+				<Checkbox
 					checked={ mirror }
-					onChange={ (e) => {
-						point.setMirror(e.target.checked);
+					onChange={ (newValue) => {
+						point.setMirror(newValue);
 					} }
 				/>
 			</div>
@@ -343,11 +336,11 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 			</Row>
 			<div>
 				<label htmlFor='point-type'>Point type:</label>
-				<input
+				<TextInput
 					id='point-type'
 					spellCheck='false'
 					value={ pointType ?? '' }
-					onChange={ (e) => point.setPointType(e.target.value || undefined) }
+					onChange={ (newValue) => point.setPointType(newValue) }
 				/>
 			</div>
 			<Button

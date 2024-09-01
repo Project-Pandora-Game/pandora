@@ -5,6 +5,8 @@ import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../common/useCurrentTime';
 import { useAsyncEvent } from '../../common/useEvent';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
+import { FormInput } from '../../common/userInteraction/input/formInput';
+import { TextInput } from '../../common/userInteraction/input/textInput';
 import { PrehashPassword } from '../../crypto/helpers';
 import type { AuthToken } from '../../networking/directoryConnector';
 import { useObservable } from '../../observable';
@@ -211,12 +213,12 @@ function ExtendCurrentSessionDialog({ token, hide }: { token: AuthToken; hide: (
 				<SessionExpire token={ token } />
 				<FormField>
 					<label htmlFor='extend-current-session-password'>Password</label>
-					<input
-						type='password'
+					<TextInput
+						password
 						id='extend-current-session-password'
 						autoComplete='current-password'
 						value={ password }
-						onChange={ (e) => setPassword(e.target.value) }
+						onChange={ setPassword }
 					/>
 				</FormField>
 				<br />
@@ -285,43 +287,49 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 			<Form dirty={ submitCount > 0 } onSubmit={ onSubmit }>
 				<FormField>
 					<label htmlFor='password-change-old'>Old password</label>
-					<input
+					<FormInput
 						type='password'
 						id='password-change-old'
 						autoComplete='current-password'
-						{ ...register('oldPassword', {
+						register={ register }
+						name='oldPassword'
+						options={ {
 							required: 'Old password is required',
 							validate: (oldPassword) => (invalidPassword === oldPassword) ? 'Invalid password' : true,
-						}) }
+						} }
 					/>
 					<FormFieldError error={ errors.oldPassword } />
 				</FormField>
 				<FormField>
 					<label htmlFor='password-change-new'>New password</label>
-					<input
+					<FormInput
 						type='password'
 						id='password-change-new'
 						autoComplete='new-password'
-						{ ...register('newPassword', {
+						register={ register }
+						name='newPassword'
+						options={ {
 							required: 'New password is required',
 							validate: FormCreateStringValidator(PasswordSchema, 'password'),
-						}) }
+						} }
 					/>
 					<FormFieldError error={ errors.newPassword } />
 				</FormField>
 				<FormField>
 					<label htmlFor='password-change-new-confirm'>Confirm new password</label>
-					<input
+					<FormInput
 						type='password'
 						id='password-change-new-confirm'
 						autoComplete='new-password'
-						{ ...register('newPasswordConfirm', {
+						register={ register }
+						name='newPasswordConfirm'
+						options={ {
 							required: 'New password confirmation is required',
 							validate: (newPasswordConfirm) => {
 								const newPassword = getValues('newPassword');
 								return (newPasswordConfirm === newPassword) || 'Passwords do not match';
 							},
-						}) }
+						} }
 					/>
 					<FormFieldError error={ errors.newPasswordConfirm } />
 				</FormField>

@@ -1,13 +1,14 @@
-import React, { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
-import { ModalDialog } from '../dialog/dialog';
-import { Column, Row } from '../common/container/container';
-import { Button } from '../common/button/button';
-import { ZodType, z } from 'zod';
 import { CloneDeepMutable, GetLogger } from 'pandora-common';
-import { ExportData } from './exportImportUtils';
-import './exportDialog.scss';
-import { DownloadAsFile } from '../../common/downloadHelper';
+import React, { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
+import { ZodType, z } from 'zod';
 import { CopyToClipboard } from '../../common/clipboard';
+import { DownloadAsFile } from '../../common/downloadHelper';
+import { TextInput } from '../../common/userInteraction/input/textInput';
+import { Button } from '../common/button/button';
+import { Column, Row } from '../common/container/container';
+import { ModalDialog } from '../dialog/dialog';
+import './exportDialog.scss';
+import { ExportData } from './exportImportUtils';
 
 interface ExportDialogProps<T extends ZodType<unknown>> {
 	exportType: string;
@@ -78,7 +79,7 @@ export function ExportDialog<T extends ZodType<unknown>>({
 				<fieldset>
 					<legend>Download as file</legend>
 					<Row>
-						<input className='flex-1' value={ downloadFileName } onChange={ (e) => setDownloadFileName(e.target.value) } />
+						<TextInput className='flex-1' value={ downloadFileName } onChange={ setDownloadFileName } />
 						<Button
 							className='slim fadeDisabled'
 							onClick={ downloadAsFile }

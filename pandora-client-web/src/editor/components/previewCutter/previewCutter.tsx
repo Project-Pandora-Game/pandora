@@ -4,10 +4,11 @@ import * as PIXI from 'pixi.js';
 import React from 'react';
 import { DownloadAsFile } from '../../../common/downloadHelper';
 import { useEvent } from '../../../common/useEvent';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput';
 import { Button } from '../../../components/common/button/button';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import { InputNumber } from '../../../components/input/numberInput';
 import { Graphics } from '../../../graphics/baseComponents/graphics';
 import { Observable, useObservable } from '../../../observable';
 import { EditorSceneContext, useEditorSceneContext } from '../../graphics/editorScene';
@@ -162,10 +163,10 @@ export function PreviewCutter() {
 			size,
 		};
 	}, []);
-	const setCentered = React.useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
+	const setCentered = React.useCallback((newValue: boolean) => {
 		PREVIEW_CUTTER.value = {
 			...PREVIEW_CUTTER.value,
-			centered: ev.target.checked,
+			centered: newValue,
 		};
 	}, []);
 	const createPreviewImage = useEvent(() => {
@@ -233,19 +234,19 @@ export function PreviewCutter() {
 		<FieldsetToggle legend={ legend } forceOpen={ state.enabled } onChange={ onChange } className='previewCutter'>
 			<div>
 				<label htmlFor='preview-cutter-x'>X</label>
-				<InputNumber id='preview-cutter-x' min={ -state.size } max={ CharacterSize.WIDTH + state.size } value={ state.position.x } onChange={ setX } />
+				<NumberInput id='preview-cutter-x' min={ -state.size } max={ CharacterSize.WIDTH + state.size } value={ state.position.x } onChange={ setX } />
 			</div>
 			<div>
 				<label htmlFor='preview-cutter-y'>Y</label>
-				<InputNumber id='preview-cutter-y' min={ -state.size } max={ CharacterSize.HEIGHT + state.size } value={ state.position.y } onChange={ setY } />
+				<NumberInput id='preview-cutter-y' min={ -state.size } max={ CharacterSize.HEIGHT + state.size } value={ state.position.y } onChange={ setY } />
 			</div>
 			<div>
 				<label htmlFor='preview-cutter-size'>Size</label>
-				<InputNumber id='preview-cutter-size' min={ PREVIEW_CUTTER_MIN_SIZE } max={ PREVIEW_CUTTER_MAX_SIZE } value={ state.size } onChange={ setSize } />
+				<NumberInput id='preview-cutter-size' min={ PREVIEW_CUTTER_MIN_SIZE } max={ PREVIEW_CUTTER_MAX_SIZE } value={ state.size } onChange={ setSize } />
 			</div>
 			<div>
 				<label htmlFor='preview-cutter-centered'>Centered</label>
-				<input id='preview-cutter-centered' type='checkbox' checked={ state.centered } onChange={ setCentered } />
+				<Checkbox id='preview-cutter-centered' checked={ state.centered } onChange={ setCentered } />
 			</div>
 			<div>
 				<Button onClick={ createPreviewImage }>

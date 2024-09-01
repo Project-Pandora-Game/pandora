@@ -2,9 +2,11 @@ import { AccountRole, ConfiguredAccountRole, ConfiguredAccountRoleSchema, IAccou
 import React, { createContext, ReactElement, useContext, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../../common/useEvent';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput';
+import { Select } from '../../../common/userInteraction/select/select';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Button } from '../../common/button/button';
-import { Select } from '../../common/select/select';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import './roles.scss';
 
@@ -44,8 +46,8 @@ export function Roles(): ReactElement {
 			<div className='roles'>
 				<div className='input-row'>
 					<label>Account ID</label>
-					<input type='number' value={ id } min={ 0 } readOnly={ processing } onChange={ (e) => {
-						setId(Number(e.target.value));
+					<NumberInput value={ id } min={ 0 } readOnly={ processing } onChange={ (newValue) => {
+						setId(newValue);
 						setRoles(null);
 					} } />
 					<Button className='slim' onClick={ () => void onLoadAccount() } disabled={ id <= 0 }>Load</Button>
@@ -133,7 +135,8 @@ function ManageRoleGrant(): ReactElement {
 			</div>
 			<div className='input-row'>
 				<label>Expires</label>
-				<input type='checkbox' checked={ expires !== undefined } onChange={ (e) => setExpires(e.target.checked ? Date.now() : undefined) } />
+				<Checkbox checked={ expires !== undefined } onChange={ (checked) => setExpires(checked ? Date.now() : undefined) } />
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input type='date' value={ expires } onChange={ (e) => setExpires(new Date(e.target.value).getTime()) } readOnly={ expires === undefined } />
 			</div>
 			<div className='input-row'>

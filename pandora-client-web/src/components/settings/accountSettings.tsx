@@ -17,6 +17,8 @@ import { useColorInput } from '../../common/useColorInput';
 import { useCurrentTime } from '../../common/useCurrentTime';
 import { useEvent } from '../../common/useEvent';
 import { useMounted } from '../../common/useMounted';
+import { Checkbox } from '../../common/userInteraction/checkbox';
+import { TextInput } from '../../common/userInteraction/input/textInput';
 import { ConfigShowGitHubIntegration } from '../../config/searchArgs';
 import { useObservable } from '../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
@@ -127,7 +129,7 @@ function GitHubIntegrationInner({ account }: { account: IDirectoryAccountInfo; }
 				<legend>GitHub Integration</legend>
 				<span>Account not linked to GitHub, enter your GitHub username to link it.</span>
 				<div className='input-row'>
-					<input type='text' value={ login } onChange={ (e) => setLogin(e.target.value) } />
+					<TextInput value={ login } onChange={ setLogin } />
 					<Button className='fadeDisabled' onClick={ onInitLink } disabled={ login.length === 0 || processing }>Link</Button>
 				</div>
 			</fieldset>
@@ -183,8 +185,8 @@ function AccountRole({ role, data }: { role: AccountRole; data?: { expires?: num
 	const visibleRoles = useCurrentAccount()?.settings.visibleRoles || [];
 	const visible = visibleRoles.includes(role);
 
-	const onSetVisible = (e: React.ChangeEvent<HTMLInputElement>) => {
-		if (e.target.checked) {
+	const onSetVisible = (checked: boolean) => {
+		if (checked) {
 			directory.sendMessage('changeSettings', {
 				type: 'set',
 				settings: { visibleRoles: uniq([...visibleRoles, role]) },
@@ -201,7 +203,7 @@ function AccountRole({ role, data }: { role: AccountRole; data?: { expires?: num
 		<tr>
 			<td>{ _.startCase(role) }</td>
 			<td>
-				<input type='checkbox' checked={ visible } onChange={ onSetVisible } />
+				<Checkbox checked={ visible } onChange={ onSetVisible } />
 			</td>
 			<td>{ data ? data.expires ? `${new Date(data.expires).toLocaleString()}` : 'Never' : '-' }</td>
 		</tr>
@@ -269,7 +271,7 @@ function DisplayName({ account }: { account: IDirectoryAccountInfo; }): ReactEle
 			<legend>Display name</legend>
 			<div className='input-row'>
 				<label>Name</label>
-				<input type='text' value={ name } onChange={ (e) => setName(e.target.value) } disabled={ nextAllowedChange > now } />
+				<TextInput value={ name } onChange={ setName } disabled={ nextAllowedChange > now } />
 				<Button className='slim fadeDisabled' onClick={ onSetDisplayName } disabled={ name === current || nextAllowedChange > now }>Save</Button>
 			</div>
 			<div className='input-row'>

@@ -12,7 +12,7 @@ export function WardrobeBodySizeEditor({ character, characterState }: {
 	character: ICharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const [execute] = useWardrobeExecuteCallback();
+	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 	const assetManager = characterState.assetManager;
 	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 

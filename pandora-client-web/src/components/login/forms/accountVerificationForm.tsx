@@ -1,8 +1,9 @@
 import { GetLogger, IsSimpleToken, IsString, IsUsername } from 'pandora-common';
 import React, { ReactElement, useEffect } from 'react';
 import { useNavigate } from 'react-router';
+import { FormInput } from '../../../common/userInteraction/input/formInput';
 import { Button } from '../../common/button/button';
-import { FormErrorMessage, Form, FormField, FormFieldError, FormLink } from '../../common/form/form';
+import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
 import { useAuthFormData } from '../authFormDataProvider';
 import { useLoginForm } from './useLoginForm';
 
@@ -31,11 +32,13 @@ export function AccountVerificationForm(): ReactElement {
 			</p>
 			<FormField>
 				<label htmlFor='verify-token'>Verification code</label>
-				<input
+				<FormInput
 					type='text'
 					id='verify-token'
 					autoComplete='one-time-code'
-					{ ...register('token', {
+					register={ register }
+					name='token'
+					options={ {
 						required: 'Verification code is required',
 						minLength: {
 							message: `Verification code must be exactly ${ VERIFICATION_CODE_LENGTH } characters`,
@@ -46,7 +49,7 @@ export function AccountVerificationForm(): ReactElement {
 							value: VERIFICATION_CODE_LENGTH,
 						},
 						validate: (token) => IsSimpleToken(token) || 'Invalid verification code format',
-					}) }
+					} }
 				/>
 				<FormFieldError error={ errors.token } />
 			</FormField>

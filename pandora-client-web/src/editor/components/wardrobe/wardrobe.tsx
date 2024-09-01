@@ -1,3 +1,4 @@
+import { Immutable } from 'immer';
 import {
 	ActionSpaceContext,
 	AppearanceActionContext,
@@ -7,25 +8,25 @@ import {
 	EMPTY_ARRAY,
 	ItemId,
 } from 'pandora-common';
+import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import React, { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
+import { WardrobeItemConfigMenu } from '../../../components/wardrobe/itemDetail/_wardrobeItemDetail';
 import { InventoryAssetView } from '../../../components/wardrobe/views/wardrobeAssetView';
 import { InventoryItemView } from '../../../components/wardrobe/views/wardrobeItemView';
+import '../../../components/wardrobe/wardrobe.scss';
+import { WardrobeActionRandomizeButton } from '../../../components/wardrobe/wardrobeComponents';
 import { useWardrobeContext, wardrobeContext } from '../../../components/wardrobe/wardrobeContext';
 import { useWardrobeItems } from '../../../components/wardrobe/wardrobeItems';
 import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocuser, WardrobeHeldItem } from '../../../components/wardrobe/wardrobeTypes';
 import { WardrobeFocusesItem } from '../../../components/wardrobe/wardrobeUtils';
-import { WardrobeItemConfigMenu } from '../../../components/wardrobe/itemDetail/_wardrobeItemDetail';
 import { Observable, useObservable } from '../../../observable';
 import { useEditor, useEditorState } from '../../editorContextProvider';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor';
-import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
-import '../../../components/wardrobe/wardrobe.scss';
-import { WardrobeActionRandomizeButton } from '../../../components/wardrobe/wardrobeComponents';
-import { Immutable } from 'immer';
 
 export const EDITOR_SPACE_CONTEXT = {
 	features: [
@@ -147,15 +148,14 @@ export function EditorWardrobeUI(): ReactElement {
 			<Column padding='medium'>
 				<div>
 					<label htmlFor='unlocked-toggle'>Character Safemode</label>
-					<input
+					<Checkbox
 						id='unlocked-toggle'
-						type='checkbox'
 						checked={ safemode }
-						onChange={ (e) => {
+						onChange={ (newValue) => {
 							character.getAppearance()
 								.editorDoAction({
 									type: 'restrictionOverrideChange',
-									mode: e.target.checked ? 'normal' : 'safemode',
+									mode: newValue ? 'normal' : 'safemode',
 								});
 						} }
 					/>

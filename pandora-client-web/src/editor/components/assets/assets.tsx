@@ -6,11 +6,13 @@ import { toast } from 'react-toastify';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { useLayerName } from '../../../assets/assetGraphicsCalculations';
 import { useCharacterAppearanceItems } from '../../../character/character';
+import { FormInput } from '../../../common/userInteraction/input/formInput';
+import { Select } from '../../../common/userInteraction/select/select';
 import { Button } from '../../../components/common/button/button';
+import { ColorInput } from '../../../components/common/colorInput/colorInput';
 import { Row } from '../../../components/common/container/container';
 import { Form, FormField, FormFieldError } from '../../../components/common/form/form';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { Select } from '../../../components/common/select/select';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
@@ -252,6 +254,7 @@ function AssetLayerElement({ layer }: { layer: AssetGraphicsLayer; }): ReactElem
 	}, () => editor.getLayersAlphaOverrideIndex(layer));
 
 	const tint = useEditorLayerTint(layer);
+	const visibleName = useLayerName(layer);
 
 	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
@@ -260,13 +263,14 @@ function AssetLayerElement({ layer }: { layer: AssetGraphicsLayer; }): ReactElem
 
 	return (
 		<li>
-			<span>{ useLayerName(layer) }</span>
+			<span>{ visibleName }</span>
 			<div className='controls'>
-				<input
-					type='color'
-					value={ '#' + tint.toString(16).padStart(6, '0') }
-					onChange={ (event) => {
-						editor.setLayerTint(layer, Number.parseInt(event.target.value.replace(/^#/, ''), 16));
+				<ColorInput
+					hideTextInput
+					title={ `Layer '${visibleName}' tint` }
+					initialValue={ `#${tint.toString(16).padStart(6, '0')}` }
+					onChange={ (newValue) => {
+						editor.setLayerTint(layer, Number.parseInt(newValue.replace(/^#/, ''), 16));
 					} }
 				/>
 				<Button className='slim' onClick={ toggleAlpha } title="Cycle layers's opacity">{ EDITOR_ALPHA_ICONS[alphaIndex] }</Button>
@@ -395,8 +399,10 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): React
 							{ view.categories.map((c) => <option key={ c.name } value={ c.name }>{ c.name }</option>) }
 						</Select>
 						/
-						<input type='text'
-							{ ...register('id', { required: 'ID is required', validate: validateId }) }
+						<FormInput type='text'
+							register={ register }
+							name='id'
+							options={ { required: 'ID is required', validate: validateId } }
 							placeholder='Enter identifier of the asset'
 						/>
 					</Row>
@@ -404,8 +410,12 @@ function AssetCreateDialog({ closeDialog }: { closeDialog: () => void; }): React
 				</FormField>
 				<FormField>
 					Name:
-					<input type='text'
-						{ ...register('name', { required: 'Name is required' }) }
+					<FormInput type='text'
+						register={ register }
+						name='name'
+						options={ {
+							required: 'Name is required',
+						} }
 						placeholder='Visible name of your asset'
 					/>
 					<FormFieldError error={ errors.name } />

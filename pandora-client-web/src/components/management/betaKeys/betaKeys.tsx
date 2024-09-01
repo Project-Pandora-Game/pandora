@@ -4,6 +4,8 @@ import React, { createContext, ReactElement, useCallback, useContext, useEffect,
 import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { useAsyncEvent } from '../../../common/useEvent';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { Button } from '../../common/button/button';
@@ -117,14 +119,12 @@ function BetaKeyCreate(): ReactElement {
 	const [maxUses, setMaxUses] = useState<undefined | number>(isAdmin ? undefined : 1);
 	const { append } = useContext(BetaKeyListContext);
 
-	const updateMaxUses = useCallback((ev: React.ChangeEvent<HTMLInputElement>) => {
-		const value = ev.target.value;
-		if (value === '' && isAdmin) {
+	const updateMaxUses = useCallback((newValue: number) => {
+		if (newValue === 0 && isAdmin) {
 			setMaxUses(undefined);
 		} else {
-			const num = parseInt(value, 10);
-			if (!isNaN(num) && num >= 1 && (isAdmin || num <= 5)) {
-				setMaxUses(num);
+			if (!isNaN(newValue) && newValue >= 1 && (isAdmin || newValue <= 5)) {
+				setMaxUses(newValue);
 			}
 		}
 	}, [isAdmin]);
@@ -165,13 +165,14 @@ function BetaKeyCreate(): ReactElement {
 			<legend>Create Beta Key</legend>
 			<div className='input-row'>
 				<label>Expires</label>
-				<input type='checkbox' checked={ expires !== undefined } onChange={ (e) => setExpires(e.target.checked ? Date.now() + ONE_DAY : undefined) } disabled={ !isAdmin } />
+				<Checkbox checked={ expires !== undefined } onChange={ (checked) => setExpires(checked ? Date.now() + ONE_DAY : undefined) } disabled={ !isAdmin } />
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input type='date' value={ expires === undefined ? '' : new Date(expires).toISOString().substring(0, 10) } onChange={ updateExpires } />
 			</div>
 			<div className='input-row'>
 				<label>Max Uses</label>
-				<input type='checkbox' checked={ maxUses !== undefined } onChange={ (e) => setMaxUses(e.target.checked ? 1 : undefined) } disabled={ !isAdmin } />
-				<input type='number' value={ maxUses === undefined ? '' : maxUses } onChange={ updateMaxUses } min={ 1 } max={ isAdmin ? undefined : 5 } />
+				<Checkbox checked={ maxUses !== undefined } onChange={ (checked) => setMaxUses(checked ? 1 : undefined) } disabled={ !isAdmin } />
+				<NumberInput value={ maxUses === undefined ? 0 : maxUses } onChange={ updateMaxUses } min={ isAdmin ? 0 : 1 } max={ isAdmin ? undefined : 5 } />
 			</div>
 			<div className='input-row'>
 				<Button className='slim' onClick={ onCreate }>Create</Button>

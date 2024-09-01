@@ -1,10 +1,11 @@
 import React, { ReactElement } from 'react';
 import { ICharacter } from '../../../character/character';
-import { usePlayerId } from '../../gameContext/playerContextProvider';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
-import { Column, Row } from '../../common/container/container';
-import { MIN_RANDOMIZE_UPDATE_INTERVAL, WardrobeActionRandomizeButton, WardrobeActionRandomizeUpdateInterval } from '../wardrobeComponents';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput';
 import { useObservable } from '../../../observable';
+import { Column, Row } from '../../common/container/container';
+import { FieldsetToggle } from '../../common/fieldsetToggle';
+import { usePlayerId } from '../../gameContext/playerContextProvider';
+import { MIN_RANDOMIZE_UPDATE_INTERVAL, WardrobeActionRandomizeButton, WardrobeActionRandomizeUpdateInterval } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 
 export function WardrobeRandomizationGui({ character }: {
@@ -49,8 +50,8 @@ function WardrobeActionRandomizeSettings() {
 	const { showHoverPreview } = useWardrobeContext();
 	const updateInterval = useObservable(WardrobeActionRandomizeUpdateInterval);
 
-	const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		const result = WardrobeActionRandomizeUpdateInterval.validate.safeParse(e.target.valueAsNumber);
+	const onChange = (newValue: number) => {
+		const result = WardrobeActionRandomizeUpdateInterval.validate.safeParse(newValue);
 		if (result.success)
 			WardrobeActionRandomizeUpdateInterval.value = result.data;
 	};
@@ -67,9 +68,8 @@ function WardrobeActionRandomizeSettings() {
 		<>
 			<Row className='input-row'>
 				<label htmlFor='update-interval'>Hover randomization interval</label>
-				<input
+				<NumberInput
 					id='update-interval'
-					type='number'
 					value={ updateInterval }
 					onChange={ onChange }
 				/>

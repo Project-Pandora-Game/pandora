@@ -45,8 +45,8 @@
 	"devDependencies": {
 		"@stylistic/eslint-plugin": "2.7.1",
 		"@types/jest": "29.5.12",
-		"@typescript-eslint/eslint-plugin": "8.3.0",
-		"@typescript-eslint/parser": "8.3.0",
+		"@typescript-eslint/eslint-plugin": "8.4.0",
+		"@typescript-eslint/parser": "8.4.0",
 		"eslint": "8.57.0",
 		"eslint-plugin-deprecation": "3.0.0",
 		"eslint-plugin-import": "2.29.1",

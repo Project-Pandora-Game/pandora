@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  pixi-viewport:
+    hash: vtenzegv5nm2rviie2tt353xhu
+    path: patches/pixi-viewport.patch
+
 importers:
 
   .:
@@ -62,7 +67,7 @@ importers:
         version: link:../pandora-common
       pixi-viewport:
         specifier: 5.0.3
-        version: 5.0.3
+        version: 5.0.3(patch_hash=vtenzegv5nm2rviie2tt353xhu)
       pixi.js:
         specifier: 8.4.0
         version: 8.4.0
@@ -13203,7 +13208,7 @@ snapshots:
 
   pirates@4.0.6: {}
 
-  pixi-viewport@5.0.3: {}
+  pixi-viewport@5.0.3(patch_hash=vtenzegv5nm2rviie2tt353xhu): {}
 
   pixi.js@8.4.0:
     dependencies:

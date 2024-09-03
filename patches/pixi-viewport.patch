@@ -1,0 +1,9 @@
+diff --git a/dist/index.d.ts b/dist/index.d.ts
+index 17d9c9976226591832efd9c04bf33ee7d37b0afc..b5f514cdb643e7b68399b16eee157627c041e32c 100644
+--- a/dist/index.d.ts
++++ b/dist/index.d.ts
+@@ -1,4 +1,3 @@
+-///<reference path="./global.d.ts" />
+ export * from './plugins';
+ export * from './ease';
+ export * from './InputManager';

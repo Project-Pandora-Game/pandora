@@ -1,26 +1,27 @@
 import {
 	ActionRowBuilder,
+	ApplicationCommandOptionType,
 	ButtonBuilder,
 	ButtonStyle,
+	ChannelType,
+	DiscordAPIError,
 	EmbedBuilder,
 	PermissionFlagsBits,
-	SlashCommandBuilder,
-	SlashCommandSubcommandBuilder,
-	type MessageActionRowComponentBuilder,
-	SlashCommandIntegerOption,
 	SlashCommandBooleanOption,
-	ApplicationCommandOptionType,
+	SlashCommandBuilder,
+	SlashCommandIntegerOption,
+	SlashCommandSubcommandBuilder,
 	userMention,
-	DiscordAPIError,
 	type GuildMember,
+	type MessageActionRowComponentBuilder,
 } from 'discord.js';
 import { Assert, AssertNever, GetLogger, TimeSpanMs } from 'pandora-common';
+import { ACTOR_PANDORA } from '../../../account/actorPandora';
 import { ENV } from '../../../config';
+import { BetaKeyStore } from '../../../shard/betaKeyStore';
+import { Sleep } from '../../../utility';
 import { BetaRegistrationService } from '../../betaRegistration/betaRegistration';
 import { GetInteractionMember, type DiscordButtonDescriptor, type DiscordCommandDescriptor } from './_common';
-import { Sleep } from '../../../utility';
-import { BetaKeyStore } from '../../../shard/betaKeyStore';
-import { ACTOR_PANDORA } from '../../../account/actorPandora';
 
 const {
 	BETA_KEY_ENABLED,
@@ -86,6 +87,14 @@ export const DISCORD_COMMAND_ADMIN: DiscordCommandDescriptor = {
 
 			const row = new ActionRowBuilder<MessageActionRowComponentBuilder>()
 				.addComponents(registerButton);
+
+			if (interaction.channel.type !== ChannelType.GuildText) {
+				await interaction.reply({
+					ephemeral: true,
+					content: `Error: This command can only be used in a standard text channel.`,
+				});
+				return;
+			}
 
 			await interaction.channel.send({
 				embeds: [

@@ -1,4 +1,4 @@
-import Discord, { BitFieldResolvable, Events, GatewayIntentsString, GuildChannel, REST, Routes, type Interaction } from 'discord.js';
+import Discord, { Events, GatewayIntentBits, GuildChannel, REST, Routes, type ClientOptions, type Interaction } from 'discord.js';
 import _ from 'lodash';
 import { Assert, GetLogger, ServerService } from 'pandora-common';
 import promClient from 'prom-client';
@@ -10,9 +10,9 @@ const { DISCORD_BOT_TOKEN, DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID, DISCORD_BOT_CH
 
 const STATUS_THROTTLE_TIME = 10 * 60 * 1000; // 10 minutes
 
-const GATEWAY_INTENTS: BitFieldResolvable<GatewayIntentsString, number> = [
-	'Guilds',
-	'GuildIntegrations',
+const GATEWAY_INTENTS: ClientOptions['intents'] = [
+	GatewayIntentBits.Guilds,
+	GatewayIntentBits.GuildIntegrations,
 ];
 
 const DISCORD_COMMANDS: readonly DiscordCommandDescriptor[] = [

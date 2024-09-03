@@ -14,6 +14,8 @@ import { CreatePixiRoot, type PixiRoot } from './reconciler/reconciler';
 export interface GraphicsSceneRendererProps extends ChildrenProps {
 	container: HTMLDivElement;
 	resolution: number;
+	backgroundColor?: number;
+	backgroundAlpha?: number;
 	onMount?: (app: Application) => void;
 	onUnmount?: (app: Application) => void;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -52,12 +54,16 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 	}
 
 	public override componentDidUpdate(oldProps: Readonly<Omit<GraphicsSceneRendererProps, 'forwardContexts'>>) {
-		const { container, resolution } = this.props;
-		const { container: oldContainer, resolution: oldResolution } = oldProps;
+		const {
+			container,
+			resolution,
+			backgroundColor,
+			backgroundAlpha,
+		} = this.props;
 
 		let needsUpdate = false;
 
-		if (container !== oldContainer && this.app != null) {
+		if (container !== oldProps.container && this.app != null) {
 			this.app.canvas.remove();
 			container.appendChild(this.app.canvas);
 			this.app.resizeTo = container;
@@ -65,9 +71,19 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 			needsUpdate = true;
 		}
 
-		if (resolution !== oldResolution && this.app != null) {
+		if (resolution !== oldProps.resolution && this.app != null) {
 			this.app.renderer.resolution = resolution;
 			this.app.resize();
+			needsUpdate = true;
+		}
+
+		if (backgroundColor !== oldProps.backgroundColor && this.app != null) {
+			this.app.renderer.background.color = backgroundColor ?? DEFAULT_BACKGROUND_COLOR;
+			needsUpdate = true;
+		}
+
+		if (backgroundAlpha !== oldProps.backgroundAlpha && this.app != null) {
+			this.app.renderer.background.alpha = backgroundAlpha ?? 1;
 			needsUpdate = true;
 		}
 
@@ -97,7 +113,13 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 	}
 
 	private _mountApp(app: Application): void {
-		const { onMount, container, resolution } = this.props;
+		const {
+			onMount,
+			container,
+			resolution,
+			backgroundColor = DEFAULT_BACKGROUND_COLOR,
+			backgroundAlpha = 1,
+		} = this.props;
 
 		if (this.app === app)
 			return;
@@ -108,9 +130,11 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		this.logger.debug('Mounting application');
 
 		app.renderer.resolution = resolution;
-		container.appendChild(app.canvas);
 		this.app.resizeTo = container;
 		this.app.resize();
+		app.renderer.background.color = backgroundColor;
+		app.renderer.background.alpha = backgroundAlpha;
+		container.appendChild(app.canvas);
 		onMount?.(this.app);
 
 		this.root = CreatePixiRoot(this.app.stage);
@@ -138,6 +162,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		// Now we manually clear the children, so the app can be immediately reused without remnants
 		if (this.app != null) {
 			onUnmount?.(this.app);
+			this.app.resizeTo = window;
 			this.app.stage
 				.removeChildren()
 				.forEach((c) => c.destroy({
@@ -193,6 +218,8 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 export function GraphicsSceneRendererShared({
 	children,
 	resolution,
+	backgroundColor,
+	backgroundAlpha,
 	onMount,
 	onUnmount,
 	container,
@@ -204,6 +231,8 @@ export function GraphicsSceneRendererShared({
 		<ContextBridge contexts={ forwardContexts } render={ (c) => (
 			<GraphicsSceneRendererSharedImpl
 				resolution={ resolution }
+				backgroundColor={ backgroundColor }
+				backgroundAlpha={ backgroundAlpha }
 				onMount={ onMount }
 				onUnmount={ onUnmount }
 				container={ container }
@@ -222,8 +251,6 @@ export function GraphicsSceneRendererShared({
 
 interface GraphicsSceneBackgroundRendererProps extends Omit<GraphicsSceneRendererProps, 'container'> {
 	renderArea: Rectangle;
-	backgroundColor?: number;
-	backgroundAlpha?: number;
 }
 
 const backgroundRenderingQueue = new CalculationQueue({

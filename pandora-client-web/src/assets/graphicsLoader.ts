@@ -258,16 +258,11 @@ export class URLGraphicsLoader extends GraphicsLoaderBase {
 			src = await new Promise((resolve, reject) => {
 				const img = new Image();
 				img.crossOrigin = 'anonymous';
+				img.onload = () => {
+					resolve(img);
+				};
+				img.onerror = reject;
 				img.src = url;
-
-				if (img.complete) {
-					resolve(src);
-				} else {
-					img.onload = (): void => {
-						resolve(src);
-					};
-					img.onerror = reject;
-				}
 			});
 		}
 

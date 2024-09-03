@@ -398,7 +398,7 @@ function MaskContainerCustom({
 
 	const maskLayer = useRef<GraphicsMaskLayer | null>(null);
 	const maskContainer = useRef<PIXI.Container | null>(null);
-	const maskGeometryFinal = useRef<PIXI.Geometry | undefined | null>(null);
+	const maskGeometryFinal = useRef<PIXI.MeshGeometry | undefined | null>(null);
 
 	const maskImageTexture = useTexture(maskImage, true, getTexture);
 	const maskImageTextureSaved = useRef<PIXI.Texture | null>(null);

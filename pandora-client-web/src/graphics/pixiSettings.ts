@@ -1,7 +1,7 @@
 import { settings as PIXISettings } from 'pixi.js';
 
 // PIXI plugins
-import '@pixi/unsafe-eval';
+import 'pixi.js/lib/unsafe-eval/init';
 
 /**
  * This function applies global Pixi.js settings we need

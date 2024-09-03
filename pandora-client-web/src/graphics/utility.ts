@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import type { AssetId, AtomicCondition, Condition } from 'pandora-common';
+import { Assert, type AssetId, type AtomicCondition, type Condition } from 'pandora-common';
 import { ImageSource, type TextureSource } from 'pixi.js';
 
 export function GetAngle(x: number, y: number): number {
@@ -32,6 +32,19 @@ export function StripAssetHash(name: string): string {
 	return name.replace(/_[a-z0-9_-]{43}(?=\.[a-z]+$)/i, '');
 }
 
+function ImageToCanvas(image: HTMLImageElement): HTMLCanvasElement {
+	Assert(image.complete);
+
+	const canvas = document.createElement('canvas');
+	canvas.width = image.width;
+	canvas.height = image.height;
+	const context = canvas.getContext('2d');
+	Assert(context != null);
+	context.drawImage(image, 0, 0, image.width, image.height);
+
+	return canvas;
+}
+
 export function LoadArrayBufferImageResource(buffer: ArrayBuffer): Promise<TextureSource> {
 	const blob = new Blob([buffer], { type: 'image/png' });
 	return new Promise((resolve, reject) => {
@@ -39,7 +52,7 @@ export function LoadArrayBufferImageResource(buffer: ArrayBuffer): Promise<Textu
 		image.onload = () => {
 			URL.revokeObjectURL(image.src);
 			resolve(new ImageSource({
-				resource: image,
+				resource: ImageToCanvas(image),
 				alphaMode: 'premultiply-alpha-on-upload',
 				resolution: 1,
 			}));
@@ -49,6 +62,24 @@ export function LoadArrayBufferImageResource(buffer: ArrayBuffer): Promise<Textu
 			reject(new Error('Load failed'));
 		};
 		image.src = URL.createObjectURL(blob);
+	});
+}
+
+export function LoadInlineImageResource(data: string): Promise<TextureSource> {
+	return new Promise((resolve, reject) => {
+		const image = new Image();
+		image.onload = () => {
+			resolve(new ImageSource({
+				resource: ImageToCanvas(image),
+				alphaMode: 'premultiply-alpha-on-upload',
+				resolution: 1,
+			}));
+		};
+		image.onerror = () => {
+			URL.revokeObjectURL(image.src);
+			reject(new Error('Load failed'));
+		};
+		image.src = data;
 	});
 }
 

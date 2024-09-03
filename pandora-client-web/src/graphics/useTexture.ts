@@ -1,8 +1,11 @@
+import { GetLogger } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { useEffect, useRef, useState } from 'react';
+import { ERROR_TEXTURE } from '../assets/graphicsLoader';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { useObservable } from '../observable';
 import { useRegisterSuspenseAsset } from './graphicsSuspense/graphicsSuspense';
+import { LoadInlineImageResource } from './utility';
 
 const RESULT_NO_TEXTURE = {
 	image: '',
@@ -50,12 +53,24 @@ export function useTexture(
 		wanted.current = image;
 
 		if (/^data:image\/[^;]+;base64,[0-9a-zA-Z+/=]+$/i.test(image)) {
-			const img = new Image();
-			img.src = image;
-			setTexture({
-				image,
-				texture: Texture.from(img),
-			});
+			LoadInlineImageResource(image)
+				.then((source) => {
+					if (wanted.current === image) {
+						setTexture({
+							image,
+							texture: new Texture({ source }),
+						});
+					}
+				})
+				.catch((error) => {
+					GetLogger('useTexture').error('Error loading inline texture:', error);
+					if (wanted.current === image) {
+						setTexture({
+							image,
+							texture: ERROR_TEXTURE,
+						});
+					}
+				});
 			return;
 		}
 

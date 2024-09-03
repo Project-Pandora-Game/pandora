@@ -1,5 +1,5 @@
 import { Assert } from 'pandora-common';
-import type { DisplayObject } from 'pixi.js';
+import type { Container } from 'pixi.js';
 import type ReactReconciler from 'react-reconciler';
 import { DefaultEventPriority } from 'react-reconciler/constants';
 import { PIXI_REGISTERED_COMPONENTS } from './component';
@@ -13,11 +13,11 @@ export type PixiHostConfig = ReactReconciler.HostConfig<
 	string, // Type
 	any, // Props
 	PixiRootContainer, // Container
-	PixiInternalElementInstance<any, never, any, any>, // Instance
+	PixiInternalElementInstance<Container, never, any, any>, // Instance
 	never, // TextInstance
 	never, // SuspenseInstance
 	never, // HydratableInstance
-	DisplayObject, // PublicInstance
+	Container, // PublicInstance
 	null, // HostContext
 	string[], // UpdatePayload: We use a list of changed props
 	never, // ChildSet
@@ -77,7 +77,6 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 	},
 	getPublicInstance(instance) {
 		// Return what should be used as `ref` of the component.
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-return
 		return instance.instance;
 	},
 	prepareForCommit(_containerInfo) {

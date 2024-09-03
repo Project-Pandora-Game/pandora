@@ -6,7 +6,7 @@ import { usePixiApp } from '../reconciler/appContext';
 import { RegisterPixiComponent } from '../reconciler/component';
 import { PixiElementRequestUpdate } from '../reconciler/element';
 import { usePixiTick } from '../reconciler/tick';
-import { DISPLAY_OBJECT_EVENTS, type DisplayObjectEventMap } from './container';
+import { CONTAINER_EVENTS, type ContainerEventMap } from './container';
 
 export type PixiViewportSetupCallback = (viewport: Viewport, params: {
 	width: number;
@@ -24,7 +24,7 @@ export interface PixiViewportProps extends ChildrenProps {
 	setup?: PixiViewportSetupCallback;
 }
 
-const PixiViewportComponent = RegisterPixiComponent<Viewport, never, DisplayObjectEventMap, PixiViewportProps & { app: Application; }>('Viewport', {
+const PixiViewportComponent = RegisterPixiComponent<Viewport, never, ContainerEventMap, PixiViewportProps & { app: Application; }>('Viewport', {
 	create(props) {
 		const {
 			app,
@@ -104,7 +104,7 @@ const PixiViewportComponent = RegisterPixiComponent<Viewport, never, DisplayObje
 		}
 	},
 	autoProps: {},
-	events: DISPLAY_OBJECT_EVENTS,
+	events: CONTAINER_EVENTS,
 });
 
 export type PixiViewportRef = {
@@ -127,7 +127,7 @@ export const PixiViewport = forwardRef<PixiViewportRef, PixiViewportProps>((prop
 		},
 	}), [viewPort]);
 
-	usePixiTick((_delta, ticker) => {
+	usePixiTick((ticker) => {
 		viewPort?.update(ticker.elapsedMS);
 	});
 

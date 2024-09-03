@@ -1,9 +1,9 @@
-import { Text as PixiText, type IPointData } from 'pixi.js';
+import { Text as PixiText, type PointData } from 'pixi.js';
 import { ParsePixiPointLike, RegisterPixiComponent, type DisplayObjectEventNames, type PixiDisplayObjectWriteableProps } from '../reconciler/component';
-import { DISPLAY_OBJECT_AUTO_PROPS, DISPLAY_OBJECT_EVENTS, type DisplayObjectEventMap } from './container';
+import { CONTAINER_AUTO_PROPS, CONTAINER_EVENTS, type ContainerEventMap } from './container';
 
 const TEXT_AUTO_PROPS = {
-	...DISPLAY_OBJECT_AUTO_PROPS,
+	...CONTAINER_AUTO_PROPS,
 	style: true,
 	text: true,
 } as const satisfies Readonly<Partial<Record<keyof PixiDisplayObjectWriteableProps<PixiText>, true>>>;
@@ -11,11 +11,11 @@ const TEXT_AUTO_PROPS = {
 export type TextAutoProps = keyof typeof TEXT_AUTO_PROPS;
 
 const TEXT_EVENTS = {
-	...DISPLAY_OBJECT_EVENTS,
+	...CONTAINER_EVENTS,
 } as const satisfies Readonly<Partial<Record<DisplayObjectEventNames<PixiText>, true>>>;
 
 export type TextCustomProps = {
-	anchor?: IPointData;
+	anchor?: PointData;
 };
 
 /**
@@ -32,7 +32,7 @@ export type TextCustomProps = {
  * To split a line you can use '\n' in your text string, or, on the `style` object,
  * change its `wordWrap` property to true and and give the `wordWrapWidth` property a value.
  */
-export const Text = RegisterPixiComponent<PixiText, TextAutoProps, DisplayObjectEventMap, TextCustomProps>('Text', {
+export const Text = RegisterPixiComponent<PixiText, TextAutoProps, ContainerEventMap, TextCustomProps>('Text', {
 	create(props) {
 		const instance = new PixiText();
 		if (props.anchor != null) {

@@ -1,6 +1,6 @@
 import { freeze } from 'immer';
 import { Assert, type Satisfies } from 'pandora-common';
-import { DisplayObject, utils, type Container, type IPointData } from 'pixi.js';
+import { type Container, type EventEmitter, type PointData } from 'pixi.js';
 import type React from 'react';
 import type { ReactNode } from 'react';
 import type { ConditionalKeys, ReadonlyKeysOf } from 'type-fest';
@@ -10,13 +10,14 @@ import type { ConditionalKeys, ReadonlyKeysOf } from 'type-fest';
 /* eslint-disable @typescript-eslint/no-unsafe-function-type, @typescript-eslint/no-empty-object-type, @typescript-eslint/no-explicit-any */
 
 /** Writeable non-function props of the component */
-type DisplayObjectAllProps<Component extends DisplayObject> = Omit<Component, ConditionalKeys<Component, Function> | ReadonlyKeysOf<Component>>;
+type DisplayObjectAllProps<Component extends Container> = Omit<Component, ConditionalKeys<Component, Function> | ReadonlyKeysOf<Component>>;
 
 /** List of black-listed properties that shouldn't ever be visible (mainly those that we depend on with our internal state) */
 export const PIXI_COMPONENT_PRIVATE_PROPERTIES = [
 	'parent',
-	'worldAlpha',
-] as const satisfies (readonly (keyof DisplayObjectAllProps<DisplayObject>)[]);
+	'children',
+	'allowChildren',
+] as const satisfies (readonly (keyof DisplayObjectAllProps<Container>)[]);
 
 /** Keys of black-listed properties that shouldn't ever be visible (mainly those that we depend on with our internal state) */
 type DisplayObjectPrivateProps = (typeof PIXI_COMPONENT_PRIVATE_PROPERTIES)[number];
@@ -35,7 +36,7 @@ export const PIXI_COMPONENT_SPECIAL_PROPERTIES = [
 	'pivot',
 	'position',
 	'skew',
-] as const satisfies (readonly (keyof DisplayObjectAllProps<DisplayObject>)[]);
+] as const satisfies (readonly (keyof DisplayObjectAllProps<Container>)[]);
 
 /** Check if DisplayObject key is one of a property with special handling. */
 export function PixiComponentIsSpecialProperty(key: string): key is DisplayObjectSpecialPropKeys {
@@ -46,7 +47,7 @@ export function PixiComponentIsSpecialProperty(key: string): key is DisplayObjec
 type DisplayObjectSpecialPropKeys = (typeof PIXI_COMPONENT_SPECIAL_PROPERTIES)[number];
 
 /** A generic type that can be transformed into a point. */
-export type PixiPointLike = IPointData | readonly [number, number] | number;
+export type PixiPointLike = PointData | readonly [number, number] | number;
 
 /**
  * Parse a `PixiPointLike` data into X and Y numbers.
@@ -81,26 +82,26 @@ export type DisplayObjectSpecialProps = Satisfies<{
 }, Record<DisplayObjectSpecialPropKeys, any>>;
 
 /** List of writeable props, excluding any black-listed ones. */
-export type PixiDisplayObjectWriteableProps<Component extends DisplayObject> = Omit<DisplayObjectAllProps<Component>, DisplayObjectPrivateProps | DisplayObjectSpecialPropKeys>;
+export type PixiDisplayObjectWriteableProps<Component extends Container> = Omit<DisplayObjectAllProps<Component>, DisplayObjectPrivateProps | DisplayObjectSpecialPropKeys>;
 
 /** Helper for extracting valid event names for `pixi.utils.EventEmitter` class. */
-export type DisplayObjectEventNames<Component extends utils.EventEmitter<any>> = ReturnType<Component['eventNames']>[number];
+export type DisplayObjectEventNames<Component extends EventEmitter<any>> = ReturnType<Component['eventNames']>[number];
 
 /** Utility for extracting event mappings from an object. */
-type DisplayObjectListenersMapRaw<EventMap extends (utils.EventEmitter.ValidEventTypes)> = {
-	[eventType in utils.EventEmitter.EventNames<EventMap> as eventType extends string ? eventType : never]: utils.EventEmitter.EventListener<EventMap, eventType>;
+type DisplayObjectListenersMapRaw<EventMap extends (EventEmitter.ValidEventTypes)> = {
+	[eventType in EventEmitter.EventNames<EventMap> as eventType extends string ? eventType : never]: EventEmitter.EventListener<EventMap, eventType>;
 };
 
 /** Utility for extracting event mappings from an object, adding prefix */
-type DisplayObjectListenersMap<EventMap extends (utils.EventEmitter.ValidEventTypes)> = {
-	[eventType in utils.EventEmitter.EventNames<EventMap> as eventType extends string ? `on${eventType}` : never]: utils.EventEmitter.EventListener<EventMap, eventType>;
+type DisplayObjectListenersMap<EventMap extends (EventEmitter.ValidEventTypes)> = {
+	[eventType in EventEmitter.EventNames<EventMap> as eventType extends string ? `on${eventType}` : never]: EventEmitter.EventListener<EventMap, eventType>;
 };
 
 /** Properties a registered pixi components has access to; combination of custom-defined properties, event properties and automatically-setable properties. */
 export type PixiComponentProps<
-	Element extends DisplayObject,
+	Element extends Container,
 	AutoPropKeys extends (keyof PixiDisplayObjectWriteableProps<Element>) = never,
-	EventMap extends (utils.EventEmitter.ValidEventTypes) = DisplayObjectEventNames<Element>,
+	EventMap extends (EventEmitter.ValidEventTypes) = DisplayObjectEventNames<Element>,
 	CustomProps = {},
 > =
 	// Any properties defined by the component
@@ -114,9 +115,9 @@ export type PixiComponentProps<
 
 /** Config for a specific component, allowing it to be used generically by out Fiber. */
 export type PixiComponentConfig<
-	Element extends DisplayObject,
+	Element extends Container,
 	AutoPropKeys extends (keyof PixiDisplayObjectWriteableProps<Element>) = never,
-	EventMap extends (utils.EventEmitter.ValidEventTypes) = DisplayObjectEventNames<Element>,
+	EventMap extends (EventEmitter.ValidEventTypes) = DisplayObjectEventNames<Element>,
 	CustomProps = {},
 > = {
 	/**
@@ -143,9 +144,9 @@ export type PixiComponentConfig<
 
 /** Full props of a component defining how the component can be used by client code. */
 export type PixiComponentFullProps<
-	Element extends DisplayObject,
+	Element extends Container,
 	AutoPropKeys extends (keyof PixiDisplayObjectWriteableProps<Element>) = never,
-	EventMap extends (utils.EventEmitter.ValidEventTypes) = DisplayObjectEventNames<Element>,
+	EventMap extends (EventEmitter.ValidEventTypes) = DisplayObjectEventNames<Element>,
 	CustomProps = {},
 > =
 	// The props visible to the component itself
@@ -162,9 +163,9 @@ export type PixiComponentFullProps<
  * @returns Opaque value that can be used as an JSX component.
  */
 export function RegisterPixiComponent<
-	Element extends DisplayObject,
+	Element extends Container,
 	AutoPropKeys extends (keyof PixiDisplayObjectWriteableProps<Element>) = never,
-	EventMap extends (utils.EventEmitter.ValidEventTypes) = DisplayObjectEventNames<Element>,
+	EventMap extends (EventEmitter.ValidEventTypes) = DisplayObjectEventNames<Element>,
 	CustomProps = {},
 >(
 	uniqueName: string,

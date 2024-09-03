@@ -1,9 +1,9 @@
 import { Sprite as PixiSprite } from 'pixi.js';
 import { ParsePixiPointLike, RegisterPixiComponent, type DisplayObjectEventNames, type PixiDisplayObjectWriteableProps, type PixiPointLike } from '../reconciler/component';
-import { DISPLAY_OBJECT_AUTO_PROPS, DISPLAY_OBJECT_EVENTS, type DisplayObjectEventMap } from './container';
+import { CONTAINER_AUTO_PROPS, CONTAINER_EVENTS, type ContainerEventMap } from './container';
 
 const SPRITE_AUTO_PROPS = {
-	...DISPLAY_OBJECT_AUTO_PROPS,
+	...CONTAINER_AUTO_PROPS,
 	texture: true,
 	tint: true,
 	width: true,
@@ -13,7 +13,7 @@ const SPRITE_AUTO_PROPS = {
 export type SpriteAutoProps = keyof typeof SPRITE_AUTO_PROPS;
 
 const SPRITE_EVENTS = {
-	...DISPLAY_OBJECT_EVENTS,
+	...CONTAINER_EVENTS,
 } as const satisfies Readonly<Partial<Record<DisplayObjectEventNames<PixiSprite>, true>>>;
 
 export type SpriteCustomProps = {
@@ -23,7 +23,7 @@ export type SpriteCustomProps = {
 /**
  * The Sprite object is the base for all textured objects that are rendered to the screen.
  */
-export const Sprite = RegisterPixiComponent<PixiSprite, SpriteAutoProps, DisplayObjectEventMap, SpriteCustomProps>('Sprite', {
+export const Sprite = RegisterPixiComponent<PixiSprite, SpriteAutoProps, ContainerEventMap, SpriteCustomProps>('Sprite', {
 	create(props) {
 		const instance = new PixiSprite();
 		if (props.anchor != null) {

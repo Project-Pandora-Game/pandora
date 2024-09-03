@@ -1,5 +1,5 @@
 import { AssetGraphicsDefinition, AssetId, AssetsGraphicsDefinitionFile, PointTemplate, TypedEventEmitter, type ITypedEventEmitter } from 'pandora-common';
-import { Resource, Texture } from 'pixi.js';
+import { Texture, type TextureSource } from 'pixi.js';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { BrowserStorage } from '../browserStorage';
@@ -16,7 +16,7 @@ export type IGraphicsLoaderEvents = {
 	storeChaged: void;
 };
 
-export type TextureUpdateListener = (texture: Texture<Resource>, lock: () => (() => void)) => void;
+export type TextureUpdateListener = (texture: Texture, lock: () => (() => void)) => void;
 
 export interface IGraphicsLoader extends ITypedEventEmitter<IGraphicsLoaderEvents> {
 	getCachedTexture(path: string): Texture | null;
@@ -27,7 +27,7 @@ export interface IGraphicsLoader extends ITypedEventEmitter<IGraphicsLoaderEvent
 	 * @returns A callback to release the texture
 	 */
 	useTexture(path: string, listener: TextureUpdateListener): () => void;
-	loadResource(path: string): Promise<Resource>;
+	loadTextureSource(path: string): Promise<TextureSource>;
 	loadTextFile(path: string): Promise<string>;
 	loadFileArrayBuffer(path: string, type?: string): Promise<ArrayBuffer>;
 	/**
@@ -80,8 +80,8 @@ class AlternateImageFormatGraphicsLoader extends TypedEventEmitter<IGraphicsLoad
 		return this._loader.useTexture(this._transformPath(path), listener);
 	}
 
-	public loadResource(path: string): Promise<Resource> {
-		return this._loader.loadResource(this._transformPath(path));
+	public loadTextureSource(path: string): Promise<TextureSource> {
+		return this._loader.loadTextureSource(this._transformPath(path));
 	}
 
 	public loadTextFile(path: string): Promise<string> {

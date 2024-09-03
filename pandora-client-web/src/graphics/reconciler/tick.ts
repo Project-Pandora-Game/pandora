@@ -7,7 +7,7 @@ import { usePixiAppOptional } from './appContext';
  * @param callback - The callback that should be called
  * @param enabled - Whether this callback is enabled or not (allowing to disable the tick without calling the hook conditionally)
  */
-export function usePixiTick(callback: (dt: number, ticker: Ticker) => void, enabled: boolean = true) {
+export function usePixiTick(callback: (ticker: Ticker) => void, enabled: boolean = true) {
 	const app = usePixiAppOptional();
 
 	useEffect(() => {
@@ -16,8 +16,8 @@ export function usePixiTick(callback: (dt: number, ticker: Ticker) => void, enab
 
 		const ticker = app.ticker;
 
-		const tick = (dt: number) => {
-			callback(dt, ticker);
+		const tick = (tickerRef: Ticker) => {
+			callback(tickerRef);
 		};
 
 		ticker.add(tick);

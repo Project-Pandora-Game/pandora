@@ -1,7 +1,7 @@
 import { Draft } from 'immer';
 import { AssertNotNullable, CloneDeepMutable, ICharacterRoomData, ResolveBackground, RoomBackgroundCalibrationDataSchema } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
-import z from 'zod';
+import { z } from 'zod';
 import { useAssetManager } from '../../../assets/assetManager';
 import { BrowserStorage } from '../../../browserStorage';
 import { Character, useCharacterData } from '../../../character/character';

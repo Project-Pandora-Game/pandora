@@ -40,6 +40,7 @@
 				// Disabled recommended rules
 				"@typescript-eslint/no-inferrable-types": "off",
 				"@typescript-eslint/prefer-nullish-coalescing": "off",
+				"import/namespace": "off", // TypeScript ensures the validity better
 				// NOs
 				"@typescript-eslint/only-throw-error": "error",
 				// Warnings

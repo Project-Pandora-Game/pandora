@@ -113,6 +113,10 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 				data: result.actionData,
 			};
 		},
+		sendPermissionRequest: (_target, _permissions) => {
+			// Editor does not support permission manipulations
+			return { result: 'failure' };
+		},
 		showExtraActionButtons: true,
 		showHoverPreview: true,
 		itemDisplayNameType: 'custom_with_original_in_brackets',

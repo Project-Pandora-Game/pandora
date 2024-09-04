@@ -63,6 +63,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			chatMessageAck: this.handleChatMessageAck.bind(this),
 			roomCharacterMove: this.handleRoomCharacterMove.bind(this),
 			appearanceAction: this.handleAppearanceAction.bind(this),
+			requestPermission: this.handleRequestPermission.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
 			updateAssetPreferences: this.handleUpdateAssetPreferences.bind(this),
 			updateCharacterDescription: this.handleUpdateCharacterDescription.bind(this),
@@ -208,6 +209,50 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			result: 'success',
 			data: result.actionData,
 		};
+	}
+
+	private handleRequestPermission({ target, permissions }: IClientShardArgument['requestPermission'], client: ClientConnection): IClientShardNormalResult['requestPermission'] {
+		const character = client.character;
+		if (!character)
+			throw new BadMessageError();
+
+		const space = character.getOrLoadSpace();
+		const player = character.gameLogicCharacter;
+		const targetCharacter = space.getCharacterById(target);
+		if (targetCharacter == null) {
+			// If the target isn't found, fail
+			return {
+				result: 'failure',
+			};
+		}
+		if (targetCharacter.connection == null) {
+			return { result: 'promptFailedCharacterOffline' };
+		}
+		const requiredPermissions: [PermissionSetup, PermissionConfig | null][] = [];
+		for (const [permissionGroup, permissionId] of permissions) {
+			const permission = targetCharacter.gameLogicCharacter.getPermission(permissionGroup, permissionId);
+			if (permission == null) {
+				return {
+					result: 'failure',
+				};
+			}
+
+			// Deny request immediately if some permission is denied
+			const checkResult = permission.checkPermission(player);
+			if (checkResult === 'no') {
+				return {
+					result: 'failure',
+				};
+			}
+
+			requiredPermissions.push([CloneDeepMutable(permission.setup), permission.getConfig()]);
+		}
+		targetCharacter.connection.sendMessage('permissionPrompt', {
+			characterId: character.id,
+			requiredPermissions,
+			messages: [],
+		});
+		return { result: 'promptSent' };
 	}
 
 	private handleUpdateSettings(settings: IClientShardArgument['updateSettings'], client: ClientConnection): void {

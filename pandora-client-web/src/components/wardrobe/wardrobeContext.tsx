@@ -13,6 +13,8 @@ import {
 	ItemId,
 	Nullable,
 	type AppearanceActionData,
+	type CharacterId,
+	type PermissionGroup,
 } from 'pandora-common';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
@@ -107,6 +109,7 @@ export function WardrobeContextProvider({ target, player, children }: { target: 
 		extraItemActions,
 		actions,
 		execute: (action) => shardConnector?.awaitResponse('appearanceAction', action),
+		sendPermissionRequest: (permissionRequestTarget, permissions) => shardConnector?.awaitResponse('requestPermission', { target: permissionRequestTarget, permissions }),
 		actionPreviewState,
 		showExtraActionButtons: settings.wardrobeExtraActionButtons,
 		showHoverPreview: settings.wardrobeHoverPreview,
@@ -176,6 +179,37 @@ export function useWardrobeExecuteCallback({ onSuccess, onFailure }: ExecuteCall
 			errorHandler: (err) => {
 				GetLogger('wardrobeExecute').error('Error executing action:', err);
 				toast(`Error performing action`, TOAST_OPTIONS_ERROR);
+			},
+			updateAfterUnmount: true,
+		},
+	);
+}
+
+export function useWardrobePermissionRequestCallback() {
+	const { sendPermissionRequest } = useWardrobeContext();
+	return useAsyncEvent(
+		async (target: CharacterId, permissions: [PermissionGroup, string][]) => await sendPermissionRequest(target, permissions),
+		(result) => {
+			switch (result?.result) {
+				case 'promptSent':
+					toast('Prompt sent', TOAST_OPTIONS_WARNING);
+					break;
+				case 'promptFailedCharacterOffline':
+					toast('Character is offline, try again later', TOAST_OPTIONS_ERROR);
+					break;
+				case 'failure':
+					toast('Failed to request the permissions', TOAST_OPTIONS_ERROR);
+					break;
+				case undefined:
+					break;
+				default:
+					AssertNever(result);
+			}
+		},
+		{
+			errorHandler: (err) => {
+				GetLogger('wardrobeSendPermissionRequest').error('Error requesting permissions:', err);
+				toast(`Error requesting permissions`, TOAST_OPTIONS_ERROR);
 			},
 			updateAfterUnmount: true,
 		},

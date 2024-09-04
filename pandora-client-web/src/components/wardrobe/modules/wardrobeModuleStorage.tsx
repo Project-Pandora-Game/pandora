@@ -6,13 +6,14 @@ import {
 import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Row } from '../../common/container/container';
-import { useWardrobeContext } from '../wardrobeContext';
-import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
-import { ActionWarning, CheckResultToClassName } from '../wardrobeComponents';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
+import { ActionWarning, CheckResultToClassName } from '../wardrobeComponents';
+import { useWardrobeContext, useWardrobePermissionRequestCallback } from '../wardrobeContext';
+import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
 
 export function WardrobeModuleConfigStorage({ item, moduleName, m }: WardrobeModuleProps<ItemModuleStorage>): ReactElement {
 	const { target, targetSelector, focuser, actions, globalState } = useWardrobeContext();
+	const [requestPermission] = useWardrobePermissionRequestCallback();
 	const [ref, setRef] = useState<HTMLElement | null>(null);
 
 	const checkResultInitial = useMemo(() => {
@@ -30,11 +31,14 @@ export function WardrobeModuleConfigStorage({ item, moduleName, m }: WardrobeMod
 	const onClick = useCallback((ev: React.MouseEvent) => {
 		ev.stopPropagation();
 		if (!checkResult.valid) {
+			if (checkResult.prompt != null) {
+				requestPermission(checkResult.prompt, Array.from(checkResult.requiredPermissions).map((p) => [p.group, p.id]));
+			}
 			return;
 		}
 
 		focuser.focusItemModule(item, moduleName, target);
-	}, [item, moduleName, focuser, target, checkResult]);
+	}, [requestPermission, item, moduleName, focuser, target, checkResult]);
 
 	return (
 		<Row padding='medium' wrap>

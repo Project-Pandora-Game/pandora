@@ -1,35 +1,38 @@
 import classNames from 'classnames';
+import { isEqual } from 'lodash';
 import {
+	ActionTargetSelector,
 	AppearanceAction,
+	AppearanceActionProcessingContext,
 	AppearanceItems,
+	AppearanceItemsCalculateTotalCount,
 	AssertNever,
 	CloneDeepMutable,
 	EMPTY_ARRAY,
 	Item,
-	ItemContainerPath,
-	ItemId,
-	ItemPath,
-	ActionTargetSelector,
 	ITEM_LIMIT_CHARACTER_WORN,
 	ITEM_LIMIT_ROOM_INVENTORY,
-	AppearanceItemsCalculateTotalCount,
+	ItemContainerPath,
+	ItemId,
+	ItemInteractionType,
+	ItemPath,
 } from 'pandora-common';
-import React, { ReactElement, useEffect, useMemo, useRef } from 'react';
-import { useObservable } from '../../../observable';
-import { isEqual } from 'lodash';
+import { EvalContainerPath, SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
-import { EvalContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import React, { ReactElement, useEffect, useMemo, useRef } from 'react';
+import { useNavigate } from 'react-router';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
-import { Scrollbar } from '../../common/scrollbar/scrollbar';
-import { WardrobeHeldItem } from '../wardrobeTypes';
-import { useWardrobeContext } from '../wardrobeContext';
-import { useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
-import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
-import { useNavigate } from 'react-router';
+import { useObservable } from '../../../observable';
 import { Button } from '../../common/button/button';
+import { Scrollbar } from '../../common/scrollbar/scrollbar';
+import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
 import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobeItemName';
+import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
+import { useWardrobeContext } from '../wardrobeContext';
+import { WardrobeHeldItem } from '../wardrobeTypes';
+import { useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
 
 export function InventoryItemView({
 	className,
@@ -40,11 +43,27 @@ export function InventoryItemView({
 	title: string;
 	filter?: (item: Item) => boolean;
 }): ReactElement | null {
-	const { target, targetSelector, heldItem, focuser, itemDisplayNameType } = useWardrobeContext();
+	const { target, targetSelector, heldItem, focuser, itemDisplayNameType, actions, globalState } = useWardrobeContext();
 	const focus = useObservable(focuser.current);
 	const appearance = useWardrobeTargetItems(target);
 	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(appearance), [appearance]);
 	const navigate = useNavigate();
+
+	const containerAccessCheckInitial = useMemo(() => {
+		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
+		const actionTarget = processingContext.getTarget(targetSelector);
+		if (actionTarget == null)
+			return processingContext.invalid();
+
+		const containerPath = SplitContainerPath(focus.container);
+		if (containerPath != null) {
+			processingContext.checkCanUseItemModule(actionTarget, containerPath.itemPath, containerPath.module, ItemInteractionType.MODIFY);
+		}
+
+		return processingContext.finalize();
+	}, [actions, globalState, targetSelector, focus]);
+
+	const containerAccessCheck = useCheckAddPermissions(containerAccessCheckInitial);
 
 	const [displayedItems, containerModule, containerSteps] = useMemo<[AppearanceItems, IItemModule | undefined, readonly string[]]>(() => {
 		let items: AppearanceItems = filter ? appearance.filter(filter) : appearance;
@@ -64,6 +83,12 @@ export function InventoryItemView({
 
 	const singleItemContainer = containerModule != null && containerModule instanceof ItemModuleLockSlot;
 	useEffect(() => {
+		// If we don't have access, then force de-select of an item, if there is one selected
+		if (!containerAccessCheck.valid) {
+			focuser.focusItemId(null);
+			return;
+		}
+
 		// Locks have special GUI on higher level, so be friendly and focus on that when there is a lock
 		if (containerModule?.type === 'lockSlot' && displayedItems.length === 1) {
 			focuser.focusPrevious();
@@ -78,7 +103,7 @@ export function InventoryItemView({
 		} else if (displayedItems.length === 0) {
 			focuser.focusItemId(null);
 		}
-	}, [focus, focuser, containerModule, singleItemContainer, displayedItems]);
+	}, [focus, focuser, containerModule, singleItemContainer, displayedItems, containerAccessCheck]);
 
 	return (
 		<div className={ classNames('inventoryView', className) }>
@@ -107,47 +132,55 @@ export function InventoryItemView({
 					</Button>
 					: '' }
 			</div>
-			<Scrollbar color='dark'>
-				<div className='list reverse withDropButtons'>
-					{
-						heldItem.type !== 'nothing' ? (
-							<div className='overlay' />
-						) : null
-					}
-					{
-						displayedItems.map((i) => (
-							<React.Fragment key={ i.id }>
-								<div className='overlayDropContainer'>
-									{
-										heldItem.type !== 'nothing' ? (
-											<InventoryItemViewDropArea
-												target={ targetSelector }
-												container={ focus.container }
-												insertBefore={ i.id }
-											/>
-										) : null
-									}
-								</div>
-								<InventoryItemViewList
-									item={ { container: focus.container, itemId: i.id } }
-									selected={ i.id === focus.itemId }
-									singleItemContainer={ singleItemContainer }
-								/>
-							</React.Fragment>
-						))
-					}
-					<div className='overlayDropContainer'>
-						{
-							heldItem.type !== 'nothing' ? (
-								<InventoryItemViewDropArea
-									target={ targetSelector }
-									container={ focus.container }
-								/>
-							) : null
-						}
+			{
+				containerAccessCheck.valid ? (
+					<Scrollbar color='dark'>
+						<div className='list reverse withDropButtons'>
+							{
+								heldItem.type !== 'nothing' ? (
+									<div className='overlay' />
+								) : null
+							}
+							{
+								displayedItems.map((i) => (
+									<React.Fragment key={ i.id }>
+										<div className='overlayDropContainer'>
+											{
+												heldItem.type !== 'nothing' ? (
+													<InventoryItemViewDropArea
+														target={ targetSelector }
+														container={ focus.container }
+														insertBefore={ i.id }
+													/>
+												) : null
+											}
+										</div>
+										<InventoryItemViewList
+											item={ { container: focus.container, itemId: i.id } }
+											selected={ i.id === focus.itemId }
+											singleItemContainer={ singleItemContainer }
+										/>
+									</React.Fragment>
+								))
+							}
+							<div className='overlayDropContainer'>
+								{
+									heldItem.type !== 'nothing' ? (
+										<InventoryItemViewDropArea
+											target={ targetSelector }
+											container={ focus.container }
+										/>
+									) : null
+								}
+							</div>
+						</div>
+					</Scrollbar>
+				) : (
+					<div className='flex-1 center-flex'>
+						<strong className='wardrobeProblemMessage'>You are not allowed to view the contents of this container.</strong>
 					</div>
-				</div>
-			</Scrollbar>
+				)
+			}
 		</div>
 	);
 }

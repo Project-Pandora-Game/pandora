@@ -72,6 +72,24 @@ export const ClientShardSchema = {
 			}),
 		]),
 	},
+	requestPermission: {
+		request: z.object({
+			target: CharacterIdSchema,
+			/** List of requested permissions. If any of the permissions cannot be prompted, the request fails. */
+			permissions: z.tuple([PermissionGroupSchema, z.string()]).array(),
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('promptSent'),
+			}),
+			z.object({
+				result: z.literal('promptFailedCharacterOffline'),
+			}),
+			z.object({
+				result: z.literal('failure'),
+			}),
+		]),
+	},
 	updateSettings: {
 		request: CharacterPublicSettingsSchema.partial(),
 		response: null,

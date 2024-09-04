@@ -165,7 +165,7 @@ export function WardrobeActionButton({
 	);
 }
 
-function CheckResultToClassName(result: AppearanceActionProcessingResult | null): string {
+export function CheckResultToClassName(result: AppearanceActionProcessingResult | null): string {
 	if (result == null)
 		return 'pending';
 	if (result.valid)

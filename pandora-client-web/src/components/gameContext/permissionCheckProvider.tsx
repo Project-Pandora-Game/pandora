@@ -1,9 +1,21 @@
+import {
+	AppearanceActionProblem,
+	AssertNever,
+	AssertNotNullable,
+	EMPTY_ARRAY,
+	GameLogicPermission,
+	GetLogger,
+	Logger,
+	PermissionRestriction,
+	PermissionType,
+	TypedEventEmitter,
+	type AppearanceActionProcessingResult,
+} from 'pandora-common';
 import React, { ReactElement, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
-import { AppearanceActionProblem, AssertNever, AssertNotNullable, GameLogicPermission, GetLogger, Logger, PermissionRestriction, PermissionType, TypedEventEmitter } from 'pandora-common';
-import { useShardChangeListener, useShardConnector } from './shardConnectorContextProvider';
 import { ShardConnector } from '../../networking/shardConnector';
 import { PermissionPromptHandler } from '../settings/permissionsSettings';
+import { useShardChangeListener, useShardConnector } from './shardConnectorContextProvider';
 
 export class PermissionCheckServiceBase extends TypedEventEmitter<{
 	permissionResultReset: void;
@@ -118,18 +130,22 @@ function usePermissionCheckService(): PermissionCheckServiceBase {
 export function usePermissionCheck(permissions: ReadonlySet<GameLogicPermission> | undefined): readonly AppearanceActionProblem[] {
 	const service = usePermissionCheckService();
 
-	const [resultProblems, setResultProblems] = useState<readonly AppearanceActionProblem[]>([]);
+	const [resultProblems, setResultProblems] = useState<{
+		forPermissionsSet: ReadonlySet<GameLogicPermission>;
+		result: readonly AppearanceActionProblem[];
+	} | null>(null);
 
 	const runChecks = useCallback(() => {
 		if (permissions == null)
 			return;
 
-		setResultProblems(
-			service.checkPermissions(permissions).map((restriction) => ({
+		setResultProblems({
+			forPermissionsSet: permissions,
+			result: service.checkPermissions(permissions).map((restriction) => ({
 				result: 'restrictionError',
 				restriction,
 			})),
-		);
+		});
 	}, [permissions, service]);
 
 	useEffect(() => {
@@ -157,5 +173,37 @@ export function usePermissionCheck(permissions: ReadonlySet<GameLogicPermission>
 		};
 	}, [permissions, runChecks, service]);
 
-	return resultProblems;
+	return useMemo((): readonly AppearanceActionProblem[] => {
+		// If there are no permissions to check, then just return empty array
+		if (permissions == null)
+			return EMPTY_ARRAY;
+
+		// If we have full up-to-date result, return it
+		if (resultProblems?.forPermissionsSet === permissions) {
+			return resultProblems.result;
+		}
+
+		// Otherwise calculate immediate best-attempt solution
+		return service.checkPermissions(permissions).map((restriction) => ({
+			result: 'restrictionError',
+			restriction,
+		}));
+	}, [permissions, resultProblems, service]);
+}
+
+export function useCheckAddPermissions(result: AppearanceActionProcessingResult): AppearanceActionProcessingResult;
+export function useCheckAddPermissions(result: AppearanceActionProcessingResult | null): AppearanceActionProcessingResult | null;
+export function useCheckAddPermissions(result: AppearanceActionProcessingResult | null): AppearanceActionProcessingResult | null {
+	const permissionProblems = usePermissionCheck(result?.requiredPermissions);
+
+	return useMemo((): AppearanceActionProcessingResult | null => {
+		if (result == null)
+			return null;
+
+		if (permissionProblems.length > 0) {
+			return result.addAdditionalProblems(permissionProblems);
+		}
+
+		return result;
+	}, [result, permissionProblems]);
 }

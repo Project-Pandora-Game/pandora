@@ -96,7 +96,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		actions,
 		actionPreviewState,
 		execute: (action) => {
-			const result = DoAppearanceAction(action, actions, assetManager);
+			const result = DoAppearanceAction(action, actions, editor.globalState.currentState);
 
 			// Check if result is valid
 			if (!result.valid || result.problems.length > 0) {
@@ -114,10 +114,14 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 				data: result.actionData,
 			};
 		},
+		sendPermissionRequest: (_target, _permissions) => {
+			// Editor does not support permission manipulations
+			return { result: 'failure' };
+		},
 		showExtraActionButtons: true,
 		showHoverPreview: true,
 		itemDisplayNameType: 'custom_with_original_in_brackets',
-	}), [character, globalState, assetList, heldItem, scrollToItem, focuser, extraItemActions, actions, actionPreviewState, assetManager, editor]);
+	}), [character, globalState, assetList, heldItem, scrollToItem, focuser, extraItemActions, actions, actionPreviewState, editor]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

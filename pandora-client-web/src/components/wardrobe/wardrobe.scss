@@ -628,7 +628,6 @@ $drop-overlay-gap: 0.3em;
 
 .attribute-description {
 	text-align: center;
-
 }
 
 .WardrobeLockPassword {
@@ -708,4 +707,8 @@ $drop-overlay-gap: 0.3em;
 	input {
 		flex-grow: 1;
 	}
+}
+
+.wardrobeProblemMessage {
+	text-align: center;
 }

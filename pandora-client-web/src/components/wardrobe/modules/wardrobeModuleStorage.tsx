@@ -1,19 +1,56 @@
 import classNames from 'classnames';
-import React, { ReactElement } from 'react';
-import { Row } from '../../common/container/container';
+import {
+	AppearanceActionProcessingContext,
+	ItemInteractionType,
+} from 'pandora-common';
 import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
+import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import { Row } from '../../common/container/container';
+import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
+import { ActionWarning, CheckResultToClassName } from '../wardrobeComponents';
+import { useWardrobeContext, useWardrobePermissionRequestCallback } from '../wardrobeContext';
 import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
-import { useWardrobeContext } from '../wardrobeContext';
 
 export function WardrobeModuleConfigStorage({ item, moduleName, m }: WardrobeModuleProps<ItemModuleStorage>): ReactElement {
-	const { target, focuser } = useWardrobeContext();
-	const onClick = React.useCallback((ev: React.MouseEvent) => {
+	const { target, targetSelector, focuser, actions, globalState } = useWardrobeContext();
+	const [requestPermission] = useWardrobePermissionRequestCallback();
+	const [ref, setRef] = useState<HTMLElement | null>(null);
+
+	const checkResultInitial = useMemo(() => {
+		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
+		const actionTarget = processingContext.getTarget(targetSelector);
+		if (actionTarget == null)
+			return processingContext.invalid();
+
+		processingContext.checkCanUseItemModule(actionTarget, item, moduleName, ItemInteractionType.MODIFY);
+		return processingContext.finalize();
+	}, [actions, globalState, item, moduleName, targetSelector]);
+
+	const checkResult = useCheckAddPermissions(checkResultInitial);
+
+	const onClick = useCallback((ev: React.MouseEvent) => {
 		ev.stopPropagation();
+		if (!checkResult.valid) {
+			if (checkResult.prompt != null) {
+				requestPermission(checkResult.prompt, Array.from(checkResult.requiredPermissions).map((p) => [p.group, p.id]));
+			}
+			return;
+		}
+
 		focuser.focusItemModule(item, moduleName, target);
-	}, [item, moduleName, focuser, target]);
+	}, [requestPermission, item, moduleName, focuser, target, checkResult]);
+
 	return (
 		<Row padding='medium' wrap>
-			<button className={ classNames('wardrobeActionButton', 'allowed') } onClick={ onClick }>
+			<button
+				ref={ setRef }
+				className={ classNames(
+					'wardrobeActionButton',
+					CheckResultToClassName(checkResult),
+				) }
+				onClick={ onClick }
+			>
+				<ActionWarning problems={ checkResult.problems } prompt={ !checkResult.valid && checkResult.prompt != null } parent={ ref } />
 				Open
 			</button>
 			<Row padding='medium' alignY='center'>

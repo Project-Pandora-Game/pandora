@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { ItemInteractionType, RestrictionResult } from '../character/restrictionTypes';
 import type { GameLogicCharacter } from '../gameLogic';
+import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN } from '../inputLimits';
 import { PseudoRandom } from '../math/pseudoRandom';
 import type { ActionSpaceContext } from '../space/space';
 import { Assert, AssertNever, ShuffleArray } from '../utility';
@@ -21,8 +22,7 @@ import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure, type Mo
 import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
 import { AppearanceArmPoseSchema, AppearanceArmsOrderSchema, AppearancePoseSchema } from './state/characterStatePose';
 import { RestrictionOverride } from './state/characterStateTypes';
-import { AssetFrameworkGlobalStateContainer } from './state/globalState';
-import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN } from '../inputLimits';
+import type { AssetFrameworkGlobalState } from './state/globalState';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../validation';
@@ -198,7 +198,6 @@ export type AppearanceAction = z.infer<typeof AppearanceActionSchema>;
 
 export interface AppearanceActionContext {
 	player: GameLogicCharacter;
-	globalState: AssetFrameworkGlobalStateContainer;
 	spaceContext: ActionSpaceContext;
 	getCharacter(id: CharacterId): GameLogicCharacter | null;
 }
@@ -226,9 +225,10 @@ export interface AppearanceActionHandlerArg<Action extends AppearanceAction = Ap
 export function DoAppearanceAction(
 	action: AppearanceAction,
 	context: AppearanceActionContext,
-	assetManager: AssetManager,
+	initialState: AssetFrameworkGlobalState,
 ): AppearanceActionProcessingResult {
-	const processingContext = new AppearanceActionProcessingContext(context);
+	const assetManager = initialState.assetManager;
+	const processingContext = new AppearanceActionProcessingContext(context, initialState);
 	const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
 
 	const arg: Omit<AppearanceActionHandlerArg, 'action'> = {

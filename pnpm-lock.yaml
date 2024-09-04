@@ -108,7 +108,7 @@ importers:
         version: 0.5.13(@types/webpack@5.28.5(webpack-cli@5.1.4(webpack-dev-server@5.1.0)(webpack@5.94.0)))(react-refresh@0.14.2)(type-fest@4.26.0)(webpack-dev-server@5.1.0(webpack-cli@5.1.4)(webpack@5.94.0))(webpack@5.94.0(webpack-cli@5.1.4(webpack-dev-server@5.1.0)(webpack@5.94.0)))
       '@project-pandora-game/sass-loader':
         specifier: 13.2.0
-        version: 13.2.0(sass@1.77.0)(webpack@5.94.0(webpack-cli@5.1.4(webpack-dev-server@5.1.0)(webpack@5.94.0)))
+        version: 13.2.0(sass@1.78.0)(webpack@5.94.0(webpack-cli@5.1.4(webpack-dev-server@5.1.0)(webpack@5.94.0)))
       '@stylistic/eslint-plugin':
         specifier: 2.7.1
         version: 2.7.1(eslint@8.57.0)(typescript@5.5.4)
@@ -239,8 +239,8 @@ importers:
         specifier: 6.0.0
         version: 6.0.0
       sass:
-        specifier: 1.77.0
-        version: 1.77.0
+        specifier: 1.78.0
+        version: 1.78.0
       source-map-loader:
         specifier: 5.0.0
         version: 5.0.0(webpack@5.94.0(webpack-cli@5.1.4(webpack-dev-server@5.1.0)(webpack@5.94.0)))
@@ -6381,8 +6381,8 @@ packages:
   safer-buffer@2.1.2:
     resolution: {integrity: sha512-YZo3K82SD7Riyi0E1EQPojLz7kpepnSQI9IyPbHHg1XXXevb5dJI7tpyN2ADxGcQbHG7vcyRHk0cbwqcQriUtg==}
 
-  sass@1.77.0:
-    resolution: {integrity: sha512-eGj4HNfXqBWtSnvItNkn7B6icqH14i3CiCGbzMKs3BAPTq62pp9NBYsBgyN4cA+qssqo9r26lW4JSvlaUUWbgw==}
+  sass@1.78.0:
+    resolution: {integrity: sha512-AaIqGSrjo5lA2Yg7RvFZrlXDBCp3nV4XP73GrLGvdRWWwk+8H3l0SDvq/5bA4eF+0RFPLuWUk3E+P1U/YqnpsQ==}
     engines: {node: '>=14.0.0'}
     hasBin: true
 
@@ -9407,13 +9407,13 @@ snapshots:
       '@pnpm/network.ca-file': 1.0.2
       config-chain: 1.1.13
 
-  '@project-pandora-game/sass-loader@13.2.0(sass@1.77.0)(webpack@5.94.0(webpack-cli@5.1.4(webpack-dev-server@5.1.0)(webpack@5.94.0)))':
+  '@project-pandora-game/sass-loader@13.2.0(sass@1.78.0)(webpack@5.94.0(webpack-cli@5.1.4(webpack-dev-server@5.1.0)(webpack@5.94.0)))':
     dependencies:
       klona: 2.0.6
       neo-async: 2.6.2
       webpack: 5.94.0(webpack-cli@5.1.4(webpack-dev-server@5.1.0)(webpack@5.94.0))
     optionalDependencies:
-      sass: 1.77.0
+      sass: 1.78.0
 
   '@remix-run/router@1.19.0': {}
 
@@ -14424,7 +14424,7 @@ snapshots:
 
   safer-buffer@2.1.2: {}
 
-  sass@1.77.0:
+  sass@1.78.0:
     dependencies:
       chokidar: 3.6.0
       immutable: 4.3.7

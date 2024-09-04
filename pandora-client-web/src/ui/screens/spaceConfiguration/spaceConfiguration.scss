@@ -63,6 +63,7 @@
 		@include flex(column);
 		gap: 0.5em;
 		max-width: 95vw;
+		align-items: center;
 
 		.header-filter {
 			display: grid;
@@ -89,8 +90,6 @@
 				}
 			}
 		}
-
-		align-items: center;
 
 		.input-filter {
 			@include flex(column);

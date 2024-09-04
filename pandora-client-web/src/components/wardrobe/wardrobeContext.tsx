@@ -132,9 +132,10 @@ export function useWardrobeContext(): Readonly<WardrobeContext> {
 type ExecuteCallbackOptions = {
 	onSuccess?: (data: readonly AppearanceActionData[]) => void;
 	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
+	allowMultipleSimultaneousExecutions?: boolean;
 };
 
-export function useWardrobeExecuteCallback({ onSuccess, onFailure }: ExecuteCallbackOptions = {}) {
+export function useWardrobeExecuteCallback({ onSuccess, onFailure, allowMultipleSimultaneousExecutions }: ExecuteCallbackOptions = {}) {
 	const assetManager = useAssetManager();
 	const { execute, itemDisplayNameType } = useWardrobeContext();
 	return useAsyncEvent(
@@ -181,6 +182,7 @@ export function useWardrobeExecuteCallback({ onSuccess, onFailure }: ExecuteCall
 				toast(`Error performing action`, TOAST_OPTIONS_ERROR);
 			},
 			updateAfterUnmount: true,
+			allowMultipleSimultaneousExecutions,
 		},
 	);
 }

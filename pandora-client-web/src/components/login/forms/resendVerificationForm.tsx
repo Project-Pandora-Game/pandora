@@ -2,6 +2,7 @@ import { AssertNever, IsEmail } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
+import { FormInput } from '../../../common/userInteraction/input/formInput';
 import { useDirectoryResendVerification } from '../../../networking/account_manager';
 import { Button } from '../../common/button/button';
 import { Form, FormField, FormFieldError, FormLink } from '../../common/form/form';
@@ -47,14 +48,16 @@ export function ResendVerificationForm(): ReactElement {
 			<h1>Resend email</h1>
 			<FormField>
 				<label htmlFor='forgot-password-email'>Enter your email</label>
-				<input
+				<FormInput
 					type='email'
 					id='forgot-password-email'
 					autoComplete='email'
-					{ ...register('email', {
+					register={ register }
+					name='email'
+					options={ {
 						required: 'Email is required',
 						validate: (email) => IsEmail(email) || 'Invalid email format',
-					}) }
+					} }
 				/>
 				<FormFieldError error={ errors.email } />
 			</FormField>

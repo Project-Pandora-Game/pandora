@@ -1,22 +1,24 @@
 import { AssertNever, ICharacterPrivateData } from 'pandora-common';
+import { PronounKey, PRONOUNS } from 'pandora-common/dist/character/pronouns';
 import React, { ReactElement } from 'react';
+import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { useColorInput } from '../../common/useColorInput';
+import { FormInput } from '../../common/userInteraction/input/formInput';
+import { TextInput } from '../../common/userInteraction/input/textInput';
+import { Select } from '../../common/userInteraction/select/select';
+import { PrehashPassword } from '../../crypto/helpers';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast';
 import { Button } from '../common/button/button';
+import { ColorInput } from '../common/colorInput/colorInput';
+import { Column, Row } from '../common/container/container';
+import { Form, FormField, FormFieldError } from '../common/form/form';
+import { ModalDialog } from '../dialog/dialog';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useSpaceFeatures } from '../gameContext/gameStateContextProvider';
 import { usePlayerData } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { ColorInput } from '../common/colorInput/colorInput';
-import { PronounKey, PRONOUNS } from 'pandora-common/dist/character/pronouns';
-import { useSpaceFeatures } from '../gameContext/gameStateContextProvider';
-import { Select } from '../common/select/select';
-import { useColorInput } from '../../common/useColorInput';
-import { useNavigate } from 'react-router-dom';
-import { ModalDialog } from '../dialog/dialog';
-import { Form, FormField, FormFieldError } from '../common/form/form';
-import { Column, Row } from '../common/container/container';
-import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { PrehashPassword } from '../../crypto/helpers';
-import { useForm } from 'react-hook-form';
-import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast';
 
 export function CharacterSettings(): ReactElement | null {
 	const navigate = useNavigate();
@@ -194,12 +196,11 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 					</span>
 					<br />
 					<label htmlFor='character'>Enter your character name:</label>
-					<input
+					<TextInput
 						id='character'
-						name='character'
-						type='text' aria-haspopup='false' autoCapitalize='off' autoComplete='off' autoCorrect='off' autoFocus spellCheck='false'
+						aria-haspopup='false' autoCapitalize='off' autoComplete='off' autoCorrect='off' autoFocus spellCheck='false'
 						value={ character }
-						onChange={ (ev) => setCharacter(ev.target.value) }
+						onChange={ setCharacter }
 					/>
 					<br />
 					<Row>
@@ -228,14 +229,16 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 			<Form dirty={ submitCount > 0 } onSubmit={ onSubmit }>
 				<FormField>
 					<label htmlFor='password'>Current password</label>
-					<input
+					<FormInput
 						type='password'
 						id='password'
 						autoComplete='current-password'
-						{ ...register('password', {
+						register={ register }
+						name='password'
+						options={ {
 							required: 'Password is required',
 							validate: (pwd) => (invalidPassword === pwd) ? 'Invalid password' : true,
-						}) }
+						} }
 					/>
 					<FormFieldError error={ errors.password } />
 				</FormField>

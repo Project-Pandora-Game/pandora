@@ -1,3 +1,4 @@
+/* eslint-disable react/forbid-elements */
 import { Immutable } from 'immer';
 import { AssetDefinition, AssetModuleDefinition, ModuleType } from 'pandora-common';
 import { EFFECTS_DEFAULT, EffectsDefinition } from 'pandora-common/dist/assets/effects';

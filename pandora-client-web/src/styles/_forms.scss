@@ -13,10 +13,10 @@ input, textarea {
 	}
 
 	&:read-only {
+		background-color: $grey-light;
 		&:focus, &:active {
 			outline: 0 none;
 		}
-		background-color: $grey-light;
 	}
 }
 

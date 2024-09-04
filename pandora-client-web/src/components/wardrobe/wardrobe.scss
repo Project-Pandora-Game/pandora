@@ -63,18 +63,6 @@ $header-height: 2em;
 					padding: 0.25em 0.5em;
 				}
 			}
-
-			input[type='color'] {
-				width: 2em;
-				height: 2em;
-				border-radius: 0.2em;
-				cursor: pointer;
-				background-color: $grey-darkest;
-
-				&:hover {
-					background-color: $grey-lightest;
-				}
-			}
 		}
 	}
 }
@@ -514,13 +502,12 @@ $drop-overlay-gap: 0.3em;
 .wardrobeActionButton {
 	@include center-flex;
 	border: 1px solid black;
+	background-color: $grey-lighter;
 
 	&:not(.slim) {
 		min-height: 2.5em;
 		min-width: 2.5em;
 	}
-
-	background-color: $grey-lighter;
 
 	&.selected {
 		color: $white;

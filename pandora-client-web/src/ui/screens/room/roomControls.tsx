@@ -10,11 +10,12 @@ import shieldIcon from '../../../assets/icons/shield.svg';
 import storageIcon from '../../../assets/icons/storage.svg';
 import toolsIcon from '../../../assets/icons/tools.svg';
 import { Character, useCharacterData, useCharacterDataMultiple, useCharacterRestrictionManager } from '../../../character/character';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
+import { Select, type SelectProps } from '../../../common/userInteraction/select/select';
 import { useFriendStatus } from '../../../components/accountContacts/accountContactContext';
 import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText, useRestrictionOverrideDialogContext } from '../../../components/characterRestrictionOverride/characterRestrictionOverride';
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
-import { Select, type SelectProps } from '../../../components/common/select/select';
 import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayer, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
@@ -278,12 +279,11 @@ function DeviceOverlaySelector(): ReactElement {
 			</div>
 			<div>
 				<label htmlFor='chatroom-character-name-display'>Show name under characters </label>
-				<input
+				<Checkbox
 					id='chatroom-character-name-display'
-					type='checkbox'
 					checked={ showName }
-					onChange={ (e) => {
-						SettingDisplayCharacterName.value = e.target.checked;
+					onChange={ (newValue) => {
+						SettingDisplayCharacterName.value = newValue;
 					} }
 				/>
 			</div>

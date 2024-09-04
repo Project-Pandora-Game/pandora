@@ -28,33 +28,39 @@ export function useAsyncEvent<R, Args extends unknown[]>(
 	{
 		errorHandler,
 		updateAfterUnmount = false,
+		allowMultipleSimultaneousExecutions = false,
 	}: {
 		errorHandler?: (error: unknown) => void;
 		/** If update should trigger even after the component was unmounted */
 		updateAfterUnmount?: boolean;
+		/**
+		 * If multiple simultaneous calls are allowed. If false, then calls while one is pending are ignored.
+		 * @default false
+		 */
+		allowMultipleSimultaneousExecutions?: boolean;
 	} = {},
 ): [(...args: Args) => void, boolean] {
-	const [processing, setProcessing] = useState(false);
+	const [processing, setProcessing] = useState<number>(0);
 	const mounted = useMounted();
 
 	return [useEvent((...args: Args) => {
-		if (processing)
+		if (!allowMultipleSimultaneousExecutions && processing > 0)
 			return;
 
-		setProcessing(true);
+		setProcessing((previousProcessing) => previousProcessing + 1);
 
 		callback(...args)
 			.then((result: R) => {
 				if (updateAfterUnmount || mounted.current) {
-					setProcessing(false);
+					setProcessing((previousProcessing) => previousProcessing - 1);
 					updateComponent(result);
 				}
 			})
 			.catch((e) => {
 				if (updateAfterUnmount || mounted.current) {
-					setProcessing(false);
+					setProcessing((previousProcessing) => previousProcessing - 1);
 					errorHandler?.(e);
 				}
 			});
-	}), processing];
+	}), processing > 0];
 }

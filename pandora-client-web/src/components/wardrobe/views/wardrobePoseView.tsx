@@ -24,6 +24,8 @@ import { IChatroomCharacter, useCharacterData } from '../../../character/charact
 import { useDebouncedValue } from '../../../common/useDebounceValue';
 import { useEvent } from '../../../common/useEvent';
 import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../common/button/button';
 import { Column, Row } from '../../common/container/container';
@@ -249,13 +251,10 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 		<>
 			<strong>Arms</strong>
 			<Row>
-				<input
+				<Checkbox
 					id='pose-arms-individual'
-					type='checkbox'
 					checked={ controlIndividually }
-					onChange={ (e) => {
-						setControlIndividually(e.target.checked);
-					} }
+					onChange={ setControlIndividually }
 				/>
 				<label htmlFor='pose-arms-individual'>Control arms individually</label>
 			</Row>
@@ -363,7 +362,7 @@ export function WardrobePoseGui({ character, characterState }: {
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const [execute] = useWardrobeExecuteCallback();
+	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 	const { globalState, itemDisplayNameType } = useWardrobeContext();
 	const roomItems = globalState.getItems({ type: 'roomInventory' });
 	const assetManager = characterState.assetManager;
@@ -490,36 +489,28 @@ export function BoneRowElement({ definition, onChange, characterState }: {
 		updateCallback: onChange,
 	});
 
-	const onInput = useEvent((event: React.ChangeEvent<HTMLInputElement>) => {
-		const newValue = Math.round(parseFloat(event.target.value));
-		if (Number.isInteger(newValue)) {
-			setValue(newValue);
-		}
-	});
-
 	return (
 		<FieldsetToggle legend={ visibleName } persistent={ 'bone-ui-' + definition.name }>
 			<div className='bone-rotation'>
-				<input
+				<NumberInput
 					id={ id }
-					type='range'
+					rangeSlider
 					min={ BONE_MIN }
 					max={ BONE_MAX }
-					step='1'
+					step={ 1 }
 					value={ value }
-					onChange={ onInput }
+					onChange={ setValue }
 					list={ id + '-markers' }
 				/>
 				<datalist id={ id + '-markers' }>
 					<option value={ markerPosition }></option>
 				</datalist>
-				<input
-					type='number'
+				<NumberInput
 					min={ BONE_MIN }
 					max={ BONE_MAX }
-					step='1'
+					step={ 1 }
 					value={ value }
-					onChange={ onInput }
+					onChange={ setValue }
 				/>
 				<Button className='slim' onClick={ () => setValue(0) } disabled={ value === 0 }>
 					↺
@@ -550,17 +541,10 @@ function RoomManualYOffsetControl({ character }: {
 		});
 	}, [setYOffsetLocal, shard, id, position]);
 
-	const onInput = useEvent((event: React.ChangeEvent<HTMLInputElement>) => {
-		const value = Math.round(parseFloat(event.target.value));
-		if (Number.isInteger(value) && value !== yOffset) {
-			setYOffset(value);
-		}
-	});
-
 	return (
 		<Row padding='small'>
 			<Row alignY='center'>Character Y Offset:</Row>
-			<input type='number' className='positioning-input' step='1' value={ yOffset } onChange={ onInput } />
+			<NumberInput className='positioning-input' step={ 1 } value={ yOffset } onChange={ setYOffset } />
 			<Button className='slim' onClick={ () => setYOffset(0) } disabled={ yOffset === 0 }>
 				↺
 			</Button>

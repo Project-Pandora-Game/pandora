@@ -1,14 +1,14 @@
-import React, { ReactElement, useEffect, useId, useState } from 'react';
-import { ModalDialog } from '../dialog/dialog';
-import { Column, Row } from '../common/container/container';
-import { Button } from '../common/button/button';
-import { ZodType, z } from 'zod';
+import { isEqual } from 'lodash';
 import { Assert, GetLogger } from 'pandora-common';
+import React, { ReactElement, useEffect, useId, useState } from 'react';
+import { toast } from 'react-toastify';
+import { ZodType, z } from 'zod';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { Button } from '../common/button/button';
+import { Column, Row } from '../common/container/container';
+import { ModalDialog } from '../dialog/dialog';
 import { ParseImportData } from './exportImportUtils';
 import './importDialog.scss';
-import { isEqual } from 'lodash';
-import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 
 interface ImportDialogProps<T extends ZodType<unknown>> {
 	expectedType: string;
@@ -113,6 +113,7 @@ export function ImportDialog<T extends ZodType<unknown>>({
 					</Row>
 				</fieldset>
 				<label htmlFor={ importInputId } className='flex-1 hiddenUpload'>
+					{ /* eslint-disable-next-line react/forbid-elements */ }
 					<input
 						accept='text/plain'
 						id={ importInputId }

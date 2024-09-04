@@ -6,26 +6,27 @@ import {
 	type AppearanceAction,
 	type Item,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useRef } from 'react';
-import { z } from 'zod';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
-import { Column, Row } from '../../common/container/container';
-import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
 import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
+import React, { ReactElement, useCallback, useEffect, useRef } from 'react';
+import { toast } from 'react-toastify';
+import { z } from 'zod';
 import deleteIcon from '../../../assets/icons/delete.svg';
+import { useEvent } from '../../../common/useEvent';
+import { TextInput } from '../../../common/userInteraction/input/textInput';
+import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
+import { Button } from '../../common/button/button';
+import { Column, Row } from '../../common/container/container';
+import { FieldsetToggle } from '../../common/fieldsetToggle';
+import { FormCreateStringValidator } from '../../common/form/form';
+import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
+import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
+import { ActionWarningContent, WardrobeActionButton } from '../wardrobeComponents';
 import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
 import { useWardrobeTargetItem } from '../wardrobeUtils';
-import { ActionWarningContent, WardrobeActionButton } from '../wardrobeComponents';
 import { WardrobeItemColorization } from './wardrobeItemColor';
-import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
-import { WardrobeRoomDeviceDeployment, WardrobeRoomDeviceSlots, WardrobeRoomDeviceWearable } from './wardrobeItemRoomDevice';
 import { WardrobeItemName } from './wardrobeItemName';
-import { Button } from '../../common/button/button';
-import { useEvent } from '../../../common/useEvent';
-import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
-import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
-import { FormCreateStringValidator } from '../../common/form/form';
+import { WardrobeRoomDeviceDeployment, WardrobeRoomDeviceSlots, WardrobeRoomDeviceWearable } from './wardrobeItemRoomDevice';
 
 export function WardrobeItemConfigMenu({
 	item,
@@ -247,11 +248,11 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 			<Column className='wardrobeItemCustomizationView'>
 				<Row alignY='center'>
 					<label htmlFor='original-name'>Original name:</label>
-					<input id='original-name' type='text' value={ item.asset.definition.name } readOnly />
+					<TextInput id='original-name' value={ item.asset.definition.name } readOnly />
 				</Row>
 				<Row alignY='center'>
 					<label htmlFor='custom-name'>Custom name:</label>
-					<input id='custom-name' type='text' value={ name } onChange={ (e) => setName(e.target.value) } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
+					<TextInput id='custom-name' value={ name } onChange={ setName } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
 				</Row>
 				{
 					nameError && (

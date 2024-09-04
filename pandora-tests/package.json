@@ -17,10 +17,10 @@
 	},
 	"devDependencies": {
 		"@playwright/test": "1.46.0",
-		"@stylistic/eslint-plugin": "2.6.2",
+		"@stylistic/eslint-plugin": "2.7.1",
 		"@types/node": "20.16.0",
-		"@typescript-eslint/eslint-plugin": "8.3.0",
-		"@typescript-eslint/parser": "8.3.0",
+		"@typescript-eslint/eslint-plugin": "8.4.0",
+		"@typescript-eslint/parser": "8.4.0",
 		"eslint": "8.57.0",
 		"nyc": "17.0.0",
 		"pandora-common": "workspace:*",
@@ -29,7 +29,7 @@
 		"rimraf": "6.0.0",
 		"superstatic": "9.0.3",
 		"tslib": "2.7.0",
-		"typescript": "5.4.5",
+		"typescript": "5.5.4",
 		"v8-to-istanbul": "9.3.0"
 	}
 }

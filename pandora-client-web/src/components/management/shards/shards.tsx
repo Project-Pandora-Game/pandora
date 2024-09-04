@@ -3,10 +3,11 @@ import React, { createContext, ReactElement, useContext, useEffect, useMemo, use
 import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { useAsyncEvent } from '../../../common/useEvent';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
+import { Select } from '../../../common/userInteraction/select/select';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { Button } from '../../common/button/button';
-import { Select } from '../../common/select/select';
 import { useConfirmDialog } from '../../dialog/dialog';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import './shards.scss';
@@ -159,7 +160,8 @@ function ShardCreate(): ReactElement {
 			</div>
 			<div className='input-row'>
 				<label>Expires</label>
-				<input type='checkbox' checked={ expires !== undefined } onChange={ (e) => setExpires(e.target.checked ? Date.now() : undefined) } />
+				<Checkbox checked={ expires !== undefined } onChange={ (checked) => setExpires(checked ? Date.now() : undefined) } />
+				{ /* eslint-disable-next-line react/forbid-elements */ }
 				<input type='date' value={ expires === undefined ? '' : new Date(expires).toISOString().substring(0, 10) } onChange={ (e) => setExpires(e.target.value === '' ? undefined : new Date(e.target.value).getTime()) } />
 			</div>
 			<div className='input-row'>

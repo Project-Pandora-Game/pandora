@@ -1,14 +1,15 @@
+import { nanoid } from 'nanoid';
 import { CharacterInputNameSchema, IsValidCharacterName } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useCreateCharacter } from '../../character/player';
-import { usePlayer, usePlayerData } from '../gameContext/playerContextProvider';
-import { Button } from '../common/button/button';
-import './characterCreate.scss';
-import { Form, FormCreateStringValidator, FormError, FormErrorMessage, FormField } from '../common/form/form';
-import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { nanoid } from 'nanoid';
 import { useAsyncEvent } from '../../common/useEvent';
+import { TextInput } from '../../common/userInteraction/input/textInput';
+import { Button } from '../common/button/button';
+import { Form, FormCreateStringValidator, FormError, FormErrorMessage, FormField } from '../common/form/form';
+import { usePlayer, usePlayerData } from '../gameContext/playerContextProvider';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import './characterCreate.scss';
 
 export function CharacterCreate(): ReactElement | null {
 	// React States
@@ -85,13 +86,11 @@ export function CharacterCreate(): ReactElement | null {
 				<Form onSubmit={ onSubmit }>
 					<FormField className='input-container'>
 						<label htmlFor='characterName'>Name</label>
-						<input
-							type='text'
+						<TextInput
 							autoComplete='off'
 							id='characterName'
-							name='characterName'
 							value={ characterName }
-							onChange={ (event) => setCharacterName(event.target.value) }
+							onChange={ setCharacterName }
 							required
 						/>
 						<FormError error={ characterNameError } />

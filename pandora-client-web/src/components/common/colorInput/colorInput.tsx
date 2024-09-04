@@ -1,11 +1,14 @@
-import React, { useState, type ChangeEvent, useCallback, useMemo, type ReactElement, useEffect, useRef } from 'react';
-import { toast } from 'react-toastify';
+import classNames from 'classnames';
 import parse from 'color-parse';
 import _ from 'lodash';
 import { type HexColorString, HexColorStringSchema, HexRGBAColorString, HexRGBAColorStringSchema } from 'pandora-common';
-import { Button } from '../button/button';
-import { DraggableDialog } from '../../dialog/dialog';
+import React, { type ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'react-toastify';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput';
+import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { DraggableDialog } from '../../dialog/dialog';
+import { Button } from '../button/button';
 import './colorInput.scss';
 
 type ColorInputProps<THexString extends `#${string}`> = {
@@ -16,6 +19,8 @@ type ColorInputProps<THexString extends `#${string}`> = {
 	throttle?: number;
 	disabled?: boolean;
 	hideTextInput?: boolean;
+	classNameTextInput?: string;
+	classNameColorButton?: string;
 };
 
 export function ColorInput(props: ColorInputProps<HexColorString>): ReactElement {
@@ -29,7 +34,16 @@ type ColorInputRGBAProps = ColorInputProps<HexRGBAColorString> & {
 };
 
 export function ColorInputRGBA({
-	title, initialValue, resetValue, onChange, throttle = 0, disabled = false, hideTextInput = false, minAlpha = 255,
+	title,
+	initialValue,
+	resetValue,
+	onChange,
+	throttle = 0,
+	disabled = false,
+	hideTextInput = false,
+	minAlpha = 255,
+	classNameTextInput,
+	classNameColorButton,
 }: ColorInputRGBAProps): ReactElement {
 	const [value, setInput] = useState<HexRGBAColorString>(initialValue.toUpperCase() as HexRGBAColorString);
 	const [showEditor, setShowEditor] = useState(false);
@@ -55,7 +69,6 @@ export function ColorInputRGBA({
 		setInput(color);
 	}, [onChangeCallerThrottled]);
 
-	const onInputChange = useCallback((ev: ChangeEvent<HTMLInputElement>) => changeCallback(ev.target.value), [changeCallback]);
 	const onClick = useCallback((ev: React.MouseEvent) => {
 		ev.stopPropagation();
 		setShowEditor(true);
@@ -64,12 +77,23 @@ export function ColorInputRGBA({
 	return (
 		<>
 			{
-				!hideTextInput &&
-				<input type='text' value={ value } onChange={ onInputChange } disabled={ disabled } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } onPaste={ onPaste } />
+				hideTextInput ? null : (
+					<TextInput
+						value={ value }
+						onChange={ changeCallback }
+						disabled={ disabled }
+						maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 }
+						onPaste={ onPaste }
+						className={ classNameTextInput }
+					/>
+				)
 			}
-			<button className='color-input-button' disabled={ disabled } onClick={ onClick } >
-				<div className='color-view' style={ { backgroundColor: value } } />
-			</button>
+			<button
+				className={ classNames('color-input-button', classNameColorButton) }
+				disabled={ disabled }
+				onClick={ onClick }
+				style={ { backgroundColor: value } }
+			/>
 			{
 				resetValue != null &&
 				<Button className='slim' onClick={ () => changeCallback(resetValue) } disabled={ disabled }>↺</Button>
@@ -118,17 +142,17 @@ function ColorEditor({
 			color.writeCss(ref.current.style);
 	}, [color, ref]);
 
-	const setHue = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
-		setState(color.setHue(ev.target.valueAsNumber));
+	const setHue = useCallback((newValue: number) => {
+		setState(color.setHue(newValue));
 	}, [color, setState]);
-	const setSaturation = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
-		setState(color.setSaturation(ev.target.valueAsNumber));
+	const setSaturation = useCallback((newValue: number) => {
+		setState(color.setSaturation(newValue));
 	}, [color, setState]);
-	const setValue = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
-		setState(color.setValue(ev.target.valueAsNumber));
+	const setValue = useCallback((newValue: number) => {
+		setState(color.setValue(newValue));
 	}, [color, setState]);
-	const setAlpha = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
-		let value = Number(ev.target.value);
+	const setAlpha = useCallback((newValue: number) => {
+		let value = Number(newValue);
 		if (value < minAlpha) {
 			value = minAlpha;
 		}
@@ -147,10 +171,6 @@ function ColorEditor({
 			setState(newColor);
 		}
 	}, [color, setState, minAlpha]);
-
-	const onInputChange = useCallback((ev: ChangeEvent<HTMLInputElement>) => {
-		onTextInput(ev.target.value);
-	}, [onTextInput]);
 
 	const onPaste = useCallback((ev: React.ClipboardEvent) => {
 		ColorParsePaste(ev, onTextInput, minAlpha < Color.maxAlpha);
@@ -189,14 +209,14 @@ function ColorEditor({
 						<div className='color-editor__rect__color__pointer' />
 					</div>
 				</div>
-				<input className='color-editor__hue' type='range' min='0' max={ Color.maxHue } value={ color.hue } onChange={ setHue } />
-				<input className='color-editor__saturation' type='range' min='0' max={ Color.maxSaturation } value={ color.saturation } onChange={ setSaturation } />
-				<input className='color-editor__value' type='range' min='0' max={ Color.maxValue } value={ color.value } onChange={ setValue } />
+				<NumberInput className='color-editor__hue' rangeSlider min={ 0 } max={ Color.maxHue } value={ color.hue } onChange={ setHue } />
+				<NumberInput className='color-editor__saturation' rangeSlider min={ 0 } max={ Color.maxSaturation } value={ color.saturation } onChange={ setSaturation } />
+				<NumberInput className='color-editor__value' rangeSlider min={ 0 } max={ Color.maxValue } value={ color.value } onChange={ setValue } />
 				{
 					minAlpha < Color.maxAlpha &&
-					<input className='color-editor__alpha' type='range' min='0' max={ Color.maxAlpha } value={ color.alpha } onChange={ setAlpha } />
+					<NumberInput className='color-editor__alpha' rangeSlider min={ 0 } max={ Color.maxAlpha } value={ color.alpha } onChange={ setAlpha } />
 				}
-				<input className='color-editor_hex' type='text' value={ input } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } onChange={ onInputChange } onPaste={ onPaste } />
+				<TextInput className='color-editor_hex' value={ input } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } onChange={ onTextInput } onPaste={ onPaste } />
 			</div>
 		</DraggableDialog>
 	);

@@ -36,13 +36,16 @@ import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManage
 import { CopyToClipboard } from '../../../common/clipboard';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { useAsyncEvent } from '../../../common/useEvent';
+import { Checkbox } from '../../../common/userInteraction/checkbox';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput';
+import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
+import { Select } from '../../../common/userInteraction/select/select';
 import { Button } from '../../../components/common/button/button';
 import { ColorInput } from '../../../components/common/colorInput/colorInput';
 import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
-import { Select } from '../../../components/common/select/select';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator';
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs';
 import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
@@ -194,19 +197,24 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 		<>
 			<div className='input-container'>
 				<label>Space name ({ currentConfig.name.length }/{ LIMIT_SPACE_NAME_LENGTH } characters)</label>
-				<input
+				<TextInput
 					autoComplete='none'
-					type='text'
 					value={ currentConfig.name }
-					onChange={ (event) => setModifiedData({ name: event.target.value }) }
+					onChange={ (newValue) => setModifiedData({ name: newValue }) }
 					readOnly={ !canEdit }
 				/>
 				{ canEdit && !IsValidName(currentConfig.name) ? (<div className='error'>Invalid name</div>) : null }
 			</div>
 			<div className='input-container'>
 				<label>Space size (maximum number of characters allowed inside - from 1 to { LIMIT_SPACE_MAX_CHARACTER_NUMBER })</label>
-				<input autoComplete='none' type='number' value={ currentConfig.maxUsers } min={ 1 } max={ LIMIT_SPACE_MAX_CHARACTER_NUMBER } readOnly={ !canEdit }
-					onChange={ (event) => setModifiedData({ maxUsers: Number.parseInt(event.target.value, 10) }) } />
+				<NumberInput
+					autoComplete='none'
+					value={ currentConfig.maxUsers }
+					min={ 1 }
+					max={ LIMIT_SPACE_MAX_CHARACTER_NUMBER }
+					readOnly={ !canEdit }
+					onChange={ (newValue) => setModifiedData({ maxUsers: newValue }) }
+				/>
 			</div>
 			<FieldsetToggle legend='Presentation and access'>
 				<div className='input-container'>
@@ -321,14 +329,15 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						<>
 							<div className='input-container'>
 								<label>Background color</label>
-								<div className='row-first'>
+								<Row alignY='center'>
 									<ColorInput
 										initialValue={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
 										onChange={ (color) => setModifiedData({ background: { ...currentConfigBackground, image: color } }) }
 										disabled={ !canEdit }
 										title='Background'
+										classNameTextInput='flex-1'
 									/>
-								</div>
+								</Row>
 							</div>
 							<br />
 							<Button
@@ -357,11 +366,11 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						SPACE_FEATURES.map((feature) => (
 							(feature.id !== 'development' || (feature.id === 'development' && isDeveloper)) &&
 							<div key={ feature.id }>
-								<input type='checkbox'
+								<Checkbox
 									id={ `${idPrefix}-feature-${feature.id}` }
 									checked={ currentConfig.features.includes(feature.id) }
-									onChange={ (event) => {
-										if (event.target.checked) {
+									onChange={ (newValue) => {
+										if (newValue) {
 											if (!currentConfig.features.includes(feature.id)) {
 												setModifiedData({ features: [...currentConfig.features, feature.id] });
 											}
@@ -404,31 +413,31 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						</Select>
 						<div className='input-line'>
 							<label>Auto admin for developers</label>
-							<input type='checkbox' checked={ currentConfig.development?.autoAdmin ?? false } onChange={
-								(event) => {
-									const autoAdmin = event.target.checked;
+							<Checkbox
+								checked={ currentConfig.development?.autoAdmin ?? false }
+								onChange={ (newValue) => {
 									setModifiedData({
 										development: {
 											...currentConfig.development,
-											autoAdmin,
+											autoAdmin: newValue,
 										},
 									});
-								}
-							} />
+								} }
+							/>
 						</div>
 						<div className='input-line'>
 							<label>Bypass safemode cooldown</label>
-							<input type='checkbox' checked={ currentConfig.development?.disableSafemodeCooldown ?? false } onChange={
-								(event) => {
-									const disableSafemodeCooldown = event.target.checked;
+							<Checkbox
+								checked={ currentConfig.development?.disableSafemodeCooldown ?? false }
+								onChange={ (newValue) => {
 									setModifiedData({
 										development: {
 											...currentConfig.development,
-											disableSafemodeCooldown,
+											disableSafemodeCooldown: newValue,
 										},
 									});
-								}
-							} />
+								} }
+							/>
 						</div>
 					</div>
 				}
@@ -479,13 +488,12 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 						<FieldsetToggle legend='Offline character management'>
 							<Column>
 								<Row>
-									<input
+									<Checkbox
 										id={ `${idPrefix}-ghostmanagement-enable` }
-										type='checkbox'
 										checked={ currentConfig.ghostManagement != null }
-										onChange={ (event) => {
+										onChange={ (newValue) => {
 											setModifiedData({
-												ghostManagement: event.target.checked ? {
+												ghostManagement: newValue ? {
 													ignore: 'admin',
 													timer: 2,
 													affectCharactersInRoomDevice: false,
@@ -531,14 +539,13 @@ function GhostManagement({ config, setConfig, canEdit }: {
 		<>
 			<Column>
 				<label>Autokick offline characters after (minutes)</label>
-				<input
-					type='number'
+				<NumberInput
 					min={ 0 }
 					value={ config.timer }
-					onChange={ (e) => {
+					onChange={ (newValue) => {
 						setConfig({
 							...config,
-							timer: e.target.valueAsNumber,
+							timer: newValue,
 						});
 					} }
 					readOnly={ !canEdit }
@@ -563,14 +570,13 @@ function GhostManagement({ config, setConfig, canEdit }: {
 				} }
 			/>
 			<Row>
-				<input
+				<Checkbox
 					id={ `${idPrefix}-ghostmanagement-room-devices` }
-					type='checkbox'
 					checked={ config.affectCharactersInRoomDevice }
-					onChange={ (event) => {
+					onChange={ (newValue) => {
 						setConfig({
 							...config,
-							affectCharactersInRoomDevice: event.target.checked,
+							affectCharactersInRoomDevice: newValue,
 						});
 					} }
 					readOnly={ !canEdit }
@@ -686,20 +692,20 @@ function SpaceInviteCreation({ closeDialog, addInvite, isPlayerAdmin }: { closeD
 			<Column className='spaceInviteCreation' gap='medium'>
 				<div className='input-row'>
 					<label>Limit To Account ID</label>
-					<input type='checkbox' checked={ allowAccount } onChange={ (e) => setAllowAccount(e.target.checked) } />
-					<input type='number' min={ 0 } value={ account } onChange={ (e) => setAccount(e.target.valueAsNumber) } readOnly={ !allowAccount } />
+					<Checkbox checked={ allowAccount } onChange={ setAllowAccount } />
+					<NumberInput min={ 0 } value={ account } onChange={ setAccount } readOnly={ !allowAccount } />
 				</div>
 				<div className='input-row'>
 					<label>Limit To Character ID</label>
-					<input type='checkbox' checked={ allowCharacter } onChange={ (e) => setAllowCharacter(e.target.checked) } />
-					<input type='number' min={ 0 } value={ character } onChange={ (e) => setCharacter(e.target.valueAsNumber) } readOnly={ !allowCharacter } />
+					<Checkbox checked={ allowCharacter } onChange={ setAllowCharacter } />
+					<NumberInput min={ 0 } value={ character } onChange={ setCharacter } readOnly={ !allowCharacter } />
 				</div>
 				{
 					isPlayerAdmin && (
 						<div className='input-row'>
 							<label>Max uses</label>
-							<input type='checkbox' checked={ allowMaxUses } onChange={ (e) => setAllowMaxUses(e.target.checked) } />
-							<input type='number' min={ 1 } value={ uses } onChange={ (e) => setUses(e.target.valueAsNumber) } readOnly={ !allowMaxUses } />
+							<Checkbox checked={ allowMaxUses } onChange={ setAllowMaxUses } />
+							<NumberInput min={ 1 } value={ uses } onChange={ setUses } readOnly={ !allowMaxUses } />
 						</div>
 					)
 				}
@@ -966,7 +972,7 @@ function BackgroundSelectDialog({ hide, current, select }: {
 			.sort(backgroundSortOrder);
 	}, [selection, nameFilter, backgroundSortOrder]);
 
-	const nameFilterInput = useRef<HTMLInputElement>(null);
+	const nameFilterInput = useRef<TextInput>(null);
 	useInputAutofocus(nameFilterInput);
 
 	return (
@@ -975,11 +981,11 @@ function BackgroundSelectDialog({ hide, current, select }: {
 				<div className='header'>
 					<div className='header-filter'>
 						<span>Select a background for the room</span>
-						<input ref={ nameFilterInput }
+						<TextInput ref={ nameFilterInput }
 							className='input-filter'
 							placeholder='Background name…'
 							value={ nameFilter }
-							onChange={ (e) => setNameFilter(e.target.value) }
+							onChange={ setNameFilter }
 						/>
 					</div>
 					<div className='header-tags'>

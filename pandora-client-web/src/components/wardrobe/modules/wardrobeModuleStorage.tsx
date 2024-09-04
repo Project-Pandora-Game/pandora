@@ -1,22 +1,21 @@
 import classNames from 'classnames';
-import React, { ReactElement, useMemo } from 'react';
-import { Row } from '../../common/container/container';
-import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
-import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
-import { useWardrobeContext } from '../wardrobeContext';
 import {
 	AppearanceActionProcessingContext,
 	ItemInteractionType,
 } from 'pandora-common';
+import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
+import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import { Row } from '../../common/container/container';
+import { useWardrobeContext } from '../wardrobeContext';
+import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
+import { ActionWarning, CheckResultToClassName } from '../wardrobeComponents';
+import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
 
 export function WardrobeModuleConfigStorage({ item, moduleName, m }: WardrobeModuleProps<ItemModuleStorage>): ReactElement {
 	const { target, targetSelector, focuser, actions } = useWardrobeContext();
-	const onClick = React.useCallback((ev: React.MouseEvent) => {
-		ev.stopPropagation();
-		focuser.focusItemModule(item, moduleName, target);
-	}, [item, moduleName, focuser, target]);
+	const [ref, setRef] = useState<HTMLElement | null>(null);
 
-	const checkResult = useMemo(() => {
+	const checkResultInitial = useMemo(() => {
 		const processingContext = new AppearanceActionProcessingContext(actions);
 		const actionTarget = processingContext.getTarget(targetSelector);
 		if (actionTarget == null)
@@ -26,10 +25,28 @@ export function WardrobeModuleConfigStorage({ item, moduleName, m }: WardrobeMod
 		return processingContext.finalize();
 	}, [actions, item, moduleName, targetSelector]);
 
-	const isLocked = !checkResult.valid;
+	const checkResult = useCheckAddPermissions(checkResultInitial);
+
+	const onClick = useCallback((ev: React.MouseEvent) => {
+		ev.stopPropagation();
+		if (!checkResult.valid) {
+			return;
+		}
+
+		focuser.focusItemModule(item, moduleName, target);
+	}, [item, moduleName, focuser, target, checkResult]);
+
 	return (
 		<Row padding='medium' wrap>
-			<button className={ classNames('wardrobeActionButton', isLocked ? 'blocked' : 'allowed') } onClick={ onClick }>
+			<button
+				ref={ setRef }
+				className={ classNames(
+					'wardrobeActionButton',
+					CheckResultToClassName(checkResult),
+				) }
+				onClick={ onClick }
+			>
+				<ActionWarning problems={ checkResult.problems } prompt={ !checkResult.valid && checkResult.prompt != null } parent={ ref } />
 				Open
 			</button>
 			<Row padding='medium' alignY='center'>

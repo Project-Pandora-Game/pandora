@@ -1,6 +1,6 @@
 import React, { ReactElement, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
-import { AppearanceActionProblem, AssertNever, AssertNotNullable, GameLogicPermission, GetLogger, Logger, PermissionRestriction, PermissionType, TypedEventEmitter } from 'pandora-common';
+import { AppearanceActionProblem, AssertNever, AssertNotNullable, GameLogicPermission, GetLogger, Logger, PermissionRestriction, PermissionType, TypedEventEmitter, type AppearanceActionProcessingResult } from 'pandora-common';
 import { useShardChangeListener, useShardConnector } from './shardConnectorContextProvider';
 import { ShardConnector } from '../../networking/shardConnector';
 import { PermissionPromptHandler } from '../settings/permissionsSettings';
@@ -158,4 +158,21 @@ export function usePermissionCheck(permissions: ReadonlySet<GameLogicPermission>
 	}, [permissions, runChecks, service]);
 
 	return resultProblems;
+}
+
+export function useCheckAddPermissions(result: AppearanceActionProcessingResult): AppearanceActionProcessingResult;
+export function useCheckAddPermissions(result: AppearanceActionProcessingResult | null): AppearanceActionProcessingResult | null;
+export function useCheckAddPermissions(result: AppearanceActionProcessingResult | null): AppearanceActionProcessingResult | null {
+	const permissionProblems = usePermissionCheck(result?.requiredPermissions);
+
+	return useMemo((): AppearanceActionProcessingResult | null => {
+		if (result == null)
+			return null;
+
+		if (permissionProblems.length > 0) {
+			return result.addAdditionalProblems(permissionProblems);
+		}
+
+		return result;
+	}, [result, permissionProblems]);
 }

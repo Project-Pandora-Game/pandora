@@ -4,10 +4,10 @@ import {
 	AppearanceActionProcessingResult,
 	DoAppearanceAction,
 } from 'pandora-common';
-import { useCallback, useMemo, useRef, useState } from 'react';
-import { useWardrobeContext } from './wardrobeContext';
+import { useCallback, useRef, useState } from 'react';
 import { CalculationQueue, useCalculateInQueue } from '../../common/calculationQueue';
-import { usePermissionCheck } from '../gameContext/permissionCheckProvider';
+import { useCheckAddPermissions } from '../gameContext/permissionCheckProvider';
+import { useWardrobeContext } from './wardrobeContext';
 
 const calculationQueue = new CalculationQueue({
 	immediate: 0,
@@ -50,16 +50,5 @@ export function useStaggeredAppearanceActionResult(action: AppearanceAction | nu
 	const valid = lowPriority ? (resultAction.current === action && resultContext.current === actions) :
 		(resultAction.current?.type === action?.type);
 
-	const permissionProblems = usePermissionCheck(result?.requiredPermissions);
-
-	return useMemo((): AppearanceActionProcessingResult | null => {
-		if (!valid || result == null)
-			return null;
-
-		if (permissionProblems.length > 0) {
-			return result.addAdditionalProblems(permissionProblems);
-		}
-
-		return result;
-	}, [valid, result, permissionProblems]);
+	return useCheckAddPermissions(valid ? result : null);
 }

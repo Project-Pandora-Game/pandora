@@ -513,10 +513,8 @@ export class Character {
 	}
 
 	public getAppearanceActionContext(): AppearanceActionContext {
-		const globalState = this.getGlobalState();
 		return {
 			player: this.gameLogicCharacter,
-			globalState,
 			spaceContext: this.getOrLoadSpace().getActionSpaceContext(),
 			getCharacter: (id) => {
 				const char = this.id === id ? this : this.getOrLoadSpace().getCharacterById(id);

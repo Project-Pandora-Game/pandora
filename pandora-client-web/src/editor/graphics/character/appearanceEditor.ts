@@ -56,7 +56,6 @@ export class AppearanceEditor extends CharacterAppearance {
 	protected _makeActionContext(): AppearanceActionContext {
 		return {
 			player: this.character,
-			globalState: this.globalState,
 			spaceContext: EDITOR_SPACE_CONTEXT,
 			getCharacter: (id) => {
 				if (id === this.id) {
@@ -71,7 +70,7 @@ export class AppearanceEditor extends CharacterAppearance {
 		action: AppearanceAction,
 		{ dryRun = false }: EditorActionContext = {},
 	): boolean {
-		const result = DoAppearanceAction(action, this._makeActionContext(), this.assetManager);
+		const result = DoAppearanceAction(action, this._makeActionContext(), this.globalState.currentState);
 
 		if (!result.valid || result.problems.length > 0) {
 			return false;

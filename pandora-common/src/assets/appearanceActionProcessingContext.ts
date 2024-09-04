@@ -53,9 +53,9 @@ export class AppearanceActionProcessingContext {
 		return this._actionData;
 	}
 
-	constructor(context: AppearanceActionContext) {
+	constructor(context: AppearanceActionContext, initialState: AssetFrameworkGlobalState) {
 		this._context = context;
-		this.originalState = context.globalState.currentState;
+		this.originalState = initialState;
 
 		this.manipulator = new AssetFrameworkGlobalStateManipulator(this.originalState);
 	}

@@ -12,18 +12,18 @@ import { ActionWarning, CheckResultToClassName } from '../wardrobeComponents';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
 
 export function WardrobeModuleConfigStorage({ item, moduleName, m }: WardrobeModuleProps<ItemModuleStorage>): ReactElement {
-	const { target, targetSelector, focuser, actions } = useWardrobeContext();
+	const { target, targetSelector, focuser, actions, globalState } = useWardrobeContext();
 	const [ref, setRef] = useState<HTMLElement | null>(null);
 
 	const checkResultInitial = useMemo(() => {
-		const processingContext = new AppearanceActionProcessingContext(actions);
+		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
 		const actionTarget = processingContext.getTarget(targetSelector);
 		if (actionTarget == null)
 			return processingContext.invalid();
 
 		processingContext.checkCanUseItemModule(actionTarget, item, moduleName, ItemInteractionType.MODIFY);
 		return processingContext.finalize();
-	}, [actions, item, moduleName, targetSelector]);
+	}, [actions, globalState, item, moduleName, targetSelector]);
 
 	const checkResult = useCheckAddPermissions(checkResultInitial);
 

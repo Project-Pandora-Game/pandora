@@ -20,7 +20,6 @@ import {
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import promClient from 'prom-client';
-import { assetManager } from '../assets/assetManager';
 import { Character } from '../character/character';
 import { CharacterManager } from '../character/characterManager';
 import { ClientConnection } from './connection_client';
@@ -159,7 +158,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!character)
 			throw new BadMessageError();
 
-		const result = DoAppearanceAction(action, character.getAppearanceActionContext(), assetManager);
+		const globalState = character.getGlobalState();
+		const result = DoAppearanceAction(action, character.getAppearanceActionContext(), globalState.currentState);
 
 		// Check if result is valid
 		if (!result.valid) {
@@ -195,7 +195,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 		{
 			// Apply the action
-			character.getGlobalState().setState(result.resultState);
+			globalState.setState(result.resultState);
 			const space = character.getOrLoadSpace();
 
 			// Send chat messages as needed

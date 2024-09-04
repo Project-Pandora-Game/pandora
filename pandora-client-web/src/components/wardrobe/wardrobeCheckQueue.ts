@@ -35,14 +35,12 @@ export function useStaggeredAppearanceActionResult(action: AppearanceAction | nu
 				resultContext.current = null;
 				setResult(null);
 			} else {
-				const checkResult = DoAppearanceAction(action, actions, globalState.assetManager);
+				const checkResult = DoAppearanceAction(action, actions, globalState);
 				resultAction.current = action;
 				resultContext.current = actions;
 				setResult(checkResult);
 			}
 		}
-	// Note, the presence of `globalState` here is more important than just for assetManager
-	// Its purpose is to recalculate requirements when the state changes
 	}, [action, actions, globalState]);
 
 	useCalculateInQueue(calculationQueue, immediate ? 'immediate' : lowPriority ? 'low' : 'normal', calculate);

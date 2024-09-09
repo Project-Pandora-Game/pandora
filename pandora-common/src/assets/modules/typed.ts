@@ -56,6 +56,7 @@ export type IModuleConfigTyped<TProperties, TStaticData> = IModuleConfigCommon<'
 	/**
 	 * The kind of interaction this module provides, affects prerequisites for changing it.
 	 * @default ItemInteractionType.MODIFY
+	 * @note If this module is an `expression`, then the default value is `ItemInteractionType.EXPRESSION_CHANGE`, instead.
 	 */
 	interactionType?: ItemInteractionType;
 

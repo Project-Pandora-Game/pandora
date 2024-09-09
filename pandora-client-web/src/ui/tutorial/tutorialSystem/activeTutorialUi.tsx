@@ -25,7 +25,7 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 		return null;
 
 	return (
-		<DraggableDialog title='Tutorial' close={ stopTutorial }>
+		<DraggableDialog title='Tutorial' className='tutorialDialogContainer' close={ stopTutorial }>
 			<Column className='tutorialDialog'>
 				<strong>{ tutorial.config.name } ({ tutorial.stageIndex + 1 }/{ tutorial.config.stages.length })</strong>
 				<ActiveTutorialStageUi stage={ stage } />

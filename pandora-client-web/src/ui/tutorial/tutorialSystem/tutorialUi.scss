@@ -1,3 +1,7 @@
+.tutorialDialogContainer {
+	z-index: 90000;
+}
+
 .tutorialDialog {
 	max-width: max(50vw, min(95vw, 50em));
 
@@ -11,7 +15,7 @@
 	position: absolute;
 	overflow: hidden;
 	margin: 0;
-	z-index: 90000;
+	z-index: 91000;
 	pointer-events: none;
 
 	background-color: transparent;

@@ -2,6 +2,8 @@
 
 $theme-accent-color: #939393;
 
+//#region Generic theming
+
 $theme-normal-background: #aaa;
 $theme-normal-background-secondary: #a0a0a0;
 $theme-normal-text: #000;
@@ -24,6 +26,10 @@ $theme-errorbox-text: $theme-normal-text;
 $theme-textbox-background: #ccc;
 $theme-textbox-text: #000;
 
+//#endregion
+
+//#region Header
+
 $theme-header-background: #888;
 $theme-header-text: #000;
 $theme-header-collapsable-background: #777;
@@ -36,11 +42,19 @@ $theme-header-button-hover-text: rgba($white, 0.95);
 $theme-header-button-hover-imgfilter: invert(100%);
 $theme-header-button-visiblefocus-outline: rgba($white, 0.8);
 
+$theme-notification-badge-background: #d00;
+$theme-notification-badge-text: rgba(#fff, 0.95);
+
+//#endregion
+
+//#region Footer
+
 $theme-footer-background: #888;
 $theme-footer-text: #000;
 
-$theme-notification-badge-background: #d00;
-$theme-notification-badge-text: rgba(#fff, 0.95);
+//#endregion
+
+//#region Character selection
 
 $theme-characterselect-card-shadow: 0 0.2em 0.4em 0 rgba(0, 0, 0, 0.2), 0 0.3em 1em 0 rgba(0, 0, 0, 0.19);
 $theme-characterselect-card-outerborder: #999;
@@ -51,3 +65,18 @@ $theme-characterselect-card-visiblefocus-outline: color-mix(in srgb, #444, $them
 $theme-characterselect-card-extrainfo-background: #053bb1;
 $theme-characterselect-card-extrainfo-text: #fff;
 $theme-characterselect-card-frame-background: #eee;
+
+//#endregion
+
+//#region Space search
+
+$theme-tipsbox-normal-background: transparent;
+$theme-tipsbox-normal-text: inherit;
+$theme-tipsbox-normal-border: #555;
+$theme-tipsbox-hover-border: #fff;
+$theme-tipsbox-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
+
+$theme-spacesearch-gapcolor: #000;
+$theme-spacesearch-entry-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
+
+//#endregion

@@ -1,109 +1,134 @@
 @import '../../../styles/common';
 
-.spacesSearchGrid {
-	display: grid;
-	width: 100%;
-	height: 4.5em;
-	grid-template-columns:
-		3em 2em minmax(540px, 2fr) minmax(260px, 6fr);
-	grid-template-rows: auto;
-	align-items: center;
-	padding: 0.5em;
-	background-color: $theme-normal-background;
-	color: $theme-normal-text;
-	border: 0.15em solid black;
+.spacesSearchList {
+	background-color: $theme-spacesearch-gapcolor;
+	padding: 3px;
 
-	&.selected {
-		background-color: $theme-active-background;
-		color: $theme-active-text;
-		.entry .offlineCount {
-			color: $theme-active-text-dim;
+	.spacesSearchListEntry {
+		display: grid;
+		width: 100%;
+		align-items: center;
+		background-color: $theme-normal-background;
+		color: $theme-normal-text;
+		border: solid transparent 0.25em;
+		padding: 0.25em;
+		overflow: hidden;
+
+		grid-template:
+			"icon extraIcons name description" 3.5em
+			/ 2.8em 2em minmax(30%, max-content) auto;
+		// grid-template might have different value for narrow screens (see lower)
+
+		&.selected {
+			background-color: $theme-active-background;
+			color: $theme-active-text;
+			.entry .offlineCount {
+				color: $theme-active-text-dim;
+			}
 		}
-	}
 
-	&:nth-child(even):not(:hover):not(.selected) {
-		background-color: $theme-normal-background-secondary;
-	}
-
-	&:hover:not(.selected) {
-		color: $theme-hover-text;
-		background-color: $theme-hover-background;
-
-		.entry .offlineCount {
-			color: $theme-hover-text-dim;
+		&:nth-child(even):not(:hover):not(.selected) {
+			background-color: $theme-normal-background-secondary;
 		}
-	}
 
-	&.empty {
-		&:not(:hover):not(.selected) {
-			color: $theme-normal-text-dim;
+		&:hover:not(.selected) {
+			color: $theme-hover-text;
+			background-color: $theme-hover-background;
 
 			.entry .offlineCount {
+				color: $theme-hover-text-dim;
+			}
+		}
+
+		&:focus-visible {
+			border-color: $theme-spacesearch-entry-visiblefocus-outline;
+		}
+
+		&.empty {
+			&:not(:hover):not(.selected) {
 				color: $theme-normal-text-dim;
+
+				.entry .offlineCount {
+					color: $theme-normal-text-dim;
+				}
+			}
+
+			.entry {
+				font-style: italic;
+			}
+		}
+
+		&.full .userCount {
+			background-color: color-mix(in srgb, transparent, $theme-error 40%);
+			border-radius: 0.5em;
+		}
+
+		.icon {
+			grid-area: icon;
+			display: flex;
+			justify-content: center;
+			align-items: center;
+			height: 80%;
+			aspect-ratio: 1;
+			overflow: hidden;
+
+			img {
+				width: 100%;
+				height: 100%;
+			}
+		}
+
+		.icons-extra {
+			grid-area: extraIcons;
+			height: 80%;
+			display: flex;
+			flex-flow: column;
+			justify-content: flex-start;
+
+			img {
+				width: 1.5em;
+				height: 1.5em;
 			}
 		}
 
 		.entry {
-			font-style: italic;
+			grid-area: name;
+			padding: 0.5em;
+			text-align: left;
+			vertical-align: middle;
+			background-color: transparent;
+			white-space: nowrap;
+			overflow: hidden;
+
+			.offlineCount {
+				color: $theme-normal-text-dim;
+				transition: all 150ms linear;
+			}
+		}
+
+		.description-preview {
+			grid-area: description;
+			padding: 0.5em;
+			text-align: left;
+			vertical-align: middle;
+			background-color: transparent;
+			white-space: nowrap;
+			overflow: hidden;
+			text-overflow: ellipsis;
+		}
+
+		.userCount {
+			padding: 0 0.25em;
 		}
 	}
 
-	&.full .userCount {
-		background-color: color-mix(in srgb, transparent, $theme-error 40%);
-		border-radius: 0.5em;
-	}
-
-	.icon {
-		display: flex;
-		justify-content: center;
-		align-items: center;
-		height: 80%;
-		aspect-ratio: 1;
-		overflow: hidden;
-
-		img {
-			width: 100%;
-			height: 100%;
+	&.narrowScreen {
+		.spacesSearchListEntry {
+			grid-template:
+				"icon extraIcons name" 1.75em
+				"icon extraIcons description" 1.75em
+				/ 2.8em 2em auto;
 		}
-	}
-
-	.icons-extra {
-		height: 80%;
-		display: flex;
-		flex-flow: column;
-		justify-content: flex-start;
-
-		img {
-			width: 1.5em;
-			height: 1.5em;
-		}
-	}
-
-	.entry {
-		padding: 0.5em;
-		text-align: left;
-		vertical-align: middle;
-		background-color: transparent;
-		white-space: nowrap;
-
-		.offlineCount {
-			color: $theme-normal-text-dim;
-			transition: all 150ms linear;
-		}
-	}
-
-	.description-preview {
-		padding: 0.5em;
-		text-align: left;
-		vertical-align: middle;
-		background-color: transparent;
-		white-space: nowrap;
-		overflow: hidden;
-		text-overflow: ellipsis;
-	}
-
-	.userCount {
-		padding: 0 0.25em;
 	}
 }
 
@@ -194,12 +219,18 @@
 }
 
 .infoBox {
+	background: $theme-tipsbox-normal-background;
+	color: $theme-tipsbox-normal-text;
 	border-radius: 0.6em;
-	border: 2px solid $grey-dark;
+	border: 2px solid $theme-tipsbox-normal-border;
 	padding: 0.4em;
 
 	&:hover {
 		cursor: pointer;
-		border: 2px solid $white;
+		border: 2px solid $theme-tipsbox-hover-border;
+	}
+
+	&:focus-visible {
+		outline: $theme-tipsbox-visiblefocus-outline solid 0.25em;
 	}
 }

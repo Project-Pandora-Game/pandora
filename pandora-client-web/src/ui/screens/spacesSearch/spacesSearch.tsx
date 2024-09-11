@@ -26,7 +26,7 @@ import shieldIcon from '../../../assets/icons/shield.svg';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { useAccountContacts } from '../../../components/accountContacts/accountContactContext';
 import { Button } from '../../../components/common/button/button';
-import { Row } from '../../../components/common/container/container';
+import { Column, Row } from '../../../components/common/container/container';
 import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
@@ -39,6 +39,7 @@ import publicDoor from '../../../icons/public-door.svg';
 import { useObservable } from '../../../observable';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
+import { useIsNarrowScreen } from '../../../styles/mediaQueries';
 import { DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration';
 import './spacesSearch.scss';
 
@@ -86,10 +87,10 @@ export function SpacesSearch(): ReactElement {
 	return (
 		<div>
 			<Row padding='medium' wrap alignX='space-between'>
-				<Link to='/'>◄ Back</Link><br />
-				<span className='infoBox' onClick={ () => setShowTips(true) } >
+				<Link className='center-flex' to='/'>◄ Back</Link>
+				<button className='infoBox' onClick={ () => setShowTips(true) } >
 					🛈 Tip: { TIPS[index] }
-				</span>
+				</button>
 			</Row>
 			<Row wrap alignX='space-between'>
 				<h2>Spaces search</h2>
@@ -127,6 +128,7 @@ function TipsListDialog({ hide }: {
 function SpaceSearchList({ list }: {
 	list: SpaceListInfo[];
 }): ReactElement {
+	const isNarrowScreen = useIsNarrowScreen();
 	const navigate = useNavigate();
 	const account = useCurrentAccount();
 	AssertNotNullable(account);
@@ -172,23 +174,32 @@ function SpaceSearchList({ list }: {
 						</p>
 					</ContextHelpButton>
 				</h3>
-				{ ownSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
-				{
-					ownSpaces.length >= account.spaceOwnershipLimit ? null : (
-						<a className='spacesSearchGrid' onClick={ () => navigate('/spaces/create') } >
-							<div className='icon'>➕</div>
-							<div className='icons-extra' />
-							<div className='entry'>Create a new space</div>
-							<div className='description-preview' />
-						</a>
-					)
-				}
+				<Column className={ classNames('spacesSearchList', isNarrowScreen ? 'narrowScreen' : null) } gap='tiny'>
+					{ ownSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
+					{
+						ownSpaces.length >= account.spaceOwnershipLimit ? null : (
+							<button className='spacesSearchListEntry' onClick={ () => navigate('/spaces/create') } >
+								<div className='icon'>➕</div>
+								<div className='icons-extra' />
+								<div className='entry'>Create a new space</div>
+								<div className='description-preview' />
+							</button>
+						)
+					}
+				</Column>
 			</div>
 			<hr />
 			<div>
 				<h3>Found spaces ({ otherSpaces.length })</h3>
-				{ otherSpaces.length === 0 ? <p>No space matches your filter criteria</p> : null }
-				{ otherSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
+				{
+					otherSpaces.length === 0 ? (
+						<p>No space matches your filter criteria</p>
+					) : (
+						<Column className={ classNames('spacesSearchList', isNarrowScreen ? 'narrowScreen' : null) } gap='tiny'>
+							{ otherSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
+						</Column>
+					)
+				}
 			</div>
 		</>
 	);
@@ -226,9 +237,9 @@ function SpaceSearchEntry({ baseInfo }: {
 
 	return (
 		<>
-			<a
+			<button
 				className={ classNames(
-					'spacesSearchGrid',
+					'spacesSearchListEntry',
 					isEmpty ? 'empty' : null,
 					isFull ? 'full' : null,
 					show ? 'selected' : null,
@@ -261,7 +272,7 @@ function SpaceSearchEntry({ baseInfo }: {
 					{ `)` }
 				</div>
 				<div className='description-preview'>{ `${description}` }</div>
-			</a>
+			</button>
 			{ show && <SpaceDetailsDialog
 				baseInfo={ baseInfo }
 				hide={ () => setShow(false) }

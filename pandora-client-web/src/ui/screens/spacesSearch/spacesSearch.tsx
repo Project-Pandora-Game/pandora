@@ -177,11 +177,9 @@ function SpaceSearchList({ list }: {
 					{ ownSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
 					{
 						ownSpaces.length >= account.spaceOwnershipLimit ? null : (
-							<button className='spacesSearchListEntry' onClick={ () => navigate('/spaces/create') } >
+							<button className='spacesSearchListEntry noDescription' onClick={ () => navigate('/spaces/create') } >
 								<div className='icon'>➕</div>
-								<div className='icons-extra' />
 								<div className='entry'>Create a new space</div>
-								<div className='description-preview' />
 							</button>
 						)
 					}

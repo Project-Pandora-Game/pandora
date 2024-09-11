@@ -47,7 +47,8 @@ button {
 	font-size: 1em;
 	transition:
 		all 150ms linear,
-		visibility 0ms;
+		visibility 0ms,
+		outline 0ms;
 
 	&:hover {
 		cursor: pointer;

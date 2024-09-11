@@ -58,7 +58,7 @@ function DialogLeave(): ReactElement {
 
 	return (
 		<ModalDialog>
-			<Column className='LeaveDialog' alignX='center'>
+			<Column className='LeaveDialog' alignX='center' gap='large'>
 				<SpaceLeave />
 				{
 					inPublicSpace ? (

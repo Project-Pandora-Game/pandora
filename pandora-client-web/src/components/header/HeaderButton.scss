@@ -1,18 +1,14 @@
-@import '../../styles/constants';
-@import '../../styles/utils';
+@import '../../styles/common';
 
 $header-button-img-height: 1.5em;
 $header-button-v-padding: 0.3em;
 $header-button-height: $header-button-img-height + 2 * $header-button-v-padding;
 
 .HeaderButton {
-	background-color: transparent;
+	background-color: $theme-header-button-normal-background;
+	color: $theme-header-button-normal-text;
 	border: 0.2em solid transparent;
 	min-width: 4em;
-
-	&.withText {
-		min-width: 6em;
-	}
 
 	.icon-container {
 		position: relative;
@@ -33,8 +29,8 @@ $header-button-height: $header-button-img-height + 2 * $header-button-v-padding;
 			height: 1.4em;
 			font-size: 0.8em;
 			line-height: 1.5;
-			color: $white-primary;
-			background-color: $theme-notification;
+			background-color: $theme-notification-badge-background;
+			color: $theme-notification-badge-text;
 			padding: 0 0.3em;
 		}
 	}
@@ -43,17 +39,17 @@ $header-button-height: $header-button-img-height + 2 * $header-button-v-padding;
 		height: $header-button-img-height;
 	}
 
-	&:hover, &:focus, &.active {
-		background-color: $grey-darkest;
-		color: $white-primary;
+	&:hover {
+		background-color: $theme-header-button-hover-background;
+		color: $theme-header-button-hover-text;
 
 		img {
-			filter: invert(100%);
+			filter: $theme-header-button-hover-imgfilter;
 		}
 	}
 
-	&:focus {
+	&:focus-visible {
 		outline: 0;
-		border-color: $white-secondary;
+		border-color: $theme-header-button-visiblefocus-outline;
 	}
 }

@@ -1,10 +1,10 @@
-@import '../../styles/constants';
-@import '../../styles/utils';
+@import '../../styles/common';
 @import 'HeaderButton';
 
 .Header {
 	@include flex(row, wrap);
-	background-color: $grey-mid;
+	background-color: $theme-header-background;
+	color: $theme-header-text;
 	width: 100%;
 	position: relative;
 
@@ -29,23 +29,9 @@
 		padding: 0 1em;
 	}
 
-	.characterMenu {
-		@include flex(column);
-		background: #888;
-		position: absolute;
-		top: calc(100% + 0.2em);
-		left: 0.2em;
-		border: 0.2em solid black;
-		z-index: $z-index-menu;
-		header {
-			@include center-flex;
-			background: #777;
-			padding: 0.2em;
-		}
-	}
-
 	.collapsableHeaderButton {
-		background-color: #777;
+		background-color: $theme-header-collapsable-background;
+		color: $theme-header-collapsable-text;
 	}
 }
 
@@ -56,7 +42,8 @@
 	margin: 0;
 	overflow: hidden;
 	pointer-events: auto;
-	background-color: #777;
+	background-color: $theme-header-collapsable-background;
+	color: $theme-header-collapsable-text;
 	transition: all 200ms linear;
 
 	&.hide {

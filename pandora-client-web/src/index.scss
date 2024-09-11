@@ -1,6 +1,6 @@
 @import 'styles/typography';
 @import 'styles/forms';
-@import 'styles/utils';
+@import 'styles/common';
 
 * {
 	box-sizing: border-box;
@@ -9,20 +9,23 @@
 html, body {
 	height: 100%;
 	margin: 0;
-	background-color: $grey-lightest;
+	background-color: $theme-normal-background;
+	color: $theme-normal-text;
 }
 
 #pandora-root, #editor-root {
 	@include flex(column);
 	margin: 0;
 	height: 100%;
-	background-color: $grey-lighter;
+	background-color: $theme-normal-background;
+	color: $theme-normal-text;
 	user-select: none;
 }
 
 div.main-container {
 	position: relative;
-	background-color: $grey-light;
+	background-color: $theme-normal-background;
+	color: $theme-normal-text;
 	flex: 1;
 	overflow: hidden;
 
@@ -49,13 +52,8 @@ div.main-container {
 		height: 1.5em;
 		padding: 0.2em;
 		font-style: italic;
-		background-color: $grey-mid;
+		background-color: $theme-footer-background;
+		color: $theme-footer-text;
 		user-select: text;
 	}
-}
-
-.centerbox {
-	@include center-flex;
-	min-width: 100%;
-	min-height: 100%;
 }

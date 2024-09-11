@@ -41,3 +41,13 @@ $theme-footer-text: #000;
 
 $theme-notification-badge-background: #d00;
 $theme-notification-badge-text: rgba(#fff, 0.95);
+
+$theme-characterselect-card-shadow: 0 0.2em 0.4em 0 rgba(0, 0, 0, 0.2), 0 0.3em 1em 0 rgba(0, 0, 0, 0.19);
+$theme-characterselect-card-outerborder: #999;
+$theme-characterselect-card-innerborder: #555;
+$theme-characterselect-card-background: #ccc;
+$theme-characterselect-card-text: #000;
+$theme-characterselect-card-visiblefocus-outline: color-mix(in srgb, #444, $theme-accent-color 35%);
+$theme-characterselect-card-extrainfo-background: #053bb1;
+$theme-characterselect-card-extrainfo-text: #fff;
+$theme-characterselect-card-frame-background: #eee;

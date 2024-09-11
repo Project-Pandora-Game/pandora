@@ -9,65 +9,69 @@
 	gap: 3.5em;
 	padding: spacing('x-large');
 	margin: 0;
-}
 
-.card {
-	@include center-flex(column);
-	position: relative;
-	height: 20em;
-	width: 16em;
-	font-family: Arial, Helvetica, sans-serif;
-	border-radius: 0.2em;
-	background-color: #999;
-	box-shadow: 0 0.2em 0.4em 0 rgba(0, 0, 0, 0.2), 0 0.3em 1em 0 rgba(0, 0, 0, 0.19);
-
-	.border {
+	.card {
 		@include center-flex(column);
-		height: 18em;
-		width: 14em;
-		background-color: #ccc;
+		height: 20em;
+		width: 16em;
+		padding: 1em;
 		font-family: Arial, Helvetica, sans-serif;
-		border: 0.2em solid #555;
+		border-radius: 0.2em;
+		background-color: $theme-characterselect-card-outerborder;
+		box-shadow: $theme-characterselect-card-shadow;
 		cursor: pointer;
 
+		.border {
+			@include center-flex(column);
+			position: relative;
+			height: 100%;
+			width: 100%;
+			gap: 1em;
+			background-color: $theme-characterselect-card-background;
+			color: $theme-characterselect-card-text;
+			border: 0.2em solid $theme-characterselect-card-innerborder;
+
+			.label {
+				position: absolute;
+				top: .4em;
+				right: .4em;
+				color: $theme-characterselect-card-extrainfo-text;
+				background-color: $theme-characterselect-card-extrainfo-background;
+				padding: .1em .75em;
+				border-radius: 1em;
+			}
+
+			.frame {
+				background-color: $theme-characterselect-card-frame-background;
+				border-style: solid;
+				border-width: 0.06em;
+				box-shadow: inset 0em 0em 0.3em #000000e6;
+				width: 5em;
+				height: 5em;
+				padding: 1em;
+				overflow: hidden;
+
+				img {
+					object-fit: contain;
+					width: 100%;
+					height: 100%;
+				}
+			}
+
+			.title {
+				font-size: 1.2em;
+				text-align: center;
+			}
+		}
+
 		&:hover {
-			background-color: #eee;
+			.border {
+				background-color: #eee;
+			}
 		}
 
-		.label {
-			position: absolute;
-			top: 1.4em;
-			right: 1.4em;
-			color: #fff;
-			background-color: rgb(5, 59, 177);
-			padding: 0.1em 1em 0.1em 1em;
-			border-radius: 1em;
-		}
-
-		.frame {
-			background-color: #eee;
-			border-style: solid;
-			border-width: 0.06em;
-			padding: 1em;
-			box-shadow: inset 0em 0em 0.3em rgba(0,0,0,0.9);
-		}
-
-		.title {
-			font-size: 1.2em;
-			margin-bottom: 1em;
-			text-align: center;
-		}
-
-		.character-container {
-			display: flex;
-			flex-direction: column;
-			gap: 0.5em;
-			align-items: center;
-		}
-
-		.character-image {
-			width: 5em;
-			height: 5em;
+		&:focus-visible {
+			outline: $theme-characterselect-card-visiblefocus-outline solid 0.25em;
 		}
 	}
 }

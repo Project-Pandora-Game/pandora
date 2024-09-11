@@ -80,14 +80,14 @@ type CharacterListItemProps = Partial<CharacterSelfInfo> & {
 
 function CharacterListItem({ id, name, preview, state, onClick }: CharacterListItemProps): ReactElement {
 	return (
-		<div className='card'>
-			<div className='border' onClick={ onClick }>
+		<button className='card' onClick={ onClick }>
+			<div className='border'>
 				<State state={ state } />
 				<div className='title'>{ name }</div>
 				<Preview name={ name } preview={ preview } />
 				{ id && <p>{ id }</p> }
 			</div>
-		</div>
+		</button>
 	);
 }
 
@@ -110,14 +110,11 @@ function Preview({ name, preview }: PreviewProps): ReactElement | null {
 		return null;
 
 	return (
-		<div className='character-container'>
-			<div className='frame'>
-				<img
-					className='character-image'
-					src={ `data:image/png;base64,${preview}` }
-					alt={ `Preview image for ${name}` }
-				/>
-			</div>
+		<div className='frame'>
+			<img
+				src={ `data:image/png;base64,${preview}` }
+				alt={ `Preview image for ${name}` }
+			/>
 		</div>
 	);
 }

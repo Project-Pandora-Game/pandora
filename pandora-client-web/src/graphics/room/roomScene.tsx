@@ -397,7 +397,7 @@ export function usePlayerVisionFilters(targetIsPlayer: boolean): Filter[] {
 			return [];
 		if (targetIsPlayer)
 			return [];
-		const filter = new PIXI.ColorMatrixFilter();
+		const filter = new PIXI.ColorMatrixFilter({ resolution: 'inherit' });
 		filter.brightness(1 - blindness / 10, false);
 		return [filter];
 	}, [blindness, targetIsPlayer]);
@@ -418,13 +418,13 @@ export function useCharacterDisplayFilters(character: Character<ICharacterRoomDa
 		} else if (interfaceChatroomOfflineCharacterFilter === 'icon') {
 			return [];
 		} else if (interfaceChatroomOfflineCharacterFilter === 'darken') {
-			const colorFilter = new PIXI.ColorMatrixFilter();
+			const colorFilter = new PIXI.ColorMatrixFilter({ resolution: 'inherit' });
 			colorFilter.brightness(0.4, true);
 			return [colorFilter];
 		} else if (interfaceChatroomOfflineCharacterFilter === 'ghost') {
-			const colorFilter = new PIXI.ColorMatrixFilter();
+			const colorFilter = new PIXI.ColorMatrixFilter({ resolution: 'inherit' });
 			colorFilter.brightness(0.4, true);
-			const alphaFilter = new PIXI.AlphaFilter({ alpha: 0.8 });
+			const alphaFilter = new PIXI.AlphaFilter({ alpha: 0.8, resolution: 'inherit' });
 			return [colorFilter, alphaFilter];
 		}
 		AssertNever(interfaceChatroomOfflineCharacterFilter);

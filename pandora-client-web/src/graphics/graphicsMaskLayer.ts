@@ -184,6 +184,7 @@ class AlphaMaskFilter extends Filter {
 				filterUniforms,
 				uMaskTexture: mask.texture.source,
 			},
+			resolution: 'inherit',
 		});
 
 		this._maskSprite = mask;

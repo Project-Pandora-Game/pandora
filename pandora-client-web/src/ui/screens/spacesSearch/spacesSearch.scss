@@ -128,6 +128,13 @@
 				"icon extraIcons name" 1.75em
 				"icon extraIcons description" 1.75em
 				/ 2.8em 2em auto;
+
+			&.noDescription {
+				grid-template:
+					"icon extraIcons name" 1.75em
+					"icon extraIcons name" 1.75em
+					/ 2.8em 2em auto;
+			}
 		}
 	}
 }

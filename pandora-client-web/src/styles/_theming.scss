@@ -23,3 +23,21 @@ $theme-errorbox-text: $theme-normal-text;
 
 $theme-textbox-background: #ccc;
 $theme-textbox-text: #000;
+
+$theme-header-background: #888;
+$theme-header-text: #000;
+$theme-header-collapsable-background: #777;
+$theme-header-collapsable-text: #000;
+
+$theme-header-button-normal-background: transparent;
+$theme-header-button-normal-text: inherit;
+$theme-header-button-hover-background: #151515;
+$theme-header-button-hover-text: rgba($white, 0.95);
+$theme-header-button-hover-imgfilter: invert(100%);
+$theme-header-button-visiblefocus-outline: rgba($white, 0.8);
+
+$theme-footer-background: #888;
+$theme-footer-text: #000;
+
+$theme-notification-badge-background: #d00;
+$theme-notification-badge-text: rgba(#fff, 0.95);

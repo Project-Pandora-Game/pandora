@@ -28,6 +28,16 @@ $theme-textbox-text: #000;
 
 //#endregion
 
+//#region Chat
+
+$theme-chat-embed-normal-background: #222;
+$theme-chat-embed-normal-text: #fff;
+$theme-chat-embed-hover-background: #181818;
+$theme-chat-embed-hover-text: #fff;
+$theme-chat-embed-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
+
+//#endregion
+
 //#region Header
 
 $theme-header-background: #888;
@@ -78,15 +88,5 @@ $theme-tipsbox-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-colo
 
 $theme-spacesearch-gapcolor: #000;
 $theme-spacesearch-entry-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
-
-//#endregion
-
-//#region Chat
-
-$theme-chat-embed-normal-background: #222;
-$theme-chat-embed-normal-text: #fff;
-$theme-chat-embed-hover-background: #181818;
-$theme-chat-embed-hover-text: #fff;
-$theme-chat-embed-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
 
 //#endregion

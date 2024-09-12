@@ -9,7 +9,7 @@ fieldset.fieldset-toggle {
 		align-items: center;
 
 		&::before {
-			content: '▶';
+			content: '\0025B6';
 			display: inline-block;
 			background-repeat: no-repeat;
 			width: 1rem;
@@ -18,7 +18,7 @@ fieldset.fieldset-toggle {
 		}
 
 		&.open::before {
-			content: '▼';
+			content: '\0025BC';
 		}
 	}
 

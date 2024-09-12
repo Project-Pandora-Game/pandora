@@ -11,6 +11,7 @@ import { RoomScene } from '../../../graphics/room/roomScene';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { useIsPortrait } from '../../../styles/mediaQueries';
 import { Chat } from '../../components/chat/chat';
+import './chatArea.scss';
 import './room.scss';
 import { RoomScreenContextProvider } from './roomContext';
 import { PersonalSpaceControls, RoomControls } from './roomControls';

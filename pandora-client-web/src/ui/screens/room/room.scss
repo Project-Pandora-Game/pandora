@@ -115,18 +115,17 @@
 }
 
 .chatArea {
-	background-color: #303030;
 	display: flex;
 	flex-flow: column;
 	flex: 1;
+	background-color: #303030;
 	overflow: hidden;
 
-	&>div.messages {
+	> .messagesArea {
 		position: relative;
 		flex: 1;
 		overflow: hidden;
 		user-select: text;
-	}
 
 	.message {
 		color: $white;
@@ -161,7 +160,7 @@
 			opacity: 0.7;
 		}
 
-		&> .info {
+			> .info {
 			float: right;
 			color: $grey-mid;
 			font-style: italic;
@@ -183,6 +182,7 @@
 			padding: 0.2em;
 			margin: 0 0.2em;
 			border-left: solid 2px #09f;
+			}
 		}
 	}
 

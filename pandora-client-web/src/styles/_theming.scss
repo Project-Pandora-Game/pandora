@@ -30,11 +30,30 @@ $theme-textbox-text: #000;
 
 //#region Chat
 
+$theme-chat-background: #303030;
+$theme-chat-text: #fff;
+$theme-chat-messageinfo-text: #888;
+
+$theme-chat-serverMessage-background: #202020;
+$theme-chat-serverMessage-text: #fff;
+$theme-chat-serverMessage-foldable-hover-background: #181818;
+
+$theme-chat-link-normal-text: $theme-link-light;
+$theme-chat-link-hover-text: $grey-light;
+
+$theme-chat-editedMessage-background: #444;
+$theme-chat-editedMessage-notch: #09f;
+
 $theme-chat-embed-normal-background: #222;
 $theme-chat-embed-normal-text: #fff;
 $theme-chat-embed-hover-background: #181818;
 $theme-chat-embed-hover-text: #fff;
 $theme-chat-embed-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
+
+$theme-chat-input-normal-background: #505050;
+$theme-chat-input-focused-background: #000;
+$theme-chat-input-text: #fff;
+$theme-chat-input-placeholder-text: #777;
 
 //#endregion
 

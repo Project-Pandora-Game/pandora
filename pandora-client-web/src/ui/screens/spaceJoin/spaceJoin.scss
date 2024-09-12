@@ -1,17 +1,30 @@
+@import '../../../styles/common';
+
 .spaceJoin {
 	margin: auto;
 	justify-self: center;
 }
 
 .spaceInvite {
-	display: flex;
+	display: block flex;
 	flex-flow: row;
-	background-color: #222;
+	width: calc(100% - 1em);
+	margin: 0.5em;
+	padding: 0.75em;
+	background-color: $theme-chat-embed-normal-background;
+	color: $theme-chat-embed-normal-text;
 	font-weight: bold;
-	padding: 1em;
+	border: solid transparent 0.25em;
 
-	&.active:hover {
-		cursor: pointer;
-		background-color: #181818;
+	&.active {
+		&:hover {
+			cursor: pointer;
+			background-color: $theme-chat-embed-hover-background;
+			color: $theme-chat-embed-hover-text;
+		}
+
+		&:focus-visible {
+			border-color: $theme-chat-embed-visiblefocus-outline;
+		}
 	}
 }

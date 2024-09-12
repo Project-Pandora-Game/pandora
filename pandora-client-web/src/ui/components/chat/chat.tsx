@@ -48,13 +48,24 @@ export function Chat(): ReactElement | null {
 		<div className='chatArea'>
 			<div
 				className={ classNames(
-					'messages',
+					'messagesArea',
 					`fontSize-${interfaceChatroomChatFontSize}`,
 				) }
 			>
-				<Scrollable color='dark' className='fill' ref={ messagesDiv } tabIndex={ 1 }>
+				<Scrollable
+					ref={ messagesDiv }
+					color='dark'
+					className='fill'
+					tabIndex={ 1 }
+				>
 					<Column gap='none'>
-						{ messages.map((m) => <Message key={ m.time } message={ m } playerId={ playerId } />) }
+						{ messages.map((m) => (
+							<Message
+								key={ m.time }
+								message={ m }
+								playerId={ playerId }
+							/>
+						)) }
 					</Column>
 				</Scrollable>
 				<ChatAutoCompleteHint />

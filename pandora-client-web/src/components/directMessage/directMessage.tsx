@@ -21,7 +21,6 @@ import { DirectMessageChannelProvider, useDirectMessageChat } from '../gameConte
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { useGameStateOptional } from '../gameContext/gameStateContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import './directMessage.scss';
 import { DIRECT_MESSAGE_COMMANDS, DirectMessageCommandExecutionContext } from './directMessageCommandContext';
 
 export function DirectMessage({ accountId }: { accountId: number; }): ReactElement {
@@ -49,11 +48,10 @@ export function DirectMessage({ accountId }: { accountId: number; }): ReactEleme
 	}), [autocompleteHint]);
 
 	return (
-		<div className='direct-message'>
+		<div className='chatArea'>
 			<chatInputContext.Provider value={ ctx }>
 				<DirectMessageChannelProvider accountId={ accountId }>
 					<DirectMessageList />
-					<DirectMessageAutoCompleteHint />
 					<DirectChannelInput ref={ ref } />
 				</DirectMessageChannelProvider>
 			</chatInputContext.Provider>
@@ -75,7 +73,7 @@ function DirectMessageList(): ReactElement | null {
 	return (
 		<div
 			className={ classNames(
-				'direct-message-list',
+				'messagesArea',
 				`fontSize-${interfaceChatroomChatFontSize}`,
 			) }
 		>
@@ -95,6 +93,7 @@ function DirectMessageList(): ReactElement | null {
 					)) }
 				</Column>
 			</Scrollable>
+			<DirectMessageAutoCompleteHint />
 		</div>
 	);
 }
@@ -155,16 +154,17 @@ function DirectMessageElement({ message, currentAccount }: {
 		};
 
 		return (
-			<span style={ { color: labelColor } } className='direct-message-entry__name'>
-				{ displayName }
+			<span className='name'>
+				<span className='from' data-id={ message.source } style={ { color: labelColor } }>{ displayName }</span>
+				{ ': ' }
 			</span>
 		);
 	}, [message, currentAccount, accountLabelColor, displayInfo]);
 	const time = useMemo(() => new Date(message.time), [message.time]);
 
 	return (
-		<div className='direct-message-entry'>
-			<span className='direct-message-entry__info'>
+		<div className='message chat'>
+			<span className='info'>
 				<time>
 					{ time.toLocaleDateString() } { time.toLocaleTimeString('en-IE').substring(0, 5) }
 				</time>
@@ -172,7 +172,6 @@ function DirectMessageElement({ message, currentAccount }: {
 				{ /* Space so copied text looks nicer */ ' ' }
 			</span>
 			{ displayNameElement }
-			{ ': ' }
 			<DirectMessageContents message={ message } />
 		</div>
 	);
@@ -207,19 +206,15 @@ function DirectMessageContents({ message }: { message: Immutable<LoadedDirectMes
 
 	if (error === 'invalidKey') {
 		return (
-			<span className='direct-message-entry__content'>
-				<span className='error'>[ Unable to decrypt message created with a different key ]</span>
-			</span>
+			<span className='error'>[ Unable to decrypt message created with a different key ]</span>
 		);
 	} else if (error === 'error') {
 		return (
-			<span className='direct-message-entry__content'>
-				<span className='error'>[ ERROR: Failed to decrypt the message ]</span>
-			</span>
+			<span className='error'>[ ERROR: Failed to decrypt the message ]</span>
 		);
 	} else if (message.decrypted == null) {
 		return (
-			<span className='direct-message-entry__content'>
+			<span>
 				[ <i>Decrypting...</i> ] <br />
 				{ message.content }
 			</span>
@@ -227,9 +222,10 @@ function DirectMessageContents({ message }: { message: Immutable<LoadedDirectMes
 	}
 
 	return (
-		<span className='direct-message-entry__content'>
+		// eslint-disable-next-line react/jsx-no-useless-fragment
+		<>
 			{ ...message.decrypted.map((c, i) => RenderChatPart(c, i, true)) }
-		</span>
+		</>
 	);
 }
 

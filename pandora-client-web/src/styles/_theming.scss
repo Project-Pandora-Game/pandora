@@ -39,7 +39,7 @@ $theme-chat-serverMessage-text: #fff;
 $theme-chat-serverMessage-foldable-hover-background: #181818;
 
 $theme-chat-link-normal-text: $theme-link-light;
-$theme-chat-link-hover-text: $grey-light;
+$theme-chat-link-hover-text: #aaa;
 
 $theme-chat-editedMessage-background: #444;
 $theme-chat-editedMessage-notch: #09f;
@@ -54,6 +54,14 @@ $theme-chat-input-normal-background: #505050;
 $theme-chat-input-focused-background: #000;
 $theme-chat-input-text: #fff;
 $theme-chat-input-placeholder-text: #777;
+
+$theme-chat-indicator-background: #202020;
+$theme-chat-indicator-interactive-hover-background: #101010;
+$theme-chat-indicator-text: #fff;
+
+$theme-autocomplete-hint-background: #336;
+$theme-autocomplete-hint-text: #fff;
+$theme-autocomplete-hint-entry-hover-background: #7e7eff54;
 
 //#endregion
 

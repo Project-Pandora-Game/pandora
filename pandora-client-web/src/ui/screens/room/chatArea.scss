@@ -93,3 +93,67 @@
 		}
 	}
 }
+
+.typing-indicator, .input-modifiers, .unread-messages-indicator {
+	@include flex(row, wrap);
+	align-items: center;
+
+	background-color: $theme-chat-indicator-background;
+	color: $theme-chat-indicator-text;
+	padding-left: 0.5em;
+	gap: 0.5em;
+}
+
+.typing-indicator, .unread-messages-indicator {
+	min-height: 1.5em;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+.typing-indicator {
+	padding-right: 0.5em;
+	cursor: pointer;
+
+	&:hover {
+		background-color: $theme-chat-indicator-interactive-hover-background;
+	}
+
+	img {
+		height: 1em;
+		filter: brightness(0) saturate(100%) invert(100%);
+	}
+}
+
+.unread-messages-indicator:hover {
+	background-color: $theme-chat-indicator-interactive-hover-background;
+	cursor: pointer;
+}
+
+.autocomplete-hint {
+	position: absolute;
+	left: 0;
+	bottom: 0;
+	right: 0;
+	max-height: calc(100% - 0.4em);
+	overflow-y: scroll;
+	margin: 0.2em;
+	font-size: medium;
+
+	@include flex(column);
+	background-color: $theme-autocomplete-hint-background;
+	color: $theme-autocomplete-hint-text;
+	padding: 0.5em;
+	gap: 0.1em;
+
+	hr {
+		width: 100%;
+	}
+
+	span {
+		cursor: pointer;
+
+		&:hover, &.selected {
+			background-color: $theme-autocomplete-hint-entry-hover-background;
+		}
+	}
+}

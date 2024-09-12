@@ -24,7 +24,12 @@
 	overflow: auto;
 	overflow-x: hidden;
 
-	background-color: $grey-lighter;
+	background-color: $theme-textbox-background;
+	color: $theme-textbox-text;
 
 	user-select: text;
+
+	h2, h3, h4 {
+		margin-top: 1em;
+	}
 }

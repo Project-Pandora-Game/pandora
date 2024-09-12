@@ -169,12 +169,19 @@ function DirectMessageElement({ message, currentAccount }: {
 			labelColor: accountLabelColor,
 		} : {
 			labelColor: displayInfo.labelColor,
-			displayName: displayInfo.displayName,
+			displayName: displayInfo.displayName ?? '[Loading ...]',
 		};
 
 		return (
 			<span className='name'>
-				<span className='from' data-id={ message.source } style={ { color: labelColor } }>{ displayName }</span>
+				<span
+					className='from'
+					data-id={ message.source }
+					title={ `${displayName} (${message.source})` }
+					style={ { color: labelColor } }
+				>
+					{ displayName }
+				</span>
 				{ ': ' }
 			</span>
 		);

@@ -1,0 +1,95 @@
+@import '../../../styles/common';
+
+.chatArea {
+	display: flex;
+	flex-flow: column;
+	flex: 1;
+	background-color: $theme-chat-background;
+	color: $theme-chat-text;
+	overflow: hidden;
+
+	> .messagesArea {
+		position: relative;
+		flex: 1;
+		overflow: hidden;
+		user-select: text;
+
+		.message {
+			padding: 0.1em;
+			white-space: pre-wrap;
+			overflow-wrap: break-word;
+
+			&:not(:hover) {
+				// Prevent Zalgo text from getting weird (but still show it if the message is hovered)
+				overflow: hidden;
+				overflow: clip;
+				overflow-clip-margin: 0.05em;
+			}
+
+			&.serverMessage {
+				border-left: solid 5px $white;
+				background-color: $theme-chat-serverMessage-background;
+				color: $theme-chat-serverMessage-text;
+				margin: 0.4em;
+				padding: 0.2em;
+
+				&.foldable:hover {
+					background-color: $theme-chat-serverMessage-foldable-hover-background;
+					cursor: pointer;
+				}
+			}
+
+			&.emote .name {
+				display: none;
+			}
+
+			&.private {
+				opacity: 0.7;
+			}
+
+			> .info {
+				float: right;
+				color: $theme-chat-messageinfo-text;
+				font-style: italic;
+				font-size: 0.6em;
+				margin-right: 0.2em;
+			}
+
+			a {
+				color: $theme-chat-link-normal-text;
+				text-decoration: underline;
+
+				&:hover {
+					color: $theme-chat-link-hover-text;
+				}
+			}
+
+			&.editing {
+				background-color: $theme-chat-editedMessage-background;
+				padding: 0.2em;
+				margin: 0 0.2em;
+				border-left: solid 2px $theme-chat-editedMessage-notch;
+			}
+		}
+	}
+
+	textarea {
+		height: min(10em, 35%);
+		resize: none;
+		margin: 0;
+		font-size: 105%;
+		background-color: $theme-chat-input-normal-background;
+		color: $theme-chat-input-text;
+		border: none;
+		outline: none;
+
+		&:focus {
+			background-color: $theme-chat-input-focused-background;
+		}
+
+		&::placeholder {
+			color: $theme-chat-input-placeholder-text;
+			opacity: 1; /* Firefox */
+		}
+	}
+}

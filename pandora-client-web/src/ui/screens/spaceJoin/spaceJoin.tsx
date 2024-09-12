@@ -71,7 +71,7 @@ export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: string; invite?
 	}
 
 	return (
-		<div className='spaceInvite active' onClick={ () => setOpen((s) => !s) }>
+		<button className='spaceInvite active' onClick={ () => setOpen((s) => !s) }>
 			<span>Space Invitation to: { info.data.name }</span>
 			{
 				!open ? null : (
@@ -80,7 +80,7 @@ export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: string; invite?
 					</ModalDialog>
 				)
 			}
-		</div>
+		</button>
 	);
 }
 

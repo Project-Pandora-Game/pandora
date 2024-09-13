@@ -176,8 +176,8 @@ class GraphicsSuspenseManager {
 				const alpha = 0.6;
 				g.clear()
 					.circle(0, 0, LOADING_PROGRESS_BASE_RADIUS)
-					.stroke({ width: 2, color: 0x000000, alpha })
 					.fill({ color: 0x550000, alpha })
+					.stroke({ width: 2, color: 0x000000, alpha })
 					.moveTo(0, -LOADING_PROGRESS_BASE_RADIUS)
 					.arc(0, 0, LOADING_PROGRESS_BASE_RADIUS, -0.5 * Math.PI, this._loadingProgress * (2 * Math.PI) - 0.5 * Math.PI)
 					.lineTo(0, 0)

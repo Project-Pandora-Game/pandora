@@ -26,6 +26,15 @@ $theme-errorbox-text: $theme-normal-text;
 $theme-textbox-background: #ccc;
 $theme-textbox-text: #000;
 
+$theme-tablist-tab-normal-background: #fff;
+$theme-tablist-tab-normal-text: #000;
+$theme-tablist-tab-hover-background: #2e2e2e;
+$theme-tablist-tab-hover-text: #fff;
+$theme-tablist-tab-normal-visiblefocus-outline: color-mix(in srgb, #000, $theme-accent-color 35%);
+$theme-tablist-tab-selected-background: #000;
+$theme-tablist-tab-selected-text: #fff;
+$theme-tablist-tab-selected-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
+
 //#endregion
 
 //#region Chat

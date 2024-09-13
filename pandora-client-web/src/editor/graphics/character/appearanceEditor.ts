@@ -31,7 +31,7 @@ import {
 	LayerMirror,
 	TypedEventEmitter,
 } from 'pandora-common';
-import { BaseTexture, Texture } from 'pixi.js';
+import { Texture } from 'pixi.js';
 import { AssetGraphics, AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { IGraphicsLoader } from '../../../assets/graphicsManager';
 import { CharacterEvents, ICharacter } from '../../../character/character';
@@ -334,7 +334,10 @@ export class EditorAssetGraphics extends AssetGraphics {
 	}
 
 	public async addTextureFromArrayBuffer(name: string, buffer: ArrayBuffer): Promise<void> {
-		const texture = new Texture(new BaseTexture(await LoadArrayBufferImageResource(buffer)));
+		const texture = new Texture({
+			source: await LoadArrayBufferImageResource(buffer),
+			label: `Editor: ${name}`,
+		});
 		this.fileContents.set(name, buffer);
 		this.textures.set(name, texture);
 		if (!this._loadedTextures.includes(name)) {

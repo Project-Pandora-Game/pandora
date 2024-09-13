@@ -92,13 +92,14 @@ export function PointTemplateEditLayer({ templateEditor }: {
 	}, [currentTemplate]);
 
 	const drawWireFrame = useCallback((g: PIXI.Graphics) => {
-		g.clear().lineStyle(1, 0x555555, 0.3);
+		g.clear();
 		// Draw triangles
 		for (let i = 0; i < triangles.length; i += 3) {
 			const poly = [0, 1, 2]
 				.map((p) => triangles[i + p])
 				.flatMap((p) => [points[p].pos[0], points[p].pos[1]]);
-			g.drawPolygon(poly);
+			g.poly(poly)
+				.stroke({ width: 1, color: 0x555555, alpha: 0.3 });
 		}
 	}, [points, triangles]);
 

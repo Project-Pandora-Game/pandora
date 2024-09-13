@@ -112,7 +112,7 @@ export function CalculatePointDefinitionsFromTemplate(template: Immutable<PointT
 	return calculatedPoints.flatMap(MakeMirroredPoints);
 }
 
-export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalculated[]>, pointType?: readonly string[]): Uint16Array {
+export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalculated[]>, pointType?: readonly string[]): Uint32Array {
 	const result: number[] = [];
 	const delaunator = new Delaunator(points.flatMap((point) => point.pos));
 	for (let i = 0; i < delaunator.triangles.length; i += 3) {
@@ -121,7 +121,7 @@ export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalcul
 			result.push(...t);
 		}
 	}
-	return new Uint16Array(result);
+	return new Uint32Array(result);
 }
 
 export function useLayerCalculatedPoints(layer: AssetGraphicsLayer): PointDefinitionCalculated[] {

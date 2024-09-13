@@ -180,7 +180,7 @@ function GraphicsCharacterWithManagerImpl({
 
 	const sortOrder = useComputedLayerPriority(characterState.actualPose);
 
-	const actualFilters = useMemo<PIXI.Filter[] | null>(() => filters?.slice() ?? null, [filters]);
+	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => filters?.slice(), [filters]);
 
 	return (
 		<Container

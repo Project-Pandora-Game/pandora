@@ -247,8 +247,8 @@ export function RoomPreview({
 
 	const borderDraw = useCallback((g: PIXI.Graphics) => {
 		g.clear()
-			.lineStyle(2, 0x404040, 0.4)
-			.drawRect(0, 0, roomBackground.imageSize[0], roomBackground.imageSize[1]);
+			.rect(0, 0, roomBackground.imageSize[0], roomBackground.imageSize[1])
+			.stroke({ width: 2, color: 0x404040, alpha: 0.4 });
 	}, [roomBackground]);
 
 	const focusArea = useMemo((): Rectangle | undefined => {

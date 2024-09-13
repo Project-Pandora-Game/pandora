@@ -181,7 +181,7 @@
 		"prefer-object-spread": "warn",
 		"import/no-cycle": "warn",
 		"import/no-unresolved": ["warn", {
-			"ignore": ["^pandora-common($|/dist)"]
+			"ignore": ["^(pandora-common($|/dist)|pixi.js/)"]
 		}],
 		// Stylistic rules
 		"@stylistic/semi": ["warn", "always"],

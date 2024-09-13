@@ -6,6 +6,9 @@
 			"ignoreDependencies": [
 				"nanoid"
 			]
+		},
+		"patchedDependencies": {
+			"pixi-viewport": "patches/pixi-viewport.patch"
 		}
 	},
 	"scripts": {

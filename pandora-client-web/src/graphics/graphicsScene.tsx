@@ -4,13 +4,12 @@ import { Application, Filter } from 'pixi.js';
 import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useImageResolutionAlternative } from '../assets/assetGraphicsCalculations';
 import { ChildrenProps } from '../common/reactTypes';
-import { useEvent } from '../common/useEvent';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
+import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback } from './baseComponents/pixiViewport';
+import { Sprite } from './baseComponents/sprite';
 import { GraphicsSceneRendererShared } from './graphicsSceneRenderer';
 import { useGraphicsSettings } from './graphicsSettings';
-import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback } from './baseComponents/pixiViewport';
 import { useTexture } from './useTexture';
-import { Sprite } from './baseComponents/sprite';
 
 export type GraphicsSceneProps = {
 	viewportConfig?: PixiViewportSetupCallback;
@@ -44,14 +43,14 @@ function GraphicsSceneCore({
 
 	const [size, setSize] = useState({ width: 1, height: 1 });
 
-	const onResize = useEvent(() => {
+	const onResize = useCallback(() => {
 		const app = appRef.current;
 		if (!app)
 			return;
 		app.resize();
 		const { width, height } = app.screen;
 		setSize({ width, height });
-	});
+	}, []);
 
 	const viewportSetup = useCallback<PixiViewportSetupCallback>((viewport, params) => {
 		viewport.clampZoom({
@@ -72,31 +71,16 @@ function GraphicsSceneCore({
 	}, [resizeObserver]);
 
 	useEffect(() => {
-		const app = appRef.current;
-		if (app) {
-			app.resizeTo = div;
-			onResize();
-		}
 		resizeObserver.observe(div);
 		return () => {
 			resizeObserver.unobserve(div);
 		};
-	}, [div, resizeObserver, onResize]);
-
-	useEffect(() => {
-		const app = appRef.current;
-		if (!app)
-			return;
-
-		const renderer = app.renderer;
-		renderer.background.color = backgroundColor;
-		renderer.background.alpha = backgroundAlpha;
-		renderer.render(app.stage);
-	}, [backgroundColor, backgroundAlpha]);
+	}, [div, resizeObserver]);
 
 	const onMount = useCallback((newApp: Application) => {
 		appRef.current = newApp;
-	}, []);
+		onResize();
+	}, [onResize]);
 	const onUnmount = useCallback((_oldApp: Application) => {
 		appRef.current = null;
 	}, []);
@@ -108,6 +92,8 @@ function GraphicsSceneCore({
 			onMount={ onMount }
 			onUnmount={ onUnmount }
 			resolution={ resolution }
+			backgroundColor={ backgroundColor }
+			backgroundAlpha={ backgroundAlpha }
 		>
 			<PixiViewport
 				{ ...size }
@@ -133,7 +119,7 @@ export function GraphicsBackground({
 }: {
 	background?: string | number;
 	backgroundSize?: readonly [number, number];
-	backgroundFilters?: Filter[] | null;
+	backgroundFilters?: Filter[];
 	zIndex?: number;
 	x?: number;
 	y?: number;
@@ -186,7 +172,7 @@ export function GraphicsBackground({
 			zIndex={ zIndex }
 			texture={ backgroundTexture }
 			tint={ backgroundResult.backgroundTint }
-			filters={ backgroundFilters ?? null }
+			filters={ backgroundFilters }
 		/>
 	);
 }

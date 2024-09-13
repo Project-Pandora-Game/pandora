@@ -1,56 +1,25 @@
-import { cloneDeep } from 'lodash';
 import { Assert, AssertNotNullable, GetLogger, Rectangle } from 'pandora-common';
-import { Application, Container, IApplicationOptions } from 'pixi.js';
+import { Application, Container } from 'pixi.js';
 import React, { Context, ReactElement, ReactNode } from 'react';
 import { CalculationQueue } from '../common/calculationQueue';
 import { ChildrenProps } from '../common/reactTypes';
 import { useErrorHandler } from '../common/useErrorHandler';
 import { ForwardingErrorBoundary } from '../components/error/forwardingErrorBoundary';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
-import { USER_DEBUG } from '../config/Environment';
+import { GetApplicationManager, ReleaseApplicationManager, type GraphicsApplicationManager } from './graphicsAppManager';
 import { DEFAULT_BACKGROUND_COLOR } from './graphicsScene';
 import { PixiAppContext } from './reconciler/appContext';
 import { CreatePixiRoot, type PixiRoot } from './reconciler/reconciler';
 
-const SHARED_APP_MAX_COUNT = 2;
-
-export const PIXI_APPLICATION_OPTIONS: Readonly<Partial<IApplicationOptions>> = {
-	backgroundColor: 0x1099bb,
-	resolution: window.devicePixelRatio || 1,
-	// Antialias **NEEDS** to be explicitly disabled - having it enabled causes seams when using filters (such as alpha masks)
-	antialias: false,
-};
-
-function CreateApplication(): Application<HTMLCanvasElement> {
-	return new Application({
-		...cloneDeep(PIXI_APPLICATION_OPTIONS),
-		autoDensity: true,
-		autoStart: false,
-	});
-}
-
 export interface GraphicsSceneRendererProps extends ChildrenProps {
 	container: HTMLDivElement;
 	resolution: number;
+	backgroundColor?: number;
+	backgroundAlpha?: number;
 	onMount?: (app: Application) => void;
 	onUnmount?: (app: Application) => void;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	forwardContexts: readonly Context<any>[];
-}
-
-// This actually has more effect than just exposing for debugging purposes:
-// It allows hot reload to reuse existing apps instead of having leak during development
-interface WindowWithSharedApps extends Window {
-	pandoraPixiApps?: Application<HTMLCanvasElement>[];
-	pandoraPixiAppsAvailable?: Application<HTMLCanvasElement>[];
-}
-
-const SharedApps: Application<HTMLCanvasElement>[] = (USER_DEBUG && Array.isArray((window as WindowWithSharedApps).pandoraPixiApps)) ? ((window as WindowWithSharedApps).pandoraPixiApps ?? []) : [];
-const AvailableApps: Application<HTMLCanvasElement>[] = (USER_DEBUG && Array.isArray((window as WindowWithSharedApps).pandoraPixiAppsAvailable)) ? ((window as WindowWithSharedApps).pandoraPixiAppsAvailable ?? []) : [];
-
-if (USER_DEBUG) {
-	(window as WindowWithSharedApps).pandoraPixiApps = SharedApps;
-	(window as WindowWithSharedApps).pandoraPixiAppsAvailable = AvailableApps;
 }
 
 class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsSceneRendererProps, 'forwardContexts'>> {
@@ -58,69 +27,70 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 	private _animationFrameRequest: number | null = null;
 	private _cleanupUpdateCallback: undefined | (() => void);
 	private root: PixiRoot | null = null;
-	private app: Application<HTMLCanvasElement> | null = null;
+	private appManager: GraphicsApplicationManager | null = null;
+	private _appManagerReadyCleanupCallback: undefined | (() => void);
+	private app: Application | null = null;
+
+	private readonly logger = GetLogger('GraphicsSceneRendererShared');
 
 	public override render(): React.ReactNode {
 		return null;
 	}
 
 	public override componentDidMount() {
-		const { onMount, container, resolution } = this.props;
-
-		let app = AvailableApps.pop();
-		if (!app && SharedApps.length < SHARED_APP_MAX_COUNT) {
-			app = CreateApplication();
-			SharedApps.push(app);
-		}
-		if (!app)
+		this.logger.debug('Mount');
+		const appManager = GetApplicationManager();
+		if (!appManager)
 			return;
 
-		this.app = app;
-		Assert(app.view instanceof HTMLCanvasElement, 'Expected app.view to be an HTMLCanvasElement');
-
-		app.renderer.resolution = resolution;
-		container.appendChild(app.view);
-		this.app.resizeTo = container;
-		this.app.resize();
-
-		this.root = CreatePixiRoot(this.app.stage);
-		this.root.render(this.getChildren());
-
-		onMount?.(this.app);
-
-		Assert(this._cleanupUpdateCallback == null);
-		this._cleanupUpdateCallback = this.root.updateEmitter.on('needsUpdate', this.needsRenderUpdate);
-
-		this.needsRenderUpdate();
+		Assert(this._appManagerReadyCleanupCallback == null);
+		this.appManager = appManager;
+		const app = appManager.app;
+		if (app != null) {
+			this._mountApp(app);
+		} else {
+			appManager.on('applicationReady', this._mountApp.bind(this));
+		}
 	}
 
 	public override componentDidUpdate(oldProps: Readonly<Omit<GraphicsSceneRendererProps, 'forwardContexts'>>) {
-		if (!this.app && !this.root)
-			return;
-		AssertNotNullable(this.app);
-		AssertNotNullable(this.root);
-
-		const { container, resolution } = this.props;
-		const { container: oldContainer, resolution: oldResolution } = oldProps;
+		const {
+			container,
+			resolution,
+			backgroundColor,
+			backgroundAlpha,
+		} = this.props;
 
 		let needsUpdate = false;
 
-		if (container !== oldContainer) {
-			this.app.view.remove();
-			container.appendChild(this.app.view);
+		if (container !== oldProps.container && this.app != null) {
+			this.app.canvas.remove();
+			container.appendChild(this.app.canvas);
 			this.app.resizeTo = container;
 			this.app.resize();
 			needsUpdate = true;
 		}
 
-		if (resolution !== oldResolution) {
+		if (resolution !== oldProps.resolution && this.app != null) {
 			this.app.renderer.resolution = resolution;
 			this.app.resize();
 			needsUpdate = true;
 		}
 
+		if (backgroundColor !== oldProps.backgroundColor && this.app != null) {
+			this.app.renderer.background.color = backgroundColor ?? DEFAULT_BACKGROUND_COLOR;
+			needsUpdate = true;
+		}
+
+		if (backgroundAlpha !== oldProps.backgroundAlpha && this.app != null) {
+			this.app.renderer.background.alpha = backgroundAlpha ?? 1;
+			needsUpdate = true;
+		}
+
 		// flush fiber
-		this.root.render(this.getChildren());
+		if (this.root != null) {
+			this.root.render(this.getChildren());
+		}
 
 		if (needsUpdate) {
 			this.needsRenderUpdate();
@@ -128,37 +98,87 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 	}
 
 	public override componentWillUnmount() {
-		if (!this.app && !this.root)
-			return;
+		this.logger.debug('Unmount');
 
+		this._appManagerReadyCleanupCallback?.();
+		this._appManagerReadyCleanupCallback = undefined;
+
+		const appManager = this.appManager;
+		this.appManager = null;
+
+		this._unmountApp();
+
+		if (appManager != null) {
+			ReleaseApplicationManager(appManager);
+		}
+	}
+
+	private _mountApp(app: Application): void {
+		const {
+			onMount,
+			container,
+			resolution,
+			backgroundColor = DEFAULT_BACKGROUND_COLOR,
+			backgroundAlpha = 1,
+		} = this.props;
+
+		if (this.app === app)
+			return;
+		Assert(this.app == null);
+		this.app = app;
+		Assert(app.canvas instanceof HTMLCanvasElement, 'Expected app.view to be an HTMLCanvasElement');
+
+		this.logger.debug('Mounting application');
+
+		app.renderer.resolution = resolution;
+		this.app.resizeTo = container;
+		this.app.resize();
+		app.renderer.background.color = backgroundColor;
+		app.renderer.background.alpha = backgroundAlpha;
+		container.appendChild(app.canvas);
+		onMount?.(this.app);
+
+		this.root = CreatePixiRoot(this.app.stage);
+		this.root.render(this.getChildren());
+
+		Assert(this._cleanupUpdateCallback == null);
+		this._cleanupUpdateCallback = this.root.updateEmitter.on('needsUpdate', this.needsRenderUpdate);
+
+		this.needsRenderUpdate();
+	}
+
+	private _unmountApp(): void {
 		const { onUnmount } = this.props;
-		AssertNotNullable(this.app);
-		AssertNotNullable(this.root);
+
+		this.logger.debug('Unmounting application');
 
 		this._cleanupUpdateCallback?.();
 		this._cleanupUpdateCallback = undefined;
 
-		onUnmount?.(this.app);
-
-		this.root.unmount();
-		this.root = null;
+		if (this.root != null) {
+			this.root.unmount();
+			this.root = null;
+		}
 
 		// Now we manually clear the children, so the app can be immediately reused without remnants
-		this.app.stage
-			.removeChildren()
-			.forEach((c) => c.destroy({
-				children: true,
-			}));
+		if (this.app != null) {
+			onUnmount?.(this.app);
+			this.app.resizeTo = window;
+			this.app.stage
+				.removeChildren()
+				.forEach((c) => c.destroy({
+					children: true,
+				}));
+
+			this.app.canvas.remove();
+			this.app = null;
+		}
 
 		// Cancel any pending frame request
 		if (this._animationFrameRequest != null) {
 			cancelAnimationFrame(this._animationFrameRequest);
 			this._animationFrameRequest = null;
 		}
-
-		this.app.view.remove();
-		AvailableApps.push(this.app);
-		this.app = null;
 	}
 
 	private _requestAnimationFrame() {
@@ -199,6 +219,8 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 export function GraphicsSceneRendererShared({
 	children,
 	resolution,
+	backgroundColor,
+	backgroundAlpha,
 	onMount,
 	onUnmount,
 	container,
@@ -210,6 +232,8 @@ export function GraphicsSceneRendererShared({
 		<ContextBridge contexts={ forwardContexts } render={ (c) => (
 			<GraphicsSceneRendererSharedImpl
 				resolution={ resolution }
+				backgroundColor={ backgroundColor }
+				backgroundAlpha={ backgroundAlpha }
 				onMount={ onMount }
 				onUnmount={ onUnmount }
 				container={ container }
@@ -228,8 +252,6 @@ export function GraphicsSceneRendererShared({
 
 interface GraphicsSceneBackgroundRendererProps extends Omit<GraphicsSceneRendererProps, 'container'> {
 	renderArea: Rectangle;
-	backgroundColor?: number;
-	backgroundAlpha?: number;
 }
 
 const backgroundRenderingQueue = new CalculationQueue({
@@ -246,7 +268,8 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 	private _root: PixiRoot | null = null;
 	private _stage: Container | null = null;
 
-	private _app: Application<HTMLCanvasElement> | null = null;
+	private _appManager: GraphicsApplicationManager | null = null;
+	private _app: Application | null = null;
 
 	public override render(): React.ReactNode {
 		const { renderArea } = this.props;
@@ -348,7 +371,7 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 		const outContext = this._canvasRef.getContext('2d');
 		if (outContext) {
 			outContext.clearRect(0, 0, this._canvasRef.width, this._canvasRef.height);
-			outContext.drawImage(this._app.view, 0, 0, this._canvasRef.width, this._canvasRef.height);
+			outContext.drawImage(this._app.canvas, 0, 0, this._canvasRef.width, this._canvasRef.height);
 		} else {
 			this.logger.warning('Failed to get output 2d context');
 		}
@@ -356,6 +379,7 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 	};
 
 	private _mountApp(): boolean {
+		Assert(this._appManager == null);
 		Assert(this._app == null);
 		Assert(this._stage != null);
 		const {
@@ -366,16 +390,19 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 			backgroundAlpha = 1,
 		} = this.props;
 
-		let app = AvailableApps.pop();
-		if (!app && SharedApps.length < SHARED_APP_MAX_COUNT) {
-			app = CreateApplication();
-			SharedApps.push(app);
-		}
-		if (!app)
+		const appManager = GetApplicationManager();
+		if (!appManager)
 			return false;
 
+		const app = appManager.app;
+		if (app == null) {
+			ReleaseApplicationManager(appManager);
+			return false;
+		}
+
+		this._appManager = appManager;
 		this._app = app;
-		Assert(app.view instanceof HTMLCanvasElement, 'Expected app.view to be an HTMLCanvasElement');
+		Assert(app.canvas instanceof HTMLCanvasElement, 'Expected app.view to be an HTMLCanvasElement');
 
 		app.renderer.resolution = resolution;
 		app.renderer.resize(renderArea.width, renderArea.height);
@@ -389,14 +416,18 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 
 	private _unmountApp() {
 		const { onUnmount } = this.props;
-		if (this._app == null)
-			return;
 
-		onUnmount?.(this._app);
-		this._app.stage.removeChildren();
+		if (this._app != null) {
+			onUnmount?.(this._app);
+			this._app.stage.removeChildren();
+			this._app = null;
+		}
 
-		AvailableApps.push(this._app);
-		this._app = null;
+		if (this._appManager != null) {
+			const appManager = this._appManager;
+			this._appManager = null;
+			ReleaseApplicationManager(appManager);
+		}
 	}
 
 	public getChildren() {

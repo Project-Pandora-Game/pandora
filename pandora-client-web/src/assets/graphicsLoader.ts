@@ -1,6 +1,6 @@
 import { noop } from 'lodash';
 import { Assert, GetLogger, Logger, TypedEventEmitter } from 'pandora-common';
-import { BaseTexture, IImageResourceOptions, Resource, Texture, autoDetectResource } from 'pixi.js';
+import { ImageSource, loadImageBitmap, Texture, TextureSource, WorkerManager } from 'pixi.js';
 import { PersistentToast } from '../persistentToast';
 import { IGraphicsLoader, type IGraphicsLoaderEvents, type IGraphicsLoaderStats, type TextureUpdateListener } from './graphicsManager';
 
@@ -20,7 +20,7 @@ class TextureData {
 	private readonly _listeners = new Set<TextureUpdateListener>;
 	private _locks: number = 0;
 
-	private _loadedResource: Resource | null = null;
+	private _loadedTextureSource: TextureSource | null = null;
 	private _loadedTexture: Texture | null = null;
 	public get loadedTexture(): Texture | null {
 		return this._loadedTexture;
@@ -60,14 +60,14 @@ class TextureData {
 	}
 
 	public load(): void {
-		if (this._loadedResource != null || this._pendingLoad)
+		if (this._loadedTextureSource != null || this._pendingLoad)
 			return;
 		this._pendingLoad = true;
 
-		this.loader.loadResource(this.path)
-			.then((resource) => {
+		this.loader.loadTextureSource(this.path)
+			.then((source) => {
 				Assert(this._pendingLoad);
-				Assert(this._loadedResource == null);
+				Assert(this._loadedTextureSource == null);
 				Assert(this._loadedTexture == null);
 
 				if (this._failedCounter > 0) {
@@ -75,10 +75,11 @@ class TextureData {
 				}
 
 				// Finish load
-				this._loadedResource = resource;
-				const texture = new Texture(new BaseTexture(resource, {
-					resolution: 1,
-				}));
+				this._loadedTextureSource = source;
+				const texture = new Texture({
+					source,
+					label: this.path,
+				});
 				this._loadedTexture = texture;
 				this._failedCounter = 0;
 				this._pendingLoad = false;
@@ -88,7 +89,7 @@ class TextureData {
 			})
 			.catch((err) => {
 				Assert(this._pendingLoad);
-				Assert(this._loadedResource == null);
+				Assert(this._loadedTextureSource == null);
 				Assert(this._loadedTexture == null);
 
 				this._failedCounter++;
@@ -120,9 +121,9 @@ class TextureData {
 			this._loadedTexture = null;
 		}
 
-		if (this._loadedResource != null) {
-			this._loadedResource.destroy();
-			this._loadedResource = null;
+		if (this._loadedTextureSource != null) {
+			this._loadedTextureSource.destroy();
+			this._loadedTextureSource = null;
 		}
 	}
 }
@@ -226,7 +227,7 @@ export abstract class GraphicsLoaderBase extends TypedEventEmitter<IGraphicsLoad
 		}
 	}
 
-	public abstract loadResource(path: string): Promise<Resource>;
+	public abstract loadTextureSource(path: string): Promise<TextureSource>;
 
 	public abstract loadTextFile(path: string): Promise<string>;
 
@@ -243,11 +244,33 @@ export class URLGraphicsLoader extends GraphicsLoaderBase {
 		this.prefix = prefix;
 	}
 
-	public override loadResource(path: string): Promise<Resource> {
-		return autoDetectResource<Resource, IImageResourceOptions>(this.prefix + path, {
-			autoLoad: false,
-			crossorigin: 'anonymous',
-		}).load();
+	public override async loadTextureSource(path: string): Promise<TextureSource> {
+		const url = this.prefix + path;
+		let src: HTMLImageElement | ImageBitmap;
+
+		if (typeof createImageBitmap === 'function') {
+			if (await WorkerManager.isImageBitmapSupported()) {
+				src = await WorkerManager.loadImageBitmap(url);
+			} else {
+				src = await loadImageBitmap(url);
+			}
+		} else {
+			src = await new Promise((resolve, reject) => {
+				const img = new Image();
+				img.crossOrigin = 'anonymous';
+				img.onload = () => {
+					resolve(img);
+				};
+				img.onerror = reject;
+				img.src = url;
+			});
+		}
+
+		return new ImageSource({
+			resource: src,
+			alphaMode: 'premultiply-alpha-on-upload',
+			resolution: 1,
+		});
 	}
 
 	public override loadTextFile(path: string): Promise<string> {

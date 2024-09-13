@@ -95,8 +95,8 @@ export function RoomGraphicsScene({
 
 	const borderDraw = useCallback((g: PIXI.Graphics) => {
 		g.clear()
-			.lineStyle(2, 0x404040, 0.4)
-			.drawRect(0, 0, roomBackground.imageSize[0], roomBackground.imageSize[1]);
+			.rect(0, 0, roomBackground.imageSize[0], roomBackground.imageSize[1])
+			.stroke({ width: 2, color: 0x404040, alpha: 0.4 });
 	}, [roomBackground]);
 
 	const calibrationLineDraw = useCallback((g: PIXI.Graphics) => {
@@ -112,36 +112,38 @@ export function RoomGraphicsScene({
 		const renderedAreaWidthHalf = Math.floor(renderedAreaWidth / 2);
 
 		g.clear()
-			.beginFill(0x550000, 0.8)
-			.drawPolygon([
+			.poly([
 				...transform(floorAreaWidthRight, 0, 0),
 				...transform(-floorAreaWidthLeft, 0, 0),
 				...transform(-floorAreaWidthLeft, floorAreaDepth, 0),
 				...transform(floorAreaWidthRight, floorAreaDepth, 0),
 			])
-			.beginFill(0x990000, 0.6)
-			.drawPolygon([
+			.fill({ color: 0x550000, alpha: 0.8 })
+
+			.poly([
 				...transform(renderedAreaWidthHalf, 0, 0),
 				...transform(-renderedAreaWidthHalf, 0, 0),
 				...transform(0, Infinity, 0),
-			]);
+			])
+			.fill({ color: 0x990000, alpha: 0.6 });
 
 		if (ceiling > 0) {
 			g
-				.beginFill(0xffff00, 0.4)
-				.drawPolygon([
+
+				.poly([
 					...transform(floorAreaWidthRight, floorAreaDepth, 0),
 					...transform(-floorAreaWidthLeft, floorAreaDepth, 0),
 					...transform(-floorAreaWidthLeft, floorAreaDepth, ceiling),
 					...transform(floorAreaWidthRight, floorAreaDepth, ceiling),
 				])
-				.beginFill(0x000055, 0.8)
-				.drawPolygon([
+				.fill({ color: 0xffff00, alpha: 0.4 })
+				.poly([
 					...transform(floorAreaWidthRight, 0, ceiling),
 					...transform(-floorAreaWidthLeft, 0, ceiling),
 					...transform(-floorAreaWidthLeft, floorAreaDepth, ceiling),
 					...transform(floorAreaWidthRight, floorAreaDepth, ceiling),
-				]);
+				])
+				.fill({ color: 0x000055, alpha: 0.8 });
 		}
 	}, [projectionResolver]);
 
@@ -395,7 +397,7 @@ export function usePlayerVisionFilters(targetIsPlayer: boolean): Filter[] {
 			return [];
 		if (targetIsPlayer)
 			return [];
-		const filter = new PIXI.ColorMatrixFilter();
+		const filter = new PIXI.ColorMatrixFilter({ resolution: 'inherit' });
 		filter.brightness(1 - blindness / 10, false);
 		return [filter];
 	}, [blindness, targetIsPlayer]);
@@ -416,13 +418,13 @@ export function useCharacterDisplayFilters(character: Character<ICharacterRoomDa
 		} else if (interfaceChatroomOfflineCharacterFilter === 'icon') {
 			return [];
 		} else if (interfaceChatroomOfflineCharacterFilter === 'darken') {
-			const colorFilter = new PIXI.ColorMatrixFilter();
+			const colorFilter = new PIXI.ColorMatrixFilter({ resolution: 'inherit' });
 			colorFilter.brightness(0.4, true);
 			return [colorFilter];
 		} else if (interfaceChatroomOfflineCharacterFilter === 'ghost') {
-			const colorFilter = new PIXI.ColorMatrixFilter();
+			const colorFilter = new PIXI.ColorMatrixFilter({ resolution: 'inherit' });
 			colorFilter.brightness(0.4, true);
-			const alphaFilter = new PIXI.AlphaFilter(0.8);
+			const alphaFilter = new PIXI.AlphaFilter({ alpha: 0.8, resolution: 'inherit' });
 			return [colorFilter, alphaFilter];
 		}
 		AssertNever(interfaceChatroomOfflineCharacterFilter);

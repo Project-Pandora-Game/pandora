@@ -21,13 +21,12 @@ export function MovementHelperGraphics({
 
 	const graphicsDraw = useCallback((g: PIXI.Graphics) => {
 		g.clear()
-			.lineStyle(4, 0xffffff, 1)
-			.drawEllipse(0, 0, radius, radius)
-			.lineStyle(0);
+			.ellipse(0, 0, radius, radius)
+			.stroke({ width: 4, color: 0xffffff, alpha: 1 });
 
 		if (colorLeftRight != null) {
-			g.beginFill(colorLeftRight, 1)
-				.drawPolygon([
+			g
+				.poly([
 					centerOffset, -arrowWidthInner,
 					centerOffset + arrowBodyLength, -arrowWidthInner,
 					centerOffset + arrowBodyLength, -arrowWidth,
@@ -36,9 +35,8 @@ export function MovementHelperGraphics({
 					centerOffset + arrowBodyLength, arrowWidthInner,
 					centerOffset, arrowWidthInner,
 				])
-				.endFill()
-				.beginFill(colorLeftRight, 1)
-				.drawPolygon([
+				.fill({ color: colorLeftRight, alpha: 1 })
+				.poly([
 					- centerOffset, arrowWidthInner,
 					- centerOffset - arrowBodyLength, arrowWidthInner,
 					- centerOffset - arrowBodyLength, arrowWidth,
@@ -47,12 +45,12 @@ export function MovementHelperGraphics({
 					- centerOffset - arrowBodyLength, -arrowWidthInner,
 					- centerOffset, -arrowWidthInner,
 				])
-				.endFill();
+				.fill({ color: colorLeftRight, alpha: 1 });
 		}
 
 		if (colorUpDown != null) {
-			g.beginFill(colorUpDown, 1)
-				.drawPolygon([
+			g
+				.poly([
 					- arrowWidthInner, -centerOffset,
 					- arrowWidthInner, -centerOffset - arrowBodyLength,
 					- arrowWidth, -centerOffset - arrowBodyLength,
@@ -61,9 +59,8 @@ export function MovementHelperGraphics({
 					arrowWidthInner, - centerOffset - arrowBodyLength,
 					arrowWidthInner, - centerOffset,
 				])
-				.endFill()
-				.beginFill(colorUpDown, 1)
-				.drawPolygon([
+				.fill({ color: colorUpDown, alpha: 1 })
+				.poly([
 					- arrowWidthInner, centerOffset,
 					- arrowWidthInner, centerOffset + arrowBodyLength,
 					- arrowWidth, centerOffset + arrowBodyLength,
@@ -72,11 +69,11 @@ export function MovementHelperGraphics({
 					arrowWidthInner, centerOffset + arrowBodyLength,
 					arrowWidthInner, centerOffset,
 				])
-				.endFill();
+				.fill({ color: colorUpDown, alpha: 1 });
 		}
-		g.beginFill(0xffffff, 1)
-			.drawEllipse(0, 0, centerOffset, centerOffset)
-			.endFill();
+		g
+			.ellipse(0, 0, centerOffset, centerOffset)
+			.fill({ color: 0xffffff, alpha: 1 });
 	}, [radius, colorLeftRight, colorUpDown]);
 
 	return (

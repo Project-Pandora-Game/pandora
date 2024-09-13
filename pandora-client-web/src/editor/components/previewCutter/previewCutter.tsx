@@ -29,7 +29,7 @@ const PREVIEW_CUTTER = new Observable<PreviewCutterState>({
 	position: { x: 0, y: 100 },
 });
 
-const PREVIRE_CUTTER_LINE_WIDTH = 2;
+const PREVIEW_CUTTER_LINE_WIDTH = 2;
 const PREVIEW_CUTTER_MIN_SIZE = 50;
 const PREVIEW_CUTTER_MAX_SIZE = CharacterSize.HEIGHT / 3 * 4;
 const PREVIEW_CUTTER_OUTPUT_SIZE = 256;
@@ -58,8 +58,8 @@ function PreviewCutterRectangleInner({
 		const color = dragging ? 0x00ff00 : 0x333333;
 		g
 			.clear()
-			.lineStyle(PREVIRE_CUTTER_LINE_WIDTH, color, 1)
-			.drawRect(x - PREVIRE_CUTTER_LINE_WIDTH / 2, y - PREVIRE_CUTTER_LINE_WIDTH / 2, size + PREVIRE_CUTTER_LINE_WIDTH, size + PREVIRE_CUTTER_LINE_WIDTH);
+			.rect(x - PREVIEW_CUTTER_LINE_WIDTH / 2, y - PREVIEW_CUTTER_LINE_WIDTH / 2, size + PREVIEW_CUTTER_LINE_WIDTH, size + PREVIEW_CUTTER_LINE_WIDTH)
+			.stroke({ width: PREVIEW_CUTTER_LINE_WIDTH, color, alpha: 1 });
 	}, [dragging, x, y, size]);
 	const onPointerDown = React.useCallback((ev: PIXI.FederatedPointerEvent) => {
 		ev.stopPropagation();

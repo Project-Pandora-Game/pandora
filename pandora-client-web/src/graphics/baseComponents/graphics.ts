@@ -1,15 +1,15 @@
 import { Graphics as PixiGraphics } from 'pixi.js';
 import { RegisterPixiComponent, type DisplayObjectEventNames, type PixiComponentProps, type PixiDisplayObjectWriteableProps } from '../reconciler/component';
-import { DISPLAY_OBJECT_AUTO_PROPS, DISPLAY_OBJECT_EVENTS, type DisplayObjectEventMap } from './container';
+import { CONTAINER_AUTO_PROPS, CONTAINER_EVENTS, type ContainerEventMap } from './container';
 
 const GRAPHICS_AUTO_PROPS = {
-	...DISPLAY_OBJECT_AUTO_PROPS,
+	...CONTAINER_AUTO_PROPS,
 } as const satisfies Readonly<Partial<Record<keyof PixiDisplayObjectWriteableProps<PixiGraphics>, true>>>;
 
 export type GraphicsAutoProps = keyof typeof GRAPHICS_AUTO_PROPS;
 
 const GRAPHICS_EVENTS = {
-	...DISPLAY_OBJECT_EVENTS,
+	...CONTAINER_EVENTS,
 } as const satisfies Readonly<Partial<Record<DisplayObjectEventNames<PixiGraphics>, true>>>;
 
 export type GraphicsCustomProps = {
@@ -20,7 +20,7 @@ export type GraphicsCustomProps = {
 	draw?: (graphics: PixiGraphics) => void;
 };
 
-export type GraphicsProps = PixiComponentProps<PixiGraphics, GraphicsAutoProps, DisplayObjectEventMap, GraphicsCustomProps>;
+export type GraphicsProps = PixiComponentProps<PixiGraphics, GraphicsAutoProps, ContainerEventMap, GraphicsCustomProps>;
 /**
  * The Graphics class is primarily used to render primitive shapes such as lines, circles and
  * rectangles to the display, and to color and fill them.  However, you can also use a Graphics
@@ -33,7 +33,7 @@ export type GraphicsProps = PixiComponentProps<PixiGraphics, GraphicsAutoProps, 
  * change the screen, it simply resets the list of primitives, which can be useful if you want to
  * rebuild the contents of an existing Graphics object.
  */
-export const Graphics = RegisterPixiComponent<PixiGraphics, GraphicsAutoProps, DisplayObjectEventMap, GraphicsCustomProps>('Graphics', {
+export const Graphics = RegisterPixiComponent<PixiGraphics, GraphicsAutoProps, ContainerEventMap, GraphicsCustomProps>('Graphics', {
 	create(props) {
 		const instance = new PixiGraphics();
 		props.draw?.(instance);

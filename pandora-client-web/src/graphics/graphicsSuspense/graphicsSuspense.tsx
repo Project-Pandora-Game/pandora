@@ -175,16 +175,15 @@ class GraphicsSuspenseManager {
 			if (this._showProgress) {
 				const alpha = 0.6;
 				g.clear()
-					.lineStyle(2, 0x000000, alpha)
-					.beginFill(0x550000, alpha)
-					.drawCircle(0, 0, LOADING_PROGRESS_BASE_RADIUS)
-					.endFill()
-					.beginFill(0x00ff44, alpha)
+					.circle(0, 0, LOADING_PROGRESS_BASE_RADIUS)
+					.fill({ color: 0x550000, alpha })
+					.stroke({ width: 2, color: 0x000000, alpha })
 					.moveTo(0, -LOADING_PROGRESS_BASE_RADIUS)
 					.arc(0, 0, LOADING_PROGRESS_BASE_RADIUS, -0.5 * Math.PI, this._loadingProgress * (2 * Math.PI) - 0.5 * Math.PI)
 					.lineTo(0, 0)
 					.lineTo(0, -LOADING_PROGRESS_BASE_RADIUS)
-					.endFill();
+					.fill({ color: 0x00ff44, alpha })
+					.stroke({ width: 2, color: 0x000000, alpha });
 				g.visible = true;
 			} else {
 				g.clear();
@@ -210,4 +209,3 @@ class GraphicsSuspenseAsset extends TypedEventEmitter<{ update: void; }> {
 		this.emit('update', undefined);
 	}
 }
-

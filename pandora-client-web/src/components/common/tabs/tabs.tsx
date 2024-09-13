@@ -21,7 +21,7 @@ export interface TabConfig {
 	tabClassName?: string;
 }
 
-export function Tabulation({ children, className, collapsable, tabsPosition, tabs }: {
+export function Tabulation({ children, className, collapsable, tabsPosition = 'top', tabs }: {
 	children: ReactNode;
 	className?: string;
 	collapsable?: true;
@@ -36,12 +36,14 @@ export function Tabulation({ children, className, collapsable, tabsPosition, tab
 
 	return (
 		<div className={ classNames('tab-container', `tab-position-${tabsPosition}`, className) }>
-			<ul className={ classNames('header', { collapsed }) }>
+			<ul className={ classNames('header', { collapsed }) } role='tablist' aria-orientation={ tabsPosition === 'left' ? 'vertical' : 'horizontal' }>
 				{
 					tabs.map((tab, index) => (tab &&
 						<button key={ index }
 							className={ classNames('tab', { active: tab.active }, tab.tabClassName) }
 							onClick={ tab.onClick }
+							role='tab'
+							aria-selected={ tab.active }
 						>
 							{ tab.name }
 						</button>
@@ -49,16 +51,16 @@ export function Tabulation({ children, className, collapsable, tabsPosition, tab
 				}
 				{
 					collapsable && (
-						<li className='tab collapse' onClick={ () => setCollapsed(true) }>
+						<button className='tab collapse' onClick={ () => setCollapsed(true) } title='Hide tabs'>
 							▲
-						</li>
+						</button>
 					)
 				}
 			</ul>
 			{ !collapsed ? null : (
-				<div className='tab-container-collapsed' onClick={ () => setCollapsed(false) }>
+				<button className='tab-container-collapsed' onClick={ () => setCollapsed(false) } title='Reveal hidden tabs'>
 					▼
-				</div>
+				</button>
 			) }
 			{ children }
 		</div>

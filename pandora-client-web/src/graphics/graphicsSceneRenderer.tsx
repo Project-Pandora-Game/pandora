@@ -99,7 +99,6 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 
 	public override componentWillUnmount() {
 		this.logger.debug('Unmount');
-		Assert(this.appManager != null);
 
 		this._appManagerReadyCleanupCallback?.();
 		this._appManagerReadyCleanupCallback = undefined;
@@ -109,7 +108,9 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 
 		this._unmountApp();
 
-		ReleaseApplicationManager(appManager);
+		if (appManager != null) {
+			ReleaseApplicationManager(appManager);
+		}
 	}
 
 	private _mountApp(app: Application): void {

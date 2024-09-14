@@ -164,6 +164,7 @@ export class AssetManager {
 			name,
 			x: mirror ? CharacterSize.WIDTH - x : x,
 			y,
+			uiPositionOffset: (mirror && bone.uiPositionOffset != null) ? [-bone.uiPositionOffset[0], bone.uiPositionOffset[1]] : bone.uiPositionOffset,
 			baseRotation: bone.baseRotation,
 			mirror,
 			isMirror: mirror !== undefined,

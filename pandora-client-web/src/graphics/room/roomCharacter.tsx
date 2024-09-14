@@ -240,8 +240,8 @@ function RoomCharacterInteractiveImpl({
 		}
 	}, [onDragMove, onDragStart]);
 
-	const isBeingMoved = roomSceneMode.mode === 'moveCharacter' && roomSceneMode.characterId === character.id;
-	const enableMenu = !isBeingMoved;
+	const isFocused = (roomSceneMode.mode === 'moveCharacter' || roomSceneMode.mode === 'poseCharacter') && roomSceneMode.characterId === character.id;
+	const enableMenu = !isFocused;
 
 	return (
 		<RoomCharacterDisplay

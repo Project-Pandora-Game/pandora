@@ -38,7 +38,7 @@ import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphi
 import { CharacterContextMenu } from './contextMenus/characterContextMenu';
 import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
 import { RoomCharacterInteractive } from './roomCharacter';
-import { RoomCharacterMovementTool } from './roomCharacterPosing';
+import { RoomCharacterMovementTool, RoomCharacterPosingTool } from './roomCharacterPosing';
 import { RoomDeviceInteractive, RoomDeviceMovementTool, useIsRoomConstructionModeEnabled } from './roomDevice';
 
 const BONCE_OVERFLOW = 500;
@@ -225,6 +225,22 @@ export function RoomGraphicsScene({
 				{
 					characters.map((character) => ((roomSceneMode.mode === 'moveCharacter' && roomSceneMode.characterId === character.id) ? (
 						<RoomCharacterMovementTool
+							key={ character.id }
+							globalState={ globalState }
+							character={ character }
+							spaceInfo={ info }
+							debugConfig={ debugConfig }
+							projectionResolver={ projectionResolver }
+							roomSceneMode={ roomSceneMode }
+							setRoomSceneMode={ setRoomSceneMode }
+							shard={ shard }
+							menuOpen={ menuOpen }
+						/>
+					) : null))
+				}
+				{
+					characters.map((character) => ((roomSceneMode.mode === 'poseCharacter' && roomSceneMode.characterId === character.id) ? (
+						<RoomCharacterPosingTool
 							key={ character.id }
 							globalState={ globalState }
 							character={ character }
@@ -455,7 +471,7 @@ export function useCharacterDisplayFilters(character: Character<ICharacterRoomDa
 export type IRoomSceneMode = {
 	mode: 'normal';
 } | {
-	mode: 'moveCharacter';
+	mode: 'moveCharacter' | 'poseCharacter';
 	characterId: CharacterId;
 } | {
 	mode: 'moveDevice';

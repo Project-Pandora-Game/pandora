@@ -367,6 +367,12 @@ export function CharacterContextMenuContent({ character, setRoomSceneMode, onClo
 					} }>
 						Move
 					</button>
+					<button onClick={ () => {
+						setRoomSceneMode({ mode: 'poseCharacter', characterId: characterData.id });
+						context.close();
+					} }>
+						Pose
+					</button>
 					{ characterData.id !== playerId && (
 						<button onClick={ () => {
 							onClose();

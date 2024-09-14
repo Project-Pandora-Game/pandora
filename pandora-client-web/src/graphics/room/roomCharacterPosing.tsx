@@ -303,6 +303,16 @@ function RoomCharacterPosingToolImpl({
 						setRoomSceneMode({ mode: 'normal' });
 					} }
 				/>
+				<TurnAroundButton
+					position={ { x: pivot.x, y: pivot.y + 80 } }
+					radiusSmall={ 20 }
+					radiusBig={ 32 }
+					onClick={ () => {
+						setPose({
+							view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
+						});
+					} }
+				/>
 			</Container>
 			<PosingToolBone
 				characterState={ characterState }
@@ -597,6 +607,67 @@ function ExitPosingUiButton({
 		<Graphics
 			position={ position }
 			angle={ 45 }
+			draw={ graphicsDraw }
+			eventMode='static'
+			cursor='pointer'
+			hitArea={ hitArea }
+			onpointerdown={ onPointerDown }
+			onpointerup={ onPointerUp }
+		/>
+	);
+}
+
+function TurnAroundButton({
+	position,
+	radiusSmall,
+	radiusBig,
+	onClick,
+}: {
+	position: Readonly<PointLike>;
+	radiusSmall: number;
+	radiusBig: number;
+	onClick: () => void;
+}): ReactElement {
+	const arrowheadLength = 0.4 * radiusBig;
+	const innerSize = 0.2 * radiusSmall;
+	const arrowheadWidth = 0.6 * radiusSmall;
+	const edgeWidth = 4;
+
+	const hitArea = useMemo(() => new PIXI.Rectangle(-radiusBig, -radiusSmall, 2 * radiusBig, 2 * radiusSmall), [radiusBig, radiusSmall]);
+
+	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
+		g
+			.rect(-radiusBig, -radiusSmall, 2 * radiusBig, 2 * radiusSmall)
+			.fill({ color: 0x880000, alpha: 0.4 })
+			.stroke({ width: 4, color: 0xffffff, alpha: 1 })
+			.poly([
+				radiusBig - edgeWidth - arrowheadLength, -innerSize,
+				radiusBig - edgeWidth - arrowheadLength, -arrowheadWidth,
+				radiusBig - edgeWidth, 0,
+				radiusBig - edgeWidth - arrowheadLength, arrowheadWidth,
+				radiusBig - edgeWidth - arrowheadLength, innerSize,
+
+				- radiusBig + edgeWidth + arrowheadLength, innerSize,
+				- radiusBig + edgeWidth + arrowheadLength, arrowheadWidth,
+				- radiusBig + edgeWidth, 0,
+				- radiusBig + edgeWidth + arrowheadLength, -arrowheadWidth,
+				- radiusBig + edgeWidth + arrowheadLength, -innerSize,
+			])
+			.fill({ color: 0xffffff, alpha: 1 });
+	}, [arrowheadLength, arrowheadWidth, innerSize, radiusBig, radiusSmall]);
+
+	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
+		event.stopPropagation();
+	}, []);
+
+	const onPointerUp = useCallback((event: PIXI.FederatedPointerEvent) => {
+		event.stopPropagation();
+		onClick();
+	}, [onClick]);
+
+	return (
+		<Graphics
+			position={ position }
 			draw={ graphicsDraw }
 			eventMode='static'
 			cursor='pointer'

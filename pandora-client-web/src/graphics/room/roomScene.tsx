@@ -148,15 +148,17 @@ export function RoomGraphicsScene({
 		}
 	}, [projectionResolver]);
 
+	const [roomBackgroundWidth, roomBackgroundHeight] = roomBackground.imageSize;
+
 	const viewportConfig = useCallback<PixiViewportSetupCallback>((viewport) => {
 		viewport
 			.drag({ clampWheel: true })
 			.wheel({ smooth: 10, percent: 0.1 })
 			.bounce({
 				...BASE_BOUNCE_OPTIONS,
-				bounceBox: new Rectangle(-BONCE_OVERFLOW, -BONCE_OVERFLOW, roomBackground.imageSize[0] + 2 * BONCE_OVERFLOW, roomBackground.imageSize[1] + 2 * BONCE_OVERFLOW),
+				bounceBox: new Rectangle(-BONCE_OVERFLOW, -BONCE_OVERFLOW, roomBackgroundWidth + 2 * BONCE_OVERFLOW, roomBackgroundHeight + 2 * BONCE_OVERFLOW),
 			});
-	}, [roomBackground]);
+	}, [roomBackgroundWidth, roomBackgroundHeight]);
 
 	const viewportRef = useRef<PixiViewportRef>(null);
 
@@ -170,10 +172,10 @@ export function RoomGraphicsScene({
 		viewportConfig,
 		viewportRef,
 		forwardContexts: [serviceManagerContext],
-		worldWidth: roomBackground.imageSize[0],
-		worldHeight: roomBackground.imageSize[1],
+		worldWidth: roomBackgroundWidth,
+		worldHeight: roomBackgroundHeight,
 		backgroundColor: 0x000000,
-	}), [viewportConfig, viewportRef, roomBackground]);
+	}), [viewportConfig, roomBackgroundWidth, roomBackgroundHeight]);
 
 	return (
 		<GraphicsScene

@@ -1,5 +1,5 @@
 import { throttle } from 'lodash';
-import { Assert, type AssetFrameworkCharacterState, type BoneDefinition, type PartialAppearancePose } from 'pandora-common';
+import { Assert, CharacterSize, type AssetFrameworkCharacterState, type BoneDefinition, type PartialAppearancePose } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
@@ -62,7 +62,10 @@ function RoomCharacterMovementToolImpl({
 		yOffsetExtra,
 		scale,
 		pivot,
+		rotationAngle,
 	} = useRoomCharacterPosition(dataPosition, characterState, projectionResolver);
+	const backView = characterState.actualPose.view === 'back';
+	const scaleX = backView ? -1 : 1;
 
 	const labelX = pivot.x;
 	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
@@ -149,6 +152,20 @@ function RoomCharacterMovementToolImpl({
 			scale={ { x: scale, y: scale } }
 			pivot={ pivot }
 		>
+			<Container
+				position={ { x: pivot.x, y: pivot.y - yOffsetExtra } }
+				scale={ { x: scaleX, y: 1 } }
+				pivot={ pivot }
+				angle={ rotationAngle }
+			>
+				<SwitchModePosingButton
+					position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 } }
+					radius={ 40 }
+					onClick={ () => {
+						setRoomSceneMode({ mode: 'poseCharacter', characterId: id });
+					} }
+				/>
+			</Container>
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
 				colorLeftRight={ 0xff0000 }
@@ -206,6 +223,7 @@ function RoomCharacterPosingToolImpl({
 	character,
 	characterState,
 	projectionResolver,
+	setRoomSceneMode,
 }: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
 	const assetManager = useAssetManager();
 	const bones = useMemo(() => assetManager.getAllBones(), [assetManager]);
@@ -271,6 +289,20 @@ function RoomCharacterPosingToolImpl({
 							/>
 						))
 				}
+				<SwitchModeMovementButton
+					position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 } }
+					radius={ 40 }
+					onClick={ () => {
+						setRoomSceneMode({ mode: 'moveCharacter', characterId: id });
+					} }
+				/>
+				<ExitPosingUiButton
+					position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT } }
+					radius={ 40 }
+					onClick={ () => {
+						setRoomSceneMode({ mode: 'normal' });
+					} }
+				/>
 			</Container>
 			<PosingToolBone
 				characterState={ characterState }
@@ -398,6 +430,7 @@ function PosingToolBone({
 	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
 		g
 			.ellipse(0, 0, radius, radius)
+			.fill({ color: 0x000000, alpha: 0.4 })
 			.stroke({ width: 4, color: 0xffffff, alpha: 1 })
 			.poly([
 				centerOffset, -arrowWidthInner,
@@ -427,6 +460,149 @@ function PosingToolBone({
 			onpointerup={ onPointerUp }
 			onpointerupoutside={ onPointerUp }
 			onglobalpointermove={ onPointerMove }
+		/>
+	);
+}
+
+function SwitchModeMovementButton({
+	position,
+	radius,
+	onClick,
+}: {
+	position: Readonly<PointLike>;
+	radius: number;
+	onClick: () => void;
+}): ReactElement {
+	const hitArea = useMemo(() => new PIXI.Rectangle(-radius, -radius, 2 * radius, 2 * radius), [radius]);
+
+	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
+		event.stopPropagation();
+	}, []);
+
+	const onPointerUp = useCallback((event: PIXI.FederatedPointerEvent) => {
+		event.stopPropagation();
+		onClick();
+	}, [onClick]);
+
+	return (
+		<MovementHelperGraphics
+			radius={ radius }
+			colorLeftRight={ 0xffffff }
+			colorUpDown={ 0xffffff }
+			position={ position }
+			hitArea={ hitArea }
+			eventMode='static'
+			cursor='pointer'
+			onpointerdown={ onPointerDown }
+			onpointerup={ onPointerUp }
+		/>
+	);
+}
+
+function SwitchModePosingButton({
+	position,
+	radius,
+	onClick,
+}: {
+	position: Readonly<PointLike>;
+	radius: number;
+	onClick: () => void;
+}): ReactElement {
+	const hitArea = useMemo(() => new PIXI.Rectangle(-radius, -radius, 2 * radius, 2 * radius), [radius]);
+	/** Sized 24x24 */
+	const POSING_ICON_PATH = 'M12 1a2 2 0 1 1-2 2 2 2 0 0 1 2-2zm8.79 4.546L14.776 6H9.223l-6.012-.454a.72.72 0 0 0-.168 1.428l6.106.97a.473.473 0 0 1 .395.409L10 12 6.865 22.067a.68.68 0 0 0 .313.808l.071.04a.707.707 0 0 0 .994-.338L12 13.914l3.757 8.663a.707.707 0 0 0 .994.338l.07-.04a.68.68 0 0 0 .314-.808L14 12l.456-3.647a.473.473 0 0 1 .395-.409l6.106-.97a.72.72 0 0 0-.168-1.428z';
+
+	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
+		event.stopPropagation();
+	}, []);
+
+	const onPointerUp = useCallback((event: PIXI.FederatedPointerEvent) => {
+		event.stopPropagation();
+		onClick();
+	}, [onClick]);
+
+	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
+		g
+			.ellipse(0, 0, radius, radius)
+			.fill({ color: 0x000000, alpha: 0.4 })
+			.stroke({ width: 4, color: 0xffffff, alpha: 1 });
+
+		const iconButtonSize = 1.8 * (radius / 24);
+		g
+			.transform(iconButtonSize, 0, 0, iconButtonSize, -12 * iconButtonSize, -12 * iconButtonSize)
+			.path(new PIXI.GraphicsPath(POSING_ICON_PATH))
+			.resetTransform()
+			.fill({ color: 0xffffff, alpha: 1 });
+	}, [radius]);
+
+	return (
+		<Graphics
+			position={ position }
+			draw={ graphicsDraw }
+			eventMode='static'
+			cursor='pointer'
+			hitArea={ hitArea }
+			onpointerdown={ onPointerDown }
+			onpointerup={ onPointerUp }
+		/>
+	);
+}
+
+function ExitPosingUiButton({
+	position,
+	radius,
+	onClick,
+}: {
+	position: Readonly<PointLike>;
+	radius: number;
+	onClick: () => void;
+}): ReactElement {
+	const innerWidth = 2;
+	const sideGap = 5;
+
+	const hitArea = useMemo(() => new PIXI.Rectangle(-radius, -radius, 2 * radius, 2 * radius), [radius]);
+
+	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
+		g
+			.ellipse(0, 0, radius, radius)
+			.fill({ color: 0x880000, alpha: 0.4 })
+			.stroke({ width: 4, color: 0xffaaaa, alpha: 1 })
+			.poly([
+				innerWidth, -innerWidth,
+				radius - sideGap, -innerWidth,
+				radius - sideGap, innerWidth,
+				innerWidth, innerWidth,
+				innerWidth, radius - sideGap,
+				-innerWidth, radius - sideGap,
+				-innerWidth, innerWidth,
+				-(radius - sideGap), innerWidth,
+				-(radius - sideGap), -innerWidth,
+				-innerWidth, -innerWidth,
+				-innerWidth, -(radius - sideGap),
+				innerWidth, -(radius - sideGap),
+			])
+			.fill({ color: 0xaa0000, alpha: 1 });
+	}, [radius]);
+
+	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
+		event.stopPropagation();
+	}, []);
+
+	const onPointerUp = useCallback((event: PIXI.FederatedPointerEvent) => {
+		event.stopPropagation();
+		onClick();
+	}, [onClick]);
+
+	return (
+		<Graphics
+			position={ position }
+			angle={ 45 }
+			draw={ graphicsDraw }
+			eventMode='static'
+			cursor='pointer'
+			hitArea={ hitArea }
+			onpointerdown={ onPointerDown }
+			onpointerup={ onPointerUp }
 		/>
 	);
 }

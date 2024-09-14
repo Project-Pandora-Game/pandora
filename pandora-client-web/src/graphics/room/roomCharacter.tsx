@@ -30,14 +30,16 @@ import { Text } from '../baseComponents/text';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
 import { MASK_SIZE, SwapCullingDirection } from '../graphicsLayer';
 import { useTexture } from '../useTexture';
-import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
+import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters, type IRoomSceneMode } from './roomScene';
 
-type RoomCharacterInteractiveProps = {
+export type RoomCharacterInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
 	spaceInfo: Immutable<SpaceClientInfo>;
 	debugConfig: ChatroomDebugConfig;
 	projectionResolver: Immutable<RoomProjectionResolver>;
+	roomSceneMode: Immutable<IRoomSceneMode>;
+	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	shard: ShardConnector | null;
 	menuOpen: (target: Character<ICharacterRoomData>, data: FederatedPointerEvent) => void;
 };
@@ -46,6 +48,7 @@ type RoomCharacterDisplayProps = {
 	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
 	projectionResolver: Immutable<RoomProjectionResolver>;
+	showName: boolean;
 
 	debugConfig?: Immutable<ChatroomDebugConfig>;
 
@@ -57,12 +60,12 @@ type RoomCharacterDisplayProps = {
 	onPointerMove?: (event: FederatedPointerEvent) => void;
 };
 
-type CharacterStateProps = {
+export type CharacterStateProps = {
 	characterState: AssetFrameworkCharacterState;
 };
 
-const PIVOT_TO_LABEL_OFFSET = 100;
-const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
+export const PIVOT_TO_LABEL_OFFSET = 100;
+export const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
 
 export const SettingDisplayCharacterName = BrowserStorage.createSession('graphics.display-character-name', true, z.boolean());
 
@@ -165,6 +168,7 @@ function RoomCharacterInteractiveImpl({
 	spaceInfo,
 	debugConfig,
 	projectionResolver,
+	roomSceneMode,
 	shard,
 	menuOpen,
 }: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
@@ -236,6 +240,9 @@ function RoomCharacterInteractiveImpl({
 		}
 	}, [onDragMove, onDragStart]);
 
+	const isBeingMoved = roomSceneMode.mode === 'moveCharacter' && roomSceneMode.characterId === character.id;
+	const enableMenu = !isBeingMoved;
+
 	return (
 		<RoomCharacterDisplay
 			ref={ characterContainer }
@@ -244,8 +251,9 @@ function RoomCharacterInteractiveImpl({
 			characterState={ characterState }
 			projectionResolver={ projectionResolver }
 			debugConfig={ debugConfig }
-			eventMode='static'
-			cursor='pointer'
+			showName={ enableMenu }
+			cursor={ enableMenu ? 'pointer' : 'none' }
+			eventMode={ enableMenu ? 'static' : 'none' }
 			hitArea={ hitArea }
 			onPointerDown={ onPointerDown }
 			onPointerUp={ onPointerUp }
@@ -258,6 +266,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 	character,
 	characterState,
 	projectionResolver,
+	showName,
 	debugConfig,
 
 	eventMode,
@@ -300,7 +309,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 	const disconnectedIconTexture = useTexture(disconnectedIcon);
 	const disconnectedIconY = labelY + 50;
 
-	const showName = useObservable(SettingDisplayCharacterName);
+	showName = useObservable(SettingDisplayCharacterName) && showName;
 
 	let fontScale: number;
 	switch (interfaceChatroomCharacterNameFontSize) {

@@ -62,7 +62,7 @@ function MoveDeviceMenu({ device, setRoomSceneMode, close }: {
 	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	close: () => void;
 }) {
-	const action = useMemo<AppearanceAction>(() => ({
+	const action = useMemo((): AppearanceAction => ({
 		type: 'roomDeviceDeploy',
 		item: {
 			container: [],
@@ -100,7 +100,7 @@ function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
 	slot: string;
 	close: () => void;
 }) {
-	const action = useMemo<AppearanceAction>(() => ({
+	const action = useMemo((): AppearanceAction => ({
 		type: 'roomDeviceLeave',
 		item: {
 			container: [],
@@ -144,7 +144,7 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 }) {
 	const characterData = useCharacterData(character);
 
-	const action = useMemo<AppearanceAction>(() => ({
+	const action = useMemo((): AppearanceAction => ({
 		type: 'roomDeviceEnter',
 		item: {
 			container: [],
@@ -176,9 +176,10 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 	);
 }
 
-function DeviceSlotsMenu({ device, position, close }: {
+function DeviceSlotsMenu({ device, position, setRoomSceneMode, close }: {
 	device: ItemRoomDevice;
 	position: Readonly<PointLike>;
+	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	close: () => void;
 }) {
 	const [slot, setSlot] = useState<string | null>(null);
@@ -199,6 +200,7 @@ function DeviceSlotsMenu({ device, position, close }: {
 			<CharacterContextMenu
 				character={ selectedCharacter }
 				position={ position }
+				setRoomSceneMode={ setRoomSceneMode }
 				onClose={ () => setSelectedCharacter(null) }
 				closeText='Back to slots'
 			/>
@@ -301,7 +303,7 @@ function DeviceContextMenuCurrent({ device, position, setRoomSceneMode, onClose 
 						) }
 						{ menu === 'slots' && (
 							<>
-								<DeviceSlotsMenu device={ device } position={ position } close={ onClose } />
+								<DeviceSlotsMenu device={ device } position={ position } setRoomSceneMode={ setRoomSceneMode } close={ onClose } />
 								<button onClick={ () => setMenu('main') }>
 									Back
 								</button>

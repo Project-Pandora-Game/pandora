@@ -13,6 +13,7 @@ import {
 	ResolveBackground,
 	RoomBackgroundData,
 	SpaceClientInfo,
+	type CharacterId,
 } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
@@ -37,6 +38,7 @@ import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphi
 import { CharacterContextMenu } from './contextMenus/characterContextMenu';
 import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
 import { RoomCharacterInteractive } from './roomCharacter';
+import { RoomCharacterMovementTool } from './roomCharacterPosing';
 import { RoomDeviceInteractive, RoomDeviceMovementTool, useIsRoomConstructionModeEnabled } from './roomDevice';
 
 const BONCE_OVERFLOW = 500;
@@ -190,12 +192,14 @@ export function RoomGraphicsScene({
 				{
 					characters.map((character) => (
 						<RoomCharacterInteractive
-							key={ character.data.id }
+							key={ character.id }
 							globalState={ globalState }
 							character={ character }
 							spaceInfo={ info }
 							debugConfig={ debugConfig }
 							projectionResolver={ projectionResolver }
+							roomSceneMode={ roomSceneMode }
+							setRoomSceneMode={ setRoomSceneMode }
 							shard={ shard }
 							menuOpen={ menuOpen }
 						/>
@@ -218,6 +222,22 @@ export function RoomGraphicsScene({
 				}
 			</Container>
 			<Container zIndex={ 20 } sortableChildren>
+				{
+					characters.map((character) => ((roomSceneMode.mode === 'moveCharacter' && roomSceneMode.characterId === character.id) ? (
+						<RoomCharacterMovementTool
+							key={ character.id }
+							globalState={ globalState }
+							character={ character }
+							spaceInfo={ info }
+							debugConfig={ debugConfig }
+							projectionResolver={ projectionResolver }
+							roomSceneMode={ roomSceneMode }
+							setRoomSceneMode={ setRoomSceneMode }
+							shard={ shard }
+							menuOpen={ menuOpen }
+						/>
+					) : null))
+				}
 				{
 					roomDevices.map((device) => ((roomSceneMode.mode === 'moveDevice' && roomSceneMode.deviceItemId === device.id && device.isDeployed()) ? (
 						<RoomDeviceMovementTool
@@ -435,6 +455,9 @@ export function useCharacterDisplayFilters(character: Character<ICharacterRoomDa
 export type IRoomSceneMode = {
 	mode: 'normal';
 } | {
+	mode: 'moveCharacter';
+	characterId: CharacterId;
+} | {
 	mode: 'moveDevice';
 	deviceItemId: ItemId;
 };
@@ -512,7 +535,14 @@ export function RoomScene({ className }: {
 			menuOpen={ menuOpen }
 		>
 			{
-				menuActive?.character ? <CharacterContextMenu character={ menuActive.character } position={ menuActive.position } onClose={ closeContextMenu } /> : null
+				menuActive?.character ? (
+					<CharacterContextMenu
+						character={ menuActive.character }
+						position={ menuActive.position }
+						setRoomSceneMode={ setRoomSceneMode }
+						onClose={ closeContextMenu }
+					/>
+				) : null
 			}
 			{
 				menuActive?.deviceItemId ? (

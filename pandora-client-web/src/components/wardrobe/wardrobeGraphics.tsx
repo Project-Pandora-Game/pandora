@@ -338,6 +338,7 @@ export function RoomPreview({
 								globalState={ globalState }
 								character={ character }
 								projectionResolver={ projectionResolver }
+								showName={ false }
 							/>
 						))
 					}

@@ -18,6 +18,7 @@ import { PointLike } from '../../../graphics/graphicsCharacter';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { useChatInput } from '../../../ui/components/chat/chatInput';
+import type { IRoomSceneMode } from '../roomScene';
 
 type MenuType = 'main' | 'admin' | 'contacts';
 
@@ -278,9 +279,10 @@ function AccountContactActionContextMenu(): ReactElement | null {
 	}
 }
 
-export function CharacterContextMenu({ character, position, onClose, closeText = 'Close' }: {
+export function CharacterContextMenu({ character, position, setRoomSceneMode, onClose, closeText = 'Close' }: {
 	character: Character<ICharacterRoomData>;
 	position: Readonly<PointLike>;
+	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	onClose: () => void;
 	closeText?: string;
 }): ReactElement | null {
@@ -289,15 +291,16 @@ export function CharacterContextMenu({ character, position, onClose, closeText =
 		<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
 			<Scrollable color='lighter'>
 				<Column>
-					<CharacterContextMenuContent character={ character } onClose={ onClose } closeText={ closeText } />
+					<CharacterContextMenuContent character={ character } setRoomSceneMode={ setRoomSceneMode } onClose={ onClose } closeText={ closeText } />
 				</Column>
 			</Scrollable>
 		</div>
 	);
 }
 
-export function CharacterContextMenuContent({ character, onClose, closeText = 'Close' }: {
+export function CharacterContextMenuContent({ character, setRoomSceneMode, onClose, closeText = 'Close' }: {
 	character: Character<ICharacterRoomData>;
+	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	onClose: () => void;
 	closeText?: string;
 }): ReactElement | null {
@@ -357,6 +360,12 @@ export function CharacterContextMenuContent({ character, onClose, closeText = 'C
 						navigate(`/profiles/character/${characterData.id}`);
 					} }>
 						Profile
+					</button>
+					<button onClick={ () => {
+						setRoomSceneMode({ mode: 'moveCharacter', characterId: characterData.id });
+						context.close();
+					} }>
+						Move
 					</button>
 					{ characterData.id !== playerId && (
 						<button onClick={ () => {

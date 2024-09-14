@@ -55,7 +55,6 @@ type RoomDeviceInteractiveProps = {
 	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	shard: ShardConnector | null;
 	menuOpen: (character: ItemRoomDevice, data: FederatedPointerEvent) => void;
-
 };
 
 type RoomDeviceProps = {

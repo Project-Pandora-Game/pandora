@@ -91,8 +91,7 @@ export function PointTemplateEditLayer({ templateEditor }: {
 		return [p, t];
 	}, [currentTemplate]);
 
-	const drawWireFrame = useCallback((g: PIXI.Graphics) => {
-		g.clear();
+	const drawWireFrame = useCallback((g: PIXI.GraphicsContext) => {
 		// Draw triangles
 		for (let i = 0; i < triangles.length; i += 3) {
 			const poly = [0, 1, 2]

@@ -312,13 +312,12 @@ export function RoomDeviceInteractive({
 		(showOverlaySetting === 'interactable' && canInteractNormally)
 	);
 
-	const deviceMenuHelperDraw = useCallback((g: PIXI.Graphics) => {
+	const deviceMenuHelperDraw = useCallback((g: PIXI.GraphicsContext) => {
 		if (!showMenuHelper) {
-			g.clear();
 			return;
 		}
 
-		g.clear()
+		g
 			.circle(0, 0, hitAreaRadius)
 			.fill({ color: roomConstructionMode ? 0xff0000 : 0x000075, alpha: roomConstructionMode ? 0.7 : 0.2 })
 			.poly([
@@ -411,7 +410,7 @@ export function RoomDevice({
 						>
 							<Graphics
 								draw={ (g) => {
-									g.clear()
+									g
 										// Vertical guide line
 										.moveTo(pivot.x, pivot.y - Math.max(100, pivot.y))
 										.lineTo(pivot.x, pivot.y + 100)
@@ -660,7 +659,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 					>
 						<Graphics
 							draw={ (g) => {
-								g.clear()
+								g
 									// Mask area
 									.rect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
 									.stroke({ color: 0xffff00, width: 2 })

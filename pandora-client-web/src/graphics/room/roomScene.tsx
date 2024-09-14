@@ -93,13 +93,13 @@ export function RoomGraphicsScene({
 
 	const projectionResolver = useRoomViewProjection(roomBackground);
 
-	const borderDraw = useCallback((g: PIXI.Graphics) => {
-		g.clear()
+	const borderDraw = useCallback((g: PIXI.GraphicsContext) => {
+		g
 			.rect(0, 0, roomBackground.imageSize[0], roomBackground.imageSize[1])
 			.stroke({ width: 2, color: 0x404040, alpha: 0.4 });
 	}, [roomBackground]);
 
-	const calibrationLineDraw = useCallback((g: PIXI.Graphics) => {
+	const calibrationLineDraw = useCallback((g: PIXI.GraphicsContext) => {
 		const {
 			transform,
 			floorAreaWidthLeft,
@@ -111,7 +111,7 @@ export function RoomGraphicsScene({
 
 		const renderedAreaWidthHalf = Math.floor(renderedAreaWidth / 2);
 
-		g.clear()
+		g
 			.poly([
 				...transform(floorAreaWidthRight, 0, 0),
 				...transform(-floorAreaWidthLeft, 0, 0),
@@ -129,7 +129,6 @@ export function RoomGraphicsScene({
 
 		if (ceiling > 0) {
 			g
-
 				.poly([
 					...transform(floorAreaWidthRight, floorAreaDepth, 0),
 					...transform(-floorAreaWidthLeft, floorAreaDepth, 0),

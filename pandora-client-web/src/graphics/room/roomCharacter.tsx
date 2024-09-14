@@ -314,13 +314,12 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 	}
 
 	// Debug graphics
-	const hotboxDebugDraw = useCallback((g: PIXI.Graphics) => {
+	const hotboxDebugDraw = useCallback((g: PIXI.GraphicsContext) => {
 		if (hitArea == null) {
-			g.clear();
 			return;
 		}
 
-		g.clear()
+		g
 			.rect(hitArea.x, hitArea.y, hitArea.width, hitArea.height)
 			.fill({ color: 0xff0000, alpha: 0.25 });
 	}, [hitArea]);
@@ -363,7 +362,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 							>
 								<Graphics
 									draw={ (g) => {
-										g.clear()
+										g
 											// Pivot point (with extra Y offset)
 											.circle(pivot.x, pivot.y, 5)
 											.fill(0xffaa00)
@@ -414,7 +413,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 						>
 							<Graphics
 								draw={ (g) => {
-									g.clear()
+									g
 										// Pivot point (wanted)
 										.circle(pivot.x, pivot.y, 5)
 										.fill(0xffff00)

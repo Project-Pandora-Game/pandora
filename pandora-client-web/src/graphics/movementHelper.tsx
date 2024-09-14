@@ -19,8 +19,8 @@ export function MovementHelperGraphics({
 	const arrowWidth = 16;
 	const centerOffset = 5;
 
-	const graphicsDraw = useCallback((g: PIXI.Graphics) => {
-		g.clear()
+	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
+		g
 			.ellipse(0, 0, radius, radius)
 			.stroke({ width: 4, color: 0xffffff, alpha: 1 });
 

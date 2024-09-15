@@ -202,6 +202,7 @@ function DeviceSlotsMenu({ device, position, close }: {
 	if (!slot) {
 		return (
 			<>
+				<hr />
 				{ Object.entries(device.asset.definition.slots).map(([name, definition]) => (
 					<button key={ name } onClick={ () => setSlot(name) }>
 						{ definition.name }
@@ -217,9 +218,11 @@ function DeviceSlotsMenu({ device, position, close }: {
 				<span>
 					{ device.asset.definition.slots[slot].name }
 				</span>
+				<hr />
 				<button onClick={ onSelectCharacter }>
 					{ character?.name } ({ character?.id })
 				</button>
+				<hr />
 				<DeviceSlotClear device={ device } slot={ slot } close={ close }>
 					{ (character)
 						? 'Exit the device'
@@ -237,12 +240,14 @@ function DeviceSlotsMenu({ device, position, close }: {
 			<span>
 				{ device.asset.definition.slots[slot].name }
 			</span>
+			<hr />
 			<span>
 				Enter:
 			</span>
 			{ characters.map((char) => (
 				<OccupyDeviceSlotMenu key={ char.id } device={ device } slot={ slot } character={ char } close={ close } />
 			)) }
+			<hr />
 			<button onClick={ () => setSlot(null) }>
 				Back to slots
 			</button>
@@ -284,6 +289,7 @@ function DeviceContextMenuCurrent({ device, position, onClose }: {
 							</button>
 							{ menu === 'main' && (
 								<>
+									<hr />
 									<LeaveDeviceMenu device={ device } close={ onClose } />
 									<button onClick={ () => setMenu('slots') }>
 										Slots

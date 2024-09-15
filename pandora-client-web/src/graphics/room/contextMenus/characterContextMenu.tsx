@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { AssertNotNullable, ICharacterRoomData, IDirectoryAccountInfo, SpaceClientInfo } from 'pandora-common';
+import { AssertNever, AssertNotNullable, ICharacterRoomData, IDirectoryAccountInfo, SpaceClientInfo } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
@@ -19,6 +19,16 @@ import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentT
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { useChatInput } from '../../../ui/components/chat/chatInput';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext';
+
+import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
+import bodyIcon from '../../../assets/icons/body.svg';
+import forbiddenIcon from '../../../assets/icons/forbidden.svg';
+import friendsIcon from '../../../assets/icons/friends.svg';
+import letterIcon from '../../../assets/icons/letter.svg';
+import lipsIcon from '../../../assets/icons/lips.svg';
+import profileIcon from '../../../assets/icons/profile.svg';
+import shieldIcon from '../../../assets/icons/shield.svg';
+import shirtIcon from '../../../assets/icons/shirt.svg';
 
 type MenuType = 'main' | 'admin' | 'contacts';
 
@@ -136,8 +146,9 @@ function AdminActionContextMenu(): ReactElement | null {
 	switch (menu) {
 		case 'main':
 			return (
-				<button onClick={ () => setMenu('admin') }>
-					Admin
+				<button className='withIcon' onClick={ () => setMenu('admin') }>
+					<img className='invert' src={ shieldIcon } />
+					<span>Admin</span>
 				</button>
 			);
 		case 'admin':
@@ -147,7 +158,7 @@ function AdminActionContextMenu(): ReactElement | null {
 	}
 }
 
-function BlockMenu({ action, text }: { action: 'add' | 'remove'; text: ReactNode; }): ReactElement {
+function BlockMenu({ action }: { action: 'add' | 'remove'; }): ReactElement {
 	const directory = useDirectoryConnector();
 	const { character } = useCharacterMenuContext();
 	const confirm = useConfirmDialog();
@@ -162,11 +173,22 @@ function BlockMenu({ action, text }: { action: 'add' | 'remove'; text: ReactNode
 			.catch(() => { /** ignore */ });
 	}, [action, character.data.accountId, character.data.name, confirm, directory]);
 
-	return (
-		<button onClick={ block } >
-			{ text }
-		</button>
-	);
+	if (action === 'add') {
+		return (
+			<button className='withIcon' onClick={ block } >
+				<img className='invert' src={ forbiddenIcon } />
+				<span>Block</span>
+			</button>
+		);
+	} else if (action === 'remove') {
+		return (
+			<button onClick={ block } >
+				Unblock
+			</button>
+		);
+	}
+
+	AssertNever(action);
 }
 
 const errorHandler = (err: unknown) => toast(err instanceof Error ? err.message : 'An unknown error occurred', TOAST_OPTIONS_ERROR);
@@ -216,8 +238,9 @@ function NavigateToDMMenu(): ReactElement | null {
 		return null;
 
 	return (
-		<button onClick={ onClick } >
-			Go to Direct Messages
+		<button className='withIcon' onClick={ onClick }>
+			<img className='invert' src={ letterIcon } />
+			<span>Direct message</span>
 		</button>
 	);
 }
@@ -231,7 +254,7 @@ function AccountContactActionContextMenuInner(): ReactElement | null {
 			return (
 				<>
 					<FriendRequestMenu action='initiate' text='Add to contacts' />
-					<BlockMenu action='add' text='Block' />
+					<BlockMenu action='add' />
 				</>
 			);
 		case 'pending':
@@ -241,13 +264,13 @@ function AccountContactActionContextMenuInner(): ReactElement | null {
 				<>
 					<FriendRequestMenu action='accept' text='Accept Request' />
 					<FriendRequestMenu action='decline' text='Decline Request' />
-					<BlockMenu action='add' text='Block' />
+					<BlockMenu action='add' />
 				</>
 			);
 		case 'friend':
 			return <UnfriendRequestMenu />;
 		case 'blocked':
-			return <BlockMenu action='remove' text='Unblock' />;
+			return <BlockMenu action='remove' />;
 		default:
 			return null;
 	}
@@ -261,8 +284,9 @@ function AccountContactActionContextMenu(): ReactElement | null {
 	switch (menu) {
 		case 'main':
 			return (
-				<button onClick={ () => setMenu('contacts') }>
-					Contacts
+				<button className='withIcon' onClick={ () => setMenu('contacts') }>
+					<img className='invert' src={ friendsIcon } />
+					<span>Contacts</span>
 				</button>
 			);
 		case 'contacts':
@@ -349,38 +373,44 @@ export function CharacterContextMenuContent({ character, onClose }: {
 			<span>
 				{ characterData.name } ({ characterData.id })
 			</span>
+			<hr />
 			{ menu === 'main' && (
 				<>
-					<button onClick={ () => {
+					<button className='withIcon' onClick={ () => {
 						onCloseActual();
 						navigate(`/wardrobe/character/${characterData.id}`);
 					} }>
-						Wardrobe
+						<img className='invert' src={ shirtIcon } />
+						<span>Wardrobe</span>
 					</button>
-					<button onClick={ () => {
+					<button className='withIcon' onClick={ () => {
 						onCloseActual();
 						navigate(`/profiles/character/${characterData.id}`);
 					} }>
-						Profile
+						<img className='invert' src={ profileIcon } />
+						<span>Profile</span>
 					</button>
-					<button onClick={ () => {
+					<button className='withIcon' onClick={ () => {
 						setRoomSceneMode({ mode: 'moveCharacter', characterId: characterData.id });
 						context.close();
 					} }>
-						Move
+						<img className='invert' src={ arrowAllIcon } />
+						<span>Move</span>
 					</button>
-					<button onClick={ () => {
+					<button className='withIcon' onClick={ () => {
 						setRoomSceneMode({ mode: 'poseCharacter', characterId: characterData.id });
 						context.close();
 					} }>
-						Pose
+						<img className='invert' src={ bodyIcon } />
+						<span>Pose</span>
 					</button>
 					{ characterData.id !== playerId && (
-						<button onClick={ () => {
+						<button className='withIcon' onClick={ () => {
 							onClose();
 							setTarget(characterData.id);
 						} }>
-							Whisper
+							<img className='invert' src={ lipsIcon } />
+							<span>Whisper</span>
 						</button>
 					) }
 					<NavigateToDMMenu />

@@ -1,6 +1,6 @@
 import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
 import React, {
-	ReactElement, useEffect, useMemo,
+	ReactElement, useCallback, useEffect, useMemo,
 	type ReactNode,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -25,6 +25,7 @@ import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState } 
 import { useObservable } from '../../../observable';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { useChatInput } from '../../components/chat/chatInput';
+import { useRoomScreenContext } from './roomContext';
 import { ChatroomDebugConfigView } from './roomDebug';
 
 export function RoomControls(): ReactElement | null {
@@ -300,6 +301,10 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 	const gameState = useGameState();
 	const { show: showRestrictionOverrideContext } = useRestrictionOverrideDialogContext();
 
+	const {
+		openContextMenu,
+	} = useRoomScreenContext();
+
 	const data = useCharacterData(char);
 	const state = useCharacterState(gameState, char.id);
 	const isOnline = data.isOnline;
@@ -315,16 +320,23 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 		return result;
 	}, [isAdmin]);
 
+	const openMenu = useCallback((event: React.MouseEvent) => {
+		openContextMenu(char, {
+			x: event.pageX,
+			y: event.pageY,
+		});
+	}, [char, openContextMenu]);
+
 	return (
 		<fieldset>
 			<legend className={ char.isPlayer() ? 'player' : '' }>
-				<span>
+				<button onClick={ openMenu }>
 					<span>
 						<span className='colorStrip' style={ { color: data.settings.labelColor } }><b>{ '/// ' }</b></span>
 						<span onClick={ () => setTarget(data.id) }><b>{ data.name }</b></span>
 						<span> / { data.id } / { data.accountId }</span>
 					</span>
-				</span>
+				</button>
 				{
 					icons.length > 0 ? (
 						<span>

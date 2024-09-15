@@ -7,6 +7,7 @@ import { useCharacterData } from '../../character/character';
 import { useEvent } from '../../common/useEvent';
 import { usePlayer } from '../../components/gameContext/playerContextProvider';
 import { useWardrobeExecuteCallback, WardrobeContextProvider } from '../../components/wardrobe/wardrobeContext';
+import { useRoomScreenContext } from '../../ui/screens/room/roomContext';
 import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
 import { Container } from '../baseComponents/container';
 import { Graphics } from '../baseComponents/graphics';
@@ -39,10 +40,13 @@ function RoomCharacterMovementToolImpl({
 	character,
 	characterState,
 	projectionResolver,
-	setRoomSceneMode,
 	shard,
 }: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
 	const id = characterState.id;
+
+	const {
+		setRoomSceneMode,
+	} = useRoomScreenContext();
 
 	const setPositionRaw = useCallback((newX: number, newY: number, newYOffset: number) => {
 		shard?.sendMessage('roomCharacterMove', {
@@ -223,11 +227,14 @@ function RoomCharacterPosingToolImpl({
 	character,
 	characterState,
 	projectionResolver,
-	setRoomSceneMode,
 }: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
 	const assetManager = useAssetManager();
 	const bones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 	const id = characterState.id;
+
+	const {
+		setRoomSceneMode,
+	} = useRoomScreenContext();
 
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 	const setPoseDirect = useCallback(({ arms, leftArm, rightArm, ...copy }: PartialAppearancePose) => {

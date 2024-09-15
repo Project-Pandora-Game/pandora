@@ -12,6 +12,7 @@ import { useAccountSettings } from '../../../services/accountLogic/accountManage
 import { useIsPortrait } from '../../../styles/mediaQueries';
 import { Chat } from '../../components/chat/chat';
 import './room.scss';
+import { RoomScreenContextProvider } from './roomContext';
 import { PersonalSpaceControls, RoomControls, useRoomConstructionModeCheck } from './roomControls';
 
 export function RoomScreen(): ReactElement | null {
@@ -24,10 +25,12 @@ export function RoomScreen(): ReactElement | null {
 	const chatroomChatRatio = 10 - chatroomGraphicsRatio;
 
 	return (
-		<DivContainer className='roomScreen' direction={ isPortrait ? 'column' : 'row' } key={ spaceInfo.id ?? '_personal' }>
-			<RoomScene className={ `room-scene flex-${chatroomGraphicsRatio}` } />
-			<InteractionBox className={ `interactionArea flex-${chatroomChatRatio}` } />
-		</DivContainer>
+		<RoomScreenContextProvider>
+			<DivContainer className='roomScreen' direction={ isPortrait ? 'column' : 'row' } key={ spaceInfo.id ?? '_personal' }>
+				<RoomScene className={ `room-scene flex-${chatroomGraphicsRatio}` } />
+				<InteractionBox className={ `interactionArea flex-${chatroomChatRatio}` } />
+			</DivContainer>
+		</RoomScreenContextProvider>
 	);
 }
 

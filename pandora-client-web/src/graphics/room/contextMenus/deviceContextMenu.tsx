@@ -1,28 +1,27 @@
-import React, { useMemo, useState, ReactElement, useEffect, useCallback } from 'react';
-import type { z } from 'zod';
+import { omit } from 'lodash';
 import { nanoid } from 'nanoid';
-import { ItemRoomDevice, AppearanceAction, ItemId, ICharacterRoomData } from 'pandora-common';
+import { AppearanceAction, ItemId, ItemRoomDevice } from 'pandora-common';
+import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { Character, ICharacter, useCharacterData } from '../../../character/character';
+import { toast } from 'react-toastify';
+import type { z } from 'zod';
+import { ICharacter, useCharacterData } from '../../../character/character';
 import { ChildrenProps } from '../../../common/reactTypes';
-import { PointLike } from '../../../graphics/graphicsCharacter';
+import { Column } from '../../../components/common/container/container';
+import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
 import { useContextMenuPosition } from '../../../components/contextMenu';
-import { useSpaceCharacters, useGameStateOptional, useGameState, useGlobalState } from '../../../components/gameContext/gameStateContextProvider';
+import { DialogInPortal } from '../../../components/dialog/dialog';
+import { useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue';
-import { useWardrobeContext, useWardrobeExecuteChecked, WARDROBE_TARGET_ROOM, WardrobeContextProvider } from '../../../components/wardrobe/wardrobeContext';
-import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
-import { CharacterContextMenu } from './characterContextMenu';
-import { Immutable } from 'immer';
-import { IRoomSceneMode } from '../roomScene';
-import { toast } from 'react-toastify';
 import { ActionWarningContent } from '../../../components/wardrobe/wardrobeComponents';
-import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
-import { omit } from 'lodash';
-import { useIsRoomConstructionModeEnabled } from '../roomDevice';
+import { useWardrobeContext, useWardrobeExecuteChecked, WARDROBE_TARGET_ROOM, WardrobeContextProvider } from '../../../components/wardrobe/wardrobeContext';
 import type { WardrobeDeviceLocationStateSchema } from '../../../components/wardrobe/wardrobeItems';
-import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
-import { Column } from '../../../components/common/container/container';
+import { PointLike } from '../../../graphics/graphicsCharacter';
+import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
+import { useRoomScreenContext } from '../../../ui/screens/room/roomContext';
+import { useIsRoomConstructionModeEnabled } from '../roomDevice';
 
 function StoreDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;
@@ -57,9 +56,8 @@ function StoreDeviceMenu({ device, close }: {
 	);
 }
 
-function MoveDeviceMenu({ device, setRoomSceneMode, close }: {
+function MoveDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;
-	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	close: () => void;
 }) {
 	const action = useMemo((): AppearanceAction => ({
@@ -74,6 +72,10 @@ function MoveDeviceMenu({ device, setRoomSceneMode, close }: {
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const roomConstructionMode = useIsRoomConstructionModeEnabled();
 	const available = roomConstructionMode && checkResult != null && checkResult.problems.length === 0;
+
+	const {
+		setRoomSceneMode,
+	} = useRoomScreenContext();
 
 	const onClick = () => {
 		if (!roomConstructionMode) {
@@ -176,36 +178,26 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 	);
 }
 
-function DeviceSlotsMenu({ device, position, setRoomSceneMode, close }: {
+function DeviceSlotsMenu({ device, position, close }: {
 	device: ItemRoomDevice;
 	position: Readonly<PointLike>;
-	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	close: () => void;
 }) {
 	const [slot, setSlot] = useState<string | null>(null);
 	const occupancy = useMemo(() => slot && device.slotOccupancy.get(slot), [device, slot]);
 	const characters = useSpaceCharacters();
 	const character = useMemo(() => characters.find(({ id }) => id === occupancy), [characters, occupancy]);
-	const [selectedCharacter, setSelectedCharacter] = useState<Character<ICharacterRoomData> | null>(null);
+
+	const {
+		openContextMenu,
+	} = useRoomScreenContext();
+
 	const onSelectCharacter = useCallback(() => {
-		if (!characters || !character) {
-			setSelectedCharacter(null);
+		if (!character) {
 			return;
 		}
-		setSelectedCharacter(characters.find((c) => c.data.id === character.data.id) ?? null);
-	}, [characters, character]);
-
-	if (selectedCharacter) {
-		return (
-			<CharacterContextMenu
-				character={ selectedCharacter }
-				position={ position }
-				setRoomSceneMode={ setRoomSceneMode }
-				onClose={ () => setSelectedCharacter(null) }
-				closeText='Back to slots'
-			/>
-		);
-	}
+		openContextMenu(character, position);
+	}, [character, position, openContextMenu]);
 
 	if (!slot) {
 		return (
@@ -258,11 +250,9 @@ function DeviceSlotsMenu({ device, position, setRoomSceneMode, close }: {
 	);
 }
 
-function DeviceContextMenuCurrent({ device, position, setRoomSceneMode, onClose }: {
+function DeviceContextMenuCurrent({ device, position, onClose }: {
 	device: ItemRoomDevice;
 	position: Readonly<PointLike>;
-	roomSceneMode: Immutable<IRoomSceneMode>;
-	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	onClose: () => void;
 }): ReactElement | null {
 	const ref = useContextMenuPosition(position);
@@ -281,49 +271,49 @@ function DeviceContextMenuCurrent({ device, position, setRoomSceneMode, onClose 
 	}
 
 	return (
-		<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
-			<Scrollable color='lighter'>
-				<Column>
-					<WardrobeContextProvider target={ WARDROBE_TARGET_ROOM } player={ player }>
-						<button onClick={ () => {
-							onCloseActual();
-							navigate('/wardrobe/room-inventory', { state: { deviceId: device.id } satisfies z.infer<typeof WardrobeDeviceLocationStateSchema> });
-						} }>
-							{ device.asset.definition.name }
+		<DialogInPortal>
+			<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
+				<Scrollable color='lighter'>
+					<Column>
+						<WardrobeContextProvider target={ WARDROBE_TARGET_ROOM } player={ player }>
+							<button onClick={ () => {
+								onCloseActual();
+								navigate('/wardrobe/room-inventory', { state: { deviceId: device.id } satisfies z.infer<typeof WardrobeDeviceLocationStateSchema> });
+							} }>
+								{ device.asset.definition.name }
+							</button>
+							{ menu === 'main' && (
+								<>
+									<LeaveDeviceMenu device={ device } close={ onClose } />
+									<button onClick={ () => setMenu('slots') }>
+										Slots
+									</button>
+									<MoveDeviceMenu device={ device } close={ onClose } />
+									<StoreDeviceMenu device={ device } close={ onClose } />
+								</>
+							) }
+							{ menu === 'slots' && (
+								<>
+									<DeviceSlotsMenu device={ device } position={ position } close={ onClose } />
+									<button onClick={ () => setMenu('main') }>
+										Back
+									</button>
+								</>
+							) }
+						</WardrobeContextProvider>
+						<button onClick={ onClose } >
+							Close
 						</button>
-						{ menu === 'main' && (
-							<>
-								<LeaveDeviceMenu device={ device } close={ onClose } />
-								<button onClick={ () => setMenu('slots') }>
-									Slots
-								</button>
-								<MoveDeviceMenu device={ device } setRoomSceneMode={ setRoomSceneMode } close={ onClose } />
-								<StoreDeviceMenu device={ device } close={ onClose } />
-							</>
-						) }
-						{ menu === 'slots' && (
-							<>
-								<DeviceSlotsMenu device={ device } position={ position } setRoomSceneMode={ setRoomSceneMode } close={ onClose } />
-								<button onClick={ () => setMenu('main') }>
-									Back
-								</button>
-							</>
-						) }
-					</WardrobeContextProvider>
-					<button onClick={ onClose } >
-						Close
-					</button>
-				</Column>
-			</Scrollable>
-		</div>
+					</Column>
+				</Scrollable>
+			</div>
+		</DialogInPortal>
 	);
 }
 
-export function DeviceContextMenu({ deviceItemId, position, roomSceneMode, setRoomSceneMode, onClose }: {
+export function DeviceContextMenu({ deviceItemId, position, onClose }: {
 	deviceItemId: ItemId;
 	position: Readonly<PointLike>;
-	roomSceneMode: Immutable<IRoomSceneMode>;
-	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	onClose: () => void;
 }): ReactElement | null {
 	const globalState = useGlobalState(useGameState());
@@ -350,8 +340,6 @@ export function DeviceContextMenu({ deviceItemId, position, roomSceneMode, setRo
 		<DeviceContextMenuCurrent
 			device={ item }
 			position={ position }
-			roomSceneMode={ roomSceneMode }
-			setRoomSceneMode={ setRoomSceneMode }
 			onClose={ onClose }
 		/>
 	);

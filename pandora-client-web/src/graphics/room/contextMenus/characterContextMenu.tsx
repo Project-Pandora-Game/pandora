@@ -10,7 +10,7 @@ import { useGoToDM } from '../../../components/accountContacts/accountContacts';
 import { Column } from '../../../components/common/container/container';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
 import { useContextMenuPosition } from '../../../components/contextMenu';
-import { useConfirmDialog } from '../../../components/dialog/dialog';
+import { DialogInPortal, useConfirmDialog } from '../../../components/dialog/dialog';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { IsSpaceAdmin, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
@@ -18,7 +18,7 @@ import { PointLike } from '../../../graphics/graphicsCharacter';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { useChatInput } from '../../../ui/components/chat/chatInput';
-import type { IRoomSceneMode } from '../roomScene';
+import { useRoomScreenContext } from '../../../ui/screens/room/roomContext';
 
 type MenuType = 'main' | 'admin' | 'contacts';
 
@@ -279,30 +279,28 @@ function AccountContactActionContextMenu(): ReactElement | null {
 	}
 }
 
-export function CharacterContextMenu({ character, position, setRoomSceneMode, onClose, closeText = 'Close' }: {
+export function CharacterContextMenu({ character, position, onClose }: {
 	character: Character<ICharacterRoomData>;
 	position: Readonly<PointLike>;
-	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	onClose: () => void;
-	closeText?: string;
 }): ReactElement | null {
 	const ref = useContextMenuPosition(position);
 	return (
-		<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
-			<Scrollable color='lighter'>
-				<Column>
-					<CharacterContextMenuContent character={ character } setRoomSceneMode={ setRoomSceneMode } onClose={ onClose } closeText={ closeText } />
-				</Column>
-			</Scrollable>
-		</div>
+		<DialogInPortal>
+			<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
+				<Scrollable color='lighter'>
+					<Column>
+						<CharacterContextMenuContent character={ character } onClose={ onClose } />
+					</Column>
+				</Scrollable>
+			</div>
+		</DialogInPortal>
 	);
 }
 
-export function CharacterContextMenuContent({ character, setRoomSceneMode, onClose, closeText = 'Close' }: {
+export function CharacterContextMenuContent({ character, onClose }: {
 	character: Character<ICharacterRoomData>;
-	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	onClose: () => void;
-	closeText?: string;
 }): ReactElement | null {
 	const navigate = useNavigate();
 	const { setTarget } = useChatInput();
@@ -313,6 +311,10 @@ export function CharacterContextMenuContent({ character, setRoomSceneMode, onClo
 	const characterData = useCharacterData(character);
 	const spaceInfo = useSpaceInfo().config;
 	const isPlayerAdmin = IsSpaceAdmin(spaceInfo, currentAccount);
+
+	const {
+		setRoomSceneMode,
+	} = useRoomScreenContext();
 
 	useEffect(() => {
 		if (!isPlayerAdmin && menu === 'admin') {
@@ -387,7 +389,7 @@ export function CharacterContextMenuContent({ character, setRoomSceneMode, onClo
 			<AdminActionContextMenu />
 			<AccountContactActionContextMenu />
 			<button onClick={ onCloseActual } >
-				{ closeText }
+				Close
 			</button>
 		</characterMenuContext.Provider>
 	);

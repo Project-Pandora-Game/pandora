@@ -21,6 +21,7 @@ import { useCharacterRestrictionsManager } from '../../components/gameContext/ga
 import { ShardConnector } from '../../networking/shardConnector';
 import { useObservable } from '../../observable';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
+import { useRoomScreenContext } from '../../ui/screens/room/roomContext';
 import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug';
 import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
 import { Container } from '../baseComponents/container';
@@ -30,7 +31,7 @@ import { Text } from '../baseComponents/text';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
 import { MASK_SIZE, SwapCullingDirection } from '../graphicsLayer';
 import { useTexture } from '../useTexture';
-import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters, type IRoomSceneMode } from './roomScene';
+import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
 
 export type RoomCharacterInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
@@ -38,10 +39,7 @@ export type RoomCharacterInteractiveProps = {
 	spaceInfo: Immutable<SpaceClientInfo>;
 	debugConfig: ChatroomDebugConfig;
 	projectionResolver: Immutable<RoomProjectionResolver>;
-	roomSceneMode: Immutable<IRoomSceneMode>;
-	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	shard: ShardConnector | null;
-	menuOpen: (target: Character<ICharacterRoomData>, data: FederatedPointerEvent) => void;
 };
 
 type RoomCharacterDisplayProps = {
@@ -168,14 +166,17 @@ function RoomCharacterInteractiveImpl({
 	spaceInfo,
 	debugConfig,
 	projectionResolver,
-	roomSceneMode,
 	shard,
-	menuOpen,
 }: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
 	const id = characterState.id;
 	const {
 		position: dataPosition,
 	} = useCharacterData(character);
+
+	const {
+		roomSceneMode,
+		openContextMenu,
+	} = useRoomScreenContext();
 
 	const {
 		yOffsetExtra,
@@ -224,7 +225,10 @@ function RoomCharacterInteractiveImpl({
 	const onPointerUp = useEvent((event: FederatedPointerEvent) => {
 		dragging.current = null;
 		if (pointerDown.current !== null && Date.now() < pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD) {
-			menuOpen(character, event);
+			openContextMenu(character, {
+				x: event.pageX,
+				y: event.pageY,
+			});
 		}
 		pointerDown.current = null;
 	});

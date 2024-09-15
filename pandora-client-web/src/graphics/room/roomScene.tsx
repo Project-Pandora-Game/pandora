@@ -8,17 +8,15 @@ import {
 	CalculateBackgroundDataFromCalibrationData,
 	FilterItemType,
 	ICharacterRoomData,
-	ItemId,
 	ItemRoomDevice,
 	ResolveBackground,
 	RoomBackgroundData,
 	SpaceClientInfo,
-	type CharacterId,
 } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
-import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
-import React, { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Filter, Rectangle } from 'pixi.js';
+import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterData } from '../../character/character';
 import { CommonProps } from '../../common/reactTypes';
@@ -29,17 +27,15 @@ import { useShardConnector } from '../../components/gameContext/shardConnectorCo
 import { ShardConnector } from '../../networking/shardConnector';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
 import { serviceManagerContext } from '../../services/serviceProvider';
+import { roomScreenContext, useRoomScreenContext } from '../../ui/screens/room/roomContext';
 import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomDebug';
 import { Container } from '../baseComponents/container';
 import { Graphics } from '../baseComponents/graphics';
 import { PixiViewportRef, PixiViewportSetupCallback } from '../baseComponents/pixiViewport';
-import { PointLike } from '../graphicsCharacter';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphicsScene';
-import { CharacterContextMenu } from './contextMenus/characterContextMenu';
-import { DeviceContextMenu } from './contextMenus/deviceContextMenu';
 import { RoomCharacterInteractive } from './roomCharacter';
 import { RoomCharacterMovementTool, RoomCharacterPosingTool } from './roomCharacterPosing';
-import { RoomDeviceInteractive, RoomDeviceMovementTool, useIsRoomConstructionModeEnabled } from './roomDevice';
+import { RoomDeviceInteractive, RoomDeviceMovementTool } from './roomDevice';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {
@@ -56,10 +52,7 @@ interface RoomGraphicsSceneProps extends CommonProps {
 	globalState: AssetFrameworkGlobalState;
 	info: Immutable<SpaceClientInfo>;
 	debugConfig: ChatroomDebugConfig;
-	roomSceneMode: Immutable<IRoomSceneMode>;
-	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void;
-	menuOpen: (target: Character<ICharacterRoomData> | ItemRoomDevice, event: FederatedPointerEvent) => void;
 }
 
 export function RoomGraphicsScene({
@@ -71,12 +64,13 @@ export function RoomGraphicsScene({
 	globalState,
 	info,
 	debugConfig,
-	roomSceneMode,
-	setRoomSceneMode,
 	onPointerDown,
-	menuOpen,
 }: RoomGraphicsSceneProps): ReactElement {
 	const assetManager = useAssetManager();
+
+	const {
+		roomSceneMode,
+	} = useRoomScreenContext();
 
 	const roomState = globalState.room;
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
@@ -171,7 +165,7 @@ export function RoomGraphicsScene({
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
 		viewportRef,
-		forwardContexts: [serviceManagerContext],
+		forwardContexts: [serviceManagerContext, roomScreenContext],
 		worldWidth: roomBackgroundWidth,
 		worldHeight: roomBackgroundHeight,
 		backgroundColor: 0x000000,
@@ -200,10 +194,7 @@ export function RoomGraphicsScene({
 							spaceInfo={ info }
 							debugConfig={ debugConfig }
 							projectionResolver={ projectionResolver }
-							roomSceneMode={ roomSceneMode }
-							setRoomSceneMode={ setRoomSceneMode }
 							shard={ shard }
-							menuOpen={ menuOpen }
 						/>
 					))
 				}
@@ -215,10 +206,7 @@ export function RoomGraphicsScene({
 							item={ device }
 							deployment={ device.deployment }
 							projectionResolver={ projectionResolver }
-							roomSceneMode={ roomSceneMode }
-							setRoomSceneMode={ setRoomSceneMode }
 							shard={ shard }
-							menuOpen={ menuOpen }
 						/>
 					) : null))
 				}
@@ -233,10 +221,7 @@ export function RoomGraphicsScene({
 							spaceInfo={ info }
 							debugConfig={ debugConfig }
 							projectionResolver={ projectionResolver }
-							roomSceneMode={ roomSceneMode }
-							setRoomSceneMode={ setRoomSceneMode }
 							shard={ shard }
-							menuOpen={ menuOpen }
 						/>
 					) : null))
 				}
@@ -249,10 +234,7 @@ export function RoomGraphicsScene({
 							spaceInfo={ info }
 							debugConfig={ debugConfig }
 							projectionResolver={ projectionResolver }
-							roomSceneMode={ roomSceneMode }
-							setRoomSceneMode={ setRoomSceneMode }
 							shard={ shard }
-							menuOpen={ menuOpen }
 						/>
 					) : null))
 				}
@@ -264,10 +246,7 @@ export function RoomGraphicsScene({
 							item={ device }
 							deployment={ device.deployment }
 							projectionResolver={ projectionResolver }
-							roomSceneMode={ roomSceneMode }
-							setRoomSceneMode={ setRoomSceneMode }
 							shard={ shard }
-							menuOpen={ menuOpen }
 						/>
 					) : null))
 				}
@@ -470,16 +449,6 @@ export function useCharacterDisplayFilters(character: Character<ICharacterRoomDa
 	return isOnline ? onlineFilters : offlineFilters;
 }
 
-export type IRoomSceneMode = {
-	mode: 'normal';
-} | {
-	mode: 'moveCharacter' | 'poseCharacter';
-	characterId: CharacterId;
-} | {
-	mode: 'moveDevice';
-	deviceItemId: ItemId;
-};
-
 export function RoomScene({ className }: {
 	className?: string;
 }): ReactElement {
@@ -487,17 +456,16 @@ export function RoomScene({ className }: {
 	const info = useSpaceInfo();
 	const characters = useSpaceCharacters();
 	const shard = useShardConnector();
-	const [menuActive, setMenuActive] = useState<{
-		character?: Character<ICharacterRoomData>;
-		deviceItemId?: ItemId;
-		position: Readonly<PointLike>;
-	} | null>(null);
+
+	const {
+		contextMenuFocus,
+		openContextMenu,
+	} = useRoomScreenContext();
+
 	const player = usePlayer();
 	const debugConfig = useDebugConfig();
 
 	const globalState = useGlobalState(gameState);
-
-	const [roomSceneMode, setRoomSceneMode] = useState<Immutable<IRoomSceneMode>>({ mode: 'normal' });
 
 	AssertNotNullable(characters);
 	AssertNotNullable(player);
@@ -505,39 +473,13 @@ export function RoomScene({ className }: {
 	const playerState = useCharacterState(gameState, player.id);
 	AssertNotNullable(playerState);
 
-	const roomConstructionMode = useIsRoomConstructionModeEnabled();
-	useEffect(() => {
-		if (!roomConstructionMode && roomSceneMode.mode === 'moveDevice') {
-			setRoomSceneMode({ mode: 'normal' });
-		}
-	}, [roomConstructionMode, roomSceneMode]);
-
-	const menuOpen = useCallback((target: Character<ICharacterRoomData> | ItemRoomDevice | null, event: FederatedPointerEvent | null) => {
-		if (!target || !event) {
-			setMenuActive(null);
-		} else {
-			setMenuActive({
-				character: target instanceof Character ? target : undefined,
-				deviceItemId: target instanceof ItemRoomDevice ? target.id : undefined,
-				position: {
-					x: event.pageX,
-					y: event.pageY,
-				},
-			});
-		}
-	}, []);
-
 	const onPointerDown = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
-		if (menuActive) {
-			setMenuActive(null);
+		if (contextMenuFocus != null) {
+			openContextMenu(null, null);
 			event.stopPropagation();
 			event.preventDefault();
 		}
 	});
-
-	const closeContextMenu = useCallback(() => {
-		setMenuActive(null);
-	}, []);
 
 	return (
 		<RoomGraphicsScene
@@ -547,32 +489,7 @@ export function RoomScene({ className }: {
 			globalState={ globalState }
 			info={ info.config }
 			debugConfig={ debugConfig }
-			roomSceneMode={ roomSceneMode }
-			setRoomSceneMode={ setRoomSceneMode }
 			onPointerDown={ onPointerDown }
-			menuOpen={ menuOpen }
-		>
-			{
-				menuActive?.character ? (
-					<CharacterContextMenu
-						character={ menuActive.character }
-						position={ menuActive.position }
-						setRoomSceneMode={ setRoomSceneMode }
-						onClose={ closeContextMenu }
-					/>
-				) : null
-			}
-			{
-				menuActive?.deviceItemId ? (
-					<DeviceContextMenu
-						deviceItemId={ menuActive.deviceItemId }
-						position={ menuActive.position }
-						roomSceneMode={ roomSceneMode }
-						setRoomSceneMode={ setRoomSceneMode }
-						onClose={ closeContextMenu }
-					/>
-				) : null
-			}
-		</RoomGraphicsScene>
+		/>
 	);
 }

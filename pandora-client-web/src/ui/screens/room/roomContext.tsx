@@ -1,12 +1,15 @@
 import type { Immutable } from 'immer';
-import { Assert, AssertNever, ICharacterRoomData, ItemId, ItemRoomDevice, type CharacterId } from 'pandora-common';
+import { Assert, AssertNever, AssertNotNullable, ICharacterRoomData, ItemId, ItemRoomDevice, type CharacterId } from 'pandora-common';
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Character } from '../../../character/character';
 import type { ChildrenProps } from '../../../common/reactTypes';
+import { usePlayer } from '../../../components/gameContext/playerContextProvider';
+import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext';
 import type { PointLike } from '../../../graphics/graphicsCharacter';
 import { CharacterContextMenu } from '../../../graphics/room/contextMenus/characterContextMenu';
 import { DeviceContextMenu } from '../../../graphics/room/contextMenus/deviceContextMenu';
 import { useIsRoomConstructionModeEnabled } from '../../../graphics/room/roomDevice';
+import { RoomScreenSceneModeCheckProvider } from './roomPermissionChecks';
 
 export type IRoomSceneMode = {
 	mode: 'normal';
@@ -44,6 +47,9 @@ export function useRoomScreenContext(): RoomScreenContext {
 }
 
 export function RoomScreenContextProvider({ children }: ChildrenProps): ReactNode {
+	const player = usePlayer();
+	AssertNotNullable(player);
+
 	const [contextMenuFocus, setContextMenuFocus] = useState<Readonly<IRoomContextMenuFocus> | null>(null);
 
 	const [roomSceneMode, setRoomSceneMode] = useState<Immutable<IRoomSceneMode>>({ mode: 'normal' });
@@ -89,8 +95,10 @@ export function RoomScreenContextProvider({ children }: ChildrenProps): ReactNod
 
 	return (
 		<roomScreenContext.Provider value={ context }>
-			{ children }
-			{
+			<WardrobeActionContextProvider player={ player }>
+				<RoomScreenSceneModeCheckProvider />
+				{ children }
+				{
 				contextMenuFocus?.type === 'character' ? (
 					<CharacterContextMenu
 						character={ contextMenuFocus.character }
@@ -98,8 +106,8 @@ export function RoomScreenContextProvider({ children }: ChildrenProps): ReactNod
 						onClose={ closeContextMenu }
 					/>
 				) : null
-			}
-			{
+				}
+				{
 				contextMenuFocus?.type === 'device' ? (
 					<DeviceContextMenu
 						deviceItemId={ contextMenuFocus.deviceItemId }
@@ -107,7 +115,8 @@ export function RoomScreenContextProvider({ children }: ChildrenProps): ReactNod
 						onClose={ closeContextMenu }
 					/>
 				) : null
-			}
+				}
+			</WardrobeActionContextProvider>
 		</roomScreenContext.Provider>
 	);
 }

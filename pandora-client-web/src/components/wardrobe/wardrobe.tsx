@@ -15,8 +15,9 @@ import { WardrobeExpressionGui } from './views/wardrobeExpressionsView';
 import { WardrobePoseGui } from './views/wardrobePoseView';
 import { WardrobeRandomizationGui } from './views/wardrobeRandomizationView';
 import './wardrobe.scss';
+import { useWardrobeActionContext, WardrobeActionContextProvider } from './wardrobeActionContext';
 import { WardrobeBodyManipulation } from './wardrobeBody';
-import { WARDROBE_TARGET_ROOM, WardrobeContextProvider, useWardrobeContext } from './wardrobeContext';
+import { useWardrobeContext, WARDROBE_TARGET_ROOM, WardrobeContextProvider } from './wardrobeContext';
 import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphics';
 import { WardrobeItemPreferences } from './wardrobeItemPreferences';
 import { WardrobeItemManipulation } from './wardrobeItems';
@@ -38,9 +39,11 @@ function WardrobeRouterPlayer(): ReactElement {
 	AssertNotNullable(player);
 
 	return (
-		<WardrobeContextProvider target={ player } player={ player }>
-			<WardrobeCharacter character={ player } />
-		</WardrobeContextProvider>
+		<WardrobeActionContextProvider player={ player }>
+			<WardrobeContextProvider target={ player }>
+				<WardrobeCharacter character={ player } />
+			</WardrobeContextProvider>
+		</WardrobeActionContextProvider>
 	);
 }
 
@@ -62,9 +65,11 @@ function WardrobeRouterCharacter(): ReactElement {
 		return <Link to='/'>◄ Back</Link>;
 
 	return (
-		<WardrobeContextProvider target={ character } player={ player }>
-			<WardrobeCharacter character={ character } />
-		</WardrobeContextProvider>
+		<WardrobeActionContextProvider player={ player }>
+			<WardrobeContextProvider target={ character }>
+				<WardrobeCharacter character={ character } />
+			</WardrobeContextProvider>
+		</WardrobeActionContextProvider>
 	);
 }
 
@@ -73,9 +78,11 @@ function WardrobeRouterRoomInventory(): ReactElement {
 	AssertNotNullable(player);
 
 	return (
-		<WardrobeContextProvider target={ WARDROBE_TARGET_ROOM } player={ player }>
-			<WardrobeRoom />
-		</WardrobeContextProvider>
+		<WardrobeActionContextProvider player={ player }>
+			<WardrobeContextProvider target={ WARDROBE_TARGET_ROOM }>
+				<WardrobeRoom />
+			</WardrobeContextProvider>
+		</WardrobeActionContextProvider>
 	);
 }
 
@@ -84,7 +91,8 @@ function WardrobeRoom(): ReactElement {
 	const gameState = useGameState();
 	const characters = useSpaceCharacters();
 	const roomInfo = useObservable(gameState.currentSpace).config;
-	const { globalState, actionPreviewState } = useWardrobeContext();
+	const { globalState } = useWardrobeActionContext();
+	const { actionPreviewState } = useWardrobeContext();
 	const globalPreviewState = useObservable(actionPreviewState);
 
 	return (
@@ -117,7 +125,8 @@ function WardrobeCharacter({ character }: {
 	character: IChatroomCharacter;
 }): ReactElement {
 	const navigate = useNavigate();
-	const { globalState, actionPreviewState } = useWardrobeContext();
+	const { globalState } = useWardrobeActionContext();
+	const { actionPreviewState } = useWardrobeContext();
 	const characterState = globalState.characters.get(character.id);
 	const characterPreviewState = useObservable(actionPreviewState)?.characters.get(character.id);
 

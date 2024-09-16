@@ -39,10 +39,11 @@ import { useConfirmDialog } from '../../dialog/dialog';
 import { ImportDialog } from '../../exportImport/importDialog';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import { usePlayerState } from '../../gameContext/playerContextProvider';
+import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName';
+import { useWardrobeActionContext } from '../wardrobeActionContext';
 import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { OutfitEditView } from './wardrobeOutfitEditView';
-import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName';
 
 export function InventoryOutfitView({ targetContainer }: {
 	targetContainer: ItemContainerPath;
@@ -312,7 +313,8 @@ function OutfitPreview({ outfit }: {
 	outfit: AssetFrameworkOutfit;
 }): ReactElement {
 	const assetManager = useAssetManager();
-	const { target, globalState, showHoverPreview, actionPreviewState } = useWardrobeContext();
+	const { globalState } = useWardrobeActionContext();
+	const { target, showHoverPreview, actionPreviewState } = useWardrobeContext();
 	const { player, playerState } = usePlayerState();
 
 	const [isHovering, setIsHovering] = useState(false);

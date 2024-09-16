@@ -26,8 +26,9 @@ import { useAccountSettings } from '../../services/accountLogic/accountManagerHo
 import { Button, ButtonProps, IconButton } from '../common/button/button';
 import { Column } from '../common/container/container';
 import { HoverElement } from '../hoverElement/hoverElement';
+import { useWardrobeExecuteChecked } from './wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
-import { useWardrobeContext, useWardrobeExecuteChecked } from './wardrobeContext';
+import { useWardrobeContext } from './wardrobeContext';
 
 export function ActionWarningContent({ problems, prompt }: { problems: readonly AppearanceActionProblem[]; prompt: boolean; }): ReactElement {
 	const { wardrobeItemDisplayNameType } = useAccountSettings();

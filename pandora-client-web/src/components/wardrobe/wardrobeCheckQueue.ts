@@ -7,7 +7,7 @@ import {
 import { useCallback, useRef, useState } from 'react';
 import { CalculationQueue, useCalculateInQueue } from '../../common/calculationQueue';
 import { useCheckAddPermissions } from '../gameContext/permissionCheckProvider';
-import { useWardrobeContext } from './wardrobeContext';
+import { useWardrobeActionContext } from './wardrobeActionContext';
 
 const calculationQueue = new CalculationQueue({
 	immediate: 0,
@@ -16,7 +16,7 @@ const calculationQueue = new CalculationQueue({
 });
 
 export function useStaggeredAppearanceActionResult(action: AppearanceAction | null, { lowPriority = false, immediate = false }: { lowPriority?: boolean; immediate?: boolean; } = {}): AppearanceActionProcessingResult | null {
-	const { actions, globalState } = useWardrobeContext();
+	const { actions, globalState } = useWardrobeActionContext();
 	const [result, setResult] = useState<AppearanceActionProcessingResult | null>(null);
 
 	const resultAction = useRef<AppearanceAction | null>(null);

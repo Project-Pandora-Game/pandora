@@ -29,6 +29,7 @@ import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
 import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobeItemName';
+import { useWardrobeActionContext } from '../wardrobeActionContext';
 import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeHeldItem } from '../wardrobeTypes';
@@ -43,7 +44,8 @@ export function InventoryItemView({
 	title: string;
 	filter?: (item: Item) => boolean;
 }): ReactElement | null {
-	const { target, targetSelector, heldItem, focuser, itemDisplayNameType, actions, globalState } = useWardrobeContext();
+	const { actions, globalState } = useWardrobeActionContext();
+	const { target, targetSelector, heldItem, focuser, itemDisplayNameType } = useWardrobeContext();
 	const focus = useObservable(focuser.current);
 	const appearance = useWardrobeTargetItems(target);
 	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(appearance), [appearance]);
@@ -190,7 +192,8 @@ export function InventoryItemViewDropArea({ target, container, insertBefore }: {
 	container: ItemContainerPath;
 	insertBefore?: ItemId;
 }): ReactElement | null {
-	const { heldItem, setHeldItem, globalState } = useWardrobeContext();
+	const { globalState } = useWardrobeActionContext();
+	const { heldItem, setHeldItem } = useWardrobeContext();
 
 	// Check if we are not trying to do NOOP
 	const identicalContainer = heldItem.type === 'item' &&

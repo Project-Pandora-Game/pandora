@@ -23,9 +23,10 @@ import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
 import { IconButton } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
+import { useWardrobeActionContext, useWardrobeExecuteChecked } from '../wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { ActionWarning, AttributeButton, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
-import { useWardrobeContext, useWardrobeExecuteChecked } from '../wardrobeContext';
+import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
 
 export function InventoryAssetView({ className, title, children, assets, container, attributesFilterOptions, spawnStyle }: {
@@ -367,7 +368,7 @@ export function useAssetPreferences(): Immutable<AssetPreferencesPublic> {
 }
 
 export function useAssetPreferenceResolver(): (asset: Asset) => AssetPreferenceType {
-	const { player } = useWardrobeContext();
+	const { player } = useWardrobeActionContext();
 	const preferences = useAssetPreferences();
 
 	return React.useCallback((asset) => {

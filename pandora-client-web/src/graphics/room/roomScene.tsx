@@ -22,8 +22,10 @@ import { Character, useCharacterData } from '../../character/character';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { useCharacterRestrictionsManager, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../components/gameContext/gameStateContextProvider';
+import { permissionCheckContext } from '../../components/gameContext/permissionCheckProvider';
 import { usePlayer, usePlayerState } from '../../components/gameContext/playerContextProvider';
 import { useShardConnector } from '../../components/gameContext/shardConnectorContextProvider';
+import { wardrobeActionContext } from '../../components/wardrobe/wardrobeActionContext';
 import { ShardConnector } from '../../networking/shardConnector';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
 import { serviceManagerContext } from '../../services/serviceProvider';
@@ -165,7 +167,7 @@ export function RoomGraphicsScene({
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
 		viewportRef,
-		forwardContexts: [serviceManagerContext, roomScreenContext],
+		forwardContexts: [serviceManagerContext, roomScreenContext, wardrobeActionContext, permissionCheckContext],
 		worldWidth: roomBackgroundWidth,
 		worldHeight: roomBackgroundHeight,
 		backgroundColor: 0x000000,

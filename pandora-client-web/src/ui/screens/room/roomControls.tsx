@@ -1,6 +1,7 @@
 import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
 import React, {
-	ReactElement, useCallback, useEffect, useMemo,
+	ReactElement, useCallback,
+	useMemo,
 	type ReactNode,
 } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -9,7 +10,7 @@ import settingIcon from '../../../assets/icons/setting.svg';
 import shieldIcon from '../../../assets/icons/shield.svg';
 import storageIcon from '../../../assets/icons/storage.svg';
 import toolsIcon from '../../../assets/icons/tools.svg';
-import { Character, useCharacterData, useCharacterDataMultiple, useCharacterRestrictionManager } from '../../../character/character';
+import { Character, useCharacterData, useCharacterDataMultiple } from '../../../character/character';
 import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select';
 import { useFriendStatus } from '../../../components/accountContacts/accountContactContext';
@@ -17,13 +18,12 @@ import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText,
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
 import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
-import { usePlayer, usePlayerId, usePlayerState } from '../../../components/gameContext/playerContextProvider';
+import { usePlayer, usePlayerId } from '../../../components/gameContext/playerContextProvider';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { USER_DEBUG } from '../../../config/Environment';
 import { SettingDisplayCharacterName } from '../../../graphics/room/roomCharacter';
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState } from '../../../graphics/room/roomDevice';
 import { useObservable } from '../../../observable';
-import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { useChatInput } from '../../components/chat/chatInput';
 import { useRoomScreenContext } from './roomContext';
 import { ChatroomDebugConfigView } from './roomDebug';
@@ -187,42 +187,6 @@ function SpaceVisibilityWarning(): ReactElement | null {
 	}
 
 	return null;
-}
-
-export function useRoomConstructionModeCheck() {
-	const value = useObservable(DeviceOverlayState);
-	const currentAccount = useCurrentAccount();
-	const spaceInfo = useSpaceInfo();
-	const isPlayerAdmin = IsSpaceAdmin(spaceInfo.config, currentAccount);
-	const { player, playerState } = usePlayerState();
-	const spaceContext = useActionSpaceContext();
-	const canUseHands = useCharacterRestrictionManager(player, playerState, spaceContext).canUseHands();
-
-	useEffect(() => {
-		let nextValue = DeviceOverlayState.value;
-		if (value.spaceId !== spaceInfo.id) {
-			nextValue = {
-				...nextValue,
-				roomConstructionMode: false,
-				spaceId: spaceInfo.id,
-			};
-		}
-		if (isPlayerAdmin !== value.isPlayerAdmin) {
-			nextValue = {
-				...nextValue,
-				roomConstructionMode: nextValue.roomConstructionMode && isPlayerAdmin,
-				isPlayerAdmin,
-			};
-		}
-		if (canUseHands !== value.canUseHands) {
-			nextValue = {
-				...nextValue,
-				roomConstructionMode: nextValue.roomConstructionMode && canUseHands,
-				canUseHands,
-			};
-		}
-		DeviceOverlayState.value = nextValue;
-	}, [value, spaceInfo.id, isPlayerAdmin, canUseHands]);
 }
 
 function DeviceOverlaySelector(): ReactElement {

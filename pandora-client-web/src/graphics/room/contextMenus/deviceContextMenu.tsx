@@ -14,9 +14,9 @@ import { useContextMenuPosition } from '../../../components/contextMenu';
 import { DialogInPortal } from '../../../components/dialog/dialog';
 import { useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider';
+import { useWardrobeActionContext, useWardrobeExecuteChecked, WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue';
 import { ActionWarningContent } from '../../../components/wardrobe/wardrobeComponents';
-import { useWardrobeContext, useWardrobeExecuteChecked, WARDROBE_TARGET_ROOM, WardrobeContextProvider } from '../../../components/wardrobe/wardrobeContext';
 import type { WardrobeDeviceLocationStateSchema } from '../../../components/wardrobe/wardrobeItems';
 import { PointLike } from '../../../graphics/graphicsCharacter';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
@@ -126,7 +126,7 @@ function LeaveDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;
 	close: () => void;
 }) {
-	const { player } = useWardrobeContext();
+	const { player } = useWardrobeActionContext();
 	const slot = useMemo(() => [...device.slotOccupancy.entries()].find(([, id]) => id === player.id)?.[0], [device, player]);
 	if (!slot)
 		return null;
@@ -307,7 +307,7 @@ function DeviceContextMenuCurrent({ device, position, onClose }: {
 			<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
 				<Scrollable color='lighter'>
 					<Column>
-						<WardrobeContextProvider target={ WARDROBE_TARGET_ROOM } player={ player }>
+						<WardrobeActionContextProvider player={ player }>
 							<button onClick={ () => {
 								onCloseActual();
 								navigate('/wardrobe/room-inventory', { state: { deviceId: device.id } satisfies z.infer<typeof WardrobeDeviceLocationStateSchema> });
@@ -321,7 +321,7 @@ function DeviceContextMenuCurrent({ device, position, onClose }: {
 									close={ onCloseActual }
 								/>
 							) }
-						</WardrobeContextProvider>
+						</WardrobeActionContextProvider>
 						<button onClick={ onClose } >
 							Close
 						</button>

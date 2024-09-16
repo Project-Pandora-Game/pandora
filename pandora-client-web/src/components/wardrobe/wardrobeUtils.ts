@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import type { Immutable } from 'immer';
 import {
 	ActionSpaceContext,
@@ -13,8 +12,9 @@ import {
 	ItemPath,
 } from 'pandora-common';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import { useMemo } from 'react';
 import { ICharacter } from '../../character/character';
-import { useWardrobeContext } from './wardrobeContext';
+import { useWardrobeActionContext } from './wardrobeActionContext';
 import { WardrobeFocus, WardrobeTarget } from './wardrobeTypes';
 
 export function WardrobeFocusesItem(focus: Immutable<WardrobeFocus>): focus is ItemPath {
@@ -22,7 +22,7 @@ export function WardrobeFocusesItem(focus: Immutable<WardrobeFocus>): focus is I
 }
 
 export function useWardrobeTargetItems(target: WardrobeTarget | null): AppearanceItems {
-	const { globalState } = useWardrobeContext();
+	const { globalState } = useWardrobeActionContext();
 
 	const items = useMemo<AppearanceItems | null>(() => {
 		if (target == null) {

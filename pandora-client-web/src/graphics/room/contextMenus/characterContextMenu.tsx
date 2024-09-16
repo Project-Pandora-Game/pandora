@@ -1,8 +1,18 @@
+import classNames from 'classnames';
 import { Immutable } from 'immer';
 import { AssertNever, AssertNotNullable, ICharacterRoomData, IDirectoryAccountInfo, SpaceClientInfo } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
+import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
+import bodyIcon from '../../../assets/icons/body.svg';
+import forbiddenIcon from '../../../assets/icons/forbidden.svg';
+import friendsIcon from '../../../assets/icons/friends.svg';
+import letterIcon from '../../../assets/icons/letter.svg';
+import lipsIcon from '../../../assets/icons/lips.svg';
+import profileIcon from '../../../assets/icons/profile.svg';
+import shieldIcon from '../../../assets/icons/shield.svg';
+import shirtIcon from '../../../assets/icons/shirt.svg';
 import { Character, useCharacterData } from '../../../character/character';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { AccountContactChangeHandleResult, useAccountContact } from '../../../components/accountContacts/accountContactContext';
@@ -13,22 +23,14 @@ import { useContextMenuPosition } from '../../../components/contextMenu';
 import { DialogInPortal, useConfirmDialog } from '../../../components/dialog/dialog';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { IsSpaceAdmin, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
-import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
+import { usePlayer } from '../../../components/gameContext/playerContextProvider';
+import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext';
 import { PointLike } from '../../../graphics/graphicsCharacter';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { useChatInput } from '../../../ui/components/chat/chatInput';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext';
-
-import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
-import bodyIcon from '../../../assets/icons/body.svg';
-import forbiddenIcon from '../../../assets/icons/forbidden.svg';
-import friendsIcon from '../../../assets/icons/friends.svg';
-import letterIcon from '../../../assets/icons/letter.svg';
-import lipsIcon from '../../../assets/icons/lips.svg';
-import profileIcon from '../../../assets/icons/profile.svg';
-import shieldIcon from '../../../assets/icons/shield.svg';
-import shirtIcon from '../../../assets/icons/shirt.svg';
+import { useCanMoveCharacter, useCanPoseCharacter } from '../../../ui/screens/room/roomPermissionChecks';
 
 type MenuType = 'main' | 'admin' | 'contacts';
 
@@ -322,23 +324,87 @@ export function CharacterContextMenu({ character, position, onClose }: {
 	);
 }
 
+function MoveCharacterMenuItem(): ReactElement | null {
+	const {
+		character,
+		close,
+	} = useCharacterMenuContext();
+	const {
+		setRoomSceneMode,
+	} = useRoomScreenContext();
+
+	const canMoveCharacter = useCanMoveCharacter(character);
+
+	return (
+		<button
+			className={ classNames(
+				'withIcon',
+				canMoveCharacter ? null : 'text-strikethrough',
+			) }
+			onClick={ () => {
+				if (!canMoveCharacter) {
+					toast('You cannot move this character.', TOAST_OPTIONS_WARNING);
+					return;
+				}
+				setRoomSceneMode({ mode: 'moveCharacter', characterId: character.id });
+				close();
+			} }
+		>
+			<img className='invert' src={ arrowAllIcon } />
+			<span>Move</span>
+		</button>
+	);
+}
+
+function PoseCharacterMenuItem(): ReactElement | null {
+	const {
+		character,
+		close,
+	} = useCharacterMenuContext();
+	const {
+		setRoomSceneMode,
+	} = useRoomScreenContext();
+
+	const canPoseCharacter = useCanPoseCharacter(character);
+
+	return (
+		<button
+			className={ classNames(
+				'withIcon',
+				(canPoseCharacter === 'forbidden') ? 'text-strikethrough' : null,
+			) }
+			onClick={ () => {
+				if (canPoseCharacter === 'forbidden') {
+					toast('You cannot pose this character.', TOAST_OPTIONS_WARNING);
+					return;
+				}
+				if (canPoseCharacter === 'prompt') {
+					toast(`Attempting to change this character's pose will ask them for permission.`, TOAST_OPTIONS_WARNING);
+				}
+				setRoomSceneMode({ mode: 'poseCharacter', characterId: character.id });
+				close();
+			} }
+		>
+			<img className='invert' src={ bodyIcon } />
+			<span>Pose</span>
+		</button>
+	);
+}
+
 export function CharacterContextMenuContent({ character, onClose }: {
 	character: Character<ICharacterRoomData>;
 	onClose: () => void;
 }): ReactElement | null {
 	const navigate = useNavigate();
 	const { setTarget } = useChatInput();
-	const playerId = usePlayerId();
+	const player = usePlayer();
+	AssertNotNullable(player);
 	const currentAccount = useCurrentAccount();
 	const [menu, setMenu] = useState<MenuType>('main');
 
 	const characterData = useCharacterData(character);
 	const spaceInfo = useSpaceInfo().config;
 	const isPlayerAdmin = IsSpaceAdmin(spaceInfo, currentAccount);
-
-	const {
-		setRoomSceneMode,
-	} = useRoomScreenContext();
 
 	useEffect(() => {
 		if (!isPlayerAdmin && menu === 'admin') {
@@ -370,57 +436,47 @@ export function CharacterContextMenuContent({ character, onClose }: {
 
 	return (
 		<characterMenuContext.Provider value={ context }>
-			<span>
-				{ characterData.name } ({ characterData.id })
-			</span>
-			<hr />
-			{ menu === 'main' && (
-				<>
-					<button className='withIcon' onClick={ () => {
-						onCloseActual();
-						navigate(`/wardrobe/character/${characterData.id}`);
-					} }>
-						<img className='invert' src={ shirtIcon } />
-						<span>Wardrobe</span>
-					</button>
-					<button className='withIcon' onClick={ () => {
-						onCloseActual();
-						navigate(`/profiles/character/${characterData.id}`);
-					} }>
-						<img className='invert' src={ profileIcon } />
-						<span>Profile</span>
-					</button>
-					<button className='withIcon' onClick={ () => {
-						setRoomSceneMode({ mode: 'moveCharacter', characterId: characterData.id });
-						context.close();
-					} }>
-						<img className='invert' src={ arrowAllIcon } />
-						<span>Move</span>
-					</button>
-					<button className='withIcon' onClick={ () => {
-						setRoomSceneMode({ mode: 'poseCharacter', characterId: characterData.id });
-						context.close();
-					} }>
-						<img className='invert' src={ bodyIcon } />
-						<span>Pose</span>
-					</button>
-					{ characterData.id !== playerId && (
+			<WardrobeActionContextProvider player={ player }>
+				<span>
+					{ characterData.name } ({ characterData.id })
+				</span>
+				<hr />
+				{ menu === 'main' && (
+					<>
 						<button className='withIcon' onClick={ () => {
-							onClose();
-							setTarget(characterData.id);
+							onCloseActual();
+							navigate(`/wardrobe/character/${characterData.id}`);
 						} }>
-							<img className='invert' src={ lipsIcon } />
-							<span>Whisper</span>
+							<img className='invert' src={ shirtIcon } />
+							<span>Wardrobe</span>
 						</button>
-					) }
-					<NavigateToDMMenu />
-				</>
-			) }
-			<AdminActionContextMenu />
-			<AccountContactActionContextMenu />
-			<button onClick={ onCloseActual } >
-				Close
-			</button>
+						<button className='withIcon' onClick={ () => {
+							onCloseActual();
+							navigate(`/profiles/character/${characterData.id}`);
+						} }>
+							<img className='invert' src={ profileIcon } />
+							<span>Profile</span>
+						</button>
+						<MoveCharacterMenuItem />
+						<PoseCharacterMenuItem />
+						{ characterData.id !== player.id && (
+							<button className='withIcon' onClick={ () => {
+								onClose();
+								setTarget(characterData.id);
+							} }>
+								<img className='invert' src={ lipsIcon } />
+								<span>Whisper</span>
+							</button>
+						) }
+						<NavigateToDMMenu />
+					</>
+				) }
+				<AdminActionContextMenu />
+				<AccountContactActionContextMenu />
+				<button onClick={ onCloseActual } >
+					Close
+				</button>
+			</WardrobeActionContextProvider>
 		</characterMenuContext.Provider>
 	);
 }

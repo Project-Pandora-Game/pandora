@@ -14,11 +14,12 @@ import deleteIcon from '../../../assets/icons/delete.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
 import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
+import { WardrobeItemName } from '../itemDetail/wardrobeItemName';
+import { useWardrobeActionContext } from '../wardrobeActionContext';
 import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeContextExtraItemActionComponent, WardrobeHeldItem } from '../wardrobeTypes';
 import { InventoryItemViewDropArea } from './wardrobeItemView';
-import { WardrobeItemName } from '../itemDetail/wardrobeItemName';
 
 export function SecondaryInventoryView({ title, secondaryTarget, secondaryTargetContainer = EMPTY_ARRAY, quickActionTarget, quickActionTargetContainer }: {
 	title: string;
@@ -27,7 +28,8 @@ export function SecondaryInventoryView({ title, secondaryTarget, secondaryTarget
 	quickActionTarget: ActionTargetSelector;
 	quickActionTargetContainer: ItemContainerPath;
 }): ReactElement | null {
-	const { globalState, extraItemActions, showExtraActionButtons, heldItem } = useWardrobeContext();
+	const { globalState } = useWardrobeActionContext();
+	const { extraItemActions, showExtraActionButtons, heldItem } = useWardrobeContext();
 	const navigate = useNavigate();
 
 	const extraItemAction = useCallback<WardrobeContextExtraItemActionComponent>(({ target, item }) => {
@@ -124,7 +126,8 @@ function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickA
 	quickActionTarget: ActionTargetSelector;
 	quickActionTargetContainer: ItemContainerPath;
 }): ReactElement {
-	const { globalState, heldItem, setHeldItem, showExtraActionButtons } = useWardrobeContext();
+	const { globalState } = useWardrobeActionContext();
+	const { heldItem, setHeldItem, showExtraActionButtons } = useWardrobeContext();
 
 	const item = EvalItemPath(globalState.getItems(target) ?? EMPTY_ARRAY, itemPath);
 	const ribbonColor = useItemColorRibbon([], item ?? null);

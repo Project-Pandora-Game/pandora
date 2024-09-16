@@ -2,12 +2,15 @@ import { throttle } from 'lodash';
 import { Assert, CharacterSize, type AssetFrameworkCharacterState, type BoneDefinition, type PartialAppearancePose } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
+import { toast } from 'react-toastify';
 import { useAssetManager } from '../../assets/assetManager';
 import { useCharacterData } from '../../character/character';
 import { useEvent } from '../../common/useEvent';
 import { usePlayer } from '../../components/gameContext/playerContextProvider';
-import { useWardrobeExecuteCallback, WardrobeContextProvider } from '../../components/wardrobe/wardrobeContext';
+import { useWardrobeExecuteCallback, WardrobeActionContextProvider } from '../../components/wardrobe/wardrobeActionContext';
+import { TOAST_OPTIONS_WARNING } from '../../persistentToast';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext';
+import { useCanMoveCharacter, useCanPoseCharacter } from '../../ui/screens/room/roomPermissionChecks';
 import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
 import { Container } from '../baseComponents/container';
 import { Graphics } from '../baseComponents/graphics';
@@ -149,6 +152,8 @@ function RoomCharacterMovementToolImpl({
 		}
 	}, [onDragMove, onDragStart]);
 
+	const canPoseCharacter = useCanPoseCharacter(character);
+
 	return (
 		<Container
 			ref={ movementHelpersContainer }
@@ -162,13 +167,20 @@ function RoomCharacterMovementToolImpl({
 				pivot={ pivot }
 				angle={ rotationAngle }
 			>
-				<SwitchModePosingButton
-					position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 } }
-					radius={ 40 }
-					onClick={ () => {
-						setRoomSceneMode({ mode: 'poseCharacter', characterId: id });
-					} }
-				/>
+				{
+					canPoseCharacter !== 'forbidden' ? (
+						<SwitchModePosingButton
+							position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 } }
+							radius={ 40 }
+							onClick={ () => {
+								if (canPoseCharacter === 'prompt') {
+									toast(`Attempting to change this character's pose will ask them for permission.`, TOAST_OPTIONS_WARNING);
+								}
+								setRoomSceneMode({ mode: 'poseCharacter', characterId: id });
+							} }
+						/>
+					) : null
+				}
 			</Container>
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
@@ -212,14 +224,14 @@ export function RoomCharacterPosingTool({
 		return null;
 
 	return (
-		<WardrobeContextProvider player={ player } target={ character }>
+		<WardrobeActionContextProvider player={ player }>
 			<RoomCharacterPosingToolImpl
 				{ ...props }
 				globalState={ globalState }
 				character={ character }
 				characterState={ characterState }
 			/>
-		</WardrobeContextProvider>
+		</WardrobeActionContextProvider>
 	);
 }
 
@@ -266,6 +278,8 @@ function RoomCharacterPosingToolImpl({
 	const characterRotationBone = bones.find((bone) => bone.name === 'character_rotation');
 	Assert(characterRotationBone != null, 'Character rotation bone not found');
 
+	const canMoveCharacter = useCanMoveCharacter(character);
+
 	return (
 		<Container
 			position={ position }
@@ -296,13 +310,17 @@ function RoomCharacterPosingToolImpl({
 							/>
 						))
 				}
-				<SwitchModeMovementButton
-					position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 } }
-					radius={ 40 }
-					onClick={ () => {
-						setRoomSceneMode({ mode: 'moveCharacter', characterId: id });
-					} }
-				/>
+				{
+					canMoveCharacter ? (
+						<SwitchModeMovementButton
+							position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 } }
+							radius={ 40 }
+							onClick={ () => {
+								setRoomSceneMode({ mode: 'moveCharacter', characterId: id });
+							} }
+						/>
+					) : null
+				}
 				<ExitPosingUiButton
 					position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT } }
 					radius={ 40 }

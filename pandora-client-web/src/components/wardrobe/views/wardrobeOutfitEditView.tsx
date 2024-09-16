@@ -13,6 +13,7 @@ import { useConfirmDialog } from '../../dialog/dialog';
 import { ExportDialog } from '../../exportImport/exportDialog';
 import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName';
 import { WardrobeTemplateEditMenu } from '../templateDetail/_wardrobeTemplateDetail';
+import { useWardrobeActionContext } from '../wardrobeActionContext';
 import { InventoryAssetPreview } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
@@ -29,7 +30,8 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 	isTemporary?: boolean;
 }): ReactElement | null {
 	const confirm = useConfirmDialog();
-	const { heldItem, extraItemActions, globalState, targetSelector } = useWardrobeContext();
+	const { globalState } = useWardrobeActionContext();
+	const { heldItem, extraItemActions, targetSelector } = useWardrobeContext();
 	const [editName, setEditName] = useState(outfit.name);
 
 	const [editedItemIndex, setEditedItemIndex] = useState<number | null>(null);
@@ -276,7 +278,8 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 function OutfitEditItemDropArea({ insertTemplate }: {
 	insertTemplate: (newTemplate: ItemTemplate) => void;
 }): ReactElement | null {
-	const { heldItem, setHeldItem, globalState } = useWardrobeContext();
+	const { globalState } = useWardrobeActionContext();
+	const { heldItem, setHeldItem } = useWardrobeContext();
 
 	const action = useMemo((): (() => void) | null => {
 		if (heldItem.type === 'nothing')

@@ -178,10 +178,11 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 	);
 }
 
-function DeviceSlotMenu({ slot, device, position, closeSlot }: {
+function DeviceSlotMenu({ slot, device, position, close, closeSlot }: {
 	slot: string;
 	device: ItemRoomDevice;
 	position: Readonly<PointLike>;
+	close: () => void;
 	closeSlot: () => void;
 }) {
 	const occupancy = useMemo(() => device.slotOccupancy.get(slot), [device, slot]);
@@ -277,6 +278,7 @@ function DeviceMainMenu({ device, position, close }: {
 			slot={ slot }
 			device={ device }
 			position={ position }
+			close={ close }
 			closeSlot={ () => setSlot(null) }
 		/>
 	);

@@ -133,6 +133,13 @@
 		"react/no-unsafe": ["error", { "checkAliases": true }],
 		"react/no-unstable-nested-components": "error",
 		"react/jsx-no-script-url": "error",
+		"no-restricted-globals": [
+			"error",
+			{
+				"name": "close",
+				"message": "Calling global `close` closes the tab. If you really want to do this, then use `window.close`."
+			}
+		],
 		// Warnings
 		"no-alert": "warn",
 		"react/default-props-match-prop-types": "warn",

@@ -1,11 +1,11 @@
+import _ from 'lodash';
 import {
 	AssetFrameworkCharacterState,
 	BoneName,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo } from 'react';
 import { ICharacter } from '../../../character/character';
-import _ from 'lodash';
-import { useWardrobeExecuteCallback } from '../wardrobeContext';
+import { useWardrobeExecuteCallback } from '../wardrobeActionContext';
 import { BoneRowElement } from './wardrobePoseView';
 
 export function WardrobeBodySizeEditor({ character, characterState }: {

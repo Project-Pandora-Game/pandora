@@ -29,6 +29,7 @@ import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import { useCharacterRestrictionsManager, useSpaceCharacters } from '../../components/gameContext/gameStateContextProvider';
 import { ShardConnector } from '../../networking/shardConnector';
 import { useObservable } from '../../observable';
+import { useRoomScreenContext } from '../../ui/screens/room/roomContext';
 import { useDebugConfig } from '../../ui/screens/room/roomDebug';
 import { useAppearanceConditionEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator';
 import { Container } from '../baseComponents/container';
@@ -41,7 +42,7 @@ import { useTexture } from '../useTexture';
 import { EvaluateCondition } from '../utility';
 import { useRoomCharacterOffsets } from './roomCharacter';
 import { RoomDeviceRenderContext } from './roomDeviceContext';
-import { IRoomSceneMode, RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
+import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms
@@ -51,11 +52,7 @@ type RoomDeviceInteractiveProps = {
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
 	projectionResolver: Immutable<RoomProjectionResolver>;
-	roomSceneMode: Immutable<IRoomSceneMode>;
-	setRoomSceneMode: (newMode: Immutable<IRoomSceneMode>) => void;
 	shard: ShardConnector | null;
-	menuOpen: (character: ItemRoomDevice, data: FederatedPointerEvent) => void;
-
 };
 
 type RoomDeviceProps = {
@@ -97,10 +94,13 @@ export function RoomDeviceMovementTool({
 	item,
 	deployment,
 	projectionResolver,
-	setRoomSceneMode,
 	shard,
 }: RoomDeviceInteractiveProps): ReactElement | null {
 	const asset = item.asset;
+
+	const {
+		setRoomSceneMode,
+	} = useRoomScreenContext();
 
 	const [setPositionRaw] = useAsyncEvent(async (newX: number, newY: number, newYOffset: number) => {
 		if (!shard) {
@@ -267,10 +267,13 @@ export function RoomDeviceInteractive({
 	item,
 	deployment,
 	projectionResolver,
-	roomSceneMode,
-	menuOpen,
 }: RoomDeviceInteractiveProps): ReactElement | null {
 	const asset = item.asset;
+
+	const {
+		roomSceneMode,
+		openContextMenu,
+	} = useRoomScreenContext();
 
 	const isBeingMoved = roomSceneMode.mode === 'moveDevice' && roomSceneMode.deviceItemId === item.id;
 
@@ -295,7 +298,10 @@ export function RoomDeviceInteractive({
 
 	const onPointerUp = useEvent((event: PIXI.FederatedPointerEvent) => {
 		if (pointerDown.current !== null) {
-			menuOpen(item, event);
+			openContextMenu(item, {
+				x: event.pageX,
+				y: event.pageY,
+			});
 		}
 		pointerDown.current = null;
 	});
@@ -312,13 +318,12 @@ export function RoomDeviceInteractive({
 		(showOverlaySetting === 'interactable' && canInteractNormally)
 	);
 
-	const deviceMenuHelperDraw = useCallback((g: PIXI.Graphics) => {
+	const deviceMenuHelperDraw = useCallback((g: PIXI.GraphicsContext) => {
 		if (!showMenuHelper) {
-			g.clear();
 			return;
 		}
 
-		g.clear()
+		g
 			.circle(0, 0, hitAreaRadius)
 			.fill({ color: roomConstructionMode ? 0xff0000 : 0x000075, alpha: roomConstructionMode ? 0.7 : 0.2 })
 			.poly([
@@ -411,7 +416,7 @@ export function RoomDevice({
 						>
 							<Graphics
 								draw={ (g) => {
-									g.clear()
+									g
 										// Vertical guide line
 										.moveTo(pivot.x, pivot.y - Math.max(100, pivot.y))
 										.lineTo(pivot.x, pivot.y + 100)
@@ -660,7 +665,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 					>
 						<Graphics
 							draw={ (g) => {
-								g.clear()
+								g
 									// Mask area
 									.rect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
 									.stroke({ color: 0xffff00, width: 2 })

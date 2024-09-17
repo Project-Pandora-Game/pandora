@@ -1,4 +1,4 @@
-import { Graphics as PixiGraphics } from 'pixi.js';
+import { Graphics as PixiGraphics, GraphicsContext as PixiGraphicsContext } from 'pixi.js';
 import { RegisterPixiComponent, type DisplayObjectEventNames, type PixiComponentProps, type PixiDisplayObjectWriteableProps } from '../reconciler/component';
 import { CONTAINER_AUTO_PROPS, CONTAINER_EVENTS, type ContainerEventMap } from './container';
 
@@ -17,7 +17,7 @@ export type GraphicsCustomProps = {
 	 * A callback that is called whenever it changes.
 	 * Use it together with `useCallback` to generate contents of the Graphics instance.
 	 */
-	draw?: (graphics: PixiGraphics) => void;
+	draw?: (context: PixiGraphicsContext) => void;
 };
 
 export type GraphicsProps = PixiComponentProps<PixiGraphics, GraphicsAutoProps, ContainerEventMap, GraphicsCustomProps>;
@@ -35,8 +35,14 @@ export type GraphicsProps = PixiComponentProps<PixiGraphics, GraphicsAutoProps, 
  */
 export const Graphics = RegisterPixiComponent<PixiGraphics, GraphicsAutoProps, ContainerEventMap, GraphicsCustomProps>('Graphics', {
 	create(props) {
-		const instance = new PixiGraphics();
-		props.draw?.(instance);
+		const context = new PixiGraphicsContext()
+			.clear().moveTo(0, 0);
+		// We force the context to be non-batchable as PIXI might bug out
+		// under unknown, random circumstances otherwise
+		// (at least I hope this fixed that, as it is really inconsistent)
+		context.batchMode = 'no-batch';
+		props.draw?.(context);
+		const instance = new PixiGraphics({ context });
 		return instance;
 	},
 	applyCustomProps(instance, {
@@ -45,7 +51,12 @@ export const Graphics = RegisterPixiComponent<PixiGraphics, GraphicsAutoProps, C
 		draw,
 	}) {
 		if (oldDraw !== draw) {
-			draw?.(instance);
+			const newContext = new PixiGraphicsContext()
+				.clear().moveTo(0, 0);
+			// See note in `create`
+			newContext.batchMode = 'no-batch';
+			draw?.(newContext);
+			instance.context = newContext;
 		}
 	},
 	autoProps: GRAPHICS_AUTO_PROPS,

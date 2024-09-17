@@ -28,6 +28,12 @@ $context-menu-themes: (
 	isolation: isolate;
 	max-height: 100vh;
 
+	hr {
+		width: 90%;
+		margin: 0;
+		align-self: center;
+	}
+
 	span, button {
 		@include center-flex;
 		margin: 0;
@@ -41,6 +47,27 @@ $context-menu-themes: (
 
 		&:hover {
 			background-color: #fff4;
+		}
+
+		&.withIcon {
+			padding: 0.5em;
+			gap: 0.5em;
+
+			>img {
+				width: 1.8em;
+				height: 1.8em;
+				object-fit: contain;
+
+				&.invert {
+					filter: invert(100%);
+				}
+			}
+
+			>span {
+				flex: 1;
+				padding: 0;
+				justify-content: start;
+			}
 		}
 	}
 

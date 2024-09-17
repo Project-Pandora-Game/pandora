@@ -21,6 +21,7 @@ import { useCharacterRestrictionsManager } from '../../components/gameContext/ga
 import { ShardConnector } from '../../networking/shardConnector';
 import { useObservable } from '../../observable';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
+import { useRoomScreenContext } from '../../ui/screens/room/roomContext';
 import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug';
 import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
 import { Container } from '../baseComponents/container';
@@ -32,20 +33,20 @@ import { MASK_SIZE, SwapCullingDirection } from '../graphicsLayer';
 import { useTexture } from '../useTexture';
 import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
 
-type RoomCharacterInteractiveProps = {
+export type RoomCharacterInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
 	spaceInfo: Immutable<SpaceClientInfo>;
 	debugConfig: ChatroomDebugConfig;
 	projectionResolver: Immutable<RoomProjectionResolver>;
 	shard: ShardConnector | null;
-	menuOpen: (target: Character<ICharacterRoomData>, data: FederatedPointerEvent) => void;
 };
 
 type RoomCharacterDisplayProps = {
 	globalState: AssetFrameworkGlobalState;
 	character: Character<ICharacterRoomData>;
 	projectionResolver: Immutable<RoomProjectionResolver>;
+	showName: boolean;
 
 	debugConfig?: Immutable<ChatroomDebugConfig>;
 
@@ -57,12 +58,12 @@ type RoomCharacterDisplayProps = {
 	onPointerMove?: (event: FederatedPointerEvent) => void;
 };
 
-type CharacterStateProps = {
+export type CharacterStateProps = {
 	characterState: AssetFrameworkCharacterState;
 };
 
-const PIVOT_TO_LABEL_OFFSET = 100;
-const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
+export const PIVOT_TO_LABEL_OFFSET = 100;
+export const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
 
 export const SettingDisplayCharacterName = BrowserStorage.createSession('graphics.display-character-name', true, z.boolean());
 
@@ -166,12 +167,16 @@ function RoomCharacterInteractiveImpl({
 	debugConfig,
 	projectionResolver,
 	shard,
-	menuOpen,
 }: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
 	const id = characterState.id;
 	const {
 		position: dataPosition,
 	} = useCharacterData(character);
+
+	const {
+		roomSceneMode,
+		openContextMenu,
+	} = useRoomScreenContext();
 
 	const {
 		yOffsetExtra,
@@ -220,7 +225,10 @@ function RoomCharacterInteractiveImpl({
 	const onPointerUp = useEvent((event: FederatedPointerEvent) => {
 		dragging.current = null;
 		if (pointerDown.current !== null && Date.now() < pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD) {
-			menuOpen(character, event);
+			openContextMenu(character, {
+				x: event.pageX,
+				y: event.pageY,
+			});
 		}
 		pointerDown.current = null;
 	});
@@ -236,6 +244,9 @@ function RoomCharacterInteractiveImpl({
 		}
 	}, [onDragMove, onDragStart]);
 
+	const isFocused = (roomSceneMode.mode === 'moveCharacter' || roomSceneMode.mode === 'poseCharacter') && roomSceneMode.characterId === character.id;
+	const enableMenu = !isFocused;
+
 	return (
 		<RoomCharacterDisplay
 			ref={ characterContainer }
@@ -244,8 +255,9 @@ function RoomCharacterInteractiveImpl({
 			characterState={ characterState }
 			projectionResolver={ projectionResolver }
 			debugConfig={ debugConfig }
-			eventMode='static'
-			cursor='pointer'
+			showName={ enableMenu }
+			cursor={ enableMenu ? 'pointer' : 'none' }
+			eventMode={ enableMenu ? 'static' : 'none' }
 			hitArea={ hitArea }
 			onPointerDown={ onPointerDown }
 			onPointerUp={ onPointerUp }
@@ -258,6 +270,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 	character,
 	characterState,
 	projectionResolver,
+	showName,
 	debugConfig,
 
 	eventMode,
@@ -300,7 +313,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 	const disconnectedIconTexture = useTexture(disconnectedIcon);
 	const disconnectedIconY = labelY + 50;
 
-	const showName = useObservable(SettingDisplayCharacterName);
+	showName = useObservable(SettingDisplayCharacterName) && showName;
 
 	let fontScale: number;
 	switch (interfaceChatroomCharacterNameFontSize) {
@@ -314,13 +327,12 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 	}
 
 	// Debug graphics
-	const hotboxDebugDraw = useCallback((g: PIXI.Graphics) => {
+	const hotboxDebugDraw = useCallback((g: PIXI.GraphicsContext) => {
 		if (hitArea == null) {
-			g.clear();
 			return;
 		}
 
-		g.clear()
+		g
 			.rect(hitArea.x, hitArea.y, hitArea.width, hitArea.height)
 			.fill({ color: 0xff0000, alpha: 0.25 });
 	}, [hitArea]);
@@ -363,7 +375,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 							>
 								<Graphics
 									draw={ (g) => {
-										g.clear()
+										g
 											// Pivot point (with extra Y offset)
 											.circle(pivot.x, pivot.y, 5)
 											.fill(0xffaa00)
@@ -414,7 +426,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 						>
 							<Graphics
 								draw={ (g) => {
-									g.clear()
+									g
 										// Pivot point (wanted)
 										.circle(pivot.x, pivot.y, 5)
 										.fill(0xffff00)

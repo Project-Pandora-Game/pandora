@@ -19,6 +19,7 @@ import { WardrobeItemConfigMenu } from '../../../components/wardrobe/itemDetail/
 import { InventoryAssetView } from '../../../components/wardrobe/views/wardrobeAssetView';
 import { InventoryItemView } from '../../../components/wardrobe/views/wardrobeItemView';
 import '../../../components/wardrobe/wardrobe.scss';
+import { WardrobeActionContext, wardrobeActionContext } from '../../../components/wardrobe/wardrobeActionContext';
 import { WardrobeActionRandomizeButton } from '../../../components/wardrobe/wardrobeComponents';
 import { useWardrobeContext, wardrobeContext } from '../../../components/wardrobe/wardrobeContext';
 import { useWardrobeItems } from '../../../components/wardrobe/wardrobeItems';
@@ -56,9 +57,8 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
 	const [scrollToItem, setScrollToItem] = useState<ItemId | null>(null);
 
-	const actions = useMemo<AppearanceActionContext>(() => ({
+	const actions = useMemo((): AppearanceActionContext => ({
 		player: character.gameLogicCharacter,
-		globalState: editor.globalState,
 		spaceContext: EDITOR_SPACE_CONTEXT,
 		getCharacter: (id) => {
 			if (id === character.id) {
@@ -66,7 +66,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 			}
 			return null;
 		},
-	}), [character, editor]);
+	}), [character]);
 
 	useEffect(() => {
 		if (heldItem.type === 'item') {
@@ -78,23 +78,10 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		}
 	}, [heldItem, globalState]);
 
-	const context = useMemo<WardrobeContext>(() => ({
-		target: character,
-		targetSelector: {
-			type: 'character',
-			characterId: character.id,
-		},
-		globalState,
+	const actionContext = useMemo((): WardrobeActionContext => ({
 		player: character,
-		assetList,
-		heldItem,
-		setHeldItem,
-		scrollToItem,
-		setScrollToItem,
-		focuser,
-		extraItemActions,
+		globalState,
 		actions,
-		actionPreviewState,
 		execute: (action) => {
 			const result = DoAppearanceAction(action, actions, editor.globalState.currentState);
 
@@ -118,15 +105,33 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 			// Editor does not support permission manipulations
 			return { result: 'failure' };
 		},
+	}), [character, globalState, actions, editor]);
+
+	const context = useMemo((): WardrobeContext => ({
+		target: character,
+		targetSelector: {
+			type: 'character',
+			characterId: character.id,
+		},
+		assetList,
+		heldItem,
+		setHeldItem,
+		scrollToItem,
+		setScrollToItem,
+		focuser,
+		extraItemActions,
+		actionPreviewState,
 		showExtraActionButtons: true,
 		showHoverPreview: true,
 		itemDisplayNameType: 'custom_with_original_in_brackets',
-	}), [character, globalState, assetList, heldItem, scrollToItem, focuser, extraItemActions, actions, actionPreviewState, editor]);
+	}), [character, assetList, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
 
 	return (
-		<wardrobeContext.Provider value={ context }>
-			{ children }
-		</wardrobeContext.Provider>
+		<wardrobeActionContext.Provider value={ actionContext }>
+			<wardrobeContext.Provider value={ context }>
+				{ children }
+			</wardrobeContext.Provider>
+		</wardrobeActionContext.Provider>
 	);
 }
 

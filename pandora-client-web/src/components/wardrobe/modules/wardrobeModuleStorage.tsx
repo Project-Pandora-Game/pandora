@@ -7,12 +7,14 @@ import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Row } from '../../common/container/container';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
+import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../wardrobeActionContext';
 import { ActionWarning, CheckResultToClassName } from '../wardrobeComponents';
-import { useWardrobeContext, useWardrobePermissionRequestCallback } from '../wardrobeContext';
+import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
 
 export function WardrobeModuleConfigStorage({ item, moduleName, m }: WardrobeModuleProps<ItemModuleStorage>): ReactElement {
-	const { target, targetSelector, focuser, actions, globalState } = useWardrobeContext();
+	const { actions, globalState } = useWardrobeActionContext();
+	const { target, targetSelector, focuser } = useWardrobeContext();
 	const [requestPermission] = useWardrobePermissionRequestCallback();
 	const [ref, setRef] = useState<HTMLElement | null>(null);
 

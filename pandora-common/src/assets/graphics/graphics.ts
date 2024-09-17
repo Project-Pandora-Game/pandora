@@ -1,8 +1,8 @@
 import { z } from 'zod';
 import type { AssetId } from '../base';
 import { RectangleSchema } from './common';
-import { type PointTemplate } from './points';
 import { BoneNameSchema, ConditionSchema, type BoneType } from './conditions';
+import { type PointTemplate } from './points';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../../validation';
@@ -17,6 +17,8 @@ export interface BoneDefinition {
 	x: number;
 	y: number;
 	baseRotation?: number;
+	/** Offset relative to `x` and `y` which should be applied to UI handle. Happens before `parent` or `rotation` shifts. */
+	uiPositionOffset?: readonly [x: number, y: number];
 	mirror?: BoneDefinition;
 	isMirror: boolean;
 	parent?: BoneDefinition;

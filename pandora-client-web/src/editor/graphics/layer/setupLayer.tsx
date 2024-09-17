@@ -71,8 +71,7 @@ export function SetupLayerSelected({
 
 	const uv = useLayerVertices(evaluator, points, layer, item, true, imageUv);
 
-	const drawWireFrame = useCallback((g: PIXI.Graphics) => {
-		g.clear();
+	const drawWireFrame = useCallback((g: PIXI.GraphicsContext) => {
 		// Draw triangles
 		for (let i = 0; i < triangles.length; i += 3) {
 			const poly = [0, 1, 2]

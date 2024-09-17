@@ -1,8 +1,18 @@
+import classNames from 'classnames';
 import { Immutable } from 'immer';
-import { AssertNotNullable, ICharacterRoomData, IDirectoryAccountInfo, SpaceClientInfo } from 'pandora-common';
+import { AssertNever, AssertNotNullable, ICharacterRoomData, IDirectoryAccountInfo, SpaceClientInfo } from 'pandora-common';
 import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
+import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
+import bodyIcon from '../../../assets/icons/body.svg';
+import forbiddenIcon from '../../../assets/icons/forbidden.svg';
+import friendsIcon from '../../../assets/icons/friends.svg';
+import letterIcon from '../../../assets/icons/letter.svg';
+import lipsIcon from '../../../assets/icons/lips.svg';
+import profileIcon from '../../../assets/icons/profile.svg';
+import shieldIcon from '../../../assets/icons/shield.svg';
+import shirtIcon from '../../../assets/icons/shirt.svg';
 import { Character, useCharacterData } from '../../../character/character';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { AccountContactChangeHandleResult, useAccountContact } from '../../../components/accountContacts/accountContactContext';
@@ -10,14 +20,17 @@ import { useGoToDM } from '../../../components/accountContacts/accountContacts';
 import { Column } from '../../../components/common/container/container';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
 import { useContextMenuPosition } from '../../../components/contextMenu';
-import { useConfirmDialog } from '../../../components/dialog/dialog';
+import { DialogInPortal, useConfirmDialog } from '../../../components/dialog/dialog';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { IsSpaceAdmin, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
-import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
+import { usePlayer } from '../../../components/gameContext/playerContextProvider';
+import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext';
 import { PointLike } from '../../../graphics/graphicsCharacter';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { useChatInput } from '../../../ui/components/chat/chatInput';
+import { useRoomScreenContext } from '../../../ui/screens/room/roomContext';
+import { useCanMoveCharacter, useCanPoseCharacter } from '../../../ui/screens/room/roomPermissionChecks';
 
 type MenuType = 'main' | 'admin' | 'contacts';
 
@@ -135,8 +148,9 @@ function AdminActionContextMenu(): ReactElement | null {
 	switch (menu) {
 		case 'main':
 			return (
-				<button onClick={ () => setMenu('admin') }>
-					Admin
+				<button className='withIcon' onClick={ () => setMenu('admin') }>
+					<img className='invert' src={ shieldIcon } />
+					<span>Admin</span>
 				</button>
 			);
 		case 'admin':
@@ -146,7 +160,7 @@ function AdminActionContextMenu(): ReactElement | null {
 	}
 }
 
-function BlockMenu({ action, text }: { action: 'add' | 'remove'; text: ReactNode; }): ReactElement {
+function BlockMenu({ action }: { action: 'add' | 'remove'; }): ReactElement {
 	const directory = useDirectoryConnector();
 	const { character } = useCharacterMenuContext();
 	const confirm = useConfirmDialog();
@@ -161,11 +175,22 @@ function BlockMenu({ action, text }: { action: 'add' | 'remove'; text: ReactNode
 			.catch(() => { /** ignore */ });
 	}, [action, character.data.accountId, character.data.name, confirm, directory]);
 
-	return (
-		<button onClick={ block } >
-			{ text }
-		</button>
-	);
+	if (action === 'add') {
+		return (
+			<button className='withIcon' onClick={ block } >
+				<img className='invert' src={ forbiddenIcon } />
+				<span>Block</span>
+			</button>
+		);
+	} else if (action === 'remove') {
+		return (
+			<button onClick={ block } >
+				Unblock
+			</button>
+		);
+	}
+
+	AssertNever(action);
 }
 
 const errorHandler = (err: unknown) => toast(err instanceof Error ? err.message : 'An unknown error occurred', TOAST_OPTIONS_ERROR);
@@ -215,8 +240,9 @@ function NavigateToDMMenu(): ReactElement | null {
 		return null;
 
 	return (
-		<button onClick={ onClick } >
-			Go to Direct Messages
+		<button className='withIcon' onClick={ onClick }>
+			<img className='invert' src={ letterIcon } />
+			<span>Direct message</span>
 		</button>
 	);
 }
@@ -230,7 +256,7 @@ function AccountContactActionContextMenuInner(): ReactElement | null {
 			return (
 				<>
 					<FriendRequestMenu action='initiate' text='Add to contacts' />
-					<BlockMenu action='add' text='Block' />
+					<BlockMenu action='add' />
 				</>
 			);
 		case 'pending':
@@ -240,13 +266,13 @@ function AccountContactActionContextMenuInner(): ReactElement | null {
 				<>
 					<FriendRequestMenu action='accept' text='Accept Request' />
 					<FriendRequestMenu action='decline' text='Decline Request' />
-					<BlockMenu action='add' text='Block' />
+					<BlockMenu action='add' />
 				</>
 			);
 		case 'friend':
 			return <UnfriendRequestMenu />;
 		case 'blocked':
-			return <BlockMenu action='remove' text='Unblock' />;
+			return <BlockMenu action='remove' />;
 		default:
 			return null;
 	}
@@ -260,8 +286,9 @@ function AccountContactActionContextMenu(): ReactElement | null {
 	switch (menu) {
 		case 'main':
 			return (
-				<button onClick={ () => setMenu('contacts') }>
-					Contacts
+				<button className='withIcon' onClick={ () => setMenu('contacts') }>
+					<img className='invert' src={ friendsIcon } />
+					<span>Contacts</span>
 				</button>
 			);
 		case 'contacts':
@@ -278,32 +305,100 @@ function AccountContactActionContextMenu(): ReactElement | null {
 	}
 }
 
-export function CharacterContextMenu({ character, position, onClose, closeText = 'Close' }: {
+export function CharacterContextMenu({ character, position, onClose }: {
 	character: Character<ICharacterRoomData>;
 	position: Readonly<PointLike>;
 	onClose: () => void;
-	closeText?: string;
 }): ReactElement | null {
 	const ref = useContextMenuPosition(position);
 	return (
-		<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
-			<Scrollable color='lighter'>
-				<Column>
-					<CharacterContextMenuContent character={ character } onClose={ onClose } closeText={ closeText } />
-				</Column>
-			</Scrollable>
-		</div>
+		<DialogInPortal>
+			<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
+				<Scrollable color='lighter'>
+					<Column>
+						<CharacterContextMenuContent character={ character } onClose={ onClose } />
+					</Column>
+				</Scrollable>
+			</div>
+		</DialogInPortal>
 	);
 }
 
-export function CharacterContextMenuContent({ character, onClose, closeText = 'Close' }: {
+function MoveCharacterMenuItem(): ReactElement | null {
+	const {
+		character,
+		close,
+	} = useCharacterMenuContext();
+	const {
+		setRoomSceneMode,
+	} = useRoomScreenContext();
+
+	const canMoveCharacter = useCanMoveCharacter(character);
+
+	return (
+		<button
+			className={ classNames(
+				'withIcon',
+				canMoveCharacter ? null : 'text-strikethrough',
+			) }
+			onClick={ () => {
+				if (!canMoveCharacter) {
+					toast('You cannot move this character.', TOAST_OPTIONS_WARNING);
+					return;
+				}
+				setRoomSceneMode({ mode: 'moveCharacter', characterId: character.id });
+				close();
+			} }
+		>
+			<img className='invert' src={ arrowAllIcon } />
+			<span>Move</span>
+		</button>
+	);
+}
+
+function PoseCharacterMenuItem(): ReactElement | null {
+	const {
+		character,
+		close,
+	} = useCharacterMenuContext();
+	const {
+		setRoomSceneMode,
+	} = useRoomScreenContext();
+
+	const canPoseCharacter = useCanPoseCharacter(character);
+
+	return (
+		<button
+			className={ classNames(
+				'withIcon',
+				(canPoseCharacter === 'forbidden') ? 'text-strikethrough' : null,
+			) }
+			onClick={ () => {
+				if (canPoseCharacter === 'forbidden') {
+					toast('You cannot pose this character.', TOAST_OPTIONS_WARNING);
+					return;
+				}
+				if (canPoseCharacter === 'prompt') {
+					toast(`Attempting to change this character's pose will ask them for permission.`, TOAST_OPTIONS_WARNING);
+				}
+				setRoomSceneMode({ mode: 'poseCharacter', characterId: character.id });
+				close();
+			} }
+		>
+			<img className='invert' src={ bodyIcon } />
+			<span>Pose</span>
+		</button>
+	);
+}
+
+export function CharacterContextMenuContent({ character, onClose }: {
 	character: Character<ICharacterRoomData>;
 	onClose: () => void;
-	closeText?: string;
 }): ReactElement | null {
 	const navigate = useNavigate();
 	const { setTarget } = useChatInput();
-	const playerId = usePlayerId();
+	const player = usePlayer();
+	AssertNotNullable(player);
 	const currentAccount = useCurrentAccount();
 	const [menu, setMenu] = useState<MenuType>('main');
 
@@ -341,39 +436,47 @@ export function CharacterContextMenuContent({ character, onClose, closeText = 'C
 
 	return (
 		<characterMenuContext.Provider value={ context }>
-			<span>
-				{ characterData.name } ({ characterData.id })
-			</span>
-			{ menu === 'main' && (
-				<>
-					<button onClick={ () => {
-						onCloseActual();
-						navigate(`/wardrobe/character/${characterData.id}`);
-					} }>
-						Wardrobe
-					</button>
-					<button onClick={ () => {
-						onCloseActual();
-						navigate(`/profiles/character/${characterData.id}`);
-					} }>
-						Profile
-					</button>
-					{ characterData.id !== playerId && (
-						<button onClick={ () => {
-							onClose();
-							setTarget(characterData.id);
+			<WardrobeActionContextProvider player={ player }>
+				<span>
+					{ characterData.name } ({ characterData.id })
+				</span>
+				<hr />
+				{ menu === 'main' && (
+					<>
+						<button className='withIcon' onClick={ () => {
+							onCloseActual();
+							navigate(`/wardrobe/character/${characterData.id}`);
 						} }>
-							Whisper
+							<img className='invert' src={ shirtIcon } />
+							<span>Wardrobe</span>
 						</button>
-					) }
-					<NavigateToDMMenu />
-				</>
-			) }
-			<AdminActionContextMenu />
-			<AccountContactActionContextMenu />
-			<button onClick={ onCloseActual } >
-				{ closeText }
-			</button>
+						<button className='withIcon' onClick={ () => {
+							onCloseActual();
+							navigate(`/profiles/character/${characterData.id}`);
+						} }>
+							<img className='invert' src={ profileIcon } />
+							<span>Profile</span>
+						</button>
+						<MoveCharacterMenuItem />
+						<PoseCharacterMenuItem />
+						{ characterData.id !== player.id && (
+							<button className='withIcon' onClick={ () => {
+								onClose();
+								setTarget(characterData.id);
+							} }>
+								<img className='invert' src={ lipsIcon } />
+								<span>Whisper</span>
+							</button>
+						) }
+						<NavigateToDMMenu />
+					</>
+				) }
+				<AdminActionContextMenu />
+				<AccountContactActionContextMenu />
+				<button onClick={ onCloseActual } >
+					Close
+				</button>
+			</WardrobeActionContextProvider>
 		</characterMenuContext.Provider>
 	);
 }

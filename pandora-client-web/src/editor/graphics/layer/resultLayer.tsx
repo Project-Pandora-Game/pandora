@@ -32,8 +32,7 @@ export function ResultLayer({
 
 	const vertices = useLayerVertices(evaluator, points, layer, item);
 
-	const drawWireFrame = useCallback((g: PIXI.Graphics) => {
-		g.clear();
+	const drawWireFrame = useCallback((g: PIXI.GraphicsContext) => {
 		for (let i = 0; i < triangles.length; i += 3) {
 			const poly = [0, 1, 2]
 				.map((p) => triangles[i + p])

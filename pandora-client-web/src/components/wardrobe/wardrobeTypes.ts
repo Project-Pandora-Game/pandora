@@ -2,24 +2,19 @@ import type { Immutable } from 'immer';
 import { omit } from 'lodash';
 import {
 	ActionTargetSelector,
-	AppearanceAction,
-	AppearanceActionContext,
 	Asset,
 	AssetFrameworkGlobalState,
 	IAssetModuleTypes,
-	IClientShardResult,
 	ItemContainerPath,
 	ItemId,
 	ItemPath,
 	ItemTemplate,
 	ModuleType,
-	type CharacterId,
 	type ItemDisplayNameType,
-	type PermissionGroup,
 } from 'pandora-common';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ReactElement } from 'react';
-import { ICharacter, IChatroomCharacter } from '../../character/character';
+import { IChatroomCharacter } from '../../character/character';
 import { Observable, type ReadonlyObservable } from '../../observable';
 
 export type WardrobeContextExtraItemActionComponent = (props: { target: ActionTargetSelector; item: ItemPath; }) => ReactElement | null;
@@ -39,8 +34,6 @@ export type WardrobeHeldItem = {
 export interface WardrobeContext {
 	target: WardrobeTarget;
 	targetSelector: ActionTargetSelector;
-	player: ICharacter;
-	globalState: AssetFrameworkGlobalState;
 	assetList: readonly Asset[];
 	heldItem: WardrobeHeldItem;
 	setHeldItem: (newHeldItem: WardrobeHeldItem) => void;
@@ -48,9 +41,6 @@ export interface WardrobeContext {
 	setScrollToItem: (newScrollToItem: ItemId | null) => void;
 	focuser: WardrobeFocuser;
 	extraItemActions: Observable<readonly WardrobeContextExtraItemActionComponent[]>;
-	actions: AppearanceActionContext;
-	execute: (action: AppearanceAction) => IClientShardResult['appearanceAction'] | undefined;
-	sendPermissionRequest: (target: CharacterId, permissions: [PermissionGroup, string][]) => IClientShardResult['requestPermission'] | undefined;
 
 	/** Override for previewing the actions */
 	actionPreviewState: Observable<AssetFrameworkGlobalState | null>;

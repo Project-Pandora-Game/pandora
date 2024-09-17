@@ -54,8 +54,12 @@
 			gap: 1px;
 
 			&.player {
-				>span {
+				>span, >button {
 					background-color: $white;
+				}
+
+				>button:hover {
+					background-color: $grey-lighter;
 				}
 			}
 
@@ -63,9 +67,10 @@
 				text-shadow: #666 1px 1px 1px;
 			}
 
-			>span {
+			>span, >button {
 				font-size: 1em;
-				padding: 0.2em 0.5em;
+				padding: 0 0.3em;
+				border: solid transparent 0.2em;
 				flex-grow: 1;
 
 				display: inline-flex;
@@ -88,6 +93,14 @@
 				.character-icon {
 					height: 1.25rem;
 				}
+			}
+
+			>button:hover {
+				background-color: $grey-lighter;
+			}
+
+			>button:focus-visible {
+				border-color: black;
 			}
 		}
 	}

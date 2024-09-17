@@ -12,22 +12,26 @@ import { useAccountSettings } from '../../../services/accountLogic/accountManage
 import { useIsPortrait } from '../../../styles/mediaQueries';
 import { Chat } from '../../components/chat/chat';
 import './room.scss';
-import { PersonalSpaceControls, RoomControls, useRoomConstructionModeCheck } from './roomControls';
+import { RoomScreenContextProvider } from './roomContext';
+import { PersonalSpaceControls, RoomControls } from './roomControls';
+import { useRoomConstructionModeCheckProvider } from './roomPermissionChecks';
 
 export function RoomScreen(): ReactElement | null {
 	const { interfaceChatroomGraphicsRatioHorizontal, interfaceChatroomGraphicsRatioVertical } = useAccountSettings();
 	const isPortrait = useIsPortrait();
 	const spaceInfo = useSpaceInfo();
-	useRoomConstructionModeCheck();
+	useRoomConstructionModeCheckProvider();
 
 	const chatroomGraphicsRatio = isPortrait ? interfaceChatroomGraphicsRatioVertical : interfaceChatroomGraphicsRatioHorizontal;
 	const chatroomChatRatio = 10 - chatroomGraphicsRatio;
 
 	return (
-		<DivContainer className='roomScreen' direction={ isPortrait ? 'column' : 'row' } key={ spaceInfo.id ?? '_personal' }>
-			<RoomScene className={ `room-scene flex-${chatroomGraphicsRatio}` } />
-			<InteractionBox className={ `interactionArea flex-${chatroomChatRatio}` } />
-		</DivContainer>
+		<RoomScreenContextProvider>
+			<DivContainer className='roomScreen' direction={ isPortrait ? 'column' : 'row' } key={ spaceInfo.id ?? '_personal' }>
+				<RoomScene className={ `room-scene flex-${chatroomGraphicsRatio}` } />
+				<InteractionBox className={ `interactionArea flex-${chatroomChatRatio}` } />
+			</DivContainer>
+		</RoomScreenContextProvider>
 	);
 }
 
@@ -62,12 +66,12 @@ function InteractionBox({ className }: {
 				) : null
 			}
 			<Tab name='Pose'>
-				<WardrobeContextProvider player={ player } target={ player }>
+				<WardrobeContextProvider target={ player }>
 					<WardrobePoseGui character={ player } characterState={ playerState } />
 				</WardrobeContextProvider>
 			</Tab>
 			<Tab name='Expressions'>
-				<WardrobeContextProvider player={ player } target={ player }>
+				<WardrobeContextProvider target={ player }>
 					<WardrobeExpressionGui character={ player } characterState={ playerState } />
 				</WardrobeContextProvider>
 			</Tab>

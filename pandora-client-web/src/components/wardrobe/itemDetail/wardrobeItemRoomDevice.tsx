@@ -18,9 +18,10 @@ import { Column, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
+import { useWardrobeActionContext, useWardrobeExecuteCallback } from '../wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { WardrobeActionButton } from '../wardrobeComponents';
-import { WardrobeContextSelectRoomInventoryProvider, useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
+import { WardrobeContextSelectRoomInventoryProvider, useWardrobeContext } from '../wardrobeContext';
 
 export function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
 	roomDevice: Item<'roomDevice'>;
@@ -179,7 +180,8 @@ function WardrobeRoomDeviceSlot({ slotName, slotDefinition, occupancy, item }: {
 	occupancy: CharacterId | null;
 	item: ItemPath;
 }): ReactElement | null {
-	const { targetSelector, player } = useWardrobeContext();
+	const { player } = useWardrobeActionContext();
+	const { targetSelector } = useWardrobeContext();
 
 	const characters: readonly ICharacter[] = useSpaceCharacters();
 
@@ -250,7 +252,7 @@ export function WardrobeRoomDeviceWearable({ roomDeviceWearable }: {
 	item: ItemPath;
 }): ReactElement | null {
 	const roomDeviceLink = roomDeviceWearable.roomDeviceLink;
-	const { globalState } = useWardrobeContext();
+	const { globalState } = useWardrobeActionContext();
 	const roomDevice = useMemo(() => (roomDeviceLink != null
 		? globalState.getItems({ type: 'roomInventory' })?.find((it) => it.id === roomDeviceLink.device)
 		: undefined

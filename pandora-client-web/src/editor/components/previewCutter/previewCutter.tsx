@@ -54,10 +54,9 @@ function PreviewCutterRectangleInner({
 	const x = centered ? ((CharacterSize.WIDTH - size) / 2) : position.x;
 	const y = position.y;
 
-	const draw = React.useCallback((g: PIXI.Graphics) => {
+	const draw = React.useCallback((g: PIXI.GraphicsContext) => {
 		const color = dragging ? 0x00ff00 : 0x333333;
 		g
-			.clear()
 			.rect(x - PREVIEW_CUTTER_LINE_WIDTH / 2, y - PREVIEW_CUTTER_LINE_WIDTH / 2, size + PREVIEW_CUTTER_LINE_WIDTH, size + PREVIEW_CUTTER_LINE_WIDTH)
 			.stroke({ width: PREVIEW_CUTTER_LINE_WIDTH, color, alpha: 1 });
 	}, [dragging, x, y, size]);

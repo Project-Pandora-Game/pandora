@@ -1,3 +1,5 @@
+import { Immutable } from 'immer';
+import _ from 'lodash';
 import {
 	AppearanceAction,
 	AppearanceItems,
@@ -9,14 +11,13 @@ import {
 	Writeable,
 } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
-import _ from 'lodash';
-import { ColorInputRGBA } from '../../common/colorInput/colorInput';
-import { Immutable } from 'immer';
 import { useItemColorString } from '../../../graphics/graphicsLayer';
-import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
-import { useWardrobeTargetItems } from '../wardrobeUtils';
+import { ColorInputRGBA } from '../../common/colorInput/colorInput';
+import { FieldsetToggle } from '../../common/fieldsetToggle';
+import { useWardrobeExecuteCallback } from '../wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
+import { useWardrobeContext } from '../wardrobeContext';
+import { useWardrobeTargetItems } from '../wardrobeUtils';
 
 export function WardrobeItemColorization({ wornItem, item }: {
 	wornItem: Item<'personal' | 'roomDevice'>;

@@ -14,36 +14,38 @@ export function MovementHelperGraphics({
 	colorLeftRight,
 	...props
 }: MovementHelperGraphicsProps): ReactElement | null {
-	const arrowBodyLength = 15;
-	const arrowWidthInner = 4;
-	const arrowWidth = 16;
-	const centerOffset = 5;
+	const arrowBodyLength = 0.3 * radius;
+	const arrowWidthInner = Math.ceil(0.08 * radius);
+	const arrowWidth = 0.32 * radius;
+	const centerOffset = Math.ceil(0.1 * radius);
+	const circleEdgeWidth = 4;
 
-	const graphicsDraw = useCallback((g: PIXI.Graphics) => {
-		g.clear()
+	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
+		g
 			.ellipse(0, 0, radius, radius)
-			.stroke({ width: 4, color: 0xffffff, alpha: 1 });
+			.fill({ color: 0x000000, alpha: 0.4 })
+			.stroke({ width: circleEdgeWidth, color: 0xffffff, alpha: 1 });
 
 		if (colorLeftRight != null) {
 			g
 				.poly([
-					centerOffset, -arrowWidthInner,
-					centerOffset + arrowBodyLength, -arrowWidthInner,
-					centerOffset + arrowBodyLength, -arrowWidth,
-					radius, 0,
-					centerOffset + arrowBodyLength, arrowWidth,
-					centerOffset + arrowBodyLength, arrowWidthInner,
-					centerOffset, arrowWidthInner,
+					centerOffset + 1, -arrowWidthInner,
+					centerOffset + 1 + arrowBodyLength, -arrowWidthInner,
+					centerOffset + 1 + arrowBodyLength, -arrowWidth,
+					radius - circleEdgeWidth, 0,
+					centerOffset + 1 + arrowBodyLength, arrowWidth,
+					centerOffset + 1 + arrowBodyLength, arrowWidthInner,
+					centerOffset + 1, arrowWidthInner,
 				])
 				.fill({ color: colorLeftRight, alpha: 1 })
 				.poly([
-					- centerOffset, arrowWidthInner,
-					- centerOffset - arrowBodyLength, arrowWidthInner,
-					- centerOffset - arrowBodyLength, arrowWidth,
-					-radius, 0,
-					- centerOffset - arrowBodyLength, -arrowWidth,
-					- centerOffset - arrowBodyLength, -arrowWidthInner,
-					- centerOffset, -arrowWidthInner,
+					- centerOffset - 1, arrowWidthInner,
+					- centerOffset - 1 - arrowBodyLength, arrowWidthInner,
+					- centerOffset - 1 - arrowBodyLength, arrowWidth,
+					-radius + circleEdgeWidth, 0,
+					- centerOffset - 1 - arrowBodyLength, -arrowWidth,
+					- centerOffset - 1 - arrowBodyLength, -arrowWidthInner,
+					- centerOffset - 1, -arrowWidthInner,
 				])
 				.fill({ color: colorLeftRight, alpha: 1 });
 		}
@@ -51,30 +53,30 @@ export function MovementHelperGraphics({
 		if (colorUpDown != null) {
 			g
 				.poly([
-					- arrowWidthInner, -centerOffset,
-					- arrowWidthInner, -centerOffset - arrowBodyLength,
-					- arrowWidth, -centerOffset - arrowBodyLength,
-					0, -radius,
-					arrowWidth, - centerOffset - arrowBodyLength,
-					arrowWidthInner, - centerOffset - arrowBodyLength,
-					arrowWidthInner, - centerOffset,
+					- arrowWidthInner, -centerOffset - 1,
+					- arrowWidthInner, -centerOffset - 1 - arrowBodyLength,
+					- arrowWidth, -centerOffset - 1 - arrowBodyLength,
+					0, -radius + circleEdgeWidth,
+					arrowWidth, - centerOffset - 1 - arrowBodyLength,
+					arrowWidthInner, - centerOffset - 1 - arrowBodyLength,
+					arrowWidthInner, - centerOffset - 1,
 				])
 				.fill({ color: colorUpDown, alpha: 1 })
 				.poly([
-					- arrowWidthInner, centerOffset,
-					- arrowWidthInner, centerOffset + arrowBodyLength,
-					- arrowWidth, centerOffset + arrowBodyLength,
-					0, radius,
-					arrowWidth, centerOffset + arrowBodyLength,
-					arrowWidthInner, centerOffset + arrowBodyLength,
-					arrowWidthInner, centerOffset,
+					- arrowWidthInner, centerOffset + 1,
+					- arrowWidthInner, centerOffset + 1 + arrowBodyLength,
+					- arrowWidth, centerOffset + 1 + arrowBodyLength,
+					0, radius - circleEdgeWidth,
+					arrowWidth, centerOffset + 1 + arrowBodyLength,
+					arrowWidthInner, centerOffset + 1 + arrowBodyLength,
+					arrowWidthInner, centerOffset + 1,
 				])
 				.fill({ color: colorUpDown, alpha: 1 });
 		}
 		g
 			.ellipse(0, 0, centerOffset, centerOffset)
 			.fill({ color: 0xffffff, alpha: 1 });
-	}, [radius, colorLeftRight, colorUpDown]);
+	}, [radius, colorLeftRight, colorUpDown, centerOffset, arrowWidthInner, arrowBodyLength, arrowWidth]);
 
 	return (
 		<Graphics

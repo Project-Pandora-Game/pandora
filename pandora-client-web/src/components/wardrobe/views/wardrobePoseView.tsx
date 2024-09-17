@@ -34,7 +34,8 @@ import { SelectionIndicator } from '../../common/selectionIndicator/selectionInd
 import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
 import { ResolveItemDisplayName } from '../itemDetail/wardrobeItemName';
 import { WardrobeStoredPosePresets } from '../poseDetail/storedPosePresets';
-import { useWardrobeContext, useWardrobeExecuteCallback } from '../wardrobeContext';
+import { useWardrobeActionContext, useWardrobeExecuteCallback } from '../wardrobeActionContext';
+import { useWardrobeContext } from '../wardrobeContext';
 
 type CheckedPosePreset = {
 	active: boolean;
@@ -134,7 +135,8 @@ function WardrobePoseCategoriesInternal({ poses, setPose, characterState }: {
 }
 
 export function WardrobePoseCategories({ characterState, setPose }: { characterState: AssetFrameworkCharacterState; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
-	const { globalState, itemDisplayNameType } = useWardrobeContext();
+	const { globalState } = useWardrobeActionContext();
+	const { itemDisplayNameType } = useWardrobeContext();
 	const roomItems = globalState.getItems({ type: 'roomInventory' });
 	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, roomItems ?? [], itemDisplayNameType), [characterState, roomItems, itemDisplayNameType]);
 	return (
@@ -363,7 +365,8 @@ export function WardrobePoseGui({ character, characterState }: {
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
-	const { globalState, itemDisplayNameType } = useWardrobeContext();
+	const { globalState } = useWardrobeActionContext();
+	const { itemDisplayNameType } = useWardrobeContext();
 	const roomItems = globalState.getItems({ type: 'roomInventory' });
 	const assetManager = characterState.assetManager;
 	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);

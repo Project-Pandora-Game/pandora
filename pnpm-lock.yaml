@@ -69,8 +69,8 @@ importers:
         specifier: 5.0.3
         version: 5.0.3(patch_hash=vtenzegv5nm2rviie2tt353xhu)
       pixi.js:
-        specifier: 8.4.0
-        version: 8.4.0
+        specifier: 8.4.1
+        version: 8.4.1
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -465,8 +465,8 @@ importers:
         specifier: 29.7.0
         version: 29.7.0(@types/node@20.16.5)(ts-node@10.9.2(@types/node@20.16.5)(typescript@5.6.2))
       nodemon:
-        specifier: 3.1.5
-        version: 3.1.5
+        specifier: 3.1.6
+        version: 3.1.6
       rimraf:
         specifier: 6.0.1
         version: 6.0.1
@@ -577,8 +577,8 @@ importers:
         specifier: 29.7.0
         version: 29.7.0(@types/node@20.16.5)(ts-node@10.9.2(@types/node@20.16.5)(typescript@5.6.2))
       nodemon:
-        specifier: 3.1.5
-        version: 3.1.5
+        specifier: 3.1.6
+        version: 3.1.6
       rimraf:
         specifier: 6.0.1
         version: 6.0.1
@@ -5243,8 +5243,8 @@ packages:
     resolution: {integrity: sha512-AHf04ySLC6CIfuRtRiEYtGEXgRfa6INgWGluDhnxTZhHSKvrBu7lc1VVchQ0d8nPc4cFaZoPq8vkyNoZr0TpGQ==}
     engines: {node: '>=6.0.0'}
 
-  nodemon@3.1.5:
-    resolution: {integrity: sha512-V5UtfYc7hjFD4SI3EzD5TR8ChAHEZ+Ns7Z5fBk8fAbTVAj+q3G+w7sHJrHxXBkVn6ApLVTljau8wfHwqmGUjMw==}
+  nodemon@3.1.6:
+    resolution: {integrity: sha512-C8ymJbXpTTinxjWuMfMxw0rZhTn/r7ypSGldQyqPEgDEaVwAthqC0aodsMwontnAInN9TuPwRLeBoyhmfv+iSA==}
     engines: {node: '>=10'}
     hasBin: true
 
@@ -5484,8 +5484,8 @@ packages:
   pixi-viewport@5.0.3:
     resolution: {integrity: sha512-DGG7cg2vUltAiL2fanzYPLR+L6qBeoskPfbUXxN6CYKW+fkni5cF9J1t2WBTmyBnC3kVq3ATFE2KDi7zy2FY8A==}
 
-  pixi.js@8.4.0:
-    resolution: {integrity: sha512-IM0YDv7G9XATtD/sPgbEi6FoLg82+XSqejzeCWg575vEyuQGs4RrdVFSV/K/i2PeXr/sLxiHRJDOGuotBUlldA==}
+  pixi.js@8.4.1:
+    resolution: {integrity: sha512-3ZbEIkLYYi602UB5wuN7kPz3VsGHoJa6nxD8ustvMLRySxHAR9Z8tCAYY8ISgNplpPbaDw03B0yTD4/k9f6cAQ==}
 
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -13060,7 +13060,7 @@ snapshots:
 
   nodemailer@6.9.15: {}
 
-  nodemon@3.1.5:
+  nodemon@3.1.6:
     dependencies:
       chokidar: 3.6.0
       debug: 4.3.7(supports-color@5.5.0)
@@ -13328,7 +13328,7 @@ snapshots:
 
   pixi-viewport@5.0.3(patch_hash=vtenzegv5nm2rviie2tt353xhu): {}
 
-  pixi.js@8.4.0:
+  pixi.js@8.4.1:
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/css-font-loading-module': 0.0.12

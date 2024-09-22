@@ -1,9 +1,11 @@
 import React from 'react';
 import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 
-export const TUTORIAL_SWITCHING_SPACES: TutorialConfig = {
-	id: 'switchingSpaces',
-	name: `Switching and Leaving Spaces`,
+// TODO: Space management
+// (create, delete, leave, enter, manage; while inside also note the difference between "Personal Space" tab and "Room" tab)
+export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
+	id: 'spaceManagement',
+	name: `Spaces`,
 	stages: [
 		{
 			steps: [

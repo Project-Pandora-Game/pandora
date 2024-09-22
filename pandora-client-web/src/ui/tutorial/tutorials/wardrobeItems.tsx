@@ -6,6 +6,11 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 	id: 'wardrobeItems',
 	name: `Character interactions: Items`,
+	description: (
+		<p>
+			This tutorial will teach you the basics of how items work in Pandora.
+		</p>
+	),
 	stages: [
 		{
 			steps: [

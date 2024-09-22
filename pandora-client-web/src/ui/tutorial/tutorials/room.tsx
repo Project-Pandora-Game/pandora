@@ -6,6 +6,11 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 export const TUTORIAL_ROOM: TutorialConfig = {
 	id: 'room',
 	name: `Pandora introduction`,
+	description: (
+		<p>
+			This tutorial will teach you about the very basics of Pandora.
+		</p>
+	),
 	stages: [
 		{
 			steps: [

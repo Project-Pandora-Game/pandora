@@ -6,6 +6,11 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 export const TUTORIAL_WARDROBE_LOCKS_STORAGES: TutorialConfig = {
 	id: 'wardrobeLocksStorages',
 	name: `Character interactions: Locks and Storages`,
+	description: (
+		<p>
+			This tutorial will teach you about items that can be locked, the locks themselves, and items that can store other items in them.
+		</p>
+	),
 	stages: [
 		{
 			steps: [

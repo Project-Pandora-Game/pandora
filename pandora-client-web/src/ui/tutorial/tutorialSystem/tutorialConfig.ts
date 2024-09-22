@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 export interface TutorialConfig {
 	id: string;
 	name: string;
+	description: string | ReactNode;
 	stages: TutorialStage[];
 }
 

@@ -1,8 +1,9 @@
 import { Assert } from 'pandora-common';
-import React, { useCallback, type ReactElement } from 'react';
+import React, { useCallback, useState, type ReactElement } from 'react';
 import { Button } from '../../components/common/button/button';
 import { Column, Row } from '../../components/common/container/container';
 import { FieldsetToggle } from '../../components/common/fieldsetToggle';
+import { DraggableDialog } from '../../components/dialog/dialog';
 import { useObservable } from '../../observable';
 import type { TutorialConfig } from './tutorialSystem/tutorialConfig';
 import { TutorialRunner } from './tutorialSystem/tutorialRunner';
@@ -62,31 +63,68 @@ function TutorialEntry({ tutorial }: {
 	tutorial: TutorialConfig;
 }): ReactElement {
 	const activeTutorial = useObservable(ActiveTutorial);
+	const [dialogOpen, setDialogOpen] = useState(false);
+
+	return (
+		<Row alignY='center'>
+			<a onClick={ () => {
+				setDialogOpen((s) => !s);
+			} }>
+				{ tutorial.name }
+			</a>
+			{
+				activeTutorial?.config.id === tutorial.id ? (
+					<strong>[Currently active]</strong>
+				) : null
+			}
+			{
+				dialogOpen ? (
+					<TutorialDialog
+						tutorial={ tutorial }
+						close={ () => {
+							setDialogOpen(false);
+						} }
+					/>
+				) : null
+			}
+		</Row>
+	);
+}
+
+function TutorialDialog({ tutorial, close }: {
+	tutorial: TutorialConfig;
+	close: () => void;
+}): ReactElement {
+	const activeTutorial = useObservable(ActiveTutorial);
+	const canActivate = activeTutorial == null;
 
 	const startTutorial = useCallback(() => {
 		if (ActiveTutorial.value != null)
 			return;
 
+		close();
 		ActiveTutorial.value = new TutorialRunner(tutorial);
-	}, [tutorial]);
+	}, [tutorial, close]);
 
 	return (
-		<Row alignY='center'>
-			<span>{ tutorial.name }</span>
-			{
-				activeTutorial?.config.id === tutorial.id ? (
-					<strong>[Currently active]</strong>
-				) : (
+		<DraggableDialog title={ `"${tutorial.name}" tutorial details` } className='tutorialDialogContainer' close={ close }>
+			<Column className='tutorialDialog'>
+				{
+					typeof tutorial.description === 'string' ? (
+						<p>{ tutorial.description }</p>
+					) : tutorial.description
+				}
+				<Row alignX='end'>
 					<Button
 						onClick={ startTutorial }
 						className='fadeDisabled'
-						disabled={ activeTutorial != null }
+						disabled={ !canActivate }
 						slim
 					>
 						Start
 					</Button>
-				)
-			}
-		</Row>
+				</Row>
+			</Column>
+		</DraggableDialog>
 	);
 }

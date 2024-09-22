@@ -6,6 +6,12 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 export const TUTORIAL_ROOM_DEVICES: TutorialConfig = {
 	id: 'roomDevices',
 	name: `Room devices`,
+	description: (
+		<p>
+			This tutorial will teach you the most important bits about Room Devices (furniture).<br />
+			This includes spawning a new room device, deploying it where you want it and storing it again, as well as entering and leaving deployed devices.
+		</p>
+	),
 	stages: [
 		{
 			steps: [

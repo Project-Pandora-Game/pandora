@@ -7,6 +7,13 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 export const TUTORIAL_CONTACTS_DMS: TutorialConfig = {
 	id: 'contactsDMs',
 	name: `Contacts and Direct Messages`,
+	description: (
+		<p>
+			This tutorial will teach you about adding contacts,
+			sending Direct Messages to other people even while they are offline,
+			and blocking people you do not want to interact with.
+		</p>
+	),
 	stages: [
 		{
 			steps: [

@@ -6,6 +6,12 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 export const TUTORIAL_SPACE_MANAGEMENT: TutorialConfig = {
 	id: 'spaceManagement',
 	name: `Spaces`,
+	description: (
+		<p>
+			This tutorial will teach you the basics of Pandora's Spaces.<br />
+			It will talk about entering and leaving spaces and about creating and managing your own space.
+		</p>
+	),
 	stages: [
 		{
 			steps: [

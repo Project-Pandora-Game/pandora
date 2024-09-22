@@ -6,6 +6,11 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 	id: 'wardrobeBody',
 	name: `Character interactions: Body`,
+	description: (
+		<p>
+			This tutorial will teach you about character bodies in Pandora and guide you through creating your own, unique, character.
+		</p>
+	),
 	stages: [
 		{
 			steps: [

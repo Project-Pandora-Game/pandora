@@ -84,8 +84,8 @@ importers:
         specifier: 0.29.2
         version: 0.29.2(react@18.3.1)
       react-rnd:
-        specifier: 10.4.12
-        version: 10.4.12(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        specifier: 10.4.13
+        version: 10.4.13(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react-router:
         specifier: 6.26.2
         version: 6.26.2(react@18.3.1)
@@ -392,8 +392,8 @@ importers:
         specifier: 6.9.0
         version: 6.9.0(socks@2.8.3)
       mongodb-memory-server-core:
-        specifier: 10.0.0
-        version: 10.0.0(socks@2.8.3)
+        specifier: 10.0.1
+        version: 10.0.1(socks@2.8.3)
       nanoid:
         specifier: 3.3.7
         version: 3.3.7
@@ -5127,8 +5127,8 @@ packages:
   mongodb-connection-string-url@3.0.1:
     resolution: {integrity: sha512-XqMGwRX0Lgn05TDB4PyG2h2kKO/FfWJyCzYQbIhXUxz7ETt0I/FqHjUeqj37irJ+Dl1ZtU82uYyj14u2XsZKfg==}
 
-  mongodb-memory-server-core@10.0.0:
-    resolution: {integrity: sha512-AdYi4nVqe3Pk95fRJ+DegbDdEfAG9wujNsVvJWbwh8+ZJd+d3JJK1PHxRyJ9rMvoczvlli5M30eMig7zBuF5pQ==}
+  mongodb-memory-server-core@10.0.1:
+    resolution: {integrity: sha512-sJGqoS3saNNJKQjocrqxRISUP6g2N6/D+k1JEqKYo2p9YzUOOvEopxROyvBlqkiVa67/vdf2FV4v+rOvNIHURg==}
     engines: {node: '>=16.20.1'}
 
   mongodb@6.9.0:
@@ -5978,8 +5978,8 @@ packages:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
 
-  re-resizable@6.9.17:
-    resolution: {integrity: sha512-OBqd1BwVXpEJJn/yYROG+CbeqIDBWIp6wathlpB0kzZWWZIY1gPTsgK2yJEui5hOvkCdC2mcexF2V3DZVfLq2g==}
+  re-resizable@6.10.0:
+    resolution: {integrity: sha512-hysSK0xmA5nz24HBVztlk4yCqCLCvS32E6ZpWxVKop9x3tqCa4yAj1++facrmkOf62JsJHjmjABdKxXofYioCw==}
     peerDependencies:
       react: ^16.13.1 || ^17.0.0 || ^18.0.0
       react-dom: ^16.13.1 || ^17.0.0 || ^18.0.0
@@ -6035,8 +6035,8 @@ packages:
       react: ^16.0.0 || ^17.0.0 || ^18.0.0
       react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0
 
-  react-rnd@10.4.12:
-    resolution: {integrity: sha512-EZ0ddi+R9JQVqk6jtPzvy11z5kjdw3aZbtiRmA9KP09UNx3LZT8WFrWO3QXbH7dHo1DKO3Rh8usCCwaJgu6Ahg==}
+  react-rnd@10.4.13:
+    resolution: {integrity: sha512-Vgbf0iihspcQ6nkaFhpOGWfmnuVbhkhoB0hBbYl8aRDA4horsQHESc4E1z7O/P27kFFjK2aqM0u5CGzfr9gEZA==}
     peerDependencies:
       react: '>=16.3.0'
       react-dom: '>=16.3.0'
@@ -12945,7 +12945,7 @@ snapshots:
       '@types/whatwg-url': 11.0.5
       whatwg-url: 13.0.0
 
-  mongodb-memory-server-core@10.0.0(socks@2.8.3):
+  mongodb-memory-server-core@10.0.1(socks@2.8.3):
     dependencies:
       async-mutex: 0.5.0
       camelcase: 6.3.0
@@ -13870,7 +13870,7 @@ snapshots:
       minimist: 1.2.8
       strip-json-comments: 2.0.1
 
-  re-resizable@6.9.17(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  re-resizable@6.10.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
@@ -13925,9 +13925,9 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  react-rnd@10.4.12(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  react-rnd@10.4.13(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
-      re-resizable: 6.9.17(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      re-resizable: 6.10.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-draggable: 4.4.6(react-dom@18.3.1(react@18.3.1))(react@18.3.1)

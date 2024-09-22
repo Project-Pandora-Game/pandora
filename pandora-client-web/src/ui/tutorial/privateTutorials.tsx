@@ -7,12 +7,33 @@ import { useObservable } from '../../observable';
 import type { TutorialConfig } from './tutorialSystem/tutorialConfig';
 import { TutorialRunner } from './tutorialSystem/tutorialRunner';
 import { ActiveTutorial } from './tutorialSystem/tutorialService';
-import { TUTORIAL_RANDOMIZE_APPEARANCE } from './tutorials/randomizeAppearance';
-import { TUTORIAL_SWITCHING_SPACES } from './tutorials/switchingSpaces';
+import { TUTORIAL_ROOM } from './tutorials/room';
+import { TUTORIAL_ROOM_DEVICES } from './tutorials/roomDevices';
+import { TUTORIAL_SAFEMODE } from './tutorials/safemode';
+import { TUTORIAL_SETTINGS_PROFILE } from './tutorials/settingsProfile';
+import { TUTORIAL_SPACE_MANAGEMENT } from './tutorials/spaceManagement';
+import { TUTORIAL_TUTORIALS } from './tutorials/tutorials';
+import { TUTORIAL_WARDROBE_BODY } from './tutorials/wardrobeBody';
+import { TUTORIAL_WARDROBE_ITEMS } from './tutorials/wardrobeItems';
+import { TUTORIAL_WARDROBE_LOCKS_STORAGES } from './tutorials/wardrobeLocksStorages';
+import { TUTORIAL_WARDROBE_POSING_EXPRESSIONS } from './tutorials/wardrobePoseExpressions';
+import { TUTORIAL_WARDROBE_ROOM_INVENTORY } from './tutorials/wardrobeRoomInventory';
 
 export const PRIVATE_TUTORIALS: TutorialConfig[] = [
-	TUTORIAL_RANDOMIZE_APPEARANCE,
-	TUTORIAL_SWITCHING_SPACES,
+	TUTORIAL_TUTORIALS,
+	TUTORIAL_ROOM,
+	TUTORIAL_WARDROBE_BODY,
+	TUTORIAL_WARDROBE_POSING_EXPRESSIONS,
+	TUTORIAL_SAFEMODE,
+	TUTORIAL_WARDROBE_ITEMS,
+	TUTORIAL_WARDROBE_ROOM_INVENTORY,
+	TUTORIAL_WARDROBE_LOCKS_STORAGES,
+	TUTORIAL_ROOM_DEVICES,
+	TUTORIAL_SETTINGS_PROFILE,
+	TUTORIAL_SPACE_MANAGEMENT,
+	// TODO: Low priority as it is hard to show without someone else present
+	// TUTORIAL_CONTACTS_DMS,
+	// TODO: Consider advanced permissions tutorial
 ];
 Assert(new Set(PRIVATE_TUTORIALS.map((t) => t.id)).size === PRIVATE_TUTORIALS.length, 'Private tutorials need to have a unique id');
 

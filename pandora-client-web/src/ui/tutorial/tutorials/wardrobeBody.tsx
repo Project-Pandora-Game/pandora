@@ -1,9 +1,11 @@
 import React from 'react';
 import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 
-export const TUTORIAL_RANDOMIZE_APPEARANCE: TutorialConfig = {
-	id: 'randomizeAppearance',
-	name: `Character appearance randomization`,
+// TODO: Randomizing + Changing body
+// TODO: we might need option to hide clothes without un-equipping them in the "body" tab, as by this point user doesn't know how to change them
+export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
+	id: 'wardrobeBody',
+	name: `Character interactions: Body`,
 	stages: [
 		{
 			steps: [

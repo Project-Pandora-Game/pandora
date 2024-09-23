@@ -42,7 +42,7 @@ export function PrivateRoomTutorialList(): ReactElement {
 	const activeTutorial = useObservable(ActiveTutorial);
 
 	return (
-		<Column>
+		<Column className='privateSpaceTutorialsUi'>
 			<Column>
 				<h2 className='margin-none'>Tutorials</h2>
 				<span>{ activeTutorial == null ? 'No tutorial is currently active' : `Currently active tutorial: "${activeTutorial.config.name}"` }</span>

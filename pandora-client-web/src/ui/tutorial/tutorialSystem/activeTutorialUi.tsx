@@ -1,9 +1,9 @@
 import type { Immutable } from 'immer';
-import { AssertNever, EMPTY_ARRAY } from 'pandora-common';
+import { AssertNever, EMPTY_ARRAY, GetLogger } from 'pandora-common';
 import React, { useCallback, useEffect, useState, type ReactElement } from 'react';
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
-import { DialogInPortal, DraggableDialog } from '../../../components/dialog/dialog';
+import { DialogInPortal, DraggableDialog, useConfirmDialog } from '../../../components/dialog/dialog';
 import { useObservable } from '../../../observable';
 import type { TutorialCondition, TutorialHighlightSelector, TutorialStep } from './tutorialConfig';
 import type { TutorialRunner, TutorialStageRunner } from './tutorialRunner';
@@ -14,6 +14,7 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 	stopTutorial: () => void;
 }): ReactElement | null {
 	const stage = useObservable(tutorial.currentStage);
+	const confirm = useConfirmDialog();
 
 	useEffect(() => {
 		if (stage == null) {
@@ -21,11 +22,25 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 		}
 	}, [stage, stopTutorial]);
 
+	const stopTutorialConfirm = useCallback(() => {
+		confirm('Cancel tutorial', <>Are you sure you want to cancel the tutorial?</>, undefined, 'aboveTutorial')
+			.then((result) => {
+				if (result) {
+					stopTutorial();
+				}
+			}, (err) => {
+				GetLogger('ActiveTutorialUi').error('Confirm errored:', err);
+			});
+	}, [stopTutorial, confirm]);
+
 	if (stage == null)
 		return null;
 
+	const headerBottom = document.getElementsByClassName('Header')[0]?.getBoundingClientRect().bottom ?? 16;
+	const defaultShift = 16;
+
 	return (
-		<DraggableDialog title='Tutorial' className='tutorialDialogContainer' close={ stopTutorial }>
+		<DraggableDialog title='Tutorial' className='tutorialDialogContainer' close={ stopTutorialConfirm } initialPosition={ { x: defaultShift, y: headerBottom + defaultShift } }>
 			<Column className='tutorialDialog'>
 				<strong>{ tutorial.config.name } ({ tutorial.stageIndex + 1 }/{ tutorial.config.stages.length })</strong>
 				<ActiveTutorialStageUi stage={ stage } />
@@ -86,16 +101,24 @@ function ActiveTutorialStepUi({ stage, step, stepIndex, active }: {
 			return null;
 
 		return (
-			<span className='finishedStep'>{ step.text }</span>
+			<span className='finishedStep'>
+				{
+					typeof step.text === 'function' ? (
+						<span><step.text /></span>
+					) : <span>{ step.text }</span>
+				}
+			</span>
 		);
 	}
 
 	return (
 		<>
 			{
-				step.text ? (
-					<span>{ step.text }</span>
-				) : null
+				!step ? (
+					null
+				) : typeof step.text === 'function' ? (
+					<span><step.text /></span>
+				) : <span>{ step.text }</span>
 			}
 			{
 				step.highlight?.map((highlight, index) => (

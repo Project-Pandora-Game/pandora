@@ -1,6 +1,9 @@
 import React from 'react';
-import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
+import maid from '../../../assets/maid.png';
+import { Column, Row } from '../../../components/common/container/container';
 import { ExternalLink } from '../../../components/common/link/externalLink';
+import { useHelpUserName } from '../../../components/help/helpUtils';
+import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 
 // TODO: entry tutorial
 // TODO: should it autostart?
@@ -32,11 +35,244 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 		{
 			steps: [
 				{
+					text: function Text() {
+						return (
+							<Row>
+								<Column>
+									<p>
+										“ Dear { useHelpUserName() },<br />
+										<br />
+										a warm welcome to Club Pandora!<br />
+										<br />
+										Let me give you some important hints and tips about your stay in the club and its rules. ”
+									</p>
+								</Column>
+								<Row alignX='center' className='maid-container'>
+									<img src={ maid } />
+								</Row>
+							</Row>
+						);
+					},
+					conditions: [{ type: 'next' }],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: (
+						<Row>
+							<Column>
+								<p>
+									As I am quite new to this job, I might sometimes get in the way.<br />
+									If that happens feel free to move me!<br />
+									<br />
+									You can move the tutorial screen by dragging the highlighted section.
+								</p>
+							</Column>
+							<Row alignX='center' className='maid-container'>
+								<img src={ maid } />
+							</Row>
+						</Row>
+					),
+					highlight: [
+						{
+							query: '.tutorialDialogContainer > .dialog-header .drag-handle',
+						},
+					],
+					conditions: [{ type: 'next' }],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: (
+						<Row>
+							<Column>
+								<p>
+									If you are already familiar with the club, or if you prefer exploring it completely by yourself,<br />
+									then you can just quit this tutorial right now by clicking the '×' in the corner.
+								</p>
+							</Column>
+							<Row alignX='center' className='maid-container'>
+								<img src={ maid } />
+							</Row>
+						</Row>
+					),
+					highlight: [
+						{
+							query: '.tutorialDialogContainer > .dialog-header .dialog-close',
+						},
+					],
+					conditions: [{ type: 'next' }],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: (
+						<Row>
+							<Column>
+								<p>
+									Not bored of me yet? Great!<br />
+									The next step to your journey is creating a character!
+								</p>
+								<p>
+									<i>
+										From the next step onwards I will also get out of your way,<br />
+										only explaining things instead of taking up most of your screen.
+									</i>
+								</p>
+							</Column>
+							<Row alignX='center' className='maid-container'>
+								<img src={ maid } />
+							</Row>
+						</Row>
+					),
+					conditions: [{ type: 'next' }],
+				},
+			],
+		},
+		// TODO: When this tutorial auto-starts, show tutorial regarding character creation here.
+		// This part shouldn't happen when you manually start the tutorial.
+		{
+			steps: [
+				{
 					text: (
 						<>
-							[ WORK IN PROGRESS ]
+							<p>
+								Congratulations on creating your first character!
+							</p>
+							<p>
+								What you now see in front of you is your personal room,
+								but all of that will be explained in the next tutorial.
+							</p>
 						</>
 					),
+					conditions: [{ type: 'next' }],
+				},
+				{
+					text: <>Please switch back to the room screen.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: '/room',
+					}],
+				},
+				{
+					text: <>Please open the "Personal Space" tab.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.roomScreen .tab.active',
+						filter: (e) => e.innerText.includes('Personal space'),
+					}],
+					highlight: [{
+						query: '.roomScreen .tab',
+						filter: (e) => e.innerText.includes('Personal space'),
+					}],
+				},
+				{
+					text: (
+						<>
+							For now the most important bit is the section showing tutorials.<br />
+							Here you can find the currently running tutorial, as well as all the tutorials you can start.
+						</>
+					),
+					highlight: [{
+						query: '.privateSpaceTutorialsUi',
+					}],
+					conditions: [{ type: 'next' }],
+				},
+				{
+					text: (
+						<>
+							Please open the "Available tutorials" section by clicking on it.
+						</>
+					),
+					highlight: [{
+						query: '.fieldset-toggle-legend',
+						filter: (e) => e.innerText.includes('Available tutorials'),
+					}],
+					conditions: [{
+						type: 'elementQuery',
+						query: '.fieldset-toggle-legend.open',
+						filter: (e) => e.innerText.includes('Available tutorials'),
+					}],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <>Please switch back to the room screen.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: '/room',
+					}],
+				},
+				{
+					text: <>Please open the "Personal Space" tab.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.roomScreen .tab.active',
+						filter: (e) => e.innerText.includes('Personal space'),
+					}],
+					highlight: [{
+						query: '.roomScreen .tab',
+						filter: (e) => e.innerText.includes('Personal space'),
+					}],
+				},
+				{
+					text: (
+						<>
+							Please open the "Available tutorials" section by clicking on it.
+						</>
+					),
+					hideWhenCompleted: true,
+					highlight: [{
+						query: '.fieldset-toggle-legend',
+						filter: (e) => e.innerText.includes('Available tutorials'),
+					}],
+					conditions: [{
+						type: 'elementQuery',
+						query: '.fieldset-toggle-legend.open',
+						filter: (e) => e.innerText.includes('Available tutorials'),
+					}],
+				},
+				{
+					text: (
+						<>
+							These are all the tutorials we currently have.<br />
+							After you finish this tutorial we strongly recommend following up with the next one: "Pandora Introduction".
+						</>
+					),
+					conditions: [{ type: 'next' }],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: (
+						<>
+							<p>
+								One last thing I would like to mention now is, that Project Pandora also has rather comprehensive Wiki!<br />
+								You can find it using the highlighted button near the top of the screen.
+							</p>
+							<p>
+								And that is all from me for now!<br />
+								<i>Please have a joyful stay~</i>
+							</p>
+						</>
+					),
+					highlight: [{
+						query: '.HeaderButton[title="Wiki"]',
+					}],
 					conditions: [{ type: 'next' }],
 				},
 			],

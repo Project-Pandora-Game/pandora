@@ -1,15 +1,16 @@
-import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
-import React, { ReactElement, ReactNode, useCallback, useRef, useEffect, useMemo, useLayoutEffect } from 'react';
-import { Rnd } from 'react-rnd';
-import { sortBy } from 'lodash';
-import { ChildrenProps } from '../../common/reactTypes';
-import { Button, ButtonProps } from '../common/button/button';
-import { Observable, useObservable } from '../../observable';
-import './dialog.scss';
-import { useAsyncEvent, useEvent } from '../../common/useEvent';
-import { Column, Row } from '../common/container/container';
 import classNames from 'classnames';
+import { sortBy } from 'lodash';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
+import { Rnd } from 'react-rnd';
+import { type CommonProps } from '../../common/reactTypes';
+import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
+import type { PointLike } from '../../graphics/graphicsCharacter';
+import { Observable, useObservable } from '../../observable';
+import { Button, ButtonProps } from '../common/button/button';
+import { Column, Row } from '../common/container/container';
+import './dialog.scss';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type HtmlPortalNodeAny = HtmlPortalNode<any>;
@@ -83,7 +84,7 @@ export function DialogInPortal({ children, priority, location = 'global' }: {
 	);
 }
 
-export function ModalDialog({ children, priority, position = 'center', allowClickBubbling = false }: ChildrenProps & {
+export function ModalDialog({ children, priority, position = 'center', id, className, allowClickBubbling = false }: CommonProps & {
 	/**
 	 * Priority of this dialog for ordering the dialogs on screen.
 	 * Higher priority dialogs cover lower priority dialogs.
@@ -107,7 +108,7 @@ export function ModalDialog({ children, priority, position = 'center', allowClic
 
 	return (
 		<DialogInPortal priority={ priority }>
-			<div className={ classNames('dialog', position) } onClick={ clickSink } onPointerDown={ clickSink } onPointerUp={ clickSink }>
+			<div id={ id } className={ classNames('dialog', position, className) } onClick={ clickSink } onPointerDown={ clickSink } onPointerUp={ clickSink }>
 				<div className='dialog-content'>
 					{ children }
 				</div>
@@ -116,13 +117,14 @@ export function ModalDialog({ children, priority, position = 'center', allowClic
 	);
 }
 
-export function DraggableDialog({ children, className, title, rawContent, close, hiddenClose }: {
+export function DraggableDialog({ children, className, title, rawContent, close, hiddenClose, initialPosition }: {
 	children?: ReactNode;
 	className?: string;
 	title: string;
 	rawContent?: boolean;
 	close: () => void;
 	hiddenClose?: boolean;
+	initialPosition?: Readonly<PointLike>;
 }): ReactElement {
 	useEffect(() => {
 		if (close == null) {
@@ -148,8 +150,9 @@ export function DraggableDialog({ children, className, title, rawContent, close,
 					className={ classNames('dialog-draggable', className) }
 					dragHandleClassName='drag-handle'
 					default={ {
-						x: Math.max((window.innerWidth ?? 0) / 4 - 20, 0),
-						y: Math.max((window.innerHeight ?? 0) / 8 - 10, 0),
+						// We divide the position by 2, because there seems to be a bug in "Draggable" that multiplies it
+						x: (initialPosition?.x ?? Math.max((window.innerWidth ?? 0) / 2 - 20, 0)) / 2,
+						y: (initialPosition?.y ?? Math.max((window.innerHeight ?? 0) / 4 - 10, 0)) / 2,
 						width: 'auto',
 						height: 'auto',
 					} }
@@ -182,6 +185,7 @@ type ConfirmDialogEntry = Readonly<{
 	title: string;
 	content: ReactNode;
 	priority?: number;
+	className?: string;
 	handler: (result: boolean) => void;
 }>;
 
@@ -200,6 +204,7 @@ function useConfirmDialogController(symbol: symbol): {
 	title: string;
 	content: ReactNode;
 	priority: number;
+	className?: string;
 	onConfirm: () => void;
 	onCancel: () => void;
 } {
@@ -220,11 +225,13 @@ function useConfirmDialogController(symbol: symbol): {
 	const title = observed != null ? observed.title : '';
 	const content = observed?.content;
 	const priority = observed?.priority ?? DEFAULT_CONFIRM_DIALOG_PRIORITY;
+	const className = observed?.className;
 	return {
 		open,
 		title,
 		content,
 		priority,
+		className,
 		onConfirm,
 		onCancel,
 	};
@@ -237,13 +244,13 @@ type ConfirmDialogProps = {
 };
 
 export function ConfirmDialog({ symbol, yes = 'Ok', no = 'Cancel' }: ConfirmDialogProps) {
-	const { open, title, content, priority, onConfirm, onCancel } = useConfirmDialogController(symbol);
+	const { open, title, content, priority, className, onConfirm, onCancel } = useConfirmDialogController(symbol);
 
 	if (!open)
 		return null;
 
 	return (
-		<ModalDialog priority={ priority }>
+		<ModalDialog priority={ priority } className={ className }>
 			<Column className='dialog-confirm'>
 				<strong>{ title }<hr /></strong>
 				<Column padding='large'>
@@ -262,7 +269,7 @@ export function ConfirmDialog({ symbol, yes = 'Ok', no = 'Cancel' }: ConfirmDial
 	);
 }
 
-export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL): (title: string, content?: ReactNode, priority?: number) => Promise<boolean> {
+export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL): (title: string, content?: ReactNode, priority?: number, dialogClassName?: string) => Promise<boolean> {
 	const unset = useRef(false);
 	const entry = GetConfirmDialogEntry(symbol);
 	const resolveRef = useRef<(result: boolean) => void>();
@@ -281,13 +288,14 @@ export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL)
 		}
 		return false;
 	}, [entry]), 'Escape');
-	return useCallback((title: string, content?: ReactNode, priority?: number) => new Promise<boolean>((resolve) => {
+	return useCallback((title: string, content?: ReactNode, priority?: number, dialogClassName?: string) => new Promise<boolean>((resolve) => {
 		unset.current = true;
 		resolveRef.current = resolve;
 		entry.value = {
 			title,
 			content,
 			priority,
+			className: dialogClassName,
 			handler: (result) => {
 				unset.current = false;
 				entry.value = null;

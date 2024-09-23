@@ -13,7 +13,7 @@ export interface TutorialStage {
 }
 
 export interface TutorialStep {
-	text: string | ReactNode;
+	text: string | ReactNode | React.FC;
 	hideWhenCompleted?: true;
 	conditions: TutorialCondition[];
 	highlight?: TutorialHighlightSelector[];

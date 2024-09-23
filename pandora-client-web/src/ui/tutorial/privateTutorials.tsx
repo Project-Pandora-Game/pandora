@@ -42,20 +42,19 @@ export function PrivateRoomTutorialList(): ReactElement {
 	const activeTutorial = useObservable(ActiveTutorial);
 
 	return (
-		<FieldsetToggle legend='Tutorials'>
+		<Column>
 			<Column>
+				<h2 className='margin-none'>Tutorials</h2>
+				<span>{ activeTutorial == null ? 'No tutorial is currently active' : `Currently active tutorial: "${activeTutorial.config.name}"` }</span>
+			</Column>
+			<FieldsetToggle legend='Available tutorials' open={ false } persistent='tutorials-available'>
 				<Column>
-					<h2 className='margin-none'>Active tutorial</h2>
-					<span>{ activeTutorial == null ? 'None' : activeTutorial.config.name }</span>
-				</Column>
-				<Column>
-					<h2 className='margin-none'>Available tutorials</h2>
 					{
 						PRIVATE_TUTORIALS.map((t) => (<TutorialEntry key={ t.id } tutorial={ t } />))
 					}
 				</Column>
-			</Column>
-		</FieldsetToggle>
+			</FieldsetToggle>
+		</Column>
 	);
 }
 

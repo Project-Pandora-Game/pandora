@@ -40,7 +40,6 @@ import { MovementHelperGraphics } from '../movementHelper';
 import { useTexture } from '../useTexture';
 import { EvaluateCondition } from '../utility';
 import { useRoomCharacterOffsets } from './roomCharacter';
-import { RoomDeviceRenderContext } from './roomDeviceContext';
 import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
@@ -392,49 +391,47 @@ export function RoomDevice({
 	}), [asset]);
 
 	return (
-		<RoomDeviceRenderContext.Provider value={ item }>
-			<RoomDeviceGraphics
-				globalState={ globalState }
-				item={ item }
-				position={ { x, y: y - yOffsetExtra } }
-				scale={ { x: scale, y: scale } }
-				pivot={ pivot }
-				hitArea={ hitArea }
-				eventMode={ eventMode }
-				cursor={ cursor }
-				onPointerDown={ onPointerDown }
-				onPointerUp={ onPointerUp }
-				onPointerUpOutside={ onPointerUp }
-				zIndex={ -deploymentY }
-			>
-				{ children }
-				{
-					!debugConfig?.deviceDebugOverlay ? null : (
-						<Container
-							zIndex={ 99999 }
-						>
-							<Graphics
-								draw={ (g) => {
-									g
-										// Vertical guide line
-										.moveTo(pivot.x, pivot.y - Math.max(100, pivot.y))
-										.lineTo(pivot.x, pivot.y + 100)
-										.stroke({ color: 0xffff00, width: 2, alpha: 0.5 })
-										// Ground line
-										.moveTo(pivot.x - Math.max(100, pivot.x), pivot.y)
-										.lineTo(pivot.x + Math.max(100, pivot.x), pivot.y)
-										.stroke({ color: 0xffff00, width: 2, alpha: 1 })
-										// Pivot point (wanted)
-										.circle(pivot.x, pivot.y, 5)
-										.fill(0xffff00)
-										.stroke({ color: 0x000000, width: 1 });
-								} }
-							/>
-						</Container>
-					)
-				}
-			</RoomDeviceGraphics>
-		</RoomDeviceRenderContext.Provider>
+		<RoomDeviceGraphics
+			globalState={ globalState }
+			item={ item }
+			position={ { x, y: y - yOffsetExtra } }
+			scale={ { x: scale, y: scale } }
+			pivot={ pivot }
+			hitArea={ hitArea }
+			eventMode={ eventMode }
+			cursor={ cursor }
+			onPointerDown={ onPointerDown }
+			onPointerUp={ onPointerUp }
+			onPointerUpOutside={ onPointerUp }
+			zIndex={ -deploymentY }
+		>
+			{ children }
+			{
+				!debugConfig?.deviceDebugOverlay ? null : (
+					<Container
+						zIndex={ 99999 }
+					>
+						<Graphics
+							draw={ (g) => {
+								g
+									// Vertical guide line
+									.moveTo(pivot.x, pivot.y - Math.max(100, pivot.y))
+									.lineTo(pivot.x, pivot.y + 100)
+									.stroke({ color: 0xffff00, width: 2, alpha: 0.5 })
+									// Ground line
+									.moveTo(pivot.x - Math.max(100, pivot.x), pivot.y)
+									.lineTo(pivot.x + Math.max(100, pivot.x), pivot.y)
+									.stroke({ color: 0xffff00, width: 2, alpha: 1 })
+									// Pivot point (wanted)
+									.circle(pivot.x, pivot.y, 5)
+									.fill(0xffff00)
+									.stroke({ color: 0x000000, width: 1 });
+							} }
+						/>
+					</Container>
+				)
+			}
+		</RoomDeviceGraphics>
 	);
 }
 

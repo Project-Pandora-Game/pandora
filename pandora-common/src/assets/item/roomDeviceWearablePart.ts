@@ -139,12 +139,12 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 		});
 	}
 
-	public resolveColor(colorizationKey: string, roomDevice: ItemRoomDevice | null): HexRGBAColorString | undefined {
-		return roomDevice?.resolveColor(colorizationKey);
+	public resolveColor(colorizationKey: string): HexRGBAColorString | undefined {
+		return this.roomDevice?.resolveColor(colorizationKey);
 	}
 
-	public getColorRibbon(roomDevice: ItemRoomDevice | null): HexRGBAColorString | undefined {
-		return roomDevice?.getColorRibbon();
+	public getColorRibbon(): HexRGBAColorString | undefined {
+		return this.roomDevice?.getColorRibbon();
 	}
 
 	@MemoizeNoArg

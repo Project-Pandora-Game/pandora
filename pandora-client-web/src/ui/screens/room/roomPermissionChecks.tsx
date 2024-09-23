@@ -5,7 +5,7 @@ import {
 } from 'react';
 import { toast } from 'react-toastify';
 import { useCharacterRestrictionManager, type Character } from '../../../character/character';
-import { IsSpaceAdmin, useActionSpaceContext, useCharacterRestrictionsManager, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { IsSpaceAdmin, useActionSpaceContext, useCharacterRestrictionsManager, useCharacterState, useGameState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue';
 import { DeviceOverlayState } from '../../../graphics/room/roomDevice';
@@ -66,11 +66,18 @@ export function useCanMoveCharacter(target: Character | null): boolean {
 	const spaceInfo = useSpaceInfo();
 	const isPlayerAdmin = IsSpaceAdmin(spaceInfo.config, currentAccount);
 
+	const gameState = useGameState();
+	const targetState = useCharacterState(gameState, target?.id ?? null);
+
 	const playerHasBlockedMovement = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getEffects().blockRoomMovement);
 
 	// See Space.updateCharacterPosition on shard for server-side version of this.
 	return useMemo((): boolean => {
-		if (target == null)
+		if (target == null || targetState == null)
+			return false;
+
+		// Characters in a room device cannot be used
+		if (targetState.getRoomDeviceWearablePart() != null)
 			return false;
 
 		// If moving self, must not be restricted by items
@@ -85,7 +92,7 @@ export function useCanMoveCharacter(target: Character | null): boolean {
 		}
 
 		return true;
-	}, [isPlayerAdmin, player, playerHasBlockedMovement, target]);
+	}, [isPlayerAdmin, player, playerHasBlockedMovement, target, targetState]);
 }
 
 /**

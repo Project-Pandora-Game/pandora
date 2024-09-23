@@ -8,7 +8,7 @@ import { AppearanceItemProperties } from '../assets/appearanceValidation';
 import { Asset } from '../assets/asset';
 import { EffectsDefinition } from '../assets/effects';
 import { FilterItemType, type Item, type ItemId, type RoomDeviceLink } from '../assets/item';
-import { AssetPropertiesResult, CreateAssetPropertiesResult } from '../assets/properties';
+import { AssetPropertiesResult } from '../assets/properties';
 import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes';
 import { HearingImpairment, Muffler } from '../character/speech';
 import type { GameLogicCharacter } from '../gameLogic/character/character';
@@ -23,9 +23,8 @@ export class CharacterRestrictionsManager {
 	public readonly appearance: CharacterAppearance;
 	public readonly spaceContext: ActionSpaceContext;
 	public readonly restrictionOverrideConfig: RestrictionOverrideConfig;
-	private _items: readonly Item[] = [];
-	private _properties: Immutable<AssetPropertiesResult> = CreateAssetPropertiesResult();
-	private _roomDeviceLink: Immutable<RoomDeviceLink> | null = null;
+	private readonly _properties: Immutable<AssetPropertiesResult>;
+	private readonly _roomDeviceLink: Immutable<RoomDeviceLink> | null;
 
 	public get character(): GameLogicCharacter {
 		return this.appearance.character;
@@ -35,29 +34,17 @@ export class CharacterRestrictionsManager {
 		this.appearance = appearance;
 		this.spaceContext = spaceContext;
 		this.restrictionOverrideConfig = GetRestrictionOverrideConfig(this.appearance.getRestrictionOverride());
-	}
 
-	private updateCachedData(): void {
-		const items = this.appearance.getAllItems();
-		if (items === this._items)
-			return;
-
-		this._items = items;
-		this._properties = AppearanceItemProperties(items);
-
-		const roomDeviceWearable = items.find((i) => i.isType('roomDeviceWearablePart'));
-		this._roomDeviceLink = roomDeviceWearable?.isType('roomDeviceWearablePart') ? roomDeviceWearable.roomDeviceLink : null;
+		// Calculate caches
+		this._properties = AppearanceItemProperties(this.appearance.getAllItems());
+		this._roomDeviceLink = this.appearance.characterState.getRoomDeviceWearablePart()?.roomDeviceLink ?? null;
 	}
 
 	public getProperties(): Immutable<AssetPropertiesResult> {
-		this.updateCachedData();
-
 		return this._properties;
 	}
 
 	public getRoomDeviceLink(): Immutable<RoomDeviceLink> | null {
-		this.updateCachedData();
-
 		return this._roomDeviceLink;
 	}
 

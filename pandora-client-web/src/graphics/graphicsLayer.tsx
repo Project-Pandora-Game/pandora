@@ -14,7 +14,6 @@ import { LayerStateOverrides } from './def';
 import { GraphicsMaskLayer } from './graphicsMaskLayer';
 import { useGraphicsSettings } from './graphicsSettings';
 import { usePixiApp, usePixiAppOptional } from './reconciler/appContext';
-import { RoomDeviceRenderContext } from './room/roomDeviceContext';
 import { useTexture } from './useTexture';
 import { EvaluateCondition } from './utility';
 
@@ -207,8 +206,6 @@ export function GraphicsLayer({
 }
 
 export function useItemColorString(items: AppearanceItems, item: Item | null, colorizationKey?: string | null): HexColorString | undefined {
-	const currentRoomDevice = useContext(RoomDeviceRenderContext);
-
 	if (item == null || colorizationKey == null) {
 		return undefined;
 	} else if (item.isType('personal')) {
@@ -216,7 +213,7 @@ export function useItemColorString(items: AppearanceItems, item: Item | null, co
 	} else if (item.isType('roomDevice')) {
 		return item.resolveColor(colorizationKey);
 	} else if (item.isType('roomDeviceWearablePart')) {
-		return item.resolveColor(colorizationKey, currentRoomDevice);
+		return item.resolveColor(colorizationKey);
 	} else if (item.isType('lock')) {
 		return undefined;
 	}
@@ -241,8 +238,6 @@ export function useItemColor(items: AppearanceItems, item: Item | null, coloriza
 }
 
 export function useItemColorRibbon(items: AppearanceItems, item: Item | null): HexColorString | undefined {
-	const currentRoomDevice = useContext(RoomDeviceRenderContext);
-
 	let color: HexColorString | undefined;
 
 	if (item == null) {
@@ -252,7 +247,7 @@ export function useItemColorRibbon(items: AppearanceItems, item: Item | null): H
 	} else if (item.isType('roomDevice')) {
 		color = item.getColorRibbon();
 	} else if (item.isType('roomDeviceWearablePart')) {
-		color = item.getColorRibbon(currentRoomDevice);
+		color = item.getColorRibbon();
 	} else if (item.isType('lock')) {
 		color = undefined;
 	} else {

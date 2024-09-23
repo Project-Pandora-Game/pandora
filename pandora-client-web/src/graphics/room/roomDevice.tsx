@@ -9,7 +9,6 @@ import {
 	Coordinates,
 	EMPTY_ARRAY,
 	ICharacterRoomData,
-	IRoomDeviceGraphicsCharacterPosition,
 	IRoomDeviceGraphicsLayerSlot,
 	IRoomDeviceGraphicsLayerSprite,
 	ItemRoomDevice,
@@ -31,7 +30,7 @@ import { ShardConnector } from '../../networking/shardConnector';
 import { useObservable } from '../../observable';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext';
 import { useDebugConfig } from '../../ui/screens/room/roomDebug';
-import { useAppearanceConditionEvaluator, useStandaloneConditionEvaluator } from '../appearanceConditionEvaluator';
+import { useStandaloneConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
 import { Container } from '../baseComponents/container';
 import { Graphics } from '../baseComponents/graphics';
 import { Sprite } from '../baseComponents/sprite';
@@ -41,7 +40,6 @@ import { MovementHelperGraphics } from '../movementHelper';
 import { useTexture } from '../useTexture';
 import { EvaluateCondition } from '../utility';
 import { useRoomCharacterOffsets } from './roomCharacter';
-import { RoomDeviceRenderContext } from './roomDeviceContext';
 import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
@@ -393,49 +391,47 @@ export function RoomDevice({
 	}), [asset]);
 
 	return (
-		<RoomDeviceRenderContext.Provider value={ item }>
-			<RoomDeviceGraphics
-				globalState={ globalState }
-				item={ item }
-				position={ { x, y: y - yOffsetExtra } }
-				scale={ { x: scale, y: scale } }
-				pivot={ pivot }
-				hitArea={ hitArea }
-				eventMode={ eventMode }
-				cursor={ cursor }
-				onPointerDown={ onPointerDown }
-				onPointerUp={ onPointerUp }
-				onPointerUpOutside={ onPointerUp }
-				zIndex={ -deploymentY }
-			>
-				{ children }
-				{
-					!debugConfig?.deviceDebugOverlay ? null : (
-						<Container
-							zIndex={ 99999 }
-						>
-							<Graphics
-								draw={ (g) => {
-									g
-										// Vertical guide line
-										.moveTo(pivot.x, pivot.y - Math.max(100, pivot.y))
-										.lineTo(pivot.x, pivot.y + 100)
-										.stroke({ color: 0xffff00, width: 2, alpha: 0.5 })
-										// Ground line
-										.moveTo(pivot.x - Math.max(100, pivot.x), pivot.y)
-										.lineTo(pivot.x + Math.max(100, pivot.x), pivot.y)
-										.stroke({ color: 0xffff00, width: 2, alpha: 1 })
-										// Pivot point (wanted)
-										.circle(pivot.x, pivot.y, 5)
-										.fill(0xffff00)
-										.stroke({ color: 0x000000, width: 1 });
-								} }
-							/>
-						</Container>
-					)
-				}
-			</RoomDeviceGraphics>
-		</RoomDeviceRenderContext.Provider>
+		<RoomDeviceGraphics
+			globalState={ globalState }
+			item={ item }
+			position={ { x, y: y - yOffsetExtra } }
+			scale={ { x: scale, y: scale } }
+			pivot={ pivot }
+			hitArea={ hitArea }
+			eventMode={ eventMode }
+			cursor={ cursor }
+			onPointerDown={ onPointerDown }
+			onPointerUp={ onPointerUp }
+			onPointerUpOutside={ onPointerUp }
+			zIndex={ -deploymentY }
+		>
+			{ children }
+			{
+				!debugConfig?.deviceDebugOverlay ? null : (
+					<Container
+						zIndex={ 99999 }
+					>
+						<Graphics
+							draw={ (g) => {
+								g
+									// Vertical guide line
+									.moveTo(pivot.x, pivot.y - Math.max(100, pivot.y))
+									.lineTo(pivot.x, pivot.y + 100)
+									.stroke({ color: 0xffff00, width: 2, alpha: 0.5 })
+									// Ground line
+									.moveTo(pivot.x - Math.max(100, pivot.x), pivot.y)
+									.lineTo(pivot.x + Math.max(100, pivot.x), pivot.y)
+									.stroke({ color: 0xffff00, width: 2, alpha: 1 })
+									// Pivot point (wanted)
+									.circle(pivot.x, pivot.y, 5)
+									.fill(0xffff00)
+									.stroke({ color: 0x000000, width: 1 });
+							} }
+						/>
+					</Container>
+				)
+			}
+		</RoomDeviceGraphics>
 	);
 }
 
@@ -598,6 +594,51 @@ function RoomDeviceGraphicsLayerSlot({ item, layer, globalState }: {
 	);
 }
 
+export interface CalculateCharacterDeviceSlotPositionArgs {
+	item: ItemRoomDevice;
+	layer: Immutable<IRoomDeviceGraphicsLayerSlot>;
+	characterState: AssetFrameworkCharacterState;
+	evaluator: AppearanceConditionEvaluator;
+	baseScale: number;
+	pivot: Readonly<PointLike>;
+}
+
+export function CalculateCharacterDeviceSlotPosition({ item, layer, characterState, evaluator, baseScale, pivot }: CalculateCharacterDeviceSlotPositionArgs): {
+	/** Position on the room canvas */
+	position: Readonly<PointLike>;
+	/** Final scale of the character (both pose and room scaling applied) */
+	scale: Readonly<PointLike>;
+	/** Position of character's pivot (usually between feet; between knees when kneeling) */
+	pivot: Readonly<PointLike>;
+} {
+	const devicePivot = item.asset.definition.pivot;
+
+	const effectiveCharacterPosition = layer.characterPositionOverrides
+		?.find((override) => EvaluateCondition(override.condition, (c) => evaluator.evalCondition(c, item)))?.position
+			?? layer.characterPosition;
+
+	const x = devicePivot.x + effectiveCharacterPosition.offsetX;
+	const y = devicePivot.y + effectiveCharacterPosition.offsetY;
+
+	const scale = baseScale * (effectiveCharacterPosition.relativeScale ?? 1);
+
+	const backView = characterState.actualPose.view === 'back';
+
+	const scaleX = backView ? -1 : 1;
+
+	const actualPivot: PointLike = CloneDeepMutable(effectiveCharacterPosition.disablePoseOffset ? CHARACTER_PIVOT_POSITION : pivot);
+	if (effectiveCharacterPosition.pivotOffset != null) {
+		actualPivot.x += effectiveCharacterPosition.pivotOffset.x;
+		actualPivot.y += effectiveCharacterPosition.pivotOffset.y;
+	}
+
+	return {
+		position: { x, y },
+		scale: { x: scale * scaleX, y: scale },
+		pivot: actualPivot,
+	};
+}
+
 function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characterState }: {
 	item: ItemRoomDevice;
 	layer: Immutable<IRoomDeviceGraphicsLayerSlot>;
@@ -609,39 +650,25 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 	const characterFilters = useCharacterDisplayFilters(character);
 	const filters = useMemo(() => [...playerFilters, ...characterFilters], [playerFilters, characterFilters]);
 
-	const devicePivot = item.asset.definition.pivot;
-
-	const evaluator = useAppearanceConditionEvaluator(characterState);
-
-	const effectiveCharacterPosition = useMemo<IRoomDeviceGraphicsCharacterPosition>(() => {
-		return layer.characterPositionOverrides
-			?.find((override) => EvaluateCondition(override.condition, (c) => evaluator.evalCondition(c, item)))?.position
-			?? layer.characterPosition;
-	}, [evaluator, item, layer]);
-
-	const x = devicePivot.x + effectiveCharacterPosition.offsetX;
-	const y = devicePivot.y + effectiveCharacterPosition.offsetY;
-
 	const {
 		baseScale,
 		pivot,
 		rotationAngle,
+		evaluator,
 	} = useRoomCharacterOffsets(characterState);
 
-	const scale = baseScale * (effectiveCharacterPosition.relativeScale ?? 1);
-
-	const backView = characterState.actualPose.view === 'back';
-
-	const scaleX = backView ? -1 : 1;
-
-	const actualPivot = useMemo((): PointLike => {
-		const result: PointLike = CloneDeepMutable(effectiveCharacterPosition.disablePoseOffset ? CHARACTER_PIVOT_POSITION : pivot);
-		if (effectiveCharacterPosition.pivotOffset != null) {
-			result.x += effectiveCharacterPosition.pivotOffset.x;
-			result.y += effectiveCharacterPosition.pivotOffset.y;
-		}
-		return result;
-	}, [effectiveCharacterPosition, pivot]);
+	const {
+		position,
+		pivot: actualPivot,
+		scale,
+	} = useMemo(() => CalculateCharacterDeviceSlotPosition({
+		item,
+		layer,
+		characterState,
+		evaluator,
+		baseScale,
+		pivot,
+	}), [item, layer, characterState, evaluator, baseScale, pivot]);
 
 	// Character must be in this device, otherwise we skip rendering it here
 	// (could happen if character left and rejoined the room without device equipped)
@@ -652,9 +679,9 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 	return (
 		<GraphicsCharacter
 			characterState={ characterState }
-			position={ { x, y } }
+			position={ position }
 			pivot={ actualPivot }
-			scale={ { x: scale * scaleX, y: scale } }
+			scale={ scale }
 			angle={ rotationAngle }
 			filters={ filters }
 		>

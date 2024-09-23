@@ -7,7 +7,7 @@ import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, 
 import type { AssetManager } from '../assetManager';
 import { WearableAssetType } from '../definitions';
 import { BoneType, CharacterView } from '../graphics';
-import { Item } from '../item';
+import { Item, type ItemRoomDeviceWearablePart } from '../item';
 import type { IExportOptions } from '../modules/common';
 import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose';
 import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type RestrictionOverride } from './characterStateTypes';
@@ -110,6 +110,14 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		void this.assetManager.getBoneByName(bone);
 
 		return this.actualPose.bones[bone] || 0;
+	}
+
+	/**
+	 * Looks for a room device wearable part on the character and returns it if it exists, otherwise returns `null`.
+	 */
+	public getRoomDeviceWearablePart(): ItemRoomDeviceWearablePart | null {
+		const roomDeviceWearable = this.items.find((i) => i.isType('roomDeviceWearablePart'));
+		return roomDeviceWearable != null ? roomDeviceWearable : null;
 	}
 
 	public produceWithItems(newItems: AppearanceItems<WearableAssetType>): AssetFrameworkCharacterState {

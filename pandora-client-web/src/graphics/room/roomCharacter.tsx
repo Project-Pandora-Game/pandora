@@ -23,7 +23,7 @@ import { useObservable } from '../../observable';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext';
 import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug';
-import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
+import { useAppearanceConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
 import { Container } from '../baseComponents/container';
 import { Graphics } from '../baseComponents/graphics';
 import { Sprite } from '../baseComponents/sprite';
@@ -31,6 +31,7 @@ import { Text } from '../baseComponents/text';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
 import { MASK_SIZE, SwapCullingDirection } from '../graphicsLayer';
 import { useTexture } from '../useTexture';
+import { CalculateCharacterDeviceSlotPosition } from './roomDevice';
 import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
 
 export type RoomCharacterInteractiveProps = {
@@ -80,6 +81,8 @@ export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterS
 	pivot: Readonly<PointLike>;
 	/** Angle (in degrees) of whole-character rotation */
 	rotationAngle: number;
+	/** Appearance condition evaluator for the character */
+	evaluator: AppearanceConditionEvaluator;
 } {
 	const evaluator = useAppearanceConditionEvaluator(characterState);
 
@@ -110,10 +113,11 @@ export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterS
 		yOffset,
 		pivot,
 		rotationAngle: evaluator.getBoneLikeValue('character_rotation'),
+		evaluator,
 	};
 }
 
-export function useRoomCharacterPosition(position: CharacterRoomPosition, characterState: AssetFrameworkCharacterState, projectionResolver: Immutable<RoomProjectionResolver>): {
+export type RoomCharacterCalculatedPosition = {
 	/** Position on the room canvas */
 	position: Readonly<PointLike>;
 	/** Z index to use for the character within the room's container */
@@ -135,7 +139,9 @@ export function useRoomCharacterPosition(position: CharacterRoomPosition, charac
 	pivot: Readonly<PointLike>;
 	/** Angle (in degrees) of whole-character rotation */
 	rotationAngle: number;
-} {
+};
+
+export function useRoomCharacterPosition(position: CharacterRoomPosition, characterState: AssetFrameworkCharacterState, projectionResolver: Immutable<RoomProjectionResolver>): RoomCharacterCalculatedPosition {
 	const [posX, posY, yOffsetExtra] = projectionResolver.fixupPosition(position);
 
 	const {
@@ -143,20 +149,69 @@ export function useRoomCharacterPosition(position: CharacterRoomPosition, charac
 		yOffset,
 		pivot,
 		rotationAngle,
+		evaluator,
 	} = useRoomCharacterOffsets(characterState);
 
-	return {
-		position: useMemo((): PointLike => {
+	return useMemo((): RoomCharacterCalculatedPosition => {
+		// If we are in a room device, calculate transformation based on it instead
+		const roomDeviceWearablePart = characterState.getRoomDeviceWearablePart();
+		if (roomDeviceWearablePart != null) {
+			const roomDevice = roomDeviceWearablePart.roomDevice;
+			const deviceAsset = roomDevice?.asset.definition;
+			const displayLayer = deviceAsset?.graphicsLayers.findLast((layer) => layer.type === 'slot' && layer.slot === roomDeviceWearablePart.roomDeviceLink?.slot);
+			if (displayLayer?.type === 'slot' && roomDevice?.deployment != null && deviceAsset != null) {
+				const [deploymentX, deploymentY, deploymentYOffsetExtra] = projectionResolver.fixupPosition([
+					roomDevice.deployment.x,
+					roomDevice.deployment.y,
+					roomDevice.deployment.yOffset,
+				]);
+				const [deviceX, deviceBaseY] = projectionResolver.transform(deploymentX, deploymentY, 0);
+				const deviceScale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
+				const deviceY = deviceBaseY - deploymentYOffsetExtra;
+				const devicePivot = deviceAsset.pivot;
+
+				const {
+					position: slotPosition,
+					pivot: slotPivot,
+					scale: slotScale,
+				} = CalculateCharacterDeviceSlotPosition({
+					item: roomDevice,
+					layer: displayLayer,
+					characterState,
+					evaluator,
+					baseScale,
+					pivot,
+				});
+
+				return {
+					position: {
+						x: deviceX + deviceScale * (-devicePivot.x + slotPosition.x),
+						y: deviceY + deviceScale * (-devicePivot.y + slotPosition.y),
+					},
+					zIndex: 0,
+					yOffset: 0,
+					yOffsetExtra: 0,
+					scale: deviceScale * slotScale.y,
+					pivot: slotPivot,
+					rotationAngle,
+				};
+			}
+		}
+
+		// Normal character room position
+		{
 			const [x, y] = projectionResolver.transform(posX, posY, 0);
-			return ({ x, y });
-		}, [projectionResolver, posX, posY]),
-		zIndex: -posY,
-		yOffset,
-		yOffsetExtra,
-		scale: baseScale * projectionResolver.scaleAt(posX, posY, 0),
-		pivot,
-		rotationAngle,
-	};
+			return {
+				position: { x, y },
+				zIndex: -posY,
+				yOffset,
+				yOffsetExtra,
+				scale: baseScale * projectionResolver.scaleAt(posX, posY, 0),
+				pivot,
+				rotationAngle,
+			};
+		}
+	}, [baseScale, characterState, evaluator, pivot, posX, posY, projectionResolver, rotationAngle, yOffset, yOffsetExtra]);
 }
 
 function RoomCharacterInteractiveImpl({

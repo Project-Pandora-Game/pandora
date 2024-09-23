@@ -51,7 +51,6 @@ const TIPS: readonly string[] = [
 	`You can use your browser's "back" and "forward" buttons to navigate between screens.`,
 	`In the Pandora settings, character (chat) and account (direct messages) name colors are set separately.`,
 	`Every single change in the wardrobe happens instantly and is immediately visible to everyone in the room.`,
-	`Public spaces without an admin online inside are not publicly listed in the spaces search.`,
 	`The character context menu can still be opened from a room item's menu while a character is inside.`,
 	`You can start typing a chat message at any time, even without clicking into the text input field first.`,
 ];

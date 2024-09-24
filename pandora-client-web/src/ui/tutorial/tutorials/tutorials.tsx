@@ -44,7 +44,9 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 										<br />
 										a warm welcome to Club Pandora!<br />
 										<br />
-										Let me give you some important hints and tips about your stay in the club and its rules. ”
+										I am Mona and I am here to show you everything important to make your stay in the club a pleasant experience.<br />
+										<br />
+										Let's start with some basic hints and tips. ”
 									</p>
 								</Column>
 								<Row alignX='center' className='maid-container'>
@@ -65,7 +67,7 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 							<Column>
 								<p>
 									As I am quite new to this job, I might sometimes get in the way.<br />
-									If that happens feel free to move me!<br />
+									If that happens please feel free to move me as it pleases you!<br />
 									<br />
 									You can move the tutorial screen by dragging the highlighted section.
 								</p>
@@ -91,8 +93,10 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 						<Row>
 							<Column>
 								<p>
-									If you are already familiar with the club, or if you prefer exploring it completely by yourself,<br />
-									then you can just quit this tutorial right now by clicking the '×' in the corner.
+									If you are already familiar with the club or if you prefer exploring it completely by yourself,
+									you can quit a tutorial at any time by clicking the '×' in the corner.<br />
+									<br />
+									I recommend going through the tutorials at your own pace, as it will likely give you a smoother experience.
 								</p>
 							</Column>
 							<Row alignX='center' className='maid-container'>
@@ -116,8 +120,8 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 						<Row>
 							<Column>
 								<p>
-									Not bored of me yet? Great!<br />
-									The next step to your journey is creating a character!
+									Ah, you decided to stick with me. That makes me happy!<br />
+									The next step on your journey is creating a character.
 								</p>
 								<p>
 									<i>
@@ -261,7 +265,7 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								One last thing I would like to mention now is, that Project Pandora also has rather comprehensive Wiki!<br />
+								One last thing I would like to mention now is, that Project Pandora also has a rather comprehensive Wiki!<br />
 								You can find it using the highlighted button near the top of the screen.
 							</p>
 							<p>

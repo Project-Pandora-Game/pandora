@@ -36,8 +36,8 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 	if (stage == null)
 		return null;
 
-	const headerBottom = document.getElementsByClassName('Header')[0]?.getBoundingClientRect().bottom ?? 16;
-	const defaultShift = 16;
+	const headerBottom = document.getElementsByClassName('Header')[0]?.getBoundingClientRect().bottom ?? 26;
+	const defaultShift = 26;
 
 	return (
 		<DraggableDialog title='Tutorial' className='tutorialDialogContainer' close={ stopTutorialConfirm } initialPosition={ { x: defaultShift, y: headerBottom + defaultShift } }>

@@ -120,7 +120,7 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 						<Row>
 							<Column>
 								<p>
-									Ah, you decided to stick with me. That makes me happy!<br />
+									Ah, you decided to stick with me. Thank you!<br />
 									The next step on your journey is creating a character.
 								</p>
 								<p>

@@ -37,8 +37,8 @@
 		]
 	},
 	"dependencies": {
-		"@aws-sdk/client-ses": "3.658.0",
-		"@aws-sdk/credential-provider-node": "3.658.0",
+		"@aws-sdk/client-ses": "3.658.1",
+		"@aws-sdk/credential-provider-node": "3.658.1",
 		"@octokit/auth-oauth-app": "7.1.0",
 		"@octokit/rest": "20.1.1",
 		"argon2": "0.41.1",
@@ -65,7 +65,7 @@
 		"@types/jest": "29.5.13",
 		"@types/json-diff": "1.0.3",
 		"@types/lodash": "4.17.9",
-		"@types/node": "20.16.7",
+		"@types/node": "20.16.9",
 		"@types/nodemailer": "6.4.16",
 		"@types/semver": "7.5.8",
 		"@types/wtfnode": "0.7.3",

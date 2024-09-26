@@ -61,7 +61,7 @@
 	"devDependencies": {
 		"@stylistic/eslint-plugin": "2.8.0",
 		"@types/async-lock": "1.4.2",
-		"@types/express": "4.17.21",
+		"@types/express": "5.0.0",
 		"@types/jest": "29.5.13",
 		"@types/json-diff": "1.0.3",
 		"@types/lodash": "4.17.9",

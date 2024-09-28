@@ -165,6 +165,9 @@ export function WardrobeRoomDeviceSlots({ roomDevice, item }: {
 		contents = 'Device must be deployed to interact with slots';
 	}
 
+	if (Object.entries(roomDevice.asset.definition.slots).length === 0)
+		return null;
+
 	return (
 		<FieldsetToggle legend='Slots'>
 			<Column padding='medium'>

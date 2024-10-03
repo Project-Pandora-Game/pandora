@@ -157,6 +157,8 @@ export function DraggableDialog({ children, className, title, rawContent, close,
 						height: 'auto',
 					} }
 					bounds='parent'
+					maxHeight={ initialPosition ? (window.innerHeight - initialPosition.y - 10) : 'calc(95vh - 2em)' }
+					maxWidth={ initialPosition ? (window.innerWidth - initialPosition.x - 20) : 'calc(95vw - 2em)' }
 				>
 					<header className='dialog-header'>
 						<div className='drag-handle'>

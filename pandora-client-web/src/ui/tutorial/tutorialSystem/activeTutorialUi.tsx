@@ -4,6 +4,7 @@ import React, { useCallback, useEffect, useRef, useState, type ReactElement } fr
 import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
 import { DialogInPortal, DraggableDialog, useConfirmDialog } from '../../../components/dialog/dialog';
+import { USER_DEBUG } from '../../../config/Environment';
 import { useObservable } from '../../../observable';
 import type { TutorialCondition, TutorialHighlightSelector, TutorialStep } from './tutorialConfig';
 import type { TutorialRunner, TutorialStageRunner } from './tutorialRunner';
@@ -55,7 +56,26 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 	return (
 		<DraggableDialog title='Tutorial' className='tutorialDialogContainer' close={ stopTutorialConfirm } initialPosition={ { x: defaultShift, y: headerBottom + defaultShift } }>
 			<div className='tutorialDialog div-container direction-column gap-medium' ref={ contentRef }>
-				<strong>{ tutorial.config.name } ({ tutorial.stageIndex + 1 }/{ tutorial.config.stages.length })</strong>
+				<strong>
+					{ tutorial.config.name } (
+					{
+						USER_DEBUG ? (
+							<a
+								title='[DEBUG] Skip this tutorial stage'
+								onClick={ (ev) => {
+									ev.preventDefault();
+									ev.stopPropagation();
+									tutorial.advanceStage();
+								} }
+							>
+								{ tutorial.stageIndex + 1 }/{ tutorial.config.stages.length }
+							</a>
+						) : (
+							<>{ tutorial.stageIndex + 1 }/{ tutorial.config.stages.length }</>
+						)
+					}
+					)
+				</strong>
 				<ActiveTutorialStageUi stage={ stage } scrollToEnd={ scrollToEnd } />
 			</div>
 		</DraggableDialog>

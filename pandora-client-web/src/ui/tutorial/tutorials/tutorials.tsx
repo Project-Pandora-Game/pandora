@@ -93,6 +93,31 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 						<Row>
 							<Column>
 								<p>
+									You can also resize the tutorials dialog by dragging any of its edges.
+								</p>
+							</Column>
+							<Row alignX='center' className='maid-container'>
+								<img src={ maid } />
+							</Row>
+						</Row>
+					),
+					highlight: [
+						{
+							query: '.tutorialDialogContainer > div:not(.dialog-content) > div',
+							inset: true,
+						},
+					],
+					conditions: [{ type: 'next' }],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: (
+						<Row>
+							<Column>
+								<p>
 									If you are already familiar with the club or if you prefer exploring it completely by yourself,
 									you can quit a tutorial at any time by clicking the '×' in the corner.<br />
 									<br />
@@ -276,6 +301,7 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 					),
 					highlight: [{
 						query: '.HeaderButton[title="Wiki"]',
+						inset: true,
 					}],
 					conditions: [{ type: 'next' }],
 				},

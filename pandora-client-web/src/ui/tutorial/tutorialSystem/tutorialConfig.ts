@@ -22,6 +22,7 @@ export interface TutorialStep {
 export type TutorialHighlightSelector = {
 	query: string;
 	filter?: (element: HTMLElement) => boolean;
+	inset?: true;
 };
 
 export type TutorialConditionUrl = {

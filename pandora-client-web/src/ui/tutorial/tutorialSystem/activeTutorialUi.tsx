@@ -1,8 +1,8 @@
 import type { Immutable } from 'immer';
 import { AssertNever, EMPTY_ARRAY, GetLogger } from 'pandora-common';
-import React, { useCallback, useEffect, useState, type ReactElement } from 'react';
+import React, { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
 import { Button } from '../../../components/common/button/button';
-import { Column, Row } from '../../../components/common/container/container';
+import { Row } from '../../../components/common/container/container';
 import { DialogInPortal, DraggableDialog, useConfirmDialog } from '../../../components/dialog/dialog';
 import { useObservable } from '../../../observable';
 import type { TutorialCondition, TutorialHighlightSelector, TutorialStep } from './tutorialConfig';
@@ -33,6 +33,19 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 			});
 	}, [stopTutorial, confirm]);
 
+	const contentRef = useRef<HTMLDivElement>(null);
+
+	const scrollToEnd = useCallback(() => {
+		const target = contentRef.current?.parentElement;
+		if (target != null) {
+			target.scroll({
+				top: target.scrollHeight,
+				left: 0,
+				behavior: 'smooth',
+			});
+		}
+	}, []);
+
 	if (stage == null)
 		return null;
 
@@ -41,16 +54,17 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 
 	return (
 		<DraggableDialog title='Tutorial' className='tutorialDialogContainer' close={ stopTutorialConfirm } initialPosition={ { x: defaultShift, y: headerBottom + defaultShift } }>
-			<Column className='tutorialDialog'>
+			<div className='tutorialDialog div-container direction-column gap-medium' ref={ contentRef }>
 				<strong>{ tutorial.config.name } ({ tutorial.stageIndex + 1 }/{ tutorial.config.stages.length })</strong>
-				<ActiveTutorialStageUi stage={ stage } />
-			</Column>
+				<ActiveTutorialStageUi stage={ stage } scrollToEnd={ scrollToEnd } />
+			</div>
 		</DraggableDialog>
 	);
 }
 
-function ActiveTutorialStageUi({ stage }: {
+function ActiveTutorialStageUi({ stage, scrollToEnd }: {
 	stage: TutorialStageRunner;
+	scrollToEnd: () => void;
 }): ReactElement | null {
 	const activeStepIndex = useObservable(stage.activeStepIndex);
 
@@ -60,6 +74,8 @@ function ActiveTutorialStageUi({ stage }: {
 			return;
 		}
 
+		scrollToEnd();
+
 		// If there is a step, trigger updates at regular intervals
 		const interval = setInterval(() => {
 			stage.update();
@@ -67,7 +83,7 @@ function ActiveTutorialStageUi({ stage }: {
 		return () => {
 			clearInterval(interval);
 		};
-	}, [stage, activeStepIndex]);
+	}, [stage, activeStepIndex, scrollToEnd]);
 
 	if (activeStepIndex < 0)
 		return null;
@@ -164,7 +180,7 @@ function ActiveTutorialStepCondition({ condition, stage, stepIndex }: {
 				</Button>
 				{
 					highlightElement != null ? (
-						<ActiveTutorialElementHighlight target={ highlightElement } />
+						<ActiveTutorialElementHighlight target={ highlightElement } inset={ false } />
 					) : null
 				}
 			</Row>
@@ -183,6 +199,7 @@ function ActiveTutorialStepCondition({ condition, stage, stepIndex }: {
 const HIGHLIGHT_QUERY_INTERVAL = 1_000;
 const HIGHLIGHT_POSITION_INTERVAL = 200;
 const HIGHLIGHT_PADDING = 8;
+const HIGHLIGHT_INSET = 2;
 
 function ActiveTutorialHighlight({ highlight }: {
 	highlight: TutorialHighlightSelector;
@@ -217,6 +234,7 @@ function ActiveTutorialHighlight({ highlight }: {
 				elements.map((el, i) => (
 					<ActiveTutorialElementHighlight key={ el.id || i }
 						target={ el }
+						inset={ highlight.inset === true }
 					/>
 				))
 			}
@@ -224,8 +242,9 @@ function ActiveTutorialHighlight({ highlight }: {
 	);
 }
 
-function ActiveTutorialElementHighlight({ target }: {
+function ActiveTutorialElementHighlight({ target, inset }: {
 	target: HTMLElement;
+	inset: boolean;
 }): ReactElement | null {
 	const [area, setArea] = useState<[number, number, number, number]>([0, 0, 0, 0]);
 
@@ -262,10 +281,10 @@ function ActiveTutorialElementHighlight({ target }: {
 			<div
 				className='tutorial-highlight-overlay'
 				style={ {
-					left: area[0] - HIGHLIGHT_PADDING,
-					top: area[1] - HIGHLIGHT_PADDING,
-					width: area[2] + 2 * HIGHLIGHT_PADDING,
-					height: area[3] + 2 * HIGHLIGHT_PADDING,
+					left: inset ? (area[0] + HIGHLIGHT_INSET) : (area[0] - HIGHLIGHT_PADDING),
+					top: inset ? (area[1] + HIGHLIGHT_INSET) : (area[1] - HIGHLIGHT_PADDING),
+					width: inset ? (area[2] - 2 * HIGHLIGHT_INSET) : (area[2] + 2 * HIGHLIGHT_PADDING),
+					height: inset ? (area[3] - 2 * HIGHLIGHT_INSET) : (area[3] + 2 * HIGHLIGHT_PADDING),
 				} }
 			/>
 		</DialogInPortal>

@@ -241,7 +241,8 @@ export class URLGraphicsLoader extends GraphicsLoaderBase {
 
 	constructor(prefix: string = '') {
 		super(GetLogger('GraphicsLoader', `[URLGraphicsLoader '${prefix}']`));
-		this.prefix = prefix;
+		// Use full URL, as service worker fetch requires it
+		this.prefix = prefix.startsWith('/') ? (window.location.origin + prefix) : prefix;
 	}
 
 	public override async loadTextureSource(path: string): Promise<TextureSource> {

@@ -1,28 +1,10 @@
 import React from 'react';
+import { ExternalLink } from '../../../components/common/link/externalLink';
+import { usePlayerData } from '../../../components/gameContext/playerContextProvider';
 import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 
-// TODO: Moving around in a room and for the "Room" tab of the space
+// Moving around in a room and for the "Room" tab of the space
 // (basics of the room; only inside personal space for now)
-/*
-- On the left there is a room view. Contains background image, characters and may contain room devices
-- You can drag empty space to move around and use mouse wheel (desktop) or pinch (mobile) to zoom; double-click empty space to reset the room's focus
-- You can click on your name to open menu for your character
-- You can drag name of your character to quickly move your character; note about who can move character (you can move yourself unless some items prevent it, admin can move anyone)
-- On the right you have controls with various tabs
-  - Personal room
-	- Each character has its personal room that no one else can enter. Meeting with other characters can happen in public or private "space"s. (those have similar, but slightly different tab, will be mentioned in later tutorials)
-	- Contains list of characters and quick actions. You can again click the character's name to open its menu
-	- Other options (Room inventory, List of spaces, Room construction mode, ...) will be covered in later tutorials
-  - Chat
-	- You see most of what happens in the room here (showcase action)
-	- Some important changes are also shown (showcase server message)
-	- Type a message to say something as your character and send with Enter (what your character says can be impacted by worn items)
-	- Type a message starting with `*` to emote your character doing something (you can also do `**` to emote without your character's name being added at the beginning)
-	- Type a message starting with `((` or use the `/ooc` command to say something Out-Of-Character
-	- Chat can do much more, such as ability to edit messages you sent, whispering to a specific person, or many chat commands. Those will be covered in a later tutorial or in the Wiki
-  - Pose & Expressions will be covered in later tutorials
-- You can find summary of this and more in the wiki page "New User Guide"!
-*/
 export const TUTORIAL_ROOM: TutorialConfig = {
 	id: 'room',
 	name: `Pandora introduction`,
@@ -448,12 +430,347 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 					text: (
 						<p>
 							Great! That is all for the room part of the screen for now.<br />
-							Lets move to the basic controls Pandora has.<br />
-							<br />
-							[ WORK IN PROGRESS ]
+							Lets move to the basic controls Pandora has.
 						</p>
 					),
 					highlight: [{ query: '.roomScreen .interactionArea' }],
+					conditions: [{ type: 'next' }],
+				},
+				{
+					text: <>Open the "Personal Space" tab.</>,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.roomScreen .tab.active',
+						filter: (e) => e.innerText.includes('Personal space'),
+					}],
+					highlight: [{
+						query: '.roomScreen .tab',
+						filter: (e) => e.innerText.includes('Personal space'),
+					}],
+				},
+				{
+					text: (
+						<>
+							<p>
+								As you can see, you are currently in your own "personal space".
+							</p>
+							<p>
+								Every character has their own personal space, which functions as a singleplayer lobby - no other characters can enter it.<br />
+								It cannot be deleted or given up. You will automatically end up in this space when your<br />
+								selected character is not in any other space.<br />
+								You can find more about personal spaces in the context help or in the wiki.
+							</p>
+							<p>
+								The other type of space is a public (or private/invite-only) space.<br />
+								Those will be covered by a later tutorial.
+							</p>
+						</>
+					),
+					highlight: [{
+						query: '.roomScreen .tab-content',
+					}],
+					conditions: [{ type: 'next' }],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <>Please switch back to the room screen.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: '/room',
+					}],
+				},
+				{
+					text: <>Open the "Personal Space" tab.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.roomScreen .tab.active',
+						filter: (e) => e.innerText.includes('Personal space'),
+					}],
+					highlight: [{
+						query: '.roomScreen .tab',
+						filter: (e) => e.innerText.includes('Personal space'),
+					}],
+				},
+				{
+					text: (
+						<>
+							<p>
+								The "Personal space" tab allows you to do many actions, most of which will be explained in later tutorials.
+							</p>
+							<p>
+								The part we would like to point out right now is the list of characters currently inside this space.<br />
+								As this is a personal space, you can only see yourself here, but in a public room you can always see everyone currently inside using this list.
+							</p>
+						</>
+					),
+					highlight: [{ query: '.character-info' }],
+					conditions: [{ type: 'next' }],
+				},
+				{
+					text: (
+						<>
+							<p>
+								For each character there are several quick actions you can do, such as opening their Wardrobe or Profile.
+							</p>
+							<p>
+								You can also click the character's name to open the same menu as when clicking their name in the room on the left.<br />
+								Try doing so now.
+							</p>
+						</>
+					),
+					highlight: [{ query: '.character-info legend.player > button:has(.colorStrip)' }],
+					conditions: [{
+						type: 'elementQuery',
+						query: '.context-menu',
+					}],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <>Please switch back to the room screen.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: '/room',
+					}],
+				},
+				{
+					text: (
+						<p>
+							The second tab we will briefly cover in this tutorial is the "Chat".<br />
+							Please switch to it now.
+						</p>
+					),
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.roomScreen .tab.active',
+						filter: (e) => e.innerText.includes('Chat'),
+					}],
+					highlight: [{
+						query: '.roomScreen .tab',
+						filter: (e) => e.innerText.includes('Chat'),
+					}],
+				},
+				{
+					text: (
+						<>
+							<p>
+								Chat is the most essential part of Pandora, as you use it to communicate with others and roleplay your character's actions.<br />
+								It also shows actions that you or others do in the current space.
+							</p>
+							<p>
+								As chat is a core part of Pandora, it also is a powerful tool.<br />
+								While this tutorial will only introduce the basics, you can find more details about it in the <ExternalLink href='https://project-pandora.com/wiki/spaces'>"Spaces" wiki page</ExternalLink>.
+							</p>
+						</>
+					),
+					conditions: [{ type: 'next' }],
+				},
+			],
+		},
+		// TODO: You see most of what happens in the room here (showcase action)
+		// TODO: Some important changes are also shown (showcase server message)
+		{
+			steps: [
+				{
+					text: <>Please switch back to the room screen.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: '/room',
+					}],
+				},
+				{
+					text: <>Open the "Chat" tab.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.roomScreen .tab.active',
+						filter: (e) => e.innerText.includes('Chat'),
+					}],
+					highlight: [{
+						query: '.roomScreen .tab',
+						filter: (e) => e.innerText.includes('Chat'),
+					}],
+				},
+				{
+					text: function Text() {
+						const player = usePlayerData();
+
+						return (
+							<>
+								<p>
+									The most common usage is your character saying something out loud.<br />
+									To do that simply type a message and send it with [Enter].
+								</p>
+								<p>
+									A good way to start might be greeting, followed by saying who you are - it is likely no-one saw your character before, after all.<br />
+									Try saying "Hello! I'm { player?.name ?? '<your name>' }." now.
+								</p>
+							</>
+						);
+					},
+					conditions: [{
+						type: 'elementQuery',
+						query: '.message.chat span',
+						filter: (e) => ['hi', 'hello', 'greeting'].some((greeting) => e.innerText.toLowerCase().includes(greeting)),
+					}],
+					highlight: [{
+						query: '.chatArea textarea',
+					}],
+				},
+				{
+					text: '',
+					conditions: [{ type: 'next' }],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <>Please switch back to the room screen.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: '/room',
+					}],
+				},
+				{
+					text: <>Open the "Chat" tab.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.roomScreen .tab.active',
+						filter: (e) => e.innerText.includes('Chat'),
+					}],
+					highlight: [{
+						query: '.roomScreen .tab',
+						filter: (e) => e.innerText.includes('Chat'),
+					}],
+				},
+				{
+					text: (
+						<>
+							<p>
+								The second most common usage is your character performing an action.<br />
+								This can be done by starting your message with a '*' (star) or using the '/me' command.
+							</p>
+							<p>
+								Example of this is your character waving.<br />
+								Try emoting that using "*waves" now.
+							</p>
+							<p>
+								<i>
+									Note: Using a '*' will automatically add your character's name at the beginning of your emote.<br />
+									If you want to avoid that (for example to roleplay something happening in the environment), you can use '**' (two stars) or the '/emote' command instead.
+								</i>
+							</p>
+						</>
+					),
+					conditions: [{
+						type: 'elementQuery',
+						query: '.message.me span',
+						filter: (e) => ['wave'].some((greeting) => e.innerText.toLowerCase().includes(greeting)),
+					}],
+					highlight: [{
+						query: '.chatArea textarea',
+					}],
+				},
+				{
+					text: '',
+					conditions: [{ type: 'next' }],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <>Please switch back to the room screen.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: '/room',
+					}],
+				},
+				{
+					text: <>Open the "Chat" tab.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.roomScreen .tab.active',
+						filter: (e) => e.innerText.includes('Chat'),
+					}],
+					highlight: [{
+						query: '.roomScreen .tab',
+						filter: (e) => e.innerText.includes('Chat'),
+					}],
+				},
+				{
+					text: (
+						<>
+							<p>
+								The third most important usage is saying something out‑of‑character (OOC).<br />
+								OOC means it isn't simply your character saying it, but you, as a person, are saying so.<br />
+								This can be done by starting your message with a '((' (two opening parenthesis) or using the '/ooc' command.
+							</p>
+							<p>
+								Try saying anything in OOC now.
+							</p>
+						</>
+					),
+					conditions: [{
+						type: 'elementQuery',
+						query: '.message.ooc',
+					}],
+					highlight: [{
+						query: '.chatArea textarea',
+					}],
+				},
+				{
+					text: (
+						<>
+							<p>
+								Remember, the [OOC] tag in front of a message signals everyone that this text was not spoken by your character but comes from the human user behind the screen.<br />
+								It can be, for example, used to convey limits, talk about not being comfortable with how the scene is going, or to indicate that you have to leave the club soon.<br />
+								It is especially used to ask to be let go or to stop the play, representing a kind of "safeword" usage.
+							</p>
+							<p>
+								It is generally frowned upon using this to talk as your character in this way (IC‑in‑OOC), especially if done to circumvent some in‑character restrictions, such as the character being gagged.
+								It also makes it confusing for others to differentiate if the message is meant to be understood as from the character or the user behind it.
+							</p>
+							<p>
+								<strong>Please respect the responsible use of OOC and take the content seriously. It is no longer fun and games if someone asks to be freed in an OOC message!</strong>
+							</p>
+						</>
+					),
+					conditions: [{ type: 'next' }],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: (
+						<>
+							<p>
+								This concludes the tutorial regarding the basics of Pandora!
+							</p>
+							<p>
+								The remaining tutorials always focus on one, more specific subject, but we recommend trying them in order, as later tutorials might build on knowledge from previous ones.
+							</p>
+							<p>
+								If you ever need a short summary of this tutorial, you can find that and more in the <ExternalLink href='https://project-pandora.com/wiki/new'>"New User Guide" wiki page</ExternalLink>.
+							</p>
+						</>
+					),
 					conditions: [{ type: 'next' }],
 				},
 			],

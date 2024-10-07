@@ -1,19 +1,20 @@
 import classNames from 'classnames';
-import React, { ReactElement, useMemo, useState, ReactNode } from 'react';
-import { ChildrenProps } from '../../../common/reactTypes';
-import './tabs.scss';
-import { Column } from '../container/container';
+import type { Immutable } from 'immer';
+import React, { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
 import { Navigate, Route, Routes, matchPath, resolvePath, useLocation, useNavigate, useResolvedPath } from 'react-router';
+import { ChildrenProps } from '../../../common/reactTypes';
 import { LocalErrorBoundary } from '../../error/localErrorBoundary';
+import { Column } from '../container/container';
+import './tabs.scss';
 
-interface TabProps extends ChildrenProps {
+export interface TabProps extends ChildrenProps {
 	name: ReactNode;
 	default?: boolean;
 	onClick?: React.MouseEventHandler;
 	tabClassName?: string;
 }
 
-interface TabConfig {
+export interface TabConfig {
 	name: ReactNode;
 	active: boolean;
 	onClick: React.MouseEventHandler;
@@ -69,6 +70,7 @@ export function TabContainer({
 	className,
 	collapsable,
 	tabsPosition = 'top',
+	onTabOpen,
 }: {
 	children: (ReactElement<TabProps> | undefined | null)[];
 	className?: string;
@@ -78,6 +80,7 @@ export function TabContainer({
 	 * @default 'top'
 	 */
 	tabsPosition?: 'top' | 'left';
+	onTabOpen?: (tab: Immutable<TabConfig>) => (void | (() => void));
 }): ReactElement {
 
 	const [currentTab, setTab] = useState(() => {
@@ -91,6 +94,15 @@ export function TabContainer({
 		onClick: c.props.onClick ?? (() => setTab(index)),
 		tabClassName: c.props.tabClassName,
 	})), [children, currentTab]);
+
+	useEffect(() => {
+		if (currentTab < tabs.length) {
+			const tab = tabs[currentTab];
+			if (tab) {
+				return onTabOpen?.(tab);
+			}
+		}
+	}, [currentTab, onTabOpen, tabs]);
 
 	return (
 		<Tabulation tabs={ tabs } className={ className } collapsable={ collapsable } tabsPosition={ tabsPosition }>

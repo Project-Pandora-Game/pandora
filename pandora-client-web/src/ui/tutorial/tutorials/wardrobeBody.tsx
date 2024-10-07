@@ -8,7 +8,7 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 - Talk about wardrobe being complex and then make user open Randomization
 - Show them how to randomize character
 - Make them switch to "Body" tab
-- [will need new feature] Show them how to hide clothes temporarily
+- Show them how to hide clothes temporarily
 - Show them how to change body size
 - Have them select some bodypart and show them how to color it and interact with its typed modules
 - Show them how to add new bodyparts

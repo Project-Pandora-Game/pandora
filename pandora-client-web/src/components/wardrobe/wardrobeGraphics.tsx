@@ -14,13 +14,14 @@ import {
 	SpaceClientInfo,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import React, { ReactElement, ReactNode, useCallback, useMemo, useRef } from 'react';
+import React, { ReactElement, ReactNode, useCallback, useId, useMemo, useRef, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { Character, IChatroomCharacter } from '../../character/character';
+import { Checkbox } from '../../common/userInteraction/checkbox';
 import { Container } from '../../graphics/baseComponents/container';
 import { Graphics } from '../../graphics/baseComponents/graphics';
 import { PixiViewportSetupCallback, type PixiViewportRef } from '../../graphics/baseComponents/pixiViewport';
-import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../graphics/graphicsCharacter';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, type GraphicsCharacterLayerFilter } from '../../graphics/graphicsCharacter';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
 import { RoomCharacter, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter';
 import { RoomDevice } from '../../graphics/room/roomDevice';
@@ -28,21 +29,25 @@ import { RoomProjectionResolver, usePlayerVisionFilters, useRoomViewProjection }
 import { useObservable } from '../../observable';
 import { serviceManagerContext } from '../../services/serviceProvider';
 import { Button } from '../common/button/button';
-import { Row } from '../common/container/container';
+import { Column, Row } from '../common/container/container';
 import { useSpaceInfo } from '../gameContext/gameStateContextProvider';
 import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { useWardrobeContext } from './wardrobeContext';
 
-export function WardrobeCharacterPreview({ character, characterState, isPreview = false }: {
+export function WardrobeCharacterPreview({ character, characterState, isPreview = false, allowHideItems = false }: {
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 	isPreview?: boolean;
+	allowHideItems?: boolean;
 }): ReactElement {
+	const id = useId();
 	const [onClick, processing] = useAppearanceActionEvent({
 		type: 'setView',
 		target: character.id,
 		view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
 	});
+
+	const [hideItems, setHideItems] = useState(false);
 
 	const viewportRef = useRef<PixiViewportRef>(null);
 
@@ -65,29 +70,43 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 					⊙
 				</Button>
 			</Row>
-			<Row className='pointer-events-enable'>
+			<Column className='pointer-events-enable' alignX='end'>
+				{
+					allowHideItems ? (
+						<Row className='option' gap='small' alignY='center'>
+							<Checkbox
+								id={ `${id}-hide-clothes` }
+								checked={ hideItems }
+								onChange={ setHideItems }
+							/>
+							<label htmlFor={ `${id}-hide-clothes` }>Hide worn items</label>
+						</Row>
+					) : null
+				}
 				{
 					isPreview ? (
 						<div className='warning'>Preview</div>
 					) : null
 				}
-			</Row>
+			</Column>
 		</Row>
-	), [isPreview, onClick, processing]);
+	), [allowHideItems, hideItems, id, isPreview, onClick, processing]);
 
 	return (
 		<CharacterPreview
 			character={ character }
 			characterState={ characterState }
+			hideClothes={ allowHideItems && hideItems }
 			overlay={ overlay }
 			viewportRef={ viewportRef }
 		/>
 	);
 }
 
-export function CharacterPreview({ character, characterState, overlay, viewportRef }: {
+export function CharacterPreview({ character, characterState, hideClothes = false, overlay, viewportRef }: {
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
+	hideClothes?: boolean;
 	overlay?: ReactNode;
 	viewportRef?: React.Ref<PixiViewportRef>;
 }): ReactElement {
@@ -128,12 +147,24 @@ export function CharacterPreview({ character, characterState, overlay, viewportR
 	const { pivot } = useRoomCharacterOffsets(characterState);
 	const filters = usePlayerVisionFilters(character.isPlayer());
 
+	const layerFilter = useCallback<GraphicsCharacterLayerFilter>((layer) => {
+		if (hideClothes && layer.item != null) {
+			const asset = layer.item.asset;
+			if (asset.isType('personal') && asset.definition.bodypart == null) {
+				return false;
+			}
+		}
+
+		return true;
+	}, [hideClothes]);
+
 	return (
 		<GraphicsScene className='characterPreview' divChildren={ overlay } sceneOptions={ sceneOptions }>
 			<GraphicsCharacter
 				position={ { x: CHARACTER_PIVOT_POSITION.x, y: CHARACTER_PIVOT_POSITION.y } }
 				pivot={ pivot }
 				characterState={ characterState }
+				layerFilter={ layerFilter }
 				filters={ filters }
 				useBlinking
 			/>

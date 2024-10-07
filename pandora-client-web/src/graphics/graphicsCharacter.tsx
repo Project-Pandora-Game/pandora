@@ -20,8 +20,11 @@ export type PointLike = {
 
 const logger = GetLogger('GraphicsCharacter');
 
+export type GraphicsCharacterLayerFilter = (layer: LayerState) => boolean;
+
 export interface GraphicsCharacterProps extends ChildrenProps {
 	layer?: (props: GraphicsLayerProps) => ReactElement;
+	layerFilter?: GraphicsCharacterLayerFilter;
 	characterState: AssetFrameworkCharacterState;
 	position?: PointLike;
 	scale?: PointLike;
@@ -78,6 +81,7 @@ export const CHARACTER_PIVOT_POSITION: Readonly<PointLike> = {
 
 function GraphicsCharacterWithManagerImpl({
 	layer: Layer,
+	layerFilter,
 	characterState,
 	position: positionOffset = { x: 0, y: 0 },
 	scale: scaleExtra,
@@ -141,8 +145,13 @@ function GraphicsCharacterWithManagerImpl({
 				})),
 			);
 		}
+
+		if (layerFilter != null) {
+			return result.filter(layerFilter);
+		}
+
 		return result;
-	}, [items, assetPreferenceIsVisible, graphicsGetter, layerStateOverrideGetter]);
+	}, [items, assetPreferenceIsVisible, graphicsGetter, layerStateOverrideGetter, layerFilter]);
 
 	const { view } = characterState.actualPose;
 

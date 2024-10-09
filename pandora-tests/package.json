@@ -29,7 +29,7 @@
 		"rimraf": "6.0.1",
 		"superstatic": "9.0.3",
 		"tslib": "2.7.0",
-		"typescript": "5.6.2",
+		"typescript": "5.6.3",
 		"v8-to-istanbul": "9.3.0"
 	}
 }

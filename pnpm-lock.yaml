@@ -69,8 +69,8 @@ importers:
         specifier: 5.0.3
         version: 5.0.3(patch_hash=vtenzegv5nm2rviie2tt353xhu)
       pixi.js:
-        specifier: 8.4.1
-        version: 8.4.1
+        specifier: 8.5.0
+        version: 8.5.0
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -5516,8 +5516,8 @@ packages:
   pixi-viewport@5.0.3:
     resolution: {integrity: sha512-DGG7cg2vUltAiL2fanzYPLR+L6qBeoskPfbUXxN6CYKW+fkni5cF9J1t2WBTmyBnC3kVq3ATFE2KDi7zy2FY8A==}
 
-  pixi.js@8.4.1:
-    resolution: {integrity: sha512-3ZbEIkLYYi602UB5wuN7kPz3VsGHoJa6nxD8ustvMLRySxHAR9Z8tCAYY8ISgNplpPbaDw03B0yTD4/k9f6cAQ==}
+  pixi.js@8.5.0:
+    resolution: {integrity: sha512-C3UouBCqZZskKAkI63JrROUDUZF27avtmzq5udyVHJNRK/noZsS38YfQgx6SMANOIuuMSQ3jWnqD07mtCPmpeA==}
 
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -13381,7 +13381,7 @@ snapshots:
 
   pixi-viewport@5.0.3(patch_hash=vtenzegv5nm2rviie2tt353xhu): {}
 
-  pixi.js@8.4.1:
+  pixi.js@8.5.0:
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/css-font-loading-module': 0.0.12

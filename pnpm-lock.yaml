@@ -69,8 +69,8 @@ importers:
         specifier: 5.0.3
         version: 5.0.3(patch_hash=vtenzegv5nm2rviie2tt353xhu)
       pixi.js:
-        specifier: 8.5.0
-        version: 8.5.0
+        specifier: 8.5.1
+        version: 8.5.1
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -453,8 +453,8 @@ importers:
         specifier: 8.6.0
         version: 8.6.0(eslint@8.57.1)(typescript@5.6.3)
       discord-api-types:
-        specifier: 0.37.101
-        version: 0.37.101
+        specifier: 0.37.102
+        version: 0.37.102
       eslint:
         specifier: 8.57.1
         version: 8.57.1
@@ -562,8 +562,8 @@ importers:
         specifier: 8.6.0
         version: 8.6.0(eslint@8.57.1)(typescript@5.6.3)
       discord-api-types:
-        specifier: 0.37.101
-        version: 0.37.101
+        specifier: 0.37.102
+        version: 0.37.102
       eslint:
         specifier: 8.57.1
         version: 8.57.1
@@ -3544,8 +3544,8 @@ packages:
   discord-api-types@0.37.100:
     resolution: {integrity: sha512-a8zvUI0GYYwDtScfRd/TtaNBDTXwP5DiDVX7K5OmE+DRT57gBqKnwtOC5Ol8z0mRW8KQfETIgiB8U0YZ9NXiCA==}
 
-  discord-api-types@0.37.101:
-    resolution: {integrity: sha512-2wizd94t7G3A8U5Phr3AiuL4gSvhqistDwWnlk1VLTit8BI1jWUncFqFQNdPbHqS3661+Nx/iEyIwtVjPuBP3w==}
+  discord-api-types@0.37.102:
+    resolution: {integrity: sha512-5+m5twqG8n77rLhKuh2c/971UWszEL/c3KbdvVLUBTPXuS8PbYC/7W7NYhwP02qowjj6CHoKYZbD0ppOUCsT6g==}
 
   discord-api-types@0.37.83:
     resolution: {integrity: sha512-urGGYeWtWNYMKnYlZnOnDHm8fVRffQs3U0SpE8RHeiuLKb/u92APS8HoQnPTFbnXmY1vVnXjXO4dOxcAn3J+DA==}
@@ -5516,8 +5516,8 @@ packages:
   pixi-viewport@5.0.3:
     resolution: {integrity: sha512-DGG7cg2vUltAiL2fanzYPLR+L6qBeoskPfbUXxN6CYKW+fkni5cF9J1t2WBTmyBnC3kVq3ATFE2KDi7zy2FY8A==}
 
-  pixi.js@8.5.0:
-    resolution: {integrity: sha512-C3UouBCqZZskKAkI63JrROUDUZF27avtmzq5udyVHJNRK/noZsS38YfQgx6SMANOIuuMSQ3jWnqD07mtCPmpeA==}
+  pixi.js@8.5.1:
+    resolution: {integrity: sha512-yYj8tWehUfH7or/34gf17XyZGnyjiG8toMH8oy9gP+4GjLK+/WjFLlRqaP0AECB8XGF8AJxgkS5y2aMDHqx11A==}
 
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -10937,7 +10937,7 @@ snapshots:
 
   discord-api-types@0.37.100: {}
 
-  discord-api-types@0.37.101: {}
+  discord-api-types@0.37.102: {}
 
   discord-api-types@0.37.83: {}
 
@@ -13381,7 +13381,7 @@ snapshots:
 
   pixi-viewport@5.0.3(patch_hash=vtenzegv5nm2rviie2tt353xhu): {}
 
-  pixi.js@8.5.0:
+  pixi.js@8.5.1:
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/css-font-loading-module': 0.0.12

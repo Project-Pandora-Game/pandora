@@ -61,7 +61,7 @@ export function WardrobeItemConfigMenu({
 
 	if (!wornItem) {
 		return (
-			<div className='inventoryView'>
+			<div className='inventoryView itemEdit'>
 				<div className='toolbar'>
 					<span>Editing item: [ ERROR: ITEM NOT FOUND ]</span>
 					<button className='modeButton' onClick={ close }>✖️</button>
@@ -71,13 +71,13 @@ export function WardrobeItemConfigMenu({
 	}
 
 	return (
-		<div className='inventoryView'>
+		<div className='inventoryView itemEdit'>
 			<div className='toolbar'>
 				<span>Editing item:&#x20;<WardrobeItemName item={ wornItem } /></span>
 				{ !singleItemContainer && <button className='modeButton' onClick={ close }>✖️</button> }
 			</div>
 			<Column padding='medium' overflowX='hidden' overflowY='auto'>
-				<Row padding='medium' wrap>
+				<Row padding='medium' wrap className='itemActions'>
 					{
 						singleItemContainer ? null : (
 							<>

@@ -36,7 +36,7 @@ export function WardrobeItemColorization({ wornItem, item }: {
 		return null;
 
 	return (
-		<FieldsetToggle legend='Coloring'>
+		<FieldsetToggle legend='Coloring' className='coloring'>
 			{
 				Object.entries(wornItem.asset.definition.colorization).map(([colorPartKey, colorPart]) => (
 					<WardrobeColorInput

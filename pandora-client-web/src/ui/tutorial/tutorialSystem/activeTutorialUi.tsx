@@ -183,26 +183,19 @@ function ActiveTutorialStepCondition({ condition, stage, stepIndex }: {
 	step: Immutable<TutorialStep>;
 	condition: Immutable<TutorialCondition>;
 }): ReactElement | null {
-	const [highlightElement, setHighlightElement] = useState<HTMLElement | null>(null);
-
 	if (condition.type === 'next') {
-
 		return (
 			<Row alignX='end'>
 				<Button
 					slim
+					className='tutorialNextButton'
 					onClick={ () => {
 						stage.stepClickNext(stepIndex);
 					} }
-					ref={ setHighlightElement }
 				>
 					Next { '\u25b8' }
+					<div className='tutorial-highlight-overlay' />
 				</Button>
-				{
-					highlightElement != null ? (
-						<ActiveTutorialElementHighlight target={ highlightElement } inset={ false } />
-					) : null
-				}
 			</Row>
 		);
 	} else if (condition.type === 'url') {

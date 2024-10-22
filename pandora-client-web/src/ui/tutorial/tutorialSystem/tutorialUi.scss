@@ -22,6 +22,18 @@
 			object-fit: contain;
 		}
 	}
+
+	.tutorialNextButton {
+		position: relative;
+
+		.tutorial-highlight-overlay {
+			position: absolute;
+			top: -8px;
+			left: -8px;
+			width: calc(100% + 16px);
+			height: calc(100% + 16px);
+		}
+	}
 }
 
 .dialog.aboveTutorial {

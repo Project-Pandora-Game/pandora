@@ -33,6 +33,7 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	eventMode?: PIXI.EventMode;
 	filters?: readonly Filter[];
 	zIndex?: number;
+	useBlinking?: boolean;
 
 	onPointerDown?: (event: FederatedPointerEvent) => void;
 	onPointerUp?: (event: FederatedPointerEvent) => void;
@@ -96,6 +97,7 @@ function GraphicsCharacterWithManagerImpl({
 	children,
 	graphicsGetter,
 	layerStateOverrideGetter,
+	useBlinking,
 	...graphicsProps
 }: GraphicsCharacterProps & {
 	graphicsGetter: GraphicsGetterFunction;
@@ -110,6 +112,10 @@ function GraphicsCharacterWithManagerImpl({
 	const blinkRandom = useMemo(() => new PseudoRandom(blinkSeed), [blinkSeed]);
 
 	useEffect(() => {
+		if (!useBlinking) {
+			return;
+		}
+
 		const blinkInterval = blinkRandom.between(MIN_BLINK_INTERVAL, MAX_BLINK_INTERVAL);
 
 		let timeoutId: number | undefined;
@@ -128,7 +134,7 @@ function GraphicsCharacterWithManagerImpl({
 			clearInterval(intervalId);
 			clearTimeout(timeoutId);
 		};
-	}, [setCharacterBlinking, blinkRandom, newBlinkSeed]);
+	}, [setCharacterBlinking, blinkRandom, newBlinkSeed, useBlinking]);
 
 	const layers = useMemo<LayerState[]>(() => {
 		const visibleItems = items.slice();

@@ -422,6 +422,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 					scale={ { x: scaleX, y: 1 } }
 					pivot={ pivot }
 					angle={ rotationAngle }
+					useBlinking={ true }
 				>
 					{
 						!debugConfig?.characterDebugOverlay ? null : (

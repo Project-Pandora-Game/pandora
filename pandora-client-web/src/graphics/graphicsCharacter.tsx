@@ -1,7 +1,7 @@
 import { AssertNotNullable, Asset, ASSET_PREFERENCES_DEFAULT, AssetFrameworkCharacterState, AssetId, CharacterArmsPose, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties, ResolveAssetPreference } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
-import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { useCharacterAppearanceItems } from '../character/character';
@@ -12,6 +12,8 @@ import { Container } from './baseComponents/container';
 import { ComputedLayerPriority, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def';
 import { GraphicsLayer, GraphicsLayerProps, SwapCullingDirection } from './graphicsLayer';
 import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense';
+import { nanoid } from 'nanoid';
+import { PseudoRandom } from 'pandora-common/src/math/pseudoRandom';
 
 export type PointLike = {
 	x: number;
@@ -76,6 +78,10 @@ export const CHARACTER_PIVOT_POSITION: Readonly<PointLike> = {
 	y: 1290, // The position where heels seemingly touch the floor
 };
 
+const MIN_BLINK_INTERVAL = 4_000; // ms
+const MAX_BLINK_INTERVAL = 6_000; // ms
+const BLINK_LENGTH = 250; // ms
+
 function GraphicsCharacterWithManagerImpl({
 	layer: Layer,
 	characterState,
@@ -98,6 +104,31 @@ function GraphicsCharacterWithManagerImpl({
 	const items = useCharacterAppearanceItems(characterState);
 
 	const assetPreferenceIsVisible = useAssetPreferenceVisibilityCheck();
+
+	const [characterBlinking, setCharacterBlinking] = useState(false);
+	const [blinkSeed, newBlinkSeed] = useReducer(() => nanoid(), nanoid());
+	const blinkRandom = useMemo(() => new PseudoRandom(blinkSeed), [blinkSeed]);
+
+	useEffect(() => {
+		const blinkInterval = blinkRandom.between(MIN_BLINK_INTERVAL, MAX_BLINK_INTERVAL);
+
+		let timeoutId: number | undefined;
+		const intervalId = setInterval(() => {
+			clearTimeout(timeoutId);
+			setCharacterBlinking(true);
+
+			timeoutId = setTimeout(() => {
+				setCharacterBlinking(false);
+
+				newBlinkSeed();
+			}, BLINK_LENGTH);
+		}, blinkInterval);
+
+		return () => {
+			clearInterval(intervalId);
+			clearTimeout(timeoutId);
+		};
+	}, [setCharacterBlinking, blinkRandom, newBlinkSeed]);
 
 	const layers = useMemo<LayerState[]>(() => {
 		const visibleItems = items.slice();
@@ -166,13 +197,14 @@ function GraphicsCharacterWithManagerImpl({
 					item={ layerState.item }
 					state={ layerState.state }
 					characterState={ characterState }
+					characterBlinking={ characterBlinking }
 				>
 					{ lowerLayer }
 				</LayerElement>
 			));
 		}
 		return result;
-	}, [Layer, characterState, layers, priorities, view]);
+	}, [Layer, characterState, layers, priorities, view, characterBlinking]);
 
 	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CHARACTER_PIVOT_POSITION.x, y: 0 }), [pivotExtra]);
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);

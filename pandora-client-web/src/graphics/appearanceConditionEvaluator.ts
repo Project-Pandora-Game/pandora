@@ -91,11 +91,13 @@ export abstract class ConditionEvaluatorBase {
 export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 	public readonly pose: Immutable<AppearancePose>;
 	public readonly attributes: ReadonlySet<string>;
+	public readonly blinking: Immutable<boolean>;
 
-	constructor(character: AssetFrameworkCharacterState) {
+	constructor(character: AssetFrameworkCharacterState, blinking: Immutable<boolean>) {
 		super(character.assetManager);
 		this.pose = character.actualPose;
 		this.attributes = AppearanceItemProperties(character.items).attributes;
+		this.blinking = blinking;
 	}
 
 	private readonly _evalCache = new Map<string, boolean>();
@@ -143,6 +145,9 @@ export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 		} else if ('view' in condition) {
 			Assert(condition.view != null);
 			return this.pose.view === condition.view;
+		} else if ('blinking' in condition) {
+			Assert(condition.blinking != null);
+			return this.blinking === condition.blinking;
 		} else {
 			AssertNever(condition);
 		}
@@ -159,8 +164,8 @@ export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 	}
 }
 
-export function useAppearanceConditionEvaluator(characterState: AssetFrameworkCharacterState): AppearanceConditionEvaluator {
-	return useMemo(() => new AppearanceConditionEvaluator(characterState), [characterState]);
+export function useAppearanceConditionEvaluator(characterState: AssetFrameworkCharacterState, isBlinking?: boolean): AppearanceConditionEvaluator {
+	return useMemo(() => new AppearanceConditionEvaluator(characterState, isBlinking ?? false), [characterState, isBlinking]);
 }
 
 export class StandaloneConditionEvaluator extends ConditionEvaluatorBase {
@@ -188,6 +193,9 @@ export class StandaloneConditionEvaluator extends ConditionEvaluatorBase {
 			return false;
 		} else if ('view' in condition) {
 			Assert(condition.view != null);
+			return false;
+		} else if ('blinking' in condition) {
+			Assert(condition.blinking != null);
 			return false;
 		} else {
 			AssertNever(condition);

@@ -18,6 +18,16 @@ function ParseFloat(input: string): number {
 	return result;
 }
 
+function ParseBoolean(input: string): boolean {
+	if (input.toLowerCase() === 'true') {
+		return true;
+	}
+	if (input.toLowerCase() === 'false') {
+		return false;
+	}
+	throw new Error(`Not a boolean: '${input}`);
+}
+
 export function SerializeAtomicCondition(condition: Immutable<AtomicCondition>): string {
 	if ('bone' in condition) {
 		Assert(condition.bone != null);
@@ -37,6 +47,9 @@ export function SerializeAtomicCondition(condition: Immutable<AtomicCondition>):
 	} else if ('view' in condition) {
 		Assert(condition.view != null);
 		return `view_${condition.view}`;
+	} else if ('blinking' in condition) {
+		Assert(condition.blinking != null);
+		return `blinking_${condition.blinking}`;
 	} else {
 		AssertNever(condition);
 	}
@@ -74,6 +87,15 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 		}
 		return {
 			view: view[1],
+		};
+	}
+	if (input.startsWith('blinking_')) {
+		const blinking = /^blinking_(true|false)$/i.exec(input);
+		if (!blinking) {
+			throw new Error(`Failed to parse blinking condition '${input}'`);
+		}
+		return {
+			blinking: ParseBoolean(blinking[1]),
 		};
 	}
 	const parsed = /^([-_a-z0-9]+)([=<>!]+)\s*(-?[-_a-z0-9.]+)$/i.exec(input);

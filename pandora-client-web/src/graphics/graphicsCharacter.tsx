@@ -1,7 +1,7 @@
 import { AssertNotNullable, Asset, ASSET_PREFERENCES_DEFAULT, AssetFrameworkCharacterState, AssetId, CharacterArmsPose, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties, ResolveAssetPreference } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
-import React, { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { useCharacterAppearanceItems } from '../character/character';
@@ -81,7 +81,8 @@ export const CHARACTER_PIVOT_POSITION: Readonly<PointLike> = {
 
 const MIN_BLINK_INTERVAL = 4_000; // ms
 const MAX_BLINK_INTERVAL = 6_000; // ms
-const BLINK_LENGTH = 250; // ms
+const MIN_BLINK_LENGTH = 100; // ms
+const MAX_BLINK_LENGTH = 400; // ms
 
 function GraphicsCharacterWithManagerImpl({
 	layer: Layer,
@@ -108,33 +109,40 @@ function GraphicsCharacterWithManagerImpl({
 	const assetPreferenceIsVisible = useAssetPreferenceVisibilityCheck();
 
 	const [characterBlinking, setCharacterBlinking] = useState(false);
-	const [blinkSeed, newBlinkSeed] = useReducer(() => nanoid(), nanoid());
-	const blinkRandom = useMemo(() => new PseudoRandom(blinkSeed), [blinkSeed]);
+	const blinkRandom = useMemo(() => new PseudoRandom(nanoid()), []);
 
 	useEffect(() => {
 		if (!useBlinking) {
 			return;
 		}
 
-		const blinkInterval = blinkRandom.between(MIN_BLINK_INTERVAL, MAX_BLINK_INTERVAL);
-
 		let timeoutId: number | undefined;
-		const intervalId = setInterval(() => {
-			clearTimeout(timeoutId);
-			setCharacterBlinking(true);
 
+		const doBlinkCycle = () => {
+			const blinkInterval = blinkRandom.between(MIN_BLINK_INTERVAL, MAX_BLINK_INTERVAL);
+			const blinkLength = blinkRandom.between(MIN_BLINK_LENGTH, MAX_BLINK_LENGTH);
+
+			// Blink start timeout
 			timeoutId = setTimeout(() => {
-				setCharacterBlinking(false);
+				setCharacterBlinking(true);
 
-				newBlinkSeed();
-			}, BLINK_LENGTH);
-		}, blinkInterval);
+				// Blink end timeout
+				timeoutId = setTimeout(() => {
+					setCharacterBlinking(false);
+
+					// Loop
+					doBlinkCycle();
+				}, blinkLength);
+			}, blinkInterval);
+		};
+
+		// Start blink loop
+		doBlinkCycle();
 
 		return () => {
-			clearInterval(intervalId);
 			clearTimeout(timeoutId);
 		};
-	}, [setCharacterBlinking, blinkRandom, newBlinkSeed, useBlinking]);
+	}, [setCharacterBlinking, blinkRandom, useBlinking]);
 
 	const layers = useMemo<LayerState[]>(() => {
 		const visibleItems = items.slice();

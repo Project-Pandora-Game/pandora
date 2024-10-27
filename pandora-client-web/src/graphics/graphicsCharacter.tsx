@@ -97,7 +97,7 @@ function GraphicsCharacterWithManagerImpl({
 	children,
 	graphicsGetter,
 	layerStateOverrideGetter,
-	useBlinking,
+	useBlinking = false,
 	...graphicsProps
 }: GraphicsCharacterProps & {
 	graphicsGetter: GraphicsGetterFunction;

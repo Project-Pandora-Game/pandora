@@ -91,9 +91,9 @@ export abstract class ConditionEvaluatorBase {
 export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 	public readonly pose: Immutable<AppearancePose>;
 	public readonly attributes: ReadonlySet<string>;
-	public readonly blinking: Immutable<boolean>;
+	public readonly blinking: boolean;
 
-	constructor(character: AssetFrameworkCharacterState, blinking: Immutable<boolean>) {
+	constructor(character: AssetFrameworkCharacterState, blinking: boolean) {
 		super(character.assetManager);
 		this.pose = character.actualPose;
 		this.attributes = AppearanceItemProperties(character.items).attributes;
@@ -164,8 +164,8 @@ export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 	}
 }
 
-export function useAppearanceConditionEvaluator(characterState: AssetFrameworkCharacterState, isBlinking?: boolean): AppearanceConditionEvaluator {
-	return useMemo(() => new AppearanceConditionEvaluator(characterState, isBlinking ?? false), [characterState, isBlinking]);
+export function useAppearanceConditionEvaluator(characterState: AssetFrameworkCharacterState, isBlinking: boolean = false): AppearanceConditionEvaluator {
+	return useMemo(() => new AppearanceConditionEvaluator(characterState, isBlinking), [characterState, isBlinking]);
 }
 
 export class StandaloneConditionEvaluator extends ConditionEvaluatorBase {

@@ -31,8 +31,6 @@ export type ConditionOperator = z.infer<typeof ConditionOperatorSchema>;
 export const ModuleNameSchema = ZodOverridable(z.string());
 export const AttributeNameSchema = ZodOverridable(z.string());
 
-export const BlinkingSchema = z.boolean();
-
 export const AtomicConditionBoneSchema = z.object({
 	bone: BoneNameSchema,
 	operator: ConditionOperatorSchema,
@@ -77,7 +75,7 @@ export const AtomicConditionViewSchema = z.object({
 	view: CharacterViewSchema,
 });
 export const AtomicConditionBlinkingSchema = z.object({
-	blinking: BlinkingSchema,
+	blinking: z.boolean(),
 });
 export const AtomicConditionSchema = z.union([
 	AtomicConditionBoneSchema,

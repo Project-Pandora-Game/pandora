@@ -97,7 +97,13 @@ export interface GraphicsLayerProps extends ChildrenProps {
 	item: Item | null;
 	verticesPoseOverride?: Record<BoneName, number>;
 	state?: LayerStateOverrides;
+
+	/**
+	 * Whether the character the layer belongs to is currently mid-blink
+	 * @default false
+	 */
 	characterBlinking?: boolean;
+
 	getTexture?: (path: string) => Texture;
 }
 
@@ -132,7 +138,7 @@ export function GraphicsLayer({
 	verticesPoseOverride,
 	state,
 	getTexture,
-	characterBlinking,
+	characterBlinking = false,
 }: GraphicsLayerProps): ReactElement {
 
 	const { points, triangles } = useLayerPoints(layer);

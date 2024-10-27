@@ -33,6 +33,11 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	eventMode?: PIXI.EventMode;
 	filters?: readonly Filter[];
 	zIndex?: number;
+
+	/**
+	 * Whether the blinking condition should be used for the graphics layer evaluators.
+	 * @default false
+	 */
 	useBlinking?: boolean;
 
 	onPointerDown?: (event: FederatedPointerEvent) => void;

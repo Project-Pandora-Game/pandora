@@ -91,6 +91,8 @@ export abstract class ConditionEvaluatorBase {
 export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 	public readonly pose: Immutable<AppearancePose>;
 	public readonly attributes: ReadonlySet<string>;
+
+	/** Whether the character is currently mid-blink */
 	public readonly blinking: boolean;
 
 	constructor(character: AssetFrameworkCharacterState, blinking: boolean) {
@@ -164,6 +166,12 @@ export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 	}
 }
 
+/**
+ * Gets an appearance condition evaluator for the character
+ * @param characterState Character state
+ * @param isBlinking Whether the character is currently mid-blink
+ * @returns The requested appearance condition evaluator
+ */
 export function useAppearanceConditionEvaluator(characterState: AssetFrameworkCharacterState, isBlinking: boolean = false): AppearanceConditionEvaluator {
 	return useMemo(() => new AppearanceConditionEvaluator(characterState, isBlinking), [characterState, isBlinking]);
 }

@@ -8,7 +8,6 @@ import { Dialogs } from './components/dialog/dialog';
 import { EulaGate } from './components/Eula';
 import { GameContextProvider } from './components/gameContext/gameContextProvider';
 import { Header } from './components/header/Header';
-import { HoverElementsPortal } from './components/hoverElement/hoverElement';
 import { NODE_ENV, USER_DEBUG } from './config/Environment';
 import { ConfigLogLevel, LoadSearchArgs } from './config/searchArgs';
 import { ConfigurePixiSettings } from './graphics/pixiSettings';
@@ -45,7 +44,6 @@ async function Start(): Promise<void> {
 	createRoot(document.querySelector('#pandora-root') as HTMLElement).render(
 		<React.StrictMode>
 			<Dialogs location='global' />
-			<HoverElementsPortal />
 			<EulaGate>
 				<BrowserRouter>
 					<GameContextProvider serviceManager={ serviceManager }>

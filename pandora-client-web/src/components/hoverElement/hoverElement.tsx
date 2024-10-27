@@ -1,12 +1,9 @@
 import classNames from 'classnames';
-import React, { PureComponent, ReactElement, useEffect, useState } from 'react';
-import { ChildrenProps, CommonProps } from '../../common/reactTypes';
+import React, { ReactElement, useEffect, useState } from 'react';
+import { CommonProps } from '../../common/reactTypes';
 import { useContextMenuPosition } from '../contextMenu/contextMenu';
-import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
-import { Observable, useObservable } from '../../observable';
+import { DialogInPortal } from '../dialog/dialog';
 import './hoverElement.scss';
-
-const PORTALS = new Observable<readonly HtmlPortalNode[]>([]);
 
 type HoverElementProps = CommonProps & {
 	parent: HTMLElement | null;
@@ -47,49 +44,10 @@ export function HoverElement({ children, className, parent }: HoverElementProps)
 		return null;
 
 	return (
-		<HoverElementInner>
+		<DialogInPortal location='global' priority={ 100 }>
 			<div className={ classNames('hover-element', className) } ref={ positionRef }>
 				{ children }
 			</div>
-		</HoverElementInner>
-	);
-}
-
-class HoverElementInner extends PureComponent<ChildrenProps> {
-	private readonly _node: HtmlPortalNode;
-
-	constructor(props: ChildrenProps) {
-		super(props);
-		this._node = createHtmlPortalNode();
-	}
-
-	public override componentDidMount() {
-		PORTALS.produce((old) => old.concat([this._node]));
-	}
-
-	public override componentWillUnmount() {
-		PORTALS.produce((old) => old.filter((p) => p !== this._node));
-	}
-
-	public override render() {
-		const { children } = this.props;
-
-		return (
-			<InPortal node={ this._node }>
-				{ children }
-			</InPortal>
-		);
-	}
-}
-
-export function HoverElementsPortal(): ReactElement {
-	const portals = useObservable(PORTALS);
-
-	return (
-		<>
-			{ portals.map((node, index) => (
-				<OutPortal key={ index } node={ node } />
-			)) }
-		</>
+		</DialogInPortal>
 	);
 }

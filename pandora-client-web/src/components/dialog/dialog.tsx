@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { sortBy } from 'lodash';
-import React, { ReactElement, ReactNode, useCallback, useEffect, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef } from 'react';
 import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
 import { Rnd } from 'react-rnd';
 import { type CommonProps } from '../../common/reactTypes';
@@ -20,11 +20,14 @@ const DEFAULT_CONFIRM_DIALOG_PRIORITY = 10;
 
 export type DialogLocation = 'global' | 'mainOverlay';
 
-const PORTALS = new Observable<readonly ({
+type PortalEntry = {
 	priority: number;
 	location: DialogLocation;
 	node: HtmlPortalNodeAny;
-})[]>([]);
+	key: string;
+};
+
+const PORTALS = new Observable<readonly PortalEntry[]>([]);
 
 export function Dialogs({ location }: {
 	location: DialogLocation;
@@ -36,8 +39,12 @@ export function Dialogs({ location }: {
 			{
 				portals
 					.filter((portal) => portal.location === location)
-					.map(({ node }, index) => (
-						<OutPortal key={ index } node={ node } />
+					.map(({ node, key }) => (
+						// We need to wrap the portal in its own div element,
+						// otherwise it might crash if interacting with other portals that change at the same time
+						<div key={ key } className='dialog-portal-out'>
+							<OutPortal node={ node } />
+						</div>
 					))
 			}
 			{
@@ -54,6 +61,7 @@ export function DialogInPortal({ children, priority, location = 'global' }: {
 	priority?: number;
 	location?: DialogLocation;
 }): ReactElement {
+	const id = useId();
 	const portal = useMemo(() => createHtmlPortalNode({
 		attributes: {
 			class: 'dialog-portal',
@@ -61,21 +69,24 @@ export function DialogInPortal({ children, priority, location = 'global' }: {
 	}), []);
 
 	useLayoutEffect(() => {
+		const self: PortalEntry = {
+			priority: priority ?? 0,
+			location,
+			node: portal,
+			key: id,
+		};
+
 		PORTALS.produce((existingPortals) => {
 			return sortBy([
-				{
-					priority: priority ?? 0,
-					location,
-					node: portal,
-				},
+				self,
 				...existingPortals,
 			], (v) => v.priority);
 		});
 
 		return () => {
-			PORTALS.value = PORTALS.value.filter(({ node }) => node !== portal);
+			PORTALS.value = PORTALS.value.filter((p) => p !== self);
 		};
-	}, [portal, priority, location]);
+	}, [portal, priority, location, id]);
 
 	return (
 		<InPortal node={ portal }>

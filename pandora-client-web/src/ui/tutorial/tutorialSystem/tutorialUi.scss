@@ -1,5 +1,5 @@
 .tutorialDialogContainer {
-	z-index: 90000;
+	z-index: 90100;
 }
 
 .tutorialDialog {
@@ -41,24 +41,41 @@
 }
 
 .tutorial-highlight-overlay {
-	position: absolute;
+	position: fixed;
 	overflow: hidden;
 	margin: 0;
-	z-index: 91000;
+	z-index: 90000;
 	pointer-events: none;
 
 	background-color: transparent;
-	border: solid red 0.3em;
+	border: solid #ff0000 0.3em;
 	border-radius: 0.5em;
 
 	animation: tutorial-highlight-overlay-blink 1s infinite alternate-reverse;
+
+	&.top {
+		z-index: 91000;
+		border: dashed #ff000080 0.3em;
+		border-style: dashed;
+
+		animation: tutorial-highlight-overlay-blink-transparent 1s infinite alternate-reverse;
+	}
 }
 
 @keyframes tutorial-highlight-overlay-blink {
 	from {
-		border-color: darkred;
+		border-color: #8b0000;
 	}
 	to {
-		border-color: orange;
+		border-color: #ffa500;
+	}
+}
+
+@keyframes tutorial-highlight-overlay-blink-transparent {
+	from {
+		border-color: #8b000080;
+	}
+	to {
+		border-color: #ffa50080;
 	}
 }

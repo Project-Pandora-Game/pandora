@@ -10,6 +10,8 @@ import type { TutorialCondition, TutorialHighlightSelector, TutorialStep } from 
 import type { TutorialRunner, TutorialStageRunner } from './tutorialRunner';
 import './tutorialUi.scss';
 
+// TODO: Ability to hide tutorial UI temporarily
+
 export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 	tutorial: TutorialRunner;
 	stopTutorial: () => void;
@@ -292,7 +294,16 @@ function ActiveTutorialElementHighlight({ target, inset }: {
 	return (
 		<DialogInPortal>
 			<div
-				className='tutorial-highlight-overlay'
+				className='tutorial-highlight-overlay base'
+				style={ {
+					left: inset ? (area[0] + HIGHLIGHT_INSET) : (area[0] - HIGHLIGHT_PADDING),
+					top: inset ? (area[1] + HIGHLIGHT_INSET) : (area[1] - HIGHLIGHT_PADDING),
+					width: inset ? (area[2] - 2 * HIGHLIGHT_INSET) : (area[2] + 2 * HIGHLIGHT_PADDING),
+					height: inset ? (area[3] - 2 * HIGHLIGHT_INSET) : (area[3] + 2 * HIGHLIGHT_PADDING),
+				} }
+			/>
+			<div
+				className='tutorial-highlight-overlay top'
 				style={ {
 					left: inset ? (area[0] + HIGHLIGHT_INSET) : (area[0] - HIGHLIGHT_PADDING),
 					top: inset ? (area[1] + HIGHLIGHT_INSET) : (area[1] - HIGHLIGHT_PADDING),

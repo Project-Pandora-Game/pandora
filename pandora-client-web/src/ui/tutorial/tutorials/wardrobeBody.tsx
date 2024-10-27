@@ -3,19 +3,6 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 import { BONE_MAX, BONE_MIN } from 'pandora-common';
 import { ExternalLink } from '../../../components/common/link/externalLink';
 
-// TODO: Randomizing + Changing body
-/*
-- We make user open wardrobe
-- Talk about wardrobe being complex and then make user open Randomization
-- Show them how to randomize character
-- Make them switch to "Body" tab
-- Show them how to hide clothes temporarily
-- Show them how to change body size
-- Have them select some bodypart and show them how to color it and interact with its typed modules
-- Show them how to add new bodyparts
-- Show them how to reorder and then remove bodyparts (e.g. on hairs - making them add multiple hairs first)
-- Have them leave the wardrobe
-*/
 export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 	id: 'wardrobeBody',
 	name: `Character interactions: Body`,
@@ -32,7 +19,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 						<p>
 							Hi and welcome to the tutorial on creating a custom character!<br />
 							In this tutorial you will learn how to enter your character's wardrobe and create<br />
-							a unique look for your character through, at first, randomization, and then editing the details.
+							a unique look for your character through randomization and then editing the details.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -53,7 +40,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					text: (
 						<p>
 							Let's start by opening your character's wardrobe.<br />
-							That is a place where you can freely edit your character's appearance.
+							That is the place where you can freely edit your character's appearance.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -110,8 +97,8 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					text: (
 						<p>
 							You are now successfully in your character's wardrobe!<br />
-							In Pandora, the wardrobe is a powerful tool, so don't be scared about it looking so complex -<br />
-							more of it will be covered in later tutorials.<br />
+							In Pandora, the wardrobe is a powerful tool, so it may look overwhelming at first sight.<br />
+							But no worries - we will cover all its details in later tutorials.<br />
 							<br />
 							Our next step is going to the randomization menu, which will allow you to create a new, random appearance for your character.
 						</p>
@@ -185,7 +172,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					text: (
 						<p>
 							Our next step is further customizing your character's look.<br />
-							The "Body" tab can be used to do that.<br />
+							The "Body" tab allows you to do that.<br />
 							<br />
 							Please switch to it now.
 						</p>
@@ -205,12 +192,13 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 						<p>
 							As you can see, the "Body" tab of the wardrobe has two main areas.<br />
 							<br />
-							The left pane shows the current status - what bodyparts make up your character.<br />
+							The left pane shows all current bodyparts of your character.<br />
 							Here you can edit details of the bodyparts (more on that later), delete them, or even reorder them in some cases.<br />
-							Do note, that order of bodyparts does matter. While Pandora enforces a specific order most of the time,<br />
+							Do note, that the order of bodyparts does matter. <br />
+							While Pandora enforces a specific order most of the time,
 							identical bodypart types (e.g. multiple "hair" bodyparts) can be reordered freely.<br />
 							<br />
-							The right pane shows several ways you can add or swap different bodyparts for other available bodyparts.<br />
+							The right pane shows several ways how you can add or swap different bodyparts for other available bodyparts.<br />
 							<br />
 							Note:&#32;
 							<i>
@@ -387,7 +375,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 						<p>
 							At the top of the bodypart's details you will find several actions you might be able to do with it.<br />
 							For base body it is likely, that all of them will not be possible.<br />
-							You can hover over the action (or hold down on it, if using touchscreen) to see why it isn't possible.
+							You can hover over the action (or hold down on it, if using a touchscreen) to see why it isn't possible.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -406,7 +394,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 							<br />
 							Note:&#32;
 							<i>
-								Some items might also contain colors with 4th component - "alpha" (or commonly called "opacity" or "transparency").<br />
+								Some items might also contain colors with a 4th component - "alpha" (commonly also called "opacity" or "transparency").<br />
 								This means that part of the item controlled by that color can be made partially or fully transparent.
 							</i><br />
 							Note:&#32;
@@ -465,7 +453,8 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					text: (
 						<p>
 							Finally we will look at using different bodyparts altogether.<br />
-							Please close the current bodypart's details by clicking on it again, or by clicking on the cross in the top-right corner.
+							Please close the current bodypart's details by clicking on it again,<br />
+							or by clicking on the cross in the top-right corner.
 						</p>
 					),
 					conditions: [{
@@ -481,7 +470,188 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 						},
 					],
 				},
-				// TODO: Continue here
+				{
+					text: (
+						<p>
+							Bodyparts can be added or swapped using the "Change body parts" tab.<br />
+							Please switch to it now.
+						</p>
+					),
+					conditions: [{
+						type: 'elementQuery',
+						query: '.wardrobe .tab.active',
+						filter: (e) => e.innerText.includes('Change body parts'),
+					}],
+					highlight: [{
+						query: '.wardrobe .tab',
+						filter: (e) => e.innerText.includes('Change body parts'),
+					}],
+				},
+				{
+					text: (
+						<p>
+							On the right side, all existing bodyparts in Pandora are listed per default.<br />
+							You can filter the selection with the item row at the top. Feel free to hover over<br />
+							any of the icons (or hold down on it, if using a touchscreen) to see what type of<br />
+							bodypart the filter will show.
+						</p>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [{
+						query: '.toolbar.attributeFilter',
+					}],
+				},
+				{
+					text: (
+						<p>
+							For the sake of this tutorial, please filter for front hairs now with the according button.
+						</p>
+					),
+					conditions: [{
+						type: 'elementQuery',
+						query: '.toolbar.attributeFilter button[data-attribute="Hair_front"].defaultActive',
+					}],
+					highlight: [{
+						query: '.toolbar.attributeFilter button[data-attribute="Hair_front"]',
+					}],
+				},
+				{
+					text: (
+						<p>
+							Now you can see that only front hairs are listed.<br />
+							By clicking any entry, you can add the bodypart to your body. Only hovering over it, will preview the change.<br />
+							Note that hair is a body part type where multiples can be added at the same time. That said, for some other bodypart types<br />
+							this action would swap the existing bodypart of that type for the new one.
+						</p>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [{
+						query: '.wardrobeAssetList .listContainer',
+					}],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <p>Please switch back to the wardrobe screen for your character.</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: /^\/wardrobe($|\/character\/c)/,
+					}],
+				},
+				{
+					text: <p>Please switch back to the "Body" tab</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.wardrobe .tab.active',
+						filter: (e) => e.innerText.includes('Body'),
+					}],
+					highlight: [{
+						query: '.wardrobe .tab',
+						filter: (e) => e.innerText.includes('Body'),
+					}],
+				},
+				{
+					text: <p>Please switch back to the "Change body parts" tab</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.wardrobe .tab.active',
+						filter: (e) => e.innerText.includes('Change body parts'),
+					}],
+					highlight: [{
+						query: '.wardrobe .tab',
+						filter: (e) => e.innerText.includes('Change body parts'),
+					}],
+				},
+				{
+					text: (
+						<p>
+							For demo purposes, please add several front hairs to your character at the same time to proceed.
+						</p>
+					),
+					conditions: [{
+						type: 'elementQuery',
+						query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem .quickActions .wardrobeActionButton.allowed',
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+						filter: (e) => (JSON.parse(e.dataset.action ?? 'null')?.type === 'move'),
+					}],
+					highlight: [{
+						query: '.wardrobeAssetList .listContainer',
+					}],
+				},
+				{
+					text: (
+						<p>
+							Some bodyparts can be reordered with the up/down buttons in the left list, which<br />
+							contains the current bodyparts of your character.<br />
+							As usual, only hovering the button previews the change. Feel free to experiment before proceeding.
+						</p>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [{
+						query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem .quickActions .wardrobeActionButton:not(.invisible)',
+						inset: true,
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+						filter: (e) => (JSON.parse(e.dataset.action ?? 'null')?.type === 'move'),
+					}],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <p>Please switch back to the wardrobe screen for your character.</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: /^\/wardrobe($|\/character\/c)/,
+					}],
+				},
+				{
+					text: <p>Please switch back to the "Body" tab</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.wardrobe .tab.active',
+						filter: (e) => e.innerText.includes('Body'),
+					}],
+					highlight: [{
+						query: '.wardrobe .tab',
+						filter: (e) => e.innerText.includes('Body'),
+					}],
+				},
+				{
+					text: <p>Please switch back to the "Change body parts" tab</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.wardrobe .tab.active',
+						filter: (e) => e.innerText.includes('Change body parts'),
+					}],
+					highlight: [{
+						query: '.wardrobe .tab',
+						filter: (e) => e.innerText.includes('Change body parts'),
+					}],
+				},
+				{
+					text: (
+						<p>
+							You can delete some bodyparts with the trashcan icon.<br />
+							Note that certain bodypart types can only be swapped, but not removed.<br />
+							Please feel free to remove the front hair you do not want to keep before proceeding.
+						</p>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [{
+						query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem .quickActions .wardrobeActionButton',
+						// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+						filter: (e) => (JSON.parse(e.dataset.action ?? 'null')?.type === 'delete'),
+					}],
+				},
 			],
 		},
 		{
@@ -489,6 +659,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 				{
 					text: (
 						<p>
+							This concludes this tutorial about the character body.<br />
 							Now you can exit the wardrobe by clicking the "Back" button in the top-right corner of the screen.<br />
 							This will take you back to the most-relevant view for your current situation (in most cases that is the room view).
 						</p>

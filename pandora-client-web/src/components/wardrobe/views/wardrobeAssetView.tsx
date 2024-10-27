@@ -29,8 +29,7 @@ import { ActionWarning, AttributeButton, InventoryAssetPreview, WardrobeActionBu
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
 
-export function InventoryAssetView({ className, title, children, assets, container, attributesFilterOptions, spawnStyle }: {
-	className?: string;
+export function InventoryAssetView({ title, children, assets, container, attributesFilterOptions, spawnStyle }: {
 	title: string;
 	children?: ReactNode;
 	assets: readonly Asset[];
@@ -60,7 +59,6 @@ export function InventoryAssetView({ className, title, children, assets, contain
 
 	return (
 		<WardrobeAssetList
-			className={ className }
 			title={ title }
 			overlay={
 				heldItem.type !== 'nothing' ? (
@@ -83,8 +81,7 @@ export interface WardrobeAssetListItemProps {
 	listMode: boolean;
 }
 
-export function WardrobeAssetList({ className, title, children, overlay, assets, container, attributesFilterOptions, ListItemComponent, itemSortIgnorePreferenceOrdering = false }: {
-	className?: string;
+export function WardrobeAssetList({ title, children, overlay, assets, container, attributesFilterOptions, ListItemComponent, itemSortIgnorePreferenceOrdering = false }: {
 	title: string;
 	children?: ReactNode;
 	overlay?: ReactNode;
@@ -137,7 +134,7 @@ export function WardrobeAssetList({ className, title, children, overlay, assets,
 	}, [container, setFilter]);
 
 	return (
-		<div className={ classNames('inventoryView', className) }>
+		<div className='inventoryView wardrobeAssetList'>
 			<div className='toolbar'>
 				<span>{ title }</span>
 				<TextInput ref={ filterInput }
@@ -159,7 +156,7 @@ export function WardrobeAssetList({ className, title, children, overlay, assets,
 				/>
 			</div>
 			{ attributesFilterOptions == null ? null : (
-				<div className='toolbar'>
+				<div className='toolbar attributeFilter'>
 					{ attributesFilterOptions.map((a) => (
 						<AttributeButton
 							key={ a }

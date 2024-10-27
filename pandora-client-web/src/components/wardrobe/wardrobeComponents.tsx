@@ -236,9 +236,14 @@ export function AttributeButton({ attribute, ...buttonProps }: {
 					{ ...buttonProps }
 					src={ icon }
 					alt={ attributeDefinition?.name ?? `[UNKNOWN ATTRIBUTE '${attribute}']` }
+					data-attribute={ attribute }
 				/>
 			) : (
-				<Button ref={ setButtonRef } { ...buttonProps } className={ classNames(buttonProps.className, 'iconHeightButton') } >
+				<Button ref={ setButtonRef }
+					{ ...buttonProps }
+					className={ classNames(buttonProps.className, 'iconHeightButton') }
+					data-attribute={ attribute }
+				>
 					{ attributeDefinition?.name ?? `[UNKNOWN ATTRIBUTE '${attribute}']` }
 				</Button>
 			) }

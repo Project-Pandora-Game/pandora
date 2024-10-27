@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { AssertNever } from 'pandora-common';
+import { AssertNever, GetLogger } from 'pandora-common';
 import { Observable, type ReadonlyObservable } from '../../../observable';
 import type { TutorialCondition, TutorialConfig, TutorialStage } from './tutorialConfig';
 
@@ -101,7 +101,12 @@ export class TutorialStageRunner {
 					if (condition.filter == null)
 						return true;
 
-					return condition.filter(e);
+					try {
+						return condition.filter(e);
+					} catch (error) {
+						GetLogger('TutorialStageRunner').warning('Crash while testing elementQuery condition:', error);
+						return false;
+					}
 				});
 
 			return elements.length > 0;

@@ -168,8 +168,8 @@ export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 
 /**
  * Gets an appearance condition evaluator for the character
- * @param characterState Character state
- * @param isBlinking Whether the character is currently mid-blink
+ * @param characterState - Character state
+ * @param isBlinking - Whether the character is currently mid-blink
  * @returns The requested appearance condition evaluator
  */
 export function useAppearanceConditionEvaluator(characterState: AssetFrameworkCharacterState, isBlinking: boolean = false): AppearanceConditionEvaluator {

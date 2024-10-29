@@ -125,9 +125,14 @@ export function CalculatePointDefinitionsFromTemplate(template: Immutable<PointT
 	return result;
 }
 
+const delaunatorCache = new WeakMap<Immutable<PointDefinitionCalculated[]>, Delaunator<number[]>>();
 export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalculated[]>, pointType?: readonly string[]): Uint32Array {
 	const result: number[] = [];
-	const delaunator = new Delaunator(points.flatMap((point) => point.pos));
+	let delaunator: Delaunator<number[]> | undefined = delaunatorCache.get(points);
+	if (delaunator === undefined) {
+		delaunator = new Delaunator(points.flatMap((point) => point.pos));
+		delaunatorCache.set(points, delaunator);
+	}
 	for (let i = 0; i < delaunator.triangles.length; i += 3) {
 		const t = [i, i + 1, i + 2].map((tp) => delaunator.triangles[tp]);
 		if (t.every((tp) => SelectPoints(points[tp], pointType))) {

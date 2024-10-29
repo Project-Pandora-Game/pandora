@@ -97,10 +97,10 @@ export const CHARACTER_PIVOT_POSITION: Readonly<PointLike> = {
 	y: 1290, // The position where heels seemingly touch the floor
 };
 
-const MIN_BLINK_INTERVAL = 4_000; // ms
-const MAX_BLINK_INTERVAL = 6_000; // ms
-const MIN_BLINK_LENGTH = 100; // ms
-const MAX_BLINK_LENGTH = 400; // ms
+const BLINK_INTERVAL_MIN = 4_000; // ms
+const BLINK_INTERVAL_MAX = 6_000; // ms
+const BLINK_LENGTH_MIN = 100; // ms
+const BLINK_LENGTH_MAX = 400; // ms
 
 function GraphicsCharacterWithManagerImpl({
 	layer: Layer,
@@ -135,17 +135,23 @@ function GraphicsCharacterWithManagerImpl({
 		}
 
 		let timeoutId: number | undefined;
+		/** Whether next cycle should continue. Anti-race-condition for clearTimeout */
+		let mounted: boolean = true;
 
 		const doBlinkCycle = () => {
-			const blinkInterval = blinkRandom.between(MIN_BLINK_INTERVAL, MAX_BLINK_INTERVAL);
-			const blinkLength = blinkRandom.between(MIN_BLINK_LENGTH, MAX_BLINK_LENGTH);
+			const blinkInterval = blinkRandom.between(BLINK_INTERVAL_MIN, BLINK_INTERVAL_MAX);
+			const blinkLength = blinkRandom.between(BLINK_LENGTH_MIN, BLINK_LENGTH_MAX);
 
 			// Blink start timeout
 			timeoutId = setTimeout(() => {
+				if (!mounted)
+					return;
 				setCharacterBlinking(true);
 
 				// Blink end timeout
 				timeoutId = setTimeout(() => {
+					if (!mounted)
+						return;
 					setCharacterBlinking(false);
 
 					// Loop
@@ -158,6 +164,7 @@ function GraphicsCharacterWithManagerImpl({
 		doBlinkCycle();
 
 		return () => {
+			mounted = false;
 			clearTimeout(timeoutId);
 		};
 	}, [setCharacterBlinking, blinkRandom, useBlinking]);

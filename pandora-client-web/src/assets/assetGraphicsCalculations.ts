@@ -31,6 +31,8 @@ export function useLayerDefinition(layer: AssetGraphicsLayer): Immutable<LayerDe
 	return useObservable(layer.definition);
 }
 
+/** Constant for the most common case, so caches can just use reference to this object. */
+const SCALING_IMAGE_UV_EMPTY: Record<BoneName, number> = Object.freeze({});
 export function useLayerImageSource(evaluator: AppearanceConditionEvaluator, layer: AssetGraphicsLayer, item: Item | null): Immutable<{
 	setting: Immutable<LayerImageSetting>;
 	image: string;
@@ -63,7 +65,7 @@ export function useLayerImageSource(evaluator: AppearanceConditionEvaluator, lay
 				}
 			}
 		}
-		return [scalingBaseimage, {}];
+		return [scalingBaseimage, SCALING_IMAGE_UV_EMPTY];
 	}, [evaluator, scaling, scalingBaseimage]);
 
 	return useMemo((): ReturnType<typeof useLayerImageSource> => {
@@ -72,10 +74,10 @@ export function useLayerImageSource(evaluator: AppearanceConditionEvaluator, lay
 		return {
 			setting,
 			image: resultSetting.image,
-			imageUv: {
+			imageUv: resultSetting.uvPose ? {
 				...resultSetting.uvPose,
 				...scalingUv,
-			},
+			} : scalingUv,
 		};
 	}, [evaluator, item, setting, scalingUv]);
 }

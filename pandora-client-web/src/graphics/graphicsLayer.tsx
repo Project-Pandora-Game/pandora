@@ -46,28 +46,26 @@ export function useLayerVertices(
 	layer: AssetGraphicsLayer,
 	item: Item | null,
 	normalize: boolean = false,
-	valueOverrides?: Record<BoneName, number>,
 ): Float32Array {
-	const { mirror, height, width, x, y } = useLayerDefinition(layer);
+	const layerDefinition = useLayerDefinition(layer);
 
 	return useMemo(() => {
 		const result = new Float32Array(points
 			.flatMap((point) => evaluator.evalTransform(
-				MirrorPoint(point.pos, mirror, width),
+				MirrorPoint(point.pos, layerDefinition.mirror, layerDefinition.width),
 				point.transforms,
 				point.mirror,
 				item,
-				valueOverrides,
 			)));
 
 		if (normalize) {
 			for (let i = 0; i < result.length; i++) {
-				result[i] -= i % 2 ? y : x;
-				result[i] /= i % 2 ? height : width;
+				result[i] -= i % 2 ? layerDefinition.y : layerDefinition.x;
+				result[i] /= i % 2 ? layerDefinition.height : layerDefinition.width;
 			}
 		}
 		return result;
-	}, [evaluator, mirror, height, width, x, y, item, normalize, points, valueOverrides]);
+	}, [evaluator, layerDefinition, item, normalize, points]);
 }
 
 export interface GraphicsLayerProps extends ChildrenProps {
@@ -126,7 +124,8 @@ export function GraphicsLayer({
 
 	const evaluator = useAppearanceConditionEvaluator(characterState, characterBlinking);
 
-	const vertices = useLayerVertices(evaluator, points, layer, item, false, verticesPoseOverride);
+	const evaluatorVerticesPose = useAppearanceConditionEvaluator(characterState, characterBlinking, verticesPoseOverride);
+	const vertices = useLayerVertices(evaluatorVerticesPose, points, layer, item, false);
 
 	const {
 		colorizationKey,
@@ -138,7 +137,8 @@ export function GraphicsLayer({
 		imageUv,
 	} = useLayerImageSource(evaluator, layer, item);
 
-	const uv = useLayerVertices(evaluator, points, layer, item, true, imageUv);
+	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, characterBlinking, imageUv);
+	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true);
 
 	const alphaImage = useMemo<string>(() => {
 		return setting.alphaOverrides?.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item)))?.image ?? setting.alphaImage ?? '';

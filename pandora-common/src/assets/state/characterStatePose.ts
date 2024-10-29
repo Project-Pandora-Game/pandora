@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { Satisfies } from '../../utility';
 import type { AssetManager } from '../assetManager';
 import type { BoneType, CharacterView, LegsPose } from '../graphics';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, BoneState, CharacterViewSchema, LegsPoseSchema } from '../graphics';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, CharacterViewSchema, LegsPoseSchema } from '../graphics';
 
 // Fix for pnpm resolution weirdness
 import type { } from '../../validation';
@@ -35,7 +35,6 @@ export const AppearancePoseSchema = z.object({
 export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
 export type CharacterArmsPose = Readonly<Pick<AppearancePose, 'leftArm' | 'rightArm' | 'armsOrder'>>;
 
-export type AppearanceCharacterPose = ReadonlyMap<BoneName, BoneState>;
 function GetDefaultAppearanceArmPose(): AppearanceArmPose {
 	return {
 		position: 'front',

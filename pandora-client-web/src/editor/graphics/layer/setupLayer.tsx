@@ -69,7 +69,8 @@ export function SetupLayerSelected({
 		imageUv,
 	} = useLayerImageSource(evaluator, layer, item);
 
-	const uv = useLayerVertices(evaluator, points, layer, item, true, imageUv);
+	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, false, imageUv);
+	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true);
 
 	const drawWireFrame = useCallback((g: PIXI.GraphicsContext) => {
 		// Draw triangles

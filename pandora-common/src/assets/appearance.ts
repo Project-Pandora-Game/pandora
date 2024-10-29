@@ -9,7 +9,7 @@ import type { AppearanceItems } from './appearanceValidation';
 import type { AssetManager } from './assetManager';
 import type { AssetId } from './base';
 import type { WearableAssetType } from './definitions';
-import type { BoneState, CharacterView } from './graphics';
+import type { CharacterView } from './graphics';
 import type { Item } from './item';
 import type { AssetFrameworkCharacterState } from './state/characterState';
 import type { CharacterArmsPose } from './state/characterStatePose';
@@ -58,16 +58,6 @@ export class CharacterAppearance implements ActionTargetCharacter {
 
 	public getAllItems(): AppearanceItems<WearableAssetType> {
 		return this._items;
-	}
-
-	public getPose(bone: string): BoneState {
-		const definition = this.assetManager.getBoneByName(bone);
-		if (definition == null)
-			throw new Error(`Attempt to get pose for unknown bone: ${bone}`);
-		return {
-			definition,
-			rotation: this.characterState.actualPose.bones[definition.name] || 0,
-		};
 	}
 
 	public getArmsPose(): CharacterArmsPose {

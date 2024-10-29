@@ -25,11 +25,6 @@ export interface BoneDefinition {
 	type: BoneType;
 }
 
-export interface BoneState {
-	readonly definition: BoneDefinition;
-	readonly rotation: number;
-}
-
 export const LayerImageOverrideSchema = z.object({
 	image: z.string(),
 	/**

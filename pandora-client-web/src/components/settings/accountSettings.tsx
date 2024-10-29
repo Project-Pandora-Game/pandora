@@ -39,7 +39,7 @@ export function AccountSettings(): ReactElement | null {
 
 	return (
 		<>
-			<Button className='slim' onClick={ () => { // TODO: Integrate better
+			<Button onClick={ () => { // TODO: Integrate better
 				navigate(`/profiles/account/${account.id}`, {
 					state: {
 						back: location.pathname,

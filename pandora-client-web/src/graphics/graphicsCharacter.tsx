@@ -22,7 +22,7 @@ import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { useCharacterAppearanceItems } from '../character/character';
 import { ChildrenProps } from '../common/reactTypes';
 import { usePlayerData } from '../components/gameContext/playerContextProvider';
-import { useObservable } from '../observable';
+import { Observable, useObservable } from '../observable';
 import { Container } from './baseComponents/container';
 import { ComputedLayerPriority, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def';
 import { GraphicsLayer, GraphicsLayerProps, SwapCullingDirection } from './graphicsLayer';
@@ -129,14 +129,15 @@ function GraphicsCharacterWithManagerImpl({
 
 	const assetPreferenceIsVisible = useAssetPreferenceVisibilityCheck();
 
-	const [characterBlinking, setCharacterBlinking] = useState(false);
-	const blinkRandom = useMemo(() => new PseudoRandom(nanoid()), []);
+	const characterBlinking = useMemo(() => new Observable<boolean>(false), []);
 
 	useEffect(() => {
 		if (!useBlinking || !effectBlinking) {
-			setCharacterBlinking(false);
+			characterBlinking.value = false;
 			return;
 		}
+
+		const blinkRandom = new PseudoRandom(nanoid());
 
 		let timeoutId: number | undefined;
 		/** Whether next cycle should continue. Anti-race-condition for clearTimeout */
@@ -150,13 +151,13 @@ function GraphicsCharacterWithManagerImpl({
 			timeoutId = setTimeout(() => {
 				if (!mounted)
 					return;
-				setCharacterBlinking(true);
+				characterBlinking.value = true;
 
 				// Blink end timeout
 				timeoutId = setTimeout(() => {
 					if (!mounted)
 						return;
-					setCharacterBlinking(false);
+					characterBlinking.value = false;
 
 					// Loop
 					doBlinkCycle();
@@ -171,7 +172,7 @@ function GraphicsCharacterWithManagerImpl({
 			mounted = false;
 			clearTimeout(timeoutId);
 		};
-	}, [blinkRandom, useBlinking, effectBlinking]);
+	}, [characterBlinking, useBlinking, effectBlinking]);
 
 	const layers = useMemo<LayerState[]>(() => {
 		const visibleItems = items.slice();

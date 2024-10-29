@@ -18,6 +18,7 @@ import React, { ReactElement, createContext, useCallback, useContext, useLayoutE
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../assets/assetGraphics';
 import { useImageResolutionAlternative, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource, useLayerMeshPoints } from '../assets/assetGraphicsCalculations';
 import { ChildrenProps } from '../common/reactTypes';
+import { useNullableObservable, type ReadonlyObservable } from '../observable';
 import { ConditionEvaluatorBase, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator';
 import { Container } from './baseComponents/container';
 import { PixiMesh, type PixiMeshProps } from './baseComponents/mesh';
@@ -138,10 +139,10 @@ export interface GraphicsLayerProps extends ChildrenProps {
 	state?: LayerStateOverrides;
 
 	/**
-	 * Whether the character the layer belongs to is currently mid-blink
-	 * @default false
+	 * Observable for whether the character the layer belongs to is currently mid-blink.
+	 * If not passed, it is assumed to be `false`.
 	 */
-	characterBlinking?: boolean;
+	characterBlinking?: ReadonlyObservable<boolean>;
 
 	getTexture?: (path: string) => Texture;
 }
@@ -177,14 +178,15 @@ export function GraphicsLayer({
 	verticesPoseOverride,
 	state,
 	getTexture,
-	characterBlinking = false,
+	characterBlinking,
 }: GraphicsLayerProps): ReactElement {
 
 	const { points, triangles } = useLayerMeshPoints(layer);
 
-	const evaluator = useAppearanceConditionEvaluator(characterState, characterBlinking);
+	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
+	const evaluator = useAppearanceConditionEvaluator(characterState, currentlyBlinking);
 
-	const evaluatorVerticesPose = useAppearanceConditionEvaluator(characterState, characterBlinking, verticesPoseOverride);
+	const evaluatorVerticesPose = useAppearanceConditionEvaluator(characterState, currentlyBlinking, verticesPoseOverride);
 	const vertices = useLayerVertices(evaluatorVerticesPose, points, layer, item, false);
 
 	const {
@@ -197,7 +199,7 @@ export function GraphicsLayer({
 		imageUv,
 	} = useLayerImageSource(evaluator, layer, item);
 
-	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, characterBlinking, imageUv);
+	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, currentlyBlinking, imageUv);
 	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true);
 
 	const alphaImage = useMemo<string>(() => {

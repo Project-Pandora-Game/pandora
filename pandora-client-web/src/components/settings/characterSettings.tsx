@@ -29,7 +29,7 @@ export function CharacterSettings(): ReactElement | null {
 
 	return (
 		<>
-			<Button className='slim' onClick={ () => { // TODO: Integrate better
+			<Button onClick={ () => { // TODO: Integrate better
 				navigate(`/profiles/character/${playerData.id}`, {
 					state: {
 						back: location.pathname,

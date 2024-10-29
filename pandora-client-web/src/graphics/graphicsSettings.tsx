@@ -83,7 +83,7 @@ function EffectsSettings(): ReactElement {
 			<ToggleSettingInput
 				currentValue={ effectBlinking }
 				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.effectBlinking }
-				label='Character blinking'
+				label='Eye blinking of characters'
 				onChange={ (newValue) => {
 					SetGraphicsSettings({ effectBlinking: newValue });
 				} }

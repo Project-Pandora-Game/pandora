@@ -1,16 +1,19 @@
 import { CloneDeepMutable } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
-import { BrowserStorage } from '../browserStorage';
-import { ContextHelpButton } from '../components/help/contextHelpButton';
-import { SelectSettingInput } from '../components/settings/helpers/settingsInputs';
-import { useObservable } from '../observable';
 import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../assets/graphicsManager';
+import { BrowserStorage } from '../browserStorage';
 import { Button } from '../components/common/button/button';
 import { Column, Row } from '../components/common/container/container';
+import { ContextHelpButton } from '../components/help/contextHelpButton';
+import { SelectSettingInput, ToggleSettingInput } from '../components/settings/helpers/settingsInputs';
+import { useObservable } from '../observable';
 import { useAutomaticResolution } from '../services/screenResolution/screenResolution';
 
 export const GraphicsSettingsSchema = z.object({
+	// Effects
+	effectBlinking: z.boolean(),
+	// Quality
 	renderResolution: z.number().int().min(0).max(100),
 	textureResolution: z.enum(['auto', '1', '0.5', '0.25']),
 	alphamaskEngine: z.enum(['pixi', 'customShader', 'disabled']),
@@ -18,6 +21,9 @@ export const GraphicsSettingsSchema = z.object({
 export type GraphicsSettings = z.infer<typeof GraphicsSettingsSchema>;
 
 const GRAPHICS_SETTINGS_DEFAULT: GraphicsSettings = {
+	// Effects
+	effectBlinking: false,
+	// Quality
 	renderResolution: 100,
 	textureResolution: 'auto',
 	alphamaskEngine: 'disabled',
@@ -61,9 +67,29 @@ function ResetGraphicsSettings(settings: readonly (keyof GraphicsSettings)[]): v
 export function GraphicsSettings(): ReactElement | null {
 	return (
 		<>
+			<EffectsSettings />
 			<QualitySettings />
 			<GraphicsDebug />
 		</>
+	);
+}
+
+function EffectsSettings(): ReactElement {
+	const { effectBlinking } = useObservable(storage);
+
+	return (
+		<fieldset>
+			<legend>Effects</legend>
+			<ToggleSettingInput
+				currentValue={ effectBlinking }
+				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.effectBlinking }
+				label='Character blinking'
+				onChange={ (newValue) => {
+					SetGraphicsSettings({ effectBlinking: newValue });
+				} }
+				onReset={ () => ResetGraphicsSettings(['effectBlinking']) }
+			/>
+		</fieldset>
 	);
 }
 

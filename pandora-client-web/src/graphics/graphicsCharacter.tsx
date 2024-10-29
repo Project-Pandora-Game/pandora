@@ -26,6 +26,7 @@ import { useObservable } from '../observable';
 import { Container } from './baseComponents/container';
 import { ComputedLayerPriority, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def';
 import { GraphicsLayer, GraphicsLayerProps, SwapCullingDirection } from './graphicsLayer';
+import { useGraphicsSettings } from './graphicsSettings';
 import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense';
 
 export type PointLike = {
@@ -122,6 +123,8 @@ function GraphicsCharacterWithManagerImpl({
 	graphicsGetter: GraphicsGetterFunction;
 	layerStateOverrideGetter?: LayerStateOverrideGetter;
 }, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
+	const { effectBlinking } = useGraphicsSettings();
+
 	const items = useCharacterAppearanceItems(characterState);
 
 	const assetPreferenceIsVisible = useAssetPreferenceVisibilityCheck();
@@ -130,7 +133,8 @@ function GraphicsCharacterWithManagerImpl({
 	const blinkRandom = useMemo(() => new PseudoRandom(nanoid()), []);
 
 	useEffect(() => {
-		if (!useBlinking) {
+		if (!useBlinking || !effectBlinking) {
+			setCharacterBlinking(false);
 			return;
 		}
 
@@ -167,7 +171,7 @@ function GraphicsCharacterWithManagerImpl({
 			mounted = false;
 			clearTimeout(timeoutId);
 		};
-	}, [setCharacterBlinking, blinkRandom, useBlinking]);
+	}, [blinkRandom, useBlinking, effectBlinking]);
 
 	const layers = useMemo<LayerState[]>(() => {
 		const visibleItems = items.slice();

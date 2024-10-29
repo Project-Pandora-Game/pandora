@@ -1,20 +1,20 @@
+import { isEqual } from 'lodash';
+import { Assert } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useMemo } from 'react';
+import { useLayerDefinition, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations';
 import dotTexture from '../../../assets/editor/dotTexture.png';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
 import { Container } from '../../../graphics/baseComponents/container';
 import { Graphics } from '../../../graphics/baseComponents/graphics';
 import { Sprite } from '../../../graphics/baseComponents/sprite';
-import { GraphicsLayerProps, useLayerPoints, useLayerVertices } from '../../../graphics/graphicsLayer';
+import { GraphicsLayerProps, useLayerVertices } from '../../../graphics/graphicsLayer';
 import { useTexture } from '../../../graphics/useTexture';
+import { MeshFaceIsCW } from '../../../graphics/utility';
 import { useNullableObservable, useObservable } from '../../../observable';
 import { PreviewCutterRectangle } from '../../components/previewCutter/previewCutter';
 import { useEditor } from '../../editorContextProvider';
 import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer';
-import { isEqual } from 'lodash';
-import { useLayerDefinition } from '../../../assets/assetGraphicsCalculations';
-import { MeshFaceIsCW } from '../../../graphics/utility';
-import { Assert } from 'pandora-common';
 
 export function ResultLayer({
 	layer,
@@ -26,7 +26,7 @@ export function ResultLayer({
 	const showHelpers = useObservable(editor.targetLayer) === layer;
 
 	const { points: pointTemplate } = useLayerDefinition(layer);
-	const { points, triangles } = useLayerPoints(layer);
+	const { points, triangles } = useLayerMeshPoints(layer);
 
 	const evaluator = useAppearanceConditionEvaluator(characterState);
 

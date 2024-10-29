@@ -3,13 +3,13 @@ import * as PIXI from 'pixi.js';
 import { Texture } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
-import { useLayerDefinition, useLayerImageSource } from '../../../assets/assetGraphicsCalculations';
+import { useLayerDefinition, useLayerImageSource, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations';
 import { useCharacterAppearanceItems } from '../../../character/character';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
 import { Container } from '../../../graphics/baseComponents/container';
 import { Graphics } from '../../../graphics/baseComponents/graphics';
 import { Sprite } from '../../../graphics/baseComponents/sprite';
-import { GraphicsLayerProps, useItemColor, useLayerPoints, useLayerVertices } from '../../../graphics/graphicsLayer';
+import { GraphicsLayerProps, useItemColor, useLayerVertices } from '../../../graphics/graphicsLayer';
 import { useTexture } from '../../../graphics/useTexture';
 import { useEditorLayerStateOverride } from '../../editor';
 import { useEditor } from '../../editorContextProvider';
@@ -53,7 +53,7 @@ export function SetupLayerSelected({
 	const items = useCharacterAppearanceItems(characterState);
 	const item = items.find((i) => i.asset.id === layer.asset.id) ?? null;
 
-	const { points, triangles } = useLayerPoints(layer);
+	const { points, triangles } = useLayerMeshPoints(layer);
 
 	const evaluator = useAppearanceConditionEvaluator(characterState);
 

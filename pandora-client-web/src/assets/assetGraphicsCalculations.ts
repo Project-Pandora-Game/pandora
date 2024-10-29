@@ -97,19 +97,32 @@ export function useLayerName(layer: AssetGraphicsLayer): string {
 	return name;
 }
 
-export function CalculatePointDefinitionsFromTemplate(template: Immutable<PointTemplate>, mirrorPoints: boolean = false): PointDefinitionCalculated[] {
+const pointMirrorCache = new WeakMap<Immutable<PointDefinition[]>, Immutable<PointDefinition[]>>();
+const calculatedPointsCache = new WeakMap<Immutable<PointDefinition[]>, Immutable<PointDefinitionCalculated[]>>();
+export function CalculatePointDefinitionsFromTemplate(template: Immutable<PointTemplate>, mirrorPoints: boolean = false): Immutable<PointDefinitionCalculated[]> {
 	let points: Immutable<PointDefinition[]> = template;
 
 	if (mirrorPoints) {
-		points = points.map(MirrorPoint);
+		let newPoints: Immutable<PointDefinition[]> | undefined = pointMirrorCache.get(points);
+		if (newPoints === undefined) {
+			newPoints = points.map(MirrorPoint);
+			pointMirrorCache.set(points, newPoints);
+		}
+		points = newPoints;
 	}
 
-	const calculatedPoints = points.map<PointDefinitionCalculated>((point, index) => ({
-		...CloneDeepMutable(point),
-		index,
-		isMirror: false,
-	}));
-	return calculatedPoints.flatMap(MakeMirroredPoints);
+	let result: Immutable<PointDefinitionCalculated[]> | undefined = calculatedPointsCache.get(points);
+	if (result === undefined) {
+		result = points
+			.map((point, index): PointDefinitionCalculated => ({
+				...CloneDeepMutable(point),
+				index,
+				isMirror: false,
+			}))
+			.flatMap(MakeMirroredPoints);
+		calculatedPointsCache.set(points, result);
+	}
+	return result;
 }
 
 export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalculated[]>, pointType?: readonly string[]): Uint32Array {
@@ -124,20 +137,34 @@ export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalcul
 	return new Uint32Array(result);
 }
 
-export function useLayerCalculatedPoints(layer: AssetGraphicsLayer): PointDefinitionCalculated[] {
-	const { points, mirror } = useLayerDefinition(layer);
+export function useLayerMeshPoints(layer: AssetGraphicsLayer): {
+	readonly points: Immutable<PointDefinitionCalculated[]>;
+	readonly triangles: Uint32Array;
+} {
+	// Note: The points should NOT be filtered before Delaunator step!
+	// Doing so would cause body and arms not to have exactly matching triangles,
+	// causing (most likely) overlap, which would result in clipping.
+	// In some other cases this could lead to gaps or other visual artifacts
+	// Any optimization of unused points needs to be done *after* triangles are calculated
+	const { points, pointType, mirror } = useLayerDefinition(layer);
 
 	const manager = useObservable(GraphicsManagerInstance);
 	const templateOverrides = useNullableObservable(useContext(AssetGraphicsResolverOverrideContext)?.pointTemplates);
 
-	return useMemo((): PointDefinitionCalculated[] => {
+	return useMemo((): ReturnType<typeof useLayerMeshPoints> => {
 		const p = templateOverrides?.get(points) ?? manager?.getTemplate(points);
 		if (!p) {
 			throw new Error(`Unknown template '${p}'`);
 		}
 
-		return CalculatePointDefinitionsFromTemplate(p, (layer.isMirror && mirror === LayerMirror.FULL));
-	}, [layer, manager, templateOverrides, points, mirror]);
+		const calculatedPoints = CalculatePointDefinitionsFromTemplate(p, (layer.isMirror && mirror === LayerMirror.FULL));
+		Assert(calculatedPoints.length < 65535, 'Points do not fit into indices');
+
+		return {
+			points: calculatedPoints,
+			triangles: CalculatePointsTriangles(calculatedPoints, pointType),
+		};
+	}, [layer, manager, templateOverrides, points, mirror, pointType]);
 }
 
 export function useLayerHasAlphaMasks(layer: AssetGraphicsLayer): boolean {

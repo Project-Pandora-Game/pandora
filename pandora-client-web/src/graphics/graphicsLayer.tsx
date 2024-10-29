@@ -4,7 +4,7 @@ import * as PIXI from 'pixi.js';
 import { Rectangle, Texture } from 'pixi.js';
 import React, { ReactElement, createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../assets/assetGraphics';
-import { CalculatePointsTriangles, useImageResolutionAlternative, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource } from '../assets/assetGraphicsCalculations';
+import { useImageResolutionAlternative, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource, useLayerMeshPoints } from '../assets/assetGraphicsCalculations';
 import { ChildrenProps } from '../common/reactTypes';
 import { ConditionEvaluatorBase, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator';
 import { Container } from './baseComponents/container';
@@ -16,25 +16,6 @@ import { useGraphicsSettings } from './graphicsSettings';
 import { usePixiApp, usePixiAppOptional } from './reconciler/appContext';
 import { useTexture } from './useTexture';
 import { EvaluateCondition } from './utility';
-
-export function useLayerPoints(layer: AssetGraphicsLayer): {
-	points: readonly PointDefinitionCalculated[];
-	triangles: Uint32Array;
-} {
-	// Note: The points should NOT be filtered before Delaunator step!
-	// Doing so would cause body and arms not to have exactly matching triangles,
-	// causing (most likely) overlap, which would result in clipping.
-	// In some other cases this could lead to gaps or other visual artifacts
-	// Any optimization of unused points needs to be done *after* triangles are calculated
-	const points = useLayerCalculatedPoints(layer);
-	Assert(points.length < 65535, 'Points do not fit into indices');
-
-	const { pointType } = useLayerDefinition(layer);
-	const triangles = useMemo<Uint32Array>(() => {
-		return CalculatePointsTriangles(points, pointType);
-	}, [pointType, points]);
-	return { points, triangles };
-}
 
 export function SelectPoints({ pointType }: Immutable<PointDefinition>, pointTypes?: readonly string[]): boolean {
 	// If point has no type, include it
@@ -52,7 +33,7 @@ export function SelectPoints({ pointType }: Immutable<PointDefinition>, pointTyp
 		pointTypes.includes(pointType.replace(/_[lr]$/, ''));
 }
 
-export function MirrorPoint([x, y]: CoordinatesCompressed, mirror: LayerMirror, width: number): CoordinatesCompressed {
+export function MirrorPoint([x, y]: Immutable<CoordinatesCompressed>, mirror: LayerMirror, width: number): CoordinatesCompressed {
 	if (mirror === LayerMirror.FULL)
 		return [x - width, y];
 
@@ -61,7 +42,7 @@ export function MirrorPoint([x, y]: CoordinatesCompressed, mirror: LayerMirror, 
 
 export function useLayerVertices(
 	evaluator: ConditionEvaluatorBase,
-	points: readonly PointDefinitionCalculated[],
+	points: Immutable<PointDefinitionCalculated[]>,
 	layer: AssetGraphicsLayer,
 	item: Item | null,
 	normalize: boolean = false,
@@ -141,7 +122,7 @@ export function GraphicsLayer({
 	characterBlinking = false,
 }: GraphicsLayerProps): ReactElement {
 
-	const { points, triangles } = useLayerPoints(layer);
+	const { points, triangles } = useLayerMeshPoints(layer);
 
 	const evaluator = useAppearanceConditionEvaluator(characterState, characterBlinking);
 

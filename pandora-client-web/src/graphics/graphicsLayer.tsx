@@ -1,5 +1,17 @@
-import type { Immutable } from 'immer';
-import { AppearanceItems, Assert, AssertNever, AssetFrameworkCharacterState, BoneName, CharacterSize, CoordinatesCompressed, HexColorString, Item, LayerMirror, Rectangle as PandoraRectangle, PointDefinition } from 'pandora-common';
+import { produce, type Immutable } from 'immer';
+import {
+	AppearanceItems,
+	Assert,
+	AssertNever,
+	AssetFrameworkCharacterState,
+	BoneName,
+	CharacterSize,
+	HexColorString,
+	Item,
+	LayerMirror,
+	Rectangle as PandoraRectangle,
+	PointDefinition,
+} from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { Rectangle, Texture } from 'pixi.js';
 import React, { ReactElement, createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
@@ -33,11 +45,46 @@ export function SelectPoints({ pointType }: Immutable<PointDefinition>, pointTyp
 		pointTypes.includes(pointType.replace(/_[lr]$/, ''));
 }
 
-export function MirrorPoint([x, y]: Immutable<CoordinatesCompressed>, mirror: LayerMirror, width: number): CoordinatesCompressed {
-	if (mirror === LayerMirror.FULL)
-		return [x - width, y];
+type TransformEvalCacheEntryValue = WeakMap<Immutable<PointDefinitionCalculated[]>, Float32Array>;
+type TransformEvalCacheEntry = {
+	noItem: TransformEvalCacheEntryValue;
+	withItem: WeakMap<Item, TransformEvalCacheEntryValue>;
+};
 
-	return [x, y];
+const transformEvalCache = new WeakMap<ConditionEvaluatorBase, TransformEvalCacheEntry>();
+
+export function EvalLayerVerticesTransform(evaluator: ConditionEvaluatorBase, item: Item | null, points: Immutable<PointDefinitionCalculated[]>): Float32Array {
+	let cacheEntry: TransformEvalCacheEntry | undefined = transformEvalCache.get(evaluator);
+	if (cacheEntry === undefined) {
+		cacheEntry = {
+			noItem: new WeakMap(),
+			withItem: new WeakMap(),
+		};
+		transformEvalCache.set(evaluator, cacheEntry);
+	}
+
+	let value: TransformEvalCacheEntryValue = cacheEntry.noItem;
+	if (item != null) {
+		let itemValue: TransformEvalCacheEntryValue | undefined = cacheEntry.withItem.get(item);
+		if (itemValue === undefined) {
+			itemValue = new WeakMap();
+			cacheEntry.withItem.set(item, itemValue);
+		}
+		value = itemValue;
+	}
+
+	let result: Float32Array | undefined = value.get(points);
+	if (result === undefined) {
+		result = new Float32Array(points
+			.flatMap((point) => evaluator.evalTransform(
+				point.pos,
+				point.transforms,
+				point.mirror,
+				item,
+			)));
+		value.set(points, result);
+	}
+	return result;
 }
 
 export function useLayerVertices(
@@ -49,23 +96,36 @@ export function useLayerVertices(
 ): Float32Array {
 	const layerDefinition = useLayerDefinition(layer);
 
-	return useMemo(() => {
-		const result = new Float32Array(points
-			.flatMap((point) => evaluator.evalTransform(
-				MirrorPoint(point.pos, layerDefinition.mirror, layerDefinition.width),
-				point.transforms,
-				point.mirror,
-				item,
-			)));
+	// Mirror
+	const mirroredPoints = useMemo((): Immutable<PointDefinitionCalculated[]> => {
+		if (layerDefinition.mirror === LayerMirror.FULL) {
+			return produce(points, (draftPoints) => {
+				for (const point of draftPoints) {
+					// FIXME: This is likely wrong, but it isn't currently used anywhere (I kept old variant)
+					point.pos[0] -= layerDefinition.width;
+				}
+			});
+		}
 
+		return points;
+	}, [points, layerDefinition]);
+
+	return useMemo((): Float32Array => {
+		// Eval transform
+		const result = EvalLayerVerticesTransform(evaluator, item, mirroredPoints);
+
+		// Normalize
 		if (normalize) {
+			const normalizedResult = new Float32Array(result.length);
 			for (let i = 0; i < result.length; i++) {
-				result[i] -= i % 2 ? layerDefinition.y : layerDefinition.x;
-				result[i] /= i % 2 ? layerDefinition.height : layerDefinition.width;
+				const odd = (i % 2) !== 0;
+				normalizedResult[i] = (result[i] - (odd ? layerDefinition.y : layerDefinition.x)) /
+					(odd ? layerDefinition.height : layerDefinition.width);
 			}
+			return normalizedResult;
 		}
 		return result;
-	}, [evaluator, layerDefinition, item, normalize, points]);
+	}, [layerDefinition, evaluator, item, mirroredPoints, normalize]);
 }
 
 export interface GraphicsLayerProps extends ChildrenProps {

@@ -1,4 +1,19 @@
-import { AssertNotNullable, Asset, ASSET_PREFERENCES_DEFAULT, AssetFrameworkCharacterState, AssetId, CharacterArmsPose, CharacterSize, CharacterView, CreateAssetPropertiesResult, GetLogger, MergeAssetProperties, ResolveAssetPreference } from 'pandora-common';
+import { nanoid } from 'nanoid';
+import {
+	AssertNotNullable,
+	Asset,
+	ASSET_PREFERENCES_DEFAULT,
+	AssetFrameworkCharacterState,
+	AssetId,
+	CharacterArmsPose,
+	CharacterSize,
+	CharacterView,
+	CreateAssetPropertiesResult,
+	GetLogger,
+	MergeAssetProperties,
+	PseudoRandom,
+	ResolveAssetPreference,
+} from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
@@ -31,6 +46,12 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	eventMode?: PIXI.EventMode;
 	filters?: readonly Filter[];
 	zIndex?: number;
+
+	/**
+	 * Whether the blinking condition should be used for the graphics layer evaluators.
+	 * @default false
+	 */
+	useBlinking?: boolean;
 
 	onPointerDown?: (event: FederatedPointerEvent) => void;
 	onPointerUp?: (event: FederatedPointerEvent) => void;
@@ -76,6 +97,11 @@ export const CHARACTER_PIVOT_POSITION: Readonly<PointLike> = {
 	y: 1290, // The position where heels seemingly touch the floor
 };
 
+const BLINK_INTERVAL_MIN = 4_000; // ms
+const BLINK_INTERVAL_MAX = 6_000; // ms
+const BLINK_LENGTH_MIN = 100; // ms
+const BLINK_LENGTH_MAX = 400; // ms
+
 function GraphicsCharacterWithManagerImpl({
 	layer: Layer,
 	characterState,
@@ -90,6 +116,7 @@ function GraphicsCharacterWithManagerImpl({
 	children,
 	graphicsGetter,
 	layerStateOverrideGetter,
+	useBlinking = false,
 	...graphicsProps
 }: GraphicsCharacterProps & {
 	graphicsGetter: GraphicsGetterFunction;
@@ -98,6 +125,49 @@ function GraphicsCharacterWithManagerImpl({
 	const items = useCharacterAppearanceItems(characterState);
 
 	const assetPreferenceIsVisible = useAssetPreferenceVisibilityCheck();
+
+	const [characterBlinking, setCharacterBlinking] = useState(false);
+	const blinkRandom = useMemo(() => new PseudoRandom(nanoid()), []);
+
+	useEffect(() => {
+		if (!useBlinking) {
+			return;
+		}
+
+		let timeoutId: number | undefined;
+		/** Whether next cycle should continue. Anti-race-condition for clearTimeout */
+		let mounted: boolean = true;
+
+		const doBlinkCycle = () => {
+			const blinkInterval = blinkRandom.between(BLINK_INTERVAL_MIN, BLINK_INTERVAL_MAX);
+			const blinkLength = blinkRandom.between(BLINK_LENGTH_MIN, BLINK_LENGTH_MAX);
+
+			// Blink start timeout
+			timeoutId = setTimeout(() => {
+				if (!mounted)
+					return;
+				setCharacterBlinking(true);
+
+				// Blink end timeout
+				timeoutId = setTimeout(() => {
+					if (!mounted)
+						return;
+					setCharacterBlinking(false);
+
+					// Loop
+					doBlinkCycle();
+				}, blinkLength);
+			}, blinkInterval);
+		};
+
+		// Start blink loop
+		doBlinkCycle();
+
+		return () => {
+			mounted = false;
+			clearTimeout(timeoutId);
+		};
+	}, [setCharacterBlinking, blinkRandom, useBlinking]);
 
 	const layers = useMemo<LayerState[]>(() => {
 		const visibleItems = items.slice();
@@ -166,13 +236,14 @@ function GraphicsCharacterWithManagerImpl({
 					item={ layerState.item }
 					state={ layerState.state }
 					characterState={ characterState }
+					characterBlinking={ characterBlinking }
 				>
 					{ lowerLayer }
 				</LayerElement>
 			));
 		}
 		return result;
-	}, [Layer, characterState, layers, priorities, view]);
+	}, [Layer, characterState, layers, priorities, view, characterBlinking]);
 
 	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CHARACTER_PIVOT_POSITION.x, y: 0 }), [pivotExtra]);
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);

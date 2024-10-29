@@ -135,6 +135,7 @@ export function CharacterPreview({ character, characterState, overlay, viewportR
 				pivot={ pivot }
 				characterState={ characterState }
 				filters={ filters }
+				useBlinking
 			/>
 			{
 				roomBackground ? (

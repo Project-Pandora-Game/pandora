@@ -684,6 +684,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 			scale={ scale }
 			angle={ rotationAngle }
 			filters={ filters }
+			useBlinking
 		>
 			{
 				!debugConfig?.characterDebugOverlay ? null : (

@@ -74,6 +74,9 @@ export const AtomicConditionLegsSchema = z.object({
 export const AtomicConditionViewSchema = z.object({
 	view: CharacterViewSchema,
 });
+export const AtomicConditionBlinkingSchema = z.object({
+	blinking: z.boolean(),
+});
 export const AtomicConditionSchema = z.union([
 	AtomicConditionBoneSchema,
 	AtomicConditionModuleSchema,
@@ -82,6 +85,7 @@ export const AtomicConditionSchema = z.union([
 	AtomicConditionArmFingersSchema,
 	AtomicConditionLegsSchema,
 	AtomicConditionViewSchema,
+	AtomicConditionBlinkingSchema,
 ]);
 export type AtomicCondition = z.infer<typeof AtomicConditionSchema>;
 

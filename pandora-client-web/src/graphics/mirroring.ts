@@ -48,6 +48,11 @@ export function MirrorCondition(condition: Immutable<Condition> | undefined): Co
 			return {
 				...c,
 			};
+		} else if ('blinking' in c) {
+			Assert(c.blinking != null);
+			return {
+				...c,
+			};
 		} else {
 			AssertNever(c);
 		}

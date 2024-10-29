@@ -8,6 +8,7 @@ export * from './event';
 export * from './gameLogic';
 export * from './inputLimits';
 export * from './logging';
+export * from './math';
 export * from './networking';
 export * from './security';
 export * from './services';

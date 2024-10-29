@@ -37,6 +37,9 @@ export function SerializeAtomicCondition(condition: Immutable<AtomicCondition>):
 	} else if ('view' in condition) {
 		Assert(condition.view != null);
 		return `view_${condition.view}`;
+	} else if ('blinking' in condition) {
+		Assert(condition.blinking != null);
+		return condition.blinking ? `blinking` : `!blinking`;
 	} else {
 		AssertNever(condition);
 	}
@@ -74,6 +77,11 @@ function ParseAtomicCondition(input: string, validBones: string[]): AtomicCondit
 		}
 		return {
 			view: view[1],
+		};
+	}
+	if (/^!?blinking$/i.exec(input)) {
+		return {
+			blinking: !input.startsWith('!'),
 		};
 	}
 	const parsed = /^([-_a-z0-9]+)([=<>!]+)\s*(-?[-_a-z0-9.]+)$/i.exec(input);

@@ -92,10 +92,14 @@ export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 	public readonly pose: Immutable<AppearancePose>;
 	public readonly attributes: ReadonlySet<string>;
 
-	constructor(character: AssetFrameworkCharacterState) {
+	/** Whether the character is currently mid-blink */
+	public readonly blinking: boolean;
+
+	constructor(character: AssetFrameworkCharacterState, blinking: boolean) {
 		super(character.assetManager);
 		this.pose = character.actualPose;
 		this.attributes = AppearanceItemProperties(character.items).attributes;
+		this.blinking = blinking;
 	}
 
 	private readonly _evalCache = new Map<string, boolean>();
@@ -143,6 +147,9 @@ export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 		} else if ('view' in condition) {
 			Assert(condition.view != null);
 			return this.pose.view === condition.view;
+		} else if ('blinking' in condition) {
+			Assert(condition.blinking != null);
+			return this.blinking === condition.blinking;
 		} else {
 			AssertNever(condition);
 		}
@@ -159,8 +166,14 @@ export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 	}
 }
 
-export function useAppearanceConditionEvaluator(characterState: AssetFrameworkCharacterState): AppearanceConditionEvaluator {
-	return useMemo(() => new AppearanceConditionEvaluator(characterState), [characterState]);
+/**
+ * Gets an appearance condition evaluator for the character
+ * @param characterState - Character state
+ * @param isBlinking - Whether the character is currently mid-blink
+ * @returns The requested appearance condition evaluator
+ */
+export function useAppearanceConditionEvaluator(characterState: AssetFrameworkCharacterState, isBlinking: boolean = false): AppearanceConditionEvaluator {
+	return useMemo(() => new AppearanceConditionEvaluator(characterState, isBlinking), [characterState, isBlinking]);
 }
 
 export class StandaloneConditionEvaluator extends ConditionEvaluatorBase {
@@ -188,6 +201,9 @@ export class StandaloneConditionEvaluator extends ConditionEvaluatorBase {
 			return false;
 		} else if ('view' in condition) {
 			Assert(condition.view != null);
+			return false;
+		} else if ('blinking' in condition) {
+			Assert(condition.blinking != null);
 			return false;
 		} else {
 			AssertNever(condition);

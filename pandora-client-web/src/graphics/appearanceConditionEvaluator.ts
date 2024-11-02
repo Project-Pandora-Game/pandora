@@ -1,13 +1,28 @@
-import { AppearanceItemProperties, Assert, AssertNever, AssetFrameworkCharacterState, AtomicCondition, BoneName, BoneState, ConditionOperator, Item, TransformDefinition, AppearancePose, AssetManager } from 'pandora-common';
+import type { Immutable } from 'immer';
+import {
+	AppearanceItemProperties,
+	AppearancePose,
+	Assert,
+	AssertNever,
+	AssetFrameworkCharacterState,
+	AssetManager,
+	AtomicCondition,
+	BoneName,
+	ConditionOperator,
+	Item,
+	TransformDefinition,
+	type BoneDefinition,
+} from 'pandora-common';
 import { useMemo } from 'react';
 import { EvaluateCondition, RotateVector } from './utility';
-import type { Immutable } from 'immer';
 
 export abstract class ConditionEvaluatorBase {
 	public readonly assetManager: AssetManager;
+	public readonly valueOverrides: Readonly<Record<BoneName, number>> | undefined;
 
-	constructor(assetManager: AssetManager) {
+	constructor(assetManager: AssetManager, valueOverrides?: Record<BoneName, number>) {
 		this.assetManager = assetManager;
+		this.valueOverrides = valueOverrides;
 	}
 
 	//#region Point transform
@@ -39,11 +54,12 @@ export abstract class ConditionEvaluatorBase {
 		AssertNever(operator);
 	}
 
-	public evalTransform([x, y]: readonly [number, number], transforms: Immutable<TransformDefinition[]>, _mirror: boolean, item: Item | null, valueOverrides?: Record<BoneName, number>): [number, number] {
-		let [resX, resY] = [x, y];
+	public evalTransform([x, y]: readonly [number, number], transforms: Immutable<TransformDefinition[]>, _mirror: boolean, item: Item | null): [number, number] {
+		let resX = x;
+		let resY = y;
 		for (const transform of transforms) {
 			const { type, condition } = transform;
-			if (valueOverrides != null && (type === 'const-shift' || type === 'const-rotate')) {
+			if (this.valueOverrides != null && (type === 'const-shift' || type === 'const-rotate')) {
 				continue;
 			}
 			if (condition && !EvaluateCondition(condition, (c) => this.evalCondition(c, item))) {
@@ -55,18 +71,18 @@ export abstract class ConditionEvaluatorBase {
 				continue;
 			}
 			const boneName = transform.bone;
-			const bone = this._getBone(boneName);
-			const rotation = valueOverrides ? (valueOverrides[boneName] ?? 0) : bone.rotation;
+			const rotation = this.valueOverrides ? (this.valueOverrides[boneName] ?? 0) : this.getBoneLikeValue(boneName);
 
 			switch (type) {
 				case 'const-rotate':
 				case 'rotate': {
-					let vecX = resX - bone.definition.x;
-					let vecY = resY - bone.definition.y;
+					const bone = this._getBone(boneName);
+					let vecX = resX - bone.x;
+					let vecY = resY - bone.y;
 					const value = type === 'const-rotate' ? transform.value : transform.value * rotation;
 					[vecX, vecY] = RotateVector(vecX, vecY, value);
-					resX = bone.definition.x + vecX;
-					resY = bone.definition.y + vecY;
+					resX = bone.x + vecX;
+					resY = bone.y + vecY;
 					break;
 				}
 				case 'shift': {
@@ -81,11 +97,14 @@ export abstract class ConditionEvaluatorBase {
 	}
 	//#endregion
 
-	protected abstract _getBone(bone: string): BoneState;
-
-	public getBoneLikeValue(name: string): number {
-		return this._getBone(name).rotation;
+	protected _getBone(bone: string): BoneDefinition {
+		const definition = this.assetManager.getBoneByName(bone);
+		if (definition == null)
+			throw new Error(`Attempt to get pose for unknown bone: ${bone}`);
+		return definition;
 	}
+
+	public abstract getBoneLikeValue(name: string): number;
 }
 
 export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
@@ -95,8 +114,8 @@ export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 	/** Whether the character is currently mid-blink */
 	public readonly blinking: boolean;
 
-	constructor(character: AssetFrameworkCharacterState, blinking: boolean) {
-		super(character.assetManager);
+	constructor(character: AssetFrameworkCharacterState, blinking: boolean, valueOverrides?: Record<BoneName, number>) {
+		super(character.assetManager, valueOverrides);
 		this.pose = character.actualPose;
 		this.attributes = AppearanceItemProperties(character.items).attributes;
 		this.blinking = blinking;
@@ -155,25 +174,62 @@ export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 		}
 	}
 
-	protected override _getBone(bone: string): BoneState {
-		const definition = this.assetManager.getBoneByName(bone);
-		if (definition == null)
-			throw new Error(`Attempt to get pose for unknown bone: ${bone}`);
-		return {
-			definition,
-			rotation: this.pose.bones[definition.name] || 0,
-		};
+	public override getBoneLikeValue(name: string): number {
+		return this.pose.bones[name] || 0;
 	}
 }
+
+type EvaluatorInstanceCacheValueEntry = {
+	normal: AppearanceConditionEvaluator;
+	blink: AppearanceConditionEvaluator;
+};
+
+type EvaluatorInstanceCacheEntry = {
+	base: EvaluatorInstanceCacheValueEntry;
+	withOverrides: WeakMap<Record<BoneName, number>, {
+		normal: AppearanceConditionEvaluator;
+		blink: AppearanceConditionEvaluator;
+	}>;
+};
+
+const evaluatorInstanceCache = new WeakMap<AssetFrameworkCharacterState, EvaluatorInstanceCacheEntry>();
 
 /**
  * Gets an appearance condition evaluator for the character
  * @param characterState - Character state
  * @param isBlinking - Whether the character is currently mid-blink
+ * @param valueOverrides - Overrides for bone values the evaluator should use
  * @returns The requested appearance condition evaluator
  */
-export function useAppearanceConditionEvaluator(characterState: AssetFrameworkCharacterState, isBlinking: boolean = false): AppearanceConditionEvaluator {
-	return useMemo(() => new AppearanceConditionEvaluator(characterState, isBlinking), [characterState, isBlinking]);
+export function useAppearanceConditionEvaluator(characterState: AssetFrameworkCharacterState, isBlinking: boolean = false, valueOverrides?: Record<BoneName, number>): AppearanceConditionEvaluator {
+	return useMemo((): AppearanceConditionEvaluator => {
+		let cacheEntry: EvaluatorInstanceCacheEntry | undefined = evaluatorInstanceCache.get(characterState);
+		if (cacheEntry === undefined) {
+			cacheEntry = {
+				base: {
+					normal: new AppearanceConditionEvaluator(characterState, false),
+					blink: new AppearanceConditionEvaluator(characterState, true),
+				},
+				withOverrides: new WeakMap(),
+			};
+			evaluatorInstanceCache.set(characterState, cacheEntry);
+		}
+
+		let value: EvaluatorInstanceCacheValueEntry = cacheEntry.base;
+		if (valueOverrides != null) {
+			let overrideValue: EvaluatorInstanceCacheValueEntry | undefined = cacheEntry.withOverrides.get(valueOverrides);
+			if (overrideValue === undefined) {
+				overrideValue = {
+					normal: new AppearanceConditionEvaluator(characterState, false, valueOverrides),
+					blink: new AppearanceConditionEvaluator(characterState, true, valueOverrides),
+				};
+				cacheEntry.withOverrides.set(valueOverrides, overrideValue);
+			}
+			value = overrideValue;
+		}
+
+		return isBlinking ? value.blink : value.normal;
+	}, [characterState, isBlinking, valueOverrides]);
 }
 
 export class StandaloneConditionEvaluator extends ConditionEvaluatorBase {
@@ -210,8 +266,8 @@ export class StandaloneConditionEvaluator extends ConditionEvaluatorBase {
 		}
 	}
 
-	protected override _getBone(_bone: string): BoneState {
-		throw new Error(`Attempt to get bone in standalone evaluator`);
+	public override getBoneLikeValue(_name: string): number {
+		throw new Error(`Attempt to get bone value in standalone evaluator`);
 	}
 }
 

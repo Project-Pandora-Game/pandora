@@ -9,12 +9,12 @@ import dotTexture from '../../assets/editor/dotTexture.png';
 import { useEvent } from '../../common/useEvent';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
 import { Sprite } from '../../graphics/baseComponents/sprite';
+import { MirrorBoneLike, MirrorTransform } from '../../graphics/mirroring';
 import { useTexture } from '../../graphics/useTexture';
 import { GetAngle, RotateVector } from '../../graphics/utility';
 import { Observable, ReadonlyObservable, useObservable } from '../../observable';
 import { EditorCharacter } from './character/appearanceEditor';
 import type { PointTemplateEditor } from './pointTemplateEditor';
-import { MirrorBoneLike, MirrorTransform } from '../../graphics/mirroring';
 
 type DraggableProps = {
 	x: number;
@@ -108,14 +108,14 @@ export function DraggablePointDisplay({
 }
 
 export class DraggablePoint {
-	private readonly _definition: Observable<PointDefinitionCalculated>;
+	private readonly _definition: Observable<Immutable<PointDefinitionCalculated>>;
 	public readonly template: PointTemplateEditor;
 
 	public get definition(): ReadonlyObservable<Immutable<PointDefinitionCalculated>> {
 		return this._definition;
 	}
 
-	constructor(template: PointTemplateEditor, point: PointDefinitionCalculated) {
+	constructor(template: PointTemplateEditor, point: Immutable<PointDefinitionCalculated>) {
 		this.template = template;
 		this._definition = new Observable(point);
 	}
@@ -124,7 +124,7 @@ export class DraggablePoint {
 		return this._definition.value.index;
 	}
 
-	public updatePoint(point: PointDefinitionCalculated) {
+	public updatePoint(point: Immutable<PointDefinitionCalculated>) {
 		this._definition.value = point;
 	}
 

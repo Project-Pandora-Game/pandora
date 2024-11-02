@@ -1,11 +1,24 @@
-import type { Immutable } from 'immer';
-import { AppearanceItems, Assert, AssertNever, AssetFrameworkCharacterState, BoneName, CharacterSize, CoordinatesCompressed, HexColorString, Item, LayerMirror, Rectangle as PandoraRectangle, PointDefinition } from 'pandora-common';
+import { produce, type Immutable } from 'immer';
+import {
+	AppearanceItems,
+	Assert,
+	AssertNever,
+	AssetFrameworkCharacterState,
+	BoneName,
+	CharacterSize,
+	HexColorString,
+	Item,
+	LayerMirror,
+	Rectangle as PandoraRectangle,
+	PointDefinition,
+} from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { Rectangle, Texture } from 'pixi.js';
 import React, { ReactElement, createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AssetGraphicsLayer, PointDefinitionCalculated } from '../assets/assetGraphics';
-import { CalculatePointsTriangles, useImageResolutionAlternative, useLayerCalculatedPoints, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource } from '../assets/assetGraphicsCalculations';
+import { useImageResolutionAlternative, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource, useLayerMeshPoints } from '../assets/assetGraphicsCalculations';
 import { ChildrenProps } from '../common/reactTypes';
+import { useNullableObservable, type ReadonlyObservable } from '../observable';
 import { ConditionEvaluatorBase, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator';
 import { Container } from './baseComponents/container';
 import { PixiMesh, type PixiMeshProps } from './baseComponents/mesh';
@@ -16,25 +29,6 @@ import { useGraphicsSettings } from './graphicsSettings';
 import { usePixiApp, usePixiAppOptional } from './reconciler/appContext';
 import { useTexture } from './useTexture';
 import { EvaluateCondition } from './utility';
-
-export function useLayerPoints(layer: AssetGraphicsLayer): {
-	points: readonly PointDefinitionCalculated[];
-	triangles: Uint32Array;
-} {
-	// Note: The points should NOT be filtered before Delaunator step!
-	// Doing so would cause body and arms not to have exactly matching triangles,
-	// causing (most likely) overlap, which would result in clipping.
-	// In some other cases this could lead to gaps or other visual artifacts
-	// Any optimization of unused points needs to be done *after* triangles are calculated
-	const points = useLayerCalculatedPoints(layer);
-	Assert(points.length < 65535, 'Points do not fit into indices');
-
-	const { pointType } = useLayerDefinition(layer);
-	const triangles = useMemo<Uint32Array>(() => {
-		return CalculatePointsTriangles(points, pointType);
-	}, [pointType, points]);
-	return { points, triangles };
-}
 
 export function SelectPoints({ pointType }: Immutable<PointDefinition>, pointTypes?: readonly string[]): boolean {
 	// If point has no type, include it
@@ -52,41 +46,87 @@ export function SelectPoints({ pointType }: Immutable<PointDefinition>, pointTyp
 		pointTypes.includes(pointType.replace(/_[lr]$/, ''));
 }
 
-export function MirrorPoint([x, y]: CoordinatesCompressed, mirror: LayerMirror, width: number): CoordinatesCompressed {
-	if (mirror === LayerMirror.FULL)
-		return [x - width, y];
+type TransformEvalCacheEntryValue = WeakMap<Immutable<PointDefinitionCalculated[]>, Float32Array>;
+type TransformEvalCacheEntry = {
+	noItem: TransformEvalCacheEntryValue;
+	withItem: WeakMap<Item, TransformEvalCacheEntryValue>;
+};
 
-	return [x, y];
+const transformEvalCache = new WeakMap<ConditionEvaluatorBase, TransformEvalCacheEntry>();
+
+export function EvalLayerVerticesTransform(evaluator: ConditionEvaluatorBase, item: Item | null, points: Immutable<PointDefinitionCalculated[]>): Float32Array {
+	let cacheEntry: TransformEvalCacheEntry | undefined = transformEvalCache.get(evaluator);
+	if (cacheEntry === undefined) {
+		cacheEntry = {
+			noItem: new WeakMap(),
+			withItem: new WeakMap(),
+		};
+		transformEvalCache.set(evaluator, cacheEntry);
+	}
+
+	let value: TransformEvalCacheEntryValue = cacheEntry.noItem;
+	if (item != null) {
+		let itemValue: TransformEvalCacheEntryValue | undefined = cacheEntry.withItem.get(item);
+		if (itemValue === undefined) {
+			itemValue = new WeakMap();
+			cacheEntry.withItem.set(item, itemValue);
+		}
+		value = itemValue;
+	}
+
+	let result: Float32Array | undefined = value.get(points);
+	if (result === undefined) {
+		result = new Float32Array(points
+			.flatMap((point) => evaluator.evalTransform(
+				point.pos,
+				point.transforms,
+				point.mirror,
+				item,
+			)));
+		value.set(points, result);
+	}
+	return result;
 }
 
 export function useLayerVertices(
 	evaluator: ConditionEvaluatorBase,
-	points: readonly PointDefinitionCalculated[],
+	points: Immutable<PointDefinitionCalculated[]>,
 	layer: AssetGraphicsLayer,
 	item: Item | null,
 	normalize: boolean = false,
-	valueOverrides?: Record<BoneName, number>,
 ): Float32Array {
-	const { mirror, height, width, x, y } = useLayerDefinition(layer);
+	const layerDefinition = useLayerDefinition(layer);
 
-	return useMemo(() => {
-		const result = new Float32Array(points
-			.flatMap((point) => evaluator.evalTransform(
-				MirrorPoint(point.pos, mirror, width),
-				point.transforms,
-				point.mirror,
-				item,
-				valueOverrides,
-			)));
+	// Mirror
+	const mirroredPoints = useMemo((): Immutable<PointDefinitionCalculated[]> => {
+		if (layerDefinition.mirror === LayerMirror.FULL) {
+			return produce(points, (draftPoints) => {
+				for (const point of draftPoints) {
+					// FIXME: This is likely wrong, but it isn't currently used anywhere (I kept old variant)
+					point.pos[0] -= layerDefinition.width;
+				}
+			});
+		}
 
+		return points;
+	}, [points, layerDefinition]);
+
+	return useMemo((): Float32Array => {
+		// Eval transform
+		const result = EvalLayerVerticesTransform(evaluator, item, mirroredPoints);
+
+		// Normalize
 		if (normalize) {
+			const normalizedResult = new Float32Array(result.length);
 			for (let i = 0; i < result.length; i++) {
-				result[i] -= i % 2 ? y : x;
-				result[i] /= i % 2 ? height : width;
+				const odd = (i % 2) !== 0;
+				normalizedResult[i] = (result[i] - (odd ? layerDefinition.y : layerDefinition.x)) /
+					(odd ? layerDefinition.height : layerDefinition.width);
 			}
+			return normalizedResult;
 		}
 		return result;
-	}, [evaluator, mirror, height, width, x, y, item, normalize, points, valueOverrides]);
+	}, [layerDefinition, evaluator, item, mirroredPoints, normalize]);
 }
 
 export interface GraphicsLayerProps extends ChildrenProps {
@@ -99,10 +139,10 @@ export interface GraphicsLayerProps extends ChildrenProps {
 	state?: LayerStateOverrides;
 
 	/**
-	 * Whether the character the layer belongs to is currently mid-blink
-	 * @default false
+	 * Observable for whether the character the layer belongs to is currently mid-blink.
+	 * If not passed, it is assumed to be `false`.
 	 */
-	characterBlinking?: boolean;
+	characterBlinking?: ReadonlyObservable<boolean>;
 
 	getTexture?: (path: string) => Texture;
 }
@@ -138,14 +178,16 @@ export function GraphicsLayer({
 	verticesPoseOverride,
 	state,
 	getTexture,
-	characterBlinking = false,
+	characterBlinking,
 }: GraphicsLayerProps): ReactElement {
 
-	const { points, triangles } = useLayerPoints(layer);
+	const { points, triangles } = useLayerMeshPoints(layer);
 
-	const evaluator = useAppearanceConditionEvaluator(characterState, characterBlinking);
+	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
+	const evaluator = useAppearanceConditionEvaluator(characterState, currentlyBlinking);
 
-	const vertices = useLayerVertices(evaluator, points, layer, item, false, verticesPoseOverride);
+	const evaluatorVerticesPose = useAppearanceConditionEvaluator(characterState, currentlyBlinking, verticesPoseOverride);
+	const vertices = useLayerVertices(evaluatorVerticesPose, points, layer, item, false);
 
 	const {
 		colorizationKey,
@@ -157,7 +199,8 @@ export function GraphicsLayer({
 		imageUv,
 	} = useLayerImageSource(evaluator, layer, item);
 
-	const uv = useLayerVertices(evaluator, points, layer, item, true, imageUv);
+	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, currentlyBlinking, imageUv);
+	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true);
 
 	const alphaImage = useMemo<string>(() => {
 		return setting.alphaOverrides?.find((img) => EvaluateCondition(img.condition, (c) => evaluator.evalCondition(c, item)))?.image ?? setting.alphaImage ?? '';

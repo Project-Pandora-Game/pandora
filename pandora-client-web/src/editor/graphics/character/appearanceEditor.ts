@@ -86,8 +86,9 @@ export class AppearanceEditor extends CharacterAppearance {
 		if (!Number.isInteger(value))
 			throw new Error('Attempt to set non-int pose value');
 
-		// This asserts existence of bone
-		this.getPose(bone);
+		const definition = this.assetManager.getBoneByName(bone);
+		if (definition == null)
+			throw new Error(`Attempt to get pose for unknown bone: ${bone}`);
 
 		return this.editorDoAction({
 			type: this.assetManager.getBoneByName(bone).type,

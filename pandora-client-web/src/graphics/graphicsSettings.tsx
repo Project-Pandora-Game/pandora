@@ -22,7 +22,7 @@ export type GraphicsSettings = z.infer<typeof GraphicsSettingsSchema>;
 
 const GRAPHICS_SETTINGS_DEFAULT: GraphicsSettings = {
 	// Effects
-	effectBlinking: false,
+	effectBlinking: true,
 	// Quality
 	renderResolution: 100,
 	textureResolution: 'auto',

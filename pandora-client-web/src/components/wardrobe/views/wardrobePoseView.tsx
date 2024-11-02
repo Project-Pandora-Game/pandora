@@ -15,6 +15,7 @@ import {
 	MergePartialAppearancePoses,
 	PartialAppearancePose,
 	ProduceAppearancePose,
+	type AppearanceLimitTree,
 	type ItemDisplayNameType,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useId, useMemo } from 'react';
@@ -45,11 +46,16 @@ type CheckedPosePreset = {
 	name: string;
 };
 
+const CHARACTER_STATE_LIMITS_CACHE = new WeakMap<AssetFrameworkCharacterState, AppearanceLimitTree>();
 function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkCharacterState): CheckedPosePreset {
 	const assetManager = characterState.assetManager;
 	const mergedPose = MergePartialAppearancePoses(pose, pose.optional);
-	// TODO: Optimize this
-	const limits = AppearanceItemProperties(characterState.items).limits;
+	// Cache the limits calculation as we have many buttons that can reuse this
+	let limits: AppearanceLimitTree | undefined = CHARACTER_STATE_LIMITS_CACHE.get(characterState);
+	if (limits === undefined) {
+		limits = AppearanceItemProperties(characterState.items).limits;
+		CHARACTER_STATE_LIMITS_CACHE.set(characterState, limits);
+	}
 	return {
 		pose: mergedPose,
 		requested: _.isEqual(

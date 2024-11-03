@@ -10,6 +10,10 @@ export interface IGraphicsLoaderStats {
 	inUseTextures: number;
 	loadedTextures: number;
 	trackedTextures: number;
+	/** Number of pixels summed across all loaded textures */
+	loadedPixels: number;
+	/** Size in bytes of loaded textures, estimated. */
+	estLoadedSize: number;
 }
 
 export type IGraphicsLoaderEvents = {

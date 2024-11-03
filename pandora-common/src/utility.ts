@@ -246,6 +246,26 @@ export function MessageSubstitute(originalMessage: string, substitutions: Readon
 	return message;
 }
 
+const SIZE_UNITS = ['B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB'];
+
+export function FormatBytes(bytes: number, allowFraction: boolean = false): string {
+	let unitIndex = 0;
+	while (bytes >= 1024 && unitIndex < (SIZE_UNITS.length - 1)) {
+		if ((bytes % 1024) !== 0) {
+			if (!allowFraction || bytes < 2048) {
+				break;
+			}
+		}
+		bytes /= 1024;
+		unitIndex++;
+	}
+	// Round to 2 decimal digits if fractional
+	if (allowFraction && !Number.isInteger(bytes)) {
+		bytes = Math.floor(100 * bytes) / 100;
+	}
+	return `${bytes} ${SIZE_UNITS[unitIndex]}`;
+}
+
 /**
  * Create a deep copy of the data, marking it as mutable if it was originally immutable
  * @param data - Data to clone

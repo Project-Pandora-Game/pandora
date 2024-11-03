@@ -191,6 +191,8 @@ export abstract class GraphicsLoaderBase extends TypedEventEmitter<IGraphicsLoad
 			inUseTextures: 0,
 			loadedTextures: 0,
 			trackedTextures: this.store.size,
+			loadedPixels: 0,
+			estLoadedSize: 0,
 		};
 
 		for (const texture of this.store.values()) {
@@ -199,6 +201,10 @@ export abstract class GraphicsLoaderBase extends TypedEventEmitter<IGraphicsLoad
 			}
 			if (texture.loadedTexture != null) {
 				result.loadedTextures++;
+				const pixels = texture.loadedTexture.width * texture.loadedTexture.height;
+				result.loadedPixels += pixels;
+				// HACK: Assume all our textures are RGBA8888 for now
+				result.estLoadedSize += pixels * 4;
 			}
 		}
 

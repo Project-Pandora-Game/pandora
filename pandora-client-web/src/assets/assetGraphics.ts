@@ -1,14 +1,20 @@
 import { Draft, Immutable, freeze, produce } from 'immer';
-import { Assert, AssetGraphicsDefinition, AssetId, CharacterSize, LayerDefinition, LayerImageOverride, LayerImageSetting, LayerMirror, LayerPriority, PointDefinition } from 'pandora-common';
+import {
+	Assert,
+	AssetGraphicsDefinition,
+	AssetId,
+	CharacterSize,
+	LayerDefinition,
+	LayerImageOverride,
+	LayerImageSetting,
+	LayerMirror,
+	LayerPriority,
+	MirrorBoneLike,
+	MirrorImageOverride,
+	MirrorLayerImageSetting,
+} from 'pandora-common';
 import { MirrorPriority } from '../graphics/def';
-import { MirrorBoneLike, MirrorImageOverride, MirrorLayerImageSetting } from '../graphics/mirroring';
 import { Observable, ReadonlyObservable } from '../observable';
-
-export interface PointDefinitionCalculated extends PointDefinition {
-	index: number;
-	mirrorPoint?: PointDefinitionCalculated;
-	isMirror: boolean;
-}
 
 export class AssetGraphicsLayer {
 	public readonly asset: AssetGraphics;

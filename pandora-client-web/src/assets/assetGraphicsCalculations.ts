@@ -1,16 +1,29 @@
 import Delaunator from 'delaunator';
 import { Immutable } from 'immer';
 import { maxBy, minBy } from 'lodash';
-import { Assert, Asset, BoneName, CloneDeepMutable, Item, LayerDefinition, LayerImageSetting, LayerMirror, PointDefinition, type PointTemplate } from 'pandora-common';
+import {
+	Assert,
+	Asset,
+	BoneName,
+	CloneDeepMutable,
+	Item,
+	LayerDefinition,
+	LayerImageSetting,
+	LayerMirror,
+	MakeMirroredPoints,
+	MirrorPoint,
+	PointDefinition,
+	PointMatchesPointType,
+	type PointDefinitionCalculated,
+	type PointTemplate,
+} from 'pandora-common';
 import { createContext, useContext, useMemo } from 'react';
 import { AppearanceConditionEvaluator } from '../graphics/appearanceConditionEvaluator';
-import { SelectPoints } from '../graphics/graphicsLayer';
 import { GRAPHICS_TEXTURE_RESOLUTION_SCALE, useGraphicsSettings } from '../graphics/graphicsSettings';
-import { MakeMirroredPoints, MirrorPoint } from '../graphics/mirroring';
 import { EvaluateCondition } from '../graphics/utility';
 import { useNullableObservable, useObservable, type ReadonlyObservable } from '../observable';
 import { useAutomaticResolution } from '../services/screenResolution/screenResolution';
-import type { AssetGraphics, AssetGraphicsLayer, PointDefinitionCalculated } from './assetGraphics';
+import type { AssetGraphics, AssetGraphicsLayer } from './assetGraphics';
 import { useAssetManager } from './assetManager';
 import { GraphicsManagerInstance } from './graphicsManager';
 
@@ -137,7 +150,7 @@ export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalcul
 	}
 	for (let i = 0; i < delaunator.triangles.length; i += 3) {
 		const t = [i, i + 1, i + 2].map((tp) => delaunator.triangles[tp]);
-		if (t.every((tp) => SelectPoints(points[tp], pointType))) {
+		if (t.every((tp) => PointMatchesPointType(points[tp], pointType))) {
 			result.push(...t);
 		}
 	}

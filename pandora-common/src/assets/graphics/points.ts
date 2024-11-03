@@ -99,3 +99,19 @@ export type PointTemplate = z.infer<typeof PointTemplateSchema>;
 export function CanonizePointTemplate(template: Immutable<PointTemplate>): PointTemplate {
 	return template.map(CanonizePointDefinition);
 }
+
+export function PointMatchesPointType({ pointType }: Immutable<PointDefinition>, pointTypes?: readonly string[]): boolean {
+	// If point has no type, include it
+	return !pointType ||
+		// If there is no requirement on point types, include all
+		!pointTypes ||
+		// If the point type is included exactly, include it
+		pointTypes.includes(pointType) ||
+		// If the point type doesn't have side, include it if wanted types have sided one
+		!(/_[lr]$/.exec(pointType)) && (
+			pointTypes.includes(pointType + '_r') ||
+			pointTypes.includes(pointType + '_l')
+		) ||
+		// If the point type has side, indide it if wanted types have base one
+		pointTypes.includes(pointType.replace(/_[lr]$/, ''));
+}

@@ -4,6 +4,7 @@ import { maxBy, minBy } from 'lodash';
 import {
 	Assert,
 	Asset,
+	BitField,
 	BoneName,
 	CloneDeepMutable,
 	Item,
@@ -141,7 +142,7 @@ export function CalculatePointDefinitionsFromTemplate(template: Immutable<PointT
 }
 
 const delaunatorCache = new WeakMap<Immutable<PointDefinitionCalculated[]>, Delaunator<number[]>>();
-export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalculated[]>, pointType?: readonly string[]): Uint32Array {
+export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalculated[]>, pointFilter?: BitField): Uint32Array {
 	const result: number[] = [];
 	let delaunator: Delaunator<number[]> | undefined = delaunatorCache.get(points);
 	if (delaunator === undefined) {
@@ -150,7 +151,7 @@ export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalcul
 	}
 	for (let i = 0; i < delaunator.triangles.length; i += 3) {
 		const t = [i, i + 1, i + 2].map((tp) => delaunator.triangles[tp]);
-		if (t.every((tp) => PointMatchesPointType(points[tp], pointType))) {
+		if (pointFilter == null || t.every((tp) => pointFilter.get(tp))) {
 			result.push(...t);
 		}
 	}
@@ -180,9 +181,14 @@ export function useLayerMeshPoints(layer: AssetGraphicsLayer): {
 		const calculatedPoints = CalculatePointDefinitionsFromTemplate(p, (layer.isMirror && mirror === LayerMirror.FULL));
 		Assert(calculatedPoints.length < 65535, 'Points do not fit into indices');
 
+		const pointsFilter = new BitField(calculatedPoints.length);
+		for (let i = 0; i < calculatedPoints.length; i++) {
+			pointsFilter.set(i, PointMatchesPointType(calculatedPoints[i], pointType));
+		}
+
 		return {
 			points: calculatedPoints,
-			triangles: CalculatePointsTriangles(calculatedPoints, pointType),
+			triangles: CalculatePointsTriangles(calculatedPoints, pointsFilter),
 		};
 	}, [layer, manager, templateOverrides, points, mirror, pointType]);
 }

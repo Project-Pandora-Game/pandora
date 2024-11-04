@@ -1,6 +1,6 @@
 import { Immutable } from 'immer';
 import { AssetPreferenceType, AssetPreferencesPublic, IsAssetPreferenceType } from '../../character';
-import { KnownObject } from '../../utility';
+import { KnownObject } from '../../utility/misc';
 import type { GameLogicCharacterClient } from '../character/characterClient';
 import { IPermissionProvider } from '../permissions';
 import { GameLogicPermissionClient } from '../permissions/permissionClient';

@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { z } from 'zod';
-import { AssertNever, CloneDeepMutable } from '../../utility';
+import { AssertNever, CloneDeepMutable } from '../../utility/misc';
 import { CoordinatesCompressedSchema, CoordinatesSchema } from './common';
 import { BoneNameSchema, ConditionSchema } from './conditions';
 

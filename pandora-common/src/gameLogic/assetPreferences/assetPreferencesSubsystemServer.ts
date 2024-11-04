@@ -1,7 +1,7 @@
 import { Immutable, freeze } from 'immer';
 import type { AssetManager } from '../../assets/assetManager';
 import { AssetPreferenceType, AssetPreferencesPublic, AssetPreferencesServer, CleanupAssetPreferences, IsAssetPreferenceType } from '../../character/assetPreferences';
-import { CloneDeepMutable, KnownObject } from '../../utility';
+import { CloneDeepMutable, KnownObject } from '../../utility/misc';
 import type { GameLogicCharacterServer } from '../character/characterServer';
 import { GameLogicPermissionServer, IPermissionProvider } from '../permissions';
 import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferencesSubsystem } from './assetPreferencesSubsystem';

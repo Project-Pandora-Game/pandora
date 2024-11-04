@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import type { InteractionGenericId } from './interactionData';
 import { PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfigDefault, PermissionType } from '../permissions';
-import { KnownObject, ParseArrayNotEmpty } from '../../utility';
+import { KnownObject, ParseArrayNotEmpty } from '../../utility/misc';
 
 //#region Config for existing interactions; when adding an interaction edit only this
 

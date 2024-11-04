@@ -12,7 +12,7 @@ import type { AssetProperties } from '../properties';
 import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base';
 
 import { CharacterId, CharacterIdSchema } from '../../character/characterTypes';
-import { MemoizeNoArg } from '../../utility';
+import { MemoizeNoArg } from '../../utility/misc';
 import { ItemModuleAction, LoadItemModule } from '../modules';
 import { CreateRoomDevicePropertiesResult, MergeRoomDeviceProperties, RoomDeviceProperties, RoomDevicePropertiesResult } from '../roomDeviceProperties';
 

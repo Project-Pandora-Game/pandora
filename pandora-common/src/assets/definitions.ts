@@ -2,7 +2,7 @@ import { Immutable } from 'immer';
 import { z } from 'zod';
 import type { AssetPreferenceType } from '../character';
 import type { RoomBackgroundData } from '../space/room';
-import type { Satisfies } from '../utility';
+import type { Satisfies } from '../utility/misc';
 import { HexRGBAColorString } from '../validation';
 import type { AssetId } from './base';
 import type { BoneDefinitionCompressed, BoneName, CharacterView, Condition, Coordinates, LayerImageOverride, LegsPose } from './graphics';

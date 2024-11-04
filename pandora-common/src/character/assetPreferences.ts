@@ -4,7 +4,7 @@ import type { Asset } from '../assets/asset';
 import type { AssetManager } from '../assets/assetManager';
 import { AssetId, AssetIdSchema } from '../assets/base';
 import { PermissionConfigSchema } from '../gameLogic/permissions/permissionData';
-import { KnownObject } from '../utility';
+import { KnownObject } from '../utility/misc';
 import { ZodMatcher } from '../validation';
 import type { CharacterId } from './characterTypes';
 

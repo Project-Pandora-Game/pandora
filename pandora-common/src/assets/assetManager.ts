@@ -1,7 +1,7 @@
 import { freeze, Immutable } from 'immer';
 import type { GameLogicCharacter } from '../gameLogic';
 import type { Logger } from '../logging';
-import { Assert, AssertNotNullable, CloneDeepMutable } from '../utility';
+import { Assert, AssertNotNullable, CloneDeepMutable } from '../utility/misc';
 import { Asset } from './asset';
 import type { AssetId } from './base';
 import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetsDefinitionFile, AssetType, RoomBackgroundInfo, RoomBackgroundTagDefinition } from './definitions';

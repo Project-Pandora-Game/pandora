@@ -5,7 +5,7 @@ import type { IChatMessageDirectoryAction } from '../chat';
 import { z } from 'zod';
 import { AccountRoleInfoSchema } from '../account';
 import { ZodCast } from '../validation';
-import { Satisfies } from '../utility';
+import { Satisfies } from '../utility/misc';
 import { Immutable } from 'immer';
 
 // Fix for pnpm resolution weirdness

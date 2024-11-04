@@ -3,7 +3,7 @@
 
 import { z, type ZodTypeDef } from 'zod';
 import type { ItemBundle, ItemTemplate } from './base';
-import { Assert } from '../../utility';
+import { Assert } from '../../utility/misc';
 
 let ItemBundleSchemaReference: z.ZodType<ItemBundle, ZodTypeDef, unknown> | undefined;
 // eslint-disable-next-line @typescript-eslint/naming-convention

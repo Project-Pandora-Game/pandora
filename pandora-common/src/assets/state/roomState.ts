@@ -1,7 +1,7 @@
 import { freeze } from 'immer';
 import { z } from 'zod';
 import { Logger } from '../../logging';
-import { Assert, MemoizeNoArg } from '../../utility';
+import { Assert, MemoizeNoArg } from '../../utility/misc';
 import { ZodArrayWithInvalidDrop } from '../../validation';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';

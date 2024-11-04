@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { CharacterIdSchema } from '../../character/characterTypes';
 import { ItemInteractionType } from '../../character/restrictionTypes';
 import type { InteractionId } from '../../gameLogic/interactions';
-import { Satisfies } from '../../utility';
+import { Satisfies } from '../../utility/misc';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';

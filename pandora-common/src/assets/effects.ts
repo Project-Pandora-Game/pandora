@@ -1,5 +1,5 @@
 import type { HearingImpairmentSettings, MuffleSettings } from '../character/speech';
-import type { Satisfies } from '../utility';
+import type { Satisfies } from '../utility/misc';
 
 //#region Effects definition
 

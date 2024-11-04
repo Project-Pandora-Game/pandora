@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import type { CharacterId } from '../character';
-import { Assert, AssertNever } from '../utility';
+import { Assert, AssertNever } from '../utility/misc';
 import type { ActionHandlerMessageTarget, ActionHandlerMessageTemplate, ActionHandlerMessageWithTarget, ActionTargetSelector, ItemContainerPath, ItemPath } from './appearanceTypes';
 import { AppearanceItems, AppearanceItemsFixBodypartOrder } from './appearanceValidation';
 import type { AssetManager } from './assetManager';

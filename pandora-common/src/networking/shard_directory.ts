@@ -4,7 +4,7 @@ import { CharacterDataSchema, CharacterDataShardUpdateSchema, ICharacterData } f
 import { DirectoryShardUpdateSchema, ShardCharacterDefinitionSchema, ShardSpaceDefinitionSchema } from './directory_shard';
 import { SpaceDataShardUpdateSchema, SpaceData, SpaceIdSchema, ShardFeatureSchema } from '../space/space';
 import { z } from 'zod';
-import { Satisfies } from '../utility';
+import { Satisfies } from '../utility/misc';
 import { ZodCast } from '../validation';
 import { Immutable } from 'immer';
 

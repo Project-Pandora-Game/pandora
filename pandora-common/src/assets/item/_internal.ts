@@ -12,7 +12,7 @@ import type { IExportOptions, IItemModule } from '../modules/common';
 import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, Item, ItemBundle, ItemColorBundle, ItemId, ItemTemplate } from './base';
 import type { CharacterId, ItemInteractionType } from '../../character';
 
-import { Assert, MemoizeNoArg } from '../../utility';
+import { Assert, MemoizeNoArg } from '../../utility/misc';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from '../properties';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type

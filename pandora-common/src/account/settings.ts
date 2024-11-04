@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { AccountRoleSchema } from './accountRoles';
-import { KnownObject, ParseArrayNotEmpty, TimeSpanMs } from '../utility';
+import { KnownObject, ParseArrayNotEmpty, TimeSpanMs } from '../utility/misc';
 import { DisplayNameSchema, HexColorStringSchema } from '../validation';
 
 //#region Settings declarations

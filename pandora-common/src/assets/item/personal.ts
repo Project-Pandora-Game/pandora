@@ -9,7 +9,7 @@ import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { AppearanceItems } from '../appearanceValidation';
 import type { ItemBundle, IItemLoadContext } from './base';
 
-import { MemoizeNoArg } from '../../utility';
+import { MemoizeNoArg } from '../../utility/misc';
 import { LoadItemModule, ItemModuleAction } from '../modules';
 
 import { ItemBaseProps, ItemBase } from './_internal';

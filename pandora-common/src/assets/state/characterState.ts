@@ -2,7 +2,7 @@ import { Immutable, freeze } from 'immer';
 import _, { isEqual } from 'lodash';
 import type { CharacterId } from '../../character';
 import { Logger } from '../../logging';
-import { Assert, IsNotNullable, MemoizeNoArg } from '../../utility';
+import { Assert, IsNotNullable, MemoizeNoArg } from '../../utility/misc';
 import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
 import { WearableAssetType } from '../definitions';

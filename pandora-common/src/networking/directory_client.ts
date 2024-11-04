@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { AccountId, AccountIdSchema, IAccountRoleInfo, type AccountSettings, type AccountSettingsCooldowns } from '../account';
 import type { CharacterId } from '../character';
 import type { ShardFeature } from '../space/space';
-import { Satisfies } from '../utility';
+import { Satisfies } from '../utility/misc';
 import { ZodCast, type HexColorString } from '../validation';
 import type { IAccountContact, IAccountFriendStatus } from './client_directory';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';

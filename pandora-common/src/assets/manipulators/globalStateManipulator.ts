@@ -1,5 +1,5 @@
 import { CharacterId } from '../../character';
-import { AssertNever } from '../../utility';
+import { AssertNever } from '../../utility/misc';
 import { AppearanceCharacterManipulator, AppearanceRootManipulator } from '../appearanceHelpers';
 import { ActionTargetSelector } from '../appearanceTypes';
 import { AppearanceItems } from '../appearanceValidation';

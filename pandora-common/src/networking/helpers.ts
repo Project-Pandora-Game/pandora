@@ -1,5 +1,5 @@
 import { z, ZodType, ZodTypeDef } from 'zod';
-import type { KeysMatching, Awaitable } from '../utility';
+import type { KeysMatching, Awaitable } from '../utility/misc';
 
 /** The base type for how (one-way) socket interface definition should look like */
 export type SocketInterfaceDefinition = {

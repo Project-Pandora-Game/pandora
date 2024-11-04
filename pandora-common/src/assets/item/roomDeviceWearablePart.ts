@@ -9,7 +9,7 @@ import type { AssetProperties } from '../properties';
 import { ItemIdSchema, type IItemLoadContext, type IItemValidationContext, type ItemBundle, type ItemTemplate } from './base';
 import type { ItemRoomDevice } from './roomDevice';
 
-import { Assert, MemoizeNoArg } from '../../utility';
+import { Assert, MemoizeNoArg } from '../../utility/misc';
 import { GetPropertiesForSlot, RoomDevicePropertiesResult } from '../roomDeviceProperties';
 
 import { ItemBase, ItemBaseProps } from './_internal';

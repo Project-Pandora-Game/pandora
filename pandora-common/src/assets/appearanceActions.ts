@@ -7,7 +7,7 @@ import type { GameLogicCharacter } from '../gameLogic';
 import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN } from '../inputLimits';
 import { PseudoRandom } from '../math/pseudoRandom';
 import type { ActionSpaceContext } from '../space/space';
-import { Assert, AssertNever, ShuffleArray } from '../utility';
+import { Assert, AssertNever, ShuffleArray } from '../utility/misc';
 import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
 import { AppearanceRootManipulator } from './appearanceHelpers';
 import { ActionMessageTemplateHandler, ActionTarget, ActionTargetSelectorSchema, CharacterSelectorSchema, ItemContainerPath, ItemContainerPathSchema, ItemPath, ItemPathSchema, type ActionTargetCharacter } from './appearanceTypes';

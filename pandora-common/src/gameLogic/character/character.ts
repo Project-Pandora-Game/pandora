@@ -4,7 +4,7 @@ import { AssetFrameworkCharacterState } from '../../assets/state/characterState'
 import { CharacterId, CharacterRestrictionsManager, ICharacterMinimalData } from '../../character';
 import { TypedEventEmitter } from '../../event';
 import type { ActionSpaceContext } from '../../space/space';
-import { Assert } from '../../utility';
+import { Assert } from '../../utility/misc';
 import { AssetPreferencesSubsystem } from '../assetPreferences';
 import { InteractionSubsystem } from '../interactions/interactionSubsystem';
 import { GameLogicPermission, IPermissionProvider, PermissionGroup } from '../permissions';

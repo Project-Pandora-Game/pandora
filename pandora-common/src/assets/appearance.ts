@@ -2,7 +2,7 @@ import type { CharacterId } from '../character/characterTypes';
 import { CharacterRestrictionsManager } from '../character/restrictionsManager';
 import type { GameLogicCharacter } from '../gameLogic/character/character';
 import type { ActionSpaceContext } from '../space/space';
-import { Assert } from '../utility';
+import { Assert } from '../utility/misc';
 import { EvalItemPath } from './appearanceHelpers';
 import type { ActionTargetCharacter, ItemPath } from './appearanceTypes';
 import type { AppearanceItems } from './appearanceValidation';

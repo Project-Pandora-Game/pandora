@@ -6,7 +6,7 @@ import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData
 import type { CharacterId } from '../character/characterTypes';
 import type { ChatCharacterStatus, IChatMessage } from '../chat/chat';
 import { SpaceClientInfo, SpaceId } from '../space/space';
-import { Satisfies } from '../utility';
+import { Satisfies } from '../utility/misc';
 import { ZodCast } from '../validation';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 import type { PermissionConfig, PermissionSetup } from '../gameLogic/permissions/permissionData';

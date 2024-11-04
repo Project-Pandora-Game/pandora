@@ -1,4 +1,4 @@
-import { AssertNotNullable } from '../../utility';
+import { AssertNotNullable } from '../../utility/misc';
 import { ArrayIncludesGuard } from '../../validation';
 import type { GameLogicCharacterClient } from '../character/characterClient';
 import { IPermissionProvider } from '../permissions';

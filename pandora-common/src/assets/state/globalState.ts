@@ -2,7 +2,7 @@ import { freeze } from 'immer';
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../../character';
 import { Logger } from '../../logging';
-import { Assert, AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility';
+import { Assert, AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility/misc';
 import { ActionTargetSelector } from '../appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import { AssetManager } from '../assetManager';

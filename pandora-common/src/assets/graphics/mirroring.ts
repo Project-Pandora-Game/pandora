@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { Assert, AssertNever } from '../../utility';
+import { Assert, AssertNever } from '../../utility/misc';
 import type { Condition } from './conditions';
 import { CharacterSize, type LayerImageOverride, type LayerImageSetting } from './graphics';
 import type { PointDefinition, TransformDefinition } from './points';

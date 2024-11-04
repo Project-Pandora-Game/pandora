@@ -1,4 +1,4 @@
-import { Assert, AssertNever, ParseArrayNotEmpty, Satisfies } from '../utility';
+import { Assert, AssertNever, ParseArrayNotEmpty, Satisfies } from '../utility/misc';
 import type { IAssetModuleDefinition, IModuleConfigCommon, IItemModule } from './modules/common';
 import { IModuleConfigTyped, TypedModuleDefinition, ItemModuleTypedActionSchema, ModuleItemDataTypedSchema, ModuleItemTemplateTypedSchema } from './modules/typed';
 import { IModuleConfigStorage, StorageModuleDefinition, ItemModuleStorageActionSchema, ModuleItemDataStorageSchema, ModuleItemTemplateStorageSchema } from './modules/storage';

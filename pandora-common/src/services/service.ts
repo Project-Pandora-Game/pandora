@@ -1,5 +1,5 @@
 import { TypedEventEmitter, type ITypedEventEmitter, type TypedEvent } from '../event';
-import { Assert } from '../utility';
+import { Assert } from '../utility/misc';
 import type { BaseServicesDefinition } from './serviceDefinitions';
 
 /**

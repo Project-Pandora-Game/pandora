@@ -2,7 +2,7 @@ import type { Immutable } from 'immer';
 import { AssetDefinition, AssetType, IsWearableAssetDefinition, WearableAssetType } from './definitions';
 import type { AssetId } from './base';
 import { GetModuleStaticAttributes } from './modules';
-import { Assert, AssertNever } from '../utility';
+import { Assert, AssertNever } from '../utility/misc';
 
 export class Asset<Type extends AssetType = AssetType> {
 	public readonly id: AssetId;

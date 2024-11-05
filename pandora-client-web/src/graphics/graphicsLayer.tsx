@@ -10,12 +10,12 @@ import {
 	Item,
 	LayerMirror,
 	Rectangle as PandoraRectangle,
-	PointDefinition,
+	type PointDefinitionCalculated,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { Rectangle, Texture } from 'pixi.js';
 import React, { ReactElement, createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AssetGraphicsLayer, PointDefinitionCalculated } from '../assets/assetGraphics';
+import { AssetGraphicsLayer } from '../assets/assetGraphics';
 import { useImageResolutionAlternative, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource, useLayerMeshPoints } from '../assets/assetGraphicsCalculations';
 import { ChildrenProps } from '../common/reactTypes';
 import { useNullableObservable, type ReadonlyObservable } from '../observable';
@@ -29,22 +29,6 @@ import { useGraphicsSettings } from './graphicsSettings';
 import { usePixiApp, usePixiAppOptional } from './reconciler/appContext';
 import { useTexture } from './useTexture';
 import { EvaluateCondition } from './utility';
-
-export function SelectPoints({ pointType }: Immutable<PointDefinition>, pointTypes?: readonly string[]): boolean {
-	// If point has no type, include it
-	return !pointType ||
-		// If there is no requirement on point types, include all
-		!pointTypes ||
-		// If the point type is included exactly, include it
-		pointTypes.includes(pointType) ||
-		// If the point type doesn't have side, include it if wanted types have sided one
-		!(/_[lr]$/.exec(pointType)) && (
-			pointTypes.includes(pointType + '_r') ||
-			pointTypes.includes(pointType + '_l')
-		) ||
-		// If the point type has side, indide it if wanted types have base one
-		pointTypes.includes(pointType.replace(/_[lr]$/, ''));
-}
 
 type TransformEvalCacheEntryValue = WeakMap<Immutable<PointDefinitionCalculated[]>, Float32Array>;
 type TransformEvalCacheEntry = {

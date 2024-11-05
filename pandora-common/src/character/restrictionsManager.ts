@@ -13,7 +13,7 @@ import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../asse
 import { HearingImpairment, Muffler } from '../character/speech';
 import type { GameLogicCharacter } from '../gameLogic/character/character';
 import type { ActionSpaceContext } from '../space/space';
-import { Assert, AssertNever } from '../utility';
+import { Assert, AssertNever } from '../utility/misc';
 import { ItemInteractionType, type RestrictionResult } from './restrictionTypes';
 
 /**

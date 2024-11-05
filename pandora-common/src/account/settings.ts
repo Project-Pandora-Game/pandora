@@ -1,7 +1,8 @@
 import { z } from 'zod';
-import { AccountRoleSchema } from './accountRoles';
-import { KnownObject, ParseArrayNotEmpty, TimeSpanMs } from '../utility';
+import { TimeSpanMs } from '../utility/formatting';
+import { KnownObject, ParseArrayNotEmpty } from '../utility/misc';
 import { DisplayNameSchema, HexColorStringSchema } from '../validation';
+import { AccountRoleSchema } from './accountRoles';
 
 //#region Settings declarations
 

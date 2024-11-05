@@ -9,7 +9,7 @@ import type { AssetLockProperties, AssetProperties } from '../properties';
 import type { AppearanceValidationResult, AppearanceItems } from '../appearanceValidation';
 
 import { Logger } from '../../logging';
-import { AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility';
+import { AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility/misc';
 import { CharacterIdSchema } from '../../character/characterTypes';
 
 import { ItemBaseProps, ItemBase } from './_internal';

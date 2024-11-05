@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { ChatActionDictionaryMetaEntry } from '../chat';
-import type { Satisfies } from '../utility';
+import type { Satisfies } from '../utility/misc';
 
 export type Pronouns = {
 	subjective: string;

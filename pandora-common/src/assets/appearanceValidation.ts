@@ -1,6 +1,6 @@
 import type { CharacterId } from '../character';
 import { Logger } from '../logging';
-import { Assert, ShuffleArray } from '../utility';
+import { Assert, ShuffleArray } from '../utility/misc';
 import type { Asset } from './asset';
 import type { AssetManager } from './assetManager';
 import type { AssetId } from './base';

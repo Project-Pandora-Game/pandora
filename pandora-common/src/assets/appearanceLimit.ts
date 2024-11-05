@@ -1,7 +1,7 @@
 import { Immutable } from 'immer';
 import _ from 'lodash';
 import { ZodEnum } from 'zod';
-import { CloneDeepMutable, IntervalSetIntersection } from '../utility';
+import { CloneDeepMutable, IntervalSetIntersection } from '../utility/misc';
 import type { AssetDefinitionPoseLimit, AssetDefinitionPoseLimits } from './definitions';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, CharacterViewSchema, LegsPoseSchema } from './graphics';
 import type { AppearanceArmPose, AppearanceArmsOrder, AppearancePose } from './state/characterStatePose';

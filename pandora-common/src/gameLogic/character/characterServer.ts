@@ -1,7 +1,7 @@
 import type { AssetManager } from '../../assets/assetManager';
 import type { ICharacterData } from '../../character';
 import { Logger } from '../../logging';
-import { AssertNever } from '../../utility';
+import { AssertNever } from '../../utility/misc';
 import { AssetPreferencesSubsystemServer } from '../assetPreferences';
 import { MakeDefaultInteractionSystemData } from '../interactions/interactionData';
 import { InteractionSubsystemServer } from '../interactions/interactionSubsystemServer';

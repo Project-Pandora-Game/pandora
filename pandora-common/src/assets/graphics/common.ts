@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { ArrayCompressType } from '../../utility';
+import type { ArrayCompressType } from '../../utility/misc';
 
 export const CoordinatesSchema = z.object({ x: z.number(), y: z.number() });
 export type Coordinates = z.infer<typeof CoordinatesSchema>;

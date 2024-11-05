@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid';
 import { GetLogger, Logger } from '../logging';
-import { AssertNotNullable } from '../utility';
+import { AssertNotNullable } from '../utility/misc';
 import { IsObject } from '../validation';
 import { DEFAULT_ACK_TIMEOUT, MESSAGE_HANDLER_DEBUG_ALL, MESSAGE_HANDLER_DEBUG_MESSAGES } from './config';
 import type { SocketInterfaceDefinition, SocketInterfaceOneshotMessages, SocketInterfaceRequest, SocketInterfaceRespondedMessages, SocketInterfaceResponse } from './helpers';

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { KeysMatching } from '../utility';
+import type { KeysMatching } from '../utility/misc';
 
 export type IAccountRoleConfig = {
 	/** List of roles that are implied by this one, NOT transitive */

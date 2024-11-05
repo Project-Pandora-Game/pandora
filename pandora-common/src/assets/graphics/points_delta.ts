@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { isEqual } from 'lodash';
 import { z } from 'zod';
-import { CloneDeepMutable } from '../../utility';
+import { CloneDeepMutable } from '../../utility/misc';
 import { CoordinatesCompressedSchema } from './common';
 import { PointDefinitionSchema, type PointTemplate } from './points';
 

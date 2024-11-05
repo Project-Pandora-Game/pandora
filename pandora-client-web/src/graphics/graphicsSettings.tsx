@@ -1,4 +1,4 @@
-import { CloneDeepMutable } from 'pandora-common';
+import { CloneDeepMutable, FormatBytes } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../assets/graphicsManager';
@@ -192,6 +192,8 @@ function GraphicsDebug(): ReactElement {
 		inUseTextures: 0,
 		loadedTextures: 0,
 		trackedTextures: 0,
+		loadedPixels: 0,
+		estLoadedSize: 0,
 	}));
 
 	const refreshStats = useCallback(() => {
@@ -231,6 +233,9 @@ function GraphicsDebug(): ReactElement {
 				<span>Tracked textures: { stats.trackedTextures }</span>
 				<span>Loaded textures: { stats.loadedTextures }</span>
 				<span>Used textures: { stats.inUseTextures }</span>
+				<hr className='fill-x' />
+				<span>Loaded textures size (pixels): { stats.loadedPixels.toLocaleString(undefined, { useGrouping: 'always' }) }</span>
+				<span>Loaded textures size (bytes, estimate): { FormatBytes(stats.estLoadedSize, true) }</span>
 				<hr className='fill-x' />
 				<Row>
 					<Button onClick={ () => {

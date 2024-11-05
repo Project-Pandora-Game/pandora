@@ -4,7 +4,7 @@ import type { Asset } from '../asset';
 import type { AssetType } from '../definitions';
 
 import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN, LIMIT_OUTFIT_NAME_LENGTH, LIMIT_POSE_PRESET_NAME_LENGTH } from '../../inputLimits';
-import { Assert, AssertNever } from '../../utility';
+import { Assert, AssertNever } from '../../utility/misc';
 import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop, ZodTruncate } from '../../validation';
 import { AssetIdSchema } from '../base';
 import { CreateModuleDataFromTemplate, ItemModuleDataSchema, ItemModuleTemplateSchema } from '../modules';

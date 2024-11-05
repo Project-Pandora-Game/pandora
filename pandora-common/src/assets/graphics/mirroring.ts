@@ -1,6 +1,14 @@
 import { Immutable } from 'immer';
-import { Assert, AssertNever, CharacterSize, Condition, LayerImageOverride, LayerImageSetting, PointDefinition, TransformDefinition } from 'pandora-common';
-import { PointDefinitionCalculated } from '../assets/assetGraphics';
+import { Assert, AssertNever } from '../../utility/misc';
+import type { Condition } from './conditions';
+import { CharacterSize, type LayerImageOverride, type LayerImageSetting } from './graphics';
+import type { PointDefinition, TransformDefinition } from './points';
+
+export interface PointDefinitionCalculated extends PointDefinition {
+	index: number;
+	mirrorPoint?: PointDefinitionCalculated;
+	isMirror: boolean;
+}
 
 /** formatting for `<T extends (...)>` is different for ESLint and VS Code */
 type Maybe<T> = T | undefined;

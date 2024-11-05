@@ -25,7 +25,7 @@ export function ResultLayer({
 	const editor = useEditor();
 	const showHelpers = useObservable(editor.targetLayer) === layer;
 
-	const { points: pointTemplate } = useLayerDefinition(layer);
+	const { points: pointTemplate, x, y, width, height } = useLayerDefinition(layer);
 	const { points, triangles } = useLayerMeshPoints(layer);
 
 	const evaluator = useAppearanceConditionEvaluator(characterState);
@@ -33,6 +33,11 @@ export function ResultLayer({
 	const vertices = useLayerVertices(evaluator, points, layer, item);
 
 	const drawWireFrame = useCallback((g: PIXI.GraphicsContext) => {
+		// Borders of the layer
+		g.rect(x, y, width, height)
+			.stroke({ width: 2, color: 0x000088, alpha: 0.6 });
+
+		// Wireframe of the points template
 		for (let i = 0; i < triangles.length; i += 3) {
 			const poly = [0, 1, 2]
 				.map((p) => triangles[i + p])
@@ -53,7 +58,7 @@ export function ResultLayer({
 					.stroke({ width: 1, color: 0x333333, alpha: 0.2 });
 			}
 		}
-	}, [triangles, vertices]);
+	}, [triangles, vertices, x, y, width, height]);
 
 	const editedTemplate = useObservable(editor.targetTemplate);
 	const pointEditSelectedPoint = useNullableObservable(editedTemplate?.targetPoint);

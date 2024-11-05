@@ -1,5 +1,5 @@
 import { pick } from 'lodash';
-import { Assert, CheckPropertiesNotNullable, KnownObject } from '../utility';
+import { Assert, CheckPropertiesNotNullable, KnownObject } from '../utility/misc';
 import type { ServiceConfigBase, ServiceConfigFixupDependencies, ServiceInitArgs, ServiceManagementInterface, ServiceProviderDefinition } from './service';
 import type { BaseServicesDefinition } from './serviceDefinitions';
 

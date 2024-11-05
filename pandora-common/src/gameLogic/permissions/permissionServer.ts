@@ -3,7 +3,7 @@ import type { GameLogicCharacter } from '../character/character';
 import type { PermissionConfig, PermissionSetup, PermissionType, PermissionConfigChange } from './permissionData';
 import type { Immutable } from 'immer';
 import { GameLogicPermission, MakePermissionConfigFromDefault } from './permission';
-import { KnownObject } from '../../utility';
+import { KnownObject } from '../../utility/misc';
 
 export class GameLogicPermissionServer extends GameLogicPermission {
 	/**

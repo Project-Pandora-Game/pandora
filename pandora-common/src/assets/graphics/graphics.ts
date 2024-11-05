@@ -1,11 +1,9 @@
 import { z } from 'zod';
+import { ZodBase64Regex } from '../../validation';
 import type { AssetId } from '../base';
 import { RectangleSchema } from './common';
 import { BoneNameSchema, ConditionSchema, type BoneType } from './conditions';
 import { type PointTemplate } from './points';
-
-// Fix for pnpm resolution weirdness
-import type { } from '../../validation';
 
 export const CharacterSize = {
 	WIDTH: 1000,
@@ -99,6 +97,7 @@ export const LayerDefinitionSchema = RectangleSchema.extend({
 	priority: LayerPrioritySchema,
 	points: z.string(),
 	pointType: z.array(z.string()).optional(),
+	pointFilterMask: z.string().regex(ZodBase64Regex).optional(),
 	mirror: LayerMirrorSchema,
 	colorizationKey: z.string().optional(),
 

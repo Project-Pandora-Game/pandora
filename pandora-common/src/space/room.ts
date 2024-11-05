@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { CharacterSize } from '../assets/graphics/graphics';
 import type { AssetManager } from '../assets/assetManager';
 import type { CharacterRoomPosition } from '../character/characterData';
-import { CloneDeepMutable } from '../utility';
+import { CloneDeepMutable } from '../utility/misc';
 import { HexColorString } from '../validation';
 
 export const RoomBackgroundDataSchema = z.object({

@@ -1,5 +1,5 @@
 import { Logger } from '../../logging';
-import { AssertNotNullable } from '../../utility';
+import { AssertNotNullable } from '../../utility/misc';
 import { ArrayIncludesGuard } from '../../validation';
 import type { GameLogicCharacter } from '../character/character';
 import { GameLogicPermissionServer, IPermissionProvider } from '../permissions';

@@ -2,7 +2,7 @@ import { isEqual, uniqWith } from 'lodash';
 import type { CharacterId, CharacterRestrictionsManager } from '../character';
 import type { ItemInteractionType, Restriction, RestrictionResult } from '../character/restrictionTypes';
 import type { GameLogicCharacter, GameLogicPermission, InteractionId } from '../gameLogic';
-import { Assert, AssertNever, AssertNotNullable } from '../utility';
+import { Assert, AssertNever, AssertNotNullable } from '../utility/misc';
 import type { AppearanceActionProblem, AppearanceActionData, InvalidActionReason } from './appearanceActionProblems';
 import type { AppearanceActionContext } from './appearanceActions';
 import { SplitContainerPath } from './appearanceHelpers';

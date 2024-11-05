@@ -5,7 +5,7 @@ import { RoomInventoryBundleSchema } from '../assets/state/roomState';
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
 import { SpaceIdSchema } from '../space/space';
-import { ArrayToRecordKeys } from '../utility';
+import { ArrayToRecordKeys } from '../utility/misc';
 import { CharacterNameSchema, HexColorStringSchema, ZodTruncate } from '../validation';
 import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesServerSchema } from './assetPreferences';
 import { CharacterIdSchema } from './characterTypes';

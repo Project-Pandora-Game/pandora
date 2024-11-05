@@ -4,6 +4,8 @@ import {
 	useEffect,
 	useRef,
 } from 'react';
+import { useAssetManager } from '../../assets/assetManager';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager';
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { useAsyncEvent } from '../../common/useEvent';
 import { ShardConnector } from '../../networking/shardConnector';
@@ -57,6 +59,9 @@ export function ShardConnectorContextProvider(): null {
 	useDebugExpose('shardConnector', shardConnector);
 	useDebugExpose('player', gameState?.player);
 	useDebugExpose('gameState', gameState);
+
+	useDebugExpose('assetManager', useAssetManager());
+	useDebugExpose('graphicsManager', useObservable(GraphicsManagerInstance));
 
 	return null;
 }

@@ -3,7 +3,7 @@ import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
 import type { GameLogicCharacter } from '../../gameLogic';
-import type { Satisfies } from '../../utility';
+import type { Satisfies } from '../../utility/misc';
 import type { Asset } from '../asset';
 import type { AssetManager } from '../assetManager';
 import type { AssetColorization, AssetType, WearableAssetType } from '../definitions';

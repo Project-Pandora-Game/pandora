@@ -6,7 +6,7 @@ import { CharacterSelfInfoSchema } from '../character/characterData';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from '../inputLimits';
 import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceId, SpaceIdSchema, SpaceInvite, SpaceInviteCreateSchema, SpaceInviteIdSchema, SpaceListExtendedInfo, SpaceListInfo } from '../space/space';
-import { Satisfies } from '../utility';
+import { Satisfies } from '../utility/misc';
 import { DisplayNameSchema, EmailAddressSchema, HexColorString, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast, ZodTruncate } from '../validation';
 import { AccountCryptoKeySchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';

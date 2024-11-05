@@ -5,7 +5,7 @@ import { AppearanceActionProblem, AppearanceActionData } from '../assets/appeara
 import { ClientChatMessagesSchema, ChatCharacterStatusSchema } from '../chat/chat';
 import { z } from 'zod';
 import { CharacterInputNameSchema, ZodCast } from '../validation';
-import { Satisfies } from '../utility';
+import { Satisfies } from '../utility/misc';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 import { Immutable } from 'immer';
 import { PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic';

@@ -76,6 +76,7 @@ class TextureData {
 
 				// Finish load
 				this._loadedTextureSource = source;
+				source.autoGarbageCollect = false;
 				const texture = new Texture({
 					source,
 					label: this.path,
@@ -116,6 +117,8 @@ class TextureData {
 	public destroy() {
 		Assert(!this.isInUse());
 
+		const resource: unknown = this._loadedTextureSource?.resource;
+
 		if (this._loadedTexture != null) {
 			this._loadedTexture.destroy(true);
 			this._loadedTexture = null;
@@ -124,6 +127,11 @@ class TextureData {
 		if (this._loadedTextureSource != null) {
 			this._loadedTextureSource.destroy();
 			this._loadedTextureSource = null;
+		}
+
+		// Cleanup the resource specially if it is an ImageBitmap
+		if (!!resource && resource instanceof ImageBitmap) {
+			resource.close();
 		}
 	}
 }

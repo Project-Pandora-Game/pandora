@@ -40,8 +40,8 @@
 		"react-hook-form": "7.53.1",
 		"react-reconciler": "0.29.2",
 		"react-rnd": "10.4.13",
-		"react-router": "6.27.0",
-		"react-router-dom": "6.27.0",
+		"react-router": "6.28.0",
+		"react-router-dom": "6.28.0",
 		"react-toastify": "10.0.6",
 		"socket.io-client": "4.6.1",
 		"zod": "3.23.8"

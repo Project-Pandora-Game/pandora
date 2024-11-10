@@ -127,6 +127,13 @@ export type PixiComponentConfig<
 	 * After this function returns, `autoProps` will be assigned to the element.
 	 */
 	create(props: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>>): Element;
+	/**
+	 * Destroy the element returned by `create`
+	 *
+	 * Optional - if not defined, the `destroy` method is called on the element.
+	 * @param element - The element to destroy
+	 */
+	destroy?(element: Element): void;
 	/** Map of valid event names, where each event name should be set to `true`. */
 	events: Record<keyof DisplayObjectListenersMapRaw<EventMap>, true>;
 	/** Map of automatically managed properties, where each such property name should be set to `true`. */

@@ -56,6 +56,16 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, Pi
 
 		return mesh;
 	},
+	destroy: (mesh) => {
+		// We need to manually destroy the geometry to clean up properly
+		const geometry = mesh.geometry;
+		mesh.destroy({
+			texture: false,
+			textureSource: false,
+			children: false,
+		});
+		geometry.destroy(true);
+	},
 	applyCustomProps(mesh, oldProps, newProps) {
 		const {
 			vertices: oldVertices,
@@ -91,8 +101,9 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, Pi
 			});
 			newGeometry.getBuffer('aPosition').static = false;
 
-			mesh.geometry.destroy();
+			const oldGeometry = mesh.geometry;
 			mesh.geometry = newGeometry;
+			oldGeometry.destroy(true);
 			updated = true;
 		} else if (vertices !== oldVertices) {
 			mesh.geometry.getBuffer('aPosition').data = vertices;

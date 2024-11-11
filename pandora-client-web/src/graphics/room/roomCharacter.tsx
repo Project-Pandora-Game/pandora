@@ -381,39 +381,6 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 			AssertNever(interfaceChatroomCharacterNameFontSize);
 	}
 
-	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
-		g
-			// Pivot point (with extra Y offset)
-			.circle(pivot.x, pivot.y, 5)
-			.fill(0xffaa00)
-			.stroke({ color: 0x000000, width: 1 })
-			// Mask area
-			.rect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
-			.stroke({ color: 0xffff00, width: 2 })
-			// Character canvas standard area
-			.rect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
-			.stroke({ color: 0x00ff00, width: 2 });
-	}, [pivot]);
-
-	const pivotDraw = useCallback((g: PIXI.GraphicsContext) => {
-		g
-			// Pivot point (wanted)
-			.circle(pivot.x, pivot.y, 5)
-			.fill(0xffff00)
-			.stroke({ color: 0x000000, width: 1 });
-	}, [pivot]);
-
-	// Debug graphics
-	const hotboxDebugDraw = useCallback((g: PIXI.GraphicsContext) => {
-		if (hitArea == null) {
-			return;
-		}
-
-		g
-			.rect(hitArea.x, hitArea.y, hitArea.width, hitArea.height)
-			.fill({ color: 0xff0000, alpha: 0.25 });
-	}, [hitArea]);
-
 	// If character is in a device, do not render it here, it will be rendered by the device
 	const roomDeviceLink = useCharacterRestrictionsManager(characterState, character, (rm) => rm.getRoomDeviceLink());
 
@@ -448,12 +415,8 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 				>
 					{
 						!debugConfig?.characterDebugOverlay ? null : (
-							<Container
-								zIndex={ 99999 }
-							>
-								<Graphics
-									draw={ graphicsDraw }
-								/>
+							<Container zIndex={ 99999 }>
+								<RoomCharacterDebugGraphicsInner pivot={ pivot } />
 							</Container>
 						)
 					}
@@ -487,13 +450,8 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 				}
 				{
 					!debugConfig?.characterDebugOverlay ? null : (
-						<Container
-							zIndex={ 99999 }
-						>
-							<Graphics
-								draw={ pivotDraw }
-							/>
-							<Graphics draw={ hotboxDebugDraw } />
+						<Container zIndex={ 99999 }>
+							<RoomCharacterDebugGraphicsOuter pivot={ pivot } hitArea={ hitArea } />
 						</Container>
 					)
 				}
@@ -501,6 +459,60 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 		</Container>
 	);
 });
+
+function RoomCharacterDebugGraphicsInner({ pivot }: {
+	pivot: Readonly<PointLike>;
+}): ReactElement {
+	const pivotDraw = useCallback((g: PIXI.GraphicsContext) => {
+		g
+			// Pivot point (with extra Y offset)
+			.circle(pivot.x, pivot.y, 5)
+			.fill(0xffaa00)
+			.stroke({ color: 0x000000, width: 1 })
+			// Mask area
+			.rect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
+			.stroke({ color: 0xffff00, width: 2 })
+			// Character canvas standard area
+			.rect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
+			.stroke({ color: 0x00ff00, width: 2 });
+	}, [pivot]);
+
+	return (
+		<Graphics
+			draw={ pivotDraw }
+		/>
+	);
+}
+
+function RoomCharacterDebugGraphicsOuter({ pivot, hitArea }: {
+	pivot: Readonly<PointLike>;
+	hitArea?: PIXI.Rectangle;
+}): ReactElement {
+	const pivotDraw = useCallback((g: PIXI.GraphicsContext) => {
+		g
+			// Pivot point (wanted)
+			.circle(pivot.x, pivot.y, 5)
+			.fill(0xffff00)
+			.stroke({ color: 0x000000, width: 1 });
+	}, [pivot]);
+
+	const hitboxDebugDraw = useCallback((g: PIXI.GraphicsContext) => {
+		if (hitArea == null) {
+			return;
+		}
+
+		g
+			.rect(hitArea.x, hitArea.y, hitArea.width, hitArea.height)
+			.fill({ color: 0xff0000, alpha: 0.25 });
+	}, [hitArea]);
+
+	return (
+		<>
+			<Graphics draw={ pivotDraw } />
+			<Graphics draw={ hitboxDebugDraw } />
+		</>
+	);
+}
 
 export function RoomCharacterInteractive({
 	globalState,

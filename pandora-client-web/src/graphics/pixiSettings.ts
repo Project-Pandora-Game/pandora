@@ -6,4 +6,7 @@ import 'pixi.js/unsafe-eval';
  */
 export function ConfigurePixiSettings(): void {
 	// Nothing here for now
+
+	// Debug utilities
+	// DebugInitResourceRetentionMonitor();
 }

@@ -390,6 +390,22 @@ export function RoomDevice({
 		y: asset.definition.pivot.y,
 	}), [asset]);
 
+	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
+		g
+			// Vertical guide line
+			.moveTo(pivot.x, pivot.y - Math.max(100, pivot.y))
+			.lineTo(pivot.x, pivot.y + 100)
+			.stroke({ color: 0xffff00, width: 2, alpha: 0.5 })
+			// Ground line
+			.moveTo(pivot.x - Math.max(100, pivot.x), pivot.y)
+			.lineTo(pivot.x + Math.max(100, pivot.x), pivot.y)
+			.stroke({ color: 0xffff00, width: 2, alpha: 1 })
+			// Pivot point (wanted)
+			.circle(pivot.x, pivot.y, 5)
+			.fill(0xffff00)
+			.stroke({ color: 0x000000, width: 1 });
+	}, [pivot]);
+
 	return (
 		<RoomDeviceGraphics
 			globalState={ globalState }
@@ -412,21 +428,7 @@ export function RoomDevice({
 						zIndex={ 99999 }
 					>
 						<Graphics
-							draw={ (g) => {
-								g
-									// Vertical guide line
-									.moveTo(pivot.x, pivot.y - Math.max(100, pivot.y))
-									.lineTo(pivot.x, pivot.y + 100)
-									.stroke({ color: 0xffff00, width: 2, alpha: 0.5 })
-									// Ground line
-									.moveTo(pivot.x - Math.max(100, pivot.x), pivot.y)
-									.lineTo(pivot.x + Math.max(100, pivot.x), pivot.y)
-									.stroke({ color: 0xffff00, width: 2, alpha: 1 })
-									// Pivot point (wanted)
-									.circle(pivot.x, pivot.y, 5)
-									.fill(0xffff00)
-									.stroke({ color: 0x000000, width: 1 });
-							} }
+							draw={ graphicsDraw }
 						/>
 					</Container>
 				)
@@ -670,6 +672,20 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 		pivot,
 	}), [item, layer, characterState, evaluator, baseScale, pivot]);
 
+	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
+		g
+			// Mask area
+			.rect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
+			.stroke({ color: 0xffff00, width: 2 })
+			// Character canvas standard area
+			.rect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
+			.stroke({ color: 0x00ff00, width: 2 })
+			// Pivot point
+			.circle(actualPivot.x, actualPivot.y, 5)
+			.fill(0xffaa00)
+			.stroke({ color: 0x000000, width: 1 });
+	}, [actualPivot]);
+
 	// Character must be in this device, otherwise we skip rendering it here
 	// (could happen if character left and rejoined the room without device equipped)
 	const roomDeviceLink = useCharacterRestrictionsManager(characterState, character, (rm) => rm.getRoomDeviceLink());
@@ -692,19 +708,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 						zIndex={ 99999 }
 					>
 						<Graphics
-							draw={ (g) => {
-								g
-									// Mask area
-									.rect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
-									.stroke({ color: 0xffff00, width: 2 })
-									// Character canvas standard area
-									.rect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
-									.stroke({ color: 0x00ff00, width: 2 })
-									// Pivot point
-									.circle(actualPivot.x, actualPivot.y, 5)
-									.fill(0xffaa00)
-									.stroke({ color: 0x000000, width: 1 });
-							} }
+							draw={ graphicsDraw }
 						/>
 					</Container>
 				)

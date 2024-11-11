@@ -381,6 +381,28 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 			AssertNever(interfaceChatroomCharacterNameFontSize);
 	}
 
+	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
+		g
+			// Pivot point (with extra Y offset)
+			.circle(pivot.x, pivot.y, 5)
+			.fill(0xffaa00)
+			.stroke({ color: 0x000000, width: 1 })
+			// Mask area
+			.rect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
+			.stroke({ color: 0xffff00, width: 2 })
+			// Character canvas standard area
+			.rect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
+			.stroke({ color: 0x00ff00, width: 2 });
+	}, [pivot]);
+
+	const pivotDraw = useCallback((g: PIXI.GraphicsContext) => {
+		g
+			// Pivot point (wanted)
+			.circle(pivot.x, pivot.y, 5)
+			.fill(0xffff00)
+			.stroke({ color: 0x000000, width: 1 });
+	}, [pivot]);
+
 	// Debug graphics
 	const hotboxDebugDraw = useCallback((g: PIXI.GraphicsContext) => {
 		if (hitArea == null) {
@@ -430,19 +452,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 								zIndex={ 99999 }
 							>
 								<Graphics
-									draw={ (g) => {
-										g
-											// Pivot point (with extra Y offset)
-											.circle(pivot.x, pivot.y, 5)
-											.fill(0xffaa00)
-											.stroke({ color: 0x000000, width: 1 })
-											// Mask area
-											.rect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
-											.stroke({ color: 0xffff00, width: 2 })
-											// Character canvas standard area
-											.rect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
-											.stroke({ color: 0x00ff00, width: 2 });
-									} }
+									draw={ graphicsDraw }
 								/>
 							</Container>
 						)
@@ -481,13 +491,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 							zIndex={ 99999 }
 						>
 							<Graphics
-								draw={ (g) => {
-									g
-										// Pivot point (wanted)
-										.circle(pivot.x, pivot.y, 5)
-										.fill(0xffff00)
-										.stroke({ color: 0x000000, width: 1 });
-								} }
+								draw={ pivotDraw }
 							/>
 							<Graphics draw={ hotboxDebugDraw } />
 						</Container>

@@ -42,6 +42,7 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, Pi
 			positions: vertices,
 			uvs,
 			indices,
+			shrinkBuffersToFit: true,
 		});
 		// Mark vertices as changeable
 		geometry.getBuffer('aPosition').static = false;
@@ -88,25 +89,16 @@ export const PixiMesh = RegisterPixiComponent<Mesh, never, ContainerEventMap, Pi
 
 		let updated = false;
 
-		if (
-			uvs !== oldUvs ||
-			indices !== oldIndices
-		) {
-			// If uvs or indices change, we have to recreate geometry
-			// TODO: Check if this still is the case
-			const newGeometry = new MeshGeometry({
-				positions: vertices,
-				uvs,
-				indices,
-			});
-			newGeometry.getBuffer('aPosition').static = false;
-
-			const oldGeometry = mesh.geometry;
-			mesh.geometry = newGeometry;
-			oldGeometry.destroy(true);
-			updated = true;
-		} else if (vertices !== oldVertices) {
+		if (vertices !== oldVertices) {
 			mesh.geometry.getBuffer('aPosition').data = vertices;
+			updated = true;
+		}
+		if (uvs !== oldUvs) {
+			mesh.geometry.getBuffer('aUV').data = uvs;
+			updated = true;
+		}
+		if (indices !== oldIndices) {
+			mesh.geometry.indexBuffer.data = indices;
 			updated = true;
 		}
 

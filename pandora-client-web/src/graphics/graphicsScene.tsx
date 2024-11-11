@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { CharacterSize } from 'pandora-common';
-import { Application, Filter } from 'pixi.js';
+import { type Application, Filter } from 'pixi.js';
 import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useImageResolutionAlternative } from '../assets/assetGraphicsCalculations';
 import { ChildrenProps } from '../common/reactTypes';

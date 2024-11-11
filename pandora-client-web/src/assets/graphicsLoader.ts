@@ -219,6 +219,19 @@ export abstract class GraphicsLoaderBase extends TypedEventEmitter<IGraphicsLoad
 		return result;
 	}
 
+	public destroy(): void {
+		for (const [k, texture] of this.store) {
+			if (!texture.isInUse()) {
+				texture.destroy();
+				this.store.delete(k);
+			} else {
+				this.logger.warning('Textue is still in use during unload:', k);
+			}
+		}
+
+		this.emit('storeChaged', undefined);
+	}
+
 	private readonly _pendingPromises = new Set<Promise<unknown>>();
 	protected monitorProgress<T>(promiseFactory: Promise<T> | (() => Promise<T>)): Promise<T> {
 		let promise = typeof promiseFactory === 'function' ? promiseFactory() : promiseFactory;

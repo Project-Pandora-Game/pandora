@@ -1,6 +1,7 @@
 import { cloneDeep } from 'lodash';
 import { GetLogger, TypedEventEmitter } from 'pandora-common';
 import { Application, ApplicationOptions } from 'pixi.js';
+import { DestroyGraphicsLoader } from '../assets/assetManager';
 import { USER_DEBUG } from '../config/Environment';
 
 const SHARED_APP_MAX_COUNT = 2;
@@ -22,6 +23,10 @@ async function CreateApplication(): Promise<Application> {
 	return app;
 }
 
+function DestroyApplication(app: Application): void {
+	app.destroy(true, true);
+}
+
 // This actually has more effect than just exposing for debugging purposes:
 // It allows hot reload to reuse existing apps instead of having leak during development
 interface WindowWithSharedApps extends Window {
@@ -39,6 +44,7 @@ if (USER_DEBUG) {
 
 export class GraphicsApplicationManager extends TypedEventEmitter<{
 	applicationReady: Application;
+	beforeDestroy: void;
 }> {
 	private readonly logger = GetLogger('GraphicsApplicationManager');
 
@@ -63,11 +69,41 @@ export class GraphicsApplicationManager extends TypedEventEmitter<{
 				this.logger.error('Failed to create Pixi application:', err);
 			});
 	}
+
+	public _triggerBeforeDestroy() {
+		this.emit('beforeDestroy', undefined);
+	}
+}
+
+let cleanupInitialized = false;
+function InitCleanupHook() {
+	if (cleanupInitialized)
+		return;
+	cleanupInitialized = true;
+
+	window.addEventListener('beforeunload', function () {
+		// Forcefully cleanup any applications currently in use
+		// we want to avoid any leaks (that tend to happen despite the fact that browsers _should_ cleanup everything when page is unloaded)
+		AvailableApps.splice(0, AvailableApps.length);
+		for (const manager of SharedApps.splice(0, SharedApps.length)) {
+			try {
+				const { app } = manager;
+				if (!app)
+					continue;
+				manager._triggerBeforeDestroy();
+				DestroyApplication(app);
+			} catch (error) {
+				GetLogger('GraphicsApplicationManager').error('Failed to cleanup application:', error);
+			}
+		}
+		DestroyGraphicsLoader();
+	});
 }
 
 export function GetApplicationManager(): GraphicsApplicationManager | null {
 	let app = AvailableApps.pop();
 	if (!app && SharedApps.length < SHARED_APP_MAX_COUNT) {
+		InitCleanupHook();
 		app = new GraphicsApplicationManager();
 		SharedApps.push(app);
 	}

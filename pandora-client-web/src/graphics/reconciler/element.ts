@@ -211,11 +211,15 @@ export class PixiInternalElementInstance<
 		this._destroyed = true;
 		this.root.instantiatedElements.delete(this);
 
-		this.instance.destroy({
-			texture: false,
-			textureSource: false,
-			children: false,
-		});
+		if (this.config.destroy !== undefined) {
+			this.config.destroy(this.instance);
+		} else {
+			this.instance.destroy({
+				texture: false,
+				textureSource: false,
+				children: false,
+			});
+		}
 		Assert(this.instance.destroyed);
 	}
 

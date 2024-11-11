@@ -1,6 +1,6 @@
 import { Rectangle } from 'pandora-common';
 import {
-	Application,
+	type Application,
 	Filter,
 	type FilterSystem,
 	GlProgram,

@@ -1,5 +1,5 @@
 import { Assert, AssertNotNullable, GetLogger, Rectangle } from 'pandora-common';
-import { Application, Container } from 'pixi.js';
+import { type Application, Container } from 'pixi.js';
 import React, { Context, ReactElement, ReactNode } from 'react';
 import { CalculationQueue } from '../common/calculationQueue';
 import { ChildrenProps } from '../common/reactTypes';
@@ -28,7 +28,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 	private _cleanupUpdateCallback: undefined | (() => void);
 	private root: PixiRoot | null = null;
 	private appManager: GraphicsApplicationManager | null = null;
-	private _appManagerReadyCleanupCallback: undefined | (() => void);
+	private _appManagerCleanupCallback: undefined | (() => void);
 	private app: Application | null = null;
 
 	private readonly logger = GetLogger('GraphicsSceneRendererShared');
@@ -43,13 +43,18 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		if (!appManager)
 			return;
 
-		Assert(this._appManagerReadyCleanupCallback == null);
+		Assert(this._appManagerCleanupCallback == null);
 		this.appManager = appManager;
+		const cleanupDestroy = appManager.on('beforeDestroy', this._unmountApp.bind(this));
+		const cleanupReady = appManager.on('applicationReady', this._mountApp.bind(this));
+		this._appManagerCleanupCallback = () => {
+			cleanupReady();
+			cleanupDestroy();
+		};
+
 		const app = appManager.app;
 		if (app != null) {
 			this._mountApp(app);
-		} else {
-			appManager.on('applicationReady', this._mountApp.bind(this));
 		}
 	}
 
@@ -100,8 +105,8 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 	public override componentWillUnmount() {
 		this.logger.debug('Unmount');
 
-		this._appManagerReadyCleanupCallback?.();
-		this._appManagerReadyCleanupCallback = undefined;
+		this._appManagerCleanupCallback?.();
+		this._appManagerCleanupCallback = undefined;
 
 		const appManager = this.appManager;
 		this.appManager = null;

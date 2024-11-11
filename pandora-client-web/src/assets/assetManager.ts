@@ -67,3 +67,10 @@ export function LoadAssetDefinitions(definitionsHash: string, data: Immutable<As
 		}
 	})();
 }
+
+export function DestroyGraphicsLoader(): void {
+	if (loader !== undefined) {
+		loader.destroy();
+		loader = undefined;
+	}
+}

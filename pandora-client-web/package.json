@@ -24,7 +24,7 @@
 		"@hcaptcha/react-hcaptcha": "1.11.0",
 		"bowser": "2.11.0",
 		"classnames": "2.5.1",
-		"client-zip": "2.4.5",
+		"client-zip": "2.4.6",
 		"color-parse": "2.0.2",
 		"delaunator": "5.0.1",
 		"history": "5.3.0",

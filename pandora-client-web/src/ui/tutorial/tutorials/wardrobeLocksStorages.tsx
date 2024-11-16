@@ -9,7 +9,7 @@ export const TUTORIAL_WARDROBE_LOCKS_STORAGES: TutorialConfig = {
 	disabled: 'workInProgress',
 	description: (
 		<p>
-			This tutorial will teach you about items that can be locked, the locks themselves, and items that can store other items in them.
+			This tutorial will teach you about items that can be locked, the locks themselves, and items that can store other items inside them.
 		</p>
 	),
 	stages: [

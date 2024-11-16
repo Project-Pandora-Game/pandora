@@ -48,7 +48,7 @@ export function PrivateRoomTutorialList(): ReactElement {
 				<h2 className='margin-none'>Tutorials</h2>
 				<span>{ activeTutorial == null ? 'No tutorial is currently active' : `Currently active tutorial: "${activeTutorial.config.name}"` }</span>
 			</Column>
-			<FieldsetToggle legend='Available tutorials' open={ false } persistent='tutorials-available'>
+			<FieldsetToggle legend='Tutorial catalogue' open={ false } persistent='tutorials-available'>
 				<Column>
 					{
 						PRIVATE_TUTORIALS.map((t) => (<TutorialEntry key={ t.id } tutorial={ t } />))
@@ -60,7 +60,7 @@ export function PrivateRoomTutorialList(): ReactElement {
 }
 
 const TUTORIAL_DISABLE_REASON_QUICKTEXT: Record<TutorialDisableReason, string> = {
-	workInProgress: 'Work In Progress',
+	workInProgress: 'Coming soon',
 };
 
 function TutorialEntry({ tutorial }: {

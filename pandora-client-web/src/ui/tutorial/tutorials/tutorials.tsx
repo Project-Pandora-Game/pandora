@@ -218,17 +218,17 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 				{
 					text: (
 						<>
-							Please open the "Available tutorials" section by clicking on it.
+							Please open the "Tutorial catalogue" section by clicking on it.
 						</>
 					),
 					highlight: [{
 						query: '.fieldset-toggle-legend',
-						filter: (e) => e.innerText.includes('Available tutorials'),
+						filter: (e) => e.innerText.includes('Tutorial catalogue'),
 					}],
 					conditions: [{
 						type: 'elementQuery',
 						query: '.fieldset-toggle-legend.open',
-						filter: (e) => e.innerText.includes('Available tutorials'),
+						filter: (e) => e.innerText.includes('Tutorial catalogue'),
 					}],
 				},
 			],
@@ -259,18 +259,18 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 				{
 					text: (
 						<>
-							Please open the "Available tutorials" section by clicking on it.
+							Please open the "Tutorial catalogue" section by clicking on it.
 						</>
 					),
 					hideWhenCompleted: true,
 					highlight: [{
 						query: '.fieldset-toggle-legend',
-						filter: (e) => e.innerText.includes('Available tutorials'),
+						filter: (e) => e.innerText.includes('Tutorial catalogue'),
 					}],
 					conditions: [{
 						type: 'elementQuery',
 						query: '.fieldset-toggle-legend.open',
-						filter: (e) => e.innerText.includes('Available tutorials'),
+						filter: (e) => e.innerText.includes('Tutorial catalogue'),
 					}],
 				},
 				{

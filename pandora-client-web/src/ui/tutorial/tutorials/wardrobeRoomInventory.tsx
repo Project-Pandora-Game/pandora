@@ -8,7 +8,7 @@ export const TUTORIAL_WARDROBE_ROOM_INVENTORY: TutorialConfig = {
 	disabled: 'workInProgress',
 	description: (
 		<p>
-			This tutorial will teach you basics about Room's inventory.
+			This tutorial will teach you the basics about Room inventory.
 		</p>
 	),
 	stages: [

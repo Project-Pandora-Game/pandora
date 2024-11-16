@@ -32,7 +32,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 	disabled: 'workInProgress',
 	description: (
 		<p>
-			This tutorial will teach you posing your character and changing its expression.
+			This tutorial will teach you about posing your character and changing its expression.
 		</p>
 	),
 	stages: [

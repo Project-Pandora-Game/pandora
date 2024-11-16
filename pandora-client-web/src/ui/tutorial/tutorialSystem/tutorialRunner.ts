@@ -7,7 +7,7 @@ export class TutorialRunner {
 	public readonly config: Immutable<TutorialConfig>;
 
 	private _stageIndex: number = 0;
-	public readonly currentStage: Observable<TutorialStageRunner | null>;
+	public readonly currentStage: Observable<TutorialStageRunner | 'complete' | null>;
 
 	public get stageIndex(): number {
 		return this._stageIndex;
@@ -15,7 +15,7 @@ export class TutorialRunner {
 
 	constructor(tutorial: Immutable<TutorialConfig>) {
 		this.config = tutorial;
-		this.currentStage = new Observable<TutorialStageRunner | null>(null);
+		this.currentStage = new Observable<TutorialStageRunner | 'complete' | null>(null);
 		this.currentStage.value = this._generateStageRunner();
 	}
 
@@ -24,13 +24,18 @@ export class TutorialRunner {
 		this.currentStage.value = this._generateStageRunner();
 	}
 
-	private _generateStageRunner(): TutorialStageRunner | null {
+	public endTutorial(): void {
+		this.currentStage.value = null;
+	}
+
+	private _generateStageRunner(): TutorialStageRunner | 'complete' | null {
 		if (this.config.stages.length <= this._stageIndex)
-			return null;
+			return 'complete';
 
 		const stageConfig = this.config.stages[this._stageIndex];
-		if (this.currentStage.value?.config === stageConfig)
-			return this.currentStage.value;
+		const currentStage = this.currentStage.value;
+		if (currentStage != null && typeof currentStage !== 'string' && currentStage.config === stageConfig)
+			return currentStage;
 
 		return new TutorialStageRunner(stageConfig, this);
 	}

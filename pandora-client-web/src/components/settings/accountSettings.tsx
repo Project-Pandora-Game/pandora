@@ -6,6 +6,7 @@ import {
 	DisplayNameSchema,
 	EMPTY,
 	FormatTimeInterval,
+	GetLogger,
 	IDirectoryAccountInfo,
 	IsAuthorized,
 	TimeSpanMs,
@@ -187,15 +188,23 @@ function AccountRole({ role, data }: { role: AccountRole; data?: { expires?: num
 
 	const onSetVisible = (checked: boolean) => {
 		if (checked) {
-			directory.sendMessage('changeSettings', {
+			directory.awaitResponse('changeSettings', {
 				type: 'set',
 				settings: { visibleRoles: uniq([...visibleRoles, role]) },
-			});
+			})
+				.catch((err: unknown) => {
+					toast('Failed to update your settings. Please try again.', TOAST_OPTIONS_ERROR);
+					GetLogger('changeSettings').error('Failed to update settings:', err);
+				});
 		} else {
-			directory.sendMessage('changeSettings', {
+			directory.awaitResponse('changeSettings', {
 				type: 'set',
 				settings: { visibleRoles: visibleRoles.filter((r) => r !== role) },
-			});
+			})
+				.catch((err: unknown) => {
+					toast('Failed to update your settings. Please try again.', TOAST_OPTIONS_ERROR);
+					GetLogger('changeSettings').error('Failed to update settings:', err);
+				});
 		}
 	};
 
@@ -223,10 +232,14 @@ function LabelColor({ account }: { account: IDirectoryAccountInfo; }): ReactElem
 				<Button
 					className='slim fadeDisabled'
 					onClick={ () => {
-						directory.sendMessage('changeSettings', {
+						directory.awaitResponse('changeSettings', {
 							type: 'set',
 							settings: { labelColor: color },
-						});
+						})
+							.catch((err: unknown) => {
+								toast('Failed to update your settings. Please try again.', TOAST_OPTIONS_ERROR);
+								GetLogger('changeSettings').error('Failed to update settings:', err);
+							});
 					} }
 					disabled={ color === account.settings.labelColor?.toUpperCase() }>
 					Save
@@ -258,10 +271,14 @@ function DisplayName({ account }: { account: IDirectoryAccountInfo; }): ReactEle
 		}
 
 		const displayName = account.username === name ? null : name;
-		directory.sendMessage('changeSettings', {
+		directory.awaitResponse('changeSettings', {
 			type: 'set',
 			settings: { displayName },
-		});
+		})
+			.catch((err: unknown) => {
+				toast('Failed to update your settings. Please try again.', TOAST_OPTIONS_ERROR);
+				GetLogger('changeSettings').error('Failed to update settings:', err);
+			});
 	});
 
 	const now = useCurrentTime(TimeSpanMs(1, 'seconds'));

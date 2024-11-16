@@ -1,7 +1,9 @@
-import { ACCOUNT_SETTINGS_DEFAULT, AccountSettingsSchema, type AccountSettings } from 'pandora-common';
+import { ACCOUNT_SETTINGS_DEFAULT, AccountSettingsSchema, GetLogger, type AccountSettings } from 'pandora-common';
 import React, { type ReactElement, type ReactNode } from 'react';
+import { toast } from 'react-toastify';
 import type { ConditionalKeys } from 'type-fest';
 import type { ZodType } from 'zod';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { useModifiedAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import { SelectSettingInput, ToggleSettingInput } from './settingsInputs';
@@ -15,17 +17,25 @@ export function ToggleAccountSetting<const Setting extends BooleanSettings>({ se
 	const directory = useDirectoryConnector();
 
 	const onChange = (value: boolean) => {
-		directory.sendMessage('changeSettings', {
+		directory.awaitResponse('changeSettings', {
 			type: 'set',
 			settings: { [setting]: value },
-		});
+		})
+			.catch((err: unknown) => {
+				toast('Failed to update your settings. Please try again.', TOAST_OPTIONS_ERROR);
+				GetLogger('changeSettings').error('Failed to update settings:', err);
+			});
 	};
 
 	const onReset = () => {
-		directory.sendMessage('changeSettings', {
+		directory.awaitResponse('changeSettings', {
 			type: 'reset',
 			settings: [setting],
-		});
+		})
+			.catch((err: unknown) => {
+				toast('Failed to update your settings. Please try again.', TOAST_OPTIONS_ERROR);
+				GetLogger('changeSettings').error('Failed to update settings:', err);
+			});
 	};
 
 	return (
@@ -51,17 +61,25 @@ export function SelectAccountSettings<const Setting extends StringSettings>({ se
 	const directory = useDirectoryConnector();
 
 	const onChange = (value: AccountSettings[Setting]) => {
-		directory.sendMessage('changeSettings', {
+		directory.awaitResponse('changeSettings', {
 			type: 'set',
 			settings: { [setting]: value },
-		});
+		})
+			.catch((err: unknown) => {
+				toast('Failed to update your settings. Please try again.', TOAST_OPTIONS_ERROR);
+				GetLogger('changeSettings').error('Failed to update settings:', err);
+			});
 	};
 
 	const onReset = () => {
-		directory.sendMessage('changeSettings', {
+		directory.awaitResponse('changeSettings', {
 			type: 'reset',
 			settings: [setting],
-		});
+		})
+			.catch((err: unknown) => {
+				toast('Failed to update your settings. Please try again.', TOAST_OPTIONS_ERROR);
+				GetLogger('changeSettings').error('Failed to update settings:', err);
+			});
 	};
 
 	const currentValue: string | undefined = modifiedSettings?.[setting];

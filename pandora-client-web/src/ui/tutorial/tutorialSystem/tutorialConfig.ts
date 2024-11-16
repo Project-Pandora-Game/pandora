@@ -1,9 +1,10 @@
+import type { TutorialId } from 'pandora-common';
 import type { ReactNode } from 'react';
 
 export type TutorialDisableReason = 'workInProgress';
 
 export interface TutorialConfig {
-	id: string;
+	id: TutorialId;
 	name: string;
 	/** If this option is set on a tutorial, it will not be usable and it will show the reason why. */
 	disabled?: TutorialDisableReason;

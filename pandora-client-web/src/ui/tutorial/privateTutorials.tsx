@@ -19,6 +19,7 @@ import { TUTORIAL_WARDROBE_ITEMS } from './tutorials/wardrobeItems';
 import { TUTORIAL_WARDROBE_LOCKS_STORAGES } from './tutorials/wardrobeLocksStorages';
 import { TUTORIAL_WARDROBE_POSING_EXPRESSIONS } from './tutorials/wardrobePoseExpressions';
 import { TUTORIAL_WARDROBE_ROOM_INVENTORY } from './tutorials/wardrobeRoomInventory';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
 
 export const PRIVATE_TUTORIALS: TutorialConfig[] = [
 	TUTORIAL_TUTORIALS,
@@ -66,6 +67,7 @@ const TUTORIAL_DISABLE_REASON_QUICKTEXT: Record<TutorialDisableReason, string> =
 function TutorialEntry({ tutorial }: {
 	tutorial: TutorialConfig;
 }): ReactElement {
+	const { tutorialCompleted } = useAccountSettings();
 	const activeTutorial = useObservable(ActiveTutorial);
 	const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -74,6 +76,8 @@ function TutorialEntry({ tutorial }: {
 			{
 				tutorial.disabled !== undefined ? (
 					<span>[{ TUTORIAL_DISABLE_REASON_QUICKTEXT[tutorial.disabled] }]</span>
+				) : tutorialCompleted.includes(tutorial.id) ? (
+					<span>[Completed]</span>
 				) : null
 			}
 			{

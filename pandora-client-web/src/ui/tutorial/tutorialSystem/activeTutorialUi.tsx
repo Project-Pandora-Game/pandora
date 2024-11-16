@@ -1,11 +1,17 @@
 import type { Immutable } from 'immer';
-import { AssertNever, EMPTY_ARRAY, GetLogger } from 'pandora-common';
+import { uniq } from 'lodash';
+import { AssertNever, EMPTY_ARRAY, GetLogger, TutorialIdSchema, type TutorialId } from 'pandora-common';
 import React, { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
+import { toast } from 'react-toastify';
+import { useAsyncEvent } from '../../../common/useEvent';
 import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
 import { DialogInPortal, DraggableDialog, useConfirmDialog } from '../../../components/dialog/dialog';
+import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { USER_DEBUG } from '../../../config/Environment';
 import { useObservable } from '../../../observable';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import type { TutorialCondition, TutorialHighlightSelector, TutorialStep } from './tutorialConfig';
 import type { TutorialRunner, TutorialStageRunner } from './tutorialRunner';
 import './tutorialUi.scss';
@@ -26,7 +32,7 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 	}, [stage, stopTutorial]);
 
 	const stopTutorialConfirm = useCallback(() => {
-		confirm('Cancel tutorial', <>Are you sure you want to cancel the tutorial?</>, undefined, 'aboveTutorial')
+		confirm('Cancel tutorial', <>Are you sure you want to cancel the tutorial?<br /><i>The tutorial will not be marked as completed.</i></>, undefined, 'aboveTutorial')
 			.then((result) => {
 				if (result) {
 					stopTutorial();
@@ -61,7 +67,9 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 				<strong>
 					{ tutorial.config.name } (
 					{
-						USER_DEBUG ? (
+						stage === 'complete' ? (
+							<>complete</>
+						) : USER_DEBUG ? (
 							<a
 								title='[DEBUG] Skip this tutorial stage'
 								onClick={ (ev) => {
@@ -78,9 +86,85 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 					}
 					)
 				</strong>
-				<ActiveTutorialStageUi stage={ stage } scrollToEnd={ scrollToEnd } />
+				{
+					stage === 'complete' ? (
+						<ActiveTutorialCompletionUi tutorial={ tutorial } />
+					) : (
+						<ActiveTutorialStageUi stage={ stage } scrollToEnd={ scrollToEnd } />
+					)
+				}
 			</div>
 		</DraggableDialog>
+	);
+}
+
+function ActiveTutorialCompletionUi({ tutorial }: {
+	tutorial: TutorialRunner;
+}): ReactElement | null {
+	const { tutorialCompleted } = useAccountSettings();
+	const directory = useDirectoryConnector();
+
+	const [didAutoFail, setDidAutoFail] = useState(false);
+
+	const saveCompletion = useCallback(async () => {
+		if (tutorialCompleted.includes(tutorial.config.id)) {
+			tutorial.endTutorial();
+			return;
+		}
+
+		const newCompletion: TutorialId[] = uniq([...tutorialCompleted, tutorial.config.id]);
+		newCompletion.sort((a, b) => TutorialIdSchema.options.indexOf(a) - TutorialIdSchema.options.indexOf(b));
+
+		const { result } = await directory.awaitResponse('changeSettings', {
+			type: 'set',
+			settings: {
+				tutorialCompleted: newCompletion,
+			},
+		});
+
+		if (result === 'ok') {
+			tutorial.endTutorial();
+		} else {
+			AssertNever(result);
+		}
+	}, [tutorial, tutorialCompleted, directory]);
+
+	const [manuallySaveCompletion, processing] = useAsyncEvent(saveCompletion, null, {
+		errorHandler: (err) => {
+			toast('Failed to save your progress. Please try again.', TOAST_OPTIONS_ERROR);
+			GetLogger('TutorialSaveCompletion').error('Failed to save tutorial completion:', err);
+		},
+	});
+
+	useEffect(() => {
+		if (didAutoFail)
+			return;
+
+		saveCompletion()
+			.catch((err: unknown) => {
+				GetLogger('TutorialSaveCompletion').error('Failed to save tutorial completion:', err);
+				setDidAutoFail(true);
+			});
+	}, [didAutoFail, saveCompletion]);
+
+	return (
+		<>
+			{
+				didAutoFail ? (
+					<>
+						<span>Failed to save your progress!</span><br />
+						<Button
+							onClick={ manuallySaveCompletion }
+							disabled={ processing }
+						>
+							Retry
+						</Button>
+					</>
+				) : (
+					<span>Saving your progress...</span>
+				)
+			}
+		</>
 	);
 }
 

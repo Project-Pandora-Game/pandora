@@ -1,8 +1,12 @@
 import type { ReactNode } from 'react';
 
+export type TutorialDisableReason = 'workInProgress';
+
 export interface TutorialConfig {
 	id: string;
 	name: string;
+	/** If this option is set on a tutorial, it will not be usable and it will show the reason why. */
+	disabled?: TutorialDisableReason;
 	description: string | ReactNode;
 	stages: TutorialStage[];
 }

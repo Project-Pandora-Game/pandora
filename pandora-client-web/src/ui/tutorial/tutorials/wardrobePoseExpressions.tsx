@@ -29,6 +29,7 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 	id: 'wardrobePoseExpressions',
 	name: `Character interactions: Poses and Expressions`,
+	disabled: 'workInProgress',
 	description: (
 		<p>
 			This tutorial will teach you posing your character and changing its expression.

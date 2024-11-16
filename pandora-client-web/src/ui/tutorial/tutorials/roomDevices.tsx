@@ -6,6 +6,7 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 export const TUTORIAL_ROOM_DEVICES: TutorialConfig = {
 	id: 'roomDevices',
 	name: `Room devices`,
+	disabled: 'workInProgress',
 	description: (
 		<p>
 			This tutorial will teach you the most important bits about Room Devices (furniture).<br />

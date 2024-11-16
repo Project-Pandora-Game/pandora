@@ -6,6 +6,7 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 export const TUTORIAL_SAFEMODE: TutorialConfig = {
 	id: 'safemode',
 	name: `Safemode and Timeout mode`,
+	disabled: 'workInProgress',
 	description: (
 		<p>
 			This tutorial will teach you about getting out of tricky situations.

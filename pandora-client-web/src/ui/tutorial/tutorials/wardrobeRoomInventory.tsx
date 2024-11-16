@@ -5,6 +5,7 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 export const TUTORIAL_WARDROBE_ROOM_INVENTORY: TutorialConfig = {
 	id: 'wardrobeRoomInventory',
 	name: `Character interactions: Room inventory`,
+	disabled: 'workInProgress',
 	description: (
 		<p>
 			This tutorial will teach you basics about Room's inventory.

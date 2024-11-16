@@ -6,6 +6,7 @@ import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 export const TUTORIAL_SETTINGS_PROFILE: TutorialConfig = {
 	id: 'settingsProfile',
 	name: `Settings and Profile`,
+	disabled: 'workInProgress',
 	description: (
 		<p>
 			This tutorial will briefly go through settings you can tweak and through setting up your public profile.

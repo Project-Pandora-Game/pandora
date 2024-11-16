@@ -5,7 +5,7 @@ import { Column, Row } from '../../components/common/container/container';
 import { FieldsetToggle } from '../../components/common/fieldsetToggle';
 import { DraggableDialog } from '../../components/dialog/dialog';
 import { useObservable } from '../../observable';
-import type { TutorialConfig } from './tutorialSystem/tutorialConfig';
+import type { TutorialConfig, TutorialDisableReason } from './tutorialSystem/tutorialConfig';
 import { TutorialRunner } from './tutorialSystem/tutorialRunner';
 import { ActiveTutorial } from './tutorialSystem/tutorialService';
 import { TUTORIAL_ROOM } from './tutorials/room';
@@ -59,6 +59,10 @@ export function PrivateRoomTutorialList(): ReactElement {
 	);
 }
 
+const TUTORIAL_DISABLE_REASON_QUICKTEXT: Record<TutorialDisableReason, string> = {
+	workInProgress: 'Work In Progress',
+};
+
 function TutorialEntry({ tutorial }: {
 	tutorial: TutorialConfig;
 }): ReactElement {
@@ -67,15 +71,22 @@ function TutorialEntry({ tutorial }: {
 
 	return (
 		<Row alignY='center'>
-			<a onClick={ () => {
-				setDialogOpen((s) => !s);
-			} }>
-				{ tutorial.name }
-			</a>
+			{
+				tutorial.disabled !== undefined ? (
+					<span>[{ TUTORIAL_DISABLE_REASON_QUICKTEXT[tutorial.disabled] }]</span>
+				) : null
+			}
 			{
 				activeTutorial?.config.id === tutorial.id ? (
 					<strong>[Currently active]</strong>
 				) : null
+			}
+			{
+				<a onClick={ () => {
+					setDialogOpen((s) => !s);
+				} }>
+					{ tutorial.name }
+				</a>
 			}
 			{
 				dialogOpen ? (
@@ -91,15 +102,19 @@ function TutorialEntry({ tutorial }: {
 	);
 }
 
+const TUTORIAL_DISABLE_REASON: Record<TutorialDisableReason, string> = {
+	workInProgress: 'This tutorial is not available, as it is still under development.',
+};
+
 function TutorialDialog({ tutorial, close }: {
 	tutorial: TutorialConfig;
 	close: () => void;
 }): ReactElement {
 	const activeTutorial = useObservable(ActiveTutorial);
-	const canActivate = activeTutorial == null;
+	const canActivate = activeTutorial == null && tutorial.disabled === undefined;
 
 	const startTutorial = useCallback(() => {
-		if (ActiveTutorial.value != null)
+		if (ActiveTutorial.value != null || tutorial.disabled !== undefined)
 			return;
 
 		close();
@@ -113,6 +128,11 @@ function TutorialDialog({ tutorial, close }: {
 					typeof tutorial.description === 'string' ? (
 						<p>{ tutorial.description }</p>
 					) : tutorial.description
+				}
+				{
+					tutorial.disabled !== undefined ? (
+						<strong>{ TUTORIAL_DISABLE_REASON[tutorial.disabled] }</strong>
+					) : null
 				}
 				<Row alignX='end'>
 					<Button

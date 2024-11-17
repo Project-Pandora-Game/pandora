@@ -169,12 +169,12 @@ export function RegistrationForm(): ReactElement {
 						validate: DEVELOPMENT ? undefined : FormCreateStringValidator(PasswordSchema, 'password'),
 					} }
 				/>
-				<FormFieldError error={ errors.password } />
 				{
 					DEVELOPMENT ? (
-						<em>Running in development mode. Password restrictions are disabled.</em>
+						<em>Running in development mode.<br />Password restrictions are disabled.</em>
 					) : null
 				}
+				<FormFieldError error={ errors.password } />
 			</FormField>
 			<FormField>
 				<label htmlFor='registration-passwordConfirm'>Confirm password</label>

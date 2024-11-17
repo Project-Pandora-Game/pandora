@@ -1,3 +1,4 @@
+import { LIMIT_CHARACTER_COUNT } from 'pandora-common';
 import React from 'react';
 import maid from '../../../assets/maid.png';
 import { Column, Row } from '../../../components/common/container/container';
@@ -165,7 +166,70 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 			],
 		},
 		// TODO: When this tutorial auto-starts, show tutorial regarding character creation here.
-		// This part shouldn't happen when you manually start the tutorial.
+		// This part shouldn't happen when you already have a character.
+		{
+			advanceConditions: [
+				{
+					type: 'url',
+					url: /^\/(room|character\/create)/,
+				},
+			],
+			steps: [
+				{
+					text: (
+						<>
+							<p>
+								[TODO]<br />
+								You can have multiple characters in Pandora, they are mostly independent.<br />
+								By default you can have at most { LIMIT_CHARACTER_COUNT } characters.<br />
+								Click on the blank character card to create a new one.
+							</p>
+							<p>
+								<i>Note: If you already have a character, you can use it for the next steps of this tutorial as well.</i>
+							</p>
+						</>
+					),
+					highlight: [
+						{
+							query: '.character-select .card',
+						},
+					],
+					conditions: [
+						{
+							type: 'url',
+							url: /^\/(room|character\/create)/,
+						},
+					],
+				},
+			],
+		},
+		{
+			advanceConditions: [
+				{
+					type: 'url',
+					url: '/room',
+				},
+			],
+			steps: [
+				{
+					text: (
+						<p>
+							[TODO]<br />
+							This is character creation.<br />
+							Give your character a name.<br />
+							It cannot be changed later. (but we might allow that in the future)<br />
+							Most people use only a first name, starting with a capital letter.<br />
+						</p>
+					),
+					conditions: [
+						{
+							type: 'url',
+							url: '/room',
+						},
+					],
+				},
+			],
+		},
 		{
 			steps: [
 				{

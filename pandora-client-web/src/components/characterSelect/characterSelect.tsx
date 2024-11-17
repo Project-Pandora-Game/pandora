@@ -1,7 +1,7 @@
 import { noop } from 'lodash';
 import { CharacterSelfInfo, EMPTY, GetLogger, IClientDirectoryNormalResult } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import React, { ReactElement, useCallback, useState } from 'react';
+import { Navigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useCreateNewCharacter } from '../../networking/account_manager';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
@@ -12,7 +12,6 @@ import './characterSelect.scss';
 
 /**
  * @todo
- *  - handle character state, do not resume character creation if character is already in use
  *  - handle character deletion
  *  - connect should block UI until connected
  */
@@ -22,34 +21,16 @@ interface UseCharacterListResult {
 	fetchCharacterList: () => Promise<void>;
 }
 
-/** Prevents showing wiki automatically if it was done already */
-let showWiki = false;
-
 export function CharacterSelect(): ReactElement {
 	const { data, fetchCharacterList } = useCharacterList();
 	const playerData = usePlayerData();
 	const createNewCharacter = useCreateNewCharacter();
 	const accountManager = useService('accountManager');
 
-	const navigate = useNavigate();
-
 	const createNewCharacterAndRefreshList = useCallback(async () => {
 		await createNewCharacter();
 		await fetchCharacterList();
 	}, [createNewCharacter, fetchCharacterList]);
-
-	useEffect(() => {
-		if (!data || showWiki) {
-			return;
-		}
-
-		const { characters } = data;
-
-		if (characters.length === 0) {
-			showWiki = true;
-			navigate('/wiki/greeting');
-		}
-	}, [data, navigate]);
 
 	if (playerData) {
 		if (playerData.inCreation) {

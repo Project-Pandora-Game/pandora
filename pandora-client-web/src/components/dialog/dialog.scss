@@ -2,11 +2,8 @@
 
 .dialog {
 	background-color: $black-secondary;
-	width: 100%;
-	height: 100%;
 	position: fixed;
-	top: 0;
-	left: 0;
+	inset: 0;
 	z-index: 10000;
 	display: flex;
 	align-items: center;
@@ -37,8 +34,7 @@
 
 .overlay-bounding-box {
 	position: absolute;
-	width: 100%;
-	height: 100%;
+	inset: 0;
 	margin: 0;
 	overflow: hidden;
 
@@ -46,6 +42,12 @@
 
 	>* {
 		pointer-events: auto;
+	}
+
+	&.modal {
+		background-color: $black-secondary;
+		pointer-events: auto;
+		z-index: 1000;
 	}
 }
 

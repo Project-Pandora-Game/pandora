@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import { uniq } from 'lodash';
 import { AssertNever, EMPTY_ARRAY, GetLogger, TutorialIdSchema, type TutorialId } from 'pandora-common';
@@ -62,7 +63,13 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 	const defaultShift = 26;
 
 	return (
-		<DraggableDialog title='Tutorial' className='tutorialDialogContainer' close={ stopTutorialConfirm } initialPosition={ { x: defaultShift, y: headerBottom + defaultShift } }>
+		<DraggableDialog
+			title='Tutorial'
+			className='tutorialDialogContainer'
+			close={ stopTutorialConfirm }
+			initialPosition={ { x: defaultShift, y: headerBottom + defaultShift } }
+			modal={ typeof stage !== 'string' && stage.config.modal === true }
+		>
 			<div className='tutorialDialog div-container direction-column gap-medium' ref={ contentRef }>
 				<strong>
 					{ tutorial.config.name } (
@@ -334,6 +341,7 @@ function ActiveTutorialHighlight({ highlight }: {
 					<ActiveTutorialElementHighlight key={ el.id || i }
 						target={ el }
 						inset={ highlight.inset === true }
+						zIndex={ highlight.zIndex }
 					/>
 				))
 			}
@@ -341,9 +349,10 @@ function ActiveTutorialHighlight({ highlight }: {
 	);
 }
 
-function ActiveTutorialElementHighlight({ target, inset }: {
+function ActiveTutorialElementHighlight({ target, inset, zIndex = 'normal' }: {
 	target: HTMLElement;
 	inset: boolean;
+	zIndex: TutorialHighlightSelector['zIndex'];
 }): ReactElement | null {
 	const [area, setArea] = useState<[number, number, number, number]>([0, 0, 0, 0]);
 
@@ -378,7 +387,10 @@ function ActiveTutorialElementHighlight({ target, inset }: {
 	return (
 		<DialogInPortal>
 			<div
-				className='tutorial-highlight-overlay base'
+				className={ classNames(
+					'tutorial-highlight-overlay base',
+					zIndex === 'aboveTutorial' ? 'z-aboveTutorial' : null,
+				) }
 				style={ {
 					left: inset ? (area[0] + HIGHLIGHT_INSET) : (area[0] - HIGHLIGHT_PADDING),
 					top: inset ? (area[1] + HIGHLIGHT_INSET) : (area[1] - HIGHLIGHT_PADDING),

@@ -128,10 +128,15 @@ export function ModalDialog({ children, priority, position = 'center', id, class
 	);
 }
 
-export function DraggableDialog({ children, className, title, rawContent, close, hiddenClose, initialPosition }: {
+export function DraggableDialog({ children, className, title, modal = false, rawContent, close, hiddenClose, initialPosition }: {
 	children?: ReactNode;
 	className?: string;
 	title: string;
+	/**
+	 * Whether this dialog should have a modal containing overlay on top of which it is positioned.
+	 * @default false
+	 */
+	modal?: boolean;
 	rawContent?: boolean;
 	close: () => void;
 	hiddenClose?: boolean;
@@ -156,7 +161,7 @@ export function DraggableDialog({ children, className, title, rawContent, close,
 
 	return (
 		<DialogInPortal priority={ -1 } >
-			<div className='overlay-bounding-box'>
+			<div className={ modal ? 'overlay-bounding-box modal' : 'overlay-bounding-box' }>
 				<Rnd
 					className={ classNames('dialog-draggable', className) }
 					dragHandleClassName='drag-handle'

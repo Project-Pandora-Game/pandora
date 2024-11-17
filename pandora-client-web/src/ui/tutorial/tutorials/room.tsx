@@ -3,8 +3,6 @@ import { ExternalLink } from '../../../components/common/link/externalLink';
 import { usePlayerData } from '../../../components/gameContext/playerContextProvider';
 import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 
-// Moving around in a room and for the "Room" tab of the space
-// (basics of the room; only inside personal space for now)
 export const TUTORIAL_ROOM: TutorialConfig = {
 	id: 'room',
 	name: `Pandora introduction`,

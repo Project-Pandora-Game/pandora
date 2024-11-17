@@ -14,6 +14,11 @@ export interface TutorialConfig {
 
 export interface TutorialStage {
 	advanceConditions?: TutorialCondition[];
+	/**
+	 * This makes the tutorial stage modal, preventing user from interacting with Pandora while it is active.
+	 * @default false
+	 */
+	modal?: true;
 	steps: TutorialStep[];
 }
 
@@ -27,7 +32,16 @@ export interface TutorialStep {
 export type TutorialHighlightSelector = {
 	query: string;
 	filter?: (element: HTMLElement) => boolean;
+	/**
+	 * Whether the highlight should be inset into the element's bounding box, rather than positioned around it.
+	 * @default false
+	 */
 	inset?: true;
+	/**
+	 * What z index should this highlighted be positioned on.
+	 * @default 'normal'
+	 */
+	zIndex?: 'normal' | 'aboveTutorial';
 };
 
 export type TutorialConditionUrl = {

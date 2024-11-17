@@ -53,8 +53,12 @@
 
 	animation: tutorial-highlight-overlay-blink 1s infinite alternate-reverse;
 
-	&.top {
+	&.z-aboveTutorial {
 		z-index: 91000;
+	}
+
+	&.top {
+		z-index: 91001;
 		border: dashed #ff000080 0.3em;
 		border-style: dashed;
 

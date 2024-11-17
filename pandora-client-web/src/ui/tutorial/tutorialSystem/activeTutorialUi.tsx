@@ -8,7 +8,7 @@ import { Button } from '../../../components/common/button/button';
 import { Row } from '../../../components/common/container/container';
 import { DialogInPortal, DraggableDialog, useConfirmDialog } from '../../../components/dialog/dialog';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
-import { USER_DEBUG } from '../../../config/Environment';
+import { DEVELOPMENT } from '../../../config/Environment';
 import { useObservable } from '../../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
@@ -69,7 +69,7 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 					{
 						stage === 'complete' ? (
 							<>complete</>
-						) : USER_DEBUG ? (
+						) : DEVELOPMENT ? (
 							<a
 								title='[DEBUG] Skip this tutorial stage'
 								onClick={ (ev) => {

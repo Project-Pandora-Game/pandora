@@ -601,8 +601,8 @@ importers:
   pandora-tests:
     devDependencies:
       '@playwright/test':
-        specifier: 1.48.2
-        version: 1.48.2
+        specifier: 1.49.0
+        version: 1.49.0
       '@stylistic/eslint-plugin':
         specifier: 2.10.1
         version: 2.10.1(eslint@8.57.1)(typescript@5.6.3)
@@ -1936,8 +1936,8 @@ packages:
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
     engines: {node: '>=14'}
 
-  '@playwright/test@1.48.2':
-    resolution: {integrity: sha512-54w1xCWfXuax7dz4W2M9uw0gDyh+ti/0K/MxcCUxChFh37kkdxPdfZDw5QBbuPUJHr1CiHJ1hXgSs+GgeQc5Zw==}
+  '@playwright/test@1.49.0':
+    resolution: {integrity: sha512-DMulbwQURa8rNIQrf94+jPJQ4FmOVdpE5ZppRNvWVjvhC+6sOeo28r8MgIpQRYouXRtt/FCCXU7zn20jnHR4Qw==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -5557,13 +5557,13 @@ packages:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
     engines: {node: '>=8'}
 
-  playwright-core@1.48.2:
-    resolution: {integrity: sha512-sjjw+qrLFlriJo64du+EK0kJgZzoQPsabGF4lBvsid+3CNIZIYLgnMj9V6JY5VhM2Peh20DJWIVpVljLLnlawA==}
+  playwright-core@1.49.0:
+    resolution: {integrity: sha512-R+3KKTQF3npy5GTiKH/T+kdhoJfJojjHESR1YEWhYuEKRVfVaxH3+4+GvXE5xyCngCxhxnykk0Vlah9v8fs3jA==}
     engines: {node: '>=18'}
     hasBin: true
 
-  playwright@1.48.2:
-    resolution: {integrity: sha512-NjYvYgp4BPmiwfe31j4gHLa3J7bD2WiBz8Lk2RoSsmX38SVIARZ18VYjxLjAcDsAhA+F4iSEXTSGgjua0rrlgQ==}
+  playwright@1.49.0:
+    resolution: {integrity: sha512-eKpmys0UFDnfNb3vfsf8Vx2LEOtflgRebl0Im2eQQnYMA4Aqd+Zw8bEOB+7ZKvN76901mRnqdsiOGKxzVTbi7A==}
     engines: {node: '>=18'}
     hasBin: true
 
@@ -9125,9 +9125,9 @@ snapshots:
   '@pkgjs/parseargs@0.11.0':
     optional: true
 
-  '@playwright/test@1.48.2':
+  '@playwright/test@1.49.0':
     dependencies:
-      playwright: 1.48.2
+      playwright: 1.49.0
 
   '@pmmmwh/react-refresh-webpack-plugin@0.5.15(@types/webpack@5.28.5(webpack-cli@5.1.4))(react-refresh@0.14.2)(type-fest@4.27.0)(webpack-dev-server@5.1.0)(webpack@5.96.1)':
     dependencies:
@@ -13470,11 +13470,11 @@ snapshots:
     dependencies:
       find-up: 4.1.0
 
-  playwright-core@1.48.2: {}
+  playwright-core@1.49.0: {}
 
-  playwright@1.48.2:
+  playwright@1.49.0:
     dependencies:
-      playwright-core: 1.48.2
+      playwright-core: 1.49.0
     optionalDependencies:
       fsevents: 2.3.2
 

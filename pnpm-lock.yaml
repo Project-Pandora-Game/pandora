@@ -410,8 +410,8 @@ importers:
         specifier: 4.6.2
         version: 4.6.2
       wtfnode:
-        specifier: 0.9.3
-        version: 0.9.3
+        specifier: 0.9.4
+        version: 0.9.4
       zod:
         specifier: 3.23.8
         version: 3.23.8
@@ -438,8 +438,8 @@ importers:
         specifier: 20.16.11
         version: 20.16.11
       '@types/nodemailer':
-        specifier: 6.4.16
-        version: 6.4.16
+        specifier: 6.4.17
+        version: 6.4.17
       '@types/semver':
         specifier: 7.5.8
         version: 7.5.8
@@ -525,8 +525,8 @@ importers:
         specifier: 4.6.1
         version: 4.6.1
       wtfnode:
-        specifier: 0.9.3
-        version: 0.9.3
+        specifier: 0.9.4
+        version: 0.9.4
       zod:
         specifier: 3.23.8
         version: 3.23.8
@@ -2375,8 +2375,8 @@ packages:
   '@types/node@20.16.11':
     resolution: {integrity: sha512-y+cTCACu92FyA5fgQSAI8A1H429g7aSK2HsO7K4XYUWc4dY5IUz55JSDIYT6/VsOLfGy8vmvQYC2hfb0iF16Uw==}
 
-  '@types/nodemailer@6.4.16':
-    resolution: {integrity: sha512-uz6hN6Pp0upXMcilM61CoKyjT7sskBoOWpptkjjJp8jIMlTdc3xG01U7proKkXzruMS4hS0zqtHNkNPFB20rKQ==}
+  '@types/nodemailer@6.4.17':
+    resolution: {integrity: sha512-I9CCaIp6DTldEg7vyUTZi8+9Vo0hi1/T8gv3C89yk1rSAAzoKQ8H8ki/jBYJSFoH/BisgLP8tkZMlQ91CIquww==}
 
   '@types/offscreencanvas@2019.7.3':
     resolution: {integrity: sha512-ieXiYmgSRXUDeOntE1InxjWyvEelZGP63M+cGuquuRLuIKKT1osnkXjxev9B7d1nXSug5vpunx+gNlbVxMlC9A==}
@@ -7185,8 +7185,9 @@ packages:
       utf-8-validate:
         optional: true
 
-  wtfnode@0.9.3:
-    resolution: {integrity: sha512-MXjgxJovNVYUkD85JBZTKT5S5ng/e56sNuRZlid7HcGTNrIODa5UPtqE3i0daj7fJ2SGj5Um2VmiphQVyVKK5A==}
+  wtfnode@0.9.4:
+    resolution: {integrity: sha512-5xgeLjIxZ8DVHU4ty3kOdd9QfHDxf89tmSy0+yN8n59S3wx6LBJh8XhEg61OPOGE65jEYGAtLq0GMzLKrsjfPQ==}
+    engines: {node: '>=0.10.0'}
     hasBin: true
 
   xdg-basedir@4.0.0:
@@ -9673,7 +9674,7 @@ snapshots:
     dependencies:
       undici-types: 6.19.8
 
-  '@types/nodemailer@6.4.16':
+  '@types/nodemailer@6.4.17':
     dependencies:
       '@types/node': 20.16.11
 
@@ -15348,7 +15349,7 @@ snapshots:
 
   ws@8.18.0: {}
 
-  wtfnode@0.9.3: {}
+  wtfnode@0.9.4: {}
 
   xdg-basedir@4.0.0: {}
 

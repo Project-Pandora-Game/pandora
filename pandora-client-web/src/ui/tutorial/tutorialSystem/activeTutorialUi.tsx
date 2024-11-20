@@ -17,8 +17,6 @@ import type { TutorialCondition, TutorialHighlightSelector, TutorialStep } from 
 import type { TutorialRunner, TutorialStageRunner } from './tutorialRunner';
 import './tutorialUi.scss';
 
-// TODO: Ability to hide tutorial UI temporarily
-
 export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 	tutorial: TutorialRunner;
 	stopTutorial: () => void;
@@ -69,6 +67,7 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 			close={ stopTutorialConfirm }
 			initialPosition={ { x: defaultShift, y: headerBottom + defaultShift } }
 			modal={ typeof stage !== 'string' && stage.config.modal === true }
+			allowShade
 		>
 			<div className='tutorialDialog div-container direction-column gap-medium' ref={ contentRef }>
 				<strong>

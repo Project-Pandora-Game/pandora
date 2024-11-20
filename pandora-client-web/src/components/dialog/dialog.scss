@@ -69,15 +69,25 @@
 		padding: 0.2em 0.2em 0.2em 1em;
 		background-color: $grey-light;
 		position: relative;
+		min-height: 1.5em;
 		gap: 1em;
 
-		.dialog-close {
+		.dialog-close, .dialog-shade {
 			flex: 1;
 			max-width: 2em;
+			text-align: center;
 			cursor: pointer;
+		}
 
+		.dialog-close {
 			&:hover {
 				color: red;
+			}
+		}
+
+		.dialog-shade {
+			&:hover {
+				color: white;
 			}
 		}
 	}
@@ -97,6 +107,15 @@
 		flex-flow: column;
 		flex: 1;
 		overflow: auto;
+	}
+
+	&.shaded {
+		height: auto !important;
+		min-height: unset !important;
+
+		>.dialog-content, .resize-handle-wrapper {
+			display: none;
+		}
 	}
 }
 

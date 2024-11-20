@@ -94,8 +94,35 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 					),
 					highlight: [
 						{
-							query: '.tutorialDialogContainer > div:not(.dialog-content) > div',
+							query: '.tutorialDialogContainer > .resize-handle-wrapper > div',
 							inset: true,
+							zIndex: 'aboveTutorial',
+						},
+					],
+					conditions: [{ type: 'next' }],
+				},
+			],
+		},
+		{
+			modal: true,
+			steps: [
+				{
+					text: (
+						<Row>
+							<Column>
+								<p>
+									Finally, you can temporarily minimize the tutorial dialog<br />
+									by clicking on the '▲' button at the top.
+								</p>
+							</Column>
+							<Row alignX='center' className='maid-container'>
+								<img src={ maid } />
+							</Row>
+						</Row>
+					),
+					highlight: [
+						{
+							query: '.tutorialDialogContainer > .dialog-header .dialog-shade',
 							zIndex: 'aboveTutorial',
 						},
 					],

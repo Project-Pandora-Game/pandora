@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { sortBy } from 'lodash';
-import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef } from 'react';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
 import { Rnd } from 'react-rnd';
 import { type CommonProps } from '../../common/reactTypes';
@@ -128,7 +128,7 @@ export function ModalDialog({ children, priority, position = 'center', id, class
 	);
 }
 
-export function DraggableDialog({ children, className, title, modal = false, rawContent, close, hiddenClose, initialPosition }: {
+export function DraggableDialog({ children, className, title, modal = false, rawContent, close, hiddenClose, allowShade = false, initialPosition }: {
 	children?: ReactNode;
 	className?: string;
 	title: string;
@@ -140,6 +140,11 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 	rawContent?: boolean;
 	close: () => void;
 	hiddenClose?: boolean;
+	/**
+	 * Shows a "shade" button on the header, and allows the contents to be shaded.
+	 * @default false
+	 */
+	allowShade?: boolean;
 	initialPosition?: Readonly<PointLike>;
 }): ReactElement {
 	useEffect(() => {
@@ -159,12 +164,28 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 		};
 	}, [close]);
 
+	const [shaded, setShaded] = useState(false);
+	useEffect(() => {
+		if (!allowShade && shaded) {
+			setShaded(false);
+		}
+	}, [shaded, allowShade]);
+
+	const toggleShade = useCallback(() => {
+		setShaded((currentShaded) => !currentShaded);
+	}, []);
+
 	return (
 		<DialogInPortal priority={ -1 } >
 			<div className={ modal ? 'overlay-bounding-box modal' : 'overlay-bounding-box' }>
 				<Rnd
-					className={ classNames('dialog-draggable', className) }
+					className={ classNames(
+						'dialog-draggable',
+						shaded ? 'shaded' : null,
+						className,
+					) }
 					dragHandleClassName='drag-handle'
+					resizeHandleWrapperClass='resize-handle-wrapper'
 					default={ {
 						// We divide the position by 2, because there seems to be a bug in "Draggable" that multiplies it
 						x: (initialPosition?.x ?? Math.max((window.innerWidth ?? 0) / 2 - 20, 0)) / 2,
@@ -180,6 +201,13 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 						<div className='drag-handle'>
 							{ title }
 						</div>
+						{
+							allowShade ? (
+								<div className='dialog-shade' onClick={ toggleShade }>
+									{ shaded ? '▼' : '▲' }
+								</div>
+							) : null
+						}
 						{ hiddenClose !== true ? (
 							<div className='dialog-close' onClick={ close }>
 								×
@@ -187,7 +215,7 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 						) : null }
 					</header>
 					{
-						rawContent ? children : (
+						rawContent ? (shaded ? null : children) : (
 							<div className='dialog-content'>
 								{ children }
 							</div>

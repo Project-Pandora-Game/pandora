@@ -203,7 +203,7 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 						</div>
 						{
 							allowShade ? (
-								<div className='dialog-shade' onClick={ toggleShade }>
+								<div className='dialog-shade' title='Shade this dialog' onClick={ toggleShade }>
 									{ shaded ? '▼' : '▲' }
 								</div>
 							) : null

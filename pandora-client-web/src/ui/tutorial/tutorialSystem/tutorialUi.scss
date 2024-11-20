@@ -44,7 +44,7 @@
 	position: fixed;
 	overflow: hidden;
 	margin: 0;
-	z-index: 90000;
+	z-index: 89000; // This is positioned to be under hover elements (.hover-element), not to obscure them
 	pointer-events: none;
 
 	background-color: transparent;

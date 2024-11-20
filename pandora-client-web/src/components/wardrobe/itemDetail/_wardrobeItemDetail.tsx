@@ -265,8 +265,8 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 				<label htmlFor='custom-description'>Description ({ description.length }/{ LIMIT_ITEM_DESCRIPTION_LENGTH } characters):</label>
 				<textarea id='custom-description' className='description' value={ description } rows={ 10 } onChange={ (e) => setDescription(e.target.value) } maxLength={ LIMIT_ITEM_DESCRIPTION_LENGTH } />
 				<Row>
-					<Button onClick={ onEndEdit } className='fadeDisabled' disabled={ processing }>Cancel</Button>
-					<Button onClick={ onSave } className='fadeDisabled' disabled={ processing || !!nameError }>Save</Button>
+					<Button onClick={ onEndEdit } disabled={ processing }>Cancel</Button>
+					<Button onClick={ onSave } disabled={ processing || !!nameError }>Save</Button>
 				</Row>
 			</Column>
 		</FieldsetToggle>

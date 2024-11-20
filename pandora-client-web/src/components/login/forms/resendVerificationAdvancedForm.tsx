@@ -135,7 +135,7 @@ export function ResendVerificationAdvancedForm(): ReactElement {
 			<br />
 			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
 			{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
-			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>
+			<Button type='submit' disabled={ isSubmitting }>
 				{ overrideEmail ? 'Change account email' : 'Resend verification email' }
 			</Button>
 			<FormLink to='/login'>◄ Return to login</FormLink>

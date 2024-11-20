@@ -62,7 +62,7 @@ export function ForgotPasswordForm(): ReactElement {
 				<FormFieldError error={ errors.email } />
 			</FormField>
 			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
-			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>Send reset email</Button>
+			<Button type='submit' disabled={ isSubmitting }>Send reset email</Button>
 			<FormLink to='/reset_password'>Already have a reset code?</FormLink>
 			<FormLink to='/login'>◄ Return to login</FormLink>
 		</Form>

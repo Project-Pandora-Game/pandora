@@ -70,7 +70,7 @@ export function LoginForm(): ReactElement {
 				<FormFieldError error={ errors.password } />
 			</FormField>
 			{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
-			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>Sign in</Button>
+			<Button type='submit' disabled={ isSubmitting }>Sign in</Button>
 			<FormLink to='/forgot_password'>Forgot your password?</FormLink>
 			<FormLink to='/register'>Not a member? <strong>Sign up</strong></FormLink>
 		</Form>

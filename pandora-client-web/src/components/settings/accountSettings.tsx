@@ -131,7 +131,7 @@ function GitHubIntegrationInner({ account }: { account: IDirectoryAccountInfo; }
 				<span>Account not linked to GitHub, enter your GitHub username to link it.</span>
 				<div className='input-row'>
 					<TextInput value={ login } onChange={ setLogin } />
-					<Button className='fadeDisabled' onClick={ onInitLink } disabled={ login.length === 0 || processing }>Link</Button>
+					<Button onClick={ onInitLink } disabled={ login.length === 0 || processing }>Link</Button>
 				</div>
 			</fieldset>
 		);
@@ -230,7 +230,7 @@ function LabelColor({ account }: { account: IDirectoryAccountInfo; }): ReactElem
 				<label>Color</label>
 				<ColorInput initialValue={ color } onChange={ setColor } title='Name' />
 				<Button
-					className='slim fadeDisabled'
+					className='slim'
 					onClick={ () => {
 						directory.awaitResponse('changeSettings', {
 							type: 'set',
@@ -289,7 +289,7 @@ function DisplayName({ account }: { account: IDirectoryAccountInfo; }): ReactEle
 			<div className='input-row'>
 				<label>Name</label>
 				<TextInput value={ name } onChange={ setName } disabled={ nextAllowedChange > now } />
-				<Button className='slim fadeDisabled' onClick={ onSetDisplayName } disabled={ name === current || nextAllowedChange > now }>Save</Button>
+				<Button className='slim' onClick={ onSetDisplayName } disabled={ name === current || nextAllowedChange > now }>Save</Button>
 			</div>
 			<div className='input-row'>
 				{

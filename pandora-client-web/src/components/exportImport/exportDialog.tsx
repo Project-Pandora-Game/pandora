@@ -81,7 +81,7 @@ export function ExportDialog<T extends ZodType<unknown>>({
 					<Row>
 						<TextInput className='flex-1' value={ downloadFileName } onChange={ setDownloadFileName } />
 						<Button
-							className='slim fadeDisabled'
+							className='slim'
 							onClick={ downloadAsFile }
 						>
 							Download

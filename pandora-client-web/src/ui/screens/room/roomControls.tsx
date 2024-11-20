@@ -211,7 +211,7 @@ function DeviceOverlaySelector(): ReactElement {
 	return (
 		<>
 			<Row padding='small' className='room-construction-mode'>
-				<Button onClick={ onRoomConstructionModeChange } className='fadeDisabled inverseColor' disabled={ !isPlayerAdmin || !canUseHands }>
+				<Button onClick={ onRoomConstructionModeChange } className='inverseColor' disabled={ !isPlayerAdmin || !canUseHands }>
 					<img src={ toolsIcon } />&nbsp;{ roomConstructionMode ? 'Disable' : 'Enable' } room construction mode
 				</Button>
 				{

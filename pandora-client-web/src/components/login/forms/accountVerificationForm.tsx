@@ -54,7 +54,7 @@ export function AccountVerificationForm(): ReactElement {
 				<FormFieldError error={ errors.token } />
 			</FormField>
 			{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
-			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>Sign in</Button>
+			<Button type='submit' disabled={ isSubmitting }>Sign in</Button>
 			<FormLink to='/resend_verification_email'>Didn't receive a code by email?</FormLink>
 		</Form>
 	);

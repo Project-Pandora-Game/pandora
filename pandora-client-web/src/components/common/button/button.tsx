@@ -9,9 +9,17 @@ export interface ButtonProps extends Omit<DetailedHTMLProps<ButtonHTMLAttributes
 	slim?: boolean;
 }
 
-function ButtonImpl({ theme = 'default', children, className, slim, ...buttonProps }: ButtonProps, ref: React.ForwardedRef<HTMLButtonElement>): ReactElement {
+function ButtonImpl({ theme = 'default', children, className, slim = false, ...buttonProps }: ButtonProps, ref: React.ForwardedRef<HTMLButtonElement>): ReactElement {
 	return (
-		<button ref={ ref } { ...buttonProps } className={ classNames('Button', slim ? 'slim' : null, className, theme) }>
+		<button ref={ ref }
+			{ ...buttonProps }
+			className={ classNames(
+				'Button',
+				slim ? 'slim' : null,
+				className,
+				theme,
+			) }
+		>
 			{ children }
 		</button>
 	);

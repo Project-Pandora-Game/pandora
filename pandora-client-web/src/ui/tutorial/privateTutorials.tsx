@@ -141,7 +141,6 @@ function TutorialDialog({ tutorial, close }: {
 				<Row alignX='end'>
 					<Button
 						onClick={ startTutorial }
-						className='fadeDisabled'
 						disabled={ !canActivate }
 						slim
 					>

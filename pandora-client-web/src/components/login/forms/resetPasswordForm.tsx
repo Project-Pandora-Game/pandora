@@ -127,7 +127,7 @@ export function ResetPasswordForm(): ReactElement {
 				<FormFieldError error={ errors.passwordConfirm } />
 			</FormField>
 			{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
-			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>Reset password</Button>
+			<Button type='submit' disabled={ isSubmitting }>Reset password</Button>
 			<FormLink to='/login'>◄ Return to login</FormLink>
 		</Form>
 	);

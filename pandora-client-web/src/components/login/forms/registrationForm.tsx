@@ -211,7 +211,7 @@ export function RegistrationForm(): ReactElement {
 					<FormFieldError error={ errors.betaKey } />
 				</FormField> }
 			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
-			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>Register</Button>
+			<Button type='submit' disabled={ isSubmitting }>Register</Button>
 			<FormLink to='/login'>Already have an account? <strong>Sign in</strong></FormLink>
 		</Form>
 	);

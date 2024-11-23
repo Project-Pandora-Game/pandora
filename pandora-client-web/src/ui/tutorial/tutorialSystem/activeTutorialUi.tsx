@@ -294,6 +294,8 @@ function ActiveTutorialStepCondition({ condition, stage, stepIndex }: {
 		return null;
 	} else if (condition.type === 'elementQuery') {
 		return null;
+	} else if (condition.type === 'flag') {
+		return null;
 	} else if (condition.type === 'never') {
 		return null;
 	}

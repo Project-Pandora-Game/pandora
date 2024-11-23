@@ -1,5 +1,6 @@
 import type { TutorialId } from 'pandora-common';
 import type { ReactNode } from 'react';
+import type { TutorialFlags } from './tutorialExternalConditions';
 
 export type TutorialDisableReason = 'workInProgress';
 
@@ -59,6 +60,23 @@ export type TutorialConditionElementExists = {
 	filter?: (element: HTMLElement) => boolean;
 };
 
+export type TutorialConditionFlag = {
+	[Flag in keyof TutorialFlags]: {
+		type: 'flag';
+		flag: Flag;
+		expect: NoInfer<TutorialFlags[Flag] | ((value: TutorialFlags[Flag]) => boolean)>;
+	};
+}[keyof TutorialFlags];
+
+export function MakeTutorialConditionFlag<const TFlag extends keyof TutorialFlags>(flag: TFlag, expect: NoInfer<TutorialFlags[TFlag] | ((value: TutorialFlags[TFlag]) => boolean)>): TutorialConditionFlag {
+	return {
+		type: 'flag',
+		flag,
+		// @ts-expect-error: It is correct, but TS complains anyway...
+		expect,
+	};
+}
+
 /** Special condition that is never true - useable for making sure the stage advancement triggers instead. */
 export type TutorialConditionNever = {
 	type: 'never';
@@ -68,4 +86,5 @@ export type TutorialCondition =
 	| TutorialConditionNext
 	| TutorialConditionUrl
 	| TutorialConditionElementExists
+	| TutorialConditionFlag
 	| TutorialConditionNever;

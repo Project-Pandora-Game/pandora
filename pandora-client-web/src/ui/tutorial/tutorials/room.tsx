@@ -1,7 +1,7 @@
 import React from 'react';
 import { ExternalLink } from '../../../components/common/link/externalLink';
 import { usePlayerData } from '../../../components/gameContext/playerContextProvider';
-import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
+import { MakeTutorialConditionFlag, type TutorialConfig } from '../tutorialSystem/tutorialConfig';
 
 export const TUTORIAL_ROOM: TutorialConfig = {
 	id: 'room',
@@ -354,8 +354,9 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 						query: '.context-menu button',
 						filter: (element) => element.innerText.includes('Move'),
 					}],
-					conditions: [{ type: 'next' }],
-					// TODO: Can we get automatic advancement conditions for this?
+					conditions: [
+						MakeTutorialConditionFlag('roomSceneMode', (value) => value.mode === 'moveCharacter'),
+					],
 				},
 				{
 					text: (
@@ -397,11 +398,12 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Please exit the movement mode by clicking the circle with red/green arrows and then click next.
+							Please exit the movement mode by clicking the circle with red/green arrows.
 						</p>
 					),
-					// TODO: Can we get automatic advancement conditions for this?
-					conditions: [{ type: 'next' }],
+					conditions: [
+						MakeTutorialConditionFlag('roomSceneMode', (value) => value.mode === 'normal'),
+					],
 				},
 				{
 					text: (

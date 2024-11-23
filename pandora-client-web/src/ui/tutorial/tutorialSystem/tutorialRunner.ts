@@ -1,10 +1,14 @@
 import type { Immutable } from 'immer';
+import { isEqual } from 'lodash';
 import { AssertNever, GetLogger } from 'pandora-common';
 import { Observable, type ReadonlyObservable } from '../../../observable';
 import type { TutorialCondition, TutorialConfig, TutorialStage } from './tutorialConfig';
+import type { TutorialFlagInfo } from './tutorialExternalConditions';
 
 export class TutorialRunner {
 	public readonly config: Immutable<TutorialConfig>;
+
+	public readonly externalTutorialFlags = new Set<TutorialFlagInfo>();
 
 	private _stageIndex: number = 0;
 	public readonly currentStage: Observable<TutorialStageRunner | 'complete' | null>;
@@ -82,7 +86,7 @@ export class TutorialStageRunner {
 		this.update();
 	}
 
-	private _checkCondition(condition: TutorialCondition, stepIndex: number): boolean {
+	private _checkCondition(condition: Immutable<TutorialCondition>, stepIndex: number): boolean {
 		if (condition.type === 'next') {
 			return this._finishedNextConditions.has(stepIndex);
 		} else if (condition.type === 'url') {
@@ -115,6 +119,16 @@ export class TutorialStageRunner {
 				});
 
 			return elements.length > 0;
+		} else if (condition.type === 'flag') {
+			for (const existingFlag of this.tutorial.externalTutorialFlags.values()) {
+				if (existingFlag.flag === condition.flag) {
+					// @ts-expect-error: Manual variant narrowing
+					const result: unknown = (typeof condition.expect === 'function') ? condition.expect(existingFlag.value) : isEqual(condition.expect, existingFlag.value);
+					if (result)
+						return true;
+				}
+			}
+			return false;
 		} else if (condition.type === 'never') {
 			return false;
 		}

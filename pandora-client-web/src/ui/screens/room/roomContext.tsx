@@ -9,6 +9,7 @@ import type { PointLike } from '../../../graphics/graphicsCharacter';
 import { CharacterContextMenu } from '../../../graphics/room/contextMenus/characterContextMenu';
 import { DeviceContextMenu } from '../../../graphics/room/contextMenus/deviceContextMenu';
 import { useIsRoomConstructionModeEnabled } from '../../../graphics/room/roomDevice';
+import { useProvideTutorialFlag } from '../../tutorial/tutorialSystem/tutorialExternalConditions';
 import { RoomScreenSceneModeCheckProvider } from './roomPermissionChecks';
 
 export type IRoomSceneMode = {
@@ -92,6 +93,9 @@ export function RoomScreenContextProvider({ children }: ChildrenProps): ReactNod
 		roomSceneMode,
 		setRoomSceneMode,
 	}), [contextMenuFocus, openContextMenu, roomSceneMode]);
+
+	useProvideTutorialFlag('roomSceneContextMenuFocus', contextMenuFocus);
+	useProvideTutorialFlag('roomSceneMode', roomSceneMode);
 
 	return (
 		<roomScreenContext.Provider value={ context }>

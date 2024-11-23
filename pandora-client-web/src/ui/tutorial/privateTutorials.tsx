@@ -43,6 +43,12 @@ Assert(new Set(PRIVATE_TUTORIALS.map((t) => t.id)).size === PRIVATE_TUTORIALS.le
 export function PrivateRoomTutorialList(): ReactElement {
 	const activeTutorial = useObservable(ActiveTutorial);
 
+	const [openDetailsTutorial, setOpenDetailsTutorial] = useState<TutorialConfig | null>(null);
+
+	const closeTutorialDetails = useCallback(() => {
+		setOpenDetailsTutorial(null);
+	}, []);
+
 	return (
 		<Column className='privateSpaceTutorialsUi'>
 			<Column>
@@ -52,10 +58,26 @@ export function PrivateRoomTutorialList(): ReactElement {
 			<FieldsetToggle legend='Tutorial catalogue' open={ false } persistent='tutorials-available'>
 				<Column>
 					{
-						PRIVATE_TUTORIALS.map((t) => (<TutorialEntry key={ t.id } tutorial={ t } />))
+						PRIVATE_TUTORIALS.map((t) => (
+							<TutorialEntry key={ t.id }
+								tutorial={ t }
+								openTutorialDetails={ () => {
+									// Close the current one, if user clicks it again (toggle)
+									setOpenDetailsTutorial((v) => t === v ? null : t);
+								} }
+							/>
+						))
 					}
 				</Column>
 			</FieldsetToggle>
+			{
+				(openDetailsTutorial != null) ? (
+					<TutorialDialog
+						tutorial={ openDetailsTutorial }
+						close={ closeTutorialDetails }
+					/>
+				) : null
+			}
 		</Column>
 	);
 }
@@ -64,12 +86,12 @@ const TUTORIAL_DISABLE_REASON_QUICKTEXT: Record<TutorialDisableReason, string> =
 	workInProgress: 'Coming soon',
 };
 
-function TutorialEntry({ tutorial }: {
+function TutorialEntry({ tutorial, openTutorialDetails }: {
 	tutorial: TutorialConfig;
+	openTutorialDetails: () => void;
 }): ReactElement {
 	const { tutorialCompleted } = useAccountSettings();
 	const activeTutorial = useObservable(ActiveTutorial);
-	const [dialogOpen, setDialogOpen] = useState(false);
 
 	return (
 		<Row alignY='center'>
@@ -86,21 +108,9 @@ function TutorialEntry({ tutorial }: {
 				) : null
 			}
 			{
-				<a onClick={ () => {
-					setDialogOpen((s) => !s);
-				} }>
+				<a onClick={ openTutorialDetails }>
 					{ tutorial.name }
 				</a>
-			}
-			{
-				dialogOpen ? (
-					<TutorialDialog
-						tutorial={ tutorial }
-						close={ () => {
-							setDialogOpen(false);
-						} }
-					/>
-				) : null
 			}
 		</Row>
 	);

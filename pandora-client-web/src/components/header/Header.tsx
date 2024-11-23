@@ -108,7 +108,7 @@ function RightHeader({ onAnyClick }: {
 					) }
 					<span>
 						<span className='label'>Current account:</span>
-						{ currentAccount.username }
+						{ currentAccount.settings.displayName || currentAccount.username }
 					</span>
 					<LeaveButton onClickExtra={ onAnyClick } />
 				</>

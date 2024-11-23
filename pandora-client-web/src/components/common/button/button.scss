@@ -84,12 +84,12 @@ $button-themes: (
 		}
 	}
 
-	&.hideDisabled:disabled {
-		visibility: hidden !important;
-	}
-
-	&.fadeDisabled:disabled {
+	&:disabled {
 		filter: grayscale(100%) opacity(50%);
+
+		&.hideDisabled {
+			visibility: hidden !important;
+		}
 	}
 
 	&.IconButton {
@@ -119,7 +119,7 @@ $button-themes: (
 		font-weight: bold;
 	}
 
-	&.danger.fadeDisabled:disabled {
+	&.danger:disabled {
 		filter: grayscale(20%) opacity(80%);
 	}
 }

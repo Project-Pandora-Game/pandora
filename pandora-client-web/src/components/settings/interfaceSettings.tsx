@@ -1,8 +1,13 @@
 import { range } from 'lodash';
-import { ACCOUNT_SETTINGS_DEFAULT, AccountSettings, AccountSettingsSchema } from 'pandora-common';
+import { ACCOUNT_SETTINGS_DEFAULT, AccountSettings, AccountSettingsSchema, GetLogger } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
+import { toast } from 'react-toastify';
 import { z } from 'zod';
-import { useCurrentAccount, useModifiedAccountSettings } from '../../services/accountLogic/accountManagerHooks';
+import { useAsyncEvent } from '../../common/useEvent';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { useAccountSettings, useCurrentAccount, useModifiedAccountSettings } from '../../services/accountLogic/accountManagerHooks';
+import { Button } from '../common/button/button';
+import { useConfirmDialog } from '../dialog/dialog';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { SelectAccountSettings, ToggleAccountSetting } from './helpers/accountSettings';
 import { SelectSettingInput } from './helpers/settingsInputs';
@@ -17,6 +22,7 @@ export function InterfaceSettings(): ReactElement | null {
 		<>
 			<ChatroomSettings />
 			<WardrobeSettings />
+			<TutorialSettings />
 		</>
 	);
 }
@@ -40,17 +46,25 @@ function ChatroomGraphicsRatio(): ReactElement {
 
 	const onChange = (s: 'interfaceChatroomGraphicsRatioHorizontal' | 'interfaceChatroomGraphicsRatioVertical', value: string) => {
 		const newValue = AccountSettingsSchema.shape[s].parse(Number.parseInt(value, 10));
-		directory.sendMessage('changeSettings', {
+		directory.awaitResponse('changeSettings', {
 			type: 'set',
 			settings: { [s]: newValue },
-		});
+		})
+			.catch((err: unknown) => {
+				toast('Failed to update your settings. Please try again.', TOAST_OPTIONS_ERROR);
+				GetLogger('changeSettings').error('Failed to update settings:', err);
+			});
 	};
 
 	const onReset = (s: 'interfaceChatroomGraphicsRatioHorizontal' | 'interfaceChatroomGraphicsRatioVertical') => {
-		directory.sendMessage('changeSettings', {
+		directory.awaitResponse('changeSettings', {
 			type: 'reset',
 			settings: [s],
-		});
+		})
+			.catch((err: unknown) => {
+				toast('Failed to update your settings. Please try again.', TOAST_OPTIONS_ERROR);
+				GetLogger('changeSettings').error('Failed to update settings:', err);
+			});
 	};
 
 	return (
@@ -164,3 +178,47 @@ const ITEM_DISPLAY_NAME_TYPE_DESCRIPTION: Record<AccountSettings['wardrobeItemDi
 	original: 'Original name',
 	custom_with_original_in_brackets: 'Custom name [Original name]',
 };
+
+function TutorialSettings(): ReactElement {
+	const { tutorialCompleted } = useAccountSettings();
+	const confirm = useConfirmDialog();
+	const directory = useDirectoryConnector();
+
+	const [clearTutorialsHistory, processing] = useAsyncEvent(async () => {
+		if (tutorialCompleted.length === 0)
+			return;
+
+		if (!await confirm(
+			'Clear the history of completed tutorials',
+			<>
+				Are you sure you want to reset your tutorial completion progress?<br />
+				This will start the introduction tutorial again.
+			</>,
+		)) {
+			return;
+		}
+
+		directory.awaitResponse('changeSettings', {
+			type: 'reset',
+			settings: ['tutorialCompleted'],
+		})
+			.catch((err: unknown) => {
+				toast('Failed to update your settings. Please try again.', TOAST_OPTIONS_ERROR);
+				GetLogger('changeSettings').error('Failed to update settings:', err);
+			});
+	}, null);
+
+	return (
+		<fieldset>
+			<legend>Tutorials</legend>
+			<span>You completed { tutorialCompleted.length } of the available tutorials.</span>
+			<Button
+				onClick={ clearTutorialsHistory }
+				disabled={ tutorialCompleted.length === 0 || processing }
+				slim
+			>
+				Reset completed tutorials
+			</Button>
+		</fieldset>
+	);
+}

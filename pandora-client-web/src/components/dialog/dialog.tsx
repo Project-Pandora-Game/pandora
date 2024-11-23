@@ -1,15 +1,16 @@
-import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
-import React, { ReactElement, ReactNode, useCallback, useRef, useEffect, useMemo, useLayoutEffect } from 'react';
-import { Rnd } from 'react-rnd';
-import { sortBy } from 'lodash';
-import { ChildrenProps } from '../../common/reactTypes';
-import { Button, ButtonProps } from '../common/button/button';
-import { Observable, useObservable } from '../../observable';
-import './dialog.scss';
-import { useAsyncEvent, useEvent } from '../../common/useEvent';
-import { Column, Row } from '../common/container/container';
 import classNames from 'classnames';
+import { sortBy } from 'lodash';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
+import { Rnd } from 'react-rnd';
+import { type CommonProps } from '../../common/reactTypes';
+import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
+import type { PointLike } from '../../graphics/graphicsCharacter';
+import { Observable, useObservable } from '../../observable';
+import { Button, ButtonProps } from '../common/button/button';
+import { Column, Row } from '../common/container/container';
+import './dialog.scss';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type HtmlPortalNodeAny = HtmlPortalNode<any>;
@@ -19,11 +20,14 @@ const DEFAULT_CONFIRM_DIALOG_PRIORITY = 10;
 
 export type DialogLocation = 'global' | 'mainOverlay';
 
-const PORTALS = new Observable<readonly ({
+type PortalEntry = {
 	priority: number;
 	location: DialogLocation;
 	node: HtmlPortalNodeAny;
-})[]>([]);
+	key: string;
+};
+
+const PORTALS = new Observable<readonly PortalEntry[]>([]);
 
 export function Dialogs({ location }: {
 	location: DialogLocation;
@@ -35,8 +39,12 @@ export function Dialogs({ location }: {
 			{
 				portals
 					.filter((portal) => portal.location === location)
-					.map(({ node }, index) => (
-						<OutPortal key={ index } node={ node } />
+					.map(({ node, key }) => (
+						// We need to wrap the portal in its own div element,
+						// otherwise it might crash if interacting with other portals that change at the same time
+						<div key={ key } className='dialog-portal-out'>
+							<OutPortal node={ node } />
+						</div>
 					))
 			}
 			{
@@ -53,6 +61,7 @@ export function DialogInPortal({ children, priority, location = 'global' }: {
 	priority?: number;
 	location?: DialogLocation;
 }): ReactElement {
+	const id = useId();
 	const portal = useMemo(() => createHtmlPortalNode({
 		attributes: {
 			class: 'dialog-portal',
@@ -60,21 +69,24 @@ export function DialogInPortal({ children, priority, location = 'global' }: {
 	}), []);
 
 	useLayoutEffect(() => {
+		const self: PortalEntry = {
+			priority: priority ?? 0,
+			location,
+			node: portal,
+			key: id,
+		};
+
 		PORTALS.produce((existingPortals) => {
 			return sortBy([
-				{
-					priority: priority ?? 0,
-					location,
-					node: portal,
-				},
+				self,
 				...existingPortals,
 			], (v) => v.priority);
 		});
 
 		return () => {
-			PORTALS.value = PORTALS.value.filter(({ node }) => node !== portal);
+			PORTALS.value = PORTALS.value.filter((p) => p !== self);
 		};
-	}, [portal, priority, location]);
+	}, [portal, priority, location, id]);
 
 	return (
 		<InPortal node={ portal }>
@@ -83,7 +95,7 @@ export function DialogInPortal({ children, priority, location = 'global' }: {
 	);
 }
 
-export function ModalDialog({ children, priority, position = 'center', allowClickBubbling = false }: ChildrenProps & {
+export function ModalDialog({ children, priority, position = 'center', id, className, allowClickBubbling = false }: CommonProps & {
 	/**
 	 * Priority of this dialog for ordering the dialogs on screen.
 	 * Higher priority dialogs cover lower priority dialogs.
@@ -107,7 +119,7 @@ export function ModalDialog({ children, priority, position = 'center', allowClic
 
 	return (
 		<DialogInPortal priority={ priority }>
-			<div className={ classNames('dialog', position) } onClick={ clickSink } onPointerDown={ clickSink } onPointerUp={ clickSink }>
+			<div id={ id } className={ classNames('dialog', position, className) } onClick={ clickSink } onPointerDown={ clickSink } onPointerUp={ clickSink }>
 				<div className='dialog-content'>
 					{ children }
 				</div>
@@ -116,12 +128,24 @@ export function ModalDialog({ children, priority, position = 'center', allowClic
 	);
 }
 
-export function DraggableDialog({ children, title, rawContent, close, hiddenClose }: {
+export function DraggableDialog({ children, className, title, modal = false, rawContent, close, hiddenClose, allowShade = false, initialPosition }: {
 	children?: ReactNode;
+	className?: string;
 	title: string;
+	/**
+	 * Whether this dialog should have a modal containing overlay on top of which it is positioned.
+	 * @default false
+	 */
+	modal?: boolean;
 	rawContent?: boolean;
 	close: () => void;
 	hiddenClose?: boolean;
+	/**
+	 * Shows a "shade" button on the header, and allows the contents to be shaded.
+	 * @default false
+	 */
+	allowShade?: boolean;
+	initialPosition?: Readonly<PointLike>;
 }): ReactElement {
 	useEffect(() => {
 		if (close == null) {
@@ -140,24 +164,50 @@ export function DraggableDialog({ children, title, rawContent, close, hiddenClos
 		};
 	}, [close]);
 
+	const [shaded, setShaded] = useState(false);
+	useEffect(() => {
+		if (!allowShade && shaded) {
+			setShaded(false);
+		}
+	}, [shaded, allowShade]);
+
+	const toggleShade = useCallback(() => {
+		setShaded((currentShaded) => !currentShaded);
+	}, []);
+
 	return (
 		<DialogInPortal priority={ -1 } >
-			<div className='overlay-bounding-box'>
+			<div className={ modal ? 'overlay-bounding-box modal' : 'overlay-bounding-box' }>
 				<Rnd
-					className='dialog-draggable'
+					className={ classNames(
+						'dialog-draggable',
+						shaded ? 'shaded' : null,
+						className,
+					) }
 					dragHandleClassName='drag-handle'
+					resizeHandleWrapperClass='resize-handle-wrapper'
 					default={ {
-						x: Math.max((window.innerWidth ?? 0) / 4 - 20, 0),
-						y: Math.max((window.innerHeight ?? 0) / 8 - 10, 0),
+						// We divide the position by 2, because there seems to be a bug in "Draggable" that multiplies it
+						x: (initialPosition?.x ?? Math.max((window.innerWidth ?? 0) / 2 - 20, 0)) / 2,
+						y: (initialPosition?.y ?? Math.max((window.innerHeight ?? 0) / 4 - 10, 0)) / 2,
 						width: 'auto',
 						height: 'auto',
 					} }
 					bounds='parent'
+					maxHeight={ initialPosition ? (window.innerHeight - initialPosition.y - 10) : 'calc(95vh - 2em)' }
+					maxWidth={ initialPosition ? (window.innerWidth - initialPosition.x - 20) : 'calc(95vw - 2em)' }
 				>
 					<header className='dialog-header'>
 						<div className='drag-handle'>
 							{ title }
 						</div>
+						{
+							allowShade ? (
+								<div className='dialog-shade' title='Shade this dialog' onClick={ toggleShade }>
+									{ shaded ? '▼' : '▲' }
+								</div>
+							) : null
+						}
 						{ hiddenClose !== true ? (
 							<div className='dialog-close' onClick={ close }>
 								×
@@ -165,7 +215,7 @@ export function DraggableDialog({ children, title, rawContent, close, hiddenClos
 						) : null }
 					</header>
 					{
-						rawContent ? children : (
+						rawContent ? (shaded ? null : children) : (
 							<div className='dialog-content'>
 								{ children }
 							</div>
@@ -181,6 +231,7 @@ type ConfirmDialogEntry = Readonly<{
 	title: string;
 	content: ReactNode;
 	priority?: number;
+	className?: string;
 	handler: (result: boolean) => void;
 }>;
 
@@ -199,6 +250,7 @@ function useConfirmDialogController(symbol: symbol): {
 	title: string;
 	content: ReactNode;
 	priority: number;
+	className?: string;
 	onConfirm: () => void;
 	onCancel: () => void;
 } {
@@ -219,11 +271,13 @@ function useConfirmDialogController(symbol: symbol): {
 	const title = observed != null ? observed.title : '';
 	const content = observed?.content;
 	const priority = observed?.priority ?? DEFAULT_CONFIRM_DIALOG_PRIORITY;
+	const className = observed?.className;
 	return {
 		open,
 		title,
 		content,
 		priority,
+		className,
 		onConfirm,
 		onCancel,
 	};
@@ -236,13 +290,13 @@ type ConfirmDialogProps = {
 };
 
 export function ConfirmDialog({ symbol, yes = 'Ok', no = 'Cancel' }: ConfirmDialogProps) {
-	const { open, title, content, priority, onConfirm, onCancel } = useConfirmDialogController(symbol);
+	const { open, title, content, priority, className, onConfirm, onCancel } = useConfirmDialogController(symbol);
 
 	if (!open)
 		return null;
 
 	return (
-		<ModalDialog priority={ priority }>
+		<ModalDialog priority={ priority } className={ className }>
 			<Column className='dialog-confirm'>
 				<strong>{ title }<hr /></strong>
 				<Column padding='large'>
@@ -261,7 +315,7 @@ export function ConfirmDialog({ symbol, yes = 'Ok', no = 'Cancel' }: ConfirmDial
 	);
 }
 
-export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL): (title: string, content?: ReactNode, priority?: number) => Promise<boolean> {
+export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL): (title: string, content?: ReactNode, priority?: number, dialogClassName?: string) => Promise<boolean> {
 	const unset = useRef(false);
 	const entry = GetConfirmDialogEntry(symbol);
 	const resolveRef = useRef<(result: boolean) => void>();
@@ -280,13 +334,14 @@ export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL)
 		}
 		return false;
 	}, [entry]), 'Escape');
-	return useCallback((title: string, content?: ReactNode, priority?: number) => new Promise<boolean>((resolve) => {
+	return useCallback((title: string, content?: ReactNode, priority?: number, dialogClassName?: string) => new Promise<boolean>((resolve) => {
 		unset.current = true;
 		resolveRef.current = resolve;
 		entry.value = {
 			title,
 			content,
 			priority,
+			className: dialogClassName,
 			handler: (result) => {
 				unset.current = false;
 				entry.value = null;

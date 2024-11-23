@@ -25,6 +25,7 @@ import { SettingDisplayCharacterName } from '../../../graphics/room/roomCharacte
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState } from '../../../graphics/room/roomDevice';
 import { useObservable } from '../../../observable';
 import { useChatInput } from '../../components/chat/chatInput';
+import { PrivateRoomTutorialList } from '../../tutorial/privateTutorials';
 import { useRoomScreenContext } from './roomContext';
 import { ChatroomDebugConfigView } from './roomDebug';
 
@@ -159,6 +160,8 @@ export function PersonalSpaceControls(): ReactElement {
 				</Button>
 			</Row>
 			&nbsp;
+			<PrivateRoomTutorialList />
+			&nbsp;
 			<DeviceOverlaySelector />
 			&nbsp;
 			{ USER_DEBUG ? <ChatroomDebugConfigView /> : null }
@@ -208,7 +211,7 @@ function DeviceOverlaySelector(): ReactElement {
 	return (
 		<>
 			<Row padding='small' className='room-construction-mode'>
-				<Button onClick={ onRoomConstructionModeChange } className='fadeDisabled inverseColor' disabled={ !isPlayerAdmin || !canUseHands }>
+				<Button onClick={ onRoomConstructionModeChange } className='inverseColor' disabled={ !isPlayerAdmin || !canUseHands }>
 					<img src={ toolsIcon } />&nbsp;{ roomConstructionMode ? 'Disable' : 'Enable' } room construction mode
 				</Button>
 				{

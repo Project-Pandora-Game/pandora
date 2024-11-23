@@ -146,7 +146,6 @@ function CharacterRestrictionOverrideLeave({ type, allowLeaveAt, doModeExit, pro
 				<Button onClick={ hide }>Cancel</Button>
 				<Button
 					disabled={ !canLeave || processing }
-					className='fadeDisabled'
 					onClick={ doModeExit }
 				>
 					Leave { mode }

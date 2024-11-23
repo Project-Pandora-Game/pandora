@@ -143,7 +143,7 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 					</Row>
 				) : null
 			}
-			<Button onClick={ onLeave } className='fadeDisabled inverseColor' disabled={ !canLeave || roomDeviceLink != null }>
+			<Button onClick={ onLeave } className='inverseColor' disabled={ !canLeave || roomDeviceLink != null }>
 				<img src={ logoutIcon } />Leave space
 			</Button>
 		</>

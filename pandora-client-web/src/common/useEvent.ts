@@ -24,7 +24,7 @@ export function useEvent<R, Args extends unknown[]>(callback: (...args: Args) =>
 
 export function useAsyncEvent<R, Args extends unknown[]>(
 	callback: (...args: Args) => Promise<R>,
-	updateComponent: (result: R) => void,
+	updateComponent: ((result: R) => void) | null,
 	{
 		errorHandler,
 		updateAfterUnmount = false,
@@ -53,7 +53,7 @@ export function useAsyncEvent<R, Args extends unknown[]>(
 			.then((result: R) => {
 				if (updateAfterUnmount || mounted.current) {
 					setProcessing((previousProcessing) => previousProcessing - 1);
-					updateComponent(result);
+					updateComponent?.(result);
 				}
 			})
 			.catch((e) => {

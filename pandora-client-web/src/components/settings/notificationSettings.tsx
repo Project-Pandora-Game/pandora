@@ -49,7 +49,7 @@ function RoomEntrySettings(): ReactElement {
 				stringify={ NOTIFICATION_AUDIO_NAMES }
 			>
 				<Button
-					className='slim fadeDisabled'
+					className='slim'
 					disabled={ notificationRoomEntrySound === '' }
 					onClick={ () => {
 						const sound = NOTIFICATION_AUDIO_SOUNDS[notificationRoomEntrySound];

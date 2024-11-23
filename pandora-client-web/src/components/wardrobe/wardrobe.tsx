@@ -1,14 +1,15 @@
+import type { Immutable } from 'immer';
 import {
 	AssertNotNullable,
 	CharacterIdSchema,
 	ICharacterRoomData,
 } from 'pandora-common';
-import React, { ReactElement, useMemo } from 'react';
+import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { Character, IChatroomCharacter } from '../../character/character';
 import { useObservable } from '../../observable';
 import { CharacterRestrictionOverrideWarningContent } from '../characterRestrictionOverride/characterRestrictionOverride';
-import { Tab, TabContainer } from '../common/tabs/tabs';
+import { Tab, TabContainer, type TabConfig } from '../common/tabs/tabs';
 import { useGameState, useSpaceCharacters } from '../gameContext/gameStateContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { WardrobeExpressionGui } from './views/wardrobeExpressionsView';
@@ -130,6 +131,12 @@ function WardrobeCharacter({ character }: {
 	const characterState = globalState.characters.get(character.id);
 	const characterPreviewState = useObservable(actionPreviewState)?.characters.get(character.id);
 
+	const [allowHideItems, setAllowHideItems] = useState(false);
+
+	const onTabOpen = useCallback((tab: Immutable<TabConfig>): void => {
+		setAllowHideItems(tab.name === 'Body');
+	}, []);
+
 	if (characterState == null)
 		return <Link to='/'>◄ Back</Link>;
 
@@ -140,9 +147,10 @@ function WardrobeCharacter({ character }: {
 				<WardrobeCharacterPreview
 					character={ character }
 					characterState={ characterPreviewState ?? characterState }
+					allowHideItems={ allowHideItems }
 					isPreview={ characterPreviewState != null }
 				/>
-				<TabContainer className='flex-1'>
+				<TabContainer className='flex-1' onTabOpen={ onTabOpen }>
 					<Tab name='Items'>
 						<div className='wardrobe-pane'>
 							<WardrobeItemManipulation />

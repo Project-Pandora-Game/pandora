@@ -3,6 +3,7 @@ import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { FormInput } from '../../../common/userInteraction/input/formInput';
+import { DEVELOPMENT } from '../../../config/Environment';
 import { useDirectoryRegister } from '../../../networking/account_manager';
 import { useObservable } from '../../../observable';
 import { Button } from '../../common/button/button';
@@ -165,9 +166,14 @@ export function RegistrationForm(): ReactElement {
 					name='password'
 					options={ {
 						required: 'Password is required',
-						validate: FormCreateStringValidator(PasswordSchema, 'password'),
+						validate: DEVELOPMENT ? undefined : FormCreateStringValidator(PasswordSchema, 'password'),
 					} }
 				/>
+				{
+					DEVELOPMENT ? (
+						<em>Running in development mode.<br />Password restrictions are disabled.</em>
+					) : null
+				}
 				<FormFieldError error={ errors.password } />
 			</FormField>
 			<FormField>
@@ -205,7 +211,7 @@ export function RegistrationForm(): ReactElement {
 					<FormFieldError error={ errors.betaKey } />
 				</FormField> }
 			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
-			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>Register</Button>
+			<Button type='submit' disabled={ isSubmitting }>Register</Button>
 			<FormLink to='/login'>Already have an account? <strong>Sign in</strong></FormLink>
 		</Form>
 	);

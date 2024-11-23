@@ -6,6 +6,7 @@ import type { Account } from '../account/account';
 import { accountManager } from '../account/accountManager';
 import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
 import { ENV } from '../config';
+import { AUDIT_LOG } from '../logging';
 import { GitHubVerifier } from '../services/github/githubVerify';
 import { BetaKeyStore } from '../shard/betaKeyStore';
 import { ShardManager } from '../shard/shardManager';
@@ -13,7 +14,6 @@ import { ShardTokenStore } from '../shard/shardTokenStore';
 import { SpaceManager } from '../spaces/spaceManager';
 import { Sleep } from '../utility';
 import type { ClientConnection } from './connection_client';
-import { AUDIT_LOG } from '../logging';
 const { BETA_KEY_ENABLED, HCAPTCHA_SECRET_KEY, HCAPTCHA_SITE_KEY } = ENV;
 
 /** Time (in ms) of how often the directory should send status updates */
@@ -735,6 +735,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		} else {
 			AssertNever(request);
 		}
+
+		return { result: 'ok' };
 	}
 
 	private async handleManageGetAccountRoles({ id }: IClientDirectoryArgument['manageGetAccountRoles'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryPromiseResult['manageGetAccountRoles'] {

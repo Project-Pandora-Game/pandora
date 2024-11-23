@@ -61,7 +61,7 @@ export function WardrobeItemConfigMenu({
 
 	if (!wornItem) {
 		return (
-			<div className='inventoryView'>
+			<div className='inventoryView itemEdit'>
 				<div className='toolbar'>
 					<span>Editing item: [ ERROR: ITEM NOT FOUND ]</span>
 					<button className='modeButton' onClick={ close }>✖️</button>
@@ -71,13 +71,13 @@ export function WardrobeItemConfigMenu({
 	}
 
 	return (
-		<div className='inventoryView'>
+		<div className='inventoryView itemEdit'>
 			<div className='toolbar'>
 				<span>Editing item:&#x20;<WardrobeItemName item={ wornItem } /></span>
 				{ !singleItemContainer && <button className='modeButton' onClick={ close }>✖️</button> }
 			</div>
 			<Column padding='medium' overflowX='hidden' overflowY='auto'>
-				<Row padding='medium' wrap>
+				<Row padding='medium' wrap className='itemActions'>
 					{
 						singleItemContainer ? null : (
 							<>
@@ -265,8 +265,8 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 				<label htmlFor='custom-description'>Description ({ description.length }/{ LIMIT_ITEM_DESCRIPTION_LENGTH } characters):</label>
 				<textarea id='custom-description' className='description' value={ description } rows={ 10 } onChange={ (e) => setDescription(e.target.value) } maxLength={ LIMIT_ITEM_DESCRIPTION_LENGTH } />
 				<Row>
-					<Button onClick={ onEndEdit } className='fadeDisabled' disabled={ processing }>Cancel</Button>
-					<Button onClick={ onSave } className='fadeDisabled' disabled={ processing || !!nameError }>Save</Button>
+					<Button onClick={ onEndEdit } disabled={ processing }>Cancel</Button>
+					<Button onClick={ onSave } disabled={ processing || !!nameError }>Save</Button>
 				</Row>
 			</Column>
 		</FieldsetToggle>

@@ -2,11 +2,8 @@
 
 .dialog {
 	background-color: $black-secondary;
-	width: 100%;
-	height: 100%;
 	position: fixed;
-	top: 0;
-	left: 0;
+	inset: 0;
 	z-index: 10000;
 	display: flex;
 	align-items: center;
@@ -37,8 +34,7 @@
 
 .overlay-bounding-box {
 	position: absolute;
-	width: 100%;
-	height: 100%;
+	inset: 0;
 	margin: 0;
 	overflow: hidden;
 
@@ -46,6 +42,12 @@
 
 	>* {
 		pointer-events: auto;
+	}
+
+	&.modal {
+		background-color: $black-secondary;
+		pointer-events: auto;
+		z-index: 1000;
 	}
 }
 
@@ -67,13 +69,25 @@
 		padding: 0.2em 0.2em 0.2em 1em;
 		background-color: $grey-light;
 		position: relative;
+		min-height: 1.5em;
+		gap: 1em;
+
+		.dialog-close, .dialog-shade {
+			flex: 1;
+			max-width: 2em;
+			text-align: center;
+			cursor: pointer;
+		}
 
 		.dialog-close {
-			flex: 1;
-			cursor: pointer;
-
 			&:hover {
 				color: red;
+			}
+		}
+
+		.dialog-shade {
+			&:hover {
+				color: white;
 			}
 		}
 	}
@@ -93,6 +107,15 @@
 		flex-flow: column;
 		flex: 1;
 		overflow: auto;
+	}
+
+	&.shaded {
+		height: auto !important;
+		min-height: unset !important;
+
+		>.dialog-content, .resize-handle-wrapper {
+			display: none;
+		}
 	}
 }
 

@@ -19,7 +19,12 @@ export type IModuleConfigCommon<Type extends ModuleType, TProperties = unknown, 
 	type: Type;
 	/** The display name of this module */
 	name: string;
-	/** If this module is hoisted to expressions */
+	/**
+	 * Name used for displaying this module in the expressions menu.
+	 * If set to a non-empty string, then this module appears in the list of expressions.
+	 *
+	 * @note If this is a `typed` module without explicitly set `interactionType`, then this being set makes `interactionType` default to `ItemInteractionType.EXPRESSION_CHANGE`.
+	 */
 	expression?: string;
 };
 

@@ -321,7 +321,7 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 				</Row>
 			</Column>
 			<Row padding='medium' alignX='space-between' alignY='center'>
-				<Button slim onClick={ () => setDefault(null) } className='fadeDisabled'>Reset defaults</Button>
+				<Button slim onClick={ () => setDefault(null) }>Reset defaults</Button>
 				<Button onClick={ hide }>Close</Button>
 			</Row>
 			<PermissionConfigOverrides overrides={ permissionConfig?.characterOverrides ?? EMPTY } limit={ permissionSetup.maxCharacterOverrides ?? PERMISSION_MAX_CHARACTER_OVERRIDES } setConfig={ setAny } />
@@ -525,7 +525,7 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions, message
 			</Column>
 			<Row padding='medium' alignX='space-between' alignY='center'>
 				<Button onClick={ dismiss }>Deny unchosen once</Button>
-				<Button onClick={ acceptAll } disabled={ !allowAccept } className='fadeDisabled'>Allow all above always</Button>
+				<Button onClick={ acceptAll } disabled={ !allowAccept }>Allow all above always</Button>
 			</Row>
 		</DraggableDialog>
 	);
@@ -608,7 +608,7 @@ function PermissionPromptButton({ setYes, setNo, isAllowed }: { setYes: () => vo
 	return (
 		<>
 			<Button
-				className='slim fadeDisabled'
+				className='slim'
 				disabled={ state === 'yes' }
 				onClick={ () => {
 					if (state !== 'yes') {

@@ -499,7 +499,7 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 				}
 				{ userIsOwner && <SpaceOwnershipRemoval buttonClassName='slim' id={ info.id } name={ info.name } /> }
 				<GuardedJoinButton spaceId={ info.id } inviteId={ invite?.id } redirectBeforeLeave={ redirectBeforeLeave }>
-					<Button className='fadeDisabled'
+					<Button
 						disabled={ processing }
 						onClick={ join }>
 						Enter Space
@@ -519,7 +519,7 @@ function GuardedJoinButton({ children, spaceId, inviteId, redirectBeforeLeave }:
 
 	if (!player || !gameState) {
 		return (
-			<Button className='fadeDisabled' disabled={ true }>
+			<Button disabled>
 				No character selected
 			</Button>
 		);
@@ -531,7 +531,7 @@ function GuardedJoinButton({ children, spaceId, inviteId, redirectBeforeLeave }:
 
 	if (space?.id === spaceId) {
 		return (
-			<Button className='fadeDisabled' disabled={ true }>
+			<Button disabled>
 				You are already inside this space
 			</Button>
 		);
@@ -569,7 +569,7 @@ function GuardedJoinButtonWithLeave({ spaceId, inviteId, redirectBeforeLeave }: 
 
 	if (roomDeviceLink) {
 		return (
-			<Button className='fadeDisabled' disabled={ true }>
+			<Button disabled>
 				You must exit the room device before leaving the space
 			</Button>
 		);
@@ -577,7 +577,7 @@ function GuardedJoinButtonWithLeave({ spaceId, inviteId, redirectBeforeLeave }: 
 
 	if (!canLeave) {
 		return (
-			<Button className='fadeDisabled' disabled={ true }>
+			<Button disabled>
 				An item is preventing you from leaving the space
 			</Button>
 		);
@@ -594,7 +594,7 @@ function GuardedJoinButtonWithLeave({ spaceId, inviteId, redirectBeforeLeave }: 
 	}
 
 	return (
-		<Button onClick={ leave } className='fadeDisabled' disabled={ processing || !canLeave || roomDeviceLink != null }>
+		<Button onClick={ leave } disabled={ processing || !canLeave || roomDeviceLink != null }>
 			Leave current space
 		</Button>
 	);

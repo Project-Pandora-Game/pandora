@@ -320,7 +320,6 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 							<Button
 								onClick={ () => setShowBackgrounds(true) }
 								disabled={ !canEdit }
-								className='fadeDisabled'
 							>
 								Select a background
 							</Button>
@@ -343,7 +342,6 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 							<Button
 								onClick={ () => setShowBackgrounds(true) }
 								disabled={ !canEdit }
-								className='fadeDisabled'
 							>
 								Select a background
 							</Button>

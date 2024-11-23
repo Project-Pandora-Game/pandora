@@ -1,19 +1,18 @@
 import React, { ReactElement, ReactNode } from 'react';
-import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
+import { useNavigate } from 'react-router';
 import { ChildrenProps } from '../../common/reactTypes';
 import { Scrollable } from '../common/scrollbar/scrollbar';
+import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
 import { PrivacyPolicyContent } from '../Eula/privacyPolicy';
-import { useNavigate } from 'react-router';
-import './wiki.scss';
-import { WikiIntroduction } from './pages/intro';
-import { WikiGreeting } from './pages/greeting';
+import { WikiCharacters } from './pages/characters';
 import { WikiContact } from './pages/contact';
 import { WikiHistory } from './pages/history';
-import { WikiSpaces } from './pages/spaces';
+import { WikiIntroduction } from './pages/intro';
 import { WikiItems } from './pages/items';
-import { WikiCharacters } from './pages/characters';
-import { WikiSafety } from './pages/safety';
 import { WikiNew } from './pages/new';
+import { WikiSafety } from './pages/safety';
+import { WikiSpaces } from './pages/spaces';
+import './wiki.scss';
 
 export default function Wiki(): ReactElement {
 	const navigate = useNavigate();
@@ -43,9 +42,6 @@ export default function Wiki(): ReactElement {
 			</WikiContentTab>
 			<WikiContentTab name='Pandora History' urlChunk='history'>
 				<WikiHistory />
-			</WikiContentTab>
-			<WikiContentTab name='Greeting' urlChunk='greeting'>
-				<WikiGreeting />
 			</WikiContentTab>
 			<WikiContentTab name='Contact' urlChunk='contact'>
 				<WikiContact />

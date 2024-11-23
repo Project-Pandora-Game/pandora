@@ -7,7 +7,6 @@ import { DebugContextProvider, useDebugContext } from '../components/error/debug
 import { RootErrorBoundary } from '../components/error/rootErrorBoundary';
 import { Editor } from './editor';
 import { AssetFrameworkGlobalState, type ServiceManager } from 'pandora-common';
-import { HoverElementsPortal } from '../components/hoverElement/hoverElement';
 import { permissionCheckContext, PermissionCheckServiceBase } from '../components/gameContext/permissionCheckProvider';
 import { AnchorAutoscroll } from '../common/anchorAutoscroll';
 import type { ClientServices } from '../services/clientServices';
@@ -38,7 +37,6 @@ export function EditorContextProvider({ children, serviceManager }: EditorContex
 					<Dialogs location='global' />
 					<Dialogs location='mainOverlay' />
 					<AnchorAutoscroll />
-					<HoverElementsPortal />
 					<EditorContext.Provider value={ context }>
 						<PermissionCheckServiceProvider>
 							{ children }

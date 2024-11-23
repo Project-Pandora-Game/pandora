@@ -5,6 +5,7 @@ import { ChildrenProps } from '../../common/reactTypes';
 import type { ClientServices } from '../../services/clientServices';
 import { ServiceManagerContextProvider } from '../../services/serviceProvider';
 import { ChatInputContextProvider } from '../../ui/components/chat/chatInput';
+import { TutorialService } from '../../ui/tutorial/tutorialSystem/tutorialService';
 import { CharacterRestrictionOverrideDialogContext } from '../characterRestrictionOverride/characterRestrictionOverride';
 import { DebugContextProvider } from '../error/debugContextProvider';
 import { RootErrorBoundary } from '../error/rootErrorBoundary';
@@ -43,6 +44,7 @@ function MiscProviders({ children }: ChildrenProps): ReactElement {
 				<SecondFactorProvider />
 				<NotificationProvider />
 				<ShardConnectorContextProvider />
+				<TutorialService />
 
 				{ children }
 			</PermissionCheckServiceProvider>

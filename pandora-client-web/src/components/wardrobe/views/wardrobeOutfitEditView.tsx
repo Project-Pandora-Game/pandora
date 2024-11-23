@@ -205,7 +205,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 						{
 							isTemporary ? null : (
 								<Button
-									className='slim fadeDisabled'
+									className='slim'
 									onClick={ () => updateOutfit({
 										...outfit,
 										name: editName,

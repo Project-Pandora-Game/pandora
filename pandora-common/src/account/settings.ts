@@ -1,8 +1,9 @@
 import { z } from 'zod';
 import { TimeSpanMs } from '../utility/formatting';
-import { KnownObject, ParseArrayNotEmpty } from '../utility/misc';
+import { EMPTY_ARRAY, KnownObject, ParseArrayNotEmpty } from '../utility/misc';
 import { DisplayNameSchema, HexColorStringSchema } from '../validation';
 import { AccountRoleSchema } from './accountRoles';
+import { TutorialIdSchema } from './tutorials';
 
 //#region Settings declarations
 
@@ -83,6 +84,10 @@ export const AccountSettingsSchema = z.object({
 	 * @default 100
 	 */
 	notificationVolume: z.enum(['0', '25', '50', '75', '100']),
+	/**
+	 * Set of tutorials the user completed in the past. Should only contain unique values (optimally sorted by the order in the schema).
+	 */
+	tutorialCompleted: TutorialIdSchema.array().max(TutorialIdSchema.options.length).readonly(),
 });
 
 export type AccountSettings = z.infer<typeof AccountSettingsSchema>;
@@ -107,6 +112,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceChatroomItemDisplayNameType: 'custom_with_original_in_brackets',
 	notificationRoomEntrySound: '',
 	notificationVolume: '100',
+	tutorialCompleted: EMPTY_ARRAY,
 });
 
 export const ACCOUNT_SETTINGS_LIMITED_LIMITS = Object.freeze({

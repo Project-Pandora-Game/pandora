@@ -3,6 +3,7 @@ import React, { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { FormInput } from '../../../common/userInteraction/input/formInput';
+import { DEVELOPMENT } from '../../../config/Environment';
 import { useDirectoryPasswordResetConfirm } from '../../../networking/account_manager';
 import { Button } from '../../common/button/button';
 import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
@@ -97,9 +98,14 @@ export function ResetPasswordForm(): ReactElement {
 					name='password'
 					options={ {
 						required: 'Password is required',
-						validate: FormCreateStringValidator(PasswordSchema, 'password'),
+						validate: DEVELOPMENT ? undefined : FormCreateStringValidator(PasswordSchema, 'password'),
 					} }
 				/>
+				{
+					DEVELOPMENT ? (
+						<em>Running in development mode.<br />Password restrictions are disabled.</em>
+					) : null
+				}
 				<FormFieldError error={ errors.password } />
 			</FormField>
 			<FormField>
@@ -121,7 +127,7 @@ export function ResetPasswordForm(): ReactElement {
 				<FormFieldError error={ errors.passwordConfirm } />
 			</FormField>
 			{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
-			<Button type='submit' className='fadeDisabled' disabled={ isSubmitting }>Reset password</Button>
+			<Button type='submit' disabled={ isSubmitting }>Reset password</Button>
 			<FormLink to='/login'>◄ Return to login</FormLink>
 		</Form>
 	);

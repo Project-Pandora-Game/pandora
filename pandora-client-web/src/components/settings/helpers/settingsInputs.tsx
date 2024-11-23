@@ -49,7 +49,7 @@ export function ToggleSettingInput({ currentValue, defaultValue, label, onChange
 				{ label }
 			</label>
 			<Button
-				className='slim fadeDisabled'
+				className='slim'
 				onClick={ () => setValue(undefined) }
 				disabled={ value === undefined }
 			>
@@ -119,7 +119,7 @@ export function SelectSettingInput<TValue extends string>({ currentValue, defaul
 					{ options }
 				</Select>
 				<Button
-					className='slim fadeDisabled'
+					className='slim'
 					onClick={ () => setValue(undefined) }
 					disabled={ value === undefined }
 				>

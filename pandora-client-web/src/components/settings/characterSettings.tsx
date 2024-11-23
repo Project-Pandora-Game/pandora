@@ -56,7 +56,7 @@ function LabelColor({ playerData }: { playerData: Readonly<ICharacterPrivateData
 				<label>Color</label>
 				<ColorInput initialValue={ color } onChange={ setColor } title='Name' />
 				<Button
-					className='slim fadeDisabled'
+					className='slim'
 					onClick={ () => shardConnector?.sendMessage('updateSettings', { labelColor: color }) }
 					disabled={ color === playerData.settings.labelColor?.toUpperCase() }>
 					Save
@@ -85,7 +85,7 @@ function Pronouns({ playerData }: { playerData: Readonly<ICharacterPrivateData>;
 					)) }
 				</Select>
 				<Button
-					className='slim fadeDisabled'
+					className='slim'
 					onClick={ () => shardConnector?.sendMessage('updateSettings', { pronoun }) }
 					disabled={ !allowChange || pronoun === playerData.settings.pronoun }>
 					Save
@@ -209,7 +209,6 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 						</Button>
 						<Button
 							theme='danger'
-							className='fadeDisabled'
 							onClick={ toStage2 }
 							disabled={ character !== playerData.name }
 						>
@@ -246,7 +245,7 @@ function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Re
 					<Button onClick={ onReset }>
 						Cancel
 					</Button>
-					<Button className='fadeDisabled' theme='danger' type='submit' disabled={ isSubmitting }>
+					<Button theme='danger' type='submit' disabled={ isSubmitting }>
 						Delete this character
 					</Button>
 				</Row>

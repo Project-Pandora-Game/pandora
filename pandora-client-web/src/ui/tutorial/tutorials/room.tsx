@@ -398,7 +398,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Please exit the movement mode by clicking the circle with red/green arrows.
+							Please exit the movement mode by clicking the circle with the red/green arrows.
 						</p>
 					),
 					conditions: [
@@ -576,7 +576,6 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				},
 			],
 		},
-		// TODO: You see most of what happens in the room here (showcase action)
 		// TODO: Some important changes are also shown (showcase server message)
 		{
 			steps: [
@@ -661,7 +660,8 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 						<>
 							<p>
 								The second most common usage is your character performing an action.<br />
-								This can be done by starting your message with a '*' (star) or using the '/me' command.
+								This can be done by starting your message with a '*' (star) or using the '/me' command.<br />
+								This type of action is called "emote".
 							</p>
 							<p>
 								Example of this is your character waving.<br />
@@ -679,6 +679,59 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 						type: 'elementQuery',
 						query: '.message.me span',
 						filter: (e) => ['wave'].some((greeting) => e.innerText.toLowerCase().includes(greeting)),
+					}],
+					highlight: [{
+						query: '.chatArea textarea',
+					}],
+				},
+				{
+					text: '',
+					conditions: [{ type: 'next' }],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <>Please switch back to the room screen.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: '/room',
+					}],
+				},
+				{
+					text: <>Open the "Chat" tab.</>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.roomScreen .tab.active',
+						filter: (e) => e.innerText.includes('Chat'),
+					}],
+					highlight: [{
+						query: '.roomScreen .tab',
+						filter: (e) => e.innerText.includes('Chat'),
+					}],
+				},
+				{
+					text: (
+						<>
+							<p>
+								Another type of messages similar to emotes are actions.<br />
+								Actions differ from emotes in that they are not written by users,<br />
+								but come from an action that was recognized, performed, and enforced by Pandora.<br />
+								As such they cannot be forged or edited.
+							</p>
+							<p>
+								These usually happen as a result of interacting with character's items,<br />
+								but can also be created through the use of various commands.<br />
+								Try doing just that by using the "/dice" command to roll a dice.
+							</p>
+						</>
+					),
+					conditions: [{
+						type: 'elementQuery',
+						query: '.message.action',
 					}],
 					highlight: [{
 						query: '.chatArea textarea',

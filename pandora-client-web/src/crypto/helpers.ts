@@ -3,8 +3,8 @@ import { PASSWORD_PREHASH_SALT } from 'pandora-common';
 const crypto = globalThis.crypto;
 const subtle = globalThis.crypto.subtle;
 
-export const Encode = (str: string) => new TextEncoder().encode(str);
-export const Decode = (buf: ArrayBuffer) => new TextDecoder().decode(buf);
+export const Encode = (str: string): Uint8Array => new TextEncoder().encode(str);
+export const Decode = (buf: Uint8Array): string => new TextDecoder().decode(buf);
 
 export function ArrayToBase64(array: Iterable<number> | ArrayLike<number>): string {
 	return btoa(String.fromCharCode(...Array.from(array)));

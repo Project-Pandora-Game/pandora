@@ -5,7 +5,7 @@
 	"repository": "github:Project-Pandora-Game/pandora-server-directory",
 	"license": "LGPL-3.0-or-later",
 	"engines": {
-		"node": ">=20.x"
+		"node": ">=22.x"
 	},
 	"scripts": {
 		"clean": "rimraf dist",
@@ -65,7 +65,7 @@
 		"@types/jest": "29.5.14",
 		"@types/json-diff": "1.0.3",
 		"@types/lodash": "4.17.13",
-		"@types/node": "20.17.10",
+		"@types/node": "22.10.9",
 		"@types/nodemailer": "6.4.17",
 		"@types/semver": "7.5.8",
 		"@types/wtfnode": "0.7.3",

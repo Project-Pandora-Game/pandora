@@ -1,6 +1,9 @@
 {
 	"private": true,
 	"packageManager": "pnpm@9.15.1",
+	"engines": {
+		"node": ">=22.x"
+	},
 	"pnpm": {
 		"updateConfig": {
 			"ignoreDependencies": [

@@ -8,7 +8,8 @@
 			]
 		},
 		"patchedDependencies": {
-			"pixi-viewport": "patches/pixi-viewport.patch"
+			"pixi-viewport": "patches/pixi-viewport.patch",
+			"pixi.js": "patches/pixi.js.patch"
 		}
 	},
 	"scripts": {

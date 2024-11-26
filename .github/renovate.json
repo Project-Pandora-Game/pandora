@@ -28,7 +28,7 @@
 				"docker.io/node",
 				"@types/node"
 			],
-			"allowedVersions": "^20.x"
+			"allowedVersions": "^22.x"
 		},
 		{
 			"groupName": "all patched dependencies",

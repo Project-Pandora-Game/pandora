@@ -73,6 +73,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run setup-dev
       - run: pnpm run lint
 
   test:
@@ -86,6 +87,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
+      - run: pnpm run setup-dev
       - run: pnpm run type-check:test
       - run: pnpm run test --ci --coverage
 
@@ -101,6 +103,7 @@ jobs:
       - run: corepack enable
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - run: pnpm run setup-dev
       - name: Install Playwright dependencies and browsers
         run: pnpm run -C pandora-tests playwright-setup-ci
       - name: Typecheck E2E tests

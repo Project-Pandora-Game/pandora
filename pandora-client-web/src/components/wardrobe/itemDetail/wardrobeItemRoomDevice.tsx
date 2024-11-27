@@ -14,6 +14,7 @@ import { ICharacter } from '../../../character/character';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput';
 import { Select } from '../../../common/userInteraction/select/select';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
+import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment';
 import { Column, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider';
@@ -71,8 +72,6 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 	deployment: NonNullable<Immutable<RoomDeviceDeploymentPosition>>;
 	item: ItemPath;
 }): ReactElement | null {
-	const throttle = 100;
-
 	const { targetSelector } = useWardrobeContext();
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 
@@ -96,7 +95,7 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 			deployment: { deployed: true, position: newPosition },
 		});
 	}, [execute, targetSelector, item]);
-	const onChangeCallerThrottled = useMemo(() => throttle <= 0 ? onChangeCaller : _.throttle(onChangeCaller, throttle), [onChangeCaller, throttle]);
+	const onChangeCallerThrottled = useMemo(() => _.throttle(onChangeCaller, LIVE_UPDATE_THROTTLE), [onChangeCaller]);
 
 	const changeCallback = useCallback((positionChange: Partial<RoomDeviceDeploymentPosition>) => {
 		const newPosition: Immutable<RoomDeviceDeploymentPosition> = {

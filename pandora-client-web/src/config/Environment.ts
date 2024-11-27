@@ -17,3 +17,8 @@ export const DEVELOPMENT = NODE_ENV === 'development';
 export const USER_DEBUG = DEVELOPMENT || ENV.USER_DEBUG;
 export const GIT_COMMIT_HASH = ENV.GIT_COMMIT_HASH;
 export const GIT_DESCRIBE = ENV.GIT_DESCRIBE;
+
+// Values that make sense to tweak globally, but not necessarily through Env
+
+/** How often should an update be sent (at most) for things that update "live", such as movement, color picker, posing, ... */
+export const LIVE_UPDATE_THROTTLE = 125; // ms

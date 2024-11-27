@@ -5,6 +5,7 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo } from 'react';
 import { ICharacter } from '../../../character/character';
+import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment';
 import { useWardrobeExecuteCallback } from '../wardrobeActionContext';
 import { BoneRowElement } from './wardrobePoseView';
 
@@ -24,7 +25,7 @@ export function WardrobeBodySizeEditor({ character, characterState }: {
 		});
 	}, [execute, character]);
 
-	const setBody = useMemo(() => _.throttle(setBodyDirect, 100), [setBodyDirect]);
+	const setBody = useMemo(() => _.throttle(setBodyDirect, LIVE_UPDATE_THROTTLE), [setBodyDirect]);
 
 	return (
 		<div className='inventoryView'>

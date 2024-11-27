@@ -8,6 +8,7 @@ import { useCharacterData } from '../../character/character';
 import { useEvent } from '../../common/useEvent';
 import { usePlayer } from '../../components/gameContext/playerContextProvider';
 import { useWardrobeExecuteCallback, WardrobeActionContextProvider } from '../../components/wardrobe/wardrobeActionContext';
+import { LIVE_UPDATE_THROTTLE } from '../../config/Environment';
 import { TOAST_OPTIONS_WARNING } from '../../persistentToast';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext';
 import { useCanMoveCharacter, useCanPoseCharacter } from '../../ui/screens/room/roomPermissionChecks';
@@ -58,7 +59,7 @@ function RoomCharacterMovementToolImpl({
 		});
 	}, [id, projectionResolver, shard]);
 
-	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, 100), [setPositionRaw]);
+	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, LIVE_UPDATE_THROTTLE), [setPositionRaw]);
 
 	const {
 		position: dataPosition,
@@ -258,7 +259,7 @@ function RoomCharacterPosingToolImpl({
 		});
 	}, [execute, id]);
 
-	const setPose = useMemo(() => throttle(setPoseDirect, 100), [setPoseDirect]);
+	const setPose = useMemo(() => throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
 
 	const {
 		position: dataPosition,

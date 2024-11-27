@@ -18,6 +18,7 @@ import { BrowserStorage } from '../../browserStorage';
 import { Character, useCharacterData } from '../../character/character';
 import { useEvent } from '../../common/useEvent';
 import { useCharacterRestrictionsManager } from '../../components/gameContext/gameStateContextProvider';
+import { LIVE_UPDATE_THROTTLE } from '../../config/Environment';
 import { ShardConnector } from '../../networking/shardConnector';
 import { useObservable } from '../../observable';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
@@ -245,7 +246,7 @@ function RoomCharacterInteractiveImpl({
 		});
 	});
 
-	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, 100), [setPositionRaw]);
+	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, LIVE_UPDATE_THROTTLE), [setPositionRaw]);
 
 	const labelX = 0;
 	const labelY = PIVOT_TO_LABEL_OFFSET;

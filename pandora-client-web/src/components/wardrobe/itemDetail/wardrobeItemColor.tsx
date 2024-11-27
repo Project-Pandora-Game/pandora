@@ -11,6 +11,7 @@ import {
 	Writeable,
 } from 'pandora-common';
 import React, { ReactElement, useMemo } from 'react';
+import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment';
 import { useItemColorString } from '../../../graphics/graphicsLayer';
 import { ColorInputRGBA } from '../../common/colorInput/colorInput';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
@@ -86,7 +87,7 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup
 			<ColorInputRGBA
 				initialValue={ current }
 				resetValue={ colorDefinition.default }
-				throttle={ 100 }
+				throttle={ LIVE_UPDATE_THROTTLE }
 				disabled={ disabled || !!overrideGroup }
 				onChange={ (color) => {
 					const newColor = _.cloneDeep<Writeable<typeof bundle>>(bundle);

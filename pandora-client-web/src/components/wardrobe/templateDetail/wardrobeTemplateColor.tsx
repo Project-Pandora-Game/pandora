@@ -1,3 +1,4 @@
+import { Immutable } from 'immer';
 import {
 	Asset,
 	AssetColorization,
@@ -5,9 +6,9 @@ import {
 	ItemColorBundle,
 } from 'pandora-common';
 import React, { ReactElement } from 'react';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
+import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment';
 import { ColorInputRGBA } from '../../common/colorInput/colorInput';
-import { Immutable } from 'immer';
+import { FieldsetToggle } from '../../common/fieldsetToggle';
 
 export function WardrobeTemplateColorization({ asset, color, onChange }: {
 	asset: Asset<'personal' | 'roomDevice'>;
@@ -52,7 +53,7 @@ function WardrobeColorInput({ color, onChange, colorDefinition }: {
 			<ColorInputRGBA
 				initialValue={ color }
 				resetValue={ colorDefinition.default }
-				throttle={ 100 }
+				throttle={ LIVE_UPDATE_THROTTLE }
 				onChange={ onChange }
 				minAlpha={ colorDefinition.minAlpha }
 				title={ colorDefinition.name }

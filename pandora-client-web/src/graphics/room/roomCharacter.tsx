@@ -236,7 +236,6 @@ function RoomCharacterInteractiveImpl({
 	const {
 		yOffsetExtra,
 		scale,
-		pivot,
 	} = useRoomCharacterPosition(dataPosition, characterState, projectionResolver);
 
 	const setPositionRaw = useEvent((newX: number, newY: number): void => {
@@ -248,8 +247,8 @@ function RoomCharacterInteractiveImpl({
 
 	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, 100), [setPositionRaw]);
 
-	const labelX = pivot.x;
-	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
+	const labelX = 0;
+	const labelY = PIVOT_TO_LABEL_OFFSET;
 
 	const hitArea = useMemo(() => new Rectangle(labelX - 100, labelY - 50, 200, 100), [labelX, labelY]);
 
@@ -361,8 +360,8 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 
 	const scaleX = backView ? -1 : 1;
 
-	const labelX = pivot.x;
-	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
+	const labelX = 0;
+	const labelY = PIVOT_TO_LABEL_OFFSET;
 
 	const showDisconnectedIcon = !isOnline && interfaceChatroomOfflineCharacterFilter === 'icon';
 	const disconnectedIconTexture = useTexture(disconnectedIcon);
@@ -392,7 +391,6 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 			ref={ ref }
 			position={ position }
 			scale={ { x: scale, y: scale } }
-			pivot={ pivot }
 			zIndex={ zIndex }
 			filters={ filters }
 			sortableChildren
@@ -407,7 +405,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 			<SwapCullingDirection uniqueKey='filter' swap={ filters.length > 0 }>
 				<GraphicsCharacter
 					characterState={ characterState }
-					position={ { x: pivot.x, y: pivot.y - yOffsetExtra } }
+					position={ { x: 0, y: -yOffsetExtra } }
 					scale={ { x: scaleX, y: 1 } }
 					pivot={ pivot }
 					angle={ rotationAngle }

@@ -74,8 +74,8 @@ function RoomCharacterMovementToolImpl({
 	const backView = characterState.actualPose.view === 'back';
 	const scaleX = backView ? -1 : 1;
 
-	const labelX = pivot.x;
-	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
+	const labelX = 0;
+	const labelY = PIVOT_TO_LABEL_OFFSET;
 
 	const hitAreaRadius = 50;
 	const hitArea = useMemo(() => new PIXI.Rectangle(-hitAreaRadius, -hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius]);
@@ -103,7 +103,7 @@ function RoomCharacterMovementToolImpl({
 		} else if (pointerDownTarget.current === 'offset') {
 			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(movementHelpersContainer.current);
 
-			const newYOffset = (dragPointerEnd.y - labelY) * -scale;
+			const newYOffset = labelY - dragPointerEnd.y;
 
 			setPositionThrottled(dataPosition[0], dataPosition[1], newYOffset);
 		}
@@ -159,10 +159,9 @@ function RoomCharacterMovementToolImpl({
 			ref={ movementHelpersContainer }
 			position={ position }
 			scale={ { x: scale, y: scale } }
-			pivot={ pivot }
 		>
 			<Container
-				position={ { x: pivot.x, y: pivot.y - yOffsetExtra } }
+				position={ { x: 0, y: -yOffsetExtra } }
 				scale={ { x: scaleX, y: 1 } }
 				pivot={ pivot }
 				angle={ rotationAngle }
@@ -199,7 +198,7 @@ function RoomCharacterMovementToolImpl({
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
 				colorUpDown={ 0x0000ff }
-				position={ { x: labelX + 110, y: labelY - (yOffsetExtra / scale) } }
+				position={ { x: labelX + 110, y: labelY - yOffsetExtra } }
 				hitArea={ hitArea }
 				eventMode='static'
 				cursor='ns-resize'

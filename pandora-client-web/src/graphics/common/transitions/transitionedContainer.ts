@@ -12,6 +12,7 @@ const TRANSITIONS = {
 	y: true,
 	angle: true,
 	alpha: true,
+	zIndex: true,
 } as const satisfies Readonly<Partial<Record<ContainerAutoProps, true>>>;
 
 type ExtraTransitionableValues = {
@@ -34,6 +35,8 @@ export type TransitionedContainerCustomProps = Partial<TransitionableValues> & {
 	tickerRef: TickerRef;
 	transitionDuration: number;
 	transitionDelay?: number;
+	/** Handler that is called right after transitions are applied. */
+	onTransitionTick?: (container: PixiTransitionedContainer) => void;
 };
 
 /**
@@ -71,6 +74,7 @@ const DefaultValues: TransitionableValues = {
 	scaleY: 1,
 	skewX: 0,
 	skewY: 0,
+	zIndex: 0,
 };
 
 type AppliedProps = TransitionedContainerCustomProps & Readonly<Partial<DisplayObjectSpecialProps>>;
@@ -80,6 +84,8 @@ export class PixiTransitionedContainer extends PixiContainer {
 		[prop in keyof TransitionableValues]: TransitionHandler<TransitionableValues[prop]>;
 	};
 
+	private _onTransitionTick?: (container: PixiTransitionedContainer) => void;
+
 	constructor(props: AppliedProps) {
 		super();
 
@@ -87,6 +93,7 @@ export class PixiTransitionedContainer extends PixiContainer {
 		this._transitionHandlers = this._createTransitionHandlers(props);
 
 		// Init ticker ref
+		this._onTransitionTick = props.onTransitionTick;
 		props.tickerRef.current = this._onTick.bind(this);
 	}
 
@@ -177,6 +184,22 @@ export class PixiTransitionedContainer extends PixiContainer {
 					this.skew.y = newValue;
 				},
 			}, skew[1]),
+			zIndex: new TransitionHandler<number>({
+				transitionDuration,
+				transitionDelay,
+				// zIndex should be limited to integers only
+				valueProcessor: {
+					isTransitionable(a, b) {
+						return Number.isSafeInteger(a) && Number.isSafeInteger(b);
+					},
+					mix(a, b, ratio) {
+						return Math.round((1 - ratio) * a + ratio * b);
+					},
+				},
+				applyValue: (newValue) => {
+					this.zIndex = newValue;
+				},
+			}, initialValues.zIndex ?? DefaultValues.zIndex),
 		};
 	}
 
@@ -186,6 +209,7 @@ export class PixiTransitionedContainer extends PixiContainer {
 			oldProps.tickerRef.current = null;
 			newProps.tickerRef.current = this._onTick.bind(this);
 		}
+		this._onTransitionTick = newProps.onTransitionTick;
 
 		// If any transition properties changed, we need to regenerate the containers (they don't support updating the transition properties)
 		if (oldProps.transitionDuration !== newProps.transitionDuration ||
@@ -225,7 +249,7 @@ export class PixiTransitionedContainer extends PixiContainer {
 			this._transitionHandlers.pivotY.setValue(pivot[1]);
 			needsUpdate ||= this._transitionHandlers.pivotY.needsUpdate;
 		}
-		if (oldProps.pivot !== newProps.pivot) {
+		if (oldProps.scale !== newProps.scale) {
 			const scale = ParsePixiPointLike(newProps.scale, DefaultValues.scaleX, DefaultValues.scaleY);
 
 			this._transitionHandlers.scaleX.setValue(scale[0]);
@@ -233,13 +257,18 @@ export class PixiTransitionedContainer extends PixiContainer {
 			this._transitionHandlers.scaleY.setValue(scale[1]);
 			needsUpdate ||= this._transitionHandlers.scaleY.needsUpdate;
 		}
-		if (oldProps.pivot !== newProps.pivot) {
+		if (oldProps.skew !== newProps.skew) {
 			const skew = ParsePixiPointLike(newProps.skew, DefaultValues.skewX, DefaultValues.skewY);
 
 			this._transitionHandlers.skewX.setValue(skew[0]);
 			needsUpdate ||= this._transitionHandlers.skewX.needsUpdate;
 			this._transitionHandlers.skewY.setValue(skew[1]);
 			needsUpdate ||= this._transitionHandlers.skewY.needsUpdate;
+		}
+
+		if (oldProps.zIndex !== newProps.zIndex) {
+			this._transitionHandlers.zIndex.setValue(newProps.zIndex ?? DefaultValues.zIndex);
+			needsUpdate ||= this._transitionHandlers.zIndex.needsUpdate;
 		}
 
 		if (needsUpdate) {
@@ -259,6 +288,7 @@ export class PixiTransitionedContainer extends PixiContainer {
 			}
 		}
 
+		this._onTransitionTick?.(this);
 		if (needsFurtherUpdates) {
 			this._requestUpdate();
 		}

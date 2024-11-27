@@ -18,7 +18,7 @@ import React, { ReactElement, createContext, useCallback, useContext, useLayoutE
 import { AssetGraphicsLayer } from '../assets/assetGraphics';
 import { useImageResolutionAlternative, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource, useLayerMeshPoints } from '../assets/assetGraphicsCalculations';
 import { ChildrenProps } from '../common/reactTypes';
-import { useNullableObservable, type ReadonlyObservable } from '../observable';
+import { useNullableObservable, useObservable, type ReadonlyObservable } from '../observable';
 import { ConditionEvaluatorBase, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator';
 import { Container } from './baseComponents/container';
 import { PixiMesh, type PixiMeshProps } from './baseComponents/mesh';
@@ -149,6 +149,14 @@ export function SwapCullingDirection({ children, swap = true, uniqueKey }: Child
 		<ContextCullClockwise.Provider value={ newValue }>
 			{ children }
 		</ContextCullClockwise.Provider>
+	);
+}
+
+export function SwapCullingDirectionObservable({ children, swap, uniqueKey }: ChildrenProps & { swap: ReadonlyObservable<boolean>; uniqueKey?: string; }): ReactElement {
+	return (
+		<SwapCullingDirection swap={ useObservable(swap) } uniqueKey={ uniqueKey }>
+			{ children }
+		</SwapCullingDirection>
 	);
 }
 

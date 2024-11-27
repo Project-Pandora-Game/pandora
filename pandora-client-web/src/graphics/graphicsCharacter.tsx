@@ -24,10 +24,12 @@ import { ChildrenProps } from '../common/reactTypes';
 import { usePlayerData } from '../components/gameContext/playerContextProvider';
 import { Observable, useObservable } from '../observable';
 import { Container } from './baseComponents/container';
+import { TransitionedContainer, type PixiTransitionedContainer } from './common/transitions/transitionedContainer';
 import { ComputedLayerPriority, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def';
-import { GraphicsLayer, GraphicsLayerProps, SwapCullingDirection } from './graphicsLayer';
+import { GraphicsLayer, GraphicsLayerProps, SwapCullingDirection, SwapCullingDirectionObservable } from './graphicsLayer';
 import { useGraphicsSettings } from './graphicsSettings';
 import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense';
+import { useTickerRef } from './reconciler/tick';
 
 export type PointLike = {
 	x: number;
@@ -56,6 +58,8 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	 * @default false
 	 */
 	useBlinking?: boolean;
+
+	movementTransitionDuration?: number;
 
 	onPointerDown?: (event: FederatedPointerEvent) => void;
 	onPointerUp?: (event: FederatedPointerEvent) => void;
@@ -106,7 +110,7 @@ const BLINK_INTERVAL_MAX = 6_000; // ms
 const BLINK_LENGTH_MIN = 100; // ms
 const BLINK_LENGTH_MAX = 400; // ms
 
-function GraphicsCharacterWithManagerImpl({
+export function GraphicsCharacterWithManager({
 	layer: Layer,
 	layerFilter,
 	characterState,
@@ -122,11 +126,12 @@ function GraphicsCharacterWithManagerImpl({
 	graphicsGetter,
 	layerStateOverrideGetter,
 	useBlinking = false,
+	movementTransitionDuration = 0,
 	...graphicsProps
 }: GraphicsCharacterProps & {
 	graphicsGetter: GraphicsGetterFunction;
 	layerStateOverrideGetter?: LayerStateOverrideGetter;
-}, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
+}): ReactElement {
 	const { effectBlinking } = useGraphicsSettings();
 
 	const items = useCharacterAppearanceItems(characterState);
@@ -267,10 +272,14 @@ function GraphicsCharacterWithManagerImpl({
 
 	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => filters?.slice(), [filters]);
 
+	const swapCullingScale = useMemo(() => new Observable<boolean>(false), []);
+	const onTransitionTick = useCallback((container: PixiTransitionedContainer) => {
+		swapCullingScale.value = (container.scale.x >= 0) !== (container.scale.y >= 0);
+	}, [swapCullingScale]);
+
 	return (
-		<Container
+		<TransitionedContainer
 			{ ...graphicsProps }
-			ref={ ref }
 			pivot={ pivot }
 			position={ position }
 			scale={ scale }
@@ -281,10 +290,13 @@ function GraphicsCharacterWithManagerImpl({
 			onpointerupoutside={ onPointerUpOutside }
 			onpointermove={ onPointerMove }
 			cursor='pointer'
+			tickerRef={ useTickerRef() }
+			transitionDuration={ movementTransitionDuration }
+			onTransitionTick={ onTransitionTick }
 		>
 			<GraphicsSuspense loadingCirclePosition={ { x: 500, y: 750 } } sortableChildren>
 				<SwapCullingDirection uniqueKey='filter' swap={ filters != null && filters.length > 0 }>
-					<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
+					<SwapCullingDirectionObservable swap={ swapCullingScale }>
 						{
 							sortOrder.map((priority, i) => {
 								const layer = priorityLayers.get(priority);
@@ -292,26 +304,22 @@ function GraphicsCharacterWithManagerImpl({
 							})
 						}
 						{ children }
-					</SwapCullingDirection>
+					</SwapCullingDirectionObservable>
 				</SwapCullingDirection>
 			</GraphicsSuspense>
-		</Container>
+		</TransitionedContainer>
 	);
 }
 
-export const GraphicsCharacterWithManager = React.forwardRef(GraphicsCharacterWithManagerImpl);
-
-function GraphicsCharacterImpl(props: GraphicsCharacterProps, ref: React.ForwardedRef<PIXI.Container>): ReactElement | null {
+export function GraphicsCharacter(props: GraphicsCharacterProps): ReactElement | null {
 	const manager = useObservable(GraphicsManagerInstance);
 	const graphicsGetter = useMemo<GraphicsGetterFunction | undefined>(() => manager?.getAssetGraphicsById.bind(manager), [manager]);
 
 	if (!manager || !graphicsGetter)
 		return null;
 
-	return <GraphicsCharacterWithManager { ...props } graphicsGetter={ graphicsGetter } ref={ ref } />;
+	return <GraphicsCharacterWithManager { ...props } graphicsGetter={ graphicsGetter } />;
 }
-
-export const GraphicsCharacter = React.forwardRef(GraphicsCharacterImpl);
 
 export function useAssetPreferenceVisibilityCheck(): (asset: Asset) => boolean {
 	const preferences = usePlayerData()?.assetPreferences ?? ASSET_PREFERENCES_DEFAULT;

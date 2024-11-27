@@ -29,8 +29,10 @@ import { Container } from '../baseComponents/container';
 import { Graphics } from '../baseComponents/graphics';
 import { Sprite } from '../baseComponents/sprite';
 import { Text } from '../baseComponents/text';
+import { TransitionedContainer } from '../common/transitions/transitionedContainer';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
 import { MASK_SIZE, SwapCullingDirection } from '../graphicsLayer';
+import { useTickerRef } from '../reconciler/tick';
 import { useTexture } from '../useTexture';
 import { CalculateCharacterDeviceSlotPosition } from './roomDevice';
 import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
@@ -52,6 +54,7 @@ type RoomCharacterDisplayProps = {
 
 	debugConfig?: Immutable<ChatroomDebugConfig>;
 
+	quickTransitions?: boolean;
 	hitArea?: PIXI.Rectangle;
 	cursor?: PIXI.Cursor;
 	eventMode?: PIXI.EventMode;
@@ -66,6 +69,8 @@ export type CharacterStateProps = {
 
 export const PIVOT_TO_LABEL_OFFSET = 100;
 export const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
+const CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL = 250; // ms
+const CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION = LIVE_UPDATE_THROTTLE; // ms
 
 export const SettingDisplayCharacterName = BrowserStorage.createSession('graphics.display-character-name', true, z.boolean());
 
@@ -253,19 +258,18 @@ function RoomCharacterInteractiveImpl({
 
 	const hitArea = useMemo(() => new Rectangle(labelX - 100, labelY - 50, 200, 100), [labelX, labelY]);
 
-	const characterContainer = useRef<PIXI.Container>(null);
 	const dragging = useRef<Point | null>(null);
 	/** Time at which user pressed button/touched */
 	const pointerDown = useRef<number | null>(null);
 
 	const onDragStart = useCallback((event: FederatedPointerEvent) => {
-		if (dragging.current || !characterContainer.current) return;
-		dragging.current = event.getLocalPosition<Point>(characterContainer.current.parent);
+		if (dragging.current) return;
+		dragging.current = event.getLocalPosition<Point>(event.currentTarget.parent);
 	}, []);
 
 	const onDragMove = useEvent((event: FederatedPointerEvent) => {
-		if (!dragging.current || !spaceInfo || !characterContainer.current) return;
-		const dragPointerEnd = event.getLocalPosition<Point>(characterContainer.current.parent);
+		if (!dragging.current || !spaceInfo) return;
+		const dragPointerEnd = event.getLocalPosition<Point>(event.currentTarget.parent);
 
 		const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, (dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale), 0);
 
@@ -304,13 +308,13 @@ function RoomCharacterInteractiveImpl({
 
 	return (
 		<RoomCharacterDisplay
-			ref={ characterContainer }
 			globalState={ globalState }
 			character={ character }
 			characterState={ characterState }
 			projectionResolver={ projectionResolver }
 			debugConfig={ debugConfig }
 			showName={ enableMenu }
+			quickTransitions={ isFocused }
 			cursor={ enableMenu ? 'pointer' : 'none' }
 			eventMode={ enableMenu ? 'static' : 'none' }
 			hitArea={ hitArea }
@@ -321,20 +325,21 @@ function RoomCharacterInteractiveImpl({
 	);
 }
 
-const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
+function RoomCharacterDisplay({
 	character,
 	characterState,
 	projectionResolver,
 	showName,
 	debugConfig,
 
+	quickTransitions = false,
 	eventMode,
 	cursor,
 	hitArea,
 	onPointerDown,
 	onPointerMove,
 	onPointerUp,
-}: RoomCharacterDisplayProps & CharacterStateProps, ref?: React.ForwardedRef<PIXI.Container>): ReactElement | null {
+}: RoomCharacterDisplayProps & CharacterStateProps): ReactElement | null {
 	const {
 		name,
 		position: dataPosition,
@@ -384,12 +389,14 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 	// If character is in a device, do not render it here, it will be rendered by the device
 	const roomDeviceLink = useCharacterRestrictionsManager(characterState, character, (rm) => rm.getRoomDeviceLink());
 
+	const transitionTickerRef = useTickerRef();
+	const movementTransitionDuration = quickTransitions ? CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION : CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL;
+
 	if (roomDeviceLink != null)
 		return null;
 
 	return (
-		<Container
-			ref={ ref }
+		<TransitionedContainer
 			position={ position }
 			scale={ { x: scale, y: scale } }
 			zIndex={ zIndex }
@@ -402,6 +409,8 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 			onpointerup={ onPointerUp }
 			onpointerupoutside={ onPointerUp }
 			onglobalpointermove={ onPointerMove }
+			transitionDuration={ movementTransitionDuration }
+			tickerRef={ transitionTickerRef }
 		>
 			<SwapCullingDirection uniqueKey='filter' swap={ filters.length > 0 }>
 				<GraphicsCharacter
@@ -411,6 +420,7 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 					pivot={ pivot }
 					angle={ rotationAngle }
 					useBlinking
+					movementTransitionDuration={ movementTransitionDuration }
 				>
 					{
 						!debugConfig?.characterDebugOverlay ? null : (
@@ -455,9 +465,9 @@ const RoomCharacterDisplay = React.forwardRef(function RoomCharacterDisplay({
 					)
 				}
 			</SwapCullingDirection>
-		</Container>
+		</TransitionedContainer>
 	);
-});
+}
 
 function RoomCharacterDebugGraphicsInner({ pivot }: {
 	pivot: Readonly<PointLike>;

@@ -15,8 +15,10 @@ import { useCanMoveCharacter, useCanPoseCharacter } from '../../ui/screens/room/
 import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
 import { Container } from '../baseComponents/container';
 import { Graphics } from '../baseComponents/graphics';
+import { TransitionedContainer } from '../common/transitions/transitionedContainer';
 import { type PointLike } from '../graphicsCharacter';
 import { MovementHelperGraphics } from '../movementHelper';
+import { useTickerRef } from '../reconciler/tick';
 import { GetAngle } from '../utility';
 import { CHARACTER_WAIT_DRAG_THRESHOLD, PIVOT_TO_LABEL_OFFSET, useRoomCharacterPosition, type CharacterStateProps, type RoomCharacterInteractiveProps } from './roomCharacter';
 
@@ -81,28 +83,27 @@ function RoomCharacterMovementToolImpl({
 	const hitAreaRadius = 50;
 	const hitArea = useMemo(() => new PIXI.Rectangle(-hitAreaRadius, -hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius]);
 
-	const movementHelpersContainer = useRef<PIXI.Container>(null);
 	const dragging = useRef<PIXI.Point | null>(null);
 	/** Time at which user pressed button/touched */
 	const pointerDown = useRef<number | null>(null);
 	const pointerDownTarget = useRef<'pos' | 'offset' | null>(null);
 
 	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (dragging.current || !movementHelpersContainer.current) return;
-		dragging.current = event.getLocalPosition<PIXI.Point>(movementHelpersContainer.current.parent);
+		if (dragging.current) return;
+		dragging.current = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent.parent);
 	}, []);
 
 	const onDragMove = useEvent((event: PIXI.FederatedPointerEvent) => {
-		if (!dragging.current || !movementHelpersContainer.current) return;
+		if (!dragging.current) return;
 
 		if (pointerDownTarget.current === 'pos') {
-			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(movementHelpersContainer.current.parent);
+			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent.parent);
 
 			const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale, 0);
 
 			setPositionThrottled(newX, newY, yOffsetExtra);
 		} else if (pointerDownTarget.current === 'offset') {
-			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(movementHelpersContainer.current);
+			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent);
 
 			const newYOffset = labelY - dragPointerEnd.y;
 
@@ -156,16 +157,19 @@ function RoomCharacterMovementToolImpl({
 	const canPoseCharacter = useCanPoseCharacter(character);
 
 	return (
-		<Container
-			ref={ movementHelpersContainer }
+		<TransitionedContainer
 			position={ position }
 			scale={ { x: scale, y: scale } }
+			transitionDuration={ LIVE_UPDATE_THROTTLE }
+			tickerRef={ useTickerRef() }
 		>
-			<Container
+			<TransitionedContainer
 				position={ { x: 0, y: -yOffsetExtra } }
 				scale={ { x: scaleX, y: 1 } }
 				pivot={ pivot }
 				angle={ rotationAngle }
+				transitionDuration={ LIVE_UPDATE_THROTTLE }
+				tickerRef={ useTickerRef() }
 			>
 				{
 					canPoseCharacter !== 'forbidden' ? (
@@ -181,7 +185,7 @@ function RoomCharacterMovementToolImpl({
 						/>
 					) : null
 				}
-			</Container>
+			</TransitionedContainer>
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
 				colorLeftRight={ 0xff0000 }
@@ -208,7 +212,7 @@ function RoomCharacterMovementToolImpl({
 				onpointerupoutside={ onPointerUp }
 				onglobalpointermove={ onPointerMove }
 			/>
-		</Container>
+		</TransitionedContainer>
 	);
 }
 

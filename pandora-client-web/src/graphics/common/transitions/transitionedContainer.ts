@@ -1,0 +1,270 @@
+import { omit } from 'lodash';
+import { KnownObject } from 'pandora-common';
+import { Container as PixiContainer, type Ticker } from 'pixi.js';
+import { CONTAINER_AUTO_PROPS, CONTAINER_EVENTS, type ContainerAutoProps, type ContainerEventMap } from '../../baseComponents/container';
+import { ParsePixiPointLike, RegisterPixiComponent, type DisplayObjectSpecialProps, type PixiDisplayObjectWriteableProps } from '../../reconciler/component';
+import { PixiElementRequestUpdate } from '../../reconciler/element';
+import type { TickerRef } from '../../reconciler/tick';
+import { TRANSITION_PROCESSOR_NUMBER, TransitionHandler } from './transitionHandler';
+
+const TRANSITIONS = {
+	x: true,
+	y: true,
+	angle: true,
+	alpha: true,
+} as const satisfies Readonly<Partial<Record<ContainerAutoProps, true>>>;
+
+type ExtraTransitionableValues = {
+	pivotX: number;
+	pivotY: number;
+	scaleX: number;
+	scaleY: number;
+	skewX: number;
+	skewY: number;
+};
+type TransitionableValues = Pick<PixiDisplayObjectWriteableProps<PixiContainer>, keyof typeof TRANSITIONS> & ExtraTransitionableValues;
+
+export const TRANSITIONED_CONTAINER_AUTO_PROPS = omit(CONTAINER_AUTO_PROPS, ...KnownObject.keys(TRANSITIONS));
+export type TransitionedContainerAutoProps = keyof typeof TRANSITIONED_CONTAINER_AUTO_PROPS;
+
+export const TRANSITIONED_CONTAINER_EVENTS = CONTAINER_EVENTS;
+export type TransitionedContainerEventMap = ContainerEventMap;
+
+export type TransitionedContainerCustomProps = Partial<TransitionableValues> & {
+	tickerRef: TickerRef;
+	transitionDuration: number;
+	transitionDelay?: number;
+};
+
+/**
+ * Container is a general-purpose display object that holds children. It also adds built-in support for advanced
+ * rendering features like masking and filtering.
+ *
+ * It is the base class of all display objects that act as a container for other objects, including Graphics
+ * and Sprite.
+ */
+export const TransitionedContainer = RegisterPixiComponent<PixiTransitionedContainer, TransitionedContainerAutoProps, TransitionedContainerEventMap, TransitionedContainerCustomProps>('TransitionedContainer', {
+	create(props) {
+		return new PixiTransitionedContainer(props);
+	},
+	applyCustomProps(instance, oldProps, newProps) {
+		instance.applyProps(oldProps, newProps);
+	},
+	applySkipSpecialPropsApply: {
+		position: true,
+		pivot: true,
+		scale: true,
+		skew: true,
+	},
+	autoProps: CONTAINER_AUTO_PROPS,
+	events: CONTAINER_EVENTS,
+});
+
+const DefaultValues: TransitionableValues = {
+	x: 0,
+	y: 0,
+	angle: 0,
+	alpha: 1,
+	pivotX: 0,
+	pivotY: 0,
+	scaleX: 1,
+	scaleY: 1,
+	skewX: 0,
+	skewY: 0,
+};
+
+type AppliedProps = TransitionedContainerCustomProps & Readonly<Partial<DisplayObjectSpecialProps>>;
+
+export class PixiTransitionedContainer extends PixiContainer {
+	private _transitionHandlers: {
+		[prop in keyof TransitionableValues]: TransitionHandler<TransitionableValues[prop]>;
+	};
+
+	constructor(props: AppliedProps) {
+		super();
+
+		// Init the transition handlers (needs to be done manually due to possibility of different transition functions)
+		this._transitionHandlers = this._createTransitionHandlers(props);
+
+		// Init ticker ref
+		props.tickerRef.current = this._onTick.bind(this);
+	}
+
+	private _createTransitionHandlers({ transitionDuration, transitionDelay, ...initialValues }: AppliedProps): typeof this._transitionHandlers {
+		const position = ParsePixiPointLike(initialValues.position, DefaultValues.x, DefaultValues.y);
+		const pivot = ParsePixiPointLike(initialValues.pivot, DefaultValues.pivotX, DefaultValues.pivotY);
+		const scale = ParsePixiPointLike(initialValues.scale, DefaultValues.scaleX, DefaultValues.scaleY);
+		const skew = ParsePixiPointLike(initialValues.skew, DefaultValues.skewX, DefaultValues.skewY);
+
+		return {
+			x: new TransitionHandler<number>({
+				transitionDuration,
+				transitionDelay,
+				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
+				applyValue: (newValue) => {
+					this.x = newValue;
+				},
+			}, initialValues.x ?? position[0]),
+			y: new TransitionHandler<number>({
+				transitionDuration,
+				transitionDelay,
+				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
+				applyValue: (newValue) => {
+					this.y = newValue;
+				},
+			}, initialValues.y ?? position[1]),
+			angle: new TransitionHandler<number>({
+				transitionDuration,
+				transitionDelay,
+				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
+				applyValue: (newValue) => {
+					this.angle = newValue;
+				},
+			}, initialValues.angle ?? DefaultValues.angle),
+			alpha: new TransitionHandler<number>({
+				transitionDuration,
+				transitionDelay,
+				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
+				applyValue: (newValue) => {
+					this.alpha = newValue;
+				},
+			}, initialValues.alpha ?? DefaultValues.alpha),
+			pivotX: new TransitionHandler<number>({
+				transitionDuration,
+				transitionDelay,
+				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
+				applyValue: (newValue) => {
+					this.pivot.x = newValue;
+				},
+			}, pivot[0]),
+			pivotY: new TransitionHandler<number>({
+				transitionDuration,
+				transitionDelay,
+				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
+				applyValue: (newValue) => {
+					this.pivot.y = newValue;
+				},
+			}, pivot[1]),
+			scaleX: new TransitionHandler<number>({
+				transitionDuration,
+				transitionDelay,
+				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
+				applyValue: (newValue) => {
+					this.scale.x = newValue;
+				},
+			}, scale[0]),
+			scaleY: new TransitionHandler<number>({
+				transitionDuration,
+				transitionDelay,
+				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
+				applyValue: (newValue) => {
+					this.scale.y = newValue;
+				},
+			}, scale[1]),
+			skewX: new TransitionHandler<number>({
+				transitionDuration,
+				transitionDelay,
+				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
+				applyValue: (newValue) => {
+					this.skew.x = newValue;
+				},
+			}, skew[0]),
+			skewY: new TransitionHandler<number>({
+				transitionDuration,
+				transitionDelay,
+				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
+				applyValue: (newValue) => {
+					this.skew.y = newValue;
+				},
+			}, skew[1]),
+		};
+	}
+
+	public applyProps(oldProps: AppliedProps, newProps: AppliedProps) {
+		// Update ticker
+		if (oldProps.tickerRef !== newProps.tickerRef) {
+			oldProps.tickerRef.current = null;
+			newProps.tickerRef.current = this._onTick.bind(this);
+		}
+
+		// If any transition properties changed, we need to regenerate the containers (they don't support updating the transition properties)
+		if (oldProps.transitionDuration !== newProps.transitionDuration ||
+			oldProps.transitionDelay !== newProps.transitionDelay
+		) {
+			this._transitionHandlers = this._createTransitionHandlers(newProps);
+			this._requestUpdate();
+			return;
+		}
+
+		// Update all the properties
+		let needsUpdate = false;
+
+		if (oldProps.x !== newProps.x || oldProps.y !== newProps.y || oldProps.position !== newProps.position) {
+			const position = ParsePixiPointLike(newProps.position, DefaultValues.x, DefaultValues.y);
+			this._transitionHandlers.x.setValue(newProps.x ?? position[0]);
+			needsUpdate ||= this._transitionHandlers.x.needsUpdate;
+			this._transitionHandlers.y.setValue(newProps.y ?? position[1]);
+			needsUpdate ||= this._transitionHandlers.y.needsUpdate;
+		}
+
+		if (oldProps.angle !== newProps.angle) {
+			this._transitionHandlers.angle.setValue(newProps.angle ?? DefaultValues.angle);
+			needsUpdate ||= this._transitionHandlers.angle.needsUpdate;
+		}
+
+		if (oldProps.alpha !== newProps.alpha) {
+			this._transitionHandlers.alpha.setValue(newProps.alpha ?? DefaultValues.alpha);
+			needsUpdate ||= this._transitionHandlers.alpha.needsUpdate;
+		}
+
+		if (oldProps.pivot !== newProps.pivot) {
+			const pivot = ParsePixiPointLike(newProps.pivot, DefaultValues.pivotX, DefaultValues.pivotY);
+
+			this._transitionHandlers.pivotX.setValue(pivot[0]);
+			needsUpdate ||= this._transitionHandlers.pivotX.needsUpdate;
+			this._transitionHandlers.pivotY.setValue(pivot[1]);
+			needsUpdate ||= this._transitionHandlers.pivotY.needsUpdate;
+		}
+		if (oldProps.pivot !== newProps.pivot) {
+			const scale = ParsePixiPointLike(newProps.scale, DefaultValues.scaleX, DefaultValues.scaleY);
+
+			this._transitionHandlers.scaleX.setValue(scale[0]);
+			needsUpdate ||= this._transitionHandlers.scaleX.needsUpdate;
+			this._transitionHandlers.scaleY.setValue(scale[1]);
+			needsUpdate ||= this._transitionHandlers.scaleY.needsUpdate;
+		}
+		if (oldProps.pivot !== newProps.pivot) {
+			const skew = ParsePixiPointLike(newProps.skew, DefaultValues.skewX, DefaultValues.skewY);
+
+			this._transitionHandlers.skewX.setValue(skew[0]);
+			needsUpdate ||= this._transitionHandlers.skewX.needsUpdate;
+			this._transitionHandlers.skewY.setValue(skew[1]);
+			needsUpdate ||= this._transitionHandlers.skewY.needsUpdate;
+		}
+
+		if (needsUpdate) {
+			this._requestUpdate();
+		}
+	}
+
+	private _onTick(ticker: Ticker): void {
+		// HACK: Is there really no way to get currentTime out of the ticker?
+		const now = ticker.lastTime + ticker.elapsedMS;
+
+		let needsFurtherUpdates = false;
+		for (const transition of KnownObject.values(this._transitionHandlers)) {
+			if (transition.needsUpdate) {
+				transition.tick(now);
+				needsFurtherUpdates ||= transition.needsUpdate;
+			}
+		}
+
+		if (needsFurtherUpdates) {
+			this._requestUpdate();
+		}
+	}
+
+	private _requestUpdate() {
+		PixiElementRequestUpdate(this);
+	}
+}

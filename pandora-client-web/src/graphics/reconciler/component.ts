@@ -147,6 +147,8 @@ export type PixiComponentConfig<
 		oldProps: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>>,
 		newProps: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>>,
 	): void;
+	/** Skips applying of the specified special props, if custom props wants to apply them itself. */
+	applySkipSpecialPropsApply?: Partial<Omit<Record<DisplayObjectSpecialPropKeys, true>, 'visible'>>;
 };
 
 /** Full props of a component defining how the component can be used by client code. */

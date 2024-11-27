@@ -235,24 +235,26 @@ export class PixiInternalElementInstance<
 				continue;
 			} else if (PixiComponentIsSpecialProperty(key)) {
 				// Apply special properties
-				switch (key) {
-					case 'visible':
-						this.instance.visible = nextProps.visible !== false && !this._fiberHidden;
-						break;
-					case 'pivot':
-						this.instance.pivot.set(...ParsePixiPointLike(nextProps.pivot, 0, 0));
-						break;
-					case 'position':
-						this.instance.position.set(...ParsePixiPointLike(nextProps.position, 0, 0));
-						break;
-					case 'scale':
-						this.instance.scale.set(...ParsePixiPointLike(nextProps.scale, 1, 1));
-						break;
-					case 'skew':
-						this.instance.skew.set(...ParsePixiPointLike(nextProps.skew, 0, 0));
-						break;
-					default:
-						AssertNever(key);
+				if (key === 'visible' || this.config.applySkipSpecialPropsApply?.[key] !== true) {
+					switch (key) {
+						case 'visible':
+							this.instance.visible = nextProps.visible !== false && !this._fiberHidden;
+							break;
+						case 'pivot':
+							this.instance.pivot.set(...ParsePixiPointLike(nextProps.pivot, 0, 0));
+							break;
+						case 'position':
+							this.instance.position.set(...ParsePixiPointLike(nextProps.position, 0, 0));
+							break;
+						case 'scale':
+							this.instance.scale.set(...ParsePixiPointLike(nextProps.scale, 1, 1));
+							break;
+						case 'skew':
+							this.instance.skew.set(...ParsePixiPointLike(nextProps.skew, 0, 0));
+							break;
+						default:
+							AssertNever(key);
+					}
 				}
 			} else if (Object.prototype.hasOwnProperty.call(this.config.autoProps, key)) {
 				// Apply writable props

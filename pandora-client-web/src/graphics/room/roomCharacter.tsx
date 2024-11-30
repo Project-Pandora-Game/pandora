@@ -32,6 +32,7 @@ import { Text } from '../baseComponents/text';
 import { TransitionedContainer } from '../common/transitions/transitionedContainer';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
 import { MASK_SIZE, SwapCullingDirection } from '../graphicsLayer';
+import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings';
 import { useTickerRef } from '../reconciler/tick';
 import { useTexture } from '../useTexture';
 import { CalculateCharacterDeviceSlotPosition } from './roomDevice';
@@ -348,6 +349,7 @@ function RoomCharacterDisplay({
 	} = useCharacterData(character);
 
 	const { interfaceChatroomOfflineCharacterFilter, interfaceChatroomCharacterNameFontSize } = useAccountSettings();
+	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
 	const playerFilters = usePlayerVisionFilters(character.isPlayer());
 	const characterFilters = useCharacterDisplayFilters(character);
@@ -390,7 +392,9 @@ function RoomCharacterDisplay({
 	const roomDeviceLink = useCharacterRestrictionsManager(characterState, character, (rm) => rm.getRoomDeviceLink());
 
 	const transitionTickerRef = useTickerRef();
-	const movementTransitionDuration = quickTransitions ? CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION : CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL;
+	const movementTransitionDuration = !smoothMovementEnabled ? 0 :
+		quickTransitions ? CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION :
+		CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL;
 
 	if (roomDeviceLink != null)
 		return null;

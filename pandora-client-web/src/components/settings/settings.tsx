@@ -1,15 +1,15 @@
 import React, { ReactElement } from 'react';
-import './settings.scss';
+import { useNavigate } from 'react-router-dom';
 import { GIT_DESCRIBE } from '../../config/Environment';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
 import { AccountSettings } from './accountSettings';
-import { NotificationSettings } from './notificationSettings';
-import { useNavigate } from 'react-router-dom';
 import { CharacterSettings } from './characterSettings';
-import { GraphicsSettings } from '../../graphics/graphicsSettings';
+import { GraphicsSettings } from './graphicsSettings';
 import { InterfaceSettings } from './interfaceSettings';
+import { NotificationSettings } from './notificationSettings';
 import { PermissionsSettings } from './permissionsSettings';
 import { SecuritySettings } from './securitySettings';
+import './settings.scss';
 
 export function Settings(): ReactElement | null {
 	const navigate = useNavigate();

@@ -17,6 +17,7 @@ import { Container } from '../baseComponents/container';
 import { Graphics } from '../baseComponents/graphics';
 import { TransitionedContainer } from '../common/transitions/transitionedContainer';
 import { type PointLike } from '../graphicsCharacter';
+import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings';
 import { MovementHelperGraphics } from '../movementHelper';
 import { useTickerRef } from '../reconciler/tick';
 import { GetAngle } from '../utility';
@@ -49,6 +50,7 @@ function RoomCharacterMovementToolImpl({
 	shard,
 }: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
 	const id = characterState.id;
+	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
 	const {
 		setRoomSceneMode,
@@ -160,7 +162,7 @@ function RoomCharacterMovementToolImpl({
 		<TransitionedContainer
 			position={ position }
 			scale={ { x: scale, y: scale } }
-			transitionDuration={ LIVE_UPDATE_THROTTLE }
+			transitionDuration={ smoothMovementEnabled ? LIVE_UPDATE_THROTTLE : 0 }
 			tickerRef={ useTickerRef() }
 		>
 			<TransitionedContainer
@@ -168,7 +170,7 @@ function RoomCharacterMovementToolImpl({
 				scale={ { x: scaleX, y: 1 } }
 				pivot={ pivot }
 				angle={ rotationAngle }
-				transitionDuration={ LIVE_UPDATE_THROTTLE }
+				transitionDuration={ smoothMovementEnabled ? LIVE_UPDATE_THROTTLE : 0 }
 				tickerRef={ useTickerRef() }
 			>
 				{

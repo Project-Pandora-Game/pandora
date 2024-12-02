@@ -17,24 +17,12 @@ import { EditorAssetGraphics } from '../character/appearanceEditor';
 import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer';
 
 export function SetupLayer({
-	layer,
-	item,
-	characterState,
 	...props
 }: GraphicsLayerProps): ReactElement {
-	const evaluator = useAppearanceConditionEvaluator(characterState);
-
-	const {
-		imageUv,
-	} = useLayerImageSource(evaluator, layer, item);
-
 	return (
 		<EditorLayer
 			{ ...props }
-			layer={ layer }
-			item={ item }
-			verticesPoseOverride={ imageUv }
-			characterState={ characterState }
+			displayUvPose
 		/>
 	);
 }

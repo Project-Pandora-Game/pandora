@@ -161,3 +161,64 @@ export function ProduceAppearancePose(
 		}
 	});
 }
+
+/**
+ * Takes two poses and combines them using a ratio.
+ * Bones are moved to a valid pose based on the ratio, while enum values are set to the closest of the two values.
+ * @param poseA - Pose A, used at ratio=0
+ * @param poseB - Pose B, used at ratio=1
+ * @param ratio - The ratio to use, must be a value in range [0, 1]
+ * @returns The combined pose.
+ */
+export function CombineAppearancePoses(
+	poseA: Immutable<AppearancePose>,
+	poseB: Immutable<AppearancePose>,
+	ratio: number,
+): Immutable<AppearancePose> {
+	if (ratio <= 0)
+		return poseA;
+
+	if (ratio >= 1)
+		return poseB;
+
+	const pickA = ratio < 0.5;
+
+	function combineArmsPose(armPoseA: Immutable<AppearanceArmPose>, armPoseB: Immutable<AppearanceArmPose>): Immutable<AppearanceArmPose> {
+		return {
+			position: pickA ? armPoseA.position : armPoseB.position,
+			rotation: pickA ? armPoseA.rotation : armPoseB.rotation,
+			fingers: pickA ? armPoseA.fingers : armPoseB.fingers,
+		};
+	}
+
+	const bones: Record<string, number | undefined> = {};
+
+	for (const bone of new Set([...Object.keys(poseA.bones), ...Object.keys(poseB.bones)])) {
+		let a = poseA.bones[bone] ?? 0;
+		let b = poseB.bones[bone] ?? 0;
+		const diff = Math.abs(a - b);
+		// If it is smaller distance to wrap around, then do that
+		if (a < 0 && (Math.abs(a + 360 - b) < diff)) {
+			a += 360;
+		} else if (b < 0 && (Math.abs(a - (b + 360)) < diff)) {
+			b += 360;
+		}
+		let res = Math.round((1 - ratio) * a + ratio * b);
+		// Fix for wrap-around
+		if (res > 360) {
+			res -= 360;
+		}
+		bones[bone] = res;
+	}
+
+	return {
+		bones,
+		leftArm: combineArmsPose(poseA.leftArm, poseB.leftArm),
+		rightArm: combineArmsPose(poseA.rightArm, poseB.rightArm),
+		armsOrder: {
+			upper: pickA ? poseA.armsOrder.upper : poseB.armsOrder.upper,
+		},
+		legs: pickA ? poseA.legs : poseB.legs,
+		view: pickA ? poseA.view : poseB.view,
+	};
+}

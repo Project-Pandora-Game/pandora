@@ -4,7 +4,6 @@ import {
 	Assert,
 	AssertNever,
 	AssetFrameworkCharacterState,
-	BoneName,
 	CharacterSize,
 	HexColorString,
 	Item,
@@ -119,7 +118,13 @@ export interface GraphicsLayerProps extends ChildrenProps {
 	lowerZIndex: number;
 	layer: AssetGraphicsLayer;
 	item: Item | null;
-	verticesPoseOverride?: Record<BoneName, number>;
+
+	/**
+	 * Displays the vertices in pose matching the uv pose instead of the normal one.
+	 * Useful for showing exact cutout of the original texture (which is useful in Editor).
+	 * @default false
+	 */
+	displayUvPose?: boolean;
 	state?: LayerStateOverrides;
 
 	/**
@@ -167,7 +172,7 @@ export function GraphicsLayer({
 	lowerZIndex,
 	layer,
 	item,
-	verticesPoseOverride,
+	displayUvPose = false,
 	state,
 	getTexture,
 	characterBlinking,
@@ -177,9 +182,6 @@ export function GraphicsLayer({
 
 	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
 	const evaluator = useAppearanceConditionEvaluator(characterState, currentlyBlinking);
-
-	const evaluatorVerticesPose = useAppearanceConditionEvaluator(characterState, currentlyBlinking, verticesPoseOverride);
-	const vertices = useLayerVertices(evaluatorVerticesPose, points, layer, item, false);
 
 	const {
 		colorizationKey,
@@ -192,6 +194,8 @@ export function GraphicsLayer({
 	} = useLayerImageSource(evaluator, layer, item);
 
 	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, currentlyBlinking, imageUv);
+
+	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator, points, layer, item, false);
 	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true);
 
 	const alphaImage = useMemo<string>(() => {

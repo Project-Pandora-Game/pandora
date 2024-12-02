@@ -59,7 +59,7 @@ export const TransitionedContainer = RegisterPixiComponent<PixiTransitionedConta
 		scale: true,
 		skew: true,
 	},
-	autoProps: CONTAINER_AUTO_PROPS,
+	autoProps: TRANSITIONED_CONTAINER_AUTO_PROPS,
 	events: CONTAINER_EVENTS,
 });
 

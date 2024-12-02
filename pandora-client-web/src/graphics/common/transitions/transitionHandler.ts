@@ -27,6 +27,26 @@ export const TRANSITION_PROCESSOR_NUMBER: Readonly<TransitionHandlerValueProcess
 	},
 };
 
+export function MakeTransitionProcessorNumberWithModulo(modulo: number): Readonly<TransitionHandlerValueProcessor<number>> {
+	return {
+		mix(a, b, ratio) {
+			a %= modulo;
+			b %= modulo;
+			const diff = Math.abs(a - b);
+			// If it is smaller distance to wrap around, then do that
+			if ((Math.abs(a + modulo - b) < diff)) {
+				a += modulo;
+			} else if ((Math.abs(a - (b + modulo)) < diff)) {
+				b += modulo;
+			}
+			return ((1 - ratio) * a + ratio * b) % modulo;
+		},
+		isTransitionable(a, b) {
+			return Number.isFinite(a) && Number.isFinite(b);
+		},
+	};
+}
+
 export interface TransitionHandlerProps<TValue> {
 	/** Duration of the transition, in ms */
 	transitionDuration: number;

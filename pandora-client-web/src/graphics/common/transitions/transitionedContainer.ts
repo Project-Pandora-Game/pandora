@@ -5,7 +5,7 @@ import { CONTAINER_AUTO_PROPS, CONTAINER_EVENTS, type ContainerAutoProps, type C
 import { ParsePixiPointLike, RegisterPixiComponent, type DisplayObjectSpecialProps, type PixiDisplayObjectWriteableProps } from '../../reconciler/component';
 import { PixiElementRequestUpdate } from '../../reconciler/element';
 import type { TickerRef } from '../../reconciler/tick';
-import { TRANSITION_PROCESSOR_NUMBER, TransitionHandler } from './transitionHandler';
+import { MakeTransitionProcessorNumberWithModulo, TRANSITION_PROCESSOR_NUMBER, TransitionHandler } from './transitionHandler';
 
 const TRANSITIONS = {
 	x: true,
@@ -123,7 +123,7 @@ export class PixiTransitionedContainer extends PixiContainer {
 			angle: new TransitionHandler<number>({
 				transitionDuration,
 				transitionDelay,
-				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
+				valueProcessor: MakeTransitionProcessorNumberWithModulo(360),
 				applyValue: (newValue) => {
 					this.angle = newValue;
 				},

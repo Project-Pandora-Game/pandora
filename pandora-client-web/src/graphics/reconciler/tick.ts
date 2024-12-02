@@ -1,5 +1,5 @@
 import type { Ticker } from 'pixi.js';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef, type MutableRefObject } from 'react';
 import { usePixiAppOptional } from './appContext';
 
 /**
@@ -26,4 +26,17 @@ export function usePixiTick(callback: (ticker: Ticker) => void, enabled: boolean
 			ticker.remove(tick);
 		};
 	}, [app, callback, enabled]);
+}
+
+export type TickerRef = MutableRefObject<((ticker: Ticker) => void) | null>;
+
+export function useTickerRef(): TickerRef {
+	const ref = useRef<((ticker: Ticker) => void) | null>(null);
+
+	const callback = useCallback((ticker: Ticker) => {
+		ref.current?.(ticker);
+	}, [ref]);
+	usePixiTick(callback);
+
+	return ref;
 }

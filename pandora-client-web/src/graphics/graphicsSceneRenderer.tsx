@@ -193,9 +193,9 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		this._animationFrameRequest = requestAnimationFrame(this._onAnimationFrame);
 	}
 
-	private _onAnimationFrame: FrameRequestCallback = () => {
+	private _onAnimationFrame: FrameRequestCallback = (time) => {
 		this._animationFrameRequest = null;
-		this.renderStage();
+		this.renderStage(time);
 	};
 
 	public needsRenderUpdate = () => {
@@ -203,10 +203,10 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		this._requestAnimationFrame();
 	};
 
-	public renderStage = () => {
+	public renderStage = (time: DOMHighResTimeStamp) => {
 		if (this._needsUpdate && this.app != null) {
 			this._needsUpdate = false;
-			this.app.ticker.update();
+			this.app.ticker.update(time);
 		}
 	};
 

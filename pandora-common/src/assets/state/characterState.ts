@@ -124,6 +124,13 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		return new AssetFrameworkCharacterState(this, { items: newItems });
 	}
 
+	public produceWithRequestedPose(requestedPose: AppearancePose): AssetFrameworkCharacterState {
+		if (requestedPose === this.requestedPose)
+			return this;
+
+		return new AssetFrameworkCharacterState(this, { requestedPose });
+	}
+
 	public produceWithPose(pose: PartialAppearancePose, type: BoneType | true, missingAsZero: boolean = false): AssetFrameworkCharacterState {
 		const resultPose = ProduceAppearancePose(
 			this.requestedPose,
@@ -135,20 +142,14 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			pose,
 		);
 
-		// Return current if no change
-		if (resultPose === this.requestedPose)
-			return this;
-
-		return new AssetFrameworkCharacterState(this, { requestedPose: resultPose });
+		return this.produceWithRequestedPose(resultPose);
 	}
 
 	public produceWithPosePreset(preset: AssetsPosePreset): AssetFrameworkCharacterState {
-		const result = this.produceWithPose(preset, 'pose');
+		if (preset.optional != null)
+			return this.produceWithPose(MergePartialAppearancePoses(preset, preset.optional), 'pose');
 
-		if (preset.optional == null)
-			return result;
-
-		return this.produceWithPose(MergePartialAppearancePoses(preset, preset.optional), 'pose');
+		return this.produceWithPose(preset, 'pose');
 	}
 
 	public produceWithView(newView: CharacterView): AssetFrameworkCharacterState {

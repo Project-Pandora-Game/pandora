@@ -8,6 +8,7 @@ import {
 	CharacterArmsPose,
 	CharacterSize,
 	CharacterView,
+	CombineAppearancePoses,
 	CreateAssetPropertiesResult,
 	GetLogger,
 	MergeAssetProperties,
@@ -16,18 +17,20 @@ import {
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
-import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
-import { useCharacterAppearanceItems } from '../character/character';
 import { ChildrenProps } from '../common/reactTypes';
 import { usePlayerData } from '../components/gameContext/playerContextProvider';
 import { Observable, useObservable } from '../observable';
 import { Container } from './baseComponents/container';
+import { TransitionedContainer, type PixiTransitionedContainer } from './common/transitions/transitionedContainer';
+import { TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler';
 import { ComputedLayerPriority, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def';
-import { GraphicsLayer, GraphicsLayerProps, SwapCullingDirection } from './graphicsLayer';
+import { GraphicsLayer, GraphicsLayerProps, SwapCullingDirection, SwapCullingDirectionObservable } from './graphicsLayer';
 import { useGraphicsSettings } from './graphicsSettings';
 import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense';
+import { useTickerRef } from './reconciler/tick';
 
 export type PointLike = {
 	x: number;
@@ -56,6 +59,8 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	 * @default false
 	 */
 	useBlinking?: boolean;
+
+	movementTransitionDuration?: number;
 
 	onPointerDown?: (event: FederatedPointerEvent) => void;
 	onPointerUp?: (event: FederatedPointerEvent) => void;
@@ -106,7 +111,20 @@ const BLINK_INTERVAL_MAX = 6_000; // ms
 const BLINK_LENGTH_MIN = 100; // ms
 const BLINK_LENGTH_MAX = 400; // ms
 
-function GraphicsCharacterWithManagerImpl({
+const TRANSITION_CHARACTER_STATE_TICK = 50; // ms
+
+const TRANSITION_CHARACTER_STATE_POSE: TransitionHandlerValueProcessor<AssetFrameworkCharacterState> = {
+	mix(a, b, ratio) {
+		// We base the animation off of "actualPose" despite doing it by setting "requestedPose",
+		// as it looks more natural with most of the item limits
+		return b.produceWithRequestedPose(CombineAppearancePoses(a.actualPose, b.actualPose, ratio));
+	},
+	isTransitionable(a, b) {
+		return a.id === b.id;
+	},
+};
+
+export function GraphicsCharacterWithManager({
 	layer: Layer,
 	layerFilter,
 	characterState,
@@ -122,14 +140,70 @@ function GraphicsCharacterWithManagerImpl({
 	graphicsGetter,
 	layerStateOverrideGetter,
 	useBlinking = false,
+	movementTransitionDuration = 0,
 	...graphicsProps
 }: GraphicsCharacterProps & {
 	graphicsGetter: GraphicsGetterFunction;
 	layerStateOverrideGetter?: LayerStateOverrideGetter;
-}, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
+}): ReactElement {
 	const { effectBlinking } = useGraphicsSettings();
 
-	const items = useCharacterAppearanceItems(characterState);
+	const [producedEffectiveCharacterState, setProducedEffectiveCharacterState] = useState<AssetFrameworkCharacterState>(characterState);
+	const characterStateTransitionHandler = useRef<TransitionHandler<AssetFrameworkCharacterState> | null>(null);
+
+	useEffect(() => {
+		// If the transition is disabled, simply ignore the values
+		if (!Number.isFinite(movementTransitionDuration) && movementTransitionDuration <= 0) {
+			characterStateTransitionHandler.current?.cancel();
+			characterStateTransitionHandler.current = null;
+			setProducedEffectiveCharacterState(characterState);
+			return;
+		}
+
+		// Re-generate transition if duration changed
+		if (characterStateTransitionHandler.current?.config.transitionDuration !== movementTransitionDuration) {
+			characterStateTransitionHandler.current?.cancel();
+			characterStateTransitionHandler.current = new TransitionHandler({
+				transitionDuration: movementTransitionDuration,
+				valueProcessor: TRANSITION_CHARACTER_STATE_POSE,
+				applyValue(newValue) {
+					setProducedEffectiveCharacterState(newValue);
+				},
+			}, characterState);
+		}
+
+		// Trigger transition
+		const transitionHander = characterStateTransitionHandler.current;
+		transitionHander.setValue(characterState);
+		// Tick immediately to start transition with current time
+		characterStateTransitionHandler.current.tick(performance.now());
+
+		let scheduledTick: number | undefined;
+		function scheduleNextTickIfNeeded() {
+			if (!transitionHander.needsUpdate)
+				return;
+
+			scheduledTick = setTimeout(function () {
+				if (scheduledTick === undefined)
+					return;
+
+				transitionHander.tick(performance.now());
+				scheduleNextTickIfNeeded();
+			}, TRANSITION_CHARACTER_STATE_TICK);
+		}
+
+		scheduleNextTickIfNeeded();
+
+		return () => {
+			if (scheduledTick !== undefined) {
+				clearTimeout(scheduledTick);
+				scheduledTick = undefined;
+			}
+		};
+	}, [movementTransitionDuration, characterState]);
+
+	const effectiveCharacterState = (Number.isFinite(movementTransitionDuration) && movementTransitionDuration > 0) ? producedEffectiveCharacterState : characterState;
+	const items = effectiveCharacterState.items;
 
 	const assetPreferenceIsVisible = useAssetPreferenceVisibilityCheck();
 
@@ -228,9 +302,10 @@ function GraphicsCharacterWithManagerImpl({
 		return result;
 	}, [items, assetPreferenceIsVisible, graphicsGetter, layerStateOverrideGetter, layerFilter]);
 
-	const { view } = characterState.actualPose;
-
-	const priorities = useLayerPriorityResolver(layers, characterState.actualPose);
+	const effectivePose = effectiveCharacterState.actualPose;
+	const { view } = effectivePose;
+	const priorities = useLayerPriorityResolver(layers, effectivePose);
+	const sortOrder = useComputedLayerPriority(effectivePose);
 
 	const priorityLayers = useMemo<ReadonlyMap<ComputedLayerPriority, ReactElement>>(() => {
 		const result = new Map<ComputedLayerPriority, ReactElement>();
@@ -249,7 +324,7 @@ function GraphicsCharacterWithManagerImpl({
 					layer={ layerState.layer }
 					item={ layerState.item }
 					state={ layerState.state }
-					characterState={ characterState }
+					characterState={ effectiveCharacterState }
 					characterBlinking={ characterBlinking }
 				>
 					{ lowerLayer }
@@ -257,20 +332,22 @@ function GraphicsCharacterWithManagerImpl({
 			));
 		}
 		return result;
-	}, [Layer, characterState, layers, priorities, view, characterBlinking]);
+	}, [Layer, effectiveCharacterState, layers, priorities, view, characterBlinking]);
 
 	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CHARACTER_PIVOT_POSITION.x, y: 0 }), [pivotExtra]);
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);
 	const position = useMemo<PointLike>(() => ({ x: (pivotExtra ? 0 : pivot.x) + positionOffset.x, y: 0 + positionOffset.y }), [pivot, pivotExtra, positionOffset]);
 
-	const sortOrder = useComputedLayerPriority(characterState.actualPose);
-
 	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => filters?.slice(), [filters]);
 
+	const swapCullingScale = useMemo(() => new Observable<boolean>(false), []);
+	const onTransitionTick = useCallback((container: PixiTransitionedContainer) => {
+		swapCullingScale.value = (container.scale.x >= 0) !== (container.scale.y >= 0);
+	}, [swapCullingScale]);
+
 	return (
-		<Container
+		<TransitionedContainer
 			{ ...graphicsProps }
-			ref={ ref }
 			pivot={ pivot }
 			position={ position }
 			scale={ scale }
@@ -281,10 +358,13 @@ function GraphicsCharacterWithManagerImpl({
 			onpointerupoutside={ onPointerUpOutside }
 			onpointermove={ onPointerMove }
 			cursor='pointer'
+			tickerRef={ useTickerRef() }
+			transitionDuration={ movementTransitionDuration }
+			onTransitionTick={ onTransitionTick }
 		>
 			<GraphicsSuspense loadingCirclePosition={ { x: 500, y: 750 } } sortableChildren>
 				<SwapCullingDirection uniqueKey='filter' swap={ filters != null && filters.length > 0 }>
-					<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
+					<SwapCullingDirectionObservable swap={ swapCullingScale }>
 						{
 							sortOrder.map((priority, i) => {
 								const layer = priorityLayers.get(priority);
@@ -292,26 +372,22 @@ function GraphicsCharacterWithManagerImpl({
 							})
 						}
 						{ children }
-					</SwapCullingDirection>
+					</SwapCullingDirectionObservable>
 				</SwapCullingDirection>
 			</GraphicsSuspense>
-		</Container>
+		</TransitionedContainer>
 	);
 }
 
-export const GraphicsCharacterWithManager = React.forwardRef(GraphicsCharacterWithManagerImpl);
-
-function GraphicsCharacterImpl(props: GraphicsCharacterProps, ref: React.ForwardedRef<PIXI.Container>): ReactElement | null {
+export function GraphicsCharacter(props: GraphicsCharacterProps): ReactElement | null {
 	const manager = useObservable(GraphicsManagerInstance);
 	const graphicsGetter = useMemo<GraphicsGetterFunction | undefined>(() => manager?.getAssetGraphicsById.bind(manager), [manager]);
 
 	if (!manager || !graphicsGetter)
 		return null;
 
-	return <GraphicsCharacterWithManager { ...props } graphicsGetter={ graphicsGetter } ref={ ref } />;
+	return <GraphicsCharacterWithManager { ...props } graphicsGetter={ graphicsGetter } />;
 }
-
-export const GraphicsCharacter = React.forwardRef(GraphicsCharacterImpl);
 
 export function useAssetPreferenceVisibilityCheck(): (asset: Asset) => boolean {
 	const preferences = usePlayerData()?.assetPreferences ?? ASSET_PREFERENCES_DEFAULT;

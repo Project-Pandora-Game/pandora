@@ -28,6 +28,7 @@ import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedU
 import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
+import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment';
 import { Button } from '../../common/button/button';
 import { Column, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
@@ -389,7 +390,7 @@ export function WardrobePoseGui({ character, characterState }: {
 
 	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, roomItems ?? [], itemDisplayNameType), [characterState, roomItems, itemDisplayNameType]);
 
-	const setPose = useMemo(() => _.throttle(setPoseDirect, 100), [setPoseDirect]);
+	const setPose = useMemo(() => _.throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
 
 	const actualPoseDiffers = !_.isEqual(characterState.requestedPose, characterState.actualPose);
 

@@ -4,7 +4,6 @@ import {
 	Assert,
 	AssertNever,
 	AssetFrameworkCharacterState,
-	BoneName,
 	CharacterSize,
 	HexColorString,
 	Item,
@@ -18,7 +17,7 @@ import React, { ReactElement, createContext, useCallback, useContext, useLayoutE
 import { AssetGraphicsLayer } from '../assets/assetGraphics';
 import { useImageResolutionAlternative, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource, useLayerMeshPoints } from '../assets/assetGraphicsCalculations';
 import { ChildrenProps } from '../common/reactTypes';
-import { useNullableObservable, type ReadonlyObservable } from '../observable';
+import { useNullableObservable, useObservable, type ReadonlyObservable } from '../observable';
 import { ConditionEvaluatorBase, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator';
 import { Container } from './baseComponents/container';
 import { PixiMesh, type PixiMeshProps } from './baseComponents/mesh';
@@ -119,7 +118,13 @@ export interface GraphicsLayerProps extends ChildrenProps {
 	lowerZIndex: number;
 	layer: AssetGraphicsLayer;
 	item: Item | null;
-	verticesPoseOverride?: Record<BoneName, number>;
+
+	/**
+	 * Displays the vertices in pose matching the uv pose instead of the normal one.
+	 * Useful for showing exact cutout of the original texture (which is useful in Editor).
+	 * @default false
+	 */
+	displayUvPose?: boolean;
 	state?: LayerStateOverrides;
 
 	/**
@@ -152,6 +157,14 @@ export function SwapCullingDirection({ children, swap = true, uniqueKey }: Child
 	);
 }
 
+export function SwapCullingDirectionObservable({ children, swap, uniqueKey }: ChildrenProps & { swap: ReadonlyObservable<boolean>; uniqueKey?: string; }): ReactElement {
+	return (
+		<SwapCullingDirection swap={ useObservable(swap) } uniqueKey={ uniqueKey }>
+			{ children }
+		</SwapCullingDirection>
+	);
+}
+
 export function GraphicsLayer({
 	characterState,
 	children,
@@ -159,7 +172,7 @@ export function GraphicsLayer({
 	lowerZIndex,
 	layer,
 	item,
-	verticesPoseOverride,
+	displayUvPose = false,
 	state,
 	getTexture,
 	characterBlinking,
@@ -169,9 +182,6 @@ export function GraphicsLayer({
 
 	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
 	const evaluator = useAppearanceConditionEvaluator(characterState, currentlyBlinking);
-
-	const evaluatorVerticesPose = useAppearanceConditionEvaluator(characterState, currentlyBlinking, verticesPoseOverride);
-	const vertices = useLayerVertices(evaluatorVerticesPose, points, layer, item, false);
 
 	const {
 		colorizationKey,
@@ -184,6 +194,8 @@ export function GraphicsLayer({
 	} = useLayerImageSource(evaluator, layer, item);
 
 	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, currentlyBlinking, imageUv);
+
+	const vertices = useLayerVertices(displayUvPose ? evaluatorUvPose : evaluator, points, layer, item, false);
 	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true);
 
 	const alphaImage = useMemo<string>(() => {

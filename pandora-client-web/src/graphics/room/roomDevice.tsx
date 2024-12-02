@@ -26,6 +26,7 @@ import { Character } from '../../character/character';
 import { ChildrenProps } from '../../common/reactTypes';
 import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import { useCharacterRestrictionsManager, useSpaceCharacters } from '../../components/gameContext/gameStateContextProvider';
+import { LIVE_UPDATE_THROTTLE } from '../../config/Environment';
 import { ShardConnector } from '../../networking/shardConnector';
 import { useObservable } from '../../observable';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext';
@@ -129,7 +130,7 @@ export function RoomDeviceMovementTool({
 		/* Do nothing */
 	});
 
-	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, 100), [setPositionRaw]);
+	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, LIVE_UPDATE_THROTTLE), [setPositionRaw]);
 
 	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
 		deployment.x,

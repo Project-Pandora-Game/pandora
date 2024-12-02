@@ -8,14 +8,18 @@ import { useCharacterData } from '../../character/character';
 import { useEvent } from '../../common/useEvent';
 import { usePlayer } from '../../components/gameContext/playerContextProvider';
 import { useWardrobeExecuteCallback, WardrobeActionContextProvider } from '../../components/wardrobe/wardrobeActionContext';
+import { LIVE_UPDATE_THROTTLE } from '../../config/Environment';
 import { TOAST_OPTIONS_WARNING } from '../../persistentToast';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext';
 import { useCanMoveCharacter, useCanPoseCharacter } from '../../ui/screens/room/roomPermissionChecks';
 import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
 import { Container } from '../baseComponents/container';
 import { Graphics } from '../baseComponents/graphics';
+import { TransitionedContainer } from '../common/transitions/transitionedContainer';
 import { type PointLike } from '../graphicsCharacter';
+import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings';
 import { MovementHelperGraphics } from '../movementHelper';
+import { useTickerRef } from '../reconciler/tick';
 import { GetAngle } from '../utility';
 import { CHARACTER_WAIT_DRAG_THRESHOLD, PIVOT_TO_LABEL_OFFSET, useRoomCharacterPosition, type CharacterStateProps, type RoomCharacterInteractiveProps } from './roomCharacter';
 
@@ -46,6 +50,7 @@ function RoomCharacterMovementToolImpl({
 	shard,
 }: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
 	const id = characterState.id;
+	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
 	const {
 		setRoomSceneMode,
@@ -58,7 +63,7 @@ function RoomCharacterMovementToolImpl({
 		});
 	}, [id, projectionResolver, shard]);
 
-	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, 100), [setPositionRaw]);
+	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, LIVE_UPDATE_THROTTLE), [setPositionRaw]);
 
 	const {
 		position: dataPosition,
@@ -74,36 +79,35 @@ function RoomCharacterMovementToolImpl({
 	const backView = characterState.actualPose.view === 'back';
 	const scaleX = backView ? -1 : 1;
 
-	const labelX = pivot.x;
-	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
+	const labelX = 0;
+	const labelY = PIVOT_TO_LABEL_OFFSET;
 
 	const hitAreaRadius = 50;
 	const hitArea = useMemo(() => new PIXI.Rectangle(-hitAreaRadius, -hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius]);
 
-	const movementHelpersContainer = useRef<PIXI.Container>(null);
 	const dragging = useRef<PIXI.Point | null>(null);
 	/** Time at which user pressed button/touched */
 	const pointerDown = useRef<number | null>(null);
 	const pointerDownTarget = useRef<'pos' | 'offset' | null>(null);
 
 	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (dragging.current || !movementHelpersContainer.current) return;
-		dragging.current = event.getLocalPosition<PIXI.Point>(movementHelpersContainer.current.parent);
+		if (dragging.current) return;
+		dragging.current = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent.parent);
 	}, []);
 
 	const onDragMove = useEvent((event: PIXI.FederatedPointerEvent) => {
-		if (!dragging.current || !movementHelpersContainer.current) return;
+		if (!dragging.current) return;
 
 		if (pointerDownTarget.current === 'pos') {
-			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(movementHelpersContainer.current.parent);
+			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent.parent);
 
 			const [newX, newY] = projectionResolver.inverseGivenZ(dragPointerEnd.x, dragPointerEnd.y - PIVOT_TO_LABEL_OFFSET * scale, 0);
 
 			setPositionThrottled(newX, newY, yOffsetExtra);
 		} else if (pointerDownTarget.current === 'offset') {
-			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(movementHelpersContainer.current);
+			const dragPointerEnd = event.getLocalPosition<PIXI.Point>(event.currentTarget.parent);
 
-			const newYOffset = (dragPointerEnd.y - labelY) * -scale;
+			const newYOffset = labelY - dragPointerEnd.y;
 
 			setPositionThrottled(dataPosition[0], dataPosition[1], newYOffset);
 		}
@@ -155,17 +159,19 @@ function RoomCharacterMovementToolImpl({
 	const canPoseCharacter = useCanPoseCharacter(character);
 
 	return (
-		<Container
-			ref={ movementHelpersContainer }
+		<TransitionedContainer
 			position={ position }
 			scale={ { x: scale, y: scale } }
-			pivot={ pivot }
+			transitionDuration={ smoothMovementEnabled ? LIVE_UPDATE_THROTTLE : 0 }
+			tickerRef={ useTickerRef() }
 		>
-			<Container
-				position={ { x: pivot.x, y: pivot.y - yOffsetExtra } }
+			<TransitionedContainer
+				position={ { x: 0, y: -yOffsetExtra } }
 				scale={ { x: scaleX, y: 1 } }
 				pivot={ pivot }
 				angle={ rotationAngle }
+				transitionDuration={ smoothMovementEnabled ? LIVE_UPDATE_THROTTLE : 0 }
+				tickerRef={ useTickerRef() }
 			>
 				{
 					canPoseCharacter !== 'forbidden' ? (
@@ -181,7 +187,7 @@ function RoomCharacterMovementToolImpl({
 						/>
 					) : null
 				}
-			</Container>
+			</TransitionedContainer>
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
 				colorLeftRight={ 0xff0000 }
@@ -199,7 +205,7 @@ function RoomCharacterMovementToolImpl({
 			<MovementHelperGraphics
 				radius={ hitAreaRadius }
 				colorUpDown={ 0x0000ff }
-				position={ { x: labelX + 110, y: labelY - (yOffsetExtra / scale) } }
+				position={ { x: labelX + 110, y: labelY - yOffsetExtra } }
 				hitArea={ hitArea }
 				eventMode='static'
 				cursor='ns-resize'
@@ -208,7 +214,7 @@ function RoomCharacterMovementToolImpl({
 				onpointerupoutside={ onPointerUp }
 				onglobalpointermove={ onPointerMove }
 			/>
-		</Container>
+		</TransitionedContainer>
 	);
 }
 
@@ -259,7 +265,7 @@ function RoomCharacterPosingToolImpl({
 		});
 	}, [execute, id]);
 
-	const setPose = useMemo(() => throttle(setPoseDirect, 100), [setPoseDirect]);
+	const setPose = useMemo(() => throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
 
 	const {
 		position: dataPosition,

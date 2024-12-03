@@ -580,7 +580,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			{ accounts },
 			{
 				$set: {
-					keyHash: data.keyHash,
+					keyHash,
 					messages: data.messages,
 				},
 			},

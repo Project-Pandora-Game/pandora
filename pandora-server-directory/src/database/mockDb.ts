@@ -363,8 +363,10 @@ export class MockDatabase implements PandoraDatabase {
 			return Promise.resolve(true);
 		}
 
-		if (data.keyHash !== keyHash)
+		if (data.keyHash !== keyHash) {
+			data.keyHash = keyHash;
 			data.messages = [];
+		}
 
 		if (message.edited != null) {
 			const index = data.messages.findIndex((msg) => msg.time === message.time);

@@ -131,7 +131,7 @@ function useDirectMessageCommandContext(displayError: boolean): ICommandInvokeCo
 			toast(`Encrypted message too long: ${encrypted.length} > ${LIMIT_DIRECT_MESSAGE_LENGTH_BASE64}`, TOAST_OPTIONS_ERROR);
 			return;
 		}
-		const response = await directoryConnector.awaitResponse('sendDirectMessage', { id: chat.id, content: encrypted, editing });
+		const response = await directoryConnector.awaitResponse('sendDirectMessage', { id: chat.id, keyHash: encryption.keyHash, content: encrypted, editing });
 		if (response.result !== 'ok') {
 			toast(`Failed to send message: ${response.result}`, TOAST_OPTIONS_ERROR);
 		}

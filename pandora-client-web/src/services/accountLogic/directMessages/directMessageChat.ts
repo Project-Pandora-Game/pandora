@@ -17,7 +17,7 @@ import { HashSHA256Base64 } from '../../../crypto/helpers';
 import { SymmetricEncryption } from '../../../crypto/symmetric';
 import { ChatParser } from '../../../ui/components/chat/chatParser';
 
-export type DirectMessageChatState = 'notLoaded' | 'ready' | 'errorNotFound' | 'errorDenied' | 'error';
+export type DirectMessageChatState = 'notLoaded' | 'ready' | 'errorNotFound' | 'errorNoKeyAvailable' | 'errorDenied' | 'error';
 export type ChatEncryption = {
 	service: SymmetricEncryption;
 	keyHash: string;
@@ -93,6 +93,8 @@ export class DirectMessageChat {
 				this._state.value = 'errorDenied';
 			} else if (response.result === 'notFound') {
 				this._state.value = 'errorNotFound';
+			} else if (response.result === 'noKeyAvailable') {
+				this._state.value = 'errorNoKeyAvailable';
 			} else {
 				AssertNever(response.result);
 			}

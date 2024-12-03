@@ -63,7 +63,7 @@ export function DirectMessage({ accountId }: { accountId: number; }): ReactEleme
 
 function DirectMessageList(): ReactElement | null {
 	const { interfaceChatroomChatFontSize } = useAccountSettings();
-	const { chat } = useDirectMessageChat();
+	const { chat, encryption } = useDirectMessageChat();
 	const encryptedMessages = useObservable(chat.messages);
 	const account = useCurrentAccount();
 	const [ref] = useAutoScroll<HTMLDivElement>([encryptedMessages]);
@@ -71,6 +71,8 @@ function DirectMessageList(): ReactElement | null {
 	if (!account) {
 		return null;
 	}
+
+	const lastInvalidKeyMessage = encryptedMessages.findLastIndex((message) => message.keyHash !== encryption.keyHash);
 
 	return (
 		<div
@@ -86,15 +88,32 @@ function DirectMessageList(): ReactElement | null {
 				tabIndex={ 1 }
 			>
 				<Column gap='none'>
-					{ encryptedMessages.map((message) => (
-						<DirectMessageElement
-							key={ message.time }
-							message={ message }
-							currentAccount={ account }
-						/>
+					{ encryptedMessages.map((message, i) => (
+						<>
+							<DirectMessageElement
+								key={ message.time }
+								message={ message }
+								currentAccount={ account }
+							/>
+							{
+								i === lastInvalidKeyMessage ? (
+									<OldMessagesKeyWarning />
+								) : null
+							}
+						</>
 					)) }
 				</Column>
 			</Scrollable>
+		</div>
+	);
+}
+
+function OldMessagesKeyWarning(): ReactElement {
+	return (
+		<div className='direct-message-entry serverMessage'>
+			The messages above cannot be decrypted, because either you or your conversation partner reset your account password.<br />
+			Because of that, a fresh encryption key was generated for this conversation, making older messages unrecoverable.<br />
+			Sending a new message will delete the older messages from the conversation history.
 		</div>
 	);
 }
@@ -112,7 +131,7 @@ function useDirectMessageCommandContext(displayError: boolean): ICommandInvokeCo
 			toast(`Encrypted message too long: ${encrypted.length} > ${LIMIT_DIRECT_MESSAGE_LENGTH_BASE64}`, TOAST_OPTIONS_ERROR);
 			return;
 		}
-		const response = await directoryConnector.awaitResponse('sendDirectMessage', { id: chat.id, content: encrypted, editing });
+		const response = await directoryConnector.awaitResponse('sendDirectMessage', { id: chat.id, keyHash: encryption.keyHash, content: encrypted, editing });
 		if (response.result !== 'ok') {
 			toast(`Failed to send message: ${response.result}`, TOAST_OPTIONS_ERROR);
 		}

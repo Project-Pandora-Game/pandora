@@ -60,7 +60,7 @@ export function DirectMessageChannelProvider({ accountId, children }: ChildrenPr
 	}, [chat, encryption, state]);
 
 	if (chat == null || state == null) {
-		return <DirectMessageChannelError message='Chat closed' />;
+		return <DirectMessageChannelError channel={ chat } message='Chat closed' />;
 	} else if (state === 'notLoaded') {
 		return (
 			<span className='loading'>
@@ -70,14 +70,16 @@ export function DirectMessageChannelProvider({ accountId, children }: ChildrenPr
 			</span>
 		);
 	} else if (state === 'error') {
-		return <DirectMessageChannelError message='Error loading the chat' />;
+		return <DirectMessageChannelError channel={ chat } message='Error loading the chat' />;
 	} else if (state === 'errorNotFound') {
-		return <DirectMessageChannelError message='Not found' />;
+		return <DirectMessageChannelError channel={ chat } message='Not found' />;
+	} else if (state === 'errorNoKeyAvailable') {
+		return <DirectMessageChannelError channel={ chat } message={ 'The other account has no usable encryption key.\nThis is most likely caused by them not yet logging in after registration or password reset.' } />;
 	} else if (state === 'errorDenied') {
-		return <DirectMessageChannelError message='Denied' />;
+		return <DirectMessageChannelError channel={ chat } message='Denied' />;
 	} else if (state === 'ready') {
 		if (ctx == null) {
-			return <DirectMessageChannelError message='Error decrypting chat' />;
+			return <DirectMessageChannelError channel={ chat } message='Error decrypting chat' />;
 		}
 
 		return (
@@ -98,9 +100,9 @@ export function DirectMessageChannelProvider({ accountId, children }: ChildrenPr
 	AssertNever(state);
 }
 
-function DirectMessageChannelError({ channel, message = 'Unknown error' }: { channel?: DirectMessageChat; message?: string; }): ReactElement {
+function DirectMessageChannelError({ channel, message = 'Unknown error' }: { channel: DirectMessageChat | null; message?: string; }): ReactElement {
 	return (
-		<span className='error'>
+		<span className='error display-linebreak'>
 			Account: { channel?.id ?? 'unknown' }
 			<br />
 			{ message }

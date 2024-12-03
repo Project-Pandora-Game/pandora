@@ -17,7 +17,7 @@ import { HashSHA256Base64 } from '../../../crypto/helpers';
 import { SymmetricEncryption } from '../../../crypto/symmetric';
 import { ChatParser } from '../../../ui/components/chat/chatParser';
 
-export type DirectMessageChatState = 'notLoaded' | 'ready' | 'errorNotFound' | 'errorDenied' | 'error';
+export type DirectMessageChatState = 'notLoaded' | 'ready' | 'errorNotFound' | 'errorNoKeyAvailable' | 'errorDenied' | 'error';
 export type ChatEncryption = {
 	service: SymmetricEncryption;
 	keyHash: string;
@@ -93,6 +93,8 @@ export class DirectMessageChat {
 				this._state.value = 'errorDenied';
 			} else if (response.result === 'notFound') {
 				this._state.value = 'errorNotFound';
+			} else if (response.result === 'noKeyAvailable') {
+				this._state.value = 'errorNoKeyAvailable';
 			} else {
 				AssertNever(response.result);
 			}
@@ -126,6 +128,17 @@ export class DirectMessageChat {
 			this.logger.debug(`Successfully loaded encryption`);
 		} catch (error) {
 			this.logger.error('Error loading encryption key:', error);
+		}
+	}
+
+	public reloadIfLoaded(): void {
+		if (this._state.value === 'ready') {
+			this._state.value = 'notLoaded';
+			this.load()
+				.catch((err) => {
+					GetLogger('DirectMessageChat')
+						.error('Failed to re-load chat:', err);
+				});
 		}
 	}
 
@@ -180,11 +193,16 @@ export class DirectMessageChat {
 			const insertIndex = messages.findIndex((m) => m.time >= message.time);
 			// Holds from the fast-path if - the last message exists and definitely has bigger or equal time
 			Assert(insertIndex >= 0 && insertIndex < messages.length);
+			// Ignore this message if tries to replace more recently edited message
+			if (messages[insertIndex].time === message.time && (messages[insertIndex].edited ?? 0) >= (message.edited ?? 0))
+				return messages;
 			// Insert or replace the message
-			return messages.slice().splice(insertIndex, (messages[insertIndex].time === message.time) ? 1 : 0, {
+			const newMessages = messages.slice();
+			newMessages.splice(insertIndex, (messages[insertIndex].time === message.time) ? 1 : 0, {
 				...message,
 				decrypted: null,
 			});
+			return newMessages;
 		});
 
 		this._displayInfo.produceImmer((info) => {

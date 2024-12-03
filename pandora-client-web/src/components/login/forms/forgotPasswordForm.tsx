@@ -46,6 +46,15 @@ export function ForgotPasswordForm(): ReactElement {
 	return (
 		<Form className='ForgotPasswordForm' dirty={ submitCount > 0 } onSubmit={ onSubmit }>
 			<h1>Forgot password</h1>
+			<div className='warning-box'>
+				<h3>Warning</h3>
+				<p>
+					Resetting your password will permanently <b>delete all past Direct Messages</b> for you and the other party.
+				</p>
+				<p>
+					If you know your current password and want to change it, use the "Security" tab in the settings instead.
+				</p>
+			</div>
 			<FormField>
 				<label htmlFor='forgot-password-email'>Enter your email</label>
 				<FormInput

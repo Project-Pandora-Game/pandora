@@ -44,7 +44,7 @@ describe('AuthFormRouter', () => {
 		({ component, expectedHeading }: { component: ComponentType<Record<string, never>>; expectedHeading: string; }) => {
 			renderWithComponent(component);
 			if (expectedHeading) {
-				const heading = screen.getByRole('heading');
+				const heading = screen.getByRole('heading', { level: 1 });
 				expect(heading).toBeVisible();
 				expect(heading).toHaveTextContent(expectedHeading);
 			}

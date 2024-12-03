@@ -92,13 +92,20 @@ export class AccountDirectMessages {
 		await GetDatabase().setDirectMessageInfo(this._account.id, this._dms);
 	}
 
-	public async sendMessage({ id, content, editing }: IClientDirectoryArgument['sendDirectMessage']): IClientDirectoryPromiseResult['sendDirectMessage'] {
+	public async sendMessage({ id, keyHash: messageKeyHash, content, editing }: IClientDirectoryArgument['sendDirectMessage']): IClientDirectoryPromiseResult['sendDirectMessage'] {
 		if (!this._publicKey) {
 			return { result: 'denied' };
 		}
 		const target = await accountManager.loadAccountById(id);
-		if (!target || !target.directMessages._publicKey) {
+		if (!target) {
 			return { result: 'notFound' };
+		}
+		if (!target.directMessages._publicKey) {
+			return { result: 'badKey' };
+		}
+		const keyHash = KeyHash(this._publicKey, target.directMessages._publicKey);
+		if (messageKeyHash !== keyHash) {
+			return { result: 'badKey' };
 		}
 		if (!await target.contacts.canReceiveDM(this._account)) {
 			return { result: 'denied' };
@@ -111,7 +118,6 @@ export class AccountDirectMessages {
 			source: this._account.id,
 			edited: editing ? time : undefined,
 		};
-		const keyHash = KeyHash(this._publicKey, target.directMessages._publicKey);
 		if (!await GetDatabase().setDirectMessage(accounts, keyHash, message, LIMIT_DIRECT_MESSAGE_STORE_COUNT)) {
 			return { result: 'messageNotFound' };
 		}
@@ -142,8 +148,11 @@ export class AccountDirectMessages {
 			return { result: 'denied' };
 		}
 		const target = await accountManager.loadAccountById(id);
-		if (!target || !target.directMessages._publicKey) {
+		if (!target) {
 			return { result: 'notFound' };
+		}
+		if (!target.directMessages._publicKey) {
+			return { result: 'noKeyAvailable' };
 		}
 		const dms = await GetDatabase().getDirectMessages(GetDirectMessageId(this._account, target));
 		if (dms == null || dms.messages.length === 0) {
@@ -153,13 +162,12 @@ export class AccountDirectMessages {
 				messages: [],
 			};
 		}
-		const keyHash = KeyHash(this._publicKey, target.directMessages._publicKey);
 		return {
 			result: 'ok',
 			account: target.directMessages._getAccountInfo(),
 			messages: dms.messages.map((message) => ({
 				...message,
-				keyHash,
+				keyHash: dms.keyHash,
 			})),
 		};
 	}

@@ -7,7 +7,7 @@ import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from '../inputLimits';
 import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceId, SpaceIdSchema, SpaceInvite, SpaceInviteCreateSchema, SpaceInviteIdSchema, SpaceListExtendedInfo, SpaceListInfo } from '../space/space';
 import { Satisfies } from '../utility/misc';
-import { DisplayNameSchema, EmailAddressSchema, HexColorString, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodCast, ZodTruncate } from '../validation';
+import { DisplayNameSchema, EmailAddressSchema, HexColorString, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodBase64Regex, ZodCast, ZodTruncate } from '../validation';
 import { AccountCryptoKeySchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 
@@ -456,7 +456,7 @@ export const ClientDirectorySchema = {
 		request: z.object({
 			id: AccountIdSchema,
 		}),
-		response: ZodCast<{ result: 'notFound' | 'denied'; } | {
+		response: ZodCast<{ result: 'notFound' | 'denied' | 'noKeyAvailable'; } | {
 			result: 'ok';
 			account: IDirectoryDirectMessageAccount;
 			messages: IDirectoryDirectMessage[];
@@ -465,10 +465,15 @@ export const ClientDirectorySchema = {
 	sendDirectMessage: {
 		request: z.object({
 			id: AccountIdSchema,
-			content: z.string().max(LIMIT_DIRECT_MESSAGE_LENGTH_BASE64),
+			keyHash: z.string().regex(ZodBase64Regex),
+			/**
+			 * Content of the message.
+			 * Can be either a `base64(salt):base64(encrypt(message))` or empty (when deleting a message).
+			 */
+			content: z.string().regex(/^([A-Za-z0-9+/=]+:[A-Za-z0-9+/=]+)?$/).max(LIMIT_DIRECT_MESSAGE_LENGTH_BASE64),
 			editing: z.number().min(0).optional(),
 		}),
-		response: ZodCast<{ result: 'ok' | 'notFound' | 'denied' | 'messageNotFound'; }>(),
+		response: ZodCast<{ result: 'ok' | 'notFound' | 'denied' | 'badKey' | 'messageNotFound'; }>(),
 	},
 	directMessage: {
 		request: z.object({

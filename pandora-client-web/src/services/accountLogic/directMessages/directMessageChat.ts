@@ -181,10 +181,12 @@ export class DirectMessageChat {
 			// Holds from the fast-path if - the last message exists and definitely has bigger or equal time
 			Assert(insertIndex >= 0 && insertIndex < messages.length);
 			// Insert or replace the message
-			return messages.slice().splice(insertIndex, (messages[insertIndex].time === message.time) ? 1 : 0, {
+			const newMessages = messages.slice();
+			newMessages.splice(insertIndex, (messages[insertIndex].time === message.time) ? 1 : 0, {
 				...message,
 				decrypted: null,
 			});
+			return newMessages;
 		});
 
 		this._displayInfo.produceImmer((info) => {

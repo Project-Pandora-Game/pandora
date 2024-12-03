@@ -153,13 +153,12 @@ export class AccountDirectMessages {
 				messages: [],
 			};
 		}
-		const keyHash = KeyHash(this._publicKey, target.directMessages._publicKey);
 		return {
 			result: 'ok',
 			account: target.directMessages._getAccountInfo(),
 			messages: dms.messages.map((message) => ({
 				...message,
-				keyHash,
+				keyHash: dms.keyHash,
 			})),
 		};
 	}

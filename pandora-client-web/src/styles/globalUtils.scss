@@ -162,4 +162,17 @@
 	pointer-events: auto;
 }
 
+.warning-box {
+	@include center-flex;
+	background: $theme-warning;
+	border: solid black 1px;
+	border-radius: 1em;
+	padding: 0.25em 0.5em;
+	margin: 0.25em;
+
+	p {
+		margin: 0.25em 0;
+	}
+}
+
 //#endregion

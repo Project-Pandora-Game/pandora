@@ -289,6 +289,7 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 		for (const chatInfo of info) {
 			const chat = this.getChat(chatInfo.id);
 			chat.loadInfo(chatInfo);
+			chat.reloadIfLoaded();
 		}
 		this._sortChats();
 		this.logger.debug('Loaded DM info');

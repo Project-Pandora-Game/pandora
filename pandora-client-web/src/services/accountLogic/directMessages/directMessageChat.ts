@@ -131,6 +131,17 @@ export class DirectMessageChat {
 		}
 	}
 
+	public reloadIfLoaded(): void {
+		if (this._state.value === 'ready') {
+			this._state.value = 'notLoaded';
+			this.load()
+				.catch((err) => {
+					GetLogger('DirectMessageChat')
+						.error('Failed to re-load chat:', err);
+				});
+		}
+	}
+
 	@AsyncSynchronized()
 	public async loadKey(): Promise<boolean> {
 		if (this._publicKeyData == null)
@@ -182,6 +193,9 @@ export class DirectMessageChat {
 			const insertIndex = messages.findIndex((m) => m.time >= message.time);
 			// Holds from the fast-path if - the last message exists and definitely has bigger or equal time
 			Assert(insertIndex >= 0 && insertIndex < messages.length);
+			// Ignore this message if tries to replace more recently edited message
+			if (messages[insertIndex].time === message.time && (messages[insertIndex].edited ?? 0) >= (message.edited ?? 0))
+				return messages;
 			// Insert or replace the message
 			const newMessages = messages.slice();
 			newMessages.splice(insertIndex, (messages[insertIndex].time === message.time) ? 1 : 0, {

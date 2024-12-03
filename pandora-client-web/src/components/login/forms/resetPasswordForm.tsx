@@ -49,9 +49,6 @@ export function ResetPasswordForm(): ReactElement {
 	return (
 		<Form className='ResetPasswordForm' dirty={ submitCount > 0 } onSubmit={ onSubmit }>
 			<h1>Reset password</h1>
-			<p><strong>Note:</strong> This action will make all past Direct Messages unreadable
-				for you and all your conversation partners as they were encrypted based on your old password.
-			</p>
 			<LocationStateMessage />
 			<FormField>
 				<label htmlFor='reset-password-username'>Username</label>

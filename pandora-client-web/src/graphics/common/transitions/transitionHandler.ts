@@ -190,7 +190,7 @@ export class TransitionHandler<TValue> {
 				this._currentTransition.state = 'completed';
 			} else {
 				// If the transition didn't complete, calculate current value
-				if (time <= this._currentTransition.startTime) {
+				if (time < this._currentTransition.startTime) {
 					this._currentValue = this._currentTransition.startValue;
 				} else {
 					this._currentValue = this.config.valueProcessor.mix(

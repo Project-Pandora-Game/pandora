@@ -35,6 +35,7 @@ import { useStandaloneConditionEvaluator, type AppearanceConditionEvaluator } fr
 import { Container } from '../baseComponents/container';
 import { Graphics } from '../baseComponents/graphics';
 import { Sprite } from '../baseComponents/sprite';
+import type { TransitionedContainerCustomProps } from '../common/transitions/transitionedContainer';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
 import { MASK_SIZE, SwapCullingDirection, useItemColor } from '../graphicsLayer';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings';
@@ -698,6 +699,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 			filters={ filters }
 			useBlinking
 			movementTransitionDuration={ movementTransitionDuration }
+			perPropertyMovementTransitionDuration={ ROOM_DEVICE_CHARACTER_TRANSITION_OVERRIDES }
 		>
 			{
 				!debugConfig?.characterDebugOverlay ? null : (
@@ -709,6 +711,14 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 		</GraphicsCharacter>
 	);
 }
+
+const ROOM_DEVICE_CHARACTER_TRANSITION_OVERRIDES: TransitionedContainerCustomProps['perPropertyTransitionDuration'] = {
+	angle: 0,
+	scaleX: 0,
+	scaleY: 0,
+	x: 0,
+	y: 0,
+};
 
 function RoomDeviceLayerSlotCharacterDebugGraphics({ actualPivot }: {
 	actualPivot: Readonly<PointLike>;

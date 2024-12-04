@@ -23,7 +23,8 @@ import { Graphics } from '../../graphics/baseComponents/graphics';
 import { PixiViewportSetupCallback, type PixiViewportRef } from '../../graphics/baseComponents/pixiViewport';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, type GraphicsCharacterLayerFilter } from '../../graphics/graphicsCharacter';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
-import { RoomCharacter, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter';
+import { useGraphicsSmoothMovementEnabled } from '../../graphics/graphicsSettings';
+import { CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION, RoomCharacter, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter';
 import { RoomDevice } from '../../graphics/room/roomDevice';
 import { RoomProjectionResolver, usePlayerVisionFilters, useRoomViewProjection } from '../../graphics/room/roomScene';
 import { useObservable } from '../../observable';
@@ -113,6 +114,8 @@ export function CharacterPreview({ character, characterState, hideClothes = fals
 	const spaceInfo = useSpaceInfo();
 	const assetManager = useAssetManager();
 
+	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
+
 	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
 		return ResolveBackground(assetManager, spaceInfo.config.background);
 	}, [assetManager, spaceInfo]);
@@ -135,6 +138,8 @@ export function CharacterPreview({ character, characterState, hideClothes = fals
 				time: 500,
 				underflow: 'center',
 			});
+		viewport.fit();
+		viewport.moveCenter(viewport.worldWidth / 2, viewport.worldHeight / 2);
 	}, []);
 
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({
@@ -158,6 +163,8 @@ export function CharacterPreview({ character, characterState, hideClothes = fals
 		return true;
 	}, [hideClothes]);
 
+	const movementTransitionDuration = !smoothMovementEnabled ? 0 : CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION;
+
 	return (
 		<GraphicsScene className='characterPreview' divChildren={ overlay } sceneOptions={ sceneOptions }>
 			<GraphicsCharacter
@@ -167,6 +174,7 @@ export function CharacterPreview({ character, characterState, hideClothes = fals
 				layerFilter={ layerFilter }
 				filters={ filters }
 				useBlinking
+				movementTransitionDuration={ movementTransitionDuration }
 			/>
 			{
 				roomBackground ? (

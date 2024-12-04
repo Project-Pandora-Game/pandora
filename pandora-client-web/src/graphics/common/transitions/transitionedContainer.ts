@@ -24,6 +24,7 @@ type ExtraTransitionableValues = {
 	skewY: number;
 };
 type TransitionableValues = Pick<PixiDisplayObjectWriteableProps<PixiContainer>, keyof typeof TRANSITIONS> & ExtraTransitionableValues;
+export type TransitionedContainerTransitionableProps = keyof TransitionableValues;
 
 export const TRANSITIONED_CONTAINER_AUTO_PROPS = omit(CONTAINER_AUTO_PROPS, ...KnownObject.keys(TRANSITIONS));
 export type TransitionedContainerAutoProps = keyof typeof TRANSITIONED_CONTAINER_AUTO_PROPS;
@@ -37,6 +38,9 @@ export type TransitionedContainerCustomProps = Partial<TransitionableValues> & {
 	transitionDelay?: number;
 	/** Handler that is called right after transitions are applied. */
 	onTransitionTick?: (container: PixiTransitionedContainer) => void;
+
+	perPropertyTransitionDuration?: Partial<Record<TransitionedContainerTransitionableProps, number>>;
+	perPropertyTransitionDelay?: Partial<Record<TransitionedContainerTransitionableProps, number>>;
 };
 
 /**
@@ -97,7 +101,7 @@ export class PixiTransitionedContainer extends PixiContainer {
 		props.tickerRef.current = this._onTick.bind(this);
 	}
 
-	private _createTransitionHandlers({ transitionDuration, transitionDelay, ...initialValues }: AppliedProps): typeof this._transitionHandlers {
+	private _createTransitionHandlers({ transitionDuration, transitionDelay, perPropertyTransitionDuration, perPropertyTransitionDelay, ...initialValues }: AppliedProps): typeof this._transitionHandlers {
 		const position = ParsePixiPointLike(initialValues.position, DefaultValues.x, DefaultValues.y);
 		const pivot = ParsePixiPointLike(initialValues.pivot, DefaultValues.pivotX, DefaultValues.pivotY);
 		const scale = ParsePixiPointLike(initialValues.scale, DefaultValues.scaleX, DefaultValues.scaleY);
@@ -105,88 +109,88 @@ export class PixiTransitionedContainer extends PixiContainer {
 
 		return {
 			x: new TransitionHandler<number>({
-				transitionDuration,
-				transitionDelay,
+				transitionDuration: perPropertyTransitionDuration?.x ?? transitionDuration,
+				transitionDelay: perPropertyTransitionDelay?.x ?? transitionDelay,
 				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
 				applyValue: (newValue) => {
 					this.x = newValue;
 				},
 			}, initialValues.x ?? position[0]),
 			y: new TransitionHandler<number>({
-				transitionDuration,
-				transitionDelay,
+				transitionDuration: perPropertyTransitionDuration?.y ?? transitionDuration,
+				transitionDelay: perPropertyTransitionDelay?.y ?? transitionDelay,
 				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
 				applyValue: (newValue) => {
 					this.y = newValue;
 				},
 			}, initialValues.y ?? position[1]),
 			angle: new TransitionHandler<number>({
-				transitionDuration,
-				transitionDelay,
+				transitionDuration: perPropertyTransitionDuration?.angle ?? transitionDuration,
+				transitionDelay: perPropertyTransitionDelay?.angle ?? transitionDelay,
 				valueProcessor: MakeTransitionProcessorNumberWithModulo(360),
 				applyValue: (newValue) => {
 					this.angle = newValue;
 				},
 			}, initialValues.angle ?? DefaultValues.angle),
 			alpha: new TransitionHandler<number>({
-				transitionDuration,
-				transitionDelay,
+				transitionDuration: perPropertyTransitionDuration?.alpha ?? transitionDuration,
+				transitionDelay: perPropertyTransitionDelay?.alpha ?? transitionDelay,
 				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
 				applyValue: (newValue) => {
 					this.alpha = newValue;
 				},
 			}, initialValues.alpha ?? DefaultValues.alpha),
 			pivotX: new TransitionHandler<number>({
-				transitionDuration,
-				transitionDelay,
+				transitionDuration: perPropertyTransitionDuration?.pivotX ?? transitionDuration,
+				transitionDelay: perPropertyTransitionDelay?.pivotX ?? transitionDelay,
 				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
 				applyValue: (newValue) => {
 					this.pivot.x = newValue;
 				},
 			}, pivot[0]),
 			pivotY: new TransitionHandler<number>({
-				transitionDuration,
-				transitionDelay,
+				transitionDuration: perPropertyTransitionDuration?.pivotY ?? transitionDuration,
+				transitionDelay: perPropertyTransitionDelay?.pivotY ?? transitionDelay,
 				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
 				applyValue: (newValue) => {
 					this.pivot.y = newValue;
 				},
 			}, pivot[1]),
 			scaleX: new TransitionHandler<number>({
-				transitionDuration,
-				transitionDelay,
+				transitionDuration: perPropertyTransitionDuration?.scaleX ?? transitionDuration,
+				transitionDelay: perPropertyTransitionDelay?.scaleX ?? transitionDelay,
 				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
 				applyValue: (newValue) => {
 					this.scale.x = newValue;
 				},
 			}, scale[0]),
 			scaleY: new TransitionHandler<number>({
-				transitionDuration,
-				transitionDelay,
+				transitionDuration: perPropertyTransitionDuration?.scaleY ?? transitionDuration,
+				transitionDelay: perPropertyTransitionDelay?.scaleY ?? transitionDelay,
 				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
 				applyValue: (newValue) => {
 					this.scale.y = newValue;
 				},
 			}, scale[1]),
 			skewX: new TransitionHandler<number>({
-				transitionDuration,
-				transitionDelay,
+				transitionDuration: perPropertyTransitionDuration?.skewX ?? transitionDuration,
+				transitionDelay: perPropertyTransitionDelay?.skewX ?? transitionDelay,
 				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
 				applyValue: (newValue) => {
 					this.skew.x = newValue;
 				},
 			}, skew[0]),
 			skewY: new TransitionHandler<number>({
-				transitionDuration,
-				transitionDelay,
+				transitionDuration: perPropertyTransitionDuration?.skewY ?? transitionDuration,
+				transitionDelay: perPropertyTransitionDelay?.skewY ?? transitionDelay,
 				valueProcessor: TRANSITION_PROCESSOR_NUMBER,
 				applyValue: (newValue) => {
 					this.skew.y = newValue;
 				},
 			}, skew[1]),
 			zIndex: new TransitionHandler<number>({
-				transitionDuration,
-				transitionDelay,
+				transitionDuration: perPropertyTransitionDuration?.zIndex ?? transitionDuration,
+				transitionDelay: perPropertyTransitionDelay?.zIndex ?? transitionDelay,
 				// zIndex should be limited to integers only
 				valueProcessor: {
 					isTransitionable(a, b) {
@@ -213,7 +217,9 @@ export class PixiTransitionedContainer extends PixiContainer {
 
 		// If any transition properties changed, we need to regenerate the containers (they don't support updating the transition properties)
 		if (oldProps.transitionDuration !== newProps.transitionDuration ||
-			oldProps.transitionDelay !== newProps.transitionDelay
+			oldProps.transitionDelay !== newProps.transitionDelay ||
+			oldProps.perPropertyTransitionDuration !== newProps.perPropertyTransitionDuration ||
+			oldProps.perPropertyTransitionDelay !== newProps.perPropertyTransitionDelay
 		) {
 			this._transitionHandlers = this._createTransitionHandlers(newProps);
 			this._requestUpdate();

@@ -70,8 +70,8 @@ export type CharacterStateProps = {
 
 export const PIVOT_TO_LABEL_OFFSET = 100;
 export const CHARACTER_WAIT_DRAG_THRESHOLD = 400; // ms
-const CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL = 250; // ms
-const CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION = LIVE_UPDATE_THROTTLE; // ms
+export const CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL = 250; // ms
+export const CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION = LIVE_UPDATE_THROTTLE; // ms
 
 export const SettingDisplayCharacterName = BrowserStorage.createSession('graphics.display-character-name', true, z.boolean());
 

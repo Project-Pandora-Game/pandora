@@ -24,7 +24,7 @@ import { ChildrenProps } from '../common/reactTypes';
 import { usePlayerData } from '../components/gameContext/playerContextProvider';
 import { Observable, useObservable } from '../observable';
 import { Container } from './baseComponents/container';
-import { TransitionedContainer, type PixiTransitionedContainer } from './common/transitions/transitionedContainer';
+import { TransitionedContainer, type PixiTransitionedContainer, type TransitionedContainerCustomProps } from './common/transitions/transitionedContainer';
 import { TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler';
 import { ComputedLayerPriority, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def';
 import { GraphicsLayer, GraphicsLayerProps, SwapCullingDirection, SwapCullingDirectionObservable } from './graphicsLayer';
@@ -61,6 +61,7 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	useBlinking?: boolean;
 
 	movementTransitionDuration?: number;
+	perPropertyMovementTransitionDuration?: TransitionedContainerCustomProps['perPropertyTransitionDuration'];
 
 	onPointerDown?: (event: FederatedPointerEvent) => void;
 	onPointerUp?: (event: FederatedPointerEvent) => void;
@@ -141,6 +142,7 @@ export function GraphicsCharacterWithManager({
 	layerStateOverrideGetter,
 	useBlinking = false,
 	movementTransitionDuration = 0,
+	perPropertyMovementTransitionDuration,
 	...graphicsProps
 }: GraphicsCharacterProps & {
 	graphicsGetter: GraphicsGetterFunction;
@@ -176,7 +178,7 @@ export function GraphicsCharacterWithManager({
 		const transitionHander = characterStateTransitionHandler.current;
 		transitionHander.setValue(characterState);
 		// Tick immediately to start transition with current time
-		characterStateTransitionHandler.current.tick(performance.now());
+		transitionHander.tick(performance.now());
 
 		let scheduledTick: number | undefined;
 		function scheduleNextTickIfNeeded() {
@@ -360,6 +362,7 @@ export function GraphicsCharacterWithManager({
 			cursor='pointer'
 			tickerRef={ useTickerRef() }
 			transitionDuration={ movementTransitionDuration }
+			perPropertyTransitionDuration={ perPropertyMovementTransitionDuration }
 			onTransitionTick={ onTransitionTick }
 		>
 			<GraphicsSuspense loadingCirclePosition={ { x: 500, y: 750 } } sortableChildren>

@@ -135,6 +135,8 @@ export function CharacterPreview({ character, characterState, hideClothes = fals
 				time: 500,
 				underflow: 'center',
 			});
+		viewport.fit();
+		viewport.moveCenter(viewport.worldWidth / 2, viewport.worldHeight / 2);
 	}, []);
 
 	const sceneOptions = useMemo<GraphicsSceneProps>(() => ({

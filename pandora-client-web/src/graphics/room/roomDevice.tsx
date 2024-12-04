@@ -37,10 +37,11 @@ import { Graphics } from '../baseComponents/graphics';
 import { Sprite } from '../baseComponents/sprite';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
 import { MASK_SIZE, SwapCullingDirection, useItemColor } from '../graphicsLayer';
+import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings';
 import { MovementHelperGraphics } from '../movementHelper';
 import { useTexture } from '../useTexture';
 import { EvaluateCondition } from '../utility';
-import { useRoomCharacterOffsets } from './roomCharacter';
+import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, useRoomCharacterOffsets } from './roomCharacter';
 import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
@@ -653,6 +654,8 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement | null {
 	const debugConfig = useDebugConfig();
+	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
+
 	const playerFilters = usePlayerVisionFilters(character.isPlayer());
 	const characterFilters = useCharacterDisplayFilters(character);
 	const filters = useMemo(() => [...playerFilters, ...characterFilters], [playerFilters, characterFilters]);
@@ -683,6 +686,8 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 	if (roomDeviceLink == null || roomDeviceLink.device !== item.id || roomDeviceLink.slot !== layer.slot)
 		return null;
 
+	const movementTransitionDuration = !smoothMovementEnabled ? 0 : CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL;
+
 	return (
 		<GraphicsCharacter
 			characterState={ characterState }
@@ -692,6 +697,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 			angle={ rotationAngle }
 			filters={ filters }
 			useBlinking
+			movementTransitionDuration={ movementTransitionDuration }
 		>
 			{
 				!debugConfig?.characterDebugOverlay ? null : (

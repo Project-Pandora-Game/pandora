@@ -105,9 +105,14 @@ interface PreviewProps {
 	preview?: string;
 }
 
+const DEBUG_PREVIEW_PREVIEW = false;
 function Preview({ name, preview }: PreviewProps): ReactElement | null {
-	if (!preview)
+	if (!preview) {
+		if (DEBUG_PREVIEW_PREVIEW && preview != null) {
+			return <div className='frame' />;
+		}
 		return null;
+	}
 
 	return (
 		<div className='frame'>

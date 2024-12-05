@@ -65,13 +65,15 @@ function PolicyDialog({ hide }: {
 	hide: () => void;
 }): ReactElement {
 	return (
-		<ModalDialog>
-			<Scrollbar color='dark' className='policyDetails'>
-				<PrivacyPolicyContent />
-			</Scrollbar>
-			<Row padding='medium' className='policyDetails-button' alignX='center'>
-				<Button onClick={ hide }>Close</Button>
-			</Row>
+		<ModalDialog contentOverflow='hidden'>
+			<Column className='fit'>
+				<Scrollbar color='dark' className='policyDetails flex-1'>
+					<PrivacyPolicyContent />
+				</Scrollbar>
+				<Row padding='medium' className='policyDetails-button' alignX='center'>
+					<Button onClick={ hide }>Close</Button>
+				</Row>
+			</Column>
 		</ModalDialog>
 	);
 }

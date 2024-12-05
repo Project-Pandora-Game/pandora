@@ -17,7 +17,7 @@ export function Settings(): ReactElement | null {
 	return (
 		<>
 			<div className='settings'>
-				<UrlTabContainer className='flex-1'>
+				<UrlTabContainer className='flex-1' allowWrap>
 					<UrlTab name='Permissions' urlChunk='permissions'>
 						<SettingsTab element={ PermissionsSettings } />
 					</UrlTab>
@@ -49,9 +49,11 @@ export function Settings(): ReactElement | null {
 
 function SettingsTab({ element: Element }: { element: () => ReactElement | null; }): ReactElement {
 	return (
-		<div className='settings-tab'>
-			<div className='settings-tab-contents'>
-				<Element />
+		<div className='settings-tab-wrapper'>
+			<div className='settings-tab'>
+				<div className='settings-tab-contents'>
+					<Element />
+				</div>
 			</div>
 		</div>
 	);

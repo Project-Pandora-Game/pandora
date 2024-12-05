@@ -2,15 +2,17 @@
 
 .profileScreen {
 	display: flex;
-	padding: 0.5em !important;
 	overflow-y: hidden;
 }
 
 .profileView {
-	border: 2px solid black;
+	border-top: max(2px, 0.1em) solid black;
 
 	.profileHeader {
 		font-size: 1.8em;
+
+		padding: 0.25em 0.5em;
+		background-color: #999;
 
 		hr {
 			height: 2px;
@@ -36,6 +38,7 @@
 		width: max(min(20em, 90vw), 33vw);
 		flex-shrink: 0;
 		overflow: hidden;
+		border-right: solid black max(2px, 0.1em);
 
 		&.disabled {
 			display: none;

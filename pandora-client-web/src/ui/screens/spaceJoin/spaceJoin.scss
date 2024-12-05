@@ -1,8 +1,20 @@
 @import '../../../styles/common';
 
+.spaceJoinError {
+	font-weight: bold;
+	color: darkred;
+}
+
 .spaceJoin {
-	margin: auto;
-	justify-self: center;
+	max-width: calc(100% - 1em);
+	max-height: calc(100% - 1em);
+
+	padding: 1em;
+	border: 1px solid $black;
+	border-radius: 1em;
+	background-color: $grey-lightest;
+
+	overflow: hidden;
 }
 
 .spaceInvite {

@@ -140,16 +140,20 @@
 }
 
 .spacesSearchSpaceDetails {
-	max-width: 95vw;
+	width: 65em;
+	max-width: 100%;
 	display: grid;
 	gap: spacing('medium');
-	grid-template-columns: auto 200px;
+	grid-template-columns: 1fr min(12em, 40vw);
 
 	.preview {
 		grid-column: 2;
 		grid-row: 1 / 4;
+		justify-self: end;
+		max-height: 8em;
+		max-width: 100%;
+		object-fit: contain;
 		box-shadow: 0.3em 0.3em 0.2em $drop-shadow;
-		align-items: end;
 	}
 
 	.ownership {
@@ -182,8 +186,6 @@
 		grid-column: 1 / 3;
 		border: 0.1em solid black;
 		padding: 0.2em;
-		min-width: min(70em, 95vw);
-		max-width: 95vw;
 		background-color: $theme-textbox-background;
 		color: $theme-textbox-text;
 	}
@@ -199,6 +201,10 @@
 		overflow-y: auto;
 		display: grid;
 		grid-template-columns: repeat(3, minmax(0, 1fr));
+
+		@media only screen and (max-width: 719px) {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
 
 		div {
 			display: flex;

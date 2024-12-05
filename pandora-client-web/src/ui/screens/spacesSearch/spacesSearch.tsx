@@ -84,7 +84,7 @@ export function SpacesSearch(): ReactElement {
 	}
 
 	return (
-		<div>
+		<Column padding='medium'>
 			<Row padding='medium' wrap alignX='space-between'>
 				<Link className='center-flex' to='/'>◄ Back</Link>
 				<button className='infoBox' onClick={ () => setShowTips(true) } >
@@ -101,7 +101,7 @@ export function SpacesSearch(): ReactElement {
 			{ showTips && <TipsListDialog
 				hide={ () => setShowTips(false) }
 			/> }
-		</div>
+		</Column>
 	);
 }
 
@@ -427,9 +427,12 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 			<Row className='ownership' alignY='center'>
 				Owned by: { info.owners.join(', ') }
 			</Row>
-			{ (background !== '' && !background.startsWith('#')) &&
-				<img className='preview' src={ background } width='200px' height='100px' /> }
-			<Row className='features'>
+			{
+				(background !== '' && !background.startsWith('#')) ? (
+					<img className='preview' src={ background } />
+				) : null
+			}
+			<Row className='features' wrap>
 				{
 					featureIcons.map(([icon, name, extraClassNames], i) => (
 						<img key={ i } className={ classNames('features-img', extraClassNames) } src={ icon } title={ name } alt={ name } />
@@ -495,7 +498,7 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 					</div>
 				)
 			}
-			<Row padding='medium' className='buttons' alignX='space-between' alignY='center'>
+			<Row padding='medium' className='buttons' alignX='space-between' alignY='center' wrap>
 				{
 					hide && (
 						<Button onClick={ (e) => {

@@ -168,7 +168,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				{
 					text: (
 						<p>
-							On the right are various controls, such as information about the current room/space, chat, and some controls for your character.
+							On the right (or bottom) are various controls, such as information about the current room/space, chat, and some controls for your character.
 						</p>
 					),
 					highlight: [{ query: '.roomScreen .interactionArea' }],
@@ -261,12 +261,12 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 						<>
 							<p>
 								In the context menu you can do several quick actions with the character.<br />
-								The actions available to you will change depending on various things, such as if this is your character or not,<br />
+								The actions available to you will change depending on various things, such as if this is your character or not,
 								or if you are the current space's administrator.
 							</p>
 							<p>
 								At the top of the menu you can see the name of the character again.<br />
-								Next to the name in parenthesis is the character's unique identifier. This "id" is used in many menus,<br />
+								Next to the name in parenthesis is the character's unique identifier. This "id" is used in many menus,
 								so it is useful to be aware of it.
 							</p>
 							<p>
@@ -369,7 +369,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							</p>
 							<p>
 								You can also click the circles:<br />
-								Clicking the circle with blue up/down arrow resets your "flying",<br />
+								Clicking the circle with blue up/down arrow resets your "flying",
 								while clicking the circle with red/green arrows exits the move mode.
 							</p>
 							<p>
@@ -456,7 +456,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							</p>
 							<p>
 								Every character has their own personal space, which functions as a singleplayer lobby - no other characters can enter it.<br />
-								It cannot be deleted or given up. You will automatically end up in this space when your<br />
+								It cannot be deleted or given up. You will automatically end up in this space when your
 								selected character is not in any other space.<br />
 								You can find more about personal spaces in the context help or in the wiki.
 							</p>
@@ -518,7 +518,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 								For each character there are several quick actions you can do, such as opening their Wardrobe or Profile.
 							</p>
 							<p>
-								You can also click the character's name to open the same menu as when clicking their name in the room on the left.<br />
+								You can also click any character's name in the list to open the same menu as when clicking the name under their character in the room.<br />
 								Try doing so now.
 							</p>
 						</>
@@ -718,12 +718,12 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 						<>
 							<p>
 								Another type of messages similar to emotes are actions.<br />
-								Actions differ from emotes in that they are not written by users,<br />
+								Actions differ from emotes in that they are not written by users,
 								but come from an action that was recognized, performed, and enforced by Pandora.<br />
 								As such they cannot be forged or edited.
 							</p>
 							<p>
-								These usually happen as a result of interacting with character's items,<br />
+								These usually happen as a result of interacting with character's items,
 								but can also be created through the use of various commands.<br />
 								Try doing just that by using the "/dice" command to roll a dice.
 							</p>

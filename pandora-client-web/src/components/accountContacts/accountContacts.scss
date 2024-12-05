@@ -9,7 +9,11 @@
 		height: 100%;
 
 		>div {
-			margin: 0.1em 0.2em;
+			border-top: max(2px, 0.1em) solid black;
+
+			table {
+				margin: 0.1em 0.2em;
+			}
 		}
 	}
 

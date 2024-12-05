@@ -28,7 +28,12 @@ export function RoomScreen(): ReactElement | null {
 
 	return (
 		<RoomScreenContextProvider>
-			<DivContainer className='roomScreen' direction={ isPortrait ? 'column' : 'row' } key={ spaceInfo.id ?? '_personal' }>
+			<DivContainer
+				key={ spaceInfo.id ?? '_personal' }
+				className='roomScreen'
+				gap='none'
+				direction={ isPortrait ? 'column' : 'row' }
+			>
 				<RoomScene className={ `room-scene flex-${chatroomGraphicsRatio}` } />
 				<InteractionBox className={ `interactionArea flex-${chatroomChatRatio}` } />
 			</DivContainer>

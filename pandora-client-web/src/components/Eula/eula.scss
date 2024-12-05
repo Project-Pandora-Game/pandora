@@ -2,6 +2,7 @@
 
 .eula {
 	@include center-flex;
+	padding: 0.5em;
 
 	.eula-header {
 		max-width: 30em;
@@ -17,8 +18,6 @@
 }
 
 .policyDetails {
-	max-width: 85vw;
-	max-height: 80vh;
 	padding: 0.5em;
 
 	overflow: auto;

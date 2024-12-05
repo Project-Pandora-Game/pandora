@@ -114,6 +114,13 @@ $theme-characterselect-card-frame-background: #eee;
 
 //#endregion
 
+//#region Character creation
+
+$theme-character-create-background: #aaa;
+$theme-character-create-text: #000;
+
+//#endregion
+
 //#region Space search
 
 $theme-tipsbox-normal-background: transparent;
@@ -124,5 +131,12 @@ $theme-tipsbox-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-colo
 
 $theme-spacesearch-gapcolor: #000;
 $theme-spacesearch-entry-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
+
+//#endregion
+
+//#region Login & Registration
+
+$theme-auth-routerbox-background: #aaa;
+$theme-auth-routerbox-text: #000;
 
 //#endregion

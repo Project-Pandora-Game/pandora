@@ -11,3 +11,7 @@ export function useIsLandscape(): boolean {
 export function useIsNarrowScreen(): boolean {
 	return useMediaQuery('only screen and (max-width: 719px)');
 }
+
+export function useIsVeryNarrowScreen(): boolean {
+	return useMediaQuery('only screen and (max-width: 479px)');
+}

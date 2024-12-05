@@ -21,7 +21,7 @@ export interface TabConfig {
 	tabClassName?: string;
 }
 
-export function Tabulation({ children, className, collapsable, tabsPosition = 'top', tabs }: {
+export function Tabulation({ children, className, collapsable, tabsPosition = 'top', allowWrap = false, tabs }: {
 	children: ReactNode;
 	className?: string;
 	collapsable?: true;
@@ -31,11 +31,16 @@ export function Tabulation({ children, className, collapsable, tabsPosition = 't
 	 * @default 'top'
 	 */
 	tabsPosition?: 'top' | 'left';
+	/**
+	 * Whether the tabs should wrap to a new line if there is not enough space.
+	 * @default false
+	 */
+	allowWrap?: boolean;
 }): ReactElement {
 	const [collapsed, setCollapsed] = useState(false);
 
 	return (
-		<div className={ classNames('tab-container', `tab-position-${tabsPosition}`, className) }>
+		<div className={ classNames('tab-container', `tab-position-${tabsPosition}`, allowWrap ? 'allow-wrap' : null, className) }>
 			<ul className={ classNames('header', { collapsed }) } role='tablist' aria-orientation={ tabsPosition === 'left' ? 'vertical' : 'horizontal' }>
 				{
 					tabs.map((tab, index) => (tab &&
@@ -72,6 +77,7 @@ export function TabContainer({
 	className,
 	collapsable,
 	tabsPosition = 'top',
+	allowWrap,
 	onTabOpen,
 }: {
 	children: (ReactElement<TabProps> | undefined | null)[];
@@ -82,6 +88,11 @@ export function TabContainer({
 	 * @default 'top'
 	 */
 	tabsPosition?: 'top' | 'left';
+	/**
+	 * Whether the tabs should wrap to a new line if there is not enough space.
+	 * @default false
+	 */
+	allowWrap?: boolean;
 	onTabOpen?: (tab: Immutable<TabConfig>) => (void | (() => void));
 }): ReactElement {
 
@@ -107,7 +118,7 @@ export function TabContainer({
 	}, [currentTab, onTabOpen, tabs]);
 
 	return (
-		<Tabulation tabs={ tabs } className={ className } collapsable={ collapsable } tabsPosition={ tabsPosition }>
+		<Tabulation tabs={ tabs } className={ className } collapsable={ collapsable } tabsPosition={ tabsPosition } allowWrap={ allowWrap }>
 			<React.Fragment key={ currentTab }>
 				{ currentTab < children.length ? children[currentTab] : null }
 			</React.Fragment>
@@ -132,6 +143,7 @@ export function UrlTabContainer({
 	className,
 	collapsable,
 	tabsPosition = 'top',
+	allowWrap,
 }: {
 	children: (ReactElement<UrlTabProps> | undefined | null)[];
 	className?: string;
@@ -141,6 +153,11 @@ export function UrlTabContainer({
 	 * @default 'top'
 	 */
 	tabsPosition?: 'top' | 'left';
+	/**
+	 * Whether the tabs should wrap to a new line if there is not enough space.
+	 * @default false
+	 */
+	allowWrap?: boolean;
 }): ReactElement {
 	const routerPath = useResolvedPath('').pathname;
 	const { pathname } = useLocation();
@@ -159,7 +176,7 @@ export function UrlTabContainer({
 	})), [children, navigate, routerPath, pathname]);
 
 	return (
-		<Tabulation tabs={ tabs } className={ className } collapsable={ collapsable } tabsPosition={ tabsPosition }>
+		<Tabulation tabs={ tabs } className={ className } collapsable={ collapsable } tabsPosition={ tabsPosition } allowWrap={ allowWrap }>
 			<Routes>
 				{
 					children.map((tab, index) => (tab && tab.props.urlChunk != null && (

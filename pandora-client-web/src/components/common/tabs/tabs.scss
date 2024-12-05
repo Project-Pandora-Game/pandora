@@ -10,7 +10,7 @@ $header-height: 2em;
 		display: flex;
 		width: 100%;
 		margin: 0;
-		padding: 0 0.5em;
+		padding: 0.25em 0.45em 0 0.45em;
 
 		.tab {
 			@include center-flex;
@@ -59,7 +59,6 @@ $header-height: 2em;
 				flex: 0;
 				white-space: nowrap;
 				padding: 0.25em 0.5em 0.5em 0.5em;
-				margin: 0 -0.5em 0 0;
 			}
 		}
 
@@ -74,6 +73,15 @@ $header-height: 2em;
 		}
 	}
 
+	&.tab-position-top.allow-wrap {
+		>.header {
+			overflow-x: hidden;
+			flex-flow: row wrap-reverse;
+			justify-content: flex-end;
+			row-gap: max(2px, 0.1em);
+		}
+	}
+
 	&.tab-position-left {
 		flex-flow: row;
 
@@ -82,11 +90,12 @@ $header-height: 2em;
 			flex-flow: column;
 			width: unset;
 			height: 100%;
-			padding: 0.5em 0;
+			padding: 0.35em 0 0.35em 0.25em;
 
 			.tab {
 				flex: unset;
 				padding: 0.25em 1em 0.25em 0.75em;
+				justify-content: flex-end;
 				border-width: 0.25em 0 0.25em 0.25em;
 				border-radius: 1.2em 0em 0em 1.2em;
 				margin: -0.1em 0;

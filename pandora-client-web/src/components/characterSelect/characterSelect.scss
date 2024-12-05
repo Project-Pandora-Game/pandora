@@ -12,8 +12,8 @@
 
 	.card {
 		@include center-flex(column);
-		height: 20em;
-		width: 16em;
+		height: min(min(20em, 75vh), 100vw);
+		width: min(min(16em, 60vh), 80vw);
 		padding: 1em;
 		font-family: Arial, Helvetica, sans-serif;
 		border-radius: 0.2em;
@@ -26,6 +26,7 @@
 			position: relative;
 			height: 100%;
 			width: 100%;
+			padding: .5em;
 			gap: 1em;
 			background-color: $theme-characterselect-card-background;
 			color: $theme-characterselect-card-text;

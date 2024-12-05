@@ -1,0 +1,33 @@
+@import '../../styles/common';
+
+.AuthFormRouter {
+	@include flex(column);
+	align-items: center;
+	width: 22rem;
+	max-width: 90vw;
+	border-radius: 0.2em;
+	background-color: $theme-auth-routerbox-background;
+	color: $theme-auth-routerbox-text;
+	padding: 2em min(2em, max(1em, 5vw));
+	box-shadow: 0 0.2em 0.4em 0 $black-decoration, 0 0.3em 1em 0 $black-decoration;
+}
+
+.LoginForm {
+	.logo-container {
+		width: 100%;
+		margin: 0em 1em 2em 1em;
+
+		img {
+			max-height: 70em;
+			max-width: min(90%, 282em);
+		}
+	}
+}
+
+.FormField.captcha {
+	width: fit-content;
+
+	> div {
+		width: fit-content;
+	}
+}

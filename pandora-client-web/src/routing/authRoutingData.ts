@@ -28,4 +28,3 @@ const authPageComponentMap: Record<AuthPagePath, ComponentType<Record<string, ne
 };
 
 export const authPagePathsAndComponents = Object.entries(authPageComponentMap);
-export const authPageComponents = Object.values(authPageComponentMap);

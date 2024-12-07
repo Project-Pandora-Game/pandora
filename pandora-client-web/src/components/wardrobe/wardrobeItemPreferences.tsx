@@ -149,11 +149,13 @@ export function WardrobePreferencesAttributePicker({ title }: {
 		<div className='inventoryView'>
 			<div className='toolbar'>
 				<span>{ title }</span>
-				<TextInput ref={ filterInput }
-					placeholder='Filter by name'
-					value={ filter }
-					onChange={ setFilter }
-				/>
+				<div className='filter'>
+					<TextInput ref={ filterInput }
+						placeholder='Filter by name'
+						value={ filter }
+						onChange={ setFilter }
+					/>
+				</div>
 			</div>
 			<div className='listContainer'>
 				<Scrollbar color='dark'>

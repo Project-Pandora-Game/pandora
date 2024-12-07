@@ -4,6 +4,8 @@
 	display: flex;
 	flex-flow: column;
 	justify-content: center;
+	padding: 1em;
+	gap: 1em;
 
 	&>table {
 		max-width: 50em;

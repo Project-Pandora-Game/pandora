@@ -144,6 +144,7 @@ export function UrlTabContainer({
 	collapsable,
 	tabsPosition = 'top',
 	allowWrap,
+	noImplicitDefaultTab = false,
 }: {
 	children: (ReactElement<UrlTabProps> | undefined | null)[];
 	className?: string;
@@ -158,6 +159,12 @@ export function UrlTabContainer({
 	 * @default false
 	 */
 	allowWrap?: boolean;
+	/**
+	 * Disables the first tab being implicit default.
+	 * This means, that if no tab is explicitly marked as `default`, no tab will be initially selected.
+	 * @default false
+	 */
+	noImplicitDefaultTab?: boolean;
 }): ReactElement {
 	const routerPath = useResolvedPath('').pathname;
 	const { pathname } = useLocation();
@@ -165,8 +172,8 @@ export function UrlTabContainer({
 
 	const defaultTabPath = useMemo(() => {
 		const defaultTab = children.find((c) => c && c.props.default);
-		return (defaultTab ?? children.find((c) => !!c))?.props.urlChunk ?? '';
-	}, [children]);
+		return (defaultTab ?? (noImplicitDefaultTab ? undefined : children.find((c) => !!c)))?.props.urlChunk ?? '';
+	}, [children, noImplicitDefaultTab]);
 
 	const tabs = useMemo<(TabConfig | undefined)[]>(() => children.map((c): TabConfig | undefined => (c == null ? undefined : {
 		name: c.props.name,

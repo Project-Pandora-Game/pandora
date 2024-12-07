@@ -43,6 +43,7 @@ export function BetaKeys(): ReactElement {
 	return (
 		<BetaKeyListContext.Provider value={ context }>
 			<div className='shards'>
+				<BetaKeyCreate />
 				<table>
 					<thead>
 						<tr>
@@ -60,7 +61,6 @@ export function BetaKeys(): ReactElement {
 						)) }
 					</tbody>
 				</table>
-				<BetaKeyCreate />
 			</div>
 		</BetaKeyListContext.Provider>
 	);

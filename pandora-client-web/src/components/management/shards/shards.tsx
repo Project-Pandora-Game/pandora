@@ -40,6 +40,7 @@ export function Shards(): ReactElement {
 	return (
 		<ShardListContext.Provider value={ context }>
 			<div className='shards'>
+				<ShardCreate />
 				<table>
 					<thead>
 						<tr>
@@ -58,7 +59,6 @@ export function Shards(): ReactElement {
 						)) }
 					</tbody>
 				</table>
-				<ShardCreate />
 			</div>
 		</ShardListContext.Provider>
 	);

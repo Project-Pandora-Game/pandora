@@ -260,13 +260,16 @@ function SpaceSearchEntry({ baseInfo }: {
 					}
 				</div>
 				<div className='entry'>
-					{ `${name} (` }
-					<span className='userCount'>
-						{ `${onlineCharacters} ` }
-						<span className='offlineCount'>(+{ totalCharacters - onlineCharacters })</span>
-						{ ` / ${maxUsers}` }
+					<span className='name'>{ name }</span>
+					<span className='userCountWrapper'>
+						(
+						<span className='userCount'>
+							{ `${onlineCharacters} ` }
+							<span className='offlineCount'>(+{ totalCharacters - onlineCharacters })</span>
+							{ ` / ${maxUsers}` }
+						</span>
+						)
 					</span>
-					{ `)` }
 				</div>
 				<div className='description-preview'>{ `${description}` }</div>
 			</button>
@@ -422,7 +425,7 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 	return (
 		<div className='spacesSearchSpaceDetails'>
 			<div>
-				Details for { isPublic ? 'public' : 'private' } space <b>{ info.name }</b><br />
+				Details for { isPublic ? 'public' : 'private' } space <b className='spaceName'>{ info.name }</b><br />
 			</div>
 			<Row className='ownership' alignY='center'>
 				Owned by: { info.owners.join(', ') }

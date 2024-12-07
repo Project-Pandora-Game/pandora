@@ -16,7 +16,7 @@
 
 		grid-template:
 			"icon extraIcons name description" 3.5em
-			/ 2.8em 2em minmax(30%, max-content) auto;
+			/ 2.8em 2em minmax(30%, max-content) 1fr;
 		// grid-template might have different value for narrow screens (see lower)
 
 		&.selected {
@@ -92,13 +92,20 @@
 		}
 
 		.entry {
+			display: flex;
 			grid-area: name;
 			padding: 0.5em;
-			text-align: left;
+			gap: 0.5em;
 			vertical-align: middle;
 			background-color: transparent;
 			white-space: nowrap;
 			overflow: hidden;
+
+			.name {
+				text-overflow: ellipsis;
+				flex-shrink: 1;
+				overflow: hidden;
+			}
 
 			.offlineCount {
 				color: $theme-normal-text-dim;
@@ -117,6 +124,10 @@
 			text-overflow: ellipsis;
 		}
 
+		.userCountWrapper {
+			font-style: normal;
+		}
+
 		.userCount {
 			padding: 0 0.25em;
 		}
@@ -127,13 +138,13 @@
 			grid-template:
 				"icon extraIcons name" 1.75em
 				"icon extraIcons description" 1.75em
-				/ 2.8em 2em auto;
+				/ 2.8em 2em 1fr;
 
 			&.noDescription {
 				grid-template:
 					"icon extraIcons name" 1.75em
 					"icon extraIcons name" 1.75em
-					/ 2.8em 2em auto;
+					/ 2.8em 2em 1fr;
 			}
 		}
 	}
@@ -145,6 +156,11 @@
 	display: grid;
 	gap: spacing('medium');
 	grid-template-columns: 1fr min(12em, 40vw);
+
+	.spaceName {
+		display: inline-block;
+		word-break: break-word;
+	}
 
 	.preview {
 		grid-column: 2;
@@ -207,8 +223,9 @@
 		}
 
 		div {
-			display: flex;
+			display: block;
 			align-items: center;
+			word-wrap: break-word;
 
 			&.offline {
 				color: $theme-normal-text-dim;

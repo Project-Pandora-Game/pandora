@@ -1,7 +1,7 @@
 @import '../../styles/common';
 
 .dialog {
-	background-color: $black-secondary;
+	background: $theme-dialog-overlay;
 	position: fixed;
 	inset: 0;
 	z-index: 10000;
@@ -17,9 +17,10 @@
 		max-height: calc(100% - 1em);
 
 		padding: 1em;
-		border: 1px solid $black;
+		border: 1px solid $theme-dialog-border;
 		border-radius: 1em;
-		background-color: $grey-lightest;
+		background: $theme-dialog-background;
+		color: $theme-dialog-text;
 	}
 
 	&.top {
@@ -44,7 +45,7 @@
 	}
 
 	&.modal {
-		background-color: $black-secondary;
+		background: $theme-dialog-overlay;
 		pointer-events: auto;
 		z-index: 1000;
 	}
@@ -56,17 +57,18 @@
 	min-width: 8em;
 	min-height: 5em;
 
-	border: 1px solid $black;
+	border: 1px solid $theme-dialog-border;
 	border-radius: 1em;
-	background-color: $grey-lightest;
-	display: flex !important;
+	background: $theme-dialog-background;
+	color: $theme-dialog-text;
+	display: flex !important; // Overrides value from library
 	flex-flow: column;
 	isolation: isolate;
 
 	>header {
 		@include center-flex;
 		padding: 0.2em 0.2em 0.2em 1em;
-		background-color: $grey-light;
+		background: $theme-dialog-header;
 		position: relative;
 		min-height: 1.5em;
 		gap: 1em;
@@ -80,13 +82,13 @@
 
 		.dialog-close {
 			&:hover {
-				color: red;
+				color: $theme-dialog-button-close-hover;
 			}
 		}
 
 		.dialog-shade {
 			&:hover {
-				color: white;
+				color: $theme-dialog-button-shade-hover;
 			}
 		}
 	}
@@ -109,6 +111,7 @@
 	}
 
 	&.shaded {
+		// Override manual sizing to allow dialog to shrink
 		height: auto !important;
 		min-height: unset !important;
 
@@ -121,5 +124,3 @@
 .dialog-confirm {
 	max-width: min(95vw, 50em);
 }
-
-

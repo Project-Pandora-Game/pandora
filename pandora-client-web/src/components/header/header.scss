@@ -3,7 +3,7 @@
 
 .Header {
 	@include flex(row, wrap);
-	background-color: $theme-header-background;
+	background: $theme-header-background;
 	color: $theme-header-text;
 	width: 100%;
 	position: relative;
@@ -30,7 +30,7 @@
 	}
 
 	.collapsableHeaderButton {
-		background-color: $theme-header-collapsable-background;
+		background: $theme-header-collapsable-background;
 		color: $theme-header-collapsable-text;
 	}
 }
@@ -42,7 +42,7 @@
 	margin: 0;
 	overflow: hidden;
 	pointer-events: auto;
-	background-color: $theme-header-collapsable-background;
+	background: $theme-header-collapsable-background;
 	color: $theme-header-collapsable-text;
 	transition: all 200ms linear;
 

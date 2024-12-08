@@ -1,5 +1,4 @@
 @import '../../styles/common';
-@import '../../styles/forms';
 
 $header-height: 2em;
 
@@ -12,7 +11,7 @@ $header-height: 2em;
 
 	.safemode {
 		@include center-flex;
-		background: $theme-warning;
+		background: $themecolor-warning;
 		border: solid black 1px;
 		padding: 0.25em;
 	}
@@ -56,7 +55,7 @@ $header-height: 2em;
 
 				.warning {
 					@include center-flex;
-					background: $theme-warning;
+					background: $themecolor-warning;
 					border: solid black 1px;
 					border-radius: 1em;
 					padding: 0.25em 0.5em;
@@ -78,7 +77,7 @@ $header-height: 2em;
 	flex: 1;
 	border: solid black 2px;
 	padding: 0.5em;
-	background-color: #aaaaaaaa;
+	background: #aaaaaaaa;
 	overflow: hidden;
 }
 
@@ -121,7 +120,7 @@ $drop-overlay-gap: 0.3em;
 	overflow: hidden;
 	min-width: min(20em, 90vw);
 
-	background-color: $grey-lighter;
+	background: $grey-lighter;
 	border: solid $black 2px;
 
 	.toolbar {
@@ -149,7 +148,7 @@ $drop-overlay-gap: 0.3em;
 			margin: 2px;
 
 			&.active {
-				background-color: $grey-mid;
+				background: $grey-mid;
 			}
 		}
 
@@ -197,10 +196,10 @@ $drop-overlay-gap: 0.3em;
 			display: flex;
 
 			border: solid black 1px;
-			background-color: $grey-lighter;
+			background: $grey-lighter;
 
 			&:hover {
-				background-color: $grey-light;
+				background: $grey-light;
 			}
 
 			.outfitPreview {
@@ -242,7 +241,7 @@ $drop-overlay-gap: 0.3em;
 		isolation: isolate;
 
 		z-index: 10;
-		background-color: #00000050;
+		background: #00000050;
 
 		.centerButton {
 			width: max(10em, 50%);
@@ -317,21 +316,21 @@ $drop-overlay-gap: 0.3em;
 
 .inventoryViewItem {
 	border: solid $black 1px;
-	background-color: $grey-lighter;
+	background: $grey-lighter;
 	display: flex;
 	position: relative;
 
 	&.selected {
 		color: $white;
-		background-color: $grey-darker;
+		background: $grey-darker;
 	}
 
 	&.allowed:hover {
 		cursor: pointer;
-		background-color: $grey-light;
+		background: $grey-light;
 
 		&.selected {
-			background-color: $black;
+			background: $black;
 		}
 	}
 
@@ -340,11 +339,11 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	&.blocked {
-		background-color: #977;
+		background: #977;
 	}
 
 	&.pending {
-		background-color: #999;
+		background: #999;
 	}
 
 	>.colorRibbon {
@@ -517,7 +516,7 @@ $drop-overlay-gap: 0.3em;
 .wardrobeActionButton {
 	@include center-flex;
 	border: 1px solid black;
-	background-color: $grey-lighter;
+	background: $grey-lighter;
 
 	&:not(.slim) {
 		min-height: 2.5em;
@@ -526,24 +525,24 @@ $drop-overlay-gap: 0.3em;
 
 	&.selected {
 		color: $white;
-		background-color: $grey-darker;
+		background: $grey-darker;
 	}
 
 	&:disabled {
-		background-color: $grey-dark;
+		background: $grey-dark;
 
 		&.selected {
 			color: $white;
-			background-color: $grey-darker;
+			background: $grey-darker;
 		}
 	}
 
 	&.allowed:hover:not(:disabled) {
 		cursor: pointer;
-		background-color: $grey-mid;
+		background: $grey-mid;
 
 		&.selected {
-			background-color: $black;
+			background: $black;
 		}
 	}
 
@@ -553,15 +552,15 @@ $drop-overlay-gap: 0.3em;
 
 	&.blocked:not(.selected) {
 		cursor: default;
-		background-color: #977;
+		background: #977;
 	}
 
 	&.pending:not(.selected) {
-		background-color: #999;
+		background: #999;
 	}
 
 	&.promptRequired:not(.selected) {
-		background-color: #997;
+		background: #997;
 	}
 }
 
@@ -660,7 +659,7 @@ $drop-overlay-gap: 0.3em;
 
 	span {
 		width: 100%;
-		color: $theme-error;
+		color: $themecolor-error;
 		text-align: right;
 	}
 }
@@ -701,14 +700,13 @@ $drop-overlay-gap: 0.3em;
 		font-size: 1em;
 		padding: 0.5em;
 		border: 0.1em solid;
-		background-color: $grey-light;
+		background: $grey-light;
 		flex-grow: 1;
 	}
 
 	.description {
 		padding: 0.5em;
 		border: 1px solid $black;
-		font-family: Arial, Helvetica, sans-serif;
 		white-space: pre-wrap;
 		word-wrap: break-word;
 		word-break: break-word;
@@ -716,7 +714,7 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	.error {
-		color: $theme-error;
+		color: $themecolor-error;
 	}
 
 	input {

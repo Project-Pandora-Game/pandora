@@ -248,7 +248,7 @@ function DirectMessageInfo({ chat, selected, select }: { chat: DirectMessageChat
 	return (
 		<li onClick={ show } className={ selected ? 'selected' : '' }>
 			{ displayName ?? '[Loading ...]' } ({ chat.id })
-			{ hasUnread && <span>!</span> }
+			{ hasUnread && <span className='unreadIndicator'>!</span> }
 		</li>
 	);
 }

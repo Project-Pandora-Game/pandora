@@ -22,7 +22,7 @@ export function SpaceJoin(): ReactElement {
 	if (!spaceId) {
 		return (
 			<DivContainer align='center' justify='center'>
-				<div className='spaceJoinError'>Invalid space ID</div>
+				<div className='error-box'>Invalid space ID</div>
 			</DivContainer>
 		);
 	}
@@ -45,7 +45,7 @@ function QuerySpaceInfo({ spaceId, invite }: { spaceId: SpaceId; invite?: SpaceI
 	}
 
 	if (info.result !== 'success') {
-		return <div className='spaceJoinError'>{ INVALID_INVITE_MESSAGES[info.result] }</div>;
+		return <div className='error-box'>{ INVALID_INVITE_MESSAGES[info.result] }</div>;
 	}
 	return (
 		<div className='spaceJoin'>
@@ -55,9 +55,9 @@ function QuerySpaceInfo({ spaceId, invite }: { spaceId: SpaceId; invite?: SpaceI
 }
 
 const INVALID_INVITE_MESSAGES: Record<Exclude<SpaceExtendedInfoResponse['result'], 'success'>, string> = {
-	notFound: 'Unknown space.',
-	noAccess: `Invite expired or you don't have access to this space.`,
-	noCharacter: 'You need to have a character selected to view invite details.',
+	notFound: 'Unknown space',
+	noAccess: `Invite expired or you don't have access to this space`,
+	noCharacter: 'You need to have a character selected to view invite details',
 };
 
 export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: string; invite?: string; }): ReactElement {
@@ -73,7 +73,7 @@ export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: string; invite?
 
 	if (info.result !== 'success') {
 		return (
-			<div className='spaceInvite'>Invalid Invitation: { INVALID_INVITE_MESSAGES[info.result] }</div>
+			<div className='spaceInvite'>Invalid Invitation: { INVALID_INVITE_MESSAGES[info.result] }.</div>
 		);
 	}
 

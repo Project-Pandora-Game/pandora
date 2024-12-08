@@ -21,15 +21,15 @@ $header-height: 2em;
 			z-index: 0;
 			flex: 1;
 
-			background-color: $theme-tablist-tab-normal-background;
+			background: $theme-tablist-tab-normal-background;
 			color: $theme-tablist-tab-normal-text;
 			border-radius: 1.2em 1.2em 0em 0em;
 
 			cursor: pointer;
-			transition: background-color 0.2s ease-in-out;
+			transition: background-color 0.25s ease-in-out;
 
 			&.active {
-				background-color: $theme-tablist-tab-selected-background;
+				background: $theme-tablist-tab-selected-background;
 				color: $theme-tablist-tab-selected-text;
 				z-index: 2;
 
@@ -40,7 +40,7 @@ $header-height: 2em;
 			}
 
 			&:hover:not(.active) {
-				background-color: $theme-tablist-tab-hover-background;
+				background: $theme-tablist-tab-hover-background;
 				color: $theme-tablist-tab-hover-text;
 				z-index: 1;
 			}
@@ -105,7 +105,7 @@ $header-height: 2em;
 
 	>.tab-container-collapsed {
 		position: absolute;
-		background-color: $theme-tablist-tab-normal-background;
+		background: $theme-tablist-tab-normal-background;
 		color: $theme-tablist-tab-normal-text;
 		top: 0;
 		right: 0;
@@ -116,7 +116,7 @@ $header-height: 2em;
 		z-index: 1;
 
 		&:hover {
-			background-color: $theme-tablist-tab-hover-background;
+			background: $theme-tablist-tab-hover-background;
 			color: $theme-tablist-tab-hover-text;
 			z-index: 1;
 		}

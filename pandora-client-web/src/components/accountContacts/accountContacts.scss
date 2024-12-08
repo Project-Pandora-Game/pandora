@@ -1,4 +1,4 @@
-@import '../../styles/constants';
+@import '../../styles/common';
 
 .accountContacts {
 	height: 100%;
@@ -9,7 +9,7 @@
 		height: 100%;
 
 		>div {
-			border-top: max(2px, 0.1em) solid black;
+			border-top: max(2px, 0.1em) solid $theme-separator;
 
 			table {
 				margin: 0.1em 0.2em;
@@ -25,19 +25,21 @@
 	th {
 		padding: 0.2em 0.5em;
 		text-align: center;
-		border: 1px solid $grey-darker;
+		border: 1px solid $theme-table-border;
 	}
 
 	th {
-		background-color: $grey-dark;
+		background: $theme-table-header-background;
+		color: $theme-table-header-text;
 	}
 
 	tr {
-		background-color: $grey-light;
-	}
+		background: $theme-table-body-background;
+		color: $theme-table-body-text;
 
-	tr:nth-child(2n) {
-		background-color: $grey-lighter;
+		&:nth-child(2n) {
+			background: $theme-table-body-altbackground;
+		}
 	}
 
 	.friend {
@@ -47,7 +49,7 @@
 
 		&.online {
 			.status .indicator {
-				color: #080;
+				color: $theme-contacts-status-online;
 			}
 		}
 
@@ -56,11 +58,10 @@
 				font-style: italic;
 
 				.indicator {
-					color: #444;
+					color: $theme-contacts-status-offline;
 					font-style: normal;
 				}
 			}
-
 		}
 	}
 }

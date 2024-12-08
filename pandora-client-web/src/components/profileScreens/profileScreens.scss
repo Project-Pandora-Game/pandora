@@ -3,22 +3,22 @@
 .profileScreen {
 	display: flex;
 	overflow-y: hidden;
+
+	.tab-content {
+		background: $theme-profile-content-background;
+		color: $theme-profile-content-text;
+	}
 }
 
 .profileView {
-	border-top: max(2px, 0.1em) solid black;
+	border-top: max(2px, 0.1em) solid $theme-separator;
 
 	.profileHeader {
 		font-size: 1.8em;
 
 		padding: 0.25em 0.5em;
-		background-color: #999;
-
-		hr {
-			height: 2px;
-			width: 100%;
-			background-color: black;
-		}
+		background: $theme-profile-header-background;
+		color: $theme-profile-header-text;
 	}
 
 	.profileContent {
@@ -29,7 +29,7 @@
 		display: inline-block;
 		width: 1em;
 		height: 1em;
-		border: solid black 2px;
+		border: 2px solid black; // Intentionally not themed
 		border-radius: 50%;
 	}
 
@@ -38,7 +38,7 @@
 		width: max(min(20em, 90vw), 33vw);
 		flex-shrink: 0;
 		overflow: hidden;
-		border-right: solid black max(2px, 0.1em);
+		border-right: max(2px, 0.1em) solid $theme-separator;
 
 		&.disabled {
 			display: none;
@@ -51,28 +51,31 @@
 	}
 
 	.profileDescriptionContent {
-		background-color: #303030;
-		color: $white;
+		background: $theme-profile-description-background;
+		color: $theme-profile-description-text;
 		padding: 0.5em;
-		border: 1px solid black;
-		font-family: Arial, Helvetica, sans-serif;
+		border: 1px solid $theme-profile-description-border;
 		white-space: pre-wrap;
 		word-wrap: break-word;
 		word-break: break-word;
 
 		a {
-			color: $theme-link-light;
+			color: $theme-light-link;
 			text-decoration: underline;
 
-			&:hover {
-				color: $grey-light;
+			&:visited:not(:hover):not(:focus):not(:active) {
+				color: $theme-light-link-visited;
+			}
+
+			&:hover, &:focus, &:active {
+				color: $theme-light-link-active;
 			}
 		}
 	}
 
 	.profileEdit {
-		background-color: $grey-lightest;
-		color: $black;
-		border: 2px dashed $red-dark;
+		background: $theme-profile-description-edit-background;
+		color: $theme-profile-description-edit-text;
+		border: 2px dashed $theme-profile-description-edit-border;
 	}
 }

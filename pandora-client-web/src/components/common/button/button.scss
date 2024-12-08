@@ -41,12 +41,12 @@ $button-themes: (
 
 	@each $theme-name, $theme-data in $button-themes {
 		&.#{$theme-name} {
-			background-color: map-get($theme-data, "background");
+			background: map-get($theme-data, "background");
 			border-color: map-get($theme-data, "border");
 			color: map-get($theme-data, "color");
 
 			&:hover, &:active {
-				background-color: map-get($theme-data, "background-hover");
+				background: map-get($theme-data, "background-hover");
 				color: map-get($theme-data, "color-hover");
 			}
 
@@ -61,7 +61,7 @@ $button-themes: (
 			&:disabled {
 				cursor: unset;
 				&:hover, &:focus, &:active {
-					background-color: map-get($theme-data, "background");
+					background: map-get($theme-data, "background");
 					border-color: map-get($theme-data, "background");
 					color: map-get($theme-data, "color");
 				}

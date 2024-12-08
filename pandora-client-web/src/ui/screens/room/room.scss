@@ -23,17 +23,17 @@
 		min-width: min(20em, 100%);
 		min-height: min(10vw, 100%);
 		border-left: solid #222 max(2px, 0.1em);
-		background-color: #222;
+		background: #222;
 	}
 }
 
 .controls-container {
-	background-color: $grey-lighter;
+	background: $grey-lighter;
 	border: solid $black 2px;
 }
 
 .space-warning {
-	background-color: $theme-warningbox-background;
+	background: $theme-warningbox-background;
 	color: $theme-warningbox-text;
 	border: 1px solid $black;
 	border-radius: 0.5em;
@@ -58,16 +58,16 @@
 			overflow: hidden;
 			padding: 0;
 
-			background-color: $black;
+			background: $black;
 			gap: 1px;
 
 			&.player {
 				>span, >button {
-					background-color: $white;
+					background: $white;
 				}
 
 				>button:hover {
-					background-color: $grey-lighter;
+					background: $grey-lighter;
 				}
 			}
 
@@ -85,16 +85,16 @@
 				align-items: center;
 				justify-content: center;
 
-				background-color: $grey-lightest;
+				background: $grey-lightest;
 
 				&.safemode {
-					background-color: $theme-warningbox-background;
+					background: $theme-warningbox-background;
 					color: $theme-warningbox-text;
 					padding: 0 0.5em;
 				}
 
 				&.offline {
-					background-color: $grey-light;
+					background: $grey-light;
 					padding: 0 0.5em;
 					font-style: italic;
 				}
@@ -105,7 +105,7 @@
 			}
 
 			>button:hover {
-				background-color: $grey-lighter;
+				background: $grey-lighter;
 			}
 
 			>button:focus-visible {
@@ -117,7 +117,7 @@
 
 .room-construction-mode {
 	.error {
-		color: $theme-error;
+		color: $themecolor-error;
 		font-weight: bold;
 		margin: auto 0;
 	}

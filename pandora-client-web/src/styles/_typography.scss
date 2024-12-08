@@ -1,27 +1,27 @@
-@import 'constants';
-
-$font-family-main: 'Arial', 'Helvetica', sans-serif;
+@import 'common';
 
 html, body {
-	font-family: $font-family-main;
+	font-family: $theme-font-family;
 }
 
 a {
 	display: inline-block;
-	color: $theme-link;
+	color: $theme-normal-link;
 	cursor: pointer;
-	margin: -0.2em -0.5em;
-	padding: 0.2em 0.5em;
 	line-height: 1.3;
 	transition: all 150ms linear;
 	text-decoration: none;
 
-	&:hover, &:focus, &:active {
-		color: $white-primary;
+	&:visited:not(:hover):not(:focus):not(:active) {
+		color: $theme-normal-link-visited;
 	}
 
-	&:focus, &:active {
-		outline: 0.15em solid $black-secondary;
+	&:hover, &:focus, &:active {
+		color: $theme-normal-link-active;
+	}
+
+	&:focus-visible {
+		outline: $theme-link-visiblefocus-outline solid 0.15em;
 	}
 }
 

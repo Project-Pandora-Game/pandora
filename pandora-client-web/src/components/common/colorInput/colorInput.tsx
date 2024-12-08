@@ -216,7 +216,7 @@ function ColorEditor({
 					minAlpha < Color.maxAlpha &&
 					<NumberInput className='color-editor__alpha' rangeSlider min={ 0 } max={ Color.maxAlpha } value={ color.alpha } onChange={ setAlpha } />
 				}
-				<TextInput className='color-editor_hex' value={ input } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } onChange={ onTextInput } onPaste={ onPaste } />
+				<TextInput className='color-editor__hex' value={ input } maxLength={ minAlpha === Color.maxAlpha ? 7 : 9 } onChange={ onTextInput } onPaste={ onPaste } />
 			</div>
 		</DraggableDialog>
 	);

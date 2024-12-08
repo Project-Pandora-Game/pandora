@@ -1,4 +1,4 @@
-@import 'constants';
+@import 'common';
 
 //#region Inputs
 
@@ -6,17 +6,24 @@ input, textarea {
 	font-size: 1em;
 	padding: 0.5em;
 	border: 0.1em solid;
-	background-color: $grey-lighter;
+	background: $theme-input-normal-background;
+	color: $theme-input-text;
 
 	&:focus, &:active {
 		outline: 0.15em solid $black-secondary;
+		background: $theme-input-focused-background;
 	}
 
 	&:read-only {
-		background-color: $grey-light;
+		background: $theme-input-readonly-background;
 		&:focus, &:active {
 			outline: 0 none;
 		}
+	}
+
+	&::placeholder {
+		color: $theme-input-placeholder-text;
+		opacity: 1; /* Firefox */
 	}
 }
 
@@ -29,12 +36,15 @@ select {
 	padding: 0.5em;
 }
 
-input[type='checkbox'] {
+input[type=checkbox] {
 	transform: scale(1.3);
-}
+	background: $theme-checkbox-background;
+	accent-color: $theme-checkbox-accent;
 
-input[type=checkbox]:read-only {
-	filter: grayscale(100%);
+	&:disabled {
+		background: $theme-checkbox-disabled-background;
+		accent-color: $theme-checkbox-disabled-accent;
+	}
 }
 
 //#endregion

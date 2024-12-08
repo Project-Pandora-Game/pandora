@@ -1,5 +1,4 @@
-@import '../../../styles/constants';
-@import '../../../styles/utils';
+@import '../../../styles/common';
 
 .Form {
 	@include flex(column);
@@ -26,20 +25,20 @@
 
 	&.dirty {
 		input:invalid {
-			border-color: $theme-error;
-			outline-color: $theme-error;
+			border-color: $theme-input-border-error;
+			outline-color: $theme-input-border-error;
 		}
 	}
 
 	.FormErrorMessage {
 		font-size: 0.75em;
-		color: $theme-error;
+		color: $theme-form-validationmessage-text;
 		font-weight: 600;
 	}
 
 	.FormFieldError {
 		font-size: 0.85em;
-		color: $theme-error;
+		color: $theme-form-validationmessage-text;
 		margin-bottom: 0.8em;
 
 		&.empty:before {

@@ -15,11 +15,9 @@
 		height: min(min(20em, 75vh), 100vw);
 		width: min(min(16em, 60vh), 80vw);
 		padding: 1em;
-		font-family: Arial, Helvetica, sans-serif;
 		border-radius: 0.2em;
-		background-color: $theme-characterselect-card-outerborder;
+		background: $theme-characterselect-card-outerborder;
 		box-shadow: $theme-characterselect-card-shadow;
-		cursor: pointer;
 
 		.border {
 			@include center-flex(column);
@@ -28,7 +26,7 @@
 			width: 100%;
 			padding: .5em;
 			gap: 1em;
-			background-color: $theme-characterselect-card-background;
+			background: $theme-characterselect-card-background;
 			color: $theme-characterselect-card-text;
 			border: 0.2em solid $theme-characterselect-card-innerborder;
 
@@ -37,13 +35,13 @@
 				top: .4em;
 				right: .4em;
 				color: $theme-characterselect-card-extrainfo-text;
-				background-color: $theme-characterselect-card-extrainfo-background;
+				background: $theme-characterselect-card-extrainfo-background;
 				padding: .1em .75em;
 				border-radius: 1em;
 			}
 
 			.frame {
-				background-color: $theme-characterselect-card-frame-background;
+				background: $theme-characterselect-card-frame-background;
 				border-style: solid;
 				border-width: 0.06em;
 				box-shadow: inset 0em 0em 0.3em #000000e6;
@@ -67,12 +65,12 @@
 
 		&:hover {
 			.border {
-				background-color: #eee;
+				background: #eee;
 			}
 		}
 
 		&:focus-visible {
-			outline: $theme-characterselect-card-visiblefocus-outline solid 0.25em;
+			outline: 0.25em solid $theme-characterselect-card-visiblefocus-outline;
 		}
 	}
 }

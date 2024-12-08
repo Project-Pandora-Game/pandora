@@ -1,13 +1,13 @@
-@import '../../../styles/constants';
+@import '../../../styles/common';
 
 $scrollbar-colors: (
 	dark: (
-		thumb: $grey-darkest,
-		hover: $black,
+		thumb: $theme-scrollbar-dark-thumb,
+		hover: $theme-scrollbar-dark-hover,
 	),
 	lighter: (
-		thumb: $grey-mid,
-		hover: $grey-darker,
+		thumb: $theme-scrollbar-lighter-thumb,
+		hover: $theme-scrollbar-lighter-hover,
 	),
 );
 
@@ -23,11 +23,11 @@ $scrollbar-colors: (
 	@each $color-name, $color-data in $scrollbar-colors {
 		&.#{$color-name} {
 			&::-webkit-scrollbar-thumb {
-				background-color: map-get($color-data, "thumb");
+				background: map-get($color-data, "thumb");
 			}
 
 			&::-webkit-scrollbar-thumb:hover {
-				background-color: map-get($color-data, "hover");
+				background: map-get($color-data, "hover");
 			}
 		}
 	}

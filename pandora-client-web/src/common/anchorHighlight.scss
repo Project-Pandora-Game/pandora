@@ -1,12 +1,14 @@
+@import '../styles/common';
+
 :target, .target-highlight {
 	animation: target-highlight 2s ease-in;
 }
 
 @keyframes target-highlight {
 	from {
-		background-color: orange;
+		background: $theme-highlight-background;
 	}
 	to {
-		background-color: transparent;
+		background: transparent;
 	}
 }

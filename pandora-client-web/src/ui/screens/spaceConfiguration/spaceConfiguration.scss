@@ -42,7 +42,7 @@
 
 	.error {
 		@extend .message;
-		color: $theme-error;
+		color: $themecolor-error;
 		font-weight: 600;
 	}
 
@@ -114,7 +114,7 @@
 		}
 
 		.dropdown-button {
-			background-color: $grey-lighter;
+			background: $grey-lighter;
 			text-align: left;
 			color: $grey-dark;
 			padding: 0.5em;
@@ -129,7 +129,7 @@
 			position: absolute;
 			max-height: 50vh;
 			overflow-y: auto;
-			background-color: $grey-lighter;
+			background: $grey-lighter;
 			box-shadow: 0.3em 0.3em 0.2em $drop-shadow;
 			padding: 0.8em 1em;
 			z-index: 1;
@@ -154,7 +154,7 @@
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 		overflow-x: hidden;
 		overflow-y: scroll;
-		background-color: $grey-lighter;
+		background: $grey-lighter;
 
 		.details {
 			height: 10em;
@@ -231,8 +231,8 @@
 	}
 
 	.invite {
-		font-family: 'Courier New', Courier, monospace;
-		background-color: #ccc;
+		font-family: $theme-font-family-invite;
+		background: #ccc;
 		border-radius: 5px;
 		border: 1px solid #ddd;
 		padding: 5px;

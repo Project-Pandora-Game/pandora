@@ -1,16 +1,16 @@
 @import '../../../styles/common';
 
 .spacesSearchList {
-	background-color: $theme-spacesearch-gapcolor;
+	background: $theme-spacesearch-gapcolor;
 	padding: 3px;
 
 	.spacesSearchListEntry {
 		display: grid;
 		width: 100%;
 		align-items: center;
-		background-color: $theme-normal-background;
+		background: $theme-normal-background;
 		color: $theme-normal-text;
-		border: solid transparent 0.25em;
+		border: 0.25em solid transparent;
 		padding: 0.25em;
 		overflow: hidden;
 
@@ -20,7 +20,7 @@
 		// grid-template might have different value for narrow screens (see lower)
 
 		&.selected {
-			background-color: $theme-active-background;
+			background: $theme-active-background;
 			color: $theme-active-text;
 			.entry .offlineCount {
 				color: $theme-active-text-dim;
@@ -28,12 +28,12 @@
 		}
 
 		&:nth-child(even):not(:hover):not(.selected) {
-			background-color: $theme-normal-background-secondary;
+			background: $theme-normal-background-secondary;
 		}
 
 		&:hover:not(.selected) {
 			color: $theme-hover-text;
-			background-color: $theme-hover-background;
+			background: $theme-hover-background;
 
 			.entry .offlineCount {
 				color: $theme-hover-text-dim;
@@ -59,7 +59,7 @@
 		}
 
 		&.full .userCount {
-			background-color: color-mix(in srgb, transparent, $theme-error 40%);
+			background: $theme-spacesearch-entry-spacefull-highlight;
 			border-radius: 0.5em;
 		}
 
@@ -97,7 +97,7 @@
 			padding: 0.5em;
 			gap: 0.5em;
 			vertical-align: middle;
-			background-color: transparent;
+			background: transparent;
 			white-space: nowrap;
 			overflow: hidden;
 
@@ -118,7 +118,7 @@
 			padding: 0.5em;
 			text-align: left;
 			vertical-align: middle;
-			background-color: transparent;
+			background: transparent;
 			white-space: nowrap;
 			overflow: hidden;
 			text-overflow: ellipsis;
@@ -185,11 +185,11 @@
 	.features-img {
 		width: 2.5em;
 		height: 2.5em;
-		border: 1px solid black;
+		border: 1px solid $theme-separator;
 		padding: 0.1em;
 
 		&.warning {
-			background-color: $theme-warningbox-background;
+			background: $theme-warningbox-background;
 			color: $theme-warningbox-text;
 		}
 	}
@@ -200,9 +200,9 @@
 
 	.widebox {
 		grid-column: 1 / 3;
-		border: 0.1em solid black;
+		border: 0.1em solid $theme-separator;
 		padding: 0.2em;
-		background-color: $theme-textbox-background;
+		background: $theme-textbox-background;
 		color: $theme-textbox-text;
 	}
 
@@ -212,7 +212,7 @@
 
 	.users-list {
 		grid-column: 1 / 3;
-		border: 0.1em solid black;
+		border: 0.1em solid $theme-separator;
 		padding: 0.2em;
 		overflow-y: auto;
 		display: grid;
@@ -261,6 +261,6 @@
 	}
 
 	&:focus-visible {
-		outline: $theme-tipsbox-visiblefocus-outline solid 0.25em;
+		outline: 0.25em solid $theme-tipsbox-visiblefocus-outline;
 	}
 }

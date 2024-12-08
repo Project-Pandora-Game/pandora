@@ -1,31 +1,55 @@
 @import 'constants';
 
 $theme-accent-color: #939393;
+$theme-font-family: 'Arial', 'Helvetica', sans-serif;
+$theme-font-family-invite: 'Courier New', 'Courier', monospace;
+
+// TODO
+$themecolor-error: #b60000;
+$themecolor-warning: #fd0;
+$themecolor-shadow: #00000026;
 
 //#region Generic theming
 
+// Normal themes
 $theme-normal-background: #aaa;
 $theme-normal-background-secondary: #a0a0a0;
 $theme-normal-text: #000;
 $theme-normal-text-dim: #444;
+$theme-separator: #000; // E.g. borders
 
+// Hover
 $theme-hover-background: color-mix(in srgb, #797979, $theme-accent-color 35%);
 $theme-hover-text: $theme-normal-text;
 $theme-hover-text-dim: $theme-normal-text-dim;
 
+// Activateable elements
 $theme-active-background: color-mix(in srgb, black, $theme-accent-color 35%);
 $theme-active-text: #fff;
 $theme-active-text-dim: #ccc;
 
-$theme-warningbox-background: $theme-warning;
+// Links
+$theme-normal-link: #349;
+$theme-normal-link-visited: #559;
+$theme-normal-link-active: #fffffff2;
+$theme-light-link: #58e;
+$theme-light-link-visited: #8ae;
+$theme-light-link-active: #aaa;
+$theme-link-visiblefocus-outline: #000;
+
+// Boxes: Warning
+$theme-warningbox-background: $themecolor-warning;
 $theme-warningbox-text: $theme-normal-text;
 
-$theme-errorbox-background: $theme-error;
-$theme-errorbox-text: $theme-normal-text;
+// Boxes: Error
+$theme-errorbox-background: #b60000;
+$theme-errorbox-text: #fff;
 
+// Boxes: Lot of text
 $theme-textbox-background: #ccc;
 $theme-textbox-text: #000;
 
+// Tabs
 $theme-tablist-tab-normal-background: #fff;
 $theme-tablist-tab-normal-text: #000;
 $theme-tablist-tab-hover-background: #2e2e2e;
@@ -34,6 +58,83 @@ $theme-tablist-tab-normal-visiblefocus-outline: color-mix(in srgb, #000, $theme-
 $theme-tablist-tab-selected-background: #000;
 $theme-tablist-tab-selected-text: #fff;
 $theme-tablist-tab-selected-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
+
+// Text inputs (text, number, email, ...)
+$theme-input-normal-background: #ccc;
+$theme-input-focused-background: #ccc;
+$theme-input-text: #000;
+$theme-input-readonly-background: #aaa;
+$theme-input-readonly-text: #000;
+$theme-input-placeholder-text: #777;
+
+$theme-input-border-error: #b60000;
+$theme-form-validationmessage-text: #b60000;
+
+// Checkbox input
+$theme-checkbox-background: #aaa;
+$theme-checkbox-accent: #444;
+$theme-checkbox-disabled-background: #999;
+$theme-checkbox-disabled-accent: #555;
+
+// Text highlight (such as selected anchor)
+$theme-highlight-background: orange;
+
+// Table data
+$theme-table-header-background: #555;
+$theme-table-header-text: #000;
+$theme-table-body-background: #aaa;
+$theme-table-body-altbackground: #ccc;
+$theme-table-body-text: #000;
+$theme-table-border: #2e2e2e;
+
+//#endregion
+
+//#region Scrollbar
+
+$theme-scrollbar-dark-thumb: #151515;
+$theme-scrollbar-dark-hover: #000;
+$theme-scrollbar-lighter-thumb: #888;
+$theme-scrollbar-lighter-hover: #2e2e2e;
+
+//#endregion
+
+//#region Context menu
+
+$theme-contextmenu-default-background: #000;
+$theme-contextmenu-default-text: #fff;
+$theme-contextmenu-default-border: #fff;
+$theme-contextmenu-opaque-background: #000000b3;
+$theme-contextmenu-opaque-border: #ffffffb3;
+
+$theme-contextmenu-button-text: #fff;
+$theme-contextmenu-button-hover-background: #fff4;
+
+//#endregion
+
+//#region Dialogs
+
+$theme-dialog-overlay: #000000b3;
+$theme-dialog-background: #e4e4e4;
+$theme-dialog-text: #000;
+$theme-dialog-border: #000;
+
+$theme-dialog-header: #aaa;
+$theme-dialog-button-close-hover: #f00;
+$theme-dialog-button-shade-hover: #fff;
+
+$theme-hoverdialog-background: #fff;
+$theme-hoverdialog-text: #000;
+$theme-hoverdialog-border: #000;
+
+//#endregion
+
+//#region Error report
+
+$theme-errorreport-local-background: #8b0000;
+$theme-errorreport-local-text: #fff;
+
+$theme-errorreport-report-background: #ccc;
+$theme-errorreport-report-text: #000;
 
 //#endregion
 
@@ -46,9 +147,7 @@ $theme-chat-messageinfo-text: #888;
 $theme-chat-serverMessage-background: #202020;
 $theme-chat-serverMessage-text: #fff;
 $theme-chat-serverMessage-foldable-hover-background: #181818;
-
-$theme-chat-link-normal-text: $theme-link-light;
-$theme-chat-link-hover-text: #aaa;
+$theme-chat-serverMessage-notch: #fff;
 
 $theme-chat-editedMessage-background: #444;
 $theme-chat-editedMessage-notch: #09f;
@@ -74,6 +173,27 @@ $theme-autocomplete-hint-entry-hover-background: #7e7eff54;
 
 //#endregion
 
+//#region Direct messages (DMs)
+
+$theme-dms-base-background: #444;
+
+$theme-dms-list-background: #2e2e2e;
+$theme-dms-list-item-border: #888;
+$theme-dms-list-item-normal-background: $theme-dms-list-background;
+$theme-dms-list-item-selected-background: #888;
+$theme-dms-list-item-temp-background: #888;
+$theme-dms-list-item-text: #fff;
+$theme-dms-list-item-unread-indicator: #f00;
+
+$theme-dms-chat-loading: #fff;
+$theme-dms-chat-error: #f44;
+
+$theme-dms-crypto-dialog-base-background: #2e2e2e;
+$theme-dms-crypto-dialog-background: #aaa;
+$theme-dms-crypto-dialog-text: #000;
+
+//#endregion
+
 //#region Header
 
 $theme-header-background: #888;
@@ -83,6 +203,7 @@ $theme-header-collapsable-text: #000;
 
 $theme-header-button-normal-background: transparent;
 $theme-header-button-normal-text: inherit;
+$theme-header-button-normal-imgfilter: none;
 $theme-header-button-hover-background: #151515;
 $theme-header-button-hover-text: rgba($white, 0.95);
 $theme-header-button-hover-imgfilter: invert(100%);
@@ -131,6 +252,44 @@ $theme-tipsbox-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-colo
 
 $theme-spacesearch-gapcolor: #000;
 $theme-spacesearch-entry-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
+$theme-spacesearch-entry-spacefull-highlight: color-mix(in srgb, transparent, #b60000 40%);
+
+//#endregion
+
+//#region Contacts
+
+$theme-contacts-status-online: #080;
+$theme-contacts-status-offline: #444;
+
+//#endregion
+
+//#region Contacts
+
+$theme-profile-header-background: #999;
+$theme-profile-header-text: #000;
+
+$theme-profile-content-background: $theme-normal-background;
+$theme-profile-content-text: $theme-normal-text;
+
+$theme-profile-description-background: $theme-chat-background;
+$theme-profile-description-text: $theme-chat-text;
+$theme-profile-description-border: $theme-separator;
+
+$theme-profile-description-edit-background: #e4e4e4;
+$theme-profile-description-edit-text: #000;
+$theme-profile-description-edit-border: #5e0000;
+
+//#endregion
+
+//#region Settings
+
+$theme-settings-fieldset-background: #fff;
+$theme-settings-fieldset-text: #000;
+$theme-settings-fieldset-border: #000;
+$theme-settings-fieldset-legend-background: #fff;
+$theme-settings-fieldset-legend-text: #000;
+
+$theme-settings-table-row-highlight-background: #f0f0f0; // Used for highlighting "current connection" in security settings
 
 //#endregion
 
@@ -138,5 +297,10 @@ $theme-spacesearch-entry-visiblefocus-outline: color-mix(in srgb, #fff, $theme-a
 
 $theme-auth-routerbox-background: #aaa;
 $theme-auth-routerbox-text: #000;
+
+$theme-auth-teaser-content: #888;
+$theme-auth-teaser-dot-inactive: #555;
+$theme-auth-teaser-dot-active: #349;
+$theme-auth-teaser-dot-hover: #e4e4e4;
 
 //#endregion

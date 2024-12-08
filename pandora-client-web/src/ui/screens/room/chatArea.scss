@@ -4,7 +4,7 @@
 	display: flex;
 	flex-flow: column;
 	flex: 1;
-	background-color: $theme-chat-background;
+	background: $theme-chat-background;
 	color: $theme-chat-text;
 	overflow: hidden;
 
@@ -27,14 +27,14 @@
 			}
 
 			&.serverMessage {
-				border-left: solid 5px $white;
-				background-color: $theme-chat-serverMessage-background;
+				border-left: 5px solid $theme-chat-serverMessage-notch;
+				background: $theme-chat-serverMessage-background;
 				color: $theme-chat-serverMessage-text;
 				margin: 0.4em;
 				padding: 0.2em;
 
 				&.foldable:hover {
-					background-color: $theme-chat-serverMessage-foldable-hover-background;
+					background: $theme-chat-serverMessage-foldable-hover-background;
 					cursor: pointer;
 				}
 			}
@@ -56,19 +56,23 @@
 			}
 
 			a {
-				color: $theme-chat-link-normal-text;
+				color: $theme-light-link;
 				text-decoration: underline;
 
-				&:hover {
-					color: $theme-chat-link-hover-text;
+				&:visited:not(:hover):not(:focus):not(:active) {
+					color: $theme-light-link-visited;
+				}
+
+				&:hover, &:focus, &:active {
+					color: $theme-light-link-active;
 				}
 			}
 
 			&.editing {
-				background-color: $theme-chat-editedMessage-background;
+				background: $theme-chat-editedMessage-background;
 				padding: 0.2em;
 				margin: 0 0.2em;
-				border-left: solid 2px $theme-chat-editedMessage-notch;
+				border-left: 2px solid $theme-chat-editedMessage-notch;
 			}
 		}
 	}
@@ -78,13 +82,13 @@
 		resize: none;
 		margin: 0;
 		font-size: 105%;
-		background-color: $theme-chat-input-normal-background;
+		background: $theme-chat-input-normal-background;
 		color: $theme-chat-input-text;
 		border: none;
 		outline: none;
 
 		&:focus {
-			background-color: $theme-chat-input-focused-background;
+			background: $theme-chat-input-focused-background;
 		}
 
 		&::placeholder {
@@ -98,7 +102,7 @@
 	@include flex(row, wrap);
 	align-items: center;
 
-	background-color: $theme-chat-indicator-background;
+	background: $theme-chat-indicator-background;
 	color: $theme-chat-indicator-text;
 	padding-left: 0.5em;
 	gap: 0.5em;
@@ -115,7 +119,7 @@
 	cursor: pointer;
 
 	&:hover {
-		background-color: $theme-chat-indicator-interactive-hover-background;
+		background: $theme-chat-indicator-interactive-hover-background;
 	}
 
 	img {
@@ -125,7 +129,7 @@
 }
 
 .unread-messages-indicator:hover {
-	background-color: $theme-chat-indicator-interactive-hover-background;
+	background: $theme-chat-indicator-interactive-hover-background;
 	cursor: pointer;
 }
 
@@ -140,7 +144,7 @@
 	font-size: medium;
 
 	@include flex(column);
-	background-color: $theme-autocomplete-hint-background;
+	background: $theme-autocomplete-hint-background;
 	color: $theme-autocomplete-hint-text;
 	padding: 0.5em;
 	gap: 0.1em;
@@ -153,7 +157,7 @@
 		cursor: pointer;
 
 		&:hover, &.selected {
-			background-color: $theme-autocomplete-hint-entry-hover-background;
+			background: $theme-autocomplete-hint-entry-hover-background;
 		}
 	}
 }

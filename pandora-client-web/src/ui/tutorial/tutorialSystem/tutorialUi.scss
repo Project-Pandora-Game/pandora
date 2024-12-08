@@ -6,7 +6,7 @@
 	max-width: max(50vw, min(95vw, 50em));
 
 	.finishedStep {
-		color: darkgrey;
+		color: #a9a9a9;
 		font-style: italic;
 	}
 
@@ -47,7 +47,7 @@
 	z-index: 89000; // This is positioned to be under hover elements (.hover-element), not to obscure them
 	pointer-events: none;
 
-	background-color: transparent;
+	background: transparent;
 	border: solid #ff0000 0.3em;
 	border-radius: 0.5em;
 

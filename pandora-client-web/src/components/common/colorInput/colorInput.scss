@@ -9,7 +9,7 @@
 		position: relative;
 		width: 200px;
 		height: 200px;
-		background-color: hsla(var(--hue), 100%, 50%, 1);
+		background: hsla(var(--hue), 100%, 50%, 1);
 		margin-bottom: 0.5em;
 
 		&__color {
@@ -55,7 +55,7 @@
 			width: 1.5em;
 			height: 1.5em;
 			border-radius: 50%;
-			background-color: var(--rgba);
+			background: var(--rgba);
 			box-shadow:
 				0 0 4px 1px rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
 				0 2px 2px 0 rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
@@ -71,7 +71,7 @@
 			width: 1.5em;
 			height: 1.5em;
 			border-radius: 50%;
-			background-color: var(--rgba);
+			background: var(--rgba);
 			box-shadow:
 				0 0 4px 1px rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
 				0 2px 2px 0 rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
@@ -101,15 +101,11 @@
 
 	&__hex {
 		width: 200px;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-		padding: 5px;
-		font-size: 14px;
 	}
 }
 
 .color-input-button {
-	border: 2px solid black;
+	border: 2px solid black; // Intentionally not themed
 	border-radius: 0;
 	display: flex;
 	width: 4em;

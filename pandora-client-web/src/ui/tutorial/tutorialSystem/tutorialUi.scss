@@ -1,3 +1,5 @@
+@import '../../../styles/common';
+
 .tutorialDialogContainer {
 	z-index: 90100;
 }
@@ -6,7 +8,7 @@
 	max-width: max(50vw, min(95vw, 50em));
 
 	.finishedStep {
-		color: #a9a9a9;
+		color: $theme-tutorial-dialog-text-dim;
 		font-style: italic;
 	}
 
@@ -48,7 +50,7 @@
 	pointer-events: none;
 
 	background: transparent;
-	border: solid #ff0000 0.3em;
+	border: 0.3em solid $theme-tutorial-highlight-base-1;
 	border-radius: 0.5em;
 
 	animation: tutorial-highlight-overlay-blink 1s infinite alternate-reverse;
@@ -59,7 +61,7 @@
 
 	&.top {
 		z-index: 91001;
-		border: dashed #ff000080 0.3em;
+		border: 0.3em dashed $theme-tutorial-highlight-top-1;
 		border-style: dashed;
 
 		animation: tutorial-highlight-overlay-blink-transparent 1s infinite alternate-reverse;
@@ -68,18 +70,18 @@
 
 @keyframes tutorial-highlight-overlay-blink {
 	from {
-		border-color: #8b0000;
+		border-color: $theme-tutorial-highlight-base-1;
 	}
 	to {
-		border-color: #ffa500;
+		border-color: $theme-tutorial-highlight-base-2;
 	}
 }
 
 @keyframes tutorial-highlight-overlay-blink-transparent {
 	from {
-		border-color: #8b000080;
+		border-color: $theme-tutorial-highlight-top-1;
 	}
 	to {
-		border-color: #ffa50080;
+		border-color: $theme-tutorial-highlight-top-2;
 	}
 }

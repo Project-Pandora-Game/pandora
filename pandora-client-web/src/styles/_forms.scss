@@ -10,7 +10,7 @@ input, textarea {
 	color: $theme-input-text;
 
 	&:focus, &:active {
-		outline: 0.15em solid $black-secondary;
+		outline: 0.15em solid $theme-input-focused-outline;
 		background: $theme-input-focused-background;
 	}
 

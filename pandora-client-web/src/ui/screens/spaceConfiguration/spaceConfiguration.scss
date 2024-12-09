@@ -9,7 +9,7 @@
 	}
 
 	.spaceConfigurationScreen-tab {
-		border-top: 2px solid black;
+		border-top: 2px solid $theme-separator;
 	}
 
 	.input-container {
@@ -114,9 +114,9 @@
 		}
 
 		.dropdown-button {
-			background: $grey-lighter;
 			text-align: left;
-			color: $grey-dark;
+			background: $theme-spaceconfig-backgroundselect-filterdropdown-background;
+			color: $theme-spaceconfig-backgroundselect-filterdropdown-text;
 			padding: 0.5em;
 			border: solid;
 			width: 100%;
@@ -129,8 +129,8 @@
 			position: absolute;
 			max-height: 50vh;
 			overflow-y: auto;
-			background: $grey-lighter;
-			box-shadow: 0.3em 0.3em 0.2em $drop-shadow;
+			background: $theme-spaceconfig-backgroundselect-filterdropdown-contentbackground;
+			box-shadow: 0.3em 0.3em 0.2em $themecolor-shadow;
 			padding: 0.8em 1em;
 			z-index: 1;
 
@@ -154,7 +154,7 @@
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 		overflow-x: hidden;
 		overflow-y: scroll;
-		background: $grey-lighter;
+		background: $theme-spaceconfig-backgroundselect-list-background;
 
 		.details {
 			height: 10em;
@@ -168,7 +168,7 @@
 					max-width: 100%;
 					max-height: 100%;
 					object-fit: contain;
-					box-shadow: 0.3em 0.3em 0.2em $drop-shadow;
+					box-shadow: 0.3em 0.3em 0.2em $themecolor-shadow;
 				}
 			}
 
@@ -185,13 +185,13 @@
 	.footer {
 		max-width: 100%;
 	}
-
 }
 
 .backgroundInfo {
 	img {
-		max-width: 46em;
-		max-height: 46em;
+		max-width: min(24em, 33vw);
+		max-height: min(24em, 50vh);
+		object-fit: scale-down;
 	}
 }
 
@@ -200,14 +200,14 @@
 	grid-template-columns: 1fr 2em 1fr;
 	height: 2.1em;
 
-	input[type='checkbox'] {
+	input[type=checkbox] {
 		margin: auto 0;
 	}
 }
 
 .spaceInvitesTable {
 	&, tr, td, th {
-		border: solid black 1px;
+		border: 1px solid $theme-separator;
 		border-collapse: collapse;
 	}
 
@@ -222,20 +222,20 @@
 
 .permanentInvite {
 	display: block;
-	padding: 10px;
+	padding: 0.5em;
 
 	.text {
 		display: block;
 		user-select: none;
-		margin-bottom: 5px;
+		margin-bottom: 0.25em;
 	}
 
 	.invite {
 		font-family: $theme-font-family-invite;
-		background: #ccc;
-		border-radius: 5px;
-		border: 1px solid #ddd;
-		padding: 5px;
+		background: $theme-spaceconfig-invites-permanentlink-background;
+		color: $theme-spaceconfig-invites-permanentlink-text;
+		border-radius: 0.5em;
+		padding: 0.5em 0.75em;
 		display: block;
 		user-select: all;
 		cursor: pointer;

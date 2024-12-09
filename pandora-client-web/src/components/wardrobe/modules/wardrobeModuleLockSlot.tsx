@@ -438,7 +438,7 @@ function PasswordInput({
 			{
 				error ? (
 					<Row className='WardrobeInputRow'>
-						<span>{ error }</span>
+						<span className='error'>{ error }</span>
 					</Row>
 				) : null
 			}

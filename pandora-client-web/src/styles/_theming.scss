@@ -4,7 +4,7 @@ $theme-accent-color: #939393;
 $theme-font-family: 'Arial', 'Helvetica', sans-serif;
 $theme-font-family-invite: 'Courier New', 'Courier', monospace;
 
-// TODO
+// Some unified colors, still used somewhat randomly
 $themecolor-error: #b60000;
 $themecolor-warning: #fd0;
 $themecolor-shadow: #00000026;
@@ -27,6 +27,39 @@ $theme-hover-text-dim: $theme-normal-text-dim;
 $theme-active-background: color-mix(in srgb, black, $theme-accent-color 35%);
 $theme-active-text: #fff;
 $theme-active-text-dim: #ccc;
+
+// Buttons
+$theme-button: (
+	default: (
+		background: #151515,
+		border: #151515,
+		color: #fff,
+		background-hover: #555,
+		color-hover: #fff,
+		focus-outline: #fff,
+		icon-filter: none
+	),
+	defaultActive: (
+		background: #ccc,
+		border: #151515,
+		color: #000,
+		background-hover: #e4e4e4,
+		color-hover: #000,
+		focus-outline: #fff,
+		icon-filter: invert(100%)
+	),
+	danger: (
+		background: #151515,
+		border: #8b0000,
+		color: #f00,
+		background-hover: #555,
+		color-hover: #f00,
+		focus-outline: #f00,
+		icon-filter: none
+	),
+);
+$theme-button-selected-outline: #000;
+$theme-buttonicon-hamburger-color: #000;
 
 // Links
 $theme-normal-link: #349;
@@ -62,6 +95,7 @@ $theme-tablist-tab-selected-visiblefocus-outline: color-mix(in srgb, #fff, $them
 // Text inputs (text, number, email, ...)
 $theme-input-normal-background: #ccc;
 $theme-input-focused-background: #ccc;
+$theme-input-focused-outline: #000000b3;
 $theme-input-text: #000;
 $theme-input-readonly-background: #aaa;
 $theme-input-readonly-text: #000;
@@ -205,9 +239,9 @@ $theme-header-button-normal-background: transparent;
 $theme-header-button-normal-text: inherit;
 $theme-header-button-normal-imgfilter: none;
 $theme-header-button-hover-background: #151515;
-$theme-header-button-hover-text: rgba($white, 0.95);
+$theme-header-button-hover-text: #fffffff2;
 $theme-header-button-hover-imgfilter: invert(100%);
-$theme-header-button-visiblefocus-outline: rgba($white, 0.8);
+$theme-header-button-visiblefocus-outline: #ffffffcc;
 
 $theme-notification-badge-background: #d00;
 $theme-notification-badge-text: rgba(#fff, 0.95);
@@ -218,6 +252,17 @@ $theme-notification-badge-text: rgba(#fff, 0.95);
 
 $theme-footer-background: #888;
 $theme-footer-text: #000;
+
+//#endregion
+
+//#region Tutorials
+
+// Base dialog style is $theme-dialog-*
+$theme-tutorial-dialog-text-dim: #a9a9a9;
+$theme-tutorial-highlight-base-1: #8b0000;
+$theme-tutorial-highlight-base-2: #ffa500;
+$theme-tutorial-highlight-top-1: #8b000080;
+$theme-tutorial-highlight-top-2: #ffa50080;
 
 //#endregion
 
@@ -239,6 +284,99 @@ $theme-characterselect-card-frame-background: #eee;
 
 $theme-character-create-background: #aaa;
 $theme-character-create-text: #000;
+
+//#endregion
+
+//#region Wardrobe
+
+$theme-wardrobe-pane-background: #aaaaaaaa;
+$theme-wardrobe-pane-text: #000;
+
+$theme-wardrobe-view-background: #ccc;
+$theme-wardrobe-view-text: #000;
+$theme-wardrobe-view-overlay: #00000050;
+
+$theme-wardrobe-modebutton-border: #000;
+$theme-wardrobe-modebutton-active-background: #888;
+
+$theme-wardrobe-outfitbutton-border: #000;
+$theme-wardrobe-outfitbutton-normal-background: #ccc;
+$theme-wardrobe-outfitbutton-hover-background: #aaa;
+$theme-wardrobe-outfitbutton-text: #000;
+$theme-wardrobe-outfitbutton-preview-border: #000;
+
+$theme-wardrobe-actionbutton-border: #000;
+$theme-wardrobe-actionbutton-visiblefocus-border: #fff;
+$theme-wardrobe-actionbutton-normal-background: #ccc;
+$theme-wardrobe-actionbutton-normal-text: #000;
+$theme-wardrobe-actionbutton-hover-background: #888;
+$theme-wardrobe-actionbutton-hover-text: #000;
+$theme-wardrobe-actionbutton-selected-background: #2e2e2e;
+$theme-wardrobe-actionbutton-selected-text: #fff;
+$theme-wardrobe-actionbutton-selectedhover-background: #000;
+$theme-wardrobe-actionbutton-selectedhover-text: #fff;
+$theme-wardrobe-actionbutton-blocked-background: #977;
+$theme-wardrobe-actionbutton-blocked-text: #000;
+$theme-wardrobe-actionbutton-pending-background: #999;
+$theme-wardrobe-actionbutton-pending-text: #000;
+$theme-wardrobe-actionbutton-promptRequired-background: #997;
+$theme-wardrobe-actionbutton-promptRequired-text: #000;
+$theme-wardrobe-actionbutton-disabled-background: #555;
+$theme-wardrobe-actionbutton-disabled-text: #000;
+
+// Item entries almost completely reuse actionbutton colors, as they fulfill similar role
+// The only difference is normal hover, where action buttons can be inside item entries,
+// so they must differ not to look the same when hovered.
+$theme-wardrobe-itementry-hover-background: #aaa;
+$theme-wardrobe-itementry-hover-text: #000;
+
+$theme-wardrobe-assetpreferences-shadow: #000;
+$theme-wardrobe-favorite-color: #fafa00;
+$theme-wardrobe-maybe-color: #fa7d00;
+$theme-wardrobe-prevent-color: #fa0000;
+$theme-wardrobe-doNotRender-color: #000;
+
+$theme-wardrobe-errormessage-text: $themecolor-error;
+
+$theme-wardrobe-itemname-border: #000;
+$theme-wardrobe-itemname-background: #aaa;
+$theme-wardrobe-itemname-text: #000;
+$theme-wardrobe-itemdescription-border: #000;
+$theme-wardrobe-itemdescription-background: #aaa;
+$theme-wardrobe-itemdescription-text: #000;
+
+//#endregion
+
+//#region Room view
+
+$theme-room-separator: #222;
+$theme-room-background: #222;
+
+$theme-room-controls-background: #ccc;
+$theme-room-controls-text: #000;
+$theme-room-controls-border: #000;
+
+$theme-room-controls-character-border: #000;
+$theme-room-controls-character-background: #e4e4e4;
+$theme-room-controls-character-text: #000;
+$theme-room-controls-character-hover-background: #ccc;
+$theme-room-controls-offlinecharacter-background: #aaa;
+$theme-room-controls-player-background: #fff;
+$theme-room-controls-player-text: #000;
+$theme-room-controls-player-hover-background: #ccc;
+$theme-room-controls-character-colorstrip-shadow: #666;
+$theme-room-controls-character-visiblefocus-outline: #000;
+
+//#endregion
+
+//#region Space configuration
+
+$theme-spaceconfig-backgroundselect-filterdropdown-background: #ccc;
+$theme-spaceconfig-backgroundselect-filterdropdown-text: #555;
+$theme-spaceconfig-backgroundselect-filterdropdown-contentbackground: #ccc;
+$theme-spaceconfig-backgroundselect-list-background: #ccc;
+$theme-spaceconfig-invites-permanentlink-background: #ccc;
+$theme-spaceconfig-invites-permanentlink-text: #000;
 
 //#endregion
 
@@ -302,5 +440,24 @@ $theme-auth-teaser-content: #888;
 $theme-auth-teaser-dot-inactive: #555;
 $theme-auth-teaser-dot-active: #349;
 $theme-auth-teaser-dot-hover: #e4e4e4;
+
+//#endregion
+
+//#region Editor
+
+$theme-editor-background: #000;
+$theme-editor-pane-background: #ccc;
+$theme-editor-pane-text: #000;
+$theme-editor-error-text: #8b0000;
+
+$theme-editor-nestedlist-guide: #000;
+$theme-editor-assets-button-background: #666;
+
+$theme-editor-asset-layerentry-background: #bbb;
+$theme-editor-asset-layerentry-text: #000;
+$theme-editor-asset-layerentry-hover-background: #aaa;
+$theme-editor-asset-layerentry-selected-border: #000;
+$theme-editor-asset-layerentry-selected-border-spacing: #999;
+$theme-editor-asset-imagepreview-background: #1099bb;
 
 //#endregion

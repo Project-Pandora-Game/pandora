@@ -1,11 +1,10 @@
-@import '../styles/utils';
-@import '../styles/constants';
+@import '../styles/common';
 
 .editor {
 	display: flex;
 	flex-flow: row;
 	gap: 2px;
-	background: black;
+	background: $theme-editor-background;
 	height: 100%;
 	align-items: stretch;
 	overflow: hidden;
@@ -14,7 +13,8 @@
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
-		background: #ccc;
+		background: $theme-editor-pane-background;
+		color: $theme-editor-pane-text;
 
 		&.editor-ui {
 			flex: 1;
@@ -68,7 +68,7 @@
 		justify-content: center;
 		gap: 0.5rem;
 		padding: 0.5em;
-		border-bottom: solid black 3px;
+		border-bottom: 3px solid $theme-separator;
 	}
 }
 
@@ -85,18 +85,18 @@
 	}
 
 	.error {
-		color: darkred;
+		color: $theme-editor-error-text;
 	}
 
 	table.with-border {
-		border: 1px solid black;
+		border: 1px solid $theme-separator;
 		border-collapse: collapse;
 
 		th,
 		td {
 			padding: 0.2em;
 			white-space: nowrap;
-			border: 1px solid black;
+			border: 1px solid $theme-separator;
 		}
 	}
 

@@ -1,3 +1,5 @@
+@import '../../../styles/common';
+
 .asset-ui {
 	>div {
 		display: flex;
@@ -11,10 +13,11 @@
 		list-style-type: none;
 	}
 
+	// This is for nested lists
 	ul {
 		padding-left: 2rem;
 		margin-top: 0.5rem;
-		border-left: 2px dashed black;
+		border-left: 2px dashed $theme-editor-nestedlist-guide;
 	}
 
 	&>ul {
@@ -61,7 +64,7 @@
 				border: 2px solid;
 				border-radius: 0.5rem;
 				font-weight: bold;
-				background: #666;
+				background: $theme-editor-assets-button-background;
 				width: 1.6rem;
 				height: 1.6rem;
 				color: initial;

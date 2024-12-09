@@ -934,12 +934,12 @@ function BackgroundInfo({ background }: { background: string; }): ReactElement {
 	}
 
 	return (
-		<Column className='backgroundInfo'>
+		<Row alignX='space-between' className='backgroundInfo'>
 			<span className='name'>{ backgroundInfo.name }</span>
 			<div className='preview'>
 				<img src={ GetAssetsSourceUrl() + backgroundInfo.image } />
 			</div>
-		</Column>
+		</Row>
 	);
 }
 

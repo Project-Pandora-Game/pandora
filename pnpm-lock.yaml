@@ -107,7 +107,7 @@ importers:
         version: 7.26.0(@babel/core@7.25.2)
       '@pmmmwh/react-refresh-webpack-plugin':
         specifier: 0.5.15
-        version: 0.5.15(@types/webpack@5.28.5(webpack-cli@5.1.4))(react-refresh@0.14.2)(type-fest@4.27.0)(webpack-dev-server@5.1.0)(webpack@5.96.1)
+        version: 0.5.15(@types/webpack@5.28.5(webpack-cli@5.1.4))(react-refresh@0.14.2)(type-fest@4.30.0)(webpack-dev-server@5.1.0)(webpack@5.96.1)
       '@project-pandora-game/sass-loader':
         specifier: 13.2.0
         version: 13.2.0(sass@1.78.0)(webpack@5.96.1)
@@ -265,8 +265,8 @@ importers:
         specifier: 2.8.1
         version: 2.8.1
       type-fest:
-        specifier: 4.27.0
-        version: 4.27.0
+        specifier: 4.30.0
+        version: 4.30.0
       typescript:
         specifier: 5.6.3
         version: 5.6.3
@@ -313,8 +313,8 @@ importers:
         specifier: 2.8.1
         version: 2.8.1
       type-fest:
-        specifier: 4.27.0
-        version: 4.27.0
+        specifier: 4.30.0
+        version: 4.30.0
       typescript:
         specifier: 5.6.3
         version: 5.6.3
@@ -483,8 +483,8 @@ importers:
         specifier: 2.8.1
         version: 2.8.1
       type-fest:
-        specifier: 4.27.0
-        version: 4.27.0
+        specifier: 4.30.0
+        version: 4.30.0
       typescript:
         specifier: 5.6.3
         version: 5.6.3
@@ -6831,8 +6831,8 @@ packages:
     resolution: {integrity: sha512-4dbzIzqvjtgiM5rw1k5rEHtBANKmdudhGyBEajN01fEyhaAIhsoKNy6y7+IN93IfpFtwY9iqi7kD+xwKhQsNJA==}
     engines: {node: '>=8'}
 
-  type-fest@4.27.0:
-    resolution: {integrity: sha512-3IMSWgP7C5KSQqmo1wjhKrwsvXAtF33jO3QY+Uy++ia7hqvgSK6iXbbg5PbDBc1P2ZbNEDgejOrN4YooXvhwCw==}
+  type-fest@4.30.0:
+    resolution: {integrity: sha512-G6zXWS1dLj6eagy6sVhOMQiLtJdxQBHIA9Z6HFUNLOlr6MFOgzV8wvmidtPONfPtEUv0uZsy77XJNzTAfwPDaA==}
     engines: {node: '>=16'}
 
   type-is@1.6.18:
@@ -9137,7 +9137,7 @@ snapshots:
     dependencies:
       playwright: 1.49.0
 
-  '@pmmmwh/react-refresh-webpack-plugin@0.5.15(@types/webpack@5.28.5(webpack-cli@5.1.4))(react-refresh@0.14.2)(type-fest@4.27.0)(webpack-dev-server@5.1.0)(webpack@5.96.1)':
+  '@pmmmwh/react-refresh-webpack-plugin@0.5.15(@types/webpack@5.28.5(webpack-cli@5.1.4))(react-refresh@0.14.2)(type-fest@4.30.0)(webpack-dev-server@5.1.0)(webpack@5.96.1)':
     dependencies:
       ansi-html: 0.0.9
       core-js-pure: 3.38.1
@@ -9150,7 +9150,7 @@ snapshots:
       webpack: 5.96.1(webpack-cli@5.1.4)
     optionalDependencies:
       '@types/webpack': 5.28.5(webpack-cli@5.1.4)
-      type-fest: 4.27.0
+      type-fest: 4.30.0
       webpack-dev-server: 5.1.0(webpack-cli@5.1.4)(webpack@5.96.1)
 
   '@pnpm/config.env-replace@1.1.0': {}
@@ -14930,7 +14930,7 @@ snapshots:
 
   type-fest@0.8.1: {}
 
-  type-fest@4.27.0: {}
+  type-fest@4.30.0: {}
 
   type-is@1.6.18:
     dependencies:

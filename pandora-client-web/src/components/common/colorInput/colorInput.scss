@@ -1,14 +1,16 @@
+$coloreditor-selector-size: 12.5em;
+
 .color-editor {
 	display: flex;
 	position: relative;
 	flex-direction: column;
 	align-items: center;
-	gap: 10px;
+	gap: 0.65em;
 
 	&__rect {
 		position: relative;
-		width: 200px;
-		height: 200px;
+		width: $coloreditor-selector-size;
+		height: $coloreditor-selector-size;
 		background: hsla(var(--hue), 100%, 50%, 1);
 		margin-bottom: 0.5em;
 
@@ -45,7 +47,7 @@
 
 	input[type='range'] {
 		-webkit-appearance: none;
-		width: 200px;
+		width: $coloreditor-selector-size;
 		height: 1em;
 		margin-bottom: 0.5em;
 		padding: 0;
@@ -100,7 +102,7 @@
 	}
 
 	&__hex {
-		width: 200px;
+		width: $coloreditor-selector-size;
 	}
 }
 

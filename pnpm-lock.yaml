@@ -453,8 +453,8 @@ importers:
         specifier: 8.6.0
         version: 8.6.0(eslint@8.57.1)(typescript@5.6.3)
       discord-api-types:
-        specifier: 0.37.110
-        version: 0.37.110
+        specifier: 0.37.111
+        version: 0.37.111
       eslint:
         specifier: 8.57.1
         version: 8.57.1
@@ -562,8 +562,8 @@ importers:
         specifier: 8.6.0
         version: 8.6.0(eslint@8.57.1)(typescript@5.6.3)
       discord-api-types:
-        specifier: 0.37.110
-        version: 0.37.110
+        specifier: 0.37.111
+        version: 0.37.111
       eslint:
         specifier: 8.57.1
         version: 8.57.1
@@ -3574,8 +3574,8 @@ packages:
   discord-api-types@0.37.100:
     resolution: {integrity: sha512-a8zvUI0GYYwDtScfRd/TtaNBDTXwP5DiDVX7K5OmE+DRT57gBqKnwtOC5Ol8z0mRW8KQfETIgiB8U0YZ9NXiCA==}
 
-  discord-api-types@0.37.110:
-    resolution: {integrity: sha512-wVaAJkrSgNRo8nd523qKYPqkClTNHhjKOk/g6265rzHuc7TNS6Ivz06DPW4iZvnhFobbH95hKlgsRf6jcAbtlA==}
+  discord-api-types@0.37.111:
+    resolution: {integrity: sha512-22O4/mjfcLaQ8bbJorGpzFThnjhd8/exQxFscP3fnyJPo9Fk9O5GkWDIremYbvuw4YiwMfssWFniIb/iAwRqTg==}
 
   discord-api-types@0.37.83:
     resolution: {integrity: sha512-urGGYeWtWNYMKnYlZnOnDHm8fVRffQs3U0SpE8RHeiuLKb/u92APS8HoQnPTFbnXmY1vVnXjXO4dOxcAn3J+DA==}
@@ -11015,7 +11015,7 @@ snapshots:
 
   discord-api-types@0.37.100: {}
 
-  discord-api-types@0.37.110: {}
+  discord-api-types@0.37.111: {}
 
   discord-api-types@0.37.83: {}
 

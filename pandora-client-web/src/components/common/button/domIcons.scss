@@ -1,4 +1,4 @@
-$lineColor: black;
+@import '../../../styles/common';
 
 .icon-hamburger {
 	position: relative;
@@ -39,15 +39,15 @@ $lineColor: black;
 
 	&.state-hamburger {
 		.icon {
-			background: $lineColor;
+			background: $theme-buttonicon-hamburger-color;
 
 			&:before{
-				background: $lineColor;
+				background: $theme-buttonicon-hamburger-color;
 				top: -300%;
 			}
 
 			&:after{
-				background: $lineColor;
+				background: $theme-buttonicon-hamburger-color;
 				top: 300%;
 			}
 		}
@@ -58,12 +58,12 @@ $lineColor: black;
 
 		.icon {
 			&:before{
-				background: $lineColor;
+				background: $theme-buttonicon-hamburger-color;
 				transform: rotate(45deg);
 			}
 
 			&:after{
-				background: $lineColor;
+				background: $theme-buttonicon-hamburger-color;
 				transform: rotate(-45deg);
 			}
 		}

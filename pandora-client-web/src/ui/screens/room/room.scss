@@ -22,20 +22,21 @@
 	>.interactionArea {
 		min-width: min(20em, 100%);
 		min-height: min(10vw, 100%);
-		border-left: solid #222 max(2px, 0.1em);
-		background: #222;
+		border-left: max(2px, 0.1em) solid $theme-room-separator;
+		background: $theme-room-background;
 	}
 }
 
 .controls-container {
-	background: $grey-lighter;
-	border: solid $black 2px;
+	background: $theme-room-controls-background;
+	color: $theme-room-controls-text;
+	border: 2px solid $theme-room-controls-border;
 }
 
 .space-warning {
 	background: $theme-warningbox-background;
 	color: $theme-warningbox-text;
-	border: 1px solid $black;
+	border: 1px solid $theme-separator;
 	border-radius: 0.5em;
 	padding: 0.2em 0.5em;
 }
@@ -46,33 +47,34 @@
 	fieldset {
 		display: flex;
 		flex-direction: column;
-		border: 1px solid $black;
+		border: 1px solid $theme-room-controls-character-border;
 		border-radius: 0.5em;
 		margin-bottom: 0.5em;
 
 		>legend {
 			display: flex;
 			flex-flow: row wrap;
-			border: 1px solid $black;
+			border: 1px solid $theme-room-controls-character-border;
 			border-radius: 0.5em;
 			overflow: hidden;
 			padding: 0;
 
-			background: $black;
+			background: $theme-room-controls-character-border;
 			gap: 1px;
 
 			&.player {
 				>span, >button {
-					background: $white;
+					background: $theme-room-controls-player-background;
+					color: $theme-room-controls-player-text;
 				}
 
 				>button:hover {
-					background: $grey-lighter;
+					background: $theme-room-controls-player-hover-background;
 				}
 			}
 
 			.colorStrip {
-				text-shadow: #666 1px 1px 1px;
+				text-shadow: $theme-room-controls-character-colorstrip-shadow 1px 1px 1px;
 			}
 
 			>span, >button {
@@ -85,7 +87,8 @@
 				align-items: center;
 				justify-content: center;
 
-				background: $grey-lightest;
+				background: $theme-room-controls-character-background;
+				color: $theme-room-controls-character-text;
 
 				&.safemode {
 					background: $theme-warningbox-background;
@@ -94,7 +97,7 @@
 				}
 
 				&.offline {
-					background: $grey-light;
+					background: $theme-room-controls-offlinecharacter-background;
 					padding: 0 0.5em;
 					font-style: italic;
 				}
@@ -105,11 +108,11 @@
 			}
 
 			>button:hover {
-				background: $grey-lighter;
+				background: $theme-room-controls-character-hover-background;
 			}
 
 			>button:focus-visible {
-				border-color: black;
+				border-color: $theme-room-controls-character-visiblefocus-outline;
 			}
 		}
 	}

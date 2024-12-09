@@ -1,34 +1,4 @@
-@import '../../../styles/utils';
-
-$button-themes: (
-	default: (
-		background: $grey-darkest,
-		border: $grey-darkest,
-		color: white,
-		background-hover: $grey-dark,
-		color-hover: white,
-		focus-outline: $white,
-		icon-filter: none
-	),
-	defaultActive: (
-		background: $grey-lighter,
-		border: $grey-darkest,
-		color: black,
-		background-hover: $grey-lightest,
-		color-hover: black,
-		focus-outline: $white,
-		icon-filter: invert(100%)
-	),
-	danger: (
-		background: $grey-darkest,
-		border: darkred,
-		color: red,
-		background-hover: $grey-dark,
-		color-hover: red,
-		focus-outline: red,
-		icon-filter: none
-	),
-);
+@import '../../../styles/common';
 
 .Button {
 	@include center-flex;
@@ -39,7 +9,7 @@ $button-themes: (
 	padding: 0.8em 1.2em;
 	border: 0.2em solid;
 
-	@each $theme-name, $theme-data in $button-themes {
+	@each $theme-name, $theme-data in $theme-button {
 		&.#{$theme-name} {
 			background: map-get($theme-data, "background");
 			border-color: map-get($theme-data, "border");
@@ -54,7 +24,7 @@ $button-themes: (
 				border-color: map-get($theme-data, "background-hover");
 			}
 
-			&:focus, &:active {
+			&:focus-visible, &:active {
 				border-color: map-get($theme-data, "focus-outline");
 			}
 

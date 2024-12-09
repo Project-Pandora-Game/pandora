@@ -41,6 +41,8 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 	public readonly spawnedBy?: CharacterId;
 	public readonly color: Immutable<ItemColorBundle>;
 	public readonly name?: string;
+	public readonly chatGeneric?: string;
+	public readonly chatConcrete?: string;
 	public readonly description?: string;
 
 	public get type(): Type {

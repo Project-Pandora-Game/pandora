@@ -49,6 +49,12 @@ export type ItemBundle = {
 	spawnedBy?: CharacterId;
 	color?: ItemColorBundle | HexRGBAColorString[];
 	name?: string;
+	chat: {
+		/* generic name to be used in chat messages */
+		generic?: string;
+		/* specific name to be used in chat messages */
+		specific?: string;
+	};
 	description?: string;
 	moduleData?: Record<string, ItemModuleData>;
 	/** Room device specific data */
@@ -68,6 +74,10 @@ export type ItemTemplate = {
 	templateName?: string;
 	color?: ItemColorBundle;
 	name?: string;
+	chat: {
+		generic?: string;
+		specific?: string;
+	};
 	description?: string;
 	modules?: Record<string, ItemModuleTemplate>;
 };

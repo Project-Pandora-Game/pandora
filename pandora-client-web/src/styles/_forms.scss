@@ -5,12 +5,12 @@
 input, textarea {
 	font-size: 1em;
 	padding: 0.5em;
-	border: 0.1em solid;
+	border: 1px solid $theme-input-border;
 	background: $theme-input-normal-background;
 	color: $theme-input-text;
 
 	&:focus, &:active {
-		outline: 0.15em solid $theme-input-focused-outline;
+		outline: max(0.2em, 2px) solid $theme-input-focused-outline;
 		background: $theme-input-focused-background;
 	}
 
@@ -34,16 +34,43 @@ input[type=color] {
 select {
 	font-size: 1em;
 	padding: 0.5em;
+	border: 1px solid $theme-input-border;
+	background: $theme-input-normal-background;
+	color: $theme-input-text;
+
+	&:focus-visible {
+		outline: max(0.2em, 2px) solid $theme-input-focused-outline;
+	}
+
+	&:disabled {
+		background: $theme-input-readonly-background;
+		&:focus, &:active {
+			outline: 0 none;
+		}
+	}
 }
 
 input[type=checkbox] {
 	transform: scale(1.3);
-	background: $theme-checkbox-background;
 	accent-color: $theme-checkbox-accent;
+	border-radius: 0.5em;
+	filter: $theme-checkbox-unchecked-filter;
+
+	&:checked {
+		filter: none;
+	}
+
+	&:focus-visible {
+		outline: max(0.2em, 2px) solid $theme-input-focused-outline;
+	}
 
 	&:disabled {
-		background: $theme-checkbox-disabled-background;
 		accent-color: $theme-checkbox-disabled-accent;
+		filter: $theme-checkbox-disabled-unchecked-filter;
+
+		&:checked {
+			filter: none;
+		}
 	}
 }
 

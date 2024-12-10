@@ -22,6 +22,7 @@ import { Character, useCharacterData } from '../../character/character';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
 import { useCharacterRestrictionsManager, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../components/gameContext/gameStateContextProvider';
+import { THEME_NORMAL_BACKGROUND } from '../../components/gameContext/interfaceSettingsProvider';
 import { permissionCheckContext } from '../../components/gameContext/permissionCheckProvider';
 import { usePlayer, usePlayerState } from '../../components/gameContext/playerContextProvider';
 import { useShardConnector } from '../../components/gameContext/shardConnectorContextProvider';
@@ -170,7 +171,7 @@ export function RoomGraphicsScene({
 		forwardContexts: [serviceManagerContext, roomScreenContext, wardrobeActionContext, permissionCheckContext],
 		worldWidth: roomBackgroundWidth,
 		worldHeight: roomBackgroundHeight,
-		backgroundColor: 0x000000,
+		backgroundColor: Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16),
 	}), [viewportConfig, roomBackgroundWidth, roomBackgroundHeight]);
 
 	return (

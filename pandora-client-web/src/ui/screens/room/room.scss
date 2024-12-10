@@ -47,6 +47,7 @@
 	fieldset {
 		display: flex;
 		flex-direction: column;
+		background: $theme-room-controls-charactercontent-background;
 		border: 1px solid $theme-room-controls-character-border;
 		border-radius: 0.5em;
 		margin-bottom: 0.5em;

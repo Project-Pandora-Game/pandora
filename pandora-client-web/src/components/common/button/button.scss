@@ -7,7 +7,7 @@
 
 	border-radius: 0.2em;
 	padding: 0.8em 1.2em;
-	border: 0.2em solid;
+	border: 1px solid;
 
 	@each $theme-name, $theme-data in $theme-button {
 		&.#{$theme-name} {

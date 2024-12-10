@@ -48,10 +48,12 @@ export type ItemBundle = {
 	spawnedBy?: CharacterId;
 	color?: ItemColorBundle | HexRGBAColorString[];
 	name?: string;
-	/* generic name to be used in chat messages */
-	chatGeneric?: string;
-	/* specific name to be used in chat messages */
-	chatSpecific?: string;
+	chat: {
+		/* generic name to be used in chat messages */
+		generic?: string;
+		/* specific name to be used in chat messages */
+		specific?: string;
+	};
 	description?: string;
 	/** Whether free hands are required to interact with this item. */
 	requireFreeHandsToUse?: boolean;
@@ -73,6 +75,10 @@ export type ItemTemplate = {
 	templateName?: string;
 	color?: ItemColorBundle;
 	name?: string;
+	chat: {
+		generic?: string;
+		specific?: string;
+	};
 	description?: string;
 	/** Whether free hands are required to interact with this item. */
 	requireFreeHandsToUse?: boolean;

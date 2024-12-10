@@ -13,6 +13,13 @@ export const AppearanceActionCustomize = z.object({
 	item: ItemPathSchema,
 	/** New custom name */
 	name: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN).optional(),
+	/** Chat specific entries */
+	chat: z.object({
+		/** New generic name */
+		generic: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN),
+		/** New concrete name */
+		concrete: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN),
+	}),
 	/** New description */
 	description: z.string().max(LIMIT_ITEM_DESCRIPTION_LENGTH).optional(),
 	/** New usage state to require hands to use or not */

@@ -53,7 +53,7 @@
 
 .dialog-draggable {
 	z-index: 1000;
-	overflow: hidden;
+	// Do NOT hide overflow for the dialog itself - otherwise drag handles break
 	min-width: 8em;
 	min-height: 5em;
 
@@ -67,28 +67,37 @@
 
 	>header {
 		@include center-flex;
-		padding: 0.2em 0.2em 0.2em 1em;
+		overflow: hidden;
+		padding: 0.1em 0.5em;
+		border-radius: 1em 1em 0 0; // Needs to match the dialog
 		background: $theme-dialog-header;
 		position: relative;
 		min-height: 1.5em;
 		gap: 1em;
 
+		.dialog-title {
+			padding: 0.25em 0.5em;
+		}
+
 		.dialog-close, .dialog-shade {
-			flex: 1;
-			max-width: 2em;
-			text-align: center;
+			@include center-flex;
+			width: 1.5em;
+			height: 1.5em;
 			cursor: pointer;
+			border-radius: 50%;
 		}
 
 		.dialog-close {
 			&:hover {
-				color: $theme-dialog-button-close-hover;
+				background: $theme-dialog-button-close-hover-background;
+				color: $theme-dialog-button-hover-text;
 			}
 		}
 
 		.dialog-shade {
 			&:hover {
-				color: $theme-dialog-button-shade-hover;
+				background: $theme-dialog-button-shade-hover-background;
+				color: $theme-dialog-button-hover-text;
 			}
 		}
 	}

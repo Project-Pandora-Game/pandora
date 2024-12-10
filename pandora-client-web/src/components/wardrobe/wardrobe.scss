@@ -148,15 +148,6 @@ $drop-overlay-gap: 0.3em;
 			padding: 0.2em;
 		}
 
-		.modeButton {
-			border: 1px solid $theme-wardrobe-modebutton-border;
-			margin: 2px;
-
-			&.active {
-				background: $theme-wardrobe-modebutton-active-background;
-			}
-		}
-
 		.IconButton {
 			width: 3em;
 			height: 3em;

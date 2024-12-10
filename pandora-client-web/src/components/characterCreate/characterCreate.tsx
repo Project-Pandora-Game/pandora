@@ -96,7 +96,7 @@ export function CharacterCreate(): ReactElement | null {
 						<FormError error={ characterNameError } />
 					</FormField>
 					{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
-					<Button type='submit' disabled={ processing }>Submit</Button>
+					<Button type='submit' disabled={ processing }>Confirm</Button>
 				</Form>
 			</div>
 		</div>

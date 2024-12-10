@@ -198,14 +198,20 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 						width: 'auto',
 						height: 'auto',
 					} }
+					resizeHandleStyles={ {
+						bottomLeft: { zIndex: 2 },
+						bottomRight: { zIndex: 2 },
+						topLeft: { zIndex: 2 },
+						topRight: { zIndex: 2 },
+					} }
 					bounds='parent'
 					maxHeight={ initialPosition ? (window.innerHeight - initialPosition.y - 10) : 'calc(95vh - 2em)' }
 					maxWidth={ initialPosition ? (window.innerWidth - initialPosition.x - 20) : 'calc(95vw - 2em)' }
 				>
 					<header className='dialog-header'>
-						<div className='drag-handle'>
+						<span className='drag-handle dialog-title'>
 							{ title }
-						</div>
+						</span>
 						{
 							allowShade ? (
 								<div className='dialog-shade' title='Shade this dialog' onClick={ toggleShade }>

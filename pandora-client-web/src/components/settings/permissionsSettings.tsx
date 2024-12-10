@@ -424,7 +424,7 @@ function PermissionAllowOthersSelector({ type, setConfig, effectiveConfig, permi
 	}, [disabled, setConfig, type]);
 
 	return (
-		<SelectionIndicator selected={ effectiveConfig.allowOthers === type }>
+		<SelectionIndicator padding='tiny' selected={ effectiveConfig.allowOthers === type }>
 			<Button slim className='hideDisabled' onClick={ onClick } disabled={ disabled }>{ type }</Button>
 		</SelectionIndicator>
 	);

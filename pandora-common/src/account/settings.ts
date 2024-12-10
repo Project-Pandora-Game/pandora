@@ -108,7 +108,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	wardrobeSmallPreview: 'image',
 	wardrobeBigPreview: 'image',
 	wardrobeItemDisplayNameType: 'custom_with_original_in_brackets',
-	interfaceAccentColor: '#00aaff',
+	interfaceAccentColor: '#3daee9',
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,
 	interfaceChatroomOfflineCharacterFilter: 'ghost',

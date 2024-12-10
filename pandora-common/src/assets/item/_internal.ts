@@ -40,8 +40,10 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 	public readonly spawnedBy?: CharacterId;
 	public readonly color: Immutable<ItemColorBundle>;
 	public readonly name?: string;
-	public readonly chatGeneric?: string;
-	public readonly chatConcrete?: string;
+	public readonly chat = {
+		generic: '',
+		specific: '',
+	};
 	public readonly description?: string;
 
 	public get type(): Type {
@@ -63,6 +65,8 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		this.spawnedBy = overrideProps?.spawnedBy ?? props.spawnedBy;
 		this.color = overrideProps?.color ?? props.color;
 		this.name = (overrideProps && 'name' in overrideProps) ? overrideProps.name : props.name;
+		this.chat.generic = this.name ? this.name : this.asset.definition.name;
+		this.chat.specific = this.name ? this.name : this.asset.definition.name;
 		this.description = (overrideProps && 'description' in overrideProps) ? overrideProps.description : props.description;
 	}
 
@@ -94,6 +98,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			asset: this.asset.id,
 			color: this.exportColorToBundle(),
 			name: this.name,
+			chat: this.chat,
 			description: this.description,
 			modules,
 		};
@@ -114,6 +119,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			spawnedBy: options.clientOnly ? undefined : this.spawnedBy,
 			color: this.exportColorToBundle(),
 			name: this.name,
+			chat: this.chat,
 			description: this.description,
 			moduleData,
 		};
@@ -243,16 +249,19 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 	}
 
 	/** Returns a new item with the passed name and description */
-	public customize(newName: string, newDescription: string): Item<Type> {
+	public customize(newName: string, newGeneric: string, newSpecific: string, newDescription: string): Item<Type> {
 		let name: string | undefined = newName.trim();
 		if (name === '' || name === this.asset.definition.name)
 			name = undefined;
+
+		const generic = newGeneric;
+		const specific = newSpecific;
 
 		let description: string | undefined = newDescription.trim();
 		if (description === '')
 			description = undefined;
 
-		return this.withProps({ name, description });
+		return this.withProps({ name, generic, specific, description });
 	}
 
 	@MemoizeNoArg

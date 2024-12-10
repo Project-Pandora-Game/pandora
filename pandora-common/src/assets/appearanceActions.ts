@@ -114,7 +114,7 @@ export const AppearanceActionCustomize = z.object({
 	/** New custom name */
 	name: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN),
 	/** object for chat specific entries */
-	chsat: z.object({
+	chat: z.object({
 		/** New generic name */
 		generic: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN),
 		/** New concrete name */

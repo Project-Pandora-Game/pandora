@@ -261,7 +261,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		if (description === '')
 			description = undefined;
 
-		return this.withProps({ name, generic, specific, description });
+		return this.withProps({ name, chat.generic, chat.specific, description });
 	}
 
 	@MemoizeNoArg

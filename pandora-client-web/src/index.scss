@@ -15,6 +15,7 @@ html, body {
 
 body {
 	--pandora-accent-color: #00aaff;
+	accent-color: var(--pandora-accent-color)
 }
 
 #pandora-root, #editor-root {

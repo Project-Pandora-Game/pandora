@@ -1,3 +1,5 @@
+@import '../../../styles/common';
+
 $coloreditor-selector-size: 12.5em;
 
 .color-editor {
@@ -113,4 +115,8 @@ $coloreditor-selector-size: 12.5em;
 	width: 4em;
 	height: 2em;
 	padding: 0;
+
+	&:focus-visible {
+		outline: 0.25em solid $theme-colorbutton-visiblefocus-outline;
+	}
 }

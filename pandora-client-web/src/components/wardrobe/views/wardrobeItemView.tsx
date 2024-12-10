@@ -113,9 +113,9 @@ export function InventoryItemView({
 				{
 					focus.container.length > 0 ? (
 						<>
-							<button className='modeButton' onClick={ () => focuser?.previous() } >
+							<Button onClick={ () => focuser?.previous() } >
 								Close
-							</button>
+							</Button>
 							<div className='center-flex'>
 								Viewing contents of: <br />
 								{ containerSteps.join(' > ') }

@@ -21,6 +21,7 @@ import {
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager';
+import crossIcon from '../../../assets/icons/cross.svg';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import diskIcon from '../../../assets/icons/disk.svg';
 import editIcon from '../../../assets/icons/edit.svg';
@@ -32,7 +33,7 @@ import { usePlayerVisionFilters } from '../../../graphics/room/roomScene';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { serviceManagerContext } from '../../../services/serviceProvider';
-import { Button } from '../../common/button/button';
+import { Button, IconButton } from '../../common/button/button';
 import { Column, DivContainer, Row } from '../../common/container/container';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { useConfirmDialog } from '../../dialog/dialog';
@@ -215,7 +216,12 @@ export function InventoryOutfitView({ targetContainer }: {
 				<div className='toolbar'>
 					<span>Editing collection: { editedOutfit?.name ?? editedOutfitId }</span>
 					<StorageUsageMeter title='Storage used' used={ storageUsed } limit={ storageAvailableTotal } />
-					<button className='modeButton' onClick={ () => setEditedOutfitId(null) }>✖️</button>
+					<IconButton
+						onClick={ () => setEditedOutfitId(null) }
+						theme='default'
+						src={ crossIcon }
+						alt='Stop editing'
+					/>
 				</div>
 				{
 					editedOutfit != null ? (

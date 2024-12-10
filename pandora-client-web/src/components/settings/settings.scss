@@ -107,4 +107,23 @@
 	tr.current-connection {
 		background: $theme-settings-table-row-highlight-background;
 	}
+
+	.accentColorPresets {
+		.colorPreset {
+			width: 2em;
+			height: 2em;
+			outline-width: 0.25em;
+			border-radius: 50%;
+
+			button {
+				width: 100%;
+				height: 100%;
+				border-radius: 50%;
+				border-width: 2px;
+				// Intentionally not themed (black looks the best next to the other options)
+				background: #000;
+				color: #eee;
+			}
+		}
+	}
 }

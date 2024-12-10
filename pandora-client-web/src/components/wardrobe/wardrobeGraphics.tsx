@@ -32,6 +32,7 @@ import { serviceManagerContext } from '../../services/serviceProvider';
 import { Button } from '../common/button/button';
 import { Column, Row } from '../common/container/container';
 import { useSpaceInfo } from '../gameContext/gameStateContextProvider';
+import { THEME_NORMAL_BACKGROUND } from '../gameContext/interfaceSettingsProvider';
 import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { useWardrobeContext } from './wardrobeContext';
 
@@ -146,7 +147,7 @@ export function CharacterPreview({ character, characterState, hideClothes = fals
 		viewportConfig,
 		viewportRef,
 		forwardContexts: [serviceManagerContext],
-		backgroundColor: 0x000000,
+		backgroundColor: Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16),
 	}), [viewportRef, viewportConfig]);
 
 	const { pivot } = useRoomCharacterOffsets(characterState);
@@ -352,7 +353,7 @@ export function RoomPreview({
 		forwardContexts: [serviceManagerContext],
 		worldWidth: focusArea?.width ?? roomBackground.imageSize[0],
 		worldHeight: focusArea?.height ?? roomBackground.imageSize[1],
-		backgroundColor: 0x000000,
+		backgroundColor: Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16),
 	}), [focusArea, roomBackground]);
 
 	return (

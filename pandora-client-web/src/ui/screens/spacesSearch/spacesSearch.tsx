@@ -18,9 +18,12 @@ import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useRed
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
+import closedDoorLocked from '../../../assets/icons/closed-door-locked.svg';
+import closedDoor from '../../../assets/icons/closed-door.svg';
 import forbiddenIcon from '../../../assets/icons/forbidden.svg';
 import friendsIcon from '../../../assets/icons/friends.svg';
 import lockIcon from '../../../assets/icons/lock.svg';
+import publicDoor from '../../../assets/icons/public-door.svg';
 import shieldSlashedIcon from '../../../assets/icons/shield-slashed.svg';
 import shieldIcon from '../../../assets/icons/shield.svg';
 import { useAsyncEvent } from '../../../common/useEvent';
@@ -33,9 +36,6 @@ import { useDirectoryChangeListener, useDirectoryConnector } from '../../../comp
 import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import closedDoorLocked from '../../../icons/closed-door-locked.svg';
-import closedDoor from '../../../icons/closed-door.svg';
-import publicDoor from '../../../icons/public-door.svg';
 import { useObservable } from '../../../observable';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
@@ -438,7 +438,9 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 			<Row className='features' wrap>
 				{
 					featureIcons.map(([icon, name, extraClassNames], i) => (
-						<img key={ i } className={ classNames('features-img', extraClassNames) } src={ icon } title={ name } alt={ name } />
+						<div key={ i } className={ classNames('features-img', extraClassNames) } title={ name }>
+							<img src={ icon } alt={ name } />
+						</div>
 					))
 				}
 			</Row>

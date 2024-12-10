@@ -49,6 +49,10 @@ export const AccountSettingsSchema = z.object({
 	 */
 	wardrobeItemDisplayNameType: ItemDisplayNameTypeSchema,
 	/**
+	 * Accent color for the interface
+	 */
+	interfaceAccentColor: HexColorStringSchema,
+	/**
 	 * Controls how many parts (of 10 total) the room graphics takes, while in horizontal mode
 	 */
 	interfaceChatroomGraphicsRatioHorizontal: z.number().int().min(1).max(9),
@@ -104,6 +108,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	wardrobeSmallPreview: 'image',
 	wardrobeBigPreview: 'image',
 	wardrobeItemDisplayNameType: 'custom_with_original_in_brackets',
+	interfaceAccentColor: '#00aaff',
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,
 	interfaceChatroomOfflineCharacterFilter: 'ghost',

@@ -191,6 +191,16 @@
 		&.warning {
 			background: $theme-warningbox-background;
 			color: $theme-warningbox-text;
+
+			img {
+				filter: brightness(0%);
+			}
+		}
+
+		img {
+			width: 100%;
+			height: 100%;
+			object-fit: contain;
 		}
 	}
 

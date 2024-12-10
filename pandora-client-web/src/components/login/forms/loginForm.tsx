@@ -27,7 +27,7 @@ export function LoginForm(): ReactElement {
 						autoComplete='username'
 						id='login-uname'
 						value={ auth.username }
-						disabled={ true }
+						disabled
 					/>
 				</div>
 				<div className='message'>
@@ -49,6 +49,7 @@ export function LoginForm(): ReactElement {
 					type='text'
 					id='login-username'
 					autoComplete='username'
+					readOnly={ isSubmitting }
 					register={ register }
 					name='username'
 					options={ {
@@ -64,6 +65,7 @@ export function LoginForm(): ReactElement {
 					type='password'
 					id='login-password'
 					autoComplete='current-password'
+					readOnly={ isSubmitting }
 					register={ register }
 					name='password'
 					options={ { required: 'Password is required' } }

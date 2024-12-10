@@ -13,6 +13,10 @@ html, body {
 	color: $theme-normal-text;
 }
 
+body {
+	--pandora-accent-color: #00aaff;
+}
+
 #pandora-root, #editor-root {
 	@include flex(column);
 	margin: 0;

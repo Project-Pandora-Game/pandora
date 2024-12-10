@@ -4,9 +4,11 @@ import React, { ReactElement, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 import { useAsyncEvent } from '../../common/useEvent';
+import { LIVE_UPDATE_THROTTLE } from '../../config/Environment';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { useAccountSettings, useCurrentAccount, useModifiedAccountSettings } from '../../services/accountLogic/accountManagerHooks';
 import { Button } from '../common/button/button';
+import { ColorInput } from '../common/colorInput/colorInput';
 import { useConfirmDialog } from '../dialog/dialog';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { SelectAccountSettings, ToggleAccountSetting } from './helpers/accountSettings';
@@ -20,10 +22,41 @@ export function InterfaceSettings(): ReactElement | null {
 
 	return (
 		<>
+			<ThemeSettings />
 			<ChatroomSettings />
 			<WardrobeSettings />
 			<TutorialSettings />
 		</>
+	);
+}
+
+function ThemeSettings(): ReactElement {
+	const { interfaceAccentColor } = useAccountSettings();
+	const directory = useDirectoryConnector();
+
+	return (
+		<fieldset>
+			<legend>Theme</legend>
+			<div className='input-row'>
+				<label>Accent color</label>
+				<ColorInput
+					initialValue={ interfaceAccentColor }
+					resetValue={ ACCOUNT_SETTINGS_DEFAULT.interfaceAccentColor }
+					throttle={ LIVE_UPDATE_THROTTLE }
+					onChange={ (color) => {
+						directory.awaitResponse('changeSettings', {
+							type: 'set',
+							settings: { interfaceAccentColor: color },
+						})
+							.catch((err: unknown) => {
+								toast('Failed to update your settings. Please try again.', TOAST_OPTIONS_ERROR);
+								GetLogger('changeSettings').error('Failed to update settings:', err);
+							});
+					} }
+					title='Interface accent color'
+				/>
+			</div>
+		</fieldset>
 	);
 }
 

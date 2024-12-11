@@ -283,6 +283,9 @@ export class PixiTransitionedContainer extends PixiContainer {
 	}
 
 	private _onTick(ticker: Ticker): void {
+		if (this.destroyed)
+			return;
+
 		// HACK: Is there really no way to get currentTime out of the ticker?
 		const now = ticker.lastTime + ticker.elapsedMS;
 

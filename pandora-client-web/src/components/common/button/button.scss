@@ -46,12 +46,6 @@
 		padding: 0.1em 0.3em;
 	}
 
-	&.inverseColor {
-		img {
-			filter: invert(100%);
-		}
-	}
-
 	&.hideDisabled:disabled {
 		visibility: hidden !important;
 	}

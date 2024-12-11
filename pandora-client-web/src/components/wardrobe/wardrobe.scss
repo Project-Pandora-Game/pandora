@@ -351,8 +351,22 @@ $drop-overlay-gap: 0.3em;
 	>.colorRibbon {
 		position: absolute;
 		display: inline-block;
-		inset: 0;
-		clip-path: polygon(0 0, 0.75em 0, 0 0.75em);
+		top: 0;
+		left: 0;
+		width: 0.9em;
+		height: 0.9em;
+		clip-path: polygon(0 0, 100% 0, 0 100%);
+		background: $theme-wardrobe-itementry-ribbon-border;
+
+		.colorRibbonInner {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 1px;
+			bottom: 1px;
+			clip-path: polygon(0 0, 100% 0, 0 100%);
+			box-shadow: $theme-wardrobe-itementry-ribbon-shadow;
+		}
 	}
 
 	&.listMode {
@@ -706,24 +720,29 @@ $drop-overlay-gap: 0.3em;
 .wardrobeItemCustomizationView {
 	.name {
 		display: inline-block;
-		border: 1px solid $theme-wardrobe-itemname-border;
 		font-size: 1em;
 		padding: 0.5em;
-		border: 0.1em solid;
-		background: $theme-wardrobe-itemname-background;
-		color: $theme-wardrobe-itemname-text;
 		flex-grow: 1;
+
+		&:not(:is(input)) {
+			border: 1px solid $theme-wardrobe-itemname-border;
+			background: $theme-wardrobe-itemname-background;
+			color: $theme-wardrobe-itemname-text;
+		}
 	}
 
 	.description {
 		padding: 0.5em;
-		border: 1px solid $theme-wardrobe-itemdescription-border;
 		white-space: pre-wrap;
 		word-wrap: break-word;
 		word-break: break-word;
-		background: $theme-wardrobe-itemdescription-background;
-		color: $theme-wardrobe-itemdescription-text;
 		min-height: 12em;
+
+		&:not(:is(textarea)) {
+			border: 1px solid $theme-wardrobe-itemdescription-border;
+			background: $theme-wardrobe-itemdescription-background;
+			color: $theme-wardrobe-itemdescription-text;
+		}
 	}
 
 	.error {

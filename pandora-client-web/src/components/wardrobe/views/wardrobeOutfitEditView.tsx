@@ -14,7 +14,7 @@ import { ExportDialog } from '../../exportImport/exportDialog';
 import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName';
 import { WardrobeTemplateEditMenu } from '../templateDetail/_wardrobeTemplateDetail';
 import { useWardrobeActionContext } from '../wardrobeActionContext';
-import { InventoryAssetPreview } from '../wardrobeComponents';
+import { InventoryAssetPreview, WardrobeColorRibbon } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
 
@@ -410,13 +410,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 			} }
 		>
 			{
-				ribbonColor ?
-					<span
-						className='colorRibbon'
-						style={ {
-							backgroundColor: ribbonColor,
-						} }
-					/> : null
+				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
 			<span className='itemName'>{ visibleName }</span>

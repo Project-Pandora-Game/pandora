@@ -11,34 +11,9 @@
 		>div {
 			border-top: max(2px, 0.1em) solid $theme-separator;
 
-			table {
-				margin: 0.1em 0.2em;
+			> .scrollable-vertical {
+				padding: 0.1em 0.2em;
 			}
-		}
-	}
-
-	tr {
-		height: 2em;
-	}
-
-	td,
-	th {
-		padding: 0.2em 0.5em;
-		text-align: center;
-		border: 1px solid $theme-table-border;
-	}
-
-	th {
-		background: $theme-table-header-background;
-		color: $theme-table-header-text;
-	}
-
-	tr {
-		background: $theme-table-body-background;
-		color: $theme-table-body-text;
-
-		&:nth-child(2n) {
-			background: $theme-table-body-altbackground;
 		}
 	}
 

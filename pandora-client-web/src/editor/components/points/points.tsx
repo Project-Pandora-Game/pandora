@@ -137,9 +137,9 @@ export function PointsHelperMathUi(): ReactElement | null {
 						<table className='with-border'>
 							<thead>
 								<tr>
-									<td></td>
-									<td>Value</td>
-									<td>Adjusted</td>
+									<th></th>
+									<th>Value</th>
+									<th>Adjusted</th>
 								</tr>
 							</thead>
 							<tbody>

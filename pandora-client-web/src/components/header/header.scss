@@ -30,8 +30,23 @@
 	}
 
 	.collapsableHeaderButton {
-		background: $theme-header-collapsable-background;
-		color: $theme-header-collapsable-text;
+		background: $theme-header-button-normal-background;
+		color: $theme-header-button-normal-text;
+		border: 0.2em solid transparent;
+
+		&:hover {
+			background: $theme-header-button-hover-background;
+			color: $theme-header-button-hover-text;
+
+			img {
+				filter: $theme-header-button-hover-imgfilter;
+			}
+		}
+
+		&:focus-visible {
+			outline: 0;
+			border-color: $theme-header-button-visiblefocus-outline;
+		}
 	}
 }
 

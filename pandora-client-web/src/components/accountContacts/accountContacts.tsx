@@ -25,7 +25,7 @@ export function AccountContacts() {
 
 	return (
 		<div className='accountContacts'>
-			<UrlTabContainer>
+			<UrlTabContainer allowWrap>
 				<UrlTab name={ <AccountContactHeader type='friend' /> } urlChunk=''>
 					<ShowFriends />
 				</UrlTab>
@@ -182,7 +182,7 @@ function ShowFriends() {
 
 	return (
 		<Scrollable direction='vertical' color='lighter'>
-			<table>
+			<table className='fill-x'>
 				<colgroup>
 					<col style={ { width: '1%' } } />
 					<col />

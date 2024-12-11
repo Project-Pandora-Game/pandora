@@ -180,7 +180,7 @@ function SpaceSearchList({ list }: {
 						</p>
 					</ContextHelpButton>
 				</h3>
-				<Column className={ classNames('spacesSearchList', isNarrowScreen ? 'narrowScreen' : null) } gap='tiny'>
+				<Column className={ classNames('spacesSearchList', isNarrowScreen ? 'narrowScreen' : null) }>
 					{ ownSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
 					{
 						ownSpaces.length >= account.spaceOwnershipLimit ? null : (
@@ -199,7 +199,7 @@ function SpaceSearchList({ list }: {
 					otherSpaces.length === 0 ? (
 						<p>No space matches your filter criteria</p>
 					) : (
-						<Column className={ classNames('spacesSearchList', isNarrowScreen ? 'narrowScreen' : null) } gap='tiny'>
+						<Column className={ classNames('spacesSearchList', isNarrowScreen ? 'narrowScreen' : null) }>
 							{ otherSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
 						</Column>
 					)

@@ -16,7 +16,7 @@ import { Button } from '../../common/button/button';
 import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { WardrobeItemName } from '../itemDetail/wardrobeItemName';
 import { useWardrobeActionContext } from '../wardrobeActionContext';
-import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
+import { InventoryAssetPreview, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeContextExtraItemActionComponent, WardrobeHeldItem } from '../wardrobeTypes';
 import { InventoryItemViewDropArea } from './wardrobeItemView';
@@ -156,13 +156,7 @@ function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickA
 			} }
 		>
 			{
-				ribbonColor ?
-					<span
-						className='colorRibbon'
-						style={ {
-							backgroundColor: ribbonColor,
-						} }
-					/> : null
+				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
 			<span className='itemName'><WardrobeItemName item={ item } /></span>

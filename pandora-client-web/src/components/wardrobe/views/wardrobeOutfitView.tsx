@@ -39,10 +39,11 @@ import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { useConfirmDialog } from '../../dialog/dialog';
 import { ImportDialog } from '../../exportImport/importDialog';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
+import { THEME_NORMAL_BACKGROUND } from '../../gameContext/interfaceSettingsProvider';
 import { usePlayerState } from '../../gameContext/playerContextProvider';
 import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName';
 import { useWardrobeActionContext } from '../wardrobeActionContext';
-import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
+import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { OutfitEditView } from './wardrobeOutfitEditView';
 
@@ -397,7 +398,7 @@ function OutfitPreview({ outfit }: {
 			<GraphicsSceneBackgroundRenderer
 				renderArea={ { x: 97, y: 145, width: 806, height: 1210 } }
 				resolution={ 1 }
-				backgroundColor={ 0xcccccc }
+				backgroundColor={ Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16) }
 				forwardContexts={ [serviceManagerContext] }
 			>
 				<GraphicsCharacter
@@ -617,13 +618,7 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 			} }
 		>
 			{
-				ribbonColor ?
-					<span
-						className='colorRibbon'
-						style={ {
-							backgroundColor: ribbonColor,
-						} }
-					/> : null
+				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
 			<span className='itemName'>{ visibleName }</span>

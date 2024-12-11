@@ -30,7 +30,7 @@ import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
 import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobeItemName';
 import { useWardrobeActionContext } from '../wardrobeActionContext';
-import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
+import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeHeldItem } from '../wardrobeTypes';
 import { useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
@@ -320,13 +320,7 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 			}, target);
 		} }>
 			{
-				ribbonColor ?
-					<span
-						className='colorRibbon'
-						style={ {
-							backgroundColor: ribbonColor,
-						} }
-					/> : null
+				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
 			<span className='itemName'><WardrobeItemName item={ wornItem } /></span>

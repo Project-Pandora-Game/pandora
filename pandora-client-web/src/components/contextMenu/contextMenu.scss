@@ -18,7 +18,7 @@ $context-menu-themes: (
 	flex-direction: column;
 	justify-content: center;
 	align-items: stretch;
-	border: 0.2em solid $theme-contextmenu-default-border;
+	border: 0.15em solid $theme-contextmenu-default-border;
 	border-radius: 0.2em;
 	padding: 0.3em;
 	gap: 0.3em;
@@ -55,10 +55,6 @@ $context-menu-themes: (
 				width: 1.8em;
 				height: 1.8em;
 				object-fit: contain;
-
-				&.invert {
-					filter: invert(100%);
-				}
 			}
 
 			>span {

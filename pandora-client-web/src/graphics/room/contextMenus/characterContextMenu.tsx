@@ -149,7 +149,7 @@ function AdminActionContextMenu(): ReactElement | null {
 		case 'main':
 			return (
 				<button className='withIcon' onClick={ () => setMenu('admin') }>
-					<img className='invert' src={ shieldIcon } />
+					<img src={ shieldIcon } />
 					<span>Admin</span>
 				</button>
 			);
@@ -178,7 +178,7 @@ function BlockMenu({ action }: { action: 'add' | 'remove'; }): ReactElement {
 	if (action === 'add') {
 		return (
 			<button className='withIcon' onClick={ block } >
-				<img className='invert' src={ forbiddenIcon } />
+				<img src={ forbiddenIcon } />
 				<span>Block</span>
 			</button>
 		);
@@ -241,7 +241,7 @@ function NavigateToDMMenu(): ReactElement | null {
 
 	return (
 		<button className='withIcon' onClick={ onClick }>
-			<img className='invert' src={ letterIcon } />
+			<img src={ letterIcon } />
 			<span>Direct message</span>
 		</button>
 	);
@@ -287,7 +287,7 @@ function AccountContactActionContextMenu(): ReactElement | null {
 		case 'main':
 			return (
 				<button className='withIcon' onClick={ () => setMenu('contacts') }>
-					<img className='invert' src={ friendsIcon } />
+					<img src={ friendsIcon } />
 					<span>Contacts</span>
 				</button>
 			);
@@ -350,7 +350,7 @@ function MoveCharacterMenuItem(): ReactElement | null {
 				close();
 			} }
 		>
-			<img className='invert' src={ arrowAllIcon } />
+			<img src={ arrowAllIcon } />
 			<span>Move</span>
 		</button>
 	);
@@ -385,7 +385,7 @@ function PoseCharacterMenuItem(): ReactElement | null {
 				close();
 			} }
 		>
-			<img className='invert' src={ bodyIcon } />
+			<img src={ bodyIcon } />
 			<span>Pose</span>
 		</button>
 	);
@@ -447,14 +447,14 @@ export function CharacterContextMenuContent({ character, onClose }: {
 							onCloseActual();
 							navigate(`/wardrobe/character/${characterData.id}`);
 						} }>
-							<img className='invert' src={ shirtIcon } />
+							<img src={ shirtIcon } />
 							<span>Wardrobe</span>
 						</button>
 						<button className='withIcon' onClick={ () => {
 							onCloseActual();
 							navigate(`/profiles/character/${characterData.id}`);
 						} }>
-							<img className='invert' src={ profileIcon } />
+							<img src={ profileIcon } />
 							<span>Profile</span>
 						</button>
 						<MoveCharacterMenuItem />
@@ -464,7 +464,7 @@ export function CharacterContextMenuContent({ character, onClose }: {
 								onClose();
 								setTarget(characterData.id);
 							} }>
-								<img className='invert' src={ lipsIcon } />
+								<img src={ lipsIcon } />
 								<span>Whisper</span>
 							</button>
 						) }

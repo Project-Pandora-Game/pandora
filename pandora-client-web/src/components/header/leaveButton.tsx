@@ -128,7 +128,7 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 	return (
 		<>
 			<span>Name: { config.name }</span>
-			<span>Id: { spaceId }</span>
+			<span className='unimportant'>Id: { spaceId }</span>
 			{
 				roomDeviceLink ? (
 					<Row alignX='center' padding='large'>
@@ -143,7 +143,7 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 					</Row>
 				) : null
 			}
-			<Button onClick={ onLeave } className='inverseColor' disabled={ !canLeave || roomDeviceLink != null }>
+			<Button onClick={ onLeave } disabled={ !canLeave || roomDeviceLink != null }>
 				<img src={ logoutIcon } />Leave space
 			</Button>
 		</>
@@ -171,8 +171,8 @@ function CharacterLeave(): ReactElement {
 				connectionInfo ? (
 					<>
 						<span>Name: { characterName ?? `[Character ${connectionInfo.characterId}]` }</span>
-						<span>Id: { connectionInfo.characterId }</span>
-						<Button className='inverseColor' onClick={ onClick }>
+						<span className='unimportant'>Id: { connectionInfo.characterId }</span>
+						<Button onClick={ onClick }>
 							<img src={ peopleIcon } />Change character
 						</Button>
 					</>
@@ -204,8 +204,8 @@ function AccountLeave(): ReactElement {
 					<>
 						<span>Display name: { currentAccount.displayName }</span>
 						<span>Username: { currentAccount.username }</span>
-						<span>Id: { currentAccount.id }</span>
-						<Button className='inverseColor' onClick={ onClick }>
+						<span className='unimportant'>Id: { currentAccount.id }</span>
+						<Button onClick={ onClick }>
 							<img src={ onoffIcon } />Logout
 						</Button>
 					</>

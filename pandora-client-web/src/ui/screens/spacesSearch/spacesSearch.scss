@@ -186,6 +186,7 @@
 		width: 2.5em;
 		height: 2.5em;
 		border: 1px solid $theme-separator;
+		background: $theme-spacedetails-feature-norma-background;
 		padding: 0.1em;
 
 		&.warning {
@@ -212,8 +213,8 @@
 		grid-column: 1 / 3;
 		border: 0.1em solid $theme-separator;
 		padding: 0.2em;
-		background: $theme-textbox-background;
-		color: $theme-textbox-text;
+		background: $theme-spacedetails-description-background;
+		color: $theme-spacedetails-description-text;
 	}
 
 	.title {

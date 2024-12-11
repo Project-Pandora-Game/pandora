@@ -11,6 +11,7 @@ import {
 	EMPTY_ARRAY,
 	IsNotNullable,
 	type AppearanceActionData,
+	type HexColorString,
 } from 'pandora-common';
 import React, { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
 import { z } from 'zod';
@@ -364,5 +365,20 @@ export function StorageUsageMeter({ title, used, limit }: {
 			<span>{ title }: { used } / { limit } ({ Math.ceil(100 * used / limit) }%)</span>
 			<meter min={ 0 } max={ 1 } low={ 0.75 } high={ 0.9 } optimum={ 0 } value={ used / limit }>{ Math.ceil(100 * used / limit) }%</meter>
 		</Column>
+	);
+}
+
+export function WardrobeColorRibbon({ ribbonColor }: {
+	ribbonColor: HexColorString;
+}): ReactElement {
+	return (
+		<span className='colorRibbon'>
+			<span
+				className='colorRibbonInner'
+				style={ {
+					backgroundColor: ribbonColor,
+				} }
+			/>
+		</span>
 	);
 }

@@ -151,19 +151,6 @@ $theme-scrollbar-lighter-hover: #2e2e2e;
 
 //#endregion
 
-//#region Context menu
-
-$theme-contextmenu-default-background: #000;
-$theme-contextmenu-default-text: #fff;
-$theme-contextmenu-default-border: #fff;
-$theme-contextmenu-opaque-background: #000000b3;
-$theme-contextmenu-opaque-border: #ffffffb3;
-
-$theme-contextmenu-button-text: #fff;
-$theme-contextmenu-button-hover-background: #fff4;
-
-//#endregion
-
 //#region Dialogs
 
 $theme-dialog-overlay: #000000b3;
@@ -176,9 +163,22 @@ $theme-dialog-button-hover-text: #000;
 $theme-dialog-button-close-hover-background: #c00;
 $theme-dialog-button-shade-hover-background: #ccc;
 
-$theme-hoverdialog-background: #fff;
-$theme-hoverdialog-text: #000;
-$theme-hoverdialog-border: #000;
+$theme-hoverdialog-background: $theme-dialog-background;
+$theme-hoverdialog-text: $theme-dialog-text;
+$theme-hoverdialog-border: $theme-dialog-border;
+
+//#endregion
+
+//#region Context menu
+
+$theme-contextmenu-default-background: $theme-dialog-background;
+$theme-contextmenu-default-text: $theme-dialog-text;
+$theme-contextmenu-default-border: $theme-dialog-border;
+$theme-contextmenu-opaque-background: #0d1111b3;
+$theme-contextmenu-opaque-border: #43454ab3;
+
+$theme-contextmenu-button-text: #eee;
+$theme-contextmenu-button-hover-background:  color-mix(in srgb, #282d32, $theme-accent-color 35%);
 
 //#endregion
 
@@ -323,35 +323,37 @@ $theme-wardrobe-modebutton-border: #43454a;
 $theme-wardrobe-modebutton-active-background: #232930;
 
 $theme-wardrobe-outfitbutton-border: #000;
-$theme-wardrobe-outfitbutton-normal-background: #ccc;
-$theme-wardrobe-outfitbutton-hover-background: #aaa;
-$theme-wardrobe-outfitbutton-text: #000;
+$theme-wardrobe-outfitbutton-normal-background: #202429;
+$theme-wardrobe-outfitbutton-hover-background: color-mix(in srgb, #282d32, $theme-accent-color 35%);
+$theme-wardrobe-outfitbutton-text: #eee;
 $theme-wardrobe-outfitbutton-preview-border: #000;
 
-$theme-wardrobe-actionbutton-border: #000;
-$theme-wardrobe-actionbutton-visiblefocus-border: #fff;
-$theme-wardrobe-actionbutton-normal-background: #ccc;
-$theme-wardrobe-actionbutton-normal-text: #000;
-$theme-wardrobe-actionbutton-hover-background: #888;
-$theme-wardrobe-actionbutton-hover-text: #000;
-$theme-wardrobe-actionbutton-selected-background: #2e2e2e;
-$theme-wardrobe-actionbutton-selected-text: #fff;
-$theme-wardrobe-actionbutton-selectedhover-background: #000;
-$theme-wardrobe-actionbutton-selectedhover-text: #fff;
-$theme-wardrobe-actionbutton-blocked-background: #977;
-$theme-wardrobe-actionbutton-blocked-text: #000;
-$theme-wardrobe-actionbutton-pending-background: #999;
-$theme-wardrobe-actionbutton-pending-text: #000;
-$theme-wardrobe-actionbutton-promptRequired-background: #997;
-$theme-wardrobe-actionbutton-promptRequired-text: #000;
-$theme-wardrobe-actionbutton-disabled-background: #555;
-$theme-wardrobe-actionbutton-disabled-text: #000;
+$theme-wardrobe-actionbutton-border: #43454a;
+$theme-wardrobe-actionbutton-visiblefocus-border: color-mix(in srgb, #fff, $theme-accent-color 65%);
+$theme-wardrobe-actionbutton-normal-background: #232930;
+$theme-wardrobe-actionbutton-normal-text: #eee;
+$theme-wardrobe-actionbutton-hover-background: color-mix(in srgb, #282d32, $theme-accent-color 35%);
+$theme-wardrobe-actionbutton-hover-text: #eee;
+$theme-wardrobe-actionbutton-selected-background: color-mix(in srgb, #282d32, $theme-accent-color 65%);
+$theme-wardrobe-actionbutton-selected-text: #000;
+$theme-wardrobe-actionbutton-selectedhover-background: color-mix(in srgb, #535658, $theme-accent-color 65%);
+$theme-wardrobe-actionbutton-selectedhover-text: #000;
+$theme-wardrobe-actionbutton-blocked-background: #592626;
+$theme-wardrobe-actionbutton-blocked-text: #eee;
+$theme-wardrobe-actionbutton-pending-background: #393f46;
+$theme-wardrobe-actionbutton-pending-text: #555;
+$theme-wardrobe-actionbutton-promptRequired-background: #595926;
+$theme-wardrobe-actionbutton-promptRequired-text: #eee;
+$theme-wardrobe-actionbutton-disabled-background: #232930;
+$theme-wardrobe-actionbutton-disabled-text: #444;
 
 // Item entries almost completely reuse actionbutton colors, as they fulfill similar role
 // The only difference is normal hover, where action buttons can be inside item entries,
 // so they must differ not to look the same when hovered.
-$theme-wardrobe-itementry-hover-background: #aaa;
-$theme-wardrobe-itementry-hover-text: #000;
+$theme-wardrobe-itementry-hover-background: color-mix(in srgb, #22262b, $theme-accent-color 25%);
+$theme-wardrobe-itementry-hover-text: #eee;
+$theme-wardrobe-itementry-ribbon-border: #777;
+$theme-wardrobe-itementry-ribbon-shadow: inset 0 0 0.1em #ffffffaa;
 
 $theme-wardrobe-assetpreferences-shadow: #000;
 $theme-wardrobe-favorite-color: #fafa00;
@@ -359,14 +361,14 @@ $theme-wardrobe-maybe-color: #fa7d00;
 $theme-wardrobe-prevent-color: #fa0000;
 $theme-wardrobe-doNotRender-color: #000;
 
-$theme-wardrobe-errormessage-text: $themecolor-error;
+$theme-wardrobe-errormessage-text: #e44545;
 
-$theme-wardrobe-itemname-border: #000;
-$theme-wardrobe-itemname-background: #aaa;
-$theme-wardrobe-itemname-text: #000;
-$theme-wardrobe-itemdescription-border: #000;
-$theme-wardrobe-itemdescription-background: #aaa;
-$theme-wardrobe-itemdescription-text: #000;
+$theme-wardrobe-itemname-border: $theme-separator;
+$theme-wardrobe-itemname-background: $theme-chat-background;
+$theme-wardrobe-itemname-text: $theme-chat-text;
+$theme-wardrobe-itemdescription-border: $theme-separator;
+$theme-wardrobe-itemdescription-background: $theme-chat-background;
+$theme-wardrobe-itemdescription-text: $theme-chat-text;
 
 //#endregion
 
@@ -416,6 +418,10 @@ $theme-spacesearch-gapcolor: $theme-separator;
 $theme-spacesearch-entry-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
 $theme-spacesearch-entry-spacefull-highlight: color-mix(in srgb, transparent, #b60000 40%);
 
+$theme-spacedetails-feature-norma-background: #000;
+$theme-spacedetails-description-background: $theme-chat-background;
+$theme-spacedetails-description-text: $theme-chat-text;
+
 //#endregion
 
 //#region Contacts
@@ -427,8 +433,8 @@ $theme-contacts-status-offline: #444;
 
 //#region Contacts
 
-$theme-profile-header-background: #999;
-$theme-profile-header-text: #000;
+$theme-profile-header-background: $theme-inset-background;
+$theme-profile-header-text: $theme-inset-text;
 
 $theme-profile-content-background: $theme-normal-background;
 $theme-profile-content-text: $theme-normal-text;
@@ -437,9 +443,9 @@ $theme-profile-description-background: $theme-chat-background;
 $theme-profile-description-text: $theme-chat-text;
 $theme-profile-description-border: $theme-separator;
 
-$theme-profile-description-edit-background: #e4e4e4;
-$theme-profile-description-edit-text: #000;
-$theme-profile-description-edit-border: #5e0000;
+$theme-profile-description-edit-background: $theme-input-focused-background;
+$theme-profile-description-edit-text: $theme-input-text;
+$theme-profile-description-edit-border: #850000;
 
 //#endregion
 

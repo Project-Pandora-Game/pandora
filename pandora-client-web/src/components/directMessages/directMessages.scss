@@ -5,9 +5,10 @@
 	flex-flow: row;
 	background: $theme-dms-base-background;
 	height: 100%;
+	width: 100vw;
 
 	&__list {
-		width: 10em;
+		width: min(11em, 25vw);
 		background: $theme-dms-list-background;
 		border-right: max(2px, 0.1em) solid $theme-separator;
 		position: relative;
@@ -18,34 +19,38 @@
 
 		ul {
 			margin: 0;
-			padding: 0.5em;
+			padding: 0.65em;
 			list-style-type: none;
 			flex: 1;
 		}
 
-		li {
+		ul > button {
+			width: 100%;
 			position: relative;
-			background: $theme-dms-list-item-normal-background;
-			color: $theme-dms-list-item-text;
-			border: 1px solid $theme-dms-list-item-border;
 			border-radius: 0.3em;
-			padding: 0.5em;
+			padding: 0.5em min(1em, 10%);
 			margin-bottom: 0.5em;
-
-			.unreadIndicator {
-				position: absolute;
-				color: $theme-dms-list-item-unread-indicator;
-				right: 0.3em;
-				font-weight: bold;
-			}
-
-			&.selected {
-				background: $theme-dms-list-item-selected-background;
-			}
+			word-break: break-word;
 
 			&.temp {
-				background: $theme-dms-list-item-temp-background;
 				font-style: italic;
+			}
+
+			.unreadIndicator {
+				@include center-flex;
+				position: absolute;
+				border-radius: 50%;
+				top: calc(50% - 0.7em);
+				right: -0.6em;
+				aspect-ratio: 1;
+				min-height: unset;
+				min-width: unset;
+				width: 1.4em;
+				height: 1.4em;
+				font-size: 0.8em;
+				font-weight: bold;
+				background: $theme-dms-list-item-unread-indicator-background;
+				color: $theme-dms-list-item-unread-indicator-text;
 			}
 		}
 	}

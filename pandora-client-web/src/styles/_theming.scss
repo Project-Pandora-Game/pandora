@@ -108,7 +108,7 @@ $theme-tablist-tab-selected-text: #eee;
 $theme-tablist-tab-selected-visiblefocus-outline: color-mix(in srgb, #ffffffcc, $theme-accent-color 35%);
 
 // Fieldset
-$theme-fieldset-border: #ddd;
+$theme-fieldset-border: $theme-separator;
 
 // Text inputs (text, number, email, ...)
 $theme-input-normal-background: #131516;
@@ -130,15 +130,16 @@ $theme-checkbox-disabled-unchecked-filter: brightness(60%);
 $theme-checkbox-disabled-accent: color-mix(in srgb, #aaa, $theme-accent-color 35%);
 
 // Text highlight (such as selected anchor)
-$theme-highlight-background: orange;
+$theme-highlight-background: color-mix(in srgb, #bbb, $theme-accent-color 60%);
 
 // Table data
-$theme-table-header-background: #555;
-$theme-table-header-text: #000;
-$theme-table-body-background: #aaa;
-$theme-table-body-altbackground: #ccc;
-$theme-table-body-text: #000;
-$theme-table-border: #2e2e2e;
+$theme-table-header-background: #2d373d;
+$theme-table-header-text: #eee;
+$theme-table-body-background: #121717;
+$theme-table-body-altbackground: #161d1d;
+$theme-table-body-text: #eee;
+$theme-table-border-outer: transparent;
+$theme-table-border: transparent;
 
 //#endregion
 
@@ -229,22 +230,18 @@ $theme-autocomplete-hint-entry-hover-background: #7e7eff54;
 
 //#region Direct messages (DMs)
 
-$theme-dms-base-background: #444;
+$theme-dms-base-background: $theme-normal-background;
 
-$theme-dms-list-background: #2e2e2e;
-$theme-dms-list-item-border: #888;
-$theme-dms-list-item-normal-background: $theme-dms-list-background;
-$theme-dms-list-item-selected-background: #888;
-$theme-dms-list-item-temp-background: #888;
-$theme-dms-list-item-text: #fff;
-$theme-dms-list-item-unread-indicator: #f00;
+$theme-dms-list-background: $theme-inset-background;
+$theme-dms-list-item-unread-indicator-background: #a00;
+$theme-dms-list-item-unread-indicator-text: #fff;
 
-$theme-dms-chat-loading: #fff;
-$theme-dms-chat-error: #f44;
+$theme-dms-chat-loading: #eee;
+$theme-dms-chat-error: #e33;
 
-$theme-dms-crypto-dialog-base-background: #2e2e2e;
-$theme-dms-crypto-dialog-background: #aaa;
-$theme-dms-crypto-dialog-text: #000;
+$theme-dms-crypto-dialog-base-background: $theme-dialog-header;
+$theme-dms-crypto-dialog-background: $theme-dialog-background;
+$theme-dms-crypto-dialog-text: $theme-dialog-text;
 
 //#endregion
 
@@ -252,8 +249,8 @@ $theme-dms-crypto-dialog-text: #000;
 
 $theme-header-background: #000;
 $theme-header-text: #eee;
-$theme-header-collapsable-background: $theme-normal-background-secondary;
-$theme-header-collapsable-text: $theme-normal-text;
+$theme-header-collapsable-background: #19191a;
+$theme-header-collapsable-text: #eee;
 
 $theme-header-button-normal-background: transparent;
 $theme-header-button-normal-text: inherit;
@@ -263,7 +260,7 @@ $theme-header-button-hover-text: inherit;
 $theme-header-button-hover-imgfilter: none;
 $theme-header-button-visiblefocus-outline: #ffffffcc;
 
-$theme-notification-badge-background: #b00;
+$theme-notification-badge-background: #a00;
 $theme-notification-badge-text: #fff;
 
 //#endregion
@@ -426,13 +423,6 @@ $theme-spacedetails-description-text: $theme-chat-text;
 
 //#region Contacts
 
-$theme-contacts-status-online: #080;
-$theme-contacts-status-offline: #444;
-
-//#endregion
-
-//#region Contacts
-
 $theme-profile-header-background: $theme-inset-background;
 $theme-profile-header-text: $theme-inset-text;
 
@@ -447,6 +437,9 @@ $theme-profile-description-edit-background: $theme-input-focused-background;
 $theme-profile-description-edit-text: $theme-input-text;
 $theme-profile-description-edit-border: #850000;
 
+$theme-contacts-status-online: #080;
+$theme-contacts-status-offline: #444;
+
 //#endregion
 
 //#region Settings
@@ -457,7 +450,8 @@ $theme-settings-fieldset-border: $theme-separator;
 $theme-settings-fieldset-legend-background: #111315;
 $theme-settings-fieldset-legend-text: #eee;
 
-$theme-settings-table-row-highlight-background: #f0f0f0; // Used for highlighting "current connection" in security settings
+// Used for highlighting "current connection" in security settings
+$theme-settings-table-row-highlight-background: color-mix(in srgb, #2d373d, $theme-accent-color 35%);
 
 //#endregion
 
@@ -475,19 +469,19 @@ $theme-auth-teaser-dot-hover: #e4e4e4;
 
 //#region Editor
 
-$theme-editor-background: #000;
-$theme-editor-pane-background: #ccc;
-$theme-editor-pane-text: #000;
-$theme-editor-error-text: #8b0000;
+$theme-editor-background: $theme-separator; // This is actually used as a separator between panes
+$theme-editor-pane-background: $theme-normal-background;
+$theme-editor-pane-text: $theme-normal-text;
+$theme-editor-error-text: #e33;
 
-$theme-editor-nestedlist-guide: #000;
-$theme-editor-assets-button-background: #666;
+$theme-editor-nestedlist-guide: #ffffffaa;
+$theme-editor-assets-button-background: #232930;
 
-$theme-editor-asset-layerentry-background: #bbb;
-$theme-editor-asset-layerentry-text: #000;
-$theme-editor-asset-layerentry-hover-background: #aaa;
-$theme-editor-asset-layerentry-selected-border: #000;
-$theme-editor-asset-layerentry-selected-border-spacing: #999;
-$theme-editor-asset-imagepreview-background: #1099bb;
+$theme-editor-asset-layerentry-background: #232930;
+$theme-editor-asset-layerentry-text: #eee;
+$theme-editor-asset-layerentry-hover-background: color-mix(in srgb, #282d32, $theme-accent-color 35%);
+$theme-editor-asset-layerentry-selected-border: color-mix(in srgb, #fff, $theme-accent-color 65%);
+$theme-editor-asset-layerentry-selected-border-spacing: #333;
+$theme-editor-asset-imagepreview-background: $theme-normal-background;
 
 //#endregion

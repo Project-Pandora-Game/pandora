@@ -58,17 +58,13 @@
 			display: flex;
 			right: 0;
 			top: 0;
-			gap: 0.1rem;
+			gap: 0.25rem;
 
 			&>button {
-				border: 2px solid;
-				border-radius: 0.5rem;
 				font-weight: bold;
-				background: $theme-editor-assets-button-background;
 				width: 1.6rem;
 				height: 1.6rem;
-				color: initial;
-				padding: initial;
+				padding: 0;
 			}
 		}
 	}

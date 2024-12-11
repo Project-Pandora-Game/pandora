@@ -246,10 +246,10 @@ function DirectMessageInfo({ chat, selected, select }: { chat: DirectMessageChat
 	}, [chat, select]);
 
 	return (
-		<li onClick={ show } className={ selected ? 'selected' : '' }>
+		<Button onClick={ show } theme={ selected ? 'defaultActive' : 'default' }>
 			{ displayName ?? '[Loading ...]' } ({ chat.id })
-			{ hasUnread && <span className='unreadIndicator'>!</span> }
-		</li>
+			{ hasUnread ? <span className='unreadIndicator'>!</span> : undefined }
+		</Button>
 	);
 }
 

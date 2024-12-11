@@ -10,31 +10,9 @@
 	> table {
 		max-width: 50em;
 		margin: 2em auto;
-		border: 1px solid $theme-table-border;
-		border-collapse: collapse;
-		background: $theme-table-body-background;
-		color: $theme-table-body-text;
 
-		th {
-			background: $theme-table-header-background;
-			color: $theme-table-header-text;
-		}
-
-		tr {
-			background: $theme-table-body-background;
-			color: $theme-table-body-text;
-
-			&:nth-child(2n) {
-				background: $theme-table-body-altbackground;
-			}
-		}
-
-		th,
-		td {
-			text-align: center;
+		th, td {
 			white-space: nowrap;
-			border: 1px solid $theme-table-border;
-			padding: 0.1em 0.2em;
 		}
 	}
 

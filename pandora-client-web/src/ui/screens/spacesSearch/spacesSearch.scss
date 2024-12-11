@@ -2,7 +2,8 @@
 
 .spacesSearchList {
 	background: $theme-spacesearch-gapcolor;
-	padding: 3px;
+	padding: 2px;
+	gap: 2px !important; // Overriding `Column` we use
 
 	.spacesSearchListEntry {
 		display: grid;

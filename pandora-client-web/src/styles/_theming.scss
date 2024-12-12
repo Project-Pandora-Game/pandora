@@ -2,7 +2,7 @@
 
 $theme-accent-color: var(--pandora-accent-color);
 $theme-font-family: 'Arial', 'Helvetica', sans-serif;
-$theme-font-family-invite: 'Courier New', 'Courier', monospace;
+$theme-font-family-monospace: 'Courier New', 'Courier', monospace;
 
 // Some unified colors, still used somewhat randomly
 $themecolor-error: #b60000;
@@ -77,13 +77,10 @@ $theme-buttonicon-hamburger-color: #ccc;
 $theme-colorbutton-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%);
 
 // Links
-$theme-normal-link: #58e;
-$theme-normal-link-visited: #8ae;
-$theme-normal-link-active: #aaa;
-$theme-light-link: #349;
-$theme-light-link-visited: #559;
-$theme-light-link-active: #fffffff2;
-$theme-link-visiblefocus-outline: #000;
+$theme-link: #58e;
+$theme-link-visited: #8ae;
+$theme-link-active: #ccc;
+$theme-link-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%);
 
 // Boxes: Warning
 $theme-warningbox-background: $themecolor-warning;
@@ -186,6 +183,7 @@ $theme-contextmenu-button-hover-background:  color-mix(in srgb, #282d32, $theme-
 $theme-errorreport-local-background: #8b0000;
 $theme-errorreport-local-text: #fff;
 
+// Intentionally left obnoxious
 $theme-errorreport-report-background: #ccc;
 $theme-errorreport-report-text: #000;
 
@@ -217,12 +215,12 @@ $theme-chat-input-text: $theme-input-text;
 $theme-chat-input-placeholder-text: $theme-input-placeholder-text;
 
 $theme-chat-indicator-background: #202020;
-$theme-chat-indicator-interactive-hover-background: #101010;
-$theme-chat-indicator-text: #fff;
+$theme-chat-indicator-interactive-hover-background: color-mix(in srgb, #1b1b1b, $theme-accent-color 35%);
+$theme-chat-indicator-text: #eee;
 
-$theme-autocomplete-hint-background: #336;
-$theme-autocomplete-hint-text: #fff;
-$theme-autocomplete-hint-entry-hover-background: #7e7eff54;
+$theme-autocomplete-hint-background: #2e2e49;
+$theme-autocomplete-hint-text: #eee;
+$theme-autocomplete-hint-entry-hover-background: #535388a4;
 
 //#endregion
 
@@ -392,22 +390,30 @@ $theme-room-controls-charactercontent-background: #080d0f;
 
 //#region Space configuration
 
-$theme-spaceconfig-backgroundselect-filterdropdown-background: #ccc;
-$theme-spaceconfig-backgroundselect-filterdropdown-text: #555;
-$theme-spaceconfig-backgroundselect-filterdropdown-contentbackground: #ccc;
-$theme-spaceconfig-backgroundselect-list-background: #ccc;
-$theme-spaceconfig-invites-permanentlink-background: #ccc;
-$theme-spaceconfig-invites-permanentlink-text: #000;
+$theme-spaceconfig-backgroundselect-filterdropdown-border: #43454a;
+$theme-spaceconfig-backgroundselect-filterdropdown-background: #232930;
+$theme-spaceconfig-backgroundselect-filterdropdown-text: #eee;
+$theme-spaceconfig-backgroundselect-filterdropdown-hover-background: color-mix(in srgb, #282d32, $theme-accent-color 35%);
+$theme-spaceconfig-backgroundselect-filterdropdown-focus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%);
+$theme-spaceconfig-backgroundselect-filterdropdown-contentborder: $theme-dialog-border;
+$theme-spaceconfig-backgroundselect-filterdropdown-contentbackground: $theme-dialog-background;
+
+$theme-spaceconfig-backgroundselect-list-background: $theme-inset-background;
+$theme-spaceconfig-backgroundselect-list-text: $theme-inset-text;
+
+$theme-spaceconfig-invites-permanentlink-background: #000;
+$theme-spaceconfig-invites-permanentlink-text: #eee;
 
 //#endregion
 
 //#region Space search
 
+$theme-tipsbox-normal-border: #666;
 $theme-tipsbox-normal-background: transparent;
 $theme-tipsbox-normal-text: inherit;
-$theme-tipsbox-normal-border: #555;
-$theme-tipsbox-hover-border: #fff;
-$theme-tipsbox-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
+$theme-tipsbox-hover-border: color-mix(in srgb, #ccc, $theme-accent-color 35%);
+$theme-tipsbox-icon-text: color-mix(in srgb, #fff, $theme-accent-color 65%);
+$theme-tipsbox-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%);
 
 $theme-spacesearch-gapcolor: $theme-separator;
 $theme-spacesearch-entry-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
@@ -436,7 +442,7 @@ $theme-profile-description-edit-text: $theme-input-text;
 $theme-profile-description-edit-border: #850000;
 
 $theme-contacts-status-online: #080;
-$theme-contacts-status-offline: #444;
+$theme-contacts-status-offline: #666;
 
 //#endregion
 

@@ -6,18 +6,18 @@ html, body {
 
 a {
 	display: inline-block;
-	color: $theme-normal-link;
+	color: $theme-link;
 	cursor: pointer;
 	line-height: 1.3;
 	transition: all 150ms linear;
 	text-decoration: none;
 
 	&:visited:not(:hover):not(:focus):not(:active) {
-		color: $theme-normal-link-visited;
+		color: $theme-link-visited;
 	}
 
 	&:hover, &:focus, &:active {
-		color: $theme-normal-link-active;
+		color: $theme-link-active;
 	}
 
 	&:focus-visible {

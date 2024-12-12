@@ -94,7 +94,7 @@ export function SpacesSearch(): ReactElement {
 					◄ Back
 				</Button>
 				<button className='infoBox' onClick={ () => setShowTips(true) } >
-					🛈 Tip: { TIPS[index] }
+					<span className='icon'>🛈</span> Tip: { TIPS[index] }
 				</button>
 			</Row>
 			<Row wrap alignX='space-between'>

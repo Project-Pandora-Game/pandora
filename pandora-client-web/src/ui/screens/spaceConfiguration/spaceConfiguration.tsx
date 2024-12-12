@@ -1001,29 +1001,32 @@ function BackgroundSelectDialog({ hide, current, select }: {
 				<div className='backgrounds'>
 					{ backgroundsToShow
 						.map((b) => (
-							<a key={ b.id }
-								onClick={ () => {
-									setSelectedBackground(b.id);
-								} }
+							<SelectionIndicator key={ b.id }
+								padding='tiny'
+								selected={ b.id === selectedBackground }
+								active={ b.id === current }
 							>
-								<SelectionIndicator
-									direction='column'
-									align='center'
-									justify='center'
-									padding='small'
-									selected={ b.id === selectedBackground }
-									active={ b.id === current }
-									className='details'
+								<Button
+									className='fill'
+									onClick={ () => {
+										setSelectedBackground(b.id);
+									} }
 								>
-									<div className='preview'>
-										<img src={ GetAssetsSourceUrl() + b.preview } />
-									</div>
-									<div className='name'>{ b.name }</div>
-								</SelectionIndicator>
-							</a>
+									<Column
+										alignX='center'
+										alignY='center'
+										className='details fill'
+									>
+										<div className='preview'>
+											<img src={ GetAssetsSourceUrl() + b.preview } />
+										</div>
+										<div className='name'>{ b.name }</div>
+									</Column>
+								</Button>
+							</SelectionIndicator>
 						)) }
 				</div>
-				<Row className='footer' alignX='space-between'>
+				<Row className='footer' alignX='space-between' wrap>
 					<Button onClick={ hide }>Cancel</Button>
 					<Button
 						disabled={ IsObject(current) }

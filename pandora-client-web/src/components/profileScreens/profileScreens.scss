@@ -60,16 +60,7 @@
 		word-break: break-word;
 
 		a {
-			color: $theme-light-link;
 			text-decoration: underline;
-
-			&:visited:not(:hover):not(:focus):not(:active) {
-				color: $theme-light-link-visited;
-			}
-
-			&:hover, &:focus, &:active {
-				color: $theme-light-link-active;
-			}
 		}
 	}
 

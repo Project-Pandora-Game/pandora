@@ -446,6 +446,7 @@ $drop-overlay-gap: 0.3em;
 		line-height: 1em;
 		width: 1em;
 		height: 1em;
+		border-radius: 50%;
 		display: flex;
 		justify-content: center;
 		align-items: center;
@@ -503,6 +504,7 @@ $drop-overlay-gap: 0.3em;
 		&::after {
 			content: '✕';
 			color: $theme-wardrobe-doNotRender-color;
+			background: $theme-wardrobe-prevent-color;
 		}
 	}
 

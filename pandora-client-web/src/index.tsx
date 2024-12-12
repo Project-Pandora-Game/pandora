@@ -15,6 +15,7 @@ import './index.scss';
 import { PandoraRoutes } from './routing/Routes';
 import { GenerateClientUsermodeServices } from './services/clientServices';
 import './styles/globalUtils.scss';
+import './styles/fonts.scss';
 
 const logger = GetLogger('init');
 

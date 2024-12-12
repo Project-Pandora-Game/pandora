@@ -18,6 +18,7 @@ import { BrowserStorage } from '../../browserStorage';
 import { Character, useCharacterData } from '../../character/character';
 import { useEvent } from '../../common/useEvent';
 import { useCharacterRestrictionsManager } from '../../components/gameContext/gameStateContextProvider';
+import { THEME_FONT } from '../../components/gameContext/interfaceSettingsProvider';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment';
 import { ShardConnector } from '../../networking/shardConnector';
 import { useObservable } from '../../observable';
@@ -440,7 +441,7 @@ function RoomCharacterDisplay({
 							anchor={ { x: 0.5, y: 0.5 } }
 							position={ { x: labelX, y: labelY } }
 							style={ new TextStyle({
-								fontFamily: 'Arial',
+								fontFamily: THEME_FONT.slice(),
 								fontSize: 32 * fontScale,
 								fill: settings.labelColor,
 								align: 'center',

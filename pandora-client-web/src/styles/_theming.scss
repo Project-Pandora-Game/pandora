@@ -1,7 +1,12 @@
 @import 'constants';
 
 $theme-accent-color: var(--pandora-accent-color);
-$theme-font-family: 'Arial', 'Helvetica', sans-serif;
+
+// NOTE: If you update this, you should also update it in `components/gameContext/interfaceSettingsProvider.tsx`
+$theme-font-family-variable: 'InterVariable', 'Arial', 'Helvetica', sans-serif; // Variable fonts are preferred, even if less supported
+$theme-font-family: 'Inter', 'Arial', 'Helvetica', sans-serif;
+$theme-font-features: 'cv05';
+
 $theme-font-family-monospace: 'Courier New', 'Courier', monospace;
 
 // Some unified colors, still used somewhat randomly

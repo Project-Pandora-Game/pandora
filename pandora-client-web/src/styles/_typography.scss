@@ -2,6 +2,18 @@
 
 html, body {
 	font-family: $theme-font-family;
+	font-feature-settings: $theme-font-features;
+}
+
+@supports (font-variation-settings: normal) {
+	html, body {
+		font-family: $theme-font-family-variable;
+	}
+}
+
+button {
+	font-family: inherit;
+	font-feature-settings: inherit;
 }
 
 a {

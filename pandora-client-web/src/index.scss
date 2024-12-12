@@ -38,6 +38,7 @@ div.main-container {
 
 	> .Toastify {
 		position: relative;
+		--toastify-font-family: $theme-font-family-variable;
 	}
 }
 

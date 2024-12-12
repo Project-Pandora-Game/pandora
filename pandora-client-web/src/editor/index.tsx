@@ -14,6 +14,7 @@ import { ConfigurePixiSettings } from '../graphics/pixiSettings';
 import '../index.scss';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast';
 import { ScreenResolutionSerice } from '../services/screenResolution/screenResolution';
+import '../styles/fonts.scss';
 import '../styles/globalUtils.scss';
 import { LoadAssetsFromAssetDevServer, LoadAssetsFromOfficialLink } from './assetLoader';
 import { AssetManagerEditor } from './assets/assetManager';

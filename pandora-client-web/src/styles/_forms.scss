@@ -2,6 +2,11 @@
 
 //#region Inputs
 
+input, textarea, select, select option {
+	font-family: inherit;
+	font-feature-settings: inherit;
+}
+
 input, textarea {
 	font-size: 1em;
 	padding: 0.5em;

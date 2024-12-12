@@ -69,10 +69,9 @@
 	}
 
 	textarea {
-		height: min(10em, 35%);
+		height: min(8.5em, 35%);
 		resize: none;
 		margin: 0;
-		font-size: 105%;
 		background: $theme-chat-input-normal-background;
 		color: $theme-chat-input-text;
 		border: none;

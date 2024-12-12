@@ -1,15 +1,15 @@
-@import '../../styles/constants';
-@import '../../styles/utils';
+@import '../../styles/common';
 
 .LoginTeaser {
 	@include flex(column);
 	width: min(95vw, 45em);
 	min-height: min(90vh, 25em);
-	background-color: $grey-light;
+	background: $theme-auth-routerbox-background;
+	color: $theme-auth-routerbox-text;
 	border-radius: 0.2em;
 	padding: 2em 2.5em 1em;
 	align-self: stretch;
-	box-shadow: 0 0.2em 0.4em 0 $black-decoration, 0 0.3em 1em 0 $black-decoration;
+	box-shadow: 0 0.2em 0.4em 0 $themecolor-shadow, 0 0.3em 1em 0 $themecolor-shadow;
 
 	.teaser-content-box {
 		flex: 1;
@@ -18,10 +18,10 @@
 
 		.teaser-content {
 			overflow: hidden;
-			background-color: $grey-mid;
+			background: $theme-auth-teaser-content;
 			border-top-left-radius: 0.3em;
 			border-top-right-radius: 0.3em;
-			box-shadow: 0 0.2em 0.4em 0 $black-decoration, 0 0.3em 1em 0 $black-decoration;
+			box-shadow: 0 0.2em 0.4em 0 $themecolor-shadow, 0 0.3em 1em 0 $themecolor-shadow;
 
 			.teaser-text {
 				@include center-flex;
@@ -51,18 +51,18 @@
 
 	.dot {
 		display: inline-block;
-		background-color: $grey-dark;
+		background: $theme-auth-teaser-dot-inactive;
 		border-radius: 50%;
 		width: 1em;
 		height: 1em;
 		margin-left: 1em;
 
 		&.active {
-			background-color: $theme-link;
+			background: $theme-auth-teaser-dot-active;
 		}
 
 		&:hover {
-			background-color: $grey-lightest;
+			background: $theme-auth-teaser-dot-hover;
 			cursor: pointer;
 		}
 	}

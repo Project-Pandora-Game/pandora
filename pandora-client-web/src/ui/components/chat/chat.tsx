@@ -48,13 +48,23 @@ export function Chat(): ReactElement | null {
 		<div className='chatArea'>
 			<div
 				className={ classNames(
-					'messages',
+					'messagesArea',
 					`fontSize-${interfaceChatroomChatFontSize}`,
 				) }
 			>
-				<Scrollable color='dark' className='fill' ref={ messagesDiv } tabIndex={ 1 }>
+				<Scrollable
+					ref={ messagesDiv }
+					className='fill'
+					tabIndex={ 1 }
+				>
 					<Column gap='none'>
-						{ messages.map((m) => <Message key={ m.time } message={ m } playerId={ playerId } />) }
+						{ messages.map((m) => (
+							<Message
+								key={ m.time }
+								message={ m }
+								playerId={ playerId }
+							/>
+						)) }
 					</Column>
 				</Scrollable>
 				<ChatAutoCompleteHint />
@@ -250,9 +260,25 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 		return (
 			<span className='name'>
 				{ before }
-				<span className='from' data-id={ message.from.id } onClick={ onClick } style={ style }>{ message.from.name }</span>
+				<span
+					className='from'
+					data-id={ message.from.id }
+					title={ `${message.from.name} (${message.from.id})` }
+					onClick={ onClick }
+					style={ style }
+				>
+					{ message.from.name }
+				</span>
 				{ ' -> ' }
-				<span className='to' data-id={ message.to.id } onClick={ onClick } style={ { color: message.to.labelColor } }>{ message.to.name }</span>
+				<span
+					className='to'
+					data-id={ message.to.id }
+					title={ `${message.to.name} (${message.to.id})` }
+					onClick={ onClick }
+					style={ { color: message.to.labelColor } }
+				>
+					{ message.to.name }
+				</span>
 				{ after }
 			</span>
 		);
@@ -261,7 +287,15 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 	return (
 		<span className='name'>
 			{ before }
-			<span className='from' data-id={ message.from.id } onClick={ onClick } style={ style }>{ message.from.name }</span>
+			<span
+				className='from'
+				data-id={ message.from.id }
+				title={ `${message.from.name} (${message.from.id})` }
+				onClick={ onClick }
+				style={ style }
+			>
+				{ message.from.name }
+			</span>
 			{ after }
 		</span>
 	);

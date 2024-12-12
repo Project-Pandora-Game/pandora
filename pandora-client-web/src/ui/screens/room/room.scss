@@ -12,22 +12,31 @@
 		&.disabled {
 			display: none;
 		}
+
+		canvas {
+			position: absolute;
+			z-index: auto;
+		}
 	}
 
 	>.interactionArea {
 		min-width: min(20em, 100%);
 		min-height: min(10vw, 100%);
+		border-left: max(2px, 0.1em) solid $theme-room-separator;
+		background: $theme-room-background;
 	}
 }
 
 .controls-container {
-	background-color: $grey-lighter;
-	border: solid $black 2px;
+	background: $theme-room-controls-background;
+	color: $theme-room-controls-text;
+	border: 2px solid $theme-room-controls-border;
 }
 
 .space-warning {
-	background-color: $theme-warning;
-	border: 1px solid $black;
+	background: $theme-warningbox-background;
+	color: $theme-warningbox-text;
+	border: 1px solid $theme-separator;
 	border-radius: 0.5em;
 	padding: 0.2em 0.5em;
 }
@@ -38,33 +47,35 @@
 	fieldset {
 		display: flex;
 		flex-direction: column;
-		border: 1px solid $black;
+		background: $theme-room-controls-charactercontent-background;
+		border: 1px solid $theme-room-controls-character-border;
 		border-radius: 0.5em;
 		margin-bottom: 0.5em;
 
 		>legend {
 			display: flex;
 			flex-flow: row wrap;
-			border: 1px solid $black;
+			border: 1px solid $theme-room-controls-character-border;
 			border-radius: 0.5em;
 			overflow: hidden;
 			padding: 0;
 
-			background-color: $black;
+			background: $theme-room-controls-character-border;
 			gap: 1px;
 
 			&.player {
 				>span, >button {
-					background-color: $white;
+					background: $theme-room-controls-player-background;
+					color: $theme-room-controls-player-text;
 				}
 
 				>button:hover {
-					background-color: $grey-lighter;
+					background: $theme-room-controls-player-hover-background;
 				}
 			}
 
 			.colorStrip {
-				text-shadow: #666 1px 1px 1px;
+				text-shadow: $theme-room-controls-character-colorstrip-shadow 1px 1px 1px;
 			}
 
 			>span, >button {
@@ -77,15 +88,17 @@
 				align-items: center;
 				justify-content: center;
 
-				background-color: $grey-lightest;
+				background: $theme-room-controls-character-background;
+				color: $theme-room-controls-character-text;
 
 				&.safemode {
-					background: $theme-warning;
+					background: $theme-warningbox-background;
+					color: $theme-warningbox-text;
 					padding: 0 0.5em;
 				}
 
 				&.offline {
-					background-color: $grey-light;
+					background: $theme-room-controls-offlinecharacter-background;
 					padding: 0 0.5em;
 					font-style: italic;
 				}
@@ -96,11 +109,11 @@
 			}
 
 			>button:hover {
-				background-color: $grey-lighter;
+				background: $theme-room-controls-character-hover-background;
 			}
 
 			>button:focus-visible {
-				border-color: black;
+				border-color: $theme-room-controls-character-visiblefocus-outline;
 			}
 		}
 	}
@@ -108,165 +121,8 @@
 
 .room-construction-mode {
 	.error {
-		color: $theme-error;
+		color: $themecolor-error;
 		font-weight: bold;
 		margin: auto 0;
-	}
-}
-
-.chatArea {
-	background-color: #303030;
-	display: flex;
-	flex-flow: column;
-	flex: 1;
-	overflow: hidden;
-
-	&>div.messages {
-		position: relative;
-		flex: 1;
-		overflow: hidden;
-		user-select: text;
-	}
-
-	.message {
-		color: $white;
-		padding: 0.1em;
-		white-space: pre-wrap;
-		overflow-wrap: break-word;
-
-		&:not(:hover) {
-			// Prevent Zalgo text from getting weird (but still show it if the message is hovered)
-			overflow: hidden;
-			overflow: clip;
-			overflow-clip-margin: 0.05em;
-		}
-
-		&.serverMessage {
-			border-left: solid 5px $white;
-			background-color: #202020;
-			margin: 0.4em;
-			padding: 0.2em;
-
-			&.foldable:hover {
-				background-color: #181818;
-				cursor: pointer;
-			}
-		}
-
-		&.emote .name {
-			display: none;
-		}
-
-		&.private {
-			opacity: 0.7;
-		}
-
-		&> .info {
-			float: right;
-			color: $grey-mid;
-			font-style: italic;
-			font-size: 0.6em;
-			margin-right: 0.2em;
-		}
-
-		a {
-			color: $theme-link-light;
-			text-decoration: underline;
-
-			&:hover {
-				color: $grey-light;
-			}
-		}
-
-		&.editing {
-			background-color: #444;
-			padding: 0.2em;
-			margin: 0 0.2em;
-			border-left: solid 2px #09f;
-		}
-	}
-
-	textarea {
-		height: min(10em, 35%);
-		resize: none;
-		margin: 0;
-		color: #fff;
-		font-size: 105%;
-		background-color: #505050;
-		border: none;
-  		outline: none;
-
-		&:focus {
-			background-color: #000;
-		}
-
-		&::placeholder {
-			color: #777;
-			opacity: 1; /* Firefox */
-		}
-	}
-}
-
-.typing-indicator {
-	padding-right: 0.5em;
-	cursor: pointer;
-
-	&:hover {
-		background-color: #101010;
-	}
-
-	img {
-		height: 1em;
-		filter: brightness(0) saturate(100%) invert(100%);
-	}
-}
-
-.typing-indicator, .input-modifiers, .unread-messages-indicator {
-	@include flex(row, wrap);
-	align-items: center;
-
-	background-color: #202020;
-	color: $white;
-	padding-left: 0.5em;
-	gap: 0.5em;
-}
-
-.typing-indicator, .unread-messages-indicator {
-	min-height: 1.5em;
-	overflow: hidden;
-	white-space: nowrap;
-}
-
-.unread-messages-indicator:hover {
-	background-color: #101010;
-	cursor: pointer;
-}
-
-.autocomplete-hint {
-	position: absolute;
-	left: 0;
-	bottom: 0;
-	right: 0;
-	max-height: calc(100% - 0.4em);
-	overflow-y: scroll;
-	margin: 0.2em;
-	font-size: medium;
-
-	@include flex(column);
-	background-color: #336;
-	color: $white;
-	padding: 0.5em;
-	gap: 0.1em;
-
-	hr {
-		width: 100%;
-	}
-
-	span {
-		cursor: pointer;
-
-		&:hover, &.selected {
-			background-color: #7e7eff54;
-		}
 	}
 }

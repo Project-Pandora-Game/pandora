@@ -9,7 +9,7 @@ import { LoginForm } from '../../../src/components/login/forms/loginForm';
 import { RegistrationForm } from '../../../src/components/login/forms/registrationForm';
 import { ResendVerificationForm } from '../../../src/components/login/forms/resendVerificationForm';
 import { ResetPasswordForm } from '../../../src/components/login/forms/resetPasswordForm';
-import { authPageComponents } from '../../../src/routing/authRoutingData';
+import { authPagePathsAndComponents } from '../../../src/routing/authRoutingData';
 import { RenderWithRouterAndProviders } from '../../testUtils';
 
 const originalCrypto = window.crypto;
@@ -22,11 +22,11 @@ Object.defineProperty(window, 'crypto', {
 });
 
 describe('AuthFormRouter', () => {
-	it.each(authPageComponents)('should render an error message on the path %p if SubtleCrypto is not available', (path) => {
+	it.each(authPagePathsAndComponents)('should render an error message on the path %p if SubtleCrypto is not available', (_path, element) => {
 		// @ts-expect-error - Simulating no SubtleCrypto
 		// noinspection JSConstantReassignment
 		window.crypto = {};
-		renderWithComponent(path);
+		renderWithComponent(element);
 		expect(screen.getByText(/Cryptography service is not available/)).toBeVisible();
 		// noinspection JSConstantReassignment
 		window.crypto = originalCrypto;

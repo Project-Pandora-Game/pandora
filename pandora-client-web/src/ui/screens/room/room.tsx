@@ -11,6 +11,7 @@ import { RoomScene } from '../../../graphics/room/roomScene';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { useIsPortrait } from '../../../styles/mediaQueries';
 import { Chat } from '../../components/chat/chat';
+import './chatArea.scss';
 import './room.scss';
 import { RoomScreenContextProvider } from './roomContext';
 import { PersonalSpaceControls, RoomControls } from './roomControls';
@@ -27,7 +28,12 @@ export function RoomScreen(): ReactElement | null {
 
 	return (
 		<RoomScreenContextProvider>
-			<DivContainer className='roomScreen' direction={ isPortrait ? 'column' : 'row' } key={ spaceInfo.id ?? '_personal' }>
+			<DivContainer
+				key={ spaceInfo.id ?? '_personal' }
+				className='roomScreen'
+				gap='none'
+				direction={ isPortrait ? 'column' : 'row' }
+			>
 				<RoomScene className={ `room-scene flex-${chatroomGraphicsRatio}` } />
 				<InteractionBox className={ `interactionArea flex-${chatroomChatRatio}` } />
 			</DivContainer>
@@ -47,7 +53,7 @@ function InteractionBox({ className }: {
 			{
 				isPersonalSpace ? (
 					<Tab name='Personal space'>
-						<Scrollable color='dark' className='controls-container flex-1'>
+						<Scrollable className='controls-container flex-1'>
 							<PersonalSpaceControls />
 						</Scrollable>
 					</Tab>
@@ -59,7 +65,7 @@ function InteractionBox({ className }: {
 			{
 				!isPersonalSpace ? (
 					<Tab name='Room'>
-						<Scrollable color='dark' className='controls-container flex-1'>
+						<Scrollable className='controls-container flex-1'>
 							<RoomControls />
 						</Scrollable>
 					</Tab>

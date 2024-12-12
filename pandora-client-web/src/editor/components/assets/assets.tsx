@@ -12,7 +12,6 @@ import { Button } from '../../../components/common/button/button';
 import { ColorInput } from '../../../components/common/colorInput/colorInput';
 import { Row } from '../../../components/common/container/container';
 import { Form, FormField, FormFieldError } from '../../../components/common/form/form';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
@@ -33,7 +32,7 @@ export function AssetsUI(): ReactElement {
 	const editorAssets = useSyncExternalStore((change) => editor.on('modifiedAssetsChange', change), () => editor.getModifiedAssetsList());
 
 	return (
-		<Scrollbar color='lighter' className='editor-setupui asset-ui slim'>
+		<div className='editor-setupui asset-ui'>
 			<h3>
 				Equipped
 				<ContextHelpButton>
@@ -105,7 +104,7 @@ export function AssetsUI(): ReactElement {
 			<ul>
 				{ view.categories.map((category) => <AssetCategoryElement key={ category.name } category={ category } />) }
 			</ul>
-		</Scrollbar>
+		</div>
 	);
 }
 

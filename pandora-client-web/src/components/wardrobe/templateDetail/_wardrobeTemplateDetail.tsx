@@ -1,14 +1,16 @@
+import { Immutable } from 'immer';
 import {
 	AssetModuleDefinition,
 	ItemTemplate,
 } from 'pandora-common';
 import React, { ReactElement } from 'react';
-import { Column, Row } from '../../common/container/container';
 import { useAssetManager } from '../../../assets/assetManager';
-import { WardrobeTemplateColorization } from './wardrobeTemplateColor';
-import { Immutable } from 'immer';
+import crossIcon from '../../../assets/icons/cross.svg';
+import { IconButton } from '../../common/button/button';
+import { Column, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { WardrobeModuleTemplateConfig } from '../modules/_wardrobeModules';
+import { WardrobeTemplateColorization } from './wardrobeTemplateColor';
 
 export function WardrobeTemplateEditMenu({
 	title,
@@ -31,7 +33,12 @@ export function WardrobeTemplateEditMenu({
 			<div className='inventoryView'>
 				<div className='toolbar'>
 					<span>{ title }: [ ERROR: ASSET NOT FOUND ]</span>
-					<button className='modeButton' onClick={ cancel }>✖️</button>
+					<IconButton
+						onClick={ cancel }
+						theme='default'
+						src={ crossIcon }
+						alt='Cancel'
+					/>
 				</div>
 			</div>
 		);

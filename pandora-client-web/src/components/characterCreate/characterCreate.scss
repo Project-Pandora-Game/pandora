@@ -1,12 +1,12 @@
-@import '../../styles/constants';
-@import '../../styles/utils';
+@import '../../styles/common';
 
 .CharacterCreate {
 	#registration-form {
 		@include center-absolute;
 		padding: 2rem;
-		background-color: $grey-light;
-		box-shadow: 0 0.2em 0.4em 0 $black-decoration, 0 0.3em 1em 0 $black-decoration;
+		background: $theme-character-create-background;
+		color: $theme-character-create-text;
+		box-shadow: 0 0.2em 0.4em 0 $themecolor-shadow, 0 0.3em 1em 0 $themecolor-shadow;
 		border-radius: 0.2em;
 
 		.Button {

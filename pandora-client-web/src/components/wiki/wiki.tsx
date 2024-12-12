@@ -64,5 +64,5 @@ function WikiContentTab({ name, urlChunk = name.toLowerCase(), children }: { nam
 }
 
 export function WikiContent({ children }: ChildrenProps): ReactElement {
-	return <Scrollable color='dark' className='wiki-content'>{ children }</Scrollable>;
+	return <Scrollable className='wiki-content'>{ children }</Scrollable>;
 }

@@ -1,6 +1,7 @@
 import { SpaceId, SpaceIdSchema, SpaceInviteId, SpaceInviteIdSchema, type SpaceExtendedInfoResponse } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { useLocation, useNavigate } from 'react-router';
+import { DivContainer } from '../../../components/common/container/container';
 import { ExternalLink, UntrustedLink } from '../../../components/common/link/externalLink';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { SpaceDetails, useSpaceExtendedInfo } from '../spacesSearch/spacesSearch';
@@ -9,7 +10,7 @@ import './spaceJoin.scss';
 export function SpaceJoin(): ReactElement {
 	const { pathname, search } = useLocation();
 	const { spaceId, invite } = React.useMemo(() => {
-		const spaceResult = SpaceIdSchema.safeParse(`s/${pathname.split('/').pop()}`);
+		const spaceResult = SpaceIdSchema.safeParse(`s/${decodeURIComponent(pathname.split('/').pop() ?? '')}`);
 		const inviteResult = SpaceInviteIdSchema.safeParse(new URLSearchParams(search).get('invite'));
 
 		return {
@@ -20,16 +21,16 @@ export function SpaceJoin(): ReactElement {
 
 	if (!spaceId) {
 		return (
-			<div className='spaceJoin'>
-				<p>Invalid space ID</p>
-			</div>
+			<DivContainer align='center' justify='center'>
+				<div className='error-box'>Invalid space ID</div>
+			</DivContainer>
 		);
 	}
 
 	return (
-		<div className='spaceJoin'>
+		<DivContainer align='center' justify='center'>
 			<QuerySpaceInfo spaceId={ spaceId } invite={ invite } />
-		</div>
+		</DivContainer>
 	);
 }
 
@@ -37,20 +38,26 @@ function QuerySpaceInfo({ spaceId, invite }: { spaceId: SpaceId; invite?: SpaceI
 	const info = useSpaceExtendedInfo(spaceId, invite);
 	const navigate = useNavigate();
 
-	if (info?.result !== 'success') {
+	if (info === undefined) {
 		return (
-			<p>Space ({ spaceId }) not found</p>
+			<p>Loading...</p>
 		);
 	}
+
+	if (info.result !== 'success') {
+		return <div className='error-box'>{ INVALID_INVITE_MESSAGES[info.result] }</div>;
+	}
 	return (
-		<SpaceDetails info={ info.data } hasFullInfo invite={ info.invite } hide={ () => navigate('/room') } closeText='Back to room' />
+		<div className='spaceJoin'>
+			<SpaceDetails info={ info.data } hasFullInfo invite={ info.invite } hide={ () => navigate('/room') } closeText='Back to room' />
+		</div>
 	);
 }
 
 const INVALID_INVITE_MESSAGES: Record<Exclude<SpaceExtendedInfoResponse['result'], 'success'>, string> = {
-	notFound: 'Unknown space.',
-	noAccess: `Invite expired or you don't have access to this space.`,
-	noCharacter: 'You need to have a character selected to view invite details.',
+	notFound: 'Unknown space',
+	noAccess: `Invite expired or you don't have access to this space`,
+	noCharacter: 'You need to have a character selected to view invite details',
 };
 
 export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: string; invite?: string; }): ReactElement {
@@ -66,12 +73,12 @@ export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: string; invite?
 
 	if (info.result !== 'success') {
 		return (
-			<div className='spaceInvite'>Invalid Invitation: { INVALID_INVITE_MESSAGES[info.result] }</div>
+			<div className='spaceInvite'>Invalid Invitation: { INVALID_INVITE_MESSAGES[info.result] }.</div>
 		);
 	}
 
 	return (
-		<div className='spaceInvite active' onClick={ () => setOpen((s) => !s) }>
+		<button className='spaceInvite active' onClick={ () => setOpen((s) => !s) }>
 			<span>Space Invitation to: { info.data.name }</span>
 			{
 				!open ? null : (
@@ -80,7 +87,7 @@ export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: string; invite?
 					</ModalDialog>
 				)
 			}
-		</div>
+		</button>
 	);
 }
 

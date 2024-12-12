@@ -12,10 +12,11 @@ import React, { ReactElement, useCallback, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 import deleteIcon from '../../../assets/icons/delete.svg';
+import crossIcon from '../../../assets/icons/cross.svg';
 import { useEvent } from '../../../common/useEvent';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
-import { Button } from '../../common/button/button';
+import { Button, IconButton } from '../../common/button/button';
 import { Column, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { FormCreateStringValidator } from '../../common/form/form';
@@ -64,7 +65,12 @@ export function WardrobeItemConfigMenu({
 			<div className='inventoryView itemEdit'>
 				<div className='toolbar'>
 					<span>Editing item: [ ERROR: ITEM NOT FOUND ]</span>
-					<button className='modeButton' onClick={ close }>✖️</button>
+					<IconButton
+						onClick={ close }
+						theme='default'
+						src={ crossIcon }
+						alt='Close item details'
+					/>
 				</div>
 			</div>
 		);
@@ -74,7 +80,16 @@ export function WardrobeItemConfigMenu({
 		<div className='inventoryView itemEdit'>
 			<div className='toolbar'>
 				<span>Editing item:&#x20;<WardrobeItemName item={ wornItem } /></span>
-				{ !singleItemContainer && <button className='modeButton' onClick={ close }>✖️</button> }
+				{
+					!singleItemContainer ? (
+						<IconButton
+							onClick={ close }
+							theme='default'
+							src={ crossIcon }
+							alt='Close item details'
+						/>
+					) : null
+				}
 			</div>
 			<Column padding='medium' overflowX='hidden' overflowY='auto'>
 				<Row padding='medium' wrap className='itemActions'>

@@ -1,4 +1,4 @@
-$lineColor: black;
+@import '../../../styles/common';
 
 .icon-hamburger {
 	position: relative;
@@ -12,7 +12,7 @@ $lineColor: black;
 		height: 0.1875em;
 		width: 100%;
 		transition: all 200ms linear;
-		background-color: transparent;
+		background: transparent;
 
 		&:before{
 			position: absolute;
@@ -21,7 +21,7 @@ $lineColor: black;
 			width: 100%;
 			height: 100%;
 			transition: all 200ms linear;
-			background-color: transparent;
+			background: transparent;
 			content: "";
 		}
 
@@ -32,22 +32,22 @@ $lineColor: black;
 			width: 100%;
 			height: 100%;
 			transition: all 200ms linear;
-			background-color: transparent;
+			background: transparent;
 			content: "";
 		}
 	}
 
 	&.state-hamburger {
 		.icon {
-			background-color: $lineColor;
+			background: $theme-buttonicon-hamburger-color;
 
 			&:before{
-				background-color: $lineColor;
+				background: $theme-buttonicon-hamburger-color;
 				top: -300%;
 			}
 
 			&:after{
-				background-color: $lineColor;
+				background: $theme-buttonicon-hamburger-color;
 				top: 300%;
 			}
 		}
@@ -58,12 +58,12 @@ $lineColor: black;
 
 		.icon {
 			&:before{
-				background-color: $lineColor;
+				background: $theme-buttonicon-hamburger-color;
 				transform: rotate(45deg);
 			}
 
 			&:after{
-				background-color: $lineColor;
+				background: $theme-buttonicon-hamburger-color;
 				transform: rotate(-45deg);
 			}
 		}

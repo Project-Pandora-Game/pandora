@@ -1,25 +1,496 @@
 @import 'constants';
 
-$theme-accent-color: #939393;
+$theme-accent-color: var(--pandora-accent-color);
 
-$theme-normal-background: #aaa;
-$theme-normal-background-secondary: #a0a0a0;
-$theme-normal-text: #000;
-$theme-normal-text-dim: #444;
+// NOTE: If you update this, you should also update it in `components/gameContext/interfaceSettingsProvider.tsx`
+$theme-font-family-variable: 'InterVariable', 'Arial', 'Helvetica', sans-serif; // Variable fonts are preferred, even if less supported
+$theme-font-family: 'Inter', 'Arial', 'Helvetica', sans-serif;
+$theme-font-features: 'cv05';
 
-$theme-hover-background: color-mix(in srgb, #797979, $theme-accent-color 35%);
+$theme-font-family-monospace: 'Courier New', 'Courier', monospace;
+
+// Some unified colors, still used somewhat randomly
+$themecolor-error: #b60000;
+$themecolor-warning: #fd0;
+$themecolor-shadow: #00000026;
+
+//#region Generic theming
+
+// Normal themes
+// NOTE: If you update this, you should also update it in `components/gameContext/interfaceSettingsProvider.tsx`
+$theme-normal-background: #0d1111;
+$theme-normal-background-secondary: #141a1b;
+$theme-normal-text: #eee;
+$theme-normal-text-dim: #888;
+$theme-separator: #43454a; // E.g. borders
+
+// Alternative background
+$theme-inset-background: #141a1d;
+$theme-inset-text: #eee;
+
+// Hover
+$theme-hover-background: color-mix(in srgb, #333, $theme-accent-color 35%);
 $theme-hover-text: $theme-normal-text;
 $theme-hover-text-dim: $theme-normal-text-dim;
 
-$theme-active-background: color-mix(in srgb, black, $theme-accent-color 35%);
-$theme-active-text: #fff;
-$theme-active-text-dim: #ccc;
+// Activateable elements
+$theme-active-background: color-mix(in srgb, #444, $theme-accent-color 65%);
+$theme-active-text: #eee;
+$theme-active-text-dim: #aaa;
 
-$theme-warningbox-background: $theme-warning;
-$theme-warningbox-text: $theme-normal-text;
+// Buttons
+$theme-button: (
+	default: (
+		border: #43454a,
+		background: #232930,
+		color: #eee,
+		hover-background: color-mix(in srgb, #282d32, $theme-accent-color 35%),
+		hover-color: #eee,
+		disabled-border: #303136,
+		disabled-background: #232930,
+		disabled-color: #444,
+		focus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%),
+		icon-filter: none
+	),
+	defaultActive: (
+		border: #43454a,
+		background: color-mix(in srgb, #969a9f, $theme-accent-color 65%),
+		color: #000,
+		hover-background: color-mix(in srgb, #535658, $theme-accent-color 65%),
+		hover-color: #000,
+		disabled-border: #303136,
+		disabled-background: color-mix(in srgb, #969a9f, $theme-accent-color 65%),
+		disabled-color: #777,
+		focus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%),
+		icon-filter: invert(100%)
+	),
+	danger: (
+		border: #43454a,
+		background: #151719,
+		color: #e00,
+		hover-background: #600,
+		hover-color: #eee,
+		disabled-border: #303136,
+		disabled-background: #121315,
+		disabled-color: #600,
+		focus-outline: #b00,
+		icon-filter: none
+	),
+);
+$theme-button-selected-outline: color-mix(in srgb, #888, $theme-accent-color 60%);
+$theme-buttonicon-hamburger-color: #ccc;
+$theme-colorbutton-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%);
 
-$theme-errorbox-background: $theme-error;
-$theme-errorbox-text: $theme-normal-text;
+// Links
+$theme-link: #58e;
+$theme-link-visited: #8ae;
+$theme-link-active: #ccc;
+$theme-link-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%);
 
-$theme-textbox-background: #ccc;
-$theme-textbox-text: #000;
+// Boxes: Warning
+$theme-warningbox-background: $themecolor-warning;
+$theme-warningbox-text: #000;
+
+// Boxes: Error
+$theme-errorbox-background: #b60000;
+$theme-errorbox-text: #fff;
+
+// Boxes: Lot of text
+$theme-textbox-background: #020408;
+$theme-textbox-text: #eee;
+
+// Tabs
+$theme-tablist-tab-normal-background: #202429;
+$theme-tablist-tab-normal-text: #eee;
+$theme-tablist-tab-hover-background: color-mix(in srgb, #0d0d0d, $theme-accent-color 35%);
+$theme-tablist-tab-hover-text: #eee;
+$theme-tablist-tab-normal-visiblefocus-outline: color-mix(in srgb, #ffffffcc, $theme-accent-color 35%);
+$theme-tablist-tab-selected-background: color-mix(in srgb, #222, $theme-accent-color 60%);
+$theme-tablist-tab-selected-text: #eee;
+$theme-tablist-tab-selected-visiblefocus-outline: color-mix(in srgb, #ffffffcc, $theme-accent-color 35%);
+
+// Fieldset
+$theme-fieldset-border: $theme-separator;
+
+// Text inputs (text, number, email, ...)
+$theme-input-normal-background: #131516;
+$theme-input-focused-background: #000;
+$theme-input-focused-outline: color-mix(in srgb, #000000b3, $theme-accent-color 60%);
+$theme-input-border: #ccc;
+$theme-input-text: #eee;
+$theme-input-readonly-background: #444;
+$theme-input-readonly-text: #eee;
+$theme-input-placeholder-text: #999;
+
+$theme-input-border-error: #b62222;
+$theme-form-validationmessage-text: #fa4747;
+
+// Checkbox input
+$theme-checkbox-unchecked-filter: brightness(40%);
+$theme-checkbox-accent: color-mix(in srgb, #666, $theme-accent-color 60%);
+$theme-checkbox-disabled-unchecked-filter: brightness(60%);
+$theme-checkbox-disabled-accent: color-mix(in srgb, #aaa, $theme-accent-color 35%);
+
+// Text highlight (such as selected anchor)
+$theme-highlight-background: color-mix(in srgb, #bbb, $theme-accent-color 60%);
+
+// Table data
+$theme-table-header-background: #2d373d;
+$theme-table-header-text: #eee;
+$theme-table-body-background: #121717;
+$theme-table-body-altbackground: #161d1d;
+$theme-table-body-text: #eee;
+$theme-table-border-outer: transparent;
+$theme-table-border: transparent;
+
+//#endregion
+
+//#region Scrollbar
+
+$theme-scrollbar-track: #000;
+$theme-scrollbar-thumb: color-mix(in srgb, #888, $theme-accent-color 35%);
+
+//#endregion
+
+//#region Dialogs
+
+$theme-dialog-overlay: #000000b3;
+$theme-dialog-background: #0d1111;
+$theme-dialog-text: #eee;
+$theme-dialog-border: $theme-separator;
+
+$theme-dialog-header: #242628;
+$theme-dialog-button-hover-text: #000;
+$theme-dialog-button-close-hover-background: #c00;
+$theme-dialog-button-shade-hover-background: #ccc;
+
+$theme-hoverdialog-background: $theme-dialog-background;
+$theme-hoverdialog-text: $theme-dialog-text;
+$theme-hoverdialog-border: $theme-dialog-border;
+
+//#endregion
+
+//#region Context menu
+
+$theme-contextmenu-default-background: $theme-dialog-background;
+$theme-contextmenu-default-text: $theme-dialog-text;
+$theme-contextmenu-default-border: $theme-dialog-border;
+$theme-contextmenu-opaque-background: #0d1111b3;
+$theme-contextmenu-opaque-border: #43454ab3;
+
+$theme-contextmenu-button-text: #eee;
+$theme-contextmenu-button-hover-background:  color-mix(in srgb, #282d32, $theme-accent-color 35%);
+
+//#endregion
+
+//#region Error report
+
+$theme-errorreport-local-background: #8b0000;
+$theme-errorreport-local-text: #fff;
+
+// Intentionally left obnoxious
+$theme-errorreport-report-background: #ccc;
+$theme-errorreport-report-text: #000;
+
+//#endregion
+
+//#region Chat
+
+$theme-chat-background: #303030;
+$theme-chat-text: #fff;
+$theme-chat-messageinfo-text: #888;
+
+$theme-chat-serverMessage-background: #202020;
+$theme-chat-serverMessage-text: #fff;
+$theme-chat-serverMessage-foldable-hover-background: #181818;
+$theme-chat-serverMessage-notch: #fff;
+
+$theme-chat-editedMessage-background: #444;
+$theme-chat-editedMessage-notch: #09f;
+
+$theme-chat-embed-normal-background: #222;
+$theme-chat-embed-normal-text: #fff;
+$theme-chat-embed-hover-background: #181818;
+$theme-chat-embed-hover-text: #fff;
+$theme-chat-embed-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
+
+$theme-chat-input-normal-background: $theme-input-normal-background;
+$theme-chat-input-focused-background: $theme-input-focused-background;
+$theme-chat-input-text: $theme-input-text;
+$theme-chat-input-placeholder-text: $theme-input-placeholder-text;
+
+$theme-chat-indicator-background: #202020;
+$theme-chat-indicator-interactive-hover-background: color-mix(in srgb, #1b1b1b, $theme-accent-color 35%);
+$theme-chat-indicator-text: #eee;
+
+$theme-autocomplete-hint-background: #2e2e49;
+$theme-autocomplete-hint-text: #eee;
+$theme-autocomplete-hint-entry-hover-background: #535388a4;
+
+//#endregion
+
+//#region Direct messages (DMs)
+
+$theme-dms-base-background: $theme-normal-background;
+
+$theme-dms-list-background: $theme-inset-background;
+$theme-dms-list-item-unread-indicator-background: #a00;
+$theme-dms-list-item-unread-indicator-text: #fff;
+
+$theme-dms-chat-loading: #eee;
+$theme-dms-chat-error: #e33;
+
+$theme-dms-crypto-dialog-base-background: $theme-dialog-header;
+$theme-dms-crypto-dialog-background: $theme-dialog-background;
+$theme-dms-crypto-dialog-text: $theme-dialog-text;
+
+//#endregion
+
+//#region Header
+
+$theme-header-background: #000;
+$theme-header-text: #eee;
+$theme-header-collapsable-background: #19191a;
+$theme-header-collapsable-text: #eee;
+
+$theme-header-button-normal-background: transparent;
+$theme-header-button-normal-text: inherit;
+$theme-header-button-normal-imgfilter: none;
+$theme-header-button-hover-background: color-mix(in srgb, #222, $theme-accent-color 35%);
+$theme-header-button-hover-text: inherit;
+$theme-header-button-hover-imgfilter: none;
+$theme-header-button-visiblefocus-outline: #ffffffcc;
+
+$theme-notification-badge-background: #a00;
+$theme-notification-badge-text: #fff;
+
+//#endregion
+
+//#region Footer
+
+$theme-footer-background: $theme-header-background;
+$theme-footer-text: $theme-header-text;
+
+//#endregion
+
+//#region Tutorials
+
+// Base dialog style is $theme-dialog-*
+$theme-tutorial-dialog-text-dim: #666;
+$theme-tutorial-highlight-base-1: #8b0000;
+$theme-tutorial-highlight-base-2: #ffa500;
+$theme-tutorial-highlight-top-1: #8b000080;
+$theme-tutorial-highlight-top-2: #ffa50080;
+
+//#endregion
+
+//#region Character selection
+
+$theme-characterselect-card-shadow: 0 0.2em 0.4em 0 #ffffff33, 0 0.3em 1em 0 #ffffff30;
+$theme-characterselect-card-outerborder: #414446;
+$theme-characterselect-card-innerborder: #212224;
+$theme-characterselect-card-background: #83878a;
+$theme-characterselect-card-hover-background: color-mix(in srgb, #616569, $theme-accent-color 35%);
+$theme-characterselect-card-text: #000;
+$theme-characterselect-card-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%);
+$theme-characterselect-card-extrainfo-background: #053bb1;
+$theme-characterselect-card-extrainfo-text: #eee;
+$theme-characterselect-card-frame-background: $theme-normal-background;
+$theme-characterselect-card-frame-border: #eee;
+$theme-characterselect-card-frame-shadow: inset -0.1em 0.75em 1.5em #ffffff9a, inset 0 0 0.25em #ffffff9a;
+
+//#endregion
+
+//#region Character creation
+
+$theme-character-create-background: $theme-inset-background;
+$theme-character-create-text: $theme-inset-text;
+
+//#endregion
+
+//#region Wardrobe
+
+$theme-wardrobe-pane-background: $theme-inset-background;
+$theme-wardrobe-pane-text: $theme-inset-text;
+
+$theme-wardrobe-view-background: $theme-normal-background;
+$theme-wardrobe-view-text: $theme-normal-text;
+$theme-wardrobe-view-overlay: #00000050;
+
+$theme-wardrobe-modebutton-border: #43454a;
+$theme-wardrobe-modebutton-active-background: #232930;
+
+$theme-wardrobe-outfitbutton-border: #000;
+$theme-wardrobe-outfitbutton-normal-background: #202429;
+$theme-wardrobe-outfitbutton-hover-background: color-mix(in srgb, #282d32, $theme-accent-color 35%);
+$theme-wardrobe-outfitbutton-text: #eee;
+$theme-wardrobe-outfitbutton-preview-border: #000;
+
+$theme-wardrobe-actionbutton-border: #43454a;
+$theme-wardrobe-actionbutton-visiblefocus-border: color-mix(in srgb, #fff, $theme-accent-color 65%);
+$theme-wardrobe-actionbutton-normal-background: #232930;
+$theme-wardrobe-actionbutton-normal-text: #eee;
+$theme-wardrobe-actionbutton-hover-background: color-mix(in srgb, #282d32, $theme-accent-color 35%);
+$theme-wardrobe-actionbutton-hover-text: #eee;
+$theme-wardrobe-actionbutton-selected-background: color-mix(in srgb, #282d32, $theme-accent-color 65%);
+$theme-wardrobe-actionbutton-selected-text: #000;
+$theme-wardrobe-actionbutton-selectedhover-background: color-mix(in srgb, #535658, $theme-accent-color 65%);
+$theme-wardrobe-actionbutton-selectedhover-text: #000;
+$theme-wardrobe-actionbutton-blocked-background: #592626;
+$theme-wardrobe-actionbutton-blocked-text: #eee;
+$theme-wardrobe-actionbutton-pending-background: #393f46;
+$theme-wardrobe-actionbutton-pending-text: #555;
+$theme-wardrobe-actionbutton-promptRequired-background: #595926;
+$theme-wardrobe-actionbutton-promptRequired-text: #eee;
+$theme-wardrobe-actionbutton-disabled-background: #232930;
+$theme-wardrobe-actionbutton-disabled-text: #444;
+
+// Item entries almost completely reuse actionbutton colors, as they fulfill similar role
+// The only difference is normal hover, where action buttons can be inside item entries,
+// so they must differ not to look the same when hovered.
+$theme-wardrobe-itementry-hover-background: color-mix(in srgb, #22262b, $theme-accent-color 25%);
+$theme-wardrobe-itementry-hover-text: #eee;
+$theme-wardrobe-itementry-ribbon-border: #777;
+$theme-wardrobe-itementry-ribbon-shadow: inset 0 0 0.1em #ffffffaa;
+
+$theme-wardrobe-assetpreferences-shadow: #000;
+$theme-wardrobe-favorite-color: #fafa00;
+$theme-wardrobe-maybe-color: #fa7d00;
+$theme-wardrobe-prevent-color: #fa0000;
+$theme-wardrobe-doNotRender-color: #000;
+
+$theme-wardrobe-errormessage-text: #e44545;
+
+$theme-wardrobe-itemname-border: $theme-separator;
+$theme-wardrobe-itemname-background: $theme-chat-background;
+$theme-wardrobe-itemname-text: $theme-chat-text;
+$theme-wardrobe-itemdescription-border: $theme-separator;
+$theme-wardrobe-itemdescription-background: $theme-chat-background;
+$theme-wardrobe-itemdescription-text: $theme-chat-text;
+
+//#endregion
+
+//#region Room view
+
+$theme-room-background: $theme-inset-background;
+$theme-room-separator: $theme-room-background;
+
+$theme-room-controls-background: $theme-normal-background;
+$theme-room-controls-text: $theme-normal-text;
+$theme-room-controls-border: $theme-separator;
+
+$theme-room-controls-character-border: #444;
+$theme-room-controls-character-background: #111315;
+$theme-room-controls-character-text: #eee;
+$theme-room-controls-character-hover-background: color-mix(in srgb, #15171a, $theme-accent-color 35%);
+$theme-room-controls-offlinecharacter-background: #4b0404;
+$theme-room-controls-player-background: color-mix(in srgb, $theme-room-controls-character-background, $theme-accent-color 15%);
+$theme-room-controls-player-text: #eee;
+$theme-room-controls-player-hover-background: color-mix(in srgb, #15171a, $theme-accent-color 35%);
+$theme-room-controls-character-colorstrip-shadow: #ccc;
+$theme-room-controls-character-visiblefocus-outline: color-mix(in srgb, #ccc, $theme-accent-color 35%);
+$theme-room-controls-charactercontent-background: #080d0f;
+
+//#endregion
+
+//#region Space configuration
+
+$theme-spaceconfig-backgroundselect-filterdropdown-border: #43454a;
+$theme-spaceconfig-backgroundselect-filterdropdown-background: #232930;
+$theme-spaceconfig-backgroundselect-filterdropdown-text: #eee;
+$theme-spaceconfig-backgroundselect-filterdropdown-hover-background: color-mix(in srgb, #282d32, $theme-accent-color 35%);
+$theme-spaceconfig-backgroundselect-filterdropdown-focus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%);
+$theme-spaceconfig-backgroundselect-filterdropdown-contentborder: $theme-dialog-border;
+$theme-spaceconfig-backgroundselect-filterdropdown-contentbackground: $theme-dialog-background;
+
+$theme-spaceconfig-backgroundselect-list-background: $theme-inset-background;
+$theme-spaceconfig-backgroundselect-list-text: $theme-inset-text;
+
+$theme-spaceconfig-invites-permanentlink-background: #000;
+$theme-spaceconfig-invites-permanentlink-text: #eee;
+
+//#endregion
+
+//#region Space search
+
+$theme-tipsbox-normal-border: #666;
+$theme-tipsbox-normal-background: transparent;
+$theme-tipsbox-normal-text: inherit;
+$theme-tipsbox-hover-border: color-mix(in srgb, #ccc, $theme-accent-color 35%);
+$theme-tipsbox-icon-text: color-mix(in srgb, #fff, $theme-accent-color 65%);
+$theme-tipsbox-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%);
+
+$theme-spacesearch-gapcolor: $theme-separator;
+$theme-spacesearch-entry-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 35%);
+$theme-spacesearch-entry-spacefull-highlight: color-mix(in srgb, transparent, #b60000 40%);
+
+$theme-spacedetails-feature-norma-background: #000;
+$theme-spacedetails-description-background: $theme-chat-background;
+$theme-spacedetails-description-text: $theme-chat-text;
+
+//#endregion
+
+//#region Contacts
+
+$theme-profile-header-background: $theme-inset-background;
+$theme-profile-header-text: $theme-inset-text;
+
+$theme-profile-content-background: $theme-normal-background;
+$theme-profile-content-text: $theme-normal-text;
+
+$theme-profile-description-background: $theme-chat-background;
+$theme-profile-description-text: $theme-chat-text;
+$theme-profile-description-border: $theme-separator;
+
+$theme-profile-description-edit-background: $theme-input-focused-background;
+$theme-profile-description-edit-text: $theme-input-text;
+$theme-profile-description-edit-border: #850000;
+
+$theme-contacts-status-online: #080;
+$theme-contacts-status-offline: #666;
+
+//#endregion
+
+//#region Settings
+
+$theme-settings-fieldset-background: $theme-inset-background;
+$theme-settings-fieldset-text: $theme-inset-text;
+$theme-settings-fieldset-border: $theme-separator;
+$theme-settings-fieldset-legend-background: #111315;
+$theme-settings-fieldset-legend-text: #eee;
+
+// Used for highlighting "current connection" in security settings
+$theme-settings-table-row-highlight-background: color-mix(in srgb, #2d373d, $theme-accent-color 35%);
+
+//#endregion
+
+//#region Login & Registration
+
+$theme-auth-routerbox-background: $theme-inset-background;
+$theme-auth-routerbox-text: $theme-inset-text;
+
+$theme-auth-teaser-content: $theme-normal-background;
+$theme-auth-teaser-dot-inactive: #555;
+$theme-auth-teaser-dot-active: #349;
+$theme-auth-teaser-dot-hover: #e4e4e4;
+
+//#endregion
+
+//#region Editor
+
+$theme-editor-background: $theme-separator; // This is actually used as a separator between panes
+$theme-editor-pane-background: $theme-normal-background;
+$theme-editor-pane-text: $theme-normal-text;
+$theme-editor-error-text: #e33;
+
+$theme-editor-nestedlist-guide: #ffffffaa;
+$theme-editor-assets-button-background: #232930;
+
+$theme-editor-asset-layerentry-background: #232930;
+$theme-editor-asset-layerentry-text: #eee;
+$theme-editor-asset-layerentry-hover-background: color-mix(in srgb, #282d32, $theme-accent-color 35%);
+$theme-editor-asset-layerentry-selected-border: color-mix(in srgb, #fff, $theme-accent-color 65%);
+$theme-editor-asset-layerentry-selected-border-spacing: #333;
+$theme-editor-asset-imagepreview-background: $theme-normal-background;
+
+//#endregion

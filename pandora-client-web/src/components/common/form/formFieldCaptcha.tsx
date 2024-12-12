@@ -1,6 +1,7 @@
 import React, { Suspense, type ReactElement } from 'react';
-import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import { useObservable } from '../../../observable';
+import { useIsVeryNarrowScreen } from '../../../styles/mediaQueries';
+import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
 import { FormField, FormFieldError } from './form';
 
 const HCaptcha = React.lazy(() => import('@hcaptcha/react-hcaptcha'));
@@ -14,6 +15,7 @@ export function FormFieldCaptcha({
 }): ReactElement | null {
 	const directoryConnector = useDirectoryConnector();
 	const captchaSiteKey = useObservable(directoryConnector.directoryStatus).captchaSiteKey;
+	const isVeryNarrowScreen = useIsVeryNarrowScreen();
 
 	const clear = React.useCallback(() => {
 		setCaptchaToken('');
@@ -24,7 +26,7 @@ export function FormFieldCaptcha({
 	}
 
 	return (
-		<FormField>
+		<FormField className='captcha'>
 			<Suspense fallback={ (
 				<span>Loading captcha...</span>
 			) }>
@@ -35,6 +37,7 @@ export function FormFieldCaptcha({
 					onError={ clear }
 					reCaptchaCompat={ false }
 					theme='dark'
+					size={ isVeryNarrowScreen ? 'compact' : 'normal' }
 					sentry={ false }
 				/>
 				<FormFieldError error={ invalidCaptcha ? { type: 'invalidCaptcha', message: 'Invalid captcha' } : undefined } />

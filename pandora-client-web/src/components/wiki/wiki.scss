@@ -10,10 +10,11 @@
 	}
 
 	.wiki-content {
-		background-color: $grey-lighter;
+		background: $theme-textbox-background;
+		color: $theme-textbox-text;
 		user-select: text;
 		padding: 0.5em;
-		border: solid black 1px;
+		border: 1px solid $theme-separator;
 		flex: 1;
 
 		h3, h4 {

@@ -1,22 +1,34 @@
-@import 'constants';
+@import 'common';
 
 //#region Inputs
+
+input, textarea, select, select option {
+	font-family: inherit;
+	font-feature-settings: inherit;
+}
 
 input, textarea {
 	font-size: 1em;
 	padding: 0.5em;
-	border: 0.1em solid;
-	background-color: $grey-lighter;
+	border: 1px solid $theme-input-border;
+	background: $theme-input-normal-background;
+	color: $theme-input-text;
 
 	&:focus, &:active {
-		outline: 0.15em solid $black-secondary;
+		outline: max(0.2em, 2px) solid $theme-input-focused-outline;
+		background: $theme-input-focused-background;
 	}
 
 	&:read-only {
-		background-color: $grey-light;
+		background: $theme-input-readonly-background;
 		&:focus, &:active {
 			outline: 0 none;
 		}
+	}
+
+	&::placeholder {
+		color: $theme-input-placeholder-text;
+		opacity: 1; /* Firefox */
 	}
 }
 
@@ -27,14 +39,47 @@ input[type=color] {
 select {
 	font-size: 1em;
 	padding: 0.5em;
+	border: 1px solid $theme-input-border;
+	background: $theme-input-normal-background;
+	color: $theme-input-text;
+	overflow: hidden;
+	white-space: pre;
+	text-overflow: ellipsis;
+
+	&:focus-visible {
+		outline: max(0.2em, 2px) solid $theme-input-focused-outline;
+	}
+
+	&:disabled {
+		background: $theme-input-readonly-background;
+		&:focus, &:active {
+			outline: 0 none;
+		}
+	}
 }
 
-input[type='checkbox'] {
+input[type=checkbox] {
 	transform: scale(1.3);
-}
+	accent-color: $theme-checkbox-accent;
+	border-radius: 0.5em;
+	filter: $theme-checkbox-unchecked-filter;
 
-input[type=checkbox]:read-only {
-	filter: grayscale(100%);
+	&:checked {
+		filter: none;
+	}
+
+	&:focus-visible {
+		outline: max(0.2em, 2px) solid $theme-input-focused-outline;
+	}
+
+	&:disabled {
+		accent-color: $theme-checkbox-disabled-accent;
+		filter: $theme-checkbox-disabled-unchecked-filter;
+
+		&:checked {
+			filter: none;
+		}
+	}
 }
 
 //#endregion
@@ -47,7 +92,8 @@ button {
 	font-size: 1em;
 	transition:
 		all 150ms linear,
-		visibility 0ms;
+		visibility 0ms,
+		outline 0ms;
 
 	&:hover {
 		cursor: pointer;

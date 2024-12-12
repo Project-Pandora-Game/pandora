@@ -404,6 +404,7 @@ export function WardrobePoseGui({ character, characterState }: {
 				>
 					<SelectionIndicator
 						active
+						padding='tiny'
 						justify='center'
 						align='center'
 						className='requestedPoseIndicatorText'
@@ -457,6 +458,7 @@ function PoseButton({ preset, setPose, characterState }: {
 		<SelectionIndicator
 			selected={ requested }
 			active={ active }
+			padding='tiny'
 			className={ classNames(
 				'pose',
 				{

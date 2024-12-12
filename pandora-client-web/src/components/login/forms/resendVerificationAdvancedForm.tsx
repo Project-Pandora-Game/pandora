@@ -3,12 +3,10 @@ import React, { ReactElement, useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { FormInput } from '../../../common/userInteraction/input/formInput';
 import { useDirectoryResendVerificationAdvanced } from '../../../networking/account_manager';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
 import { Button } from '../../common/button/button';
-import { Row } from '../../common/container/container';
 import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
 import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha';
 
@@ -24,7 +22,8 @@ export function ResendVerificationAdvancedForm(): ReactElement {
 	const [errorMessage, setErrorMessage] = useState('');
 	const [captchaToken, setCaptchaToken] = useState('');
 	const [captchaFailed, setCaptchaFailed] = useState(false);
-	const [overrideEmail, setOverrideEmail] = useState(false);
+	// Always override the email. If the user got this far, it is most likely they don't know the email they used.
+	const overrideEmail = true;
 
 	const {
 		formState: { errors, submitCount, isSubmitting },
@@ -79,7 +78,7 @@ export function ResendVerificationAdvancedForm(): ReactElement {
 
 	return (
 		<Form className='ForgotPasswordForm' dirty={ submitCount > 0 } onSubmit={ onSubmit }>
-			<h1>Resend activation email</h1>
+			<h1>Reset registration email</h1>
 			<FormField>
 				<label htmlFor='forgot-activation-username'>Username</label>
 				<FormInput
@@ -108,7 +107,7 @@ export function ResendVerificationAdvancedForm(): ReactElement {
 				<FormFieldError error={ errors.password } />
 			</FormField>
 			<FormField>
-				<label htmlFor='forgot-activation-email'>Enter your email</label>
+				<label htmlFor='forgot-activation-email'>Enter new email</label>
 				<FormInput
 					type='email'
 					id='forgot-activation-email'
@@ -122,17 +121,6 @@ export function ResendVerificationAdvancedForm(): ReactElement {
 				/>
 				<FormFieldError error={ errors.email } />
 			</FormField>
-			<FormField>
-				<Row>
-					<Checkbox
-						id='forgot-activation-override-email'
-						checked={ overrideEmail }
-						onChange={ setOverrideEmail }
-					/>
-					<label htmlFor='forgot-activation-override-email'>Override email</label>
-				</Row>
-			</FormField>
-			<br />
 			<FormFieldCaptcha setCaptchaToken={ setCaptchaToken } invalidCaptcha={ captchaFailed } />
 			{ errorMessage && <FormErrorMessage>{ errorMessage }</FormErrorMessage> }
 			<Button type='submit' disabled={ isSubmitting }>

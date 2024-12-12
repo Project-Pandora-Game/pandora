@@ -38,7 +38,7 @@ function AccountProfileContent({ accountData }: { accountData: AccountPublicInfo
 	const isPlayer = useCurrentAccount()?.id === accountData.id;
 
 	return (
-		<Column className='profileView flex-1' padding='medium' overflowY='auto'>
+		<Column className='profileView flex-1' gap='none' overflowY='auto'>
 			<span className='profileHeader'>
 				Profile of user&nbsp;
 				<strong
@@ -49,9 +49,8 @@ function AccountProfileContent({ accountData }: { accountData: AccountPublicInfo
 				>
 					{ accountData.displayName }
 				</strong>
-				<hr />
 			</span>
-			<Scrollable className='flex-1' color='dark'>
+			<Scrollable className='flex-1'>
 				<Column className='profileContent' padding='medium'>
 					<span>
 						Titles:&nbsp;

@@ -1,4 +1,4 @@
-@import '../../../styles/utils';
+@import '../../../styles/common';
 
 .editor .editor-ui .editor-assetui {
 	gap: 0.3em;
@@ -21,7 +21,8 @@
 					flex: 1;
 					display: flex;
 					align-items: center;
-					background: #bbb;
+					background: $theme-editor-asset-layerentry-background;
+					color: $theme-editor-asset-layerentry-text;
 					min-width: 0;
 					padding: 0.4em;
 				}
@@ -31,13 +32,13 @@
 					position: relative;
 
 					&:hover {
-						background: #aaa;
+						background: $theme-editor-asset-layerentry-hover-background;
 					}
 				}
 
 				&.selected {
 					.layerName, .layerName:hover {
-						@include corner-border(2px, black, 0.5em, #999);
+						@include corner-border(2px, $theme-editor-asset-layerentry-selected-border, 0.5em, $theme-editor-asset-layerentry-selected-border-spacing);
 					}
 				}
 
@@ -55,7 +56,7 @@
 
 				&.preview img {
 					width: 100%;
-					background-color: var(--editor-background-color #1099bb);
+					background: $theme-editor-asset-imagepreview-background;
 				}
 			}
 		}

@@ -12,8 +12,7 @@ import { Select } from '../../../common/userInteraction/select/select';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/button/button';
 import { ColorInput } from '../../../components/common/colorInput/colorInput';
-import { Row } from '../../../components/common/container/container';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
+import { Column, Row } from '../../../components/common/container/container';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
@@ -45,7 +44,7 @@ export function LayerUI(): ReactElement {
 	Assert(asset === selectedLayer.asset);
 
 	return (
-		<Scrollbar color='lighter' className='editor-setupui slim' key={ `${asset.id}/${selectedLayer.index}:${selectedLayer.isMirror ? 'mirror' : ''}` }>
+		<div className='editor-setupui' key={ `${asset.id}/${selectedLayer.index}:${selectedLayer.isMirror ? 'mirror' : ''}` }>
 			<LayerName layer={ selectedLayer } />
 			<hr />
 			<ColorizationSetting layer={ selectedLayer } graphics={ asset } />
@@ -64,7 +63,7 @@ export function LayerUI(): ReactElement {
 			<LayerImageOverridesTextarea layer={ selectedLayer } asAlpha />
 			<hr />
 			<LayerScalingConfig layer={ selectedLayer } asset={ asset } />
-		</Scrollbar>
+		</div>
 	);
 }
 
@@ -692,7 +691,7 @@ function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset
 
 	return (
 		<>
-			<Row alignY='center'>
+			<Column alignX='stretch'>
 				<label htmlFor='layer-scaling-bone-select'>
 					Select an image based on the value of bone:
 					<ContextHelpButton>
@@ -732,7 +731,7 @@ function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset
 				>
 					{ elements }
 				</Select>
-			</Row>
+			</Column>
 			{
 				layerScaling && <LayerScalingList layer={ layer } asset={ asset } />
 			}

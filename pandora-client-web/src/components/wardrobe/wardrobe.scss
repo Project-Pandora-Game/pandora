@@ -1,5 +1,4 @@
 @import '../../styles/common';
-@import '../../styles/forms';
 
 $header-height: 2em;
 
@@ -12,8 +11,9 @@ $header-height: 2em;
 
 	.safemode {
 		@include center-flex;
-		background: $theme-warning;
-		border: solid black 1px;
+		background: $theme-warningbox-background;
+		color: $theme-warningbox-text;
+		border: 1px solid $theme-separator;
 		padding: 0.25em;
 	}
 
@@ -22,7 +22,6 @@ $header-height: 2em;
 		overflow: hidden;
 		display: flex;
 		flex-flow: row;
-		gap: 1em;
 
 		.characterPreview, .roomPreview {
 			position: relative;
@@ -57,15 +56,17 @@ $header-height: 2em;
 
 				.warning {
 					@include center-flex;
-					background: $theme-warning;
-					border: solid black 1px;
+					background: $theme-warningbox-background;
+					color: $theme-warningbox-text;
+					border: 1px solid $theme-separator;
 					border-radius: 1em;
 					padding: 0.25em 0.5em;
 				}
 
 				.option {
-					background: $grey-light;
-					border: solid black 1px;
+					background: $theme-normal-background;
+					color: $theme-normal-text;
+					border: 1px solid $theme-separator;
 					border-radius: 1em;
 					padding: 0.25em 0.5em;
 				}
@@ -77,9 +78,10 @@ $header-height: 2em;
 .wardrobe-pane {
 	display: flex;
 	flex: 1;
-	border: solid black 2px;
-	padding: 1em;
-	background-color: #aaaaaaaa;
+	border: 2px solid $theme-separator;
+	padding: 0.5em;
+	background: $theme-wardrobe-pane-background;
+	color: $theme-wardrobe-pane-text;
 	overflow: hidden;
 }
 
@@ -88,7 +90,7 @@ $header-height: 2em;
 	flex-flow: row;
 	position: relative;
 	width: 100%;
-	gap: 1em;
+	gap: 0.5em;
 }
 
 $drop-overlay-height: 1.8em;
@@ -98,7 +100,7 @@ $drop-overlay-gap: 0.3em;
 	overflow: hidden;
 
 	&.missing {
-		border: solid $black 1px;
+		border: 1px solid $theme-separator;
 		@include center-flex;
 	}
 
@@ -122,33 +124,28 @@ $drop-overlay-gap: 0.3em;
 	overflow: hidden;
 	min-width: min(20em, 90vw);
 
-	background-color: $grey-lighter;
-	border: solid $black 2px;
+	background: $theme-wardrobe-view-background;
+	color: $theme-wardrobe-view-text;
+	border: 2px solid $theme-separator;
 
 	.toolbar {
 		flex-shrink: 0;
 		min-height: 3.5em;
 		display: flex;
 		flex-direction: row;
-		flex-wrap: wrap;
 		padding: 0.25em 0.25em;
 		gap: 0.3em;
-		border-bottom: solid black 1px;
+		border-bottom: 1px solid $theme-separator;
+
+		&.wrap {
+			flex-wrap: wrap;
+		}
 
 		> span {
 			flex: 1;
 			display: flex;
 			align-items: center;
 			padding: 0.2em;
-		}
-
-		.modeButton {
-			border: solid $black 1px;
-			margin: 2px;
-
-			&.active {
-				background-color: $grey-mid;
-			}
 		}
 
 		.IconButton {
@@ -160,11 +157,17 @@ $drop-overlay-gap: 0.3em;
 			min-height: 3em;
 		}
 
-		input[type=text] {
-			padding: 0.2em;
-			height: 2em;
-			margin: auto;
-			width: 10vw;
+		.filter {
+			display: flex;
+			flex: 1;
+			max-width: 20em;
+			align-items: center;
+
+			input[type=text] {
+				padding: 0.2em;
+				height: 2em;
+				width: 100%;
+			}
 		}
 	}
 
@@ -180,7 +183,7 @@ $drop-overlay-gap: 0.3em;
 
 	.outfit {
 		width: 100%;
-		border: solid black 2px;
+		border: 2px solid $theme-separator;
 
 		.outfitMainButton {
 			width: 100%;
@@ -188,11 +191,12 @@ $drop-overlay-gap: 0.3em;
 			overflow: hidden;
 			display: flex;
 
-			border: solid black 1px;
-			background-color: $grey-lighter;
+			border: 1px solid $theme-wardrobe-outfitbutton-border;
+			background: $theme-wardrobe-outfitbutton-normal-background;
+			color: $theme-wardrobe-outfitbutton-text;
 
 			&:hover {
-				background-color: $grey-light;
+				background: $theme-wardrobe-outfitbutton-hover-background;
 			}
 
 			.outfitPreview {
@@ -201,7 +205,7 @@ $drop-overlay-gap: 0.3em;
 				width: 3.4em;
 				margin: 0.2em 0;
 				padding: 0;
-				border: solid black 1px;
+				border: 1px solid $theme-wardrobe-outfitbutton-preview-border;
 				overflow: hidden;
 				aspect-ratio: 2 / 3;
 
@@ -234,7 +238,7 @@ $drop-overlay-gap: 0.3em;
 		isolation: isolate;
 
 		z-index: 10;
-		background-color: #00000050;
+		background: $theme-wardrobe-view-overlay;
 
 		.centerButton {
 			width: max(10em, 50%);
@@ -292,13 +296,13 @@ $drop-overlay-gap: 0.3em;
 
 	.grid {
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 384px));
+		grid-template-columns: repeat(3, 1fr);
 		grid-template-rows: min-content auto;
 	}
 
 	@media (min-width: 1536px) {
 		.grid {
-			grid-template-columns: repeat(4, minmax(0, 384px));
+			grid-template-columns: repeat(4, 1fr);
 		}
 	}
 
@@ -308,42 +312,61 @@ $drop-overlay-gap: 0.3em;
 }
 
 .inventoryViewItem {
-	border: solid $black 1px;
-	background-color: $grey-lighter;
+	border: 1px solid $theme-wardrobe-actionbutton-border;
+	background: $theme-wardrobe-actionbutton-normal-background;
+	color: $theme-wardrobe-actionbutton-normal-text;
 	display: flex;
 	position: relative;
 
 	&.selected {
-		color: $white;
-		background-color: $grey-darker;
+		background: $theme-wardrobe-actionbutton-selected-background;
+		color: $theme-wardrobe-actionbutton-selected-text;
 	}
 
 	&.allowed:hover {
 		cursor: pointer;
-		background-color: $grey-light;
+		background: $theme-wardrobe-itementry-hover-background;
+		color: $theme-wardrobe-itementry-hover-text;
 
 		&.selected {
-			background-color: $black;
+			background: $theme-wardrobe-actionbutton-selectedhover-background;
+			color: $theme-wardrobe-actionbutton-selectedhover-text;
 		}
 	}
 
-	&:focus, &:active {
-		border-color: white;
+	&:focus-visible {
+		border-color: $theme-wardrobe-actionbutton-visiblefocus-border;
 	}
 
 	&.blocked {
-		background-color: #977;
+		background: $theme-wardrobe-actionbutton-blocked-background;
+		color: $theme-wardrobe-actionbutton-blocked-text;
 	}
 
 	&.pending {
-		background-color: #999;
+		background: $theme-wardrobe-actionbutton-pending-background;
+		color: $theme-wardrobe-actionbutton-pending-text;
 	}
 
 	>.colorRibbon {
 		position: absolute;
 		display: inline-block;
-		inset: 0;
-		clip-path: polygon(0 0, 0.75em 0, 0 0.75em);
+		top: 0;
+		left: 0;
+		width: 0.9em;
+		height: 0.9em;
+		clip-path: polygon(0 0, 100% 0, 0 100%);
+		background: $theme-wardrobe-itementry-ribbon-border;
+
+		.colorRibbonInner {
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 1px;
+			bottom: 1px;
+			clip-path: polygon(0 0, 100% 0, 0 100%);
+			box-shadow: $theme-wardrobe-itementry-ribbon-shadow;
+		}
 	}
 
 	&.listMode {
@@ -416,17 +439,18 @@ $drop-overlay-gap: 0.3em;
 		}
 	}
 
-	&::after {
+	&::after { // Used for displaying asset preferences
 		position: absolute;
 		right: 0.3em;
 		font-size: 1.5em;
 		line-height: 1em;
 		width: 1em;
 		height: 1em;
+		border-radius: 50%;
 		display: flex;
 		justify-content: center;
 		align-items: center;
-		text-shadow: 0 0 0.05em black, 0 0 0.05em black, 0 0 0.05em black, 0 0 0.05em black;
+		text-shadow: 0 0 0.05em $theme-wardrobe-assetpreferences-shadow, 0 0 0.05em $theme-wardrobe-assetpreferences-shadow, 0 0 0.05em $theme-wardrobe-assetpreferences-shadow, 0 0 0.05em $theme-wardrobe-assetpreferences-shadow;
 	}
 
 	&.pref-favorite {
@@ -436,7 +460,7 @@ $drop-overlay-gap: 0.3em;
 
 		&::after {
 			content: '★';
-			color: #fafa00;
+			color: $theme-wardrobe-favorite-color;
 		}
 	}
 
@@ -447,7 +471,7 @@ $drop-overlay-gap: 0.3em;
 
 		&::after {
 			content: '?';
-			color: #fa7d00;
+			color: $theme-wardrobe-maybe-color;
 		}
 	}
 
@@ -463,7 +487,7 @@ $drop-overlay-gap: 0.3em;
 
 		&::after {
 			content: '✕';
-			color: #fa0000;
+			color: $theme-wardrobe-prevent-color;
 		}
 	}
 
@@ -479,7 +503,8 @@ $drop-overlay-gap: 0.3em;
 
 		&::after {
 			content: '✕';
-			color: black;
+			color: $theme-wardrobe-doNotRender-color;
+			background: $theme-wardrobe-prevent-color;
 		}
 	}
 
@@ -508,8 +533,9 @@ $drop-overlay-gap: 0.3em;
 
 .wardrobeActionButton {
 	@include center-flex;
-	border: 1px solid black;
-	background-color: $grey-lighter;
+	border: 1px solid $theme-wardrobe-actionbutton-border;
+	background: $theme-wardrobe-actionbutton-normal-background;
+	color: $theme-wardrobe-actionbutton-normal-text;
 
 	&:not(.slim) {
 		min-height: 2.5em;
@@ -517,43 +543,49 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	&.selected {
-		color: $white;
-		background-color: $grey-darker;
+		background: $theme-wardrobe-actionbutton-selected-background;
+		color: $theme-wardrobe-actionbutton-selected-text;
 	}
 
 	&:disabled {
-		background-color: $grey-dark;
+		background: $theme-wardrobe-actionbutton-disabled-background;
+		color: $theme-wardrobe-actionbutton-disabled-text;
 
 		&.selected {
-			color: $white;
-			background-color: $grey-darker;
+			background: $theme-wardrobe-actionbutton-selected-background;
+			color: $theme-wardrobe-actionbutton-selected-text;
 		}
 	}
 
 	&.allowed:hover:not(:disabled) {
 		cursor: pointer;
-		background-color: $grey-mid;
+		background: $theme-wardrobe-actionbutton-hover-background;
+		color: $theme-wardrobe-actionbutton-hover-text;
 
 		&.selected {
-			background-color: $black;
+			background: $theme-wardrobe-actionbutton-selectedhover-background;
+			color: $theme-wardrobe-actionbutton-selectedhover-text;
 		}
 	}
 
-	&:focus, &:active {
-		border-color: white;
+	&:focus-visible {
+		border-color: $theme-wardrobe-actionbutton-visiblefocus-border;
 	}
 
 	&.blocked:not(.selected) {
 		cursor: default;
-		background-color: #977;
+		background: $theme-wardrobe-actionbutton-blocked-background;
+		color: $theme-wardrobe-actionbutton-blocked-text;
 	}
 
 	&.pending:not(.selected) {
-		background-color: #999;
+		background: $theme-wardrobe-actionbutton-pending-background;
+		color: $theme-wardrobe-actionbutton-pending-text;
 	}
 
 	&.promptRequired:not(.selected) {
-		background-color: #997;
+		background: $theme-wardrobe-actionbutton-promptRequired-background;
+		color: $theme-wardrobe-actionbutton-promptRequired-text;
 	}
 }
 
@@ -597,7 +629,7 @@ $drop-overlay-gap: 0.3em;
 		margin: 0.5em;
 
 		&, td {
-			border: solid 1px black;
+			border: 1px solid $theme-separator;
 			border-collapse: collapse;
 			padding: 0.25em;
 			text-align: center;
@@ -626,9 +658,10 @@ $drop-overlay-gap: 0.3em;
 }
 
 .action-warning, .attribute-description {
-	background: white;
+	background: $theme-hoverdialog-background;
+	color: $theme-hoverdialog-text;
+	border: 2px solid $theme-hoverdialog-border;
 	padding: 1em;
-	border: 2px solid black;
 	border-radius: 1em;
 	line-height: 1.5em;
 }
@@ -650,9 +683,9 @@ $drop-overlay-gap: 0.3em;
 		margin: auto 0;
 	}
 
-	span {
+	.error {
 		width: 100%;
-		color: $theme-error;
+		color: $theme-wardrobe-errormessage-text;
 		text-align: right;
 	}
 }
@@ -688,27 +721,34 @@ $drop-overlay-gap: 0.3em;
 
 .wardrobeItemCustomizationView {
 	.name {
-	    display: inline-block;
-		border: solid $black 1px;
+		display: inline-block;
 		font-size: 1em;
 		padding: 0.5em;
-		border: 0.1em solid;
-		background-color: $grey-light;
 		flex-grow: 1;
+
+		&:not(:is(input)) {
+			border: 1px solid $theme-wardrobe-itemname-border;
+			background: $theme-wardrobe-itemname-background;
+			color: $theme-wardrobe-itemname-text;
+		}
 	}
 
 	.description {
 		padding: 0.5em;
-		border: 1px solid $black;
-		font-family: Arial, Helvetica, sans-serif;
 		white-space: pre-wrap;
 		word-wrap: break-word;
 		word-break: break-word;
 		min-height: 12em;
+
+		&:not(:is(textarea)) {
+			border: 1px solid $theme-wardrobe-itemdescription-border;
+			background: $theme-wardrobe-itemdescription-background;
+			color: $theme-wardrobe-itemdescription-text;
+		}
 	}
 
 	.error {
-		color: $theme-error;
+		color: $theme-wardrobe-errormessage-text;
 	}
 
 	input {

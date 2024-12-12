@@ -466,7 +466,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 							query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem.selected',
 						},
 						{
-							query: '.inventoryView.itemEdit .toolbar .modeButton',
+							query: '.inventoryView.itemEdit .toolbar .Button',
 						},
 					],
 				},

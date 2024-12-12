@@ -1,6 +1,6 @@
 @import 'styles/typography';
 @import 'styles/forms';
-@import 'styles/utils';
+@import 'styles/common';
 
 * {
 	box-sizing: border-box;
@@ -9,25 +9,36 @@
 html, body {
 	height: 100%;
 	margin: 0;
-	background-color: $grey-lightest;
+	background: $theme-normal-background;
+	color: $theme-normal-text;
+}
+
+body {
+	--pandora-accent-color: #3daee9;
+	accent-color: var(--pandora-accent-color);
+
+	scrollbar-color: $theme-scrollbar-thumb $theme-scrollbar-track;
 }
 
 #pandora-root, #editor-root {
 	@include flex(column);
 	margin: 0;
 	height: 100%;
-	background-color: $grey-lighter;
+	background: $theme-normal-background;
+	color: $theme-normal-text;
 	user-select: none;
 }
 
 div.main-container {
 	position: relative;
-	background-color: $grey-light;
+	background: $theme-normal-background;
+	color: $theme-normal-text;
 	flex: 1;
 	overflow: hidden;
 
 	> .Toastify {
 		position: relative;
+		--toastify-font-family: $theme-font-family-variable;
 	}
 }
 
@@ -40,7 +51,6 @@ div.main-container {
 
 	& > * {
 		flex: 1;
-		padding: 1em;
 	}
 
 	& > footer {
@@ -49,13 +59,8 @@ div.main-container {
 		height: 1.5em;
 		padding: 0.2em;
 		font-style: italic;
-		background-color: $grey-mid;
+		background: $theme-footer-background;
+		color: $theme-footer-text;
 		user-select: text;
 	}
-}
-
-.centerbox {
-	@include center-flex;
-	min-width: 100%;
-	min-height: 100%;
 }

@@ -43,6 +43,22 @@ globalThis.ResizeObserver = jest.fn().mockImplementation(() => ({
 	disconnect: jest.fn(),
 }));
 
+// Polyfill matchMedia as JSDom doesn't support it
+Assert(typeof globalThis.matchMedia === 'undefined');
+Object.defineProperty(globalThis, 'matchMedia', {
+	writable: true,
+	value: jest.fn().mockImplementation((query: string): ReturnType<typeof globalThis.matchMedia> => ({
+		matches: false,
+		media: query,
+		onchange: null,
+		addListener: jest.fn(),
+		removeListener: jest.fn(),
+		addEventListener: jest.fn(),
+		removeEventListener: jest.fn(),
+		dispatchEvent: jest.fn(),
+	})),
+});
+
 // Logging setup
 SetConsoleOutput(LogLevel.FATAL);
 logConfig.onFatal.push(() => {

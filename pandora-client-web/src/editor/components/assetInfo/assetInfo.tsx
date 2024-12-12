@@ -8,7 +8,6 @@ import React, { ReactElement, useId, useMemo } from 'react';
 import { useGraphicsAsset } from '../../../assets/assetGraphicsCalculations';
 import { Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
 import { useEditor } from '../../editorContextProvider';
@@ -38,7 +37,7 @@ function AssetInfoUIImpl({ graphics }: { graphics: EditorAssetGraphics; }): Reac
 	const definition = asset.definition;
 
 	return (
-		<Scrollbar color='lighter' className='editor-setupui slim'>
+		<div className='editor-setupui'>
 			<h3>Asset: { StripAssetIdPrefix(asset.id) }</h3>
 			<Row alignY='center'>
 				<label htmlFor='id'>ID: </label>
@@ -59,7 +58,7 @@ function AssetInfoUIImpl({ graphics }: { graphics: EditorAssetGraphics; }): Reac
 			<Colorization colorization={ definition.colorization } />
 			<Effects effects={ definition.effects } />
 			<Modules modules={ definition.modules } />
-		</Scrollbar>
+		</div>
 	);
 }
 

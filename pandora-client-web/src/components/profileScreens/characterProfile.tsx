@@ -57,7 +57,7 @@ function CharacterProfileContent({ character, gameState }: { character: Characte
 						{ characterData.name }
 					</strong>
 				</span>
-				<Scrollable className='flex-1' color='dark'>
+				<Scrollable className='flex-1'>
 					<Column className='profileContent' padding='medium'>
 						<span>Character id: <span className='selectable-all'>{ characterData.id }</span></span>
 						<Row alignY='center'>

@@ -1,48 +1,5 @@
 @import '../../../styles/common';
 
-$scrollbar-colors: (
-	dark: (
-		thumb: $theme-scrollbar-dark-thumb,
-		hover: $theme-scrollbar-dark-hover,
-	),
-	lighter: (
-		thumb: $theme-scrollbar-lighter-thumb,
-		hover: $theme-scrollbar-lighter-hover,
-	),
-);
-
-.Scrollbar {
-	&::-webkit-scrollbar {
-		width: 0.5em;
-	}
-
-	&::-webkit-scrollbar-thumb {
-		border-radius: 0.5rem;
-	}
-
-	@each $color-name, $color-data in $scrollbar-colors {
-		&.#{$color-name} {
-			&::-webkit-scrollbar-thumb {
-				background: map-get($color-data, "thumb");
-			}
-
-			&::-webkit-scrollbar-thumb:hover {
-				background: map-get($color-data, "hover");
-			}
-		}
-	}
-
-	&.slim {
-		&::-webkit-scrollbar {
-			width: 0.3em;
-		}
-
-		&::-webkit-scrollbar-thumb {
-			border-radius: 0.3rem;
-		}
-	}
-}
-
 .scrollable-vertical {
 	overflow-x: hidden;
 	overflow-y: auto;

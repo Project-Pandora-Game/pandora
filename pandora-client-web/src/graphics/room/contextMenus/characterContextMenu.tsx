@@ -314,7 +314,7 @@ export function CharacterContextMenu({ character, position, onClose }: {
 	return (
 		<DialogInPortal>
 			<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
-				<Scrollable color='lighter'>
+				<Scrollable>
 					<Column>
 						<CharacterContextMenuContent character={ character } onClose={ onClose } />
 					</Column>

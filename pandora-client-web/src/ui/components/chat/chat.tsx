@@ -54,7 +54,6 @@ export function Chat(): ReactElement | null {
 			>
 				<Scrollable
 					ref={ messagesDiv }
-					color='dark'
 					className='fill'
 					tabIndex={ 1 }
 				>

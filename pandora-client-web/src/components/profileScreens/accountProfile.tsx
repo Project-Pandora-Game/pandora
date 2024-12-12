@@ -50,7 +50,7 @@ function AccountProfileContent({ accountData }: { accountData: AccountPublicInfo
 					{ accountData.displayName }
 				</strong>
 			</span>
-			<Scrollable className='flex-1' color='dark'>
+			<Scrollable className='flex-1'>
 				<Column className='profileContent' padding='medium'>
 					<span>
 						Titles:&nbsp;

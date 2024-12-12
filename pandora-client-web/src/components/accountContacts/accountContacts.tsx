@@ -66,7 +66,7 @@ function ClearIncoming() {
 function ShowAccountContacts({ type }: { type: IAccountContact['type']; }) {
 	const rel = useAccountContacts(type);
 	return (
-		<Scrollable color='dark'>
+		<Scrollable>
 			<table className='fill-x'>
 				<thead>
 					<tr>
@@ -181,7 +181,7 @@ function ShowFriends() {
 	}, [friends, status]);
 
 	return (
-		<Scrollable direction='vertical' color='lighter'>
+		<Scrollable direction='vertical'>
 			<table className='fill-x'>
 				<colgroup>
 					<col style={ { width: '1%' } } />

@@ -53,7 +53,7 @@ function InteractionBox({ className }: {
 			{
 				isPersonalSpace ? (
 					<Tab name='Personal space'>
-						<Scrollable color='dark' className='controls-container flex-1'>
+						<Scrollable className='controls-container flex-1'>
 							<PersonalSpaceControls />
 						</Scrollable>
 					</Tab>
@@ -65,7 +65,7 @@ function InteractionBox({ className }: {
 			{
 				!isPersonalSpace ? (
 					<Tab name='Room'>
-						<Scrollable color='dark' className='controls-container flex-1'>
+						<Scrollable className='controls-container flex-1'>
 							<RoomControls />
 						</Scrollable>
 					</Tab>

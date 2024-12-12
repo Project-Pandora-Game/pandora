@@ -8,7 +8,6 @@ import pandoraLogo from '../../assets/icons/pandora.svg';
 import { ModalDialog } from '../dialog/dialog';
 import './eula.scss';
 import { z } from 'zod';
-import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { EULA_LAST_UPDATED, EULA_VERSION, PrivacyPolicyContent } from './privacyPolicy';
 
 /**
@@ -67,9 +66,9 @@ function PolicyDialog({ hide }: {
 	return (
 		<ModalDialog contentOverflow='hidden'>
 			<Column className='fit'>
-				<Scrollbar color='dark' className='policyDetails flex-1'>
+				<div className='Scrollbar policyDetails flex-1'>
 					<PrivacyPolicyContent />
-				</Scrollbar>
+				</div>
 				<Row padding='medium' className='policyDetails-button' alignX='center'>
 					<Button onClick={ hide }>Close</Button>
 				</Row>

@@ -30,7 +30,6 @@ import { useAsyncEvent } from '../../../common/useEvent';
 import { useAccountContacts } from '../../../components/accountContacts/accountContactContext';
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
@@ -118,12 +117,12 @@ function TipsListDialog({ hide }: {
 
 	return (
 		<ModalDialog>
-			<Scrollbar color='dark' className='policyDetails'>
+			<div className='policyDetails'>
 				<h2>🛈 Full list of Pandora tips:</h2>
 				<ul>
 					{ TIPS.map((tip, index) => <li key={ index }>{ tip }</li>) }
 				</ul>
-			</Scrollbar>
+			</div>
 			<Row padding='medium' alignX='center'>
 				<Button onClick={ hide }>Close</Button>
 			</Row>

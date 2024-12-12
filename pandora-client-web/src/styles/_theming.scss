@@ -145,10 +145,8 @@ $theme-table-border: transparent;
 
 //#region Scrollbar
 
-$theme-scrollbar-dark-thumb: #151515;
-$theme-scrollbar-dark-hover: #000;
-$theme-scrollbar-lighter-thumb: #888;
-$theme-scrollbar-lighter-hover: #2e2e2e;
+$theme-scrollbar-track: #000;
+$theme-scrollbar-thumb: color-mix(in srgb, #888, $theme-accent-color 35%);
 
 //#endregion
 

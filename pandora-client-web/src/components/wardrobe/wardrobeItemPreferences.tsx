@@ -13,7 +13,7 @@ import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus';
 import { Select, type SelectProps } from '../../common/userInteraction/select/select';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { Column, Row } from '../common/container/container';
-import { Scrollable, Scrollbar } from '../common/scrollbar/scrollbar';
+import { Scrollable } from '../common/scrollbar/scrollbar';
 import { Tab, TabContainer } from '../common/tabs/tabs';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { WardrobeAssetList, useAssetPreference, useAssetPreferenceResolver, useAssetPreferences } from './views/wardrobeAssetView';
@@ -158,7 +158,7 @@ export function WardrobePreferencesAttributePicker({ title }: {
 				</div>
 			</div>
 			<div className='listContainer'>
-				<Scrollbar color='dark'>
+				<div className='Scrollbar'>
 					<div className='list'>
 						{
 							finalAttributes.map(([attribute, definition]) => (
@@ -170,7 +170,7 @@ export function WardrobePreferencesAttributePicker({ title }: {
 							))
 						}
 					</div>
-				</Scrollbar>
+				</div>
 			</div>
 		</div>
 	);
@@ -345,7 +345,7 @@ function WardrobePreferenceAssetConfiguration({ asset }: {
 				<InventoryAssetPreview asset={ asset } small={ false } />
 				<span className='flex-1'>{ asset.definition.name }</span>
 			</div>
-			<Scrollable color='dark'>
+			<Scrollable>
 				<Column padding='large'>
 					<label htmlFor={ `${idBase}-select` }>Item preference:</label>
 					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAssetPreference?.base ?? '' } noScrollChange>
@@ -473,7 +473,7 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 				<InventoryAttributePreview attribute={ attribute } />
 				<span className='flex-1'>{ definition.name }</span>
 			</div>
-			<Scrollable color='dark'>
+			<Scrollable>
 				<Column padding='large'>
 					<label htmlFor={ `${idBase}-select` }>Attribute preference:</label>
 					<Select id={ `${idBase}-select` } onChange={ onChange } value={ currentAttributePreference?.base ?? 'normal' } noScrollChange disabled={ !isConfigurable }>

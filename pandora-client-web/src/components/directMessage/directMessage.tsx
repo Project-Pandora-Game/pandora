@@ -81,7 +81,6 @@ function DirectMessageList(): ReactElement | null {
 		>
 			<Scrollable
 				ref={ ref }
-				color='dark'
 				className='fill'
 				tabIndex={ 1 }
 			>

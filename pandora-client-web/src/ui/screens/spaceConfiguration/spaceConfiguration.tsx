@@ -45,7 +45,6 @@ import { Button } from '../../../components/common/button/button';
 import { ColorInput } from '../../../components/common/colorInput/colorInput';
 import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator';
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs';
 import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
@@ -999,7 +998,7 @@ function BackgroundSelectDialog({ hide, current, select }: {
 						}
 					</div>
 				</div>
-				<Scrollbar className='backgrounds' color='lighter'>
+				<div className='backgrounds'>
 					{ backgroundsToShow
 						.map((b) => (
 							<a key={ b.id }
@@ -1023,7 +1022,7 @@ function BackgroundSelectDialog({ hide, current, select }: {
 								</SelectionIndicator>
 							</a>
 						)) }
-				</Scrollbar>
+				</div>
 				<Row className='footer' alignX='space-between'>
 					<Button onClick={ hide }>Cancel</Button>
 					<Button

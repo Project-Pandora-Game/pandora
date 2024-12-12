@@ -23,7 +23,6 @@ import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
 import { useIsNarrowScreen } from '../../../styles/mediaQueries';
 import { IconButton } from '../../common/button/button';
-import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { useWardrobeActionContext, useWardrobeExecuteChecked } from '../wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { ActionWarning, AttributeButton, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
@@ -172,7 +171,7 @@ export function WardrobeAssetList({ title, children, overlay, assets, container,
 						</div>
 					) : null
 				}
-				<Scrollbar color='dark'>
+				<div className='Scrollbar'>
 					<div className={ listMode ? 'list' : 'grid' }>
 						{
 							sortedAssets.map((a) => (
@@ -185,7 +184,7 @@ export function WardrobeAssetList({ title, children, overlay, assets, container,
 							))
 						}
 					</div>
-				</Scrollbar>
+				</div>
 			</div>
 		</div>
 	);

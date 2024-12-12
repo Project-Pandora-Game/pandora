@@ -15,7 +15,9 @@ html, body {
 
 body {
 	--pandora-accent-color: #3daee9;
-	accent-color: var(--pandora-accent-color)
+	accent-color: var(--pandora-accent-color);
+
+	scrollbar-color: $theme-scrollbar-thumb $theme-scrollbar-track;
 }
 
 #pandora-root, #editor-root {

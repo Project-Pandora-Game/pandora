@@ -37,6 +37,9 @@ select {
 	border: 1px solid $theme-input-border;
 	background: $theme-input-normal-background;
 	color: $theme-input-text;
+	overflow: hidden;
+	white-space: pre;
+	text-overflow: ellipsis;
 
 	&:focus-visible {
 		outline: max(0.2em, 2px) solid $theme-input-focused-outline;

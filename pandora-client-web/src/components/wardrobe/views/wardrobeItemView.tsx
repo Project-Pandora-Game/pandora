@@ -26,7 +26,6 @@ import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
 import { useObservable } from '../../../observable';
 import { Button } from '../../common/button/button';
-import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
 import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobeItemName';
 import { useWardrobeActionContext } from '../wardrobeActionContext';
@@ -136,7 +135,7 @@ export function InventoryItemView({
 			</div>
 			{
 				containerAccessCheck.valid ? (
-					<Scrollbar color='dark'>
+					<div className='Scrollbar'>
 						<div className='list reverse withDropButtons'>
 							{
 								heldItem.type !== 'nothing' ? (
@@ -176,7 +175,7 @@ export function InventoryItemView({
 								}
 							</div>
 						</div>
-					</Scrollbar>
+					</div>
 				) : (
 					<div className='flex-1 center-flex'>
 						<strong className='wardrobeProblemMessage'>You are not allowed to view the contents of this container.</strong>

@@ -14,7 +14,6 @@ import { useAssetManager } from '../../../assets/assetManager';
 import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { WardrobeItemConfigMenu } from '../../../components/wardrobe/itemDetail/_wardrobeItemDetail';
 import { InventoryAssetView } from '../../../components/wardrobe/views/wardrobeAssetView';
 import { InventoryItemView } from '../../../components/wardrobe/views/wardrobeItemView';
@@ -153,7 +152,7 @@ export function EditorWardrobeUI(): ReactElement {
 	), [assetManager]);
 
 	return (
-		<Scrollbar color='dark' className='editor-wardrobe slim'>
+		<div className='Scrollbar editor-wardrobe slim'>
 			<Column padding='medium'>
 				<div>
 					<label htmlFor='unlocked-toggle'>Character Safemode</label>
@@ -202,6 +201,6 @@ export function EditorWardrobeUI(): ReactElement {
 					</Row>
 				</FieldsetToggle>
 			</Column>
-		</Scrollbar>
+		</div>
 	);
 }

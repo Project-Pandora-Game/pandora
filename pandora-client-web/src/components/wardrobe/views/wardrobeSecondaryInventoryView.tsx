@@ -13,7 +13,6 @@ import { useNavigate } from 'react-router';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
 import { Button } from '../../common/button/button';
-import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { WardrobeItemName } from '../itemDetail/wardrobeItemName';
 import { useWardrobeActionContext } from '../wardrobeActionContext';
 import { InventoryAssetPreview, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents';
@@ -74,7 +73,7 @@ export function SecondaryInventoryView({ title, secondaryTarget, secondaryTarget
 					) : null
 				}
 			</div>
-			<Scrollbar color='dark'>
+			<div className='Scrollbar'>
 				<div className='list reverse withDropButtons'>
 					{
 						heldItem.type !== 'nothing' ? (
@@ -115,7 +114,7 @@ export function SecondaryInventoryView({ title, secondaryTarget, secondaryTarget
 						}
 					</div>
 				</div>
-			</Scrollbar>
+			</div>
 		</div>
 	);
 }

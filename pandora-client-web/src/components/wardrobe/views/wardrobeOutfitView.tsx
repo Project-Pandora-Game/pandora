@@ -35,7 +35,6 @@ import { useAccountSettings } from '../../../services/accountLogic/accountManage
 import { serviceManagerContext } from '../../../services/serviceProvider';
 import { Button, IconButton } from '../../common/button/button';
 import { Column, DivContainer, Row } from '../../common/container/container';
-import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { useConfirmDialog } from '../../dialog/dialog';
 import { ImportDialog } from '../../exportImport/importDialog';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
@@ -191,7 +190,7 @@ export function InventoryOutfitView({ targetContainer }: {
 				<div className='toolbar'>
 					<span className='center-flex'><strong>Temporary collection</strong></span>
 				</div>
-				<Scrollbar color='dark'>
+				<div className='Scrollbar'>
 					<Column className='flex-1' padding='small'>
 						<Row alignX='center' padding='medium'>
 							<strong>This collection is temporary and will be lost when the game is closed</strong>
@@ -204,7 +203,7 @@ export function InventoryOutfitView({ targetContainer }: {
 							targetContainer={ targetContainer }
 						/>
 					</Column>
-				</Scrollbar>
+				</div>
 			</div>
 		);
 	}
@@ -286,7 +285,7 @@ export function InventoryOutfitView({ targetContainer }: {
 				</Button>
 			</div>
 			<div className='listContainer outfitList'>
-				<Scrollbar color='dark'>
+				<div className='Scrollbar'>
 					<Column overflowY='hidden' padding='small'>
 						{
 							storedOutfits.map((outfit) => (
@@ -310,7 +309,7 @@ export function InventoryOutfitView({ targetContainer }: {
 							} }
 						/>
 					</Column>
-				</Scrollbar>
+				</div>
 			</div>
 		</div>
 	);

@@ -79,7 +79,12 @@
 	flex-flow: column;
 	gap: 0.3em;
 	padding: 0.5em;
-	overflow: auto;
+	overflow-x: hidden;
+	overflow-y: auto;
+
+	select {
+		min-width: 5em;
+	}
 
 	textarea {
 		height: unset;
@@ -88,6 +93,15 @@
 
 	.error {
 		color: $theme-editor-error-text;
+	}
+
+	.points-helper-input-table {
+		width: 100%;
+
+		input {
+			width: 5em;
+			flex: 1;
+		}
 	}
 
 	table.with-border {

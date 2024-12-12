@@ -267,6 +267,11 @@
 	border: 2px solid $theme-tipsbox-normal-border;
 	padding: 0.4em;
 
+	.icon {
+		display: inline;
+		color: $theme-tipsbox-icon-text;
+	}
+
 	&:hover {
 		cursor: pointer;
 		border: 2px solid $theme-tipsbox-hover-border;

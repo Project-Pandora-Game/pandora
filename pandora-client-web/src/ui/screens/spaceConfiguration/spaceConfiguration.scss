@@ -68,7 +68,7 @@
 
 		.header-filter {
 			display: grid;
-			grid-template-columns: auto 1fr;
+			grid-template-columns: minmax(40%, min-content) 1fr;
 			grid-template-rows: auto;
 			column-gap: 0.6em;
 			width: 100%;
@@ -116,12 +116,22 @@
 
 		.dropdown-button {
 			text-align: left;
-			background: $theme-spaceconfig-backgroundselect-filterdropdown-background;
-			color: $theme-spaceconfig-backgroundselect-filterdropdown-text;
 			padding: 0.5em;
-			border: solid;
 			width: 100%;
 			cursor: pointer;
+			border: 1px solid $theme-spaceconfig-backgroundselect-filterdropdown-border;
+			background: $theme-spaceconfig-backgroundselect-filterdropdown-background;
+			color: $theme-spaceconfig-backgroundselect-filterdropdown-text;
+
+			&:hover, &:active {
+				&:not(:disabled) {
+					background: $theme-spaceconfig-backgroundselect-filterdropdown-hover-background;
+				}
+			}
+
+			&:focus-visible {
+				outline: 0.25em solid $theme-spaceconfig-backgroundselect-filterdropdown-focus-outline;
+			}
 		}
 
 		.dropdown-content {
@@ -130,6 +140,7 @@
 			position: absolute;
 			max-height: 50vh;
 			overflow-y: auto;
+			border: 2px solid $theme-spaceconfig-backgroundselect-filterdropdown-contentborder;
 			background: $theme-spaceconfig-backgroundselect-filterdropdown-contentbackground;
 			box-shadow: 0.3em 0.3em 0.2em $themecolor-shadow;
 			padding: 0.8em 1em;
@@ -156,6 +167,11 @@
 		overflow-x: hidden;
 		overflow-y: scroll;
 		background: $theme-spaceconfig-backgroundselect-list-background;
+		color: $theme-spaceconfig-backgroundselect-list-text;
+
+		@media only screen and (max-width: 719px) {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
 
 		.details {
 			height: 10em;
@@ -163,11 +179,12 @@
 			.preview {
 				@include center-flex;
 				flex: 1;
-				overflow: hidden;
 
 				img {
 					max-width: 100%;
 					max-height: 100%;
+					width: unset;
+					height: unset;
 					object-fit: contain;
 					box-shadow: 0.3em 0.3em 0.2em $themecolor-shadow;
 				}
@@ -232,7 +249,7 @@
 	}
 
 	.invite {
-		font-family: $theme-font-family-invite;
+		font-family: $theme-font-family-monospace;
 		background: $theme-spaceconfig-invites-permanentlink-background;
 		color: $theme-spaceconfig-invites-permanentlink-text;
 		border-radius: 0.5em;

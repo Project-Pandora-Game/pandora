@@ -75,10 +75,13 @@ const consoleOutput: LogOutputDefinition = {
 			const log = [prefix.replace(LOG_NAMES[level], `%c${LOG_NAMES[level]}%c`), LOG_COLORS[level], '', ...message];
 			const c = console as Record<string, unknown>;
 			if (level <= LogLevel.ERROR && typeof c.error === 'function') {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 				c.error(...log);
 			} else if (level <= LogLevel.WARNING && typeof c.warn === 'function') {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 				c.warn(...log);
 			} else if (level >= LogLevel.DEBUG && typeof c.debug === 'function') {
+				// eslint-disable-next-line @typescript-eslint/no-unsafe-call
 				c.debug(...log);
 			} else {
 				console.info(...log);
@@ -258,6 +261,7 @@ export function AnyToString(data: unknown): string {
 			return data.stack ? `[${data.stack}\n]` : `[Error ${data.name}: ${data.message}]`;
 		}
 		if ('toString' in data) {
+			// eslint-disable-next-line @typescript-eslint/no-base-to-string
 			const customString = String(data);
 			if (customString !== '[object Object]') {
 				return customString;

@@ -1,9 +1,10 @@
 @import '../../styles/common';
 
 .attribute-description {
-	background: white;
 	padding: 1em;
-	border: 2px solid black;
+	background: $theme-hoverdialog-background;
+	color: $theme-hoverdialog-text;
+	border: 2px solid $theme-hoverdialog-border;
 	border-radius: 1em;
 	line-height: 1.5em;
 	text-align: center;
@@ -17,18 +18,28 @@
 
 .settings {
 	display: flex;
-	padding: 0.5em 0 0 0 !important;
-	overflow-y: hidden;
+	overflow: hidden;
+
+	.tab-content {
+		max-width: 100vw;
+	}
+
+	.settings-tab-wrapper {
+		width: 100%;
+		height: 100%;
+		overflow: auto;
+
+		border-top: 2px solid $theme-separator;
+	}
 
 	.settings-tab {
+		min-width: fit-content;
+		min-height: fit-content;
 		display: flex;
 		flex-flow: column;
 		align-items: center;
 
 		flex: 1;
-
-		border-top: 2px solid black;
-		overflow-y: auto;
 
 		.settings-tab-contents {
 			display: flex;
@@ -47,8 +58,9 @@
 				flex-direction: column;
 				gap: spacing('medium');
 				min-width: 30em;
-				background-color: white;
-				border: 1px solid black;
+				background: $theme-settings-fieldset-background;
+				color: $theme-settings-fieldset-text;
+				border: 1px solid $theme-settings-fieldset-border;
 				border-radius: 0.5em;
 				padding-bottom: 0.8em;
 
@@ -56,8 +68,9 @@
 					font-size: 1.2em;
 					font-weight: bold;
 					margin-bottom: 0.5em;
-					background-color: white;
-					border: 1px solid black;
+					background: $theme-settings-fieldset-legend-background;
+					color: $theme-settings-fieldset-legend-text;
+					border: 1px solid $theme-settings-fieldset-border;
 					border-radius: 0.5em;
 					padding: 0.2em;
 				}
@@ -92,6 +105,25 @@
 	}
 
 	tr.current-connection {
-		background-color: #f0f0f0;
+		background: $theme-settings-table-row-highlight-background;
+	}
+
+	.accentColorPresets {
+		.colorPreset {
+			width: 2em;
+			height: 2em;
+			outline-width: 0.25em;
+			border-radius: 50%;
+
+			button {
+				width: 100%;
+				height: 100%;
+				border-radius: 50%;
+				border-width: 2px;
+				// Intentionally not themed (black looks the best next to the other options)
+				background: #000;
+				color: #eee;
+			}
+		}
 	}
 }

@@ -2,6 +2,7 @@
 
 .eula {
 	@include center-flex;
+	padding: 0.5em;
 
 	.eula-header {
 		max-width: 30em;
@@ -17,14 +18,17 @@
 }
 
 .policyDetails {
-	max-width: 85vw;
-	max-height: 80vh;
 	padding: 0.5em;
 
 	overflow: auto;
 	overflow-x: hidden;
 
-	background-color: $grey-lighter;
+	background: $theme-textbox-background;
+	color: $theme-textbox-text;
 
 	user-select: text;
+
+	h2, h3, h4 {
+		margin-top: 1em;
+	}
 }

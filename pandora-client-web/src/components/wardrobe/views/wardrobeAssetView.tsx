@@ -21,8 +21,8 @@ import listIcon from '../../../assets/icons/list.svg';
 import { useCharacterDataOptional } from '../../../character/character';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
+import { useIsNarrowScreen } from '../../../styles/mediaQueries';
 import { IconButton } from '../../common/button/button';
-import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { useWardrobeActionContext, useWardrobeExecuteChecked } from '../wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { ActionWarning, AttributeButton, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
@@ -137,26 +137,20 @@ export function WardrobeAssetList({ title, children, overlay, assets, container,
 		<div className='inventoryView wardrobeAssetList'>
 			<div className='toolbar'>
 				<span>{ title }</span>
-				<TextInput ref={ filterInput }
-					placeholder='Filter by name'
-					value={ filter }
-					onChange={ setFilter }
-				/>
-				<IconButton
-					onClick={ () => setListMode(false) }
-					theme={ listMode ? 'default' : 'defaultActive' }
-					src={ gridIcon }
-					alt='Grid view mode'
-				/>
-				<IconButton
-					onClick={ () => setListMode(true) }
-					theme={ listMode ? 'defaultActive' : 'default' }
-					src={ listIcon }
-					alt='List view mode'
+				<div className='filter'>
+					<TextInput ref={ filterInput }
+						placeholder='Filter by name'
+						value={ filter }
+						onChange={ setFilter }
+					/>
+				</div>
+				<ListViewToggle
+					listMode={ listMode }
+					setListMode={ setListMode }
 				/>
 			</div>
 			{ attributesFilterOptions == null ? null : (
-				<div className='toolbar attributeFilter'>
+				<div className='toolbar wrap attributeFilter'>
 					{ attributesFilterOptions.map((a) => (
 						<AttributeButton
 							key={ a }
@@ -177,7 +171,7 @@ export function WardrobeAssetList({ title, children, overlay, assets, container,
 						</div>
 					) : null
 				}
-				<Scrollbar color='dark'>
+				<div className='Scrollbar'>
 					<div className={ listMode ? 'list' : 'grid' }>
 						{
 							sortedAssets.map((a) => (
@@ -190,9 +184,56 @@ export function WardrobeAssetList({ title, children, overlay, assets, container,
 							))
 						}
 					</div>
-				</Scrollbar>
+				</div>
 			</div>
 		</div>
+	);
+}
+
+function ListViewToggle({ listMode, setListMode }: {
+	listMode: boolean;
+	setListMode: (newValue: boolean) => void;
+}): ReactElement {
+	const isNarrowScreen = useIsNarrowScreen();
+
+	// On narrow screens only show the other button
+	if (isNarrowScreen) {
+		if (listMode) {
+			return (
+				<IconButton
+					onClick={ () => setListMode(false) }
+					theme='default'
+					src={ gridIcon }
+					alt='Grid view mode'
+				/>
+			);
+		} else {
+			return (
+				<IconButton
+					onClick={ () => setListMode(true) }
+					theme='default'
+					src={ listIcon }
+					alt='List view mode'
+				/>
+			);
+		}
+	}
+
+	return (
+		<>
+			<IconButton
+				onClick={ () => setListMode(false) }
+				theme={ listMode ? 'default' : 'defaultActive' }
+				src={ gridIcon }
+				alt='Grid view mode'
+			/>
+			<IconButton
+				onClick={ () => setListMode(true) }
+				theme={ listMode ? 'defaultActive' : 'default' }
+				src={ listIcon }
+				alt='List view mode'
+			/>
+		</>
 	);
 }
 

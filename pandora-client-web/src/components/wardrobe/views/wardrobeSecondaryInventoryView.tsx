@@ -13,10 +13,9 @@ import { useNavigate } from 'react-router';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
 import { Button } from '../../common/button/button';
-import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { WardrobeItemName } from '../itemDetail/wardrobeItemName';
 import { useWardrobeActionContext } from '../wardrobeActionContext';
-import { InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
+import { InventoryAssetPreview, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeContextExtraItemActionComponent, WardrobeHeldItem } from '../wardrobeTypes';
 import { InventoryItemViewDropArea } from './wardrobeItemView';
@@ -74,7 +73,7 @@ export function SecondaryInventoryView({ title, secondaryTarget, secondaryTarget
 					) : null
 				}
 			</div>
-			<Scrollbar color='dark'>
+			<div className='Scrollbar'>
 				<div className='list reverse withDropButtons'>
 					{
 						heldItem.type !== 'nothing' ? (
@@ -115,7 +114,7 @@ export function SecondaryInventoryView({ title, secondaryTarget, secondaryTarget
 						}
 					</div>
 				</div>
-			</Scrollbar>
+			</div>
 		</div>
 	);
 }
@@ -156,13 +155,7 @@ function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickA
 			} }
 		>
 			{
-				ribbonColor ?
-					<span
-						className='colorRibbon'
-						style={ {
-							backgroundColor: ribbonColor,
-						} }
-					/> : null
+				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
 			<span className='itemName'><WardrobeItemName item={ item } /></span>

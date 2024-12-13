@@ -80,10 +80,10 @@ export function RoomControls(): ReactElement | null {
 	return (
 		<Column padding='medium' className='controls'>
 			<Row padding='small'>
-				<Button className='inverseColor' onClick={ () => navigate('/wardrobe/room-inventory') } >
+				<Button onClick={ () => navigate('/wardrobe/room-inventory') } >
 					<img src={ storageIcon } />Room inventory
 				</Button>
-				<Button className='inverseColor' onClick={ () => navigate('/space/configuration') }>
+				<Button onClick={ () => navigate('/space/configuration') }>
 					<img src={ settingIcon } />Space configuration
 				</Button>
 			</Row>
@@ -147,7 +147,7 @@ export function PersonalSpaceControls(): ReactElement {
 				</ContextHelpButton>
 			</span>
 			<Row padding='small'>
-				<Button className='inverseColor' onClick={ () => navigate('/wardrobe/room-inventory') } >
+				<Button onClick={ () => navigate('/wardrobe/room-inventory') } >
 					<img src={ storageIcon } />Room inventory
 				</Button>
 			</Row>
@@ -211,7 +211,7 @@ function DeviceOverlaySelector(): ReactElement {
 	return (
 		<>
 			<Row padding='small' className='room-construction-mode'>
-				<Button onClick={ onRoomConstructionModeChange } className='inverseColor' disabled={ !isPlayerAdmin || !canUseHands }>
+				<Button onClick={ onRoomConstructionModeChange } disabled={ !isPlayerAdmin || !canUseHands }>
 					<img src={ toolsIcon } />&nbsp;{ roomConstructionMode ? 'Disable' : 'Enable' } room construction mode
 				</Button>
 				{

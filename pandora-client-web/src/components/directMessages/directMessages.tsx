@@ -74,7 +74,7 @@ function DirectMessagesInner(): ReactElement {
 		<div className='direct-messages'>
 			<Column className='direct-messages__list' gap='none'>
 				<TextInput value={ filter } onChange={ setFilter } placeholder='Filter' />
-				<Scrollable color='dark' tag='ul'>
+				<Scrollable tag='ul'>
 					{ filtered.map((c) => <DirectMessageInfo key={ c.id } chat={ c } selected={ c.id === selected } select={ select } />) }
 				</Scrollable>
 				<OpenConversation select={ select } />
@@ -246,10 +246,10 @@ function DirectMessageInfo({ chat, selected, select }: { chat: DirectMessageChat
 	}, [chat, select]);
 
 	return (
-		<li onClick={ show } className={ selected ? 'selected' : '' }>
+		<Button onClick={ show } theme={ selected ? 'defaultActive' : 'default' }>
 			{ displayName ?? '[Loading ...]' } ({ chat.id })
-			{ hasUnread && <span>!</span> }
-		</li>
+			{ hasUnread ? <span className='unreadIndicator'>!</span> : undefined }
+		</Button>
 	);
 }
 

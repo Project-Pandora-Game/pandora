@@ -74,7 +74,7 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 
 	return (
 		<div className={ classNames('context-menu', className) } ref={ finalRef }>
-			<Scrollable color='lighter'>
+			<Scrollable>
 				<Column>
 					{ children }
 				</Column>

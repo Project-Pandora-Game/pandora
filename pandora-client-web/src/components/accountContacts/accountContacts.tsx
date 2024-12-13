@@ -25,7 +25,7 @@ export function AccountContacts() {
 
 	return (
 		<div className='accountContacts'>
-			<UrlTabContainer>
+			<UrlTabContainer allowWrap>
 				<UrlTab name={ <AccountContactHeader type='friend' /> } urlChunk=''>
 					<ShowFriends />
 				</UrlTab>
@@ -66,7 +66,7 @@ function ClearIncoming() {
 function ShowAccountContacts({ type }: { type: IAccountContact['type']; }) {
 	const rel = useAccountContacts(type);
 	return (
-		<Scrollable color='dark'>
+		<Scrollable>
 			<table className='fill-x'>
 				<thead>
 					<tr>
@@ -181,8 +181,8 @@ function ShowFriends() {
 	}, [friends, status]);
 
 	return (
-		<Scrollable direction='vertical' color='lighter'>
-			<table>
+		<Scrollable direction='vertical'>
+			<table className='fill-x'>
 				<colgroup>
 					<col style={ { width: '1%' } } />
 					<col />

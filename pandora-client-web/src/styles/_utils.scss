@@ -37,7 +37,7 @@
 
 //#region Misc
 
-@mixin corner-border($thickness: 1px, $color: black, $width: 20px, $background: inherit) {
+@mixin corner-border($thickness: 1px, $color: black, $width: 0.5em, $background: inherit) {
 	border: $thickness solid transparent;
 	background:
 		conic-gradient(from 90deg  at top    $thickness left  $thickness, #0000 90deg, $color 0) 0    0,

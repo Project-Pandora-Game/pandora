@@ -307,7 +307,7 @@ function DeviceContextMenuCurrent({ device, position, onClose }: {
 	return (
 		<DialogInPortal>
 			<div className='context-menu' ref={ ref } onPointerDown={ (e) => e.stopPropagation() }>
-				<Scrollable color='lighter'>
+				<Scrollable>
 					<Column>
 						<WardrobeActionContextProvider player={ player }>
 							<button onClick={ () => {

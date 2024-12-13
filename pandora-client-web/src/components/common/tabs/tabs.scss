@@ -9,37 +9,44 @@ $header-height: 2em;
 	>.header {
 		display: flex;
 		width: 100%;
-		overflow: auto;
 		margin: 0;
-		padding: 0 0.5em;
+		padding: 0.25em 0.45em 0 0.45em;
 
 		.tab {
 			@include center-flex;
-			padding: 0.5em 1em;
+			padding: 0.25em 0.75em 0.5em 0.75em;
+			border: solid transparent;
+			border-width: 0.25em 0.25em 0 0.25em;
 			margin: 0 -0.2em;
 			z-index: 0;
 			flex: 1;
 
-			background-color: $white;
+			background: $theme-tablist-tab-normal-background;
+			color: $theme-tablist-tab-normal-text;
 			border-radius: 1.2em 1.2em 0em 0em;
 
-			color: $black;
 			cursor: pointer;
-			transition: background-color 0.2s ease-in-out;
+			transition: background-color 0.25s ease-in-out;
 
 			&.active {
-				background-color: $black;
-				color: $white;
+				background: $theme-tablist-tab-selected-background;
+				color: $theme-tablist-tab-selected-text;
 				z-index: 2;
-			}
 
-			&:focus, &:active {
-				filter: brightness(80%);
+				&:focus-visible {
+					border-color: $theme-tablist-tab-selected-visiblefocus-outline;
+					z-index: 1;
+				}
 			}
 
 			&:hover:not(.active) {
-				background-color: $grey-darker;
-				color: $white;
+				background: $theme-tablist-tab-hover-background;
+				color: $theme-tablist-tab-hover-text;
+				z-index: 1;
+			}
+
+			&:focus-visible:not(.active) {
+				border-color: $theme-tablist-tab-normal-visiblefocus-outline;
 				z-index: 1;
 			}
 
@@ -51,9 +58,7 @@ $header-height: 2em;
 			&.collapse {
 				flex: 0;
 				white-space: nowrap;
-				clip-path: none;
-				padding: 0.5em 0.5em;
-				margin: 0 -0.5em 0 0;
+				padding: 0.25em 0.5em 0.5em 0.5em;
 			}
 		}
 
@@ -62,17 +67,36 @@ $header-height: 2em;
 		}
 	}
 
+	&.tab-position-top {
+		>.header {
+			overflow-x: auto;
+		}
+	}
+
+	&.tab-position-top.allow-wrap {
+		>.header {
+			overflow-x: hidden;
+			flex-flow: row wrap-reverse;
+			justify-content: flex-end;
+			row-gap: max(2px, 0.1em);
+		}
+	}
+
 	&.tab-position-left {
 		flex-flow: row;
 
 		>.header {
+			overflow-y: auto;
 			flex-flow: column;
 			width: unset;
 			height: 100%;
-			padding: 0.5em 0;
+			padding: 0.35em 0 0.35em 0.25em;
 
 			.tab {
 				flex: unset;
+				padding: 0.25em 1em 0.25em 0.75em;
+				justify-content: flex-end;
+				border-width: 0.25em 0 0.25em 0.25em;
 				border-radius: 1.2em 0em 0em 1.2em;
 				margin: -0.1em 0;
 			}
@@ -81,10 +105,25 @@ $header-height: 2em;
 
 	>.tab-container-collapsed {
 		position: absolute;
-		background-color: $white;
+		background: $theme-tablist-tab-normal-background;
+		color: $theme-tablist-tab-normal-text;
 		top: 0;
 		right: 0;
-		padding: 0.5em;
+		padding: 0.25em;
+		border: solid transparent;
+		border-width: 0.25em;
+		border-radius: 0 0 0 0.75em;
 		z-index: 1;
+
+		&:hover {
+			background: $theme-tablist-tab-hover-background;
+			color: $theme-tablist-tab-hover-text;
+			z-index: 1;
+		}
+
+		&:focus-visible {
+			border-color: $theme-tablist-tab-normal-visiblefocus-outline;
+			z-index: 1;
+		}
 	}
 }

@@ -1,7 +1,7 @@
 @import '../../styles/common';
 
 .dialog {
-	background-color: $black-secondary;
+	background: $theme-dialog-overlay;
 	position: fixed;
 	inset: 0;
 	z-index: 10000;
@@ -15,12 +15,12 @@
 	.dialog-content {
 		max-width: calc(100% - 1em);
 		max-height: calc(100% - 1em);
-		overflow: auto;
 
 		padding: 1em;
-		border: 1px solid $black;
+		border: 1px solid $theme-dialog-border;
 		border-radius: 1em;
-		background-color: $grey-lightest;
+		background: $theme-dialog-background;
+		color: $theme-dialog-text;
 	}
 
 	&.top {
@@ -45,7 +45,7 @@
 	}
 
 	&.modal {
-		background-color: $black-secondary;
+		background: $theme-dialog-overlay;
 		pointer-events: auto;
 		z-index: 1000;
 	}
@@ -53,41 +53,51 @@
 
 .dialog-draggable {
 	z-index: 1000;
-	overflow: hidden;
+	// Do NOT hide overflow for the dialog itself - otherwise drag handles break
 	min-width: 8em;
 	min-height: 5em;
 
-	border: 1px solid $black;
+	border: 1px solid $theme-dialog-border;
 	border-radius: 1em;
-	background-color: $grey-lightest;
-	display: flex !important;
+	background: $theme-dialog-background;
+	color: $theme-dialog-text;
+	display: flex !important; // Overrides value from library
 	flex-flow: column;
 	isolation: isolate;
 
 	>header {
 		@include center-flex;
-		padding: 0.2em 0.2em 0.2em 1em;
-		background-color: $grey-light;
+		overflow: hidden;
+		padding: 0.1em 0.5em;
+		border-radius: 1em 1em 0 0; // Needs to match the dialog
+		background: $theme-dialog-header;
 		position: relative;
 		min-height: 1.5em;
 		gap: 1em;
 
+		.dialog-title {
+			padding: 0.25em 0.5em;
+		}
+
 		.dialog-close, .dialog-shade {
-			flex: 1;
-			max-width: 2em;
-			text-align: center;
+			@include center-flex;
+			width: 1.5em;
+			height: 1.5em;
 			cursor: pointer;
+			border-radius: 50%;
 		}
 
 		.dialog-close {
 			&:hover {
-				color: red;
+				background: $theme-dialog-button-close-hover-background;
+				color: $theme-dialog-button-hover-text;
 			}
 		}
 
 		.dialog-shade {
 			&:hover {
-				color: white;
+				background: $theme-dialog-button-shade-hover-background;
+				color: $theme-dialog-button-hover-text;
 			}
 		}
 	}
@@ -110,6 +120,7 @@
 	}
 
 	&.shaded {
+		// Override manual sizing to allow dialog to shrink
 		height: auto !important;
 		min-height: unset !important;
 
@@ -122,5 +133,3 @@
 .dialog-confirm {
 	max-width: min(95vw, 50em);
 }
-
-

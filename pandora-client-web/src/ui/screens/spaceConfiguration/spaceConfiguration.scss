@@ -9,7 +9,8 @@
 	}
 
 	.spaceConfigurationScreen-tab {
-		border-top: 2px solid black;
+		border-top: 2px solid $theme-separator;
+		padding: 0.5em;
 	}
 
 	.input-container {
@@ -42,7 +43,7 @@
 
 	.error {
 		@extend .message;
-		color: $theme-error;
+		color: $themecolor-error;
 		font-weight: 600;
 	}
 
@@ -67,7 +68,7 @@
 
 		.header-filter {
 			display: grid;
-			grid-template-columns: auto 1fr;
+			grid-template-columns: minmax(40%, min-content) 1fr;
 			grid-template-rows: auto;
 			column-gap: 0.6em;
 			width: 100%;
@@ -96,10 +97,10 @@
 			gap: 0.5em;
 			width: 100%;
 			background-image: url('../../../icons/magnifier.svg');
-			background-size: 20px;
-			background-position: 7px 7px;
+			background-size: 1.5em;
+			background-position: 0.5em 0.5em;
 			background-repeat: no-repeat;
-			padding-left: 34px;
+			padding: 0.5em 0.5em 0.5em 2.5em;
 
 			ul {
 				margin-top: 0;
@@ -114,13 +115,23 @@
 		}
 
 		.dropdown-button {
-			background-color: $grey-lighter;
 			text-align: left;
-			color: $grey-dark;
 			padding: 0.5em;
-			border: solid;
 			width: 100%;
 			cursor: pointer;
+			border: 1px solid $theme-spaceconfig-backgroundselect-filterdropdown-border;
+			background: $theme-spaceconfig-backgroundselect-filterdropdown-background;
+			color: $theme-spaceconfig-backgroundselect-filterdropdown-text;
+
+			&:hover, &:active {
+				&:not(:disabled) {
+					background: $theme-spaceconfig-backgroundselect-filterdropdown-hover-background;
+				}
+			}
+
+			&:focus-visible {
+				outline: 0.25em solid $theme-spaceconfig-backgroundselect-filterdropdown-focus-outline;
+			}
 		}
 
 		.dropdown-content {
@@ -129,8 +140,9 @@
 			position: absolute;
 			max-height: 50vh;
 			overflow-y: auto;
-			background-color: $grey-lighter;
-			box-shadow: 0.3em 0.3em 0.2em $drop-shadow;
+			border: 2px solid $theme-spaceconfig-backgroundselect-filterdropdown-contentborder;
+			background: $theme-spaceconfig-backgroundselect-filterdropdown-contentbackground;
+			box-shadow: 0.3em 0.3em 0.2em $themecolor-shadow;
 			padding: 0.8em 1em;
 			z-index: 1;
 
@@ -154,7 +166,12 @@
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 		overflow-x: hidden;
 		overflow-y: scroll;
-		background-color: $grey-lighter;
+		background: $theme-spaceconfig-backgroundselect-list-background;
+		color: $theme-spaceconfig-backgroundselect-list-text;
+
+		@media only screen and (max-width: 719px) {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
 
 		.details {
 			height: 10em;
@@ -162,13 +179,14 @@
 			.preview {
 				@include center-flex;
 				flex: 1;
-				overflow: hidden;
 
 				img {
 					max-width: 100%;
 					max-height: 100%;
+					width: unset;
+					height: unset;
 					object-fit: contain;
-					box-shadow: 0.3em 0.3em 0.2em $drop-shadow;
+					box-shadow: 0.3em 0.3em 0.2em $themecolor-shadow;
 				}
 			}
 
@@ -185,13 +203,13 @@
 	.footer {
 		max-width: 100%;
 	}
-
 }
 
 .backgroundInfo {
 	img {
-		max-width: 46em;
-		max-height: 46em;
+		max-width: min(24em, 33vw);
+		max-height: min(24em, 50vh);
+		object-fit: scale-down;
 	}
 }
 
@@ -200,14 +218,14 @@
 	grid-template-columns: 1fr 2em 1fr;
 	height: 2.1em;
 
-	input[type='checkbox'] {
+	input[type=checkbox] {
 		margin: auto 0;
 	}
 }
 
 .spaceInvitesTable {
 	&, tr, td, th {
-		border: solid black 1px;
+		border: 1px solid $theme-separator;
 		border-collapse: collapse;
 	}
 
@@ -222,20 +240,20 @@
 
 .permanentInvite {
 	display: block;
-	padding: 10px;
+	padding: 0.5em;
 
 	.text {
 		display: block;
 		user-select: none;
-		margin-bottom: 5px;
+		margin-bottom: 0.25em;
 	}
 
 	.invite {
-		font-family: 'Courier New', Courier, monospace;
-		background-color: #ccc;
-		border-radius: 5px;
-		border: 1px solid #ddd;
-		padding: 5px;
+		font-family: $theme-font-family-monospace;
+		background: $theme-spaceconfig-invites-permanentlink-background;
+		color: $theme-spaceconfig-invites-permanentlink-text;
+		border-radius: 0.5em;
+		padding: 0.5em 0.75em;
 		display: block;
 		user-select: all;
 		cursor: pointer;

@@ -39,7 +39,7 @@ function CharacterProfileContent({ character, gameState }: { character: Characte
 	const pronouns = PRONOUNS[characterData.settings.pronoun];
 
 	return (
-		<Row className='profileView flex-1' padding='medium' gap='large' overflowY='hidden'>
+		<Row className='profileView flex-1' gap='none' overflowY='hidden'>
 			{
 				characterState != null && !isNarrowScreen ? (
 					<CharacterPreview character={ character } characterState={ characterState } />
@@ -56,9 +56,8 @@ function CharacterProfileContent({ character, gameState }: { character: Characte
 					>
 						{ characterData.name }
 					</strong>
-					<hr />
 				</span>
-				<Scrollable className='flex-1' color='dark'>
+				<Scrollable className='flex-1'>
 					<Column className='profileContent' padding='medium'>
 						<span>Character id: <span className='selectable-all'>{ characterData.id }</span></span>
 						<Row alignY='center'>

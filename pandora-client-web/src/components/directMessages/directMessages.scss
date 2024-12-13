@@ -1,14 +1,16 @@
-@import '../../styles/constants';
+@import '../../styles/common';
 
 .direct-messages {
 	display: flex;
 	flex-flow: row;
-	gap: 0.3em;
+	background: $theme-dms-base-background;
 	height: 100%;
+	width: 100vw;
 
 	&__list {
-		width: 10em;
-		background-color: $grey-darker;
+		width: min(11em, 25vw);
+		background: $theme-dms-list-background;
+		border-right: max(2px, 0.1em) solid $theme-separator;
 		position: relative;
 
 		input {
@@ -17,48 +19,54 @@
 
 		ul {
 			margin: 0;
-			padding: 0.5em;
+			padding: 0.65em;
 			list-style-type: none;
 			flex: 1;
 		}
 
-		li {
+		ul > button {
+			width: 100%;
 			position: relative;
-			color: $white;
-			border: 1px solid $grey-mid;
 			border-radius: 0.3em;
-			padding: 0.5em;
+			padding: 0.5em min(1em, 10%);
 			margin-bottom: 0.5em;
-
-			span {
-				position: absolute;
-				color: red;
-				right: 0.3em;
-				font-weight: bold;
-			}
-
-			&.selected {
-				background-color: $grey-mid;
-			}
+			word-break: break-word;
 
 			&.temp {
-				background-color: $grey-mid;
 				font-style: italic;
+			}
+
+			.unreadIndicator {
+				@include center-flex;
+				position: absolute;
+				border-radius: 50%;
+				top: calc(50% - 0.7em);
+				right: -0.6em;
+				aspect-ratio: 1;
+				min-height: unset;
+				min-width: unset;
+				width: 1.4em;
+				height: 1.4em;
+				font-size: 0.8em;
+				font-weight: bold;
+				background: $theme-dms-list-item-unread-indicator-background;
+				color: $theme-dms-list-item-unread-indicator-text;
 			}
 		}
 	}
 
-	>.direct-message {
+	>.direct-message, >.chatArea {
 		flex: 1;
 
 		.error {
-			color: red;
+			color: $theme-dms-chat-error;
 			font-weight: bold;
 			text-align: center;
 			margin: auto;
 		}
 
 		.loading {
+			color: $theme-dms-chat-loading;
 			font-weight: bold;
 			text-align: center;
 			margin: auto;
@@ -68,10 +76,11 @@
 	>.direct-message-crypto-dialog {
 		flex: 1;
 		height: 100%;
-		background-color: $grey-darker;
+		background: $theme-dms-crypto-dialog-base-background;
 
 		.dialog-content {
-			background-color: $grey-light;
+			background: $theme-dms-crypto-dialog-background;
+			color: $theme-dms-crypto-dialog-text;
 			border-radius: 0.5em;
 
 			hr {

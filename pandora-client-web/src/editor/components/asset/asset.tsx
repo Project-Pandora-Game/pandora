@@ -7,7 +7,6 @@ import { useLayerHasAlphaMasks, useLayerName } from '../../../assets/assetGraphi
 import { useEvent } from '../../../common/useEvent';
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { StripAssetIdPrefix } from '../../../graphics/utility';
 import { useObservable } from '../../../observable';
@@ -32,7 +31,7 @@ export function AssetUI() {
 	}
 
 	return (
-		<Scrollbar color='lighter' className='editor-setupui editor-assetui slim'>
+		<div className='editor-setupui editor-assetui'>
 			<h3>
 				Editing: { StripAssetIdPrefix(selectedAsset.id) }
 				<ContextHelpButton>
@@ -124,7 +123,7 @@ export function AssetUI() {
 				</span>
 			</label>
 			<AssetImageList asset={ selectedAsset } />
-		</Scrollbar>
+		</div>
 	);
 }
 

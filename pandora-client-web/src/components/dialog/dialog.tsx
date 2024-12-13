@@ -95,7 +95,7 @@ export function DialogInPortal({ children, priority, location = 'global' }: {
 	);
 }
 
-export function ModalDialog({ children, priority, position = 'center', id, className, allowClickBubbling = false }: CommonProps & {
+export function ModalDialog({ children, priority, position = 'center', contentOverflow = 'auto', id, className, allowClickBubbling = false }: CommonProps & {
 	/**
 	 * Priority of this dialog for ordering the dialogs on screen.
 	 * Higher priority dialogs cover lower priority dialogs.
@@ -103,6 +103,11 @@ export function ModalDialog({ children, priority, position = 'center', id, class
 	 */
 	priority?: number;
 	position?: 'center' | 'top';
+	/**
+	 * What overflow style should be used for the dialog content
+	 * @default 'auto'
+	 */
+	contentOverflow?: 'auto' | 'hidden';
 	/**
 	 * Whether to allow click events to bubble through to the parent or not.
 	 * @default false
@@ -120,7 +125,7 @@ export function ModalDialog({ children, priority, position = 'center', id, class
 	return (
 		<DialogInPortal priority={ priority }>
 			<div id={ id } className={ classNames('dialog', position, className) } onClick={ clickSink } onPointerDown={ clickSink } onPointerUp={ clickSink }>
-				<div className='dialog-content'>
+				<div className={ classNames('dialog-content', `overflow-${contentOverflow}`) } >
 					{ children }
 				</div>
 			</div>
@@ -193,14 +198,20 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 						width: 'auto',
 						height: 'auto',
 					} }
+					resizeHandleStyles={ {
+						bottomLeft: { zIndex: 2 },
+						bottomRight: { zIndex: 2 },
+						topLeft: { zIndex: 2 },
+						topRight: { zIndex: 2 },
+					} }
 					bounds='parent'
 					maxHeight={ initialPosition ? (window.innerHeight - initialPosition.y - 10) : 'calc(95vh - 2em)' }
 					maxWidth={ initialPosition ? (window.innerWidth - initialPosition.x - 20) : 'calc(95vw - 2em)' }
 				>
 					<header className='dialog-header'>
-						<div className='drag-handle'>
+						<span className='drag-handle dialog-title'>
 							{ title }
-						</div>
+						</span>
 						{
 							allowShade ? (
 								<div className='dialog-shade' title='Shade this dialog' onClick={ toggleShade }>

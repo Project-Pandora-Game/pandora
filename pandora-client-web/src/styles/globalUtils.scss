@@ -67,6 +67,11 @@
 	height: 100%;
 }
 
+.fit {
+	max-width: 100%;
+	max-height: 100%;
+}
+
 .margin-none {
 	margin: 0;
 }
@@ -162,10 +167,9 @@
 	pointer-events: auto;
 }
 
-.warning-box {
+.warning-box, .error-box {
 	@include center-flex;
-	background: $theme-warning;
-	border: solid black 1px;
+	border: $theme-separator solid 1px;
 	border-radius: 1em;
 	padding: 0.25em 0.5em;
 	margin: 0.25em;
@@ -173,6 +177,16 @@
 	p {
 		margin: 0.25em 0;
 	}
+}
+
+.warning-box {
+	background: $theme-warningbox-background;
+	color: $theme-warningbox-text;
+}
+
+.error-box {
+	background: $theme-errorbox-background;
+	color: $theme-errorbox-text;
 }
 
 //#endregion

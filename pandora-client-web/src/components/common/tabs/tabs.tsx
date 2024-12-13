@@ -21,7 +21,7 @@ export interface TabConfig {
 	tabClassName?: string;
 }
 
-export function Tabulation({ children, className, collapsable, tabsPosition, tabs }: {
+export function Tabulation({ children, className, collapsable, tabsPosition = 'top', allowWrap = false, tabs }: {
 	children: ReactNode;
 	className?: string;
 	collapsable?: true;
@@ -31,17 +31,24 @@ export function Tabulation({ children, className, collapsable, tabsPosition, tab
 	 * @default 'top'
 	 */
 	tabsPosition?: 'top' | 'left';
+	/**
+	 * Whether the tabs should wrap to a new line if there is not enough space.
+	 * @default false
+	 */
+	allowWrap?: boolean;
 }): ReactElement {
 	const [collapsed, setCollapsed] = useState(false);
 
 	return (
-		<div className={ classNames('tab-container', `tab-position-${tabsPosition}`, className) }>
-			<ul className={ classNames('header', { collapsed }) }>
+		<div className={ classNames('tab-container', `tab-position-${tabsPosition}`, allowWrap ? 'allow-wrap' : null, className) }>
+			<ul className={ classNames('header', { collapsed }) } role='tablist' aria-orientation={ tabsPosition === 'left' ? 'vertical' : 'horizontal' }>
 				{
 					tabs.map((tab, index) => (tab &&
 						<button key={ index }
 							className={ classNames('tab', { active: tab.active }, tab.tabClassName) }
 							onClick={ tab.onClick }
+							role='tab'
+							aria-selected={ tab.active }
 						>
 							{ tab.name }
 						</button>
@@ -49,16 +56,16 @@ export function Tabulation({ children, className, collapsable, tabsPosition, tab
 				}
 				{
 					collapsable && (
-						<li className='tab collapse' onClick={ () => setCollapsed(true) }>
+						<button className='tab collapse' onClick={ () => setCollapsed(true) } title='Hide tabs'>
 							▲
-						</li>
+						</button>
 					)
 				}
 			</ul>
 			{ !collapsed ? null : (
-				<div className='tab-container-collapsed' onClick={ () => setCollapsed(false) }>
+				<button className='tab-container-collapsed' onClick={ () => setCollapsed(false) } title='Reveal hidden tabs'>
 					▼
-				</div>
+				</button>
 			) }
 			{ children }
 		</div>
@@ -70,6 +77,7 @@ export function TabContainer({
 	className,
 	collapsable,
 	tabsPosition = 'top',
+	allowWrap,
 	onTabOpen,
 }: {
 	children: (ReactElement<TabProps> | undefined | null)[];
@@ -80,6 +88,11 @@ export function TabContainer({
 	 * @default 'top'
 	 */
 	tabsPosition?: 'top' | 'left';
+	/**
+	 * Whether the tabs should wrap to a new line if there is not enough space.
+	 * @default false
+	 */
+	allowWrap?: boolean;
 	onTabOpen?: (tab: Immutable<TabConfig>) => (void | (() => void));
 }): ReactElement {
 
@@ -105,7 +118,7 @@ export function TabContainer({
 	}, [currentTab, onTabOpen, tabs]);
 
 	return (
-		<Tabulation tabs={ tabs } className={ className } collapsable={ collapsable } tabsPosition={ tabsPosition }>
+		<Tabulation tabs={ tabs } className={ className } collapsable={ collapsable } tabsPosition={ tabsPosition } allowWrap={ allowWrap }>
 			<React.Fragment key={ currentTab }>
 				{ currentTab < children.length ? children[currentTab] : null }
 			</React.Fragment>
@@ -130,6 +143,8 @@ export function UrlTabContainer({
 	className,
 	collapsable,
 	tabsPosition = 'top',
+	allowWrap,
+	noImplicitDefaultTab = false,
 }: {
 	children: (ReactElement<UrlTabProps> | undefined | null)[];
 	className?: string;
@@ -139,6 +154,17 @@ export function UrlTabContainer({
 	 * @default 'top'
 	 */
 	tabsPosition?: 'top' | 'left';
+	/**
+	 * Whether the tabs should wrap to a new line if there is not enough space.
+	 * @default false
+	 */
+	allowWrap?: boolean;
+	/**
+	 * Disables the first tab being implicit default.
+	 * This means, that if no tab is explicitly marked as `default`, no tab will be initially selected.
+	 * @default false
+	 */
+	noImplicitDefaultTab?: boolean;
 }): ReactElement {
 	const routerPath = useResolvedPath('').pathname;
 	const { pathname } = useLocation();
@@ -146,8 +172,8 @@ export function UrlTabContainer({
 
 	const defaultTabPath = useMemo(() => {
 		const defaultTab = children.find((c) => c && c.props.default);
-		return (defaultTab ?? children.find((c) => !!c))?.props.urlChunk ?? '';
-	}, [children]);
+		return (defaultTab ?? (noImplicitDefaultTab ? undefined : children.find((c) => !!c)))?.props.urlChunk ?? '';
+	}, [children, noImplicitDefaultTab]);
 
 	const tabs = useMemo<(TabConfig | undefined)[]>(() => children.map((c): TabConfig | undefined => (c == null ? undefined : {
 		name: c.props.name,
@@ -157,7 +183,7 @@ export function UrlTabContainer({
 	})), [children, navigate, routerPath, pathname]);
 
 	return (
-		<Tabulation tabs={ tabs } className={ className } collapsable={ collapsable } tabsPosition={ tabsPosition }>
+		<Tabulation tabs={ tabs } className={ className } collapsable={ collapsable } tabsPosition={ tabsPosition } allowWrap={ allowWrap }>
 			<Routes>
 				{
 					children.map((tab, index) => (tab && tab.props.urlChunk != null && (

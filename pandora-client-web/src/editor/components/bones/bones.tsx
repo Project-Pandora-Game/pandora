@@ -5,7 +5,6 @@ import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { ExternalLink } from '../../../components/common/link/externalLink';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ModalDialog } from '../../../components/dialog/dialog';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardrobeExpressionsView';
@@ -35,7 +34,7 @@ export function BoneUI(): ReactElement {
 	}, [character]);
 
 	return (
-		<Scrollbar color='lighter' className='bone-ui slim'>
+		<div className='bone-ui'>
 			<div>
 				<label htmlFor='show-bones-toggle'>Show bone points</label>
 				<Checkbox
@@ -112,7 +111,7 @@ export function BoneUI(): ReactElement {
 					.filter((bone) => bone.type === 'body')
 					.map((bone) => <BoneRowElement key={ bone.name } definition={ bone } characterState={ characterState } onChange={ (value) => character.getAppearance().setPose(bone.name, value) } />)
 			}
-		</Scrollbar>
+		</div>
 	);
 }
 

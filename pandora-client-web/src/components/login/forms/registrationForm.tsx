@@ -117,6 +117,7 @@ export function RegistrationForm(): ReactElement {
 					type='text'
 					id='registration-username'
 					autoComplete='username'
+					placeholder='mona'
 					register={ register }
 					name='username'
 					options={ {
@@ -132,6 +133,7 @@ export function RegistrationForm(): ReactElement {
 					type='text'
 					id='registration-display-name'
 					autoComplete='off'
+					placeholder='Mona the Maid'
 					register={ register }
 					name='displayName'
 					options={ {
@@ -147,6 +149,7 @@ export function RegistrationForm(): ReactElement {
 					type='email'
 					id='registration-email'
 					autoComplete='email'
+					placeholder='mona@project-pandora.com'
 					register={ register }
 					name='email'
 					options={ {

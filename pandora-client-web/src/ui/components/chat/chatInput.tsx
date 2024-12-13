@@ -649,7 +649,7 @@ export function AutoCompleteHint<TCommandExecutionContext extends ICommandExecut
 				autocompleteHint.result.options.length > 0 &&
 				<>
 					<hr />
-					<Scrollable color='dark' className='flex-1'>
+					<Scrollable className='flex-1'>
 						<Column gap='tiny'>
 							{
 								autocompleteHint.result.options.map((option, index) => (

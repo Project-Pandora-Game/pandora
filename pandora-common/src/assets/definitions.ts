@@ -5,11 +5,11 @@ import type { RoomBackgroundData } from '../space/room';
 import type { Satisfies } from '../utility/misc';
 import { HexRGBAColorString } from '../validation';
 import type { AssetId } from './base';
-import type { BoneDefinitionCompressed, BoneName, CharacterView, Condition, Coordinates, LayerImageOverride, LegsPose } from './graphics';
+import type { ArmFingers, ArmPose, ArmRotation, ArmSegmentOrder, BoneDefinitionCompressed, BoneName, CharacterView, Condition, Coordinates, LayerImageOverride, LegsPose } from './graphics';
 import type { AssetModuleDefinition } from './modules';
 import type { AssetLockProperties, AssetProperties } from './properties';
 import type { RoomDeviceProperties } from './roomDeviceProperties';
-import type { AppearanceArmPose, AppearanceArmsOrder, AssetsPosePreset, AssetsPosePresets } from './state/characterStatePose';
+import type { AssetsPosePreset, AssetsPosePresets } from './state/characterStatePose';
 
 // Each asset must have a size (bodyparts and only bodyparts have `bodypart` size)
 // The size is used to make sure you cannot infinitely recurse storing items into one another
@@ -32,12 +32,22 @@ export interface AssetDefinitionExtraArgs {
 	colorGroups: string;
 }
 
+export type AssetDefinitionArmPoseLimit = {
+	position?: ArmPose | ArmPose[];
+	rotation?: ArmRotation | ArmRotation[];
+	fingers?: ArmFingers | ArmFingers[];
+};
+
+export type AssetDefinitionArmOrderPoseLimit = {
+	upper?: ArmSegmentOrder | ArmSegmentOrder[];
+};
+
 export interface AssetDefinitionPoseLimit<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
 	bones?: Partial<Record<A['bones'], number | [number, number][]>>;
-	arms?: Partial<AppearanceArmPose>;
-	leftArm?: Partial<AppearanceArmPose>;
-	rightArm?: Partial<AppearanceArmPose>;
-	armsOrder?: Partial<AppearanceArmsOrder>;
+	arms?: AssetDefinitionArmPoseLimit;
+	leftArm?: AssetDefinitionArmPoseLimit;
+	rightArm?: AssetDefinitionArmPoseLimit;
+	armsOrder?: AssetDefinitionArmOrderPoseLimit;
 	legs?: LegsPose | LegsPose[];
 	view?: CharacterView;
 }

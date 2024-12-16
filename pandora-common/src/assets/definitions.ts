@@ -140,6 +140,9 @@ export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = As
 	 */
 	allowRandomizerUsage?: boolean;
 
+	/** Extra pose presets available when inside this device */
+	posePresets?: AssetsPosePreset<A['bones']>[];
+
 	/**
 	 * Chat specific settings for this asset
 	 *

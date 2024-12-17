@@ -113,6 +113,13 @@ export const AppearanceActionCustomize = z.object({
 	item: ItemPathSchema,
 	/** New custom name */
 	name: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN),
+	/** object for chat specific entries */
+	chat: z.object({
+		/** New generic name */
+		generic: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN),
+		/** New specific name */
+		specific: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN),
+	}),
 	/** New description */
 	description: z.string().max(LIMIT_ITEM_DESCRIPTION_LENGTH),
 });
@@ -708,7 +715,7 @@ export function ActionAppearanceCustomize({ action, processingContext }: Appeara
 	processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.STYLING);
 
 	const manipulator = processingContext.manipulator.getManipulatorFor(action.target).getContainer(action.item.container);
-	if (!manipulator.modifyItem(action.item.itemId, (it) => it.customize(action.name, action.description))) {
+	if (!manipulator.modifyItem(action.item.itemId, (it) => it.customize(action.name, action.chat, action.description))) {
 		return processingContext.invalid();
 	}
 

@@ -188,10 +188,9 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit }: { i
 		target: targetSelector,
 		item: itemPath,
 		name: item.name ?? '',
-		chat.generic: item.chat.generic ?? '',
-		chat.specific: item.chat.specific ?? '',
+		chat: item.chat ?? {generic: '', specific: ''},
 		description: item.description ?? '',
-	}), [targetSelector, itemPath, item.name, item.chat.generic, item.chat.specific, item.description]);
+	}), [targetSelector, itemPath, item.name, item.chat?.generic, item.chat?.specific, item.description]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.problems.length === 0;
 
@@ -216,11 +215,11 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit }: { i
 				</Row>
 				<Row alignY='center'>
 					<label htmlFor='generic-name'>Generic name:</label>
-					<span className='name'>{ item.chat.generic ?? ' ' }</span>
+					<span className='name'>{ item.chat?.generic ?? ' ' }</span>
 				</Row>
 				<Row alignY='center'>
 					<label htmlFor='specific-name'>Specific name:</label>
-					<span className='name'>{ item.chat.specific ?? ' ' }</span>
+					<span className='name'>{ item.chat?.specific ?? ' ' }</span>
 				</Row>
 				<label>Description ({ item.description ? item.description.length : 0 } characters):</label>
 				<div className='flex-1 description'>
@@ -238,8 +237,8 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 	const { targetSelector } = useWardrobeContext();
 	const [execute, processing] = useWardrobeExecuteCallback({ onSuccess: onEndEdit });
 	const [name, setName] = React.useState(item.name ?? '');
-	const [generic, setGeneric] = React.useState(item.chat.generic ?? '');
-	const [specific, setSpecific] = React.useState(item.chat.specific ?? '');
+	const [generic, setGeneric] = React.useState(item.chat?.generic ?? '');
+	const [specific, setSpecific] = React.useState(item.chat?.specific ?? '');
 	const [description, setDescription] = React.useState(item.description ?? '');
 
 	const nameError = React.useMemo(() => (
@@ -252,8 +251,8 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 			target: targetSelector,
 			item: itemPath,
 			name: name.trim(),
-			chat.generic: chat.generic.trim(),
-			chat.concrete: chat.concrete.trim(),
+			chat.generic: chat?.generic.trim(),
+			chat.specific: chat.?specific.trim(),
 			description: description.trim(),
 		});
 	});
@@ -271,11 +270,11 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 				</Row>
 				<Row alignY='center'>
 					<label htmlFor='custom-name'>Generic name:</label>
-					<TextInput id='custom-name' value={ item.chat?.generic } onChange={ setGeneric } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
+					<TextInput id='custom-name' value={ item.chat?.generic ?? ''} onChange={ setGeneric } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
 				</Row>
 				<Row alignY='center'>
-					<label htmlFor='custom-name'>Concrete name:</label>
-					<TextInput id='custom-name' value={ item.chat?.specific } onChange={ setSpecific } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
+					<label htmlFor='custom-name'>Specific name:</label>
+					<TextInput id='custom-name' value={ item.chat?.specific ?? ''} onChange={ setSpecific } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
 				</Row>
 				{
 					nameError && (

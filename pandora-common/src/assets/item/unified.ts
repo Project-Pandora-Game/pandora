@@ -8,7 +8,7 @@ import { Assert, AssertNever } from '../../utility/misc';
 import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop, ZodTruncate } from '../../validation';
 import { AssetIdSchema } from '../base';
 import { CreateModuleDataFromTemplate, ItemModuleDataSchema, ItemModuleTemplateSchema } from '../modules';
-import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base';
+import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemChatCustomMessagesSchema, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base';
 import { PartialAppearancePoseSchema } from '../state/characterStatePose';
 
 import { __internal_InitRecursiveItemSchemas } from './_internalRecursion';
@@ -29,6 +29,7 @@ export const ItemBundleSchema = z.object({
 	spawnedBy: CharacterIdSchema.optional(),
 	color: ItemColorBundleSchema.or(z.array(HexRGBAColorStringSchema)).optional(),
 	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
+	chat: ItemChatCustomMessagesSchema.optional(),
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
 	moduleData: z.record(z.lazy(() => ItemModuleDataSchema)).optional(),
 	/** Room device specific data */
@@ -49,6 +50,7 @@ export const ItemTemplateSchema: z.ZodType<ItemTemplate, ZodTypeDef, unknown> = 
 	templateName: z.string().optional(),
 	color: ItemColorBundleSchema.optional(),
 	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
+	chat: ItemChatCustomMessagesSchema.optional(),
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
 	modules: z.record(z.lazy(() => ItemModuleTemplateSchema)).optional(),
 });

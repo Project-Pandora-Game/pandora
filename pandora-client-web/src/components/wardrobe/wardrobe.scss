@@ -107,10 +107,6 @@ $drop-overlay-gap: 0.3em;
 	img {
 		width: 100%;
 		height: 100%;
-
-		&.black {
-			filter: brightness(0) saturate(100%);
-		}
 	}
 
 	&.doNotRender img {

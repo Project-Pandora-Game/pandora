@@ -296,7 +296,6 @@ export function InventoryAssetPreview({ asset, small }: {
 				) }
 			>
 				<img
-					className={ previewType === 'image' ? '' : 'black' }
 					src={ icon }
 					alt='Item preview'
 					crossOrigin='anonymous'
@@ -332,7 +331,6 @@ export function InventoryAttributePreview({ attribute }: {
 		return (
 			<div className='itemPreview'>
 				<img
-					className='black'
 					src={ icon }
 					alt='Attribute icon'
 					crossOrigin='anonymous'

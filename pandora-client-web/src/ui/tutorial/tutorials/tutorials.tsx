@@ -172,7 +172,7 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 								</p>
 								<p>
 									<i>
-										From the next step onwards I will also get out of your way,<br />
+										From the next step onwards I will also get out of your way,
 										only explaining things instead of taking up most of your screen.
 									</i>
 								</p>
@@ -200,7 +200,7 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 						<>
 							<p>
 								You can have multiple, mostly independent characters in Pandora.<br />
-								While some settings are shared across all characters, most parts are specific to each character,<br />
+								While some settings are shared across all characters, most parts are specific to each character,
 								such as their worn items, permissions they give to others, item limits, profile, and more...<br />
 								You could even use more than one of your characters at the same time!
 							</p>
@@ -397,7 +397,7 @@ export const TUTORIAL_TUTORIALS: TutorialConfig = {
 							<p>
 								Please be aware that the club is still being renovated.<br />
 								You can expect many new things over time or even help us with building it up further!<br />
-								If you want to help, it is best to familiarize yourself with the club first,<br />
+								If you want to help, it is best to familiarize yourself with the club first,
 								and then get in touch using the information found in the "Contact"-tab of the Wiki.
 							</p>
 							<p>

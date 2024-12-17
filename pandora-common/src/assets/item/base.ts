@@ -42,7 +42,6 @@ export const ItemChatCustomMessagesSchema = z.object({
 });
 export type ItemChatCustomMessages = z.infer<typeof ItemChatCustomMessagesSchema>;
 
-
 export const ItemColorBundleSchema = z.record(z.string(), HexRGBAColorStringSchema);
 export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
 

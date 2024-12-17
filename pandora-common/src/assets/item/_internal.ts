@@ -14,6 +14,7 @@ import type { CharacterId, ItemInteractionType } from '../../character';
 
 import { Assert, MemoizeNoArg } from '../../utility/misc';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from '../properties';
+import { lowerCase } from 'lodash';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface InternalItemTypeMap { }
@@ -245,7 +246,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		});
 	}
 
-	/** Returns a new item with the passed name and description */
+	/** Returns a new item with the passed name, chat specifics and description */
 	public customize(newName: string, newChat: ItemChatCustomMessages, newDescription: string): Item<Type> {
 		let name: string | undefined = newName.trim();
 		if (name === '' || name === this.asset.definition.name)
@@ -255,9 +256,21 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		if (description === '')
 			description = undefined;
 
-		let chat: ItemChatCustomMessages;
-		chat.generic === newChat.generic;
-		chat.specific === newChat.specific;
+		const chat: ItemChatCustomMessages = { generic: '', specific: '' };
+		if (newChat.generic === '')
+			if (name === undefined)
+				chat.generic = '';
+			else
+				chat.generic = 'aeiou'.includes(name[0]) ? 'an ' : 'a ' + lowerCase(name);
+		else
+			chat.generic = newChat.generic;
+		if (newChat.specific === '')
+			if (name === undefined)
+				chat.specific = '';
+			else
+				chat.specific = 'the ' + lowerCase(name);
+		else
+			chat.specific = newChat.specific;
 
 		return this.withProps({ name, chat, description });
 	}

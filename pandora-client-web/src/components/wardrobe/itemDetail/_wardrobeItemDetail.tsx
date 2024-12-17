@@ -266,9 +266,9 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit }: { i
 		target: targetSelector,
 		item: itemPath,
 		name: item.name ?? '',
-		chat: item.chat ?? {generic: '', specific: ''},
+		chat: item.chat ?? { generic: '', specific: '' },
 		description: item.description ?? '',
-	}), [targetSelector, itemPath, item.name, item.chat?.generic, item.chat?.specific, item.description]);
+	}), [targetSelector, itemPath, item.name, item.chat, item.description]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const available = checkResult != null && checkResult.valid;
 
@@ -366,11 +366,11 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 				</Row>
 				<Row alignY='center'>
 					<label htmlFor='custom-name'>Generic name:</label>
-					<TextInput id='custom-name' value={ item.chat?.generic ?? ''} onChange={ setGeneric } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
+					<TextInput id='custom-name' value={ item.chat?.generic ?? '' } onChange={ setGeneric } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
 				</Row>
 				<Row alignY='center'>
 					<label htmlFor='custom-name'>Specific name:</label>
-					<TextInput id='custom-name' value={ item.chat?.specific ?? ''} onChange={ setSpecific } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
+					<TextInput id='custom-name' value={ item.chat?.specific ?? '' } onChange={ setSpecific } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
 				</Row>
 				{
 					nameError && (

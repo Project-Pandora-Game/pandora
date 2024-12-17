@@ -15,6 +15,7 @@ import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, Item, 
 import type { IChatMessageActionItem } from '../../chat';
 import { Assert, MemoizeNoArg } from '../../utility/misc';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from '../properties';
+import { lowerCase } from 'lodash';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface InternalItemTypeMap { }
@@ -243,6 +244,28 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			description = undefined;
 
 		return this.withProps({ description });
+	}
+	/** Returns a new item with the passed name and description */
+	public customizeChat(newChat: ItemChatCustomMessages): Item<Type> {
+
+		const chat: ItemChatCustomMessages = { generic: '', specific: '' };
+		if (newChat.generic === '')
+			if (this.name === undefined)
+				chat.generic = '';
+			else
+				chat.generic = 'aeiou'.includes(this.name[0]) ? 'an ' : 'a ' + lowerCase(this.name);
+		else
+			chat.generic = newChat.generic;
+
+		if (newChat.specific === '')
+			if (this.name === undefined)
+				chat.specific = '';
+			else
+				chat.specific = 'the ' + lowerCase(this.name);
+		else
+			chat.specific = newChat.specific;
+
+		return this.withProps({ chat });
 	}
 
 	@MemoizeNoArg

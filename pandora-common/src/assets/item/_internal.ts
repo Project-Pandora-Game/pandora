@@ -10,7 +10,7 @@ import type { AssetManager } from '../assetManager';
 import type { AssetColorization, AssetType, WearableAssetType } from '../definitions';
 import type { ItemModuleAction } from '../modules';
 import type { IExportOptions, IItemModule } from '../modules/common';
-import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, Item, ItemBundle, ItemColorBundle, ItemId, ItemTemplate } from './base';
+import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, Item, ItemBundle, ItemChatCustomMessages, ItemColorBundle, ItemId, ItemTemplate } from './base';
 
 import type { IChatMessageActionItem } from '../../chat';
 import { Assert, MemoizeNoArg } from '../../utility/misc';
@@ -26,6 +26,7 @@ export interface ItemBaseProps<Type extends AssetType = AssetType> {
 	readonly spawnedBy?: CharacterId;
 	readonly color: Immutable<ItemColorBundle>;
 	readonly name?: string;
+	readonly chat?: ItemChatCustomMessages;
 	readonly description?: string;
 }
 
@@ -41,10 +42,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 	public readonly spawnedBy?: CharacterId;
 	public readonly color: Immutable<ItemColorBundle>;
 	public readonly name?: string;
-	public readonly chat = {
-		generic: '',
-		specific: '',
-	};
+	public readonly chat?: Immutable<ItemChatCustomMessages>;
 	public readonly description?: string;
 
 	public get type(): Type {
@@ -66,8 +64,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		this.spawnedBy = overrideProps?.spawnedBy ?? props.spawnedBy;
 		this.color = overrideProps?.color ?? props.color;
 		this.name = (overrideProps && 'name' in overrideProps) ? overrideProps.name : props.name;
-		this.chat.generic = this.name ? this.name : this.asset.definition.name;
-		this.chat.specific = this.name ? this.name : this.asset.definition.name;
+		this.chat = (overrideProps && 'chat' in overrideProps) ? overrideProps.chat : props.chat;
 		this.description = (overrideProps && 'description' in overrideProps) ? overrideProps.description : props.description;
 	}
 

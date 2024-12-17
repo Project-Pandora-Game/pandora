@@ -17,8 +17,8 @@ export const AppearanceActionCustomize = z.object({
 	chat: z.object({
 		/** New generic name */
 		generic: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN),
-		/** New concrete name */
-		concrete: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN),
+		/** New specific name */
+		specific: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN),
 	}),
 	/** New description */
 	description: z.string().max(LIMIT_ITEM_DESCRIPTION_LENGTH).optional(),

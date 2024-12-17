@@ -131,7 +131,7 @@ export type Restriction =
 	}
 	| {
 		type: 'modifyRoomRestriction';
-		reason: 'notAdmin' | 'missingConstructionTools';
+		reason: 'notAdmin';
 	}
 	| {
 		type: 'itemCustomizeOther';

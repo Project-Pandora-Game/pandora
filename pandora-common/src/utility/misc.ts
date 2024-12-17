@@ -89,6 +89,16 @@ export function AssertNotNullable<T>(value: Nullable<T>): asserts value is NonNu
 	}
 }
 
+/**
+ * Checks if the passed value is an array, typing it as a readonly array.
+ * @param value - The value to check
+ * @returns - `true` if the value is an array, `false` otherwise
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function IsReadonlyArray(value: unknown): value is (readonly any[]) {
+	return Array.isArray(value);
+}
+
 /** Asserts that passed array is not empty */
 export function AssertArrayNotEmpty<T>(value: T[]): asserts value is [T, ...T[]] {
 	if (value.length === 0) {

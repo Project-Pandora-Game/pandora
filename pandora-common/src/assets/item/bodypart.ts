@@ -17,34 +17,34 @@ import { ItemBase, ItemBaseProps } from './_internal';
 
 declare module './_internal' {
 	interface InternalItemTypeMap {
-		personal: ItemPersonal;
+		bodypart: ItemBodypart;
 	}
 }
 
-interface ItemPersonalProps extends ItemBaseProps<'personal'> {
+interface ItemBodypartProps extends ItemBaseProps<'bodypart'> {
 	readonly modules: ReadonlyMap<string, IItemModule<AssetProperties, undefined>>;
 }
 
-export class ItemPersonal extends ItemBase<'personal'> implements ItemPersonalProps {
+export class ItemBodypart extends ItemBase<'bodypart'> implements ItemBodypartProps {
 	public readonly modules: ReadonlyMap<string, IItemModule<AssetProperties, undefined>>;
 
-	protected constructor(props: ItemPersonalProps, overrideProps?: Partial<ItemPersonalProps>) {
+	protected constructor(props: ItemBodypartProps, overrideProps?: Partial<ItemBodypartProps>) {
 		super(props, overrideProps);
 		this.modules = overrideProps?.modules ?? props.modules;
 	}
 
-	protected override withProps(overrideProps: Partial<ItemPersonalProps>): ItemPersonal {
-		return new ItemPersonal(this, overrideProps);
+	protected override withProps(overrideProps: Partial<ItemBodypartProps>): ItemBodypart {
+		return new ItemBodypart(this, overrideProps);
 	}
 
-	public static loadFromBundle(asset: Asset<'personal'>, bundle: ItemBundle, context: IItemLoadContext): ItemPersonal {
+	public static loadFromBundle(asset: Asset<'bodypart'>, bundle: ItemBundle, context: IItemLoadContext): ItemBodypart {
 		// Load modules
 		const modules = new Map<string, IItemModule<AssetProperties, undefined>>();
 		for (const [moduleName, moduleConfig] of Object.entries(asset.definition.modules ?? {})) {
 			modules.set(moduleName, LoadItemModule<AssetProperties, undefined>(moduleConfig, bundle.moduleData?.[moduleName], context));
 		}
 
-		return new ItemPersonal({
+		return new ItemBodypart({
 			...(ItemBase._parseBundle(asset, bundle, context)),
 			modules,
 		});
@@ -172,7 +172,7 @@ export class ItemPersonal extends ItemBase<'personal'> implements ItemPersonalPr
 		return this.modules;
 	}
 
-	public override moduleAction(context: AppearanceModuleActionContext, moduleName: string, action: ItemModuleAction): ItemPersonal | null {
+	public override moduleAction(context: AppearanceModuleActionContext, moduleName: string, action: ItemModuleAction): ItemBodypart | null {
 		const module = this.modules.get(moduleName);
 		if (!module || module.type !== action.moduleType)
 			return null;
@@ -188,7 +188,7 @@ export class ItemPersonal extends ItemBase<'personal'> implements ItemPersonalPr
 		});
 	}
 
-	public override setModuleItems(moduleName: string, items: AppearanceItems): ItemPersonal | null {
+	public override setModuleItems(moduleName: string, items: AppearanceItems): ItemBodypart | null {
 		const moduleResult = this.modules.get(moduleName)?.setContents(items);
 		if (!moduleResult)
 			return null;

@@ -40,10 +40,7 @@ export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
 		if (target.type === 'room') {
 			return asset.isType('roomDevice') ||
 				asset.isType('lock') ||
-				(
-					asset.isType('personal') &&
-					asset.definition.bodypart == null
-				);
+				asset.isType('personal');
 		}
 		if (target.type === 'character') {
 			return asset.isType('roomDeviceWearablePart') ||
@@ -53,7 +50,6 @@ export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
 				) ||
 				(
 					asset.isType('personal') &&
-					asset.definition.bodypart == null &&
 					(currentFocus.container.length !== 0 || asset.definition.wearable !== false)
 				);
 		}

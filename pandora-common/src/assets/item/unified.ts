@@ -3,20 +3,21 @@ import { z, ZodTypeDef } from 'zod';
 import type { Asset } from '../asset';
 import type { AssetType } from '../definitions';
 
+import { CharacterIdSchema } from '../../character/characterTypes';
 import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN, LIMIT_OUTFIT_NAME_LENGTH, LIMIT_POSE_PRESET_NAME_LENGTH } from '../../inputLimits';
 import { Assert, AssertNever } from '../../utility/misc';
 import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop, ZodTruncate } from '../../validation';
 import { AssetIdSchema } from '../base';
 import { CreateModuleDataFromTemplate, ItemModuleDataSchema, ItemModuleTemplateSchema } from '../modules';
-import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base';
 import { PartialAppearancePoseSchema } from '../state/characterStatePose';
+import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base';
 
 import { __internal_InitRecursiveItemSchemas } from './_internalRecursion';
+import { ItemBodypart } from './bodypart';
 import { ItemLock, LockBundleSchema } from './lock';
 import { ItemPersonal } from './personal';
 import { ItemRoomDevice, RoomDeviceBundleSchema } from './roomDevice';
 import { ItemRoomDeviceWearablePart, RoomDeviceLinkSchema } from './roomDeviceWearablePart';
-import { CharacterIdSchema } from '../../character/characterTypes';
 
 /**
  * Serializable data bundle containing information about an item.
@@ -96,7 +97,7 @@ export function CreateItemBundleFromTemplate(template: ItemTemplate, context: II
 	};
 
 	// Load modules
-	if (template.modules != null && (asset.isType('personal') || asset.isType('roomDevice'))) {
+	if (template.modules != null && (asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice'))) {
 		bundle.moduleData = {};
 		for (const [moduleName, moduleTemplate] of Object.entries(template.modules)) {
 			const moduleConfig = asset.definition.modules?.[moduleName];
@@ -148,6 +149,10 @@ export function LoadItemFromBundle<T extends AssetType>(asset: Asset<T>, bundle:
 	Assert(asset.id === bundle.asset);
 	const type = asset.type;
 	switch (type) {
+		case 'bodypart':
+			Assert(asset.isType('bodypart'));
+			// @ts-expect-error: Type specialized manually
+			return ItemBodypart.loadFromBundle(asset, bundle, context);
 		case 'personal':
 			Assert(asset.isType('personal'));
 			// @ts-expect-error: Type specialized manually

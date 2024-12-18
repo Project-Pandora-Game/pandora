@@ -156,7 +156,7 @@ export function CharacterPreview({ character, characterState, hideClothes = fals
 	const layerFilter = useCallback<GraphicsCharacterLayerFilter>((layer) => {
 		if (hideClothes && layer.item != null) {
 			const asset = layer.item.asset;
-			if (asset.isType('personal') && asset.definition.bodypart == null) {
+			if (asset.isType('personal')) {
 				return false;
 			}
 		}

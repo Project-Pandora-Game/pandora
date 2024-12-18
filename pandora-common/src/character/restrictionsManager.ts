@@ -276,7 +276,7 @@ export class CharacterRestrictionsManager {
 			return;
 
 		// Bodyparts have different handling (we already checked we can interact with the asset)
-		if (item.isType('personal') && item.asset.definition.bodypart != null) {
+		if (item.isType('bodypart')) {
 			// Only characters have bodyparts
 			if (target.type !== 'character') {
 				context.addRestriction({ type: 'invalid' });

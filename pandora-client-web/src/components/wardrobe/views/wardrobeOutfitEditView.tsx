@@ -370,7 +370,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 		);
 	}
 
-	const ribbonColor = (asset.isType('personal') || asset.isType('roomDevice')) ? (
+	const ribbonColor = (asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice')) ? (
 		itemTemplate.color?.[
 			asset.definition.colorRibbonGroup ??
 			first(Object.keys(asset.definition.colorization ?? {})) ??

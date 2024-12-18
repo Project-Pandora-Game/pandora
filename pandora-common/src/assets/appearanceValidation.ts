@@ -1,7 +1,6 @@
 import type { CharacterId } from '../character';
 import { Logger } from '../logging';
 import { Assert, ShuffleArray } from '../utility/misc';
-import type { Asset } from './asset';
 import type { AssetManager } from './assetManager';
 import type { AssetId } from './base';
 import type { AssetType, WearableAssetType } from './definitions';
@@ -66,7 +65,7 @@ export function AppearanceValidationCombineResults(result1: AppearanceValidation
 }
 
 function GetItemBodypartSortIndex(assetManager: AssetManager, item: Item): number {
-	return (!item.isType('personal') || item.asset.definition.bodypart === undefined) ? assetManager.bodyparts.length :
+	return (!item.isType('bodypart')) ? assetManager.bodyparts.length :
 		assetManager.bodyparts.findIndex((bp) => bp.name === item.asset.definition.bodypart);
 }
 
@@ -120,7 +119,7 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 
 	// Check duplicate bodyparts
 	for (const bodypart of assetManager.bodyparts) {
-		if (!bodypart.allowMultiple && items.filter((item) => item.isType('personal') && item.asset.definition.bodypart === bodypart.name).length > 1)
+		if (!bodypart.allowMultiple && items.filter((item) => item.isType('bodypart') && item.asset.definition.bodypart === bodypart.name).length > 1)
 			return {
 				success: false,
 				error: {
@@ -139,11 +138,12 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 	// Check requirements are met, and check asset count limits
 	let hasDevicePart = false;
 	const assetCounts = new Map<AssetId, number>();
-	const maxItemLimit = 1; // All personal items have no limit. If we want to change this later, here is the place
 	let globalProperties = CreateAssetPropertiesResult();
 	for (const item of items) {
+		// All personal items have no limit. If we want to change this later, here is the place
+		const maxItemLimit = (item.isType('bodypart') || item.isType('personal')) ? Infinity : 1;
 		const currentCount = assetCounts.get(item.asset.id) ?? 0;
-		if (!item.asset.isType('personal') && currentCount >= maxItemLimit) {
+		if (currentCount >= maxItemLimit) {
 			return {
 				success: false,
 				error: {
@@ -203,7 +203,7 @@ export function ValidateAppearanceItems(assetManager: AssetManager, items: Appea
 
 	// Validate required assets
 	for (const bodypart of assetManager.bodyparts) {
-		if (bodypart.required && !items.some((item) => item.isType('personal') && item.asset.definition.bodypart === bodypart.name))
+		if (bodypart.required && !items.some((item) => item.isType('bodypart') && item.asset.definition.bodypart === bodypart.name))
 			return {
 				success: false,
 				error: {
@@ -231,18 +231,18 @@ export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, o
 			currentBodypartIndex !== null &&
 			(
 				itemToAdd == null ||
-				!itemToAdd.isType('personal') ||
+				!itemToAdd.isType('bodypart') ||
 				itemToAdd.asset.definition.bodypart !== assetManager.bodyparts[currentBodypartIndex].name
 			)
 		) {
 			const bodypart = assetManager.bodyparts[currentBodypartIndex];
 
 			// Check if we need to add required bodypart
-			if (bodypart.required && !resultItems.some((item) => item.isType('personal') && item.asset.definition.bodypart === bodypart.name)) {
+			if (bodypart.required && !resultItems.some((item) => item.isType('bodypart') && item.asset.definition.bodypart === bodypart.name)) {
 				// Find matching bodypart assets
 				const possibleAssets = assetManager
 					.getAllAssets()
-					.filter((asset): asset is Asset<'personal'> => asset.isType('personal'))
+					.filter((asset) => asset.isType('bodypart'))
 					.filter((asset) => asset.definition.bodypart === bodypart.name && asset.definition.allowRandomizerUsage === true);
 
 				ShuffleArray(possibleAssets);
@@ -256,7 +256,7 @@ export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, o
 				}
 			}
 
-			if (bodypart.required && !resultItems.some((item) => item.isType('personal') && item.asset.definition.bodypart === bodypart.name)) {
+			if (bodypart.required && !resultItems.some((item) => item.isType('bodypart') && item.asset.definition.bodypart === bodypart.name)) {
 				throw new Error(`Failed to satisfy the requirement for '${bodypart.name}'`);
 			}
 

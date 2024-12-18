@@ -75,6 +75,7 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 			case 'blockedModule': {
 				const asset = assetManager.getAssetById(e.asset);
 				const visibleModuleName: string =
+					(asset?.isType('bodypart') && asset.definition.modules?.[e.module]?.name) ||
 					(asset?.isType('personal') && asset.definition.modules?.[e.module]?.name) ||
 					(asset?.isType('roomDevice') && asset.definition.modules?.[e.module]?.name) ||
 					`[UNKNOWN MODULE '${e.module}']`;

@@ -390,7 +390,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 					return false;
 
 				//Get the actual blush item of the current player to get the current blush level
-				const blush = playerState.items.filter(FilterItemType('personal')).find((it) => it.asset.definition.bodypart === 'blush');
+				const blush = playerState.items.filter(FilterItemType('bodypart')).find((it) => it.asset.definition.bodypart === 'blush');
 				if (!blush)
 					return false;
 

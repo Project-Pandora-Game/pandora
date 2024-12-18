@@ -428,12 +428,10 @@ export function ActionAddItem(processingContext: AppearanceActionProcessingConte
 	let removed: AppearanceItems = [];
 	// if this is a bodypart not allowing multiple do a swap instead, but only in root
 	if (manipulator.isCharacter() &&
-		item.isType('personal') &&
-		item.asset.definition.bodypart &&
-		manipulator.assetManager.bodyparts.find((bp) => item.isType('personal') &&
-			bp.name === item.asset.definition.bodypart)?.allowMultiple === false
+		item.isType('bodypart') &&
+		manipulator.assetManager.bodyparts.find((bp) => bp.name === item.asset.definition.bodypart)?.allowMultiple === false
 	) {
-		removed = manipulator.removeMatchingItems((oldItem) => oldItem.isType('personal') &&
+		removed = manipulator.removeMatchingItems((oldItem) => oldItem.isType('bodypart') &&
 			oldItem.asset.definition.bodypart === item.asset.definition.bodypart,
 		);
 	}
@@ -450,8 +448,7 @@ export function ActionAddItem(processingContext: AppearanceActionProcessingConte
 
 	// if this is a bodypart, we sort bodyparts to be valid, to be more friendly
 	if (manipulator.isCharacter() &&
-		item.isType('personal') &&
-		item.asset.definition.bodypart
+		item.isType('bodypart')
 	) {
 		if (!manipulator.fixBodypartOrder())
 			return false;
@@ -786,7 +783,7 @@ export function ActionAppearanceRandomize({
 	const oldItems = characterManipulator.getRootItems().filter(FilterItemWearable);
 	for (const i of oldItems) {
 		// Ignore bodyparts if we are not changing those
-		if (kind === 'items' && i.isType('personal') && i.asset.definition.bodypart != null)
+		if (kind === 'items' && i.isType('bodypart'))
 			continue;
 
 		character.checkUseItemDirect(processingContext, character.appearance, [], i, ItemInteractionType.ADD_REMOVE);
@@ -822,7 +819,7 @@ export function ActionAppearanceRandomize({
 	}
 
 	// Filter appearance to get either body or nothing
-	let newAppearance: Item<WearableAssetType>[] = kind === 'items' ? oldItems.filter((i) => !i.isType('personal') || i.asset.definition.bodypart != null) : [];
+	let newAppearance: Item<WearableAssetType>[] = kind === 'items' ? oldItems.filter((i) => i.isType('bodypart')) : [];
 	// Collect info about already present items
 	const usedAssets = new Set<Asset>();
 	let properties = CreateAssetPropertiesResult();
@@ -845,7 +842,7 @@ export function ActionAppearanceRandomize({
 			// Find possible assets (intentionally using only always-present attributes, not statically collected ones)
 			const possibleAssets = assetManager
 				.getAllAssets()
-				.filter((a) => a.isType('personal') && a.definition.bodypart != null &&
+				.filter((a) => a.isType('bodypart') &&
 					a.definition.allowRandomizerUsage === true &&
 					a.definition.attributes?.provides?.includes(requestedBodyAttribute) &&
 					// Skip already present assets
@@ -856,7 +853,7 @@ export function ActionAppearanceRandomize({
 
 			// Pick one and add it to the appearance
 			const asset = sample(possibleAssets);
-			if (asset && asset.isType('personal') && asset.definition.bodypart != null) {
+			if (asset && asset.isType('bodypart')) {
 				const item = assetManager.createItem(`i/${nanoid()}`, asset, processingContext.player);
 				newAppearance.push(item);
 				usedAssets.add(asset);
@@ -894,8 +891,8 @@ export function ActionAppearanceRandomize({
 		// Find possible assets (intentionally using only always-present attributes, not statically collected ones)
 		const possibleAssets = assetManager
 			.getAllAssets()
-			.filter((asset): asset is Asset<'personal'> => asset.isType('personal'))
-			.filter((asset) => asset.definition.bodypart == null &&
+			.filter((asset) => asset.isType('personal'))
+			.filter((asset) =>
 				asset.definition.attributes?.provides?.includes(requestedAttribute) &&
 				asset.definition.allowRandomizerUsage === true &&
 				// Skip already present assets

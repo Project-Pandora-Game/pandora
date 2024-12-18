@@ -180,6 +180,12 @@ export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = As
 	 */
 	allowRandomizerUsage?: boolean;
 
+	/**
+	 * The default for if this asset requires free hands to be used
+	 * @default false
+	 */
+	requireFreeHandsToUseDefault?: boolean;
+
 	/** Extra pose presets available when inside this device */
 	posePresets?: AssetsPosePreset<A['bones']>[];
 
@@ -308,6 +314,11 @@ export interface RoomDeviceAssetDefinition<A extends AssetDefinitionExtraArgs = 
 	graphicsLayers: IRoomDeviceGraphicsLayer[];
 	/** Attributes that are used strictly for filtering, no effect on character */
 	staticAttributes?: (A['attributes'])[];
+	/**
+	 * The default for if this asset requires free hands to be used
+	 * @default false
+	 */
+	requireFreeHandsToUseDefault?: boolean;
 	/** Extra pose presets available when inside this device */
 	posePresets?: AssetsPosePreset<A['bones']>[];
 	/**

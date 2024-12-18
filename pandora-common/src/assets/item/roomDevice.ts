@@ -63,18 +63,21 @@ interface ItemRoomDeviceProps extends ItemBaseProps<'roomDevice'> {
 	readonly deployment: Immutable<RoomDeviceDeployment>;
 	readonly slotOccupancy: ReadonlyMap<string, CharacterId>;
 	readonly modules: ReadonlyMap<string, IItemModule<RoomDeviceProperties, RoomDeviceModuleStaticData>>;
+	readonly requireFreeHandsToUse: boolean;
 }
 
 export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDeviceProps {
 	public readonly deployment: Immutable<RoomDeviceDeployment>;
 	public readonly slotOccupancy: ReadonlyMap<string, CharacterId>;
 	public readonly modules: ReadonlyMap<string, IItemModule<RoomDeviceProperties, RoomDeviceModuleStaticData>>;
+	public readonly requireFreeHandsToUse: boolean;
 
 	protected constructor(props: ItemRoomDeviceProps, overrideProps: Partial<ItemRoomDeviceProps> = {}) {
 		super(props, overrideProps);
 		this.deployment = overrideProps.deployment !== undefined ? overrideProps.deployment : props.deployment;
 		this.slotOccupancy = overrideProps?.slotOccupancy ?? props.slotOccupancy;
 		this.modules = overrideProps?.modules ?? props.modules;
+		this.requireFreeHandsToUse = overrideProps?.requireFreeHandsToUse ?? props.requireFreeHandsToUse;
 	}
 
 	public isDeployed(): this is ItemRoomDevice & { deployment: RoomDeviceDeployment & { deployed: true; }; } {
@@ -115,11 +118,14 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 			}
 		}
 
+		const requireFreeHandsToUse = bundle.requireFreeHandsToUse ?? true;
+
 		return new ItemRoomDevice({
 			...(ItemBase._parseBundle(asset, bundle, context)),
 			modules,
 			deployment,
 			slotOccupancy,
+			requireFreeHandsToUse,
 		});
 	}
 
@@ -172,6 +178,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 				deployment: this.deployment,
 				slotOccupancy,
 			},
+			requireFreeHandsToUse: this.requireFreeHandsToUse,
 		};
 	}
 

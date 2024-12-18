@@ -2,7 +2,7 @@ import { isEqual, sample } from 'lodash';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
-import { ItemInteractionType, RestrictionResult } from '../character/restrictionTypes';
+import { ItemInteractionType } from '../character/restrictionTypes';
 import type { GameLogicCharacter } from '../gameLogic';
 import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN } from '../inputLimits';
 import { PseudoRandom } from '../math/pseudoRandom';
@@ -807,19 +807,12 @@ export function ActionAppearanceRandomize({
 
 	// Must be able to remove all items currently worn, have free hands and if modifying body also be in room that allows body changes
 	const oldItems = characterManipulator.getRootItems().filter(FilterItemWearable);
-	const restriction = oldItems
-		.map((i): RestrictionResult => {
-			// Ignore bodyparts if we are not changing those
-			if (kind === 'items' && i.isType('personal') && i.asset.definition.bodypart != null)
-				return { allowed: true };
-			return character.canUseItemDirect(processingContext, character.appearance, [], i, ItemInteractionType.ADD_REMOVE);
-		})
-		.find((res) => !res.allowed);
-	if (restriction != null && !restriction.allowed) {
-		processingContext.addProblem({
-			result: 'restrictionError',
-			restriction: restriction.restriction,
-		});
+	for (const i of oldItems) {
+		// Ignore bodyparts if we are not changing those
+		if (kind === 'items' && i.isType('personal') && i.asset.definition.bodypart != null)
+			continue;
+
+		character.checkUseItemDirect(processingContext, character.appearance, [], i, ItemInteractionType.ADD_REMOVE);
 	}
 
 	// Room must allow body changes if running full randomization

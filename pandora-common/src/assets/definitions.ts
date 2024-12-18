@@ -76,6 +76,8 @@ export interface AssetColorization<A extends AssetDefinitionExtraArgs = AssetDef
 }
 
 export type AssetType =
+	// Bodyparts are special items that form character's body. They cannot exist anywhere else but on the character and have a few unique limitations.
+	'bodypart' |
 	// Personal items are items worn on person, not spanning multiple persons or interacting with a room
 	'personal' |
 	// Room devices are items placed in the room
@@ -85,7 +87,7 @@ export type AssetType =
 	// Lock items are items that can be used to lock other items
 	'lock';
 
-export const WEARABLE_ASSET_TYPES = ['personal', 'roomDeviceWearablePart'] as const satisfies readonly AssetType[];
+export const WEARABLE_ASSET_TYPES = ['bodypart', 'personal', 'roomDeviceWearablePart'] as const satisfies readonly AssetType[];
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export interface AssetBaseDefinition<Type extends AssetType, A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
@@ -127,6 +129,44 @@ export interface AssetBaseDefinition<Type extends AssetType, A extends AssetDefi
 	assetPreferenceDefault?: AssetPreferenceType & ('maybe' | 'prevent');
 }
 
+export interface BodypartAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'bodypart', A> {
+	/**
+	 * If this asset can be used when randomly picking part needed to fit
+	 * @default false
+	 */
+	allowRandomizerUsage?: boolean;
+
+	/** Extra pose presets available when this bodypart is in use */
+	posePresets?: AssetsPosePreset<A['bones']>[];
+
+	/**
+	 * Chat specific settings for this asset
+	 *
+	 * @see https://github.com/Project-Pandora-Game/pandora/blob/master/pandora-common/src/chat/chatActions.ts
+	 */
+	chat?: {
+		/** How items of this asset are referred to in chat (defaults to asset's name) */
+		chatDescriptor?: string;
+	};
+
+	/** What bodypart this is. */
+	bodypart: A['bodyparts'];
+
+	/** Configuration of user-configurable asset colorization */
+	colorization?: Record<string, AssetColorization<A>>;
+
+	/** Which colorization group should be used for item's ribbon in inventory (if not specified defaults to first color group) */
+	colorRibbonGroup?: string;
+
+	/**
+	 * Modules this asset has
+	 */
+	modules?: Record<string, AssetModuleDefinition<AssetProperties<A>, undefined>>;
+
+	/** If this item has any graphics to be loaded or is only virtual */
+	hasGraphics: boolean;
+}
+
 export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetProperties<A>, AssetBaseDefinition<'personal', A> {
 	/**
 	 * If this asset can be worn on body directly.
@@ -164,9 +204,6 @@ export interface PersonalAssetDefinition<A extends AssetDefinitionExtraArgs = As
 		/** Message for when this item is removed (defaults to `itemDetach`) */
 		actionDetach?: string;
 	};
-
-	/** If this asset is a bodypart, `undefined` if not. */
-	bodypart?: A['bodyparts'];
 
 	/** Configuration of user-configurable asset colorization */
 	colorization?: Record<string, AssetColorization<A>>;
@@ -367,6 +404,7 @@ export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetD
 export type AssetDefinitionTypeMap<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> =
 	Satisfies<
 		{
+			bodypart: BodypartAssetDefinition<A>;
 			personal: PersonalAssetDefinition<A>;
 			roomDevice: RoomDeviceAssetDefinition<A>;
 			roomDeviceWearablePart: RoomDeviceWearablePartAssetDefinition<A>;

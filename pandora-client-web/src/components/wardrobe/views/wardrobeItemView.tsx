@@ -326,7 +326,7 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 			<div className='quickActions'>
 				{
 					singleItemContainer ? null : (
-						asset.isType('personal') && asset.definition.bodypart != null ? (
+						asset.isType('bodypart') ? (
 							<>
 								<WardrobeActionButton action={ {
 									type: 'move',

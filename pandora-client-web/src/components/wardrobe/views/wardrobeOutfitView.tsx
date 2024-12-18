@@ -330,7 +330,7 @@ function OutfitPreview({ outfit }: {
 	const characterState = useMemo((): AssetFrameworkCharacterState => {
 		// As a base use the current character, but only body - not any items
 		const templateBundle = baseCharacterState.items
-			.filter((item) => item.isType('personal') && item.asset.definition.bodypart != null)
+			.filter((item) => item.isType('bodypart'))
 			.map((item) => item.exportToBundle({}));
 
 		const overwrittenBodyparts = new Set<string>();
@@ -344,13 +344,13 @@ function OutfitPreview({ outfit }: {
 			if (itemBundle != null) {
 				const asset = assetManager.getAssetById(itemBundle.asset);
 				// We need to overwrite bodyparts of type we are adding for the preview to make sense
-				if (asset?.isType('personal') && asset.definition.bodypart != null && !overwrittenBodyparts.has(asset.definition.bodypart)) {
+				if (asset?.isType('bodypart') && !overwrittenBodyparts.has(asset.definition.bodypart)) {
 					const bodypart = asset.definition.bodypart;
 					// But we don't want to drop bodyparts that are in the outfit multiple times (e.g. hairs)
 					overwrittenBodyparts.add(bodypart);
 					_.remove(templateBundle, (oldItem) => {
 						const oldAsset = assetManager.getAssetById(oldItem.asset);
-						return oldAsset?.isType('personal') && oldAsset.definition.bodypart === bodypart;
+						return oldAsset?.isType('bodypart') && oldAsset.definition.bodypart === bodypart;
 					});
 				}
 
@@ -585,7 +585,7 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 		);
 	}
 
-	const ribbonColor = (asset.isType('personal') || asset.isType('roomDevice')) ? (
+	const ribbonColor = (asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice')) ? (
 		itemTemplate.color?.[
 			asset.definition.colorRibbonGroup ??
 			first(Object.keys(asset.definition.colorization ?? {})) ??

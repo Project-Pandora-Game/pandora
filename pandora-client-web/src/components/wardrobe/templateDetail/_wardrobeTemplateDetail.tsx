@@ -59,7 +59,7 @@ export function WardrobeTemplateEditMenu({
 					</button>
 				</Row>
 				{
-					(asset.isType('personal') || asset.isType('roomDevice')) ? (
+					(asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice')) ? (
 						<WardrobeTemplateColorization
 							asset={ asset }
 							color={ template.color ?? {} }
@@ -74,7 +74,7 @@ export function WardrobeTemplateEditMenu({
 					) : null
 				}
 				{
-					(asset.isType('personal') || asset.isType('roomDevice')) ? (
+					(asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice')) ? (
 						Array.from(Object.entries<Immutable<AssetModuleDefinition<unknown, unknown>>>(asset.definition.modules as Record<string, AssetModuleDefinition<unknown, unknown>> ?? {}))
 							.map(([moduleName, m]) => (
 								<FieldsetToggle legend={ `Module: ${m.name}` } key={ moduleName }>

@@ -145,7 +145,7 @@ export function WardrobeItemConfigMenu({
 					}
 				</Row>
 				{
-					(wornItem.isType('personal') || wornItem.isType('roomDevice')) ? (
+					(wornItem.isType('bodypart') || wornItem.isType('personal') || wornItem.isType('roomDevice')) ? (
 						<WardrobeItemColorization wornItem={ wornItem } item={ item } />
 					) : null
 				}

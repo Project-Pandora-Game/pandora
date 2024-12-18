@@ -29,7 +29,7 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 
 	const filter = (item: Item | Asset) => {
 		const asset = 'asset' in item ? item.asset : item;
-		return asset.isType('personal') && asset.definition.bodypart !== undefined;
+		return asset.isType('bodypart');
 	};
 
 	const title = `Currently worn items`;

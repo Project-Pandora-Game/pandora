@@ -118,7 +118,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 	}
 
 	public exportColorToBundle(): ItemColorBundle | undefined {
-		if (!this.isType('personal') && !this.isType('roomDevice'))
+		if (!this.isType('bodypart') && !this.isType('personal') && !this.isType('roomDevice'))
 			return undefined;
 		const colorization = this.asset.definition.colorization;
 		if (!colorization)
@@ -145,35 +145,8 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		return this._overrideColors(items);
 	}
 
-	public getColorOverrides(items: AppearanceItems): null | Partial<Record<string, ColorGroupResult>> {
-		if (!this.isType('personal'))
-			return null;
-		const colorization = this.asset.definition.colorization;
-		if (!colorization)
-			return null;
-
-		const { overrideColorKey } = this.getProperties();
-		if (overrideColorKey.size === 0)
-			return null;
-
-		let hasGroup = false;
-		const result: Record<string, ColorGroupResult> = {};
-		for (const key of Object.keys(this.color)) {
-			const def = colorization[key];
-			if (!def || def.name == null)
-				continue;
-
-			if (!overrideColorKey.has(key))
-				continue;
-
-			const groupColor = this._resolveColorGroup(items, key, def);
-			if (groupColor == null)
-				continue;
-
-			result[key] = groupColor;
-			hasGroup = true;
-		}
-		return hasGroup ? result : null;
+	public getColorOverrides(_items: AppearanceItems): null | Partial<Record<string, ColorGroupResult>> {
+		return null;
 	}
 
 	public validate(context: IItemValidationContext): AppearanceValidationResult {
@@ -205,7 +178,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			};
 
 		// Check bodyparts are worn
-		if (this.isType('personal') && this.asset.definition.bodypart != null && context.location !== 'worn')
+		if (this.isType('bodypart') && context.location !== 'worn')
 			return {
 				success: false,
 				error: {
@@ -227,7 +200,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 	/** Returns if this item can be transferred between inventories */
 	public canBeTransferred(): boolean {
 		// No transferring bodyparts, thank you
-		if (this.isType('personal') && this.asset.definition.bodypart)
+		if (this.isType('bodypart'))
 			return false;
 
 		return true;
@@ -296,7 +269,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 
 	private _overrideColors(items: AppearanceItems): Item<Type> {
 		Assert(this.isType(this.type));
-		if (!this.isType('personal'))
+		if (!this.isType('bodypart') && !this.isType('personal'))
 			return this;
 		const colorization = this.asset.definition.colorization;
 		if (!colorization)
@@ -321,77 +294,12 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		return this.changeColor(result);
 	}
 
-	/**
-	 * Color resolution order:
-	 * 1. Self (if it is not an inherited color)
-	 * 2. Closest item before self that has this color group (if it is not an inherited color)
-	 * 3. Closest item after self that has this color group (if it is not an inherited color)
-	 * 4. Closest item from self (inclusive) that has this color group and it has an inherited color
-	 */
-	protected _resolveColorGroup(items: AppearanceItems, ignoreKey: string, { group }: Immutable<AssetColorization>): ColorGroupResult | undefined {
-		Assert(this.isType(this.type));
-		if (!group)
-			return undefined;
-
-		const selfResult = this._getColorByGroup(group, ignoreKey);
-		if (selfResult?.[0] === 'primary')
-			return { item: this, colorization: selfResult[1], color: selfResult[2] };
-
-		let color: ColorGroupResult | undefined;
-		let colorInherited: ColorGroupResult | undefined = selfResult ? { item: this, colorization: selfResult[1], color: selfResult[2] } : undefined;
-		let foundSelf = false;
-		for (const item of items) {
-			if (item.id === this.id) {
-				if (color)
-					return color;
-
-				foundSelf = true;
-				continue;
-			}
-
-			const result = item._getColorByGroup(group);
-			if (result == null)
-				continue;
-
-			const [resultKey, colorization, resultColor] = result;
-			switch (resultKey) {
-				case 'primary':
-					if (foundSelf)
-						return { item, colorization, color: resultColor };
-
-					color = { item, colorization, color: resultColor };
-					break;
-				case 'inherited':
-					if (!colorInherited || !foundSelf)
-						colorInherited = { item, colorization, color: resultColor };
-					break;
-			}
-		}
-		return color ?? colorInherited;
-	}
-
-	private _getColorByGroup(group: string, ignoreKey?: string): null | ['primary' | 'inherited', Immutable<AssetColorization>, HexRGBAColorString] {
-		const { overrideColorKey, excludeFromColorInheritance } = this.getProperties();
-		let inherited: [Immutable<AssetColorization>, HexRGBAColorString] | undefined;
-		if (this.isType('personal') && this.asset.definition.colorization) {
-			for (const [key, value] of Object.entries(this.asset.definition.colorization)) {
-				if (value.group !== group || !this.color[key])
-					continue;
-				if (key === ignoreKey || excludeFromColorInheritance.has(key))
-					continue;
-
-				if (!overrideColorKey.has(key))
-					return ['primary', value, this.color[key]];
-
-				if (!inherited)
-					inherited = [value, this.color[key]];
-			}
-		}
-		return inherited ? ['inherited', ...inherited] : null;
+	public _getColorByGroup(_group: string, _ignoreKey?: string): null | ['primary' | 'inherited', Immutable<AssetColorization>, HexRGBAColorString] {
+		return null;
 	}
 
 	private static _loadColorBundle(asset: Asset, color: ItemColorBundle | HexRGBAColorString[] = {}): ItemColorBundle {
-		const colorization = (asset.isType('personal') || asset.isType('roomDevice')) ? (asset.definition.colorization ?? {}) : {};
+		const colorization = (asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice')) ? (asset.definition.colorization ?? {}) : {};
 		if (Array.isArray(color)) {
 			const keys = Object.keys(colorization);
 			const fixup: Writeable<ItemColorBundle> = {};

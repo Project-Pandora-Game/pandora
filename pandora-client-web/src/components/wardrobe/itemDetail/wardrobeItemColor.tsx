@@ -21,7 +21,7 @@ import { useWardrobeContext } from '../wardrobeContext';
 import { useWardrobeTargetItems } from '../wardrobeUtils';
 
 export function WardrobeItemColorization({ wornItem, item }: {
-	wornItem: Item<'personal' | 'roomDevice'>;
+	wornItem: Item<'bodypart' | 'personal' | 'roomDevice'>;
 	item: ItemPath;
 }): ReactElement | null {
 	const { target, targetSelector } = useWardrobeContext();

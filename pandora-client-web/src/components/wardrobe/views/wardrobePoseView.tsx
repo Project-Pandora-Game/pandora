@@ -90,7 +90,7 @@ function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterSta
 	const presets: AssetsPosePresets = assetManager.getPosePresets();
 	for (const item of characterState.items) {
 		// Collect custom pose presets from room device and personal items that provide them
-		if (!item.isType('personal') && !item.isType('roomDeviceWearablePart'))
+		if (!item.isType('bodypart') && !item.isType('personal') && !item.isType('roomDeviceWearablePart'))
 			continue;
 
 		const baseItem = item.isType('roomDeviceWearablePart') ? item.roomDevice : null;

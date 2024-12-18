@@ -143,10 +143,3 @@ export type Restriction =
 	| {
 		type: 'invalid';
 	};
-
-export type RestrictionResult = {
-	allowed: true;
-} | {
-	allowed: false;
-	restriction: Restriction;
-};

@@ -1,9 +1,9 @@
 import { isEqual, uniqWith } from 'lodash';
 import type { CharacterId, CharacterRestrictionsManager } from '../character';
-import type { ItemInteractionType, Restriction, RestrictionResult } from '../character/restrictionTypes';
+import type { ItemInteractionType, Restriction } from '../character/restrictionTypes';
 import type { GameLogicCharacter, GameLogicPermission, InteractionId } from '../gameLogic';
 import { Assert, AssertNever, AssertNotNullable } from '../utility/misc';
-import type { AppearanceActionProblem, AppearanceActionData, InvalidActionReason } from './appearanceActionProblems';
+import type { AppearanceActionData, AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
 import type { AppearanceActionContext } from './appearanceActions';
 import { SplitContainerPath } from './appearanceHelpers';
 import type {
@@ -174,28 +174,22 @@ export class AppearanceActionProcessingContext {
 
 	public checkInteractWithTarget(target: ActionTargetCharacter | null): void {
 		const restrictionManager = this.getPlayerRestrictionManager();
-		this.addRestrictionResult(restrictionManager.canInteractWithTarget(this, target));
+		restrictionManager.checkInteractWithTarget(this, target);
 	}
 
 	public checkCanUseItem(target: ActionTarget, itemPath: ItemPath, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): void {
 		const restrictionManager = this.getPlayerRestrictionManager();
-		this.addRestrictionResult(restrictionManager.canUseItem(this, target, itemPath, interaction, insertBeforeRootItem));
+		restrictionManager.checkUseItem(this, target, itemPath, interaction, insertBeforeRootItem);
 	}
 
 	public checkCanUseItemDirect(target: ActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): void {
 		const restrictionManager = this.getPlayerRestrictionManager();
-		this.addRestrictionResult(restrictionManager.canUseItemDirect(this, target, container, item, interaction, insertBeforeRootItem));
+		restrictionManager.checkUseItemDirect(this, target, container, item, interaction, insertBeforeRootItem);
 	}
 
 	public checkCanUseItemModule(target: ActionTarget, itemPath: ItemPath, moduleName: string, interaction?: ItemInteractionType): void {
 		const restrictionManager = this.getPlayerRestrictionManager();
-		this.addRestrictionResult(restrictionManager.canUseItemModule(this, target, itemPath, moduleName, interaction));
-	}
-
-	private addRestrictionResult(result: RestrictionResult): void {
-		if (!result.allowed) {
-			this.addRestriction(result.restriction);
-		}
+		restrictionManager.checkUseItemModule(this, target, itemPath, moduleName, interaction);
 	}
 
 	public addRestriction(restriction: Restriction): void {

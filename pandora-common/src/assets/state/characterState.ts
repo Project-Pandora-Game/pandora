@@ -6,7 +6,7 @@ import { Assert, IsNotNullable, MemoizeNoArg } from '../../utility/misc';
 import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
 import { WearableAssetType } from '../definitions';
-import { BoneType, CharacterView } from '../graphics';
+import { BoneType } from '../graphics';
 import { Item, type ItemRoomDeviceWearablePart } from '../item';
 import type { IExportOptions } from '../modules/common';
 import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose';
@@ -150,12 +150,6 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			return this.produceWithPose(MergePartialAppearancePoses(preset, preset.optional), 'pose');
 
 		return this.produceWithPose(preset, 'pose');
-	}
-
-	public produceWithView(newView: CharacterView): AssetFrameworkCharacterState {
-		return this.produceWithPose({
-			view: newView,
-		}, true);
 	}
 
 	public produceWithRestrictionOverride(type: RestrictionOverride['type'] | 'normal', removeAllowLeaveAt?: boolean): AssetFrameworkCharacterState;

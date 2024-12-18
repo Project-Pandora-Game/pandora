@@ -44,7 +44,7 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 }): ReactElement {
 	const id = useId();
 	const [onClick, processing] = useAppearanceActionEvent({
-		type: 'setView',
+		type: 'pose',
 		target: character.id,
 		view: characterState.requestedPose.view === 'front' ? 'back' : 'front',
 	});

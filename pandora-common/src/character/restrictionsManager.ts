@@ -243,7 +243,7 @@ export class CharacterRestrictionsManager {
 
 		// Must be able to use item's asset
 		this.checkUseAsset(context, targetCharacter, item.asset);
-		
+
 		/** If the action should be considered as "manipulating themselves" for the purpose of self-blocking checks */
 		const isSelfAction = targetCharacter != null && targetCharacter.character.id === this.character.id;
 		const forceAllowItemActions = this.forceAllowItemActions();
@@ -269,7 +269,7 @@ export class CharacterRestrictionsManager {
 				upperPath.module,
 				interaction === ItemInteractionType.ACCESS_ONLY ? ItemInteractionType.ACCESS_ONLY : ItemInteractionType.MODIFY,
 			);
-					}
+		}
 
 		// If access is all we needed, then success
 		if (interaction === ItemInteractionType.ACCESS_ONLY)
@@ -289,14 +289,14 @@ export class CharacterRestrictionsManager {
 				interaction !== ItemInteractionType.EXPRESSION_CHANGE
 			) {
 				context.addRestriction({
-						type: 'modifyBodyRoom',
-					});
+					type: 'modifyBodyRoom',
+				});
 			}
 
 			// Bodyparts have special interaction type
 			context.addInteraction(target.character, 'modifyBody');
 
-// Otherwise success
+			// Otherwise success
 			return;
 		}
 
@@ -309,7 +309,7 @@ export class CharacterRestrictionsManager {
 		// To add or remove the item, we need to have access to all contained items
 		if (interaction === ItemInteractionType.ADD_REMOVE || interaction === ItemInteractionType.DEVICE_ENTER_LEAVE) {
 			this.checkPermissionForItemContents(context, targetCharacter, item);
-					}
+		}
 
 		// Enter/Leave interaction is only allowed on room devices and their wearable parts
 		if (interaction === ItemInteractionType.DEVICE_ENTER_LEAVE) {
@@ -332,22 +332,22 @@ export class CharacterRestrictionsManager {
 		if ((interaction === ItemInteractionType.ADD_REMOVE || interaction === ItemInteractionType.DEVICE_ENTER_LEAVE) && isPhysicallyEquipped) {
 			// If item blocks add/remove, fail
 			if (properties.blockAddRemove && !forceAllowItemActions) {
-					context.addRestriction({
-						type: 'blockedAddRemove',
-						asset: item.asset.id,
-						itemName: item.name ?? '',
-						self: false,
-					});
+				context.addRestriction({
+					type: 'blockedAddRemove',
+					asset: item.asset.id,
+					itemName: item.name ?? '',
+					self: false,
+				});
 			}
 
 			// If equipping on self, the asset must allow self-equip
 			if (isSelfAction && properties.blockSelfAddRemove && !forceAllowItemActions) {
-					context.addRestriction({
-						type: 'blockedAddRemove',
-						asset: item.asset.id,
-						itemName: item.name ?? '',
-						self: true,
-					});
+				context.addRestriction({
+					type: 'blockedAddRemove',
+					asset: item.asset.id,
+					itemName: item.name ?? '',
+					self: true,
+				});
 			}
 		}
 
@@ -359,11 +359,11 @@ export class CharacterRestrictionsManager {
 			const coveredAttribute = Array.from(properties.attributes).find((a) => targetProperties.attributesCovers.has(a));
 			if (coveredAttribute != null) {
 				context.addRestriction({
-						type: 'covered',
-						asset: item.asset.id,
-						itemName: item.name ?? '',
-						attribute: coveredAttribute,
-					});
+					type: 'covered',
+					asset: item.asset.id,
+					itemName: item.name ?? '',
+					attribute: coveredAttribute,
+				});
 			}
 		}
 
@@ -375,9 +375,9 @@ export class CharacterRestrictionsManager {
 			interaction === ItemInteractionType.REORDER
 		) {
 			if (!this.canUseHands() && !forceAllowItemActions) {
-					context.addRestriction({
-						type: 'blockedHands',
-					});
+				context.addRestriction({
+					type: 'blockedHands',
+				});
 			}
 		}
 	}
@@ -412,7 +412,7 @@ export class CharacterRestrictionsManager {
 
 		// Must be able to interact with this item in that way
 		this.checkUseItemDirect(context, target, container, item, interaction);
-			
+
 		// If the target is a room device, then must be able to interact with the wearable part as well (if there is a target character)
 		if (item.isType('roomDevice') && targetCharacter != null) {
 			const wearablePart = targetCharacter.getAllItems()
@@ -425,7 +425,7 @@ export class CharacterRestrictionsManager {
 			}
 
 			this.checkUseItemDirect(context, targetCharacter, [], wearablePart, interaction);
-					}
+		}
 
 		// If access is all we needed, then success
 		if (interaction === ItemInteractionType.ACCESS_ONLY)
@@ -439,24 +439,24 @@ export class CharacterRestrictionsManager {
 
 		// If item blocks this module, fail
 		if (properties.blockModules.has(moduleName) && !this.forceAllowItemActions()) {
-				context.addRestriction({
-					type: 'blockedModule',
-					asset: item.asset.id,
-					itemName: item.name ?? '',
-					module: moduleName,
-					self: false,
-				});
+			context.addRestriction({
+				type: 'blockedModule',
+				asset: item.asset.id,
+				itemName: item.name ?? '',
+				module: moduleName,
+				self: false,
+			});
 		}
 
 		// If accessing on self, the item must not block it
 		if (isSelfAction && properties.blockSelfModules.has(moduleName) && !this.forceAllowItemActions()) {
-				context.addRestriction({
-					type: 'blockedModule',
-					asset: item.asset.id,
-					itemName: item.name ?? '',
-					module: moduleName,
-					self: true,
-				});
+			context.addRestriction({
+				type: 'blockedModule',
+				asset: item.asset.id,
+				itemName: item.name ?? '',
+				module: moduleName,
+				self: true,
+			});
 		}
 	}
 }

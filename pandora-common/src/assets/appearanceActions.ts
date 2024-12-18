@@ -79,12 +79,6 @@ export const AppearanceActionBody = z.object({
 	bones: AppearancePoseSchema.shape.bones,
 });
 
-export const AppearanceActionSetView = z.object({
-	type: z.literal('setView'),
-	target: CharacterIdSchema,
-	view: CharacterViewSchema,
-});
-
 export const AppearanceActionMove = z.object({
 	type: z.literal('move'),
 	/** Target with the item to move */
@@ -183,7 +177,6 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionTransferSchema,
 	AppearanceActionPose,
 	AppearanceActionBody,
-	AppearanceActionSetView,
 	AppearanceActionMove,
 	AppearanceActionColor,
 	AppearanceActionCustomize,
@@ -348,22 +341,6 @@ export function DoAppearanceAction(
 
 			if (!processingContext.manipulator.produceCharacterState(action.target, (character) => {
 				return character.produceWithPose(action, action.type);
-			})) {
-				return processingContext.invalid();
-			}
-
-			return processingContext.finalize();
-		}
-		// Changes view of the character - front or back
-		case 'setView': {
-			const target = processingContext.getTargetCharacter({ type: 'character', characterId: action.target });
-			if (!target)
-				return processingContext.invalid();
-
-			processingContext.checkInteractWithTarget(target);
-
-			if (!processingContext.manipulator.produceCharacterState(action.target, (character) => {
-				return character.produceWithView(action.view);
 			})) {
 				return processingContext.invalid();
 			}

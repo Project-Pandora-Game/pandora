@@ -142,7 +142,7 @@ export class AppearanceEditor extends CharacterAppearance {
 
 	public setView(view: CharacterView, context: EditorActionContext = {}): boolean {
 		return this.editorDoAction({
-			type: 'setView',
+			type: 'pose',
 			target: this.id,
 			view,
 		}, context);

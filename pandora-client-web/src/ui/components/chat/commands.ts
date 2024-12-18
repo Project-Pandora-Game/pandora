@@ -303,7 +303,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 					return false;
 
 				shardConnector.awaitResponse('appearanceAction', {
-					type: 'setView',
+					type: 'pose',
 					target: player.data.id,
 					view: playerState.requestedPose.view === 'front' ? 'back' : 'front',
 				}).catch(() => { /** TODO */ });

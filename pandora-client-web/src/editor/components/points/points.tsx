@@ -82,7 +82,7 @@ export function PointsEditUi(): ReactElement | null {
 			<h4>POINT CONFIGURATION</h4>
 			{
 				selectedPoint ?
-					<PointConfiguration point={ selectedPoint } /> :
+					<PointConfiguration key={ selectedTemplate.templateName + ':' + selectedPoint.index.toString() } point={ selectedPoint } /> :
 					<Row alignY='center'>No point selected</Row>
 			}
 		</>

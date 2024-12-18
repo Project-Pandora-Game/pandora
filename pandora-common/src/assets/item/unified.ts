@@ -31,6 +31,8 @@ export const ItemBundleSchema = z.object({
 	color: ItemColorBundleSchema.or(z.array(HexRGBAColorStringSchema)).optional(),
 	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
+	/** Whether free hands are required to interact with this item. */
+	requireFreeHandsToUse: z.boolean().optional(),
 	moduleData: z.record(z.lazy(() => ItemModuleDataSchema)).optional(),
 	/** Room device specific data */
 	roomDeviceData: RoomDeviceBundleSchema.optional(),
@@ -51,6 +53,8 @@ export const ItemTemplateSchema: z.ZodType<ItemTemplate, ZodTypeDef, unknown> = 
 	color: ItemColorBundleSchema.optional(),
 	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
+	/** Whether free hands are required to interact with this item. */
+	requireFreeHandsToUse: z.boolean().optional(),
 	modules: z.record(z.lazy(() => ItemModuleTemplateSchema)).optional(),
 });
 
@@ -94,6 +98,9 @@ export function CreateItemBundleFromTemplate(template: ItemTemplate, context: II
 		color: template.color,
 		name: template.name,
 		description: template.description,
+		requireFreeHandsToUse: (asset.isType('personal') || asset.isType('roomDevice')) ?
+			(template.requireFreeHandsToUse ?? (asset.definition.requireFreeHandsToUseDefault ?? false)) :
+			undefined,
 	};
 
 	// Load modules

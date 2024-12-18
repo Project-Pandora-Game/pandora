@@ -6,7 +6,7 @@ import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { AppearanceItems } from '../appearanceValidation';
 import type { Asset } from '../asset';
 import type { AssetColorization } from '../definitions';
-import type { IItemModule } from '../modules/common';
+import type { IExportOptions, IItemModule } from '../modules/common';
 import type { AssetProperties } from '../properties';
 import type { ColorGroupResult, IItemLoadContext, ItemBundle } from './base';
 
@@ -23,14 +23,17 @@ declare module './_internal' {
 
 interface ItemPersonalProps extends ItemBaseProps<'personal'> {
 	readonly modules: ReadonlyMap<string, IItemModule<AssetProperties, undefined>>;
+	readonly requireFreeHandsToUse: boolean;
 }
 
 export class ItemPersonal extends ItemBase<'personal'> implements ItemPersonalProps {
 	public readonly modules: ReadonlyMap<string, IItemModule<AssetProperties, undefined>>;
+	public readonly requireFreeHandsToUse: boolean;
 
 	protected constructor(props: ItemPersonalProps, overrideProps?: Partial<ItemPersonalProps>) {
 		super(props, overrideProps);
 		this.modules = overrideProps?.modules ?? props.modules;
+		this.requireFreeHandsToUse = overrideProps?.requireFreeHandsToUse ?? props.requireFreeHandsToUse;
 	}
 
 	protected override withProps(overrideProps: Partial<ItemPersonalProps>): ItemPersonal {
@@ -44,10 +47,20 @@ export class ItemPersonal extends ItemBase<'personal'> implements ItemPersonalPr
 			modules.set(moduleName, LoadItemModule<AssetProperties, undefined>(moduleConfig, bundle.moduleData?.[moduleName], context));
 		}
 
+		const requireFreeHandsToUse = bundle.requireFreeHandsToUse ?? true;
+
 		return new ItemPersonal({
 			...(ItemBase._parseBundle(asset, bundle, context)),
 			modules,
+			requireFreeHandsToUse,
 		});
+	}
+
+	public override exportToBundle(options: IExportOptions): ItemBundle {
+		return {
+			...super.exportToBundle(options),
+			requireFreeHandsToUse: this.requireFreeHandsToUse,
+		};
 	}
 
 	public resolveColor(items: AppearanceItems, colorizationKey: string): HexRGBAColorString | undefined {

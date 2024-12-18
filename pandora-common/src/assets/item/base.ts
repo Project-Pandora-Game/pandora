@@ -50,6 +50,8 @@ export type ItemBundle = {
 	color?: ItemColorBundle | HexRGBAColorString[];
 	name?: string;
 	description?: string;
+	/** Whether free hands are required to interact with this item. */
+	requireFreeHandsToUse?: boolean;
 	moduleData?: Record<string, ItemModuleData>;
 	/** Room device specific data */
 	roomDeviceData?: RoomDeviceBundle;
@@ -69,6 +71,8 @@ export type ItemTemplate = {
 	color?: ItemColorBundle;
 	name?: string;
 	description?: string;
+	/** Whether free hands are required to interact with this item. */
+	requireFreeHandsToUse?: boolean;
 	modules?: Record<string, ItemModuleTemplate>;
 };
 

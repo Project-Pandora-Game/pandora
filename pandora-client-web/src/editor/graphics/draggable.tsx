@@ -127,7 +127,7 @@ export class DraggablePoint {
 		this._definition = new Observable(point);
 	}
 
-	private get index(): number {
+	public get index(): number {
 		return this._definition.value.index;
 	}
 

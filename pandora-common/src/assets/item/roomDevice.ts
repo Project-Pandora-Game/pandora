@@ -9,7 +9,7 @@ import type { Asset } from '../asset';
 import type { RoomDeviceModuleStaticData } from '../definitions';
 import type { IExportOptions, IItemModule } from '../modules/common';
 import type { AssetProperties } from '../properties';
-import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base';
+import type { IItemLoadContext, IItemValidationContext, ItemBundle, ItemTemplate } from './base';
 
 import { CharacterId, CharacterIdSchema } from '../../character/characterTypes';
 import { MemoizeNoArg } from '../../utility/misc';
@@ -165,6 +165,13 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 			};
 
 		return { success: true };
+	}
+
+	public override exportToTemplate(): ItemTemplate {
+		return {
+			...super.exportToTemplate(),
+			requireFreeHandsToUse: this.requireFreeHandsToUse,
+		};
 	}
 
 	public override exportToBundle(options: IExportOptions): ItemBundle & { roomDeviceData: RoomDeviceBundle; } {

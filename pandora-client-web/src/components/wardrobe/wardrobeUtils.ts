@@ -89,7 +89,16 @@ export function WardrobeCheckResultForConfirmationWarnings(
 		!resultRestrictionManager.forceAllowItemActions() &&
 		!resultRestrictionManager.canUseHands()
 	) {
-		warnings.push(`This action will prevent you from using your hands`);
+		const onlyStruggleableItems = resultCharacterState.items
+			.filter((i) => i.getProperties().effects.blockHands)
+			.map((i) => (i.isType('roomDeviceWearablePart') && i.roomDevice != null) ? i.roomDevice : i)
+			.every((i) => !(i.isType('personal') || i.isType('roomDevice')) || !i.requireFreeHandsToUse);
+
+		if (onlyStruggleableItems) {
+			warnings.push(`This action will prevent you from using your hands (but you might still be able to struggle out)`);
+		} else {
+			warnings.push(`This action will prevent you from using your hands and you will not be able to get out yourself`);
+		}
 	}
 
 	if (action.type === 'roomDeviceDeploy' && !action.deployment.deployed) {

@@ -1,9 +1,11 @@
-import { Immutable } from 'immer';
+import classNames from 'classnames';
+import { Immutable, produce } from 'immer';
 import {
 	AssetModuleDefinition,
 	ItemTemplate,
+	type Asset,
 } from 'pandora-common';
-import React, { ReactElement } from 'react';
+import React, { ReactElement, useCallback } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import crossIcon from '../../../assets/icons/cross.svg';
 import { IconButton } from '../../common/button/button';
@@ -59,6 +61,15 @@ export function WardrobeTemplateEditMenu({
 					</button>
 				</Row>
 				{
+					(asset.isType('personal') || asset.isType('roomDevice')) ? (
+						<WardrobeTemplateRequireFreeHandsCustomize
+							asset={ asset }
+							template={ template }
+							updateTemplate={ updateTemplate }
+						/>
+					) : null
+				}
+				{
 					(asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice')) ? (
 						<WardrobeTemplateColorization
 							asset={ asset }
@@ -99,5 +110,52 @@ export function WardrobeTemplateEditMenu({
 				}
 			</Column>
 		</div>
+	);
+}
+
+function WardrobeTemplateRequireFreeHandsCustomize({ template, updateTemplate }: {
+	asset: Asset<'personal' | 'roomDevice'>;
+	template: Immutable<ItemTemplate>;
+	updateTemplate: (newTemplate: Immutable<ItemTemplate>) => void;
+}): ReactElement {
+
+	const setRequire = useCallback((newValue: boolean) => {
+		updateTemplate(produce(template, (draft) => {
+			draft.requireFreeHandsToUse = newValue;
+		}));
+	}, [template, updateTemplate]);
+
+	return (
+		// TODO: Give it better name than "struggling"
+		<FieldsetToggle legend='[TODO] Struggling'>
+			<Row alignY='center'>
+				<button
+					className={ classNames(
+						'wardrobeActionButton',
+						'allowed',
+						(template.requireFreeHandsToUse === true) ? 'selected' : null,
+					) }
+					onClick={ (ev) => {
+						ev.stopPropagation();
+						setRequire(true);
+					} }
+				>
+					Require free hands to use this item
+				</button>
+				<button
+					className={ classNames(
+						'wardrobeActionButton',
+						'allowed',
+						(template.requireFreeHandsToUse === false) ? 'selected' : null,
+					) }
+					onClick={ (ev) => {
+						ev.stopPropagation();
+						setRequire(false);
+					} }
+				>
+					Allow using this item even with blocked hands
+				</button>
+			</Row>
+		</FieldsetToggle>
 	);
 }

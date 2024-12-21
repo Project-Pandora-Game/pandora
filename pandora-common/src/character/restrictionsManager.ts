@@ -368,13 +368,24 @@ export class CharacterRestrictionsManager {
 		}
 
 		// Must be able to use hands (for most interaction types)
-		if (
-			interaction === ItemInteractionType.STYLING ||
-			interaction === ItemInteractionType.MODIFY ||
-			interaction === ItemInteractionType.ADD_REMOVE ||
-			interaction === ItemInteractionType.REORDER
-		) {
-			if (!this.canUseHands() && !forceAllowItemActions) {
+		if (!this.canUseHands() && !forceAllowItemActions) {
+			let allowStruggleBypass: boolean;
+			switch (interaction) {
+				case ItemInteractionType.STYLING:
+					allowStruggleBypass = false;
+					break;
+				case ItemInteractionType.ADD_REMOVE:
+				case ItemInteractionType.MODIFY:
+				case ItemInteractionType.REORDER:
+				case ItemInteractionType.DEVICE_ENTER_LEAVE:
+					allowStruggleBypass = !(item.isType('personal') || item.isType('roomDevice')) || !item.requireFreeHandsToUse;
+					break;
+				default:
+					AssertNever(interaction);
+			}
+			if (allowStruggleBypass) {
+				// TODO: Implement actual struggling
+			} else {
 				context.addRestriction({
 					type: 'blockedHands',
 				});

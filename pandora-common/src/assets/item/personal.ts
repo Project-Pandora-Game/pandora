@@ -8,7 +8,7 @@ import type { Asset } from '../asset';
 import type { AssetColorization } from '../definitions';
 import type { IExportOptions, IItemModule } from '../modules/common';
 import type { AssetProperties } from '../properties';
-import type { ColorGroupResult, IItemLoadContext, ItemBundle } from './base';
+import type { ColorGroupResult, IItemLoadContext, ItemBundle, ItemTemplate } from './base';
 
 import { MemoizeNoArg } from '../../utility/misc';
 import { ItemModuleAction, LoadItemModule } from '../modules';
@@ -54,6 +54,13 @@ export class ItemPersonal extends ItemBase<'personal'> implements ItemPersonalPr
 			modules,
 			requireFreeHandsToUse,
 		});
+	}
+
+	public override exportToTemplate(): ItemTemplate {
+		return {
+			...super.exportToTemplate(),
+			requireFreeHandsToUse: this.requireFreeHandsToUse,
+		};
 	}
 
 	public override exportToBundle(options: IExportOptions): ItemBundle {

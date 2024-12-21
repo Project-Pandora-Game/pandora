@@ -11,8 +11,8 @@ import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot'
 import React, { ReactElement, useCallback, useEffect, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
-import deleteIcon from '../../../assets/icons/delete.svg';
 import crossIcon from '../../../assets/icons/cross.svg';
+import deleteIcon from '../../../assets/icons/delete.svg';
 import { useEvent } from '../../../common/useEvent';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
@@ -145,6 +145,11 @@ export function WardrobeItemConfigMenu({
 					}
 				</Row>
 				{
+					(wornItem.isType('personal') || wornItem.isType('roomDevice')) ? (
+						<WardrobeItemRequireFreeHandsCustomize wornItem={ wornItem } item={ item } />
+					) : null
+				}
+				{
 					(wornItem.isType('bodypart') || wornItem.isType('personal') || wornItem.isType('roomDevice')) ? (
 						<WardrobeItemColorization wornItem={ wornItem } item={ item } />
 					) : null
@@ -179,6 +184,45 @@ export function WardrobeItemConfigMenu({
 				}
 			</Column>
 		</div>
+	);
+}
+
+function WardrobeItemRequireFreeHandsCustomize({ wornItem, item }: { wornItem: Item<'personal' | 'roomDevice'>; item: ItemPath; }): ReactElement {
+	const { targetSelector } = useWardrobeContext();
+
+	const actionSetRequired = React.useMemo<AppearanceAction>(() => ({
+		type: 'customize',
+		target: targetSelector,
+		item,
+		requireFreeHandsToUse: true,
+	}), [targetSelector, item]);
+	const actionSetOptional = React.useMemo<AppearanceAction>(() => ({
+		type: 'customize',
+		target: targetSelector,
+		item,
+		requireFreeHandsToUse: false,
+	}), [targetSelector, item]);
+
+	return (
+		// TODO: Give it better name than "struggling"
+		<FieldsetToggle legend='[TODO] Struggling'>
+			<Row alignY='center'>
+				<WardrobeActionButton
+					action={ actionSetRequired }
+					className={ wornItem.requireFreeHandsToUse ? 'selected' : '' }
+					showActionBlockedExplanation={ !wornItem.requireFreeHandsToUse }
+				>
+					Require free hands to use this item
+				</WardrobeActionButton>
+				<WardrobeActionButton
+					action={ actionSetOptional }
+					className={ !wornItem.requireFreeHandsToUse ? 'selected' : '' }
+					showActionBlockedExplanation={ wornItem.requireFreeHandsToUse }
+				>
+					Allow using this item even with blocked hands
+				</WardrobeActionButton>
+			</Row>
+		</FieldsetToggle>
 	);
 }
 

@@ -259,6 +259,7 @@ function InventoryAssetViewListPickup({ asset, listMode }: {
 					type: 'template',
 					template: {
 						asset: asset.id,
+						requireFreeHandsToUse: (asset.isType('personal') || asset.isType('roomDevice')) ? (asset.definition.requireFreeHandsToUseDefault ?? false) : undefined,
 					},
 				});
 			} }>

@@ -109,6 +109,8 @@ export const AppearanceActionCustomize = z.object({
 	name: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN),
 	/** New description */
 	description: z.string().max(LIMIT_ITEM_DESCRIPTION_LENGTH),
+	/** New usage state to require hands to use or not */
+	requireFreeHandsToUse: z.boolean().optional(),
 });
 
 export const AppearanceActionModuleAction = z.object({
@@ -669,11 +671,12 @@ export function ActionAppearanceCustomize({ action, processingContext }: Appeara
 	}
 
 	const item = target.getItem(action.item);
+	// Room device wearable parts cannot be customized
 	if (item == null || item.isType('roomDeviceWearablePart')) {
 		return processingContext.invalid();
 	}
 
-	// To manipulate the color of room devices, player must be an admin
+	// To manipulate the style of room devices, player must be an admin
 	if (item.isType('roomDevice')) {
 		processingContext.checkPlayerIsSpaceAdmin();
 	}
@@ -682,7 +685,17 @@ export function ActionAppearanceCustomize({ action, processingContext }: Appeara
 	processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.STYLING);
 
 	const manipulator = processingContext.manipulator.getManipulatorFor(action.target).getContainer(action.item.container);
-	if (!manipulator.modifyItem(action.item.itemId, (it) => it.customize(action.name, action.description))) {
+	if (!manipulator.modifyItem(action.item.itemId, (it) => {
+		// Apply name and description
+		it = it.customize(action.name, action.description);
+
+		// Apply the new requireFreeHandsToUse value, if a new value is defined
+		if (action.requireFreeHandsToUse !== undefined && (it.isType('personal') || it.isType('roomDevice'))) {
+			it = it.customizeFreeHandUsage(action.requireFreeHandsToUse);
+		}
+
+		return it;
+	})) {
 		return processingContext.invalid();
 	}
 

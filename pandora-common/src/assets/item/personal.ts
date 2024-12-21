@@ -214,6 +214,11 @@ export class ItemPersonal extends ItemBase<'personal'> implements ItemPersonalPr
 		});
 	}
 
+	/** Returns a new item with the passed requireFreeHandsToUse attribute */
+	public customizeFreeHandUsage(requireFreeHandsToUse: boolean): ItemPersonal {
+		return this.withProps({ requireFreeHandsToUse });
+	}
+
 	@MemoizeNoArg
 	public override getPropertiesParts(): readonly Immutable<AssetProperties>[] {
 		return [

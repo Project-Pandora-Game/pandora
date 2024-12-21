@@ -282,6 +282,11 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 		});
 	}
 
+	/** Returns a new item with the passed requireFreeHandsToUse attribute */
+	public customizeFreeHandUsage(requireFreeHandsToUse: boolean): ItemRoomDevice {
+		return this.withProps({ requireFreeHandsToUse });
+	}
+
 	@MemoizeNoArg
 	public getRoomDevicePropertiesParts(): readonly Immutable<RoomDeviceProperties>[] {
 		const propertyParts: Immutable<AssetProperties>[] = [

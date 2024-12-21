@@ -214,16 +214,21 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 	}
 
 	/** Returns a new item with the passed name and description */
-	public customize(newName: string, newDescription: string): Item<Type> {
+	public customizeName(newName: string): Item<Type> {
 		let name: string | undefined = newName.trim();
 		if (name === '' || name === this.asset.definition.name)
 			name = undefined;
 
+		return this.withProps({ name });
+	}
+
+	/** Returns a new item with the passed name and description */
+	public customizeDescription(newDescription: string): Item<Type> {
 		let description: string | undefined = newDescription.trim();
 		if (description === '')
 			description = undefined;
 
-		return this.withProps({ name, description });
+		return this.withProps({ description });
 	}
 
 	@MemoizeNoArg

@@ -106,9 +106,9 @@ export const AppearanceActionCustomize = z.object({
 	/** Path to the item to change */
 	item: ItemPathSchema,
 	/** New custom name */
-	name: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN),
+	name: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN).optional(),
 	/** New description */
-	description: z.string().max(LIMIT_ITEM_DESCRIPTION_LENGTH),
+	description: z.string().max(LIMIT_ITEM_DESCRIPTION_LENGTH).optional(),
 	/** New usage state to require hands to use or not */
 	requireFreeHandsToUse: z.boolean().optional(),
 });
@@ -687,7 +687,12 @@ export function ActionAppearanceCustomize({ action, processingContext }: Appeara
 	const manipulator = processingContext.manipulator.getManipulatorFor(action.target).getContainer(action.item.container);
 	if (!manipulator.modifyItem(action.item.itemId, (it) => {
 		// Apply name and description
-		it = it.customize(action.name, action.description);
+		if (action.name !== undefined) {
+			it = it.customizeName(action.name);
+		}
+		if (action.description !== undefined) {
+			it = it.customizeDescription(action.description);
+		}
 
 		// Apply the new requireFreeHandsToUse value, if a new value is defined
 		if (action.requireFreeHandsToUse !== undefined && (it.isType('personal') || it.isType('roomDevice'))) {

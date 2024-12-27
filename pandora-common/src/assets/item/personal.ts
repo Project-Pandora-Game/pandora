@@ -1,8 +1,8 @@
 import type { Immutable } from 'immer';
 import { first } from 'lodash';
 
+import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions';
 import type { HexRGBAColorString } from '../../validation';
-import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { AppearanceItems } from '../appearanceValidation';
 import type { Asset } from '../asset';
 import type { AssetColorization } from '../definitions';

@@ -1,11 +1,6 @@
 import { isEqual, uniqWith } from 'lodash';
-import type { CharacterId, CharacterRestrictionsManager } from '../character';
-import type { ItemInteractionType, Restriction } from '../character/restrictionTypes';
-import type { GameLogicCharacter, GameLogicPermission, InteractionId } from '../gameLogic';
-import { Assert, AssertNever, AssertNotNullable } from '../utility/misc';
-import type { AppearanceActionData, AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
-import type { AppearanceActionContext } from './appearanceActions';
-import { SplitContainerPath } from './appearanceHelpers';
+import type { GameLogicCharacter, GameLogicPermission, InteractionId } from '..';
+import { SplitContainerPath } from '../../assets/appearanceHelpers';
 import type {
 	ActionCharacterSelector,
 	ActionHandlerMessage,
@@ -16,11 +11,16 @@ import type {
 	ActionTargetSelector,
 	ItemContainerPath,
 	ItemPath,
-} from './appearanceTypes';
-import type { Item, ItemId } from './item';
-import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
-import { RoomInventory } from './roomInventory';
-import type { AssetFrameworkGlobalState } from './state/globalState';
+} from '../../assets/appearanceTypes';
+import type { Item, ItemId } from '../../assets/item';
+import { AssetFrameworkGlobalStateManipulator } from '../../assets/manipulators/globalStateManipulator';
+import { RoomInventory } from '../../assets/roomInventory';
+import type { AssetFrameworkGlobalState } from '../../assets/state/globalState';
+import type { CharacterId, CharacterRestrictionsManager } from '../../character';
+import type { ItemInteractionType, Restriction } from '../../character/restrictionTypes';
+import { Assert, AssertNever, AssertNotNullable } from '../../utility/misc';
+import type { AppearanceActionData, AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
+import type { AppearanceActionContext } from './appearanceActions';
 
 export class AppearanceActionProcessingContext {
 	private readonly _context: AppearanceActionContext;

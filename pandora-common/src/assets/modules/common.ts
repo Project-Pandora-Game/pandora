@@ -1,12 +1,12 @@
+import type { Immutable } from 'immer';
+import type { ItemInteractionType } from '../../character/restrictionTypes';
+import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions';
+import type { InteractionId } from '../../gameLogic/interactions';
+import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { Asset } from '../asset';
 import type { ConditionOperator } from '../graphics';
-import type { ItemInteractionType } from '../../character/restrictionTypes';
-import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item';
-import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { IAssetModuleTypes, ModuleType } from '../modules';
-import type { Immutable } from 'immer';
-import type { InteractionId } from '../../gameLogic/interactions';
 
 type StaticConfigDataHelper<TStaticData> = TStaticData extends undefined ? {
 	staticConfig?: TStaticData;

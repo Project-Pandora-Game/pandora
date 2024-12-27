@@ -1,31 +1,31 @@
 import { isEqual, sample } from 'lodash';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
-import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
-import { ItemInteractionType } from '../character/restrictionTypes';
-import type { GameLogicCharacter } from '../gameLogic';
-import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN } from '../inputLimits';
-import { PseudoRandom } from '../math/pseudoRandom';
-import type { ActionSpaceContext } from '../space/space';
-import { Assert, AssertNever, ShuffleArray } from '../utility/misc';
+import type { GameLogicCharacter } from '..';
+import { AppearanceRootManipulator } from '../../assets/appearanceHelpers';
+import { ActionMessageTemplateHandler, ActionTarget, ActionTargetSelectorSchema, CharacterSelectorSchema, ItemContainerPath, ItemContainerPathSchema, ItemPath, ItemPathSchema, type ActionTargetCharacter } from '../../assets/appearanceTypes';
+import { AppearanceItems, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from '../../assets/appearanceValidation';
+import type { Asset } from '../../assets/asset';
+import type { AssetManager } from '../../assets/assetManager';
+import { WearableAssetType } from '../../assets/definitions';
+import { CharacterViewSchema, LegsPoseSchema } from '../../assets/graphics/conditions';
+import { ItemRoomDevice, ItemTemplateSchema, RoomDeviceDeploymentChange, RoomDeviceDeploymentChangeSchema } from '../../assets/item';
+import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemId, ItemIdSchema } from '../../assets/item/base';
+import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure, type ModuleActionData } from '../../assets/modules';
+import { CreateAssetPropertiesResult, MergeAssetProperties } from '../../assets/properties';
+import { AppearanceArmPoseSchema, AppearanceArmsOrderSchema, AppearancePoseSchema } from '../../assets/state/characterStatePose';
+import { RestrictionOverride } from '../../assets/state/characterStateTypes';
+import type { AssetFrameworkGlobalState } from '../../assets/state/globalState';
+import { CharacterId, CharacterIdSchema } from '../../character/characterTypes';
+import { ItemInteractionType } from '../../character/restrictionTypes';
+import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN } from '../../inputLimits';
+import { PseudoRandom } from '../../math/pseudoRandom';
+import type { ActionSpaceContext } from '../../space/space';
+import { Assert, AssertNever, ShuffleArray } from '../../utility/misc';
 import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
-import { AppearanceRootManipulator } from './appearanceHelpers';
-import { ActionMessageTemplateHandler, ActionTarget, ActionTargetSelectorSchema, CharacterSelectorSchema, ItemContainerPath, ItemContainerPathSchema, ItemPath, ItemPathSchema, type ActionTargetCharacter } from './appearanceTypes';
-import { AppearanceItems, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from './appearanceValidation';
-import type { Asset } from './asset';
-import type { AssetManager } from './assetManager';
-import { WearableAssetType } from './definitions';
-import { CharacterViewSchema, LegsPoseSchema } from './graphics/conditions';
-import { ItemRoomDevice, ItemTemplateSchema, RoomDeviceDeploymentChange, RoomDeviceDeploymentChangeSchema } from './item';
-import { FilterItemWearable, Item, ItemColorBundle, ItemColorBundleSchema, ItemId, ItemIdSchema } from './item/base';
-import { ItemModuleActionSchema, ModuleActionError, ModuleActionFailure, type ModuleActionData } from './modules';
-import { CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
-import { AppearanceArmPoseSchema, AppearanceArmsOrderSchema, AppearancePoseSchema } from './state/characterStatePose';
-import { RestrictionOverride } from './state/characterStateTypes';
-import type { AssetFrameworkGlobalState } from './state/globalState';
 
 // Fix for pnpm resolution weirdness
-import type { } from '../validation';
+import type { } from '../../validation';
 
 export const AppearanceActionCreateSchema = z.object({
 	type: z.literal('create'),

@@ -1,7 +1,6 @@
 import type { Immutable } from 'immer';
 import _ from 'lodash';
 import type { CharacterAppearance } from '../assets/appearance';
-import type { AppearanceActionProcessingContext } from '../assets/appearanceActionProcessingContext';
 import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { ActionTarget, ActionTargetCharacter, ItemContainerPath, ItemPath } from '../assets/appearanceTypes';
 import { AppearanceItemProperties } from '../assets/appearanceValidation';
@@ -11,6 +10,7 @@ import { FilterItemType, type Item, type ItemId, type RoomDeviceLink } from '../
 import { AssetPropertiesResult } from '../assets/properties';
 import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes';
 import { HearingImpairment, Muffler } from '../character/speech';
+import type { AppearanceActionProcessingContext } from '../gameLogic/actionLogic/appearanceActionProcessingContext';
 import type { GameLogicCharacter } from '../gameLogic/character/character';
 import type { ActionSpaceContext } from '../space/space';
 import { Assert, AssertNever } from '../utility/misc';

@@ -1,9 +1,9 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
 import { ItemInteractionType } from '../../character/restrictionTypes';
+import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions';
 import type { InteractionId } from '../../gameLogic/interactions';
 import { IsNotNullable, Satisfies } from '../../utility/misc';
-import type { AppearanceModuleActionContext } from '../appearanceActions';
 import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidationResult } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
 import { AssetSize, AssetSizeMapping } from '../definitions';

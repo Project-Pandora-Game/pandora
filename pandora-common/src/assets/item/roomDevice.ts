@@ -2,8 +2,8 @@ import type { Immutable } from 'immer';
 import { first } from 'lodash';
 import { z } from 'zod';
 
+import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions';
 import type { HexRGBAColorString } from '../../validation';
-import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { Asset } from '../asset';
 import type { RoomDeviceModuleStaticData } from '../definitions';

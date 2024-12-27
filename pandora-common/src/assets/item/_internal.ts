@@ -1,8 +1,9 @@
 import type { Immutable } from 'immer';
 import type { Writeable } from 'zod';
 
+import type { CharacterId, ItemInteractionType } from '../../character';
+import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions';
 import type { HexRGBAColorString } from '../../validation';
-import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { Asset } from '../asset';
 import type { AssetManager } from '../assetManager';
@@ -10,7 +11,6 @@ import type { AssetColorization, AssetType, WearableAssetType } from '../definit
 import type { ItemModuleAction } from '../modules';
 import type { IExportOptions, IItemModule } from '../modules/common';
 import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, Item, ItemBundle, ItemColorBundle, ItemId, ItemTemplate } from './base';
-import type { CharacterId, ItemInteractionType } from '../../character';
 
 import { Assert, MemoizeNoArg } from '../../utility/misc';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from '../properties';

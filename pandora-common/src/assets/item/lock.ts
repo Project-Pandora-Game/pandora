@@ -1,18 +1,18 @@
 import type { Immutable } from 'immer';
 import { z } from 'zod';
 
+import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions';
+import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { Asset } from '../asset';
 import type { IExportOptions } from '../modules/common';
-import type { AppearanceModuleActionContext } from '../appearanceActions';
-import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base';
 import type { AssetLockProperties, AssetProperties } from '../properties';
-import type { AppearanceValidationResult, AppearanceItems } from '../appearanceValidation';
+import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base';
 
+import { CharacterIdSchema } from '../../character/characterTypes';
 import { Logger } from '../../logging';
 import { AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility/misc';
-import { CharacterIdSchema } from '../../character/characterTypes';
 
-import { ItemBaseProps, ItemBase } from './_internal';
+import { ItemBase, ItemBaseProps } from './_internal';
 
 declare module './_internal' {
 	interface InternalItemTypeMap {

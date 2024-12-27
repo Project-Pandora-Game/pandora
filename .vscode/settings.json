@@ -38,7 +38,8 @@
 	"typescript.preferences.preferTypeOnlyAutoImports": true,
 	"typescript.preferences.quoteStyle": "single",
 	"editor.codeActionsOnSave": {
-		"source.fixAll.eslint": "explicit"
+		"source.fixAll.eslint": "explicit",
+		"source.organizeImports": "explicit",
 	},
 	"eslint.workingDirectories": [
 		"pandora-client-web",

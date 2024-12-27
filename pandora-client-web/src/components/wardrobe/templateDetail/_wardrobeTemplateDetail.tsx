@@ -8,6 +8,8 @@ import {
 import React, { ReactElement, useCallback } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import crossIcon from '../../../assets/icons/cross.svg';
+import strugglingAllow from '../../../assets/icons/struggling_allow.svg';
+import strugglingDeny from '../../../assets/icons/struggling_deny.svg';
 import { IconButton } from '../../common/button/button';
 import { Column, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
@@ -126,12 +128,12 @@ function WardrobeTemplateRequireFreeHandsCustomize({ template, updateTemplate }:
 	}, [template, updateTemplate]);
 
 	return (
-		// TODO: Give it better name than "struggling"
-		<FieldsetToggle legend='[TODO] Struggling'>
+		<FieldsetToggle legend='Bound usage'>
 			<Row alignY='center'>
 				<button
 					className={ classNames(
 						'wardrobeActionButton',
+						'IconButton',
 						'allowed',
 						(template.requireFreeHandsToUse === true) ? 'selected' : null,
 					) }
@@ -140,11 +142,17 @@ function WardrobeTemplateRequireFreeHandsCustomize({ template, updateTemplate }:
 						setRequire(true);
 					} }
 				>
-					Require free hands to use this item
+					<img
+						src={ strugglingDeny }
+						crossOrigin='anonymous'
+						alt='Require free hands to use this item'
+						title='Require free hands to use this item'
+					/>
 				</button>
 				<button
 					className={ classNames(
 						'wardrobeActionButton',
+						'IconButton',
 						'allowed',
 						(template.requireFreeHandsToUse === false) ? 'selected' : null,
 					) }
@@ -153,7 +161,12 @@ function WardrobeTemplateRequireFreeHandsCustomize({ template, updateTemplate }:
 						setRequire(false);
 					} }
 				>
-					Allow using this item even with blocked hands
+					<img
+						src={ strugglingAllow }
+						crossOrigin='anonymous'
+						alt='Allow using this item even with blocked hands'
+						title='Allow using this item even with blocked hands'
+					/>
 				</button>
 			</Row>
 		</FieldsetToggle>

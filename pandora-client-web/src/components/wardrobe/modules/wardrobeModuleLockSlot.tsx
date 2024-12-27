@@ -37,8 +37,8 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeMo
 		return (
 			<Column padding='medium'>
 				<Row padding='medium' wrap>
-					<button className={ classNames('wardrobeActionButton', 'allowed') } onClick={ onFocus } >
-						<img width='21' height='33' src={ emptyLock } />
+					<button className={ classNames('wardrobeActionButton', 'IconButton', 'allowed') } onClick={ onFocus } >
+						<img src={ emptyLock } />
 					</button>
 					<Row padding='medium' alignY='center'>
 						No lock
@@ -125,8 +125,8 @@ export function WardrobeModuleTemplateConfigLockSlot({ template, onTemplateChang
 		return (
 			<Column padding='medium'>
 				<Row padding='medium' wrap>
-					<button className='wardrobeActionButton' disabled>
-						<img width='21' height='33' src={ emptyLock } />
+					<button className='wardrobeActionButton IconButton' disabled>
+						<img src={ emptyLock } />
 					</button>
 					<Row padding='medium' alignY='center'>
 						No lock

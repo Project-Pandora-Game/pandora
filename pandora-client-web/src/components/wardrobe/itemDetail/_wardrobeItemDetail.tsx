@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import {
 	ItemPath,
 	LIMIT_ITEM_DESCRIPTION_LENGTH,
@@ -13,6 +14,8 @@ import { toast } from 'react-toastify';
 import { z } from 'zod';
 import crossIcon from '../../../assets/icons/cross.svg';
 import deleteIcon from '../../../assets/icons/delete.svg';
+import strugglingAllow from '../../../assets/icons/struggling_allow.svg';
+import strugglingDeny from '../../../assets/icons/struggling_deny.svg';
 import { useEvent } from '../../../common/useEvent';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
@@ -204,22 +207,37 @@ function WardrobeItemRequireFreeHandsCustomize({ wornItem, item }: { wornItem: I
 	}), [targetSelector, item]);
 
 	return (
-		// TODO: Give it better name than "struggling"
-		<FieldsetToggle legend='[TODO] Struggling'>
+		<FieldsetToggle legend='Bound usage'>
 			<Row alignY='center'>
 				<WardrobeActionButton
 					action={ actionSetRequired }
-					className={ wornItem.requireFreeHandsToUse ? 'selected' : '' }
+					className={ classNames(
+						'IconButton',
+						wornItem.requireFreeHandsToUse ? 'selected' : '',
+					) }
 					showActionBlockedExplanation={ !wornItem.requireFreeHandsToUse }
 				>
-					Require free hands to use this item
+					<img
+						src={ strugglingDeny }
+						crossOrigin='anonymous'
+						alt='Require free hands to use this item'
+						title='Require free hands to use this item'
+					/>
 				</WardrobeActionButton>
 				<WardrobeActionButton
 					action={ actionSetOptional }
-					className={ !wornItem.requireFreeHandsToUse ? 'selected' : '' }
+					className={ classNames(
+						'IconButton',
+						!wornItem.requireFreeHandsToUse ? 'selected' : '',
+					) }
 					showActionBlockedExplanation={ wornItem.requireFreeHandsToUse }
 				>
-					Allow using this item even with blocked hands
+					<img
+						src={ strugglingAllow }
+						crossOrigin='anonymous'
+						alt='Allow using this item even with blocked hands'
+						title='Allow using this item even with blocked hands'
+					/>
 				</WardrobeActionButton>
 			</Row>
 		</FieldsetToggle>

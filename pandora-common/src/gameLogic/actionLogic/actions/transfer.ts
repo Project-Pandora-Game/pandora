@@ -1,7 +1,8 @@
 import { isEqual } from 'lodash';
 import { z } from 'zod';
-import { ActionTargetSelectorSchema, ItemContainerPathSchema, ItemIdSchema, ItemPathSchema, type ItemId } from '../../../assets';
-import { ItemInteractionType } from '../../../character';
+import { ActionTargetSelectorSchema, ItemContainerPathSchema, ItemPathSchema } from '../../../assets/appearanceTypes';
+import { ItemIdSchema, type ItemId } from '../../../assets/item/base';
+import { ItemInteractionType } from '../../../character/restrictionTypes';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
 import type { AppearanceActionHandlerArg } from './_common';
 

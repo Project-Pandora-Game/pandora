@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { AppearanceArmPoseSchema, AppearanceArmsOrderSchema, AppearancePoseSchema, CharacterViewSchema, LegsPoseSchema } from '../../../assets';
-import { CharacterIdSchema } from '../../../character';
+import { CharacterViewSchema, LegsPoseSchema } from '../../../assets/graphics/conditions';
+import { AppearanceArmPoseSchema, AppearanceArmsOrderSchema, AppearancePoseSchema } from '../../../assets/state/characterStatePose';
+import { CharacterIdSchema } from '../../../character/characterTypes';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
 import type { AppearanceActionHandlerArg } from './_common';
 

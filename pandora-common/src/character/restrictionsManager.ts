@@ -16,6 +16,9 @@ import type { ActionSpaceContext } from '../space/space';
 import { Assert, AssertNever } from '../utility/misc';
 import { ItemInteractionType } from './restrictionTypes';
 
+/** How many seconds does it take to perform action while having blocked hands. */
+export const BLOCKED_HANDS_ACTION_SLOWDOWN = 5;
+
 /**
  * All functions should return a stable value, or useSyncExternalStore will not work properly.
  */
@@ -384,7 +387,7 @@ export class CharacterRestrictionsManager {
 					AssertNever(interaction);
 			}
 			if (allowStruggleBypass) {
-				// TODO: Implement actual struggling
+				context.addSlowdown(BLOCKED_HANDS_ACTION_SLOWDOWN);
 			} else {
 				context.addRestriction({
 					type: 'blockedHands',

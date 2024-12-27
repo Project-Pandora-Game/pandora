@@ -1,6 +1,7 @@
 import { z } from 'zod';
-import { ActionTargetSelectorSchema, ItemColorBundleSchema, ItemPathSchema } from '../../../assets';
-import { ItemInteractionType } from '../../../character';
+import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes';
+import { ItemColorBundleSchema } from '../../../assets/item/base';
+import { ItemInteractionType } from '../../../character/restrictionTypes';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
 import type { AppearanceActionHandlerArg } from './_common';
 

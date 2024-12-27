@@ -1,6 +1,8 @@
 import { z } from 'zod';
-import { ActionTargetSelectorSchema, ItemPathSchema, RoomDeviceDeploymentChangeSchema, type ItemRoomDevice } from '../../../assets';
-import { ItemInteractionType, type CharacterId } from '../../../character';
+import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes';
+import { RoomDeviceDeploymentChangeSchema, type ItemRoomDevice } from '../../../assets/item/roomDevice';
+import type { CharacterId } from '../../../character/characterTypes';
+import { ItemInteractionType } from '../../../character/restrictionTypes';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
 import type { AppearanceActionHandlerArg } from './_common';
 

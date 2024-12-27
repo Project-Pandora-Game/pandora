@@ -1,8 +1,12 @@
 import { sample } from 'lodash';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
-import { CharacterAppearanceLoadAndValidate, CreateAssetPropertiesResult, FilterItemWearable, MergeAssetProperties, ValidateAppearanceItems, ValidateAppearanceItemsPrefix, type Asset, type Item, type WearableAssetType } from '../../../assets';
-import { ItemInteractionType } from '../../../character';
+import { CharacterAppearanceLoadAndValidate, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from '../../../assets/appearanceValidation';
+import type { Asset } from '../../../assets/asset';
+import type { WearableAssetType } from '../../../assets/definitions';
+import { FilterItemWearable, type Item } from '../../../assets/item/base';
+import { CreateAssetPropertiesResult, MergeAssetProperties } from '../../../assets/properties';
+import { ItemInteractionType } from '../../../character/restrictionTypes';
 import { PseudoRandom } from '../../../math';
 import { ShuffleArray } from '../../../utility';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';

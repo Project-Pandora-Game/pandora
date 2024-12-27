@@ -88,14 +88,14 @@ export class AssetFrameworkGlobalState {
 		AssertNever(target);
 	}
 
-	public exportToBundle(options: IExportOptions = {}): AssetFrameworkGlobalStateBundle {
+	public exportToBundle(): AssetFrameworkGlobalStateBundle {
 		const result: AssetFrameworkGlobalStateBundle = {
 			characters: {},
-			room: this.room?.exportToBundle(options) ?? null,
+			room: this.room?.exportToBundle() ?? null,
 		};
 
 		for (const [characterId, characterState] of this.characters) {
-			result.characters[characterId] = characterState.exportToBundle(options);
+			result.characters[characterId] = characterState.exportToBundle();
 		}
 		return result;
 	}

@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { ActionTargetSelectorSchema, ItemModuleActionSchema, ItemPathSchema, type ModuleActionError } from '../../../assets';
+import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes';
+import { ItemModuleActionSchema, type ModuleActionError } from '../../../assets/modules';
 import { Assert } from '../../../utility';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
 import type { AppearanceModuleActionContext } from '../appearanceActions';

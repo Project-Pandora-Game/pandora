@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets';
-import { ItemInteractionType } from '../../../character';
+import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes';
+import { ItemInteractionType } from '../../../character/restrictionTypes';
 import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN } from '../../../inputLimits';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
 import type { AppearanceActionHandlerArg } from './_common';

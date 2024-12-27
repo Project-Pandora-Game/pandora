@@ -13,6 +13,9 @@ export type AppearanceActionProblem = {
 	result: 'failure';
 	failure: AppearanceActionFailure;
 } | {
+	// The action requires an attempt to be started and later finished due to a slowdown.
+	result: 'attemptRequired';
+} | {
 	result: 'invalidAction';
 	reason?: InvalidActionReason;
 } | {

@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { AppearancePoseSchema } from '../../../assets';
-import { CharacterIdSchema } from '../../../character';
+import { AppearancePoseSchema } from '../../../assets/state/characterStatePose';
+import { CharacterIdSchema } from '../../../character/characterTypes';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
 import type { AppearanceActionHandlerArg } from './_common';
 

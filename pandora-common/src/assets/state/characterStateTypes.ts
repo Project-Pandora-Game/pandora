@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { AppearanceActionSchema } from '../../gameLogic/actionLogic';
 import { ZodArrayWithInvalidDrop } from '../../validation';
 import { ItemBundleSchema } from '../item/unified';
 import { AppearancePoseSchema, GetDefaultAppearancePose } from './characterStatePose';
@@ -11,6 +12,16 @@ export const RestrictionOverrideSchema = z.object({
 	allowLeaveAt: z.number(),
 });
 export type RestrictionOverride = Readonly<z.infer<typeof RestrictionOverrideSchema>>;
+
+export const CharacterActionAttemptSchema = z.object({
+	/** Action that is being attempted */
+	action: AppearanceActionSchema,
+	/** When was the attempt started (timestamp) */
+	start: z.number().int().nonnegative(),
+	/** What is the soonest that the attempt can be successfully finished (timestamp) */
+	finishAfter: z.number().int().nonnegative(),
+});
+export type CharacterActionAttempt = z.infer<typeof CharacterActionAttemptSchema>;
 
 export type RestrictionOverrideConfig = Readonly<{
 	allowLeaveAt: number;
@@ -53,6 +64,7 @@ export const AppearanceBundleSchema = z.object({
 	requestedPose: AppearancePoseSchema.catch(() => GetDefaultAppearancePose()),
 	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
 	restrictionOverride: RestrictionOverrideSchema.optional().catch(() => undefined),
+	attemptingAction: CharacterActionAttemptSchema.optional(),
 	clientOnly: z.boolean().optional(),
 });
 export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;

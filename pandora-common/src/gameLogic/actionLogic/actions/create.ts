@@ -1,6 +1,9 @@
 import { z } from 'zod';
-import { ActionTargetSelectorSchema, ItemContainerPathSchema, ItemIdSchema, ItemTemplateSchema, type AppearanceItems, type ItemId } from '../../../assets';
-import { ItemInteractionType } from '../../../character';
+import { ActionTargetSelectorSchema, ItemContainerPathSchema } from '../../../assets/appearanceTypes';
+import type { AppearanceItems } from '../../../assets/appearanceValidation';
+import { ItemIdSchema, type ItemId } from '../../../assets/item/base';
+import { ItemTemplateSchema } from '../../../assets/item/unified';
+import { ItemInteractionType } from '../../../character/restrictionTypes';
 import { Assert } from '../../../utility';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
 import type { AppearanceActionHandlerArg } from './_common';

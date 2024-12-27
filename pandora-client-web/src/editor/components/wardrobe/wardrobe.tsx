@@ -2,9 +2,10 @@ import { Immutable } from 'immer';
 import {
 	ActionSpaceContext,
 	AppearanceActionContext,
+	AppearanceActionProcessingContext,
+	ApplyAction,
 	Assert,
 	AssetFrameworkGlobalState,
-	DoAppearanceAction,
 	EMPTY_ARRAY,
 	ItemId,
 } from 'pandora-common';
@@ -82,7 +83,8 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		globalState,
 		actions,
 		execute: (action) => {
-			const result = DoAppearanceAction(action, actions, editor.globalState.currentState);
+			const processingContext = new AppearanceActionProcessingContext(actions, editor.globalState.currentState);
+			const result = ApplyAction(processingContext, action);
 
 			// Check if result is valid
 			if (!result.valid || result.problems.length > 0) {

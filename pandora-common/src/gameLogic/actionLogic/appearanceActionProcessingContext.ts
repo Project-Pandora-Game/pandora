@@ -43,6 +43,11 @@ export class AppearanceActionProcessingContext {
 		return this._actionProblems;
 	}
 
+	private _actionSlowdown: number = 0;
+	public get actionSlowdown(): number {
+		return this._actionSlowdown;
+	}
+
 	private readonly _requiredPermissions = new Set<GameLogicPermission>();
 	public get requiredPermissions(): ReadonlySet<GameLogicPermission> {
 		return this._requiredPermissions;
@@ -120,6 +125,11 @@ export class AppearanceActionProcessingContext {
 			return;
 
 		this._actionProblems.push(problem);
+	}
+
+	/** Adds a slowdown to the action (in seconds) */
+	public addSlowdown(slowdown: number): void {
+		this._actionSlowdown += slowdown;
 	}
 
 	public addData(data: AppearanceActionData): void {
@@ -279,16 +289,19 @@ abstract class AppearanceActionProcessingResultBase {
 	public readonly originalState: AssetFrameworkGlobalState;
 
 	public abstract readonly problems: readonly AppearanceActionProblem[];
+	/** Slowdown that should be applied to this action (in seconds) */
+	public readonly actionSlowdown: number;
 
 	public readonly requiredPermissions: ReadonlySet<GameLogicPermission>;
 
 	constructor(processingContext: AppearanceActionProcessingContext) {
 		this._finalProcessingContext = processingContext;
 		this.originalState = processingContext.originalState;
+		this.actionSlowdown = processingContext.actionSlowdown;
 		this.requiredPermissions = processingContext.requiredPermissions;
 	}
 
-	public addAdditionalProblems(additionalProblems: readonly AppearanceActionProblem[]): AppearanceActionProcessingResult {
+	public addAdditionalProblems(...additionalProblems: readonly AppearanceActionProblem[]): AppearanceActionProcessingResult {
 		return new AppearanceActionProcessingResultInvalid(this._finalProcessingContext, additionalProblems);
 	}
 }

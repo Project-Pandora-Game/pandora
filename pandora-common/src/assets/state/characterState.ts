@@ -1,8 +1,9 @@
 import { Immutable, freeze } from 'immer';
 import _, { isEqual } from 'lodash';
 import type { CharacterId } from '../../character';
+import { RedactSensitiveActionData } from '../../gameLogic/actionLogic/actionUtils';
 import { Logger } from '../../logging';
-import { Assert, IsNotNullable, MemoizeNoArg } from '../../utility/misc';
+import { Assert, CloneDeepMutable, IsNotNullable, MemoizeNoArg } from '../../utility/misc';
 import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation';
 import type { AssetManager } from '../assetManager';
 import { WearableAssetType } from '../definitions';
@@ -10,7 +11,7 @@ import { BoneType } from '../graphics';
 import { Item, type ItemRoomDeviceWearablePart } from '../item';
 import type { IExportOptions } from '../modules/common';
 import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose';
-import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type RestrictionOverride } from './characterStateTypes';
+import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type CharacterActionAttempt, type RestrictionOverride } from './characterStateTypes';
 import type { AssetFrameworkRoomState } from './roomState';
 
 // Fix for pnpm resolution weirdness
@@ -22,6 +23,7 @@ type AssetFrameworkCharacterStateProps = {
 	readonly items: AppearanceItems<WearableAssetType>;
 	readonly requestedPose: AppearancePose;
 	readonly restrictionOverride?: RestrictionOverride;
+	readonly attemptingAction: Immutable<CharacterActionAttempt> | null;
 };
 
 /**
@@ -36,6 +38,8 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 	public readonly requestedPose: Immutable<AppearancePose>;
 	public readonly restrictionOverride?: RestrictionOverride;
 
+	public readonly attemptingAction: Immutable<CharacterActionAttempt> | null;
+
 	public get actualPose(): Immutable<AppearancePose> {
 		return this._generateActualPose();
 	}
@@ -49,6 +53,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		this.requestedPose = override.requestedPose ?? props.requestedPose;
 		// allow override restrictionOverride with undefined (override: { restrictionOverride: undefined })
 		this.restrictionOverride = 'restrictionOverride' in override ? override.restrictionOverride : props.restrictionOverride;
+		this.attemptingAction = override.attemptingAction !== undefined ? override.attemptingAction : props.attemptingAction;
 	}
 
 	public isValid(roomState: AssetFrameworkRoomState | null): boolean {
@@ -67,11 +72,12 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		};
 	}
 
-	public exportToBundle(options: IExportOptions = {}): AppearanceBundle {
+	public exportToBundle(): AppearanceBundle {
 		return {
-			items: this.items.map((item) => item.exportToBundle(options)),
+			items: this.items.map((item) => item.exportToBundle({})),
 			requestedPose: _.cloneDeep(this.requestedPose),
 			restrictionOverride: this.restrictionOverride,
+			attemptingAction: CloneDeepMutable(this.attemptingAction) ?? undefined,
 		};
 	}
 
@@ -81,6 +87,11 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			items: this.items.map((item) => item.exportToBundle(options)),
 			requestedPose: _.cloneDeep(this.requestedPose),
 			restrictionOverride: this.restrictionOverride,
+			attemptingAction: this.attemptingAction != null ? ({
+				action: RedactSensitiveActionData(this.attemptingAction.action),
+				start: this.attemptingAction.start,
+				finishAfter: this.attemptingAction.finishAfter,
+			}) : undefined,
 			clientOnly: true,
 		};
 	}
@@ -179,6 +190,10 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		return new AssetFrameworkCharacterState(this, { restrictionOverride: freeze(value, true) });
 	}
 
+	public produceWithAttemptedAction(action: Immutable<CharacterActionAttempt> | null): AssetFrameworkCharacterState {
+		return new AssetFrameworkCharacterState(this, { attemptingAction: freeze(action, true) });
+	}
+
 	public updateRoomStateLink(roomInventory: AssetFrameworkRoomState | null, revalidate: boolean): AssetFrameworkCharacterState {
 		let updatedItems: AppearanceItems<WearableAssetType> = this.items.map((item) => {
 			if (item.isType('roomDeviceWearablePart')) {
@@ -272,6 +287,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				items: newItems,
 				requestedPose,
 				restrictionOverride: bundle.restrictionOverride,
+				attemptingAction: bundle.attemptingAction ?? null,
 			}).updateRoomStateLink(roomState, true),
 			true,
 		);

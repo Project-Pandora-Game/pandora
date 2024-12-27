@@ -4,7 +4,7 @@ import {
 	BadMessageError,
 	CharacterId,
 	CloneDeepMutable,
-	DoAppearanceAction,
+	DoImmediateAction,
 	GameLogicPermissionServer,
 	GetLogger,
 	IChatMessage,
@@ -160,7 +160,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		const globalState = character.getGlobalState();
-		const result = DoAppearanceAction(action, character.getAppearanceActionContext(), globalState.currentState);
+		const result = DoImmediateAction(action, character.getAppearanceActionContext(), globalState.currentState);
 
 		// Check if result is valid
 		if (!result.valid) {

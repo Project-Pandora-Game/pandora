@@ -147,6 +147,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `The action results in a generally invalid state.`;
 		}
 		AssertNever(e);
+	} else if (result.result === 'attemptRequired') {
+		return 'This action requires starting an attempt to perform it first.';
 	} else if (result.result === 'failure') {
 		const f = result.failure;
 		if (f.type === 'moduleActionFailure') {

@@ -5,7 +5,6 @@ import {
 	AppearanceAction,
 	AppearanceActionProblem,
 	AppearanceActionProcessingResult,
-	AppearanceActionRandomize,
 	AssertNever,
 	Asset,
 	EMPTY_ARRAY,
@@ -184,7 +183,7 @@ export const WardrobeActionRandomizeUpdateInterval = BrowserStorage.create('ward
 export function WardrobeActionRandomizeButton({
 	kind,
 }: {
-	kind: z.infer<typeof AppearanceActionRandomize>['kind'];
+	kind: AppearanceAction<'randomize'>['kind'];
 }) {
 	const { showHoverPreview } = useWardrobeContext();
 	const [seed, newSeed] = useReducer(() => nanoid(), nanoid());

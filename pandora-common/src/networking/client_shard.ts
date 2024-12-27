@@ -5,8 +5,8 @@ import { CharacterPublicSettingsSchema, CharacterRoomPositionSchema } from '../c
 import { CharacterIdSchema } from '../character/characterTypes';
 import { ChatCharacterStatusSchema, ClientChatMessagesSchema } from '../chat/chat';
 import { PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic';
+import { AppearanceActionSchema } from '../gameLogic/actionLogic/actions/_index';
 import { AppearanceActionData, AppearanceActionProblem } from '../gameLogic/actionLogic/appearanceActionProblems';
-import { AppearanceActionSchema } from '../gameLogic/actionLogic/appearanceActions';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
 import { Satisfies } from '../utility/misc';
 import { CharacterInputNameSchema, ZodCast } from '../validation';

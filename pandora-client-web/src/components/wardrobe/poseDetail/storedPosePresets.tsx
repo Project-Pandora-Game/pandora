@@ -370,17 +370,15 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 					</tr>
 				</tbody>
 			</table>
-			<br />
-			<Row alignX='center'>
-				<Button onClick={ onUncheckAll }>Uncheck all</Button>
-				<Button onClick={ onCheckAll }>Check all</Button>
-			</Row>
-			<br />
-			<Row alignX='center'>
-				<Button onClick={ close }>Cancel</Button>
-				<Button onClick={ onExport }>Export</Button>
-				<Button onClick={ onSave }>Save</Button>
-			</Row>
+			<p>
+				<Row alignX='center'>
+					<Button onClick={ close }>Cancel</Button>
+					<Button onClick={ onCheckAll }>Check all</Button>
+					<Button onClick={ onUncheckAll }>Uncheck all</Button>
+					<Button onClick={ onExport }>Export</Button>
+					<Button onClick={ onSave }>Save</Button>
+				</Row>
+			</p>
 			{
 				exported == null ? null : (
 					<ExportDialog

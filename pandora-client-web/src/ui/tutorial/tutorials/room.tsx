@@ -286,7 +286,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 								The actions you can do with your own character are:
 							</p>
 							<ul>
-								<li>Open its wardrobe. (this is covered in much more detail in later tutorials)</li>
+								<li>Opening its wardrobe. (this is covered in much more detail in later tutorials)</li>
 							</ul>
 						</>
 					),
@@ -299,7 +299,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				{
 					text: (
 						<ul>
-							<li>Open your character's and your account's profile. (this is explained in later tutorial)</li>
+							<li>Opening your character's and your account's profile. (this is explained in later tutorial)</li>
 						</ul>
 					),
 					highlight: [{
@@ -311,7 +311,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				{
 					text: (
 						<ul>
-							<li>Enter move mode, allowing for movement in the room.</li>
+							<li>Entering move mode, allowing for movement in the room.</li>
 						</ul>
 					),
 					highlight: [{
@@ -323,7 +323,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				{
 					text: (
 						<ul>
-							<li>Enter posing mode, allowing for custom poses. (posing is explained in later tutorial)</li>
+							<li>Entering posing mode, allowing for custom poses. (posing is explained in later tutorial)</li>
 						</ul>
 					),
 					highlight: [{

@@ -7,7 +7,9 @@ import {
 	Assert,
 	AssetFrameworkGlobalState,
 	EMPTY_ARRAY,
+	FinishActionAttempt,
 	ItemId,
+	StartActionAttempt,
 } from 'pandora-common';
 import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import React, { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
@@ -82,12 +84,51 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		player: character,
 		globalState,
 		actions,
-		execute: (action) => {
+		doImmediateAction: (action) => {
+			// We do direct apply to skip need for attempt in some edge cases.
 			const processingContext = new AppearanceActionProcessingContext(actions, editor.globalState.currentState);
 			const result = ApplyAction(processingContext, action);
 
 			// Check if result is valid
-			if (!result.valid || result.problems.length > 0) {
+			if (!result.valid) {
+				return {
+					result: 'failure',
+					problems: result.problems.slice(),
+				};
+			}
+
+			// Apply the action
+			editor.globalState.setState(result.resultState);
+
+			return {
+				result: 'success',
+				data: result.actionData,
+			};
+		},
+		startActionAttempt: (action) => {
+			const result = StartActionAttempt(action, actions, editor.globalState.currentState, Date.now());
+
+			// Check if result is valid
+			if (!result.valid) {
+				return {
+					result: 'failure',
+					problems: result.problems.slice(),
+				};
+			}
+
+			// Apply the action
+			editor.globalState.setState(result.resultState);
+
+			return {
+				result: 'success',
+				data: result.actionData,
+			};
+		},
+		completeCurrentActionAttempt: () => {
+			const result = FinishActionAttempt(actions, editor.globalState.currentState, Date.now());
+
+			// Check if result is valid
+			if (!result.valid) {
 				return {
 					result: 'failure',
 					problems: result.problems.slice(),

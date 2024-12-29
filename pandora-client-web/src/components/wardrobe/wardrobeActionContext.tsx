@@ -1,3 +1,5 @@
+import type { Immutable } from 'immer';
+import { isEqual } from 'lodash';
 import {
 	AppearanceAction,
 	AppearanceActionContext,
@@ -9,10 +11,13 @@ import {
 	type AppearanceActionData,
 	type AppearanceActionProblem,
 	type AppearanceActionProcessingResult,
+	type CharacterActionAttempt,
 	type CharacterId,
+	type IClientShardNormalResult,
 	type Nullable,
 	type PermissionGroup,
 } from 'pandora-common';
+import { RedactSensitiveActionData } from 'pandora-common/src/gameLogic/actionLogic/actionUtils';
 import React, { createContext, useCallback, useContext, useMemo, type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import { RenderAppearanceActionProblem } from '../../assets/appearanceValidation';
@@ -33,7 +38,9 @@ export interface WardrobeActionContext {
 	player: ICharacter;
 	globalState: AssetFrameworkGlobalState;
 	actions: AppearanceActionContext;
-	execute: (action: AppearanceAction) => IClientShardResult['appearanceAction'] | undefined;
+	doImmediateAction: (action: AppearanceAction) => IClientShardResult['gameLogicAction'];
+	startActionAttempt: (action: AppearanceAction) => IClientShardResult['gameLogicAction'];
+	completeCurrentActionAttempt: () => IClientShardResult['gameLogicAction'];
 	sendPermissionRequest: (target: CharacterId, permissions: [PermissionGroup, string][]) => IClientShardResult['requestPermission'] | undefined;
 }
 
@@ -65,9 +72,11 @@ export function WardrobeActionContextProvider({ player, children }: { player: Pl
 		player,
 		globalState,
 		actions,
-		execute: (action) => shardConnector?.awaitResponse('appearanceAction', action),
+		doImmediateAction: (action) => gameState.doImmediateAction(action),
+		startActionAttempt: (action) => gameState.startActionAttempt(action),
+		completeCurrentActionAttempt: () => gameState.completeCurrentActionAttempt(),
 		sendPermissionRequest: (permissionRequestTarget, permissions) => shardConnector?.awaitResponse('requestPermission', { target: permissionRequestTarget, permissions }),
-	}), [player, globalState, actions, shardConnector]);
+	}), [player, globalState, actions, shardConnector, gameState]);
 
 	return (
 		<wardrobeActionContext.Provider value={ context }>
@@ -83,23 +92,33 @@ export function useWardrobeActionContext(): Readonly<WardrobeActionContext> {
 }
 
 type ExecuteCallbackOptions = {
-	onSuccess?: (data: readonly AppearanceActionData[]) => void;
+	onSuccess?: (data: readonly AppearanceActionData[], operation?: 'start' | 'complete') => void;
 	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
 	allowMultipleSimultaneousExecutions?: boolean;
 };
 
-export function useWardrobeExecuteCallback({ onSuccess, onFailure, allowMultipleSimultaneousExecutions }: ExecuteCallbackOptions = {}) {
+type WardrobeExecuteCallback = (action: AppearanceAction, operation?: 'start' | 'complete') => void;
+
+export function useWardrobeExecuteCallback({ onSuccess, onFailure, allowMultipleSimultaneousExecutions }: ExecuteCallbackOptions = {}): [WardrobeExecuteCallback, processing: boolean] {
 	const assetManager = useAssetManager();
-	const { execute } = useWardrobeActionContext();
+	const { doImmediateAction, startActionAttempt, completeCurrentActionAttempt } = useWardrobeActionContext();
 	const {
 		wardrobeItemDisplayNameType,
 	} = useAccountSettings();
 	return useAsyncEvent(
-		async (action: AppearanceAction) => await execute(action),
-		(result) => {
+		async (action: AppearanceAction, operation?: 'start' | 'complete'): Promise<[IClientShardNormalResult['gameLogicAction'], 'start' | 'complete' | undefined]> => {
+			if (operation === 'start') {
+				return [await startActionAttempt(action), 'start'];
+			} else if (operation === 'complete') {
+				return [await completeCurrentActionAttempt(), 'complete'];
+			} else {
+				return [await doImmediateAction(action), undefined];
+			}
+		},
+		([result, operation]) => {
 			switch (result?.result) {
 				case 'success':
-					onSuccess?.(result.data);
+					onSuccess?.(result.data, operation);
 					break;
 				case 'promptSent':
 					toast('Prompt sent', TOAST_OPTIONS_WARNING);
@@ -174,17 +193,41 @@ export function useWardrobePermissionRequestCallback() {
 	);
 }
 
-export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, result?: AppearanceActionProcessingResult | null, props: ExecuteCallbackOptions = {}) {
-	const [execute, processing] = useWardrobeExecuteCallback(props);
+interface WardrobeExecuteCheckedResult {
+	execute: () => void;
+	processing: boolean;
+	currentAttempt: Immutable<CharacterActionAttempt> | null;
+}
+
+export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, result?: AppearanceActionProcessingResult | null, props: ExecuteCallbackOptions = {}): WardrobeExecuteCheckedResult {
 	const {
 		player,
 		actions: { spaceContext },
+		globalState,
 	} = useWardrobeActionContext();
 
 	const confirm = useConfirmDialog();
 
-	return [
-		useCallback(() => {
+	const currentlyAttemptedAction = globalState.getCharacterState(player.id)?.attemptingAction;
+	const isCurrentlyAttempting = action != null && currentlyAttemptedAction != null && isEqual(
+		// HACK: Using JSON stringify+parse, because some fields might be `undefined` on one while missing on the other
+		JSON.parse(JSON.stringify(RedactSensitiveActionData(action))),
+		JSON.parse(JSON.stringify(RedactSensitiveActionData(currentlyAttemptedAction.action))),
+	);
+
+	const onSuccess = props.onSuccess;
+	const [execute, processing] = useWardrobeExecuteCallback({
+		...props,
+		onSuccess: useCallback<ExecuteCallbackOptions['onSuccess'] & {}>((data, operation) => {
+			if (operation === 'start')
+				return;
+
+			onSuccess?.(data, operation);
+		}, [onSuccess]),
+	});
+
+	return {
+		execute: useCallback(() => {
 			if (action == null || result == null)
 				return;
 
@@ -195,27 +238,41 @@ export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, re
 
 			// Detect need for confirmation
 			const warnings = WardrobeCheckResultForConfirmationWarnings(player, spaceContext, action, result);
+			const needsAttempt = result.actionSlowdown > 0;
 
-			if (warnings.length > 0) {
-				confirm(
-					`You might not be able to undo this action easily. Continue?`,
-					(
-						<ul>
-							{
-								warnings.map((warning, i) => <li key={ i }>{ warning }</li>)
-							}
-						</ul>
-					),
-				).then((confirmResult) => {
-					if (confirmResult) {
+			Promise.resolve()
+				.then(() => {
+					if (warnings.length > 0) {
+						return confirm(
+							`You might not be able to undo this action easily. Continue?`,
+							(
+								<ul>
+									{
+										warnings.map((warning, i) => <li key={ i }>{ warning }</li>)
+									}
+								</ul>
+							),
+						);
+					}
+
+					return true;
+				})
+				.then((confirmResult) => {
+					if (!confirmResult)
+						return;
+
+					if (isCurrentlyAttempting) {
+						execute(action, 'complete');
+					} else if (needsAttempt) {
+						execute(action, 'start');
+					} else {
 						execute(action);
 					}
-				}).catch(() => { /* NOOP */ });
-			} else {
-				execute(action);
-			}
 
-		}, [execute, confirm, player, spaceContext, action, result]),
+				})
+				.catch(() => { /* NOOP */ });
+		}, [execute, confirm, player, spaceContext, action, result, isCurrentlyAttempting]),
 		processing,
-	] as const;
+		currentAttempt: isCurrentlyAttempting ? currentlyAttemptedAction : null,
+	};
 }

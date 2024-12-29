@@ -5,6 +5,7 @@ import {
 	CharacterId,
 	CloneDeepMutable,
 	DoImmediateAction,
+	FinishActionAttempt,
 	GameLogicPermissionServer,
 	GetLogger,
 	IChatMessage,
@@ -17,6 +18,8 @@ import {
 	NaturalListJoin,
 	PermissionConfig,
 	PermissionSetup,
+	StartActionAttempt,
+	type AppearanceActionProcessingResult,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import promClient from 'prom-client';
@@ -62,7 +65,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			chatStatus: this.handleChatStatus.bind(this),
 			chatMessageAck: this.handleChatMessageAck.bind(this),
 			roomCharacterMove: this.handleRoomCharacterMove.bind(this),
-			appearanceAction: this.handleAppearanceAction.bind(this),
+			gameLogicAction: this.handleGameLogicAction.bind(this),
 			requestPermission: this.handleRequestPermission.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
 			updateAssetPreferences: this.handleUpdateAssetPreferences.bind(this),
@@ -154,13 +157,24 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		space.updateCharacterPosition(character, id ?? character.id, position);
 	}
 
-	private handleAppearanceAction(action: IClientShardArgument['appearanceAction'], client: ClientConnection): IClientShardNormalResult['appearanceAction'] {
+	private handleGameLogicAction(request: IClientShardArgument['gameLogicAction'], client: ClientConnection): IClientShardNormalResult['gameLogicAction'] {
 		const character = client.character;
 		if (!character)
 			throw new BadMessageError();
 
 		const globalState = character.getGlobalState();
-		const result = DoImmediateAction(action, character.getAppearanceActionContext(), globalState.currentState);
+		const now = Date.now();
+		let result: AppearanceActionProcessingResult;
+
+		if (request.operation === 'doImmediately') {
+			result = DoImmediateAction(request.action, character.getAppearanceActionContext(), globalState.currentState);
+		} else if (request.operation === 'start') {
+			result = StartActionAttempt(request.action, character.getAppearanceActionContext(), globalState.currentState, now);
+		} else if (request.operation === 'complete') {
+			result = FinishActionAttempt(character.getAppearanceActionContext(), globalState.currentState, now);
+		} else {
+			AssertNever(request.operation);
+		}
 
 		// Check if result is valid
 		if (!result.valid) {

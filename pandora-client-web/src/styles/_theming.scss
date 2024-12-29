@@ -332,6 +332,10 @@ $theme-wardrobe-actionbutton-normal-background: #232930;
 $theme-wardrobe-actionbutton-normal-text: #eee;
 $theme-wardrobe-actionbutton-hover-background: color-mix(in srgb, #282d32, $theme-accent-color 35%);
 $theme-wardrobe-actionbutton-hover-text: #eee;
+$theme-wardrobe-actionbutton-requiresAttempt-background: #18404d;
+$theme-wardrobe-actionbutton-requiresAttempt-text: #eee;
+$theme-wardrobe-actionbutton-requiresAttempt-hover-background: color-mix(in srgb, #37494e, $theme-accent-color 35%);
+$theme-wardrobe-actionbutton-requiresAttempt-hover-text: #eee;
 $theme-wardrobe-actionbutton-selected-background: color-mix(in srgb, #282d32, $theme-accent-color 65%);
 $theme-wardrobe-actionbutton-selected-text: #000;
 $theme-wardrobe-actionbutton-selectedhover-background: color-mix(in srgb, #535658, $theme-accent-color 65%);
@@ -344,6 +348,9 @@ $theme-wardrobe-actionbutton-promptRequired-background: #595926;
 $theme-wardrobe-actionbutton-promptRequired-text: #eee;
 $theme-wardrobe-actionbutton-disabled-background: #232930;
 $theme-wardrobe-actionbutton-disabled-text: #444;
+
+$theme-wardrobe-actionbutton-progress-pending: #666;
+$theme-wardrobe-actionbutton-progress-done: #333;
 
 // Item entries almost completely reuse actionbutton colors, as they fulfill similar role
 // The only difference is normal hover, where action buttons can be inside item entries,

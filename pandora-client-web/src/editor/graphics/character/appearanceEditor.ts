@@ -74,7 +74,7 @@ export class AppearanceEditor extends CharacterAppearance {
 		const processingContext = new AppearanceActionProcessingContext(this._makeActionContext(), this.globalState.currentState);
 		const result = ApplyAction(processingContext, action);
 
-		if (!result.valid || result.problems.length > 0) {
+		if (!result.valid) {
 			return false;
 		}
 

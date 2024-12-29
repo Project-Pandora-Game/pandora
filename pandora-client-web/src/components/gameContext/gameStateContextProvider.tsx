@@ -38,7 +38,9 @@ import {
 	SpaceIdSchema,
 	TypedEventEmitter,
 	ZodCast,
+	type AppearanceAction,
 	type IChatMessageActionTargetCharacter,
+	type IClientShardPromiseResult,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { z } from 'zod';
@@ -176,6 +178,26 @@ export class GameState extends TypedEventEmitter<{
 		this._updateCharacters(characters);
 
 		setInterval(() => this._cleanupEdits(), MESSAGE_EDIT_TIMEOUT / 2);
+	}
+
+	public async doImmediateAction(action: AppearanceAction): IClientShardPromiseResult['gameLogicAction'] {
+		return await this._shard.awaitResponse('gameLogicAction', {
+			operation: 'doImmediately',
+			action,
+		});
+	}
+
+	public async startActionAttempt(action: AppearanceAction): IClientShardPromiseResult['gameLogicAction'] {
+		return await this._shard.awaitResponse('gameLogicAction', {
+			operation: 'start',
+			action,
+		});
+	}
+
+	public async completeCurrentActionAttempt(): IClientShardPromiseResult['gameLogicAction'] {
+		return await this._shard.awaitResponse('gameLogicAction', {
+			operation: 'complete',
+		});
 	}
 
 	//#region Handler
@@ -404,6 +426,8 @@ export class GameState extends TypedEventEmitter<{
 
 	//#endregion Handler
 
+	//#region Typing indicator
+
 	private _indicatorStatus: ChatCharacterStatus = 'none';
 	private _indicatorTarget: CharacterId | undefined;
 
@@ -429,6 +453,8 @@ export class GameState extends TypedEventEmitter<{
 	public getStatus(id: CharacterId): ChatCharacterStatus {
 		return this._status.get(id) ?? 'none';
 	}
+
+	//#endregion
 
 	//#region MessageSender
 

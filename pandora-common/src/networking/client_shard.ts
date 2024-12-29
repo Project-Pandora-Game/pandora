@@ -53,8 +53,16 @@ export const ClientShardSchema = {
 		}),
 		response: null,
 	},
-	appearanceAction: {
-		request: AppearanceActionSchema,
+	gameLogicAction: {
+		request: z.discriminatedUnion('operation', [
+			z.object({
+				operation: z.enum(['doImmediately', 'start']),
+				action: AppearanceActionSchema,
+			}),
+			z.object({
+				operation: z.literal('complete'),
+			}),
+		]),
 		response: z.discriminatedUnion('result', [
 			z.object({
 				result: z.literal('success'),

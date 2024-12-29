@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import _ from 'lodash';
+import _, { clamp } from 'lodash';
 import { nanoid } from 'nanoid';
 import {
 	AppearanceAction,
@@ -7,7 +7,7 @@ import {
 	AppearanceActionProcessingResult,
 	AssertNever,
 	Asset,
-	EMPTY_ARRAY,
+	FormatTimeInterval,
 	IsNotNullable,
 	type AppearanceActionData,
 	type HexColorString,
@@ -66,14 +66,17 @@ export function ActionWarningContent({ problems, prompt }: { problems: readonly 
 	);
 }
 
-export function ActionWarning({ problems, prompt, parent }: { problems: readonly AppearanceActionProblem[]; prompt: boolean; parent: HTMLElement | null; }) {
-	if (problems.length === 0) {
+export function ActionWarning({ checkResult, parent }: {
+	checkResult: AppearanceActionProcessingResult;
+	parent: HTMLElement | null;
+}) {
+	if (checkResult.valid) {
 		return null;
 	}
 
 	return (
 		<HoverElement parent={ parent } className='action-warning display-linebreak'>
-			<ActionWarningContent problems={ problems } prompt={ prompt } />
+			<ActionWarningContent problems={ checkResult.problems } prompt={ checkResult.prompt != null } />
 		</HoverElement>
 	);
 }
@@ -108,16 +111,14 @@ export function WardrobeActionButton({
 	const [isHovering, setIsHovering] = useState(false);
 
 	const check = useStaggeredAppearanceActionResult(action);
-	const hide = check != null && autohide && check.problems.some(AppearanceActionProblemShouldHide);
-	const [execute, processing] = useWardrobeExecuteChecked(action, check, {
+	const hide = check != null && !check.valid && autohide && check.problems.some(AppearanceActionProblemShouldHide);
+	const { execute, processing, currentAttempt } = useWardrobeExecuteChecked(action, check, {
 		onSuccess: onExecute,
 		onFailure,
 	});
 
-	const finalProblems: readonly AppearanceActionProblem[] = check?.problems ?? EMPTY_ARRAY;
-
 	useEffect(() => {
-		if (!isHovering || !showHoverPreview || check == null || !check.valid || finalProblems.length > 0)
+		if (!isHovering || !showHoverPreview || check == null || !check.valid)
 			return;
 
 		const previewState = check.resultState;
@@ -129,7 +130,49 @@ export function WardrobeActionButton({
 				actionPreviewState.value = null;
 			}
 		};
-	}, [isHovering, showHoverPreview, actionPreviewState, check, finalProblems]);
+	}, [isHovering, showHoverPreview, actionPreviewState, check]);
+
+	// Handle visual "cooldown" effect while attempting action that has slowdown
+	useEffect(() => {
+		if (!ref || !currentAttempt)
+			return;
+
+		let run = true;
+		let frameRequest: number | undefined;
+
+		const update = () => {
+			frameRequest = undefined;
+			if (!run)
+				return;
+
+			const now = Date.now();
+
+			if (now >= currentAttempt.finishAfter) {
+				ref.style.removeProperty('--progress');
+				ref.classList.remove('pendingAttempt');
+				return;
+			}
+
+			ref.classList.add('pendingAttempt');
+			const done = now - currentAttempt.start;
+			const progress = clamp(done / (currentAttempt.finishAfter - currentAttempt.start), 0, 1);
+			ref.style.setProperty('--progress', `${Math.floor(progress * 100)}%`);
+
+			frameRequest = requestAnimationFrame(update);
+		};
+
+		update();
+
+		return () => {
+			run = false;
+			if (frameRequest !== undefined) {
+				cancelAnimationFrame(frameRequest);
+				frameRequest = undefined;
+			}
+			ref.style.removeProperty('--progress');
+			ref.classList.remove('pendingAttempt');
+		};
+	}, [ref, currentAttempt]);
 
 	return (
 		<Element
@@ -139,7 +182,7 @@ export function WardrobeActionButton({
 			className={ classNames(
 				'wardrobeActionButton',
 				className,
-				CheckResultToClassName(check),
+				CheckResultToClassName(check, currentAttempt != null),
 				hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null,
 			) }
 			onClick={ (ev) => {
@@ -154,11 +197,11 @@ export function WardrobeActionButton({
 			} }
 			disabled={ processing || disabled }
 			data-action={ USER_DEBUG ? JSON.stringify(action, undefined, '\t') : undefined }
-			data-action-localproblems={ (USER_DEBUG && check != null) ? JSON.stringify(check.problems, undefined, '\t') : undefined }
+			data-action-localproblems={ (USER_DEBUG && check != null) ? (JSON.stringify(check.valid ? null : check.problems, undefined, '\t')) : undefined }
 		>
 			{
 				showActionBlockedExplanation && check != null ? (
-					<ActionWarning problems={ finalProblems } prompt={ !check.valid && check.prompt != null } parent={ ref } />
+					<ActionWarning checkResult={ check } parent={ ref } />
 				) : null
 			}
 			{ children }
@@ -166,11 +209,25 @@ export function WardrobeActionButton({
 	);
 }
 
-export function CheckResultToClassName(result: AppearanceActionProcessingResult | null): string {
-	if (result == null)
+export function CheckResultToClassName(result: AppearanceActionProcessingResult | null, isCurrentlyAttempting: boolean): string {
+	if (result == null) {
+		// Short-circuit check if currently attempting this action - to look nicer
+		if (isCurrentlyAttempting)
+			return 'allowed';
+
 		return 'pending';
-	if (result.valid)
+	}
+
+	if (result.valid) {
+		if (isCurrentlyAttempting)
+			return 'allowed';
+
+		if (result.actionSlowdown > 0)
+			return 'requiresAttempt';
+
 		return 'allowed';
+	}
+
 	if (result.prompt != null)
 		return 'promptRequired';
 

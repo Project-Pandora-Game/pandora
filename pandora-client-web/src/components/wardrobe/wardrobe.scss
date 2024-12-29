@@ -309,40 +309,8 @@ $drop-overlay-gap: 0.3em;
 
 .inventoryViewItem {
 	border: 1px solid $theme-wardrobe-actionbutton-border;
-	background: $theme-wardrobe-actionbutton-normal-background;
-	color: $theme-wardrobe-actionbutton-normal-text;
 	display: flex;
 	position: relative;
-
-	&.selected {
-		background: $theme-wardrobe-actionbutton-selected-background;
-		color: $theme-wardrobe-actionbutton-selected-text;
-	}
-
-	&.allowed:hover {
-		cursor: pointer;
-		background: $theme-wardrobe-itementry-hover-background;
-		color: $theme-wardrobe-itementry-hover-text;
-
-		&.selected {
-			background: $theme-wardrobe-actionbutton-selectedhover-background;
-			color: $theme-wardrobe-actionbutton-selectedhover-text;
-		}
-	}
-
-	&:focus-visible {
-		border-color: $theme-wardrobe-actionbutton-visiblefocus-border;
-	}
-
-	&.blocked {
-		background: $theme-wardrobe-actionbutton-blocked-background;
-		color: $theme-wardrobe-actionbutton-blocked-text;
-	}
-
-	&.pending {
-		background: $theme-wardrobe-actionbutton-pending-background;
-		color: $theme-wardrobe-actionbutton-pending-text;
-	}
 
 	>.colorRibbon {
 		position: absolute;
@@ -528,44 +496,79 @@ $drop-overlay-gap: 0.3em;
 }
 
 .wardrobeActionButton {
+	position: relative;
 	@include center-flex;
 	border: 1px solid $theme-wardrobe-actionbutton-border;
-	background: $theme-wardrobe-actionbutton-normal-background;
-	color: $theme-wardrobe-actionbutton-normal-text;
+	z-index: 1;
 
 	&:not(.slim) {
 		min-height: 2.5em;
 		min-width: 2.5em;
 	}
 
+	&.IconButton {
+		padding: 0.15em;
+		width: 3.3em;
+		height: 3.3em;
+
+		img {
+			width: 100%;
+			height: 100%;
+		}
+	}
+}
+
+.wardrobeActionButton, .inventoryViewItem {
+	background: $theme-wardrobe-actionbutton-normal-background;
+	color: $theme-wardrobe-actionbutton-normal-text;
+
 	&.selected {
 		background: $theme-wardrobe-actionbutton-selected-background;
 		color: $theme-wardrobe-actionbutton-selected-text;
 	}
 
-	&:disabled {
-		background: $theme-wardrobe-actionbutton-disabled-background;
-		color: $theme-wardrobe-actionbutton-disabled-text;
+	&.requiresAttempt:not(:disabled) {
+		background: $theme-wardrobe-actionbutton-requiresAttempt-background;
+		color: $theme-wardrobe-actionbutton-requiresAttempt-text;
 
-		&.selected {
-			background: $theme-wardrobe-actionbutton-selected-background;
-			color: $theme-wardrobe-actionbutton-selected-text;
+		&:hover {
+			background: $theme-wardrobe-actionbutton-requiresAttempt-hover-background;
+			color: $theme-wardrobe-actionbutton-requiresAttempt-hover-text;
 		}
 	}
 
-	&.allowed:hover:not(:disabled) {
+	&.pendingAttempt:not(.progressDone) {
+		background: $theme-wardrobe-actionbutton-progress-pending;
+		--progress: 0%;
+		background: linear-gradient(
+			to bottom,
+			$theme-wardrobe-actionbutton-progress-done var(--progress),
+			$theme-wardrobe-actionbutton-progress-pending var(--progress),
+		);
+		// --progress: 0deg;
+		// background: conic-gradient(
+		// 	$theme-wardrobe-actionbutton-progress-done var(--progress),
+		// 	$theme-wardrobe-actionbutton-progress-pending var(--progress),
+		// );
+	}
+
+	&.allowed:not(:disabled) {
 		cursor: pointer;
-		background: $theme-wardrobe-actionbutton-hover-background;
-		color: $theme-wardrobe-actionbutton-hover-text;
 
-		&.selected {
-			background: $theme-wardrobe-actionbutton-selectedhover-background;
-			color: $theme-wardrobe-actionbutton-selectedhover-text;
+		&:hover:not(.pendingAttempt:not(.progressDone)) {
+			background: $theme-wardrobe-actionbutton-hover-background;
+			color: $theme-wardrobe-actionbutton-hover-text;
+
+			&.inventoryViewItem {
+				background: $theme-wardrobe-itementry-hover-background;
+				color: $theme-wardrobe-itementry-hover-text;
+			}
+
+			&.selected {
+				background: $theme-wardrobe-actionbutton-selectedhover-background;
+				color: $theme-wardrobe-actionbutton-selectedhover-text;
+			}
 		}
-	}
-
-	&:focus-visible {
-		border-color: $theme-wardrobe-actionbutton-visiblefocus-border;
 	}
 
 	&.blocked:not(.selected) {
@@ -584,15 +587,18 @@ $drop-overlay-gap: 0.3em;
 		color: $theme-wardrobe-actionbutton-promptRequired-text;
 	}
 
-	&.IconButton {
-		padding: 0.15em;
-		width: 3.3em;
-		height: 3.3em;
+	&:disabled {
+		background: $theme-wardrobe-actionbutton-disabled-background;
+		color: $theme-wardrobe-actionbutton-disabled-text;
 
-		img {
-			width: 100%;
-			height: 100%;
+		&.selected {
+			background: $theme-wardrobe-actionbutton-selected-background;
+			color: $theme-wardrobe-actionbutton-selected-text;
 		}
+	}
+
+	&:focus-visible {
+		border-color: $theme-wardrobe-actionbutton-visiblefocus-border;
 	}
 }
 

@@ -149,6 +149,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 		AssertNever(e);
 	} else if (result.result === 'attemptRequired') {
 		return 'This action requires starting an attempt to perform it first.';
+	} else if (result.result === 'tooSoon') {
+		return 'This action cannot be performed yet. Try again later.';
 	} else if (result.result === 'failure') {
 		const f = result.failure;
 		if (f.type === 'moduleActionFailure') {

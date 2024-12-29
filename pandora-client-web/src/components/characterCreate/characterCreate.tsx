@@ -7,8 +7,8 @@ import { useAsyncEvent } from '../../common/useEvent';
 import { TextInput } from '../../common/userInteraction/input/textInput';
 import { Button } from '../common/button/button';
 import { Form, FormCreateStringValidator, FormError, FormErrorMessage, FormField } from '../common/form/form';
+import { useGameStateOptional } from '../gameContext/gameStateContextProvider';
 import { usePlayer, usePlayerData } from '../gameContext/playerContextProvider';
-import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import './characterCreate.scss';
 
 export function CharacterCreate(): ReactElement | null {
@@ -20,22 +20,22 @@ export function CharacterCreate(): ReactElement | null {
 
 	const player = usePlayer();
 	const playerData = usePlayerData();
-	const shardConnector = useShardConnector();
+	const gameState = useGameStateOptional();
 	const createCharacter = useCreateCharacter();
 
 	// On open randomize appearance
 	const shouldRandomize = player != null && playerData?.inCreation === true;
 	useEffect(() => {
 		if (shouldRandomize) {
-			shardConnector?.awaitResponse('appearanceAction', {
+			gameState?.doImmediateAction({
 				type: 'randomize',
 				kind: 'full',
 				seed: nanoid(),
 			}).catch(() => {
-				// TODO: this is bad, ww shouldn't have a useEffect that calls a shard action like this
+				// TODO: this is bad, we shouldn't have a useEffect that calls a shard action like this
 			});
 		}
-	}, [shouldRandomize, shardConnector]);
+	}, [shouldRandomize, gameState]);
 
 	const [handleSubmit, processing] = useAsyncEvent(
 		async () => {

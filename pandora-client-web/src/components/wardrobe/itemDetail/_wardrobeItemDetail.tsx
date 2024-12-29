@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 import {
+	EMPTY_ARRAY,
 	ItemPath,
 	LIMIT_ITEM_DESCRIPTION_LENGTH,
 	LIMIT_ITEM_NAME_LENGTH,
@@ -268,11 +269,11 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit }: { i
 		description: item.description ?? '',
 	}), [targetSelector, itemPath, item.name, item.description]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
-	const available = checkResult != null && checkResult.problems.length === 0;
+	const available = checkResult != null && checkResult.valid;
 
 	const onClick = useCallback(() => {
-		if (checkResult != null && !checkResult.valid && checkResult.prompt == null) {
-			toast(<ActionWarningContent problems={ checkResult.problems } prompt={ false } />, TOAST_OPTIONS_WARNING);
+		if (checkResult != null && (!checkResult.valid && checkResult.prompt == null || checkResult.actionSlowdown > 0)) {
+			toast(<ActionWarningContent problems={ !checkResult.valid ? checkResult.problems : EMPTY_ARRAY } prompt={ false } />, TOAST_OPTIONS_WARNING);
 			return;
 		}
 		onStartEdit();

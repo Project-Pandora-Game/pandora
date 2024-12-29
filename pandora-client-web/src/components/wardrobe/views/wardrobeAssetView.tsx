@@ -3,13 +3,11 @@ import { Immutable } from 'immer';
 import {
 	ASSET_PREFERENCES_DEFAULT,
 	AppearanceAction,
-	AppearanceActionProblem,
 	AssertNever,
 	Asset,
 	AssetPreferenceType,
 	AssetPreferenceTypeSchema,
 	AssetPreferencesPublic,
-	EMPTY_ARRAY,
 	ItemContainerPath,
 	ResolveAssetPreference,
 } from 'pandora-common';
@@ -25,7 +23,7 @@ import { useIsNarrowScreen } from '../../../styles/mediaQueries';
 import { IconButton } from '../../common/button/button';
 import { useWardrobeActionContext, useWardrobeExecuteChecked } from '../wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
-import { ActionWarning, AttributeButton, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
+import { ActionWarning, AttributeButton, CheckResultToClassName, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
 
@@ -289,12 +287,10 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	}), [targetSelector, asset, container]);
 
 	const check = useStaggeredAppearanceActionResult(action, { lowPriority: true });
-	const [execute] = useWardrobeExecuteChecked(action, check);
-
-	const finalProblems: readonly AppearanceActionProblem[] = check?.problems ?? EMPTY_ARRAY;
+	const { execute, currentAttempt } = useWardrobeExecuteChecked(action, check);
 
 	useEffect(() => {
-		if (!isHovering || !showHoverPreview || check == null || !check.valid || finalProblems.length > 0)
+		if (!isHovering || !showHoverPreview || check == null || !check.valid)
 			return;
 
 		const previewState = check.resultState;
@@ -306,7 +302,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 				actionPreviewState.value = null;
 			}
 		};
-	}, [isHovering, showHoverPreview, actionPreviewState, check, finalProblems]);
+	}, [isHovering, showHoverPreview, actionPreviewState, check]);
 
 	return (
 		<div
@@ -315,7 +311,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 				listMode ? 'listMode' : 'gridMode',
 				'small',
 				`pref-${preference}`,
-				check === null ? 'pending' : finalProblems.length === 0 ? 'allowed' : 'blocked',
+				CheckResultToClassName(check, currentAttempt != null),
 			) }
 			tabIndex={ 0 }
 			ref={ setRef }
@@ -329,7 +325,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 		>
 			{
 				check != null ? (
-					<ActionWarning problems={ finalProblems } prompt={ !check.valid && check.prompt != null } parent={ ref } />
+					<ActionWarning checkResult={ check } parent={ ref } />
 				) : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ listMode } />

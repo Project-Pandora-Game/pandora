@@ -1,3 +1,4 @@
+import type { Immutable } from 'immer';
 import { z, ZodTypeDef } from 'zod';
 
 import type { Asset } from '../asset';
@@ -84,7 +85,7 @@ export type AssetFrameworkPosePresetWithId = z.infer<typeof AssetFrameworkPosePr
 
 __internal_InitRecursiveItemSchemas(ItemBundleSchema, ItemTemplateSchema);
 
-export function CreateItemBundleFromTemplate(template: ItemTemplate, context: IItemCreationContext): ItemBundle | undefined {
+export function CreateItemBundleFromTemplate(template: Immutable<ItemTemplate>, context: IItemCreationContext): ItemBundle | undefined {
 	const asset = context.assetManager.getAssetById(template.asset);
 	// Fail if the template referrs to asset that is unknown or cannot be spawned by users
 	if (asset == null || !asset.canBeSpawned())

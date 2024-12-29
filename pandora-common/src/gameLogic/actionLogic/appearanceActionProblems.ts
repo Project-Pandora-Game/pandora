@@ -16,6 +16,10 @@ export type AppearanceActionProblem = {
 	// The action requires an attempt to be started and later finished due to a slowdown.
 	result: 'attemptRequired';
 } | {
+	// This action might be valid, but not at this point in time.
+	// Example is attempting to finish an action that takes longer than from when it was started.
+	result: 'tooSoon';
+} | {
 	result: 'invalidAction';
 	reason?: InvalidActionReason;
 } | {

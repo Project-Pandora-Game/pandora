@@ -129,7 +129,7 @@ export class AppearanceActionProcessingContext {
 
 	/** Adds a slowdown to the action (in seconds) */
 	public addSlowdown(slowdown: number): void {
-		this._actionSlowdown += slowdown;
+		this._actionSlowdown = Math.max(this._actionSlowdown, slowdown);
 	}
 
 	public addData(data: AppearanceActionData): void {
@@ -288,7 +288,6 @@ abstract class AppearanceActionProcessingResultBase {
 
 	public readonly originalState: AssetFrameworkGlobalState;
 
-	public abstract readonly problems: readonly AppearanceActionProblem[];
 	/** Slowdown that should be applied to this action (in seconds) */
 	public readonly actionSlowdown: number;
 
@@ -340,7 +339,6 @@ export class AppearanceActionProcessingResultInvalid extends AppearanceActionPro
 export class AppearanceActionProcessingResultValid extends AppearanceActionProcessingResultBase {
 	public readonly valid = true;
 
-	public readonly problems: readonly AppearanceActionProblem[] = [];
 	public readonly resultState: AssetFrameworkGlobalState;
 	public readonly pendingMessages: readonly ActionHandlerMessage[];
 	public readonly actionData: readonly AppearanceActionData[];

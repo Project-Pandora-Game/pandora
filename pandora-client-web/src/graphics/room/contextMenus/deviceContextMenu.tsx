@@ -38,8 +38,8 @@ function StoreDeviceMenu({ device, close }: {
 	}), [device]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const roomConstructionMode = useIsRoomConstructionModeEnabled();
-	const available = roomConstructionMode && checkResult != null && checkResult.problems.length === 0;
-	const [execute, processing] = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
+	const available = roomConstructionMode && checkResult != null && checkResult.valid;
+	const { execute, processing } = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
 
 	const onClick = () => {
 		if (!roomConstructionMode) {
@@ -71,7 +71,7 @@ function MoveDeviceMenu({ device, close }: {
 	}), [device]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 	const roomConstructionMode = useIsRoomConstructionModeEnabled();
-	const available = roomConstructionMode && checkResult != null && checkResult.problems.length === 0;
+	const available = roomConstructionMode && checkResult != null && checkResult.valid;
 
 	const {
 		setRoomSceneMode,
@@ -112,8 +112,8 @@ function DeviceSlotClear({ device, slot, children, close }: ChildrenProps & {
 		slot,
 	}), [device, slot]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
-	const available = checkResult != null && checkResult.problems.length === 0;
-	const [execute, processing] = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
+	const available = checkResult != null && checkResult.valid;
+	const { execute, processing } = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
 
 	return (
 		<button onClick={ execute } disabled={ processing } className={ available ? '' : 'text-strikethrough' }>
@@ -161,8 +161,8 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 		itemId: `i/${nanoid()}` as const,
 	}), [device, slot, character]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
-	const available = checkResult != null && checkResult.problems.length === 0;
-	const [execute, processing] = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
+	const available = checkResult != null && checkResult.valid;
+	const { execute, processing } = useWardrobeExecuteChecked(action, checkResult, { onSuccess: close });
 
 	return (
 		<button

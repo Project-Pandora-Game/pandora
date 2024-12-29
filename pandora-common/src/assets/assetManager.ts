@@ -1,4 +1,5 @@
 import { freeze, Immutable } from 'immer';
+import type { CharacterId } from '../character/characterTypes';
 import type { GameLogicCharacter } from '../gameLogic';
 import type { Logger } from '../logging';
 import { Assert, AssertNotNullable, CloneDeepMutable } from '../utility/misc';
@@ -8,7 +9,6 @@ import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, A
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 import { CreateItemBundleFromTemplate, Item, ItemBundle, ItemTemplate, LoadItemFromBundle, type ItemId } from './item';
 import type { AssetsPosePresets } from './state/characterStatePose';
-import type { CharacterId } from '../character/characterTypes';
 
 export class AssetManager {
 	protected readonly _assets: ReadonlyMap<AssetId, Asset>;
@@ -192,7 +192,7 @@ export class AssetManager {
 		});
 	}
 
-	public createItemFromTemplate(template: ItemTemplate, creator: GameLogicCharacter): Item | undefined {
+	public createItemFromTemplate(template: Immutable<ItemTemplate>, creator: GameLogicCharacter): Item | undefined {
 		// Build a bundle from the template
 		const bundle: ItemBundle | undefined = CreateItemBundleFromTemplate(template, {
 			assetManager: this,

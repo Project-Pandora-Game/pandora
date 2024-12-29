@@ -1,3 +1,4 @@
+import type { Immutable } from 'immer';
 import { z } from 'zod';
 import { AssertNever } from '../../../utility';
 import type { AppearanceActionProcessingContext } from '../appearanceActionProcessingContext';
@@ -40,7 +41,7 @@ export type AppearanceAction<ActionType extends AppearanceActionBase['type'] = A
 
 export function ApplyAction(
 	processingContext: AppearanceActionProcessingContext,
-	action: AppearanceAction,
+	action: Immutable<AppearanceAction>,
 ) {
 	const arg: Omit<AppearanceActionHandlerArg, 'action'> = {
 		assetManager: processingContext.originalState.assetManager,

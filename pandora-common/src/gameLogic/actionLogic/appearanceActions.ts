@@ -1,5 +1,6 @@
-import { freeze } from 'immer';
+import { freeze, type Immutable } from 'immer';
 import type { GameLogicCharacter } from '..';
+import type { CharacterActionAttempt } from '../../assets';
 import { ActionMessageTemplateHandler, ActionTarget, type ActionTargetCharacter } from '../../assets/appearanceTypes';
 import { ModuleActionError, ModuleActionFailure, type ModuleActionData } from '../../assets/modules';
 import type { AssetFrameworkGlobalState } from '../../assets/state/globalState';
@@ -96,3 +97,45 @@ export function StartActionAttempt(
 	return processingContext.finalize();
 }
 
+/**
+ * Start an attempt at performing an action
+ * @param action - The action to attempt
+ * @param context - Context for the action
+ * @param initialState - State before the action
+ */
+export function FinishActionAttempt(
+	context: AppearanceActionContext,
+	initialState: AssetFrameworkGlobalState,
+	currentTime: number,
+): AppearanceActionProcessingResult {
+	const processingContext = new AppearanceActionProcessingContext(context, initialState);
+	const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
+
+	// Get and clear the current action the user is performing
+	let attempt: undefined | Immutable<CharacterActionAttempt>;
+
+	if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) => {
+		attempt = character.attemptingAction ?? undefined;
+
+		return character.produceWithAttemptedAction(null);
+	})) {
+		return processingContext.invalid();
+	}
+
+	// There must be an action in progress
+	if (attempt == null)
+		return processingContext.invalid();
+
+	// We must be allowed to finish the action
+	if (attempt.finishAfter > currentTime) {
+		processingContext.addProblem({ result: 'tooSoon' });
+	}
+
+	// Perform the action now, checking if it still is valid
+	const result = ApplyAction(processingContext, attempt.action);
+
+	// Note: We intentionally ignore the possibility of slowdown having increased since the action start,
+	// as that could easily be annoying for the user.
+
+	return result;
+}

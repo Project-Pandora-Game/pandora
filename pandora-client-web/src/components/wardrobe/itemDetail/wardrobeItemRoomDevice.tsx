@@ -85,7 +85,7 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 		item,
 		deployment: { deployed: true, position: deployment },
 	});
-	const disabled = checkResult == null || checkResult.problems.length > 0;
+	const disabled = checkResult == null || !checkResult.valid || checkResult.actionSlowdown > 0;
 
 	const onChangeCaller = useCallback((newPosition: Immutable<RoomDeviceDeploymentPosition>) => {
 		execute({

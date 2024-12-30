@@ -1,7 +1,7 @@
-import { AppearanceActionProblem, AssertNever, type AssetId, type ItemDisplayNameType } from 'pandora-common';
+import { AppearanceActionProblem, AssertNever, type AssetId, type GameLogicActionSlowdownReason, type ItemDisplayNameType } from 'pandora-common';
+import { ResolveItemDisplayNameType } from '../components/wardrobe/itemDetail/wardrobeItemName';
 import { DescribeAsset, DescribeAttribute } from '../ui/components/chat/chatMessages';
 import { AssetManagerClient } from './assetManager';
-import { ResolveItemDisplayNameType } from '../components/wardrobe/itemDetail/wardrobeItemName';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */
 export function AppearanceActionProblemShouldHide(result: AppearanceActionProblem): boolean {
@@ -168,4 +168,13 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 		AssertNever(f.type);
 	}
 	AssertNever(result);
+}
+
+export function RenderAppearanceActionSlowdown(reason: GameLogicActionSlowdownReason): string {
+	switch (reason) {
+		case 'blockedHands':
+			return 'You need to be able to use hands to do this freely, but yours are bound.';
+	}
+
+	AssertNever(reason);
 }

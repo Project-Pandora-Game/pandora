@@ -325,7 +325,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 		>
 			{
 				check != null ? (
-					<ActionWarning checkResult={ check } parent={ ref } />
+					<ActionWarning checkResult={ check } actionInProgress={ currentAttempt != null } parent={ ref } />
 				) : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ listMode } />

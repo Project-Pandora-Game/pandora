@@ -45,7 +45,7 @@ export function DoImmediateAction(
 	let result = ApplyAction(processingContext, action);
 
 	// The action must have no slowdown, otherwise fail
-	if (result.actionSlowdown > 0) {
+	if (result.getActionSlowdownTime() > 0) {
 		result = result.addAdditionalProblems({
 			result: 'attemptRequired',
 		});
@@ -76,7 +76,7 @@ export function StartActionAttempt(
 		if (!checkResult.valid)
 			return checkResult;
 
-		slowdown = checkResult.actionSlowdown;
+		slowdown = checkResult.getActionSlowdownTime();
 	}
 
 	// Edit the state to start the attempt
@@ -88,7 +88,7 @@ export function StartActionAttempt(
 		character.produceWithAttemptedAction({
 			action,
 			start: currentTime,
-			finishAfter: currentTime + (1000 * slowdown),
+			finishAfter: currentTime + slowdown,
 		}),
 	)) {
 		return processingContext.invalid();

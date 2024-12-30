@@ -21,6 +21,7 @@ import type { ItemInteractionType, Restriction } from '../../character/restricti
 import { Assert, AssertNever, AssertNotNullable } from '../../utility/misc';
 import type { AppearanceActionData, AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
 import type { AppearanceActionContext } from './appearanceActions';
+import { GAME_LOGIC_ACTION_SLOWDOWN_TIMES, type GameLogicActionSlowdownReason } from './appearanceActionSlowdown';
 
 export class AppearanceActionProcessingContext {
 	private readonly _context: AppearanceActionContext;
@@ -43,9 +44,9 @@ export class AppearanceActionProcessingContext {
 		return this._actionProblems;
 	}
 
-	private _actionSlowdown: number = 0;
-	public get actionSlowdown(): number {
-		return this._actionSlowdown;
+	private readonly _actionSlowdownReasons = new Set<GameLogicActionSlowdownReason>();
+	public get actionSlowdownReasons(): ReadonlySet<GameLogicActionSlowdownReason> {
+		return this._actionSlowdownReasons;
 	}
 
 	private readonly _requiredPermissions = new Set<GameLogicPermission>();
@@ -127,9 +128,9 @@ export class AppearanceActionProcessingContext {
 		this._actionProblems.push(problem);
 	}
 
-	/** Adds a slowdown to the action (in seconds) */
-	public addSlowdown(slowdown: number): void {
-		this._actionSlowdown = Math.max(this._actionSlowdown, slowdown);
+	/** Adds a slowdown to the action */
+	public addSlowdown(slowdown: GameLogicActionSlowdownReason): void {
+		this._actionSlowdownReasons.add(slowdown);
 	}
 
 	public addData(data: AppearanceActionData): void {
@@ -288,20 +289,29 @@ abstract class AppearanceActionProcessingResultBase {
 
 	public readonly originalState: AssetFrameworkGlobalState;
 
-	/** Slowdown that should be applied to this action (in seconds) */
-	public readonly actionSlowdown: number;
+	/** Slowdown that should be applied to this action */
+	public readonly actionSlowdownReasons: ReadonlySet<GameLogicActionSlowdownReason>;
 
 	public readonly requiredPermissions: ReadonlySet<GameLogicPermission>;
 
 	constructor(processingContext: AppearanceActionProcessingContext) {
 		this._finalProcessingContext = processingContext;
 		this.originalState = processingContext.originalState;
-		this.actionSlowdown = processingContext.actionSlowdown;
+		this.actionSlowdownReasons = processingContext.actionSlowdownReasons;
 		this.requiredPermissions = processingContext.requiredPermissions;
 	}
 
 	public addAdditionalProblems(...additionalProblems: readonly AppearanceActionProblem[]): AppearanceActionProcessingResult {
 		return new AppearanceActionProcessingResultInvalid(this._finalProcessingContext, additionalProblems);
+	}
+
+	/** Calculates the action slowdown time (in milliseconds) */
+	public getActionSlowdownTime(): number {
+		let total = 0;
+		for (const reason of this.actionSlowdownReasons) {
+			total += GAME_LOGIC_ACTION_SLOWDOWN_TIMES[reason];
+		}
+		return total;
 	}
 }
 

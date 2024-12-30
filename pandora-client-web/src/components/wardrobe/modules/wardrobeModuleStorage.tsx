@@ -52,7 +52,7 @@ export function WardrobeModuleConfigStorage({ item, moduleName, m }: WardrobeMod
 				) }
 				onClick={ onClick }
 			>
-				<ActionWarning checkResult={ checkResult } parent={ ref } />
+				<ActionWarning checkResult={ checkResult } actionInProgress={ false } parent={ ref } />
 				Open
 			</button>
 			<Row padding='medium' alignY='center'>

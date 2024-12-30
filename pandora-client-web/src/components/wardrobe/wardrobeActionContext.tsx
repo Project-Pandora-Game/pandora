@@ -238,7 +238,7 @@ export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, re
 
 			// Detect need for confirmation
 			const warnings = WardrobeCheckResultForConfirmationWarnings(player, spaceContext, action, result);
-			const needsAttempt = result.actionSlowdown > 0;
+			const needsAttempt = result.getActionSlowdownTime() > 0;
 
 			Promise.resolve()
 				.then(() => {

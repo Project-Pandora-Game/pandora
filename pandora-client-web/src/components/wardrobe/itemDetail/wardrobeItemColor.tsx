@@ -67,7 +67,7 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup
 
 	const checkAction = useMemo((): AppearanceAction => ({ ...action, color: CloneDeepMutable(bundle) ?? {} }), [action, bundle]);
 	const check = useStaggeredAppearanceActionResult(checkAction);
-	const disabled = check == null || !check.valid || check.actionSlowdown > 0;
+	const disabled = check == null || !check.valid || check.getActionSlowdownTime() > 0;
 
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 

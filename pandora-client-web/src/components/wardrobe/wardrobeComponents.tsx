@@ -10,11 +10,12 @@ import {
 	FormatTimeInterval,
 	IsNotNullable,
 	type AppearanceActionData,
+	type GameLogicActionSlowdownReason,
 	type HexColorString,
 } from 'pandora-common';
 import React, { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
 import { z } from 'zod';
-import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem } from '../../assets/appearanceValidation';
+import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem, RenderAppearanceActionSlowdown } from '../../assets/appearanceValidation';
 import { useAssetManager } from '../../assets/assetManager';
 import { useGraphicsUrl } from '../../assets/graphicsManager';
 import { BrowserStorage } from '../../browserStorage';
@@ -29,6 +30,36 @@ import { HoverElement } from '../hoverElement/hoverElement';
 import { useWardrobeExecuteChecked } from './wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import { useWardrobeContext } from './wardrobeContext';
+
+export function ActionSlowdownContent({ slowdownReasons, slowdownTime }: { slowdownReasons: ReadonlySet<GameLogicActionSlowdownReason>; slowdownTime: number; }): ReactElement {
+	const reasons = useMemo(() => (
+		_.uniq(
+			Array.from(slowdownReasons)
+				.map((reason) => RenderAppearanceActionSlowdown(reason))
+				.filter(Boolean),
+		)
+	), [slowdownReasons]);
+
+	return (
+		<>
+			This action will start a usage attempt that will take at least { FormatTimeInterval(slowdownTime, 'two-most-significant') } before
+			you can decide when it is successful or stopped.
+			{
+				reasons.length > 0 ? (
+					<>
+						<br />
+						This will happen because:
+						<ul>
+							{
+								reasons.map((reason, i) => (<li key={ i }>{ reason }</li>))
+							}
+						</ul>
+					</>
+				) : null
+			}
+		</>
+	);
+}
 
 export function ActionWarningContent({ problems, prompt }: { problems: readonly AppearanceActionProblem[]; prompt: boolean; }): ReactElement {
 	const { wardrobeItemDisplayNameType } = useAccountSettings();
@@ -66,17 +97,39 @@ export function ActionWarningContent({ problems, prompt }: { problems: readonly 
 	);
 }
 
-export function ActionWarning({ checkResult, parent }: {
+export function ActionWarning({ checkResult, parent, actionInProgress }: {
 	checkResult: AppearanceActionProcessingResult;
+	actionInProgress: boolean;
 	parent: HTMLElement | null;
 }) {
-	if (checkResult.valid) {
+	const slowdown = checkResult.getActionSlowdownTime();
+	if (checkResult.valid && slowdown === 0 && !actionInProgress) {
 		return null;
 	}
 
 	return (
 		<HoverElement parent={ parent } className='action-warning display-linebreak'>
-			<ActionWarningContent problems={ checkResult.problems } prompt={ checkResult.prompt != null } />
+			<Column>
+				{
+					actionInProgress ? (
+						<strong>You are currently attempting this action.</strong>
+					) : null
+				}
+				{
+					!checkResult.valid ? (
+						<div>
+							<ActionWarningContent problems={ checkResult.problems } prompt={ checkResult.prompt != null } />
+						</div>
+					) : null
+				}
+				{
+					slowdown > 0 ? (
+						<div>
+							<ActionSlowdownContent slowdownReasons={ checkResult.actionSlowdownReasons } slowdownTime={ slowdown } />
+						</div>
+					) : null
+				}
+			</Column>
 		</HoverElement>
 	);
 }
@@ -201,7 +254,7 @@ export function WardrobeActionButton({
 		>
 			{
 				showActionBlockedExplanation && check != null ? (
-					<ActionWarning checkResult={ check } parent={ ref } />
+					<ActionWarning checkResult={ check } actionInProgress={ currentAttempt != null } parent={ ref } />
 				) : null
 			}
 			{ children }
@@ -222,7 +275,7 @@ export function CheckResultToClassName(result: AppearanceActionProcessingResult 
 		if (isCurrentlyAttempting)
 			return 'allowed';
 
-		if (result.actionSlowdown > 0)
+		if (result.getActionSlowdownTime() > 0)
 			return 'requiresAttempt';
 
 		return 'allowed';

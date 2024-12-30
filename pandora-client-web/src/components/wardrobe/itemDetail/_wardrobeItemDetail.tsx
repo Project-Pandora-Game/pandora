@@ -272,7 +272,7 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit }: { i
 	const available = checkResult != null && checkResult.valid;
 
 	const onClick = useCallback(() => {
-		if (checkResult != null && (!checkResult.valid && checkResult.prompt == null || checkResult.actionSlowdown > 0)) {
+		if (checkResult != null && (!checkResult.valid && checkResult.prompt == null || checkResult.getActionSlowdownTime() > 0)) {
 			toast(<ActionWarningContent problems={ !checkResult.valid ? checkResult.problems : EMPTY_ARRAY } prompt={ false } />, TOAST_OPTIONS_WARNING);
 			return;
 		}

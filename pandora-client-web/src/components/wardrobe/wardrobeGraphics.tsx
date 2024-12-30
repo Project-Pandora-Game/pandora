@@ -34,6 +34,7 @@ import { Column, Row } from '../common/container/container';
 import { useSpaceInfo } from '../gameContext/gameStateContextProvider';
 import { THEME_NORMAL_BACKGROUND } from '../gameContext/interfaceSettingsProvider';
 import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
+import { WardrobeActionAttemptOverlay } from './views/wardrobeActionAttempt';
 import { useWardrobeContext } from './wardrobeContext';
 
 export function WardrobeCharacterPreview({ character, characterState, isPreview = false, allowHideItems = false }: {
@@ -54,45 +55,51 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 	const viewportRef = useRef<PixiViewportRef>(null);
 
 	const overlay = useMemo(() => (
-		<Row gap='medium' padding='medium' className='overlay pointer-events-disable'>
-			<Row className='pointer-events-enable flex' gap='medium'>
-				<Button className='slim iconButton'
-					title='Toggle character view'
-					onClick={ onClick }
-					disabled={ processing }
-				>
-					↷
-				</Button>
-				<Button className='slim iconButton'
-					title='Center the view'
-					onClick={ () => {
-						viewportRef.current?.center();
-					} }
-				>
-					⊙
-				</Button>
+		<Column gap='medium' padding='medium' className='overlay pointer-events-disable'>
+			<Row gap='medium'>
+				<Row className='pointer-events-enable flex' gap='medium'>
+					<Button className='slim iconButton'
+						title='Toggle character view'
+						onClick={ onClick }
+						disabled={ processing }
+					>
+						↷
+					</Button>
+					<Button className='slim iconButton'
+						title='Center the view'
+						onClick={ () => {
+							viewportRef.current?.center();
+						} }
+					>
+						⊙
+					</Button>
+				</Row>
+				<Column className='pointer-events-enable' alignX='end'>
+					{
+						allowHideItems ? (
+							<Row className='option' gap='small' alignY='center'>
+								<Checkbox
+									id={ `${id}-hide-clothes` }
+									checked={ hideItems }
+									onChange={ setHideItems }
+								/>
+								<label htmlFor={ `${id}-hide-clothes` }>Hide worn items</label>
+							</Row>
+						) : null
+					}
+					{
+						isPreview ? (
+							<div className='warning'>Preview</div>
+						) : null
+					}
+				</Column>
 			</Row>
-			<Column className='pointer-events-enable' alignX='end'>
-				{
-					allowHideItems ? (
-						<Row className='option' gap='small' alignY='center'>
-							<Checkbox
-								id={ `${id}-hide-clothes` }
-								checked={ hideItems }
-								onChange={ setHideItems }
-							/>
-							<label htmlFor={ `${id}-hide-clothes` }>Hide worn items</label>
-						</Row>
-					) : null
-				}
-				{
-					isPreview ? (
-						<div className='warning'>Preview</div>
-					) : null
-				}
-			</Column>
-		</Row>
-	), [allowHideItems, hideItems, id, isPreview, onClick, processing]);
+			<div className='flex-1' />
+			<Row alignX='center' className='fill-x'>
+				<WardrobeActionAttemptOverlay characterState={ characterState } />
+			</Row>
+		</Column>
+	), [allowHideItems, hideItems, id, isPreview, onClick, processing, characterState]);
 
 	return (
 		<CharacterPreview

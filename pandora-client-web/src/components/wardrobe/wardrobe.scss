@@ -70,6 +70,13 @@ $header-height: 2em;
 					border-radius: 1em;
 					padding: 0.25em 0.5em;
 				}
+
+				.actionAttempt {
+					background: $theme-wardrobe-preview-actionattempt-background;
+					color: $theme-wardrobe-preview-actionattempt-text;
+					border: 1px solid $theme-wardrobe-preview-actionattempt-border;
+					border-radius: 1em;
+				}
 			}
 		}
 	}

@@ -1,5 +1,6 @@
 import { Immutable } from 'immer';
 import {
+	AbortActionAttempt,
 	ActionSpaceContext,
 	AppearanceActionContext,
 	AppearanceActionProcessingContext,
@@ -126,6 +127,25 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		},
 		completeCurrentActionAttempt: () => {
 			const result = FinishActionAttempt(actions, editor.globalState.currentState, Date.now());
+
+			// Check if result is valid
+			if (!result.valid) {
+				return {
+					result: 'failure',
+					problems: result.problems.slice(),
+				};
+			}
+
+			// Apply the action
+			editor.globalState.setState(result.resultState);
+
+			return {
+				result: 'success',
+				data: result.actionData,
+			};
+		},
+		abortCurrentActionAttempt: () => {
+			const result = AbortActionAttempt(actions, editor.globalState.currentState);
 
 			// Check if result is valid
 			if (!result.valid) {

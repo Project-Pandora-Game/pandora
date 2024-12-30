@@ -59,9 +59,10 @@ export function DoImmediateAction(
  * @param action - The action to attempt
  * @param context - Context for the action
  * @param initialState - State before the action
+ * @param currentTime - Current time (timestamp)
  */
 export function StartActionAttempt(
-	action: AppearanceAction,
+	action: Immutable<AppearanceAction>,
 	context: AppearanceActionContext,
 	initialState: AssetFrameworkGlobalState,
 	currentTime: number,
@@ -98,10 +99,10 @@ export function StartActionAttempt(
 }
 
 /**
- * Start an attempt at performing an action
- * @param action - The action to attempt
+ * Finish an attempt at performing an action
  * @param context - Context for the action
  * @param initialState - State before the action
+ * @param currentTime - Current time (timestamp)
  */
 export function FinishActionAttempt(
 	context: AppearanceActionContext,
@@ -138,4 +139,26 @@ export function FinishActionAttempt(
 	// as that could easily be annoying for the user.
 
 	return result;
+}
+
+/**
+ * Abort an attempt at performing an action
+ * @param context - Context for the action
+ * @param initialState - State before the action
+ */
+export function AbortActionAttempt(
+	context: AppearanceActionContext,
+	initialState: AssetFrameworkGlobalState,
+): AppearanceActionProcessingResult {
+	const processingContext = new AppearanceActionProcessingContext(context, initialState);
+	const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
+
+	// Clear the current action the user is performing
+	if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) => {
+		return character.produceWithAttemptedAction(null);
+	})) {
+		return processingContext.invalid();
+	}
+
+	return processingContext.finalize();
 }

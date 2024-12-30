@@ -10,6 +10,7 @@ import {
 	FormatTimeInterval,
 	IsNotNullable,
 	type AppearanceActionData,
+	type CharacterActionAttempt,
 	type GameLogicActionSlowdownReason,
 	type HexColorString,
 } from 'pandora-common';
@@ -30,6 +31,7 @@ import { HoverElement } from '../hoverElement/hoverElement';
 import { useWardrobeExecuteChecked } from './wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import { useWardrobeContext } from './wardrobeContext';
+import type { Immutable } from 'immer';
 
 export function ActionSlowdownContent({ slowdownReasons, slowdownTime }: { slowdownReasons: ReadonlySet<GameLogicActionSlowdownReason>; slowdownTime: number; }): ReactElement {
 	const reasons = useMemo(() => (
@@ -134,60 +136,41 @@ export function ActionWarning({ checkResult, parent, actionInProgress }: {
 	);
 }
 
-export function WardrobeActionButton({
+export function WardrobeActionButtonElement({
 	Element = 'button',
 	id,
 	className,
 	children,
-	action,
-	autohide = false,
-	hideReserveSpace = false,
-	showActionBlockedExplanation = true,
-	onExecute,
-	onFailure,
 	disabled = false,
+	check,
+	actionData,
+	currentAttempt,
+	showActionBlockedExplanation = true,
+	hide = false,
+	hideReserveSpace = false,
+	onClick,
+	onHoverChange,
 }: CommonProps & {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
 	Element?: 'button' | 'div';
-	action: AppearanceAction;
-	/** If the button should hide on certain invalid states */
-	autohide?: boolean;
+	disabled?: boolean;
+
+	check: AppearanceActionProcessingResult | null;
+	actionData?: Immutable<AppearanceAction>;
+	currentAttempt?: Immutable<CharacterActionAttempt> | null;
+	showActionBlockedExplanation?: boolean;
+	hide?: boolean;
 	/** Makes the button hide if it should in a way, that occupied space is preserved */
 	hideReserveSpace?: boolean;
-	showActionBlockedExplanation?: boolean;
-	onExecute?: (data: readonly AppearanceActionData[]) => void;
-	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
-	disabled?: boolean;
+
+	onClick?: () => void;
+	onHoverChange?: (isHovering: boolean) => void;
 }): ReactElement {
-	const { actionPreviewState, showHoverPreview } = useWardrobeContext();
 	const [ref, setRef] = useState<HTMLElement | null>(null);
-	const [isHovering, setIsHovering] = useState(false);
-
-	const check = useStaggeredAppearanceActionResult(action);
-	const hide = check != null && !check.valid && autohide && check.problems.some(AppearanceActionProblemShouldHide);
-	const { execute, processing, currentAttempt } = useWardrobeExecuteChecked(action, check, {
-		onSuccess: onExecute,
-		onFailure,
-	});
-
-	useEffect(() => {
-		if (!isHovering || !showHoverPreview || check == null || !check.valid)
-			return;
-
-		const previewState = check.resultState;
-
-		actionPreviewState.value = previewState;
-
-		return () => {
-			if (actionPreviewState.value === previewState) {
-				actionPreviewState.value = null;
-			}
-		};
-	}, [isHovering, showHoverPreview, actionPreviewState, check]);
 
 	// Handle visual "cooldown" effect while attempting action that has slowdown
 	useEffect(() => {
-		if (!ref || !currentAttempt)
+		if (!ref || currentAttempt == null)
 			return;
 
 		let run = true;
@@ -240,16 +223,16 @@ export function WardrobeActionButton({
 			) }
 			onClick={ (ev) => {
 				ev.stopPropagation();
-				execute();
+				onClick?.();
 			} }
 			onMouseEnter={ () => {
-				setIsHovering(true);
+				onHoverChange?.(true);
 			} }
 			onMouseLeave={ () => {
-				setIsHovering(false);
+				onHoverChange?.(false);
 			} }
-			disabled={ processing || disabled }
-			data-action={ USER_DEBUG ? JSON.stringify(action, undefined, '\t') : undefined }
+			disabled={ disabled }
+			data-action={ (USER_DEBUG && actionData != null) ? JSON.stringify(actionData, undefined, '\t') : undefined }
 			data-action-localproblems={ (USER_DEBUG && check != null) ? (JSON.stringify(check.valid ? null : check.problems, undefined, '\t')) : undefined }
 		>
 			{
@@ -259,6 +242,76 @@ export function WardrobeActionButton({
 			}
 			{ children }
 		</Element>
+	);
+}
+
+export function WardrobeActionButton({
+	Element = 'button',
+	id,
+	className,
+	children,
+	action,
+	autohide = false,
+	hideReserveSpace = false,
+	showActionBlockedExplanation = true,
+	onExecute,
+	onFailure,
+	disabled = false,
+}: CommonProps & {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	Element?: 'button' | 'div';
+	action: AppearanceAction;
+	/** If the button should hide on certain invalid states */
+	autohide?: boolean;
+	/** Makes the button hide if it should in a way, that occupied space is preserved */
+	hideReserveSpace?: boolean;
+	showActionBlockedExplanation?: boolean;
+	onExecute?: (data: readonly AppearanceActionData[]) => void;
+	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
+	disabled?: boolean;
+}): ReactElement {
+	const { actionPreviewState, showHoverPreview } = useWardrobeContext();
+	const [isHovering, setIsHovering] = useState(false);
+
+	const check = useStaggeredAppearanceActionResult(action);
+	const hide = check != null && !check.valid && autohide && check.problems.some(AppearanceActionProblemShouldHide);
+	const { execute, processing, currentAttempt } = useWardrobeExecuteChecked(action, check, {
+		onSuccess: onExecute,
+		onFailure,
+	});
+
+	useEffect(() => {
+		if (!isHovering || !showHoverPreview || check == null || !check.valid)
+			return;
+
+		const previewState = check.resultState;
+
+		actionPreviewState.value = previewState;
+
+		return () => {
+			if (actionPreviewState.value === previewState) {
+				actionPreviewState.value = null;
+			}
+		};
+	}, [isHovering, showHoverPreview, actionPreviewState, check]);
+
+	return (
+		<WardrobeActionButtonElement
+			Element={ Element }
+			id={ id }
+			className={ className }
+			disabled={ processing || disabled }
+			check={ check }
+			showActionBlockedExplanation={ showActionBlockedExplanation }
+			actionData={ action }
+			currentAttempt={ currentAttempt }
+			hide={ hide }
+			hideReserveSpace={ hideReserveSpace }
+			onClick={ execute }
+			onHoverChange={ setIsHovering }
+		>
+			{ children }
+		</WardrobeActionButtonElement>
 	);
 }
 

@@ -60,7 +60,7 @@ export const ClientShardSchema = {
 				action: AppearanceActionSchema,
 			}),
 			z.object({
-				operation: z.literal('complete'),
+				operation: z.enum(['complete', 'abortCurrentAction']),
 			}),
 		]),
 		response: z.discriminatedUnion('result', [

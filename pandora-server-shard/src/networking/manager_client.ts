@@ -1,4 +1,5 @@
 import {
+	AbortActionAttempt,
 	ActionHandlerMessageTargetCharacter,
 	AssertNever,
 	BadMessageError,
@@ -172,6 +173,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			result = StartActionAttempt(request.action, character.getAppearanceActionContext(), globalState.currentState, now);
 		} else if (request.operation === 'complete') {
 			result = FinishActionAttempt(character.getAppearanceActionContext(), globalState.currentState, now);
+		} else if (request.operation === 'abortCurrentAction') {
+			result = AbortActionAttempt(character.getAppearanceActionContext(), globalState.currentState);
 		} else {
 			AssertNever(request.operation);
 		}

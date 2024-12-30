@@ -180,23 +180,29 @@ export class GameState extends TypedEventEmitter<{
 		setInterval(() => this._cleanupEdits(), MESSAGE_EDIT_TIMEOUT / 2);
 	}
 
-	public async doImmediateAction(action: AppearanceAction): IClientShardPromiseResult['gameLogicAction'] {
+	public async doImmediateAction(action: Immutable<AppearanceAction>): IClientShardPromiseResult['gameLogicAction'] {
 		return await this._shard.awaitResponse('gameLogicAction', {
 			operation: 'doImmediately',
-			action,
+			action: CloneDeepMutable(action),
 		});
 	}
 
-	public async startActionAttempt(action: AppearanceAction): IClientShardPromiseResult['gameLogicAction'] {
+	public async startActionAttempt(action: Immutable<AppearanceAction>): IClientShardPromiseResult['gameLogicAction'] {
 		return await this._shard.awaitResponse('gameLogicAction', {
 			operation: 'start',
-			action,
+			action: CloneDeepMutable(action),
 		});
 	}
 
 	public async completeCurrentActionAttempt(): IClientShardPromiseResult['gameLogicAction'] {
 		return await this._shard.awaitResponse('gameLogicAction', {
 			operation: 'complete',
+		});
+	}
+
+	public async abortCurrentActionAttempt(): IClientShardPromiseResult['gameLogicAction'] {
+		return await this._shard.awaitResponse('gameLogicAction', {
+			operation: 'abortCurrentAction',
 		});
 	}
 

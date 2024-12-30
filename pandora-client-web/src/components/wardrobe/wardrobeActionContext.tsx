@@ -38,9 +38,10 @@ export interface WardrobeActionContext {
 	player: ICharacter;
 	globalState: AssetFrameworkGlobalState;
 	actions: AppearanceActionContext;
-	doImmediateAction: (action: AppearanceAction) => IClientShardResult['gameLogicAction'];
-	startActionAttempt: (action: AppearanceAction) => IClientShardResult['gameLogicAction'];
+	doImmediateAction: (action: Immutable<AppearanceAction>) => IClientShardResult['gameLogicAction'];
+	startActionAttempt: (action: Immutable<AppearanceAction>) => IClientShardResult['gameLogicAction'];
 	completeCurrentActionAttempt: () => IClientShardResult['gameLogicAction'];
+	abortCurrentActionAttempt: () => IClientShardResult['gameLogicAction'];
 	sendPermissionRequest: (target: CharacterId, permissions: [PermissionGroup, string][]) => IClientShardResult['requestPermission'] | undefined;
 }
 
@@ -75,6 +76,7 @@ export function WardrobeActionContextProvider({ player, children }: { player: Pl
 		doImmediateAction: (action) => gameState.doImmediateAction(action),
 		startActionAttempt: (action) => gameState.startActionAttempt(action),
 		completeCurrentActionAttempt: () => gameState.completeCurrentActionAttempt(),
+		abortCurrentActionAttempt: () => gameState.abortCurrentActionAttempt(),
 		sendPermissionRequest: (permissionRequestTarget, permissions) => shardConnector?.awaitResponse('requestPermission', { target: permissionRequestTarget, permissions }),
 	}), [player, globalState, actions, shardConnector, gameState]);
 
@@ -91,29 +93,37 @@ export function useWardrobeActionContext(): Readonly<WardrobeActionContext> {
 	return ctx;
 }
 
+type WardrobeExecuteCallback = (action: Immutable<AppearanceAction>, operation?: 'start' | 'complete' | 'abort') => void;
+
 type ExecuteCallbackOptions = {
-	onSuccess?: (data: readonly AppearanceActionData[], operation?: 'start' | 'complete') => void;
+	onSuccess?: (data: readonly AppearanceActionData[], operation?: Parameters<WardrobeExecuteCallback>[1]) => void;
 	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
 	allowMultipleSimultaneousExecutions?: boolean;
 };
 
-type WardrobeExecuteCallback = (action: AppearanceAction, operation?: 'start' | 'complete') => void;
-
 export function useWardrobeExecuteCallback({ onSuccess, onFailure, allowMultipleSimultaneousExecutions }: ExecuteCallbackOptions = {}): [WardrobeExecuteCallback, processing: boolean] {
 	const assetManager = useAssetManager();
-	const { doImmediateAction, startActionAttempt, completeCurrentActionAttempt } = useWardrobeActionContext();
+	const {
+		doImmediateAction,
+		startActionAttempt,
+		completeCurrentActionAttempt,
+		abortCurrentActionAttempt,
+	} = useWardrobeActionContext();
 	const {
 		wardrobeItemDisplayNameType,
 	} = useAccountSettings();
 	return useAsyncEvent(
-		async (action: AppearanceAction, operation?: 'start' | 'complete'): Promise<[IClientShardNormalResult['gameLogicAction'], 'start' | 'complete' | undefined]> => {
+		async (action: Immutable<AppearanceAction>, operation?: 'start' | 'complete' | 'abort'): Promise<[IClientShardNormalResult['gameLogicAction'], Parameters<WardrobeExecuteCallback>[1]]> => {
 			if (operation === 'start') {
 				return [await startActionAttempt(action), 'start'];
 			} else if (operation === 'complete') {
 				return [await completeCurrentActionAttempt(), 'complete'];
-			} else {
+			} else if (operation === 'abort') {
+				return [await abortCurrentActionAttempt(), 'abort'];
+			} else if (operation === undefined) {
 				return [await doImmediateAction(action), undefined];
 			}
+			AssertNever(operation);
 		},
 		([result, operation]) => {
 			switch (result?.result) {
@@ -199,7 +209,7 @@ interface WardrobeExecuteCheckedResult {
 	currentAttempt: Immutable<CharacterActionAttempt> | null;
 }
 
-export function useWardrobeExecuteChecked(action: Nullable<AppearanceAction>, result?: AppearanceActionProcessingResult | null, props: ExecuteCallbackOptions = {}): WardrobeExecuteCheckedResult {
+export function useWardrobeExecuteChecked(action: Nullable<Immutable<AppearanceAction>>, result?: AppearanceActionProcessingResult | null, props: ExecuteCallbackOptions = {}): WardrobeExecuteCheckedResult {
 	const {
 		player,
 		actions: { spaceContext },

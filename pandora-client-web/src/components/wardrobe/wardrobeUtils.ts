@@ -66,7 +66,7 @@ export function useWardrobeTargetItem(target: WardrobeTarget | null, itemPath: I
 export function WardrobeCheckResultForConfirmationWarnings(
 	player: ICharacter,
 	spaceContext: ActionSpaceContext | null,
-	action: AppearanceAction,
+	action: Immutable<AppearanceAction>,
 	result: AppearanceActionProcessingResult,
 ): string[] {
 	if (!result.valid) {

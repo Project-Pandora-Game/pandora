@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { AssertNever } from '../../../utility';
 import type { AppearanceActionProcessingContext } from '../appearanceActionProcessingContext';
 import type { AppearanceActionHandlerArg } from './_common';
+import { ActionAttemptInterrupt, AppearanceActionAttemptInterruptSchema } from './actionAttemptInterrupt';
 import { ActionBody, AppearanceActionBody } from './body';
 import { ActionColor, AppearanceActionColor } from './color';
 import { ActionCreate, AppearanceActionCreateSchema } from './create';
@@ -33,6 +34,7 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionRoomDeviceDeploy,
 	AppearanceActionRoomDeviceEnter,
 	AppearanceActionRoomDeviceLeave,
+	AppearanceActionAttemptInterruptSchema,
 ]);
 type AppearanceActionBase = z.infer<typeof AppearanceActionSchema>;
 
@@ -77,6 +79,8 @@ export function ApplyAction(
 			return ActionRoomDeviceEnter({ ...arg, action });
 		case 'roomDeviceLeave':
 			return ActionRoomDeviceLeave({ ...arg, action });
+		case 'actionAttemptInterrupt':
+			return ActionAttemptInterrupt({ ...arg, action });
 		default:
 			AssertNever(action);
 	}

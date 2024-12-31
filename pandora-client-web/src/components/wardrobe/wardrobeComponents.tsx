@@ -254,6 +254,7 @@ export function WardrobeActionButton({
 	autohide = false,
 	hideReserveSpace = false,
 	showActionBlockedExplanation = true,
+	allowPreview = true,
 	onExecute,
 	onFailure,
 	disabled = false,
@@ -266,6 +267,11 @@ export function WardrobeActionButton({
 	/** Makes the button hide if it should in a way, that occupied space is preserved */
 	hideReserveSpace?: boolean;
 	showActionBlockedExplanation?: boolean;
+	/**
+	 * Whether to show preview on hover (if settings allows that)
+	 * @default true
+	 */
+	allowPreview?: boolean;
 	onExecute?: (data: readonly AppearanceActionData[]) => void;
 	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
 	disabled?: boolean;
@@ -281,7 +287,7 @@ export function WardrobeActionButton({
 	});
 
 	useEffect(() => {
-		if (!isHovering || !showHoverPreview || check == null || !check.valid)
+		if (!isHovering || !showHoverPreview || !allowPreview || check == null || !check.valid)
 			return;
 
 		const previewState = check.resultState;
@@ -293,7 +299,7 @@ export function WardrobeActionButton({
 				actionPreviewState.value = null;
 			}
 		};
-	}, [isHovering, showHoverPreview, actionPreviewState, check]);
+	}, [isHovering, showHoverPreview, allowPreview, actionPreviewState, check]);
 
 	return (
 		<WardrobeActionButtonElement

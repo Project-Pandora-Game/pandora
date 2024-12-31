@@ -56,7 +56,7 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 
 	const overlay = useMemo(() => (
 		<Column gap='medium' padding='medium' className='overlay pointer-events-disable'>
-			<Row gap='medium'>
+			<Row gap='medium' alignY='start' className='fill-x'>
 				<Row className='pointer-events-enable flex' gap='medium'>
 					<Button className='slim iconButton'
 						title='Toggle character view'
@@ -96,10 +96,10 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 			</Row>
 			<div className='flex-1' />
 			<Row alignX='center' className='fill-x'>
-				<WardrobeActionAttemptOverlay characterState={ characterState } />
+				<WardrobeActionAttemptOverlay character={ character } />
 			</Row>
 		</Column>
-	), [allowHideItems, hideItems, id, isPreview, onClick, processing, characterState]);
+	), [allowHideItems, hideItems, id, isPreview, onClick, processing, character]);
 
 	return (
 		<CharacterPreview

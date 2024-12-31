@@ -24,6 +24,7 @@ export function RedactSensitiveActionData(originalAction: Immutable<AppearanceAc
 		case 'roomDeviceDeploy':
 		case 'roomDeviceEnter':
 		case 'roomDeviceLeave':
+		case 'actionAttemptInterrupt':
 			break;
 
 		case 'moduleAction':

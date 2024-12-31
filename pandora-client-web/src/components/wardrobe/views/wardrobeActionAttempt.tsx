@@ -1,12 +1,11 @@
 import type { Immutable } from 'immer';
 import { AppearanceActionProcessingContext, FinishActionAttempt, type AppearanceAction, type AssetFrameworkCharacterState, type CharacterActionAttempt } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo } from 'react';
+import type { IChatroomCharacter } from '../../../character/character';
 import { Column, Row } from '../../common/container/container';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
 import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobeExecuteChecked } from '../wardrobeActionContext';
-import { WardrobeActionButton, WardrobeActionButtonElement } from '../wardrobeComponents';
-import { useWardrobeContext } from '../wardrobeContext';
-import type { IChatroomCharacter } from '../../../character/character';
+import { GameLogicActionButton, WardrobeActionButtonElement } from '../wardrobeComponents';
 
 export function WardrobeActionAttemptOverlay({ character }: {
 	character: IChatroomCharacter;
@@ -37,23 +36,15 @@ export function WardrobeActionAttemptOverlay({ character }: {
 	);
 }
 
-function ActionAttemptCancelButton({ attemptingAction }: {
+export function ActionAttemptCancelButton({ attemptingAction }: {
 	attemptingAction: Immutable<CharacterActionAttempt>;
 }): ReactElement {
 	const { actions, globalState } = useWardrobeActionContext();
-	const { targetSelector } = useWardrobeContext();
 
 	const cancelCheckInitial = useMemo(() => {
 		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
-		const actionTarget = processingContext.getTarget(targetSelector);
-		if (actionTarget == null)
-			return processingContext.invalid();
-
-		if (actionTarget.type === 'character') {
-			processingContext.checkInteractWithTarget(actionTarget);
-		}
 		return processingContext.finalize();
-	}, [actions, globalState, targetSelector]);
+	}, [actions, globalState]);
 
 	const checkResult = useCheckAddPermissions(cancelCheckInitial);
 
@@ -74,7 +65,7 @@ function ActionAttemptCancelButton({ attemptingAction }: {
 	);
 }
 
-function ActionAttemptConfirmButton({ attemptingAction }: {
+export function ActionAttemptConfirmButton({ attemptingAction }: {
 	attemptingAction: Immutable<CharacterActionAttempt>;
 }): ReactElement {
 	const { actions, globalState } = useWardrobeActionContext();
@@ -100,7 +91,7 @@ function ActionAttemptConfirmButton({ attemptingAction }: {
 	);
 }
 
-function ActionAttemptInterruptButton({ characterState }: {
+export function ActionAttemptInterruptButton({ characterState }: {
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const interruptAction = useMemo((): AppearanceAction => ({
@@ -112,11 +103,10 @@ function ActionAttemptInterruptButton({ characterState }: {
 	}), [characterState.id]);
 
 	return (
-		<WardrobeActionButton
+		<GameLogicActionButton
 			action={ interruptAction }
-			allowPreview={ false }
 		>
 			Interrupt the attempt
-		</WardrobeActionButton>
+		</GameLogicActionButton>
 	);
 }

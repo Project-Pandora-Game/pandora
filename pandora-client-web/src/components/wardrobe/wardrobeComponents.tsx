@@ -1,4 +1,5 @@
 import classNames from 'classnames';
+import type { Immutable } from 'immer';
 import _, { clamp } from 'lodash';
 import { nanoid } from 'nanoid';
 import {
@@ -31,7 +32,6 @@ import { HoverElement } from '../hoverElement/hoverElement';
 import { useWardrobeExecuteChecked } from './wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import { useWardrobeContext } from './wardrobeContext';
-import type { Immutable } from 'immer';
 
 export function ActionSlowdownContent({ slowdownReasons, slowdownTime }: { slowdownReasons: ReadonlySet<GameLogicActionSlowdownReason>; slowdownTime: number; }): ReactElement {
 	const reasons = useMemo(() => (
@@ -315,6 +315,57 @@ export function WardrobeActionButton({
 			hideReserveSpace={ hideReserveSpace }
 			onClick={ execute }
 			onHoverChange={ setIsHovering }
+		>
+			{ children }
+		</WardrobeActionButtonElement>
+	);
+}
+
+/**
+ * A button for triggering an game logic action.
+ * Similar to wardrobe action button, but can be used outside of wardrobe.
+ */
+export function GameLogicActionButton({
+	id,
+	className,
+	children,
+	action,
+	autohide = false,
+	hideReserveSpace = false,
+	showActionBlockedExplanation = true,
+	onExecute,
+	onFailure,
+	disabled = false,
+}: CommonProps & {
+	action: AppearanceAction;
+	/** If the button should hide on certain invalid states */
+	autohide?: boolean;
+	/** Makes the button hide if it should in a way, that occupied space is preserved */
+	hideReserveSpace?: boolean;
+	showActionBlockedExplanation?: boolean;
+	onExecute?: (data: readonly AppearanceActionData[]) => void;
+	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
+	disabled?: boolean;
+}): ReactElement {
+	const check = useStaggeredAppearanceActionResult(action);
+	const hide = check != null && !check.valid && autohide && check.problems.some(AppearanceActionProblemShouldHide);
+	const { execute, processing, currentAttempt } = useWardrobeExecuteChecked(action, check, {
+		onSuccess: onExecute,
+		onFailure,
+	});
+
+	return (
+		<WardrobeActionButtonElement
+			id={ id }
+			className={ className }
+			disabled={ processing || disabled }
+			check={ check }
+			showActionBlockedExplanation={ showActionBlockedExplanation }
+			actionData={ action }
+			currentAttempt={ currentAttempt }
+			hide={ hide }
+			hideReserveSpace={ hideReserveSpace }
+			onClick={ execute }
 		>
 			{ children }
 		</WardrobeActionButtonElement>

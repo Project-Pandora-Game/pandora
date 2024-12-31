@@ -1,4 +1,5 @@
 import type { Immutable } from 'immer';
+import { sortBy } from 'lodash';
 import type { AssetFrameworkCharacterState, CharacterActionAttempt, ICharacterRoomData } from 'pandora-common';
 import React, { useMemo, type ReactElement } from 'react';
 import type { Character } from '../../../character/character';
@@ -7,6 +8,7 @@ import { useGlobalState, type GameState } from '../../../components/gameContext/
 import { ActionAttemptCancelButton, ActionAttemptConfirmButton, ActionAttemptInterruptButton } from '../../../components/wardrobe/views/wardrobeActionAttempt';
 import { useObservable } from '../../../observable';
 import { ActionMessageElement } from './chat';
+import { DescribeGameLogicAction } from './chatMessagesDescriptions';
 
 interface ChatInjectedMessageDescriptor {
 	time: number;
@@ -28,7 +30,7 @@ export function useChatInjectedMessages(gameState: GameState): readonly ChatInje
 			}
 		}
 
-		return result;
+		return sortBy(result, (m) => m.time);
 	}, [currentState, characters]);
 }
 
@@ -43,6 +45,9 @@ function MessageForAttemptedAction(character: Character<ICharacterRoomData>, cha
 				edited={ false }
 				extraContent={
 					<Column>
+						<span>
+							{ character.isPlayer() ? 'You are' : `${ character.data.name } (${ character.id }) is` } attempting to: <DescribeGameLogicAction action={ action.action } />
+						</span>
 						{
 							character.isPlayer() ? (
 								<Row padding='medium'>
@@ -51,7 +56,7 @@ function MessageForAttemptedAction(character: Character<ICharacterRoomData>, cha
 								</Row>
 							) : (
 								<Row padding='medium'>
-									<ActionAttemptInterruptButton characterState={ characterState } />
+									<ActionAttemptInterruptButton characterState={ characterState } attemptingAction={ action } />
 								</Row>
 							)
 						}

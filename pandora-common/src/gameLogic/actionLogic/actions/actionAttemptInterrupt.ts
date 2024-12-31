@@ -6,6 +6,11 @@ import type { AppearanceActionHandlerArg } from './_common';
 export const AppearanceActionAttemptInterruptSchema = z.object({
 	type: z.literal('actionAttemptInterrupt'),
 	target: CharacterSelectorSchema,
+	/**
+	 * Time of the start of the action attempt we are trying to interrupt.
+	 * Used for avoiding race conditions when attempted action changes.
+	 */
+	targetAttemptStart: z.number().int().nonnegative(),
 });
 
 /** Change character's pose. */
@@ -27,7 +32,7 @@ export function ActionAttemptInterrupt({
 	}
 
 	// The target must be currently performing an action
-	if (target.characterState.attemptingAction == null)
+	if (target.characterState.attemptingAction?.start !== action.targetAttemptStart)
 		return processingContext.invalid();
 
 	// Clear the target action attempt

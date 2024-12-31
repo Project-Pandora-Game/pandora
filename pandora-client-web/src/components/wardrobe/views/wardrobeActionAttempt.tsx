@@ -6,6 +6,7 @@ import { Column, Row } from '../../common/container/container';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
 import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobeExecuteChecked } from '../wardrobeActionContext';
 import { GameLogicActionButton, WardrobeActionButtonElement } from '../wardrobeComponents';
+import { DescribeGameLogicAction } from '../../../ui/components/chat/chatMessagesDescriptions';
 
 export function WardrobeActionAttemptOverlay({ character }: {
 	character: IChatroomCharacter;
@@ -19,7 +20,10 @@ export function WardrobeActionAttemptOverlay({ character }: {
 
 	return (
 		<Column padding='medium' className='pointer-events-enable actionAttempt' key={ currentlyAttemptedAction.start }>
-			This character is currently attempting an action.
+			<strong>This character is currently attempting an action.</strong>
+			<span>
+				This character is attempting to: <DescribeGameLogicAction action={ currentlyAttemptedAction.action } />
+			</span>
 			{
 				characterState.id === player.id ? (
 					<Row alignX='space-between'>
@@ -28,7 +32,7 @@ export function WardrobeActionAttemptOverlay({ character }: {
 					</Row>
 				) : (
 					<Row alignX='start'>
-						<ActionAttemptInterruptButton characterState={ characterState } />
+						<ActionAttemptInterruptButton characterState={ characterState } attemptingAction={ currentlyAttemptedAction } />
 					</Row>
 				)
 			}
@@ -91,8 +95,9 @@ export function ActionAttemptConfirmButton({ attemptingAction }: {
 	);
 }
 
-export function ActionAttemptInterruptButton({ characterState }: {
+export function ActionAttemptInterruptButton({ characterState, attemptingAction }: {
 	characterState: AssetFrameworkCharacterState;
+	attemptingAction: Immutable<CharacterActionAttempt>;
 }): ReactElement {
 	const interruptAction = useMemo((): AppearanceAction => ({
 		type: 'actionAttemptInterrupt',
@@ -100,7 +105,8 @@ export function ActionAttemptInterruptButton({ characterState }: {
 			type: 'character',
 			characterId: characterState.id,
 		},
-	}), [characterState.id]);
+		targetAttemptStart: attemptingAction.start,
+	}), [characterState.id, attemptingAction.start]);
 
 	return (
 		<GameLogicActionButton

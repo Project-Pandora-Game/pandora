@@ -31,7 +31,7 @@ export function Chat(): ReactElement | null {
 	const injectedMessages = useChatInjectedMessages(gameState);
 	const shardConnector = useShardConnector();
 	const { interfaceChatroomChatFontSize } = useAccountSettings();
-	const [messagesDiv, scroll, isScrolling] = useAutoScroll<HTMLDivElement>([messages]);
+	const [messagesDiv, scroll, isScrolling] = useAutoScroll<HTMLDivElement>([messages, injectedMessages]);
 	const lastMessageCount = useRef(0);
 	let newMessageCount = 0;
 

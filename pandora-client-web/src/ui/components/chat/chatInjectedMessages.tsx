@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { sortBy } from 'lodash';
-import type { AssetFrameworkCharacterState, CharacterActionAttempt, ICharacterRoomData } from 'pandora-common';
+import type { AssetFrameworkCharacterState, AssetFrameworkGlobalState, CharacterActionAttempt, ICharacterRoomData } from 'pandora-common';
 import React, { useMemo, type ReactElement } from 'react';
 import type { Character } from '../../../character/character';
 import { Column, Row } from '../../../components/common/container/container';
@@ -26,7 +26,7 @@ export function useChatInjectedMessages(gameState: GameState): readonly ChatInje
 		for (const character of characters) {
 			const characterState = currentState.getCharacterState(character.id);
 			if (characterState?.attemptingAction != null) {
-				result.push(MessageForAttemptedAction(character, characterState, characterState.attemptingAction));
+				result.push(MessageForAttemptedAction(character, characterState, currentState, characterState.attemptingAction));
 			}
 		}
 
@@ -34,7 +34,12 @@ export function useChatInjectedMessages(gameState: GameState): readonly ChatInje
 	}, [currentState, characters]);
 }
 
-function MessageForAttemptedAction(character: Character<ICharacterRoomData>, characterState: AssetFrameworkCharacterState, action: Immutable<CharacterActionAttempt>): ChatInjectedMessageDescriptor {
+function MessageForAttemptedAction(
+	character: Character<ICharacterRoomData>,
+	characterState: AssetFrameworkCharacterState,
+	globalState: AssetFrameworkGlobalState,
+	action: Immutable<CharacterActionAttempt>,
+): ChatInjectedMessageDescriptor {
 	return {
 		time: action.start,
 		element: (
@@ -46,7 +51,11 @@ function MessageForAttemptedAction(character: Character<ICharacterRoomData>, cha
 				extraContent={
 					<Column>
 						<span>
-							{ character.isPlayer() ? 'You are' : `${ character.data.name } (${ character.id }) is` } attempting to: <DescribeGameLogicAction action={ action.action } />
+							{ character.isPlayer() ? 'You are' : `${ character.data.name } (${ character.id }) is` } attempting to:&#32;
+							<DescribeGameLogicAction
+								action={ action.action }
+								globalState={ globalState }
+							/>
 						</span>
 						{
 							character.isPlayer() ? (

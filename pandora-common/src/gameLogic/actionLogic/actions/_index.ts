@@ -38,7 +38,8 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 ]);
 type AppearanceActionBase = z.infer<typeof AppearanceActionSchema>;
 
-export type AppearanceAction<ActionType extends AppearanceActionBase['type'] = AppearanceActionBase['type']> =
+export type AppearanceActionType = AppearanceActionBase['type'];
+export type AppearanceAction<ActionType extends AppearanceActionType = AppearanceActionType> =
 	Extract<AppearanceActionBase, { type: ActionType; }>;
 
 export function ApplyAction(

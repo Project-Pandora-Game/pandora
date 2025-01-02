@@ -22,7 +22,10 @@ export function WardrobeActionAttemptOverlay({ character }: {
 		<Column padding='medium' className='pointer-events-enable actionAttempt' key={ currentlyAttemptedAction.start }>
 			<strong>This character is currently attempting an action.</strong>
 			<span>
-				This character is attempting to: <DescribeGameLogicAction action={ currentlyAttemptedAction.action } />
+				This character is attempting to: <DescribeGameLogicAction
+					action={ currentlyAttemptedAction.action }
+					globalState={ globalState }
+				/>
 			</span>
 			{
 				characterState.id === player.id ? (

@@ -54,6 +54,7 @@ function MessageForAttemptedAction(
 							{ character.isPlayer() ? 'You are' : `${ character.data.name } (${ character.id }) is` } attempting to:&#32;
 							<DescribeGameLogicAction
 								action={ action.action }
+								actionOriginator={ character }
 								globalState={ globalState }
 							/>
 						</span>

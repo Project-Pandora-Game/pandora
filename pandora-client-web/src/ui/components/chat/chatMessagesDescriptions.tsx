@@ -1,10 +1,10 @@
 import type { Immutable } from 'immer';
 import { isEqual } from 'lodash';
-import { AssertNever, type ActionTargetSelector, type AppearanceActionType, type AppearanceAction, type AssetFrameworkGlobalState, type CharacterId, type Item, type ItemContainerPath } from 'pandora-common';
+import { AssertNever, IsNotNullable, NaturalListJoin, type ActionTargetSelector, type AppearanceAction, type AppearanceActionType, type AssetFrameworkGlobalState, type CharacterId, type Item, type ItemContainerPath } from 'pandora-common';
 import { EvalItemPath, SplitContainerPath } from 'pandora-common/src/assets/appearanceHelpers';
 import React, { ReactElement } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
-import { useCharacterDataOptional } from '../../../character/character';
+import { useCharacterDataOptional, type IChatroomCharacter } from '../../../character/character';
 import { useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
@@ -12,68 +12,80 @@ import { DescribeAsset } from './chatMessages';
 
 interface DescribeGameLogicActionProps<TAction extends AppearanceActionType = AppearanceActionType> {
 	action: Immutable<AppearanceAction<TAction>>;
+	actionOriginator: IChatroomCharacter;
 	globalState: AssetFrameworkGlobalState;
 }
 
 export function DescribeGameLogicAction({ action, ...props }: DescribeGameLogicActionProps): ReactElement {
 	switch (action.type) {
 		case 'create':
-			return <>[TODO] Create an item</>;
+			return <DescribeGameLogicActionCreate action={ action } { ...props } />;
 		case 'delete':
-			return <>[TODO] Delete an item</>;
+			return <DescribeGameLogicActionDelete action={ action } { ...props } />;
 		case 'transfer':
 			return <DescribeGameLogicActionTransfer action={ action } { ...props } />;
 		case 'pose':
-			return <>[TODO] Pose a character</>;
+			return <DescribeGameLogicActionPose action={ action } { ...props } />;
 		case 'body':
-			return <>[TODO] Modify body sizes</>;
+			return <DescribeGameLogicActionBody action={ action } { ...props } />;
 		case 'move':
-			return <>[TODO] Reorder items</>;
+			return <DescribeGameLogicActionMove action={ action } { ...props } />;
 		case 'color':
-			return <>[TODO] Change item's color</>;
+			return <DescribeGameLogicActionColor action={ action } { ...props } />;
 		case 'customize':
-			return <>[TODO] Customize an item</>;
+			return <DescribeGameLogicActionCustomize action={ action } { ...props } />;
 		case 'moduleAction':
-			return <>[TODO] Interact with item's module in some way</>;
+			return <DescribeGameLogicActionModuleAction action={ action } { ...props } />;
 		case 'restrictionOverrideChange':
-			return <>[TODO] Enter or leave safemode/timeout mode</>;
+			return <DescribeGameLogicActionRestrictionOverrideChange action={ action } { ...props } />;
 		case 'randomize':
-			return <>[TODO] Randomize own appearance</>;
+			return <DescribeGameLogicActionRandomize action={ action } { ...props } />;
 		case 'roomDeviceDeploy':
-			return <>[TODO] Deploy or move a room device</>;
+			return <DescribeGameLogicActionRoomDeviceDeploy action={ action } { ...props } />;
 		case 'roomDeviceEnter':
-			return <>[TODO] Put character into a room device</>;
+			return <DescribeGameLogicActionRoomDeviceEnter action={ action } { ...props } />;
 		case 'roomDeviceLeave':
-			return <>[TODO] Remove character from a room device</>;
+			return <DescribeGameLogicActionRoomDeviceLeave action={ action } { ...props } />;
 		case 'actionAttemptInterrupt':
-			return <>[TODO] Interrupt someone's attempted action</>;
+			return <DescribeGameLogicActionInterrupt action={ action } { ...props } />;
 	}
 
 	AssertNever(action);
 }
 
+function DescribeGameLogicActionCreate({ action, globalState, actionOriginator }: DescribeGameLogicActionProps<'create'>): ReactElement {
+	const item = globalState.assetManager.createItemFromTemplate(action.itemTemplate, actionOriginator) ?? null;
+
+	const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.container);
+
+	return (
+		<>
+			{ isPhysicallyEquipped ? 'Create and equip' : 'Create and store' } <DescribeItem item={ item } />
+			{ isPhysicallyEquipped ? ' onto' : ' into' } <DescribeContainer target={ action.target } container={ action.container } globalState={ globalState } />.
+		</>
+	);
+}
+
+function DescribeGameLogicActionDelete({ action, globalState }: DescribeGameLogicActionProps<'delete'>): ReactElement {
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? null;
+
+	const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.item.container);
+
+	return (
+		<>
+			{ isPhysicallyEquipped ? 'Unequip and delete' : 'Delete' } <DescribeItem item={ item } />
+			{ ' from' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.
+		</>
+	);
+}
+
 function DescribeGameLogicActionTransfer({ action, globalState }: DescribeGameLogicActionProps<'transfer'>): ReactElement {
-// If the source and target container are the same, the action is only a reorder
+	// If the source and target container are the same, the action is only a reorder
 	const isReorder = isEqual(action.source, action.target) && isEqual(action.item.container, action.container);
 	const item = EvalItemPath(globalState.getItems(action.source) ?? [], action.item) ?? null;
 
-	let isSourcePhysicallyEquipped = action.source.type === 'character';
-	const sourceUpperPath = SplitContainerPath(action.item.container);
-	if (sourceUpperPath) {
-		const containingModule = EvalItemPath(globalState.getItems(action.source) ?? [], sourceUpperPath.itemPath)?.getModules().get(sourceUpperPath.module);
-		if (containingModule) {
-			isSourcePhysicallyEquipped = containingModule.contentsPhysicallyEquipped;
-		}
-	}
-
-	let isTargetPhysicallyEquipped = action.target.type === 'character';
-	const targetUpperPath = SplitContainerPath(action.container);
-	if (targetUpperPath) {
-		const containingModule = EvalItemPath(globalState.getItems(action.target) ?? [], targetUpperPath.itemPath)?.getModules().get(targetUpperPath.module);
-		if (containingModule) {
-			isTargetPhysicallyEquipped = containingModule.contentsPhysicallyEquipped;
-		}
-	}
+	const isSourcePhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.source, action.item.container);
+	const isTargetPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.container);
 
 	if (isReorder) {
 		return <>Reorder items { isSourcePhysicallyEquipped ? 'on' : 'in' } <DescribeContainer target={ action.source } container={ action.item.container } globalState={ globalState } />.</>;
@@ -87,6 +99,174 @@ function DescribeGameLogicActionTransfer({ action, globalState }: DescribeGameLo
 		</>
 	);
 }
+
+function DescribeGameLogicActionPose({ action }: DescribeGameLogicActionProps<'pose'>): ReactElement {
+	return <>Change <DescribeSpaceCharacter id={ action.target } form='possessive' /> pose.</>;
+}
+
+function DescribeGameLogicActionBody({ action }: DescribeGameLogicActionProps<'body'>): ReactElement {
+	return <>Modify <DescribeSpaceCharacter id={ action.target } form='possessive' /> body sizes.</>;
+}
+
+function DescribeGameLogicActionMove({ action, globalState }: DescribeGameLogicActionProps<'move'>): ReactElement {
+	const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.item.container);
+
+	return <>Reorder items { isPhysicallyEquipped ? 'on' : 'in' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.</>;
+}
+
+function DescribeGameLogicActionColor({ action, globalState }: DescribeGameLogicActionProps<'color'>): ReactElement {
+	const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.item.container);
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? null;
+
+	return (
+		<>
+			Change the color of <DescribeItem item={ item } />
+			{ isPhysicallyEquipped ? ' on' : ' in' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.
+		</>
+	);
+}
+
+function DescribeGameLogicActionCustomize({ action, globalState }: DescribeGameLogicActionProps<'customize'>): ReactElement {
+	const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.item.container);
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? null;
+
+	const changes = NaturalListJoin([
+		(action.name != null) ? 'name' : null,
+		(action.description != null) ? 'description' : null,
+		(action.requireFreeHandsToUse != null) ? 'bound usage' : null,
+	].filter(IsNotNullable));
+
+	return (
+		<>
+			Change the { changes } of <DescribeItem item={ item } />
+			{ isPhysicallyEquipped ? ' on' : ' in' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.
+		</>
+	);
+}
+
+function DescribeGameLogicActionModuleAction({ action, globalState }: DescribeGameLogicActionProps<'moduleAction'>): ReactElement {
+	const isPhysicallyEquipped = ContainerPhysicallyEquips(globalState, action.target, action.item.container);
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? null;
+
+	const moduleName = item?.getModules().get(action.module)?.config.name ?? '[UNKNOWN]';
+
+	let actionDescription: ReactElement;
+	switch (action.action.moduleType) {
+		case 'typed':
+			actionDescription = <>Change the selected variant of the "{ moduleName }" module</>;
+			break;
+		case 'storage':
+			// Nothing possible here
+			actionDescription = <>[ERROR]</>;
+			break;
+		case 'lockSlot':
+			switch (action.action.lockAction.action) {
+				case 'lock':
+					actionDescription = <>Lock the lock in the "{ moduleName.replace(/lock slot\s*(:\s*)?/i, '') }" lock slot</>;
+					break;
+				case 'unlock':
+					actionDescription = <>Unlock the lock in the "{ moduleName.replace(/lock slot\s*(:\s*)?/i, '') }" lock slot</>;
+					break;
+				case 'showPassword':
+					actionDescription = <>Remember the password of the lock in the "{ moduleName.replace(/lock slot\s*(:\s*)?/i, '') }" lock slot</>;
+					break;
+				default:
+					AssertNever(action.action.lockAction);
+			}
+			break;
+		default:
+			AssertNever(action.action);
+	}
+
+	return (
+		<>
+			{ actionDescription } of <DescribeItem item={ item } />
+			{ isPhysicallyEquipped ? ' on' : ' in' } <DescribeContainer target={ action.target } container={ action.item.container } globalState={ globalState } />.
+		</>
+	);
+}
+
+function DescribeGameLogicActionRestrictionOverrideChange({ action }: DescribeGameLogicActionProps<'restrictionOverrideChange'>): ReactElement {
+	switch (action.mode) {
+		case 'normal':
+			return <>Leave the safemode.</>;
+		case 'safemode':
+			return <>Enter safemode.</>;
+		case 'timeout':
+			return <>Enter timeout.</>;
+	}
+
+	AssertNever(action.mode);
+}
+
+function DescribeGameLogicActionRandomize({ action }: DescribeGameLogicActionProps<'randomize'>): ReactElement {
+	switch (action.kind) {
+		case 'items':
+			return <>Randomize their clothing.</>;
+		case 'full':
+			return <>Randomize their appearance.</>;
+	}
+
+	AssertNever(action.kind);
+}
+
+function DescribeGameLogicActionRoomDeviceDeploy({ action, globalState }: DescribeGameLogicActionProps<'roomDeviceDeploy'>): ReactElement {
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? null;
+
+	if (!action.deployment.deployed) {
+		return <>Store the <DescribeItem item={ item } /> into the room inventory.</>;
+	}
+
+	if (item?.isType('roomDevice') && item.isDeployed()) {
+		return <>Reposition the <DescribeItem item={ item } />.</>;
+	}
+
+	return <>Deploy the <DescribeItem item={ item } /> from the room inventory.</>;
+}
+
+function DescribeGameLogicActionRoomDeviceEnter({ action, actionOriginator, globalState }: DescribeGameLogicActionProps<'roomDeviceEnter'>): ReactElement {
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? null;
+	const slot = item?.isType('roomDevice') ? (item.asset.definition.slots[action.slot]) : undefined;
+
+	const slotName = slot?.name ?? '[UNKNOWN]';
+
+	return (
+		<>
+			{ action.character.characterId === actionOriginator.id ? 'Enter' : (<>Put <DescribeSpaceCharacter id={ action.character.characterId } /></>) }
+			{ ' into' } the "{ slotName }" slot of the <DescribeItem item={ item } />.
+		</>
+	);
+}
+
+function DescribeGameLogicActionRoomDeviceLeave({ action, actionOriginator, globalState }: DescribeGameLogicActionProps<'roomDeviceLeave'>): ReactElement {
+	const item = EvalItemPath(globalState.getItems(action.target) ?? [], action.item) ?? null;
+	const slot = item?.isType('roomDevice') ? (item.asset.definition.slots[action.slot]) : undefined;
+	const slotName = slot?.name ?? '[UNKNOWN]';
+
+	const currentCharacter = item?.isType('roomDevice') ? (item.slotOccupancy.get(action.slot)) : undefined;
+	const characterPresent = currentCharacter != null && globalState.getCharacterState(currentCharacter) != null;
+
+	if (!characterPresent) {
+		return (
+			<>
+				Clear the "{ slotName }" slot of the <DescribeItem item={ item } />.
+			</>
+		);
+	}
+
+	return (
+		<>
+			{ currentCharacter === actionOriginator.id ? 'Leave' : (<>Remove <DescribeSpaceCharacter id={ currentCharacter ?? null } /></>) }
+			{ ' from' } the "{ slotName }" slot of the <DescribeItem item={ item } />.
+		</>
+	);
+}
+
+function DescribeGameLogicActionInterrupt({ action }: DescribeGameLogicActionProps<'actionAttemptInterrupt'>): ReactElement {
+	return <>Interrupt <DescribeSpaceCharacter id={ action.target.characterId } form='possessive' /> attempted action.</>;
+}
+
+//#region Utilities
 
 export function DescribeItem({ item }: {
 	item: Item | null;
@@ -155,3 +335,17 @@ export function DescribeSpaceCharacter({ id, form = 'normal' }: {
 
 	AssertNever(form);
 }
+
+function ContainerPhysicallyEquips(globalState: AssetFrameworkGlobalState, target: ActionTargetSelector, container: ItemContainerPath): boolean {
+	let isPhysicallyEquipped = target.type === 'character';
+	const upperPath = SplitContainerPath(container);
+	if (upperPath) {
+		const containingModule = EvalItemPath(globalState.getItems(target) ?? [], upperPath.itemPath)?.getModules().get(upperPath.module);
+		if (containingModule) {
+			isPhysicallyEquipped = containingModule.contentsPhysicallyEquipped;
+		}
+	}
+	return isPhysicallyEquipped;
+}
+
+//#endregion

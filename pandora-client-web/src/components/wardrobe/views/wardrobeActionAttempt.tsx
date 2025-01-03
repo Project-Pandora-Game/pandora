@@ -24,6 +24,7 @@ export function WardrobeActionAttemptOverlay({ character }: {
 			<span>
 				This character is attempting to: <DescribeGameLogicAction
 					action={ currentlyAttemptedAction.action }
+					actionOriginator={ character }
 					globalState={ globalState }
 				/>
 			</span>

@@ -18,7 +18,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					text: (
 						<p>
 							Hi and welcome to the tutorial on creating a custom character!<br />
-							In this tutorial you will learn how to enter your character's wardrobe and create<br />
+							In this tutorial you will learn how to enter your character's wardrobe and create
 							a unique look for your character through randomization and then editing the details.
 						</p>
 					),
@@ -97,7 +97,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					text: (
 						<p>
 							You are now successfully in your character's wardrobe!<br />
-							In Pandora, the wardrobe is a powerful tool, so it may look overwhelming at first sight.<br />
+							In Pandora, the wardrobe is a powerful tool, so it may look overwhelming at first sight.
 							But no worries - we will cover all its details in later tutorials.<br />
 							<br />
 							Our next step is going to the randomization menu, which will allow you to create a new, random appearance for your character.
@@ -194,7 +194,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 							<br />
 							The left pane shows all current body parts of your character.<br />
 							Here you can edit details of the body parts (more on that later), delete them, or even reorder them in some cases.<br />
-							Do note, that the order of body parts does matter. <br />
+							Do note, that the order of body parts does matter.
 							While Pandora enforces a specific order most of the time,
 							identical body part types (e.g. multiple "hair" body parts) can be reordered freely.<br />
 							<br />
@@ -249,7 +249,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 				{
 					text: (
 						<p>
-							As it might be hard to edit your character's body while the clothes are in the way,<br />
+							As it might be hard to edit your character's body while the clothes are in the way,
 							you can temporarily hide all worn clothing (or other items) by enabling the "Hide worn items" checkbox.<br />
 							Please do so now.<br />
 							<br />
@@ -272,7 +272,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Before we start completely swapping body parts, please note that some parts of the body can have their size adjusted.<br />
+							Before we start completely swapping body parts, please note that some parts of the body can have their size adjusted.
 							You can find the currently available adjustments in the "Change body size" tab.<br />
 							Please switch to it now.
 						</p>
@@ -295,9 +295,9 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 							<br />
 							Note:&#32;
 							<i>
-								Most sliders allow you to freely choose any value between { BONE_MIN } and { BONE_MAX } with the default being 0.<br />
-								Some body parts might, however, limit available values. Example of this are breasts, which only have several valid positions you can choose from.<br />
-								While you can freely move the slider, Pandora will actually choose the closest valid value at all times.<br />
+								Most sliders allow you to freely choose any value between { BONE_MIN } and { BONE_MAX } with the default being 0.
+								Some body parts might, however, limit available values. Example of this are breasts, which only have several valid positions you can choose from.
+								While you can freely move the slider, Pandora will actually choose the closest valid value at all times.
 								You can see what value is in effect by watching the small "nub" under the slider.
 							</i>
 						</p>
@@ -338,7 +338,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					text: (
 						<p>
 							Next we will look at modifying a specific body part.<br />
-							Find the "Base body" body part at the very bottom of the items list, then click on its name to select it.<br />
+							Find the "Base body" body part at the very bottom of the items list, then click on its name to select it.
 							This will open up its details, where you will be able to see all the options this body part offers.
 						</p>
 					),
@@ -361,7 +361,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					text: (
 						<p>
 							The menu that appeared on the right shows all the options this specific body part has.<br />
-							Note, that the options depend not only on the body part type, but on the actual, specific body part.<br />
+							Note, that the options depend not only on the body part type, but on the actual, specific body part.
 							For example, different eyes might have different options.
 						</p>
 					),
@@ -373,8 +373,8 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 				{
 					text: (
 						<p>
-							At the top of the body part's details you will find several actions you might be able to do with it.<br />
-							For base body it is likely, that all of them will not be possible.<br />
+							At the top of the body part's details you will find several actions you might be able to do with it.
+							For base body it is likely, that all of them will not be possible.
 							You can hover over the action (or hold down on it, if using a touchscreen) to see why it isn't possible.
 						</p>
 					),
@@ -387,14 +387,14 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					text: (
 						<p>
 							The first configuration section, shared practically by all items, is the ability to change its color.<br />
-							In this section you can see all the coloring options this body part or item has.<br />
-							You can enter any color in a <ExternalLink href='https://en.wikipedia.org/wiki/Web_colors'>hex triplet</ExternalLink> format, or press the colored square to open a color picker.<br />
-							The last button allows you to reset the color to the item's default one.<br />
+							In this section you can see all the coloring options this body part or item has.
+							You can enter any color in a <ExternalLink href='https://en.wikipedia.org/wiki/Web_colors'>hex triplet</ExternalLink> format, or press the colored square to open a color picker.
+							The last button allows you to reset the color to the item's default one.
 							Feel free to try that now and press "Next" when you are happy with the body's color.<br />
 							<br />
 							Note:&#32;
 							<i>
-								Some items might also contain colors with a 4th component - "alpha" (commonly also called "opacity" or "transparency").<br />
+								Some items might also contain colors with a 4th component - "alpha" (commonly also called "opacity" or "transparency").
 								This means that part of the item controlled by that color can be made partially or fully transparent.
 							</i><br />
 							Note:&#32;
@@ -413,8 +413,8 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					text: (
 						<p>
 							Further configuration sections are called "Modules".<br />
-							There are many kinds of modules, but the most common one allows you to choose one option out of several.<br />
-							The currently selected variant is highlighted, but you can switch to other variants by clicking on them.<br />
+							There are many kinds of modules, but the most common one allows you to choose one option out of several.
+							The currently selected variant is highlighted, but you can switch to other variants by clicking on them.
 							Hovering over the variant with your mouse will allow you to preview what it would look like.
 						</p>
 					),
@@ -453,7 +453,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					text: (
 						<p>
 							Finally we will look at using different body parts altogether.<br />
-							Please close the current body part's details by clicking on it again,<br />
+							Please close the current body part's details by clicking on it again,
 							or by clicking on the cross in the top-right corner.
 						</p>
 					),
@@ -473,7 +473,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 				{
 					text: (
 						<p>
-							body parts can be added or swapped using the "Change body parts" tab.<br />
+							Body parts can be added or swapped using the "Change body parts" tab.<br />
 							Please switch to it now.
 						</p>
 					),
@@ -490,9 +490,9 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 				{
 					text: (
 						<p>
-							On the right side, all existing body parts in Pandora are listed per default.<br />
-							You can filter the selection with the item row at the top. Feel free to hover over<br />
-							any of the icons (or hold down on it, if using a touchscreen) to see what type of<br />
+							On the right side, all existing body parts in Pandora are listed per default.
+							You can filter the selection with the item row at the top. Feel free to hover over
+							any of the icons (or hold down on it, if using a touchscreen) to see what type of
 							body part the filter will show.
 						</p>
 					),
@@ -519,8 +519,8 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					text: (
 						<p>
 							Now you can see that only front hairs are listed.<br />
-							By clicking any entry, you can add the body part to your body. Only hovering over it, will preview the change.<br />
-							Note that hair is a body part type where multiples can be added at the same time. That said, for some other body part types<br />
+							By clicking any entry, you can add the body part to your body. Only hovering over it, will preview the change.
+							Note that hair is a body part type where multiples can be added at the same time. That said, for some other body part types
 							this action would swap the existing body part of that type for the new one.
 						</p>
 					),
@@ -586,8 +586,8 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Some body parts can be reordered with the up/down buttons in the left list, which<br />
-							contains the current body parts of your character.<br />
+							Some body parts can be reordered with the up/down buttons in the left list, which
+							contains the current body parts of your character.
 							As usual, only hovering the button previews the change. Feel free to experiment before proceeding.
 						</p>
 					),
@@ -660,7 +660,7 @@ export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 					text: (
 						<p>
 							This concludes this tutorial about the character body.<br />
-							Now you can exit the wardrobe by clicking the "Back" button in the top-right corner of the screen.<br />
+							Now you can exit the wardrobe by clicking the "Back" button in the top-right corner of the screen.
 							This will take you back to the most-relevant view for your current situation (in most cases that is the room view).
 						</p>
 					),

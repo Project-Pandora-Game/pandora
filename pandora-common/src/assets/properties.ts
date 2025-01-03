@@ -1,12 +1,13 @@
 import { Immutable } from 'immer';
+import { IsReadonlyArray } from '../utility';
 import { AppearanceLimitTree } from './appearanceLimit';
 import type { AssetDefinitionExtraArgs, AssetDefinitionPoseLimits } from './definitions';
-import { EffectsDefinition, EFFECTS_DEFAULT, MergeEffects } from './effects';
+import { EFFECTS_DEFAULT, EffectsDefinition, MergeEffects } from './effects';
 
 export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
 
 	/** Configuration of how the asset limits pose */
-	poseLimits?: AssetDefinitionPoseLimits<A>;
+	poseLimits?: AssetDefinitionPoseLimits<A> | AssetDefinitionPoseLimits<A>[];
 
 	/** The effects this item applies when worn */
 	effects?: Partial<EffectsDefinition>;
@@ -150,7 +151,13 @@ export function CreateAssetPropertiesResult(): AssetPropertiesResult {
 }
 
 export function MergeAssetProperties<T extends AssetPropertiesResult>(base: T, properties: Immutable<AssetProperties>): T {
-	base.limits.merge(properties.poseLimits);
+	if (IsReadonlyArray(properties.poseLimits)) {
+		for (const limit of properties.poseLimits) {
+			base.limits.merge(limit);
+		}
+	} else {
+		base.limits.merge(properties.poseLimits);
+	}
 	base.effects = MergeEffects(base.effects, properties.effects);
 	properties.attributes?.provides?.forEach((a) => base.attributes.add(a));
 	properties.attributes?.hides?.forEach((a) => base.attributesHides.add(a));

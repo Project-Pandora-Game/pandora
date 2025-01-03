@@ -92,8 +92,6 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				switch (e.reason) {
 					case 'notAdmin':
 						return `You must be a room admin or a room owner to do this.`;
-					case 'missingConstructionTools':
-						return `You must be holding 'Room Construction Tools' to do this.`;
 				}
 				break;
 			case 'itemCustomizeOther':

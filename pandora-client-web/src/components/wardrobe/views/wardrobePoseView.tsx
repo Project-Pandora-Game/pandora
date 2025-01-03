@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import _ from 'lodash';
 import {
 	AppearanceItemProperties,
-	AppearanceItems,
 	ArmRotationSchema,
 	AssetFrameworkCharacterState,
 	AssetsPosePreset,
@@ -36,7 +35,7 @@ import { SelectionIndicator } from '../../common/selectionIndicator/selectionInd
 import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
 import { ResolveItemDisplayName } from '../itemDetail/wardrobeItemName';
 import { WardrobeStoredPosePresets } from '../poseDetail/storedPosePresets';
-import { useWardrobeActionContext, useWardrobeExecuteCallback } from '../wardrobeActionContext';
+import { useWardrobeExecuteCallback } from '../wardrobeActionContext';
 import { useWardrobeContext } from '../wardrobeContext';
 
 type CheckedPosePreset = {
@@ -86,26 +85,24 @@ function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkC
 	};
 }
 
-function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState, roomItems: AppearanceItems, itemDisplayNameType: ItemDisplayNameType): AssetsPosePresets {
+function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState, itemDisplayNameType: ItemDisplayNameType): AssetsPosePresets {
 	const assetManager = characterState.assetManager;
 	const presets: AssetsPosePresets = assetManager.getPosePresets();
 	for (const item of characterState.items) {
-		if (!item.isType('roomDeviceWearablePart') || item.roomDeviceLink == null)
+		// Collect custom pose presets from room device and personal items that provide them
+		if (!item.isType('personal') && !item.isType('roomDeviceWearablePart'))
 			continue;
 
-		const deviceId = item.roomDeviceLink.device;
-		const roomItem = roomItems.find((i) => i.id === deviceId);
-		if (!roomItem?.isType('roomDevice'))
-			continue;
+		const baseItem = item.isType('roomDeviceWearablePart') ? item.roomDevice : null;
 
-		if (!item.asset.definition.posePresets && !roomItem.asset.definition.posePresets)
+		if (!item.asset.definition.posePresets && !baseItem?.asset.definition.posePresets)
 			continue;
 
 		presets.unshift({
-			category: `Device: ${ResolveItemDisplayName(roomItem, itemDisplayNameType)}`,
+			category: `${item.isType('roomDeviceWearablePart') ? 'Device' : 'Item'}: ${ResolveItemDisplayName(baseItem ?? item, itemDisplayNameType)}`,
 			poses: [
-				...roomItem.asset.definition.posePresets ?? [],
-				...item.asset.definition.posePresets ?? [],
+				...(baseItem?.asset.definition.posePresets ?? []),
+				...(item.asset.definition.posePresets ?? []),
 			],
 		});
 	}
@@ -142,10 +139,8 @@ function WardrobePoseCategoriesInternal({ poses, setPose, characterState }: {
 }
 
 export function WardrobePoseCategories({ characterState, setPose }: { characterState: AssetFrameworkCharacterState; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
-	const { globalState } = useWardrobeActionContext();
 	const { itemDisplayNameType } = useWardrobeContext();
-	const roomItems = globalState.getItems({ type: 'roomInventory' });
-	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, roomItems ?? [], itemDisplayNameType), [characterState, roomItems, itemDisplayNameType]);
+	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, itemDisplayNameType), [characterState, itemDisplayNameType]);
 	return (
 		<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
 	);
@@ -372,9 +367,7 @@ export function WardrobePoseGui({ character, characterState }: {
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
-	const { globalState } = useWardrobeActionContext();
 	const { itemDisplayNameType } = useWardrobeContext();
-	const roomItems = globalState.getItems({ type: 'roomInventory' });
 	const assetManager = characterState.assetManager;
 	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 
@@ -388,7 +381,7 @@ export function WardrobePoseGui({ character, characterState }: {
 		});
 	});
 
-	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, roomItems ?? [], itemDisplayNameType), [characterState, roomItems, itemDisplayNameType]);
+	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, itemDisplayNameType), [characterState, itemDisplayNameType]);
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
 

@@ -523,6 +523,10 @@ $drop-overlay-gap: 0.3em;
 			height: 100%;
 		}
 	}
+
+	&.standardButtonSize {
+		padding: 0.8em 1.2em;
+	}
 }
 
 .wardrobeActionButton, .inventoryViewItem {

@@ -1,6 +1,7 @@
 import classNames from 'classnames';
 import {
 	EMPTY_ARRAY,
+	GetLogger,
 	ItemPath,
 	LIMIT_ITEM_DESCRIPTION_LENGTH,
 	LIMIT_ITEM_NAME_LENGTH,
@@ -10,22 +11,21 @@ import {
 } from 'pandora-common';
 import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
-import React, { ReactElement, useCallback, useEffect, useRef } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 import crossIcon from '../../../assets/icons/cross.svg';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import strugglingAllow from '../../../assets/icons/struggling_allow.svg';
 import strugglingDeny from '../../../assets/icons/struggling_deny.svg';
-import { useEvent } from '../../../common/useEvent';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 import { Button, IconButton } from '../../common/button/button';
 import { Column, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { FormCreateStringValidator } from '../../common/form/form';
+import { useConfirmDialog } from '../../dialog/dialog';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
-import { useWardrobeExecuteCallback } from '../wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { ActionWarningContent, WardrobeActionButton } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
@@ -303,8 +303,8 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit }: { i
 }
 
 function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { item: Item; itemPath: ItemPath; onEndEdit: () => void; }): ReactElement {
+	const confirm = useConfirmDialog();
 	const { targetSelector } = useWardrobeContext();
-	const [execute, processing] = useWardrobeExecuteCallback({ onSuccess: onEndEdit });
 	const [name, setName] = React.useState(item.name ?? '');
 	const [description, setDescription] = React.useState(item.description ?? '');
 
@@ -312,15 +312,31 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 		FormCreateStringValidator(z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN), 'name')(name)
 	), [name]);
 
-	const onSave = useEvent(() => {
-		execute({
-			type: 'customize',
-			target: targetSelector,
-			item: itemPath,
-			name: name.trim(),
-			description: description.trim(),
-		});
-	});
+	const cancelConfirm = useCallback(() => {
+		Promise.resolve()
+			.then(() => {
+				if (name !== (item.name ?? '') || description !== (item.description ?? '')) {
+					return confirm('Unsaved changes', <>Are you sure you want to discard your changes?</>);
+				}
+				return true;
+			})
+			.then((confirmed) => {
+				if (confirmed) {
+					onEndEdit();
+				}
+			})
+			.catch((err) => {
+				GetLogger('WardrobeItemNameAndDescriptionEdit').error('Error cancelling edit:', err);
+			});
+	}, [confirm, description, item.description, item.name, name, onEndEdit]);
+
+	const action = useMemo((): AppearanceAction => ({
+		type: 'customize',
+		target: targetSelector,
+		item: itemPath,
+		name: name.trim(),
+		description: description.trim(),
+	}), [description, itemPath, name, targetSelector]);
 
 	return (
 		<FieldsetToggle legend='Item'>
@@ -342,9 +358,15 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 				}
 				<label htmlFor='custom-description'>Description ({ description.length }/{ LIMIT_ITEM_DESCRIPTION_LENGTH } characters):</label>
 				<textarea id='custom-description' className='description' value={ description } rows={ 10 } onChange={ (e) => setDescription(e.target.value) } maxLength={ LIMIT_ITEM_DESCRIPTION_LENGTH } />
-				<Row>
-					<Button onClick={ onEndEdit } disabled={ processing }>Cancel</Button>
-					<Button onClick={ onSave } disabled={ processing || !!nameError }>Save</Button>
+				<Row alignX='space-between'>
+					<Button onClick={ cancelConfirm }>Cancel</Button>
+					<WardrobeActionButton
+						action={ action }
+						disabled={ !!nameError }
+						className='standardButtonSize'
+					>
+						Save
+					</WardrobeActionButton>
 				</Row>
 			</Column>
 		</FieldsetToggle>

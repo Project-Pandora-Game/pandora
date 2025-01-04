@@ -28,6 +28,7 @@ export function WikiItems(): ReactElement {
 			<ul>
 				<li><Link to='#IT_Body_parts'>Body parts</Link></li>
 				<li><Link to='#IT_Room-level_items'>Room-level items</Link></li>
+				<li><Link to='#IT_Bound_usage'>Bound usage</Link></li>
 				<li><Link to='#IT_Storage_modules'>Storage modules</Link></li>
 				<li><Link to='#IT_Lock_module'>Lock module</Link></li>
 				<li><Link to='#IT_Item_preferences_and_limits'>Item preferences and limits</Link></li>
@@ -84,6 +85,32 @@ export function WikiItems(): ReactElement {
 				</li>
 			</ul>
 
+			<h4 id='IT_Bound_usage'>Bound usage</h4>
+			<p>
+				"Bound usage" is a setting that all wearable items and room-level items have. It can be found near the top of an item's detailed view.
+				The setting defines whether the item can be used with restrained/blocked hands or not.
+				This allows for a wider variety of roleplaying scenarios more conveniently, such as safe (self-)bondage, switch plays, and escape attempts.
+			</p>
+			<ul>
+				<li>Every item comes with a default that can be changed at item creation time or by anyone with permission afterwards.</li>
+				<li>In Pandora's global settings, you can override the default setting for all newly created items to your desired behavior.</li>
+				<li>
+					When a character with blocked hands tries to use an action on an item that is only possible due to the bound usage setting on that item,
+					they will enter an "attempted usage" state that can be seen in the wardrobe and chat by everyone in the room.
+					This states lasts indefinitely until the bound user decides to stop the attempt, finishes the action, or someone else interrupts it.
+				</li>
+				<li>
+					When someone else interrupts an attempt, it has no consequence, other than clearing the original message in the chat.
+					It is simply a convenient and quick way for someone to show the desire to not allow this attempted action.
+				</li>
+				<li>Attempting an action has a (small) delay, before the user can decide to finish it.</li>
+			</ul>
+			<strong>Important:</strong> This initial delay is not the time it takes to
+			succeed with this attempt, as the system cannot know how long it would take to succeed with the action you are attempting in the current scene!
+			This fully depends on the style and type of role play and everyone's perception of how long a bound action might take.<br />
+			For example, you could roll a dice (with "/dice") to decide if you are successful, you could decide for
+			yourself on a time you think might be realistic, or, what might be the most common approach, you simply give your play partner enough time to type out a reaction.
+
 			<h4 id='IT_Storage_modules'>Storage modules</h4>
 			<p>
 				After clicking on an item with a storage module in the <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link>, the inventory view of the
@@ -114,6 +141,7 @@ export function WikiItems(): ReactElement {
 			</p>
 			<ul>
 				<li>A lock must be locked explicitly for the effect of the lock slot to take effect.</li>
+				<li>Locked locks don't allow a <Link to='#IT_Bound_usage'>bound usage</Link> of the locked parts of an item any more, independent of the setting.</li>
 				<li>Dummy locks can always be unlocked by anybody.</li>
 				<li>Exclusive locks can be unlocked by anybody but the wearer of the locked item.</li>
 				<li>

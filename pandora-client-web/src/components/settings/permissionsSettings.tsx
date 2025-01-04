@@ -14,6 +14,7 @@ import onOff from '../../assets/icons/on-off.svg';
 import promptIcon from '../../assets/icons/prompt.svg';
 import allow from '../../assets/icons/public.svg';
 import questionmark from '../../assets/icons/questionmark.svg';
+import settingIcon from '../../assets/icons/setting.svg';
 import star from '../../assets/icons/star.svg';
 import storage from '../../assets/icons/storage.svg';
 import toggle from '../../assets/icons/toggle.svg';
@@ -83,6 +84,8 @@ function GetIcon(icon: string): string {
 			return lock;
 		case 'on-off':
 			return onOff;
+		case 'setting':
+			return settingIcon;
 		case 'storage':
 			return storage;
 		case 'toggle':
@@ -488,10 +491,10 @@ export function PermissionPromptHandler(): ReactElement | null {
 		<>
 			{
 				Array.from(prompts.entries()).map(([characterId, characterPrompt]) => (
-<PermissionPromptDialog
+					<PermissionPromptDialog
 						key={ characterId }
-prompt={ characterPrompt }
-dismiss={ () => dismiss(characterId) }
+						prompt={ characterPrompt }
+						dismiss={ () => dismiss(characterId) }
 						gameState={ gameState }
 					/>
 				))
@@ -502,7 +505,7 @@ dismiss={ () => dismiss(characterId) }
 
 const PROMPT_SAFETY_COOLDOWN = 2_000;
 function PermissionPromptDialog({ prompt, dismiss, gameState }: {
-prompt: PermissionPromptData;
+	prompt: PermissionPromptData;
 	dismiss: () => void;
 	gameState: GameState;
 }): ReactElement {
@@ -552,22 +555,22 @@ prompt: PermissionPromptData;
 					asks for permission to...
 				</h2>
 			</Row>
-{
+			{
 				actions.length > 0 ? (
-			<Column alignX='center'>
-				<span>Requested actions:</span>
-				{
-					actions.map((action, i) => (
-						<DescribeGameLogicAction
-key={ i }
+					<Column alignX='center'>
+						<span>Requested actions:</span>
+						{
+							actions.map((action, i) => (
+								<DescribeGameLogicAction
+									key={ i }
 									action={ action }
 									actionOriginator={ source }
 									globalState={ globalState }
-/>
-					))
-				}
-			</Column>
-) : null
+								/>
+							))
+						}
+					</Column>
+				) : null
 			}
 			<Column padding='large'>
 				{

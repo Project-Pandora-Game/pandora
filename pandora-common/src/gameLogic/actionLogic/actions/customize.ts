@@ -28,25 +28,28 @@ export function ActionAppearanceCustomize({
 	if (!target)
 		return processingContext.invalid();
 
-	if (target.type === 'character' && target.character.id !== processingContext.player.id) {
-		// TODO: change this: only the player can customize their own items for now
-		processingContext.addRestriction({ type: 'itemCustomizeOther' });
-		return processingContext.invalid();
-	}
-
 	const item = target.getItem(action.item);
 	// Room device wearable parts cannot be customized
 	if (item == null || item.isType('roomDeviceWearablePart')) {
 		return processingContext.invalid();
 	}
 
-	// To manipulate the style of room devices, player must be an admin
-	if (item.isType('roomDevice')) {
+	// To customize deployed room devices, player must be an admin
+	if (item.isType('roomDevice') && item.isDeployed()) {
 		processingContext.checkPlayerIsSpaceAdmin();
 	}
 
-	// Player doing the action must be able to interact with the item
-	processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.STYLING);
+	// Determinate the interaction type(s) based on what is edited
+	const isModify = action.requireFreeHandsToUse !== undefined;
+	const isCustomize = action.name !== undefined || action.description !== undefined;
+
+	// Player must be able to do the action
+	if (isModify) {
+		processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.MODIFY);
+	}
+	if (isCustomize) {
+		processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.CUSTOMIZE);
+	}
 
 	const manipulator = processingContext.manipulator.getManipulatorFor(action.target).getContainer(action.item.container);
 	if (!manipulator.modifyItem(action.item.itemId, (it) => {

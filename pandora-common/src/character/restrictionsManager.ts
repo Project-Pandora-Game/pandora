@@ -275,6 +275,18 @@ export class CharacterRestrictionsManager {
 		if (interaction === ItemInteractionType.ACCESS_ONLY)
 			return;
 
+		// Add interactrions based on interaction type
+		if (interaction === ItemInteractionType.STYLING) {
+			if (targetCharacter != null) {
+				context.addInteraction(targetCharacter.character, 'changeItemColor');
+			}
+		}
+		if (interaction === ItemInteractionType.CUSTOMIZE) {
+			if (targetCharacter != null) {
+				context.addInteraction(targetCharacter.character, 'customizeItem');
+			}
+		}
+
 		// Bodyparts have different handling (we already checked we can interact with the asset)
 		if (item.isType('bodypart')) {
 			// Only characters have bodyparts
@@ -319,13 +331,6 @@ export class CharacterRestrictionsManager {
 			}
 		}
 
-		// Styling the item is a "color"-like interaction
-		if (interaction === ItemInteractionType.STYLING) {
-			if (targetCharacter != null) {
-				context.addInteraction(targetCharacter.character, 'changeItemColor');
-			}
-		}
-
 		const properties = item.getProperties();
 
 		// If equipping (or entering a device) there are further checks
@@ -351,6 +356,7 @@ export class CharacterRestrictionsManager {
 			}
 		}
 
+		// Check for items covered/blocked by other items
 		if (isPhysicallyEquipped && !forceAllowItemActions && target.type === 'character') {
 			const targetProperties = target.getRestrictionManager(this.spaceContext).getLimitedProperties({
 				from: insertBeforeRootItem ?? (container.length > 0 ? container[0].item : item.id),
@@ -372,6 +378,7 @@ export class CharacterRestrictionsManager {
 			let allowStruggleBypass: boolean;
 			switch (interaction) {
 				case ItemInteractionType.STYLING:
+				case ItemInteractionType.CUSTOMIZE:
 					allowStruggleBypass = false;
 					break;
 				case ItemInteractionType.ADD_REMOVE:

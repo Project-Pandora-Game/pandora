@@ -1,18 +1,19 @@
 import { Immutable } from 'immer';
+import { z } from 'zod';
 import type { AssetsDefinitionFile } from '../assets/definitions';
 import { AssetFrameworkGlobalStateClientBundle } from '../assets/state/globalState';
-import { AssetPreferencesPublic } from '../character';
+import { AssetPreferencesPublic, CharacterIdSchema } from '../character';
 import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData';
 import type { CharacterId } from '../character/characterTypes';
 import type { ChatCharacterStatus, IChatMessage } from '../chat/chat';
+import { AppearanceActionSchema } from '../gameLogic';
+import { PermissionConfigSchema, PermissionSetupSchema } from '../gameLogic/permissions/permissionData';
 import { SpaceClientInfo, SpaceId } from '../space/space';
 import { Satisfies } from '../utility/misc';
 import { ZodCast } from '../validation';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
-import type { PermissionConfig, PermissionSetup } from '../gameLogic/permissions/permissionData';
 
 // Fix for pnpm resolution weirdness
-import type { } from 'zod';
 import type { } from '../assets/appearance';
 import type { } from '../character/pronouns';
 
@@ -87,11 +88,11 @@ export const ShardClientSchema = {
 		response: null,
 	},
 	permissionPrompt: {
-		request: ZodCast<{
-			characterId: CharacterId;
-			requiredPermissions: [PermissionSetup, PermissionConfig | null][];
-			messages: IChatMessage[];
-		}>(),
+		request: z.object({
+			characterId: CharacterIdSchema,
+			requiredPermissions: z.tuple([PermissionSetupSchema, PermissionConfigSchema.nullable()]).array(),
+			actions: AppearanceActionSchema.array(),
+		}),
 		response: null,
 	},
 } as const satisfies Immutable<SocketInterfaceDefinition>;

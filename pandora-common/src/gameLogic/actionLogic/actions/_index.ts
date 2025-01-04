@@ -51,6 +51,8 @@ export function ApplyAction(
 		processingContext,
 	};
 
+	processingContext.addPerformedAction(action);
+
 	switch (action.type) {
 		case 'create':
 			return ActionCreate({ ...arg, action });

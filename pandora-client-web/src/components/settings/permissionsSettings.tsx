@@ -11,7 +11,7 @@ import deviceSvg from '../../assets/icons/device.svg';
 import forbid from '../../assets/icons/forbidden.svg';
 import lock from '../../assets/icons/lock.svg';
 import onOff from '../../assets/icons/on-off.svg';
-import prompt from '../../assets/icons/prompt.svg';
+import promptIcon from '../../assets/icons/prompt.svg';
 import allow from '../../assets/icons/public.svg';
 import questionmark from '../../assets/icons/questionmark.svg';
 import star from '../../assets/icons/star.svg';
@@ -22,12 +22,12 @@ import { useFunctionBind } from '../../common/useFunctionBind';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
 import { TextInput } from '../../common/userInteraction/input/textInput';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { ActionMessage } from '../../ui/components/chat/chat';
+import { DescribeGameLogicAction } from '../../ui/components/chat/chatMessagesDescriptions';
 import { Button } from '../common/button/button';
 import { Column, Row } from '../common/container/container';
 import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator';
 import { ButtonConfirm, DraggableDialog, ModalDialog } from '../dialog/dialog';
-import { PermissionPromptData, useGameStateOptional } from '../gameContext/gameStateContextProvider';
+import { PermissionPromptData, useGameStateOptional, useGlobalState, type GameState } from '../gameContext/gameStateContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { HoverElement } from '../hoverElement/hoverElement';
@@ -136,7 +136,7 @@ function ShowAllowOthers({ config }: { config: PermissionType; }): ReactElement 
 				};
 			case 'prompt':
 				return {
-					src: prompt,
+					src: promptIcon,
 					alt: 'General permission configuration preview',
 					description: 'Trying to use this permission opens a popup that lets the targeted user decide if they want to give or deny the requester this permission. Exceptions can be set individually.',
 				};
@@ -456,28 +456,60 @@ export function usePermissionData(permissionGroup: PermissionGroup, permissionId
 
 export function PermissionPromptHandler(): ReactElement | null {
 	const gameState = useGameStateOptional();
-	const [prompts, setPrompts] = useState<readonly PermissionPromptData[]>([]);
+	const [prompts, setPrompts] = useState<ReadonlyMap<CharacterId, PermissionPromptData>>(new Map());
 
 	useEffect(() => {
 		if (!gameState)
 			return undefined;
 
 		return gameState.on('permissionPrompt', (request) => {
-			setPrompts((requests) => [...requests, request]);
+			setPrompts((requests) => {
+				const result = new Map(requests);
+				const id = request.source.id;
+				// We intentionally only keep the last prompt
+				result.set(id, request);
+				return result;
+			});
 		});
 	}, [gameState]);
 
-	const dismissFirst = useCallback(() => {
-		setPrompts((requests) => requests.slice(1));
+	const dismiss = useCallback((id: CharacterId) => {
+		setPrompts((requests) => {
+			const result = new Map(requests);
+			result.delete(id);
+			return result;
+		});
 	}, []);
 
-	if (prompts.length === 0)
+	if (gameState == null || prompts.size === 0)
 		return null;
 
-	return <PermissionPromptDialog prompt={ prompts[0] } dismiss={ dismissFirst } />;
+	return (
+		<>
+			{
+				Array.from(prompts.entries()).map(([characterId, characterPrompt]) => (
+<PermissionPromptDialog
+						key={ characterId }
+prompt={ characterPrompt }
+dismiss={ () => dismiss(characterId) }
+						gameState={ gameState }
+					/>
+				))
+			}
+		</>
+	);
 }
 
-function PermissionPromptDialog({ prompt: { source, requiredPermissions, messages }, dismiss }: { prompt: PermissionPromptData; dismiss: () => void; }): ReactElement {
+const PROMPT_SAFETY_COOLDOWN = 2_000;
+function PermissionPromptDialog({ prompt, dismiss, gameState }: {
+prompt: PermissionPromptData;
+	dismiss: () => void;
+	gameState: GameState;
+}): ReactElement {
+	const globalState = useGlobalState(gameState);
+
+	const { source, requiredPermissions, actions } = prompt;
+
 	const setFull = usePermissionConfigSetAny();
 	const setAnyConfig = useCallback((permissionGroup: PermissionGroup, permissionId: string, allowOthers: PermissionConfigChangeType) => {
 		setFull(permissionGroup, permissionId, source.id, allowOthers);
@@ -495,8 +527,20 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions, message
 	}, [requiredPermissions, dismiss, setAnyConfig]);
 	const [allowAccept, disableAccept] = useReducer(() => false, true);
 
+	// Prevent the user from confirming the prompt by accident if it just changed by introducing confirm cooldown
+	const [safePrompt, setSafePrompt] = useState<PermissionPromptData | null>(null);
+	useEffect(() => {
+		const id = setTimeout(() => {
+			setSafePrompt(prompt);
+		}, PROMPT_SAFETY_COOLDOWN);
+		return () => {
+			clearTimeout(id);
+		};
+	}, [prompt]);
+	const isSafe = prompt === safePrompt;
+
 	return (
-		<DraggableDialog title='Permission Prompt' close={ dismiss } hiddenClose>
+		<DraggableDialog title='Permission Prompt' close={ dismiss } hiddenClose highlight={ !isSafe }>
 			<Row alignX='center'>
 				<h2>
 					<span style={ { textShadow: `${source.data.settings.labelColor} 1px 2px` } }>
@@ -508,14 +552,23 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions, message
 					asks for permission to...
 				</h2>
 			</Row>
+{
+				actions.length > 0 ? (
 			<Column alignX='center'>
-				<span>Action text:</span>
+				<span>Requested actions:</span>
 				{
-					messages.map((message, i) => (
-						<ActionMessage key={ i } message={ message } ignoreColor />
+					actions.map((action, i) => (
+						<DescribeGameLogicAction
+key={ i }
+									action={ action }
+									actionOriginator={ source }
+									globalState={ globalState }
+/>
 					))
 				}
 			</Column>
+) : null
+			}
 			<Column padding='large'>
 				{
 					KnownObject.entries(requiredPermissions).map(([group, permissions]) => (
@@ -525,7 +578,7 @@ function PermissionPromptDialog({ prompt: { source, requiredPermissions, message
 			</Column>
 			<Row padding='medium' alignX='space-between' alignY='center'>
 				<Button onClick={ dismiss }>Deny unchosen once</Button>
-				<Button onClick={ acceptAll } disabled={ !allowAccept }>Allow all above always</Button>
+				<Button onClick={ acceptAll } disabled={ !allowAccept || !isSafe }>Allow all above always</Button>
 			</Row>
 		</DraggableDialog>
 	);

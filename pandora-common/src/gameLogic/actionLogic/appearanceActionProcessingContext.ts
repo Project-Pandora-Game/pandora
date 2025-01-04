@@ -1,5 +1,5 @@
 import { isEqual, uniqWith } from 'lodash';
-import type { GameLogicCharacter, GameLogicPermission, InteractionId } from '..';
+import type { AppearanceAction, GameLogicCharacter, GameLogicPermission, InteractionId } from '..';
 import { SplitContainerPath } from '../../assets/appearanceHelpers';
 import type {
 	ActionCharacterSelector,
@@ -22,6 +22,7 @@ import { Assert, AssertNever, AssertNotNullable } from '../../utility/misc';
 import type { AppearanceActionData, AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
 import type { AppearanceActionContext } from './appearanceActions';
 import { GAME_LOGIC_ACTION_SLOWDOWN_TIMES, type GameLogicActionSlowdownReason } from './appearanceActionSlowdown';
+import type { Immutable } from 'immer';
 
 export class AppearanceActionProcessingContext {
 	private readonly _context: AppearanceActionContext;
@@ -52,6 +53,11 @@ export class AppearanceActionProcessingContext {
 	private readonly _requiredPermissions = new Set<GameLogicPermission>();
 	public get requiredPermissions(): ReadonlySet<GameLogicPermission> {
 		return this._requiredPermissions;
+	}
+
+	private readonly _performedActions: Immutable<AppearanceAction>[] = [];
+	public get performedActions(): readonly Immutable<AppearanceAction>[] {
+		return this._performedActions;
 	}
 
 	private readonly _actionData: AppearanceActionData[] = [];
@@ -131,6 +137,10 @@ export class AppearanceActionProcessingContext {
 	/** Adds a slowdown to the action */
 	public addSlowdown(slowdown: GameLogicActionSlowdownReason): void {
 		this._actionSlowdownReasons.add(slowdown);
+	}
+
+	public addPerformedAction(action: Immutable<AppearanceAction>): void {
+		this._performedActions.push(action);
 	}
 
 	public addData(data: AppearanceActionData): void {
@@ -292,12 +302,15 @@ abstract class AppearanceActionProcessingResultBase {
 	/** Slowdown that should be applied to this action */
 	public readonly actionSlowdownReasons: ReadonlySet<GameLogicActionSlowdownReason>;
 
+	public readonly performedActions: readonly Immutable<AppearanceAction>[];
+
 	public readonly requiredPermissions: ReadonlySet<GameLogicPermission>;
 
 	constructor(processingContext: AppearanceActionProcessingContext) {
 		this._finalProcessingContext = processingContext;
 		this.originalState = processingContext.originalState;
 		this.actionSlowdownReasons = processingContext.actionSlowdownReasons;
+		this.performedActions = processingContext.performedActions;
 		this.requiredPermissions = processingContext.requiredPermissions;
 	}
 

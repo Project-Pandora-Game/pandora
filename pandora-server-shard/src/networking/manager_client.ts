@@ -1,3 +1,4 @@
+import { freeze } from 'immer';
 import {
 	AbortActionAttempt,
 	ActionHandlerMessageTargetCharacter,
@@ -9,7 +10,6 @@ import {
 	FinishActionAttempt,
 	GameLogicPermissionServer,
 	GetLogger,
-	IChatMessage,
 	IClientShard,
 	IClientShardArgument,
 	IClientShardNormalResult,
@@ -19,7 +19,9 @@ import {
 	NaturalListJoin,
 	PermissionConfig,
 	PermissionSetup,
+	RedactSensitiveActionData,
 	StartActionAttempt,
+	type AppearanceAction,
 	type AppearanceActionProcessingResult,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
@@ -168,8 +170,10 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		let result: AppearanceActionProcessingResult;
 
 		if (request.operation === 'doImmediately') {
+			freeze(request.action, true);
 			result = DoImmediateAction(request.action, character.getAppearanceActionContext(), globalState.currentState);
 		} else if (request.operation === 'start') {
+			freeze(request.action, true);
 			result = StartActionAttempt(request.action, character.getAppearanceActionContext(), globalState.currentState, now);
 		} else if (request.operation === 'complete') {
 			result = FinishActionAttempt(character.getAppearanceActionContext(), globalState.currentState, now);
@@ -200,14 +204,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					requiredPermissions.push([CloneDeepMutable(permission.setup), permission.getConfig()]);
 				}
 			}
-			const messages: IChatMessage[] = [];
-			for (const message of result.pendingMessages) {
-				messages.push(space.mapActionMessageToChatMessage(message));
-			}
+			const actions: AppearanceAction[] = result.performedActions
+				.map((a) => RedactSensitiveActionData(a));
+
 			target.connection.sendMessage('permissionPrompt', {
 				characterId: character.id,
 				requiredPermissions,
-				messages,
+				actions,
 			});
 			return { result: 'promptSent' };
 		}
@@ -267,7 +270,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		targetCharacter.connection.sendMessage('permissionPrompt', {
 			characterId: character.id,
 			requiredPermissions,
-			messages: [],
+			actions: [],
 		});
 		return { result: 'promptSent' };
 	}

@@ -20,18 +20,25 @@ export function ActionDelete({
 	const target = processingContext.getTarget(action.target);
 	if (!target)
 		return processingContext.invalid();
+
 	// Player removing the item must be able to use it
 	processingContext.checkCanUseItem(target, action.item, ItemInteractionType.ADD_REMOVE);
 
 	// Room device wearable parts cannot be deleted, you have to leave the device instead
 	const item = target.getItem(action.item);
-	if (item?.isType('roomDeviceWearablePart')) {
+	if (item == null)
+		return processingContext.invalid();
+
+	if (item.isType('roomDeviceWearablePart'))
 		return processingContext.invalid('noDeleteRoomDeviceWearable');
-	}
+
 	// Deployed room devices cannot be deleted, you must store them first
-	if (item?.isType('roomDevice') && item.isDeployed()) {
+	if (item.isType('roomDevice') && item.isDeployed())
 		return processingContext.invalid('noDeleteDeployedRoomDevice');
-	}
+
+	// Player must be allowed to delete the item
+	processingContext.getPlayerRestrictionManager()
+		.checkDeleteItem(processingContext, item);
 
 	const targetManipulator = processingContext.manipulator.getManipulatorFor(action.target);
 

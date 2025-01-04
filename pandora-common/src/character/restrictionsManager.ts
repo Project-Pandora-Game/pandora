@@ -470,4 +470,39 @@ export class CharacterRestrictionsManager {
 			});
 		}
 	}
+
+	/**
+	 * Check whether user is allowed to spawn a new item
+	 * @param context - Context of the action
+	 * @param item - Item that is being spanwed
+	 */
+	public checkSpawnItem(context: AppearanceActionProcessingContext, item: Item): void {
+		const forceAllowItemActions = this.forceAllowItemActions();
+
+		// The item must be spawn-able
+		if (!item.asset.canBeSpawned()) {
+			context.addRestriction({ type: 'invalid' });
+		}
+
+		// Must be able to use hands to spawn a new item
+		if (!this.canUseHands() && !forceAllowItemActions) {
+			context.addRestriction({ type: 'blockedHands' });
+		}
+	}
+
+	/**
+	 * Check whether user is allowed to delete an new item
+	 * @param context - Context of the action
+	 * @param item - Item that user wants to delete
+	 */
+	public checkDeleteItem(context: AppearanceActionProcessingContext, _item: Item): void {
+		const forceAllowItemActions = this.forceAllowItemActions();
+
+		// Must be able to use hands to delete an item
+		if (!this.canUseHands() && !forceAllowItemActions) {
+			context.addRestriction({
+				type: 'blockedHands',
+			});
+		}
+	}
 }

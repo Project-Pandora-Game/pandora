@@ -29,9 +29,15 @@ export function ActionCreate({
 	const target = processingContext.getTarget(action.target);
 	if (!target)
 		return processingContext.invalid();
+
 	const item = assetManager.createItemFromTemplate(action.itemTemplate, processingContext.player);
 	if (item == null)
 		return processingContext.invalid();
+
+	// Player must be allowed to spawn this item
+	processingContext.getPlayerRestrictionManager()
+		.checkSpawnItem(processingContext, item);
+
 	// Player adding the item must be able to use it
 	processingContext.checkCanUseItemDirect(
 		target,

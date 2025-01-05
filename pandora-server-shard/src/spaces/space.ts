@@ -4,6 +4,7 @@ import {
 	ActionHandlerMessage,
 	ActionSpaceContext,
 	AppearanceBundle,
+	Assert,
 	AssertNever,
 	AssertNotNullable,
 	AssetFrameworkCharacterState,
@@ -33,6 +34,7 @@ import {
 	SpaceDirectoryConfig,
 	SpaceId,
 	SpaceLoadData,
+	type AppearanceActionProcessingResultValid,
 	type IChatMessageAction,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager';
@@ -108,6 +110,18 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 		if (update.characters) {
 			this.sendUpdateToAllCharacters(update);
+		}
+	}
+
+	public applyAction(result: AppearanceActionProcessingResultValid): void {
+		Assert(this.gameState.currentState === result.originalState, 'Attempt to apply action originating from a different state than the current one');
+
+		// Apply the action
+		this.gameState.setState(result.resultState);
+
+		// Send chat messages as needed
+		for (const message of result.pendingMessages) {
+			this.handleActionMessage(message);
 		}
 	}
 

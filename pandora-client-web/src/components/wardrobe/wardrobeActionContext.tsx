@@ -55,6 +55,7 @@ export function WardrobeActionContextProvider({ player, children }: { player: Pl
 	const characters = useSpaceCharacters();
 
 	const actions = useMemo((): AppearanceActionContext => ({
+		executionContext: 'clientOnlyVerify',
 		player: player.gameLogicCharacter,
 		spaceContext,
 		getCharacter: (id) => {
@@ -203,7 +204,7 @@ export function useWardrobePermissionRequestCallback() {
 	);
 }
 
-interface WardrobeExecuteCheckedResult {
+export interface WardrobeExecuteCheckedResult {
 	execute: () => void;
 	processing: boolean;
 	currentAttempt: Immutable<CharacterActionAttempt> | null;

@@ -165,29 +165,39 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!character)
 			throw new BadMessageError();
 
-		const globalState = character.getGlobalState();
+		const space = character.getOrLoadSpace();
+		const originalState = space.gameState.currentState;
 		const now = Date.now();
 		let result: AppearanceActionProcessingResult;
 
 		if (request.operation === 'doImmediately') {
 			freeze(request.action, true);
-			result = DoImmediateAction(request.action, character.getAppearanceActionContext(), globalState.currentState);
+			result = DoImmediateAction(request.action, character.getAppearanceActionContext(), originalState);
 		} else if (request.operation === 'start') {
 			freeze(request.action, true);
-			result = StartActionAttempt(request.action, character.getAppearanceActionContext(), globalState.currentState, now);
+			result = StartActionAttempt(request.action, character.getAppearanceActionContext(), originalState, now);
 		} else if (request.operation === 'complete') {
-			result = FinishActionAttempt(character.getAppearanceActionContext(), globalState.currentState, now);
+			result = FinishActionAttempt(character.getAppearanceActionContext(), originalState, now);
 		} else if (request.operation === 'abortCurrentAction') {
-			result = AbortActionAttempt(character.getAppearanceActionContext(), globalState.currentState);
+			result = AbortActionAttempt(character.getAppearanceActionContext(), originalState);
 		} else {
 			AssertNever(request.operation);
 		}
 
 		// Check if result is valid
 		if (!result.valid) {
-			const space = character.getOrLoadSpace();
 			const target = result.prompt ? space.getCharacterById(result.prompt) : null;
+			// The action failed and not because of promptable permission
 			if (target == null) {
+				// If finishing an action attempt was what failed, then cancel it
+				if (request.operation === 'complete') {
+					const cancelResult = AbortActionAttempt(character.getAppearanceActionContext(), originalState);
+					if (cancelResult.valid) {
+						space.applyAction(cancelResult);
+					} else {
+						logger.error(`Failed to abort action attempt by ${ character.id } for failed action completion:\n`, cancelResult.problems);
+					}
+				}
 				// If the action failed, client might be out of sync, force-send full reload
 				client.sendLoadMessage();
 				return {
@@ -214,16 +224,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			});
 			return { result: 'promptSent' };
 		}
-		{
-			// Apply the action
-			globalState.setState(result.resultState);
-			const space = character.getOrLoadSpace();
-
-			// Send chat messages as needed
-			for (const message of result.pendingMessages) {
-				space.handleActionMessage(message);
-			}
-		}
+		// Apply the action
+		space.applyAction(result);
 
 		return {
 			result: 'success',

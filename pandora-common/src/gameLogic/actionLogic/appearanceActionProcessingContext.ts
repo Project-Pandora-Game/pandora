@@ -31,6 +31,10 @@ export class AppearanceActionProcessingContext {
 		return this._context.player;
 	}
 
+	public get executionContext(): AppearanceActionContext['executionContext'] {
+		return this._context.executionContext;
+	}
+
 	public readonly originalState: AssetFrameworkGlobalState;
 
 	public readonly manipulator: AssetFrameworkGlobalStateManipulator;

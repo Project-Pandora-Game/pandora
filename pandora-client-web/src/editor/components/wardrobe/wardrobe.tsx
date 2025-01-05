@@ -61,6 +61,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	const [scrollToItem, setScrollToItem] = useState<ItemId | null>(null);
 
 	const actions = useMemo((): AppearanceActionContext => ({
+		executionContext: 'clientOnlyVerify',
 		player: character.gameLogicCharacter,
 		spaceContext: EDITOR_SPACE_CONTEXT,
 		getCharacter: (id) => {
@@ -87,7 +88,10 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		actions,
 		doImmediateAction: (action) => {
 			// We do direct apply to skip need for attempt in some edge cases.
-			const processingContext = new AppearanceActionProcessingContext(actions, editor.globalState.currentState);
+			const processingContext = new AppearanceActionProcessingContext({
+				...actions,
+				executionContext: 'act',
+			}, editor.globalState.currentState);
 			const result = ApplyAction(processingContext, action);
 
 			// Check if result is valid
@@ -107,7 +111,10 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 			};
 		},
 		startActionAttempt: (action) => {
-			const result = StartActionAttempt(action, actions, editor.globalState.currentState, Date.now());
+			const result = StartActionAttempt(action, {
+				...actions,
+				executionContext: 'act',
+			}, editor.globalState.currentState, Date.now());
 
 			// Check if result is valid
 			if (!result.valid) {
@@ -126,7 +133,10 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 			};
 		},
 		completeCurrentActionAttempt: () => {
-			const result = FinishActionAttempt(actions, editor.globalState.currentState, Date.now());
+			const result = FinishActionAttempt({
+				...actions,
+				executionContext: 'act',
+			}, editor.globalState.currentState, Date.now());
 
 			// Check if result is valid
 			if (!result.valid) {
@@ -145,7 +155,10 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 			};
 		},
 		abortCurrentActionAttempt: () => {
-			const result = AbortActionAttempt(actions, editor.globalState.currentState);
+			const result = AbortActionAttempt({
+				...actions,
+				executionContext: 'act',
+			}, editor.globalState.currentState);
 
 			// Check if result is valid
 			if (!result.valid) {

@@ -242,7 +242,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		if (this.asset.definition.password != null && password == null) {
 			switch (this.lockData?.hidden?.side) {
 				case 'client':
-					if (!this.lockData.hidden.hasPassword) {
+					if (!this.lockData.hidden.hasPassword && processingContext.executionContext !== 'clientOnlyVerify') {
 						return rejectMissingPassword();
 					}
 					hidden = { side: 'client', hasPassword: true };
@@ -293,10 +293,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		if (!this.isLocked() || this.lockData == null)
 			return null;
 
-		if (this.asset.definition.password != null && !playerRestrictionManager.forceAllowItemActions()) {
-			if (password == null) {
-				return null;
-			}
+		if (this.asset.definition.password != null && !playerRestrictionManager.forceAllowItemActions() && processingContext.executionContext === 'act') {
 			if (this.lockData.hidden?.side === 'server' && !ItemLock._isEqualPassword(this.asset, this.lockData.hidden.password, password)) {
 				failure({
 					type: 'lockInteractionPrevented',
@@ -387,7 +384,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		return parentResult;
 	}
 
-	private static _validatePassword(asset: Asset<'lock'>, password: string, logger?: Logger): boolean {
+	public static _validatePassword(asset: Asset<'lock'>, password: string, logger?: Logger): boolean {
 		const def = asset.definition.password;
 		if (def == null) {
 			logger?.warning(`has a hidden password but the asset does not define a password`);

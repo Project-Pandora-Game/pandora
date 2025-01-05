@@ -56,6 +56,7 @@ export class AppearanceEditor extends CharacterAppearance {
 
 	protected _makeActionContext(): AppearanceActionContext {
 		return {
+			executionContext: 'act',
 			player: this.character,
 			spaceContext: EDITOR_SPACE_CONTEXT,
 			getCharacter: (id) => {

@@ -10,6 +10,12 @@ import { ApplyAction, type AppearanceAction } from './actions/_index';
 import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
 
 export interface AppearanceActionContext {
+	/**
+	 * What is the reason for running this action. Can cause some checks to be skipped.
+	 * - `act` = This is a full action that will result in changes. All checks are performed.
+	 * - `clientOnlyVerify` = This is a pre-check on client and some bits can be skipped (especially those opaque to client).
+	 */
+	executionContext: 'act' | 'clientOnlyVerify';
 	player: GameLogicCharacter;
 	spaceContext: ActionSpaceContext;
 	getCharacter(id: CharacterId): GameLogicCharacter | null;
@@ -72,7 +78,11 @@ export function StartActionAttempt(
 	let slowdown: number;
 	// First validate that the action would be possible and fail if it wouldn't with its problems
 	{
-		const checkContext = new AppearanceActionProcessingContext(context, initialState);
+		// We do a client-only verify when starting action to delay things like password checks until the action is actually performed
+		const checkContext = new AppearanceActionProcessingContext({
+			...context,
+			executionContext: 'clientOnlyVerify',
+		}, initialState);
 		const checkResult = ApplyAction(checkContext, action);
 		if (!checkResult.valid)
 			return checkResult;
@@ -151,10 +161,9 @@ export function AbortActionAttempt(
 	initialState: AssetFrameworkGlobalState,
 ): AppearanceActionProcessingResult {
 	const processingContext = new AppearanceActionProcessingContext(context, initialState);
-	const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
 
 	// Clear the current action the user is performing
-	if (!processingContext.manipulator.produceCharacterState(playerRestrictionManager.appearance.id, (character) => {
+	if (!processingContext.manipulator.produceCharacterState(processingContext.player.id, (character) => {
 		return character.produceWithAttemptedAction(null);
 	})) {
 		return processingContext.invalid();

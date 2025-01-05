@@ -29,7 +29,7 @@ import { useAccountSettings } from '../../services/accountLogic/accountManagerHo
 import { Button, ButtonProps, IconButton } from '../common/button/button';
 import { Column } from '../common/container/container';
 import { HoverElement } from '../hoverElement/hoverElement';
-import { useWardrobeExecuteChecked } from './wardrobeActionContext';
+import { useWardrobeExecuteChecked, type WardrobeExecuteCheckedResult } from './wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import { useWardrobeContext } from './wardrobeContext';
 
@@ -257,6 +257,7 @@ export function WardrobeActionButton({
 	allowPreview = true,
 	onExecute,
 	onFailure,
+	onCurrentAttempt,
 	disabled = false,
 }: CommonProps & {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -274,6 +275,7 @@ export function WardrobeActionButton({
 	allowPreview?: boolean;
 	onExecute?: (data: readonly AppearanceActionData[]) => void;
 	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
+	onCurrentAttempt?: (currentAttempt: WardrobeExecuteCheckedResult['currentAttempt']) => void;
 	disabled?: boolean;
 }): ReactElement {
 	const { actionPreviewState, showHoverPreview } = useWardrobeContext();
@@ -285,6 +287,10 @@ export function WardrobeActionButton({
 		onSuccess: onExecute,
 		onFailure,
 	});
+
+	useEffect(() => {
+		onCurrentAttempt?.(currentAttempt);
+	}, [onCurrentAttempt, currentAttempt]);
 
 	useEffect(() => {
 		if (!isHovering || !showHoverPreview || !allowPreview || check == null || !check.valid)

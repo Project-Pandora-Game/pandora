@@ -19,6 +19,7 @@ import listIcon from '../../../assets/icons/list.svg';
 import { useCharacterDataOptional } from '../../../character/character';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { useIsNarrowScreen } from '../../../styles/mediaQueries';
 import { IconButton } from '../../common/button/button';
 import { useWardrobeActionContext, useWardrobeExecuteChecked } from '../wardrobeActionContext';
@@ -239,6 +240,7 @@ function InventoryAssetViewListPickup({ asset, listMode }: {
 	asset: Asset;
 	listMode: boolean;
 }): ReactElement {
+	const { wardrobeItemRequireFreeHandsToUseDefault } = useAccountSettings();
 	const { setHeldItem } = useWardrobeContext();
 	const preference = useAssetPreference(asset);
 
@@ -257,7 +259,12 @@ function InventoryAssetViewListPickup({ asset, listMode }: {
 					type: 'template',
 					template: {
 						asset: asset.id,
-						requireFreeHandsToUse: (asset.isType('personal') || asset.isType('roomDevice')) ? (asset.definition.requireFreeHandsToUseDefault ?? false) : undefined,
+						requireFreeHandsToUse: (asset.isType('personal') || asset.isType('roomDevice')) ? (
+							wardrobeItemRequireFreeHandsToUseDefault === 'useAssetValue' ? (asset.definition.requireFreeHandsToUseDefault ?? false) :
+							wardrobeItemRequireFreeHandsToUseDefault === 'true' ? true :
+							wardrobeItemRequireFreeHandsToUseDefault === 'false' ? false :
+							AssertNever(wardrobeItemRequireFreeHandsToUseDefault)
+						) : undefined,
 					},
 				});
 			} }>

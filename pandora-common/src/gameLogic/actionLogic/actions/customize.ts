@@ -50,6 +50,12 @@ export function ActionAppearanceCustomize({
 	if (isCustomize) {
 		processingContext.checkCanUseItemDirect(target, action.item.container, item, ItemInteractionType.CUSTOMIZE);
 	}
+	// Changing the "requireFreeHandsToUse" specially requires free hands
+	// (no changing something that affects how blocked hands behave, while you have blocked hands)
+	if (action.requireFreeHandsToUse !== undefined) {
+		processingContext.getPlayerRestrictionManager()
+			.checkUseHands(processingContext, false);
+	}
 
 	const manipulator = processingContext.manipulator.getManipulatorFor(action.target).getContainer(action.item.container);
 	if (!manipulator.modifyItem(action.item.itemId, (it) => {

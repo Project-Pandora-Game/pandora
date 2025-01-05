@@ -141,7 +141,6 @@ export function WikiItems(): ReactElement {
 			</p>
 			<ul>
 				<li>A lock must be locked explicitly for the effect of the lock slot to take effect.</li>
-				<li>Locked locks don't allow a <Link to='#IT_Bound_usage'>bound usage</Link> of the locked parts of an item any more, independent of the setting.</li>
 				<li>Dummy locks can always be unlocked by anybody.</li>
 				<li>Exclusive locks can be unlocked by anybody but the wearer of the locked item.</li>
 				<li>

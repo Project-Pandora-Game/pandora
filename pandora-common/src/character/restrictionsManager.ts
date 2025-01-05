@@ -126,6 +126,23 @@ export class CharacterRestrictionsManager {
 		return false;
 	}
 
+	/**
+	 * Check that this character can use hands.
+	 * @param context - Context of the action
+	 * @param allowStruggleBypass - Whether this action allows using an "action attempt" to bypass blocked hands limitation
+	 * (`false` = blocked hands block | `true` = blocked hands slow down)
+	 */
+	public checkUseHands(context: AppearanceActionProcessingContext, allowStruggleBypass: boolean): void {
+		// Safemode bypasses this check
+		if (!this.canUseHands() && !this.forceAllowItemActions()) {
+			if (allowStruggleBypass) {
+				context.addSlowdown('blockedHands');
+			} else {
+				context.addRestriction({ type: 'blockedHands' });
+			}
+		}
+	}
+
 	public checkInteractWithTarget(context: AppearanceActionProcessingContext, target: ActionTargetCharacter | null): void {
 		// Non-character inventories can always be interacted with
 		if (target == null)
@@ -373,8 +390,8 @@ export class CharacterRestrictionsManager {
 			}
 		}
 
-		// Must be able to use hands (for most interaction types)
-		if (!this.canUseHands() && !forceAllowItemActions) {
+		// Must be able to use hands (for everything except entering/leaving a room device)
+		if (interaction !== ItemInteractionType.DEVICE_ENTER_LEAVE) {
 			let allowStruggleBypass: boolean;
 			switch (interaction) {
 				case ItemInteractionType.STYLING:
@@ -384,19 +401,14 @@ export class CharacterRestrictionsManager {
 				case ItemInteractionType.ADD_REMOVE:
 				case ItemInteractionType.MODIFY:
 				case ItemInteractionType.REORDER:
-				case ItemInteractionType.DEVICE_ENTER_LEAVE:
-					allowStruggleBypass = !(item.isType('personal') || item.isType('roomDevice')) || !item.requireFreeHandsToUse;
+					allowStruggleBypass = (item.isType('personal') || item.isType('roomDevice')) ? !item.requireFreeHandsToUse :
+						item.isType('roomDeviceWearablePart') ? !(item.roomDevice?.requireFreeHandsToUse ?? false) :
+						true;
 					break;
 				default:
 					AssertNever(interaction);
 			}
-			if (allowStruggleBypass) {
-				context.addSlowdown('blockedHands');
-			} else {
-				context.addRestriction({
-					type: 'blockedHands',
-				});
-			}
+			this.checkUseHands(context, allowStruggleBypass);
 		}
 	}
 
@@ -484,17 +496,13 @@ export class CharacterRestrictionsManager {
 	 * @param item - Item that is being spanwed
 	 */
 	public checkSpawnItem(context: AppearanceActionProcessingContext, item: Item): void {
-		const forceAllowItemActions = this.forceAllowItemActions();
-
 		// The item must be spawn-able
 		if (!item.asset.canBeSpawned()) {
 			context.addRestriction({ type: 'invalid' });
 		}
 
 		// Must be able to use hands to spawn a new item
-		if (!this.canUseHands() && !forceAllowItemActions) {
-			context.addRestriction({ type: 'blockedHands' });
-		}
+		this.checkUseHands(context, false);
 	}
 
 	/**
@@ -503,13 +511,7 @@ export class CharacterRestrictionsManager {
 	 * @param item - Item that user wants to delete
 	 */
 	public checkDeleteItem(context: AppearanceActionProcessingContext, _item: Item): void {
-		const forceAllowItemActions = this.forceAllowItemActions();
-
 		// Must be able to use hands to delete an item
-		if (!this.canUseHands() && !forceAllowItemActions) {
-			context.addRestriction({
-				type: 'blockedHands',
-			});
-		}
+		this.checkUseHands(context, false);
 	}
 }

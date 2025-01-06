@@ -16,8 +16,8 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 					text: (
 						<p>
 							Hello and welcome to the tutorial on character poses and expressions!<br />
-							In this tutorial you will learn how to move a character's body parts<br />
-							and how to change various aspects of it, such as facial expressions.
+							In this tutorial you will learn how to move the body of a character<br />
+							and how to change its various aspects, such as facial expressions.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -99,9 +99,10 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							When you scroll down a bit, the three arm posing presets sections next.<br />
+							When you scroll down a bit, the three arm posing presets sections are next.<br />
 							Arms can be moved at their shoulder and elbow joints.
-							Each arm can also either be in the front or behind the body and can be controlled individually, including each hand.
+							Each arm can also either be in the front or behind the body.
+							This can be controlled individually, including each hand.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -115,9 +116,10 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							If you scroll further down, you can see the next four sections. Those are leg posing presets, grouped into standing, kneeling, and sitting poses.
+							If you scroll further down, you can see the next four sections. These are leg posing presets, grouped into standing, kneeling, and sitting poses.
 							Legs can be moved at their hip joints.
-							Each leg can be controlled individually and characters can stand on their toes.
+							Each leg can be controlled individually.<br />
+							Characters can also stand on their toes.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -136,7 +138,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 					text: (
 						<p>
 							Next, there is the presets section that lets you quickly rotate your character in the 4 main directions, such as sideways and upside down.<br />
-							The center of rotation is at the bottom end of an upright character.
+							The center of rotation is where character's feet usually touch the floor.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -177,12 +179,12 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 						<p>
 							The 'Stored poses' category lets you create and manage your own pose presets.<br />
 							<br />
-							First, pose your character manually as desired (more on how to do manual posing in a later part of this tutorial).
-							Then save the current pose to your Pandora account or export it as a file or text string.
-							You can select which joints/bones of the body shall be included in the preset. Not including something means the preset will not override the according current value.<br />
+							After posing your character manually as desired (more on how to do manual posing in a later part of this tutorial)
+							you can use this section to save the current pose to your Pandora account or export it as a file or text string.
+							You can select which joints/bones of the body will be included in the preset. Not including something means the preset will not change the according current value.<br />
 							<br />
-							A button for any newly saved custom pose preset will be listed in this section afterwards and you can manage all stored poses with the edit button in the middle.
-							Any exported pose can be imported again as long as you still have a free pose preset slot as storing custom poses on the account has a limit.
+							A button for any saved custom pose preset will be listed in this section afterwards. You can manage all stored poses with the edit button in the middle.
+							Any exported pose can be imported again, as long as you still have a free pose preset slot, as storing custom poses on the account has a limit.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -200,7 +202,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 							<br />
 							This feature can be useful in certain situations, for example to show a character on top of objects in a perspectively correct way,
 							to simulate hanging from the ceiling, or to slowly appear behind an object by slowly increasing the value.<br />
-							You can use the button next to the input field to reset the value back to the default offset quickly.
+							You can use the button next to the input field to reset the value back to zero quickly.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -239,9 +241,9 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							At the bottom of the tab are the manual posing controls. There you can manipulate every joint and bone and adjust
+							At the bottom of the tab are the manual posing controls. Using these, you can manipulate every joint and bone and adjust
 							each hand configuration.<br />
-							There is also an alternative user interface for this. More on that later.
+							There also exists an alternative interface for manual posing. More on that later.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -251,6 +253,23 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 							filter: (e) => e.innerText.includes('Manual pose'),
 						},
 					],
+				},
+				{
+					text: (
+						<>
+							Please open the "Manual pose" section by clicking on it.
+						</>
+					),
+					hideWhenCompleted: true,
+					highlight: [{
+						query: '.fieldset-toggle-legend',
+						filter: (e) => e.innerText.includes('Manual pose'),
+					}],
+					conditions: [{
+						type: 'elementQuery',
+						query: '.fieldset-toggle-legend.open',
+						filter: (e) => e.innerText.includes('Manual pose'),
+					}],
 				},
 				{
 					text: (
@@ -294,20 +313,26 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							The last section lets you manually set the rotation for every available body joint/bone as well as the character rotation itself
+							The last section lets you manually set the rotation for every available body joint/bone, as well as the character rotation itself,
 							from minus 180 to plus 180 degrees.
-							This can be useful to fine-tune a pose.<br />
-							<br />
-							Feel free to experiment with the features in this tab before continuing.<br />
-							In the next step, the alternative user interface for manual posing will be explained.
+							This can be useful for fine-tuning a pose.<br />
 						</p>
 					),
 					conditions: [{ type: 'next' }],
 					highlight: [
 						{
-							query: '.bone-rotation',
+							query: '.fieldset-toggle:has(> .bone-rotation)',
 						},
 					],
+				},
+				{
+					text: (
+						<p>
+							Feel free to experiment with the features in this tab before continuing.<br />
+							In the next step, the alternative user interface for manual posing will be explained.
+						</p>
+					),
+					conditions: [{ type: 'next' }],
 				},
 			],
 		},
@@ -324,7 +349,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							As the manual posing sliders can be a bit hard to use for quickly adjusting a pose, we also offer posing per dragging the joints of a character directly.<br />
+							As the manual posing sliders can be a bit hard to use for quickly adjusting a pose, we also allow posing by dragging the joints of a character directly.<br />
 							<br />
 							In the room scene, find your character and click on your character's name to open its context menu or alternatively open it via the space's character list.
 						</p>
@@ -377,7 +402,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								In this mode you can see circles over your character's body that you can drag to rotate the various joints/bones of
+								In this mode you can see circles over the character's body that you can drag to rotate the various joints/bones of
 								the character body (move or minimize this popup if needed).
 								Each one matches a slider from the "Manual pose" section in the "Pose" tab.<br />
 								Hint: To achieve the most accurate rotation control, hold a circle and drag in the direction of the arrow on it and only then drag
@@ -386,7 +411,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 							<ul>
 								<li>Clicking the left-right arrow at the bottom allows you to turn the character around.</li>
 								<li>The four-way arrow in the center allows you to switch to the character move mode. Please note that this button might not always be available.</li>
-								<li>You can exit the manual posing mode by clicking the red "X" in the middle of your character.</li>
+								<li>You can exit the manual posing mode by clicking the red "X" in the middle of the character.</li>
 							</ul>
 							<p>
 								<br />
@@ -395,11 +420,6 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 							</p>
 						</>
 					),
-					highlight: [
-						{
-							query: '.bone-rotation',
-						},
-					],
 					conditions: [
 						MakeTutorialConditionFlag('roomSceneMode', (value) => value.mode === 'normal'),
 					],
@@ -436,9 +456,10 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							The tab shows a number of expression categories that have several states each. Every category will always have one of its states selected.<br />
-							These categories depend on the body parts "worn" in the "Body" tab of the character's wardrobe. Adding, removing, or even just changing body parts
-							can affect the number of available categories in this tab.
+							This tab shows a number of expression modules you can interact with.<br />
+							If you played around with your character's body parts in the wardrobe,
+							you might notice that these options exactly match the options on your current body parts.
+							This is because the purpose of this menu is to offer a quick way to interact with a few select modules from the parts of your body.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -451,7 +472,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							It is important to note that the "Pose" and "Expression" tabs only allow you to alter your own character.
+							It is important to note, that the "Pose" and "Expression" tabs only allow you to alter your own character.
 							If you want to make such changes to another character in the same room, you can find the same two tabs in the wardrobe of any character.
 							That said, changes to another character might require the other party's permission first.
 						</p>

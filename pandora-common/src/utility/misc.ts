@@ -145,6 +145,19 @@ export function ShuffleArray<T extends unknown[]>(array: T, source: { random(): 
 	return array;
 }
 
+/**
+ * Picks a random element from the array
+ * @param array The array to sample
+ * @param source The random source to use, defaults to `Math`
+ * @returns The element or `undefined` if the array is empty
+ */
+export function SampleArray<T>(array: readonly T[], source: { random(): number; } = Math): T | undefined {
+	if (array.length === 0)
+		return undefined;
+
+	return array[Math.floor(source.random() * array.length)];
+}
+
 export function SplitStringFirstOccurrence(input: string, separator: string): [string, string] {
 	const index = input.indexOf(separator);
 	return index < 0 ? [input, ''] : [input.substring(0, index), input.substring(index + 1)];

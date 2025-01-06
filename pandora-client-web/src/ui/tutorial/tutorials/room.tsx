@@ -162,7 +162,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							</p>
 						</>
 					),
-					highlight: [{ query: '.roomScreen .room-scene' }],
+					highlight: [{ query: '.roomScreen .room-scene', inset: true }],
 					conditions: [{ type: 'next' }],
 				},
 				{
@@ -171,7 +171,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							On the right (or bottom) are various controls, such as information about the current room/space, chat, and some controls for your character.
 						</p>
 					),
-					highlight: [{ query: '.roomScreen .interactionArea' }],
+					highlight: [{ query: '.roomScreen .interactionArea', inset: true }],
 					conditions: [{ type: 'next' }],
 				},
 			],
@@ -200,7 +200,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							</p>
 						</>
 					),
-					highlight: [{ query: '.roomScreen .room-scene' }],
+					highlight: [{ query: '.roomScreen .room-scene', inset: true }],
 					conditions: [{ type: 'next' }],
 				},
 				{
@@ -433,7 +433,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							Lets move to the basic controls Pandora has.
 						</p>
 					),
-					highlight: [{ query: '.roomScreen .interactionArea' }],
+					highlight: [{ query: '.roomScreen .interactionArea', inset: true }],
 					conditions: [{ type: 'next' }],
 				},
 				{
@@ -468,6 +468,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 					),
 					highlight: [{
 						query: '.roomScreen .tab-content',
+						inset: true,
 					}],
 					conditions: [{ type: 'next' }],
 				},
@@ -624,6 +625,8 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 					}],
 					highlight: [{
 						query: '.chatArea textarea',
+						inset: true,
+						filter: (el) => document.activeElement !== el, // Hide highlight when user selects the input
 					}],
 				},
 				{
@@ -682,6 +685,8 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 					}],
 					highlight: [{
 						query: '.chatArea textarea',
+						inset: true,
+						filter: (el) => document.activeElement !== el, // Hide highlight when user selects the input
 					}],
 				},
 				{
@@ -735,6 +740,8 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 					}],
 					highlight: [{
 						query: '.chatArea textarea',
+						inset: true,
+						filter: (el) => document.activeElement !== el, // Hide highlight when user selects the input
 					}],
 				},
 				{
@@ -785,6 +792,8 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 					}],
 					highlight: [{
 						query: '.chatArea textarea',
+						inset: true,
+						filter: (el) => document.activeElement !== el, // Hide highlight when user selects the input
 					}],
 				},
 				{

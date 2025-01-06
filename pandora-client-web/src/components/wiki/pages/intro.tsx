@@ -54,7 +54,7 @@ export function WikiIntroduction(): ReactElement {
 			<h4>2. Front and back character view</h4>
 			<p>
 				Your character's view can be toggled in the pose menu. The chosen position is seen by everyone in the room.
-				Alternatively, you can simply use the "/t" command in the chat.
+				Alternatively, you can simply use the "/turn" command in the chat.
 			</p>
 
 			<h4>3. Persistent rooms & personal room</h4>

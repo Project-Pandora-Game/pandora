@@ -1,4 +1,3 @@
-import { sample } from 'lodash';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 import { CharacterAppearanceLoadAndValidate, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from '../../../assets/appearanceValidation';
@@ -8,7 +7,7 @@ import { FilterItemWearable, type Item } from '../../../assets/item/base';
 import { CreateAssetPropertiesResult, MergeAssetProperties } from '../../../assets/properties';
 import { ItemInteractionType } from '../../../character/restrictionTypes';
 import { PseudoRandom } from '../../../math';
-import { ShuffleArray } from '../../../utility';
+import { SampleArray, ShuffleArray } from '../../../utility';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
 import type { AppearanceActionHandlerArg } from './_common';
 
@@ -84,6 +83,8 @@ export function ActionAppearanceRandomize({
 
 	const room = processingContext.manipulator.currentState.room;
 
+	const randomSource = new PseudoRandom(action.seed);
+
 	// Build body if running full randomization
 	if (kind === 'full') {
 		const usedSingularBodyparts = new Set<string>();
@@ -106,7 +107,7 @@ export function ActionAppearanceRandomize({
 				);
 
 			// Pick one and add it to the appearance
-			const asset = sample(possibleAssets);
+			const asset = SampleArray(possibleAssets, randomSource);
 			if (asset && asset.isType('bodypart')) {
 				const item = assetManager.createItem(`i/${nanoid()}`, asset, processingContext.player);
 				newAppearance.push(item);
@@ -131,8 +132,6 @@ export function ActionAppearanceRandomize({
 		});
 		return processingContext.invalid();
 	}
-
-	const randomSource = new PseudoRandom(action.seed);
 
 	// Go through wanted attributes one-by one, always try to find matching items and try to add them in random order
 	// After each time we try the item, we validate appearance in full to see if it is possible addition

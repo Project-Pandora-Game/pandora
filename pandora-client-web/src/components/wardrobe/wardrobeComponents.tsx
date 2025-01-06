@@ -438,8 +438,14 @@ export function WardrobeActionRandomizeButton({
 			AssertNever(kind);
 	}
 
+	const action = useMemo((): AppearanceAction => ({
+		type: 'randomize',
+		kind,
+		seed,
+	}), [kind, seed]);
+
 	return (
-		<WardrobeActionButton onExecute={ newSeed } action={ { type: 'randomize', kind, seed } } >
+		<WardrobeActionButton onExecute={ newSeed } action={ action } >
 			{ text }
 		</WardrobeActionButton>
 	);

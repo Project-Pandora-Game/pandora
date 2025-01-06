@@ -1,4 +1,5 @@
 export * from './appearance';
+export * from './appearanceHelpers';
 export * from './appearanceLimit';
 export * from './appearanceTypes';
 export * from './appearanceValidation';

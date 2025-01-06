@@ -1,7 +1,19 @@
 import type { Immutable } from 'immer';
 import { isEqual } from 'lodash';
-import { AssertNever, IsNotNullable, NaturalListJoin, type ActionTargetSelector, type AppearanceAction, type AppearanceActionType, type AssetFrameworkGlobalState, type CharacterId, type Item, type ItemContainerPath } from 'pandora-common';
-import { EvalItemPath, SplitContainerPath } from 'pandora-common/src/assets/appearanceHelpers';
+import {
+	AssertNever,
+	EvalItemPath,
+	IsNotNullable,
+	NaturalListJoin,
+	SplitContainerPath,
+	type ActionTargetSelector,
+	type AppearanceAction,
+	type AppearanceActionType,
+	type AssetFrameworkGlobalState,
+	type CharacterId,
+	type Item,
+	type ItemContainerPath,
+} from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import { useCharacterDataOptional, type IChatroomCharacter } from '../../../character/character';

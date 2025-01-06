@@ -8,10 +8,10 @@ import {
 	AssertNever,
 	AssertNotNullable,
 	EMPTY_ARRAY,
+	EvalItemPath,
 	Item,
 	ItemPath,
 } from 'pandora-common';
-import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { useMemo } from 'react';
 import { ICharacter } from '../../character/character';
 import { useWardrobeActionContext } from './wardrobeActionContext';

@@ -9,6 +9,7 @@ import {
 	AssertNever,
 	CloneDeepMutable,
 	EMPTY_ARRAY,
+	EvalContainerPath,
 	Item,
 	ITEM_LIMIT_CHARACTER_WORN,
 	ITEM_LIMIT_ROOM_INVENTORY,
@@ -16,8 +17,8 @@ import {
 	ItemId,
 	ItemInteractionType,
 	ItemPath,
+	SplitContainerPath,
 } from 'pandora-common';
-import { EvalContainerPath, SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
 import React, { ReactElement, useEffect, useMemo, useRef } from 'react';

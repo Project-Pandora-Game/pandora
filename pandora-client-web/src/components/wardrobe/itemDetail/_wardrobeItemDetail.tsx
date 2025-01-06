@@ -6,10 +6,10 @@ import {
 	LIMIT_ITEM_DESCRIPTION_LENGTH,
 	LIMIT_ITEM_NAME_LENGTH,
 	LIMIT_ITEM_NAME_PATTERN,
+	SplitContainerPath,
 	type AppearanceAction,
 	type Item,
 } from 'pandora-common';
-import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';

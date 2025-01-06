@@ -8,11 +8,11 @@ import {
 	Assert,
 	AssetFrameworkGlobalState,
 	EMPTY_ARRAY,
+	EvalItemPath,
 	FinishActionAttempt,
 	ItemId,
 	StartActionAttempt,
 } from 'pandora-common';
-import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import React, { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import { Checkbox } from '../../../common/userInteraction/checkbox';

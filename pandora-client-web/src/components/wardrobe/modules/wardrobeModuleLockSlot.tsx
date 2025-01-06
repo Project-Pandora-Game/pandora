@@ -1,15 +1,15 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import {
-    AppearanceAction,
-    Assert,
-    AssertNever,
-    FormatTimeInterval,
-    ItemLock,
-    LockAssetDefinition,
-    MessageSubstitute,
-    type AppearanceActionData,
-    type Asset,
+	AppearanceAction,
+	Assert,
+	AssertNever,
+	FormatTimeInterval,
+	ItemLock,
+	LockAssetDefinition,
+	MessageSubstitute,
+	type AppearanceActionData,
+	type Asset,
 } from 'pandora-common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
 import React, { ReactElement, useCallback, useEffect, useId, useMemo, useState } from 'react';

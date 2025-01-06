@@ -1,6 +1,14 @@
 import { clamp, first, noop } from 'lodash';
-import { AssertNever, AssetFrameworkOutfit, AssetFrameworkOutfitSchema, CloneDeepMutable, EMPTY_ARRAY, ItemTemplate, LIMIT_OUTFIT_NAME_LENGTH } from 'pandora-common';
-import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import {
+	AssertNever,
+	AssetFrameworkOutfit,
+	AssetFrameworkOutfitSchema,
+	CloneDeepMutable,
+	EMPTY_ARRAY,
+	EvalItemPath,
+	ItemTemplate,
+	LIMIT_OUTFIT_NAME_LENGTH,
+} from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager';

@@ -8,6 +8,7 @@ import {
 	AssetFrameworkGlobalState,
 	GetLogger,
 	IClientShardResult,
+	RedactSensitiveActionData,
 	type AppearanceActionData,
 	type AppearanceActionProblem,
 	type AppearanceActionProcessingResult,
@@ -17,7 +18,6 @@ import {
 	type Nullable,
 	type PermissionGroup,
 } from 'pandora-common';
-import { RedactSensitiveActionData } from 'pandora-common/src/gameLogic/actionLogic/actionUtils';
 import React, { createContext, useCallback, useContext, useMemo, type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import { RenderAppearanceActionProblem } from '../../assets/appearanceValidation';

@@ -1,7 +1,6 @@
 import { omit } from 'lodash';
 import { nanoid } from 'nanoid';
-import { AppearanceAction, ItemId, ItemRoomDevice } from 'pandora-common';
-import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import { AppearanceAction, EvalItemPath, ItemId, ItemRoomDevice } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';

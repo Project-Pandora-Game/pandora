@@ -255,6 +255,8 @@ export function GraphicsLayer({
 export function useItemColorString(items: AppearanceItems, item: Item | null, colorizationKey?: string | null): HexColorString | undefined {
 	if (item == null || colorizationKey == null) {
 		return undefined;
+	} else if (item.isType('bodypart')) {
+		return item.resolveColor(items, colorizationKey);
 	} else if (item.isType('personal')) {
 		return item.resolveColor(items, colorizationKey);
 	} else if (item.isType('roomDevice')) {
@@ -289,6 +291,8 @@ export function useItemColorRibbon(items: AppearanceItems, item: Item | null): H
 
 	if (item == null) {
 		color = undefined;
+	} else if (item.isType('bodypart')) {
+		color = item.getColorRibbon(items);
 	} else if (item.isType('personal')) {
 		color = item.getColorRibbon(items);
 	} else if (item.isType('roomDevice')) {

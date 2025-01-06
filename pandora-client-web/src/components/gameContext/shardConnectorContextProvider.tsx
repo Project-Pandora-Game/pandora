@@ -15,6 +15,7 @@ import { NotificationSource, useNotification } from '../../services/notification
 import { useService } from '../../services/serviceProvider';
 import { useDebugContext } from '../error/debugContextProvider';
 import { useDirectoryConnector } from './directoryConnectorContextProvider';
+import { useGameStateOptional } from './gameStateContextProvider';
 
 export function ShardConnectorContextProvider(): null {
 	const directoryConnector = useDirectoryConnector();
@@ -92,13 +93,13 @@ export function useShardChangeListener(
 	}, [shardConnector, event, callbackRef, runImmediate]);
 }
 
-export function useAppearanceActionEvent(action: AppearanceAction, handler: (result: IClientShardNormalResult['appearanceAction'] | null) => void = () => { /** ignore */ }) {
-	const shardConnector = useShardConnector();
+export function useAppearanceActionEvent(action: AppearanceAction, handler: (result: IClientShardNormalResult['gameLogicAction'] | null) => void = () => { /** ignore */ }) {
+	const gameState = useGameStateOptional();
 	return useAsyncEvent(async () => {
-		if (!shardConnector) {
+		if (!gameState) {
 			return null;
 		}
-		return await shardConnector.awaitResponse('appearanceAction', action);
+		return await gameState.doImmediateAction(action);
 	}, handler);
 }
 

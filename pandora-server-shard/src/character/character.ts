@@ -514,6 +514,7 @@ export class Character {
 
 	public getAppearanceActionContext(): AppearanceActionContext {
 		return {
+			executionContext: 'act',
 			player: this.gameLogicCharacter,
 			spaceContext: this.getOrLoadSpace().getActionSpaceContext(),
 			getCharacter: (id) => {

@@ -26,20 +26,37 @@ export class AssetManagerEditor extends AssetManagerClient {
 		Assert(!currentManager.getAssetById(id));
 		Assert(!bodypart || currentManager.bodyparts.some((b) => b.name === bodypart));
 
-		const definition: AssetDefinition<'personal'> = {
-			type: 'personal',
-			id,
-			name,
-			size: bodypart ? 'bodypart' : 'medium',
-			bodypart: bodypart ? bodypart : undefined,
-			colorization: {
-				base: {
-					name: 'Color group',
-					default: '#FFFFFF',
+		let definition: AssetDefinition<'bodypart'> | AssetDefinition<'personal'>;
+		if (bodypart) {
+			definition = {
+				type: 'bodypart',
+				id,
+				name,
+				size: 'bodypart',
+				bodypart,
+				colorization: {
+					base: {
+						name: 'Color group',
+						default: '#FFFFFF',
+					},
 				},
-			},
-			hasGraphics: false,
-		};
+				hasGraphics: false,
+			};
+		} else {
+			definition = {
+				type: 'personal',
+				id,
+				name,
+				size: 'medium',
+				colorization: {
+					base: {
+						name: 'Color group',
+						default: '#FFFFFF',
+					},
+				},
+				hasGraphics: false,
+			};
+		}
 
 		EditorAssetManager.loadAssetManager(currentManager.definitionsHash, {
 			...currentManager.rawData,

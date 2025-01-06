@@ -9,6 +9,7 @@ import {
 	LockAssetDefinition,
 	MessageSubstitute,
 	type AppearanceActionData,
+	type Asset,
 } from 'pandora-common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
 import React, { ReactElement, useCallback, useEffect, useId, useMemo, useState } from 'react';
@@ -22,6 +23,7 @@ import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { Column, Row } from '../../common/container/container';
 import { WardrobeItemName } from '../itemDetail/wardrobeItemName';
+import type { WardrobeExecuteCheckedResult } from '../wardrobeActionContext';
 import { WardrobeActionButton } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
@@ -37,8 +39,8 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeMo
 		return (
 			<Column padding='medium'>
 				<Row padding='medium' wrap>
-					<button className={ classNames('wardrobeActionButton', 'allowed') } onClick={ onFocus } >
-						<img width='21' height='33' src={ emptyLock } />
+					<button className={ classNames('wardrobeActionButton', 'IconButton', 'allowed') } onClick={ onFocus } >
+						<img src={ emptyLock } />
 					</button>
 					<Row padding='medium' alignY='center'>
 						No lock
@@ -125,8 +127,8 @@ export function WardrobeModuleTemplateConfigLockSlot({ template, onTemplateChang
 		return (
 			<Column padding='medium'>
 				<Row padding='medium' wrap>
-					<button className='wardrobeActionButton' disabled>
-						<img width='21' height='33' src={ emptyLock } />
+					<button className='wardrobeActionButton IconButton' disabled>
+						<img src={ emptyLock } />
 					</button>
 					<Row padding='medium' alignY='center'>
 						No lock
@@ -192,6 +194,9 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 	const [showInvalidWarning, setShowInvalidWarning] = useState(false);
 	const [clearLastPassword, setClearLastPassword] = useState(false);
 
+	// Attempted action for locking or unlocking the lock
+	const [currentAttempt, setCurrentAttempt] = useState<WardrobeExecuteCheckedResult['currentAttempt']>(null);
+
 	return (
 		<>
 			{ lockedText }
@@ -204,6 +209,7 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 						</Row>
 						<PasswordInput
 							item={ item }
+							asset={ lock.asset }
 							moduleName={ moduleName }
 							password={ lock.asset.definition.password }
 							showInvalidWarning={ showInvalidWarning }
@@ -212,6 +218,7 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 								if (allow)
 									setPassword(value);
 							} }
+							pendingAttempt={ currentAttempt != null }
 						/>
 					</Column>
 				) : null
@@ -228,11 +235,13 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 						moduleType: 'lockSlot',
 						lockAction: {
 							action: 'unlock',
-							password,
+							password: currentAttempt != null ? undefined : password,
 							clearLastPassword,
 						},
 					},
-				} }>
+				} }
+				onCurrentAttempt={ setCurrentAttempt }
+			>
 				Unlock
 			</WardrobeActionButton>
 		</>
@@ -244,6 +253,9 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 	const [password, setPassword] = useState<string | undefined>(undefined);
 	const [useOldPassword, setUseOldPassword] = useState(false);
 	const [allowExecute, setAllowExecute] = useState(lock.asset.definition.password == null);
+
+	// Attempted action for locking or unlocking the lock
+	const [currentAttempt, setCurrentAttempt] = useState<WardrobeExecuteCheckedResult['currentAttempt']>(null);
 
 	useEffect(() => {
 		if (!lock.hasPassword)
@@ -266,6 +278,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 						<PasswordInput
 							item={ item }
 							moduleName={ moduleName }
+							asset={ lock.asset }
 							password={ lock.asset.definition.password }
 							disabled={ useOldPassword && lock.hasPassword }
 							setAllowExecute={ (allow, value) => {
@@ -273,12 +286,13 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 								if (allow)
 									setPassword(value);
 							} }
+							pendingAttempt={ currentAttempt != null }
 						/>
 					</Column>
 				) : null
 			}
 			<WardrobeActionButton
-				disabled={ !allowExecute && !useOldPassword }
+				disabled={ !allowExecute && !useOldPassword && currentAttempt == null }
 				action={ {
 					type: 'moduleAction',
 					target: targetSelector,
@@ -288,10 +302,14 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 						moduleType: 'lockSlot',
 						lockAction: {
 							action: 'lock',
-							password: useOldPassword ? undefined : password,
+							password: currentAttempt != null ? undefined :
+								useOldPassword ? undefined :
+								password,
 						},
 					},
-				} }>
+				} }
+				onCurrentAttempt={ setCurrentAttempt }
+			>
 				Lock
 			</WardrobeActionButton>
 		</>
@@ -301,16 +319,19 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 function PasswordInput({
 	item,
 	moduleName,
+	asset,
 	password,
+	pendingAttempt = false,
 	showInvalidWarning,
 	setAllowExecute,
 	disabled,
 }: Pick<WardrobeModuleProps<ItemModuleLockSlot>, 'item' | 'moduleName'> & {
+	asset: Asset<'lock'>;
 	password: Immutable<NonNullable<LockAssetDefinition['password']>>;
+	pendingAttempt?: boolean;
 	showInvalidWarning?: boolean;
 	setAllowExecute?: (...args: [false, null] | [true, string]) => void;
 	disabled?: boolean;
-
 }) {
 	const { targetSelector } = useWardrobeContext();
 	const [min, max] = typeof password.length === 'number' ? [password.length, password.length] : password.length;
@@ -391,32 +412,13 @@ function PasswordInput({
 		if (setAllowExecute == null)
 			return;
 
-		if (value.length < min || value.length > max) {
-			setAllowExecute(false, null);
-			return;
-		}
-		let allow = true;
-		switch (password.format) {
-			case 'numeric':
-				allow = /^[0-9]+$/.test(value);
-				break;
-			case 'letters':
-				allow = /^[a-zA-Z]+$/.test(value);
-				break;
-			case 'alphanumeric':
-				allow = /^[a-zA-Z0-9]+$/.test(value);
-				break;
-			case 'text':
-				break;
-			default:
-				AssertNever(password.format);
-		}
+		const allow = ItemLock.validatePassword(asset, value);
 		if (!allow) {
 			setAllowExecute(false, null);
 		} else {
 			setAllowExecute(true, value);
 		}
-	}, [value, min, max, password.format, setAllowExecute]);
+	}, [value, asset, setAllowExecute]);
 
 	return (
 		<>
@@ -424,19 +426,19 @@ function PasswordInput({
 				<label htmlFor={ id }>
 					Password
 				</label>
-				<WardrobeActionButton action={ showPasswordAction } onExecute={ onPasswordShown }>
+				<WardrobeActionButton action={ showPasswordAction } onExecute={ onPasswordShown } disabled={ pendingAttempt }>
 					Show
 				</WardrobeActionButton>
 				<TextInput
 					id={ id }
-					value={ value }
+					value={ pendingAttempt ? '\u2022'.repeat(Math.min(max, 16)) : value }
 					maxLength={ max }
 					onChange={ onInput }
-					disabled={ disabled }
+					disabled={ disabled || pendingAttempt }
 				/>
 			</Row>
 			{
-				error ? (
+				(error && !pendingAttempt) ? (
 					<Row className='WardrobeInputRow'>
 						<span className='error'>{ error }</span>
 					</Row>

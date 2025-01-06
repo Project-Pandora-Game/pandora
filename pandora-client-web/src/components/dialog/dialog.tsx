@@ -133,7 +133,7 @@ export function ModalDialog({ children, priority, position = 'center', contentOv
 	);
 }
 
-export function DraggableDialog({ children, className, title, modal = false, rawContent, close, hiddenClose, allowShade = false, initialPosition }: {
+export function DraggableDialog({ children, className, title, modal = false, rawContent, close, hiddenClose, allowShade = false, highlight = false, initialPosition }: {
 	children?: ReactNode;
 	className?: string;
 	title: string;
@@ -150,6 +150,11 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 	 * @default false
 	 */
 	allowShade?: boolean;
+	/**
+	 * Whether the dialog should be highlighted.
+	 * @default false
+	 */
+	highlight?: boolean;
 	initialPosition?: Readonly<PointLike>;
 }): ReactElement {
 	useEffect(() => {
@@ -187,6 +192,7 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 					className={ classNames(
 						'dialog-draggable',
 						shaded ? 'shaded' : null,
+						highlight ? 'dialogHighlight' : null,
 						className,
 					) }
 					dragHandleClassName='drag-handle'

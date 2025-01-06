@@ -369,14 +369,14 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							</p>
 							<p>
 								You can also click the circles:<br />
-								Clicking the circle with blue up/down arrow resets your "flying",
+								Clicking the circle with blue up/down arrow resets your elevation,
 								while clicking the circle with red/green arrows exits the move mode.
 							</p>
 							<p>
 								In the middle of the character there is also third button that allows you to quickly switch to character posing mode.
 							</p>
 							<p>
-								Feel free to experiment with moving your character and then click next.
+								Feel free to experiment with movingyour character and then click next.
 							</p>
 						</>
 					),

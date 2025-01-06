@@ -1,12 +1,12 @@
+import type { Immutable } from 'immer';
+import type { ItemInteractionType } from '../../character/restrictionTypes';
+import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions';
+import type { InteractionId } from '../../gameLogic/interactions';
+import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { Asset } from '../asset';
 import type { ConditionOperator } from '../graphics';
-import type { ItemInteractionType } from '../../character/restrictionTypes';
-import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item';
-import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { IAssetModuleTypes, ModuleType } from '../modules';
-import type { Immutable } from 'immer';
-import type { InteractionId } from '../../gameLogic/interactions';
 
 type StaticConfigDataHelper<TStaticData> = TStaticData extends undefined ? {
 	staticConfig?: TStaticData;
@@ -38,7 +38,7 @@ export interface IModuleActionCommon<Type extends ModuleType> {
 
 export interface IAssetModuleDefinition<Type extends ModuleType> {
 	makeDefaultData<TProperties, TStaticData>(config: Immutable<IAssetModuleTypes<TProperties, TStaticData>[Type]['config']>): IAssetModuleTypes<TProperties, TStaticData>[Type]['data'];
-	makeDataFromTemplate<TProperties, TStaticData>(config: Immutable<IAssetModuleTypes<TProperties, TStaticData>[Type]['config']>, template: IAssetModuleTypes<TProperties, TStaticData>[Type]['template'], context: IItemCreationContext): IAssetModuleTypes<TProperties, TStaticData>[Type]['data'] | undefined;
+	makeDataFromTemplate<TProperties, TStaticData>(config: Immutable<IAssetModuleTypes<TProperties, TStaticData>[Type]['config']>, template: Immutable<IAssetModuleTypes<TProperties, TStaticData>[Type]['template']>, context: IItemCreationContext): IAssetModuleTypes<TProperties, TStaticData>[Type]['data'] | undefined;
 	loadModule<TProperties, TStaticData>(config: Immutable<IAssetModuleTypes<TProperties, TStaticData>[Type]['config']>, data: IAssetModuleTypes<TProperties, TStaticData>[Type]['data'], context: IItemLoadContext): IItemModule<TProperties, TStaticData, Type>;
 	getStaticAttributes<TProperties, TStaticData>(config: Immutable<IAssetModuleTypes<TProperties, TStaticData>[Type]['config']>, staticAttributesExtractor: (properties: Immutable<TProperties>) => ReadonlySet<string>): ReadonlySet<string>;
 }

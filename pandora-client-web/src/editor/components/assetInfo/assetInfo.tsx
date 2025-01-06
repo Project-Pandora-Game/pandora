@@ -31,7 +31,7 @@ export function AssetInfoUI(): ReactElement {
 function AssetInfoUIImpl({ graphics }: { graphics: EditorAssetGraphics; }): ReactElement | null {
 	const asset = useGraphicsAsset(graphics);
 
-	if (!asset.isType('personal'))
+	if (!asset.isType('bodypart') && !asset.isType('personal'))
 		return null;
 
 	const definition = asset.definition;
@@ -47,10 +47,14 @@ function AssetInfoUIImpl({ graphics }: { graphics: EditorAssetGraphics; }): Reac
 				<label htmlFor='name'>Name: </label>
 				<input id='name' type='text' value={ definition.name } readOnly />
 			</Row>
-			<Row alignY='center'>
-				<label htmlFor='bodypart'>Body part: </label>
-				<input id='bodypart' type='text' value={ definition.bodypart } readOnly />
-			</Row>
+			{
+				asset.isType('bodypart') ? (
+					<Row alignY='center'>
+						<label htmlFor='bodypart'>Body part: </label>
+						<input id='bodypart' type='text' value={ asset.definition.bodypart } readOnly />
+					</Row>
+				) : null
+			}
 			<Row alignY='center'>
 				<label htmlFor='graphics'>Has graphics: </label>
 				<input id='graphics' type='checkbox' checked={ definition.hasGraphics } disabled />
@@ -62,7 +66,7 @@ function AssetInfoUIImpl({ graphics }: { graphics: EditorAssetGraphics; }): Reac
 	);
 }
 
-function Colorization({ colorization }: { colorization: Immutable<AssetDefinition<'personal'>['colorization']>; }): ReactElement | null {
+function Colorization({ colorization }: { colorization: Immutable<AssetDefinition<'bodypart' | 'personal'>['colorization']>; }): ReactElement | null {
 	if (!colorization) {
 		return null;
 	}
@@ -80,7 +84,7 @@ function Colorization({ colorization }: { colorization: Immutable<AssetDefinitio
 	);
 }
 
-function Effects({ effects, id = '' }: { effects: AssetDefinition<'personal'>['effects']; id?: string; }): ReactElement {
+function Effects({ effects, id = '' }: { effects: AssetDefinition<'bodypart' | 'personal'>['effects']; id?: string; }): ReactElement {
 	const allEffects: EffectsDefinition = { ...EFFECTS_DEFAULT, ...effects };
 	id += 'effect';
 
@@ -102,7 +106,7 @@ function Effects({ effects, id = '' }: { effects: AssetDefinition<'personal'>['e
 	);
 }
 
-function Modules({ modules }: { modules: Immutable<AssetDefinition<'personal'>>['modules']; }): ReactElement | null {
+function Modules({ modules }: { modules: Immutable<AssetDefinition<'bodypart' | 'personal'>>['modules']; }): ReactElement | null {
 	if (!modules) {
 		return null;
 	}

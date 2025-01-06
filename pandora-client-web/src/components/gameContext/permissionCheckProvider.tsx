@@ -201,7 +201,7 @@ export function useCheckAddPermissions(result: AppearanceActionProcessingResult 
 			return null;
 
 		if (permissionProblems.length > 0) {
-			return result.addAdditionalProblems(permissionProblems);
+			return result.addAdditionalProblems(...permissionProblems);
 		}
 
 		return result;

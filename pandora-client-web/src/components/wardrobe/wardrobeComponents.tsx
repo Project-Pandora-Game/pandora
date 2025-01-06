@@ -1,21 +1,23 @@
 import classNames from 'classnames';
-import _ from 'lodash';
+import type { Immutable } from 'immer';
+import _, { clamp } from 'lodash';
 import { nanoid } from 'nanoid';
 import {
 	AppearanceAction,
 	AppearanceActionProblem,
 	AppearanceActionProcessingResult,
-	AppearanceActionRandomize,
 	AssertNever,
 	Asset,
-	EMPTY_ARRAY,
+	FormatTimeInterval,
 	IsNotNullable,
 	type AppearanceActionData,
+	type CharacterActionAttempt,
+	type GameLogicActionSlowdownReason,
 	type HexColorString,
 } from 'pandora-common';
 import React, { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
 import { z } from 'zod';
-import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem } from '../../assets/appearanceValidation';
+import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem, RenderAppearanceActionSlowdown } from '../../assets/appearanceValidation';
 import { useAssetManager } from '../../assets/assetManager';
 import { useGraphicsUrl } from '../../assets/graphicsManager';
 import { BrowserStorage } from '../../browserStorage';
@@ -27,9 +29,39 @@ import { useAccountSettings } from '../../services/accountLogic/accountManagerHo
 import { Button, ButtonProps, IconButton } from '../common/button/button';
 import { Column } from '../common/container/container';
 import { HoverElement } from '../hoverElement/hoverElement';
-import { useWardrobeExecuteChecked } from './wardrobeActionContext';
+import { useWardrobeExecuteChecked, type WardrobeExecuteCheckedResult } from './wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
 import { useWardrobeContext } from './wardrobeContext';
+
+export function ActionSlowdownContent({ slowdownReasons, slowdownTime }: { slowdownReasons: ReadonlySet<GameLogicActionSlowdownReason>; slowdownTime: number; }): ReactElement {
+	const reasons = useMemo(() => (
+		_.uniq(
+			Array.from(slowdownReasons)
+				.map((reason) => RenderAppearanceActionSlowdown(reason))
+				.filter(Boolean),
+		)
+	), [slowdownReasons]);
+
+	return (
+		<>
+			This action will start a usage attempt that will take at least { FormatTimeInterval(slowdownTime, 'two-most-significant') } before
+			you can decide when it is successful or stopped.
+			{
+				reasons.length > 0 ? (
+					<>
+						<br />
+						This will happen because:
+						<ul>
+							{
+								reasons.map((reason, i) => (<li key={ i }>{ reason }</li>))
+							}
+						</ul>
+					</>
+				) : null
+			}
+		</>
+	);
+}
 
 export function ActionWarningContent({ problems, prompt }: { problems: readonly AppearanceActionProblem[]; prompt: boolean; }): ReactElement {
 	const { wardrobeItemDisplayNameType } = useAccountSettings();
@@ -67,15 +99,149 @@ export function ActionWarningContent({ problems, prompt }: { problems: readonly 
 	);
 }
 
-export function ActionWarning({ problems, prompt, parent }: { problems: readonly AppearanceActionProblem[]; prompt: boolean; parent: HTMLElement | null; }) {
-	if (problems.length === 0) {
+export function ActionWarning({ checkResult, parent, actionInProgress }: {
+	checkResult: AppearanceActionProcessingResult;
+	actionInProgress: boolean;
+	parent: HTMLElement | null;
+}) {
+	const slowdown = checkResult.getActionSlowdownTime();
+	if (checkResult.valid && slowdown === 0 && !actionInProgress) {
 		return null;
 	}
 
 	return (
 		<HoverElement parent={ parent } className='action-warning display-linebreak'>
-			<ActionWarningContent problems={ problems } prompt={ prompt } />
+			<Column>
+				{
+					actionInProgress ? (
+						<strong>You are currently attempting this action.</strong>
+					) : null
+				}
+				{
+					!checkResult.valid ? (
+						<div>
+							<ActionWarningContent problems={ checkResult.problems } prompt={ checkResult.prompt != null } />
+						</div>
+					) : null
+				}
+				{
+					slowdown > 0 ? (
+						<div>
+							<ActionSlowdownContent slowdownReasons={ checkResult.actionSlowdownReasons } slowdownTime={ slowdown } />
+						</div>
+					) : null
+				}
+			</Column>
 		</HoverElement>
+	);
+}
+
+export function WardrobeActionButtonElement({
+	Element = 'button',
+	id,
+	className,
+	children,
+	disabled = false,
+	check,
+	actionData,
+	currentAttempt,
+	showActionBlockedExplanation = true,
+	hide = false,
+	hideReserveSpace = false,
+	onClick,
+	onHoverChange,
+}: CommonProps & {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	Element?: 'button' | 'div';
+	disabled?: boolean;
+
+	check: AppearanceActionProcessingResult | null;
+	actionData?: Immutable<AppearanceAction>;
+	currentAttempt?: Immutable<CharacterActionAttempt> | null;
+	showActionBlockedExplanation?: boolean;
+	hide?: boolean;
+	/** Makes the button hide if it should in a way, that occupied space is preserved */
+	hideReserveSpace?: boolean;
+
+	onClick?: () => void;
+	onHoverChange?: (isHovering: boolean) => void;
+}): ReactElement {
+	const [ref, setRef] = useState<HTMLElement | null>(null);
+
+	// Handle visual "cooldown" effect while attempting action that has slowdown
+	useEffect(() => {
+		if (!ref || currentAttempt == null)
+			return;
+
+		let run = true;
+		let frameRequest: number | undefined;
+
+		const update = () => {
+			frameRequest = undefined;
+			if (!run)
+				return;
+
+			const now = Date.now();
+
+			if (now >= currentAttempt.finishAfter) {
+				ref.style.removeProperty('--progress');
+				ref.classList.remove('pendingAttempt');
+				return;
+			}
+
+			ref.classList.add('pendingAttempt');
+			const done = now - currentAttempt.start;
+			const progress = clamp(done / (currentAttempt.finishAfter - currentAttempt.start), 0, 1);
+			ref.style.setProperty('--progress', `${Math.floor(progress * 100)}%`);
+
+			frameRequest = requestAnimationFrame(update);
+		};
+
+		update();
+
+		return () => {
+			run = false;
+			if (frameRequest !== undefined) {
+				cancelAnimationFrame(frameRequest);
+				frameRequest = undefined;
+			}
+			ref.style.removeProperty('--progress');
+			ref.classList.remove('pendingAttempt');
+		};
+	}, [ref, currentAttempt]);
+
+	return (
+		<Element
+			id={ id }
+			ref={ setRef }
+			tabIndex={ 0 }
+			className={ classNames(
+				'wardrobeActionButton',
+				className,
+				CheckResultToClassName(check, currentAttempt != null),
+				hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null,
+			) }
+			onClick={ (ev) => {
+				ev.stopPropagation();
+				onClick?.();
+			} }
+			onMouseEnter={ () => {
+				onHoverChange?.(true);
+			} }
+			onMouseLeave={ () => {
+				onHoverChange?.(false);
+			} }
+			disabled={ disabled }
+			data-action={ (USER_DEBUG && actionData != null) ? JSON.stringify(actionData, undefined, '\t') : undefined }
+			data-action-localproblems={ (USER_DEBUG && check != null) ? (JSON.stringify(check.valid ? null : check.problems, undefined, '\t')) : undefined }
+		>
+			{
+				showActionBlockedExplanation && check != null ? (
+					<ActionWarning checkResult={ check } actionInProgress={ currentAttempt != null } parent={ ref } />
+				) : null
+			}
+			{ children }
+		</Element>
 	);
 }
 
@@ -88,8 +254,10 @@ export function WardrobeActionButton({
 	autohide = false,
 	hideReserveSpace = false,
 	showActionBlockedExplanation = true,
+	allowPreview = true,
 	onExecute,
 	onFailure,
+	onCurrentAttempt,
 	disabled = false,
 }: CommonProps & {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -100,25 +268,32 @@ export function WardrobeActionButton({
 	/** Makes the button hide if it should in a way, that occupied space is preserved */
 	hideReserveSpace?: boolean;
 	showActionBlockedExplanation?: boolean;
+	/**
+	 * Whether to show preview on hover (if settings allows that)
+	 * @default true
+	 */
+	allowPreview?: boolean;
 	onExecute?: (data: readonly AppearanceActionData[]) => void;
 	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
+	onCurrentAttempt?: (currentAttempt: WardrobeExecuteCheckedResult['currentAttempt']) => void;
 	disabled?: boolean;
 }): ReactElement {
 	const { actionPreviewState, showHoverPreview } = useWardrobeContext();
-	const [ref, setRef] = useState<HTMLElement | null>(null);
 	const [isHovering, setIsHovering] = useState(false);
 
 	const check = useStaggeredAppearanceActionResult(action);
-	const hide = check != null && autohide && check.problems.some(AppearanceActionProblemShouldHide);
-	const [execute, processing] = useWardrobeExecuteChecked(action, check, {
+	const hide = check != null && !check.valid && autohide && check.problems.some(AppearanceActionProblemShouldHide);
+	const { execute, processing, currentAttempt } = useWardrobeExecuteChecked(action, check, {
 		onSuccess: onExecute,
 		onFailure,
 	});
 
-	const finalProblems: readonly AppearanceActionProblem[] = check?.problems ?? EMPTY_ARRAY;
+	useEffect(() => {
+		onCurrentAttempt?.(currentAttempt);
+	}, [onCurrentAttempt, currentAttempt]);
 
 	useEffect(() => {
-		if (!isHovering || !showHoverPreview || check == null || !check.valid || finalProblems.length > 0)
+		if (!isHovering || !showHoverPreview || !allowPreview || check == null || !check.valid)
 			return;
 
 		const previewState = check.resultState;
@@ -130,48 +305,98 @@ export function WardrobeActionButton({
 				actionPreviewState.value = null;
 			}
 		};
-	}, [isHovering, showHoverPreview, actionPreviewState, check, finalProblems]);
+	}, [isHovering, showHoverPreview, allowPreview, actionPreviewState, check]);
 
 	return (
-		<Element
+		<WardrobeActionButtonElement
+			Element={ Element }
 			id={ id }
-			ref={ setRef }
-			tabIndex={ 0 }
-			className={ classNames(
-				'wardrobeActionButton',
-				className,
-				CheckResultToClassName(check),
-				hide ? (hideReserveSpace ? 'invisible' : 'hidden') : null,
-			) }
-			onClick={ (ev) => {
-				ev.stopPropagation();
-				execute();
-			} }
-			onMouseEnter={ () => {
-				setIsHovering(true);
-			} }
-			onMouseLeave={ () => {
-				setIsHovering(false);
-			} }
+			className={ className }
 			disabled={ processing || disabled }
-			data-action={ USER_DEBUG ? JSON.stringify(action, undefined, '\t') : undefined }
-			data-action-localproblems={ (USER_DEBUG && check != null) ? JSON.stringify(check.problems, undefined, '\t') : undefined }
+			check={ check }
+			showActionBlockedExplanation={ showActionBlockedExplanation }
+			actionData={ action }
+			currentAttempt={ currentAttempt }
+			hide={ hide }
+			hideReserveSpace={ hideReserveSpace }
+			onClick={ execute }
+			onHoverChange={ setIsHovering }
 		>
-			{
-				showActionBlockedExplanation && check != null ? (
-					<ActionWarning problems={ finalProblems } prompt={ !check.valid && check.prompt != null } parent={ ref } />
-				) : null
-			}
 			{ children }
-		</Element>
+		</WardrobeActionButtonElement>
 	);
 }
 
-export function CheckResultToClassName(result: AppearanceActionProcessingResult | null): string {
-	if (result == null)
+/**
+ * A button for triggering an game logic action.
+ * Similar to wardrobe action button, but can be used outside of wardrobe.
+ */
+export function GameLogicActionButton({
+	id,
+	className,
+	children,
+	action,
+	autohide = false,
+	hideReserveSpace = false,
+	showActionBlockedExplanation = true,
+	onExecute,
+	onFailure,
+	disabled = false,
+}: CommonProps & {
+	action: AppearanceAction;
+	/** If the button should hide on certain invalid states */
+	autohide?: boolean;
+	/** Makes the button hide if it should in a way, that occupied space is preserved */
+	hideReserveSpace?: boolean;
+	showActionBlockedExplanation?: boolean;
+	onExecute?: (data: readonly AppearanceActionData[]) => void;
+	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
+	disabled?: boolean;
+}): ReactElement {
+	const check = useStaggeredAppearanceActionResult(action);
+	const hide = check != null && !check.valid && autohide && check.problems.some(AppearanceActionProblemShouldHide);
+	const { execute, processing, currentAttempt } = useWardrobeExecuteChecked(action, check, {
+		onSuccess: onExecute,
+		onFailure,
+	});
+
+	return (
+		<WardrobeActionButtonElement
+			id={ id }
+			className={ className }
+			disabled={ processing || disabled }
+			check={ check }
+			showActionBlockedExplanation={ showActionBlockedExplanation }
+			actionData={ action }
+			currentAttempt={ currentAttempt }
+			hide={ hide }
+			hideReserveSpace={ hideReserveSpace }
+			onClick={ execute }
+		>
+			{ children }
+		</WardrobeActionButtonElement>
+	);
+}
+
+export function CheckResultToClassName(result: AppearanceActionProcessingResult | null, isCurrentlyAttempting: boolean): string {
+	if (result == null) {
+		// Short-circuit check if currently attempting this action - to look nicer
+		if (isCurrentlyAttempting)
+			return 'allowed';
+
 		return 'pending';
-	if (result.valid)
+	}
+
+	if (result.valid) {
+		if (isCurrentlyAttempting)
+			return 'allowed';
+
+		if (result.getActionSlowdownTime() > 0)
+			return 'requiresAttempt';
+
 		return 'allowed';
+	}
+
 	if (result.prompt != null)
 		return 'promptRequired';
 
@@ -184,7 +409,7 @@ export const WardrobeActionRandomizeUpdateInterval = BrowserStorage.create('ward
 export function WardrobeActionRandomizeButton({
 	kind,
 }: {
-	kind: z.infer<typeof AppearanceActionRandomize>['kind'];
+	kind: AppearanceAction<'randomize'>['kind'];
 }) {
 	const { showHoverPreview } = useWardrobeContext();
 	const [seed, newSeed] = useReducer(() => nanoid(), nanoid());

@@ -1,27 +1,31 @@
+import classNames from 'classnames';
 import {
+	EMPTY_ARRAY,
+	GetLogger,
 	ItemPath,
 	LIMIT_ITEM_DESCRIPTION_LENGTH,
 	LIMIT_ITEM_NAME_LENGTH,
 	LIMIT_ITEM_NAME_PATTERN,
+	SplitContainerPath,
 	type AppearanceAction,
 	type Item,
 } from 'pandora-common';
-import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
-import React, { ReactElement, useCallback, useEffect, useRef } from 'react';
+import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
-import deleteIcon from '../../../assets/icons/delete.svg';
 import crossIcon from '../../../assets/icons/cross.svg';
-import { useEvent } from '../../../common/useEvent';
+import deleteIcon from '../../../assets/icons/delete.svg';
+import strugglingAllow from '../../../assets/icons/struggling_allow.svg';
+import strugglingDeny from '../../../assets/icons/struggling_deny.svg';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 import { Button, IconButton } from '../../common/button/button';
 import { Column, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { FormCreateStringValidator } from '../../common/form/form';
+import { useConfirmDialog } from '../../dialog/dialog';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
-import { useWardrobeExecuteCallback } from '../wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { ActionWarningContent, WardrobeActionButton } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
@@ -146,6 +150,11 @@ export function WardrobeItemConfigMenu({
 				</Row>
 				{
 					(wornItem.isType('personal') || wornItem.isType('roomDevice')) ? (
+						<WardrobeItemRequireFreeHandsCustomize wornItem={ wornItem } item={ item } />
+					) : null
+				}
+				{
+					(wornItem.isType('bodypart') || wornItem.isType('personal') || wornItem.isType('roomDevice')) ? (
 						<WardrobeItemColorization wornItem={ wornItem } item={ item } />
 					) : null
 				}
@@ -182,6 +191,60 @@ export function WardrobeItemConfigMenu({
 	);
 }
 
+function WardrobeItemRequireFreeHandsCustomize({ wornItem, item }: { wornItem: Item<'personal' | 'roomDevice'>; item: ItemPath; }): ReactElement {
+	const { targetSelector } = useWardrobeContext();
+
+	const actionSetRequired = React.useMemo<AppearanceAction>(() => ({
+		type: 'customize',
+		target: targetSelector,
+		item,
+		requireFreeHandsToUse: true,
+	}), [targetSelector, item]);
+	const actionSetOptional = React.useMemo<AppearanceAction>(() => ({
+		type: 'customize',
+		target: targetSelector,
+		item,
+		requireFreeHandsToUse: false,
+	}), [targetSelector, item]);
+
+	return (
+		<FieldsetToggle legend='Bound usage'>
+			<Row alignY='center'>
+				<WardrobeActionButton
+					action={ actionSetRequired }
+					className={ classNames(
+						'IconButton',
+						wornItem.requireFreeHandsToUse ? 'selected' : '',
+					) }
+					showActionBlockedExplanation={ !wornItem.requireFreeHandsToUse }
+				>
+					<img
+						src={ strugglingDeny }
+						crossOrigin='anonymous'
+						alt='Require free hands to use this item'
+						title='Require free hands to use this item'
+					/>
+				</WardrobeActionButton>
+				<WardrobeActionButton
+					action={ actionSetOptional }
+					className={ classNames(
+						'IconButton',
+						!wornItem.requireFreeHandsToUse ? 'selected' : '',
+					) }
+					showActionBlockedExplanation={ wornItem.requireFreeHandsToUse }
+				>
+					<img
+						src={ strugglingAllow }
+						crossOrigin='anonymous'
+						alt='Allow using this item even with blocked hands'
+						title='Allow using this item even with blocked hands'
+					/>
+				</WardrobeActionButton>
+			</Row>
+		</FieldsetToggle>
+	);
+}
+
 function WardrobeItemNameAndDescription({ item, itemPath }: { item: Item; itemPath: ItemPath; }): ReactElement {
 	const [edit, setEdit] = React.useState(false);
 	const onStartEdit = React.useCallback(() => setEdit(true), []);
@@ -206,11 +269,11 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit }: { i
 		description: item.description ?? '',
 	}), [targetSelector, itemPath, item.name, item.description]);
 	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
-	const available = checkResult != null && checkResult.problems.length === 0;
+	const available = checkResult != null && checkResult.valid;
 
 	const onClick = useCallback(() => {
-		if (checkResult != null && !checkResult.valid && checkResult.prompt == null) {
-			toast(<ActionWarningContent problems={ checkResult.problems } prompt={ false } />, TOAST_OPTIONS_WARNING);
+		if (checkResult != null && (!checkResult.valid && checkResult.prompt == null || checkResult.getActionSlowdownTime() > 0)) {
+			toast(<ActionWarningContent problems={ !checkResult.valid ? checkResult.problems : EMPTY_ARRAY } prompt={ false } />, TOAST_OPTIONS_WARNING);
 			return;
 		}
 		onStartEdit();
@@ -240,8 +303,8 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit }: { i
 }
 
 function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { item: Item; itemPath: ItemPath; onEndEdit: () => void; }): ReactElement {
+	const confirm = useConfirmDialog();
 	const { targetSelector } = useWardrobeContext();
-	const [execute, processing] = useWardrobeExecuteCallback({ onSuccess: onEndEdit });
 	const [name, setName] = React.useState(item.name ?? '');
 	const [description, setDescription] = React.useState(item.description ?? '');
 
@@ -249,15 +312,31 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 		FormCreateStringValidator(z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN), 'name')(name)
 	), [name]);
 
-	const onSave = useEvent(() => {
-		execute({
-			type: 'customize',
-			target: targetSelector,
-			item: itemPath,
-			name: name.trim(),
-			description: description.trim(),
-		});
-	});
+	const cancelConfirm = useCallback(() => {
+		Promise.resolve()
+			.then(() => {
+				if (name !== (item.name ?? '') || description !== (item.description ?? '')) {
+					return confirm('Unsaved changes', <>Are you sure you want to discard your changes?</>);
+				}
+				return true;
+			})
+			.then((confirmed) => {
+				if (confirmed) {
+					onEndEdit();
+				}
+			})
+			.catch((err) => {
+				GetLogger('WardrobeItemNameAndDescriptionEdit').error('Error cancelling edit:', err);
+			});
+	}, [confirm, description, item.description, item.name, name, onEndEdit]);
+
+	const action = useMemo((): AppearanceAction => ({
+		type: 'customize',
+		target: targetSelector,
+		item: itemPath,
+		name: name.trim(),
+		description: description.trim(),
+	}), [description, itemPath, name, targetSelector]);
 
 	return (
 		<FieldsetToggle legend='Item'>
@@ -279,9 +358,15 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 				}
 				<label htmlFor='custom-description'>Description ({ description.length }/{ LIMIT_ITEM_DESCRIPTION_LENGTH } characters):</label>
 				<textarea id='custom-description' className='description' value={ description } rows={ 10 } onChange={ (e) => setDescription(e.target.value) } maxLength={ LIMIT_ITEM_DESCRIPTION_LENGTH } />
-				<Row>
-					<Button onClick={ onEndEdit } disabled={ processing }>Cancel</Button>
-					<Button onClick={ onSave } disabled={ processing || !!nameError }>Save</Button>
+				<Row alignX='space-between'>
+					<Button onClick={ cancelConfirm }>Cancel</Button>
+					<WardrobeActionButton
+						action={ action }
+						disabled={ !!nameError }
+						className='standardButtonSize'
+					>
+						Save
+					</WardrobeActionButton>
 				</Row>
 			</Column>
 		</FieldsetToggle>

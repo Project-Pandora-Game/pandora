@@ -225,7 +225,7 @@ export function useEditorLayerTint(layer: AssetGraphicsLayer): number {
 	if (override?.color !== undefined) {
 		return override.color;
 	}
-	if (asset.isType('personal')) {
+	if (asset.isType('bodypart') || asset.isType('personal')) {
 		const { colorization } = asset.definition;
 		if (colorization && colorizationKey) {
 			const value = colorization[colorizationKey];

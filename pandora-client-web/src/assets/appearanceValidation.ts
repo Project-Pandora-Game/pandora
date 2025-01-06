@@ -1,7 +1,7 @@
-import { AppearanceActionProblem, AssertNever, type AssetId, type ItemDisplayNameType } from 'pandora-common';
+import { AppearanceActionProblem, AssertNever, type AssetId, type GameLogicActionSlowdownReason, type ItemDisplayNameType } from 'pandora-common';
+import { ResolveItemDisplayNameType } from '../components/wardrobe/itemDetail/wardrobeItemName';
 import { DescribeAsset, DescribeAttribute } from '../ui/components/chat/chatMessages';
 import { AssetManagerClient } from './assetManager';
-import { ResolveItemDisplayNameType } from '../components/wardrobe/itemDetail/wardrobeItemName';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */
 export function AppearanceActionProblemShouldHide(result: AppearanceActionProblem): boolean {
@@ -75,6 +75,7 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 			case 'blockedModule': {
 				const asset = assetManager.getAssetById(e.asset);
 				const visibleModuleName: string =
+					(asset?.isType('bodypart') && asset.definition.modules?.[e.module]?.name) ||
 					(asset?.isType('personal') && asset.definition.modules?.[e.module]?.name) ||
 					(asset?.isType('roomDevice') && asset.definition.modules?.[e.module]?.name) ||
 					`[UNKNOWN MODULE '${e.module}']`;
@@ -146,6 +147,10 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `The action results in a generally invalid state.`;
 		}
 		AssertNever(e);
+	} else if (result.result === 'attemptRequired') {
+		return 'This action requires starting an attempt to perform it first.';
+	} else if (result.result === 'tooSoon') {
+		return 'This action cannot be performed yet. Try again later.';
 	} else if (result.result === 'failure') {
 		const f = result.failure;
 		if (f.type === 'moduleActionFailure') {
@@ -163,4 +168,13 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 		AssertNever(f.type);
 	}
 	AssertNever(result);
+}
+
+export function RenderAppearanceActionSlowdown(reason: GameLogicActionSlowdownReason): string {
+	switch (reason) {
+		case 'blockedHands':
+			return 'You need to be able to use hands to do this freely, but yours are bound.';
+	}
+
+	AssertNever(reason);
 }

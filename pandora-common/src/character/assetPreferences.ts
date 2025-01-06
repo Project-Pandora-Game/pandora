@@ -140,6 +140,7 @@ export function CleanupAssetPreferences(assetManager: AssetManager, {
 				delete assets[key];
 				hasInvalid = true;
 				continue;
+			case 'bodypart':
 			case 'personal':
 			case 'lock':
 				break;

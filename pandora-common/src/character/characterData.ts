@@ -11,9 +11,6 @@ import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesServerSchema } from './asset
 import { CharacterIdSchema } from './characterTypes';
 import { PronounKeySchema } from './pronouns';
 
-// Fix for pnpm resolution weirdness
-import type { } from '../assets/item/base';
-
 export const CharacterPublicSettingsSchema = z.object({
 	labelColor: HexColorStringSchema.catch('#ffffff'),
 	pronoun: PronounKeySchema.catch('she'),

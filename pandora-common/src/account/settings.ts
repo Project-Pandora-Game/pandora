@@ -49,6 +49,10 @@ export const AccountSettingsSchema = z.object({
 	 */
 	wardrobeItemDisplayNameType: ItemDisplayNameTypeSchema,
 	/**
+	 * Controls the bound usage default of newly created items
+	 */
+	wardrobeItemRequireFreeHandsToUseDefault: z.enum(['useAssetValue', 'true', 'false']),
+	/**
 	 * Accent color for the interface
 	 */
 	interfaceAccentColor: HexColorStringSchema,
@@ -108,6 +112,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	wardrobeSmallPreview: 'image',
 	wardrobeBigPreview: 'image',
 	wardrobeItemDisplayNameType: 'custom_with_original_in_brackets',
+	wardrobeItemRequireFreeHandsToUseDefault: 'useAssetValue',
 	interfaceAccentColor: '#3daee9',
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,

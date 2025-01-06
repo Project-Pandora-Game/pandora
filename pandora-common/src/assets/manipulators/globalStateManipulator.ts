@@ -1,4 +1,4 @@
-import { CharacterId } from '../../character';
+import type { CharacterId } from '../../character';
 import { AssertNever } from '../../utility/misc';
 import { AppearanceCharacterManipulator, AppearanceRootManipulator } from '../appearanceHelpers';
 import { ActionTargetSelector } from '../appearanceTypes';

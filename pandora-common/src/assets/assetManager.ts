@@ -1,14 +1,13 @@
 import { freeze, Immutable } from 'immer';
-import type { GameLogicCharacter } from '../gameLogic';
+import type { CharacterId } from '../character/characterTypes';
 import type { Logger } from '../logging';
 import { Assert, AssertNotNullable, CloneDeepMutable } from '../utility/misc';
 import { Asset } from './asset';
 import type { AssetId } from './base';
 import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetsDefinitionFile, AssetType, RoomBackgroundInfo, RoomBackgroundTagDefinition } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
-import { CreateItemBundleFromTemplate, Item, ItemBundle, ItemTemplate, LoadItemFromBundle, type ItemId } from './item';
+import { CreateItemBundleFromTemplate, Item, ItemBundle, ItemTemplate, LoadItemFromBundle, type IItemCreationContext, type ItemId } from './item';
 import type { AssetsPosePresets } from './state/characterStatePose';
-import type { CharacterId } from '../character/characterTypes';
 
 export class AssetManager {
 	protected readonly _assets: ReadonlyMap<AssetId, Asset>;
@@ -192,7 +191,7 @@ export class AssetManager {
 		});
 	}
 
-	public createItemFromTemplate(template: ItemTemplate, creator: GameLogicCharacter): Item | undefined {
+	public createItemFromTemplate(template: Immutable<ItemTemplate>, creator: IItemCreationContext['creator']): Item | undefined {
 		// Build a bundle from the template
 		const bundle: ItemBundle | undefined = CreateItemBundleFromTemplate(template, {
 			assetManager: this,

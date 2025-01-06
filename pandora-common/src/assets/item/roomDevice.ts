@@ -2,14 +2,14 @@ import type { Immutable } from 'immer';
 import { first } from 'lodash';
 import { z } from 'zod';
 
+import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions';
 import type { HexRGBAColorString } from '../../validation';
-import type { AppearanceModuleActionContext } from '../appearanceActions';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { Asset } from '../asset';
 import type { RoomDeviceModuleStaticData } from '../definitions';
 import type { IExportOptions, IItemModule } from '../modules/common';
 import type { AssetProperties } from '../properties';
-import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base';
+import type { IItemLoadContext, IItemValidationContext, ItemBundle, ItemTemplate } from './base';
 
 import { CharacterId, CharacterIdSchema } from '../../character/characterTypes';
 import { MemoizeNoArg } from '../../utility/misc';
@@ -63,18 +63,21 @@ interface ItemRoomDeviceProps extends ItemBaseProps<'roomDevice'> {
 	readonly deployment: Immutable<RoomDeviceDeployment>;
 	readonly slotOccupancy: ReadonlyMap<string, CharacterId>;
 	readonly modules: ReadonlyMap<string, IItemModule<RoomDeviceProperties, RoomDeviceModuleStaticData>>;
+	readonly requireFreeHandsToUse: boolean;
 }
 
 export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDeviceProps {
 	public readonly deployment: Immutable<RoomDeviceDeployment>;
 	public readonly slotOccupancy: ReadonlyMap<string, CharacterId>;
 	public readonly modules: ReadonlyMap<string, IItemModule<RoomDeviceProperties, RoomDeviceModuleStaticData>>;
+	public readonly requireFreeHandsToUse: boolean;
 
 	protected constructor(props: ItemRoomDeviceProps, overrideProps: Partial<ItemRoomDeviceProps> = {}) {
 		super(props, overrideProps);
 		this.deployment = overrideProps.deployment !== undefined ? overrideProps.deployment : props.deployment;
 		this.slotOccupancy = overrideProps?.slotOccupancy ?? props.slotOccupancy;
 		this.modules = overrideProps?.modules ?? props.modules;
+		this.requireFreeHandsToUse = overrideProps?.requireFreeHandsToUse ?? props.requireFreeHandsToUse;
 	}
 
 	public isDeployed(): this is ItemRoomDevice & { deployment: RoomDeviceDeployment & { deployed: true; }; } {
@@ -115,11 +118,14 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 			}
 		}
 
+		const requireFreeHandsToUse = bundle.requireFreeHandsToUse ?? true;
+
 		return new ItemRoomDevice({
 			...(ItemBase._parseBundle(asset, bundle, context)),
 			modules,
 			deployment,
 			slotOccupancy,
+			requireFreeHandsToUse,
 		});
 	}
 
@@ -161,6 +167,13 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 		return { success: true };
 	}
 
+	public override exportToTemplate(): ItemTemplate {
+		return {
+			...super.exportToTemplate(),
+			requireFreeHandsToUse: this.requireFreeHandsToUse,
+		};
+	}
+
 	public override exportToBundle(options: IExportOptions): ItemBundle & { roomDeviceData: RoomDeviceBundle; } {
 		const slotOccupancy: RoomDeviceBundle['slotOccupancy'] = {};
 		for (const [slot, character] of this.slotOccupancy.entries()) {
@@ -172,6 +185,7 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 				deployment: this.deployment,
 				slotOccupancy,
 			},
+			requireFreeHandsToUse: this.requireFreeHandsToUse,
 		};
 	}
 
@@ -273,6 +287,11 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 		return this.withProps({
 			modules: newModules,
 		});
+	}
+
+	/** Returns a new item with the passed requireFreeHandsToUse attribute */
+	public customizeFreeHandUsage(requireFreeHandsToUse: boolean): ItemRoomDevice {
+		return this.withProps({ requireFreeHandsToUse });
 	}
 
 	@MemoizeNoArg

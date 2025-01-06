@@ -3,11 +3,12 @@ import { isEqual } from 'lodash';
 import {
 	ActionTargetSelector,
 	EMPTY_ARRAY,
+	EvalContainerPath,
+	EvalItemPath,
 	ItemContainerPath,
 	ItemPath,
 	type AppearanceItems,
 } from 'pandora-common';
-import { EvalContainerPath, EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import React, { ReactElement, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import deleteIcon from '../../../assets/icons/delete.svg';

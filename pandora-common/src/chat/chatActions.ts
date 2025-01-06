@@ -17,6 +17,9 @@ const CHAT_ACTIONS_DEF = {
 
 	//#region Action messages
 
+	// Action attempts
+	actionInterrupted: `SOURCE_CHARACTER interrupted TARGET_CHARACTER_POSSESSIVE attempted action.`,
+
 	// Restriction override changes
 	safemodeEnter: `SOURCE_CHARACTER entered safemode!`,
 	safemodeLeave: `SOURCE_CHARACTER left safemode.`,

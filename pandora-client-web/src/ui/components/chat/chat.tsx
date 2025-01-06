@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { CharacterId, IChatMessageAction, IChatMessageChat, SpaceId } from 'pandora-common';
+import { CharacterId, IChatMessageAction, IChatMessageChat, type HexColorString } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -8,32 +8,77 @@ import React, {
 	useMemo,
 	useRef,
 	useState,
+	type ReactNode,
 } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import { useAutoScroll } from '../../../common/useAutoScroll';
 import { Column } from '../../../components/common/container/container';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
 import { ContextMenu, useContextMenu } from '../../../components/contextMenu';
-import { useChatMessages, useChatMessageSender } from '../../../components/gameContext/gameStateContextProvider';
+import { useChatMessages, useChatMessageSender, useGameState } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { NotificationSource, useNotificationSuppressed } from '../../../services/notificationHandler';
+import { useChatInjectedMessages } from './chatInjectedMessages';
 import { AutoCompleteHint, ChatInputArea, useChatCommandContext, useChatInput } from './chatInput';
 import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatMessages';
 import { COMMANDS } from './commands';
 
 export function Chat(): ReactElement | null {
+	const gameState = useGameState();
 	const messages = useChatMessages();
+	const injectedMessages = useChatInjectedMessages(gameState);
 	const shardConnector = useShardConnector();
 	const { interfaceChatroomChatFontSize } = useAccountSettings();
-	const [messagesDiv, scroll, isScrolling] = useAutoScroll<HTMLDivElement>([messages]);
+	const [messagesDiv, scroll, isScrolling] = useAutoScroll<HTMLDivElement>([messages, injectedMessages]);
 	const lastMessageCount = useRef(0);
 	let newMessageCount = 0;
 
 	useNotificationSuppressed(NotificationSource.CHAT_MESSAGE, isScrolling);
 
 	const playerId = usePlayerId();
+
+	// Combine normal and injected messages
+	const finalMessages = useMemo((): readonly ReactElement[] => {
+		const result = new Array<ReactElement>(messages.length + injectedMessages.length);
+		let t = 0;
+		let messagesIndex = 0;
+		let injectedMessagesIndex = 0;
+
+		while (messagesIndex < messages.length && injectedMessagesIndex < injectedMessages.length) {
+			const injectedMessage = injectedMessages[injectedMessagesIndex];
+			const normalMessage = messages[messagesIndex];
+			if (injectedMessage.time < normalMessage.time) {
+				result[t++] = injectedMessage.element;
+				injectedMessagesIndex++;
+			} else {
+				result[t++] = (
+					<Message
+						key={ normalMessage.time }
+						message={ normalMessage }
+						playerId={ playerId }
+					/>
+				);
+				messagesIndex++;
+			}
+		}
+		while (messagesIndex < messages.length) {
+			const normalMessage = messages[messagesIndex++];
+			result[t++] = (
+				<Message
+					key={ normalMessage.time }
+					message={ normalMessage }
+					playerId={ playerId }
+				/>
+			);
+		}
+		while (injectedMessagesIndex < injectedMessages.length) {
+			result[t++] = injectedMessages[injectedMessagesIndex++].element;
+		}
+
+		return result;
+	}, [messages, injectedMessages, playerId]);
 
 	if (!shardConnector)
 		return null;
@@ -58,13 +103,7 @@ export function Chat(): ReactElement | null {
 					tabIndex={ 1 }
 				>
 					<Column gap='none'>
-						{ messages.map((m) => (
-							<Message
-								key={ m.time }
-								message={ m }
-								playerId={ playerId }
-							/>
-						)) }
+						{ finalMessages }
 					</Column>
 				</Scrollable>
 				<ChatAutoCompleteHint />
@@ -97,7 +136,7 @@ const Message = memo(function Message({ message, playerId }: { message: IChatMes
 	return ChatMessageEquals(prev.message, next.message) && prev.playerId === next.playerId;
 });
 
-function DisplayUserMessage({ message, playerId }: { message: IChatMessageChat & { time: number; spaceId: SpaceId | null; }; playerId: CharacterId | null; }): ReactElement {
+function DisplayUserMessage({ message, playerId }: { message: IChatMessageProcessed<IChatMessageChat>; playerId: CharacterId | null; }): ReactElement {
 	const [before, after] = useMemo(() => {
 		switch (message.type) {
 			case 'ooc':
@@ -128,7 +167,7 @@ function DisplayUserMessage({ message, playerId }: { message: IChatMessageChat &
 				style={ style }
 				onContextMenu={ self ? onContextMenu : undefined }
 			>
-				<DisplayInfo message={ message } />
+				<DisplayInfo messageTime={ message.time } edited={ message.edited ?? false } />
 				{ before }
 				<DisplayName message={ message } color={ message.from.labelColor } />
 				{ ...message.parts.map((c, i) => RenderChatPart(c, i, message.type === 'ooc')) }
@@ -198,8 +237,11 @@ function DisplayContextMenuItems({ close, id }: { close: () => void; id: number;
 	);
 }
 
-function DisplayInfo({ message }: { message: IChatMessageProcessed; }): ReactElement {
-	const time = useMemo(() => new Date(message.time), [message.time]);
+function DisplayInfo({ messageTime, edited }: {
+	messageTime: number;
+	edited: boolean;
+}): ReactElement {
+	const time = useMemo(() => new Date(messageTime), [messageTime]);
 	const [full, setFull] = useState(new Date().getDate() !== time.getDate());
 
 	useEffect(() => {
@@ -212,14 +254,14 @@ function DisplayInfo({ message }: { message: IChatMessageProcessed; }): ReactEle
 			setFull(true);
 		}, tomorrow.getTime() - now.getTime());
 		return () => clearTimeout(cleanup);
-	}, [message.time, full]);
+	}, [messageTime, full]);
 
 	return (
 		<span className='info'>
 			{ full
 				? <time>{ `${time.toLocaleDateString()} ${time.toLocaleTimeString('en-IE').substring(0, 5)}` }</time>
 				: <time>{ time.toLocaleTimeString('en-IE').substring(0, 5) }</time> }
-			{ message.edited ? <span> [edited]</span> : null }
+			{ edited ? <span> [edited]</span> : null }
 			{ /* Space so copied text looks nicer */ ' ' }
 		</span>
 	);
@@ -301,10 +343,52 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 	);
 }
 
+export function ActionMessageElement({ type, labelColor, messageTime, edited, children, extraContent, defaultUnfolded = false }: {
+	type: 'action' | 'serverMessage';
+	labelColor?: HexColorString;
+	messageTime: number;
+	edited: boolean;
+	children: ReactNode;
+	extraContent?: ReactElement | null;
+	/**
+	 * Unfold the message's extra content by default (if it has any).
+	 * @default false
+	 */
+	defaultUnfolded?: boolean;
+}): ReactElement | null {
+	const [folded, setFolded] = useState(!defaultUnfolded);
+
+	const style = (type === 'action' && labelColor) ? ({ backgroundColor: labelColor + '44' }) : undefined;
+
+	return (
+		<div
+			className={ classNames(
+				'message',
+				type,
+				extraContent !== null ? 'foldable' : null,
+			) }
+			style={ style }
+			onClick={ () => setFolded(!folded) }
+		>
+			<DisplayInfo messageTime={ messageTime } edited={ edited } />
+			{ extraContent != null ? (folded ? '\u25ba ' : '\u25bc ') : null }
+			{ children }
+			{ extraContent != null && folded ? ' ( ... )' : null }
+			{
+				!folded && extraContent != null ? (
+					<>
+						<br />
+						{ extraContent }
+					</>
+				) : null
+			}
+		</div>
+	);
+}
+
 export function ActionMessage({ message, ignoreColor = false }: { message: IChatMessageProcessed<IChatMessageAction>; ignoreColor?: boolean; }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const { interfaceChatroomItemDisplayNameType } = useAccountSettings();
-	const [folded, setFolded] = useState(true);
 
 	const [content, extraContent] = useMemo(() => RenderActionContent(message, assetManager, interfaceChatroomItemDisplayNameType), [message, assetManager, interfaceChatroomItemDisplayNameType]);
 
@@ -312,30 +396,19 @@ export function ActionMessage({ message, ignoreColor = false }: { message: IChat
 	if (content.length === 0 && extraContent == null)
 		return null;
 
-	const style = (message.type === 'action' && message.data?.character && !ignoreColor) ? ({ backgroundColor: message.data.character.labelColor + '44' }) : undefined;
-
 	return (
-		<div
-			className={ classNames(
-				'message',
-				message.type,
-				extraContent !== null ? 'foldable' : null,
-			) }
-			style={ style }
-			onClick={ () => setFolded(!folded) }
+		<ActionMessageElement
+			type={ message.type }
+			labelColor={ message.data?.character && !ignoreColor ? message.data.character.labelColor : undefined }
+			messageTime={ message.time }
+			edited={ message.edited ?? false }
+			extraContent={ extraContent != null ? (
+				<>
+					{ extraContent.map((c, i) => RenderChatPart(c, i, false)) }
+				</>
+			) : null }
 		>
-			<DisplayInfo message={ message } />
-			{ extraContent != null ? (folded ? '\u25ba ' : '\u25bc ') : null }
 			{ content.map((c, i) => RenderChatPart(c, i, false)) }
-			{ extraContent != null && folded ? ' ( ... )' : null }
-			{
-				!folded && extraContent != null && (
-					<>
-						<br />
-						{ extraContent.map((c, i) => RenderChatPart(c, i, false)) }
-					</>
-				)
-			}
-		</div>
+		</ActionMessageElement>
 	);
 }

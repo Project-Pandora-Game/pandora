@@ -19,7 +19,7 @@ export function ExportData(data: unknown, exportType: string, exportVersion: num
 		Assert(parseResult.success);
 		Assert(parseResult.exportType === exportType);
 		Assert(parseResult.exportVersion === exportVersion);
-		Assert(isEqual(parseResult.data, data));
+		Assert(isEqual(parseResult.data, JSON.parse(serialized)));
 	}
 
 	return result;

@@ -28,7 +28,7 @@ export class Asset<Type extends AssetType = AssetType> {
 		Assert(definition.id === id);
 
 		const staticAttributes = this.staticAttributes = new Set<string>();
-		if (definition.type === 'personal') {
+		if (definition.type === 'personal' || definition.type === 'bodypart') {
 			definition.attributes?.provides?.forEach((a) => staticAttributes.add(a));
 			for (const module of Object.values(definition.modules ?? {})) {
 				GetModuleStaticAttributes(module, (p) => new Set(p.attributes?.provides)).forEach((a) => staticAttributes.add(a));

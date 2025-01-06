@@ -5,6 +5,8 @@ import {
 	ActionSpaceContext,
 	AppearanceAction,
 	AppearanceActionContext,
+	AppearanceActionProcessingContext,
+	ApplyAction,
 	Assert,
 	AssertNotNullable,
 	Asset,
@@ -20,7 +22,6 @@ import {
 	CharacterRestrictionsManager,
 	CharacterSize,
 	CharacterView,
-	DoAppearanceAction,
 	GameLogicCharacter,
 	GameLogicCharacterClient,
 	GetLogger,
@@ -55,6 +56,7 @@ export class AppearanceEditor extends CharacterAppearance {
 
 	protected _makeActionContext(): AppearanceActionContext {
 		return {
+			executionContext: 'act',
 			player: this.character,
 			spaceContext: EDITOR_SPACE_CONTEXT,
 			getCharacter: (id) => {
@@ -70,9 +72,10 @@ export class AppearanceEditor extends CharacterAppearance {
 		action: AppearanceAction,
 		{ dryRun = false }: EditorActionContext = {},
 	): boolean {
-		const result = DoAppearanceAction(action, this._makeActionContext(), this.globalState.currentState);
+		const processingContext = new AppearanceActionProcessingContext(this._makeActionContext(), this.globalState.currentState);
+		const result = ApplyAction(processingContext, action);
 
-		if (!result.valid || result.problems.length > 0) {
+		if (!result.valid) {
 			return false;
 		}
 
@@ -142,7 +145,7 @@ export class AppearanceEditor extends CharacterAppearance {
 
 	public setView(view: CharacterView, context: EditorActionContext = {}): boolean {
 		return this.editorDoAction({
-			type: 'setView',
+			type: 'pose',
 			target: this.id,
 			view,
 		}, context);

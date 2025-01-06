@@ -2,8 +2,9 @@ import { z } from 'zod';
 import type { AssetId } from '../assets/base';
 import { CharacterId, CharacterIdSchema } from '../character';
 import type { PronounKey } from '../character/pronouns';
-import { ChatActionId } from './chatActions';
 import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits';
+import type { HexColorString } from '../validation';
+import { ChatActionId } from './chatActions';
 
 export const ChatModifierSchema = z.enum(['normal', 'bold', 'italic']);
 export type IChatModifier = z.infer<typeof ChatModifierSchema>;
@@ -70,7 +71,7 @@ export type IChatMessageActionTargetCharacter = {
 	id: CharacterId;
 	name: string;
 	pronoun: PronounKey;
-	labelColor: string;
+	labelColor: HexColorString;
 };
 export type IChatMessageActionItem = {
 	assetId: AssetId;

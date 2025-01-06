@@ -1,22 +1,24 @@
+import type { Immutable } from 'immer';
 import { z, ZodTypeDef } from 'zod';
 
 import type { Asset } from '../asset';
 import type { AssetType } from '../definitions';
 
+import { CharacterIdSchema } from '../../character/characterTypes';
 import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN, LIMIT_OUTFIT_NAME_LENGTH, LIMIT_POSE_PRESET_NAME_LENGTH } from '../../inputLimits';
 import { Assert, AssertNever } from '../../utility/misc';
 import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop, ZodTruncate } from '../../validation';
 import { AssetIdSchema } from '../base';
 import { CreateModuleDataFromTemplate, ItemModuleDataSchema, ItemModuleTemplateSchema } from '../modules';
-import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base';
 import { PartialAppearancePoseSchema } from '../state/characterStatePose';
+import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base';
 
 import { __internal_InitRecursiveItemSchemas } from './_internalRecursion';
+import { ItemBodypart } from './bodypart';
 import { ItemLock, LockBundleSchema } from './lock';
 import { ItemPersonal } from './personal';
 import { ItemRoomDevice, RoomDeviceBundleSchema } from './roomDevice';
 import { ItemRoomDeviceWearablePart, RoomDeviceLinkSchema } from './roomDeviceWearablePart';
-import { CharacterIdSchema } from '../../character/characterTypes';
 
 /**
  * Serializable data bundle containing information about an item.
@@ -30,6 +32,8 @@ export const ItemBundleSchema = z.object({
 	color: ItemColorBundleSchema.or(z.array(HexRGBAColorStringSchema)).optional(),
 	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
+	/** Whether free hands are required to interact with this item. */
+	requireFreeHandsToUse: z.boolean().optional(),
 	moduleData: z.record(z.lazy(() => ItemModuleDataSchema)).optional(),
 	/** Room device specific data */
 	roomDeviceData: RoomDeviceBundleSchema.optional(),
@@ -50,6 +54,8 @@ export const ItemTemplateSchema: z.ZodType<ItemTemplate, ZodTypeDef, unknown> = 
 	color: ItemColorBundleSchema.optional(),
 	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
+	/** Whether free hands are required to interact with this item. */
+	requireFreeHandsToUse: z.boolean().optional(),
 	modules: z.record(z.lazy(() => ItemModuleTemplateSchema)).optional(),
 });
 
@@ -79,7 +85,7 @@ export type AssetFrameworkPosePresetWithId = z.infer<typeof AssetFrameworkPosePr
 
 __internal_InitRecursiveItemSchemas(ItemBundleSchema, ItemTemplateSchema);
 
-export function CreateItemBundleFromTemplate(template: ItemTemplate, context: IItemCreationContext): ItemBundle | undefined {
+export function CreateItemBundleFromTemplate(template: Immutable<ItemTemplate>, context: IItemCreationContext): ItemBundle | undefined {
 	const asset = context.assetManager.getAssetById(template.asset);
 	// Fail if the template referrs to asset that is unknown or cannot be spawned by users
 	if (asset == null || !asset.canBeSpawned())
@@ -93,10 +99,13 @@ export function CreateItemBundleFromTemplate(template: ItemTemplate, context: II
 		color: template.color,
 		name: template.name,
 		description: template.description,
+		requireFreeHandsToUse: (asset.isType('personal') || asset.isType('roomDevice')) ?
+			(template.requireFreeHandsToUse ?? (asset.definition.requireFreeHandsToUseDefault ?? false)) :
+			undefined,
 	};
 
 	// Load modules
-	if (template.modules != null && (asset.isType('personal') || asset.isType('roomDevice'))) {
+	if (template.modules != null && (asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice'))) {
 		bundle.moduleData = {};
 		for (const [moduleName, moduleTemplate] of Object.entries(template.modules)) {
 			const moduleConfig = asset.definition.modules?.[moduleName];
@@ -148,6 +157,10 @@ export function LoadItemFromBundle<T extends AssetType>(asset: Asset<T>, bundle:
 	Assert(asset.id === bundle.asset);
 	const type = asset.type;
 	switch (type) {
+		case 'bodypart':
+			Assert(asset.isType('bodypart'));
+			// @ts-expect-error: Type specialized manually
+			return ItemBodypart.loadFromBundle(asset, bundle, context);
 		case 'personal':
 			Assert(asset.isType('personal'));
 			// @ts-expect-error: Type specialized manually

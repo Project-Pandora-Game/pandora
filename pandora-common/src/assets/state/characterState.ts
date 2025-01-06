@@ -14,9 +14,6 @@ import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, MergePartialAppea
 import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type CharacterActionAttempt, type RestrictionOverride } from './characterStateTypes';
 import type { AssetFrameworkRoomState } from './roomState';
 
-// Fix for pnpm resolution weirdness
-import type { } from '../item/base';
-
 type AssetFrameworkCharacterStateProps = {
 	readonly assetManager: AssetManager;
 	readonly id: CharacterId;

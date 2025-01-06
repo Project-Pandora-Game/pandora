@@ -11,10 +11,6 @@ import { AssetFrameworkCharacterState } from './characterState';
 import { AppearanceBundleSchema, AppearanceClientBundle } from './characterStateTypes';
 import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClientBundle } from './roomState';
 
-// Fix for pnpm resolution weirdness
-import type { } from '../../validation';
-import type { } from '../item/base';
-
 export const AssetFrameworkGlobalStateBundleSchema = z.object({
 	characters: z.record(CharacterIdSchema, AppearanceBundleSchema),
 	room: RoomInventoryBundleSchema,

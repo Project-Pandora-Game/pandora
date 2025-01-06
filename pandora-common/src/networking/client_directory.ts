@@ -11,10 +11,6 @@ import { DisplayNameSchema, EmailAddressSchema, HexColorString, HexColorStringSc
 import { AccountCryptoKeySchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 
-// Fix for pnpm resolution weirdness
-import type { } from '../account/accountRoles';
-import type { } from '../assets/item/base';
-
 type ShardError = 'noShardFound' | 'failed';
 
 export const ClientDirectoryAuthMessageSchema = z.object({

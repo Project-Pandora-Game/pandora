@@ -12,11 +12,6 @@ import { Satisfies } from '../utility/misc';
 import { CharacterInputNameSchema, ZodCast } from '../validation';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 
-// Fix for pnpm resolution weirdness
-import type { } from '../assets/appearance';
-import type { } from '../assets/item/base';
-import type { } from '../character/pronouns';
-
 /** Client->Shard messages */
 export const ClientShardSchema = {
 	finishCharacterCreation: {

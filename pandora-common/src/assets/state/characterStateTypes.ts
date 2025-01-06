@@ -4,9 +4,6 @@ import { ZodArrayWithInvalidDrop } from '../../validation';
 import { ItemBundleSchema } from '../item/unified';
 import { AppearancePoseSchema, GetDefaultAppearancePose } from './characterStatePose';
 
-// Fix for pnpm resolution weirdness
-import type { } from '../item/base';
-
 export const RestrictionOverrideSchema = z.object({
 	type: z.enum(['safemode', 'timeout']),
 	allowLeaveAt: z.number(),

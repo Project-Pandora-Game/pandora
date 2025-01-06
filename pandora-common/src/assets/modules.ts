@@ -9,9 +9,6 @@ import { IModuleConfigLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDe
 import { IModuleConfigStorage, ItemModuleStorageActionSchema, ModuleItemDataStorageSchema, ModuleItemTemplateStorageSchema, StorageModuleDefinition } from './modules/storage';
 import { IModuleConfigTyped, ItemModuleTypedActionSchema, ModuleItemDataTypedSchema, ModuleItemTemplateTypedSchema, TypedModuleDefinition } from './modules/typed';
 
-// Fix for pnpm resolution weirdness
-import type { } from './item/base';
-
 //#region Module definitions
 
 export const IAssetModuleTypesSchemas = {

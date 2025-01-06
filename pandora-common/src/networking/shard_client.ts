@@ -13,10 +13,6 @@ import { Satisfies } from '../utility/misc';
 import { ZodCast } from '../validation';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 
-// Fix for pnpm resolution weirdness
-import type { } from '../assets/appearance';
-import type { } from '../character/pronouns';
-
 export type ICharacterRoomData = ICharacterPublicData & {
 	assetPreferences: AssetPreferencesPublic;
 	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)

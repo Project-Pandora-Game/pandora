@@ -13,9 +13,6 @@ import { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '
 import { ItemLock, ItemLockActionSchema } from '../item/lock';
 import type { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common';
 
-// Fix for pnpm resolution weirdness
-import type { } from '../item/base';
-
 export type IModuleConfigLockSlot<TProperties, TStaticData> = IModuleConfigCommon<'lockSlot', TProperties, TStaticData> & {
 	/** Properties applied when this slot isn't occupied by a lock */
 	emptyProperties?: TProperties;

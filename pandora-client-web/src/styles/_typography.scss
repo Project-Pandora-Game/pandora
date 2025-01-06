@@ -67,6 +67,10 @@ table {
 		padding: 0.2em 0.5em;
 		text-align: center;
 		border: 1px solid $theme-table-border;
+
+		&.noPadding {
+			padding: 0;
+		}
 	}
 
 	th {
@@ -80,6 +84,12 @@ table {
 
 		&:nth-child(2n) {
 			background: $theme-table-body-altbackground;
+		}
+	}
+
+	&.smallPadding {
+		td:not(.noPadding), th:not(.noPadding) {
+			padding: 0.1em 0.25em;
 		}
 	}
 }

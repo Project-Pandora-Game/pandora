@@ -102,7 +102,7 @@ export class ItemLock extends ItemBase<'lock'> {
 					}
 					break;
 				case 'server':
-					if (lockData.hidden.password != null && !ItemLock._validatePassword(asset, lockData.hidden.password, context.logger?.prefixMessages(`Lock ${bundle.id}`))) {
+					if (lockData.hidden.password != null && !ItemLock.validatePassword(asset, lockData.hidden.password, context.logger?.prefixMessages(`Lock ${bundle.id}`))) {
 						delete lockData.hidden.password;
 					}
 					if (asset.definition.password != null && lockData.hidden?.password == null && lockData.locked != null) {
@@ -198,7 +198,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		const isSelfAction = context.targetCharacter != null && context.targetCharacter.character.id === context.processingContext.player.id;
 		const properties = this.getLockProperties();
 
-		if (action.password != null && !ItemLock._validatePassword(this.asset, action.password)) {
+		if (action.password != null && !ItemLock.validatePassword(this.asset, action.password)) {
 			return null;
 		}
 
@@ -384,7 +384,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		return parentResult;
 	}
 
-	public static _validatePassword(asset: Asset<'lock'>, password: string, logger?: Logger): boolean {
+	public static validatePassword(asset: Asset<'lock'>, password: string, logger?: Logger): boolean {
 		const def = asset.definition.password;
 		if (def == null) {
 			logger?.warning(`has a hidden password but the asset does not define a password`);

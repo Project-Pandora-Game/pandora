@@ -391,15 +391,21 @@ export class CharacterRestrictionsManager {
 		}
 
 		// Must be able to use hands (for everything except entering/leaving a room device)
-		if (interaction !== ItemInteractionType.DEVICE_ENTER_LEAVE) {
+		if (
+			interaction === ItemInteractionType.STYLING ||
+			interaction === ItemInteractionType.CUSTOMIZE ||
+			interaction === ItemInteractionType.MODIFY ||
+			interaction === ItemInteractionType.ADD_REMOVE ||
+			interaction === ItemInteractionType.REORDER
+		) {
 			let allowStruggleBypass: boolean;
 			switch (interaction) {
 				case ItemInteractionType.STYLING:
 				case ItemInteractionType.CUSTOMIZE:
 					allowStruggleBypass = false;
 					break;
-				case ItemInteractionType.ADD_REMOVE:
 				case ItemInteractionType.MODIFY:
+				case ItemInteractionType.ADD_REMOVE:
 				case ItemInteractionType.REORDER:
 					allowStruggleBypass = (item.isType('personal') || item.isType('roomDevice')) ? !item.requireFreeHandsToUse :
 						item.isType('roomDeviceWearablePart') ? !(item.roomDevice?.requireFreeHandsToUse ?? false) :
@@ -506,7 +512,7 @@ export class CharacterRestrictionsManager {
 	}
 
 	/**
-	 * Check whether user is allowed to delete an new item
+	 * Check whether user is allowed to delete an item
 	 * @param context - Context of the action
 	 * @param item - Item that user wants to delete
 	 */

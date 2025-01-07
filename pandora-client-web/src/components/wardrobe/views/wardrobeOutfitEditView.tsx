@@ -1,6 +1,14 @@
 import { clamp, first, noop } from 'lodash';
-import { AssertNever, AssetFrameworkOutfit, AssetFrameworkOutfitSchema, CloneDeepMutable, EMPTY_ARRAY, ItemTemplate, LIMIT_OUTFIT_NAME_LENGTH } from 'pandora-common';
-import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
+import {
+	AssertNever,
+	AssetFrameworkOutfit,
+	AssetFrameworkOutfitSchema,
+	CloneDeepMutable,
+	EMPTY_ARRAY,
+	EvalItemPath,
+	ItemTemplate,
+	LIMIT_OUTFIT_NAME_LENGTH,
+} from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager';
@@ -8,13 +16,12 @@ import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { Button } from '../../common/button/button';
 import { Column, Row } from '../../common/container/container';
-import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { useConfirmDialog } from '../../dialog/dialog';
 import { ExportDialog } from '../../exportImport/exportDialog';
 import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName';
 import { WardrobeTemplateEditMenu } from '../templateDetail/_wardrobeTemplateDetail';
 import { useWardrobeActionContext } from '../wardrobeActionContext';
-import { InventoryAssetPreview } from '../wardrobeComponents';
+import { InventoryAssetPreview, WardrobeColorRibbon } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
 
@@ -139,7 +146,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 	}
 
 	return (
-		<Scrollbar color='dark'>
+		<div className='Scrollbar'>
 			<Column className='flex-1' padding='small'>
 				{
 					showExportDialog ? (
@@ -220,7 +227,7 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 				</fieldset>
 				<fieldset className='flex-1'>
 					<legend>Items</legend>
-					<Scrollbar color='dark' className='fill'>
+					<div className='Scrollbar fill'>
 						<div className='list reverse withDropButtons'>
 							{
 								heldItem.type !== 'nothing' ? (
@@ -268,10 +275,10 @@ export function OutfitEditView({ extraActions, outfit, updateOutfit, isTemporary
 								}
 							</div>
 						</div>
-					</Scrollbar>
+					</div>
 				</fieldset>
 			</Column>
-		</Scrollbar>
+		</div>
 	);
 }
 
@@ -371,7 +378,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 		);
 	}
 
-	const ribbonColor = (asset.isType('personal') || asset.isType('roomDevice')) ? (
+	const ribbonColor = (asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice')) ? (
 		itemTemplate.color?.[
 			asset.definition.colorRibbonGroup ??
 			first(Object.keys(asset.definition.colorization ?? {})) ??
@@ -410,13 +417,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 			} }
 		>
 			{
-				ribbonColor ?
-					<span
-						className='colorRibbon'
-						style={ {
-							backgroundColor: ribbonColor,
-						} }
-					/> : null
+				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
 			<span className='itemName'>{ visibleName }</span>

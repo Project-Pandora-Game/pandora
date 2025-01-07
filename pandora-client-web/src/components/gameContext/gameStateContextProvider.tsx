@@ -17,7 +17,6 @@ import {
 	ICharacterPrivateData,
 	ICharacterRoomData,
 	IChatMessage,
-	IChatMessageAction,
 	IClientMessage,
 	IDirectoryAccountInfo,
 	IShardClientArgument,
@@ -38,7 +37,9 @@ import {
 	SpaceIdSchema,
 	TypedEventEmitter,
 	ZodCast,
+	type AppearanceAction,
 	type IChatMessageActionTargetCharacter,
+	type IClientShardPromiseResult,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { z } from 'zod';
@@ -91,7 +92,7 @@ export type CurrentSpaceInfo = {
 export type PermissionPromptData = {
 	source: Character<ICharacterRoomData>;
 	requiredPermissions: Immutable<Partial<Record<PermissionGroup, [PermissionSetup, PermissionConfig][]>>>;
-	messages: IChatMessageProcessed<IChatMessageAction>[];
+	actions: AppearanceAction[];
 };
 
 export class GameState extends TypedEventEmitter<{
@@ -176,6 +177,32 @@ export class GameState extends TypedEventEmitter<{
 		this._updateCharacters(characters);
 
 		setInterval(() => this._cleanupEdits(), MESSAGE_EDIT_TIMEOUT / 2);
+	}
+
+	public async doImmediateAction(action: Immutable<AppearanceAction>): IClientShardPromiseResult['gameLogicAction'] {
+		return await this._shard.awaitResponse('gameLogicAction', {
+			operation: 'doImmediately',
+			action: CloneDeepMutable(action),
+		});
+	}
+
+	public async startActionAttempt(action: Immutable<AppearanceAction>): IClientShardPromiseResult['gameLogicAction'] {
+		return await this._shard.awaitResponse('gameLogicAction', {
+			operation: 'start',
+			action: CloneDeepMutable(action),
+		});
+	}
+
+	public async completeCurrentActionAttempt(): IClientShardPromiseResult['gameLogicAction'] {
+		return await this._shard.awaitResponse('gameLogicAction', {
+			operation: 'complete',
+		});
+	}
+
+	public async abortCurrentActionAttempt(): IClientShardPromiseResult['gameLogicAction'] {
+		return await this._shard.awaitResponse('gameLogicAction', {
+			operation: 'abortCurrentAction',
+		});
 	}
 
 	//#region Handler
@@ -365,7 +392,7 @@ export class GameState extends TypedEventEmitter<{
 		}
 	}
 
-	public onPermissionPrompt({ characterId, requiredPermissions, messages }: IShardClientArgument['permissionPrompt']): void {
+	public onPermissionPrompt({ characterId, requiredPermissions, actions }: IShardClientArgument['permissionPrompt']): void {
 		const source = this.characters.value.find((c) => c.data.id === characterId);
 		if (!source) {
 			this.logger.warning('Permission prompt for unknown character', characterId);
@@ -382,27 +409,16 @@ export class GameState extends TypedEventEmitter<{
 			return;
 		}
 
-		const actionMessages: IChatMessageProcessed<IChatMessageAction>[] = [];
-		for (const message of messages) {
-			if (message.type !== 'action' && message.type !== 'serverMessage') {
-				logger.warning('Permission prompt with non-action message', message);
-				continue;
-			}
-
-			actionMessages.push({
-				...message,
-				spaceId: this.currentSpace.value.id,
-			});
-		}
-
 		this.emit('permissionPrompt', {
 			source,
 			requiredPermissions: groups,
-			messages: actionMessages,
+			actions,
 		});
 	}
 
 	//#endregion Handler
+
+	//#region Typing indicator
 
 	private _indicatorStatus: ChatCharacterStatus = 'none';
 	private _indicatorTarget: CharacterId | undefined;
@@ -429,6 +445,8 @@ export class GameState extends TypedEventEmitter<{
 	public getStatus(id: CharacterId): ChatCharacterStatus {
 		return this._status.get(id) ?? 'none';
 	}
+
+	//#endregion
 
 	//#region MessageSender
 

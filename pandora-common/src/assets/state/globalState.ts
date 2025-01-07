@@ -11,10 +11,6 @@ import { AssetFrameworkCharacterState } from './characterState';
 import { AppearanceBundleSchema, AppearanceClientBundle } from './characterStateTypes';
 import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClientBundle } from './roomState';
 
-// Fix for pnpm resolution weirdness
-import type { } from '../../validation';
-import type { } from '../item/base';
-
 export const AssetFrameworkGlobalStateBundleSchema = z.object({
 	characters: z.record(CharacterIdSchema, AppearanceBundleSchema),
 	room: RoomInventoryBundleSchema,
@@ -88,14 +84,14 @@ export class AssetFrameworkGlobalState {
 		AssertNever(target);
 	}
 
-	public exportToBundle(options: IExportOptions = {}): AssetFrameworkGlobalStateBundle {
+	public exportToBundle(): AssetFrameworkGlobalStateBundle {
 		const result: AssetFrameworkGlobalStateBundle = {
 			characters: {},
-			room: this.room?.exportToBundle(options) ?? null,
+			room: this.room?.exportToBundle() ?? null,
 		};
 
 		for (const [characterId, characterState] of this.characters) {
-			result.characters[characterId] = characterState.exportToBundle(options);
+			result.characters[characterId] = characterState.exportToBundle();
 		}
 		return result;
 	}

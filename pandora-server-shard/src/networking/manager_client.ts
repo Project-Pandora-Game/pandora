@@ -1,13 +1,15 @@
+import { freeze } from 'immer';
 import {
+	AbortActionAttempt,
 	ActionHandlerMessageTargetCharacter,
 	AssertNever,
 	BadMessageError,
 	CharacterId,
 	CloneDeepMutable,
-	DoAppearanceAction,
+	DoImmediateAction,
+	FinishActionAttempt,
 	GameLogicPermissionServer,
 	GetLogger,
-	IChatMessage,
 	IClientShard,
 	IClientShardArgument,
 	IClientShardNormalResult,
@@ -17,6 +19,10 @@ import {
 	NaturalListJoin,
 	PermissionConfig,
 	PermissionSetup,
+	RedactSensitiveActionData,
+	StartActionAttempt,
+	type AppearanceAction,
+	type AppearanceActionProcessingResult,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import promClient from 'prom-client';
@@ -62,7 +68,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			chatStatus: this.handleChatStatus.bind(this),
 			chatMessageAck: this.handleChatMessageAck.bind(this),
 			roomCharacterMove: this.handleRoomCharacterMove.bind(this),
-			appearanceAction: this.handleAppearanceAction.bind(this),
+			gameLogicAction: this.handleGameLogicAction.bind(this),
 			requestPermission: this.handleRequestPermission.bind(this),
 			updateSettings: this.handleUpdateSettings.bind(this),
 			updateAssetPreferences: this.handleUpdateAssetPreferences.bind(this),
@@ -154,19 +160,44 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		space.updateCharacterPosition(character, id ?? character.id, position);
 	}
 
-	private handleAppearanceAction(action: IClientShardArgument['appearanceAction'], client: ClientConnection): IClientShardNormalResult['appearanceAction'] {
+	private handleGameLogicAction(request: IClientShardArgument['gameLogicAction'], client: ClientConnection): IClientShardNormalResult['gameLogicAction'] {
 		const character = client.character;
 		if (!character)
 			throw new BadMessageError();
 
-		const globalState = character.getGlobalState();
-		const result = DoAppearanceAction(action, character.getAppearanceActionContext(), globalState.currentState);
+		const space = character.getOrLoadSpace();
+		const originalState = space.gameState.currentState;
+		const now = Date.now();
+		let result: AppearanceActionProcessingResult;
+
+		if (request.operation === 'doImmediately') {
+			freeze(request.action, true);
+			result = DoImmediateAction(request.action, character.getAppearanceActionContext(), originalState);
+		} else if (request.operation === 'start') {
+			freeze(request.action, true);
+			result = StartActionAttempt(request.action, character.getAppearanceActionContext(), originalState, now);
+		} else if (request.operation === 'complete') {
+			result = FinishActionAttempt(character.getAppearanceActionContext(), originalState, now);
+		} else if (request.operation === 'abortCurrentAction') {
+			result = AbortActionAttempt(character.getAppearanceActionContext(), originalState);
+		} else {
+			AssertNever(request.operation);
+		}
 
 		// Check if result is valid
 		if (!result.valid) {
-			const space = character.getOrLoadSpace();
 			const target = result.prompt ? space.getCharacterById(result.prompt) : null;
+			// The action failed and not because of promptable permission
 			if (target == null) {
+				// If finishing an action attempt was what failed, then cancel it
+				if (request.operation === 'complete') {
+					const cancelResult = AbortActionAttempt(character.getAppearanceActionContext(), originalState);
+					if (cancelResult.valid) {
+						space.applyAction(cancelResult);
+					} else {
+						logger.error(`Failed to abort action attempt by ${ character.id } for failed action completion:\n`, cancelResult.problems);
+					}
+				}
 				// If the action failed, client might be out of sync, force-send full reload
 				client.sendLoadMessage();
 				return {
@@ -183,27 +214,18 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					requiredPermissions.push([CloneDeepMutable(permission.setup), permission.getConfig()]);
 				}
 			}
-			const messages: IChatMessage[] = [];
-			for (const message of result.pendingMessages) {
-				messages.push(space.mapActionMessageToChatMessage(message));
-			}
+			const actions: AppearanceAction[] = result.performedActions
+				.map((a) => RedactSensitiveActionData(a));
+
 			target.connection.sendMessage('permissionPrompt', {
 				characterId: character.id,
 				requiredPermissions,
-				messages,
+				actions,
 			});
 			return { result: 'promptSent' };
 		}
-		{
-			// Apply the action
-			globalState.setState(result.resultState);
-			const space = character.getOrLoadSpace();
-
-			// Send chat messages as needed
-			for (const message of result.pendingMessages) {
-				space.handleActionMessage(message);
-			}
-		}
+		// Apply the action
+		space.applyAction(result);
 
 		return {
 			result: 'success',
@@ -250,7 +272,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		targetCharacter.connection.sendMessage('permissionPrompt', {
 			characterId: character.id,
 			requiredPermissions,
-			messages: [],
+			actions: [],
 		});
 		return { result: 'promptSent' };
 	}

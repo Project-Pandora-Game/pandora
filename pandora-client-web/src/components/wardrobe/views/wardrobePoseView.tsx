@@ -1,8 +1,8 @@
 import classNames from 'classnames';
 import _ from 'lodash';
 import {
+	AppearanceActionProcessingContext,
 	AppearanceItemProperties,
-	AppearanceItems,
 	ArmRotationSchema,
 	AssetFrameworkCharacterState,
 	AssetsPosePreset,
@@ -18,10 +18,11 @@ import {
 	type AppearanceLimitTree,
 	type ItemDisplayNameType,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useId, useMemo } from 'react';
+import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { useBrowserStorage } from '../../../browserStorage';
 import { IChatroomCharacter, useCharacterData } from '../../../character/character';
+import type { ChildrenProps } from '../../../common/reactTypes';
 import { useDebouncedValue } from '../../../common/useDebounceValue';
 import { useEvent } from '../../../common/useEvent';
 import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
@@ -33,10 +34,12 @@ import { Button } from '../../common/button/button';
 import { Column, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { SelectionIndicator } from '../../common/selectionIndicator/selectionIndicator';
+import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
 import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
 import { ResolveItemDisplayName } from '../itemDetail/wardrobeItemName';
 import { WardrobeStoredPosePresets } from '../poseDetail/storedPosePresets';
-import { useWardrobeActionContext, useWardrobeExecuteCallback } from '../wardrobeActionContext';
+import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobePermissionRequestCallback } from '../wardrobeActionContext';
+import { ActionWarning, ActionWarningContent, CheckResultToClassName } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 
 type CheckedPosePreset = {
@@ -86,26 +89,24 @@ function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkC
 	};
 }
 
-function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState, roomItems: AppearanceItems, itemDisplayNameType: ItemDisplayNameType): AssetsPosePresets {
+function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState, itemDisplayNameType: ItemDisplayNameType): AssetsPosePresets {
 	const assetManager = characterState.assetManager;
 	const presets: AssetsPosePresets = assetManager.getPosePresets();
 	for (const item of characterState.items) {
-		if (!item.isType('roomDeviceWearablePart') || item.roomDeviceLink == null)
+		// Collect custom pose presets from room device and personal items that provide them
+		if (!item.isType('bodypart') && !item.isType('personal') && !item.isType('roomDeviceWearablePart'))
 			continue;
 
-		const deviceId = item.roomDeviceLink.device;
-		const roomItem = roomItems.find((i) => i.id === deviceId);
-		if (!roomItem?.isType('roomDevice'))
-			continue;
+		const baseItem = item.isType('roomDeviceWearablePart') ? item.roomDevice : null;
 
-		if (!item.asset.definition.posePresets && !roomItem.asset.definition.posePresets)
+		if (!item.asset.definition.posePresets && !baseItem?.asset.definition.posePresets)
 			continue;
 
 		presets.unshift({
-			category: `Device: ${ResolveItemDisplayName(roomItem, itemDisplayNameType)}`,
+			category: `${item.isType('roomDeviceWearablePart') ? 'Device' : 'Item'}: ${ResolveItemDisplayName(baseItem ?? item, itemDisplayNameType)}`,
 			poses: [
-				...roomItem.asset.definition.posePresets ?? [],
-				...item.asset.definition.posePresets ?? [],
+				...(baseItem?.asset.definition.posePresets ?? []),
+				...(item.asset.definition.posePresets ?? []),
 			],
 		});
 	}
@@ -142,10 +143,8 @@ function WardrobePoseCategoriesInternal({ poses, setPose, characterState }: {
 }
 
 export function WardrobePoseCategories({ characterState, setPose }: { characterState: AssetFrameworkCharacterState; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
-	const { globalState } = useWardrobeActionContext();
 	const { itemDisplayNameType } = useWardrobeContext();
-	const roomItems = globalState.getItems({ type: 'roomInventory' });
-	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, roomItems ?? [], itemDisplayNameType), [characterState, roomItems, itemDisplayNameType]);
+	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, itemDisplayNameType), [characterState, itemDisplayNameType]);
 	return (
 		<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
 	);
@@ -372,9 +371,7 @@ export function WardrobePoseGui({ character, characterState }: {
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
-	const { globalState } = useWardrobeActionContext();
 	const { itemDisplayNameType } = useWardrobeContext();
-	const roomItems = globalState.getItems({ type: 'roomInventory' });
 	const assetManager = characterState.assetManager;
 	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 
@@ -388,7 +385,7 @@ export function WardrobePoseGui({ character, characterState }: {
 		});
 	});
 
-	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, roomItems ?? [], itemDisplayNameType), [characterState, roomItems, itemDisplayNameType]);
+	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, itemDisplayNameType), [characterState, itemDisplayNameType]);
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
 
@@ -397,53 +394,109 @@ export function WardrobePoseGui({ character, characterState }: {
 	return (
 		<div className='inventoryView'>
 			<div className='bone-ui'>
-				<Row
-					className={ actualPoseDiffers ? '' : 'invisible' }
-					alignX='center'
-					alignY='stretch'
-				>
-					<SelectionIndicator
-						active
-						justify='center'
-						align='center'
-						className='requestedPoseIndicatorText'
+				<WardrobePoseGuiGate>
+					<Row
+						className={ actualPoseDiffers ? '' : 'invisible' }
+						alignX='center'
+						alignY='stretch'
 					>
-						Items are forcing this character into a different pose.
-					</SelectionIndicator>
-					<Button
-						slim
-						onClick={ () => {
-							setPose(CloneDeepMutable(characterState.actualPose));
-						} }
-					>
-						Stay in it
-					</Button>
-				</Row>
-				<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
-				<WardrobeStoredPosePresets setPose={ setPose } characterState={ characterState } />
-				<RoomManualYOffsetControl character={ character } />
-				<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
-					<Column>
-						<WardrobeArmPoses characterState={ characterState } setPose={ setPose } />
-						<WardrobeLegsPose characterState={ characterState } setPose={ setPose } />
-						<br />
-						{
-							allBones
-								.filter((bone) => bone.type === 'pose')
-								.map((bone) => (
-									<BoneRowElement key={ bone.name } definition={ bone } characterState={ characterState } onChange={ (value) => {
-										setPose({
-											bones: {
-												[bone.name]: value,
-											},
-										});
-									} } />
-								))
-						}
-					</Column>
-				</FieldsetToggle>
+						<SelectionIndicator
+							active
+							padding='tiny'
+							justify='center'
+							align='center'
+							className='requestedPoseIndicatorText'
+						>
+							Items are forcing this character into a different pose.
+						</SelectionIndicator>
+						<Button
+							slim
+							onClick={ () => {
+								setPose(CloneDeepMutable(characterState.actualPose));
+							} }
+						>
+							Stay in it
+						</Button>
+					</Row>
+					<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
+					<WardrobeStoredPosePresets setPose={ setPose } characterState={ characterState } />
+					<RoomManualYOffsetControl character={ character } />
+					<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
+						<Column>
+							<WardrobeArmPoses characterState={ characterState } setPose={ setPose } />
+							<WardrobeLegsPose characterState={ characterState } setPose={ setPose } />
+							<br />
+							{
+								allBones
+									.filter((bone) => bone.type === 'pose')
+									.map((bone) => (
+										<BoneRowElement key={ bone.name } definition={ bone } characterState={ characterState } onChange={ (value) => {
+											setPose({
+												bones: {
+													[bone.name]: value,
+												},
+											});
+										} } />
+									))
+							}
+						</Column>
+					</FieldsetToggle>
+				</WardrobePoseGuiGate>
 			</div>
 		</div>
+	);
+}
+
+export function WardrobePoseGuiGate({ children }: ChildrenProps): ReactElement {
+	const { actions, globalState } = useWardrobeActionContext();
+	const { targetSelector } = useWardrobeContext();
+	const [requestPermission, processing] = useWardrobePermissionRequestCallback();
+	const [ref, setRef] = useState<HTMLElement | null>(null);
+
+	const checkResultInitial = useMemo(() => {
+		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
+		const actionTarget = processingContext.getTarget(targetSelector);
+		if (actionTarget == null || actionTarget.type !== 'character')
+			return processingContext.invalid();
+
+		processingContext.checkInteractWithTarget(actionTarget);
+		return processingContext.finalize();
+	}, [actions, globalState, targetSelector]);
+	const checkResult = useCheckAddPermissions(checkResultInitial);
+
+	const onClick = useCallback((ev: React.MouseEvent) => {
+		ev.stopPropagation();
+		if (!checkResult.valid) {
+			if (checkResult.prompt != null) {
+				requestPermission(checkResult.prompt, Array.from(checkResult.requiredPermissions).map((p) => [p.group, p.id]));
+			}
+			return;
+		}
+	}, [requestPermission, checkResult]);
+
+	if (checkResult != null && !checkResult.valid) {
+		return (
+			<Column padding='medium'>
+				<span>You cannot pose this character.</span>
+				<ActionWarningContent problems={ checkResult.problems } prompt={ false } />
+				<button
+					ref={ setRef }
+					className={ classNames(
+						'wardrobeActionButton',
+						CheckResultToClassName(checkResult, false),
+					) }
+					onClick={ onClick }
+					disabled={ processing }
+				>
+					<ActionWarning checkResult={ checkResult } actionInProgress={ false } parent={ ref } />
+					Request access
+				</button>
+			</Column>
+		);
+	}
+
+	return (
+		<>{ children }</>
 	);
 }
 
@@ -457,6 +510,7 @@ function PoseButton({ preset, setPose, characterState }: {
 		<SelectionIndicator
 			selected={ requested }
 			active={ active }
+			padding='tiny'
 			className={ classNames(
 				'pose',
 				{

@@ -1,27 +1,39 @@
-@import 'constants';
-
-$font-family-main: 'Arial', 'Helvetica', sans-serif;
+@import 'common';
 
 html, body {
-	font-family: $font-family-main;
+	font-family: $theme-font-family;
+	font-feature-settings: $theme-font-features;
+}
+
+@supports (font-variation-settings: normal) {
+	html, body {
+		font-family: $theme-font-family-variable;
+	}
+}
+
+button {
+	font-family: inherit;
+	font-feature-settings: inherit;
 }
 
 a {
 	display: inline-block;
 	color: $theme-link;
 	cursor: pointer;
-	margin: -0.2em -0.5em;
-	padding: 0.2em 0.5em;
 	line-height: 1.3;
 	transition: all 150ms linear;
 	text-decoration: none;
 
-	&:hover, &:focus, &:active {
-		color: $white-primary;
+	&:visited:not(:hover):not(:focus):not(:active) {
+		color: $theme-link-visited;
 	}
 
-	&:focus, &:active {
-		outline: 0.15em solid $black-secondary;
+	&:hover, &:focus, &:active {
+		color: $theme-link-active;
+	}
+
+	&:focus-visible {
+		outline: $theme-link-visiblefocus-outline solid 0.15em;
 	}
 }
 
@@ -41,4 +53,37 @@ li {
 h2, h3, h4 {
 	padding-bottom: 0.3em;
 	margin: 0;
+}
+
+table {
+	border: 1px solid $theme-table-border-outer;
+
+	tr {
+		min-height: 2em;
+	}
+
+	td,
+	th {
+		padding: 0.2em 0.5em;
+		text-align: center;
+		border: 1px solid $theme-table-border;
+	}
+
+	th {
+		background: $theme-table-header-background;
+		color: $theme-table-header-text;
+	}
+
+	tr {
+		background: $theme-table-body-background;
+		color: $theme-table-body-text;
+
+		&:nth-child(2n) {
+			background: $theme-table-body-altbackground;
+		}
+	}
+}
+
+fieldset {
+	border-color: $theme-fieldset-border;
 }

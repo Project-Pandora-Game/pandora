@@ -95,7 +95,7 @@ export function DialogInPortal({ children, priority, location = 'global' }: {
 	);
 }
 
-export function ModalDialog({ children, priority, position = 'center', id, className, allowClickBubbling = false }: CommonProps & {
+export function ModalDialog({ children, priority, position = 'center', contentOverflow = 'auto', id, className, allowClickBubbling = false }: CommonProps & {
 	/**
 	 * Priority of this dialog for ordering the dialogs on screen.
 	 * Higher priority dialogs cover lower priority dialogs.
@@ -103,6 +103,11 @@ export function ModalDialog({ children, priority, position = 'center', id, class
 	 */
 	priority?: number;
 	position?: 'center' | 'top';
+	/**
+	 * What overflow style should be used for the dialog content
+	 * @default 'auto'
+	 */
+	contentOverflow?: 'auto' | 'hidden';
 	/**
 	 * Whether to allow click events to bubble through to the parent or not.
 	 * @default false
@@ -120,7 +125,7 @@ export function ModalDialog({ children, priority, position = 'center', id, class
 	return (
 		<DialogInPortal priority={ priority }>
 			<div id={ id } className={ classNames('dialog', position, className) } onClick={ clickSink } onPointerDown={ clickSink } onPointerUp={ clickSink }>
-				<div className='dialog-content'>
+				<div className={ classNames('dialog-content', `overflow-${contentOverflow}`) } >
 					{ children }
 				</div>
 			</div>
@@ -128,7 +133,7 @@ export function ModalDialog({ children, priority, position = 'center', id, class
 	);
 }
 
-export function DraggableDialog({ children, className, title, modal = false, rawContent, close, hiddenClose, allowShade = false, initialPosition }: {
+export function DraggableDialog({ children, className, title, modal = false, rawContent, close, hiddenClose, allowShade = false, highlight = false, initialPosition }: {
 	children?: ReactNode;
 	className?: string;
 	title: string;
@@ -145,6 +150,11 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 	 * @default false
 	 */
 	allowShade?: boolean;
+	/**
+	 * Whether the dialog should be highlighted.
+	 * @default false
+	 */
+	highlight?: boolean;
 	initialPosition?: Readonly<PointLike>;
 }): ReactElement {
 	useEffect(() => {
@@ -182,6 +192,7 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 					className={ classNames(
 						'dialog-draggable',
 						shaded ? 'shaded' : null,
+						highlight ? 'dialogHighlight' : null,
 						className,
 					) }
 					dragHandleClassName='drag-handle'
@@ -193,14 +204,20 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 						width: 'auto',
 						height: 'auto',
 					} }
+					resizeHandleStyles={ {
+						bottomLeft: { zIndex: 2 },
+						bottomRight: { zIndex: 2 },
+						topLeft: { zIndex: 2 },
+						topRight: { zIndex: 2 },
+					} }
 					bounds='parent'
 					maxHeight={ initialPosition ? (window.innerHeight - initialPosition.y - 10) : 'calc(95vh - 2em)' }
 					maxWidth={ initialPosition ? (window.innerWidth - initialPosition.x - 20) : 'calc(95vw - 2em)' }
 				>
 					<header className='dialog-header'>
-						<div className='drag-handle'>
+						<span className='drag-handle dialog-title'>
 							{ title }
-						</div>
+						</span>
 						{
 							allowShade ? (
 								<div className='dialog-shade' title='Shade this dialog' onClick={ toggleShade }>

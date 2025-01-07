@@ -9,6 +9,7 @@ import {
 	AssertNever,
 	CloneDeepMutable,
 	EMPTY_ARRAY,
+	EvalContainerPath,
 	Item,
 	ITEM_LIMIT_CHARACTER_WORN,
 	ITEM_LIMIT_ROOM_INVENTORY,
@@ -16,8 +17,8 @@ import {
 	ItemId,
 	ItemInteractionType,
 	ItemPath,
+	SplitContainerPath,
 } from 'pandora-common';
-import { EvalContainerPath, SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
 import React, { ReactElement, useEffect, useMemo, useRef } from 'react';
@@ -26,11 +27,10 @@ import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
 import { useObservable } from '../../../observable';
 import { Button } from '../../common/button/button';
-import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
 import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobeItemName';
 import { useWardrobeActionContext } from '../wardrobeActionContext';
-import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
+import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeHeldItem } from '../wardrobeTypes';
 import { useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
@@ -113,9 +113,9 @@ export function InventoryItemView({
 				{
 					focus.container.length > 0 ? (
 						<>
-							<button className='modeButton' onClick={ () => focuser?.previous() } >
+							<Button onClick={ () => focuser?.previous() } >
 								Close
-							</button>
+							</Button>
 							<div className='center-flex'>
 								Viewing contents of: <br />
 								{ containerSteps.join(' > ') }
@@ -136,7 +136,7 @@ export function InventoryItemView({
 			</div>
 			{
 				containerAccessCheck.valid ? (
-					<Scrollbar color='dark'>
+					<div className='Scrollbar'>
 						<div className='list reverse withDropButtons'>
 							{
 								heldItem.type !== 'nothing' ? (
@@ -176,7 +176,7 @@ export function InventoryItemView({
 								}
 							</div>
 						</div>
-					</Scrollbar>
+					</div>
 				) : (
 					<div className='flex-1 center-flex'>
 						<strong className='wardrobeProblemMessage'>You are not allowed to view the contents of this container.</strong>
@@ -320,20 +320,14 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 			}, target);
 		} }>
 			{
-				ribbonColor ?
-					<span
-						className='colorRibbon'
-						style={ {
-							backgroundColor: ribbonColor,
-						} }
-					/> : null
+				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
 			<span className='itemName'><WardrobeItemName item={ wornItem } /></span>
 			<div className='quickActions'>
 				{
 					singleItemContainer ? null : (
-						asset.isType('personal') && asset.definition.bodypart != null ? (
+						asset.isType('bodypart') ? (
 							<>
 								<WardrobeActionButton action={ {
 									type: 'move',

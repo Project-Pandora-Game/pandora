@@ -48,11 +48,11 @@ export function WardrobeModuleConfigStorage({ item, moduleName, m }: WardrobeMod
 				ref={ setRef }
 				className={ classNames(
 					'wardrobeActionButton',
-					CheckResultToClassName(checkResult),
+					CheckResultToClassName(checkResult, false),
 				) }
 				onClick={ onClick }
 			>
-				<ActionWarning problems={ checkResult.problems } prompt={ !checkResult.valid && checkResult.prompt != null } parent={ ref } />
+				<ActionWarning checkResult={ checkResult } actionInProgress={ false } parent={ ref } />
 				Open
 			</button>
 			<Row padding='medium' alignY='center'>

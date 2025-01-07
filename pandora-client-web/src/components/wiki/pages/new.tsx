@@ -118,7 +118,8 @@ export function WikiNew(): ReactElement {
 				you truly stuck. If you ever find yourself stuck, you can still use the last resort, which is "safemode" (more on that later).
 			</p>
 			<p>
-				Another way that can get you stuck is if you permit someone to put you into a room furniture/device that restraints you. Then you can no longer leave the room/space and disconnecting or closing Pandora will not make you leave your current room/space either.<br />
+				Another way that can get you stuck is if you permit someone to put you into a room furniture/device that restraints you. Then you may no
+				longer be able to leave the room/space and disconnecting or closing Pandora will not make you leave your current room/space either.<br />
 				Again, if you get into a situation which no longer feels consensual or safe and in case communicating with OOC messages
 				would not help, using "safemode" is the only way out.
 			</p>

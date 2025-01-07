@@ -1,8 +1,7 @@
-import { Size, Rectangle, CharacterSize } from 'pandora-common/dist/assets';
-import { Application, Container, Texture, Mesh, MeshGeometry, RenderTexture, Matrix } from 'pixi.js';
 import Delaunator from 'delaunator';
-import { DataString, AssertDataString } from '../../../common/downloadHelper';
-import { PromiseOnce } from 'pandora-common';
+import { CharacterSize, PromiseOnce, Rectangle, Size } from 'pandora-common';
+import { Application, Container, Matrix, Mesh, MeshGeometry, RenderTexture, Texture } from 'pixi.js';
+import { AssertDataString, DataString } from '../../../common/downloadHelper';
 
 type ImageFormat = 'png' | 'jpg' | 'webp';
 

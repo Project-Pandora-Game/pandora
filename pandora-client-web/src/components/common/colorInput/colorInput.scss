@@ -1,15 +1,19 @@
+@import '../../../styles/common';
+
+$coloreditor-selector-size: 12.5em;
+
 .color-editor {
 	display: flex;
 	position: relative;
 	flex-direction: column;
 	align-items: center;
-	gap: 10px;
+	gap: 0.65em;
 
 	&__rect {
 		position: relative;
-		width: 200px;
-		height: 200px;
-		background-color: hsla(var(--hue), 100%, 50%, 1);
+		width: $coloreditor-selector-size;
+		height: $coloreditor-selector-size;
+		background: hsla(var(--hue), 100%, 50%, 1);
 		margin-bottom: 0.5em;
 
 		&__color {
@@ -45,7 +49,7 @@
 
 	input[type='range'] {
 		-webkit-appearance: none;
-		width: 200px;
+		width: $coloreditor-selector-size;
 		height: 1em;
 		margin-bottom: 0.5em;
 		padding: 0;
@@ -55,7 +59,7 @@
 			width: 1.5em;
 			height: 1.5em;
 			border-radius: 50%;
-			background-color: var(--rgba);
+			background: var(--rgba);
 			box-shadow:
 				0 0 4px 1px rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
 				0 2px 2px 0 rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
@@ -71,7 +75,7 @@
 			width: 1.5em;
 			height: 1.5em;
 			border-radius: 50%;
-			background-color: var(--rgba);
+			background: var(--rgba);
 			box-shadow:
 				0 0 4px 1px rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
 				0 2px 2px 0 rgba(0, 0, 0, calc(var(--hsl-lightness) * 0.5)),
@@ -100,19 +104,19 @@
 	}
 
 	&__hex {
-		width: 200px;
-		border: 1px solid #ccc;
-		border-radius: 4px;
-		padding: 5px;
-		font-size: 14px;
+		width: $coloreditor-selector-size;
 	}
 }
 
 .color-input-button {
-	border: 2px solid black;
+	border: 2px solid black; // Intentionally not themed
 	border-radius: 0;
 	display: flex;
 	width: 4em;
 	height: 2em;
 	padding: 0;
+
+	&:focus-visible {
+		outline: 0.25em solid $theme-colorbutton-visiblefocus-outline;
+	}
 }

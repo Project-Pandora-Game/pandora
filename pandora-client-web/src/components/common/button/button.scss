@@ -1,34 +1,4 @@
-@import '../../../styles/utils';
-
-$button-themes: (
-	default: (
-		background: $grey-darkest,
-		border: $grey-darkest,
-		color: white,
-		background-hover: $grey-dark,
-		color-hover: white,
-		focus-outline: $white,
-		icon-filter: none
-	),
-	defaultActive: (
-		background: $grey-lighter,
-		border: $grey-darkest,
-		color: black,
-		background-hover: $grey-lightest,
-		color-hover: black,
-		focus-outline: $white,
-		icon-filter: invert(100%)
-	),
-	danger: (
-		background: $grey-darkest,
-		border: darkred,
-		color: red,
-		background-hover: $grey-dark,
-		color-hover: red,
-		focus-outline: red,
-		icon-filter: none
-	),
-);
+@import '../../../styles/common';
 
 .Button {
 	@include center-flex;
@@ -37,34 +7,32 @@ $button-themes: (
 
 	border-radius: 0.2em;
 	padding: 0.8em 1.2em;
-	border: 0.2em solid;
+	border: 1px solid;
 
-	@each $theme-name, $theme-data in $button-themes {
+	outline-offset: -0.25em;
+
+	@each $theme-name, $theme-data in $theme-button {
 		&.#{$theme-name} {
-			background-color: map-get($theme-data, "background");
+			background: map-get($theme-data, "background");
 			border-color: map-get($theme-data, "border");
 			color: map-get($theme-data, "color");
 
 			&:hover, &:active {
-				background-color: map-get($theme-data, "background-hover");
-				color: map-get($theme-data, "color-hover");
+				&:not(:disabled) {
+					background: map-get($theme-data, "hover-background");
+					color: map-get($theme-data, "hover-color");
+				}
 			}
 
-			&:hover {
-				border-color: map-get($theme-data, "background-hover");
-			}
-
-			&:focus, &:active {
-				border-color: map-get($theme-data, "focus-outline");
+			&:focus-visible {
+				outline: 0.25em solid map-get($theme-data, "focus-outline");
 			}
 
 			&:disabled {
 				cursor: unset;
-				&:hover, &:focus, &:active {
-					background-color: map-get($theme-data, "background");
-					border-color: map-get($theme-data, "background");
-					color: map-get($theme-data, "color");
-				}
+				background: map-get($theme-data, "disabled-background");
+				color: map-get($theme-data, "disabled-color");
+				border-color: map-get($theme-data, "disabled-border");
 			}
 
 			&.IconButton img {
@@ -78,18 +46,8 @@ $button-themes: (
 		padding: 0.1em 0.3em;
 	}
 
-	&.inverseColor {
-		img {
-			filter: invert(100%);
-		}
-	}
-
-	&:disabled {
-		filter: grayscale(100%) opacity(50%);
-
-		&.hideDisabled {
-			visibility: hidden !important;
-		}
+	&.hideDisabled:disabled {
+		visibility: hidden !important;
 	}
 
 	&.IconButton {
@@ -117,9 +75,5 @@ $button-themes: (
 
 	&.danger {
 		font-weight: bold;
-	}
-
-	&.danger:disabled {
-		filter: grayscale(20%) opacity(80%);
 	}
 }

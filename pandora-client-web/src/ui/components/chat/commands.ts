@@ -1,12 +1,12 @@
-import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
-import { ChatTypeDetails, CommandBuilder, CreateCommand, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE, AccountIdSchema, CommandStepProcessor, AccountId, CommandStepOptional, FilterItemType, AssertNever } from 'pandora-common';
-import { CommandSelectorCharacter, CommandSelectorEnum } from './commandsHelpers';
-import { ChatMode } from './chatInput';
-import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider';
 import { capitalize } from 'lodash';
-import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
+import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandBuilder, CommandStepOptional, CommandStepProcessor, CreateCommand, FilterItemType, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE } from 'pandora-common';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
+import { toast } from 'react-toastify';
+import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider';
+import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
+import { ChatMode } from './chatInput';
+import { CommandSelectorCharacter, CommandSelectorEnum } from './commandsHelpers';
+import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
 
 function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
 	return CreateCommand<ICommandExecutionContextClient>();
@@ -297,13 +297,13 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		longDescription: `(alternative command: '/t')`,
 		usage: '',
 		handler: CreateClientCommand()
-			.handler(({ shardConnector, gameState, player }) => {
+			.handler(({ gameState, player }) => {
 				const playerState = gameState.globalState.currentState.characters.get(player.id);
 				if (!playerState)
 					return false;
 
-				shardConnector.awaitResponse('appearanceAction', {
-					type: 'setView',
+				gameState.doImmediateAction({
+					type: 'pose',
 					target: player.data.id,
 					view: playerState.requestedPose.view === 'front' ? 'back' : 'front',
 				}).catch(() => { /** TODO */ });
@@ -316,12 +316,12 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		longDescription: '',
 		usage: '',
 		handler: CreateClientCommand()
-			.handler(({ shardConnector, gameState, player }) => {
+			.handler(({ gameState, player }) => {
 				const playerState = gameState.globalState.currentState.characters.get(player.id);
 				if (!playerState)
 					return false;
 
-				shardConnector.awaitResponse('appearanceAction', {
+				gameState.doImmediateAction({
 					type: 'pose',
 					target: player.data.id,
 					legs: 'standing',
@@ -335,12 +335,12 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		longDescription: '',
 		usage: '',
 		handler: CreateClientCommand()
-			.handler(({ shardConnector, gameState, player }) => {
+			.handler(({ gameState, player }) => {
 				const playerState = gameState.globalState.currentState.characters.get(player.id);
 				if (!playerState)
 					return false;
 
-				shardConnector.awaitResponse('appearanceAction', {
+				gameState.doImmediateAction({
 					type: 'pose',
 					target: player.data.id,
 					legs: 'kneeling',
@@ -354,12 +354,12 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		longDescription: 'May lead to sudden bum / floor impact, if not used carefully',
 		usage: '',
 		handler: CreateClientCommand()
-			.handler(({ shardConnector, gameState, player }) => {
+			.handler(({ gameState, player }) => {
 				const playerState = gameState.globalState.currentState.characters.get(player.id);
 				if (!playerState)
 					return false;
 
-				shardConnector.awaitResponse('appearanceAction', {
+				gameState.doImmediateAction({
 					type: 'pose',
 					target: player.data.id,
 					legs: 'sitting',
@@ -383,14 +383,14 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		usage: '+ | - | min | max',
 		handler: CreateClientCommand()
 			.argument('options', CommandSelectorEnum(['+', '-', 'min', 'max']))
-			.handler(({ shardConnector, gameState, player }, { options }) => {
+			.handler(({ gameState, player }, { options }) => {
 				// Get the current player so that we can access their worn items
 				const playerState = gameState.globalState.currentState.characters.get(player.id);
 				if (!playerState)
 					return false;
 
 				//Get the actual blush item of the current player to get the current blush level
-				const blush = playerState.items.filter(FilterItemType('personal')).find((it) => it.asset.definition.bodypart === 'blush');
+				const blush = playerState.items.filter(FilterItemType('bodypart')).find((it) => it.asset.definition.bodypart === 'blush');
 				if (!blush)
 					return false;
 
@@ -421,7 +421,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				} else
 					return false;
 
-				shardConnector.awaitResponse('appearanceAction', {
+				gameState.doImmediateAction({
 					type: 'moduleAction',
 					target: {
 						type: 'character',

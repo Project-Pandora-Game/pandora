@@ -10,9 +10,6 @@ import { ItemBundleSchema } from '../item/unified';
 import type { IExportOptions } from '../modules/common';
 import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation';
 
-// Fix for pnpm resolution weirdness
-import type { } from '../item/base';
-
 export const RoomInventoryBundleSchema = z.object({
 	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
 	clientOnly: z.boolean().optional(),
@@ -59,9 +56,9 @@ export class AssetFrameworkRoomState {
 		};
 	}
 
-	public exportToBundle(options: IExportOptions = {}): RoomInventoryBundle {
+	public exportToBundle(): RoomInventoryBundle {
 		return {
-			items: this.items.map((item) => item.exportToBundle(options)),
+			items: this.items.map((item) => item.exportToBundle({})),
 		};
 	}
 

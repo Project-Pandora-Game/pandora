@@ -1,16 +1,13 @@
-import { Assert, AssertNever, ParseArrayNotEmpty, Satisfies } from '../utility/misc';
-import type { IAssetModuleDefinition, IModuleConfigCommon, IItemModule } from './modules/common';
-import { IModuleConfigTyped, TypedModuleDefinition, ItemModuleTypedActionSchema, ModuleItemDataTypedSchema, ModuleItemTemplateTypedSchema } from './modules/typed';
-import { IModuleConfigStorage, StorageModuleDefinition, ItemModuleStorageActionSchema, ModuleItemDataStorageSchema, ModuleItemTemplateStorageSchema } from './modules/storage';
-import { IModuleConfigLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition, ModuleItemDataLockSlotSchema, ModuleItemTemplateLockSlotSchema } from './modules/lockSlot';
+import type { Immutable } from 'immer';
 import { ZodDiscriminatedUnionOption, z } from 'zod';
+import { Assert, AssertNever, ParseArrayNotEmpty, Satisfies } from '../utility/misc';
 import { RecordUnpackSubobjectProperties } from '../validation';
 import type { AssetId } from './base';
 import type { IItemCreationContext, IItemLoadContext } from './item';
-import type { Immutable } from 'immer';
-
-// Fix for pnpm resolution weirdness
-import type { } from './item/base';
+import type { IAssetModuleDefinition, IItemModule, IModuleConfigCommon } from './modules/common';
+import { IModuleConfigLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition, ModuleItemDataLockSlotSchema, ModuleItemTemplateLockSlotSchema } from './modules/lockSlot';
+import { IModuleConfigStorage, ItemModuleStorageActionSchema, ModuleItemDataStorageSchema, ModuleItemTemplateStorageSchema, StorageModuleDefinition } from './modules/storage';
+import { IModuleConfigTyped, ItemModuleTypedActionSchema, ModuleItemDataTypedSchema, ModuleItemTemplateTypedSchema, TypedModuleDefinition } from './modules/typed';
 
 //#region Module definitions
 
@@ -141,7 +138,7 @@ export function GetModuleStaticAttributes<TProperties, TStaticData>(moduleDefini
 	}
 }
 
-export function CreateModuleDataFromTemplate<TProperties, TStaticData>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties, TStaticData>>, template: ItemModuleTemplate, context: IItemCreationContext): ItemModuleData | undefined {
+export function CreateModuleDataFromTemplate<TProperties, TStaticData>(moduleDefinition: Immutable<AssetModuleDefinition<TProperties, TStaticData>>, template: Immutable<ItemModuleTemplate>, context: IItemCreationContext): ItemModuleData | undefined {
 	if (moduleDefinition.type !== template.type) {
 		// Fail if the types don't match
 		return undefined;

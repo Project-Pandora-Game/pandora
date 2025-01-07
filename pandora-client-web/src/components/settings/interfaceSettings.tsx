@@ -1,12 +1,16 @@
 import { range } from 'lodash';
-import { ACCOUNT_SETTINGS_DEFAULT, AccountSettings, AccountSettingsSchema, GetLogger } from 'pandora-common';
-import React, { ReactElement, useMemo } from 'react';
+import { ACCOUNT_SETTINGS_DEFAULT, AccountSettings, AccountSettingsSchema, GetLogger, type HexColorString } from 'pandora-common';
+import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 import { useAsyncEvent } from '../../common/useEvent';
+import { LIVE_UPDATE_THROTTLE } from '../../config/Environment';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { useAccountSettings, useCurrentAccount, useModifiedAccountSettings } from '../../services/accountLogic/accountManagerHooks';
 import { Button } from '../common/button/button';
+import { ColorInput } from '../common/colorInput/colorInput';
+import { Column, Row } from '../common/container/container';
+import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator';
 import { useConfirmDialog } from '../dialog/dialog';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
 import { SelectAccountSettings, ToggleAccountSetting } from './helpers/accountSettings';
@@ -20,10 +24,102 @@ export function InterfaceSettings(): ReactElement | null {
 
 	return (
 		<>
+			<ThemeSettings />
 			<ChatroomSettings />
 			<WardrobeSettings />
 			<TutorialSettings />
 		</>
+	);
+}
+
+const THEME_SUGGESTED_ACCENT_COLORS: readonly HexColorString[] = [
+	'#e93a9a',
+	'#e93d58',
+	'#e9643a',
+	'#e8cb2d',
+	'#3dd425',
+	'#00d3b8',
+	'#3daee9',
+	'#b875dc',
+	'#926ee4',
+	'#686b6f',
+];
+
+function ThemeSettings(): ReactElement {
+	const { interfaceAccentColor } = useAccountSettings();
+	const directory = useDirectoryConnector();
+
+	const [useCustomAccentColor, setUseCustomAccentColor] = useState(!THEME_SUGGESTED_ACCENT_COLORS.includes(interfaceAccentColor));
+	const setAccentColor = useCallback((color: HexColorString) => {
+		directory.awaitResponse('changeSettings', {
+			type: 'set',
+			settings: { interfaceAccentColor: color },
+		})
+			.catch((err: unknown) => {
+				toast('Failed to update your settings. Please try again.', TOAST_OPTIONS_ERROR);
+				GetLogger('changeSettings').error('Failed to update settings:', err);
+			});
+	}, [directory]);
+
+	return (
+		<fieldset>
+			<legend>Theme</legend>
+			<Column>
+				<span>Accent color</span>
+				<Row className='accentColorPresets' wrap>
+					{
+						THEME_SUGGESTED_ACCENT_COLORS.map((color) => (
+							<SelectionIndicator key={ color }
+								selected={ interfaceAccentColor === color }
+								className='colorPreset'
+							>
+								<Button
+									slim
+									onClick={ () => {
+										setUseCustomAccentColor(false);
+										setAccentColor(color);
+									} }
+									style={ {
+										backgroundColor: color,
+									} }
+									className='flex-1'
+								/>
+							</SelectionIndicator>
+						))
+					}
+					<SelectionIndicator
+						selected={ useCustomAccentColor || !THEME_SUGGESTED_ACCENT_COLORS.includes(interfaceAccentColor) }
+						className='colorPreset'
+					>
+						<Button
+							slim
+							onClick={ () => {
+								setUseCustomAccentColor(true);
+							} }
+							className='flex-1'
+						>
+							{ '\u2026' }
+						</Button>
+					</SelectionIndicator>
+				</Row>
+				{
+					(useCustomAccentColor || !THEME_SUGGESTED_ACCENT_COLORS.includes(interfaceAccentColor)) ? (
+						<div className='input-row'>
+							<label>Custom accent color</label>
+							<ColorInput
+								initialValue={ interfaceAccentColor }
+								resetValue={ ACCOUNT_SETTINGS_DEFAULT.interfaceAccentColor }
+								throttle={ LIVE_UPDATE_THROTTLE }
+								onChange={ (color) => {
+									setAccentColor(color);
+								} }
+								title='Interface accent color'
+							/>
+						</div>
+					) : null
+				}
+			</Column>
+		</fieldset>
 	);
 }
 
@@ -150,6 +246,7 @@ function WardrobeSettings(): ReactElement {
 			<SelectAccountSettings setting='wardrobeSmallPreview' label='Item previews: List mode with small previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
 			<SelectAccountSettings setting='wardrobeBigPreview' label='Item previews: Grid mode with big previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
 			<SelectAccountSettings setting='wardrobeItemDisplayNameType' label='Item name display' stringify={ ITEM_DISPLAY_NAME_TYPE_DESCRIPTION } />
+			<SelectAccountSettings setting='wardrobeItemRequireFreeHandsToUseDefault' label='Bound usage pre-selection when creating new items' stringify={ WARDROBE_ITEM_REQUIRE_FREE_HANDS_TO_USE_DEFAULT } />
 		</fieldset>
 	);
 }
@@ -171,6 +268,12 @@ const WARDROBE_PREVIEWS_DESCRIPTION: Record<AccountSettings['wardrobeOutfitsPrev
 const WARDROBE_PREVIEW_TYPE_DESCRIPTION: Record<AccountSettings['wardrobeSmallPreview'], string> = {
 	icon: 'Show attribute icon',
 	image: 'Show preview image',
+};
+
+const WARDROBE_ITEM_REQUIRE_FREE_HANDS_TO_USE_DEFAULT: Record<AccountSettings['wardrobeItemRequireFreeHandsToUseDefault'], string> = {
+	useAssetValue: 'Select depending on the item (default)',
+	true: 'Always select "Require free hands to use"',
+	false: 'Always select "Allow using with blocked hands"',
 };
 
 const ITEM_DISPLAY_NAME_TYPE_DESCRIPTION: Record<AccountSettings['wardrobeItemDisplayNameType'], string> = {

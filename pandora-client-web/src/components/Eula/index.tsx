@@ -8,7 +8,6 @@ import pandoraLogo from '../../assets/icons/pandora.svg';
 import { ModalDialog } from '../dialog/dialog';
 import './eula.scss';
 import { z } from 'zod';
-import { Scrollbar } from '../common/scrollbar/scrollbar';
 import { EULA_LAST_UPDATED, EULA_VERSION, PrivacyPolicyContent } from './privacyPolicy';
 
 /**
@@ -65,13 +64,15 @@ function PolicyDialog({ hide }: {
 	hide: () => void;
 }): ReactElement {
 	return (
-		<ModalDialog>
-			<Scrollbar color='dark' className='policyDetails'>
-				<PrivacyPolicyContent />
-			</Scrollbar>
-			<Row padding='medium' className='policyDetails-button' alignX='center'>
-				<Button onClick={ hide }>Close</Button>
-			</Row>
+		<ModalDialog contentOverflow='hidden'>
+			<Column className='fit'>
+				<div className='Scrollbar policyDetails flex-1'>
+					<PrivacyPolicyContent />
+				</div>
+				<Row padding='medium' className='policyDetails-button' alignX='center'>
+					<Button onClick={ hide }>Close</Button>
+				</Row>
+			</Column>
 		</ModalDialog>
 	);
 }

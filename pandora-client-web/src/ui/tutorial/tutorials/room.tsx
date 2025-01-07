@@ -369,7 +369,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 							</p>
 							<p>
 								You can also click the circles:<br />
-								Clicking the circle with blue up/down arrow resets your "flying",<br />
+								Clicking the circle with blue up/down arrow resets your elevation,<br />
 								while clicking the circle with red/green arrows exits the move mode.
 							</p>
 							<p>

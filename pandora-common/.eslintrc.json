@@ -183,6 +183,9 @@
 		"import/no-unresolved": ["warn", {
 			"ignore": ["^(pandora-common($|/dist)|pixi.js/)"]
 		}],
+		"import/no-internal-modules": [ "error", {
+			"forbid": [ "pandora-common/src/**" ]
+		}],
 		// Stylistic rules
 		"@stylistic/semi": ["warn", "always"],
 		"@stylistic/semi-style": ["warn", "last"],

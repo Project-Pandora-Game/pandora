@@ -1,5 +1,3 @@
-import React, { ReactElement, useCallback, useEffect, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import {
@@ -7,11 +5,14 @@ import {
 	Asset,
 	Item,
 	ItemIdSchema,
+	SplitContainerPath,
 	type ActionTargetSelector,
 } from 'pandora-common';
-import { SplitContainerPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
+import React, { ReactElement, useCallback, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
+import { z } from 'zod';
 import { useAssetManager } from '../../assets/assetManager';
 import { useObservable } from '../../observable';
 import { Tab, TabContainer } from '../common/tabs/tabs';
@@ -24,7 +25,6 @@ import { SecondaryInventoryView } from './views/wardrobeSecondaryInventoryView';
 import { useWardrobeContext } from './wardrobeContext';
 import { WardrobeFocus } from './wardrobeTypes';
 import { WardrobeFocusesItem, useWardrobeTargetItem, useWardrobeTargetItems } from './wardrobeUtils';
-import { z } from 'zod';
 
 /** This hook doesn't generate or use a global state and shouldn't be used recursively */
 export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
@@ -40,10 +40,7 @@ export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
 		if (target.type === 'room') {
 			return asset.isType('roomDevice') ||
 				asset.isType('lock') ||
-				(
-					asset.isType('personal') &&
-					asset.definition.bodypart == null
-				);
+				asset.isType('personal');
 		}
 		if (target.type === 'character') {
 			return asset.isType('roomDeviceWearablePart') ||
@@ -53,7 +50,6 @@ export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
 				) ||
 				(
 					asset.isType('personal') &&
-					asset.definition.bodypart == null &&
 					(currentFocus.container.length !== 0 || asset.definition.wearable !== false)
 				);
 		}

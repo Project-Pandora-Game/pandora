@@ -1,5 +1,4 @@
-import { AssertNever, ICharacterPrivateData } from 'pandora-common';
-import { PronounKey, PRONOUNS } from 'pandora-common/dist/character/pronouns';
+import { AssertNever, ICharacterPrivateData, PRONOUNS, type PronounKey } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';

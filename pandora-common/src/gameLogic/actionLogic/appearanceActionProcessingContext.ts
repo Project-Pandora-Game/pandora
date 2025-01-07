@@ -1,11 +1,6 @@
 import { isEqual, uniqWith } from 'lodash';
-import type { CharacterId, CharacterRestrictionsManager } from '../character';
-import type { ItemInteractionType, Restriction, RestrictionResult } from '../character/restrictionTypes';
-import type { GameLogicCharacter, GameLogicPermission, InteractionId } from '../gameLogic';
-import { Assert, AssertNever, AssertNotNullable } from '../utility/misc';
-import type { AppearanceActionProblem, AppearanceActionData, InvalidActionReason } from './appearanceActionProblems';
-import type { AppearanceActionContext } from './appearanceActions';
-import { SplitContainerPath } from './appearanceHelpers';
+import type { AppearanceAction, GameLogicCharacter, GameLogicPermission, InteractionId } from '..';
+import { SplitContainerPath } from '../../assets/appearanceHelpers';
 import type {
 	ActionCharacterSelector,
 	ActionHandlerMessage,
@@ -16,17 +11,28 @@ import type {
 	ActionTargetSelector,
 	ItemContainerPath,
 	ItemPath,
-} from './appearanceTypes';
-import type { Item, ItemId } from './item';
-import { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
-import { RoomInventory } from './roomInventory';
-import type { AssetFrameworkGlobalState } from './state/globalState';
+} from '../../assets/appearanceTypes';
+import type { Item, ItemId } from '../../assets/item';
+import { AssetFrameworkGlobalStateManipulator } from '../../assets/manipulators/globalStateManipulator';
+import { RoomInventory } from '../../assets/roomInventory';
+import type { AssetFrameworkGlobalState } from '../../assets/state/globalState';
+import type { CharacterId, CharacterRestrictionsManager } from '../../character';
+import type { ItemInteractionType, Restriction } from '../../character/restrictionTypes';
+import { Assert, AssertNever, AssertNotNullable } from '../../utility/misc';
+import type { AppearanceActionData, AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
+import type { AppearanceActionContext } from './appearanceActions';
+import { GAME_LOGIC_ACTION_SLOWDOWN_TIMES, type GameLogicActionSlowdownReason } from './appearanceActionSlowdown';
+import type { Immutable } from 'immer';
 
 export class AppearanceActionProcessingContext {
 	private readonly _context: AppearanceActionContext;
 
 	public get player(): GameLogicCharacter {
 		return this._context.player;
+	}
+
+	public get executionContext(): AppearanceActionContext['executionContext'] {
+		return this._context.executionContext;
 	}
 
 	public readonly originalState: AssetFrameworkGlobalState;
@@ -43,9 +49,19 @@ export class AppearanceActionProcessingContext {
 		return this._actionProblems;
 	}
 
+	private readonly _actionSlowdownReasons = new Set<GameLogicActionSlowdownReason>();
+	public get actionSlowdownReasons(): ReadonlySet<GameLogicActionSlowdownReason> {
+		return this._actionSlowdownReasons;
+	}
+
 	private readonly _requiredPermissions = new Set<GameLogicPermission>();
 	public get requiredPermissions(): ReadonlySet<GameLogicPermission> {
 		return this._requiredPermissions;
+	}
+
+	private readonly _performedActions: Immutable<AppearanceAction>[] = [];
+	public get performedActions(): readonly Immutable<AppearanceAction>[] {
+		return this._performedActions;
 	}
 
 	private readonly _actionData: AppearanceActionData[] = [];
@@ -122,6 +138,15 @@ export class AppearanceActionProcessingContext {
 		this._actionProblems.push(problem);
 	}
 
+	/** Adds a slowdown to the action */
+	public addSlowdown(slowdown: GameLogicActionSlowdownReason): void {
+		this._actionSlowdownReasons.add(slowdown);
+	}
+
+	public addPerformedAction(action: Immutable<AppearanceAction>): void {
+		this._performedActions.push(action);
+	}
+
 	public addData(data: AppearanceActionData): void {
 		// Avoid adding duplicate data
 		if (this._actionData.some((existingData) => isEqual(existingData, data)))
@@ -174,28 +199,22 @@ export class AppearanceActionProcessingContext {
 
 	public checkInteractWithTarget(target: ActionTargetCharacter | null): void {
 		const restrictionManager = this.getPlayerRestrictionManager();
-		this.addRestrictionResult(restrictionManager.canInteractWithTarget(this, target));
+		restrictionManager.checkInteractWithTarget(this, target);
 	}
 
 	public checkCanUseItem(target: ActionTarget, itemPath: ItemPath, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): void {
 		const restrictionManager = this.getPlayerRestrictionManager();
-		this.addRestrictionResult(restrictionManager.canUseItem(this, target, itemPath, interaction, insertBeforeRootItem));
+		restrictionManager.checkUseItem(this, target, itemPath, interaction, insertBeforeRootItem);
 	}
 
 	public checkCanUseItemDirect(target: ActionTarget, container: ItemContainerPath, item: Item, interaction: ItemInteractionType, insertBeforeRootItem?: ItemId): void {
 		const restrictionManager = this.getPlayerRestrictionManager();
-		this.addRestrictionResult(restrictionManager.canUseItemDirect(this, target, container, item, interaction, insertBeforeRootItem));
+		restrictionManager.checkUseItemDirect(this, target, container, item, interaction, insertBeforeRootItem);
 	}
 
 	public checkCanUseItemModule(target: ActionTarget, itemPath: ItemPath, moduleName: string, interaction?: ItemInteractionType): void {
 		const restrictionManager = this.getPlayerRestrictionManager();
-		this.addRestrictionResult(restrictionManager.canUseItemModule(this, target, itemPath, moduleName, interaction));
-	}
-
-	private addRestrictionResult(result: RestrictionResult): void {
-		if (!result.allowed) {
-			this.addRestriction(result.restriction);
-		}
+		restrictionManager.checkUseItemModule(this, target, itemPath, moduleName, interaction);
 	}
 
 	public addRestriction(restriction: Restriction): void {
@@ -284,18 +303,32 @@ abstract class AppearanceActionProcessingResultBase {
 
 	public readonly originalState: AssetFrameworkGlobalState;
 
-	public abstract readonly problems: readonly AppearanceActionProblem[];
+	/** Slowdown that should be applied to this action */
+	public readonly actionSlowdownReasons: ReadonlySet<GameLogicActionSlowdownReason>;
+
+	public readonly performedActions: readonly Immutable<AppearanceAction>[];
 
 	public readonly requiredPermissions: ReadonlySet<GameLogicPermission>;
 
 	constructor(processingContext: AppearanceActionProcessingContext) {
 		this._finalProcessingContext = processingContext;
 		this.originalState = processingContext.originalState;
+		this.actionSlowdownReasons = processingContext.actionSlowdownReasons;
+		this.performedActions = processingContext.performedActions;
 		this.requiredPermissions = processingContext.requiredPermissions;
 	}
 
-	public addAdditionalProblems(additionalProblems: readonly AppearanceActionProblem[]): AppearanceActionProcessingResult {
+	public addAdditionalProblems(...additionalProblems: readonly AppearanceActionProblem[]): AppearanceActionProcessingResult {
 		return new AppearanceActionProcessingResultInvalid(this._finalProcessingContext, additionalProblems);
+	}
+
+	/** Calculates the action slowdown time (in milliseconds) */
+	public getActionSlowdownTime(): number {
+		let total = 0;
+		for (const reason of this.actionSlowdownReasons) {
+			total += GAME_LOGIC_ACTION_SLOWDOWN_TIMES[reason];
+		}
+		return total;
 	}
 }
 
@@ -333,7 +366,6 @@ export class AppearanceActionProcessingResultInvalid extends AppearanceActionPro
 export class AppearanceActionProcessingResultValid extends AppearanceActionProcessingResultBase {
 	public readonly valid = true;
 
-	public readonly problems: readonly AppearanceActionProblem[] = [];
 	public readonly resultState: AssetFrameworkGlobalState;
 	public readonly pendingMessages: readonly ActionHandlerMessage[];
 	public readonly actionData: readonly AppearanceActionData[];

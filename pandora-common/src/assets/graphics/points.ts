@@ -4,9 +4,6 @@ import { AssertNever, CloneDeepMutable } from '../../utility/misc';
 import { CoordinatesCompressedSchema, CoordinatesSchema } from './common';
 import { BoneNameSchema, ConditionSchema } from './conditions';
 
-// Fix for pnpm resolution weirdness
-import type { } from '../../validation';
-
 const TransformDefinitionBaseSchema = z.object({
 	condition: ConditionSchema.optional(),
 });

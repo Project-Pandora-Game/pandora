@@ -2,7 +2,7 @@
 	"extends": "pandora-common/tsconfig.base.json",
 	"compilerOptions": {
 		"lib": [
-			"ESNext",
+			"ES2023",
 			"DOM"
 		],
 		"types": [

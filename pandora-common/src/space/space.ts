@@ -8,9 +8,6 @@ import { ArrayToRecordKeys, CloneDeepMutable } from '../utility/misc';
 import { HexColorStringSchema, ZodArrayWithInvalidDrop, ZodTemplateString, ZodTrimedRegex } from '../validation';
 import { DEFAULT_BACKGROUND, RoomBackgroundDataSchema } from './room';
 
-// Fix for pnpm resolution weirdness
-import type { } from '../assets/item/base';
-
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;
 

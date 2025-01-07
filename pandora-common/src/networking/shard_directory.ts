@@ -8,12 +8,6 @@ import { Satisfies } from '../utility/misc';
 import { ZodCast } from '../validation';
 import { Immutable } from 'immer';
 
-// Fix for pnpm resolution weirdness
-import type { } from '../assets/appearance';
-import type { } from '../assets/item/base';
-import type { } from '../character/pronouns';
-import type { } from '../chat/chat';
-
 export const ShardDirectorySchema = {
 	shardRegister: {
 		request: z.object({

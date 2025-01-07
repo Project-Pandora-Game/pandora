@@ -15,30 +15,30 @@ import {
 	type SpacePublicSetting,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
+import closedDoorLocked from '../../../assets/icons/closed-door-locked.svg';
+import closedDoor from '../../../assets/icons/closed-door.svg';
 import forbiddenIcon from '../../../assets/icons/forbidden.svg';
 import friendsIcon from '../../../assets/icons/friends.svg';
 import lockIcon from '../../../assets/icons/lock.svg';
+import publicDoor from '../../../assets/icons/public-door.svg';
 import shieldSlashedIcon from '../../../assets/icons/shield-slashed.svg';
 import shieldIcon from '../../../assets/icons/shield.svg';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { useAccountContacts } from '../../../components/accountContacts/accountContactContext';
 import { Button } from '../../../components/common/button/button';
-import { Row } from '../../../components/common/container/container';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
+import { Column, Row } from '../../../components/common/container/container';
 import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import closedDoorLocked from '../../../icons/closed-door-locked.svg';
-import closedDoor from '../../../icons/closed-door.svg';
-import publicDoor from '../../../icons/public-door.svg';
 import { useObservable } from '../../../observable';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
+import { useIsNarrowScreen } from '../../../styles/mediaQueries';
 import { DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration';
 import './spacesSearch.scss';
 
@@ -56,6 +56,7 @@ const TIPS: readonly string[] = [
 ];
 
 export function SpacesSearch(): ReactElement {
+	const navigate = useNavigate();
 	const spaceInfo = useSpaceInfo();
 	const list = useSpacesList();
 
@@ -83,12 +84,18 @@ export function SpacesSearch(): ReactElement {
 	}
 
 	return (
-		<div>
+		<Column padding='medium'>
 			<Row padding='medium' wrap alignX='space-between'>
-				<Link to='/'>◄ Back</Link><br />
-				<span className='infoBox' onClick={ () => setShowTips(true) } >
-					🛈 Tip: { TIPS[index] }
-				</span>
+				<Button
+					onClick={ () => {
+						navigate('/');
+					} }
+				>
+					◄ Back
+				</Button>
+				<button className='infoBox' onClick={ () => setShowTips(true) } >
+					<span className='icon'>🛈</span> Tip: { TIPS[index] }
+				</button>
 			</Row>
 			<Row wrap alignX='space-between'>
 				<h2>Spaces search</h2>
@@ -100,7 +107,7 @@ export function SpacesSearch(): ReactElement {
 			{ showTips && <TipsListDialog
 				hide={ () => setShowTips(false) }
 			/> }
-		</div>
+		</Column>
 	);
 }
 
@@ -110,12 +117,12 @@ function TipsListDialog({ hide }: {
 
 	return (
 		<ModalDialog>
-			<Scrollbar color='dark' className='policyDetails'>
+			<div className='policyDetails'>
 				<h2>🛈 Full list of Pandora tips:</h2>
 				<ul>
 					{ TIPS.map((tip, index) => <li key={ index }>{ tip }</li>) }
 				</ul>
-			</Scrollbar>
+			</div>
 			<Row padding='medium' alignX='center'>
 				<Button onClick={ hide }>Close</Button>
 			</Row>
@@ -126,6 +133,7 @@ function TipsListDialog({ hide }: {
 function SpaceSearchList({ list }: {
 	list: SpaceListInfo[];
 }): ReactElement {
+	const isNarrowScreen = useIsNarrowScreen();
 	const navigate = useNavigate();
 	const account = useCurrentAccount();
 	AssertNotNullable(account);
@@ -171,23 +179,30 @@ function SpaceSearchList({ list }: {
 						</p>
 					</ContextHelpButton>
 				</h3>
-				{ ownSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
-				{
-					ownSpaces.length >= account.spaceOwnershipLimit ? null : (
-						<a className='spacesSearchGrid' onClick={ () => navigate('/spaces/create') } >
-							<div className='icon'>➕</div>
-							<div className='icons-extra' />
-							<div className='entry'>Create a new space</div>
-							<div className='description-preview' />
-						</a>
-					)
-				}
+				<Column className={ classNames('spacesSearchList', isNarrowScreen ? 'narrowScreen' : null) }>
+					{ ownSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
+					{
+						ownSpaces.length >= account.spaceOwnershipLimit ? null : (
+							<button className='spacesSearchListEntry noDescription' onClick={ () => navigate('/spaces/create') } >
+								<div className='icon'>➕</div>
+								<div className='entry'>Create a new space</div>
+							</button>
+						)
+					}
+				</Column>
 			</div>
 			<hr />
 			<div>
 				<h3>Found spaces ({ otherSpaces.length })</h3>
-				{ otherSpaces.length === 0 ? <p>No space matches your filter criteria</p> : null }
-				{ otherSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
+				{
+					otherSpaces.length === 0 ? (
+						<p>No space matches your filter criteria</p>
+					) : (
+						<Column className={ classNames('spacesSearchList', isNarrowScreen ? 'narrowScreen' : null) }>
+							{ otherSpaces.map((space) => <SpaceSearchEntry key={ space.id } baseInfo={ space } />) }
+						</Column>
+					)
+				}
 			</div>
 		</>
 	);
@@ -225,9 +240,9 @@ function SpaceSearchEntry({ baseInfo }: {
 
 	return (
 		<>
-			<a
+			<button
 				className={ classNames(
-					'spacesSearchGrid',
+					'spacesSearchListEntry',
 					isEmpty ? 'empty' : null,
 					isFull ? 'full' : null,
 					show ? 'selected' : null,
@@ -251,16 +266,19 @@ function SpaceSearchEntry({ baseInfo }: {
 					}
 				</div>
 				<div className='entry'>
-					{ `${name} (` }
-					<span className='userCount'>
-						{ `${onlineCharacters} ` }
-						<span className='offlineCount'>(+{ totalCharacters - onlineCharacters })</span>
-						{ ` / ${maxUsers}` }
+					<span className='name'>{ name }</span>
+					<span className='userCountWrapper'>
+						(
+						<span className='userCount'>
+							{ `${onlineCharacters} ` }
+							<span className='offlineCount'>(+{ totalCharacters - onlineCharacters })</span>
+							{ ` / ${maxUsers}` }
+						</span>
+						)
 					</span>
-					{ `)` }
 				</div>
 				<div className='description-preview'>{ `${description}` }</div>
-			</a>
+			</button>
 			{ show && <SpaceDetailsDialog
 				baseInfo={ baseInfo }
 				hide={ () => setShow(false) }
@@ -413,17 +431,22 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 	return (
 		<div className='spacesSearchSpaceDetails'>
 			<div>
-				Details for { isPublic ? 'public' : 'private' } space <b>{ info.name }</b><br />
+				Details for { isPublic ? 'public' : 'private' } space <b className='spaceName'>{ info.name }</b><br />
 			</div>
 			<Row className='ownership' alignY='center'>
 				Owned by: { info.owners.join(', ') }
 			</Row>
-			{ (background !== '' && !background.startsWith('#')) &&
-				<img className='preview' src={ background } width='200px' height='100px' /> }
-			<Row className='features'>
+			{
+				(background !== '' && !background.startsWith('#')) ? (
+					<img className='preview' src={ background } />
+				) : null
+			}
+			<Row className='features' wrap>
 				{
 					featureIcons.map(([icon, name, extraClassNames], i) => (
-						<img key={ i } className={ classNames('features-img', extraClassNames) } src={ icon } title={ name } alt={ name } />
+						<div key={ i } className={ classNames('features-img', extraClassNames) } title={ name }>
+							<img src={ icon } alt={ name } />
+						</div>
 					))
 				}
 			</Row>
@@ -486,7 +509,7 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 					</div>
 				)
 			}
-			<Row padding='medium' className='buttons' alignX='space-between' alignY='center'>
+			<Row padding='medium' className='buttons' alignX='space-between' alignY='center' wrap>
 				{
 					hide && (
 						<Button onClick={ (e) => {

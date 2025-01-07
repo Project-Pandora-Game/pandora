@@ -14,7 +14,6 @@ import { Select } from '../../../common/userInteraction/select/select';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
 import { useNullableObservable, useObservable } from '../../../observable';
@@ -30,22 +29,22 @@ export function PointsUI(): ReactElement {
 
 	if (!editingEnabled) {
 		return (
-			<Scrollbar color='lighter' className='editor-setupui slim'>
+			<div className='editor-setupui'>
 				<h3>Template editing</h3>
 				<h4>This menu is intended for advanced users and is not necessary for the vast majority of assets.</h4>
 				<h4 className='error'>Editing points without being aware of how assets use them <u>will</u> lead to graphical problems, including breaking existing assets.</h4>
 				<Button onClick={ () => setEditingEnabled(true) }>I understand, enable point editing</Button>
-			</Scrollbar>
+			</div>
 		);
 	}
 
 	return (
-		<Scrollbar color='lighter' className='editor-setupui slim'>
+		<div className='editor-setupui'>
 			<h3>Template editing</h3>
 			<SelectTemplateToEdit />
 			<PointsEditUi />
 			<PointsHelperMathUi />
-		</Scrollbar>
+		</div>
 	);
 }
 
@@ -137,9 +136,9 @@ export function PointsHelperMathUi(): ReactElement | null {
 						<table className='with-border'>
 							<thead>
 								<tr>
-									<td></td>
-									<td>Value</td>
-									<td>Adjusted</td>
+									<th></th>
+									<th>Value</th>
+									<th>Adjusted</th>
 								</tr>
 							</thead>
 							<tbody>
@@ -194,51 +193,59 @@ export function PointsHelperMathUi(): ReactElement | null {
 			}
 			<Column alignX='start'>
 				<h5>Target</h5>
-				<table>
+				<table className='points-helper-input-table'>
 					<tr>
 						<td>X:</td>
 						<td>{ targetCoords[0] } =</td>
 						<td>
-							<NumberInput
-								value={ targetBase[0] }
-								size={ 5 }
-								onChange={ (newValue) => {
-									setTargetBase([newValue, targetCoords[1]]);
-								} }
-							/>
+							<Row alignY='center' className='fill'>
+								<NumberInput
+									value={ targetBase[0] }
+									size={ 5 }
+									onChange={ (newValue) => {
+										setTargetBase([newValue, targetCoords[1]]);
+									} }
+								/>
+							</Row>
 						</td>
 						<td>
-							+
-							<NumberInput
-								value={ targetOffset[0] }
-								size={ 5 }
-								onChange={ (newValue) => {
-									setTargetOffset([newValue, targetOffset[1]]);
-								} }
-							/>
+							<Row alignY='center' className='fill'>
+								<span>+</span>
+								<NumberInput
+									value={ targetOffset[0] }
+									size={ 5 }
+									onChange={ (newValue) => {
+										setTargetOffset([newValue, targetOffset[1]]);
+									} }
+								/>
+							</Row>
 						</td>
 					</tr>
 					<tr>
 						<td>Y:</td>
 						<td>{ targetCoords[1] } =</td>
 						<td>
-							<NumberInput
-								value={ targetBase[1] }
-								size={ 5 }
-								onChange={ (newValue) => {
-									setTargetBase([targetCoords[0], newValue]);
-								} }
-							/>
+							<Row alignY='center' className='fill'>
+								<NumberInput
+									value={ targetBase[1] }
+									size={ 5 }
+									onChange={ (newValue) => {
+										setTargetBase([targetCoords[0], newValue]);
+									} }
+								/>
+							</Row>
 						</td>
 						<td>
-							+
-							<NumberInput
-								value={ targetOffset[1] }
-								size={ 5 }
-								onChange={ (newValue) => {
-									setTargetOffset([targetOffset[0], newValue]);
-								} }
-							/>
+							<Row alignY='center' className='fill'>
+								<span>+</span>
+								<NumberInput
+									value={ targetOffset[1] }
+									size={ 5 }
+									onChange={ (newValue) => {
+										setTargetOffset([targetOffset[0], newValue]);
+									} }
+								/>
+							</Row>
 						</td>
 					</tr>
 				</table>

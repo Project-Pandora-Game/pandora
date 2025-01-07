@@ -1,8 +1,7 @@
 import React, { ComponentType, ReactElement } from 'react';
+import { DivContainer, Row } from '../common/container/container';
 import { AuthFormRouter } from './authFormRouter';
-import './authPage.scss';
 import { LoginTeaser } from './loginTeaser';
-import { Row } from '../common/container/container';
 
 export interface AuthPageProps {
 	component: ComponentType<Record<string, never>>;
@@ -10,11 +9,11 @@ export interface AuthPageProps {
 
 export function AuthPage({ component }: AuthPageProps): ReactElement {
 	return (
-		<div className='AuthPage'>
-			<Row alignX='center' alignY='center' wrap gap='xxx-large'>
+		<DivContainer align='center' justify='center'>
+			<Row alignX='center' alignY='center' wrap padding='large' gap='xxx-large'>
 				<LoginTeaser />
 				<AuthFormRouter component={ component } />
 			</Row>
-		</div>
+		</DivContainer>
 	);
 }

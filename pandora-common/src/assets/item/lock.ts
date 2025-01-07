@@ -1,18 +1,18 @@
 import type { Immutable } from 'immer';
 import { z } from 'zod';
 
+import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions';
+import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { Asset } from '../asset';
 import type { IExportOptions } from '../modules/common';
-import type { AppearanceModuleActionContext } from '../appearanceActions';
-import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base';
 import type { AssetLockProperties, AssetProperties } from '../properties';
-import type { AppearanceValidationResult, AppearanceItems } from '../appearanceValidation';
+import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base';
 
+import { CharacterIdSchema } from '../../character/characterTypes';
 import { Logger } from '../../logging';
 import { AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility/misc';
-import { CharacterIdSchema } from '../../character/characterTypes';
 
-import { ItemBaseProps, ItemBase } from './_internal';
+import { ItemBase, ItemBaseProps } from './_internal';
 
 declare module './_internal' {
 	interface InternalItemTypeMap {
@@ -102,7 +102,7 @@ export class ItemLock extends ItemBase<'lock'> {
 					}
 					break;
 				case 'server':
-					if (lockData.hidden.password != null && !ItemLock._validatePassword(asset, lockData.hidden.password, context.logger?.prefixMessages(`Lock ${bundle.id}`))) {
+					if (lockData.hidden.password != null && !ItemLock.validatePassword(asset, lockData.hidden.password, context.logger?.prefixMessages(`Lock ${bundle.id}`))) {
 						delete lockData.hidden.password;
 					}
 					if (asset.definition.password != null && lockData.hidden?.password == null && lockData.locked != null) {
@@ -198,7 +198,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		const isSelfAction = context.targetCharacter != null && context.targetCharacter.character.id === context.processingContext.player.id;
 		const properties = this.getLockProperties();
 
-		if (action.password != null && !ItemLock._validatePassword(this.asset, action.password)) {
+		if (action.password != null && !ItemLock.validatePassword(this.asset, action.password)) {
 			return null;
 		}
 
@@ -242,7 +242,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		if (this.asset.definition.password != null && password == null) {
 			switch (this.lockData?.hidden?.side) {
 				case 'client':
-					if (!this.lockData.hidden.hasPassword) {
+					if (!this.lockData.hidden.hasPassword && processingContext.executionContext !== 'clientOnlyVerify') {
 						return rejectMissingPassword();
 					}
 					hidden = { side: 'client', hasPassword: true };
@@ -293,10 +293,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		if (!this.isLocked() || this.lockData == null)
 			return null;
 
-		if (this.asset.definition.password != null && !playerRestrictionManager.forceAllowItemActions()) {
-			if (password == null) {
-				return null;
-			}
+		if (this.asset.definition.password != null && !playerRestrictionManager.forceAllowItemActions() && processingContext.executionContext === 'act') {
 			if (this.lockData.hidden?.side === 'server' && !ItemLock._isEqualPassword(this.asset, this.lockData.hidden.password, password)) {
 				failure({
 					type: 'lockInteractionPrevented',
@@ -387,7 +384,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		return parentResult;
 	}
 
-	private static _validatePassword(asset: Asset<'lock'>, password: string, logger?: Logger): boolean {
+	public static validatePassword(asset: Asset<'lock'>, password: string, logger?: Logger): boolean {
 		const def = asset.definition.password;
 		if (def == null) {
 			logger?.warning(`has a hidden password but the asset does not define a password`);

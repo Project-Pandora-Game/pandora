@@ -45,7 +45,6 @@ import { Button } from '../../../components/common/button/button';
 import { ColorInput } from '../../../components/common/colorInput/colorInput';
 import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator';
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs';
 import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
@@ -934,12 +933,12 @@ function BackgroundInfo({ background }: { background: string; }): ReactElement {
 	}
 
 	return (
-		<Column className='backgroundInfo'>
+		<Row alignX='space-between' className='backgroundInfo'>
 			<span className='name'>{ backgroundInfo.name }</span>
 			<div className='preview'>
 				<img src={ GetAssetsSourceUrl() + backgroundInfo.image } />
 			</div>
-		</Column>
+		</Row>
 	);
 }
 
@@ -999,32 +998,35 @@ function BackgroundSelectDialog({ hide, current, select }: {
 						}
 					</div>
 				</div>
-				<Scrollbar className='backgrounds' color='lighter'>
+				<div className='backgrounds'>
 					{ backgroundsToShow
 						.map((b) => (
-							<a key={ b.id }
-								onClick={ () => {
-									setSelectedBackground(b.id);
-								} }
+							<SelectionIndicator key={ b.id }
+								padding='tiny'
+								selected={ b.id === selectedBackground }
+								active={ b.id === current }
 							>
-								<SelectionIndicator
-									direction='column'
-									align='center'
-									justify='center'
-									padding='small'
-									selected={ b.id === selectedBackground }
-									active={ b.id === current }
-									className='details'
+								<Button
+									className='fill'
+									onClick={ () => {
+										setSelectedBackground(b.id);
+									} }
 								>
-									<div className='preview'>
-										<img src={ GetAssetsSourceUrl() + b.preview } />
-									</div>
-									<div className='name'>{ b.name }</div>
-								</SelectionIndicator>
-							</a>
+									<Column
+										alignX='center'
+										alignY='center'
+										className='details fill'
+									>
+										<div className='preview'>
+											<img src={ GetAssetsSourceUrl() + b.preview } />
+										</div>
+										<div className='name'>{ b.name }</div>
+									</Column>
+								</Button>
+							</SelectionIndicator>
 						)) }
-				</Scrollbar>
-				<Row className='footer' alignX='space-between'>
+				</div>
+				<Row className='footer' alignX='space-between' wrap>
 					<Button onClick={ hide }>Cancel</Button>
 					<Button
 						disabled={ IsObject(current) }

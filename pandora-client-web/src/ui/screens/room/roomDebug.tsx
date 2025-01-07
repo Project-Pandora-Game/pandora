@@ -8,7 +8,7 @@ import { Character, useCharacterData } from '../../../character/character';
 import { useEvent } from '../../../common/useEvent';
 import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput';
-import { Row } from '../../../components/common/container/container';
+import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { useGameState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
 import { USER_DEBUG } from '../../../config/Environment';
@@ -350,12 +350,11 @@ function ChatroomDebugCharacterView({
 	const characterData = useCharacterData(character);
 
 	return (
-		<>
+		<Column padding='small' gap='none'>
 			<span>Name: { characterData.name }</span>
 			<span>Character ID: { characterData.id }</span>
 			<span>Account ID: { characterData.accountId }</span>
 			<span>Position: { `[${characterData.position[0]}, ${characterData.position[1]}]` }</span>
-			<br />
-		</>
+		</Column>
 	);
 }

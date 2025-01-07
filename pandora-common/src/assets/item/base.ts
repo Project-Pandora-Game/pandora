@@ -2,19 +2,18 @@ import type { Immutable } from 'immer';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
-import type { GameLogicCharacter } from '../../gameLogic';
+import type { CharacterId } from '../../character';
 import type { Satisfies } from '../../utility/misc';
 import type { Asset } from '../asset';
 import type { AssetManager } from '../assetManager';
+import type { AssetId } from '../base';
 import type { AssetColorization, AssetType, WearableAssetType } from '../definitions';
+import type { ItemModuleData, ItemModuleTemplate } from '../modules';
 import type { AssetFrameworkRoomState } from '../state/roomState';
 import type { InternalItemTypeMap, ItemBase } from './_internal';
 import type { LockBundle } from './lock';
 import type { RoomDeviceBundle } from './roomDevice';
 import type { RoomDeviceLink } from './roomDeviceWearablePart';
-import type { AssetId } from '../base';
-import type { ItemModuleData, ItemModuleTemplate } from '../modules';
-import type { CharacterId } from '../../character';
 
 import { Logger } from '../../logging';
 import { HexRGBAColorString, HexRGBAColorStringSchema, ZodTemplateString } from '../../validation';
@@ -57,6 +56,8 @@ export type ItemBundle = {
 	name?: string;
 	chat?: ItemChatCustomMessages;
 	description?: string;
+	/** Whether free hands are required to interact with this item. */
+	requireFreeHandsToUse?: boolean;
 	moduleData?: Record<string, ItemModuleData>;
 	/** Room device specific data */
 	roomDeviceData?: RoomDeviceBundle;
@@ -77,6 +78,8 @@ export type ItemTemplate = {
 	name?: string;
 	chat?: ItemChatCustomMessages;
 	description?: string;
+	/** Whether free hands are required to interact with this item. */
+	requireFreeHandsToUse?: boolean;
 	modules?: Record<string, ItemModuleTemplate>;
 };
 
@@ -89,7 +92,10 @@ export type IItemLoadContext = {
 
 export type IItemCreationContext = {
 	assetManager: AssetManager;
-	creator: GameLogicCharacter;
+	creator: {
+		readonly id: CharacterId;
+		readonly name: string;
+	};
 	createItemBundleFromTemplate(template: ItemTemplate, context: IItemCreationContext): ItemBundle | undefined;
 };
 

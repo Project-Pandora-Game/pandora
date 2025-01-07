@@ -21,6 +21,7 @@ import {
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager';
+import crossIcon from '../../../assets/icons/cross.svg';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import diskIcon from '../../../assets/icons/disk.svg';
 import editIcon from '../../../assets/icons/edit.svg';
@@ -32,16 +33,16 @@ import { usePlayerVisionFilters } from '../../../graphics/room/roomScene';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { serviceManagerContext } from '../../../services/serviceProvider';
-import { Button } from '../../common/button/button';
+import { Button, IconButton } from '../../common/button/button';
 import { Column, DivContainer, Row } from '../../common/container/container';
-import { Scrollbar } from '../../common/scrollbar/scrollbar';
 import { useConfirmDialog } from '../../dialog/dialog';
 import { ImportDialog } from '../../exportImport/importDialog';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
+import { THEME_NORMAL_BACKGROUND } from '../../gameContext/interfaceSettingsProvider';
 import { usePlayerState } from '../../gameContext/playerContextProvider';
 import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName';
 import { useWardrobeActionContext } from '../wardrobeActionContext';
-import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton } from '../wardrobeComponents';
+import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { OutfitEditView } from './wardrobeOutfitEditView';
 
@@ -189,7 +190,7 @@ export function InventoryOutfitView({ targetContainer }: {
 				<div className='toolbar'>
 					<span className='center-flex'><strong>Temporary collection</strong></span>
 				</div>
-				<Scrollbar color='dark'>
+				<div className='Scrollbar'>
 					<Column className='flex-1' padding='small'>
 						<Row alignX='center' padding='medium'>
 							<strong>This collection is temporary and will be lost when the game is closed</strong>
@@ -202,7 +203,7 @@ export function InventoryOutfitView({ targetContainer }: {
 							targetContainer={ targetContainer }
 						/>
 					</Column>
-				</Scrollbar>
+				</div>
 			</div>
 		);
 	}
@@ -215,7 +216,12 @@ export function InventoryOutfitView({ targetContainer }: {
 				<div className='toolbar'>
 					<span>Editing collection: { editedOutfit?.name ?? editedOutfitId }</span>
 					<StorageUsageMeter title='Storage used' used={ storageUsed } limit={ storageAvailableTotal } />
-					<button className='modeButton' onClick={ () => setEditedOutfitId(null) }>✖️</button>
+					<IconButton
+						onClick={ () => setEditedOutfitId(null) }
+						theme='default'
+						src={ crossIcon }
+						alt='Stop editing'
+					/>
 				</div>
 				{
 					editedOutfit != null ? (
@@ -279,7 +285,7 @@ export function InventoryOutfitView({ targetContainer }: {
 				</Button>
 			</div>
 			<div className='listContainer outfitList'>
-				<Scrollbar color='dark'>
+				<div className='Scrollbar'>
 					<Column overflowY='hidden' padding='small'>
 						{
 							storedOutfits.map((outfit) => (
@@ -303,7 +309,7 @@ export function InventoryOutfitView({ targetContainer }: {
 							} }
 						/>
 					</Column>
-				</Scrollbar>
+				</div>
 			</div>
 		</div>
 	);
@@ -324,7 +330,7 @@ function OutfitPreview({ outfit }: {
 	const characterState = useMemo((): AssetFrameworkCharacterState => {
 		// As a base use the current character, but only body - not any items
 		const templateBundle = baseCharacterState.items
-			.filter((item) => item.isType('personal') && item.asset.definition.bodypart != null)
+			.filter((item) => item.isType('bodypart'))
 			.map((item) => item.exportToBundle({}));
 
 		const overwrittenBodyparts = new Set<string>();
@@ -338,13 +344,13 @@ function OutfitPreview({ outfit }: {
 			if (itemBundle != null) {
 				const asset = assetManager.getAssetById(itemBundle.asset);
 				// We need to overwrite bodyparts of type we are adding for the preview to make sense
-				if (asset?.isType('personal') && asset.definition.bodypart != null && !overwrittenBodyparts.has(asset.definition.bodypart)) {
+				if (asset?.isType('bodypart') && !overwrittenBodyparts.has(asset.definition.bodypart)) {
 					const bodypart = asset.definition.bodypart;
 					// But we don't want to drop bodyparts that are in the outfit multiple times (e.g. hairs)
 					overwrittenBodyparts.add(bodypart);
 					_.remove(templateBundle, (oldItem) => {
 						const oldAsset = assetManager.getAssetById(oldItem.asset);
-						return oldAsset?.isType('personal') && oldAsset.definition.bodypart === bodypart;
+						return oldAsset?.isType('bodypart') && oldAsset.definition.bodypart === bodypart;
 					});
 				}
 
@@ -391,7 +397,7 @@ function OutfitPreview({ outfit }: {
 			<GraphicsSceneBackgroundRenderer
 				renderArea={ { x: 97, y: 145, width: 806, height: 1210 } }
 				resolution={ 1 }
-				backgroundColor={ 0xcccccc }
+				backgroundColor={ Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16) }
 				forwardContexts={ [serviceManagerContext] }
 			>
 				<GraphicsCharacter
@@ -579,7 +585,7 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 		);
 	}
 
-	const ribbonColor = (asset.isType('personal') || asset.isType('roomDevice')) ? (
+	const ribbonColor = (asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice')) ? (
 		itemTemplate.color?.[
 			asset.definition.colorRibbonGroup ??
 			first(Object.keys(asset.definition.colorization ?? {})) ??
@@ -611,13 +617,7 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 			} }
 		>
 			{
-				ribbonColor ?
-					<span
-						className='colorRibbon'
-						style={ {
-							backgroundColor: ribbonColor,
-						} }
-					/> : null
+				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
 			<span className='itemName'>{ visibleName }</span>

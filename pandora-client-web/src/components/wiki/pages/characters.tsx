@@ -47,8 +47,8 @@ export function WikiCharacters(): ReactElement {
 				and affect characters in predictable ways - the effects on them cannot be altered, ignored or bypassed.
 				That way everyone can easily predict what effects items have on the person wearing them.
 				If you dislike any of these effects, such as seeing a fully black room view with certain heavy blindfolds, you
-				can simply <Link to='/wiki/items#IT_Item_preferences_and_limits'>block according items.</Link>
-				Note that items come with different strength levels of such effects.
+				can simply <Link to='/wiki/items#IT_Item_preferences_and_limits'>block according items.</Link> Note
+				that items come with different strength levels of such effects.
 				For example items with a weaker speech impairment effect might still allow the wearer to be mostly understandable.
 			</p>
 			<p>

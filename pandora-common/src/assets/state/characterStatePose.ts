@@ -6,9 +6,6 @@ import type { AssetManager } from '../assetManager';
 import type { BoneType, CharacterView, LegsPose } from '../graphics';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, CharacterViewSchema, LegsPoseSchema } from '../graphics';
 
-// Fix for pnpm resolution weirdness
-import type { } from '../../validation';
-
 export const AppearanceArmPoseSchema = z.object({
 	position: ArmPoseSchema.catch('front'),
 	rotation: ArmRotationSchema.catch('forward'),

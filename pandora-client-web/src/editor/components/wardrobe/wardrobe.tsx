@@ -1,20 +1,23 @@
 import { Immutable } from 'immer';
 import {
+	AbortActionAttempt,
 	ActionSpaceContext,
 	AppearanceActionContext,
+	AppearanceActionProcessingContext,
+	ApplyAction,
 	Assert,
 	AssetFrameworkGlobalState,
-	DoAppearanceAction,
 	EMPTY_ARRAY,
+	EvalItemPath,
+	FinishActionAttempt,
 	ItemId,
+	StartActionAttempt,
 } from 'pandora-common';
-import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import React, { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle';
-import { Scrollbar } from '../../../components/common/scrollbar/scrollbar';
 import { WardrobeItemConfigMenu } from '../../../components/wardrobe/itemDetail/_wardrobeItemDetail';
 import { InventoryAssetView } from '../../../components/wardrobe/views/wardrobeAssetView';
 import { InventoryItemView } from '../../../components/wardrobe/views/wardrobeItemView';
@@ -58,6 +61,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	const [scrollToItem, setScrollToItem] = useState<ItemId | null>(null);
 
 	const actions = useMemo((): AppearanceActionContext => ({
+		executionContext: 'clientOnlyVerify',
 		player: character.gameLogicCharacter,
 		spaceContext: EDITOR_SPACE_CONTEXT,
 		getCharacter: (id) => {
@@ -82,11 +86,82 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		player: character,
 		globalState,
 		actions,
-		execute: (action) => {
-			const result = DoAppearanceAction(action, actions, editor.globalState.currentState);
+		doImmediateAction: (action) => {
+			// We do direct apply to skip need for attempt in some edge cases.
+			const processingContext = new AppearanceActionProcessingContext({
+				...actions,
+				executionContext: 'act',
+			}, editor.globalState.currentState);
+			const result = ApplyAction(processingContext, action);
 
 			// Check if result is valid
-			if (!result.valid || result.problems.length > 0) {
+			if (!result.valid) {
+				return {
+					result: 'failure',
+					problems: result.problems.slice(),
+				};
+			}
+
+			// Apply the action
+			editor.globalState.setState(result.resultState);
+
+			return {
+				result: 'success',
+				data: result.actionData,
+			};
+		},
+		startActionAttempt: (action) => {
+			const result = StartActionAttempt(action, {
+				...actions,
+				executionContext: 'act',
+			}, editor.globalState.currentState, Date.now());
+
+			// Check if result is valid
+			if (!result.valid) {
+				return {
+					result: 'failure',
+					problems: result.problems.slice(),
+				};
+			}
+
+			// Apply the action
+			editor.globalState.setState(result.resultState);
+
+			return {
+				result: 'success',
+				data: result.actionData,
+			};
+		},
+		completeCurrentActionAttempt: () => {
+			const result = FinishActionAttempt({
+				...actions,
+				executionContext: 'act',
+			}, editor.globalState.currentState, Date.now());
+
+			// Check if result is valid
+			if (!result.valid) {
+				return {
+					result: 'failure',
+					problems: result.problems.slice(),
+				};
+			}
+
+			// Apply the action
+			editor.globalState.setState(result.resultState);
+
+			return {
+				result: 'success',
+				data: result.actionData,
+			};
+		},
+		abortCurrentActionAttempt: () => {
+			const result = AbortActionAttempt({
+				...actions,
+				executionContext: 'act',
+			}, editor.globalState.currentState);
+
+			// Check if result is valid
+			if (!result.valid) {
 				return {
 					result: 'failure',
 					problems: result.problems.slice(),
@@ -153,7 +228,7 @@ export function EditorWardrobeUI(): ReactElement {
 	), [assetManager]);
 
 	return (
-		<Scrollbar color='dark' className='editor-wardrobe slim'>
+		<div className='Scrollbar editor-wardrobe slim'>
 			<Column padding='medium'>
 				<div>
 					<label htmlFor='unlocked-toggle'>Character Safemode</label>
@@ -202,6 +277,6 @@ export function EditorWardrobeUI(): ReactElement {
 					</Row>
 				</FieldsetToggle>
 			</Column>
-		</Scrollbar>
+		</div>
 	);
 }

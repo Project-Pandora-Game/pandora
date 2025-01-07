@@ -29,6 +29,13 @@ export const INTERACTION_CONFIG = {
 			allowOthers: 'yes',
 		},
 	},
+	customizeItem: {
+		visibleName: 'Customize worn items (such as their description)',
+		icon: 'setting',
+		defaultPermissions: {
+			allowOthers: 'prompt',
+		},
+	},
 	useStorageModule: {
 		visibleName: 'Interact with items stored inside worn items',
 		icon: 'storage',

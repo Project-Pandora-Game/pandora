@@ -25,9 +25,8 @@ import { BrowserStorage } from '../../browserStorage';
 import { Character } from '../../character/character';
 import { ChildrenProps } from '../../common/reactTypes';
 import { useAsyncEvent, useEvent } from '../../common/useEvent';
-import { useCharacterRestrictionsManager, useSpaceCharacters } from '../../components/gameContext/gameStateContextProvider';
+import { useCharacterRestrictionsManager, useSpaceCharacters, type GameState } from '../../components/gameContext/gameStateContextProvider';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment';
-import { ShardConnector } from '../../networking/shardConnector';
 import { useObservable } from '../../observable';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext';
 import { useDebugConfig } from '../../ui/screens/room/roomDebug';
@@ -53,7 +52,7 @@ type RoomDeviceInteractiveProps = {
 	item: ItemRoomDevice;
 	deployment: Immutable<RoomDeviceDeploymentPosition>;
 	projectionResolver: Immutable<RoomProjectionResolver>;
-	shard: ShardConnector | null;
+	gameState: GameState;
 };
 
 type RoomDeviceProps = {
@@ -95,7 +94,7 @@ export function RoomDeviceMovementTool({
 	item,
 	deployment,
 	projectionResolver,
-	shard,
+	gameState,
 }: RoomDeviceInteractiveProps): ReactElement | null {
 	const asset = item.asset;
 
@@ -104,13 +103,9 @@ export function RoomDeviceMovementTool({
 	} = useRoomScreenContext();
 
 	const [setPositionRaw] = useAsyncEvent(async (newX: number, newY: number, newYOffset: number) => {
-		if (!shard) {
-			return;
-		}
-
 		[newX, newY, newYOffset] = projectionResolver.fixupPosition([newX, newY, newYOffset]);
 
-		await shard.awaitResponse('appearanceAction', {
+		await gameState.doImmediateAction({
 			type: 'roomDeviceDeploy',
 			target: {
 				type: 'roomInventory',

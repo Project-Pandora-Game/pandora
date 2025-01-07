@@ -561,26 +561,26 @@ function PosePresetEditRow({ preset }: { preset: AssetFrameworkPosePresetWithId;
 			<td>{ preset.name }</td>
 			<td>
 				<Row>
-					<button onClick={ onMoveUp }>
+					<Button onClick={ onMoveUp } slim>
 						<img src={ triangleUp } alt='Move up' />
 						<span>&nbsp;Move up</span>
-					</button>
-					<button onClick={ onMoveDown }>
+					</Button>
+					<Button onClick={ onMoveDown } slim>
 						<img src={ triangleDown } alt='Move down' />
 						<span>&nbsp;Move down</span>
-					</button>
-					<button onClick={ onEdit }>
+					</Button>
+					<Button onClick={ onEdit } slim>
 						<img src={ editIcon } alt='Edit action' />
 						<span>&nbsp;Edit</span>
-					</button>
-					<button onClick={ onRemove }>
+					</Button>
+					<Button onClick={ onRemove } slim>
 						<img src={ deleteIcon } alt='Delete action' />
 						<span>&nbsp;Delete</span>
-					</button>
-					<button onClick={ onExport }>
+					</Button>
+					<Button onClick={ onExport } slim>
 						<img src={ exportIcon } alt='Export action' />
 						<span>&nbsp;Export</span>
-					</button>
+					</Button>
 				</Row>
 			</td>
 			{

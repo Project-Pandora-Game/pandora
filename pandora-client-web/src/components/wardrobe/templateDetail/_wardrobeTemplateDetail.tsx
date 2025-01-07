@@ -1,14 +1,20 @@
+import classNames from 'classnames';
+import { Immutable, produce } from 'immer';
 import {
 	AssetModuleDefinition,
 	ItemTemplate,
+	type Asset,
 } from 'pandora-common';
-import React, { ReactElement } from 'react';
-import { Column, Row } from '../../common/container/container';
+import React, { ReactElement, useCallback } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
-import { WardrobeTemplateColorization } from './wardrobeTemplateColor';
-import { Immutable } from 'immer';
+import crossIcon from '../../../assets/icons/cross.svg';
+import strugglingAllow from '../../../assets/icons/struggling_allow.svg';
+import strugglingDeny from '../../../assets/icons/struggling_deny.svg';
+import { IconButton } from '../../common/button/button';
+import { Column, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { WardrobeModuleTemplateConfig } from '../modules/_wardrobeModules';
+import { WardrobeTemplateColorization } from './wardrobeTemplateColor';
 
 export function WardrobeTemplateEditMenu({
 	title,
@@ -31,7 +37,12 @@ export function WardrobeTemplateEditMenu({
 			<div className='inventoryView'>
 				<div className='toolbar'>
 					<span>{ title }: [ ERROR: ASSET NOT FOUND ]</span>
-					<button className='modeButton' onClick={ cancel }>✖️</button>
+					<IconButton
+						onClick={ cancel }
+						theme='default'
+						src={ crossIcon }
+						alt='Cancel'
+					/>
 				</div>
 			</div>
 		);
@@ -53,6 +64,15 @@ export function WardrobeTemplateEditMenu({
 				</Row>
 				{
 					(asset.isType('personal') || asset.isType('roomDevice')) ? (
+						<WardrobeTemplateRequireFreeHandsCustomize
+							asset={ asset }
+							template={ template }
+							updateTemplate={ updateTemplate }
+						/>
+					) : null
+				}
+				{
+					(asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice')) ? (
 						<WardrobeTemplateColorization
 							asset={ asset }
 							color={ template.color ?? {} }
@@ -67,7 +87,7 @@ export function WardrobeTemplateEditMenu({
 					) : null
 				}
 				{
-					(asset.isType('personal') || asset.isType('roomDevice')) ? (
+					(asset.isType('bodypart') || asset.isType('personal') || asset.isType('roomDevice')) ? (
 						Array.from(Object.entries<Immutable<AssetModuleDefinition<unknown, unknown>>>(asset.definition.modules as Record<string, AssetModuleDefinition<unknown, unknown>> ?? {}))
 							.map(([moduleName, m]) => (
 								<FieldsetToggle legend={ `Module: ${m.name}` } key={ moduleName }>
@@ -92,5 +112,63 @@ export function WardrobeTemplateEditMenu({
 				}
 			</Column>
 		</div>
+	);
+}
+
+function WardrobeTemplateRequireFreeHandsCustomize({ template, updateTemplate }: {
+	asset: Asset<'personal' | 'roomDevice'>;
+	template: Immutable<ItemTemplate>;
+	updateTemplate: (newTemplate: Immutable<ItemTemplate>) => void;
+}): ReactElement {
+
+	const setRequire = useCallback((newValue: boolean) => {
+		updateTemplate(produce(template, (draft) => {
+			draft.requireFreeHandsToUse = newValue;
+		}));
+	}, [template, updateTemplate]);
+
+	return (
+		<FieldsetToggle legend='Bound usage'>
+			<Row alignY='center'>
+				<button
+					className={ classNames(
+						'wardrobeActionButton',
+						'IconButton',
+						'allowed',
+						(template.requireFreeHandsToUse === true) ? 'selected' : null,
+					) }
+					onClick={ (ev) => {
+						ev.stopPropagation();
+						setRequire(true);
+					} }
+				>
+					<img
+						src={ strugglingDeny }
+						crossOrigin='anonymous'
+						alt='Require free hands to use this item'
+						title='Require free hands to use this item'
+					/>
+				</button>
+				<button
+					className={ classNames(
+						'wardrobeActionButton',
+						'IconButton',
+						'allowed',
+						(template.requireFreeHandsToUse === false) ? 'selected' : null,
+					) }
+					onClick={ (ev) => {
+						ev.stopPropagation();
+						setRequire(false);
+					} }
+				>
+					<img
+						src={ strugglingAllow }
+						crossOrigin='anonymous'
+						alt='Allow using this item even with blocked hands'
+						title='Allow using this item even with blocked hands'
+					/>
+				</button>
+			</Row>
+		</FieldsetToggle>
 	);
 }

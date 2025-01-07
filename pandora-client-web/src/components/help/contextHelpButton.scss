@@ -5,10 +5,16 @@
 	aspect-ratio: 1;
 	margin: 0.2em 0.4em;
 	padding: 0;
+	border-radius: 100%;
 
-	background-color: transparent;
+	background: transparent;
 
 	&:hover {
 		filter: brightness(75%);
+	}
+
+	&:focus-visible {
+		// Not themable as it is based on the icon's color
+		outline: 0.25em solid #257;
 	}
 }

@@ -1,21 +1,16 @@
-import { CharacterIdSchema } from '../character/characterTypes';
-import { CharacterPublicSettingsSchema, CharacterRoomPositionSchema } from '../character/characterData';
-import { AppearanceActionSchema } from '../assets/appearanceActions';
-import { AppearanceActionProblem, AppearanceActionData } from '../assets/appearanceActionProblems';
-import { ClientChatMessagesSchema, ChatCharacterStatusSchema } from '../chat/chat';
-import { z } from 'zod';
-import { CharacterInputNameSchema, ZodCast } from '../validation';
-import { Satisfies } from '../utility/misc';
-import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 import { Immutable } from 'immer';
-import { PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic';
-import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
+import { z } from 'zod';
 import { AssetPreferencesPublicSchema } from '../character/assetPreferences';
-
-// Fix for pnpm resolution weirdness
-import type { } from '../assets/item/base';
-import type { } from '../assets/appearance';
-import type { } from '../character/pronouns';
+import { CharacterPublicSettingsSchema, CharacterRoomPositionSchema } from '../character/characterData';
+import { CharacterIdSchema } from '../character/characterTypes';
+import { ChatCharacterStatusSchema, ClientChatMessagesSchema } from '../chat/chat';
+import { PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic';
+import { AppearanceActionSchema } from '../gameLogic/actionLogic/actions/_index';
+import { AppearanceActionData, AppearanceActionProblem } from '../gameLogic/actionLogic/appearanceActionProblems';
+import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
+import { Satisfies } from '../utility/misc';
+import { CharacterInputNameSchema, ZodCast } from '../validation';
+import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
 
 /** Client->Shard messages */
 export const ClientShardSchema = {
@@ -53,8 +48,16 @@ export const ClientShardSchema = {
 		}),
 		response: null,
 	},
-	appearanceAction: {
-		request: AppearanceActionSchema,
+	gameLogicAction: {
+		request: z.discriminatedUnion('operation', [
+			z.object({
+				operation: z.enum(['doImmediately', 'start']),
+				action: AppearanceActionSchema,
+			}),
+			z.object({
+				operation: z.enum(['complete', 'abortCurrentAction']),
+			}),
+		]),
 		response: z.discriminatedUnion('result', [
 			z.object({
 				result: z.literal('success'),

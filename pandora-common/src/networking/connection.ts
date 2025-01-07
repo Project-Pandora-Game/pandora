@@ -118,7 +118,7 @@ export abstract class ConnectionBase<
 					if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {
 						this.logger.warning(`\u25BC message '${messageType}' socket error:`, socketError);
 					}
-					return reject(socketError instanceof Error ? socketError : new Error(String(socketError)));
+					return reject(socketError instanceof Error ? socketError : new Error('Socket error', { cause: socketError }));
 				}
 				if (error != null) {
 					if (MESSAGE_HANDLER_DEBUG_ALL || MESSAGE_HANDLER_DEBUG_MESSAGES.has(messageType)) {

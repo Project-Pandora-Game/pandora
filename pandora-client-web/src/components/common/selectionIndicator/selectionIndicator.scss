@@ -1,25 +1,27 @@
+@import '../../../styles/common';
+
 .selectionIndicator {
 	position: relative;
 	margin: 2px;
 	border-radius: 0.5em;
-	outline: solid 2px transparent;
+	outline: 2px solid transparent;
 	transition: outline-color 150ms linear;
 
 	&.selected {
-		outline-color: black;
+		outline-color: $theme-button-selected-outline;
 	}
 
 	&::before {
 		content: " ";
 		position: absolute;
 		inset: 0px;
-		outline: dashed 2px transparent;
+		outline: 2px dashed transparent;
 		border-radius: 0.5em;
 		transition: outline-color 150ms linear;
 		pointer-events: none;
 	}
 
 	&.active:not(.selected)::before {
-		outline-color: black;
+		outline-color: $theme-button-selected-outline;
 	}
 }

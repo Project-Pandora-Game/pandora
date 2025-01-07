@@ -1,8 +1,8 @@
 @import '../../styles/common';
 
 .localErrorBoundaryOverlay {
-	color: white;
-	background-color: darkred;
+	background: $theme-errorreport-local-background;
+	color: $theme-errorreport-local-text;
 	text-decoration: none;
 	display: flex;
 	justify-content: center;
@@ -39,7 +39,8 @@
 		border: 1px solid;
 		padding: 1em;
 		overflow: auto;
-		background-color: $grey-lighter;
+		background: $theme-errorreport-report-background;
+		color: $theme-errorreport-report-text;
 		border-radius: 0.25em;
 
 		.button-wrapper {

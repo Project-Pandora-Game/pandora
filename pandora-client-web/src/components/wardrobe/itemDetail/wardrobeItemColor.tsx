@@ -21,7 +21,7 @@ import { useWardrobeContext } from '../wardrobeContext';
 import { useWardrobeTargetItems } from '../wardrobeUtils';
 
 export function WardrobeItemColorization({ wornItem, item }: {
-	wornItem: Item<'personal' | 'roomDevice'>;
+	wornItem: Item<'bodypart' | 'personal' | 'roomDevice'>;
 	item: ItemPath;
 }): ReactElement | null {
 	const { target, targetSelector } = useWardrobeContext();
@@ -57,7 +57,7 @@ export function WardrobeItemColorization({ wornItem, item }: {
 function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup, action, item }: {
 	colorKey: string;
 	colorDefinition: Immutable<AssetColorization>;
-	action: Omit<AppearanceAction & { type: 'color'; }, 'color'>;
+	action: Omit<AppearanceAction<'color'>, 'color'>;
 	allItems: AppearanceItems;
 	overrideGroup?: ColorGroupResult;
 	item: Item;
@@ -67,7 +67,7 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup
 
 	const checkAction = useMemo((): AppearanceAction => ({ ...action, color: CloneDeepMutable(bundle) ?? {} }), [action, bundle]);
 	const check = useStaggeredAppearanceActionResult(checkAction);
-	const disabled = check == null || !check.valid || check.problems.length > 0;
+	const disabled = check == null || !check.valid || check.getActionSlowdownTime() > 0;
 
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 

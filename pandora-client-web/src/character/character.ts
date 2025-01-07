@@ -8,6 +8,7 @@ import {
 	CharacterAppearance,
 	CharacterId,
 	CharacterRestrictionsManager,
+	EvalItemPath,
 	GameLogicCharacter,
 	GameLogicCharacterClient,
 	GetLogger,
@@ -20,7 +21,6 @@ import {
 	TypedEventEmitter,
 	WearableAssetType,
 } from 'pandora-common';
-import { EvalItemPath } from 'pandora-common/dist/assets/appearanceHelpers';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import type { PlayerCharacter } from './player';
 

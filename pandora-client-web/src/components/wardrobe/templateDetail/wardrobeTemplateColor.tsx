@@ -11,7 +11,7 @@ import { ColorInputRGBA } from '../../common/colorInput/colorInput';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 
 export function WardrobeTemplateColorization({ asset, color, onChange }: {
-	asset: Asset<'personal' | 'roomDevice'>;
+	asset: Asset<'bodypart' | 'personal' | 'roomDevice'>;
 	color: ItemColorBundle;
 	onChange: (newColor: ItemColorBundle) => void;
 }): ReactElement | null {

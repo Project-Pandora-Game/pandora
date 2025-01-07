@@ -10,6 +10,7 @@ import { CharacterRestrictionOverrideDialogContext } from '../characterRestricti
 import { DebugContextProvider } from '../error/debugContextProvider';
 import { RootErrorBoundary } from '../error/rootErrorBoundary';
 import { DirectoryConnectorServices } from './directoryConnectorContextProvider';
+import { InterfaceSettingsProvider } from './interfaceSettingsProvider';
 import { NotificationProvider } from './notificationProvider';
 import { PermissionCheckServiceProvider } from './permissionCheckProvider';
 import { SecondFactorProvider } from './secondFactorProvider';
@@ -45,6 +46,7 @@ function MiscProviders({ children }: ChildrenProps): ReactElement {
 				<NotificationProvider />
 				<ShardConnectorContextProvider />
 				<TutorialService />
+				<InterfaceSettingsProvider />
 
 				{ children }
 			</PermissionCheckServiceProvider>

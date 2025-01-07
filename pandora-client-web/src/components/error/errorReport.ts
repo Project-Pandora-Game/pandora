@@ -28,8 +28,12 @@ export function BuildErrorReport(error: unknown, errorInfo: ErrorInfo | undefine
 			.map(DisplayReportSection)
 			.join('\n\n');
 		return '```\n' + report + '\n```';
-	} catch (_) {
-		return `${String(error)}\n${String(errorInfo)}\n${String(debugData)}`;
+	} catch (_error) {
+		try {
+			return `${String(error)}\n${JSON.stringify(errorInfo)}\n${String(JSON.stringify(debugData))}`;
+		} catch (_error2) {
+			return `${String(error)}\n[ERROR SERIALIZING EXTRA DATA]`;
+		}
 	}
 }
 
@@ -67,7 +71,7 @@ function BuildDirectoryDataSection(debugData: DebugData): ReportSection {
 		try {
 			directoryStatusString = JSON.stringify(directoryStatus, null, 4);
 		} catch (_) {
-			directoryStatusString = String(directoryStatus);
+			directoryStatusString = '[ERROR]';
 		}
 		details += directoryStatusString ? `\n${directoryStatusString}` : ' unavailable';
 	}
@@ -84,7 +88,7 @@ function BuildShardDataSection(debugData: DebugData): ReportSection {
 		try {
 			connectionInfoString = JSON.stringify(shardConnectionInfo, null, 4);
 		} catch (_) {
-			connectionInfoString = String(shardConnectionInfo);
+			connectionInfoString = '[ERROR]';
 		}
 		details += connectionInfoString ? `\n${connectionInfoString}` : ' unavailable';
 	}
@@ -98,6 +102,8 @@ function BuildDiagnosticsSection(): ReportSection {
 		`Game version: ${GAME_VERSION}`,
 		`Local time: ${new Date().toISOString()}`,
 		`WebGL supported: ${String(isWebGLSupported())}`,
+		// FIXME: Think about how to resolve this promise
+		// eslint-disable-next-line @typescript-eslint/no-base-to-string
 		`WebGPU supported: ${String(isWebGPUSupported())}`,
 	].join('\n');
 	return { heading: 'Additional Diagnostics', details };

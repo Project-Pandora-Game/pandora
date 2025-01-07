@@ -13,15 +13,15 @@ test.describe('Wiki', () => {
 		await TestOpenPandora(page, { path: '/wiki' });
 
 		await page.waitForURL('/wiki/introduction');
-		await expect(page.getByRole('button', { name: 'Introduction' })).toHaveClass('tab active');
+		await expect(page.getByRole('tab', { name: 'Introduction' })).toHaveClass('tab active');
 		await expect(page.getByRole('heading', { name: 'Introduction to Pandora' })).toBeVisible();
 	});
 
 	test('Loads specific tab directly based on url', async ({ page }) => {
 		await TestOpenPandora(page, { path: '/wiki/history' });
 
-		await expect(page.getByRole('button', { name: 'Introduction' })).toHaveClass('tab');
-		await expect(page.getByRole('button', { name: 'Pandora History' })).toHaveClass('tab active');
+		await expect(page.getByRole('tab', { name: 'Introduction' })).toHaveClass('tab');
+		await expect(page.getByRole('tab', { name: 'Pandora History' })).toHaveClass('tab active');
 		await expect(page.getByRole('heading', { name: `Pandora's history`, exact: true })).toBeVisible();
 	});
 
@@ -29,25 +29,25 @@ test.describe('Wiki', () => {
 		await TestOpenPandora(page, { path: '/wiki/introduction' });
 
 		// Initial tab is introcution
-		await expect(page.getByRole('button', { name: 'Introduction' })).toHaveClass('tab active');
-		await expect(page.getByRole('button', { name: 'Contact' })).toHaveClass('tab');
+		await expect(page.getByRole('tab', { name: 'Introduction' })).toHaveClass('tab active');
+		await expect(page.getByRole('tab', { name: 'Contact' })).toHaveClass('tab');
 		await expect(page.getByRole('heading', { name: 'Introduction to Pandora' })).toBeVisible();
 		await page.waitForURL('/wiki/introduction');
 
 		// Nothing changes when clicking already selected tab
-		await page.getByRole('button', { name: 'Introduction' }).click();
-		await expect(page.getByRole('button', { name: 'Introduction' })).toHaveClass('tab active');
-		await expect(page.getByRole('button', { name: 'Contact' })).toHaveClass('tab');
+		await page.getByRole('tab', { name: 'Introduction' }).click();
+		await expect(page.getByRole('tab', { name: 'Introduction' })).toHaveClass('tab active');
+		await expect(page.getByRole('tab', { name: 'Contact' })).toHaveClass('tab');
 		await expect(page.getByRole('heading', { name: 'Introduction to Pandora' })).toBeVisible();
 		await page.waitForURL('/wiki/introduction');
 
 		// Switch to tab "Contact"
-		await page.getByRole('button', { name: 'Contact' }).click();
-		await expect(page.getByRole('button', { name: 'Contact' })).toHaveClass('tab active');
+		await page.getByRole('tab', { name: 'Contact' }).click();
+		await expect(page.getByRole('tab', { name: 'Contact' })).toHaveClass('tab active');
 		await expect(page.getByRole('heading', { name: 'Contact Us', exact: true })).toBeVisible();
 		await page.waitForURL('/wiki/contact');
 
-		await expect(page.getByRole('button', { name: 'Introduction' })).toHaveClass('tab');
+		await expect(page.getByRole('tab', { name: 'Introduction' })).toHaveClass('tab');
 		await expect(page.getByRole('heading', { name: 'Introduction to Pandora' })).not.toBeVisible();
 	});
 
@@ -55,8 +55,8 @@ test.describe('Wiki', () => {
 		await TestOpenPandora(page, { path: '/wiki/introduction' });
 
 		// Initial tab is introcution
-		await expect(page.getByRole('button', { name: 'Introduction' })).toHaveClass('tab active');
-		await page.getByRole('button', { name: 'Back' }).click();
+		await expect(page.getByRole('tab', { name: 'Introduction' })).toHaveClass('tab active');
+		await page.getByRole('tab', { name: 'Back' }).click();
 		await page.waitForURL('/login');
 	});
 });

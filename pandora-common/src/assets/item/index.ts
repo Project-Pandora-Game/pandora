@@ -1,6 +1,7 @@
 // must be first
 export * from './base';
 
+export * from './bodypart';
 export * from './lock';
 export * from './personal';
 export * from './roomDevice';

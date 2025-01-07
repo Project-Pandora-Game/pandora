@@ -21,7 +21,8 @@ import { useAssetManager } from '../../assets/assetManager';
 import { Character, useCharacterData } from '../../character/character';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
-import { useCharacterRestrictionsManager, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../components/gameContext/gameStateContextProvider';
+import { useCharacterRestrictionsManager, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo, type GameState } from '../../components/gameContext/gameStateContextProvider';
+import { THEME_NORMAL_BACKGROUND } from '../../components/gameContext/interfaceSettingsProvider';
 import { permissionCheckContext } from '../../components/gameContext/permissionCheckProvider';
 import { usePlayer, usePlayerState } from '../../components/gameContext/playerContextProvider';
 import { useShardConnector } from '../../components/gameContext/shardConnectorContextProvider';
@@ -51,6 +52,7 @@ const BASE_BOUNCE_OPTIONS: IBounceOptions = {
 interface RoomGraphicsSceneProps extends CommonProps {
 	characters: readonly Character<ICharacterRoomData>[];
 	shard: ShardConnector | null;
+	gameState: GameState;
 	globalState: AssetFrameworkGlobalState;
 	info: Immutable<SpaceClientInfo>;
 	debugConfig: ChatroomDebugConfig;
@@ -63,6 +65,7 @@ export function RoomGraphicsScene({
 	children,
 	characters,
 	shard,
+	gameState,
 	globalState,
 	info,
 	debugConfig,
@@ -170,7 +173,7 @@ export function RoomGraphicsScene({
 		forwardContexts: [serviceManagerContext, roomScreenContext, wardrobeActionContext, permissionCheckContext],
 		worldWidth: roomBackgroundWidth,
 		worldHeight: roomBackgroundHeight,
-		backgroundColor: 0x000000,
+		backgroundColor: Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16),
 	}), [viewportConfig, roomBackgroundWidth, roomBackgroundHeight]);
 
 	return (
@@ -208,7 +211,7 @@ export function RoomGraphicsScene({
 							item={ device }
 							deployment={ device.deployment }
 							projectionResolver={ projectionResolver }
-							shard={ shard }
+							gameState={ gameState }
 						/>
 					) : null))
 				}
@@ -248,7 +251,7 @@ export function RoomGraphicsScene({
 							item={ device }
 							deployment={ device.deployment }
 							projectionResolver={ projectionResolver }
-							shard={ shard }
+							gameState={ gameState }
 						/>
 					) : null))
 				}
@@ -488,6 +491,7 @@ export function RoomScene({ className }: {
 			className={ className }
 			characters={ characters }
 			shard={ shard }
+			gameState={ gameState }
 			globalState={ globalState }
 			info={ info.config }
 			debugConfig={ debugConfig }

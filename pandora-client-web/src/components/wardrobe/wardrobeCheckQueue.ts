@@ -1,8 +1,9 @@
 import {
 	AppearanceAction,
 	AppearanceActionContext,
+	AppearanceActionProcessingContext,
 	AppearanceActionProcessingResult,
-	DoAppearanceAction,
+	ApplyAction,
 } from 'pandora-common';
 import { useCallback, useRef, useState } from 'react';
 import { CalculationQueue, useCalculateInQueue } from '../../common/calculationQueue';
@@ -35,7 +36,8 @@ export function useStaggeredAppearanceActionResult(action: AppearanceAction | nu
 				resultContext.current = null;
 				setResult(null);
 			} else {
-				const checkResult = DoAppearanceAction(action, actions, globalState);
+				const processingContext = new AppearanceActionProcessingContext(actions, globalState);
+				const checkResult = ApplyAction(processingContext, action);
 				resultAction.current = action;
 				resultContext.current = actions;
 				setResult(checkResult);

@@ -1,20 +1,43 @@
 import { Immutable } from 'immer';
 import _ from 'lodash';
 import { ZodEnum } from 'zod';
-import { CloneDeepMutable, IntervalSetIntersection } from '../utility/misc';
-import type { AssetDefinitionPoseLimit, AssetDefinitionPoseLimits } from './definitions';
+import { Assert, CloneDeepMutable, IntervalSetIntersection, IsReadonlyArray, type Satisfies } from '../utility/misc';
+import type { AssetDefinitionArmOrderPoseLimit, AssetDefinitionArmPoseLimit, AssetDefinitionPoseLimit, AssetDefinitionPoseLimits } from './definitions';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, CharacterViewSchema, LegsPoseSchema } from './graphics';
 import type { AppearanceArmPose, AppearanceArmsOrder, AppearancePose } from './state/characterStatePose';
-import { PartialAppearancePose, GetDefaultAppearancePose } from './state/characterStatePose';
+import { GetDefaultAppearancePose, PartialAppearancePose } from './state/characterStatePose';
+
+type PoseTypeBase = Partial<Record<string, number | string | Partial<Record<string, number | string>>>>;
+
+/** Converts partial pose object to dimension keys for the pose limit tree. */
+type PoseTypeToDimensions<T extends PoseTypeBase> = {
+	[K in (keyof T) & string]:
+		NonNullable<T[K]> extends Partial<Record<string, number | string>> ? `${K}.${(keyof NonNullable<T[K]>) & string}` :
+		K
+}[(keyof T) & string];
+
+/** Converts partial pose object to limits for that object */
+export type PoseTypeToLimits<T extends PoseTypeBase> = {
+	[K in (keyof T) & string]?:
+		NonNullable<T[K]> extends Partial<Record<string, number | string>> ? PoseTypeToLimits<NonNullable<T[K]>> :
+		NonNullable<T[K]> extends number ? (number | [number, number][]) :
+		NonNullable<T[K]> extends string ? (NonNullable<T[K]> | NonNullable<T[K]>[]) :
+		never
+};
+
+// Create a strongly-typed dimensional data, where each dimension is named and its value is a numeric coordinate.
+type TreeLimitDimension = PoseTypeToDimensions<PartialAppearancePose>;
+type TreeLimitDimensionData = ReadonlyMap<TreeLimitDimension, [number, number][]>;
+type TreeLimitMutableDimensionData = Satisfies<Map<TreeLimitDimension, [number, number][]>, TreeLimitDimensionData>;
 
 class TreeLimit {
-	private readonly limit: ReadonlyMap<string, [number, number][]>;
+	private readonly limit: TreeLimitDimensionData;
 
-	constructor(limit: ReadonlyMap<string, [number, number][]> = new Map<string, [number, number][]>()) {
+	constructor(limit: TreeLimitDimensionData = new Map<TreeLimitDimension, [number, number][]>()) {
 		this.limit = limit;
 	}
 
-	public validate(data: ReadonlyMap<string, number>): boolean {
+	public validate(data: ReadonlyMap<TreeLimitDimension, number>): boolean {
 		for (const [key, value] of data) {
 			const limit = this.limit.get(key);
 			if (!limit)
@@ -26,9 +49,9 @@ class TreeLimit {
 		return true;
 	}
 
-	public force(data: ReadonlyMap<string, number>): [number, Map<string, number>] {
+	public force(data: ReadonlyMap<TreeLimitDimension, number>): [number, Map<TreeLimitDimension, number>] {
 		let totalDiff = 0;
-		const newData = new Map<string, number>(data);
+		const newData = new Map<TreeLimitDimension, number>(data);
 		for (const [key, value] of data) {
 			const limit = this.limit.get(key);
 			if (!limit) {
@@ -70,7 +93,7 @@ class TreeLimit {
 	 * Selects keys that are present in both limits and calculates the intersection of their values.
 	 */
 	public intersection(other: TreeLimit): TreeLimit | null {
-		const newLimit = new Map<string, [number, number][]>();
+		const newLimit: TreeLimitMutableDimensionData = new Map<TreeLimitDimension, [number, number][]>();
 		for (const [key, value] of this.limit) {
 			const otherValue = other.limit.get(key);
 			if (!otherValue)
@@ -89,7 +112,7 @@ class TreeLimit {
 	 * Adds all keys from other that are not present in the current limit.
 	 */
 	public extend(other: TreeLimit): TreeLimit {
-		const newLimit = new Map<string, [number, number][]>(this.limit);
+		const newLimit: TreeLimitMutableDimensionData = new Map<TreeLimitDimension, [number, number][]>(this.limit);
 		for (const [key, value] of other.limit) {
 			if (newLimit.has(key))
 				continue;
@@ -103,7 +126,7 @@ class TreeLimit {
 	 * Removes all keys that store the same values as in other.
 	 */
 	public prune(other: TreeLimit): TreeLimit {
-		const newLimit = new Map<string, [number, number][]>(this.limit);
+		const newLimit: TreeLimitMutableDimensionData = new Map<TreeLimitDimension, [number, number][]>(this.limit);
 		for (const [key, value] of other.limit) {
 			const newValue = newLimit.get(key);
 			if (!newValue)
@@ -123,12 +146,12 @@ class TreeNode {
 	private readonly limit: TreeLimit;
 	private readonly children: TreeNode[] | null;
 
-	constructor(limit: TreeLimit | ReadonlyMap<string, [number, number][]> = new TreeLimit(), children: TreeNode[] | null = null) {
+	constructor(limit: TreeLimit | TreeLimitDimensionData = new TreeLimit(), children: TreeNode[] | null = null) {
 		this.limit = limit instanceof TreeLimit ? limit : new TreeLimit(limit);
 		this.children = children;
 	}
 
-	public validate(data: ReadonlyMap<string, number>): boolean {
+	public validate(data: ReadonlyMap<TreeLimitDimension, number>): boolean {
 		if (!this.limit.validate(data))
 			return false;
 
@@ -138,13 +161,13 @@ class TreeNode {
 		return this.children.some((child) => child.validate(data));
 	}
 
-	public force(data: ReadonlyMap<string, number>): [number, Map<string, number>] {
+	public force(data: ReadonlyMap<TreeLimitDimension, number>): [number, Map<TreeLimitDimension, number>] {
 		const [diff, newData] = this.limit.force(data);
 		if (!this.children)
 			return [diff, newData];
 
 		let minDiff = Infinity;
-		let minData: Map<string, number> | null = null;
+		let minData: Map<TreeLimitDimension, number> | null = null;
 		for (const child of this.children) {
 			const [childDiff, childData] = child.force(newData);
 			if (childDiff < minDiff) {
@@ -270,8 +293,8 @@ function CreateTreeNode(limits: Immutable<AssetDefinitionPoseLimits>): TreeNode 
 	return new TreeNode(FromLimit(limits), nodeChildren);
 }
 
-function FromPose({ bones, leftArm, rightArm, arms, armsOrder, legs, view }: Immutable<PartialAppearancePose>): Map<string, number> {
-	const data = new Map<string, number>();
+function FromPose({ bones, leftArm, rightArm, arms, armsOrder, legs, view }: Immutable<PartialAppearancePose>): Map<TreeLimitDimension, number> {
+	const data = new Map<TreeLimitDimension, number>();
 
 	if (bones) {
 		for (const [key, value] of Object.entries(bones)) {
@@ -284,24 +307,24 @@ function FromPose({ bones, leftArm, rightArm, arms, armsOrder, legs, view }: Imm
 	FromArmPose(data, 'leftArm', { ...arms, ...leftArm });
 	FromArmPose(data, 'rightArm', { ...arms, ...rightArm });
 	FromArmsOrder(data, armsOrder);
-	EnumToIndex(LegsPoseSchema, legs, (index) => data.set('legs', index));
-	EnumToIndex(CharacterViewSchema, view, (index) => data.set('view', index));
+	FromPoseEnumValue(data, 'legs', LegsPoseSchema, legs);
+	FromPoseEnumValue(data, 'view', CharacterViewSchema, view);
 
 	return data;
 }
 
-function FromArmPose(data: Map<string, number>, prefix: 'leftArm' | 'rightArm', { position, rotation, fingers }: Partial<AppearanceArmPose> = {}): void {
-	EnumToIndex(ArmPoseSchema, position, (index) => data.set(`${prefix}.position`, index));
-	EnumToIndex(ArmRotationSchema, rotation, (index) => data.set(`${prefix}.rotation`, index));
-	EnumToIndex(ArmFingersSchema, fingers, (index) => data.set(`${prefix}.fingers`, index));
+function FromArmPose(data: Map<TreeLimitDimension, number>, prefix: 'leftArm' | 'rightArm', { position, rotation, fingers }: Partial<AppearanceArmPose> = {}): void {
+	FromPoseEnumValue(data, `${prefix}.position`, ArmPoseSchema, position);
+	FromPoseEnumValue(data, `${prefix}.rotation`, ArmRotationSchema, rotation);
+	FromPoseEnumValue(data, `${prefix}.fingers`, ArmFingersSchema, fingers);
 }
 
-function FromArmsOrder(data: Map<string, number>, { upper }: Partial<AppearanceArmsOrder> = {}): void {
-	EnumToIndex(ArmSegmentOrderSchema, upper, (index) => data.set('armsOrder.upper', index));
+function FromArmsOrder(data: Map<TreeLimitDimension, number>, { upper }: Partial<AppearanceArmsOrder> = {}): void {
+	FromPoseEnumValue(data, 'armsOrder.upper', ArmSegmentOrderSchema, upper);
 }
 
-function FromLimit({ bones, leftArm, rightArm, arms, armsOrder, legs, view }: Immutable<AssetDefinitionPoseLimit>): Map<string, [number, number][]> {
-	const data = new Map<string, [number, number][]>();
+function FromLimit({ bones, leftArm, rightArm, arms, armsOrder, legs, view }: Immutable<AssetDefinitionPoseLimit>): TreeLimitDimensionData {
+	const data: TreeLimitMutableDimensionData = new Map<TreeLimitDimension, [number, number][]>();
 
 	if (bones) {
 		for (const [key, value] of Object.entries(bones)) {
@@ -317,39 +340,53 @@ function FromLimit({ bones, leftArm, rightArm, arms, armsOrder, legs, view }: Im
 	FromArmLimit(data, 'leftArm', { ...arms, ...leftArm });
 	FromArmLimit(data, 'rightArm', { ...arms, ...rightArm });
 	FromArmsOrderLimit(data, armsOrder);
-	EnumToIndex(CharacterViewSchema, view, (index) => data.set('view', [[index, index]]));
-	if (typeof legs === 'string') {
-		EnumToIndex(LegsPoseSchema, legs, (index) => data.set('legs', [[index, index]]));
-	} else if (legs != null) {
-		data.set('legs', legs
-			.map((leg) => LegsPoseSchema.options.indexOf(leg))
-			.filter((index) => index !== -1)
-			.map((index) => [index, index]));
-	}
+	FromLimitEnumValue(data, 'view', CharacterViewSchema, view);
+	FromLimitEnumValue(data, 'legs', LegsPoseSchema, legs);
 	return data;
 }
 
-function FromArmLimit(data: Map<string, [number, number][]>, prefix: 'leftArm' | 'rightArm', { position, rotation, fingers }: Partial<AppearanceArmPose> = {}): void {
-	EnumToIndex(ArmPoseSchema, position, (index) => data.set(`${prefix}.position`, [[index, index]]));
-	EnumToIndex(ArmRotationSchema, rotation, (index) => data.set(`${prefix}.rotation`, [[index, index]]));
-	EnumToIndex(ArmFingersSchema, fingers, (index) => data.set(`${prefix}.fingers`, [[index, index]]));
+function FromArmLimit(data: TreeLimitMutableDimensionData, prefix: 'leftArm' | 'rightArm', { position, rotation, fingers }: Immutable<AssetDefinitionArmPoseLimit> = {}): void {
+	FromLimitEnumValue(data, `${prefix}.position`, ArmPoseSchema, position);
+	FromLimitEnumValue(data, `${prefix}.rotation`, ArmRotationSchema, rotation);
+	FromLimitEnumValue(data, `${prefix}.fingers`, ArmFingersSchema, fingers);
 }
 
-function FromArmsOrderLimit(data: Map<string, [number, number][]>, { upper }: Partial<AppearanceArmsOrder> = {}): void {
-	EnumToIndex(ArmSegmentOrderSchema, upper, (index) => data.set('armsOrder.upper', [[index, index]]));
+function FromArmsOrderLimit(data: TreeLimitMutableDimensionData, { upper }: Immutable<AssetDefinitionArmOrderPoseLimit> = {}): void {
+	FromLimitEnumValue(data, 'armsOrder.upper', ArmSegmentOrderSchema, upper);
 }
 
-function ToArmPose(data: ReadonlyMap<string, number>, prefix: 'leftArm' | 'rightArm', pose: AppearancePose): void {
+function FromPoseEnumValue<E extends [string, ...string[]]>(data: Map<TreeLimitDimension, number>, property: TreeLimitDimension, schema: ZodEnum<E>, value: E[number] | undefined): void {
+	if (value != null) {
+		const index = EnumToIndex(schema, value);
+		data.set(property, index);
+	}
+}
+
+function FromLimitEnumValue<E extends [string, ...string[]]>(data: TreeLimitMutableDimensionData, property: TreeLimitDimension, schema: ZodEnum<E>, value: E[number] | readonly (E[number])[] | undefined): void {
+	if (value != null) {
+		if (IsReadonlyArray(value)) {
+			const result: [number, number][] = value
+				.map((v) => EnumToIndex(schema, v))
+				.map((v) => [v, v]);
+			data.set(property, result);
+		} else {
+			const index = EnumToIndex(schema, value);
+			data.set(property, [[index, index]]);
+		}
+	}
+}
+
+function ToArmPose(data: ReadonlyMap<TreeLimitDimension, number>, prefix: 'leftArm' | 'rightArm', pose: AppearancePose): void {
 	IndexToEnum(ArmPoseSchema, data.get(`${prefix}.position`), (value) => pose[prefix].position = value);
 	IndexToEnum(ArmRotationSchema, data.get(`${prefix}.rotation`), (value) => pose[prefix].rotation = value);
 	IndexToEnum(ArmFingersSchema, data.get(`${prefix}.fingers`), (value) => pose[prefix].fingers = value);
 }
 
-function ToArmsOrder(data: ReadonlyMap<string, number>, pose: AppearancePose): void {
+function ToArmsOrder(data: ReadonlyMap<TreeLimitDimension, number>, pose: AppearancePose): void {
 	IndexToEnum(ArmSegmentOrderSchema, data.get('armsOrder.upper'), (value) => pose.armsOrder.upper = value);
 }
 
-function ToPose(data: ReadonlyMap<string, number>): AppearancePose {
+function ToPose(data: ReadonlyMap<TreeLimitDimension, number>): AppearancePose {
 	const pose = GetDefaultAppearancePose();
 
 	ToArmPose(data, 'leftArm', pose);
@@ -371,7 +408,7 @@ function ToPose(data: ReadonlyMap<string, number>): AppearancePose {
 }
 
 /** Gets a key and returns multiplier for cost of changing it */
-function PoseChangeWeight(key: string): number {
+function PoseChangeWeight(key: TreeLimitDimension): number {
 	// Bones have base value
 	if (key.startsWith('bones.')) {
 		return 1;
@@ -381,18 +418,14 @@ function PoseChangeWeight(key: string): number {
 	return 90;
 }
 
-function EnumToIndex<E extends [string, ...string[]], Z extends ZodEnum<E>>(schema: Z, value: Z['options'][number] | undefined, set: (index: number) => void): void {
-	if (value == null)
-		return;
-
+function EnumToIndex<E extends [string, ...string[]]>(schema: ZodEnum<E>, value: E[number]): number {
 	const index = schema.options.indexOf(value);
-	if (index === -1)
-		return;
+	Assert(index >= 0, `Got invalid enum value: '${value}'`);
 
-	set(index);
+	return index;
 }
 
-function IndexToEnum<E extends [string, ...string[]], Z extends ZodEnum<E>>(schema: Z, index: number | undefined, set: (value: Z['options'][number]) => void): void {
+function IndexToEnum<E extends [string, ...string[]]>(schema: ZodEnum<E>, index: number | undefined, set: (value: E[number]) => void): void {
 	if (index == null)
 		return;
 

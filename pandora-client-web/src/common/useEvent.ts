@@ -39,7 +39,7 @@ export function useAsyncEvent<R, Args extends unknown[]>(
 		 */
 		allowMultipleSimultaneousExecutions?: boolean;
 	} = {},
-): [(...args: Args) => void, boolean] {
+): [(...args: Args) => void, processing: boolean] {
 	const [processing, setProcessing] = useState<number>(0);
 	const mounted = useMounted();
 

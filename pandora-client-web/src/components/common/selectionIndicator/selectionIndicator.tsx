@@ -19,7 +19,6 @@ export function SelectionIndicator({
 }: SelectionIndicatorProps): ReactElement {
 	return (
 		<DivContainer
-			padding='tiny'
 			{ ...divContainerProps }
 			className={ classNames(
 				'selectionIndicator',

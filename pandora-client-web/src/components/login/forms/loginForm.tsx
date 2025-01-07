@@ -5,6 +5,7 @@ import { FormInput } from '../../../common/userInteraction/input/formInput';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { Button } from '../../common/button/button';
+import { DivContainer } from '../../common/container/container';
 import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
 import { LocationStateMessage } from '../../common/locationStateMessage/locationStateMessage';
 import { useAuthToken } from '../../gameContext/directoryConnectorContextProvider';
@@ -26,7 +27,7 @@ export function LoginForm(): ReactElement {
 						autoComplete='username'
 						id='login-uname'
 						value={ auth.username }
-						disabled={ true }
+						disabled
 					/>
 				</div>
 				<div className='message'>
@@ -38,9 +39,9 @@ export function LoginForm(): ReactElement {
 
 	return (
 		<Form className='LoginForm' dirty={ dirty } onSubmit={ onSubmit }>
-			<p>
-				<img src={ pandoraLogo } alt='Pandora Logo' width='282em' height='70em' />
-			</p>
+			<DivContainer justify='center' className='logo-container'>
+				<img src={ pandoraLogo } alt='Pandora Logo' />
+			</DivContainer>
 			<LocationStateMessage />
 			<FormField>
 				<label htmlFor='login-username'>Username</label>
@@ -48,6 +49,7 @@ export function LoginForm(): ReactElement {
 					type='text'
 					id='login-username'
 					autoComplete='username'
+					readOnly={ isSubmitting }
 					register={ register }
 					name='username'
 					options={ {
@@ -63,6 +65,7 @@ export function LoginForm(): ReactElement {
 					type='password'
 					id='login-password'
 					autoComplete='current-password'
+					readOnly={ isSubmitting }
 					register={ register }
 					name='password'
 					options={ { required: 'Password is required' } }

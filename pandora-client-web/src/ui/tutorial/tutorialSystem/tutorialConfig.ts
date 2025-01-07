@@ -58,6 +58,11 @@ export type TutorialConditionElementExists = {
 	type: 'elementQuery';
 	query: string;
 	filter?: (element: HTMLElement) => boolean;
+	/**
+	 * Whether to expect no element to match to continue (inverts the condition).
+	 * @default false
+	 */
+	expectNoMatch?: boolean;
 };
 
 export type TutorialConditionFlag = {

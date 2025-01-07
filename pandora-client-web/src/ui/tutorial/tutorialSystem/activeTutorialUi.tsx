@@ -10,7 +10,7 @@ import { Row } from '../../../components/common/container/container';
 import { DialogInPortal, DraggableDialog, useConfirmDialog } from '../../../components/dialog/dialog';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
 import { DEVELOPMENT } from '../../../config/Environment';
-import { useObservable } from '../../../observable';
+import { useNullableObservable, useObservable } from '../../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import type { TutorialCondition, TutorialHighlightSelector, TutorialStep } from './tutorialConfig';
@@ -54,6 +54,10 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 		}
 	}, []);
 
+	const activeStepIndex = useNullableObservable((stage != null && stage !== 'complete') ? stage.activeStepIndex : null);
+	const activeStageStep = (stage != null && stage !== 'complete' && activeStepIndex != null && activeStepIndex < stage.config.steps.length) ?
+		stage.config.steps[activeStepIndex] : undefined;
+
 	if (stage == null)
 		return null;
 
@@ -67,6 +71,7 @@ export function ActiveTutorialUi({ tutorial, stopTutorial }: {
 			close={ stopTutorialConfirm }
 			initialPosition={ { x: defaultShift, y: headerBottom + defaultShift } }
 			modal={ typeof stage !== 'string' && stage.config.modal === true }
+			highlightShaded={ activeStageStep?.conditions.some((c) => c.type === 'next') ?? false }
 			allowShade
 		>
 			<div className='tutorialDialog div-container direction-column gap-medium' ref={ contentRef }>

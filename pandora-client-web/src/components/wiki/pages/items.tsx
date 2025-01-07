@@ -234,7 +234,7 @@ export function WikiItems(): ReactElement {
 			</p>
 			<ul>
 				<li>If there is no transparency slider, the asset maker did likely not intend for this layer to be made transparent.</li>
-				<li>If you cannot move the slider all the way to the full transparency side, the asset maker likely defined a minimum alpha value to allow the layer to be invisible.</li>
+				<li>If you cannot move the slider all the way to the full transparency side, the asset maker likely defined a minimum alpha value to prevent the layer from becoming fully invisible.</li>
 				<li>The reason this is not universally allowed for every layer is that too many transparency filtered layers onscreen at once hurt the performance for everyone in the room.</li>
 			</ul>
 

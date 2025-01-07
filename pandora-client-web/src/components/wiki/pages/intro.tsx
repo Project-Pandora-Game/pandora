@@ -47,14 +47,14 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>1. Dynamically generated body model with many poses and free arm movement</h4>
 			<p>
-				In the "Pose"-tab, you will find the ability to freely move arms and legs under the "manual pose" section at the bottom of the screen.
-				Expand this section to view the respective sliders. The "Body"-tab in
-				the <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link> lets you manage <Link to='/wiki/items#IT_Body_parts'>body parts</Link>.
+				By opening the character menu by clicking on your character name as well as under the "Pose"-tab, you will find the ability to freely move arms and legs.
+				The "Body"-tab in the <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link> lets you manage <Link to='/wiki/items#IT_Body_parts'>body parts</Link>.
 			</p>
 
 			<h4>2. Front and back character view</h4>
 			<p>
 				Your character's view can be toggled in the pose menu. The chosen position is seen by everyone in the room.
+				Alternatively, you can simply use the "/turn" command in the chat.
 			</p>
 
 			<h4>3. Persistent rooms & personal room</h4>
@@ -168,9 +168,9 @@ export function WikiIntroduction(): ReactElement {
 
 			That's not all of course! We have many exciting features planned for the future. In no particular order:
 			<ul>
-				<li>Improvements to the new user experience</li>
-				<li>Reworked UI design with focus on improved usability and design themes</li>
+				<li>Adding new interactive tutorials to enhance the new user experience</li>
 				<li>Expanding the notification options</li>
+				<li>Further improved UI with focus on improved usability and potentially more design themes</li>
 				<li>More customization options for items, for instance more ways to get out of them</li>
 				<li>Allowing spaces to contain several connected rooms with a user-defined layout and ways to move from room to room</li>
 				<li>Spectator mode for spaces that will help to not disrupt the chat during plays and that can be managed by space admins</li>

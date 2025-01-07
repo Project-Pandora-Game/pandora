@@ -20,12 +20,6 @@ export function WikiGreeting(): ReactElement {
 					generally, before anything can happen to you. Moreover, due to the security of restraints in Pandora, stricter ones such as
 					password locks are set to be unavailable to other characters until you change these default item limits.<br />
 					<br />
-					{ /* Include in "Safeword" tutorial */ }
-					Second important mechanism is for when communication should fail or someone is not respecting your safeword. For such a case there are two safe modes,
-					which you can enter under the "Room"-tab via a button next to your character name: Timeout and safemode.
-					Both modes prevent interactions in both ways while active. Do note, however, that we consider safemode a last-resort option for emergencies.
-					It comes with a cooldown period that simulates stopping the play after a safeword usage to recover and be safe.<br />
-					<br />
 				</p>
 			</WikiContent>
 		</Row>

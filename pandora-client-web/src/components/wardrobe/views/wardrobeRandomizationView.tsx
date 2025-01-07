@@ -38,9 +38,6 @@ export function WardrobeRandomizationGui({ character }: {
 						}
 					</Row>
 				</FieldsetToggle>
-				<div className='center-flex flex-1'>
-					TODO
-				</div>
 			</Column>
 		</div>
 	);

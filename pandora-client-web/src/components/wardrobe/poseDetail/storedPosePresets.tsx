@@ -297,6 +297,10 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 					...preset.pose.arms,
 					...preset.pose.rightArm,
 				},
+				armsOrder: {
+					...characterState.actualPose.armsOrder,
+					...preset.pose.armsOrder,
+				},
 				legs: preset.pose.legs ?? characterState.actualPose.legs,
 			},
 		});
@@ -323,64 +327,61 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 
 	return (
 		<DraggableDialog title={ title } close={ close }>
-			<Column gap='small'>
-				<label htmlFor='pose-preset-name'>Name:</label>
-				<TextInput id='pose-preset-name' value={ preset.name } onChange={ onNameChange } maxLength={ LIMIT_POSE_PRESET_NAME_LENGTH } />
+			<Column>
+				<Row gap='small' alignY='center'>
+					<label htmlFor='pose-preset-name'>Name:</label>
+					<TextInput id='pose-preset-name' className='flex-1' value={ preset.name } onChange={ onNameChange } maxLength={ LIMIT_POSE_PRESET_NAME_LENGTH } />
+				</Row>
+				<br />
+				<table className='smallPadding'>
+					<thead>
+						<tr>
+							<th>Include</th>
+							<th>Name</th>
+							<th>Value</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>
+								<Button onClick={ Object.keys(preset.pose).length === 0 ? onCheckAll : onUncheckAll } slim>Toggle all</Button>
+							</td>
+							<td></td>
+							<td></td>
+						</tr>
+						<PosePresetArmPoses preset={ preset } />
+						<tr>
+							<td className='noPadding' colSpan={ 3 }><hr /></td>
+						</tr>
+						<PosePresetArmsOrder preset={ preset } />
+						<tr>
+							<td className='noPadding' colSpan={ 3 }><hr /></td>
+						</tr>
+						<PosePresetLegPoses preset={ preset } />
+						<tr>
+							<td className='noPadding' colSpan={ 3 }><hr /></td>
+						</tr>
+						{
+							allBones
+								.filter((bone) => bone.type === 'pose')
+								.map((bone) => (
+									<PosePresetBoneRow
+										key={ bone.name }
+										preset={ preset }
+										bone={ bone }
+										storedValue={ preset.pose.bones?.[bone.name] }
+										currentValue={ characterState.getActualPoseBoneValue(bone.name) }
+									/>
+								))
+						}
+					</tbody>
+				</table>
+				<Row alignX='space-between'>
+					<Button onClick={ close }>Cancel</Button>
+					<Button onClick={ onExport }>Export</Button>
+					<Button onClick={ onSave }>Save</Button>
+				</Row>
 			</Column>
-			<br />
-			<table>
-				<thead>
-					<tr>
-						<th>Include</th>
-						<th>Name</th>
-						<th>Value</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr>
-						<td colSpan={ 3 }><hr /></td>
-					</tr>
-					<PosePresetArmPoses preset={ preset } />
-					<tr>
-						<td colSpan={ 3 }><hr /></td>
-					</tr>
-					<PosePresetArmsOrder preset={ preset } />
-					<tr>
-						<td colSpan={ 3 }><hr /></td>
-					</tr>
-					<PosePresetLegPoses preset={ preset } />
-					<tr>
-						<td colSpan={ 3 }><hr /></td>
-					</tr>
-					{
-						allBones
-							.filter((bone) => bone.type === 'pose')
-							.map((bone) => (
-								<PosePresetBoneRow
-									key={ bone.name }
-									preset={ preset }
-									bone={ bone }
-									storedValue={ preset.pose.bones?.[bone.name] }
-									currentValue={ characterState.getActualPoseBoneValue(bone.name) }
-								/>
-							))
-					}
-					<tr>
-						<td colSpan={ 3 }><hr /></td>
-					</tr>
-				</tbody>
-			</table>
-			<br />
-			<Row alignX='center'>
-				<Button onClick={ onUncheckAll }>Uncheck all</Button>
-				<Button onClick={ onCheckAll }>Check all</Button>
-			</Row>
-			<br />
-			<Row alignX='center'>
-				<Button onClick={ close }>Cancel</Button>
-				<Button onClick={ onExport }>Export</Button>
-				<Button onClick={ onSave }>Save</Button>
-			</Row>
 			{
 				exported == null ? null : (
 					<ExportDialog

@@ -20,8 +20,9 @@ export function WikiHistory(): ReactElement {
 				.<br />
 				<br />
 				The first half year was focused on looking for suitable technologies, asset basis, and architecture planning.
-				Progress was slow but steady, as making such a platform is really a lot of work and requires careful planning and thinking.
-				Moreover, it is merely a hobby for everyone, spending free time here and there besides the actual day-time work, friends & family, etc.
+				Progress was slow but steady, as making such a platform is a huge amount of work and requires careful planning and discussions.
+				Moreover, it is merely a hobby for everyone, spending some free time here and there besides the actual day-time work, friends & family, etc.<br />
+				Since April 2024, Pandora is in a closed beta phase and is available to an audience beyond the initial group of founders.
 			</p>
 
 			<h4>Does Pandora want to replace BC?</h4>
@@ -33,7 +34,7 @@ export function WikiHistory(): ReactElement {
 				interests of parts of the community slowly. Also the fact that console-usage/scripts/mods/extensions in BC are so all-powerful has certain
 				drawbacks and is exploited quite often.<br />
 				In a way, Pandora is offering an improved "classic" experience, focusing on roleplaying and clear house rules. We will actively remove/hinder
-				ways with which users can cheat or gain unexpected feature advantages. Instead of embracing inofficial scripts/mods that can pose
+				ways with which users can cheat or gain unexpected feature advantages. Instead of embracing unofficial scripts/mods that can pose
 				a security risk to Pandora's users and will lead to a fragmented user experience, we encourage developers with feature ideas to get in
 				touch with us about contributing to Pandora directly.
 			</p>
@@ -54,7 +55,7 @@ export function WikiHistory(): ReactElement {
 				<li>Not Open-Source: While the source code of BC is public, it is not fully licensed under an open-source license. That means that most parts of BC
 					are proprietary and owned by its authors and that would mean that one cannot legally use the BC code anywhere else or copy it and further
 					develop it (e.g. if the project manager would disappear some day) without the explicit permission of almost every person who ever contributed
-					to BC which makes that almost impossible. The longevity of BC is therefore doubtful and contributing to BC
+					to BC which makes a reuse/continuation almost impossible. The longevity of BC is therefore unpredictable and contributing to BC
 					can be seen as a risk to invest time into a black hole.
 				</li>
 				<li>

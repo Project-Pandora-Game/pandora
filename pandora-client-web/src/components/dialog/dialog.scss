@@ -123,6 +123,7 @@
 		// Override manual sizing to allow dialog to shrink
 		height: auto !important;
 		min-height: unset !important;
+		overflow: hidden;
 
 		>.dialog-content, .resize-handle-wrapper {
 			display: none;

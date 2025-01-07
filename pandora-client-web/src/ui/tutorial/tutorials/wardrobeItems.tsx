@@ -17,7 +17,7 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 						<p>
 							Welcome to the tutorial on wearable items!<br />
 							In this tutorial you will learn how to use the wardrobe to create,
-							customize and delete items from a character.
+							customize, and delete items from a character.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -39,7 +39,7 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 						<p>
 							Let's start by opening your character's wardrobe.<br />
 							In general, you can open any character's wardrobe to edit
-							the character's appearance when having the correct permissions.
+							their appearance, if you have the correct permissions.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -108,9 +108,9 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							The wardrobe typically opens on the "Items" tab, which is the correct tab to manage all items equipped to a character.
-							A character can only "wear" a limit amount of items. This limit is indicated by the bar in the middle.
-							Locks, body parts, and items inside equipped storage items also count towards the limit.
+							The wardrobe typically opens on the "Items" tab, which is used to manage all items equipped on a character.
+							A character can only "wear" a limited amount of items. This limit is indicated by the bar in the middle.
+							Locks, body parts, and items inside equipped storage items also count towards this limit.
 						</p>
 					),
 					conditions: [{
@@ -130,14 +130,15 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Similar to the "Body" tab, the "Item" tab of the wardrobe also has two main areas.<br />
+							Similar to the "Body" tab, the "Items" tab of the wardrobe also has two main areas.<br />
 							<br />
-							The left pane shows all items currently equipped on your character.<br />
-							Here you can edit/configure these items, reorder them, and delete them or move them to the room inventory.<br />
-							Do note that the order of items matters! Items worn closest to the body (e.g. underwear) are at the bottom and then
-							outer wear is layered on top, piece by piece. Restraints should typically be near the top of the list, unless they are under clothing items.<br />
+							The left pane shows all items currently equipped on the character.<br />
+							Here you can edit/configure these items, reorder them, delete them, or move them to the room inventory.<br />
+							Do note that the order of items matters! Items worn closest to the body (e.g. underwear) are at the bottom, while
+							items worn on top of those are at the top.
+							This means that restraints should typically be near the top of the list, unless you want to hide them under clothing.<br />
 							<br />
-							The right pane shows several ways how you can add or swap items. Let's look at these in the next step.
+							The right pane shows several ways how you can add or swap items. We will look at these in the next step.
 						</p>
 					),
 					conditions: [{
@@ -145,13 +146,38 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 					}],
 					highlight: [{ query: '.wardrobe-pane > .wardrobe-ui > *' }],
 				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <p>Please switch back to the wardrobe screen for your character.</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: /^\/wardrobe($|\/character\/c)/,
+					}],
+				},
+				{
+					text: <p>Please switch back to the "Items" tab</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.wardrobe .tab.active',
+						filter: (e) => e.innerText.includes('Items'),
+					}],
+					highlight: [{
+						query: '.wardrobe .tab',
+						filter: (e) => e.innerText.includes('Items'),
+					}],
+				},
 				{
 					text: (
 						<p>
-							In the right pane, the left tab "Room inventory", that is typically active when you open the wardrobe, lists all items that are
-							currently inside the room your character is in. The room inventory will be topic of another tutorial.<br />
+							In the right pane, the left tab "Room inventory" (which is typically active when you open the wardrobe) lists all items that are
+							currently inside the room your character is in. The room inventory will be the topic of another tutorial.<br />
 							The right tab "Saved items" will allow you to add items from item collection templates. These are part of a feature to save whole
-							outfits including restraints. This will also be subject of another tutorial.<br />
+							outfits, including restraints. This will also be the subject of another tutorial.<br />
 							<br />
 							For the current tutorial, we are interested in creating a completely new item. Let's proceed to the next step.
 						</p>
@@ -218,8 +244,8 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 							<br />
 							The top row contains a text field for searching items
 							by name and two buttons to switch between the current list-based view and a grid view with larger previews of the items.
-							The section below that contains many item type-based filter buttons.<br />
-							Feel free to hover over any of the icons (or hold down on one, if using a touchscreen) to see what type of items the filter will show.<br />
+							The section below that contains several buttons to filter based on item's type.<br />
+							Feel free to hover over any of these icons (or hold down on it, if using a touchscreen) to see the description of that type.<br />
 							<br />
 							Afterwards, please proceed to the next step.
 						</p>
@@ -340,20 +366,31 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							The right pane changed now to the item creation view, where you can configure various aspects of the item, before creating it.<br />
+							The right pane changed now to the item creation view, where you can configure various aspects of the item before creating it.<br />
 							Similar to body parts, which were covered in a previous tutorial, one configuration option is the ability to change all
-							of the item's colors and sometimes the transparency of a color. Moreover, depending on the item, you can change
+							of the item's colors and sometimes the transparency of a color. Depending on the item, you can also change
 							the default state of various modules the item may or may not have.<br />
 							<br />
 							After you are happy with your choices, click on the position where you want to create the item in the list of worn items (left pane)
 							to finalize creating the item.
+							<br />
+							As this item is a hat, the position you select likely doesn't matter, as you are unlikely to be wearing items that overlap with it.
+							If you, however, were wearing for example a headband, it would matter whether you position the hat under it or above it.
 						</p>
 					),
-					conditions: [{
-						type: 'elementQuery',
-						query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem',
-						filter: (e) => e.innerText.includes('Top Hat'),
-					}],
+					conditions: [
+						{
+							type: 'elementQuery',
+							query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem',
+							filter: (e) => e.innerText.includes('Top Hat'),
+						},
+						{
+							type: 'elementQuery',
+							query: '.inventoryView',
+							filter: (e) => e.innerText.includes('Creating item: Top Hat'),
+							expectNoMatch: true,
+						},
+					],
 					highlight: [
 						{
 							query: '.wardrobeActionButton',
@@ -430,7 +467,7 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 						<p>
 							The menu that appeared on the right shows all the configuration options of this item.
 							Possibly even more options than before, such as being able to give the item a custom name and description
-							to make it more unique by giving it some background information or describing noticeable additional details or features.
+							to make it more unique by giving it some background story or describing additional noticeable details or features.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -479,6 +516,7 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 						},
 						{
 							query: '.wardrobe-pane > .wardrobe-ui > .inventoryView .inventoryViewItem .wardrobeActionButton',
+							inset: true,
 						},
 					],
 				},
@@ -527,7 +565,7 @@ export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							Feel free to try removing the "Top Hat" from your character by either
+							[optional] Feel free to try removing the "Top Hat" from your character by either
 							deleting it or moving it to the room inventory.
 						</p>
 					),

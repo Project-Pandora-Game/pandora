@@ -118,7 +118,7 @@ export class TutorialStageRunner {
 					}
 				});
 
-			return elements.length > 0;
+			return condition.expectNoMatch ? (elements.length === 0) : (elements.length > 0);
 		} else if (condition.type === 'flag') {
 			for (const existingFlag of this.tutorial.externalTutorialFlags.values()) {
 				if (existingFlag.flag === condition.flag) {

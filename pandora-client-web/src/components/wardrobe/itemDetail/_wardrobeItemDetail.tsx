@@ -346,10 +346,12 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 		target: targetSelector,
 		item: itemPath,
 		name: name.trim(),
-		generic: generic.trim(),
-		specific: specific.trim(),
+		chat: {
+			generic: generic.trim(),
+			specific: specific.trim(),
+		},
 		description: description.trim(),
-	}), [description, itemPath, name, targetSelector]);
+	}), [description, itemPath, name, generic, specific, targetSelector]);
 
 	return (
 		<FieldsetToggle legend='Item'>

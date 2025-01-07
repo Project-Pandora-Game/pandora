@@ -186,6 +186,13 @@
 		"import/no-internal-modules": [ "error", {
 			"forbid": [ "pandora-common/src/**" ]
 		}],
+		"import/no-extraneous-dependencies": ["warn", {
+			"devDependencies": [
+				"**/pandora-tests/**/*.ts",
+				"**/pandora-client-web/test/**",
+				"**/pandora-client-web/webpack.config.ts"
+			]
+		}],
 		// Stylistic rules
 		"@stylistic/semi": ["warn", "always"],
 		"@stylistic/semi-style": ["warn", "last"],

@@ -1,14 +1,12 @@
 import React from 'react';
 import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 
-// TODO: Safemode & Timeout
-// (that they exist, letting user try to enter timeout mode; not safemode as we don't want to force the timer on them)
 export const TUTORIAL_SAFEMODE: TutorialConfig = {
 	id: 'safemode',
 	name: `Safemode and Timeout mode`,
 	description: (
 		<p>
-			This tutorial will teach you about getting out of negative situations.
+			This tutorial will teach you about getting out of bad situations.
 		</p>
 	),
 	stages: [
@@ -26,11 +24,11 @@ export const TUTORIAL_SAFEMODE: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								Hello again! In this tutorial, we will talk about something very important: Safemode as well as timeout mode.
+								Hello again! In this tutorial, we will talk about something very important: Safemode and timeout mode.
 							</p>
 							<p>
-								These features are designed as a last resort, for situations where you no longer feel comfortable or you get your character
-								stuck and cannot find another way out.
+								These features are designed as a last resort &ndash; for situations where you no longer feel comfortable or you get your character
+								stuck and cannot find any other way out.
 							</p>
 						</>
 					),
@@ -52,18 +50,18 @@ export const TUTORIAL_SAFEMODE: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								Features in Pandora are very secure and some of them can really get a character stuck with no one else being able to help so please
-								be mindful of that when you open up critical permissions to other users (permissions will be the topic of a future tutorial).
-								As always, communication with others is the most important tool in our community, but Pandora also offers mechanisms to keep you safe.<br />
+								Most of Pandora's features are very secure and some can even get a character truly struck with no one else being able to help.
+								Please be mindful of that when you open up critical permissions to other users (permissions will be the topic of a future tutorial).
+								As always, communication with others is the most important tool in our community, but Pandora also offers mechanisms to keep you safe.
 							</p>
 							<p>
-								These mechanisms are for when you would encounter a situation where communication with another party failed or someone is not
-								respecting your OOC communication about limits / your safeword. For such a case, there are two modes: Timeout and safemode.
-								Both modes prevent interactions in both ways while active, but safemode also allows you to neutralize restricting features,
-								for instance allowing you to remove any items on your character, even locked ones.
+								The mechanisms that will be discussed in this tutorial are for when you would encounter a situation where communication with another party failed or someone is not
+								respecting your OOC communication about limits / your safeword. For such a case, there are two modes: Timeout and safemode.<br />
+								Both modes prevent interactions between the character and others characters in either direction while active.
+								Safemode also allows you to bypass all restricting features, for instance allowing you to remove any items on your character &ndash; even locked ones.
 							</p>
 							<p>
-								Let's show where you can find these modes.
+								The next step will show where you can find these modes.
 							</p>
 						</>
 					),
@@ -83,6 +81,7 @@ export const TUTORIAL_SAFEMODE: TutorialConfig = {
 				},
 				{
 					text: <p>Open the "Personal Space" tab.</p>,
+					hideWhenCompleted: true,
 					conditions: [{
 						type: 'elementQuery',
 						query: '.roomScreen .tab.active',
@@ -214,14 +213,18 @@ export const TUTORIAL_SAFEMODE: TutorialConfig = {
 							filter: (e) => e.innerText.includes('Cancel'),
 						},
 					],
-					// TODO advance this condition automatically after pressing the Cancel-button
-					conditions: [{ type: 'next' }],
+					conditions: [{
+						type: 'elementQuery',
+						query: '.dialog-content.overflow-auto .Button',
+						filter: (e) => /(Enter|Leave) timeout mode/.test(e.innerText),
+						expectNoMatch: true,
+					}],
 				},
 				{
 					text: (
 						<p>
-							You can now see a notice that timeout mode is active under your character's name in the space's character list.
-							The same banner is also shown in your wardrobe.
+							You can now see a notice that timeout mode is active next to your character's name in the space's character list.
+							The same banner is also shown in the wardrobe.
 							These notifications are visible to other users as well. It is a clear indication that something is not okay and it gives users time to
 							start communicating that while being able to feel safe.
 						</p>
@@ -232,26 +235,6 @@ export const TUTORIAL_SAFEMODE: TutorialConfig = {
 						},
 					],
 					conditions: [{ type: 'next' }],
-				},
-				{
-					text: (
-						<p>
-							For exiting timeout mode or safemode (after the cooldown period) the same dialog is used.<br />
-							<br />
-							Press the "Exit timeout mode" button.
-						</p>
-					),
-					highlight: [
-						{
-							query: '.Button',
-							filter: (e) => e.innerText.includes('Exit timeout mode'),
-						},
-					],
-					conditions: [{
-						type: 'elementQuery',
-						query: '.dialog-content.overflow-auto .Button',
-						filter: (e) => e.innerText.includes('Leave timeout mode'),
-					}],
 				},
 			],
 		},
@@ -276,6 +259,26 @@ export const TUTORIAL_SAFEMODE: TutorialConfig = {
 					highlight: [{
 						query: '.roomScreen .tab',
 						filter: (e) => e.innerText.includes('Personal space'),
+					}],
+				},
+				{
+					text: (
+						<p>
+							For exiting timeout mode or safemode (after the cooldown period) the same dialog is used.<br />
+							<br />
+							Press the "Exit timeout mode" button.
+						</p>
+					),
+					highlight: [
+						{
+							query: '.Button',
+							filter: (e) => e.innerText.includes('Exit timeout mode'),
+						},
+					],
+					conditions: [{
+						type: 'elementQuery',
+						query: '.dialog-content.overflow-auto .Button',
+						filter: (e) => /(Enter|Leave) timeout mode/.test(e.innerText),
 					}],
 				},
 				{

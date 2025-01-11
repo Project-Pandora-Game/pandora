@@ -6,11 +6,12 @@ import { TypedEventEmitter } from '../../event';
 import type { ActionSpaceContext } from '../../space/space';
 import { Assert } from '../../utility/misc';
 import { AssetPreferencesSubsystem } from '../assetPreferences';
+import type { CharacterModifiersSubsystem } from '../characterModifiers/characterModifiersSubsystem';
 import { InteractionSubsystem } from '../interactions/interactionSubsystem';
 import { GameLogicPermission, IPermissionProvider, PermissionGroup } from '../permissions';
 
 export type GameLogicCharacterEvents = {
-	dataChanged: 'interactions' | 'assetPreferences';
+	dataChanged: 'interactions' | 'assetPreferences' | 'characterModifiers';
 };
 
 export abstract class GameLogicCharacter extends TypedEventEmitter<GameLogicCharacterEvents> {
@@ -20,6 +21,7 @@ export abstract class GameLogicCharacter extends TypedEventEmitter<GameLogicChar
 
 	public readonly abstract interactions: InteractionSubsystem;
 	public readonly abstract assetPreferences: AssetPreferencesSubsystem;
+	public readonly abstract characterModifiers: CharacterModifiersSubsystem;
 
 	constructor(minimalData: ICharacterMinimalData) {
 		super();

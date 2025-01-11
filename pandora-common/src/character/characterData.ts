@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { AccountIdSchema } from '../account';
 import { AppearanceBundleSchema } from '../assets/state/characterStateTypes';
 import { RoomInventoryBundleSchema } from '../assets/state/roomState';
+import { CharacterModifierSystemDataSchema } from '../gameLogic/characterModifiers/characterModifierData';
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
 import { SpaceIdSchema } from '../space/space';
@@ -66,6 +67,7 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	}).optional(),
 	interactionConfig: InteractionSystemDataSchema.optional(),
 	assetPreferences: AssetPreferencesServerSchema.default(ASSET_PREFERENCES_DEFAULT),
+	characterModifiers: CharacterModifierSystemDataSchema.optional(),
 	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
 	roomId: z.string().nullable().optional().catch(undefined),
 	position: CharacterRoomPositionSchema,
@@ -91,6 +93,7 @@ export const CHARACTER_SHARD_UPDATEABLE_PROPERTIES = [
 	'settings',
 	'interactionConfig',
 	'assetPreferences',
+	'characterModifiers',
 ] as const satisfies readonly Exclude<keyof ICharacterData, ((typeof CHARACTER_DIRECTORY_UPDATEABLE_PROPERTIES)[number])>[];
 export const CharacterDataShardUpdateSchema = CharacterDataSchema.pick(ArrayToRecordKeys(CHARACTER_SHARD_UPDATEABLE_PROPERTIES, true)).partial();
 export type ICharacterDataShardUpdate = z.infer<typeof CharacterDataShardUpdateSchema>;

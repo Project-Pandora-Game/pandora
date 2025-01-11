@@ -199,6 +199,7 @@ export class Character {
 
 		const originalInteractionConfig = data.interactionConfig;
 		const originalAssetPreferencesConfig = CloneDeepMutable(data.assetPreferences);
+		const originalCharacterModifiersData = CloneDeepMutable(data.characterModifiers);
 		this.gameLogicCharacter = new GameLogicCharacterServer(data, assetManager, this.logger.prefixMessages('[GameLogic]'));
 
 		this.setConnection(null);
@@ -227,6 +228,9 @@ export class Character {
 					assetPreferences: this.assetPreferences,
 				});
 				this._emitSomethingChanged('permissions');
+			} else if (type === 'characterModifiers') {
+				this.setValue('characterModifiers', this.gameLogicCharacter.characterModifiers.getData(), false);
+				this._emitSomethingChanged('permissions');
 			} else {
 				AssertNever(type);
 			}
@@ -241,6 +245,11 @@ export class Character {
 		if (!isEqual(originalAssetPreferencesConfig, currentAssetPreferencesConfig)) {
 			this.logger.debug('Migrated asset preferences');
 			this.setValue('assetPreferences', currentAssetPreferencesConfig, false);
+		}
+		const currentCharacterModifiersData = this.gameLogicCharacter.characterModifiers.getData();
+		if (!isEqual(originalCharacterModifiersData, currentCharacterModifiersData)) {
+			this.logger.debug('Migrated character modifiers');
+			this.setValue('characterModifiers', currentCharacterModifiersData, false);
 		}
 
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);

@@ -37,6 +37,7 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 
 	public getData(): CharacterModifierSystemData {
 		const data: CharacterModifierSystemData = {
+			modifiers: [],
 			typeConfig: {},
 		};
 

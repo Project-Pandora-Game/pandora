@@ -1,9 +1,10 @@
 import { isEqual } from 'lodash';
 import { z } from 'zod';
-import { CharacterIdSchema } from '../../../character';
-import { Assert, AssertNever } from '../../../utility';
+import { CharacterIdSchema } from '../../../character/characterTypes';
+import { Assert, AssertNever, KnownObject } from '../../../utility';
 import type { ModifierConfigurationEntryDefinition } from '../configuration';
 
+/** Mapping of a configuration type to its schema type */
 type ModifierConfigurationDataTypeSchemaMap = {
 	characterList: z.ZodArray<typeof CharacterIdSchema>;
 	number: z.ZodNumber;
@@ -11,6 +12,7 @@ type ModifierConfigurationDataTypeSchemaMap = {
 	toggle: z.ZodBoolean;
 };
 
+/** Create a schema for character modifier type's configuration data; specifically for a singular config property. */
 function CharacterModifierBuildConfigurationSchemaSingle<const TConfig extends ModifierConfigurationEntryDefinition>(config: TConfig): ModifierConfigurationDataTypeSchemaMap[TConfig['type']] {
 	switch (config.type) {
 		case 'string': {
@@ -45,20 +47,24 @@ function CharacterModifierBuildConfigurationSchemaSingle<const TConfig extends M
 	AssertNever(config);
 }
 
-export type CharacterModifierBuildConfigurationSchemaType<TConfig extends Readonly<Record<string, ModifierConfigurationEntryDefinition>>> =
-	z.ZodObject<{
+/** Object Schema shape for character modifier type's configuration data */
+export type CharacterModifierBuildConfigurationSchemaShape<TConfig extends Readonly<Record<string, ModifierConfigurationEntryDefinition>>> =
+	{
 		[k in keyof TConfig]: ModifierConfigurationDataTypeSchemaMap[TConfig[k]['type']];
-	}>;
+	};
 
+/** Schema type for character modifier type's configuration data */
+export type CharacterModifierBuildConfigurationSchemaType<TConfig extends Readonly<Record<string, ModifierConfigurationEntryDefinition>>> =
+	z.ZodObject<CharacterModifierBuildConfigurationSchemaShape<TConfig>>;
+
+/** Create a schema for character modifier type's configuration data. */
 export function CharacterModifierBuildConfigurationSchema<const TConfig extends Readonly<Record<string, ModifierConfigurationEntryDefinition>>>(config: TConfig): CharacterModifierBuildConfigurationSchemaType<TConfig> {
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	const result: Record<string, ModifierConfigurationDataTypeSchemaMap[keyof ModifierConfigurationDataTypeSchemaMap]> = {};
-	for (const [k, v] of Object.entries(config)) {
+	const result: Partial<CharacterModifierBuildConfigurationSchemaShape<TConfig>> = {};
+	for (const [k, v] of KnownObject.entries(config)) {
 		const schema = CharacterModifierBuildConfigurationSchemaSingle(v);
 		Assert(isEqual(schema.parse(v.default), v.default), "Option's default does not parse");
 		result[k] = schema;
 	}
 
-	// @ts-expect-error: Manually narrowed type
-	return z.object(result);
+	return z.object(result as CharacterModifierBuildConfigurationSchemaShape<TConfig>);
 }

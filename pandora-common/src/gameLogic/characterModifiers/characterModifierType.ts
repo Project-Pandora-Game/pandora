@@ -3,7 +3,7 @@ import type { GameLogicCharacter } from '../character';
 import { GameLogicPermission, GameLogicPermissionServer } from '../permissions';
 import { GameLogicPermissionClient } from '../permissions/permissionClient';
 import type { CharacterModifierTypeConfig } from './characterModifierData';
-import { CHARACTER_MODIFIER_TYPE_CONFIG, CharacterModifierType } from './modifierTypes/_index';
+import { CHARACTER_MODIFIER_TYPE_DEFINITION, CharacterModifierType } from './modifierTypes/_index';
 
 export type GameLogicModifierTypeEvents = {
 	configChanged: void;
@@ -22,7 +22,7 @@ export class GameLogicModifierTypeClient extends GameLogicModifierTypeData {
 
 	constructor(character: GameLogicCharacter, type: CharacterModifierType) {
 		super();
-		const config = CHARACTER_MODIFIER_TYPE_CONFIG[type];
+		const config = CHARACTER_MODIFIER_TYPE_DEFINITION[type];
 
 		this.permission = new GameLogicPermissionClient(character, {
 			group: 'characterModifierType',
@@ -39,7 +39,7 @@ export class GameLogicModifierTypeServer extends GameLogicModifierTypeData {
 
 	constructor(character: GameLogicCharacter, type: CharacterModifierType, data: CharacterModifierTypeConfig | undefined) {
 		super();
-		const config = CHARACTER_MODIFIER_TYPE_CONFIG[type];
+		const config = CHARACTER_MODIFIER_TYPE_DEFINITION[type];
 
 		this.permission = new GameLogicPermissionServer(character, {
 			group: 'characterModifierType',

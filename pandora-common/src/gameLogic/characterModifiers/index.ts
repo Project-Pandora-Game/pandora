@@ -1,3 +1,4 @@
+export * from './characterModifierBaseData';
 export * from './characterModifierData';
 export * from './characterModifiersSubsystem';
 export * from './characterModifiersSubsystemClient';

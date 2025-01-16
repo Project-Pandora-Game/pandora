@@ -1,7 +1,6 @@
-import { cloneDeep } from 'lodash';
-import { z, type ZodObject } from 'zod';
+import { z } from 'zod';
 import type { EffectsDefinition } from '../../../assets/effects';
-import { Assert, AssertNever } from '../../../utility';
+import { AssertNever } from '../../../utility';
 import type { PermissionConfigDefault, PermissionType } from '../../permissions';
 import type { CharacterModifierStrictnessCategory } from '../characterModifierBaseData';
 import type { ModifierConfigurationBase } from '../configuration';
@@ -19,50 +18,13 @@ export interface CharacterModifierTypeDefinitionBase {
 /** Character modifier type configuration data */
 export interface CharacterModifierTypeConstructedDefinition<TType extends string, TConfig extends ModifierConfigurationBase> extends CharacterModifierTypeDefinitionBase {
 	readonly typeId: TType;
-	readonly configurationDefinition: TConfig;
-	readonly instanceDataSchema: CharacterModifierInstanceDataSchema<TType, TConfig>;
-	readonly clientDataSchema: CharacterModifierInstanceClientDataSchema<TType, TConfig>;
-	readonly effectDataSchema: CharacterModifierEffectDataSchema<TType, TConfig>;
+	readonly configDefinition: TConfig;
+	readonly configSchema: CharacterModifierBuildConfigurationSchemaType<TConfig>;
 
 	readonly applyCharacterEffects?: (config: CharacterModifierConfiguration<TConfig>, currentEffects: EffectsDefinition) => Readonly<Partial<EffectsDefinition>>;
-
-	instanceToEffect(instance: z.infer<CharacterModifierInstanceDataSchema<TType, TConfig>>): z.infer<CharacterModifierEffectDataSchema<TType, TConfig>>;
-	instanceToClientData(instance: z.infer<CharacterModifierInstanceDataSchema<TType, TConfig>>): z.infer<CharacterModifierInstanceClientDataSchema<TType, TConfig>>;
 }
 /** Character modifier type configuration data */
 type CharacterModifierConfiguration<TConfig extends ModifierConfigurationBase> = z.infer<CharacterModifierBuildConfigurationSchemaType<TConfig>>;
-
-/** "Common" data for all character modifier instances */
-export const CharacterModifierInstanceCommonDataSchema = z.object({
-	/** Unique identifier */
-	id: z.string(),
-	enabled: z.boolean(),
-});
-type CharacterModifierInstanceDataSchema<TType extends string, TConfig extends ModifierConfigurationBase> = z.ZodObject<z.objectUtil.extendShape<(typeof CharacterModifierInstanceCommonDataSchema extends ZodObject<infer TShape> ? TShape : never), {
-	type: z.ZodLiteral<TType>;
-	config: CharacterModifierBuildConfigurationSchemaType<TConfig>;
-}>>;
-
-/** "Common" client data for all character modifier instances */
-export const CharacterModifierInstanceCommonClientDataSchema = z.object({
-	/** Unique identifier */
-	id: z.string(),
-	enabled: z.boolean(),
-});
-type CharacterModifierInstanceClientDataSchema<TType extends string, TConfig extends ModifierConfigurationBase> = z.ZodObject<z.objectUtil.extendShape<(typeof CharacterModifierInstanceCommonClientDataSchema extends ZodObject<infer TShape> ? TShape : never), {
-	type: z.ZodLiteral<TType>;
-	config: CharacterModifierBuildConfigurationSchemaType<TConfig>;
-}>>;
-
-/** "Common" data for all character modifier effects */
-export const CharacterModifierEffectCommonDataSchema = z.object({
-	id: z.string(),
-});
-
-type CharacterModifierEffectDataSchema<TType extends string, TConfig extends ModifierConfigurationBase> = z.ZodObject<z.objectUtil.extendShape<(typeof CharacterModifierEffectCommonDataSchema extends ZodObject<infer TShape> ? TShape : never), {
-	type: z.ZodLiteral<TType>;
-	config: CharacterModifierBuildConfigurationSchemaType<TConfig>;
-}>>;
 
 export function DefineCharacterModifier<
 	const TType extends string,
@@ -78,21 +40,6 @@ export function DefineCharacterModifier<
 
 	const configSchema = CharacterModifierBuildConfigurationSchema(intermediateConfig.config);
 
-	const instanceDataSchema: CharacterModifierInstanceDataSchema<TType, TConfig> = CharacterModifierInstanceCommonDataSchema.extend({
-		type: z.literal(intermediateConfig.typeId),
-		config: configSchema,
-	});
-
-	const clientDataSchema: CharacterModifierInstanceClientDataSchema<TType, TConfig> = CharacterModifierInstanceCommonClientDataSchema.extend({
-		type: z.literal(intermediateConfig.typeId),
-		config: configSchema,
-	});
-
-	const effectDataSchema: CharacterModifierEffectDataSchema<TType, TConfig> = CharacterModifierEffectCommonDataSchema.extend({
-		type: z.literal(intermediateConfig.typeId),
-		config: configSchema,
-	});
-
 	return {
 		typeId: intermediateConfig.typeId,
 		visibleName: intermediateConfig.visibleName,
@@ -107,32 +54,8 @@ export function DefineCharacterModifier<
 				intermediateConfig.strictnessCategory === 'strict' ? undefined :
 					intermediateConfig.strictnessCategory === 'extreme' ? ['yes'] :
 						AssertNever(intermediateConfig.strictnessCategory),
-		configurationDefinition: intermediateConfig.config,
-		instanceDataSchema,
-		clientDataSchema,
-		effectDataSchema,
+		configDefinition: intermediateConfig.config,
+		configSchema,
 		applyCharacterEffects: intermediateConfig.applyCharacterEffects,
-
-		instanceToEffect(instance: z.infer<CharacterModifierInstanceDataSchema<TType, TConfig>>): z.infer<CharacterModifierEffectDataSchema<TType, TConfig>> {
-			Assert(instance.type === intermediateConfig.typeId);
-
-			return {
-				id: instance.id,
-				type: instance.type,
-				config: cloneDeep(instance.config) as z.infer<CharacterModifierBuildConfigurationSchemaType<TConfig>>,
-			};
-		},
-
-		instanceToClientData(instance: z.infer<CharacterModifierInstanceDataSchema<TType, TConfig>>): z.infer<CharacterModifierInstanceClientDataSchema<TType, TConfig>> {
-			Assert(instance.type === intermediateConfig.typeId);
-
-			return {
-				id: instance.id,
-				type: instance.type,
-				enabled: instance.enabled,
-				config: cloneDeep(instance.config) as z.infer<CharacterModifierBuildConfigurationSchemaType<TConfig>>,
-			};
-		},
-
 	};
 }

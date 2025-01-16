@@ -1,27 +1,27 @@
 import { cloneDeep } from 'lodash';
 import type { GameLogicCharacter } from '../character/character';
 import type { CharacterModifierInstanceClientData, CharacterModifierInstanceData } from './characterModifierData';
-import { CHARACTER_MODIFIER_TYPE_DEFINITION, type CharacterModifierType, type CharacterModifierTypeDefinition } from './modifierTypes/_index';
-import type { CharacterModifierTypeConstructedDefinition } from './helpers/modifierDefinition';
+import { CHARACTER_MODIFIER_TYPE_DEFINITION, type CharacterModifierTypeDefinition } from './modifierTypes/_index';
 
-export class GameLogicModifierInstanceServer<TType extends CharacterModifierType> {
-	public readonly definition: CharacterModifierTypeDefinition<TType>;
-	private data: CharacterModifierInstanceData<TType>;
+export class GameLogicModifierInstanceServer {
+	public readonly definition: CharacterModifierTypeDefinition;
+	private data: CharacterModifierInstanceData;
 
-	constructor(_character: GameLogicCharacter, data: CharacterModifierInstanceData<TType>) {
+	constructor(_character: GameLogicCharacter, data: CharacterModifierInstanceData) {
 		this.definition = CHARACTER_MODIFIER_TYPE_DEFINITION[data.type];
 		this.data = data;
 	}
 
-	public getData(): CharacterModifierInstanceData<TType> {
+	public getData(): CharacterModifierInstanceData {
 		return cloneDeep(this.data);
 	}
 
-	public getClientData(): CharacterModifierInstanceClientData<TType> {
-		return (this.definition.instanceToClientData as CharacterModifierTypeConstructedDefinition<TType, typeof this.definition.configurationDefinition>['instanceToClientData'])(this.data) as CharacterModifierInstanceClientData<TType>;
+	public getClientData(): CharacterModifierInstanceClientData {
+		return {
+			id: this.data.id,
+			type: this.data.type,
+			enabled: this.data.enabled,
+			config: cloneDeep(this.data.config),
+		};
 	}
 }
-
-export type GameLogicModifierInstanceServerAny = {
-	[TType in CharacterModifierType]: GameLogicModifierInstanceServer<TType>;
-}[CharacterModifierType];

@@ -128,13 +128,13 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 			}
 			case 'invalidState': {
 				if (e.asset) {
-					return `The ${describeItem(e.asset, e.itemName)} is in an invalid state:\n${e.reason}`;
+					return `The ${describeItem(e.asset, e.itemName)} would be in an invalid state:\n${e.reason}`;
 				} else {
 					return e.reason;
 				}
 			}
 			case 'poseConflict':
-				return `This item requires a pose conflicting with the added items.`;
+				return `This item would require a pose conflicting with the added items.`;
 			case 'tooManyItems':
 				return e.asset ?
 					`At most ${e.limit} "${describeItem(e.asset, e.itemName)}" can be equipped.` :
@@ -144,7 +144,7 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 			case 'canOnlyBeInOneDevice':
 				return `Character can only be in a single device at a time.`;
 			case 'invalid':
-				return `The action results in a generally invalid state.`;
+				return `This action results in a generally invalid state.`;
 		}
 		AssertNever(e);
 	} else if (result.result === 'attemptRequired') {

@@ -1,19 +1,12 @@
 import classNames from 'classnames';
 import {
-	Asset,
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
-	ItemContainerPath,
 	KnownObject,
 	type CharacterModifierTypeDefinition,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useMemo, useRef, useState } from 'react';
-import { TextInput } from '../../../common/userInteraction/input/textInput';
-import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
-
-export interface WardrobeAssetListItemProps {
-	asset: Asset;
-	container: ItemContainerPath;
-}
+import { TextInput } from '../../../../common/userInteraction/input/textInput';
+import { useInputAutofocus } from '../../../../common/userInteraction/inputAutofocus';
 
 export function WardrobeCharacterModifierTypeView({ title, children }: {
 	title: string;
@@ -36,7 +29,7 @@ export function WardrobeCharacterModifierTypeView({ title, children }: {
 	useInputAutofocus(filterInput);
 
 	return (
-		<div className='inventoryView wardrobeAssetList'>
+		<div className='inventoryView wardrobeModifierTypeList'>
 			<div className='toolbar'>
 				<span>{ title }</span>
 				<div className='filter'>

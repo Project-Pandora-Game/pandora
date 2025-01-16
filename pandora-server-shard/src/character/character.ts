@@ -1,6 +1,7 @@
 import {
 	AccountRole,
 	AppearanceActionContext,
+	AppearanceActionProcessingContext,
 	AppearanceBundle,
 	Assert,
 	AssertNever,
@@ -40,6 +41,7 @@ import {
 	ResolveAssetPreference,
 	RoomBackgroundData,
 	SpaceId,
+	type AppearanceActionProcessingResult,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager';
 import { GetDatabase } from '../database/databaseProvider';
@@ -531,6 +533,18 @@ export class Character {
 				return char?.gameLogicCharacter ?? null;
 			},
 		};
+	}
+
+	/**
+	 * Runs a simulation of a custom action, returning its result.
+	 */
+	public checkAction(action: (processingContext: AppearanceActionProcessingContext) => AppearanceActionProcessingResult): AppearanceActionProcessingResult {
+		const processingContext = new AppearanceActionProcessingContext(
+			this.getAppearanceActionContext(),
+			this.getOrLoadSpace().gameState.currentState,
+		);
+
+		return action(processingContext);
 	}
 
 	@AsyncSynchronized()

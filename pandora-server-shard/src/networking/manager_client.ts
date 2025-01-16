@@ -77,6 +77,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			permissionCheck: this.handlePermissionCheck.bind(this),
 			permissionGet: this.handlePermissionGet.bind(this),
 			permissionSet: this.handlePermissionSet.bind(this),
+			characterModifiersGet: this.handleCharacterModifiersGet.bind(this),
 		});
 	}
 
@@ -415,7 +416,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (client.character.id === target) {
 			targetCharacter = client.character;
 		} else {
-			targetCharacter = client.character.getOrLoadSpace().getCharacterById(target) ?? null;
+			targetCharacter = client.character.getOrLoadSpace().getCharacterById(target);
 		}
 
 		if (targetCharacter == null) {
@@ -471,6 +472,44 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const result = permission.setConfig(config);
 		return {
 			result,
+		};
+	}
+
+	private handleCharacterModifiersGet({ target }: IClientShardArgument['characterModifiersGet'], client: ClientConnection): IClientShardNormalResult['characterModifiersGet'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		// Find the target
+		const space = client.character.getOrLoadSpace();
+		const targetCharacter = space.getCharacterById(target);
+		if (targetCharacter == null) {
+			return {
+				result: 'notFound',
+			};
+		}
+
+		// Check that the source character is allowed to get this data
+		const checkResult = client.character.checkAction((ctx) => {
+			const checkTarget = ctx.getCharacter(target);
+			if (checkTarget == null)
+				return ctx.invalid();
+
+			ctx.addInteraction(checkTarget.character, 'interact');
+			ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
+
+			return ctx.finalize();
+		});
+
+		if (!checkResult.valid) {
+			return {
+				result: 'failure',
+				problems: checkResult.problems.slice(),
+			};
+		}
+
+		return {
+			result: 'ok',
+			modifiers: targetCharacter.gameLogicCharacter.characterModifiers.getClientData(),
 		};
 	}
 

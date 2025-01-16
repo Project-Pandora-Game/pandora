@@ -595,50 +595,47 @@ function PermissionPromptGroup({ sourceId, permissionGroup, permissions, setAnyC
 	disableAccept: () => void;
 }): ReactElement {
 	let header;
-	let note;
-	let config: Immutable<Record<string, { visibleName: string; icon: string; } | null>>;
 	switch (permissionGroup) {
 		case 'interaction':
 			header = 'Interactions';
-			note = 'Allow character to...';
-			config = INTERACTION_CONFIG;
 			break;
 		case 'assetPreferences':
 			header = 'Item Limits';
-			note = 'Allow character to interact with worn items and to add new items that are marked in the item limits as...';
-			config = ASSET_PREFERENCES_PERMISSIONS;
+			break;
+		case 'characterModifierType':
+			header = 'Character modifiers';
 			break;
 		default:
 			AssertNever(permissionGroup);
 	}
 
 	const perms = useMemo(() => {
-		const result: Readonly<{ id: string; visibleName: string; icon: string; allowOthers: PermissionType; isAllowed: boolean; }>[] = [];
+		const result: Readonly<{ id: string; visibleName: string; icon?: string; allowOthers: PermissionType; isAllowed: boolean; }>[] = [];
 		for (const [setup, cfg] of permissions) {
-			const permConfig = config[setup.id];
-			if (permConfig == null)
-				continue;
 
 			result.push({
 				id: setup.id,
-				visibleName: permConfig.visibleName,
-				icon: permConfig.icon,
+				visibleName: setup.displayName,
+				icon: setup.icon,
 				allowOthers: cfg.allowOthers,
 				isAllowed: (cfg.characterOverrides[sourceId] ?? cfg.allowOthers) === 'yes',
 			});
 		}
 		return result;
-	}, [permissions, config, sourceId]);
+	}, [permissions, sourceId]);
 
 	return (
 		<Column className='permissionPrompt'>
 			<h3>{ header }</h3>
-			<i>{ note }</i>
 			{
 				perms.map((perm) => (
 					<div className='input-row flex-1' key={ perm.id }>
 						<label className='flex-1'>
-							<img src={ GetIcon(perm.icon) } width='28' height='28' alt='permission icon' />
+							{
+								perm.icon ? (
+									<img src={ GetIcon(perm.icon) } width='28' height='28' alt='permission icon' />
+								) : null
+							}
 							&nbsp;&nbsp;
 							<span>{ perm.visibleName }</span>
 						</label>

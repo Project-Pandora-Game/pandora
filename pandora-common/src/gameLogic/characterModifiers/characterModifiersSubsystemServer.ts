@@ -3,13 +3,15 @@ import { AssertNotNullable } from '../../utility/misc';
 import { ArrayIncludesGuard } from '../../validation';
 import type { GameLogicCharacter } from '../character/character';
 import { GameLogicPermissionServer, IPermissionProvider } from '../permissions';
-import type { CharacterModifierSystemData, CharacterModifierTypeConfig } from './characterModifierData';
+import type { CharacterModifierInstanceClientData, CharacterModifierSystemData, CharacterModifierTypeConfig } from './characterModifierData';
+import { GameLogicModifierInstanceServer, type GameLogicModifierInstanceServerAny } from './characterModifierInstance';
 import { CharacterModifiersSubsystem } from './characterModifiersSubsystem';
 import { GameLogicModifierTypeServer } from './characterModifierType';
 import { CHARACTER_MODIFIER_TYPES, type CharacterModifierType } from './modifierTypes/_index';
 
 export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsystem implements IPermissionProvider<GameLogicPermissionServer> {
 	private readonly modifierTypes: ReadonlyMap<CharacterModifierType, GameLogicModifierTypeServer>;
+	private readonly modifierInstances: GameLogicModifierInstanceServerAny[];
 
 	constructor(character: GameLogicCharacter, data: CharacterModifierSystemData, logger: Logger) {
 		super();
@@ -27,9 +29,12 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 			}
 		}
 
+		// Load instances
+		this.modifierInstances = data.modifiers.map((m) => new GameLogicModifierInstanceServer(character, m) as GameLogicModifierInstanceServerAny);
+
 		// Link up events
-		for (const interaction of this.modifierTypes.values()) {
-			interaction.on('configChanged', () => {
+		for (const type of this.modifierTypes.values()) {
+			type.on('configChanged', () => {
 				this.emit('dataChanged', undefined);
 			});
 		}
@@ -37,7 +42,7 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 
 	public getData(): CharacterModifierSystemData {
 		const data: CharacterModifierSystemData = {
-			modifiers: [],
+			modifiers: this.modifierInstances.map((m) => m.getData()),
 			typeConfig: {},
 		};
 
@@ -46,6 +51,10 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 		}
 
 		return data;
+	}
+
+	public getClientData(): CharacterModifierInstanceClientData[] {
+		return this.modifierInstances.map((m) => m.getClientData());
 	}
 
 	public override getModifierTypePermission(type: CharacterModifierType): GameLogicPermissionServer {

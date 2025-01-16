@@ -4,7 +4,7 @@ import { AssetPreferencesPublicSchema } from '../character/assetPreferences';
 import { CharacterPublicSettingsSchema, CharacterRoomPositionSchema } from '../character/characterData';
 import { CharacterIdSchema } from '../character/characterTypes';
 import { ChatCharacterStatusSchema, ClientChatMessagesSchema } from '../chat/chat';
-import { PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic';
+import { CharacterModifierInstanceClientDataSchema, PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic';
 import { AppearanceActionSchema } from '../gameLogic/actionLogic/actions/_index';
 import { AppearanceActionData, AppearanceActionProblem } from '../gameLogic/actionLogic/appearanceActionProblems';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
@@ -170,6 +170,24 @@ export const ClientShardSchema = {
 			}),
 			z.object({
 				result: z.literal('notFound'),
+			}),
+		]),
+	},
+	characterModifiersGet: {
+		request: z.object({
+			target: CharacterIdSchema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				modifiers: CharacterModifierInstanceClientDataSchema.array(),
+			}),
+			z.object({
+				result: z.literal('notFound'),
+			}),
+			z.object({
+				result: z.literal('failure'),
+				problems: ZodCast<AppearanceActionProblem>().array(),
 			}),
 		]),
 	},

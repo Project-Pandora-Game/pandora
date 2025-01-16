@@ -25,6 +25,7 @@ export const PermissionSetupSchema = z.object({
 	group: PermissionGroupSchema,
 	id: z.string(),
 	displayName: z.string(),
+	icon: z.string().optional(),
 	defaultConfig: PermissionConfigDefaultSchema,
 	forbidDefaultAllowOthers: z.array(PermissionTypeSchema).optional(),
 	maxCharacterOverrides: z.number().int().positive().optional(),

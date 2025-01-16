@@ -20,6 +20,14 @@ export const CharacterModifierInstanceDataSchema = z.discriminatedUnion('type',
 export type CharacterModifierInstanceData<TType extends CharacterModifierType = CharacterModifierType> =
 	Extract<z.infer<typeof CharacterModifierInstanceDataSchema>, { readonly type: TType; }>;
 
+/** Client data of a character modifier instance */
+export const CharacterModifierInstanceClientDataSchema = z.discriminatedUnion('type',
+	ParseArrayNotEmpty(KnownObject.values(RecordUnpackSubobjectProperties('clientDataSchema', CHARACTER_MODIFIER_TYPE_DEFINITION))),
+);
+/** Server-saved data of a character modifier instance (optionally filtered for a specific type) */
+export type CharacterModifierInstanceClientData<TType extends CharacterModifierType = CharacterModifierType> =
+	Extract<z.infer<typeof CharacterModifierInstanceClientDataSchema>, { readonly type: TType; }>;
+
 /** Data of modifier instance effect - put onto a character if the modifier is active */
 export const CharacterModifierEffectDataSchema = z.discriminatedUnion('type',
 	ParseArrayNotEmpty(KnownObject.values(RecordUnpackSubobjectProperties('effectDataSchema', CHARACTER_MODIFIER_TYPE_DEFINITION))),

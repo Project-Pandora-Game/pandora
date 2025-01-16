@@ -80,7 +80,7 @@ export function TabContainer({
 	allowWrap,
 	onTabOpen,
 }: {
-	children: (ReactElement<TabProps> | undefined | null)[];
+	children: (ReactElement<TabProps> | undefined | null)[] | (ReactElement<TabProps> | undefined | null);
 	className?: string;
 	collapsable?: true;
 	/**
@@ -95,6 +95,9 @@ export function TabContainer({
 	allowWrap?: boolean;
 	onTabOpen?: (tab: Immutable<TabConfig>) => (void | (() => void));
 }): ReactElement {
+	if (!Array.isArray(children)) {
+		children = [children];
+	}
 
 	const [currentTab, setTab] = useState(() => {
 		const defaultTab = children.findIndex((c) => c && c.props.default);

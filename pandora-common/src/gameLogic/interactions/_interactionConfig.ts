@@ -64,6 +64,20 @@ export const INTERACTION_CONFIG = {
 			allowOthers: 'prompt',
 		},
 	},
+	viewCharacterModifiers: {
+		visibleName: 'View all added character modifiers',
+		icon: 'device', //TODO
+		defaultPermissions: {
+			allowOthers: 'prompt',
+		},
+	},
+	modifyCharacterModifiers: {
+		visibleName: 'Add, remove, or configure this character\'s modifiers',
+		icon: 'device', //TODO
+		defaultPermissions: {
+			allowOthers: 'no',
+		},
+	},
 } as const satisfies Immutable<Record<InteractionGenericId, IInteractionConfig>>;
 
 //#endregion

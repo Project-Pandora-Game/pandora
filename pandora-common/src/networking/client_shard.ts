@@ -188,6 +188,7 @@ export const ClientShardSchema = {
 			z.object({
 				result: z.literal('failure'),
 				problems: ZodCast<AppearanceActionProblem>().array(),
+				canPrompt: z.boolean(),
 			}),
 		]),
 	},

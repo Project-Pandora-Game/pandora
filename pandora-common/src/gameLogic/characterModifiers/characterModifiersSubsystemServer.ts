@@ -4,14 +4,14 @@ import { ArrayIncludesGuard } from '../../validation';
 import type { GameLogicCharacter } from '../character/character';
 import { GameLogicPermissionServer, IPermissionProvider } from '../permissions';
 import type { CharacterModifierInstanceClientData, CharacterModifierSystemData, CharacterModifierTypeConfig } from './characterModifierData';
-import { GameLogicModifierInstanceServer, type GameLogicModifierInstanceServerAny } from './characterModifierInstance';
+import { GameLogicModifierInstanceServer } from './characterModifierInstance';
 import { CharacterModifiersSubsystem } from './characterModifiersSubsystem';
 import { GameLogicModifierTypeServer } from './characterModifierType';
 import { CHARACTER_MODIFIER_TYPES, type CharacterModifierType } from './modifierTypes/_index';
 
 export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsystem implements IPermissionProvider<GameLogicPermissionServer> {
 	private readonly modifierTypes: ReadonlyMap<CharacterModifierType, GameLogicModifierTypeServer>;
-	private readonly modifierInstances: GameLogicModifierInstanceServerAny[];
+	private readonly modifierInstances: GameLogicModifierInstanceServer[];
 
 	constructor(character: GameLogicCharacter, data: CharacterModifierSystemData, logger: Logger) {
 		super();
@@ -30,7 +30,7 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 		}
 
 		// Load instances
-		this.modifierInstances = data.modifiers.map((m) => new GameLogicModifierInstanceServer(character, m) as GameLogicModifierInstanceServerAny);
+		this.modifierInstances = data.modifiers.map((m) => new GameLogicModifierInstanceServer(character, m));
 
 		// Link up events
 		for (const type of this.modifierTypes.values()) {

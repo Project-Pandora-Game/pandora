@@ -1,9 +1,8 @@
 import { z } from 'zod';
-import { KnownObject, ParseArrayNotEmpty } from '../../utility';
-import { RecordUnpackSubobjectProperties, ZodArrayWithInvalidDrop } from '../../validation';
+import { ZodArrayWithInvalidDrop } from '../../validation';
 import { PermissionConfigSchema } from '../permissions';
-import { CharacterModifierTypeGenericIdSchema } from './characterModifierBaseData';
-import { CHARACTER_MODIFIER_TYPE_DEFINITION, type CharacterModifierType } from './modifierTypes/_index';
+import { CharacterModifierConfigurationSchema, CharacterModifierTypeGenericIdSchema } from './characterModifierBaseData';
+import { CharacterModifierTypeSchema } from './modifierTypes/_index';
 
 /** Configuration for any character modifier _type_ (not an instance of a modifier) */
 export const CharacterModifierTypeConfigSchema = z.object({
@@ -13,28 +12,36 @@ export const CharacterModifierTypeConfigSchema = z.object({
 export type CharacterModifierTypeConfig = z.infer<typeof CharacterModifierTypeConfigSchema>;
 
 /** Server-saved data of a character modifier instance */
-export const CharacterModifierInstanceDataSchema = z.discriminatedUnion('type',
-	ParseArrayNotEmpty(KnownObject.values(RecordUnpackSubobjectProperties('instanceDataSchema', CHARACTER_MODIFIER_TYPE_DEFINITION))),
-);
-/** Server-saved data of a character modifier instance (optionally filtered for a specific type) */
-export type CharacterModifierInstanceData<TType extends CharacterModifierType = CharacterModifierType> =
-	Extract<z.infer<typeof CharacterModifierInstanceDataSchema>, { readonly type: TType; }>;
+export const CharacterModifierInstanceDataSchema = z.object({
+	/** Unique identifier */
+	id: z.string(),
+	type: CharacterModifierTypeSchema,
+	enabled: z.boolean(),
+	config: CharacterModifierConfigurationSchema,
+});
+
+/** Server-saved data of a character modifier instance */
+export type CharacterModifierInstanceData = z.infer<typeof CharacterModifierInstanceDataSchema>;
 
 /** Client data of a character modifier instance */
-export const CharacterModifierInstanceClientDataSchema = z.discriminatedUnion('type',
-	ParseArrayNotEmpty(KnownObject.values(RecordUnpackSubobjectProperties('clientDataSchema', CHARACTER_MODIFIER_TYPE_DEFINITION))),
-);
-/** Server-saved data of a character modifier instance (optionally filtered for a specific type) */
-export type CharacterModifierInstanceClientData<TType extends CharacterModifierType = CharacterModifierType> =
-	Extract<z.infer<typeof CharacterModifierInstanceClientDataSchema>, { readonly type: TType; }>;
+export const CharacterModifierInstanceClientDataSchema = z.object({
+	/** Unique identifier */
+	id: z.string(),
+	type: CharacterModifierTypeSchema,
+	enabled: z.boolean(),
+	config: CharacterModifierConfigurationSchema,
+});
+/** Server-saved data of a character modifier instance */
+export type CharacterModifierInstanceClientData = z.infer<typeof CharacterModifierInstanceClientDataSchema>;
 
 /** Data of modifier instance effect - put onto a character if the modifier is active */
-export const CharacterModifierEffectDataSchema = z.discriminatedUnion('type',
-	ParseArrayNotEmpty(KnownObject.values(RecordUnpackSubobjectProperties('effectDataSchema', CHARACTER_MODIFIER_TYPE_DEFINITION))),
-);
-/** Data of modifier instance effect - put onto a character if the modifier is active (optionally filtered for a specific type) */
-export type CharacterModifierEffectData<TType extends CharacterModifierType = CharacterModifierType> =
-	Extract<z.infer<typeof CharacterModifierEffectDataSchema>, { readonly type: TType; }>;
+export const CharacterModifierEffectDataSchema = z.object({
+	id: z.string(),
+	type: CharacterModifierTypeSchema,
+	config: CharacterModifierConfigurationSchema,
+});
+/** Data of modifier instance effect - put onto a character if the modifier is active */
+export type CharacterModifierEffectData = z.infer<typeof CharacterModifierEffectDataSchema>;
 
 /** Data of the whole character modifer subsystem, saved on character in database */
 export const CharacterModifierSystemDataSchema = z.object({
@@ -50,10 +57,4 @@ export function MakeDefaultCharacterModifierSystemData(): CharacterModifierSyste
 		modifiers: [],
 		typeConfig: {},
 	};
-}
-
-/** Create an modifier effect from modifier instance */
-export function CharacterModifierInstanceToEffect<TType extends CharacterModifierType>(instanceData: CharacterModifierInstanceData<TType>): CharacterModifierEffectData<TType> {
-	// @ts-expect-error: Manually narrowed call.
-	return CHARACTER_MODIFIER_TYPE_DEFINITION[instanceData.type].instanceToEffect(instanceData);
 }

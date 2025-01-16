@@ -11,6 +11,9 @@ export const CharacterModifierIdSchema = ZodTemplateString<`mod:${string}`>(z.st
 /** Id of a character modifier instance */
 export type CharacterModifierId = z.infer<typeof CharacterModifierIdSchema>;
 
+export const CharacterModifierConfigurationSchema = z.record(z.unknown());
+export type CharacterModifierConfiguration = z.infer<typeof CharacterModifierConfigurationSchema>;
+
 /**
  * Category for how strictly is a modifier type perceived.
  * - `normal` - This is a normal modifier, "prompt" permission by default

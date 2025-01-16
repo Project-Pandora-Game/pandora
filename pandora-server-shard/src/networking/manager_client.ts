@@ -504,6 +504,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			return {
 				result: 'failure',
 				problems: checkResult.problems.slice(),
+				canPrompt: checkResult.prompt === target,
 			};
 		}
 

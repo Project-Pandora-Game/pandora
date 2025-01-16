@@ -27,7 +27,7 @@ export type CharacterModifierType = (keyof typeof CHARACTER_MODIFIER_TYPE_DEFINI
 
 /** Definition of a character modifier type, optionally filterable to a specific type */
 export type CharacterModifierTypeDefinition<TType extends CharacterModifierType = CharacterModifierType> =
-	Extract<(typeof CHARACTER_MODIFIER_TYPE_DEFINITION)[CharacterModifierType], { readonly typeId: TType; }>;
+	(typeof CHARACTER_MODIFIER_TYPE_DEFINITION)[TType];
 
 // Check integrity
 type __satisfies__ModiferTypeIds = Satisfies<typeof CHARACTER_MODIFIER_TYPE_DEFINITION, {

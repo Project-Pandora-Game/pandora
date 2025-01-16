@@ -45,8 +45,8 @@ $header-height: 2em;
 				align-items: flex-start;
 				pointer-events: none;
 
-				>* {
-					pointer-events: auto;
+				&.solidOverlay {
+					background: $theme-wardrobe-preview-overlay;
 				}
 
 				.iconButton {

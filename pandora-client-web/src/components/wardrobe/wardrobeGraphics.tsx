@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { Immutable } from 'immer';
 import { min } from 'lodash';
 import {
@@ -36,12 +37,14 @@ import { THEME_NORMAL_BACKGROUND } from '../gameContext/interfaceSettingsProvide
 import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { WardrobeActionAttemptOverlay } from './views/wardrobeActionAttempt';
 import { useWardrobeContext } from './wardrobeContext';
+import { WardrobeCurrentEffectsView } from './views/wardrobeCurrentEffectsView';
 
-export function WardrobeCharacterPreview({ character, characterState, isPreview = false, allowHideItems = false }: {
+export function WardrobeCharacterPreview({ character, characterState, isPreview = false, allowHideItems = false, showCharacterEffects = false }: {
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 	isPreview?: boolean;
 	allowHideItems?: boolean;
+	showCharacterEffects?: boolean;
 }): ReactElement {
 	const id = useId();
 	const [onClick, processing] = useAppearanceActionEvent({
@@ -55,7 +58,14 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 	const viewportRef = useRef<PixiViewportRef>(null);
 
 	const overlay = useMemo(() => (
-		<Column gap='medium' padding='medium' className='overlay pointer-events-disable'>
+		<Column
+			gap='medium'
+			padding='medium'
+			className={ classNames(
+				'overlay pointer-events-disable',
+				showCharacterEffects ? 'solidOverlay' : null,
+			) }
+		>
 			<Row gap='medium' alignY='start' className='fill-x'>
 				<Row className='pointer-events-enable flex' gap='medium'>
 					<Button className='slim iconButton'
@@ -94,12 +104,18 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 					}
 				</Column>
 			</Row>
-			<div className='flex-1' />
+			{
+				showCharacterEffects ? (
+					<WardrobeCurrentEffectsView character={ character } characterState={ characterState } />
+				) : (
+					<div className='flex-1' />
+				)
+			}
 			<Row alignX='center' className='fill-x'>
 				<WardrobeActionAttemptOverlay character={ character } />
 			</Row>
 		</Column>
-	), [allowHideItems, hideItems, id, isPreview, onClick, processing, character]);
+	), [allowHideItems, showCharacterEffects, hideItems, id, isPreview, onClick, processing, character, characterState]);
 
 	return (
 		<CharacterPreview

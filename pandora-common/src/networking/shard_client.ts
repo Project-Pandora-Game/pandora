@@ -34,7 +34,7 @@ export type GameStateUpdate = {
 	characters?: Record<CharacterId, Partial<ICharacterRoomData>>;
 };
 
-export type IShardClientChangeEvents = 'permissions';
+export type IShardClientChangeEvents = 'permissions' | 'characterModifiers';
 
 /** Shard->Client messages */
 export const ShardClientSchema = {

@@ -54,6 +54,7 @@ const TIPS: readonly string[] = [
 	`The character context menu can still be opened from a room item's menu while a character is inside.`,
 	`You can start typing a chat message at any time, even without clicking into the text input field first.`,
 	`Setting the render resolution in the graphics settings to 0% lets you use the chat without graphics.`,
+	`Cannot move a character because the name is covered? Enter move mode in the room tab's character menu.`,
 ];
 
 export function SpacesSearch(): ReactElement {

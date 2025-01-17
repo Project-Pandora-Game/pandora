@@ -103,6 +103,7 @@ export function WikiItems(): ReactElement {
 					When someone else interrupts an attempt, it has no consequence, other than clearing the original message in the chat.
 					It is simply a convenient and quick way for someone to show the desire to not allow this attempted action.
 				</li>
+				<li>Creating or deleting items, and changing this setting on existing items always requires free hands.</li>
 				<li>Attempting an action has a (small) delay, before the user can decide to finish it.</li>
 			</ul>
 			<strong>Important:</strong> This initial delay is not the time it takes to

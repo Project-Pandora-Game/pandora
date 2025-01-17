@@ -66,14 +66,14 @@ export const INTERACTION_CONFIG = {
 	},
 	viewCharacterModifiers: {
 		visibleName: 'View all added character modifiers',
-		icon: 'device', //TODO
+		icon: 'modification-view',
 		defaultPermissions: {
 			allowOthers: 'prompt',
 		},
 	},
 	modifyCharacterModifiers: {
 		visibleName: 'Add, remove, or configure this character\'s modifiers',
-		icon: 'device', //TODO
+		icon: 'modification-edit',
 		defaultPermissions: {
 			allowOthers: 'no',
 		},

@@ -10,6 +10,8 @@ import color from '../../assets/icons/color.svg';
 import deviceSvg from '../../assets/icons/device.svg';
 import forbid from '../../assets/icons/forbidden.svg';
 import lock from '../../assets/icons/lock.svg';
+import modificationEdit from '../../assets/icons/modification-edit.svg';
+import modificationView from '../../assets/icons/modification-view.svg';
 import onOff from '../../assets/icons/on-off.svg';
 import promptIcon from '../../assets/icons/prompt.svg';
 import allow from '../../assets/icons/public.svg';
@@ -92,6 +94,10 @@ function GetIcon(icon: string): string {
 			return toggle;
 		case 'device':
 			return deviceSvg;
+		case 'modification-edit':
+			return modificationEdit;
+		case 'modification-view':
+			return modificationView;
 		default:
 			return forbid;
 	}

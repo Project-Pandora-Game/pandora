@@ -77,3 +77,6 @@ export const LIMIT_ACCOUNT_POSE_PRESET_STORAGE = 20;
 /** The maximum amount of invites a space can have */
 export const LIMIT_SPACE_BOUND_INVITES = 20;
 export const LIMIT_JOIN_ME_INVITES = 10;
+
+/** The maximum number of character modifier instances on a single character */
+export const LIMIT_CHARACTER_MODIFIER_INSTANCE_COUNT = 100;

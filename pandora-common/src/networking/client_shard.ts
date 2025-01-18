@@ -4,7 +4,7 @@ import { AssetPreferencesPublicSchema } from '../character/assetPreferences';
 import { CharacterPublicSettingsSchema, CharacterRoomPositionSchema } from '../character/characterData';
 import { CharacterIdSchema } from '../character/characterTypes';
 import { ChatCharacterStatusSchema, ClientChatMessagesSchema } from '../chat/chat';
-import { CharacterModifierInstanceClientDataSchema, PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic';
+import { CharacterModifierIdSchema, CharacterModifierInstanceClientDataSchema, CharacterModifierTemplateSchema, PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic';
 import { AppearanceActionSchema } from '../gameLogic/actionLogic/actions/_index';
 import { AppearanceActionData, AppearanceActionProblem } from '../gameLogic/actionLogic/appearanceActionProblems';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
@@ -184,6 +184,32 @@ export const ClientShardSchema = {
 			}),
 			z.object({
 				result: z.literal('notFound'),
+			}),
+			z.object({
+				result: z.literal('failure'),
+				problems: ZodCast<AppearanceActionProblem>().array(),
+				canPrompt: z.boolean(),
+			}),
+		]),
+	},
+	characterModifierAdd: {
+		request: z.object({
+			target: CharacterIdSchema,
+			modifier: CharacterModifierTemplateSchema,
+		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				instanceId: CharacterModifierIdSchema,
+			}),
+			z.object({
+				result: z.literal('characterNotFound'),
+			}),
+			z.object({
+				result: z.literal('invalidConfiguration'),
+			}),
+			z.object({
+				result: z.literal('tooManyModifiers'),
 			}),
 			z.object({
 				result: z.literal('failure'),

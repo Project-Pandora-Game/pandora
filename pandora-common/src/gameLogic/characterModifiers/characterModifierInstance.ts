@@ -1,5 +1,4 @@
 import { cloneDeep } from 'lodash';
-import type { GameLogicCharacter } from '../character/character';
 import type { CharacterModifierInstanceClientData, CharacterModifierInstanceData } from './characterModifierData';
 import { CHARACTER_MODIFIER_TYPE_DEFINITION, type CharacterModifierTypeDefinition } from './modifierTypes/_index';
 
@@ -7,7 +6,7 @@ export class GameLogicModifierInstanceServer {
 	public readonly definition: CharacterModifierTypeDefinition;
 	private data: CharacterModifierInstanceData;
 
-	constructor(_character: GameLogicCharacter, data: CharacterModifierInstanceData) {
+	constructor(data: CharacterModifierInstanceData) {
 		this.definition = CHARACTER_MODIFIER_TYPE_DEFINITION[data.type];
 		this.data = data;
 	}

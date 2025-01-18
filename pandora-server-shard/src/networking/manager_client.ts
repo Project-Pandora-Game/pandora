@@ -78,6 +78,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			permissionGet: this.handlePermissionGet.bind(this),
 			permissionSet: this.handlePermissionSet.bind(this),
 			characterModifiersGet: this.handleCharacterModifiersGet.bind(this),
+			characterModifierAdd: this.handleCharacterModifierAdd.bind(this),
 		});
 	}
 
@@ -511,6 +512,56 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return {
 			result: 'ok',
 			modifiers: targetCharacter.gameLogicCharacter.characterModifiers.getClientData(),
+		};
+	}
+
+	private handleCharacterModifierAdd({ target, modifier }: IClientShardArgument['characterModifierAdd'], client: ClientConnection): IClientShardNormalResult['characterModifierAdd'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		// Find the target
+		const space = client.character.getOrLoadSpace();
+		const targetCharacter = space.getCharacterById(target);
+		if (targetCharacter == null) {
+			return {
+				result: 'characterNotFound',
+			};
+		}
+
+		// Check that the source character is allowed to get this data
+		const checkResult = client.character.checkAction((ctx) => {
+			const checkTarget = ctx.getCharacter(target);
+			if (checkTarget == null)
+				return ctx.invalid();
+
+			ctx.addInteraction(checkTarget.character, 'interact');
+			ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
+			ctx.addInteraction(checkTarget.character, 'modifyCharacterModifiers');
+
+			// TODO: Check modifier-specific permission
+
+			return ctx.finalize();
+		});
+
+		if (!checkResult.valid) {
+			return {
+				result: 'failure',
+				problems: checkResult.problems.slice(),
+				canPrompt: checkResult.prompt === target,
+			};
+		}
+
+		const result = targetCharacter.gameLogicCharacter.characterModifiers.addModifier(modifier, client.character.gameLogicCharacter);
+
+		if (result === 'invalidConfiguration' || result === 'tooManyModifiers') {
+			return {
+				result,
+			};
+		}
+
+		return {
+			result: 'ok',
+			instanceId: result.id,
 		};
 	}
 

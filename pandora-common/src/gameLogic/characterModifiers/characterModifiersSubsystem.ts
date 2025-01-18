@@ -4,6 +4,7 @@ import { CharacterModifierType } from './modifierTypes/_index';
 
 export type CharacterModifiersSubsystemEvents = {
 	dataChanged: void;
+	modifiersChanged: void;
 };
 
 export abstract class CharacterModifiersSubsystem extends TypedEventEmitter<CharacterModifiersSubsystemEvents> implements IPermissionProvider {

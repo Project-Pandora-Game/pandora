@@ -11,25 +11,29 @@ import {
 	type IShardClientChangeEvents,
 	type PermissionGroup,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useState } from 'react';
+import React, { ReactElement, useCallback, useRef, useState } from 'react';
 import { ICharacter } from '../../character/character';
 import { Column } from '../common/container/container';
-import { Tab, TabContainer } from '../common/tabs/tabs';
+import { Tab, TabContainer, type TabContainerRef } from '../common/tabs/tabs';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { WardrobeCharacterModifierEffectiveInstanceView, WardrobeCharacterModifierFullInstanceView } from './views/characterModifiers/characterModifierInstanceView';
+import { WardrobeCharacterModifierTypeDetailsView } from './views/characterModifiers/characterModifierTypeDetailsView';
 import { WardrobeCharacterModifierTypeView } from './views/characterModifiers/characterModifierTypeView';
 import { useWardrobePermissionRequestCallback } from './wardrobeActionContext';
 import { ActionWarningContent } from './wardrobeComponents';
 
 export type ModifierFocus = {
-	type: 'instance' | 'effectiveInstance';
+	type: 'instance';
+	id: CharacterModifierId;
+} | {
+	type: 'effectiveInstance';
 	id: CharacterModifierId;
 } | {
 	type: 'type';
 	typeId: CharacterModifierType;
 };
 
-export function WardrobeEffectsModifiers({ className, character, characterState }: {
+export function WardrobeEffectsModifiers({ className, character }: {
 	className?: string;
 	character: ICharacter;
 	characterState: AssetFrameworkCharacterState;
@@ -37,32 +41,90 @@ export function WardrobeEffectsModifiers({ className, character, characterState 
 	const [currentFocus, setCurrentFocus] = useState<ModifierFocus | null>(null);
 	const fullInstanceList = useCharacterModifierInstanceList(character.id);
 
+	const tabListRef = useRef<TabContainerRef>(null);
+
 	return (
 		<div className={ classNames('wardrobe-ui', className) }>
-			<TabContainer className='flex-1'>
+			<TabContainer className='flex-1' ref={ tabListRef }>
 				<Tab name='Active modifiers'>
-					<WardrobeCharacterModifierEffectiveInstanceView effectiveInstances={ EMPTY_ARRAY } />
+					<WardrobeCharacterModifierEffectiveInstanceView effectiveInstances={ EMPTY_ARRAY /* TODO */ } />
 				</Tab>
 				<Tab name='Current modifiers'>
-					<WardrobeEffectsFullList character={ character } data={ fullInstanceList } />
+					<WardrobeEffectsFullList
+						character={ character }
+						data={ fullInstanceList }
+						currentlyFocusedModifier={ currentFocus?.type === 'instance' ? currentFocus.id : null }
+						focusModifierInstance={ (id) => {
+							setCurrentFocus(id == null ? null : {
+								type: 'instance',
+								id,
+							});
+						} }
+					/>
 				</Tab>
 				<Tab name='Possible modifiers'>
-					<WardrobeCharacterModifierTypeView title='Possible modifiers' />
+					<WardrobeCharacterModifierTypeView
+						title='Possible modifiers'
+						currentlyFocusedModifier={ currentFocus?.type === 'type' ? currentFocus.typeId : null }
+						focusModifier={ (typeId) => {
+							setCurrentFocus(typeId == null ? null : {
+								type: 'type',
+								typeId,
+							});
+						} }
+					/>
 				</Tab>
 			</TabContainer>
-			{ /* {
-				WardrobeFocusesItem(currentFocus) &&
-				<div className='flex-col flex-1'>
-					<WardrobeItemConfigMenu key={ currentFocus.itemId } item={ currentFocus } />
-				</div>
-			} */ }
+			{
+				currentFocus == null ? (
+					<div className='inventoryView'>
+						<div className='center-flex flex-1 padding-large'>
+							<span>
+								Select a current modifier to view or change its settings or a possible modifier to add it to this character
+							</span>
+						</div>
+					</div>
+				) : currentFocus.type === 'type' ? (
+					<WardrobeCharacterModifierTypeDetailsView
+						type={ currentFocus.typeId }
+						target={ character.id }
+						focusModifierInstance={ (id) => {
+							tabListRef.current?.setTabByName('Current modifiers');
+							setCurrentFocus({
+								type: 'instance',
+								id,
+							});
+						} }
+					/>
+				) : currentFocus.type === 'effectiveInstance' ? (
+					<div className='inventoryView'>
+						<div className='center-flex flex-1 padding-large'>
+							<span>
+								TODO
+							</span>
+						</div>
+					</div>
+				) : currentFocus.type === 'instance' ? (
+					<div className='inventoryView'>
+						<div className='center-flex flex-1 padding-large'>
+							<span>
+								TODO
+							</span>
+						</div>
+					</div>
+				) : (
+					AssertNever(currentFocus)
+				)
+			}
 		</div>
 	);
 }
 
-function WardrobeEffectsFullList({ data, character }: {
+function WardrobeEffectsFullList({ data, character, currentlyFocusedModifier, focusModifierInstance }: {
 	data: IClientShardNormalResult['characterModifiersGet'] | undefined;
 	character: ICharacter;
+	currentlyFocusedModifier: CharacterModifierId | null;
+	focusModifierInstance: (id: CharacterModifierId | null) => void;
 }): ReactElement {
 	const [requestPermissions, processingPermissionRequest] = useWardrobePermissionRequestCallback();
 
@@ -72,7 +134,11 @@ function WardrobeEffectsFullList({ data, character }: {
 				<span>Loading...</span>
 			</div>
 		) : data.result === 'ok' ? (
-			<WardrobeCharacterModifierFullInstanceView modifiers={ data.modifiers } />
+			<WardrobeCharacterModifierFullInstanceView
+				modifiers={ data.modifiers }
+				currentlyFocusedModifier={ currentlyFocusedModifier }
+				focusModifierInstance={ focusModifierInstance }
+			/>
 		) : data.result === 'failure' ? (
 			<div className='inventoryView'>
 				<Column padding='medium'>

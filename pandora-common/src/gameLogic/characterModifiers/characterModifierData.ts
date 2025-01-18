@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { ZodArrayWithInvalidDrop } from '../../validation';
 import { PermissionConfigSchema } from '../permissions';
-import { CharacterModifierConfigurationSchema, CharacterModifierTypeGenericIdSchema } from './characterModifierBaseData';
+import { CharacterModifierConfigurationSchema, CharacterModifierIdSchema, CharacterModifierTypeGenericIdSchema } from './characterModifierBaseData';
 import { CharacterModifierTypeSchema } from './modifierTypes/_index';
 
 /** Configuration for any character modifier _type_ (not an instance of a modifier) */
@@ -14,7 +14,7 @@ export type CharacterModifierTypeConfig = z.infer<typeof CharacterModifierTypeCo
 /** Server-saved data of a character modifier instance */
 export const CharacterModifierInstanceDataSchema = z.object({
 	/** Unique identifier */
-	id: z.string(),
+	id: CharacterModifierIdSchema,
 	type: CharacterModifierTypeSchema,
 	enabled: z.boolean(),
 	config: CharacterModifierConfigurationSchema,
@@ -26,17 +26,26 @@ export type CharacterModifierInstanceData = z.infer<typeof CharacterModifierInst
 /** Client data of a character modifier instance */
 export const CharacterModifierInstanceClientDataSchema = z.object({
 	/** Unique identifier */
-	id: z.string(),
+	id: CharacterModifierIdSchema,
 	type: CharacterModifierTypeSchema,
 	enabled: z.boolean(),
 	config: CharacterModifierConfigurationSchema,
 });
-/** Server-saved data of a character modifier instance */
+/** Client data of a character modifier instance */
 export type CharacterModifierInstanceClientData = z.infer<typeof CharacterModifierInstanceClientDataSchema>;
+
+/** Client data of a character modifier template */
+export const CharacterModifierTemplateSchema = z.object({
+	type: CharacterModifierTypeSchema,
+	enabled: z.boolean(),
+	config: CharacterModifierConfigurationSchema,
+});
+/** Client data of a character modifier template */
+export type CharacterModifierTemplate = z.infer<typeof CharacterModifierTemplateSchema>;
 
 /** Data of modifier instance effect - put onto a character if the modifier is active */
 export const CharacterModifierEffectDataSchema = z.object({
-	id: z.string(),
+	id: CharacterModifierIdSchema,
 	type: CharacterModifierTypeSchema,
 	config: CharacterModifierConfigurationSchema,
 });

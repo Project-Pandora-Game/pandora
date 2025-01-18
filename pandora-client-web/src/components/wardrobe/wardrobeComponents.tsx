@@ -63,7 +63,7 @@ export function ActionSlowdownContent({ slowdownReasons, slowdownTime }: { slowd
 	);
 }
 
-export function ActionWarningContent({ problems, prompt }: { problems: readonly AppearanceActionProblem[]; prompt: boolean; }): ReactElement {
+export function ActionWarningContent({ problems, prompt, noText = false }: { problems: readonly AppearanceActionProblem[]; prompt: boolean; noText?: boolean; }): ReactElement {
 	const { wardrobeItemDisplayNameType } = useAccountSettings();
 	const assetManager = useAssetManager();
 	const reasons = useMemo(() => (
@@ -83,7 +83,9 @@ export function ActionWarningContent({ problems, prompt }: { problems: readonly 
 	}
 
 	let text = "This action isn't possible, because:";
-	if (prompt) {
+	if (noText) {
+		text = '';
+	} else if (prompt) {
 		text = 'Executing the action will prompt for the following permissions:';
 	}
 

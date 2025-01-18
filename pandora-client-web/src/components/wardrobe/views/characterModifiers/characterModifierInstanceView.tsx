@@ -2,14 +2,17 @@ import classNames from 'classnames';
 import {
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
 	type CharacterModifierEffectData,
+	type CharacterModifierId,
 	type CharacterModifierInstanceClientData,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode } from 'react';
 import { DivContainer } from '../../../common/container/container';
 
-export function WardrobeCharacterModifierFullInstanceView({ children, modifiers }: {
+export function WardrobeCharacterModifierFullInstanceView({ children, modifiers, currentlyFocusedModifier, focusModifierInstance }: {
 	children?: ReactNode;
 	modifiers: readonly CharacterModifierInstanceClientData[];
+	currentlyFocusedModifier: CharacterModifierId | null;
+	focusModifierInstance: (id: CharacterModifierId | null) => void;
 }): ReactElement | null {
 	return (
 		<div className='inventoryView wardrobeModifierFullInstanceList'>
@@ -24,6 +27,8 @@ export function WardrobeCharacterModifierFullInstanceView({ children, modifiers 
 										<ModifierFullInstanceListItem
 											key={ m.id }
 											modifier={ m }
+											selected={ currentlyFocusedModifier === m.id }
+											onClick={ () => focusModifierInstance(currentlyFocusedModifier === m.id ? null : m.id) }
 										/>
 									))
 								}
@@ -40,8 +45,10 @@ export function WardrobeCharacterModifierFullInstanceView({ children, modifiers 
 	);
 }
 
-function ModifierFullInstanceListItem({ modifier }: {
+function ModifierFullInstanceListItem({ modifier, selected = false, onClick }: {
 	modifier: CharacterModifierInstanceClientData;
+	selected?: boolean;
+	onClick?: () => void;
 }): ReactElement {
 	const definition = CHARACTER_MODIFIER_TYPE_DEFINITION[modifier.type];
 	// TODO: const preference = useAssetPreference(asset);
@@ -51,13 +58,12 @@ function ModifierFullInstanceListItem({ modifier }: {
 			className={ classNames(
 				'inventoryViewItem',
 				'listMode',
+				selected ? 'selected' : null,
 				'allowed',
 				// `pref-${preference}`,
 			) }
 			tabIndex={ 0 }
-			onClick={ () => {
-				// TODO
-			} }>
+			onClick={ onClick }>
 			<span className='itemName'>{ definition.visibleName }</span>
 		</div>
 	);

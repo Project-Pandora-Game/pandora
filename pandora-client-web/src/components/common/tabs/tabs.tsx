@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import React, { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
+import React, { forwardRef, ReactElement, ReactNode, useEffect, useMemo, useState, type ForwardedRef, useImperativeHandle } from 'react';
 import { Navigate, Route, Routes, matchPath, resolvePath, useLocation, useNavigate, useResolvedPath } from 'react-router';
 import { ChildrenProps } from '../../../common/reactTypes';
 import { LocalErrorBoundary } from '../../error/localErrorBoundary';
@@ -72,7 +72,11 @@ export function Tabulation({ children, className, collapsable, tabsPosition = 't
 	);
 }
 
-export function TabContainer({
+export interface TabContainerRef {
+	setTabByName(name: string): void;
+}
+
+export const TabContainer = forwardRef(function TabContainer({
 	children,
 	className,
 	collapsable,
@@ -94,7 +98,7 @@ export function TabContainer({
 	 */
 	allowWrap?: boolean;
 	onTabOpen?: (tab: Immutable<TabConfig>) => (void | (() => void));
-}): ReactElement {
+}, ref: ForwardedRef<TabContainerRef>): ReactElement {
 	if (!Array.isArray(children)) {
 		children = [children];
 	}
@@ -110,6 +114,15 @@ export function TabContainer({
 		onClick: c.props.onClick ?? (() => setTab(index)),
 		tabClassName: c.props.tabClassName,
 	})), [children, currentTab]);
+
+	useImperativeHandle(ref, () => ({
+		setTabByName(name) {
+			const tab = tabs.findIndex((t) => t?.name === name);
+			if (tab >= 0) {
+				setTab(tab);
+			}
+		},
+	}), [tabs]);
 
 	useEffect(() => {
 		if (currentTab < tabs.length) {
@@ -127,7 +140,7 @@ export function TabContainer({
 			</React.Fragment>
 		</Tabulation>
 	);
-}
+});
 
 /** Props where at least one of urlChunk and onClick handler is required */
 type UrlTabProps = (

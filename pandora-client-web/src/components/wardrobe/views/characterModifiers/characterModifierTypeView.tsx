@@ -2,14 +2,17 @@ import classNames from 'classnames';
 import {
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
 	KnownObject,
+	type CharacterModifierType,
 	type CharacterModifierTypeDefinition,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useMemo, useRef, useState } from 'react';
 import { TextInput } from '../../../../common/userInteraction/input/textInput';
 import { useInputAutofocus } from '../../../../common/userInteraction/inputAutofocus';
 
-export function WardrobeCharacterModifierTypeView({ title, children }: {
+export function WardrobeCharacterModifierTypeView({ title, currentlyFocusedModifier, focusModifier, children }: {
 	title: string;
+	currentlyFocusedModifier: CharacterModifierType | null;
+	focusModifier: (type: CharacterModifierType | null) => void;
 	children?: ReactNode;
 	itemSortIgnorePreferenceOrdering?: boolean;
 }): ReactElement | null {
@@ -49,6 +52,8 @@ export function WardrobeCharacterModifierTypeView({ title, children }: {
 								<ModifierTypesListItem
 									key={ m.typeId }
 									modifier={ m }
+									selected={ currentlyFocusedModifier === m.typeId }
+									onClick={ () => focusModifier(currentlyFocusedModifier === m.typeId ? null : m.typeId) }
 								/>
 							))
 						}
@@ -59,8 +64,10 @@ export function WardrobeCharacterModifierTypeView({ title, children }: {
 	);
 }
 
-function ModifierTypesListItem({ modifier }: {
+function ModifierTypesListItem({ modifier, selected, onClick }: {
 	modifier: CharacterModifierTypeDefinition;
+	selected: boolean;
+	onClick: () => void;
 }): ReactElement {
 	// TODO: const preference = useAssetPreference(asset);
 
@@ -70,13 +77,12 @@ function ModifierTypesListItem({ modifier }: {
 				'inventoryViewItem',
 				'listMode',
 				'small',
+				selected ? 'selected' : null,
 				'allowed',
 				// `pref-${preference}`,
 			) }
 			tabIndex={ 0 }
-			onClick={ () => {
-				// TODO
-			} }>
+			onClick={ onClick }>
 			<span className='itemName'>{ modifier.visibleName }</span>
 		</div>
 	);

@@ -237,6 +237,10 @@ export class Character {
 				AssertNever(type);
 			}
 		});
+		this.gameLogicCharacter.characterModifiers.on('modifiersChanged', () => {
+			this._emitSomethingChanged('characterModifiers');
+			// TODO: Trigger modifier effect rebuild
+		});
 
 		const currentInteractionConfig = this.gameLogicCharacter.interactions.getData();
 		if (!isEqual(originalInteractionConfig, currentInteractionConfig)) {

@@ -364,6 +364,7 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 						action={ action }
 						disabled={ !!nameError }
 						className='standardButtonSize'
+						onExecute={ onEndEdit }
 					>
 						Save
 					</WardrobeActionButton>

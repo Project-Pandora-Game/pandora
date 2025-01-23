@@ -118,8 +118,8 @@ importers:
         specifier: 0.5.15
         version: 0.5.15(@types/webpack@5.28.5(webpack-cli@5.1.4))(react-refresh@0.14.2)(type-fest@4.31.0)(webpack-dev-server@5.2.0)(webpack@5.97.1)
       '@stylistic/eslint-plugin':
-        specifier: 2.12.1
-        version: 2.12.1(eslint@8.57.1)(typescript@5.7.3)
+        specifier: 2.13.0
+        version: 2.13.0(eslint@8.57.1)(typescript@5.7.3)
       '@testing-library/jest-dom':
         specifier: 6.6.3
         version: 6.6.3
@@ -323,8 +323,8 @@ importers:
         version: 3.24.1
     devDependencies:
       '@stylistic/eslint-plugin':
-        specifier: 2.12.1
-        version: 2.12.1(eslint@8.57.1)(typescript@5.7.3)
+        specifier: 2.13.0
+        version: 2.13.0(eslint@8.57.1)(typescript@5.7.3)
       '@types/jest':
         specifier: 29.5.14
         version: 29.5.14
@@ -426,8 +426,8 @@ importers:
         version: 3.24.1
     devDependencies:
       '@stylistic/eslint-plugin':
-        specifier: 2.12.1
-        version: 2.12.1(eslint@8.57.1)(typescript@5.7.3)
+        specifier: 2.13.0
+        version: 2.13.0(eslint@8.57.1)(typescript@5.7.3)
       '@types/async-lock':
         specifier: 1.4.2
         version: 1.4.2
@@ -544,8 +544,8 @@ importers:
         version: 3.24.1
     devDependencies:
       '@stylistic/eslint-plugin':
-        specifier: 2.12.1
-        version: 2.12.1(eslint@8.57.1)(typescript@5.7.3)
+        specifier: 2.13.0
+        version: 2.13.0(eslint@8.57.1)(typescript@5.7.3)
       '@types/async-lock':
         specifier: 1.4.2
         version: 1.4.2
@@ -613,8 +613,8 @@ importers:
         specifier: 1.50.0
         version: 1.50.0
       '@stylistic/eslint-plugin':
-        specifier: 2.12.1
-        version: 2.12.1(eslint@8.57.1)(typescript@5.7.3)
+        specifier: 2.13.0
+        version: 2.13.0(eslint@8.57.1)(typescript@5.7.3)
       '@types/node':
         specifier: 22.10.10
         version: 22.10.10
@@ -2131,8 +2131,8 @@ packages:
   '@socket.io/component-emitter@3.1.2':
     resolution: {integrity: sha512-9BCxFwvbGg/RsZK9tjXd8s4UcwR0MWeFQ1XEKIQVVvAGJyINdrqKMcTRyLoK8Rse1GjzLV9cwjWV1olXRWEXVA==}
 
-  '@stylistic/eslint-plugin@2.12.1':
-    resolution: {integrity: sha512-fubZKIHSPuo07FgRTn6S4Nl0uXPRPYVNpyZzIDGfp7Fny6JjNus6kReLD7NI380JXi4HtUTSOZ34LBuNPO1XLQ==}
+  '@stylistic/eslint-plugin@2.13.0':
+    resolution: {integrity: sha512-RnO1SaiCFHn666wNz2QfZEFxvmiNRqhzaMXHXxXXKt+MEP7aajlPxUSMIQpKAaJfverpovEYqjBOXDq6dDcaOQ==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
     peerDependencies:
       eslint: '>=8.40.0'
@@ -9432,7 +9432,7 @@ snapshots:
 
   '@socket.io/component-emitter@3.1.2': {}
 
-  '@stylistic/eslint-plugin@2.12.1(eslint@8.57.1)(typescript@5.7.3)':
+  '@stylistic/eslint-plugin@2.13.0(eslint@8.57.1)(typescript@5.7.3)':
     dependencies:
       '@typescript-eslint/utils': 8.21.0(eslint@8.57.1)(typescript@5.7.3)
       eslint: 8.57.1

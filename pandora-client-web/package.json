@@ -94,7 +94,7 @@
 		"react-refresh": "0.14.2",
 		"react-refresh-typescript": "2.0.10",
 		"rimraf": "6.0.1",
-		"sass": "1.78.0",
+		"sass": "1.83.4",
 		"source-map-loader": "5.0.0",
 		"style-loader": "4.0.0",
 		"ts-jest": "29.2.5",

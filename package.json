@@ -1,18 +1,25 @@
 {
 	"private": true,
 	"packageManager": "pnpm@9.15.1",
+	"engines": {
+		"node": ">=22.x"
+	},
 	"pnpm": {
 		"updateConfig": {
 			"ignoreDependencies": [
 				"nanoid"
 			]
 		},
+		"overrides": {
+			"@octokit/types": "13.5.0"
+		},
 		"patchedDependencies": {
-			"pixi-viewport": "patches/pixi-viewport.patch"
+			"pixi-viewport": "patches/pixi-viewport.patch",
+			"pixi.js": "patches/pixi.js.patch"
 		}
 	},
 	"scripts": {
-		"install": "pnpm --filter pandora-common --silent run build",
+		"setup-dev": "pnpm --filter pandora-common --silent run build",
 		"postinstall": "node .hooks/postinstall.cjs",
 		"ci": "pnpm run build && pnpm run check-common-install && pnpm run lint && pnpm run type-check:test && pnpm run test --ci --coverage && pnpm run test-e2e && pnpm run coverage:collect",
 		"deploy": "pnpm run build && pnpm run deploy-client-rsync",

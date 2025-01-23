@@ -1,4 +1,4 @@
-@import '../../styles/common';
+@use '../../styles/common';
 
 .character-select {
 	width: 100%;
@@ -7,44 +7,44 @@
 	justify-content: center;
 	align-items: center;
 	gap: 3.5em;
-	padding: spacing('x-large');
+	padding: common.spacing('x-large');
 	margin: 0;
 
 	.card {
-		@include center-flex(column);
+		@include common.center-flex(column);
 		height: min(min(20em, 75vh), 100vw);
 		width: min(min(16em, 60vh), 80vw);
 		padding: 1em;
 		border-radius: 0.2em;
-		background: $theme-characterselect-card-outerborder;
-		box-shadow: $theme-characterselect-card-shadow;
+		background: common.$theme-characterselect-card-outerborder;
+		box-shadow: common.$theme-characterselect-card-shadow;
 
 		.border {
-			@include center-flex(column);
+			@include common.center-flex(column);
 			position: relative;
 			height: 100%;
 			width: 100%;
 			padding: .5em;
 			gap: 1em;
-			background: $theme-characterselect-card-background;
-			color: $theme-characterselect-card-text;
-			border: 0.2em solid $theme-characterselect-card-innerborder;
+			background: common.$theme-characterselect-card-background;
+			color: common.$theme-characterselect-card-text;
+			border: 0.2em solid common.$theme-characterselect-card-innerborder;
 
 			.label {
 				position: absolute;
 				top: .4em;
 				right: .4em;
-				color: $theme-characterselect-card-extrainfo-text;
-				background: $theme-characterselect-card-extrainfo-background;
+				color: common.$theme-characterselect-card-extrainfo-text;
+				background: common.$theme-characterselect-card-extrainfo-background;
 				padding: .1em .75em;
 				border-radius: 1em;
 			}
 
 			.frame {
-				background: $theme-characterselect-card-frame-background;
-				border: max(0.1em, 2px) solid $theme-characterselect-card-frame-border;
+				background: common.$theme-characterselect-card-frame-background;
+				border: max(0.1em, 2px) solid common.$theme-characterselect-card-frame-border;
 				border-radius: 0.25em;
-				box-shadow: $theme-characterselect-card-frame-shadow;
+				box-shadow: common.$theme-characterselect-card-frame-shadow;
 				width: 5em;
 				height: 5em;
 				padding: 1em;
@@ -65,12 +65,12 @@
 
 		&:hover {
 			.border {
-				background: $theme-characterselect-card-hover-background;
+				background: common.$theme-characterselect-card-hover-background;
 			}
 		}
 
 		&:focus-visible {
-			outline: 0.25em solid $theme-characterselect-card-visiblefocus-outline;
+			outline: 0.25em solid common.$theme-characterselect-card-visiblefocus-outline;
 		}
 	}
 }

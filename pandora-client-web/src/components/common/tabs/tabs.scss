@@ -1,9 +1,9 @@
-@import '../../../styles/common';
+@use '../../../styles/common';
 
 $header-height: 2em;
 
 .tab-container {
-	@include flex(column);
+	@include common.flex(column);
 	position: relative;
 
 	>.header {
@@ -13,7 +13,7 @@ $header-height: 2em;
 		padding: 0.25em 0.45em 0 0.45em;
 
 		.tab {
-			@include center-flex;
+			@include common.center-flex;
 			padding: 0.25em 0.75em 0.5em 0.75em;
 			border: solid transparent;
 			border-width: 0.25em 0.25em 0 0.25em;
@@ -21,32 +21,32 @@ $header-height: 2em;
 			z-index: 0;
 			flex: 1;
 
-			background: $theme-tablist-tab-normal-background;
-			color: $theme-tablist-tab-normal-text;
+			background: common.$theme-tablist-tab-normal-background;
+			color: common.$theme-tablist-tab-normal-text;
 			border-radius: 1.2em 1.2em 0em 0em;
 
 			cursor: pointer;
 			transition: background-color 0.25s ease-in-out;
 
 			&.active {
-				background: $theme-tablist-tab-selected-background;
-				color: $theme-tablist-tab-selected-text;
+				background: common.$theme-tablist-tab-selected-background;
+				color: common.$theme-tablist-tab-selected-text;
 				z-index: 2;
 
 				&:focus-visible {
-					border-color: $theme-tablist-tab-selected-visiblefocus-outline;
+					border-color: common.$theme-tablist-tab-selected-visiblefocus-outline;
 					z-index: 1;
 				}
 			}
 
 			&:hover:not(.active) {
-				background: $theme-tablist-tab-hover-background;
-				color: $theme-tablist-tab-hover-text;
+				background: common.$theme-tablist-tab-hover-background;
+				color: common.$theme-tablist-tab-hover-text;
 				z-index: 1;
 			}
 
 			&:focus-visible:not(.active) {
-				border-color: $theme-tablist-tab-normal-visiblefocus-outline;
+				border-color: common.$theme-tablist-tab-normal-visiblefocus-outline;
 				z-index: 1;
 			}
 
@@ -105,8 +105,8 @@ $header-height: 2em;
 
 	>.tab-container-collapsed {
 		position: absolute;
-		background: $theme-tablist-tab-normal-background;
-		color: $theme-tablist-tab-normal-text;
+		background: common.$theme-tablist-tab-normal-background;
+		color: common.$theme-tablist-tab-normal-text;
 		top: 0;
 		right: 0;
 		padding: 0.25em;
@@ -116,13 +116,13 @@ $header-height: 2em;
 		z-index: 1;
 
 		&:hover {
-			background: $theme-tablist-tab-hover-background;
-			color: $theme-tablist-tab-hover-text;
+			background: common.$theme-tablist-tab-hover-background;
+			color: common.$theme-tablist-tab-hover-text;
 			z-index: 1;
 		}
 
 		&:focus-visible {
-			border-color: $theme-tablist-tab-normal-visiblefocus-outline;
+			border-color: common.$theme-tablist-tab-normal-visiblefocus-outline;
 			z-index: 1;
 		}
 	}

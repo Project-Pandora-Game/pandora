@@ -1,7 +1,7 @@
-@import '../../styles/common';
+@use '../../styles/common';
 
 .dialog {
-	background: $theme-dialog-overlay;
+	background: common.$theme-dialog-overlay;
 	position: fixed;
 	inset: 0;
 	z-index: 10000;
@@ -17,10 +17,10 @@
 		max-height: calc(100% - 1em);
 
 		padding: 1em;
-		border: 1px solid $theme-dialog-border;
+		border: 1px solid common.$theme-dialog-border;
 		border-radius: 1em;
-		background: $theme-dialog-background;
-		color: $theme-dialog-text;
+		background: common.$theme-dialog-background;
+		color: common.$theme-dialog-text;
 	}
 
 	&.top {
@@ -45,7 +45,7 @@
 	}
 
 	&.modal {
-		background: $theme-dialog-overlay;
+		background: common.$theme-dialog-overlay;
 		pointer-events: auto;
 		z-index: 1000;
 	}
@@ -57,20 +57,20 @@
 	min-width: 8em;
 	min-height: 5em;
 
-	border: 1px solid $theme-dialog-border;
+	border: 1px solid common.$theme-dialog-border;
 	border-radius: 1em;
-	background: $theme-dialog-background;
-	color: $theme-dialog-text;
+	background: common.$theme-dialog-background;
+	color: common.$theme-dialog-text;
 	display: flex !important; // Overrides value from library
 	flex-flow: column;
 	isolation: isolate;
 
 	>header {
-		@include center-flex;
+		@include common.center-flex;
 		overflow: hidden;
 		padding: 0.1em 0.5em;
 		border-radius: 1em 1em 0 0; // Needs to match the dialog
-		background: $theme-dialog-header;
+		background: common.$theme-dialog-header;
 		position: relative;
 		min-height: 1.5em;
 		gap: 1em;
@@ -80,7 +80,7 @@
 		}
 
 		.dialog-close, .dialog-shade {
-			@include center-flex;
+			@include common.center-flex;
 			width: 1.5em;
 			height: 1.5em;
 			cursor: pointer;
@@ -89,15 +89,15 @@
 
 		.dialog-close {
 			&:hover {
-				background: $theme-dialog-button-close-hover-background;
-				color: $theme-dialog-button-hover-text;
+				background: common.$theme-dialog-button-close-hover-background;
+				color: common.$theme-dialog-button-hover-text;
 			}
 		}
 
 		.dialog-shade {
 			&:hover {
-				background: $theme-dialog-button-shade-hover-background;
-				color: $theme-dialog-button-hover-text;
+				background: common.$theme-dialog-button-shade-hover-background;
+				color: common.$theme-dialog-button-hover-text;
 			}
 		}
 	}
@@ -131,7 +131,7 @@
 	}
 
 	&.dialogHighlight {
-		outline: solid 3px $theme-dialog-border-highlight;
+		outline: solid 3px common.$theme-dialog-border-highlight;
 	}
 }
 

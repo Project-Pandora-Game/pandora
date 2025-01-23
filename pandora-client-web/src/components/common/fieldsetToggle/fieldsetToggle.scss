@@ -1,7 +1,7 @@
-@import '../../../styles/common';
+@use '../../../styles/common';
 
 fieldset.fieldset-toggle {
-	border: 0.1em solid $theme-fieldset-border;
+	border: 0.1em solid common.$theme-fieldset-border;
 	border-radius: 0.2em;
 
 	&>legend.fieldset-toggle-legend {

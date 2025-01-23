@@ -1,12 +1,12 @@
-@import '../../styles/common';
+@use '../../styles/common';
 
 $header-button-img-height: 1.5em;
 $header-button-v-padding: 0.3em;
 $header-button-height: $header-button-img-height + 2 * $header-button-v-padding;
 
 .HeaderButton {
-	background: $theme-header-button-normal-background;
-	color: $theme-header-button-normal-text;
+	background: common.$theme-header-button-normal-background;
+	color: common.$theme-header-button-normal-text;
 	border: 0.2em solid transparent;
 	min-width: 4em;
 
@@ -29,28 +29,28 @@ $header-button-height: $header-button-img-height + 2 * $header-button-v-padding;
 			height: 1.4em;
 			font-size: 0.8em;
 			line-height: 1.5;
-			background: $theme-notification-badge-background;
-			color: $theme-notification-badge-text;
+			background: common.$theme-notification-badge-background;
+			color: common.$theme-notification-badge-text;
 			padding: 0 0.3em;
 		}
 	}
 
 	img {
 		height: $header-button-img-height;
-		filter: $theme-header-button-normal-imgfilter;
+		filter: common.$theme-header-button-normal-imgfilter;
 	}
 
 	&:hover {
-		background: $theme-header-button-hover-background;
-		color: $theme-header-button-hover-text;
+		background: common.$theme-header-button-hover-background;
+		color: common.$theme-header-button-hover-text;
 
 		img {
-			filter: $theme-header-button-hover-imgfilter;
+			filter: common.$theme-header-button-hover-imgfilter;
 		}
 	}
 
 	&:focus-visible {
 		outline: 0;
-		border-color: $theme-header-button-visiblefocus-outline;
+		border-color: common.$theme-header-button-visiblefocus-outline;
 	}
 }

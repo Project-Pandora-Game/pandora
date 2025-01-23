@@ -1,24 +1,24 @@
-@import '../../styles/common';
+@use '../../styles/common';
 
 .profileScreen {
 	display: flex;
 	overflow-y: hidden;
 
 	.tab-content {
-		background: $theme-profile-content-background;
-		color: $theme-profile-content-text;
+		background: common.$theme-profile-content-background;
+		color: common.$theme-profile-content-text;
 	}
 }
 
 .profileView {
-	border-top: max(2px, 0.1em) solid $theme-separator;
+	border-top: max(2px, 0.1em) solid common.$theme-separator;
 
 	.profileHeader {
 		font-size: 1.8em;
 
 		padding: 0.25em 0.5em;
-		background: $theme-profile-header-background;
-		color: $theme-profile-header-text;
+		background: common.$theme-profile-header-background;
+		color: common.$theme-profile-header-text;
 	}
 
 	.profileContent {
@@ -38,7 +38,7 @@
 		width: max(min(20em, 90vw), 33vw);
 		flex-shrink: 0;
 		overflow: hidden;
-		border-right: max(2px, 0.1em) solid $theme-separator;
+		border-right: max(2px, 0.1em) solid common.$theme-separator;
 
 		&.disabled {
 			display: none;
@@ -51,10 +51,10 @@
 	}
 
 	.profileDescriptionContent {
-		background: $theme-profile-description-background;
-		color: $theme-profile-description-text;
+		background: common.$theme-profile-description-background;
+		color: common.$theme-profile-description-text;
 		padding: 0.5em;
-		border: 1px solid $theme-profile-description-border;
+		border: 1px solid common.$theme-profile-description-border;
 		white-space: pre-wrap;
 		word-wrap: break-word;
 		word-break: break-word;
@@ -65,8 +65,8 @@
 	}
 
 	.profileEdit {
-		background: $theme-profile-description-edit-background;
-		color: $theme-profile-description-edit-text;
-		border: 2px dashed $theme-profile-description-edit-border;
+		background: common.$theme-profile-description-edit-background;
+		color: common.$theme-profile-description-edit-text;
+		border: 2px dashed common.$theme-profile-description-edit-border;
 	}
 }

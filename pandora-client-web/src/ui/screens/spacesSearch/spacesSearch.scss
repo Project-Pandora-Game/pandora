@@ -1,7 +1,7 @@
-@import '../../../styles/common';
+@use '../../../styles/common';
 
 .spacesSearchList {
-	background: $theme-spacesearch-gapcolor;
+	background: common.$theme-spacesearch-gapcolor;
 	padding: 2px;
 	gap: 2px !important; // Overriding `Column` we use
 
@@ -9,8 +9,8 @@
 		display: grid;
 		width: 100%;
 		align-items: center;
-		background: $theme-normal-background;
-		color: $theme-normal-text;
+		background: common.$theme-normal-background;
+		color: common.$theme-normal-text;
 		border: 0.25em solid transparent;
 		padding: 0.25em;
 		overflow: hidden;
@@ -21,36 +21,36 @@
 		// grid-template might have different value for narrow screens (see lower)
 
 		&.selected {
-			background: $theme-active-background;
-			color: $theme-active-text;
+			background: common.$theme-active-background;
+			color: common.$theme-active-text;
 			.entry .offlineCount {
-				color: $theme-active-text-dim;
+				color: common.$theme-active-text-dim;
 			}
 		}
 
 		&:nth-child(even):not(:hover):not(.selected) {
-			background: $theme-normal-background-secondary;
+			background: common.$theme-normal-background-secondary;
 		}
 
 		&:hover:not(.selected) {
-			color: $theme-hover-text;
-			background: $theme-hover-background;
+			color: common.$theme-hover-text;
+			background: common.$theme-hover-background;
 
 			.entry .offlineCount {
-				color: $theme-hover-text-dim;
+				color: common.$theme-hover-text-dim;
 			}
 		}
 
 		&:focus-visible {
-			border-color: $theme-spacesearch-entry-visiblefocus-outline;
+			border-color: common.$theme-spacesearch-entry-visiblefocus-outline;
 		}
 
 		&.empty {
 			&:not(:hover):not(.selected) {
-				color: $theme-normal-text-dim;
+				color: common.$theme-normal-text-dim;
 
 				.entry .offlineCount {
-					color: $theme-normal-text-dim;
+					color: common.$theme-normal-text-dim;
 				}
 			}
 
@@ -60,7 +60,7 @@
 		}
 
 		&.full .userCount {
-			background: $theme-spacesearch-entry-spacefull-highlight;
+			background: common.$theme-spacesearch-entry-spacefull-highlight;
 			border-radius: 0.5em;
 		}
 
@@ -109,7 +109,7 @@
 			}
 
 			.offlineCount {
-				color: $theme-normal-text-dim;
+				color: common.$theme-normal-text-dim;
 				transition: all 150ms linear;
 			}
 		}
@@ -155,7 +155,7 @@
 	width: 65em;
 	max-width: 100%;
 	display: grid;
-	gap: spacing('medium');
+	gap: common.spacing('medium');
 	grid-template-columns: 1fr min(12em, 40vw);
 
 	.spaceName {
@@ -170,7 +170,7 @@
 		max-height: 8em;
 		max-width: 100%;
 		object-fit: contain;
-		box-shadow: 0.3em 0.3em 0.2em $themecolor-shadow;
+		box-shadow: 0.3em 0.3em 0.2em common.$themecolor-shadow;
 	}
 
 	.ownership {
@@ -186,13 +186,13 @@
 	.features-img {
 		width: 2.5em;
 		height: 2.5em;
-		border: 1px solid $theme-separator;
-		background: $theme-spacedetails-feature-norma-background;
+		border: 1px solid common.$theme-separator;
+		background: common.$theme-spacedetails-feature-norma-background;
 		padding: 0.1em;
 
 		&.warning {
-			background: $theme-warningbox-background;
-			color: $theme-warningbox-text;
+			background: common.$theme-warningbox-background;
+			color: common.$theme-warningbox-text;
 
 			img {
 				filter: brightness(0%);
@@ -212,10 +212,10 @@
 
 	.widebox {
 		grid-column: 1 / 3;
-		border: 0.1em solid $theme-separator;
+		border: 0.1em solid common.$theme-separator;
 		padding: 0.2em;
-		background: $theme-spacedetails-description-background;
-		color: $theme-spacedetails-description-text;
+		background: common.$theme-spacedetails-description-background;
+		color: common.$theme-spacedetails-description-text;
 	}
 
 	.title {
@@ -224,7 +224,7 @@
 
 	.users-list {
 		grid-column: 1 / 3;
-		border: 0.1em solid $theme-separator;
+		border: 0.1em solid common.$theme-separator;
 		padding: 0.2em;
 		overflow-y: auto;
 		display: grid;
@@ -240,7 +240,7 @@
 			word-wrap: break-word;
 
 			&.offline {
-				color: $theme-normal-text-dim;
+				color: common.$theme-normal-text-dim;
 				font-style: italic;
 			}
 
@@ -261,23 +261,23 @@
 }
 
 .infoBox {
-	background: $theme-tipsbox-normal-background;
-	color: $theme-tipsbox-normal-text;
+	background: common.$theme-tipsbox-normal-background;
+	color: common.$theme-tipsbox-normal-text;
 	border-radius: 0.6em;
-	border: 2px solid $theme-tipsbox-normal-border;
+	border: 2px solid common.$theme-tipsbox-normal-border;
 	padding: 0.4em;
 
 	.icon {
 		display: inline;
-		color: $theme-tipsbox-icon-text;
+		color: common.$theme-tipsbox-icon-text;
 	}
 
 	&:hover {
 		cursor: pointer;
-		border: 2px solid $theme-tipsbox-hover-border;
+		border: 2px solid common.$theme-tipsbox-hover-border;
 	}
 
 	&:focus-visible {
-		outline: 0.25em solid $theme-tipsbox-visiblefocus-outline;
+		outline: 0.25em solid common.$theme-tipsbox-visiblefocus-outline;
 	}
 }

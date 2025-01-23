@@ -1,4 +1,4 @@
-@import '../../../styles/common';
+@use '../../../styles/common';
 
 .icon-hamburger {
 	position: relative;
@@ -39,15 +39,15 @@
 
 	&.state-hamburger {
 		.icon {
-			background: $theme-buttonicon-hamburger-color;
+			background: common.$theme-buttonicon-hamburger-color;
 
 			&:before{
-				background: $theme-buttonicon-hamburger-color;
+				background: common.$theme-buttonicon-hamburger-color;
 				top: -300%;
 			}
 
 			&:after{
-				background: $theme-buttonicon-hamburger-color;
+				background: common.$theme-buttonicon-hamburger-color;
 				top: 300%;
 			}
 		}
@@ -58,12 +58,12 @@
 
 		.icon {
 			&:before{
-				background: $theme-buttonicon-hamburger-color;
+				background: common.$theme-buttonicon-hamburger-color;
 				transform: rotate(45deg);
 			}
 
 			&:after{
-				background: $theme-buttonicon-hamburger-color;
+				background: common.$theme-buttonicon-hamburger-color;
 				transform: rotate(-45deg);
 			}
 		}

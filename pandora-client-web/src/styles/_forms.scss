@@ -1,4 +1,4 @@
-@import 'common';
+@use 'common';
 
 //#region Inputs
 
@@ -10,24 +10,24 @@ input, textarea, select, select option {
 input, textarea {
 	font-size: 1em;
 	padding: 0.5em;
-	border: 1px solid $theme-input-border;
-	background: $theme-input-normal-background;
-	color: $theme-input-text;
+	border: 1px solid common.$theme-input-border;
+	background: common.$theme-input-normal-background;
+	color: common.$theme-input-text;
 
 	&:focus, &:active {
-		outline: max(0.2em, 2px) solid $theme-input-focused-outline;
-		background: $theme-input-focused-background;
+		outline: max(0.2em, 2px) solid common.$theme-input-focused-outline;
+		background: common.$theme-input-focused-background;
 	}
 
 	&:read-only {
-		background: $theme-input-readonly-background;
+		background: common.$theme-input-readonly-background;
 		&:focus, &:active {
 			outline: 0 none;
 		}
 	}
 
 	&::placeholder {
-		color: $theme-input-placeholder-text;
+		color: common.$theme-input-placeholder-text;
 		opacity: 1; /* Firefox */
 	}
 }
@@ -39,19 +39,19 @@ input[type=color] {
 select {
 	font-size: 1em;
 	padding: 0.5em;
-	border: 1px solid $theme-input-border;
-	background: $theme-input-normal-background;
-	color: $theme-input-text;
+	border: 1px solid common.$theme-input-border;
+	background: common.$theme-input-normal-background;
+	color: common.$theme-input-text;
 	overflow: hidden;
 	white-space: pre;
 	text-overflow: ellipsis;
 
 	&:focus-visible {
-		outline: max(0.2em, 2px) solid $theme-input-focused-outline;
+		outline: max(0.2em, 2px) solid common.$theme-input-focused-outline;
 	}
 
 	&:disabled {
-		background: $theme-input-readonly-background;
+		background: common.$theme-input-readonly-background;
 		&:focus, &:active {
 			outline: 0 none;
 		}
@@ -60,21 +60,21 @@ select {
 
 input[type=checkbox] {
 	transform: scale(1.3);
-	accent-color: $theme-checkbox-accent;
+	accent-color: common.$theme-checkbox-accent;
 	border-radius: 0.5em;
-	filter: $theme-checkbox-unchecked-filter;
+	filter: common.$theme-checkbox-unchecked-filter;
 
 	&:checked {
 		filter: none;
 	}
 
 	&:focus-visible {
-		outline: max(0.2em, 2px) solid $theme-input-focused-outline;
+		outline: max(0.2em, 2px) solid common.$theme-input-focused-outline;
 	}
 
 	&:disabled {
-		accent-color: $theme-checkbox-disabled-accent;
-		filter: $theme-checkbox-disabled-unchecked-filter;
+		accent-color: common.$theme-checkbox-disabled-accent;
+		filter: common.$theme-checkbox-disabled-unchecked-filter;
 
 		&:checked {
 			filter: none;

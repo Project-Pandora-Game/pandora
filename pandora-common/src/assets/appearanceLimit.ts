@@ -367,6 +367,8 @@ function FromLimitEnumValue<E extends [string, ...string[]]>(data: TreeLimitMuta
 		if (IsReadonlyArray(value)) {
 			const result: [number, number][] = value
 				.map((v) => EnumToIndex(schema, v))
+				// We need to sort the values ascending for the algorithm to work properly
+				.sort((a, b) => a - b)
 				.map((v) => [v, v]);
 			data.set(property, result);
 		} else {

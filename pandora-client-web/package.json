@@ -34,7 +34,7 @@
 		"lz-string": "1.5.0",
 		"nanoid": "3.3.8",
 		"pandora-common": "workspace:*",
-		"pixi-viewport": "5.0.3",
+		"pixi-viewport": "6.0.3",
 		"pixi.js": "8.6.6",
 		"react": "18.3.1",
 		"react-dom": "18.3.1",

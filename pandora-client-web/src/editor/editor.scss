@@ -1,10 +1,10 @@
-@import '../styles/common';
+@use '../styles/common';
 
 .editor {
 	display: flex;
 	flex-flow: row;
 	gap: 2px;
-	background: $theme-editor-background;
+	background: common.$theme-editor-background;
 	height: 100%;
 	align-items: stretch;
 	overflow: hidden;
@@ -13,8 +13,8 @@
 		display: flex;
 		flex-direction: column;
 		overflow: hidden;
-		background: $theme-editor-pane-background;
-		color: $theme-editor-pane-text;
+		background: common.$theme-editor-pane-background;
+		color: common.$theme-editor-pane-text;
 
 		&.editor-ui {
 			flex: 1;
@@ -64,13 +64,13 @@
 	}
 
 	.ui-selector {
-		@include flex($wrap: wrap);
+		@include common.flex($wrap: wrap);
 		justify-content: center;
 		gap: 0.5rem;
 		padding: 0.5em;
-		border-bottom: 3px solid $theme-separator;
-		background: $theme-header-background;
-		color: $theme-header-text;
+		border-bottom: 3px solid common.$theme-separator;
+		background: common.$theme-header-background;
+		color: common.$theme-header-text;
 	}
 }
 
@@ -92,7 +92,7 @@
 	}
 
 	.error {
-		color: $theme-editor-error-text;
+		color: common.$theme-editor-error-text;
 	}
 
 	.points-helper-input-table {
@@ -105,14 +105,14 @@
 	}
 
 	table.with-border {
-		border: 1px solid $theme-separator;
+		border: 1px solid common.$theme-separator;
 		border-collapse: collapse;
 
 		th,
 		td {
 			padding: 0.2em;
 			white-space: nowrap;
-			border: 1px solid $theme-separator;
+			border: 1px solid common.$theme-separator;
 		}
 	}
 

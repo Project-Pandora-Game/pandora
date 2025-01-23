@@ -1,4 +1,4 @@
-@import '../../styles/common';
+@use '../../styles/common';
 
 .accountContacts {
 	height: 100%;
@@ -9,7 +9,7 @@
 		height: 100%;
 
 		>div {
-			border-top: max(2px, 0.1em) solid $theme-separator;
+			border-top: max(2px, 0.1em) solid common.$theme-separator;
 
 			> .scrollable-vertical {
 				padding: 0.1em 0.2em;
@@ -24,7 +24,7 @@
 
 		&.online {
 			.status .indicator {
-				color: $theme-contacts-status-online;
+				color: common.$theme-contacts-status-online;
 			}
 		}
 
@@ -33,7 +33,7 @@
 				font-style: italic;
 
 				.indicator {
-					color: $theme-contacts-status-offline;
+					color: common.$theme-contacts-status-offline;
 					font-style: normal;
 				}
 			}

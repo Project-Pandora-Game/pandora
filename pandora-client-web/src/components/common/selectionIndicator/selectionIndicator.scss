@@ -1,4 +1,4 @@
-@import '../../../styles/common';
+@use '../../../styles/common';
 
 .selectionIndicator {
 	position: relative;
@@ -8,7 +8,7 @@
 	transition: outline-color 150ms linear;
 
 	&.selected {
-		outline-color: $theme-button-selected-outline;
+		outline-color: common.$theme-button-selected-outline;
 	}
 
 	&::before {
@@ -22,6 +22,6 @@
 	}
 
 	&.active:not(.selected)::before {
-		outline-color: $theme-button-selected-outline;
+		outline-color: common.$theme-button-selected-outline;
 	}
 }

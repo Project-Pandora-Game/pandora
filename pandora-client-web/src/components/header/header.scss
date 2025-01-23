@@ -1,17 +1,17 @@
-@import '../../styles/common';
-@import 'HeaderButton';
+@use '../../styles/common';
+@use 'HeaderButton';
 
 .Header {
-	@include flex(row, wrap);
-	background: $theme-header-background;
-	color: $theme-header-text;
+	@include common.flex(row, wrap);
+	background: common.$theme-header-background;
+	color: common.$theme-header-text;
 	width: 100%;
 	position: relative;
 
 	& > div {
-		@include flex(row, wrap);
+		@include common.flex(row, wrap);
 		align-items: flex-start;
-		min-height: $header-button-height;
+		min-height: HeaderButton.$header-button-height;
 
 		&.rightHeader, &.leftHeader {
 			align-items: stretch;
@@ -23,29 +23,29 @@
 	}
 
 	span {
-		@include center-flex;
+		@include common.center-flex;
 		min-width: 6em;
-		min-height: $header-button-height;
+		min-height: HeaderButton.$header-button-height;
 		padding: 0 1em;
 	}
 
 	.collapsableHeaderButton {
-		background: $theme-header-button-normal-background;
-		color: $theme-header-button-normal-text;
+		background: common.$theme-header-button-normal-background;
+		color: common.$theme-header-button-normal-text;
 		border: 0.2em solid transparent;
 
 		&:hover {
-			background: $theme-header-button-hover-background;
-			color: $theme-header-button-hover-text;
+			background: common.$theme-header-button-hover-background;
+			color: common.$theme-header-button-hover-text;
 
 			img {
-				filter: $theme-header-button-hover-imgfilter;
+				filter: common.$theme-header-button-hover-imgfilter;
 			}
 		}
 
 		&:focus-visible {
 			outline: 0;
-			border-color: $theme-header-button-visiblefocus-outline;
+			border-color: common.$theme-header-button-visiblefocus-outline;
 		}
 	}
 }
@@ -57,8 +57,8 @@
 	margin: 0;
 	overflow: hidden;
 	pointer-events: auto;
-	background: $theme-header-collapsable-background;
-	color: $theme-header-collapsable-text;
+	background: common.$theme-header-collapsable-background;
+	color: common.$theme-header-collapsable-text;
 	transition: all 200ms linear;
 
 	&.hide {
@@ -75,16 +75,16 @@
 		}
 
 		> div {
-			@include flex(column, wrap);
+			@include common.flex(column, wrap);
 			align-items: stretch;
-			min-height: $header-button-height;
+			min-height: HeaderButton.$header-button-height;
 			flex: unset;
 
 			> button, > span {
-				@include flex(row);
+				@include common.flex(row);
 				align-items: center;
 				min-width: 6em;
-				min-height: $header-button-height;
+				min-height: HeaderButton.$header-button-height;
 				padding: 0 1em;
 			}
 

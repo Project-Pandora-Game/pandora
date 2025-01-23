@@ -1,7 +1,7 @@
-@import '../../../styles/common';
+@use '../../../styles/common';
 
 .Form {
-	@include flex(column);
+	@include common.flex(column);
 	align-items: center;
 	width: 100%;
 	margin: 1rem 0;
@@ -18,27 +18,27 @@
 	}
 
 	.FormField {
-		@include flex(column);
+		@include common.flex(column);
 		gap: 0.25em;
 		width: 100%;
 	}
 
 	&.dirty {
 		input:invalid {
-			border-color: $theme-input-border-error;
-			outline-color: $theme-input-border-error;
+			border-color: common.$theme-input-border-error;
+			outline-color: common.$theme-input-border-error;
 		}
 	}
 
 	.FormErrorMessage {
 		font-size: 0.75em;
-		color: $theme-form-validationmessage-text;
+		color: common.$theme-form-validationmessage-text;
 		font-weight: 600;
 	}
 
 	.FormFieldError {
 		font-size: 0.85em;
-		color: $theme-form-validationmessage-text;
+		color: common.$theme-form-validationmessage-text;
 		margin-bottom: 0.8em;
 
 		&.empty:before {

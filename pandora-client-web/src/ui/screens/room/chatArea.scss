@@ -1,11 +1,11 @@
-@import '../../../styles/common';
+@use '../../../styles/common';
 
 .chatArea {
 	display: flex;
 	flex-flow: column;
 	flex: 1;
-	background: $theme-chat-background;
-	color: $theme-chat-text;
+	background: common.$theme-chat-background;
+	color: common.$theme-chat-text;
 	overflow: hidden;
 
 	> .messagesArea {
@@ -27,14 +27,14 @@
 			}
 
 			&.serverMessage {
-				border-left: 5px solid $theme-chat-serverMessage-notch;
-				background: $theme-chat-serverMessage-background;
-				color: $theme-chat-serverMessage-text;
+				border-left: 5px solid common.$theme-chat-serverMessage-notch;
+				background: common.$theme-chat-serverMessage-background;
+				color: common.$theme-chat-serverMessage-text;
 				margin: 0.4em;
 				padding: 0.2em;
 
 				&.foldable:hover {
-					background: $theme-chat-serverMessage-foldable-hover-background;
+					background: common.$theme-chat-serverMessage-foldable-hover-background;
 					cursor: pointer;
 				}
 			}
@@ -49,7 +49,7 @@
 
 			> .info {
 				float: right;
-				color: $theme-chat-messageinfo-text;
+				color: common.$theme-chat-messageinfo-text;
 				font-style: italic;
 				font-size: 0.6em;
 				margin-right: 0.2em;
@@ -60,10 +60,10 @@
 			}
 
 			&.editing {
-				background: $theme-chat-editedMessage-background;
+				background: common.$theme-chat-editedMessage-background;
 				padding: 0.2em;
 				margin: 0 0.2em;
-				border-left: 2px solid $theme-chat-editedMessage-notch;
+				border-left: 2px solid common.$theme-chat-editedMessage-notch;
 			}
 		}
 	}
@@ -72,28 +72,28 @@
 		height: min(8.5em, 35%);
 		resize: none;
 		margin: 0;
-		background: $theme-chat-input-normal-background;
-		color: $theme-chat-input-text;
+		background: common.$theme-chat-input-normal-background;
+		color: common.$theme-chat-input-text;
 		border: none;
 		outline: none;
 
 		&:focus {
-			background: $theme-chat-input-focused-background;
+			background: common.$theme-chat-input-focused-background;
 		}
 
 		&::placeholder {
-			color: $theme-chat-input-placeholder-text;
+			color: common.$theme-chat-input-placeholder-text;
 			opacity: 1; /* Firefox */
 		}
 	}
 }
 
 .typing-indicator, .input-modifiers, .unread-messages-indicator {
-	@include flex(row, wrap);
+	@include common.flex(row, wrap);
 	align-items: center;
 
-	background: $theme-chat-indicator-background;
-	color: $theme-chat-indicator-text;
+	background: common.$theme-chat-indicator-background;
+	color: common.$theme-chat-indicator-text;
 	padding-left: 0.5em;
 	gap: 0.5em;
 }
@@ -109,7 +109,7 @@
 	cursor: pointer;
 
 	&:hover {
-		background: $theme-chat-indicator-interactive-hover-background;
+		background: common.$theme-chat-indicator-interactive-hover-background;
 	}
 
 	img {
@@ -119,7 +119,7 @@
 }
 
 .unread-messages-indicator:hover {
-	background: $theme-chat-indicator-interactive-hover-background;
+	background: common.$theme-chat-indicator-interactive-hover-background;
 	cursor: pointer;
 }
 
@@ -133,9 +133,9 @@
 	margin: 0.2em;
 	font-size: medium;
 
-	@include flex(column);
-	background: $theme-autocomplete-hint-background;
-	color: $theme-autocomplete-hint-text;
+	@include common.flex(column);
+	background: common.$theme-autocomplete-hint-background;
+	color: common.$theme-autocomplete-hint-text;
 	padding: 0.5em;
 	gap: 0.1em;
 
@@ -147,7 +147,7 @@
 		cursor: pointer;
 
 		&:hover, &.selected {
-			background: $theme-autocomplete-hint-entry-hover-background;
+			background: common.$theme-autocomplete-hint-entry-hover-background;
 		}
 	}
 }

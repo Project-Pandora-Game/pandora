@@ -1,16 +1,16 @@
-@import '../../styles/common';
+@use '../../styles/common';
 
 .direct-messages {
 	display: flex;
 	flex-flow: row;
-	background: $theme-dms-base-background;
+	background: common.$theme-dms-base-background;
 	height: 100%;
 	width: 100vw;
 
 	&__list {
 		width: min(11em, 25vw);
-		background: $theme-dms-list-background;
-		border-right: max(2px, 0.1em) solid $theme-separator;
+		background: common.$theme-dms-list-background;
+		border-right: max(2px, 0.1em) solid common.$theme-separator;
 		position: relative;
 
 		input {
@@ -37,7 +37,7 @@
 			}
 
 			.unreadIndicator {
-				@include center-flex;
+				@include common.center-flex;
 				position: absolute;
 				border-radius: 50%;
 				top: calc(50% - 0.7em);
@@ -49,8 +49,8 @@
 				height: 1.4em;
 				font-size: 0.8em;
 				font-weight: bold;
-				background: $theme-dms-list-item-unread-indicator-background;
-				color: $theme-dms-list-item-unread-indicator-text;
+				background: common.$theme-dms-list-item-unread-indicator-background;
+				color: common.$theme-dms-list-item-unread-indicator-text;
 			}
 		}
 	}
@@ -59,14 +59,14 @@
 		flex: 1;
 
 		.error {
-			color: $theme-dms-chat-error;
+			color: common.$theme-dms-chat-error;
 			font-weight: bold;
 			text-align: center;
 			margin: auto;
 		}
 
 		.loading {
-			color: $theme-dms-chat-loading;
+			color: common.$theme-dms-chat-loading;
 			font-weight: bold;
 			text-align: center;
 			margin: auto;
@@ -76,11 +76,11 @@
 	>.direct-message-crypto-dialog {
 		flex: 1;
 		height: 100%;
-		background: $theme-dms-crypto-dialog-base-background;
+		background: common.$theme-dms-crypto-dialog-base-background;
 
 		.dialog-content {
-			background: $theme-dms-crypto-dialog-background;
-			color: $theme-dms-crypto-dialog-text;
+			background: common.$theme-dms-crypto-dialog-background;
+			color: common.$theme-dms-crypto-dialog-text;
 			border-radius: 0.5em;
 
 			hr {

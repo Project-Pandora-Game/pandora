@@ -1,21 +1,21 @@
-@import 'common';
+@use 'common';
 
 //#region Flexbox
 
 .flex-row, .flex-row-nowrap {
-	@include flex;
+	@include common.flex;
 }
 
 .flex-row-wrap {
-	@include flex($wrap: wrap);
+	@include common.flex($wrap: wrap);
 }
 
 .flex-col, .flex-col-nowrap {
-	@include flex($direction: column);
+	@include common.flex($direction: column);
 }
 
 .flex-col-wrap {
-	@include flex(column, wrap);
+	@include common.flex(column, wrap);
 }
 
 @for $weight from 1 through 12 {
@@ -33,17 +33,17 @@
 //#region Positioning
 
 .center-absolute {
-	@include center-absolute;
+	@include common.center-absolute;
 }
 
 .center-fixed {
-	@include center-fixed;
+	@include common.center-fixed;
 }
 
 .center-flex {
-	@include center-flex;
+	@include common.center-flex;
 	// Give this a default gap so things look better without custom style
-	gap: spacing('medium');
+	gap: common.spacing('medium');
 }
 
 .hidden {
@@ -96,7 +96,7 @@
 
 //#region Spacing
 
-@each $spacing-name, $spacing-value in $spacing {
+@each $spacing-name, $spacing-value in common.$spacing {
 	.spacing-#{$spacing-name} {
 		padding: $spacing-value;
 		gap: $spacing-value;
@@ -168,8 +168,8 @@
 }
 
 .warning-box, .error-box {
-	@include center-flex;
-	border: $theme-separator solid 1px;
+	@include common.center-flex;
+	border: common.$theme-separator solid 1px;
 	border-radius: 1em;
 	padding: 0.25em 0.5em;
 	margin: 0.25em;
@@ -180,13 +180,13 @@
 }
 
 .warning-box {
-	background: $theme-warningbox-background;
-	color: $theme-warningbox-text;
+	background: common.$theme-warningbox-background;
+	color: common.$theme-warningbox-text;
 }
 
 .error-box {
-	background: $theme-errorbox-background;
-	color: $theme-errorbox-text;
+	background: common.$theme-errorbox-background;
+	color: common.$theme-errorbox-text;
 }
 
 //#endregion

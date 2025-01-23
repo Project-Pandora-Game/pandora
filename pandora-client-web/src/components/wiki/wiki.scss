@@ -1,4 +1,4 @@
-@import '../../styles/common';
+@use '../../styles/common';
 
 .wiki {
 	flex: 1;
@@ -10,11 +10,11 @@
 	}
 
 	.wiki-content {
-		background: $theme-textbox-background;
-		color: $theme-textbox-text;
+		background: common.$theme-textbox-background;
+		color: common.$theme-textbox-text;
 		user-select: text;
 		padding: 0.5em;
-		border: 1px solid $theme-separator;
+		border: 1px solid common.$theme-separator;
 		flex: 1;
 
 		h3, h4 {

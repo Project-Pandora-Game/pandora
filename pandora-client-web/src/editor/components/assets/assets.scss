@@ -1,4 +1,4 @@
-@import '../../../styles/common';
+@use '../../../styles/common';
 
 .asset-ui {
 	>div {
@@ -17,7 +17,7 @@
 	ul {
 		padding-left: 2rem;
 		margin-top: 0.5rem;
-		border-left: 2px dashed $theme-editor-nestedlist-guide;
+		border-left: 2px dashed common.$theme-editor-nestedlist-guide;
 	}
 
 	&>ul {

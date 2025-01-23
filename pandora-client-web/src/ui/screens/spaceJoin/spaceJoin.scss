@@ -1,14 +1,14 @@
-@import '../../../styles/common';
+@use '../../../styles/common';
 
 .spaceJoin {
 	max-width: calc(100% - 1em);
 	max-height: calc(100% - 1em);
 
 	padding: 1em;
-	border: 1px solid $theme-dialog-border;
+	border: 1px solid common.$theme-dialog-border;
 	border-radius: 1em;
-	background: $theme-dialog-background;
-	color: $theme-dialog-text;
+	background: common.$theme-dialog-background;
+	color: common.$theme-dialog-text;
 
 	overflow: hidden;
 }
@@ -19,20 +19,20 @@
 	width: calc(100% - 1em);
 	margin: 0.5em;
 	padding: 0.75em;
-	background: $theme-chat-embed-normal-background;
-	color: $theme-chat-embed-normal-text;
+	background: common.$theme-chat-embed-normal-background;
+	color: common.$theme-chat-embed-normal-text;
 	font-weight: bold;
 	border: 0.25em solid transparent;
 
 	&.active {
 		&:hover {
 			cursor: pointer;
-			background: $theme-chat-embed-hover-background;
-			color: $theme-chat-embed-hover-text;
+			background: common.$theme-chat-embed-hover-background;
+			color: common.$theme-chat-embed-hover-text;
 		}
 
 		&:focus-visible {
-			border-color: $theme-chat-embed-visiblefocus-outline;
+			border-color: common.$theme-chat-embed-visiblefocus-outline;
 		}
 	}
 }

@@ -1,4 +1,4 @@
-@import '../../../styles/common';
+@use '../../../styles/common';
 
 .roomScreen {
 	overflow: hidden;
@@ -22,60 +22,60 @@
 	>.interactionArea {
 		min-width: min(20em, 100%);
 		min-height: min(10vw, 100%);
-		border-left: max(2px, 0.1em) solid $theme-room-separator;
-		background: $theme-room-background;
+		border-left: max(2px, 0.1em) solid common.$theme-room-separator;
+		background: common.$theme-room-background;
 	}
 }
 
 .controls-container {
-	background: $theme-room-controls-background;
-	color: $theme-room-controls-text;
-	border: 2px solid $theme-room-controls-border;
+	background: common.$theme-room-controls-background;
+	color: common.$theme-room-controls-text;
+	border: 2px solid common.$theme-room-controls-border;
 }
 
 .space-warning {
-	background: $theme-warningbox-background;
-	color: $theme-warningbox-text;
-	border: 1px solid $theme-separator;
+	background: common.$theme-warningbox-background;
+	color: common.$theme-warningbox-text;
+	border: 1px solid common.$theme-separator;
 	border-radius: 0.5em;
 	padding: 0.2em 0.5em;
 }
 
 .character-info {
-	margin-bottom: spacing('large');
+	margin-bottom: common.spacing('large');
 
 	fieldset {
 		display: flex;
 		flex-direction: column;
-		background: $theme-room-controls-charactercontent-background;
-		border: 1px solid $theme-room-controls-character-border;
+		background: common.$theme-room-controls-charactercontent-background;
+		border: 1px solid common.$theme-room-controls-character-border;
 		border-radius: 0.5em;
 		margin-bottom: 0.5em;
 
 		>legend {
 			display: flex;
 			flex-flow: row wrap;
-			border: 1px solid $theme-room-controls-character-border;
+			border: 1px solid common.$theme-room-controls-character-border;
 			border-radius: 0.5em;
 			overflow: hidden;
 			padding: 0;
 
-			background: $theme-room-controls-character-border;
+			background: common.$theme-room-controls-character-border;
 			gap: 1px;
 
 			&.player {
 				>span, >button {
-					background: $theme-room-controls-player-background;
-					color: $theme-room-controls-player-text;
+					background: common.$theme-room-controls-player-background;
+					color: common.$theme-room-controls-player-text;
 				}
 
 				>button:hover {
-					background: $theme-room-controls-player-hover-background;
+					background: common.$theme-room-controls-player-hover-background;
 				}
 			}
 
 			.colorStrip {
-				text-shadow: $theme-room-controls-character-colorstrip-shadow 1px 1px 1px;
+				text-shadow: common.$theme-room-controls-character-colorstrip-shadow 1px 1px 1px;
 			}
 
 			>span, >button {
@@ -88,17 +88,17 @@
 				align-items: center;
 				justify-content: center;
 
-				background: $theme-room-controls-character-background;
-				color: $theme-room-controls-character-text;
+				background: common.$theme-room-controls-character-background;
+				color: common.$theme-room-controls-character-text;
 
 				&.safemode {
-					background: $theme-warningbox-background;
-					color: $theme-warningbox-text;
+					background: common.$theme-warningbox-background;
+					color: common.$theme-warningbox-text;
 					padding: 0 0.5em;
 				}
 
 				&.offline {
-					background: $theme-room-controls-offlinecharacter-background;
+					background: common.$theme-room-controls-offlinecharacter-background;
 					padding: 0 0.5em;
 					font-style: italic;
 				}
@@ -109,11 +109,11 @@
 			}
 
 			>button:hover {
-				background: $theme-room-controls-character-hover-background;
+				background: common.$theme-room-controls-character-hover-background;
 			}
 
 			>button:focus-visible {
-				border-color: $theme-room-controls-character-visiblefocus-outline;
+				border-color: common.$theme-room-controls-character-visiblefocus-outline;
 			}
 		}
 	}
@@ -121,7 +121,7 @@
 
 .room-construction-mode {
 	.error {
-		color: $themecolor-error;
+		color: common.$themecolor-error;
 		font-weight: bold;
 		margin: auto 0;
 	}

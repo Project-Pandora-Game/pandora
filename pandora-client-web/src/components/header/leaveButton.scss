@@ -1,4 +1,4 @@
-@import '../../styles/common';
+@use '../../styles/common';
 
 .LeaveDialog {
 	fieldset {
@@ -6,10 +6,10 @@
 		flex-flow: column;
 		width: min(30em, 80vw);
 		user-select: text;
-		border-color: $theme-separator;
+		border-color: common.$theme-separator;
 
 		.unimportant {
-			color: $theme-normal-text-dim;
+			color: common.$theme-normal-text-dim;
 		}
 
 		button {

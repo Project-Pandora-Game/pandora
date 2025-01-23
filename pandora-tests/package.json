@@ -16,7 +16,7 @@
 		"playwright-setup-ci": "playwright install --with-deps chromium"
 	},
 	"devDependencies": {
-		"@playwright/test": "1.49.1",
+		"@playwright/test": "1.50.0",
 		"@stylistic/eslint-plugin": "2.12.1",
 		"@types/node": "22.10.9",
 		"@typescript-eslint/eslint-plugin": "8.18.2",

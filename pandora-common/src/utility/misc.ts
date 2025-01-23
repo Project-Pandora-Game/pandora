@@ -407,7 +407,6 @@ export class KnownObject {
  */
 export function CheckPropertiesNotNullable<TObject extends object, TKeys extends (keyof TObject & string)>(object: Partial<TObject>, keys: Record<TKeys, true>): object is TObject & (SetRequired<TObject, TKeys>) {
 	for (const key of KnownObject.keys(keys)) {
-		// eslint-disable-next-line @typescript-eslint/no-unnecessary-boolean-literal-compare
 		Assert(keys[key] === true);
 		if (object[key] == null)
 			return false;

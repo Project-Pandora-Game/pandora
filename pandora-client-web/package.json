@@ -51,7 +51,6 @@
 	"devDependencies": {
 		"@babel/preset-env": "7.26.0",
 		"@pmmmwh/react-refresh-webpack-plugin": "0.5.15",
-		"@project-pandora-game/sass-loader": "13.2.0",
 		"@stylistic/eslint-plugin": "2.12.1",
 		"@testing-library/jest-dom": "6.6.3",
 		"@testing-library/react": "16.1.0",
@@ -94,7 +93,8 @@
 		"react-refresh": "0.14.2",
 		"react-refresh-typescript": "2.0.10",
 		"rimraf": "6.0.1",
-		"sass": "1.78.0",
+		"sass-embedded": "1.83.4",
+		"sass-loader": "16.0.4",
 		"source-map-loader": "5.0.0",
 		"style-loader": "4.0.0",
 		"ts-jest": "29.2.5",

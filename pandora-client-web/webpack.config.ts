@@ -250,12 +250,7 @@ function GenerateStyleLoaders(env: WebpackEnv): RuleSetUseItem[] {
 				},
 			},
 		},
-		{
-			loader: '@project-pandora-game/sass-loader',
-			options: {
-				ignoreErrors: !env.prod,
-			},
-		},
+		{ loader: 'sass-loader' },
 	];
 
 	if (env.prod) {

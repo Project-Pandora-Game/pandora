@@ -10,6 +10,9 @@
 				"nanoid"
 			]
 		},
+		"overrides": {
+			"@octokit/types": "13.5.0"
+		},
 		"patchedDependencies": {
 			"pixi-viewport": "patches/pixi-viewport.patch",
 			"pixi.js": "patches/pixi.js.patch"

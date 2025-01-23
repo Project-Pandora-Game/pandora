@@ -43,7 +43,7 @@
 		"@octokit/rest": "20.1.1",
 		"argon2": "0.41.1",
 		"async-lock": "1.4.1",
-		"discord.js": "14.16.3",
+		"discord.js": "14.17.3",
 		"dotenv": "16.4.7",
 		"express": "4.21.2",
 		"json-diff": "1.0.6",

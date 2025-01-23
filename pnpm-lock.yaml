@@ -8,9 +8,6 @@ overrides:
   '@octokit/types': 13.5.0
 
 patchedDependencies:
-  pixi-viewport:
-    hash: vtenzegv5nm2rviie2tt353xhu
-    path: patches/pixi-viewport.patch
   pixi.js:
     hash: ewjekhmxyewfd5mz4dvsypq3xe
     path: patches/pixi.js.patch
@@ -76,7 +73,7 @@ importers:
         version: link:../pandora-common
       pixi-viewport:
         specifier: 6.0.3
-        version: 6.0.3(patch_hash=vtenzegv5nm2rviie2tt353xhu)(pixi.js@8.6.6(patch_hash=ewjekhmxyewfd5mz4dvsypq3xe))
+        version: 6.0.3(pixi.js@8.6.6(patch_hash=ewjekhmxyewfd5mz4dvsypq3xe))
       pixi.js:
         specifier: 8.6.6
         version: 8.6.6(patch_hash=ewjekhmxyewfd5mz4dvsypq3xe)
@@ -13420,7 +13417,7 @@ snapshots:
 
   pirates@4.0.6: {}
 
-  pixi-viewport@6.0.3(patch_hash=vtenzegv5nm2rviie2tt353xhu)(pixi.js@8.6.6(patch_hash=ewjekhmxyewfd5mz4dvsypq3xe)):
+  pixi-viewport@6.0.3(pixi.js@8.6.6(patch_hash=ewjekhmxyewfd5mz4dvsypq3xe)):
     dependencies:
       pixi.js: 8.6.6(patch_hash=ewjekhmxyewfd5mz4dvsypq3xe)
 

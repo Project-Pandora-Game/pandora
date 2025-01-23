@@ -8,6 +8,9 @@ patchedDependencies:
   pixi-viewport:
     hash: vtenzegv5nm2rviie2tt353xhu
     path: patches/pixi-viewport.patch
+  pixi.js:
+    hash: ewjekhmxyewfd5mz4dvsypq3xe
+    path: patches/pixi.js.patch
 
 importers:
 
@@ -73,7 +76,7 @@ importers:
         version: 5.0.3(patch_hash=vtenzegv5nm2rviie2tt353xhu)
       pixi.js:
         specifier: 8.6.6
-        version: 8.6.6
+        version: 8.6.6(patch_hash=ewjekhmxyewfd5mz4dvsypq3xe)
       react:
         specifier: 18.3.1
         version: 18.3.1
@@ -254,7 +257,7 @@ importers:
         version: 4.0.0(webpack@5.97.1)
       ts-jest:
         specifier: 29.2.5
-        version: 29.2.5(@babel/core@7.25.2)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.25.2))(jest@29.7.0(@types/node@22.10.9)(ts-node@10.9.2(@types/node@22.10.9)(typescript@5.7.3)))(typescript@5.7.3)
+        version: 29.2.5(@babel/core@7.25.2)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.25.2))(jest@29.7.0(@types/node@22.10.9))(typescript@5.7.3)
       ts-loader:
         specifier: 9.5.1
         version: 9.5.1(typescript@5.7.3)(webpack@5.97.1)
@@ -345,7 +348,7 @@ importers:
         version: 6.0.1
       ts-jest:
         specifier: 29.2.5
-        version: 29.2.5(@babel/core@7.25.2)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.25.2))(jest@29.7.0(@types/node@22.10.9)(ts-node@10.9.2(@types/node@22.10.9)(typescript@5.7.3)))(typescript@5.7.3)
+        version: 29.2.5(@babel/core@7.25.2)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.25.2))(jest@29.7.0(@types/node@22.10.9))(typescript@5.7.3)
       ts-mockito:
         specifier: 2.6.1
         version: 2.6.1
@@ -475,7 +478,7 @@ importers:
         version: 6.0.1
       ts-jest:
         specifier: 29.2.5
-        version: 29.2.5(@babel/core@7.25.2)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.25.2))(jest@29.7.0(@types/node@22.10.9)(ts-node@10.9.2(@types/node@22.10.9)(typescript@5.7.3)))(typescript@5.7.3)
+        version: 29.2.5(@babel/core@7.25.2)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.25.2))(jest@29.7.0(@types/node@22.10.9))(typescript@5.7.3)
       ts-mockito:
         specifier: 2.6.1
         version: 2.6.1
@@ -587,7 +590,7 @@ importers:
         version: 6.0.1
       ts-jest:
         specifier: 29.2.5
-        version: 29.2.5(@babel/core@7.25.2)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.25.2))(jest@29.7.0(@types/node@22.10.9)(ts-node@10.9.2(@types/node@22.10.9)(typescript@5.7.3)))(typescript@5.7.3)
+        version: 29.2.5(@babel/core@7.25.2)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.25.2))(jest@29.7.0(@types/node@22.10.9))(typescript@5.7.3)
       ts-mockito:
         specifier: 2.6.1
         version: 2.6.1
@@ -13908,7 +13911,7 @@ snapshots:
 
   pixi-viewport@5.0.3(patch_hash=vtenzegv5nm2rviie2tt353xhu): {}
 
-  pixi.js@8.6.6:
+  pixi.js@8.6.6(patch_hash=ewjekhmxyewfd5mz4dvsypq3xe):
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/css-font-loading-module': 0.0.12
@@ -15336,7 +15339,7 @@ snapshots:
     dependencies:
       typescript: 5.7.3
 
-  ts-jest@29.2.5(@babel/core@7.25.2)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.25.2))(jest@29.7.0(@types/node@22.10.9)(ts-node@10.9.2(@types/node@22.10.9)(typescript@5.7.3)))(typescript@5.7.3):
+  ts-jest@29.2.5(@babel/core@7.25.2)(@jest/transform@29.7.0)(@jest/types@29.6.3)(babel-jest@29.7.0(@babel/core@7.25.2))(jest@29.7.0(@types/node@22.10.9))(typescript@5.7.3):
     dependencies:
       bs-logger: 0.2.6
       ejs: 3.1.10

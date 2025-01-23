@@ -1,0 +1,15 @@
+diff --git a/lib/events/FederatedPointerEvent.d.ts b/lib/events/FederatedPointerEvent.d.ts
+index 7346ea677cb5246fa33fcf1dbf2f099247a94544..7bf624c5f9a70c8bd38beb613423ba5eeedac9cc 100644
+--- a/lib/events/FederatedPointerEvent.d.ts
++++ b/lib/events/FederatedPointerEvent.d.ts
+@@ -4,6 +4,10 @@ import { FederatedMouseEvent } from './FederatedMouseEvent';
+  * @memberof events
+  */
+ export declare class FederatedPointerEvent extends FederatedMouseEvent implements PointerEvent {
++    /** Polyfilled. Does not actually exist. */
++    altitudeAngle: number;
++    /** Polyfilled. Does not actually exist. */
++    azimuthAngle: number;
+     /**
+      * The unique identifier of the pointer.
+      * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/PointerEvent/pointerId}

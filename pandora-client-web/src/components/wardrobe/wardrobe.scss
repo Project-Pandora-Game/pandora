@@ -46,7 +46,7 @@ $header-height: 2em;
 				pointer-events: none;
 
 				&.solidOverlay {
-					background: $theme-wardrobe-preview-overlay;
+					background: common.$theme-wardrobe-preview-overlay;
 				}
 
 				.iconButton {

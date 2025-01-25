@@ -318,7 +318,7 @@ abstract class AppearanceActionProcessingResultBase {
 		this.requiredPermissions = processingContext.requiredPermissions;
 	}
 
-	public addAdditionalProblems(...additionalProblems: readonly AppearanceActionProblem[]): AppearanceActionProcessingResult {
+	public addAdditionalProblems(...additionalProblems: readonly AppearanceActionProblem[]): AppearanceActionProcessingResultInvalid {
 		return new AppearanceActionProcessingResultInvalid(this._finalProcessingContext, additionalProblems);
 	}
 

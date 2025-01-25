@@ -12,9 +12,6 @@
 		},
 		"overrides": {
 			"@octokit/types": "13.5.0"
-		},
-		"patchedDependencies": {
-			"pixi.js": "patches/pixi.js.patch"
 		}
 	},
 	"scripts": {

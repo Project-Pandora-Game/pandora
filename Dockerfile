@@ -6,7 +6,8 @@ ENV CI=true
 
 # Files required by pnpm to fetch dependencies
 COPY .npmrc package.json pnpm-lock.yaml ./
-COPY ./patches ./patches
+# Copy patches folder (if we have any patches)
+# COPY ./patches ./patches
 
 RUN pnpm fetch
 

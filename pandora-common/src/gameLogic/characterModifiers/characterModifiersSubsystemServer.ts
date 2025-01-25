@@ -5,7 +5,8 @@ import { AssertNotNullable } from '../../utility/misc';
 import { ArrayIncludesGuard } from '../../validation';
 import type { GameLogicCharacter } from '../character/character';
 import { GameLogicPermissionServer, IPermissionProvider } from '../permissions';
-import type { CharacterModifierInstanceClientData, CharacterModifierInstanceData, CharacterModifierSystemData, CharacterModifierTemplate, CharacterModifierTypeConfig } from './characterModifierData';
+import type { CharacterModifierId } from './characterModifierBaseData';
+import type { CharacterModifierConfigurationChange, CharacterModifierInstanceClientData, CharacterModifierInstanceData, CharacterModifierSystemData, CharacterModifierTemplate, CharacterModifierTypeConfig } from './characterModifierData';
 import { GameLogicModifierInstanceServer } from './characterModifierInstance';
 import { CharacterModifiersSubsystem } from './characterModifiersSubsystem';
 import { GameLogicModifierTypeServer } from './characterModifierType';
@@ -76,6 +77,57 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 		return {
 			id: instanceData.id,
 		};
+	}
+
+	public reorderModifier(modifier: CharacterModifierId, shift: number): boolean {
+		const currentPos = this.modifierInstances.findIndex((m) => m.id === modifier);
+		const newPos = currentPos + shift;
+
+		if (currentPos < 0 || newPos < 0 || newPos >= this.modifierInstances.length)
+			return false;
+
+		const moved = this.modifierInstances.splice(currentPos, 1);
+		this.modifierInstances.splice(newPos, 0, ...moved);
+
+		this.emit('modifiersChanged', undefined);
+		this.emit('dataChanged', undefined);
+
+		return true;
+	}
+
+	public deleteModifier(modifier: CharacterModifierId): void {
+		const currentPos = this.modifierInstances.findIndex((m) => m.id === modifier);
+
+		if (currentPos < 0)
+			return;
+
+		this.modifierInstances.splice(currentPos, 1);
+
+		this.emit('modifiersChanged', undefined);
+		this.emit('dataChanged', undefined);
+	}
+
+	public configureModifier(modifier: CharacterModifierId, config: CharacterModifierConfigurationChange): true | 'invalidConfiguration' | 'failure' {
+		const instance = this.modifierInstances.find((m) => m.id === modifier);
+
+		if (instance == null)
+			return 'failure';
+
+		const parsedConfig = (config.config != null) ? instance.definition.configSchema.partial().safeParse(config.config) : null;
+		if (parsedConfig != null && !parsedConfig.success) {
+			return 'invalidConfiguration';
+		}
+
+		if (config.enabled != null) {
+			instance.setEnabled(config.enabled);
+		}
+		if (parsedConfig != null) {
+			instance.setConfig(parsedConfig.data);
+		}
+
+		this.emit('modifiersChanged', undefined);
+		this.emit('dataChanged', undefined);
+		return true;
 	}
 
 	public getData(): CharacterModifierSystemData {

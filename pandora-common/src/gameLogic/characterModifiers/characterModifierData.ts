@@ -43,6 +43,14 @@ export const CharacterModifierTemplateSchema = z.object({
 /** Client data of a character modifier template */
 export type CharacterModifierTemplate = z.infer<typeof CharacterModifierTemplateSchema>;
 
+/** Request for change to modifier configuration. */
+export const CharacterModifierConfigurationChangeSchema = z.object({
+	enabled: z.boolean().optional(),
+	config: CharacterModifierConfigurationSchema.optional(),
+});
+/** Request for change to modifier configuration. */
+export type CharacterModifierConfigurationChange = z.infer<typeof CharacterModifierConfigurationChangeSchema>;
+
 /** Data of modifier instance effect - put onto a character if the modifier is active */
 export const CharacterModifierEffectDataSchema = z.object({
 	id: CharacterModifierIdSchema,

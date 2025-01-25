@@ -79,6 +79,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			permissionSet: this.handlePermissionSet.bind(this),
 			characterModifiersGet: this.handleCharacterModifiersGet.bind(this),
 			characterModifierAdd: this.handleCharacterModifierAdd.bind(this),
+			characterModifierReorder: this.handleCharacterModifierReorder.bind(this),
+			characterModifierDelete: this.handleCharacterModifierDelete.bind(this),
+			characterModifierConfigure: this.handleCharacterModifierConfigure.bind(this),
 		});
 	}
 
@@ -563,6 +566,158 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			result: 'ok',
 			instanceId: result.id,
 		};
+	}
+	private handleCharacterModifierReorder({ target, modifier, shift }: IClientShardArgument['characterModifierReorder'], client: ClientConnection): IClientShardNormalResult['characterModifierReorder'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		// Find the target
+		const space = client.character.getOrLoadSpace();
+		const targetCharacter = space.getCharacterById(target);
+		if (targetCharacter == null) {
+			return {
+				result: 'characterNotFound',
+			};
+		}
+
+		// Check that the source character is allowed to get this data
+		const checkResult = client.character.checkAction((ctx) => {
+			const checkTarget = ctx.getCharacter(target);
+			if (checkTarget == null)
+				return ctx.invalid();
+
+			ctx.addInteraction(checkTarget.character, 'interact');
+			ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
+			ctx.addInteraction(checkTarget.character, 'modifyCharacterModifiers');
+
+			// TODO: Check modifier-specific permission
+
+			return ctx.finalize();
+		});
+
+		if (!checkResult.valid) {
+			return {
+				result: 'failure',
+				problems: checkResult.problems.slice(),
+				canPrompt: checkResult.prompt === target,
+			};
+		}
+
+		const result = targetCharacter.gameLogicCharacter.characterModifiers.reorderModifier(modifier, shift);
+
+		if (!result) {
+			return {
+				result: 'failure',
+				problems: [
+					{ result: 'invalidAction' },
+				],
+				canPrompt: false,
+			};
+		}
+
+		return {
+			result: 'ok',
+		};
+	}
+	private handleCharacterModifierDelete({ target, modifier }: IClientShardArgument['characterModifierDelete'], client: ClientConnection): IClientShardNormalResult['characterModifierDelete'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		// Find the target
+		const space = client.character.getOrLoadSpace();
+		const targetCharacter = space.getCharacterById(target);
+		if (targetCharacter == null) {
+			return {
+				result: 'characterNotFound',
+			};
+		}
+
+		// Check that the source character is allowed to get this data
+		const checkResult = client.character.checkAction((ctx) => {
+			const checkTarget = ctx.getCharacter(target);
+			if (checkTarget == null)
+				return ctx.invalid();
+
+			ctx.addInteraction(checkTarget.character, 'interact');
+			ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
+			ctx.addInteraction(checkTarget.character, 'modifyCharacterModifiers');
+
+			// TODO: Check modifier-specific permission
+
+			return ctx.finalize();
+		});
+
+		if (!checkResult.valid) {
+			return {
+				result: 'failure',
+				problems: checkResult.problems.slice(),
+				canPrompt: checkResult.prompt === target,
+			};
+		}
+
+		targetCharacter.gameLogicCharacter.characterModifiers.deleteModifier(modifier);
+
+		return {
+			result: 'ok',
+		};
+	}
+	private handleCharacterModifierConfigure({ target, modifier, config }: IClientShardArgument['characterModifierConfigure'], client: ClientConnection): IClientShardNormalResult['characterModifierConfigure'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		// Find the target
+		const space = client.character.getOrLoadSpace();
+		const targetCharacter = space.getCharacterById(target);
+		if (targetCharacter == null) {
+			return {
+				result: 'characterNotFound',
+			};
+		}
+
+		// Check that the source character is allowed to get this data
+		const checkResult = client.character.checkAction((ctx) => {
+			const checkTarget = ctx.getCharacter(target);
+			if (checkTarget == null)
+				return ctx.invalid();
+
+			ctx.addInteraction(checkTarget.character, 'interact');
+			ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
+			ctx.addInteraction(checkTarget.character, 'modifyCharacterModifiers');
+
+			// TODO: Check modifier-specific permission
+
+			return ctx.finalize();
+		});
+
+		if (!checkResult.valid) {
+			return {
+				result: 'failure',
+				problems: checkResult.problems.slice(),
+				canPrompt: checkResult.prompt === target,
+			};
+		}
+
+		const result = targetCharacter.gameLogicCharacter.characterModifiers.configureModifier(modifier, config);
+
+		switch (result) {
+			case true:
+				return {
+					result: 'ok',
+				};
+			case 'invalidConfiguration':
+				return {
+					result: 'invalidConfiguration',
+				};
+			case 'failure':
+				return {
+					result: 'failure',
+					problems: [
+						{ result: 'invalidAction' },
+					],
+					canPrompt: false,
+				};
+		}
+		AssertNever(result);
 	}
 
 	public onAssetDefinitionsChanged(): void {

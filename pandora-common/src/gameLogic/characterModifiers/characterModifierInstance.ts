@@ -1,10 +1,15 @@
 import { cloneDeep } from 'lodash';
+import type { CharacterModifierConfiguration, CharacterModifierId } from './characterModifierBaseData';
 import type { CharacterModifierInstanceClientData, CharacterModifierInstanceData } from './characterModifierData';
 import { CHARACTER_MODIFIER_TYPE_DEFINITION, type CharacterModifierTypeDefinition } from './modifierTypes/_index';
 
 export class GameLogicModifierInstanceServer {
 	public readonly definition: CharacterModifierTypeDefinition;
 	private data: CharacterModifierInstanceData;
+
+	public get id(): CharacterModifierId {
+		return this.data.id;
+	}
 
 	constructor(data: CharacterModifierInstanceData) {
 		this.definition = CHARACTER_MODIFIER_TYPE_DEFINITION[data.type];
@@ -21,6 +26,17 @@ export class GameLogicModifierInstanceServer {
 			type: this.data.type,
 			enabled: this.data.enabled,
 			config: cloneDeep(this.data.config),
+		};
+	}
+
+	public setEnabled(enabled: boolean): void {
+		this.data.enabled = enabled;
+	}
+
+	public setConfig(config: CharacterModifierConfiguration): void {
+		this.data.config = {
+			...this.data.config,
+			...config,
 		};
 	}
 }

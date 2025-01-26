@@ -42,6 +42,9 @@ export class GameLogicCharacterServer extends GameLogicCharacter {
 		this.assetPreferences.on('dataChanged', () => {
 			this.emit('dataChanged', 'assetPreferences');
 		});
+		this.characterModifiers.on('dataChanged', () => {
+			this.emit('dataChanged', 'characterModifiers');
+		});
 	}
 
 	protected override _getPermissionProvider(permissionGroup: PermissionGroup): IPermissionProvider<GameLogicPermissionServer> {

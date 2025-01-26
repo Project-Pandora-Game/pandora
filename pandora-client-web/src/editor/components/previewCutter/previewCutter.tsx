@@ -232,19 +232,13 @@ export function PreviewCutter() {
 				</p>
 				<p>
 					To be consistent with the existing preview images, you should show the location of the item on a stylized character outline.<br />
-					To get such a transparent character body area into the background of your item preview image, do the following:
+					To get such a specially configured character body into the background of your item preview image,<br />
+					the checkbox "Automatically configure layers" is pre-selected.
 				</p>
 				<p>
-					Set all equipped body parts of the default editor character to fully transparent (square button), except "head" and ears".<br />
-					Then, expand the body/base item and set the layers "Body", "Arms" and "Arms (mirror)" to half transparent.<br />
-					Finally, set the colors of the following layers to the color "Silver" (#C0C0C0):<br />
-					<ul>
-						<li>body/base - Body</li>
-						<li>body/base - Arms</li>
-						<li>body/base - Arms (mirror)</li>
-						<li>body/head - Layer #1</li>
-						<li>body/ears - Layer #1</li>
-					</ul>
+					What does this toggle do? It hides most of the base body layers and for the remaining ones it sets their color to "#535759".<br />
+					Note, that bodyparts such as eyes or mouth are not automatically hidden, because it can make sense for them to be used in previews in rare cases.<br />
+					If your preview covers the character head, please consider whether you want those to be included. Otherwise, please hide them manually.
 				</p>
 				<p>
 					Hint: Most existing assets have a comment in their `*.asset.ts` file about the size and position of the cut-out rectangle used<br />

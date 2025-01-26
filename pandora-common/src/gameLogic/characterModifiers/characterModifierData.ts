@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash';
 import { z } from 'zod';
 import { ZodArrayWithInvalidDrop } from '../../validation';
 import { PermissionConfigSchema } from '../permissions';
@@ -37,7 +38,6 @@ export type CharacterModifierInstanceClientData = z.infer<typeof CharacterModifi
 /** Client data of a character modifier template */
 export const CharacterModifierTemplateSchema = z.object({
 	type: CharacterModifierTypeSchema,
-	enabled: z.boolean(),
 	config: CharacterModifierConfigurationSchema,
 });
 /** Client data of a character modifier template */
@@ -73,5 +73,13 @@ export function MakeDefaultCharacterModifierSystemData(): CharacterModifierSyste
 	return {
 		modifiers: [],
 		typeConfig: {},
+	};
+}
+
+/** Create template data from client instance data */
+export function MakeCharacterModifierTemplateFromClientData(data: CharacterModifierInstanceClientData): CharacterModifierTemplate {
+	return {
+		type: data.type,
+		config: cloneDeep(data.config),
 	};
 }

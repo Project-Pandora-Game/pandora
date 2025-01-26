@@ -32,9 +32,9 @@ export interface IconButtonProps extends Omit<ButtonProps, 'children'> {
 	alt: string;
 }
 
-function IconButtonImpl({ src, alt, className, ...buttonProps }: IconButtonProps, ref: React.ForwardedRef<HTMLButtonElement>): ReactElement {
+function IconButtonImpl({ src, alt, className, title, ...buttonProps }: IconButtonProps, ref: React.ForwardedRef<HTMLButtonElement>): ReactElement {
 	return (
-		<Button { ...buttonProps } className={ classNames('IconButton', className) } ref={ ref }>
+		<Button { ...buttonProps } className={ classNames('IconButton', className) } title={ title ?? alt } ref={ ref }>
 			<img src={ src } alt={ alt } crossOrigin='anonymous' />
 		</Button>
 	);

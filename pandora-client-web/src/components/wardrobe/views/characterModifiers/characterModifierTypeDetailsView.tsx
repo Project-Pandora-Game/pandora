@@ -46,9 +46,9 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, target, focusMo
 			target,
 			modifier: {
 				type,
-				enabled: false,
 				config: {},
 			},
+			enabled: false,
 		});
 	}, (result: IClientShardNormalResult['characterModifierAdd'] | null) => {
 		if (result == null) {
@@ -94,7 +94,7 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, target, focusMo
 	}, [check, execute, requestPermissions, target]);
 
 	return (
-		<div className='inventoryView wardrobeModifierTypeList'>
+		<div className='inventoryView wardrobeModifierTypeDetails'>
 			<div className='toolbar'>
 				<span>Modifier "{ typeDefinition.visibleName }"</span>
 			</div>

@@ -196,6 +196,7 @@ export const ClientShardSchema = {
 		request: z.object({
 			target: CharacterIdSchema,
 			modifier: CharacterModifierTemplateSchema,
+			enabled: z.boolean(),
 		}),
 		response: z.discriminatedUnion('result', [
 			z.object({

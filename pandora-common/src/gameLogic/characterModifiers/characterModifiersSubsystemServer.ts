@@ -49,7 +49,7 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 	 * @param source - Character adding it
 	 * @returns Id of the new instance of error code
 	 */
-	public addModifier(template: CharacterModifierTemplate, _source: GameLogicCharacter): 'tooManyModifiers' | 'invalidConfiguration' | { id: `mod:${string}`; } {
+	public addModifier(template: CharacterModifierTemplate, enabled: boolean, _source: GameLogicCharacter): 'tooManyModifiers' | 'invalidConfiguration' | { id: `mod:${string}`; } {
 		if (this.modifierInstances.length >= LIMIT_CHARACTER_MODIFIER_INSTANCE_COUNT) {
 			return 'tooManyModifiers';
 		}
@@ -65,7 +65,7 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 		const instanceData: CharacterModifierInstanceData = {
 			id: `mod:${nanoid()}`,
 			type: template.type,
-			enabled: template.enabled,
+			enabled,
 			config: parsedConfig.data,
 		};
 

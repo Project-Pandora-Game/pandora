@@ -16,6 +16,7 @@ import { ICharacter } from '../../character/character';
 import { Column } from '../common/container/container';
 import { Tab, TabContainer, type TabContainerRef } from '../common/tabs/tabs';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import { WardrobeCharacterModifierInstanceDetailsView } from './views/characterModifiers/characterModifierInstanceDetailsView';
 import { WardrobeCharacterModifierEffectiveInstanceView, WardrobeCharacterModifierFullInstanceView } from './views/characterModifiers/characterModifierInstanceView';
 import { WardrobeCharacterModifierTypeDetailsView } from './views/characterModifiers/characterModifierTypeDetailsView';
 import { WardrobeCharacterModifierTypeView } from './views/characterModifiers/characterModifierTypeView';
@@ -105,13 +106,13 @@ export function WardrobeEffectsModifiers({ className, character }: {
 						</div>
 					</div>
 				) : currentFocus.type === 'instance' ? (
-					<div className='inventoryView'>
-						<div className='center-flex flex-1 padding-large'>
-							<span>
-								TODO
-							</span>
-						</div>
-					</div>
+					<WardrobeCharacterModifierInstanceDetailsView
+						target={ character.id }
+						instance={ fullInstanceList?.result === 'ok' ? (fullInstanceList.modifiers.find((m) => m.id === currentFocus.id) ?? null) : null }
+						unfocus={ () => {
+							setCurrentFocus(null);
+						} }
+					/>
 				) : (
 					AssertNever(currentFocus)
 				)

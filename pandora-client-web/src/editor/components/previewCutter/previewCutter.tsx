@@ -15,6 +15,12 @@ import { EditorSceneContext, useEditorSceneContext } from '../../graphics/editor
 import { ImageExporter } from '../../graphics/export/imageExporter';
 import './previewCutter.scss';
 
+const PREVIEW_CUTTER_LINE_WIDTH = 2;
+const PREVIEW_CUTTER_MIN_SIZE = 50;
+const PREVIEW_CUTTER_MAX_SIZE = CharacterSize.HEIGHT / 3 * 4;
+const PREVIEW_CUTTER_OUTPUT_SIZE = 256;
+const PREVIEW_CUTTER_CENTERED_X = CharacterSize.WIDTH / 2;
+
 type PreviewCutterState = Readonly<{
 	enabled: boolean;
 	overrideLayers: boolean;
@@ -28,13 +34,8 @@ const PREVIEW_CUTTER = new Observable<PreviewCutterState>({
 	overrideLayers: true,
 	size: 200,
 	centered: true,
-	position: { x: 0, y: 100 },
+	position: { x: PREVIEW_CUTTER_CENTERED_X - 100, y: CharacterSize.HEIGHT / 2 - 100 },
 });
-
-const PREVIEW_CUTTER_LINE_WIDTH = 2;
-const PREVIEW_CUTTER_MIN_SIZE = 50;
-const PREVIEW_CUTTER_MAX_SIZE = CharacterSize.HEIGHT / 3 * 4;
-const PREVIEW_CUTTER_OUTPUT_SIZE = 256;
 
 export function PreviewCutterRectangle() {
 	const state = useObservable(PREVIEW_CUTTER);
@@ -61,15 +62,20 @@ function PreviewCutterRectangleInner({
 }: PreviewCutterState) {
 	const [dragging, setDragging] = React.useState(false);
 	const graphic = React.useRef<PIXI.Graphics>(null);
-	const x = centered ? ((CharacterSize.WIDTH - size) / 2) : position.x;
+	const x = centered ? (PREVIEW_CUTTER_CENTERED_X - size / 2) : position.x;
 	const y = position.y;
 
 	const draw = React.useCallback((g: PIXI.GraphicsContext) => {
 		const color = dragging ? 0x00ff00 : 0x333333;
 		g
-			.rect(x - PREVIEW_CUTTER_LINE_WIDTH / 2, y - PREVIEW_CUTTER_LINE_WIDTH / 2, size + PREVIEW_CUTTER_LINE_WIDTH, size + PREVIEW_CUTTER_LINE_WIDTH)
+			.rect(
+				- (PREVIEW_CUTTER_LINE_WIDTH / 2),
+				- (PREVIEW_CUTTER_LINE_WIDTH / 2),
+				size + PREVIEW_CUTTER_LINE_WIDTH,
+				size + PREVIEW_CUTTER_LINE_WIDTH,
+			)
 			.stroke({ width: PREVIEW_CUTTER_LINE_WIDTH, color, alpha: 1 });
-	}, [dragging, x, y, size]);
+	}, [dragging, size]);
 	const onPointerDown = React.useCallback((ev: PIXI.FederatedPointerEvent) => {
 		ev.stopPropagation();
 		setDragging(true);
@@ -87,7 +93,7 @@ function PreviewCutterRectangleInner({
 		PREVIEW_CUTTER.value = {
 			...PREVIEW_CUTTER.value,
 			position: {
-				x: clamp(Math.round(dragPointerEnd.x - (size / 2)), 0, CharacterSize.WIDTH),
+				x: PREVIEW_CUTTER.value.centered ? PREVIEW_CUTTER_CENTERED_X : clamp(Math.round(dragPointerEnd.x - (size / 2)), 0, CharacterSize.WIDTH),
 				y: clamp(Math.round(dragPointerEnd.y - (size / 2)), 0, CharacterSize.HEIGHT),
 			},
 		};
@@ -128,14 +134,16 @@ function PreviewCutterRectangleInner({
 	return (
 		<Graphics
 			zIndex={ 0 }
+			hitArea={ new PIXI.Rectangle(0, 0, size, size) }
+			x={ x }
+			y={ y }
 			interactive={ true }
-			hitArea={ new PIXI.Rectangle(x, y, size, size) }
 			draw={ draw }
 			ref={ graphic }
 			onpointerdown={ onPointerDown }
 			onpointerup={ onPointerUp }
 			onpointerupoutside={ onPointerUp }
-			onpointermove={ onPointerMove }
+			onglobalpointermove={ onPointerMove }
 		/>
 	);
 }
@@ -193,7 +201,7 @@ export function PreviewCutter() {
 		exporter.imageCut(
 			container,
 			{
-				x: (state.centered ? ((CharacterSize.WIDTH - state.size) / 2) : state.position.x),
+				x: state.centered ? (PREVIEW_CUTTER_CENTERED_X - state.size / 2) : state.position.x,
 				y: state.position.y,
 				width: state.size,
 				height: state.size,
@@ -248,20 +256,24 @@ export function PreviewCutter() {
 	return (
 		<FieldsetToggle legend={ legend } forceOpen={ state.enabled } onChange={ onChange } className='previewCutter'>
 			<div>
-				<label htmlFor='preview-cutter-x'>X</label>
-				<NumberInput id='preview-cutter-x' min={ -state.size } max={ CharacterSize.WIDTH + state.size } value={ state.position.x } onChange={ setX } />
+				<label htmlFor='preview-cutter-centered'>Centered</label>
+				<Checkbox id='preview-cutter-centered' checked={ state.centered } onChange={ setCentered } />
 			</div>
+			{
+				!state.centered ? (
+					<div>
+						<label htmlFor='preview-cutter-x'>X</label>
+						<NumberInput id='preview-cutter-x' min={ -state.size } max={ CharacterSize.WIDTH + state.size } value={ state.position.x } onChange={ setX } />
+					</div>
+				) : null
+			}
 			<div>
 				<label htmlFor='preview-cutter-y'>Y</label>
 				<NumberInput id='preview-cutter-y' min={ -state.size } max={ CharacterSize.HEIGHT + state.size } value={ state.position.y } onChange={ setY } />
 			</div>
 			<div>
 				<label htmlFor='preview-cutter-size'>Size</label>
-				<NumberInput id='preview-cutter-size' min={ PREVIEW_CUTTER_MIN_SIZE } max={ PREVIEW_CUTTER_MAX_SIZE } value={ state.size } onChange={ setSize } />
-			</div>
-			<div>
-				<label htmlFor='preview-cutter-centered'>Centered</label>
-				<Checkbox id='preview-cutter-centered' checked={ state.centered } onChange={ setCentered } />
+				<NumberInput id='preview-cutter-size' min={ PREVIEW_CUTTER_MIN_SIZE } max={ PREVIEW_CUTTER_MAX_SIZE } value={ state.size } step={ 2 } onChange={ setSize } />
 			</div>
 			<div>
 				<label htmlFor='preview-cutter-overrides'>Automatically configure layers</label>

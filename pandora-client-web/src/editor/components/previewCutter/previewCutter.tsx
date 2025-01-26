@@ -17,6 +17,7 @@ import './previewCutter.scss';
 
 type PreviewCutterState = Readonly<{
 	enabled: boolean;
+	overrideLayers: boolean;
 	size: number;
 	centered: boolean;
 	position: Readonly<{ x: number; y: number; }>;
@@ -24,6 +25,7 @@ type PreviewCutterState = Readonly<{
 
 const PREVIEW_CUTTER = new Observable<PreviewCutterState>({
 	enabled: false,
+	overrideLayers: true,
 	size: 200,
 	centered: true,
 	position: { x: 0, y: 100 },
@@ -40,6 +42,14 @@ export function PreviewCutterRectangle() {
 		return null;
 	}
 	return <PreviewCutterRectangleInner { ...state } />;
+}
+
+export function usePreviewCutterEnabled(): boolean {
+	return useObservable(PREVIEW_CUTTER).enabled;
+}
+export function usePreviewCutterOverridesEnabled(): boolean {
+	const state = useObservable(PREVIEW_CUTTER);
+	return state.enabled && state.overrideLayers;
 }
 
 let editorSceneContext: EditorSceneContext | null = null;
@@ -168,6 +178,12 @@ export function PreviewCutter() {
 			centered: newValue,
 		};
 	}, []);
+	const setOverrideLayers = React.useCallback((newValue: boolean) => {
+		PREVIEW_CUTTER.value = {
+			...PREVIEW_CUTTER.value,
+			overrideLayers: newValue,
+		};
+	}, []);
 	const createPreviewImage = useEvent(() => {
 		const container = editorSceneContext?.contentRef.current;
 		if (!container) {
@@ -246,6 +262,10 @@ export function PreviewCutter() {
 			<div>
 				<label htmlFor='preview-cutter-centered'>Centered</label>
 				<Checkbox id='preview-cutter-centered' checked={ state.centered } onChange={ setCentered } />
+			</div>
+			<div>
+				<label htmlFor='preview-cutter-overrides'>Automatically configure layers</label>
+				<Checkbox id='preview-cutter-overrides' checked={ state.overrideLayers } onChange={ setOverrideLayers } />
 			</div>
 			<div>
 				<Button onClick={ createPreviewImage }>

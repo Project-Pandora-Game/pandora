@@ -92,12 +92,20 @@ export const LayerImageSettingSchema = z.object({
 }).strict();
 export type LayerImageSetting = z.infer<typeof LayerImageSettingSchema>;
 
+export const LayerStateOverridesSchema = z.object({
+	color: z.number().optional(),
+	alpha: z.number().optional(),
+});
+export type LayerStateOverrides = z.infer<typeof LayerStateOverridesSchema>;
+
 export const LayerDefinitionSchema = RectangleSchema.extend({
 	name: z.string().optional(),
 	priority: LayerPrioritySchema,
 	points: z.string(),
 	pointType: z.array(z.string()).optional(),
 	pointFilterMask: z.string().regex(ZodBase64Regex).optional(),
+	/** Overrides applied to this layer while generating an item preview. */
+	previewOverrides: LayerStateOverridesSchema.optional(),
 	mirror: LayerMirrorSchema,
 	colorizationKey: z.string().optional(),
 

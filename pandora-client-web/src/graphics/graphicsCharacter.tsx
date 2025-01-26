@@ -14,6 +14,7 @@ import {
 	MergeAssetProperties,
 	PseudoRandom,
 	ResolveAssetPreference,
+	type LayerStateOverrides,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
@@ -26,7 +27,7 @@ import { Observable, useObservable } from '../observable';
 import { Container } from './baseComponents/container';
 import { TransitionedContainer, type PixiTransitionedContainer, type TransitionedContainerCustomProps } from './common/transitions/transitionedContainer';
 import { TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler';
-import { ComputedLayerPriority, ComputeLayerPriority, LayerState, LayerStateOverrides, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def';
+import { ComputedLayerPriority, ComputeLayerPriority, LayerState, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def';
 import { GraphicsLayer, GraphicsLayerProps, SwapCullingDirection, SwapCullingDirectionObservable } from './graphicsLayer';
 import { useGraphicsSettings } from './graphicsSettings';
 import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense';

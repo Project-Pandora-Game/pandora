@@ -9,6 +9,7 @@ import {
 	Item,
 	LayerMirror,
 	Rectangle as PandoraRectangle,
+	type LayerStateOverrides,
 	type PointDefinitionCalculated,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
@@ -22,7 +23,6 @@ import { ConditionEvaluatorBase, useAppearanceConditionEvaluator } from './appea
 import { Container } from './baseComponents/container';
 import { PixiMesh, type PixiMeshProps } from './baseComponents/mesh';
 import { Sprite } from './baseComponents/sprite';
-import { LayerStateOverrides } from './def';
 import { GraphicsMaskLayer } from './graphicsMaskLayer';
 import { useGraphicsSettings } from './graphicsSettings';
 import { usePixiApp, usePixiAppOptional } from './reconciler/appContext';

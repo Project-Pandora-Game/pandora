@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { noop } from 'lodash';
-import { Assert, AssertNotNullable, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkRoomState, AssetId, CharacterSize, GetLogger, HexColorString, ParseArrayNotEmpty, TypedEventEmitter, type PointTemplate } from 'pandora-common';
+import { Assert, AssertNotNullable, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkRoomState, AssetId, CharacterSize, GetLogger, HexColorString, ParseArrayNotEmpty, TypedEventEmitter, type LayerStateOverrides, type PointTemplate } from 'pandora-common';
 import React, { createContext, ReactElement, useContext, useMemo, useSyncExternalStore } from 'react';
 import { z } from 'zod';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
@@ -12,7 +12,6 @@ import { useEvent } from '../common/useEvent';
 import { Select } from '../common/userInteraction/select/select';
 import { Button } from '../components/common/button/button';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
-import { LayerStateOverrides } from '../graphics/def';
 import { Observable } from '../observable';
 import { AssetManagerEditor, EditorAssetManager } from './assets/assetManager';
 import { AssetUI } from './components/asset/asset';

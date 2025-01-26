@@ -192,7 +192,13 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 
 	return (
 		<DialogInPortal priority={ -1 } >
-			<div className={ modal ? 'overlay-bounding-box modal' : 'overlay-bounding-box' }>
+			<div
+				className={ modal ? 'overlay-bounding-box modal' : 'overlay-bounding-box' }
+				// Prevent clicks from bubbling through the portal
+				onClick={ (ev) => {
+					ev.stopPropagation();
+				} }
+			>
 				<Rnd
 					className={ classNames(
 						'dialog-draggable',

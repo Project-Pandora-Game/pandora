@@ -41,6 +41,7 @@ function EditorColorPicker({ throttle }: { throttle: number; }): ReactElement {
 
 export type EditorSceneContext = {
 	contentRef: React.RefObject<PIXI.Container>;
+	appRef: React.RefObject<PIXI.Application>;
 };
 
 const EditorSceneContext = React.createContext<EditorSceneContext | null>(null);
@@ -52,9 +53,11 @@ export function EditorScene({
 }: CommonProps): ReactElement {
 	const editor = useEditor();
 	const contentRef = useRef<PIXI.Container>(null);
+	const appRef = useRef<PIXI.Application | null>(null);
 
 	const sceneContext = useMemo((): EditorSceneContext => ({
 		contentRef,
+		appRef,
 	}), []);
 	const graphicsOverridesContext = useMemo((): AssetGraphicsResolverOverride => ({
 		pointTemplates: editor.modifiedPointTemplates,
@@ -86,6 +89,12 @@ export function EditorScene({
 		worldHeight: CharacterSize.HEIGHT,
 		worldWidth: CharacterSize.WIDTH,
 		backgroundColor,
+		onMount(app) {
+			appRef.current = app;
+		},
+		onUnmount() {
+			appRef.current = null;
+		},
 	}), [viewportConfig, backgroundColor]);
 
 	const getCenter = useCallback(() => (viewportRef.current?.getCenter() ?? { x: CharacterSize.WIDTH / 2, y: CharacterSize.HEIGHT / 2 }), []);
@@ -105,9 +114,9 @@ export function EditorScene({
 	}, [cleanup]);
 
 	const exportImage = useCallback(() => {
-		if (!contentRef.current)
+		if (!contentRef.current || !appRef.current)
 			return;
-		const exporter = new ImageExporter();
+		const exporter = new ImageExporter(appRef.current);
 		exporter.imageCut(contentRef.current, {
 			x: 0,
 			y: 0,

@@ -20,6 +20,8 @@ export type GraphicsSceneProps = {
 	backgroundAlpha?: number;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
 	forwardContexts?: readonly Context<any>[];
+	onMount?: (app: Application) => void;
+	onUnmount?: (app: Application) => void;
 };
 
 export const DEFAULT_BACKGROUND_COLOR = 0xaaaaaa;
@@ -35,6 +37,8 @@ function GraphicsSceneCore({
 	backgroundColor = DEFAULT_BACKGROUND_COLOR,
 	backgroundAlpha = 1,
 	forwardContexts = [],
+	onMount: onSceneMount,
+	onUnmount: onSceneUnmount,
 }: ChildrenProps & GraphicsSceneProps & {
 	div: HTMLDivElement;
 	resolution: number;
@@ -80,10 +84,12 @@ function GraphicsSceneCore({
 	const onMount = useCallback((newApp: Application) => {
 		appRef.current = newApp;
 		onResize();
-	}, [onResize]);
-	const onUnmount = useCallback((_oldApp: Application) => {
+		onSceneMount?.(newApp);
+	}, [onResize, onSceneMount]);
+	const onUnmount = useCallback((oldApp: Application) => {
+		onSceneUnmount?.(oldApp);
 		appRef.current = null;
-	}, []);
+	}, [onSceneUnmount]);
 
 	return (
 		<GraphicsSceneRendererShared

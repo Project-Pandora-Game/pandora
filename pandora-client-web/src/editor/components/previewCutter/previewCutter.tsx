@@ -194,10 +194,11 @@ export function PreviewCutter() {
 	}, []);
 	const createPreviewImage = useEvent(() => {
 		const container = editorSceneContext?.contentRef.current;
-		if (!container) {
+		const app = editorSceneContext?.appRef.current;
+		if (!container || !app) {
 			return;
 		}
-		const exporter = new ImageExporter();
+		const exporter = new ImageExporter(app);
 		exporter.imageCut(
 			container,
 			{

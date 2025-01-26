@@ -518,7 +518,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		};
 	}
 
-	private handleCharacterModifierAdd({ target, modifier }: IClientShardArgument['characterModifierAdd'], client: ClientConnection): IClientShardNormalResult['characterModifierAdd'] {
+	private handleCharacterModifierAdd({ target, modifier, enabled }: IClientShardArgument['characterModifierAdd'], client: ClientConnection): IClientShardNormalResult['characterModifierAdd'] {
 		if (!client.character)
 			throw new BadMessageError();
 
@@ -554,7 +554,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			};
 		}
 
-		const result = targetCharacter.gameLogicCharacter.characterModifiers.addModifier(modifier, client.character.gameLogicCharacter);
+		const result = targetCharacter.gameLogicCharacter.characterModifiers.addModifier(modifier, enabled, client.character.gameLogicCharacter);
 
 		if (result === 'invalidConfiguration' || result === 'tooManyModifiers') {
 			return {

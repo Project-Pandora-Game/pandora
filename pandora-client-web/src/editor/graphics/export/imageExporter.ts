@@ -1,32 +1,22 @@
 import Delaunator from 'delaunator';
-import { CharacterSize, PromiseOnce, Rectangle, Size } from 'pandora-common';
+import { CharacterSize, Rectangle, Size } from 'pandora-common';
 import { Application, Container, Matrix, Mesh, MeshGeometry, RenderTexture, Texture } from 'pixi.js';
 import { AssertDataString, DataString } from '../../../common/downloadHelper';
 
 type ImageFormat = 'png' | 'jpg' | 'webp';
 
 export class ImageExporter {
-	private readonly _getApp: () => Promise<Application>;
+	public readonly app: Application;
 
-	constructor() {
-		this._getApp = PromiseOnce(async () => {
-			const app = new Application();
-			await app.init({
-				backgroundAlpha: 0,
-				resolution: 1,
-				antialias: true,
-			});
-			return app;
-		});
+	constructor(app: Application) {
+		this.app = app;
 	}
 
 	public async export(target: Container, format: ImageFormat): Promise<DataString> {
-		const app = await this._getApp();
-
-		app.renderer.resize(target.width, target.height);
-		const child = app.stage.addChild(target);
-		const result = await app.renderer.extract.base64({ target, format });
-		app.stage.removeChild(child);
+		this.app.renderer.resize(target.width, target.height);
+		const child = this.app.stage.addChild(target);
+		const result = await this.app.renderer.extract.base64({ target, format });
+		this.app.stage.removeChild(child);
 		AssertDataString(result);
 		return result;
 	}
@@ -37,19 +27,32 @@ export class ImageExporter {
 	}
 
 	public async imageCut(container: Container, rect: Rectangle, format: ImageFormat, resultSize: Readonly<Size> = { width: CharacterSize.WIDTH, height: CharacterSize.HEIGHT }): Promise<DataString> {
-		const app = await this._getApp();
-
-		const renderTexture = RenderTexture.create(resultSize);
+		const renderTexture = RenderTexture.create({
+			...resultSize,
+			resolution: 1,
+			antialias: true,
+		});
 		WithCullingDisabled(container, () => {
-			app.renderer.render({
+			// We render twice as first render _sometimes_ returns a blank texture for unknown reason...
+			this.app.renderer.render({
 				container,
 				target: renderTexture,
 				transform: Matrix.IDENTITY
 					.translate(-rect.x, -rect.y)
 					.scale(resultSize.width / rect.width, resultSize.height / rect.height),
+				clearColor: [0, 0, 0, 0],
+			});
+			this.app.renderer.render({
+				container,
+				target: renderTexture,
+				transform: Matrix.IDENTITY
+					.translate(-rect.x, -rect.y)
+					.scale(resultSize.width / rect.width, resultSize.height / rect.height),
+				clearColor: [0, 0, 0, 0],
 			});
 		});
-		const result = await app.renderer.extract.base64({ target: renderTexture, format });
+		renderTexture.source.updateMipmaps();
+		const result = await this.app.renderer.extract.base64({ target: renderTexture, format });
 		renderTexture.destroy(true);
 		AssertDataString(result);
 		return result;

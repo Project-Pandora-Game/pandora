@@ -41,11 +41,18 @@
 		"source.fixAll.eslint": "explicit",
 		"source.organizeImports": "explicit",
 	},
-	"eslint.workingDirectories": [
-		"pandora-client-web",
-		"pandora-common",
-		"pandora-server-directory",
-		"pandora-server-shard",
-		"pandora-tests"
-	]
+	"eslint.useESLintClass": true,
+	"eslint.useFlatConfig": true,
+	"eslint.problems.shortenToSingleLine": true,
+	"eslint.rules.customizations": [
+		{
+			"rule": "*",
+			"severity": "warn"
+		},
+		{
+			"rule": "*",
+			"fixable": true,
+			"severity": "info"
+		}
+	],
 }

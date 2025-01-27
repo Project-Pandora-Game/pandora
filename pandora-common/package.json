@@ -11,14 +11,13 @@
 	"types": "./dist/index.d.ts",
 	"files": [
 		"/dist/**/*",
-		".eslintrc.json",
 		"tsconfig.base.json"
 	],
 	"scripts": {
 		"clean": "rimraf dist",
 		"build": "pnpm run --silent clean && tsc -p ./tsconfig.json",
 		"dev": "tsc -p ./tsconfig.json -w",
-		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
+		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",
 		"type-check": "pnpm run '/type-check:.*/'",
 		"type-check:test": "tsc -p ./test/tsconfig.json --noEmit",
@@ -40,13 +39,7 @@
 		"zod": "3.24.1"
 	},
 	"devDependencies": {
-		"@stylistic/eslint-plugin": "3.0.0",
 		"@types/jest": "29.5.14",
-		"@typescript-eslint/eslint-plugin": "8.22.0",
-		"@typescript-eslint/parser": "8.22.0",
-		"eslint": "8.57.1",
-		"eslint-plugin-deprecation": "3.0.0",
-		"eslint-plugin-import": "2.31.0",
 		"jest": "29.7.0",
 		"rimraf": "6.0.1",
 		"ts-jest": "29.2.5",

@@ -13,7 +13,7 @@
 		"dev": "pnpm run --silent clean && tsc-watch -p ./tsconfig.json --noClear --onFirstSuccess \"nodemon --enable-source-maps -r dotenv/config dist/index.js --development\"",
 		"dev:inspect": "pnpm run --silent clean && tsc-watch -p ./tsconfig.json --noClear --onFirstSuccess \"nodemon --inspect=25861 --enable-source-maps -r dotenv/config dist/index.js --development\"",
 		"start": "node --enable-source-maps -r dotenv/config dist/index.js",
-		"lint": "eslint --max-warnings 0 --report-unused-disable-directives .",
+		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",
 		"type-check": "pnpm run '/type-check:.*/'",
 		"type-check:test": "tsc -p ./test/tsconfig.json --noEmit",
@@ -54,7 +54,6 @@
 		"zod": "3.24.1"
 	},
 	"devDependencies": {
-		"@stylistic/eslint-plugin": "3.0.0",
 		"@types/async-lock": "1.4.2",
 		"@types/express": "4.17.21",
 		"@types/jest": "29.5.14",
@@ -62,11 +61,7 @@
 		"@types/lodash": "4.17.14",
 		"@types/node": "22.10.10",
 		"@types/wtfnode": "0.7.3",
-		"@typescript-eslint/eslint-plugin": "8.22.0",
-		"@typescript-eslint/parser": "8.22.0",
 		"discord-api-types": "0.37.118",
-		"eslint": "8.57.1",
-		"eslint-plugin-import": "2.31.0",
 		"jest": "29.7.0",
 		"nodemon": "3.1.9",
 		"rimraf": "6.0.1",

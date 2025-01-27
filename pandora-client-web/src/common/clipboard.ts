@@ -21,7 +21,7 @@ export function CopyToClipboard(text: string, onSuccess?: () => void, onError?: 
 		let successful = false;
 
 		try {
-			// eslint-disable-next-line deprecation/deprecation
+			// eslint-disable-next-line @typescript-eslint/no-deprecated
 			successful = document.execCommand('copy');
 			if (!successful) {
 				logger.warning(`Failed to copy text with returned error by execCommand`);

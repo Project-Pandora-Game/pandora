@@ -11,7 +11,6 @@
 	"types": "./dist/index.d.ts",
 	"files": [
 		"/dist/**/*",
-		".eslintrc.json",
 		"tsconfig.base.json"
 	],
 	"scripts": {

@@ -318,17 +318,6 @@ export default tsEslint.config(
 		},
 	},
 	{
-		name: 'pandora/servers',
-		files: [
-			'pandora-server-directory/**/*.ts',
-			'pandora-server-shard/**/*.ts',
-		],
-		rules: {
-			// Disabled recommended rules
-			'import/no-cycle': 'off',
-		},
-	},
-	{
 		name: 'pandora/client/base',
 		files: [
 			'pandora-client-web/**/*.js',

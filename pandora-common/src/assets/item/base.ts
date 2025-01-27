@@ -35,6 +35,12 @@ export type ItemTypeMap =
 
 export type Item<Type extends AssetType = AssetType> = ItemTypeMap[Type];
 
+export const ItemChatCustomMessagesSchema = z.object({
+	generic: z.string(),
+	specific: z.string(),
+});
+export type ItemChatCustomMessages = z.infer<typeof ItemChatCustomMessagesSchema>;
+
 export const ItemColorBundleSchema = z.record(z.string(), HexRGBAColorStringSchema);
 export type ItemColorBundle = Readonly<z.infer<typeof ItemColorBundleSchema>>;
 
@@ -48,6 +54,7 @@ export type ItemBundle = {
 	spawnedBy?: CharacterId;
 	color?: ItemColorBundle | HexRGBAColorString[];
 	name?: string;
+	chat?: ItemChatCustomMessages;
 	description?: string;
 	/** Whether free hands are required to interact with this item. */
 	requireFreeHandsToUse?: boolean;
@@ -69,6 +76,7 @@ export type ItemTemplate = {
 	templateName?: string;
 	color?: ItemColorBundle;
 	name?: string;
+	chat?: ItemChatCustomMessages;
 	description?: string;
 	/** Whether free hands are required to interact with this item. */
 	requireFreeHandsToUse?: boolean;

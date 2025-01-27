@@ -74,7 +74,7 @@ jobs:
       - run: corepack enable
       - run: pnpm install --frozen-lockfile
       - run: pnpm run setup-dev
-      - run: pnpm run lint
+      - run: pnpm run lint:root
 
   test:
     name: Test

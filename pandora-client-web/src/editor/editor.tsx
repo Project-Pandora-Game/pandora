@@ -99,7 +99,7 @@ export class Editor extends TypedEventEmitter<{
 		window.addEventListener('beforeunload', (event) => {
 			if (this.editorGraphics.size > 0) {
 				event.preventDefault();
-				// eslint-disable-next-line deprecation/deprecation
+				// eslint-disable-next-line @typescript-eslint/no-deprecated
 				return event.returnValue = 'Are you sure you want to exit?';
 			}
 			return undefined;

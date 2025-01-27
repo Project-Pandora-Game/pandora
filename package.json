@@ -14,16 +14,18 @@
 			"@octokit/types": "13.5.0"
 		}
 	},
+	"type": "module",
 	"scripts": {
 		"setup-dev": "pnpm --filter pandora-common --silent run build",
 		"postinstall": "node .hooks/postinstall.cjs",
-		"ci": "pnpm run build && pnpm run check-common-install && pnpm run lint && pnpm run type-check:test && pnpm run test --ci --coverage && pnpm run test-e2e && pnpm run coverage:collect",
+		"ci": "pnpm run build && pnpm run check-common-install && pnpm run lint:root && pnpm run type-check:test && pnpm run test --ci --coverage && pnpm run test-e2e && pnpm run coverage:collect",
 		"deploy": "pnpm run build && pnpm run deploy-client-rsync",
 		"deploy-client": "pnpm --filter pandora-client-web run build && pnpm run deploy-client-rsync",
 		"deploy-client-rsync": "rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist",
 		"check-common-install": "cd ./.github/workflows/common-install-check && pnpm install --force --no-lockfile",
 		"lint": "pnpm -r --no-bail --parallel run lint",
-		"lint:fix": "pnpm -r --no-bail --parallel run lint:fix",
+		"lint:root": "eslint --max-warnings 0 .",
+		"lint:fix": "eslint --fix .",
 		"type-check:test": "pnpm -r --no-bail --parallel run type-check:test",
 		"test": "pnpm -r --no-bail --parallel run test",
 		"test-e2e": "pnpm run -C pandora-tests type-check && pnpm run -C pandora-tests playwright-setup && pnpm run -C pandora-tests test-e2e && pnpm run -C pandora-tests coverage:report",
@@ -35,8 +37,16 @@
 		"js-yaml": "4.1.0"
 	},
 	"devDependencies": {
+		"@eslint/js": "9.19.0",
+		"@stylistic/eslint-plugin": "3.0.0",
+		"eslint": "9.19.0",
+		"eslint-plugin-import": "2.31.0",
+		"eslint-plugin-react": "7.37.4",
+		"eslint-plugin-react-hooks": "5.1.0",
 		"jest": "29.7.0",
 		"nyc": "17.1.0",
-		"rimraf": "6.0.1"
+		"rimraf": "6.0.1",
+		"typescript": "5.7.3",
+		"typescript-eslint": "8.22.0"
 	}
 }

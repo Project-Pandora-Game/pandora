@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* Scripts are run in Node, so don't make use of the logger or ES imports */
-/* eslint-disable no-console, @typescript-eslint/no-var-requires*/
+/* eslint-disable no-console, @typescript-eslint/no-require-imports */
 const { constants } = require('fs');
 const { copyFile } = require('fs/promises');
 const { resolve } = require('path');

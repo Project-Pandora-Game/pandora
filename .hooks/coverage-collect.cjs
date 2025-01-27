@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* Scripts are run in Node, so don't make use of the logger or ES imports */
-/* eslint-disable no-console, @typescript-eslint/no-var-requires*/
+/* eslint-disable no-console, @typescript-eslint/no-require-imports */
 
 const { constants } = require('fs');
 const { copyFile } = require('fs/promises');
@@ -18,12 +18,12 @@ async function collectCoverage() {
 	if (fs.existsSync(COVERAGE_TEMP)) {
 		rimraf.sync(COVERAGE_TEMP);
 	}
-	fs.mkdirSync(COVERAGE_TEMP)
+	fs.mkdirSync(COVERAGE_TEMP);
 
 	if (fs.existsSync(COVERAGE_OUTPUT)) {
 		rimraf.sync(COVERAGE_OUTPUT);
 	}
-	fs.mkdirSync(COVERAGE_OUTPUT)
+	fs.mkdirSync(COVERAGE_OUTPUT);
 
 	for (const project of ['pandora-common', 'pandora-server-directory', 'pandora-server-shard', 'pandora-client-web', 'pandora-tests']) {
 		try {
@@ -32,13 +32,13 @@ async function collectCoverage() {
 				path.resolve(COVERAGE_TEMP, `coverage-${project}.json`),
 				constants.COPYFILE_EXCL,
 			);
-		} catch (error) {
-			console.error(`Failed to copy coverage file from ${project}:\n`, error);
+		} catch (err) {
+			console.error(`Failed to copy coverage file from ${project}:\n`, err);
 			process.exitCode = 1;
 		}
 	}
 
-	console.log("\n\nCollecting overall coverage from all tests...\n\n")
+	console.log('\n\nCollecting overall coverage from all tests...\n\n');
 
 	if (process.platform === 'win32') {
 		console.log('!!! WARNING !!!\nRunning on Windows - coverage will be imprecise.\n\n');

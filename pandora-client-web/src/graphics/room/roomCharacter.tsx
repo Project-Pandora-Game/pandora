@@ -10,7 +10,7 @@ import {
 	LegsPose,
 	SpaceClientInfo,
 } from 'pandora-common';
-import PIXI, { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle } from 'pixi.js';
+import { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle, type Cursor, type EventMode, type GraphicsContext } from 'pixi.js';
 import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { z } from 'zod';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
@@ -57,9 +57,9 @@ type RoomCharacterDisplayProps = {
 	debugConfig?: Immutable<ChatroomDebugConfig>;
 
 	quickTransitions?: boolean;
-	hitArea?: PIXI.Rectangle;
-	cursor?: PIXI.Cursor;
-	eventMode?: PIXI.EventMode;
+	hitArea?: Rectangle;
+	cursor?: Cursor;
+	eventMode?: EventMode;
 	onPointerDown?: (event: FederatedPointerEvent) => void;
 	onPointerUp?: (event: FederatedPointerEvent) => void;
 	onPointerMove?: (event: FederatedPointerEvent) => void;
@@ -477,7 +477,7 @@ function RoomCharacterDisplay({
 function RoomCharacterDebugGraphicsInner({ pivot }: {
 	pivot: Readonly<PointLike>;
 }): ReactElement {
-	const pivotDraw = useCallback((g: PIXI.GraphicsContext) => {
+	const pivotDraw = useCallback((g: GraphicsContext) => {
 		g
 			// Pivot point (with extra Y offset)
 			.circle(pivot.x, pivot.y, 5)
@@ -500,9 +500,9 @@ function RoomCharacterDebugGraphicsInner({ pivot }: {
 
 function RoomCharacterDebugGraphicsOuter({ pivot, hitArea }: {
 	pivot: Readonly<PointLike>;
-	hitArea?: PIXI.Rectangle;
+	hitArea?: Rectangle;
 }): ReactElement {
-	const pivotDraw = useCallback((g: PIXI.GraphicsContext) => {
+	const pivotDraw = useCallback((g: GraphicsContext) => {
 		g
 			// Pivot point (wanted)
 			.circle(pivot.x, pivot.y, 5)
@@ -510,7 +510,7 @@ function RoomCharacterDebugGraphicsOuter({ pivot, hitArea }: {
 			.stroke({ color: 0x000000, width: 1 });
 	}, [pivot]);
 
-	const hitboxDebugDraw = useCallback((g: PIXI.GraphicsContext) => {
+	const hitboxDebugDraw = useCallback((g: GraphicsContext) => {
 		if (hitArea == null) {
 			return;
 		}

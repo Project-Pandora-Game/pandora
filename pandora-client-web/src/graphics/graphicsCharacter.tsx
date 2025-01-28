@@ -1,11 +1,11 @@
 import { nanoid } from 'nanoid';
 import {
+	Assert,
 	AssertNotNullable,
 	Asset,
 	ASSET_PREFERENCES_DEFAULT,
 	AssetFrameworkCharacterState,
 	AssetId,
-	CharacterArmsPose,
 	CharacterSize,
 	CharacterView,
 	CombineAppearancePoses,
@@ -14,6 +14,7 @@ import {
 	MergeAssetProperties,
 	PseudoRandom,
 	ResolveAssetPreference,
+	type LayerPriority,
 	type LayerStateOverrides,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
@@ -23,11 +24,11 @@ import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { GraphicsManagerInstance } from '../assets/graphicsManager';
 import { ChildrenProps } from '../common/reactTypes';
 import { usePlayerData } from '../components/gameContext/playerContextProvider';
-import { Observable, useObservable } from '../observable';
+import { Observable, useObservable, useObservableMultiple } from '../observable';
 import { Container } from './baseComponents/container';
 import { TransitionedContainer, type PixiTransitionedContainer, type TransitionedContainerCustomProps } from './common/transitions/transitionedContainer';
 import { TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler';
-import { ComputedLayerPriority, ComputeLayerPriority, LayerState, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def';
+import { LayerState, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def';
 import { GraphicsLayer, GraphicsLayerProps, SwapCullingDirection, SwapCullingDirectionObservable } from './graphicsLayer';
 import { useGraphicsSettings } from './graphicsSettings';
 import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense';
@@ -72,35 +73,21 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 
 export type GraphicsGetterFunction = (asset: AssetId) => AssetGraphics | undefined;
 export type LayerStateOverrideGetter = (layer: AssetGraphicsLayer) => LayerStateOverrides | undefined;
-export type LayerGetSortOrder = (view: CharacterView) => readonly ComputedLayerPriority[];
+export type LayerGetSortOrder = (view: CharacterView) => readonly LayerPriority[];
 
-function useLayerPriorityResolver(states: readonly LayerState[], armsPose: CharacterArmsPose): ReadonlyMap<LayerState, ComputedLayerPriority> {
-	const calculate = useCallback((layers: readonly LayerState[]) => {
-		const result = new Map<LayerState, ComputedLayerPriority>();
-		for (const layer of layers) {
-			result.set(layer, ComputeLayerPriority(layer.layer.definition.value.priority, armsPose));
+function useLayerPriorityResolver(states: readonly LayerState[]): ReadonlyMap<LayerState, LayerPriority> {
+	const layerDefinitions = useObservableMultiple(states.map((s) => s.layer.definition));
+	Assert(layerDefinitions.length === states.length);
+
+	return useMemo((): ReadonlyMap<LayerState, LayerPriority> => {
+		const result = new Map<LayerState, LayerPriority>();
+		for (let i = 0; i < states.length; i++) {
+			const state = states[i];
+			const definition = layerDefinitions[i];
+			result.set(state, definition.priority);
 		}
 		return result;
-	}, [armsPose]);
-
-	const [actualCalculate, setActualCalculate] = useState<(layers: readonly LayerState[]) => ReadonlyMap<LayerState, ComputedLayerPriority>>(() => calculate);
-
-	useEffect(() => {
-		const cleanup: (() => void)[] = [];
-		setActualCalculate(() => calculate);
-
-		for (const state of states) {
-			cleanup.push(state.layer.definition.subscribe(() => {
-				setActualCalculate(() => (l: readonly LayerState[]) => calculate(l));
-			}));
-		}
-
-		return () => {
-			cleanup.forEach((c) => c());
-		};
-	}, [calculate, states]);
-
-	return useMemo(() => actualCalculate(states), [actualCalculate, states]);
+	}, [states, layerDefinitions]);
 }
 
 export const CHARACTER_PIVOT_POSITION: Readonly<PointLike> = {
@@ -307,11 +294,11 @@ export function GraphicsCharacterWithManager({
 
 	const effectivePose = effectiveCharacterState.actualPose;
 	const { view } = effectivePose;
-	const priorities = useLayerPriorityResolver(layers, effectivePose);
+	const priorities = useLayerPriorityResolver(layers);
 	const sortOrder = useComputedLayerPriority(effectivePose);
 
-	const priorityLayers = useMemo<ReadonlyMap<ComputedLayerPriority, ReactElement>>(() => {
-		const result = new Map<ComputedLayerPriority, ReactElement>();
+	const priorityLayers = useMemo<ReadonlyMap<LayerPriority, ReactElement>>(() => {
+		const result = new Map<LayerPriority, ReactElement>();
 		for (const layerState of layers) {
 			const priority = priorities.get(layerState);
 			AssertNotNullable(priority);

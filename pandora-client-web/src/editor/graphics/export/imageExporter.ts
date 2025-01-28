@@ -33,21 +33,13 @@ export class ImageExporter {
 			antialias: true,
 		});
 		WithCullingDisabled(container, () => {
-			// We render twice as first render _sometimes_ returns a blank texture for unknown reason...
+			const transform = new Matrix()
+				.translate(-rect.x, -rect.y)
+				.scale(resultSize.width / rect.width, resultSize.height / rect.height);
 			this.app.renderer.render({
 				container,
 				target: renderTexture,
-				transform: Matrix.IDENTITY
-					.translate(-rect.x, -rect.y)
-					.scale(resultSize.width / rect.width, resultSize.height / rect.height),
-				clearColor: [0, 0, 0, 0],
-			});
-			this.app.renderer.render({
-				container,
-				target: renderTexture,
-				transform: Matrix.IDENTITY
-					.translate(-rect.x, -rect.y)
-					.scale(resultSize.width / rect.width, resultSize.height / rect.height),
+				transform,
 				clearColor: [0, 0, 0, 0],
 			});
 		});

@@ -16,6 +16,7 @@ import {
 	PartialAppearancePose,
 	ProduceAppearancePose,
 	type AppearanceLimitTree,
+	type ArmPose,
 	type ItemDisplayNameType,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
@@ -159,26 +160,26 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 	const ArmPosition = useCallback(({ arm }: { arm: 'leftArm' | 'rightArm' | 'arms'; }): ReactElement => (
 		<td>
 			<Row gap='tiny' wrap>
-				<PoseButton
-					preset={ {
-						name: 'Front',
-						[arm]: {
-							position: 'front',
-						},
-					} }
-					characterState={ characterState }
-					setPose={ setPose }
-				/>
-				<PoseButton
-					preset={ {
-						name: 'Back',
-						[arm]: {
-							position: 'back',
-						},
-					} }
-					characterState={ characterState }
-					setPose={ setPose }
-				/>
+				{
+					([
+						['front_above_hair', 'Front [experimental]'],
+						['front', 'Under front hair'],
+						['back', 'Under back hair'],
+						['back_below_hair', 'Back [experimental]'],
+					] satisfies [ArmPose, string][]).map(([position, name]) => (
+						<PoseButton
+							key={ position }
+							preset={ {
+								name,
+								[arm]: {
+									position,
+								},
+							} }
+							characterState={ characterState }
+							setPose={ setPose }
+						/>
+					))
+				}
 			</Row>
 		</td>
 	), [characterState, setPose]);

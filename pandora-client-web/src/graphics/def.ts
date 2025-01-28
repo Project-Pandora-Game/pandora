@@ -19,28 +19,40 @@ export type LayerState = {
 };
 
 export function ComputeLayerPriorityOrder({ view, armsOrder, leftArm, rightArm }: Immutable<AppearancePose>): readonly LayerPriority[] {
-	function ReverseIf(condition: boolean, arr: ((LayerPriority | null)[] | null)[]): (LayerPriority | null)[] {
+	function ReverseIf(condition: boolean, ...arr: ((LayerPriority | null)[] | null)[]): (LayerPriority | null)[] {
 		return condition ? arr.reverse().flat() : arr.flat();
 	}
 
-	const order = ([
+	const order: LayerPriority[] = ([
 		'BACKGROUND',
+
+		...(ReverseIf(armsOrder.upper === 'left',
+			leftArm.position === 'back_below_hair' ? [
+				`BELOW_ARM_LEFT`,
+				`ARM_LEFT`,
+				`ABOVE_ARM_LEFT`,
+			] : null,
+			rightArm.position === 'back_below_hair' ? [
+				`BELOW_ARM_RIGHT`,
+				`ARM_RIGHT`,
+				`ABOVE_ARM_RIGHT`,
+			] : null,
+		)),
+
 		'BELOW_BACK_HAIR',
 		'BACK_HAIR',
 
 		...(ReverseIf(armsOrder.upper === 'left',
-			[
-				leftArm.position === 'back' ? [
-					`BELOW_ARM_LEFT`,
-					`ARM_LEFT`,
-					`ABOVE_ARM_LEFT`,
-				] : null,
-				rightArm.position === 'back' ? [
-					`BELOW_ARM_RIGHT`,
-					`ARM_RIGHT`,
-					`ABOVE_ARM_RIGHT`,
-				] : null,
-			],
+			leftArm.position === 'back' ? [
+				`BELOW_ARM_LEFT`,
+				`ARM_LEFT`,
+				`ABOVE_ARM_LEFT`,
+			] : null,
+			rightArm.position === 'back' ? [
+				`BELOW_ARM_RIGHT`,
+				`ARM_RIGHT`,
+				`ABOVE_ARM_RIGHT`,
+			] : null,
 		)),
 
 		'BELOW_BODY_SOLES',
@@ -52,24 +64,37 @@ export function ComputeLayerPriorityOrder({ view, armsOrder, leftArm, rightArm }
 		'ABOVE_BODY',
 
 		...(ReverseIf(armsOrder.upper === 'left',
-			[
-				leftArm.position === 'front' ? [
-					`BELOW_ARM_LEFT`,
-					`ARM_LEFT`,
-					`ABOVE_ARM_LEFT`,
-				] : null,
-				rightArm.position === 'front' ? [
-					`BELOW_ARM_RIGHT`,
-					`ARM_RIGHT`,
-					`ABOVE_ARM_RIGHT`,
-				] : null,
-			],
+			leftArm.position === 'front' ? [
+				`BELOW_ARM_LEFT`,
+				`ARM_LEFT`,
+				`ABOVE_ARM_LEFT`,
+			] : null,
+			rightArm.position === 'front' ? [
+				`BELOW_ARM_RIGHT`,
+				`ARM_RIGHT`,
+				`ABOVE_ARM_RIGHT`,
+			] : null,
 		)),
 
 		'FRONT_HAIR',
 		'ABOVE_FRONT_HAIR',
+
+		...(ReverseIf(armsOrder.upper === 'left',
+			leftArm.position === 'front_above_hair' ? [
+				`BELOW_ARM_LEFT`,
+				`ARM_LEFT`,
+				`ABOVE_ARM_LEFT`,
+			] : null,
+			rightArm.position === 'front_above_hair' ? [
+				`BELOW_ARM_RIGHT`,
+				`ARM_RIGHT`,
+				`ABOVE_ARM_RIGHT`,
+			] : null,
+		)),
+
 		'OVERLAY',
-	] satisfies readonly (LayerPriority | null)[]).filter(IsNotNullable);
+	] satisfies readonly (LayerPriority | null)[])
+		.filter(IsNotNullable);
 
 	Assert(new Set(order).size === order.length);
 	Assert(order.length === LAYER_PRIORITIES.length);

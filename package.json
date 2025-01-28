@@ -11,7 +11,7 @@
 			]
 		},
 		"overrides": {
-			"@octokit/types": "13.5.0"
+			"@octokit/types": "13.7.0"
 		}
 	},
 	"type": "module",

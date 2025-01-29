@@ -13,6 +13,7 @@ export const effect_blind = DefineCharacterModifier({
 			options: {
 				min: 0,
 				max: 10,
+withSlider: true,
 			},
 		},
 		intensityMax: {
@@ -22,6 +23,7 @@ export const effect_blind = DefineCharacterModifier({
 			options: {
 				min: 0,
 				max: 10,
+withSlider: true,
 			},
 		},
 	},

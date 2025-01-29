@@ -1,19 +1,20 @@
 import { isEqual } from 'lodash';
 import { z } from 'zod';
 import { CharacterIdSchema } from '../../../character/characterTypes';
+import { LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT } from '../../../inputLimits';
 import { Assert, AssertNever, KnownObject } from '../../../utility';
 import type { ModifierConfigurationEntryDefinition } from '../configuration';
 
 /** Mapping of a configuration type to its schema type */
 type ModifierConfigurationDataTypeSchemaMap = {
-	characterList: z.ZodArray<typeof CharacterIdSchema>;
-	number: z.ZodNumber;
-	string: z.ZodString;
-	toggle: z.ZodBoolean;
+	characterList: z.ZodCatch<z.ZodArray<typeof CharacterIdSchema>>;
+	number: z.ZodCatch<z.ZodNumber>;
+	string: z.ZodCatch<z.ZodString>;
+	toggle: z.ZodCatch<z.ZodBoolean>;
 };
 
 /** Create a schema for character modifier type's configuration data; specifically for a singular config property. */
-function CharacterModifierBuildConfigurationSchemaSingle<const TConfig extends ModifierConfigurationEntryDefinition>(config: TConfig): ModifierConfigurationDataTypeSchemaMap[TConfig['type']] {
+export function CharacterModifierBuildConfigurationSchemaSingle<const TConfig extends ModifierConfigurationEntryDefinition>(config: TConfig): ModifierConfigurationDataTypeSchemaMap[TConfig['type']] {
 	switch (config.type) {
 		case 'string': {
 			let schema = z.string().max(config.options.maxLength);
@@ -38,8 +39,10 @@ function CharacterModifierBuildConfigurationSchemaSingle<const TConfig extends M
 			return schema.catch(config.default);
 		}
 		case 'characterList':
+			// TODO: Would be nice to ensure values are unique
 			// @ts-expect-error: Manually narrowed type
-			return CharacterIdSchema.array().catch(() => []);
+			return CharacterIdSchema.array().max(LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT)
+				.catch(() => []);
 		case 'toggle':
 			// @ts-expect-error: Manually narrowed type
 			return z.boolean().catch(config.default);
@@ -62,7 +65,7 @@ export function CharacterModifierBuildConfigurationSchema<const TConfig extends 
 	const result: Partial<CharacterModifierBuildConfigurationSchemaShape<TConfig>> = {};
 	for (const [k, v] of KnownObject.entries(config)) {
 		const schema = CharacterModifierBuildConfigurationSchemaSingle(v);
-		Assert(isEqual(schema.parse(v.default), v.default), "Option's default does not parse");
+		Assert(isEqual(schema.removeCatch().parse(v.default), v.default), "Option's default does not parse");
 		result[k] = schema;
 	}
 

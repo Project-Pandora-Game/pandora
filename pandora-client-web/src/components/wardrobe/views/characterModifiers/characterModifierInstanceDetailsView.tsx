@@ -8,6 +8,7 @@ import {
 	type CharacterId,
 	type CharacterModifierInstanceClientData,
 	type IClientShardNormalResult,
+	type ModifierConfigurationEntryDefinition,
 	type PermissionGroup,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
@@ -25,6 +26,7 @@ import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProv
 import { useShardConnector } from '../../../gameContext/shardConnectorContextProvider';
 import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../../wardrobeActionContext';
 import { ActionWarningContent, WardrobeActionButtonElement } from '../../wardrobeComponents';
+import { WardrobeCharacterModifierConfig } from './configuration/_index';
 
 interface WardrobeCharacterModifierInstanceDetailsViewProps {
 	target: CharacterId;
@@ -61,7 +63,50 @@ export function WardrobeCharacterModifierInstanceDetailsView({ instance, unfocus
 function CheckedInstanceDetails({ target, instance, unfocus }: WardrobeCharacterModifierInstanceDetailsViewProps & {
 	instance: CharacterModifierInstanceClientData;
 }): ReactElement {
+	const shard = useShardConnector();
 	const typeDefinition = CHARACTER_MODIFIER_TYPE_DEFINITION[instance.type];
+
+	const updateConfig = useCallback(async (option: string, newValue: unknown): Promise<void> => {
+		if (shard == null) {
+			toast('Request failed, try again later', TOAST_OPTIONS_ERROR);
+			return;
+		}
+
+		const result = await shard.awaitResponse('characterModifierConfigure', {
+			target,
+			modifier: instance.id,
+			config: {
+				config: {
+					[option]: newValue,
+				},
+			},
+		}).catch((err) => {
+			GetLogger('CheckedInstanceDetails').error('Failed to configure character modifier:', err);
+			toast('Error performing action, try again later', TOAST_OPTIONS_ERROR);
+			return undefined;
+		});
+
+		if (result == null) {
+			return;
+		} else if (result.result === 'ok') {
+			// Nothing to do here
+			return;
+		} else if (result.result === 'characterNotFound') {
+			toast('The target character is no longer in the same space', TOAST_OPTIONS_ERROR);
+		} else if (result.result === 'invalidConfiguration') {
+			toast('Error in the modifier configuration', TOAST_OPTIONS_ERROR);
+		} else if (result.result === 'failure') {
+			toast(
+				<Column>
+					<span>Problems performing action:</span>
+					<ActionWarningContent problems={ result.problems } prompt={ false } noText />
+				</Column>,
+				TOAST_OPTIONS_ERROR,
+			);
+		} else {
+			AssertNever(result);
+		}
+	}, [instance.id, shard, target]);
 
 	return (
 		<div className='inventoryView wardrobeModifierInstanceDetails'>
@@ -91,6 +136,17 @@ function CheckedInstanceDetails({ target, instance, unfocus }: WardrobeCharacter
 					/>
 					<ModifierInstanceExportButton instance={ instance } />
 				</Row>
+				{
+					Array.from(Object.entries(typeDefinition.configDefinition))
+						.map(([option, optionDefinition]: [string, ModifierConfigurationEntryDefinition]) => (
+							<WardrobeCharacterModifierConfig
+								key={ option }
+								definition={ optionDefinition }
+								value={ instance.config[option] }
+								onChange={ (newValue) => updateConfig(option, newValue) }
+							/>
+						))
+				}
 			</Column>
 		</div>
 	);

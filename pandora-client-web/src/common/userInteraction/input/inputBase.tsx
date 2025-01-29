@@ -57,6 +57,12 @@ export abstract class InputBase<TValue, TProps extends InputBaseProps<TValue>, T
 
 		const newValue = this.getValue();
 
+		// Focus the element if it changed while not focused
+		// (looking at you, Firefox and your number inputs)
+		if (!this.isSelected()) {
+			this.focus();
+		}
+
 		// When element changes in any way, trigger cooldown
 		this._enterCooldown();
 

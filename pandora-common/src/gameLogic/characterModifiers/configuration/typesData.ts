@@ -16,6 +16,7 @@ export type ModifierConfigurationDataTypesOptins = {
 		allowDecimal?: boolean;
 		min?: number;
 		max?: number;
+		withSlider?: boolean;
 	};
 	string: {
 		maxLength: number;

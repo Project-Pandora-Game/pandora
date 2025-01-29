@@ -1,7 +1,7 @@
 import { GetLogger, type ModifierConfigurationEntryDefinition } from 'pandora-common';
 import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/dist/gameLogic/characterModifiers/helpers/configurationBuilder';
 import type { ReactElement } from 'react';
-import React, { useMemo, useState } from 'react';
+import React, { useId, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import type { Promisable } from 'type-fest';
 import { useAsyncEvent } from '../../../../../common/useEvent';
@@ -16,6 +16,7 @@ export function WardrobeCharacterModifierConfigNumber({ definition, value, onCha
 	value: unknown;
 	onChange?: (newValue: number) => Promisable<void>;
 }): ReactElement {
+	const id = useId();
 	const schema = useMemo(() => CharacterModifierBuildConfigurationSchemaSingle(definition), [definition]);
 
 	const parsedValue = useMemo(() => schema.parse(value), [schema, value]);
@@ -41,7 +42,29 @@ export function WardrobeCharacterModifierConfigNumber({ definition, value, onCha
 	return (
 		<FieldsetToggle legend={ definition.name }>
 			<Row>
+				{
+					(definition.options?.withSlider &&
+						definition.options.min != null && isFinite(definition.options.min) &&
+						definition.options.max != null && isFinite(definition.options.max)
+					) ? (
+						<NumberInput
+							id={ id + '-slider' }
+							aria-label={ definition.name }
+							className='flex-6'
+							rangeSlider
+							min={ definition.options.min }
+							max={ definition.options.max }
+							step={ definition.options?.allowDecimal ? 0.01 : 1 }
+							value={ changedValue ?? parsedValue }
+							onChange={ (newValue) => {
+								setChangedValue(schema.parse(newValue));
+							} }
+						/>
+					) : null
+				}
 				<NumberInput
+					id={ id }
+					aria-label={ definition.name }
 					className='flex-1'
 					value={ changedValue ?? parsedValue }
 					onChange={ (newValue) => {

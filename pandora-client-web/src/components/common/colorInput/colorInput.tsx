@@ -249,7 +249,7 @@ function ColorParsePaste(ev: React.ClipboardEvent, allowAlpha: boolean): string 
 
 type ColorArray = readonly [number, number, number];
 
-class Color {
+export class Color {
 	/** Edge length constant */
 	private static e: number = 65537;
 

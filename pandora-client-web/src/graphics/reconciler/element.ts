@@ -1,4 +1,4 @@
-import { Assert, AssertNever, GetLogger, TypedEventEmitter, type Logger } from 'pandora-common';
+import { Assert, AssertNever, GetLogger, KnownObject, TypedEventEmitter, type Logger } from 'pandora-common';
 import { Container, type EventEmitter } from 'pixi.js';
 import { ParsePixiPointLike, PixiComponentIsPrivateProperty, PixiComponentIsSpecialProperty, type PixiComponentConfig, type PixiComponentProps, type PixiDisplayObjectWriteableProps } from './component';
 
@@ -98,6 +98,9 @@ export class PixiRootContainer extends PixiInternalContainerInstance<Container> 
 	}
 }
 
+/** Name of the React's special property for children. */
+const CHILDREN_PROP = 'children';
+
 /** Instance container for pixi elements. Meant only for internal usage by our fiber. */
 export class PixiInternalElementInstance<
 	Element extends Container,
@@ -132,7 +135,7 @@ export class PixiInternalElementInstance<
 		// Track the created element
 		this.root.instantiatedElements.add(this);
 		// Apply initial props (we expect create to apply custom ones first)
-		this._applyAutoProps(null, initialProps, Object.keys(initialProps));
+		this._applyAutoProps(null, initialProps);
 	}
 
 	private _getLogger(): Logger {
@@ -152,7 +155,6 @@ export class PixiInternalElementInstance<
 	public commitUpdate(
 		prevProps: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>>,
 		nextProps: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>>,
-		updatePayload: string[],
 	): void {
 		if (this.instance.destroyed) {
 			if (!this._destroyed) {
@@ -164,7 +166,7 @@ export class PixiInternalElementInstance<
 		}
 
 		this.config.applyCustomProps?.(this.instance, prevProps, nextProps);
-		this._applyAutoProps(prevProps, nextProps, updatePayload);
+		this._applyAutoProps(prevProps, nextProps);
 	}
 
 	/** Hide this instance, marking it as "hidden by fiber" */
@@ -227,9 +229,26 @@ export class PixiInternalElementInstance<
 	private _applyAutoProps(
 		prevProps: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>> | null,
 		nextProps: Readonly<PixiComponentProps<Element, AutoPropKeys, EventMap, CustomProps>>,
-		updatePayload: string[],
 	): void {
-		for (const key of updatePayload) {
+		const update: (keyof typeof nextProps)[] = [];
+
+		// Check for deleted props
+		if (prevProps != null) {
+			for (const key of KnownObject.keys(prevProps)) {
+				if (key !== CHILDREN_PROP && !Object.prototype.hasOwnProperty.call(nextProps, key)) {
+					update.push(key);
+				}
+			}
+		}
+
+		// Check for updated props
+		for (const key of KnownObject.keys(nextProps)) {
+			if (key !== CHILDREN_PROP && prevProps?.[key] !== nextProps[key]) {
+				update.push(key);
+			}
+		}
+
+		for (const key of update) {
 			if (PixiComponentIsPrivateProperty(key)) {
 				// We can never write private properties.
 				continue;
@@ -272,18 +291,16 @@ export class PixiInternalElementInstance<
 						this._originalValues.delete(typedKey);
 					}
 				}
-			} else if (key.startsWith('on')) {
+			} else if (typeof key === 'string' && key.startsWith('on')) {
 				// Apply events
 				const rawEventName = key.substring(2);
 				if (Object.prototype.hasOwnProperty.call(this.config.events, rawEventName)) {
-					// @ts-expect-error: Intentional - we know we are working with an event by now.
 					const oldListener: unknown = prevProps?.[key];
 					if (oldListener != null) {
 						Assert(typeof oldListener === 'function', 'Old event listener is not a function');
 						// @ts-expect-error: Intentional - the types are checked by factory.
 						this.instance.removeEventListener(rawEventName, oldListener);
 					}
-					// @ts-expect-error: Intentional - we know we are working with an event by now.
 					const newListener: unknown = nextProps?.[key];
 					if (newListener != null) {
 						Assert(typeof newListener === 'function', 'Event listener is not a function');

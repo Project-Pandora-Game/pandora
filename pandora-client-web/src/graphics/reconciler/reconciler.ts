@@ -1,21 +1,19 @@
+/* eslint-disable @typescript-eslint/no-unsafe-call */
 import { Assert, GetLogger } from 'pandora-common';
 import type { Container } from 'pixi.js';
 import type { ReactNode } from 'react';
 import ReactReconciler from 'react-reconciler';
 import { ConcurrentRoot } from 'react-reconciler/constants';
-import { GAME_VERSION, NODE_ENV } from '../../config/Environment';
 import { PixiRootContainer, type PixiUpdateEmitter } from './element';
 import { PIXI_FIBER_HOST_CONFIG } from './reconciler-config';
 
 /** React reconciler instance with config for working with Pixi elements. */
-export const PixiFiber = ReactReconciler(PIXI_FIBER_HOST_CONFIG);
+// @ts-expect-error: No reconciler typings for React 19 are available yet.
+const PixiFiber = ReactReconciler(PIXI_FIBER_HOST_CONFIG);
 
 // Inject our fiber into devtools for both debugging and HMR support
-PixiFiber.injectIntoDevTools({
-	bundleType: NODE_ENV === 'production' ? 0 : 1,
-	version: GAME_VERSION ?? '[unknown]',
-	rendererPackageName: 'pandora-client-web/pixi-renderer',
-});
+// @ts-expect-error: No reconciler typings for React 19 are available yet.
+PixiFiber.injectIntoDevTools();
 
 /** A root handle for working with a Pixi React root. */
 export type PixiRoot = {
@@ -38,17 +36,24 @@ export function CreatePixiRoot(rootContainer: Container): PixiRoot {
 	const root = new PixiRootContainer(rootContainer);
 
 	// Create a React container for the root
-	const container: unknown = PixiFiber.createContainer(
-		root,
-		ConcurrentRoot,
-		null,
-		true,
-		null,
-		'',
-		(error) => {
-			GetLogger('PixiRoot').error('Caught recoverable error:\n', error);
-		},
-		null,
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	const container: unknown = (PixiFiber.createContainer as any)(
+		root, // container
+		ConcurrentRoot, // tag
+		null, // hydration callbacks
+		false, // isStrictMode
+		null, // concurrentUpdatesByDefaultOverride
+		'', // identifierPrefix
+		(...args: unknown[]) => {
+			GetLogger('PixiRoot').error('Uncaught error:\n', ...args);
+		}, // onUncaughtError
+		(...args: unknown[]) => {
+			GetLogger('PixiRoot').error('Caught error:\n', ...args);
+		}, // onCaughtError
+		(...args: unknown[]) => {
+			GetLogger('PixiRoot').error('Caught recoverable error:\n', ...args);
+		}, // onRecoverableError
+		null, // transitionCallbacks
 	);
 
 	// Return a handle for the root, allowing it to be manipulated.
@@ -58,9 +63,10 @@ export function CreatePixiRoot(rootContainer: Container): PixiRoot {
 		},
 		unmount() {
 			// Clear all children of the container
-			PixiFiber.flushSync(() => {
-				PixiFiber.updateContainer(null, container);
-			});
+			// @ts-expect-error: No reconciler typings for React 19 are available yet.
+			PixiFiber.updateContainerSync(null, container);
+			// @ts-expect-error: No reconciler typings for React 19 are available yet.
+			PixiFiber.flushSyncWork();
 			// Flush any pending "passive" work
 			PixiFiber.flushPassiveEffects();
 			// Cleanup any potentially forgotten instances

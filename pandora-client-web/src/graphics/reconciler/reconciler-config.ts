@@ -1,39 +1,161 @@
+/* eslint-disable @typescript-eslint/no-unsafe-function-type */
+/* eslint-disable @typescript-eslint/naming-convention */
 import { Assert } from 'pandora-common';
-import type { Container } from 'pixi.js';
+import type { Container as PixiContainer } from 'pixi.js';
+import { createContext } from 'react';
 import type ReactReconciler from 'react-reconciler';
+import type { Lane } from 'react-reconciler';
 import { DefaultEventPriority } from 'react-reconciler/constants';
 import { PIXI_REGISTERED_COMPONENTS } from './component';
 import { PixiInternalElementInstance, type PixiRootContainer } from './element';
+import { GAME_VERSION } from '../../config/Environment';
 
 // This file extensively ignores types. This is done because react-reconciler typings don't support mapping Props per specific type.
 // We depend on things being declarated using `RegisterPixiComponent` to keep things type-safe.
 /* eslint-disable @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-argument */
 
-export type PixiHostConfig = ReactReconciler.HostConfig<
+// FIXME: use DefinitelyTyped for React 19 once available
+// https://github.com/facebook/react/issues/28956
+// Currently reusing: https://github.com/pmndrs/react-three-fiber/blob/v9/packages/fiber/src/core/reconciler.tsx
+// @ f7b56b06b36c65f7ae2bbfc5e487501b69fe5232
+type EventPriority = number;
+
+type React19HostConfig<
+	Type,
+	Props,
+	Container,
+	Instance,
+	TextInstance,
+	SuspenseInstance,
+	HydratableInstance,
+	FormInstance,
+	PublicInstance,
+	HostContext,
+	ChildSet,
+	TimeoutHandle,
+	NoTimeout,
+	TransitionStatus,
+> = (
+		Omit<
+			ReactReconciler.HostConfig<
+				Type,
+				Props,
+				Container,
+				Instance,
+				TextInstance,
+				SuspenseInstance,
+				HydratableInstance,
+				PublicInstance,
+				HostContext,
+				null, // updatePayload
+				ChildSet,
+				TimeoutHandle,
+				NoTimeout
+			>,
+			'getCurrentEventPriority' | 'prepareUpdate' | 'commitUpdate'
+		> & {
+			/**
+			 * This method should mutate the `instance` and perform prop diffing if needed.
+			 *
+			 * The `internalHandle` data structure is meant to be opaque. If you bend the rules and rely on its internal fields, be aware that it may change significantly between versions. You're taking on additional maintenance risk by reading from it, and giving up all guarantees if you write something to it.
+			 */
+			commitUpdate?(
+				instance: Instance,
+				type: Type,
+				prevProps: Props,
+				nextProps: Props,
+				internalHandle: ReactReconciler.OpaqueHandle,
+			): void;
+
+			// Undocumented
+			// https://github.com/facebook/react/pull/26722
+			NotPendingTransition: TransitionStatus | null;
+			HostTransitionContext: React.Context<TransitionStatus>;
+			// https://github.com/facebook/react/pull/28751
+			setCurrentUpdatePriority(newPriority: EventPriority): void;
+			getCurrentUpdatePriority(): EventPriority;
+			resolveUpdatePriority(): EventPriority;
+			// https://github.com/facebook/react/pull/28804
+			resetFormInstance(form: FormInstance): void;
+			// https://github.com/facebook/react/pull/25105
+			requestPostPaintCallback(callback: (time: number) => void): void;
+			// https://github.com/facebook/react/pull/26025
+			shouldAttemptEagerTransition(): boolean;
+			// https://github.com/facebook/react/pull/31528
+			trackSchedulerEvent(): void;
+			// https://github.com/facebook/react/pull/31008
+			resolveEventType(): null | string;
+			resolveEventTimeStamp(): number;
+
+			/**
+			 * This method is called during render to determine if the Host Component type and props require some kind of loading process to complete before committing an update.
+			 */
+			maySuspendCommit(type: Type, props: Props): boolean;
+			/**
+			 * This method may be called during render if the Host Component type and props might suspend a commit. It can be used to initiate any work that might shorten the duration of a suspended commit.
+			 */
+			preloadInstance(type: Type, props: Props): boolean;
+			/**
+			 * This method is called just before the commit phase. Use it to set up any necessary state while any Host Components that might suspend this commit are evaluated to determine if the commit must be suspended.
+			 */
+			startSuspendingCommit(): void;
+			/**
+			 * This method is called after `startSuspendingCommit` for each Host Component that indicated it might suspend a commit.
+			 */
+			suspendInstance(type: Type, props: Props): void;
+			/**
+			 * This method is called after all `suspendInstance` calls are complete.
+			 *
+			 * Return `null` if the commit can happen immediately.
+			 *
+			 * Return `(initiateCommit: Function) => Function` if the commit must be suspended. The argument to this callback will initiate the commit when called. The return value is a cancellation function that the Reconciler can use to abort the commit.
+			 *
+			 */
+			waitForCommitToBeReady(): ((initiateCommit: Function) => Function) | null;
+
+			// Extras from Pandora's research
+			rendererPackageName: string;
+			rendererVersion: string;
+			extraDevToolsConfig: unknown;
+		}
+	);
+
+declare module 'react-reconciler/constants' {
+	const NoEventPriority = 0;
+}
+
+export type PixiHostConfig = React19HostConfig<
 	string, // Type
 	any, // Props
 	PixiRootContainer, // Container
-	PixiInternalElementInstance<Container, never, any, any>, // Instance
+	PixiInternalElementInstance<PixiContainer, never, any, any>, // Instance
 	never, // TextInstance
 	never, // SuspenseInstance
 	never, // HydratableInstance
-	Container, // PublicInstance
-	null, // HostContext
-	string[], // UpdatePayload: We use a list of changed props
+	never, // FormInstance
+	PixiContainer, // PublicInstance
+	Record<string, never>, // HostContext
 	never, // ChildSet
 	number, // TimeoutHandle
-	-1 // NoTimeout
+	-1, // NoTimeout
+	null // TransitionStatus
 >;
 
-/** Name of the React's special property for children. */
-const CHILDREN_PROP = 'children';
+const NO_CONTEXT: Record<string, never> = {};
+
+let CurrentUpdatePriority: Lane = 0;
 
 export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
+	// Debug tools info
+	rendererPackageName: 'pandora-client-web/pixi-renderer',
+	rendererVersion: GAME_VERSION ?? '0.0.0',
+	extraDevToolsConfig: null,
 	// Mode setup
 	supportsMutation: true,
 	supportsPersistence: false,
 	supportsHydration: false,
 	isPrimaryRenderer: false,
+	warnsIfNotActing: false,
 	// Basics
 	createInstance(type, props, rootContainer, _hostContext, _internalHandle) {
 		// When react requests creation of a new element instance
@@ -50,30 +172,6 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 	finalizeInitialChildren(_instance, _type, _props, _rootContainer, _hostContext) {
 		// Called right after `createInstance` and all `appendInitialChild` calls - marking the instance ready
 		return false; // No work scheduled on mount
-	},
-	prepareUpdate(_instance, _type, oldProps, newProps, _rootContainer, _hostContext) {
-		// Method for pre-calculating update that needs to be done (if any).
-		// Used to reduce time spent during the actual update as much as possible.
-		let update: string[] | null = null;
-
-		// Check for deleted props
-		for (const key of Object.keys(oldProps)) {
-			if (key !== CHILDREN_PROP && !Object.prototype.hasOwnProperty.call(newProps, key)) {
-				update ??= [];
-				update.push(key);
-			}
-		}
-
-		// Check for updated props
-		for (const key of Object.keys(newProps)) {
-			// eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-			if (key !== CHILDREN_PROP && oldProps[key] !== newProps[key]) {
-				update ??= [];
-				update.push(key);
-			}
-		}
-
-		return update;
 	},
 	getPublicInstance(instance) {
 		// Return what should be used as `ref` of the component.
@@ -132,13 +230,16 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 		// but only called if we returned `true` from `finalizeInitialChildren`.
 		// Nothing to do
 	},
-	commitUpdate(instance, updatePayload, _type, prevProps, nextProps, _internalHandle) {
+	commitUpdate(
+		instance: PixiInternalElementInstance<PixiContainer, never, any, any>,
+		_type: string,
+		prevProps: any,
+		nextProps: any,
+		_internalHandle: ReactReconciler.OpaqueHandle,
+	): void {
 		// Called when we need to apply an update.
-		// `updatePayload` is what we returned from `prepareUpdate`.
-		instance.commitUpdate(prevProps, nextProps, updatePayload);
-		if (updatePayload.length > 0) {
-			instance.emitNeedsUpdate();
-		}
+		instance.commitUpdate(prevProps, nextProps);
+		instance.emitNeedsUpdate();
 	},
 	hideInstance(instance) {
 		// Hides some instance without removing it.
@@ -184,7 +285,7 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 	// Used for keeping data where in the tree we are.
 	// We don't use this feature, as none of our elements are context-dependant.
 	getRootHostContext(_rootContainer) {
-		return null;
+		return NO_CONTEXT;
 	},
 	getChildHostContext(parentHostContext, _type, _rootContainer) {
 		return parentHostContext;
@@ -193,12 +294,6 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 	// Portals
 	preparePortalMount(_containerInfo) {
 		// Nothing to do
-	},
-
-	// Additional info for React
-	getCurrentEventPriority() {
-		// TODO: Investigate how to properly implement this
-		return DefaultEventPriority;
 	},
 
 	// Bowser link-up
@@ -224,4 +319,53 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 	getInstanceFromScope(_scopeInstance) {
 		throw new Error('Not yet implemented');
 	},
+
+	// React 19
+	setCurrentUpdatePriority(newPriority: Lane): void {
+		CurrentUpdatePriority = newPriority;
+	},
+	getCurrentUpdatePriority(): Lane {
+		return CurrentUpdatePriority;
+	},
+	resolveUpdatePriority(): Lane { // Replaces getCurrentEventPriority
+		return CurrentUpdatePriority || DefaultEventPriority;
+	},
+	maySuspendCommit() {
+		return false;
+	},
+	preloadInstance(_type, _props) {
+		return true; // true indicates already loaded
+	},
+	startSuspendingCommit() {
+		// Noop
+	},
+	suspendInstance() {
+		// Noop
+	},
+	waitForCommitToBeReady() {
+		return null;
+	},
+	HostTransitionContext: createContext<null>(null),
+	shouldAttemptEagerTransition() {
+		return false;
+	},
+	trackSchedulerEvent() {
+		// Noop
+	},
+	resolveEventType() {
+		return null;
+	},
+	resolveEventTimeStamp() {
+		return -1.1;
+	},
+	requestPostPaintCallback() {
+		// Noop
+	},
+	NotPendingTransition: null,
+	resetFormInstance() {
+		// Noop
+	},
 };
+
+// FIXME: Possibly still missing:
+// bindToConsole

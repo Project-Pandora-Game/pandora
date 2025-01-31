@@ -23,8 +23,8 @@ export const PIXI_COMPONENT_PRIVATE_PROPERTIES = [
 type DisplayObjectPrivateProps = (typeof PIXI_COMPONENT_PRIVATE_PROPERTIES)[number];
 
 /** Check if DisplayObject key is one of a private property. */
-export function PixiComponentIsPrivateProperty(key: string): key is DisplayObjectPrivateProps {
-	return (PIXI_COMPONENT_PRIVATE_PROPERTIES as readonly string[]).includes(key);
+export function PixiComponentIsPrivateProperty(key: string | number | symbol): key is DisplayObjectPrivateProps {
+	return (PIXI_COMPONENT_PRIVATE_PROPERTIES as readonly (string | number | symbol)[]).includes(key);
 }
 
 /** List of properties that are always handled automatically, because they have additional special handling. */
@@ -39,8 +39,8 @@ export const PIXI_COMPONENT_SPECIAL_PROPERTIES = [
 ] as const satisfies (readonly (keyof DisplayObjectAllProps<Container>)[]);
 
 /** Check if DisplayObject key is one of a property with special handling. */
-export function PixiComponentIsSpecialProperty(key: string): key is DisplayObjectSpecialPropKeys {
-	return (PIXI_COMPONENT_SPECIAL_PROPERTIES as readonly string[]).includes(key);
+export function PixiComponentIsSpecialProperty(key: string | number | symbol): key is DisplayObjectSpecialPropKeys {
+	return (PIXI_COMPONENT_SPECIAL_PROPERTIES as readonly (string | number | symbol)[]).includes(key);
 }
 
 /** Keys of black-listed properties that shouldn't ever be visible (mainly those that we depend on with our internal state) */

@@ -7,7 +7,6 @@ import {
 	AssertNever,
 	AssertNotNullable,
 	AssetFrameworkCharacterState,
-	AssetFrameworkGlobalStateContainer,
 	AssetManager,
 	AssetPreferencesPublic,
 	AsyncSynchronized,
@@ -502,13 +501,8 @@ export class Character {
 		return this._loadedSpace?.id ?? null;
 	}
 
-	public getGlobalState(): AssetFrameworkGlobalStateContainer {
-		const space = this.getOrLoadSpace();
-		return space.gameState;
-	}
-
 	public getCharacterState(): AssetFrameworkCharacterState {
-		const state = this.getGlobalState().currentState.characters.get(this.id);
+		const state = this.getOrLoadSpace().currentState.characters.get(this.id);
 		AssertNotNullable(state);
 		return state;
 	}
@@ -521,7 +515,7 @@ export class Character {
 	}
 
 	public getRestrictionManager(): CharacterRestrictionsManager {
-		const state = this.getGlobalState().currentState.characters.get(this.id);
+		const state = this.getOrLoadSpace().currentState.characters.get(this.id);
 		AssertNotNullable(state);
 
 		return this.gameLogicCharacter.getRestrictionManager(state, this.getOrLoadSpace().getActionSpaceContext());
@@ -545,7 +539,7 @@ export class Character {
 	public checkAction(action: (processingContext: AppearanceActionProcessingContext) => AppearanceActionProcessingResult): AppearanceActionProcessingResult {
 		const processingContext = new AppearanceActionProcessingContext(
 			this.getAppearanceActionContext(),
-			this.getOrLoadSpace().gameState.currentState,
+			this.getOrLoadSpace().currentState,
 		);
 
 		return action(processingContext);
@@ -566,7 +560,7 @@ export class Character {
 			if (key === 'appearance') {
 				data.appearance = this.getCharacterAppearanceBundle();
 			} else if (key === 'personalRoom') {
-				const roomState = this._personalSpace.gameState.currentState.room;
+				const roomState = this._personalSpace.currentState.room;
 				data.personalRoom = {
 					inventory: roomState.exportToBundle(),
 				};

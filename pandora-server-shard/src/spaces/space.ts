@@ -55,7 +55,11 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	protected readonly actionCache = new Map<CharacterId, { result: IChatMessageActionTargetCharacter; leave?: number; }>();
 	protected readonly tickInterval: NodeJS.Timeout;
 
-	public readonly gameState: AssetFrameworkGlobalStateContainer;
+	private readonly _gameState: AssetFrameworkGlobalStateContainer;
+
+	public get currentState(): AssetFrameworkGlobalState {
+		return this._gameState.currentState;
+	}
 
 	public abstract get id(): SpaceId | null;
 	public abstract get owners(): readonly AccountId[];
@@ -91,9 +95,9 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			}
 		}
 
-		this.gameState = new AssetFrameworkGlobalStateContainer(
+		this._gameState = new AssetFrameworkGlobalStateContainer(
 			this.logger,
-			this.onStateChanged.bind(this),
+			this._onStateChanged.bind(this),
 			initialState,
 		);
 
@@ -101,7 +105,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	}
 
 	public reloadAssetManager(manager: AssetManager) {
-		this.gameState.reloadAssetManager(manager);
+		this._gameState.reloadAssetManager(manager);
 
 		// Background definition might have changed, make sure all characters are still inside range
 		const update: GameStateUpdate = {};
@@ -128,10 +132,10 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	}
 
 	public applyAction(result: AppearanceActionProcessingResultValid): void {
-		Assert(this.gameState.currentState === result.originalState, 'Attempt to apply action originating from a different state than the current one');
+		Assert(this._gameState.currentState === result.originalState, 'Attempt to apply action originating from a different state than the current one');
 
 		// Apply the action
-		this.gameState.setState(result.resultState);
+		this._gameState.setState(result.resultState);
 
 		// Send chat messages as needed
 		for (const message of result.pendingMessages) {
@@ -170,7 +174,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		}
 	}
 
-	public onStateChanged(newState: AssetFrameworkGlobalState, oldState: AssetFrameworkGlobalState): void {
+	private _onStateChanged(newState: AssetFrameworkGlobalState, oldState: AssetFrameworkGlobalState): void {
 		const changes = newState.listChanges(oldState);
 
 		if (changes.room) {
@@ -285,7 +289,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	}
 
 	public getRoomInventory(): RoomInventory {
-		const state = this.gameState.currentState.room;
+		const state = this.currentState.room;
 		AssertNotNullable(state);
 		return new RoomInventory(state);
 	}
@@ -297,7 +301,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		const logger = this.logger.prefixMessages(`Character ${character.id} join:`);
 
 		this.runWithSuppressedUpdates(() => {
-			let newState = this.gameState.currentState;
+			let newState = this._gameState.currentState;
 
 			// Add the character to the room
 			this.characters.add(character);
@@ -325,10 +329,10 @@ export abstract class Space extends ServerRoom<IShardClient> {
 				}
 			}
 
-			this.gameState.setState(newState);
+			this._gameState.setState(newState);
 
 			// Send update to current characters
-			const globalState = this.gameState.currentState.exportToClientBundle();
+			const globalState = this._gameState.currentState.exportToClientBundle();
 			this.sendUpdateToAllCharacters({
 				globalState,
 				join: character.getRoomData(),
@@ -353,7 +357,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public characterRemove(character: Character): void {
 		this.runWithSuppressedUpdates(() => {
 			// Remove character
-			let newState = this.gameState.currentState;
+			let newState = this._gameState.currentState;
 			const characterAppearance = newState.characters.get(character.id)?.exportToBundle();
 			AssertNotNullable(characterAppearance);
 
@@ -364,9 +368,9 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			character.setSpace(null, characterAppearance);
 
 			// Update anyone remaining in the space
-			this.gameState.setState(newState);
+			this._gameState.setState(newState);
 			this.sendUpdateToAllCharacters({
-				globalState: this.gameState.currentState.exportToClientBundle(),
+				globalState: this._gameState.currentState.exportToClientBundle(),
 				leave: character.id,
 			});
 

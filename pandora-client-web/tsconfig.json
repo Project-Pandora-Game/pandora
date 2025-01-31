@@ -8,7 +8,7 @@
 		"types": [
 			"offscreencanvas"
 		],
-		"jsx": "react",
+		"jsx": "react-jsx",
 		"module": "ESNext",
 		"noEmit": false,
 		"target": "ES6"

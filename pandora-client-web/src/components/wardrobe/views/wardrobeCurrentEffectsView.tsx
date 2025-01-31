@@ -1,16 +1,16 @@
-import type { AssetFrameworkCharacterState } from 'pandora-common';
+import type { AssetFrameworkGlobalState } from 'pandora-common';
 import React, { useMemo, type ReactElement } from 'react';
 import type { IChatroomCharacter } from '../../../character/character';
 import { Column } from '../../common/container/container';
 import { useWardrobeActionContext } from '../wardrobeActionContext';
 
-export function WardrobeCurrentEffectsView({ character, characterState }: {
+export function WardrobeCurrentEffectsView({ character, globalState }: {
 	character: IChatroomCharacter;
-	characterState: AssetFrameworkCharacterState;
+	globalState: AssetFrameworkGlobalState;
 }): ReactElement {
 	const { actions } = useWardrobeActionContext();
 
-	const restrictionManager = character.getRestrictionManager(characterState, actions.spaceContext);
+	const restrictionManager = character.getRestrictionManager(globalState, actions.spaceContext);
 	const effects = restrictionManager.getEffects();
 
 	const effectsList = useMemo((): ReactElement[] => {

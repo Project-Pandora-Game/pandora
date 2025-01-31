@@ -6,6 +6,7 @@ $theme-accent-color: var(--pandora-accent-color);
 $theme-font-family-variable: 'InterVariable', 'Arial', 'Helvetica', sans-serif; // Variable fonts are preferred, even if less supported
 $theme-font-family: 'Inter', 'Arial', 'Helvetica', sans-serif;
 $theme-font-features: 'cv05';
+$theme-font-features-tabular: 'tnum', 'cv05';
 
 $theme-font-family-monospace: 'Courier New', 'Courier', monospace;
 
@@ -142,6 +143,13 @@ $theme-table-body-altbackground: #161d1d;
 $theme-table-body-text: #eee;
 $theme-table-border-outer: transparent;
 $theme-table-border: transparent;
+
+// "Meter" element
+$theme-meter-background: #334;
+$theme-meter-bar-mono: color-mix(in srgb, #aaa, $theme-accent-color 60%);
+$theme-meter-bar-optimum: #00ab60;
+$theme-meter-bar-sub-optimum: #ffbd4f;
+$theme-meter-sub-sub-optimum: #e22850;
 
 //#endregion
 

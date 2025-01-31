@@ -43,6 +43,8 @@ export const EDITOR_SPACE_CONTEXT = {
 		autoAdmin: true,
 		disableSafemodeCooldown: true,
 	},
+	// Editor has no character modifiers
+	getCharacterModifierEffects: () => EMPTY_ARRAY,
 } as const satisfies Immutable<ActionSpaceContext>;
 
 export function EditorWardrobeContextProvider({ children }: { children: ReactNode; }): ReactElement {

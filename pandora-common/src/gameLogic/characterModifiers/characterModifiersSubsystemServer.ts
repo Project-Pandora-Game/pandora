@@ -1,12 +1,14 @@
 import { nanoid } from 'nanoid';
+import type { AssetFrameworkGlobalState } from '../../assets';
 import { LIMIT_CHARACTER_MODIFIER_INSTANCE_COUNT } from '../../inputLimits';
 import { Logger } from '../../logging';
+import type { SpaceClientInfo } from '../../space';
 import { AssertNotNullable } from '../../utility/misc';
 import { ArrayIncludesGuard } from '../../validation';
 import type { GameLogicCharacter } from '../character/character';
 import { GameLogicPermissionServer, IPermissionProvider } from '../permissions';
 import type { CharacterModifierId } from './characterModifierBaseData';
-import type { CharacterModifierConfigurationChange, CharacterModifierInstanceClientData, CharacterModifierInstanceData, CharacterModifierSystemData, CharacterModifierTemplate, CharacterModifierTypeConfig } from './characterModifierData';
+import type { CharacterModifierConfigurationChange, CharacterModifierEffectData, CharacterModifierInstanceClientData, CharacterModifierInstanceData, CharacterModifierSystemData, CharacterModifierTemplate, CharacterModifierTypeConfig } from './characterModifierData';
 import { GameLogicModifierInstanceServer } from './characterModifierInstance';
 import { CharacterModifiersSubsystem } from './characterModifiersSubsystem';
 import { GameLogicModifierTypeServer } from './characterModifierType';
@@ -145,6 +147,12 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 
 	public getClientData(): CharacterModifierInstanceClientData[] {
 		return this.modifierInstances.map((m) => m.getClientData());
+	}
+
+	public getActiveEffects(gameState: AssetFrameworkGlobalState, spaceConfig: SpaceClientInfo): CharacterModifierEffectData[] {
+		return this.modifierInstances
+			.filter((m) => m.isInEffect(gameState, spaceConfig))
+			.map((m) => m.getEffect());
 	}
 
 	public override getModifierTypePermission(type: CharacterModifierType): GameLogicPermissionServer {

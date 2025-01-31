@@ -8,7 +8,7 @@ import { useIsNarrowScreen } from '../../styles/mediaQueries';
 import { Button } from '../common/button/button';
 import { Column, Row } from '../common/container/container';
 import { Scrollable } from '../common/scrollbar/scrollbar';
-import { GameState, useCharacterState, useGameStateOptional, useSpaceCharacters } from '../gameContext/gameStateContextProvider';
+import { GameState, useCharacterState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../gameContext/gameStateContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { CharacterPreview } from '../wardrobe/wardrobeGraphics';
@@ -33,7 +33,8 @@ export function CharacterProfile({ characterId }: { characterId: CharacterId; })
 function CharacterProfileContent({ character, gameState }: { character: Character<ICharacterRoomData>; gameState: GameState; }): ReactElement {
 	const isPlayer = usePlayer()?.id === character.id;
 	const characterData = useCharacterData(character);
-	const characterState = useCharacterState(gameState, character.id);
+	const globalState = useGlobalState(gameState);
+	const characterState = useCharacterState(globalState, character.id);
 	const isNarrowScreen = useIsNarrowScreen();
 
 	const pronouns = PRONOUNS[characterData.settings.pronoun];

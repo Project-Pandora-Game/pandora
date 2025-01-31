@@ -1,9 +1,8 @@
 import classNames from 'classnames';
 import {
 	AssertNever,
-	AssetFrameworkCharacterState,
-	EMPTY_ARRAY,
 	GetLogger,
+	type AssetFrameworkGlobalState,
 	type CharacterId,
 	type CharacterModifierId,
 	type CharacterModifierType,
@@ -11,16 +10,17 @@ import {
 	type IShardClientChangeEvents,
 	type PermissionGroup,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useRef, useState } from 'react';
-import { ICharacter } from '../../character/character';
+import React, { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
+import { ICharacter, useCharacterRestrictionManager } from '../../character/character';
 import { Column } from '../common/container/container';
 import { Tab, TabContainer, type TabContainerRef } from '../common/tabs/tabs';
 import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
+import { WardrobeCharacterModifierEffectDetailsView } from './views/characterModifiers/characterModifierEffectDetailsView';
 import { WardrobeCharacterModifierInstanceDetailsView } from './views/characterModifiers/characterModifierInstanceDetailsView';
 import { WardrobeCharacterModifierEffectiveInstanceView, WardrobeCharacterModifierFullInstanceView } from './views/characterModifiers/characterModifierInstanceView';
 import { WardrobeCharacterModifierTypeDetailsView } from './views/characterModifiers/characterModifierTypeDetailsView';
 import { WardrobeCharacterModifierTypeView } from './views/characterModifiers/characterModifierTypeView';
-import { useWardrobePermissionRequestCallback } from './wardrobeActionContext';
+import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from './wardrobeActionContext';
 import { ActionWarningContent } from './wardrobeComponents';
 
 export type ModifierFocus = {
@@ -34,13 +34,17 @@ export type ModifierFocus = {
 	typeId: CharacterModifierType;
 };
 
-export function WardrobeEffectsModifiers({ className, character }: {
+export function WardrobeEffectsModifiers({ className, character, globalState }: {
 	className?: string;
 	character: ICharacter;
-	characterState: AssetFrameworkCharacterState;
+	globalState: AssetFrameworkGlobalState;
 }): ReactElement {
 	const [currentFocus, setCurrentFocus] = useState<ModifierFocus | null>(null);
+	const { actions: { spaceContext } } = useWardrobeActionContext();
+
 	const fullInstanceList = useCharacterModifierInstanceList(character.id);
+	const characterRestrictionManager = useCharacterRestrictionManager(character, globalState, spaceContext);
+	const characterModifierEffects = useMemo(() => characterRestrictionManager.getModifierEffects(), [characterRestrictionManager]);
 
 	const tabListRef = useRef<TabContainerRef>(null);
 
@@ -48,7 +52,16 @@ export function WardrobeEffectsModifiers({ className, character }: {
 		<div className={ classNames('wardrobe-ui', className) }>
 			<TabContainer className='flex-1' ref={ tabListRef }>
 				<Tab name='Active modifiers'>
-					<WardrobeCharacterModifierEffectiveInstanceView effectiveInstances={ EMPTY_ARRAY /* TODO */ } />
+					<WardrobeCharacterModifierEffectiveInstanceView
+						modifierEffects={ characterModifierEffects }
+						currentlyFocusedEffect={ currentFocus?.type === 'effectiveInstance' ? currentFocus.id : null }
+						focusModifierEffect={ (id) => {
+							setCurrentFocus(id == null ? null : {
+								type: 'effectiveInstance',
+								id,
+							});
+						} }
+					/>
 				</Tab>
 				<Tab name='Current modifiers'>
 					<WardrobeEffectsFullList
@@ -98,13 +111,13 @@ export function WardrobeEffectsModifiers({ className, character }: {
 						} }
 					/>
 				) : currentFocus.type === 'effectiveInstance' ? (
-					<div className='inventoryView'>
-						<div className='center-flex flex-1 padding-large'>
-							<span>
-								TODO
-							</span>
-						</div>
-					</div>
+					<WardrobeCharacterModifierEffectDetailsView
+						target={ character.id }
+						effect={ characterModifierEffects.find((m) => m.id === currentFocus.id) ?? null }
+						unfocus={ () => {
+							setCurrentFocus(null);
+						} }
+					/>
 				) : currentFocus.type === 'instance' ? (
 					<WardrobeCharacterModifierInstanceDetailsView
 						target={ character.id }

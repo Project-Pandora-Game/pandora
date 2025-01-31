@@ -17,6 +17,7 @@ import {
 	CharacterRoomPosition,
 	ChatCharacterStatus,
 	CloneDeepMutable,
+	EMPTY_ARRAY,
 	GameStateUpdate,
 	GenerateInitialRoomPosition,
 	IChatMessage,
@@ -37,6 +38,7 @@ import {
 	SpaceLoadData,
 	type AppearanceActionProcessingResultValid,
 	type IChatMessageAction,
+	type SpaceCharacterModifierEffectData,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager';
 import type { Character } from '../character/character';
@@ -190,6 +192,13 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 		this.sendUpdateToAllCharacters({
 			globalState: newState.exportToClientBundle(),
+			characterModifierEffects: this.getCharacterModifierEffects(),
+		});
+	}
+
+	public onCharacterModifiersChanged(): void {
+		this.sendUpdateToAllCharacters({
+			characterModifierEffects: this.getCharacterModifierEffects(),
 		});
 	}
 
@@ -207,7 +216,20 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			id: this.id,
 			info: this.getInfo(),
 			characters: Array.from(this.characters).map((c) => c.getRoomData()),
+			characterModifierEffects: this.getCharacterModifierEffects(),
 		};
+	}
+
+	public getCharacterModifierEffects(): SpaceCharacterModifierEffectData {
+		const result: SpaceCharacterModifierEffectData = {};
+
+		const gameState = this.currentState;
+		const spaceConfig = this.getInfo();
+		for (const character of this.characters) {
+			result[character.id] = character.gameLogicCharacter.characterModifiers.getActiveEffects(gameState, spaceConfig);
+		}
+
+		return result;
 	}
 
 	public getActionSpaceContext(): ActionSpaceContext {
@@ -215,6 +237,11 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			features: this.config.features,
 			isAdmin: (account) => Array.from(this.characters).some((character) => character.accountId === account && this.isAdmin(character)),
 			development: this.config.development,
+			getCharacterModifierEffects: (characterId, gameState) => {
+				const character = Array.from(this.characters).find((c) => c.id === characterId);
+				return character == null ? EMPTY_ARRAY :
+					character.gameLogicCharacter.characterModifiers.getActiveEffects(gameState, this.getInfo());
+			},
 		};
 	}
 
@@ -335,6 +362,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			const globalState = this._gameState.currentState.exportToClientBundle();
 			this.sendUpdateToAllCharacters({
 				globalState,
+				characterModifierEffects: this.getCharacterModifierEffects(),
 				join: character.getRoomData(),
 			});
 			// Send update to joining character
@@ -371,6 +399,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			this._gameState.setState(newState);
 			this.sendUpdateToAllCharacters({
 				globalState: this._gameState.currentState.exportToClientBundle(),
+				characterModifierEffects: this.getCharacterModifierEffects(),
 				leave: character.id,
 			});
 

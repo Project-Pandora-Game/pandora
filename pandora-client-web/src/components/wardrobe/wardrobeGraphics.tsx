@@ -36,12 +36,13 @@ import { useSpaceInfo } from '../gameContext/gameStateContextProvider';
 import { THEME_NORMAL_BACKGROUND } from '../gameContext/interfaceSettingsProvider';
 import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { WardrobeActionAttemptOverlay } from './views/wardrobeActionAttempt';
-import { useWardrobeContext } from './wardrobeContext';
 import { WardrobeCurrentEffectsView } from './views/wardrobeCurrentEffectsView';
+import { useWardrobeContext } from './wardrobeContext';
 
-export function WardrobeCharacterPreview({ character, characterState, isPreview = false, allowHideItems = false, showCharacterEffects = false }: {
+export function WardrobeCharacterPreview({ character, characterState, globalState, isPreview = false, allowHideItems = false, showCharacterEffects = false }: {
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
+	globalState: AssetFrameworkGlobalState;
 	isPreview?: boolean;
 	allowHideItems?: boolean;
 	showCharacterEffects?: boolean;
@@ -106,7 +107,7 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 			</Row>
 			{
 				showCharacterEffects ? (
-					<WardrobeCurrentEffectsView character={ character } characterState={ characterState } />
+					<WardrobeCurrentEffectsView character={ character } globalState={ globalState } />
 				) : (
 					<div className='flex-1' />
 				)
@@ -115,7 +116,7 @@ export function WardrobeCharacterPreview({ character, characterState, isPreview 
 				<WardrobeActionAttemptOverlay character={ character } />
 			</Row>
 		</Column>
-	), [allowHideItems, showCharacterEffects, hideItems, id, isPreview, onClick, processing, character, characterState]);
+	), [allowHideItems, showCharacterEffects, hideItems, id, isPreview, onClick, processing, character, globalState]);
 
 	return (
 		<CharacterPreview

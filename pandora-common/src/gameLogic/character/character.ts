@@ -1,10 +1,9 @@
 import { AccountId } from '../../account';
+import type { AssetFrameworkGlobalState } from '../../assets';
 import { CharacterAppearance } from '../../assets/appearance';
-import { AssetFrameworkCharacterState } from '../../assets/state/characterState';
 import { CharacterId, CharacterRestrictionsManager, ICharacterMinimalData } from '../../character';
 import { TypedEventEmitter } from '../../event';
 import type { ActionSpaceContext } from '../../space/space';
-import { Assert } from '../../utility/misc';
 import { AssetPreferencesSubsystem } from '../assetPreferences';
 import type { CharacterModifiersSubsystem } from '../characterModifiers/characterModifiersSubsystem';
 import { InteractionSubsystem } from '../interactions/interactionSubsystem';
@@ -30,13 +29,12 @@ export abstract class GameLogicCharacter extends TypedEventEmitter<GameLogicChar
 		this.name = minimalData.name;
 	}
 
-	public getAppearance(state: AssetFrameworkCharacterState): CharacterAppearance {
-		Assert(state.id === this.id);
-		return new CharacterAppearance(state, this);
+	public getAppearance(gameState: AssetFrameworkGlobalState): CharacterAppearance {
+		return new CharacterAppearance(gameState, this);
 	}
 
-	public getRestrictionManager(state: AssetFrameworkCharacterState, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
-		return this.getAppearance(state).getRestrictionManager(spaceContext);
+	public getRestrictionManager(gameState: AssetFrameworkGlobalState, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
+		return this.getAppearance(gameState).getRestrictionManager(spaceContext);
 	}
 
 	protected abstract _getPermissionProvider(permissionGroup: PermissionGroup): IPermissionProvider;

@@ -84,24 +84,20 @@ export class AppearanceActionProcessingContext {
 
 	public getCharacter(id: CharacterId): CharacterRestrictionsManager | null {
 		const char = this._context.getCharacter(id);
-		const charState = this.manipulator.currentState.getCharacterState(id);
-		Assert((char == null) === (charState == null));
 
-		if (char == null || charState == null)
+		if (char == null)
 			return null;
 
-		return char.getRestrictionManager(charState, this._context.spaceContext);
+		return char.getRestrictionManager(this.manipulator.currentState, this._context.spaceContext);
 	}
 
 	public getTargetCharacter(target: ActionCharacterSelector): ActionTargetCharacter | null {
 		const char = this._context.getCharacter(target.characterId);
-		const charState = this.manipulator.currentState.getCharacterState(target.characterId);
-		Assert((char == null) === (charState == null));
 
-		if (char == null || charState == null)
+		if (char == null)
 			return null;
 
-		return char.getAppearance(charState);
+		return char.getAppearance(this.manipulator.currentState);
 	}
 
 	public getTargetRoomInventory(): ActionTargetRoomInventory {

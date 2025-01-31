@@ -171,7 +171,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		const space = character.getOrLoadSpace();
-		const originalState = space.gameState.currentState;
+		const originalState = space.currentState;
 		const now = Date.now();
 		let result: AppearanceActionProcessingResult;
 

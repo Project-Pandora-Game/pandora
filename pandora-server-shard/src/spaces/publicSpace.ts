@@ -151,7 +151,7 @@ export class PublicSpace extends Space {
 		const data: SpaceDataShardUpdate = {};
 
 		if (keys.includes('inventory')) {
-			const roomState = this.gameState.currentState.room;
+			const roomState = this.currentState.room;
 			data.inventory = roomState.exportToBundle();
 		}
 

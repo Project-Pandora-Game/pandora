@@ -43,6 +43,7 @@ import {
 	type IClientShardPromiseResult,
 	type ItemContainerPath,
 	type ItemId,
+	type SpaceCharacterModifierEffectData,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { z } from 'zod';
@@ -109,6 +110,7 @@ export class GameState extends TypedEventEmitter<{
 	public readonly messages = new Observable<readonly IChatMessageProcessed[]>([]);
 	public readonly currentSpace: Observable<CurrentSpaceInfo>;
 	public readonly characters: Observable<readonly Character<ICharacterRoomData>[]>;
+	public readonly characterModifierEffects: Observable<Immutable<SpaceCharacterModifierEffectData>>;
 	public readonly status = new Observable<ReadonlySet<CharacterId>>(new Set<CharacterId>());
 	public readonly player: PlayerCharacter;
 
@@ -153,7 +155,7 @@ export class GameState extends TypedEventEmitter<{
 		this.player = new PlayerCharacter(characterData);
 		this.characters = new Observable<readonly Character<ICharacterRoomData>[]>([this.player]);
 
-		const { id, info, characters } = space;
+		const { id, info, characters, characterModifierEffects } = space;
 		this.currentSpace = new Observable<CurrentSpaceInfo>({
 			id,
 			config: info,
@@ -178,6 +180,8 @@ export class GameState extends TypedEventEmitter<{
 		);
 
 		this._updateCharacters(characters);
+
+		this.characterModifierEffects = new Observable<Immutable<SpaceCharacterModifierEffectData>>(freeze(characterModifierEffects, true));
 
 		setInterval(() => this._cleanupEdits(), MESSAGE_EDIT_TIMEOUT / 2);
 	}
@@ -212,7 +216,7 @@ export class GameState extends TypedEventEmitter<{
 
 	public onLoad(data: IShardClientArgument['gameStateLoad']): void {
 		const oldSpace = this.currentSpace.value;
-		const { id, info, characters } = data.space;
+		const { id, info, characters, characterModifierEffects } = data.space;
 		this.currentSpace.value = {
 			id,
 			config: info,
@@ -233,13 +237,14 @@ export class GameState extends TypedEventEmitter<{
 		this._updateCharacters(characters);
 		logger.debug('Loaded data', data);
 		this._updateGlobalState(data.globalState);
+		this.characterModifierEffects.value = freeze(characterModifierEffects, true);
 	}
 
 	public onUpdate(data: GameStateUpdate): void {
 		if (!this.player) {
 			throw new Error('Cannot update room when player is not loaded');
 		}
-		const { info, globalState, join, leave, characters } = data;
+		const { info, globalState, join, leave, characters, characterModifierEffects } = data;
 		if (join?.id === this.playerId) {
 			return; // Ignore self-join
 		}
@@ -270,6 +275,8 @@ export class GameState extends TypedEventEmitter<{
 		}
 		if (characters) {
 			for (const [id, characterData] of Object.entries(characters)) {
+				if (characterData == null)
+					continue;
 				const char = this.characters.value.find((oc) => oc.data.id === id);
 				if (!char) {
 					logger.error('Character not found', id);
@@ -281,6 +288,9 @@ export class GameState extends TypedEventEmitter<{
 		}
 		if (globalState) {
 			this._updateGlobalState(globalState);
+		}
+		if (characterModifierEffects != null) {
+			this.characterModifierEffects.value = freeze(characterModifierEffects, true);
 		}
 		logger.debug('Updated data', data);
 	}
@@ -595,7 +605,9 @@ export function useSpaceFeatures(): readonly SpaceFeature[] {
 }
 
 export function useActionSpaceContext(): ActionSpaceContext {
-	const info = useSpaceInfo();
+	const context = useGameState();
+	const info = useObservable(context.currentSpace);
+	const characterModifierEffects = useObservable(context.characterModifierEffects);
 	const playerAccount = useCurrentAccount();
 	return useMemo((): ActionSpaceContext => ({
 		features: info.config.features,
@@ -606,12 +618,15 @@ export function useActionSpaceContext(): ActionSpaceContext {
 			return IsSpaceAdmin(info.config, { id: accountId });
 		},
 		development: info.config.development,
-	}), [info, playerAccount]);
+		getCharacterModifierEffects: (characterId) => {
+			return characterModifierEffects[characterId] ?? EMPTY_ARRAY;
+		},
+	}), [info, playerAccount, characterModifierEffects]);
 }
 
-export function useCharacterRestrictionsManager<T>(characterState: AssetFrameworkCharacterState, character: Character, use: (manager: CharacterRestrictionsManager) => T): T {
+export function useCharacterRestrictionsManager<T>(globalState: AssetFrameworkGlobalState, character: Character, use: (manager: CharacterRestrictionsManager) => T): T {
 	const spaceContext = useActionSpaceContext();
-	const manager = useMemo(() => character.getRestrictionManager(characterState, spaceContext), [character, characterState, spaceContext]);
+	const manager = useMemo(() => character.getRestrictionManager(globalState, spaceContext), [character, globalState, spaceContext]);
 	return useMemo(() => use(manager), [use, manager]);
 }
 
@@ -643,9 +658,7 @@ export function useGlobalState(context: GameState): AssetFrameworkGlobalState {
 	}, () => context.globalState.currentState);
 }
 
-export function useCharacterState(context: GameState, id: CharacterId | null): AssetFrameworkCharacterState | null {
-	const globalState = useGlobalState(context);
-
+export function useCharacterState(globalState: AssetFrameworkGlobalState, id: CharacterId | null): AssetFrameworkCharacterState | null {
 	return useMemo(() => (id != null ? globalState.characters.get(id) ?? null : null), [globalState, id]);
 }
 

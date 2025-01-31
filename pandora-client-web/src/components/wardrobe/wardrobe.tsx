@@ -170,7 +170,8 @@ function WardrobeCharacter({ character }: {
 	const { globalState } = useWardrobeActionContext();
 	const { actionPreviewState } = useWardrobeContext();
 	const characterState = globalState.characters.get(character.id);
-	const characterPreviewState = useObservable(actionPreviewState)?.characters.get(character.id);
+	const globalPreviewState = useObservable(actionPreviewState);
+	const characterPreviewState = globalPreviewState?.characters.get(character.id);
 	const currentSpaceInfo = useSpaceInfo();
 	const inPersonalSpace = currentSpaceInfo.id == null;
 
@@ -192,6 +193,7 @@ function WardrobeCharacter({ character }: {
 				<WardrobeCharacterPreview
 					character={ character }
 					characterState={ characterPreviewState ?? characterState }
+					globalState={ (characterPreviewState != null ? globalPreviewState : undefined) ?? globalState }
 					allowHideItems={ allowHideItems }
 					showCharacterEffects={ showCharacterEffects }
 					isPreview={ characterPreviewState != null }
@@ -217,7 +219,7 @@ function WardrobeCharacter({ character }: {
 					</Tab>
 					<Tab name='Effects & Modifiers'>
 						<div className='wardrobe-pane'>
-							<WardrobeEffectsModifiers character={ character } characterState={ characterState } />
+							<WardrobeEffectsModifiers character={ character } globalState={ globalState } />
 						</div>
 					</Tab>
 					{

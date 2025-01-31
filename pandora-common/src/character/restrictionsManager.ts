@@ -10,6 +10,7 @@ import { FilterItemType, type Item, type ItemId, type RoomDeviceLink } from '../
 import { AssetPropertiesResult } from '../assets/properties';
 import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes';
 import { HearingImpairment, Muffler } from '../character/speech';
+import type { CharacterModifierEffectData } from '../gameLogic';
 import type { AppearanceActionProcessingContext } from '../gameLogic/actionLogic/appearanceActionProcessingContext';
 import type { GameLogicCharacter } from '../gameLogic/character/character';
 import type { ActionSpaceContext } from '../space/space';
@@ -38,6 +39,10 @@ export class CharacterRestrictionsManager {
 		// Calculate caches
 		this._properties = AppearanceItemProperties(this.appearance.getAllItems());
 		this._roomDeviceLink = this.appearance.characterState.getRoomDeviceWearablePart()?.roomDeviceLink ?? null;
+	}
+
+	public getModifierEffects(): readonly Immutable<CharacterModifierEffectData>[] {
+		return this.spaceContext.getCharacterModifierEffects(this.appearance.id, this.appearance.gameState);
 	}
 
 	public getProperties(): Immutable<AssetPropertiesResult> {
@@ -414,7 +419,7 @@ export class CharacterRestrictionsManager {
 				case ItemInteractionType.REORDER:
 					allowStruggleBypass = (item.isType('personal') || item.isType('roomDevice')) ? !item.requireFreeHandsToUse :
 						item.isType('roomDeviceWearablePart') ? !(item.roomDevice?.requireFreeHandsToUse ?? false) :
-						true;
+							true;
 					break;
 				default:
 					AssertNever(interaction);

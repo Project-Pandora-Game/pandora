@@ -1,6 +1,6 @@
 import React from 'react';
 
-export function useWrappedRef<Element extends HTMLElement>(originalRef: React.ForwardedRef<Element>): React.RefObject<Element> {
+export function useWrappedRef<Element extends HTMLElement>(originalRef: React.ForwardedRef<Element>): React.RefObject<Element | null> {
 	return React.useMemo(() => {
 		let current: Element | null = null;
 		return {

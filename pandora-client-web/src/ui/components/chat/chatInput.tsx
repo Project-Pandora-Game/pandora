@@ -43,7 +43,7 @@ export type IChatInputHandler = {
 	showSelector: boolean;
 	setShowSelector: (show: boolean) => void;
 	allowCommands: boolean;
-	ref: RefObject<HTMLTextAreaElement>;
+	ref: RefObject<HTMLTextAreaElement | null>;
 };
 
 export const chatInputContext = createContext<IChatInputHandler | null>(null);
@@ -166,7 +166,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 	);
 }
 
-export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messagesDiv: RefObject<HTMLDivElement>; scroll: (forceScroll: boolean) => void; newMessageCount: number; }) {
+export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messagesDiv: RefObject<HTMLDivElement | null>; scroll: (forceScroll: boolean) => void; newMessageCount: number; }) {
 	const { ref, mode, editing } = useChatInput();
 	const modeRef = useRef<typeof mode | null>(null);
 	const editingRef = useRef<number | undefined>(undefined);
@@ -199,7 +199,7 @@ export function ChatInputArea({ messagesDiv, scroll, newMessageCount }: { messag
 }
 
 function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
-	messagesDiv: RefObject<HTMLDivElement>;
+	messagesDiv: RefObject<HTMLDivElement | null>;
 	scrollMessagesView: (forceScroll: boolean) => void;
 }, ref: ForwardedRef<HTMLTextAreaElement>) {
 	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);

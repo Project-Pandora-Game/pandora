@@ -31,7 +31,7 @@ export function ExportDialog<T extends ZodType<unknown>>({
 }: ExportDialogProps<T>): ReactElement {
 	const textAreaRef = useRef<HTMLTextAreaElement>(null);
 	const [showCopySuccess, setShowCopySuccess] = useState(false);
-	const showCopyClearTimeout = useRef<number>();
+	const showCopyClearTimeout = useRef<number>(null);
 
 	const validatedExportData = useMemo(() => {
 		const parseResult = dataSchema.safeParse(CloneDeepMutable(data));

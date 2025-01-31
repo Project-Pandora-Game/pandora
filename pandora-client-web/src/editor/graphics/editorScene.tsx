@@ -40,8 +40,8 @@ function EditorColorPicker({ throttle }: { throttle: number; }): ReactElement {
 }
 
 export type EditorSceneContext = {
-	contentRef: React.RefObject<PIXI.Container>;
-	appRef: React.RefObject<PIXI.Application>;
+	contentRef: React.RefObject<PIXI.Container | null>;
+	appRef: React.RefObject<PIXI.Application | null>;
 };
 
 const EditorSceneContext = React.createContext<EditorSceneContext | null>(null);
@@ -53,7 +53,7 @@ export function EditorScene({
 }: CommonProps): ReactElement {
 	const editor = useEditor();
 	const contentRef = useRef<PIXI.Container>(null);
-	const appRef = useRef<PIXI.Application | null>(null);
+	const appRef = useRef<PIXI.Application>(null);
 
 	const sceneContext = useMemo((): EditorSceneContext => ({
 		contentRef,

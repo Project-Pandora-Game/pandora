@@ -85,7 +85,7 @@ function ContextMenuImpl({ children, className }: CommonProps, ref: ForwardedRef
 
 export const ContextMenu = forwardRef<ContextMenuHandle, CommonProps>(ContextMenuImpl);
 
-export function useContextMenu(): [RefObject<ContextMenuHandle>, (event: React.MouseEvent<HTMLDivElement>) => void, () => void] {
+export function useContextMenu(): [RefObject<ContextMenuHandle | null>, (event: React.MouseEvent<HTMLDivElement>) => void, () => void] {
 	const ref = useRef<ContextMenuHandle>(null);
 	const onContextMenu = useEvent((event: React.MouseEvent<HTMLDivElement>) => {
 		// Ignore custom context menu when holding shift

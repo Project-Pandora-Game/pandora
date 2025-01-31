@@ -8,6 +8,11 @@ overrides:
   '@octokit/types': 13.5.0
   superstatic>re2: '-'
 
+patchedDependencies:
+  re-resizable:
+    hash: 9ca05a4a2c31cc673475b2e5f192a46f3380bd041c24ced6dec6cd2d7fa2e133
+    path: patches/re-resizable.patch
+
 importers:
 
   .:
@@ -13397,7 +13402,7 @@ snapshots:
       minimist: 1.2.8
       strip-json-comments: 2.0.1
 
-  re-resizable@6.10.3(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+  re-resizable@6.10.3(patch_hash=9ca05a4a2c31cc673475b2e5f192a46f3380bd041c24ced6dec6cd2d7fa2e133)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
@@ -13443,7 +13448,7 @@ snapshots:
 
   react-rnd@10.4.14(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
-      re-resizable: 6.10.3(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      re-resizable: 6.10.3(patch_hash=9ca05a4a2c31cc673475b2e5f192a46f3380bd041c24ced6dec6cd2d7fa2e133)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
       react-draggable: 4.4.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)

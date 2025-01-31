@@ -19,10 +19,10 @@ import './wardrobe.scss';
 import { useWardrobeActionContext, WardrobeActionContextProvider } from './wardrobeActionContext';
 import { WardrobeBodyManipulation } from './wardrobeBody';
 import { useWardrobeContext, WARDROBE_TARGET_ROOM, WardrobeContextProvider } from './wardrobeContext';
+import { WardrobeEffectsModifiers } from './wardrobeEffectsModifiers';
 import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphics';
 import { WardrobeItemPreferences } from './wardrobeItemPreferences';
 import { WardrobeItemManipulation } from './wardrobeItems';
-import { WardrobeEffectsModifiers } from './wardrobeEffectsModifiers';
 
 export function WardrobeRouter(): ReactElement | null {
 	return (
@@ -130,7 +130,8 @@ function WardrobeCharacter({ character }: {
 	const { globalState } = useWardrobeActionContext();
 	const { actionPreviewState } = useWardrobeContext();
 	const characterState = globalState.characters.get(character.id);
-	const characterPreviewState = useObservable(actionPreviewState)?.characters.get(character.id);
+	const globalPreviewState = useObservable(actionPreviewState);
+	const characterPreviewState = globalPreviewState?.characters.get(character.id);
 	const currentSpaceInfo = useSpaceInfo();
 	const inPersonalSpace = currentSpaceInfo.id == null;
 
@@ -152,6 +153,7 @@ function WardrobeCharacter({ character }: {
 				<WardrobeCharacterPreview
 					character={ character }
 					characterState={ characterPreviewState ?? characterState }
+					globalState={ (characterPreviewState != null ? globalPreviewState : undefined) ?? globalState }
 					allowHideItems={ allowHideItems }
 					showCharacterEffects={ showCharacterEffects }
 					isPreview={ characterPreviewState != null }
@@ -177,7 +179,7 @@ function WardrobeCharacter({ character }: {
 					</Tab>
 					<Tab name='Effects & Modifiers'>
 						<div className='wardrobe-pane'>
-							<WardrobeEffectsModifiers character={ character } characterState={ characterState } />
+							<WardrobeEffectsModifiers character={ character } globalState={ globalState } />
 						</div>
 					</Tab>
 					{

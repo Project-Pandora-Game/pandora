@@ -14,11 +14,13 @@ import type { Item } from './item';
 import type { AssetFrameworkCharacterState } from './state/characterState';
 import type { CharacterArmsPose } from './state/characterStatePose';
 import type { RestrictionOverride } from './state/characterStateTypes';
+import type { AssetFrameworkGlobalState } from './state/globalState';
 
 /**
  * A helper wrapper around a global state that allows easy access and manipulation of specific character.
  */
 export class CharacterAppearance implements ActionTargetCharacter {
+	public readonly gameState: AssetFrameworkGlobalState;
 	public readonly characterState: AssetFrameworkCharacterState;
 
 	public readonly type = 'character';
@@ -33,10 +35,13 @@ export class CharacterAppearance implements ActionTargetCharacter {
 		return this.characterState.items;
 	}
 
-	constructor(characterState: AssetFrameworkCharacterState, character: GameLogicCharacter) {
+	constructor(gameState: AssetFrameworkGlobalState, character: GameLogicCharacter) {
+		const characterState = gameState.getCharacterState(character.id);
+		Assert(characterState != null, 'Attempting to get character appearance from a state where the character does not exist');
+
+		this.gameState = gameState;
 		this.characterState = characterState;
 		this.id = characterState.id;
-		Assert(character.id === this.id);
 		this.character = character;
 	}
 

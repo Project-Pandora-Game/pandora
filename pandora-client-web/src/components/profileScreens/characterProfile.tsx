@@ -1,17 +1,17 @@
-import React, { ReactElement, useState } from 'react';
 import { AssertNever, CharacterId, GetLogger, ICharacterRoomData, LIMIT_CHARACTER_PROFILE_LENGTH, PRONOUNS } from 'pandora-common';
-import { Column, Row } from '../common/container/container';
-import { GameState, useCharacterState, useSpaceCharacters, useGameStateOptional } from '../gameContext/gameStateContextProvider';
+import React, { ReactElement, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { Character, useCharacterData } from '../../character/character';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast';
 import { useIsNarrowScreen } from '../../styles/mediaQueries';
-import { CharacterPreview } from '../wardrobe/wardrobeGraphics';
+import { Button } from '../common/button/button';
+import { Column, Row } from '../common/container/container';
 import { Scrollable } from '../common/scrollbar/scrollbar';
+import { GameState, useCharacterState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../gameContext/gameStateContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { Button } from '../common/button/button';
-import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast';
-import { Link } from 'react-router-dom';
+import { CharacterPreview } from '../wardrobe/wardrobeGraphics';
 import { ProfileDescription } from './profileDescription';
 
 export function CharacterProfile({ characterId }: { characterId: CharacterId; }): ReactElement {
@@ -33,7 +33,8 @@ export function CharacterProfile({ characterId }: { characterId: CharacterId; })
 function CharacterProfileContent({ character, gameState }: { character: Character<ICharacterRoomData>; gameState: GameState; }): ReactElement {
 	const isPlayer = usePlayer()?.id === character.id;
 	const characterData = useCharacterData(character);
-	const characterState = useCharacterState(gameState, character.id);
+	const globalState = useGlobalState(gameState);
+	const characterState = useCharacterState(globalState, character.id);
 	const isNarrowScreen = useIsNarrowScreen();
 
 	const pronouns = PRONOUNS[characterData.settings.pronoun];

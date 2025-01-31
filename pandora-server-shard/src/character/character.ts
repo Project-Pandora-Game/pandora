@@ -238,7 +238,7 @@ export class Character {
 		});
 		this.gameLogicCharacter.characterModifiers.on('modifiersChanged', () => {
 			this._emitSomethingChanged('characterModifiers');
-			// TODO: Trigger modifier effect rebuild
+			this._loadedSpace?.onCharacterModifiersChanged();
 		});
 
 		const currentInteractionConfig = this.gameLogicCharacter.interactions.getData();
@@ -515,10 +515,8 @@ export class Character {
 	}
 
 	public getRestrictionManager(): CharacterRestrictionsManager {
-		const state = this.getOrLoadSpace().currentState.characters.get(this.id);
-		AssertNotNullable(state);
-
-		return this.gameLogicCharacter.getRestrictionManager(state, this.getOrLoadSpace().getActionSpaceContext());
+		const space = this.getOrLoadSpace();
+		return this.gameLogicCharacter.getRestrictionManager(space.currentState, space.getActionSpaceContext());
 	}
 
 	public getAppearanceActionContext(): AppearanceActionContext {

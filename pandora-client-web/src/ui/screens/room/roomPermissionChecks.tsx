@@ -5,7 +5,7 @@ import {
 } from 'react';
 import { toast } from 'react-toastify';
 import { useCharacterRestrictionManager, type Character } from '../../../character/character';
-import { IsSpaceAdmin, useActionSpaceContext, useCharacterRestrictionsManager, useCharacterState, useGameState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { IsSpaceAdmin, useActionSpaceContext, useCharacterRestrictionsManager, useCharacterState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue';
 import { DeviceOverlayState } from '../../../graphics/room/roomDevice';
@@ -25,9 +25,9 @@ export function useRoomConstructionModeCheckProvider(): void {
 	const currentAccount = useCurrentAccount();
 	const spaceInfo = useSpaceInfo();
 	const isPlayerAdmin = IsSpaceAdmin(spaceInfo.config, currentAccount);
-	const { player, playerState } = usePlayerState();
+	const { player, globalState } = usePlayerState();
 	const spaceContext = useActionSpaceContext();
-	const canUseHands = useCharacterRestrictionManager(player, playerState, spaceContext).canUseHands();
+	const canUseHands = useCharacterRestrictionManager(player, globalState, spaceContext).canUseHands();
 
 	useEffect(() => {
 		let nextValue = DeviceOverlayState.value;
@@ -61,15 +61,14 @@ export function useRoomConstructionModeCheckProvider(): void {
  * @param target - The character to be moved. If `null` is used, the check always fails.
  */
 export function useCanMoveCharacter(target: Character | null): boolean {
-	const { player, playerState } = usePlayerState();
+	const { player, globalState } = usePlayerState();
 	const currentAccount = useCurrentAccount();
 	const spaceInfo = useSpaceInfo();
 	const isPlayerAdmin = IsSpaceAdmin(spaceInfo.config, currentAccount);
 
-	const gameState = useGameState();
-	const targetState = useCharacterState(gameState, target?.id ?? null);
+	const targetState = useCharacterState(globalState, target?.id ?? null);
 
-	const playerHasBlockedMovement = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getEffects().blockRoomMovement);
+	const playerHasBlockedMovement = useCharacterRestrictionsManager(globalState, player, (manager) => manager.getEffects().blockRoomMovement);
 
 	// See Space.updateCharacterPosition on shard for server-side version of this.
 	return useMemo((): boolean => {

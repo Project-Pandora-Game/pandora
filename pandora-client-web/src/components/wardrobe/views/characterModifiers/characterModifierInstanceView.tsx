@@ -63,15 +63,18 @@ function ModifierFullInstanceListItem({ modifier, selected = false, onClick }: {
 				// `pref-${preference}`,
 			) }
 			tabIndex={ 0 }
-			onClick={ onClick }>
+			onClick={ onClick }
+		>
 			<span className='itemName'>{ definition.visibleName }</span>
 		</div>
 	);
 }
 
-export function WardrobeCharacterModifierEffectiveInstanceView({ effectiveInstances, children }: {
-	effectiveInstances: readonly CharacterModifierEffectData[];
+export function WardrobeCharacterModifierEffectiveInstanceView({ children, modifierEffects, currentlyFocusedEffect, focusModifierEffect }: {
 	children?: ReactNode;
+	modifierEffects: readonly CharacterModifierEffectData[];
+	currentlyFocusedEffect: CharacterModifierId | null;
+	focusModifierEffect: (id: CharacterModifierId | null) => void;
 }): ReactElement | null {
 
 	return (
@@ -79,14 +82,16 @@ export function WardrobeCharacterModifierEffectiveInstanceView({ effectiveInstan
 			{ children }
 			<div className='listContainer'>
 				{
-					effectiveInstances.length > 0 ? (
+					modifierEffects.length > 0 ? (
 						<div className='Scrollbar'>
 							<div className={ 'list' }>
 								{
-									effectiveInstances.map((m) => (
+									modifierEffects.map((m) => (
 										<ModifierEffectiveInstanceListItem
 											key={ m.id }
 											modifier={ m }
+											selected={ currentlyFocusedEffect === m.id }
+											onClick={ () => focusModifierEffect(currentlyFocusedEffect === m.id ? null : m.id) }
 										/>
 									))
 								}
@@ -103,8 +108,10 @@ export function WardrobeCharacterModifierEffectiveInstanceView({ effectiveInstan
 	);
 }
 
-function ModifierEffectiveInstanceListItem({ modifier }: {
+function ModifierEffectiveInstanceListItem({ modifier, selected = false, onClick }: {
 	modifier: CharacterModifierEffectData;
+	selected?: boolean;
+	onClick?: () => void;
 }): ReactElement {
 	const definition = CHARACTER_MODIFIER_TYPE_DEFINITION[modifier.type];
 	// TODO: const preference = useAssetPreference(asset);
@@ -114,13 +121,13 @@ function ModifierEffectiveInstanceListItem({ modifier }: {
 			className={ classNames(
 				'inventoryViewItem',
 				'listMode',
+				selected ? 'selected' : null,
 				'allowed',
 				// `pref-${preference}`,
 			) }
 			tabIndex={ 0 }
-			onClick={ () => {
-				// TODO
-			} }>
+			onClick={ onClick }
+		>
 			<span className='itemName'>{ definition.visibleName }</span>
 		</div>
 	);

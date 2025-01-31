@@ -75,6 +75,8 @@ export class PublicSpace extends Space {
 				}
 			}
 		}
+		// Character modifiers might depend on space config
+		update.characterModifierEffects = this.getCharacterModifierEffects();
 
 		this.sendUpdateToAllCharacters(update);
 	}

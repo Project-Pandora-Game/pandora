@@ -169,8 +169,8 @@ export function WardrobeModuleTemplateConfigLockSlot({ template, onTemplateChang
 function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
 	const { targetSelector } = useWardrobeContext();
 	const { actions } = useWardrobeActionContext();
-	const { player, playerState } = usePlayerState();
-	const playerRestrictionManager = useCharacterRestrictionManager(player, playerState, actions.spaceContext);
+	const { player, globalState } = usePlayerState();
+	const playerRestrictionManager = useCharacterRestrictionManager(player, globalState, actions.spaceContext);
 
 	const now = useCurrentTime();
 	const lockedText = useMemo(() => {

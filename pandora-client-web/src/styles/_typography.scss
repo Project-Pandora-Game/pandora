@@ -5,6 +5,11 @@ html, body {
 	font-feature-settings: common.$theme-font-features;
 }
 
+.tabularFont {
+	font-family: common.$theme-font-family;
+	font-feature-settings: common.$theme-font-features-tabular;
+}
+
 @supports (font-variation-settings: normal) {
 	html, body {
 		font-family: common.$theme-font-family-variable;
@@ -96,4 +101,40 @@ table {
 
 fieldset {
 	border-color: common.$theme-fieldset-border;
+}
+
+meter {
+	background: common.$theme-meter-background; // Firefox
+	display: block;
+	border: solid 1px common.$theme-separator;
+	border-radius: 2em;
+	height: 0.75em;
+
+	&::-webkit-meter-bar {
+		background: common.$theme-meter-background; // Chromium
+	}
+
+	/* The green (optimum) bar */
+	&:-moz-meter-optimum::-moz-meter-bar, &::-webkit-meter-optimum-value {
+		background: common.$theme-meter-bar-optimum;
+	}
+
+	/* The yellow (sub-optimum) bar */
+	&:-moz-meter-sub-optimum::-moz-meter-bar, &::-webkit-meter-suboptimum-value {
+		background: common.$theme-meter-bar-sub-optimum;
+	}
+
+	/* The red (angry) bar */
+	&:-moz-meter-sub-sub-optimum::-moz-meter-bar, &::-webkit-meter-even-less-good-value {
+		background: common.$theme-meter-sub-sub-optimum;
+	}
+
+	&.monoColor {
+		/* The green (optimum) bar */
+		&:-moz-meter-optimum::-moz-meter-bar, &::-webkit-meter-optimum-value,
+			&:-moz-meter-sub-optimum::-moz-meter-bar, &::-webkit-meter-suboptimum-value,
+			&:-moz-meter-sub-sub-optimum::-moz-meter-bar, &::-webkit-meter-even-less-good-value {
+			background: common.$theme-meter-bar-mono;
+		}
+	}
 }

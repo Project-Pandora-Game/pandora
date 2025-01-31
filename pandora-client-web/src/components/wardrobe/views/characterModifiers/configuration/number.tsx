@@ -40,41 +40,59 @@ export function WardrobeCharacterModifierConfigNumber({ definition, value, onCha
 	});
 
 	return (
-		<FieldsetToggle legend={ definition.name }>
-			<Row>
+		<FieldsetToggle legend={ definition.name } className='characterModifierNumberEdit'>
+			<Row alignY='center' gap='medium'>
 				{
 					(definition.options?.withSlider &&
 						definition.options.min != null && isFinite(definition.options.min) &&
 						definition.options.max != null && isFinite(definition.options.max)
 					) ? (
+						onChange != null ? (
+							<NumberInput
+								id={ id + '-slider' }
+								aria-label={ definition.name }
+								className='flex-6'
+								rangeSlider
+								min={ definition.options.min }
+								max={ definition.options.max }
+								step={ definition.options?.allowDecimal ? 0.01 : 1 }
+								value={ changedValue ?? parsedValue }
+								onChange={ (newValue) => {
+									setChangedValue(schema.parse(newValue));
+								} }
+								disabled={ onChange == null || processing }
+							/>
+						) : (
+							<meter
+								className='flex-6 monoColor'
+								min={ definition.options.min }
+								max={ definition.options.max }
+								value={ parsedValue }
+							>
+								{ parsedValue }
+							</meter>
+						)
+					) : null
+				}
+				{
+					onChange != null ? (
 						<NumberInput
-							id={ id + '-slider' }
+							id={ id }
 							aria-label={ definition.name }
-							className='flex-6'
-							rangeSlider
-							min={ definition.options.min }
-							max={ definition.options.max }
-							step={ definition.options?.allowDecimal ? 0.01 : 1 }
+							className='flex-1 value'
 							value={ changedValue ?? parsedValue }
 							onChange={ (newValue) => {
 								setChangedValue(schema.parse(newValue));
 							} }
+							min={ definition.options?.min }
+							max={ definition.options?.max }
+							step={ definition.options?.allowDecimal ? undefined : 1 }
+							disabled={ onChange == null || processing }
 						/>
-					) : null
+					) : (
+						<strong className='flex-1 value tabularFont'>{ parsedValue }</strong>
+					)
 				}
-				<NumberInput
-					id={ id }
-					aria-label={ definition.name }
-					className='flex-1'
-					value={ changedValue ?? parsedValue }
-					onChange={ (newValue) => {
-						setChangedValue(schema.parse(newValue));
-					} }
-					min={ definition.options?.min }
-					max={ definition.options?.max }
-					step={ definition.options?.allowDecimal ? undefined : 1 }
-					disabled={ onChange == null || processing }
-				/>
 				{
 					onChange != null ? (
 						<Button

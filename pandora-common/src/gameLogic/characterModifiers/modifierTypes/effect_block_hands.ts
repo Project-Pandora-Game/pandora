@@ -7,7 +7,7 @@ export const effect_block_hands = DefineCharacterModifier({
 	strictnessCategory: 'normal',
 	config: {},
 
-	applyCharacterEffects: () => {
+	applyCharacterEffects() {
 		return {
 			blockHands: true,
 		};

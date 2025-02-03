@@ -5,16 +5,16 @@ import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { ActionTarget, ActionTargetCharacter, ItemContainerPath, ItemPath } from '../assets/appearanceTypes';
 import { AppearanceItemProperties } from '../assets/appearanceValidation';
 import { Asset } from '../assets/asset';
-import { EffectsDefinition } from '../assets/effects';
+import { EffectsDefinition, MergeEffects } from '../assets/effects';
 import { FilterItemType, type Item, type ItemId, type RoomDeviceLink } from '../assets/item';
 import { AssetPropertiesResult } from '../assets/properties';
 import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes';
 import { HearingImpairment, Muffler } from '../character/speech';
-import type { CharacterModifierEffectData } from '../gameLogic';
+import { CHARACTER_MODIFIER_TYPE_DEFINITION, type CharacterModifierEffectData, type CharacterModifierPropertiesApplier } from '../gameLogic';
 import type { AppearanceActionProcessingContext } from '../gameLogic/actionLogic/appearanceActionProcessingContext';
 import type { GameLogicCharacter } from '../gameLogic/character/character';
 import type { ActionSpaceContext } from '../space/space';
-import { Assert, AssertNever } from '../utility/misc';
+import { Assert, AssertNever, MemoizeNoArg } from '../utility/misc';
 import { ItemInteractionType } from './restrictionTypes';
 
 /**
@@ -41,8 +41,17 @@ export class CharacterRestrictionsManager {
 		this._roomDeviceLink = this.appearance.characterState.getRoomDeviceWearablePart()?.roomDeviceLink ?? null;
 	}
 
+	@MemoizeNoArg
 	public getModifierEffects(): readonly Immutable<CharacterModifierEffectData>[] {
 		return this.spaceContext.getCharacterModifierEffects(this.appearance.id, this.appearance.gameState);
+	}
+
+	@MemoizeNoArg
+	public getModifierEffectProperties(): readonly CharacterModifierPropertiesApplier[] {
+		return this.getModifierEffects().map((e): CharacterModifierPropertiesApplier => {
+			const definition = CHARACTER_MODIFIER_TYPE_DEFINITION[e.type];
+			return definition.createPropertiesApplier(e.config);
+		});
 	}
 
 	public getProperties(): Immutable<AssetPropertiesResult> {
@@ -79,8 +88,19 @@ export class CharacterRestrictionsManager {
 	/**
 	 * @returns Stable result for effects
 	 */
+	@MemoizeNoArg
 	public getEffects(): Readonly<EffectsDefinition> {
-		return this.getProperties().effects;
+		// Get effects from items
+		let effects = this.getProperties().effects;
+
+		// Apply effects from modifiers
+		for (const modifierEffect of this.getModifierEffectProperties()) {
+			if (modifierEffect.applyCharacterEffects != null) {
+				effects = MergeEffects(effects, modifierEffect.applyCharacterEffects(effects));
+			}
+		}
+
+		return effects;
 	}
 
 	/**

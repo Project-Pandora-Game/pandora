@@ -1,5 +1,5 @@
 import type { AssetId } from '../assets/base';
-import type { PermissionGroup, PermissionTypeInvalid } from '../gameLogic';
+import type { CharacterModifierId, CharacterModifierType, PermissionGroup, PermissionTypeInvalid } from '../gameLogic';
 import type { AssetPreferenceResolution } from './assetPreferences';
 import type { CharacterId } from './characterTypes';
 
@@ -92,6 +92,11 @@ export type Restriction =
 	}
 	| {
 		type: 'inRoomDevice';
+	}
+	| {
+		type: 'blockedByCharacterModifier';
+		modifierId: CharacterModifierId;
+		modifierType: CharacterModifierType;
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
 	| {

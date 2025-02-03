@@ -32,6 +32,7 @@ export interface CharacterModifierProperties<TConfig> {
 	 * @param player - Restriction manager of player before the action
 	 * @param originalState - State of the space before the action
 	 * @param resultState - State of the space after the action
+	 * @returns Whether to `allow` or `block` this action.
 	 */
 	checkCharacterAction?(
 		config: TConfig,

@@ -4,6 +4,10 @@ import { DefineCharacterModifier } from '../helpers/modifierDefinition';
 export const effect_blind = DefineCharacterModifier({
 	typeId: 'effect_blind',
 	visibleName: 'Effect: Blindness',
+	description: `
+[TODO] This effect blinds the character.
+You can also use _italics_ and __bold__ text in the description - actually same formatting the chat has! Specifically action messages, to be exact...
+	`,
 	strictnessCategory: 'normal',
 	config: {
 		intensity: {

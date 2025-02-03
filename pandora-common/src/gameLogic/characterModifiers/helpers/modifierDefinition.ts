@@ -10,6 +10,7 @@ import { CharacterModifierBuildConfigurationSchema, type CharacterModifierBuildC
 export interface CharacterModifierTypeDefinitionBase {
 	readonly typeId: string;
 	readonly visibleName: string;
+	readonly description: string;
 	readonly permissionDefault: PermissionConfigDefault;
 	readonly permissionForbidDefaultAllowOthers?: [PermissionType, ...PermissionType[]];
 	readonly strictnessCategory: CharacterModifierStrictnessCategory;
@@ -33,6 +34,7 @@ export function DefineCharacterModifier<
 	intermediateConfig: {
 		typeId: TType;
 		visibleName: string;
+		description: string;
 		strictnessCategory: CharacterModifierStrictnessCategory;
 		config: TConfig;
 	} & NoInfer<CharacterModifierProperties<CharacterModifierConfiguration<TConfig>>>,
@@ -43,6 +45,7 @@ export function DefineCharacterModifier<
 	return {
 		typeId: intermediateConfig.typeId,
 		visibleName: intermediateConfig.visibleName,
+		description: intermediateConfig.description.trim(),
 		strictnessCategory: intermediateConfig.strictnessCategory,
 		permissionDefault:
 			intermediateConfig.strictnessCategory === 'normal' ? { allowOthers: 'prompt' } :

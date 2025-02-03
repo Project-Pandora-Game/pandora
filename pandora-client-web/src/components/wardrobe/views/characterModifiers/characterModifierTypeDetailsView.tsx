@@ -13,6 +13,8 @@ import React, { ReactElement, useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../../../common/useEvent';
 import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast';
+import { RenderChatPart } from '../../../../ui/components/chat/chatMessages';
+import { ChatParser } from '../../../../ui/components/chat/chatParser';
 import { Column } from '../../../common/container/container';
 import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProvider';
 import { useShardConnector } from '../../../gameContext/shardConnectorContextProvider';
@@ -93,12 +95,20 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, target, focusMo
 		}
 	}, [check, execute, requestPermissions, target]);
 
+	const description = useMemo(() => (
+		ChatParser.parseStyle(typeDefinition.description)
+			.map((c, i) => RenderChatPart(c, i, false))
+	), [typeDefinition]);
+
 	return (
 		<div className='inventoryView wardrobeModifierTypeDetails'>
 			<div className='toolbar'>
 				<span>Modifier "{ typeDefinition.visibleName }"</span>
 			</div>
-			<Column padding='large'>
+			<Column padding='large' gap='medium'>
+				<div className='description'>
+					{ description }
+				</div>
 				<WardrobeActionButtonElement
 					check={ check }
 					onClick={ onClick }

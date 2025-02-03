@@ -2,6 +2,8 @@ import { z } from 'zod';
 import { Assert, KnownObject, ParseArrayNotEmpty, type Satisfies } from '../../../utility';
 import type { CharacterModifierTypeDefinitionBase } from '../helpers/modifierDefinition';
 
+import { block_lock_unlock_others } from './block_lock_unlock_others';
+import { block_lock_unlock_self } from './block_lock_unlock_self';
 import { effect_blind } from './effect_blind';
 import { effect_block_hands } from './effect_block_hands';
 
@@ -9,6 +11,8 @@ import { effect_block_hands } from './effect_block_hands';
 
 /** Catalogue of all character modifier types */
 export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
+	block_lock_unlock_others,
+	block_lock_unlock_self,
 	effect_blind,
 	effect_block_hands,
 } as const satisfies Readonly<Record<string, CharacterModifierTypeDefinitionBase>>;

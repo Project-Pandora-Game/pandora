@@ -1,4 +1,4 @@
-import { AppearanceActionProblem, AssertNever, type AssetId, type GameLogicActionSlowdownReason, type ItemDisplayNameType } from 'pandora-common';
+import { AppearanceActionProblem, AssertNever, CHARACTER_MODIFIER_TYPE_DEFINITION, type AssetId, type GameLogicActionSlowdownReason, type ItemDisplayNameType } from 'pandora-common';
 import { ResolveItemDisplayNameType } from '../components/wardrobe/itemDetail/wardrobeItemName';
 import { DescribeAsset, DescribeAttribute } from '../ui/components/chat/chatMessages';
 import { AssetManagerClient } from './assetManager';
@@ -103,6 +103,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `You cannot customize other people's items.`;
 			case 'inRoomDevice':
 				return `You cannot do this while in a room device.`;
+			case 'blockedByCharacterModifier':
+				return `Character modifier "${CHARACTER_MODIFIER_TYPE_DEFINITION[e.modifierType].visibleName}" is preventing this action.`;
 			case 'invalid':
 				return '';
 		}

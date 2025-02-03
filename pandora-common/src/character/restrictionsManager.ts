@@ -50,7 +50,7 @@ export class CharacterRestrictionsManager {
 	public getModifierEffectProperties(): readonly CharacterModifierPropertiesApplier[] {
 		return this.getModifierEffects().map((e): CharacterModifierPropertiesApplier => {
 			const definition = CHARACTER_MODIFIER_TYPE_DEFINITION[e.type];
-			return definition.createPropertiesApplier(e.config);
+			return definition.createPropertiesApplier(e);
 		});
 	}
 

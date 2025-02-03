@@ -10,9 +10,10 @@ import { FilterItemType, type Item, type ItemId, type RoomDeviceLink } from '../
 import { AssetPropertiesResult } from '../assets/properties';
 import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes';
 import { HearingImpairment, Muffler } from '../character/speech';
-import { CHARACTER_MODIFIER_TYPE_DEFINITION, type CharacterModifierEffectData, type CharacterModifierPropertiesApplier } from '../gameLogic';
+import type { CharacterModifierEffectData, CharacterModifierPropertiesApplier } from '../gameLogic';
 import type { AppearanceActionProcessingContext } from '../gameLogic/actionLogic/appearanceActionProcessingContext';
 import type { GameLogicCharacter } from '../gameLogic/character/character';
+import { CHARACTER_MODIFIER_TYPE_DEFINITION } from '../gameLogic/characterModifiers';
 import type { ActionSpaceContext } from '../space/space';
 import { Assert, AssertNever, MemoizeNoArg } from '../utility/misc';
 import { ItemInteractionType } from './restrictionTypes';

@@ -1,8 +1,8 @@
+import { isEqual } from 'lodash';
 import { z } from 'zod';
-import type { EffectsDefinition } from '../../../assets/effects';
-import { AssertNever } from '../../../utility';
+import { Assert, AssertNever } from '../../../utility';
 import type { PermissionConfigDefault, PermissionType } from '../../permissions';
-import type { CharacterModifierStrictnessCategory } from '../characterModifierBaseData';
+import type { CharacterModifierProperties, CharacterModifierPropertiesApplier, CharacterModifierStrictnessCategory } from '../characterModifierBaseData';
 import type { ModifierConfigurationBase } from '../configuration';
 import { CharacterModifierBuildConfigurationSchema, type CharacterModifierBuildConfigurationSchemaType } from './configurationBuilder';
 
@@ -21,7 +21,7 @@ export interface CharacterModifierTypeConstructedDefinition<TType extends string
 	readonly configDefinition: TConfig;
 	readonly configSchema: CharacterModifierBuildConfigurationSchemaType<TConfig>;
 
-	readonly applyCharacterEffects?: (config: CharacterModifierConfiguration<TConfig>, currentEffects: EffectsDefinition) => Readonly<Partial<EffectsDefinition>>;
+	createPropertiesApplier(config: unknown): CharacterModifierPropertiesApplier;
 }
 /** Character modifier type configuration data */
 type CharacterModifierConfiguration<TConfig extends ModifierConfigurationBase> = z.infer<CharacterModifierBuildConfigurationSchemaType<TConfig>>;
@@ -35,7 +35,7 @@ export function DefineCharacterModifier<
 		visibleName: string;
 		strictnessCategory: CharacterModifierStrictnessCategory;
 		config: TConfig;
-	} & Pick<CharacterModifierTypeConstructedDefinition<TType, TConfig>, 'applyCharacterEffects'>,
+	} & NoInfer<CharacterModifierProperties<CharacterModifierConfiguration<TConfig>>>,
 ): CharacterModifierTypeConstructedDefinition<TType, TConfig> {
 
 	const configSchema = CharacterModifierBuildConfigurationSchema(intermediateConfig.config);
@@ -56,6 +56,13 @@ export function DefineCharacterModifier<
 						AssertNever(intermediateConfig.strictnessCategory),
 		configDefinition: intermediateConfig.config,
 		configSchema,
-		applyCharacterEffects: intermediateConfig.applyCharacterEffects,
+		createPropertiesApplier(config): CharacterModifierPropertiesApplier {
+			const parsedConfig = configSchema.parse(config);
+			Assert(isEqual(parsedConfig, config), 'Incompatible configuration passed to character modifier properties applier');
+
+			return {
+				applyCharacterEffects: intermediateConfig.applyCharacterEffects?.bind(globalThis, parsedConfig),
+			};
+		},
 	};
 }

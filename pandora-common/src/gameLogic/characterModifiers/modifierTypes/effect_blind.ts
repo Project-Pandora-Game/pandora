@@ -13,7 +13,7 @@ export const effect_blind = DefineCharacterModifier({
 			options: {
 				min: 0,
 				max: 10,
-withSlider: true,
+				withSlider: true,
 			},
 		},
 		intensityMax: {
@@ -23,12 +23,12 @@ withSlider: true,
 			options: {
 				min: 0,
 				max: 10,
-withSlider: true,
+				withSlider: true,
 			},
 		},
 	},
 
-	applyCharacterEffects: (config, currentEffects) => {
+	applyCharacterEffects(config, currentEffects) {
 		const maxExtraBlind = Math.max(0, config.intensityMax - currentEffects.blind);
 
 		return {

@@ -309,6 +309,11 @@ $drop-overlay-gap: 0.3em;
 		}
 	}
 
+	.description {
+		white-space: pre-wrap;
+		overflow-wrap: break-word;
+	}
+
 	>.fieldset-toggle {
 		margin-top: 1em;
 	}

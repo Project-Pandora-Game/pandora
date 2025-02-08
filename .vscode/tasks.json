@@ -13,6 +13,11 @@
 				"--frozen-lockfile",
 				"--prefer-offline"
 			],
+			"options": {
+				"env": {
+					"COREPACK_ENABLE_DOWNLOAD_PROMPT": "0"
+				}
+			},
 			"presentation": {
 				"echo": true,
 				"reveal": "always",

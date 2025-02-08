@@ -1,6 +1,10 @@
 FROM docker.io/node:22.13.1-alpine AS builder
 
+# Update and enable corepack
+RUN npm install -g corepack@latest
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable
+
 WORKDIR /app
 ENV CI=true
 
@@ -9,19 +13,25 @@ COPY .npmrc package.json pnpm-lock.yaml ./
 # Copy patches folder (if we have any patches)
 # COPY ./patches ./patches
 
-RUN pnpm fetch
+ENV PNPM_HOME="/pnpm"
+ENV PATH="$PNPM_HOME:$PATH"
+RUN corepack prepare
 
 # Bundle app source
 COPY . ./
 
-RUN pnpm install -r --offline --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,sharing=locked,target=/pnpm/store \
+	pnpm install -r --frozen-lockfile
 
 # Build
 RUN pnpm -r --filter pandora-common --filter 'pandora-server-*' run build
 
 # Shrinkwrap for deployment
-RUN pnpm deploy --filter=pandora-server-directory --prod /app/deploy/directory
-RUN pnpm deploy --filter=pandora-server-shard --prod /app/deploy/shard
+RUN --mount=type=cache,id=pnpm,sharing=locked,target=/pnpm/store \
+	pnpm deploy --filter=pandora-server-directory --prod /app/deploy/directory
+
+RUN --mount=type=cache,id=pnpm,sharing=locked,target=/pnpm/store \
+	pnpm deploy --filter=pandora-server-shard --prod /app/deploy/shard
 
 # Directory production image
 FROM docker.io/node:22.13.1-alpine AS pandora-server-directory

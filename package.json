@@ -11,11 +11,11 @@
 			]
 		},
 		"overrides": {
-			"@octokit/types": "13.5.0"
+			"@octokit/types": "13.5.0",
+			"superstatic>re2": "-"
 		},
 		"onlyBuiltDependencies": [
-			"argon2",
-			"re2"
+			"argon2"
 		],
 		"ignoredBuiltDependencies": [
 			"core-js-pure"

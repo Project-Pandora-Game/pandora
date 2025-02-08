@@ -16,5 +16,5 @@ function pnpm_helper() {
 
 	# Do a pnpm install
 	# We set "CI=true" to bypass any potential prompts (e.g. when purging node_modules would be needed)
-	CI=true pnpm install --prefer-offline --frozen-lockfile
+	CI=true pnpm install --prefer-offline --frozen-lockfile --color
 }

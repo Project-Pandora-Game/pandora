@@ -581,8 +581,8 @@ importers:
         specifier: 6.0.1
         version: 6.0.1
       superstatic:
-        specifier: 9.1.0
-        version: 9.1.0(encoding@0.1.13)
+        specifier: 9.2.0
+        version: 9.2.0(encoding@0.1.13)
       tslib:
         specifier: 2.8.1
         version: 2.8.1
@@ -3788,9 +3788,6 @@ packages:
   fast-uri@3.0.6:
     resolution: {integrity: sha512-Atfo14OibSv5wAp4VWNsFYE1AchQRTv9cBGWET4pZWHzYshFSS9NQI6I57rdKn9croWVMbYFbLhJ+yJvmZIIHw==}
 
-  fast-url-parser@1.1.3:
-    resolution: {integrity: sha512-5jOCVXADYNuRkKFzNJ0dCCewsZiYo0dz8QNYljkOpFC6r2U4OBmKtvm/Tsuh4w1YYdDqDb31a8TVhBJ2OJKdqQ==}
-
   fast-xml-parser@4.4.1:
     resolution: {integrity: sha512-xkjOecfnKGkSsOwtZ5Pz7Us/T6mrbPQrq0nh+aCO5V9nk5NLWmasAHumTKjiPJPWANe+kAZ84Jc8ooJkzZ88Sw==}
     hasBin: true
@@ -5833,9 +5830,6 @@ packages:
   pstree.remy@1.1.8:
     resolution: {integrity: sha512-77DZwxQmxKnu3aR542U+X8FypNzbfJ+C5XQDk3uWjWxn6151aIMGthWYRXTqT1E5oJvg+ljaa2OJi+VfvCOQ8w==}
 
-  punycode@1.4.1:
-    resolution: {integrity: sha512-jmYNElW7yvO7TV33CjSmvSiE2yco3bV2czu/OzDKdMNVZQWfxCblURLhf+47syQRBntjfLdd/H0egrzIG+oaFQ==}
-
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
     engines: {node: '>=6'}
@@ -6592,8 +6586,8 @@ packages:
     peerDependencies:
       postcss: ^8.4.31
 
-  superstatic@9.1.0:
-    resolution: {integrity: sha512-1PcxGREb5My6iX/DL9x+3+XFY5lM2nOiPBQV45RwbpM5bHGsStz+Lduts7y8W+xo68pHa7F8atTF52+dwfwxcw==}
+  superstatic@9.2.0:
+    resolution: {integrity: sha512-QrJAJIpAij0jJT1nEwYTB0SzDi4k0wYygu6GxK0ko8twiQgfgaOAZ7Hu99p02MTAsGho753zhzSvsw8We4PBEQ==}
     engines: {node: 18 || 20 || 22}
     hasBin: true
 
@@ -11376,10 +11370,6 @@ snapshots:
 
   fast-uri@3.0.6: {}
 
-  fast-url-parser@1.1.3:
-    dependencies:
-      punycode: 1.4.1
-
   fast-xml-parser@4.4.1:
     dependencies:
       strnum: 1.0.5
@@ -13742,8 +13732,6 @@ snapshots:
 
   pstree.remy@1.1.8: {}
 
-  punycode@1.4.1: {}
-
   punycode@2.3.1: {}
 
   pupa@2.1.1:
@@ -14582,14 +14570,13 @@ snapshots:
       postcss: 8.5.1
       postcss-selector-parser: 6.1.2
 
-  superstatic@9.1.0(encoding@0.1.13):
+  superstatic@9.2.0(encoding@0.1.13):
     dependencies:
       basic-auth-connect: 1.1.0
       commander: 10.0.1
       compression: 1.7.5
       connect: 3.7.0
       destroy: 1.2.0
-      fast-url-parser: 1.1.3
       glob-slasher: 1.0.1
       is-url: 1.2.4
       join-path: 1.1.1

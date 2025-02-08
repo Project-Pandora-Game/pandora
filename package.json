@@ -12,7 +12,14 @@
 		},
 		"overrides": {
 			"@octokit/types": "13.5.0"
-		}
+		},
+		"onlyBuiltDependencies": [
+			"argon2",
+			"re2"
+		],
+		"ignoredBuiltDependencies": [
+			"core-js-pure"
+		]
 	},
 	"type": "module",
 	"scripts": {

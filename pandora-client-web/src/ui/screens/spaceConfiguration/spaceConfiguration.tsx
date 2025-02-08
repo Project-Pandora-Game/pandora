@@ -115,7 +115,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 	AssertNotNullable(currentAccount);
 	const create = useCreateSpace();
 	let currentSpaceInfo: Immutable<CurrentSpaceInfo> | null = useSpaceInfo();
-	const lastSpaceId = useRef<SpaceId | null>();
+	const lastSpaceId = useRef<SpaceId>(null);
 	const isInPublicSpace = currentSpaceInfo.id != null;
 	const isDeveloper = currentAccount?.roles !== undefined && IsAuthorized(currentAccount.roles, 'developer');
 	if (creation) {

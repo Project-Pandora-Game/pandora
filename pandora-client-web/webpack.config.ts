@@ -136,6 +136,7 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 						sourceMap: false,
 						inlineSourceMap: false,
 						declarationMap: false,
+						jsx: env.prod ? 'react-jsx' : 'react-jsxdev',
 					},
 				},
 			},
@@ -197,6 +198,9 @@ function GenerateRules(env: WebpackEnv): RuleSetRule[] {
 				loader: 'ts-loader',
 				options: {
 					configFile: 'tsconfig.json',
+					compilerOptions: {
+						jsx: env.prod ? 'react-jsx' : 'react-jsxdev',
+					},
 					getCustomTransformers: () => ({
 						before: [!env.prod && ReactRefreshTypeScript()].filter(Boolean),
 					}),

@@ -346,7 +346,7 @@ export function ConfirmDialog({ symbol, yes = 'Ok', no = 'Cancel' }: ConfirmDial
 export function useConfirmDialog(symbol: symbol = DEFAULT_CONFIRM_DIALOG_SYMBOL): (title: string, content?: ReactNode, priority?: number, dialogClassName?: string) => Promise<boolean> {
 	const unset = useRef(false);
 	const entry = GetConfirmDialogEntry(symbol);
-	const resolveRef = useRef<(result: boolean) => void>();
+	const resolveRef = useRef<(result: boolean) => void>(undefined);
 	useEffect(() => () => {
 		if (unset.current) {
 			entry.value = null;

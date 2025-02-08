@@ -12,7 +12,7 @@ import { useEvent } from './useEvent';
  * autoScroll - boolean to indicate if the element should be scrolled automatically
  */
 export function useAutoScroll<Element extends HTMLElement>(deps: DependencyList = []): [
-	React.RefObject<Element>,
+	React.RefObject<Element | null>,
 	(forceScroll: boolean) => void,
 	boolean,
 ] {

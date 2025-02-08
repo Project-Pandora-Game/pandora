@@ -5,7 +5,7 @@ import type { IInputBase } from './input/inputBase';
  * Utility to focus a desired input if there is no input focused when user starts writing on the keyboard
  * @param ref - The input to focus
  */
-export function useInputAutofocus(ref: React.RefObject<HTMLTextAreaElement | HTMLInputElement | IInputBase>): void {
+export function useInputAutofocus(ref: React.RefObject<HTMLTextAreaElement | HTMLInputElement | IInputBase | null>): void {
 	useEffect(() => {
 		const keyPressHandler = (ev: KeyboardEvent) => {
 			if (

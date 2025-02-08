@@ -1,6 +1,10 @@
 FROM docker.io/node:22.13.1-alpine AS builder
 
+# Update and enable corepack
+RUN npm install -g corepack@latest
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 RUN corepack enable
+
 WORKDIR /app
 ENV CI=true
 

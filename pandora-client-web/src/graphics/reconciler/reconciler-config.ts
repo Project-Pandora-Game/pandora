@@ -145,18 +145,42 @@ const NO_CONTEXT: Record<string, never> = {};
 
 let CurrentUpdatePriority: Lane = 0;
 
+function MakeUnsupportedShim(reason: string): () => never {
+	return function () {
+		throw new Error(reason);
+	};
+}
+
 export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 	// Debug tools info
-	rendererPackageName: 'pandora-client-web/pixi-renderer',
 	rendererVersion: GAME_VERSION ?? '0.0.0',
+	rendererPackageName: 'pandora-client-web/pixi-renderer',
 	extraDevToolsConfig: null,
-	// Mode setup
-	supportsMutation: true,
-	supportsPersistence: false,
-	supportsHydration: false,
-	isPrimaryRenderer: false,
-	warnsIfNotActing: false,
-	// Basics
+
+	//#region Basics
+
+	getPublicInstance(instance) {
+		// Return what should be used as `ref` of the component.
+		return instance.instance;
+	},
+	// Context
+	// Used for keeping data where in the tree we are.
+	// We don't use this feature, as none of our elements are context-dependant.
+	getRootHostContext() {
+		return NO_CONTEXT;
+	},
+	getChildHostContext() {
+		return NO_CONTEXT;
+	},
+
+	prepareForCommit(_containerInfo) {
+		// Called right before all updates are applied
+		return null; // We don't need to do anything around commit
+	},
+	resetAfterCommit(_containerInfo) {
+		// Called right after all updates are applied
+		// We don't need to do anything around commit
+	},
 	createInstance(type, props, rootContainer, _hostContext, _internalHandle) {
 		// When react requests creation of a new element instance
 		const componentConfig = PIXI_REGISTERED_COMPONENTS.get(type);
@@ -173,17 +197,54 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 		// Called right after `createInstance` and all `appendInitialChild` calls - marking the instance ready
 		return false; // No work scheduled on mount
 	},
-	getPublicInstance(instance) {
-		// Return what should be used as `ref` of the component.
-		return instance.instance;
+	shouldSetTextContent(_type, _props) {
+		return false;
 	},
-	prepareForCommit(_containerInfo) {
-		// Called right before all updates are applied
-		return null; // We don't need to do anything around commit
+	createTextInstance: MakeUnsupportedShim('Text nodes are not supported'),
+
+	scheduleTimeout: setTimeout,
+	cancelTimeout: clearTimeout,
+	noTimeout: -1, // Value that can never be returned by `scheduleTimeout`
+
+	isPrimaryRenderer: false,
+	warnsIfNotActing: false,
+	supportsMutation: true,
+	supportsPersistence: false,
+	supportsHydration: false,
+
+	getInstanceFromNode(_node) {
+		// TODO: Find out what this is.
+		return null;
 	},
-	resetAfterCommit(_containerInfo) {
-		// Called right after all updates are applied
-		// We don't need to do anything around commit
+	beforeActiveInstanceBlur() {
+		// Noop
+	},
+	afterActiveInstanceBlur() {
+		// Noop
+	},
+	preparePortalMount(_containerInfo) {
+		// Nothing to do
+	},
+	prepareScopeUpdate: MakeUnsupportedShim('React Scopes are not supported.'),
+	getInstanceFromScope: MakeUnsupportedShim('React Scopes are not supported.'),
+
+	setCurrentUpdatePriority(newPriority: Lane): void {
+		CurrentUpdatePriority = newPriority;
+	},
+	getCurrentUpdatePriority(): Lane {
+		return CurrentUpdatePriority;
+	},
+	resolveUpdatePriority(): Lane { // Replaces getCurrentEventPriority
+		return CurrentUpdatePriority || DefaultEventPriority;
+	},
+	resolveEventType() {
+		return null;
+	},
+	resolveEventTimeStamp() {
+		return -1.1;
+	},
+	shouldAttemptEagerTransition() {
+		return false;
 	},
 	detachDeletedInstance(node) {
 		// This method isn't really documented by React.
@@ -191,8 +252,57 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 		// but it also appears it is called multiple times.
 		node.destroy();
 	},
+	requestPostPaintCallback() {
+		// Noop
+	},
+	maySuspendCommit() {
+		return false;
+	},
+	preloadInstance(_type, _props) {
+		return true; // true indicates already loaded
+	},
+	startSuspendingCommit() {
+		// Noop
+	},
+	suspendInstance() {
+		// Noop
+	},
+	waitForCommitToBeReady() {
+		return null;
+	},
+	NotPendingTransition: null,
+	HostTransitionContext: createContext<null>(null),
+	resetFormInstance() {
+		// Noop
+	},
+	// FIXME: Possibly still missing:
+	// bindToConsole
 
-	// Mutation support
+	//#endregion
+
+	//#region Microtasks
+
+	supportsMicrotasks: true,
+	scheduleMicrotask: queueMicrotask,
+
+	//#endregion
+
+	//#region Test selectors
+
+	//@ts-expect-error: It does exist in the reconciler code.
+	supportsTestSelectors: false,
+	findFiberRoot: MakeUnsupportedShim('Test selectors are not supported'),
+	getBoundingRect: MakeUnsupportedShim('Test selectors are not supported'),
+	getTextContent: MakeUnsupportedShim('Test selectors are not supported'),
+	isHiddenSubtree: MakeUnsupportedShim('Test selectors are not supported'),
+	matchAccessibilityRole: MakeUnsupportedShim('Test selectors are not supported'),
+	setFocusIfFocusable: MakeUnsupportedShim('Test selectors are not supported'),
+	setupIntersectionObserver: MakeUnsupportedShim('Test selectors are not supported'),
+
+	//#endregion
+
+	//#region Mutation
+
 	appendChild(parentInstance, child) {
 		// Append a new child to an existing instance
 		parentInstance.addChild(child.instance);
@@ -202,6 +312,25 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 		// Append a new child to the root container
 		container.addChild(child.instance);
 		container.emitNeedsUpdate();
+	},
+	commitTextUpdate(_textInstance, _oldText, _newText) {
+		// Nothing to do (should never happen)
+	},
+	commitMount(_instance, _type, _props, _internalInstanceHandle) {
+		// Called right after instance was mounted under some parrent,
+		// but only called if we returned `true` from `finalizeInitialChildren`.
+		// Nothing to do
+	},
+	commitUpdate(
+		instance: PixiInternalElementInstance<PixiContainer, never, any, any>,
+		_type: string,
+		prevProps: any,
+		nextProps: any,
+		_internalHandle: ReactReconciler.OpaqueHandle,
+	): void {
+		// Called when we need to apply an update.
+		instance.commitUpdate(prevProps, nextProps);
+		instance.emitNeedsUpdate();
 	},
 	insertBefore(parentInstance, child, beforeChild) {
 		// Append a new child to an existing instance, but to the position before `beforeChild` (a child that is already attached)
@@ -225,21 +354,8 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 		container.removeChild(child.instance);
 		container.emitNeedsUpdate();
 	},
-	commitMount(_instance, _type, _props, _internalInstanceHandle) {
-		// Called right after instance was mounted under some parrent,
-		// but only called if we returned `true` from `finalizeInitialChildren`.
-		// Nothing to do
-	},
-	commitUpdate(
-		instance: PixiInternalElementInstance<PixiContainer, never, any, any>,
-		_type: string,
-		prevProps: any,
-		nextProps: any,
-		_internalHandle: ReactReconciler.OpaqueHandle,
-	): void {
-		// Called when we need to apply an update.
-		instance.commitUpdate(prevProps, nextProps);
-		instance.emitNeedsUpdate();
+	resetTextContent(_instance) {
+		// Nothing to do (should never happen)
 	},
 	hideInstance(instance) {
 		// Hides some instance without removing it.
@@ -247,10 +363,16 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 		instance.hide();
 		instance.emitNeedsUpdate();
 	},
+	hideTextInstance(_textInstance) {
+		// Nothing to do (should never happen)
+	},
 	unhideInstance(instance, props) {
 		// Un-hides a previously hidden instance.
 		instance.unhide(props);
 		instance.emitNeedsUpdate();
+	},
+	unhideTextInstance(_textInstance, _text) {
+		// Nothing to do (should never happen)
 	},
 	clearContainer(container) {
 		// Remove all children from the root container
@@ -258,114 +380,84 @@ export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 		container.emitNeedsUpdate();
 	},
 
-	// Text nodes
-	// We currently do not support text nodes.
-	// In the future we might support them as children of some elements (like `Text`) to make them look nicer,
-	// but that is low-priority.
-	createTextInstance(_text, _rootContainer, _hostContext, _internalHandle) {
-		Assert(false, 'Text nodes are not supported');
-	},
-	shouldSetTextContent(_type, _props) {
-		return false;
-	},
-	resetTextContent(_instance) {
-		// Nothing to do (should never happen)
-	},
-	commitTextUpdate(_textInstance, _oldText, _newText) {
-		// Nothing to do (should never happen)
-	},
-	hideTextInstance(_textInstance) {
-		// Nothing to do (should never happen)
-	},
-	unhideTextInstance(_textInstance, _text) {
-		// Nothing to do (should never happen)
-	},
+	//#endregion
 
-	// Context
-	// Used for keeping data where in the tree we are.
-	// We don't use this feature, as none of our elements are context-dependant.
-	getRootHostContext(_rootContainer) {
-		return NO_CONTEXT;
-	},
-	getChildHostContext(parentHostContext, _type, _rootContainer) {
-		return parentHostContext;
-	},
+	//#region Persistence
 
-	// Portals
-	preparePortalMount(_containerInfo) {
-		// Nothing to do
-	},
+	cloneInstance: MakeUnsupportedShim('Persistence is not supported.'),
+	createContainerChildSet: MakeUnsupportedShim('Persistence is not supported.'),
+	appendChildToContainerChildSet: MakeUnsupportedShim('Persistence is not supported.'),
+	finalizeContainerChildren: MakeUnsupportedShim('Persistence is not supported.'),
+	replaceContainerChildren: MakeUnsupportedShim('Persistence is not supported.'),
+	cloneHiddenInstance: MakeUnsupportedShim('Persistence is not supported.'),
+	cloneHiddenTextInstance: MakeUnsupportedShim('Persistence is not supported.'),
 
-	// Bowser link-up
-	scheduleTimeout: setTimeout,
-	cancelTimeout: clearTimeout,
-	noTimeout: -1, // Value that can never be returned by `scheduleTimeout`
-	supportsMicrotasks: true,
-	scheduleMicrotask: queueMicrotask,
+	//#endregion
 
-	// Things that are type-required be we don't seem to need
-	getInstanceFromNode(_node) {
-		throw new Error('Not yet implemented');
-	},
-	beforeActiveInstanceBlur() {
-		// Noop
-	},
-	afterActiveInstanceBlur() {
-		// Noop
-	},
-	prepareScopeUpdate(_scopeInstance, _instance) {
-		throw new Error('Not yet implemented');
-	},
-	getInstanceFromScope(_scopeInstance) {
-		throw new Error('Not yet implemented');
-	},
+	//#region Hydration
 
-	// React 19
-	setCurrentUpdatePriority(newPriority: Lane): void {
-		CurrentUpdatePriority = newPriority;
-	},
-	getCurrentUpdatePriority(): Lane {
-		return CurrentUpdatePriority;
-	},
-	resolveUpdatePriority(): Lane { // Replaces getCurrentEventPriority
-		return CurrentUpdatePriority || DefaultEventPriority;
-	},
-	maySuspendCommit() {
-		return false;
-	},
-	preloadInstance(_type, _props) {
-		return true; // true indicates already loaded
-	},
-	startSuspendingCommit() {
-		// Noop
-	},
-	suspendInstance() {
-		// Noop
-	},
-	waitForCommitToBeReady() {
-		return null;
-	},
-	HostTransitionContext: createContext<null>(null),
-	shouldAttemptEagerTransition() {
-		return false;
-	},
+	isSuspenseInstancePending: MakeUnsupportedShim('Hydration is not supported.'),
+	isSuspenseInstanceFallback: MakeUnsupportedShim('Hydration is not supported.'),
+	getSuspenseInstanceFallbackErrorDetails: MakeUnsupportedShim('Hydration is not supported.'),
+	registerSuspenseInstanceRetry: MakeUnsupportedShim('Hydration is not supported.'),
+	canHydrateFormStateMarker: MakeUnsupportedShim('Hydration is not supported.'),
+	isFormStateMarkerMatching: MakeUnsupportedShim('Hydration is not supported.'),
+	getNextHydratableSibling: MakeUnsupportedShim('Hydration is not supported.'),
+	getFirstHydratableChild: MakeUnsupportedShim('Hydration is not supported.'),
+	getFirstHydratableChildWithinContainer: MakeUnsupportedShim('Hydration is not supported.'),
+	getFirstHydratableChildWithinSuspenseInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	canHydrateInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	canHydrateTextInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	canHydrateSuspenseInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	hydrateInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	hydrateTextInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	hydrateSuspenseInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	getNextHydratableInstanceAfterSuspenseInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	commitHydratedContainer: MakeUnsupportedShim('Hydration is not supported.'),
+	commitHydratedSuspenseInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	clearSuspenseBoundary: MakeUnsupportedShim('Hydration is not supported.'),
+	clearSuspenseBoundaryFromContainer: MakeUnsupportedShim('Hydration is not supported.'),
+	shouldDeleteUnhydratedTailInstances: MakeUnsupportedShim('Hydration is not supported.'),
+	diffHydratedPropsForDevWarnings: MakeUnsupportedShim('Hydration is not supported.'),
+	diffHydratedTextForDevWarnings: MakeUnsupportedShim('Hydration is not supported.'),
+	describeHydratableInstanceForDevWarnings: MakeUnsupportedShim('Hydration is not supported.'),
+	validateHydratableInstance: MakeUnsupportedShim('Hydration is not supported.'),
+	validateHydratableTextInstance: MakeUnsupportedShim('Hydration is not supported.'),
+
+	//#endregion
+
+	//#region Resources
+
+	supportsResources: false,
+	isHostHoistableType: MakeUnsupportedShim('Resources are not supported.'),
+	getHoistableRoot: MakeUnsupportedShim('Resources are not supported.'),
+	getResource: MakeUnsupportedShim('Resources are not supported.'),
+	acquireResource: MakeUnsupportedShim('Resources are not supported.'),
+	releaseResource: MakeUnsupportedShim('Resources are not supported.'),
+	hydrateHoistable: MakeUnsupportedShim('Resources are not supported.'),
+	mountHoistable: MakeUnsupportedShim('Resources are not supported.'),
+	unmountHoistable: MakeUnsupportedShim('Resources are not supported.'),
+	createHoistableInstance: MakeUnsupportedShim('Resources are not supported.'),
+	prepareToCommitHoistables: MakeUnsupportedShim('Resources are not supported.'),
+	mayResourceSuspendCommit: MakeUnsupportedShim('Resources are not supported.'),
+	preloadResource: MakeUnsupportedShim('Resources are not supported.'),
+	suspendResource: MakeUnsupportedShim('Resources are not supported.'),
+
+	//#endregion
+
+	//#region Singletons
+
+	supportsSingletons: false,
+	resolveSingletonInstance: MakeUnsupportedShim('Singletons are not supported'),
+	clearSingleton: MakeUnsupportedShim('Singletons are not supported'),
+	acquireSingletonInstance: MakeUnsupportedShim('Singletons are not supported'),
+	releaseSingletonInstance: MakeUnsupportedShim('Singletons are not supported'),
+	isHostSingletonType: MakeUnsupportedShim('Singletons are not supported'),
+
+	//#endregion
+
+	// TODO: Does this actually exist?
 	trackSchedulerEvent() {
 		// Noop
 	},
-	resolveEventType() {
-		return null;
-	},
-	resolveEventTimeStamp() {
-		return -1.1;
-	},
-	requestPostPaintCallback() {
-		// Noop
-	},
-	NotPendingTransition: null,
-	resetFormInstance() {
-		// Noop
-	},
 };
-
-// FIXME: Possibly still missing:
-// bindToConsole

@@ -14,5 +14,7 @@ function pnpm_helper() {
 	# Do not prompt for user confirmation if downloading new pnpm version
 	export COREPACK_ENABLE_DOWNLOAD_PROMPT=0
 
-	pnpm install --prefer-offline --frozen-lockfile
+	# Do a pnpm install
+	# We set "CI=true" to bypass any potential prompts (e.g. when purging node_modules would be needed)
+	CI=true pnpm install --prefer-offline --frozen-lockfile
 }

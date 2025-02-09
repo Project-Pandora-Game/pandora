@@ -21,7 +21,7 @@ export type CharacterModifierCondition = z.infer<typeof CharacterModifierConditi
 export function EvaluateCharacterModifierCondition(
 	condition: Immutable<CharacterModifierCondition>,
 	gameState: AssetFrameworkGlobalState,
-	spaceInfo: CurrentSpaceInfo,
+	spaceInfo: Immutable<CurrentSpaceInfo>,
 ): boolean {
 
 	switch (condition.type) {

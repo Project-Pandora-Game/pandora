@@ -7,10 +7,12 @@ import {
 } from 'pandora-common';
 import { ReactElement, ReactNode } from 'react';
 import { DivContainer } from '../../../common/container/container';
+import './characterModifierInstanceView.scss';
 
-export function WardrobeCharacterModifierFullInstanceView({ children, modifiers, currentlyFocusedModifier, focusModifierInstance }: {
+export function WardrobeCharacterModifierFullInstanceView({ children, modifiers, modifierEffects, currentlyFocusedModifier, focusModifierInstance }: {
 	children?: ReactNode;
 	modifiers: readonly CharacterModifierInstanceClientData[];
+	modifierEffects: readonly CharacterModifierEffectData[];
 	currentlyFocusedModifier: CharacterModifierId | null;
 	focusModifierInstance: (id: CharacterModifierId | null) => void;
 }): ReactElement | null {
@@ -29,6 +31,7 @@ export function WardrobeCharacterModifierFullInstanceView({ children, modifiers,
 											modifier={ m }
 											selected={ currentlyFocusedModifier === m.id }
 											onClick={ () => focusModifierInstance(currentlyFocusedModifier === m.id ? null : m.id) }
+											active={ modifierEffects.some((e) => e.id === m.id) }
 										/>
 									))
 								}
@@ -45,10 +48,11 @@ export function WardrobeCharacterModifierFullInstanceView({ children, modifiers,
 	);
 }
 
-function ModifierFullInstanceListItem({ modifier, selected = false, onClick }: {
+function ModifierFullInstanceListItem({ modifier, selected = false, onClick, active }: {
 	modifier: CharacterModifierInstanceClientData;
 	selected?: boolean;
 	onClick?: () => void;
+	active: boolean;
 }): ReactElement {
 	const definition = CHARACTER_MODIFIER_TYPE_DEFINITION[modifier.type];
 	// TODO: const preference = useAssetPreference(asset);
@@ -61,10 +65,17 @@ function ModifierFullInstanceListItem({ modifier, selected = false, onClick }: {
 				selected ? 'selected' : null,
 				'allowed',
 				// `pref-${preference}`,
+				'characterModifierInstance',
 			) }
 			tabIndex={ 0 }
 			onClick={ onClick }
 		>
+			<div
+				className={ classNames(
+					'modifierStatusBar',
+					!modifier.enabled ? 'status-disabled' : active ? 'status-active' : 'status-inactive',
+				) }
+			/>
 			<span className='itemName'>{ definition.visibleName }</span>
 		</div>
 	);

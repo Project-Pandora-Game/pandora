@@ -27,7 +27,7 @@ export type CharacterModifierConditionChain = z.infer<typeof CharacterModifierCo
 export function EvaluateCharacterModifierConditionChain(
 	chain: Immutable<CharacterModifierConditionChain>,
 	gameState: AssetFrameworkGlobalState,
-	spaceInfo: CurrentSpaceInfo,
+	spaceInfo: Immutable<CurrentSpaceInfo>,
 ): boolean {
 	// Empty chain is always truthy (for always false, user can just disable the modifier)
 	if (chain.length === 0)

@@ -5,5 +5,6 @@ export * from './characterModifiersSubsystem';
 export * from './characterModifiersSubsystemClient';
 export * from './characterModifiersSubsystemServer';
 export * from './characterModifierType';
+export * from './conditions';
 export * from './configuration';
 export * from './modifierTypes/_index';

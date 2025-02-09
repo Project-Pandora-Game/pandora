@@ -12,7 +12,7 @@ import {
 	type ModifierConfigurationEntryDefinition,
 	type PermissionGroup,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import type { Promisable } from 'type-fest';
 import crossIcon from '../../../../assets/icons/cross.svg';

@@ -10,7 +10,7 @@ import {
 	type IShardClientChangeEvents,
 	type PermissionGroup,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
+import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 import { ICharacter, useCharacterRestrictionManager } from '../../character/character';
 import { Column } from '../common/container/container';
 import { Tab, TabContainer, type TabContainerRef } from '../common/tabs/tabs';

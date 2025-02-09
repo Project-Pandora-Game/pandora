@@ -1,5 +1,5 @@
 import { AssertNever, IsSimpleToken, PasswordSchema, SIMPLE_TOKEN_LENGTH, UserNameSchema } from 'pandora-common';
-import React, { ReactElement, useState } from 'react';
+import { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import { FormInput } from '../../../common/userInteraction/input/formInput';

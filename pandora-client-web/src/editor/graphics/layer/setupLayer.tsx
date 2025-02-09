@@ -1,7 +1,7 @@
 import { AssetFrameworkCharacterState } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { Texture } from 'pixi.js';
-import React, { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { useLayerDefinition, useLayerImageSource, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations';
 import { useCharacterAppearanceItems } from '../../../character/character';

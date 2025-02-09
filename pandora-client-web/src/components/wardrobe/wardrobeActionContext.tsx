@@ -18,7 +18,7 @@ import {
 	type Nullable,
 	type PermissionGroup,
 } from 'pandora-common';
-import React, { createContext, useCallback, useContext, useMemo, type ReactElement, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useMemo, type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import { RenderAppearanceActionProblem } from '../../assets/appearanceValidation';
 import { useAssetManager } from '../../assets/assetManager';

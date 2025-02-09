@@ -1,4 +1,4 @@
-import React, { MouseEvent, ReactElement, useCallback, useState } from 'react';
+import { MouseEvent, ReactElement, useCallback, useState } from 'react';
 import helpIcon from '../../assets/icons/help.svg';
 import { ChildrenProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';

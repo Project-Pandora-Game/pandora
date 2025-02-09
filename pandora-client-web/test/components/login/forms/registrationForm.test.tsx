@@ -1,9 +1,8 @@
 import { screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import React from 'react';
 import { RegistrationForm } from '../../../../src/components/login/forms/registrationForm';
-import { RenderWithRouterAndProviders } from '../../../testUtils';
 import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
+import { RenderWithRouterAndProviders } from '../../../testUtils';
 import { INVALID_DISPLAY_NAMES, INVALID_EMAILS, INVALID_USERNAMES } from '../loginTestData';
 
 describe('Registration Form', () => {

@@ -5,7 +5,7 @@ import {
 	ItemTemplate,
 	type Asset,
 } from 'pandora-common';
-import React, { ReactElement, useCallback } from 'react';
+import { ReactElement, useCallback } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import crossIcon from '../../../assets/icons/cross.svg';
 import strugglingAllow from '../../../assets/icons/struggling_allow.svg';

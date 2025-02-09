@@ -1,10 +1,10 @@
 import {
 	AssetFrameworkCharacterState,
 } from 'pandora-common';
-import React, { ReactElement, useEffect } from 'react';
+import { ReactElement, useEffect } from 'react';
 import { ICharacter, useCharacterAppearanceItems } from '../../../character/character';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { Column } from '../../common/container/container';
+import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
 import { useWardrobeContext } from '../wardrobeContext';
 

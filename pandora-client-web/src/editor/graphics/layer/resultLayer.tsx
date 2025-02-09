@@ -1,7 +1,7 @@
 import { isEqual } from 'lodash';
 import { Assert } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import React, { ReactElement, useCallback, useMemo } from 'react';
+import { ReactElement, useCallback, useMemo } from 'react';
 import { useLayerDefinition, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations';
 import dotTexture from '../../../assets/editor/dotTexture.png';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';

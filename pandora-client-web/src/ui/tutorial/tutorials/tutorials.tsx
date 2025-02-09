@@ -1,5 +1,4 @@
 import { LIMIT_CHARACTER_COUNT } from 'pandora-common';
-import React from 'react';
 import maid from '../../../assets/maid.png';
 import { Column, Row } from '../../../components/common/container/container';
 import { ExternalLink } from '../../../components/common/link/externalLink';

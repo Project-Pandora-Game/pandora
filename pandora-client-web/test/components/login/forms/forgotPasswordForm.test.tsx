@@ -1,9 +1,8 @@
 import { screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import React from 'react';
 import { ForgotPasswordForm } from '../../../../src/components/login/forms/forgotPasswordForm';
-import { RenderWithRouterAndProviders } from '../../../testUtils';
 import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
+import { RenderWithRouterAndProviders } from '../../../testUtils';
 import { INVALID_EMAILS } from '../loginTestData';
 
 describe('Forgot Password Form', () => {

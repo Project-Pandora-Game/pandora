@@ -5,7 +5,7 @@ import {
 	HexRGBAColorString,
 	ItemColorBundle,
 } from 'pandora-common';
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment';
 import { ColorInputRGBA } from '../../common/colorInput/colorInput';
 import { FieldsetToggle } from '../../common/fieldsetToggle';

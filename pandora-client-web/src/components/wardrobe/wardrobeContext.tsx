@@ -8,7 +8,7 @@ import {
 	EvalItemPath,
 	ItemId,
 } from 'pandora-common';
-import React, { createContext, ReactElement, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, ReactElement, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { Observable, useObservable } from '../../observable';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';

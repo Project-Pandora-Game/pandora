@@ -1,13 +1,13 @@
-import React, { ReactElement, useState } from 'react';
+import { ReactElement, useState } from 'react';
+import { z } from 'zod';
+import pandoraLogo from '../../assets/icons/pandora.svg';
 import { useBrowserStorage } from '../../browserStorage';
 import { ChildrenProps } from '../../common/reactTypes';
 import { GAME_NAME } from '../../config/Environment';
 import { Button } from '../common/button/button';
 import { Column, Row } from '../common/container/container';
-import pandoraLogo from '../../assets/icons/pandora.svg';
 import { ModalDialog } from '../dialog/dialog';
 import './eula.scss';
-import { z } from 'zod';
 import { EULA_LAST_UPDATED, EULA_VERSION, PrivacyPolicyContent } from './privacyPolicy';
 
 /**

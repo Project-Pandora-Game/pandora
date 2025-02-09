@@ -14,7 +14,7 @@ import {
 	type Item,
 	type ItemContainerPath,
 } from 'pandora-common';
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import { useCharacterDataOptional, type IChatroomCharacter } from '../../../character/character';
 import { useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';

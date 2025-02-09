@@ -12,7 +12,7 @@ import {
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Texture } from 'pixi.js';
-import React, { ReactElement, useMemo, useRef } from 'react';
+import { ReactElement, useMemo, useRef } from 'react';
 import dotTexture from '../../assets/editor/dotTexture.png';
 import { useEvent } from '../../common/useEvent';
 import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';

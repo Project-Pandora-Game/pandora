@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 import { DivContainer } from '../../../components/common/container/container';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs';

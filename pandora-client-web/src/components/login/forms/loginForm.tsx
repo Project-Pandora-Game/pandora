@@ -1,5 +1,5 @@
 import { UserNameSchema } from 'pandora-common';
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 import pandoraLogo from '../../../assets/icons/pandora.svg';
 import { FormInput } from '../../../common/userInteraction/input/formInput';
 import { TextInput } from '../../../common/userInteraction/input/textInput';

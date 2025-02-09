@@ -1,6 +1,6 @@
 import { RenderResult, screen } from '@testing-library/react';
 import { noop } from 'lodash';
-import React, { ComponentType } from 'react';
+import { ComponentType } from 'react';
 import { AuthFormData, authFormDataContext } from '../../../src/components/login/authFormDataProvider';
 import { AuthFormRouter } from '../../../src/components/login/authFormRouter';
 import { AccountVerificationForm } from '../../../src/components/login/forms/accountVerificationForm';

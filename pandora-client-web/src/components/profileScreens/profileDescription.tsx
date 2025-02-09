@@ -1,6 +1,5 @@
 import type { ReactElement } from 'react';
 import { RenderedLink } from '../../ui/screens/spaceJoin/spaceJoin';
-import React from 'react';
 
 export function ProfileDescription({ contents }: { contents: string; }): ReactElement {
 	const segments = contents.split(/(https?:\/\/\S+)/);

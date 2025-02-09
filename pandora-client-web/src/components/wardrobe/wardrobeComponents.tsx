@@ -15,7 +15,7 @@ import {
 	type GameLogicActionSlowdownReason,
 	type HexColorString,
 } from 'pandora-common';
-import React, { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
+import { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
 import { z } from 'zod';
 import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem, RenderAppearanceActionSlowdown } from '../../assets/appearanceValidation';
 import { useAssetManager } from '../../assets/assetManager';

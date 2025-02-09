@@ -1,5 +1,5 @@
 import { ACCOUNT_SETTINGS_DEFAULT, AccountSettingsSchema, GetLogger, type AccountSettings } from 'pandora-common';
-import React, { type ReactElement, type ReactNode } from 'react';
+import { type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import type { ConditionalKeys } from 'type-fest';
 import type { ZodType } from 'zod';

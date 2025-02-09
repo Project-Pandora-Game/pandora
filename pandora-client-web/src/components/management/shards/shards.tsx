@@ -1,5 +1,5 @@
 import { EMPTY, IsAuthorized, IShardTokenConnectInfo, IShardTokenType } from 'pandora-common';
-import React, { createContext, ReactElement, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, ReactElement, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { useAsyncEvent } from '../../../common/useEvent';

@@ -328,6 +328,7 @@ export default tsEslint.config(
 		],
 		extends: [
 			eslintReactPlugin.configs.flat.recommended,
+			eslintReactPlugin.configs.flat['jsx-runtime'],
 		],
 		plugins: {
 			'react': eslintReactPlugin,

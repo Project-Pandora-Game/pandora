@@ -517,6 +517,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		return space;
 	}
 
+	@DbSynchronized((_name, [id]) => id)
 	public async updateSpace(id: SpaceId, data: SpaceDataDirectoryUpdate & SpaceDataShardUpdate, accessId: string | null): Promise<boolean> {
 		if (accessId !== null) {
 			const result = await this._spaces.findOneAndUpdate({ id, accessId }, { $set: data });
@@ -527,6 +528,7 @@ export default class MongoDatabase implements PandoraDatabase {
 		}
 	}
 
+	@DbSynchronized((_name, [id]) => id)
 	public async deleteSpace(id: SpaceId): Promise<void> {
 		await this._spaces.deleteOne({ id });
 	}

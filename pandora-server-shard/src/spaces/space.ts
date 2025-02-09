@@ -37,6 +37,7 @@ import {
 	SpaceId,
 	SpaceLoadData,
 	type AppearanceActionProcessingResultValid,
+	type CurrentSpaceInfo,
 	type IChatMessageAction,
 	type SpaceCharacterModifierEffectData,
 } from 'pandora-common';
@@ -224,9 +225,12 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		const result: SpaceCharacterModifierEffectData = {};
 
 		const gameState = this.currentState;
-		const spaceConfig = this.getInfo();
+		const spaceInfo: CurrentSpaceInfo = {
+			id: this.id,
+			config: this.getInfo(),
+		};
 		for (const character of this.characters) {
-			result[character.id] = character.gameLogicCharacter.characterModifiers.getActiveEffects(gameState, spaceConfig);
+			result[character.id] = character.gameLogicCharacter.characterModifiers.getActiveEffects(gameState, spaceInfo);
 		}
 
 		return result;
@@ -239,8 +243,12 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			development: this.config.development,
 			getCharacterModifierEffects: (characterId, gameState) => {
 				const character = Array.from(this.characters).find((c) => c.id === characterId);
+				const spaceInfo: CurrentSpaceInfo = {
+					id: this.id,
+					config: this.getInfo(),
+				};
 				return character == null ? EMPTY_ARRAY :
-					character.gameLogicCharacter.characterModifiers.getActiveEffects(gameState, this.getInfo());
+					character.gameLogicCharacter.characterModifiers.getActiveEffects(gameState, spaceInfo);
 			},
 		};
 	}

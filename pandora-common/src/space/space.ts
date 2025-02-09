@@ -191,6 +191,12 @@ export const SpaceClientInfoSchema = SpaceDirectoryConfigSchema.extend({
 });
 export type SpaceClientInfo = z.infer<typeof SpaceClientInfoSchema>;
 
+export const CurrentSpaceInfoSchema = z.object({
+	id: SpaceIdSchema.nullable(),
+	config: SpaceClientInfoSchema,
+});
+export type CurrentSpaceInfo = z.infer<typeof CurrentSpaceInfoSchema>;
+
 /** Space data stored in database */
 export const SpaceDataSchema = z.object({
 	id: SpaceIdSchema,

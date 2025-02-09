@@ -1,8 +1,9 @@
+import { cloneDeep } from 'lodash';
 import { nanoid } from 'nanoid';
 import type { AssetFrameworkGlobalState } from '../../assets';
 import { LIMIT_CHARACTER_MODIFIER_INSTANCE_COUNT } from '../../inputLimits';
 import { Logger } from '../../logging';
-import type { SpaceClientInfo } from '../../space';
+import type { CurrentSpaceInfo } from '../../space';
 import { AssertNotNullable } from '../../utility/misc';
 import { ArrayIncludesGuard } from '../../validation';
 import type { GameLogicCharacter } from '../character/character';
@@ -69,6 +70,7 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 			type: template.type,
 			enabled,
 			config: parsedConfig.data,
+			conditions: cloneDeep(template.conditions),
 		};
 
 		this.modifierInstances.push(new GameLogicModifierInstanceServer(instanceData));
@@ -126,6 +128,9 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 		if (parsedConfig != null) {
 			instance.setConfig(parsedConfig.data);
 		}
+		if (config.conditions != null) {
+			instance.setConditions(config.conditions);
+		}
 
 		this.emit('modifiersChanged', undefined);
 		this.emit('dataChanged', undefined);
@@ -149,9 +154,9 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 		return this.modifierInstances.map((m) => m.getClientData());
 	}
 
-	public getActiveEffects(gameState: AssetFrameworkGlobalState, spaceConfig: SpaceClientInfo): CharacterModifierEffectData[] {
+	public getActiveEffects(gameState: AssetFrameworkGlobalState, spaceInfo: CurrentSpaceInfo): CharacterModifierEffectData[] {
 		return this.modifierInstances
-			.filter((m) => m.isInEffect(gameState, spaceConfig))
+			.filter((m) => m.isInEffect(gameState, spaceInfo))
 			.map((m) => m.getEffect());
 	}
 

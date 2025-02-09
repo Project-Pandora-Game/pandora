@@ -122,7 +122,7 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 		currentSpaceInfo = null;
 	} else {
 		// Remember which space we were opened into - that way we can exit the screen if it changes abruptly
-		if (lastSpaceId.current === undefined) {
+		if (lastSpaceId.current == null) {
 			lastSpaceId.current = currentSpaceInfo.id;
 		}
 	}

@@ -4,7 +4,7 @@ import { AssetDefinition, AssetModuleDefinition, ModuleType } from 'pandora-comm
 import { EFFECTS_DEFAULT, EffectsDefinition } from 'pandora-common/dist/assets/effects';
 import { IModuleConfigCommon } from 'pandora-common/dist/assets/modules/common';
 import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/dist/assets/modules/typed';
-import React, { ReactElement, useId, useMemo } from 'react';
+import { ReactElement, useId, useMemo } from 'react';
 import { useGraphicsAsset } from '../../../assets/assetGraphicsCalculations';
 import { Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';

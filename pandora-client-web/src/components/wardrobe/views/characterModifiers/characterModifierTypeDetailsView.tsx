@@ -9,7 +9,7 @@ import {
 	type IClientShardNormalResult,
 	type PermissionGroup,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo } from 'react';
+import { ReactElement, useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../../../common/useEvent';
 import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast';

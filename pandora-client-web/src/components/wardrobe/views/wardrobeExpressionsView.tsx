@@ -1,7 +1,7 @@
 import {
 	AssetFrameworkCharacterState,
 } from 'pandora-common';
-import React, { ReactElement, useEffect } from 'react';
+import { ReactElement, useEffect } from 'react';
 import { ICharacter } from '../../../character/character';
 import { Column } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';

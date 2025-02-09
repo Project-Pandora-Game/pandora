@@ -11,7 +11,7 @@ import {
 	TypedEventEmitter,
 	type AppearanceActionProcessingResult,
 } from 'pandora-common';
-import React, { ReactElement, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { ReactElement, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { ShardConnector } from '../../networking/shardConnector';
 import { PermissionPromptHandler } from '../settings/permissionsSettings';

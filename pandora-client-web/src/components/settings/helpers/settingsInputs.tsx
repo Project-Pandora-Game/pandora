@@ -1,5 +1,5 @@
 import { EMPTY_ARRAY, KnownObject } from 'pandora-common';
-import React, { useCallback, useId, useMemo, type DependencyList, type ReactElement, type ReactNode } from 'react';
+import { useCallback, useId, useMemo, type DependencyList, type ReactElement, type ReactNode } from 'react';
 import type { ZodSchema, ZodTypeDef } from 'zod';
 import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
 import { Checkbox } from '../../../common/userInteraction/checkbox';

@@ -1,7 +1,7 @@
 import { pick } from 'lodash';
 import type { HexColorString } from 'pandora-common';
 import type { InputHTMLAttributes, ReactElement } from 'react';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import ReactSwitch, { type ReactSwitchProps } from 'react-switch';
 import { Color } from '../../components/common/colorInput/colorInput';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';

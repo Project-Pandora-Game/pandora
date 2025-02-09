@@ -4,7 +4,7 @@ import {
 	CharacterIdSchema,
 	ICharacterRoomData,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
 import { Character, IChatroomCharacter } from '../../character/character';
 import { useObservable } from '../../observable';

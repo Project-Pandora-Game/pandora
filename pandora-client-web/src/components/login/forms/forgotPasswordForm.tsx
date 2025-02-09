@@ -1,5 +1,5 @@
 import { AssertNever, EmailAddressSchema } from 'pandora-common';
-import React, { ReactElement, useState } from 'react';
+import { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { FormInput } from '../../../common/userInteraction/input/formInput';

@@ -10,7 +10,7 @@ import {
 	ItemPath,
 	Writeable,
 } from 'pandora-common';
-import React, { ReactElement, useMemo } from 'react';
+import { ReactElement, useMemo } from 'react';
 import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment';
 import { useItemColorString } from '../../../graphics/graphicsLayer';
 import { ColorInputRGBA } from '../../common/colorInput/colorInput';

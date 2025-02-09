@@ -1,7 +1,7 @@
-import React, { ComponentType, ReactElement } from 'react';
+import { ComponentType, ReactElement } from 'react';
 import { FormErrorMessage } from '../common/form/form';
-import { AuthFormDataProvider } from './authFormDataProvider';
 import './authForm.scss';
+import { AuthFormDataProvider } from './authFormDataProvider';
 
 export interface AuthFormRouterProps {
 	component: ComponentType<Record<string, never>>;

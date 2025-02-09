@@ -1,5 +1,5 @@
 import type { ServiceManager } from 'pandora-common';
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 import { AnchorAutoscroll } from '../../common/anchorAutoscroll';
 import { ChildrenProps } from '../../common/reactTypes';
 import type { ClientServices } from '../../services/clientServices';

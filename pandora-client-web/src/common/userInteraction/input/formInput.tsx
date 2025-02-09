@@ -1,6 +1,6 @@
 /* eslint-disable react/forbid-elements */
 import { pick } from 'lodash';
-import React, { type InputHTMLAttributes, type ReactElement } from 'react';
+import { type InputHTMLAttributes, type ReactElement } from 'react';
 import type { FieldPath, FieldValues, RegisterOptions, UseFormRegister, UseFormRegisterReturn } from 'react-hook-form';
 
 const FORWARDED_PROPS = [

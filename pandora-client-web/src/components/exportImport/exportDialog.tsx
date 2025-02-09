@@ -1,5 +1,5 @@
 import { CloneDeepMutable, GetLogger } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
+import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 import { ZodType, z } from 'zod';
 import { CopyToClipboard } from '../../common/clipboard';
 import { DownloadAsFile } from '../../common/downloadHelper';

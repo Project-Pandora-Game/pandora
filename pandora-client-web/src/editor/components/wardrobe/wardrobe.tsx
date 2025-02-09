@@ -13,7 +13,7 @@ import {
 	ItemId,
 	StartActionAttempt,
 } from 'pandora-common';
-import React, { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
+import { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { Column, Row } from '../../../components/common/container/container';

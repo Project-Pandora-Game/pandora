@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { ReactElement, useEffect, useState } from 'react';
+import { ReactElement, useEffect, useState } from 'react';
 import { CommonProps } from '../../common/reactTypes';
 import { useContextMenuPosition } from '../contextMenu/contextMenu';
 import { DialogInPortal } from '../dialog/dialog';

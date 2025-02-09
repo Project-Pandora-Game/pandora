@@ -10,7 +10,7 @@
 			"@testing-library/jest-dom",
 			"offscreencanvas"
 		],
-		"jsx": "react",
+		"jsx": "react-jsxdev",
 		"rootDir": ".."
 	},
 	"include": [

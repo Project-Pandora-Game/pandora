@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, type ReactElement } from 'react';
+import { useCallback, useEffect, type ReactElement } from 'react';
 import { Observable, useObservable } from '../../../observable';
 import { useAccountSettings, useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
 import { TUTORIAL_TUTORIALS } from '../tutorials/tutorials';

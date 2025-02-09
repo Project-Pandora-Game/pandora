@@ -1,4 +1,3 @@
-import React from 'react';
 import { MakeTutorialConditionFlag, type TutorialConfig } from '../tutorialSystem/tutorialConfig';
 
 export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {

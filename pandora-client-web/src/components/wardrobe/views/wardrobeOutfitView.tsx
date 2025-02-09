@@ -18,7 +18,7 @@ import {
 	LIMIT_OUTFIT_NAME_LENGTH,
 	OutfitMeasureCost,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager';
 import crossIcon from '../../../assets/icons/cross.svg';

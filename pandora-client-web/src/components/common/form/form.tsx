@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { capitalize } from 'lodash';
 import { GetLogger } from 'pandora-common';
-import React, { FormEvent, HTMLProps, ReactElement, RefAttributes, useCallback } from 'react';
+import { FormEvent, HTMLProps, ReactElement, RefAttributes, useCallback } from 'react';
 import { FieldError } from 'react-hook-form';
 import { Link, LinkProps } from 'react-router-dom';
 import type { Promisable } from 'type-fest';

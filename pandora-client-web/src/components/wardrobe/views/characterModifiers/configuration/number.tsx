@@ -1,7 +1,7 @@
 import { GetLogger, type ModifierConfigurationEntryDefinition } from 'pandora-common';
 import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/dist/gameLogic/characterModifiers/helpers/configurationBuilder';
 import type { ReactElement } from 'react';
-import React, { useId, useMemo, useState } from 'react';
+import { useId, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import type { Promisable } from 'type-fest';
 import { useAsyncEvent } from '../../../../../common/useEvent';

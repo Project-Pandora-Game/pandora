@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import { Immutable } from 'immer';
 import { noop } from 'lodash';
 import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, CloneDeepMutable, EMPTY_ARRAY, KnownObject, ResolveAssetPreference } from 'pandora-common';
-import React, { ReactElement, createContext, useCallback, useContext, useId, useMemo, useRef, useState } from 'react';
+import { ReactElement, createContext, useCallback, useContext, useId, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 import { useAssetManager } from '../../assets/assetManager';

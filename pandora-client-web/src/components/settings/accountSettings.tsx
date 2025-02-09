@@ -11,7 +11,7 @@ import {
 	IsAuthorized,
 	TimeSpanMs,
 } from 'pandora-common';
-import React, { ReactElement, useMemo, useState } from 'react';
+import { ReactElement, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useColorInput } from '../../common/useColorInput';

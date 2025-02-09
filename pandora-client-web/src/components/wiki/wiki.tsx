@@ -1,4 +1,4 @@
-import React, { ReactElement, ReactNode } from 'react';
+import { ReactElement, ReactNode } from 'react';
 import { useNavigate } from 'react-router';
 import { ChildrenProps } from '../../common/reactTypes';
 import { Scrollable } from '../common/scrollbar/scrollbar';

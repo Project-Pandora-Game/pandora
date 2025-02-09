@@ -10,7 +10,7 @@ import {
 } from 'pandora-common';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
-import React, { ReactElement, useCallback, useEffect, useMemo } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { z } from 'zod';
 import { useAssetManager } from '../../assets/assetManager';

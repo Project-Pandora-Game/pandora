@@ -1,4 +1,4 @@
-import React, { ReactElement, useMemo } from 'react';
+import { ReactElement, useMemo } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import { Container } from '../../../graphics/baseComponents/container';
 import { useObservable } from '../../../observable';

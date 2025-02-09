@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 import { ExternalLink } from '../../common/link/externalLink';
 
 export function WikiHistory(): ReactElement {

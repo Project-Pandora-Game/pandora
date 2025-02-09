@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ZodArrayWithInvalidDrop } from '../../validation';
 import { PermissionConfigSchema } from '../permissions';
 import { CharacterModifierConfigurationSchema, CharacterModifierIdSchema, CharacterModifierTypeGenericIdSchema } from './characterModifierBaseData';
+import { CharacterModifierConditionChainSchema } from './conditions/characterModifierConditionChain';
 import { CharacterModifierTypeSchema } from './modifierTypes/_index';
 
 /** Configuration for any character modifier _type_ (not an instance of a modifier) */
@@ -19,6 +20,7 @@ export const CharacterModifierInstanceDataSchema = z.object({
 	type: CharacterModifierTypeSchema,
 	enabled: z.boolean(),
 	config: CharacterModifierConfigurationSchema,
+	conditions: CharacterModifierConditionChainSchema.catch(() => []),
 });
 
 /** Server-saved data of a character modifier instance */
@@ -31,6 +33,7 @@ export const CharacterModifierInstanceClientDataSchema = z.object({
 	type: CharacterModifierTypeSchema,
 	enabled: z.boolean(),
 	config: CharacterModifierConfigurationSchema,
+	conditions: CharacterModifierConditionChainSchema,
 });
 /** Client data of a character modifier instance */
 export type CharacterModifierInstanceClientData = z.infer<typeof CharacterModifierInstanceClientDataSchema>;
@@ -39,6 +42,7 @@ export type CharacterModifierInstanceClientData = z.infer<typeof CharacterModifi
 export const CharacterModifierTemplateSchema = z.object({
 	type: CharacterModifierTypeSchema,
 	config: CharacterModifierConfigurationSchema,
+	conditions: CharacterModifierConditionChainSchema,
 });
 /** Client data of a character modifier template */
 export type CharacterModifierTemplate = z.infer<typeof CharacterModifierTemplateSchema>;
@@ -47,6 +51,7 @@ export type CharacterModifierTemplate = z.infer<typeof CharacterModifierTemplate
 export const CharacterModifierConfigurationChangeSchema = z.object({
 	enabled: z.boolean().optional(),
 	config: CharacterModifierConfigurationSchema.optional(),
+	conditions: CharacterModifierConditionChainSchema.optional(),
 });
 /** Request for change to modifier configuration. */
 export type CharacterModifierConfigurationChange = z.infer<typeof CharacterModifierConfigurationChangeSchema>;
@@ -81,5 +86,6 @@ export function MakeCharacterModifierTemplateFromClientData(data: CharacterModif
 	return {
 		type: data.type,
 		config: cloneDeep(data.config),
+		conditions: cloneDeep(data.conditions),
 	};
 }

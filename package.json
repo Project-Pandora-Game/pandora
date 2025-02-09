@@ -15,7 +15,8 @@
 			"superstatic>re2": "-"
 		},
 		"patchedDependencies": {
-			"re-resizable": "patches/re-resizable.patch"
+			"re-resizable": "patches/re-resizable.patch",
+			"react-switch": "patches/react-switch.patch"
 		},
 		"onlyBuiltDependencies": [
 			"argon2"

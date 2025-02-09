@@ -82,3 +82,5 @@ export const LIMIT_JOIN_ME_INVITES = 10;
 export const LIMIT_CHARACTER_MODIFIER_INSTANCE_COUNT = 100;
 /** The maximum amount of characters that can be specified in a character list configuration type of a character modifier. */
 export const LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT = 50;
+/** The maximum amount of conditions inside a single character modifier instance. */
+export const LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT = 50;

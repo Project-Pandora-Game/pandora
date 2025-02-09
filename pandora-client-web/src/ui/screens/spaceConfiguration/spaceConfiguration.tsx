@@ -27,6 +27,7 @@ import {
 	SpaceInvite,
 	SpacePublicSettingSchema,
 	ZodMatcher,
+	type CurrentSpaceInfo,
 	type SpaceGhostManagementConfig,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
@@ -52,7 +53,7 @@ import {
 	useDirectoryChangeListener,
 	useDirectoryConnector,
 } from '../../../components/gameContext/directoryConnectorContextProvider';
-import { CurrentSpaceInfo, IsSpaceAdmin, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { IsSpaceAdmin, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs';
 import bodyChange from '../../../icons/body-change.svg';

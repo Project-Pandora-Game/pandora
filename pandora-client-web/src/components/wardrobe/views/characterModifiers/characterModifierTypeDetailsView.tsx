@@ -49,6 +49,7 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, target, focusMo
 			modifier: {
 				type,
 				config: {},
+				conditions: [],
 			},
 			enabled: false,
 		});

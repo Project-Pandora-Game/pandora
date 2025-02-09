@@ -1,8 +1,9 @@
 import { cloneDeep } from 'lodash';
 import type { AssetFrameworkGlobalState } from '../../assets';
-import type { SpaceClientInfo } from '../../space';
+import type { CurrentSpaceInfo } from '../../space';
 import type { CharacterModifierConfiguration, CharacterModifierId } from './characterModifierBaseData';
 import type { CharacterModifierEffectData, CharacterModifierInstanceClientData, CharacterModifierInstanceData } from './characterModifierData';
+import { EvaluateCharacterModifierConditionChain, type CharacterModifierConditionChain } from './conditions/characterModifierConditionChain';
 import { CHARACTER_MODIFIER_TYPE_DEFINITION, type CharacterModifierTypeDefinition } from './modifierTypes/_index';
 
 export class GameLogicModifierInstanceServer {
@@ -28,6 +29,7 @@ export class GameLogicModifierInstanceServer {
 			type: this.data.type,
 			enabled: this.data.enabled,
 			config: cloneDeep(this.data.config),
+			conditions: cloneDeep(this.data.conditions),
 		};
 	}
 
@@ -39,13 +41,11 @@ export class GameLogicModifierInstanceServer {
 		};
 	}
 
-	public isInEffect(_gameState: AssetFrameworkGlobalState, _spaceConfig: SpaceClientInfo): boolean {
+	public isInEffect(gameState: AssetFrameworkGlobalState, spaceInfo: CurrentSpaceInfo): boolean {
 		if (!this.data.enabled)
 			return false;
 
-		// TODO: Implement conditions
-
-		return true;
+		return EvaluateCharacterModifierConditionChain(this.data.conditions, gameState, spaceInfo);
 	}
 
 	public setEnabled(enabled: boolean): void {
@@ -57,5 +57,9 @@ export class GameLogicModifierInstanceServer {
 			...this.data.config,
 			...config,
 		};
+	}
+
+	public setConditions(conditions: CharacterModifierConditionChain): void {
+		this.data.conditions = cloneDeep(conditions);
 	}
 }

@@ -277,7 +277,7 @@ export class Space {
 
 		await Promise.all([
 			this._assignedShard?.update('spaces'),
-			GetDatabase().updateSpace(this.id, { config: this.config }, null),
+			GetDatabase().updateSpace(this.id, { config: cloneDeep(this.config) }, null),
 		]);
 
 		ConnectionManagerClient.onSpaceListChange();
@@ -393,7 +393,10 @@ export class Space {
 		}
 		if (updated) {
 			ConnectionManagerClient.onSpaceListChange();
-			await this._assignedShard?.update('spaces');
+			await Promise.all([
+				this._assignedShard?.update('spaces'),
+				GetDatabase().updateSpace(this.id, { config: cloneDeep(this.config) }, null),
+			]);
 		}
 	}
 
@@ -580,7 +583,7 @@ export class Space {
 
 		this._invites.splice(index, 1);
 		this._cleanupInvites();
-		await GetDatabase().updateSpace(this.id, { invites: this._invites }, null);
+		await GetDatabase().updateSpace(this.id, { invites: cloneDeep(this._invites) }, null);
 		return true;
 	}
 
@@ -634,7 +637,7 @@ export class Space {
 		};
 
 		this._invites.push(invite);
-		await GetDatabase().updateSpace(this.id, { invites: this._invites }, null);
+		await GetDatabase().updateSpace(this.id, { invites: cloneDeep(this._invites) }, null);
 		return invite;
 	}
 
@@ -778,7 +781,7 @@ export class Space {
 		invite.uses++;
 
 		this._cleanupInvites();
-		await GetDatabase().updateSpace(this.id, { invites: this._invites }, null);
+		await GetDatabase().updateSpace(this.id, { invites: cloneDeep(this._invites) }, null);
 	}
 
 	@AsyncSynchronized('object')
@@ -845,7 +848,7 @@ export class Space {
 		ConnectionManagerClient.onSpaceListChange();
 
 		if (invitesChanged)
-			await GetDatabase().updateSpace(this.id, { invites: this._invites }, null);
+			await GetDatabase().updateSpace(this.id, { invites: cloneDeep(this._invites) }, null);
 	}
 
 	/**

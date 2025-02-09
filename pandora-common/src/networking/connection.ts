@@ -301,8 +301,8 @@ export abstract class IncomingConnection<
 	) {
 		super(socket, schema, logger);
 		this._server = server;
-		socket.onDisconnect = this.onDisconnect.bind(this);
-		socket.onMessage = this.handleMessage.bind(this);
+		socket.onDisconnect = (reason) => this.onDisconnect(reason);
+		socket.onMessage = (...args) => this.handleMessage(...args);
 	}
 
 	public get id(): string {

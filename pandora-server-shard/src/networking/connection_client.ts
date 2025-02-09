@@ -26,6 +26,13 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 		this.headers = headers;
 		this.logger.debug('Connected');
 		ConnectionManagerClient.onConnect(this);
+
+		if (!this.isConnected()) {
+			this.logger.warning('Client disconnect before onConnect finished');
+			queueMicrotask(() => {
+				this.onDisconnect('isConnected check failed');
+			});
+		}
 	}
 
 	/** Handler for when client disconnects */
@@ -33,6 +40,7 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 		this.character?.setConnection(null);
 		this.logger.debug('Disconnected, reason:', reason);
 		ConnectionManagerClient.onDisconnect(this);
+		super.onDisconnect(reason);
 	}
 
 	public abortConnection(): void {

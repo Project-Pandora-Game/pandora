@@ -33,6 +33,12 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 		super(server, socket, [DirectoryClientSchema, ClientDirectorySchema], GetLogger('Connection-Client', `[Connection-Client ${socket.id}]`));
 		this.logger.debug('Connected');
 		ConnectionManagerClient.onConnect(this, auth);
+		if (!this.isConnected()) {
+			this.logger.warning('Client disconnect before onConnect finished');
+			queueMicrotask(() => {
+				this.onDisconnect('isConnected check failed');
+			});
+		}
 	}
 
 	/** Handler for when client disconnects */

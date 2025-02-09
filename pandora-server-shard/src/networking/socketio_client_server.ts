@@ -22,10 +22,7 @@ export class SocketIOServerClient extends SocketIOServer implements IServerSocke
 	 * @param socket - The newly connected socket
 	 */
 	protected onConnect(socket: Socket): void {
-		const connection = new ClientConnection(this, new SocketIOSocket(socket), socket.handshake.headers);
-		if (!connection.isConnected()) {
-			logger.fatal('Asserting failed: client disconnect before onConnect finished');
-		}
+		new ClientConnection(this, new SocketIOSocket(socket), socket.handshake.headers);
 	}
 
 	protected override allowRequest(req: IncomingMessage, next: (err: string | null | undefined, success: boolean) => void): void {

@@ -42,10 +42,7 @@ export class SocketIOServerClient extends SocketIOServer implements IServerSocke
 	 * @param socket - The newly connected socket
 	 */
 	protected onConnect(socket: Socket): void {
-		const connection = new ClientConnection(this, new SocketIOSocket(socket), socket.handshake.auth);
-		if (!connection.isConnected()) {
-			logger.fatal('Asserting failed: client disconnect before onConnect finished');
-		}
+		new ClientConnection(this, new SocketIOSocket(socket), socket.handshake.auth);
 	}
 
 	public sendToAll<K extends SocketInterfaceOneshotMessages<IDirectoryClient>>(client: ReadonlySet<IIncomingConnection<IDirectoryClient>>, messageType: K, message: SocketInterfaceRequest<IDirectoryClient>[K]): void {

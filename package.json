@@ -14,7 +14,9 @@
 			"@octokit/types": "13.5.0",
 			"superstatic>re2": "-"
 		},
-		"patchedDependencies": {},
+		"patchedDependencies": {
+			"react-switch": "patches/react-switch.patch"
+		},
 		"onlyBuiltDependencies": [
 			"argon2"
 		],

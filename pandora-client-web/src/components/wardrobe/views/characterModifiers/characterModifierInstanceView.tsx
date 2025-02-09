@@ -5,7 +5,7 @@ import {
 	type CharacterModifierId,
 	type CharacterModifierInstanceClientData,
 } from 'pandora-common';
-import React, { ReactElement, ReactNode } from 'react';
+import { ReactElement, ReactNode } from 'react';
 import { DivContainer } from '../../../common/container/container';
 
 export function WardrobeCharacterModifierFullInstanceView({ children, modifiers, currentlyFocusedModifier, focusModifierInstance }: {

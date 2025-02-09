@@ -2,7 +2,7 @@ import { uniq } from 'lodash';
 import { CharacterIdSchema, CompareCharacterIds, GetLogger, LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT, type CharacterId, type ModifierConfigurationEntryDefinition } from 'pandora-common';
 import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/dist/gameLogic/characterModifiers/helpers/configurationBuilder';
 import type { ReactElement } from 'react';
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import type { Promisable } from 'type-fest';
 import crossIcon from '../../../../../assets/icons/cross.svg';

@@ -5,7 +5,7 @@ import {
 	type CharacterModifierType,
 	type CharacterModifierTypeDefinition,
 } from 'pandora-common';
-import React, { ReactElement, ReactNode, useMemo, useRef, useState } from 'react';
+import { ReactElement, ReactNode, useMemo, useRef, useState } from 'react';
 import { TextInput } from '../../../../common/userInteraction/input/textInput';
 import { useInputAutofocus } from '../../../../common/userInteraction/inputAutofocus';
 

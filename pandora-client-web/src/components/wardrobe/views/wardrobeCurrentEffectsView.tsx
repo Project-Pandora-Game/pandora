@@ -1,5 +1,5 @@
 import type { AssetFrameworkGlobalState } from 'pandora-common';
-import React, { useMemo, type ReactElement } from 'react';
+import { useMemo, type ReactElement } from 'react';
 import type { IChatroomCharacter } from '../../../character/character';
 import { Column } from '../../common/container/container';
 import { useWardrobeActionContext } from '../wardrobeActionContext';

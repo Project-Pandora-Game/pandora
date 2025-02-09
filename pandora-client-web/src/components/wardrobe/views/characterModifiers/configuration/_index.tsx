@@ -1,5 +1,5 @@
 import { AssertNever, type ModifierConfigurationEntryDefinition } from 'pandora-common';
-import React, { type ReactElement } from 'react';
+import { type ReactElement } from 'react';
 import type { Promisable } from 'type-fest';
 import { WardrobeCharacterModifierConfigCharacterList } from './characterList';
 import { WardrobeCharacterModifierConfigNumber } from './number';

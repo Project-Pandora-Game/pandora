@@ -38,6 +38,7 @@ import {
 	TypedEventEmitter,
 	ZodCast,
 	type AppearanceAction,
+	type CurrentSpaceInfo,
 	type IChatMessageActionTargetCharacter,
 	type IClientShardPromiseResult,
 	type SpaceCharacterModifierEffectData,
@@ -84,11 +85,6 @@ export interface IChatMessageSender {
 	getMessageEdit(id: number): ISavedMessage | undefined;
 	getLastMessageEdit(): number | undefined;
 }
-
-export type CurrentSpaceInfo = {
-	id: SpaceId | null;
-	config: SpaceClientInfo;
-};
 
 export type PermissionPromptData = {
 	source: Character<ICharacterRoomData>;

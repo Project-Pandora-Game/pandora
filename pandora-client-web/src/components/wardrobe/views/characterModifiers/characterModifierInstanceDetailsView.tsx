@@ -29,6 +29,7 @@ import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProv
 import { useShardConnector } from '../../../gameContext/shardConnectorContextProvider';
 import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../../wardrobeActionContext';
 import { ActionWarningContent, WardrobeActionButtonElement } from '../../wardrobeComponents';
+import { CharacterModifierConditionList } from './conditions/characterModifierConditionList';
 import { WardrobeCharacterModifierConfig } from './configuration/_index';
 
 interface WardrobeCharacterModifierInstanceDetailsViewProps {
@@ -157,6 +158,12 @@ function CheckedInstanceDetails({ target, instance, unfocus }: WardrobeCharacter
 							/>
 						))
 				}
+				<CharacterModifierConditionList
+					conditions={ instance.conditions }
+					onChange={ (newValue) => updateConfig({
+						conditions: newValue,
+					}) }
+				/>
 			</Column>
 		</div>
 	);

@@ -17,7 +17,7 @@ import './characterSelect.scss';
  */
 
 interface UseCharacterListResult {
-	data: IClientDirectoryNormalResult['listCharacters'] | undefined;
+	data: Extract<IClientDirectoryNormalResult['listCharacters'], { result: 'ok'; }> | undefined;
 	fetchCharacterList: () => Promise<void>;
 }
 
@@ -125,14 +125,18 @@ function Preview({ name, preview }: PreviewProps): ReactElement | null {
 }
 
 function useCharacterList(): UseCharacterListResult {
-	const [data, setData] = useState<IClientDirectoryNormalResult['listCharacters']>();
+	const [data, setData] = useState<Extract<IClientDirectoryNormalResult['listCharacters'], { result: 'ok'; } >>();
 	const directoryConnector = useDirectoryConnector();
 	const accountManager = useService('accountManager');
 
 	const fetchCharacterList = useCallback(async () => {
 		if (accountManager.currentAccount.value) {
 			const result = await directoryConnector.awaitResponse('listCharacters', EMPTY);
-			setData(result);
+			if (result.result === 'ok') {
+				setData(result);
+			} else {
+				GetLogger('useCharacterList').warning('Failed to list characters:', result);
+			}
 		}
 	}, [accountManager, directoryConnector]);
 

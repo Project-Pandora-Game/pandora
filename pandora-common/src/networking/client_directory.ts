@@ -291,10 +291,16 @@ export const ClientDirectorySchema = {
 	//#region Character management
 	listCharacters: {
 		request: z.object({}),
-		response: z.object({
-			characters: CharacterSelfInfoSchema.array(),
-			limit: z.number().int().nonnegative(),
-		}),
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+				characters: CharacterSelfInfoSchema.array(),
+				limit: z.number().int().nonnegative(),
+			}),
+			z.object({
+				result: z.literal('notLoggedIn'),
+			}),
+		]),
 	},
 	createCharacter: {
 		request: z.object({}),

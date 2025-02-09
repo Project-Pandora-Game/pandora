@@ -50,10 +50,7 @@ export class SocketIOServerShard extends SocketIOServer implements IServerSocket
 			socket.disconnect(true);
 			return;
 		}
-		const connection = new ShardConnection(this, new SocketIOSocket(socket), info);
-		if (!connection.isConnected()) {
-			logger.fatal('Assertion failed: client disconnect before onConnect finished');
-		}
+		new ShardConnection(this, new SocketIOSocket(socket), info);
 	}
 
 	public sendToAll<K extends SocketInterfaceOneshotMessages<IDirectoryShard>>(client: ReadonlySet<IIncomingConnection<IDirectoryShard>>, messageType: K, message: SocketInterfaceRequest<IDirectoryShard>[K]): void {

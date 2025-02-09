@@ -19,11 +19,19 @@ export class ShardConnection extends IncomingConnection<IDirectoryShard, IShardD
 		this.info = info;
 		this.connectionTime = Date.now();
 		this.logger.verbose(`Connected type: '${info.type}', token: ${info.id}`);
+
+		if (!this.isConnected()) {
+			this.logger.warning('Client disconnect before onConnect finished');
+			queueMicrotask(() => {
+				this.onDisconnect('isConnected check failed');
+			});
+		}
 	}
 
 	protected override onDisconnect(reason: string): void {
 		this.logger.verbose('Disconnected, reason:', reason);
 		ConnectionManagerShard.onDisconnect(this);
+		super.onDisconnect(reason);
 	}
 
 	protected onMessage<K extends keyof IShardDirectory>(

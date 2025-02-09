@@ -94,7 +94,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	/** Handle disconnecting client */
 	public onDisconnect(connection: ClientConnection): void {
 		if (!this._connectedClients.has(connection) && !connection.aborted) {
-			logger.fatal('Asserting failed: client disconnect while not in connectedClients', connection);
+			logger.warning('Client disconnect while not in connectedClients', connection);
 			return;
 		}
 		this._connectedClients.delete(connection);

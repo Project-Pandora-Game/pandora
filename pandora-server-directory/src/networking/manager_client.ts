@@ -170,7 +170,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	/** Handle disconnecting client */
 	public onDisconnect(connection: ClientConnection): void {
 		if (!this.connectedClients.has(connection)) {
-			logger.fatal('Assertion failed: client disconnect while not in connectedClients', connection);
+			logger.warning('Client disconnect while not in connectedClients', connection);
 			return;
 		}
 		this.connectedClients.delete(connection);
@@ -356,10 +356,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	private handleListCharacters(_: IClientDirectoryArgument['listCharacters'], connection: ClientConnection): IClientDirectoryResult['listCharacters'] {
-		if (!connection.isLoggedIn())
-			throw new BadMessageError();
+		if (!connection.isLoggedIn()) {
+			return {
+				result: 'notLoggedIn',
+			};
+		}
 
 		return {
+			result: 'ok',
 			characters: connection.account.listCharacters(),
 			limit: LIMIT_CHARACTER_COUNT,
 		};

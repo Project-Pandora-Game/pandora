@@ -4,6 +4,7 @@ import {
 	GetLogger,
 	type AssetFrameworkGlobalState,
 	type CharacterId,
+	type CharacterModifierEffectData,
 	type CharacterModifierId,
 	type CharacterModifierType,
 	type IClientShardNormalResult,
@@ -67,6 +68,7 @@ export function WardrobeEffectsModifiers({ className, character, globalState }: 
 					<WardrobeEffectsFullList
 						character={ character }
 						data={ fullInstanceList }
+						modifierEffects={ characterModifierEffects }
 						currentlyFocusedModifier={ currentFocus?.type === 'instance' ? currentFocus.id : null }
 						focusModifierInstance={ (id) => {
 							setCurrentFocus(id == null ? null : {
@@ -134,9 +136,10 @@ export function WardrobeEffectsModifiers({ className, character, globalState }: 
 	);
 }
 
-function WardrobeEffectsFullList({ data, character, currentlyFocusedModifier, focusModifierInstance }: {
+function WardrobeEffectsFullList({ data, character, modifierEffects, currentlyFocusedModifier, focusModifierInstance }: {
 	data: IClientShardNormalResult['characterModifiersGet'] | undefined;
 	character: ICharacter;
+	modifierEffects: readonly CharacterModifierEffectData[];
 	currentlyFocusedModifier: CharacterModifierId | null;
 	focusModifierInstance: (id: CharacterModifierId | null) => void;
 }): ReactElement {
@@ -150,6 +153,7 @@ function WardrobeEffectsFullList({ data, character, currentlyFocusedModifier, fo
 		) : data.result === 'ok' ? (
 			<WardrobeCharacterModifierFullInstanceView
 				modifiers={ data.modifiers }
+				modifierEffects={ modifierEffects }
 				currentlyFocusedModifier={ currentlyFocusedModifier }
 				focusModifierInstance={ focusModifierInstance }
 			/>

@@ -1,0 +1,36 @@
+@use '../../../../../styles/common';
+
+.characterModifierConditions {
+	.conditionList {
+		display: grid;
+		grid-template-columns: 4em 0.25em 1fr;
+		grid-auto-rows: minmax(2em, auto);
+		gap: 0.25em;
+
+		.logicToggle {
+			height: 2em;
+			width: 3em;
+			transform: translate(0, -50%);
+
+			&.and {
+				justify-self: end;
+			}
+		}
+
+		.groupIndicator {
+			width: 0.25em;
+			margin: 0.2em 0;
+			background-color: common.$theme-wardrobe-modifiers-indication-inactive;
+
+			&.active {
+				background-color: common.$theme-wardrobe-modifiers-indication-active;
+			}
+		}
+
+		.conditionDetails {
+			&.active {
+				background-color: color-mix(in srgb, common.$theme-wardrobe-modifiers-indication-active 27%, transparent);
+			}
+		}
+	}
+}

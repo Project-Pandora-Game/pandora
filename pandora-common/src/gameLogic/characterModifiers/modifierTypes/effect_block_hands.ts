@@ -5,8 +5,8 @@ export const effect_block_hands = DefineCharacterModifier({
 	typeId: 'effect_block_hands',
 	visibleName: 'Effect: Block hands',
 	description: `
-[TODO] This effect blocks hands.
-Yes, it does that - same as item!
+This effect blocks hands.
+It is the same effect that restraining items such as mittens have.
 	`,
 	strictnessCategory: 'normal',
 	config: {},

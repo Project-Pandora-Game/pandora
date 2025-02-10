@@ -5,7 +5,7 @@ export const block_lock_unlock_others = DefineCharacterModifier({
 	typeId: 'block_lock_unlock_others',
 	visibleName: 'Block: Forbid unlocking locks on others',
 	description: `
-[TODO] This modifier prevents the character from unlocking any lock on other club members or in the room inventory.
+This modifier prevents the character from unlocking any lock on other characters or on items in any room inventory.
 	`,
 	strictnessCategory: 'normal',
 	config: {

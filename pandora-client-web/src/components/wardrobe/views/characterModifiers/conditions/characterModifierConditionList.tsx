@@ -5,15 +5,16 @@ import { AssertNever, CloneDeepMutable, EvaluateCharacterModifierCondition, GetL
 import { useMemo, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
 import type { Promisable } from 'type-fest';
+import crossImage from '../../../../../assets/icons/cross.svg';
 import { useAsyncEvent } from '../../../../../common/useEvent';
 import { Select } from '../../../../../common/userInteraction/select/select';
 import { TOAST_OPTIONS_ERROR } from '../../../../../persistentToast';
-import { Button } from '../../../../common/button/button';
+import { Button, IconButton } from '../../../../common/button/button';
 import { Column, DivContainer, Row } from '../../../../common/container/container';
 import { FieldsetToggle } from '../../../../common/fieldsetToggle';
 import { useGameState, useGlobalState, useSpaceInfo } from '../../../../gameContext/gameStateContextProvider';
-import './style.scss';
 import { CharacterModifierConditionListEntry } from './characterModifierCondition';
+import './style.scss';
 
 export function CharacterModifierConditionList({ conditions, onChange }: {
 	conditions: Immutable<CharacterModifierConditionChain>;
@@ -72,6 +73,17 @@ export function CharacterModifierConditionList({ conditions, onChange }: {
 												newValue[i] = newRecord;
 												setConditions(newValue);
 											} }
+											onDelete={ () => {
+												const newValue = CloneDeepMutable(conditions);
+												newValue.splice(i, 1);
+												setConditions(newValue);
+											} }
+											onMoveUp={ () => {
+												// TODO
+											} }
+											onMoveDown={ () => {
+												// TODO
+											} }
 											processing={ processing }
 											active={ conditionsActive[i] }
 											group={ group }
@@ -100,10 +112,13 @@ export function CharacterModifierConditionList({ conditions, onChange }: {
 	);
 }
 
-function ConditionRecordListEntry({ record, firstEntry, onChange, processing, active, group }: {
+function ConditionRecordListEntry({ record, firstEntry, onChange, onDelete, onMoveUp, onMoveDown, processing, active, group }: {
 	record: Immutable<CharacterModifierConditionRecord>;
 	firstEntry: boolean;
 	onChange: (newRecord: CharacterModifierConditionRecord) => void;
+	onDelete: () => void;
+	onMoveUp: () => void;
+	onMoveDown: () => void;
 	processing: boolean;
 	active: boolean;
 	/** For first element of "AND" group - details about this group. */
@@ -148,12 +163,33 @@ function ConditionRecordListEntry({ record, firstEntry, onChange, processing, ac
 					condition={ record.condition }
 					invert={ record.invert }
 				/>
-				<div className='quickActions'>
-					<Button slim>
-						X
-					</Button>
-				</div>
 			</DivContainer>
+			<Row className='quickActions' gap='small'>
+				<Button
+					slim
+					onClick={ onMoveUp }
+					disabled={ processing }
+					title='Move condition up'
+				>
+					▲
+				</Button>
+				<Button
+					slim
+					onClick={ onMoveDown }
+					disabled={ processing }
+					title='Move condition down'
+				>
+					▼
+				</Button>
+				<IconButton
+					slim
+					onClick={ onDelete }
+					disabled={ processing }
+					src={ crossImage }
+					alt='Remove condition'
+					title='Remove condition'
+				/>
+			</Row>
 		</>
 	);
 }

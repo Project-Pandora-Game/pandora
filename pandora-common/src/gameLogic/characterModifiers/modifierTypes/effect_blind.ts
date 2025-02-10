@@ -5,10 +5,10 @@ export const effect_blind = DefineCharacterModifier({
 	typeId: 'effect_blind',
 	visibleName: 'Effect: Sensory deprivation - Sight',
 	description: `
-This modifier impacts the character's natural ability to see - in the same way blindfolding items do.
+This modifier impacts the character's natural ability to see - in the same way blindfolds do.
 
 The intensity of the effect can be adjusted and it stacks with worn items that have the same effect up to the maximum intensity defined in the configuration of this modifier.
-If the sum of the blind effects of all worn items together is not lower than the set maximum intensity, the defined intensity of this modifier does nothing.
+The maximum intensity setting will not limit the sum of the blind effects by items or other character modifiers.
 	`,
 	strictnessCategory: 'normal',
 	config: {

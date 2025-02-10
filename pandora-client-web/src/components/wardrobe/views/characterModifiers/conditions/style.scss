@@ -28,8 +28,17 @@
 		}
 
 		.conditionDetails {
+			padding-left: 0.25em;
+			padding-right: 0.2em;
+
 			&.active {
 				background-color: color-mix(in srgb, common.$theme-wardrobe-modifiers-indication-active 27%, transparent);
+			}
+
+			.quickActions {
+				display: flex;
+				gap: 0.2em;
+				margin-left: auto;
 			}
 		}
 	}

@@ -3,10 +3,12 @@ import { DefineCharacterModifier } from '../helpers/modifierDefinition';
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const effect_blind = DefineCharacterModifier({
 	typeId: 'effect_blind',
-	visibleName: 'Effect: Blindness',
+	visibleName: 'Effect: Sensory deprivation - Sight',
 	description: `
-[TODO] This effect blinds the character.
-You can also use _italics_ and __bold__ text in the description - actually same formatting the chat has! Specifically action messages, to be exact...
+This modifier impacts the character's natural ability to see - in the same way blindfolding items do.
+
+The intensity of the effect can be adjusted and it stacks with worn items that have the same effect up to the maximum intensity defined in the configuration of this modifier.
+If the sum of the blind effects of all worn items together is not lower than the set maximum intensity, the defined intensity of this modifier does nothing.
 	`,
 	strictnessCategory: 'normal',
 	config: {

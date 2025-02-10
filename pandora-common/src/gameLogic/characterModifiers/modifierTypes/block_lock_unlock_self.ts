@@ -5,7 +5,7 @@ export const block_lock_unlock_self = DefineCharacterModifier({
 	typeId: 'block_lock_unlock_self',
 	visibleName: 'Block: Forbid unlocking locks on self',
 	description: `
-[TODO] This modifier prevents the character from unlocking any lock on themselves.
+This modifier prevents the character from unlocking any lock on themselves. (Other characters can still interact with locks on the items normally)
 	`,
 	strictnessCategory: 'normal',
 	config: {},

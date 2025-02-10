@@ -148,6 +148,11 @@ function ConditionRecordListEntry({ record, firstEntry, onChange, processing, ac
 					condition={ record.condition }
 					invert={ record.invert }
 				/>
+				<div className='quickActions'>
+					<Button slim>
+						X
+					</Button>
+				</div>
 			</DivContainer>
 		</>
 	);

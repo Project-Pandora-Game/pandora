@@ -6,6 +6,11 @@ import { block_lock_unlock_others } from './block_lock_unlock_others';
 import { block_lock_unlock_self } from './block_lock_unlock_self';
 import { effect_blind } from './effect_blind';
 import { effect_block_hands } from './effect_block_hands';
+import { effect_hearing } from './effect_hearing';
+import { effect_speech_garble } from './effect_speech_garble';
+import { effect_block_room_movement } from './effect_block_room_movement';
+import { effect_block_room_leaving } from './effect_block_room_leaving';
+import { effect_blindfolds_blind_fully } from './effect_blindfolds_blind_fully';
 
 //#region Character modifier types catalogue
 
@@ -14,7 +19,12 @@ export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	block_lock_unlock_others,
 	block_lock_unlock_self,
 	effect_blind,
+	effect_blindfolds_blind_fully,
+	effect_hearing,
+	effect_speech_garble,
 	effect_block_hands,
+	effect_block_room_movement,
+	effect_block_room_leaving
 } as const satisfies Readonly<Record<string, CharacterModifierTypeDefinitionBase>>;
 
 //#endregion

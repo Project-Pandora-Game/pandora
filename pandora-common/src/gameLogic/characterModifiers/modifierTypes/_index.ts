@@ -9,7 +9,7 @@ import { effect_block_hands } from './effect_block_hands';
 import { effect_hearing } from './effect_hearing';
 import { effect_speech_garble } from './effect_speech_garble';
 import { effect_block_room_movement } from './effect_block_room_movement';
-import { effect_block_room_leaving } from './effect_block_room_leaving';
+import { effect_block_space_leaving } from './effect_block_space_leaving';
 import { effect_blindfolds_blind_fully } from './effect_blindfolds_blind_fully';
 
 //#region Character modifier types catalogue
@@ -24,7 +24,7 @@ export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	effect_speech_garble,
 	effect_block_hands,
 	effect_block_room_movement,
-	effect_block_room_leaving
+	effect_block_space_leaving,
 } as const satisfies Readonly<Record<string, CharacterModifierTypeDefinitionBase>>;
 
 //#endregion

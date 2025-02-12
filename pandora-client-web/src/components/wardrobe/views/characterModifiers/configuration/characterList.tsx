@@ -12,7 +12,7 @@ import { TOAST_OPTIONS_ERROR } from '../../../../../persistentToast';
 import { Button, IconButton } from '../../../../common/button/button';
 import { Column, Row } from '../../../../common/container/container';
 import { FieldsetToggle } from '../../../../common/fieldsetToggle';
-import { useSpaceCharacters } from '../../../../gameContext/gameStateContextProvider';
+import { useResolveCharacterName, useSpaceCharacters } from '../../../../gameContext/gameStateContextProvider';
 import { usePlayerId } from '../../../../gameContext/playerContextProvider';
 
 export function WardrobeCharacterModifierConfigCharacterList({ definition, value, onChange }: {
@@ -127,7 +127,7 @@ function CharacterListItem({ id, remove, disabledRemove }: {
 	return (
 		<Row alignY='center' padding='small' className='listItem'>
 			<span className='flex-1'>
-				{ character?.name ?? '[unknown]' } ({ id }) { character?.isPlayer() ? '[You]' : '' }
+				{ useResolveCharacterName(id) ?? '[unknown]' } ({ id }) { character?.isPlayer() ? '[You]' : '' }
 			</span>
 			{
 				remove != null ? (

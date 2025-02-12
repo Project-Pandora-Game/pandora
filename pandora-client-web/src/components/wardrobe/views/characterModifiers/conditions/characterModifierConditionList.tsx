@@ -45,97 +45,100 @@ export function CharacterModifierConditionList({ conditions, onChange }: {
 					conditions.length === 0 ? (
 						<i>This modifier is always active (no conditions set)</i>
 					) : (
-						<div className='conditionList'>
-							{
-								conditions.map((record, i) => {
-									let group: { size: number; active: boolean; } | null = null;
-									if (i === 0 || record.logic === 'or') {
-										group = {
-											size: 1,
-											active: conditionsActive[i],
-										};
-										for (let j = i + 1; j < conditions.length; j++) {
-											if (conditions[j].logic === 'or')
-												break;
+						<>
+							<i>This modifier is active when this character is&#8230;</i>
+							<div className='conditionList'>
+								{
+									conditions.map((record, i) => {
+										let group: { size: number; active: boolean; } | null = null;
+										if (i === 0 || record.logic === 'or') {
+											group = {
+												size: 1,
+												active: conditionsActive[i],
+											};
+											for (let j = i + 1; j < conditions.length; j++) {
+												if (conditions[j].logic === 'or')
+													break;
 
-											group.size++;
-											group.active &&= conditionsActive[j];
+												group.size++;
+												group.active &&= conditionsActive[j];
+											}
 										}
-									}
 
-									return (
-										<ConditionRecordListEntry
-											key={ i }
-											record={ record }
-											firstEntry={ i === 0 }
-											lastEntry={ i === (conditions.length - 1) }
-											onChange={ (newRecord) => {
-												const newValue = CloneDeepMutable(conditions);
-												newValue[i] = newRecord;
-												setConditions(newValue);
-											} }
-											onDelete={ () => {
-												const newValue = CloneDeepMutable(conditions);
-												newValue.splice(i, 1);
-												setConditions(newValue);
-											} }
-											onMoveUp={ () => {
-												if (i < 1)
-													return;
+										return (
+											<ConditionRecordListEntry
+												key={ i }
+												record={ record }
+												firstEntry={ i === 0 }
+												lastEntry={ i === (conditions.length - 1) }
+												onChange={ (newRecord) => {
+													const newValue = CloneDeepMutable(conditions);
+													newValue[i] = newRecord;
+													setConditions(newValue);
+												} }
+												onDelete={ () => {
+													const newValue = CloneDeepMutable(conditions);
+													newValue.splice(i, 1);
+													setConditions(newValue);
+												} }
+												onMoveUp={ () => {
+													if (i < 1)
+														return;
 
-												const newValue = CloneDeepMutable(conditions);
-												if (newValue[i].logic === 'or') {
-													// If this is a first condition in a group, then only shift it group higher
-													newValue[i].logic = 'and';
-													// If next condition belongs to the same group, then it is the new start of the group
-													if ((i + 1) < newValue.length && newValue[i + 1].logic === 'and') {
-														newValue[i + 1].logic = 'or';
-													}
-												} else {
-													// Otherwise we move it
-													// Update logic if it would become the first thing in the group
-													if (newValue[i - 1].logic === 'or') {
-														newValue[i - 1].logic = 'and';
-														newValue[i].logic = 'or';
-													}
-													// And move it
-													const moved = newValue.splice(i, 1);
-													newValue.splice(i - 1, 0, ...moved);
-												}
-
-												setConditions(newValue);
-											} }
-											onMoveDown={ () => {
-												if (i >= (conditions.length - 1))
-													return;
-
-												const newValue = CloneDeepMutable(conditions);
-												if ((i + 1) < newValue.length && newValue[i + 1].logic === 'or') {
-													// If this is the last condition in the group, move it to the next one
-													newValue[i].logic = 'or';
-													newValue[i + 1].logic = 'and';
-												} else {
-													// Otherwise we move it
-													// Update logic if it was the first thing in the group
+													const newValue = CloneDeepMutable(conditions);
 													if (newValue[i].logic === 'or') {
+														// If this is a first condition in a group, then only shift it group higher
 														newValue[i].logic = 'and';
-														newValue[i + 1].logic = 'or';
+														// If next condition belongs to the same group, then it is the new start of the group
+														if ((i + 1) < newValue.length && newValue[i + 1].logic === 'and') {
+															newValue[i + 1].logic = 'or';
+														}
+													} else {
+														// Otherwise we move it
+														// Update logic if it would become the first thing in the group
+														if (newValue[i - 1].logic === 'or') {
+															newValue[i - 1].logic = 'and';
+															newValue[i].logic = 'or';
+														}
+														// And move it
+														const moved = newValue.splice(i, 1);
+														newValue.splice(i - 1, 0, ...moved);
 													}
-													// And move it
-													const moved = newValue.splice(i, 1);
-													newValue.splice(i + 1, 0, ...moved);
-												}
 
-												setConditions(newValue);
-											} }
-											processing={ processing }
-											active={ conditionsActive[i] }
-											group={ group }
-										/>
-									);
-								})
-							}
-						</div>
+													setConditions(newValue);
+												} }
+												onMoveDown={ () => {
+													if (i >= (conditions.length - 1))
+														return;
+
+													const newValue = CloneDeepMutable(conditions);
+													if ((i + 1) < newValue.length && newValue[i + 1].logic === 'or') {
+														// If this is the last condition in the group, move it to the next one
+														newValue[i].logic = 'or';
+														newValue[i + 1].logic = 'and';
+													} else {
+														// Otherwise we move it
+														// Update logic if it was the first thing in the group
+														if (newValue[i].logic === 'or') {
+															newValue[i].logic = 'and';
+															newValue[i + 1].logic = 'or';
+														}
+														// And move it
+														const moved = newValue.splice(i, 1);
+														newValue.splice(i + 1, 0, ...moved);
+													}
+
+													setConditions(newValue);
+												} }
+												processing={ processing }
+												active={ conditionsActive[i] }
+												group={ group }
+											/>
+										);
+									})
+								}
+							</div>
+						</>
 					)
 				}
 				{
@@ -207,6 +210,19 @@ function ConditionRecordListEntry({ record, firstEntry, lastEntry, onChange, onD
 				<CharacterModifierConditionListEntry
 					condition={ record.condition }
 					invert={ record.invert }
+					setCondition={ (newCondition) => {
+						onChange({
+							...record,
+							condition: newCondition,
+						});
+					} }
+					setInvert={ (newInvert) => {
+						onChange({
+							...record,
+							invert: newInvert,
+						});
+					} }
+					processing={ processing }
 				/>
 			</DivContainer>
 			<Row className='quickActions' gap='small'>

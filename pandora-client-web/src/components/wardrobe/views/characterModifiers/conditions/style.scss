@@ -31,11 +31,19 @@
 			padding-left: 0.25em;
 			padding-right: 0.2em;
 			overflow-wrap: anywhere;
+			background-color: common.$theme-normal-background-secondary;
 
 			&.active {
 				background-color: color-mix(in srgb, common.$theme-wardrobe-modifiers-indication-active 27%, transparent);
 			}
 
+			> span {
+				display: inline-block;
+
+				button {
+					display: inline;
+				}
+			}
 		}
 
 		.quickActions {

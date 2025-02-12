@@ -102,6 +102,7 @@ export function WardrobeEffectsModifiers({ className, character, globalState }: 
 					</div>
 				) : currentFocus.type === 'type' ? (
 					<WardrobeCharacterModifierTypeDetailsView
+						key={ currentFocus.typeId }
 						type={ currentFocus.typeId }
 						target={ character.id }
 						focusModifierInstance={ (id) => {
@@ -114,6 +115,7 @@ export function WardrobeEffectsModifiers({ className, character, globalState }: 
 					/>
 				) : currentFocus.type === 'effectiveInstance' ? (
 					<WardrobeCharacterModifierEffectDetailsView
+						key={ currentFocus.id }
 						target={ character.id }
 						effect={ characterModifierEffects.find((m) => m.id === currentFocus.id) ?? null }
 						unfocus={ () => {
@@ -122,6 +124,7 @@ export function WardrobeEffectsModifiers({ className, character, globalState }: 
 					/>
 				) : currentFocus.type === 'instance' ? (
 					<WardrobeCharacterModifierInstanceDetailsView
+						key={ currentFocus.id }
 						target={ character.id }
 						instance={ fullInstanceList?.result === 'ok' ? (fullInstanceList.modifiers.find((m) => m.id === currentFocus.id) ?? null) : null }
 						unfocus={ () => {

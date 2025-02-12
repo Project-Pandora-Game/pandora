@@ -13,16 +13,17 @@ const FORWARDED_PROPS = [
 export interface CheckboxProps extends Pick<InputHTMLAttributes<HTMLInputElement>, (typeof FORWARDED_PROPS)[number]> {
 	checked: boolean;
 	onChange: (newValue: boolean) => void;
+	radioButtion?: boolean;
 }
 
 export function Checkbox(props: CheckboxProps): ReactElement {
-	const { checked, onChange } = props;
+	const { checked, onChange, radioButtion = false } = props;
 	const forwardedProps = pick(props, FORWARDED_PROPS);
 
 	return (
 		<input
 			{ ...forwardedProps }
-			type='checkbox'
+			type={ radioButtion ? 'radio' : 'checkbox' }
 			checked={ checked }
 			onChange={ (event) => {
 				event.stopPropagation();

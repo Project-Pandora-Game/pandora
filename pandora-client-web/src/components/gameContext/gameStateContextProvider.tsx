@@ -50,7 +50,7 @@ import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { z } from 'zod';
 import { GetCurrentAssetManager } from '../../assets/assetManager';
 import { BrowserStorage } from '../../browserStorage';
-import { Character } from '../../character/character';
+import { Character, useCharacterDataOptional } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
 import { ShardConnectionState, ShardConnector } from '../../networking/shardConnector';
 import { Observable, useNullableObservable, useObservable } from '../../observable';
@@ -583,6 +583,16 @@ export function useChatMessages(): readonly IChatMessageProcessed[] {
 export function useSpaceCharacters(): readonly Character<ICharacterRoomData>[] {
 	const context = useGameStateOptional();
 	return useNullableObservable(context?.characters) ?? EMPTY_ARRAY;
+}
+
+export function useResolveCharacterName(characterId: CharacterId): string | null {
+	// Look through space characters to see if we find matching one
+	const characters = useSpaceCharacters();
+	const character = characters.find((c) => c.id === characterId);
+
+	const data = useCharacterDataOptional(character ?? null);
+
+	return (data != null) ? data.name : null;
 }
 
 export function useSpaceInfo(): Immutable<CurrentSpaceInfo> {

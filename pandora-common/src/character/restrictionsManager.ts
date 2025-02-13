@@ -312,10 +312,15 @@ export class CharacterRestrictionsManager {
 				return;
 			}
 
-			// Not all rooms allow bodypart changes (changing expression is allowed)
+			// Get bodypart descriptor of the target item
+			const bodypart = this.appearance.getAssetManager().bodyparts.find((b) => b.name === item.asset.definition.bodypart);
+			Assert(bodypart != null, `Bodypart definition '${item.asset.definition.bodypart}' of bodypart item not found`);
+
+			// Not all rooms allow bodypart changes (changing expression is allowed and some bodyparts can be changed anywhere)
 			if (
 				!this.spaceContext.features.includes('allowBodyChanges') &&
-				interaction !== ItemInteractionType.EXPRESSION_CHANGE
+				interaction !== ItemInteractionType.EXPRESSION_CHANGE &&
+				!bodypart.adjustable
 			) {
 				context.addRestriction({
 					type: 'modifyBodyRoom',

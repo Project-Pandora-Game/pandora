@@ -452,10 +452,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!connection.isLoggedIn())
 			throw new BadMessageError();
 
-		const accountFriends = await connection.account.contacts.getFriendsIds();
+		const account = connection.account;
+		const accountFriends = await account.contacts.getFriendsIds();
 
-		const spaces = (await SpaceManager.listSpacesVisibleTo(connection.account))
-			.map((r) => r.getListInfo(connection.account, accountFriends));
+		const spaces = (await SpaceManager.listSpacesVisibleTo(account))
+			.map((r) => r.getListInfo(account, accountFriends));
 
 		return { spaces };
 	}

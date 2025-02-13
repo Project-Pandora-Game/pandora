@@ -264,7 +264,11 @@ export class AssetFrameworkGlobalStateContainer {
 		const oldState = this._currentState;
 		const bundle = oldState.exportToBundle();
 
-		const newState = AssetFrameworkGlobalState.loadFromBundle(assetManager, bundle, this._logger);
+		const newState = AssetFrameworkGlobalState.loadFromBundle(
+			assetManager,
+			bundle,
+			this._logger.prefixMessages('Asset manager reload:'),
+		);
 		Assert(newState.isValid());
 		this._currentState = newState;
 		this._onChange(newState, oldState);

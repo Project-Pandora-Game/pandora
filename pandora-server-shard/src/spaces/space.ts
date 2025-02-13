@@ -1,3 +1,4 @@
+import { diffString } from 'json-diff';
 import _, { isEqual, omit } from 'lodash';
 import {
 	AccountId,
@@ -76,6 +77,19 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			AssetFrameworkRoomState
 				.loadFromBundle(assetManager, inventory, this.logger.prefixMessages('Room inventory load:')),
 		);
+
+		// Check if room state changed and if it did queue saving the changes
+		{
+			// HACK: The JSON wrapping is because exported bundle might have undefined fields, which lodash doesn't handle well
+			const inventoryBefore: unknown = JSON.parse(JSON.stringify(inventory));
+			const inventoryAfter: unknown = JSON.parse(JSON.stringify(initialState.room.exportToBundle()));
+			if (!isEqual(inventoryBefore, inventoryAfter)) {
+				this.logger.alert('Room inventory changed during load, queuing update of migrated data\n', diffString(inventoryBefore, inventoryAfter, { color: false }));
+				queueMicrotask(() => {
+					this._onDataModified('inventory');
+				});
+			}
+		}
 
 		this.gameState = new AssetFrameworkGlobalStateContainer(
 			this.logger,
@@ -280,6 +294,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
 		const roomBackground = ResolveBackground(assetManager, this.config.background);
 		character.initRoomPosition(this.id, roomBackground);
+		const logger = this.logger.prefixMessages(`Character ${character.id} join:`);
 
 		this.runWithSuppressedUpdates(() => {
 			let newState = this.gameState.currentState;
@@ -292,9 +307,21 @@ export abstract class Space extends ServerRoom<IShardClient> {
 					character.id,
 					appearance,
 					newState.room,
-					this.logger.prefixMessages(`Character ${character.id} join:`),
+					logger,
 				);
 			newState = newState.withCharacter(character.id, characterState);
+			const newAppearanceBundle = characterState.exportToBundle();
+			{
+				// HACK: The JSON wrapping is because exported bundle might have undefined fields, which lodash doesn't handle well
+				const appearanceBefore: unknown = JSON.parse(JSON.stringify(appearance));
+				const appearanceAfter: unknown = JSON.parse(JSON.stringify(newAppearanceBundle));
+				if (!isEqual(appearanceBefore, appearanceAfter)) {
+					logger.alert('Character appearance changed during load, queuing update of migrated data\n', diffString(appearanceBefore, appearanceAfter, { color: false }));
+					queueMicrotask(() => {
+						character.onAppearanceChanged();
+					});
+				}
+			}
 
 			this.gameState.setState(newState);
 
@@ -305,7 +332,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 				join: character.getRoomData(),
 			});
 			// Send update to joining character
-			character.setSpace(this, appearance);
+			character.setSpace(this, newAppearanceBundle);
 			character.connection?.sendMessage('gameStateLoad', {
 				globalState,
 				space: this.getLoadData(),

@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { AssetFrameworkGlobalState } from '../../../assets';
 import { LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT } from '../../../inputLimits';
 import type { CurrentSpaceInfo } from '../../../space';
+import type { GameLogicCharacter } from '../../character/character';
 import { CharacterModifierConditionSchema, EvaluateCharacterModifierCondition } from './characterModifierCondition';
 
 /** A single record in condition chain. */
@@ -28,6 +29,7 @@ export function EvaluateCharacterModifierConditionChain(
 	chain: Immutable<CharacterModifierConditionChain>,
 	gameState: AssetFrameworkGlobalState,
 	spaceInfo: Immutable<CurrentSpaceInfo>,
+	character: GameLogicCharacter,
 ): boolean {
 	// Empty chain is always truthy (for always false, user can just disable the modifier)
 	if (chain.length === 0)
@@ -46,7 +48,7 @@ export function EvaluateCharacterModifierConditionChain(
 		}
 
 		// Evaluate this condition
-		let conditionResult = EvaluateCharacterModifierCondition(conditionRecord.condition, gameState, spaceInfo);
+		let conditionResult = EvaluateCharacterModifierCondition(conditionRecord.condition, gameState, spaceInfo, character);
 		// Invert if needed
 		if (conditionRecord.invert) {
 			conditionResult = !conditionResult;

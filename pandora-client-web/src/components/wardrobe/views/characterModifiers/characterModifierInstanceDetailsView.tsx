@@ -5,7 +5,6 @@ import {
 	CharacterModifierTemplateSchema,
 	GetLogger,
 	MakeCharacterModifierTemplateFromClientData,
-	type CharacterId,
 	type CharacterModifierConfigurationChange,
 	type CharacterModifierInstanceClientData,
 	type IClientShardNormalResult,
@@ -18,6 +17,7 @@ import type { Promisable } from 'type-fest';
 import crossIcon from '../../../../assets/icons/cross.svg';
 import deleteIcon from '../../../../assets/icons/delete.svg';
 import exportIcon from '../../../../assets/icons/export.svg';
+import type { ICharacter } from '../../../../character/character';
 import type { ChildrenProps } from '../../../../common/reactTypes';
 import { useAsyncEvent } from '../../../../common/useEvent';
 import { Switch } from '../../../../common/userInteraction/switch';
@@ -33,7 +33,7 @@ import { CharacterModifierConditionList } from './conditions/characterModifierCo
 import { WardrobeCharacterModifierConfig } from './configuration/_index';
 
 interface WardrobeCharacterModifierInstanceDetailsViewProps {
-	target: CharacterId;
+	character: ICharacter;
 	instance: CharacterModifierInstanceClientData | null;
 	unfocus: () => void;
 }
@@ -64,7 +64,7 @@ export function WardrobeCharacterModifierInstanceDetailsView({ instance, unfocus
 	);
 }
 
-function CheckedInstanceDetails({ target, instance, unfocus }: WardrobeCharacterModifierInstanceDetailsViewProps & {
+function CheckedInstanceDetails({ character, instance, unfocus }: WardrobeCharacterModifierInstanceDetailsViewProps & {
 	instance: CharacterModifierInstanceClientData;
 }): ReactElement {
 	const shard = useShardConnector();
@@ -77,7 +77,7 @@ function CheckedInstanceDetails({ target, instance, unfocus }: WardrobeCharacter
 		}
 
 		const result = await shard.awaitResponse('characterModifierConfigure', {
-			target,
+			target: character.id,
 			modifier: instance.id,
 			config,
 		}).catch((err) => {
@@ -106,13 +106,13 @@ function CheckedInstanceDetails({ target, instance, unfocus }: WardrobeCharacter
 		} else {
 			AssertNever(result);
 		}
-	}, [instance.id, shard, target]);
+	}, [instance.id, shard, character]);
 
 	return (
 		<div className='inventoryView wardrobeModifierInstanceDetails'>
 			<Row className='toolbar'>
 				<ModifierInstanceEnableButton
-					target={ target }
+					character={ character }
 					enabled={ instance.enabled }
 					onChange={ (newValue) => updateConfig({
 						enabled: newValue,
@@ -123,21 +123,21 @@ function CheckedInstanceDetails({ target, instance, unfocus }: WardrobeCharacter
 			<Column padding='medium' overflowX='hidden' overflowY='auto'>
 				<Row padding='medium' wrap alignX='space-evenly' className='itemActions'>
 					<ModifierInstanceReorderButton
-						target={ target }
+						character={ character }
 						instance={ instance }
 						shift={ -1 }
 					>
 						▲ Increase priority
 					</ModifierInstanceReorderButton>
 					<ModifierInstanceReorderButton
-						target={ target }
+						character={ character }
 						instance={ instance }
 						shift={ 1 }
 					>
 						▼ Decrease priority
 					</ModifierInstanceReorderButton>
 					<ModifierInstanceDeleteButton
-						target={ target }
+						character={ character }
 						instance={ instance }
 						unfocus={ unfocus }
 					/>
@@ -159,6 +159,7 @@ function CheckedInstanceDetails({ target, instance, unfocus }: WardrobeCharacter
 						))
 				}
 				<CharacterModifierConditionList
+					character={ character }
 					conditions={ instance.conditions }
 					onChange={ (newValue) => updateConfig({
 						conditions: newValue,
@@ -169,8 +170,8 @@ function CheckedInstanceDetails({ target, instance, unfocus }: WardrobeCharacter
 	);
 }
 
-function ModifierInstanceEnableButton({ target, enabled, onChange }: {
-	target: CharacterId;
+function ModifierInstanceEnableButton({ character, enabled, onChange }: {
+	character: ICharacter;
 	enabled: boolean;
 	onChange?: (enabled: boolean) => Promisable<void>;
 }): ReactElement {
@@ -201,11 +202,11 @@ function ModifierInstanceEnableButton({ target, enabled, onChange }: {
 			.map((r): [PermissionGroup, string] => ([r.permissionGroup, r.permissionId]));
 
 		if (permissions.length > 0) {
-			requestPermissions(target, permissions);
+			requestPermissions(character.id, permissions);
 		} else {
 			execute(newValue);
 		}
-	}, [check, execute, requestPermissions, target]);
+	}, [check, execute, requestPermissions, character]);
 
 	return (
 		<DivContainer align='center' justify='center' padding='small' className='activationSwitch'>
@@ -219,8 +220,8 @@ function ModifierInstanceEnableButton({ target, enabled, onChange }: {
 	);
 }
 
-function ModifierInstanceReorderButton({ target, instance, shift, children }: ChildrenProps & {
-	target: CharacterId;
+function ModifierInstanceReorderButton({ character, instance, shift, children }: ChildrenProps & {
+	character: ICharacter;
 	instance: CharacterModifierInstanceClientData;
 	shift: number;
 }): ReactElement {
@@ -241,7 +242,7 @@ function ModifierInstanceReorderButton({ target, instance, shift, children }: Ch
 		}
 
 		return await shard.awaitResponse('characterModifierReorder', {
-			target,
+			target: character.id,
 			modifier: instance.id,
 			shift,
 		});
@@ -279,11 +280,11 @@ function ModifierInstanceReorderButton({ target, instance, shift, children }: Ch
 			.map((r): [PermissionGroup, string] => ([r.permissionGroup, r.permissionId]));
 
 		if (permissions.length > 0) {
-			requestPermissions(target, permissions);
+			requestPermissions(character.id, permissions);
 		} else {
 			execute();
 		}
-	}, [check, execute, requestPermissions, target]);
+	}, [check, execute, requestPermissions, character]);
 
 	return (
 		<WardrobeActionButtonElement
@@ -296,8 +297,8 @@ function ModifierInstanceReorderButton({ target, instance, shift, children }: Ch
 	);
 }
 
-function ModifierInstanceDeleteButton({ target, instance, unfocus }: {
-	target: CharacterId;
+function ModifierInstanceDeleteButton({ character, instance, unfocus }: {
+	character: ICharacter;
 	instance: CharacterModifierInstanceClientData;
 	unfocus: () => void;
 }): ReactElement {
@@ -318,7 +319,7 @@ function ModifierInstanceDeleteButton({ target, instance, unfocus }: {
 		}
 
 		return await shard.awaitResponse('characterModifierDelete', {
-			target,
+			target: character.id,
 			modifier: instance.id,
 		});
 	}, (result: IClientShardNormalResult['characterModifierDelete'] | null) => {
@@ -355,11 +356,11 @@ function ModifierInstanceDeleteButton({ target, instance, unfocus }: {
 			.map((r): [PermissionGroup, string] => ([r.permissionGroup, r.permissionId]));
 
 		if (permissions.length > 0) {
-			requestPermissions(target, permissions);
+			requestPermissions(character.id, permissions);
 		} else {
 			execute();
 		}
-	}, [check, execute, requestPermissions, target]);
+	}, [check, execute, requestPermissions, character]);
 
 	return (
 		<WardrobeActionButtonElement

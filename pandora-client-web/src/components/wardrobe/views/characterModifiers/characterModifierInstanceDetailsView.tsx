@@ -311,8 +311,8 @@ function ModifierInstanceDeleteButton({ character, instance, unfocus }: {
 
 	const checkInitial = useMemo(() => {
 		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
-		return CharacterModifierActionCheckModify(processingContext, character.id);
-	}, [actions, globalState, character]);
+		return CharacterModifierActionCheckModify(processingContext, character.id, instance.type);
+	}, [actions, globalState, character, instance.type]);
 	const check = useCheckAddPermissions(checkInitial);
 
 	const [requestPermissions, processingPermissionRequest] = useWardrobePermissionRequestCallback();

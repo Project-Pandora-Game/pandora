@@ -164,30 +164,14 @@ function ShowAllowOthers({ config }: { config: PermissionType; }): ReactElement 
 
 function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
 	const config: Immutable<IInteractionConfig> = INTERACTION_CONFIG[id];
-	const [showConfig, setShowConfig] = useState(false);
 
 	return (
-		<div className='input-row'>
-			<label className='flex-1'>
-				<img src={ GetIcon(config.icon) } width='28' height='28' alt='permission icon' />
-				&nbsp;&nbsp;
-				{ config.visibleName }
-			</label>
-			<ShowEffectiveAllowOthers permissionGroup='interaction' permissionId={ id } />
-			<Button
-				className='slim'
-				onClick={ () => setShowConfig(true) }
-			>
-				Edit
-			</Button>
-			{ showConfig && (
-				<PermissionConfigDialog
-					hide={ () => setShowConfig(false) }
-					permissionGroup='interaction'
-					permissionId={ id }
-				/>
-			) }
-		</div>
+		<PermissionSettingEntry
+			visibleName={ config.visibleName }
+			icon={ config.icon }
+			permissionGroup='interaction'
+			permissionId={ id }
+		/>
 	);
 }
 
@@ -207,33 +191,17 @@ function ItemLimitsPermissions(): ReactElement {
 
 function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactElement | null {
 	const config = ASSET_PREFERENCES_PERMISSIONS[group];
-	const [showConfig, setShowConfig] = useState(false);
 
 	if (config == null)
 		return null;
 
 	return (
-		<div className='input-row flex-1'>
-			<label className='flex-1'>
-				<img src={ GetIcon(config.icon) } width='28' height='28' alt='permission icon' />
-				&nbsp;&nbsp;
-				{ config.visibleName }
-			</label>
-			<ShowEffectiveAllowOthers permissionGroup='assetPreferences' permissionId={ group } />
-			<Button
-				className='slim'
-				onClick={ () => setShowConfig(true) }
-			>
-				Edit
-			</Button>
-			{ showConfig && (
-				<PermissionConfigDialog
-					hide={ () => setShowConfig(false) }
-					permissionGroup='assetPreferences'
-					permissionId={ group }
-				/>
-			) }
-		</div>
+		<PermissionSettingEntry
+			visibleName={ config.visibleName }
+			icon={ config.icon }
+			permissionGroup='assetPreferences'
+			permissionId={ group }
+		/>
 	);
 }
 
@@ -273,6 +241,45 @@ function PermissionConfigDialogEscaper({ hide }: { hide: () => void; }): null {
 	}, [hide]), 'Escape');
 
 	return null;
+}
+
+export function PermissionSettingEntry({ visibleName, icon, permissionGroup, permissionId }: {
+	visibleName: string;
+	icon: string;
+	permissionGroup: PermissionGroup;
+	permissionId: string;
+}): ReactElement {
+	const [showConfig, setShowConfig] = useState(false);
+
+	return (
+		<Row alignY='center' alignX='space-between'>
+			<label className='flex-1'>
+				{
+					icon ? (
+						<>
+							<img src={ GetIcon(icon) } width='28' height='28' alt='permission icon' />
+							&nbsp;&nbsp;
+						</>
+					) : null
+				}
+				{ visibleName }
+			</label>
+			<ShowEffectiveAllowOthers permissionGroup={ permissionGroup } permissionId={ permissionId } />
+			<Button
+				className='slim'
+				onClick={ () => setShowConfig(true) }
+			>
+				Edit
+			</Button>
+			{ showConfig && (
+				<PermissionConfigDialog
+					hide={ () => setShowConfig(false) }
+					permissionGroup={ permissionGroup }
+					permissionId={ permissionId }
+				/>
+			) }
+		</Row>
+	);
 }
 
 function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {

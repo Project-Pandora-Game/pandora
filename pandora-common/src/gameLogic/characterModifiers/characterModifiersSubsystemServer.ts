@@ -158,6 +158,11 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 		return this.modifierInstances.map((m) => m.getClientData());
 	}
 
+	public getModifier(modifier: CharacterModifierId): CharacterModifierInstanceClientData | null {
+		const instance = this.modifierInstances.find((m) => m.id === modifier);
+		return instance?.getClientData() ?? null;
+	}
+
 	public getActiveEffects(gameState: AssetFrameworkGlobalState, spaceInfo: CurrentSpaceInfo): CharacterModifierEffectData[] {
 		const apppearance = this.character.getAppearance(gameState);
 		const restrictionOverride = GetRestrictionOverrideConfig(apppearance.getRestrictionOverride());

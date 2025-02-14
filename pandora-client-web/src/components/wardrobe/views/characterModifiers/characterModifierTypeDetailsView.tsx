@@ -2,6 +2,7 @@ import {
 	AppearanceActionProcessingContext,
 	AssertNever,
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
+	CharacterModifierActionCheckAdd,
 	GetLogger,
 	type CharacterId,
 	type CharacterModifierId,
@@ -33,8 +34,8 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, target, focusMo
 
 	const checkInitial = useMemo(() => {
 		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
-		return processingContext.finalize();
-	}, [actions, globalState]);
+		return CharacterModifierActionCheckAdd(processingContext, target, type);
+	}, [actions, globalState, target, type]);
 	const check = useCheckAddPermissions(checkInitial);
 
 	const [requestPermissions, processingPermissionRequest] = useWardrobePermissionRequestCallback();

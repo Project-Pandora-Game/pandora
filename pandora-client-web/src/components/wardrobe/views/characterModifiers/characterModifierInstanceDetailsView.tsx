@@ -2,6 +2,8 @@ import {
 	AppearanceActionProcessingContext,
 	AssertNever,
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
+	CharacterModifierActionCheckModify,
+	CharacterModifierActionCheckReorder,
 	CharacterModifierTemplateSchema,
 	GetLogger,
 	MakeCharacterModifierTemplateFromClientData,
@@ -107,6 +109,8 @@ function CheckedInstanceDetails({ character, instance, unfocus }: WardrobeCharac
 			AssertNever(result);
 		}
 	}, [instance.id, shard, character]);
+
+	// TODO: Do an early check on if we are allowed to run modify through CharacterModifierActionCheckModify
 
 	return (
 		<div className='inventoryView wardrobeModifierInstanceDetails'>
@@ -230,8 +234,8 @@ function ModifierInstanceReorderButton({ character, instance, shift, children }:
 
 	const checkInitial = useMemo(() => {
 		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
-		return processingContext.finalize();
-	}, [actions, globalState]);
+		return CharacterModifierActionCheckReorder(processingContext, character.id);
+	}, [actions, globalState, character]);
 	const check = useCheckAddPermissions(checkInitial);
 
 	const [requestPermissions, processingPermissionRequest] = useWardrobePermissionRequestCallback();
@@ -307,8 +311,8 @@ function ModifierInstanceDeleteButton({ character, instance, unfocus }: {
 
 	const checkInitial = useMemo(() => {
 		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
-		return processingContext.finalize();
-	}, [actions, globalState]);
+		return CharacterModifierActionCheckModify(processingContext, character.id);
+	}, [actions, globalState, character]);
 	const check = useCheckAddPermissions(checkInitial);
 
 	const [requestPermissions, processingPermissionRequest] = useWardrobePermissionRequestCallback();

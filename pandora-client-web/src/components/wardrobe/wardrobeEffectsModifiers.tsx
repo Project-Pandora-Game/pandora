@@ -104,7 +104,7 @@ export function WardrobeEffectsModifiers({ className, character, globalState }: 
 					<WardrobeCharacterModifierTypeDetailsView
 						key={ currentFocus.typeId }
 						type={ currentFocus.typeId }
-						target={ character.id }
+						character={ character }
 						focusModifierInstance={ (id) => {
 							tabListRef.current?.setTabByName('Current modifiers');
 							setCurrentFocus({

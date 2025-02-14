@@ -4,7 +4,6 @@ import {
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
 	CharacterModifierActionCheckAdd,
 	GetLogger,
-	type CharacterId,
 	type CharacterModifierId,
 	type CharacterModifierType,
 	type IClientShardNormalResult,
@@ -12,6 +11,7 @@ import {
 } from 'pandora-common';
 import { ReactElement, useCallback, useMemo } from 'react';
 import { toast } from 'react-toastify';
+import type { ICharacter } from '../../../../character/character';
 import { useAsyncEvent } from '../../../../common/useEvent';
 import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast';
 import { RenderChatPart } from '../../../../ui/components/chat/chatMessages';
@@ -19,12 +19,14 @@ import { ChatParser } from '../../../../ui/components/chat/chatParser';
 import { Column } from '../../../common/container/container';
 import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProvider';
 import { useShardConnector } from '../../../gameContext/shardConnectorContextProvider';
+import { PermissionSettingEntry } from '../../../settings/permissionsSettings';
 import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../../wardrobeActionContext';
 import { ActionWarningContent, WardrobeActionButtonElement } from '../../wardrobeComponents';
+import './characterModifierTypeDetailsView.scss';
 
-export function WardrobeCharacterModifierTypeDetailsView({ type, target, focusModifierInstance }: {
+export function WardrobeCharacterModifierTypeDetailsView({ type, character, focusModifierInstance }: {
 	type: CharacterModifierType;
-	target: CharacterId;
+	character: ICharacter;
 	focusModifierInstance: (id: CharacterModifierId) => void;
 }): ReactElement | null {
 	const { actions, globalState } = useWardrobeActionContext();
@@ -34,8 +36,8 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, target, focusMo
 
 	const checkInitial = useMemo(() => {
 		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
-		return CharacterModifierActionCheckAdd(processingContext, target, type);
-	}, [actions, globalState, target, type]);
+		return CharacterModifierActionCheckAdd(processingContext, character.id, type);
+	}, [actions, globalState, character, type]);
 	const check = useCheckAddPermissions(checkInitial);
 
 	const [requestPermissions, processingPermissionRequest] = useWardrobePermissionRequestCallback();
@@ -46,7 +48,7 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, target, focusMo
 		}
 
 		return await shard.awaitResponse('characterModifierAdd', {
-			target,
+			target: character.id,
 			modifier: {
 				type,
 				config: {},
@@ -91,11 +93,11 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, target, focusMo
 			.map((r): [PermissionGroup, string] => ([r.permissionGroup, r.permissionId]));
 
 		if (permissions.length > 0) {
-			requestPermissions(target, permissions);
+			requestPermissions(character.id, permissions);
 		} else {
 			execute();
 		}
-	}, [check, execute, requestPermissions, target]);
+	}, [check, execute, requestPermissions, character]);
 
 	const description = useMemo(() => (
 		ChatParser.parseStyle(typeDefinition.description)
@@ -118,6 +120,19 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, target, focusMo
 				>
 					Add this modifier
 				</WardrobeActionButtonElement>
+				{
+					character.isPlayer() ? (
+						<fieldset className='modifierPermission'>
+							<legend>Permission</legend>
+							<PermissionSettingEntry
+								visibleName={ `Allow other characters to add or configure "${ typeDefinition.visibleName }" modifiers` }
+								icon=''
+								permissionGroup='characterModifierType'
+								permissionId={ type }
+							/>
+						</fieldset>
+					) : null
+				}
 			</Column>
 		</div>
 	);

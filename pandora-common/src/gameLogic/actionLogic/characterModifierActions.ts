@@ -31,7 +31,7 @@ export function CharacterModifierActionCheckRead(
 export function CharacterModifierActionCheckAdd(
 	ctx: AppearanceActionProcessingContext,
 	target: CharacterId,
-	_modifierType: CharacterModifierType,
+	modifierType: CharacterModifierType,
 ): AppearanceActionProcessingResult {
 	const player = ctx.getPlayerRestrictionManager();
 	const checkTarget = ctx.getCharacter(target);
@@ -42,7 +42,9 @@ export function CharacterModifierActionCheckAdd(
 	ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
 	ctx.addInteraction(checkTarget.character, 'modifyCharacterModifiers');
 
-	// TODO: Check modifier-specific permission
+	ctx.addRequiredPermission(
+		checkTarget.character.characterModifiers.getModifierTypePermission(modifierType),
+	);
 
 	return ctx.finalize();
 }
@@ -53,6 +55,7 @@ export function CharacterModifierActionCheckAdd(
 export function CharacterModifierActionCheckModify(
 	ctx: AppearanceActionProcessingContext,
 	target: CharacterId,
+	modifierType: CharacterModifierType,
 ): AppearanceActionProcessingResult {
 	const player = ctx.getPlayerRestrictionManager();
 	const checkTarget = ctx.getCharacter(target);
@@ -63,7 +66,9 @@ export function CharacterModifierActionCheckModify(
 	ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
 	ctx.addInteraction(checkTarget.character, 'modifyCharacterModifiers');
 
-	// TODO: Check modifier-specific permission
+	ctx.addRequiredPermission(
+		checkTarget.character.characterModifiers.getModifierTypePermission(modifierType),
+	);
 
 	return ctx.finalize();
 }
@@ -84,7 +89,7 @@ export function CharacterModifierActionCheckReorder(
 	ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
 	ctx.addInteraction(checkTarget.character, 'modifyCharacterModifiers');
 
-	// TODO: Check modifier-specific permission
+	// TODO: Consider what logic do we actually want to use for reordering
 
 	return ctx.finalize();
 }

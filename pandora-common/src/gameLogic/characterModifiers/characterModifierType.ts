@@ -27,7 +27,7 @@ export class GameLogicModifierTypeClient extends GameLogicModifierTypeData {
 		this.permission = new GameLogicPermissionClient(character, {
 			group: 'characterModifierType',
 			id: type,
-			displayName: `${config.visibleName}`,
+			displayName: `Interact with modifiers of type "${config.visibleName}"`,
 			defaultConfig: config.permissionDefault,
 			forbidDefaultAllowOthers: config.permissionForbidDefaultAllowOthers,
 		});
@@ -44,7 +44,7 @@ export class GameLogicModifierTypeServer extends GameLogicModifierTypeData {
 		this.permission = new GameLogicPermissionServer(character, {
 			group: 'characterModifierType',
 			id: type,
-			displayName: `${config.visibleName}`,
+			displayName: `Interact with modifiers of type "${config.visibleName}"`,
 			defaultConfig: config.permissionDefault,
 			forbidDefaultAllowOthers: config.permissionForbidDefaultAllowOthers,
 		}, data?.permission ?? null);

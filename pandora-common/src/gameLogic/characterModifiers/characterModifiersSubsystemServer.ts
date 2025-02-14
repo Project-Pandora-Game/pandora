@@ -1,6 +1,7 @@
 import { cloneDeep } from 'lodash';
 import { nanoid } from 'nanoid';
-import type { AssetFrameworkGlobalState } from '../../assets';
+import { GetRestrictionOverrideConfig } from '../../assets/state/characterStateTypes';
+import type { AssetFrameworkGlobalState } from '../../assets/state/globalState';
 import { LIMIT_CHARACTER_MODIFIER_INSTANCE_COUNT } from '../../inputLimits';
 import { Logger } from '../../logging';
 import type { CurrentSpaceInfo } from '../../space';
@@ -16,11 +17,14 @@ import { GameLogicModifierTypeServer } from './characterModifierType';
 import { CHARACTER_MODIFIER_TYPE_DEFINITION, CHARACTER_MODIFIER_TYPES, type CharacterModifierType } from './modifierTypes/_index';
 
 export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsystem implements IPermissionProvider<GameLogicPermissionServer> {
+	public readonly character: GameLogicCharacter;
+
 	private readonly modifierTypes: ReadonlyMap<CharacterModifierType, GameLogicModifierTypeServer>;
 	private readonly modifierInstances: GameLogicModifierInstanceServer[];
 
 	constructor(character: GameLogicCharacter, data: CharacterModifierSystemData, logger: Logger) {
 		super();
+		this.character = character;
 		// Load data
 		const modifierTypes = new Map<CharacterModifierType, GameLogicModifierTypeServer>();
 		for (const type of CHARACTER_MODIFIER_TYPES) {
@@ -155,8 +159,15 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 	}
 
 	public getActiveEffects(gameState: AssetFrameworkGlobalState, spaceInfo: CurrentSpaceInfo): CharacterModifierEffectData[] {
+		const apppearance = this.character.getAppearance(gameState);
+		const restrictionOverride = GetRestrictionOverrideConfig(apppearance.getRestrictionOverride());
+
+		// If character is in safemode, then there are no active effects
+		if (restrictionOverride.suppressCharacterModifiers)
+			return [];
+
 		return this.modifierInstances
-			.filter((m) => m.isInEffect(gameState, spaceInfo))
+			.filter((m) => m.isInEffect(gameState, spaceInfo, this.character))
 			.map((m) => m.getEffect());
 	}
 

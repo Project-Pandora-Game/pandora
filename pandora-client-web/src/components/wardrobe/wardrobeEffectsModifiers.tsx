@@ -125,7 +125,7 @@ export function WardrobeEffectsModifiers({ className, character, globalState }: 
 				) : currentFocus.type === 'instance' ? (
 					<WardrobeCharacterModifierInstanceDetailsView
 						key={ currentFocus.id }
-						target={ character.id }
+						character={ character }
 						instance={ fullInstanceList?.result === 'ok' ? (fullInstanceList.modifiers.find((m) => m.id === currentFocus.id) ?? null) : null }
 						unfocus={ () => {
 							setCurrentFocus(null);

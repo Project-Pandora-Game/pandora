@@ -604,7 +604,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		// Check that the source character is allowed to get this data
-		const checkResult = client.character.checkAction((ctx) => CharacterModifierActionCheckModify(ctx, target));
+		const checkResult = client.character.checkAction((ctx) => {
+			const modifierInstance = targetCharacter.gameLogicCharacter.characterModifiers.getModifier(modifier);
+			if (modifierInstance == null)
+				return ctx.invalid();
+
+			return CharacterModifierActionCheckModify(ctx, target, modifierInstance.type);
+		});
 
 		if (!checkResult.valid) {
 			return {
@@ -634,7 +640,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		// Check that the source character is allowed to get this data
-		const checkResult = client.character.checkAction((ctx) => CharacterModifierActionCheckModify(ctx, target));
+		const checkResult = client.character.checkAction((ctx) => {
+			const modifierInstance = targetCharacter.gameLogicCharacter.characterModifiers.getModifier(modifier);
+			if (modifierInstance == null)
+				return ctx.invalid();
+
+			return CharacterModifierActionCheckModify(ctx, target, modifierInstance.type);
+		});
 
 		if (!checkResult.valid) {
 			return {

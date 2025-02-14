@@ -5,6 +5,10 @@ import {
 	AssertNever,
 	BadMessageError,
 	CharacterId,
+	CharacterModifierActionCheckAdd,
+	CharacterModifierActionCheckModify,
+	CharacterModifierActionCheckRead,
+	CharacterModifierActionCheckReorder,
 	CloneDeepMutable,
 	DoImmediateAction,
 	FinishActionAttempt,
@@ -200,7 +204,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					if (cancelResult.valid) {
 						space.applyAction(cancelResult);
 					} else {
-						logger.error(`Failed to abort action attempt by ${ character.id } for failed action completion:\n`, cancelResult.problems);
+						logger.error(`Failed to abort action attempt by ${character.id} for failed action completion:\n`, cancelResult.problems);
 					}
 				}
 				// If the action failed, client might be out of sync, force-send full reload
@@ -493,16 +497,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		// Check that the source character is allowed to get this data
-		const checkResult = client.character.checkAction((ctx) => {
-			const checkTarget = ctx.getCharacter(target);
-			if (checkTarget == null)
-				return ctx.invalid();
-
-			ctx.addInteraction(checkTarget.character, 'interact');
-			ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
-
-			return ctx.finalize();
-		});
+		const checkResult = client.character.checkAction((ctx) => CharacterModifierActionCheckRead(ctx, target));
 
 		if (!checkResult.valid) {
 			return {
@@ -532,19 +527,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		// Check that the source character is allowed to get this data
-		const checkResult = client.character.checkAction((ctx) => {
-			const checkTarget = ctx.getCharacter(target);
-			if (checkTarget == null)
-				return ctx.invalid();
-
-			ctx.addInteraction(checkTarget.character, 'interact');
-			ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
-			ctx.addInteraction(checkTarget.character, 'modifyCharacterModifiers');
-
-			// TODO: Check modifier-specific permission
-
-			return ctx.finalize();
-		});
+		const checkResult = client.character.checkAction((ctx) => CharacterModifierActionCheckAdd(ctx, target, modifier.type));
 
 		if (!checkResult.valid) {
 			return {
@@ -581,19 +564,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		// Check that the source character is allowed to get this data
-		const checkResult = client.character.checkAction((ctx) => {
-			const checkTarget = ctx.getCharacter(target);
-			if (checkTarget == null)
-				return ctx.invalid();
-
-			ctx.addInteraction(checkTarget.character, 'interact');
-			ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
-			ctx.addInteraction(checkTarget.character, 'modifyCharacterModifiers');
-
-			// TODO: Check modifier-specific permission
-
-			return ctx.finalize();
-		});
+		const checkResult = client.character.checkAction((ctx) => CharacterModifierActionCheckReorder(ctx, target));
 
 		if (!checkResult.valid) {
 			return {
@@ -633,19 +604,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		// Check that the source character is allowed to get this data
-		const checkResult = client.character.checkAction((ctx) => {
-			const checkTarget = ctx.getCharacter(target);
-			if (checkTarget == null)
-				return ctx.invalid();
-
-			ctx.addInteraction(checkTarget.character, 'interact');
-			ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
-			ctx.addInteraction(checkTarget.character, 'modifyCharacterModifiers');
-
-			// TODO: Check modifier-specific permission
-
-			return ctx.finalize();
-		});
+		const checkResult = client.character.checkAction((ctx) => CharacterModifierActionCheckModify(ctx, target));
 
 		if (!checkResult.valid) {
 			return {
@@ -675,19 +634,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		// Check that the source character is allowed to get this data
-		const checkResult = client.character.checkAction((ctx) => {
-			const checkTarget = ctx.getCharacter(target);
-			if (checkTarget == null)
-				return ctx.invalid();
-
-			ctx.addInteraction(checkTarget.character, 'interact');
-			ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
-			ctx.addInteraction(checkTarget.character, 'modifyCharacterModifiers');
-
-			// TODO: Check modifier-specific permission
-
-			return ctx.finalize();
-		});
+		const checkResult = client.character.checkAction((ctx) => CharacterModifierActionCheckModify(ctx, target));
 
 		if (!checkResult.valid) {
 			return {

@@ -6,6 +6,7 @@ import { useMemo, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
 import type { Promisable } from 'type-fest';
 import crossImage from '../../../../../assets/icons/cross.svg';
+import type { ICharacter } from '../../../../../character/character';
 import { useAsyncEvent } from '../../../../../common/useEvent';
 import { Select } from '../../../../../common/userInteraction/select/select';
 import { TOAST_OPTIONS_ERROR } from '../../../../../persistentToast';
@@ -16,7 +17,8 @@ import { useGameState, useGlobalState, useSpaceInfo } from '../../../../gameCont
 import { CharacterModifierConditionListEntry } from './characterModifierCondition';
 import './style.scss';
 
-export function CharacterModifierConditionList({ conditions, onChange }: {
+export function CharacterModifierConditionList({ character, conditions, onChange }: {
+	character: ICharacter;
 	conditions: Immutable<CharacterModifierConditionChain>;
 	onChange: (newValue: CharacterModifierConditionChain) => Promisable<void>;
 }): ReactElement {
@@ -34,9 +36,9 @@ export function CharacterModifierConditionList({ conditions, onChange }: {
 	});
 
 	const conditionsActive = useMemo(() => conditions.map((c) => {
-		const res = EvaluateCharacterModifierCondition(c.condition, globalState, spaceInfo);
+		const res = EvaluateCharacterModifierCondition(c.condition, globalState, spaceInfo, character.gameLogicCharacter);
 		return c.invert ? !res : res;
-	}), [conditions, globalState, spaceInfo]);
+	}), [conditions, globalState, spaceInfo, character]);
 
 	return (
 		<FieldsetToggle legend='Conditions' className='characterModifierConditions'>

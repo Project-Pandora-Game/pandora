@@ -254,8 +254,8 @@ importers:
         specifier: 1.85.0
         version: 1.85.0
       sass-loader:
-        specifier: 16.0.4
-        version: 16.0.4(sass-embedded@1.85.0)(webpack@5.98.0)
+        specifier: 16.0.5
+        version: 16.0.5(sass-embedded@1.85.0)(webpack@5.98.0)
       source-map-loader:
         specifier: 5.0.0
         version: 5.0.0(webpack@5.98.0)
@@ -6135,8 +6135,8 @@ packages:
     engines: {node: '>=16.0.0'}
     hasBin: true
 
-  sass-loader@16.0.4:
-    resolution: {integrity: sha512-LavLbgbBGUt3wCiYzhuLLu65+fWXaXLmq7YxivLhEqmiupCFZ5sKUAipK3do6V80YSU0jvSxNhEdT13IXNr3rg==}
+  sass-loader@16.0.5:
+    resolution: {integrity: sha512-oL+CMBXrj6BZ/zOq4os+UECPL+bWqt6OAC6DWS8Ln8GZRcMDjlJ4JC3FBDuHJdYaFWIdKNIBYmtZtK2MaMkNIw==}
     engines: {node: '>= 18.12.0'}
     peerDependencies:
       '@rspack/core': 0.x || 1.x
@@ -13794,7 +13794,7 @@ snapshots:
       sass-embedded-win32-ia32: 1.85.0
       sass-embedded-win32-x64: 1.85.0
 
-  sass-loader@16.0.4(sass-embedded@1.85.0)(webpack@5.98.0):
+  sass-loader@16.0.5(sass-embedded@1.85.0)(webpack@5.98.0):
     dependencies:
       neo-async: 2.6.2
     optionalDependencies:

@@ -14,8 +14,8 @@ export function ConditionInSpaceId({ condition, setCondition, invert, setInvert,
 	return (
 		<span>
 			<Button
-				onClick={ () => setInvert(!invert) }
-				disabled={ processing }
+				onClick={ () => setInvert?.(!invert) }
+				disabled={ processing || setInvert == null }
 				slim
 			>
 				{ invert ? 'Not in' : 'In' }
@@ -24,6 +24,7 @@ export function ConditionInSpaceId({ condition, setCondition, invert, setInvert,
 			<Button
 				onClick={ () => setShowDialog(true) }
 				slim
+				disabled={ setCondition == null }
 			>
 				{ condition.spaceId == null ? 'their personal space' : `space ${condition.spaceId.substring(0, 8)}\u2026` }
 			</Button>
@@ -101,13 +102,14 @@ function ConditionInSpaceIdDialog({ condition, setCondition, close }: Pick<Chara
 					<Button
 						onClick={ () => {
 							if (dialogSpaceId !== undefined) {
-								setCondition({
+								setCondition?.({
 									type: 'inSpaceId',
 									spaceId: dialogSpaceId,
 								});
 							}
 							close();
 						} }
+						disabled={ setCondition == null }
 					>
 						Confirm
 					</Button>

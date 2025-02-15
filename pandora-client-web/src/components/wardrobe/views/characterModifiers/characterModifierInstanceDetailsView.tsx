@@ -69,8 +69,19 @@ export function WardrobeCharacterModifierInstanceDetailsView({ instance, unfocus
 function CheckedInstanceDetails({ character, instance, unfocus }: WardrobeCharacterModifierInstanceDetailsViewProps & {
 	instance: CharacterModifierInstanceClientData;
 }): ReactElement {
+	const { actions, globalState } = useWardrobeActionContext();
 	const shard = useShardConnector();
 	const typeDefinition = CHARACTER_MODIFIER_TYPE_DEFINITION[instance.type];
+
+	// Do an early check on if we are allowed to do modifications
+
+	const checkInitial = useMemo(() => {
+		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
+		return CharacterModifierActionCheckModify(processingContext, character.id, instance.type);
+	}, [actions, globalState, character, instance.type]);
+	const check = useCheckAddPermissions(checkInitial);
+
+	const [requestPermissions, processingPermissionRequest] = useWardrobePermissionRequestCallback();
 
 	const updateConfig = useCallback(async (config: CharacterModifierConfigurationChange): Promise<void> => {
 		if (shard == null) {
@@ -101,7 +112,7 @@ function CheckedInstanceDetails({ character, instance, unfocus }: WardrobeCharac
 			toast(
 				<Column>
 					<span>Problems performing action:</span>
-					<ActionWarningContent problems={ result.problems } prompt={ false } noText />
+					<ActionWarningContent problems={ result.problems } prompt={ false } customText='' />
 				</Column>,
 				TOAST_OPTIONS_ERROR,
 			);
@@ -110,7 +121,7 @@ function CheckedInstanceDetails({ character, instance, unfocus }: WardrobeCharac
 		}
 	}, [instance.id, shard, character]);
 
-	// TODO: Do an early check on if we are allowed to run modify through CharacterModifierActionCheckModify
+	const allowModify = check != null && check.valid;
 
 	return (
 		<div className='inventoryView wardrobeModifierInstanceDetails'>
@@ -118,9 +129,9 @@ function CheckedInstanceDetails({ character, instance, unfocus }: WardrobeCharac
 				<ModifierInstanceEnableButton
 					character={ character }
 					enabled={ instance.enabled }
-					onChange={ (newValue) => updateConfig({
+					onChange={ allowModify ? ((newValue) => updateConfig({
 						enabled: newValue,
-					}) }
+					})) : undefined }
 				/>
 				<span>Modifier "{ typeDefinition.visibleName }"</span>
 			</Row>
@@ -148,26 +159,61 @@ function CheckedInstanceDetails({ character, instance, unfocus }: WardrobeCharac
 					<ModifierInstanceExportButton instance={ instance } />
 				</Row>
 				{
+					check != null && !check.valid ? (
+						<fieldset className={ check.prompt != null ? 'modifyCheckProblem promptRequired' : 'modifyCheckProblem blocked' }>
+							<Column>
+								<ActionWarningContent
+									problems={ check.problems }
+									prompt={ check.prompt != null }
+									customText={
+										check.prompt != null ? 'To configure this modifier you need the following permissions:' :
+											"Configuring this modifier isn't possible, because:"
+									}
+								/>
+								{
+									check.prompt != null ? (
+										<button
+											className='wardrobeActionButton promptRequired'
+											onClick={ () => {
+												const permissions = check.valid ? [] : check.problems
+													.filter((p) => p.result === 'restrictionError')
+													.map((p) => p.restriction)
+													.filter((r) => r.type === 'missingPermission')
+													.map((r): [PermissionGroup, string] => ([r.permissionGroup, r.permissionId]));
+
+												requestPermissions(character.id, permissions);
+											} }
+											disabled={ processingPermissionRequest }
+										>
+											Request access
+										</button>
+									) : null
+								}
+							</Column>
+						</fieldset>
+					) : null
+				}
+				{
 					Array.from(Object.entries(typeDefinition.configDefinition))
 						.map(([option, optionDefinition]: [string, ModifierConfigurationEntryDefinition]) => (
 							<WardrobeCharacterModifierConfig
 								key={ option }
 								definition={ optionDefinition }
 								value={ instance.config[option] }
-								onChange={ (newValue) => updateConfig({
+								onChange={ allowModify ? ((newValue) => updateConfig({
 									config: {
 										[option]: newValue,
 									},
-								}) }
+								})) : undefined }
 							/>
 						))
 				}
 				<CharacterModifierConditionList
 					character={ character }
 					conditions={ instance.conditions }
-					onChange={ (newValue) => updateConfig({
+					onChange={ allowModify ? ((newValue) => updateConfig({
 						conditions: newValue,
-					}) }
+					})) : undefined }
 				/>
 			</Column>
 		</div>
@@ -262,7 +308,7 @@ function ModifierInstanceReorderButton({ character, instance, shift, children }:
 			toast(
 				<Column>
 					<span>Problems performing action:</span>
-					<ActionWarningContent problems={ result.problems } prompt={ false } noText />
+					<ActionWarningContent problems={ result.problems } prompt={ false } customText='' />
 				</Column>,
 				TOAST_OPTIONS_ERROR,
 			);
@@ -338,7 +384,7 @@ function ModifierInstanceDeleteButton({ character, instance, unfocus }: {
 			toast(
 				<Column>
 					<span>Problems performing action:</span>
-					<ActionWarningContent problems={ result.problems } prompt={ false } noText />
+					<ActionWarningContent problems={ result.problems } prompt={ false } customText='' />
 				</Column>,
 				TOAST_OPTIONS_ERROR,
 			);

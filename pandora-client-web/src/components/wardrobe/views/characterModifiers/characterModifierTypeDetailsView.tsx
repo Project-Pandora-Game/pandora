@@ -71,7 +71,7 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, character, focu
 			toast(
 				<Column>
 					<span>Problems performing action:</span>
-					<ActionWarningContent problems={ result.problems } prompt={ false } noText />
+					<ActionWarningContent problems={ result.problems } prompt={ false } customText='' />
 				</Column>,
 				TOAST_OPTIONS_ERROR,
 			);

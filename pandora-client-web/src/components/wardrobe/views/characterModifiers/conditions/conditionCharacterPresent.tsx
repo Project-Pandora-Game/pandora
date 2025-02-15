@@ -15,8 +15,8 @@ export function ConditionCharacterPresent({ condition, setCondition, invert, set
 	return (
 		<span>
 			<Button
-				onClick={ () => setInvert(!invert) }
-				disabled={ processing }
+				onClick={ () => setInvert?.(!invert) }
+				disabled={ processing || setInvert == null }
 				slim
 			>
 				{ invert ? 'Not in' : 'In' }
@@ -25,6 +25,7 @@ export function ConditionCharacterPresent({ condition, setCondition, invert, set
 			<Button
 				onClick={ () => setShowDialog(true) }
 				slim
+				disabled={ setCondition == null }
 			>
 				{ condition.characterId === 'c0' ? '[not set]' : `${resolvedName} (${ condition.characterId })` }
 			</Button>
@@ -81,13 +82,14 @@ function ConditionCharacterPresentDialog({ condition, setCondition, close }: Pic
 					<Button
 						onClick={ () => {
 							if (dialogCharacterId != null) {
-								setCondition({
+								setCondition?.({
 									type: 'characterPresent',
 									characterId: dialogCharacterId,
 								});
 							}
 							close();
 						} }
+						disabled={ setCondition == null }
 					>
 						Confirm
 					</Button>
@@ -101,12 +103,13 @@ function ConditionCharacterPresentDialog({ condition, setCondition, close }: Pic
 								key={ c.id }
 								slim
 								onClick={ () => {
-									setCondition({
+									setCondition?.({
 										type: 'characterPresent',
 										characterId: c.id,
 									});
 									close();
 								} }
+								disabled={ setCondition == null }
 							>
 								{ c.name } ({ c.id })  { c.isPlayer() ? '[You]' : '' }
 							</Button>

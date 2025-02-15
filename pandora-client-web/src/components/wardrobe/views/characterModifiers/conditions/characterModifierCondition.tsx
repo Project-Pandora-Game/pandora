@@ -6,9 +6,9 @@ import { ConditionInSpaceId } from './conditionInSpaceId';
 
 export type CharacterModifierConditionListEntryProps<TCondition extends CharacterModifierCondition['type'] = CharacterModifierCondition['type']> = {
 	condition: Immutable<Extract<CharacterModifierCondition, { type: TCondition; }>>;
-	setCondition: (newCondition: Extract<CharacterModifierCondition, { type: TCondition; }>) => void;
+	setCondition?: (newCondition: Extract<CharacterModifierCondition, { type: TCondition; }>) => void;
 	invert: boolean;
-	setInvert: (invert: boolean) => void;
+	setInvert?: (invert: boolean) => void;
 	processing: boolean;
 };
 

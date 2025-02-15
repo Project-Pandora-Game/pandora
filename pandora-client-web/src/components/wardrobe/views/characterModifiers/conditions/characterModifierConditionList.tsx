@@ -20,13 +20,16 @@ import './style.scss';
 export function CharacterModifierConditionList({ character, conditions, onChange }: {
 	character: ICharacter;
 	conditions: Immutable<CharacterModifierConditionChain>;
-	onChange: (newValue: CharacterModifierConditionChain) => Promisable<void>;
+	onChange?: (newValue: CharacterModifierConditionChain) => Promisable<void>;
 }): ReactElement {
 	const gameState = useGameState();
 	const globalState = useGlobalState(gameState);
 	const spaceInfo = useSpaceInfo();
 
 	const [setConditions, processing] = useAsyncEvent(async (newConditions: CharacterModifierConditionChain) => {
+		if (onChange == null)
+			throw new Error('Changing value not supported');
+
 		await onChange(newConditions);
 	}, null, {
 		errorHandler: (err) => {
@@ -73,17 +76,17 @@ export function CharacterModifierConditionList({ character, conditions, onChange
 												record={ record }
 												firstEntry={ i === 0 }
 												lastEntry={ i === (conditions.length - 1) }
-												onChange={ (newRecord) => {
+												onChange={ onChange != null ? ((newRecord) => {
 													const newValue = CloneDeepMutable(conditions);
 													newValue[i] = newRecord;
 													setConditions(newValue);
-												} }
-												onDelete={ () => {
+												}) : undefined }
+												onDelete={ onChange != null ? (() => {
 													const newValue = CloneDeepMutable(conditions);
 													newValue.splice(i, 1);
 													setConditions(newValue);
-												} }
-												onMoveUp={ () => {
+												}) : undefined }
+												onMoveUp={ onChange != null ? (() => {
 													if (i < 1)
 														return;
 
@@ -108,8 +111,8 @@ export function CharacterModifierConditionList({ character, conditions, onChange
 													}
 
 													setConditions(newValue);
-												} }
-												onMoveDown={ () => {
+												}) : undefined }
+												onMoveDown={ onChange != null ? (() => {
 													if (i >= (conditions.length - 1))
 														return;
 
@@ -131,7 +134,7 @@ export function CharacterModifierConditionList({ character, conditions, onChange
 													}
 
 													setConditions(newValue);
-												} }
+												}) : undefined }
 												processing={ processing }
 												active={ conditionsActive[i] }
 												group={ group }
@@ -147,12 +150,12 @@ export function CharacterModifierConditionList({ character, conditions, onChange
 					conditions.length < LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT ? (
 						<CharacterModifierConditionAdd
 							processing={ processing }
-							addCondition={ (newCondition) => {
+							addCondition={ onChange != null ? ((newCondition) => {
 								setConditions([
 									...conditions,
 									newCondition,
 								]);
-							} }
+							}) : undefined }
 						/>
 					) : null
 				}
@@ -165,10 +168,10 @@ function ConditionRecordListEntry({ record, firstEntry, lastEntry, onChange, onD
 	record: Immutable<CharacterModifierConditionRecord>;
 	firstEntry: boolean;
 	lastEntry: boolean;
-	onChange: (newRecord: CharacterModifierConditionRecord) => void;
-	onDelete: () => void;
-	onMoveUp: () => void;
-	onMoveDown: () => void;
+	onChange?: (newRecord: CharacterModifierConditionRecord) => void;
+	onDelete?: () => void;
+	onMoveUp?: () => void;
+	onMoveDown?: () => void;
 	processing: boolean;
 	active: boolean;
 	/** For first element of "AND" group - details about this group. */
@@ -184,12 +187,12 @@ function ConditionRecordListEntry({ record, firstEntry, lastEntry, onChange, onD
 						slim
 						className={ classNames('logicToggle', record.logic === 'and' ? 'and' : null) }
 						onClick={ () => {
-							onChange({
+							onChange?.({
 								...record,
 								logic: record.logic === 'and' ? 'or' : 'and',
 							});
 						} }
-						disabled={ processing }
+						disabled={ processing || onChange == null }
 					>
 						{ record.logic === 'and' ? 'And' : record.logic === 'or' ? 'Or' : AssertNever(record.logic) }
 					</Button>
@@ -212,18 +215,18 @@ function ConditionRecordListEntry({ record, firstEntry, lastEntry, onChange, onD
 				<CharacterModifierConditionListEntry
 					condition={ record.condition }
 					invert={ record.invert }
-					setCondition={ (newCondition) => {
+					setCondition={ onChange != null ? ((newCondition) => {
 						onChange({
 							...record,
 							condition: newCondition,
 						});
-					} }
-					setInvert={ (newInvert) => {
+					}) : undefined }
+					setInvert={ onChange != null ? ((newInvert) => {
 						onChange({
 							...record,
 							invert: newInvert,
 						});
-					} }
+					}) : undefined }
 					processing={ processing }
 				/>
 			</DivContainer>
@@ -231,7 +234,7 @@ function ConditionRecordListEntry({ record, firstEntry, lastEntry, onChange, onD
 				<Button
 					slim
 					onClick={ onMoveUp }
-					disabled={ processing || firstEntry }
+					disabled={ processing || firstEntry || onMoveUp == null }
 					title='Move condition up'
 				>
 					▲
@@ -239,7 +242,7 @@ function ConditionRecordListEntry({ record, firstEntry, lastEntry, onChange, onD
 				<Button
 					slim
 					onClick={ onMoveDown }
-					disabled={ processing || lastEntry }
+					disabled={ processing || lastEntry || onMoveDown == null }
 					title='Move condition down'
 				>
 					▼
@@ -247,7 +250,7 @@ function ConditionRecordListEntry({ record, firstEntry, lastEntry, onChange, onD
 				<IconButton
 					slim
 					onClick={ onDelete }
-					disabled={ processing }
+					disabled={ processing || onDelete == null }
 					src={ crossImage }
 					alt='Remove condition'
 					title='Remove condition'
@@ -276,16 +279,17 @@ const CONDITION_PRESETS: { [t in CharacterModifierCondition['type']]: { name: st
 
 function CharacterModifierConditionAdd({ processing, addCondition }: {
 	processing: boolean;
-	addCondition: (newCondition: CharacterModifierConditionRecord) => void;
+	addCondition?: (newCondition: CharacterModifierConditionRecord) => void;
 }): ReactElement {
 	const [type, setType] = useState<CharacterModifierCondition['type'] | ''>('');
 
 	return (
 		<Row gap='medium'>
 			<Select
-				value={ type }
+				value={ addCondition != null ? type : '' }
 				onChange={ (ev) => setType(ev.target.value as (CharacterModifierCondition['type'] | '')) }
 				className='flex-1'
+				disabled={ addCondition == null }
 			>
 				<option value=''>- Select condition type -</option>
 				{ Object.entries(CONDITION_PRESETS).map(([key, value]) => (
@@ -297,7 +301,7 @@ function CharacterModifierConditionAdd({ processing, addCondition }: {
 			<Button
 				className='slim'
 				onClick={ () => {
-					if (type) {
+					if (type && addCondition != null) {
 						addCondition({
 							condition: cloneDeep(CONDITION_PRESETS[type].default),
 							invert: false,
@@ -305,7 +309,7 @@ function CharacterModifierConditionAdd({ processing, addCondition }: {
 						});
 					}
 				} }
-				disabled={ processing || !type }
+				disabled={ processing || !type || addCondition == null }
 			>
 				Add
 			</Button>

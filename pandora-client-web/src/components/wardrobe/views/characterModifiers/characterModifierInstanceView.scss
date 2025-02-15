@@ -24,3 +24,13 @@
 		}
 	}
 }
+
+.modifyCheckProblem {
+	border-radius: 1em;
+	margin: 1em;
+
+	&.blocked {
+		background: common.$theme-wardrobe-actionbutton-blocked-background;
+		color: common.$theme-wardrobe-actionbutton-blocked-text;
+	}
+}

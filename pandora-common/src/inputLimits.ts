@@ -80,6 +80,8 @@ export const LIMIT_JOIN_ME_INVITES = 10;
 
 /** The maximum number of character modifier instances on a single character */
 export const LIMIT_CHARACTER_MODIFIER_INSTANCE_COUNT = 100;
+/** The maximum length of a custom character modifier name */
+export const LIMIT_CHARACTER_MODIFIER_NAME_LENGTH = 40;
 /** The maximum amount of characters that can be specified in a character list configuration type of a character modifier. */
 export const LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT = 50;
 /** The maximum amount of conditions inside a single character modifier instance. */

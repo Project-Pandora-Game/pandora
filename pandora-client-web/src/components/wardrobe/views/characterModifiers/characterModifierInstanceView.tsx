@@ -7,6 +7,8 @@ import {
 } from 'pandora-common';
 import { ReactElement, ReactNode } from 'react';
 import { DivContainer } from '../../../common/container/container';
+import { ResolveItemDisplayNameType } from '../../itemDetail/wardrobeItemName';
+import { useWardrobeContext } from '../../wardrobeContext';
 import './characterModifierInstanceView.scss';
 
 export function WardrobeCharacterModifierFullInstanceView({ children, modifiers, modifierEffects, currentlyFocusedModifier, focusModifierInstance }: {
@@ -55,6 +57,8 @@ function ModifierFullInstanceListItem({ modifier, selected = false, onClick, act
 	active: boolean;
 }): ReactElement {
 	const definition = CHARACTER_MODIFIER_TYPE_DEFINITION[modifier.type];
+	const { itemDisplayNameType } = useWardrobeContext();
+
 	// TODO: const preference = useAssetPreference(asset);
 
 	return (
@@ -76,7 +80,7 @@ function ModifierFullInstanceListItem({ modifier, selected = false, onClick, act
 					!modifier.enabled ? 'status-disabled' : active ? 'status-active' : 'status-inactive',
 				) }
 			/>
-			<span className='itemName'>{ definition.visibleName }</span>
+			<span className='itemName'>{ ResolveItemDisplayNameType(definition.visibleName, modifier.name || null, itemDisplayNameType) }</span>
 		</div>
 	);
 }

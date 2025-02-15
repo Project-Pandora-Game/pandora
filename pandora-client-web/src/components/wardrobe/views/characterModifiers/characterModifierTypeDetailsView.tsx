@@ -51,6 +51,7 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, character, focu
 			target: character.id,
 			modifier: {
 				type,
+				name: '',
 				config: {},
 				conditions: [],
 			},

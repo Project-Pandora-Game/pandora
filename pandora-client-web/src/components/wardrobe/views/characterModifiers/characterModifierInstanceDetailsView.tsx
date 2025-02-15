@@ -4,8 +4,10 @@ import {
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
 	CharacterModifierActionCheckModify,
 	CharacterModifierActionCheckReorder,
+	CharacterModifierNameSchema,
 	CharacterModifierTemplateSchema,
 	GetLogger,
+	LIMIT_CHARACTER_MODIFIER_NAME_LENGTH,
 	MakeCharacterModifierTemplateFromClientData,
 	type CharacterModifierConfigurationChange,
 	type CharacterModifierInstanceClientData,
@@ -22,10 +24,13 @@ import exportIcon from '../../../../assets/icons/export.svg';
 import type { ICharacter } from '../../../../character/character';
 import type { ChildrenProps } from '../../../../common/reactTypes';
 import { useAsyncEvent } from '../../../../common/useEvent';
+import { TextInput } from '../../../../common/userInteraction/input/textInput';
 import { Switch } from '../../../../common/userInteraction/switch';
 import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast';
-import { IconButton } from '../../../common/button/button';
+import { Button, IconButton } from '../../../common/button/button';
 import { Column, DivContainer, Row } from '../../../common/container/container';
+import { FieldsetToggle } from '../../../common/fieldsetToggle';
+import { FormCreateStringValidator, FormError } from '../../../common/form/form';
 import { ExportDialog } from '../../../exportImport/exportDialog';
 import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProvider';
 import { useShardConnector } from '../../../gameContext/shardConnectorContextProvider';
@@ -193,6 +198,13 @@ function CheckedInstanceDetails({ character, instance, unfocus }: WardrobeCharac
 						</fieldset>
 					) : null
 				}
+				<ModifierInstanceNameInput
+					modifierTypeVisibleName={ typeDefinition.visibleName }
+					value={ instance.name }
+					onChange={ allowModify ? ((newValue) => updateConfig({
+						name: newValue,
+					})) : undefined }
+				/>
 				{
 					Array.from(Object.entries(typeDefinition.configDefinition))
 						.map(([option, optionDefinition]: [string, ModifierConfigurationEntryDefinition]) => (
@@ -267,6 +279,65 @@ function ModifierInstanceEnableButton({ character, enabled, onChange }: {
 				label='Enable this modifier'
 			/>
 		</DivContainer>
+	);
+}
+
+function ModifierInstanceNameInput({ modifierTypeVisibleName, value, onChange }: {
+	modifierTypeVisibleName: string;
+	value: string;
+	onChange?: (newValue: string) => Promisable<void>;
+}): ReactElement {
+	const [changedValue, setChangedValue] = useState<string | null>(null);
+	const valueError = changedValue != null ? FormCreateStringValidator(CharacterModifierNameSchema, 'value')(changedValue) : undefined;
+
+	const [execute, processing] = useAsyncEvent(async () => {
+		if (onChange == null)
+			throw new Error('Changing value not supported');
+		if (changedValue == null || valueError != null)
+			return value;
+
+		await onChange(changedValue);
+		return changedValue;
+	}, (result: string) => {
+		setChangedValue((currentValue) => (currentValue == null || currentValue === result) ? null : currentValue);
+	}, {
+		errorHandler: (err) => {
+			GetLogger('ModifierInstanceNameInput').error('Failed to set character modifier name:', err);
+			toast('Error performing action, try again later', TOAST_OPTIONS_ERROR);
+		},
+	});
+
+	return (
+		<FieldsetToggle legend='Custom name'>
+			<Column>
+				<Row>
+					<TextInput
+						className='flex-1'
+						value={ changedValue ?? value }
+						placeholder={ modifierTypeVisibleName }
+						onChange={ (newValue) => setChangedValue(newValue.trim()) }
+						maxLength={ LIMIT_CHARACTER_MODIFIER_NAME_LENGTH }
+						disabled={ onChange == null || processing }
+					/>
+					{
+						onChange != null ? (
+							<Button
+								slim
+								disabled={ changedValue == null || valueError != null }
+								onClick={ execute }
+							>
+								Save
+							</Button>
+						) : null
+					}
+				</Row>
+				{
+					valueError ? (
+						<FormError error={ valueError } />
+					) : null
+				}
+			</Column>
+		</FieldsetToggle>
 	);
 }
 

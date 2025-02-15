@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { ZodTemplateString } from '../../validation';
+import { LIMIT_CHARACTER_MODIFIER_NAME_LENGTH } from '../../inputLimits';
+import { ZodTemplateString, ZodTrimedRegex } from '../../validation';
 
 /** Id of a character modifier type (any possible) */
 export const CharacterModifierTypeGenericIdSchema = z.string();
@@ -10,6 +11,11 @@ export type CharacterModifierTypeGenericId = z.infer<typeof CharacterModifierTyp
 export const CharacterModifierIdSchema = ZodTemplateString<`mod:${string}`>(z.string(), /^mod:/);
 /** Id of a character modifier instance */
 export type CharacterModifierId = z.infer<typeof CharacterModifierIdSchema>;
+
+/** Name of a character modifier */
+export const CharacterModifierNameSchema = z.string()
+	.max(LIMIT_CHARACTER_MODIFIER_NAME_LENGTH)
+	.regex(ZodTrimedRegex);
 
 export const CharacterModifierConfigurationSchema = z.record(z.unknown());
 export type CharacterModifierConfiguration = z.infer<typeof CharacterModifierConfigurationSchema>;

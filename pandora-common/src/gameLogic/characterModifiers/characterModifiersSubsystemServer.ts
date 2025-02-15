@@ -72,6 +72,7 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 		const instanceData: CharacterModifierInstanceData = {
 			id: `mod:${nanoid()}`,
 			type: template.type,
+			name: template.name,
 			enabled,
 			config: parsedConfig.data,
 			conditions: cloneDeep(template.conditions),
@@ -115,25 +116,28 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 		this.emit('dataChanged', undefined);
 	}
 
-	public configureModifier(modifier: CharacterModifierId, config: CharacterModifierConfigurationChange): true | 'invalidConfiguration' | 'failure' {
+	public configureModifier(modifier: CharacterModifierId, change: CharacterModifierConfigurationChange): true | 'invalidConfiguration' | 'failure' {
 		const instance = this.modifierInstances.find((m) => m.id === modifier);
 
 		if (instance == null)
 			return 'failure';
 
-		const parsedConfig = (config.config != null) ? instance.definition.configSchema.partial().safeParse(config.config) : null;
+		const parsedConfig = (change.config != null) ? instance.definition.configSchema.partial().safeParse(change.config) : null;
 		if (parsedConfig != null && !parsedConfig.success) {
 			return 'invalidConfiguration';
 		}
 
-		if (config.enabled != null) {
-			instance.setEnabled(config.enabled);
+		if (change.name != null) {
+			instance.setName(change.name);
+		}
+		if (change.enabled != null) {
+			instance.setEnabled(change.enabled);
 		}
 		if (parsedConfig != null) {
 			instance.setConfig(parsedConfig.data);
 		}
-		if (config.conditions != null) {
-			instance.setConditions(config.conditions);
+		if (change.conditions != null) {
+			instance.setConditions(change.conditions);
 		}
 
 		this.emit('modifiersChanged', undefined);

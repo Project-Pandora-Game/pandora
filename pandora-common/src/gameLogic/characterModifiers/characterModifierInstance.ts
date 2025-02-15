@@ -28,6 +28,7 @@ export class GameLogicModifierInstanceServer {
 		return {
 			id: this.data.id,
 			type: this.data.type,
+			name: this.data.name,
 			enabled: this.data.enabled,
 			config: cloneDeep(this.data.config),
 			conditions: cloneDeep(this.data.conditions),
@@ -51,6 +52,10 @@ export class GameLogicModifierInstanceServer {
 
 	public setEnabled(enabled: boolean): void {
 		this.data.enabled = enabled;
+	}
+
+	public setName(name: string): void {
+		this.data.name = name;
 	}
 
 	public setConfig(config: CharacterModifierConfiguration): void {

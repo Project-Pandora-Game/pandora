@@ -2,7 +2,7 @@ import { cloneDeep } from 'lodash';
 import { z } from 'zod';
 import { ZodArrayWithInvalidDrop } from '../../validation';
 import { PermissionConfigSchema } from '../permissions';
-import { CharacterModifierConfigurationSchema, CharacterModifierIdSchema, CharacterModifierTypeGenericIdSchema } from './characterModifierBaseData';
+import { CharacterModifierConfigurationSchema, CharacterModifierIdSchema, CharacterModifierNameSchema, CharacterModifierTypeGenericIdSchema } from './characterModifierBaseData';
 import { CharacterModifierConditionChainSchema } from './conditions/characterModifierConditionChain';
 import { CharacterModifierTypeSchema } from './modifierTypes/_index';
 
@@ -18,6 +18,7 @@ export const CharacterModifierInstanceDataSchema = z.object({
 	/** Unique identifier */
 	id: CharacterModifierIdSchema,
 	type: CharacterModifierTypeSchema,
+	name: CharacterModifierNameSchema.catch(''),
 	enabled: z.boolean(),
 	config: CharacterModifierConfigurationSchema,
 	conditions: CharacterModifierConditionChainSchema.catch(() => []),
@@ -31,6 +32,7 @@ export const CharacterModifierInstanceClientDataSchema = z.object({
 	/** Unique identifier */
 	id: CharacterModifierIdSchema,
 	type: CharacterModifierTypeSchema,
+	name: CharacterModifierNameSchema,
 	enabled: z.boolean(),
 	config: CharacterModifierConfigurationSchema,
 	conditions: CharacterModifierConditionChainSchema,
@@ -41,6 +43,7 @@ export type CharacterModifierInstanceClientData = z.infer<typeof CharacterModifi
 /** Client data of a character modifier template */
 export const CharacterModifierTemplateSchema = z.object({
 	type: CharacterModifierTypeSchema,
+	name: CharacterModifierNameSchema,
 	config: CharacterModifierConfigurationSchema,
 	conditions: CharacterModifierConditionChainSchema,
 });
@@ -49,6 +52,7 @@ export type CharacterModifierTemplate = z.infer<typeof CharacterModifierTemplate
 
 /** Request for change to modifier configuration. */
 export const CharacterModifierConfigurationChangeSchema = z.object({
+	name: CharacterModifierNameSchema.optional(),
 	enabled: z.boolean().optional(),
 	config: CharacterModifierConfigurationSchema.optional(),
 	conditions: CharacterModifierConditionChainSchema.optional(),
@@ -85,6 +89,7 @@ export function MakeDefaultCharacterModifierSystemData(): CharacterModifierSyste
 export function MakeCharacterModifierTemplateFromClientData(data: CharacterModifierInstanceClientData): CharacterModifierTemplate {
 	return {
 		type: data.type,
+		name: data.name,
 		config: cloneDeep(data.config),
 		conditions: cloneDeep(data.conditions),
 	};

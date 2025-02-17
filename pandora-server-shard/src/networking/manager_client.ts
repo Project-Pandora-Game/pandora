@@ -2,8 +2,10 @@ import { freeze } from 'immer';
 import {
 	AbortActionAttempt,
 	ActionHandlerMessageTargetCharacter,
+	Assert,
 	AssertNever,
 	BadMessageError,
+	CHARACTER_MODIFIER_TYPE_DEFINITION,
 	CharacterId,
 	CharacterModifierActionCheckAdd,
 	CharacterModifierActionCheckModify,
@@ -27,6 +29,7 @@ import {
 	StartActionAttempt,
 	type AppearanceAction,
 	type AppearanceActionProcessingResult,
+	type CharacterModifierInstanceClientData,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import promClient from 'prom-client';
@@ -545,6 +548,21 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			};
 		}
 
+		// Send a chat notification if editing modifiers on someone else
+		if (client.character.id !== target) {
+			space.handleActionMessage({
+				id: 'characterModifierAdd',
+				character: {
+					type: 'character',
+					id: client.character.id,
+				},
+				sendTo: [target],
+				dictionary: {
+					'MODIFIER_NAME': modifier.name || CHARACTER_MODIFIER_TYPE_DEFINITION[modifier.type].visibleName,
+				},
+			});
+		}
+
 		return {
 			result: 'ok',
 			instanceId: result.id,
@@ -586,6 +604,18 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			};
 		}
 
+		// Send a chat notification if editing modifiers on someone else
+		if (client.character.id !== target) {
+			space.handleActionMessage({
+				id: 'characterModifierReorder',
+				character: {
+					type: 'character',
+					id: client.character.id,
+				},
+				sendTo: [target],
+			});
+		}
+
 		return {
 			result: 'ok',
 		};
@@ -604,8 +634,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		// Check that the source character is allowed to get this data
+		let modifierInstance: CharacterModifierInstanceClientData | null | undefined;
 		const checkResult = client.character.checkAction((ctx) => {
-			const modifierInstance = targetCharacter.gameLogicCharacter.characterModifiers.getModifier(modifier);
+			modifierInstance = targetCharacter.gameLogicCharacter.characterModifiers.getModifier(modifier);
 			if (modifierInstance == null)
 				return ctx.invalid();
 
@@ -620,7 +651,23 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			};
 		}
 
+		Assert(modifierInstance != null);
 		targetCharacter.gameLogicCharacter.characterModifiers.deleteModifier(modifier);
+
+		// Send a chat notification if editing modifiers on someone else
+		if (client.character.id !== target) {
+			space.handleActionMessage({
+				id: 'characterModifierRemove',
+				character: {
+					type: 'character',
+					id: client.character.id,
+				},
+				sendTo: [target],
+				dictionary: {
+					'MODIFIER_NAME': modifierInstance.name || CHARACTER_MODIFIER_TYPE_DEFINITION[modifierInstance.type].visibleName,
+				},
+			});
+		}
 
 		return {
 			result: 'ok',
@@ -640,8 +687,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		// Check that the source character is allowed to get this data
+		let modifierInstance: CharacterModifierInstanceClientData | null | undefined;
 		const checkResult = client.character.checkAction((ctx) => {
-			const modifierInstance = targetCharacter.gameLogicCharacter.characterModifiers.getModifier(modifier);
+			modifierInstance = targetCharacter.gameLogicCharacter.characterModifiers.getModifier(modifier);
 			if (modifierInstance == null)
 				return ctx.invalid();
 
@@ -656,13 +704,63 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			};
 		}
 
+		Assert(modifierInstance != null);
 		const result = targetCharacter.gameLogicCharacter.characterModifiers.configureModifier(modifier, config);
 
+		if (result === true) {
+			// Send a chat notification if editing modifiers on someone else
+			if (client.character.id !== target) {
+				const originalName = modifierInstance.name || CHARACTER_MODIFIER_TYPE_DEFINITION[modifierInstance.type].visibleName;
+				const newName = config.name != null ? (config.name || CHARACTER_MODIFIER_TYPE_DEFINITION[modifierInstance.type].visibleName) : originalName;
+
+				if (config.conditions != null || config.config != null) {
+					space.handleActionMessage({
+						id: 'characterModifierChange',
+						character: {
+							type: 'character',
+							id: client.character.id,
+						},
+						sendTo: [target],
+						dictionary: {
+							'MODIFIER_NAME': originalName,
+						},
+					});
+				}
+				if (config.name != null && config.name !== modifierInstance.name) {
+					space.handleActionMessage({
+						id: 'characterModifierRename',
+						character: {
+							type: 'character',
+							id: client.character.id,
+						},
+						sendTo: [target],
+						dictionary: {
+							'MODIFIER_NAME_OLD': originalName,
+							'MODIFIER_NAME': newName,
+						},
+					});
+				}
+				if (config.enabled != null && config.enabled !== modifierInstance.enabled) {
+					space.handleActionMessage({
+						id: config.enabled ? 'characterModifierEnable' : 'characterModifierDisable',
+						character: {
+							type: 'character',
+							id: client.character.id,
+						},
+						sendTo: [target],
+						dictionary: {
+							'MODIFIER_NAME': newName,
+						},
+					});
+				}
+			}
+
+			return {
+				result: 'ok',
+			};
+		}
+
 		switch (result) {
-			case true:
-				return {
-					result: 'ok',
-				};
 			case 'invalidConfiguration':
 				return {
 					result: 'invalidConfiguration',

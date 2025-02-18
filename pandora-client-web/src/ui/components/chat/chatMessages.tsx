@@ -25,6 +25,8 @@ export type IChatMessageProcessed<T extends IChatMessageBase = IChatMessageBase>
 	time: number;
 	spaceId: SpaceId | null;
 	edited?: boolean;
+	/** Identical action messages following one after another get combined into a single message to reduce spam. */
+	repetitions?: number;
 };
 
 export function IsActionMessage(message: IChatMessageProcessed): message is IChatMessageProcessed<IChatMessageAction> {

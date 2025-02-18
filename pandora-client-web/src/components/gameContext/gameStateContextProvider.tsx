@@ -1,4 +1,5 @@
 import { freeze, Immutable } from 'immer';
+import { isEqual } from 'lodash';
 import {
 	ActionSpaceContext,
 	AssetFrameworkCharacterState,
@@ -370,8 +371,31 @@ export class GameState extends TypedEventEmitter<{
 					if (message.data.character.id !== this.playerId)
 						this.emit('characterEntered', message.data.character);
 				}
+
+				// Action messages can get deduplicated
+				let skip = false;
+				if (message.type === 'action' && nextMessages.length > 0) {
+					const lastMessage = nextMessages[nextMessages.length - 1];
+					if (
+						lastMessage.type === 'action' &&
+						lastMessage.id === message.id &&
+						lastMessage.customText === message.customText &&
+						isEqual(lastMessage.sendTo, message.sendTo) &&
+						isEqual(lastMessage.data, message.data) &&
+						isEqual(lastMessage.dictionary, message.dictionary)
+					) {
+						nextMessages[nextMessages.length - 1] = {
+							...lastMessage,
+							repetitions: (lastMessage.repetitions ?? 1) + 1,
+						};
+						skip = true;
+					}
+				}
+
 				// Add the message to chat
-				nextMessages.push(message);
+				if (!skip) {
+					nextMessages.push(message);
+				}
 				if (!notified) {
 					this.emit('messageNotify', { time: Date.now() });
 					notified = true;

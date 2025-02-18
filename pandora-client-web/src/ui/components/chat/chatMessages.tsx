@@ -36,6 +36,8 @@ export type IChatNormalMessageProcessed = IChatMessageChat & {
 	time: number;
 	spaceId: SpaceId | null;
 	edited?: boolean;
+	/** Identical action messages following one after another get combined into a single message to reduce spam. */
+	repetitions?: number;
 };
 
 export type IChatActionMessageProcessed = Omit<IChatMessageAction, 'dictionary'> & {

@@ -1,6 +1,7 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
 import type { AssetPreferenceType } from '../character';
+import type { LockSetup } from '../gameLogic/locks/lockSetup';
 import type { RoomBackgroundData } from '../space/room';
 import type { Satisfies } from '../utility/misc';
 import { HexRGBAColorString } from '../validation';
@@ -367,19 +368,8 @@ export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetD
 	unlocked?: AssetLockProperties<A>;
 	/** Properties when the lock is locked */
 	locked?: AssetLockProperties<A>;
-	/** Configuration to enable password on this lock */
-	password?: {
-		/** Length of the password */
-		length: number | [number, number];
-		/**
-		 * Allowed characters in the password
-		 *  - `numeric` - only numbers
-		 *  - `letters` - only letters (case insensitive)
-		 *  - `alphanumeric` - only letters and numbers (case insensitive)
-		 *  - `text` - any text (numbers + case insensitive letters + spaces, dashes, underscores, ...)
-		 */
-		format: 'numeric' | 'letters' | 'alphanumeric' | 'text';
-	};
+	/** Setup for how this particular lock behaves */
+	lockSetup: LockSetup;
 	/**
 	 * Chat specific settings for this asset
 	 *

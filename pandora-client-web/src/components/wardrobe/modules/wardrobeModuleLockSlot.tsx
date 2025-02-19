@@ -6,10 +6,11 @@ import {
 	AssertNever,
 	FormatTimeInterval,
 	ItemLock,
-	LockAssetDefinition,
+	LockLogic,
 	MessageSubstitute,
 	type AppearanceActionData,
 	type Asset,
+	type LockSetup,
 } from 'pandora-common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
 import React, { ReactElement, useCallback, useEffect, useId, useMemo, useState } from 'react';
@@ -168,12 +169,13 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 	const { targetSelector } = useWardrobeContext();
 	const now = useCurrentTime();
 	const lockedText = useMemo(() => {
-		Assert(lock.lockData?.locked != null);
+		const lockedData = lock.lockLogic.lockData.locked;
+		Assert(lockedData != null);
 		const formatText = lock.asset.definition.lockedText ?? 'Locked by CHARACTER at TIME';
 		if (formatText.length === 0)
 			return null;
 
-		const { name, id, time } = lock.lockData.locked;
+		const { name, id, time } = lockedData;
 
 		const substitutes = {
 			CHARACTER_NAME: name,
@@ -190,7 +192,7 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 	}, [lock, now]);
 
 	const [password, setPassword] = useState<string | undefined>(undefined);
-	const [allowExecute, setAllowExecute] = useState(lock.asset.definition.password == null);
+	const [allowExecute, setAllowExecute] = useState(lock.lockLogic.lockSetup.password == null);
 	const [showInvalidWarning, setShowInvalidWarning] = useState(false);
 	const [clearLastPassword, setClearLastPassword] = useState(false);
 
@@ -201,7 +203,7 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 		<>
 			{ lockedText }
 			{
-				lock.asset.definition.password ? (
+				lock.lockLogic.lockSetup.password ? (
 					<Column className='WardrobeLockPassword'>
 						<Row className='WardrobeInputRow'>
 							<label>Remove password</label>
@@ -211,7 +213,7 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 							item={ item }
 							asset={ lock.asset }
 							moduleName={ moduleName }
-							password={ lock.asset.definition.password }
+							password={ lock.lockLogic.lockSetup.password }
 							showInvalidWarning={ showInvalidWarning }
 							setAllowExecute={ (allow, value) => {
 								setAllowExecute(allow);
@@ -252,7 +254,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 	const { targetSelector } = useWardrobeContext();
 	const [password, setPassword] = useState<string | undefined>(undefined);
 	const [useOldPassword, setUseOldPassword] = useState(false);
-	const [allowExecute, setAllowExecute] = useState(lock.asset.definition.password == null);
+	const [allowExecute, setAllowExecute] = useState(lock.lockLogic.lockSetup.password == null);
 
 	// Attempted action for locking or unlocking the lock
 	const [currentAttempt, setCurrentAttempt] = useState<WardrobeExecuteCheckedResult['currentAttempt']>(null);
@@ -265,7 +267,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 	return (
 		<>
 			{
-				lock.asset.definition.password ? (
+				lock.lockLogic.lockSetup.password ? (
 					<Column className='WardrobeLockPassword'>
 						{
 							lock.hasPassword ? (
@@ -279,7 +281,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 							item={ item }
 							moduleName={ moduleName }
 							asset={ lock.asset }
-							password={ lock.asset.definition.password }
+							password={ lock.lockLogic.lockSetup.password }
 							disabled={ useOldPassword && lock.hasPassword }
 							setAllowExecute={ (allow, value) => {
 								setAllowExecute(allow);
@@ -327,7 +329,7 @@ function PasswordInput({
 	disabled,
 }: Pick<WardrobeModuleProps<ItemModuleLockSlot>, 'item' | 'moduleName'> & {
 	asset: Asset<'lock'>;
-	password: Immutable<NonNullable<LockAssetDefinition['password']>>;
+	password: Immutable<NonNullable<LockSetup['password']>>;
 	pendingAttempt?: boolean;
 	showInvalidWarning?: boolean;
 	setAllowExecute?: (...args: [false, null] | [true, string]) => void;
@@ -412,7 +414,7 @@ function PasswordInput({
 		if (setAllowExecute == null)
 			return;
 
-		const allow = ItemLock.validatePassword(asset, value);
+		const allow = LockLogic.validatePassword(asset.definition.lockSetup, value);
 		if (!allow) {
 			setAllowExecute(false, null);
 		} else {

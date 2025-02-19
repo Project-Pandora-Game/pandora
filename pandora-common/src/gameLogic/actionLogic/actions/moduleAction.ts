@@ -50,6 +50,13 @@ export function ActionModuleAction({
 			processingContext,
 			target,
 			targetCharacter,
+			module: [
+				...container,
+				{
+					item: itemId,
+					module: action.module,
+				},
+			],
 			messageHandler: (m) => {
 				processingContext.queueMessage(
 					containerManipulator.makeMessage({

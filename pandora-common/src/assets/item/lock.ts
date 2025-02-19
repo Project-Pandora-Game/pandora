@@ -160,7 +160,7 @@ export class ItemLock extends ItemBase<'lock'> {
 					asset: this.asset.id,
 					itemName: this.name ?? '',
 				});
-				return null;
+				return this;
 
 			case 'invalid':
 				return null;
@@ -202,7 +202,7 @@ export class ItemLock extends ItemBase<'lock'> {
 						itemName: this.name ?? '',
 					});
 				}
-				return null;
+				return this;
 
 			case 'invalid':
 				return null;

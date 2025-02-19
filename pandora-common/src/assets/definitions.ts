@@ -8,7 +8,7 @@ import { HexRGBAColorString } from '../validation';
 import type { AssetId } from './base';
 import type { ArmFingers, ArmPose, ArmRotation, ArmSegmentOrder, BoneDefinitionCompressed, BoneName, CharacterView, Condition, Coordinates, LayerImageOverride, LegsPose } from './graphics';
 import type { AssetModuleDefinition } from './modules';
-import type { AssetLockProperties, AssetProperties } from './properties';
+import type { AssetProperties } from './properties';
 import type { RoomDeviceProperties } from './roomDeviceProperties';
 import type { AssetsPosePreset, AssetsPosePresets } from './state/characterStatePose';
 
@@ -364,10 +364,6 @@ export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinition
 }
 
 export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetBaseDefinition<'lock', A> {
-	/** Properties when the lock is unlocked */
-	unlocked?: AssetLockProperties<A>;
-	/** Properties when the lock is locked */
-	locked?: AssetLockProperties<A>;
 	/** Setup for how this particular lock behaves */
 	lockSetup: LockSetup;
 	/**

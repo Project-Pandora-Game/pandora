@@ -13,4 +13,12 @@ export interface LockSetup {
 		 */
 		format: 'numeric' | 'letters' | 'alphanumeric' | 'text';
 	};
+	/**
+	 * Affects how character can interact with locks on items they are wearing:
+	 * - `false` - Character can freely interact the the lock
+	 * - `'locked'` - Character cannot interact with the lock if it is locked
+	 * - `'always'` - Character cannot interact with the lock
+	 * @default false
+	 */
+	blockSelf?: false | 'locked' | 'always';
 }

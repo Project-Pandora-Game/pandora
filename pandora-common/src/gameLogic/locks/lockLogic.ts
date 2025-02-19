@@ -73,6 +73,19 @@ export class LockLogic {
 		}
 	}
 
+	public get blocksSelfActions(): boolean {
+		switch (this.lockSetup.blockSelf) {
+			case undefined:
+			case false:
+				return false;
+			case 'locked':
+				return this.isLocked();
+			case 'always':
+				return true;
+		}
+		AssertNever(this.lockSetup.blockSelf);
+	}
+
 	public exportToClientBundle(): LockDataBundle {
 		if (this.lockData.hidden?.side === 'server') {
 			return {

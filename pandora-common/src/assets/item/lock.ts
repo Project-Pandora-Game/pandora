@@ -5,7 +5,7 @@ import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { Asset } from '../asset';
 import type { IExportOptions } from '../modules/common';
-import type { AssetLockProperties, AssetProperties } from '../properties';
+import type { AssetProperties } from '../properties';
 import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base';
 
 import { AssertNever, MemoizeNoArg } from '../../utility/misc';
@@ -94,13 +94,6 @@ export class ItemLock extends ItemBase<'lock'> {
 		return this.lockLogic.isLocked();
 	}
 
-	public getLockProperties(): AssetLockProperties {
-		if (this.isLocked())
-			return this.asset.definition.locked ?? {};
-
-		return this.asset.definition.unlocked ?? {};
-	}
-
 	public lockAction(context: AppearanceModuleActionContext, action: LockAction): ItemLock | null {
 		if (action.action === 'showPassword') {
 			// 'blockSelf' has no meaning for showPassword
@@ -111,14 +104,13 @@ export class ItemLock extends ItemBase<'lock'> {
 
 		/** If the action should be considered as "manipulating themselves" for the purpose of self-blocking checks */
 		const isSelfAction = context.targetCharacter != null && context.targetCharacter.character.id === context.processingContext.player.id;
-		const properties = this.getLockProperties();
 
 		if (action.password != null && !LockLogic.validatePassword(this.lockLogic.lockSetup, action.password)) {
 			return null;
 		}
 
 		// Locks can prevent interaction from player (unless in force-allow is enabled)
-		if (properties.blockSelf && isSelfAction && !playerRestrictionManager.forceAllowItemActions()) {
+		if (this.lockLogic.blocksSelfActions && isSelfAction && !playerRestrictionManager.forceAllowItemActions()) {
 			context.reject({
 				type: 'lockInteractionPrevented',
 				moduleAction: action.action,

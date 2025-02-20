@@ -384,8 +384,8 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
       mongodb:
-        specifier: 6.13.0
-        version: 6.13.0(socks@2.8.3)
+        specifier: 6.13.1
+        version: 6.13.1(socks@2.8.3)
       mongodb-memory-server-core:
         specifier: 10.1.4
         version: 10.1.4(socks@2.8.3)
@@ -490,8 +490,8 @@ importers:
         specifier: 4.17.21
         version: 4.17.21
       mongodb:
-        specifier: 6.13.0
-        version: 6.13.0(socks@2.8.3)
+        specifier: 6.13.1
+        version: 6.13.1(socks@2.8.3)
       nanoid:
         specifier: 3.3.8
         version: 3.3.8
@@ -2823,10 +2823,9 @@ packages:
   bser@2.1.1:
     resolution: {integrity: sha512-gQxTNE/GAfIIrmHLUE3oJyp5FO6HRBfhjnw4/wMmA63ZGDJnWBmgY/lyQBpnDUkGmAhbSe39tx2d/iTOAfglwQ==}
 
-  bson@6.10.1:
-    resolution: {integrity: sha512-P92xmHDQjSKPLHqFxefqMxASNq/aWJMEZugpCjf+AF/pgcUpMMQCg7t7+ewko0/u8AapvF3luf/FoehddEK+sA==}
+  bson@6.10.3:
+    resolution: {integrity: sha512-MTxGsqgYTwfshYWTRdmZRC+M7FnG1b4y7RO7p2k3X24Wq0yv1m77Wsj0BzlPzd/IowgESfsruQCUToa7vbOpPQ==}
     engines: {node: '>=16.20.1'}
-    deprecated: a critical bug affecting only useBigInt64=true deserialization usage is fixed in bson@6.10.3
 
   btoa-lite@1.0.0:
     resolution: {integrity: sha512-gvW7InbIyF8AicrqWoptdW08pUxuhq8BEgowNajy9RhiE86fmGAGl+bLKo6oB8QP0CkqHLowfN0oJdKC/J6LbA==}
@@ -4907,11 +4906,11 @@ packages:
     resolution: {integrity: sha512-o8fgY7ZalEd8pGps43fFPr/hkQu1L8i6HFEGbsTfA2zDOW0TopgpswaBCqDr0qD7ptibyPfB5DmC+UlIxbThzA==}
     engines: {node: '>=16.20.1'}
 
-  mongodb@6.13.0:
-    resolution: {integrity: sha512-KeESYR5TEaFxOuwRqkOm3XOsMqCSkdeDMjaW5u2nuKfX7rqaofp7JQGoi7sVqQcNJTKuveNbzZtWMstb8ABP6Q==}
+  mongodb@6.13.1:
+    resolution: {integrity: sha512-gdq40tX8StmhP6akMp1pPoEVv+9jTYFSrga/g23JxajPAQhH39ysZrHGzQCSd9PEOnuEQEdjIWqxO7ZSwC0w7Q==}
     engines: {node: '>=16.20.1'}
     peerDependencies:
-      '@aws-sdk/credential-providers': ^3.188.0
+      '@aws-sdk/credential-providers': ^3.632.0
       '@mongodb-js/zstd': ^1.1.0 || ^2.0.0
       gcp-metadata: ^5.2.0
       kerberos: ^2.0.1
@@ -10056,7 +10055,7 @@ snapshots:
     dependencies:
       node-int64: 0.4.0
 
-  bson@6.10.1: {}
+  bson@6.10.3: {}
 
   btoa-lite@1.0.0: {}
 
@@ -12490,7 +12489,7 @@ snapshots:
       find-cache-dir: 3.3.2
       follow-redirects: 1.15.9(debug@4.4.0)
       https-proxy-agent: 7.0.6
-      mongodb: 6.13.0(socks@2.8.3)
+      mongodb: 6.13.1(socks@2.8.3)
       new-find-package-json: 2.0.0
       semver: 7.6.3
       tar-stream: 3.1.7
@@ -12506,10 +12505,10 @@ snapshots:
       - socks
       - supports-color
 
-  mongodb@6.13.0(socks@2.8.3):
+  mongodb@6.13.1(socks@2.8.3):
     dependencies:
       '@mongodb-js/saslprep': 1.1.9
-      bson: 6.10.1
+      bson: 6.10.3
       mongodb-connection-string-url: 3.0.2
     optionalDependencies:
       socks: 2.8.3

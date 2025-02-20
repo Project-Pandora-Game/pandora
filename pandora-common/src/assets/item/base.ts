@@ -2,6 +2,7 @@ import type { Immutable } from 'immer';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
+import type { LockDataBundle } from 'gameLogic/locks/lockData';
 import type { CharacterId } from '../../character';
 import type { Satisfies } from '../../utility/misc';
 import type { Asset } from '../asset';
@@ -11,7 +12,6 @@ import type { AssetColorization, AssetType, WearableAssetType } from '../definit
 import type { ItemModuleData, ItemModuleTemplate } from '../modules';
 import type { AssetFrameworkRoomState } from '../state/roomState';
 import type { InternalItemTypeMap, ItemBase } from './_internal';
-import type { LockBundle } from './lock';
 import type { RoomDeviceBundle } from './roomDevice';
 import type { RoomDeviceLink } from './roomDeviceWearablePart';
 
@@ -57,7 +57,7 @@ export type ItemBundle = {
 	/** Room device this part is linked to, only present for `roomDeviceWearablePart` */
 	roomDeviceLink?: RoomDeviceLink;
 	/** Lock specific data */
-	lockData?: LockBundle;
+	lockData?: LockDataBundle;
 };
 
 /**

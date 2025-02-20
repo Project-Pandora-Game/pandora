@@ -84,7 +84,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			const inventoryBefore: unknown = JSON.parse(JSON.stringify(inventory));
 			const inventoryAfter: unknown = JSON.parse(JSON.stringify(initialState.room.exportToBundle()));
 			if (!isEqual(inventoryBefore, inventoryAfter)) {
-				this.logger.alert('Room inventory changed during load, queuing update of migrated data\n', diffString(inventoryBefore, inventoryAfter, { color: false }));
+				this.logger.verbose('Room inventory changed during load, queuing update of migrated data\n', diffString(inventoryBefore, inventoryAfter, { color: false }));
 				queueMicrotask(() => {
 					this._onDataModified('inventory');
 				});
@@ -316,7 +316,9 @@ export abstract class Space extends ServerRoom<IShardClient> {
 				const appearanceBefore: unknown = JSON.parse(JSON.stringify(appearance));
 				const appearanceAfter: unknown = JSON.parse(JSON.stringify(newAppearanceBundle));
 				if (!isEqual(appearanceBefore, appearanceAfter)) {
-					logger.alert('Character appearance changed during load, queuing update of migrated data\n', diffString(appearanceBefore, appearanceAfter, { color: false }));
+					if (!character.isInCreation) { // It is normal for appearance to change sporadically for character in creation - it is just being initialized
+						logger.verbose('Character appearance changed during load, queuing update of migrated data\n', diffString(appearanceBefore, appearanceAfter, { color: false }));
+					}
 					queueMicrotask(() => {
 						character.onAppearanceChanged();
 					});

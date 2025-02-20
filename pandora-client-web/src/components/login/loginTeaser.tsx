@@ -1,8 +1,8 @@
 import classNames from 'classnames';
-import React, { ReactElement, useEffect, useReducer, useState } from 'react';
+import { ReactElement, useEffect, useReducer, useState } from 'react';
 import { EXTRA_ASSETS_ADDRESS, GAME_NAME, GAME_VERSION } from '../../config/Environment';
-import './loginTeaser.scss';
 import { Column, Row } from '../common/container/container';
+import './loginTeaser.scss';
 
 const TEASER_CONTENTS: [string, string][] = [
 	[`Welcome to ${ GAME_NAME } (version ${ GAME_VERSION })`, 'preview_1.png'],

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMounted } from '../../common/useMounted';
 import { GIT_COMMIT_HASH, NODE_ENV, USER_DEBUG } from '../../config/Environment';
 import { NotificationSource, useNotification } from '../../services/notificationHandler';

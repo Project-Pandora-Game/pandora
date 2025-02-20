@@ -1,10 +1,10 @@
 import { RenderResult, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 import { authFormDataContext, AuthFormDataState } from '../../../../src/components/login/authFormDataProvider';
 import { AccountVerificationForm } from '../../../../src/components/login/forms/accountVerificationForm';
-import { RenderWithRouterAndProviders } from '../../../testUtils';
 import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
+import { RenderWithRouterAndProviders } from '../../../testUtils';
 import { INVALID_FORMAT_TOKENS, INVALID_LENGTH_TOKENS } from '../loginTestData';
 
 describe('Account Verification Form', () => {

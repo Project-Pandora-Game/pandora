@@ -1,4 +1,3 @@
-import React from 'react';
 import { ExternalLink } from '../../../components/common/link/externalLink';
 import { usePlayerData } from '../../../components/gameContext/playerContextProvider';
 import { MakeTutorialConditionFlag, type TutorialConfig } from '../tutorialSystem/tutorialConfig';

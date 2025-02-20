@@ -1,5 +1,5 @@
 import { GetLogger, IsSimpleToken, IsString, IsUsername } from 'pandora-common';
-import React, { ReactElement, useEffect } from 'react';
+import { ReactElement, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { FormInput } from '../../../common/userInteraction/input/formInput';
 import { Button } from '../../common/button/button';

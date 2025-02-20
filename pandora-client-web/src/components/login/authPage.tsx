@@ -1,4 +1,4 @@
-import React, { ComponentType, ReactElement } from 'react';
+import { ComponentType, ReactElement } from 'react';
 import { DivContainer, Row } from '../common/container/container';
 import { AuthFormRouter } from './authFormRouter';
 import { LoginTeaser } from './loginTeaser';

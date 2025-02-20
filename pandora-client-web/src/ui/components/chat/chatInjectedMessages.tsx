@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { sortBy } from 'lodash';
 import type { AssetFrameworkCharacterState, AssetFrameworkGlobalState, CharacterActionAttempt, ICharacterRoomData } from 'pandora-common';
-import React, { useMemo, type ReactElement } from 'react';
+import { useMemo, type ReactElement } from 'react';
 import type { Character } from '../../../character/character';
 import { Column, Row } from '../../../components/common/container/container';
 import { useGlobalState, type GameState } from '../../../components/gameContext/gameStateContextProvider';

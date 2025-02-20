@@ -1,13 +1,13 @@
-import React, { ReactElement } from 'react';
-import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
-import { IItemModule } from 'pandora-common/dist/assets/modules/common';
-import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
-import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
-import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
-import { WardrobeModuleConfigTyped, WardrobeModuleTemplateConfigTyped } from './wardrobeModuleTyped';
-import { WardrobeModuleConfigStorage, WardrobeModuleTemplateConfigStorage } from './wardrobeModuleStorage';
-import { WardrobeModuleConfigLockSlot, WardrobeModuleTemplateConfigLockSlot } from './wardrobeModuleLockSlot';
 import { AssertNever } from 'pandora-common';
+import { IItemModule } from 'pandora-common/dist/assets/modules/common';
+import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
+import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage';
+import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
+import { ReactElement } from 'react';
+import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
+import { WardrobeModuleConfigLockSlot, WardrobeModuleTemplateConfigLockSlot } from './wardrobeModuleLockSlot';
+import { WardrobeModuleConfigStorage, WardrobeModuleTemplateConfigStorage } from './wardrobeModuleStorage';
+import { WardrobeModuleConfigTyped, WardrobeModuleTemplateConfigTyped } from './wardrobeModuleTyped';
 
 export function WardrobeModuleConfig({ m, ...props }: WardrobeModuleProps<IItemModule>): ReactElement {
 	if (m instanceof ItemModuleTyped) {

@@ -1,7 +1,7 @@
 import { produce } from 'immer';
 import { pick } from 'lodash';
 import { IDirectoryShardInfo, IDirectoryStatus, IsObject } from 'pandora-common';
-import React, { createContext, ReactElement, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, ReactElement, useCallback, useContext, useMemo, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { DirectoryConnectionState } from '../../networking/directoryConnector';
 import { ShardConnectionState } from '../../networking/shardConnector';

@@ -5,18 +5,18 @@ import {
 	EMPTY_ARRAY,
 	Item,
 } from 'pandora-common';
-import React, { ReactElement, useEffect, useLayoutEffect, useMemo } from 'react';
+import { ReactElement, useEffect, useLayoutEffect, useMemo } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { ICharacter } from '../../character/character';
-import { Tab, TabContainer } from '../common/tabs/tabs';
-import { useWardrobeContext } from './wardrobeContext';
-import { InventoryItemView } from './views/wardrobeItemView';
-import { InventoryAssetView } from './views/wardrobeAssetView';
-import { WardrobeFocusesItem } from './wardrobeUtils';
-import { WardrobeItemConfigMenu } from './itemDetail/_wardrobeItemDetail';
-import { WardrobeBodySizeEditor } from './views/wardrobeBodySizeView';
-import { InventoryOutfitView } from './views/wardrobeOutfitView';
 import { useObservable } from '../../observable';
+import { Tab, TabContainer } from '../common/tabs/tabs';
+import { WardrobeItemConfigMenu } from './itemDetail/_wardrobeItemDetail';
+import { InventoryAssetView } from './views/wardrobeAssetView';
+import { WardrobeBodySizeEditor } from './views/wardrobeBodySizeView';
+import { InventoryItemView } from './views/wardrobeItemView';
+import { InventoryOutfitView } from './views/wardrobeOutfitView';
+import { useWardrobeContext } from './wardrobeContext';
+import { WardrobeFocusesItem } from './wardrobeUtils';
 
 export function WardrobeBodyManipulation({ className, character, characterState }: {
 	className?: string;

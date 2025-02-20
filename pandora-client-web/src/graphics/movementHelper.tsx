@@ -1,5 +1,5 @@
 import * as PIXI from 'pixi.js';
-import React, { ReactElement, useCallback } from 'react';
+import { ReactElement, useCallback } from 'react';
 import { Graphics, type GraphicsProps } from './baseComponents/graphics';
 
 export interface MovementHelperGraphicsProps extends Omit<GraphicsProps, 'draw'> {

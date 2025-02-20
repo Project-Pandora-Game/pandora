@@ -1,23 +1,27 @@
-import { Asset, AssetManager, AssetsDefinitionFile, AssetsGraphicsDefinitionFile, GetLogger } from 'pandora-common';
-import { GraphicsManagerInstance, GraphicsManager } from './graphicsManager';
-import { URLGraphicsLoader } from './graphicsLoader';
-import { Observable, useObservable } from '../observable';
 import { Immutable } from 'immer';
+import { Asset, AssetManager, AssetsDefinitionFile, AssetsGraphicsDefinitionFile, GetLogger } from 'pandora-common';
+import { toast } from 'react-toastify';
+import { Column } from '../components/common/container/container';
+import { DEVELOPMENT } from '../config/Environment';
 import { ConfigServerIndex } from '../config/searchArgs';
+import { Observable, useObservable } from '../observable';
+import { TOAST_OPTIONS_INFO } from '../persistentToast';
+import { URLGraphicsLoader } from './graphicsLoader';
+import { GraphicsManager, GraphicsManagerInstance } from './graphicsManager';
 
 const logger = GetLogger('AssetManager');
 
 export class AssetManagerClient extends AssetManager {
 	public readonly assetList: readonly Asset[];
 
-	constructor(definitionsHash?: string, data?: Immutable<AssetsDefinitionFile>) {
+	constructor(definitionsHash: string, data?: Immutable<AssetsDefinitionFile>) {
 		super(definitionsHash, data);
 
 		this.assetList = this.getAllAssets();
 	}
 }
 
-const assetManager = new Observable<AssetManagerClient>(new AssetManagerClient());
+const assetManager = new Observable<AssetManagerClient>(new AssetManagerClient(''));
 
 export function GetCurrentAssetManager(): AssetManagerClient {
 	return assetManager.value;
@@ -40,11 +44,27 @@ export function GetAssetsSourceUrl(): string {
 }
 
 export function LoadAssetDefinitions(definitionsHash: string, data: Immutable<AssetsDefinitionFile>, source: string): void {
+	// Skip load if asset definition matches the already loaded one
+	const currentHash = assetManager.value.definitionsHash;
+	if (currentHash === definitionsHash) {
+		return;
+	}
+
 	const manager = new AssetManagerClient(definitionsHash, data);
 	UpdateAssetManager(manager);
 	logger.info(`Loaded asset definitions, version: ${manager.definitionsHash}`);
+	// Notify user if we already had some and asset definition updated
+	if (currentHash) {
+		toast((
+			<Column>
+				<strong>Loaded new asset updates</strong>
+				{ DEVELOPMENT ? '' : (<span>A list of changes can be found on Pandora's Discord.</span>) }
+			</Column>
+		), TOAST_OPTIONS_INFO);
+	}
 
-	if (lastGraphicsHash === data.graphicsId)
+	// Update graphics definition
+	if (lastGraphicsHash === manager.graphicsId)
 		return;
 
 	lastGraphicsHash = data.graphicsId;

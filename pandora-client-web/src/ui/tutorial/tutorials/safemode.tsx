@@ -1,4 +1,3 @@
-import React from 'react';
 import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 
 export const TUTORIAL_SAFEMODE: TutorialConfig = {

@@ -9,7 +9,7 @@ import {
 	RoomDeviceDeploymentPosition,
 	RoomDeviceSlot,
 } from 'pandora-common';
-import React, { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react';
+import { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react';
 import { ICharacter } from '../../../character/character';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput';
 import { Select } from '../../../common/userInteraction/select/select';

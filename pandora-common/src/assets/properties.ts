@@ -124,14 +124,6 @@ export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefin
 	excludeFromColorInheritance?: string[];
 }
 
-export interface AssetLockProperties<__satisfies__Placeholder extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
-	/**
-	 * Prevents actions against the lock from the character herself
-	 * @default false
-	 */
-	blockSelf?: boolean;
-}
-
 export interface AssetPropertiesResult {
 	limits: AppearanceLimitTree;
 	effects: EffectsDefinition;

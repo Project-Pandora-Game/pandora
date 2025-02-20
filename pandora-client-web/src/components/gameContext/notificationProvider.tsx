@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useDebugExpose } from '../../common/useDebugExpose';
 import { useObservable } from '../../observable';
 import type { NotificationFullData, NotificationHeaderKeys } from '../../services/notificationHandler';

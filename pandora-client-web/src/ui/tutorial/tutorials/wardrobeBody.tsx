@@ -1,7 +1,6 @@
-import React from 'react';
-import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 import { BONE_MAX, BONE_MIN } from 'pandora-common';
 import { ExternalLink } from '../../../components/common/link/externalLink';
+import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
 
 export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 	id: 'wardrobeBody',

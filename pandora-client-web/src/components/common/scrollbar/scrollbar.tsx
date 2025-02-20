@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import React, { DetailedHTMLProps, HTMLAttributes, ReactElement, ForwardedRef, forwardRef } from 'react';
+import { DetailedHTMLProps, ForwardedRef, forwardRef, HTMLAttributes, ReactElement } from 'react';
 import './scrollbar.scss';
 
 export type ScrollableProps<K extends keyof HTMLElementTagNameMap> = NoInfer<DetailedHTMLProps<HTMLAttributes<HTMLElementTagNameMap[K]>, HTMLElementTagNameMap[K]>> & {

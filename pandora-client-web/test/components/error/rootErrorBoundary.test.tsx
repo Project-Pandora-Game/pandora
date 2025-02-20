@@ -1,7 +1,7 @@
 import { render, RenderResult, screen, waitFor } from '@testing-library/react';
 import { noop } from 'lodash';
 import { Logger } from 'pandora-common';
-import React, { ReactElement, useEffect } from 'react';
+import { ReactElement, useEffect } from 'react';
 import { debugContext, DebugData } from '../../../src/components/error/debugContextProvider';
 import { MAX_ERROR_STACK_LINES } from '../../../src/components/error/errorReport';
 import { RootErrorBoundary } from '../../../src/components/error/rootErrorBoundary';

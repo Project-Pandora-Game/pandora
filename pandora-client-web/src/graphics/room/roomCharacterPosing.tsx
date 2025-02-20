@@ -1,7 +1,7 @@
 import { throttle } from 'lodash';
 import { Assert, CharacterSize, type AssetFrameworkCharacterState, type BoneDefinition, type PartialAppearancePose } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
+import { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../assets/assetManager';
 import { useCharacterData } from '../../character/character';

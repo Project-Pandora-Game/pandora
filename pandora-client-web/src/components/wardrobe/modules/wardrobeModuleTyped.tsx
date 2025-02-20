@@ -1,15 +1,15 @@
+import classNames from 'classnames';
 import {
 	FormatTimeInterval,
 	MessageSubstitute,
 } from 'pandora-common';
-import React, { ReactElement, useMemo } from 'react';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
-import { Column, Row } from '../../common/container/container';
+import { ReactElement, useMemo } from 'react';
 import { useCurrentTime } from '../../../common/useCurrentTime';
+import { Column, Row } from '../../common/container/container';
+import { WardrobeActionButton } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
-import { WardrobeActionButton } from '../wardrobeComponents';
-import classNames from 'classnames';
 
 export function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModuleProps<ItemModuleTyped>): ReactElement {
 	const { targetSelector } = useWardrobeContext();

@@ -1,4 +1,4 @@
-import React, { ReactElement, useCallback, useEffect, useReducer } from 'react';
+import { ReactElement, useCallback, useEffect, useReducer } from 'react';
 import { GraphicsCharacterProps, GraphicsCharacterWithManager, GraphicsGetterFunction, LayerStateOverrideGetter } from '../../../graphics/graphicsCharacter';
 import { usePreviewCutterOverridesEnabled } from '../../components/previewCutter/previewCutter';
 import { useEditor } from '../../editorContextProvider';

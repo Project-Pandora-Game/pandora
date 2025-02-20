@@ -1,6 +1,6 @@
 import { Viewport } from 'pixi-viewport';
 import { type Application, Point } from 'pixi.js';
-import React, { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import { usePixiApp } from '../reconciler/appContext';
 import { RegisterPixiComponent } from '../reconciler/component';

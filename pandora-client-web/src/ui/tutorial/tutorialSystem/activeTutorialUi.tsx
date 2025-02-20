@@ -2,7 +2,7 @@ import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import { uniq } from 'lodash';
 import { AssertNever, EMPTY_ARRAY, GetLogger, TutorialIdSchema, type TutorialId } from 'pandora-common';
-import React, { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../../common/useEvent';
 import { Button } from '../../../components/common/button/button';

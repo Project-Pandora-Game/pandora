@@ -2,7 +2,7 @@ import { render, renderHook, RenderHookResult, RenderOptions, RenderResult } fro
 import { InitialEntry } from 'history';
 import { noop } from 'lodash';
 import { Assert, ServiceManager } from 'pandora-common';
-import React, { ComponentType, ReactElement, useEffect, useMemo } from 'react';
+import { ComponentType, ReactElement, useEffect, useMemo } from 'react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
 import { ChildrenProps } from '../src/common/reactTypes';
 import { DebugContext, debugContext, DebugData } from '../src/components/error/debugContextProvider';

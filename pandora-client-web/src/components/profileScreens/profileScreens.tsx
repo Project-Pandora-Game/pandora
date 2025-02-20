@@ -1,13 +1,13 @@
-import React, { ReactElement } from 'react';
 import { AccountId, CharacterId, CharacterIdSchema } from 'pandora-common';
+import { ReactElement } from 'react';
 import { useParams } from 'react-router';
 import { Column } from '../common/container/container';
-import { Tab, TabContainer } from '../common/tabs/tabs';
-import { CharacterProfile } from './characterProfile';
-import { AccountProfile } from './accountProfile';
-import { useSpaceCharacters } from '../gameContext/gameStateContextProvider';
-import './profileScreens.scss';
 import { BackLink, useNavigateBack } from '../common/link/back';
+import { Tab, TabContainer } from '../common/tabs/tabs';
+import { useSpaceCharacters } from '../gameContext/gameStateContextProvider';
+import { AccountProfile } from './accountProfile';
+import { CharacterProfile } from './characterProfile';
+import './profileScreens.scss';
 
 function CharacterProfileScreen({ characterId }: { characterId: CharacterId; }): ReactElement {
 	const navigateBack = useNavigateBack();

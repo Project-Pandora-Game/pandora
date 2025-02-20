@@ -1,6 +1,6 @@
 import { TypedEventEmitter } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import React, { ReactElement, ReactNode, createContext, useContext, useLayoutEffect, useMemo } from 'react';
+import { ReactElement, ReactNode, createContext, useContext, useLayoutEffect, useMemo } from 'react';
 import { Container } from '../baseComponents/container';
 import { Graphics } from '../baseComponents/graphics';
 import { PointLike } from '../graphicsCharacter';

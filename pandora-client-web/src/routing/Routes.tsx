@@ -1,5 +1,5 @@
 import { IsAuthorized, IsObject } from 'pandora-common';
-import React, { ComponentType, lazy, ReactElement, Suspense, useEffect } from 'react';
+import { ComponentType, lazy, ReactElement, Suspense, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Navigate, NavigateOptions, Route, Routes, useLocation } from 'react-router-dom';
 import { AccountContacts } from '../components/accountContacts/accountContacts';

@@ -1,5 +1,5 @@
 import type { ServiceManager } from 'pandora-common';
-import React, { createContext, useContext, type ReactElement } from 'react';
+import { createContext, useContext, type ReactElement } from 'react';
 import type { ChildrenProps } from '../common/reactTypes';
 import { useDebugExpose } from '../common/useDebugExpose';
 import type { ClientServices } from './clientServices';

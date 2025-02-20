@@ -1,5 +1,5 @@
 import { GetLogger } from 'pandora-common';
-import React, { Component, ErrorInfo, ReactElement } from 'react';
+import { Component, ErrorInfo, ReactElement } from 'react';
 import { ChildrenProps } from '../../common/reactTypes';
 import './localErrorBoundary.scss';
 

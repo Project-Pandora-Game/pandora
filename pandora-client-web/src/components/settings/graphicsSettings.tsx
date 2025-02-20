@@ -1,5 +1,5 @@
 import { FormatBytes } from 'pandora-common';
-import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../../assets/graphicsManager';
 import { GRAPHICS_SETTINGS_DEFAULT, GraphicsSettingsSchema, GraphicsSettingsStorage, ResetGraphicsSettings, SetGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings } from '../../graphics/graphicsSettings';

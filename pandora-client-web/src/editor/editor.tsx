@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { noop } from 'lodash';
 import { Assert, AssertNotNullable, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkRoomState, AssetId, CharacterSize, GetLogger, HexColorString, ParseArrayNotEmpty, TypedEventEmitter, type LayerStateOverrides, type PointTemplate } from 'pandora-common';
-import React, { createContext, ReactElement, useContext, useMemo, useSyncExternalStore } from 'react';
+import { createContext, ReactElement, useContext, useMemo, useSyncExternalStore } from 'react';
 import { z } from 'zod';
 import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
 import { useGraphicsAsset, useLayerDefinition } from '../assets/assetGraphicsCalculations';

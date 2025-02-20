@@ -1,13 +1,14 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
 import type { AssetPreferenceType } from '../character';
+import type { LockSetup } from '../gameLogic/locks/lockSetup';
 import type { RoomBackgroundData } from '../space/room';
 import type { Satisfies } from '../utility/misc';
 import { HexRGBAColorString } from '../validation';
 import type { AssetId } from './base';
 import type { ArmFingers, ArmPose, ArmRotation, ArmSegmentOrder, BoneDefinitionCompressed, BoneName, CharacterView, Condition, Coordinates, LayerImageOverride, LegsPose } from './graphics';
 import type { AssetModuleDefinition } from './modules';
-import type { AssetLockProperties, AssetProperties } from './properties';
+import type { AssetProperties } from './properties';
 import type { RoomDeviceProperties } from './roomDeviceProperties';
 import type { AssetsPosePreset, AssetsPosePresets } from './state/characterStatePose';
 
@@ -363,23 +364,8 @@ export interface RoomDeviceWearablePartAssetDefinition<A extends AssetDefinition
 }
 
 export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> extends AssetBaseDefinition<'lock', A> {
-	/** Properties when the lock is unlocked */
-	unlocked?: AssetLockProperties<A>;
-	/** Properties when the lock is locked */
-	locked?: AssetLockProperties<A>;
-	/** Configuration to enable password on this lock */
-	password?: {
-		/** Length of the password */
-		length: number | [number, number];
-		/**
-		 * Allowed characters in the password
-		 *  - `numeric` - only numbers
-		 *  - `letters` - only letters (case insensitive)
-		 *  - `alphanumeric` - only letters and numbers (case insensitive)
-		 *  - `text` - any text (numbers + case insensitive letters + spaces, dashes, underscores, ...)
-		 */
-		format: 'numeric' | 'letters' | 'alphanumeric' | 'text';
-	};
+	/** Setup for how this particular lock behaves */
+	lockSetup: LockSetup;
 	/**
 	 * Chat specific settings for this asset
 	 *

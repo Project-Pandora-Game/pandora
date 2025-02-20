@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 import { ICharacter } from '../../../character/character';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput';
 import { useObservable } from '../../../observable';

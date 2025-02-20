@@ -13,9 +13,10 @@ import { CreateModuleDataFromTemplate, ItemModuleDataSchema, ItemModuleTemplateS
 import { PartialAppearancePoseSchema } from '../state/characterStatePose';
 import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base';
 
+import { LockDataBundleSchema } from '../../gameLogic/locks/lockData';
 import { __internal_InitRecursiveItemSchemas } from './_internalRecursion';
 import { ItemBodypart } from './bodypart';
-import { ItemLock, LockBundleSchema } from './lock';
+import { ItemLock } from './lock';
 import { ItemPersonal } from './personal';
 import { ItemRoomDevice, RoomDeviceBundleSchema } from './roomDevice';
 import { ItemRoomDeviceWearablePart, RoomDeviceLinkSchema } from './roomDeviceWearablePart';
@@ -40,7 +41,7 @@ export const ItemBundleSchema = z.object({
 	/** Room device this part is linked to, only present for `roomDeviceWearablePart` */
 	roomDeviceLink: RoomDeviceLinkSchema.optional(),
 	/** Lock specific data */
-	lockData: LockBundleSchema.optional(),
+	lockData: LockDataBundleSchema.optional(),
 }) satisfies z.ZodType<ItemBundle, ZodTypeDef, unknown>;
 
 /**

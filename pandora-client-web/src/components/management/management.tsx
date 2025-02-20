@@ -1,5 +1,5 @@
 import { IsAuthorized } from 'pandora-common';
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 import { useNavigate } from 'react-router';
 import { useObservable } from '../../observable';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';

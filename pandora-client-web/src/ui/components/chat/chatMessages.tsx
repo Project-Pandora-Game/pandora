@@ -1,3 +1,4 @@
+import type { Immutable } from 'immer';
 import {
 	AssetId,
 	AssignPronouns,
@@ -11,14 +12,13 @@ import {
 	SpaceId,
 	type ItemDisplayNameType,
 } from 'pandora-common';
-import React, {
+import {
 	ReactElement,
 } from 'react';
 import { AssetManagerClient } from '../../../assets/assetManager';
-import { ChatParser } from './chatParser';
-import { RenderedLink } from '../../screens/spaceJoin/spaceJoin';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName';
-import type { Immutable } from 'immer';
+import { RenderedLink } from '../../screens/spaceJoin/spaceJoin';
+import { ChatParser } from './chatParser';
 
 export type IChatMessageProcessed<T extends IChatMessageBase = IChatMessageBase> = T & {
 	/** Time the message was sent, guaranteed to be unique */

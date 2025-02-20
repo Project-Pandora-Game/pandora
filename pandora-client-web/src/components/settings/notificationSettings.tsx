@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
 import { NOTIFICATION_AUDIO_NAMES, NOTIFICATION_AUDIO_SOUNDS, NOTIFICATION_AUDIO_VOLUME } from '../../services/notificationHandler';
 import { Button } from '../common/button/button';

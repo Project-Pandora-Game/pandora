@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ItemInteractionType } from '../../character/restrictionTypes';
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions';
 import type { InteractionId } from '../../gameLogic/interactions';
+import { LockActionSchema } from '../../gameLogic/locks/lockLogic';
 import { AssertNever, Satisfies } from '../../utility/misc';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { Asset } from '../asset';
@@ -10,7 +11,7 @@ import type { AssetManager } from '../assetManager';
 import { ConditionOperator } from '../graphics';
 import { __internal_ItemBundleSchemaRecursive, __internal_ItemTemplateSchemaRecursive } from '../item/_internalRecursion';
 import { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item/base';
-import { ItemLock, ItemLockActionSchema } from '../item/lock';
+import { ItemLock } from '../item/lock';
 import type { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common';
 
 export type IModuleConfigLockSlot<TProperties, TStaticData> = IModuleConfigCommon<'lockSlot', TProperties, TStaticData> & {
@@ -36,7 +37,7 @@ export type IModuleItemTemplateLockSlot = z.infer<typeof ModuleItemTemplateLockS
 
 export const ItemModuleLockSlotActionSchema = z.object({
 	moduleType: z.literal('lockSlot'),
-	lockAction: z.lazy(() => ItemLockActionSchema),
+	lockAction: z.lazy(() => LockActionSchema),
 });
 export type ItemModuleLockSlotAction = Satisfies<z.infer<typeof ItemModuleLockSlotActionSchema>, IModuleActionCommon<'lockSlot'>>;
 

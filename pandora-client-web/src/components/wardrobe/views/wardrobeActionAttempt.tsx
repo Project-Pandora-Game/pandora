@@ -1,12 +1,12 @@
 import type { Immutable } from 'immer';
 import { AppearanceActionProcessingContext, FinishActionAttempt, type AppearanceAction, type AssetFrameworkCharacterState, type CharacterActionAttempt } from 'pandora-common';
-import React, { ReactElement, useCallback, useMemo } from 'react';
+import { ReactElement, useCallback, useMemo } from 'react';
 import type { IChatroomCharacter } from '../../../character/character';
+import { DescribeGameLogicAction } from '../../../ui/components/chat/chatMessagesDescriptions';
 import { Column, Row } from '../../common/container/container';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
 import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobeExecuteChecked } from '../wardrobeActionContext';
 import { GameLogicActionButton, WardrobeActionButtonElement } from '../wardrobeComponents';
-import { DescribeGameLogicAction } from '../../../ui/components/chat/chatMessagesDescriptions';
 
 export function WardrobeActionAttemptOverlay({ character }: {
 	character: IChatroomCharacter;

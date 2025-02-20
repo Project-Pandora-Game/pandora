@@ -1,17 +1,16 @@
 import type { Immutable } from 'immer';
-import { z } from 'zod';
 
+import { ItemInteractionType } from '../../character/restrictionTypes';
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import type { Asset } from '../asset';
 import type { IExportOptions } from '../modules/common';
-import type { AssetLockProperties, AssetProperties } from '../properties';
+import type { AssetProperties } from '../properties';
 import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base';
 
-import { CharacterIdSchema } from '../../character/characterTypes';
-import { Logger } from '../../logging';
-import { AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility/misc';
+import { AssertNever, MemoizeNoArg } from '../../utility/misc';
 
+import { LockAction, LockLogic } from '../../gameLogic/locks/lockLogic';
 import { ItemBase, ItemBaseProps } from './_internal';
 
 declare module './_internal' {
@@ -20,68 +19,19 @@ declare module './_internal' {
 	}
 }
 
-export const LockBundleSchema = z.object({
-	locked: z.object({
-		/** Id of the character that locked the item */
-		id: CharacterIdSchema,
-		/** Name of the character that locked the item */
-		name: z.string(),
-		/** Time the item was locked */
-		time: z.number(),
-	}).optional(),
-	hidden: z.discriminatedUnion('side', [
-		z.object({
-			side: z.literal('server'),
-			/** Password used to lock the item */
-			password: z.string().optional(),
-			/** Id of the character who set the password last time */
-			passwordSetBy: CharacterIdSchema.optional(),
-		}),
-		z.object({
-			side: z.literal('client'),
-			/** Whether the item has a password */
-			hasPassword: z.boolean().optional(),
-		}),
-	]).optional(),
-});
-export type LockBundle = z.infer<typeof LockBundleSchema>;
-
-export const ItemLockActionSchema = z.discriminatedUnion('action', [
-	z.object({
-		action: z.literal('lock'),
-		password: z.string().optional(),
-	}),
-	z.object({
-		action: z.literal('unlock'),
-		password: z.string().optional(),
-		clearLastPassword: z.boolean().optional(),
-	}),
-	z.object({
-		action: z.literal('showPassword'),
-	}),
-]);
-export type IItemLockAction = z.infer<typeof ItemLockActionSchema>;
-
 interface ItemLockProps extends ItemBaseProps<'lock'> {
-	readonly lockData: Immutable<LockBundle> | undefined;
+	readonly lockLogic: LockLogic;
 }
 export class ItemLock extends ItemBase<'lock'> {
-	public readonly lockData: Immutable<LockBundle> | undefined;
+	public readonly lockLogic: LockLogic;
 
 	public get hasPassword(): boolean {
-		switch (this.lockData?.hidden?.side) {
-			case 'client':
-				return this.lockData.hidden.hasPassword ?? false;
-			case 'server':
-				return this.lockData.hidden.password != null;
-			default:
-				return false;
-		}
+		return this.lockLogic.hasPassword;
 	}
 
 	protected constructor(props: ItemLockProps, overrideProps: Partial<ItemLockProps> = {}) {
 		super(props, overrideProps);
-		this.lockData = 'lockData' in overrideProps ? overrideProps.lockData : props.lockData;
+		this.lockLogic = overrideProps.lockLogic ?? props.lockLogic;
 	}
 
 	protected override withProps(overrideProps: Partial<ItemLockProps>): ItemLock {
@@ -89,60 +39,25 @@ export class ItemLock extends ItemBase<'lock'> {
 	}
 
 	public static loadFromBundle(asset: Asset<'lock'>, bundle: ItemBundle, context: IItemLoadContext): ItemLock {
-		const lockData: LockBundle | undefined = bundle.lockData;
-		if (context.doLoadTimeCleanup && lockData?.hidden != null) {
-			switch (lockData.hidden.side) {
-				case 'client':
-					if (asset.definition.password == null && lockData.hidden.hasPassword != null) {
-						context.logger?.warning(`Lock ${bundle.id} has hidden password`);
-						delete lockData.hidden.hasPassword;
-					} else if (asset.definition.password != null && lockData.hidden.hasPassword == null) {
-						context.logger?.warning(`Lock ${bundle.id} has no hidden password`);
-						delete lockData.locked;
-					}
-					break;
-				case 'server':
-					if (lockData.hidden.password != null && !ItemLock.validatePassword(asset, lockData.hidden.password, context.logger?.prefixMessages(`Lock ${bundle.id}`))) {
-						delete lockData.hidden.password;
-					}
-					if (asset.definition.password != null && lockData.hidden?.password == null && lockData.locked != null) {
-						context.logger?.warning(`Lock ${bundle.id} is locked but has no hidden password`);
-						delete lockData.locked;
-					}
-					if (lockData.hidden.password == null && lockData.hidden.passwordSetBy != null) {
-						context.logger?.warning(`Lock ${bundle.id} has password set by but no password`);
-						delete lockData.hidden.passwordSetBy;
-					}
-					break;
-			}
-			// remove hidden if only it has side
-			if (Object.keys(lockData.hidden).length === 1) {
-				delete lockData.hidden;
-			}
-		}
+		const lockLogic = LockLogic.loadFromBundle(
+			asset.definition.lockSetup,
+			bundle.lockData,
+			{
+				...context,
+				logger: context.logger?.prefixMessages(`Lock ${bundle.id}:`),
+			},
+		);
 
 		return new ItemLock({
 			...(ItemBase._parseBundle(asset, bundle, context)),
-			lockData,
+			lockLogic,
 		});
 	}
 
 	public override exportToBundle(options: IExportOptions): ItemBundle {
-		if (options.clientOnly && this.lockData?.hidden?.side === 'server') {
-			return {
-				...super.exportToBundle(options),
-				lockData: {
-					...this.lockData,
-					hidden: {
-						side: 'client',
-						hasPassword: this.lockData.hidden.password ? true : undefined,
-					},
-				},
-			};
-		}
 		return {
 			...super.exportToBundle(options),
-			lockData: this.lockData,
+			lockData: options.clientOnly ? this.lockLogic.exportToClientBundle() : this.lockLogic.exportToServerBundle(),
 		};
 	}
 
@@ -176,41 +91,16 @@ export class ItemLock extends ItemBase<'lock'> {
 	}
 
 	public isLocked(): boolean {
-		return this.lockData?.locked != null;
+		return this.lockLogic.isLocked();
 	}
 
-	public getLockProperties(): AssetLockProperties {
-		if (this.isLocked())
-			return this.asset.definition.locked ?? {};
-
-		return this.asset.definition.unlocked ?? {};
-	}
-
-	public lockAction(context: AppearanceModuleActionContext, action: IItemLockAction): ItemLock | null {
+	public lockAction(context: AppearanceModuleActionContext, action: LockAction): ItemLock | null {
 		if (action.action === 'showPassword') {
 			// 'blockSelf' has no meaning for showPassword
 			return this.showPassword(context);
 		}
 
-		const playerRestrictionManager = context.processingContext.getPlayerRestrictionManager();
-
-		/** If the action should be considered as "manipulating themselves" for the purpose of self-blocking checks */
-		const isSelfAction = context.targetCharacter != null && context.targetCharacter.character.id === context.processingContext.player.id;
-		const properties = this.getLockProperties();
-
-		if (action.password != null && !ItemLock.validatePassword(this.asset, action.password)) {
-			return null;
-		}
-
-		// Locks can prevent interaction from player (unless in force-allow is enabled)
-		if (properties.blockSelf && isSelfAction && !playerRestrictionManager.forceAllowItemActions()) {
-			context.reject({
-				type: 'lockInteractionPrevented',
-				moduleAction: action.action,
-				reason: 'blockSelf',
-				asset: this.asset.id,
-				itemName: this.name ?? '',
-			});
+		if (action.password != null && !LockLogic.validatePassword(this.lockLogic.lockSetup, action.password)) {
 			return null;
 		}
 
@@ -223,149 +113,132 @@ export class ItemLock extends ItemBase<'lock'> {
 		AssertNever(action);
 	}
 
-	public lock({ messageHandler, processingContext, reject }: AppearanceModuleActionContext, { password }: IItemLockAction & { action: 'lock'; }): ItemLock | null {
-		if (this.isLocked())
-			return null;
+	public lock({ messageHandler, reject, processingContext, target, module }: AppearanceModuleActionContext, action: Extract<LockAction, { action: 'lock'; }>): ItemLock | null {
+		const player = processingContext.getPlayerRestrictionManager();
+		// Locking the lock modifies it
+		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.MODIFY);
 
-		const rejectMissingPassword = () => {
-			reject({
-				type: 'lockInteractionPrevented',
-				moduleAction: 'lock',
-				reason: 'noStoredPassword',
-				asset: this.asset.id,
-				itemName: this.name ?? '',
-			});
-			return null;
-		};
+		const result = this.lockLogic.lock({
+			player,
+			isSelfAction: target.type === 'character' && target.character.id === player.appearance.id,
+			executionContext: processingContext.executionContext,
+		}, action);
 
-		let hidden: LockBundle['hidden'] | undefined;
-		if (this.asset.definition.password != null && password == null) {
-			switch (this.lockData?.hidden?.side) {
-				case 'client':
-					if (!this.lockData.hidden.hasPassword && processingContext.executionContext !== 'clientOnlyVerify') {
-						return rejectMissingPassword();
-					}
-					hidden = { side: 'client', hasPassword: true };
-					break;
-				case 'server':
-					if (this.lockData.hidden.password == null || this.lockData.hidden.passwordSetBy == null) {
-						return rejectMissingPassword();
-					}
-					hidden = {
-						side: 'server',
-						password: this.lockData.hidden.password,
-						passwordSetBy: this.lockData.hidden.passwordSetBy,
-					};
-					break;
-				default:
-					return rejectMissingPassword();
-			}
-		} else if (password != null) {
-			hidden = {
-				side: 'server',
-				password,
-				passwordSetBy: processingContext.player.id,
-			};
-		}
+		switch (result.result) {
+			case 'ok':
+				if (this.asset.definition.chat?.actionLock) {
+					messageHandler({
+						id: 'custom',
+						customText: this.asset.definition.chat.actionLock,
+					});
+				}
+				return this.withProps({
+					lockLogic: result.newState,
+				});
 
-		if (this.asset.definition.chat?.actionLock) {
-			messageHandler({
-				id: 'custom',
-				customText: this.asset.definition.chat.actionLock,
-			});
-		}
-
-		return this.withProps({
-			lockData: {
-				...this.lockData,
-				hidden,
-				locked: {
-					id: processingContext.player.id,
-					name: processingContext.player.name,
-					time: Date.now(),
-				},
-			},
-		});
-	}
-
-	public unlock({ messageHandler, failure, processingContext }: AppearanceModuleActionContext, { password, clearLastPassword }: IItemLockAction & { action: 'unlock'; }): ItemLock | null {
-		const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
-		if (!this.isLocked() || this.lockData == null)
-			return null;
-
-		if (this.asset.definition.password != null && !playerRestrictionManager.forceAllowItemActions() && processingContext.executionContext === 'act') {
-			if (this.lockData.hidden?.side === 'server' && !ItemLock._isEqualPassword(this.asset, this.lockData.hidden.password, password)) {
-				failure({
+			case 'failed':
+				reject({
 					type: 'lockInteractionPrevented',
-					moduleAction: 'unlock',
-					reason: 'wrongPassword',
+					moduleAction: 'lock',
+					reason: result.reason,
 					asset: this.asset.id,
 					itemName: this.name ?? '',
 				});
-			}
+				return this;
+
+			case 'invalid':
+				return null;
 		}
 
-		if (this.asset.definition.chat?.actionUnlock) {
-			messageHandler({
-				id: 'custom',
-				customText: this.asset.definition.chat.actionUnlock,
-			});
-		}
-
-		const lockData: LockBundle = {
-			...this.lockData,
-			hidden: this.lockData?.hidden ? { ...this.lockData.hidden } : undefined,
-			locked: undefined,
-		};
-		if (clearLastPassword && lockData.hidden) {
-			switch (lockData.hidden.side) {
-				case 'client':
-					delete lockData.hidden.hasPassword;
-					break;
-				case 'server':
-					delete lockData.hidden.password;
-					delete lockData.hidden.passwordSetBy;
-					break;
-			}
-			// remove hidden if only it has side
-			if (Object.keys(lockData.hidden).length === 1) {
-				lockData.hidden = undefined;
-			}
-		}
-
-		return this.withProps({
-			lockData,
-		});
+		AssertNever(result);
 	}
 
-	public showPassword({ failure, addData, processingContext }: AppearanceModuleActionContext): ItemLock | null {
-		if (!this.isLocked() || this.lockData == null) {
-			return null;
-		}
-		if (this.lockData.hidden?.side !== 'server') {
-			return this;
+	public unlock({ messageHandler, failure, reject, processingContext, target, module }: AppearanceModuleActionContext, action: Extract<LockAction, { action: 'unlock'; }>): ItemLock | null {
+		const player = processingContext.getPlayerRestrictionManager();
+		// Unlocking the lock modifies it
+		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.MODIFY);
+
+		const result = this.lockLogic.unlock({
+			player,
+			isSelfAction: target.type === 'character' && target.character.id === player.appearance.id,
+			executionContext: processingContext.executionContext,
+		}, action);
+
+		switch (result.result) {
+			case 'ok':
+				if (this.asset.definition.chat?.actionUnlock) {
+					messageHandler({
+						id: 'custom',
+						customText: this.asset.definition.chat.actionUnlock,
+					});
+				}
+				return this.withProps({
+					lockLogic: result.newState,
+				});
+
+			case 'failed':
+				if (result.reason === 'blockSelf') {
+					reject({
+						type: 'lockInteractionPrevented',
+						moduleAction: 'unlock',
+						reason: result.reason,
+						asset: this.asset.id,
+						itemName: this.name ?? '',
+					});
+				} else {
+					failure({
+						type: 'lockInteractionPrevented',
+						moduleAction: 'unlock',
+						reason: result.reason,
+						asset: this.asset.id,
+						itemName: this.name ?? '',
+					});
+				}
+				return this;
+
+			case 'invalid':
+				return null;
 		}
 
-		AssertNotNullable(this.lockData.hidden.password);
+		AssertNever(result);
+	}
 
-		if (this.lockData.hidden.passwordSetBy !== processingContext.player.id) {
-			failure({
-				type: 'lockInteractionPrevented',
-				moduleAction: 'showPassword',
-				reason: 'notAllowed',
-				asset: this.asset.id,
-				itemName: this.name ?? '',
-			});
-			return this;
-		}
+	public showPassword({ failure, addData, processingContext, target, module }: AppearanceModuleActionContext): ItemLock | null {
+		const player = processingContext.getPlayerRestrictionManager();
+		// Showing password requires permission access to the lock
+		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.ACCESS_ONLY);
 
-		addData({
-			moduleAction: 'showPassword',
-			password: this.lockData.hidden.password,
+		const result = this.lockLogic.showPassword({
+			player,
+			isSelfAction: target.type === 'character' && target.character.id === player.appearance.id,
+			executionContext: processingContext.executionContext,
 		});
 
-		return this;
+		switch (result.result) {
+			case 'ok':
+				if (result.password != null) {
+					addData({
+						moduleAction: 'showPassword',
+						password: result.password,
+					});
+				}
+				return this;
 
+			case 'failed':
+				failure({
+					type: 'lockInteractionPrevented',
+					moduleAction: 'showPassword',
+					reason: result.reason,
+					asset: this.asset.id,
+					itemName: this.name ?? '',
+				});
+				return this;
+
+			case 'invalid':
+				return null;
+		}
+
+		AssertNever(result);
 	}
 
 	@MemoizeNoArg
@@ -382,55 +255,5 @@ export class ItemLock extends ItemBase<'lock'> {
 		}
 
 		return parentResult;
-	}
-
-	public static validatePassword(asset: Asset<'lock'>, password: string, logger?: Logger): boolean {
-		const def = asset.definition.password;
-		if (def == null) {
-			logger?.warning(`has a hidden password but the asset does not define a password`);
-			return false;
-		}
-		if (typeof def.length === 'number') {
-			if (password.length !== def.length) {
-				logger?.warning(`has a hidden password longer than the asset's password length`);
-				return false;
-			}
-		} else if (password.length < def.length[0] || password.length > def.length[1]) {
-			logger?.warning(`has a hidden password outside of the asset's password length range`);
-			return false;
-		}
-		switch (def.format) {
-			case 'numeric':
-				if (/[^0-9]/.exec(password)) {
-					logger?.warning(`has a hidden password that is not numeric`);
-					return false;
-				}
-				break;
-			case 'letters':
-				if (/[^a-zA-Z]/.exec(password)) {
-					logger?.warning(`has a hidden password that is not letters`);
-					return false;
-				}
-				break;
-			case 'alphanumeric':
-				if (/[^a-zA-Z0-9]/.exec(password)) {
-					logger?.warning(`has a hidden password that is not alphanumeric`);
-					return false;
-				}
-				break;
-			case 'text':
-				break;
-			default:
-				AssertNever(def.format);
-		}
-		return true;
-	}
-
-	private static _isEqualPassword(_asset: Asset<'lock'>, lhs?: string, rhs?: string): boolean {
-		if (lhs == null || rhs == null)
-			return lhs === rhs;
-
-		// all passwords are case insensitive for now
-		return lhs.toLowerCase() === rhs.toLowerCase();
 	}
 }

@@ -1,16 +1,16 @@
 import { noop } from 'lodash';
-import React, { createContext, ReactElement, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { AssetFrameworkGlobalState, type ServiceManager } from 'pandora-common';
+import { createContext, ReactElement, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { AnchorAutoscroll } from '../common/anchorAutoscroll';
 import type { ChildrenProps } from '../common/reactTypes';
 import { useDebugExpose } from '../common/useDebugExpose';
 import { Dialogs } from '../components/dialog/dialog';
 import { DebugContextProvider, useDebugContext } from '../components/error/debugContextProvider';
 import { RootErrorBoundary } from '../components/error/rootErrorBoundary';
-import { Editor } from './editor';
-import { AssetFrameworkGlobalState, type ServiceManager } from 'pandora-common';
 import { permissionCheckContext, PermissionCheckServiceBase } from '../components/gameContext/permissionCheckProvider';
-import { AnchorAutoscroll } from '../common/anchorAutoscroll';
 import type { ClientServices } from '../services/clientServices';
 import { ServiceManagerContextProvider } from '../services/serviceProvider';
+import { Editor } from './editor';
 
 export const EditorContext = createContext({
 	editor: null as Editor | null,

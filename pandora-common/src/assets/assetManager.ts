@@ -66,8 +66,8 @@ export class AssetManager {
 		return bone;
 	}
 
-	constructor(definitionsHash?: string, data?: Partial<Immutable<AssetsDefinitionFile>>) {
-		this.definitionsHash = definitionsHash ?? '';
+	constructor(definitionsHash: string, data?: Partial<Immutable<AssetsDefinitionFile>>) {
+		this.definitionsHash = definitionsHash;
 
 		// Note: Intentionally always assigning here instead of null coalescing,
 		// to perform easy "migration" of asset data that might be missing fields

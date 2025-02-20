@@ -11,7 +11,7 @@ import {
 	SpaceClientInfo,
 } from 'pandora-common';
 import { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle, type Cursor, type EventMode, type GraphicsContext } from 'pixi.js';
-import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
+import { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { z } from 'zod';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
 import { BrowserStorage } from '../../browserStorage';

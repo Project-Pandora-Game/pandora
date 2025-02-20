@@ -100,24 +100,7 @@ export class ItemLock extends ItemBase<'lock'> {
 			return this.showPassword(context);
 		}
 
-		const playerRestrictionManager = context.processingContext.getPlayerRestrictionManager();
-
-		/** If the action should be considered as "manipulating themselves" for the purpose of self-blocking checks */
-		const isSelfAction = context.targetCharacter != null && context.targetCharacter.character.id === context.processingContext.player.id;
-
 		if (action.password != null && !LockLogic.validatePassword(this.lockLogic.lockSetup, action.password)) {
-			return null;
-		}
-
-		// Locks can prevent interaction from player (unless in force-allow is enabled)
-		if (this.lockLogic.blocksSelfActions && isSelfAction && !playerRestrictionManager.forceAllowItemActions()) {
-			context.reject({
-				type: 'lockInteractionPrevented',
-				moduleAction: action.action,
-				reason: 'blockSelf',
-				asset: this.asset.id,
-				itemName: this.name ?? '',
-			});
 			return null;
 		}
 
@@ -131,11 +114,15 @@ export class ItemLock extends ItemBase<'lock'> {
 	}
 
 	public lock({ messageHandler, reject, processingContext, target, module }: AppearanceModuleActionContext, action: Extract<LockAction, { action: 'lock'; }>): ItemLock | null {
+		const player = processingContext.getPlayerRestrictionManager();
 		// Locking the lock modifies it
-		processingContext.getPlayerRestrictionManager()
-			.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.MODIFY);
+		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.MODIFY);
 
-		const result = this.lockLogic.lock(processingContext, action);
+		const result = this.lockLogic.lock({
+			player,
+			isSelfAction: target.type === 'character' && target.character.id === player.appearance.id,
+			executionContext: processingContext.executionContext,
+		}, action);
 
 		switch (result.result) {
 			case 'ok':
@@ -167,11 +154,15 @@ export class ItemLock extends ItemBase<'lock'> {
 	}
 
 	public unlock({ messageHandler, failure, reject, processingContext, target, module }: AppearanceModuleActionContext, action: Extract<LockAction, { action: 'unlock'; }>): ItemLock | null {
+		const player = processingContext.getPlayerRestrictionManager();
 		// Unlocking the lock modifies it
-		processingContext.getPlayerRestrictionManager()
-			.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.MODIFY);
+		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.MODIFY);
 
-		const result = this.lockLogic.unlock(processingContext, action);
+		const result = this.lockLogic.unlock({
+			player,
+			isSelfAction: target.type === 'character' && target.character.id === player.appearance.id,
+			executionContext: processingContext.executionContext,
+		}, action);
 
 		switch (result.result) {
 			case 'ok':
@@ -213,11 +204,15 @@ export class ItemLock extends ItemBase<'lock'> {
 	}
 
 	public showPassword({ failure, addData, processingContext, target, module }: AppearanceModuleActionContext): ItemLock | null {
+		const player = processingContext.getPlayerRestrictionManager();
 		// Showing password requires permission access to the lock
-		processingContext.getPlayerRestrictionManager()
-			.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.ACCESS_ONLY);
+		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.ACCESS_ONLY);
 
-		const result = this.lockLogic.showPassword(processingContext);
+		const result = this.lockLogic.showPassword({
+			player,
+			isSelfAction: target.type === 'character' && target.character.id === player.appearance.id,
+			executionContext: processingContext.executionContext,
+		});
 
 		switch (result.result) {
 			case 'ok':

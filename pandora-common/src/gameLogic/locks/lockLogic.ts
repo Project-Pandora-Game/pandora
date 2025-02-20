@@ -1,9 +1,10 @@
 import { freeze, produce, type Immutable } from 'immer';
 import { z } from 'zod';
 import type { IItemLoadContext } from '../../assets/item/base';
+import type { CharacterRestrictionsManager } from '../../character/restrictionsManager';
 import type { Logger } from '../../logging';
 import { Assert, AssertNever, AssertNotNullable, CloneDeepMutable } from '../../utility/misc';
-import type { AppearanceActionProcessingContext } from '../actionLogic/appearanceActionProcessingContext';
+import type { AppearanceActionContext } from '../actionLogic/appearanceActions';
 import type { LockDataBundle } from './lockData';
 import type { LockSetup } from './lockSetup';
 
@@ -52,6 +53,15 @@ export type LockActionShowPasswordResult = {
 } | {
 	result: 'invalid';
 };
+
+export interface LockActionContext {
+	/** The character doing the action. */
+	player: CharacterRestrictionsManager;
+	/** Whether the character doing the action is targetting a lock somewhere on themselves. */
+	isSelfAction: boolean;
+	/** In which context is the action being executed. */
+	executionContext: AppearanceActionContext['executionContext'];
+}
 
 export class LockLogic {
 	public readonly lockSetup: Immutable<LockSetup>;
@@ -107,15 +117,23 @@ export class LockLogic {
 		return this.lockData.locked != null;
 	}
 
-	public lock(processingContext: AppearanceActionProcessingContext, { password }: Extract<LockAction, { action: 'lock'; }>): LockActionLockResult {
+	public lock({ player, executionContext, isSelfAction }: LockActionContext, { password }: Extract<LockAction, { action: 'lock'; }>): LockActionLockResult {
 		if (this.isLocked())
 			return { result: 'invalid' };
+
+		// Locks can prevent interaction from player (unless in force-allow is enabled)
+		if (this.blocksSelfActions && isSelfAction && !player.forceAllowItemActions()) {
+			return {
+				result: 'failed',
+				reason: 'blockSelf',
+			};
+		}
 
 		let hidden: LockDataBundle['hidden'] | undefined;
 		if (this.lockSetup.password != null && password == null) {
 			switch (this.lockData?.hidden?.side) {
 				case 'client':
-					if (!this.lockData.hidden.hasPassword && processingContext.executionContext !== 'clientOnlyVerify') {
+					if (!this.lockData.hidden.hasPassword && executionContext !== 'clientOnlyVerify') {
 						return {
 							result: 'failed',
 							reason: 'noStoredPassword',
@@ -146,15 +164,15 @@ export class LockLogic {
 			hidden = {
 				side: 'server',
 				password,
-				passwordSetBy: processingContext.player.id,
+				passwordSetBy: player.appearance.id,
 			};
 		}
 
 		const lockData: Immutable<LockDataBundle> = produce(this.lockData, (data) => {
 			data.hidden = hidden;
 			data.locked = {
-				id: processingContext.player.id,
-				name: processingContext.player.name,
+				id: player.appearance.id,
+				name: player.appearance.character.name,
 				time: Date.now(),
 			};
 		});
@@ -165,12 +183,19 @@ export class LockLogic {
 		};
 	}
 
-	public unlock(processingContext: AppearanceActionProcessingContext, { password, clearLastPassword }: Extract<LockAction, { action: 'unlock'; }>): LockActionUnlockResult {
-		const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
+	public unlock({ player, executionContext, isSelfAction }: LockActionContext, { password, clearLastPassword }: Extract<LockAction, { action: 'unlock'; }>): LockActionUnlockResult {
 		if (!this.isLocked() || this.lockData == null)
 			return { result: 'invalid' };
 
-		if (this.lockSetup.password != null && !playerRestrictionManager.forceAllowItemActions() && processingContext.executionContext === 'act') {
+		// Locks can prevent interaction from player (unless in force-allow is enabled)
+		if (this.blocksSelfActions && isSelfAction && !player.forceAllowItemActions()) {
+			return {
+				result: 'failed',
+				reason: 'blockSelf',
+			};
+		}
+
+		if (this.lockSetup.password != null && !player.forceAllowItemActions() && executionContext === 'act') {
 			if (this.lockData.hidden?.side === 'server' && !LockLogic._isEqualPassword(this.lockSetup, this.lockData.hidden.password, password)) {
 				return {
 					result: 'failed',
@@ -205,7 +230,7 @@ export class LockLogic {
 		};
 	}
 
-	public showPassword(processingContext: AppearanceActionProcessingContext): LockActionShowPasswordResult {
+	public showPassword({ player }: LockActionContext): LockActionShowPasswordResult {
 		if (!this.isLocked() || this.lockData == null) {
 			return { result: 'invalid' };
 		}
@@ -219,7 +244,7 @@ export class LockLogic {
 
 		AssertNotNullable(this.lockData.hidden.password);
 
-		if (this.lockData.hidden.passwordSetBy !== processingContext.player.id) {
+		if (this.lockData.hidden.passwordSetBy !== player.appearance.id) {
 			return {
 				result: 'failed',
 				reason: 'notAllowed',

@@ -410,8 +410,8 @@ export function useRoomViewProjection(roomBackground: Immutable<RoomBackgroundDa
 }
 
 export function usePlayerVisionFilters(targetIsPlayer: boolean): Filter[] {
-	const { player, playerState } = usePlayerState();
-	const blindness = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getBlindness());
+	const { player, globalState } = usePlayerState();
+	const blindness = useCharacterRestrictionsManager(globalState, player, (manager) => manager.getBlindness());
 
 	return useMemo((): Filter[] => {
 		if (blindness === 0)
@@ -475,7 +475,7 @@ export function RoomScene({ className }: {
 	AssertNotNullable(characters);
 	AssertNotNullable(player);
 
-	const playerState = useCharacterState(gameState, player.id);
+	const playerState = useCharacterState(globalState, player.id);
 	AssertNotNullable(playerState);
 
 	const onPointerDown = useEvent((event: React.PointerEvent<HTMLDivElement>) => {

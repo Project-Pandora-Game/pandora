@@ -134,4 +134,12 @@ export abstract class InputBase<TValue, TProps extends InputBaseProps<TValue>, T
 	public focus(): void {
 		this.element?.focus();
 	}
+
+	public resetValue(): void {
+		this._cooldownState = false;
+		this._leaveCooldown();
+		if (!this.isSelected()) {
+			this._resetValue();
+		}
+	}
 }

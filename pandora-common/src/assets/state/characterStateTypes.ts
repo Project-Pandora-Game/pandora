@@ -25,6 +25,8 @@ export type RestrictionOverrideConfig = Readonly<{
 	blockInteractions: boolean;
 	forceAllowItemActions: boolean;
 	forceAllowRoomLeave: boolean;
+	/** This flag disables all character modifiers - same as if they didn't satisfy their activation conditions. */
+	suppressCharacterModifiers: boolean;
 }>;
 
 const INTERACTION_OVERRIDE_CONFIG = {
@@ -33,18 +35,21 @@ const INTERACTION_OVERRIDE_CONFIG = {
 		blockInteractions: false,
 		forceAllowItemActions: false,
 		forceAllowRoomLeave: false,
+		suppressCharacterModifiers: false,
 	},
 	safemode: {
 		allowLeaveAt: 60 * 60_000,
 		blockInteractions: true,
 		forceAllowItemActions: true,
 		forceAllowRoomLeave: true,
+		suppressCharacterModifiers: true,
 	},
 	timeout: {
 		allowLeaveAt: 0,
 		blockInteractions: true,
 		forceAllowItemActions: false,
 		forceAllowRoomLeave: false,
+		suppressCharacterModifiers: false,
 	},
 } as const satisfies Readonly<Record<RestrictionOverride['type'] | 'normal', RestrictionOverrideConfig>>;
 

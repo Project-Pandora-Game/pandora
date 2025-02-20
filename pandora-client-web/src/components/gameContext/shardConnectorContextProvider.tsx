@@ -72,7 +72,7 @@ export function useShardConnector(): ShardConnector | null {
 }
 
 export function useShardChangeListener(
-	event: IShardClientChangeEvents,
+	event: IShardClientChangeEvents | readonly IShardClientChangeEvents[],
 	callback: () => void,
 	runImmediate = true,
 ): void {
@@ -89,7 +89,16 @@ export function useShardChangeListener(
 		}
 		if (shardConnector == null)
 			return undefined;
-		return shardConnector.changeEventEmitter.on(event, () => callbackRef.current());
+
+		if (typeof event === 'string') {
+			return shardConnector.changeEventEmitter.on(event, () => callbackRef.current());
+		} else {
+			return shardConnector.changeEventEmitter.onAny((data) => {
+				if (event.some((e) => data[e] !== undefined)) {
+					callbackRef.current();
+				}
+			});
+		}
 	}, [shardConnector, event, callbackRef, runImmediate]);
 }
 

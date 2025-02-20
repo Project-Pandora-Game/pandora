@@ -14,6 +14,7 @@ const FORWARDED_PROPS = [
 	'required',
 	// Presentation
 	'aria-haspopup',
+	'aria-label',
 	'autoComplete',
 	'inputMode',
 	'list',

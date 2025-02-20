@@ -1,8 +1,11 @@
+import type { Immutable } from 'immer';
 import { cloneDeep } from 'lodash';
 import { z } from 'zod';
 import { AccountId, AccountIdSchema } from '../account/account';
+import type { AssetFrameworkGlobalState } from '../assets';
 import { ROOM_INVENTORY_BUNDLE_DEFAULT, RoomInventoryBundleSchema } from '../assets/state/roomState';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
+import type { CharacterModifierEffectData } from '../gameLogic';
 import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_ENTRYTEXT_LENGTH, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits';
 import { ArrayToRecordKeys, CloneDeepMutable } from '../utility/misc';
 import { HexColorStringSchema, ZodArrayWithInvalidDrop, ZodTemplateString, ZodTrimedRegex } from '../validation';
@@ -28,6 +31,7 @@ export type ActionSpaceContext = {
 	features: readonly SpaceFeature[];
 	development: Readonly<SpaceDevelopmentConfig> | undefined;
 	isAdmin(account: AccountId): boolean;
+	getCharacterModifierEffects(character: CharacterId, gameState: AssetFrameworkGlobalState): readonly Immutable<CharacterModifierEffectData>[];
 };
 
 /**
@@ -186,6 +190,12 @@ export const SpaceClientInfoSchema = SpaceDirectoryConfigSchema.extend({
 	owners: AccountIdSchema.array(),
 });
 export type SpaceClientInfo = z.infer<typeof SpaceClientInfoSchema>;
+
+export const CurrentSpaceInfoSchema = z.object({
+	id: SpaceIdSchema.nullable(),
+	config: SpaceClientInfoSchema,
+});
+export type CurrentSpaceInfo = z.infer<typeof CurrentSpaceInfoSchema>;
 
 /** Space data stored in database */
 export const SpaceDataSchema = z.object({

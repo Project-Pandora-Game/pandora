@@ -102,7 +102,7 @@ export function Chat(): ReactElement | null {
 					className='fill'
 					tabIndex={ 1 }
 				>
-					<Column gap='none'>
+					<Column gap='none' className='messagesContainer'>
 						{ finalMessages }
 					</Column>
 				</Scrollable>
@@ -121,7 +121,7 @@ function ChatAutoCompleteHint() {
 }
 
 function ChatMessageEquals(a: IChatMessageProcessed, b: IChatMessageProcessed): boolean {
-	return a.time === b.time && a.edited === b.edited && a.spaceId === b.spaceId;
+	return a.time === b.time && a.edited === b.edited && a.spaceId === b.spaceId && a.repetitions === b.repetitions;
 }
 
 const Message = memo(function Message({ message, playerId }: { message: IChatMessageProcessed; playerId: CharacterId | null; }): ReactElement | null {
@@ -343,11 +343,12 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 	);
 }
 
-export function ActionMessageElement({ type, labelColor, messageTime, edited, children, extraContent, defaultUnfolded = false }: {
+export function ActionMessageElement({ type, labelColor, messageTime, edited, repetitions = 1, children, extraContent, defaultUnfolded = false }: {
 	type: 'action' | 'serverMessage';
 	labelColor?: HexColorString;
 	messageTime: number;
 	edited: boolean;
+	repetitions?: number;
 	children: ReactNode;
 	extraContent?: ReactElement | null;
 	/**
@@ -357,6 +358,19 @@ export function ActionMessageElement({ type, labelColor, messageTime, edited, ch
 	defaultUnfolded?: boolean;
 }): ReactElement | null {
 	const [folded, setFolded] = useState(!defaultUnfolded);
+	const repetitionCountRef = useRef<HTMLSpanElement>(null);
+	const lastRepetitionCount = useRef(repetitions);
+
+	// Do a highlight if the repetitions count changes on an existing message
+	useEffect(() => {
+		if (repetitions > 1 && repetitions !== lastRepetitionCount.current) {
+			lastRepetitionCount.current = repetitions;
+			repetitionCountRef.current?.classList.remove('highlightChange');
+			requestAnimationFrame(() => {
+				repetitionCountRef.current?.classList.add('highlightChange');
+			});
+		}
+	}, [repetitions]);
 
 	const style = (type === 'action' && labelColor) ? ({ backgroundColor: labelColor + '44' }) : undefined;
 
@@ -374,6 +388,11 @@ export function ActionMessageElement({ type, labelColor, messageTime, edited, ch
 			{ extraContent != null ? (folded ? '\u25ba ' : '\u25bc ') : null }
 			{ children }
 			{ extraContent != null && folded ? ' ( ... )' : null }
+			{
+				repetitions > 1 ? (
+					<> <span className='repetitionCount' ref={ repetitionCountRef }>&#xD7;{ repetitions }</span></>
+				) : null
+			}
 			{
 				!folded && extraContent != null ? (
 					<>
@@ -402,6 +421,7 @@ export function ActionMessage({ message, ignoreColor = false }: { message: IChat
 			labelColor={ message.data?.character && !ignoreColor ? message.data.character.labelColor : undefined }
 			messageTime={ message.time }
 			edited={ message.edited ?? false }
+			repetitions={ message.repetitions }
 			extraContent={ extraContent != null ? (
 				<>
 					{ extraContent.map((c, i) => RenderChatPart(c, i, false)) }

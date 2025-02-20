@@ -1,9 +1,14 @@
-import { Asset, AssetManager, AssetsDefinitionFile, AssetsGraphicsDefinitionFile, GetLogger } from 'pandora-common';
-import { GraphicsManagerInstance, GraphicsManager } from './graphicsManager';
-import { URLGraphicsLoader } from './graphicsLoader';
-import { Observable, useObservable } from '../observable';
 import { Immutable } from 'immer';
+import React from 'react';
+import { Asset, AssetManager, AssetsDefinitionFile, AssetsGraphicsDefinitionFile, GetLogger } from 'pandora-common';
+import { toast } from 'react-toastify';
+import { DEVELOPMENT } from '../config/Environment';
 import { ConfigServerIndex } from '../config/searchArgs';
+import { Observable, useObservable } from '../observable';
+import { TOAST_OPTIONS_INFO } from '../persistentToast';
+import { URLGraphicsLoader } from './graphicsLoader';
+import { GraphicsManager, GraphicsManagerInstance } from './graphicsManager';
+import { Column } from '../components/common/container/container';
 
 const logger = GetLogger('AssetManager');
 
@@ -41,13 +46,23 @@ export function GetAssetsSourceUrl(): string {
 
 export function LoadAssetDefinitions(definitionsHash: string, data: Immutable<AssetsDefinitionFile>, source: string): void {
 	// Skip load if asset definition matches the already loaded one
-	if (assetManager.value.definitionsHash === definitionsHash) {
+	const currentHash = assetManager.value.definitionsHash;
+	if (currentHash === definitionsHash) {
 		return;
 	}
 
 	const manager = new AssetManagerClient(definitionsHash, data);
 	UpdateAssetManager(manager);
 	logger.info(`Loaded asset definitions, version: ${manager.definitionsHash}`);
+	// Notify user if we already had some and asset definition updated
+	if (currentHash) {
+		toast((
+			<Column>
+				<strong>Loaded new asset updates</strong>
+				{ DEVELOPMENT ? '' : (<span>A list of changes can be found on Pandora's Discord.</span>) }
+			</Column>
+		), TOAST_OPTIONS_INFO);
+	}
 
 	// Update graphics definition
 	if (lastGraphicsHash === manager.graphicsId)

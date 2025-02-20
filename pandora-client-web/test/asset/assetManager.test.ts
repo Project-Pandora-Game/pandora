@@ -9,7 +9,7 @@ describe('GetCurrentAssetManager()', () => {
 
 describe('UpdateAssetManager()', () => {
 	it('should override the current assetManager reference', () => {
-		const newManager = new AssetManagerClient();
+		const newManager = new AssetManagerClient('v2');
 		const oldManager = GetCurrentAssetManager();
 		expect(GetCurrentAssetManager()).toBe(oldManager);
 		UpdateAssetManager(newManager);

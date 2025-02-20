@@ -2,8 +2,8 @@ import type { Immutable } from 'immer';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
-import type { LockDataBundle } from 'gameLogic/locks/lockData';
 import type { CharacterId } from '../../character';
+import type { LockDataBundle } from '../../gameLogic/locks/lockData';
 import type { Satisfies } from '../../utility/misc';
 import type { Asset } from '../asset';
 import type { AssetManager } from '../assetManager';

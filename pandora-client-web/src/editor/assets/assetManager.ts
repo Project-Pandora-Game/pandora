@@ -12,7 +12,7 @@ export class AssetManagerEditor extends AssetManagerClient {
 	public readonly assetTreeView: AssetTreeView = new AssetTreeViewClass;
 
 	constructor(definitionsHash?: string, data?: Immutable<AssetsDefinitionFile>) {
-		super(definitionsHash, data);
+		super('editor:' + (definitionsHash ?? ''), data);
 		this.assetTreeView.update(this.assetList);
 	}
 

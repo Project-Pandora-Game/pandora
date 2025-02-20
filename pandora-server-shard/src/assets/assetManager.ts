@@ -11,7 +11,7 @@ const { ASSETS_DEFINITION_PATH, SHARD_DEVELOPMENT_MODE } = ENV;
 
 const logger = GetLogger('AssetManager');
 
-export let assetManager = new AssetManager();
+export let assetManager = new AssetManager('');
 
 // Checks asset definitions for changes every 2 seconds, if in development mode, every 15 seconds otherwise
 const ASSET_DEFINITIONS_WATCH_INTERVAL = SHARD_DEVELOPMENT_MODE ? 2_000 : 15_000;

@@ -10,14 +10,14 @@ const logger = GetLogger('AssetManager');
 export class AssetManagerClient extends AssetManager {
 	public readonly assetList: readonly Asset[];
 
-	constructor(definitionsHash?: string, data?: Immutable<AssetsDefinitionFile>) {
+	constructor(definitionsHash: string, data?: Immutable<AssetsDefinitionFile>) {
 		super(definitionsHash, data);
 
 		this.assetList = this.getAllAssets();
 	}
 }
 
-const assetManager = new Observable<AssetManagerClient>(new AssetManagerClient());
+const assetManager = new Observable<AssetManagerClient>(new AssetManagerClient(''));
 
 export function GetCurrentAssetManager(): AssetManagerClient {
 	return assetManager.value;
@@ -40,11 +40,17 @@ export function GetAssetsSourceUrl(): string {
 }
 
 export function LoadAssetDefinitions(definitionsHash: string, data: Immutable<AssetsDefinitionFile>, source: string): void {
+	// Skip load if asset definition matches the already loaded one
+	if (assetManager.value.definitionsHash === definitionsHash) {
+		return;
+	}
+
 	const manager = new AssetManagerClient(definitionsHash, data);
 	UpdateAssetManager(manager);
 	logger.info(`Loaded asset definitions, version: ${manager.definitionsHash}`);
 
-	if (lastGraphicsHash === data.graphicsId)
+	// Update graphics definition
+	if (lastGraphicsHash === manager.graphicsId)
 		return;
 
 	lastGraphicsHash = data.graphicsId;

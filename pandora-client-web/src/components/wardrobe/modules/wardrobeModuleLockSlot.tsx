@@ -203,7 +203,9 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 	// Attempted action for locking or unlocking the lock
 	const [currentAttempt, setCurrentAttempt] = useState<WardrobeExecuteCheckedResult['currentAttempt']>(null);
 
-	const allowExecute = playerRestrictionManager.forceAllowItemActions() ||
+	const allowExecute =
+		lock.lockLogic.lockSetup.password == null ||
+		playerRestrictionManager.forceAllowItemActions() ||
 		LockLogic.validatePassword(lock.lockLogic.lockSetup, password);
 
 	const action = useMemo((): AppearanceAction => ({
@@ -265,6 +267,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 	const [currentAttempt, setCurrentAttempt] = useState<WardrobeExecuteCheckedResult['currentAttempt']>(null);
 
 	const allowExecute =
+		lock.lockLogic.lockSetup.password == null ||
 		useOldPassword ||
 		LockLogic.validatePassword(lock.lockLogic.lockSetup, password);
 

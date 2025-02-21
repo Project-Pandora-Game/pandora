@@ -13,6 +13,13 @@ export const AppearanceActionCustomize = z.object({
 	item: ItemPathSchema,
 	/** New custom name */
 	name: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN).optional(),
+	/** object for chat specific entries */
+	chat: z.object({
+		/** New generic name */
+		generic: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN),
+		/** New specific name */
+		specific: z.string().max(LIMIT_ITEM_NAME_LENGTH).regex(LIMIT_ITEM_NAME_PATTERN),
+	}).optional(),
 	/** New description */
 	description: z.string().max(LIMIT_ITEM_DESCRIPTION_LENGTH).optional(),
 	/** New usage state to require hands to use or not */
@@ -41,7 +48,7 @@ export function ActionAppearanceCustomize({
 
 	// Determinate the interaction type(s) based on what is edited
 	const isModify = action.requireFreeHandsToUse !== undefined;
-	const isCustomize = action.name !== undefined || action.description !== undefined;
+	const isCustomize = action.name !== undefined || action.chat !== undefined || action.description !== undefined;
 
 	// Player must be able to do the action
 	if (isModify) {
@@ -65,6 +72,9 @@ export function ActionAppearanceCustomize({
 		}
 		if (action.description !== undefined) {
 			it = it.customizeDescription(action.description);
+		}
+		if (action.chat !== undefined) {
+			it = it.customizeChat(action.chat);
 		}
 
 		// Apply the new requireFreeHandsToUse value, if a new value is defined

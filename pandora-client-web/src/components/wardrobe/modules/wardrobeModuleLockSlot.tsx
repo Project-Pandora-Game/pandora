@@ -105,7 +105,7 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeMo
 					</WardrobeActionButton>
 				</Row>
 				<WardrobeLockSlotUnlocked item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
-				<WardrobeLockSlotLockDescription item={ item } moduleName={ moduleName } m={ m } />
+				<WardrobeLockSlotLockDescription lock={ m.lock } />
 			</Column>
 		);
 	}
@@ -119,7 +119,7 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeMo
 				</Row>
 			</Row>
 			<WardrobeLockSlotLocked item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
-			<WardrobeLockSlotLockDescription item={ item } moduleName={ moduleName } m={ m } />
+			<WardrobeLockSlotLockDescription lock={ m.lock } />
 		</Column>
 	);
 }
@@ -169,16 +169,15 @@ export function WardrobeModuleTemplateConfigLockSlot({ template, onTemplateChang
 	);
 }
 
-function WardrobeLockSlotLockDescription({ m }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement | null {
-	if (!m || !m.lock)
-		return null;
-
+function WardrobeLockSlotLockDescription({ lock }: {
+	lock: ItemLock;
+}): ReactElement {
 	return (
 		<>
-			{ !m.lock.description ? null : (
+			{ !lock.description ? null : (
 				<FieldsetToggle legend='Show custom lock description' open={ false }>
 					<span className='display-linebreak'>
-						{ m.lock.description }
+						{ lock.description }
 					</span>
 				</FieldsetToggle>
 			) }

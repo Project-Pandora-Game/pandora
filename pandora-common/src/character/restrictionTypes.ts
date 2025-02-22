@@ -98,6 +98,11 @@ export type Restriction =
 		modifierId: CharacterModifierId;
 		modifierType: CharacterModifierType;
 	}
+	| {
+		type: 'characterModifierLocked'; // The modifier is protected by a locked lock
+		modifierId: CharacterModifierId;
+		modifierType: CharacterModifierType;
+	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
 	| {
 		type: 'invalid';

@@ -1,5 +1,5 @@
 import type { CharacterId } from '../../character';
-import type { CharacterModifierType } from '../characterModifiers';
+import type { CharacterModifierLockAction, CharacterModifierType, GameLogicModifierInstance } from '../characterModifiers';
 import type { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
 
 // Character modifiers happen outside of the character state and action logic frameworks.
@@ -55,7 +55,7 @@ export function CharacterModifierActionCheckAdd(
 export function CharacterModifierActionCheckModify(
 	ctx: AppearanceActionProcessingContext,
 	target: CharacterId,
-	modifierType: CharacterModifierType,
+	modifier: GameLogicModifierInstance,
 ): AppearanceActionProcessingResult {
 	const player = ctx.getPlayerRestrictionManager();
 	const checkTarget = ctx.getCharacter(target);
@@ -67,8 +67,59 @@ export function CharacterModifierActionCheckModify(
 	ctx.addInteraction(checkTarget.character, 'modifyCharacterModifiers');
 
 	ctx.addRequiredPermission(
-		checkTarget.character.characterModifiers.getModifierTypePermission(modifierType),
+		checkTarget.character.characterModifiers.getModifierTypePermission(modifier.type),
 	);
+
+	// Check for the modifier being locked
+	if (modifier.lock != null && !modifier.lockExceptions.includes(player.appearance.id)) {
+		const lock = modifier.lock.logic;
+		if (lock.isLocked()) {
+			ctx.addRestriction({
+				type: 'characterModifierLocked',
+				modifierId: modifier.id,
+				modifierType: modifier.type,
+			});
+		}
+	}
+
+	return ctx.finalize();
+}
+
+/**
+ * Check if player is allowed to interact with the modifier's lock.
+ */
+export function CharacterModifierActionCheckLockModify(
+	ctx: AppearanceActionProcessingContext,
+	target: CharacterId,
+	modifier: GameLogicModifierInstance,
+	action: CharacterModifierLockAction,
+): AppearanceActionProcessingResult {
+	const player = ctx.getPlayerRestrictionManager();
+	const checkTarget = ctx.getCharacter(target);
+	if (checkTarget == null)
+		return ctx.invalid();
+
+	player.checkInteractWithTarget(ctx, checkTarget.appearance);
+	ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
+	ctx.addInteraction(checkTarget.character, 'modifyCharacterModifiers');
+	ctx.addInteraction(checkTarget.character, 'lockCharacterModifiers');
+
+	ctx.addRequiredPermission(
+		checkTarget.character.characterModifiers.getModifierTypePermission(modifier.type),
+	);
+
+	// Lock actions can return problems in client validation state already
+	if (action.action === 'lockAction') {
+		const result = modifier.doLockAction({
+			player,
+			isSelfAction: target === player.appearance.id,
+			executionContext: 'clientOnlyVerify',
+		}, action.lockAction);
+
+		if (result.result !== 'ok') {
+			result.problems.forEach((p) => ctx.addProblem(p));
+		}
+	}
 
 	return ctx.finalize();
 }

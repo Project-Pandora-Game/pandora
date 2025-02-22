@@ -78,6 +78,13 @@ export const INTERACTION_CONFIG = {
 			allowOthers: 'no',
 		},
 	},
+	lockCharacterModifiers: {
+		visibleName: 'Lock this character\'s modifiers or interact with existing locks',
+		icon: 'modification-edit',
+		defaultPermissions: {
+			allowOthers: 'no',
+		},
+	},
 } as const satisfies Immutable<Record<InteractionGenericId, IInteractionConfig>>;
 
 //#endregion

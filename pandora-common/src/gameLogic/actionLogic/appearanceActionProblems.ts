@@ -1,6 +1,7 @@
 import type { AppearanceValidationError } from '../../assets/appearanceValidation';
 import type { ModuleActionData, ModuleActionError, ModuleActionFailure } from '../../assets/modules';
 import type { Restriction } from '../../character/restrictionTypes';
+import type { CharacterModifierActionError } from '../characterModifiers/characterModifierData';
 
 export type AppearanceActionFailure = {
 	type: 'moduleActionFailure';
@@ -25,6 +26,9 @@ export type AppearanceActionProblem = {
 } | {
 	result: 'moduleActionError';
 	reason: ModuleActionError;
+} | {
+	result: 'characterModifierActionError';
+	reason: CharacterModifierActionError;
 } | {
 	result: 'restrictionError';
 	restriction: Restriction;

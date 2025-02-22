@@ -289,36 +289,39 @@ export class LockLogic {
 			result: 'ok',
 			password: this.lockData.hidden.password,
 		};
-
 	}
 
-	public static loadFromBundle(lockSetup: Immutable<LockSetup>, bundle: Immutable<LockDataBundle> | undefined = {}, context: IItemLoadContext): LockLogic {
+	public static loadFromBundle(
+		lockSetup: Immutable<LockSetup>,
+		bundle: Immutable<LockDataBundle> | undefined = {},
+		{ doLoadTimeCleanup, logger }: Pick<IItemLoadContext, 'doLoadTimeCleanup' | 'logger'>,
+	): LockLogic {
 		freeze(lockSetup, true);
 		freeze(bundle, true);
 		// Load-time cleanup logic
-		if (context.doLoadTimeCleanup && bundle?.hidden != null) {
+		if (doLoadTimeCleanup && bundle?.hidden != null) {
 			const lockData = CloneDeepMutable(bundle);
 			Assert(lockData?.hidden != null);
 			switch (lockData.hidden.side) {
 				case 'client':
 					if (lockSetup.password == null && lockData.hidden.hasPassword != null) {
-						context.logger?.warning(`Lock without password has hidden password`);
+						logger?.warning(`Lock without password has hidden password`);
 						delete lockData.hidden.hasPassword;
 					} else if (lockSetup.password != null && lockData.hidden.hasPassword == null) {
-						context.logger?.warning(`Lock with password has no hidden password`);
+						logger?.warning(`Lock with password has no hidden password`);
 						delete lockData.locked;
 					}
 					break;
 				case 'server':
-					if (lockData.hidden.password != null && !LockLogic.validatePassword(lockSetup, lockData.hidden.password, context.logger)) {
+					if (lockData.hidden.password != null && !LockLogic.validatePassword(lockSetup, lockData.hidden.password, logger)) {
 						delete lockData.hidden.password;
 					}
 					if (lockSetup.password != null && lockData.hidden?.password == null && lockData.locked != null) {
-						context.logger?.warning(`Lock is locked but has no hidden password`);
+						logger?.warning(`Lock is locked but has no hidden password`);
 						delete lockData.locked;
 					}
 					if (lockData.hidden.password == null && lockData.hidden.passwordSetBy != null) {
-						context.logger?.warning(`Lock has password set by but no password`);
+						logger?.warning(`Lock has password set by but no password`);
 						delete lockData.hidden.passwordSetBy;
 					}
 					break;

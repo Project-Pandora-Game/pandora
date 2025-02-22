@@ -1,8 +1,12 @@
 import { cloneDeep } from 'lodash';
 import { z } from 'zod';
+import { CharacterIdSchema } from '../../character/characterTypes';
+import { LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT } from '../../inputLimits';
 import { ZodArrayWithInvalidDrop } from '../../validation';
+import { LockActionSchema } from '../locks/lockLogic';
 import { PermissionConfigSchema } from '../permissions';
 import { CharacterModifierConfigurationSchema, CharacterModifierIdSchema, CharacterModifierNameSchema, CharacterModifierTypeGenericIdSchema } from './characterModifierBaseData';
+import { CharacterModifierLockSchema, CharacterModifierLockTypeSchema } from './characterModifierLocks';
 import { CharacterModifierConditionChainSchema } from './conditions/characterModifierConditionChain';
 import { CharacterModifierTypeSchema } from './modifierTypes/_index';
 
@@ -22,6 +26,10 @@ export const CharacterModifierInstanceDataSchema = z.object({
 	enabled: z.boolean(),
 	config: CharacterModifierConfigurationSchema,
 	conditions: CharacterModifierConditionChainSchema.catch(() => []),
+	/** Lock on the modifier, if any */
+	lock: CharacterModifierLockSchema.optional(),
+	/** List of characters that can simply ignore any locked lock on it */
+	lockExceptions: CharacterIdSchema.array().max(LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT).catch(() => []),
 });
 
 /** Server-saved data of a character modifier instance */
@@ -36,6 +44,8 @@ export const CharacterModifierInstanceClientDataSchema = z.object({
 	enabled: z.boolean(),
 	config: CharacterModifierConfigurationSchema,
 	conditions: CharacterModifierConditionChainSchema,
+	lock: CharacterModifierLockSchema.optional(),
+	lockExceptions: CharacterIdSchema.array().max(LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT),
 });
 /** Client data of a character modifier instance */
 export type CharacterModifierInstanceClientData = z.infer<typeof CharacterModifierInstanceClientDataSchema>;
@@ -56,9 +66,47 @@ export const CharacterModifierConfigurationChangeSchema = z.object({
 	enabled: z.boolean().optional(),
 	config: CharacterModifierConfigurationSchema.optional(),
 	conditions: CharacterModifierConditionChainSchema.optional(),
+	lockExceptions: CharacterIdSchema.array().max(LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT).optional(),
 });
 /** Request for change to modifier configuration. */
 export type CharacterModifierConfigurationChange = z.infer<typeof CharacterModifierConfigurationChangeSchema>;
+
+export const CharacterModifierLockActionSchema = z.discriminatedUnion('action', [
+	z.object({
+		action: z.literal('addLock'),
+		lockType: CharacterModifierLockTypeSchema,
+	}),
+	z.object({
+		action: z.literal('removeLock'),
+	}),
+	z.object({
+		action: z.literal('lockAction'),
+		lockAction: LockActionSchema,
+	}),
+]);
+export type CharacterModifierLockAction = z.infer<typeof CharacterModifierLockActionSchema>;
+
+export type CharacterModifierActionError =
+	| {
+		type: 'lockInteractionPrevented';
+		moduleAction: 'lock' | 'unlock';
+		reason: 'blockSelf';
+	}
+	| {
+		type: 'lockInteractionPrevented';
+		moduleAction: 'lock';
+		reason: 'noStoredPassword';
+	}
+	| {
+		type: 'lockInteractionPrevented';
+		moduleAction: 'unlock';
+		reason: 'wrongPassword';
+	}
+	| {
+		type: 'lockInteractionPrevented';
+		moduleAction: 'showPassword';
+		reason: 'notAllowed';
+	};
 
 /** Data of modifier instance effect - put onto a character if the modifier is active */
 export const CharacterModifierEffectDataSchema = z.object({

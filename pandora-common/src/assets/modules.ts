@@ -41,6 +41,7 @@ export const MODULE_TYPES: { [Type in ModuleType]: IAssetModuleDefinition<Type>;
 	lockSlot: new LockSlotModuleDefinition(),
 };
 
+/** Module action errors are problems performing actions on modules that can be anticipated by client */
 export type ModuleActionError =
 	| {
 		type: 'lockInteractionPrevented';
@@ -61,6 +62,7 @@ export type ModuleActionError =
 		type: 'invalid';
 	};
 
+/** Module action failures are problems performing actions on modules that cannot be anticipated by client */
 export type ModuleActionFailure =
 	| {
 		type: 'lockInteractionPrevented';

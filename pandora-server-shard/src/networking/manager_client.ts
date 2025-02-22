@@ -5,9 +5,11 @@ import {
 	Assert,
 	AssertNever,
 	BadMessageError,
+	CHARACTER_MODIFIER_LOCK_DEFINITIONS,
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
 	CharacterId,
 	CharacterModifierActionCheckAdd,
+	CharacterModifierActionCheckLockModify,
 	CharacterModifierActionCheckModify,
 	CharacterModifierActionCheckRead,
 	CharacterModifierActionCheckReorder,
@@ -29,7 +31,8 @@ import {
 	StartActionAttempt,
 	type AppearanceAction,
 	type AppearanceActionProcessingResult,
-	type CharacterModifierInstanceClientData,
+	type CharacterRestrictionsManager,
+	type GameLogicModifierInstanceServer,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import promClient from 'prom-client';
@@ -89,6 +92,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			characterModifierReorder: this.handleCharacterModifierReorder.bind(this),
 			characterModifierDelete: this.handleCharacterModifierDelete.bind(this),
 			characterModifierConfigure: this.handleCharacterModifierConfigure.bind(this),
+			characterModifierLock: this.handleCharacterModifierLock.bind(this),
 		});
 	}
 
@@ -634,13 +638,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		// Check that the source character is allowed to get this data
-		let modifierInstance: CharacterModifierInstanceClientData | null | undefined;
+		let modifierInstance: GameLogicModifierInstanceServer | null | undefined;
 		const checkResult = client.character.checkAction((ctx) => {
 			modifierInstance = targetCharacter.gameLogicCharacter.characterModifiers.getModifier(modifier);
 			if (modifierInstance == null)
 				return ctx.invalid();
 
-			return CharacterModifierActionCheckModify(ctx, target, modifierInstance.type);
+			return CharacterModifierActionCheckModify(ctx, target, modifierInstance);
 		});
 
 		if (!checkResult.valid) {
@@ -673,6 +677,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			result: 'ok',
 		};
 	}
+
 	private handleCharacterModifierConfigure({ target, modifier, config }: IClientShardArgument['characterModifierConfigure'], client: ClientConnection): IClientShardNormalResult['characterModifierConfigure'] {
 		if (!client.character)
 			throw new BadMessageError();
@@ -687,13 +692,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		// Check that the source character is allowed to get this data
-		let modifierInstance: CharacterModifierInstanceClientData | null | undefined;
+		let modifierInstance: GameLogicModifierInstanceServer | null | undefined;
 		const checkResult = client.character.checkAction((ctx) => {
 			modifierInstance = targetCharacter.gameLogicCharacter.characterModifiers.getModifier(modifier);
 			if (modifierInstance == null)
 				return ctx.invalid();
 
-			return CharacterModifierActionCheckModify(ctx, target, modifierInstance.type);
+			return CharacterModifierActionCheckModify(ctx, target, modifierInstance);
 		});
 
 		if (!checkResult.valid) {
@@ -710,16 +715,27 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (result === true) {
 			// Send a chat notification if editing modifiers on someone else
 			if (client.character.id !== target) {
+				const character: ActionHandlerMessageTargetCharacter = {
+					type: 'character',
+					id: client.character.id,
+				};
 				const originalName = modifierInstance.name || CHARACTER_MODIFIER_TYPE_DEFINITION[modifierInstance.type].visibleName;
 				const newName = config.name != null ? (config.name || CHARACTER_MODIFIER_TYPE_DEFINITION[modifierInstance.type].visibleName) : originalName;
 
 				if (config.conditions != null || config.config != null) {
 					space.handleActionMessage({
 						id: 'characterModifierChange',
-						character: {
-							type: 'character',
-							id: client.character.id,
+						character,
+						sendTo: [target],
+						dictionary: {
+							'MODIFIER_NAME': originalName,
 						},
+					});
+				}
+				if (config.lockExceptions != null) {
+					space.handleActionMessage({
+						id: 'characterModifierLockExceptionsChange',
+						character,
 						sendTo: [target],
 						dictionary: {
 							'MODIFIER_NAME': originalName,
@@ -729,10 +745,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				if (config.name != null && config.name !== modifierInstance.name) {
 					space.handleActionMessage({
 						id: 'characterModifierRename',
-						character: {
-							type: 'character',
-							id: client.character.id,
-						},
+						character,
 						sendTo: [target],
 						dictionary: {
 							'MODIFIER_NAME_OLD': originalName,
@@ -743,10 +756,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				if (config.enabled != null && config.enabled !== modifierInstance.enabled) {
 					space.handleActionMessage({
 						id: config.enabled ? 'characterModifierEnable' : 'characterModifierDisable',
-						character: {
-							type: 'character',
-							id: client.character.id,
-						},
+						character,
 						sendTo: [target],
 						dictionary: {
 							'MODIFIER_NAME': newName,
@@ -771,6 +781,130 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					problems: [
 						{ result: 'invalidAction' },
 					],
+					canPrompt: false,
+				};
+		}
+		AssertNever(result);
+	}
+
+	private handleCharacterModifierLock({ target, modifier, action }: IClientShardArgument['characterModifierLock'], client: ClientConnection): IClientShardNormalResult['characterModifierLock'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		// Find the target
+		const space = client.character.getOrLoadSpace();
+		const targetCharacter = space.getCharacterById(target);
+		if (targetCharacter == null) {
+			return {
+				result: 'characterNotFound',
+			};
+		}
+
+		// Check that the source character is allowed to do this action
+		let modifierInstance: GameLogicModifierInstanceServer | null | undefined;
+		let player: CharacterRestrictionsManager | undefined;
+		const checkResult = client.character.checkAction((ctx) => {
+			player = ctx.getPlayerRestrictionManager();
+			modifierInstance = targetCharacter.gameLogicCharacter.characterModifiers.getModifier(modifier);
+			if (modifierInstance == null)
+				return ctx.invalid();
+
+			return CharacterModifierActionCheckLockModify(ctx, target, modifierInstance, action);
+		});
+
+		if (!checkResult.valid) {
+			return {
+				result: 'failure',
+				problems: checkResult.problems.slice(),
+				canPrompt: checkResult.prompt === target,
+			};
+		}
+
+		Assert(modifierInstance != null);
+		Assert(player != null);
+		const result = targetCharacter.gameLogicCharacter.characterModifiers.doLockAction(
+			modifier,
+			{
+				player,
+				isSelfAction: target === player.appearance.id,
+				executionContext: 'act',
+			},
+			action,
+		);
+
+		if (result.result === 'ok') {
+			// Send a chat notification if editing modifiers on someone else
+			if (client.character.id !== target) {
+				const character: ActionHandlerMessageTargetCharacter = {
+					type: 'character',
+					id: client.character.id,
+				};
+				const name = modifierInstance.name || CHARACTER_MODIFIER_TYPE_DEFINITION[modifierInstance.type].visibleName;
+
+				switch (action.action) {
+					case 'addLock':
+						space.handleActionMessage({
+							id: 'characterModifierLockAdd',
+							character,
+							sendTo: [target],
+							dictionary: {
+								'MODIFIER_NAME': name,
+								'LOCK_TYPE': CHARACTER_MODIFIER_LOCK_DEFINITIONS[action.lockType].name,
+							},
+						});
+						break;
+					case 'removeLock':
+						space.handleActionMessage({
+							id: 'characterModifierLockAdd',
+							character,
+							sendTo: [target],
+							dictionary: {
+								'MODIFIER_NAME': name,
+							},
+						});
+						break;
+					case 'lockAction':
+						switch (action.lockAction.action) {
+							case 'lock':
+								space.handleActionMessage({
+									id: 'characterModifierLockLock',
+									character,
+									sendTo: [target],
+									dictionary: {
+										'MODIFIER_NAME': name,
+									},
+								});
+								break;
+							case 'unlock':
+								space.handleActionMessage({
+									id: 'characterModifierLockUnlock',
+									character,
+									sendTo: [target],
+									dictionary: {
+										'MODIFIER_NAME': name,
+									},
+								});
+								break;
+							case 'showPassword':
+								// No message for show password
+								break;
+							default:
+								AssertNever(action.lockAction);
+						}
+						break;
+					default:
+						AssertNever(action);
+				}
+			}
+
+			return result;
+		}
+
+		switch (result.result) {
+			case 'failure':
+				return {
+					result: 'failure',
+					problems: result.problems,
 					canPrompt: false,
 				};
 		}

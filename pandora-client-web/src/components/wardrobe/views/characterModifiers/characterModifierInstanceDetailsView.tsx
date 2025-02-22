@@ -6,6 +6,7 @@ import {
 	CharacterModifierActionCheckReorder,
 	CharacterModifierNameSchema,
 	CharacterModifierTemplateSchema,
+	GameLogicModifierInstanceClient,
 	GetLogger,
 	LIMIT_CHARACTER_MODIFIER_NAME_LENGTH,
 	MakeCharacterModifierTemplateFromClientData,
@@ -46,7 +47,11 @@ interface WardrobeCharacterModifierInstanceDetailsViewProps {
 }
 
 export function WardrobeCharacterModifierInstanceDetailsView({ instance, unfocus, ...props }: WardrobeCharacterModifierInstanceDetailsViewProps): ReactElement {
-	if (instance == null) {
+	const loadedInstance = useMemo((): GameLogicModifierInstanceClient | null => (
+		instance != null ? (new GameLogicModifierInstanceClient(instance)) : null
+	), [instance]);
+
+	if (loadedInstance == null) {
 		return (
 			<div className='inventoryView wardrobeModifierInstanceDetails'>
 				<div className='toolbar'>
@@ -65,15 +70,16 @@ export function WardrobeCharacterModifierInstanceDetailsView({ instance, unfocus
 	return (
 		<CheckedInstanceDetails
 			{ ...props }
-			instance={ instance }
+			instance={ loadedInstance }
 			unfocus={ unfocus }
 		/>
 	);
 }
 
-function CheckedInstanceDetails({ character, instance, unfocus }: WardrobeCharacterModifierInstanceDetailsViewProps & {
-	instance: CharacterModifierInstanceClientData;
-}): ReactElement {
+type ModifierInstanceDetailCheckedProps = Omit<WardrobeCharacterModifierInstanceDetailsViewProps, 'instance'> & {
+	instance: GameLogicModifierInstanceClient;
+};
+function CheckedInstanceDetails({ character, instance, unfocus }: ModifierInstanceDetailCheckedProps): ReactElement {
 	const { actions, globalState } = useWardrobeActionContext();
 	const shard = useShardConnector();
 	const typeDefinition = CHARACTER_MODIFIER_TYPE_DEFINITION[instance.type];
@@ -82,8 +88,8 @@ function CheckedInstanceDetails({ character, instance, unfocus }: WardrobeCharac
 
 	const checkInitial = useMemo(() => {
 		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
-		return CharacterModifierActionCheckModify(processingContext, character.id, instance.type);
-	}, [actions, globalState, character, instance.type]);
+		return CharacterModifierActionCheckModify(processingContext, character.id, instance);
+	}, [actions, globalState, character, instance]);
 	const check = useCheckAddPermissions(checkInitial);
 
 	const [requestPermissions, processingPermissionRequest] = useWardrobePermissionRequestCallback();
@@ -343,7 +349,7 @@ function ModifierInstanceNameInput({ modifierTypeVisibleName, value, onChange }:
 
 function ModifierInstanceReorderButton({ character, instance, shift, children }: ChildrenProps & {
 	character: ICharacter;
-	instance: CharacterModifierInstanceClientData;
+	instance: GameLogicModifierInstanceClient;
 	shift: number;
 }): ReactElement {
 	const { actions, globalState } = useWardrobeActionContext();
@@ -420,7 +426,7 @@ function ModifierInstanceReorderButton({ character, instance, shift, children }:
 
 function ModifierInstanceDeleteButton({ character, instance, unfocus }: {
 	character: ICharacter;
-	instance: CharacterModifierInstanceClientData;
+	instance: GameLogicModifierInstanceClient;
 	unfocus: () => void;
 }): ReactElement {
 	const { actions, globalState } = useWardrobeActionContext();
@@ -428,8 +434,8 @@ function ModifierInstanceDeleteButton({ character, instance, unfocus }: {
 
 	const checkInitial = useMemo(() => {
 		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
-		return CharacterModifierActionCheckModify(processingContext, character.id, instance.type);
-	}, [actions, globalState, character, instance.type]);
+		return CharacterModifierActionCheckModify(processingContext, character.id, instance);
+	}, [actions, globalState, character, instance]);
 	const check = useCheckAddPermissions(checkInitial);
 
 	const [requestPermissions, processingPermissionRequest] = useWardrobePermissionRequestCallback();
@@ -495,7 +501,7 @@ function ModifierInstanceDeleteButton({ character, instance, unfocus }: {
 }
 
 function ModifierInstanceExportButton({ instance }: {
-	instance: CharacterModifierInstanceClientData;
+	instance: GameLogicModifierInstanceClient;
 }): ReactElement {
 	const [showExportDialog, setShowExportDialog] = useState(false);
 
@@ -515,7 +521,7 @@ function ModifierInstanceExportButton({ instance }: {
 						exportType='CharacterModifier'
 						exportVersion={ 1 }
 						dataSchema={ CharacterModifierTemplateSchema }
-						data={ MakeCharacterModifierTemplateFromClientData(instance) }
+						data={ MakeCharacterModifierTemplateFromClientData(instance.getClientData()) }
 						closeDialog={ () => setShowExportDialog(false) }
 					/>
 				) : null

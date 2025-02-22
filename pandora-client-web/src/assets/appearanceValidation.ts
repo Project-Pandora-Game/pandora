@@ -60,6 +60,32 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 			default:
 				AssertNever(e);
 		}
+	} else if (result.result === 'characterModifierActionError') {
+		const e = result.reason;
+		switch (e.type) {
+			case 'lockInteractionPrevented': {
+				const actionDescription: Record<'lock' | 'unlock', string> = {
+					lock: 'locked',
+					unlock: 'unlocked',
+				};
+
+				switch (e.reason) {
+					case 'blockSelf':
+						return `The lock on the modifier cannot be ${actionDescription[e.moduleAction]} on yourself.`;
+					case 'noStoredPassword':
+						return `The lock on the modifier cannot be ${actionDescription[e.moduleAction]} because it has no stored password.`;
+					case 'wrongPassword':
+						return `The password is incorrect.`;
+					case 'notAllowed':
+						return `You are not allowed to view the password.`;
+				}
+
+				AssertNever(e);
+				break;
+			}
+			default:
+				AssertNever(e.type);
+		}
 	} else if (result.result === 'restrictionError') {
 		const e = result.restriction;
 		switch (e.type) {
@@ -105,6 +131,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `You cannot do this while in a room device.`;
 			case 'blockedByCharacterModifier':
 				return `Character modifier "${CHARACTER_MODIFIER_TYPE_DEFINITION[e.modifierType].visibleName}" is preventing this action.`;
+			case 'characterModifierLocked':
+				return `The modifier is locked, preventing any changes to it.`;
 			case 'invalid':
 				return '';
 		}

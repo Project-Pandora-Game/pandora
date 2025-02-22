@@ -23,6 +23,7 @@ import { useCurrentTime } from '../../../common/useCurrentTime';
 import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { Column, Row } from '../../common/container/container';
+import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { usePlayerState } from '../../gameContext/playerContextProvider';
 import { WardrobeItemName } from '../itemDetail/wardrobeItemName';
 import { useWardrobeActionContext, type WardrobeExecuteCheckedResult } from '../wardrobeActionContext';
@@ -104,6 +105,7 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeMo
 					</WardrobeActionButton>
 				</Row>
 				<WardrobeLockSlotUnlocked item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
+				<WardrobeLockSlotLockDescription item={ item } moduleName={ moduleName } m={ m } />
 			</Column>
 		);
 	}
@@ -117,6 +119,7 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeMo
 				</Row>
 			</Row>
 			<WardrobeLockSlotLocked item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
+			<WardrobeLockSlotLockDescription item={ item } moduleName={ moduleName } m={ m } />
 		</Column>
 	);
 }
@@ -163,6 +166,23 @@ export function WardrobeModuleTemplateConfigLockSlot({ template, onTemplateChang
 				</button>
 			</Row>
 		</Column>
+	);
+}
+
+function WardrobeLockSlotLockDescription({ m }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement | null {
+	if (!m || !m.lock)
+		return null;
+
+	return (
+		<>
+			{ !m.lock.description ? null : (
+				<FieldsetToggle legend='Show custom lock description' open={ false }>
+					<span className='display-linebreak'>
+						{ m.lock.description }
+					</span>
+				</FieldsetToggle>
+			) }
+		</>
 	);
 }
 

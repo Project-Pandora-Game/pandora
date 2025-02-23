@@ -61,6 +61,7 @@ function ModifierFullInstanceListItem({ modifier, selected = false, onClick, act
 
 	// TODO: const preference = useAssetPreference(asset);
 
+	const hasCustomName = itemDisplayNameType === 'custom' && !!modifier.name && modifier.name !== definition.visibleName;
 	return (
 		<div
 			className={ classNames(
@@ -80,7 +81,9 @@ function ModifierFullInstanceListItem({ modifier, selected = false, onClick, act
 					!modifier.enabled ? 'status-disabled' : active ? 'status-active' : 'status-inactive',
 				) }
 			/>
-			<span className='itemName'>{ ResolveItemDisplayNameType(definition.visibleName, modifier.name || null, itemDisplayNameType) }</span>
+			<span className={ classNames('itemName', hasCustomName ? 'custom' : null) }>
+				{ ResolveItemDisplayNameType(definition.visibleName, modifier.name || null, itemDisplayNameType) }
+			</span>
 		</div>
 	);
 }

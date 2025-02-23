@@ -57,6 +57,8 @@ export function ActionModuleAction({
 					module: action.module,
 				},
 			],
+			item: it,
+			moduleName: action.module,
 			messageHandler: (m) => {
 				processingContext.queueMessage(
 					containerManipulator.makeMessage({

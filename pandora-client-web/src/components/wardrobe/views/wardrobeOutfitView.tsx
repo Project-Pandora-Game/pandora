@@ -620,7 +620,11 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
-			<span className='itemName'>{ visibleName }</span>
+			<span className='itemName'>
+				{
+					itemTemplate.name && itemTemplate.name !== asset.definition.name && itemDisplayNameType === 'custom' ? <i>{ visibleName }</i> : visibleName
+				}
+			</span>
 			<div className='quickActions'>
 				<WardrobeActionButton
 					Element='div'

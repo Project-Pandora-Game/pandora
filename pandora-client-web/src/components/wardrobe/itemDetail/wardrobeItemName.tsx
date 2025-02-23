@@ -13,6 +13,13 @@ export function WardrobeItemName({
 }): React.ReactElement {
 	const { itemDisplayNameType } = useWardrobeContext();
 
+	if (item.name && item.name !== item.asset.definition.name && itemDisplayNameType === 'custom') {
+		return (
+			<i>
+				{ ResolveItemDisplayName(item, itemDisplayNameType) }
+			</i>
+		);
+	}
 	return (
 		<>
 			{ ResolveItemDisplayName(item, itemDisplayNameType) }

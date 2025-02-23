@@ -194,7 +194,20 @@ export class ItemModuleLockSlot<out TProperties = unknown, out TStaticData = unk
 		if (this.lock == null)
 			return null;
 
-		const result = this.lock.lockAction(context, lockAction);
+		const lock = this.lock;
+		const result = lock.lockAction({
+			...context,
+			messageHandler: (message) => {
+				// Add this container step to the message
+				message.itemContainerPath ??= [];
+				message.itemContainerPath?.unshift({ assetId: context.item.asset.id, module: context.moduleName, itemName: context.item.name ?? '' });
+				message.item ??= {
+					assetId: lock.asset.id,
+					itemName: lock.name ?? '',
+				};
+				context.messageHandler(message);
+			},
+		}, lockAction);
 		if (result == null)
 			return result;
 

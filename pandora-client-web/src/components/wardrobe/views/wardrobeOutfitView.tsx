@@ -605,6 +605,7 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 		);
 	}
 
+	const hasCustomName = itemDisplayNameType === 'custom' && !!itemTemplate.name && itemTemplate.name !== asset.definition.name;
 	return (
 		<div
 			tabIndex={ 0 }
@@ -620,10 +621,8 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
-			<span className='itemName'>
-				{
-					itemTemplate.name && itemTemplate.name !== asset.definition.name && itemDisplayNameType === 'custom' ? <i>{ visibleName }</i> : visibleName
-				}
+			<span className={ classNames('itemName', hasCustomName ? 'custom' : null) }>
+				{ visibleName }
 			</span>
 			<div className='quickActions'>
 				<WardrobeActionButton

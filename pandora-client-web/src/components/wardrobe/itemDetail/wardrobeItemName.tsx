@@ -1,29 +1,24 @@
-import React from 'react';
+import classNames from 'classnames';
 import {
 	AssertNever,
 	type Item,
 	type ItemDisplayNameType,
 } from 'pandora-common';
+import type { ReactElement } from 'react';
 import { useWardrobeContext } from '../wardrobeContext';
 
 export function WardrobeItemName({
 	item,
 }: {
 	item: Item;
-}): React.ReactElement {
+}): ReactElement {
 	const { itemDisplayNameType } = useWardrobeContext();
 
-	if (item.name && item.name !== item.asset.definition.name && itemDisplayNameType === 'custom') {
-		return (
-			<i>
-				{ ResolveItemDisplayName(item, itemDisplayNameType) }
-			</i>
-		);
-	}
+	const isCustomName = itemDisplayNameType === 'custom' && !!item.name && item.name !== item.asset.definition.name;
 	return (
-		<>
+		<span className={ classNames('itemName', isCustomName ? 'custom' : null) }>
 			{ ResolveItemDisplayName(item, itemDisplayNameType) }
-		</>
+		</span>
 	);
 }
 

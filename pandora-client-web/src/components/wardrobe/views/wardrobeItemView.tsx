@@ -323,7 +323,7 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
-			<span className='itemName'><WardrobeItemName item={ wornItem } /></span>
+			<WardrobeItemName item={ wornItem } />
 			<div className='quickActions'>
 				{
 					singleItemContainer ? null : (

@@ -502,6 +502,12 @@ $drop-overlay-gap: 0.3em;
 	}
 }
 
+.itemName {
+	&.custom {
+		font-style: italic;
+	}
+}
+
 .wardrobeActionButton {
 	position: relative;
 	@include common.center-flex;

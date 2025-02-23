@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { clamp, first, noop } from 'lodash';
 import {
 	AssertNever,
@@ -408,6 +409,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 		);
 	}
 
+	const hasCustomName = itemDisplayNameType === 'custom' && !!itemTemplate.name && itemTemplate.name !== asset.definition.name;
 	return (
 		<div
 			tabIndex={ 0 }
@@ -420,10 +422,8 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
-			<span className='itemName'>
-				{
-					itemTemplate.name && itemTemplate.name !== asset.definition.name && itemDisplayNameType === 'custom' ? <i>{ visibleName }</i> : visibleName
-				}
+			<span className={ classNames('itemName', hasCustomName ? 'custom' : null) }>
+				{ visibleName }
 			</span>
 			<div className='quickActions'>
 				<button

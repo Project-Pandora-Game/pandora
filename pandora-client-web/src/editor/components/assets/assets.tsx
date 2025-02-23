@@ -5,7 +5,6 @@ import { useForm, Validate } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { useLayerName } from '../../../assets/assetGraphicsCalculations';
-import { useCharacterAppearanceItems } from '../../../character/character';
 import { FormInput } from '../../../common/userInteraction/input/formInput';
 import { Select } from '../../../common/userInteraction/select/select';
 import { Button } from '../../../components/common/button/button';
@@ -28,7 +27,6 @@ export function AssetsUI(): ReactElement {
 	const editor = useEditor();
 	const editorCharacterState = useEditorCharacterState();
 	const view = useAssetManagerEditor().assetTreeView;
-	const items = useCharacterAppearanceItems(editorCharacterState);
 	const editorAssets = useSyncExternalStore((change) => editor.on('modifiedAssetsChange', change), () => editor.getModifiedAssetsList());
 
 	return (
@@ -54,7 +52,7 @@ export function AssetsUI(): ReactElement {
 				</ContextHelpButton>
 			</h3>
 			<ul>
-				{ items.map((item) => <ItemElement key={ item.id } item={ item } />) }
+				{ editorCharacterState.items.map((item) => <ItemElement key={ item.id } item={ item } />) }
 			</ul>
 			<h3>
 				Edited assets

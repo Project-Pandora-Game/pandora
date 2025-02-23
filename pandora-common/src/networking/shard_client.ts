@@ -2,13 +2,12 @@ import { Immutable } from 'immer';
 import { z } from 'zod';
 import type { AssetsDefinitionFile } from '../assets/definitions';
 import { AssetFrameworkGlobalStateClientBundle } from '../assets/state/globalState';
-import { AssetPreferencesPublic, CharacterIdSchema } from '../character';
+import { AssetPreferencesPublic, CharacterIdSchema, CharacterPrivateDataSchema } from '../character';
 import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData';
-import type { CharacterId } from '../character/characterTypes';
-import type { ChatCharacterStatus, IChatMessage } from '../chat/chat';
-import { AppearanceActionSchema } from '../gameLogic';
+import { ChatCharacterStatusSchema, type IChatMessage } from '../chat/chat';
+import { AppearanceActionSchema, CharacterModifierEffectDataSchema } from '../gameLogic';
 import { PermissionConfigSchema, PermissionSetupSchema } from '../gameLogic/permissions/permissionData';
-import { SpaceClientInfo, SpaceId } from '../space/space';
+import { SpaceClientInfoSchema, SpaceIdSchema } from '../space/space';
 import { Satisfies } from '../utility/misc';
 import { ZodCast } from '../validation';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
@@ -20,67 +19,74 @@ export type ICharacterRoomData = ICharacterPublicData & {
 	isOnline: boolean;
 };
 
-export type SpaceLoadData = {
-	id: SpaceId | null;
-	info: SpaceClientInfo;
-	characters: ICharacterRoomData[];
-};
+export const SpaceCharacterModifierEffectDataSchema = z.record(CharacterIdSchema, CharacterModifierEffectDataSchema.array());
+export type SpaceCharacterModifierEffectData = z.infer<typeof SpaceCharacterModifierEffectDataSchema>;
 
-export type GameStateUpdate = {
-	globalState?: AssetFrameworkGlobalStateClientBundle;
-	info?: Partial<SpaceClientInfo>;
-	leave?: CharacterId;
-	join?: ICharacterRoomData;
-	characters?: Record<CharacterId, Partial<ICharacterRoomData>>;
-};
+export const SpaceLoadDataSchema = z.object({
+	id: SpaceIdSchema.nullable(),
+	info: SpaceClientInfoSchema,
+	characters: ZodCast<ICharacterRoomData>().array(),
+	characterModifierEffects: SpaceCharacterModifierEffectDataSchema,
+});
+export type SpaceLoadData = z.infer<typeof SpaceLoadDataSchema>;
 
-export type IShardClientChangeEvents = 'permissions';
+export const GameStateUpdateSchema = z.object({
+	globalState: ZodCast<AssetFrameworkGlobalStateClientBundle>().optional(),
+	info: SpaceClientInfoSchema.partial().optional(),
+	leave: CharacterIdSchema.optional(),
+	join: ZodCast<ICharacterRoomData>().optional(),
+	characters: z.record(CharacterIdSchema, ZodCast<Partial<ICharacterRoomData>>()).optional(),
+	characterModifierEffects: SpaceCharacterModifierEffectDataSchema.optional(),
+});
+export type GameStateUpdate = z.infer<typeof GameStateUpdateSchema>;
+
+export type IShardClientChangeEvents = 'permissions' | 'characterModifiers';
 
 /** Shard->Client messages */
 export const ShardClientSchema = {
 	load: {
-		request: ZodCast<{
-			character: ICharacterPrivateData & ICharacterRoomData;
-			globalState: AssetFrameworkGlobalStateClientBundle;
-			space: SpaceLoadData;
-			assetsDefinition: Immutable<AssetsDefinitionFile>;
-			assetsDefinitionHash: string;
-			assetsSource: string;
-		}>(),
+		request: z.object({
+			character: ZodCast<ICharacterPrivateData & ICharacterRoomData>(),
+			globalState: ZodCast<AssetFrameworkGlobalStateClientBundle>(),
+			space: SpaceLoadDataSchema,
+			assetsDefinition: ZodCast<Immutable<AssetsDefinitionFile>>(),
+			assetsDefinitionHash: z.string(),
+			assetsSource: z.string(),
+		}),
 		response: null,
 	},
 	updateCharacter: {
-		request: ZodCast<Partial<ICharacterPrivateData>>(),
+		request: CharacterPrivateDataSchema.partial(),
 		response: null,
 	},
 	gameStateLoad: {
-		request: ZodCast<{
-			globalState: AssetFrameworkGlobalStateClientBundle;
-			space: SpaceLoadData;
-		}>(),
+		request: z.object({
+			globalState: ZodCast<AssetFrameworkGlobalStateClientBundle>(),
+			space: SpaceLoadDataSchema,
+		}),
 		response: null,
 	},
 	gameStateUpdate: {
-		request: ZodCast<GameStateUpdate>(),
+		request: GameStateUpdateSchema,
 		response: null,
 	},
 	chatMessage: {
-		request: ZodCast<{
-			messages: IChatMessage[];
-		}>(),
+		request: z.object({
+			messages: ZodCast<IChatMessage>().array(),
+		}),
 		response: null,
 	},
 	chatCharacterStatus: {
-		request: ZodCast<{
-			id: CharacterId;
-			status: ChatCharacterStatus;
-		}>(),
+		request: z.object({
+			id: CharacterIdSchema,
+			status: ChatCharacterStatusSchema,
+		}),
 		response: null,
 	},
 	somethingChanged: {
-		request: ZodCast<{
-			changes: IShardClientChangeEvents[];
-		}>(),
+		request: z.object({
+			changes: ZodCast<IShardClientChangeEvents>().array(),
+		}),
 		response: null,
 	},
 	permissionPrompt: {

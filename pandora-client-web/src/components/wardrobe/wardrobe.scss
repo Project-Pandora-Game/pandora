@@ -45,8 +45,8 @@ $header-height: 2em;
 				align-items: flex-start;
 				pointer-events: none;
 
-				>* {
-					pointer-events: auto;
+				&.solidOverlay {
+					background: common.$theme-wardrobe-preview-overlay;
 				}
 
 				.iconButton {
@@ -307,6 +307,11 @@ $drop-overlay-gap: 0.3em;
 		.grid {
 			grid-template-columns: repeat(4, 1fr);
 		}
+	}
+
+	.description {
+		white-space: pre-wrap;
+		overflow-wrap: break-word;
 	}
 
 	>.fieldset-toggle {

@@ -36,16 +36,6 @@
 		font-weight: 600;
 	}
 
-	.FormFieldError {
-		font-size: 0.85em;
-		color: common.$theme-form-validationmessage-text;
-		margin-bottom: 0.8em;
-
-		&.empty:before {
-			content: '\200b';
-		}
-	}
-
 	.FormLink {
 		font-size: 0.95rem;
 		margin-top: 1em;
@@ -53,5 +43,15 @@
 
 	.warning-box {
 		margin: 0 0 1.5em 0;
+	}
+}
+
+.FormFieldError {
+	font-size: 0.85em;
+	color: common.$theme-form-validationmessage-text;
+	margin-bottom: 0.8em;
+
+	&.empty:before {
+		content: '\200b';
 	}
 }

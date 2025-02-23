@@ -23,6 +23,7 @@ import { useCurrentTime } from '../../../common/useCurrentTime';
 import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { Column, Row } from '../../common/container/container';
+import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { usePlayerState } from '../../gameContext/playerContextProvider';
 import { WardrobeItemName } from '../itemDetail/wardrobeItemName';
 import { useWardrobeActionContext, type WardrobeExecuteCheckedResult } from '../wardrobeActionContext';
@@ -104,6 +105,7 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeMo
 					</WardrobeActionButton>
 				</Row>
 				<WardrobeLockSlotUnlocked item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
+				<WardrobeLockSlotLockDescription lock={ m.lock } />
 			</Column>
 		);
 	}
@@ -117,6 +119,7 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeMo
 				</Row>
 			</Row>
 			<WardrobeLockSlotLocked item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
+			<WardrobeLockSlotLockDescription lock={ m.lock } />
 		</Column>
 	);
 }
@@ -166,11 +169,27 @@ export function WardrobeModuleTemplateConfigLockSlot({ template, onTemplateChang
 	);
 }
 
+function WardrobeLockSlotLockDescription({ lock }: {
+	lock: ItemLock;
+}): ReactElement {
+	return (
+		<>
+			{ !lock.description ? null : (
+				<FieldsetToggle legend='Show custom lock description' open={ false }>
+					<span className='display-linebreak'>
+						{ lock.description }
+					</span>
+				</FieldsetToggle>
+			) }
+		</>
+	);
+}
+
 function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
 	const { targetSelector } = useWardrobeContext();
 	const { actions } = useWardrobeActionContext();
-	const { player, playerState } = usePlayerState();
-	const playerRestrictionManager = useCharacterRestrictionManager(player, playerState, actions.spaceContext);
+	const { player, globalState } = usePlayerState();
+	const playerRestrictionManager = useCharacterRestrictionManager(player, globalState, actions.spaceContext);
 
 	const now = useCurrentTime();
 	const lockedText = useMemo(() => {

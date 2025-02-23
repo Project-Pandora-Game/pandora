@@ -43,6 +43,8 @@ export const EDITOR_SPACE_CONTEXT = {
 		autoAdmin: true,
 		disableSafemodeCooldown: true,
 	},
+	// Editor has no character modifiers
+	getCharacterModifierEffects: () => EMPTY_ARRAY,
 } as const satisfies Immutable<ActionSpaceContext>;
 
 export function EditorWardrobeContextProvider({ children }: { children: ReactNode; }): ReactElement {
@@ -198,7 +200,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		actionPreviewState,
 		showExtraActionButtons: true,
 		showHoverPreview: true,
-		itemDisplayNameType: 'custom_with_original_in_brackets',
+		itemDisplayNameType: 'custom',
 	}), [character, assetList, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
 
 	return (

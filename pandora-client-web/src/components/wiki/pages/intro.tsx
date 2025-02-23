@@ -168,18 +168,20 @@ export function WikiIntroduction(): ReactElement {
 
 			That's not all of course! We have many exciting features planned for the future. In no particular order:
 			<ul>
-				<li>Adding new interactive tutorials to enhance the new user experience</li>
+				<li>Character modifiers - putting effects and rules on characters with deeply customizable activation conditions and lock support</li>
+				<li>Adding more joints to the arms and legs of the Pandora body to allow more detailed posing</li>
 				<li>Expanding the notification options</li>
-				<li>Further improved UI with focus on improved usability and potentially more design themes</li>
-				<li>More customization options for items, for instance more ways to get out of them</li>
-				<li>Allowing spaces to contain several connected rooms with a user-defined layout and ways to move from room to room</li>
+				<li>More customization options for items, for instance creating items with their configuration permanently frozen</li>
+				<li>Further improved UI with focus on better usability and potentially more design themes</li>
 				<li>Spectator mode for spaces that will help to not disrupt the chat during plays and that can be managed by space admins</li>
 				<li>More space features that allow space admins to modify the space-wide rules to customize the experience for everyone inside</li>
-				<li>Character rules</li>
 				<li>Room templates</li>
-				<li>Key system for locks</li>
+				<li>Allowing spaces to contain several connected rooms with a user-defined layout and ways to move from room to room</li>
+				<li>Key system for locks and more lock types in general</li>
 				<li>Visible locks on worn items with different lock designs</li>
 				<li>Showing and managing relationships between characters</li>
+				<li>Offline chat history - not missing any chat messages during an account disconnect for several minutes.</li>
+				<li>Memories - being able to save full play scenes with graphics on your local device and to replay them as often as you like</li>
 				<li>More supporting features for roleplaying, for instance a new space role "storyteller" that can orchestrate a prepared roleplay without a physical presence in any room of the space</li>
 				... and many more, which can be found by looking at Pandora's issue list on <ExternalLink href='https://github.com/Project-Pandora-Game/pandora/issues'>GitHub</ExternalLink>
 			</ul>

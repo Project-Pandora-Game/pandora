@@ -118,8 +118,8 @@ importers:
         specifier: 2.2.0
         version: 2.2.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react-rnd:
-        specifier: 10.4.14
-        version: 10.4.14(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: 10.5.1
+        version: 10.5.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react-router:
         specifier: 6.29.0
         version: 6.29.0(react@19.0.0)
@@ -5728,8 +5728,8 @@ packages:
     resolution: {integrity: sha512-y3bGgqKj3QBdxLbLkomlohkvsA8gdAiUQlSBJnBhfn+BPxg4bc62d8TcBW15wavDfgexCgccckhcZvywyQYPOw==}
     hasBin: true
 
-  re-resizable@6.10.3:
-    resolution: {integrity: sha512-zvWb7X3RJMA4cuSrqoxgs3KR+D+pEXnGrD2FAD6BMYAULnZsSF4b7AOVyG6pC3VVNVOtlagGDCDmZSwWLjjBBw==}
+  re-resizable@6.11.0:
+    resolution: {integrity: sha512-XwaQX5Yk+JEvyGwX1nlLWaZUDr+8gz+Joys5lF4i+7Jy33wShJ0VYQUoFceiSKqUnjVEEz+zf3YkCTyT04R3AA==}
     peerDependencies:
       react: ^16.13.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.13.1 || ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -5782,8 +5782,8 @@ packages:
       react: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.0.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  react-rnd@10.4.14:
-    resolution: {integrity: sha512-NLGc3IymymumPfHy3DXiHNIMOiTlj6xBNb2boHqrtwCgYDasNarpg8tdUY36JlJbrs0E4BvjYBkfEGqUPBsukg==}
+  react-rnd@10.5.1:
+    resolution: {integrity: sha512-jzIdsDywCnrPETLkMnodawOtbL3VmDcym4xgpwW8ANxIj0cDyRAzWDBYdfjK3KzVl06eNLWrB5CHBrW96lLhQw==}
     peerDependencies:
       react: '>=16.3.0'
       react-dom: '>=16.3.0'
@@ -13373,7 +13373,7 @@ snapshots:
       minimist: 1.2.8
       strip-json-comments: 2.0.1
 
-  re-resizable@6.10.3(patch_hash=9ca05a4a2c31cc673475b2e5f192a46f3380bd041c24ced6dec6cd2d7fa2e133)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+  re-resizable@6.11.0(patch_hash=9ca05a4a2c31cc673475b2e5f192a46f3380bd041c24ced6dec6cd2d7fa2e133)(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
@@ -13417,9 +13417,9 @@ snapshots:
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
 
-  react-rnd@10.4.14(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
+  react-rnd@10.5.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
-      re-resizable: 6.10.3(patch_hash=9ca05a4a2c31cc673475b2e5f192a46f3380bd041c24ced6dec6cd2d7fa2e133)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      re-resizable: 6.11.0(patch_hash=9ca05a4a2c31cc673475b2e5f192a46f3380bd041c24ced6dec6cd2d7fa2e133)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react: 19.0.0
       react-dom: 19.0.0(react@19.0.0)
       react-draggable: 4.4.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)

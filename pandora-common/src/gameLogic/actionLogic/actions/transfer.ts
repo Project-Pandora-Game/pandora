@@ -90,10 +90,7 @@ export function ActionTransferItem({
 		processingContext.queueMessage(
 			sourceContainerManipulator.makeMessage({
 				id: !manipulatorContainer ? 'itemRemove' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
-				item: {
-					assetId: item.asset.id,
-					itemName: item.name ?? '',
-				},
+				item: item.getChatDescriptor(),
 			}),
 		);
 	}
@@ -102,10 +99,7 @@ export function ActionTransferItem({
 		processingContext.queueMessage(
 			targetContainerManipulator.makeMessage({
 				id: !manipulatorContainer ? 'itemAdd' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
-				item: {
-					assetId: removedItems[0].asset.id,
-					itemName: removedItems[0].name ?? '',
-				},
+				item: removedItems[0].getChatDescriptor(),
 			}),
 		);
 	}

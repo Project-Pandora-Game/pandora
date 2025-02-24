@@ -62,10 +62,7 @@ export function ActionModuleAction({
 			messageHandler: (m) => {
 				processingContext.queueMessage(
 					containerManipulator.makeMessage({
-						item: {
-							assetId: it.asset.id,
-							itemName: it.name ?? '',
-						},
+						item: it.getChatDescriptor(),
 						...m,
 					}),
 				);

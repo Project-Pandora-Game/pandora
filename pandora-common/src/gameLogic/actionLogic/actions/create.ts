@@ -90,14 +90,8 @@ export function ActionCreate({
 		processingContext.queueMessage(
 			manipulator.makeMessage({
 				id: 'itemReplace',
-				item: {
-					assetId: item.asset.id,
-					itemName: item.name ?? '',
-				},
-				itemPrevious: {
-					assetId: removed[0].asset.id,
-					itemName: removed[0].name ?? '',
-				},
+				item: item.getChatDescriptor(),
+				itemPrevious: removed[0].getChatDescriptor(),
 			}),
 		);
 	} else {
@@ -105,10 +99,7 @@ export function ActionCreate({
 		processingContext.queueMessage(
 			manipulator.makeMessage({
 				id: (!manipulatorContainer && targetManipulator.isCharacter()) ? 'itemAddCreate' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemAttach' : 'itemStore',
-				item: {
-					assetId: item.asset.id,
-					itemName: item.name ?? '',
-				},
+				item: item.getChatDescriptor(),
 			}),
 		);
 	}

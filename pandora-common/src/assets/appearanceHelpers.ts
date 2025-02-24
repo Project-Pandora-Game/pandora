@@ -173,7 +173,7 @@ class AppearanceContainerManipulator extends AppearanceManipulator {
 
 		message.itemContainerPath ??= [];
 		if (item != null) {
-			message.itemContainerPath?.unshift({ assetId: item.asset.id, module: this._module, itemName: item.name ?? '' })
+			message.itemContainerPath?.unshift({ assetId: item.asset.id, module: this._module, itemName: item.name ?? '' });
 		}
 
 		return this._base.makeMessage(message);

@@ -1,15 +1,16 @@
 import type { Immutable } from 'immer';
 import {
+	AssertNever,
 	AssetId,
 	AssignPronouns,
 	CHAT_ACTIONS,
 	CHAT_ACTIONS_FOLDED_EXTRA,
 	ChatActionDictionaryMetaEntry,
 	IChatMessageAction,
-	IChatMessageBase,
 	IChatSegment,
-	MessageSubstitute,
 	SpaceId,
+	type IChatMessageChat,
+	type IChatMessageDeleted,
 	type ItemDisplayNameType,
 } from 'pandora-common';
 import {
@@ -20,23 +21,40 @@ import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDet
 import { RenderedLink } from '../../screens/spaceJoin/spaceJoin';
 import { ChatParser } from './chatParser';
 
-export type IChatMessageProcessed<T extends IChatMessageBase = IChatMessageBase> = T & {
+export type IChatDeletedMessageProcessed = IChatMessageDeleted & {
+	/** Time the message was sent, guaranteed to be unique */
+	time: number;
+	spaceId: SpaceId | null;
+};
+
+export type IChatNormalMessageProcessed = IChatMessageChat & {
 	/** Time the message was sent, guaranteed to be unique */
 	time: number;
 	spaceId: SpaceId | null;
 	edited?: boolean;
 };
 
-export function IsActionMessage(message: IChatMessageProcessed): message is IChatMessageProcessed<IChatMessageAction> {
+export type IChatActionMessageProcessed = Omit<IChatMessageAction, 'dictionary'> & {
+	/** Time the message was sent, guaranteed to be unique */
+	time: number;
+	spaceId: SpaceId | null;
+	/** Identical action messages following one after another get combined into a single message to reduce spam. */
+	repetitions?: number;
+	dictionary?: Record<string, string | ReactElement>;
+};
+
+export type IChatMessageProcessed = IChatNormalMessageProcessed | IChatDeletedMessageProcessed | IChatActionMessageProcessed;
+
+export function IsActionMessage(message: IChatMessageProcessed): message is IChatActionMessageProcessed {
 	return message.type === 'action' || message.type === 'serverMessage';
 }
 
 function ActionMessagePrepareDictionary(
-	message: IChatMessageProcessed<IChatMessageAction>,
+	message: IChatActionMessageProcessed,
 	assetManager: AssetManagerClient,
 	itemDisplayNameType: ItemDisplayNameType,
-): IChatMessageProcessed<IChatMessageAction> {
-	const metaDictionary: Partial<Record<ChatActionDictionaryMetaEntry, string>> = {};
+): IChatActionMessageProcessed {
+	const metaDictionary: Partial<Record<ChatActionDictionaryMetaEntry, string | ReactElement>> = {};
 
 	const source = message.data?.character;
 	const target = message.data?.target ?? source;
@@ -100,8 +118,8 @@ function ActionMessagePrepareDictionary(
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
 					`${asset} in the room inventory`;
 			} else {
-				metaDictionary.ITEM_CONTAINER_SIMPLE = `${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${asset}`;
-				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${asset}`;
+				metaDictionary.ITEM_CONTAINER_SIMPLE = <>{ metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s` } { asset }</>;
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = <>{ metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s` } { asset }</>;
 			}
 		} else {
 			const assetFirst = describeAsset(itemContainerPath[0]);
@@ -111,8 +129,8 @@ function ActionMessagePrepareDictionary(
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
 					`the ${assetLast} in ${assetFirst} in the room inventory`;
 			} else {
-				metaDictionary.ITEM_CONTAINER_SIMPLE = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s`} ${assetFirst}`;
-				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = `the ${assetLast} in ${metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s`} ${assetFirst}`;
+				metaDictionary.ITEM_CONTAINER_SIMPLE = <>the { assetLast } in { metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s` } { assetFirst }</>;
+				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = <>the { assetLast } in { metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s` } { assetFirst }</>;
 			}
 		}
 	}
@@ -159,7 +177,7 @@ export function RenderChatPart([type, contents]: Immutable<IChatSegment>, index:
 	}
 }
 
-function GetActionText(action: IChatMessageProcessed<IChatMessageAction>, assetManager: AssetManagerClient): string | undefined {
+function GetActionText(action: IChatActionMessageProcessed, assetManager: AssetManagerClient): string | undefined {
 	if (action.customText != null)
 		return action.customText;
 
@@ -206,23 +224,73 @@ function GetActionText(action: IChatMessageProcessed<IChatMessageAction>, assetM
 	return defaultMessage;
 }
 
-export function RenderActionContent(action: IChatMessageProcessed<IChatMessageAction>, assetManager: AssetManagerClient, itemDisplayNameType: ItemDisplayNameType): [IChatSegment[], IChatSegment[] | null] {
-	// Append implicit dictionary entries
-	action = ActionMessagePrepareDictionary(action, assetManager, itemDisplayNameType);
-	let actionText = GetActionText(action, assetManager);
-	if (actionText === undefined) {
-		return [ChatParser.parseStyle(`( ERROR UNKNOWN ACTION '${action.id}' )`), null];
-	}
-	// Server messages can have extra info
-	let actionExtraText = action.type === 'serverMessage' ? CHAT_ACTIONS_FOLDED_EXTRA.get(action.id) : undefined;
-	if (action.dictionary) {
-		actionText = MessageSubstitute(actionText, action.dictionary);
-		if (actionExtraText !== undefined) {
-			actionExtraText = MessageSubstitute(actionExtraText, action.dictionary);
+export function RenderActionContentPart(originalMessage: string, substitutions: Readonly<Record<string, string | ReactElement>> | undefined): ReactElement {
+	const message: (string | ReactElement)[] = [originalMessage];
+
+	// Do replacements
+	if (substitutions != null) {
+		for (const [key, value] of Object
+			.entries(substitutions)
+			// Do the longest substitutions first to avoid small one replacing part of large one
+			.sort(([a], [b]) => b.length - a.length)
+		) {
+			for (let i = message.length - 1; i >= 0; i--) {
+				// Replace keys with values by splitting the original chunk with the key and "joining" with the value
+				const original = message[i];
+				if (typeof original === 'string') {
+					const split: (string | ReactElement)[] = original.split(key);
+					if (split.length > 1) {
+						for (let j = split.length - 1; j >= 1; j--) {
+							split.splice(j, 0, value);
+						}
+						message.splice(i, 1, ...split);
+					}
+				}
+			}
 		}
 	}
-	if (action.type === 'action' && actionText) {
-		actionText = `(${actionText})`;
+
+	return <>{ message }</>;
+}
+
+export function RenderActionContent(
+	action: IChatActionMessageProcessed,
+	assetManager: AssetManagerClient,
+	itemDisplayNameType: ItemDisplayNameType,
+): [content: ReactElement | null, extraContent: ReactElement | null] {
+	// Append implicit dictionary entries
+	action = ActionMessagePrepareDictionary(action, assetManager, itemDisplayNameType);
+	let actionText: string | ReactElement | undefined = GetActionText(action, assetManager);
+	if (actionText === undefined) {
+		return [
+			<span key='actionError'>( ERROR UNKNOWN ACTION '{ action.id }' )</span>,
+			null,
+		];
 	}
-	return [ChatParser.parseStyle(actionText), actionExtraText ? ChatParser.parseStyle(actionExtraText) : null];
+	// If the message is set to empty, don't show anyting
+	if (!actionText) {
+		return [null, null];
+	}
+
+	actionText = RenderActionContentPart(actionText, action.dictionary);
+
+	if (action.type === 'action') {
+		actionText = <>({ actionText })</>;
+		return [
+			actionText,
+			null,
+		];
+	} else if (action.type === 'serverMessage') {
+		// Server messages can have extra info
+		let actionExtraText: string | ReactElement | undefined = CHAT_ACTIONS_FOLDED_EXTRA.get(action.id);
+		if (actionExtraText !== undefined) {
+			actionExtraText = RenderActionContentPart(actionExtraText, action.dictionary);
+		}
+		return [
+			actionText,
+			actionExtraText ?? null,
+		];
+	}
+
+	AssertNever(action.type);
 }

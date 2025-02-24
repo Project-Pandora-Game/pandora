@@ -57,10 +57,7 @@ export function ActionDelete({
 	processingContext.queueMessage(
 		manipulator.makeMessage({
 			id: (!manipulatorContainer && targetManipulator.isCharacter()) ? 'itemRemoveDelete' : manipulatorContainer?.contentsPhysicallyEquipped ? 'itemDetach' : 'itemUnload',
-			item: {
-				assetId: removedItems[0].asset.id,
-				itemName: removedItems[0].name ?? '',
-			},
+			item: removedItems[0].getChatDescriptor(),
 		}),
 	);
 

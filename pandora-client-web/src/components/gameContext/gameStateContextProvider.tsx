@@ -1,4 +1,4 @@
-import { Immutable } from 'immer';
+import { freeze, Immutable } from 'immer';
 import {
 	ActionSpaceContext,
 	AssetFrameworkCharacterState,
@@ -40,6 +40,7 @@ import {
 	type AppearanceAction,
 	type IChatMessageActionTargetCharacter,
 	type IClientShardPromiseResult,
+	type ItemId,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { z } from 'zod';
@@ -662,6 +663,46 @@ export function useRoomInventoryItems(context: GameState): readonly Item[] {
 	const roomInventory = useRoomInventory(context);
 
 	return useMemo(() => (roomInventory?.getAllItems() ?? []), [roomInventory]);
+}
+
+const FindItemByIdCache = new WeakMap<AssetFrameworkGlobalState, Map<ItemId, readonly Item[]>>();
+export function FindItemById(globalState: AssetFrameworkGlobalState, id: ItemId): readonly Item[] {
+	let cache = FindItemByIdCache.get(globalState);
+	if (cache == null) {
+		cache = new Map();
+		FindItemByIdCache.set(globalState, cache);
+	}
+
+	const cachedResult = cache.get(id);
+	if (cachedResult != null) {
+		return cachedResult;
+	}
+	const result: Item[] = [];
+
+	function processContainer(items: readonly Item[]): void {
+		for (const item of items) {
+			if (item.id === id) {
+				result.push(item);
+			}
+
+			for (const module of item.getModules().values()) {
+				processContainer(module.getContents());
+			}
+		}
+	}
+
+	for (const character of globalState.characters.values()) {
+		processContainer(character.items);
+	}
+	processContainer(globalState.room.items);
+
+	freeze(result);
+	cache.set(id, result);
+	return result;
+}
+
+export function useStateFindItemById(globalState: AssetFrameworkGlobalState, id: ItemId): readonly Item[] {
+	return useMemo(() => FindItemById(globalState, id), [globalState, id]);
 }
 
 export function IsSpaceAdmin(data: Immutable<SpaceClientInfo>, account: Nullable<Partial<IDirectoryAccountInfo>>): boolean {

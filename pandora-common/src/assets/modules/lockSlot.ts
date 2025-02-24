@@ -201,10 +201,7 @@ export class ItemModuleLockSlot<out TProperties = unknown, out TStaticData = unk
 				// Add this container step to the message
 				message.itemContainerPath ??= [];
 				message.itemContainerPath?.unshift({ assetId: context.item.asset.id, module: context.moduleName, itemName: context.item.name ?? '' });
-				message.item ??= {
-					assetId: lock.asset.id,
-					itemName: lock.name ?? '',
-				};
+				message.item ??= lock.getChatDescriptor();
 				context.messageHandler(message);
 			},
 		}, lockAction);

@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import {
 	AssertNever,
@@ -9,6 +10,8 @@ import {
 	IChatMessageAction,
 	IChatSegment,
 	SpaceId,
+	type AssetManager,
+	type IChatMessageActionItem,
 	type IChatMessageChat,
 	type IChatMessageDeleted,
 	type ItemDisplayNameType,
@@ -16,7 +19,7 @@ import {
 import {
 	ReactElement,
 } from 'react';
-import { AssetManagerClient } from '../../../assets/assetManager';
+import { useGameState, useGlobalState, useStateFindItemById } from '../../../components/gameContext/gameStateContextProvider';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName';
 import { RenderedLink } from '../../screens/spaceJoin/spaceJoin';
 import { ChatParser } from './chatParser';
@@ -51,7 +54,7 @@ export function IsActionMessage(message: IChatMessageProcessed): message is ICha
 
 function ActionMessagePrepareDictionary(
 	message: IChatActionMessageProcessed,
-	assetManager: AssetManagerClient,
+	assetManager: AssetManager,
 	itemDisplayNameType: ItemDisplayNameType,
 ): IChatActionMessageProcessed {
 	const metaDictionary: Partial<Record<ChatActionDictionaryMetaEntry, string | ReactElement>> = {};
@@ -63,21 +66,19 @@ function ActionMessagePrepareDictionary(
 
 	if (source) {
 		const { id, name, pronoun } = source;
-		const nameEscaped = ChatParser.escapeStyle(name);
-		metaDictionary.SOURCE_CHARACTER_NAME = nameEscaped;
+		metaDictionary.SOURCE_CHARACTER_NAME = name;
 		metaDictionary.SOURCE_CHARACTER_ID = id;
-		metaDictionary.SOURCE_CHARACTER = `${nameEscaped} (${id})`;
-		metaDictionary.SOURCE_CHARACTER_POSSESSIVE = `${nameEscaped}'s (${id})`;
+		metaDictionary.SOURCE_CHARACTER = `${name} (${id})`;
+		metaDictionary.SOURCE_CHARACTER_POSSESSIVE = `${name}'s (${id})`;
 		AssignPronouns('SOURCE_CHARACTER_PRONOUN', pronoun, metaDictionary);
 	}
 
 	if (target?.type === 'character') {
 		const { id, name, pronoun } = target;
-		const nameEscaped = ChatParser.escapeStyle(name);
-		metaDictionary.TARGET_CHARACTER_NAME = nameEscaped;
+		metaDictionary.TARGET_CHARACTER_NAME = name;
 		metaDictionary.TARGET_CHARACTER_ID = id;
-		metaDictionary.TARGET_CHARACTER = `${nameEscaped} (${id})`;
-		metaDictionary.TARGET_CHARACTER_POSSESSIVE = `${nameEscaped}'s (${id})`;
+		metaDictionary.TARGET_CHARACTER = `${name} (${id})`;
+		metaDictionary.TARGET_CHARACTER_POSSESSIVE = `${name}'s (${id})`;
 		AssignPronouns('TARGET_CHARACTER_PRONOUN', pronoun, metaDictionary);
 
 		if (id === source?.id) {
@@ -95,11 +96,11 @@ function ActionMessagePrepareDictionary(
 	const itemContainerPath = message.data?.itemContainerPath;
 
 	if (item) {
-		metaDictionary.ITEM_ASSET_NAME = describeAsset(item);
+		metaDictionary.ITEM_ASSET_NAME = <ActionTextItemLink item={ item } itemDisplayNameType={ itemDisplayNameType } />;
 	}
 
 	if (itemPrevious) {
-		metaDictionary.ITEM_ASSET_NAME_PREVIOUS = describeAsset(itemPrevious);
+		metaDictionary.ITEM_ASSET_NAME_PREVIOUS = <ActionTextItemLink item={ itemPrevious } itemDisplayNameType={ itemDisplayNameType } />;
 	}
 
 	if (itemContainerPath) {
@@ -144,7 +145,7 @@ function ActionMessagePrepareDictionary(
 	};
 }
 
-export function DescribeAsset(assetManager: AssetManagerClient, assetId: AssetId): string {
+export function DescribeAsset(assetManager: AssetManager, assetId: AssetId): string {
 	const asset = assetManager.getAssetById(assetId);
 	if (!asset)
 		return `[UNKNOWN ASSET '${assetId}']`;
@@ -155,7 +156,7 @@ export function DescribeAsset(assetManager: AssetManagerClient, assetId: AssetId
 	return asset.definition.name.toLocaleLowerCase();
 }
 
-export function DescribeAttribute(assetManager: AssetManagerClient, attributeName: string): string {
+export function DescribeAttribute(assetManager: AssetManager, attributeName: string): string {
 	const attribute = assetManager.getAttributeDefinition(attributeName);
 	return attribute != null ? `${attribute.description}` : `[UNKNOWN ATTRIBUTE '${attributeName}']`;
 }
@@ -177,7 +178,7 @@ export function RenderChatPart([type, contents]: Immutable<IChatSegment>, index:
 	}
 }
 
-function GetActionText(action: IChatActionMessageProcessed, assetManager: AssetManagerClient): string | undefined {
+function GetActionText(action: IChatActionMessageProcessed, assetManager: AssetManager): string | undefined {
 	if (action.customText != null)
 		return action.customText;
 
@@ -224,6 +225,37 @@ function GetActionText(action: IChatActionMessageProcessed, assetManager: AssetM
 	return defaultMessage;
 }
 
+export function ActionTextItemLink({ item, itemDisplayNameType }: {
+	item: IChatMessageActionItem;
+	itemDisplayNameType: ItemDisplayNameType;
+}): ReactElement {
+	const globalState = useGlobalState(useGameState());
+	const assetManager = globalState.assetManager;
+
+	const matchingItems = useStateFindItemById(globalState, item.id);
+
+	if (matchingItems.length === 1) {
+		// If we found exactly one matching item, make it a link
+		const currentItem = matchingItems[0];
+
+		const isCustomized = (!!currentItem.name && currentItem.name !== currentItem.asset.definition.name) ||
+			(!!currentItem.description);
+
+		return (
+			<a className={ classNames('itemLink', isCustomized ? 'customizedItem' : null) }>
+				{ ResolveItemDisplayNameType(DescribeAsset(assetManager, item.assetId), item.itemName, itemDisplayNameType) }
+			</a>
+		);
+	}
+
+	// If the item was not found, return basic text
+	return (
+		<>
+			{ ResolveItemDisplayNameType(DescribeAsset(assetManager, item.assetId), item.itemName, itemDisplayNameType) }
+		</>
+	);
+}
+
 export function RenderActionContentPart(originalMessage: string, substitutions: Readonly<Record<string, string | ReactElement>> | undefined): ReactElement {
 	const message: (string | ReactElement)[] = [originalMessage];
 
@@ -255,7 +287,7 @@ export function RenderActionContentPart(originalMessage: string, substitutions: 
 
 export function RenderActionContent(
 	action: IChatActionMessageProcessed,
-	assetManager: AssetManagerClient,
+	assetManager: AssetManager,
 	itemDisplayNameType: ItemDisplayNameType,
 ): [content: ReactElement | null, extraContent: ReactElement | null] {
 	// Append implicit dictionary entries

@@ -203,6 +203,8 @@ $theme-chat-messageinfo-text: #888;
 
 $theme-chat-serverMessage-background: #202020;
 $theme-chat-serverMessage-text: #fff;
+$theme-chat-serverMessage-textlink: color-mix(in srgb, #ccc, $theme-accent-color 35%);
+$theme-chat-serverMessage-textlink-hover: color-mix(in srgb, #888, $theme-accent-color 60%);
 $theme-chat-serverMessage-foldable-hover-background: #181818;
 $theme-chat-serverMessage-notch: #fff;
 

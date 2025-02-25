@@ -238,11 +238,18 @@ export function ActionTextItemLink({ item, itemDisplayNameType }: {
 		// If we found exactly one matching item, make it a link
 		const currentItem = matchingItems[0];
 
-		const isCustomized = (!!currentItem.name && currentItem.name !== currentItem.asset.definition.name) ||
-			(!!currentItem.description);
+		const hasCustomName = (!!currentItem.name && currentItem.name !== currentItem.asset.definition.name) && itemDisplayNameType !== 'original';
+		const hasDescription = !!currentItem.description;
 
+		// TODO: Make this link work
 		return (
-			<a className={ classNames('itemLink', isCustomized ? 'customizedItem' : null) }>
+			<a
+				className={ classNames(
+					'itemLink',
+					hasCustomName ? 'hasCustomName' : null,
+					hasDescription ? 'hasDescription' : null,
+				) }
+			>
 				{ ResolveItemDisplayNameType(DescribeAsset(assetManager, item.assetId), item.itemName, itemDisplayNameType) }
 			</a>
 		);

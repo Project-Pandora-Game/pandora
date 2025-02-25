@@ -45,8 +45,8 @@ $header-height: 2em;
 				align-items: flex-start;
 				pointer-events: none;
 
-				>* {
-					pointer-events: auto;
+				&.solidOverlay {
+					background: common.$theme-wardrobe-preview-overlay;
 				}
 
 				.iconButton {
@@ -309,6 +309,11 @@ $drop-overlay-gap: 0.3em;
 		}
 	}
 
+	.description {
+		white-space: pre-wrap;
+		overflow-wrap: break-word;
+	}
+
 	>.fieldset-toggle {
 		margin-top: 1em;
 	}
@@ -499,6 +504,12 @@ $drop-overlay-gap: 0.3em;
 		left: 2.6em;
 		right: 1em;
 		z-index: 11;
+	}
+}
+
+.itemName {
+	&.custom {
+		font-style: italic;
 	}
 }
 

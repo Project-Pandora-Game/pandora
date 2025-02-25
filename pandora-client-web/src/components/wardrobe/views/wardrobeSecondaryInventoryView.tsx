@@ -159,7 +159,7 @@ function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickA
 				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
-			<span className='itemName'><WardrobeItemName item={ item } /></span>
+			<WardrobeItemName item={ item } />
 			<div className='quickActions'>
 				{ showExtraActionButtons ? (
 					<>

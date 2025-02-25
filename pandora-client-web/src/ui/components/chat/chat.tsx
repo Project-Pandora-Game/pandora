@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { CharacterId, IChatMessageAction, IChatMessageChat, type HexColorString } from 'pandora-common';
+import { AssertNever, CharacterId, IChatMessageChat, type HexColorString } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -22,7 +22,7 @@ import { useAccountSettings } from '../../../services/accountLogic/accountManage
 import { NotificationSource, useNotificationSuppressed } from '../../../services/notificationHandler';
 import { useChatInjectedMessages } from './chatInjectedMessages';
 import { AutoCompleteHint, ChatInputArea, useChatCommandContext, useChatInput } from './chatInput';
-import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart } from './chatMessages';
+import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart, type IChatActionMessageProcessed, type IChatNormalMessageProcessed } from './chatMessages';
 import { COMMANDS } from './commands';
 
 export function Chat(): ReactElement | null {
@@ -102,7 +102,7 @@ export function Chat(): ReactElement | null {
 					className='fill'
 					tabIndex={ 1 }
 				>
-					<Column gap='none'>
+					<Column gap='none' className='messagesContainer'>
 						{ finalMessages }
 					</Column>
 				</Scrollable>
@@ -121,7 +121,22 @@ function ChatAutoCompleteHint() {
 }
 
 function ChatMessageEquals(a: IChatMessageProcessed, b: IChatMessageProcessed): boolean {
-	return a.time === b.time && a.edited === b.edited && a.spaceId === b.spaceId;
+	if (a.time !== b.time || a.spaceId !== b.spaceId)
+		return false;
+
+	switch (a.type) {
+		case 'chat':
+		case 'ooc':
+		case 'me':
+		case 'emote':
+			return b.type === a.type && a.edited === b.edited;
+		case 'deleted':
+			return b.type === a.type;
+		case 'action':
+		case 'serverMessage':
+			return b.type === a.type && a.repetitions === b.repetitions;
+	}
+	AssertNever(a);
 }
 
 const Message = memo(function Message({ message, playerId }: { message: IChatMessageProcessed; playerId: CharacterId | null; }): ReactElement | null {
@@ -136,7 +151,7 @@ const Message = memo(function Message({ message, playerId }: { message: IChatMes
 	return ChatMessageEquals(prev.message, next.message) && prev.playerId === next.playerId;
 });
 
-function DisplayUserMessage({ message, playerId }: { message: IChatMessageProcessed<IChatMessageChat>; playerId: CharacterId | null; }): ReactElement {
+function DisplayUserMessage({ message, playerId }: { message: IChatNormalMessageProcessed; playerId: CharacterId | null; }): ReactElement {
 	const [before, after] = useMemo(() => {
 		switch (message.type) {
 			case 'ooc':
@@ -343,11 +358,12 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 	);
 }
 
-export function ActionMessageElement({ type, labelColor, messageTime, edited, children, extraContent, defaultUnfolded = false }: {
+export function ActionMessageElement({ type, labelColor, messageTime, edited, repetitions = 1, children, extraContent, defaultUnfolded = false }: {
 	type: 'action' | 'serverMessage';
 	labelColor?: HexColorString;
 	messageTime: number;
 	edited: boolean;
+	repetitions?: number;
 	children: ReactNode;
 	extraContent?: ReactElement | null;
 	/**
@@ -357,6 +373,19 @@ export function ActionMessageElement({ type, labelColor, messageTime, edited, ch
 	defaultUnfolded?: boolean;
 }): ReactElement | null {
 	const [folded, setFolded] = useState(!defaultUnfolded);
+	const repetitionCountRef = useRef<HTMLSpanElement>(null);
+	const lastRepetitionCount = useRef(repetitions);
+
+	// Do a highlight if the repetitions count changes on an existing message
+	useEffect(() => {
+		if (repetitions > 1 && repetitions !== lastRepetitionCount.current) {
+			lastRepetitionCount.current = repetitions;
+			repetitionCountRef.current?.classList.remove('highlightChange');
+			requestAnimationFrame(() => {
+				repetitionCountRef.current?.classList.add('highlightChange');
+			});
+		}
+	}, [repetitions]);
 
 	const style = (type === 'action' && labelColor) ? ({ backgroundColor: labelColor + '44' }) : undefined;
 
@@ -375,6 +404,11 @@ export function ActionMessageElement({ type, labelColor, messageTime, edited, ch
 			{ children }
 			{ extraContent != null && folded ? ' ( ... )' : null }
 			{
+				repetitions > 1 ? (
+					<> <span className='repetitionCount' ref={ repetitionCountRef }>&#xD7;{ repetitions }</span></>
+				) : null
+			}
+			{
 				!folded && extraContent != null ? (
 					<>
 						<br />
@@ -386,14 +420,14 @@ export function ActionMessageElement({ type, labelColor, messageTime, edited, ch
 	);
 }
 
-export function ActionMessage({ message, ignoreColor = false }: { message: IChatMessageProcessed<IChatMessageAction>; ignoreColor?: boolean; }): ReactElement | null {
+export function ActionMessage({ message, ignoreColor = false }: { message: IChatActionMessageProcessed; ignoreColor?: boolean; }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const { interfaceChatroomItemDisplayNameType } = useAccountSettings();
 
 	const [content, extraContent] = useMemo(() => RenderActionContent(message, assetManager, interfaceChatroomItemDisplayNameType), [message, assetManager, interfaceChatroomItemDisplayNameType]);
 
 	// If there is nothing to display, hide this message
-	if (content.length === 0 && extraContent == null)
+	if (content == null && extraContent == null)
 		return null;
 
 	return (
@@ -401,14 +435,15 @@ export function ActionMessage({ message, ignoreColor = false }: { message: IChat
 			type={ message.type }
 			labelColor={ message.data?.character && !ignoreColor ? message.data.character.labelColor : undefined }
 			messageTime={ message.time }
-			edited={ message.edited ?? false }
+			edited={ false }
+			repetitions={ message.repetitions }
 			extraContent={ extraContent != null ? (
 				<>
-					{ extraContent.map((c, i) => RenderChatPart(c, i, false)) }
+					{ extraContent }
 				</>
 			) : null }
 		>
-			{ content.map((c, i) => RenderChatPart(c, i, false)) }
+			{ content }
 		</ActionMessageElement>
 	);
 }

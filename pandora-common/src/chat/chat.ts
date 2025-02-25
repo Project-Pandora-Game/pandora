@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { ItemId } from '../assets';
 import type { AssetId } from '../assets/base';
 import { CharacterId, CharacterIdSchema } from '../character';
 import type { PronounKey } from '../character/pronouns';
@@ -74,6 +75,7 @@ export type IChatMessageActionTargetCharacter = {
 	labelColor: HexColorString;
 };
 export type IChatMessageActionItem = {
+	id: ItemId;
 	assetId: AssetId;
 	itemName: string;
 };

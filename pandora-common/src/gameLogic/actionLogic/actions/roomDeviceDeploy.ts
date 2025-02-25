@@ -72,10 +72,7 @@ export function ActionRoomDeviceDeploy({
 		processingContext.queueMessage(
 			manipulator.makeMessage({
 				id: (deployment != null) ? 'roomDeviceDeploy' : 'roomDeviceStore',
-				item: {
-					assetId: previousDeviceState.asset.id,
-					itemName: previousDeviceState.name ?? '',
-				},
+				item: previousDeviceState.getChatDescriptor(),
 			}),
 		);
 	}

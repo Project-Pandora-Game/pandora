@@ -7,10 +7,10 @@ import { useKeyDownEvent } from '../../common/useKeyDownEvent';
 import { Button } from '../common/button/button';
 import { Row } from '../common/container/container';
 import { ModalDialog } from '../dialog/dialog';
+import { useCharacterState, useGameState, useGlobalState } from '../gameContext/gameStateContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
 import { ContextHelpButton } from '../help/contextHelpButton';
-import { useCharacterState, useGameState } from '../gameContext/gameStateContextProvider';
 
 export type RestrictionOverrideDialogContext = {
 	show: () => void;
@@ -47,8 +47,8 @@ export function CharacterRestrictionOverrideDialog({ player }: {
 	player: PlayerCharacter;
 }): ReactElement {
 	const { hide } = useRestrictionOverrideDialogContext();
-	const gameState = useGameState();
-	const state = useCharacterState(gameState, player.id);
+	const globalState = useGlobalState(useGameState());
+	const state = useCharacterState(globalState, player.id);
 	const restrictionOverride = state?.restrictionOverride;
 
 	useKeyDownEvent(useCallback(() => {

@@ -36,7 +36,7 @@ export const PronounKeySchema = z.enum(Object.keys(PRONOUNS) as [PronounKey, ...
 
 type MetaKeys<K extends ChatActionDictionaryMetaEntry> = K extends `${infer PREFIX}_${Uppercase<keyof Pronouns>}` ? (`${PREFIX}_${Uppercase<keyof Pronouns>}` extends ChatActionDictionaryMetaEntry ? PREFIX : never) : never;
 
-export function AssignPronouns<K extends MetaKeys<ChatActionDictionaryMetaEntry>>(prefix: K, pronounKey: PronounKey, pronouns: Partial<Record<ChatActionDictionaryMetaEntry, string>>): void {
+export function AssignPronouns<K extends MetaKeys<ChatActionDictionaryMetaEntry>, VExtra = never>(prefix: K, pronounKey: PronounKey, pronouns: Partial<Record<ChatActionDictionaryMetaEntry, string | VExtra>>): void {
 	for (const [key, value] of Object.entries(PRONOUNS[pronounKey])) {
 		const newKey: ChatActionDictionaryMetaEntry = `${prefix}_${key.toUpperCase() as Uppercase<keyof Pronouns>}`;
 		pronouns[newKey] = value;

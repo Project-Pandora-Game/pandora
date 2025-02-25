@@ -1,0 +1,37 @@
+diff --git a/index.d.ts b/index.d.ts
+index 61f7928780446b3cde5fbd1dc54422653fa16072..a94f07d9bd0878cb883fd53465d8164aa0747a9e 100644
+--- a/index.d.ts
++++ b/index.d.ts
+@@ -69,28 +69,28 @@ export interface ReactSwitchProps {
+    *
+    * Defaults to undefined.
+    */
+-  uncheckedHandleIcon?: JSX.Element;
++  uncheckedHandleIcon?: React.JSX.Element;
+ 
+   /**
+    * Icon to display on the handle while switch is checked.
+    *
+    * Defaults to undefined.
+    */
+-  checkedHandleIcon?: JSX.Element;
++  checkedHandleIcon?: React.JSX.Element;
+ 
+   /**
+    * An icon that will be shown on the switch when it is **not** checked. Set to false to show no icon.
+    *
+    * Defaults to an x icon.
+    */
+-  uncheckedIcon?: JSX.Element | boolean;
++  uncheckedIcon?: React.JSX.Element | boolean;
+ 
+   /**
+    * An icon that will be shown on the switch when it is checked. Set to false to show no icon.
+    *
+    * Defaults to a checked icon.
+    */
+-  checkedIcon?: JSX.Element | boolean;
++  checkedIcon?: React.JSX.Element | boolean;
+ 
+   /**
+    * The box-shadow of the handle of the switch.

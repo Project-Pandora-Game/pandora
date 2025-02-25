@@ -10,7 +10,7 @@ import { Character, IChatroomCharacter } from '../../character/character';
 import { useObservable } from '../../observable';
 import { CharacterRestrictionOverrideWarningContent } from '../characterRestrictionOverride/characterRestrictionOverride';
 import { Tab, TabContainer, type TabConfig } from '../common/tabs/tabs';
-import { useGameState, useSpaceCharacters } from '../gameContext/gameStateContextProvider';
+import { useGameState, useSpaceCharacters, useSpaceInfo } from '../gameContext/gameStateContextProvider';
 import { usePlayer } from '../gameContext/playerContextProvider';
 import { WardrobeExpressionGui } from './views/wardrobeExpressionsView';
 import { WardrobePoseGui } from './views/wardrobePoseView';
@@ -19,6 +19,7 @@ import './wardrobe.scss';
 import { useWardrobeActionContext, WardrobeActionContextProvider } from './wardrobeActionContext';
 import { WardrobeBodyManipulation } from './wardrobeBody';
 import { useWardrobeContext, WARDROBE_TARGET_ROOM, WardrobeContextProvider } from './wardrobeContext';
+import { WardrobeEffectsModifiers } from './wardrobeEffectsModifiers';
 import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphics';
 import { WardrobeItemPreferences } from './wardrobeItemPreferences';
 import { WardrobeItemManipulation } from './wardrobeItems';
@@ -129,12 +130,17 @@ function WardrobeCharacter({ character }: {
 	const { globalState } = useWardrobeActionContext();
 	const { actionPreviewState } = useWardrobeContext();
 	const characterState = globalState.characters.get(character.id);
-	const characterPreviewState = useObservable(actionPreviewState)?.characters.get(character.id);
+	const globalPreviewState = useObservable(actionPreviewState);
+	const characterPreviewState = globalPreviewState?.characters.get(character.id);
+	const currentSpaceInfo = useSpaceInfo();
+	const inPersonalSpace = currentSpaceInfo.id == null;
 
 	const [allowHideItems, setAllowHideItems] = useState(false);
+	const [showCharacterEffects, setShowCharacterEffects] = useState(false);
 
 	const onTabOpen = useCallback((tab: Immutable<TabConfig>): void => {
 		setAllowHideItems(tab.name === 'Body');
+		setShowCharacterEffects(tab.name === 'Effects & Modifiers');
 	}, []);
 
 	if (characterState == null)
@@ -147,7 +153,9 @@ function WardrobeCharacter({ character }: {
 				<WardrobeCharacterPreview
 					character={ character }
 					characterState={ characterPreviewState ?? characterState }
+					globalState={ (characterPreviewState != null ? globalPreviewState : undefined) ?? globalState }
 					allowHideItems={ allowHideItems }
+					showCharacterEffects={ showCharacterEffects }
 					isPreview={ characterPreviewState != null }
 				/>
 				<TabContainer className='flex-1' onTabOpen={ onTabOpen }>
@@ -169,11 +177,20 @@ function WardrobeCharacter({ character }: {
 							</div>
 						</div>
 					</Tab>
-					<Tab name='Randomization'>
+					<Tab name='Effects & Modifiers'>
 						<div className='wardrobe-pane'>
-							<WardrobeRandomizationGui character={ character } />
+							<WardrobeEffectsModifiers character={ character } globalState={ globalState } />
 						</div>
 					</Tab>
+					{
+						inPersonalSpace ? (
+							<Tab name='Randomization'>
+								<div className='wardrobe-pane'>
+									<WardrobeRandomizationGui character={ character } />
+								</div>
+							</Tab>
+						) : null
+					}
 					{
 						character.isPlayer() ? (
 							<Tab name='Item Limits'>

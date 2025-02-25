@@ -29,6 +29,7 @@ export class AssetPreferencesSubsystemClient extends AssetPreferencesSubsystem i
 					group: 'assetPreferences',
 					id: preference,
 					displayName: `Interact with worn items that are marked as "${config.visibleName}"`,
+					icon: config.icon,
 					defaultConfig: config.defaultPermissions,
 				}),
 			);

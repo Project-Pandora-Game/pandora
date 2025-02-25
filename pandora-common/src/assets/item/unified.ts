@@ -11,7 +11,7 @@ import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop, ZodTruncate } from '
 import { AssetIdSchema } from '../base';
 import { CreateModuleDataFromTemplate, ItemModuleDataSchema, ItemModuleTemplateSchema } from '../modules';
 import { PartialAppearancePoseSchema } from '../state/characterStatePose';
-import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base';
+import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemChatCustomMessagesSchema, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base';
 
 import { LockDataBundleSchema } from '../../gameLogic/locks/lockData';
 import { __internal_InitRecursiveItemSchemas } from './_internalRecursion';
@@ -32,6 +32,7 @@ export const ItemBundleSchema = z.object({
 	spawnedBy: CharacterIdSchema.optional(),
 	color: ItemColorBundleSchema.or(z.array(HexRGBAColorStringSchema)).optional(),
 	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
+	chat: ItemChatCustomMessagesSchema.optional(),
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
 	/** Whether free hands are required to interact with this item. */
 	requireFreeHandsToUse: z.boolean().optional(),
@@ -54,6 +55,7 @@ export const ItemTemplateSchema: z.ZodType<ItemTemplate, ZodTypeDef, unknown> = 
 	templateName: z.string().optional(),
 	color: ItemColorBundleSchema.optional(),
 	name: z.string().regex(LIMIT_ITEM_NAME_PATTERN).transform(ZodTruncate(LIMIT_ITEM_NAME_LENGTH)).optional(),
+	chat: ItemChatCustomMessagesSchema.optional(),
 	description: z.string().transform(ZodTruncate(LIMIT_ITEM_DESCRIPTION_LENGTH)).optional(),
 	/** Whether free hands are required to interact with this item. */
 	requireFreeHandsToUse: z.boolean().optional(),

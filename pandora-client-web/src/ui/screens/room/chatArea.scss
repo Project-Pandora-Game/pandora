@@ -28,16 +28,20 @@
 
 			&.action, &.serverMessage {
 				.itemLink {
-					color: common.$theme-chat-serverMessage-textlink;
+					color: common.$theme-chat-serverMessage-text;
 					text-decoration: none;
 
-					&.customizedItem {
+					&.hasCustomName, &.hasDescription {
 						&::before {
 							content: '[';
 						}
 						&::after {
 							content: ']';
 						}
+					}
+
+					&.hasDescription {
+						color: common.$theme-chat-serverMessage-textlink;
 					}
 
 					&:hover {

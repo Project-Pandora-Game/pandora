@@ -36,7 +36,7 @@ export function ResolveItemDisplayNameType(original: string, custom: string | nu
 		case 'custom':
 			return custom;
 		case 'custom_with_original_in_brackets':
-			return `${custom} [${original}]`;
+			return `${custom} (${original})`;
 		default:
 			AssertNever(itemDisplayNameType);
 	}

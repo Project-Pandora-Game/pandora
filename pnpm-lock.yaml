@@ -58,8 +58,8 @@ importers:
   pandora-client-web:
     dependencies:
       '@hcaptcha/react-hcaptcha':
-        specifier: 1.11.2
-        version: 1.11.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+        specifier: 1.11.3
+        version: 1.11.3(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       bowser:
         specifier: 2.11.0
         version: 2.11.0
@@ -1606,8 +1606,8 @@ packages:
   '@hcaptcha/loader@1.2.4':
     resolution: {integrity: sha512-3MNrIy/nWBfyVVvMPBKdKrX7BeadgiimW0AL/a/8TohNtJqxoySKgTJEXOQvYwlHemQpUzFrIsK74ody7JiMYw==}
 
-  '@hcaptcha/react-hcaptcha@1.11.2':
-    resolution: {integrity: sha512-F6+aZknrpTHoAhKIP80wWNJI5nhOJg0qyazM3pAw0bCyvVLSsveWeZyTK7W8EhO6nvovTE061gehlC+bmS/vMw==}
+  '@hcaptcha/react-hcaptcha@1.11.3':
+    resolution: {integrity: sha512-nsa1GkIliJTgXZxHoD+hUScwcnPijWJgAS3u3dhDqWMIOdXu8OESbNqSRp0/YhI34JsaV2LpjwtrubWx9ZS8tg==}
     peerDependencies:
       react: '>= 16.3.0'
       react-dom: '>= 16.3.0'
@@ -8498,7 +8498,7 @@ snapshots:
 
   '@hcaptcha/loader@1.2.4': {}
 
-  '@hcaptcha/react-hcaptcha@1.11.2(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
+  '@hcaptcha/react-hcaptcha@1.11.3(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
       '@babel/runtime': 7.26.7
       '@hcaptcha/loader': 1.2.4

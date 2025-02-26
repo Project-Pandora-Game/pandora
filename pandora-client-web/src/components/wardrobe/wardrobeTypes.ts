@@ -14,11 +14,9 @@ import {
 } from 'pandora-common';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ReactElement } from 'react';
-import { IChatroomCharacter } from '../../character/character';
 import { Observable, type ReadonlyObservable } from '../../observable';
 
 export type WardrobeContextExtraItemActionComponent = (props: { target: ActionTargetSelector; item: ItemPath; }) => ReactElement | null;
-export type WardrobeTarget = IChatroomCharacter | { type: 'room'; };
 
 export type WardrobeHeldItem = {
 	type: 'nothing';
@@ -32,7 +30,6 @@ export type WardrobeHeldItem = {
 };
 
 export interface WardrobeContext {
-	target: WardrobeTarget;
 	targetSelector: ActionTargetSelector;
 	assetList: readonly Asset[];
 	heldItem: WardrobeHeldItem;
@@ -57,6 +54,7 @@ export interface WardrobeFocus {
 }
 
 export interface WardrobeModuleProps<Module extends IItemModule> {
+	target: ActionTargetSelector;
 	item: ItemPath;
 	moduleName: string;
 	m: Module;
@@ -105,7 +103,7 @@ export class WardrobeFocuser {
 		this._inRoom.value = popped.inRoom;
 	}
 
-	public focus(newFocus: WardrobeFocus, target: WardrobeTarget): void {
+	public focus(newFocus: WardrobeFocus, target: ActionTargetSelector): void {
 		if (this._disabled != null)
 			throw new Error(this._disabled);
 		if (this._disabledContainers && newFocus.container.length > 0)
@@ -118,7 +116,7 @@ export class WardrobeFocuser {
 		});
 
 		this._current.value = newFocus;
-		this._inRoom.value = target?.type === 'room';
+		this._inRoom.value = target.type === 'roomInventory';
 	}
 
 	public focusItemId(itemId: ItemId | null): void {
@@ -132,7 +130,7 @@ export class WardrobeFocuser {
 		this._current.value = ({ ...current, itemId });
 	}
 
-	public focusItemModule(item: ItemPath, moduleName: string, target: WardrobeTarget): void {
+	public focusItemModule(item: ItemPath, moduleName: string, target: ActionTargetSelector): void {
 		this.focus({
 			container: [...item.container, { item: item.itemId, module: moduleName }],
 			itemId: null,

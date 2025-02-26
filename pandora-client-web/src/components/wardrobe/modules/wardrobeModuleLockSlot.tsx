@@ -31,8 +31,8 @@ import { WardrobeActionButton } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
 
-export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement {
-	const { targetSelector, target, focuser } = useWardrobeContext();
+export function WardrobeModuleConfigLockSlot({ target, item, moduleName, m }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement {
+	const { focuser } = useWardrobeContext();
 	const onFocus = useCallback((e: React.MouseEvent) => {
 		e.stopPropagation();
 		focuser.focusItemModule(item, moduleName, target);
@@ -68,7 +68,7 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeMo
 					<WardrobeActionButton
 						action={ {
 							type: 'delete',
-							target: targetSelector,
+							target,
 							item: {
 								container: [
 									...item.container,
@@ -86,7 +86,7 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeMo
 					<WardrobeActionButton
 						action={ {
 							type: 'transfer',
-							source: targetSelector,
+							source: target,
 							item: {
 								container: [
 									...item.container,
@@ -106,7 +106,7 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeMo
 						</span>
 					</WardrobeActionButton>
 				</Row>
-				<WardrobeLockSlotUnlocked item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
+				<WardrobeLockSlotUnlocked target={ target } item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
 				<WardrobeLockSlotLockDescription lock={ m.lock } />
 			</Column>
 		);
@@ -122,7 +122,7 @@ export function WardrobeModuleConfigLockSlot({ item, moduleName, m }: WardrobeMo
 					</span>
 				</Row>
 			</Row>
-			<WardrobeLockSlotLocked item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
+			<WardrobeLockSlotLocked target={ target } item={ item } moduleName={ moduleName } m={ m } lock={ m.lock } />
 			<WardrobeLockSlotLockDescription lock={ m.lock } />
 		</Column>
 	);
@@ -189,8 +189,7 @@ function WardrobeLockSlotLockDescription({ lock }: {
 	);
 }
 
-function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
-	const { targetSelector } = useWardrobeContext();
+function WardrobeLockSlotLocked({ target, item, moduleName, lock }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
 	const { actions } = useWardrobeActionContext();
 	const { player, playerState } = usePlayerState();
 	const playerRestrictionManager = useCharacterRestrictionManager(player, playerState, actions.spaceContext);
@@ -233,7 +232,7 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 
 	const action = useMemo((): AppearanceAction => ({
 		type: 'moduleAction',
-		target: targetSelector,
+		target,
 		item,
 		module: moduleName,
 		action: {
@@ -244,7 +243,7 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 				clearLastPassword,
 			},
 		},
-	}), [clearLastPassword, currentAttempt, item, moduleName, password, targetSelector]);
+	}), [clearLastPassword, currentAttempt, item, moduleName, password, target]);
 
 	return (
 		<>
@@ -257,6 +256,7 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 							<Checkbox checked={ clearLastPassword } onChange={ setClearLastPassword } />
 						</Row>
 						<PasswordInput
+							target={ target }
 							item={ item }
 							value={ password }
 							onChange={ setPassword }
@@ -280,9 +280,7 @@ function WardrobeLockSlotLocked({ item, moduleName, lock }: Omit<WardrobeModuleP
 	);
 }
 
-function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
-	const { targetSelector } = useWardrobeContext();
-
+function WardrobeLockSlotUnlocked({ target, item, moduleName, lock }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
 	const [password, setPassword] = useState<string>('');
 	const [useOldPassword, setUseOldPassword] = useState(false);
 
@@ -301,7 +299,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 
 	const action = useMemo((): AppearanceAction => ({
 		type: 'moduleAction',
-		target: targetSelector,
+		target,
 		item,
 		module: moduleName,
 		action: {
@@ -313,7 +311,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 					(password || undefined),
 			},
 		},
-	}), [currentAttempt, item, moduleName, password, targetSelector, useOldPassword]);
+	}), [currentAttempt, item, moduleName, password, target, useOldPassword]);
 
 	return (
 		<>
@@ -329,6 +327,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 							) : null
 						}
 						<PasswordInput
+							target={ target }
 							item={ item }
 							moduleName={ moduleName }
 							value={ password }
@@ -352,6 +351,7 @@ function WardrobeLockSlotUnlocked({ item, moduleName, lock }: Omit<WardrobeModul
 }
 
 function PasswordInput({
+	target,
 	item,
 	moduleName,
 	value,
@@ -360,7 +360,7 @@ function PasswordInput({
 	pendingAttempt = false,
 	showInvalidWarning,
 	disabled,
-}: Pick<WardrobeModuleProps<ItemModuleLockSlot>, 'item' | 'moduleName'> & {
+}: Pick<WardrobeModuleProps<ItemModuleLockSlot>, 'target' | 'item' | 'moduleName'> & {
 	value: string;
 	onChange: (newValue: string) => void;
 	password: Immutable<NonNullable<LockSetup['password']>>;
@@ -368,7 +368,6 @@ function PasswordInput({
 	showInvalidWarning?: boolean;
 	disabled?: boolean;
 }) {
-	const { targetSelector } = useWardrobeContext();
 	const [min, max] = typeof password.length === 'number' ? [password.length, password.length] : password.length;
 
 	const id = useId();
@@ -422,7 +421,7 @@ function PasswordInput({
 
 	const showPasswordAction = useMemo<AppearanceAction>(() => ({
 		type: 'moduleAction',
-		target: targetSelector,
+		target,
 		item,
 		module: moduleName,
 		action: {
@@ -431,7 +430,7 @@ function PasswordInput({
 				action: 'showPassword',
 			},
 		},
-	}), [targetSelector, item, moduleName]);
+	}), [target, item, moduleName]);
 
 	const onPasswordShown = useCallback((data: readonly AppearanceActionData[]) => {
 		for (const d of data) {

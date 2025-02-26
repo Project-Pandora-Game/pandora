@@ -183,7 +183,6 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	}), [character, globalState, actions, editor]);
 
 	const context = useMemo((): WardrobeContext => ({
-		target: character,
 		targetSelector: {
 			type: 'character',
 			characterId: character.id,

@@ -13,7 +13,7 @@ export function WardrobeExpressionGui({ characterState }: {
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const appearance = useCharacterAppearanceItems(characterState);
-	const { focuser } = useWardrobeContext();
+	const { focuser, targetSelector } = useWardrobeContext();
 	useEffect(() => focuser.disable('Expressions cannot focus container!'), [focuser]);
 
 	return (
@@ -27,6 +27,7 @@ export function WardrobeExpressionGui({ characterState }: {
 								.map(([moduleName, m]) => (
 									<FieldsetToggle legend={ m.config.expression } key={ `${item.id}:${moduleName}` }>
 										<WardrobeModuleConfig
+											target={ targetSelector }
 											item={ { container: [], itemId: item.id } }
 											moduleName={ moduleName }
 											m={ m }

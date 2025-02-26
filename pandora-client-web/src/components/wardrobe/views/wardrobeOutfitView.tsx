@@ -320,12 +320,12 @@ function OutfitPreview({ outfit }: {
 }): ReactElement {
 	const assetManager = useAssetManager();
 	const { globalState } = useWardrobeActionContext();
-	const { target, showHoverPreview, actionPreviewState } = useWardrobeContext();
+	const { targetSelector, showHoverPreview, actionPreviewState } = useWardrobeContext();
 	const { player, playerState } = usePlayerState();
 
 	const [isHovering, setIsHovering] = useState(false);
 
-	const baseCharacterState = (target.type === 'character' ? globalState.getCharacterState(target.id) : null) ?? playerState;
+	const baseCharacterState = (targetSelector.type === 'character' ? globalState.getCharacterState(targetSelector.characterId) : null) ?? playerState;
 
 	const characterState = useMemo((): AssetFrameworkCharacterState => {
 		// As a base use the current character, but only body - not any items

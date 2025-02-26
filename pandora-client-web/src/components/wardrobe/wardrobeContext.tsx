@@ -1,7 +1,5 @@
-import { freeze } from 'immer';
 import {
 	ActionTargetSelector,
-	AssertNever,
 	AssertNotNullable,
 	AssetFrameworkGlobalState,
 	EMPTY_ARRAY,
@@ -13,13 +11,11 @@ import { useAssetManager } from '../../assets/assetManager';
 import { Observable, useObservable } from '../../observable';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
 import { useWardrobeActionContext } from './wardrobeActionContext';
-import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocuser, WardrobeHeldItem, WardrobeTarget } from './wardrobeTypes';
+import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocuser, WardrobeHeldItem } from './wardrobeTypes';
 
 export const wardrobeContext = createContext<WardrobeContext | null>(null);
 
-export const WARDROBE_TARGET_ROOM: WardrobeTarget = freeze({ type: 'room' });
-
-export function WardrobeContextProvider({ target, children }: { target: WardrobeTarget; children: ReactNode; }): ReactElement {
+export function WardrobeContextProvider({ target, children }: { target: ActionTargetSelector; children: ReactNode; }): ReactElement {
 	const {
 		globalState,
 	} = useWardrobeActionContext();
@@ -28,26 +24,21 @@ export function WardrobeContextProvider({ target, children }: { target: Wardrobe
 	const assetList = useAssetManager().assetList;
 
 	const focuser = useMemo(() => new WardrobeFocuser(), []);
-	const actualTarget = useObservable(focuser.inRoom) ? WARDROBE_TARGET_ROOM : target;
+	const focuserInRoom = useObservable(focuser.inRoom);
 	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
 	const actionPreviewState = useMemo(() => new Observable<AssetFrameworkGlobalState | null>(null), []);
 
 	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
 	const [scrollToItem, setScrollToItem] = useState<ItemId | null>(null);
 
-	const targetSelector = useMemo((): ActionTargetSelector => {
-		if (actualTarget.type === 'character') {
-			return {
-				type: 'character',
-				characterId: actualTarget.id,
-			};
-		} else if (actualTarget.type === 'room') {
+	const actualTargetSelector = useMemo((): ActionTargetSelector => {
+		if (focuserInRoom) {
 			return {
 				type: 'roomInventory',
 			};
 		}
-		AssertNever(actualTarget);
-	}, [actualTarget]);
+		return target;
+	}, [focuserInRoom, target]);
 
 	useEffect(() => {
 		if (heldItem.type === 'item') {
@@ -60,8 +51,7 @@ export function WardrobeContextProvider({ target, children }: { target: Wardrobe
 	}, [heldItem, globalState]);
 
 	const context = useMemo((): WardrobeContext => ({
-		target: actualTarget,
-		targetSelector,
+		targetSelector: actualTargetSelector,
 		assetList,
 		heldItem,
 		setHeldItem,
@@ -73,7 +63,7 @@ export function WardrobeContextProvider({ target, children }: { target: Wardrobe
 		showExtraActionButtons: settings.wardrobeExtraActionButtons,
 		showHoverPreview: settings.wardrobeHoverPreview,
 		itemDisplayNameType: settings.wardrobeItemDisplayNameType,
-	}), [actualTarget, targetSelector, assetList, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState, settings.wardrobeExtraActionButtons, settings.wardrobeHoverPreview, settings.wardrobeItemDisplayNameType]);
+	}), [actualTargetSelector, assetList, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState, settings.wardrobeExtraActionButtons, settings.wardrobeHoverPreview, settings.wardrobeItemDisplayNameType]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -92,7 +82,6 @@ export function WardrobeContextSelectRoomInventoryProvider({ children }: { child
 	const ctx = useWardrobeContext();
 	const value = useMemo<WardrobeContext>(() => ({
 		...ctx,
-		target: WARDROBE_TARGET_ROOM,
 		targetSelector: {
 			type: 'roomInventory',
 		},

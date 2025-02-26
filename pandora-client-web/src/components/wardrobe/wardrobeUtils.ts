@@ -11,17 +11,18 @@ import {
 	EvalItemPath,
 	Item,
 	ItemPath,
+	type ActionTargetSelector,
 } from 'pandora-common';
 import { useMemo } from 'react';
 import { ICharacter } from '../../character/character';
 import { useWardrobeActionContext } from './wardrobeActionContext';
-import { WardrobeFocus, WardrobeTarget } from './wardrobeTypes';
+import { WardrobeFocus } from './wardrobeTypes';
 
 export function WardrobeFocusesItem(focus: Immutable<WardrobeFocus>): focus is ItemPath {
 	return focus.itemId != null;
 }
 
-export function useWardrobeTargetItems(target: WardrobeTarget | null): AppearanceItems {
+export function useWardrobeTargetItems(target: ActionTargetSelector | null): AppearanceItems {
 	const { globalState } = useWardrobeActionContext();
 
 	const items = useMemo<AppearanceItems | null>(() => {
@@ -30,9 +31,9 @@ export function useWardrobeTargetItems(target: WardrobeTarget | null): Appearanc
 		} else if (target.type === 'character') {
 			return globalState.getItems({
 				type: 'character',
-				characterId: target.id,
+				characterId: target.characterId,
 			});
-		} else if (target.type === 'room') {
+		} else if (target.type === 'roomInventory') {
 			return globalState.getItems({
 				type: 'roomInventory',
 			});
@@ -43,7 +44,7 @@ export function useWardrobeTargetItems(target: WardrobeTarget | null): Appearanc
 	return items ?? EMPTY_ARRAY;
 }
 
-export function useWardrobeTargetItem(target: WardrobeTarget | null, itemPath: ItemPath | null | undefined): Item | undefined {
+export function useWardrobeTargetItem(target: ActionTargetSelector | null, itemPath: ItemPath | null | undefined): Item | undefined {
 	const items = useWardrobeTargetItems(target);
 
 	return useMemo(() => {

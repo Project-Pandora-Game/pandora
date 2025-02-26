@@ -39,15 +39,15 @@ export function WardrobeItemConfigMenu({
 }: {
 	item: ItemPath;
 }): ReactElement {
-	const { targetSelector, target, focuser } = useWardrobeContext();
-	const wornItem = useWardrobeTargetItem(target, item);
+	const { targetSelector, focuser } = useWardrobeContext();
+	const wornItem = useWardrobeTargetItem(targetSelector, item);
 	const wornItemRef = useRef(wornItem);
 
 	const containerPath = SplitContainerPath(item.container);
-	const containerItem = useWardrobeTargetItem(target, containerPath?.itemPath);
+	const containerItem = useWardrobeTargetItem(targetSelector, containerPath?.itemPath);
 	const containerModule = containerPath != null ? containerItem?.getModules().get(containerPath.module) : undefined;
 	const singleItemContainer = containerModule != null && containerModule instanceof ItemModuleLockSlot;
-	const isRoomInventory = target.type === 'room' && item.container.length === 0;
+	const isRoomInventory = targetSelector.type === 'roomInventory' && item.container.length === 0;
 
 	const close = useCallback(() => {
 		focuser.reset();
@@ -177,7 +177,7 @@ export function WardrobeItemConfigMenu({
 					Array.from(wornItem.getModules().entries())
 						.map(([moduleName, m]) => (
 							<FieldsetToggle legend={ `Module: ${m.config.name}` } key={ moduleName }>
-								<WardrobeModuleConfig item={ item } moduleName={ moduleName } m={ m } />
+								<WardrobeModuleConfig target={ targetSelector } item={ item } moduleName={ moduleName } m={ m } />
 							</FieldsetToggle>
 						))
 				}

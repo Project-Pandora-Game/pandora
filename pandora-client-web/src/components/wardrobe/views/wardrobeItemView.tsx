@@ -45,9 +45,9 @@ export function InventoryItemView({
 	filter?: (item: Item) => boolean;
 }): ReactElement | null {
 	const { actions, globalState } = useWardrobeActionContext();
-	const { target, targetSelector, heldItem, focuser, itemDisplayNameType } = useWardrobeContext();
+	const { targetSelector, heldItem, focuser, itemDisplayNameType } = useWardrobeContext();
 	const focus = useObservable(focuser.current);
-	const appearance = useWardrobeTargetItems(target);
+	const appearance = useWardrobeTargetItems(targetSelector);
 	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(appearance), [appearance]);
 	const navigate = useNavigate();
 
@@ -121,11 +121,16 @@ export function InventoryItemView({
 								{ containerSteps.join(' > ') }
 							</div>
 						</>
-					) :
-						<StorageUsageMeter title={ title } used={ itemCount } limit={ target.type === 'character' ? ITEM_LIMIT_CHARACTER_WORN : ITEM_LIMIT_ROOM_INVENTORY } />
+					) : (
+						<StorageUsageMeter
+							title={ title }
+							used={ itemCount }
+							limit={ targetSelector.type === 'character' ? ITEM_LIMIT_CHARACTER_WORN : ITEM_LIMIT_ROOM_INVENTORY }
+						/>
+					)
 				}
 				<div className='flex-1' />
-				{ target.type === 'room' ?
+				{ targetSelector.type === 'roomInventory' ?
 					<Button className='slim' onClick={ () => {
 						focuser.reset();
 						navigate('/wardrobe');
@@ -280,8 +285,8 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 	selected?: boolean;
 	singleItemContainer?: boolean;
 }): ReactElement {
-	const { targetSelector, target, extraItemActions, heldItem, focuser, setHeldItem, scrollToItem, setScrollToItem } = useWardrobeContext();
-	const wornItem = useWardrobeTargetItem(target, item);
+	const { targetSelector, extraItemActions, heldItem, focuser, setHeldItem, scrollToItem, setScrollToItem } = useWardrobeContext();
+	const wornItem = useWardrobeTargetItem(targetSelector, item);
 	const extraActions = useObservable(extraItemActions);
 
 	const ref = useRef<HTMLDivElement>(null);
@@ -317,7 +322,7 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 			focuser.focus({
 				container: item.container,
 				itemId: selected ? null : item.itemId,
-			}, target);
+			}, targetSelector);
 		} }>
 			{
 				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null

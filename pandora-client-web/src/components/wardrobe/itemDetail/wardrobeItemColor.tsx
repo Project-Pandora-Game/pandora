@@ -24,8 +24,8 @@ export function WardrobeItemColorization({ wornItem, item }: {
 	wornItem: Item<'bodypart' | 'personal' | 'roomDevice'>;
 	item: ItemPath;
 }): ReactElement | null {
-	const { target, targetSelector } = useWardrobeContext();
-	const allItems = useWardrobeTargetItems(target);
+	const { targetSelector } = useWardrobeContext();
+	const allItems = useWardrobeTargetItems(targetSelector);
 	const action: Omit<AppearanceAction & { type: 'color'; }, 'color'> = useMemo(() => ({
 		type: 'color',
 		target: targetSelector,

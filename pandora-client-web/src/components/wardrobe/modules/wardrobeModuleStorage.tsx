@@ -14,7 +14,7 @@ import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTyp
 
 export function WardrobeModuleConfigStorage({ item, moduleName, m }: WardrobeModuleProps<ItemModuleStorage>): ReactElement {
 	const { actions, globalState } = useWardrobeActionContext();
-	const { target, targetSelector, focuser } = useWardrobeContext();
+	const { targetSelector, focuser } = useWardrobeContext();
 	const [requestPermission] = useWardrobePermissionRequestCallback();
 	const [ref, setRef] = useState<HTMLElement | null>(null);
 
@@ -39,8 +39,8 @@ export function WardrobeModuleConfigStorage({ item, moduleName, m }: WardrobeMod
 			return;
 		}
 
-		focuser.focusItemModule(item, moduleName, target);
-	}, [requestPermission, item, moduleName, focuser, target, checkResult]);
+		focuser.focusItemModule(item, moduleName, targetSelector);
+	}, [requestPermission, item, moduleName, focuser, targetSelector, checkResult]);
 
 	return (
 		<Row padding='medium' wrap>

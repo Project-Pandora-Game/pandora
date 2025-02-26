@@ -72,12 +72,12 @@ function InteractionBox({ className }: {
 				) : null
 			}
 			<Tab name='Pose'>
-				<WardrobeContextProvider target={ player }>
+				<WardrobeContextProvider target={ player.actionSelector }>
 					<WardrobePoseGui character={ player } characterState={ playerState } />
 				</WardrobeContextProvider>
 			</Tab>
 			<Tab name='Expressions'>
-				<WardrobeContextProvider target={ player }>
+				<WardrobeContextProvider target={ player.actionSelector }>
 					<WardrobeExpressionGui character={ player } characterState={ playerState } />
 				</WardrobeContextProvider>
 			</Tab>

@@ -3,6 +3,7 @@ import {
 	AssertNotNullable,
 	CharacterIdSchema,
 	ICharacterRoomData,
+	type ActionTargetSelector,
 } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
@@ -18,7 +19,7 @@ import { WardrobeRandomizationGui } from './views/wardrobeRandomizationView';
 import './wardrobe.scss';
 import { useWardrobeActionContext, WardrobeActionContextProvider } from './wardrobeActionContext';
 import { WardrobeBodyManipulation } from './wardrobeBody';
-import { useWardrobeContext, WARDROBE_TARGET_ROOM, WardrobeContextProvider } from './wardrobeContext';
+import { useWardrobeContext, WardrobeContextProvider } from './wardrobeContext';
 import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphics';
 import { WardrobeItemPreferences } from './wardrobeItemPreferences';
 import { WardrobeItemManipulation } from './wardrobeItems';
@@ -41,7 +42,7 @@ function WardrobeRouterPlayer(): ReactElement {
 
 	return (
 		<WardrobeActionContextProvider player={ player }>
-			<WardrobeContextProvider target={ player }>
+			<WardrobeContextProvider target={ player.actionSelector }>
 				<WardrobeCharacter character={ player } />
 			</WardrobeContextProvider>
 		</WardrobeActionContextProvider>
@@ -67,7 +68,7 @@ function WardrobeRouterCharacter(): ReactElement {
 
 	return (
 		<WardrobeActionContextProvider player={ player }>
-			<WardrobeContextProvider target={ character }>
+			<WardrobeContextProvider target={ character.actionSelector }>
 				<WardrobeCharacter character={ character } />
 			</WardrobeContextProvider>
 		</WardrobeActionContextProvider>
@@ -78,9 +79,13 @@ function WardrobeRouterRoomInventory(): ReactElement {
 	const player = usePlayer();
 	AssertNotNullable(player);
 
+	const roomTarget = useMemo((): ActionTargetSelector => ({
+		type: 'roomInventory',
+	}), []);
+
 	return (
 		<WardrobeActionContextProvider player={ player }>
-			<WardrobeContextProvider target={ WARDROBE_TARGET_ROOM }>
+			<WardrobeContextProvider target={ roomTarget }>
 				<WardrobeRoom />
 			</WardrobeContextProvider>
 		</WardrobeActionContextProvider>

@@ -10,18 +10,20 @@ import {
 	AssetPreferencesPublic,
 	ItemContainerPath,
 	ResolveAssetPreference,
+	type ICharacterRoomData,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import gridIcon from '../../../assets/icons/grid.svg';
 import listIcon from '../../../assets/icons/list.svg';
-import { useCharacterDataOptional } from '../../../character/character';
+import { useCharacterDataOptional, type Character } from '../../../character/character';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { useIsNarrowScreen } from '../../../styles/mediaQueries';
 import { IconButton } from '../../common/button/button';
+import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider';
 import { useWardrobeActionContext, useWardrobeExecuteChecked } from '../wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { ActionWarning, AttributeButton, CheckResultToClassName, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
@@ -401,8 +403,16 @@ function InventoryAssetDropArea(): ReactElement | null {
 }
 
 export function useAssetPreferences(): Immutable<AssetPreferencesPublic> {
-	const { target } = useWardrobeContext();
-	const characterPreferences = useCharacterDataOptional(target.type === 'character' ? target : null)?.assetPreferences;
+	const { targetSelector } = useWardrobeContext();
+	const characters = useSpaceCharacters();
+
+	const character = useMemo((): Character<ICharacterRoomData> | null => {
+		if (targetSelector.type !== 'character')
+			return null;
+		return characters?.find((c) => c.data.id === targetSelector.characterId) ?? null;
+	}, [characters, targetSelector]);
+
+	const characterPreferences = useCharacterDataOptional(character)?.assetPreferences;
 
 	const preferences = characterPreferences ?? ASSET_PREFERENCES_DEFAULT;
 

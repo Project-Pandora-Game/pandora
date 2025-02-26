@@ -60,8 +60,12 @@ export function ColorInputRGBA({
 		}
 	}, [minAlpha, setInput, onChangeCallerThrottled]);
 
-	const onPaste = useCallback((ev: React.ClipboardEvent) => {
-		ColorParsePaste(ev, changeCallback, minAlpha < Color.maxAlpha);
+	const onPaste = useCallback((ev: React.ClipboardEvent<HTMLInputElement>) => {
+		const result = ColorParsePaste(ev, minAlpha < Color.maxAlpha);
+		if (result) {
+			changeCallback(result);
+			ev.currentTarget.value = result;
+		}
 	}, [changeCallback, minAlpha]);
 
 	const onEdit = useCallback((color: HexRGBAColorString) => {
@@ -172,8 +176,12 @@ function ColorEditor({
 		}
 	}, [color, setState, minAlpha]);
 
-	const onPaste = useCallback((ev: React.ClipboardEvent) => {
-		ColorParsePaste(ev, onTextInput, minAlpha < Color.maxAlpha);
+	const onPaste = useCallback((ev: React.ClipboardEvent<HTMLInputElement>) => {
+		const result = ColorParsePaste(ev, minAlpha < Color.maxAlpha);
+		if (result) {
+			onTextInput(result);
+			ev.currentTarget.value = result;
+		}
 	}, [onTextInput, minAlpha]);
 
 	const onPointerDown = useCallback((ev: React.PointerEvent) => {
@@ -222,7 +230,7 @@ function ColorEditor({
 	);
 }
 
-function ColorParsePaste(ev: React.ClipboardEvent, set: (color: string) => void, allowAlpha: boolean) {
+function ColorParsePaste(ev: React.ClipboardEvent, allowAlpha: boolean): string | undefined {
 	ev.preventDefault();
 	let text = ev.clipboardData.getData('text').trim();
 	if (/^[0-9a-f]{3,8}/i.test(text)) {
@@ -231,12 +239,12 @@ function ColorParsePaste(ev: React.ClipboardEvent, set: (color: string) => void,
 	const { space, values, alpha } = parse(text);
 	switch (space) {
 		case 'rgb':
-			set(`#${Color.toHexPart(values[0])}${Color.toHexPart(values[1])}${Color.toHexPart(values[2])}${allowAlpha ? Color.toHexPart(alpha) : ''}`);
-			break;
+			return `#${Color.toHexPart(values[0])}${Color.toHexPart(values[1])}${Color.toHexPart(values[2])}${allowAlpha ? Color.toHexPart(Math.floor(Color.maxAlpha * alpha)) : ''}`;
 		default:
 			toast(`Unsupported color space: ${space}`, TOAST_OPTIONS_ERROR);
 			break;
 	}
+	return undefined;
 }
 
 type ColorArray = readonly [number, number, number];

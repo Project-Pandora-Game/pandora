@@ -19,8 +19,8 @@ import {
 	IChatMessage,
 	IClientMessage,
 	IDirectoryAccountInfo,
-	IShardClientArgument,
 	IsAuthorized,
+	IShardClientArgument,
 	Item,
 	ItemPath,
 	LIMIT_CHAT_MESSAGE_LENGTH,
@@ -37,9 +37,11 @@ import {
 	SpaceIdSchema,
 	TypedEventEmitter,
 	ZodCast,
+	type ActionTargetSelector,
 	type AppearanceAction,
 	type IChatMessageActionTargetCharacter,
 	type IClientShardPromiseResult,
+	type ItemContainerPath,
 	type ItemId,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
@@ -665,8 +667,14 @@ export function useRoomInventoryItems(context: GameState): readonly Item[] {
 	return useMemo(() => (roomInventory?.getAllItems() ?? []), [roomInventory]);
 }
 
-const FindItemByIdCache = new WeakMap<AssetFrameworkGlobalState, Map<ItemId, readonly Item[]>>();
-export function FindItemById(globalState: AssetFrameworkGlobalState, id: ItemId): readonly Item[] {
+export type FindItemResultEntry = {
+	item: Item;
+	target: ActionTargetSelector;
+	path: ItemPath;
+};
+export type FindItemResult = readonly Readonly<FindItemResultEntry>[];
+const FindItemByIdCache = new WeakMap<AssetFrameworkGlobalState, Map<ItemId, FindItemResult>>();
+export function FindItemById(globalState: AssetFrameworkGlobalState, id: ItemId): FindItemResult {
 	let cache = FindItemByIdCache.get(globalState);
 	if (cache == null) {
 		cache = new Map();
@@ -677,31 +685,41 @@ export function FindItemById(globalState: AssetFrameworkGlobalState, id: ItemId)
 	if (cachedResult != null) {
 		return cachedResult;
 	}
-	const result: Item[] = [];
+	const result: Readonly<FindItemResultEntry>[] = [];
 
-	function processContainer(items: readonly Item[]): void {
+	function processContainer(items: readonly Item[], target: ActionTargetSelector, container: ItemContainerPath): void {
 		for (const item of items) {
 			if (item.id === id) {
-				result.push(item);
+				result.push({
+					item,
+					target,
+					path: {
+						container,
+						itemId: item.id,
+					},
+				});
 			}
 
-			for (const module of item.getModules().values()) {
-				processContainer(module.getContents());
+			for (const [moduleName, module] of item.getModules()) {
+				processContainer(module.getContents(), target, [
+					...container,
+					{ item: item.id, module: moduleName },
+				]);
 			}
 		}
 	}
 
 	for (const character of globalState.characters.values()) {
-		processContainer(character.items);
+		processContainer(character.items, { type: 'character', characterId: character.id }, []);
 	}
-	processContainer(globalState.room.items);
+	processContainer(globalState.room.items, { type: 'roomInventory' }, []);
 
 	freeze(result);
 	cache.set(id, result);
 	return result;
 }
 
-export function useStateFindItemById(globalState: AssetFrameworkGlobalState, id: ItemId): readonly Item[] {
+export function useStateFindItemById(globalState: AssetFrameworkGlobalState, id: ItemId): FindItemResult {
 	return useMemo(() => FindItemById(globalState, id), [globalState, id]);
 }
 

@@ -4,15 +4,12 @@ import {
 	AssertNever,
 	Asset,
 	Item,
-	ItemIdSchema,
 	SplitContainerPath,
 	type ActionTargetSelector,
 } from 'pandora-common';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
-import { ReactElement, useCallback, useEffect, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
-import { z } from 'zod';
+import { ReactElement, useCallback, useMemo } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { useObservable } from '../../observable';
 import { Tab, TabContainer } from '../common/tabs/tabs';
@@ -97,24 +94,10 @@ export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
 	};
 }
 
-export const WardrobeDeviceLocationStateSchema = z.object({
-	deviceId: ItemIdSchema,
-}).passthrough();
-
 export function WardrobeItemManipulation(): ReactElement {
-	const { targetSelector, heldItem, setHeldItem, focuser, setScrollToItem } = useWardrobeContext();
+	const { targetSelector, heldItem, setHeldItem, focuser } = useWardrobeContext();
 	const assetList = useAssetManager().assetList;
 
-	const location = useLocation();
-	useEffect(() => {
-		const locationState = WardrobeDeviceLocationStateSchema.safeParse(location.state);
-		if (locationState.success) {
-			const { deviceId } = locationState.data;
-			focuser.focus({ container: [], itemId: deviceId }, targetSelector);
-			setScrollToItem(deviceId);
-			location.state = {};
-		}
-	}, [focuser, location, setScrollToItem, targetSelector]);
 	const currentFocus = useObservable(focuser.current);
 
 	const { preFilter, containerContentsFilter, assetFilterAttributes } = useWardrobeItems(currentFocus);

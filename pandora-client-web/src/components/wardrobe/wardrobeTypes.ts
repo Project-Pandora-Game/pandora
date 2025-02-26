@@ -5,13 +5,16 @@ import {
 	AssetFrameworkGlobalState,
 	IAssetModuleTypes,
 	ItemContainerPath,
+	ItemContainerPathSchema,
 	ItemId,
+	ItemIdSchema,
 	ItemPath,
 	ItemTemplate,
 	ModuleType,
 } from 'pandora-common';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ReactElement } from 'react';
+import { z } from 'zod';
 import { Observable, type ReadonlyObservable } from '../../observable';
 
 export type WardrobeContextExtraItemActionComponent = (props: { target: ActionTargetSelector; item: ItemPath; }) => ReactElement | null;
@@ -40,10 +43,11 @@ export interface WardrobeContext {
 	actionPreviewState: Observable<AssetFrameworkGlobalState | null>;
 }
 
-export interface WardrobeFocus {
-	container: ItemContainerPath;
-	itemId: ItemId | null;
-}
+export const WardrobeFocusSchema = z.object({
+	container: ItemContainerPathSchema,
+	itemId: ItemIdSchema.nullable(),
+});
+export type WardrobeFocus = z.infer<typeof WardrobeFocusSchema>;
 
 export interface WardrobeModuleProps<Module extends IItemModule> {
 	target: ActionTargetSelector;
@@ -111,6 +115,17 @@ export class WardrobeFocuser {
 		this._inRoom.value = target.type === 'roomInventory';
 	}
 
+	/** Set a new focus without pushing entry on the history stack */
+	public focusReplace(newFocus: WardrobeFocus, target: ActionTargetSelector): void {
+		if (this._disabled != null)
+			throw new Error(this._disabled);
+		if (this._disabledContainers && newFocus.container.length > 0)
+			throw new Error(this._disabledContainers);
+
+		this._current.value = newFocus;
+		this._inRoom.value = target.type === 'roomInventory';
+	}
+
 	public focusItemId(itemId: ItemId | null): void {
 		if (this._disabled != null)
 			throw new Error(this._disabled);
@@ -127,25 +142,6 @@ export class WardrobeFocuser {
 			container: [...item.container, { item: item.itemId, module: moduleName }],
 			itemId: null,
 		}, target);
-	}
-
-	public focusPrevious(): void {
-		if (this._disabled != null)
-			throw new Error(this._disabled);
-
-		if (this._stack.length === 0) {
-			return;
-		}
-
-		const last = this._stack[this._stack.length - 1];
-		this._stack.push({
-			container: this._current.value.container,
-			itemId: this._current.value.itemId,
-			inRoom: this._inRoom.value,
-		});
-
-		this._current.value = omit(last, 'inRoom');
-		this._inRoom.value = last.inRoom;
 	}
 
 	public disable(message: string): () => void {

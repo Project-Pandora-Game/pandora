@@ -4,7 +4,6 @@ import { AppearanceAction, EvalItemPath, ItemId, ItemRoomDevice } from 'pandora-
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
-import type { z } from 'zod';
 import { ICharacter, useCharacterData, useCharacterDataOptional } from '../../../character/character';
 import { ChildrenProps } from '../../../common/reactTypes';
 import { Column } from '../../../components/common/container/container';
@@ -13,10 +12,10 @@ import { useContextMenuPosition } from '../../../components/contextMenu';
 import { DialogInPortal } from '../../../components/dialog/dialog';
 import { useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider';
+import type { WardrobeLocationState } from '../../../components/wardrobe/wardrobe';
 import { useWardrobeActionContext, useWardrobeExecuteChecked, WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue';
 import { ActionWarningContent } from '../../../components/wardrobe/wardrobeComponents';
-import type { WardrobeDeviceLocationStateSchema } from '../../../components/wardrobe/wardrobeItems';
 import { PointLike } from '../../../graphics/graphicsCharacter';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext';
@@ -311,7 +310,7 @@ function DeviceContextMenuCurrent({ device, position, onClose }: {
 						<WardrobeActionContextProvider player={ player }>
 							<button onClick={ () => {
 								onCloseActual();
-								navigate('/wardrobe/room-inventory', { state: { deviceId: device.id } satisfies z.infer<typeof WardrobeDeviceLocationStateSchema> });
+								navigate('/wardrobe/room-inventory', { state: { initialFocus: { container: [], itemId: device.id } } satisfies WardrobeLocationState });
 							} }>
 								{ device.asset.definition.name }
 							</button>

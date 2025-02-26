@@ -17,10 +17,12 @@ import {
 	type ItemDisplayNameType,
 } from 'pandora-common';
 import {
+	Fragment,
 	ReactElement,
 } from 'react';
 import { useGameState, useGlobalState, useStateFindItemById } from '../../../components/gameContext/gameStateContextProvider';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName';
+import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList';
 import { RenderedLink } from '../../screens/spaceJoin/spaceJoin';
 import { ChatParser } from './chatParser';
 
@@ -236,12 +238,11 @@ export function ActionTextItemLink({ item, itemDisplayNameType }: {
 
 	if (matchingItems.length === 1) {
 		// If we found exactly one matching item, make it a link
-		const currentItem = matchingItems[0];
+		const currentItem = matchingItems[0].item;
 
 		const hasCustomName = (!!currentItem.name && currentItem.name !== currentItem.asset.definition.name) && itemDisplayNameType !== 'original';
 		const hasDescription = !!currentItem.description;
 
-		// TODO: Make this link work
 		return (
 			<a
 				className={ classNames(
@@ -249,6 +250,9 @@ export function ActionTextItemLink({ item, itemDisplayNameType }: {
 					hasCustomName ? 'hasCustomName' : null,
 					hasDescription ? 'hasDescription' : null,
 				) }
+				onClick={ () => {
+					OpenRoomItemDialog(item.id);
+				} }
 			>
 				{ ResolveItemDisplayNameType(DescribeAsset(assetManager, item.assetId), item.itemName, itemDisplayNameType) }
 			</a>
@@ -289,7 +293,7 @@ export function RenderActionContentPart(originalMessage: string, substitutions: 
 		}
 	}
 
-	return <>{ message }</>;
+	return <Fragment key='actionContent'>{ message.map((e, i) => (<Fragment key={ i }>{ e }</Fragment>)) }</Fragment>;
 }
 
 export function RenderActionContent(
@@ -314,7 +318,7 @@ export function RenderActionContent(
 	actionText = RenderActionContentPart(actionText, action.dictionary);
 
 	if (action.type === 'action') {
-		actionText = <>({ actionText })</>;
+		actionText = <Fragment key='action'>({ actionText })</Fragment>;
 		return [
 			actionText,
 			null,

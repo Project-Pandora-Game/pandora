@@ -94,8 +94,9 @@ export function InventoryItemView({
 		}
 
 		// Locks have special GUI on higher level, so be friendly and focus on that when there is a lock
-		if (containerModule?.type === 'lockSlot' && displayedItems.length === 1) {
-			focuser.focusPrevious();
+		const containerItem = SplitContainerPath(focus.container);
+		if (containerModule?.type === 'lockSlot' && displayedItems.length === 1 && containerItem != null) {
+			focuser.focusReplace(containerItem.itemPath, targetSelector);
 			return;
 		}
 
@@ -107,7 +108,7 @@ export function InventoryItemView({
 		} else if (displayedItems.length === 0) {
 			focuser.focusItemId(null);
 		}
-	}, [focus, focuser, containerModule, singleItemContainer, displayedItems, containerAccessCheck]);
+	}, [focus, focuser, containerModule, singleItemContainer, displayedItems, containerAccessCheck, targetSelector]);
 
 	return (
 		<div className={ classNames('inventoryView', className) }>

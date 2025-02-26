@@ -5,19 +5,19 @@ import {
 	type ItemDisplayNameType,
 } from 'pandora-common';
 import type { ReactElement } from 'react';
-import { useWardrobeContext } from '../wardrobeContext';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 
 export function WardrobeItemName({
 	item,
 }: {
 	item: Item;
 }): ReactElement {
-	const { itemDisplayNameType } = useWardrobeContext();
+	const { wardrobeItemDisplayNameType } = useAccountSettings();
 
-	const isCustomName = itemDisplayNameType === 'custom' && !!item.name && item.name !== item.asset.definition.name;
+	const isCustomName = wardrobeItemDisplayNameType === 'custom' && !!item.name && item.name !== item.asset.definition.name;
 	return (
 		<span className={ classNames('itemName', isCustomName ? 'custom' : null) }>
-			{ ResolveItemDisplayName(item, itemDisplayNameType) }
+			{ ResolveItemDisplayName(item, wardrobeItemDisplayNameType) }
 		</span>
 	);
 }

@@ -195,9 +195,6 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		focuser,
 		extraItemActions,
 		actionPreviewState,
-		showExtraActionButtons: true,
-		showHoverPreview: true,
-		itemDisplayNameType: 'custom',
 	}), [character, assetList, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
 
 	return (

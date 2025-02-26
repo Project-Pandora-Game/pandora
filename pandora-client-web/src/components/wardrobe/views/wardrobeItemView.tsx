@@ -26,6 +26,7 @@ import { useNavigate } from 'react-router';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
 import { useObservable } from '../../../observable';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { Button } from '../../common/button/button';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
 import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobeItemName';
@@ -45,7 +46,8 @@ export function InventoryItemView({
 	filter?: (item: Item) => boolean;
 }): ReactElement | null {
 	const { actions, globalState } = useWardrobeActionContext();
-	const { targetSelector, heldItem, focuser, itemDisplayNameType } = useWardrobeContext();
+	const { wardrobeItemDisplayNameType } = useAccountSettings();
+	const { targetSelector, heldItem, focuser } = useWardrobeContext();
 	const focus = useObservable(focuser.current);
 	const appearance = useWardrobeTargetItems(targetSelector);
 	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(appearance), [appearance]);
@@ -76,12 +78,12 @@ export function InventoryItemView({
 			const module = item?.getModules().get(step.module);
 			if (!item || !module)
 				return [[], undefined, []];
-			steps.push(`${ResolveItemDisplayName(item, itemDisplayNameType)} (${module.config.name})`);
+			steps.push(`${ResolveItemDisplayName(item, wardrobeItemDisplayNameType)} (${module.config.name})`);
 			container = module;
 			items = item.getModuleItems(step.module);
 		}
 		return [items, container, steps];
-	}, [appearance, filter, focus, itemDisplayNameType]);
+	}, [appearance, filter, focus, wardrobeItemDisplayNameType]);
 
 	const singleItemContainer = containerModule != null && containerModule instanceof ItemModuleLockSlot;
 	useEffect(() => {

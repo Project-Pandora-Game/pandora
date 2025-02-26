@@ -9,7 +9,6 @@ import {
 import { createContext, ReactElement, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { Observable, useObservable } from '../../observable';
-import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
 import { useWardrobeActionContext } from './wardrobeActionContext';
 import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocuser, WardrobeHeldItem } from './wardrobeTypes';
 
@@ -20,7 +19,6 @@ export function WardrobeContextProvider({ target, children }: { target: ActionTa
 		globalState,
 	} = useWardrobeActionContext();
 
-	const settings = useAccountSettings();
 	const assetList = useAssetManager().assetList;
 
 	const focuser = useMemo(() => new WardrobeFocuser(), []);
@@ -60,10 +58,7 @@ export function WardrobeContextProvider({ target, children }: { target: ActionTa
 		focuser,
 		extraItemActions,
 		actionPreviewState,
-		showExtraActionButtons: settings.wardrobeExtraActionButtons,
-		showHoverPreview: settings.wardrobeHoverPreview,
-		itemDisplayNameType: settings.wardrobeItemDisplayNameType,
-	}), [actualTargetSelector, assetList, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState, settings.wardrobeExtraActionButtons, settings.wardrobeHoverPreview, settings.wardrobeItemDisplayNameType]);
+	}), [actualTargetSelector, assetList, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

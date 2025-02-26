@@ -278,7 +278,8 @@ export function WardrobeActionButton({
 	onCurrentAttempt?: (currentAttempt: WardrobeExecuteCheckedResult['currentAttempt']) => void;
 	disabled?: boolean;
 }): ReactElement {
-	const { actionPreviewState, showHoverPreview } = useWardrobeContext();
+	const { actionPreviewState } = useWardrobeContext();
+	const { wardrobeHoverPreview } = useAccountSettings();
 	const [isHovering, setIsHovering] = useState(false);
 
 	const check = useStaggeredAppearanceActionResult(action);
@@ -293,7 +294,7 @@ export function WardrobeActionButton({
 	}, [onCurrentAttempt, currentAttempt]);
 
 	useEffect(() => {
-		if (!isHovering || !showHoverPreview || !allowPreview || check == null || !check.valid)
+		if (!isHovering || !wardrobeHoverPreview || !allowPreview || check == null || !check.valid)
 			return;
 
 		const previewState = check.resultState;
@@ -305,7 +306,7 @@ export function WardrobeActionButton({
 				actionPreviewState.value = null;
 			}
 		};
-	}, [isHovering, showHoverPreview, allowPreview, actionPreviewState, check]);
+	}, [isHovering, wardrobeHoverPreview, allowPreview, actionPreviewState, check]);
 
 	return (
 		<WardrobeActionButtonElement
@@ -411,20 +412,20 @@ export function WardrobeActionRandomizeButton({
 }: {
 	kind: AppearanceAction<'randomize'>['kind'];
 }) {
-	const { showHoverPreview } = useWardrobeContext();
+	const { wardrobeHoverPreview } = useAccountSettings();
 	const [seed, newSeed] = useReducer(() => nanoid(), nanoid());
 	const updateInterval = useObservable(WardrobeActionRandomizeUpdateInterval);
 
 	useEffect(() => newSeed(), [newSeed]);
 	useEffect(() => {
-		if (!showHoverPreview || updateInterval < MIN_RANDOMIZE_UPDATE_INTERVAL)
+		if (!wardrobeHoverPreview || updateInterval < MIN_RANDOMIZE_UPDATE_INTERVAL)
 			return undefined;
 
 		const timeout = setInterval(newSeed, updateInterval);
 		return () => {
 			clearTimeout(timeout);
 		};
-	}, [showHoverPreview, updateInterval, newSeed]);
+	}, [wardrobeHoverPreview, updateInterval, newSeed]);
 
 	let text;
 	switch (kind) {

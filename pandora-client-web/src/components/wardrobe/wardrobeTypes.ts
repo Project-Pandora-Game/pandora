@@ -10,7 +10,6 @@ import {
 	ItemPath,
 	ItemTemplate,
 	ModuleType,
-	type ItemDisplayNameType,
 } from 'pandora-common';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ReactElement } from 'react';
@@ -41,11 +40,6 @@ export interface WardrobeContext {
 
 	/** Override for previewing the actions */
 	actionPreviewState: Observable<AssetFrameworkGlobalState | null>;
-
-	// Settings
-	showExtraActionButtons: boolean;
-	showHoverPreview: boolean;
-	itemDisplayNameType: ItemDisplayNameType;
 }
 
 export interface WardrobeFocus {

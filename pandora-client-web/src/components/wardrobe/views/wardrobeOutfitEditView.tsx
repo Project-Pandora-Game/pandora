@@ -15,6 +15,7 @@ import { toast } from 'react-toastify';
 import { useAssetManager } from '../../../assets/assetManager';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { Button } from '../../common/button/button';
 import { Column, Row } from '../../common/container/container';
 import { useConfirmDialog } from '../../dialog/dialog';
@@ -355,7 +356,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 }): ReactElement {
 	const confirm = useConfirmDialog();
 	const assetManager = useAssetManager();
-	const { itemDisplayNameType } = useWardrobeContext();
+	const { wardrobeItemDisplayNameType } = useAccountSettings();
 
 	const asset = assetManager.getAssetById(itemTemplate.asset);
 
@@ -387,7 +388,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 		]
 	) : undefined;
 
-	const visibleName = ResolveItemDisplayNameType(asset.definition.name, itemTemplate.name, itemDisplayNameType);
+	const visibleName = ResolveItemDisplayNameType(asset.definition.name, itemTemplate.name, wardrobeItemDisplayNameType);
 
 	if (!asset.canBeSpawned()) {
 		return (
@@ -409,7 +410,7 @@ function OutfitEditViewItem({ itemTemplate, updateItemTemplate, reorderItemTempl
 		);
 	}
 
-	const hasCustomName = itemDisplayNameType === 'custom' && !!itemTemplate.name && itemTemplate.name !== asset.definition.name;
+	const hasCustomName = wardrobeItemDisplayNameType === 'custom' && !!itemTemplate.name && itemTemplate.name !== asset.definition.name;
 	return (
 		<div
 			tabIndex={ 0 }

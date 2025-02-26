@@ -38,10 +38,11 @@ export function InventoryAssetView({ title, children, assets, container, attribu
 	attributesFilterOptions?: readonly string[];
 	spawnStyle: 'spawn' | 'pickup';
 }): ReactElement | null {
-	const { targetSelector, extraItemActions, heldItem, showExtraActionButtons } = useWardrobeContext();
+	const { targetSelector, extraItemActions, heldItem } = useWardrobeContext();
+	const { wardrobeExtraActionButtons } = useAccountSettings();
 
 	const extraItemAction = useCallback<WardrobeContextExtraItemActionComponent>(({ item }) => {
-		return (showExtraActionButtons || spawnStyle === 'spawn') ? (
+		return (wardrobeExtraActionButtons || spawnStyle === 'spawn') ? (
 			<WardrobeActionButton action={ {
 				type: 'delete',
 				target: targetSelector,
@@ -50,7 +51,7 @@ export function InventoryAssetView({ title, children, assets, container, attribu
 				<img src={ deleteIcon } alt='Delete action' />
 			</WardrobeActionButton>
 		) : null;
-	}, [targetSelector, spawnStyle, showExtraActionButtons]);
+	}, [targetSelector, spawnStyle, wardrobeExtraActionButtons]);
 	useEffect(() => {
 		extraItemActions.value = extraItemActions.value.concat([extraItemAction]);
 		return () => {
@@ -281,7 +282,8 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	container: ItemContainerPath;
 	listMode: boolean;
 }): ReactElement {
-	const { targetSelector, actionPreviewState, showHoverPreview } = useWardrobeContext();
+	const { targetSelector, actionPreviewState } = useWardrobeContext();
+	const { wardrobeHoverPreview } = useAccountSettings();
 	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 	const [isHovering, setIsHovering] = useState(false);
 	const preference = useAssetPreference(asset);
@@ -299,7 +301,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	const { execute, currentAttempt } = useWardrobeExecuteChecked(action, check);
 
 	useEffect(() => {
-		if (!isHovering || !showHoverPreview || check == null || !check.valid)
+		if (!isHovering || !wardrobeHoverPreview || check == null || !check.valid)
 			return;
 
 		const previewState = check.resultState;
@@ -311,7 +313,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 				actionPreviewState.value = null;
 			}
 		};
-	}, [isHovering, showHoverPreview, actionPreviewState, check]);
+	}, [isHovering, wardrobeHoverPreview, actionPreviewState, check]);
 
 	return (
 		<div

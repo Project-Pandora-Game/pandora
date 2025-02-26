@@ -2,11 +2,11 @@ import { ReactElement } from 'react';
 import { ICharacter } from '../../../character/character';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput';
 import { useObservable } from '../../../observable';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { Column, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { usePlayerId } from '../../gameContext/playerContextProvider';
 import { MIN_RANDOMIZE_UPDATE_INTERVAL, WardrobeActionRandomizeButton, WardrobeActionRandomizeUpdateInterval } from '../wardrobeComponents';
-import { useWardrobeContext } from '../wardrobeContext';
 
 export function WardrobeRandomizationGui({ character }: {
 	character: ICharacter;
@@ -44,7 +44,7 @@ export function WardrobeRandomizationGui({ character }: {
 }
 
 function WardrobeActionRandomizeSettings() {
-	const { showHoverPreview } = useWardrobeContext();
+	const { wardrobeHoverPreview } = useAccountSettings();
 	const updateInterval = useObservable(WardrobeActionRandomizeUpdateInterval);
 
 	const onChange = (newValue: number) => {
@@ -53,7 +53,7 @@ function WardrobeActionRandomizeSettings() {
 			WardrobeActionRandomizeUpdateInterval.value = result.data;
 	};
 
-	if (!showHoverPreview) {
+	if (!wardrobeHoverPreview) {
 		return (
 			<span>
 				Note: hover preview is disabled, enable it in character settings.

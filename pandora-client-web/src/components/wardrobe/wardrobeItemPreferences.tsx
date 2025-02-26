@@ -18,7 +18,6 @@ import { Tab, TabContainer } from '../common/tabs/tabs';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
 import { WardrobeAssetList, useAssetPreference, useAssetPreferenceResolver, useAssetPreferences } from './views/wardrobeAssetView';
 import { InventoryAssetPreview, InventoryAttributePreview } from './wardrobeComponents';
-import { useWardrobeContext } from './wardrobeContext';
 
 type ItemPreferencesFocus = {
 	type: 'none';
@@ -67,8 +66,8 @@ export function WardrobeItemPreferences(): ReactElement {
 export function WardrobePreferencesItemPicker({ title }: {
 	title: string;
 }): ReactElement | null {
-	const { assetList } = useWardrobeContext();
 	const assetManager = useAssetManager();
+	const assetList = assetManager.assetList;
 
 	const attributesFilterOptions = useMemo<string[]>(() => ([...assetManager.attributes.entries()]
 		.filter((a) => a[1].useAsWardrobeFilter != null)
@@ -433,7 +432,7 @@ function WardrobePreferenceAttributeConfiguration({ attribute, definition }: {
 	const idBase = useId();
 
 	const { setFocus } = useContext(WardrobeItemPreferencesFocusContext);
-	const { assetList } = useWardrobeContext();
+	const assetList = useAssetManager().assetList;
 	const shardConnector = useShardConnector();
 	const resolvePreference = useAssetPreferenceResolver();
 	const currentPreferences = useAssetPreferences();

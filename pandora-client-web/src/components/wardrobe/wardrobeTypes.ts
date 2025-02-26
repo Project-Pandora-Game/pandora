@@ -2,7 +2,6 @@ import type { Immutable } from 'immer';
 import { omit } from 'lodash';
 import {
 	ActionTargetSelector,
-	Asset,
 	AssetFrameworkGlobalState,
 	IAssetModuleTypes,
 	ItemContainerPath,
@@ -30,7 +29,6 @@ export type WardrobeHeldItem = {
 
 export interface WardrobeContext {
 	targetSelector: ActionTargetSelector;
-	assetList: readonly Asset[];
 	heldItem: WardrobeHeldItem;
 	setHeldItem: (newHeldItem: WardrobeHeldItem) => void;
 	scrollToItem: ItemId | null;

@@ -7,7 +7,6 @@ import {
 	ItemId,
 } from 'pandora-common';
 import { createContext, ReactElement, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
-import { useAssetManager } from '../../assets/assetManager';
 import { Observable, useObservable } from '../../observable';
 import { useWardrobeActionContext } from './wardrobeActionContext';
 import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocuser, WardrobeHeldItem } from './wardrobeTypes';
@@ -18,8 +17,6 @@ export function WardrobeContextProvider({ target, children }: { target: ActionTa
 	const {
 		globalState,
 	} = useWardrobeActionContext();
-
-	const assetList = useAssetManager().assetList;
 
 	const focuser = useMemo(() => new WardrobeFocuser(), []);
 	const focuserInRoom = useObservable(focuser.inRoom);
@@ -50,7 +47,6 @@ export function WardrobeContextProvider({ target, children }: { target: ActionTa
 
 	const context = useMemo((): WardrobeContext => ({
 		targetSelector: actualTargetSelector,
-		assetList,
 		heldItem,
 		setHeldItem,
 		scrollToItem,
@@ -58,7 +54,7 @@ export function WardrobeContextProvider({ target, children }: { target: ActionTa
 		focuser,
 		extraItemActions,
 		actionPreviewState,
-	}), [actualTargetSelector, assetList, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
+	}), [actualTargetSelector, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>

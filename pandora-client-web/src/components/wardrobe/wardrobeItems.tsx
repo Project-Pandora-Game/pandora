@@ -102,7 +102,8 @@ export const WardrobeDeviceLocationStateSchema = z.object({
 }).passthrough();
 
 export function WardrobeItemManipulation(): ReactElement {
-	const { targetSelector, assetList, heldItem, setHeldItem, focuser, setScrollToItem } = useWardrobeContext();
+	const { targetSelector, heldItem, setHeldItem, focuser, setScrollToItem } = useWardrobeContext();
+	const assetList = useAssetManager().assetList;
 
 	const location = useLocation();
 	useEffect(() => {

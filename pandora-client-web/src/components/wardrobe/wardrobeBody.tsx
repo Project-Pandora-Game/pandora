@@ -23,9 +23,10 @@ export function WardrobeBodyManipulation({ className, character, characterState 
 	character: ICharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const { assetList, focuser } = useWardrobeContext();
+	const { focuser } = useWardrobeContext();
 	const currentFocus = useObservable(focuser.current);
 	const assetManager = useAssetManager();
+	const assetList = assetManager.assetList;
 
 	const filter = (item: Item | Asset) => {
 		const asset = 'asset' in item ? item.asset : item;

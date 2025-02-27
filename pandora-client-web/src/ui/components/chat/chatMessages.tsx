@@ -24,7 +24,6 @@ import { useGameState, useGlobalState, useStateFindItemById } from '../../../com
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName';
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList';
 import { RenderedLink } from '../../screens/spaceJoin/spaceJoin';
-import { ChatParser } from './chatParser';
 
 export type IChatDeletedMessageProcessed = IChatMessageDeleted & {
 	/** Time the message was sent, guaranteed to be unique */
@@ -56,15 +55,12 @@ export function IsActionMessage(message: IChatMessageProcessed): message is ICha
 
 function ActionMessagePrepareDictionary(
 	message: IChatActionMessageProcessed,
-	assetManager: AssetManager,
 	itemDisplayNameType: ItemDisplayNameType,
 ): IChatActionMessageProcessed {
 	const metaDictionary: Partial<Record<ChatActionDictionaryMetaEntry, string | ReactElement>> = {};
 
 	const source = message.data?.character;
 	const target = message.data?.target ?? source;
-
-	const describeAsset = ({ assetId, itemName }: { assetId: AssetId; itemName: string; }) => ChatParser.escapeStyle(ResolveItemDisplayNameType(DescribeAsset(assetManager, assetId), itemName, itemDisplayNameType));
 
 	if (source) {
 		const { id, name, pronoun } = source;
@@ -115,22 +111,22 @@ function ActionMessagePrepareDictionary(
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.TARGET_CHARACTER_DYNAMIC_REFLEXIVE;
 			}
 		} else if (itemContainerPath.length === 1) {
-			const asset = describeAsset(itemContainerPath[0]);
+			const asset = <ActionTextItemLink item={ itemContainerPath[0] } itemDisplayNameType={ itemDisplayNameType } />;
 
 			if (target?.type === 'roomInventory') {
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
-					`${asset} in the room inventory`;
+					<>{ asset } in the room inventory</>;
 			} else {
 				metaDictionary.ITEM_CONTAINER_SIMPLE = <>{ metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s` } { asset }</>;
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = <>{ metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s` } { asset }</>;
 			}
 		} else {
-			const assetFirst = describeAsset(itemContainerPath[0]);
-			const assetLast = describeAsset(itemContainerPath[itemContainerPath.length - 1]);
+			const assetFirst = <ActionTextItemLink item={ itemContainerPath[0] } itemDisplayNameType={ itemDisplayNameType } />;
+			const assetLast = <ActionTextItemLink item={ itemContainerPath[itemContainerPath.length - 1] } itemDisplayNameType={ itemDisplayNameType } />;
 
 			if (target?.type === 'roomInventory') {
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = metaDictionary.ITEM_CONTAINER_SIMPLE =
-					`the ${assetLast} in ${assetFirst} in the room inventory`;
+					<>the { assetLast } in { assetFirst } in the room inventory</>;
 			} else {
 				metaDictionary.ITEM_CONTAINER_SIMPLE = <>the { assetLast } in { metaDictionary.TARGET_CHARACTER_POSSESSIVE ?? `???'s` } { assetFirst }</>;
 				metaDictionary.ITEM_CONTAINER_SIMPLE_DYNAMIC = <>the { assetLast } in { metaDictionary.TARGET_CHARACTER_DYNAMIC_POSSESSIVE ?? `???'s` } { assetFirst }</>;
@@ -302,7 +298,7 @@ export function RenderActionContent(
 	itemDisplayNameType: ItemDisplayNameType,
 ): [content: ReactElement | null, extraContent: ReactElement | null] {
 	// Append implicit dictionary entries
-	action = ActionMessagePrepareDictionary(action, assetManager, itemDisplayNameType);
+	action = ActionMessagePrepareDictionary(action, itemDisplayNameType);
 	let actionText: string | ReactElement | undefined = GetActionText(action, assetManager);
 	if (actionText === undefined) {
 		return [

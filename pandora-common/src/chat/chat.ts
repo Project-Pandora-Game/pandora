@@ -80,6 +80,7 @@ export type IChatMessageActionItem = {
 	itemName: string;
 };
 export type IChatMessageActionContainerPath = {
+	id: ItemId;
 	assetId: AssetId;
 	itemName: string;
 	module: string;

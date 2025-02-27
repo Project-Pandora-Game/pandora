@@ -3,9 +3,11 @@ import { Observable } from '../../../observable';
 
 export interface RoomItemDialogDefinition {
 	itemId: ItemId;
+	pinned: boolean;
 }
 
 export const RoomItemDialogs = new Observable<readonly Readonly<RoomItemDialogDefinition>[]>([]);
+export const RoomItemDialogsShouldShow = new Observable<number>(0);
 
 export function OpenRoomItemDialog(itemId: ItemId): void {
 	const currentDialog = RoomItemDialogs.value.findIndex((d) => d.itemId === itemId);
@@ -17,6 +19,7 @@ export function OpenRoomItemDialog(itemId: ItemId): void {
 		} else {
 			d.push({
 				itemId,
+				pinned: false,
 			});
 		}
 	});

@@ -1,9 +1,12 @@
+import classNames from 'classnames';
 import { SplitContainerPath } from 'pandora-common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
-import { useCallback, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useState, type ReactElement } from 'react';
 import { useNavigate } from 'react-router';
 import deleteIcon from '../../../assets/icons/delete.svg';
+import pinOutlineIcon from '../../../assets/icons/pin-outline.svg';
+import pinSolidIcon from '../../../assets/icons/pin-solid.svg';
 import shirtIcon from '../../../assets/icons/shirt.svg';
 import type { ChildrenProps } from '../../../common/reactTypes';
 import { Button, IconButton } from '../../../components/common/button/button';
@@ -11,26 +14,51 @@ import { Column, Row } from '../../../components/common/container/container';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
 import { DraggableDialog } from '../../../components/dialog/dialog';
 import { useGameState, useGlobalState, useStateFindItemById, type FindItemResultEntry } from '../../../components/gameContext/gameStateContextProvider';
+import { usePlayer } from '../../../components/gameContext/playerContextProvider';
 import { WardrobeModuleConfig } from '../../../components/wardrobe/modules/_wardrobeModules';
 import { ActionTargetToWardrobeUrl, type WardrobeLocationState } from '../../../components/wardrobe/wardrobe';
+import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents';
 import { WardrobeExternalContextProvider } from '../../../components/wardrobe/wardrobeContext';
 import { useWardrobeTargetItem } from '../../../components/wardrobe/wardrobeUtils';
 import { useObservable } from '../../../observable';
 import './roomItemDialog.scss';
-import { RoomItemDialogs, type RoomItemDialogDefinition } from './roomItemDialogList';
+import { RoomItemDialogs, RoomItemDialogsShouldShow, type RoomItemDialogDefinition } from './roomItemDialogList';
 
-export function RoomItemDialogsProvider(): ReactElement {
+export function RoomItemDialogsProvider(): ReactElement | null {
 	const roomItemDialogs = useObservable(RoomItemDialogs);
+	const shouldShow = useObservable(RoomItemDialogsShouldShow) > 0;
+	const player = usePlayer();
+
+	useEffect(() => {
+		// Close all non-pinned dialogs when they should get hidden
+		if (!shouldShow) {
+			RoomItemDialogs.produce((d) => d.filter((i) => i.pinned));
+		}
+	}, [shouldShow]);
+
+	if (player == null)
+		return null;
 
 	return (
-		<>
-			{ roomItemDialogs.map((d) => <RoomItemDialog { ...d } key={ d.itemId } />) }
-		</>
+		<WardrobeActionContextProvider player={ player }>
+			{ roomItemDialogs.map((d) => <RoomItemDialog { ...d } show={ shouldShow } key={ d.itemId } />) }
+		</WardrobeActionContextProvider>
 	);
 }
 
-function RoomItemDialog({ itemId }: RoomItemDialogDefinition): ReactElement {
+export function RoomItemDialogsProviderEnabler(): null {
+	useEffect(() => {
+		RoomItemDialogsShouldShow.produce((c) => c + 1);
+		return () => {
+			RoomItemDialogsShouldShow.produce((c) => c - 1);
+		};
+	}, []);
+
+	return null;
+}
+
+function RoomItemDialog({ itemId, pinned, show }: RoomItemDialogDefinition & { show: boolean; }): ReactElement {
 	const globalState = useGlobalState(useGameState());
 
 	const matchingItems = useStateFindItemById(globalState, itemId);
@@ -45,16 +73,30 @@ function RoomItemDialog({ itemId }: RoomItemDialogDefinition): ReactElement {
 		}
 	}, [itemId]);
 
+	const togglePin = useCallback(() => {
+		const index = RoomItemDialogs.value.findIndex((d) => d.itemId === itemId);
+		if (index >= 0) {
+			RoomItemDialogs.produceImmer((d) => {
+				d[index].pinned = !d[index].pinned;
+			});
+		}
+	}, [itemId]);
+
 	return (
 		<DraggableDialog
 			key={ itemId }
 			close={ close }
 			title={ (findResult?.item.name || findResult?.item.asset.definition.name) ?? '[ERROR: Unknown item]' }
-			className='roomItemDialog'
+			className={ classNames('roomItemDialog', show ? null : 'hidden') }
 			initialHeight={ Math.min(400 * window.devicePixelRatio, Math.floor(80 * window.innerHeight)) }
 			initialWidth={ Math.min(300 * window.devicePixelRatio, Math.floor(80 * window.innerWidth)) }
 			rawContent
 			allowShade
+			headerExtraBeforeTitle={ (
+				<div className={ classNames('dialog-button', pinned ? 'active' : null) } title='Keep this item dialog open' onClick={ togglePin }>
+					<img src={ pinned ? pinSolidIcon : pinOutlineIcon } alt='Keep this item dialog open' crossOrigin='anonymous' />
+				</div>
+			) }
 		>
 			{
 				findResult != null ? (

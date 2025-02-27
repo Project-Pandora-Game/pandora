@@ -5,6 +5,7 @@ import { ChildrenProps } from '../../common/reactTypes';
 import type { ClientServices } from '../../services/clientServices';
 import { ServiceManagerContextProvider } from '../../services/serviceProvider';
 import { ChatInputContextProvider } from '../../ui/components/chat/chatInput';
+import { RoomItemDialogsProvider } from '../../ui/screens/room/roomItemDialog';
 import { TutorialService } from '../../ui/tutorial/tutorialSystem/tutorialService';
 import { CharacterRestrictionOverrideDialogContext } from '../characterRestrictionOverride/characterRestrictionOverride';
 import { DebugContextProvider } from '../error/debugContextProvider';
@@ -47,6 +48,7 @@ function MiscProviders({ children }: ChildrenProps): ReactElement {
 				<ShardConnectorContextProvider />
 				<TutorialService />
 				<InterfaceSettingsProvider />
+				<RoomItemDialogsProvider />
 
 				{ children }
 			</PermissionCheckServiceProvider>

@@ -79,25 +79,43 @@
 			padding: 0.25em 0.5em;
 		}
 
-		.dialog-close, .dialog-shade {
+		.dialog-close, .dialog-shade, .dialog-button {
 			@include common.center-flex;
 			width: 1.5em;
 			height: 1.5em;
 			cursor: pointer;
 			border-radius: 50%;
+
+			img {
+				width: 70%;
+				height: 70%;
+				user-select: none;
+				pointer-events: none;
+			}
 		}
 
 		.dialog-close {
 			&:hover {
 				background: common.$theme-dialog-button-close-hover-background;
-				color: common.$theme-dialog-button-hover-text;
 			}
 		}
 
-		.dialog-shade {
+		.dialog-shade, .dialog-button {
 			&:hover {
-				background: common.$theme-dialog-button-shade-hover-background;
-				color: common.$theme-dialog-button-hover-text;
+				background: common.$theme-dialog-button-hover-background;
+			}
+
+			&.active {
+				background: common.$theme-dialog-button-active-background;
+				color: common.$theme-dialog-button-active-text;
+
+				&:hover {
+					background: common.$theme-dialog-button-active-hover-background;
+				}
+
+				img {
+					filter: common.$theme-dialog-button-active-imgfilter;
+				}
 			}
 		}
 	}

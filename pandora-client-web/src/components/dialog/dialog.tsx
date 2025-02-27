@@ -3,6 +3,7 @@ import { sortBy } from 'lodash';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type Ref } from 'react';
 import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
 import { Rnd } from 'react-rnd';
+import crossIcon from '../../assets/icons/cross.svg';
 import { type CommonProps } from '../../common/reactTypes';
 import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
@@ -171,6 +172,10 @@ export interface DraggableDialogProps {
 	 * @default false
 	 */
 	allowShade?: boolean;
+	/** Content inserted before title in the header. */
+	headerExtraBeforeTitle?: ReactNode;
+	/** Content inserted after title in the header. */
+	headerExtraAfterTitle?: ReactNode;
 	/**
 	 * Whether the dialog should be highlighted.
 	 * @default false
@@ -202,6 +207,8 @@ export function DraggableDialog({
 	close,
 	hiddenClose,
 	allowShade = false,
+	headerExtraBeforeTitle,
+	headerExtraAfterTitle,
 	highlight = false,
 	highlightShaded = false,
 	initialPosition,
@@ -311,19 +318,21 @@ export function DraggableDialog({
 					maxWidth={ initialPosition ? (window.innerWidth - initialPosition.x - 20) : 'calc(95vw - 2em)' }
 				>
 					<header className='dialog-header'>
+						{ headerExtraBeforeTitle }
 						<span className='drag-handle dialog-title'>
 							{ title }
 						</span>
+						{ headerExtraAfterTitle }
 						{
 							allowShade ? (
-								<div className='dialog-shade' title='Shade this dialog' onClick={ toggleShade }>
+								<div className={ classNames('dialog-shade', shaded ? 'active' : null) } title='Shade this dialog' onClick={ toggleShade }>
 									{ shaded ? '▼' : '▲' }
 								</div>
 							) : null
 						}
 						{ hiddenClose !== true ? (
 							<div className='dialog-close' onClick={ close }>
-								×
+								<img src={ crossIcon } alt='Close dialog' crossOrigin='anonymous' />
 							</div>
 						) : null }
 					</header>

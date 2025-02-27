@@ -13,6 +13,7 @@ import React, { ReactElement, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { Button } from '../../common/button/button';
 import { WardrobeItemName } from '../itemDetail/wardrobeItemName';
 import { useWardrobeActionContext } from '../wardrobeActionContext';
@@ -29,11 +30,12 @@ export function SecondaryInventoryView({ title, secondaryTarget, secondaryTarget
 	quickActionTargetContainer: ItemContainerPath;
 }): ReactElement | null {
 	const { globalState } = useWardrobeActionContext();
-	const { extraItemActions, showExtraActionButtons, heldItem } = useWardrobeContext();
+	const { extraItemActions, heldItem } = useWardrobeContext();
+	const { wardrobeExtraActionButtons } = useAccountSettings();
 	const navigate = useNavigate();
 
 	const extraItemAction = useCallback<WardrobeContextExtraItemActionComponent>(({ target, item }) => {
-		if (!showExtraActionButtons)
+		if (!wardrobeExtraActionButtons)
 			return null;
 
 		return (
@@ -47,7 +49,7 @@ export function SecondaryInventoryView({ title, secondaryTarget, secondaryTarget
 				▷
 			</WardrobeActionButton>
 		);
-	}, [showExtraActionButtons, secondaryTarget, secondaryTargetContainer]);
+	}, [wardrobeExtraActionButtons, secondaryTarget, secondaryTargetContainer]);
 
 	useEffect(() => {
 		extraItemActions.value = extraItemActions.value.concat([extraItemAction]);
@@ -127,7 +129,8 @@ function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickA
 	quickActionTargetContainer: ItemContainerPath;
 }): ReactElement {
 	const { globalState } = useWardrobeActionContext();
-	const { heldItem, setHeldItem, showExtraActionButtons } = useWardrobeContext();
+	const { heldItem, setHeldItem } = useWardrobeContext();
+	const { wardrobeExtraActionButtons } = useAccountSettings();
 
 	const item = EvalItemPath(globalState.getItems(target) ?? EMPTY_ARRAY, itemPath);
 	const ribbonColor = useItemColorRibbon([], item ?? null);
@@ -159,9 +162,9 @@ function RoomInventoryViewListItem({ target, itemPath, quickActionTarget, quickA
 				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
-			<span className='itemName'><WardrobeItemName item={ item } /></span>
+			<WardrobeItemName item={ item } />
 			<div className='quickActions'>
-				{ showExtraActionButtons ? (
+				{ wardrobeExtraActionButtons ? (
 					<>
 						<WardrobeActionButton action={ {
 							type: 'delete',

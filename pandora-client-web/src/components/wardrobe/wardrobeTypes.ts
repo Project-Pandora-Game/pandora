@@ -2,23 +2,22 @@ import type { Immutable } from 'immer';
 import { omit } from 'lodash';
 import {
 	ActionTargetSelector,
-	Asset,
 	AssetFrameworkGlobalState,
 	IAssetModuleTypes,
 	ItemContainerPath,
+	ItemContainerPathSchema,
 	ItemId,
+	ItemIdSchema,
 	ItemPath,
 	ItemTemplate,
 	ModuleType,
-	type ItemDisplayNameType,
 } from 'pandora-common';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ReactElement } from 'react';
-import { IChatroomCharacter } from '../../character/character';
+import { z } from 'zod';
 import { Observable, type ReadonlyObservable } from '../../observable';
 
 export type WardrobeContextExtraItemActionComponent = (props: { target: ActionTargetSelector; item: ItemPath; }) => ReactElement | null;
-export type WardrobeTarget = IChatroomCharacter | { type: 'room'; };
 
 export type WardrobeHeldItem = {
 	type: 'nothing';
@@ -32,9 +31,7 @@ export type WardrobeHeldItem = {
 };
 
 export interface WardrobeContext {
-	target: WardrobeTarget;
 	targetSelector: ActionTargetSelector;
-	assetList: readonly Asset[];
 	heldItem: WardrobeHeldItem;
 	setHeldItem: (newHeldItem: WardrobeHeldItem) => void;
 	scrollToItem: ItemId | null;
@@ -44,19 +41,16 @@ export interface WardrobeContext {
 
 	/** Override for previewing the actions */
 	actionPreviewState: Observable<AssetFrameworkGlobalState | null>;
-
-	// Settings
-	showExtraActionButtons: boolean;
-	showHoverPreview: boolean;
-	itemDisplayNameType: ItemDisplayNameType;
 }
 
-export interface WardrobeFocus {
-	container: ItemContainerPath;
-	itemId: ItemId | null;
-}
+export const WardrobeFocusSchema = z.object({
+	container: ItemContainerPathSchema,
+	itemId: ItemIdSchema.nullable(),
+});
+export type WardrobeFocus = z.infer<typeof WardrobeFocusSchema>;
 
 export interface WardrobeModuleProps<Module extends IItemModule> {
+	target: ActionTargetSelector;
 	item: ItemPath;
 	moduleName: string;
 	m: Module;
@@ -105,7 +99,7 @@ export class WardrobeFocuser {
 		this._inRoom.value = popped.inRoom;
 	}
 
-	public focus(newFocus: WardrobeFocus, target: WardrobeTarget): void {
+	public focus(newFocus: WardrobeFocus, target: ActionTargetSelector): void {
 		if (this._disabled != null)
 			throw new Error(this._disabled);
 		if (this._disabledContainers && newFocus.container.length > 0)
@@ -118,7 +112,18 @@ export class WardrobeFocuser {
 		});
 
 		this._current.value = newFocus;
-		this._inRoom.value = target?.type === 'room';
+		this._inRoom.value = target.type === 'roomInventory';
+	}
+
+	/** Set a new focus without pushing entry on the history stack */
+	public focusReplace(newFocus: WardrobeFocus, target: ActionTargetSelector): void {
+		if (this._disabled != null)
+			throw new Error(this._disabled);
+		if (this._disabledContainers && newFocus.container.length > 0)
+			throw new Error(this._disabledContainers);
+
+		this._current.value = newFocus;
+		this._inRoom.value = target.type === 'roomInventory';
 	}
 
 	public focusItemId(itemId: ItemId | null): void {
@@ -132,30 +137,11 @@ export class WardrobeFocuser {
 		this._current.value = ({ ...current, itemId });
 	}
 
-	public focusItemModule(item: ItemPath, moduleName: string, target: WardrobeTarget): void {
+	public focusItemModule(item: ItemPath, moduleName: string, target: ActionTargetSelector): void {
 		this.focus({
 			container: [...item.container, { item: item.itemId, module: moduleName }],
 			itemId: null,
 		}, target);
-	}
-
-	public focusPrevious(): void {
-		if (this._disabled != null)
-			throw new Error(this._disabled);
-
-		if (this._stack.length === 0) {
-			return;
-		}
-
-		const last = this._stack[this._stack.length - 1];
-		this._stack.push({
-			container: this._current.value.container,
-			itemId: this._current.value.itemId,
-			inRoom: this._inRoom.value,
-		});
-
-		this._current.value = omit(last, 'inRoom');
-		this._inRoom.value = last.inRoom;
 	}
 
 	public disable(message: string): () => void {

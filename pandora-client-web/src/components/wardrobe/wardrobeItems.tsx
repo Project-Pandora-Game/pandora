@@ -4,15 +4,12 @@ import {
 	AssertNever,
 	Asset,
 	Item,
-	ItemIdSchema,
 	SplitContainerPath,
 	type ActionTargetSelector,
 } from 'pandora-common';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
-import { ReactElement, useCallback, useEffect, useMemo } from 'react';
-import { useLocation } from 'react-router-dom';
-import { z } from 'zod';
+import { ReactElement, useCallback, useMemo } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
 import { useObservable } from '../../observable';
 import { Tab, TabContainer } from '../common/tabs/tabs';
@@ -32,17 +29,17 @@ export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
 	containerContentsFilter: (asset: Asset) => boolean;
 	assetFilterAttributes: readonly string[];
 } {
-	const { target } = useWardrobeContext();
+	const { targetSelector } = useWardrobeContext();
 	const assetManager = useAssetManager();
 
 	const preFilter = useCallback((item: Item | Asset) => {
 		const asset = 'asset' in item ? item.asset : item;
-		if (target.type === 'room') {
+		if (targetSelector.type === 'roomInventory') {
 			return asset.isType('roomDevice') ||
 				asset.isType('lock') ||
 				asset.isType('personal');
 		}
-		if (target.type === 'character') {
+		if (targetSelector.type === 'character') {
 			return asset.isType('roomDeviceWearablePart') ||
 				(
 					asset.isType('lock') &&
@@ -53,11 +50,11 @@ export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
 					(currentFocus.container.length !== 0 || asset.definition.wearable !== false)
 				);
 		}
-		AssertNever(target);
-	}, [target, currentFocus]);
+		AssertNever(targetSelector);
+	}, [targetSelector, currentFocus]);
 
 	const containerPath = useMemo(() => SplitContainerPath(currentFocus.container), [currentFocus.container]);
-	const containerItem = useWardrobeTargetItem(target, containerPath?.itemPath);
+	const containerItem = useWardrobeTargetItem(targetSelector, containerPath?.itemPath);
 	const containerModule = containerPath ? containerItem?.getModules().get(containerPath.module) : undefined;
 	const containerContentsFilter = useMemo<(asset: Asset) => boolean>(() => {
 		return containerModule?.acceptedContentFilter?.bind(containerModule) ?? (() => true);
@@ -79,7 +76,7 @@ export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
 		}
 
 		// If target is character, show only wearable filters
-		if (target.type === 'character') {
+		if (targetSelector.type === 'character') {
 			return [...assetManager.attributes.entries()]
 				.filter((a) => a[1].useAsWardrobeFilter?.tabs.includes('worn'))
 				.map((a) => a[0]);
@@ -88,7 +85,7 @@ export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
 		return [...assetManager.attributes.entries()]
 			.filter((a) => a[1].useAsWardrobeFilter?.tabs.includes('room'))
 			.map((a) => a[0]);
-	}, [assetManager, containerModule, target]);
+	}, [assetManager, containerModule, targetSelector]);
 
 	return {
 		preFilter,
@@ -97,31 +94,18 @@ export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {
 	};
 }
 
-export const WardrobeDeviceLocationStateSchema = z.object({
-	deviceId: ItemIdSchema,
-}).passthrough();
-
 export function WardrobeItemManipulation(): ReactElement {
-	const { target, targetSelector, assetList, heldItem, setHeldItem, focuser, setScrollToItem } = useWardrobeContext();
+	const { targetSelector, heldItem, setHeldItem, focuser } = useWardrobeContext();
+	const assetList = useAssetManager().assetList;
 
-	const location = useLocation();
-	useEffect(() => {
-		const locationState = WardrobeDeviceLocationStateSchema.safeParse(location.state);
-		if (locationState.success) {
-			const { deviceId } = locationState.data;
-			focuser.focus({ container: [], itemId: deviceId }, target);
-			setScrollToItem(deviceId);
-			location.state = {};
-		}
-	}, [focuser, location, setScrollToItem, target]);
 	const currentFocus = useObservable(focuser.current);
 
 	const { preFilter, containerContentsFilter, assetFilterAttributes } = useWardrobeItems(currentFocus);
 
-	const appearance = useWardrobeTargetItems(target);
-	const title = target.type === 'character' ? 'Currently worn items' : 'Room inventory used';
+	const appearance = useWardrobeTargetItems(targetSelector);
+	const title = targetSelector.type === 'character' ? 'Currently worn items' : 'Room inventory used';
 
-	const isRoomInventory = target.type === 'room' && currentFocus.container.length === 0;
+	const isRoomInventory = targetSelector.type === 'roomInventory' && currentFocus.container.length === 0;
 	const roomInventoryTarget = useMemo((): ActionTargetSelector => ({ type: 'roomInventory' }), []);
 
 	const singleItemContainer = useMemo<boolean>(() => {

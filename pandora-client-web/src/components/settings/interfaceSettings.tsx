@@ -279,7 +279,7 @@ const WARDROBE_ITEM_REQUIRE_FREE_HANDS_TO_USE_DEFAULT: Record<AccountSettings['w
 const ITEM_DISPLAY_NAME_TYPE_DESCRIPTION: Record<AccountSettings['wardrobeItemDisplayNameType'], string> = {
 	custom: 'Custom name',
 	original: 'Original name',
-	custom_with_original_in_brackets: 'Custom name [Original name]',
+	custom_with_original_in_brackets: 'Custom name (Original name)',
 };
 
 function TutorialSettings(): ReactElement {

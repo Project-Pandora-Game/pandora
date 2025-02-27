@@ -91,10 +91,7 @@ export function ActionRoomDeviceEnter({
 	processingContext.queueMessage(
 		characterManipulator.makeMessage({
 			id: 'roomDeviceSlotEnter',
-			item: {
-				assetId: item.asset.id,
-				itemName: item.name ?? '',
-			},
+			item: item.getChatDescriptor(),
 			dictionary: {
 				ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
 			},

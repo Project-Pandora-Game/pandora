@@ -19,7 +19,8 @@ export type CommandAutocompleteResult = {
 	options: CommandAutocompleteOption[];
 } | null;
 
-export interface CommandStepProcessor<ResultType, Context extends ICommandExecutionContext = ICommandExecutionContext, EntryArguments extends Record<string, never> = IEmpty> {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface CommandStepProcessor<ResultType, Context extends ICommandExecutionContext = ICommandExecutionContext, EntryArguments extends Record<string, any> = IEmpty> {
 	preparse: CommandStepPreparseProcessor | 'all' | 'allTrimmed' | 'quotedArg' | 'quotedArgTrimmed';
 	parse(input: string, context: Context, args: EntryArguments): { success: true; value: ResultType; } | { success: false; error: string; };
 	autocomplete?(input: string, context: Context, args: EntryArguments): CommandAutocompleteOption[];

@@ -292,7 +292,11 @@ export function WardrobeRoomDeviceWearable({ roomDeviceWearable }: {
 					Array.from(roomDevice.getModules().entries())
 						.map(([moduleName, m]) => (
 							<FieldsetToggle legend={ `Device module: ${m.config.name}` } key={ moduleName }>
-								<WardrobeModuleConfig item={ { container: [], itemId: roomDeviceLink.device } } moduleName={ moduleName } m={ m } />
+								<WardrobeModuleConfig
+									target={ { type: 'roomInventory' } }
+									item={ { container: [], itemId: roomDeviceLink.device } }
+									moduleName={ moduleName } m={ m }
+								/>
 							</FieldsetToggle>
 						))
 				}

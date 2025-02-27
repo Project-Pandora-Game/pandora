@@ -1,6 +1,6 @@
 import { freeze, type Immutable } from 'immer';
 import type { GameLogicCharacter } from '..';
-import type { CharacterActionAttempt, ItemContainerPath } from '../../assets';
+import type { CharacterActionAttempt, Item, ItemContainerPath } from '../../assets';
 import { ActionMessageTemplateHandler, ActionTarget, type ActionTargetCharacter } from '../../assets/appearanceTypes';
 import { ModuleActionError, ModuleActionFailure, type ModuleActionData } from '../../assets/modules';
 import type { AssetFrameworkGlobalState } from '../../assets/state/globalState';
@@ -28,6 +28,10 @@ export interface AppearanceModuleActionContext {
 	target: ActionTarget;
 	/** The path to the module on which the action is being performed */
 	module: ItemContainerPath;
+	/** The item the action is being performed on */
+	item: Item;
+	/** The name of the module the action is being performed on */
+	moduleName: string;
 	/** Character that should be checked for manipulation permissions */
 	targetCharacter: ActionTargetCharacter | null;
 

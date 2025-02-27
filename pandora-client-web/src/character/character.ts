@@ -20,6 +20,7 @@ import {
 	Logger,
 	TypedEventEmitter,
 	WearableAssetType,
+	type ActionTargetSelector,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import type { PlayerCharacter } from './player';
@@ -48,6 +49,8 @@ export class Character<T extends ICharacterRoomData = ICharacterRoomData> extend
 		return this.data.name;
 	}
 
+	public readonly actionSelector: ActionTargetSelector;
+
 	protected readonly logger: Logger;
 
 	protected _data: T;
@@ -61,6 +64,7 @@ export class Character<T extends ICharacterRoomData = ICharacterRoomData> extend
 		super();
 		this.logger = logger ?? GetLogger('Character', `[Character ${data.id}]`);
 		this._data = data;
+		this.actionSelector = freeze<ActionTargetSelector>({ type: 'character', characterId: data.id }, true);
 
 		this.gameLogicCharacter = new GameLogicCharacterClient(() => this._data, this.logger.prefixMessages('[GameLogic]'));
 

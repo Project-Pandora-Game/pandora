@@ -46,11 +46,9 @@ export const EDITOR_SPACE_CONTEXT = {
 } as const satisfies Immutable<ActionSpaceContext>;
 
 export function EditorWardrobeContextProvider({ children }: { children: ReactNode; }): ReactElement {
-	const assetManager = useAssetManager();
 	const editor = useEditor();
 	const globalState = useEditorState();
 	const character = editor.character;
-	const assetList = assetManager.assetList;
 
 	const focuser = useMemo(() => new WardrobeFocuser(), []);
 	const focusedInRoom = useObservable(focuser.inRoom);
@@ -183,12 +181,10 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 	}), [character, globalState, actions, editor]);
 
 	const context = useMemo((): WardrobeContext => ({
-		target: character,
 		targetSelector: {
 			type: 'character',
 			characterId: character.id,
 		},
-		assetList,
 		heldItem,
 		setHeldItem,
 		scrollToItem,
@@ -196,10 +192,7 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 		focuser,
 		extraItemActions,
 		actionPreviewState,
-		showExtraActionButtons: true,
-		showHoverPreview: true,
-		itemDisplayNameType: 'custom_with_original_in_brackets',
-	}), [character, assetList, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
+	}), [character, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
 
 	return (
 		<wardrobeActionContext.Provider value={ actionContext }>
@@ -211,7 +204,8 @@ export function EditorWardrobeContextProvider({ children }: { children: ReactNod
 }
 
 export function EditorWardrobeUI(): ReactElement {
-	const { assetList, focuser } = useWardrobeContext();
+	const assetList = useAssetManager().assetList;
+	const { focuser } = useWardrobeContext();
 	const currentFocus = useObservable(focuser.current);
 
 	const character = useEditor().character;

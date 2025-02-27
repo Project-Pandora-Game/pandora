@@ -26,6 +26,7 @@ import { useNavigate } from 'react-router';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
 import { useObservable } from '../../../observable';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { Button } from '../../common/button/button';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
 import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobeItemName';
@@ -45,9 +46,10 @@ export function InventoryItemView({
 	filter?: (item: Item) => boolean;
 }): ReactElement | null {
 	const { actions, globalState } = useWardrobeActionContext();
-	const { target, targetSelector, heldItem, focuser, itemDisplayNameType } = useWardrobeContext();
+	const { wardrobeItemDisplayNameType } = useAccountSettings();
+	const { targetSelector, heldItem, focuser } = useWardrobeContext();
 	const focus = useObservable(focuser.current);
-	const appearance = useWardrobeTargetItems(target);
+	const appearance = useWardrobeTargetItems(targetSelector);
 	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(appearance), [appearance]);
 	const navigate = useNavigate();
 
@@ -76,12 +78,12 @@ export function InventoryItemView({
 			const module = item?.getModules().get(step.module);
 			if (!item || !module)
 				return [[], undefined, []];
-			steps.push(`${ResolveItemDisplayName(item, itemDisplayNameType)} (${module.config.name})`);
+			steps.push(`${ResolveItemDisplayName(item, wardrobeItemDisplayNameType)} (${module.config.name})`);
 			container = module;
 			items = item.getModuleItems(step.module);
 		}
 		return [items, container, steps];
-	}, [appearance, filter, focus, itemDisplayNameType]);
+	}, [appearance, filter, focus, wardrobeItemDisplayNameType]);
 
 	const singleItemContainer = containerModule != null && containerModule instanceof ItemModuleLockSlot;
 	useEffect(() => {
@@ -92,8 +94,9 @@ export function InventoryItemView({
 		}
 
 		// Locks have special GUI on higher level, so be friendly and focus on that when there is a lock
-		if (containerModule?.type === 'lockSlot' && displayedItems.length === 1) {
-			focuser.focusPrevious();
+		const containerItem = SplitContainerPath(focus.container);
+		if (containerModule?.type === 'lockSlot' && displayedItems.length === 1 && containerItem != null) {
+			focuser.focusReplace(containerItem.itemPath, targetSelector);
 			return;
 		}
 
@@ -105,7 +108,7 @@ export function InventoryItemView({
 		} else if (displayedItems.length === 0) {
 			focuser.focusItemId(null);
 		}
-	}, [focus, focuser, containerModule, singleItemContainer, displayedItems, containerAccessCheck]);
+	}, [focus, focuser, containerModule, singleItemContainer, displayedItems, containerAccessCheck, targetSelector]);
 
 	return (
 		<div className={ classNames('inventoryView', className) }>
@@ -121,11 +124,16 @@ export function InventoryItemView({
 								{ containerSteps.join(' > ') }
 							</div>
 						</>
-					) :
-						<StorageUsageMeter title={ title } used={ itemCount } limit={ target.type === 'character' ? ITEM_LIMIT_CHARACTER_WORN : ITEM_LIMIT_ROOM_INVENTORY } />
+					) : (
+						<StorageUsageMeter
+							title={ title }
+							used={ itemCount }
+							limit={ targetSelector.type === 'character' ? ITEM_LIMIT_CHARACTER_WORN : ITEM_LIMIT_ROOM_INVENTORY }
+						/>
+					)
 				}
 				<div className='flex-1' />
-				{ target.type === 'room' ?
+				{ targetSelector.type === 'roomInventory' ?
 					<Button className='slim' onClick={ () => {
 						focuser.reset();
 						navigate('/wardrobe');
@@ -280,8 +288,8 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 	selected?: boolean;
 	singleItemContainer?: boolean;
 }): ReactElement {
-	const { targetSelector, target, extraItemActions, heldItem, focuser, setHeldItem, scrollToItem, setScrollToItem } = useWardrobeContext();
-	const wornItem = useWardrobeTargetItem(target, item);
+	const { targetSelector, extraItemActions, heldItem, focuser, setHeldItem, scrollToItem, setScrollToItem } = useWardrobeContext();
+	const wornItem = useWardrobeTargetItem(targetSelector, item);
 	const extraActions = useObservable(extraItemActions);
 
 	const ref = useRef<HTMLDivElement>(null);
@@ -317,13 +325,13 @@ function InventoryItemViewList({ item, selected = false, singleItemContainer = f
 			focuser.focus({
 				container: item.container,
 				itemId: selected ? null : item.itemId,
-			}, target);
+			}, targetSelector);
 		} }>
 			{
 				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
-			<span className='itemName'><WardrobeItemName item={ wornItem } /></span>
+			<WardrobeItemName item={ wornItem } />
 			<div className='quickActions'>
 				{
 					singleItemContainer ? null : (

@@ -169,7 +169,18 @@ class AppearanceContainerManipulator extends AppearanceManipulator {
 	}
 
 	public makeMessage(message: ActionHandlerMessageTemplate): ActionHandlerMessageWithTarget {
-		message.itemContainerPath ??= this.containerPath?.map((i) => ({ assetId: i.item.asset.id, module: i.moduleName, itemName: i.item.name ?? '' }));
+		const item = this._base.getItems().find((i) => i.id === this._item);
+
+		message.itemContainerPath ??= [];
+		if (item != null) {
+			message.itemContainerPath?.unshift({
+				id: item.id,
+				assetId: item.asset.id,
+				module: this._module,
+				itemName: item.name ?? '',
+			});
+		}
+
 		return this._base.makeMessage(message);
 	}
 }
@@ -215,7 +226,7 @@ export class AppearanceRootManipulator extends AppearanceManipulator {
 	}
 
 	public override makeMessage(message: ActionHandlerMessageTemplate): ActionHandlerMessageWithTarget {
-		message.itemContainerPath ??= this.containerPath?.map((i) => ({ assetId: i.item.asset.id, module: i.moduleName, itemName: i.item.name ?? '' }));
+		message.itemContainerPath ??= [];
 
 		let target: ActionHandlerMessageTarget;
 		if (this._target.type === 'character') {

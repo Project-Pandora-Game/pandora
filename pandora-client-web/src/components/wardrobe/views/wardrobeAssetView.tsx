@@ -10,18 +10,20 @@ import {
 	AssetPreferencesPublic,
 	ItemContainerPath,
 	ResolveAssetPreference,
+	type ICharacterRoomData,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import gridIcon from '../../../assets/icons/grid.svg';
 import listIcon from '../../../assets/icons/list.svg';
-import { useCharacterDataOptional } from '../../../character/character';
+import { useCharacterDataOptional, type Character } from '../../../character/character';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { useIsNarrowScreen } from '../../../styles/mediaQueries';
 import { IconButton } from '../../common/button/button';
+import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider';
 import { useWardrobeActionContext, useWardrobeExecuteChecked } from '../wardrobeActionContext';
 import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
 import { ActionWarning, AttributeButton, CheckResultToClassName, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
@@ -36,10 +38,11 @@ export function InventoryAssetView({ title, children, assets, container, attribu
 	attributesFilterOptions?: readonly string[];
 	spawnStyle: 'spawn' | 'pickup';
 }): ReactElement | null {
-	const { targetSelector, extraItemActions, heldItem, showExtraActionButtons } = useWardrobeContext();
+	const { targetSelector, extraItemActions, heldItem } = useWardrobeContext();
+	const { wardrobeExtraActionButtons } = useAccountSettings();
 
 	const extraItemAction = useCallback<WardrobeContextExtraItemActionComponent>(({ item }) => {
-		return (showExtraActionButtons || spawnStyle === 'spawn') ? (
+		return (wardrobeExtraActionButtons || spawnStyle === 'spawn') ? (
 			<WardrobeActionButton action={ {
 				type: 'delete',
 				target: targetSelector,
@@ -48,7 +51,7 @@ export function InventoryAssetView({ title, children, assets, container, attribu
 				<img src={ deleteIcon } alt='Delete action' />
 			</WardrobeActionButton>
 		) : null;
-	}, [targetSelector, spawnStyle, showExtraActionButtons]);
+	}, [targetSelector, spawnStyle, wardrobeExtraActionButtons]);
 	useEffect(() => {
 		extraItemActions.value = extraItemActions.value.concat([extraItemAction]);
 		return () => {
@@ -279,7 +282,8 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	container: ItemContainerPath;
 	listMode: boolean;
 }): ReactElement {
-	const { targetSelector, actionPreviewState, showHoverPreview } = useWardrobeContext();
+	const { targetSelector, actionPreviewState } = useWardrobeContext();
+	const { wardrobeHoverPreview } = useAccountSettings();
 	const [ref, setRef] = useState<HTMLDivElement | null>(null);
 	const [isHovering, setIsHovering] = useState(false);
 	const preference = useAssetPreference(asset);
@@ -297,7 +301,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 	const { execute, currentAttempt } = useWardrobeExecuteChecked(action, check);
 
 	useEffect(() => {
-		if (!isHovering || !showHoverPreview || check == null || !check.valid)
+		if (!isHovering || !wardrobeHoverPreview || check == null || !check.valid)
 			return;
 
 		const previewState = check.resultState;
@@ -309,7 +313,7 @@ function InventoryAssetViewListSpawn({ asset, container, listMode }: {
 				actionPreviewState.value = null;
 			}
 		};
-	}, [isHovering, showHoverPreview, actionPreviewState, check]);
+	}, [isHovering, wardrobeHoverPreview, actionPreviewState, check]);
 
 	return (
 		<div
@@ -401,8 +405,16 @@ function InventoryAssetDropArea(): ReactElement | null {
 }
 
 export function useAssetPreferences(): Immutable<AssetPreferencesPublic> {
-	const { target } = useWardrobeContext();
-	const characterPreferences = useCharacterDataOptional(target.type === 'character' ? target : null)?.assetPreferences;
+	const { targetSelector } = useWardrobeContext();
+	const characters = useSpaceCharacters();
+
+	const character = useMemo((): Character<ICharacterRoomData> | null => {
+		if (targetSelector.type !== 'character')
+			return null;
+		return characters?.find((c) => c.data.id === targetSelector.characterId) ?? null;
+	}, [characters, targetSelector]);
+
+	const characterPreferences = useCharacterDataOptional(character)?.assetPreferences;
 
 	const preferences = characterPreferences ?? ASSET_PREFERENCES_DEFAULT;
 

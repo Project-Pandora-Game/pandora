@@ -1,4 +1,5 @@
-import { CommandAutocompleteResult, CommandRunner, ICommandExecutionContext, IEmpty, LongestCommonPrefix } from 'pandora-common';
+import type { Immutable } from 'immer';
+import { CommandAutocompleteResult, CommandRunner, ICommandExecutionContext, IEmpty, LongestCommonPrefix, type AccountSettings, type AssetFrameworkGlobalState } from 'pandora-common';
 import type { useNavigate } from 'react-router';
 import type { PlayerCharacter } from '../../../character/player';
 import type { GameState, IChatMessageSender } from '../../../components/gameContext/gameStateContextProvider';
@@ -14,7 +15,9 @@ export interface ICommandExecutionContextClient extends ICommandExecutionContext
 	directoryConnector: DirectoryConnector;
 	accountManager: AccountManager;
 	gameState: GameState;
+	globalState: AssetFrameworkGlobalState;
 	player: PlayerCharacter;
+	accountSettings: Immutable<AccountSettings>;
 	messageSender: IChatMessageSender;
 	inputHandlerContext: IChatInputHandler;
 	navigate: ReturnType<typeof useNavigate>;

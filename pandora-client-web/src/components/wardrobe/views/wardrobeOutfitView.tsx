@@ -320,12 +320,13 @@ function OutfitPreview({ outfit }: {
 }): ReactElement {
 	const assetManager = useAssetManager();
 	const { globalState } = useWardrobeActionContext();
-	const { target, showHoverPreview, actionPreviewState } = useWardrobeContext();
+	const { targetSelector, actionPreviewState } = useWardrobeContext();
+	const { wardrobeHoverPreview } = useAccountSettings();
 	const { player, playerState } = usePlayerState();
 
 	const [isHovering, setIsHovering] = useState(false);
 
-	const baseCharacterState = (target.type === 'character' ? globalState.getCharacterState(target.id) : null) ?? playerState;
+	const baseCharacterState = (targetSelector.type === 'character' ? globalState.getCharacterState(targetSelector.characterId) : null) ?? playerState;
 
 	const characterState = useMemo((): AssetFrameworkCharacterState => {
 		// As a base use the current character, but only body - not any items
@@ -366,7 +367,7 @@ function OutfitPreview({ outfit }: {
 	}, [assetManager, baseCharacterState, outfit, player]);
 
 	useEffect(() => {
-		if (!isHovering || !showHoverPreview)
+		if (!isHovering || !wardrobeHoverPreview)
 			return;
 
 		let previewState = AssetFrameworkGlobalState.createDefault(assetManager, AssetFrameworkRoomState.createDefault(assetManager));
@@ -379,7 +380,7 @@ function OutfitPreview({ outfit }: {
 				actionPreviewState.value = null;
 			}
 		};
-	}, [isHovering, showHoverPreview, actionPreviewState, assetManager, characterState]);
+	}, [isHovering, wardrobeHoverPreview, actionPreviewState, assetManager, characterState]);
 
 	const { pivot } = useRoomCharacterOffsets(characterState);
 	const filters = usePlayerVisionFilters(true);
@@ -571,7 +572,8 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 	targetContainer: ItemContainerPath;
 }): ReactElement {
 	const assetManager = useAssetManager();
-	const { setHeldItem, targetSelector, itemDisplayNameType } = useWardrobeContext();
+	const { wardrobeItemDisplayNameType } = useAccountSettings();
+	const { setHeldItem, targetSelector } = useWardrobeContext();
 
 	const asset = assetManager.getAssetById(itemTemplate.asset);
 
@@ -593,7 +595,7 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 		]
 	) : undefined;
 
-	const visibleName = ResolveItemDisplayNameType(asset.definition.name, itemTemplate.name, itemDisplayNameType);
+	const visibleName = ResolveItemDisplayNameType(asset.definition.name, itemTemplate.name, wardrobeItemDisplayNameType);
 
 	if (!asset.canBeSpawned()) {
 		return (
@@ -605,6 +607,7 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 		);
 	}
 
+	const hasCustomName = wardrobeItemDisplayNameType === 'custom' && !!itemTemplate.name && itemTemplate.name !== asset.definition.name;
 	return (
 		<div
 			tabIndex={ 0 }
@@ -620,7 +623,9 @@ function OutfitEntryItem({ itemTemplate, targetContainer }: {
 				ribbonColor ? <WardrobeColorRibbon ribbonColor={ ribbonColor } /> : null
 			}
 			<InventoryAssetPreview asset={ asset } small={ true } />
-			<span className='itemName'>{ visibleName }</span>
+			<span className={ classNames('itemName', hasCustomName ? 'custom' : null) }>
+				{ visibleName }
+			</span>
 			<div className='quickActions'>
 				<WardrobeActionButton
 					Element='div'

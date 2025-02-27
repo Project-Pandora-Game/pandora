@@ -26,6 +26,30 @@
 				overflow-clip-margin: 0.05em;
 			}
 
+			&.action, &.serverMessage {
+				.itemLink {
+					color: common.$theme-chat-serverMessage-text;
+					text-decoration: none;
+
+					&.hasCustomName, &.hasDescription {
+						&::before {
+							content: '[';
+						}
+						&::after {
+							content: ']';
+						}
+					}
+
+					&.hasDescription {
+						color: common.$theme-chat-serverMessage-textlink;
+					}
+
+					&:hover {
+						color: common.$theme-chat-serverMessage-textlink-hover;
+					}
+				}
+			}
+
 			&.serverMessage {
 				border-left: 5px solid common.$theme-chat-serverMessage-notch;
 				background: common.$theme-chat-serverMessage-background;

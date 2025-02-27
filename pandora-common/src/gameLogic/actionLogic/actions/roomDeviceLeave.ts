@@ -85,10 +85,7 @@ export function ActionRoomDeviceLeave({
 			processingContext.queueMessage(
 				characterManipulator.makeMessage({
 					id: 'roomDeviceSlotLeave',
-					item: {
-						assetId: item.asset.id,
-						itemName: item.name ?? '',
-					},
+					item: item.getChatDescriptor(),
 					dictionary: {
 						ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
 					},
@@ -111,10 +108,7 @@ export function ActionRoomDeviceLeave({
 		processingContext.queueMessage(
 			roomManipulator.makeMessage({
 				id: 'roomDeviceSlotClear',
-				item: {
-					assetId: item.asset.id,
-					itemName: item.name ?? '',
-				},
+				item: item.getChatDescriptor(),
 				dictionary: {
 					ROOM_DEVICE_SLOT: item.asset.definition.slots[action.slot]?.name ?? '[UNKNOWN]',
 				},

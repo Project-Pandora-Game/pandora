@@ -1,5 +1,6 @@
-import { CommandStepProcessor, ICharacterRoomData, ICommandExecutionContext } from 'pandora-common';
+import { CommandStepProcessor, ICharacterRoomData, ICommandExecutionContext, ItemIdSchema, type ActionTargetSelector, type ItemPath } from 'pandora-common';
 import type { Character } from '../../../character/character';
+import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName';
 import type { ICommandExecutionContextClient } from './commandsProcessor';
 
 type ICommandClientNeededContext<RequiredKeys extends Exclude<keyof ICommandExecutionContextClient, keyof ICommandExecutionContext>> =
@@ -115,6 +116,149 @@ export const CommandSelectorCharacter = ({ allowSelf }: {
 			}));
 	},
 });
+
+export function CommandSelectorGameLogicActionTarget(): CommandStepProcessor<ActionTargetSelector, ICommandClientNeededContext<'gameState'>> {
+	const characterSubprocessor = CommandSelectorCharacter({ allowSelf: 'any' });
+
+	return ({
+		preparse: 'quotedArgTrimmed',
+		parse(selector, context, args) {
+			if (!selector) {
+				return {
+					success: false,
+					error: 'Expected character name or "room"',
+				};
+			}
+
+			if (selector === 'room') {
+				return {
+					success: true,
+					value: { type: 'roomInventory' },
+				};
+			}
+
+			const characterParse = characterSubprocessor.parse(selector, context, args);
+			if (characterParse.success) {
+				return {
+					success: true,
+					value: {
+						type: 'character',
+						characterId: characterParse.value.id,
+					},
+				};
+			}
+			return characterParse;
+		},
+		autocomplete(input, context, args) {
+			const characterResult = characterSubprocessor.autocomplete?.(input, context, args) ?? [];
+			if ('room'.startsWith(input.toLowerCase())) {
+				return [{
+					displayValue: 'Room',
+					replaceValue: 'room',
+					longDescription: 'Room inventory',
+				}, ...characterResult];
+			}
+			return characterResult;
+		},
+	});
+}
+
+export function CommandSelectorItem<const TTargetKey extends string>(targetKey: TTargetKey): CommandStepProcessor<ItemPath, ICommandClientNeededContext<'globalState' | 'accountSettings'>, { [key in TTargetKey]: ActionTargetSelector; }> {
+	return ({
+		preparse: 'quotedArgTrimmed',
+		parse(selector, { globalState }, args) {
+			const targetSelector = args[targetKey];
+			const items = globalState.getItems(targetSelector);
+
+			if (items == null) {
+				return {
+					success: false,
+					error: 'Target not found',
+				};
+			}
+
+			// Prefer using id, if the input looks anything like an id
+			// This allows writing an item ID to be completely unambiguous,
+			// even preventing TOC-TOU-like problems during other people doing stuff
+			if (/^i\//.test(selector)) {
+				const parsedId = ItemIdSchema.safeParse(selector);
+				if (parsedId.success) {
+					const id = parsedId.data;
+					const item = items.find((i) => i.id === id);
+					if (!item) {
+						return {
+							success: false,
+							error: `Item "${id}" not found.`,
+						};
+					}
+					return {
+						success: true,
+						value: {
+							container: [],
+							itemId: item.id,
+						},
+					};
+				}
+			}
+
+			// If the input is not id-like treat it as a name
+			let targets = items.filter((i) => i.name === selector || i.asset.definition.name === selector);
+			// If no name matches exactly, try name case-insensitively
+			if (targets.length === 0)
+				targets = items.filter((i) => i.name?.toLowerCase() === selector.toLowerCase() || i.asset.definition.name.toLowerCase() === selector.toLowerCase());
+
+			if (targets.length === 1) {
+				return {
+					success: true,
+					value: {
+						container: [],
+						itemId: targets[0].id,
+					},
+				};
+			} else if (targets.length === 0) {
+				return {
+					success: false,
+					error: `Item "${selector}" not found.`,
+				};
+			} else {
+				return {
+					success: false,
+					error: `Multiple items match "${selector}". Please use id instead (with the help of autocomplete).`,
+				};
+			}
+		},
+		autocomplete(selector, { globalState, accountSettings }, args) {
+			const targetSelector = args[targetKey];
+			const items = globalState.getItems(targetSelector);
+
+			if (items == null)
+				return [];
+
+			// Prefer using id, if the input looks anything like an id
+			if (/^i\//.test(selector)) {
+				return items
+					.filter((i) => i.id.startsWith(selector))
+					.map((i) => ({
+						replaceValue: i.id,
+						displayValue: `${i.id} - ${ResolveItemDisplayNameType(i.asset.definition.name, i.name, accountSettings.wardrobeItemDisplayNameType)}`,
+					}));
+			}
+			// Autocomplete names, always treating selector as case insensitive
+			return items
+				.filter((i) => i.name?.toLowerCase().startsWith(selector.toLowerCase()) || i.asset.definition.name.toLowerCase().startsWith(selector.toLowerCase()))
+				.map((i) => {
+					const nameValue = i.name || i.asset.definition.name;
+					// Use ID for autocomplete if there are multiple items with matching name
+					const needsId = items.filter((otherItem) => otherItem.name === nameValue || otherItem.asset.definition.name === nameValue).length > 1;
+					return ({
+						replaceValue: needsId ? i.id : nameValue,
+						displayValue: `${ResolveItemDisplayNameType(i.asset.definition.name, i.name, accountSettings.wardrobeItemDisplayNameType)}` +
+							(needsId ? ` (${i.id})` : ''),
+					});
+				});
+		},
+	});
+}
 
 /**
  * Create argument selector that expects one of given options.

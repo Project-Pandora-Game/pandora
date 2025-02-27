@@ -1,8 +1,9 @@
 import classNames from 'classnames';
 import { sortBy } from 'lodash';
-import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type Ref } from 'react';
 import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
 import { Rnd } from 'react-rnd';
+import crossIcon from '../../assets/icons/cross.svg';
 import { type CommonProps } from '../../common/reactTypes';
 import { useAsyncEvent, useEvent } from '../../common/useEvent';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
@@ -56,10 +57,15 @@ export function Dialogs({ location }: {
 	);
 }
 
-export function DialogInPortal({ children, priority, location = 'global' }: {
+export type DialogPortalRef = {
+	/** Brings the portal to forgeground (within the bounds of its priority). */
+	bringToForeground: () => void;
+};
+export function DialogInPortal({ children, priority, location = 'global', ref }: {
 	children?: ReactNode;
 	priority?: number;
 	location?: DialogLocation;
+	ref?: Ref<DialogPortalRef>;
 }): ReactElement {
 	const id = useId();
 	const portal = useMemo(() => createHtmlPortalNode({
@@ -68,25 +74,41 @@ export function DialogInPortal({ children, priority, location = 'global' }: {
 		},
 	}), []);
 
-	useLayoutEffect(() => {
-		const self: PortalEntry = {
-			priority: priority ?? 0,
-			location,
-			node: portal,
-			key: id,
-		};
+	const selfPortalEntry = useMemo((): PortalEntry => ({
+		priority: priority ?? 0,
+		location,
+		node: portal,
+		key: id,
+	}), [portal, priority, location, id]);
 
+	useLayoutEffect(() => {
 		PORTALS.produce((existingPortals) => {
 			return sortBy([
-				self,
 				...existingPortals,
+				selfPortalEntry,
 			], (v) => v.priority);
 		});
 
 		return () => {
-			PORTALS.value = PORTALS.value.filter((p) => p !== self);
+			PORTALS.value = PORTALS.value.filter((p) => p !== selfPortalEntry);
 		};
-	}, [portal, priority, location, id]);
+	}, [selfPortalEntry]);
+
+	const bringToForeground = useCallback(() => {
+		const index = PORTALS.value.indexOf(selfPortalEntry);
+		if (index >= 0) {
+			PORTALS.produce((existingPortals) => {
+				return sortBy([
+					...existingPortals.filter((p) => p !== selfPortalEntry),
+					selfPortalEntry,
+				], (v) => v.priority);
+			});
+		}
+	}, [selfPortalEntry]);
+
+	useImperativeHandle(ref, () => ({
+		bringToForeground,
+	}), [bringToForeground]);
 
 	return (
 		<InPortal node={ portal }>
@@ -133,7 +155,7 @@ export function ModalDialog({ children, priority, position = 'center', contentOv
 	);
 }
 
-export function DraggableDialog({ children, className, title, modal = false, rawContent, close, hiddenClose, allowShade = false, highlight = false, highlightShaded = false, initialPosition }: {
+export interface DraggableDialogProps {
 	children?: ReactNode;
 	className?: string;
 	title: string;
@@ -150,6 +172,10 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 	 * @default false
 	 */
 	allowShade?: boolean;
+	/** Content inserted before title in the header. */
+	headerExtraBeforeTitle?: ReactNode;
+	/** Content inserted after title in the header. */
+	headerExtraAfterTitle?: ReactNode;
 	/**
 	 * Whether the dialog should be highlighted.
 	 * @default false
@@ -161,7 +187,36 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 	 */
 	highlightShaded?: boolean;
 	initialPosition?: Readonly<PointLike>;
-}): ReactElement {
+	initialWidth?: number | string;
+	initialHeight?: number | string;
+}
+
+let InitialPositionNextIndex = 0;
+const INITIAL_POSITION_INDEX_LIMIT = 8;
+const INITIAL_POSITION_OFFSET: PointLike = { x: 15, y: 30 };
+let OpenDraggableDialogCount = 0;
+/** Mark that gets consumed by reset. Used to handle edge-case where multiple dialogs get opened in a single render. */
+let ShouldResetIndex = false;
+
+export function DraggableDialog({
+	children,
+	className,
+	title,
+	modal = false,
+	rawContent,
+	close,
+	hiddenClose,
+	allowShade = false,
+	headerExtraBeforeTitle,
+	headerExtraAfterTitle,
+	highlight = false,
+	highlightShaded = false,
+	initialPosition,
+	initialWidth = 'auto',
+	initialHeight = 'auto',
+}: DraggableDialogProps): ReactElement {
+	const portalRef = useRef<DialogPortalRef>(null);
+
 	useEffect(() => {
 		if (close == null) {
 			return undefined;
@@ -190,13 +245,40 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 		setShaded((currentShaded) => !currentShaded);
 	}, []);
 
+	const initialPositionIndexRef = useRef(-1);
+	if (initialPositionIndexRef.current < 0) {
+		// If there is no open dialog, then reset the index
+		if (OpenDraggableDialogCount === 0 && ShouldResetIndex) {
+			InitialPositionNextIndex = 0;
+			ShouldResetIndex = false;
+		}
+		initialPositionIndexRef.current = InitialPositionNextIndex++;
+		InitialPositionNextIndex %= INITIAL_POSITION_INDEX_LIMIT;
+	}
+	useLayoutEffect(() => {
+		OpenDraggableDialogCount++;
+		return () => {
+			OpenDraggableDialogCount--;
+			if (OpenDraggableDialogCount === 0) {
+				ShouldResetIndex = true;
+			}
+		};
+	}, []);
+
 	return (
-		<DialogInPortal priority={ -1 } >
+		<DialogInPortal priority={ -1 } ref={ portalRef }>
 			<div
 				className={ modal ? 'overlay-bounding-box modal' : 'overlay-bounding-box' }
 				// Prevent clicks from bubbling through the portal
 				onClick={ (ev) => {
 					ev.stopPropagation();
+				} }
+				// Bring dialog to foreground if it is interacted with
+				onMouseDownCapture={ () => {
+					portalRef.current?.bringToForeground();
+				} }
+				onTouchStartCapture={ () => {
+					portalRef.current?.bringToForeground();
 				} }
 			>
 				<Rnd
@@ -210,10 +292,20 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 					resizeHandleWrapperClass='resize-handle-wrapper'
 					default={ {
 						// We divide the position by 2, because there seems to be a bug in "Draggable" that multiplies it
-						x: (initialPosition?.x ?? Math.max((window.innerWidth ?? 0) / 2 - 20, 0)) / 2,
-						y: (initialPosition?.y ?? Math.max((window.innerHeight ?? 0) / 4 - 10, 0)) / 2,
-						width: 'auto',
-						height: 'auto',
+						// If initialPosition is set, we respect it
+						// If it isn't set we roughly center the dialog while shifting every subsequent one by a little bit to the bottom right
+						x: (initialPosition?.x ?? (
+							Math.max(Math.floor(0.5 * (window.innerWidth ?? 0)) - 20 + (
+								(initialPositionIndexRef.current * window.devicePixelRatio * INITIAL_POSITION_OFFSET.x)
+							), 0)) / 2
+						),
+						y: (initialPosition?.y ?? (
+							Math.max(Math.floor(0.3 * (window.innerHeight ?? 0)) / 2 - 10 + (
+								(initialPositionIndexRef.current * window.devicePixelRatio * INITIAL_POSITION_OFFSET.y)
+							), 0)) / 2
+						),
+						width: initialWidth,
+						height: initialHeight,
 					} }
 					resizeHandleStyles={ {
 						bottomLeft: { zIndex: 2 },
@@ -226,19 +318,21 @@ export function DraggableDialog({ children, className, title, modal = false, raw
 					maxWidth={ initialPosition ? (window.innerWidth - initialPosition.x - 20) : 'calc(95vw - 2em)' }
 				>
 					<header className='dialog-header'>
+						{ headerExtraBeforeTitle }
 						<span className='drag-handle dialog-title'>
 							{ title }
 						</span>
+						{ headerExtraAfterTitle }
 						{
 							allowShade ? (
-								<div className='dialog-shade' title='Shade this dialog' onClick={ toggleShade }>
+								<div className={ classNames('dialog-shade', shaded ? 'active' : null) } title='Shade this dialog' onClick={ toggleShade }>
 									{ shaded ? '▼' : '▲' }
 								</div>
 							) : null
 						}
 						{ hiddenClose !== true ? (
 							<div className='dialog-close' onClick={ close }>
-								×
+								<img src={ crossIcon } alt='Close dialog' crossOrigin='anonymous' />
 							</div>
 						) : null }
 					</header>

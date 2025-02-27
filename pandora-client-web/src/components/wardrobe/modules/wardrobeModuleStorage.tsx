@@ -12,21 +12,21 @@ import { ActionWarning, CheckResultToClassName } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
 
-export function WardrobeModuleConfigStorage({ item, moduleName, m }: WardrobeModuleProps<ItemModuleStorage>): ReactElement {
+export function WardrobeModuleConfigStorage({ target, item, moduleName, m }: WardrobeModuleProps<ItemModuleStorage>): ReactElement {
 	const { actions, globalState } = useWardrobeActionContext();
-	const { target, targetSelector, focuser } = useWardrobeContext();
+	const { focuser } = useWardrobeContext();
 	const [requestPermission] = useWardrobePermissionRequestCallback();
 	const [ref, setRef] = useState<HTMLElement | null>(null);
 
 	const checkResultInitial = useMemo(() => {
 		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
-		const actionTarget = processingContext.getTarget(targetSelector);
+		const actionTarget = processingContext.getTarget(target);
 		if (actionTarget == null)
 			return processingContext.invalid();
 
 		processingContext.checkCanUseItemModule(actionTarget, item, moduleName, ItemInteractionType.MODIFY);
 		return processingContext.finalize();
-	}, [actions, globalState, item, moduleName, targetSelector]);
+	}, [actions, globalState, item, moduleName, target]);
 
 	const checkResult = useCheckAddPermissions(checkResultInitial);
 

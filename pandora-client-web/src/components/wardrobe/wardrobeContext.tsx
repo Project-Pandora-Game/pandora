@@ -1,53 +1,51 @@
-import { freeze } from 'immer';
 import {
 	ActionTargetSelector,
-	AssertNever,
 	AssertNotNullable,
 	AssetFrameworkGlobalState,
 	EMPTY_ARRAY,
 	EvalItemPath,
 	ItemId,
 } from 'pandora-common';
-import { createContext, ReactElement, ReactNode, useContext, useEffect, useMemo, useState } from 'react';
-import { useAssetManager } from '../../assets/assetManager';
+import { createContext, ReactElement, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { Observable, useObservable } from '../../observable';
-import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
 import { useWardrobeActionContext } from './wardrobeActionContext';
-import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocuser, WardrobeHeldItem, WardrobeTarget } from './wardrobeTypes';
+import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocuser, WardrobeHeldItem, type WardrobeFocus } from './wardrobeTypes';
 
 export const wardrobeContext = createContext<WardrobeContext | null>(null);
 
-export const WARDROBE_TARGET_ROOM: WardrobeTarget = freeze({ type: 'room' });
-
-export function WardrobeContextProvider({ target, children }: { target: WardrobeTarget; children: ReactNode; }): ReactElement {
+export function WardrobeContextProvider({ target, initialFocus, children }: {
+	target: ActionTargetSelector;
+	initialFocus?: WardrobeFocus;
+	children: ReactNode;
+}): ReactElement {
 	const {
 		globalState,
 	} = useWardrobeActionContext();
 
-	const settings = useAccountSettings();
-	const assetList = useAssetManager().assetList;
-
 	const focuser = useMemo(() => new WardrobeFocuser(), []);
-	const actualTarget = useObservable(focuser.inRoom) ? WARDROBE_TARGET_ROOM : target;
+	const initialFocusDone = useRef(false);
+	if (!initialFocusDone.current) {
+		initialFocusDone.current = true;
+		if (initialFocus != null) {
+			focuser.focus(initialFocus, target);
+		}
+	}
+
+	const focuserInRoom = useObservable(focuser.inRoom);
 	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
 	const actionPreviewState = useMemo(() => new Observable<AssetFrameworkGlobalState | null>(null), []);
 
 	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
-	const [scrollToItem, setScrollToItem] = useState<ItemId | null>(null);
+	const [scrollToItem, setScrollToItem] = useState<ItemId | null>(initialFocus?.itemId ?? null);
 
-	const targetSelector = useMemo((): ActionTargetSelector => {
-		if (actualTarget.type === 'character') {
-			return {
-				type: 'character',
-				characterId: actualTarget.id,
-			};
-		} else if (actualTarget.type === 'room') {
+	const actualTargetSelector = useMemo((): ActionTargetSelector => {
+		if (focuserInRoom) {
 			return {
 				type: 'roomInventory',
 			};
 		}
-		AssertNever(actualTarget);
-	}, [actualTarget]);
+		return target;
+	}, [focuserInRoom, target]);
 
 	useEffect(() => {
 		if (heldItem.type === 'item') {
@@ -60,9 +58,7 @@ export function WardrobeContextProvider({ target, children }: { target: Wardrobe
 	}, [heldItem, globalState]);
 
 	const context = useMemo((): WardrobeContext => ({
-		target: actualTarget,
-		targetSelector,
-		assetList,
+		targetSelector: actualTargetSelector,
 		heldItem,
 		setHeldItem,
 		scrollToItem,
@@ -70,10 +66,7 @@ export function WardrobeContextProvider({ target, children }: { target: Wardrobe
 		focuser,
 		extraItemActions,
 		actionPreviewState,
-		showExtraActionButtons: settings.wardrobeExtraActionButtons,
-		showHoverPreview: settings.wardrobeHoverPreview,
-		itemDisplayNameType: settings.wardrobeItemDisplayNameType,
-	}), [actualTarget, targetSelector, assetList, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState, settings.wardrobeExtraActionButtons, settings.wardrobeHoverPreview, settings.wardrobeItemDisplayNameType]);
+	}), [actualTargetSelector, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
 
 	return (
 		<wardrobeContext.Provider value={ context }>
@@ -92,7 +85,6 @@ export function WardrobeContextSelectRoomInventoryProvider({ children }: { child
 	const ctx = useWardrobeContext();
 	const value = useMemo<WardrobeContext>(() => ({
 		...ctx,
-		target: WARDROBE_TARGET_ROOM,
 		targetSelector: {
 			type: 'roomInventory',
 		},
@@ -100,6 +92,57 @@ export function WardrobeContextSelectRoomInventoryProvider({ children }: { child
 
 	return (
 		<wardrobeContext.Provider value={ value }>
+			{ children }
+		</wardrobeContext.Provider>
+	);
+}
+
+/** Wardrobe context provider meant to be used outside of the wardrobe */
+export function WardrobeExternalContextProvider({ target, children }: { target: ActionTargetSelector; children: ReactNode; }): ReactElement {
+	const {
+		globalState,
+	} = useWardrobeActionContext();
+
+	const focuser = useMemo(() => new WardrobeFocuser(), []);
+	const focuserInRoom = useObservable(focuser.inRoom);
+	const extraItemActions = useMemo(() => new Observable<readonly WardrobeContextExtraItemActionComponent[]>([]), []);
+	const actionPreviewState = useMemo(() => new Observable<AssetFrameworkGlobalState | null>(null), []);
+
+	const [heldItem, setHeldItem] = useState<WardrobeHeldItem>({ type: 'nothing' });
+	const [scrollToItem, setScrollToItem] = useState<ItemId | null>(null);
+
+	const actualTargetSelector = useMemo((): ActionTargetSelector => {
+		if (focuserInRoom) {
+			return {
+				type: 'roomInventory',
+			};
+		}
+		return target;
+	}, [focuserInRoom, target]);
+
+	useEffect(() => {
+		if (heldItem.type === 'item') {
+			const rootItems = globalState.getItems(heldItem.target);
+			const item = EvalItemPath(rootItems ?? EMPTY_ARRAY, heldItem.path);
+			if (!item) {
+				setHeldItem({ type: 'nothing' });
+			}
+		}
+	}, [heldItem, globalState]);
+
+	const context = useMemo((): WardrobeContext => ({
+		targetSelector: actualTargetSelector,
+		heldItem,
+		setHeldItem,
+		scrollToItem,
+		setScrollToItem,
+		focuser,
+		extraItemActions,
+		actionPreviewState,
+	}), [actualTargetSelector, heldItem, scrollToItem, focuser, extraItemActions, actionPreviewState]);
+
+	return (
+		<wardrobeContext.Provider value={ context }>
 			{ children }
 		</wardrobeContext.Provider>
 	);

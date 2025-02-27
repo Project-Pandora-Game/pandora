@@ -1,11 +1,14 @@
 import type { Immutable } from 'immer';
 import {
+	AssertNever,
 	AssertNotNullable,
 	CharacterIdSchema,
 	ICharacterRoomData,
+	type ActionTargetSelector,
 } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
-import { Link, Navigate, Route, Routes, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { z } from 'zod';
 import { Character, IChatroomCharacter } from '../../character/character';
 import { useObservable } from '../../observable';
 import { CharacterRestrictionOverrideWarningContent } from '../characterRestrictionOverride/characterRestrictionOverride';
@@ -18,10 +21,25 @@ import { WardrobeRandomizationGui } from './views/wardrobeRandomizationView';
 import './wardrobe.scss';
 import { useWardrobeActionContext, WardrobeActionContextProvider } from './wardrobeActionContext';
 import { WardrobeBodyManipulation } from './wardrobeBody';
-import { useWardrobeContext, WARDROBE_TARGET_ROOM, WardrobeContextProvider } from './wardrobeContext';
+import { useWardrobeContext, WardrobeContextProvider } from './wardrobeContext';
 import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphics';
 import { WardrobeItemPreferences } from './wardrobeItemPreferences';
 import { WardrobeItemManipulation } from './wardrobeItems';
+import { WardrobeFocusSchema } from './wardrobeTypes';
+
+export const WardrobeLocationStateSchema = z.object({
+	initialFocus: WardrobeFocusSchema.optional(),
+}).passthrough();
+export type WardrobeLocationState = z.infer<typeof WardrobeLocationStateSchema>;
+
+export function ActionTargetToWardrobeUrl(target: ActionTargetSelector): string {
+	if (target.type === 'character') {
+		return `/wardrobe/character/${target.characterId}`;
+	} else if (target.type === 'roomInventory') {
+		return '/wardrobe/room-inventory';
+	}
+	AssertNever(target);
+}
 
 export function WardrobeRouter(): ReactElement | null {
 	return (
@@ -41,7 +59,7 @@ function WardrobeRouterPlayer(): ReactElement {
 
 	return (
 		<WardrobeActionContextProvider player={ player }>
-			<WardrobeContextProvider target={ player }>
+			<WardrobeContextProvider target={ player.actionSelector }>
 				<WardrobeCharacter character={ player } />
 			</WardrobeContextProvider>
 		</WardrobeActionContextProvider>
@@ -62,12 +80,21 @@ function WardrobeRouterCharacter(): ReactElement {
 		return characters?.find((c) => c.data.id === parsedCharacterId.data) ?? null;
 	}, [characters, parsedCharacterId]);
 
+	const location = useLocation();
+	const initialFocus = useMemo((): WardrobeLocationState['initialFocus'] => {
+		const locationState = WardrobeLocationStateSchema.safeParse(location.state);
+		if (locationState.success) {
+			return locationState.data.initialFocus;
+		}
+		return undefined;
+	}, [location]);
+
 	if (!character)
 		return <Link to='/'>◄ Back</Link>;
 
 	return (
 		<WardrobeActionContextProvider player={ player }>
-			<WardrobeContextProvider target={ character }>
+			<WardrobeContextProvider target={ character.actionSelector } initialFocus={ initialFocus }>
 				<WardrobeCharacter character={ character } />
 			</WardrobeContextProvider>
 		</WardrobeActionContextProvider>
@@ -78,9 +105,22 @@ function WardrobeRouterRoomInventory(): ReactElement {
 	const player = usePlayer();
 	AssertNotNullable(player);
 
+	const roomTarget = useMemo((): ActionTargetSelector => ({
+		type: 'roomInventory',
+	}), []);
+
+	const location = useLocation();
+	const initialFocus = useMemo((): WardrobeLocationState['initialFocus'] => {
+		const locationState = WardrobeLocationStateSchema.safeParse(location.state);
+		if (locationState.success) {
+			return locationState.data.initialFocus;
+		}
+		return undefined;
+	}, [location]);
+
 	return (
 		<WardrobeActionContextProvider player={ player }>
-			<WardrobeContextProvider target={ WARDROBE_TARGET_ROOM }>
+			<WardrobeContextProvider target={ roomTarget } initialFocus={ initialFocus }>
 				<WardrobeRoom />
 			</WardrobeContextProvider>
 		</WardrobeActionContextProvider>

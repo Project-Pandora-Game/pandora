@@ -3,16 +3,14 @@ import {
 	FormatTimeInterval,
 	MessageSubstitute,
 } from 'pandora-common';
-import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
+import type { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
 import { ReactElement, useMemo } from 'react';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { Column, Row } from '../../common/container/container';
 import { WardrobeActionButton } from '../wardrobeComponents';
-import { useWardrobeContext } from '../wardrobeContext';
-import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
+import type { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
 
-export function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModuleProps<ItemModuleTyped>): ReactElement {
-	const { targetSelector } = useWardrobeContext();
+export function WardrobeModuleConfigTyped({ target, item, moduleName, m }: WardrobeModuleProps<ItemModuleTyped>): ReactElement {
 	const now = useCurrentTime();
 
 	const customText = useMemo(() => {
@@ -39,7 +37,7 @@ export function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModul
 				key={ v.id }
 				action={ {
 					type: 'moduleAction',
-					target: targetSelector,
+					target,
 					item,
 					module: moduleName,
 					action: {
@@ -53,7 +51,7 @@ export function WardrobeModuleConfigTyped({ item, moduleName, m }: WardrobeModul
 				{ v.name }
 			</WardrobeActionButton>
 		);
-	}), [m.activeVariant, m.config, targetSelector, item, moduleName]);
+	}), [m.activeVariant, m.config, target, item, moduleName]);
 
 	return (
 		<Column padding='medium'>

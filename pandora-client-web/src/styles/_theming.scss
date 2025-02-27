@@ -161,9 +161,12 @@ $theme-dialog-border: $theme-separator;
 $theme-dialog-border-highlight: #e27107;
 
 $theme-dialog-header: #242628;
-$theme-dialog-button-hover-text: #000;
 $theme-dialog-button-close-hover-background: #c00;
-$theme-dialog-button-shade-hover-background: #ccc;
+$theme-dialog-button-hover-background: color-mix(in srgb, #282d32, $theme-accent-color 35%);
+$theme-dialog-button-active-background: #ccc;
+$theme-dialog-button-active-text: #000;
+$theme-dialog-button-active-imgfilter: invert(100%);
+$theme-dialog-button-active-hover-background: color-mix(in srgb, #aaa, $theme-accent-color 35%);
 
 $theme-hoverdialog-background: $theme-dialog-background;
 $theme-hoverdialog-text: $theme-dialog-text;
@@ -180,7 +183,7 @@ $theme-contextmenu-opaque-background: #0d1111b3;
 $theme-contextmenu-opaque-border: #43454ab3;
 
 $theme-contextmenu-button-text: #eee;
-$theme-contextmenu-button-hover-background:  color-mix(in srgb, #282d32, $theme-accent-color 35%);
+$theme-contextmenu-button-hover-background: color-mix(in srgb, #282d32, $theme-accent-color 35%);
 
 //#endregion
 
@@ -203,6 +206,8 @@ $theme-chat-messageinfo-text: #888;
 
 $theme-chat-serverMessage-background: #202020;
 $theme-chat-serverMessage-text: #fff;
+$theme-chat-serverMessage-textlink: color-mix(in srgb, #ccc, $theme-accent-color 35%);
+$theme-chat-serverMessage-textlink-hover: color-mix(in srgb, #888, $theme-accent-color 60%);
 $theme-chat-serverMessage-foldable-hover-background: #181818;
 $theme-chat-serverMessage-notch: #fff;
 

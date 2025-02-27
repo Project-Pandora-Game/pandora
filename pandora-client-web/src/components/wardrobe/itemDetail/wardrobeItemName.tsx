@@ -1,22 +1,24 @@
-import React from 'react';
+import classNames from 'classnames';
 import {
 	AssertNever,
 	type Item,
 	type ItemDisplayNameType,
 } from 'pandora-common';
-import { useWardrobeContext } from '../wardrobeContext';
+import type { ReactElement } from 'react';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 
 export function WardrobeItemName({
 	item,
 }: {
 	item: Item;
-}): React.ReactElement {
-	const { itemDisplayNameType } = useWardrobeContext();
+}): ReactElement {
+	const { wardrobeItemDisplayNameType } = useAccountSettings();
 
+	const isCustomName = wardrobeItemDisplayNameType === 'custom' && !!item.name && item.name !== item.asset.definition.name;
 	return (
-		<>
-			{ ResolveItemDisplayName(item, itemDisplayNameType) }
-		</>
+		<span className={ classNames('itemName', isCustomName ? 'custom' : null) }>
+			{ ResolveItemDisplayName(item, wardrobeItemDisplayNameType) }
+		</span>
 	);
 }
 
@@ -34,7 +36,7 @@ export function ResolveItemDisplayNameType(original: string, custom: string | nu
 		case 'custom':
 			return custom;
 		case 'custom_with_original_in_brackets':
-			return `${custom} [${original}]`;
+			return `${custom} (${original})`;
 		default:
 			AssertNever(itemDisplayNameType);
 	}

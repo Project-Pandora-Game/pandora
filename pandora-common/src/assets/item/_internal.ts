@@ -12,6 +12,7 @@ import type { ItemModuleAction } from '../modules';
 import type { IExportOptions, IItemModule } from '../modules/common';
 import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, Item, ItemBundle, ItemColorBundle, ItemId, ItemTemplate } from './base';
 
+import type { IChatMessageActionItem } from '../../chat';
 import { Assert, MemoizeNoArg } from '../../utility/misc';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from '../properties';
 
@@ -135,6 +136,14 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			hasKey = true;
 		}
 		return hasKey ? result : undefined;
+	}
+
+	public getChatDescriptor(): IChatMessageActionItem {
+		return {
+			id: this.id,
+			assetId: this.asset.id,
+			itemName: this.name ?? '',
+		};
 	}
 
 	public containerChanged(items: AppearanceItems, isCharacter: boolean): Item<Type> {

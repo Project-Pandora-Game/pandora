@@ -31,6 +31,7 @@ import { Checkbox } from '../../../common/userInteraction/checkbox';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
 import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { Button } from '../../common/button/button';
 import { Column, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
@@ -144,8 +145,8 @@ function WardrobePoseCategoriesInternal({ poses, setPose, characterState }: {
 }
 
 export function WardrobePoseCategories({ characterState, setPose }: { characterState: AssetFrameworkCharacterState; setPose: (pose: PartialAppearancePose) => void; }): ReactElement {
-	const { itemDisplayNameType } = useWardrobeContext();
-	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, itemDisplayNameType), [characterState, itemDisplayNameType]);
+	const { wardrobeItemDisplayNameType } = useAccountSettings();
+	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, wardrobeItemDisplayNameType), [characterState, wardrobeItemDisplayNameType]);
 	return (
 		<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
 	);
@@ -372,7 +373,7 @@ export function WardrobePoseGui({ character, characterState }: {
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
 	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
-	const { itemDisplayNameType } = useWardrobeContext();
+	const { wardrobeItemDisplayNameType } = useAccountSettings();
 	const assetManager = characterState.assetManager;
 	const allBones = useMemo(() => assetManager.getAllBones(), [assetManager]);
 
@@ -386,7 +387,7 @@ export function WardrobePoseGui({ character, characterState }: {
 		});
 	});
 
-	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, itemDisplayNameType), [characterState, itemDisplayNameType]);
+	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, wardrobeItemDisplayNameType), [characterState, wardrobeItemDisplayNameType]);
 
 	const setPose = useMemo(() => _.throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
 

@@ -6,7 +6,7 @@ import { useSpaceInfo } from '../../../components/gameContext/gameStateContextPr
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider';
 import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardrobeExpressionsView';
 import { WardrobePoseGui } from '../../../components/wardrobe/views/wardrobePoseView';
-import { WardrobeContextProvider } from '../../../components/wardrobe/wardrobeContext';
+import { WardrobeExternalContextProvider } from '../../../components/wardrobe/wardrobeContext';
 import { RoomScene } from '../../../graphics/room/roomScene';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { useIsPortrait } from '../../../styles/mediaQueries';
@@ -72,14 +72,14 @@ function InteractionBox({ className }: {
 				) : null
 			}
 			<Tab name='Pose'>
-				<WardrobeContextProvider target={ player }>
+				<WardrobeExternalContextProvider target={ player.actionSelector }>
 					<WardrobePoseGui character={ player } characterState={ playerState } />
-				</WardrobeContextProvider>
+				</WardrobeExternalContextProvider>
 			</Tab>
 			<Tab name='Expressions'>
-				<WardrobeContextProvider target={ player }>
+				<WardrobeExternalContextProvider target={ player.actionSelector }>
 					<WardrobeExpressionGui character={ player } characterState={ playerState } />
-				</WardrobeContextProvider>
+				</WardrobeExternalContextProvider>
 			</Tab>
 		</TabContainer>
 	);

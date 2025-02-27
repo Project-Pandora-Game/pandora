@@ -16,11 +16,12 @@ import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
-import { IMessageParseOptions, useChatCharacterStatus, useChatMessageSender, useChatSetPlayerStatus, useGameState, useGameStateOptional, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
+import { IMessageParseOptions, useChatCharacterStatus, useChatMessageSender, useChatSetPlayerStatus, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider';
 import { useNullableObservable } from '../../../observable';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { useService } from '../../../services/serviceProvider';
 import { COMMANDS, GetChatModeDescription } from './commands';
 import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, IClientCommand, ICommandExecutionContextClient, ICommandInvokeContext, RunCommand } from './commandsProcessor';
@@ -204,15 +205,11 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 }, ref: ForwardedRef<HTMLTextAreaElement>) {
 	const timeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const setPlayerStatus = useChatSetPlayerStatus();
-	const gameState = useGameState();
 	const sender = useChatMessageSender();
 	const chatInput = useChatInput();
 	const { target, editing, setEditing, setValue, setAutocompleteHint, mode, allowCommands } = chatInput;
 
-	const directoryConnector = useDirectoryConnector();
-	const accountManager = useService('accountManager');
 	const shardConnector = useShardConnector();
-	const navigate = useNavigate();
 	AssertNotNullable(shardConnector);
 
 	/**
@@ -222,19 +219,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 	 */
 	const inputHistoryIndex = useRef(-1);
 
-	const commandInvokeContext = useMemo<ICommandInvokeContext<ICommandExecutionContextClient>>(() => ({
-		displayError(error) {
-			toast(error, TOAST_OPTIONS_ERROR);
-		},
-		shardConnector,
-		directoryConnector,
-		accountManager,
-		gameState,
-		player: gameState.player,
-		messageSender: sender,
-		inputHandlerContext: chatInput,
-		navigate,
-	}), [chatInput, gameState, directoryConnector, accountManager, navigate, sender, shardConnector]);
+	const commandInvokeContext = useChatCommandContext();
 
 	const inputEnd = useEvent(() => {
 		if (timeout.current) {
@@ -592,8 +577,10 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 
 export function useChatCommandContext(): ICommandInvokeContext<ICommandExecutionContextClient> {
 	const gameState = useGameState();
+	const globalState = useGlobalState(gameState);
 	const sender = useChatMessageSender();
 	const chatInput = useChatInput();
+	const accountSettings = useAccountSettings();
 
 	const directoryConnector = useDirectoryConnector();
 	const accountManager = useService('accountManager');
@@ -601,16 +588,21 @@ export function useChatCommandContext(): ICommandInvokeContext<ICommandExecution
 	const navigate = useNavigate();
 	AssertNotNullable(shardConnector);
 
-	return useMemo(() => ({
+	return useMemo((): ICommandInvokeContext<ICommandExecutionContextClient> => ({
+		displayError(error) {
+			toast(error, TOAST_OPTIONS_ERROR);
+		},
 		shardConnector,
 		directoryConnector,
 		accountManager,
 		gameState,
+		globalState,
 		player: gameState.player,
+		accountSettings,
 		messageSender: sender,
 		inputHandlerContext: chatInput,
 		navigate,
-	}), [chatInput, gameState, directoryConnector, accountManager, navigate, sender, shardConnector]);
+	}), [chatInput, gameState, globalState, accountSettings, directoryConnector, accountManager, navigate, sender, shardConnector]);
 }
 
 export function AutoCompleteHint<TCommandExecutionContext extends ICommandExecutionContext>({ ctx, commands }: {

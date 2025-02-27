@@ -4,8 +4,9 @@ import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
 import { toast } from 'react-toastify';
 import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
+import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList';
 import { ChatMode } from './chatInput';
-import { CommandSelectorCharacter, CommandSelectorEnum } from './commandsHelpers';
+import { CommandSelectorCharacter, CommandSelectorEnum, CommandSelectorGameLogicActionTarget, CommandSelectorItem } from './commandsHelpers';
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
 
 function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
@@ -215,6 +216,19 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 			.argument('target', CommandSelectorCharacter({ allowSelf: 'none' }))
 			.handler(({ navigate }, { target }) => {
 				navigate(`/contacts/dm/${target.data.accountId}`);
+				return true;
+			}),
+	},
+	{
+		key: ['inspect'],
+		description: 'Inspect an item on a character or in the room inventory',
+		longDescription: 'Opens an item dialog for any item worn by a character in the same space or in the room inventory.',
+		usage: '<character | room> <item>',
+		handler: CreateClientCommand()
+			.argument('target', CommandSelectorGameLogicActionTarget())
+			.argument('item', CommandSelectorItem('target'))
+			.handler((_ctx, { item }) => {
+				OpenRoomItemDialog(item.itemId);
 				return true;
 			}),
 	},

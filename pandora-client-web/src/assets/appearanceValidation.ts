@@ -74,6 +74,12 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 						return `The lock on the modifier cannot be ${actionDescription[e.moduleAction]} on yourself.`;
 					case 'noStoredPassword':
 						return `The lock on the modifier cannot be ${actionDescription[e.moduleAction]} because it has no stored password.`;
+					case 'noTimerSet':
+						return `The lock on the modifier cannot be ${actionDescription[e.moduleAction]} because it has no timer set.`;
+					case 'invalidTimer':
+						return `The lock on the modifier cannot be ${actionDescription[e.moduleAction]} because the timer is invalid.`;
+					case 'timerRunning':
+						return `The lock cannot be unlocked yet.`;
 					case 'wrongPassword':
 						return `The password is incorrect.`;
 					case 'notAllowed':

@@ -95,12 +95,12 @@ export type CharacterModifierActionError =
 	| {
 		type: 'lockInteractionPrevented';
 		moduleAction: 'lock';
-		reason: 'noStoredPassword';
+		reason: 'noStoredPassword' | 'noTimerSet' | 'invalidTimer';
 	}
 	| {
 		type: 'lockInteractionPrevented';
 		moduleAction: 'unlock';
-		reason: 'wrongPassword';
+		reason: 'wrongPassword' | 'timerRunning';
 	}
 	| {
 		type: 'lockInteractionPrevented';

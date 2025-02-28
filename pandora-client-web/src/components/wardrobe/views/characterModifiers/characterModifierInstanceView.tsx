@@ -6,9 +6,9 @@ import {
 	type CharacterModifierInstanceClientData,
 } from 'pandora-common';
 import { ReactElement, ReactNode } from 'react';
+import { useAccountSettings } from '../../../../services/accountLogic/accountManagerHooks';
 import { DivContainer } from '../../../common/container/container';
 import { ResolveItemDisplayNameType } from '../../itemDetail/wardrobeItemName';
-import { useWardrobeContext } from '../../wardrobeContext';
 import './characterModifierInstanceView.scss';
 
 export function WardrobeCharacterModifierFullInstanceView({ children, modifiers, modifierEffects, currentlyFocusedModifier, focusModifierInstance }: {
@@ -57,10 +57,11 @@ function ModifierFullInstanceListItem({ modifier, selected = false, onClick, act
 	active: boolean;
 }): ReactElement {
 	const definition = CHARACTER_MODIFIER_TYPE_DEFINITION[modifier.type];
-	const { itemDisplayNameType } = useWardrobeContext();
+	const { wardrobeItemDisplayNameType } = useAccountSettings();
 
 	// TODO: const preference = useAssetPreference(asset);
 
+	const hasCustomName = wardrobeItemDisplayNameType === 'custom' && !!modifier.name && modifier.name !== definition.visibleName;
 	return (
 		<div
 			className={ classNames(
@@ -80,7 +81,9 @@ function ModifierFullInstanceListItem({ modifier, selected = false, onClick, act
 					!modifier.enabled ? 'status-disabled' : active ? 'status-active' : 'status-inactive',
 				) }
 			/>
-			<span className='itemName'>{ ResolveItemDisplayNameType(definition.visibleName, modifier.name || null, itemDisplayNameType) }</span>
+			<span className={ classNames('itemName', hasCustomName ? 'custom' : null) }>
+				{ ResolveItemDisplayNameType(definition.visibleName, modifier.name || null, wardrobeItemDisplayNameType) }
+			</span>
 		</div>
 	);
 }

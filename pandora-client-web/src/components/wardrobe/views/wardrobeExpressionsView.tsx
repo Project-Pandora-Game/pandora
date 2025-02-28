@@ -12,7 +12,7 @@ export function WardrobeExpressionGui({ characterState }: {
 	character: ICharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const { focuser } = useWardrobeContext();
+	const { focuser, targetSelector } = useWardrobeContext();
 	useEffect(() => focuser.disable('Expressions cannot focus container!'), [focuser]);
 
 	return (

@@ -37,10 +37,11 @@ import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProv
 import { useShardConnector } from '../../../gameContext/shardConnectorContextProvider';
 import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../../wardrobeActionContext';
 import { ActionWarningContent, WardrobeActionButtonElement } from '../../wardrobeComponents';
+import { WardrobeCharacterModifierLock } from './characterModifierInstanceLock';
 import { CharacterModifierConditionList } from './conditions/characterModifierConditionList';
 import { WardrobeCharacterModifierConfig } from './configuration/_index';
 
-interface WardrobeCharacterModifierInstanceDetailsViewProps {
+export interface WardrobeCharacterModifierInstanceDetailsViewProps {
 	character: ICharacter;
 	instance: CharacterModifierInstanceClientData | null;
 	unfocus: () => void;
@@ -169,6 +170,12 @@ function CheckedInstanceDetails({ character, instance, unfocus }: ModifierInstan
 					/>
 					<ModifierInstanceExportButton instance={ instance } />
 				</Row>
+				<FieldsetToggle legend='Lock' open={ instance.lock != null }>
+					<WardrobeCharacterModifierLock
+						character={ character }
+						instance={ instance }
+					/>
+				</FieldsetToggle>
 				{
 					check != null && !check.valid ? (
 						<fieldset className={ check.prompt != null ? 'modifyCheckProblem promptRequired' : 'modifyCheckProblem blocked' }>
@@ -281,7 +288,7 @@ function ModifierInstanceEnableButton({ character, enabled, onChange }: {
 			<Switch
 				checked={ enabled }
 				onChange={ onValueChange }
-				disabled={ processing || processingPermissionRequest }
+				disabled={ onChange == null || processing || processingPermissionRequest }
 				label='Enable this modifier'
 			/>
 		</DivContainer>

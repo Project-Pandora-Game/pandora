@@ -84,7 +84,7 @@ function DirectMessageList(): ReactElement | null {
 				className='fill'
 				tabIndex={ 1 }
 			>
-				<Column gap='none'>
+				<Column gap='none' className='messagesContainer'>
 					{ encryptedMessages.map((message, i) => (
 						<>
 							<DirectMessageElement

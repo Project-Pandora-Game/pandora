@@ -1,32 +1,22 @@
 import classNames from 'classnames';
-import type { Immutable } from 'immer';
 import {
-	AppearanceAction,
-	Assert,
-	AssertNever,
-	FormatTimeInterval,
 	ItemLock,
-	LockLogic,
-	MessageSubstitute,
-	type AppearanceActionData,
-	type LockSetup,
+	type ActionTargetSelector,
+	type AppearanceAction,
+	type ItemPath,
 } from 'pandora-common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
-import React, { ReactElement, useCallback, useEffect, useId, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useMemo } from 'react';
 import { useAssetManager } from '../../../assets/assetManager';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import closedLock from '../../../assets/icons/lock_closed.svg';
 import emptyLock from '../../../assets/icons/lock_empty.svg';
 import openLock from '../../../assets/icons/lock_open.svg';
-import { useCharacterRestrictionManager } from '../../../character/character';
-import { useCurrentTime } from '../../../common/useCurrentTime';
-import { Checkbox } from '../../../common/userInteraction/checkbox';
-import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { Column, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
-import { usePlayerState } from '../../gameContext/playerContextProvider';
 import { WardrobeItemName } from '../itemDetail/wardrobeItemName';
-import { useWardrobeActionContext, type WardrobeExecuteCheckedResult } from '../wardrobeActionContext';
+import { WardrobeLockLogicLocked, WardrobeLockLogicUnlocked, type WardrobeLockLogicExecuteButtonProps } from '../views/wardrobeLockLogic';
+import type { WardrobeExecuteCheckedResult } from '../wardrobeActionContext';
 import { WardrobeActionButton } from '../wardrobeComponents';
 import { useWardrobeContext } from '../wardrobeContext';
 import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
@@ -190,112 +180,54 @@ function WardrobeLockSlotLockDescription({ lock }: {
 }
 
 function WardrobeLockSlotLocked({ target, item, moduleName, lock }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
-	const { actions } = useWardrobeActionContext();
-	const { player, playerState } = usePlayerState();
-	const playerRestrictionManager = useCharacterRestrictionManager(player, playerState, actions.spaceContext);
-
-	const now = useCurrentTime();
-	const lockedText = useMemo(() => {
-		const lockedData = lock.lockLogic.lockData.locked;
-		Assert(lockedData != null);
-		const formatText = lock.asset.definition.lockedText ?? 'Locked by CHARACTER at TIME';
-		if (formatText.length === 0)
-			return null;
-
-		const { name, id, time } = lockedData;
-
-		const substitutes = {
-			CHARACTER_NAME: name,
-			CHARACTER_ID: id,
-			CHARACTER: `${name} (${id})`,
-			TIME_PASSED: FormatTimeInterval(now - time),
-			TIME: new Date(time).toLocaleString(),
-		};
-		return (
-			<Row padding='medium' alignY='start'>
-				{ MessageSubstitute(formatText, substitutes) }
-			</Row>
-		);
-	}, [lock, now]);
-
-	const [password, setPassword] = useState<string>('');
-	const [invalidPassword, setInvalidPassword] = useState<string | undefined>(undefined);
-	const [clearLastPassword, setClearLastPassword] = useState(false);
-
-	// Attempted action for locking or unlocking the lock
-	const [currentAttempt, setCurrentAttempt] = useState<WardrobeExecuteCheckedResult['currentAttempt']>(null);
-
-	const allowExecute =
-		lock.lockLogic.lockSetup.password == null ||
-		playerRestrictionManager.forceAllowItemActions() ||
-		LockLogic.validatePassword(lock.lockLogic.lockSetup, password);
-
-	const action = useMemo((): AppearanceAction => ({
-		type: 'moduleAction',
+	const actionContext = useMemo((): WardrobeLockSlotActionButtonContext => ({
 		target,
 		item,
-		module: moduleName,
-		action: {
-			moduleType: 'lockSlot',
-			lockAction: {
-				action: 'unlock',
-				password: currentAttempt != null ? undefined : (password || undefined),
-				clearLastPassword,
-			},
-		},
-	}), [clearLastPassword, currentAttempt, item, moduleName, password, target]);
+		moduleName,
+	}), [target, item, moduleName]);
 
 	return (
-		<>
-			{ lockedText }
-			{
-				lock.lockLogic.lockSetup.password ? (
-					<Column className='WardrobeLockPassword'>
-						<Row className='WardrobeInputRow'>
-							<label>Remove password</label>
-							<Checkbox checked={ clearLastPassword } onChange={ setClearLastPassword } />
-						</Row>
-						<PasswordInput
-							target={ target }
-							item={ item }
-							value={ password }
-							onChange={ setPassword }
-							moduleName={ moduleName }
-							password={ lock.lockLogic.lockSetup.password }
-							showInvalidWarning={ password === invalidPassword }
-							pendingAttempt={ currentAttempt != null }
-						/>
-					</Column>
-				) : null
-			}
-			<WardrobeActionButton
-				disabled={ !allowExecute && currentAttempt == null }
-				onFailure={ () => setInvalidPassword(password) }
-				action={ action }
-				onCurrentAttempt={ setCurrentAttempt }
-			>
-				Unlock
-			</WardrobeActionButton>
-		</>
+		<WardrobeLockLogicLocked
+			lockLogic={ lock.lockLogic }
+			lockedText={ lock.asset.definition.lockedText }
+			ActionButton={ WardrobeLockSlotActionButton }
+			actionContext={ actionContext }
+		/>
 	);
 }
 
 function WardrobeLockSlotUnlocked({ target, item, moduleName, lock }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
-	const [password, setPassword] = useState<string>('');
-	const [useOldPassword, setUseOldPassword] = useState(false);
+	const actionContext = useMemo((): WardrobeLockSlotActionButtonContext => ({
+		target,
+		item,
+		moduleName,
+	}), [target, item, moduleName]);
 
-	// Attempted action for locking or unlocking the lock
-	const [currentAttempt, setCurrentAttempt] = useState<WardrobeExecuteCheckedResult['currentAttempt']>(null);
+	return (
+		<WardrobeLockLogicUnlocked
+			lockLogic={ lock.lockLogic }
+			ActionButton={ WardrobeLockSlotActionButton }
+			actionContext={ actionContext }
+		/>
+	);
+}
 
-	const allowExecute =
-		lock.lockLogic.lockSetup.password == null ||
-		useOldPassword ||
-		LockLogic.validatePassword(lock.lockLogic.lockSetup, password);
+interface WardrobeLockSlotActionButtonContext {
+	target: ActionTargetSelector;
+	item: ItemPath;
+	moduleName: string;
+}
 
-	useEffect(() => {
-		if (!lock.hasPassword)
-			setUseOldPassword(false);
-	}, [lock.hasPassword]);
+function WardrobeLockSlotActionButton({
+	disabled,
+	onFailure,
+	lockAction,
+	onCurrentlyAttempting,
+	children,
+	actionContext,
+	onExecute,
+}: WardrobeLockLogicExecuteButtonProps<WardrobeLockSlotActionButtonContext>): ReactElement {
+	const { target, item, moduleName } = actionContext;
 
 	const action = useMemo((): AppearanceAction => ({
 		type: 'moduleAction',
@@ -304,167 +236,23 @@ function WardrobeLockSlotUnlocked({ target, item, moduleName, lock }: Omit<Wardr
 		module: moduleName,
 		action: {
 			moduleType: 'lockSlot',
-			lockAction: {
-				action: 'lock',
-				password: currentAttempt != null ? undefined :
-					useOldPassword ? undefined :
-					(password || undefined),
-			},
+			lockAction,
 		},
-	}), [currentAttempt, item, moduleName, password, target, useOldPassword]);
+	}), [lockAction, item, moduleName, target]);
+
+	const onCurrentAttempt = useCallback((currentAttempt: WardrobeExecuteCheckedResult['currentAttempt']): void => {
+		onCurrentlyAttempting?.(currentAttempt != null);
+	}, [onCurrentlyAttempting]);
 
 	return (
-		<>
-			{
-				lock.lockLogic.lockSetup.password ? (
-					<Column className='WardrobeLockPassword'>
-						{
-							lock.hasPassword ? (
-								<Row className='WardrobeInputRow'>
-									<label>Use old password</label>
-									<Checkbox checked={ useOldPassword } onChange={ setUseOldPassword } />
-								</Row>
-							) : null
-						}
-						<PasswordInput
-							target={ target }
-							item={ item }
-							moduleName={ moduleName }
-							value={ password }
-							onChange={ setPassword }
-							password={ lock.lockLogic.lockSetup.password }
-							disabled={ useOldPassword && lock.hasPassword }
-							pendingAttempt={ currentAttempt != null }
-						/>
-					</Column>
-				) : null
-			}
-			<WardrobeActionButton
-				disabled={ !allowExecute && currentAttempt == null }
-				action={ action }
-				onCurrentAttempt={ setCurrentAttempt }
-			>
-				Lock
-			</WardrobeActionButton>
-		</>
-	);
-}
-
-function PasswordInput({
-	target,
-	item,
-	moduleName,
-	value,
-	onChange,
-	password,
-	pendingAttempt = false,
-	showInvalidWarning,
-	disabled,
-}: Pick<WardrobeModuleProps<ItemModuleLockSlot>, 'target' | 'item' | 'moduleName'> & {
-	value: string;
-	onChange: (newValue: string) => void;
-	password: Immutable<NonNullable<LockSetup['password']>>;
-	pendingAttempt?: boolean;
-	showInvalidWarning?: boolean;
-	disabled?: boolean;
-}) {
-	const [min, max] = typeof password.length === 'number' ? [password.length, password.length] : password.length;
-
-	const id = useId();
-
-	const [inputCharacterType, replaceFunc] = useMemo(() => {
-		let ict: string;
-		let rf: ((_: string) => string);
-
-		switch (password.format) {
-			case 'numeric':
-				ict = 'digits';
-				rf = (v) => v.replace(/[^0-9]/g, '');
-				break;
-			case 'letters':
-				ict = 'letters';
-				rf = (v) => v.replace(/[^a-zA-Z]/g, '');
-				break;
-			case 'alphanumeric':
-				ict = 'digits or letters';
-				rf = (v) => v.replace(/[^a-zA-Z0-9]/g, '');
-				break;
-			case 'text':
-				ict = 'characters';
-				rf = (v) => v;
-				break;
-			default:
-				AssertNever(password.format);
-		}
-		return [ict, rf];
-	}, [password.format]);
-
-	const onInput = useCallback((newValue: string) => {
-		onChange(replaceFunc(newValue));
-	}, [onChange, replaceFunc]);
-
-	const error = useMemo(() => {
-		if (disabled)
-			return null;
-
-		if (value.length < min && min === max)
-			return `Must be ${min} ${inputCharacterType}`;
-		if (value.length < min)
-			return `Must be at least ${min} ${inputCharacterType}`;
-		if (value.length > max)
-			return `Must be at most ${max} ${inputCharacterType}`;
-		if (showInvalidWarning)
-			return 'Invalid password';
-
-		return null;
-	}, [disabled, value, min, max, showInvalidWarning, inputCharacterType]);
-
-	const showPasswordAction = useMemo<AppearanceAction>(() => ({
-		type: 'moduleAction',
-		target,
-		item,
-		module: moduleName,
-		action: {
-			moduleType: 'lockSlot',
-			lockAction: {
-				action: 'showPassword',
-			},
-		},
-	}), [target, item, moduleName]);
-
-	const onPasswordShown = useCallback((data: readonly AppearanceActionData[]) => {
-		for (const d of data) {
-			if (d.type === 'moduleActionData' && d.data.moduleAction === 'showPassword') {
-				onChange(d.data.password);
-				break;
-			}
-		}
-	}, [onChange]);
-
-	return (
-		<>
-			<Row className='WardrobeInputRow'>
-				<label htmlFor={ id }>
-					Password
-				</label>
-				<WardrobeActionButton action={ showPasswordAction } onExecute={ onPasswordShown } disabled={ pendingAttempt }>
-					Show
-				</WardrobeActionButton>
-				<TextInput
-					id={ id }
-					value={ pendingAttempt ? '\u2022'.repeat(Math.min(max, 16)) : value }
-					maxLength={ max }
-					onChange={ onInput }
-					disabled={ disabled || pendingAttempt }
-				/>
-			</Row>
-			{
-				(error && !pendingAttempt) ? (
-					<Row className='WardrobeInputRow'>
-						<span className='error'>{ error }</span>
-					</Row>
-				) : null
-			}
-		</>
+		<WardrobeActionButton
+			disabled={ disabled }
+			onFailure={ onFailure }
+			action={ action }
+			onCurrentAttempt={ onCurrentAttempt }
+			onExecute={ onExecute }
+		>
+			{ children }
+		</WardrobeActionButton>
 	);
 }

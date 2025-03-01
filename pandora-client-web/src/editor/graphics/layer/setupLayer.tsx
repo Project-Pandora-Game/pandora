@@ -4,7 +4,6 @@ import { Texture } from 'pixi.js';
 import { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react';
 import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
 import { useLayerDefinition, useLayerImageSource, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations';
-import { useCharacterAppearanceItems } from '../../../character/character';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
 import { Container } from '../../../graphics/baseComponents/container';
 import { Graphics } from '../../../graphics/baseComponents/graphics';
@@ -38,8 +37,7 @@ export function SetupLayerSelected({
 }): ReactElement {
 	const editor = useEditor();
 	const state = useEditorLayerStateOverride(layer);
-	const items = useCharacterAppearanceItems(characterState);
-	const item = items.find((i) => i.asset.id === layer.asset.id) ?? null;
+	const item = characterState.items.find((i) => i.asset.id === layer.asset.id) ?? null;
 
 	const { points, triangles } = useLayerMeshPoints(layer);
 

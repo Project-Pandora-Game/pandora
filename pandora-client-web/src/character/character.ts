@@ -2,7 +2,6 @@ import { freeze } from 'immer';
 import { noop } from 'lodash';
 import {
 	ActionSpaceContext,
-	AppearanceItems,
 	Assert,
 	AssetFrameworkCharacterState,
 	CharacterAppearance,
@@ -19,8 +18,8 @@ import {
 	ITypedEventEmitter,
 	Logger,
 	TypedEventEmitter,
-	WearableAssetType,
 	type ActionTargetSelector,
+	type AssetFrameworkGlobalState,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import type { PlayerCharacter } from './player';
@@ -32,8 +31,8 @@ export interface ICharacter<T extends ICharacterPublicData = ICharacterPublicDat
 	readonly data: Readonly<T>;
 	readonly gameLogicCharacter: GameLogicCharacter;
 	isPlayer(): boolean;
-	getAppearance(state: AssetFrameworkCharacterState): CharacterAppearance;
-	getRestrictionManager(state: AssetFrameworkCharacterState, spaceContext: ActionSpaceContext | null): CharacterRestrictionsManager;
+	getAppearance(globalState: AssetFrameworkGlobalState): CharacterAppearance;
+	getRestrictionManager(globalState: AssetFrameworkGlobalState, spaceContext: ActionSpaceContext | null): CharacterRestrictionsManager;
 }
 
 export type IChatroomCharacter = ICharacter<ICharacterRoomData>;
@@ -81,13 +80,12 @@ export class Character<T extends ICharacterRoomData = ICharacterRoomData> extend
 		this.emit('update', data);
 	}
 
-	public getAppearance(state: AssetFrameworkCharacterState): CharacterAppearance {
-		Assert(state.id === this.id);
-		return new CharacterAppearance(state, this.gameLogicCharacter);
+	public getAppearance(globalState: AssetFrameworkGlobalState): CharacterAppearance {
+		return new CharacterAppearance(globalState, this.gameLogicCharacter);
 	}
 
-	public getRestrictionManager(state: AssetFrameworkCharacterState, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
-		return this.getAppearance(state).getRestrictionManager(spaceContext);
+	public getRestrictionManager(globalState: AssetFrameworkGlobalState, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
+		return this.getAppearance(globalState).getRestrictionManager(spaceContext);
 	}
 }
 
@@ -133,20 +131,16 @@ export function useCharacterDataMultiple<T extends ICharacterPublicData>(charact
 	return useSyncExternalStore(subscribe, getSnapshot);
 }
 
-export function useCharacterAppearance(characterState: AssetFrameworkCharacterState, character: Character): CharacterAppearance {
-	return useMemo(() => character.getAppearance(characterState), [characterState, character]);
-}
-
-export function useCharacterAppearanceItems(characterState: AssetFrameworkCharacterState): AppearanceItems<WearableAssetType> {
-	return characterState.items;
+export function useCharacterAppearance(globalState: AssetFrameworkGlobalState, character: Character): CharacterAppearance {
+	return useMemo(() => character.getAppearance(globalState), [globalState, character]);
 }
 
 export function useCharacterAppearanceItem(characterState: AssetFrameworkCharacterState, path: ItemPath | null | undefined): Item | undefined {
-	const items = useCharacterAppearanceItems(characterState);
+	const items = characterState.items;
 
 	return useMemo(() => (items && path) ? EvalItemPath(items, path) : undefined, [items, path]);
 }
 
-export function useCharacterRestrictionManager(character: Character, state: AssetFrameworkCharacterState, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
-	return useMemo(() => character.gameLogicCharacter.getRestrictionManager(state, spaceContext), [character, state, spaceContext]);
+export function useCharacterRestrictionManager(character: ICharacter, globalState: AssetFrameworkGlobalState, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
+	return useMemo(() => character.gameLogicCharacter.getRestrictionManager(globalState, spaceContext), [character, globalState, spaceContext]);
 }

@@ -11,6 +11,7 @@ import deviceSvg from '../../assets/icons/device.svg';
 import forbid from '../../assets/icons/forbidden.svg';
 import lock from '../../assets/icons/lock.svg';
 import modificationEdit from '../../assets/icons/modification-edit.svg';
+import modificationLock from '../../assets/icons/modification-lock.svg';
 import modificationView from '../../assets/icons/modification-view.svg';
 import onOff from '../../assets/icons/on-off.svg';
 import promptIcon from '../../assets/icons/prompt.svg';
@@ -96,6 +97,8 @@ function GetIcon(icon: string): string {
 			return deviceSvg;
 		case 'modification-edit':
 			return modificationEdit;
+		case 'modification-lock':
+			return modificationLock;
 		case 'modification-view':
 			return modificationView;
 		default:
@@ -252,7 +255,7 @@ export function PermissionSettingEntry({ visibleName, icon, permissionGroup, per
 	const [showConfig, setShowConfig] = useState(false);
 
 	return (
-		<Row alignY='center' alignX='space-between'>
+		<div className='input-row'>
 			<label className='flex-1'>
 				{
 					icon ? (
@@ -278,7 +281,7 @@ export function PermissionSettingEntry({ visibleName, icon, permissionGroup, per
 					permissionId={ permissionId }
 				/>
 			) }
-		</Row>
+		</div>
 	);
 }
 

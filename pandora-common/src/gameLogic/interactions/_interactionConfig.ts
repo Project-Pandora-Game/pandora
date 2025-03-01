@@ -80,7 +80,7 @@ export const INTERACTION_CONFIG = {
 	},
 	lockCharacterModifiers: {
 		visibleName: 'Lock this character\'s modifiers or interact with existing locks',
-		icon: 'modification-edit',
+		icon: 'modification-lock',
 		defaultPermissions: {
 			allowOthers: 'no',
 		},

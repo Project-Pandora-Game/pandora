@@ -141,12 +141,12 @@ function WardrobeTemplateRequireFreeHandsCustomize({ template, updateTemplate }:
 						ev.stopPropagation();
 						setRequire(true);
 					} }
+					title='Require free hands to use this item'
 				>
 					<img
 						src={ strugglingDeny }
 						crossOrigin='anonymous'
 						alt='Require free hands to use this item'
-						title='Require free hands to use this item'
 					/>
 				</button>
 				<button
@@ -160,12 +160,12 @@ function WardrobeTemplateRequireFreeHandsCustomize({ template, updateTemplate }:
 						ev.stopPropagation();
 						setRequire(false);
 					} }
+					title='Allow using this item even with blocked hands'
 				>
 					<img
 						src={ strugglingAllow }
 						crossOrigin='anonymous'
 						alt='Allow using this item even with blocked hands'
-						title='Allow using this item even with blocked hands'
 					/>
 				</button>
 			</Row>

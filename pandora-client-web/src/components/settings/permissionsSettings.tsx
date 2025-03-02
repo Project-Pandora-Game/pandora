@@ -62,11 +62,13 @@ function InteractionPermissions(): ReactElement {
 					<img className='help-image' src={ wikiIcon } width='26' height='26' alt='Wiki' />
 				</Link>
 			</Row>
-			{
-				INTERACTION_IDS.map((id) => (
-					<InteractionSettings key={ id } id={ id } />
-				))
-			}
+			<Column gap='none' className='permission-list'>
+				{
+					INTERACTION_IDS.map((id) => (
+						<InteractionSettings key={ id } id={ id } />
+					))
+				}
+			</Column>
 		</fieldset>
 	);
 }
@@ -183,11 +185,13 @@ function ItemLimitsPermissions(): ReactElement {
 		<fieldset>
 			<legend>Item Limits</legend>
 			<i>Allow other characters to interact with worn items and to add new items that are marked in the item limits as...</i>
-			{
-				KnownObject.keys(ASSET_PREFERENCES_PERMISSIONS).map((group) => (
-					<ItemLimitsSettings key={ group } group={ group } />
-				))
-			}
+			<Column gap='none' className='permission-list'>
+				{
+					KnownObject.keys(ASSET_PREFERENCES_PERMISSIONS).map((group) => (
+						<ItemLimitsSettings key={ group } group={ group } />
+					))
+				}
+			</Column>
 		</fieldset>
 	);
 }
@@ -255,16 +259,13 @@ export function PermissionSettingEntry({ visibleName, icon, permissionGroup, per
 	const [showConfig, setShowConfig] = useState(false);
 
 	return (
-		<div className='input-row'>
+		<Row alignY='center' padding='small'>
+			{
+				icon ? (
+					<img src={ GetIcon(icon) } width='28' height='28' alt='permission icon' />
+				) : null
+			}
 			<label className='flex-1'>
-				{
-					icon ? (
-						<>
-							<img src={ GetIcon(icon) } width='28' height='28' alt='permission icon' />
-							&nbsp;&nbsp;
-						</>
-					) : null
-				}
 				{ visibleName }
 			</label>
 			<ShowEffectiveAllowOthers permissionGroup={ permissionGroup } permissionId={ permissionId } />
@@ -281,7 +282,7 @@ export function PermissionSettingEntry({ visibleName, icon, permissionGroup, per
 					permissionId={ permissionId }
 				/>
 			) }
-		</div>
+		</Row>
 	);
 }
 

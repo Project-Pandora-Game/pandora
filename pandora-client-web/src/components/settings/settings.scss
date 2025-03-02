@@ -101,6 +101,18 @@
 					flex-direction: column;
 				}
 			}
+
+			.permission-list {
+				> div {
+					background: common.$theme-table-body-background;
+					color: common.$theme-table-body-text;
+
+					&:nth-child(2n) {
+						background: common.$theme-table-body-altbackground;
+					}
+				}
+
+			}
 		}
 	}
 

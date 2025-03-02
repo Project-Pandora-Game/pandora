@@ -6,8 +6,10 @@ import {
 	CharacterModifierActionCheckReorder,
 	CharacterModifierNameSchema,
 	CharacterModifierTemplateSchema,
+	CloneDeepMutable,
 	GameLogicModifierInstanceClient,
 	GetLogger,
+	LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT,
 	LIMIT_CHARACTER_MODIFIER_NAME_LENGTH,
 	MakeCharacterModifierTemplateFromClientData,
 	type CharacterModifierConfigurationChange,
@@ -29,6 +31,7 @@ import { TextInput } from '../../../../common/userInteraction/input/textInput';
 import { Switch } from '../../../../common/userInteraction/switch';
 import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast';
 import { Button, IconButton } from '../../../common/button/button';
+import { CharacterListInput } from '../../../common/characterListInput/characterListInput';
 import { Column, DivContainer, Row } from '../../../common/container/container';
 import { FieldsetToggle } from '../../../common/fieldsetToggle';
 import { FormCreateStringValidator, FormError } from '../../../common/form/form';
@@ -40,6 +43,7 @@ import { ActionWarningContent, WardrobeActionButtonElement } from '../../wardrob
 import { WardrobeCharacterModifierLock } from './characterModifierInstanceLock';
 import { CharacterModifierConditionList } from './conditions/characterModifierConditionList';
 import { WardrobeCharacterModifierConfig } from './configuration/_index';
+import { ContextHelpButton } from '../../../help/contextHelpButton';
 
 export interface WardrobeCharacterModifierInstanceDetailsViewProps {
 	character: ICharacter;
@@ -175,6 +179,30 @@ function CheckedInstanceDetails({ character, instance, unfocus }: ModifierInstan
 						character={ character }
 						instance={ instance }
 					/>
+					<FieldsetToggle
+						legend={
+							<>
+								Lock exceptions
+								<ContextHelpButton>
+									<p>
+										Characters in this list will ignore any lock placed on this modifier, even if it is locked.
+									</p>
+									<p>
+										These characters will not be able to unlock or remove the lock, but they will still be allowed to<br />
+										change any modifier settings (including this one), enable/disable the modifier, or even delete the modifier altogether.
+									</p>
+								</ContextHelpButton>
+							</>
+						}
+					>
+						<CharacterListInput
+							max={ LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT }
+							value={ instance.lockExceptions }
+							onChange={ allowModify ? ((newValue) => updateConfig({
+								lockExceptions: CloneDeepMutable(newValue),
+							})) : undefined }
+						/>
+					</FieldsetToggle>
 				</FieldsetToggle>
 				{
 					check != null && !check.valid ? (

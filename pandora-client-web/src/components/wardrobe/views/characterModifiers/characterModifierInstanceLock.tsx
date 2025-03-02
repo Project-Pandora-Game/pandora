@@ -5,7 +5,6 @@ import {
 	CHARACTER_MODIFIER_LOCK_DEFINITIONS,
 	CharacterModifierActionCheckLockModify,
 	CharacterModifierLockType,
-	CharacterModifierLockTypeSchema,
 	GetLogger,
 	KnownObject,
 	type AppearanceActionData,
@@ -23,7 +22,6 @@ import emptyLock from '../../../../assets/icons/lock_empty.svg';
 import openLock from '../../../../assets/icons/lock_open.svg';
 import type { ICharacter } from '../../../../character/character';
 import { useAsyncEvent } from '../../../../common/useEvent';
-import { Select } from '../../../../common/userInteraction/select/select';
 import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast';
 import { Button } from '../../../common/button/button';
 import { Column, Row } from '../../../common/container/container';
@@ -136,8 +134,35 @@ function WardrobeCharacterModifierLockUnlocked({ character, instance, lockLogic 
 }
 
 function WardrobeCharacterModifierLockSelectionDialog({ character, instance, close }: WardrobeCharacterModifierLockProps & { close: () => void; }): ReactElement {
-	const [lockType, setLockType] = useState<CharacterModifierLockType>('dummy');
+	return (
+		<ModalDialog>
+			<Column>
+				<h2>Select lock</h2>
+				{
+					KnownObject.keys(CHARACTER_MODIFIER_LOCK_DEFINITIONS).map((type) => (
+						<WardrobeCharacterModifierLockAddButton
+							key={ type }
+							lockType={ type }
+							character={ character }
+							instance={ instance }
+							close={ close }
+						/>
+					))
+				}
+				<hr className='fill-x' />
+				<Button
+					onClick={ () => {
+						close();
+					} }
+				>
+					Cancel
+				</Button>
+			</Column>
+		</ModalDialog>
+	);
+}
 
+function WardrobeCharacterModifierLockAddButton({ character, instance, lockType, close }: WardrobeCharacterModifierLockProps & { close: () => void; lockType: CharacterModifierLockType; }): ReactElement {
 	const action = useMemo((): CharacterModifierLockAction => ({
 		action: 'addLock',
 		lockType,
@@ -205,41 +230,13 @@ function WardrobeCharacterModifierLockSelectionDialog({ character, instance, clo
 	}, [check, execute, requestPermissions, character]);
 
 	return (
-		<ModalDialog>
-			<Column>
-				<h2>Select lock</h2>
-				<label>Lock type</label>
-				<Select
-					value={ lockType }
-					onChange={ (e) => {
-						setLockType(CharacterModifierLockTypeSchema.parse(e.target.value));
-					} }
-				>
-					{
-						KnownObject.entries(CHARACTER_MODIFIER_LOCK_DEFINITIONS).map(([type, definition]) => (
-							<option value={ type } key={ type }>{ definition.name }</option>
-						))
-					}
-				</Select>
-				<div />
-				<Row alignX='space-between'>
-					<Button
-						onClick={ () => {
-							close();
-						} }
-					>
-						Cancel
-					</Button>
-					<WardrobeActionButtonElement
-						check={ check }
-						onClick={ onClick }
-						disabled={ processing || processingPermissionRequest }
-					>
-						Add lock
-					</WardrobeActionButtonElement>
-				</Row>
-			</Column>
-		</ModalDialog>
+		<WardrobeActionButtonElement
+			check={ check }
+			onClick={ onClick }
+			disabled={ processing || processingPermissionRequest }
+		>
+			{ CHARACTER_MODIFIER_LOCK_DEFINITIONS[lockType].name }
+		</WardrobeActionButtonElement>
 	);
 }
 

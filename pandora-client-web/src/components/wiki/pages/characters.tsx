@@ -28,6 +28,7 @@ export function WikiCharacters(): ReactElement {
 				<li><Link to='#CH_Character_context_menu'>Character context menu</Link></li>
 				<li><Link to='#CH_Character_wardrobe'>Character wardrobe</Link></li>
 				<li><Link to='#CH_Character_permissions'>Character permissions</Link></li>
+				<li><Link to='#CH_Character_modifiers'>Character modifiers</Link></li>
 				<li><Link to='#CH_Character_deletion'>Character deletion</Link></li>
 			</ul>
 
@@ -158,6 +159,41 @@ export function WikiCharacters(): ReactElement {
 				the <Link to='/wiki/items#IT_Item_preferences_and_limits'>"item limits"</Link>-tab
 				of your wardrobe. These permissions are layered and depend upon each other:
 				To use items flagged as "maybe", the other character needs to also be permitted to use "favorite" and "normal" items.
+			</p>
+
+			<h4 id='CH_Character_modifiers'>Character modifiers</h4>
+			<p>
+				Character modifiers alter how Pandora's features work for the character a specific modifier is in effect for.
+				This feature can be found in each character's wardrobe under one of the main tabs.<br />
+				As character modifiers can have quite intense and strict results, the default general permissions for others to add modifiers or even lock them
+				is set to "deny". So if you want others to use this feature on your character, you need to change the permission defaults or add those characters manually.
+				Besides these general modifier related permissions, each character modifier type comes with its own individual permission so that you can configure
+				which modifiers you want others to be able to use on your character.
+			</p>
+			<p>
+				Every character will have the same pool of possible character modifier types that allow to configure a specific feature or immersion effect of Pandora
+				or may even introduce a new one. For instance, a modifier could add a hearing impairment effect when a certain item is worn,
+				or enforce certain speaking patterns like animal sounds. Or a character modifier could overlay a blur effect of configurable strength over the whole
+				room canvas unless the character with this modifier wears glasses.
+			</p>
+			<p>
+				Character modifiers and their settings can be secured with locks - similar to items. In addition, a list of characters can be defined who can
+				still edit the modifier even if it is locked.<br />
+				Note: Character modifier locks have the same name and effect as their lock item pendants, but they are no actual lock items and therefore not affected
+				by your set item limits. This means that if you have for instance the password lock blocked, it is still available as a lock to lock down character modifiers.
+			</p>
+			<ul>
+				<li>An added modifier can be set to "enabled" or "disabled" with the toggle on the top left.</li>
+				<li>The same modifier type template can be used to add multiple instances of the same character modifier to a single character.</li>
+				<li>Conflicts between character modifiers are resolved by the order of the added modifier list (the first entry has the highest priority)</li>
+				<li>You can only change the order of a modifier in the current modifiers list when permitted to edit all the modifiers between the current and desired position.</li>
+			</ul>
+			<p>
+				A modifier that is "enabled" is not necessarily always in effect, but only if certain conditions trigger it.
+				These activation conditions can be added several times. Each condition is of some type and might have some configurable settings.
+				You can have more conditions of the same type, as you always add them manually. Order matters. And each condition defines whether it is
+				"AND" or "OR" with the previous ones, but it is in Disjunctive Normal Form. Meaning a chain of "AND" conditions has to be true together,
+				but "OR" breaks the AND chain, starting a new AND chain. Any one AND chain is enough.
 			</p>
 
 			<h4 id='CH_Character_deletion'>Character deletion</h4>

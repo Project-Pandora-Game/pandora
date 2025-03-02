@@ -1,50 +1,120 @@
+import classNames from 'classnames';
 import { CharacterIdSchema, CompareCharacterIds, GetLogger, type CharacterId } from 'pandora-common';
 import type { ReactElement } from 'react';
-import { useCallback, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import type { Promisable } from 'type-fest';
 import crossIcon from '../../../assets/icons/cross.svg';
-import { useAsyncEvent } from '../../../common/useEvent';
+import { useAsyncEvent, useEvent } from '../../../common/useEvent';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
+import type { SelfSelect } from '../../../ui/components/chat/commandsHelpers';
 import { Button, IconButton } from '../../common/button/button';
 import { Column, Row } from '../../common/container/container';
 import { ModalDialog } from '../../dialog/dialog';
 import { useResolveCharacterName, useSpaceCharacters } from '../../gameContext/gameStateContextProvider';
+import './characterListInput.scss';
 
-export function CharacterListInput({ value, max, onChange }: {
+export interface CharacterListInputProps {
 	value: readonly CharacterId[];
 	max?: number;
 	onChange?: (newValue: readonly CharacterId[]) => Promisable<void>;
-}): ReactElement {
+	/**
+	 * Indicates that all entries should be shown.
+	 * @default false
+	 */
+	noLimitHeight?: boolean;
+	/**
+	 * Whether selecting own character should be allowed
+	 * @default 'any'
+	 */
+	allowSelf?: SelfSelect;
+}
+
+export function CharacterListInput({ value, onChange, ...props }: CharacterListInputProps): ReactElement {
+
+	const onAdd = useEvent((c: CharacterId) => {
+		if (value.includes(c))
+			return;
+
+		return onChange?.([...value, c].sort(CompareCharacterIds));
+	});
+
+	const onRemove = useEvent((c: CharacterId) => {
+		if (!value.includes(c))
+			return;
+
+		return onChange?.(value.filter((i) => i !== c));
+	});
+
+	return (
+		<CharacterListInputActions
+			{ ...props }
+			value={ value }
+			onAdd={ onChange != null ? onAdd : undefined }
+			onRemove={ onChange != null ? onRemove : undefined }
+		/>
+	);
+}
+
+export type CharacterListInputActionsProps = Omit<CharacterListInputProps, 'onChange'> & {
+	onAdd?: (characterToAdd: CharacterId) => Promisable<void>;
+	onRemove?: (characterToRemove: CharacterId) => Promisable<void>;
+};
+
+export function CharacterListInputActions({
+	value,
+	max,
+	onAdd,
+	onRemove,
+	noLimitHeight = false,
+	allowSelf = 'any',
+}: CharacterListInputActionsProps): ReactElement {
+	const valueOrdered = useMemo(() => value.slice().sort(CompareCharacterIds), [value]);
+
 	const [showDialog, setShowDialog] = useState(false);
 
-	const [execute, processing] = useAsyncEvent(async (newValue: readonly CharacterId[]) => {
-		if (onChange == null)
-			throw new Error('Changing value not supported');
+	const [executeAdd, processingAdd] = useAsyncEvent(async (characterToAdd: CharacterId) => {
+		if (onAdd == null)
+			throw new Error('Adding character not supported');
 
-		await onChange(newValue);
+		await onAdd(characterToAdd);
 	}, () => {
 		// Close the input dialog after the change
 		setShowDialog(false);
 	}, {
 		errorHandler: (err) => {
-			GetLogger('CharacterListInput').error('Failed to configure character modifier:', err);
+			GetLogger('CharacterListInput').error('Failed to add character:', err);
 			toast('Error performing action, try again later', TOAST_OPTIONS_ERROR);
 		},
 	});
 
+	const [executeRemove, processingRemove] = useAsyncEvent(async (characterToRemove: CharacterId) => {
+		if (onRemove == null)
+			throw new Error('Removing character not supported');
+
+		await onRemove(characterToRemove);
+	}, null, {
+		errorHandler: (err) => {
+			GetLogger('CharacterListInput').error('Failed to remove character:', err);
+			toast('Error performing action, try again later', TOAST_OPTIONS_ERROR);
+		},
+	});
+
+	const processing = processingAdd || processingRemove;
+
 	return (
 		<Column gap='medium'>
-			<Column padding='small' gap='small' overflowY='auto' className='characterModifierCharacterList'>
+			<Column padding='small' gap='small' overflowY='auto' className={ classNames('characterListInput', noLimitHeight ? null : 'limitHeight') }>
 				{
 					value.length > 0 ? (
-						value.map((c) => (
+						valueOrdered.map((c) => (
 							<CharacterListItem
 								key={ c }
 								id={ c }
-								remove={ onChange != null ? (() => {
-									execute(value.filter((i) => i !== c));
+								remove={ onRemove != null ? (() => {
+									executeRemove(c);
 								}) : undefined }
 								disabledRemove={ processing }
 							/>
@@ -55,7 +125,7 @@ export function CharacterListInput({ value, max, onChange }: {
 				}
 			</Column>
 			{
-				onChange != null ? (
+				onAdd != null ? (
 					<Row alignX='space-between' alignY='center'>
 						<Button
 							onClick={ () => {
@@ -75,14 +145,15 @@ export function CharacterListInput({ value, max, onChange }: {
 				) : null
 			}
 			{
-				(onChange != null && showDialog) ? (
+				(onAdd != null && showDialog) ? (
 					<CharacterListQuickSelectDialog
 						value={ value }
-						execute={ execute }
-						processing={ processing }
+						executeAdd={ executeAdd }
+						disabled={ processing }
 						close={ () => {
 							setShowDialog(false);
 						} }
+						allowSelf={ allowSelf }
 					/>
 				) : null
 			}
@@ -118,12 +189,14 @@ function CharacterListItem({ id, remove, disabledRemove }: {
 	);
 }
 
-function CharacterListQuickSelectDialog({ value, execute, processing, close }: {
+function CharacterListQuickSelectDialog({ value, executeAdd, disabled, allowSelf, close }: {
 	value: readonly CharacterId[];
-	execute: (newValue: readonly CharacterId[]) => void;
-	processing: boolean;
+	executeAdd: (characterToAdd: CharacterId) => void;
+	disabled: boolean;
 	close: () => void;
+	allowSelf: SelfSelect;
 }): ReactElement {
+	const currentAccount = useCurrentAccount();
 	const [dialogCharacterId, setDialogCharacterId] = useState<CharacterId | null>(null);
 
 	const spaceCharacters = useSpaceCharacters().slice().sort((a, b) => {
@@ -135,18 +208,6 @@ function CharacterListQuickSelectDialog({ value, execute, processing, close }: {
 	});
 
 	const resolvedName = useResolveCharacterName(dialogCharacterId ?? 'c0') ?? '[unknown]';
-
-	const addCharacter = useCallback((c: CharacterId) => {
-		if (execute == null)
-			return;
-
-		if (value.includes(c)) {
-			close();
-			return;
-		}
-
-		execute([...value, c].sort(CompareCharacterIds));
-	}, [execute, value, close]);
 
 	return (
 		<ModalDialog>
@@ -179,10 +240,10 @@ function CharacterListQuickSelectDialog({ value, execute, processing, close }: {
 					<Button
 						onClick={ () => {
 							if (dialogCharacterId != null) {
-								addCharacter(dialogCharacterId);
+								executeAdd(dialogCharacterId);
 							}
 						} }
-						disabled={ processing }
+						disabled={ disabled }
 					>
 						Confirm
 					</Button>
@@ -191,18 +252,23 @@ function CharacterListQuickSelectDialog({ value, execute, processing, close }: {
 				<fieldset>
 					<legend>Quick selection</legend>
 					<Column alignX='start'>
-						{ spaceCharacters.map((c) => (
-							<Button
-								key={ c.id }
-								slim
-								onClick={ () => {
-									addCharacter(c.id);
-								} }
-								disabled={ processing || value.includes(c.id) }
-							>
-								{ c.name } ({ c.id })  { c.isPlayer() ? '[You]' : '' }  { value.includes(c.id) ? '[Already in the list]' : '' }
-							</Button>
-						)) }
+						{
+							spaceCharacters
+								.filter((c) => allowSelf === 'any' || !c.isPlayer())
+								.filter((c) => allowSelf !== 'none' || c.data.accountId !== currentAccount?.id)
+								.map((c) => (
+									<Button
+										key={ c.id }
+										slim
+										onClick={ () => {
+											executeAdd(c.id);
+										} }
+										disabled={ disabled || value.includes(c.id) }
+									>
+										{ c.name } ({ c.id })  { c.isPlayer() ? '[You]' : '' }  { value.includes(c.id) ? '[Already in the list]' : '' }
+									</Button>
+								))
+						}
 					</Column>
 				</fieldset>
 			</Column>

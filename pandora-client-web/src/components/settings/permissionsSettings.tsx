@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { capitalize, noop } from 'lodash';
-import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, CharacterIdSchema, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -24,10 +24,10 @@ import toggle from '../../assets/icons/toggle.svg';
 import wikiIcon from '../../assets/icons/wiki.svg';
 import { useFunctionBind } from '../../common/useFunctionBind';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
-import { TextInput } from '../../common/userInteraction/input/textInput';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { DescribeGameLogicAction } from '../../ui/components/chat/chatMessagesDescriptions';
 import { Button } from '../common/button/button';
+import { CharacterListInputActions } from '../common/characterListInput/characterListInput';
 import { Column, Row } from '../common/container/container';
 import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator';
 import { ButtonConfirm, DraggableDialog, ModalDialog } from '../dialog/dialog';
@@ -344,7 +344,11 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 				<Button slim onClick={ () => setDefault(null) }>Reset defaults</Button>
 				<Button onClick={ hide }>Close</Button>
 			</Row>
-			<PermissionConfigOverrides overrides={ permissionConfig?.characterOverrides ?? EMPTY } limit={ permissionSetup.maxCharacterOverrides ?? PERMISSION_MAX_CHARACTER_OVERRIDES } setConfig={ setAny } />
+			<PermissionConfigOverrides
+				overrides={ permissionConfig?.characterOverrides ?? EMPTY }
+				limit={ permissionSetup.maxCharacterOverrides ?? PERMISSION_MAX_CHARACTER_OVERRIDES }
+				setConfig={ setAny }
+			/>
 		</ModalDialog>
 	);
 }
@@ -386,37 +390,23 @@ function PermissionConfigOverrides({ overrides, limit, setConfig }: { overrides:
 	);
 }
 
-function PermissionConfigOverrideType({ type, content, setConfig }: { type: PermissionType; content: CharacterId[]; setConfig: (selector: PermissionConfigChangeSelector, allowOthers: PermissionType | null) => void; }): ReactElement {
-	const [id, setId] = useState('');
-	const result = useMemo(() => CharacterIdSchema.safeParse(id), [id]);
+function PermissionConfigOverrideType({ type, content, setConfig }: {
+	type: PermissionType;
+	content: CharacterId[];
+	setConfig: (selector: PermissionConfigChangeSelector, allowOthers: PermissionType | null) => void;
+}): ReactElement {
+	const onAdd = useCallback((c: CharacterId) => {
+		setConfig(c, type);
+	}, [setConfig, type]);
 
-	const onAdd = useCallback(() => {
-		if (!result.success || content.includes(result.data))
-			return;
-
-		setConfig(result.data, type);
-	}, [result, content, setConfig, type]);
-
-	const onRemove = useCallback(() => {
-		if (!result.success || !content.includes(result.data))
-			return;
-
-		setConfig(result.data, null);
-	}, [result, content, setConfig]);
-
-	useEffect(() => {
-		if (id.length > 0 && /^\d+$/.test(id))
-			setId(`c${id}`);
-	}, [id]);
+	const onRemove = useCallback((c: CharacterId) => {
+		setConfig(c, null);
+	}, [setConfig]);
 
 	return (
 		<>
-			<span>{ capitalize(type as string) }:</span>
-			<textarea value={ content.join(', ') } readOnly />
-			<Row className='input-row'>
-				<TextInput placeholder='Character ID' value={ id } onChange={ (newValue) => setId(newValue.trim()) } />
-				<Button slim onClick={ onAdd } disabled={ !result.success || content.includes(result.data) }>Add</Button>
-				<Button slim onClick={ onRemove } disabled={ !result.success || !content.includes(result.data) }>Remove</Button>
+			<Row>
+				<span className='flex-1'>{ capitalize(type as string) }:</span>
 				<ButtonConfirm slim onClick={ () => setConfig('clearOverridesWith', type) }
 					title='Clear all overrides'
 					content={ `Are you sure you want to clear all overrides with ${type}?` }
@@ -424,9 +414,15 @@ function PermissionConfigOverrideType({ type, content, setConfig }: { type: Perm
 					Clear All
 				</ButtonConfirm>
 			</Row>
+			<CharacterListInputActions
+				value={ content }
+				onAdd={ onAdd }
+				onRemove={ onRemove }
+				noLimitHeight
+				allowSelf='otherCharacter'
+			/>
 		</>
 	);
-
 }
 
 function PermissionAllowOthersSelector({ type, setConfig, effectiveConfig, permissionSetup }: {

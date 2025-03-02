@@ -1,23 +1,5 @@
 @use '../../../../../styles/common';
 
-.characterModifierCharacterList {
-	max-height: 15.5em;
-
-	.listItem {
-		background: common.$theme-table-body-background;
-		color: common.$theme-table-body-text;
-
-		&:nth-child(2n) {
-			background: common.$theme-table-body-altbackground;
-		}
-
-		.Button {
-			width: 2em;
-			height: 2em;
-		}
-	}
-}
-
 .characterModifierNumberEdit {
 	.value {
 		min-width: 2em;

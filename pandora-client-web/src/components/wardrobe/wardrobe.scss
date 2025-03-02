@@ -517,6 +517,7 @@ $drop-overlay-gap: 0.3em;
 	position: relative;
 	@include common.center-flex;
 	border: 1px solid common.$theme-wardrobe-actionbutton-border;
+	border-radius: 0.2em;
 	z-index: 1;
 
 	&:not(.slim) {

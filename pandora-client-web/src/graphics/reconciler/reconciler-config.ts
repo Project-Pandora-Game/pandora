@@ -120,10 +120,6 @@ type React19HostConfig<
 		}
 	);
 
-declare module 'react-reconciler/constants' {
-	const NoEventPriority = 0;
-}
-
 export type PixiHostConfig = React19HostConfig<
 	string, // Type
 	any, // Props

@@ -100,20 +100,13 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, character, focu
 		}
 	}, [check, execute, requestPermissions, character]);
 
-	const description = useMemo(() => (
-		ChatParser.parseStyle(typeDefinition.description)
-			.map((c, i) => RenderChatPart(c, i, false))
-	), [typeDefinition]);
-
 	return (
 		<div className='inventoryView wardrobeModifierTypeDetails'>
 			<div className='toolbar'>
 				<span>Modifier "{ typeDefinition.visibleName }"</span>
 			</div>
 			<Column padding='large' gap='medium'>
-				<div className='description'>
-					{ description }
-				</div>
+				<WardrobeCharacterModifierTypeDescription type={ type } />
 				<WardrobeActionButtonElement
 					check={ check }
 					onClick={ onClick }
@@ -135,6 +128,23 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, character, focu
 					) : null
 				}
 			</Column>
+		</div>
+	);
+}
+
+export function WardrobeCharacterModifierTypeDescription({ type }: {
+	type: CharacterModifierType;
+}): ReactElement {
+	const typeDefinition = CHARACTER_MODIFIER_TYPE_DEFINITION[type];
+
+	const description = useMemo(() => (
+		ChatParser.parseStyle(typeDefinition.description)
+			.map((c, i) => RenderChatPart(c, i, false))
+	), [typeDefinition]);
+
+	return (
+		<div className='wardrobeModifierTypeDescription'>
+			{ description }
 		</div>
 	);
 }

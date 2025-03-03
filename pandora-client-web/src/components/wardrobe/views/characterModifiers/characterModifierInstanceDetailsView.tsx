@@ -41,6 +41,7 @@ import { ContextHelpButton } from '../../../help/contextHelpButton';
 import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../../wardrobeActionContext';
 import { ActionWarningContent, WardrobeActionButtonElement } from '../../wardrobeComponents';
 import { WardrobeCharacterModifierLock } from './characterModifierInstanceLock';
+import { WardrobeCharacterModifierTypeDescription } from './characterModifierTypeDetailsView';
 import { CharacterModifierConditionList } from './conditions/characterModifierConditionList';
 import { WardrobeCharacterModifierConfig } from './configuration/_index';
 
@@ -145,7 +146,12 @@ function CheckedInstanceDetails({ character, instance, allModifiers, unfocus }: 
 						enabled: newValue,
 					})) : undefined }
 				/>
-				<span>Modifier "{ typeDefinition.visibleName }"</span>
+				<span>
+					Modifier "{ typeDefinition.visibleName }"
+					<ContextHelpButton>
+						<WardrobeCharacterModifierTypeDescription type={ instance.type } />
+					</ContextHelpButton>
+				</span>
 			</Row>
 			<Column padding='medium' overflowX='hidden' overflowY='auto'>
 				<Row padding='medium' wrap alignX='space-evenly' className='itemActions'>

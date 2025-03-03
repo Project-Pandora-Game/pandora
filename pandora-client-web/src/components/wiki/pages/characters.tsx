@@ -164,7 +164,7 @@ export function WikiCharacters(): ReactElement {
 
 			<h4 id='CH_Character_modifiers'>Character modifiers</h4>
 			<p>
-				Character modifiers alter how Pandora's features work for the character a specific modifier is in effect for.
+				Character modifiers alter how Pandora's features work for the character to which modifiers have been added and while those are in effect.
 				This feature can be found in each character's wardrobe under the "Effects & Modifiers" tab.<br />
 				As character modifiers can have quite intense and strict results, the general permissions for others to add modifiers or even lock them
 				are set to "deny" by default. If you want others to use this feature on your character, you need to change the permission defaults or add those characters manually.
@@ -178,27 +178,30 @@ export function WikiCharacters(): ReactElement {
 				by your set item limits. For example, if you have the password lock blocked, it is still available as a lock to lock down character modifiers.
 			</p>
 			<ul>
-				<li>An added modifier can be set to "enabled" or "disabled" with the toggle on the top left. Disabled modifiers have no effects and their activation conditions are ignored.</li>
+				<li>An added modifier can be set to "enabled" or "disabled" with the toggle on the top left. Disabled modifiers have no effect and their activation conditions are ignored.</li>
 				<li>The same modifier type can be added multiple times to a single character. These instances of the modifier are additive to one another.</li>
 				<li>Conflicts between character modifiers are resolved by the order of the added modifier list (the first entry has the highest priority).</li>
 				<li>You can only change the order of a modifier in the current modifiers list when permitted to edit all the modifiers between the current and desired position.</li>
 			</ul>
 			<p />
 			<p>
-				By default an enabled modifier is always active - affecting the character based on its type and configuration.
-				If you, however, want the modifier to be active only in certain situations (such as when the target character is in a specific space), you can give it "activation conditions".<br />
-				Multiple activation conditions can be added at the same time. If more than one condition is added, the connection between them is determined using the logical operators "AND" or "OR".
+				By default, an enabled modifier is always active and affecting the character based on its type and configuration.
+				If you, however, want the modifier to be active only in certain situations (such as when the target character is in a specific space), you can give it
+				"activation conditions".<br />
+				Multiple activation conditions can be added at the same time. If more than one condition is added, the connection between them is determined using the
+				logical operators "AND" or "OR".
 				An "AND" chain will result active if all conditions are satisfied. Similarly an "OR" chain will result active if at least one condition is satisfied.<br />
-				When mixing "AND" and "OR" operators, the conditions are grouped by the "OR" terms into groups. When determining if the modifier should be active, each group checks if all its conditions (connected by AND) are satisfied. The modifier is then active when at least one of the groups has all its conditions satisfied.<br />
-				<i>Geek trivia: The condition logic is based on <ExternalLink href='https://en.wikipedia.org/wiki/Disjunctive_normal_form'>Disjunctive normal form</ExternalLink>, where each condition takes place of a literal.</i>
+				When mixing "AND" and "OR" operators, the conditions are grouped by the "OR" terms into groups. When determining if the modifier should be active, each group
+				checks if all its conditions (connected by "AND") are satisfied. The modifier is then active when at least one of the groups has all its conditions satisfied.<br />
+				<i>Geek trivia: The condition logic is based on <ExternalLink href='https://en.wikipedia.org/wiki/Disjunctive_normal_form'>Disjunctive normal form</ExternalLink>, where each condition takes the place of a literal.</i>
 			</p>
 			<p>
 				With the above knowledge you can create many interesting combinations of modifier types, their settings and activation conditions.<br />
 				Here are a few ideas to get you started:
 			</p>
 			<ul>
-				<li>A modifier that adds a hearing impairment effect when a certain item is worn.</li>
-				<li>A modifier that enforces certain speaking patterns, such as animal sounds.</li>
+				<li>A modifier that adds a hearing impairment effect when a certain named item is worn.</li>
+				<li>A modifier that enforces certain speaking patterns, such as animal sounds, when in public spaces and not with a special person.</li>
 				<li>A modifier that blurs the whole room canvas unless the character with it wears glasses.</li>
 			</ul>
 

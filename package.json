@@ -15,7 +15,6 @@
 			"superstatic>re2": "-"
 		},
 		"patchedDependencies": {
-			"re-resizable": "patches/re-resizable.patch"
 		},
 		"onlyBuiltDependencies": [
 			"argon2"

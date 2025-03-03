@@ -5,11 +5,11 @@ import {
 	type CharacterModifierType,
 	type CharacterModifierTypeDefinition,
 } from 'pandora-common';
-import wikiIcon from '../../../../assets/icons/wiki.svg';
 import { ReactElement, ReactNode, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import wikiIcon from '../../../../assets/icons/wiki.svg';
 import { TextInput } from '../../../../common/userInteraction/input/textInput';
 import { useInputAutofocus } from '../../../../common/userInteraction/inputAutofocus';
-import { Link } from 'react-router-dom';
 import { Row } from '../../../common/container/container';
 
 export function WardrobeCharacterModifierTypeView({ title, currentlyFocusedModifier, focusModifier, children }: {
@@ -36,11 +36,13 @@ export function WardrobeCharacterModifierTypeView({ title, currentlyFocusedModif
 
 	return (
 		<div className='inventoryView wardrobeModifierTypeList'>
-			<Row padding='medium' alignY='center' alignX='space-between'>
-				<span>{ title }</span>
-				<Link title='Get help in the wiki' to='/wiki/characters#CH_Character_modifiers'>
-					<img src={ wikiIcon } width='24' height='24' alt='Wiki' />
-				</Link>
+			<div className='toolbar'>
+				<Row alignY='center' className='flex-1'>
+					<span>{ title }</span>
+					<Link title='Get help in the wiki' to='/wiki/characters#CH_Character_modifiers' className='flex-row'>
+						<img className='help-image' src={ wikiIcon } width='26' height='26' alt='Wiki' />
+					</Link>
+				</Row>
 				<div className='filter'>
 					<TextInput ref={ filterInput }
 						placeholder='Filter by name'
@@ -48,7 +50,7 @@ export function WardrobeCharacterModifierTypeView({ title, currentlyFocusedModif
 						onChange={ setFilter }
 					/>
 				</div>
-			</Row>
+			</div>
 			{ children }
 			<div className='listContainer'>
 				<div className='Scrollbar'>

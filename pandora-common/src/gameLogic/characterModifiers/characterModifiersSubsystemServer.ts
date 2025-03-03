@@ -21,7 +21,11 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 	public readonly character: GameLogicCharacter;
 
 	private readonly modifierTypes: ReadonlyMap<CharacterModifierType, GameLogicModifierTypeServer>;
-	private readonly modifierInstances: GameLogicModifierInstanceServer[];
+	private readonly _modifierInstances: GameLogicModifierInstanceServer[];
+
+	public get modiferInstances(): readonly GameLogicModifierInstanceServer[] {
+		return this._modifierInstances;
+	}
 
 	constructor(character: GameLogicCharacter, data: CharacterModifierSystemData, logger: Logger) {
 		super();
@@ -41,7 +45,7 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 		}
 
 		// Load instances
-		this.modifierInstances = data.modifiers.map((m) => new GameLogicModifierInstanceServer(
+		this._modifierInstances = data.modifiers.map((m) => new GameLogicModifierInstanceServer(
 			m,
 			logger.prefixMessages(`Load modifier '${m.type}':`)),
 		);
@@ -61,7 +65,7 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 	 * @returns Id of the new instance of error code
 	 */
 	public addModifier(template: CharacterModifierTemplate, enabled: boolean, _source: GameLogicCharacter): 'tooManyModifiers' | 'invalidConfiguration' | { id: `mod:${string}`; } {
-		if (this.modifierInstances.length >= LIMIT_CHARACTER_MODIFIER_INSTANCE_COUNT) {
+		if (this._modifierInstances.length >= LIMIT_CHARACTER_MODIFIER_INSTANCE_COUNT) {
 			return 'tooManyModifiers';
 		}
 
@@ -83,7 +87,7 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 			lockExceptions: [],
 		};
 
-		this.modifierInstances.push(new GameLogicModifierInstanceServer(instanceData));
+		this._modifierInstances.push(new GameLogicModifierInstanceServer(instanceData));
 
 		this.emit('modifiersChanged', undefined);
 		this.emit('dataChanged', undefined);
@@ -94,14 +98,14 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 	}
 
 	public reorderModifier(modifier: CharacterModifierId, shift: number): boolean {
-		const currentPos = this.modifierInstances.findIndex((m) => m.id === modifier);
+		const currentPos = this._modifierInstances.findIndex((m) => m.id === modifier);
 		const newPos = currentPos + shift;
 
-		if (currentPos < 0 || newPos < 0 || newPos >= this.modifierInstances.length)
+		if (currentPos < 0 || newPos < 0 || newPos >= this._modifierInstances.length)
 			return false;
 
-		const moved = this.modifierInstances.splice(currentPos, 1);
-		this.modifierInstances.splice(newPos, 0, ...moved);
+		const moved = this._modifierInstances.splice(currentPos, 1);
+		this._modifierInstances.splice(newPos, 0, ...moved);
 
 		this.emit('modifiersChanged', undefined);
 		this.emit('dataChanged', undefined);
@@ -110,19 +114,19 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 	}
 
 	public deleteModifier(modifier: CharacterModifierId): void {
-		const currentPos = this.modifierInstances.findIndex((m) => m.id === modifier);
+		const currentPos = this._modifierInstances.findIndex((m) => m.id === modifier);
 
 		if (currentPos < 0)
 			return;
 
-		this.modifierInstances.splice(currentPos, 1);
+		this._modifierInstances.splice(currentPos, 1);
 
 		this.emit('modifiersChanged', undefined);
 		this.emit('dataChanged', undefined);
 	}
 
 	public configureModifier(modifier: CharacterModifierId, change: CharacterModifierConfigurationChange): true | 'invalidConfiguration' | 'failure' {
-		const instance = this.modifierInstances.find((m) => m.id === modifier);
+		const instance = this._modifierInstances.find((m) => m.id === modifier);
 
 		if (instance == null)
 			return 'failure';
@@ -154,7 +158,7 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 	}
 
 	public doLockAction(modifier: CharacterModifierId, ctx: LockActionContext, action: CharacterModifierLockAction): GameLogicModifierLockActionResult {
-		const instance = this.modifierInstances.find((m) => m.id === modifier);
+		const instance = this._modifierInstances.find((m) => m.id === modifier);
 
 		if (instance == null) {
 			return {
@@ -191,7 +195,7 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 
 	public getData(): CharacterModifierSystemData {
 		const data: CharacterModifierSystemData = {
-			modifiers: this.modifierInstances.map((m) => m.getData()),
+			modifiers: this._modifierInstances.map((m) => m.getData()),
 			typeConfig: {},
 		};
 
@@ -203,11 +207,11 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 	}
 
 	public getClientData(): CharacterModifierInstanceClientData[] {
-		return this.modifierInstances.map((m) => m.getClientData());
+		return this._modifierInstances.map((m) => m.getClientData());
 	}
 
 	public getModifier(modifier: CharacterModifierId): GameLogicModifierInstanceServer | null {
-		const instance = this.modifierInstances.find((m) => m.id === modifier);
+		const instance = this._modifierInstances.find((m) => m.id === modifier);
 		return instance ?? null;
 	}
 
@@ -219,7 +223,7 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 		if (restrictionOverride.suppressCharacterModifiers)
 			return [];
 
-		return this.modifierInstances
+		return this._modifierInstances
 			.filter((m) => m.isInEffect(gameState, spaceInfo, this.character))
 			.map((m) => m.getEffect());
 	}

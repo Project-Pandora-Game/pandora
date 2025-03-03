@@ -3,7 +3,7 @@ import {
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
 	type CharacterModifierEffectData,
 	type CharacterModifierId,
-	type CharacterModifierInstanceClientData,
+	type GameLogicModifierInstanceClient,
 } from 'pandora-common';
 import { ReactElement, ReactNode } from 'react';
 import { useAccountSettings } from '../../../../services/accountLogic/accountManagerHooks';
@@ -13,7 +13,7 @@ import './characterModifierInstanceView.scss';
 
 export function WardrobeCharacterModifierFullInstanceView({ children, modifiers, modifierEffects, currentlyFocusedModifier, focusModifierInstance }: {
 	children?: ReactNode;
-	modifiers: readonly CharacterModifierInstanceClientData[];
+	modifiers: readonly GameLogicModifierInstanceClient[];
 	modifierEffects: readonly CharacterModifierEffectData[];
 	currentlyFocusedModifier: CharacterModifierId | null;
 	focusModifierInstance: (id: CharacterModifierId | null) => void;
@@ -51,7 +51,7 @@ export function WardrobeCharacterModifierFullInstanceView({ children, modifiers,
 }
 
 function ModifierFullInstanceListItem({ modifier, selected = false, onClick, active }: {
-	modifier: CharacterModifierInstanceClientData;
+	modifier: GameLogicModifierInstanceClient;
 	selected?: boolean;
 	onClick?: () => void;
 	active: boolean;

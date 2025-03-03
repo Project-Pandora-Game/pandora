@@ -1,5 +1,5 @@
-import type { CharacterId } from '../../character';
-import type { CharacterModifierLockAction, CharacterModifierType, GameLogicModifierInstance } from '../characterModifiers';
+import type { CharacterId, CharacterRestrictionsManager } from '../../character';
+import type { CharacterModifierId, CharacterModifierLockAction, CharacterModifierType, GameLogicModifierInstance } from '../characterModifiers';
 import type { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
 
 // Character modifiers happen outside of the character state and action logic frameworks.
@@ -49,25 +49,19 @@ export function CharacterModifierActionCheckAdd(
 	return ctx.finalize();
 }
 
-/**
- * Check if player is allowed to modify or delete a specific modifier on a specific character.
- */
-export function CharacterModifierActionCheckModify(
+function CheckModifyModifier(
 	ctx: AppearanceActionProcessingContext,
-	target: CharacterId,
+	target: CharacterRestrictionsManager,
 	modifier: GameLogicModifierInstance,
-): AppearanceActionProcessingResult {
+): void {
 	const player = ctx.getPlayerRestrictionManager();
-	const checkTarget = ctx.getCharacter(target);
-	if (checkTarget == null)
-		return ctx.invalid();
 
-	player.checkInteractWithTarget(ctx, checkTarget.appearance);
-	ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
-	ctx.addInteraction(checkTarget.character, 'modifyCharacterModifiers');
+	player.checkInteractWithTarget(ctx, target.appearance);
+	ctx.addInteraction(target.character, 'viewCharacterModifiers');
+	ctx.addInteraction(target.character, 'modifyCharacterModifiers');
 
 	ctx.addRequiredPermission(
-		checkTarget.character.characterModifiers.getModifierTypePermission(modifier.type),
+		target.character.characterModifiers.getModifierTypePermission(modifier.type),
 	);
 
 	// Check for the modifier being locked
@@ -78,9 +72,25 @@ export function CharacterModifierActionCheckModify(
 				type: 'characterModifierLocked',
 				modifierId: modifier.id,
 				modifierType: modifier.type,
+				modifierName: modifier.name || modifier.definition.visibleName,
 			});
 		}
 	}
+}
+
+/**
+ * Check if player is allowed to modify or delete a specific modifier on a specific character.
+ */
+export function CharacterModifierActionCheckModify(
+	ctx: AppearanceActionProcessingContext,
+	target: CharacterId,
+	modifier: GameLogicModifierInstance,
+): AppearanceActionProcessingResult {
+	const checkTarget = ctx.getCharacter(target);
+	if (checkTarget == null)
+		return ctx.invalid();
+
+	CheckModifyModifier(ctx, checkTarget, modifier);
 
 	return ctx.finalize();
 }
@@ -130,6 +140,9 @@ export function CharacterModifierActionCheckLockModify(
 export function CharacterModifierActionCheckReorder(
 	ctx: AppearanceActionProcessingContext,
 	target: CharacterId,
+	modifiers: readonly GameLogicModifierInstance[],
+	modifierId: CharacterModifierId,
+	shift: number,
 ): AppearanceActionProcessingResult {
 	const player = ctx.getPlayerRestrictionManager();
 	const checkTarget = ctx.getCharacter(target);
@@ -140,7 +153,26 @@ export function CharacterModifierActionCheckReorder(
 	ctx.addInteraction(checkTarget.character, 'viewCharacterModifiers');
 	ctx.addInteraction(checkTarget.character, 'modifyCharacterModifiers');
 
-	// TODO: Consider what logic do we actually want to use for reordering
+	const startIndex = modifiers.findIndex((m) => m.id === modifierId);
+	if (startIndex < 0)
+		return ctx.invalid();
+
+	const endIndex = startIndex + shift;
+	if (endIndex < 0 || endIndex >= modifiers.length || !Number.isInteger(endIndex))
+		return ctx.invalid();
+
+	if (shift !== 0) {
+		const modifier = modifiers[startIndex];
+		const movedByModifiers = endIndex < startIndex ? modifiers.slice(endIndex, startIndex) : modifiers.slice(startIndex + 1, endIndex + 1);
+
+		// To move a modifier user needs to be able to modify it
+		CheckModifyModifier(ctx, checkTarget, modifier);
+
+		// And all modifiers between start and end positions
+		for (const otherModifier of movedByModifiers) {
+			CheckModifyModifier(ctx, checkTarget, otherModifier);
+		}
+	}
 
 	return ctx.finalize();
 }

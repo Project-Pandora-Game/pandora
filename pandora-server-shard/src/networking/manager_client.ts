@@ -586,7 +586,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 
 		// Check that the source character is allowed to get this data
-		const checkResult = client.character.checkAction((ctx) => CharacterModifierActionCheckReorder(ctx, target));
+		const checkResult = client.character.checkAction((ctx) => CharacterModifierActionCheckReorder(
+			ctx,
+			target,
+			targetCharacter.gameLogicCharacter.characterModifiers.modiferInstances,
+			modifier,
+			shift,
+		));
 
 		if (!checkResult.valid) {
 			return {

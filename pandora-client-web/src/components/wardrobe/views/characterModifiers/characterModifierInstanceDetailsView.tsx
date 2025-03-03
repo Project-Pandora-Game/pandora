@@ -13,7 +13,6 @@ import {
 	LIMIT_CHARACTER_MODIFIER_NAME_LENGTH,
 	MakeCharacterModifierTemplateFromClientData,
 	type CharacterModifierConfigurationChange,
-	type CharacterModifierInstanceClientData,
 	type IClientShardNormalResult,
 	type ModifierConfigurationEntryDefinition,
 	type PermissionGroup,
@@ -38,25 +37,22 @@ import { FormCreateStringValidator, FormError } from '../../../common/form/form'
 import { ExportDialog } from '../../../exportImport/exportDialog';
 import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProvider';
 import { useShardConnector } from '../../../gameContext/shardConnectorContextProvider';
+import { ContextHelpButton } from '../../../help/contextHelpButton';
 import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../../wardrobeActionContext';
 import { ActionWarningContent, WardrobeActionButtonElement } from '../../wardrobeComponents';
 import { WardrobeCharacterModifierLock } from './characterModifierInstanceLock';
 import { CharacterModifierConditionList } from './conditions/characterModifierConditionList';
 import { WardrobeCharacterModifierConfig } from './configuration/_index';
-import { ContextHelpButton } from '../../../help/contextHelpButton';
 
 export interface WardrobeCharacterModifierInstanceDetailsViewProps {
 	character: ICharacter;
-	instance: CharacterModifierInstanceClientData | null;
+	instance: GameLogicModifierInstanceClient | null;
+	allModifiers: readonly GameLogicModifierInstanceClient[];
 	unfocus: () => void;
 }
 
 export function WardrobeCharacterModifierInstanceDetailsView({ instance, unfocus, ...props }: WardrobeCharacterModifierInstanceDetailsViewProps): ReactElement {
-	const loadedInstance = useMemo((): GameLogicModifierInstanceClient | null => (
-		instance != null ? (new GameLogicModifierInstanceClient(instance)) : null
-	), [instance]);
-
-	if (loadedInstance == null) {
+	if (instance == null) {
 		return (
 			<div className='inventoryView wardrobeModifierInstanceDetails'>
 				<div className='toolbar'>
@@ -75,16 +71,16 @@ export function WardrobeCharacterModifierInstanceDetailsView({ instance, unfocus
 	return (
 		<CheckedInstanceDetails
 			{ ...props }
-			instance={ loadedInstance }
+			instance={ instance }
 			unfocus={ unfocus }
 		/>
 	);
 }
 
-type ModifierInstanceDetailCheckedProps = Omit<WardrobeCharacterModifierInstanceDetailsViewProps, 'instance'> & {
+type ModifierInstanceDetailCheckedProps = WardrobeCharacterModifierInstanceDetailsViewProps & {
 	instance: GameLogicModifierInstanceClient;
 };
-function CheckedInstanceDetails({ character, instance, unfocus }: ModifierInstanceDetailCheckedProps): ReactElement {
+function CheckedInstanceDetails({ character, instance, allModifiers, unfocus }: ModifierInstanceDetailCheckedProps): ReactElement {
 	const { actions, globalState } = useWardrobeActionContext();
 	const shard = useShardConnector();
 	const typeDefinition = CHARACTER_MODIFIER_TYPE_DEFINITION[instance.type];
@@ -156,6 +152,7 @@ function CheckedInstanceDetails({ character, instance, unfocus }: ModifierInstan
 					<ModifierInstanceReorderButton
 						character={ character }
 						instance={ instance }
+						allModifiers={ allModifiers }
 						shift={ -1 }
 					>
 						▲ Increase priority
@@ -163,6 +160,7 @@ function CheckedInstanceDetails({ character, instance, unfocus }: ModifierInstan
 					<ModifierInstanceReorderButton
 						character={ character }
 						instance={ instance }
+						allModifiers={ allModifiers }
 						shift={ 1 }
 					>
 						▼ Decrease priority
@@ -382,9 +380,10 @@ function ModifierInstanceNameInput({ modifierTypeVisibleName, value, onChange }:
 	);
 }
 
-function ModifierInstanceReorderButton({ character, instance, shift, children }: ChildrenProps & {
+function ModifierInstanceReorderButton({ character, instance, allModifiers, shift, children }: ChildrenProps & {
 	character: ICharacter;
 	instance: GameLogicModifierInstanceClient;
+	allModifiers: readonly GameLogicModifierInstanceClient[];
 	shift: number;
 }): ReactElement {
 	const { actions, globalState } = useWardrobeActionContext();
@@ -392,8 +391,8 @@ function ModifierInstanceReorderButton({ character, instance, shift, children }:
 
 	const checkInitial = useMemo(() => {
 		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
-		return CharacterModifierActionCheckReorder(processingContext, character.id);
-	}, [actions, globalState, character]);
+		return CharacterModifierActionCheckReorder(processingContext, character.id, allModifiers, instance.id, shift);
+	}, [actions, globalState, character, allModifiers, instance, shift]);
 	const check = useCheckAddPermissions(checkInitial);
 
 	const [requestPermissions, processingPermissionRequest] = useWardrobePermissionRequestCallback();

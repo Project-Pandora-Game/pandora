@@ -138,7 +138,7 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 			case 'blockedByCharacterModifier':
 				return `Character modifier "${CHARACTER_MODIFIER_TYPE_DEFINITION[e.modifierType].visibleName}" is preventing this action.`;
 			case 'characterModifierLocked':
-				return `The modifier is locked, preventing any changes to it.`;
+				return `Character modifier "${e.modifierName}" modifier is locked.`;
 			case 'invalid':
 				return '';
 		}

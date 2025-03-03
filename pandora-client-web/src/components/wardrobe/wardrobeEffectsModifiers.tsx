@@ -1,13 +1,15 @@
 import classNames from 'classnames';
 import {
 	AssertNever,
+	EMPTY_ARRAY,
+	GameLogicModifierInstanceClient,
 	GetLogger,
+	type AppearanceActionProblem,
 	type AssetFrameworkGlobalState,
 	type CharacterId,
 	type CharacterModifierEffectData,
 	type CharacterModifierId,
 	type CharacterModifierType,
-	type IClientShardNormalResult,
 	type IShardClientChangeEvents,
 	type PermissionGroup,
 } from 'pandora-common';
@@ -127,6 +129,7 @@ export function WardrobeEffectsModifiers({ className, character, globalState }: 
 						key={ currentFocus.id }
 						character={ character }
 						instance={ fullInstanceList?.result === 'ok' ? (fullInstanceList.modifiers.find((m) => m.id === currentFocus.id) ?? null) : null }
+						allModifiers={ fullInstanceList?.result === 'ok' ? fullInstanceList.modifiers : EMPTY_ARRAY }
 						unfocus={ () => {
 							setCurrentFocus(null);
 						} }
@@ -140,7 +143,7 @@ export function WardrobeEffectsModifiers({ className, character, globalState }: 
 }
 
 function WardrobeEffectsFullList({ data, character, modifierEffects, currentlyFocusedModifier, focusModifierInstance }: {
-	data: IClientShardNormalResult['characterModifiersGet'] | undefined;
+	data: ModifierInstanceListGetResult | undefined;
 	character: ICharacter;
 	modifierEffects: readonly CharacterModifierEffectData[];
 	currentlyFocusedModifier: CharacterModifierId | null;
@@ -195,9 +198,23 @@ function WardrobeEffectsFullList({ data, character, modifierEffects, currentlyFo
 	);
 }
 
+export type ModifierInstanceListGetResult =
+	{
+		result: 'ok';
+		modifiers: GameLogicModifierInstanceClient[];
+	} |
+	{
+		result: 'notFound';
+	} |
+	{
+		result: 'failure';
+		problems: AppearanceActionProblem[];
+		canPrompt: boolean;
+	};
+
 const LISTEN_EVENTS: readonly IShardClientChangeEvents[] = ['permissions', 'characterModifiers'];
-function useCharacterModifierInstanceList(target: CharacterId): IClientShardNormalResult['characterModifiersGet'] | undefined {
-	const [data, setData] = useState<IClientShardNormalResult['characterModifiersGet']>();
+function useCharacterModifierInstanceList(target: CharacterId): ModifierInstanceListGetResult | undefined {
+	const [data, setData] = useState<ModifierInstanceListGetResult>();
 
 	const shardConnector = useShardConnector();
 
@@ -209,7 +226,14 @@ function useCharacterModifierInstanceList(target: CharacterId): IClientShardNorm
 
 		shardConnector.awaitResponse('characterModifiersGet', { target })
 			.then((result) => {
-				setData(result);
+				if (result.result === 'ok') {
+					setData({
+						result: 'ok',
+						modifiers: result.modifiers.map((m) => new GameLogicModifierInstanceClient(m)),
+					});
+				} else {
+					setData(result);
+				}
 			}, (error) => {
 				GetLogger('useCharacterModifierInstanceList').warning(`Error getting character modifiers for character ${target}:`, error);
 			});

@@ -5,9 +5,12 @@ import {
 	type CharacterModifierType,
 	type CharacterModifierTypeDefinition,
 } from 'pandora-common';
+import wikiIcon from '../../../../assets/icons/wiki.svg';
 import { ReactElement, ReactNode, useMemo, useRef, useState } from 'react';
 import { TextInput } from '../../../../common/userInteraction/input/textInput';
 import { useInputAutofocus } from '../../../../common/userInteraction/inputAutofocus';
+import { Link } from 'react-router-dom';
+import { Row } from '../../../common/container/container';
 
 export function WardrobeCharacterModifierTypeView({ title, currentlyFocusedModifier, focusModifier, children }: {
 	title: string;
@@ -33,8 +36,11 @@ export function WardrobeCharacterModifierTypeView({ title, currentlyFocusedModif
 
 	return (
 		<div className='inventoryView wardrobeModifierTypeList'>
-			<div className='toolbar'>
+			<Row padding='medium' alignY='center' alignX='space-between'>
 				<span>{ title }</span>
+				<Link title='Get help in the wiki' to='/wiki/characters#CH_Character_modifiers'>
+					<img src={ wikiIcon } width='24' height='24' alt='Wiki' />
+				</Link>
 				<div className='filter'>
 					<TextInput ref={ filterInput }
 						placeholder='Filter by name'
@@ -42,7 +48,7 @@ export function WardrobeCharacterModifierTypeView({ title, currentlyFocusedModif
 						onChange={ setFilter }
 					/>
 				</div>
-			</div>
+			</Row>
 			{ children }
 			<div className='listContainer'>
 				<div className='Scrollbar'>

@@ -80,7 +80,7 @@ export function WardrobeEffectsModifiers({ className, character, globalState }: 
 				</Tab>
 				<Tab name='Possible modifiers'>
 					<WardrobeCharacterModifierTypeView
-						title='Possible modifiers'
+						title='Add a new modifier'
 						currentlyFocusedModifier={ currentFocus?.type === 'type' ? currentFocus.typeId : null }
 						focusModifier={ (typeId) => {
 							setCurrentFocus(typeId == null ? null : {

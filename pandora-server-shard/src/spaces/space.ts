@@ -453,13 +453,11 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public handleMessages(from: Character, messages: IClientMessage[], id: number, insertId?: number): void {
 		// Handle speech muffling
 		const player = from.getRestrictionManager();
-		const muffler = player.getMuffler();
-		if (muffler.isActive()) {
+		const speechFilter = player.getSpeechFilter();
+		if (speechFilter.isActive()) {
 			for (const message of messages) {
 				if (message.type === 'chat') {
-					for (const part of message.parts) {
-						part[1] = muffler.muffle(part[1]);
-					}
+					message.parts = speechFilter.processMessage(message.parts);
 				}
 			}
 		}

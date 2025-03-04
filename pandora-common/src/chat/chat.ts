@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { ItemId } from '../assets';
 import type { AssetId } from '../assets/base';
-import { CharacterId, CharacterIdSchema } from '../character';
+import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import type { PronounKey } from '../character/pronouns';
 import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits';
 import type { HexColorString } from '../validation';

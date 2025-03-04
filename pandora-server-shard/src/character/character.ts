@@ -720,23 +720,18 @@ export class Character {
 
 		let transformed: IChatMessage[];
 
-		const hearingImpairment = this.getRestrictionManager().getHearingImpairment();
-		if (hearingImpairment.isActive()) {
-			transformed = [];
-			for (const message of messages) {
+		const hearingFilter = this.getRestrictionManager().getHearingFilter();
+		if (hearingFilter.isActive()) {
+			transformed = messages.map((message) => {
 				if (message.type === 'chat') {
-					const parts: typeof message.parts = [];
-					for (const part of message.parts) {
-						parts.push([part[0], hearingImpairment.distort(part[1])]);
-					}
-					transformed.push({
+					return {
 						...message,
-						parts,
-					});
+						parts: hearingFilter.processMessage(CloneDeepMutable(message.parts)),
+					};
 				} else {
-					transformed.push(message);
+					return message;
 				}
-			}
+			});
 		} else {
 			transformed = messages;
 		}

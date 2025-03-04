@@ -9,7 +9,9 @@ import { EffectsDefinition, MergeEffects } from '../assets/effects';
 import { FilterItemType, type Item, type ItemId, type RoomDeviceLink } from '../assets/item';
 import { AssetPropertiesResult } from '../assets/properties';
 import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes';
-import { HearingImpairment, Muffler } from '../character/speech';
+import type { ChatMessageFilter } from '../chat/chatMessageFilter';
+import { HearingImpairment } from '../chat/hearingImpairment';
+import { Muffler } from '../chat/muffling';
 import type { CharacterModifierEffectData, CharacterModifierPropertiesApplier } from '../gameLogic';
 import type { AppearanceActionProcessingContext } from '../gameLogic/actionLogic/appearanceActionProcessingContext';
 import type { GameLogicCharacter } from '../gameLogic/character/character';
@@ -112,16 +114,16 @@ export class CharacterRestrictionsManager {
 	}
 
 	/**
-	 * Returns the Muffler class for this CharacterRestrictionsManager
+	 * Returns the ChatMessageFilter class for processing this character's speech
 	 */
-	public getMuffler(): Muffler {
+	public getSpeechFilter(): ChatMessageFilter {
 		return new Muffler(this.character.id, this.getEffects());
 	}
 
 	/**
-	 * Returns the HearingImpairment class for this CharacterRestrictionsManager
+	 * Returns the ChatMessageFilter class for processing this character's hearing
 	 */
-	public getHearingImpairment(): HearingImpairment {
+	public getHearingFilter(): ChatMessageFilter {
 		return new HearingImpairment(this.character.id, this.getEffects());
 	}
 

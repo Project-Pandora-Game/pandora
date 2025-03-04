@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { HearingImpairmentSettings, MuffleSettings } from '../character/speech';
+import type { HearingImpairmentSettings, MuffleSettings } from '../chat';
 import { KnownObject, ParseArrayNotEmpty, type Satisfies } from '../utility/misc';
 
 //#region Effects definition

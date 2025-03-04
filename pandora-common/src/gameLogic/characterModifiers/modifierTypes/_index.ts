@@ -10,7 +10,6 @@ import { effect_hearing } from './effect_hearing';
 import { effect_speech_garble } from './effect_speech_garble';
 import { effect_block_room_movement } from './effect_block_room_movement';
 import { effect_block_space_leaving } from './effect_block_space_leaving';
-import { effect_blindfolds_blind_fully } from './effect_blindfolds_blind_fully';
 
 //#region Character modifier types catalogue
 
@@ -19,7 +18,6 @@ export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	block_lock_unlock_others,
 	block_lock_unlock_self,
 	effect_blind,
-	effect_blindfolds_blind_fully,
 	effect_hearing,
 	effect_speech_garble,
 	effect_block_hands,

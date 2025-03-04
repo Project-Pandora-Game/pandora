@@ -9,7 +9,7 @@ import { EffectsDefinition, MergeEffects } from '../assets/effects';
 import { FilterItemType, type Item, type ItemId, type RoomDeviceLink } from '../assets/item';
 import { AssetPropertiesResult } from '../assets/properties';
 import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes';
-import type { ChatMessageFilter } from '../chat/chatMessageFilter';
+import { CompoundChatMessageFilter, CustomChatMessageFilter, type ChatMessageFilter } from '../chat/chatMessageFilter';
 import { HearingImpairment } from '../chat/hearingImpairment';
 import { Muffler } from '../chat/muffling';
 import type { CharacterModifierEffectData, CharacterModifierPropertiesApplier } from '../gameLogic';
@@ -117,14 +117,57 @@ export class CharacterRestrictionsManager {
 	 * Returns the ChatMessageFilter class for processing this character's speech
 	 */
 	public getSpeechFilter(): ChatMessageFilter {
-		return new Muffler(this.character.id, this.getEffects());
+		const resultFilters: ChatMessageFilter[] = [];
+
+		// Apply effects from "before" modifiers
+		for (const modifierEffect of this.getModifierEffectProperties()) {
+			if (modifierEffect.processChatMessageBeforeMuffle != null) {
+				resultFilters.push(new CustomChatMessageFilter(modifierEffect.processChatMessageBeforeMuffle));
+			}
+		}
+
+		// Apply standard muffling
+		resultFilters.push(new Muffler(this.character.id, this.getEffects()));
+
+		// Apply effects from "after" modifiers
+		for (const modifierEffect of this.getModifierEffectProperties().toReversed()) {
+			if (modifierEffect.processChatMessageAfterMuffle != null) {
+				resultFilters.push(new CustomChatMessageFilter(modifierEffect.processChatMessageAfterMuffle));
+			}
+		}
+
+		if (resultFilters.length === 1)
+			return resultFilters[0];
+		return new CompoundChatMessageFilter(resultFilters);
+
 	}
 
 	/**
 	 * Returns the ChatMessageFilter class for processing this character's hearing
 	 */
 	public getHearingFilter(): ChatMessageFilter {
-		return new HearingImpairment(this.character.id, this.getEffects());
+		const resultFilters: ChatMessageFilter[] = [];
+
+		// Apply effects from "before" modifiers
+		for (const modifierEffect of this.getModifierEffectProperties()) {
+			if (modifierEffect.processReceivedChatMessageBeforeFilters != null) {
+				resultFilters.push(new CustomChatMessageFilter(modifierEffect.processReceivedChatMessageBeforeFilters));
+			}
+		}
+
+		// Apply standard effects
+		resultFilters.push(new HearingImpairment(this.character.id, this.getEffects()));
+
+		// Apply effects from "after" modifiers
+		for (const modifierEffect of this.getModifierEffectProperties().toReversed()) {
+			if (modifierEffect.processReceivedChatMessageAfterFilters != null) {
+				resultFilters.push(new CustomChatMessageFilter(modifierEffect.processReceivedChatMessageAfterFilters));
+			}
+		}
+
+		if (resultFilters.length === 1)
+			return resultFilters[0];
+		return new CompoundChatMessageFilter(resultFilters);
 	}
 
 	/**

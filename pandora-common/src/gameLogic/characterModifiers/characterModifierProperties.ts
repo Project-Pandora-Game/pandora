@@ -2,6 +2,7 @@ import type { Immutable } from 'immer';
 import type { AssetFrameworkGlobalState } from '../../assets';
 import type { EffectsDefinition } from '../../assets/effects';
 import type { CharacterRestrictionsManager } from '../../character';
+import type { IChatSegment } from '../../chat/chat';
 import type { AppearanceAction } from '../actionLogic';
 import type { CharacterModifierEffectData } from './characterModifierData';
 
@@ -41,6 +42,66 @@ export interface CharacterModifierProperties<TConfig> {
 		originalState: AssetFrameworkGlobalState,
 		resultState: AssetFrameworkGlobalState
 	): ('allow' | 'block');
+
+	/**
+	 * Process a chat message, before the usual muffling.
+	 * Higher priority modifiers are applied first.
+	 *
+	 * Applies to normal chat messages and normal whispers.
+	 *
+	 * @param config - Config of this modifier
+	 * @param content - Content of the message to process, can be mutated in-place
+	 * @returns New content of the message
+	 */
+	processChatMessageBeforeMuffle?(
+		config: TConfig,
+		content: IChatSegment[]
+	): IChatSegment[];
+
+	/**
+	 * Process a chat message, applied after the usual muffling.
+	 * Higher priority modifiers are applied last.
+	 *
+	 * Applies to normal chat messages and normal whispers.
+	 *
+	 * @param config - Config of this modifier
+	 * @param content - Content of the message to process, can be mutated in-place
+	 * @returns New content of the message
+	 */
+	processChatMessageAfterMuffle?(
+		config: TConfig,
+		content: IChatSegment[]
+	): IChatSegment[];
+
+	/**
+	 * Process a received chat message, before the usual heiring impairment effects.
+	 * Higher priority modifiers are applied first.
+	 *
+	 * Applies to normal chat messages and normal whispers.
+	 *
+	 * @param config - Config of this modifier
+	 * @param content - Content of the message to process, can be mutated in-place
+	 * @returns New content of the message
+	 */
+	processReceivedChatMessageBeforeFilters?(
+		config: TConfig,
+		content: IChatSegment[]
+	): IChatSegment[];
+
+	/**
+	 * Process a received chat message, after the usual heiring impairment effects.
+	 * Higher priority modifiers are applied last.
+	 *
+	 * Applies to normal chat messages and normal whispers.
+	 *
+	 * @param config - Config of this modifier
+	 * @param content - Content of the message to process, can be mutated in-place
+	 * @returns New content of the message
+	 */
+	processReceivedChatMessageAfterFilters?(
+		config: TConfig,
+		content: IChatSegment[]
+	): IChatSegment[];
 }
 
 /** A helper type that contains all of modifier properties hooks without their config argument. */

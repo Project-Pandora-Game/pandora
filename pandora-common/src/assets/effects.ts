@@ -33,6 +33,15 @@ export type EffectsDefinition = MuffleSettings & HearingImpairmentSettings & {
 	 * - 10 = completely blind
 	 */
 	blind: number;
+
+	/**
+	 * Blurs the character's vision.
+	 *
+	 * Effective value range:
+	 * - 0 = no effect
+	 * - 16 = heavy blur
+	 */
+	blurVision: number;
 };
 
 export const EFFECTS_DEFAULT: EffectsDefault = {
@@ -57,6 +66,7 @@ export const EFFECTS_DEFAULT: EffectsDefault = {
 	blockRoomMovement: false,
 	blockRoomLeave: false,
 	blind: 0,
+	blurVision: 0,
 };
 
 export const EFFECT_NAMES: Record<EffectName, string> = {
@@ -80,6 +90,7 @@ export const EFFECT_NAMES: Record<EffectName, string> = {
 	blockRoomMovement: 'Blocks room movement',
 	blockRoomLeave: 'Blocks leaving space',
 	blind: 'Blindness',
+	blurVision: 'Vision blur',
 };
 
 //#endregion

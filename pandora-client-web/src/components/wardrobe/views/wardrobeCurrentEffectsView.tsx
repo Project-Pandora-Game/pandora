@@ -28,6 +28,9 @@ export function WardrobeCurrentEffectsView({ character, globalState }: {
 		if (effects.blind > 0) {
 			result.push(<li key='blind'>{ effects.blind >= 10 ? 'Fully blinded' : `${10 * effects.blind}% blinded` }</li>);
 		}
+		if (effects.blurVision > 0) {
+			result.push(<li key='blurVision'>Blurry vision ({ effects.blurVision })</li>);
+		}
 		if (
 			effects.lipsTouch > 0 ||
 			effects.jawMove > 0 ||

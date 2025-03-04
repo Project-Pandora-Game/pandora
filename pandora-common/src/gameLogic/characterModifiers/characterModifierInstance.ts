@@ -70,7 +70,7 @@ export class GameLogicModifierInstance {
 		this.type = data.type;
 		this._name = data.name;
 		this._enabled = data.enabled;
-		this._config = data.config;
+		this._config = this.definition.configSchema.parse(data.config);
 		this._conditions = data.conditions;
 		this._lock = data.lock != null ? {
 			type: data.lock.lockType,

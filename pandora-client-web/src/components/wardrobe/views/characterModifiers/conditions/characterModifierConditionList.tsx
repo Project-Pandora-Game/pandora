@@ -138,6 +138,7 @@ export function CharacterModifierConditionList({ character, conditions, onChange
 												processing={ processing }
 												active={ conditionsActive[i] }
 												group={ group }
+												character={ character }
 											/>
 										);
 									})
@@ -164,7 +165,7 @@ export function CharacterModifierConditionList({ character, conditions, onChange
 	);
 }
 
-function ConditionRecordListEntry({ record, firstEntry, lastEntry, onChange, onDelete, onMoveUp, onMoveDown, processing, active, group }: {
+function ConditionRecordListEntry({ record, firstEntry, lastEntry, onChange, onDelete, onMoveUp, onMoveDown, processing, active, group, character }: {
 	record: Immutable<CharacterModifierConditionRecord>;
 	firstEntry: boolean;
 	lastEntry: boolean;
@@ -176,6 +177,7 @@ function ConditionRecordListEntry({ record, firstEntry, lastEntry, onChange, onD
 	active: boolean;
 	/** For first element of "AND" group - details about this group. */
 	group: { size: number; active: boolean; } | null;
+	character: ICharacter;
 }): ReactElement {
 	return (
 		<>
@@ -228,6 +230,7 @@ function ConditionRecordListEntry({ record, firstEntry, lastEntry, onChange, onD
 						});
 					}) : undefined }
 					processing={ processing }
+					character={ character }
 				/>
 			</DivContainer>
 			<Row className='quickActions' gap='small'>
@@ -273,6 +276,27 @@ const CONDITION_PRESETS: { [t in CharacterModifierCondition['type']]: { name: st
 		default: {
 			type: 'inSpaceId',
 			spaceId: null,
+		},
+	},
+	hasItemWithAttribute: {
+		name: 'Has item with attribute',
+		default: {
+			type: 'hasItemWithAttribute',
+			attribute: '',
+		},
+	},
+	hasItemWithName: {
+		name: 'Has item with specific name',
+		default: {
+			type: 'hasItemWithName',
+			name: '',
+		},
+	},
+	hasItemWithEffect: {
+		name: 'Has item with effect',
+		default: {
+			type: 'hasItemWithEffect',
+			effect: null,
 		},
 	},
 };

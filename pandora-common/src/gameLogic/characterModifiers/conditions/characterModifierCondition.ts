@@ -1,7 +1,9 @@
 import type { Immutable } from 'immer';
 import { z } from 'zod';
-import type { AssetFrameworkGlobalState } from '../../../assets';
+import { type AssetFrameworkGlobalState } from '../../../assets';
+import { EffectNameSchema } from '../../../assets/effects';
 import { CharacterIdSchema } from '../../../character/characterTypes';
+import { LIMIT_ITEM_NAME_LENGTH } from '../../../inputLimits';
 import { SpaceIdSchema, type CurrentSpaceInfo } from '../../../space';
 import { AssertNever } from '../../../utility';
 import type { GameLogicCharacter } from '../../character/character';
@@ -16,6 +18,23 @@ export const CharacterModifierConditionSchema = z.discriminatedUnion('type', [
 		/** Id of the space, `null` for personal space. */
 		spaceId: SpaceIdSchema.nullable(),
 	}),
+	z.object({
+		type: z.literal('hasItemWithAttribute'),
+		/** Attribute to look for. */
+		attribute: z.string(),
+	}),
+	z.object({
+		type: z.literal('hasItemWithName'),
+		/** Custom name to look for (must be exact match, asset names don't count). */
+		name: z.string().max(LIMIT_ITEM_NAME_LENGTH),
+	}),
+	z.object({
+		type: z.literal('hasItemWithEffect'),
+		/** Effect to detect. Only item effects are checked. */
+		effect: EffectNameSchema.nullable(),
+		/** Expected minimum strength of the effect, only valid for numeric effects. */
+		minStrength: z.number().int().nonnegative().optional(),
+	}),
 ]);
 export type CharacterModifierCondition = z.infer<typeof CharacterModifierConditionSchema>;
 
@@ -23,7 +42,7 @@ export function EvaluateCharacterModifierCondition(
 	condition: Immutable<CharacterModifierCondition>,
 	gameState: AssetFrameworkGlobalState,
 	spaceInfo: Immutable<CurrentSpaceInfo>,
-	_character: GameLogicCharacter,
+	character: GameLogicCharacter,
 ): boolean {
 
 	switch (condition.type) {
@@ -32,6 +51,38 @@ export function EvaluateCharacterModifierCondition(
 
 		case 'inSpaceId':
 			return condition.spaceId === spaceInfo.id;
+
+		case 'hasItemWithAttribute': {
+			const characterState = gameState.characters.get(character.id);
+			if (characterState == null)
+				return false;
+
+			return characterState.items.some((i) => i.getProperties().attributes.has(condition.attribute));
+		}
+
+		case 'hasItemWithName': {
+			const characterState = gameState.characters.get(character.id);
+			if (characterState == null)
+				return false;
+
+			return characterState.items.some((i) => !!i.name && i.name === condition.name);
+		}
+
+		case 'hasItemWithEffect': {
+			const characterState = gameState.characters.get(character.id);
+			const effectName = condition.effect;
+			if (characterState == null || effectName == null)
+				return false;
+
+			return characterState.items.some((i) => {
+				const effects = i.getProperties().effects;
+				const value = effects[effectName];
+				if (condition.minStrength != null && (typeof value !== 'number' || value < condition.minStrength))
+					return false;
+
+				return !!value;
+			});
+		}
 	}
 
 	AssertNever(condition);

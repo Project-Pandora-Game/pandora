@@ -7,6 +7,7 @@ export * from './asset';
 export * from './assetManager';
 export * from './base';
 export * from './definitions';
+export * from './effects';
 export * from './graphics';
 export * from './item';
 export * from './itemLimits';

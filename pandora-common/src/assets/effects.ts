@@ -1,5 +1,6 @@
+import { z } from 'zod';
 import type { HearingImpairmentSettings, MuffleSettings } from '../character/speech';
-import type { Satisfies } from '../utility/misc';
+import { KnownObject, ParseArrayNotEmpty, type Satisfies } from '../utility/misc';
 
 //#region Effects definition
 
@@ -58,8 +59,32 @@ export const EFFECTS_DEFAULT: EffectsDefault = {
 	blind: 0,
 };
 
+export const EFFECT_NAMES: Record<EffectName, string> = {
+	// muffle
+	lipsTouch: 'Muffle: Lips related sounds',
+	jawMove: 'Muffle: Jaws related sounds',
+	tongueRoof: 'Muffle: Tongue related sounds',
+	mouthBreath: 'Muffle: Air breath sounds',
+	throatBreath: 'Muffle: Strong throat vibration sounds',
+	coherency: 'Muffle: Hinting letters',
+	stimulus: 'Stuttering',
+
+	// hearing impairment
+	distortion: 'Hearing: Distortion',
+	frequencyLoss: 'Hearing: Frequency loss',
+	vowelLoss: 'Hearing: Vowel loss',
+	middleLoss: 'Hearing: Middle loss',
+
+	// others
+	blockHands: 'Blocks hands',
+	blockRoomMovement: 'Blocks room movement',
+	blockRoomLeave: 'Blocks leaving space',
+	blind: 'Blindness',
+};
+
 //#endregion
 
+export const EffectNameSchema = z.enum<EffectName, [EffectName, ...EffectName[]]>(ParseArrayNotEmpty(KnownObject.keys(EFFECT_NAMES)));
 export type EffectName = keyof EffectsDefinition;
 
 type __satisfies__EffectsDefinition = Satisfies<EffectsDefinition, Record<EffectName, number | boolean>>;

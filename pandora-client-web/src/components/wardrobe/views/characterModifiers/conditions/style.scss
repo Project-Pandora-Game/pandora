@@ -54,3 +54,12 @@
 		}
 	}
 }
+
+.characterModifierConditionDialog {
+	.attributeList {
+		height: 60vh;
+		min-width: min(80vw, 30em);
+		border: 2px solid common.$theme-separator;
+		overflow-y: scroll;
+	}
+}

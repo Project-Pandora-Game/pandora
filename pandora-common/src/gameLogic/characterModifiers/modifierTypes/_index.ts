@@ -11,6 +11,7 @@ import { effect_block_space_leaving } from './effect_block_space_leaving';
 import { effect_blur_vision } from './effect_blur_vision';
 import { effect_hearing } from './effect_hearing';
 import { effect_speech_garble } from './effect_speech_garble';
+import { speech_doll_talk } from './speech_doll_talk';
 
 //#region Character modifier types catalogue
 
@@ -25,6 +26,7 @@ export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	effect_blur_vision,
 	effect_hearing,
 	effect_speech_garble,
+	speech_doll_talk,
 } as const satisfies Readonly<Record<string, CharacterModifierTypeDefinitionBase>>;
 
 //#endregion

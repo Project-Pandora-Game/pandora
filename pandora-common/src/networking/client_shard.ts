@@ -26,7 +26,15 @@ export const ClientShardSchema = {
 			id: z.number().min(0),
 			editId: z.number().min(0).optional(),
 		}),
-		response: null,
+		response: z.discriminatedUnion('result', [
+			z.object({
+				result: z.literal('ok'),
+			}),
+			z.object({
+				result: z.literal('blocked'),
+				reason: z.string(),
+			}),
+		]),
 	},
 	chatStatus: {
 		request: z.object({

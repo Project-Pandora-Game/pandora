@@ -9,6 +9,7 @@ import { EffectsDefinition, MergeEffects } from '../assets/effects';
 import { FilterItemType, type Item, type ItemId, type RoomDeviceLink } from '../assets/item';
 import { AssetPropertiesResult } from '../assets/properties';
 import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes';
+import type { ChatMessageBlockingResult, IClientMessage } from '../chat';
 import { CompoundChatMessageFilter, CustomChatMessageFilter, type ChatMessageFilter } from '../chat/chatMessageFilter';
 import { HearingImpairment } from '../chat/hearingImpairment';
 import { Muffler } from '../chat/muffling';
@@ -168,6 +169,29 @@ export class CharacterRestrictionsManager {
 		if (resultFilters.length === 1)
 			return resultFilters[0];
 		return new CompoundChatMessageFilter(resultFilters);
+	}
+
+	/** Check whether this character is allowed to say this message */
+	public checkChatMessage(message: IClientMessage): ChatMessageBlockingResult {
+		// Only normal chat messages can be affected
+		if (message.type !== 'chat')
+			return { result: 'ok' };
+
+		// Run modifier checks
+		for (const modifierEffect of this.getModifierEffectProperties()) {
+			if (modifierEffect.checkChatMessage != null) {
+				const check = modifierEffect.checkChatMessage(message);
+				if (check.result !== 'ok') {
+					return {
+						result: 'block',
+						reason: `Blocked by character modifier "${CHARACTER_MODIFIER_TYPE_DEFINITION[modifierEffect.effect.type].visibleName}":\n` + check.reason,
+					};
+				}
+			}
+		}
+
+		// Otherwise allow the message
+		return { result: 'ok' };
 	}
 
 	/**

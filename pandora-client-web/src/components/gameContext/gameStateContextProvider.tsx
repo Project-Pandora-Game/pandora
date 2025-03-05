@@ -48,13 +48,15 @@ import {
 	type SpaceCharacterModifierEffectData,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
+import { toast } from 'react-toastify';
 import { z } from 'zod';
 import { GetCurrentAssetManager } from '../../assets/assetManager';
 import { BrowserStorage } from '../../browserStorage';
 import { Character, useCharacterDataOptional } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
-import { ShardConnectionState, ShardConnector } from '../../networking/shardConnector';
+import { ShardConnector } from '../../networking/shardConnector';
 import { Observable, useNullableObservable, useObservable } from '../../observable';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
 import type { NotificationData } from '../../services/notificationHandler';
 import { IChatMessageProcessed } from '../../ui/components/chat/chatMessages';
@@ -95,6 +97,15 @@ export type PermissionPromptData = {
 	requiredPermissions: Immutable<Partial<Record<PermissionGroup, [PermissionSetup, PermissionConfig][]>>>;
 	actions: AppearanceAction[];
 };
+
+export class ChatSendError extends Error {
+	public readonly reason: string;
+
+	constructor(reason: string) {
+		super(reason);
+		this.reason = reason;
+	}
+}
 
 export class GameState extends TypedEventEmitter<{
 	globalStateChange: true;
@@ -489,30 +500,43 @@ export class GameState extends TypedEventEmitter<{
 		if (editing !== undefined) {
 			const edit = this._sent.get(editing);
 			if (!edit || edit.time + MESSAGE_EDIT_TIMEOUT < Date.now()) {
-				throw new Error('Message not found');
+				throw new ChatSendError('Message not found');
 			}
 		}
 		if (target !== undefined) {
 			if (!this.characters.value.some((c) => c.data.id === target)) {
-				throw new Error('Target not found in the room');
+				throw new ChatSendError('Target not found in the room');
 			}
 			if (target === this.playerId) {
-				throw new Error('Cannot send targeted message to yourself');
+				throw new ChatSendError('Cannot send targeted message to yourself');
 			}
 			if (type === 'me' || type === 'emote') {
-				throw new Error('Emote and me messages cannot be sent to a specific target');
+				throw new ChatSendError('Emote and me messages cannot be sent to a specific target');
 			}
 		}
 		if (message.length > LIMIT_CHAT_MESSAGE_LENGTH) {
-			throw new Error(`Message must not be longer than ${LIMIT_CHAT_MESSAGE_LENGTH} characters (currently: ${message.length})`);
+			throw new ChatSendError(`Message must not be longer than ${LIMIT_CHAT_MESSAGE_LENGTH} characters (currently: ${message.length})`);
 		}
 		let messages: IClientMessage[] = [];
 		if (type !== undefined) {
 			messages = [{ type, parts: raw ? [['normal', message]] : ChatParser.parseStyle(message, type === 'ooc'), to: target }];
 		} else if (raw) {
-			throw new Error('Raw is not implemented for multi-part messages');
+			throw new ChatSendError('Raw is not implemented for multi-part messages');
 		} else {
 			messages = ChatParser.parse(message, target);
+		}
+		// Test restrictions
+		{
+			const restrictionManager = this.player.getRestrictionManager(
+				this.globalState.currentState,
+				MakeActionSpaceContext(this.currentSpace.value, this._shard.accountManager.currentAccount.value, this.characterModifierEffects.value),
+			);
+			for (const checkMessage of messages) {
+				const blockCheck = restrictionManager.checkChatMessage(checkMessage);
+				if (blockCheck.result !== 'ok') {
+					throw new ChatSendError(blockCheck.reason);
+				}
+			}
 		}
 		const id = this._getNextMessageId();
 		if (messages.length > 0) {
@@ -525,21 +549,34 @@ export class GameState extends TypedEventEmitter<{
 		if (editing !== undefined) {
 			this._sent.delete(editing);
 		}
-		this._shard.sendMessage('chatMessage', { id, messages, editId: editing });
+		this._shard.awaitResponse('chatMessage', { id, messages, editId: editing })
+			.then((result) => {
+				if (result.result !== 'ok') {
+					toast('Failed to send message:\n' + result.reason, TOAST_OPTIONS_ERROR);
+				}
+			}, (error) => {
+				this.logger.error('Error sending chat message:', error);
+				toast('Error while sending chat message', TOAST_OPTIONS_ERROR);
+			});
 		this._setRestore();
 	}
 
 	public deleteMessage(deleteId: number): void {
-		if (this._shard.state.value !== ShardConnectionState.CONNECTED) {
-			throw new Error('Shard is not connected');
-		}
 		const edit = this._sent.get(deleteId);
 		if (!edit || edit.time + MESSAGE_EDIT_TIMEOUT < Date.now()) {
-			throw new Error('Message not found');
+			throw new ChatSendError('Message not found');
 		}
 		this._sent.delete(deleteId);
 		const id = this._getNextMessageId();
-		this._shard.sendMessage('chatMessage', { id, messages: [], editId: deleteId });
+		this._shard.awaitResponse('chatMessage', { id, messages: [], editId: deleteId })
+			.then((result) => {
+				if (result.result !== 'ok') {
+					toast('Failed to delete message:\n' + result.reason, TOAST_OPTIONS_ERROR);
+				}
+			}, (error) => {
+				this.logger.error('Error deleting chat message:', error);
+				toast('Error while deleting chat message', TOAST_OPTIONS_ERROR);
+			});
 		this._setRestore();
 	}
 
@@ -634,24 +671,32 @@ export function useSpaceFeatures(): readonly SpaceFeature[] {
 	return info.config.features;
 }
 
+export function MakeActionSpaceContext(
+	spaceInfo: CurrentSpaceInfo,
+	playerAccount: IDirectoryAccountInfo | null,
+	playerModifierEffects: Immutable<SpaceCharacterModifierEffectData>,
+): ActionSpaceContext {
+	return {
+		features: spaceInfo.config.features,
+		isAdmin: (accountId) => {
+			if (accountId === playerAccount?.id) {
+				return IsSpaceAdmin(spaceInfo.config, playerAccount);
+			}
+			return IsSpaceAdmin(spaceInfo.config, { id: accountId });
+		},
+		development: spaceInfo.config.development,
+		getCharacterModifierEffects: (characterId) => {
+			return playerModifierEffects[characterId] ?? EMPTY_ARRAY;
+		},
+	};
+}
+
 export function useActionSpaceContext(): ActionSpaceContext {
 	const context = useGameState();
 	const info = useObservable(context.currentSpace);
 	const characterModifierEffects = useObservable(context.characterModifierEffects);
 	const playerAccount = useCurrentAccount();
-	return useMemo((): ActionSpaceContext => ({
-		features: info.config.features,
-		isAdmin: (accountId) => {
-			if (accountId === playerAccount?.id) {
-				return IsSpaceAdmin(info.config, playerAccount);
-			}
-			return IsSpaceAdmin(info.config, { id: accountId });
-		},
-		development: info.config.development,
-		getCharacterModifierEffects: (characterId) => {
-			return characterModifierEffects[characterId] ?? EMPTY_ARRAY;
-		},
-	}), [info, playerAccount, characterModifierEffects]);
+	return useMemo((): ActionSpaceContext => (MakeActionSpaceContext(info, playerAccount, characterModifierEffects)), [info, playerAccount, characterModifierEffects]);
 }
 
 export function useCharacterRestrictionsManager<T>(globalState: AssetFrameworkGlobalState, character: Character, use: (manager: CharacterRestrictionsManager) => T): T {

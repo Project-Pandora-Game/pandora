@@ -39,6 +39,7 @@ import {
 	type AppearanceActionProcessingResultValid,
 	type CurrentSpaceInfo,
 	type IChatMessageAction,
+	type IClientShardNormalResult,
 	type SpaceCharacterModifierEffectData,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager';
@@ -450,9 +451,20 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		sendTo?.sendMessage('chatCharacterStatus', { id: character.id, status });
 	}
 
-	public handleMessages(from: Character, messages: IClientMessage[], id: number, insertId?: number): void {
-		// Handle speech muffling
+	public handleMessages(from: Character, messages: IClientMessage[], id: number, editId?: number): IClientShardNormalResult['chatMessage'] {
 		const player = from.getRestrictionManager();
+		// Handle speech blocking
+		for (const message of messages) {
+			const blockCheck = player.checkChatMessage(message);
+			if (blockCheck.result !== 'ok') {
+				return {
+					result: 'blocked',
+					reason: 'At least one part of the message was blocked with reason:\n' + blockCheck.reason,
+				};
+			}
+		}
+
+		// Handle speech muffling
 		const speechFilter = player.getSpeechFilter();
 		if (speechFilter.isActive()) {
 			for (const message of messages) {
@@ -467,25 +479,41 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		let history = this.history.get(from.id);
 		if (!history) {
 			this.history.set(from.id, history = new Map<number, number>());
-			if (insertId) {
-				return; // invalid message, nothing to edit
+			if (editId) {
+				// invalid message, nothing to edit
+				return {
+					result: 'blocked',
+					reason: 'Edited message not found',
+				};
 			}
 		} else {
 			if (history.has(id)) {
-				return; // invalid message, already exists
+				// invalid message, already exists
+				return {
+					result: 'blocked',
+					reason: 'Duplicate message',
+				};
 			}
-			if (insertId) {
-				const insert = history.get(insertId);
+			if (editId) {
+				const insert = history.get(editId);
 				if (!insert) {
-					return; // invalid message, nothing to edit
+					// invalid message, nothing to edit
+					return {
+						result: 'blocked',
+						reason: 'Edited message not found',
+					};
 				}
-				history.delete(insertId);
+				history.delete(editId);
 				if (insert + MESSAGE_EDIT_TIMEOUT < now) {
-					return; // invalid message, too old
+					// invalid message, too old
+					return {
+						result: 'blocked',
+						reason: 'Edited message is too old to be edited',
+					};
 				}
 				queue.push({
 					type: 'deleted',
-					id: insertId,
+					id: editId,
 					from: from.id,
 					time: this.nextMessageTime(),
 				});
@@ -497,7 +525,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 				queue.push({
 					type: message.type,
 					id,
-					insertId,
+					insertId: editId,
 					from: { id: from.id, name: from.name, labelColor: from.settings.labelColor },
 					parts: message.parts,
 					time: this.nextMessageTime(),
@@ -510,7 +538,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 				queue.push({
 					type: message.type,
 					id,
-					insertId,
+					insertId: editId,
 					from: { id: from.id, name: from.name, labelColor: from.settings.labelColor },
 					to: { id: target.id, name: target.name, labelColor: target.settings.labelColor },
 					parts: message.parts,
@@ -519,6 +547,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			}
 		}
 		this._queueMessages(queue);
+
+		return { result: 'ok' };
 	}
 
 	public handleActionMessage(actionMessage: ActionHandlerMessage): void {

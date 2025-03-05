@@ -136,17 +136,18 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result: 'ok' };
 	}
 
-	private handleChatMessage({ messages, id, editId }: IClientShardArgument['chatMessage'], client: ClientConnection): void {
+	private handleChatMessage({ messages, id, editId }: IClientShardArgument['chatMessage'], client: ClientConnection): IClientShardNormalResult['chatMessage'] {
 		if (!client.character)
 			throw new BadMessageError();
 
+		// Ignore empty messages
 		if (messages.length === 0 && editId === undefined)
-			return;
+			return { result: 'ok' };
 
 		const space = client.character.getOrLoadSpace();
 		const character = client.character;
 
-		space.handleMessages(character, messages, id, editId);
+		return space.handleMessages(character, messages, id, editId);
 	}
 
 	private handleChatMessageAck({ lastTime }: IClientShardArgument['chatMessageAck'], client: ClientConnection): void {

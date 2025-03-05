@@ -67,8 +67,13 @@ export function DefineCharacterModifier<
 			Assert(isEqual(parsedConfig, effect.config), 'Incompatible configuration passed to character modifier properties applier');
 
 			return {
-				applyCharacterEffects: intermediateConfig.applyCharacterEffects?.bind(globalThis, parsedConfig),
-				checkCharacterAction: intermediateConfig.checkCharacterAction?.bind(globalThis, parsedConfig),
+				applyCharacterEffects: intermediateConfig.applyCharacterEffects?.bind(globalThis, parsedConfig) ?? null,
+				checkCharacterAction: intermediateConfig.checkCharacterAction?.bind(globalThis, parsedConfig) ?? null,
+				checkChatMessage: intermediateConfig.checkChatMessage?.bind(globalThis, parsedConfig) ?? null,
+				processChatMessageBeforeMuffle: intermediateConfig.processChatMessageBeforeMuffle?.bind(globalThis, parsedConfig) ?? null,
+				processChatMessageAfterMuffle: intermediateConfig.processChatMessageAfterMuffle?.bind(globalThis, parsedConfig) ?? null,
+				processReceivedChatMessageBeforeFilters: intermediateConfig.processReceivedChatMessageBeforeFilters?.bind(globalThis, parsedConfig) ?? null,
+				processReceivedChatMessageAfterFilters: intermediateConfig.processReceivedChatMessageAfterFilters?.bind(globalThis, parsedConfig) ?? null,
 				effect,
 			};
 		},

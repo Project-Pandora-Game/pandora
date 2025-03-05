@@ -2,6 +2,7 @@ import type { Immutable } from 'immer';
 import type { AssetFrameworkGlobalState } from '../../assets';
 import type { EffectsDefinition } from '../../assets/effects';
 import type { CharacterRestrictionsManager } from '../../character';
+import type { BlockableChatMessage, ChatMessageBlockingResult } from '../../chat';
 import type { IChatSegment } from '../../chat/chat';
 import type { AppearanceAction } from '../actionLogic';
 import type { CharacterModifierEffectData } from './characterModifierData';
@@ -42,6 +43,19 @@ export interface CharacterModifierProperties<TConfig> {
 		originalState: AssetFrameworkGlobalState,
 		resultState: AssetFrameworkGlobalState
 	): ('allow' | 'block');
+
+	/**
+	 * Run additional checks on chat message the character tries to say.
+	 * Order of modifiers matters only w.r.t. to what "blocked" message is shown in case at least one modifier blocks the message.
+	 *
+	 * @param config - Config of this modifier
+	 * @param message - The message character is trying to say
+	 * @returns Whether to allow or block this message, and explanation.
+	 */
+	checkChatMessage?(
+		config: TConfig,
+		message: BlockableChatMessage
+	): ChatMessageBlockingResult;
 
 	/**
 	 * Process a chat message, before the usual muffling.
@@ -106,9 +120,10 @@ export interface CharacterModifierProperties<TConfig> {
 
 /** A helper type that contains all of modifier properties hooks without their config argument. */
 export type CharacterModifierPropertiesApplier = {
-	readonly [t in keyof CharacterModifierProperties<unknown>]:
+	readonly [t in keyof CharacterModifierProperties<unknown>]-?:
 	NonNullable<CharacterModifierProperties<unknown>[t]> extends (config: infer TConfig, ...args: infer Args) => infer Return ?
-	(...args: Args) => Return : never;
+	(((...args: Args) => Return) | null) : never;
+	// We intentionally make it non-optional and use `null` to avoid forgetting about linking things in `createPropertiesApplier`
 } & {
 	// In addition applier links to the original effect
 	readonly effect: CharacterModifierEffectData;

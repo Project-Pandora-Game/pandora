@@ -17,7 +17,7 @@ import {
 	type ModifierConfigurationEntryDefinition,
 	type PermissionGroup,
 } from 'pandora-common';
-import { ReactElement, useCallback, useMemo, useState } from 'react';
+import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import type { Promisable } from 'type-fest';
 import crossIcon from '../../../../assets/icons/cross.svg';
@@ -327,10 +327,11 @@ function ModifierInstanceEnableButton({ character, enabled, onChange }: {
 	);
 }
 
-function ModifierInstanceNameInput({ modifierTypeVisibleName, value, onChange }: {
+export function ModifierInstanceNameInput({ modifierTypeVisibleName, value, onChange, instantChange = false }: {
 	modifierTypeVisibleName: string;
 	value: string;
 	onChange?: (newValue: string) => Promisable<void>;
+	instantChange?: boolean;
 }): ReactElement {
 	const [changedValue, setChangedValue] = useState<string | null>(null);
 	const valueError = changedValue != null ? FormCreateStringValidator(CharacterModifierNameSchema, 'value')(changedValue) : undefined;
@@ -352,6 +353,18 @@ function ModifierInstanceNameInput({ modifierTypeVisibleName, value, onChange }:
 		},
 	});
 
+	useEffect(() => {
+		if (instantChange && onChange != null && changedValue != null && valueError == null && changedValue !== value) {
+			(async () => {
+				await onChange(value);
+			})()
+				.catch((err) => {
+					GetLogger('ModifierInstanceNameInput').error('Failed to auto-apply character modifier name:', err);
+					toast('Error performing action, try again later', TOAST_OPTIONS_ERROR);
+				});
+		}
+	}, [instantChange, value, changedValue, onChange, valueError]);
+
 	return (
 		<FieldsetToggle legend='Custom name'>
 			<Column>
@@ -365,7 +378,7 @@ function ModifierInstanceNameInput({ modifierTypeVisibleName, value, onChange }:
 						disabled={ onChange == null || processing }
 					/>
 					{
-						onChange != null ? (
+						(onChange != null && !instantChange) ? (
 							<Button
 								slim
 								disabled={ changedValue == null || valueError != null }

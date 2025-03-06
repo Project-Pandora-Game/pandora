@@ -3,6 +3,7 @@ import {
 	AssertNever,
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
 	CharacterModifierActionCheckAdd,
+	CharacterModifierTemplate,
 	GetLogger,
 	type CharacterModifierId,
 	type CharacterModifierType,
@@ -29,15 +30,57 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, character, focu
 	character: ICharacter;
 	focusModifierInstance: (id: CharacterModifierId) => void;
 }): ReactElement | null {
+	const typeDefinition = CHARACTER_MODIFIER_TYPE_DEFINITION[type];
+
+	const modifier = useMemo((): CharacterModifierTemplate => ({
+		type,
+		name: '',
+		config: {},
+		conditions: [],
+	}), [type]);
+
+	return (
+		<div className='inventoryView wardrobeModifierTypeDetails'>
+			<div className='toolbar'>
+				<span>Modifier "{ typeDefinition.visibleName }"</span>
+			</div>
+			<Column padding='large' gap='large'>
+				<WardrobeCharacterModifierTypeDescription type={ type } />
+				<WardrobeCharacterModifierAddButton
+					character={ character }
+					modifier={ modifier }
+					onSuccess={ focusModifierInstance }
+				/>
+				{
+					character.isPlayer() ? (
+						<fieldset className='modifierPermission'>
+							<legend>Permission</legend>
+							<PermissionSettingEntry
+								visibleName={ `Allow other characters to add or configure "${ typeDefinition.visibleName }" modifiers` }
+								icon=''
+								permissionGroup='characterModifierType'
+								permissionId={ type }
+							/>
+						</fieldset>
+					) : null
+				}
+			</Column>
+		</div>
+	);
+}
+
+export function WardrobeCharacterModifierAddButton({ character, modifier, onSuccess }: {
+	character: ICharacter;
+	modifier: CharacterModifierTemplate;
+	onSuccess?: (newInstanceId: CharacterModifierId) => void;
+}): ReactElement {
 	const { actions, globalState } = useWardrobeActionContext();
 	const shard = useShardConnector();
 
-	const typeDefinition = CHARACTER_MODIFIER_TYPE_DEFINITION[type];
-
 	const checkInitial = useMemo(() => {
 		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
-		return CharacterModifierActionCheckAdd(processingContext, character.id, type);
-	}, [actions, globalState, character, type]);
+		return CharacterModifierActionCheckAdd(processingContext, character.id, modifier.type);
+	}, [actions, globalState, character, modifier]);
 	const check = useCheckAddPermissions(checkInitial);
 
 	const [requestPermissions, processingPermissionRequest] = useWardrobePermissionRequestCallback();
@@ -49,19 +92,14 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, character, focu
 
 		return await shard.awaitResponse('characterModifierAdd', {
 			target: character.id,
-			modifier: {
-				type,
-				name: '',
-				config: {},
-				conditions: [],
-			},
+			modifier,
 			enabled: false,
 		});
 	}, (result: IClientShardNormalResult['characterModifierAdd'] | null) => {
 		if (result == null) {
 			toast('Request failed, try again later', TOAST_OPTIONS_ERROR);
 		} else if (result.result === 'ok') {
-			focusModifierInstance(result.instanceId);
+			onSuccess?.(result.instanceId);
 		} else if (result.result === 'characterNotFound') {
 			toast('The target character is no longer in the same space', TOAST_OPTIONS_ERROR);
 		} else if (result.result === 'invalidConfiguration') {
@@ -101,34 +139,13 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, character, focu
 	}, [check, execute, requestPermissions, character]);
 
 	return (
-		<div className='inventoryView wardrobeModifierTypeDetails'>
-			<div className='toolbar'>
-				<span>Modifier "{ typeDefinition.visibleName }"</span>
-			</div>
-			<Column padding='large' gap='large'>
-				<WardrobeCharacterModifierTypeDescription type={ type } />
-				<WardrobeActionButtonElement
-					check={ check }
-					onClick={ onClick }
-					disabled={ processing || processingPermissionRequest }
-				>
-					Add this modifier
-				</WardrobeActionButtonElement>
-				{
-					character.isPlayer() ? (
-						<fieldset className='modifierPermission'>
-							<legend>Permission</legend>
-							<PermissionSettingEntry
-								visibleName={ `Allow other characters to add or configure "${ typeDefinition.visibleName }" modifiers` }
-								icon=''
-								permissionGroup='characterModifierType'
-								permissionId={ type }
-							/>
-						</fieldset>
-					) : null
-				}
-			</Column>
-		</div>
+		<WardrobeActionButtonElement
+			check={ check }
+			onClick={ onClick }
+			disabled={ processing || processingPermissionRequest }
+		>
+			Add this modifier
+		</WardrobeActionButtonElement>
 	);
 }
 

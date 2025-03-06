@@ -159,6 +159,7 @@ function WardrobeEffectsFullList({ data, character, modifierEffects, currentlyFo
 			</div>
 		) : data.result === 'ok' ? (
 			<WardrobeCharacterModifierFullInstanceView
+				character={ character }
 				modifiers={ data.modifiers }
 				modifierEffects={ modifierEffects }
 				currentlyFocusedModifier={ currentlyFocusedModifier }

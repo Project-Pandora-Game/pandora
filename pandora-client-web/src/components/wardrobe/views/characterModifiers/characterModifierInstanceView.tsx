@@ -5,22 +5,34 @@ import {
 	type CharacterModifierId,
 	type GameLogicModifierInstanceClient,
 } from 'pandora-common';
-import { ReactElement, ReactNode } from 'react';
+import { ReactElement, ReactNode, useState } from 'react';
+import importIcon from '../../../../assets/icons/import.svg';
+import type { ICharacter } from '../../../../character/character';
 import { useAccountSettings } from '../../../../services/accountLogic/accountManagerHooks';
-import { DivContainer } from '../../../common/container/container';
+import { Button } from '../../../common/button/button';
+import { DivContainer, Row } from '../../../common/container/container';
 import { ResolveItemDisplayNameType } from '../../itemDetail/wardrobeItemName';
+import { CharacterModifierImportDialog } from './characterModifierImport';
 import './characterModifierInstanceView.scss';
 
-export function WardrobeCharacterModifierFullInstanceView({ children, modifiers, modifierEffects, currentlyFocusedModifier, focusModifierInstance }: {
-	children?: ReactNode;
+export function WardrobeCharacterModifierFullInstanceView({ character, modifiers, modifierEffects, currentlyFocusedModifier, focusModifierInstance }: {
+	character: ICharacter;
 	modifiers: readonly GameLogicModifierInstanceClient[];
 	modifierEffects: readonly CharacterModifierEffectData[];
 	currentlyFocusedModifier: CharacterModifierId | null;
 	focusModifierInstance: (id: CharacterModifierId | null) => void;
 }): ReactElement | null {
+	const [showImport, setShowImport] = useState(false);
+
 	return (
 		<div className='inventoryView wardrobeModifierFullInstanceList'>
-			{ children }
+			<Row className='toolbar' alignY='center' alignX='end'>
+				<Button
+					onClick={ () => setShowImport(true) }
+				>
+					<img src={ importIcon } alt='Import' crossOrigin='anonymous' /> Import
+				</Button>
+			</Row>
 			<div className='listContainer'>
 				{
 					modifiers.length > 0 ? (
@@ -46,6 +58,18 @@ export function WardrobeCharacterModifierFullInstanceView({ children, modifiers,
 					)
 				}
 			</div>
+			{
+				showImport ? (
+					<CharacterModifierImportDialog
+						character={ character }
+						close={ () => setShowImport(false) }
+						focusModifierInstance={ (id) => {
+							setShowImport(false);
+							focusModifierInstance(id);
+						} }
+					/>
+				) : null
+			}
 		</div>
 	);
 }
@@ -59,8 +83,6 @@ function ModifierFullInstanceListItem({ modifier, selected = false, onClick, act
 	const definition = CHARACTER_MODIFIER_TYPE_DEFINITION[modifier.type];
 	const { wardrobeItemDisplayNameType } = useAccountSettings();
 
-	// TODO: const preference = useAssetPreference(asset);
-
 	const hasCustomName = wardrobeItemDisplayNameType === 'custom' && !!modifier.name && modifier.name !== definition.visibleName;
 	return (
 		<div
@@ -69,7 +91,6 @@ function ModifierFullInstanceListItem({ modifier, selected = false, onClick, act
 				'listMode',
 				selected ? 'selected' : null,
 				'allowed',
-				// `pref-${preference}`,
 				'characterModifierInstance',
 			) }
 			tabIndex={ 0 }
@@ -132,7 +153,6 @@ function ModifierEffectiveInstanceListItem({ modifier, selected = false, onClick
 	onClick?: () => void;
 }): ReactElement {
 	const definition = CHARACTER_MODIFIER_TYPE_DEFINITION[modifier.type];
-	// TODO: const preference = useAssetPreference(asset);
 
 	return (
 		<div
@@ -141,7 +161,6 @@ function ModifierEffectiveInstanceListItem({ modifier, selected = false, onClick
 				'listMode',
 				selected ? 'selected' : null,
 				'allowed',
-				// `pref-${preference}`,
 			) }
 			tabIndex={ 0 }
 			onClick={ onClick }

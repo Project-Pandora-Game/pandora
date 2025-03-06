@@ -5,3 +5,23 @@
 		min-width: 2em;
 	}
 }
+
+.characterModifierStringListInput {
+	&.limitHeight {
+		max-height: 15.5em; // Intentionally a "weird" number to show part of the next hidden row
+	}
+
+	.listItem {
+		background: common.$theme-table-body-background;
+		color: common.$theme-table-body-text;
+
+		&:nth-child(2n) {
+			background: common.$theme-table-body-altbackground;
+		}
+
+		.Button {
+			width: 2em;
+			height: 2em;
+		}
+	}
+}

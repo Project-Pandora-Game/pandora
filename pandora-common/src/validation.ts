@@ -25,7 +25,7 @@ export function ZodMatcher<T extends ZodTypeAny>(validator: T, passthrough?: tru
 	};
 }
 
-export function ZodArrayWithInvalidDrop<ZodShape extends ZodTypeAny, ZodPreCheck extends ZodTypeAny>(shape: ZodShape, preCheck: ZodPreCheck) {
+export function ZodArrayWithInvalidDrop<ZodShape extends ZodTypeAny, ZodPreCheck extends ZodTypeAny>(shape: ZodShape, preCheck: ZodPreCheck, maxLength?: number) {
 	return z.array(preCheck).transform((values) => {
 		const res: z.output<ZodShape>[] = [];
 		for (const value of values) {
@@ -35,6 +35,10 @@ export function ZodArrayWithInvalidDrop<ZodShape extends ZodTypeAny, ZodPreCheck
 				res.push(parsed.data);
 			}
 		}
+
+		if (maxLength != null && res.length > maxLength)
+			return res.slice(0, maxLength);
+
 		return res;
 	});
 }

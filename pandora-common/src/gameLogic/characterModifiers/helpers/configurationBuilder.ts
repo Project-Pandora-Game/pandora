@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { CharacterIdSchema } from '../../../character/characterTypes';
 import { LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT } from '../../../inputLimits';
 import { Assert, AssertNever, KnownObject } from '../../../utility';
+import { ZodArrayWithInvalidDrop } from '../../../validation';
 import type { ModifierConfigurationEntryDefinition } from '../configuration';
 
 /** Mapping of a configuration type to its schema type */
@@ -10,19 +11,28 @@ type ModifierConfigurationDataTypeSchemaMap = {
 	characterList: z.ZodCatch<z.ZodArray<typeof CharacterIdSchema>>;
 	number: z.ZodCatch<z.ZodNumber>;
 	string: z.ZodCatch<z.ZodString>;
+	stringList: z.ZodCatch<z.ZodEffects<z.ZodArray<z.ZodString>, z.output<z.ZodString>[]>>;
 	toggle: z.ZodCatch<z.ZodBoolean>;
 };
 
 /** Create a schema for character modifier type's configuration data; specifically for a singular config property. */
-export function CharacterModifierBuildConfigurationSchemaSingle<const TConfig extends ModifierConfigurationEntryDefinition>(config: TConfig): ModifierConfigurationDataTypeSchemaMap[TConfig['type']] {
+export function CharacterModifierBuildConfigurationSchemaSingle<const TConfig extends ModifierConfigurationEntryDefinition>(config: TConfig): ModifierConfigurationDataTypeSchemaMap[TConfig['type']];
+export function CharacterModifierBuildConfigurationSchemaSingle<const TConfig extends ModifierConfigurationEntryDefinition>(config: TConfig): ModifierConfigurationDataTypeSchemaMap[keyof ModifierConfigurationDataTypeSchemaMap] {
 	switch (config.type) {
 		case 'string': {
 			let schema = z.string().max(config.options.maxLength);
 			if (config.options.match) {
 				schema = schema.regex(config.options.match);
 			}
-			// @ts-expect-error: Manually narrowed type
 			return schema.catch(config.default);
+		}
+		case 'stringList': {
+			let schema = z.string().max(config.options.maxEntryLength);
+			if (config.options.matchEntry) {
+				schema = schema.regex(config.options.matchEntry);
+			}
+			return ZodArrayWithInvalidDrop(schema, z.string(), config.options.maxCount)
+				.catch(() => []);
 		}
 		case 'number': {
 			let schema = z.number();
@@ -35,16 +45,13 @@ export function CharacterModifierBuildConfigurationSchemaSingle<const TConfig ex
 			if (config.options?.max != null) {
 				schema = schema.max(config.options.max);
 			}
-			// @ts-expect-error: Manually narrowed type
 			return schema.catch(config.default);
 		}
 		case 'characterList':
 			// TODO: Would be nice to ensure values are unique
-			// @ts-expect-error: Manually narrowed type
 			return CharacterIdSchema.array().max(LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT)
 				.catch(() => []);
 		case 'toggle':
-			// @ts-expect-error: Manually narrowed type
 			return z.boolean().catch(config.default);
 	}
 	AssertNever(config);

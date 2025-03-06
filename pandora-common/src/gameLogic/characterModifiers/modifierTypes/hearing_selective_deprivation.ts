@@ -8,12 +8,14 @@ export const hearing_selective_deprivation = DefineCharacterModifier({
 	typeId: 'hearing_selective_deprivation',
 	visibleName: 'Hearing: Selective hearing deprivation',
 	description: `
-TODO
-This modifier impacts the character's natural ability to hear - in the same way items do.
+This modifier impacts the character's ability to hear, but allows for partial hearing.
 
-The intensity of the effect can be adjusted and it stacks with worn items that have the same effect up to the maximum intensity defined in the configuration of this modifier.
-The maximum intensity setting will not limit the sum of the deafening effects by items or other character modifiers.
-	`,
+__This modifier is applied on top of items and other modifiers.__
+Characters/words listed in the allow lists will still be impacted by other sources.
+
+This modifier works in the same way as standard hearing deprivation does, based on the "Intensity" setting.
+You can, however, exclude characters or specific words from its effect or specify a random chance for a word not to be affected at all.
+`,
 	strictnessCategory: 'normal',
 	config: {
 		intensity: {
@@ -31,13 +33,14 @@ The maximum intensity setting will not limit the sum of the deafening effects by
 			type: 'characterList',
 			default: [],
 		},
-		//TODO: change after stringList type is available
-		wordWhitelist: {
-			name: 'Words that can always be understood (separated by commas)',
-			type: 'string',
-			default: '',
+		wordAllowlist: {
+			name: 'Words that can always be understood',
+			type: 'stringList',
+			default: [],
 			options: {
-				maxLength: 256,
+				maxCount: 100,
+				maxEntryLength: 24,
+				matchEntry: /^\p{L}+$/igu,
 			},
 		},
 		understandRandomWords: {
@@ -63,11 +66,18 @@ The maximum intensity setting will not limit the sum of the deafening effects by
 			vowelLoss: config.intensity,
 		});
 
+		const wordAllowlist = config.wordAllowlist.map((w) => w.trim().toLowerCase()).filter(Boolean);
+
 		const random = new PseudoRandom(nanoid());
 		for (const part of content) {
-			part[1] = part[1].replace(/\b(\w+)\b/ig, (match) => {
+			part[1] = part[1].replace(/\b(\p{L}+)\b/igu, (match) => {
 				if (random.prob(config.understandRandomWords / 100)) {
 					// Passed random check
+					return match;
+				}
+
+				// Check allowlisted words
+				if (wordAllowlist.includes(match.toLowerCase())) {
 					return match;
 				}
 

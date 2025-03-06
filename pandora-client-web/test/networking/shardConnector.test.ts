@@ -6,7 +6,8 @@ import { MockServiceManager } from '../testUtils';
 describe('ShardConnector', () => {
 	const serviceManager = MockServiceManager();
 	Assert(serviceManager.services.directoryConnector != null);
-	const mockShardConnector = new ShardConnector(MockConnectionInfo(), serviceManager.services.directoryConnector);
+	Assert(serviceManager.services.accountManager != null);
+	const mockShardConnector = new ShardConnector(MockConnectionInfo(), serviceManager.services.directoryConnector, serviceManager.services.accountManager);
 
 	it('default state should be NONE', () => {
 		expect(mockShardConnector.state.value).toBe(ShardConnectionState.NONE);

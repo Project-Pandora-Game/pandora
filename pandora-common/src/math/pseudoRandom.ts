@@ -1,3 +1,5 @@
+import { Assert } from '../utility';
+
 /* eslint-disable no-bitwise */
 export class PseudoRandom {
 	private hash: [number, number, number, number];
@@ -39,11 +41,26 @@ export class PseudoRandom {
 		return (r >>> 0) / 4294967296;
 	}
 
-	// return random between min & max;
+	/**
+	 * Returns a random float in the range [min, max)
+	 * @param min - Minimum value, inclusive
+	 * @param max - Maximum value, exclusive
+	 * @returns
+	 */
 	public between(min: number, max: number): number {
 		if (min > max) throw Error(`min(${min}) cannot be larger than max(${max})`);
 
 		return (max - min) * this.random() + min;
+	}
+
+	/**
+	 * Generate boolean that is truthy with certain probability.
+	 * @param probability - Probability of the result being truthy, must be in range [0, 1].
+	 */
+	public prob(probability: number): boolean {
+		Assert(probability >= 0 && probability <= 1, `Probability needs to be between 0 and 1 (inclusive), got ${probability}`);
+
+		return this.random() < probability;
 	}
 
 	public randomElement<T>(array: ArrayLike<T>): T {

@@ -41,6 +41,7 @@ import {
 	RoomBackgroundData,
 	SpaceId,
 	type AppearanceActionProcessingResult,
+	type ChatMessageFilterMetadata,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager';
 import { GetDatabase } from '../database/databaseProvider';
@@ -724,9 +725,13 @@ export class Character {
 		if (hearingFilter.isActive()) {
 			transformed = messages.map((message) => {
 				if (message.type === 'chat') {
+					const metadata: ChatMessageFilterMetadata = {
+						from: message.from.id,
+						to: message.to?.id ?? null,
+					};
 					return {
 						...message,
-						parts: hearingFilter.processMessage(CloneDeepMutable(message.parts)),
+						parts: hearingFilter.processMessage(CloneDeepMutable(message.parts), metadata),
 					};
 				} else {
 					return message;

@@ -37,6 +37,7 @@ import {
 	SpaceId,
 	SpaceLoadData,
 	type AppearanceActionProcessingResultValid,
+	type ChatMessageFilterMetadata,
 	type CurrentSpaceInfo,
 	type IChatMessageAction,
 	type IClientShardNormalResult,
@@ -468,8 +469,12 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		const speechFilter = player.getSpeechFilter();
 		if (speechFilter.isActive()) {
 			for (const message of messages) {
+				const metadata: ChatMessageFilterMetadata = {
+					from: from.id,
+					to: IsTargeted(message) ? message.to : null,
+				};
 				if (message.type === 'chat') {
-					message.parts = speechFilter.processMessage(message.parts);
+					message.parts = speechFilter.processMessage(message.parts, metadata);
 				}
 			}
 		}

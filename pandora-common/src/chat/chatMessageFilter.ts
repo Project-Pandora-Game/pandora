@@ -1,8 +1,17 @@
+import type { Immutable } from 'immer';
+import type { CharacterId } from '../character';
 import type { IChatSegment } from './chat';
 
 export interface ChatMessageFilter {
 	isActive(): boolean;
-	processMessage(content: IChatSegment[]): IChatSegment[];
+	processMessage(content: IChatSegment[], metadata: Immutable<ChatMessageFilterMetadata>): IChatSegment[];
+}
+
+export interface ChatMessageFilterMetadata {
+	/** Id of the character the message is from */
+	from: CharacterId;
+	/** Character this message is being whispered to, or `null` of normal chat message */
+	to: CharacterId | null;
 }
 
 export class CompoundChatMessageFilter implements ChatMessageFilter {
@@ -16,18 +25,18 @@ export class CompoundChatMessageFilter implements ChatMessageFilter {
 		return this.filters.some((f) => f.isActive());
 	}
 
-	public processMessage(content: IChatSegment[]): IChatSegment[] {
+	public processMessage(content: IChatSegment[], metadata: Immutable<ChatMessageFilterMetadata>): IChatSegment[] {
 		for (const filter of this.filters) {
-			content = filter.processMessage(content);
+			content = filter.processMessage(content, metadata);
 		}
 		return content;
 	}
 }
 
 export class CustomChatMessageFilter implements ChatMessageFilter {
-	public readonly fn: (content: IChatSegment[]) => IChatSegment[];
+	public readonly fn: (content: IChatSegment[], metadata: Immutable<ChatMessageFilterMetadata>) => IChatSegment[];
 
-	constructor(fn: (content: IChatSegment[]) => IChatSegment[]) {
+	constructor(fn: (content: IChatSegment[], metadata: Immutable<ChatMessageFilterMetadata>) => IChatSegment[]) {
 		this.fn = fn;
 	}
 
@@ -35,7 +44,7 @@ export class CustomChatMessageFilter implements ChatMessageFilter {
 		return true;
 	}
 
-	public processMessage(content: IChatSegment[]): IChatSegment[] {
-		return this.fn(content);
+	public processMessage(content: IChatSegment[], metadata: Immutable<ChatMessageFilterMetadata>): IChatSegment[] {
+		return this.fn(content, metadata);
 	}
 }

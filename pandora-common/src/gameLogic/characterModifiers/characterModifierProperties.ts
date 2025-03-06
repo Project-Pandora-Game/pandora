@@ -2,7 +2,7 @@ import type { Immutable } from 'immer';
 import type { AssetFrameworkGlobalState } from '../../assets';
 import type { EffectsDefinition } from '../../assets/effects';
 import type { CharacterRestrictionsManager } from '../../character';
-import type { BlockableChatMessage, ChatMessageBlockingResult } from '../../chat';
+import type { BlockableChatMessage, ChatMessageBlockingResult, ChatMessageFilterMetadata } from '../../chat';
 import type { IChatSegment } from '../../chat/chat';
 import type { AppearanceAction } from '../actionLogic';
 import type { CharacterModifierEffectData } from './characterModifierData';
@@ -65,11 +65,13 @@ export interface CharacterModifierProperties<TConfig> {
 	 *
 	 * @param config - Config of this modifier
 	 * @param content - Content of the message to process, can be mutated in-place
+	 * @param metadata - Metadata of the message
 	 * @returns New content of the message
 	 */
 	processChatMessageBeforeMuffle?(
 		config: TConfig,
-		content: IChatSegment[]
+		content: IChatSegment[],
+		metadata: Immutable<ChatMessageFilterMetadata>
 	): IChatSegment[];
 
 	/**
@@ -80,11 +82,13 @@ export interface CharacterModifierProperties<TConfig> {
 	 *
 	 * @param config - Config of this modifier
 	 * @param content - Content of the message to process, can be mutated in-place
+	 * @param metadata - Metadata of the message
 	 * @returns New content of the message
 	 */
 	processChatMessageAfterMuffle?(
 		config: TConfig,
-		content: IChatSegment[]
+		content: IChatSegment[],
+		metadata: Immutable<ChatMessageFilterMetadata>
 	): IChatSegment[];
 
 	/**
@@ -95,11 +99,13 @@ export interface CharacterModifierProperties<TConfig> {
 	 *
 	 * @param config - Config of this modifier
 	 * @param content - Content of the message to process, can be mutated in-place
+	 * @param metadata - Metadata of the message
 	 * @returns New content of the message
 	 */
 	processReceivedChatMessageBeforeFilters?(
 		config: TConfig,
-		content: IChatSegment[]
+		content: IChatSegment[],
+		metadata: Immutable<ChatMessageFilterMetadata>
 	): IChatSegment[];
 
 	/**
@@ -110,11 +116,13 @@ export interface CharacterModifierProperties<TConfig> {
 	 *
 	 * @param config - Config of this modifier
 	 * @param content - Content of the message to process, can be mutated in-place
+	 * @param metadata - Metadata of the message
 	 * @returns New content of the message
 	 */
 	processReceivedChatMessageAfterFilters?(
 		config: TConfig,
-		content: IChatSegment[]
+		content: IChatSegment[],
+		metadata: Immutable<ChatMessageFilterMetadata>
 	): IChatSegment[];
 }
 

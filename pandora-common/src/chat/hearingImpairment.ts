@@ -72,7 +72,7 @@ export class HearingImpairment implements ChatMessageFilter {
 		return input.replace(/\b(\w+)\b/ig, (match) => this.distortWord(match));
 	}
 
-	private distortWord(word: string): string {
+	public distortWord(word: string): string {
 		const r = new PseudoRandom(word.trim().toLowerCase() + this.salt);
 		const { distortion, frequencyLoss, vowelLoss, middleLoss } = this.setting;
 

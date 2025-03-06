@@ -124,7 +124,7 @@ function useEffectiveAllowOthers(permissionGroup: PermissionGroup, permissionId:
 	return MakePermissionConfigFromDefault(permissionSetup.defaultConfig).allowOthers;
 }
 
-function ShowEffectiveAllowOthers({ permissionGroup, permissionId }: { permissionGroup: PermissionGroup; permissionId: string; }): ReactElement {
+export function ShowEffectiveAllowOthers({ permissionGroup, permissionId }: { permissionGroup: PermissionGroup; permissionId: string; }): ReactElement {
 	const effectiveConfig = useEffectiveAllowOthers(permissionGroup, permissionId);
 	return (
 		<ShowAllowOthers config={ effectiveConfig } />

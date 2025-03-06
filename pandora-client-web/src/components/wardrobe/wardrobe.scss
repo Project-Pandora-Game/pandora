@@ -386,6 +386,10 @@ $drop-overlay-gap: 0.3em;
 		.quickActions {
 			margin: 3px 3px 3px auto;
 		}
+
+		&.sidePadding {
+			padding: 0 0.5em;
+		}
 	}
 
 	&.gridMode {
@@ -578,9 +582,11 @@ $drop-overlay-gap: 0.3em;
 		// );
 	}
 
-	&.allowed:not(:disabled) {
+	:not(:disabled) {
 		cursor: pointer;
+	}
 
+	&.allowed:not(:disabled) {
 		&:hover:not(.pendingAttempt:not(.progressDone)) {
 			background: common.$theme-wardrobe-actionbutton-hover-background;
 			color: common.$theme-wardrobe-actionbutton-hover-text;
@@ -598,7 +604,6 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	&.blocked:not(.selected) {
-		cursor: default;
 		background: common.$theme-wardrobe-actionbutton-blocked-background;
 		color: common.$theme-wardrobe-actionbutton-blocked-text;
 	}

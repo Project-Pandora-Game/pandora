@@ -1,6 +1,8 @@
 import classNames from 'classnames';
 import {
+	AppearanceActionProcessingContext,
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
+	CharacterModifierActionCheckAdd,
 	KnownObject,
 	type CharacterModifierType,
 	type CharacterModifierTypeDefinition,
@@ -8,12 +10,18 @@ import {
 import { ReactElement, ReactNode, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import wikiIcon from '../../../../assets/icons/wiki.svg';
+import type { ICharacter } from '../../../../character/character';
 import { TextInput } from '../../../../common/userInteraction/input/textInput';
 import { useInputAutofocus } from '../../../../common/userInteraction/inputAutofocus';
 import { Row } from '../../../common/container/container';
+import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProvider';
+import { ShowEffectiveAllowOthers } from '../../../settings/permissionsSettings';
+import { useWardrobeActionContext } from '../../wardrobeActionContext';
+import { CheckResultToClassName } from '../../wardrobeComponents';
 
-export function WardrobeCharacterModifierTypeView({ title, currentlyFocusedModifier, focusModifier, children }: {
+export function WardrobeCharacterModifierTypeView({ title, character, currentlyFocusedModifier, focusModifier, children }: {
 	title: string;
+	character: ICharacter;
 	currentlyFocusedModifier: CharacterModifierType | null;
 	focusModifier: (type: CharacterModifierType | null) => void;
 	children?: ReactNode;
@@ -61,6 +69,7 @@ export function WardrobeCharacterModifierTypeView({ title, currentlyFocusedModif
 									key={ m.typeId }
 									modifier={ m }
 									selected={ currentlyFocusedModifier === m.typeId }
+									character={ character }
 									onClick={ () => focusModifier(currentlyFocusedModifier === m.typeId ? null : m.typeId) }
 								/>
 							))
@@ -72,26 +81,39 @@ export function WardrobeCharacterModifierTypeView({ title, currentlyFocusedModif
 	);
 }
 
-function ModifierTypesListItem({ modifier, selected, onClick }: {
+function ModifierTypesListItem({ modifier, selected, character, onClick }: {
 	modifier: CharacterModifierTypeDefinition;
 	selected: boolean;
+	character: ICharacter;
 	onClick: () => void;
 }): ReactElement {
-	// TODO: const preference = useAssetPreference(asset);
+	const { actions, globalState } = useWardrobeActionContext();
+
+	// Resolve if the modifier can actually be added to this character
+	const checkInitial = useMemo(() => {
+		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
+		return CharacterModifierActionCheckAdd(processingContext, character.id, modifier.typeId);
+	}, [actions, globalState, character, modifier]);
+	const check = useCheckAddPermissions(checkInitial);
 
 	return (
 		<div
 			className={ classNames(
 				'inventoryViewItem',
 				'listMode',
+				'sidePadding',
 				'small',
 				selected ? 'selected' : null,
-				'allowed',
-				// `pref-${preference}`,
+				CheckResultToClassName(check, false),
 			) }
 			tabIndex={ 0 }
 			onClick={ onClick }>
 			<span className='itemName'>{ modifier.visibleName }</span>
+			{
+				character.isPlayer() ? (
+					<ShowEffectiveAllowOthers permissionGroup='characterModifierType' permissionId={ modifier.typeId } />
+				) : null
+			}
 		</div>
 	);
 }

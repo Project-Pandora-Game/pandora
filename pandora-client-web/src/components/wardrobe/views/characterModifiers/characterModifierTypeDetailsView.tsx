@@ -105,7 +105,7 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, character, focu
 			<div className='toolbar'>
 				<span>Modifier "{ typeDefinition.visibleName }"</span>
 			</div>
-			<Column padding='large' gap='medium'>
+			<Column padding='large' gap='large'>
 				<WardrobeCharacterModifierTypeDescription type={ type } />
 				<WardrobeActionButtonElement
 					check={ check }

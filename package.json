@@ -1,6 +1,6 @@
 {
 	"private": true,
-	"packageManager": "pnpm@10.5.1+sha512.c424c076bd25c1a5b188c37bb1ca56cc1e136fbf530d98bcb3289982a08fd25527b8c9c4ec113be5e3393c39af04521dd647bcf1d0801eaf8ac6a7b14da313af",
+	"packageManager": "pnpm@10.6.0+sha512.df0136e797db0cfa7ec1084e77f3bdf81bacbae9066832fbf95cba4c2140ad05e64f316cde51ce3f99ea00a91ffc702d6aedd3c0f450f895e3e7c052fe573cd8",
 	"engines": {
 		"node": ">=22.x"
 	},
@@ -14,8 +14,7 @@
 			"@octokit/types": "13.5.0",
 			"superstatic>re2": "-"
 		},
-		"patchedDependencies": {
-		},
+		"patchedDependencies": {},
 		"onlyBuiltDependencies": [
 			"argon2"
 		],

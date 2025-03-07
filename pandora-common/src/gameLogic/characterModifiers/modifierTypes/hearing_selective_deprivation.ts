@@ -11,7 +11,7 @@ export const hearing_selective_deprivation = DefineCharacterModifier({
 This modifier impacts the character's ability to hear, but allows for partial hearing.
 
 __This modifier is applied on top of items and other modifiers.__
-Characters/words listed in the allow lists will still be impacted by other sources.
+Characters/words listed in the allow lists will still be impacted by other sources. OOC text is not affected by this modifier.
 
 This modifier works in the same way as standard hearing deprivation does, based on the "Intensity" setting.
 You can, however, exclude characters or specific words from its effect or specify a random chance for a word not to be affected at all.

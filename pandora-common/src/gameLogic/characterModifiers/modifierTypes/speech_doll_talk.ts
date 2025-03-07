@@ -5,7 +5,7 @@ export const speech_doll_talk = DefineCharacterModifier({
 	typeId: 'speech_doll_talk',
 	visibleName: 'Speech: Doll talk',
 	description: `
-This modifier forbids the character to use any words longer than the set limit and can additionally limit the number of words, too. Both limits are configurable independently. Doesn't affect OOC text, but does affect whispers.
+This modifier forbids the character to use any words longer than the set limit and can additionally limit the number of words, too. Both limits are configurable independently. Doesn't affect emotes or OOC text, but does affect whispers.
 
 _Note: Setting '0' means this part is not limited._
 	`,

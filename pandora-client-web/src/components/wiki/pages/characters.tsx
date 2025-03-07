@@ -205,6 +205,14 @@ export function WikiCharacters(): ReactElement {
 				<li>A modifier that enforces certain speaking patterns, such as animal sounds, when in public spaces and not with a special person.</li>
 				<li>A modifier that blurs the whole room canvas unless the character with it wears glasses.</li>
 			</ul>
+			<p />
+			<p>
+				<strong>Careful</strong>: Certain combinations of different speech-limiting character modifiers can (accidentally) lead to a character no longer
+				being able to say or whisper anything at all, if every possible message is blocked by a combination of the set up speech modifiers.
+				If that is something you do not want (to allow),
+				you may want to be mindful of which combinations of speech-limiting modifiers you permit other users to use in parallel.
+				Out-of-character (OOC) messages or emotes can never be affected by any character modifiers, though.
+			</p>
 
 			<h4 id='CH_Character_deletion'>Character deletion</h4>
 			<p>

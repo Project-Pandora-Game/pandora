@@ -6,19 +6,20 @@
  */
 export function CheckMessageForSounds(sounds: string[], message: string, allowPartialMatch: boolean = true): boolean {
 	for (let sound of sounds) {
-		sound = sound.toLocaleLowerCase();
+		sound = sound.toLowerCase();
 		let ok = true;
 		let i = -1;
 		let fullMatch = allowPartialMatch;
 		for (const c of message) {
 			if (/\p{L}/igu.test(c)) {
-				const nx = sound[(i + 1) % sound.length];
+				const nxi = (i + 1) % sound.length;
+				const nx = sound[nxi];
 				if (c === nx) {
-					i = (i + 1) % sound.length;
+					i = nxi;
 					if (i === sound.length - 1) {
 						fullMatch = true;
 					}
-				} else if (c !== sound[i]) {
+				} else if (i < 0 || c !== sound[i]) {
 					ok = false;
 					break;
 				}

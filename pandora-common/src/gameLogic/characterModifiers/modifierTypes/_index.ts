@@ -13,8 +13,8 @@ import { effect_hearing } from './effect_hearing';
 import { effect_speech_garble } from './effect_speech_garble';
 import { hearing_selective_deprivation } from './hearing_selective_deprivation';
 import { speech_doll_talk } from './speech_doll_talk';
-import { speech_specific_sounds_only } from './speech_specific_sounds_only';
 import { speech_require_defined_words } from './speech_require_defined_words';
+import { speech_specific_sounds_only } from './speech_specific_sounds_only';
 
 //#region Character modifier types catalogue
 
@@ -31,8 +31,8 @@ export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	effect_speech_garble,
 	hearing_selective_deprivation,
 	speech_doll_talk,
-	speech_specific_sounds_only,
 	speech_require_defined_words,
+	speech_specific_sounds_only,
 } as const satisfies Readonly<Record<string, CharacterModifierTypeDefinitionBase>>;
 
 //#endregion

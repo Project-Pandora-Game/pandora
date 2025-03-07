@@ -1,4 +1,3 @@
-import { escapeRegExp } from 'lodash';
 import { DefineCharacterModifier } from '../helpers/modifierDefinition';
 import { CheckMessageForSounds } from '../helpers/speechFunctions';
 
@@ -9,10 +8,17 @@ export const speech_require_defined_words = DefineCharacterModifier({
 	description: `
 This modifier gives the character a list of words from which at least one has to always be used in any chat message or whisper.
 
-The list of required words can be configured. Checks are not case sensitive (adding 'miss' also works for 'MISS' and 'Miss' - Note: 'Miiiiissss' would also match). Doesn't affect emotes and OOC text.'
+The list of required words can be configured.
+Checks are not case sensitive. This means that adding 'miss' also works for 'MISS' and 'Miss'. If 'Allow word variants' is enabled, then 'Miiiiissss' would also match.
+Doesn't affect emotes and OOC text.
 	`,
 	strictnessCategory: 'normal',
 	config: {
+		allowVariants: {
+			name: 'Allow word variants',
+			type: 'toggle',
+			default: false,
+		},
 		mandatoryWords: {
 			name: 'List of words where one always needs to be used',
 			type: 'stringList',
@@ -20,23 +26,27 @@ The list of required words can be configured. Checks are not case sensitive (add
 			options: {
 				maxCount: 100,
 				maxEntryLength: 24,
-				matchEntry: /^[\p{L} ]*$/iu,
+				matchEntry: /^[\p{L}]*$/iug,
 			},
 		},
 	},
 	checkChatMessage(config, message) {
-		if (message.type !== 'chat' || !config.mandatoryWords?.length)
+		if (message.type !== 'chat' || !config.mandatoryWords.length)
 			return { result: 'ok' };
 
-		const checkMsg = message.parts.map((p) => p[1].toLocaleLowerCase()).join('');
-		const sounds = config.mandatoryWords.filter((e) => /^[\p{L}]*$/iu.test(e));
-		if (checkMsg.trim() === '') {
+		const checkMsg = message.parts.map((p) => p[1].toLowerCase()).join('');
+		const words = checkMsg.split(/[^\p{L}]+/iug).filter(Boolean);
+		if (words.length === 0) {
 			return { result: 'ok' };
 		}
 
-		const result = config.mandatoryWords.some((i) =>
-			new RegExp(`([^\\p{L}]|^)${escapeRegExp(i.trim())}([^\\p{L}]|$)`, 'iu').exec(checkMsg),
-		) || checkMsg.split(/[^\p{L}]+/u).some((i) => CheckMessageForSounds(sounds, i, false));
+		let result: boolean;
+		if (config.allowVariants) {
+			result = words.some((i) => CheckMessageForSounds(config.mandatoryWords, i, false));
+		} else {
+			const mandatoryWords = config.mandatoryWords.map((w) => w.toLowerCase());
+			result = words.some((w) => mandatoryWords.includes(w));
+		}
 
 		if (!result)
 			return { result: 'block', reason: 'The message must contain at least one of the defined words.' };

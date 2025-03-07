@@ -29,7 +29,7 @@ _Example_: If the set sound is 'Meow', then this is a valid message: 'Me..ow? me
 		const sounds = config.soundWhitelist;
 
 		if (sounds && sounds.length > 0 && message.type === 'chat') {
-			const fullText = message.parts.map((p) => p[1].toLocaleLowerCase()).join('');
+			const fullText = message.parts.map((p) => p[1].toLowerCase()).join('');
 			if (!CheckMessageForSounds(sounds, fullText))
 				return { result: 'block', reason: 'The message can only contain one of the configured allowed sounds.' };
 		}

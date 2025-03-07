@@ -209,8 +209,7 @@ export function WikiCharacters(): ReactElement {
 			<p>
 				<strong>Careful</strong>: Certain combinations of different speech-limiting character modifiers can (accidentally) lead to a character no longer
 				being able to say or whisper anything at all, if every possible message is blocked by a combination of the set up speech modifiers.
-				If that is something you do not want (to allow),
-				you may want to be mindful of which combinations of speech-limiting modifiers you permit other users to use in parallel.
+				If that is something you do not want, you might want to be mindful of which combinations of speech-limiting modifiers you permit other users to use in parallel.
 				Out-of-character (OOC) messages or emotes can never be affected by any character modifiers, though.
 			</p>
 

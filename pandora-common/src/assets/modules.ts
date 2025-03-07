@@ -52,7 +52,7 @@ export type ModuleActionError =
 	| {
 		type: 'lockInteractionPrevented';
 		moduleAction: 'lock';
-		reason: 'noStoredPassword';
+		reason: 'noStoredPassword' | 'noTimerSet';
 		asset: AssetId;
 		itemName: string;
 	}
@@ -65,7 +65,7 @@ export type ModuleActionFailure =
 	| {
 		type: 'lockInteractionPrevented';
 		moduleAction: 'unlock';
-		reason: 'wrongPassword';
+		reason: 'wrongPassword' | 'timerRunning';
 		asset: AssetId;
 		itemName: string;
 	} | {

@@ -13,6 +13,11 @@ export interface LockSetup {
 		 */
 		format: 'numeric' | 'letters' | 'alphanumeric' | 'text';
 	};
+	/** Configuration to enable password on this lock */
+	timer?: {
+		/** Allowed minutes timer can be locked for */
+		maxMinutes: number;
+	};
 	/**
 	 * Affects how character can interact with locks on items they are wearing:
 	 * - `false` - Character can freely interact the the lock

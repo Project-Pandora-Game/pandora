@@ -12,6 +12,7 @@ export const LockActionSchema = z.discriminatedUnion('action', [
 	z.object({
 		action: z.literal('lock'),
 		password: z.string().optional(),
+		timer: z.number().optional(),
 	}),
 	z.object({
 		action: z.literal('unlock'),
@@ -29,7 +30,7 @@ export type LockActionLockResult = {
 	newState: LockLogic;
 } | {
 	result: 'failed';
-	reason: 'blockSelf' | 'noStoredPassword';
+	reason: 'blockSelf' | 'noStoredPassword' | 'noTimerSet';
 } | {
 	result: 'invalid';
 };
@@ -39,7 +40,7 @@ export type LockActionUnlockResult = {
 	newState: LockLogic;
 } | {
 	result: 'failed';
-	reason: 'blockSelf' | 'wrongPassword';
+	reason: 'blockSelf' | 'wrongPassword' | 'timerRunning';
 } | {
 	result: 'invalid';
 };
@@ -117,7 +118,7 @@ export class LockLogic {
 		return this.lockData.locked != null;
 	}
 
-	public lock({ player, executionContext, isSelfAction }: LockActionContext, { password }: Extract<LockAction, { action: 'lock'; }>): LockActionLockResult {
+	public lock({ player, executionContext, isSelfAction }: LockActionContext, { password, timer }: Extract<LockAction, { action: 'lock'; }>): LockActionLockResult {
 		if (this.isLocked())
 			return { result: 'invalid' };
 
@@ -126,6 +127,13 @@ export class LockLogic {
 			return {
 				result: 'failed',
 				reason: 'blockSelf',
+			};
+		}
+
+		if (this.lockSetup.timer != null && timer == null) {
+			return {
+				result: 'failed',
+				reason: 'noTimerSet',
 			};
 		}
 
@@ -174,6 +182,7 @@ export class LockLogic {
 				id: player.appearance.id,
 				name: player.appearance.character.name,
 				time: Date.now(),
+				timerMinutes: timer,
 			};
 		});
 
@@ -193,6 +202,17 @@ export class LockLogic {
 				result: 'failed',
 				reason: 'blockSelf',
 			};
+		}
+
+		if (this.lockSetup.timer != null && this.lockData.locked?.timerMinutes != null && !player.forceAllowItemActions()) {
+
+			// Disallow unlock if timer is still running, except for the player that locked it
+			if ((Date.now() - this.lockData.locked?.time) <= (this.lockData.locked?.timerMinutes * 60_000) && this.lockData.locked.id !== player.appearance.id) {
+				return {
+					result: 'failed',
+					reason: 'timerRunning',
+				};
+			}
 		}
 
 		if (this.lockSetup.password != null && !player.forceAllowItemActions() && executionContext === 'act') {

@@ -21,6 +21,7 @@ import openLock from '../../../assets/icons/lock_open.svg';
 import { useCharacterRestrictionManager } from '../../../character/character';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { Checkbox } from '../../../common/userInteraction/checkbox';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { Column, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
@@ -217,6 +218,26 @@ function WardrobeLockSlotLocked({ target, item, moduleName, lock }: Omit<Wardrob
 			</Row>
 		);
 	}, [lock, now]);
+	const timeLeft = useMemo(() => {
+		const lockedData = lock.lockLogic.lockData.locked;
+		Assert(lockedData != null);
+
+		const { time, timerMinutes } = lockedData;
+		if (timerMinutes == null)
+			return null;
+
+		return time + (timerMinutes * 60_000) - now;
+	}, [lock, now]);
+	const timerText = useMemo(() => {
+		if (timeLeft == null || timeLeft <= 0)
+			return 'Can be unlocked now';
+
+		return (
+			<>
+				Can be unlocked in { FormatTimeInterval(timeLeft) }
+			</>
+		);
+	}, [timeLeft]);
 
 	const [password, setPassword] = useState<string>('');
 	const [invalidPassword, setInvalidPassword] = useState<string | undefined>(undefined);
@@ -268,6 +289,15 @@ function WardrobeLockSlotLocked({ target, item, moduleName, lock }: Omit<Wardrob
 					</Column>
 				) : null
 			}
+			{
+				lock.lockLogic.lockSetup.timer ? (
+					<Column className='WardrobeLockTimer'>
+						<Row className='WardrobeInputRow'>
+							{ timerText }
+						</Row>
+					</Column>
+				) : null
+			}
 			<WardrobeActionButton
 				disabled={ !allowExecute && currentAttempt == null }
 				onFailure={ () => setInvalidPassword(password) }
@@ -283,6 +313,8 @@ function WardrobeLockSlotLocked({ target, item, moduleName, lock }: Omit<Wardrob
 function WardrobeLockSlotUnlocked({ target, item, moduleName, lock }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
 	const [password, setPassword] = useState<string>('');
 	const [useOldPassword, setUseOldPassword] = useState(false);
+
+	const [timer, setTimer] = useState<number>(0);
 
 	// Attempted action for locking or unlocking the lock
 	const [currentAttempt, setCurrentAttempt] = useState<WardrobeExecuteCheckedResult['currentAttempt']>(null);
@@ -309,9 +341,10 @@ function WardrobeLockSlotUnlocked({ target, item, moduleName, lock }: Omit<Wardr
 				password: currentAttempt != null ? undefined :
 					useOldPassword ? undefined :
 					(password || undefined),
+				timer: currentAttempt != null ? undefined : (timer || undefined),
 			},
 		},
-	}), [currentAttempt, item, moduleName, password, target, useOldPassword]);
+	}), [currentAttempt, item, moduleName, password, timer, target, useOldPassword]);
 
 	return (
 		<>
@@ -334,6 +367,17 @@ function WardrobeLockSlotUnlocked({ target, item, moduleName, lock }: Omit<Wardr
 							onChange={ setPassword }
 							password={ lock.lockLogic.lockSetup.password }
 							disabled={ useOldPassword && lock.hasPassword }
+							pendingAttempt={ currentAttempt != null }
+						/>
+					</Column>
+				) : null
+			}
+			{
+				lock.lockLogic.lockSetup.timer ? (
+					<Column className='WardrobeLockTimer'>
+						<TimerInput
+							onChange={ setTimer }
+							timer={ lock.lockLogic.lockSetup.timer }
 							pendingAttempt={ currentAttempt != null }
 						/>
 					</Column>
@@ -466,5 +510,60 @@ function PasswordInput({
 				) : null
 			}
 		</>
+	);
+}
+
+function TimerInput({
+	onChange,
+	timer,
+	pendingAttempt = false,
+}: {
+	onChange: (newValue: number) => void;
+	timer: Immutable<NonNullable<LockSetup['timer']>>;
+	pendingAttempt?: boolean;
+	showInvalidWarning?: boolean;
+}) {
+	const id = useId();
+
+	const [hours, setHours] = useState<number>(0);
+	const [minutes, setMinutes] = useState<number>(0);
+
+	const maxHours = useMemo(() => {
+		return timer.maxMinutes / 60;
+	}, [timer]);
+
+	const maxMinutes = useMemo(() => {
+		return timer.maxMinutes < 59 ? timer.maxMinutes : 59;
+	}, [timer]);
+
+	useEffect(() => {
+		const minutesTotal = hours * 60 + minutes;
+		onChange(minutesTotal > timer.maxMinutes ? timer.maxMinutes : minutesTotal);
+	}, [timer, onChange, hours, minutes]);
+
+	return (
+		<Row className='WardrobeInputRow'>
+			<label htmlFor={ id }>
+				Timer
+			</label>
+			<NumberInput
+				min={ 0 }
+				max={ maxHours }
+				step={ 1 }
+				value={ hours }
+				onChange={ setHours }
+				disabled={ pendingAttempt }
+			/>
+			<label>Hours</label>
+			<NumberInput
+				min={ 0 }
+				max={ maxMinutes }
+				step={ 1 }
+				value={ minutes }
+				onChange={ setMinutes }
+				disabled={ pendingAttempt }
+			/>
+			<label>Minutes</label>
+		</Row>
 	);
 }

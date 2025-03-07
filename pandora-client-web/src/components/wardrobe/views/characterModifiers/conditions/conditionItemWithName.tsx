@@ -54,7 +54,7 @@ function ConditionItemWithNameDialog({ condition, setCondition, close, character
 						maxLength={ LIMIT_ITEM_NAME_LENGTH }
 						onChange={ setItemName } />
 				</Row>
-				<i>Note: Names must match exactly and are case sensitive</i>
+				<i>Note: Names must match exactly and are case sensitive. Only custom item names are checked.</i>
 				<Row alignX='space-between'>
 					<Button
 						onClick={ () => {

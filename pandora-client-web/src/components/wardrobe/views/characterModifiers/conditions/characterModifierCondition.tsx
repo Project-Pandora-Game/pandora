@@ -4,6 +4,7 @@ import { type ReactElement } from 'react';
 import type { ICharacter } from '../../../../../character/character';
 import { ConditionCharacterPresent } from './conditionCharacterPresent';
 import { ConditionInSpaceId } from './conditionInSpaceId';
+import { ConditionItemOfAsset } from './conditionItemOfAsset';
 import { ConditionItemWithAttribute } from './conditionItemWithAttribute';
 import { ConditionItemWithEffect } from './conditionItemWithEffect';
 import { ConditionItemWithName } from './conditionItemWithName';
@@ -24,6 +25,8 @@ export function CharacterModifierConditionListEntry({ condition, ...props }: Cha
 			return <ConditionCharacterPresent { ...props } condition={ condition } />;
 		case 'inSpaceId':
 			return <ConditionInSpaceId { ...props } condition={ condition } />;
+		case 'hasItemOfAsset':
+			return <ConditionItemOfAsset { ...props } condition={ condition } />;
 		case 'hasItemWithAttribute':
 			return <ConditionItemWithAttribute { ...props } condition={ condition } />;
 		case 'hasItemWithName':

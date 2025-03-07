@@ -278,6 +278,13 @@ const CONDITION_PRESETS: { [t in CharacterModifierCondition['type']]: { name: st
 			spaceId: null,
 		},
 	},
+	hasItemOfAsset: {
+		name: 'Has item of specified type',
+		default: {
+			type: 'hasItemOfAsset',
+			assetId: '',
+		},
+	},
 	hasItemWithAttribute: {
 		name: 'Has item with attribute',
 		default: {

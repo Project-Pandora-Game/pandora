@@ -19,6 +19,11 @@ export const CharacterModifierConditionSchema = z.discriminatedUnion('type', [
 		spaceId: SpaceIdSchema.nullable(),
 	}),
 	z.object({
+		type: z.literal('hasItemOfAsset'),
+		/** Asset Id to match. Wearing room devices also match their parent asset. */
+		assetId: z.string(),
+	}),
+	z.object({
 		type: z.literal('hasItemWithAttribute'),
 		/** Attribute to look for. */
 		attribute: z.string(),
@@ -61,6 +66,22 @@ export function EvaluateCharacterModifierCondition(
 
 		case 'inSpaceId':
 			return condition.spaceId === spaceInfo.id;
+
+		case 'hasItemOfAsset': {
+			const characterState = gameState.characters.get(character.id);
+			if (characterState == null)
+				return false;
+
+			return characterState.items.some((i) => {
+				if (i.asset.id === condition.assetId)
+					return true;
+
+				if (i.isType('roomDeviceWearablePart') && i.roomDevice?.asset.id === condition.assetId)
+					return true;
+
+				return false;
+			});
+		}
 
 		case 'hasItemWithAttribute': {
 			const characterState = gameState.characters.get(character.id);

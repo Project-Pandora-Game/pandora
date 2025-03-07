@@ -183,6 +183,7 @@ export function WikiCharacters(): ReactElement {
 				<li>Conflicts between character modifiers are resolved by the order of the added modifier list (the first entry has the highest priority).</li>
 				<li>You can only change the order of a modifier in the current modifiers list when permitted to edit all the modifiers between the current and desired position.</li>
 				<li>Modifier configurations can be exported in form of a longer text code that can be stored outside of Pandora and later be imported again for reuse.</li>
+				<li>Some modifier types come with preconfigured templates showcasing how they can be used.</li>
 			</ul>
 			<p />
 			<p>

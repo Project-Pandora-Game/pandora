@@ -4,14 +4,16 @@ import {
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
 	CharacterModifierActionCheckAdd,
 	CharacterModifierTemplate,
+	CloneDeepMutable,
 	GetLogger,
 	type CharacterModifierId,
 	type CharacterModifierType,
 	type IClientShardNormalResult,
 	type PermissionGroup,
 } from 'pandora-common';
-import { ReactElement, useCallback, useMemo } from 'react';
+import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useAssetManager } from '../../../../assets/assetManager';
 import type { ICharacter } from '../../../../character/character';
 import { useAsyncEvent } from '../../../../common/useEvent';
 import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast';
@@ -24,6 +26,9 @@ import { PermissionSettingEntry } from '../../../settings/permissionsSettings';
 import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../../wardrobeActionContext';
 import { ActionWarningContent, WardrobeActionButtonElement } from '../../wardrobeComponents';
 import './characterModifierTypeDetailsView.scss';
+import classNames from 'classnames';
+import { isEqual } from 'lodash';
+import { CharacterModifierImportTemplateDialog } from './characterModifierImport';
 
 export function WardrobeCharacterModifierTypeDetailsView({ type, character, focusModifierInstance }: {
 	type: CharacterModifierType;
@@ -64,6 +69,11 @@ export function WardrobeCharacterModifierTypeDetailsView({ type, character, focu
 						</fieldset>
 					) : null
 				}
+				<WardrobeCharacterModifierTypeInbuiltTemplates
+					type={ type }
+					character={ character }
+					focusModifierInstance={ focusModifierInstance }
+				/>
 			</Column>
 		</div>
 	);
@@ -163,5 +173,59 @@ export function WardrobeCharacterModifierTypeDescription({ type }: {
 		<div className='wardrobeModifierTypeDescription'>
 			{ description }
 		</div>
+	);
+}
+
+export function WardrobeCharacterModifierTypeInbuiltTemplates({ type, character, focusModifierInstance }: {
+	type: CharacterModifierType;
+	character: ICharacter;
+	focusModifierInstance: (id: CharacterModifierId) => void;
+}): ReactElement | null {
+	const [selectedTemplate, setSelectedTemplate] = useState<CharacterModifierTemplate | null>(null);
+	const assetManager = useAssetManager();
+
+	const templates = assetManager.characterModifierTemplates[type];
+
+	if (templates == null || templates.length === 0)
+		return null;
+
+	return (
+		<>
+			<fieldset>
+				<legend>Preconfigured templates by Pandora</legend>
+				<Column>
+					{
+						templates.map((t, i) => (
+							<button
+								key={ i }
+								className={ classNames(
+									'inventoryViewItem',
+									'listMode',
+									'sidePadding',
+									'small',
+									isEqual(selectedTemplate, t) ? 'selected' : null,
+									'allowed',
+								) }
+								tabIndex={ 0 }
+								onClick={ () => setSelectedTemplate(CloneDeepMutable(t)) }
+							>
+								<span className='itemName'>{ t.name }</span>
+							</button>
+						))
+					}
+				</Column>
+			</fieldset>
+			{
+				selectedTemplate != null ? (
+					<CharacterModifierImportTemplateDialog
+						character={ character }
+						template={ selectedTemplate }
+						updateTemplate={ (newTemplate) => setSelectedTemplate(newTemplate) }
+						close={ () => setSelectedTemplate(null) }
+						focusModifierInstance={ focusModifierInstance }
+					/>
+				) : null
+			}
+		</>
 	);
 }

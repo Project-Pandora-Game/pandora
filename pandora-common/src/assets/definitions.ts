@@ -1,6 +1,7 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
 import type { AssetPreferenceType } from '../character';
+import type { CharacterModifierSpecificTemplate, CharacterModifierType } from '../gameLogic';
 import type { LockSetup } from '../gameLogic/locks/lockSetup';
 import type { RoomBackgroundData } from '../space/room';
 import type { Satisfies } from '../utility/misc';
@@ -470,6 +471,10 @@ export interface RoomBackgroundTagDefinition {
 	category: string;
 }
 
+export type CharacterModifierInbuiltTemplates = {
+	[Type in CharacterModifierType]?: (Extract<CharacterModifierSpecificTemplate, { type: Type; }>)[];
+};
+
 export interface AssetsDefinitionFile {
 	assets: Record<AssetId, AssetDefinition>;
 	bones: Record<string, BoneDefinitionCompressed>;
@@ -480,4 +485,5 @@ export interface AssetsDefinitionFile {
 	backgrounds: RoomBackgroundInfo[];
 	attributes: Record<string, AssetAttributeDefinition>;
 	randomization: AppearanceRandomizationData;
+	characterModifierTemplates: CharacterModifierInbuiltTemplates;
 }

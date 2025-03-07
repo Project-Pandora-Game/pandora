@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { Assert, KnownObject, ParseArrayNotEmpty, type Satisfies } from '../../../utility';
+import type { CharacterModifierTemplate } from '../characterModifierData';
+import type { CharacterModifierConditionChain } from '../conditions';
 import type { CharacterModifierTypeDefinitionBase } from '../helpers/modifierDefinition';
 
 import { block_lock_unlock_others } from './block_lock_unlock_others';
@@ -56,3 +58,16 @@ type __satisfies__ModiferTypeIds = Satisfies<typeof CHARACTER_MODIFIER_TYPE_DEFI
 	[k in CharacterModifierType]: CharacterModifierTypeDefinitionBase & { typeId: k; };
 }>;
 Assert(KnownObject.entries(CHARACTER_MODIFIER_TYPE_DEFINITION).every(([k, v]) => k === v.typeId));
+
+/** Configuration for specific modifier type */
+export type CharacterModifierSpecificConfig<TType extends CharacterModifierType> = z.infer<CharacterModifierTypeDefinition<TType>['configSchema']>;
+
+/** Character modifier template, built to fully match a specific modifier */
+export type CharacterModifierSpecificTemplate = Satisfies<{
+	[Type in CharacterModifierType]: {
+		type: Type;
+		name: string;
+		config: CharacterModifierSpecificConfig<Type>;
+		conditions: CharacterModifierConditionChain;
+	};
+}[CharacterModifierType], CharacterModifierTemplate>;

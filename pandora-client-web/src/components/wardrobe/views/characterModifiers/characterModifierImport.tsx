@@ -54,7 +54,7 @@ export function CharacterModifierImportDialog({ character, close, focusModifierI
 	);
 }
 
-function CharacterModifierImportTemplateDialog({ character, template, updateTemplate, close, focusModifierInstance }: {
+export function CharacterModifierImportTemplateDialog({ character, template, updateTemplate, close, focusModifierInstance }: {
 	character: ICharacter;
 	template: CharacterModifierTemplate;
 	updateTemplate: (newTemplate: CharacterModifierTemplate) => void;

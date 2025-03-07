@@ -1,17 +1,18 @@
 import type { Immutable } from 'immer';
 import { z } from 'zod';
-import type { AssetFrameworkGlobalState } from '../../../assets';
+import type { AssetDefinitionExtraArgs, AssetFrameworkGlobalState } from '../../../assets';
 import { LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT } from '../../../inputLimits';
 import type { CurrentSpaceInfo } from '../../../space';
+import type { Satisfies } from '../../../utility';
 import type { GameLogicCharacter } from '../../character/character';
-import { CharacterModifierConditionSchema, EvaluateCharacterModifierCondition } from './characterModifierCondition';
+import { CharacterModifierConditionSchema, EvaluateCharacterModifierCondition, type CharacterModifierParametrizedCondition } from './characterModifierCondition';
 
 /** A single record in condition chain. */
 export const CharacterModifierConditionRecordSchema = z.object({
 	/** The base condition of this record. */
 	condition: CharacterModifierConditionSchema,
 	/**
-	 * The wa this condition combines with _previous_ ones.
+	 * The way this condition combines with _previous_ ones.
 	 * Follows Disjunctive normal form operator precedence.
 	 * Ignored for the first condition (first condition can be assumed to be 'or').
 	 */
@@ -21,9 +22,16 @@ export const CharacterModifierConditionRecordSchema = z.object({
 });
 export type CharacterModifierConditionRecord = z.infer<typeof CharacterModifierConditionRecordSchema>;
 
+export type CharacterModifierParametrizedConditionRecord<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = Satisfies<
+	Omit<CharacterModifierConditionRecord, 'condition'> & {
+		condition: CharacterModifierParametrizedCondition<A>;
+	}, CharacterModifierConditionRecord>;
+
 export const CharacterModifierConditionChainSchema = CharacterModifierConditionRecordSchema.array()
 	.max(LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT);
 export type CharacterModifierConditionChain = z.infer<typeof CharacterModifierConditionChainSchema>;
+
+export type CharacterModifierParametrizedConditionChain<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = Satisfies<CharacterModifierParametrizedConditionRecord<A>[], CharacterModifierConditionChain>;
 
 export function EvaluateCharacterModifierConditionChain(
 	chain: Immutable<CharacterModifierConditionChain>,

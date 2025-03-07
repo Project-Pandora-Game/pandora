@@ -1,11 +1,11 @@
 import type { Immutable } from 'immer';
 import { z } from 'zod';
-import { type AssetFrameworkGlobalState } from '../../../assets';
+import { type AssetDefinitionExtraArgs, type AssetFrameworkGlobalState } from '../../../assets';
 import { EffectNameSchema } from '../../../assets/effects';
 import { CharacterIdSchema } from '../../../character/characterTypes';
 import { LIMIT_ITEM_NAME_LENGTH } from '../../../inputLimits';
 import { SpaceIdSchema, type CurrentSpaceInfo } from '../../../space';
-import { AssertNever } from '../../../utility';
+import { AssertNever, type Satisfies } from '../../../utility';
 import type { GameLogicCharacter } from '../../character/character';
 
 export const CharacterModifierConditionSchema = z.discriminatedUnion('type', [
@@ -37,6 +37,16 @@ export const CharacterModifierConditionSchema = z.discriminatedUnion('type', [
 	}),
 ]);
 export type CharacterModifierCondition = z.infer<typeof CharacterModifierConditionSchema>;
+
+/** An atomic character modifier condition, but parametrized the same way as asset definitions */
+export type CharacterModifierParametrizedCondition<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> = Satisfies<(
+	Extract<CharacterModifierCondition, { type: Exclude<CharacterModifierCondition['type'], 'hasItemWithAttribute'>; }>
+	| {
+		type: 'hasItemWithAttribute';
+		/** Attribute to look for. */
+		attribute: A['attributes'];
+	}
+), CharacterModifierCondition>;
 
 export function EvaluateCharacterModifierCondition(
 	condition: Immutable<CharacterModifierCondition>,

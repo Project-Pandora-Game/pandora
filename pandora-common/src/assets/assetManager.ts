@@ -4,7 +4,7 @@ import type { Logger } from '../logging';
 import { Assert, AssertNotNullable, CloneDeepMutable } from '../utility/misc';
 import { Asset } from './asset';
 import type { AssetId } from './base';
-import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetsDefinitionFile, AssetType, RoomBackgroundInfo, RoomBackgroundTagDefinition } from './definitions';
+import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetsDefinitionFile, AssetType, RoomBackgroundInfo, RoomBackgroundTagDefinition, type CharacterModifierInbuiltTemplates } from './definitions';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
 import { CreateItemBundleFromTemplate, Item, ItemBundle, ItemTemplate, LoadItemFromBundle, type IItemCreationContext, type ItemId } from './item';
 import type { AssetsPosePresets } from './state/characterStatePose';
@@ -23,6 +23,7 @@ export class AssetManager {
 	public readonly attributes: ReadonlyMap<string, Immutable<AssetAttributeDefinition>>;
 	public readonly bodyparts: readonly AssetBodyPart[];
 	public readonly randomization: AppearanceRandomizationData;
+	public readonly characterModifierTemplates: Immutable<CharacterModifierInbuiltTemplates>;
 
 	public getAllAssets(): Asset[] {
 		return [...this._assets.values()];
@@ -84,6 +85,7 @@ export class AssetManager {
 				body: [],
 				clothes: [],
 			},
+			characterModifierTemplates: {},
 			...data,
 		};
 
@@ -94,6 +96,7 @@ export class AssetManager {
 		this._posePresets = fullData.posePresets;
 		this._backgrounds = fullData.backgrounds;
 		this.randomization = fullData.randomization;
+		this.characterModifierTemplates = fullData.characterModifierTemplates;
 
 		//#region Load Background Tags
 		const tags = new Map<string, Readonly<RoomBackgroundTagDefinition>>();

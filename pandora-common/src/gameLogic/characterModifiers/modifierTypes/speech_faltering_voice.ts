@@ -6,12 +6,13 @@ export const speech_faltering_voice = DefineCharacterModifier({
 	typeId: 'speech_faltering_voice',
 	visibleName: 'Speech: Faltering voice',
 	description: `
-This modifier converts the character's messages, only able to speak in a stuttering voice and with random filler sounds, for some [RP] reason (anxiousness, arousal, fear, etc.). Converts the typed chat text automatically. Affects chat messages and whispers, but not OOC.
+This modifier adds a stuttering voice effect to spoken messages, optionally with random filler sounds.
+Spoken messages are affected automatically. Affects chat messages and whispers, but not OOC or emotes.
 	`,
 	strictnessCategory: 'normal',
 	config: {
 		addFillerSounds: {
-			name: 'Additionally add randomized filler sounds throughout the message by chance',
+			name: 'Randomly add filler sounds throughout the message',
 			type: 'toggle',
 			default: true,
 		},

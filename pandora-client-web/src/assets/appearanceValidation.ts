@@ -48,6 +48,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 						return `The ${describeItem(e.asset, e.itemName)} cannot be ${actionDescription[e.moduleAction]} because it has no stored password.`;
 					case 'noTimerSet':
 						return `The ${describeItem(e.asset, e.itemName)} cannot be ${actionDescription[e.moduleAction]} because it has no timer set.`;
+					case 'invalidTimer':
+						return `The ${describeItem(e.asset, e.itemName)} cannot be ${actionDescription[e.moduleAction]} because the timer is invalid.`;
 				}
 
 				AssertNever(e);

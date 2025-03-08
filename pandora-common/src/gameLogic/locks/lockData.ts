@@ -10,7 +10,7 @@ export const LockDataBundleSchema = z.object({
 		/** Time the item was locked */
 		time: z.number(),
 		/** How long the item was locked for, if applicable */
-		timerMinutes: z.number().optional(),
+		lockedUntil: z.number().int().nonnegative().optional(),
 	}).optional(),
 	hidden: z.discriminatedUnion('side', [
 		z.object({

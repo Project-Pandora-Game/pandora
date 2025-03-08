@@ -52,7 +52,7 @@ export type ModuleActionError =
 	| {
 		type: 'lockInteractionPrevented';
 		moduleAction: 'lock';
-		reason: 'noStoredPassword' | 'noTimerSet';
+		reason: 'noStoredPassword' | 'noTimerSet' | 'invalidTimer';
 		asset: AssetId;
 		itemName: string;
 	}

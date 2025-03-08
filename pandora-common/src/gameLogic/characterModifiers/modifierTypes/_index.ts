@@ -17,6 +17,7 @@ import { hearing_selective_deprivation } from './hearing_selective_deprivation';
 import { speech_doll_talk } from './speech_doll_talk';
 import { speech_require_defined_words } from './speech_require_defined_words';
 import { speech_specific_sounds_only } from './speech_specific_sounds_only';
+import { speech_faltering_voice } from './speech_faltering_voice';
 
 //#region Character modifier types catalogue
 
@@ -35,6 +36,7 @@ export const CHARACTER_MODIFIER_TYPE_DEFINITION = {
 	speech_doll_talk,
 	speech_require_defined_words,
 	speech_specific_sounds_only,
+	speech_faltering_voice,
 } as const satisfies Readonly<Record<string, CharacterModifierTypeDefinitionBase>>;
 
 //#endregion

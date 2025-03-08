@@ -30,3 +30,37 @@ export function CheckMessageForSounds(sounds: string[], message: string, allowPa
 	}
 	return false;
 }
+
+/**
+ * Alters a message so that it sounds like a faltering voice, including random filler sounds.
+ * @param message - The message that will be randomly changed
+ * @param addFillerSounds - Optional setting that also adds filler sounds throughout the message at random
+ * @returns The message after stuttering and random sounds have been added
+ */
+export function FalteringSpeech(message: string, addFillerSounds: boolean = true): string {
+	const soundList: string[] = ['uuh... ', 'uhh... ', '...ah... ', 'uhm... ', 'mnn... ', '..nn... '];
+	let firstWord: boolean = true;
+	let alreadyStutteredWord: boolean = false;
+	let seed: number = message.length;
+	for (let messageIndex = 0; messageIndex < message.length; messageIndex++) {
+
+		const character = message.charAt(messageIndex).toLowerCase();
+		// from here on out, an out of context part of the message starts that will stay unchanged
+		if (!alreadyStutteredWord && /\p{L}/igu.test(character)) {
+			const stutterFactor: number = Math.floor(Math.sin(seed++) * 100000) % 10;
+			if ((!alreadyStutteredWord && stutterFactor >= 6) || firstWord) {
+				message = message.substring(0, messageIndex + 1) + '-' + message.substring(messageIndex, message.length);
+				seed++;
+				// One third chance to add a sound before a stuttered word
+				if (addFillerSounds && Math.random() < 0.33 && !firstWord) {
+					message = message.substring(0, messageIndex) + soundList[Math.floor(Math.random() * soundList.length)] + message.substring(messageIndex, message.length);
+				}
+				messageIndex += 2;
+				if (firstWord) firstWord = false;
+			}
+			alreadyStutteredWord = true;
+		}
+		if (character === ' ') alreadyStutteredWord = false;
+	}
+	return message;
+}

@@ -231,16 +231,17 @@ function WardrobeLockSlotLocked({ target, item, moduleName, lock }: Omit<Wardrob
 
 		return lockedUntil - now;
 	}, [lock, now]);
+	const timerExpired = useMemo(() => (timeLeft == null || timeLeft <= 0), [timeLeft]);
 	const timerText = useMemo(() => {
-		if (timeLeft == null || timeLeft <= 0)
+		if (timerExpired)
 			return <>Remaining time: <i>Timer expired</i></>;
 
 		return (
 			<>
-				Remaining time: { FormatTimeInterval(timeLeft) }
+				Remaining time: { FormatTimeInterval(timeLeft ?? 0) }
 			</>
 		);
-	}, [timeLeft]);
+	}, [timeLeft, timerExpired]);
 
 	const [password, setPassword] = useState<string>('');
 	const [invalidPassword, setInvalidPassword] = useState<string | undefined>(undefined);
@@ -267,7 +268,9 @@ function WardrobeLockSlotLocked({ target, item, moduleName, lock }: Omit<Wardrob
 				clearLastPassword,
 			},
 		},
-	}), [clearLastPassword, currentAttempt, item, moduleName, password, target]);
+		// Add timerExpired to dependencies to force recalculation once timer runs out
+		// eslint-disable-next-line
+	}), [clearLastPassword, currentAttempt, item, moduleName, password, target, timerExpired]);
 
 	return (
 		<>

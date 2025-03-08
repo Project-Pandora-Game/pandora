@@ -1,11 +1,13 @@
 import { freeze } from 'immer';
 import { z } from 'zod';
-import { CharacterId, CharacterIdSchema } from '../../character';
+import { CharacterId, CharacterIdSchema } from '../../character/characterTypes';
 import { Logger } from '../../logging';
 import { Assert, AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility/misc';
-import { ActionTargetSelector } from '../appearanceTypes';
+import { EvalContainerPath } from '../appearanceHelpers';
+import { ActionTargetSelector, type ItemContainerPath, type ItemPath } from '../appearanceTypes';
 import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
 import { AssetManager } from '../assetManager';
+import type { Item } from '../item/base';
 import { IExportOptions } from '../modules/common';
 import { AssetFrameworkCharacterState } from './characterState';
 import { AppearanceBundleSchema, AppearanceClientBundle } from './characterStateTypes';
@@ -70,18 +72,40 @@ export class AssetFrameworkGlobalState {
 		};
 	}
 
-	public getItems(target: ActionTargetSelector): AppearanceItems | null {
+	/**
+	 * Get items in specified target and its container.
+	 * @param target - The target to look for
+	 * @param containerPath - The container to look for
+	 * @returns List of items if found, or `null` otherwise
+	 */
+	public getItems(target: ActionTargetSelector, containerPath?: ItemContainerPath): AppearanceItems | null {
+		let result: AppearanceItems;
 		if (target.type === 'character') {
 			const character = this.getCharacterState(target.characterId);
 			if (!character)
 				return null;
 
-			return character.items;
+			result = character.items;
 		} else if (target.type === 'roomInventory') {
-			const room = this.room;
-			return room == null ? null : room.items;
+			result = this.room.items;
+		} else {
+			AssertNever(target);
 		}
-		AssertNever(target);
+		if (containerPath != null) {
+			return EvalContainerPath(result, containerPath) ?? null;
+		}
+		return result;
+	}
+
+	/**
+	 * Get specific item.
+	 * @param target - The target to look for the item on
+	 * @param itemPath - Path to the item
+	 * @returns The item, or `null` if not found
+	 */
+	public getItem(target: ActionTargetSelector, itemPath: ItemPath): Item | null {
+		return this.getItems(target, itemPath.container)
+			?.find((it) => it.id === itemPath.itemId) ?? null;
 	}
 
 	public exportToBundle(): AssetFrameworkGlobalStateBundle {

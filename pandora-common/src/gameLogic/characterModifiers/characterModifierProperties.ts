@@ -1,11 +1,12 @@
 import type { Immutable } from 'immer';
-import type { AssetFrameworkGlobalState } from '../../assets';
 import type { EffectsDefinition } from '../../assets/effects';
 import type { CharacterRestrictionsManager } from '../../character';
 import type { BlockableChatMessage, ChatMessageBlockingResult, ChatMessageFilterMetadata } from '../../chat';
 import type { IChatSegment } from '../../chat/chat';
-import type { AppearanceAction } from '../actionLogic';
+import type { AppearanceAction, AppearanceActionProcessingResultValid } from '../actionLogic';
 import type { CharacterModifierEffectData } from './characterModifierData';
+
+export type CharacterModifierActionCheckResult = ('allow' | 'block' | { result: 'slow'; milliseconds: number; });
 
 /**
  * Properties (effects) that can be applied by modifiers.
@@ -32,17 +33,15 @@ export interface CharacterModifierProperties<TConfig> {
 	 * @param config - Config of this modifier
 	 * @param action - The action the character is attempting to do
 	 * @param player - Restriction manager of player before the action
-	 * @param originalState - State of the space before the action
-	 * @param resultState - State of the space after the action
+	 * @param result - Result of the original action. Not changed as multiple modifers run.
 	 * @returns Whether to `allow` or `block` this action.
 	 */
 	checkCharacterAction?(
 		config: TConfig,
 		action: Immutable<AppearanceAction>,
 		player: CharacterRestrictionsManager,
-		originalState: AssetFrameworkGlobalState,
-		resultState: AssetFrameworkGlobalState
-	): ('allow' | 'block');
+		result: AppearanceActionProcessingResultValid,
+	): CharacterModifierActionCheckResult;
 
 	/**
 	 * Run additional checks on chat message the character tries to say.

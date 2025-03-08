@@ -1,3 +1,4 @@
+import type { Immutable } from 'immer';
 import { isEqual, uniqWith } from 'lodash';
 import type { AppearanceAction, GameLogicCharacter, GameLogicPermission, InteractionId } from '..';
 import { SplitContainerPath } from '../../assets/appearanceHelpers';
@@ -22,7 +23,6 @@ import { Assert, AssertNever, AssertNotNullable } from '../../utility/misc';
 import type { AppearanceActionData, AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
 import type { AppearanceActionContext } from './appearanceActions';
 import { GAME_LOGIC_ACTION_SLOWDOWN_TIMES, type GameLogicActionSlowdownReason } from './appearanceActionSlowdown';
-import type { Immutable } from 'immer';
 
 export class AppearanceActionProcessingContext {
 	private readonly _context: AppearanceActionContext;
@@ -295,28 +295,33 @@ export class AppearanceActionProcessingContext {
 }
 
 abstract class AppearanceActionProcessingResultBase {
-	private readonly _finalProcessingContext: AppearanceActionProcessingContext;
+	protected readonly _finalProcessingContext: AppearanceActionProcessingContext;
 
 	public readonly originalState: AssetFrameworkGlobalState;
 
 	/** Slowdown that should be applied to this action */
 	public readonly actionSlowdownReasons: ReadonlySet<GameLogicActionSlowdownReason>;
+	public readonly actionExtraSlowdown: number;
 
 	public readonly performedActions: readonly Immutable<AppearanceAction>[];
 
 	public readonly requiredPermissions: ReadonlySet<GameLogicPermission>;
 
-	constructor(processingContext: AppearanceActionProcessingContext) {
+	protected constructor(processingContext: AppearanceActionProcessingContext, actionExtraSlowdown: number) {
 		this._finalProcessingContext = processingContext;
 		this.originalState = processingContext.originalState;
-		this.actionSlowdownReasons = processingContext.actionSlowdownReasons;
+		if (actionExtraSlowdown > 0) {
+			this.actionSlowdownReasons = new Set<GameLogicActionSlowdownReason>([...processingContext.actionSlowdownReasons, 'modifierSlowdown']);
+		} else {
+			this.actionSlowdownReasons = processingContext.actionSlowdownReasons;
+		}
+		this.actionExtraSlowdown = actionExtraSlowdown;
 		this.performedActions = processingContext.performedActions;
 		this.requiredPermissions = processingContext.requiredPermissions;
 	}
 
-	public addAdditionalProblems(...additionalProblems: readonly AppearanceActionProblem[]): AppearanceActionProcessingResultInvalid {
-		return new AppearanceActionProcessingResultInvalid(this._finalProcessingContext, additionalProblems);
-	}
+	public abstract addAdditionalProblems(...additionalProblems: readonly AppearanceActionProblem[]): AppearanceActionProcessingResultInvalid;
+	public abstract addAdditionalSlowdown(slowdownMilliseconds: number): AppearanceActionProcessingResult;
 
 	/** Calculates the action slowdown time (in milliseconds) */
 	public getActionSlowdownTime(): number {
@@ -324,6 +329,7 @@ abstract class AppearanceActionProcessingResultBase {
 		for (const reason of this.actionSlowdownReasons) {
 			total += GAME_LOGIC_ACTION_SLOWDOWN_TIMES[reason];
 		}
+		total += this.actionExtraSlowdown;
 		return total;
 	}
 }
@@ -336,8 +342,11 @@ export class AppearanceActionProcessingResultInvalid extends AppearanceActionPro
 
 	public readonly problems: readonly AppearanceActionProblem[];
 
-	constructor(processingContext: AppearanceActionProcessingContext, additionalProblems: readonly AppearanceActionProblem[] = []) {
-		super(processingContext);
+	protected readonly _additionalProblems: readonly AppearanceActionProblem[];
+
+	constructor(processingContext: AppearanceActionProcessingContext, actionExtraSlowdown: number = 0, additionalProblems: readonly AppearanceActionProblem[] = []) {
+		super(processingContext, actionExtraSlowdown);
+		this._additionalProblems = additionalProblems;
 		this.problems = uniqWith([...processingContext.actionProblems, ...additionalProblems], isEqual);
 		Assert(this.problems.length > 0);
 
@@ -357,6 +366,22 @@ export class AppearanceActionProcessingResultInvalid extends AppearanceActionPro
 		this.prompt = prompt;
 		this.pendingMessages = prompt != null ? processingContext.pendingMessages : [];
 	}
+
+	public override addAdditionalProblems(...additionalProblems: readonly AppearanceActionProblem[]): AppearanceActionProcessingResultInvalid {
+		return new AppearanceActionProcessingResultInvalid(
+			this._finalProcessingContext,
+			this.actionExtraSlowdown,
+			[...this._additionalProblems, ...additionalProblems],
+		);
+	}
+
+	public override addAdditionalSlowdown(slowdownMilliseconds: number): AppearanceActionProcessingResultInvalid {
+		return new AppearanceActionProcessingResultInvalid(
+			this._finalProcessingContext,
+			this.actionExtraSlowdown + slowdownMilliseconds,
+			this._additionalProblems,
+		);
+	}
 }
 
 export class AppearanceActionProcessingResultValid extends AppearanceActionProcessingResultBase {
@@ -366,13 +391,29 @@ export class AppearanceActionProcessingResultValid extends AppearanceActionProce
 	public readonly pendingMessages: readonly ActionHandlerMessage[];
 	public readonly actionData: readonly AppearanceActionData[];
 
-	constructor(processingContext: AppearanceActionProcessingContext, resultState: AssetFrameworkGlobalState) {
-		super(processingContext);
+	constructor(processingContext: AppearanceActionProcessingContext, resultState: AssetFrameworkGlobalState, actionExtraSlowdown: number = 0) {
+		super(processingContext, actionExtraSlowdown);
 		this.resultState = resultState;
 		this.pendingMessages = processingContext.pendingMessages;
 		this.actionData = processingContext.actionData;
 		Assert(processingContext.actionProblems.length === 0);
 		Assert(this.resultState.isValid());
+	}
+
+	public override addAdditionalProblems(...additionalProblems: readonly AppearanceActionProblem[]): AppearanceActionProcessingResultInvalid {
+		return new AppearanceActionProcessingResultInvalid(
+			this._finalProcessingContext,
+			this.actionExtraSlowdown,
+			additionalProblems,
+		);
+	}
+
+	public override addAdditionalSlowdown(slowdownMilliseconds: number): AppearanceActionProcessingResultValid {
+		return new AppearanceActionProcessingResultValid(
+			this._finalProcessingContext,
+			this.resultState,
+			this.actionExtraSlowdown + slowdownMilliseconds,
+		);
 	}
 }
 

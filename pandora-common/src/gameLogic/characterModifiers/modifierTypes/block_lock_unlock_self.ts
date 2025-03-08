@@ -10,7 +10,7 @@ This modifier prevents the character from unlocking any lock on themselves. (Oth
 	strictnessCategory: 'normal',
 	config: {},
 
-	checkCharacterAction(_config, action, player, _originalState, _resultState) {
+	checkCharacterAction(_config, action, player, _result) {
 		if (
 			action.type === 'moduleAction' &&
 			action.action.moduleType === 'lockSlot' &&

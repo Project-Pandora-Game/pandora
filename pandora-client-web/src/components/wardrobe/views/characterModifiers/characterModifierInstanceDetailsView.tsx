@@ -140,7 +140,6 @@ function CheckedInstanceDetails({ character, instance, allModifiers, unfocus }: 
 		<div className='inventoryView wardrobeModifierInstanceDetails'>
 			<Row className='toolbar'>
 				<ModifierInstanceEnableButton
-					character={ character }
 					enabled={ instance.enabled }
 					onChange={ allowModify ? ((newValue) => updateConfig({
 						enabled: newValue,
@@ -277,21 +276,10 @@ function CheckedInstanceDetails({ character, instance, allModifiers, unfocus }: 
 	);
 }
 
-function ModifierInstanceEnableButton({ character, enabled, onChange }: {
-	character: ICharacter;
+function ModifierInstanceEnableButton({ enabled, onChange }: {
 	enabled: boolean;
 	onChange?: (enabled: boolean) => Promisable<void>;
 }): ReactElement {
-	const { actions, globalState } = useWardrobeActionContext();
-
-	const checkInitial = useMemo(() => {
-		const processingContext = new AppearanceActionProcessingContext(actions, globalState);
-		return processingContext.finalize();
-	}, [actions, globalState]);
-	const check = useCheckAddPermissions(checkInitial);
-
-	const [requestPermissions, processingPermissionRequest] = useWardrobePermissionRequestCallback();
-
 	const [execute, processing] = useAsyncEvent(async (newValue: boolean) => {
 		await onChange?.(newValue);
 	}, null, {
@@ -301,26 +289,12 @@ function ModifierInstanceEnableButton({ character, enabled, onChange }: {
 		},
 	});
 
-	const onValueChange = useCallback((newValue: boolean) => {
-		const permissions = check.valid ? [] : check.problems
-			.filter((p) => p.result === 'restrictionError')
-			.map((p) => p.restriction)
-			.filter((r) => r.type === 'missingPermission')
-			.map((r): [PermissionGroup, string] => ([r.permissionGroup, r.permissionId]));
-
-		if (permissions.length > 0) {
-			requestPermissions(character.id, permissions);
-		} else {
-			execute(newValue);
-		}
-	}, [check, execute, requestPermissions, character]);
-
 	return (
 		<DivContainer align='center' justify='center' padding='small' className='activationSwitch'>
 			<Switch
 				checked={ enabled }
-				onChange={ onValueChange }
-				disabled={ onChange == null || processing || processingPermissionRequest }
+				onChange={ execute }
+				disabled={ onChange == null || processing }
 				label='Enable this modifier'
 			/>
 		</DivContainer>

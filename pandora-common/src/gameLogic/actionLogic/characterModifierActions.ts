@@ -46,6 +46,19 @@ export function CharacterModifierActionCheckAdd(
 		checkTarget.character.characterModifiers.getModifierTypePermission(modifierType),
 	);
 
+	// block_adding_new_modifiers modifier handling
+	if (checkTarget.appearance.id === player.appearance.id) {
+		for (const modifierEffect of player.getModifierEffects()) {
+			if (modifierEffect.type === 'block_adding_new_modifiers') {
+				ctx.addRestriction({
+					type: 'blockedByCharacterModifier',
+					modifierId: modifierEffect.id,
+					modifierType: modifierEffect.type,
+				});
+			}
+		}
+	}
+
 	return ctx.finalize();
 }
 

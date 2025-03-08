@@ -119,10 +119,10 @@ export function ApplyAction(
 	// If the action by itself is valid, then check it against character modifiers of the source character
 	// (unless this is a "protected" action)
 	if (!IsProtectedAppearanceAction(action.type) && result.valid) {
-		const resultState = result.resultState;
+		const originalResult = result;
 		for (const modifier of modifierEffects) {
 			if (modifier.checkCharacterAction != null) {
-				const checkResult = modifier.checkCharacterAction(action, playerRestrictionManager, result.originalState, resultState);
+				const checkResult = modifier.checkCharacterAction(action, playerRestrictionManager, originalResult);
 				if (checkResult === 'allow') {
 					// Noop
 				} else if (checkResult === 'block') {
@@ -134,8 +134,10 @@ export function ApplyAction(
 							modifierType: modifier.effect.type,
 						},
 					});
+				} else if (checkResult.result === 'slow') {
+					result = result.addAdditionalSlowdown(checkResult.milliseconds);
 				} else {
-					AssertNever(checkResult);
+					AssertNever(checkResult.result);
 				}
 			}
 		}

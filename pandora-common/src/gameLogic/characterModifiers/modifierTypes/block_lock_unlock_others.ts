@@ -16,7 +16,7 @@ This modifier prevents the character from unlocking any lock on other characters
 		},
 	},
 
-	checkCharacterAction(config, action, player, _originalState, _resultState) {
+	checkCharacterAction(config, action, player, _result) {
 		if (
 			action.type === 'moduleAction' &&
 			action.action.moduleType === 'lockSlot' &&

@@ -216,6 +216,8 @@ export function RenderAppearanceActionSlowdown(reason: GameLogicActionSlowdownRe
 	switch (reason) {
 		case 'blockedHands':
 			return 'You need to be able to use hands to do this freely, but yours are bound.';
+		case 'modifierSlowdown':
+			return 'Character modifiers are affecting this action.';
 	}
 
 	AssertNever(reason);

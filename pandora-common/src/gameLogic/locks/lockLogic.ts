@@ -221,7 +221,7 @@ export class LockLogic {
 		if (this.lockSetup.timer != null && this.lockData.locked?.lockedUntil != null && !player.forceAllowItemActions()) {
 
 			// Disallow unlock if timer is still running, except for the player that locked it
-			if (Date.now() < this.lockData.locked.lockedUntil && this.lockData.locked.id !== player.appearance.id) {
+			if ((Date.now() < this.lockData.locked.lockedUntil) && this.lockData.locked.id !== player.appearance.id) {
 				return {
 					result: 'failed',
 					reason: 'timerRunning',

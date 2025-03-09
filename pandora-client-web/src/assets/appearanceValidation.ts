@@ -8,7 +8,7 @@ import {
 	type LockActionProblem,
 } from 'pandora-common';
 import { ResolveItemDisplayNameType } from '../components/wardrobe/itemDetail/wardrobeItemName';
-import { DescribeAsset, DescribeAttribute } from '../ui/components/chat/chatMessages';
+import { DescribeAttribute } from '../ui/components/chat/chatMessages';
 import { AssetManagerClient } from './assetManager';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */
@@ -38,6 +38,8 @@ function RenderLockLogicActionProblem(lockDescription: string, action: 'lock' | 
 			return `The ${lockDescription} cannot ${actionDescription[action]} on yourself.`;
 		case 'noStoredPassword':
 			return `The ${lockDescription} cannot ${actionDescription[action]} because it has no stored password.`;
+		case 'invalidPassword':
+			return `The ${lockDescription} cannot ${actionDescription[action]} because the password is invalid.`;
 		case 'noTimerSet':
 			return `The ${lockDescription} cannot ${actionDescription[action]} because it has no timer set.`;
 		case 'invalidTimer':
@@ -54,7 +56,11 @@ function RenderLockLogicActionProblem(lockDescription: string, action: 'lock' | 
 }
 
 export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, result: AppearanceActionProblem, itemDisplayNameType: ItemDisplayNameType): string {
-	const describeItem = (asset: AssetId, itemName: string | null) => ResolveItemDisplayNameType(DescribeAsset(assetManager, asset), itemName, itemDisplayNameType);
+	const describeItem = (asset: AssetId, itemName: string | null) => ResolveItemDisplayNameType(
+		assetManager.getAssetById(asset)?.definition.name.toLocaleLowerCase() ?? `[UNKNOWN ASSET '${asset}']`,
+		itemName,
+		itemDisplayNameType,
+	);
 
 	if (result.result === 'invalidAction') {
 		if (result.reason != null) {

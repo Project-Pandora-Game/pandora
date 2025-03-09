@@ -26,7 +26,7 @@ export const LockActionSchema = z.discriminatedUnion('action', [
 ]);
 export type LockAction = z.infer<typeof LockActionSchema>;
 
-export type LockActionLockProblem = 'blockSelf' | 'noStoredPassword' | 'noTimerSet' | 'invalidTimer';
+export type LockActionLockProblem = 'blockSelf' | 'noStoredPassword' | 'invalidPassword' | 'noTimerSet' | 'invalidTimer';
 export type LockActionUnlockProblem = 'blockSelf' | 'wrongPassword' | 'timerRunning';
 export type LockActionShowPasswordProblem = 'notAllowed';
 
@@ -141,59 +141,75 @@ export class LockLogic {
 		let lockedUntil: number | undefined;
 		if (this.lockSetup.timer != null) {
 			if (timer == null) {
-				return {
-					result: 'failed',
-					reason: 'noTimerSet',
-				};
+				if (executionContext !== 'clientOnlyVerify') {
+					return {
+						result: 'failed',
+						reason: 'noTimerSet',
+					};
+				}
+				// If we are checking only validity, supply default value
+				timer = 0;
 			}
-
 			if (timer < 0 || timer > this.lockSetup.timer.maxDuration) {
 				return {
 					result: 'failed',
 					reason: 'invalidTimer',
 				};
 			}
-
 			lockedUntil = lockTime + timer;
 		}
 
 		let hidden: LockDataBundle['hidden'] | undefined;
-		if (this.lockSetup.password != null && password == null) {
-			switch (this.lockData?.hidden?.side) {
-				case 'client':
-					if (!this.lockData.hidden.hasPassword && executionContext !== 'clientOnlyVerify') {
-						return {
-							result: 'failed',
-							reason: 'noStoredPassword',
-						};
-					}
+		if (this.lockSetup.password != null) {
+			if (password == null) {
+				if (executionContext === 'clientOnlyVerify') {
+					// Don't store password in verify-only context
 					hidden = { side: 'client', hasPassword: true };
-					break;
-				case 'server':
-					if (this.lockData.hidden.password == null || this.lockData.hidden.passwordSetBy == null) {
-						return {
-							result: 'failed',
-							reason: 'noStoredPassword',
-						};
+				} else {
+					// Nullish password means re-use existing (or fail trying)
+					switch (this.lockData?.hidden?.side) {
+						case 'client':
+							if (!this.lockData.hidden.hasPassword) {
+								return {
+									result: 'failed',
+									reason: 'noStoredPassword',
+								};
+							}
+							hidden = { side: 'client', hasPassword: true };
+							break;
+						case 'server':
+							if (this.lockData.hidden.password == null || this.lockData.hidden.passwordSetBy == null) {
+								return {
+									result: 'failed',
+									reason: 'noStoredPassword',
+								};
+							}
+							hidden = {
+								side: 'server',
+								password: this.lockData.hidden.password,
+								passwordSetBy: this.lockData.hidden.passwordSetBy,
+							};
+							break;
+						default:
+							return {
+								result: 'failed',
+								reason: 'noStoredPassword',
+							};
 					}
-					hidden = {
-						side: 'server',
-						password: this.lockData.hidden.password,
-						passwordSetBy: this.lockData.hidden.passwordSetBy,
-					};
-					break;
-				default:
+				}
+			} else {
+				if (!LockLogic.validatePassword(this.lockSetup, password)) {
 					return {
 						result: 'failed',
-						reason: 'noStoredPassword',
+						reason: 'invalidPassword',
 					};
+				}
+				hidden = {
+					side: 'server',
+					password,
+					passwordSetBy: player.appearance.id,
+				};
 			}
-		} else if (password != null) {
-			hidden = {
-				side: 'server',
-				password,
-				passwordSetBy: player.appearance.id,
-			};
 		}
 
 		const lockData: Immutable<LockDataBundle> = produce(this.lockData, (data) => {

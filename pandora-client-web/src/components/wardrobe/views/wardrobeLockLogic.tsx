@@ -410,7 +410,7 @@ function TimerInput({
 					min={ 0 }
 					max={ maximums.hours }
 					step={ 1 }
-					value={ inputValues.hours }
+					value={ pendingAttempt ? NaN : inputValues.hours }
 					onChange={ setHours }
 					disabled={ pendingAttempt }
 				/>
@@ -421,7 +421,7 @@ function TimerInput({
 					min={ 0 }
 					max={ maximums.minutes }
 					step={ 1 }
-					value={ inputValues.minutes }
+					value={ pendingAttempt ? NaN : inputValues.minutes }
 					onChange={ setMinutes }
 					disabled={ pendingAttempt }
 				/>
@@ -432,7 +432,7 @@ function TimerInput({
 					min={ 0 }
 					max={ maximums.seconds }
 					step={ 1 }
-					value={ inputValues.seconds }
+					value={ pendingAttempt ? NaN : inputValues.seconds }
 					onChange={ setSeconds }
 					disabled={ pendingAttempt }
 				/>

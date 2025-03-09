@@ -1,4 +1,4 @@
-import { pick } from 'lodash';
+import { pick } from 'lodash-es';
 import { Assert, CheckPropertiesNotNullable, KnownObject } from '../utility/misc.ts';
 import type { ServiceConfigBase, ServiceConfigFixupDependencies, ServiceInitArgs, ServiceManagementInterface, ServiceProviderDefinition } from './service.ts';
 import type { BaseServicesDefinition } from './serviceDefinitions.ts';

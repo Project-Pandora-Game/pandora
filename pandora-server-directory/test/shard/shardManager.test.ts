@@ -1,6 +1,7 @@
-import { ShardManager } from '../../src/shard/shardManager';
-import { Shard } from '../../src/shard/shard';
-import { TestMockDb } from '../utils';
+import { beforeAll, describe, expect, it, jest } from '@jest/globals';
+import { Shard } from '../../src/shard/shard.ts';
+import { ShardManager } from '../../src/shard/shardManager.ts';
+import { TestMockDb } from '../utils.ts';
 
 const TEST_SHARD_ID = 'shardTestId';
 

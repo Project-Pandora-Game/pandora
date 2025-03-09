@@ -1,14 +1,14 @@
 import { diffString } from 'json-diff';
-import { isEqual, pick } from 'lodash';
+import { isEqual, pick } from 'lodash-es';
 import { AccountId, Assert, AssertNotNullable, AsyncSynchronized, GetLogger, SPACE_DIRECTORY_PROPERTIES, ServerService, SpaceDirectoryConfig, SpaceDirectoryData, SpaceDirectoryDataSchema, SpaceId } from 'pandora-common';
 import promClient from 'prom-client';
-import { Account } from '../account/account';
-import { accountManager } from '../account/accountManager';
-import { ACTOR_PANDORA } from '../account/actorPandora';
-import { CharacterInfo } from '../account/character';
-import { GetDatabase } from '../database/databaseProvider';
-import { ConnectionManagerClient } from '../networking/manager_client';
-import { Space } from './space';
+import { Account } from '../account/account.ts';
+import { accountManager } from '../account/accountManager.ts';
+import { ACTOR_PANDORA } from '../account/actorPandora.ts';
+import { CharacterInfo } from '../account/character.ts';
+import { GetDatabase } from '../database/databaseProvider.ts';
+import { ConnectionManagerClient } from '../networking/manager_client.ts';
+import { Space } from './space.ts';
 
 /** Time (in ms) after which manager prunes spaces without any activity (search or characters inside) */
 export const SPACE_INACTIVITY_THRESHOLD = 60_000;

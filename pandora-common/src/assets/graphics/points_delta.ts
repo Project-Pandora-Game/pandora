@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { z } from 'zod';
 import { CloneDeepMutable } from '../../utility/misc.ts';
 import { CoordinatesCompressedSchema } from './common.ts';

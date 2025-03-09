@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import _ from 'lodash';
+import { clamp } from 'lodash-es';
 import type { CharacterAppearance } from '../assets/appearance.ts';
 import { SplitContainerPath } from '../assets/appearanceHelpers.ts';
 import type { ActionTarget, ActionTargetCharacter, ItemContainerPath, ItemPath } from '../assets/appearanceTypes.ts';
@@ -9,14 +9,14 @@ import { EffectsDefinition, MergeEffects } from '../assets/effects.ts';
 import { FilterItemType, type Item, type ItemId, type RoomDeviceLink } from '../assets/item/index.ts';
 import { AssetPropertiesResult } from '../assets/properties.ts';
 import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes.ts';
-import type { ChatMessageBlockingResult, IClientMessage } from '../chat/index.ts';
 import { CompoundChatMessageFilter, CustomChatMessageFilter, type ChatMessageFilter } from '../chat/chatMessageFilter.ts';
 import { HearingImpairment } from '../chat/hearingImpairment.ts';
+import type { ChatMessageBlockingResult, IClientMessage } from '../chat/index.ts';
 import { Muffler } from '../chat/muffling.ts';
-import type { CharacterModifierEffectData, CharacterModifierPropertiesApplier } from '../gameLogic/index.ts';
 import type { AppearanceActionProcessingContext } from '../gameLogic/actionLogic/appearanceActionProcessingContext.ts';
 import type { GameLogicCharacter } from '../gameLogic/character/character.ts';
 import { CHARACTER_MODIFIER_TYPE_DEFINITION } from '../gameLogic/characterModifiers/index.ts';
+import type { CharacterModifierEffectData, CharacterModifierPropertiesApplier } from '../gameLogic/index.ts';
 import type { ActionSpaceContext } from '../space/space.ts';
 import { Assert, AssertNever, MemoizeNoArg } from '../utility/misc.ts';
 import { ItemInteractionType } from './restrictionTypes.ts';
@@ -199,7 +199,7 @@ export class CharacterRestrictionsManager {
 	 * @returns Strength as number in range [0, 10]
 	 */
 	public getBlindness(): number {
-		return _.clamp(this.getEffects().blind, 0, 10);
+		return clamp(this.getEffects().blind, 0, 10);
 	}
 
 	public isInteractionBlocked(): boolean {

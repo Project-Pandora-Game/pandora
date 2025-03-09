@@ -1,5 +1,5 @@
-import { accountManager } from './accountManager';
-import { GenerateEmailHash } from './accountSecure';
+import { accountManager } from './accountManager.ts';
+import { GenerateEmailHash } from './accountSecure.ts';
 
 /**
  * Create and send password reset email

@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { DefineCharacterModifier } from '../helpers/modifierDefinition.ts';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention

@@ -1,9 +1,10 @@
+import { describe, expect, it } from '@jest/globals';
 import { BitField } from '../../src/utility/bitfield.ts';
 
 describe('BitField', () => {
 	const SET_CLEAR_TEST_SIZE = 26; // Intentionally not a multiple of 8 to test that testcase
 
-	test('Starts with correct size and empty', () => {
+	it('Starts with correct size and empty', () => {
 		const bf = new BitField(SET_CLEAR_TEST_SIZE);
 
 		expect(bf.length).toBeGreaterThanOrEqual(SET_CLEAR_TEST_SIZE);
@@ -12,7 +13,7 @@ describe('BitField', () => {
 		}
 	});
 
-	test('Sets and gets the correct bits', () => {
+	it('Sets and gets the correct bits', () => {
 		for (let i = 0; i < SET_CLEAR_TEST_SIZE; i++) {
 			const bf = new BitField(SET_CLEAR_TEST_SIZE);
 
@@ -24,7 +25,7 @@ describe('BitField', () => {
 		}
 	});
 
-	test('Sets, clears and gets the correct bits', () => {
+	it('Sets, clears and gets the correct bits', () => {
 		for (let i = 0; i < SET_CLEAR_TEST_SIZE; i++) {
 			const bf = new BitField(SET_CLEAR_TEST_SIZE);
 
@@ -43,7 +44,7 @@ describe('BitField', () => {
 		}
 	});
 
-	test('Provides and accepts a buffer', () => {
+	it('Provides and accepts a buffer', () => {
 		const TEST_BIT = 3;
 
 		const bf1 = new BitField(SET_CLEAR_TEST_SIZE);

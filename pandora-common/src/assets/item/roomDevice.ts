@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { first } from 'lodash';
+import { first } from 'lodash-es';
 import { z } from 'zod';
 
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';

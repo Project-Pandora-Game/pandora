@@ -1,9 +1,9 @@
-import { IShardDirectory, MessageHandler, IShardDirectoryPromiseResult, IShardDirectoryArgument, BadMessageError, IMessageHandler } from 'pandora-common';
-import type { IConnectionShard } from './common';
-import { GetDatabase } from '../database/databaseProvider';
-import { ShardManager } from '../shard/shardManager';
+import { BadMessageError, IMessageHandler, IShardDirectory, IShardDirectoryArgument, IShardDirectoryPromiseResult, MessageHandler } from 'pandora-common';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
 import promClient from 'prom-client';
-import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
+import { GetDatabase } from '../database/databaseProvider.ts';
+import { ShardManager } from '../shard/shardManager.ts';
+import type { IConnectionShard } from './common.ts';
 
 const messagesMetric = new promClient.Counter({
 	name: 'pandora_directory_shard_messages',

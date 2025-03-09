@@ -1,5 +1,5 @@
 import AsyncLock from 'async-lock';
-import _ from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import { CollationOptions, Db, MongoClient, MongoServerError } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
@@ -28,8 +28,8 @@ import {
 	ZodTemplateString,
 } from 'pandora-common';
 import { z } from 'zod';
-import { ENV } from '../config';
-import type { PandoraDatabase } from './databaseProvider';
+import { ENV } from '../config.ts';
+import type { PandoraDatabase } from './databaseProvider.ts';
 import {
 	DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES,
 	DatabaseAccount,
@@ -51,9 +51,9 @@ import {
 	type DatabaseConfigCreationCounters,
 	type DatabaseDirectMessage,
 	type DatabaseDirectMessageAccounts,
-} from './databaseStructure';
-import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
-import { DbAutomaticMigration, ValidatedCollection, ValidatedCollectionType } from './validatedCollection';
+} from './databaseStructure.ts';
+import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper.ts';
+import { DbAutomaticMigration, ValidatedCollection, ValidatedCollectionType } from './validatedCollection.ts';
 
 const { DATABASE_URL, DATABASE_NAME, DATABASE_MIGRATION } = ENV;
 const logger = GetLogger('db');
@@ -357,7 +357,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			.pick(ArrayToRecordKeys(DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, true))
 			.partial()
 			.strict()
-			.parse(_.cloneDeep(data));
+			.parse(cloneDeep(data));
 
 		await this._accounts.updateOne({ id }, { $set: data });
 	}

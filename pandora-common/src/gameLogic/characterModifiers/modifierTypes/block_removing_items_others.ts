@@ -1,4 +1,4 @@
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { SplitContainerPath } from '../../../assets/appearanceHelpers.ts';
 import { DefineCharacterModifier } from '../helpers/modifierDefinition.ts';
 

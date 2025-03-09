@@ -1,10 +1,10 @@
-import _ from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import { ACCOUNT_ROLES_CONFIG, AccountRole, GetLogger, IAccountRoleInfo, IAccountRoleManageInfo, IsAuthorized, Logger } from 'pandora-common';
-import { ENV } from '../config';
-import { GetDatabase } from '../database/databaseProvider';
-import { GitHubInfo } from '../database/databaseStructure';
-import type { Account } from './account';
-import type { ActorRoles } from './actorIdentity';
+import { ENV } from '../config.ts';
+import { GetDatabase } from '../database/databaseProvider.ts';
+import { GitHubInfo } from '../database/databaseStructure.ts';
+import type { Account } from './account.ts';
+import type { ActorRoles } from './actorIdentity.ts';
 const { AUTO_ADMIN_ACCOUNTS } = ENV;
 
 const logger = GetLogger('AccountRoles');
@@ -35,7 +35,7 @@ export class AccountRoles implements ActorRoles {
 
 	public getAdminInfo(): Readonly<IAccountRoleManageInfo> {
 		this._cleanup();
-		return _.cloneDeep({
+		return cloneDeep({
 			...this._roles,
 			...this._roleOverrides,
 		});

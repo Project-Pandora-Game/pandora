@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { first } from 'lodash';
+import { first } from 'lodash-es';
 
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
 import type { HexRGBAColorString } from '../../validation.ts';

@@ -1,4 +1,4 @@
-import _ from 'lodash';
+import { remove } from 'lodash-es';
 import type { CharacterId } from '../character/index.ts';
 import { Assert, AssertNever } from '../utility/misc.ts';
 import type { ActionHandlerMessageTarget, ActionHandlerMessageTemplate, ActionHandlerMessageWithTarget, ActionTargetSelector, ItemContainerPath, ItemPath } from './appearanceTypes.ts';
@@ -91,7 +91,7 @@ export abstract class AppearanceManipulator {
 
 	public removeMatchingItems(predicate: (item: Item) => boolean): AppearanceItems {
 		const items = this.getItems().slice();
-		const result = _.remove(items, (item) => predicate(item));
+		const result = remove(items, (item) => predicate(item));
 		return this._applyItemsWithChange(items) ? result : [];
 	}
 

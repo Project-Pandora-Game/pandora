@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import type { AssetFrameworkGlobalState } from '../../assets/index.ts';
 import type { CharacterId } from '../../character/index.ts';
 import type { Logger } from '../../logging.ts';

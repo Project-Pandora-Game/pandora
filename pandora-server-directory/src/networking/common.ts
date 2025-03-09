@@ -1,6 +1,6 @@
-import type { IIncomingConnection, IDirectoryShard } from 'pandora-common';
-import type { Shard } from '../shard/shard';
-import type { IConnectedTokenInfo } from '../shard/shardTokenStore';
+import type { IDirectoryShard, IIncomingConnection } from 'pandora-common';
+import type { Shard } from '../shard/shard.ts';
+import type { IConnectedTokenInfo } from '../shard/shardTokenStore.ts';
 
 export enum ConnectionType {
 	SHARD,

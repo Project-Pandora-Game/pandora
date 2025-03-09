@@ -1,5 +1,5 @@
 import { Immutable, freeze } from 'immer';
-import _, { isEqual } from 'lodash';
+import { clamp, cloneDeep, isEqual } from 'lodash-es';
 import type { CharacterId } from '../../character/index.ts';
 import { RedactSensitiveActionData } from '../../gameLogic/actionLogic/actionUtils.ts';
 import { Logger } from '../../logging.ts';
@@ -72,7 +72,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 	public exportToBundle(): AppearanceBundle {
 		return {
 			items: this.items.map((item) => item.exportToBundle({})),
-			requestedPose: _.cloneDeep(this.requestedPose),
+			requestedPose: cloneDeep(this.requestedPose),
 			restrictionOverride: this.restrictionOverride,
 			attemptingAction: CloneDeepMutable(this.attemptingAction) ?? undefined,
 		};
@@ -82,7 +82,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		options.clientOnly = true;
 		return {
 			items: this.items.map((item) => item.exportToBundle(options)),
-			requestedPose: _.cloneDeep(this.requestedPose),
+			requestedPose: cloneDeep(this.requestedPose),
 			restrictionOverride: this.restrictionOverride,
 			attemptingAction: this.attemptingAction != null ? ({
 				action: RedactSensitiveActionData(this.attemptingAction.action),
@@ -261,12 +261,12 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		const newItems = CharacterAppearanceLoadAndValidate(assetManager, loadedItems, { id: characterId }, roomState, logger);
 
 		// Load pose
-		const requestedPose = _.cloneDeep(bundle.requestedPose);
+		const requestedPose = cloneDeep(bundle.requestedPose);
 		// Load the bones manually, as they might change and are not validated by Zod; instead depend on assetManager
 		requestedPose.bones = {};
 		for (const bone of assetManager.getAllBones()) {
 			const value = bundle.requestedPose.bones[bone.name];
-			requestedPose.bones[bone.name] = (value != null && Number.isInteger(value)) ? _.clamp(value, BONE_MIN, BONE_MAX) : 0;
+			requestedPose.bones[bone.name] = (value != null && Number.isInteger(value)) ? clamp(value, BONE_MIN, BONE_MAX) : 0;
 		}
 		if (logger) {
 			for (const k of Object.keys(bundle.requestedPose.bones)) {

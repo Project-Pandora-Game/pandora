@@ -1,7 +1,7 @@
 import { Assert, AsyncSynchronized, GetLogger, type ServerService } from 'pandora-common';
 import promClient from 'prom-client';
-import { GetDatabase } from '../../database/databaseProvider';
-import type { DatabaseBetaRegistration } from '../../database/databaseStructure';
+import { GetDatabase } from '../../database/databaseProvider.ts';
+import type { DatabaseBetaRegistration } from '../../database/databaseStructure.ts';
 
 const betaRegistrationTotal = new promClient.Gauge({
 	name: 'pandora_directory_beta_registration_registered_total',

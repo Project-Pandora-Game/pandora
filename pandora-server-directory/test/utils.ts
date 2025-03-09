@@ -1,13 +1,14 @@
+import { expect, jest } from '@jest/globals';
 import { nanoid } from 'nanoid';
-import { Account, CreateAccountData } from '../src/account/account';
-import { accountManager } from '../src/account/accountManager';
-import { CharacterInfo } from '../src/account/character';
-import { InitDatabaseForTests } from '../src/database/databaseProvider';
-import { MockDatabase, PrehashPassword } from '../src/database/mockDb';
-import { Shard } from '../src/shard/shard';
-import { ShardManager } from '../src/shard/shardManager';
-import { ShardConnection } from '../src/networking/connection_shard';
 import { IDirectoryShard, IMessageHandler, IShardDirectory, IShardDirectoryNormalResult, MockConnection, MockServerSocket, ShardFeature } from 'pandora-common';
+import { Account, CreateAccountData } from '../src/account/account.ts';
+import { accountManager } from '../src/account/accountManager.ts';
+import { CharacterInfo } from '../src/account/character.ts';
+import { InitDatabaseForTests } from '../src/database/databaseProvider.ts';
+import { MockDatabase, PrehashPassword } from '../src/database/mockDb.ts';
+import { ShardConnection } from '../src/networking/connection_shard.ts';
+import { Shard } from '../src/shard/shard.ts';
+import { ShardManager } from '../src/shard/shardManager.ts';
 
 let mockDb: MockDatabase | undefined;
 
@@ -87,7 +88,8 @@ export async function TestMockCharacter(account: Account, finalize: {
 	return character;
 }
 
-export type JestFunctionSpy<T extends jest.Func> = jest.SpyInstance<ReturnType<T>, jest.ArgsType<T>>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type JestFunctionSpy<T extends ((...args: any) => any)> = jest.Spied<T>;
 
 export interface TestShardData {
 	shard: Shard;

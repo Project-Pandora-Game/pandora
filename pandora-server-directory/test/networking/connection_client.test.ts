@@ -1,15 +1,16 @@
-import { Assert, IClientDirectory, IDirectoryClient, MockConnection, MockServerSocket } from 'pandora-common';
-import { ClientConnection } from '../../src/networking/connection_client';
-import { ConnectionManagerClient } from '../../src/networking/manager_client';
-import { TestMockAccount, TestMockCharacter, TestMockDb } from '../utils';
-import { AccountToken, AccountTokenReason } from '../../src/account/accountSecure';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { nanoid } from 'nanoid';
+import { Assert, IClientDirectory, IDirectoryClient, MockConnection, MockServerSocket } from 'pandora-common';
+import { AccountToken, AccountTokenReason } from '../../src/account/accountSecure.ts';
+import { ClientConnection } from '../../src/networking/connection_client.ts';
+import { ConnectionManagerClient } from '../../src/networking/manager_client.ts';
+import { TestMockAccount, TestMockCharacter, TestMockDb } from '../utils.ts';
 
 describe('ClientConnection', () => {
 	let connection: MockConnection<IClientDirectory, IDirectoryClient>;
 	let server: MockServerSocket<IDirectoryClient>;
 	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	let connectionOnMessage: jest.Mock<any, any>;
+	let connectionOnMessage: jest.Mock<any>;
 	const token = new AccountToken({ value: 'test', reason: AccountTokenReason.LOGIN, expires: Date.now() + 3600_000 });
 
 	beforeAll(async () => {

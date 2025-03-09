@@ -1,6 +1,5 @@
 import type { Immutable } from 'immer';
-import { isEqual, uniqWith } from 'lodash';
-import type { AppearanceAction, GameLogicCharacter, GameLogicPermission, InteractionId } from '../index.ts';
+import { isEqual, uniqWith } from 'lodash-es';
 import { SplitContainerPath } from '../../assets/appearanceHelpers.ts';
 import type {
 	ActionCharacterSelector,
@@ -20,6 +19,7 @@ import type { AssetFrameworkGlobalState } from '../../assets/state/globalState.t
 import type { CharacterId, CharacterRestrictionsManager } from '../../character/index.ts';
 import type { ItemInteractionType, Restriction } from '../../character/restrictionTypes.ts';
 import { Assert, AssertNever, AssertNotNullable } from '../../utility/misc.ts';
+import type { AppearanceAction, GameLogicCharacter, GameLogicPermission, InteractionId } from '../index.ts';
 import type { AppearanceActionData, AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems.ts';
 import type { AppearanceActionContext } from './appearanceActions.ts';
 import { GAME_LOGIC_ACTION_SLOWDOWN_TIMES, type GameLogicActionSlowdownReason } from './appearanceActionSlowdown.ts';

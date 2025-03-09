@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import type { Coordinates } from '../../../src/assets/graphics/common.ts';
 import type { AtomicCondition, Condition } from '../../../src/assets/graphics/conditions.ts';
 import { MirrorBoneLike, MirrorCondition, MirrorPoint, MirrorTransform } from '../../../src/assets/graphics/mirroring.ts';

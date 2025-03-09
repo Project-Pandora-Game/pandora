@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import _ from 'lodash';
+import { isEqual } from 'lodash-es';
 import { ZodEnum } from 'zod';
 import { Assert, CloneDeepMutable, IntervalSetIntersection, IsReadonlyArray, type Satisfies } from '../utility/misc.ts';
 import type { AssetDefinitionArmOrderPoseLimit, AssetDefinitionArmPoseLimit, AssetDefinitionPoseLimit, AssetDefinitionPoseLimits } from './definitions.ts';
@@ -132,7 +132,7 @@ class TreeLimit {
 			if (!newValue)
 				continue;
 
-			if (_.isEqual(newValue, value))
+			if (isEqual(newValue, value))
 				newLimit.delete(key);
 		}
 		return new TreeLimit(newLimit);

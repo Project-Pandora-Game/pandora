@@ -1,8 +1,8 @@
-import _ from 'lodash';
+import { clamp } from 'lodash-es';
 import { EFFECTS_DEFAULT } from '../assets/effects.ts';
 import { PseudoRandom } from '../math/pseudoRandom.ts';
-import type { ChatMessageFilter } from './chatMessageFilter.ts';
 import type { IChatSegment } from './chat.ts';
+import type { ChatMessageFilter } from './chatMessageFilter.ts';
 
 export type HearingImpairmentSettings = {
 	/**
@@ -79,7 +79,7 @@ export class HearingImpairment implements ChatMessageFilter {
 		let output = word;
 		if (distortion > 0) {
 			output = output.replace(/(m|n|b|p)/ig, (match) => {
-				if (r.random() <= _.clamp(distortion, 0, 10) / 10) {
+				if (r.random() <= clamp(distortion, 0, 10) / 10) {
 					const lower = match.toLowerCase();
 					const isUpper = lower !== match;
 					const result = match === 'm' ? 'n' : match === 'n' ? 'm' : match === 'b' ? 'p' : 'b';
@@ -90,7 +90,7 @@ export class HearingImpairment implements ChatMessageFilter {
 		}
 		if (frequencyLoss > 0) {
 			output = output.replace(/(s|f|t|h)/ig, (match) => {
-				if (r.random() <= _.clamp(frequencyLoss, 0, 10) / 10) {
+				if (r.random() <= clamp(frequencyLoss, 0, 10) / 10) {
 					return this.replacement;
 				}
 				return match;
@@ -98,7 +98,7 @@ export class HearingImpairment implements ChatMessageFilter {
 		}
 		if (vowelLoss > 0) {
 			output = output.replace(/(a|e|i|o|u)/ig, (match) => {
-				if (r.random() <= _.clamp(vowelLoss, 0, 10) / 10) {
+				if (r.random() <= clamp(vowelLoss, 0, 10) / 10) {
 					return this.replacement;
 				}
 				return match;
@@ -123,7 +123,7 @@ export class HearingImpairment implements ChatMessageFilter {
 
 	private distortWordPart(r: PseudoRandom, word: string, level: number): string {
 		return word.replace(/./ig, (match) => {
-			if (r.random() <= _.clamp(level, 0, 10) / 10) {
+			if (r.random() <= clamp(level, 0, 10) / 10) {
 				return this.replacement;
 			}
 			return match;

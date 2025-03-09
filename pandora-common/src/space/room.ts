@@ -1,8 +1,8 @@
 import { Immutable } from 'immer';
-import { clamp } from 'lodash';
+import { clamp } from 'lodash-es';
 import { z } from 'zod';
-import { CharacterSize } from '../assets/graphics/graphics.ts';
 import type { AssetManager } from '../assets/assetManager.ts';
+import { CharacterSize } from '../assets/graphics/graphics.ts';
 import type { CharacterRoomPosition } from '../character/characterData.ts';
 import { CloneDeepMutable } from '../utility/misc.ts';
 import { HexColorString } from '../validation.ts';

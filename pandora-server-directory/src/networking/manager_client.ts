@@ -1,19 +1,19 @@
 import { AccountRole, Assert, AssertNever, AssertNotNullable, Awaitable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
 import promClient from 'prom-client';
 import { z } from 'zod';
-import type { Account } from '../account/account';
-import { accountManager } from '../account/accountManager';
-import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures';
-import { ENV } from '../config';
-import { AUDIT_LOG } from '../logging';
-import { GitHubVerifier } from '../services/github/githubVerify';
-import { BetaKeyStore } from '../shard/betaKeyStore';
-import { ShardManager } from '../shard/shardManager';
-import { ShardTokenStore } from '../shard/shardTokenStore';
-import { SpaceManager } from '../spaces/spaceManager';
-import { Sleep } from '../utility';
-import type { ClientConnection } from './connection_client';
+import type { Account } from '../account/account.ts';
+import { accountManager } from '../account/accountManager.ts';
+import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../account/accountProcedures.ts';
+import { ENV } from '../config.ts';
+import { AUDIT_LOG } from '../logging.ts';
+import { GitHubVerifier } from '../services/github/githubVerify.ts';
+import { BetaKeyStore } from '../shard/betaKeyStore.ts';
+import { ShardManager } from '../shard/shardManager.ts';
+import { ShardTokenStore } from '../shard/shardTokenStore.ts';
+import { SpaceManager } from '../spaces/spaceManager.ts';
+import { Sleep } from '../utility.ts';
+import type { ClientConnection } from './connection_client.ts';
 const { BETA_KEY_ENABLED, HCAPTCHA_SECRET_KEY, HCAPTCHA_SITE_KEY } = ENV;
 
 /** Time (in ms) of how often the directory should send status updates */

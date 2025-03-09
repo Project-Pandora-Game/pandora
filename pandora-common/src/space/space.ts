@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import { z } from 'zod';
 import { AccountId, AccountIdSchema } from '../account/account.ts';
 import type { AssetFrameworkGlobalState } from '../assets/index.ts';

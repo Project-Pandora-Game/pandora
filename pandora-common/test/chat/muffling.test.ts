@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it } from '@jest/globals';
 import { Muffler, MuffleSettings } from '../../src/chat/muffling.ts';
 
 describe('Muffler', () => {

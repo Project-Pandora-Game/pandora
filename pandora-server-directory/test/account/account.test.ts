@@ -1,4 +1,5 @@
-import { Account, CreateAccountData } from '../../src/account/account';
+import { beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
+import { Account, CreateAccountData } from '../../src/account/account.ts';
 
 describe('CreateAccountData()', () => {
 	it('should return an object', async () => {

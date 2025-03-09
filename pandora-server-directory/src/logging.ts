@@ -1,4 +1,4 @@
-import type { RESTPostAPIWebhookWithTokenJSONBody } from 'discord-api-types/v10';
+import type { RESTPostAPIWebhookWithTokenJSONBody } from 'discord.js';
 import fsPromises from 'fs/promises';
 import { AnyToString, GetLogger, logConfig, LogLevel } from 'pandora-common';
 

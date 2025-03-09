@@ -1,8 +1,9 @@
-import { Account } from '../../src/account/account';
-import AccountSecure from '../../src/account/accountSecure';
-import { accountManager } from '../../src/account/accountManager';
-import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../../src/account/accountProcedures';
-import { TestMockDb } from '../utils';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { Account } from '../../src/account/account.ts';
+import { accountManager } from '../../src/account/accountManager.ts';
+import { AccountProcedurePasswordReset, AccountProcedureResendVerifyEmail } from '../../src/account/accountProcedures.ts';
+import AccountSecure from '../../src/account/accountSecure.ts';
+import { TestMockDb } from '../utils.ts';
 
 const TEST_USERNAME = 'testuser';
 const TEST_DISPLAYNAME = 'TestUserDisplay';

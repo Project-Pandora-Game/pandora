@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { EmitterWithAck, IEmpty, MESSAGE_HANDLER_DEBUG_MESSAGES } from '../../src/index.ts';
 import { GetLogger, LogLevel } from '../../src/logging.ts';
 import { ConnectionBase } from '../../src/networking/connection.ts';

@@ -1,8 +1,8 @@
-import _ from 'lodash';
+import { clamp } from 'lodash-es';
 import { EFFECTS_DEFAULT } from '../assets/effects.ts';
 import { PseudoRandom } from '../math/pseudoRandom.ts';
-import type { ChatMessageFilter } from './chatMessageFilter.ts';
 import type { IChatSegment } from './chat.ts';
+import type { ChatMessageFilter } from './chatMessageFilter.ts';
 
 export type MuffleSettings = {
 	/**
@@ -178,7 +178,7 @@ export class Muffler implements ChatMessageFilter {
 	}
 
 	private roll(muf: string[], probMuf: number, random: PseudoRandom, c: string): string {
-		if (random.random() <= _.clamp(probMuf, 0, 10) / 10) {
+		if (random.random() <= clamp(probMuf, 0, 10) / 10) {
 			const ran = random.randomElement(muf);
 			return this.isUpper(c) ? ran.toUpperCase() : ran;
 		}

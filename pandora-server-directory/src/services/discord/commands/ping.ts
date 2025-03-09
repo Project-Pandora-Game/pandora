@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, userMention } from 'discord.js';
-import { type DiscordCommandDescriptor } from './_common';
+import type { DiscordCommandDescriptor } from './_common.ts';
 
 export const DISCORD_COMMAND_PING: DiscordCommandDescriptor = {
 	config: new SlashCommandBuilder()

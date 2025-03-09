@@ -1,12 +1,12 @@
 import { GetLogger, ServerService, ZodMatcher } from 'pandora-common';
-import { accountManager } from '../../account/accountManager';
-import { GitHubInfo } from '../../database/databaseStructure';
+import { accountManager } from '../../account/accountManager.ts';
+import { GitHubInfo } from '../../database/databaseStructure.ts';
 
+import { createOAuthAppAuth, createOAuthUserAuth } from '@octokit/auth-oauth-app';
 import { Octokit } from '@octokit/rest';
-import { createOAuthUserAuth, createOAuthAppAuth } from '@octokit/auth-oauth-app';
+import { Request, Response, Router } from 'express';
 import { nanoid } from 'nanoid';
 import { URL } from 'url';
-import { Request, Response, Router } from 'express';
 import { z } from 'zod';
 
 const API_PATH = 'https://github.com/login/oauth/';

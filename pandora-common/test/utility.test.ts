@@ -1,3 +1,4 @@
+import { describe, expect, it } from '@jest/globals';
 import { IntervalSetIntersection, IntervalSetUnion, ReadonlyIntervalSet } from '../src/index.ts';
 
 describe('IntervalSet utilities', () => {

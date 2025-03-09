@@ -1,4 +1,4 @@
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import { GetRestrictionOverrideConfig } from '../../assets/state/characterStateTypes.ts';
 import type { AssetFrameworkGlobalState } from '../../assets/state/globalState.ts';

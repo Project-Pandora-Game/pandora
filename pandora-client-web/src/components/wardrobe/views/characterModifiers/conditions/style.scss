@@ -3,7 +3,7 @@
 .characterModifierConditions {
 	.conditionList {
 		display: grid;
-		grid-template-columns: 4em 0.25em minmax(0, 1fr) auto; // And/Or | status bar | details | actions
+		grid-template-columns: 4em 0.25em minmax(min-content, 1fr) auto; // And/Or | status bar | details | actions
 		grid-auto-rows: minmax(2em, auto);
 		gap: 0.25em;
 

@@ -152,30 +152,32 @@ function CheckedInstanceDetails({ character, instance, allModifiers, unfocus }: 
 					</ContextHelpButton>
 				</span>
 			</Row>
-			<Column padding='medium' overflowX='hidden' overflowY='auto'>
-				<Row padding='medium' wrap alignX='space-evenly' className='itemActions'>
-					<ModifierInstanceReorderButton
-						character={ character }
-						instance={ instance }
-						allModifiers={ allModifiers }
-						shift={ -1 }
-					>
-						▲ Increase priority
-					</ModifierInstanceReorderButton>
-					<ModifierInstanceReorderButton
-						character={ character }
-						instance={ instance }
-						allModifiers={ allModifiers }
-						shift={ 1 }
-					>
-						▼ Decrease priority
-					</ModifierInstanceReorderButton>
-					<ModifierInstanceDeleteButton
-						character={ character }
-						instance={ instance }
-						unfocus={ unfocus }
-					/>
-					<ModifierInstanceExportButton instance={ instance } />
+			<Column padding='medium' overflowY='auto'>
+				<Row padding='medium' alignX='center'>
+					<Row wrap className='itemActions'>
+						<ModifierInstanceReorderButton
+							character={ character }
+							instance={ instance }
+							allModifiers={ allModifiers }
+							shift={ -1 }
+						>
+							▲ Increase priority
+						</ModifierInstanceReorderButton>
+						<ModifierInstanceReorderButton
+							character={ character }
+							instance={ instance }
+							allModifiers={ allModifiers }
+							shift={ 1 }
+						>
+							▼ Decrease priority
+						</ModifierInstanceReorderButton>
+						<ModifierInstanceDeleteButton
+							character={ character }
+							instance={ instance }
+							unfocus={ unfocus }
+						/>
+						<ModifierInstanceExportButton instance={ instance } />
+					</Row>
 				</Row>
 				<FieldsetToggle legend='Lock' open={ instance.lock != null }>
 					<WardrobeCharacterModifierLock

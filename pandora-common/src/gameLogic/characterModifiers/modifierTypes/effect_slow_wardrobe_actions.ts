@@ -9,7 +9,7 @@ export const effect_slow_wardrobe_actions = DefineCharacterModifier({
 This modifier changes the behavior of selected actions inside the wardrobe so that they take some time and can be interrupted.
 The affected actions can be chosen in the configuration of this modifier.
 
-This effect uses the same system as if the character was restrained (without needing to be) and had to attempt a bound usage action that can be seen by other characters in the chat.
+This effect uses the same system as if the character was restrained and had to attempt a bound usage action that can be seen by other characters.
 	`,
 	strictnessCategory: 'normal',
 	config: {

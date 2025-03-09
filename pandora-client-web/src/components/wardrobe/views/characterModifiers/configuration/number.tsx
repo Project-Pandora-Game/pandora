@@ -51,7 +51,7 @@ export function WardrobeCharacterModifierConfigNumber({ definition, value, onCha
 							<NumberInput
 								id={ id + '-slider' }
 								aria-label={ definition.name }
-								className='flex-6'
+								className='flex-6 zero-width'
 								rangeSlider
 								min={ definition.options.min }
 								max={ definition.options.max }
@@ -79,7 +79,7 @@ export function WardrobeCharacterModifierConfigNumber({ definition, value, onCha
 						<NumberInput
 							id={ id }
 							aria-label={ definition.name }
-							className='flex-1 value'
+							className='flex-grow-1 value'
 							value={ changedValue ?? parsedValue }
 							onChange={ (newValue) => {
 								setChangedValue(schema.parse(newValue));
@@ -90,7 +90,7 @@ export function WardrobeCharacterModifierConfigNumber({ definition, value, onCha
 							disabled={ onChange == null || processing }
 						/>
 					) : (
-						<strong className='flex-1 value tabularFont'>{ parsedValue }</strong>
+						<strong className='flex-grow-1 value tabularFont'>{ parsedValue }</strong>
 					)
 				}
 				{

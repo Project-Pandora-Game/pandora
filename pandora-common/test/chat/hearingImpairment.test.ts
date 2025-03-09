@@ -1,4 +1,4 @@
-import { HearingImpairment, HearingImpairmentSettings } from '../../src/chat/hearingImpairment';
+import { HearingImpairment, HearingImpairmentSettings } from '../../src/chat/hearingImpairment.ts';
 
 describe('HearingImpairment', () => {
 	describe('distort()', () => {

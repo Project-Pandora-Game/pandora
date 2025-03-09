@@ -1,3 +1,3 @@
-export * from './assetPreferencesSubsystem';
-export * from './assetPreferencesSubsystemClient';
-export * from './assetPreferencesSubsystemServer';
+export * from './assetPreferencesSubsystem.ts';
+export * from './assetPreferencesSubsystemClient.ts';
+export * from './assetPreferencesSubsystemServer.ts';

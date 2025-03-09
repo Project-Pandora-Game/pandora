@@ -1,18 +1,18 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
-import { ItemInteractionType } from '../../character/restrictionTypes';
-import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions';
-import type { InteractionId } from '../../gameLogic/interactions';
-import { LockActionSchema } from '../../gameLogic/locks/lockLogic';
-import { AssertNever, Satisfies } from '../../utility/misc';
-import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import type { Asset } from '../asset';
-import type { AssetManager } from '../assetManager';
-import { ConditionOperator } from '../graphics';
-import { __internal_ItemBundleSchemaRecursive, __internal_ItemTemplateSchemaRecursive } from '../item/_internalRecursion';
-import { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item/base';
-import { ItemLock } from '../item/lock';
-import type { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common';
+import { ItemInteractionType } from '../../character/restrictionTypes.ts';
+import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
+import type { InteractionId } from '../../gameLogic/interactions/index.ts';
+import { LockActionSchema } from '../../gameLogic/locks/lockLogic.ts';
+import { AssertNever, Satisfies } from '../../utility/misc.ts';
+import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation.ts';
+import type { Asset } from '../asset.ts';
+import type { AssetManager } from '../assetManager.ts';
+import { ConditionOperator } from '../graphics/index.ts';
+import { __internal_ItemBundleSchemaRecursive, __internal_ItemTemplateSchemaRecursive } from '../item/_internalRecursion.ts';
+import { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item/base.ts';
+import { ItemLock } from '../item/lock.ts';
+import type { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common.ts';
 
 export type IModuleConfigLockSlot<TProperties, TStaticData> = IModuleConfigCommon<'lockSlot', TProperties, TStaticData> & {
 	/** Properties applied when this slot isn't occupied by a lock */

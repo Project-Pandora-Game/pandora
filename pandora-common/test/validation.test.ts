@@ -1,4 +1,4 @@
-import { IsObject, ZodTrimedRegex } from '../src/validation';
+import { IsObject, ZodTrimedRegex } from '../src/validation.ts';
 
 describe('Validation', () => {
 

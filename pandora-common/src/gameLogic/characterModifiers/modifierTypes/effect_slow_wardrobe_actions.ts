@@ -1,5 +1,5 @@
 import { isEqual } from 'lodash';
-import { DefineCharacterModifier } from '../helpers/modifierDefinition';
+import { DefineCharacterModifier } from '../helpers/modifierDefinition.ts';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const effect_slow_wardrobe_actions = DefineCharacterModifier({

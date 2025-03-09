@@ -1,15 +1,15 @@
 import type { Immutable } from 'immer';
 import { cloneDeep } from 'lodash';
 import { z } from 'zod';
-import { AccountId, AccountIdSchema } from '../account/account';
-import type { AssetFrameworkGlobalState } from '../assets';
-import { ROOM_INVENTORY_BUNDLE_DEFAULT, RoomInventoryBundleSchema } from '../assets/state/roomState';
-import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
-import type { CharacterModifierEffectData } from '../gameLogic';
-import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_ENTRYTEXT_LENGTH, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits';
-import { ArrayToRecordKeys, CloneDeepMutable } from '../utility/misc';
-import { HexColorStringSchema, ZodArrayWithInvalidDrop, ZodTemplateString, ZodTrimedRegex } from '../validation';
-import { DEFAULT_BACKGROUND, RoomBackgroundDataSchema } from './room';
+import { AccountId, AccountIdSchema } from '../account/account.ts';
+import type { AssetFrameworkGlobalState } from '../assets/index.ts';
+import { ROOM_INVENTORY_BUNDLE_DEFAULT, RoomInventoryBundleSchema } from '../assets/state/roomState.ts';
+import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
+import type { CharacterModifierEffectData } from '../gameLogic/index.ts';
+import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_ENTRYTEXT_LENGTH, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits.ts';
+import { ArrayToRecordKeys, CloneDeepMutable } from '../utility/misc.ts';
+import { HexColorStringSchema, ZodArrayWithInvalidDrop, ZodTemplateString, ZodTrimedRegex } from '../validation.ts';
+import { DEFAULT_BACKGROUND, RoomBackgroundDataSchema } from './room.ts';
 
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;

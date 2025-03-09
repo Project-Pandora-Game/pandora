@@ -1,4 +1,4 @@
-import { AssertNever } from './misc';
+import { AssertNever } from './misc.ts';
 
 export function NaturalListJoin(list: string[]): string {
 	let res = list.pop() ?? '';

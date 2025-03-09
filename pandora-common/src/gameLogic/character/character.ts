@@ -1,13 +1,13 @@
-import { AccountId } from '../../account';
-import type { AssetFrameworkGlobalState } from '../../assets';
-import { CharacterAppearance } from '../../assets/appearance';
-import { CharacterId, CharacterRestrictionsManager, ICharacterMinimalData } from '../../character';
-import { TypedEventEmitter } from '../../event';
-import type { ActionSpaceContext } from '../../space/space';
-import { AssetPreferencesSubsystem } from '../assetPreferences';
-import type { CharacterModifiersSubsystem } from '../characterModifiers/characterModifiersSubsystem';
-import { InteractionSubsystem } from '../interactions/interactionSubsystem';
-import { GameLogicPermission, IPermissionProvider, PermissionGroup } from '../permissions';
+import { AccountId } from '../../account/index.ts';
+import type { AssetFrameworkGlobalState } from '../../assets/index.ts';
+import { CharacterAppearance } from '../../assets/appearance.ts';
+import { CharacterId, CharacterRestrictionsManager, ICharacterMinimalData } from '../../character/index.ts';
+import { TypedEventEmitter } from '../../event.ts';
+import type { ActionSpaceContext } from '../../space/space.ts';
+import { AssetPreferencesSubsystem } from '../assetPreferences/index.ts';
+import type { CharacterModifiersSubsystem } from '../characterModifiers/characterModifiersSubsystem.ts';
+import { InteractionSubsystem } from '../interactions/interactionSubsystem.ts';
+import { GameLogicPermission, IPermissionProvider, PermissionGroup } from '../permissions/index.ts';
 
 export type GameLogicCharacterEvents = {
 	dataChanged: 'interactions' | 'assetPreferences' | 'characterModifiers';

@@ -1,13 +1,13 @@
 import { freeze, type Immutable } from 'immer';
-import type { GameLogicCharacter } from '..';
-import type { CharacterActionAttempt, Item, ItemContainerPath } from '../../assets';
-import { ActionMessageTemplateHandler, ActionTarget, type ActionTargetCharacter } from '../../assets/appearanceTypes';
-import type { ModuleActionData, ModuleActionProblem } from '../../assets/modules';
-import type { AssetFrameworkGlobalState } from '../../assets/state/globalState';
-import { CharacterId } from '../../character/characterTypes';
-import type { ActionSpaceContext } from '../../space/space';
-import { ApplyAction, type AppearanceAction } from './actions/_index';
-import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
+import type { GameLogicCharacter } from '../index.ts';
+import type { CharacterActionAttempt, Item, ItemContainerPath } from '../../assets/index.ts';
+import { ActionMessageTemplateHandler, ActionTarget, type ActionTargetCharacter } from '../../assets/appearanceTypes.ts';
+import type { ModuleActionData, ModuleActionProblem } from '../../assets/modules.ts';
+import type { AssetFrameworkGlobalState } from '../../assets/state/globalState.ts';
+import { CharacterId } from '../../character/characterTypes.ts';
+import type { ActionSpaceContext } from '../../space/space.ts';
+import { ApplyAction, type AppearanceAction } from './actions/_index.ts';
+import { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext.ts';
 
 export interface AppearanceActionContext {
 	/**

@@ -1,10 +1,10 @@
 import { z } from 'zod';
-import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes';
-import { ItemModuleActionSchema } from '../../../assets/modules';
-import { Assert } from '../../../utility';
-import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
-import type { AppearanceModuleActionContext } from '../appearanceActions';
-import type { AppearanceActionHandlerArg } from './_common';
+import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes.ts';
+import { ItemModuleActionSchema } from '../../../assets/modules.ts';
+import { Assert } from '../../../utility/index.ts';
+import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
+import type { AppearanceModuleActionContext } from '../appearanceActions.ts';
+import type { AppearanceActionHandlerArg } from './_common.ts';
 
 export const AppearanceActionModuleAction = z.object({
 	type: z.literal('moduleAction'),

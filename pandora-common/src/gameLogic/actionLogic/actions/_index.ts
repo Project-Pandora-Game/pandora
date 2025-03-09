@@ -1,23 +1,23 @@
 import type { Immutable } from 'immer';
 import { z } from 'zod';
-import { AssertNever } from '../../../utility';
-import type { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
-import type { AppearanceActionHandlerArg } from './_common';
-import { ActionAttemptInterrupt, AppearanceActionAttemptInterruptSchema } from './actionAttemptInterrupt';
-import { ActionBody, AppearanceActionBody } from './body';
-import { ActionColor, AppearanceActionColor } from './color';
-import { ActionCreate, AppearanceActionCreateSchema } from './create';
-import { ActionAppearanceCustomize, AppearanceActionCustomize } from './customize';
-import { ActionDelete, AppearanceActionDeleteSchema } from './delete';
-import { ActionModuleAction, AppearanceActionModuleAction } from './moduleAction';
-import { ActionMoveItem, AppearanceActionMove } from './move';
-import { ActionPose, AppearanceActionPose } from './pose';
-import { ActionAppearanceRandomize, AppearanceActionRandomize } from './randomize';
-import { ActionRestrictionOverrideChange, AppearanceActionRestrictionOverrideChange } from './restrictionOverrideChange';
-import { ActionRoomDeviceDeploy, AppearanceActionRoomDeviceDeploy } from './roomDeviceDeploy';
-import { ActionRoomDeviceEnter, AppearanceActionRoomDeviceEnter } from './roomDeviceEnter';
-import { ActionRoomDeviceLeave, AppearanceActionRoomDeviceLeave } from './roomDeviceLeave';
-import { ActionTransferItem, AppearanceActionTransferSchema } from './transfer';
+import { AssertNever } from '../../../utility/index.ts';
+import type { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
+import type { AppearanceActionHandlerArg } from './_common.ts';
+import { ActionAttemptInterrupt, AppearanceActionAttemptInterruptSchema } from './actionAttemptInterrupt.ts';
+import { ActionBody, AppearanceActionBody } from './body.ts';
+import { ActionColor, AppearanceActionColor } from './color.ts';
+import { ActionCreate, AppearanceActionCreateSchema } from './create.ts';
+import { ActionAppearanceCustomize, AppearanceActionCustomize } from './customize.ts';
+import { ActionDelete, AppearanceActionDeleteSchema } from './delete.ts';
+import { ActionModuleAction, AppearanceActionModuleAction } from './moduleAction.ts';
+import { ActionMoveItem, AppearanceActionMove } from './move.ts';
+import { ActionPose, AppearanceActionPose } from './pose.ts';
+import { ActionAppearanceRandomize, AppearanceActionRandomize } from './randomize.ts';
+import { ActionRestrictionOverrideChange, AppearanceActionRestrictionOverrideChange } from './restrictionOverrideChange.ts';
+import { ActionRoomDeviceDeploy, AppearanceActionRoomDeviceDeploy } from './roomDeviceDeploy.ts';
+import { ActionRoomDeviceEnter, AppearanceActionRoomDeviceEnter } from './roomDeviceEnter.ts';
+import { ActionRoomDeviceLeave, AppearanceActionRoomDeviceLeave } from './roomDeviceLeave.ts';
+import { ActionTransferItem, AppearanceActionTransferSchema } from './transfer.ts';
 
 export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionCreateSchema,

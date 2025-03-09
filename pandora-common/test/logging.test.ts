@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { GetLogger, Logger, LogLevel, logConfig, SetConsoleOutput, LogOutputDefinition, AnyToString } from '../src/logging';
+import { GetLogger, Logger, LogLevel, logConfig, SetConsoleOutput, LogOutputDefinition, AnyToString } from '../src/logging.ts';
 
 describe('GetLogger()', () => {
 	it('should return an instance of Logger', () => {

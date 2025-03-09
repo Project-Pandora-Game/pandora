@@ -1,14 +1,14 @@
 import type { Immutable } from 'immer';
 import { ZodDiscriminatedUnionOption, z } from 'zod';
-import type { LockActionLockProblem, LockActionShowPasswordProblem, LockActionUnlockProblem } from '../gameLogic/locks/lockLogic';
-import { Assert, AssertNever, ParseArrayNotEmpty, Satisfies } from '../utility/misc';
-import { RecordUnpackSubobjectProperties } from '../validation';
-import type { AssetId } from './base';
-import type { IItemCreationContext, IItemLoadContext } from './item';
-import type { IAssetModuleDefinition, IItemModule, IModuleConfigCommon } from './modules/common';
-import { IModuleConfigLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition, ModuleItemDataLockSlotSchema, ModuleItemTemplateLockSlotSchema } from './modules/lockSlot';
-import { IModuleConfigStorage, ItemModuleStorageActionSchema, ModuleItemDataStorageSchema, ModuleItemTemplateStorageSchema, StorageModuleDefinition } from './modules/storage';
-import { IModuleConfigTyped, ItemModuleTypedActionSchema, ModuleItemDataTypedSchema, ModuleItemTemplateTypedSchema, TypedModuleDefinition } from './modules/typed';
+import type { LockActionLockProblem, LockActionShowPasswordProblem, LockActionUnlockProblem } from '../gameLogic/locks/lockLogic.ts';
+import { Assert, AssertNever, ParseArrayNotEmpty, Satisfies } from '../utility/misc.ts';
+import { RecordUnpackSubobjectProperties } from '../validation.ts';
+import type { AssetId } from './base.ts';
+import type { IItemCreationContext, IItemLoadContext } from './item/index.ts';
+import type { IAssetModuleDefinition, IItemModule, IModuleConfigCommon } from './modules/common.ts';
+import { IModuleConfigLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition, ModuleItemDataLockSlotSchema, ModuleItemTemplateLockSlotSchema } from './modules/lockSlot.ts';
+import { IModuleConfigStorage, ItemModuleStorageActionSchema, ModuleItemDataStorageSchema, ModuleItemTemplateStorageSchema, StorageModuleDefinition } from './modules/storage.ts';
+import { IModuleConfigTyped, ItemModuleTypedActionSchema, ModuleItemDataTypedSchema, ModuleItemTemplateTypedSchema, TypedModuleDefinition } from './modules/typed.ts';
 
 //#region Module definitions
 

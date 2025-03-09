@@ -1,18 +1,18 @@
 import type { Immutable } from 'immer';
 import { cloneDeep } from 'lodash';
-import type { AssetFrameworkGlobalState } from '../../assets';
-import type { CharacterId } from '../../character';
-import type { Logger } from '../../logging';
-import type { CurrentSpaceInfo } from '../../space';
-import { AssertNever, CloneDeepMutable } from '../../utility/misc';
-import type { AppearanceActionProblem } from '../actionLogic/appearanceActionProblems';
-import type { GameLogicCharacter } from '../character/character';
-import { LockLogic, type LockAction, type LockActionContext } from '../locks';
-import type { CharacterModifierConfiguration, CharacterModifierId } from './characterModifierBaseData';
-import type { CharacterModifierEffectData, CharacterModifierInstanceClientData, CharacterModifierInstanceData } from './characterModifierData';
-import { CHARACTER_MODIFIER_LOCK_DEFINITIONS, type CharacterModifierLockType } from './characterModifierLocks';
-import { EvaluateCharacterModifierConditionChain, type CharacterModifierConditionChain } from './conditions/characterModifierConditionChain';
-import { CHARACTER_MODIFIER_TYPE_DEFINITION, type CharacterModifierType, type CharacterModifierTypeDefinition } from './modifierTypes/_index';
+import type { AssetFrameworkGlobalState } from '../../assets/index.ts';
+import type { CharacterId } from '../../character/index.ts';
+import type { Logger } from '../../logging.ts';
+import type { CurrentSpaceInfo } from '../../space/index.ts';
+import { AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
+import type { AppearanceActionProblem } from '../actionLogic/appearanceActionProblems.ts';
+import type { GameLogicCharacter } from '../character/character.ts';
+import { LockLogic, type LockAction, type LockActionContext } from '../locks/index.ts';
+import type { CharacterModifierConfiguration, CharacterModifierId } from './characterModifierBaseData.ts';
+import type { CharacterModifierEffectData, CharacterModifierInstanceClientData, CharacterModifierInstanceData } from './characterModifierData.ts';
+import { CHARACTER_MODIFIER_LOCK_DEFINITIONS, type CharacterModifierLockType } from './characterModifierLocks.ts';
+import { EvaluateCharacterModifierConditionChain, type CharacterModifierConditionChain } from './conditions/characterModifierConditionChain.ts';
+import { CHARACTER_MODIFIER_TYPE_DEFINITION, type CharacterModifierType, type CharacterModifierTypeDefinition } from './modifierTypes/_index.ts';
 
 export type GameLogicModifierLockInstance = {
 	type: CharacterModifierLockType;

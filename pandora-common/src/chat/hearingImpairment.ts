@@ -1,8 +1,8 @@
 import _ from 'lodash';
-import { EFFECTS_DEFAULT } from '../assets/effects';
-import { PseudoRandom } from '../math/pseudoRandom';
-import type { ChatMessageFilter } from './chatMessageFilter';
-import type { IChatSegment } from './chat';
+import { EFFECTS_DEFAULT } from '../assets/effects.ts';
+import { PseudoRandom } from '../math/pseudoRandom.ts';
+import type { ChatMessageFilter } from './chatMessageFilter.ts';
+import type { IChatSegment } from './chat.ts';
 
 export type HearingImpairmentSettings = {
 	/**

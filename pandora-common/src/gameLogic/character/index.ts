@@ -1,3 +1,3 @@
-export * from './character';
-export * from './characterClient';
-export * from './characterServer';
+export * from './character.ts';
+export * from './characterClient.ts';
+export * from './characterServer.ts';

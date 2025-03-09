@@ -1,1 +1,1 @@
-export * from './pseudoRandom';
+export * from './pseudoRandom.ts';

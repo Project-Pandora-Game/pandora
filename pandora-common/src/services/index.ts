@@ -1,3 +1,3 @@
-export * from './service';
-export * from './serviceDefinitions';
-export * from './serviceManager';
+export * from './service.ts';
+export * from './serviceDefinitions.ts';
+export * from './serviceManager.ts';

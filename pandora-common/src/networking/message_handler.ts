@@ -1,5 +1,5 @@
-import { Logger } from '../logging';
-import { SocketInterfaceDefinition, SocketInterfaceHandlerResult, SocketInterfaceMessages, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
+import { Logger } from '../logging.ts';
+import { SocketInterfaceDefinition, SocketInterfaceHandlerResult, SocketInterfaceMessages, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
 type MessageHandlerFunction<T extends SocketInterfaceDefinition, Context, Message extends SocketInterfaceMessages<T> = SocketInterfaceMessages<T>> =
 	(arg: SocketInterfaceRequest<T>[Message], context: Context) => SocketInterfaceHandlerResult<T>[Message];

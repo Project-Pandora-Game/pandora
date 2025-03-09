@@ -1,14 +1,14 @@
 import { cloneDeep } from 'lodash';
 import { z } from 'zod';
-import { CharacterIdSchema } from '../../character/characterTypes';
-import { LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT } from '../../inputLimits';
-import { ZodArrayWithInvalidDrop } from '../../validation';
-import { LockActionSchema, type LockActionLockProblem, type LockActionShowPasswordProblem, type LockActionUnlockProblem } from '../locks/lockLogic';
-import { PermissionConfigSchema } from '../permissions';
-import { CharacterModifierConfigurationSchema, CharacterModifierIdSchema, CharacterModifierNameSchema, CharacterModifierTypeGenericIdSchema } from './characterModifierBaseData';
-import { CharacterModifierLockSchema, CharacterModifierLockTypeSchema } from './characterModifierLocks';
-import { CharacterModifierConditionChainSchema } from './conditions/characterModifierConditionChain';
-import { CharacterModifierTypeSchema } from './modifierTypes/_index';
+import { CharacterIdSchema } from '../../character/characterTypes.ts';
+import { LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT } from '../../inputLimits.ts';
+import { ZodArrayWithInvalidDrop } from '../../validation.ts';
+import { LockActionSchema, type LockActionLockProblem, type LockActionShowPasswordProblem, type LockActionUnlockProblem } from '../locks/lockLogic.ts';
+import { PermissionConfigSchema } from '../permissions/index.ts';
+import { CharacterModifierConfigurationSchema, CharacterModifierIdSchema, CharacterModifierNameSchema, CharacterModifierTypeGenericIdSchema } from './characterModifierBaseData.ts';
+import { CharacterModifierLockSchema, CharacterModifierLockTypeSchema } from './characterModifierLocks.ts';
+import { CharacterModifierConditionChainSchema } from './conditions/characterModifierConditionChain.ts';
+import { CharacterModifierTypeSchema } from './modifierTypes/_index.ts';
 
 /** Configuration for any character modifier _type_ (not an instance of a modifier) */
 export const CharacterModifierTypeConfigSchema = z.object({

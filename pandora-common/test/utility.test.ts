@@ -1,4 +1,4 @@
-import { IntervalSetIntersection, IntervalSetUnion, ReadonlyIntervalSet } from '../src';
+import { IntervalSetIntersection, IntervalSetUnion, ReadonlyIntervalSet } from '../src/index.ts';
 
 describe('IntervalSet utilities', () => {
 	// Set of test cases - a, b, a∩b, a∪b

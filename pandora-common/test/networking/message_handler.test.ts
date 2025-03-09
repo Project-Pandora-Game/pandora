@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { Satisfies } from '../../src';
-import { SocketInterfaceDefinition, SocketInterfaceHandlerResult, SocketInterfaceRequest } from '../../src/networking/helpers';
-import { MessageHandler } from '../../src/networking/message_handler';
+import { Satisfies } from '../../src/index.ts';
+import { SocketInterfaceDefinition, SocketInterfaceHandlerResult, SocketInterfaceRequest } from '../../src/networking/helpers.ts';
+import { MessageHandler } from '../../src/networking/message_handler.ts';
 
 export const TestSchema = {
 	message1: {

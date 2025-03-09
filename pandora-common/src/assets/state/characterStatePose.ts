@@ -1,10 +1,10 @@
 import { Immutable, freeze, produce } from 'immer';
 import _ from 'lodash';
 import { z } from 'zod';
-import type { Satisfies } from '../../utility/misc';
-import type { AssetManager } from '../assetManager';
-import type { BoneType, CharacterView, LegsPose } from '../graphics';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, CharacterViewSchema, LegsPoseSchema } from '../graphics';
+import type { Satisfies } from '../../utility/misc.ts';
+import type { AssetManager } from '../assetManager.ts';
+import type { BoneType, CharacterView, LegsPose } from '../graphics/index.ts';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, CharacterViewSchema, LegsPoseSchema } from '../graphics/index.ts';
 
 export const AppearanceArmPoseSchema = z.object({
 	position: ArmPoseSchema.catch('front'),

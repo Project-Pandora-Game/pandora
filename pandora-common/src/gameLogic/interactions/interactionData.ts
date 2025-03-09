@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PermissionConfigSchema } from '../permissions';
+import { PermissionConfigSchema } from '../permissions/index.ts';
 
 export const InteractionGenericIdSchema = z.string();
 export type InteractionGenericId = z.infer<typeof InteractionGenericIdSchema>;

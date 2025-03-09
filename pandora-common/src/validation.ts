@@ -1,8 +1,8 @@
 import { enableMapSet } from 'immer';
 import { isEqual } from 'lodash';
 import { z, ZodObject, ZodString, ZodType, ZodTypeAny, ZodTypeDef, RefinementCtx, ZodEffects, type ZodStringDef } from 'zod';
-import { LIMIT_ACCOUNT_NAME_LENGTH, LIMIT_CHARACTER_NAME_LENGTH, LIMIT_CHARACTER_NAME_MIN_LENGTH, LIMIT_MAIL_LENGTH } from './inputLimits';
-import { Assert } from './utility/misc';
+import { LIMIT_ACCOUNT_NAME_LENGTH, LIMIT_CHARACTER_NAME_LENGTH, LIMIT_CHARACTER_NAME_MIN_LENGTH, LIMIT_MAIL_LENGTH } from './inputLimits.ts';
+import { Assert } from './utility/misc.ts';
 
 enableMapSet();
 

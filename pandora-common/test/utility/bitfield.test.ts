@@ -1,4 +1,4 @@
-import { BitField } from '../../src/utility/bitfield';
+import { BitField } from '../../src/utility/bitfield.ts';
 
 describe('BitField', () => {
 	const SET_CLEAR_TEST_SIZE = 26; // Intentionally not a multiple of 8 to test that testcase

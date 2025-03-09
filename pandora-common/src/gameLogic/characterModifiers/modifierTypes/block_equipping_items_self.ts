@@ -1,6 +1,6 @@
 import { isEqual } from 'lodash';
-import { SplitContainerPath } from '../../../assets/appearanceHelpers';
-import { DefineCharacterModifier } from '../helpers/modifierDefinition';
+import { SplitContainerPath } from '../../../assets/appearanceHelpers.ts';
+import { DefineCharacterModifier } from '../helpers/modifierDefinition.ts';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const block_equipping_items_self = DefineCharacterModifier({

@@ -1,4 +1,4 @@
-import { Muffler, MuffleSettings } from '../../src/chat/muffling';
+import { Muffler, MuffleSettings } from '../../src/chat/muffling.ts';
 
 describe('Muffler', () => {
 	describe('muffle()', () => {

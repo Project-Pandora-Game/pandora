@@ -1,8 +1,8 @@
 import type { Immutable } from 'immer';
 import { z } from 'zod';
-import { AssertNever, CloneDeepMutable } from '../../utility/misc';
-import { CoordinatesCompressedSchema, CoordinatesSchema } from './common';
-import { BoneNameSchema, ConditionSchema } from './conditions';
+import { AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
+import { CoordinatesCompressedSchema, CoordinatesSchema } from './common.ts';
+import { BoneNameSchema, ConditionSchema } from './conditions.ts';
 
 const TransformDefinitionBaseSchema = z.object({
 	condition: ConditionSchema.optional(),

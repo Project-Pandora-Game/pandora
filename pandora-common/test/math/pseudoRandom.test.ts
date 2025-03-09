@@ -1,4 +1,4 @@
-import { PseudoRandom } from '../../src/math/pseudoRandom';
+import { PseudoRandom } from '../../src/math/pseudoRandom.ts';
 
 describe('PseudoRandom', () => {
 	describe('random()', () => {

@@ -1,12 +1,12 @@
 import type { Immutable } from 'immer';
-import { Logger } from '../../logging';
-import type { ICharacterRoomData } from '../../networking/shard_client';
-import { AssertNever } from '../../utility/misc';
-import { AssetPreferencesSubsystemClient } from '../assetPreferences';
-import { CharacterModifiersSubsystemClient } from '../characterModifiers/characterModifiersSubsystemClient';
-import { InteractionSubsystemClient } from '../interactions/interactionSubsystemClient';
-import { GameLogicPermissionClient, IPermissionProvider, PermissionGroup } from '../permissions';
-import { GameLogicCharacter } from './character';
+import { Logger } from '../../logging.ts';
+import type { ICharacterRoomData } from '../../networking/shard_client.ts';
+import { AssertNever } from '../../utility/misc.ts';
+import { AssetPreferencesSubsystemClient } from '../assetPreferences/index.ts';
+import { CharacterModifiersSubsystemClient } from '../characterModifiers/characterModifiersSubsystemClient.ts';
+import { InteractionSubsystemClient } from '../interactions/interactionSubsystemClient.ts';
+import { GameLogicPermissionClient, IPermissionProvider, PermissionGroup } from '../permissions/index.ts';
+import { GameLogicCharacter } from './character.ts';
 
 export class GameLogicCharacterClient extends GameLogicCharacter {
 	public readonly _dataGetter: () => Immutable<ICharacterRoomData>;

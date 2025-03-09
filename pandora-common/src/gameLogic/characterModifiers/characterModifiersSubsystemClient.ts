@@ -1,11 +1,11 @@
-import { AssertNotNullable } from '../../utility/misc';
-import { ArrayIncludesGuard } from '../../validation';
-import type { GameLogicCharacterClient } from '../character/characterClient';
-import { IPermissionProvider } from '../permissions';
-import { GameLogicPermissionClient } from '../permissions/permissionClient';
-import { CharacterModifiersSubsystem } from './characterModifiersSubsystem';
-import { GameLogicModifierTypeClient } from './characterModifierType';
-import { CHARACTER_MODIFIER_TYPES, type CharacterModifierType } from './modifierTypes/_index';
+import { AssertNotNullable } from '../../utility/misc.ts';
+import { ArrayIncludesGuard } from '../../validation.ts';
+import type { GameLogicCharacterClient } from '../character/characterClient.ts';
+import { IPermissionProvider } from '../permissions/index.ts';
+import { GameLogicPermissionClient } from '../permissions/permissionClient.ts';
+import { CharacterModifiersSubsystem } from './characterModifiersSubsystem.ts';
+import { GameLogicModifierTypeClient } from './characterModifierType.ts';
+import { CHARACTER_MODIFIER_TYPES, type CharacterModifierType } from './modifierTypes/_index.ts';
 
 export class CharacterModifiersSubsystemClient extends CharacterModifiersSubsystem implements IPermissionProvider<GameLogicPermissionClient> {
 	private readonly modifierTypes: ReadonlyMap<CharacterModifierType, GameLogicModifierTypeClient>;

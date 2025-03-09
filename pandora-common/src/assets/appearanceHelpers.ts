@@ -1,13 +1,13 @@
 import _ from 'lodash';
-import type { CharacterId } from '../character';
-import { Assert, AssertNever } from '../utility/misc';
-import type { ActionHandlerMessageTarget, ActionHandlerMessageTemplate, ActionHandlerMessageWithTarget, ActionTargetSelector, ItemContainerPath, ItemPath } from './appearanceTypes';
-import { AppearanceItems, AppearanceItemsFixBodypartOrder } from './appearanceValidation';
-import type { AssetManager } from './assetManager';
-import type { Item, ItemId } from './item';
-import type { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator';
-import type { IItemModule } from './modules/common';
-import type { AssetFrameworkGlobalState } from './state/globalState';
+import type { CharacterId } from '../character/index.ts';
+import { Assert, AssertNever } from '../utility/misc.ts';
+import type { ActionHandlerMessageTarget, ActionHandlerMessageTemplate, ActionHandlerMessageWithTarget, ActionTargetSelector, ItemContainerPath, ItemPath } from './appearanceTypes.ts';
+import { AppearanceItems, AppearanceItemsFixBodypartOrder } from './appearanceValidation.ts';
+import type { AssetManager } from './assetManager.ts';
+import type { Item, ItemId } from './item/index.ts';
+import type { AssetFrameworkGlobalStateManipulator } from './manipulators/globalStateManipulator.ts';
+import type { IItemModule } from './modules/common.ts';
+import type { AssetFrameworkGlobalState } from './state/globalState.ts';
 
 export function SplitContainerPath(path: ItemContainerPath): {
 	itemPath: ItemPath;

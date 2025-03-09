@@ -1,12 +1,12 @@
 import { freeze, produce, type Immutable } from 'immer';
 import { z } from 'zod';
-import type { IItemLoadContext } from '../../assets/item/base';
-import type { CharacterRestrictionsManager } from '../../character/restrictionsManager';
-import type { Logger } from '../../logging';
-import { Assert, AssertNever, AssertNotNullable, CloneDeepMutable } from '../../utility/misc';
-import type { AppearanceActionContext } from '../actionLogic/appearanceActions';
-import type { LockDataBundle } from './lockData';
-import type { LockSetup } from './lockSetup';
+import type { IItemLoadContext } from '../../assets/item/base.ts';
+import type { CharacterRestrictionsManager } from '../../character/restrictionsManager.ts';
+import type { Logger } from '../../logging.ts';
+import { Assert, AssertNever, AssertNotNullable, CloneDeepMutable } from '../../utility/misc.ts';
+import type { AppearanceActionContext } from '../actionLogic/appearanceActions.ts';
+import type { LockDataBundle } from './lockData.ts';
+import type { LockSetup } from './lockSetup.ts';
 
 export const LockActionSchema = z.discriminatedUnion('action', [
 	z.object({

@@ -1,11 +1,11 @@
-import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified, SocketInterfaceDefinition } from './helpers';
-import { CharacterIdSchema } from '../character/characterTypes';
-import { CharacterDataSchema, CharacterDataShardUpdateSchema, ICharacterData } from '../character/characterData';
-import { DirectoryShardUpdateSchema, ShardCharacterDefinitionSchema, ShardSpaceDefinitionSchema } from './directory_shard';
-import { SpaceDataShardUpdateSchema, SpaceData, SpaceIdSchema, ShardFeatureSchema } from '../space/space';
+import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified, SocketInterfaceDefinition } from './helpers.ts';
+import { CharacterIdSchema } from '../character/characterTypes.ts';
+import { CharacterDataSchema, CharacterDataShardUpdateSchema, ICharacterData } from '../character/characterData.ts';
+import { DirectoryShardUpdateSchema, ShardCharacterDefinitionSchema, ShardSpaceDefinitionSchema } from './directory_shard.ts';
+import { SpaceDataShardUpdateSchema, SpaceData, SpaceIdSchema, ShardFeatureSchema } from '../space/space.ts';
 import { z } from 'zod';
-import { Satisfies } from '../utility/misc';
-import { ZodCast } from '../validation';
+import { Satisfies } from '../utility/misc.ts';
+import { ZodCast } from '../validation.ts';
 import { Immutable } from 'immer';
 
 export const ShardDirectorySchema = {

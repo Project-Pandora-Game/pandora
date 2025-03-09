@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { isEqual, uniqWith } from 'lodash';
-import type { AppearanceAction, GameLogicCharacter, GameLogicPermission, InteractionId } from '..';
-import { SplitContainerPath } from '../../assets/appearanceHelpers';
+import type { AppearanceAction, GameLogicCharacter, GameLogicPermission, InteractionId } from '../index.ts';
+import { SplitContainerPath } from '../../assets/appearanceHelpers.ts';
 import type {
 	ActionCharacterSelector,
 	ActionHandlerMessage,
@@ -12,17 +12,17 @@ import type {
 	ActionTargetSelector,
 	ItemContainerPath,
 	ItemPath,
-} from '../../assets/appearanceTypes';
-import type { Item, ItemId } from '../../assets/item';
-import { AssetFrameworkGlobalStateManipulator } from '../../assets/manipulators/globalStateManipulator';
-import { RoomInventory } from '../../assets/roomInventory';
-import type { AssetFrameworkGlobalState } from '../../assets/state/globalState';
-import type { CharacterId, CharacterRestrictionsManager } from '../../character';
-import type { ItemInteractionType, Restriction } from '../../character/restrictionTypes';
-import { Assert, AssertNever, AssertNotNullable } from '../../utility/misc';
-import type { AppearanceActionData, AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems';
-import type { AppearanceActionContext } from './appearanceActions';
-import { GAME_LOGIC_ACTION_SLOWDOWN_TIMES, type GameLogicActionSlowdownReason } from './appearanceActionSlowdown';
+} from '../../assets/appearanceTypes.ts';
+import type { Item, ItemId } from '../../assets/item/index.ts';
+import { AssetFrameworkGlobalStateManipulator } from '../../assets/manipulators/globalStateManipulator.ts';
+import { RoomInventory } from '../../assets/roomInventory.ts';
+import type { AssetFrameworkGlobalState } from '../../assets/state/globalState.ts';
+import type { CharacterId, CharacterRestrictionsManager } from '../../character/index.ts';
+import type { ItemInteractionType, Restriction } from '../../character/restrictionTypes.ts';
+import { Assert, AssertNever, AssertNotNullable } from '../../utility/misc.ts';
+import type { AppearanceActionData, AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems.ts';
+import type { AppearanceActionContext } from './appearanceActions.ts';
+import { GAME_LOGIC_ACTION_SLOWDOWN_TIMES, type GameLogicActionSlowdownReason } from './appearanceActionSlowdown.ts';
 
 export class AppearanceActionProcessingContext {
 	private readonly _context: AppearanceActionContext;

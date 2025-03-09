@@ -1,7 +1,7 @@
-import type { Coordinates } from '../../../src/assets/graphics/common';
-import type { AtomicCondition, Condition } from '../../../src/assets/graphics/conditions';
-import { MirrorBoneLike, MirrorCondition, MirrorPoint, MirrorTransform } from '../../../src/assets/graphics/mirroring';
-import type { PointDefinition, TransformDefinition } from '../../../src/assets/graphics/points';
+import type { Coordinates } from '../../../src/assets/graphics/common.ts';
+import type { AtomicCondition, Condition } from '../../../src/assets/graphics/conditions.ts';
+import { MirrorBoneLike, MirrorCondition, MirrorPoint, MirrorTransform } from '../../../src/assets/graphics/mirroring.ts';
+import type { PointDefinition, TransformDefinition } from '../../../src/assets/graphics/points.ts';
 
 describe('MirrorBoneLike()', () => {
 	it.each([

@@ -1,5 +1,5 @@
-import { DefineCharacterModifier } from '../helpers/modifierDefinition';
-import { CheckMessageForSounds } from '../helpers/speechFunctions';
+import { DefineCharacterModifier } from '../helpers/modifierDefinition.ts';
+import { CheckMessageForSounds } from '../helpers/speechFunctions.ts';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const speech_ban_words = DefineCharacterModifier({

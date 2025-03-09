@@ -1,12 +1,12 @@
 import { z } from 'zod';
-import { ActionTargetSelectorSchema, ItemContainerPathSchema } from '../../../assets/appearanceTypes';
-import type { AppearanceItems } from '../../../assets/appearanceValidation';
-import { ItemIdSchema, type ItemId } from '../../../assets/item/base';
-import { ItemTemplateSchema } from '../../../assets/item/unified';
-import { ItemInteractionType } from '../../../character/restrictionTypes';
-import { Assert } from '../../../utility';
-import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
-import type { AppearanceActionHandlerArg } from './_common';
+import { ActionTargetSelectorSchema, ItemContainerPathSchema } from '../../../assets/appearanceTypes.ts';
+import type { AppearanceItems } from '../../../assets/appearanceValidation.ts';
+import { ItemIdSchema, type ItemId } from '../../../assets/item/base.ts';
+import { ItemTemplateSchema } from '../../../assets/item/unified.ts';
+import { ItemInteractionType } from '../../../character/restrictionTypes.ts';
+import { Assert } from '../../../utility/index.ts';
+import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
+import type { AppearanceActionHandlerArg } from './_common.ts';
 
 export const AppearanceActionCreateSchema = z.object({
 	type: z.literal('create'),

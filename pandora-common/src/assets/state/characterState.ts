@@ -1,18 +1,18 @@
 import { Immutable, freeze } from 'immer';
 import _, { isEqual } from 'lodash';
-import type { CharacterId } from '../../character';
-import { RedactSensitiveActionData } from '../../gameLogic/actionLogic/actionUtils';
-import { Logger } from '../../logging';
-import { Assert, CloneDeepMutable, IsNotNullable, MemoizeNoArg } from '../../utility/misc';
-import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation';
-import type { AssetManager } from '../assetManager';
-import { WearableAssetType } from '../definitions';
-import { BoneType } from '../graphics';
-import { Item, type ItemRoomDeviceWearablePart } from '../item';
-import type { IExportOptions } from '../modules/common';
-import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose';
-import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type CharacterActionAttempt, type RestrictionOverride } from './characterStateTypes';
-import type { AssetFrameworkRoomState } from './roomState';
+import type { CharacterId } from '../../character/index.ts';
+import { RedactSensitiveActionData } from '../../gameLogic/actionLogic/actionUtils.ts';
+import { Logger } from '../../logging.ts';
+import { Assert, CloneDeepMutable, IsNotNullable, MemoizeNoArg } from '../../utility/misc.ts';
+import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation.ts';
+import type { AssetManager } from '../assetManager.ts';
+import { WearableAssetType } from '../definitions.ts';
+import { BoneType } from '../graphics/index.ts';
+import { Item, type ItemRoomDeviceWearablePart } from '../item/index.ts';
+import type { IExportOptions } from '../modules/common.ts';
+import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
+import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type CharacterActionAttempt, type RestrictionOverride } from './characterStateTypes.ts';
+import type { AssetFrameworkRoomState } from './roomState.ts';
 
 type AssetFrameworkCharacterStateProps = {
 	readonly assetManager: AssetManager;

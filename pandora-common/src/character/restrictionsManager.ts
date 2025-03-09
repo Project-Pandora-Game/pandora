@@ -1,25 +1,25 @@
 import type { Immutable } from 'immer';
 import _ from 'lodash';
-import type { CharacterAppearance } from '../assets/appearance';
-import { SplitContainerPath } from '../assets/appearanceHelpers';
-import type { ActionTarget, ActionTargetCharacter, ItemContainerPath, ItemPath } from '../assets/appearanceTypes';
-import { AppearanceItemProperties } from '../assets/appearanceValidation';
-import { Asset } from '../assets/asset';
-import { EffectsDefinition, MergeEffects } from '../assets/effects';
-import { FilterItemType, type Item, type ItemId, type RoomDeviceLink } from '../assets/item';
-import { AssetPropertiesResult } from '../assets/properties';
-import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes';
-import type { ChatMessageBlockingResult, IClientMessage } from '../chat';
-import { CompoundChatMessageFilter, CustomChatMessageFilter, type ChatMessageFilter } from '../chat/chatMessageFilter';
-import { HearingImpairment } from '../chat/hearingImpairment';
-import { Muffler } from '../chat/muffling';
-import type { CharacterModifierEffectData, CharacterModifierPropertiesApplier } from '../gameLogic';
-import type { AppearanceActionProcessingContext } from '../gameLogic/actionLogic/appearanceActionProcessingContext';
-import type { GameLogicCharacter } from '../gameLogic/character/character';
-import { CHARACTER_MODIFIER_TYPE_DEFINITION } from '../gameLogic/characterModifiers';
-import type { ActionSpaceContext } from '../space/space';
-import { Assert, AssertNever, MemoizeNoArg } from '../utility/misc';
-import { ItemInteractionType } from './restrictionTypes';
+import type { CharacterAppearance } from '../assets/appearance.ts';
+import { SplitContainerPath } from '../assets/appearanceHelpers.ts';
+import type { ActionTarget, ActionTargetCharacter, ItemContainerPath, ItemPath } from '../assets/appearanceTypes.ts';
+import { AppearanceItemProperties } from '../assets/appearanceValidation.ts';
+import { Asset } from '../assets/asset.ts';
+import { EffectsDefinition, MergeEffects } from '../assets/effects.ts';
+import { FilterItemType, type Item, type ItemId, type RoomDeviceLink } from '../assets/item/index.ts';
+import { AssetPropertiesResult } from '../assets/properties.ts';
+import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes.ts';
+import type { ChatMessageBlockingResult, IClientMessage } from '../chat/index.ts';
+import { CompoundChatMessageFilter, CustomChatMessageFilter, type ChatMessageFilter } from '../chat/chatMessageFilter.ts';
+import { HearingImpairment } from '../chat/hearingImpairment.ts';
+import { Muffler } from '../chat/muffling.ts';
+import type { CharacterModifierEffectData, CharacterModifierPropertiesApplier } from '../gameLogic/index.ts';
+import type { AppearanceActionProcessingContext } from '../gameLogic/actionLogic/appearanceActionProcessingContext.ts';
+import type { GameLogicCharacter } from '../gameLogic/character/character.ts';
+import { CHARACTER_MODIFIER_TYPE_DEFINITION } from '../gameLogic/characterModifiers/index.ts';
+import type { ActionSpaceContext } from '../space/space.ts';
+import { Assert, AssertNever, MemoizeNoArg } from '../utility/misc.ts';
+import { ItemInteractionType } from './restrictionTypes.ts';
 
 /**
  * All functions should return a stable value, or useSyncExternalStore will not work properly.

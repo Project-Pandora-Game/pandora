@@ -1,10 +1,10 @@
 import { isEqual } from 'lodash';
 import { z } from 'zod';
-import { ActionTargetSelectorSchema, ItemContainerPathSchema, ItemPathSchema } from '../../../assets/appearanceTypes';
-import { ItemIdSchema, type ItemId } from '../../../assets/item/base';
-import { ItemInteractionType } from '../../../character/restrictionTypes';
-import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
-import type { AppearanceActionHandlerArg } from './_common';
+import { ActionTargetSelectorSchema, ItemContainerPathSchema, ItemPathSchema } from '../../../assets/appearanceTypes.ts';
+import { ItemIdSchema, type ItemId } from '../../../assets/item/base.ts';
+import { ItemInteractionType } from '../../../character/restrictionTypes.ts';
+import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
+import type { AppearanceActionHandlerArg } from './_common.ts';
 
 /** Action that moves item between two containers (e.g. character and character or character and room inventory or character and bag the charater is wearing) */
 export const AppearanceActionTransferSchema = z.object({

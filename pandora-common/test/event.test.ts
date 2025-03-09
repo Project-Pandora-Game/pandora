@@ -1,4 +1,4 @@
-import { TypedEventEmitter } from '../src/event';
+import { TypedEventEmitter } from '../src/event.ts';
 
 describe('TypedEventEmitter', () => {
 	type MockEvent = {

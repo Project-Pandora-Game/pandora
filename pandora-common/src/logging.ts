@@ -1,4 +1,4 @@
-import { IS_NODE } from './utility/misc';
+import { IS_NODE } from './utility/misc.ts';
 
 declare const console: { info: (...args: unknown[]) => void; };
 

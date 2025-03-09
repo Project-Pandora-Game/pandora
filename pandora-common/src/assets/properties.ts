@@ -1,8 +1,8 @@
 import { Immutable } from 'immer';
-import { IsReadonlyArray } from '../utility';
-import { AppearanceLimitTree } from './appearanceLimit';
-import type { AssetDefinitionExtraArgs, AssetDefinitionPoseLimits } from './definitions';
-import { EFFECTS_DEFAULT, EffectsDefinition, MergeEffects } from './effects';
+import { IsReadonlyArray } from '../utility/index.ts';
+import { AppearanceLimitTree } from './appearanceLimit.ts';
+import type { AssetDefinitionExtraArgs, AssetDefinitionPoseLimits } from './definitions.ts';
+import { EFFECTS_DEFAULT, EffectsDefinition, MergeEffects } from './effects.ts';
 
 export interface AssetProperties<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
 

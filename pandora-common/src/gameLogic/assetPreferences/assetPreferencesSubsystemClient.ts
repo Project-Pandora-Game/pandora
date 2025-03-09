@@ -1,10 +1,10 @@
 import { Immutable } from 'immer';
-import { AssetPreferenceType, AssetPreferencesPublic, IsAssetPreferenceType } from '../../character';
-import { KnownObject } from '../../utility/misc';
-import type { GameLogicCharacterClient } from '../character/characterClient';
-import { IPermissionProvider } from '../permissions';
-import { GameLogicPermissionClient } from '../permissions/permissionClient';
-import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferencesSubsystem } from './assetPreferencesSubsystem';
+import { AssetPreferenceType, AssetPreferencesPublic, IsAssetPreferenceType } from '../../character/index.ts';
+import { KnownObject } from '../../utility/misc.ts';
+import type { GameLogicCharacterClient } from '../character/characterClient.ts';
+import { IPermissionProvider } from '../permissions/index.ts';
+import { GameLogicPermissionClient } from '../permissions/permissionClient.ts';
+import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferencesSubsystem } from './assetPreferencesSubsystem.ts';
 
 export class AssetPreferencesSubsystemClient extends AssetPreferencesSubsystem implements IPermissionProvider<GameLogicPermissionClient> {
 	private readonly _character: GameLogicCharacterClient;

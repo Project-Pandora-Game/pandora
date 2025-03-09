@@ -1,21 +1,21 @@
 import type { Immutable } from 'immer';
 import { first } from 'lodash';
 
-import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions';
-import type { HexRGBAColorString } from '../../validation';
-import type { AppearanceItems } from '../appearanceValidation';
-import type { Asset } from '../asset';
-import type { AssetColorization } from '../definitions';
-import type { IItemModule } from '../modules/common';
-import type { AssetProperties } from '../properties';
-import type { ColorGroupResult, IItemLoadContext, ItemBundle } from './base';
+import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
+import type { HexRGBAColorString } from '../../validation.ts';
+import type { AppearanceItems } from '../appearanceValidation.ts';
+import type { Asset } from '../asset.ts';
+import type { AssetColorization } from '../definitions.ts';
+import type { IItemModule } from '../modules/common.ts';
+import type { AssetProperties } from '../properties.ts';
+import type { ColorGroupResult, IItemLoadContext, ItemBundle } from './base.ts';
 
-import { MemoizeNoArg } from '../../utility/misc';
-import { ItemModuleAction, LoadItemModule } from '../modules';
+import { MemoizeNoArg } from '../../utility/misc.ts';
+import { ItemModuleAction, LoadItemModule } from '../modules.ts';
 
-import { ItemBase, ItemBaseProps } from './_internal';
+import { ItemBase, ItemBaseProps } from './_internal.ts';
 
-declare module './_internal' {
+declare module './_internal.ts' {
 	interface InternalItemTypeMap {
 		bodypart: ItemBodypart;
 	}

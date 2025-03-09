@@ -1,8 +1,8 @@
-import type { AppearanceItems, AppearanceValidationResult } from './appearanceValidation';
-import type { AssetManager } from './assetManager';
-import type { IItemLocationDescriptor, ItemId } from './item';
-import { ITEM_LIMIT_CHARACTER_WORN, ITEM_LIMIT_ROOM_INVENTORY } from './itemLimits';
-import type { AssetFrameworkRoomState } from './state/roomState';
+import type { AppearanceItems, AppearanceValidationResult } from './appearanceValidation.ts';
+import type { AssetManager } from './assetManager.ts';
+import type { IItemLocationDescriptor, ItemId } from './item/index.ts';
+import { ITEM_LIMIT_CHARACTER_WORN, ITEM_LIMIT_ROOM_INVENTORY } from './itemLimits.ts';
+import type { AssetFrameworkRoomState } from './state/roomState.ts';
 
 const VALIDATIONS = {
 	character: {

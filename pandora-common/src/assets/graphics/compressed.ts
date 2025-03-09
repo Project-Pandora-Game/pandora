@@ -1,5 +1,5 @@
-import type { CoordinatesCompressed } from './common';
-import type { BoneType } from './conditions';
+import type { CoordinatesCompressed } from './common.ts';
+import type { BoneType } from './conditions.ts';
 
 export interface BoneDefinitionCompressed {
 	pos?: CoordinatesCompressed;

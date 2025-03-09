@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { AppearanceActionSchema } from '../../gameLogic/actionLogic';
-import { ZodArrayWithInvalidDrop } from '../../validation';
-import { ItemBundleSchema } from '../item/unified';
-import { AppearancePoseSchema, GetDefaultAppearancePose } from './characterStatePose';
+import { AppearanceActionSchema } from '../../gameLogic/actionLogic/index.ts';
+import { ZodArrayWithInvalidDrop } from '../../validation.ts';
+import { ItemBundleSchema } from '../item/unified.ts';
+import { AppearancePoseSchema, GetDefaultAppearancePose } from './characterStatePose.ts';
 
 export const RestrictionOverrideSchema = z.object({
 	type: z.enum(['safemode', 'timeout']),

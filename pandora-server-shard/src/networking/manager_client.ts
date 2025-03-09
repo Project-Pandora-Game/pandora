@@ -34,11 +34,11 @@ import {
 	type CharacterRestrictionsManager,
 	type GameLogicModifierInstanceServer,
 } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
 import promClient from 'prom-client';
-import { Character } from '../character/character';
-import { CharacterManager } from '../character/characterManager';
-import { ClientConnection } from './connection_client';
+import { Character } from '../character/character.ts';
+import { CharacterManager } from '../character/characterManager.ts';
+import { ClientConnection } from './connection_client.ts';
 
 const logger = GetLogger('ConnectionManager-Client');
 

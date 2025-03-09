@@ -1,13 +1,13 @@
 import { mkdirSync } from 'fs';
-import { APP_VERSION, ENV } from './config';
-const { APP_NAME, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION, SERVER_PUBLIC_ADDRESS } = ENV;
-import { AddDiscordLogOutput, AddFileOutput } from './logging';
 import { GetLogger, LogLevel, ServiceInit, SetConsoleOutput } from 'pandora-common';
-import { ConnectToDirectory } from './networking/socketio_directory_connector';
-import { HttpServer } from './networking/httpServer';
-import { GetDatabaseService } from './database/databaseProvider';
-import { SetupSignalHandling } from './lifecycle';
-import { LoadAssetDefinitions } from './assets/assetManager';
+import { LoadAssetDefinitions } from './assets/assetManager.ts';
+import { APP_VERSION, ENV } from './config.ts';
+import { GetDatabaseService } from './database/databaseProvider.ts';
+import { SetupSignalHandling } from './lifecycle.ts';
+import { AddDiscordLogOutput, AddFileOutput } from './logging.ts';
+import { HttpServer } from './networking/httpServer.ts';
+import { ConnectToDirectory } from './networking/socketio_directory_connector.ts';
+const { APP_NAME, LOG_DIR, LOG_DISCORD_WEBHOOK_URL, LOG_PRODUCTION, SERVER_PUBLIC_ADDRESS } = ENV;
 // get version from package.json
 
 const logger = GetLogger('init');

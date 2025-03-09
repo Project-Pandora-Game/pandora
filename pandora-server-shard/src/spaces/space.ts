@@ -1,5 +1,5 @@
 import { diffString } from 'json-diff';
-import _, { isEqual, omit } from 'lodash';
+import { chain, isEqual, omit } from 'lodash-es';
 import {
 	AccountId,
 	ActionHandlerMessage,
@@ -43,8 +43,8 @@ import {
 	type IClientShardNormalResult,
 	type SpaceCharacterModifierEffectData,
 } from 'pandora-common';
-import { assetManager } from '../assets/assetManager';
-import type { Character } from '../character/character';
+import { assetManager } from '../assets/assetManager.ts';
+import type { Character } from '../character/character.ts';
 
 const MESSAGE_EDIT_TIMEOUT = 1000 * 60 * 20; // 20 minutes
 const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
@@ -624,10 +624,10 @@ export abstract class Space extends ServerRoom<IShardClient> {
 					target: this._getCharacterActionInfo(m.data.targetCharacter),
 				} satisfies IChatMessageAction['data'] : undefined,
 			})));
-		this.lastDirectoryMessageTime = _(messages)
+		this.lastDirectoryMessageTime = chain(messages)
 			.map((m) => m.directoryTime)
 			.concat(this.lastDirectoryMessageTime)
-			.max() ?? this.lastDirectoryMessageTime;
+			.max().value() ?? this.lastDirectoryMessageTime;
 	}
 
 	private _getCharacterActionInfo(id?: CharacterId | null): IChatMessageActionTargetCharacter | undefined {

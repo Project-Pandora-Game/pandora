@@ -1,8 +1,7 @@
 import { CreateEnvParser, IsObject } from 'pandora-common';
 import { z } from 'zod';
+import PACKAGE_JSON from '../package.json' with { type: 'json' };
 
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const PACKAGE_JSON = require('../package.json') as unknown;
 if (!IsObject(PACKAGE_JSON) || typeof PACKAGE_JSON.version !== 'string') {
 	throw new Error('Failed to read package.json');
 }

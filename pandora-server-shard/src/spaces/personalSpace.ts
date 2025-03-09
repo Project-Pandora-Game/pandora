@@ -1,8 +1,8 @@
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import { AccountId, DEFAULT_BACKGROUND, GetLogger, RoomInventoryBundle, SpaceDirectoryConfig } from 'pandora-common';
-import { assetManager } from '../assets/assetManager';
-import { Character } from '../character/character';
-import { Space } from './space';
+import { assetManager } from '../assets/assetManager.ts';
+import { Character } from '../character/character.ts';
+import { Space } from './space.ts';
 
 export class PersonalSpace extends Space {
 	private readonly _character: Character;

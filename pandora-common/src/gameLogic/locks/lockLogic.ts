@@ -26,12 +26,18 @@ export const LockActionSchema = z.discriminatedUnion('action', [
 ]);
 export type LockAction = z.infer<typeof LockActionSchema>;
 
+export type LockActionLockProblem = 'blockSelf' | 'noStoredPassword' | 'noTimerSet' | 'invalidTimer';
+export type LockActionUnlockProblem = 'blockSelf' | 'wrongPassword' | 'timerRunning';
+export type LockActionShowPasswordProblem = 'notAllowed';
+
+export type LockActionProblem = LockActionLockProblem | LockActionUnlockProblem | LockActionShowPasswordProblem;
+
 export type LockActionLockResult = {
 	result: 'ok';
 	newState: LockLogic;
 } | {
 	result: 'failed';
-	reason: 'blockSelf' | 'noStoredPassword' | 'noTimerSet' | 'invalidTimer';
+	reason: LockActionLockProblem;
 } | {
 	result: 'invalid';
 };
@@ -41,7 +47,7 @@ export type LockActionUnlockResult = {
 	newState: LockLogic;
 } | {
 	result: 'failed';
-	reason: 'blockSelf' | 'wrongPassword' | 'timerRunning';
+	reason: LockActionUnlockProblem;
 } | {
 	result: 'invalid';
 };
@@ -51,7 +57,7 @@ export type LockActionShowPasswordResult = {
 	password: string | null;
 } | {
 	result: 'failed';
-	reason: 'notAllowed';
+	reason: LockActionShowPasswordProblem;
 } | {
 	result: 'invalid';
 };

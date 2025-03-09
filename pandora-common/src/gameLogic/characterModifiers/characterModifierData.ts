@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { CharacterIdSchema } from '../../character/characterTypes';
 import { LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT } from '../../inputLimits';
 import { ZodArrayWithInvalidDrop } from '../../validation';
-import { LockActionSchema } from '../locks/lockLogic';
+import { LockActionSchema, type LockActionLockProblem, type LockActionShowPasswordProblem, type LockActionUnlockProblem } from '../locks/lockLogic';
 import { PermissionConfigSchema } from '../permissions';
 import { CharacterModifierConfigurationSchema, CharacterModifierIdSchema, CharacterModifierNameSchema, CharacterModifierTypeGenericIdSchema } from './characterModifierBaseData';
 import { CharacterModifierLockSchema, CharacterModifierLockTypeSchema } from './characterModifierLocks';
@@ -89,23 +89,18 @@ export type CharacterModifierLockAction = z.infer<typeof CharacterModifierLockAc
 export type CharacterModifierActionError =
 	| {
 		type: 'lockInteractionPrevented';
-		moduleAction: 'lock' | 'unlock';
-		reason: 'blockSelf';
-	}
-	| {
-		type: 'lockInteractionPrevented';
 		moduleAction: 'lock';
-		reason: 'noStoredPassword' | 'noTimerSet' | 'invalidTimer';
+		reason: LockActionLockProblem;
 	}
 	| {
 		type: 'lockInteractionPrevented';
 		moduleAction: 'unlock';
-		reason: 'wrongPassword' | 'timerRunning';
+		reason: LockActionUnlockProblem;
 	}
 	| {
 		type: 'lockInteractionPrevented';
 		moduleAction: 'showPassword';
-		reason: 'notAllowed';
+		reason: LockActionShowPasswordProblem;
 	};
 
 /** Data of modifier instance effect - put onto a character if the modifier is active */

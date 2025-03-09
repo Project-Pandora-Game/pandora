@@ -1,5 +1,6 @@
 import type { Immutable } from 'immer';
 import { ZodDiscriminatedUnionOption, z } from 'zod';
+import type { LockActionLockProblem, LockActionShowPasswordProblem, LockActionUnlockProblem } from '../gameLogic/locks/lockLogic';
 import { Assert, AssertNever, ParseArrayNotEmpty, Satisfies } from '../utility/misc';
 import { RecordUnpackSubobjectProperties } from '../validation';
 import type { AssetId } from './base';
@@ -41,41 +42,31 @@ export const MODULE_TYPES: { [Type in ModuleType]: IAssetModuleDefinition<Type>;
 	lockSlot: new LockSlotModuleDefinition(),
 };
 
-/** Module action errors are problems performing actions on modules that can be anticipated by client */
-export type ModuleActionError =
+/** Problems performing actions on modules */
+export type ModuleActionProblem =
 	| {
 		type: 'lockInteractionPrevented';
-		moduleAction: 'lock' | 'unlock';
-		reason: 'blockSelf';
+		moduleAction: 'lock';
+		reason: LockActionLockProblem;
 		asset: AssetId;
 		itemName: string;
 	}
 	| {
 		type: 'lockInteractionPrevented';
-		moduleAction: 'lock';
-		reason: 'noStoredPassword' | 'noTimerSet' | 'invalidTimer';
+		moduleAction: 'unlock';
+		reason: LockActionUnlockProblem;
+		asset: AssetId;
+		itemName: string;
+	} | {
+		type: 'lockInteractionPrevented';
+		moduleAction: 'showPassword';
+		reason: LockActionShowPasswordProblem;
 		asset: AssetId;
 		itemName: string;
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, target not found, and so on...)
 	| {
 		type: 'invalid';
-	};
-
-/** Module action failures are problems performing actions on modules that cannot be anticipated by client */
-export type ModuleActionFailure =
-	| {
-		type: 'lockInteractionPrevented';
-		moduleAction: 'unlock';
-		reason: 'wrongPassword' | 'timerRunning';
-		asset: AssetId;
-		itemName: string;
-	} | {
-		type: 'lockInteractionPrevented';
-		moduleAction: 'showPassword';
-		reason: 'notAllowed';
-		asset: AssetId;
-		itemName: string;
 	};
 
 export type ModuleActionData =

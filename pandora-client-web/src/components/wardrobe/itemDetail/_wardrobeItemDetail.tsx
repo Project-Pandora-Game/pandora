@@ -217,12 +217,12 @@ function WardrobeItemRequireFreeHandsCustomize({ wornItem, item }: { wornItem: I
 						wornItem.requireFreeHandsToUse ? 'selected' : '',
 					) }
 					showActionBlockedExplanation={ !wornItem.requireFreeHandsToUse }
+					title='Require free hands to use this item'
 				>
 					<img
 						src={ strugglingDeny }
 						crossOrigin='anonymous'
 						alt='Require free hands to use this item'
-						title='Require free hands to use this item'
 					/>
 				</WardrobeActionButton>
 				<WardrobeActionButton
@@ -232,12 +232,12 @@ function WardrobeItemRequireFreeHandsCustomize({ wornItem, item }: { wornItem: I
 						!wornItem.requireFreeHandsToUse ? 'selected' : '',
 					) }
 					showActionBlockedExplanation={ wornItem.requireFreeHandsToUse }
+					title='Allow using this item even with blocked hands'
 				>
 					<img
 						src={ strugglingAllow }
 						crossOrigin='anonymous'
 						alt='Allow using this item even with blocked hands'
-						title='Allow using this item even with blocked hands'
 					/>
 				</WardrobeActionButton>
 			</Row>

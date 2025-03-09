@@ -2,9 +2,17 @@ import { freeze } from 'immer';
 import {
 	AbortActionAttempt,
 	ActionHandlerMessageTargetCharacter,
+	Assert,
 	AssertNever,
 	BadMessageError,
+	CHARACTER_MODIFIER_LOCK_DEFINITIONS,
+	CHARACTER_MODIFIER_TYPE_DEFINITION,
 	CharacterId,
+	CharacterModifierActionCheckAdd,
+	CharacterModifierActionCheckLockModify,
+	CharacterModifierActionCheckModify,
+	CharacterModifierActionCheckRead,
+	CharacterModifierActionCheckReorder,
 	CloneDeepMutable,
 	DoImmediateAction,
 	FinishActionAttempt,
@@ -23,6 +31,8 @@ import {
 	StartActionAttempt,
 	type AppearanceAction,
 	type AppearanceActionProcessingResult,
+	type CharacterRestrictionsManager,
+	type GameLogicModifierInstanceServer,
 } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
 import promClient from 'prom-client';
@@ -77,6 +87,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			permissionCheck: this.handlePermissionCheck.bind(this),
 			permissionGet: this.handlePermissionGet.bind(this),
 			permissionSet: this.handlePermissionSet.bind(this),
+			characterModifiersGet: this.handleCharacterModifiersGet.bind(this),
+			characterModifierAdd: this.handleCharacterModifierAdd.bind(this),
+			characterModifierReorder: this.handleCharacterModifierReorder.bind(this),
+			characterModifierDelete: this.handleCharacterModifierDelete.bind(this),
+			characterModifierConfigure: this.handleCharacterModifierConfigure.bind(this),
+			characterModifierLock: this.handleCharacterModifierLock.bind(this),
 		});
 	}
 
@@ -120,17 +136,18 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result: 'ok' };
 	}
 
-	private handleChatMessage({ messages, id, editId }: IClientShardArgument['chatMessage'], client: ClientConnection): void {
+	private handleChatMessage({ messages, id, editId }: IClientShardArgument['chatMessage'], client: ClientConnection): IClientShardNormalResult['chatMessage'] {
 		if (!client.character)
 			throw new BadMessageError();
 
+		// Ignore empty messages
 		if (messages.length === 0 && editId === undefined)
-			return;
+			return { result: 'ok' };
 
 		const space = client.character.getOrLoadSpace();
 		const character = client.character;
 
-		space.handleMessages(character, messages, id, editId);
+		return space.handleMessages(character, messages, id, editId);
 	}
 
 	private handleChatMessageAck({ lastTime }: IClientShardArgument['chatMessageAck'], client: ClientConnection): void {
@@ -166,7 +183,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			throw new BadMessageError();
 
 		const space = character.getOrLoadSpace();
-		const originalState = space.gameState.currentState;
+		const originalState = space.currentState;
 		const now = Date.now();
 		let result: AppearanceActionProcessingResult;
 
@@ -195,7 +212,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 					if (cancelResult.valid) {
 						space.applyAction(cancelResult);
 					} else {
-						logger.error(`Failed to abort action attempt by ${ character.id } for failed action completion:\n`, cancelResult.problems);
+						logger.error(`Failed to abort action attempt by ${character.id} for failed action completion:\n`, cancelResult.problems);
 					}
 				}
 				// If the action failed, client might be out of sync, force-send full reload
@@ -415,7 +432,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (client.character.id === target) {
 			targetCharacter = client.character;
 		} else {
-			targetCharacter = client.character.getOrLoadSpace().getCharacterById(target) ?? null;
+			targetCharacter = client.character.getOrLoadSpace().getCharacterById(target);
 		}
 
 		if (targetCharacter == null) {
@@ -472,6 +489,433 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return {
 			result,
 		};
+	}
+
+	private handleCharacterModifiersGet({ target }: IClientShardArgument['characterModifiersGet'], client: ClientConnection): IClientShardNormalResult['characterModifiersGet'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		// Find the target
+		const space = client.character.getOrLoadSpace();
+		const targetCharacter = space.getCharacterById(target);
+		if (targetCharacter == null) {
+			return {
+				result: 'notFound',
+			};
+		}
+
+		// Check that the source character is allowed to get this data
+		const checkResult = client.character.checkAction((ctx) => CharacterModifierActionCheckRead(ctx, target));
+
+		if (!checkResult.valid) {
+			return {
+				result: 'failure',
+				problems: checkResult.problems.slice(),
+				canPrompt: checkResult.prompt === target,
+			};
+		}
+
+		return {
+			result: 'ok',
+			modifiers: targetCharacter.gameLogicCharacter.characterModifiers.getClientData(),
+		};
+	}
+
+	private handleCharacterModifierAdd({ target, modifier, enabled }: IClientShardArgument['characterModifierAdd'], client: ClientConnection): IClientShardNormalResult['characterModifierAdd'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		// Find the target
+		const space = client.character.getOrLoadSpace();
+		const targetCharacter = space.getCharacterById(target);
+		if (targetCharacter == null) {
+			return {
+				result: 'characterNotFound',
+			};
+		}
+
+		// Check that the source character is allowed to get this data
+		const checkResult = client.character.checkAction((ctx) => CharacterModifierActionCheckAdd(ctx, target, modifier.type));
+
+		if (!checkResult.valid) {
+			return {
+				result: 'failure',
+				problems: checkResult.problems.slice(),
+				canPrompt: checkResult.prompt === target,
+			};
+		}
+
+		const result = targetCharacter.gameLogicCharacter.characterModifiers.addModifier(modifier, enabled, client.character.gameLogicCharacter);
+
+		if (result === 'invalidConfiguration' || result === 'tooManyModifiers') {
+			return {
+				result,
+			};
+		}
+
+		// Send a chat notification if editing modifiers on someone else
+		if (client.character.id !== target) {
+			space.handleActionMessage({
+				id: 'characterModifierAdd',
+				character: {
+					type: 'character',
+					id: client.character.id,
+				},
+				sendTo: [target],
+				dictionary: {
+					'MODIFIER_NAME': modifier.name || CHARACTER_MODIFIER_TYPE_DEFINITION[modifier.type].visibleName,
+				},
+			});
+		}
+
+		return {
+			result: 'ok',
+			instanceId: result.id,
+		};
+	}
+	private handleCharacterModifierReorder({ target, modifier, shift }: IClientShardArgument['characterModifierReorder'], client: ClientConnection): IClientShardNormalResult['characterModifierReorder'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		// Find the target
+		const space = client.character.getOrLoadSpace();
+		const targetCharacter = space.getCharacterById(target);
+		if (targetCharacter == null) {
+			return {
+				result: 'characterNotFound',
+			};
+		}
+
+		// Check that the source character is allowed to get this data
+		const checkResult = client.character.checkAction((ctx) => CharacterModifierActionCheckReorder(
+			ctx,
+			target,
+			targetCharacter.gameLogicCharacter.characterModifiers.modiferInstances,
+			modifier,
+			shift,
+		));
+
+		if (!checkResult.valid) {
+			return {
+				result: 'failure',
+				problems: checkResult.problems.slice(),
+				canPrompt: checkResult.prompt === target,
+			};
+		}
+
+		const result = targetCharacter.gameLogicCharacter.characterModifiers.reorderModifier(modifier, shift);
+
+		if (!result) {
+			return {
+				result: 'failure',
+				problems: [
+					{ result: 'invalidAction' },
+				],
+				canPrompt: false,
+			};
+		}
+
+		// Send a chat notification if editing modifiers on someone else
+		if (client.character.id !== target) {
+			space.handleActionMessage({
+				id: 'characterModifierReorder',
+				character: {
+					type: 'character',
+					id: client.character.id,
+				},
+				sendTo: [target],
+			});
+		}
+
+		return {
+			result: 'ok',
+		};
+	}
+	private handleCharacterModifierDelete({ target, modifier }: IClientShardArgument['characterModifierDelete'], client: ClientConnection): IClientShardNormalResult['characterModifierDelete'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		// Find the target
+		const space = client.character.getOrLoadSpace();
+		const targetCharacter = space.getCharacterById(target);
+		if (targetCharacter == null) {
+			return {
+				result: 'characterNotFound',
+			};
+		}
+
+		// Check that the source character is allowed to get this data
+		let modifierInstance: GameLogicModifierInstanceServer | null | undefined;
+		const checkResult = client.character.checkAction((ctx) => {
+			modifierInstance = targetCharacter.gameLogicCharacter.characterModifiers.getModifier(modifier);
+			if (modifierInstance == null)
+				return ctx.invalid();
+
+			return CharacterModifierActionCheckModify(ctx, target, modifierInstance);
+		});
+
+		if (!checkResult.valid) {
+			return {
+				result: 'failure',
+				problems: checkResult.problems.slice(),
+				canPrompt: checkResult.prompt === target,
+			};
+		}
+
+		Assert(modifierInstance != null);
+		targetCharacter.gameLogicCharacter.characterModifiers.deleteModifier(modifier);
+
+		// Send a chat notification if editing modifiers on someone else
+		if (client.character.id !== target) {
+			space.handleActionMessage({
+				id: 'characterModifierRemove',
+				character: {
+					type: 'character',
+					id: client.character.id,
+				},
+				sendTo: [target],
+				dictionary: {
+					'MODIFIER_NAME': modifierInstance.name || CHARACTER_MODIFIER_TYPE_DEFINITION[modifierInstance.type].visibleName,
+				},
+			});
+		}
+
+		return {
+			result: 'ok',
+		};
+	}
+
+	private handleCharacterModifierConfigure({ target, modifier, config }: IClientShardArgument['characterModifierConfigure'], client: ClientConnection): IClientShardNormalResult['characterModifierConfigure'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		// Find the target
+		const space = client.character.getOrLoadSpace();
+		const targetCharacter = space.getCharacterById(target);
+		if (targetCharacter == null) {
+			return {
+				result: 'characterNotFound',
+			};
+		}
+
+		// Check that the source character is allowed to get this data
+		let modifierInstance: GameLogicModifierInstanceServer | null | undefined;
+		const checkResult = client.character.checkAction((ctx) => {
+			modifierInstance = targetCharacter.gameLogicCharacter.characterModifiers.getModifier(modifier);
+			if (modifierInstance == null)
+				return ctx.invalid();
+
+			return CharacterModifierActionCheckModify(ctx, target, modifierInstance);
+		});
+
+		if (!checkResult.valid) {
+			return {
+				result: 'failure',
+				problems: checkResult.problems.slice(),
+				canPrompt: checkResult.prompt === target,
+			};
+		}
+
+		Assert(modifierInstance != null);
+		const result = targetCharacter.gameLogicCharacter.characterModifiers.configureModifier(modifier, config);
+
+		if (result === true) {
+			// Send a chat notification if editing modifiers on someone else
+			if (client.character.id !== target) {
+				const character: ActionHandlerMessageTargetCharacter = {
+					type: 'character',
+					id: client.character.id,
+				};
+				const originalName = modifierInstance.name || CHARACTER_MODIFIER_TYPE_DEFINITION[modifierInstance.type].visibleName;
+				const newName = config.name != null ? (config.name || CHARACTER_MODIFIER_TYPE_DEFINITION[modifierInstance.type].visibleName) : originalName;
+
+				if (config.conditions != null || config.config != null) {
+					space.handleActionMessage({
+						id: 'characterModifierChange',
+						character,
+						sendTo: [target],
+						dictionary: {
+							'MODIFIER_NAME': originalName,
+						},
+					});
+				}
+				if (config.lockExceptions != null) {
+					space.handleActionMessage({
+						id: 'characterModifierLockExceptionsChange',
+						character,
+						sendTo: [target],
+						dictionary: {
+							'MODIFIER_NAME': originalName,
+						},
+					});
+				}
+				if (config.name != null && config.name !== modifierInstance.name) {
+					space.handleActionMessage({
+						id: 'characterModifierRename',
+						character,
+						sendTo: [target],
+						dictionary: {
+							'MODIFIER_NAME_OLD': originalName,
+							'MODIFIER_NAME': newName,
+						},
+					});
+				}
+				if (config.enabled != null && config.enabled !== modifierInstance.enabled) {
+					space.handleActionMessage({
+						id: config.enabled ? 'characterModifierEnable' : 'characterModifierDisable',
+						character,
+						sendTo: [target],
+						dictionary: {
+							'MODIFIER_NAME': newName,
+						},
+					});
+				}
+			}
+
+			return {
+				result: 'ok',
+			};
+		}
+
+		switch (result) {
+			case 'invalidConfiguration':
+				return {
+					result: 'invalidConfiguration',
+				};
+			case 'failure':
+				return {
+					result: 'failure',
+					problems: [
+						{ result: 'invalidAction' },
+					],
+					canPrompt: false,
+				};
+		}
+		AssertNever(result);
+	}
+
+	private handleCharacterModifierLock({ target, modifier, action }: IClientShardArgument['characterModifierLock'], client: ClientConnection): IClientShardNormalResult['characterModifierLock'] {
+		if (!client.character)
+			throw new BadMessageError();
+
+		// Find the target
+		const space = client.character.getOrLoadSpace();
+		const targetCharacter = space.getCharacterById(target);
+		if (targetCharacter == null) {
+			return {
+				result: 'characterNotFound',
+			};
+		}
+
+		// Check that the source character is allowed to do this action
+		let modifierInstance: GameLogicModifierInstanceServer | null | undefined;
+		let player: CharacterRestrictionsManager | undefined;
+		const checkResult = client.character.checkAction((ctx) => {
+			player = ctx.getPlayerRestrictionManager();
+			modifierInstance = targetCharacter.gameLogicCharacter.characterModifiers.getModifier(modifier);
+			if (modifierInstance == null)
+				return ctx.invalid();
+
+			return CharacterModifierActionCheckLockModify(ctx, target, modifierInstance, action);
+		});
+
+		if (!checkResult.valid) {
+			return {
+				result: 'failure',
+				problems: checkResult.problems.slice(),
+				canPrompt: checkResult.prompt === target,
+			};
+		}
+
+		Assert(modifierInstance != null);
+		Assert(player != null);
+		const result = targetCharacter.gameLogicCharacter.characterModifiers.doLockAction(
+			modifier,
+			{
+				player,
+				isSelfAction: target === player.appearance.id,
+				executionContext: 'act',
+			},
+			action,
+		);
+
+		if (result.result === 'ok') {
+			// Send a chat notification if editing modifiers on someone else
+			if (client.character.id !== target) {
+				const character: ActionHandlerMessageTargetCharacter = {
+					type: 'character',
+					id: client.character.id,
+				};
+				const name = modifierInstance.name || CHARACTER_MODIFIER_TYPE_DEFINITION[modifierInstance.type].visibleName;
+
+				switch (action.action) {
+					case 'addLock':
+						space.handleActionMessage({
+							id: 'characterModifierLockAdd',
+							character,
+							sendTo: [target],
+							dictionary: {
+								'MODIFIER_NAME': name,
+								'LOCK_TYPE': CHARACTER_MODIFIER_LOCK_DEFINITIONS[action.lockType].name,
+							},
+						});
+						break;
+					case 'removeLock':
+						space.handleActionMessage({
+							id: 'characterModifierLockAdd',
+							character,
+							sendTo: [target],
+							dictionary: {
+								'MODIFIER_NAME': name,
+							},
+						});
+						break;
+					case 'lockAction':
+						switch (action.lockAction.action) {
+							case 'lock':
+								space.handleActionMessage({
+									id: 'characterModifierLockLock',
+									character,
+									sendTo: [target],
+									dictionary: {
+										'MODIFIER_NAME': name,
+									},
+								});
+								break;
+							case 'unlock':
+								space.handleActionMessage({
+									id: 'characterModifierLockUnlock',
+									character,
+									sendTo: [target],
+									dictionary: {
+										'MODIFIER_NAME': name,
+									},
+								});
+								break;
+							case 'showPassword':
+								// No message for show password
+								break;
+							default:
+								AssertNever(action.lockAction);
+						}
+						break;
+					default:
+						AssertNever(action);
+				}
+			}
+
+			return result;
+		}
+
+		switch (result.result) {
+			case 'failure':
+				return {
+					result: 'failure',
+					problems: result.problems,
+					canPrompt: false,
+				};
+		}
+		AssertNever(result);
 	}
 
 	public onAssetDefinitionsChanged(): void {

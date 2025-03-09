@@ -45,8 +45,8 @@ $header-height: 2em;
 				align-items: flex-start;
 				pointer-events: none;
 
-				>* {
-					pointer-events: auto;
+				&.solidOverlay {
+					background: common.$theme-wardrobe-preview-overlay;
 				}
 
 				.iconButton {
@@ -309,6 +309,11 @@ $drop-overlay-gap: 0.3em;
 		}
 	}
 
+	.description {
+		white-space: pre-wrap;
+		overflow-wrap: break-word;
+	}
+
 	>.fieldset-toggle {
 		margin-top: 1em;
 	}
@@ -380,6 +385,10 @@ $drop-overlay-gap: 0.3em;
 
 		.quickActions {
 			margin: 3px 3px 3px auto;
+		}
+
+		&.sidePadding {
+			padding: 0 0.5em;
 		}
 	}
 
@@ -512,6 +521,7 @@ $drop-overlay-gap: 0.3em;
 	position: relative;
 	@include common.center-flex;
 	border: 1px solid common.$theme-wardrobe-actionbutton-border;
+	border-radius: 0.2em;
 	z-index: 1;
 
 	&:not(.slim) {
@@ -527,6 +537,9 @@ $drop-overlay-gap: 0.3em;
 		img {
 			width: 100%;
 			height: 100%;
+			user-select: none;
+			pointer-events: none;
+			object-fit: contain;
 		}
 	}
 
@@ -569,9 +582,11 @@ $drop-overlay-gap: 0.3em;
 		// );
 	}
 
-	&.allowed:not(:disabled) {
+	:not(:disabled) {
 		cursor: pointer;
+	}
 
+	&.allowed:not(:disabled) {
 		&:hover:not(.pendingAttempt:not(.progressDone)) {
 			background: common.$theme-wardrobe-actionbutton-hover-background;
 			color: common.$theme-wardrobe-actionbutton-hover-text;
@@ -589,7 +604,6 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	&.blocked:not(.selected) {
-		cursor: default;
 		background: common.$theme-wardrobe-actionbutton-blocked-background;
 		color: common.$theme-wardrobe-actionbutton-blocked-text;
 	}

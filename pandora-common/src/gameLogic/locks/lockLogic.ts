@@ -26,12 +26,18 @@ export const LockActionSchema = z.discriminatedUnion('action', [
 ]);
 export type LockAction = z.infer<typeof LockActionSchema>;
 
+export type LockActionLockProblem = 'blockSelf' | 'noStoredPassword' | 'invalidPassword' | 'noTimerSet' | 'invalidTimer';
+export type LockActionUnlockProblem = 'blockSelf' | 'wrongPassword' | 'timerRunning';
+export type LockActionShowPasswordProblem = 'notAllowed';
+
+export type LockActionProblem = LockActionLockProblem | LockActionUnlockProblem | LockActionShowPasswordProblem;
+
 export type LockActionLockResult = {
 	result: 'ok';
 	newState: LockLogic;
 } | {
 	result: 'failed';
-	reason: 'blockSelf' | 'noStoredPassword' | 'noTimerSet' | 'invalidTimer';
+	reason: LockActionLockProblem;
 } | {
 	result: 'invalid';
 };
@@ -41,7 +47,7 @@ export type LockActionUnlockResult = {
 	newState: LockLogic;
 } | {
 	result: 'failed';
-	reason: 'blockSelf' | 'wrongPassword' | 'timerRunning';
+	reason: LockActionUnlockProblem;
 } | {
 	result: 'invalid';
 };
@@ -51,7 +57,7 @@ export type LockActionShowPasswordResult = {
 	password: string | null;
 } | {
 	result: 'failed';
-	reason: 'notAllowed';
+	reason: LockActionShowPasswordProblem;
 } | {
 	result: 'invalid';
 };
@@ -135,59 +141,75 @@ export class LockLogic {
 		let lockedUntil: number | undefined;
 		if (this.lockSetup.timer != null) {
 			if (timer == null) {
-				return {
-					result: 'failed',
-					reason: 'noTimerSet',
-				};
+				if (executionContext !== 'clientOnlyVerify') {
+					return {
+						result: 'failed',
+						reason: 'noTimerSet',
+					};
+				}
+				// If we are checking only validity, supply default value
+				timer = 0;
 			}
-
 			if (timer < 0 || timer > this.lockSetup.timer.maxDuration) {
 				return {
 					result: 'failed',
 					reason: 'invalidTimer',
 				};
 			}
-
 			lockedUntil = lockTime + timer;
 		}
 
 		let hidden: LockDataBundle['hidden'] | undefined;
-		if (this.lockSetup.password != null && password == null) {
-			switch (this.lockData?.hidden?.side) {
-				case 'client':
-					if (!this.lockData.hidden.hasPassword && executionContext !== 'clientOnlyVerify') {
-						return {
-							result: 'failed',
-							reason: 'noStoredPassword',
-						};
-					}
+		if (this.lockSetup.password != null) {
+			if (password == null) {
+				if (executionContext === 'clientOnlyVerify') {
+					// Don't store password in verify-only context
 					hidden = { side: 'client', hasPassword: true };
-					break;
-				case 'server':
-					if (this.lockData.hidden.password == null || this.lockData.hidden.passwordSetBy == null) {
-						return {
-							result: 'failed',
-							reason: 'noStoredPassword',
-						};
+				} else {
+					// Nullish password means re-use existing (or fail trying)
+					switch (this.lockData?.hidden?.side) {
+						case 'client':
+							if (!this.lockData.hidden.hasPassword) {
+								return {
+									result: 'failed',
+									reason: 'noStoredPassword',
+								};
+							}
+							hidden = { side: 'client', hasPassword: true };
+							break;
+						case 'server':
+							if (this.lockData.hidden.password == null || this.lockData.hidden.passwordSetBy == null) {
+								return {
+									result: 'failed',
+									reason: 'noStoredPassword',
+								};
+							}
+							hidden = {
+								side: 'server',
+								password: this.lockData.hidden.password,
+								passwordSetBy: this.lockData.hidden.passwordSetBy,
+							};
+							break;
+						default:
+							return {
+								result: 'failed',
+								reason: 'noStoredPassword',
+							};
 					}
-					hidden = {
-						side: 'server',
-						password: this.lockData.hidden.password,
-						passwordSetBy: this.lockData.hidden.passwordSetBy,
-					};
-					break;
-				default:
+				}
+			} else {
+				if (!LockLogic.validatePassword(this.lockSetup, password)) {
 					return {
 						result: 'failed',
-						reason: 'noStoredPassword',
+						reason: 'invalidPassword',
 					};
+				}
+				hidden = {
+					side: 'server',
+					password,
+					passwordSetBy: player.appearance.id,
+				};
 			}
-		} else if (password != null) {
-			hidden = {
-				side: 'server',
-				password,
-				passwordSetBy: player.appearance.id,
-			};
 		}
 
 		const lockData: Immutable<LockDataBundle> = produce(this.lockData, (data) => {
@@ -289,36 +311,39 @@ export class LockLogic {
 			result: 'ok',
 			password: this.lockData.hidden.password,
 		};
-
 	}
 
-	public static loadFromBundle(lockSetup: Immutable<LockSetup>, bundle: Immutable<LockDataBundle> | undefined = {}, context: IItemLoadContext): LockLogic {
+	public static loadFromBundle(
+		lockSetup: Immutable<LockSetup>,
+		bundle: Immutable<LockDataBundle> | undefined = {},
+		{ doLoadTimeCleanup, logger }: Pick<IItemLoadContext, 'doLoadTimeCleanup' | 'logger'>,
+	): LockLogic {
 		freeze(lockSetup, true);
 		freeze(bundle, true);
 		// Load-time cleanup logic
-		if (context.doLoadTimeCleanup && bundle?.hidden != null) {
+		if (doLoadTimeCleanup && bundle?.hidden != null) {
 			const lockData = CloneDeepMutable(bundle);
 			Assert(lockData?.hidden != null);
 			switch (lockData.hidden.side) {
 				case 'client':
 					if (lockSetup.password == null && lockData.hidden.hasPassword != null) {
-						context.logger?.warning(`Lock without password has hidden password`);
+						logger?.warning(`Lock without password has hidden password`);
 						delete lockData.hidden.hasPassword;
 					} else if (lockSetup.password != null && lockData.hidden.hasPassword == null) {
-						context.logger?.warning(`Lock with password has no hidden password`);
+						logger?.warning(`Lock with password has no hidden password`);
 						delete lockData.locked;
 					}
 					break;
 				case 'server':
-					if (lockData.hidden.password != null && !LockLogic.validatePassword(lockSetup, lockData.hidden.password, context.logger)) {
+					if (lockData.hidden.password != null && !LockLogic.validatePassword(lockSetup, lockData.hidden.password, logger)) {
 						delete lockData.hidden.password;
 					}
 					if (lockSetup.password != null && lockData.hidden?.password == null && lockData.locked != null) {
-						context.logger?.warning(`Lock is locked but has no hidden password`);
+						logger?.warning(`Lock is locked but has no hidden password`);
 						delete lockData.locked;
 					}
 					if (lockData.hidden.password == null && lockData.hidden.passwordSetBy != null) {
-						context.logger?.warning(`Lock has password set by but no password`);
+						logger?.warning(`Lock has password set by but no password`);
 						delete lockData.hidden.passwordSetBy;
 					}
 					break;

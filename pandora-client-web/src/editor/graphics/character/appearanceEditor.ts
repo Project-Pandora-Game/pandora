@@ -31,6 +31,7 @@ import {
 	LayerImageSetting,
 	LayerMirror,
 	TypedEventEmitter,
+	type AssetFrameworkGlobalState,
 } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { AssetGraphics, AssetGraphicsLayer } from '../../../assets/assetGraphics';
@@ -47,11 +48,11 @@ export interface EditorActionContext {
 }
 
 export class AppearanceEditor extends CharacterAppearance {
-	public readonly globalState: AssetFrameworkGlobalStateContainer;
+	public readonly globalStateContainer: AssetFrameworkGlobalStateContainer;
 
-	constructor(characterState: AssetFrameworkCharacterState, character: GameLogicCharacter, globalState: AssetFrameworkGlobalStateContainer) {
-		super(characterState, character);
-		this.globalState = globalState;
+	constructor(globalState: AssetFrameworkGlobalState, character: GameLogicCharacter, globalStateContainer: AssetFrameworkGlobalStateContainer) {
+		super(globalState, character);
+		this.globalStateContainer = globalStateContainer;
 	}
 
 	protected _makeActionContext(): AppearanceActionContext {
@@ -72,7 +73,7 @@ export class AppearanceEditor extends CharacterAppearance {
 		action: AppearanceAction,
 		{ dryRun = false }: EditorActionContext = {},
 	): boolean {
-		const processingContext = new AppearanceActionProcessingContext(this._makeActionContext(), this.globalState.currentState);
+		const processingContext = new AppearanceActionProcessingContext(this._makeActionContext(), this.globalStateContainer.currentState);
 		const result = ApplyAction(processingContext, action);
 
 		if (!result.valid) {
@@ -80,7 +81,7 @@ export class AppearanceEditor extends CharacterAppearance {
 		}
 
 		if (!dryRun) {
-			this.globalState.setState(result.resultState);
+			this.globalStateContainer.setState(result.resultState);
 		}
 		return true;
 	}
@@ -185,14 +186,13 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 		return true;
 	}
 
-	public getAppearance(state?: AssetFrameworkCharacterState): AppearanceEditor {
-		state ??= this.editor.globalState.currentState.getCharacterState(this.id) ?? undefined;
-		Assert(state != null && state.id === this.id);
-		return new AppearanceEditor(state, this.gameLogicCharacter, this.editor.globalState);
+	public getAppearance(globalState?: AssetFrameworkGlobalState): AppearanceEditor {
+		globalState ??= this.editor.globalState.currentState;
+		return new AppearanceEditor(globalState, this.gameLogicCharacter, this.editor.globalState);
 	}
 
-	public getRestrictionManager(state: AssetFrameworkCharacterState | undefined, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
-		return this.getAppearance(state).getRestrictionManager(spaceContext);
+	public getRestrictionManager(globalState: AssetFrameworkGlobalState | undefined, spaceContext: ActionSpaceContext): CharacterRestrictionsManager {
+		return this.getAppearance(globalState).getRestrictionManager(spaceContext);
 	}
 }
 

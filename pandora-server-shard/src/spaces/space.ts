@@ -17,6 +17,7 @@ import {
 	CharacterRoomPosition,
 	ChatCharacterStatus,
 	CloneDeepMutable,
+	EMPTY_ARRAY,
 	GameStateUpdate,
 	GenerateInitialRoomPosition,
 	IChatMessage,
@@ -36,7 +37,11 @@ import {
 	SpaceId,
 	SpaceLoadData,
 	type AppearanceActionProcessingResultValid,
+	type ChatMessageFilterMetadata,
+	type CurrentSpaceInfo,
 	type IChatMessageAction,
+	type IClientShardNormalResult,
+	type SpaceCharacterModifierEffectData,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager';
 import type { Character } from '../character/character';
@@ -55,7 +60,11 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	protected readonly actionCache = new Map<CharacterId, { result: IChatMessageActionTargetCharacter; leave?: number; }>();
 	protected readonly tickInterval: NodeJS.Timeout;
 
-	public readonly gameState: AssetFrameworkGlobalStateContainer;
+	private readonly _gameState: AssetFrameworkGlobalStateContainer;
+
+	public get currentState(): AssetFrameworkGlobalState {
+		return this._gameState.currentState;
+	}
 
 	public abstract get id(): SpaceId | null;
 	public abstract get owners(): readonly AccountId[];
@@ -91,9 +100,9 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			}
 		}
 
-		this.gameState = new AssetFrameworkGlobalStateContainer(
+		this._gameState = new AssetFrameworkGlobalStateContainer(
 			this.logger,
-			this.onStateChanged.bind(this),
+			this._onStateChanged.bind(this),
 			initialState,
 		);
 
@@ -101,7 +110,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	}
 
 	public reloadAssetManager(manager: AssetManager) {
-		this.gameState.reloadAssetManager(manager);
+		this._gameState.reloadAssetManager(manager);
 
 		// Background definition might have changed, make sure all characters are still inside range
 		const update: GameStateUpdate = {};
@@ -128,10 +137,10 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	}
 
 	public applyAction(result: AppearanceActionProcessingResultValid): void {
-		Assert(this.gameState.currentState === result.originalState, 'Attempt to apply action originating from a different state than the current one');
+		Assert(this._gameState.currentState === result.originalState, 'Attempt to apply action originating from a different state than the current one');
 
 		// Apply the action
-		this.gameState.setState(result.resultState);
+		this._gameState.setState(result.resultState);
 
 		// Send chat messages as needed
 		for (const message of result.pendingMessages) {
@@ -170,7 +179,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		}
 	}
 
-	public onStateChanged(newState: AssetFrameworkGlobalState, oldState: AssetFrameworkGlobalState): void {
+	private _onStateChanged(newState: AssetFrameworkGlobalState, oldState: AssetFrameworkGlobalState): void {
 		const changes = newState.listChanges(oldState);
 
 		if (changes.room) {
@@ -186,6 +195,13 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 		this.sendUpdateToAllCharacters({
 			globalState: newState.exportToClientBundle(),
+			characterModifierEffects: this.getCharacterModifierEffects(),
+		});
+	}
+
+	public onCharacterModifiersChanged(): void {
+		this.sendUpdateToAllCharacters({
+			characterModifierEffects: this.getCharacterModifierEffects(),
 		});
 	}
 
@@ -203,7 +219,23 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			id: this.id,
 			info: this.getInfo(),
 			characters: Array.from(this.characters).map((c) => c.getRoomData()),
+			characterModifierEffects: this.getCharacterModifierEffects(),
 		};
+	}
+
+	public getCharacterModifierEffects(): SpaceCharacterModifierEffectData {
+		const result: SpaceCharacterModifierEffectData = {};
+
+		const gameState = this.currentState;
+		const spaceInfo: CurrentSpaceInfo = {
+			id: this.id,
+			config: this.getInfo(),
+		};
+		for (const character of this.characters) {
+			result[character.id] = character.gameLogicCharacter.characterModifiers.getActiveEffects(gameState, spaceInfo);
+		}
+
+		return result;
 	}
 
 	public getActionSpaceContext(): ActionSpaceContext {
@@ -211,6 +243,15 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			features: this.config.features,
 			isAdmin: (account) => Array.from(this.characters).some((character) => character.accountId === account && this.isAdmin(character)),
 			development: this.config.development,
+			getCharacterModifierEffects: (characterId, gameState) => {
+				const character = Array.from(this.characters).find((c) => c.id === characterId);
+				const spaceInfo: CurrentSpaceInfo = {
+					id: this.id,
+					config: this.getInfo(),
+				};
+				return character == null ? EMPTY_ARRAY :
+					character.gameLogicCharacter.characterModifiers.getActiveEffects(gameState, spaceInfo);
+			},
 		};
 	}
 
@@ -285,7 +326,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	}
 
 	public getRoomInventory(): RoomInventory {
-		const state = this.gameState.currentState.room;
+		const state = this.currentState.room;
 		AssertNotNullable(state);
 		return new RoomInventory(state);
 	}
@@ -297,7 +338,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		const logger = this.logger.prefixMessages(`Character ${character.id} join:`);
 
 		this.runWithSuppressedUpdates(() => {
-			let newState = this.gameState.currentState;
+			let newState = this._gameState.currentState;
 
 			// Add the character to the room
 			this.characters.add(character);
@@ -325,12 +366,13 @@ export abstract class Space extends ServerRoom<IShardClient> {
 				}
 			}
 
-			this.gameState.setState(newState);
+			this._gameState.setState(newState);
 
 			// Send update to current characters
-			const globalState = this.gameState.currentState.exportToClientBundle();
+			const globalState = this._gameState.currentState.exportToClientBundle();
 			this.sendUpdateToAllCharacters({
 				globalState,
+				characterModifierEffects: this.getCharacterModifierEffects(),
 				join: character.getRoomData(),
 			});
 			// Send update to joining character
@@ -353,7 +395,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public characterRemove(character: Character): void {
 		this.runWithSuppressedUpdates(() => {
 			// Remove character
-			let newState = this.gameState.currentState;
+			let newState = this._gameState.currentState;
 			const characterAppearance = newState.characters.get(character.id)?.exportToBundle();
 			AssertNotNullable(characterAppearance);
 
@@ -364,9 +406,10 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			character.setSpace(null, characterAppearance);
 
 			// Update anyone remaining in the space
-			this.gameState.setState(newState);
+			this._gameState.setState(newState);
 			this.sendUpdateToAllCharacters({
-				globalState: this.gameState.currentState.exportToClientBundle(),
+				globalState: this._gameState.currentState.exportToClientBundle(),
+				characterModifierEffects: this.getCharacterModifierEffects(),
 				leave: character.id,
 			});
 
@@ -409,16 +452,29 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		sendTo?.sendMessage('chatCharacterStatus', { id: character.id, status });
 	}
 
-	public handleMessages(from: Character, messages: IClientMessage[], id: number, insertId?: number): void {
-		// Handle speech muffling
+	public handleMessages(from: Character, messages: IClientMessage[], id: number, editId?: number): IClientShardNormalResult['chatMessage'] {
 		const player = from.getRestrictionManager();
-		const muffler = player.getMuffler();
-		if (muffler.isActive()) {
+		// Handle speech blocking
+		for (const message of messages) {
+			const blockCheck = player.checkChatMessage(message);
+			if (blockCheck.result !== 'ok') {
+				return {
+					result: 'blocked',
+					reason: 'At least one part of the message was blocked with reason:\n' + blockCheck.reason,
+				};
+			}
+		}
+
+		// Handle speech muffling
+		const speechFilter = player.getSpeechFilter();
+		if (speechFilter.isActive()) {
 			for (const message of messages) {
+				const metadata: ChatMessageFilterMetadata = {
+					from: from.id,
+					to: IsTargeted(message) ? message.to : null,
+				};
 				if (message.type === 'chat') {
-					for (const part of message.parts) {
-						part[1] = muffler.muffle(part[1]);
-					}
+					message.parts = speechFilter.processMessage(message.parts, metadata);
 				}
 			}
 		}
@@ -428,25 +484,41 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		let history = this.history.get(from.id);
 		if (!history) {
 			this.history.set(from.id, history = new Map<number, number>());
-			if (insertId) {
-				return; // invalid message, nothing to edit
+			if (editId) {
+				// invalid message, nothing to edit
+				return {
+					result: 'blocked',
+					reason: 'Edited message not found',
+				};
 			}
 		} else {
 			if (history.has(id)) {
-				return; // invalid message, already exists
+				// invalid message, already exists
+				return {
+					result: 'blocked',
+					reason: 'Duplicate message',
+				};
 			}
-			if (insertId) {
-				const insert = history.get(insertId);
+			if (editId) {
+				const insert = history.get(editId);
 				if (!insert) {
-					return; // invalid message, nothing to edit
+					// invalid message, nothing to edit
+					return {
+						result: 'blocked',
+						reason: 'Edited message not found',
+					};
 				}
-				history.delete(insertId);
+				history.delete(editId);
 				if (insert + MESSAGE_EDIT_TIMEOUT < now) {
-					return; // invalid message, too old
+					// invalid message, too old
+					return {
+						result: 'blocked',
+						reason: 'Edited message is too old to be edited',
+					};
 				}
 				queue.push({
 					type: 'deleted',
-					id: insertId,
+					id: editId,
 					from: from.id,
 					time: this.nextMessageTime(),
 				});
@@ -458,7 +530,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 				queue.push({
 					type: message.type,
 					id,
-					insertId,
+					insertId: editId,
 					from: { id: from.id, name: from.name, labelColor: from.settings.labelColor },
 					parts: message.parts,
 					time: this.nextMessageTime(),
@@ -471,7 +543,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 				queue.push({
 					type: message.type,
 					id,
-					insertId,
+					insertId: editId,
 					from: { id: from.id, name: from.name, labelColor: from.settings.labelColor },
 					to: { id: target.id, name: target.name, labelColor: target.settings.labelColor },
 					parts: message.parts,
@@ -480,6 +552,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			}
 		}
 		this._queueMessages(queue);
+
+		return { result: 'ok' };
 	}
 
 	public handleActionMessage(actionMessage: ActionHandlerMessage): void {

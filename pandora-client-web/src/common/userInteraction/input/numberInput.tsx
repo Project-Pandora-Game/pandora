@@ -14,6 +14,7 @@ const FORWARDED_PROPS = [
 	'required',
 	// Presentation
 	'aria-haspopup',
+	'aria-label',
 	'autoComplete',
 	'inputMode',
 	'list',
@@ -75,15 +76,19 @@ export class NumberInput extends InputBase<number, NumberInputProps, HTMLInputEl
 
 		const { min, max } = this.props;
 
-		const newValue = this.element.valueAsNumber;
+		let newValue = this.element.valueAsNumber;
 
-		const isValid = !Number.isNaN(newValue) &&
-		(min === undefined || newValue >= min) &&
-		(max === undefined || newValue <= max);
-
-		// Return old if invalid
-		if (!isValid) {
+		// Return old value if read failed
+		if (Number.isNaN(newValue)) {
 			return this.lastValidValue;
+		}
+
+		// Limit the value
+		if (min !== undefined && newValue < min) {
+			newValue = min;
+		}
+		if (max !== undefined && newValue > max) {
+			newValue = max;
 		}
 
 		return newValue;

@@ -5,15 +5,20 @@ import { SplitContainerPath } from '../assets/appearanceHelpers';
 import type { ActionTarget, ActionTargetCharacter, ItemContainerPath, ItemPath } from '../assets/appearanceTypes';
 import { AppearanceItemProperties } from '../assets/appearanceValidation';
 import { Asset } from '../assets/asset';
-import { EffectsDefinition } from '../assets/effects';
+import { EffectsDefinition, MergeEffects } from '../assets/effects';
 import { FilterItemType, type Item, type ItemId, type RoomDeviceLink } from '../assets/item';
 import { AssetPropertiesResult } from '../assets/properties';
 import { GetRestrictionOverrideConfig, RestrictionOverrideConfig } from '../assets/state/characterStateTypes';
-import { HearingImpairment, Muffler } from '../character/speech';
+import type { ChatMessageBlockingResult, IClientMessage } from '../chat';
+import { CompoundChatMessageFilter, CustomChatMessageFilter, type ChatMessageFilter } from '../chat/chatMessageFilter';
+import { HearingImpairment } from '../chat/hearingImpairment';
+import { Muffler } from '../chat/muffling';
+import type { CharacterModifierEffectData, CharacterModifierPropertiesApplier } from '../gameLogic';
 import type { AppearanceActionProcessingContext } from '../gameLogic/actionLogic/appearanceActionProcessingContext';
 import type { GameLogicCharacter } from '../gameLogic/character/character';
+import { CHARACTER_MODIFIER_TYPE_DEFINITION } from '../gameLogic/characterModifiers';
 import type { ActionSpaceContext } from '../space/space';
-import { Assert, AssertNever } from '../utility/misc';
+import { Assert, AssertNever, MemoizeNoArg } from '../utility/misc';
 import { ItemInteractionType } from './restrictionTypes';
 
 /**
@@ -38,6 +43,19 @@ export class CharacterRestrictionsManager {
 		// Calculate caches
 		this._properties = AppearanceItemProperties(this.appearance.getAllItems());
 		this._roomDeviceLink = this.appearance.characterState.getRoomDeviceWearablePart()?.roomDeviceLink ?? null;
+	}
+
+	@MemoizeNoArg
+	public getModifierEffects(): readonly Immutable<CharacterModifierEffectData>[] {
+		return this.spaceContext.getCharacterModifierEffects(this.appearance.id, this.appearance.gameState);
+	}
+
+	@MemoizeNoArg
+	public getModifierEffectProperties(): readonly CharacterModifierPropertiesApplier[] {
+		return this.getModifierEffects().map((e): CharacterModifierPropertiesApplier => {
+			const definition = CHARACTER_MODIFIER_TYPE_DEFINITION[e.type];
+			return definition.createPropertiesApplier(e);
+		});
 	}
 
 	public getProperties(): Immutable<AssetPropertiesResult> {
@@ -74,8 +92,19 @@ export class CharacterRestrictionsManager {
 	/**
 	 * @returns Stable result for effects
 	 */
+	@MemoizeNoArg
 	public getEffects(): Readonly<EffectsDefinition> {
-		return this.getProperties().effects;
+		// Get effects from items
+		let effects = this.getProperties().effects;
+
+		// Apply effects from modifiers
+		for (const modifierEffect of this.getModifierEffectProperties()) {
+			if (modifierEffect.applyCharacterEffects != null) {
+				effects = MergeEffects(effects, modifierEffect.applyCharacterEffects(effects));
+			}
+		}
+
+		return effects;
 	}
 
 	/**
@@ -86,17 +115,83 @@ export class CharacterRestrictionsManager {
 	}
 
 	/**
-	 * Returns the Muffler class for this CharacterRestrictionsManager
+	 * Returns the ChatMessageFilter class for processing this character's speech
 	 */
-	public getMuffler(): Muffler {
-		return new Muffler(this.character.id, this.getEffects());
+	public getSpeechFilter(): ChatMessageFilter {
+		const resultFilters: ChatMessageFilter[] = [];
+
+		// Apply effects from "before" modifiers
+		for (const modifierEffect of this.getModifierEffectProperties()) {
+			if (modifierEffect.processChatMessageBeforeMuffle != null) {
+				resultFilters.push(new CustomChatMessageFilter(modifierEffect.processChatMessageBeforeMuffle));
+			}
+		}
+
+		// Apply standard muffling
+		resultFilters.push(new Muffler(this.character.id, this.getEffects()));
+
+		// Apply effects from "after" modifiers
+		for (const modifierEffect of this.getModifierEffectProperties().toReversed()) {
+			if (modifierEffect.processChatMessageAfterMuffle != null) {
+				resultFilters.push(new CustomChatMessageFilter(modifierEffect.processChatMessageAfterMuffle));
+			}
+		}
+
+		if (resultFilters.length === 1)
+			return resultFilters[0];
+		return new CompoundChatMessageFilter(resultFilters);
+
 	}
 
 	/**
-	 * Returns the HearingImpairment class for this CharacterRestrictionsManager
+	 * Returns the ChatMessageFilter class for processing this character's hearing
 	 */
-	public getHearingImpairment(): HearingImpairment {
-		return new HearingImpairment(this.character.id, this.getEffects());
+	public getHearingFilter(): ChatMessageFilter {
+		const resultFilters: ChatMessageFilter[] = [];
+
+		// Apply effects from "before" modifiers
+		for (const modifierEffect of this.getModifierEffectProperties()) {
+			if (modifierEffect.processReceivedChatMessageBeforeFilters != null) {
+				resultFilters.push(new CustomChatMessageFilter(modifierEffect.processReceivedChatMessageBeforeFilters));
+			}
+		}
+
+		// Apply standard effects
+		resultFilters.push(new HearingImpairment(this.character.id, this.getEffects()));
+
+		// Apply effects from "after" modifiers
+		for (const modifierEffect of this.getModifierEffectProperties().toReversed()) {
+			if (modifierEffect.processReceivedChatMessageAfterFilters != null) {
+				resultFilters.push(new CustomChatMessageFilter(modifierEffect.processReceivedChatMessageAfterFilters));
+			}
+		}
+
+		if (resultFilters.length === 1)
+			return resultFilters[0];
+		return new CompoundChatMessageFilter(resultFilters);
+	}
+
+	/** Check whether this character is allowed to say this message */
+	public checkChatMessage(message: IClientMessage): ChatMessageBlockingResult {
+		// Only normal chat messages can be affected
+		if (message.type !== 'chat')
+			return { result: 'ok' };
+
+		// Run modifier checks
+		for (const modifierEffect of this.getModifierEffectProperties()) {
+			if (modifierEffect.checkChatMessage != null) {
+				const check = modifierEffect.checkChatMessage(message);
+				if (check.result !== 'ok') {
+					return {
+						result: 'block',
+						reason: `Blocked by character modifier "${CHARACTER_MODIFIER_TYPE_DEFINITION[modifierEffect.effect.type].visibleName}":\n` + check.reason,
+					};
+				}
+			}
+		}
+
+		// Otherwise allow the message
+		return { result: 'ok' };
 	}
 
 	/**
@@ -414,7 +509,7 @@ export class CharacterRestrictionsManager {
 				case ItemInteractionType.REORDER:
 					allowStruggleBypass = (item.isType('personal') || item.isType('roomDevice')) ? !item.requireFreeHandsToUse :
 						item.isType('roomDeviceWearablePart') ? !(item.roomDevice?.requireFreeHandsToUse ?? false) :
-						true;
+							true;
 					break;
 				default:
 					AssertNever(interaction);

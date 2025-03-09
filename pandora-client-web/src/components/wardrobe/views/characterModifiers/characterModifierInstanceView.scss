@@ -1,0 +1,36 @@
+@use '../../../../styles/common';
+
+
+.characterModifierInstance {
+	position: relative;
+	padding-left: 0.75em;
+
+	>.modifierStatusBar {
+		position: absolute;
+		display: inline-block;
+		top: 1px;
+		left: 1px;
+		bottom: 1px;
+		width: 0.5em;
+
+		&.status-disabled {
+			background: common.$theme-wardrobe-modifiers-indication-disabled;
+		}
+		&.status-active {
+			background: common.$theme-wardrobe-modifiers-indication-active;
+		}
+		&.status-inactive {
+			background: common.$theme-wardrobe-modifiers-indication-inactive;
+		}
+	}
+}
+
+.modifyCheckProblem {
+	border-radius: 1em;
+	margin: 1em;
+
+	&.blocked {
+		background: common.$theme-wardrobe-actionbutton-blocked-background;
+		color: common.$theme-wardrobe-actionbutton-blocked-text;
+	}
+}

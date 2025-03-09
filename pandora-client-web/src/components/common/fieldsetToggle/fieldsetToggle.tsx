@@ -5,7 +5,7 @@ import './fieldsetToggle.scss';
 
 type FieldsetToggleProps = {
 	legend: ReactNode;
-	children: ReactNode;
+	children?: ReactNode;
 	className?: string;
 	open?: boolean;
 	forceOpen?: boolean;

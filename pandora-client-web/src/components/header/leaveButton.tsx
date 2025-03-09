@@ -15,8 +15,8 @@ import { Button } from '../common/button/button';
 import { Column, Row } from '../common/container/container';
 import { ModalDialog } from '../dialog/dialog';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { useCharacterRestrictionsManager, useSpaceInfoOptional } from '../gameContext/gameStateContextProvider';
-import { usePlayer, usePlayerData, usePlayerState } from '../gameContext/playerContextProvider';
+import { useCharacterRestrictionsManager, useGameState, useGlobalState, useSpaceInfoOptional } from '../gameContext/gameStateContextProvider';
+import { usePlayer, usePlayerData } from '../gameContext/playerContextProvider';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider';
 import { HeaderButton } from './HeaderButton';
 import './leaveButton.scss';
@@ -105,9 +105,9 @@ function SpaceLeaveInner({ player, config, spaceId }: {
 	spaceId: SpaceId;
 }): ReactElement {
 	const directoryConnector = useDirectoryConnector();
-	const { playerState } = usePlayerState();
-	const roomDeviceLink = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getRoomDeviceLink());
-	const canLeave = useCharacterRestrictionsManager(playerState, player, (manager) => (manager.forceAllowRoomLeave() || !manager.getEffects().blockRoomLeave));
+	const globalState = useGlobalState(useGameState());
+	const roomDeviceLink = useCharacterRestrictionsManager(globalState, player, (manager) => manager.getRoomDeviceLink());
+	const canLeave = useCharacterRestrictionsManager(globalState, player, (manager) => (manager.forceAllowRoomLeave() || !manager.getEffects().blockRoomLeave));
 	const closeDialog = useContext(leaveButtonContext);
 
 	const onLeave = useCallback(() => {

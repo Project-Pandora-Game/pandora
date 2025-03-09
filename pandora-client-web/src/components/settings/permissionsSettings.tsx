@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { capitalize, noop } from 'lodash';
-import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, CharacterIdSchema, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -10,6 +10,9 @@ import color from '../../assets/icons/color.svg';
 import deviceSvg from '../../assets/icons/device.svg';
 import forbid from '../../assets/icons/forbidden.svg';
 import lock from '../../assets/icons/lock.svg';
+import modificationEdit from '../../assets/icons/modification-edit.svg';
+import modificationLock from '../../assets/icons/modification-lock.svg';
+import modificationView from '../../assets/icons/modification-view.svg';
 import onOff from '../../assets/icons/on-off.svg';
 import promptIcon from '../../assets/icons/prompt.svg';
 import allow from '../../assets/icons/public.svg';
@@ -21,10 +24,10 @@ import toggle from '../../assets/icons/toggle.svg';
 import wikiIcon from '../../assets/icons/wiki.svg';
 import { useFunctionBind } from '../../common/useFunctionBind';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent';
-import { TextInput } from '../../common/userInteraction/input/textInput';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { DescribeGameLogicAction } from '../../ui/components/chat/chatMessagesDescriptions';
 import { Button } from '../common/button/button';
+import { CharacterListInputActions } from '../common/characterListInput/characterListInput';
 import { Column, Row } from '../common/container/container';
 import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator';
 import { ButtonConfirm, DraggableDialog, ModalDialog } from '../dialog/dialog';
@@ -59,11 +62,13 @@ function InteractionPermissions(): ReactElement {
 					<img className='help-image' src={ wikiIcon } width='26' height='26' alt='Wiki' />
 				</Link>
 			</Row>
-			{
-				INTERACTION_IDS.map((id) => (
-					<InteractionSettings key={ id } id={ id } />
-				))
-			}
+			<Column gap='none' className='permission-list'>
+				{
+					INTERACTION_IDS.map((id) => (
+						<InteractionSettings key={ id } id={ id } />
+					))
+				}
+			</Column>
 		</fieldset>
 	);
 }
@@ -92,6 +97,12 @@ function GetIcon(icon: string): string {
 			return toggle;
 		case 'device':
 			return deviceSvg;
+		case 'modification-edit':
+			return modificationEdit;
+		case 'modification-lock':
+			return modificationLock;
+		case 'modification-view':
+			return modificationView;
 		default:
 			return forbid;
 	}
@@ -113,7 +124,7 @@ function useEffectiveAllowOthers(permissionGroup: PermissionGroup, permissionId:
 	return MakePermissionConfigFromDefault(permissionSetup.defaultConfig).allowOthers;
 }
 
-function ShowEffectiveAllowOthers({ permissionGroup, permissionId }: { permissionGroup: PermissionGroup; permissionId: string; }): ReactElement {
+export function ShowEffectiveAllowOthers({ permissionGroup, permissionId }: { permissionGroup: PermissionGroup; permissionId: string; }): ReactElement {
 	const effectiveConfig = useEffectiveAllowOthers(permissionGroup, permissionId);
 	return (
 		<ShowAllowOthers config={ effectiveConfig } />
@@ -158,30 +169,14 @@ function ShowAllowOthers({ config }: { config: PermissionType; }): ReactElement 
 
 function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
 	const config: Immutable<IInteractionConfig> = INTERACTION_CONFIG[id];
-	const [showConfig, setShowConfig] = useState(false);
 
 	return (
-		<div className='input-row'>
-			<label className='flex-1'>
-				<img src={ GetIcon(config.icon) } width='28' height='28' alt='permission icon' />
-				&nbsp;&nbsp;
-				{ config.visibleName }
-			</label>
-			<ShowEffectiveAllowOthers permissionGroup='interaction' permissionId={ id } />
-			<Button
-				className='slim'
-				onClick={ () => setShowConfig(true) }
-			>
-				Edit
-			</Button>
-			{ showConfig && (
-				<PermissionConfigDialog
-					hide={ () => setShowConfig(false) }
-					permissionGroup='interaction'
-					permissionId={ id }
-				/>
-			) }
-		</div>
+		<PermissionSettingEntry
+			visibleName={ config.visibleName }
+			icon={ config.icon }
+			permissionGroup='interaction'
+			permissionId={ id }
+		/>
 	);
 }
 
@@ -190,44 +185,30 @@ function ItemLimitsPermissions(): ReactElement {
 		<fieldset>
 			<legend>Item Limits</legend>
 			<i>Allow other characters to interact with worn items and to add new items that are marked in the item limits as...</i>
-			{
-				KnownObject.keys(ASSET_PREFERENCES_PERMISSIONS).map((group) => (
-					<ItemLimitsSettings key={ group } group={ group } />
-				))
-			}
+			<Column gap='none' className='permission-list'>
+				{
+					KnownObject.keys(ASSET_PREFERENCES_PERMISSIONS).map((group) => (
+						<ItemLimitsSettings key={ group } group={ group } />
+					))
+				}
+			</Column>
 		</fieldset>
 	);
 }
 
 function ItemLimitsSettings({ group }: { group: AssetPreferenceType; }): ReactElement | null {
 	const config = ASSET_PREFERENCES_PERMISSIONS[group];
-	const [showConfig, setShowConfig] = useState(false);
 
 	if (config == null)
 		return null;
 
 	return (
-		<div className='input-row flex-1'>
-			<label className='flex-1'>
-				<img src={ GetIcon(config.icon) } width='28' height='28' alt='permission icon' />
-				&nbsp;&nbsp;
-				{ config.visibleName }
-			</label>
-			<ShowEffectiveAllowOthers permissionGroup='assetPreferences' permissionId={ group } />
-			<Button
-				className='slim'
-				onClick={ () => setShowConfig(true) }
-			>
-				Edit
-			</Button>
-			{ showConfig && (
-				<PermissionConfigDialog
-					hide={ () => setShowConfig(false) }
-					permissionGroup='assetPreferences'
-					permissionId={ group }
-				/>
-			) }
-		</div>
+		<PermissionSettingEntry
+			visibleName={ config.visibleName }
+			icon={ config.icon }
+			permissionGroup='assetPreferences'
+			permissionId={ group }
+		/>
 	);
 }
 
@@ -267,6 +248,42 @@ function PermissionConfigDialogEscaper({ hide }: { hide: () => void; }): null {
 	}, [hide]), 'Escape');
 
 	return null;
+}
+
+export function PermissionSettingEntry({ visibleName, icon, permissionGroup, permissionId }: {
+	visibleName: string;
+	icon: string;
+	permissionGroup: PermissionGroup;
+	permissionId: string;
+}): ReactElement {
+	const [showConfig, setShowConfig] = useState(false);
+
+	return (
+		<Row alignY='center' padding='small'>
+			{
+				icon ? (
+					<img src={ GetIcon(icon) } width='28' height='28' alt='permission icon' />
+				) : null
+			}
+			<label className='flex-1'>
+				{ visibleName }
+			</label>
+			<ShowEffectiveAllowOthers permissionGroup={ permissionGroup } permissionId={ permissionId } />
+			<Button
+				className='slim'
+				onClick={ () => setShowConfig(true) }
+			>
+				Edit
+			</Button>
+			{ showConfig && (
+				<PermissionConfigDialog
+					hide={ () => setShowConfig(false) }
+					permissionGroup={ permissionGroup }
+					permissionId={ permissionId }
+				/>
+			) }
+		</Row>
+	);
 }
 
 function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
@@ -327,7 +344,11 @@ function PermissionConfigDialog({ permissionGroup, permissionId, hide }: {
 				<Button slim onClick={ () => setDefault(null) }>Reset defaults</Button>
 				<Button onClick={ hide }>Close</Button>
 			</Row>
-			<PermissionConfigOverrides overrides={ permissionConfig?.characterOverrides ?? EMPTY } limit={ permissionSetup.maxCharacterOverrides ?? PERMISSION_MAX_CHARACTER_OVERRIDES } setConfig={ setAny } />
+			<PermissionConfigOverrides
+				overrides={ permissionConfig?.characterOverrides ?? EMPTY }
+				limit={ permissionSetup.maxCharacterOverrides ?? PERMISSION_MAX_CHARACTER_OVERRIDES }
+				setConfig={ setAny }
+			/>
 		</ModalDialog>
 	);
 }
@@ -369,37 +390,23 @@ function PermissionConfigOverrides({ overrides, limit, setConfig }: { overrides:
 	);
 }
 
-function PermissionConfigOverrideType({ type, content, setConfig }: { type: PermissionType; content: CharacterId[]; setConfig: (selector: PermissionConfigChangeSelector, allowOthers: PermissionType | null) => void; }): ReactElement {
-	const [id, setId] = useState('');
-	const result = useMemo(() => CharacterIdSchema.safeParse(id), [id]);
+function PermissionConfigOverrideType({ type, content, setConfig }: {
+	type: PermissionType;
+	content: CharacterId[];
+	setConfig: (selector: PermissionConfigChangeSelector, allowOthers: PermissionType | null) => void;
+}): ReactElement {
+	const onAdd = useCallback((c: CharacterId) => {
+		setConfig(c, type);
+	}, [setConfig, type]);
 
-	const onAdd = useCallback(() => {
-		if (!result.success || content.includes(result.data))
-			return;
-
-		setConfig(result.data, type);
-	}, [result, content, setConfig, type]);
-
-	const onRemove = useCallback(() => {
-		if (!result.success || !content.includes(result.data))
-			return;
-
-		setConfig(result.data, null);
-	}, [result, content, setConfig]);
-
-	useEffect(() => {
-		if (id.length > 0 && /^\d+$/.test(id))
-			setId(`c${id}`);
-	}, [id]);
+	const onRemove = useCallback((c: CharacterId) => {
+		setConfig(c, null);
+	}, [setConfig]);
 
 	return (
 		<>
-			<span>{ capitalize(type as string) }:</span>
-			<textarea value={ content.join(', ') } readOnly />
-			<Row className='input-row'>
-				<TextInput placeholder='Character ID' value={ id } onChange={ (newValue) => setId(newValue.trim()) } />
-				<Button slim onClick={ onAdd } disabled={ !result.success || content.includes(result.data) }>Add</Button>
-				<Button slim onClick={ onRemove } disabled={ !result.success || !content.includes(result.data) }>Remove</Button>
+			<Row>
+				<span className='flex-1'>{ capitalize(type as string) }:</span>
 				<ButtonConfirm slim onClick={ () => setConfig('clearOverridesWith', type) }
 					title='Clear all overrides'
 					content={ `Are you sure you want to clear all overrides with ${type}?` }
@@ -407,9 +414,15 @@ function PermissionConfigOverrideType({ type, content, setConfig }: { type: Perm
 					Clear All
 				</ButtonConfirm>
 			</Row>
+			<CharacterListInputActions
+				value={ content }
+				onAdd={ onAdd }
+				onRemove={ onRemove }
+				noLimitHeight
+				allowSelf='otherCharacter'
+			/>
 		</>
 	);
-
 }
 
 function PermissionAllowOthersSelector({ type, setConfig, effectiveConfig, permissionSetup }: {
@@ -595,50 +608,47 @@ function PermissionPromptGroup({ sourceId, permissionGroup, permissions, setAnyC
 	disableAccept: () => void;
 }): ReactElement {
 	let header;
-	let note;
-	let config: Immutable<Record<string, { visibleName: string; icon: string; } | null>>;
 	switch (permissionGroup) {
 		case 'interaction':
 			header = 'Interactions';
-			note = 'Allow character to...';
-			config = INTERACTION_CONFIG;
 			break;
 		case 'assetPreferences':
 			header = 'Item Limits';
-			note = 'Allow character to interact with worn items and to add new items that are marked in the item limits as...';
-			config = ASSET_PREFERENCES_PERMISSIONS;
+			break;
+		case 'characterModifierType':
+			header = 'Character modifiers';
 			break;
 		default:
 			AssertNever(permissionGroup);
 	}
 
 	const perms = useMemo(() => {
-		const result: Readonly<{ id: string; visibleName: string; icon: string; allowOthers: PermissionType; isAllowed: boolean; }>[] = [];
+		const result: Readonly<{ id: string; visibleName: string; icon?: string; allowOthers: PermissionType; isAllowed: boolean; }>[] = [];
 		for (const [setup, cfg] of permissions) {
-			const permConfig = config[setup.id];
-			if (permConfig == null)
-				continue;
 
 			result.push({
 				id: setup.id,
-				visibleName: permConfig.visibleName,
-				icon: permConfig.icon,
+				visibleName: setup.displayName,
+				icon: setup.icon,
 				allowOthers: cfg.allowOthers,
 				isAllowed: (cfg.characterOverrides[sourceId] ?? cfg.allowOthers) === 'yes',
 			});
 		}
 		return result;
-	}, [permissions, config, sourceId]);
+	}, [permissions, sourceId]);
 
 	return (
 		<Column className='permissionPrompt'>
 			<h3>{ header }</h3>
-			<i>{ note }</i>
 			{
 				perms.map((perm) => (
 					<div className='input-row flex-1' key={ perm.id }>
 						<label className='flex-1'>
-							<img src={ GetIcon(perm.icon) } width='28' height='28' alt='permission icon' />
+							{
+								perm.icon ? (
+									<img src={ GetIcon(perm.icon) } width='28' height='28' alt='permission icon' />
+								) : null
+							}
 							&nbsp;&nbsp;
 							<span>{ perm.visibleName }</span>
 						</label>

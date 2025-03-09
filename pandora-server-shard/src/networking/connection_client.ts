@@ -67,7 +67,7 @@ export class ClientConnection extends IncomingConnection<IShardClient, IClientSh
 		AssertNotNullable(this.character);
 		this.sendMessage('load', {
 			character: this.character.getPrivateData(),
-			globalState: this.character.getGlobalState().currentState.exportToClientBundle(),
+			globalState: this.character.getOrLoadSpace().currentState.exportToClientBundle(),
 			space: this.character.getOrLoadSpace().getLoadData(),
 			assetsDefinition: assetManager.rawData,
 			assetsDefinitionHash: assetManager.definitionsHash,

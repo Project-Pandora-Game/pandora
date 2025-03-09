@@ -2,7 +2,7 @@ import { freeze, type Immutable } from 'immer';
 import type { GameLogicCharacter } from '..';
 import type { CharacterActionAttempt, Item, ItemContainerPath } from '../../assets';
 import { ActionMessageTemplateHandler, ActionTarget, type ActionTargetCharacter } from '../../assets/appearanceTypes';
-import { ModuleActionError, ModuleActionFailure, type ModuleActionData } from '../../assets/modules';
+import type { ModuleActionData, ModuleActionProblem } from '../../assets/modules';
 import type { AssetFrameworkGlobalState } from '../../assets/state/globalState';
 import { CharacterId } from '../../character/characterTypes';
 import type { ActionSpaceContext } from '../../space/space';
@@ -36,8 +36,7 @@ export interface AppearanceModuleActionContext {
 	targetCharacter: ActionTargetCharacter | null;
 
 	messageHandler: ActionMessageTemplateHandler;
-	reject: (reason: ModuleActionError) => void;
-	failure: (reason: ModuleActionFailure) => void;
+	addProblem: (problem: ModuleActionProblem) => void;
 	addData: (data: ModuleActionData) => void;
 }
 

@@ -28,7 +28,8 @@ export class GameLogicInteractionClient extends GameLogicInteraction {
 		this.permission = new GameLogicPermissionClient(character, {
 			group: 'interaction',
 			id,
-			displayName: `${config.visibleName}`,
+			displayName: config.visibleName,
+			icon: config.icon,
 			defaultConfig: config.defaultPermissions,
 			forbidDefaultAllowOthers: config.forbidDefaultAllowOthers,
 			maxCharacterOverrides: config.maxCharacterOverrides,
@@ -46,7 +47,8 @@ export class GameLogicInteractionServer extends GameLogicInteraction {
 		this.permission = new GameLogicPermissionServer(character, {
 			group: 'interaction',
 			id,
-			displayName: `${config.visibleName}`,
+			displayName: config.visibleName,
+			icon: config.icon,
 			defaultConfig: config.defaultPermissions,
 			forbidDefaultAllowOthers: config.forbidDefaultAllowOthers,
 			maxCharacterOverrides: config.maxCharacterOverrides,

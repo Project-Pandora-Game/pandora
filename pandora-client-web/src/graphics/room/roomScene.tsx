@@ -18,10 +18,10 @@ import * as PIXI from 'pixi.js';
 import { Filter, Rectangle } from 'pixi.js';
 import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { useAssetManager } from '../../assets/assetManager';
-import { Character, useCharacterData } from '../../character/character';
+import { Character, useCharacterData, useCharacterRestrictionManager } from '../../character/character';
 import { CommonProps } from '../../common/reactTypes';
 import { useEvent } from '../../common/useEvent';
-import { useCharacterRestrictionsManager, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo, type GameState } from '../../components/gameContext/gameStateContextProvider';
+import { useActionSpaceContext, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo, type GameState } from '../../components/gameContext/gameStateContextProvider';
 import { THEME_NORMAL_BACKGROUND } from '../../components/gameContext/interfaceSettingsProvider';
 import { permissionCheckContext } from '../../components/gameContext/permissionCheckProvider';
 import { usePlayer, usePlayerState } from '../../components/gameContext/playerContextProvider';
@@ -410,18 +410,36 @@ export function useRoomViewProjection(roomBackground: Immutable<RoomBackgroundDa
 }
 
 export function usePlayerVisionFilters(targetIsPlayer: boolean): Filter[] {
-	const { player, playerState } = usePlayerState();
-	const blindness = useCharacterRestrictionsManager(playerState, player, (manager) => manager.getBlindness());
+	const { player, globalState } = usePlayerState();
+	const spaceContext = useActionSpaceContext();
+	const restrictionManager = useCharacterRestrictionManager(player, globalState, spaceContext);
+	const blindness = restrictionManager.getBlindness();
+	const blurines = clamp(restrictionManager.getEffects().blurVision, 0, 16);
 
 	return useMemo((): Filter[] => {
-		if (blindness === 0)
-			return [];
 		if (targetIsPlayer)
 			return [];
-		const filter = new PIXI.ColorMatrixFilter({ resolution: 'inherit' });
-		filter.brightness(1 - blindness / 10, false);
-		return [filter];
-	}, [blindness, targetIsPlayer]);
+		const filters: Filter[] = [];
+
+		if (blindness > 0) {
+			const filter = new PIXI.ColorMatrixFilter({ resolution: 'inherit' });
+			filter.brightness(1 - blindness / 10, false);
+			filters.push(filter);
+		}
+
+		if (blurines > 0) {
+			const log = Math.ceil(Math.log2(blurines)) || 0;
+			const filter = new PIXI.BlurFilter({
+				resolution: 'inherit',
+				strength: blurines,
+				quality: log + 1,
+				kernelSize: 5 + 2 * log,
+			});
+			filters.push(filter);
+		}
+
+		return filters;
+	}, [blindness, blurines, targetIsPlayer]);
 }
 
 export function useCharacterDisplayFilters(character: Character<ICharacterRoomData>): Filter[] {
@@ -475,7 +493,7 @@ export function RoomScene({ className }: {
 	AssertNotNullable(characters);
 	AssertNotNullable(player);
 
-	const playerState = useCharacterState(gameState, player.id);
+	const playerState = useCharacterState(globalState, player.id);
 	AssertNotNullable(playerState);
 
 	const onPointerDown = useEvent((event: React.PointerEvent<HTMLDivElement>) => {

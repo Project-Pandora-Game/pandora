@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes';
-import { ItemModuleActionSchema, type ModuleActionError } from '../../../assets/modules';
+import { ItemModuleActionSchema } from '../../../assets/modules';
 import { Assert } from '../../../utility';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
 import type { AppearanceModuleActionContext } from '../appearanceActions';
@@ -39,8 +39,6 @@ export function ActionModuleAction({
 	const { container, itemId } = action.item;
 	const containerManipulator = rootManipulator.getContainer(container);
 
-	let rejectionReason: ModuleActionError | undefined;
-
 	const targetCharacter = processingContext.resolveTargetCharacter(target, [...container, { item: itemId, module: action.module }]);
 	Assert(target.type !== 'character' || target === targetCharacter);
 
@@ -67,16 +65,10 @@ export function ActionModuleAction({
 					}),
 				);
 			},
-			reject: (reason) => {
-				rejectionReason ??= reason;
-			},
-			failure: (reason) => {
+			addProblem: (problem) => {
 				processingContext.addProblem({
-					result: 'failure',
-					failure: {
-						type: 'moduleActionFailure',
-						reason,
-					},
+					result: 'moduleActionError',
+					reason: problem,
 				});
 			},
 			addData: (data) => {
@@ -92,11 +84,7 @@ export function ActionModuleAction({
 			action.module,
 			action.action,
 		);
-	}) || rejectionReason) {
-		processingContext.addProblem({
-			result: 'moduleActionError',
-			reason: rejectionReason ?? { type: 'invalid' },
-		});
+	})) {
 		return processingContext.invalid();
 	}
 

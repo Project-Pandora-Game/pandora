@@ -14,12 +14,16 @@
 		overflow: hidden;
 		user-select: text;
 
+		.messagesContainer {
+			padding: 0 0 0.25em 0;
+		}
+
 		.message {
 			padding: 0.1em 0.1em 0.1em 0.25em;
 			white-space: pre-wrap;
 			overflow-wrap: break-word;
 
-			&:not(:hover) {
+			&:not(:hover):not(.serverMessage):not(.action) {
 				// Prevent Zalgo text from getting weird (but still show it if the message is hovered)
 				overflow: hidden;
 				overflow: clip;
@@ -79,6 +83,24 @@
 				margin-right: 0.2em;
 			}
 
+			> .repetitionCount {
+				padding: 0 0.25em;
+				border-radius: 1em;
+
+				font-family: common.$theme-font-family;
+				font-feature-settings: common.$theme-font-features-tabular;
+
+				background: common.$theme-chat-messagerepetitions-background;
+				border: 1px solid common.$theme-separator;
+				outline: 0px solid common.$theme-accent-color;
+
+				display: inline-block;
+
+				&.highlightChange {
+					animation: 0.8s chat-highlight-repetition-count ease-in-out;
+				}
+			}
+
 			a {
 				text-decoration: underline;
 			}
@@ -109,6 +131,21 @@
 			color: common.$theme-chat-input-placeholder-text;
 			opacity: 1; /* Firefox */
 		}
+	}
+}
+
+@keyframes chat-highlight-repetition-count {
+	0%, 100% {
+		transform: none;
+		outline-width: 0;
+	}
+	10%, 90% {
+		transform: none;
+		outline-width: 2px;
+	}
+	50% {
+		transform: scale(120%);
+		outline-width: 2px;
 	}
 }
 

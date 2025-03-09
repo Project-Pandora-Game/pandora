@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { z } from 'zod';
 import { AssertNever } from '../../../utility';
-import type { AppearanceActionProcessingContext } from '../appearanceActionProcessingContext';
+import type { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
 import type { AppearanceActionHandlerArg } from './_common';
 import { ActionAttemptInterrupt, AppearanceActionAttemptInterruptSchema } from './actionAttemptInterrupt';
 import { ActionBody, AppearanceActionBody } from './body';
@@ -42,10 +42,21 @@ export type AppearanceActionType = AppearanceActionBase['type'];
 export type AppearanceAction<ActionType extends AppearanceActionType = AppearanceActionType> =
 	Extract<AppearanceActionBase, { type: ActionType; }>;
 
-export function ApplyAction(
+/** List of appearance actions that cannot be affected by character modifiers or other scripting mechanisms. */
+export const PROTECTED_APPEARANCE_ACTIONS = {
+	restrictionOverrideChange: true,
+} as const satisfies Readonly<Partial<Record<AppearanceActionType, true>>>;
+export type ProtectedAppearanceActionType = keyof typeof PROTECTED_APPEARANCE_ACTIONS;
+
+export function IsProtectedAppearanceAction(type: AppearanceActionType): type is ProtectedAppearanceActionType {
+	return (PROTECTED_APPEARANCE_ACTIONS as Readonly<Partial<Record<AppearanceActionType, true>>>)[type] === true;
+}
+
+/** Apply appearance action to a processing context, without any additional checks or logic on top. */
+function ApplyActionBase(
 	processingContext: AppearanceActionProcessingContext,
 	action: Immutable<AppearanceAction>,
-) {
+): AppearanceActionProcessingResult {
 	const arg: Omit<AppearanceActionHandlerArg, 'action'> = {
 		assetManager: processingContext.originalState.assetManager,
 		processingContext,
@@ -87,4 +98,50 @@ export function ApplyAction(
 		default:
 			AssertNever(action);
 	}
+}
+
+/**
+ * Apply an action onto a processing context, running action-specific checks and "smart" behavior on top.
+ * @param processingContext - The processing context to work with
+ * @param action - The action to apply
+ * @returns - Result of the action
+ */
+export function ApplyAction(
+	processingContext: AppearanceActionProcessingContext,
+	action: Immutable<AppearanceAction>,
+): AppearanceActionProcessingResult {
+	// We get modifier effects _before_ the action is performed
+	const playerRestrictionManager = processingContext.getPlayerRestrictionManager();
+	const modifierEffects = playerRestrictionManager.getModifierEffectProperties();
+
+	let result = ApplyActionBase(processingContext, action);
+
+	// If the action by itself is valid, then check it against character modifiers of the source character
+	// (unless this is a "protected" action)
+	if (!IsProtectedAppearanceAction(action.type) && result.valid) {
+		const originalResult = result;
+		for (const modifier of modifierEffects) {
+			if (modifier.checkCharacterAction != null) {
+				const checkResult = modifier.checkCharacterAction(action, playerRestrictionManager, originalResult);
+				if (checkResult === 'allow') {
+					// Noop
+				} else if (checkResult === 'block') {
+					result = result.addAdditionalProblems({
+						result: 'restrictionError',
+						restriction: {
+							type: 'blockedByCharacterModifier',
+							modifierId: modifier.effect.id,
+							modifierType: modifier.effect.type,
+						},
+					});
+				} else if (checkResult.result === 'slow') {
+					result = result.addAdditionalSlowdown(checkResult.milliseconds);
+				} else {
+					AssertNever(checkResult.result);
+				}
+			}
+		}
+	}
+
+	return result;
 }

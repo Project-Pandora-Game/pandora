@@ -3,6 +3,7 @@ import { Assert, GetLogger } from 'pandora-common';
 import { ReactElement, useEffect, useId, useState } from 'react';
 import { toast } from 'react-toastify';
 import { ZodType, z } from 'zod';
+import type { ChildrenProps } from '../../common/reactTypes';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
 import { Button } from '../common/button/button';
 import { Column, Row } from '../common/container/container';
@@ -10,7 +11,7 @@ import { ModalDialog } from '../dialog/dialog';
 import { ParseImportData } from './exportImportUtils';
 import './importDialog.scss';
 
-interface ImportDialogProps<T extends ZodType<unknown>> {
+interface ImportDialogProps<T extends ZodType<unknown>> extends ChildrenProps {
 	expectedType: string;
 	expectedVersion: number;
 	dataSchema: T;
@@ -26,6 +27,7 @@ export function ImportDialog<T extends ZodType<unknown>>({
 	expectedVersion,
 	dataSchema,
 	migration,
+	children,
 	onImport,
 	closeDialog,
 }: ImportDialogProps<T>): ReactElement {
@@ -104,6 +106,7 @@ export function ImportDialog<T extends ZodType<unknown>>({
 	return (
 		<ModalDialog>
 			<Column className='importDialogContent'>
+				{ children }
 				<fieldset>
 					<legend>Import status</legend>
 					<Row alignY='center'>

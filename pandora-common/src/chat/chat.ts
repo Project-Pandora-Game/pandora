@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { ItemId } from '../assets';
 import type { AssetId } from '../assets/base';
-import { CharacterId, CharacterIdSchema } from '../character';
+import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
 import type { PronounKey } from '../character/pronouns';
 import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits';
 import type { HexColorString } from '../validation';
@@ -16,14 +16,22 @@ export type IChatSegment = z.infer<typeof ChatSegmentSchema>;
 export const ChatTypeSchema = z.enum(['chat', 'me', 'emote', 'ooc']);
 export type IChatType = z.infer<typeof ChatTypeSchema>;
 
-export const ClientMessageSchema = z.object({
-	type: z.enum(['me', 'emote']),
-	parts: z.array(ChatSegmentSchema),
-}).or(z.object({
-	type: z.enum(['chat', 'ooc']),
-	parts: z.array(ChatSegmentSchema),
-	to: CharacterIdSchema.optional(),
-}));
+export const ClientMessageSchema = z.discriminatedUnion('type', [
+	z.object({
+		type: z.enum(['me', 'emote']),
+		parts: z.array(ChatSegmentSchema),
+	}),
+	z.object({
+		type: z.literal('ooc'),
+		parts: z.array(ChatSegmentSchema),
+		to: CharacterIdSchema.optional(),
+	}),
+	z.object({
+		type: z.literal('chat'),
+		parts: z.array(ChatSegmentSchema),
+		to: CharacterIdSchema.optional(),
+	}),
+]);
 export type IClientMessage = z.infer<typeof ClientMessageSchema>;
 
 export function CalculateChatMessagesLength(message: IClientMessage[], maxLength: number) {

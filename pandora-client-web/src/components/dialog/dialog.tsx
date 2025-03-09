@@ -1,5 +1,6 @@
 import classNames from 'classnames';
-import { sortBy } from 'lodash';
+import { clamp, isObject, sortBy } from 'lodash';
+import { GetLogger } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type Ref } from 'react';
 import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
 import { Rnd } from 'react-rnd';
@@ -15,6 +16,7 @@ import './dialog.scss';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type HtmlPortalNodeAny = HtmlPortalNode<any>;
+type PortalMountHook = () => ((() => void) | void);
 
 const DEFAULT_CONFIRM_DIALOG_SYMBOL = Symbol('DEFAULT_CONFIRM_DIALOG_SYMBOL');
 const DEFAULT_CONFIRM_DIALOG_PRIORITY = 10;
@@ -26,6 +28,7 @@ type PortalEntry = {
 	location: DialogLocation;
 	node: HtmlPortalNodeAny;
 	key: string;
+	onMount?: PortalMountHook;
 };
 
 const PORTALS = new Observable<readonly PortalEntry[]>([]);
@@ -40,13 +43,7 @@ export function Dialogs({ location }: {
 			{
 				portals
 					.filter((portal) => portal.location === location)
-					.map(({ node, key }) => (
-						// We need to wrap the portal in its own div element,
-						// otherwise it might crash if interacting with other portals that change at the same time
-						<div key={ key } className='dialog-portal-out'>
-							<OutPortal node={ node } />
-						</div>
-					))
+					.map(({ node, onMount, key }) => (<DialogOutPortal key={ key } node={ node } onMount={ onMount } />))
 			}
 			{
 				location === 'global' ? (
@@ -57,14 +54,29 @@ export function Dialogs({ location }: {
 	);
 }
 
+function DialogOutPortal({ node, onMount }: { node: HtmlPortalNodeAny; onMount?: PortalMountHook; }): ReactElement {
+	useLayoutEffect(() => {
+		return onMount?.();
+	}, [onMount]);
+
+	// We need to wrap the portal in its own div element,
+	// otherwise it might crash if interacting with other portals that change at the same time
+	return (
+		<div className='dialog-portal-out'>
+			<OutPortal node={ node } />
+		</div>
+	);
+}
+
 export type DialogPortalRef = {
 	/** Brings the portal to forgeground (within the bounds of its priority). */
 	bringToForeground: () => void;
 };
-export function DialogInPortal({ children, priority, location = 'global', ref }: {
+export function DialogInPortal({ children, priority, location = 'global', onMount, ref }: {
 	children?: ReactNode;
 	priority?: number;
 	location?: DialogLocation;
+	onMount?: PortalMountHook;
 	ref?: Ref<DialogPortalRef>;
 }): ReactElement {
 	const id = useId();
@@ -79,7 +91,8 @@ export function DialogInPortal({ children, priority, location = 'global', ref }:
 		location,
 		node: portal,
 		key: id,
-	}), [portal, priority, location, id]);
+		onMount,
+	}), [portal, priority, location, id, onMount]);
 
 	useLayoutEffect(() => {
 		PORTALS.produce((existingPortals) => {
@@ -216,6 +229,7 @@ export function DraggableDialog({
 	initialHeight = 'auto',
 }: DraggableDialogProps): ReactElement {
 	const portalRef = useRef<DialogPortalRef>(null);
+	const rndRef = useRef<Rnd>(null);
 
 	useEffect(() => {
 		if (close == null) {
@@ -265,8 +279,49 @@ export function DraggableDialog({
 		};
 	}, []);
 
+	const onMount = useCallback(() => {
+		// After portal is mounted, immediately manually recalculate bounds and reposition the element within them
+		if (rndRef.current == null)
+			return;
+
+		try {
+			const parent: unknown = rndRef.current.getParent();
+			if (!(parent instanceof HTMLElement))
+				return;
+
+			const resizable = rndRef.current.resizable;
+			const draggable = rndRef.current.draggable;
+
+			// Calculate bounds
+			const scale = rndRef.current.props.scale as number;
+			rndRef.current.updateOffsetFromParent();
+			const offset = rndRef.current.offsetFromParent;
+			const bounds = {
+				top: -offset.top,
+				right: (parent.offsetWidth - resizable.size.width) - offset.left / scale,
+				bottom: (parent.offsetHeight - resizable.size.height) - offset.top,
+				left: 0 - offset.left / scale,
+			};
+			rndRef.current.setState({ bounds });
+
+			// Position element within the bounds
+			if (isObject(draggable.state) &&
+					'x' in draggable.state && typeof draggable.state.x === 'number' &&
+					'y' in draggable.state && typeof draggable.state.y === 'number'
+			) {
+				const newX = clamp(draggable.state.x, bounds.left, bounds.right);
+				const newY = clamp(draggable.state.y, bounds.top, bounds.bottom);
+				draggable.setState({ x: newX, y: newY });
+			} else {
+				GetLogger('DraggableDialog').warning('Inner state of draggable component did not match expectations.');
+			}
+		} catch (error) {
+			GetLogger('DraggableDialog').error('Hack to recenter draggable dialog failed:', error);
+		}
+	}, []);
+
 	return (
-		<DialogInPortal priority={ -1 } ref={ portalRef }>
+		<DialogInPortal priority={ -1 } ref={ portalRef } onMount={ onMount }>
 			<div
 				className={ modal ? 'overlay-bounding-box modal' : 'overlay-bounding-box' }
 				// Prevent clicks from bubbling through the portal
@@ -282,6 +337,7 @@ export function DraggableDialog({
 				} }
 			>
 				<Rnd
+					ref={ rndRef }
 					className={ classNames(
 						'dialog-draggable',
 						shaded ? 'shaded' : null,

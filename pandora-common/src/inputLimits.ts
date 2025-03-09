@@ -29,7 +29,7 @@ export const LIMIT_SPACE_MAX_CHARACTER_NUMBER = 100;
 export const LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS = 5;
 
 /** The maximum length of a space's name */
-export const LIMIT_SPACE_NAME_LENGTH = 40;
+export const LIMIT_SPACE_NAME_LENGTH = 48;
 /** The pattern used for validating space's name */
 export const LIMIT_SPACE_NAME_PATTERN = /^[a-zA-Z0-9_+\-:'"& ]+$/;
 
@@ -53,7 +53,7 @@ export const LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 = LIMIT_DIRECT_MESSAGE_LENGTH * 
 export const LIMIT_DIRECT_MESSAGE_STORE_COUNT = 50;
 
 /** The maximum length of a custom item name */
-export const LIMIT_ITEM_NAME_LENGTH = 40;
+export const LIMIT_ITEM_NAME_LENGTH = 48;
 /** The pattern used for validating item custom names */
 export const LIMIT_ITEM_NAME_PATTERN = /^[a-zA-Z0-9_\- ']*$/;
 
@@ -67,7 +67,7 @@ export const LIMIT_ACCOUNT_PROFILE_LENGTH = 5_000;
 export const LIMIT_CHARACTER_PROFILE_LENGTH = 10_000;
 
 /** The maximum length of an outfit name */
-export const LIMIT_OUTFIT_NAME_LENGTH = 40;
+export const LIMIT_OUTFIT_NAME_LENGTH = 48;
 
 /** The maximum length of a pose preset name */
 export const LIMIT_POSE_PRESET_NAME_LENGTH = LIMIT_OUTFIT_NAME_LENGTH;
@@ -77,3 +77,12 @@ export const LIMIT_ACCOUNT_POSE_PRESET_STORAGE = 20;
 /** The maximum amount of invites a space can have */
 export const LIMIT_SPACE_BOUND_INVITES = 20;
 export const LIMIT_JOIN_ME_INVITES = 10;
+
+/** The maximum number of character modifier instances on a single character */
+export const LIMIT_CHARACTER_MODIFIER_INSTANCE_COUNT = 100;
+/** The maximum length of a custom character modifier name */
+export const LIMIT_CHARACTER_MODIFIER_NAME_LENGTH = 48;
+/** The maximum amount of characters that can be specified in a character list configuration type of a character modifier. */
+export const LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT = 50;
+/** The maximum amount of conditions inside a single character modifier instance. */
+export const LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT = 50;

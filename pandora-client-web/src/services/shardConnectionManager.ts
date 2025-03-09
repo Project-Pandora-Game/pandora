@@ -50,7 +50,7 @@ export class ShardConnectionManager extends Service<ShardConnectionManagerServic
 	}
 
 	private _connectToShard(info: IDirectoryCharacterConnectionInfo): void {
-		const { directoryConnector } = this.serviceDeps;
+		const { directoryConnector, accountManager } = this.serviceDeps;
 
 		if (this._shardConnector.value?.connectionInfoMatches(info)) {
 			return;
@@ -58,7 +58,7 @@ export class ShardConnectionManager extends Service<ShardConnectionManagerServic
 		this._disconnectFromShard();
 		this.logger.debug('Requesting connect to shard: ', info);
 
-		const shardConnector = new ShardConnector(info, directoryConnector);
+		const shardConnector = new ShardConnector(info, directoryConnector, accountManager);
 		this._shardConnector.value = shardConnector;
 		shardConnector.connect(SocketIOConnector);
 	}

@@ -6,7 +6,6 @@ import {
 	AppearanceItems,
 	Assert,
 	AssertNever,
-	AssertNotNullable,
 	EMPTY_ARRAY,
 	EvalItemPath,
 	Item,
@@ -74,13 +73,10 @@ export function WardrobeCheckResultForConfirmationWarnings(
 		Assert(result.prompt != null);
 		return [];
 	}
-	const originalCharacterState = result.originalState.characters.get(player.id);
-	AssertNotNullable(originalCharacterState);
-	const resultCharacterState = result.resultState.characters.get(player.id);
-	AssertNotNullable(resultCharacterState);
 
-	const originalRestrictionManager = player.getRestrictionManager(originalCharacterState, spaceContext);
-	const resultRestrictionManager = player.getRestrictionManager(resultCharacterState, spaceContext);
+	const originalRestrictionManager = player.getRestrictionManager(result.originalState, spaceContext);
+	const resultRestrictionManager = player.getRestrictionManager(result.resultState, spaceContext);
+	const resultCharacterState = resultRestrictionManager.appearance.characterState;
 
 	const warnings: string[] = [];
 

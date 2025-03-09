@@ -3,6 +3,8 @@ import type { ICharacterData } from '../../character';
 import { Logger } from '../../logging';
 import { AssertNever } from '../../utility/misc';
 import { AssetPreferencesSubsystemServer } from '../assetPreferences';
+import { MakeDefaultCharacterModifierSystemData } from '../characterModifiers/characterModifierData';
+import { CharacterModifiersSubsystemServer } from '../characterModifiers/characterModifiersSubsystemServer';
 import { MakeDefaultInteractionSystemData } from '../interactions/interactionData';
 import { InteractionSubsystemServer } from '../interactions/interactionSubsystemServer';
 import { GameLogicPermissionServer, IPermissionProvider, PermissionGroup } from '../permissions';
@@ -13,6 +15,7 @@ export class GameLogicCharacterServer extends GameLogicCharacter {
 
 	public override readonly interactions: InteractionSubsystemServer;
 	public override readonly assetPreferences: AssetPreferencesSubsystemServer;
+	public override readonly characterModifiers: CharacterModifiersSubsystemServer;
 
 	constructor(data: ICharacterData, assetManager: AssetManager, logger: Logger) {
 		super(data);
@@ -27,12 +30,20 @@ export class GameLogicCharacterServer extends GameLogicCharacter {
 			data.assetPreferences,
 			assetManager,
 		);
+		this.characterModifiers = new CharacterModifiersSubsystemServer(
+			this,
+			data.characterModifiers ?? MakeDefaultCharacterModifierSystemData(),
+			logger.prefixMessages('[CharacterModifiersSubsystem]'),
+		);
 
 		this.interactions.on('dataChanged', () => {
 			this.emit('dataChanged', 'interactions');
 		});
 		this.assetPreferences.on('dataChanged', () => {
 			this.emit('dataChanged', 'assetPreferences');
+		});
+		this.characterModifiers.on('dataChanged', () => {
+			this.emit('dataChanged', 'characterModifiers');
 		});
 	}
 
@@ -42,6 +53,8 @@ export class GameLogicCharacterServer extends GameLogicCharacter {
 				return this.assetPreferences;
 			case 'interaction':
 				return this.interactions;
+			case 'characterModifierType':
+				return this.characterModifiers;
 			default:
 				AssertNever(permissionGroup);
 		}

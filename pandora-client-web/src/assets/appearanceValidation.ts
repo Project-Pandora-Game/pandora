@@ -1,6 +1,14 @@
-import { AppearanceActionProblem, AssertNever, type AssetId, type GameLogicActionSlowdownReason, type ItemDisplayNameType } from 'pandora-common';
+import {
+	AppearanceActionProblem,
+	AssertNever,
+	CHARACTER_MODIFIER_TYPE_DEFINITION,
+	type AssetId,
+	type GameLogicActionSlowdownReason,
+	type ItemDisplayNameType,
+	type LockActionProblem,
+} from 'pandora-common';
 import { ResolveItemDisplayNameType } from '../components/wardrobe/itemDetail/wardrobeItemName';
-import { DescribeAsset, DescribeAttribute } from '../ui/components/chat/chatMessages';
+import { DescribeAttribute } from '../ui/components/chat/chatMessages';
 import { AssetManagerClient } from './assetManager';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */
@@ -18,8 +26,41 @@ export function AppearanceActionProblemShouldHide(result: AppearanceActionProble
 	return false;
 }
 
+function RenderLockLogicActionProblem(lockDescription: string, action: 'lock' | 'unlock' | 'showPassword', problem: LockActionProblem): string {
+	const actionDescription: Record<typeof action, string> = {
+		lock: 'be locked',
+		unlock: 'be unlocked',
+		showPassword: 'have its password displayed',
+	};
+
+	switch (problem) {
+		case 'blockSelf':
+			return `The ${lockDescription} cannot ${actionDescription[action]} on yourself.`;
+		case 'noStoredPassword':
+			return `The ${lockDescription} cannot ${actionDescription[action]} because it has no stored password.`;
+		case 'invalidPassword':
+			return `The ${lockDescription} cannot ${actionDescription[action]} because the password is invalid.`;
+		case 'noTimerSet':
+			return `The ${lockDescription} cannot ${actionDescription[action]} because it has no timer set.`;
+		case 'invalidTimer':
+			return `The ${lockDescription} cannot ${actionDescription[action]} because the timer is invalid.`;
+		case 'wrongPassword':
+			return `The password is incorrect.`;
+		case 'timerRunning':
+			return `The ${lockDescription} cannot yet ${actionDescription[action]} as the timer is still running.`;
+		case 'notAllowed':
+			return `You are not allowed to view the password.`;
+	}
+
+	AssertNever(problem);
+}
+
 export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, result: AppearanceActionProblem, itemDisplayNameType: ItemDisplayNameType): string {
-	const describeItem = (asset: AssetId, itemName: string | null) => ResolveItemDisplayNameType(DescribeAsset(assetManager, asset), itemName, itemDisplayNameType);
+	const describeItem = (asset: AssetId, itemName: string | null) => ResolveItemDisplayNameType(
+		assetManager.getAssetById(asset)?.definition.name.toLocaleLowerCase() ?? `[UNKNOWN ASSET '${asset}']`,
+		itemName,
+		itemDisplayNameType,
+	);
 
 	if (result.result === 'invalidAction') {
 		if (result.reason != null) {
@@ -35,30 +76,20 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 	} else if (result.result === 'moduleActionError') {
 		const e = result.reason;
 		switch (e.type) {
-			case 'lockInteractionPrevented': {
-				const actionDescription: Record<typeof e.moduleAction, string> = {
-					lock: 'locked',
-					unlock: 'unlocked',
-				};
-
-				switch (e.reason) {
-					case 'blockSelf':
-						return `The ${describeItem(e.asset, e.itemName)} cannot be ${actionDescription[e.moduleAction]} on yourself.`;
-					case 'noStoredPassword':
-						return `The ${describeItem(e.asset, e.itemName)} cannot be ${actionDescription[e.moduleAction]} because it has no stored password.`;
-					case 'noTimerSet':
-						return `The ${describeItem(e.asset, e.itemName)} cannot be ${actionDescription[e.moduleAction]} because it has no timer set.`;
-					case 'invalidTimer':
-						return `The ${describeItem(e.asset, e.itemName)} cannot be ${actionDescription[e.moduleAction]} because the timer is invalid.`;
-				}
-
-				AssertNever(e);
-				break;
-			}
+			case 'lockInteractionPrevented':
+				return RenderLockLogicActionProblem(describeItem(e.asset, e.itemName), e.moduleAction, e.reason);
 			case 'invalid':
 				return '';
 			default:
 				AssertNever(e);
+		}
+	} else if (result.result === 'characterModifierActionError') {
+		const e = result.reason;
+		switch (e.type) {
+			case 'lockInteractionPrevented':
+				return RenderLockLogicActionProblem('lock on the modifier', e.moduleAction, e.reason);
+			default:
+				AssertNever(e.type);
 		}
 	} else if (result.result === 'restrictionError') {
 		const e = result.restriction;
@@ -103,6 +134,10 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `You cannot customize other people's items.`;
 			case 'inRoomDevice':
 				return `You cannot do this while in a room device.`;
+			case 'blockedByCharacterModifier':
+				return `Character modifier "${CHARACTER_MODIFIER_TYPE_DEFINITION[e.modifierType].visibleName}" is preventing this action.`;
+			case 'characterModifierLocked':
+				return `Character modifier "${e.modifierName}" modifier is locked.`;
 			case 'invalid':
 				return '';
 		}
@@ -155,23 +190,6 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 		return 'This action requires starting an attempt to perform it first.';
 	} else if (result.result === 'tooSoon') {
 		return 'This action cannot be performed yet. Try again later.';
-	} else if (result.result === 'failure') {
-		const f = result.failure;
-		if (f.type === 'moduleActionFailure') {
-			if (f.reason.type === 'lockInteractionPrevented') {
-				switch (f.reason.reason) {
-					case 'wrongPassword':
-						return `The password is incorrect.`;
-					case 'timerRunning':
-						return `The lock cannot be unlocked yet.`;
-					case 'notAllowed':
-						return `You are not allowed to view the password.`;
-				}
-				AssertNever(f.reason);
-			}
-			AssertNever(f.reason.type);
-		}
-		AssertNever(f.type);
 	}
 	AssertNever(result);
 }
@@ -180,6 +198,8 @@ export function RenderAppearanceActionSlowdown(reason: GameLogicActionSlowdownRe
 	switch (reason) {
 		case 'blockedHands':
 			return 'You need to be able to use hands to do this freely, but yours are bound.';
+		case 'modifierSlowdown':
+			return 'Character modifiers are affecting this action.';
 	}
 
 	AssertNever(reason);

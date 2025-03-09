@@ -17,7 +17,7 @@ import { useFriendStatus } from '../../../components/accountContacts/accountCont
 import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText, useRestrictionOverrideDialogContext } from '../../../components/characterRestrictionOverride/characterRestrictionOverride';
 import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
-import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
+import { IsSpaceAdmin, useActionSpaceContext, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayer, usePlayerId } from '../../../components/gameContext/playerContextProvider';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton';
 import { USER_DEBUG } from '../../../config/Environment';
@@ -265,7 +265,7 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 	const { setTarget } = useChatInput();
 	const navigate = useNavigate();
 	const location = useLocation();
-	const gameState = useGameState();
+	const globalState = useGlobalState(useGameState());
 	const { show: showRestrictionOverrideContext } = useRestrictionOverrideDialogContext();
 
 	const {
@@ -273,7 +273,7 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 	} = useRoomScreenContext();
 
 	const data = useCharacterData(char);
-	const state = useCharacterState(gameState, char.id);
+	const state = useCharacterState(globalState, char.id);
 	const isOnline = data.isOnline;
 	const isAdmin = IsSpaceAdmin(spaceInfo.config, { id: data.accountId });
 

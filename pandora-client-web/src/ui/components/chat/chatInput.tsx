@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { clamp } from 'lodash';
-import { AssertNotNullable, CharacterId, ChatCharacterStatus, EMPTY_ARRAY, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly } from 'pandora-common';
+import { AssertNotNullable, CharacterId, ChatCharacterStatus, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
@@ -16,11 +16,11 @@ import { Button } from '../../../components/common/button/button';
 import { Column, Row } from '../../../components/common/container/container';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
-import { IMessageParseOptions, useChatCharacterStatus, useChatMessageSender, useChatSetPlayerStatus, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
+import { ChatSendError, IMessageParseOptions, useChatCharacterStatus, useChatMessageSender, useChatSetPlayerStatus, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
 import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider';
 import { useNullableObservable } from '../../../observable';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
 import { useService } from '../../../services/serviceProvider';
 import { COMMANDS, GetChatModeDescription } from './commands';
@@ -302,8 +302,17 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 					}
 				}
 			} catch (error) {
-				if (error instanceof Error) {
-					toast(error.message, TOAST_OPTIONS_ERROR);
+				if (error instanceof ChatSendError) {
+					toast(
+						<span className='display-linebreak'>
+							This message cannot be sent:<br />
+							{ error.reason }
+						</span>,
+						TOAST_OPTIONS_WARNING,
+					);
+				} else {
+					toast('Error sending chat message', TOAST_OPTIONS_ERROR);
+					GetLogger('ChatInput').error('Error sending message:', error);
 				}
 			}
 		} else if (ev.key === 'Tab' && textarea.value.startsWith(COMMAND_KEY) && !textarea.value.startsWith(COMMAND_KEY + COMMAND_KEY) && allowCommands) {

@@ -594,6 +594,7 @@ function RoomDeviceGraphicsLayerSlot({ item, layer, globalState }: {
 			layer={ layer }
 			character={ character }
 			characterState={ characterState }
+			globalState={ globalState }
 		/>
 	);
 }
@@ -643,11 +644,12 @@ export function CalculateCharacterDeviceSlotPosition({ item, layer, characterSta
 	};
 }
 
-function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characterState }: {
+function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characterState, globalState }: {
 	item: ItemRoomDevice;
 	layer: Immutable<IRoomDeviceGraphicsLayerSlot>;
 	character: Character<ICharacterRoomData>;
 	characterState: AssetFrameworkCharacterState;
+	globalState: AssetFrameworkGlobalState;
 }): ReactElement | null {
 	const debugConfig = useDebugConfig();
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
@@ -678,7 +680,7 @@ function RoomDeviceGraphicsLayerSlotCharacter({ item, layer, character, characte
 
 	// Character must be in this device, otherwise we skip rendering it here
 	// (could happen if character left and rejoined the room without device equipped)
-	const roomDeviceLink = useCharacterRestrictionsManager(characterState, character, (rm) => rm.getRoomDeviceLink());
+	const roomDeviceLink = useCharacterRestrictionsManager(globalState, character, (rm) => rm.getRoomDeviceLink());
 	if (roomDeviceLink == null || roomDeviceLink.device !== item.id || roomDeviceLink.slot !== layer.slot)
 		return null;
 

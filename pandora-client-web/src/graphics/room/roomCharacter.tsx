@@ -330,6 +330,7 @@ function RoomCharacterInteractiveImpl({
 function RoomCharacterDisplay({
 	character,
 	characterState,
+	globalState,
 	projectionResolver,
 	showName,
 	debugConfig,
@@ -390,7 +391,7 @@ function RoomCharacterDisplay({
 	}
 
 	// If character is in a device, do not render it here, it will be rendered by the device
-	const roomDeviceLink = useCharacterRestrictionsManager(characterState, character, (rm) => rm.getRoomDeviceLink());
+	const roomDeviceLink = useCharacterRestrictionsManager(globalState, character, (rm) => rm.getRoomDeviceLink());
 
 	const transitionTickerRef = useTickerRef();
 	const movementTransitionDuration = !smoothMovementEnabled ? 0 :

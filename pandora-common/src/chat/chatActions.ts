@@ -53,6 +53,20 @@ const CHAT_ACTIONS_DEF = {
 	/** Room admin clears saved character id from slot, while target character is not in the room */
 	roomDeviceSlotClear: `SOURCE_CHARACTER freed up ITEM_ASSET_NAME for new usage.`,
 
+	// Character modifiers
+	characterModifierAdd: `SOURCE_CHARACTER added a new "MODIFIER_NAME" modifier on you.`,
+	characterModifierRemove: `SOURCE_CHARACTER removed the "MODIFIER_NAME" modifier from you.`,
+	characterModifierChange: `SOURCE_CHARACTER changed the configuration of the "MODIFIER_NAME" modifier on you.`,
+	characterModifierEnable: `SOURCE_CHARACTER enabled the "MODIFIER_NAME" modifier on you.`,
+	characterModifierDisable: `SOURCE_CHARACTER disabled the "MODIFIER_NAME" modifier on you.`,
+	characterModifierRename: `SOURCE_CHARACTER renamed your "MODIFIER_NAME_OLD" modifier to "MODIFIER_NAME".`,
+	characterModifierReorder: `SOURCE_CHARACTER reordered your character modifiers.`,
+	characterModifierLockAdd: `SOURCE_CHARACTER added a LOCK_TYPE to the "MODIFIER_NAME" modifier on you.`,
+	characterModifierLockRemove: `SOURCE_CHARACTER removed the lock from the "MODIFIER_NAME" modifier on you.`,
+	characterModifierLockLock: `SOURCE_CHARACTER locked your "MODIFIER_NAME" modifier.`,
+	characterModifierLockUnlock: `SOURCE_CHARACTER unlocked your "MODIFIER_NAME" modifier.`,
+	characterModifierLockExceptionsChange: `SOURCE_CHARACTER changed the list of characters who can bypass locks on your "MODIFIER_NAME" modifier.`,
+
 	// Gambling related
 	gamblingCoin: `SOURCE_CHARACTER flipped a coin and the result is TOSS_RESULT.`,
 	gamblingDice: `SOURCE_CHARACTER rolled DICE_COUNT and the result is DICE_RESULT.`,

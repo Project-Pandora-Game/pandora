@@ -2,7 +2,7 @@ import {
 	AssetFrameworkCharacterState,
 } from 'pandora-common';
 import { ReactElement, useEffect } from 'react';
-import { ICharacter, useCharacterAppearanceItems } from '../../../character/character';
+import { ICharacter } from '../../../character/character';
 import { Column } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
 import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
@@ -12,7 +12,6 @@ export function WardrobeExpressionGui({ characterState }: {
 	character: ICharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const appearance = useCharacterAppearanceItems(characterState);
 	const { focuser, targetSelector } = useWardrobeContext();
 	useEffect(() => focuser.disable('Expressions cannot focus container!'), [focuser]);
 
@@ -20,7 +19,7 @@ export function WardrobeExpressionGui({ characterState }: {
 		<div className='inventoryView'>
 			<Column padding='medium' overflowX='hidden' overflowY='auto'>
 				{
-					appearance
+					characterState.items
 						.flatMap((item) => (
 							Array.from(item.getModules().entries())
 								.filter((m) => m[1].config.expression)

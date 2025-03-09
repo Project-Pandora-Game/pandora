@@ -6,6 +6,7 @@ export const PERMISSION_MAX_CHARACTER_OVERRIDES = 100;
 export const PermissionGroupSchema = z.enum([
 	'interaction',
 	'assetPreferences',
+	'characterModifierType',
 ]);
 
 export type PermissionGroup = z.infer<typeof PermissionGroupSchema>;
@@ -24,6 +25,7 @@ export const PermissionSetupSchema = z.object({
 	group: PermissionGroupSchema,
 	id: z.string(),
 	displayName: z.string(),
+	icon: z.string().optional(),
 	defaultConfig: PermissionConfigDefaultSchema,
 	forbidDefaultAllowOthers: z.array(PermissionTypeSchema).optional(),
 	maxCharacterOverrides: z.number().int().positive().optional(),

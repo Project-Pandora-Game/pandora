@@ -63,7 +63,7 @@ export function ActionSlowdownContent({ slowdownReasons, slowdownTime }: { slowd
 	);
 }
 
-export function ActionWarningContent({ problems, prompt }: { problems: readonly AppearanceActionProblem[]; prompt: boolean; }): ReactElement {
+export function ActionWarningContent({ problems, prompt, customText }: { problems: readonly AppearanceActionProblem[]; prompt: boolean; customText?: string; }): ReactElement {
 	const { wardrobeItemDisplayNameType } = useAccountSettings();
 	const assetManager = useAssetManager();
 	const reasons = useMemo(() => (
@@ -82,9 +82,13 @@ export function ActionWarningContent({ problems, prompt }: { problems: readonly 
 		);
 	}
 
-	let text = "This action isn't possible, because:";
-	if (prompt) {
+	let text: string;
+	if (customText != null) {
+		text = customText;
+	} else if (prompt) {
 		text = 'Executing the action will prompt for the following permissions:';
+	} else {
+		text = "This action isn't possible, because:";
 	}
 
 	return (
@@ -148,6 +152,7 @@ export function WardrobeActionButtonElement({
 	showActionBlockedExplanation = true,
 	hide = false,
 	hideReserveSpace = false,
+	title,
 	onClick,
 	onHoverChange,
 }: CommonProps & {
@@ -162,6 +167,7 @@ export function WardrobeActionButtonElement({
 	hide?: boolean;
 	/** Makes the button hide if it should in a way, that occupied space is preserved */
 	hideReserveSpace?: boolean;
+	title?: string;
 
 	onClick?: () => void;
 	onHoverChange?: (isHovering: boolean) => void;
@@ -232,6 +238,7 @@ export function WardrobeActionButtonElement({
 				onHoverChange?.(false);
 			} }
 			disabled={ disabled }
+			title={ title }
 			data-action={ (USER_DEBUG && actionData != null) ? JSON.stringify(actionData, undefined, '\t') : undefined }
 			data-action-localproblems={ (USER_DEBUG && check != null) ? (JSON.stringify(check.valid ? null : check.problems, undefined, '\t')) : undefined }
 		>
@@ -258,6 +265,7 @@ export function WardrobeActionButton({
 	onExecute,
 	onFailure,
 	onCurrentAttempt,
+	title,
 	disabled = false,
 }: CommonProps & {
 	// eslint-disable-next-line @typescript-eslint/naming-convention
@@ -276,6 +284,7 @@ export function WardrobeActionButton({
 	onExecute?: (data: readonly AppearanceActionData[]) => void;
 	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
 	onCurrentAttempt?: (currentAttempt: WardrobeExecuteCheckedResult['currentAttempt']) => void;
+	title?: string;
 	disabled?: boolean;
 }): ReactElement {
 	const { actionPreviewState } = useWardrobeContext();
@@ -322,6 +331,7 @@ export function WardrobeActionButton({
 			hideReserveSpace={ hideReserveSpace }
 			onClick={ execute }
 			onHoverChange={ setIsHovering }
+			title={ title }
 		>
 			{ children }
 		</WardrobeActionButtonElement>
@@ -342,6 +352,7 @@ export function GameLogicActionButton({
 	showActionBlockedExplanation = true,
 	onExecute,
 	onFailure,
+	title,
 	disabled = false,
 }: CommonProps & {
 	action: AppearanceAction;
@@ -352,6 +363,7 @@ export function GameLogicActionButton({
 	showActionBlockedExplanation?: boolean;
 	onExecute?: (data: readonly AppearanceActionData[]) => void;
 	onFailure?: (problems: readonly AppearanceActionProblem[]) => void;
+	title?: string;
 	disabled?: boolean;
 }): ReactElement {
 	const check = useStaggeredAppearanceActionResult(action);
@@ -373,6 +385,7 @@ export function GameLogicActionButton({
 			hide={ hide }
 			hideReserveSpace={ hideReserveSpace }
 			onClick={ execute }
+			title={ title }
 		>
 			{ children }
 		</WardrobeActionButtonElement>

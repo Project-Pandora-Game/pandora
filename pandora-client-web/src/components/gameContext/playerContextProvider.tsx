@@ -1,10 +1,10 @@
+import { AssertNotNullable, AssetFrameworkCharacterState, CharacterId, ICharacterPrivateData, ICharacterRoomData, type AssetFrameworkGlobalState } from 'pandora-common';
 import { useMemo } from 'react';
-import { AssertNotNullable, AssetFrameworkCharacterState, CharacterId, ICharacterPrivateData, ICharacterRoomData } from 'pandora-common';
+import { useCharacterDataOptional } from '../../character/character';
 import { PlayerCharacter } from '../../character/player';
 import { useNullableObservable } from '../../observable';
+import { useCharacterState, useGameState, useGlobalState } from './gameStateContextProvider';
 import { useShardConnector } from './shardConnectorContextProvider';
-import { useCharacterState, useGameState } from './gameStateContextProvider';
-import { useCharacterDataOptional } from '../../character/character';
 
 export function usePlayer(): PlayerCharacter | null {
 	return useNullableObservable(useShardConnector()?.gameState)?.player ?? null;
@@ -12,18 +12,20 @@ export function usePlayer(): PlayerCharacter | null {
 
 export function usePlayerState(): {
 	player: PlayerCharacter;
+	globalState: AssetFrameworkGlobalState;
 	playerState: AssetFrameworkCharacterState;
 } {
 	const player = usePlayer();
-	const gameState = useGameState();
 	AssertNotNullable(player);
-	const playerState = useCharacterState(gameState, player.id);
+	const globalState = useGlobalState(useGameState());
+	const playerState = useCharacterState(globalState, player.id);
 	AssertNotNullable(playerState);
 
 	return useMemo(() => ({
 		player,
+		globalState,
 		playerState,
-	}), [player, playerState]);
+	}), [player, globalState, playerState]);
 }
 
 export function usePlayerData(): Readonly<ICharacterPrivateData & ICharacterRoomData> | null {

@@ -6,6 +6,7 @@ $theme-accent-color: var(--pandora-accent-color);
 $theme-font-family-variable: 'InterVariable', 'Arial', 'Helvetica', sans-serif; // Variable fonts are preferred, even if less supported
 $theme-font-family: 'Inter', 'Arial', 'Helvetica', sans-serif;
 $theme-font-features: 'cv05';
+$theme-font-features-tabular: 'tnum', 'cv05';
 
 $theme-font-family-monospace: 'Courier New', 'Courier', monospace;
 
@@ -138,10 +139,17 @@ $theme-highlight-background: color-mix(in srgb, #bbb, $theme-accent-color 60%);
 $theme-table-header-background: #2d373d;
 $theme-table-header-text: #eee;
 $theme-table-body-background: #121717;
-$theme-table-body-altbackground: #161d1d;
+$theme-table-body-altbackground: #14191a;
 $theme-table-body-text: #eee;
 $theme-table-border-outer: transparent;
 $theme-table-border: transparent;
+
+// "Meter" element
+$theme-meter-background: #334;
+$theme-meter-bar-mono: color-mix(in srgb, #aaa, $theme-accent-color 60%);
+$theme-meter-bar-optimum: #00ab60;
+$theme-meter-bar-sub-optimum: #ffbd4f;
+$theme-meter-sub-sub-optimum: #e22850;
 
 //#endregion
 
@@ -203,6 +211,7 @@ $theme-errorreport-report-text: #000;
 $theme-chat-background: #303030;
 $theme-chat-text: #fff;
 $theme-chat-messageinfo-text: #888;
+$theme-chat-messagerepetitions-background: #00000040;
 
 $theme-chat-serverMessage-background: #202020;
 $theme-chat-serverMessage-text: #fff;
@@ -322,6 +331,7 @@ $theme-wardrobe-pane-text: $theme-inset-text;
 $theme-wardrobe-view-background: $theme-normal-background;
 $theme-wardrobe-view-text: $theme-normal-text;
 $theme-wardrobe-view-overlay: #00000050;
+$theme-wardrobe-preview-overlay: #000000cc;
 
 $theme-wardrobe-modebutton-border: #43454a;
 $theme-wardrobe-modebutton-active-background: #232930;
@@ -384,6 +394,10 @@ $theme-wardrobe-itemdescription-text: $theme-chat-text;
 $theme-wardrobe-preview-actionattempt-background: #0d111188;
 $theme-wardrobe-preview-actionattempt-text: #eee;
 $theme-wardrobe-preview-actionattempt-border: #43454a88;
+
+$theme-wardrobe-modifiers-indication-disabled: #555;
+$theme-wardrobe-modifiers-indication-inactive: #800;
+$theme-wardrobe-modifiers-indication-active: #3e3;
 
 //#endregion
 

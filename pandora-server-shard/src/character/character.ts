@@ -1,12 +1,12 @@
 import {
 	AccountRole,
 	AppearanceActionContext,
+	AppearanceActionProcessingContext,
 	AppearanceBundle,
 	Assert,
 	AssertNever,
 	AssertNotNullable,
 	AssetFrameworkCharacterState,
-	AssetFrameworkGlobalStateContainer,
 	AssetManager,
 	AssetPreferencesPublic,
 	AsyncSynchronized,
@@ -40,6 +40,8 @@ import {
 	ResolveAssetPreference,
 	RoomBackgroundData,
 	SpaceId,
+	type AppearanceActionProcessingResult,
+	type ChatMessageFilterMetadata,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager';
 import { GetDatabase } from '../database/databaseProvider';
@@ -199,6 +201,7 @@ export class Character {
 
 		const originalInteractionConfig = data.interactionConfig;
 		const originalAssetPreferencesConfig = CloneDeepMutable(data.assetPreferences);
+		const originalCharacterModifiersData = CloneDeepMutable(data.characterModifiers);
 		this.gameLogicCharacter = new GameLogicCharacterServer(data, assetManager, this.logger.prefixMessages('[GameLogic]'));
 
 		this.setConnection(null);
@@ -227,9 +230,16 @@ export class Character {
 					assetPreferences: this.assetPreferences,
 				});
 				this._emitSomethingChanged('permissions');
+			} else if (type === 'characterModifiers') {
+				this.setValue('characterModifiers', this.gameLogicCharacter.characterModifiers.getData(), false);
+				this._emitSomethingChanged('permissions');
 			} else {
 				AssertNever(type);
 			}
+		});
+		this.gameLogicCharacter.characterModifiers.on('modifiersChanged', () => {
+			this._emitSomethingChanged('characterModifiers');
+			this._loadedSpace?.onCharacterModifiersChanged();
 		});
 
 		const currentInteractionConfig = this.gameLogicCharacter.interactions.getData();
@@ -241,6 +251,11 @@ export class Character {
 		if (!isEqual(originalAssetPreferencesConfig, currentAssetPreferencesConfig)) {
 			this.logger.debug('Migrated asset preferences');
 			this.setValue('assetPreferences', currentAssetPreferencesConfig, false);
+		}
+		const currentCharacterModifiersData = this.gameLogicCharacter.characterModifiers.getData();
+		if (!isEqual(originalCharacterModifiersData, currentCharacterModifiersData)) {
+			this.logger.debug('Migrated character modifiers');
+			this.setValue('characterModifiers', currentCharacterModifiersData, false);
 		}
 
 		this.tickInterval = setInterval(this.tick.bind(this), CHARACTER_TICK_INTERVAL);
@@ -487,13 +502,8 @@ export class Character {
 		return this._loadedSpace?.id ?? null;
 	}
 
-	public getGlobalState(): AssetFrameworkGlobalStateContainer {
-		const space = this.getOrLoadSpace();
-		return space.gameState;
-	}
-
 	public getCharacterState(): AssetFrameworkCharacterState {
-		const state = this.getGlobalState().currentState.characters.get(this.id);
+		const state = this.getOrLoadSpace().currentState.characters.get(this.id);
 		AssertNotNullable(state);
 		return state;
 	}
@@ -506,10 +516,8 @@ export class Character {
 	}
 
 	public getRestrictionManager(): CharacterRestrictionsManager {
-		const state = this.getGlobalState().currentState.characters.get(this.id);
-		AssertNotNullable(state);
-
-		return this.gameLogicCharacter.getRestrictionManager(state, this.getOrLoadSpace().getActionSpaceContext());
+		const space = this.getOrLoadSpace();
+		return this.gameLogicCharacter.getRestrictionManager(space.currentState, space.getActionSpaceContext());
 	}
 
 	public getAppearanceActionContext(): AppearanceActionContext {
@@ -522,6 +530,18 @@ export class Character {
 				return char?.gameLogicCharacter ?? null;
 			},
 		};
+	}
+
+	/**
+	 * Runs a simulation of a custom action, returning its result.
+	 */
+	public checkAction(action: (processingContext: AppearanceActionProcessingContext) => AppearanceActionProcessingResult): AppearanceActionProcessingResult {
+		const processingContext = new AppearanceActionProcessingContext(
+			this.getAppearanceActionContext(),
+			this.getOrLoadSpace().currentState,
+		);
+
+		return action(processingContext);
 	}
 
 	@AsyncSynchronized()
@@ -539,7 +559,7 @@ export class Character {
 			if (key === 'appearance') {
 				data.appearance = this.getCharacterAppearanceBundle();
 			} else if (key === 'personalRoom') {
-				const roomState = this._personalSpace.gameState.currentState.room;
+				const roomState = this._personalSpace.currentState.room;
 				data.personalRoom = {
 					inventory: roomState.exportToBundle(),
 				};
@@ -701,23 +721,22 @@ export class Character {
 
 		let transformed: IChatMessage[];
 
-		const hearingImpairment = this.getRestrictionManager().getHearingImpairment();
-		if (hearingImpairment.isActive()) {
-			transformed = [];
-			for (const message of messages) {
+		const hearingFilter = this.getRestrictionManager().getHearingFilter();
+		if (hearingFilter.isActive()) {
+			transformed = messages.map((message) => {
 				if (message.type === 'chat') {
-					const parts: typeof message.parts = [];
-					for (const part of message.parts) {
-						parts.push([part[0], hearingImpairment.distort(part[1])]);
-					}
-					transformed.push({
+					const metadata: ChatMessageFilterMetadata = {
+						from: message.from.id,
+						to: message.to?.id ?? null,
+					};
+					return {
 						...message,
-						parts,
-					});
+						parts: hearingFilter.processMessage(CloneDeepMutable(message.parts), metadata),
+					};
 				} else {
-					transformed.push(message);
+					return message;
 				}
-			}
+			});
 		} else {
 			transformed = messages;
 		}

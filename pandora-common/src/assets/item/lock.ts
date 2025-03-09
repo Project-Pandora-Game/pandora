@@ -113,7 +113,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		AssertNever(action);
 	}
 
-	public lock({ messageHandler, reject, processingContext, target, module }: AppearanceModuleActionContext, action: Extract<LockAction, { action: 'lock'; }>): ItemLock | null {
+	public lock({ messageHandler, addProblem, processingContext, target, module }: AppearanceModuleActionContext, action: Extract<LockAction, { action: 'lock'; }>): ItemLock | null {
 		const player = processingContext.getPlayerRestrictionManager();
 		// Locking the lock modifies it
 		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.MODIFY);
@@ -137,7 +137,7 @@ export class ItemLock extends ItemBase<'lock'> {
 				});
 
 			case 'failed':
-				reject({
+				addProblem({
 					type: 'lockInteractionPrevented',
 					moduleAction: 'lock',
 					reason: result.reason,
@@ -153,7 +153,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		AssertNever(result);
 	}
 
-	public unlock({ messageHandler, failure, reject, processingContext, target, module }: AppearanceModuleActionContext, action: Extract<LockAction, { action: 'unlock'; }>): ItemLock | null {
+	public unlock({ messageHandler, addProblem, processingContext, target, module }: AppearanceModuleActionContext, action: Extract<LockAction, { action: 'unlock'; }>): ItemLock | null {
 		const player = processingContext.getPlayerRestrictionManager();
 		// Unlocking the lock modifies it
 		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.MODIFY);
@@ -177,23 +177,13 @@ export class ItemLock extends ItemBase<'lock'> {
 				});
 
 			case 'failed':
-				if (result.reason === 'blockSelf') {
-					reject({
-						type: 'lockInteractionPrevented',
-						moduleAction: 'unlock',
-						reason: result.reason,
-						asset: this.asset.id,
-						itemName: this.name ?? '',
-					});
-				} else {
-					failure({
-						type: 'lockInteractionPrevented',
-						moduleAction: 'unlock',
-						reason: result.reason,
-						asset: this.asset.id,
-						itemName: this.name ?? '',
-					});
-				}
+				addProblem({
+					type: 'lockInteractionPrevented',
+					moduleAction: 'unlock',
+					reason: result.reason,
+					asset: this.asset.id,
+					itemName: this.name ?? '',
+				});
 				return this;
 
 			case 'invalid':
@@ -203,7 +193,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		AssertNever(result);
 	}
 
-	public showPassword({ failure, addData, processingContext, target, module }: AppearanceModuleActionContext): ItemLock | null {
+	public showPassword({ addProblem, addData, processingContext, target, module }: AppearanceModuleActionContext): ItemLock | null {
 		const player = processingContext.getPlayerRestrictionManager();
 		// Showing password requires permission access to the lock
 		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.ACCESS_ONLY);
@@ -225,7 +215,7 @@ export class ItemLock extends ItemBase<'lock'> {
 				return this;
 
 			case 'failed':
-				failure({
+				addProblem({
 					type: 'lockInteractionPrevented',
 					moduleAction: 'showPassword',
 					reason: result.reason,

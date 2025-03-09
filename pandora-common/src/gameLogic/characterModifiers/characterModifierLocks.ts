@@ -28,6 +28,14 @@ const CHARACTER_MODIFIER_LOCK_DEFINITIONS_INTERNAL = {
 			},
 		},
 	},
+	timer: {
+		name: 'Timer Lock',
+		lockSetup: {
+			timer: {
+				maxDuration: 24 * 60 * 60 * 1000,
+			},
+		},
+	},
 } as const satisfies Immutable<Record<string, CharacterModifierLockDefinition>>;
 
 export const CharacterModifierLockTypeSchema = z.enum(ParseArrayNotEmpty(

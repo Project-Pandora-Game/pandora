@@ -10,11 +10,12 @@ import type { AssetManager } from '../assetManager';
 import type { AssetColorization, AssetType, WearableAssetType } from '../definitions';
 import type { ItemModuleAction } from '../modules';
 import type { IExportOptions, IItemModule } from '../modules/common';
-import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, Item, ItemBundle, ItemColorBundle, ItemId, ItemTemplate } from './base';
+import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, Item, ItemBundle, ItemChatCustomMessages, ItemColorBundle, ItemId, ItemTemplate } from './base';
 
 import type { IChatMessageActionItem } from '../../chat';
 import { Assert, MemoizeNoArg } from '../../utility/misc';
 import { AssetProperties, AssetPropertiesIndividualResult, CreateAssetPropertiesIndividualResult, MergeAssetPropertiesIndividual } from '../properties';
+import { lowerCase } from 'lodash';
 
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface InternalItemTypeMap { }
@@ -26,6 +27,7 @@ export interface ItemBaseProps<Type extends AssetType = AssetType> {
 	readonly spawnedBy?: CharacterId;
 	readonly color: Immutable<ItemColorBundle>;
 	readonly name?: string;
+	readonly chat?: ItemChatCustomMessages;
 	readonly description?: string;
 }
 
@@ -41,6 +43,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 	public readonly spawnedBy?: CharacterId;
 	public readonly color: Immutable<ItemColorBundle>;
 	public readonly name?: string;
+	public readonly chat?: Immutable<ItemChatCustomMessages>;
 	public readonly description?: string;
 
 	public get type(): Type {
@@ -62,6 +65,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		this.spawnedBy = overrideProps?.spawnedBy ?? props.spawnedBy;
 		this.color = overrideProps?.color ?? props.color;
 		this.name = (overrideProps && 'name' in overrideProps) ? overrideProps.name : props.name;
+		this.chat = (overrideProps && 'chat' in overrideProps) ? overrideProps.chat : props.chat;
 		this.description = (overrideProps && 'description' in overrideProps) ? overrideProps.description : props.description;
 	}
 
@@ -93,6 +97,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			asset: this.asset.id,
 			color: this.exportColorToBundle(),
 			name: this.name,
+			chat: this.chat,
 			description: this.description,
 			modules,
 		};
@@ -113,6 +118,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			spawnedBy: options.clientOnly ? undefined : this.spawnedBy,
 			color: this.exportColorToBundle(),
 			name: this.name,
+			chat: this.chat,
 			description: this.description,
 			moduleData,
 		};
@@ -238,6 +244,28 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			description = undefined;
 
 		return this.withProps({ description });
+	}
+	/** Returns a new item with the passed name and description */
+	public customizeChat(newChat: ItemChatCustomMessages): Item<Type> {
+
+		const chat: ItemChatCustomMessages = { generic: '', specific: '' };
+		if (newChat.generic === '')
+			if (this.name === undefined)
+				chat.generic = '';
+			else
+				chat.generic = 'aeiou'.includes(this.name[0]) ? 'an ' : 'a ' + lowerCase(this.name);
+		else
+			chat.generic = newChat.generic;
+
+		if (newChat.specific === '')
+			if (this.name === undefined)
+				chat.specific = '';
+			else
+				chat.specific = 'the ' + lowerCase(this.name);
+		else
+			chat.specific = newChat.specific;
+
+		return this.withProps({ chat });
 	}
 
 	@MemoizeNoArg

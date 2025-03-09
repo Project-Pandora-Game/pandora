@@ -45,7 +45,7 @@ function RenderLockLogicActionProblem(lockDescription: string, action: 'lock' | 
 		case 'wrongPassword':
 			return `The password is incorrect.`;
 		case 'timerRunning':
-			return `The lock cannot be unlocked yet.`;
+			return `The ${lockDescription} cannot yet ${actionDescription[action]} as the timer is still running.`;
 		case 'notAllowed':
 			return `You are not allowed to view the password.`;
 	}

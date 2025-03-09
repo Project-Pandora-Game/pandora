@@ -269,7 +269,7 @@ function WardrobeLockSlotLocked({ target, item, moduleName, lock }: Omit<Wardrob
 			},
 		},
 		// Add timerExpired to dependencies to force recalculation once timer runs out
-		// eslint-disable-next-line
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}), [clearLastPassword, currentAttempt, item, moduleName, password, target, timerExpired]);
 
 	return (

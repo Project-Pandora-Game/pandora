@@ -37,7 +37,7 @@ export function WardrobeCharacterModifierTypeView({ title, character, currentlyF
 			}))
 	), [flt]);
 
-	const sortedModifierTypes = filteredModifierTypes; // TODO
+	const sortedModifierTypes = useMemo(() => filteredModifierTypes.sort((a, b) => a.visibleName.localeCompare(b.visibleName)), [filteredModifierTypes]);
 
 	const filterInput = useRef<TextInput>(null);
 	useInputAutofocus(filterInput);

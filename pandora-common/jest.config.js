@@ -4,7 +4,7 @@
  * https://jestjs.io/docs/configuration
  * @type { import('ts-jest').JestConfigWithTsJest }
  */
-module.exports = {
+export default {
 	clearMocks: true,
 	collectCoverageFrom: ['src/**/*.ts', 'src/**/*.tsx'],
 	coverageDirectory: 'coverage',

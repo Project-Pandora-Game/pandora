@@ -1,21 +1,23 @@
 import classNames from 'classnames';
-import type { Immutable } from 'immer';
+import { produce, type Immutable } from 'immer';
 import { cloneDeep } from 'lodash';
-import { AssertNever, CloneDeepMutable, EvaluateCharacterModifierCondition, GetLogger, LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT, type CharacterModifierCondition, type CharacterModifierConditionChain, type CharacterModifierConditionRecord } from 'pandora-common';
+import { AssertNever, CharacterModifierTemplateSchema, CloneDeepMutable, EvaluateCharacterModifierCondition, GetLogger, LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT, type CharacterModifierCondition, type CharacterModifierConditionChain, type CharacterModifierConditionRecord } from 'pandora-common';
 import { useMemo, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
 import type { Promisable } from 'type-fest';
 import crossImage from '../../../../../assets/icons/cross.svg';
+import importIcon from '../../../../../assets/icons/import.svg';
 import type { ICharacter } from '../../../../../character/character';
 import { useAsyncEvent } from '../../../../../common/useEvent';
 import { Select } from '../../../../../common/userInteraction/select/select';
-import { TOAST_OPTIONS_ERROR } from '../../../../../persistentToast';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../../../persistentToast';
 import { Button, IconButton } from '../../../../common/button/button';
 import { Column, DivContainer, Row } from '../../../../common/container/container';
 import { FieldsetToggle } from '../../../../common/fieldsetToggle';
 import { useGameState, useGlobalState, useSpaceInfo } from '../../../../gameContext/gameStateContextProvider';
 import { CharacterModifierConditionListEntry } from './characterModifierCondition';
 import './style.scss';
+import { ImportDialog } from '../../../../exportImport/importDialog';
 
 export function CharacterModifierConditionList({ character, conditions, onChange }: {
 	character: ICharacter;
@@ -44,7 +46,7 @@ export function CharacterModifierConditionList({ character, conditions, onChange
 	}), [conditions, globalState, spaceInfo, character]);
 
 	return (
-		<FieldsetToggle legend='Conditions' className='characterModifierConditions'>
+		<FieldsetToggle legend='Activation conditions' className='characterModifierConditions'>
 			<Column gap='large'>
 				{
 					conditions.length === 0 ? (
@@ -149,15 +151,30 @@ export function CharacterModifierConditionList({ character, conditions, onChange
 				}
 				{
 					conditions.length < LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT ? (
-						<CharacterModifierConditionAdd
-							processing={ processing }
-							addCondition={ onChange != null ? ((newCondition) => {
-								setConditions([
-									...conditions,
-									newCondition,
-								]);
-							}) : undefined }
-						/>
+						<Row wrap='reverse' gap='large'>
+							<CharacterModifierConditionAdd
+								processing={ processing }
+								addCondition={ onChange != null ? ((newCondition) => {
+									setConditions([
+										...conditions,
+										newCondition,
+									]);
+								}) : undefined }
+							/>
+							<CharacterModifierConditionImport
+								processing={ processing }
+								addConditions={ onChange != null ? ((addedConditions) => {
+									const newConditions = [
+										...conditions,
+										...addedConditions,
+									];
+									if (newConditions.length > LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT) {
+										toast('Not enough free space to add all conditions, conditions truncated', TOAST_OPTIONS_WARNING);
+									}
+									setConditions(newConditions.slice(0, LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT));
+								}) : undefined }
+							/>
+						</Row>
 					) : null
 				}
 			</Column>
@@ -322,7 +339,7 @@ function CharacterModifierConditionAdd({ processing, addCondition }: {
 	const [type, setType] = useState<CharacterModifierCondition['type'] | ''>('');
 
 	return (
-		<Row gap='medium'>
+		<Row gap='medium' className='flex-grow-1'>
 			<Select
 				value={ addCondition != null ? type : '' }
 				onChange={ (ev) => setType(ev.target.value as (CharacterModifierCondition['type'] | '')) }
@@ -352,5 +369,53 @@ function CharacterModifierConditionAdd({ processing, addCondition }: {
 				Add
 			</Button>
 		</Row>
+	);
+}
+
+function CharacterModifierConditionImport({ processing, addConditions }: {
+	processing: boolean;
+	addConditions?: (newConditions: CharacterModifierConditionRecord[]) => void;
+}): ReactElement {
+	const [showImportDialog, setShowImportDialog] = useState(false);
+
+	return (
+		<>
+			<Button
+				className='slim'
+				onClick={ () => {
+					setShowImportDialog(true);
+				} }
+				disabled={ processing || addConditions == null }
+			>
+				<img src={ importIcon } alt='Import' crossOrigin='anonymous' /> Import
+			</Button>
+			{
+				(showImportDialog && addConditions != null) ? (
+					<ImportDialog
+						expectedType='CharacterModifier'
+						expectedVersion={ 1 }
+						dataSchema={ CharacterModifierTemplateSchema }
+						closeDialog={ () => {
+							setShowImportDialog(false);
+						} }
+						onImport={ (importData) => {
+							setShowImportDialog(false);
+							// Make sure the first condition really is 'or' before appending them
+							const conditions = produce(importData.conditions, (d) => {
+								if (d.length > 0) {
+									d[0].logic = 'or';
+								}
+							});
+							addConditions(conditions);
+						} }
+					>
+						<h2>Import additional conditions</h2>
+						<p>
+							Import any exported modifier to append its conditions to the current modifier
+						</p>
+					</ImportDialog>
+				) : null
+			}
+		</>
 	);
 }

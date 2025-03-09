@@ -4,7 +4,7 @@ import { type AssetDefinitionExtraArgs, type AssetFrameworkGlobalState } from '.
 import { EffectNameSchema } from '../../../assets/effects';
 import { CharacterIdSchema } from '../../../character/characterTypes';
 import { LIMIT_ITEM_NAME_LENGTH } from '../../../inputLimits';
-import { SpaceIdSchema, type CurrentSpaceInfo } from '../../../space';
+import { SpaceIdSchema, SpacePublicSettingSchema, type CurrentSpaceInfo } from '../../../space';
 import { AssertNever, type Satisfies } from '../../../utility';
 import type { GameLogicCharacter } from '../../character/character';
 
@@ -17,6 +17,11 @@ export const CharacterModifierConditionSchema = z.discriminatedUnion('type', [
 		type: z.literal('inSpaceId'),
 		/** Id of the space, `null` for personal space. */
 		spaceId: SpaceIdSchema.nullable(),
+	}),
+	z.object({
+		type: z.literal('inSpaceWithVisibility'),
+		/** Visibility setting of the space. */
+		spaceVisibility: SpacePublicSettingSchema,
 	}),
 	z.object({
 		type: z.literal('hasItemOfAsset'),
@@ -66,6 +71,9 @@ export function EvaluateCharacterModifierCondition(
 
 		case 'inSpaceId':
 			return condition.spaceId === spaceInfo.id;
+
+		case 'inSpaceWithVisibility':
+			return condition.spaceVisibility === spaceInfo.config.public;
 
 		case 'hasItemOfAsset': {
 			const characterState = gameState.characters.get(character.id);

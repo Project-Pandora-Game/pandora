@@ -8,6 +8,7 @@ import { ConditionItemOfAsset } from './conditionItemOfAsset';
 import { ConditionItemWithAttribute } from './conditionItemWithAttribute';
 import { ConditionItemWithEffect } from './conditionItemWithEffect';
 import { ConditionItemWithName } from './conditionItemWithName';
+import { ConditionInSpaceWithVisibility } from './conditionInSpaceWithVisibility';
 
 export type CharacterModifierConditionListEntryProps<TCondition extends CharacterModifierCondition['type'] = CharacterModifierCondition['type']> = {
 	condition: Immutable<Extract<CharacterModifierCondition, { type: TCondition; }>>;
@@ -25,6 +26,8 @@ export function CharacterModifierConditionListEntry({ condition, ...props }: Cha
 			return <ConditionCharacterPresent { ...props } condition={ condition } />;
 		case 'inSpaceId':
 			return <ConditionInSpaceId { ...props } condition={ condition } />;
+		case 'inSpaceWithVisibility':
+			return <ConditionInSpaceWithVisibility { ...props } condition={ condition } />;
 		case 'hasItemOfAsset':
 			return <ConditionItemOfAsset { ...props } condition={ condition } />;
 		case 'hasItemWithAttribute':

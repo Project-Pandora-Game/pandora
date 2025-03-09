@@ -278,6 +278,13 @@ const CONDITION_PRESETS: { [t in CharacterModifierCondition['type']]: { name: st
 			spaceId: null,
 		},
 	},
+	inSpaceWithVisibility: {
+		name: 'In space with visibility',
+		default: {
+			type: 'inSpaceWithVisibility',
+			spaceVisibility: 'private',
+		},
+	},
 	hasItemOfAsset: {
 		name: 'Has item of specified type',
 		default: {

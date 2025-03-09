@@ -21,6 +21,7 @@ import openLock from '../../../assets/icons/lock_open.svg';
 import { useCharacterRestrictionManager } from '../../../character/character';
 import { useCurrentTime } from '../../../common/useCurrentTime';
 import { Checkbox } from '../../../common/userInteraction/checkbox';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput';
 import { TextInput } from '../../../common/userInteraction/input/textInput';
 import { Column, Row } from '../../common/container/container';
 import { FieldsetToggle } from '../../common/fieldsetToggle';
@@ -217,6 +218,30 @@ function WardrobeLockSlotLocked({ target, item, moduleName, lock }: Omit<Wardrob
 			</Row>
 		);
 	}, [lock, now]);
+	const timeLeft = useMemo(() => {
+		const lockedData = lock.lockLogic.lockData.locked;
+		Assert(lockedData != null);
+
+		const { lockedUntil } = lockedData;
+		if (lockedUntil == null)
+			return null;
+
+		if (now >= lockedUntil)
+			return 0;
+
+		return lockedUntil - now;
+	}, [lock, now]);
+	const timerExpired = useMemo(() => (timeLeft == null || timeLeft <= 0), [timeLeft]);
+	const timerText = useMemo(() => {
+		if (timerExpired)
+			return <>Remaining time: <i>Timer expired</i></>;
+
+		return (
+			<>
+				Remaining time: { FormatTimeInterval(timeLeft ?? 0) }
+			</>
+		);
+	}, [timeLeft, timerExpired]);
 
 	const [password, setPassword] = useState<string>('');
 	const [invalidPassword, setInvalidPassword] = useState<string | undefined>(undefined);
@@ -243,7 +268,9 @@ function WardrobeLockSlotLocked({ target, item, moduleName, lock }: Omit<Wardrob
 				clearLastPassword,
 			},
 		},
-	}), [clearLastPassword, currentAttempt, item, moduleName, password, target]);
+		// Add timerExpired to dependencies to force recalculation once timer runs out
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}), [clearLastPassword, currentAttempt, item, moduleName, password, target, timerExpired]);
 
 	return (
 		<>
@@ -268,6 +295,15 @@ function WardrobeLockSlotLocked({ target, item, moduleName, lock }: Omit<Wardrob
 					</Column>
 				) : null
 			}
+			{
+				lock.lockLogic.lockSetup.timer ? (
+					<Column className='WardrobeLockTimer'>
+						<Row className='WardrobeInputRow'>
+							{ timerText }
+						</Row>
+					</Column>
+				) : null
+			}
 			<WardrobeActionButton
 				disabled={ !allowExecute && currentAttempt == null }
 				onFailure={ () => setInvalidPassword(password) }
@@ -283,6 +319,8 @@ function WardrobeLockSlotLocked({ target, item, moduleName, lock }: Omit<Wardrob
 function WardrobeLockSlotUnlocked({ target, item, moduleName, lock }: Omit<WardrobeModuleProps<ItemModuleLockSlot>, 'setFocus'> & { lock: ItemLock; }): ReactElement | null {
 	const [password, setPassword] = useState<string>('');
 	const [useOldPassword, setUseOldPassword] = useState(false);
+
+	const [timer, setTimer] = useState<number>(0);
 
 	// Attempted action for locking or unlocking the lock
 	const [currentAttempt, setCurrentAttempt] = useState<WardrobeExecuteCheckedResult['currentAttempt']>(null);
@@ -309,9 +347,10 @@ function WardrobeLockSlotUnlocked({ target, item, moduleName, lock }: Omit<Wardr
 				password: currentAttempt != null ? undefined :
 					useOldPassword ? undefined :
 					(password || undefined),
+				timer: currentAttempt != null ? undefined : (timer || undefined),
 			},
 		},
-	}), [currentAttempt, item, moduleName, password, target, useOldPassword]);
+	}), [currentAttempt, item, moduleName, password, timer, target, useOldPassword]);
 
 	return (
 		<>
@@ -334,6 +373,18 @@ function WardrobeLockSlotUnlocked({ target, item, moduleName, lock }: Omit<Wardr
 							onChange={ setPassword }
 							password={ lock.lockLogic.lockSetup.password }
 							disabled={ useOldPassword && lock.hasPassword }
+							pendingAttempt={ currentAttempt != null }
+						/>
+					</Column>
+				) : null
+			}
+			{
+				lock.lockLogic.lockSetup.timer ? (
+					<Column className='WardrobeLockTimer'>
+						<TimerInput
+							value={ timer }
+							onChange={ setTimer }
+							timer={ lock.lockLogic.lockSetup.timer }
 							pendingAttempt={ currentAttempt != null }
 						/>
 					</Column>
@@ -466,5 +517,101 @@ function PasswordInput({
 				) : null
 			}
 		</>
+	);
+}
+
+function TimerInput({
+	value,
+	onChange,
+	timer,
+	pendingAttempt = false,
+}: {
+	value: number;
+	onChange: (newValue: number) => void;
+	timer: Immutable<NonNullable<LockSetup['timer']>>;
+	pendingAttempt?: boolean;
+	showInvalidWarning?: boolean;
+}) {
+	const hourMs = 3_600_000;
+	const minuteMs = 60_000;
+
+	const id = useId();
+
+	const inputValues = useMemo(() => {
+		return {
+			hours: Math.floor(value / hourMs),
+			minutes: Math.floor(value / minuteMs) % 60,
+			seconds: Math.floor(value / 1_000) % 60,
+		};
+	}, [value]);
+
+	const maximums = useMemo(() => {
+		if (value >= timer.maxDuration) {
+			return inputValues;
+		}
+
+		return {
+			hours: Math.floor(timer.maxDuration / hourMs),
+			minutes: (timer.maxDuration > (59 * minuteMs)) ? 59 : Math.floor(timer.maxDuration / minuteMs),
+			seconds: (timer.maxDuration > 59_000) ? 59 : Math.floor(timer.maxDuration / 1_000),
+		};
+	}, [value, inputValues, timer]);
+
+	const updateTimer = useCallback((newValue: number) => {
+		onChange(Math.min(timer.maxDuration, newValue));
+	}, [onChange, timer]);
+
+	const setHours = useCallback((newValue: number) => {
+		updateTimer(value + (newValue - inputValues.hours) * hourMs);
+	}, [value, updateTimer, inputValues]);
+
+	const setMinutes = useCallback((newValue: number) => {
+		updateTimer(value + (newValue - inputValues.minutes) * minuteMs);
+	}, [value, updateTimer, inputValues]);
+
+	const setSeconds = useCallback((newValue: number) => {
+		updateTimer(value + (newValue - inputValues.seconds) * 1_000);
+	}, [value, updateTimer, inputValues]);
+
+	return (
+		<Row className='WardrobeInputRow'>
+			<label htmlFor={ id }>
+				Timer
+			</label>
+			<Row alignY='center'>
+				<NumberInput
+					id={ `${id}-hours` }
+					min={ 0 }
+					max={ maximums.hours }
+					step={ 1 }
+					value={ inputValues.hours }
+					onChange={ setHours }
+					disabled={ pendingAttempt }
+				/>
+				<label htmlFor={ `${id}-hours` }>Hours</label>
+				{ ' : ' }
+				<NumberInput
+					id={ `${id}-minutes` }
+					min={ 0 }
+					max={ maximums.minutes }
+					step={ 1 }
+					value={ inputValues.minutes }
+					onChange={ setMinutes }
+					disabled={ pendingAttempt }
+				/>
+				<label htmlFor={ `${id}-minutes` }>Minutes</label>
+				{ ' : ' }
+				<NumberInput
+					id={ `${id}-seconds` }
+					min={ 0 }
+					max={ maximums.seconds }
+					step={ 1 }
+					value={ inputValues.seconds }
+					onChange={ setSeconds }
+					disabled={ pendingAttempt }
+				/>
+				<label htmlFor={ `${id}-seconds` }>Seconds</label>
+			</Row>
+		</Row>
 	);
 }

@@ -46,6 +46,10 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 						return `The ${describeItem(e.asset, e.itemName)} cannot be ${actionDescription[e.moduleAction]} on yourself.`;
 					case 'noStoredPassword':
 						return `The ${describeItem(e.asset, e.itemName)} cannot be ${actionDescription[e.moduleAction]} because it has no stored password.`;
+					case 'noTimerSet':
+						return `The ${describeItem(e.asset, e.itemName)} cannot be ${actionDescription[e.moduleAction]} because it has no timer set.`;
+					case 'invalidTimer':
+						return `The ${describeItem(e.asset, e.itemName)} cannot be ${actionDescription[e.moduleAction]} because the timer is invalid.`;
 				}
 
 				AssertNever(e);
@@ -158,6 +162,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				switch (f.reason.reason) {
 					case 'wrongPassword':
 						return `The password is incorrect.`;
+					case 'timerRunning':
+						return `The lock cannot be unlocked yet.`;
 					case 'notAllowed':
 						return `You are not allowed to view the password.`;
 				}

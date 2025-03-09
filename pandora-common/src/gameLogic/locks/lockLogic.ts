@@ -12,6 +12,8 @@ export const LockActionSchema = z.discriminatedUnion('action', [
 	z.object({
 		action: z.literal('lock'),
 		password: z.string().optional(),
+		/** How long (in ms) the lock should be locked for, if it includes a timer. */
+		timer: z.number().int().nonnegative().optional(),
 	}),
 	z.object({
 		action: z.literal('unlock'),
@@ -29,7 +31,7 @@ export type LockActionLockResult = {
 	newState: LockLogic;
 } | {
 	result: 'failed';
-	reason: 'blockSelf' | 'noStoredPassword';
+	reason: 'blockSelf' | 'noStoredPassword' | 'noTimerSet' | 'invalidTimer';
 } | {
 	result: 'invalid';
 };
@@ -39,7 +41,7 @@ export type LockActionUnlockResult = {
 	newState: LockLogic;
 } | {
 	result: 'failed';
-	reason: 'blockSelf' | 'wrongPassword';
+	reason: 'blockSelf' | 'wrongPassword' | 'timerRunning';
 } | {
 	result: 'invalid';
 };
@@ -117,7 +119,7 @@ export class LockLogic {
 		return this.lockData.locked != null;
 	}
 
-	public lock({ player, executionContext, isSelfAction }: LockActionContext, { password }: Extract<LockAction, { action: 'lock'; }>): LockActionLockResult {
+	public lock({ player, executionContext, isSelfAction }: LockActionContext, { password, timer }: Extract<LockAction, { action: 'lock'; }>): LockActionLockResult {
 		if (this.isLocked())
 			return { result: 'invalid' };
 
@@ -127,6 +129,26 @@ export class LockLogic {
 				result: 'failed',
 				reason: 'blockSelf',
 			};
+		}
+
+		const lockTime = Date.now();
+		let lockedUntil: number | undefined;
+		if (this.lockSetup.timer != null) {
+			if (timer == null) {
+				return {
+					result: 'failed',
+					reason: 'noTimerSet',
+				};
+			}
+
+			if (timer < 0 || timer > this.lockSetup.timer.maxDuration) {
+				return {
+					result: 'failed',
+					reason: 'invalidTimer',
+				};
+			}
+
+			lockedUntil = lockTime + timer;
 		}
 
 		let hidden: LockDataBundle['hidden'] | undefined;
@@ -173,7 +195,8 @@ export class LockLogic {
 			data.locked = {
 				id: player.appearance.id,
 				name: player.appearance.character.name,
-				time: Date.now(),
+				time: lockTime,
+				lockedUntil,
 			};
 		});
 
@@ -193,6 +216,17 @@ export class LockLogic {
 				result: 'failed',
 				reason: 'blockSelf',
 			};
+		}
+
+		if (this.lockSetup.timer != null && this.lockData.locked?.lockedUntil != null && !player.forceAllowItemActions()) {
+
+			// Disallow unlock if timer is still running, except for the player that locked it
+			if ((Date.now() < this.lockData.locked.lockedUntil) && this.lockData.locked.id !== player.appearance.id) {
+				return {
+					result: 'failed',
+					reason: 'timerRunning',
+				};
+			}
 		}
 
 		if (this.lockSetup.password != null && !player.forceAllowItemActions() && executionContext === 'act') {

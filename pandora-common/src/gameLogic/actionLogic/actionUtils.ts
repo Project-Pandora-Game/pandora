@@ -34,6 +34,9 @@ export function RedactSensitiveActionData(originalAction: Immutable<AppearanceAc
 					if (action.action.lockAction.action === 'lock' || action.action.lockAction.action === 'unlock') {
 						action.action.lockAction.password = undefined;
 					}
+					if (action.action.lockAction.action === 'lock') {
+						action.action.lockAction.timer = undefined;
+					}
 					break;
 			}
 			break;

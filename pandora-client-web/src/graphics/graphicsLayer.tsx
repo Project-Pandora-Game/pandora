@@ -15,19 +15,19 @@ import {
 import * as PIXI from 'pixi.js';
 import { Rectangle, Texture } from 'pixi.js';
 import { ReactElement, createContext, useCallback, useContext, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { AssetGraphicsLayer } from '../assets/assetGraphics';
-import { useImageResolutionAlternative, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource, useLayerMeshPoints } from '../assets/assetGraphicsCalculations';
-import { ChildrenProps } from '../common/reactTypes';
-import { useNullableObservable, useObservable, type ReadonlyObservable } from '../observable';
-import { ConditionEvaluatorBase, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator';
-import { Container } from './baseComponents/container';
-import { PixiMesh, type PixiMeshProps } from './baseComponents/mesh';
-import { Sprite } from './baseComponents/sprite';
-import { GraphicsMaskLayer } from './graphicsMaskLayer';
-import { useGraphicsSettings } from './graphicsSettings';
-import { usePixiApp, usePixiAppOptional } from './reconciler/appContext';
-import { useTexture } from './useTexture';
-import { EvaluateCondition } from './utility';
+import { AssetGraphicsLayer } from '../assets/assetGraphics.ts';
+import { useImageResolutionAlternative, useLayerDefinition, useLayerHasAlphaMasks, useLayerImageSource, useLayerMeshPoints } from '../assets/assetGraphicsCalculations.ts';
+import { ChildrenProps } from '../common/reactTypes.ts';
+import { useNullableObservable, useObservable, type ReadonlyObservable } from '../observable.ts';
+import { ConditionEvaluatorBase, useAppearanceConditionEvaluator } from './appearanceConditionEvaluator.ts';
+import { Container } from './baseComponents/container.ts';
+import { PixiMesh, type PixiMeshProps } from './baseComponents/mesh.tsx';
+import { Sprite } from './baseComponents/sprite.ts';
+import { GraphicsMaskLayer } from './graphicsMaskLayer.ts';
+import { useGraphicsSettings } from './graphicsSettings.tsx';
+import { usePixiApp, usePixiAppOptional } from './reconciler/appContext.ts';
+import { useTexture } from './useTexture.ts';
+import { EvaluateCondition } from './utility.ts';
 
 type TransformEvalCacheEntryValue = WeakMap<Immutable<PointDefinitionCalculated[]>, Float32Array>;
 type TransformEvalCacheEntry = {

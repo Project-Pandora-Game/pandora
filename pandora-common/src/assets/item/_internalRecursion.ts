@@ -2,8 +2,8 @@
 // It is only a helper to achieve recursion of items inside modules without introducing cyclic dependencies
 
 import { z, type ZodTypeDef } from 'zod';
-import type { ItemBundle, ItemTemplate } from './base';
-import { Assert } from '../../utility/misc';
+import type { ItemBundle, ItemTemplate } from './base.ts';
+import { Assert } from '../../utility/misc.ts';
 
 let ItemBundleSchemaReference: z.ZodType<ItemBundle, ZodTypeDef, unknown> | undefined;
 // eslint-disable-next-line @typescript-eslint/naming-convention

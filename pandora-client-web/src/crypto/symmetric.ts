@@ -1,5 +1,5 @@
 import { Assert } from 'pandora-common';
-import { ArrayToBase64, Base64ToArray, Decode, Encode, GenerateIV } from './helpers';
+import { ArrayToBase64, Base64ToArray, Decode, Encode, GenerateIV } from './helpers.ts';
 
 const AES_GCM_PARAMS = { name: 'AES-GCM', length: 256 } as const;
 const AES_GCM_KEY_USAGES: readonly KeyUsage[] = ['encrypt', 'decrypt', 'wrapKey', 'unwrapKey'];

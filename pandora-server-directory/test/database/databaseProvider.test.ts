@@ -1,5 +1,6 @@
-import { InitDatabaseForTests, GetDatabase } from '../../src/database/databaseProvider';
-import { MockDatabase } from '../../src/database/mockDb';
+import { describe, expect, it } from '@jest/globals';
+import { GetDatabase, InitDatabaseForTests } from '../../src/database/databaseProvider.ts';
+import { MockDatabase } from '../../src/database/mockDb.ts';
 
 describe('GetDatabase()', () => {
 	it('should throw error if DB is not initialized', () => {

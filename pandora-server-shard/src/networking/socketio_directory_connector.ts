@@ -1,27 +1,27 @@
-import { APP_VERSION, ENV } from '../config';
-const { DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_DEVELOPMENT_MODE, SHARD_SHARED_SECRET } = ENV;
 import {
+	ConnectionBase,
+	DirectoryShardSchema,
 	GetLogger,
 	HTTP_HEADER_SHARD_SECRET,
 	HTTP_SOCKET_IO_SHARD_PATH,
-	IShardDirectory,
-	MessageHandler,
 	IDirectoryShard,
-	ConnectionBase,
-	ShardFeature,
-	IDirectoryShardUpdate,
-	ShardDirectorySchema,
-	DirectoryShardSchema,
 	IDirectoryShardArgument,
 	IDirectoryShardResult,
+	IDirectoryShardUpdate,
+	IShardDirectory,
+	MessageHandler,
+	ShardDirectorySchema,
+	ShardFeature,
 	SpaceIdSchema,
 } from 'pandora-common';
-import { connect, Socket } from 'socket.io-client';
-import { CharacterManager } from '../character/characterManager';
-import { SpaceManager } from '../spaces/spaceManager';
-import { Stop } from '../lifecycle';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
 import promClient from 'prom-client';
-import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
+import { connect, Socket } from 'socket.io-client';
+import { CharacterManager } from '../character/characterManager.ts';
+import { APP_VERSION, ENV } from '../config.ts';
+import { Stop } from '../lifecycle.ts';
+import { SpaceManager } from '../spaces/spaceManager.ts';
+const { DIRECTORY_ADDRESS, SERVER_PUBLIC_ADDRESS, SHARD_DEVELOPMENT_MODE, SHARD_SHARED_SECRET } = ENV;
 
 /** Time in milliseconds after which should attempt to connect to Directory fail */
 const INITIAL_CONNECT_TIMEOUT = 60_000;

@@ -1,8 +1,9 @@
+import { afterAll, describe, expect, it, jest } from '@jest/globals';
 import fs, { readFileSync } from 'fs';
 import { nanoid } from 'nanoid';
 import { tmpdir } from 'os';
 import { GetLogger, LogLevel, logConfig } from 'pandora-common';
-import { AddFileOutput } from '../src/logging';
+import { AddFileOutput } from '../src/logging.ts';
 
 describe('AddFileOutput()', () => {
 	//disable console.info for this test suit

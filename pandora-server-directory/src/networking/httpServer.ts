@@ -1,15 +1,15 @@
-import { GetLogger, ServerService } from 'pandora-common';
-import { ENV } from '../config';
-const { SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT, TRUSTED_REVERSE_PROXY_HOPS } = ENV;
+import express from 'express';
+import * as fs from 'fs';
+import { Socket } from 'net';
 import { Server as NodeHttpServer } from 'node:http';
 import { Server as NodeHttpsServer } from 'node:https';
-import * as fs from 'fs';
-import { SocketIOServerShard } from './socketio_shard_server';
-import { SocketIOServerClient } from './socketio_client_server';
-import { Socket } from 'net';
-import express from 'express';
-import { MetricsServe } from '../metrics';
-import { GitHubVerifierAPI } from '../services/github/githubVerify';
+import { GetLogger, ServerService } from 'pandora-common';
+import { ENV } from '../config.ts';
+import { MetricsServe } from '../metrics.ts';
+import { GitHubVerifierAPI } from '../services/github/githubVerify.ts';
+import { SocketIOServerClient } from './socketio_client_server.ts';
+import { SocketIOServerShard } from './socketio_shard_server.ts';
+const { SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT, TRUSTED_REVERSE_PROXY_HOPS } = ENV;
 
 export const HttpServer = new class HttpServer implements ServerService {
 	private _server?: NodeHttpServer;

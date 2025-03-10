@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { ExternalLink } from '../../common/link/externalLink';
+import { ExternalLink } from '../../common/link/externalLink.tsx';
 
 export function WikiContact(): ReactElement {
 	return (

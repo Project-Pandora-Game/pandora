@@ -1,17 +1,17 @@
 import type { Immutable } from 'immer';
 import { Assert, AssertNever, AssertNotNullable, ICharacterRoomData, ItemId, ItemRoomDevice, type CharacterId } from 'pandora-common';
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Character } from '../../../character/character';
-import type { ChildrenProps } from '../../../common/reactTypes';
-import { usePlayer } from '../../../components/gameContext/playerContextProvider';
-import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext';
-import type { PointLike } from '../../../graphics/graphicsCharacter';
-import { CharacterContextMenu } from '../../../graphics/room/contextMenus/characterContextMenu';
-import { DeviceContextMenu } from '../../../graphics/room/contextMenus/deviceContextMenu';
-import { useIsRoomConstructionModeEnabled } from '../../../graphics/room/roomDevice';
-import { useProvideTutorialFlag } from '../../tutorial/tutorialSystem/tutorialExternalConditions';
-import { RoomItemDialogsProviderEnabler } from './roomItemDialog';
-import { RoomScreenSceneModeCheckProvider } from './roomPermissionChecks';
+import { Character } from '../../../character/character.ts';
+import type { ChildrenProps } from '../../../common/reactTypes.ts';
+import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
+import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
+import type { PointLike } from '../../../graphics/graphicsCharacter.tsx';
+import { CharacterContextMenu } from '../../../graphics/room/contextMenus/characterContextMenu.tsx';
+import { DeviceContextMenu } from '../../../graphics/room/contextMenus/deviceContextMenu.tsx';
+import { useIsRoomConstructionModeEnabled } from '../../../graphics/room/roomDevice.tsx';
+import { useProvideTutorialFlag } from '../../tutorial/tutorialSystem/tutorialExternalConditions.tsx';
+import { RoomItemDialogsProviderEnabler } from './roomItemDialog.tsx';
+import { RoomScreenSceneModeCheckProvider } from './roomPermissionChecks.tsx';
 
 export type IRoomSceneMode = {
 	mode: 'normal';

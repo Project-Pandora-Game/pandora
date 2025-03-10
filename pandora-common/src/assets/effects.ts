@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import type { HearingImpairmentSettings, MuffleSettings } from '../chat';
-import { KnownObject, ParseArrayNotEmpty, type Satisfies } from '../utility/misc';
+import type { HearingImpairmentSettings, MuffleSettings } from '../chat/index.ts';
+import { KnownObject, ParseArrayNotEmpty, type Satisfies } from '../utility/misc.ts';
 
 //#region Effects definition
 

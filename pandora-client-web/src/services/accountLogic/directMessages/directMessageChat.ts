@@ -11,11 +11,11 @@ import {
 	type IDirectoryDirectMessageInfo,
 	type Logger,
 } from 'pandora-common';
-import { Observable, type ReadonlyObservable } from '../../../observable';
-import type { DirectMessageManager } from './directMessageManager';
-import { HashSHA256Base64 } from '../../../crypto/helpers';
-import { SymmetricEncryption } from '../../../crypto/symmetric';
-import { ChatParser } from '../../../ui/components/chat/chatParser';
+import { HashSHA256Base64 } from '../../../crypto/helpers.ts';
+import { SymmetricEncryption } from '../../../crypto/symmetric.ts';
+import { Observable, type ReadonlyObservable } from '../../../observable.ts';
+import { ChatParser } from '../../../ui/components/chat/chatParser.ts';
+import type { DirectMessageManager } from './directMessageManager.ts';
 
 export type DirectMessageChatState = 'notLoaded' | 'ready' | 'errorNotFound' | 'errorNoKeyAvailable' | 'errorDenied' | 'error';
 export type ChatEncryption = {

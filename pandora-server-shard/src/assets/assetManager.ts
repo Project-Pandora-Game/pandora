@@ -2,10 +2,10 @@ import express from 'express';
 import { readFileSync, statSync } from 'fs';
 import { AssetManager, AssetsDefinitionFile, GetLogger, IsObject } from 'pandora-common';
 import { join } from 'path';
-import { CharacterManager } from '../character/characterManager';
-import { ENV } from '../config';
-import { ConnectionManagerClient } from '../networking/manager_client';
-import { SpaceManager } from '../spaces/spaceManager';
+import { CharacterManager } from '../character/characterManager.ts';
+import { ENV } from '../config.ts';
+import { ConnectionManagerClient } from '../networking/manager_client.ts';
+import { SpaceManager } from '../spaces/spaceManager.ts';
 
 const { ASSETS_DEFINITION_PATH, SHARD_DEVELOPMENT_MODE } = ENV;
 

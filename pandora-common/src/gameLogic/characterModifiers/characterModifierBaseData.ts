@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { LIMIT_CHARACTER_MODIFIER_NAME_LENGTH } from '../../inputLimits';
-import { ZodTemplateString, ZodTrimedRegex } from '../../validation';
+import { LIMIT_CHARACTER_MODIFIER_NAME_LENGTH } from '../../inputLimits.ts';
+import { ZodTemplateString, ZodTrimedRegex } from '../../validation.ts';
 
 /** Id of a character modifier type (any possible) */
 export const CharacterModifierTypeGenericIdSchema = z.string();

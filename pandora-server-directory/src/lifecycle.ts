@@ -1,14 +1,14 @@
 import { GetLogger, ServerService, logConfig } from 'pandora-common';
 import wtfnode from 'wtfnode';
-import { accountManager } from './account/accountManager';
-import { GetDatabaseService } from './database/databaseProvider';
-import { HttpServer } from './networking/httpServer';
-import { ConnectionManagerClient } from './networking/manager_client';
-import { BetaRegistrationService } from './services/betaRegistration/betaRegistration';
-import { DiscordBot } from './services/discord/discordBot';
-import { GitHubVerifier } from './services/github/githubVerify';
-import { ShardManager } from './shard/shardManager';
-import { SpaceManager } from './spaces/spaceManager';
+import { accountManager } from './account/accountManager.ts';
+import { GetDatabaseService } from './database/databaseProvider.ts';
+import { HttpServer } from './networking/httpServer.ts';
+import { ConnectionManagerClient } from './networking/manager_client.ts';
+import { BetaRegistrationService } from './services/betaRegistration/betaRegistration.ts';
+import { DiscordBot } from './services/discord/discordBot.ts';
+import { GitHubVerifier } from './services/github/githubVerify.ts';
+import { ShardManager } from './shard/shardManager.ts';
+import { SpaceManager } from './spaces/spaceManager.ts';
 
 const logger = GetLogger('Lifecycle');
 

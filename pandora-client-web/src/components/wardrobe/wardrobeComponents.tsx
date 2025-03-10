@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import _, { clamp } from 'lodash';
+import { clamp, uniq } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import {
 	AppearanceAction,
@@ -17,25 +17,25 @@ import {
 } from 'pandora-common';
 import { ReactElement, useEffect, useMemo, useReducer, useState } from 'react';
 import { z } from 'zod';
-import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem, RenderAppearanceActionSlowdown } from '../../assets/appearanceValidation';
-import { useAssetManager } from '../../assets/assetManager';
-import { useGraphicsUrl } from '../../assets/graphicsManager';
-import { BrowserStorage } from '../../browserStorage';
-import { CommonProps } from '../../common/reactTypes';
-import { USER_DEBUG } from '../../config/Environment';
-import { useAssetPreferenceVisibilityCheck } from '../../graphics/graphicsCharacter';
-import { useObservable } from '../../observable';
-import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
-import { Button, ButtonProps, IconButton } from '../common/button/button';
-import { Column } from '../common/container/container';
-import { HoverElement } from '../hoverElement/hoverElement';
-import { useWardrobeExecuteChecked, type WardrobeExecuteCheckedResult } from './wardrobeActionContext';
-import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue';
-import { useWardrobeContext } from './wardrobeContext';
+import { AppearanceActionProblemShouldHide, RenderAppearanceActionProblem, RenderAppearanceActionSlowdown } from '../../assets/appearanceValidation.ts';
+import { useAssetManager } from '../../assets/assetManager.tsx';
+import { useGraphicsUrl } from '../../assets/graphicsManager.ts';
+import { BrowserStorage } from '../../browserStorage.ts';
+import { CommonProps } from '../../common/reactTypes.ts';
+import { USER_DEBUG } from '../../config/Environment.ts';
+import { useAssetPreferenceVisibilityCheck } from '../../graphics/graphicsCharacter.tsx';
+import { useObservable } from '../../observable.ts';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
+import { Button, ButtonProps, IconButton } from '../common/button/button.tsx';
+import { Column } from '../common/container/container.tsx';
+import { HoverElement } from '../hoverElement/hoverElement.tsx';
+import { useWardrobeExecuteChecked, type WardrobeExecuteCheckedResult } from './wardrobeActionContext.tsx';
+import { useStaggeredAppearanceActionResult } from './wardrobeCheckQueue.ts';
+import { useWardrobeContext } from './wardrobeContext.tsx';
 
 export function ActionSlowdownContent({ slowdownReasons, slowdownTime }: { slowdownReasons: ReadonlySet<GameLogicActionSlowdownReason>; slowdownTime: number; }): ReactElement {
 	const reasons = useMemo(() => (
-		_.uniq(
+		uniq(
 			Array.from(slowdownReasons)
 				.map((reason) => RenderAppearanceActionSlowdown(reason))
 				.filter(Boolean),
@@ -67,7 +67,7 @@ export function ActionWarningContent({ problems, prompt, customText }: { problem
 	const { wardrobeItemDisplayNameType } = useAccountSettings();
 	const assetManager = useAssetManager();
 	const reasons = useMemo(() => (
-		_.uniq(
+		uniq(
 			problems
 				.map((problem) => RenderAppearanceActionProblem(assetManager, problem, wardrobeItemDisplayNameType))
 				.filter(Boolean),

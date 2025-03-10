@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import _ from 'lodash';
+import { capitalize, isEqual, throttle } from 'lodash-es';
 import {
 	AppearanceActionProcessingContext,
 	AppearanceItemProperties,
@@ -21,28 +21,28 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
 import { z } from 'zod';
-import { useBrowserStorage } from '../../../browserStorage';
-import { IChatroomCharacter, useCharacterData } from '../../../character/character';
-import type { ChildrenProps } from '../../../common/reactTypes';
-import { useDebouncedValue } from '../../../common/useDebounceValue';
-import { useEvent } from '../../../common/useEvent';
-import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
-import { Checkbox } from '../../../common/userInteraction/checkbox';
-import { NumberInput } from '../../../common/userInteraction/input/numberInput';
-import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
-import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment';
-import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
-import { Button } from '../../common/button/button';
-import { Column, Row } from '../../common/container/container';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
-import { SelectionIndicator } from '../../common/selectionIndicator/selectionIndicator';
-import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
-import { useShardConnector } from '../../gameContext/shardConnectorContextProvider';
-import { ResolveItemDisplayName } from '../itemDetail/wardrobeItemName';
-import { WardrobeStoredPosePresets } from '../poseDetail/storedPosePresets';
-import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobePermissionRequestCallback } from '../wardrobeActionContext';
-import { ActionWarning, ActionWarningContent, CheckResultToClassName } from '../wardrobeComponents';
-import { useWardrobeContext } from '../wardrobeContext';
+import { useBrowserStorage } from '../../../browserStorage.ts';
+import { IChatroomCharacter, useCharacterData } from '../../../character/character.ts';
+import type { ChildrenProps } from '../../../common/reactTypes.ts';
+import { useDebouncedValue } from '../../../common/useDebounceValue.ts';
+import { useEvent } from '../../../common/useEvent.ts';
+import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
+import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
+import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { Button } from '../../common/button/button.tsx';
+import { Column, Row } from '../../common/container/container.tsx';
+import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
+import { SelectionIndicator } from '../../common/selectionIndicator/selectionIndicator.tsx';
+import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider.tsx';
+import { useShardConnector } from '../../gameContext/shardConnectorContextProvider.tsx';
+import { ResolveItemDisplayName } from '../itemDetail/wardrobeItemName.tsx';
+import { WardrobeStoredPosePresets } from '../poseDetail/storedPosePresets.tsx';
+import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobePermissionRequestCallback } from '../wardrobeActionContext.tsx';
+import { ActionWarning, ActionWarningContent, CheckResultToClassName } from '../wardrobeComponents.tsx';
+import { useWardrobeContext } from '../wardrobeContext.tsx';
 
 type CheckedPosePreset = {
 	active: boolean;
@@ -64,7 +64,7 @@ function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkC
 	}
 	return {
 		pose: mergedPose,
-		requested: _.isEqual(
+		requested: isEqual(
 			characterState.requestedPose,
 			ProduceAppearancePose(
 				characterState.requestedPose,
@@ -75,7 +75,7 @@ function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkC
 				mergedPose,
 			),
 		),
-		active: _.isEqual(
+		active: isEqual(
 			characterState.actualPose,
 			ProduceAppearancePose(
 				characterState.actualPose,
@@ -218,7 +218,7 @@ export function WardrobeArmPoses({ setPose, characterState }: {
 						<PoseButton
 							key={ r }
 							preset={ {
-								name: _.capitalize(r),
+								name: capitalize(r),
 								[arm]: {
 									rotation: r,
 								},
@@ -351,7 +351,7 @@ export function WardrobeLegsPose({ setPose, characterState }: {
 										<PoseButton
 											key={ r }
 											preset={ {
-												name: _.capitalize(r),
+												name: capitalize(r),
 												legs: r,
 											} }
 											characterState={ characterState }
@@ -389,9 +389,9 @@ export function WardrobePoseGui({ character, characterState }: {
 
 	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, wardrobeItemDisplayNameType), [characterState, wardrobeItemDisplayNameType]);
 
-	const setPose = useMemo(() => _.throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
+	const setPose = useMemo(() => throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
 
-	const actualPoseDiffers = !_.isEqual(characterState.requestedPose, characterState.actualPose);
+	const actualPoseDiffers = !isEqual(characterState.requestedPose, characterState.actualPose);
 
 	return (
 		<div className='inventoryView'>

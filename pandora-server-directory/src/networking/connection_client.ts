@@ -1,9 +1,9 @@
-import { IDirectoryClient, GetLogger, IncomingSocket, IServerSocket, ClientDirectorySchema, IClientDirectory, IncomingConnection, DirectoryClientSchema, Assert, type TypedEventEmitterEvents } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
-import type { Account } from '../account/account';
-import type { Character } from '../account/character';
-import { ConnectionManagerClient } from './manager_client';
-import { AccountTokenReason, AccountToken } from '../account/accountSecure';
+import { Assert, ClientDirectorySchema, DirectoryClientSchema, GetLogger, IClientDirectory, IDirectoryClient, IncomingConnection, IncomingSocket, IServerSocket, type TypedEventEmitterEvents } from 'pandora-common';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
+import type { Account } from '../account/account.ts';
+import { AccountToken, AccountTokenReason } from '../account/accountSecure.ts';
+import type { Character } from '../account/character.ts';
+import { ConnectionManagerClient } from './manager_client.ts';
 
 /** Class housing connection from a client */
 export class ClientConnection extends IncomingConnection<IDirectoryClient, IClientDirectory, IncomingSocket> {

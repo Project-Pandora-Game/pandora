@@ -1,9 +1,10 @@
-import { Account, CreateAccountData } from '../../src/account/account';
-import AccountSecure, { AccountToken, AccountTokenReason, GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure';
-import { DatabaseAccountToken } from '../../src/database/databaseStructure';
-import { MockDatabase } from '../../src/database/mockDb';
-import GetEmailSender from '../../src/services/email';
-import { TestMockDb } from '../utils';
+import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
+import { Account, CreateAccountData } from '../../src/account/account.ts';
+import AccountSecure, { AccountToken, AccountTokenReason, GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure.ts';
+import { DatabaseAccountToken } from '../../src/database/databaseStructure.ts';
+import { MockDatabase } from '../../src/database/mockDb.ts';
+import GetEmailSender from '../../src/services/email/index.ts';
+import { TestMockDb } from '../utils.ts';
 
 const TEST_USERNAME = 'testuser';
 const TEST_EMAIL = 'test@project-pandora.com';
@@ -377,7 +378,7 @@ describe('AccountSecure', () => {
 			});
 		});
 
-		test('Tokens timeout', () => {
+		it('Tokens timeout', () => {
 			expect(account.getLoginToken(token2.value)).toBeDefined();
 			jest.setSystemTime(token2.expires + 1);
 			expect(account.getLoginToken(token2.value)).toBeUndefined();

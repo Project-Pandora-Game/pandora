@@ -1,8 +1,8 @@
 import { ReactElement } from 'react';
-import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
-import { NOTIFICATION_AUDIO_NAMES, NOTIFICATION_AUDIO_SOUNDS, NOTIFICATION_AUDIO_VOLUME } from '../../services/notificationHandler';
-import { Button } from '../common/button/button';
-import { SelectAccountSettings } from './helpers/accountSettings';
+import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
+import { NOTIFICATION_AUDIO_NAMES, NOTIFICATION_AUDIO_SOUNDS, NOTIFICATION_AUDIO_VOLUME } from '../../services/notificationHandler.ts';
+import { Button } from '../common/button/button.tsx';
+import { SelectAccountSettings } from './helpers/accountSettings.tsx';
 
 export function NotificationSettings(): ReactElement | null {
 	const account = useCurrentAccount();

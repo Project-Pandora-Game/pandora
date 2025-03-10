@@ -1,8 +1,8 @@
 import type { AssetFrameworkGlobalState } from 'pandora-common';
 import { useMemo, type ReactElement } from 'react';
-import type { IChatroomCharacter } from '../../../character/character';
-import { Column } from '../../common/container/container';
-import { useWardrobeActionContext } from '../wardrobeActionContext';
+import type { IChatroomCharacter } from '../../../character/character.ts';
+import { Column } from '../../common/container/container.tsx';
+import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
 
 export function WardrobeCurrentEffectsView({ character, globalState }: {
 	character: IChatroomCharacter;

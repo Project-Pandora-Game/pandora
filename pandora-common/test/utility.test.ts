@@ -1,4 +1,5 @@
-import { IntervalSetIntersection, IntervalSetUnion, ReadonlyIntervalSet } from '../src';
+import { describe, expect, it } from '@jest/globals';
+import { IntervalSetIntersection, IntervalSetUnion, ReadonlyIntervalSet } from '../src/index.ts';
 
 describe('IntervalSet utilities', () => {
 	// Set of test cases - a, b, a∩b, a∪b

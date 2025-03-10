@@ -1,17 +1,17 @@
 import { Assert, AssertNever, GetLogger, IAccountCryptoKey, Logger, TypedEventEmitter } from 'pandora-common';
-import { ENV } from '../config';
+import { ENV } from '../config.ts';
+import { GetDatabase } from '../database/databaseProvider.ts';
+import { DatabaseAccountSecure, DatabaseAccountToken, GitHubInfo } from '../database/databaseStructure.ts';
+import GetEmailSender from '../services/email/index.ts';
+import type { Account } from './account.ts';
 const { ACTIVATION_TOKEN_EXPIRATION, EMAIL_SALT, LOGIN_TOKEN_EXPIRATION, PASSWORD_RESET_TOKEN_EXPIRATION, RATE_LIMIT_EMAIL_CHANGE_NOT_ACTIVATED } = ENV;
-import { GetDatabase } from '../database/databaseProvider';
-import GetEmailSender from '../services/email';
-import type { Account } from './account';
-import { DatabaseAccountSecure, DatabaseAccountToken, GitHubInfo } from '../database/databaseStructure';
 
-import { createHash, randomInt } from 'crypto';
-import { webcrypto } from 'node:crypto';
-import { nanoid } from 'nanoid';
 import * as argon2 from 'argon2';
-import _ from 'lodash';
-import { AUDIT_LOG } from '../logging';
+import { createHash, randomInt } from 'crypto';
+import { cloneDeep } from 'lodash-es';
+import { nanoid } from 'nanoid';
+import { webcrypto } from 'node:crypto';
+import { AUDIT_LOG } from '../logging.ts';
 
 export enum AccountTokenReason {
 	/** Account activation token */
@@ -127,7 +127,7 @@ export default class AccountSecure {
 		this.#invalidateToken(AccountTokenReason.LOGIN);
 		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
 		this.#secure.password = await GeneratePasswordHash(passwordNew);
-		this.#secure.cryptoKey = _.cloneDeep(cryptoKey);
+		this.#secure.cryptoKey = cloneDeep(cryptoKey);
 
 		await this.#updateDatabase();
 
@@ -266,7 +266,7 @@ export default class AccountSecure {
 		if (!await this.#validateCryptoKey(key))
 			return 'invalid';
 
-		this.#secure.cryptoKey = _.cloneDeep(key);
+		this.#secure.cryptoKey = cloneDeep(key);
 		await this.#updateDatabase();
 		return 'ok';
 	}
@@ -334,7 +334,7 @@ export default class AccountSecure {
 				expires: t.expires,
 				reason: t.reason,
 			}));
-		return GetDatabase().setAccountSecure(this.#account.id, _.cloneDeep(this.#secure));
+		return GetDatabase().setAccountSecure(this.#account.id, cloneDeep(this.#secure));
 	}
 }
 

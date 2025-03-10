@@ -1,5 +1,5 @@
-import { IEmpty } from '../networking';
-import { CommandRunner, CommandRunnerArgParser, CommandRunnerExecutor, CommandStepProcessor, CommandExecutorOptions, ICommandExecutionContext } from './executor';
+import { IEmpty } from '../networking/index.ts';
+import { CommandRunner, CommandRunnerArgParser, CommandRunnerExecutor, CommandStepProcessor, CommandExecutorOptions, ICommandExecutionContext } from './executor.ts';
 
 interface CommandBuilderSource<
 	Context extends ICommandExecutionContext,

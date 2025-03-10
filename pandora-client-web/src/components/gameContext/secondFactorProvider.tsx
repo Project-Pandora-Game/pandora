@@ -5,12 +5,12 @@ import {
 	SecondFactorType,
 } from 'pandora-common';
 import React, { ReactElement } from 'react';
-import { useService } from '../../services/serviceProvider';
-import { Button } from '../common/button/button';
-import { Row } from '../common/container/container';
-import { Form } from '../common/form/form';
-import { FormFieldCaptcha } from '../common/form/formFieldCaptcha';
-import { ModalDialog } from '../dialog/dialog';
+import { useService } from '../../services/serviceProvider.tsx';
+import { Button } from '../common/button/button.tsx';
+import { Row } from '../common/container/container.tsx';
+import { Form } from '../common/form/form.tsx';
+import { FormFieldCaptcha } from '../common/form/formFieldCaptcha.tsx';
+import { ModalDialog } from '../dialog/dialog.tsx';
 
 type SecondFactorState = {
 	types: SecondFactorType[];

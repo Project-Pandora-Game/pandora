@@ -1,11 +1,11 @@
-import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified, SocketInterfaceDefinition } from './helpers';
-import { CharacterIdSchema } from '../character';
-import { SpaceDataSchema, SpaceIdSchema } from '../space/space';
-import type { IChatMessageDirectoryAction } from '../chat';
+import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified, SocketInterfaceDefinition } from './helpers.ts';
+import { CharacterIdSchema } from '../character/index.ts';
+import { SpaceDataSchema, SpaceIdSchema } from '../space/space.ts';
+import type { IChatMessageDirectoryAction } from '../chat/index.ts';
 import { z } from 'zod';
-import { AccountRoleInfoSchema } from '../account';
-import { ZodCast } from '../validation';
-import { Satisfies } from '../utility/misc';
+import { AccountRoleInfoSchema } from '../account/index.ts';
+import { ZodCast } from '../validation.ts';
+import { Satisfies } from '../utility/misc.ts';
 import { Immutable } from 'immer';
 
 export const ShardAccountDefinitionSchema = z.object({

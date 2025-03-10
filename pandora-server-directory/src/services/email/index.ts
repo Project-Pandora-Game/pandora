@@ -1,9 +1,9 @@
-import { ENV } from '../../config';
-const { EMAIL_SENDER_TYPE } = ENV;
-import { MockEmailSender } from './mockEmail';
-import { SmtpEmail } from './smtpEmail';
-import { SesEmail } from './sesEmail';
 import { ServerService } from 'pandora-common';
+import { ENV } from '../../config.ts';
+import { MockEmailSender } from './mockEmail.ts';
+import { SesEmail } from './sesEmail.ts';
+import { SmtpEmail } from './smtpEmail.ts';
+const { EMAIL_SENDER_TYPE } = ENV;
 
 export interface IEmailSender extends ServerService {
 	sendPasswordReset(email: string, username: string, token: string): Promise<void>;

@@ -1,4 +1,4 @@
-import type { CharacterId } from '../../../character/characterTypes';
+import type { CharacterId } from '../../../character/characterTypes.ts';
 
 /** A map of a character modifier configuration "type" to type of its data */
 export type ModifierConfigurationDataTypesMap = {

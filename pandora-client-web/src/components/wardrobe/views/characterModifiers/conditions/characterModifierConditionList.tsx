@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { produce, type Immutable } from 'immer';
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import { AssertNever, CharacterModifierTemplateSchema, CloneDeepMutable, EvaluateCharacterModifierCondition, GetLogger, LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT, type CharacterModifierCondition, type CharacterModifierConditionChain, type CharacterModifierConditionRecord } from 'pandora-common';
 import { useMemo, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
@@ -11,13 +11,13 @@ import type { ICharacter } from '../../../../../character/character';
 import { useAsyncEvent } from '../../../../../common/useEvent';
 import { Select } from '../../../../../common/userInteraction/select/select';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../../../persistentToast';
-import { Button, IconButton } from '../../../../common/button/button';
-import { Column, DivContainer, Row } from '../../../../common/container/container';
-import { FieldsetToggle } from '../../../../common/fieldsetToggle';
-import { useGameState, useGlobalState, useSpaceInfo } from '../../../../gameContext/gameStateContextProvider';
-import { CharacterModifierConditionListEntry } from './characterModifierCondition';
+import { Button, IconButton } from '../../../../common/button/button.tsx';
+import { Column, DivContainer, Row } from '../../../../common/container/container.tsx';
+import { FieldsetToggle } from '../../../../common/fieldsetToggle/index.tsx';
+import { ImportDialog } from '../../../../exportImport/importDialog.tsx';
+import { useGameState, useGlobalState, useSpaceInfo } from '../../../../gameContext/gameStateContextProvider.tsx';
+import { CharacterModifierConditionListEntry } from './characterModifierCondition.tsx';
 import './style.scss';
-import { ImportDialog } from '../../../../exportImport/importDialog';
 
 export function CharacterModifierConditionList({ character, conditions, onChange }: {
 	character: ICharacter;

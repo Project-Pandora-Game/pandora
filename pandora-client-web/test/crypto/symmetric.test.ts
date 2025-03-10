@@ -1,5 +1,5 @@
-import { SymmetricEncryption } from '../../src/crypto/symmetric';
-import { Encode } from '../../src/crypto/helpers';
+import { Encode } from '../../src/crypto/helpers.ts';
+import { SymmetricEncryption } from '../../src/crypto/symmetric.ts';
 
 let symmetric!: SymmetricEncryption;
 

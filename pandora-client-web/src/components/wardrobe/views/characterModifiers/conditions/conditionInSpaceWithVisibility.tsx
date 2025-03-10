@@ -1,8 +1,8 @@
+import { SpacePublicSettingSchema } from 'pandora-common';
 import { type ReactElement } from 'react';
 import { Select } from '../../../../../common/userInteraction/select/select';
-import { Button } from '../../../../common/button/button';
-import type { CharacterModifierConditionListEntryProps } from './characterModifierCondition';
-import { SpacePublicSettingSchema } from 'pandora-common';
+import { Button } from '../../../../common/button/button.tsx';
+import type { CharacterModifierConditionListEntryProps } from './characterModifierCondition.tsx';
 
 export function ConditionInSpaceWithVisibility({ condition, setCondition, invert, setInvert, processing }: CharacterModifierConditionListEntryProps<'inSpaceWithVisibility'>): ReactElement {
 

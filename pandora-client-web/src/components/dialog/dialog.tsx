@@ -1,17 +1,17 @@
 import classNames from 'classnames';
-import { clamp, isObject, sortBy } from 'lodash';
+import { clamp, isObject, sortBy } from 'lodash-es';
 import { GetLogger } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type Ref } from 'react';
 import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
 import { Rnd } from 'react-rnd';
 import crossIcon from '../../assets/icons/cross.svg';
-import { type CommonProps } from '../../common/reactTypes';
-import { useAsyncEvent, useEvent } from '../../common/useEvent';
-import { useKeyDownEvent } from '../../common/useKeyDownEvent';
-import type { PointLike } from '../../graphics/graphicsCharacter';
-import { Observable, useObservable } from '../../observable';
-import { Button, ButtonProps } from '../common/button/button';
-import { Column, Row } from '../common/container/container';
+import { type CommonProps } from '../../common/reactTypes.ts';
+import { useAsyncEvent, useEvent } from '../../common/useEvent.ts';
+import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
+import type { PointLike } from '../../graphics/graphicsCharacter.tsx';
+import { Observable, useObservable } from '../../observable.ts';
+import { Button, ButtonProps } from '../common/button/button.tsx';
+import { Column, Row } from '../common/container/container.tsx';
 import './dialog.scss';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -13,22 +13,22 @@ import {
 	type ICharacterRoomData,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
-import { useAssetManager } from '../../../assets/assetManager';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import gridIcon from '../../../assets/icons/grid.svg';
 import listIcon from '../../../assets/icons/list.svg';
-import { useCharacterDataOptional, type Character } from '../../../character/character';
-import { TextInput } from '../../../common/userInteraction/input/textInput';
-import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
-import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
-import { useIsNarrowScreen } from '../../../styles/mediaQueries';
-import { IconButton } from '../../common/button/button';
-import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider';
-import { useWardrobeActionContext, useWardrobeExecuteChecked } from '../wardrobeActionContext';
-import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
-import { ActionWarning, AttributeButton, CheckResultToClassName, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents';
-import { useWardrobeContext } from '../wardrobeContext';
-import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
+import { useCharacterDataOptional, type Character } from '../../../character/character.ts';
+import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus.ts';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
+import { IconButton } from '../../common/button/button.tsx';
+import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider.tsx';
+import { useWardrobeActionContext, useWardrobeExecuteChecked } from '../wardrobeActionContext.tsx';
+import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue.ts';
+import { ActionWarning, AttributeButton, CheckResultToClassName, InventoryAssetPreview, WardrobeActionButton } from '../wardrobeComponents.tsx';
+import { useWardrobeContext } from '../wardrobeContext.tsx';
+import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes.ts';
 
 export function InventoryAssetView({ title, children, assets, container, attributesFilterOptions, spawnStyle }: {
 	title: string;

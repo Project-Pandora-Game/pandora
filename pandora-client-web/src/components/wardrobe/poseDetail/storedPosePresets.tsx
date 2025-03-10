@@ -1,4 +1,4 @@
-import { capitalize, clamp, cloneDeep, noop, omit } from 'lodash';
+import { capitalize, clamp, cloneDeep, noop, omit } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import {
 	AssertNotNullable,
@@ -15,17 +15,17 @@ import {
 } from 'pandora-common';
 import React, { type ReactNode } from 'react';
 import { toast } from 'react-toastify';
-import { Checkbox } from '../../../common/userInteraction/checkbox';
-import { TextInput } from '../../../common/userInteraction/input/textInput';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { Button } from '../../common/button/button';
-import { Column, DivContainer, Row } from '../../common/container/container';
-import { FieldsetToggle } from '../../common/fieldsetToggle/fieldsetToggle';
-import { DraggableDialog } from '../../dialog/dialog';
-import { ExportDialog } from '../../exportImport/exportDialog';
-import { ImportDialog } from '../../exportImport/importDialog';
-import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
-import { GetVisibleBoneName } from '../views/wardrobePoseView';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { Button } from '../../common/button/button.tsx';
+import { Column, DivContainer, Row } from '../../common/container/container.tsx';
+import { FieldsetToggle } from '../../common/fieldsetToggle/fieldsetToggle.tsx';
+import { DraggableDialog } from '../../dialog/dialog.tsx';
+import { ExportDialog } from '../../exportImport/exportDialog.tsx';
+import { ImportDialog } from '../../exportImport/importDialog.tsx';
+import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
+import { GetVisibleBoneName } from '../views/wardrobePoseView.tsx';
 
 import deleteIcon from '../../../assets/icons/delete.svg';
 import editIcon from '../../../assets/icons/edit.svg';

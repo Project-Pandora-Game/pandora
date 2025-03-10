@@ -1,14 +1,14 @@
 import type { Immutable } from 'immer';
-import { sortBy } from 'lodash';
+import { sortBy } from 'lodash-es';
 import type { AssetFrameworkCharacterState, AssetFrameworkGlobalState, CharacterActionAttempt, ICharacterRoomData } from 'pandora-common';
 import { useMemo, type ReactElement } from 'react';
-import type { Character } from '../../../character/character';
-import { Column, Row } from '../../../components/common/container/container';
-import { useGlobalState, type GameState } from '../../../components/gameContext/gameStateContextProvider';
-import { ActionAttemptCancelButton, ActionAttemptConfirmButton, ActionAttemptInterruptButton } from '../../../components/wardrobe/views/wardrobeActionAttempt';
-import { useObservable } from '../../../observable';
-import { ActionMessageElement } from './chat';
-import { DescribeGameLogicAction } from './chatMessagesDescriptions';
+import type { Character } from '../../../character/character.ts';
+import { Column, Row } from '../../../components/common/container/container.tsx';
+import { useGlobalState, type GameState } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { ActionAttemptCancelButton, ActionAttemptConfirmButton, ActionAttemptInterruptButton } from '../../../components/wardrobe/views/wardrobeActionAttempt.tsx';
+import { useObservable } from '../../../observable.ts';
+import { ActionMessageElement } from './chat.tsx';
+import { DescribeGameLogicAction } from './chatMessagesDescriptions.tsx';
 
 interface ChatInjectedMessageDescriptor {
 	time: number;

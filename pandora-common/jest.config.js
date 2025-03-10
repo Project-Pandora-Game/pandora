@@ -1,10 +1,11 @@
+// @ts-check
 /* eslint-env node */
 /**
  * For a detailed explanation regarding each configuration property and type check, visit:
  * https://jestjs.io/docs/configuration
  * @type { import('ts-jest').JestConfigWithTsJest }
  */
-module.exports = {
+export default {
 	clearMocks: true,
 	collectCoverageFrom: ['src/**/*.ts', 'src/**/*.tsx'],
 	coverageDirectory: 'coverage',
@@ -15,10 +16,12 @@ module.exports = {
 	],
 	errorOnDeprecated: true,
 	setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
+	extensionsToTreatAsEsm: ['.ts', '.tsx', '.mts'],
 	transform: {
 		'^.+\\.tsx?$': ['ts-jest', {
 			tsconfig: './test/tsconfig.json',
 			isolatedModules: true,
+			useESM: true,
 		}],
 	},
 };

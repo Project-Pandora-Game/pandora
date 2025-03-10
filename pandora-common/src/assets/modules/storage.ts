@@ -1,16 +1,16 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
-import { ItemInteractionType } from '../../character/restrictionTypes';
-import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions';
-import type { InteractionId } from '../../gameLogic/interactions';
-import { IsNotNullable, Satisfies } from '../../utility/misc';
-import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidationResult } from '../appearanceValidation';
-import type { AssetManager } from '../assetManager';
-import { AssetSize, AssetSizeMapping } from '../definitions';
-import { ConditionOperator } from '../graphics';
-import { __internal_ItemBundleSchemaRecursive, __internal_ItemTemplateSchemaRecursive } from '../item/_internalRecursion';
-import { IItemCreationContext, IItemLoadContext, IItemValidationContext, Item, ItemId } from '../item/base';
-import { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common';
+import { ItemInteractionType } from '../../character/restrictionTypes.ts';
+import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
+import type { InteractionId } from '../../gameLogic/interactions/index.ts';
+import { IsNotNullable, Satisfies } from '../../utility/misc.ts';
+import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidationResult } from '../appearanceValidation.ts';
+import type { AssetManager } from '../assetManager.ts';
+import { AssetSize, AssetSizeMapping } from '../definitions.ts';
+import { ConditionOperator } from '../graphics/index.ts';
+import { __internal_ItemBundleSchemaRecursive, __internal_ItemTemplateSchemaRecursive } from '../item/_internalRecursion.ts';
+import { IItemCreationContext, IItemLoadContext, IItemValidationContext, Item, ItemId } from '../item/base.ts';
+import { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common.ts';
 
 export type IModuleConfigStorage<TProperties, TStaticData> = IModuleConfigCommon<'storage', TProperties, TStaticData> & {
 	maxCount: number;

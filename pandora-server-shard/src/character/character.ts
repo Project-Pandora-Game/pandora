@@ -43,17 +43,17 @@ import {
 	type AppearanceActionProcessingResult,
 	type ChatMessageFilterMetadata,
 } from 'pandora-common';
-import { assetManager } from '../assets/assetManager';
-import { GetDatabase } from '../database/databaseProvider';
-import { ClientConnection } from '../networking/connection_client';
-import { DirectoryConnector } from '../networking/socketio_directory_connector';
-import { PersonalSpace } from '../spaces/personalSpace';
-import type { Space } from '../spaces/space';
-import { SpaceManager } from '../spaces/spaceManager';
+import { assetManager } from '../assets/assetManager.ts';
+import { GetDatabase } from '../database/databaseProvider.ts';
+import { ClientConnection } from '../networking/connection_client.ts';
+import { DirectoryConnector } from '../networking/socketio_directory_connector.ts';
+import { PersonalSpace } from '../spaces/personalSpace.ts';
+import type { Space } from '../spaces/space.ts';
+import { SpaceManager } from '../spaces/spaceManager.ts';
 
 import { Immutable } from 'immer';
 import { diffString } from 'json-diff';
-import _, { isEqual } from 'lodash';
+import { isEqual, pick } from 'lodash-es';
 
 /** Time (in ms) after which manager prunes character without any active connection */
 export const CHARACTER_TIMEOUT = 30_000;
@@ -449,9 +449,9 @@ export class Character {
 		}
 		// Save migrated data into database
 		{
-			const shardUpdatableResult = _.pick(result.data, ...CHARACTER_SHARD_UPDATEABLE_PROPERTIES);
-			const originalUpdatableData = _.pick(character, ...CHARACTER_SHARD_UPDATEABLE_PROPERTIES);
-			if (!_.isEqual(shardUpdatableResult, originalUpdatableData)) {
+			const shardUpdatableResult = pick(result.data, ...CHARACTER_SHARD_UPDATEABLE_PROPERTIES);
+			const originalUpdatableData = pick(character, ...CHARACTER_SHARD_UPDATEABLE_PROPERTIES);
+			if (!isEqual(shardUpdatableResult, originalUpdatableData)) {
 				const diff = diffString(originalUpdatableData, shardUpdatableResult, { color: false });
 				logger.warning(`Character ${id} has invalid data, fixing...\n`, diff);
 				await GetDatabase().setCharacter(id, shardUpdatableResult, accessId);

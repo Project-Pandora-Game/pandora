@@ -1,4 +1,4 @@
-import type { IClientMessage } from './chat';
+import type { IClientMessage } from './chat.ts';
 
 export type BlockableChatMessage = Extract<IClientMessage, { type: 'chat'; }>;
 

@@ -2,15 +2,15 @@ import { AssertNever, DisplayNameSchema, EmailAddressSchema, PasswordSchema, Use
 import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { useNavigate } from 'react-router';
-import { FormInput } from '../../../common/userInteraction/input/formInput';
-import { DEVELOPMENT } from '../../../config/Environment';
-import { useDirectoryRegister } from '../../../networking/account_manager';
-import { useObservable } from '../../../observable';
-import { Button } from '../../common/button/button';
-import { Form, FormCreateStringValidator, FormField, FormFieldError, FormLink } from '../../common/form/form';
-import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha';
-import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
-import { useAuthFormData } from '../authFormDataProvider';
+import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
+import { DEVELOPMENT } from '../../../config/Environment.ts';
+import { useDirectoryRegister } from '../../../networking/account_manager.ts';
+import { useObservable } from '../../../observable.ts';
+import { Button } from '../../common/button/button.tsx';
+import { Form, FormCreateStringValidator, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
+import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha.tsx';
+import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
+import { useAuthFormData } from '../authFormDataProvider.tsx';
 
 export interface RegistrationFormData {
 	username: string;

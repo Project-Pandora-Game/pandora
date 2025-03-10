@@ -1,14 +1,14 @@
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { Assert, GetLogger } from 'pandora-common';
 import { ReactElement, useEffect, useId, useState } from 'react';
 import { toast } from 'react-toastify';
 import { ZodType, z } from 'zod';
-import type { ChildrenProps } from '../../common/reactTypes';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { Button } from '../common/button/button';
-import { Column, Row } from '../common/container/container';
-import { ModalDialog } from '../dialog/dialog';
-import { ParseImportData } from './exportImportUtils';
+import type { ChildrenProps } from '../../common/reactTypes.ts';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import { Button } from '../common/button/button.tsx';
+import { Column, Row } from '../common/container/container.tsx';
+import { ModalDialog } from '../dialog/dialog.tsx';
+import { ParseImportData } from './exportImportUtils.ts';
 import './importDialog.scss';
 
 interface ImportDialogProps<T extends ZodType<unknown>> extends ChildrenProps {

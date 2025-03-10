@@ -1,7 +1,7 @@
-import { CharacterId, IShardCharacterDefinition, GetLogger, Assert } from 'pandora-common';
-import { assetManager } from '../assets/assetManager';
-import { Character } from './character';
+import { Assert, CharacterId, GetLogger, IShardCharacterDefinition } from 'pandora-common';
 import promClient from 'prom-client';
+import { assetManager } from '../assets/assetManager.ts';
+import { Character } from './character.ts';
 
 const logger = GetLogger('CharacterManager');
 

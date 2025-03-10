@@ -1,6 +1,6 @@
 import { ReactElement } from 'react';
-import { Row } from '../../common/container/container';
-import { WikiContent } from '../wiki';
+import { Row } from '../../common/container/container.tsx';
+import { WikiContent } from '../wiki.tsx';
 
 export function WikiGreeting(): ReactElement {
 	// TODO: This component is now unused, but the parts below were not in incorporated to the tutorials that replace this page.

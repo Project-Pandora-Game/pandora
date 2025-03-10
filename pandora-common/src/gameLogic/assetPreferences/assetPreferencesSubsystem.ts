@@ -1,9 +1,9 @@
 import { Immutable } from 'immer';
-import type { Asset } from '../../assets/asset';
-import { AssetPreferenceResolution, AssetPreferenceType, AssetPreferencesPublic, ResolveAssetPreference } from '../../character/assetPreferences';
-import { CharacterId } from '../../character/characterTypes';
-import { TypedEventEmitter } from '../../event';
-import { GameLogicPermission, IPermissionProvider, PermissionConfigDefault } from '../permissions';
+import type { Asset } from '../../assets/asset.ts';
+import { AssetPreferenceResolution, AssetPreferenceType, AssetPreferencesPublic, ResolveAssetPreference } from '../../character/assetPreferences.ts';
+import { CharacterId } from '../../character/characterTypes.ts';
+import { TypedEventEmitter } from '../../event.ts';
+import { GameLogicPermission, IPermissionProvider, PermissionConfigDefault } from '../permissions/index.ts';
 
 export type AssetPreferencesSubsystemEvents = {
 	dataChanged: void;

@@ -1,8 +1,8 @@
 import { Immutable } from 'immer';
-import { Assert, AssertNever } from '../../utility/misc';
-import type { Condition } from './conditions';
-import { CharacterSize, type LayerImageOverride, type LayerImageSetting } from './graphics';
-import type { PointDefinition, TransformDefinition } from './points';
+import { Assert, AssertNever } from '../../utility/misc.ts';
+import type { Condition } from './conditions.ts';
+import { CharacterSize, type LayerImageOverride, type LayerImageSetting } from './graphics.ts';
+import type { PointDefinition, TransformDefinition } from './points.ts';
 
 export interface PointDefinitionCalculated extends PointDefinition {
 	index: number;

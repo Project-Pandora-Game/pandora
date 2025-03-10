@@ -14,15 +14,15 @@ import {
 	SpaceInviteId,
 	type ICharacterDataDirectoryUpdate,
 } from 'pandora-common';
-import { GetDatabase } from '../database/databaseProvider';
-import type { DatabaseCharacterSelfInfo } from '../database/databaseStructure';
-import type { ClientConnection } from '../networking/connection_client';
-import { ConnectionManagerClient } from '../networking/manager_client';
-import type { Shard } from '../shard/shard';
-import { ShardManager } from '../shard/shardManager';
-import type { Space } from '../spaces/space';
-import { SpaceManager } from '../spaces/spaceManager';
-import type { Account } from './account';
+import { GetDatabase } from '../database/databaseProvider.ts';
+import type { DatabaseCharacterSelfInfo } from '../database/databaseStructure.ts';
+import type { ClientConnection } from '../networking/connection_client.ts';
+import { ConnectionManagerClient } from '../networking/manager_client.ts';
+import type { Shard } from '../shard/shard.ts';
+import { ShardManager } from '../shard/shardManager.ts';
+import type { Space } from '../spaces/space.ts';
+import { SpaceManager } from '../spaces/spaceManager.ts';
+import type { Account } from './account.ts';
 
 function GenerateConnectSecret(): string {
 	return nanoid(8);

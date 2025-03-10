@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect, useCallback, DependencyList } from 'react';
-import { useEvent } from './useEvent';
+import React, { DependencyList, useCallback, useEffect, useRef, useState } from 'react';
+import { useEvent } from './useEvent.ts';
 
 /**
  * @param deps - dependencies to trigger the scroll

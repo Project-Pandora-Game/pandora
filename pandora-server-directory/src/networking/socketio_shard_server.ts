@@ -1,12 +1,12 @@
-import type { Socket } from 'socket.io';
-import type { IncomingMessage, Server as HttpServer } from 'http';
+import type { Server as HttpServer, IncomingMessage } from 'http';
 import { GetLogger, HTTP_SOCKET_IO_SHARD_PATH, IDirectoryShard, IIncomingConnection } from 'pandora-common';
-import { SocketIOServer } from './socketio_common_server';
-import { ShardConnection } from './connection_shard';
-import { SocketIOSocket } from './socketio_common_socket';
-import { IServerSocket } from 'pandora-common/dist/networking/room';
-import { ShardTokenStore } from '../shard/shardTokenStore';
-import { SocketInterfaceOneshotMessages, SocketInterfaceRequest } from 'pandora-common/dist/networking/helpers';
+import { SocketInterfaceOneshotMessages, SocketInterfaceRequest } from 'pandora-common/dist/networking/helpers.js';
+import { IServerSocket } from 'pandora-common/dist/networking/room.js';
+import type { Socket } from 'socket.io';
+import { ShardTokenStore } from '../shard/shardTokenStore.ts';
+import { ShardConnection } from './connection_shard.ts';
+import { SocketIOServer } from './socketio_common_server.ts';
+import { SocketIOSocket } from './socketio_common_socket.ts';
 
 const logger = GetLogger('SIO-Server-Shard');
 

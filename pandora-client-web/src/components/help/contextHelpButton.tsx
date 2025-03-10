@@ -1,10 +1,10 @@
 import { MouseEvent, ReactElement, useCallback, useState } from 'react';
 import helpIcon from '../../assets/icons/help.svg';
-import { ChildrenProps } from '../../common/reactTypes';
-import { useEvent } from '../../common/useEvent';
-import { Button } from '../common/button/button';
-import { Column } from '../common/container/container';
-import { DraggableDialog } from '../dialog/dialog';
+import { ChildrenProps } from '../../common/reactTypes.ts';
+import { useEvent } from '../../common/useEvent.ts';
+import { Button } from '../common/button/button.tsx';
+import { Column } from '../common/container/container.tsx';
+import { DraggableDialog } from '../dialog/dialog.tsx';
 import './contextHelpButton.scss';
 
 export function ContextHelpButton({ children }: ChildrenProps): ReactElement {

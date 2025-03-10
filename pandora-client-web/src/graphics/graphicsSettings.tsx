@@ -1,10 +1,10 @@
 import { AssertNever, CloneDeepMutable } from 'pandora-common';
 import { useMemo } from 'react';
 import { z } from 'zod';
-import { GraphicsManagerInstance } from '../assets/graphicsManager';
-import { BrowserStorage } from '../browserStorage';
-import { useMediaQuery } from '../common/useMediaQuery';
-import { useObservable } from '../observable';
+import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
+import { BrowserStorage } from '../browserStorage.ts';
+import { useMediaQuery } from '../common/useMediaQuery.ts';
+import { useObservable } from '../observable.ts';
 
 export const GraphicsSettingsSchema = z.object({
 	// Effects

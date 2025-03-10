@@ -1,12 +1,12 @@
 import type { Immutable } from 'immer';
 import { z } from 'zod';
-import type { Asset } from '../assets/asset';
-import type { AssetManager } from '../assets/assetManager';
-import { AssetId, AssetIdSchema } from '../assets/base';
-import { PermissionConfigSchema } from '../gameLogic/permissions/permissionData';
-import { KnownObject } from '../utility/misc';
-import { ZodMatcher } from '../validation';
-import type { CharacterId } from './characterTypes';
+import type { Asset } from '../assets/asset.ts';
+import type { AssetManager } from '../assets/assetManager.ts';
+import { AssetId, AssetIdSchema } from '../assets/base.ts';
+import { PermissionConfigSchema } from '../gameLogic/permissions/permissionData.ts';
+import { KnownObject } from '../utility/misc.ts';
+import { ZodMatcher } from '../validation.ts';
+import type { CharacterId } from './characterTypes.ts';
 
 export const AssetPreferenceTypeSchema = z.enum(['favorite', 'normal', 'maybe', 'prevent', 'doNotRender']);
 export type AssetPreferenceType = z.infer<typeof AssetPreferenceTypeSchema>;

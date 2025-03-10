@@ -1,4 +1,4 @@
-import { DefineCharacterModifier } from '../helpers/modifierDefinition';
+import { DefineCharacterModifier } from '../helpers/modifierDefinition.ts';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const speech_forbid_talking_openly = DefineCharacterModifier({

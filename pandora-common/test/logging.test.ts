@@ -1,5 +1,6 @@
-import _ from 'lodash';
-import { GetLogger, Logger, LogLevel, logConfig, SetConsoleOutput, LogOutputDefinition, AnyToString } from '../src/logging';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { remove } from 'lodash-es';
+import { AnyToString, GetLogger, logConfig, Logger, LogLevel, LogOutputDefinition, SetConsoleOutput } from '../src/logging.ts';
 
 describe('GetLogger()', () => {
 	it('should return an instance of Logger', () => {
@@ -35,7 +36,7 @@ describe('Logger', () => {
 		logConfig.onFatal = [mockFatalHandler];
 	});
 	afterAll(() => {
-		_.remove(logConfig.logOutputs, (o) => o === mockLogOutput);
+		remove(logConfig.logOutputs, (o) => o === mockLogOutput);
 		logConfig.onFatal = onFatalBackup;
 	});
 

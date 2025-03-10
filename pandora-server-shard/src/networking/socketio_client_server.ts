@@ -1,12 +1,12 @@
 import type { Server as HttpServer, IncomingMessage } from 'http';
 import { GetLogger, IIncomingConnection, IsCharacterId, IServerSocket, IShardClient } from 'pandora-common';
-import type { SocketInterfaceOneshotMessages, SocketInterfaceRequest } from 'pandora-common/dist/networking/helpers';
+import type { SocketInterfaceOneshotMessages, SocketInterfaceRequest } from 'pandora-common/dist/networking/helpers.js';
 import type { Socket } from 'socket.io';
-import { CharacterManager } from '../character/characterManager';
-import { ClientConnection } from './connection_client';
-import { ConnectionManagerClient } from './manager_client';
-import { SocketIOServer } from './socketio_common_server';
-import { SocketIOSocket } from './socketio_common_socket';
+import { CharacterManager } from '../character/characterManager.ts';
+import { ClientConnection } from './connection_client.ts';
+import { ConnectionManagerClient } from './manager_client.ts';
+import { SocketIOServer } from './socketio_common_server.ts';
+import { SocketIOSocket } from './socketio_common_socket.ts';
 
 const logger = GetLogger('SIO-Server-Client');
 

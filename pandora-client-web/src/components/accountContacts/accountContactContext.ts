@@ -1,8 +1,8 @@
+import { AccountId, AsyncSynchronized, IAccountContact, IAccountFriendStatus, IClientDirectory, IConnectionBase, IDirectoryClientArgument, TypedEventEmitter } from 'pandora-common';
 import { useMemo } from 'react';
-import { AccountId, AsyncSynchronized, IAccountFriendStatus, IAccountContact, IClientDirectory, IConnectionBase, IDirectoryClientArgument, TypedEventEmitter } from 'pandora-common';
-import { Observable, useObservable } from '../../observable';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
+import { Observable, useObservable } from '../../observable.ts';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import './accountContacts.scss';
 
 const ACCOUNT_CONTACTS = new Observable<readonly IAccountContact[]>([]);

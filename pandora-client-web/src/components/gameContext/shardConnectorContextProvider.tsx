@@ -1,21 +1,21 @@
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import { AppearanceAction, IClientShardNormalResult, IDirectoryCharacterConnectionInfo, IShardClientChangeEvents } from 'pandora-common';
 import {
 	useEffect,
 	useRef,
 } from 'react';
-import { useAssetManager } from '../../assets/assetManager';
-import { GraphicsManagerInstance } from '../../assets/graphicsManager';
-import { useDebugExpose } from '../../common/useDebugExpose';
-import { useAsyncEvent } from '../../common/useEvent';
-import { ShardConnector } from '../../networking/shardConnector';
-import { useNullableObservable, useObservable } from '../../observable';
-import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
-import { NotificationSource, useNotification } from '../../services/notificationHandler';
-import { useService } from '../../services/serviceProvider';
-import { useDebugContext } from '../error/debugContextProvider';
-import { useDirectoryConnector } from './directoryConnectorContextProvider';
-import { useGameStateOptional } from './gameStateContextProvider';
+import { useAssetManager } from '../../assets/assetManager.tsx';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
+import { useDebugExpose } from '../../common/useDebugExpose.ts';
+import { useAsyncEvent } from '../../common/useEvent.ts';
+import { ShardConnector } from '../../networking/shardConnector.ts';
+import { useNullableObservable, useObservable } from '../../observable.ts';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
+import { NotificationSource, useNotification } from '../../services/notificationHandler.ts';
+import { useService } from '../../services/serviceProvider.tsx';
+import { useDebugContext } from '../error/debugContextProvider.tsx';
+import { useDirectoryConnector } from './directoryConnectorContextProvider.tsx';
+import { useGameStateOptional } from './gameStateContextProvider.tsx';
 
 export function ShardConnectorContextProvider(): null {
 	const directoryConnector = useDirectoryConnector();

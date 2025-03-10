@@ -1,6 +1,6 @@
 import { defineConfig, devices } from '@playwright/test';
-import { TEST_CLIENT_DIST_DIR, TEST_HTTP_SERVER_PORT } from './test/_setup/config';
 import path from 'path';
+import { TEST_CLIENT_DIST_DIR, TEST_HTTP_SERVER_PORT } from './test/_setup/config.ts';
 
 /**
  * See https://playwright.dev/docs/test-configuration.

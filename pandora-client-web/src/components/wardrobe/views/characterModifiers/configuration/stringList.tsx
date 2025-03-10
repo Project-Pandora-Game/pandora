@@ -1,6 +1,6 @@
-import { uniq } from 'lodash';
+import { uniq } from 'lodash-es';
 import { GetLogger, type ModifierConfigurationEntryDefinition } from 'pandora-common';
-import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/dist/gameLogic/characterModifiers/helpers/configurationBuilder';
+import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/dist/gameLogic/characterModifiers/helpers/configurationBuilder.js';
 import type { ReactElement } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -10,10 +10,10 @@ import crossIcon from '../../../../../assets/icons/cross.svg';
 import { useAsyncEvent } from '../../../../../common/useEvent';
 import { TextInput } from '../../../../../common/userInteraction/input/textInput';
 import { TOAST_OPTIONS_ERROR } from '../../../../../persistentToast';
-import { Button, IconButton } from '../../../../common/button/button';
-import { Column, Row } from '../../../../common/container/container';
-import { FieldsetToggle } from '../../../../common/fieldsetToggle';
-import { FormCreateStringValidator, FormError } from '../../../../common/form/form';
+import { Button, IconButton } from '../../../../common/button/button.tsx';
+import { Column, Row } from '../../../../common/container/container.tsx';
+import { FieldsetToggle } from '../../../../common/fieldsetToggle/index.tsx';
+import { FormCreateStringValidator, FormError } from '../../../../common/form/form.tsx';
 
 export function WardrobeCharacterModifierConfigStringList({ definition, value, onChange }: {
 	definition: ModifierConfigurationEntryDefinition<'stringList'>;

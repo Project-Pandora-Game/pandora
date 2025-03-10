@@ -1,16 +1,16 @@
-import { clamp } from 'lodash';
+import { clamp } from 'lodash-es';
 import { EMPTY, IsAuthorized, type IBetaKeyInfo } from 'pandora-common';
 import React, { createContext, ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useCurrentTime } from '../../../common/useCurrentTime';
-import { useAsyncEvent } from '../../../common/useEvent';
-import { Checkbox } from '../../../common/userInteraction/checkbox';
-import { NumberInput } from '../../../common/userInteraction/input/numberInput';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
-import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
-import { Button } from '../../common/button/button';
-import { useConfirmDialog } from '../../dialog/dialog';
-import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
+import { useCurrentTime } from '../../../common/useCurrentTime.ts';
+import { useAsyncEvent } from '../../../common/useEvent.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { Button } from '../../common/button/button.tsx';
+import { useConfirmDialog } from '../../dialog/dialog.tsx';
+import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
 import '../shards/shards.scss';
 
 const ONE_DAY = 1000 * 60 * 60 * 24;

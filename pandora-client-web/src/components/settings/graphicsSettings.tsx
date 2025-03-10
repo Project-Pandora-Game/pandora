@@ -1,14 +1,14 @@
 import { FormatBytes } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
-import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../../assets/graphicsManager';
-import { GRAPHICS_SETTINGS_DEFAULT, GraphicsSettingsSchema, GraphicsSettingsStorage, ResetGraphicsSettings, SetGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings } from '../../graphics/graphicsSettings';
-import { useObservable } from '../../observable';
-import { useAutomaticResolution } from '../../services/screenResolution/screenResolution';
-import { Button } from '../common/button/button';
-import { Column, Row } from '../common/container/container';
-import { ContextHelpButton } from '../help/contextHelpButton';
-import { SelectSettingInput, ToggleSettingInput } from './helpers/settingsInputs';
+import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../../assets/graphicsManager.ts';
+import { GRAPHICS_SETTINGS_DEFAULT, GraphicsSettingsSchema, GraphicsSettingsStorage, ResetGraphicsSettings, SetGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings } from '../../graphics/graphicsSettings.tsx';
+import { useObservable } from '../../observable.ts';
+import { useAutomaticResolution } from '../../services/screenResolution/screenResolution.ts';
+import { Button } from '../common/button/button.tsx';
+import { Column, Row } from '../common/container/container.tsx';
+import { ContextHelpButton } from '../help/contextHelpButton.tsx';
+import { SelectSettingInput, ToggleSettingInput } from './helpers/settingsInputs.tsx';
 
 export function GraphicsSettings(): ReactElement | null {
 	return (

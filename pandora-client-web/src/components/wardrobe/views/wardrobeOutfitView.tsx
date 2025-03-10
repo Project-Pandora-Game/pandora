@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import _, { clamp, first, noop } from 'lodash';
+import { clamp, first, noop, remove } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import {
 	AppearanceBundle,
@@ -20,31 +20,31 @@ import {
 } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useAssetManager } from '../../../assets/assetManager';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
 import crossIcon from '../../../assets/icons/cross.svg';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import diskIcon from '../../../assets/icons/disk.svg';
 import editIcon from '../../../assets/icons/edit.svg';
-import { useBrowserSessionStorage } from '../../../browserStorage';
-import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../../graphics/graphicsCharacter';
-import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer';
-import { useRoomCharacterOffsets } from '../../../graphics/room/roomCharacter';
-import { usePlayerVisionFilters } from '../../../graphics/room/roomScene';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
-import { serviceManagerContext } from '../../../services/serviceProvider';
-import { Button, IconButton } from '../../common/button/button';
-import { Column, DivContainer, Row } from '../../common/container/container';
-import { useConfirmDialog } from '../../dialog/dialog';
-import { ImportDialog } from '../../exportImport/importDialog';
-import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
-import { THEME_NORMAL_BACKGROUND } from '../../gameContext/interfaceSettingsProvider';
-import { usePlayerState } from '../../gameContext/playerContextProvider';
-import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName';
-import { useWardrobeActionContext } from '../wardrobeActionContext';
-import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents';
-import { useWardrobeContext } from '../wardrobeContext';
-import { OutfitEditView } from './wardrobeOutfitEditView';
+import { useBrowserSessionStorage } from '../../../browserStorage.ts';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter } from '../../../graphics/graphicsCharacter.tsx';
+import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
+import { useRoomCharacterOffsets } from '../../../graphics/room/roomCharacter.tsx';
+import { usePlayerVisionFilters } from '../../../graphics/room/roomScene.tsx';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
+import { Button, IconButton } from '../../common/button/button.tsx';
+import { Column, DivContainer, Row } from '../../common/container/container.tsx';
+import { useConfirmDialog } from '../../dialog/dialog.tsx';
+import { ImportDialog } from '../../exportImport/importDialog.tsx';
+import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
+import { THEME_NORMAL_BACKGROUND } from '../../gameContext/interfaceSettingsProvider.tsx';
+import { usePlayerState } from '../../gameContext/playerContextProvider.tsx';
+import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName.tsx';
+import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
+import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
+import { useWardrobeContext } from '../wardrobeContext.tsx';
+import { OutfitEditView } from './wardrobeOutfitEditView.tsx';
 
 export function InventoryOutfitView({ targetContainer }: {
 	targetContainer: ItemContainerPath;
@@ -349,7 +349,7 @@ function OutfitPreview({ outfit }: {
 					const bodypart = asset.definition.bodypart;
 					// But we don't want to drop bodyparts that are in the outfit multiple times (e.g. hairs)
 					overwrittenBodyparts.add(bodypart);
-					_.remove(templateBundle, (oldItem) => {
+					remove(templateBundle, (oldItem) => {
 						const oldAsset = assetManager.getAssetById(oldItem.asset);
 						return oldAsset?.isType('bodypart') && oldAsset.definition.bodypart === bodypart;
 					});

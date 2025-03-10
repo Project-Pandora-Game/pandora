@@ -1,8 +1,8 @@
 import { produce } from 'immer';
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import { createContext, ReactElement, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { ChildrenProps } from '../../common/reactTypes';
-import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
+import { ChildrenProps } from '../../common/reactTypes.ts';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 
 export interface AuthFormDataState {
 	username?: string;

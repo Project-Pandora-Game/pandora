@@ -1,6 +1,6 @@
 import { Mesh, MeshGeometry, State, Texture } from 'pixi.js';
-import { RegisterPixiComponent } from '../reconciler/component';
-import { CONTAINER_EVENTS, type ContainerEventMap } from './container';
+import { RegisterPixiComponent } from '../reconciler/component.ts';
+import { CONTAINER_EVENTS, type ContainerEventMap } from './container.ts';
 
 export interface PixiMeshProps {
 	vertices: Float32Array;

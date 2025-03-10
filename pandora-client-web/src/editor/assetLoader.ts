@@ -1,8 +1,8 @@
 import { AssetsDefinitionFile, AssetsGraphicsDefinitionFile } from 'pandora-common';
-import { GraphicsManager, GraphicsManagerInstance, IGraphicsLoader } from '../assets/graphicsManager';
-import { URLGraphicsLoader } from '../assets/graphicsLoader';
-import { AssetManagerEditor, EditorAssetManager } from './assets/assetManager';
-import { EDITOR_ASSETS_ADDRESS, EDITOR_ASSETS_OFFICIAL_ADDRESS } from '../config/Environment';
+import { URLGraphicsLoader } from '../assets/graphicsLoader.ts';
+import { GraphicsManager, GraphicsManagerInstance, IGraphicsLoader } from '../assets/graphicsManager.ts';
+import { EDITOR_ASSETS_ADDRESS, EDITOR_ASSETS_OFFICIAL_ADDRESS } from '../config/Environment.ts';
+import { AssetManagerEditor, EditorAssetManager } from './assets/assetManager.ts';
 
 export async function LoadAssetsFromAssetDevServer(): Promise<[AssetManagerEditor, GraphicsManager]> {
 	return Load(new URLGraphicsLoader(EDITOR_ASSETS_ADDRESS + '/'));

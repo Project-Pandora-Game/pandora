@@ -1,9 +1,9 @@
 import type { RenderHookResult } from '@testing-library/react';
-import { useCurrentAccount } from '../../src/services/accountLogic/accountManagerHooks';
-import { MockServiceManager, RenderHookWithProviders, type ProvidersProps } from '../testUtils';
 import { Assert, type ServiceManager } from 'pandora-common';
-import type { ClientServices } from '../../src/services/clientServices';
-import type { AccountManager } from '../../src/services/accountLogic/accountManager';
+import type { AccountManager } from '../../src/services/accountLogic/accountManager.ts';
+import { useCurrentAccount } from '../../src/services/accountLogic/accountManagerHooks.ts';
+import type { ClientServices } from '../../src/services/clientServices.ts';
+import { MockServiceManager, RenderHookWithProviders, type ProvidersProps } from '../testUtils.tsx';
 
 describe('AccountManager', () => {
 	let serviceManager: ServiceManager<ClientServices>;

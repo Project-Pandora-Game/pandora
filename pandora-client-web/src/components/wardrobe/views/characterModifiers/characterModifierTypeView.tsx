@@ -10,14 +10,14 @@ import {
 import { ReactElement, ReactNode, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import wikiIcon from '../../../../assets/icons/wiki.svg';
-import type { ICharacter } from '../../../../character/character';
-import { TextInput } from '../../../../common/userInteraction/input/textInput';
-import { useInputAutofocus } from '../../../../common/userInteraction/inputAutofocus';
-import { Row } from '../../../common/container/container';
-import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProvider';
-import { ShowEffectiveAllowOthers } from '../../../settings/permissionsSettings';
-import { useWardrobeActionContext } from '../../wardrobeActionContext';
-import { CheckResultToClassName } from '../../wardrobeComponents';
+import type { ICharacter } from '../../../../character/character.ts';
+import { TextInput } from '../../../../common/userInteraction/input/textInput.tsx';
+import { useInputAutofocus } from '../../../../common/userInteraction/inputAutofocus.ts';
+import { Row } from '../../../common/container/container.tsx';
+import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProvider.tsx';
+import { ShowEffectiveAllowOthers } from '../../../settings/permissionsSettings.tsx';
+import { useWardrobeActionContext } from '../../wardrobeActionContext.tsx';
+import { CheckResultToClassName } from '../../wardrobeComponents.tsx';
 
 export function WardrobeCharacterModifierTypeView({ title, character, currentlyFocusedModifier, focusModifier, children }: {
 	title: string;

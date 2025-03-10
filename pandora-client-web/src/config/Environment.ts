@@ -1,5 +1,5 @@
 import { CreateEnvParser } from 'pandora-common';
-import { CLIENT_CONFIG } from './definition';
+import { CLIENT_CONFIG } from './definition.ts';
 
 export type NodeEnv = 'production' | 'development';
 

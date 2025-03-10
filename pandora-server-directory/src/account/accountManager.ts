@@ -1,12 +1,12 @@
-import { GetDatabase } from '../database/databaseProvider';
-import { Assert, AssertNotNullable, AsyncSynchronized, GetLogger, ServerService } from 'pandora-common';
-import { Account, CreateAccountData } from './account';
-import promClient from 'prom-client';
-import { DiscordBot } from '../services/discord/discordBot';
-import { isEqual, omit, pick } from 'lodash';
 import { diffString } from 'json-diff';
-import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccountWithSecure, DatabaseAccountWithSecureSchema } from '../database/databaseStructure';
-import { AUDIT_LOG } from '../logging';
+import { isEqual, omit, pick } from 'lodash-es';
+import { Assert, AssertNotNullable, AsyncSynchronized, GetLogger, ServerService } from 'pandora-common';
+import promClient from 'prom-client';
+import { GetDatabase } from '../database/databaseProvider.ts';
+import { DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, DatabaseAccountWithSecure, DatabaseAccountWithSecureSchema } from '../database/databaseStructure.ts';
+import { AUDIT_LOG } from '../logging.ts';
+import { DiscordBot } from '../services/discord/discordBot.ts';
+import { Account, CreateAccountData } from './account.ts';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 export const ACCOUNT_INACTIVITY_THRESHOLD = 60_000;

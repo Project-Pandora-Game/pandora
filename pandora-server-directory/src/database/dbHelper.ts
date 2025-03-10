@@ -1,4 +1,4 @@
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import {
 	ASSET_PREFERENCES_DEFAULT,
@@ -11,7 +11,7 @@ import {
 	SpaceDirectoryConfig,
 	SpaceId,
 } from 'pandora-common';
-import type { DatabaseCharacterSelfInfo } from './databaseStructure';
+import type { DatabaseCharacterSelfInfo } from './databaseStructure.ts';
 
 export function CreateCharacter(accountId: number, id: CharacterId): [DatabaseCharacterSelfInfo, ICharacterData] {
 	const info: DatabaseCharacterSelfInfo = {

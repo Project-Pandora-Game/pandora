@@ -2,18 +2,18 @@ import { AssetFrameworkCharacterState } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { Texture } from 'pixi.js';
 import { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react';
-import { AssetGraphicsLayer } from '../../../assets/assetGraphics';
-import { useLayerDefinition, useLayerImageSource, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations';
-import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
-import { Container } from '../../../graphics/baseComponents/container';
-import { Graphics } from '../../../graphics/baseComponents/graphics';
-import { Sprite } from '../../../graphics/baseComponents/sprite';
-import { GraphicsLayerProps, useItemColor, useLayerVertices } from '../../../graphics/graphicsLayer';
-import { useTexture } from '../../../graphics/useTexture';
-import { useEditorLayerStateOverride } from '../../editor';
-import { useEditor } from '../../editorContextProvider';
-import { EditorAssetGraphics } from '../character/appearanceEditor';
-import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer';
+import { AssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
+import { useLayerDefinition, useLayerImageSource, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
+import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
+import { Container } from '../../../graphics/baseComponents/container.ts';
+import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
+import { Sprite } from '../../../graphics/baseComponents/sprite.ts';
+import { GraphicsLayerProps, useItemColor, useLayerVertices } from '../../../graphics/graphicsLayer.tsx';
+import { useTexture } from '../../../graphics/useTexture.ts';
+import { useEditorLayerStateOverride } from '../../editor.tsx';
+import { useEditor } from '../../editorContextProvider.tsx';
+import { EditorAssetGraphics } from '../character/appearanceEditor.ts';
+import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer.tsx';
 
 export function SetupLayer({
 	...props

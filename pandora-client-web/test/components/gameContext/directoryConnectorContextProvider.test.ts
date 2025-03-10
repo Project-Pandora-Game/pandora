@@ -4,10 +4,11 @@ import {
 	useAuthToken,
 	useDirectoryChangeListener,
 	useDirectoryConnector,
-} from '../../../src/components/gameContext/directoryConnectorContextProvider';
-import { DirectoryConnector } from '../../../src/networking/directoryConnector';
-import type { ClientServices } from '../../../src/services/clientServices';
-import { MockServiceManager, ProvidersProps, RenderHookWithProviders } from '../../testUtils';
+} from '../../../src/components/gameContext/directoryConnectorContextProvider.tsx';
+import { DirectoryConnector } from '../../../src/networking/directoryConnector.ts';
+import type { ClientServices } from '../../../src/services/clientServices.ts';
+import { MockServiceManager, ProvidersProps, RenderHookWithProviders } from '../../testUtils.tsx';
+const jest = import.meta.jest; // Jest is not properly injected in ESM
 
 const directoryChangeEvents: IDirectoryClientChangeEvents[] = [
 	'characterList',

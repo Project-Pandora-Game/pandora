@@ -1,12 +1,12 @@
 import type { Immutable } from 'immer';
 import { z } from 'zod';
-import { type AssetDefinitionExtraArgs, type AssetFrameworkGlobalState } from '../../../assets';
-import { EffectNameSchema } from '../../../assets/effects';
-import { CharacterIdSchema } from '../../../character/characterTypes';
-import { LIMIT_ITEM_NAME_LENGTH } from '../../../inputLimits';
-import { SpaceIdSchema, SpacePublicSettingSchema, type CurrentSpaceInfo } from '../../../space';
-import { AssertNever, type Satisfies } from '../../../utility';
-import type { GameLogicCharacter } from '../../character/character';
+import { type AssetDefinitionExtraArgs, type AssetFrameworkGlobalState } from '../../../assets/index.ts';
+import { EffectNameSchema } from '../../../assets/effects.ts';
+import { CharacterIdSchema } from '../../../character/characterTypes.ts';
+import { LIMIT_ITEM_NAME_LENGTH } from '../../../inputLimits.ts';
+import { SpaceIdSchema, SpacePublicSettingSchema, type CurrentSpaceInfo } from '../../../space/index.ts';
+import { AssertNever, type Satisfies } from '../../../utility/index.ts';
+import type { GameLogicCharacter } from '../../character/character.ts';
 
 export const CharacterModifierConditionSchema = z.discriminatedUnion('type', [
 	z.object({

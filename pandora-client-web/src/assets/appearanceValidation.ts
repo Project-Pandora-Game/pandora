@@ -7,9 +7,9 @@ import {
 	type ItemDisplayNameType,
 	type LockActionProblem,
 } from 'pandora-common';
-import { ResolveItemDisplayNameType } from '../components/wardrobe/itemDetail/wardrobeItemName';
-import { DescribeAttribute } from '../ui/components/chat/chatMessages';
-import { AssetManagerClient } from './assetManager';
+import { ResolveItemDisplayNameType } from '../components/wardrobe/itemDetail/wardrobeItemName.tsx';
+import { DescribeAttribute } from '../ui/components/chat/chatMessages.tsx';
+import { AssetManagerClient } from './assetManager.tsx';
 
 /** Returns if the button to do the action should be straight out hidden instead of only disabled */
 export function AppearanceActionProblemShouldHide(result: AppearanceActionProblem): boolean {

@@ -1,6 +1,6 @@
 import Delaunator from 'delaunator';
 import { Immutable } from 'immer';
-import { maxBy, minBy } from 'lodash';
+import { maxBy, minBy } from 'lodash-es';
 import {
 	Assert,
 	Asset,
@@ -19,15 +19,15 @@ import {
 	type PointTemplate,
 } from 'pandora-common';
 import { createContext, useContext, useMemo } from 'react';
-import { Base64ToArray } from '../crypto/helpers';
-import { AppearanceConditionEvaluator } from '../graphics/appearanceConditionEvaluator';
-import { GRAPHICS_TEXTURE_RESOLUTION_SCALE, useGraphicsSettings } from '../graphics/graphicsSettings';
-import { EvaluateCondition } from '../graphics/utility';
-import { useNullableObservable, useObservable, type ReadonlyObservable } from '../observable';
-import { useAutomaticResolution } from '../services/screenResolution/screenResolution';
-import type { AssetGraphics, AssetGraphicsLayer } from './assetGraphics';
-import { useAssetManager } from './assetManager';
-import { GraphicsManagerInstance } from './graphicsManager';
+import { Base64ToArray } from '../crypto/helpers.ts';
+import { AppearanceConditionEvaluator } from '../graphics/appearanceConditionEvaluator.ts';
+import { GRAPHICS_TEXTURE_RESOLUTION_SCALE, useGraphicsSettings } from '../graphics/graphicsSettings.tsx';
+import { EvaluateCondition } from '../graphics/utility.ts';
+import { useNullableObservable, useObservable, type ReadonlyObservable } from '../observable.ts';
+import { useAutomaticResolution } from '../services/screenResolution/screenResolution.ts';
+import type { AssetGraphics, AssetGraphicsLayer } from './assetGraphics.ts';
+import { useAssetManager } from './assetManager.tsx';
+import { GraphicsManagerInstance } from './graphicsManager.ts';
 
 export type AssetGraphicsResolverOverride = {
 	pointTemplates?: ReadonlyObservable<ReadonlyMap<string, Immutable<PointTemplate>>>;

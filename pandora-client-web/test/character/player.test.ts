@@ -1,6 +1,7 @@
-import _ from 'lodash';
-import { CHARACTER_DEFAULT_PUBLIC_SETTINGS, ICharacterData, ICharacterRoomData, CharacterSize, ASSET_PREFERENCES_DEFAULT } from 'pandora-common';
-import { PlayerCharacter } from '../../src/character/player';
+import { cloneDeep } from 'lodash-es';
+import { ASSET_PREFERENCES_DEFAULT, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, ICharacterData, ICharacterRoomData } from 'pandora-common';
+import { PlayerCharacter } from '../../src/character/player.ts';
+const jest = import.meta.jest; // Jest is not properly injected in ESM
 
 describe('PlayerCharacter', () => {
 	const updateListener = jest.fn();
@@ -47,8 +48,8 @@ function MockPlayerData(overrides?: Partial<ICharacterData & ICharacterRoomData>
 		currentSpace: null,
 		created: 0,
 		accessId: 'mockID',
-		settings: _.cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
-		assetPreferences: _.cloneDeep(ASSET_PREFERENCES_DEFAULT),
+		settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
+		assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 		position: [CharacterSize.WIDTH / 2, 0, 0],
 		isOnline: true,
 		...overrides,

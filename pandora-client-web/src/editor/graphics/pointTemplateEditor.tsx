@@ -1,16 +1,16 @@
 import { type Draft, type Immutable } from 'immer';
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import { EMPTY_ARRAY, type PointTemplate } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
-import { CalculatePointDefinitionsFromTemplate, CalculatePointsTriangles } from '../../assets/assetGraphicsCalculations';
-import { Container } from '../../graphics/baseComponents/container';
-import { Graphics } from '../../graphics/baseComponents/graphics';
-import { Observable, useObservable } from '../../observable';
-import type { Editor } from '../editor';
-import { useEditor } from '../editorContextProvider';
-import { DraggablePoint, DraggablePointDisplay } from './draggable';
-import { EDITOR_LAYER_Z_INDEX_EXTRA } from './layer/editorLayer';
+import { CalculatePointDefinitionsFromTemplate, CalculatePointsTriangles } from '../../assets/assetGraphicsCalculations.ts';
+import { Container } from '../../graphics/baseComponents/container.ts';
+import { Graphics } from '../../graphics/baseComponents/graphics.ts';
+import { Observable, useObservable } from '../../observable.ts';
+import type { Editor } from '../editor.tsx';
+import { useEditor } from '../editorContextProvider.tsx';
+import { DraggablePoint, DraggablePointDisplay } from './draggable.tsx';
+import { EDITOR_LAYER_Z_INDEX_EXTRA } from './layer/editorLayer.tsx';
 
 /**
  * Class containing utility methods for manipulating a point template

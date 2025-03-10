@@ -1,15 +1,15 @@
+import { omit } from 'lodash-es';
 import {
 	CharacterId,
-	ICharacterData,
 	GetLogger,
-	SpaceId,
+	ICharacterData,
+	ICharacterDataShardUpdate,
 	SpaceData,
 	SpaceDataShardUpdate,
-	ICharacterDataShardUpdate,
+	SpaceId,
 } from 'pandora-common';
-import type { ShardDatabase } from './databaseProvider';
-import { DirectoryConnectionState, DirectoryConnector } from '../networking/socketio_directory_connector';
-import _ from 'lodash';
+import { DirectoryConnectionState, DirectoryConnector } from '../networking/socketio_directory_connector.ts';
+import type { ShardDatabase } from './databaseProvider.ts';
 
 const logger = GetLogger('db');
 
@@ -47,7 +47,7 @@ export default class DirectoryDatabase implements ShardDatabase {
 		if (result == null)
 			return null;
 
-		return _.omit(
+		return omit(
 			result,
 			['config', 'accessId', 'owners'],
 		);

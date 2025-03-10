@@ -1,12 +1,12 @@
-import { clamp, cloneDeep, pick, uniq } from 'lodash';
+import { clamp, cloneDeep, pick, uniq } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import { AccountId, Assert, AssertNever, AsyncSynchronized, CharacterId, ChatActionId, GetLogger, IChatMessageDirectoryAction, IClientDirectoryArgument, LIMIT_JOIN_ME_INVITES, LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_EXTRA_OWNERS, Logger, SpaceBaseInfo, SpaceDirectoryConfig, SpaceId, SpaceInvite, SpaceInviteCreate, SpaceInviteId, SpaceLeaveReason, SpaceListExtendedInfo, SpaceListInfo, TimeSpanMs, type IShardDirectoryArgument } from 'pandora-common';
-import { Account } from '../account/account';
-import { Character, CharacterInfo } from '../account/character';
-import { GetDatabase } from '../database/databaseProvider';
-import { ConnectionManagerClient } from '../networking/manager_client';
-import { Shard } from '../shard/shard';
-import { ShardManager } from '../shard/shardManager';
+import { Account } from '../account/account.ts';
+import { Character, CharacterInfo } from '../account/character.ts';
+import { GetDatabase } from '../database/databaseProvider.ts';
+import { ConnectionManagerClient } from '../networking/manager_client.ts';
+import { Shard } from '../shard/shard.ts';
+import { ShardManager } from '../shard/shardManager.ts';
 
 export class Space {
 	/** Time when this space was last requested */

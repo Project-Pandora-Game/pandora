@@ -1,6 +1,6 @@
 import type { Ticker } from 'pixi.js';
-import { useCallback, useEffect, useRef, type MutableRefObject } from 'react';
-import { usePixiAppOptional } from './appContext';
+import { useCallback, useEffect, useRef, type RefObject } from 'react';
+import { usePixiAppOptional } from './appContext.ts';
 
 /**
  * Adds a tick handler that is called each time a Pixi tick happens (so each time there is a render of the tree)
@@ -28,7 +28,7 @@ export function usePixiTick(callback: (ticker: Ticker) => void, enabled: boolean
 	}, [app, callback, enabled]);
 }
 
-export type TickerRef = MutableRefObject<((ticker: Ticker) => void) | null>;
+export type TickerRef = RefObject<((ticker: Ticker) => void) | null>;
 
 export function useTickerRef(): TickerRef {
 	const ref = useRef<((ticker: Ticker) => void) | null>(null);

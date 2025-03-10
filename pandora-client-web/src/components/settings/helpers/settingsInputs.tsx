@@ -1,11 +1,11 @@
 import { EMPTY_ARRAY, KnownObject } from 'pandora-common';
 import { useCallback, useId, useMemo, type DependencyList, type ReactElement, type ReactNode } from 'react';
 import type { ZodSchema, ZodTypeDef } from 'zod';
-import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput';
-import { Checkbox } from '../../../common/userInteraction/checkbox';
-import { Select, type SelectProps } from '../../../common/userInteraction/select/select';
-import { Button } from '../../common/button/button';
-import { Row } from '../../common/container/container';
+import { useRemotelyUpdatedUserInput } from '../../../common/useRemotelyUpdatedUserInput.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { Select, type SelectProps } from '../../../common/userInteraction/select/select.tsx';
+import { Button } from '../../common/button/button.tsx';
+import { Row } from '../../common/container/container.tsx';
 
 export function ToggleSettingInput({ currentValue, defaultValue, label, onChange, onReset, deps = EMPTY_ARRAY }: {
 	currentValue: boolean | undefined;

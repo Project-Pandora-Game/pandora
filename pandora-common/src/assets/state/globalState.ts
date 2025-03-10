@@ -1,17 +1,17 @@
 import { freeze } from 'immer';
 import { z } from 'zod';
-import { CharacterId, CharacterIdSchema } from '../../character/characterTypes';
-import { Logger } from '../../logging';
-import { Assert, AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility/misc';
-import { EvalContainerPath } from '../appearanceHelpers';
-import { ActionTargetSelector, type ItemContainerPath, type ItemPath } from '../appearanceTypes';
-import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import { AssetManager } from '../assetManager';
-import type { Item } from '../item/base';
-import { IExportOptions } from '../modules/common';
-import { AssetFrameworkCharacterState } from './characterState';
-import { AppearanceBundleSchema, AppearanceClientBundle } from './characterStateTypes';
-import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClientBundle } from './roomState';
+import { CharacterId, CharacterIdSchema } from '../../character/characterTypes.ts';
+import { Logger } from '../../logging.ts';
+import { Assert, AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility/misc.ts';
+import { EvalContainerPath } from '../appearanceHelpers.ts';
+import { ActionTargetSelector, type ItemContainerPath, type ItemPath } from '../appearanceTypes.ts';
+import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation.ts';
+import { AssetManager } from '../assetManager.ts';
+import type { Item } from '../item/base.ts';
+import { IExportOptions } from '../modules/common.ts';
+import { AssetFrameworkCharacterState } from './characterState.ts';
+import { AppearanceBundleSchema, AppearanceClientBundle } from './characterStateTypes.ts';
+import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClientBundle } from './roomState.ts';
 
 export const AssetFrameworkGlobalStateBundleSchema = z.object({
 	characters: z.record(CharacterIdSchema, AppearanceBundleSchema),

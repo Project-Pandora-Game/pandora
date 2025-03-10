@@ -7,9 +7,9 @@ import {
 	ItemId,
 } from 'pandora-common';
 import { createContext, ReactElement, ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { Observable, useObservable } from '../../observable';
-import { useWardrobeActionContext } from './wardrobeActionContext';
-import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocuser, WardrobeHeldItem, type WardrobeFocus } from './wardrobeTypes';
+import { Observable, useObservable } from '../../observable.ts';
+import { useWardrobeActionContext } from './wardrobeActionContext.tsx';
+import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocuser, WardrobeHeldItem, type WardrobeFocus } from './wardrobeTypes.ts';
 
 export const wardrobeContext = createContext<WardrobeContext | null>(null);
 

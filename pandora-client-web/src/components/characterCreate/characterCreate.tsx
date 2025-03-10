@@ -2,13 +2,13 @@ import { nanoid } from 'nanoid';
 import { CharacterInputNameSchema, IsValidCharacterName } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { useCreateCharacter } from '../../character/player';
-import { useAsyncEvent } from '../../common/useEvent';
-import { TextInput } from '../../common/userInteraction/input/textInput';
-import { Button } from '../common/button/button';
-import { Form, FormCreateStringValidator, FormError, FormErrorMessage, FormField } from '../common/form/form';
-import { useGameStateOptional } from '../gameContext/gameStateContextProvider';
-import { usePlayer, usePlayerData } from '../gameContext/playerContextProvider';
+import { useCreateCharacter } from '../../character/player.ts';
+import { useAsyncEvent } from '../../common/useEvent.ts';
+import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
+import { Button } from '../common/button/button.tsx';
+import { Form, FormCreateStringValidator, FormError, FormErrorMessage, FormField } from '../common/form/form.tsx';
+import { useGameStateOptional } from '../gameContext/gameStateContextProvider.tsx';
+import { usePlayer, usePlayerData } from '../gameContext/playerContextProvider.tsx';
 import './characterCreate.scss';
 
 export function CharacterCreate(): ReactElement | null {

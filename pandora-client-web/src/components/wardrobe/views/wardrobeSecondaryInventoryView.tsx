@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import {
 	ActionTargetSelector,
 	EMPTY_ARRAY,
@@ -12,15 +12,15 @@ import {
 import React, { ReactElement, useCallback, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router';
 import deleteIcon from '../../../assets/icons/delete.svg';
-import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
-import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
-import { Button } from '../../common/button/button';
-import { WardrobeItemName } from '../itemDetail/wardrobeItemName';
-import { useWardrobeActionContext } from '../wardrobeActionContext';
-import { InventoryAssetPreview, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents';
-import { useWardrobeContext } from '../wardrobeContext';
-import { WardrobeContextExtraItemActionComponent, WardrobeHeldItem } from '../wardrobeTypes';
-import { InventoryItemViewDropArea } from './wardrobeItemView';
+import { useItemColorRibbon } from '../../../graphics/graphicsLayer.tsx';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { Button } from '../../common/button/button.tsx';
+import { WardrobeItemName } from '../itemDetail/wardrobeItemName.tsx';
+import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
+import { InventoryAssetPreview, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
+import { useWardrobeContext } from '../wardrobeContext.tsx';
+import { WardrobeContextExtraItemActionComponent, WardrobeHeldItem } from '../wardrobeTypes.ts';
+import { InventoryItemViewDropArea } from './wardrobeItemView.tsx';
 
 export function SecondaryInventoryView({ title, secondaryTarget, secondaryTargetContainer = EMPTY_ARRAY, quickActionTarget, quickActionTargetContainer }: {
 	title: string;

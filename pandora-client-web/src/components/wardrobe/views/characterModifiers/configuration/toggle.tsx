@@ -1,5 +1,5 @@
 import { GetLogger, type ModifierConfigurationEntryDefinition } from 'pandora-common';
-import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/dist/gameLogic/characterModifiers/helpers/configurationBuilder';
+import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/dist/gameLogic/characterModifiers/helpers/configurationBuilder.js';
 import type { ReactElement } from 'react';
 import { useId, useMemo } from 'react';
 import { toast } from 'react-toastify';
@@ -7,7 +7,7 @@ import type { Promisable } from 'type-fest';
 import { useAsyncEvent } from '../../../../../common/useEvent';
 import { Checkbox } from '../../../../../common/userInteraction/checkbox';
 import { TOAST_OPTIONS_ERROR } from '../../../../../persistentToast';
-import { Row } from '../../../../common/container/container';
+import { Row } from '../../../../common/container/container.tsx';
 
 export function WardrobeCharacterModifierConfigToggle({ definition, value, onChange }: {
 	definition: ModifierConfigurationEntryDefinition<'toggle'>;

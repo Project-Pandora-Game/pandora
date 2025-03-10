@@ -1,6 +1,6 @@
 import { GetLogger } from 'pandora-common';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR } from '../persistentToast';
+import { TOAST_OPTIONS_ERROR } from '../persistentToast.ts';
 
 const logger = GetLogger('Clipboard');
 

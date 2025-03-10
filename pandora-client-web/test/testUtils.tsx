@@ -1,15 +1,16 @@
 import { render, renderHook, RenderHookResult, RenderOptions, RenderResult } from '@testing-library/react';
 import { InitialEntry } from 'history';
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import { Assert, ServiceManager } from 'pandora-common';
 import { ComponentType, ReactElement, useEffect, useMemo } from 'react';
 import { MemoryRouter, useLocation } from 'react-router-dom';
-import { ChildrenProps } from '../src/common/reactTypes';
-import { DebugContext, debugContext, DebugData } from '../src/components/error/debugContextProvider';
-import { DirectoryConnectorServiceProvider } from '../src/networking/directoryConnector';
-import { GenerateClientUsermodeServices, type ClientServices } from '../src/services/clientServices';
-import { ServiceManagerContextProvider } from '../src/services/serviceProvider';
-import { MockDebugData } from './mocks/error/errorMocks';
+import { ChildrenProps } from '../src/common/reactTypes.ts';
+import { DebugContext, debugContext, DebugData } from '../src/components/error/debugContextProvider.tsx';
+import { DirectoryConnectorServiceProvider } from '../src/networking/directoryConnector.ts';
+import { GenerateClientUsermodeServices, type ClientServices } from '../src/services/clientServices.ts';
+import { ServiceManagerContextProvider } from '../src/services/serviceProvider.tsx';
+import { MockDebugData } from './mocks/error/errorMocks.ts';
+const jest = import.meta.jest; // Jest is not properly injected in ESM
 
 export function RenderWithRouter(
 	element: ReactElement,

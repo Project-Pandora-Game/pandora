@@ -1,17 +1,17 @@
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import {
 	GetLogger,
 	IDirectoryClientChangeEvents,
 } from 'pandora-common';
 import React, { useEffect, useRef } from 'react';
-import { useDebugExpose } from '../../common/useDebugExpose';
-import { useErrorHandler } from '../../common/useErrorHandler';
-import { DIRECTORY_ADDRESS } from '../../config/Environment';
-import { ConfigServerIndex } from '../../config/searchArgs';
-import { AuthToken, DirectoryConnectionState, DirectoryConnector } from '../../networking/directoryConnector';
-import { SocketIOConnector } from '../../networking/socketio_connector';
-import { useObservable } from '../../observable';
-import { useService } from '../../services/serviceProvider';
+import { useDebugExpose } from '../../common/useDebugExpose.ts';
+import { useErrorHandler } from '../../common/useErrorHandler.ts';
+import { DIRECTORY_ADDRESS } from '../../config/Environment.ts';
+import { ConfigServerIndex } from '../../config/searchArgs.ts';
+import { AuthToken, DirectoryConnectionState, DirectoryConnector } from '../../networking/directoryConnector.ts';
+import { SocketIOConnector } from '../../networking/socketio_connector.ts';
+import { useObservable } from '../../observable.ts';
+import { useService } from '../../services/serviceProvider.tsx';
 
 /** Factory function responsible for providing the concrete directory connector implementation to the application */
 function GetDirectoryAddress(): string {

@@ -18,8 +18,8 @@ import {
 	ZodTruncate,
 } from 'pandora-common';
 import { z } from 'zod';
-import { AccountTokenReason } from '../account/accountSecure';
-import { GitHubTeamSchema } from '../services/github/githubVerify';
+import { AccountTokenReason } from '../account/accountSecure.ts';
+import { GitHubTeamSchema } from '../services/github/githubVerify.ts';
 
 export const DatabaseAccountTokenSchema = z.object({
 	/** The token secret */

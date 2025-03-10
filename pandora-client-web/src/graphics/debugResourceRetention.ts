@@ -1,5 +1,5 @@
 import { GetLogger } from 'pandora-common';
-import { USER_DEBUG } from '../config/Environment';
+import { USER_DEBUG } from '../config/Environment.ts';
 
 type ContextData = {
 	context: WebGLRenderingContext | WebGL2RenderingContext;

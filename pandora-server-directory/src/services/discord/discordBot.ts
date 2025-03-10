@@ -1,11 +1,12 @@
-import Discord, { Events, GatewayIntentBits, GuildChannel, REST, Routes, type ClientOptions, type Interaction } from 'discord.js';
-import _ from 'lodash';
+import * as Discord from 'discord.js';
+import { Events, GatewayIntentBits, GuildChannel, REST, Routes, type ClientOptions, type Interaction } from 'discord.js';
+import { throttle } from 'lodash-es';
 import { Assert, GetLogger, ServerService } from 'pandora-common';
 import promClient from 'prom-client';
-import { ENV } from '../../config';
-import type { DiscordButtonDescriptor, DiscordCommandDescriptor } from './commands/_common';
-import { DISCORD_COMMAND_PING } from './commands/ping';
-import { DISCORD_BUTTON_REGISTER, DISCORD_COMMAND_ADMIN } from './commands/registration';
+import { ENV } from '../../config.ts';
+import type { DiscordButtonDescriptor, DiscordCommandDescriptor } from './commands/_common.ts';
+import { DISCORD_COMMAND_PING } from './commands/ping.ts';
+import { DISCORD_BUTTON_REGISTER, DISCORD_COMMAND_ADMIN } from './commands/registration.ts';
 const { DISCORD_BOT_TOKEN, DISCORD_BOT_ACCOUNT_STATUS_CHANNEL_ID, DISCORD_BOT_CHARACTER_STATUS_CHANNEL_ID } = ENV;
 
 const STATUS_THROTTLE_TIME = 10 * 60 * 1000; // 10 minutes
@@ -119,7 +120,7 @@ export const DiscordBot = new class DiscordBot implements ServerService {
 		this._setOnlineStatusInternal(status);
 	}
 
-	private readonly _setOnlineStatusInternal = _.throttle((status: Partial<DiscordBotStatus>): void => {
+	private readonly _setOnlineStatusInternal = throttle((status: Partial<DiscordBotStatus>): void => {
 		if (this._destroyed || !this._client) {
 			return;
 		}

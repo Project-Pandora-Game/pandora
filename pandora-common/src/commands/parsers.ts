@@ -1,4 +1,4 @@
-import type { CommandStepProcessor } from './executor';
+import type { CommandStepProcessor } from './executor.ts';
 
 export function CommandParseQuotedString(input: string): { value: string; spacing: string; rest: string; } {
 	let value: string = '';

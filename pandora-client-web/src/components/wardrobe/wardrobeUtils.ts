@@ -13,9 +13,9 @@ import {
 	type ActionTargetSelector,
 } from 'pandora-common';
 import { useMemo } from 'react';
-import { ICharacter } from '../../character/character';
-import { useWardrobeActionContext } from './wardrobeActionContext';
-import { WardrobeFocus } from './wardrobeTypes';
+import { ICharacter } from '../../character/character.ts';
+import { useWardrobeActionContext } from './wardrobeActionContext.tsx';
+import { WardrobeFocus } from './wardrobeTypes.ts';
 
 export function WardrobeFocusesItem(focus: Immutable<WardrobeFocus>): focus is ItemPath {
 	return focus.itemId != null;

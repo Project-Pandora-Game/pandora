@@ -1,8 +1,8 @@
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import { Assert, GetLogger, Logger, TypedEventEmitter } from 'pandora-common';
 import { ImageSource, loadImageBitmap, Texture, TextureSource, WorkerManager } from 'pixi.js';
-import { PersistentToast } from '../persistentToast';
-import { IGraphicsLoader, type IGraphicsLoaderEvents, type IGraphicsLoaderStats, type TextureUpdateListener } from './graphicsManager';
+import { PersistentToast } from '../persistentToast.ts';
+import { IGraphicsLoader, type IGraphicsLoaderEvents, type IGraphicsLoaderStats, type TextureUpdateListener } from './graphicsManager.ts';
 
 /**
  * Interval after which texture load is retried, if the texture is still being requested.

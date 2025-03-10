@@ -1,9 +1,9 @@
 import { screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { LoginForm } from '../../../../src/components/login/forms/loginForm';
-import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
-import { RenderWithRouterAndProviders } from '../../../testUtils';
-import { INVALID_USERNAMES } from '../loginTestData';
+import { LoginForm } from '../../../../src/components/login/forms/loginForm.tsx';
+import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils.ts';
+import { RenderWithRouterAndProviders } from '../../../testUtils.tsx';
+import { INVALID_USERNAMES } from '../loginTestData.ts';
 
 describe('Login Form', () => {
 	let user: ReturnType<typeof userEvent.setup>;

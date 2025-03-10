@@ -14,17 +14,17 @@ import {
 	type PermissionGroup,
 } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
-import { ICharacter, useCharacterRestrictionManager } from '../../character/character';
-import { Column } from '../common/container/container';
-import { Tab, TabContainer, type TabContainerRef } from '../common/tabs/tabs';
-import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { WardrobeCharacterModifierEffectDetailsView } from './views/characterModifiers/characterModifierEffectDetailsView';
-import { WardrobeCharacterModifierInstanceDetailsView } from './views/characterModifiers/characterModifierInstanceDetailsView';
-import { WardrobeCharacterModifierEffectiveInstanceView, WardrobeCharacterModifierFullInstanceView } from './views/characterModifiers/characterModifierInstanceView';
-import { WardrobeCharacterModifierTypeDetailsView } from './views/characterModifiers/characterModifierTypeDetailsView';
-import { WardrobeCharacterModifierTypeView } from './views/characterModifiers/characterModifierTypeView';
-import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from './wardrobeActionContext';
-import { ActionWarningContent } from './wardrobeComponents';
+import { ICharacter, useCharacterRestrictionManager } from '../../character/character.ts';
+import { Column } from '../common/container/container.tsx';
+import { Tab, TabContainer, type TabContainerRef } from '../common/tabs/tabs.tsx';
+import { useShardChangeListener, useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
+import { WardrobeCharacterModifierEffectDetailsView } from './views/characterModifiers/characterModifierEffectDetailsView.tsx';
+import { WardrobeCharacterModifierInstanceDetailsView } from './views/characterModifiers/characterModifierInstanceDetailsView.tsx';
+import { WardrobeCharacterModifierEffectiveInstanceView, WardrobeCharacterModifierFullInstanceView } from './views/characterModifiers/characterModifierInstanceView.tsx';
+import { WardrobeCharacterModifierTypeDetailsView } from './views/characterModifiers/characterModifierTypeDetailsView.tsx';
+import { WardrobeCharacterModifierTypeView } from './views/characterModifiers/characterModifierTypeView.tsx';
+import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from './wardrobeActionContext.tsx';
+import { ActionWarningContent } from './wardrobeComponents.tsx';
 
 export type ModifierFocus = {
 	type: 'instance';

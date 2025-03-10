@@ -1,20 +1,20 @@
 import type { Immutable } from 'immer';
 import { z } from 'zod';
 
-import type { HexRGBAColorString } from '../../validation';
-import type { AppearanceValidationResult } from '../appearanceValidation';
-import type { Asset } from '../asset';
-import type { IExportOptions } from '../modules/common';
-import type { AssetProperties } from '../properties';
-import { ItemIdSchema, type IItemLoadContext, type IItemValidationContext, type ItemBundle, type ItemTemplate } from './base';
-import type { ItemRoomDevice } from './roomDevice';
+import type { HexRGBAColorString } from '../../validation.ts';
+import type { AppearanceValidationResult } from '../appearanceValidation.ts';
+import type { Asset } from '../asset.ts';
+import type { IExportOptions } from '../modules/common.ts';
+import type { AssetProperties } from '../properties.ts';
+import { ItemIdSchema, type IItemLoadContext, type IItemValidationContext, type ItemBundle, type ItemTemplate } from './base.ts';
+import type { ItemRoomDevice } from './roomDevice.ts';
 
-import { Assert, MemoizeNoArg } from '../../utility/misc';
-import { GetPropertiesForSlot, RoomDevicePropertiesResult } from '../roomDeviceProperties';
+import { Assert, MemoizeNoArg } from '../../utility/misc.ts';
+import { GetPropertiesForSlot, RoomDevicePropertiesResult } from '../roomDeviceProperties.ts';
 
-import { ItemBase, ItemBaseProps } from './_internal';
+import { ItemBase, ItemBaseProps } from './_internal.ts';
 
-declare module './_internal' {
+declare module './_internal.ts' {
 	interface InternalItemTypeMap {
 		roomDeviceWearablePart: ItemRoomDeviceWearablePart;
 	}

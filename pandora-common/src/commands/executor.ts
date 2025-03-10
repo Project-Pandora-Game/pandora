@@ -1,5 +1,5 @@
-import type { IEmpty } from '../networking';
-import { CommandArgumentNeedsQuotes, CommandArgumentQuote, CommandParseQuotedString, CommandParseQuotedStringTrim } from './parsers';
+import type { IEmpty } from '../networking/index.ts';
+import { CommandArgumentNeedsQuotes, CommandArgumentQuote, CommandParseQuotedString, CommandParseQuotedStringTrim } from './parsers.ts';
 
 export interface ICommandExecutionContext {
 	executionType: 'help' | 'run' | 'autocomplete';

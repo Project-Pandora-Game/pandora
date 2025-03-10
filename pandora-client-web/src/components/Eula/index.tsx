@@ -1,14 +1,14 @@
 import { ReactElement, useState } from 'react';
 import { z } from 'zod';
 import pandoraLogo from '../../assets/icons/pandora.svg';
-import { useBrowserStorage } from '../../browserStorage';
-import { ChildrenProps } from '../../common/reactTypes';
-import { GAME_NAME } from '../../config/Environment';
-import { Button } from '../common/button/button';
-import { Column, Row } from '../common/container/container';
-import { ModalDialog } from '../dialog/dialog';
+import { useBrowserStorage } from '../../browserStorage.ts';
+import { ChildrenProps } from '../../common/reactTypes.ts';
+import { GAME_NAME } from '../../config/Environment.ts';
+import { Button } from '../common/button/button.tsx';
+import { Column, Row } from '../common/container/container.tsx';
+import { ModalDialog } from '../dialog/dialog.tsx';
 import './eula.scss';
-import { EULA_LAST_UPDATED, EULA_VERSION, PrivacyPolicyContent } from './privacyPolicy';
+import { EULA_LAST_UPDATED, EULA_VERSION, PrivacyPolicyContent } from './privacyPolicy.tsx';
 
 /**
  * Display the end user license agreement, with the option to accept it.

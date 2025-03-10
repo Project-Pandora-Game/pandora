@@ -1,6 +1,6 @@
 import { Sprite as PixiSprite } from 'pixi.js';
-import { ParsePixiPointLike, RegisterPixiComponent, type DisplayObjectEventNames, type PixiDisplayObjectWriteableProps, type PixiPointLike } from '../reconciler/component';
-import { CONTAINER_AUTO_PROPS, CONTAINER_EVENTS, type ContainerEventMap } from './container';
+import { ParsePixiPointLike, RegisterPixiComponent, type DisplayObjectEventNames, type PixiDisplayObjectWriteableProps, type PixiPointLike } from '../reconciler/component.ts';
+import { CONTAINER_AUTO_PROPS, CONTAINER_EVENTS, type ContainerEventMap } from './container.ts';
 
 const SPRITE_AUTO_PROPS = {
 	...CONTAINER_AUTO_PROPS,

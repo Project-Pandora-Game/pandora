@@ -5,15 +5,15 @@ import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import type { Promisable } from 'type-fest';
 import crossIcon from '../../../assets/icons/cross.svg';
-import { useAsyncEvent, useEvent } from '../../../common/useEvent';
-import { TextInput } from '../../../common/userInteraction/input/textInput';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
-import type { SelfSelect } from '../../../ui/components/chat/commandsHelpers';
-import { Button, IconButton } from '../../common/button/button';
-import { Column, Row } from '../../common/container/container';
-import { ModalDialog } from '../../dialog/dialog';
-import { useResolveCharacterName, useSpaceCharacters } from '../../gameContext/gameStateContextProvider';
+import { useAsyncEvent, useEvent } from '../../../common/useEvent.ts';
+import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import type { SelfSelect } from '../../../ui/components/chat/commandsHelpers.ts';
+import { Button, IconButton } from '../../common/button/button.tsx';
+import { Column, Row } from '../../common/container/container.tsx';
+import { ModalDialog } from '../../dialog/dialog.tsx';
+import { useResolveCharacterName, useSpaceCharacters } from '../../gameContext/gameStateContextProvider.tsx';
 import './characterListInput.scss';
 
 export interface CharacterListInputProps {

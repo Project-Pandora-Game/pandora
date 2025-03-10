@@ -13,8 +13,8 @@ import {
 	MirrorImageOverride,
 	MirrorLayerImageSetting,
 } from 'pandora-common';
-import { MirrorPriority } from '../graphics/def';
-import { Observable, ReadonlyObservable } from '../observable';
+import { MirrorPriority } from '../graphics/def.ts';
+import { Observable, ReadonlyObservable } from '../observable.ts';
 
 export class AssetGraphicsLayer {
 	public readonly asset: AssetGraphics;

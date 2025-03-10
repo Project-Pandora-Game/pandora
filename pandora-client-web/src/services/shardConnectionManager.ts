@@ -7,10 +7,10 @@ import {
 	type ServiceConfigBase,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
-import { ShardConnector } from '../networking/shardConnector';
-import { SocketIOConnector } from '../networking/socketio_connector';
-import { Observable, type ReadonlyObservable } from '../observable';
-import type { ClientServices } from './clientServices';
+import { ShardConnector } from '../networking/shardConnector.ts';
+import { SocketIOConnector } from '../networking/socketio_connector.ts';
+import { Observable, type ReadonlyObservable } from '../observable.ts';
+import type { ClientServices } from './clientServices.ts';
 
 type ShardConnectionManagerServiceConfig = Satisfies<{
 	dependencies: Pick<ClientServices, 'directoryConnector' | 'accountManager'>;

@@ -2,13 +2,13 @@ import type { Immutable } from 'immer';
 import { AssertNever, type CharacterModifierCondition } from 'pandora-common';
 import { type ReactElement } from 'react';
 import type { ICharacter } from '../../../../../character/character';
-import { ConditionCharacterPresent } from './conditionCharacterPresent';
-import { ConditionInSpaceId } from './conditionInSpaceId';
-import { ConditionItemOfAsset } from './conditionItemOfAsset';
-import { ConditionItemWithAttribute } from './conditionItemWithAttribute';
-import { ConditionItemWithEffect } from './conditionItemWithEffect';
-import { ConditionItemWithName } from './conditionItemWithName';
-import { ConditionInSpaceWithVisibility } from './conditionInSpaceWithVisibility';
+import { ConditionCharacterPresent } from './conditionCharacterPresent.tsx';
+import { ConditionInSpaceId } from './conditionInSpaceId.tsx';
+import { ConditionInSpaceWithVisibility } from './conditionInSpaceWithVisibility.tsx';
+import { ConditionItemOfAsset } from './conditionItemOfAsset.tsx';
+import { ConditionItemWithAttribute } from './conditionItemWithAttribute.tsx';
+import { ConditionItemWithEffect } from './conditionItemWithEffect.tsx';
+import { ConditionItemWithName } from './conditionItemWithName.tsx';
 
 export type CharacterModifierConditionListEntryProps<TCondition extends CharacterModifierCondition['type'] = CharacterModifierCondition['type']> = {
 	condition: Immutable<Extract<CharacterModifierCondition, { type: TCondition; }>>;

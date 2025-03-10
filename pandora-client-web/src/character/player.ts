@@ -1,7 +1,7 @@
-import { GetLogger, ICharacterRoomData, ICharacterPrivateData, IClientShardArgument } from 'pandora-common';
+import { GetLogger, ICharacterPrivateData, ICharacterRoomData, IClientShardArgument } from 'pandora-common';
 import { useCallback } from 'react';
-import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
-import { Character } from './character';
+import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider.tsx';
+import { Character } from './character.ts';
 
 export type CharacterCreationCallback = (
 	character: PlayerCharacter,

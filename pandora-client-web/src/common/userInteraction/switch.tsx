@@ -1,10 +1,10 @@
-import { pick } from 'lodash';
+import { pick } from 'lodash-es';
 import type { HexColorString } from 'pandora-common';
 import type { InputHTMLAttributes, ReactElement } from 'react';
 import { useMemo } from 'react';
 import ReactSwitch, { type ReactSwitchProps } from 'react-switch';
-import { Color } from '../../components/common/colorInput/colorInput';
-import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
+import { Color } from '../../components/common/colorInput/colorInput.tsx';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 
 const FORWARDED_PROPS = [
 	'id',

@@ -1,6 +1,6 @@
 import type { HexColorString } from 'pandora-common';
 import { useEffect } from 'react';
-import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 
 export function InterfaceSettingsProvider(): null {
 	const { interfaceAccentColor } = useAccountSettings();

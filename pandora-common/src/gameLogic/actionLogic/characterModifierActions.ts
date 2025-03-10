@@ -1,6 +1,6 @@
-import type { CharacterId, CharacterRestrictionsManager } from '../../character';
-import type { CharacterModifierId, CharacterModifierLockAction, CharacterModifierType, GameLogicModifierInstance } from '../characterModifiers';
-import type { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext';
+import type { CharacterId, CharacterRestrictionsManager } from '../../character/index.ts';
+import type { CharacterModifierId, CharacterModifierLockAction, CharacterModifierType, GameLogicModifierInstance } from '../characterModifiers/index.ts';
+import type { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext.ts';
 
 // Character modifiers happen outside of the character state and action logic frameworks.
 // Nevertheless, it is important to be able to validate certain things while interacting with character modifiers (such as permissions and safemode).

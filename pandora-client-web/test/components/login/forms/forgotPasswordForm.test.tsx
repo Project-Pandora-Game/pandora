@@ -1,9 +1,9 @@
 import { screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { ForgotPasswordForm } from '../../../../src/components/login/forms/forgotPasswordForm';
-import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
-import { RenderWithRouterAndProviders } from '../../../testUtils';
-import { INVALID_EMAILS } from '../loginTestData';
+import { ForgotPasswordForm } from '../../../../src/components/login/forms/forgotPasswordForm.tsx';
+import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils.ts';
+import { RenderWithRouterAndProviders } from '../../../testUtils.tsx';
+import { INVALID_EMAILS } from '../loginTestData.ts';
 
 describe('Forgot Password Form', () => {
 	let user: ReturnType<typeof userEvent.setup>;

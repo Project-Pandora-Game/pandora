@@ -14,7 +14,7 @@ import {
 	type BoneDefinition,
 } from 'pandora-common';
 import { useMemo } from 'react';
-import { EvaluateCondition, RotateVector } from './utility';
+import { EvaluateCondition, RotateVector } from './utility.ts';
 
 export abstract class ConditionEvaluatorBase {
 	public readonly assetManager: AssetManager;

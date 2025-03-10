@@ -1,11 +1,11 @@
 import { GetLogger } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { useEffect, useRef, useState } from 'react';
-import { ERROR_TEXTURE } from '../assets/graphicsLoader';
-import { GraphicsManagerInstance } from '../assets/graphicsManager';
-import { useObservable } from '../observable';
-import { useRegisterSuspenseAsset } from './graphicsSuspense/graphicsSuspense';
-import { LoadInlineImageResource } from './utility';
+import { ERROR_TEXTURE } from '../assets/graphicsLoader.ts';
+import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
+import { useObservable } from '../observable.ts';
+import { useRegisterSuspenseAsset } from './graphicsSuspense/graphicsSuspense.tsx';
+import { LoadInlineImageResource } from './utility.ts';
 
 const RESULT_NO_TEXTURE = {
 	image: '',

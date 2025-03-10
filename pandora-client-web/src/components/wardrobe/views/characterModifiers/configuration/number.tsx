@@ -1,5 +1,5 @@
 import { GetLogger, type ModifierConfigurationEntryDefinition } from 'pandora-common';
-import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/dist/gameLogic/characterModifiers/helpers/configurationBuilder';
+import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/dist/gameLogic/characterModifiers/helpers/configurationBuilder.js';
 import type { ReactElement } from 'react';
 import { useId, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -7,9 +7,9 @@ import type { Promisable } from 'type-fest';
 import { useAsyncEvent } from '../../../../../common/useEvent';
 import { NumberInput } from '../../../../../common/userInteraction/input/numberInput';
 import { TOAST_OPTIONS_ERROR } from '../../../../../persistentToast';
-import { Button } from '../../../../common/button/button';
-import { Row } from '../../../../common/container/container';
-import { FieldsetToggle } from '../../../../common/fieldsetToggle';
+import { Button } from '../../../../common/button/button.tsx';
+import { Row } from '../../../../common/container/container.tsx';
+import { FieldsetToggle } from '../../../../common/fieldsetToggle/index.tsx';
 
 export function WardrobeCharacterModifierConfigNumber({ definition, value, onChange }: {
 	definition: ModifierConfigurationEntryDefinition<'number'>;

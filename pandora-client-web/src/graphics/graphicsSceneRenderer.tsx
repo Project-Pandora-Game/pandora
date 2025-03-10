@@ -1,15 +1,15 @@
 import { Assert, AssertNotNullable, GetLogger, Rectangle } from 'pandora-common';
-import { type Application, Container } from 'pixi.js';
+import { Container, type Application } from 'pixi.js';
 import React, { Context, ReactElement, ReactNode } from 'react';
-import { CalculationQueue } from '../common/calculationQueue';
-import { ChildrenProps } from '../common/reactTypes';
-import { useErrorHandler } from '../common/useErrorHandler';
-import { ForwardingErrorBoundary } from '../components/error/forwardingErrorBoundary';
-import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
-import { GetApplicationManager, ReleaseApplicationManager, type GraphicsApplicationManager } from './graphicsAppManager';
-import { DEFAULT_BACKGROUND_COLOR } from './graphicsScene';
-import { PixiAppContext } from './reconciler/appContext';
-import { CreatePixiRoot, type PixiRoot } from './reconciler/reconciler';
+import { CalculationQueue } from '../common/calculationQueue.ts';
+import { ChildrenProps } from '../common/reactTypes.ts';
+import { useErrorHandler } from '../common/useErrorHandler.ts';
+import { ForwardingErrorBoundary } from '../components/error/forwardingErrorBoundary.tsx';
+import { LocalErrorBoundary } from '../components/error/localErrorBoundary.tsx';
+import { GetApplicationManager, ReleaseApplicationManager, type GraphicsApplicationManager } from './graphicsAppManager.ts';
+import { DEFAULT_BACKGROUND_COLOR } from './graphicsScene.tsx';
+import { PixiAppContext } from './reconciler/appContext.ts';
+import { CreatePixiRoot, type PixiRoot } from './reconciler/reconciler.ts';
 
 export interface GraphicsSceneRendererProps extends ChildrenProps {
 	container: HTMLDivElement;

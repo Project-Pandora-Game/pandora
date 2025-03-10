@@ -1,5 +1,5 @@
 import { diffString } from 'json-diff';
-import _, { omit, pick } from 'lodash';
+import { isEqual, omit, pick } from 'lodash-es';
 import {
 	AccountId,
 	AssertNever,
@@ -17,10 +17,10 @@ import {
 	SpaceDirectoryConfig,
 	SpaceId,
 } from 'pandora-common';
-import { assetManager } from '../assets/assetManager';
-import { GetDatabase } from '../database/databaseProvider';
-import { DirectoryConnector } from '../networking/socketio_directory_connector';
-import { Space } from './space';
+import { assetManager } from '../assets/assetManager.ts';
+import { GetDatabase } from '../database/databaseProvider.ts';
+import { DirectoryConnector } from '../networking/socketio_directory_connector.ts';
+import { Space } from './space.ts';
 
 export class PublicSpace extends Space {
 	private readonly data: IShardSpaceDefinition;
@@ -182,7 +182,7 @@ export class PublicSpace extends Space {
 			return null;
 		}
 		const spaceWithoutDbData = omit(space, '_id');
-		if (!_.isEqual(result.data, spaceWithoutDbData)) {
+		if (!isEqual(result.data, spaceWithoutDbData)) {
 			const diff = diffString(spaceWithoutDbData, result.data, { color: false });
 			GetLogger('Space').warning(`Space ${id} has invalid data, fixing...\n`, diff);
 			await GetDatabase().setSpaceData(id, pick(result.data, SPACE_SHARD_UPDATEABLE_PROPERTIES), accessId);

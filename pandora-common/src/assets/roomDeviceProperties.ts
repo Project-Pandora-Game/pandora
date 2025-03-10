@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
-import type { AssetDefinitionExtraArgs } from './definitions';
-import type { AssetProperties } from './properties';
+import type { AssetDefinitionExtraArgs } from './definitions.ts';
+import type { AssetProperties } from './properties.ts';
 
 export interface RoomDeviceProperties<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
 	/**

@@ -1,6 +1,6 @@
 import classNames from 'classnames';
-import React, { useReducer, ReactNode } from 'react';
-import { useEvent } from '../../../common/useEvent';
+import React, { ReactNode, useReducer } from 'react';
+import { useEvent } from '../../../common/useEvent.ts';
 import './fieldsetToggle.scss';
 
 type FieldsetToggleProps = {

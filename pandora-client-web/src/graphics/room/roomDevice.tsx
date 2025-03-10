@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { throttle } from 'lodash';
+import { throttle } from 'lodash-es';
 import {
 	AssertNever,
 	AssetFrameworkCharacterState,
@@ -19,30 +19,30 @@ import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, ReactNode, useCallback, useMemo, useRef } from 'react';
 import { z } from 'zod';
-import { useImageResolutionAlternative } from '../../assets/assetGraphicsCalculations';
-import { GraphicsManagerInstance } from '../../assets/graphicsManager';
-import { BrowserStorage } from '../../browserStorage';
-import { Character } from '../../character/character';
-import { ChildrenProps } from '../../common/reactTypes';
-import { useAsyncEvent, useEvent } from '../../common/useEvent';
-import { useCharacterRestrictionsManager, useSpaceCharacters, type GameState } from '../../components/gameContext/gameStateContextProvider';
-import { LIVE_UPDATE_THROTTLE } from '../../config/Environment';
-import { useObservable } from '../../observable';
-import { useRoomScreenContext } from '../../ui/screens/room/roomContext';
-import { useDebugConfig } from '../../ui/screens/room/roomDebug';
-import { useStandaloneConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
-import { Container } from '../baseComponents/container';
-import { Graphics } from '../baseComponents/graphics';
-import { Sprite } from '../baseComponents/sprite';
-import type { TransitionedContainerCustomProps } from '../common/transitions/transitionedContainer';
-import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
-import { MASK_SIZE, SwapCullingDirection, useItemColor } from '../graphicsLayer';
-import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings';
-import { MovementHelperGraphics } from '../movementHelper';
-import { useTexture } from '../useTexture';
-import { EvaluateCondition } from '../utility';
-import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, useRoomCharacterOffsets } from './roomCharacter';
-import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
+import { useImageResolutionAlternative } from '../../assets/assetGraphicsCalculations.ts';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
+import { BrowserStorage } from '../../browserStorage.ts';
+import { Character } from '../../character/character.ts';
+import { ChildrenProps } from '../../common/reactTypes.ts';
+import { useAsyncEvent, useEvent } from '../../common/useEvent.ts';
+import { useCharacterRestrictionsManager, useSpaceCharacters, type GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
+import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
+import { useObservable } from '../../observable.ts';
+import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
+import { useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
+import { useStandaloneConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { Container } from '../baseComponents/container.ts';
+import { Graphics } from '../baseComponents/graphics.ts';
+import { Sprite } from '../baseComponents/sprite.ts';
+import type { TransitionedContainerCustomProps } from '../common/transitions/transitionedContainer.ts';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter.tsx';
+import { MASK_SIZE, SwapCullingDirection, useItemColor } from '../graphicsLayer.tsx';
+import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
+import { MovementHelperGraphics } from '../movementHelper.tsx';
+import { useTexture } from '../useTexture.ts';
+import { EvaluateCondition } from '../utility.ts';
+import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, useRoomCharacterOffsets } from './roomCharacter.tsx';
+import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene.tsx';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
 const DEVICE_WAIT_DRAG_THRESHOLD = 400; // ms

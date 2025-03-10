@@ -12,11 +12,11 @@ import type {
 	SpaceId,
 } from 'pandora-common';
 import { ServiceInit } from 'pandora-common';
-import { ENV } from '../config';
-import { DatabaseAccountContact, DatabaseAccountContactType, DatabaseAccountSecure, DatabaseAccountUpdate, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DirectMessageAccounts, type DatabaseCharacterSelfInfo, type DatabaseDirectMessage, type DatabaseDirectMessageAccounts } from './databaseStructure';
-import type { SpaceCreationData } from './dbHelper';
-import { MockDatabase } from './mockDb';
-import MongoDatabase from './mongoDb';
+import { ENV } from '../config.ts';
+import { DatabaseAccountContact, DatabaseAccountContactType, DatabaseAccountSecure, DatabaseAccountUpdate, DatabaseAccountWithSecure, DatabaseConfigData, DatabaseConfigType, DatabaseDirectMessageInfo, DirectMessageAccounts, type DatabaseCharacterSelfInfo, type DatabaseDirectMessage, type DatabaseDirectMessageAccounts } from './databaseStructure.ts';
+import type { SpaceCreationData } from './dbHelper.ts';
+import { MockDatabase } from './mockDb.ts';
+import MongoDatabase from './mongoDb.ts';
 const { DATABASE_TYPE } = ENV;
 
 export interface PandoraDatabase extends ServerService {

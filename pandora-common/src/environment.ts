@@ -6,8 +6,8 @@ import {
 	ZodNumber,
 	type ZodTypeAny,
 } from 'zod';
-import { IsObject, ZodTemplateString } from './validation';
-import { GetLogger } from './logging';
+import { IsObject, ZodTemplateString } from './validation.ts';
+import { GetLogger } from './logging.ts';
 
 declare const process: Record<string, Record<string, unknown>>;
 

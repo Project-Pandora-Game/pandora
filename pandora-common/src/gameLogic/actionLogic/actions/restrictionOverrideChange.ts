@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import type { RestrictionOverride } from '../../../assets';
-import { Assert } from '../../../utility';
-import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
-import type { AppearanceActionHandlerArg } from './_common';
+import type { RestrictionOverride } from '../../../assets/index.ts';
+import { Assert } from '../../../utility/index.ts';
+import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
+import type { AppearanceActionHandlerArg } from './_common.ts';
 
 export const AppearanceActionRestrictionOverrideChange = z.object({
 	type: z.literal('restrictionOverrideChange'),

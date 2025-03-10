@@ -10,7 +10,7 @@
 		],
 		"jsx": "react-jsx",
 		"module": "ESNext",
-		"noEmit": false,
+		"moduleResolution": "bundler",
 		"target": "ES6"
 	},
 	"include": ["./src/**/*"],

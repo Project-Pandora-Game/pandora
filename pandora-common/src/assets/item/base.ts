@@ -2,21 +2,21 @@ import type { Immutable } from 'immer';
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
 
-import type { CharacterId } from '../../character';
-import type { LockDataBundle } from '../../gameLogic/locks/lockData';
-import type { Satisfies } from '../../utility/misc';
-import type { Asset } from '../asset';
-import type { AssetManager } from '../assetManager';
-import type { AssetId } from '../base';
-import type { AssetColorization, AssetType, WearableAssetType } from '../definitions';
-import type { ItemModuleData, ItemModuleTemplate } from '../modules';
-import type { AssetFrameworkRoomState } from '../state/roomState';
-import type { InternalItemTypeMap, ItemBase } from './_internal';
-import type { RoomDeviceBundle } from './roomDevice';
-import type { RoomDeviceLink } from './roomDeviceWearablePart';
+import type { CharacterId } from '../../character/index.ts';
+import type { LockDataBundle } from '../../gameLogic/locks/lockData.ts';
+import type { Satisfies } from '../../utility/misc.ts';
+import type { Asset } from '../asset.ts';
+import type { AssetManager } from '../assetManager.ts';
+import type { AssetId } from '../base.ts';
+import type { AssetColorization, AssetType, WearableAssetType } from '../definitions.ts';
+import type { ItemModuleData, ItemModuleTemplate } from '../modules.ts';
+import type { AssetFrameworkRoomState } from '../state/roomState.ts';
+import type { InternalItemTypeMap, ItemBase } from './_internal.ts';
+import type { RoomDeviceBundle } from './roomDevice.ts';
+import type { RoomDeviceLink } from './roomDeviceWearablePart.ts';
 
-import { Logger } from '../../logging';
-import { HexRGBAColorString, HexRGBAColorStringSchema, ZodTemplateString } from '../../validation';
+import { Logger } from '../../logging.ts';
+import { HexRGBAColorString, HexRGBAColorStringSchema, ZodTemplateString } from '../../validation.ts';
 
 export const ItemIdSchema = ZodTemplateString<`i/${string}`>(z.string(), /^i\//);
 export type ItemId = z.infer<typeof ItemIdSchema>;

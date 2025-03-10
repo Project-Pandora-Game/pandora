@@ -3,9 +3,9 @@ import { FormEvent, useState } from 'react';
 import { FieldErrors, UseFormRegister, useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
 import type { Promisable } from 'type-fest';
-import { useLogin } from '../../../networking/account_manager';
-import { useNotificationPermissionCheck } from '../../gameContext/notificationProvider';
-import { useAuthFormData } from '../authFormDataProvider';
+import { useLogin } from '../../../networking/account_manager.ts';
+import { useNotificationPermissionCheck } from '../../gameContext/notificationProvider.tsx';
+import { useAuthFormData } from '../authFormDataProvider.tsx';
 
 const logger = GetLogger('useLoginForm');
 

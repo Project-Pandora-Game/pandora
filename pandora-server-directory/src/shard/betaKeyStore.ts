@@ -1,10 +1,10 @@
 import { customAlphabet } from 'nanoid';
 import { GetLogger, type IBetaKeyInfo, type IClientDirectoryArgument } from 'pandora-common';
-import { ENV } from '../config';
+import type { ActorIdentity } from '../account/actorIdentity.ts';
+import { ENV } from '../config.ts';
+import { GetDatabase } from '../database/databaseProvider.ts';
+import { TokenStoreBase } from './tokenStoreBase.ts';
 const { BETA_KEY_GLOBAL } = ENV;
-import { GetDatabase } from '../database/databaseProvider';
-import { TokenStoreBase } from './tokenStoreBase';
-import type { ActorIdentity } from '../account/actorIdentity';
 
 const TOKEN_ID_LENGTH = 8;
 const TOKEN_SECRET_LENGTH = 8;

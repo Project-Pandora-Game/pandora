@@ -1,17 +1,17 @@
 /* eslint-disable react/forbid-elements */
 import { Immutable } from 'immer';
 import { AssetDefinition, AssetModuleDefinition, ModuleType } from 'pandora-common';
-import { EFFECTS_DEFAULT, EffectsDefinition } from 'pandora-common/dist/assets/effects';
-import { IModuleConfigCommon } from 'pandora-common/dist/assets/modules/common';
-import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/dist/assets/modules/typed';
+import { EFFECTS_DEFAULT, EffectsDefinition } from 'pandora-common/dist/assets/effects.js';
+import { IModuleConfigCommon } from 'pandora-common/dist/assets/modules/common.js';
+import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/dist/assets/modules/typed.js';
 import { ReactElement, useId, useMemo } from 'react';
-import { useGraphicsAsset } from '../../../assets/assetGraphicsCalculations';
-import { Row } from '../../../components/common/container/container';
-import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
-import { StripAssetIdPrefix } from '../../../graphics/utility';
-import { useObservable } from '../../../observable';
-import { useEditor } from '../../editorContextProvider';
-import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor';
+import { useGraphicsAsset } from '../../../assets/assetGraphicsCalculations.ts';
+import { Row } from '../../../components/common/container/container.tsx';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.tsx';
+import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
+import { useObservable } from '../../../observable.ts';
+import { useEditor } from '../../editorContextProvider.tsx';
+import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor.ts';
 
 export function AssetInfoUI(): ReactElement {
 	const editor = useEditor();

@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
-import { LockDataBundleSchema, type LockSetup } from '../locks';
+import { LockDataBundleSchema, type LockSetup } from '../locks/index.ts';
 import { z } from 'zod';
-import { KnownObject, ParseArrayNotEmpty } from '../../utility';
+import { KnownObject, ParseArrayNotEmpty } from '../../utility/index.ts';
 
 export interface CharacterModifierLockDefinition {
 	name: string;

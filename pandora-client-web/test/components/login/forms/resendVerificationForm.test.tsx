@@ -1,9 +1,9 @@
 import { screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { ResendVerificationForm } from '../../../../src/components/login/forms/resendVerificationForm';
-import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
-import { RenderWithRouterAndProviders } from '../../../testUtils';
-import { INVALID_EMAILS } from '../loginTestData';
+import { ResendVerificationForm } from '../../../../src/components/login/forms/resendVerificationForm.tsx';
+import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils.ts';
+import { RenderWithRouterAndProviders } from '../../../testUtils.tsx';
+import { INVALID_EMAILS } from '../loginTestData.ts';
 
 describe('Resend Verification Email Form', () => {
 	let user: ReturnType<typeof userEvent.setup>;

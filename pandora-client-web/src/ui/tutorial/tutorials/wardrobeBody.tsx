@@ -1,6 +1,6 @@
 import { BONE_MAX, BONE_MIN } from 'pandora-common';
-import { ExternalLink } from '../../../components/common/link/externalLink';
-import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
+import { ExternalLink } from '../../../components/common/link/externalLink.tsx';
+import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
 export const TUTORIAL_WARDROBE_BODY: TutorialConfig = {
 	id: 'wardrobeBody',

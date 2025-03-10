@@ -1,4 +1,5 @@
-import { PseudoRandom } from '../../src/math/pseudoRandom';
+import { describe, expect, it } from '@jest/globals';
+import { PseudoRandom } from '../../src/math/pseudoRandom.ts';
 
 describe('PseudoRandom', () => {
 	describe('random()', () => {

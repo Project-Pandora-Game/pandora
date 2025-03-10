@@ -1,7 +1,7 @@
 import Delaunator from 'delaunator';
 import { CharacterSize, Rectangle, Size } from 'pandora-common';
 import { Application, Container, Matrix, Mesh, MeshGeometry, RenderTexture, Texture } from 'pixi.js';
-import { AssertDataString, DataString } from '../../../common/downloadHelper';
+import { AssertDataString, DataString } from '../../../common/downloadHelper.ts';
 
 type ImageFormat = 'png' | 'jpg' | 'webp';
 

@@ -1,4 +1,4 @@
-import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
+import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
 export const TUTORIAL_WARDROBE_ITEMS: TutorialConfig = {
 	id: 'wardrobeItems',

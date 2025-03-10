@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { noop, uniq } from 'lodash';
+import { noop, uniq } from 'lodash-es';
 import {
 	AccountId,
 	AssertNever,
@@ -33,35 +33,35 @@ import {
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
-import { CopyToClipboard } from '../../../common/clipboard';
-import { useCurrentTime } from '../../../common/useCurrentTime';
-import { useAsyncEvent } from '../../../common/useEvent';
-import { Checkbox } from '../../../common/userInteraction/checkbox';
-import { NumberInput } from '../../../common/userInteraction/input/numberInput';
-import { TextInput } from '../../../common/userInteraction/input/textInput';
-import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus';
-import { Select } from '../../../common/userInteraction/select/select';
-import { Button } from '../../../components/common/button/button';
-import { ColorInput } from '../../../components/common/colorInput/colorInput';
-import { Column, Row } from '../../../components/common/container/container';
-import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
-import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator';
-import { Tab, TabContainer } from '../../../components/common/tabs/tabs';
-import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
+import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager.tsx';
+import { CopyToClipboard } from '../../../common/clipboard.ts';
+import { useCurrentTime } from '../../../common/useCurrentTime.ts';
+import { useAsyncEvent } from '../../../common/useEvent.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
+import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus.ts';
+import { Select } from '../../../common/userInteraction/select/select.tsx';
+import { Button } from '../../../components/common/button/button.tsx';
+import { ColorInput } from '../../../components/common/colorInput/colorInput.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.tsx';
+import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
+import { Tab, TabContainer } from '../../../components/common/tabs/tabs.tsx';
+import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog.tsx';
 import {
 	useDirectoryChangeListener,
 	useDirectoryConnector,
-} from '../../../components/gameContext/directoryConnectorContextProvider';
-import { IsSpaceAdmin, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
-import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs';
+} from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
+import { IsSpaceAdmin, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs.tsx';
 import bodyChange from '../../../icons/body-change.svg';
 import devMode from '../../../icons/developer.svg';
 import pronounChange from '../../../icons/male-female.svg';
-import { DirectoryConnector } from '../../../networking/directoryConnector';
-import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
+import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
+import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import './spaceConfiguration.scss';
 
 export const DESCRIPTION_TEXTBOX_SIZE = 16;

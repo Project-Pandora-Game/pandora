@@ -1,2 +1,2 @@
-export * from './characterModifierCondition';
-export * from './characterModifierConditionChain';
+export * from './characterModifierCondition.ts';
+export * from './characterModifierConditionChain.ts';

@@ -1,15 +1,15 @@
 import { nanoid } from 'nanoid';
 import { z } from 'zod';
-import { CharacterAppearanceLoadAndValidate, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from '../../../assets/appearanceValidation';
-import type { Asset } from '../../../assets/asset';
-import type { WearableAssetType } from '../../../assets/definitions';
-import { FilterItemWearable, type Item } from '../../../assets/item/base';
-import { CreateAssetPropertiesResult, MergeAssetProperties } from '../../../assets/properties';
-import { ItemInteractionType } from '../../../character/restrictionTypes';
-import { PseudoRandom } from '../../../math';
-import { SampleArray, ShuffleArray } from '../../../utility';
-import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
-import type { AppearanceActionHandlerArg } from './_common';
+import { CharacterAppearanceLoadAndValidate, ValidateAppearanceItems, ValidateAppearanceItemsPrefix } from '../../../assets/appearanceValidation.ts';
+import type { Asset } from '../../../assets/asset.ts';
+import type { WearableAssetType } from '../../../assets/definitions.ts';
+import { FilterItemWearable, type Item } from '../../../assets/item/base.ts';
+import { CreateAssetPropertiesResult, MergeAssetProperties } from '../../../assets/properties.ts';
+import { ItemInteractionType } from '../../../character/restrictionTypes.ts';
+import { PseudoRandom } from '../../../math/index.ts';
+import { SampleArray, ShuffleArray } from '../../../utility/index.ts';
+import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
+import type { AppearanceActionHandlerArg } from './_common.ts';
 
 export const AppearanceActionRandomize = z.object({
 	type: z.literal('randomize'),

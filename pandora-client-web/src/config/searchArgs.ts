@@ -1,8 +1,8 @@
 import { GetLogger, LogLevel } from 'pandora-common';
-import { USER_DEBUG } from './Environment';
-import { BrowserStorage } from '../browserStorage';
 import { z } from 'zod';
-import { Observable } from '../observable';
+import { BrowserStorage } from '../browserStorage.ts';
+import { Observable } from '../observable.ts';
+import { USER_DEBUG } from './Environment.ts';
 
 /** Log level to use for logging to console, set by combination of build mode and URL arguments */
 export const ConfigLogLevel: Observable<LogLevel> = BrowserStorage.createSession(

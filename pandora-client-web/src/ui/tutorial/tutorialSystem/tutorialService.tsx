@@ -1,10 +1,10 @@
 import { useCallback, useEffect, type ReactElement } from 'react';
-import { Observable, useObservable } from '../../../observable';
-import { useAccountSettings, useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
-import { TUTORIAL_TUTORIALS } from '../tutorials/tutorials';
-import { ActiveTutorialUi } from './activeTutorialUi';
-import type { TutorialConfig } from './tutorialConfig';
-import { TutorialRunner } from './tutorialRunner';
+import { Observable, useObservable } from '../../../observable.ts';
+import { useAccountSettings, useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { TUTORIAL_TUTORIALS } from '../tutorials/tutorials.tsx';
+import { ActiveTutorialUi } from './activeTutorialUi.tsx';
+import type { TutorialConfig } from './tutorialConfig.ts';
+import { TutorialRunner } from './tutorialRunner.ts';
 
 export const ActiveTutorial = new Observable<null | TutorialRunner>(null);
 

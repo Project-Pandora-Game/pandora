@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { CharacterIdSchema } from '../../character/characterTypes';
+import { CharacterIdSchema } from '../../character/characterTypes.ts';
 
 export const LockDataBundleSchema = z.object({
 	locked: z.object({

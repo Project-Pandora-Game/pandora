@@ -1,6 +1,6 @@
-import type { Logger } from 'pandora-common';
-import type { IEmailSender } from '.';
 import type { Transporter } from 'nodemailer';
+import type { Logger } from 'pandora-common';
+import type { IEmailSender } from './index.ts';
 
 const ENVELOPE_FROM = 'game@project-pandora.com';
 

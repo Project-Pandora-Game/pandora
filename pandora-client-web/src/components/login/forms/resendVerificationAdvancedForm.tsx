@@ -3,12 +3,12 @@ import { ReactElement, useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FormInput } from '../../../common/userInteraction/input/formInput';
-import { useDirectoryResendVerificationAdvanced } from '../../../networking/account_manager';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
-import { Button } from '../../common/button/button';
-import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
-import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha';
+import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
+import { useDirectoryResendVerificationAdvanced } from '../../../networking/account_manager.ts';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
+import { Button } from '../../common/button/button.tsx';
+import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
+import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha.tsx';
 
 export interface ResendVerificationAdvancedFormData {
 	username: string;

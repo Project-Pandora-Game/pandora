@@ -1,5 +1,5 @@
 import React from 'react';
-import { useWrappedRef } from './useWrappedRef';
+import { useWrappedRef } from './useWrappedRef.ts';
 
 export function useTextFormattingOnKeyboardEvent(originalRef: React.ForwardedRef<HTMLTextAreaElement>): React.RefObject<HTMLTextAreaElement | null> {
 	const ref = useWrappedRef(originalRef);

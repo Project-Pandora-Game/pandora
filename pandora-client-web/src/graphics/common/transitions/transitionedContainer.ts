@@ -1,11 +1,11 @@
-import { omit } from 'lodash';
+import { omit } from 'lodash-es';
 import { KnownObject } from 'pandora-common';
 import { Container as PixiContainer, type Ticker } from 'pixi.js';
-import { CONTAINER_AUTO_PROPS, CONTAINER_EVENTS, type ContainerAutoProps, type ContainerEventMap } from '../../baseComponents/container';
-import { ParsePixiPointLike, RegisterPixiComponent, type DisplayObjectSpecialProps, type PixiDisplayObjectWriteableProps } from '../../reconciler/component';
-import { PixiElementRequestUpdate } from '../../reconciler/element';
-import type { TickerRef } from '../../reconciler/tick';
-import { MakeTransitionProcessorNumberWithModulo, TRANSITION_PROCESSOR_NUMBER, TransitionHandler } from './transitionHandler';
+import { CONTAINER_AUTO_PROPS, CONTAINER_EVENTS, type ContainerAutoProps, type ContainerEventMap } from '../../baseComponents/container.ts';
+import { ParsePixiPointLike, RegisterPixiComponent, type DisplayObjectSpecialProps, type PixiDisplayObjectWriteableProps } from '../../reconciler/component.ts';
+import { PixiElementRequestUpdate } from '../../reconciler/element.ts';
+import type { TickerRef } from '../../reconciler/tick.ts';
+import { MakeTransitionProcessorNumberWithModulo, TRANSITION_PROCESSOR_NUMBER, TransitionHandler } from './transitionHandler.ts';
 
 const TRANSITIONS = {
 	x: true,

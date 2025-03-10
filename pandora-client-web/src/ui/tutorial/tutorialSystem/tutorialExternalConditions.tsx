@@ -1,8 +1,8 @@
 import type { Immutable } from 'immer';
 import { useEffect } from 'react';
-import { useObservable } from '../../../observable';
-import type { IRoomContextMenuFocus, IRoomSceneMode } from '../../screens/room/roomContext';
-import { ActiveTutorial } from './tutorialService';
+import { useObservable } from '../../../observable.ts';
+import type { IRoomContextMenuFocus, IRoomSceneMode } from '../../screens/room/roomContext.tsx';
+import { ActiveTutorial } from './tutorialService.tsx';
 
 export interface TutorialFlags {
 	roomSceneMode: Immutable<IRoomSceneMode>;

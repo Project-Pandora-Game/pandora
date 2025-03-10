@@ -1,12 +1,12 @@
 import { AccountId, CharacterId, CharacterIdSchema } from 'pandora-common';
 import { ReactElement } from 'react';
 import { useParams } from 'react-router';
-import { Column } from '../common/container/container';
-import { BackLink, useNavigateBack } from '../common/link/back';
-import { Tab, TabContainer } from '../common/tabs/tabs';
-import { useSpaceCharacters } from '../gameContext/gameStateContextProvider';
-import { AccountProfile } from './accountProfile';
-import { CharacterProfile } from './characterProfile';
+import { Column } from '../common/container/container.tsx';
+import { BackLink, useNavigateBack } from '../common/link/back.tsx';
+import { Tab, TabContainer } from '../common/tabs/tabs.tsx';
+import { useSpaceCharacters } from '../gameContext/gameStateContextProvider.tsx';
+import { AccountProfile } from './accountProfile.tsx';
+import { CharacterProfile } from './characterProfile.tsx';
 import './profileScreens.scss';
 
 function CharacterProfileScreen({ characterId }: { characterId: CharacterId; }): ReactElement {

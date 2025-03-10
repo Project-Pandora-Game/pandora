@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
-import type { CharacterId } from '../character';
-import type { IChatSegment } from './chat';
+import type { CharacterId } from '../character/index.ts';
+import type { IChatSegment } from './chat.ts';
 
 export interface ChatMessageFilter {
 	isActive(): boolean;

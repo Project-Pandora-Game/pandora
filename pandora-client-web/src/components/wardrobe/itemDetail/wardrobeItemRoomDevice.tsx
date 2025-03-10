@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import _ from 'lodash';
+import { throttle } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import {
 	CharacterId,
@@ -10,19 +10,19 @@ import {
 	RoomDeviceSlot,
 } from 'pandora-common';
 import { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react';
-import { ICharacter } from '../../../character/character';
-import { NumberInput } from '../../../common/userInteraction/input/numberInput';
-import { Select } from '../../../common/userInteraction/select/select';
-import { useUpdatedUserInput } from '../../../common/useSyncUserInput';
-import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment';
-import { Column, Row } from '../../common/container/container';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
-import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider';
-import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
-import { useWardrobeActionContext, useWardrobeExecuteCallback } from '../wardrobeActionContext';
-import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
-import { WardrobeActionButton } from '../wardrobeComponents';
-import { WardrobeContextSelectRoomInventoryProvider, useWardrobeContext } from '../wardrobeContext';
+import { ICharacter } from '../../../character/character.ts';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
+import { Select } from '../../../common/userInteraction/select/select.tsx';
+import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
+import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
+import { Column, Row } from '../../common/container/container.tsx';
+import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
+import { useSpaceCharacters } from '../../gameContext/gameStateContextProvider.tsx';
+import { WardrobeModuleConfig } from '../modules/_wardrobeModules.tsx';
+import { useWardrobeActionContext, useWardrobeExecuteCallback } from '../wardrobeActionContext.tsx';
+import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue.ts';
+import { WardrobeActionButton } from '../wardrobeComponents.tsx';
+import { WardrobeContextSelectRoomInventoryProvider, useWardrobeContext } from '../wardrobeContext.tsx';
 
 export function WardrobeRoomDeviceDeployment({ roomDevice, item }: {
 	roomDevice: Item<'roomDevice'>;
@@ -95,7 +95,7 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 			deployment: { deployed: true, position: newPosition },
 		});
 	}, [execute, targetSelector, item]);
-	const onChangeCallerThrottled = useMemo(() => _.throttle(onChangeCaller, LIVE_UPDATE_THROTTLE), [onChangeCaller]);
+	const onChangeCallerThrottled = useMemo(() => throttle(onChangeCaller, LIVE_UPDATE_THROTTLE), [onChangeCaller]);
 
 	const changeCallback = useCallback((positionChange: Partial<RoomDeviceDeploymentPosition>) => {
 		const newPosition: Immutable<RoomDeviceDeploymentPosition> = {

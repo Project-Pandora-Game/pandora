@@ -7,21 +7,21 @@ import {
 	SplitContainerPath,
 	type ActionTargetSelector,
 } from 'pandora-common';
-import { IItemModule } from 'pandora-common/dist/assets/modules/common';
-import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
+import { IItemModule } from 'pandora-common/dist/assets/modules/common.js';
+import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
 import { ReactElement, useCallback, useMemo } from 'react';
-import { useAssetManager } from '../../assets/assetManager';
-import { useObservable } from '../../observable';
-import { Tab, TabContainer } from '../common/tabs/tabs';
-import { WardrobeItemConfigMenu } from './itemDetail/_wardrobeItemDetail';
-import { WardrobeTemplateEditMenu } from './templateDetail/_wardrobeTemplateDetail';
-import { InventoryAssetView } from './views/wardrobeAssetView';
-import { InventoryItemView } from './views/wardrobeItemView';
-import { InventoryOutfitView } from './views/wardrobeOutfitView';
-import { SecondaryInventoryView } from './views/wardrobeSecondaryInventoryView';
-import { useWardrobeContext } from './wardrobeContext';
-import { WardrobeFocus } from './wardrobeTypes';
-import { WardrobeFocusesItem, useWardrobeTargetItem, useWardrobeTargetItems } from './wardrobeUtils';
+import { useAssetManager } from '../../assets/assetManager.tsx';
+import { useObservable } from '../../observable.ts';
+import { Tab, TabContainer } from '../common/tabs/tabs.tsx';
+import { WardrobeItemConfigMenu } from './itemDetail/_wardrobeItemDetail.tsx';
+import { WardrobeTemplateEditMenu } from './templateDetail/_wardrobeTemplateDetail.tsx';
+import { InventoryAssetView } from './views/wardrobeAssetView.tsx';
+import { InventoryItemView } from './views/wardrobeItemView.tsx';
+import { InventoryOutfitView } from './views/wardrobeOutfitView.tsx';
+import { SecondaryInventoryView } from './views/wardrobeSecondaryInventoryView.tsx';
+import { useWardrobeContext } from './wardrobeContext.tsx';
+import { WardrobeFocus } from './wardrobeTypes.ts';
+import { WardrobeFocusesItem, useWardrobeTargetItem, useWardrobeTargetItems } from './wardrobeUtils.ts';
 
 /** This hook doesn't generate or use a global state and shouldn't be used recursively */
 export function useWardrobeItems(currentFocus: Immutable<WardrobeFocus>): {

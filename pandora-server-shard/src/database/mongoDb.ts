@@ -1,18 +1,18 @@
 import {
 	CharacterId,
-	ICharacterData,
 	GetLogger,
-	SpaceId,
+	ICharacterData,
+	ICharacterDataShardUpdate,
 	SpaceData,
 	SpaceDataShardUpdate,
-	ICharacterDataShardUpdate,
+	SpaceId,
 } from 'pandora-common';
-import type { ShardDatabase } from './databaseProvider';
-import { ENV } from '../config';
+import { ENV } from '../config.ts';
+import type { ShardDatabase } from './databaseProvider.ts';
 const { DATABASE_URL, DATABASE_NAME } = ENV;
 
+import type { Collection, Db } from 'mongodb';
 import { MongoClient } from 'mongodb';
-import type { Db, Collection } from 'mongodb';
 
 const logger = GetLogger('db');
 

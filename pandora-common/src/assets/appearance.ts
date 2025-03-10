@@ -1,20 +1,20 @@
-import type { CharacterId } from '../character/characterTypes';
-import { CharacterRestrictionsManager } from '../character/restrictionsManager';
-import type { GameLogicCharacter } from '../gameLogic/character/character';
-import type { ActionSpaceContext } from '../space/space';
-import { Assert } from '../utility/misc';
-import { EvalItemPath } from './appearanceHelpers';
-import type { ActionTargetCharacter, ItemPath } from './appearanceTypes';
-import type { AppearanceItems } from './appearanceValidation';
-import type { AssetManager } from './assetManager';
-import type { AssetId } from './base';
-import type { WearableAssetType } from './definitions';
-import type { CharacterView } from './graphics';
-import type { Item } from './item';
-import type { AssetFrameworkCharacterState } from './state/characterState';
-import type { CharacterArmsPose } from './state/characterStatePose';
-import type { RestrictionOverride } from './state/characterStateTypes';
-import type { AssetFrameworkGlobalState } from './state/globalState';
+import type { CharacterId } from '../character/characterTypes.ts';
+import { CharacterRestrictionsManager } from '../character/restrictionsManager.ts';
+import type { GameLogicCharacter } from '../gameLogic/character/character.ts';
+import type { ActionSpaceContext } from '../space/space.ts';
+import { Assert } from '../utility/misc.ts';
+import { EvalItemPath } from './appearanceHelpers.ts';
+import type { ActionTargetCharacter, ItemPath } from './appearanceTypes.ts';
+import type { AppearanceItems } from './appearanceValidation.ts';
+import type { AssetManager } from './assetManager.ts';
+import type { AssetId } from './base.ts';
+import type { WearableAssetType } from './definitions.ts';
+import type { CharacterView } from './graphics/index.ts';
+import type { Item } from './item/index.ts';
+import type { AssetFrameworkCharacterState } from './state/characterState.ts';
+import type { CharacterArmsPose } from './state/characterStatePose.ts';
+import type { RestrictionOverride } from './state/characterStateTypes.ts';
+import type { AssetFrameworkGlobalState } from './state/globalState.ts';
 
 /**
  * A helper wrapper around a global state that allows easy access and manipulation of specific character.

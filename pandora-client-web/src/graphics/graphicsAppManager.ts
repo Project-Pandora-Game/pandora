@@ -1,8 +1,8 @@
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import { GetLogger, TypedEventEmitter } from 'pandora-common';
 import { Application, ApplicationOptions } from 'pixi.js';
-import { DestroyGraphicsLoader } from '../assets/assetManager';
-import { USER_DEBUG } from '../config/Environment';
+import { DestroyGraphicsLoader } from '../assets/assetManager.tsx';
+import { USER_DEBUG } from '../config/Environment.ts';
 
 const SHARED_APP_MAX_COUNT = 2;
 

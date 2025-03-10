@@ -1,11 +1,11 @@
-import { uniq } from 'lodash';
+import { uniq } from 'lodash-es';
 import { CompareCharacterIds, LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT, type CharacterId, type ModifierConfigurationEntryDefinition } from 'pandora-common';
-import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/dist/gameLogic/characterModifiers/helpers/configurationBuilder';
+import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/dist/gameLogic/characterModifiers/helpers/configurationBuilder.js';
 import type { ReactElement } from 'react';
 import { useMemo } from 'react';
 import type { Promisable } from 'type-fest';
-import { CharacterListInput } from '../../../../common/characterListInput/characterListInput';
-import { FieldsetToggle } from '../../../../common/fieldsetToggle';
+import { CharacterListInput } from '../../../../common/characterListInput/characterListInput.tsx';
+import { FieldsetToggle } from '../../../../common/fieldsetToggle/index.tsx';
 
 export function WardrobeCharacterModifierConfigCharacterList({ definition, value, onChange }: {
 	definition: ModifierConfigurationEntryDefinition<'characterList'>;

@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { CharacterSelectorSchema } from '../../../assets/appearanceTypes';
-import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
-import type { AppearanceActionHandlerArg } from './_common';
+import { CharacterSelectorSchema } from '../../../assets/appearanceTypes.ts';
+import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
+import type { AppearanceActionHandlerArg } from './_common.ts';
 
 export const AppearanceActionAttemptInterruptSchema = z.object({
 	type: z.literal('actionAttemptInterrupt'),

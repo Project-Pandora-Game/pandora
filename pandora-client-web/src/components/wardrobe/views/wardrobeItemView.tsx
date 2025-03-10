@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import {
 	ActionTargetSelector,
 	AppearanceAction,
@@ -19,22 +19,22 @@ import {
 	ItemPath,
 	SplitContainerPath,
 } from 'pandora-common';
-import { IItemModule } from 'pandora-common/dist/assets/modules/common';
-import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
+import { IItemModule } from 'pandora-common/dist/assets/modules/common.js';
+import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
 import React, { ReactElement, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
-import { useItemColorRibbon } from '../../../graphics/graphicsLayer';
-import { useObservable } from '../../../observable';
-import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
-import { Button } from '../../common/button/button';
-import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
-import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobeItemName';
-import { useWardrobeActionContext } from '../wardrobeActionContext';
-import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents';
-import { useWardrobeContext } from '../wardrobeContext';
-import { WardrobeHeldItem } from '../wardrobeTypes';
-import { useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils';
+import { useItemColorRibbon } from '../../../graphics/graphicsLayer.tsx';
+import { useObservable } from '../../../observable.ts';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { Button } from '../../common/button/button.tsx';
+import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider.tsx';
+import { ResolveItemDisplayName, WardrobeItemName } from '../itemDetail/wardrobeItemName.tsx';
+import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
+import { InventoryAssetPreview, StorageUsageMeter, WardrobeActionButton, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
+import { useWardrobeContext } from '../wardrobeContext.tsx';
+import { WardrobeHeldItem } from '../wardrobeTypes.ts';
+import { useWardrobeTargetItem, useWardrobeTargetItems } from '../wardrobeUtils.ts';
 
 export function InventoryItemView({
 	className,

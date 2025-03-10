@@ -20,17 +20,17 @@ import deleteIcon from '../../../../assets/icons/delete.svg';
 import closedLock from '../../../../assets/icons/lock_closed.svg';
 import emptyLock from '../../../../assets/icons/lock_empty.svg';
 import openLock from '../../../../assets/icons/lock_open.svg';
-import type { ICharacter } from '../../../../character/character';
-import { useAsyncEvent } from '../../../../common/useEvent';
-import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast';
-import { Button } from '../../../common/button/button';
-import { Column, Row } from '../../../common/container/container';
-import { ModalDialog } from '../../../dialog/dialog';
-import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProvider';
-import { useShardConnector } from '../../../gameContext/shardConnectorContextProvider';
-import { WardrobeLockLogicLocked, WardrobeLockLogicUnlocked, type WardrobeLockLogicExecuteButtonProps } from '../../views/wardrobeLockLogic';
-import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../../wardrobeActionContext';
-import { ActionWarningContent, WardrobeActionButtonElement } from '../../wardrobeComponents';
+import type { ICharacter } from '../../../../character/character.ts';
+import { useAsyncEvent } from '../../../../common/useEvent.ts';
+import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast.ts';
+import { Button } from '../../../common/button/button.tsx';
+import { Column, Row } from '../../../common/container/container.tsx';
+import { ModalDialog } from '../../../dialog/dialog.tsx';
+import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProvider.tsx';
+import { useShardConnector } from '../../../gameContext/shardConnectorContextProvider.tsx';
+import { WardrobeLockLogicLocked, WardrobeLockLogicUnlocked, type WardrobeLockLogicExecuteButtonProps } from '../../views/wardrobeLockLogic.tsx';
+import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../../wardrobeActionContext.tsx';
+import { ActionWarningContent, WardrobeActionButtonElement } from '../../wardrobeComponents.tsx';
 
 export interface WardrobeCharacterModifierLockProps {
 	character: ICharacter;

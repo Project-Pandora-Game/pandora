@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import _ from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import {
 	AppearanceAction,
 	AppearanceItems,
@@ -11,14 +11,14 @@ import {
 	Writeable,
 } from 'pandora-common';
 import { ReactElement, useMemo } from 'react';
-import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment';
-import { useItemColorString } from '../../../graphics/graphicsLayer';
-import { ColorInputRGBA } from '../../common/colorInput/colorInput';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
-import { useWardrobeExecuteCallback } from '../wardrobeActionContext';
-import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
-import { useWardrobeContext } from '../wardrobeContext';
-import { useWardrobeTargetItems } from '../wardrobeUtils';
+import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
+import { useItemColorString } from '../../../graphics/graphicsLayer.tsx';
+import { ColorInputRGBA } from '../../common/colorInput/colorInput.tsx';
+import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
+import { useWardrobeExecuteCallback } from '../wardrobeActionContext.tsx';
+import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue.ts';
+import { useWardrobeContext } from '../wardrobeContext.tsx';
+import { useWardrobeTargetItems } from '../wardrobeUtils.ts';
 
 export function WardrobeItemColorization({ wornItem, item }: {
 	wornItem: Item<'bodypart' | 'personal' | 'roomDevice'>;
@@ -90,7 +90,7 @@ function WardrobeColorInput({ colorKey, colorDefinition, allItems, overrideGroup
 				throttle={ LIVE_UPDATE_THROTTLE }
 				disabled={ disabled || !!overrideGroup }
 				onChange={ (color) => {
-					const newColor = _.cloneDeep<Writeable<typeof bundle>>(bundle);
+					const newColor = cloneDeep<Writeable<typeof bundle>>(bundle);
 					newColor[colorKey] = color;
 					execute({
 						...action,

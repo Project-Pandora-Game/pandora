@@ -5,11 +5,11 @@ export {
 	Assert,
 	AssertNever,
 	AssertNotNullable,
-} from 'pandora-common/dist/utility';
+} from 'pandora-common/dist/utility/index.js';
 
 export {
 	EnvStringify,
-} from 'pandora-common/dist/environment';
+} from 'pandora-common/dist/environment.js';
 
 /** Sleep for certain amount of milliseconds */
 export function Sleep(ms: number): Promise<void> {

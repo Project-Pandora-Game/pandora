@@ -1,10 +1,10 @@
 import { SpaceId, SpaceIdSchema, SpaceInviteId, SpaceInviteIdSchema, type SpaceExtendedInfoResponse } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { useLocation, useNavigate } from 'react-router';
-import { DivContainer } from '../../../components/common/container/container';
-import { ExternalLink, UntrustedLink } from '../../../components/common/link/externalLink';
-import { ModalDialog } from '../../../components/dialog/dialog';
-import { SpaceDetails, useSpaceExtendedInfo } from '../spacesSearch/spacesSearch';
+import { DivContainer } from '../../../components/common/container/container.tsx';
+import { ExternalLink, UntrustedLink } from '../../../components/common/link/externalLink.tsx';
+import { ModalDialog } from '../../../components/dialog/dialog.tsx';
+import { SpaceDetails, useSpaceExtendedInfo } from '../spacesSearch/spacesSearch.tsx';
 import './spaceJoin.scss';
 
 export function SpaceJoin(): ReactElement {

@@ -5,9 +5,9 @@ import {
 	type IDirectoryAccountInfo,
 } from 'pandora-common';
 import { useMemo } from 'react';
-import { useNullableObservable, useObservable } from '../../observable';
-import { useService, useServiceOptional } from '../serviceProvider';
-import type { AccountManager } from './accountManager';
+import { useNullableObservable, useObservable } from '../../observable.ts';
+import { useService, useServiceOptional } from '../serviceProvider.tsx';
+import type { AccountManager } from './accountManager.ts';
 
 export function useCurrentAccount(): IDirectoryAccountInfo | null {
 	const accountManager = useService('accountManager');

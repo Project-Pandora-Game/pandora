@@ -1,4 +1,4 @@
-import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
+import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
 // TODO: Space management
 // (create, delete, leave, enter, manage; while inside also note the difference between "Personal Space" tab and "Room" tab)

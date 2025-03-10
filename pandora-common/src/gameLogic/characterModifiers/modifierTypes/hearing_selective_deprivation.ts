@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
-import { HearingImpairment } from '../../../chat';
-import { PseudoRandom } from '../../../math';
-import { DefineCharacterModifier } from '../helpers/modifierDefinition';
+import { HearingImpairment } from '../../../chat/index.ts';
+import { PseudoRandom } from '../../../math/index.ts';
+import { DefineCharacterModifier } from '../helpers/modifierDefinition.ts';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const hearing_selective_deprivation = DefineCharacterModifier({

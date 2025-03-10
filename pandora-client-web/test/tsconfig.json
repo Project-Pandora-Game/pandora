@@ -11,6 +11,8 @@
 			"offscreencanvas"
 		],
 		"jsx": "react-jsxdev",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
 		"rootDir": ".."
 	},
 	"include": [

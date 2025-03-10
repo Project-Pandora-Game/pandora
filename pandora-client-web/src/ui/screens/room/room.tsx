@@ -1,21 +1,21 @@
 import { ReactElement } from 'react';
-import { DivContainer } from '../../../components/common/container/container';
-import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
-import { Tab, TabContainer } from '../../../components/common/tabs/tabs';
-import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
-import { usePlayerState } from '../../../components/gameContext/playerContextProvider';
-import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardrobeExpressionsView';
-import { WardrobePoseGui } from '../../../components/wardrobe/views/wardrobePoseView';
-import { WardrobeExternalContextProvider } from '../../../components/wardrobe/wardrobeContext';
-import { RoomScene } from '../../../graphics/room/roomScene';
-import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
-import { useIsPortrait } from '../../../styles/mediaQueries';
-import { Chat } from '../../components/chat/chat';
+import { DivContainer } from '../../../components/common/container/container.tsx';
+import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
+import { Tab, TabContainer } from '../../../components/common/tabs/tabs.tsx';
+import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
+import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardrobeExpressionsView.tsx';
+import { WardrobePoseGui } from '../../../components/wardrobe/views/wardrobePoseView.tsx';
+import { WardrobeExternalContextProvider } from '../../../components/wardrobe/wardrobeContext.tsx';
+import { RoomScene } from '../../../graphics/room/roomScene.tsx';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useIsPortrait } from '../../../styles/mediaQueries.ts';
+import { Chat } from '../../components/chat/chat.tsx';
 import './chatArea.scss';
 import './room.scss';
-import { RoomScreenContextProvider } from './roomContext';
-import { PersonalSpaceControls, RoomControls } from './roomControls';
-import { useRoomConstructionModeCheckProvider } from './roomPermissionChecks';
+import { RoomScreenContextProvider } from './roomContext.tsx';
+import { PersonalSpaceControls, RoomControls } from './roomControls.tsx';
+import { useRoomConstructionModeCheckProvider } from './roomPermissionChecks.tsx';
 
 export function RoomScreen(): ReactElement | null {
 	const { interfaceChatroomGraphicsRatioHorizontal, interfaceChatroomGraphicsRatioVertical } = useAccountSettings();

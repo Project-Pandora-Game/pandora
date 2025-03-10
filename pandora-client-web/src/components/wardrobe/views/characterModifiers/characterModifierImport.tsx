@@ -8,17 +8,17 @@ import {
 	type ModifierConfigurationEntryDefinition,
 } from 'pandora-common';
 import { ReactElement, useState } from 'react';
-import type { ICharacter } from '../../../../character/character';
-import { Button } from '../../../common/button/button';
-import { Column, Row } from '../../../common/container/container';
-import { FieldsetToggle } from '../../../common/fieldsetToggle';
-import { ModalDialog } from '../../../dialog/dialog';
-import { ImportDialog } from '../../../exportImport/importDialog';
-import { ModifierInstanceNameInput } from './characterModifierInstanceDetailsView';
+import type { ICharacter } from '../../../../character/character.ts';
+import { Button } from '../../../common/button/button.tsx';
+import { Column, Row } from '../../../common/container/container.tsx';
+import { FieldsetToggle } from '../../../common/fieldsetToggle/index.tsx';
+import { ModalDialog } from '../../../dialog/dialog.tsx';
+import { ImportDialog } from '../../../exportImport/importDialog.tsx';
+import { ModifierInstanceNameInput } from './characterModifierInstanceDetailsView.tsx';
 import './characterModifierInstanceView.scss';
-import { WardrobeCharacterModifierAddButton, WardrobeCharacterModifierTypeDescription } from './characterModifierTypeDetailsView';
-import { CharacterModifierConditionList } from './conditions/characterModifierConditionList';
-import { WardrobeCharacterModifierConfig } from './configuration/_index';
+import { WardrobeCharacterModifierAddButton, WardrobeCharacterModifierTypeDescription } from './characterModifierTypeDetailsView.tsx';
+import { CharacterModifierConditionList } from './conditions/characterModifierConditionList.tsx';
+import { WardrobeCharacterModifierConfig } from './configuration/_index.tsx';
 
 export function CharacterModifierImportDialog({ character, close, focusModifierInstance }: {
 	character: ICharacter;

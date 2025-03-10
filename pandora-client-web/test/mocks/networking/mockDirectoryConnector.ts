@@ -1,11 +1,11 @@
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import {
 	ACCOUNT_SETTINGS_DEFAULT,
 	IDirectoryAccountInfo,
 	TypedEvent,
 	TypedEventEmitter,
 } from 'pandora-common';
-import { AuthToken } from '../../../src/networking/directoryConnector';
+import { AuthToken } from '../../../src/networking/directoryConnector.ts';
 
 /** Event emitter implementation for testing which allows events to be manually emitted */
 export class TestEventEmitter<T extends TypedEvent> extends TypedEventEmitter<T> {

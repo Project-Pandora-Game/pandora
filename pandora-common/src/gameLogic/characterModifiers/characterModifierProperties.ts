@@ -1,10 +1,10 @@
 import type { Immutable } from 'immer';
-import type { EffectsDefinition } from '../../assets/effects';
-import type { CharacterRestrictionsManager } from '../../character';
-import type { BlockableChatMessage, ChatMessageBlockingResult, ChatMessageFilterMetadata } from '../../chat';
-import type { IChatSegment } from '../../chat/chat';
-import type { AppearanceAction, AppearanceActionProcessingResultValid } from '../actionLogic';
-import type { CharacterModifierEffectData } from './characterModifierData';
+import type { EffectsDefinition } from '../../assets/effects.ts';
+import type { CharacterRestrictionsManager } from '../../character/index.ts';
+import type { BlockableChatMessage, ChatMessageBlockingResult, ChatMessageFilterMetadata } from '../../chat/index.ts';
+import type { IChatSegment } from '../../chat/chat.ts';
+import type { AppearanceAction, AppearanceActionProcessingResultValid } from '../actionLogic/index.ts';
+import type { CharacterModifierEffectData } from './characterModifierData.ts';
 
 export type CharacterModifierActionCheckResult = ('allow' | 'block' | { result: 'slow'; milliseconds: number; });
 

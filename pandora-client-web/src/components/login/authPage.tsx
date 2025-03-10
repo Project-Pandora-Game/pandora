@@ -1,7 +1,7 @@
 import { ComponentType, ReactElement } from 'react';
-import { DivContainer, Row } from '../common/container/container';
-import { AuthFormRouter } from './authFormRouter';
-import { LoginTeaser } from './loginTeaser';
+import { DivContainer, Row } from '../common/container/container.tsx';
+import { AuthFormRouter } from './authFormRouter.tsx';
+import { LoginTeaser } from './loginTeaser.tsx';
 
 export interface AuthPageProps {
 	component: ComponentType<Record<string, never>>;

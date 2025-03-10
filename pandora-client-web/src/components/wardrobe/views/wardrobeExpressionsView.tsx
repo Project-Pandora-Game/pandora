@@ -2,11 +2,11 @@ import {
 	AssetFrameworkCharacterState,
 } from 'pandora-common';
 import { ReactElement, useEffect } from 'react';
-import { ICharacter } from '../../../character/character';
-import { Column } from '../../common/container/container';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
-import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
-import { useWardrobeContext } from '../wardrobeContext';
+import { ICharacter } from '../../../character/character.ts';
+import { Column } from '../../common/container/container.tsx';
+import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
+import { WardrobeModuleConfig } from '../modules/_wardrobeModules.tsx';
+import { useWardrobeContext } from '../wardrobeContext.tsx';
 
 export function WardrobeExpressionGui({ characterState }: {
 	character: ICharacter;

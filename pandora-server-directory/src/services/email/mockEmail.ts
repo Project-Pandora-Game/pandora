@@ -1,6 +1,6 @@
 import { GetLogger } from 'pandora-common';
-import type { IEmailSender } from '.';
-import { GenerateEmailHash } from '../../account/accountSecure';
+import { GenerateEmailHash } from '../../account/accountSecure.ts';
+import type { IEmailSender } from './index.ts';
 
 const logger = GetLogger('MockEmailSender');
 

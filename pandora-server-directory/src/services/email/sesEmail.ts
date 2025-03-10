@@ -1,8 +1,8 @@
 import { GetLogger } from 'pandora-common';
-import { BaseEmailSender } from './baseEmail';
+import { BaseEmailSender } from './baseEmail.ts';
 
 import type { Transporter } from 'nodemailer';
-import type { SentMessageInfo } from 'nodemailer/lib/ses-transport';
+import type { SentMessageInfo } from 'nodemailer/lib/ses-transport/index.js';
 
 export class SesEmail extends BaseEmailSender<SentMessageInfo> {
 

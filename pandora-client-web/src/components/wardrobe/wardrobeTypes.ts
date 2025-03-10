@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { omit } from 'lodash';
+import { omit } from 'lodash-es';
 import {
 	ActionTargetSelector,
 	AssetFrameworkGlobalState,
@@ -12,10 +12,10 @@ import {
 	ItemTemplate,
 	ModuleType,
 } from 'pandora-common';
-import { IItemModule } from 'pandora-common/dist/assets/modules/common';
+import { IItemModule } from 'pandora-common/dist/assets/modules/common.js';
 import { ReactElement } from 'react';
 import { z } from 'zod';
-import { Observable, type ReadonlyObservable } from '../../observable';
+import { Observable, type ReadonlyObservable } from '../../observable.ts';
 
 export type WardrobeContextExtraItemActionComponent = (props: { target: ActionTargetSelector; item: ItemPath; }) => ReactElement | null;
 

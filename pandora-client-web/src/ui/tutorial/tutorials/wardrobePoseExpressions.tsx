@@ -1,4 +1,4 @@
-import { MakeTutorialConditionFlag, type TutorialConfig } from '../tutorialSystem/tutorialConfig';
+import { MakeTutorialConditionFlag, type TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
 export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 	id: 'wardrobePoseExpressions',

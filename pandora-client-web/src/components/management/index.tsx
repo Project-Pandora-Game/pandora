@@ -1,3 +1,3 @@
-import { ManagementRoutes } from './management';
+import { ManagementRoutes } from './management.tsx';
 
 export default ManagementRoutes;

@@ -1,5 +1,5 @@
 import { freeze, Immutable } from 'immer';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import {
 	ActionSpaceContext,
 	AssetFrameworkCharacterState,
@@ -50,18 +50,18 @@ import {
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
-import { GetCurrentAssetManager } from '../../assets/assetManager';
-import { BrowserStorage } from '../../browserStorage';
-import { Character, useCharacterDataOptional } from '../../character/character';
-import { PlayerCharacter } from '../../character/player';
-import { ShardConnector } from '../../networking/shardConnector';
-import { Observable, useNullableObservable, useObservable } from '../../observable';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
-import type { NotificationData } from '../../services/notificationHandler';
-import { IChatMessageProcessed } from '../../ui/components/chat/chatMessages';
-import { ChatParser } from '../../ui/components/chat/chatParser';
-import { useShardConnector } from './shardConnectorContextProvider';
+import { GetCurrentAssetManager } from '../../assets/assetManager.tsx';
+import { BrowserStorage } from '../../browserStorage.ts';
+import { Character, useCharacterDataOptional } from '../../character/character.ts';
+import { PlayerCharacter } from '../../character/player.ts';
+import { ShardConnector } from '../../networking/shardConnector.ts';
+import { Observable, useNullableObservable, useObservable } from '../../observable.ts';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
+import type { NotificationData } from '../../services/notificationHandler.ts';
+import { IChatMessageProcessed } from '../../ui/components/chat/chatMessages.tsx';
+import { ChatParser } from '../../ui/components/chat/chatParser.ts';
+import { useShardConnector } from './shardConnectorContextProvider.tsx';
 
 const logger = GetLogger('GameState');
 

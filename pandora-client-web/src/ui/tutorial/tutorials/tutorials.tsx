@@ -1,9 +1,9 @@
 import { LIMIT_CHARACTER_COUNT } from 'pandora-common';
 import maid from '../../../assets/maid.png';
-import { Column, Row } from '../../../components/common/container/container';
-import { ExternalLink } from '../../../components/common/link/externalLink';
-import { useHelpUserName } from '../../../components/help/helpUtils';
-import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
+import { Column, Row } from '../../../components/common/container/container.tsx';
+import { ExternalLink } from '../../../components/common/link/externalLink.tsx';
+import { useHelpUserName } from '../../../components/help/helpUtils.tsx';
+import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
 export const TUTORIAL_TUTORIALS: TutorialConfig = {
 	id: 'tutorials',

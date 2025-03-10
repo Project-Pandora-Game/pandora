@@ -1,5 +1,5 @@
 import { createHash } from 'crypto';
-import _ from 'lodash';
+import { assign, cloneDeep, pick, remove } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import {
 	AccountId,
@@ -17,8 +17,8 @@ import {
 	SpaceDirectoryData,
 	SpaceId,
 } from 'pandora-common';
-import { CreateAccountData } from '../account/account';
-import type { PandoraDatabase } from './databaseProvider';
+import { CreateAccountData } from '../account/account.ts';
+import type { PandoraDatabase } from './databaseProvider.ts';
 import {
 	DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES,
 	DatabaseAccountContact,
@@ -35,8 +35,8 @@ import {
 	type DatabaseConfigCreationCounters,
 	type DatabaseDirectMessage,
 	type DatabaseDirectMessageAccounts,
-} from './databaseStructure';
-import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper';
+} from './databaseStructure.ts';
+import { CreateCharacter, CreateSpace, SpaceCreationData } from './dbHelper.ts';
 
 function HashSHA512Base64(text: string): string {
 	return createHash('sha512').update(text, 'utf-8').digest('base64');
@@ -98,7 +98,7 @@ export class MockDatabase implements PandoraDatabase {
 	 */
 	public getAccountById(id: number): Promise<DatabaseAccountWithSecure | null> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === id);
-		return Promise.resolve(_.cloneDeep(acc ?? null));
+		return Promise.resolve(cloneDeep(acc ?? null));
 	}
 
 	/**
@@ -108,7 +108,7 @@ export class MockDatabase implements PandoraDatabase {
 	public getAccountByUsername(username: string): Promise<DatabaseAccountWithSecure | null> {
 		username = username.toLowerCase();
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.username.toLowerCase() === username);
-		return Promise.resolve(_.cloneDeep(acc ?? null));
+		return Promise.resolve(cloneDeep(acc ?? null));
 	}
 
 	/**
@@ -117,11 +117,11 @@ export class MockDatabase implements PandoraDatabase {
 	 */
 	public getAccountByEmailHash(emailHash: string): Promise<DatabaseAccountWithSecure | null> {
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.secure.emailHash === emailHash);
-		return Promise.resolve(_.cloneDeep(acc ?? null));
+		return Promise.resolve(cloneDeep(acc ?? null));
 	}
 
 	public createAccount(data: DatabaseAccountWithSecure): Promise<DatabaseAccountWithSecure | 'usernameTaken' | 'emailTaken'> {
-		const acc = _.cloneDeep(data);
+		const acc = cloneDeep(data);
 		const conflict = this.accountDbView.find(
 			(dbAccount) =>
 				dbAccount.username.toLowerCase() === acc.username.toLowerCase() ||
@@ -132,7 +132,7 @@ export class MockDatabase implements PandoraDatabase {
 		}
 		acc.id = this._creationCounters.nextAccountId++;
 		this.accountDb.add(acc);
-		return Promise.resolve(_.cloneDeep(acc));
+		return Promise.resolve(cloneDeep(acc));
 	}
 
 	public updateAccountEmailHash(id: AccountId, emailHash: string): Promise<'ok' | 'notFound' | 'emailTaken'> {
@@ -152,7 +152,7 @@ export class MockDatabase implements PandoraDatabase {
 			.pick(ArrayToRecordKeys(DATABASE_ACCOUNT_UPDATEABLE_PROPERTIES, true))
 			.partial()
 			.strict()
-			.parse(_.cloneDeep(data));
+			.parse(cloneDeep(data));
 
 		const acc = this.accountDbView.find((dbAccount) => dbAccount.id === id);
 		if (!acc)
@@ -167,7 +167,7 @@ export class MockDatabase implements PandoraDatabase {
 		if (!acc)
 			return Promise.resolve();
 
-		acc.secure = _.cloneDeep(data);
+		acc.secure = cloneDeep(data);
 		return Promise.resolve();
 	}
 
@@ -179,7 +179,7 @@ export class MockDatabase implements PandoraDatabase {
 		if (data && this.accountDbView.find((dbAccount) => dbAccount.secure.github?.id === data.id))
 			return Promise.resolve(false);
 
-		acc.secure.github = _.cloneDeep(data);
+		acc.secure.github = cloneDeep(data);
 		return Promise.resolve(true);
 	}
 
@@ -214,7 +214,7 @@ export class MockDatabase implements PandoraDatabase {
 		const [info, char] = CreateCharacter(accountId, `c${this._creationCounters.nextCharacterId++}`);
 
 		this.characterDb.set(char.id, char);
-		return Promise.resolve(_.cloneDeep(info));
+		return Promise.resolve(cloneDeep(info));
 	}
 
 	public finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<ICharacterData | null> {
@@ -225,7 +225,7 @@ export class MockDatabase implements PandoraDatabase {
 		char.inCreation = undefined;
 		char.created = Date.now();
 
-		return Promise.resolve(_.cloneDeep(char));
+		return Promise.resolve(cloneDeep(char));
 	}
 
 	public updateCharacter(id: CharacterId, data: ICharacterDataDirectoryUpdate & ICharacterDataShardUpdate, accessId: string | null): Promise<boolean> {
@@ -233,7 +233,7 @@ export class MockDatabase implements PandoraDatabase {
 		if (char == null || accessId !== null && char.accessId !== accessId)
 			return Promise.resolve(false);
 
-		_.assign(char, _.cloneDeep(data));
+		assign(char, cloneDeep(data));
 		return Promise.resolve(true);
 	}
 
@@ -279,7 +279,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(
 			Array.from(this.spacesDb.values())
 				.filter((space) => space.owners.includes(account))
-				.map((space) => _.pick(space, SPACE_DIRECTORY_PROPERTIES)),
+				.map((space) => pick(space, SPACE_DIRECTORY_PROPERTIES)),
 		);
 	}
 
@@ -287,7 +287,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(
 			Array.from(this.spacesDb.values())
 				.filter((space) => space.owners.includes(account) || space.config.admin.includes(account) || space.config.allow.includes(account))
-				.map((space) => _.pick(space, SPACE_DIRECTORY_PROPERTIES)),
+				.map((space) => pick(space, SPACE_DIRECTORY_PROPERTIES)),
 		);
 	}
 
@@ -299,7 +299,7 @@ export class MockDatabase implements PandoraDatabase {
 		if ((accessId !== null) && (accessId !== space.accessId)) {
 			return Promise.resolve(null);
 		}
-		return Promise.resolve(_.cloneDeep(space));
+		return Promise.resolve(cloneDeep(space));
 	}
 
 	public createSpace(data: SpaceCreationData, id?: SpaceId): Promise<SpaceData> {
@@ -309,11 +309,11 @@ export class MockDatabase implements PandoraDatabase {
 			return Promise.reject(new Error('Duplicate ID'));
 		}
 		this.spacesDb.set(space.id, space);
-		return Promise.resolve(_.cloneDeep(space));
+		return Promise.resolve(cloneDeep(space));
 	}
 
 	public updateSpace(id: SpaceId, data: SpaceDataDirectoryUpdate & SpaceDataShardUpdate, accessId: string | null): Promise<boolean> {
-		const space = _.cloneDeep(data);
+		const space = cloneDeep(data);
 
 		const info = this.spacesDb.get(id);
 		if (!info)
@@ -404,28 +404,28 @@ export class MockDatabase implements PandoraDatabase {
 		else if (accessId !== char.accessId)
 			return Promise.resolve(null);
 
-		return Promise.resolve(_.cloneDeep(char));
+		return Promise.resolve(cloneDeep(char));
 	}
 
 	public getAccountContacts(accountId: AccountId): Promise<DatabaseAccountContact[]> {
 		return Promise.resolve(this.accountContactDb
 			.filter((rel) => rel.accounts.includes(accountId))
-			.map((rel) => _.cloneDeep(rel)));
+			.map((rel) => cloneDeep(rel)));
 	}
 
 	public setAccountContact(accountIdA: AccountId, accountIdB: AccountId, data: DatabaseAccountContactType): Promise<DatabaseAccountContact> {
-		const newData: DatabaseAccountContact = { accounts: [accountIdA, accountIdB], updated: Date.now(), contact: _.cloneDeep(data) };
+		const newData: DatabaseAccountContact = { accounts: [accountIdA, accountIdB], updated: Date.now(), contact: cloneDeep(data) };
 		const index = this.accountContactDb.findIndex((rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
 		if (index < 0) {
 			this.accountContactDb.push(newData);
 		} else {
 			this.accountContactDb[index] = newData;
 		}
-		return Promise.resolve(_.cloneDeep(newData));
+		return Promise.resolve(cloneDeep(newData));
 	}
 
 	public removeAccountContact(accountIdA: number, accountIdB: number): Promise<void> {
-		_.remove(this.accountContactDb, (rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
+		remove(this.accountContactDb, (rel) => rel.accounts.includes(accountIdA) && rel.accounts.includes(accountIdB));
 		return Promise.resolve();
 	}
 
@@ -435,11 +435,11 @@ export class MockDatabase implements PandoraDatabase {
 			return Promise.resolve(null);
 
 		// @ts-expect-error data is unique to each config type
-		return Promise.resolve(_.cloneDeep(config));
+		return Promise.resolve(cloneDeep(config));
 	}
 
 	public setConfig<T extends DatabaseConfigType>(type: T, data: DatabaseConfigData<T>): Promise<void> {
-		this.configDb.set(type, _.cloneDeep(data));
+		this.configDb.set(type, cloneDeep(data));
 		return Promise.resolve();
 	}
 }

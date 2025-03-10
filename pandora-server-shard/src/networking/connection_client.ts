@@ -1,11 +1,11 @@
-import { CharacterId, GetLogger, IShardClient, IncomingSocket, IServerSocket, ClientShardSchema, IClientShard, IncomingConnection, ShardClientSchema, AssertNotNullable, Assert } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers';
-import { Character } from '../character/character';
-import { CharacterManager } from '../character/characterManager';
-import { ConnectionManagerClient } from './manager_client';
 import type { IncomingHttpHeaders } from 'http';
-import { assetManager } from '../assets/assetManager';
-import { ENV } from '../config';
+import { Assert, AssertNotNullable, CharacterId, ClientShardSchema, GetLogger, IClientShard, IncomingConnection, IncomingSocket, IServerSocket, IShardClient, ShardClientSchema } from 'pandora-common';
+import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
+import { assetManager } from '../assets/assetManager.ts';
+import { Character } from '../character/character.ts';
+import { CharacterManager } from '../character/characterManager.ts';
+import { ENV } from '../config.ts';
+import { ConnectionManagerClient } from './manager_client.ts';
 const { ASSETS_SOURCE, SERVER_PUBLIC_ADDRESS } = ENV;
 
 /** Class housing connection from a client */

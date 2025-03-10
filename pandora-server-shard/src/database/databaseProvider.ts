@@ -2,15 +2,15 @@ import type {
 	CharacterId,
 	ICharacterData,
 	ICharacterDataShardUpdate,
+	ServerService,
 	SpaceData,
 	SpaceDataShardUpdate,
 	SpaceId,
-	ServerService,
 } from 'pandora-common';
-import { ENV } from '../config';
+import { ENV } from '../config.ts';
+import DirectoryDatabase from './directoryDb.ts';
+import MongoDatabase from './mongoDb.ts';
 const { DATABASE_TYPE } = ENV;
-import DirectoryDatabase from './directoryDb';
-import MongoDatabase from './mongoDb';
 
 export interface ShardDatabase extends ServerService {
 	/**

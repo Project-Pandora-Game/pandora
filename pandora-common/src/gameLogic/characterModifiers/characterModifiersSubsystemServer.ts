@@ -1,21 +1,21 @@
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { GetRestrictionOverrideConfig } from '../../assets/state/characterStateTypes';
-import type { AssetFrameworkGlobalState } from '../../assets/state/globalState';
-import { LIMIT_CHARACTER_MODIFIER_INSTANCE_COUNT } from '../../inputLimits';
-import { Logger } from '../../logging';
-import type { CurrentSpaceInfo } from '../../space';
-import { AssertNever, AssertNotNullable } from '../../utility/misc';
-import { ArrayIncludesGuard } from '../../validation';
-import type { GameLogicCharacter } from '../character/character';
-import type { LockActionContext } from '../locks/lockLogic';
-import { GameLogicPermissionServer, IPermissionProvider } from '../permissions';
-import type { CharacterModifierId } from './characterModifierBaseData';
-import type { CharacterModifierConfigurationChange, CharacterModifierEffectData, CharacterModifierInstanceClientData, CharacterModifierInstanceData, CharacterModifierLockAction, CharacterModifierSystemData, CharacterModifierTemplate, CharacterModifierTypeConfig } from './characterModifierData';
-import { GameLogicModifierInstanceServer, type GameLogicModifierLockActionResult } from './characterModifierInstance';
-import { CharacterModifiersSubsystem } from './characterModifiersSubsystem';
-import { GameLogicModifierTypeServer } from './characterModifierType';
-import { CHARACTER_MODIFIER_TYPE_DEFINITION, CHARACTER_MODIFIER_TYPES, type CharacterModifierType } from './modifierTypes/_index';
+import { GetRestrictionOverrideConfig } from '../../assets/state/characterStateTypes.ts';
+import type { AssetFrameworkGlobalState } from '../../assets/state/globalState.ts';
+import { LIMIT_CHARACTER_MODIFIER_INSTANCE_COUNT } from '../../inputLimits.ts';
+import { Logger } from '../../logging.ts';
+import type { CurrentSpaceInfo } from '../../space/index.ts';
+import { AssertNever, AssertNotNullable } from '../../utility/misc.ts';
+import { ArrayIncludesGuard } from '../../validation.ts';
+import type { GameLogicCharacter } from '../character/character.ts';
+import type { LockActionContext } from '../locks/lockLogic.ts';
+import { GameLogicPermissionServer, IPermissionProvider } from '../permissions/index.ts';
+import type { CharacterModifierId } from './characterModifierBaseData.ts';
+import type { CharacterModifierConfigurationChange, CharacterModifierEffectData, CharacterModifierInstanceClientData, CharacterModifierInstanceData, CharacterModifierLockAction, CharacterModifierSystemData, CharacterModifierTemplate, CharacterModifierTypeConfig } from './characterModifierData.ts';
+import { GameLogicModifierInstanceServer, type GameLogicModifierLockActionResult } from './characterModifierInstance.ts';
+import { CharacterModifiersSubsystem } from './characterModifiersSubsystem.ts';
+import { GameLogicModifierTypeServer } from './characterModifierType.ts';
+import { CHARACTER_MODIFIER_TYPE_DEFINITION, CHARACTER_MODIFIER_TYPES, type CharacterModifierType } from './modifierTypes/_index.ts';
 
 export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsystem implements IPermissionProvider<GameLogicPermissionServer> {
 	public readonly character: GameLogicCharacter;

@@ -3,10 +3,10 @@ import { type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import type { ConditionalKeys } from 'type-fest';
 import type { ZodType } from 'zod';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { useModifiedAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
-import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
-import { SelectSettingInput, ToggleSettingInput } from './settingsInputs';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { useModifiedAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
+import { SelectSettingInput, ToggleSettingInput } from './settingsInputs.tsx';
 
 type BooleanSettings = ConditionalKeys<AccountSettings, boolean>;
 export function ToggleAccountSetting<const Setting extends BooleanSettings>({ setting, label }: {

@@ -1,5 +1,5 @@
 import { AssetsDefinitionFile } from 'pandora-common/dist/assets/definitions';
-import { AssetManagerClient, GetCurrentAssetManager, LoadAssetDefinitions, UpdateAssetManager } from '../../src/assets/assetManager';
+import { AssetManagerClient, GetCurrentAssetManager, LoadAssetDefinitions, UpdateAssetManager } from '../../src/assets/assetManager.tsx';
 
 describe('GetCurrentAssetManager()', () => {
 	it('should return instance of AssetManagerClient', () => {

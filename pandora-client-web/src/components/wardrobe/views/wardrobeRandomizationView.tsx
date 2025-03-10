@@ -1,12 +1,12 @@
 import { ReactElement } from 'react';
-import { ICharacter } from '../../../character/character';
-import { NumberInput } from '../../../common/userInteraction/input/numberInput';
-import { useObservable } from '../../../observable';
-import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
-import { Column, Row } from '../../common/container/container';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
-import { usePlayerId } from '../../gameContext/playerContextProvider';
-import { MIN_RANDOMIZE_UPDATE_INTERVAL, WardrobeActionRandomizeButton, WardrobeActionRandomizeUpdateInterval } from '../wardrobeComponents';
+import { ICharacter } from '../../../character/character.ts';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
+import { useObservable } from '../../../observable.ts';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { Column, Row } from '../../common/container/container.tsx';
+import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
+import { usePlayerId } from '../../gameContext/playerContextProvider.tsx';
+import { MIN_RANDOMIZE_UPDATE_INTERVAL, WardrobeActionRandomizeButton, WardrobeActionRandomizeUpdateInterval } from '../wardrobeComponents.tsx';
 
 export function WardrobeRandomizationGui({ character }: {
 	character: ICharacter;

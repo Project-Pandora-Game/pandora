@@ -1,9 +1,9 @@
 import { AssertNever, AssertNotNullable, GetLogger } from 'pandora-common';
 import { ReactElement, Suspense, createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { ChildrenProps } from '../../common/reactTypes';
-import { useNullableObservable } from '../../observable';
-import type { ChatEncryption, DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat';
-import { useService } from '../../services/serviceProvider';
+import { ChildrenProps } from '../../common/reactTypes.ts';
+import { useNullableObservable } from '../../observable.ts';
+import type { ChatEncryption, DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat.ts';
+import { useService } from '../../services/serviceProvider.tsx';
 
 export type DirectMessageChatContext = {
 	chat: DirectMessageChat;

@@ -1,11 +1,11 @@
 import { GetLogger, IsSimpleToken, IsString, IsUsername } from 'pandora-common';
 import { ReactElement, useEffect } from 'react';
 import { useNavigate } from 'react-router';
-import { FormInput } from '../../../common/userInteraction/input/formInput';
-import { Button } from '../../common/button/button';
-import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
-import { useAuthFormData } from '../authFormDataProvider';
-import { useLoginForm } from './useLoginForm';
+import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
+import { Button } from '../../common/button/button.tsx';
+import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
+import { useAuthFormData } from '../authFormDataProvider.tsx';
+import { useLoginForm } from './useLoginForm.ts';
 
 const VERIFICATION_CODE_LENGTH = 6;
 

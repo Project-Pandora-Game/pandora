@@ -1,12 +1,12 @@
+import type { Server as HttpServer, IncomingMessage } from 'http';
+import { GetLogger, HTTP_HEADER_CLIENT_REQUEST_SHARD, IDirectoryClient, IIncomingConnection } from 'pandora-common';
+import { SocketInterfaceOneshotMessages, SocketInterfaceRequest } from 'pandora-common/dist/networking/helpers.js';
+import { IServerSocket } from 'pandora-common/dist/networking/room.js';
 import type { Socket } from 'socket.io';
-import type { IncomingMessage, Server as HttpServer } from 'http';
-import { GetLogger, HTTP_HEADER_CLIENT_REQUEST_SHARD, IIncomingConnection, IDirectoryClient } from 'pandora-common';
-import { SocketIOServer } from './socketio_common_server';
-import { ClientConnection } from './connection_client';
-import { SocketIOSocket } from './socketio_common_socket';
-import { ShardManager, SHARD_WAIT_STOP } from '../shard/shardManager';
-import { SocketInterfaceOneshotMessages, SocketInterfaceRequest } from 'pandora-common/dist/networking/helpers';
-import { IServerSocket } from 'pandora-common/dist/networking/room';
+import { SHARD_WAIT_STOP, ShardManager } from '../shard/shardManager.ts';
+import { ClientConnection } from './connection_client.ts';
+import { SocketIOServer } from './socketio_common_server.ts';
+import { SocketIOSocket } from './socketio_common_socket.ts';
 
 const logger = GetLogger('SIO-Server-Client');
 

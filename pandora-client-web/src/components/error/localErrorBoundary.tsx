@@ -1,13 +1,13 @@
 import classNames from 'classnames';
 import { GetLogger } from 'pandora-common';
 import { Component, ErrorInfo, ReactElement } from 'react';
-import { CopyToClipboard } from '../../common/clipboard';
-import { ChildrenProps } from '../../common/reactTypes';
-import { Button } from '../common/button/button';
-import { Column, Row } from '../common/container/container';
-import { ModalDialog } from '../dialog/dialog';
-import { DebugContext, debugContext } from './debugContextProvider';
-import { BuildErrorReport } from './errorReport';
+import { CopyToClipboard } from '../../common/clipboard.ts';
+import { ChildrenProps } from '../../common/reactTypes.ts';
+import { Button } from '../common/button/button.tsx';
+import { Column, Row } from '../common/container/container.tsx';
+import { ModalDialog } from '../dialog/dialog.tsx';
+import { DebugContext, debugContext } from './debugContextProvider.tsx';
+import { BuildErrorReport } from './errorReport.ts';
 import './localErrorBoundary.scss';
 
 export enum ReportCopyState {

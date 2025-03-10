@@ -1,20 +1,20 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { uniq } from 'lodash';
+import { uniq } from 'lodash-es';
 import { AssertNever, EMPTY_ARRAY, GetLogger, TutorialIdSchema, type TutorialId } from 'pandora-common';
 import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
-import { useAsyncEvent } from '../../../common/useEvent';
-import { Button } from '../../../components/common/button/button';
-import { Row } from '../../../components/common/container/container';
-import { DialogInPortal, DraggableDialog, useConfirmDialog } from '../../../components/dialog/dialog';
-import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
-import { DEVELOPMENT } from '../../../config/Environment';
-import { useNullableObservable, useObservable } from '../../../observable';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
-import type { TutorialCondition, TutorialHighlightSelector, TutorialStep } from './tutorialConfig';
-import type { TutorialRunner, TutorialStageRunner } from './tutorialRunner';
+import { useAsyncEvent } from '../../../common/useEvent.ts';
+import { Button } from '../../../components/common/button/button.tsx';
+import { Row } from '../../../components/common/container/container.tsx';
+import { DialogInPortal, DraggableDialog, useConfirmDialog } from '../../../components/dialog/dialog.tsx';
+import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
+import { DEVELOPMENT } from '../../../config/Environment.ts';
+import { useNullableObservable, useObservable } from '../../../observable.ts';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import type { TutorialCondition, TutorialHighlightSelector, TutorialStep } from './tutorialConfig.ts';
+import type { TutorialRunner, TutorialStageRunner } from './tutorialRunner.ts';
 import './tutorialUi.scss';
 
 export function ActiveTutorialUi({ tutorial, stopTutorial }: {

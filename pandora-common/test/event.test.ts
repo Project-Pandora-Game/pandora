@@ -1,4 +1,5 @@
-import { TypedEventEmitter } from '../src/event';
+import { beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { TypedEventEmitter } from '../src/event.ts';
 
 describe('TypedEventEmitter', () => {
 	type MockEvent = {

@@ -1,16 +1,16 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
-import { AssetPreferencesPublicSchema } from '../character/assetPreferences';
-import { CharacterPublicSettingsSchema, CharacterRoomPositionSchema } from '../character/characterData';
-import { CharacterIdSchema } from '../character/characterTypes';
-import { ChatCharacterStatusSchema, ClientChatMessagesSchema } from '../chat/chat';
-import { CharacterModifierConfigurationChangeSchema, CharacterModifierIdSchema, CharacterModifierInstanceClientDataSchema, CharacterModifierLockActionSchema, CharacterModifierTemplateSchema, PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic';
-import { AppearanceActionSchema } from '../gameLogic/actionLogic/actions/_index';
-import { AppearanceActionData, AppearanceActionProblem } from '../gameLogic/actionLogic/appearanceActionProblems';
-import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
-import { Satisfies } from '../utility/misc';
-import { CharacterInputNameSchema, ZodCast } from '../validation';
-import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
+import { AssetPreferencesPublicSchema } from '../character/assetPreferences.ts';
+import { CharacterPublicSettingsSchema, CharacterRoomPositionSchema } from '../character/characterData.ts';
+import { CharacterIdSchema } from '../character/characterTypes.ts';
+import { ChatCharacterStatusSchema, ClientChatMessagesSchema } from '../chat/chat.ts';
+import { CharacterModifierConfigurationChangeSchema, CharacterModifierIdSchema, CharacterModifierInstanceClientDataSchema, CharacterModifierLockActionSchema, CharacterModifierTemplateSchema, PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic/index.ts';
+import { AppearanceActionSchema } from '../gameLogic/actionLogic/actions/_index.ts';
+import { AppearanceActionData, AppearanceActionProblem } from '../gameLogic/actionLogic/appearanceActionProblems.ts';
+import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits.ts';
+import { Satisfies } from '../utility/misc.ts';
+import { CharacterInputNameSchema, ZodCast } from '../validation.ts';
+import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
 /** Client->Shard messages */
 export const ClientShardSchema = {

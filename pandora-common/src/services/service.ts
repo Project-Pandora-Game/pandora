@@ -1,6 +1,6 @@
-import { TypedEventEmitter, type ITypedEventEmitter, type TypedEvent } from '../event';
-import { Assert } from '../utility/misc';
-import type { BaseServicesDefinition } from './serviceDefinitions';
+import { TypedEventEmitter, type ITypedEventEmitter, type TypedEvent } from '../event.ts';
+import { Assert } from '../utility/misc.ts';
+import type { BaseServicesDefinition } from './serviceDefinitions.ts';
 
 /**
  * Base for the service's config. Dictates data available to the service at runtime.

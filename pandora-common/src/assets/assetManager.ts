@@ -1,13 +1,13 @@
 import { freeze, Immutable } from 'immer';
-import type { CharacterId } from '../character/characterTypes';
-import type { Logger } from '../logging';
-import { Assert, AssertNotNullable, CloneDeepMutable } from '../utility/misc';
-import { Asset } from './asset';
-import type { AssetId } from './base';
-import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetsDefinitionFile, AssetType, RoomBackgroundInfo, RoomBackgroundTagDefinition, type CharacterModifierInbuiltTemplates } from './definitions';
-import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics';
-import { CreateItemBundleFromTemplate, Item, ItemBundle, ItemTemplate, LoadItemFromBundle, type IItemCreationContext, type ItemId } from './item';
-import type { AssetsPosePresets } from './state/characterStatePose';
+import type { CharacterId } from '../character/characterTypes.ts';
+import type { Logger } from '../logging.ts';
+import { Assert, AssertNotNullable, CloneDeepMutable } from '../utility/misc.ts';
+import { Asset } from './asset.ts';
+import type { AssetId } from './base.ts';
+import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetsDefinitionFile, AssetType, RoomBackgroundInfo, RoomBackgroundTagDefinition, type CharacterModifierInbuiltTemplates } from './definitions.ts';
+import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics/index.ts';
+import { CreateItemBundleFromTemplate, Item, ItemBundle, ItemTemplate, LoadItemFromBundle, type IItemCreationContext, type ItemId } from './item/index.ts';
+import type { AssetsPosePresets } from './state/characterStatePose.ts';
 
 export class AssetManager {
 	protected readonly _assets: ReadonlyMap<AssetId, Asset>;

@@ -2,14 +2,14 @@ import classNames from 'classnames';
 import { CharacterSize } from 'pandora-common';
 import { type Application, Filter } from 'pixi.js';
 import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useImageResolutionAlternative } from '../assets/assetGraphicsCalculations';
-import { ChildrenProps } from '../common/reactTypes';
-import { LocalErrorBoundary } from '../components/error/localErrorBoundary';
-import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback } from './baseComponents/pixiViewport';
-import { Sprite } from './baseComponents/sprite';
-import { GraphicsSceneRendererShared } from './graphicsSceneRenderer';
-import { useGraphicsSettings } from './graphicsSettings';
-import { useTexture } from './useTexture';
+import { useImageResolutionAlternative } from '../assets/assetGraphicsCalculations.ts';
+import { ChildrenProps } from '../common/reactTypes.ts';
+import { LocalErrorBoundary } from '../components/error/localErrorBoundary.tsx';
+import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback } from './baseComponents/pixiViewport.tsx';
+import { Sprite } from './baseComponents/sprite.ts';
+import { GraphicsSceneRendererShared } from './graphicsSceneRenderer.tsx';
+import { useGraphicsSettings } from './graphicsSettings.tsx';
+import { useTexture } from './useTexture.ts';
 
 export type GraphicsSceneProps = {
 	viewportConfig?: PixiViewportSetupCallback;

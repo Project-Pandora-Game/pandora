@@ -1,13 +1,13 @@
-import { capitalize } from 'lodash';
+import { capitalize } from 'lodash-es';
 import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandBuilder, CommandStepOptional, CommandStepProcessor, CreateCommand, FilterItemType, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE } from 'pandora-common';
-import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
+import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed.js';
 import { toast } from 'react-toastify';
-import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider';
-import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
-import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList';
-import { ChatMode } from './chatInput';
-import { CommandSelectorCharacter, CommandSelectorEnum, CommandSelectorGameLogicActionTarget, CommandSelectorItem } from './commandsHelpers';
-import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor';
+import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
+import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
+import { ChatMode } from './chatInput.tsx';
+import { CommandSelectorCharacter, CommandSelectorEnum, CommandSelectorGameLogicActionTarget, CommandSelectorItem } from './commandsHelpers.ts';
+import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor.ts';
 
 function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
 	return CreateCommand<ICommandExecutionContextClient>();

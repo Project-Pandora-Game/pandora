@@ -4,6 +4,7 @@
 	"description": "Collection of End to End tests for Pandora",
 	"private": true,
 	"license": "LGPL-3.0-or-later",
+	"type": "module",
 	"scripts": {
 		"lint": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",

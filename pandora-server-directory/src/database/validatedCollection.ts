@@ -1,5 +1,5 @@
 import { diffString } from 'json-diff';
-import { isEqual, omit } from 'lodash';
+import { isEqual, omit } from 'lodash-es';
 import { CollationOptions, Collection, Db, Document, IndexDescription, MongoClient, ObjectId } from 'mongodb';
 import { ArrayToRecordKeys, Assert, IsObject, KnownObject, Logger } from 'pandora-common';
 import type { ZodType, ZodTypeDef } from 'zod';

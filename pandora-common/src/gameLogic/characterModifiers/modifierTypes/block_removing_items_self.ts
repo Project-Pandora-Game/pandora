@@ -1,6 +1,6 @@
-import { isEqual } from 'lodash';
-import { SplitContainerPath } from '../../../assets/appearanceHelpers';
-import { DefineCharacterModifier } from '../helpers/modifierDefinition';
+import { isEqual } from 'lodash-es';
+import { SplitContainerPath } from '../../../assets/appearanceHelpers.ts';
+import { DefineCharacterModifier } from '../helpers/modifierDefinition.ts';
 
 // eslint-disable-next-line @typescript-eslint/naming-convention
 export const block_removing_items_self = DefineCharacterModifier({

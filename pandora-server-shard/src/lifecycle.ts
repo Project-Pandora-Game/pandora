@@ -1,10 +1,10 @@
 import { GetLogger, IEmpty, ServerService, logConfig } from 'pandora-common';
-import { CharacterManager } from './character/characterManager';
-import { HttpServer } from './networking/httpServer';
-import { DirectoryConnector } from './networking/socketio_directory_connector';
-import { SpaceManager } from './spaces/spaceManager';
 import wtfnode from 'wtfnode';
-import { GetDatabaseService } from './database/databaseProvider';
+import { CharacterManager } from './character/characterManager.ts';
+import { GetDatabaseService } from './database/databaseProvider.ts';
+import { HttpServer } from './networking/httpServer.ts';
+import { DirectoryConnector } from './networking/socketio_directory_connector.ts';
+import { SpaceManager } from './spaces/spaceManager.ts';
 
 const logger = GetLogger('Lifecycle');
 

@@ -1,5 +1,5 @@
 /* eslint-disable react/forbid-elements */
-import { pick } from 'lodash';
+import { pick } from 'lodash-es';
 import { type InputHTMLAttributes, type ReactElement } from 'react';
 import type { FieldPath, FieldValues, RegisterOptions, UseFormRegister, UseFormRegisterReturn } from 'react-hook-form';
 

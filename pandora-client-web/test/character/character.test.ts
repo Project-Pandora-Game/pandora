@@ -1,16 +1,16 @@
-import { act } from 'react';
 import { renderHook } from '@testing-library/react';
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import {
 	ASSET_PREFERENCES_DEFAULT,
 	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
 	ICharacterData,
 	ICharacterRoomData,
 } from 'pandora-common';
+import { act } from 'react';
 import {
 	Character,
 	useCharacterData,
-} from '../../src/character/character';
+} from '../../src/character/character.ts';
 
 const mockData: ICharacterRoomData = {
 	id: 'c123',

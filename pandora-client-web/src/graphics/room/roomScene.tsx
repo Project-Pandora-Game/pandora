@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { clamp } from 'lodash';
+import { clamp } from 'lodash-es';
 import {
 	Assert,
 	AssertNever,
@@ -17,28 +17,28 @@ import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
 import { Filter, Rectangle } from 'pixi.js';
 import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
-import { useAssetManager } from '../../assets/assetManager';
-import { Character, useCharacterData, useCharacterRestrictionManager } from '../../character/character';
-import { CommonProps } from '../../common/reactTypes';
-import { useEvent } from '../../common/useEvent';
-import { useActionSpaceContext, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo, type GameState } from '../../components/gameContext/gameStateContextProvider';
-import { THEME_NORMAL_BACKGROUND } from '../../components/gameContext/interfaceSettingsProvider';
-import { permissionCheckContext } from '../../components/gameContext/permissionCheckProvider';
-import { usePlayer, usePlayerState } from '../../components/gameContext/playerContextProvider';
-import { useShardConnector } from '../../components/gameContext/shardConnectorContextProvider';
-import { wardrobeActionContext } from '../../components/wardrobe/wardrobeActionContext';
-import { ShardConnector } from '../../networking/shardConnector';
-import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
-import { serviceManagerContext } from '../../services/serviceProvider';
-import { roomScreenContext, useRoomScreenContext } from '../../ui/screens/room/roomContext';
-import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomDebug';
-import { Container } from '../baseComponents/container';
-import { Graphics } from '../baseComponents/graphics';
-import { PixiViewportRef, PixiViewportSetupCallback } from '../baseComponents/pixiViewport';
-import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphicsScene';
-import { RoomCharacterInteractive } from './roomCharacter';
-import { RoomCharacterMovementTool, RoomCharacterPosingTool } from './roomCharacterPosing';
-import { RoomDeviceInteractive, RoomDeviceMovementTool } from './roomDevice';
+import { useAssetManager } from '../../assets/assetManager.tsx';
+import { Character, useCharacterData, useCharacterRestrictionManager } from '../../character/character.ts';
+import { CommonProps } from '../../common/reactTypes.ts';
+import { useEvent } from '../../common/useEvent.ts';
+import { useActionSpaceContext, useCharacterState, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo, type GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
+import { THEME_NORMAL_BACKGROUND } from '../../components/gameContext/interfaceSettingsProvider.tsx';
+import { permissionCheckContext } from '../../components/gameContext/permissionCheckProvider.tsx';
+import { usePlayer, usePlayerState } from '../../components/gameContext/playerContextProvider.tsx';
+import { useShardConnector } from '../../components/gameContext/shardConnectorContextProvider.tsx';
+import { wardrobeActionContext } from '../../components/wardrobe/wardrobeActionContext.tsx';
+import { ShardConnector } from '../../networking/shardConnector.ts';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
+import { serviceManagerContext } from '../../services/serviceProvider.tsx';
+import { roomScreenContext, useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
+import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
+import { Container } from '../baseComponents/container.ts';
+import { Graphics } from '../baseComponents/graphics.ts';
+import { PixiViewportRef, PixiViewportSetupCallback } from '../baseComponents/pixiViewport.tsx';
+import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphicsScene.tsx';
+import { RoomCharacterInteractive } from './roomCharacter.tsx';
+import { RoomCharacterMovementTool, RoomCharacterPosingTool } from './roomCharacterPosing.tsx';
+import { RoomDeviceInteractive, RoomDeviceMovementTool } from './roomDevice.tsx';
 
 const BONCE_OVERFLOW = 500;
 const BASE_BOUNCE_OPTIONS: IBounceOptions = {

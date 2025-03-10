@@ -2,9 +2,9 @@ import { AssetGraphicsDefinition, AssetId, AssetsGraphicsDefinitionFile, PointTe
 import { Texture, type TextureSource } from 'pixi.js';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
-import { BrowserStorage } from '../browserStorage';
-import { Observable, useObservable } from '../observable';
-import { AssetGraphics } from './assetGraphics';
+import { BrowserStorage } from '../browserStorage.ts';
+import { Observable, useObservable } from '../observable.ts';
+import { AssetGraphics } from './assetGraphics.ts';
 
 export interface IGraphicsLoaderStats {
 	inUseTextures: number;

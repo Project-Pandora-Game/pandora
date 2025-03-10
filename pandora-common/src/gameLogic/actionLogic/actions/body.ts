@@ -1,8 +1,8 @@
 import { z } from 'zod';
-import { AppearancePoseSchema } from '../../../assets/state/characterStatePose';
-import { CharacterIdSchema } from '../../../character/characterTypes';
-import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
-import type { AppearanceActionHandlerArg } from './_common';
+import { AppearancePoseSchema } from '../../../assets/state/characterStatePose.ts';
+import { CharacterIdSchema } from '../../../character/characterTypes.ts';
+import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
+import type { AppearanceActionHandlerArg } from './_common.ts';
 
 export const AppearanceActionBody = z.object({
 	type: z.literal('body'),

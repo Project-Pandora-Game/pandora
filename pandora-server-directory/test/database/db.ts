@@ -1,10 +1,11 @@
-import _ from 'lodash';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
+import { cloneDeep } from 'lodash-es';
 import { Assert, AssertNotNullable, logConfig, LogLevel } from 'pandora-common';
-import { CreateAccountData } from '../../src/account/account';
-import { GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure';
-import { PandoraDatabase } from '../../src/database/databaseProvider';
-import { PrehashPassword } from '../../src/database/mockDb';
-import { TEST_SPACE, TEST_SPACE2, TEST_SPACE_DEV, TEST_SPACE_PANDORA_OWNED } from '../spaces/testData';
+import { CreateAccountData } from '../../src/account/account.ts';
+import { GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure.ts';
+import { PandoraDatabase } from '../../src/database/databaseProvider.ts';
+import { PrehashPassword } from '../../src/database/mockDb.ts';
+import { TEST_SPACE, TEST_SPACE2, TEST_SPACE_DEV, TEST_SPACE_PANDORA_OWNED } from '../spaces/testData.ts';
 
 const TEST_USERNAME1 = 'testuser1';
 const TEST_EMAIL1 = 'test1@project-pandora.com';
@@ -136,7 +137,7 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			const mockAccount = await CreateAccountData('test', 'test', PrehashPassword('test'), 'test@example.com');
 
 			const [account1, account2, account3] = await Promise.all([mockAccount, mockAccount, mockAccount]
-				.map((acc) => _.cloneDeep(acc))
+				.map((acc) => cloneDeep(acc))
 				.map(async (account, index) => {
 					account.username = `test-${index}`;
 					account.secure.emailHash = `test-${index}`;

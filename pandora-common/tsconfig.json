@@ -3,6 +3,7 @@
 	"compilerOptions": {
 		"noEmit": false,
 		"outDir": "./dist",
+		"rewriteRelativeImportExtensions": true,
 		"tsBuildInfoFile": "./dist/tsconfig.tsbuildinfo",
 		"rootDir": "./src",
 		"incremental": true,

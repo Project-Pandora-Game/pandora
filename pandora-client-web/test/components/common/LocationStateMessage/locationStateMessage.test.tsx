@@ -1,6 +1,6 @@
 import { screen } from '@testing-library/react';
-import { LocationStateMessage } from '../../../../src/components/common/locationStateMessage/locationStateMessage';
-import { RenderWithRouter } from '../../../testUtils';
+import { LocationStateMessage } from '../../../../src/components/common/locationStateMessage/locationStateMessage.tsx';
+import { RenderWithRouter } from '../../../testUtils.tsx';
 
 describe('LocationStateMessage', () => {
 	it('should not render when there is no location state', () => {

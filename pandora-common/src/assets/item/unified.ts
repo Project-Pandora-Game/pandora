@@ -1,25 +1,25 @@
 import type { Immutable } from 'immer';
 import { z, ZodTypeDef } from 'zod';
 
-import type { Asset } from '../asset';
-import type { AssetType } from '../definitions';
+import type { Asset } from '../asset.ts';
+import type { AssetType } from '../definitions.ts';
 
-import { CharacterIdSchema } from '../../character/characterTypes';
-import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN, LIMIT_OUTFIT_NAME_LENGTH, LIMIT_POSE_PRESET_NAME_LENGTH } from '../../inputLimits';
-import { Assert, AssertNever } from '../../utility/misc';
-import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop, ZodTruncate } from '../../validation';
-import { AssetIdSchema } from '../base';
-import { CreateModuleDataFromTemplate, ItemModuleDataSchema, ItemModuleTemplateSchema } from '../modules';
-import { PartialAppearancePoseSchema } from '../state/characterStatePose';
-import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base';
+import { CharacterIdSchema } from '../../character/characterTypes.ts';
+import { LIMIT_ITEM_DESCRIPTION_LENGTH, LIMIT_ITEM_NAME_LENGTH, LIMIT_ITEM_NAME_PATTERN, LIMIT_OUTFIT_NAME_LENGTH, LIMIT_POSE_PRESET_NAME_LENGTH } from '../../inputLimits.ts';
+import { Assert, AssertNever } from '../../utility/misc.ts';
+import { HexRGBAColorStringSchema, ZodArrayWithInvalidDrop, ZodTruncate } from '../../validation.ts';
+import { AssetIdSchema } from '../base.ts';
+import { CreateModuleDataFromTemplate, ItemModuleDataSchema, ItemModuleTemplateSchema } from '../modules.ts';
+import { PartialAppearancePoseSchema } from '../state/characterStatePose.ts';
+import { GenerateRandomItemId, IItemCreationContext, IItemLoadContext, Item, ItemBundle, ItemColorBundleSchema, ItemIdSchema, ItemTemplate } from './base.ts';
 
-import { LockDataBundleSchema } from '../../gameLogic/locks/lockData';
-import { __internal_InitRecursiveItemSchemas } from './_internalRecursion';
-import { ItemBodypart } from './bodypart';
-import { ItemLock } from './lock';
-import { ItemPersonal } from './personal';
-import { ItemRoomDevice, RoomDeviceBundleSchema } from './roomDevice';
-import { ItemRoomDeviceWearablePart, RoomDeviceLinkSchema } from './roomDeviceWearablePart';
+import { LockDataBundleSchema } from '../../gameLogic/locks/lockData.ts';
+import { __internal_InitRecursiveItemSchemas } from './_internalRecursion.ts';
+import { ItemBodypart } from './bodypart.ts';
+import { ItemLock } from './lock.ts';
+import { ItemPersonal } from './personal.ts';
+import { ItemRoomDevice, RoomDeviceBundleSchema } from './roomDevice.ts';
+import { ItemRoomDeviceWearablePart, RoomDeviceLinkSchema } from './roomDeviceWearablePart.ts';
 
 /**
  * Serializable data bundle containing information about an item.

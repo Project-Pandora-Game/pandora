@@ -12,10 +12,10 @@ import {
 	type AppearanceActionProcessingResult,
 } from 'pandora-common';
 import { ReactElement, createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { ChildrenProps } from '../../common/reactTypes';
-import { ShardConnector } from '../../networking/shardConnector';
-import { PermissionPromptHandler } from '../settings/permissionsSettings';
-import { useShardChangeListener, useShardConnector } from './shardConnectorContextProvider';
+import { ChildrenProps } from '../../common/reactTypes.ts';
+import { ShardConnector } from '../../networking/shardConnector.ts';
+import { PermissionPromptHandler } from '../settings/permissionsSettings.tsx';
+import { useShardChangeListener, useShardConnector } from './shardConnectorContextProvider.tsx';
 
 export class PermissionCheckServiceBase extends TypedEventEmitter<{
 	permissionResultReset: void;

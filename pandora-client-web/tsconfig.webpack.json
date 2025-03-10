@@ -1,18 +1,24 @@
 {
 	"compilerOptions": {
-		"target": "ES6",
+		"target": "ES2021",
 		"lib": ["ES2023"],
 		"types": [
 			"@types/node"
 		],
-		"moduleResolution": "Node",
+		"module": "NodeNext",
+		"moduleResolution": "nodenext",
+		"allowImportingTsExtensions": true,
+		"noEmit": true,
+		"resolveJsonModule": true,
 		"esModuleInterop": true,
 		"removeComments": true,
 		"strict": true,
 		"noImplicitOverride": true,
 		"noImplicitReturns": true,
 		"noUncheckedIndexedAccess": true,
-		"resolveJsonModule": true
+		"isolatedModules": true,
+		"erasableSyntaxOnly": true,
+		"skipLibCheck": true,
 	},
 	"include": [
 		"webpack.config.ts"

@@ -2,17 +2,17 @@ import { Draft } from 'immer';
 import { AssertNotNullable, CloneDeepMutable, ICharacterRoomData, ResolveBackground, RoomBackgroundCalibrationDataSchema } from 'pandora-common';
 import { ReactElement, useMemo } from 'react';
 import { z } from 'zod';
-import { useAssetManager } from '../../../assets/assetManager';
-import { BrowserStorage } from '../../../browserStorage';
-import { Character, useCharacterData } from '../../../character/character';
-import { useEvent } from '../../../common/useEvent';
-import { Checkbox } from '../../../common/userInteraction/checkbox';
-import { NumberInput } from '../../../common/userInteraction/input/numberInput';
-import { Column, Row } from '../../../components/common/container/container';
-import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
-import { useGameState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
-import { USER_DEBUG } from '../../../config/Environment';
-import { useObservable } from '../../../observable';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
+import { BrowserStorage } from '../../../browserStorage.ts';
+import { Character, useCharacterData } from '../../../character/character.ts';
+import { useEvent } from '../../../common/useEvent.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.tsx';
+import { useGameState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { USER_DEBUG } from '../../../config/Environment.ts';
+import { useObservable } from '../../../observable.ts';
 
 const ChatroomDebugConfigSchema = z.object({
 	enabled: z.boolean().catch(false),

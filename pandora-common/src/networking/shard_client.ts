@@ -1,16 +1,16 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
-import type { AssetsDefinitionFile } from '../assets/definitions';
-import { AssetFrameworkGlobalStateClientBundle } from '../assets/state/globalState';
-import { AssetPreferencesPublic, CharacterIdSchema, CharacterPrivateDataSchema } from '../character';
-import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData';
-import { ChatCharacterStatusSchema, type IChatMessage } from '../chat/chat';
-import { AppearanceActionSchema, CharacterModifierEffectDataSchema } from '../gameLogic';
-import { PermissionConfigSchema, PermissionSetupSchema } from '../gameLogic/permissions/permissionData';
-import { SpaceClientInfoSchema, SpaceIdSchema } from '../space/space';
-import { Satisfies } from '../utility/misc';
-import { ZodCast } from '../validation';
-import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers';
+import type { AssetsDefinitionFile } from '../assets/definitions.ts';
+import { AssetFrameworkGlobalStateClientBundle } from '../assets/state/globalState.ts';
+import { AssetPreferencesPublic, CharacterIdSchema, CharacterPrivateDataSchema } from '../character/index.ts';
+import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData.ts';
+import { ChatCharacterStatusSchema, type IChatMessage } from '../chat/chat.ts';
+import { AppearanceActionSchema, CharacterModifierEffectDataSchema } from '../gameLogic/index.ts';
+import { PermissionConfigSchema, PermissionSetupSchema } from '../gameLogic/permissions/permissionData.ts';
+import { SpaceClientInfoSchema, SpaceIdSchema } from '../space/space.ts';
+import { Satisfies } from '../utility/misc.ts';
+import { ZodCast } from '../validation.ts';
+import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
 export type ICharacterRoomData = ICharacterPublicData & {
 	assetPreferences: AssetPreferencesPublic;

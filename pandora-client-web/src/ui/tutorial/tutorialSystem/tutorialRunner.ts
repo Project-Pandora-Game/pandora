@@ -1,9 +1,9 @@
 import type { Immutable } from 'immer';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { AssertNever, GetLogger } from 'pandora-common';
-import { Observable, type ReadonlyObservable } from '../../../observable';
-import type { TutorialCondition, TutorialConfig, TutorialStage } from './tutorialConfig';
-import type { TutorialFlagInfo } from './tutorialExternalConditions';
+import { Observable, type ReadonlyObservable } from '../../../observable.ts';
+import type { TutorialCondition, TutorialConfig, TutorialStage } from './tutorialConfig.ts';
+import type { TutorialFlagInfo } from './tutorialExternalConditions.tsx';
 
 export class TutorialRunner {
 	public readonly config: Immutable<TutorialConfig>;

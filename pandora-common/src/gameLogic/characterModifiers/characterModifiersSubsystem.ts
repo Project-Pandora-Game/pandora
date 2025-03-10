@@ -1,6 +1,6 @@
-import { TypedEventEmitter } from '../../event';
-import { GameLogicPermission, IPermissionProvider } from '../permissions';
-import { CharacterModifierType } from './modifierTypes/_index';
+import { TypedEventEmitter } from '../../event.ts';
+import { GameLogicPermission, IPermissionProvider } from '../permissions/index.ts';
+import { CharacterModifierType } from './modifierTypes/_index.ts';
 
 export type CharacterModifiersSubsystemEvents = {
 	dataChanged: void;

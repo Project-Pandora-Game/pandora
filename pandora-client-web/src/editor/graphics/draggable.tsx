@@ -1,5 +1,5 @@
 import { Draft, Immutable } from 'immer';
-import _, { cloneDeep } from 'lodash';
+import { clamp, cloneDeep } from 'lodash-es';
 import {
 	Assert,
 	AssetFrameworkCharacterState,
@@ -14,14 +14,14 @@ import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Texture } from 'pixi.js';
 import { ReactElement, useMemo, useRef } from 'react';
 import dotTexture from '../../assets/editor/dotTexture.png';
-import { useEvent } from '../../common/useEvent';
-import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator';
-import { Sprite } from '../../graphics/baseComponents/sprite';
-import { useTexture } from '../../graphics/useTexture';
-import { GetAngle, RotateVector } from '../../graphics/utility';
-import { Observable, ReadonlyObservable, useObservable } from '../../observable';
-import { EditorCharacter } from './character/appearanceEditor';
-import type { PointTemplateEditor } from './pointTemplateEditor';
+import { useEvent } from '../../common/useEvent.ts';
+import { useAppearanceConditionEvaluator } from '../../graphics/appearanceConditionEvaluator.ts';
+import { Sprite } from '../../graphics/baseComponents/sprite.ts';
+import { useTexture } from '../../graphics/useTexture.ts';
+import { GetAngle, RotateVector } from '../../graphics/utility.ts';
+import { Observable, ReadonlyObservable, useObservable } from '../../observable.ts';
+import { EditorCharacter } from './character/appearanceEditor.ts';
+import type { PointTemplateEditor } from './pointTemplateEditor.tsx';
 
 type DraggableProps = {
 	x: number;
@@ -57,8 +57,8 @@ export function Draggable({
 		event.stopPropagation();
 		const dragPointerEnd = event.getLocalPosition(sprite.current.parent);
 		setPos(
-			_.clamp(Math.round(dragPointerEnd.x), 0, CharacterSize.WIDTH),
-			_.clamp(Math.round(dragPointerEnd.y), 0, CharacterSize.HEIGHT),
+			clamp(Math.round(dragPointerEnd.x), 0, CharacterSize.WIDTH),
+			clamp(Math.round(dragPointerEnd.y), 0, CharacterSize.HEIGHT),
 		);
 	});
 

@@ -2,22 +2,22 @@ import { AssertNever, FormatTimeInterval, IClientDirectoryNormalResult, IDirecto
 import React, { ReactElement, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { useCurrentTime } from '../../common/useCurrentTime';
-import { useAsyncEvent } from '../../common/useEvent';
-import { useKeyDownEvent } from '../../common/useKeyDownEvent';
-import { FormInput } from '../../common/userInteraction/input/formInput';
-import { TextInput } from '../../common/userInteraction/input/textInput';
-import { PrehashPassword } from '../../crypto/helpers';
-import type { AuthToken } from '../../networking/directoryConnector';
-import { useObservable } from '../../observable';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast';
-import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
-import { useService } from '../../services/serviceProvider';
-import { Button } from '../common/button/button';
-import { Column, Row } from '../common/container/container';
-import { Form, FormCreateStringValidator, FormField, FormFieldError } from '../common/form/form';
-import { ModalDialog, useConfirmDialog } from '../dialog/dialog';
-import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useCurrentTime } from '../../common/useCurrentTime.ts';
+import { useAsyncEvent } from '../../common/useEvent.ts';
+import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
+import { FormInput } from '../../common/userInteraction/input/formInput.tsx';
+import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
+import { PrehashPassword } from '../../crypto/helpers.ts';
+import type { AuthToken } from '../../networking/directoryConnector.ts';
+import { useObservable } from '../../observable.ts';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast.ts';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
+import { useService } from '../../services/serviceProvider.tsx';
+import { Button } from '../common/button/button.tsx';
+import { Column, Row } from '../common/container/container.tsx';
+import { Form, FormCreateStringValidator, FormField, FormFieldError } from '../common/form/form.tsx';
+import { ModalDialog, useConfirmDialog } from '../dialog/dialog.tsx';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 
 export function SecuritySettings(): ReactElement | null {
 	const account = useCurrentAccount();

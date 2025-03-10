@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { ReactElement, useEffect, useReducer, useState } from 'react';
-import { EXTRA_ASSETS_ADDRESS, GAME_NAME, GAME_VERSION } from '../../config/Environment';
-import { Column, Row } from '../common/container/container';
+import { EXTRA_ASSETS_ADDRESS, GAME_NAME, GAME_VERSION } from '../../config/Environment.ts';
+import { Column, Row } from '../common/container/container.tsx';
 import './loginTeaser.scss';
 
 const TEASER_CONTENTS: [string, string][] = [

@@ -1,17 +1,17 @@
 import { AppearanceArmPose, AssetFrameworkCharacterState, CharacterArmsPose, PartialAppearancePose } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
-import { Checkbox } from '../../../common/userInteraction/checkbox';
-import { Button } from '../../../components/common/button/button';
-import { Column, Row } from '../../../components/common/container/container';
-import { FieldsetToggle } from '../../../components/common/fieldsetToggle';
-import { ExternalLink } from '../../../components/common/link/externalLink';
-import { ModalDialog } from '../../../components/dialog/dialog';
-import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardrobeExpressionsView';
-import { BoneRowElement, WardrobeArmPoses, WardrobeLegsPose, WardrobePoseCategories } from '../../../components/wardrobe/views/wardrobePoseView';
-import { useObservable } from '../../../observable';
-import { useEditor } from '../../editorContextProvider';
-import { EditorCharacter, useEditorCharacterState } from '../../graphics/character/appearanceEditor';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { Button } from '../../../components/common/button/button.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.tsx';
+import { ExternalLink } from '../../../components/common/link/externalLink.tsx';
+import { ModalDialog } from '../../../components/dialog/dialog.tsx';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardrobeExpressionsView.tsx';
+import { BoneRowElement, WardrobeArmPoses, WardrobeLegsPose, WardrobePoseCategories } from '../../../components/wardrobe/views/wardrobePoseView.tsx';
+import { useObservable } from '../../../observable.ts';
+import { useEditor } from '../../editorContextProvider.tsx';
+import { EditorCharacter, useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
 
 export function BoneUI(): ReactElement {
 	const editor = useEditor();

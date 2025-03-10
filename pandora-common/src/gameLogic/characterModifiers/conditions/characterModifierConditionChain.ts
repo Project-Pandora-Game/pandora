@@ -1,11 +1,11 @@
 import type { Immutable } from 'immer';
 import { z } from 'zod';
-import type { AssetDefinitionExtraArgs, AssetFrameworkGlobalState } from '../../../assets';
-import { LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT } from '../../../inputLimits';
-import type { CurrentSpaceInfo } from '../../../space';
-import type { Satisfies } from '../../../utility';
-import type { GameLogicCharacter } from '../../character/character';
-import { CharacterModifierConditionSchema, EvaluateCharacterModifierCondition, type CharacterModifierParametrizedCondition } from './characterModifierCondition';
+import type { AssetDefinitionExtraArgs, AssetFrameworkGlobalState } from '../../../assets/index.ts';
+import { LIMIT_CHARACTER_MODIFIER_CONFIG_CONDITION_COUNT } from '../../../inputLimits.ts';
+import type { CurrentSpaceInfo } from '../../../space/index.ts';
+import type { Satisfies } from '../../../utility/index.ts';
+import type { GameLogicCharacter } from '../../character/character.ts';
+import { CharacterModifierConditionSchema, EvaluateCharacterModifierCondition, type CharacterModifierParametrizedCondition } from './characterModifierCondition.ts';
 
 /** A single record in condition chain. */
 export const CharacterModifierConditionRecordSchema = z.object({

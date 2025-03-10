@@ -1,7 +1,7 @@
-import type { AssetId } from '../assets/base';
-import type { CharacterModifierId, CharacterModifierType, PermissionGroup, PermissionTypeInvalid } from '../gameLogic';
-import type { AssetPreferenceResolution } from './assetPreferences';
-import type { CharacterId } from './characterTypes';
+import type { AssetId } from '../assets/base.ts';
+import type { CharacterModifierId, CharacterModifierType, PermissionGroup, PermissionTypeInvalid } from '../gameLogic/index.ts';
+import type { AssetPreferenceResolution } from './assetPreferences.ts';
+import type { CharacterId } from './characterTypes.ts';
 
 export enum ItemInteractionType {
 	/**

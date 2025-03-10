@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { ZodBase64Regex } from '../../validation';
-import type { AssetId } from '../base';
-import { RectangleSchema } from './common';
-import { BoneNameSchema, ConditionSchema, type BoneType } from './conditions';
-import { type PointTemplate } from './points';
+import { ZodBase64Regex } from '../../validation.ts';
+import type { AssetId } from '../base.ts';
+import { RectangleSchema } from './common.ts';
+import { BoneNameSchema, ConditionSchema, type BoneType } from './conditions.ts';
+import { type PointTemplate } from './points.ts';
 
 export const CharacterSize = {
 	WIDTH: 1000,

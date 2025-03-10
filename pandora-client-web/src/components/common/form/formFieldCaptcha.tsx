@@ -1,8 +1,8 @@
 import React, { Suspense, type ReactElement } from 'react';
-import { useObservable } from '../../../observable';
-import { useIsVeryNarrowScreen } from '../../../styles/mediaQueries';
-import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
-import { FormField, FormFieldError } from './form';
+import { useObservable } from '../../../observable.ts';
+import { useIsVeryNarrowScreen } from '../../../styles/mediaQueries.ts';
+import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
+import { FormField, FormFieldError } from './form.tsx';
 
 const HCaptcha = React.lazy(() => import('@hcaptcha/react-hcaptcha'));
 

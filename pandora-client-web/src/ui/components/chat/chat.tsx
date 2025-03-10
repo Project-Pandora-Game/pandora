@@ -10,20 +10,20 @@ import React, {
 	useState,
 	type ReactNode,
 } from 'react';
-import { useAssetManager } from '../../../assets/assetManager';
-import { useAutoScroll } from '../../../common/useAutoScroll';
-import { Column } from '../../../components/common/container/container';
-import { Scrollable } from '../../../components/common/scrollbar/scrollbar';
-import { ContextMenu, useContextMenu } from '../../../components/contextMenu';
-import { useChatMessages, useChatMessageSender, useGameState } from '../../../components/gameContext/gameStateContextProvider';
-import { usePlayerId } from '../../../components/gameContext/playerContextProvider';
-import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider';
-import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
-import { NotificationSource, useNotificationSuppressed } from '../../../services/notificationHandler';
-import { useChatInjectedMessages } from './chatInjectedMessages';
-import { AutoCompleteHint, ChatInputArea, useChatCommandContext, useChatInput } from './chatInput';
-import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart, type IChatActionMessageProcessed, type IChatNormalMessageProcessed } from './chatMessages';
-import { COMMANDS } from './commands';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
+import { useAutoScroll } from '../../../common/useAutoScroll.ts';
+import { Column } from '../../../components/common/container/container.tsx';
+import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
+import { ContextMenu, useContextMenu } from '../../../components/contextMenu/index.ts';
+import { useChatMessages, useChatMessageSender, useGameState } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { usePlayerId } from '../../../components/gameContext/playerContextProvider.tsx';
+import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider.tsx';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { NotificationSource, useNotificationSuppressed } from '../../../services/notificationHandler.ts';
+import { useChatInjectedMessages } from './chatInjectedMessages.tsx';
+import { AutoCompleteHint, ChatInputArea, useChatCommandContext, useChatInput } from './chatInput.tsx';
+import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart, type IChatActionMessageProcessed, type IChatNormalMessageProcessed } from './chatMessages.tsx';
+import { COMMANDS } from './commands.ts';
 
 export function Chat(): ReactElement | null {
 	const gameState = useGameState();

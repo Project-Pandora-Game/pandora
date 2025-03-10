@@ -3,9 +3,9 @@ import { Assert, GetLogger } from 'pandora-common';
 import type { Container } from 'pixi.js';
 import type { ReactNode } from 'react';
 import ReactReconciler from 'react-reconciler';
-import { ConcurrentRoot } from 'react-reconciler/constants';
-import { PixiRootContainer, type PixiUpdateEmitter } from './element';
-import { PIXI_FIBER_HOST_CONFIG } from './reconciler-config';
+import { ConcurrentRoot } from 'react-reconciler/constants.js';
+import { PixiRootContainer, type PixiUpdateEmitter } from './element.ts';
+import { PIXI_FIBER_HOST_CONFIG } from './reconciler-config.ts';
 
 /** React reconciler instance with config for working with Pixi elements. */
 // @ts-expect-error: No reconciler typings for React 19 are available yet.

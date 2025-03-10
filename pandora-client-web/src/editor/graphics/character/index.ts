@@ -1,2 +1,2 @@
-export * from './resultCharacter';
-export * from './setupCharacter';
+export * from './resultCharacter.tsx';
+export * from './setupCharacter.tsx';

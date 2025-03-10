@@ -6,15 +6,15 @@ import {
 	type Asset,
 } from 'pandora-common';
 import { ReactElement, useCallback } from 'react';
-import { useAssetManager } from '../../../assets/assetManager';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
 import crossIcon from '../../../assets/icons/cross.svg';
 import strugglingAllow from '../../../assets/icons/struggling_allow.svg';
 import strugglingDeny from '../../../assets/icons/struggling_deny.svg';
-import { IconButton } from '../../common/button/button';
-import { Column, Row } from '../../common/container/container';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
-import { WardrobeModuleTemplateConfig } from '../modules/_wardrobeModules';
-import { WardrobeTemplateColorization } from './wardrobeTemplateColor';
+import { IconButton } from '../../common/button/button.tsx';
+import { Column, Row } from '../../common/container/container.tsx';
+import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
+import { WardrobeModuleTemplateConfig } from '../modules/_wardrobeModules.tsx';
+import { WardrobeTemplateColorization } from './wardrobeTemplateColor.tsx';
 
 export function WardrobeTemplateEditMenu({
 	title,

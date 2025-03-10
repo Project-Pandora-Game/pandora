@@ -1,10 +1,10 @@
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { z } from 'zod';
-import { CharacterIdSchema } from '../../../character/characterTypes';
-import { LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT } from '../../../inputLimits';
-import { Assert, AssertNever, KnownObject } from '../../../utility';
-import { ZodArrayWithInvalidDrop } from '../../../validation';
-import type { ModifierConfigurationEntryDefinition } from '../configuration';
+import { CharacterIdSchema } from '../../../character/characterTypes.ts';
+import { LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT } from '../../../inputLimits.ts';
+import { Assert, AssertNever, KnownObject } from '../../../utility/index.ts';
+import { ZodArrayWithInvalidDrop } from '../../../validation.ts';
+import type { ModifierConfigurationEntryDefinition } from '../configuration/index.ts';
 
 /** Mapping of a configuration type to its schema type */
 type ModifierConfigurationDataTypeSchemaMap = {

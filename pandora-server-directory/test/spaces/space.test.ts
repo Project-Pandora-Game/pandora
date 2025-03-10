@@ -1,12 +1,13 @@
+import { afterAll, beforeAll, describe, expect, it, jest } from '@jest/globals';
 import { Assert, AssertNever } from 'pandora-common';
-import { Space } from '../../src/spaces/space';
-import { SpaceManager } from '../../src/spaces/spaceManager';
-import { Shard } from '../../src/shard/shard';
-import { TestMockDb, TestMockShard, TestShardData } from '../utils';
-import { TEST_SPACE, TEST_SPACE2, TEST_SPACE_DEV, TEST_SPACE_PANDORA_OWNED } from './testData';
-import { Sleep } from '../../src/utility';
-import { GetDatabase } from '../../src/database/databaseProvider';
-import { ShardManager } from '../../src/shard/shardManager';
+import { GetDatabase } from '../../src/database/databaseProvider.ts';
+import { Shard } from '../../src/shard/shard.ts';
+import { ShardManager } from '../../src/shard/shardManager.ts';
+import { Space } from '../../src/spaces/space.ts';
+import { SpaceManager } from '../../src/spaces/spaceManager.ts';
+import { Sleep } from '../../src/utility.ts';
+import { TestMockDb, TestMockShard, TestShardData } from '../utils.ts';
+import { TEST_SPACE, TEST_SPACE2, TEST_SPACE_DEV, TEST_SPACE_PANDORA_OWNED } from './testData.ts';
 
 describe('Space', () => {
 	let mockShard: TestShardData;

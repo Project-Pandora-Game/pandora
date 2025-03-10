@@ -1,10 +1,10 @@
 import { Immutable, freeze } from 'immer';
-import type { AssetManager } from '../../assets/assetManager';
-import { AssetPreferenceType, AssetPreferencesPublic, AssetPreferencesServer, CleanupAssetPreferences, IsAssetPreferenceType } from '../../character/assetPreferences';
-import { CloneDeepMutable, KnownObject } from '../../utility/misc';
-import type { GameLogicCharacterServer } from '../character/characterServer';
-import { GameLogicPermissionServer, IPermissionProvider } from '../permissions';
-import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferencesSubsystem } from './assetPreferencesSubsystem';
+import type { AssetManager } from '../../assets/assetManager.ts';
+import { AssetPreferenceType, AssetPreferencesPublic, AssetPreferencesServer, CleanupAssetPreferences, IsAssetPreferenceType } from '../../character/assetPreferences.ts';
+import { CloneDeepMutable, KnownObject } from '../../utility/misc.ts';
+import type { GameLogicCharacterServer } from '../character/characterServer.ts';
+import { GameLogicPermissionServer, IPermissionProvider } from '../permissions/index.ts';
+import { ASSET_PREFERENCES_PERMISSIONS, AssetPreferencesSubsystem } from './assetPreferencesSubsystem.ts';
 
 export class AssetPreferencesSubsystemServer extends AssetPreferencesSubsystem implements IPermissionProvider<GameLogicPermissionServer> {
 	private readonly _permissions: ReadonlyMap<AssetPreferenceType, GameLogicPermissionServer>;

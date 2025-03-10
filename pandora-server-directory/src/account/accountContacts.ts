@@ -1,11 +1,11 @@
 import AsyncLock from 'async-lock';
-import _ from 'lodash';
-import { AccountId, AssertNever, GetLogger, IAccountFriendStatus, IAccountContact, IDirectoryClientArgument, IsNotNullable, Logger, PromiseOnce } from 'pandora-common';
-import { GetDatabase } from '../database/databaseProvider';
-import { Account } from './account';
-import { accountManager } from './accountManager';
-import { DatabaseAccountContact, DatabaseAccountContactType } from '../database/databaseStructure';
-import { Space } from '../spaces/space';
+import { isEqual } from 'lodash-es';
+import { AccountId, AssertNever, GetLogger, IAccountContact, IAccountFriendStatus, IDirectoryClientArgument, IsNotNullable, Logger, PromiseOnce } from 'pandora-common';
+import { GetDatabase } from '../database/databaseProvider.ts';
+import { DatabaseAccountContact, DatabaseAccountContactType } from '../database/databaseStructure.ts';
+import { Space } from '../spaces/space.ts';
+import { Account } from './account.ts';
+import { accountManager } from './accountManager.ts';
 
 const GLOBAL_LOCK = new AsyncLock();
 
@@ -365,7 +365,7 @@ export class AccountContacts {
 
 	private _updateStatus(): void {
 		const status = this.getStatus();
-		if (_.isEqual(status, this.lastStatus)) {
+		if (isEqual(status, this.lastStatus)) {
 			return;
 		}
 		this.lastStatus = status;

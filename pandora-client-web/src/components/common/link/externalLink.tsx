@@ -1,10 +1,10 @@
 import React, { ReactElement, ReactNode } from 'react';
 import { z } from 'zod';
-import { BrowserStorage } from '../../../browserStorage';
-import { Checkbox } from '../../../common/userInteraction/checkbox';
-import { ModalDialog } from '../../dialog/dialog';
-import { Button } from '../button/button';
-import { Column, Row } from '../container/container';
+import { BrowserStorage } from '../../../browserStorage.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { ModalDialog } from '../../dialog/dialog.tsx';
+import { Button } from '../button/button.tsx';
+import { Column, Row } from '../container/container.tsx';
 
 function ExternalLinkImpl({ children, ...props }: Omit<React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>, 'target' | 'referrerPolicy' | 'rel'>, ref: React.ForwardedRef<HTMLAnchorElement>): ReactElement {
 	return (

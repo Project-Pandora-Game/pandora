@@ -1,5 +1,5 @@
-import { useRef, useLayoutEffect, useCallback, useState } from 'react';
-import { useMounted } from './useMounted';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { useMounted } from './useMounted.ts';
 
 /**
  * Creates a stable function that wont change during the lifecycle of the component.

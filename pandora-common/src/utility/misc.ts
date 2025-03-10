@@ -1,6 +1,6 @@
 import AsyncLock, { AsyncLockOptions } from 'async-lock';
 import { castDraft, Draft } from 'immer';
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import type { SetRequired } from 'type-fest';
 
 /** Checks if the two types are equal */

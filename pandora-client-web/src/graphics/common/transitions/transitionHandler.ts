@@ -1,6 +1,6 @@
+import { clamp } from 'lodash-es';
 import { Assert } from 'pandora-common';
-import type { TransitionTimingFunction } from './transitionTimingFunctions';
-import { clamp } from 'lodash';
+import type { TransitionTimingFunction } from './transitionTimingFunctions.ts';
 
 /*
 This graphical transitions framework is based on the CSS Transitions

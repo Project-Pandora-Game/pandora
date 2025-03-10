@@ -1,10 +1,10 @@
 import { Immutable } from 'immer';
-import { TypedEventEmitter } from '../../event';
-import type { GameLogicCharacter } from '../character';
-import { GameLogicPermission, GameLogicPermissionServer } from '../permissions';
-import { GameLogicPermissionClient } from '../permissions/permissionClient';
-import { IInteractionConfig, INTERACTION_CONFIG, InteractionId } from './_interactionConfig';
-import { InteractionData } from './interactionData';
+import { TypedEventEmitter } from '../../event.ts';
+import type { GameLogicCharacter } from '../character/index.ts';
+import { GameLogicPermission, GameLogicPermissionServer } from '../permissions/index.ts';
+import { GameLogicPermissionClient } from '../permissions/permissionClient.ts';
+import { IInteractionConfig, INTERACTION_CONFIG, InteractionId } from './_interactionConfig.ts';
+import { InteractionData } from './interactionData.ts';
 
 export type GameLogicInteractionEvents = {
 	configChanged: void;

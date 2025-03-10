@@ -1,6 +1,6 @@
 import { Assert, type IAccountCryptoKey } from 'pandora-common';
-import { ArrayToBase64, Base64ToArray, HashSHA512Base64 } from './helpers';
-import { SymmetricEncryption } from './symmetric';
+import { ArrayToBase64, Base64ToArray, HashSHA512Base64 } from './helpers.ts';
+import { SymmetricEncryption } from './symmetric.ts';
 
 function GetSubtle(): SubtleCrypto {
 	const subtle = globalThis.crypto.subtle;

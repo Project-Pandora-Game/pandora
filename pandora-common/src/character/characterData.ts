@@ -1,16 +1,16 @@
 import { z } from 'zod';
-import { AccountIdSchema } from '../account';
-import { AppearanceBundleSchema } from '../assets/state/characterStateTypes';
-import { RoomInventoryBundleSchema } from '../assets/state/roomState';
-import { CharacterModifierSystemDataSchema } from '../gameLogic/characterModifiers/characterModifierData';
-import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData';
-import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits';
-import { SpaceIdSchema } from '../space/space';
-import { ArrayToRecordKeys } from '../utility/misc';
-import { CharacterNameSchema, HexColorStringSchema, ZodTruncate } from '../validation';
-import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesServerSchema } from './assetPreferences';
-import { CharacterIdSchema } from './characterTypes';
-import { PronounKeySchema } from './pronouns';
+import { AccountIdSchema } from '../account/index.ts';
+import { AppearanceBundleSchema } from '../assets/state/characterStateTypes.ts';
+import { RoomInventoryBundleSchema } from '../assets/state/roomState.ts';
+import { CharacterModifierSystemDataSchema } from '../gameLogic/characterModifiers/characterModifierData.ts';
+import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData.ts';
+import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits.ts';
+import { SpaceIdSchema } from '../space/space.ts';
+import { ArrayToRecordKeys } from '../utility/misc.ts';
+import { CharacterNameSchema, HexColorStringSchema, ZodTruncate } from '../validation.ts';
+import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesServerSchema } from './assetPreferences.ts';
+import { CharacterIdSchema } from './characterTypes.ts';
+import { PronounKeySchema } from './pronouns.ts';
 
 export const CharacterPublicSettingsSchema = z.object({
 	labelColor: HexColorStringSchema.catch('#ffffff'),

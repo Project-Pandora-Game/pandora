@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
-import { AssertNever, CloneDeepMutable } from '../../utility';
-import type { AppearanceAction } from './actions/_index';
+import { AssertNever, CloneDeepMutable } from '../../utility/index.ts';
+import type { AppearanceAction } from './actions/_index.ts';
 
 /**
  * Create a copy of the action with sensitive data removed.

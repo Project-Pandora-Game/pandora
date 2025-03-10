@@ -10,7 +10,7 @@ import {
 	type LayerStateOverrides,
 } from 'pandora-common';
 import { useMemo } from 'react';
-import { AssetGraphicsLayer } from '../assets/assetGraphics';
+import { AssetGraphicsLayer } from '../assets/assetGraphics.ts';
 
 export type LayerState = {
 	layer: AssetGraphicsLayer;

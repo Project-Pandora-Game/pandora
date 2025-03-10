@@ -1,20 +1,20 @@
 import classNames from 'classnames';
-import _ from 'lodash';
+import { throttle } from 'lodash-es';
 import {
 	AppearanceActionProcessingContext,
 	AssetFrameworkCharacterState,
 	BoneName,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
-import { ICharacter } from '../../../character/character';
-import type { ChildrenProps } from '../../../common/reactTypes';
-import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment';
-import { Column } from '../../common/container/container';
-import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
-import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobePermissionRequestCallback } from '../wardrobeActionContext';
-import { ActionWarning, ActionWarningContent, CheckResultToClassName } from '../wardrobeComponents';
-import { useWardrobeContext } from '../wardrobeContext';
-import { BoneRowElement } from './wardrobePoseView';
+import { ICharacter } from '../../../character/character.ts';
+import type { ChildrenProps } from '../../../common/reactTypes.ts';
+import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
+import { Column } from '../../common/container/container.tsx';
+import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider.tsx';
+import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobePermissionRequestCallback } from '../wardrobeActionContext.tsx';
+import { ActionWarning, ActionWarningContent, CheckResultToClassName } from '../wardrobeComponents.tsx';
+import { useWardrobeContext } from '../wardrobeContext.tsx';
+import { BoneRowElement } from './wardrobePoseView.tsx';
 
 export function WardrobeBodySizeEditor({ character, characterState }: {
 	character: ICharacter;
@@ -32,7 +32,7 @@ export function WardrobeBodySizeEditor({ character, characterState }: {
 		});
 	}, [execute, character]);
 
-	const setBody = useMemo(() => _.throttle(setBodyDirect, LIVE_UPDATE_THROTTLE), [setBodyDirect]);
+	const setBody = useMemo(() => throttle(setBodyDirect, LIVE_UPDATE_THROTTLE), [setBodyDirect]);
 
 	return (
 		<div className='inventoryView'>

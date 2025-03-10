@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { throttle } from 'lodash';
+import { throttle } from 'lodash-es';
 import {
 	AssertNever,
 	AssetFrameworkCharacterState,
@@ -14,30 +14,30 @@ import { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle, type Cu
 import { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { z } from 'zod';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
-import { BrowserStorage } from '../../browserStorage';
-import { Character, useCharacterData } from '../../character/character';
-import { useEvent } from '../../common/useEvent';
-import { useCharacterRestrictionsManager } from '../../components/gameContext/gameStateContextProvider';
-import { THEME_FONT } from '../../components/gameContext/interfaceSettingsProvider';
-import { LIVE_UPDATE_THROTTLE } from '../../config/Environment';
-import { ShardConnector } from '../../networking/shardConnector';
-import { useObservable } from '../../observable';
-import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
-import { useRoomScreenContext } from '../../ui/screens/room/roomContext';
-import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug';
-import { useAppearanceConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
-import { Container } from '../baseComponents/container';
-import { Graphics } from '../baseComponents/graphics';
-import { Sprite } from '../baseComponents/sprite';
-import { Text } from '../baseComponents/text';
-import { TransitionedContainer } from '../common/transitions/transitionedContainer';
-import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter';
-import { MASK_SIZE, SwapCullingDirection } from '../graphicsLayer';
-import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings';
-import { useTickerRef } from '../reconciler/tick';
-import { useTexture } from '../useTexture';
-import { CalculateCharacterDeviceSlotPosition } from './roomDevice';
-import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene';
+import { BrowserStorage } from '../../browserStorage.ts';
+import { Character, useCharacterData } from '../../character/character.ts';
+import { useEvent } from '../../common/useEvent.ts';
+import { useCharacterRestrictionsManager } from '../../components/gameContext/gameStateContextProvider.tsx';
+import { THEME_FONT } from '../../components/gameContext/interfaceSettingsProvider.tsx';
+import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
+import { ShardConnector } from '../../networking/shardConnector.ts';
+import { useObservable } from '../../observable.ts';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
+import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
+import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
+import { useAppearanceConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { Container } from '../baseComponents/container.ts';
+import { Graphics } from '../baseComponents/graphics.ts';
+import { Sprite } from '../baseComponents/sprite.ts';
+import { Text } from '../baseComponents/text.ts';
+import { TransitionedContainer } from '../common/transitions/transitionedContainer.ts';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter.tsx';
+import { MASK_SIZE, SwapCullingDirection } from '../graphicsLayer.tsx';
+import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
+import { useTickerRef } from '../reconciler/tick.ts';
+import { useTexture } from '../useTexture.ts';
+import { CalculateCharacterDeviceSlotPosition } from './roomDevice.tsx';
+import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene.tsx';
 
 export type RoomCharacterInteractiveProps = {
 	globalState: AssetFrameworkGlobalState;

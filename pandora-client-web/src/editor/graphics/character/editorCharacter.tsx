@@ -1,8 +1,8 @@
 import { ReactElement, useCallback, useEffect, useReducer } from 'react';
-import { GraphicsCharacterProps, GraphicsCharacterWithManager, GraphicsGetterFunction, LayerStateOverrideGetter } from '../../../graphics/graphicsCharacter';
-import { usePreviewCutterOverridesEnabled } from '../../components/previewCutter/previewCutter';
-import { useEditor } from '../../editorContextProvider';
-import { useEditorCharacterState } from './appearanceEditor';
+import { GraphicsCharacterProps, GraphicsCharacterWithManager, GraphicsGetterFunction, LayerStateOverrideGetter } from '../../../graphics/graphicsCharacter.tsx';
+import { usePreviewCutterOverridesEnabled } from '../../components/previewCutter/previewCutter.tsx';
+import { useEditor } from '../../editorContextProvider.tsx';
+import { useEditorCharacterState } from './appearanceEditor.ts';
 
 export type GraphicsCharacterEditorProps = Omit<GraphicsCharacterProps, 'characterState'>;
 

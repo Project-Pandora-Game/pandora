@@ -1,12 +1,12 @@
 import type { Immutable } from 'immer';
 import { CommandAutocompleteResult, CommandRunner, ICommandExecutionContext, IEmpty, LongestCommonPrefix, type AccountSettings, type AssetFrameworkGlobalState } from 'pandora-common';
 import type { useNavigate } from 'react-router';
-import type { PlayerCharacter } from '../../../character/player';
-import type { GameState, IChatMessageSender } from '../../../components/gameContext/gameStateContextProvider';
-import { DirectoryConnector } from '../../../networking/directoryConnector';
-import type { ShardConnector } from '../../../networking/shardConnector';
-import type { AccountManager } from '../../../services/accountLogic/accountManager';
-import type { IChatInputHandler } from './chatInput';
+import type { PlayerCharacter } from '../../../character/player.ts';
+import type { GameState, IChatMessageSender } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
+import type { ShardConnector } from '../../../networking/shardConnector.ts';
+import type { AccountManager } from '../../../services/accountLogic/accountManager.ts';
+import type { IChatInputHandler } from './chatInput.tsx';
 
 export const COMMAND_KEY = '/';
 

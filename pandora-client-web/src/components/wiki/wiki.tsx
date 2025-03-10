@@ -1,17 +1,17 @@
 import { ReactElement, ReactNode } from 'react';
 import { useNavigate } from 'react-router';
-import { ChildrenProps } from '../../common/reactTypes';
-import { Scrollable } from '../common/scrollbar/scrollbar';
-import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
-import { PrivacyPolicyContent } from '../Eula/privacyPolicy';
-import { WikiCharacters } from './pages/characters';
-import { WikiContact } from './pages/contact';
-import { WikiHistory } from './pages/history';
-import { WikiIntroduction } from './pages/intro';
-import { WikiItems } from './pages/items';
-import { WikiNew } from './pages/new';
-import { WikiSafety } from './pages/safety';
-import { WikiSpaces } from './pages/spaces';
+import { ChildrenProps } from '../../common/reactTypes.ts';
+import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
+import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs.tsx';
+import { PrivacyPolicyContent } from '../Eula/privacyPolicy.tsx';
+import { WikiCharacters } from './pages/characters.tsx';
+import { WikiContact } from './pages/contact.tsx';
+import { WikiHistory } from './pages/history.tsx';
+import { WikiIntroduction } from './pages/intro.tsx';
+import { WikiItems } from './pages/items.tsx';
+import { WikiNew } from './pages/new.tsx';
+import { WikiSafety } from './pages/safety.tsx';
+import { WikiSpaces } from './pages/spaces.tsx';
 import './wiki.scss';
 
 export default function Wiki(): ReactElement {

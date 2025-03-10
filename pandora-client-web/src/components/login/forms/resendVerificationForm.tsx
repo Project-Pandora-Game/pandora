@@ -2,11 +2,11 @@ import { AssertNever, IsEmail } from 'pandora-common';
 import { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
-import { FormInput } from '../../../common/userInteraction/input/formInput';
-import { useDirectoryResendVerification } from '../../../networking/account_manager';
-import { Button } from '../../common/button/button';
-import { Form, FormField, FormFieldError, FormLink } from '../../common/form/form';
-import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha';
+import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
+import { useDirectoryResendVerification } from '../../../networking/account_manager.ts';
+import { Button } from '../../common/button/button.tsx';
+import { Form, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
+import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha.tsx';
 
 export interface ResendVerificationFormData {
 	email: string;

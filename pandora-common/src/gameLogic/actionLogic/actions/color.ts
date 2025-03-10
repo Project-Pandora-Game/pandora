@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes';
-import { ItemColorBundleSchema } from '../../../assets/item/base';
-import { ItemInteractionType } from '../../../character/restrictionTypes';
-import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
-import type { AppearanceActionHandlerArg } from './_common';
+import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes.ts';
+import { ItemColorBundleSchema } from '../../../assets/item/base.ts';
+import { ItemInteractionType } from '../../../character/restrictionTypes.ts';
+import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
+import type { AppearanceActionHandlerArg } from './_common.ts';
 
 export const AppearanceActionColor = z.object({
 	type: z.literal('color'),

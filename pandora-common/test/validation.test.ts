@@ -1,4 +1,5 @@
-import { IsObject, ZodTrimedRegex } from '../src/validation';
+import { describe, expect, it } from '@jest/globals';
+import { IsObject, ZodTrimedRegex } from '../src/validation.ts';
 
 describe('Validation', () => {
 

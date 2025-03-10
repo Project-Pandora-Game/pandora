@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { TimeSpanMs } from '../utility/formatting';
-import { EMPTY_ARRAY, KnownObject, ParseArrayNotEmpty } from '../utility/misc';
-import { DisplayNameSchema, HexColorStringSchema } from '../validation';
-import { AccountRoleSchema } from './accountRoles';
-import { TutorialIdSchema } from './tutorials';
+import { TimeSpanMs } from '../utility/formatting.ts';
+import { EMPTY_ARRAY, KnownObject, ParseArrayNotEmpty } from '../utility/misc.ts';
+import { DisplayNameSchema, HexColorStringSchema } from '../validation.ts';
+import { AccountRoleSchema } from './accountRoles.ts';
+import { TutorialIdSchema } from './tutorials.ts';
 
 //#region Settings declarations
 

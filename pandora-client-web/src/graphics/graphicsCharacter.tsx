@@ -20,19 +20,19 @@ import {
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics';
-import { GraphicsManagerInstance } from '../assets/graphicsManager';
-import { ChildrenProps } from '../common/reactTypes';
-import { usePlayerData } from '../components/gameContext/playerContextProvider';
-import { Observable, useObservable, useObservableMultiple } from '../observable';
-import { Container } from './baseComponents/container';
-import { TransitionedContainer, type PixiTransitionedContainer, type TransitionedContainerCustomProps } from './common/transitions/transitionedContainer';
-import { TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler';
-import { LayerState, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def';
-import { GraphicsLayer, GraphicsLayerProps, SwapCullingDirection, SwapCullingDirectionObservable } from './graphicsLayer';
-import { useGraphicsSettings } from './graphicsSettings';
-import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense';
-import { useTickerRef } from './reconciler/tick';
+import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics.ts';
+import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
+import { ChildrenProps } from '../common/reactTypes.ts';
+import { usePlayerData } from '../components/gameContext/playerContextProvider.tsx';
+import { Observable, useObservable, useObservableMultiple } from '../observable.ts';
+import { Container } from './baseComponents/container.ts';
+import { TransitionedContainer, type PixiTransitionedContainer, type TransitionedContainerCustomProps } from './common/transitions/transitionedContainer.ts';
+import { TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler.ts';
+import { LayerState, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def.ts';
+import { GraphicsLayer, GraphicsLayerProps, SwapCullingDirection, SwapCullingDirectionObservable } from './graphicsLayer.tsx';
+import { useGraphicsSettings } from './graphicsSettings.tsx';
+import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense.tsx';
+import { useTickerRef } from './reconciler/tick.ts';
 
 export type PointLike = {
 	x: number;

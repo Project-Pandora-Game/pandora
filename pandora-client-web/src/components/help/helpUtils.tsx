@@ -1,5 +1,5 @@
-import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
-import { usePlayerData } from '../gameContext/playerContextProvider';
+import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
+import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
 
 export function useHelpUserName(): string {
 	const characterName = usePlayerData()?.name;

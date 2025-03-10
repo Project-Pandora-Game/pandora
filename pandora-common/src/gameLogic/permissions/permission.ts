@@ -1,8 +1,8 @@
 import type { Immutable } from 'immer';
-import { TypedEventEmitter } from '../../event';
-import type { GameLogicCharacter } from '../character/character';
-import { PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigDefault, PermissionGroup, PermissionSetup, PermissionType, PermissionTypeInvalid } from './permissionData';
-import type { PermissionRestriction } from '../../character/restrictionTypes';
+import { TypedEventEmitter } from '../../event.ts';
+import type { GameLogicCharacter } from '../character/character.ts';
+import { PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigDefault, PermissionGroup, PermissionSetup, PermissionType, PermissionTypeInvalid } from './permissionData.ts';
+import type { PermissionRestriction } from '../../character/restrictionTypes.ts';
 
 export type GameLogicPermissionEvents = {
 	configChanged: void;

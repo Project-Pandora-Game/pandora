@@ -1,7 +1,8 @@
-import { MockDatabase, PrehashPassword } from '../../src/database/mockDb';
+import { describe, expect, it } from '@jest/globals';
 import { createHash } from 'crypto';
 import { PASSWORD_PREHASH_SALT } from 'pandora-common';
-import RunDbTests from './db';
+import { MockDatabase, PrehashPassword } from '../../src/database/mockDb.ts';
+import RunDbTests from './db.ts';
 
 describe('PrehashPassword()', () => {
 

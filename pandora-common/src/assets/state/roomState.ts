@@ -1,14 +1,14 @@
 import { freeze } from 'immer';
 import { z } from 'zod';
-import { Logger } from '../../logging';
-import { Assert, MemoizeNoArg } from '../../utility/misc';
-import { ZodArrayWithInvalidDrop } from '../../validation';
-import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import type { AssetManager } from '../assetManager';
-import { Item } from '../item/base';
-import { ItemBundleSchema } from '../item/unified';
-import type { IExportOptions } from '../modules/common';
-import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation';
+import { Logger } from '../../logging.ts';
+import { Assert, MemoizeNoArg } from '../../utility/misc.ts';
+import { ZodArrayWithInvalidDrop } from '../../validation.ts';
+import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation.ts';
+import type { AssetManager } from '../assetManager.ts';
+import { Item } from '../item/base.ts';
+import { ItemBundleSchema } from '../item/unified.ts';
+import type { IExportOptions } from '../modules/common.ts';
+import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation.ts';
 
 export const RoomInventoryBundleSchema = z.object({
 	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),

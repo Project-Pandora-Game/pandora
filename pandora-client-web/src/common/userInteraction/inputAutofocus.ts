@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import type { IInputBase } from './input/inputBase';
+import type { IInputBase } from './input/inputBase.tsx';
 
 /**
  * Utility to focus a desired input if there is no input focused when user starts writing on the keyboard

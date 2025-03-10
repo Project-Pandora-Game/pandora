@@ -1,11 +1,11 @@
 // must be first
-export * from './base';
+export * from './base.ts';
 
-export * from './bodypart';
-export * from './lock';
-export * from './personal';
-export * from './roomDevice';
-export * from './roomDeviceWearablePart';
+export * from './bodypart.ts';
+export * from './lock.ts';
+export * from './personal.ts';
+export * from './roomDevice.ts';
+export * from './roomDeviceWearablePart.ts';
 
 // must be last
-export * from './unified';
+export * from './unified.ts';

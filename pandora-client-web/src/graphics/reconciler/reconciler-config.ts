@@ -5,10 +5,10 @@ import type { Container as PixiContainer } from 'pixi.js';
 import { createContext } from 'react';
 import type ReactReconciler from 'react-reconciler';
 import type { Lane } from 'react-reconciler';
-import { DefaultEventPriority } from 'react-reconciler/constants';
-import { PIXI_REGISTERED_COMPONENTS } from './component';
-import { PixiInternalElementInstance, type PixiRootContainer } from './element';
-import { GAME_VERSION } from '../../config/Environment';
+import { DefaultEventPriority } from 'react-reconciler/constants.js';
+import { GAME_VERSION } from '../../config/Environment.ts';
+import { PIXI_REGISTERED_COMPONENTS } from './component.ts';
+import { PixiInternalElementInstance, type PixiRootContainer } from './element.ts';
 
 // This file extensively ignores types. This is done because react-reconciler typings don't support mapping Props per specific type.
 // We depend on things being declarated using `RegisterPixiComponent` to keep things type-safe.

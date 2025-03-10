@@ -1,9 +1,9 @@
-import { cloneDeep } from 'lodash';
-import type { GameLogicCharacter } from '../character/character';
-import type { PermissionConfig, PermissionSetup, PermissionType, PermissionConfigChange } from './permissionData';
 import type { Immutable } from 'immer';
-import { GameLogicPermission, MakePermissionConfigFromDefault } from './permission';
-import { KnownObject } from '../../utility/misc';
+import { cloneDeep } from 'lodash-es';
+import { KnownObject } from '../../utility/misc.ts';
+import type { GameLogicCharacter } from '../character/character.ts';
+import { GameLogicPermission, MakePermissionConfigFromDefault } from './permission.ts';
+import type { PermissionConfig, PermissionConfigChange, PermissionSetup, PermissionType } from './permissionData.ts';
 
 export class GameLogicPermissionServer extends GameLogicPermission {
 	/**

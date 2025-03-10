@@ -1,16 +1,16 @@
 import { AssertNotNullable, FormatTimeInterval, GetRestrictionOverrideConfig, RestrictionOverride } from 'pandora-common';
 import React, { ReactElement, useCallback, useContext, useMemo, useState } from 'react';
-import { PlayerCharacter } from '../../character/player';
-import { ChildrenProps } from '../../common/reactTypes';
-import { useCurrentTime } from '../../common/useCurrentTime';
-import { useKeyDownEvent } from '../../common/useKeyDownEvent';
-import { Button } from '../common/button/button';
-import { Row } from '../common/container/container';
-import { ModalDialog } from '../dialog/dialog';
-import { useCharacterState, useGameState, useGlobalState } from '../gameContext/gameStateContextProvider';
-import { usePlayer } from '../gameContext/playerContextProvider';
-import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
-import { ContextHelpButton } from '../help/contextHelpButton';
+import { PlayerCharacter } from '../../character/player.ts';
+import { ChildrenProps } from '../../common/reactTypes.ts';
+import { useCurrentTime } from '../../common/useCurrentTime.ts';
+import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
+import { Button } from '../common/button/button.tsx';
+import { Row } from '../common/container/container.tsx';
+import { ModalDialog } from '../dialog/dialog.tsx';
+import { useCharacterState, useGameState, useGlobalState } from '../gameContext/gameStateContextProvider.tsx';
+import { usePlayer } from '../gameContext/playerContextProvider.tsx';
+import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider.tsx';
+import { ContextHelpButton } from '../help/contextHelpButton.tsx';
 
 export type RestrictionOverrideDialogContext = {
 	show: () => void;

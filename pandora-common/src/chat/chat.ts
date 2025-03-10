@@ -1,11 +1,11 @@
 import { z } from 'zod';
-import type { ItemId } from '../assets';
-import type { AssetId } from '../assets/base';
-import { CharacterId, CharacterIdSchema } from '../character/characterTypes';
-import type { PronounKey } from '../character/pronouns';
-import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits';
-import type { HexColorString } from '../validation';
-import { ChatActionId } from './chatActions';
+import type { ItemId } from '../assets/index.ts';
+import type { AssetId } from '../assets/base.ts';
+import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
+import type { PronounKey } from '../character/pronouns.ts';
+import { LIMIT_CHAT_MESSAGE_LENGTH } from '../inputLimits.ts';
+import type { HexColorString } from '../validation.ts';
+import { ChatActionId } from './chatActions.ts';
 
 export const ChatModifierSchema = z.enum(['normal', 'bold', 'italic']);
 export type IChatModifier = z.infer<typeof ChatModifierSchema>;

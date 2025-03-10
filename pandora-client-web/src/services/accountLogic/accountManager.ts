@@ -17,14 +17,14 @@ import {
 	type ServiceProviderDefinition,
 } from 'pandora-common';
 import { toast } from 'react-toastify';
-import { BrowserStorage } from '../../browserStorage';
-import { AccountContactContext } from '../../components/accountContacts/accountContactContext';
-import { PrehashPassword } from '../../crypto/helpers';
-import type { LoginResponse } from '../../networking/directoryConnector';
-import { Observable, type ReadonlyObservable } from '../../observable';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import type { ClientServices } from '../clientServices';
-import { InitDirectMessageCryptoPassword } from './directMessages/directMessageManager';
+import { BrowserStorage } from '../../browserStorage.ts';
+import { AccountContactContext } from '../../components/accountContacts/accountContactContext.ts';
+import { PrehashPassword } from '../../crypto/helpers.ts';
+import type { LoginResponse } from '../../networking/directoryConnector.ts';
+import { Observable, type ReadonlyObservable } from '../../observable.ts';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import type { ClientServices } from '../clientServices.ts';
+import { InitDirectMessageCryptoPassword } from './directMessages/directMessageManager.ts';
 
 type AccountManagerServiceConfig = Satisfies<{
 	dependencies: Pick<ClientServices, 'directoryConnector'>;

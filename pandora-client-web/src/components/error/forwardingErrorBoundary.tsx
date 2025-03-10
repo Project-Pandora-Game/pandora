@@ -1,6 +1,6 @@
 import { GetLogger } from 'pandora-common';
 import { Component, ErrorInfo, ReactElement } from 'react';
-import { ChildrenProps } from '../../common/reactTypes';
+import { ChildrenProps } from '../../common/reactTypes.ts';
 import './localErrorBoundary.scss';
 
 export interface ForwardingErrorBoundaryProps extends ChildrenProps {

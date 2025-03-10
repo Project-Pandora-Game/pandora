@@ -1,14 +1,14 @@
 import { CloneDeepMutable, GetLogger } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 import { ZodType, z } from 'zod';
-import { CopyToClipboard } from '../../common/clipboard';
-import { DownloadAsFile } from '../../common/downloadHelper';
-import { TextInput } from '../../common/userInteraction/input/textInput';
-import { Button } from '../common/button/button';
-import { Column, Row } from '../common/container/container';
-import { ModalDialog } from '../dialog/dialog';
+import { CopyToClipboard } from '../../common/clipboard.ts';
+import { DownloadAsFile } from '../../common/downloadHelper.ts';
+import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
+import { Button } from '../common/button/button.tsx';
+import { Column, Row } from '../common/container/container.tsx';
+import { ModalDialog } from '../dialog/dialog.tsx';
 import './exportDialog.scss';
-import { ExportData } from './exportImportUtils';
+import { ExportData } from './exportImportUtils.ts';
 
 interface ExportDialogProps<T extends ZodType<unknown>> {
 	exportType: string;

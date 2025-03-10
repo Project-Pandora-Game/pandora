@@ -1,12 +1,12 @@
 import { Viewport } from 'pixi-viewport';
 import { type Application, Point } from 'pixi.js';
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
-import { ChildrenProps } from '../../common/reactTypes';
-import { usePixiApp } from '../reconciler/appContext';
-import { RegisterPixiComponent } from '../reconciler/component';
-import { PixiElementRequestUpdate } from '../reconciler/element';
-import { usePixiTick } from '../reconciler/tick';
-import { CONTAINER_EVENTS, type ContainerEventMap } from './container';
+import { ChildrenProps } from '../../common/reactTypes.ts';
+import { usePixiApp } from '../reconciler/appContext.ts';
+import { RegisterPixiComponent } from '../reconciler/component.ts';
+import { PixiElementRequestUpdate } from '../reconciler/element.ts';
+import { usePixiTick } from '../reconciler/tick.ts';
+import { CONTAINER_EVENTS, type ContainerEventMap } from './container.ts';
 
 export type PixiViewportSetupCallback = (viewport: Viewport, params: {
 	width: number;

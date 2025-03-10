@@ -2,17 +2,17 @@ import { AssertNever, CharacterId, GetLogger, ICharacterRoomData, LIMIT_CHARACTE
 import { ReactElement, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { Character, useCharacterData } from '../../character/character';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast';
-import { useIsNarrowScreen } from '../../styles/mediaQueries';
-import { Button } from '../common/button/button';
-import { Column, Row } from '../common/container/container';
-import { Scrollable } from '../common/scrollbar/scrollbar';
-import { GameState, useCharacterState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../gameContext/gameStateContextProvider';
-import { usePlayer } from '../gameContext/playerContextProvider';
-import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { CharacterPreview } from '../wardrobe/wardrobeGraphics';
-import { ProfileDescription } from './profileDescription';
+import { Character, useCharacterData } from '../../character/character.ts';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
+import { useIsNarrowScreen } from '../../styles/mediaQueries.ts';
+import { Button } from '../common/button/button.tsx';
+import { Column, Row } from '../common/container/container.tsx';
+import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
+import { GameState, useCharacterState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../gameContext/gameStateContextProvider.tsx';
+import { usePlayer } from '../gameContext/playerContextProvider.tsx';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
+import { CharacterPreview } from '../wardrobe/wardrobeGraphics.tsx';
+import { ProfileDescription } from './profileDescription.tsx';
 
 export function CharacterProfile({ characterId }: { characterId: CharacterId; }): ReactElement {
 	const characters = useSpaceCharacters();

@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { ActionTargetSelectorSchema, CharacterSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes';
-import { ItemIdSchema } from '../../../assets/item/base';
-import { ItemInteractionType } from '../../../character/restrictionTypes';
-import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
-import type { AppearanceActionHandlerArg } from './_common';
+import { ActionTargetSelectorSchema, CharacterSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes.ts';
+import { ItemIdSchema } from '../../../assets/item/base.ts';
+import { ItemInteractionType } from '../../../character/restrictionTypes.ts';
+import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
+import type { AppearanceActionHandlerArg } from './_common.ts';
 
 export const AppearanceActionRoomDeviceEnter = z.object({
 	type: z.literal('roomDeviceEnter'),

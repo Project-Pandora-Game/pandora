@@ -1,13 +1,13 @@
-import type { CharacterId } from '../character';
-import { Logger } from '../logging';
-import { Assert, ShuffleArray } from '../utility/misc';
-import type { AssetManager } from './assetManager';
-import type { AssetId } from './base';
-import type { AssetType, WearableAssetType } from './definitions';
-import type { Item } from './item';
-import { AssetPropertiesResult, CreateAssetPropertiesResult, MergeAssetProperties } from './properties';
-import type { AssetFrameworkRoomState } from './state/roomState';
-import { ValidateItemsPrefix } from './validation';
+import type { CharacterId } from '../character/index.ts';
+import { Logger } from '../logging.ts';
+import { Assert, ShuffleArray } from '../utility/misc.ts';
+import type { AssetManager } from './assetManager.ts';
+import type { AssetId } from './base.ts';
+import type { AssetType, WearableAssetType } from './definitions.ts';
+import type { Item } from './item/index.ts';
+import { AssetPropertiesResult, CreateAssetPropertiesResult, MergeAssetProperties } from './properties.ts';
+import type { AssetFrameworkRoomState } from './state/roomState.ts';
+import { ValidateItemsPrefix } from './validation.ts';
 
 /** Appearance items are immutable, so changes can be created as new object, tested, and only then applied */
 export type AppearanceItems<Type extends AssetType = AssetType> = readonly Item<Type>[];

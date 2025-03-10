@@ -1,14 +1,14 @@
 import React, { Suspense, useCallback, useState, type ReactElement } from 'react';
-import { Button } from '../../components/common/button/button';
-import { Column, Row } from '../../components/common/container/container';
-import { FieldsetToggle } from '../../components/common/fieldsetToggle';
-import { DraggableDialog } from '../../components/dialog/dialog';
-import { useObservable } from '../../observable';
-import type { TutorialConfig, TutorialDisableReason } from './tutorialSystem/tutorialConfig';
-import { TutorialRunner } from './tutorialSystem/tutorialRunner';
-import { ActiveTutorial } from './tutorialSystem/tutorialService';
+import { Button } from '../../components/common/button/button.tsx';
+import { Column, Row } from '../../components/common/container/container.tsx';
+import { FieldsetToggle } from '../../components/common/fieldsetToggle/index.tsx';
+import { DraggableDialog } from '../../components/dialog/dialog.tsx';
+import { useObservable } from '../../observable.ts';
+import type { TutorialConfig, TutorialDisableReason } from './tutorialSystem/tutorialConfig.ts';
+import { TutorialRunner } from './tutorialSystem/tutorialRunner.ts';
+import { ActiveTutorial } from './tutorialSystem/tutorialService.tsx';
 
-const PrivateRoomTutorialListContent = React.lazy(() => import('./privateTutorialsList'));
+const PrivateRoomTutorialListContent = React.lazy(() => import('./privateTutorialsList.tsx'));
 
 export function PrivateRoomTutorialList(): ReactElement {
 	const activeTutorial = useObservable(ActiveTutorial);

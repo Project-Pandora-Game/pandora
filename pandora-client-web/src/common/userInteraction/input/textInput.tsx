@@ -1,8 +1,8 @@
 /* eslint-disable react/forbid-elements */
-import { pick } from 'lodash';
+import { pick } from 'lodash-es';
 import { Assert } from 'pandora-common';
 import React, { type InputHTMLAttributes } from 'react';
-import { InputBase, type InputBaseProps } from './inputBase';
+import { InputBase, type InputBaseProps } from './inputBase.tsx';
 
 const FORWARDED_PROPS = [
 	// Basic

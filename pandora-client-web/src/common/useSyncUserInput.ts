@@ -1,5 +1,5 @@
 import { DependencyList, useEffect, useRef, useState, useSyncExternalStore } from 'react';
-import { useEvent } from './useEvent';
+import { useEvent } from './useEvent.ts';
 
 export function useSyncUserInput<T extends string | number | boolean>(
 	subscribe: (onStoreChange: () => void) => () => void,

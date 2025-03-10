@@ -1,4 +1,5 @@
-import { Conjunction, EvaluateCondition, GetAngle, RotateVector } from '../../src/graphics/utility';
+import { Conjunction, EvaluateCondition, GetAngle, RotateVector } from '../../src/graphics/utility.ts';
+const jest = import.meta.jest; // Jest is not properly injected in ESM
 
 describe('GetAngle()', () => {
 	const cases = [

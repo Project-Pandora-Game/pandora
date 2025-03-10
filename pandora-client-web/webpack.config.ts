@@ -5,17 +5,17 @@ import CssMinimizerPlugin from 'css-minimizer-webpack-plugin';
 import { config } from 'dotenv';
 import ForkTsCheckerWebpackPlugin from 'fork-ts-checker-webpack-plugin';
 import HtmlWebpackPlugin from 'html-webpack-plugin';
-import MiniCssExtractPlugin, { loader as miniCssExtractLoader } from 'mini-css-extract-plugin';
+import MiniCssExtractPlugin from 'mini-css-extract-plugin';
 import { join } from 'path';
 import postcssFlexbugsFixes from 'postcss-flexbugs-fixes';
 import postcssPresetEnv from 'postcss-preset-env';
 import ReactRefreshTypeScript from 'react-refresh-typescript';
-import { Compilation, Compiler, Configuration, DefinePlugin, RuleSetRule, RuleSetUseItem, WebpackPluginInstance } from 'webpack';
+import webpack from 'webpack';
 import 'webpack-dev-server';
-import packageJson from './package.json';
+import packageJson from './package.json' with { type: 'json' };
 
 import { CreateEnvParser, type EnvInputJson } from 'pandora-common';
-import { WEBPACK_CONFIG, type CLIENT_CONFIG } from './src/config/definition';
+import { WEBPACK_CONFIG, type CLIENT_CONFIG } from './src/config/definition.ts';
 
 const GIT_COMMIT_HASH = execSync('git rev-parse --short HEAD').toString().trim();
 const GIT_DESCRIBE = execSync('git describe --tags --always --dirty').toString().trim();
@@ -36,17 +36,17 @@ const {
 	DIST_DIR_OVERRIDE,
 } = CreateEnvParser(WEBPACK_CONFIG)();
 
-const SRC_DIR = join(__dirname, 'src');
-const DIST_DIR = DIST_DIR_OVERRIDE ?? join(__dirname, 'dist');
+const SRC_DIR = join(import.meta.dirname, 'src');
+const DIST_DIR = DIST_DIR_OVERRIDE ?? join(import.meta.dirname, 'dist');
 const GAME_NAME = 'Pandora';
 
-type WebpackMinimizer = WebpackPluginInstance | '...';
+type WebpackMinimizer = webpack.WebpackPluginInstance | '...';
 
 interface WebpackEnv {
 	prod?: boolean;
 }
 
-export default function (env: WebpackEnv): Configuration {
+export default function (env: WebpackEnv): webpack.Configuration {
 	const mode = env.prod ? 'production' : 'development';
 	return {
 		devServer: {
@@ -124,8 +124,8 @@ export default function (env: WebpackEnv): Configuration {
 	};
 }
 
-function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
-	const plugins: WebpackPluginInstance[] = [
+function GeneratePlugins(env: WebpackEnv): webpack.WebpackPluginInstance[] {
+	const plugins: webpack.WebpackPluginInstance[] = [
 		new CleanWebpackPlugin({ verbose: true }),
 		new ForkTsCheckerWebpackPlugin({
 			async: false,
@@ -141,7 +141,7 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 				},
 			},
 		}),
-		new DefinePlugin({
+		new webpack.DefinePlugin({
 			'process.env': JSON.stringify({
 				NODE_ENV: env.prod ? 'production' : 'development',
 				GAME_VERSION: packageJson.version,
@@ -189,8 +189,8 @@ function GeneratePlugins(env: WebpackEnv): WebpackPluginInstance[] {
 	return plugins;
 }
 
-function GenerateRules(env: WebpackEnv): RuleSetRule[] {
-	const moduleRules: RuleSetRule[] = [
+function GenerateRules(env: WebpackEnv): webpack.RuleSetRule[] {
+	const moduleRules: webpack.RuleSetRule[] = [
 		{
 			test: /\.tsx?$/i,
 			exclude: /node_modules/,
@@ -202,6 +202,7 @@ function GenerateRules(env: WebpackEnv): RuleSetRule[] {
 						jsx: env.prod ? 'react-jsx' : 'react-jsxdev',
 					},
 					getCustomTransformers: () => ({
+						// @ts-expect-error: The typings somehow feel borked with ESM, but it works.
 						before: [!env.prod && ReactRefreshTypeScript()].filter(Boolean),
 					}),
 				},
@@ -240,8 +241,8 @@ function GenerateMinimizer(env: WebpackEnv): WebpackMinimizer[] {
 	return minimizer;
 }
 
-function GenerateStyleLoaders(env: WebpackEnv): RuleSetUseItem[] {
-	const styleLoaders: RuleSetUseItem[] = [
+function GenerateStyleLoaders(env: WebpackEnv): webpack.RuleSetUseItem[] {
+	const styleLoaders: webpack.RuleSetUseItem[] = [
 		{ loader: 'css-loader' },
 		{
 			loader: 'postcss-loader',
@@ -258,7 +259,7 @@ function GenerateStyleLoaders(env: WebpackEnv): RuleSetUseItem[] {
 	];
 
 	if (env.prod) {
-		styleLoaders.unshift(miniCssExtractLoader);
+		styleLoaders.unshift(MiniCssExtractPlugin.loader);
 	} else {
 		styleLoaders.unshift({ loader: 'style-loader' });
 	}
@@ -277,12 +278,12 @@ class GenerateStringPlugin {
 		this._value = value;
 	}
 
-	public apply(compiler: Compiler) {
+	public apply(compiler: webpack.Compiler) {
 		compiler.hooks.compilation.tap(this, (compilation) => {
 			compilation.hooks.processAssets.tap(
 				{
 					name: 'GenerateVersionJson',
-					stage: Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
+					stage: webpack.Compilation.PROCESS_ASSETS_STAGE_ADDITIONAL,
 				},
 				(assets) => {
 					// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment

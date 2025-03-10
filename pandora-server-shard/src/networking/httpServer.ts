@@ -1,14 +1,14 @@
-import { GetLogger, ServerService } from 'pandora-common';
-import { ENV } from '../config';
-const { ASSETS_SOURCE, SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT, TRUSTED_REVERSE_PROXY_HOPS } = ENV;
+import express from 'express';
+import * as fs from 'fs';
+import { Socket } from 'net';
 import { Server as NodeHttpServer } from 'node:http';
 import { Server as NodeHttpsServer } from 'node:https';
-import * as fs from 'fs';
-import { SocketIOServerClient } from './socketio_client_server';
-import { Socket } from 'net';
-import express from 'express';
-import { AssetsServe } from '../assets/assetManager';
-import { MetricsServe } from '../metrics';
+import { GetLogger, ServerService } from 'pandora-common';
+import { AssetsServe } from '../assets/assetManager.ts';
+import { ENV } from '../config.ts';
+import { MetricsServe } from '../metrics.ts';
+import { SocketIOServerClient } from './socketio_client_server.ts';
+const { ASSETS_SOURCE, SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT, TRUSTED_REVERSE_PROXY_HOPS } = ENV;
 
 /** Setup HTTP server and everything related to it */
 export const HttpServer = new class HttpServer implements ServerService {

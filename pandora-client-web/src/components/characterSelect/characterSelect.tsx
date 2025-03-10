@@ -1,13 +1,13 @@
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import { CharacterSelfInfo, EMPTY, GetLogger, IClientDirectoryNormalResult } from 'pandora-common';
 import { ReactElement, useCallback, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useCreateNewCharacter } from '../../networking/account_manager';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { useService } from '../../services/serviceProvider';
-import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { usePlayerData } from '../gameContext/playerContextProvider';
+import { useCreateNewCharacter } from '../../networking/account_manager.ts';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import { useService } from '../../services/serviceProvider.tsx';
+import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
+import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
 import './characterSelect.scss';
 
 /**

@@ -1,9 +1,9 @@
 import { z } from 'zod';
-import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes';
-import { ItemInteractionType } from '../../../character/restrictionTypes';
-import { Assert } from '../../../utility';
-import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
-import type { AppearanceActionHandlerArg } from './_common';
+import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes.ts';
+import { ItemInteractionType } from '../../../character/restrictionTypes.ts';
+import { Assert } from '../../../utility/index.ts';
+import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
+import type { AppearanceActionHandlerArg } from './_common.ts';
 
 export const AppearanceActionRoomDeviceLeave = z.object({
 	type: z.literal('roomDeviceLeave'),

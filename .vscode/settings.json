@@ -31,7 +31,7 @@
 	},
 	"typescript.updateImportsOnFileMove.enabled": "always",
 	"typescript.preferences.importModuleSpecifier": "relative",
-	"typescript.preferences.importModuleSpecifierEnding": "minimal",
+	"typescript.preferences.importModuleSpecifierEnding": "js",
 	"typescript.format.enable": true,
 	"typescript.format.semicolons": "insert",
 	"typescript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces": true,

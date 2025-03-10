@@ -1,6 +1,6 @@
-import { TypedEventEmitter } from '../event';
-import type { IIncomingConnection } from './connection';
-import type { SocketInterfaceDefinition, SocketInterfaceOneshotMessages, SocketInterfaceRequest } from './helpers';
+import { TypedEventEmitter } from '../event.ts';
+import type { IIncomingConnection } from './connection.ts';
+import type { SocketInterfaceDefinition, SocketInterfaceOneshotMessages, SocketInterfaceRequest } from './helpers.ts';
 
 export interface IServerSocket<OutboundT extends SocketInterfaceDefinition> {
 	sendToAll<K extends SocketInterfaceOneshotMessages<OutboundT>>(client: ReadonlySet<IIncomingConnection<OutboundT>>, messageType: K, message: SocketInterfaceRequest<OutboundT>[K]): void;

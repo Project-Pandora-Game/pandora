@@ -1,10 +1,10 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import React, { forwardRef, ReactElement, ReactNode, useEffect, useMemo, useState, type ForwardedRef, useImperativeHandle } from 'react';
-import { Navigate, Route, Routes, matchPath, resolvePath, useLocation, useNavigate, useResolvedPath } from 'react-router';
-import { ChildrenProps } from '../../../common/reactTypes';
-import { LocalErrorBoundary } from '../../error/localErrorBoundary';
-import { Column } from '../container/container';
+import React, { forwardRef, ReactElement, ReactNode, useEffect, useImperativeHandle, useMemo, useState, type ForwardedRef } from 'react';
+import { matchPath, Navigate, resolvePath, Route, Routes, useLocation, useNavigate, useResolvedPath } from 'react-router';
+import { ChildrenProps } from '../../../common/reactTypes.ts';
+import { LocalErrorBoundary } from '../../error/localErrorBoundary.tsx';
+import { Column } from '../container/container.tsx';
 import './tabs.scss';
 
 export interface TabProps extends ChildrenProps {

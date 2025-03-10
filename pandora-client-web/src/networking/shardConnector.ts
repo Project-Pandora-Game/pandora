@@ -12,16 +12,16 @@ import {
 	ShardClientSchema,
 	TypedEventEmitter,
 } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceOneshotMessages, type SocketInterfaceRespondedMessages } from 'pandora-common/dist/networking/helpers';
+import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceOneshotMessages, type SocketInterfaceRespondedMessages } from 'pandora-common/dist/networking/helpers.js';
 import { Socket } from 'socket.io-client';
-import { LoadAssetDefinitions } from '../assets/assetManager';
-import { GameState } from '../components/gameContext/gameStateContextProvider';
-import { ConfigServerIndex } from '../config/searchArgs';
-import { Observable, ReadonlyObservable } from '../observable';
-import { PersistentToast } from '../persistentToast';
-import type { AccountManager } from '../services/accountLogic/accountManager';
-import type { DirectoryConnector } from './directoryConnector';
-import { type Connector, type SocketIOConnectorFactory } from './socketio_connector';
+import { LoadAssetDefinitions } from '../assets/assetManager.tsx';
+import { GameState } from '../components/gameContext/gameStateContextProvider.tsx';
+import { ConfigServerIndex } from '../config/searchArgs.ts';
+import { Observable, ReadonlyObservable } from '../observable.ts';
+import { PersistentToast } from '../persistentToast.ts';
+import type { AccountManager } from '../services/accountLogic/accountManager.ts';
+import type { DirectoryConnector } from './directoryConnector.ts';
+import { type Connector, type SocketIOConnectorFactory } from './socketio_connector.ts';
 
 /** State of connection to Shard */
 export enum ShardConnectionState {

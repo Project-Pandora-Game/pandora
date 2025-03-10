@@ -1,5 +1,5 @@
 import { DependencyList, useEffect, useRef, useState } from 'react';
-import { useEvent } from './useEvent';
+import { useEvent } from './useEvent.ts';
 
 export interface RemotelyUpdatedUserInputOptions<T extends string | number | boolean | undefined | null> {
 	/**

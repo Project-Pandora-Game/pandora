@@ -1,25 +1,25 @@
 import classNames from 'classnames';
-import _ from 'lodash';
+import { throttle } from 'lodash-es';
 import { AssertNotNullable, CharacterSize, GetLogger, type HexColorString } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
-import { AssetGraphicsResolverOverrideContext, type AssetGraphicsResolverOverride } from '../../assets/assetGraphicsCalculations';
-import { DownloadAsFile } from '../../common/downloadHelper';
-import { CommonProps } from '../../common/reactTypes';
-import { useEvent } from '../../common/useEvent';
-import { Button } from '../../components/common/button/button';
-import { ColorInput } from '../../components/common/colorInput/colorInput';
-import { Container } from '../../graphics/baseComponents/container';
-import { Graphics } from '../../graphics/baseComponents/graphics';
-import { PixiViewportRef, PixiViewportSetupCallback } from '../../graphics/baseComponents/pixiViewport';
-import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
-import { useObservable } from '../../observable';
-import { serviceManagerContext } from '../../services/serviceProvider';
-import { EditorContext, useEditor } from '../editorContextProvider';
-import { ResultCharacter, SetupCharacter } from './character';
-import { ImageExporter } from './export/imageExporter';
+import { AssetGraphicsResolverOverrideContext, type AssetGraphicsResolverOverride } from '../../assets/assetGraphicsCalculations.ts';
+import { DownloadAsFile } from '../../common/downloadHelper.ts';
+import { CommonProps } from '../../common/reactTypes.ts';
+import { useEvent } from '../../common/useEvent.ts';
+import { Button } from '../../components/common/button/button.tsx';
+import { ColorInput } from '../../components/common/colorInput/colorInput.tsx';
+import { Container } from '../../graphics/baseComponents/container.ts';
+import { Graphics } from '../../graphics/baseComponents/graphics.ts';
+import { PixiViewportRef, PixiViewportSetupCallback } from '../../graphics/baseComponents/pixiViewport.tsx';
+import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene.tsx';
+import { useObservable } from '../../observable.ts';
+import { serviceManagerContext } from '../../services/serviceProvider.tsx';
+import { EditorContext, useEditor } from '../editorContextProvider.tsx';
+import { ResultCharacter, SetupCharacter } from './character/index.ts';
+import { ImageExporter } from './export/imageExporter.ts';
 
-function EditorColorPicker({ throttle }: { throttle: number; }): ReactElement {
+function EditorColorPicker({ throttle: throttleMs }: { throttle: number; }): ReactElement {
 	const editor = useEditor();
 	const color = useObservable(editor.backgroundColor);
 
@@ -27,7 +27,7 @@ function EditorColorPicker({ throttle }: { throttle: number; }): ReactElement {
 		editor.setBackgroundColor(newValue);
 	});
 
-	const onChangeThrottled = useMemo(() => _.throttle(onChange, throttle), [onChange, throttle]);
+	const onChangeThrottled = useMemo(() => throttle(onChange, throttleMs), [onChange, throttleMs]);
 
 	return (
 		<ColorInput

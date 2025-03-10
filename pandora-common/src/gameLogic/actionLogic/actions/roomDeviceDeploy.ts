@@ -1,10 +1,10 @@
 import { z } from 'zod';
-import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes';
-import { RoomDeviceDeploymentChangeSchema, type ItemRoomDevice } from '../../../assets/item/roomDevice';
-import type { CharacterId } from '../../../character/characterTypes';
-import { ItemInteractionType } from '../../../character/restrictionTypes';
-import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext';
-import type { AppearanceActionHandlerArg } from './_common';
+import { ActionTargetSelectorSchema, ItemPathSchema } from '../../../assets/appearanceTypes.ts';
+import { RoomDeviceDeploymentChangeSchema, type ItemRoomDevice } from '../../../assets/item/roomDevice.ts';
+import type { CharacterId } from '../../../character/characterTypes.ts';
+import { ItemInteractionType } from '../../../character/restrictionTypes.ts';
+import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
+import type { AppearanceActionHandlerArg } from './_common.ts';
 
 export const AppearanceActionRoomDeviceDeploy = z.object({
 	type: z.literal('roomDeviceDeploy'),

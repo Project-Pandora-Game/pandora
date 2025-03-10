@@ -4,15 +4,15 @@ import {
 	useMemo,
 } from 'react';
 import { toast } from 'react-toastify';
-import { useCharacterRestrictionManager, type Character } from '../../../character/character';
-import { IsSpaceAdmin, useActionSpaceContext, useCharacterRestrictionsManager, useCharacterState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider';
-import { usePlayerState } from '../../../components/gameContext/playerContextProvider';
-import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue';
-import { DeviceOverlayState } from '../../../graphics/room/roomDevice';
-import { useObservable } from '../../../observable';
-import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
-import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
-import { useRoomScreenContext } from './roomContext';
+import { useCharacterRestrictionManager, type Character } from '../../../character/character.ts';
+import { IsSpaceAdmin, useActionSpaceContext, useCharacterRestrictionsManager, useCharacterState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
+import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue.ts';
+import { DeviceOverlayState } from '../../../graphics/room/roomDevice.tsx';
+import { useObservable } from '../../../observable.ts';
+import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useRoomScreenContext } from './roomContext.tsx';
 
 /**
  * Watches the current device overlay state and exits the construction mode, if any following cases happen:

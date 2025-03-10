@@ -1,2 +1,2 @@
-export * from './room';
-export * from './space';
+export * from './room.ts';
+export * from './space.ts';

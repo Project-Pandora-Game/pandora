@@ -5,7 +5,7 @@ import {
 	type ItemDisplayNameType,
 } from 'pandora-common';
 import type { ReactElement } from 'react';
-import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 
 export function WardrobeItemName({
 	item,

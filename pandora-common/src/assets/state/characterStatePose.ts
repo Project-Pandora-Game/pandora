@@ -1,10 +1,10 @@
 import { Immutable, freeze, produce } from 'immer';
-import _ from 'lodash';
+import { clamp, isEqual } from 'lodash-es';
 import { z } from 'zod';
-import type { Satisfies } from '../../utility/misc';
-import type { AssetManager } from '../assetManager';
-import type { BoneType, CharacterView, LegsPose } from '../graphics';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, CharacterViewSchema, LegsPoseSchema } from '../graphics';
+import type { Satisfies } from '../../utility/misc.ts';
+import type { AssetManager } from '../assetManager.ts';
+import type { BoneType, CharacterView, LegsPose } from '../graphics/index.ts';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, CharacterViewSchema, LegsPoseSchema } from '../graphics/index.ts';
 
 export const AppearanceArmPoseSchema = z.object({
 	position: ArmPoseSchema.catch('front'),
@@ -124,8 +124,8 @@ export function ProduceAppearancePose(
 			const leftArm = { ...basePose.leftArm, ...pose.arms, ...pose.leftArm };
 			const rightArm = { ...basePose.rightArm, ...pose.arms, ...pose.rightArm };
 			const armsChanged =
-				!_.isEqual(basePose.leftArm, leftArm) ||
-				!_.isEqual(basePose.rightArm, rightArm);
+				!isEqual(basePose.leftArm, leftArm) ||
+				!isEqual(basePose.rightArm, rightArm);
 
 			if (armsChanged) {
 				draft.leftArm = freeze(leftArm, true);
@@ -133,7 +133,7 @@ export function ProduceAppearancePose(
 			}
 
 			const armsOrder = { ...basePose.armsOrder, ...pose.armsOrder };
-			if (!_.isEqual(basePose.armsOrder, armsOrder)) {
+			if (!isEqual(basePose.armsOrder, armsOrder)) {
 				draft.armsOrder = freeze(armsOrder, true);
 			}
 		}
@@ -153,7 +153,7 @@ export function ProduceAppearancePose(
 				if (!missingBonesAsZero && newValue == null)
 					continue;
 
-				draft.bones[bone.name] = (newValue != null && Number.isInteger(newValue)) ? _.clamp(newValue, BONE_MIN, BONE_MAX) : 0;
+				draft.bones[bone.name] = (newValue != null && Number.isInteger(newValue)) ? clamp(newValue, BONE_MIN, BONE_MAX) : 0;
 			}
 		}
 	});

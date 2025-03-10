@@ -1,15 +1,15 @@
 import { UserNameSchema } from 'pandora-common';
 import { ReactElement } from 'react';
 import pandoraLogo from '../../../assets/icons/pandora.svg';
-import { FormInput } from '../../../common/userInteraction/input/formInput';
-import { TextInput } from '../../../common/userInteraction/input/textInput';
-import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
-import { Button } from '../../common/button/button';
-import { DivContainer } from '../../common/container/container';
-import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
-import { LocationStateMessage } from '../../common/locationStateMessage/locationStateMessage';
-import { useAuthToken } from '../../gameContext/directoryConnectorContextProvider';
-import { useLoginForm } from './useLoginForm';
+import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
+import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { Button } from '../../common/button/button.tsx';
+import { DivContainer } from '../../common/container/container.tsx';
+import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
+import { LocationStateMessage } from '../../common/locationStateMessage/locationStateMessage.tsx';
+import { useAuthToken } from '../../gameContext/directoryConnectorContextProvider.tsx';
+import { useLoginForm } from './useLoginForm.ts';
 
 export function LoginForm(): ReactElement {
 	const auth = useAuthToken();

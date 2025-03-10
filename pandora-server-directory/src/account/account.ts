@@ -1,4 +1,4 @@
-import _, { cloneDeep, omit, remove, uniq } from 'lodash';
+import { cloneDeep, omit, remove, uniq } from 'lodash-es';
 import {
 	ACCOUNT_SETTINGS_DEFAULT,
 	ACCOUNT_SETTINGS_LIMITED_LIMITS,
@@ -26,16 +26,16 @@ import {
 	type AssetFrameworkPosePresetWithId,
 	type Logger,
 } from 'pandora-common';
-import { GetDatabase } from '../database/databaseProvider';
-import { DatabaseAccount, DatabaseAccountUpdate, DatabaseAccountWithSecure, DirectMessageAccounts, type DatabaseCharacterSelfInfo } from '../database/databaseStructure';
-import type { ClientConnection } from '../networking/connection_client';
-import { AsyncInterval } from '../utility';
-import { AccountContacts } from './accountContacts';
-import { AccountDirectMessages } from './accountDirectMessages';
-import { AccountRoles } from './accountRoles';
-import AccountSecure, { GenerateAccountSecureData } from './accountSecure';
-import type { ActorIdentity } from './actorIdentity';
-import { CharacterInfo } from './character';
+import { GetDatabase } from '../database/databaseProvider.ts';
+import { DatabaseAccount, DatabaseAccountUpdate, DatabaseAccountWithSecure, DirectMessageAccounts, type DatabaseCharacterSelfInfo } from '../database/databaseStructure.ts';
+import type { ClientConnection } from '../networking/connection_client.ts';
+import { AsyncInterval } from '../utility.ts';
+import { AccountContacts } from './accountContacts.ts';
+import { AccountDirectMessages } from './accountDirectMessages.ts';
+import { AccountRoles } from './accountRoles.ts';
+import AccountSecure, { GenerateAccountSecureData } from './accountSecure.ts';
+import type { ActorIdentity } from './actorIdentity.ts';
+import { CharacterInfo } from './character.ts';
 
 /** Currently logged in or recently used account */
 export class Account implements ActorIdentity {
@@ -124,8 +124,8 @@ export class Account implements ActorIdentity {
 			github: this.secure.getGitHubStatus(),
 			roles: this.roles.getSelfInfo(),
 			spaceOwnershipLimit: this.spaceOwnershipLimit,
-			settings: _.cloneDeep(this.data.settings),
-			settingsCooldowns: _.cloneDeep(this.data.settingsCooldowns),
+			settings: cloneDeep(this.data.settings),
+			settingsCooldowns: cloneDeep(this.data.settingsCooldowns),
 			cryptoKey: this.secure.getCryptoKey(),
 		};
 	}

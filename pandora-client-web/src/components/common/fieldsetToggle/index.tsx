@@ -1,1 +1,1 @@
-export * from './fieldsetToggle';
+export * from './fieldsetToggle.tsx';

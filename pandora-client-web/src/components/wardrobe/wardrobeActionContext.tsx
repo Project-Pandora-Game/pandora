@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import {
 	AppearanceAction,
 	AppearanceActionContext,
@@ -20,19 +20,19 @@ import {
 } from 'pandora-common';
 import { createContext, useCallback, useContext, useMemo, type ReactElement, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
-import { RenderAppearanceActionProblem } from '../../assets/appearanceValidation';
-import { useAssetManager } from '../../assets/assetManager';
-import type { ICharacter } from '../../character/character';
-import type { PlayerCharacter } from '../../character/player';
-import { useAsyncEvent } from '../../common/useEvent';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast';
-import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
-import { Column } from '../common/container/container';
-import { useConfirmDialog } from '../dialog/dialog';
-import { useActionSpaceContext, useGameState, useGlobalState, useSpaceCharacters } from '../gameContext/gameStateContextProvider';
-import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { ActionWarningContent } from './wardrobeComponents';
-import { WardrobeCheckResultForConfirmationWarnings } from './wardrobeUtils';
+import { RenderAppearanceActionProblem } from '../../assets/appearanceValidation.ts';
+import { useAssetManager } from '../../assets/assetManager.tsx';
+import type { ICharacter } from '../../character/character.ts';
+import type { PlayerCharacter } from '../../character/player.ts';
+import { useAsyncEvent } from '../../common/useEvent.ts';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
+import { Column } from '../common/container/container.tsx';
+import { useConfirmDialog } from '../dialog/dialog.tsx';
+import { useActionSpaceContext, useGameState, useGlobalState, useSpaceCharacters } from '../gameContext/gameStateContextProvider.tsx';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
+import { ActionWarningContent } from './wardrobeComponents.tsx';
+import { WardrobeCheckResultForConfirmationWarnings } from './wardrobeUtils.ts';
 
 export interface WardrobeActionContext {
 	player: ICharacter;

@@ -1,13 +1,13 @@
 import { ReactElement, useMemo } from 'react';
-import { useAssetManager } from '../../../assets/assetManager';
-import { Container } from '../../../graphics/baseComponents/container';
-import { useObservable } from '../../../observable';
-import { useEditor } from '../../editorContextProvider';
-import { DraggableBone } from '../draggable';
-import { ResultLayer } from '../layer';
-import { EDITOR_LAYER_Z_INDEX_EXTRA } from '../layer/editorLayer';
-import { useEditorCharacterState } from './appearanceEditor';
-import { GraphicsCharacterEditor } from './editorCharacter';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
+import { Container } from '../../../graphics/baseComponents/container.ts';
+import { useObservable } from '../../../observable.ts';
+import { useEditor } from '../../editorContextProvider.tsx';
+import { DraggableBone } from '../draggable.tsx';
+import { EDITOR_LAYER_Z_INDEX_EXTRA } from '../layer/editorLayer.tsx';
+import { ResultLayer } from '../layer/index.ts';
+import { useEditorCharacterState } from './appearanceEditor.ts';
+import { GraphicsCharacterEditor } from './editorCharacter.tsx';
 
 export function ResultCharacter(): ReactElement {
 	const editor = useEditor();

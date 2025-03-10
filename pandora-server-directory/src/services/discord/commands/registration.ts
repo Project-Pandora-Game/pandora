@@ -16,12 +16,12 @@ import {
 	type MessageActionRowComponentBuilder,
 } from 'discord.js';
 import { Assert, AssertNever, GetLogger, TimeSpanMs } from 'pandora-common';
-import { ACTOR_PANDORA } from '../../../account/actorPandora';
-import { ENV } from '../../../config';
-import { BetaKeyStore } from '../../../shard/betaKeyStore';
-import { Sleep } from '../../../utility';
-import { BetaRegistrationService } from '../../betaRegistration/betaRegistration';
-import { GetInteractionMember, type DiscordButtonDescriptor, type DiscordCommandDescriptor } from './_common';
+import { ACTOR_PANDORA } from '../../../account/actorPandora.ts';
+import { ENV } from '../../../config.ts';
+import { BetaKeyStore } from '../../../shard/betaKeyStore.ts';
+import { Sleep } from '../../../utility.ts';
+import { BetaRegistrationService } from '../../betaRegistration/betaRegistration.ts';
+import { GetInteractionMember, type DiscordButtonDescriptor, type DiscordCommandDescriptor } from './_common.ts';
 
 const {
 	BETA_KEY_ENABLED,

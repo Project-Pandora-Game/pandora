@@ -1,5 +1,5 @@
 /* eslint-disable react/forbid-elements */
-import { pick } from 'lodash';
+import { pick } from 'lodash-es';
 import type { InputHTMLAttributes, ReactElement } from 'react';
 
 const FORWARDED_PROPS = [

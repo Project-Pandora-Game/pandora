@@ -1,9 +1,9 @@
 import { useCallback, useEffect } from 'react';
-import { useDebugExpose } from '../../common/useDebugExpose';
-import { useObservable } from '../../observable';
-import type { NotificationFullData, NotificationHeaderKeys } from '../../services/notificationHandler';
-import { useService } from '../../services/serviceProvider';
-import { VersionCheck } from '../versionCheck/versionCheck';
+import { useDebugExpose } from '../../common/useDebugExpose.ts';
+import { useObservable } from '../../observable.ts';
+import type { NotificationFullData, NotificationHeaderKeys } from '../../services/notificationHandler.ts';
+import { useService } from '../../services/serviceProvider.tsx';
+import { VersionCheck } from '../versionCheck/versionCheck.tsx';
 
 export function NotificationProvider() {
 	const notificationHandler = useService('notificationHandler');

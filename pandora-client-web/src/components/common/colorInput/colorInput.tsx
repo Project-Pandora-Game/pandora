@@ -1,14 +1,14 @@
 import classNames from 'classnames';
 import parse from 'color-parse';
-import _ from 'lodash';
+import { clamp, throttle } from 'lodash-es';
 import { type HexColorString, HexColorStringSchema, HexRGBAColorString, HexRGBAColorStringSchema } from 'pandora-common';
 import React, { type ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
-import { NumberInput } from '../../../common/userInteraction/input/numberInput';
-import { TextInput } from '../../../common/userInteraction/input/textInput';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { DraggableDialog } from '../../dialog/dialog';
-import { Button } from '../button/button';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
+import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { DraggableDialog } from '../../dialog/dialog.tsx';
+import { Button } from '../button/button.tsx';
 import './colorInput.scss';
 
 type ColorInputProps<THexString extends `#${string}`> = {
@@ -38,7 +38,7 @@ export function ColorInputRGBA({
 	initialValue,
 	resetValue,
 	onChange,
-	throttle = 0,
+	throttle: throttleMs = 0,
 	disabled = false,
 	hideTextInput = false,
 	minAlpha = 255,
@@ -49,7 +49,7 @@ export function ColorInputRGBA({
 	const [showEditor, setShowEditor] = useState(false);
 
 	const onChangeCaller = useCallback((color: HexRGBAColorString) => onChange?.(color), [onChange]);
-	const onChangeCallerThrottled = useMemo(() => throttle <= 0 ? onChangeCaller : _.throttle(onChangeCaller, throttle), [onChangeCaller, throttle]);
+	const onChangeCallerThrottled = useMemo(() => throttleMs <= 0 ? onChangeCaller : throttle(onChangeCaller, throttleMs), [onChangeCaller, throttleMs]);
 
 	const changeCallback = useCallback((input: string) => {
 		input = '#' + input.replace(/[^0-9a-f]/gi, '').toUpperCase();
@@ -275,7 +275,7 @@ export class Color {
 	}
 
 	public setHue(hue: number) {
-		const h = _.clamp(hue, 0, Color.maxHue);
+		const h = clamp(hue, 0, Color.maxHue);
 		return new Color({
 			hsv: [h, this.hsv[1], this.hsv[2]],
 			alpha: this.alpha,
@@ -283,7 +283,7 @@ export class Color {
 	}
 
 	public setSaturation(saturation: number) {
-		const s = _.clamp(saturation, 0, Color.maxSaturation);
+		const s = clamp(saturation, 0, Color.maxSaturation);
 		return new Color({
 			hsv: [this.hsv[0], s, this.hsv[2]],
 			alpha: this.alpha,
@@ -291,7 +291,7 @@ export class Color {
 	}
 
 	public setAlpha(alpha: number) {
-		alpha = _.clamp(alpha, 0, Color.maxAlpha);
+		alpha = clamp(alpha, 0, Color.maxAlpha);
 		return new Color({
 			rgb: this.rbg,
 			hsv: this.hsv,
@@ -300,7 +300,7 @@ export class Color {
 	}
 
 	public setValue(value: number) {
-		const v = _.clamp(value, 0, Color.maxValue);
+		const v = clamp(value, 0, Color.maxValue);
 		return new Color({
 			hsv: [this.hsv[0], this.hsv[1], v],
 			alpha: this.alpha,
@@ -458,7 +458,7 @@ export class Color {
 	/* eslint-enable no-bitwise */
 
 	public static toHexPart(value: number) {
-		value = _.clamp(value, 0, 255);
+		value = clamp(value, 0, 255);
 		return value.toString(16).padStart(2, '0').substring(0, 2).toUpperCase();
 	}
 }

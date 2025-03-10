@@ -1,6 +1,6 @@
-import { TypedEventEmitter } from '../../event';
-import { GameLogicPermission, IPermissionProvider } from '../permissions';
-import { InteractionId } from './_interactionConfig';
+import { TypedEventEmitter } from '../../event.ts';
+import { GameLogicPermission, IPermissionProvider } from '../permissions/index.ts';
+import { InteractionId } from './_interactionConfig.ts';
 
 export type InteractionSubsystemEvents = {
 	dataChanged: void;

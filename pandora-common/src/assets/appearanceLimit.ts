@@ -1,11 +1,11 @@
 import { Immutable } from 'immer';
-import _ from 'lodash';
+import { isEqual } from 'lodash-es';
 import { ZodEnum } from 'zod';
-import { Assert, CloneDeepMutable, IntervalSetIntersection, IsReadonlyArray, type Satisfies } from '../utility/misc';
-import type { AssetDefinitionArmOrderPoseLimit, AssetDefinitionArmPoseLimit, AssetDefinitionPoseLimit, AssetDefinitionPoseLimits } from './definitions';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, CharacterViewSchema, LegsPoseSchema } from './graphics';
-import type { AppearanceArmPose, AppearanceArmsOrder, AppearancePose } from './state/characterStatePose';
-import { GetDefaultAppearancePose, PartialAppearancePose } from './state/characterStatePose';
+import { Assert, CloneDeepMutable, IntervalSetIntersection, IsReadonlyArray, type Satisfies } from '../utility/misc.ts';
+import type { AssetDefinitionArmOrderPoseLimit, AssetDefinitionArmPoseLimit, AssetDefinitionPoseLimit, AssetDefinitionPoseLimits } from './definitions.ts';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, CharacterViewSchema, LegsPoseSchema } from './graphics/index.ts';
+import type { AppearanceArmPose, AppearanceArmsOrder, AppearancePose } from './state/characterStatePose.ts';
+import { GetDefaultAppearancePose, PartialAppearancePose } from './state/characterStatePose.ts';
 
 type PoseTypeBase = Partial<Record<string, number | string | Partial<Record<string, number | string>>>>;
 
@@ -132,7 +132,7 @@ class TreeLimit {
 			if (!newValue)
 				continue;
 
-			if (_.isEqual(newValue, value))
+			if (isEqual(newValue, value))
 				newLimit.delete(key);
 		}
 		return new TreeLimit(newLimit);

@@ -1,9 +1,9 @@
-import { accountManager, ACCOUNTMANAGER_TICK_INTERVAL, ACCOUNT_INACTIVITY_THRESHOLD } from '../../src/account/accountManager';
-import AccountSecure, { GenerateEmailHash } from '../../src/account/accountSecure';
-import { MockDatabase, PrehashPassword } from '../../src/database/mockDb';
-import { Account, CreateAccountData } from '../../src/account/account';
-import { TestMockDb } from '../utils';
-import { DatabaseAccountWithSecure } from '../../src/database/databaseStructure';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
+import { Account, CreateAccountData } from '../../src/account/account.ts';
+import { ACCOUNT_INACTIVITY_THRESHOLD, accountManager, ACCOUNTMANAGER_TICK_INTERVAL } from '../../src/account/accountManager.ts';
+import AccountSecure, { GenerateEmailHash } from '../../src/account/accountSecure.ts';
+import { MockDatabase, PrehashPassword } from '../../src/database/mockDb.ts';
+import { TestMockDb } from '../utils.ts';
 
 const TEST_USERNAME = 'testuser';
 const TEST_DISPLAYNAME = 'TestUserDisplay';
@@ -65,7 +65,7 @@ describe('AccountManager', () => {
 
 			// The database has the account
 			await expect(mockDb.getAccountById(acc.id)).resolves.toEqual(
-				expect.objectContaining<Partial<DatabaseAccountWithSecure>>({
+				expect.objectContaining({
 					id: acc.id,
 					username: TEST_USERNAME,
 					settings: {

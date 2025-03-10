@@ -10,7 +10,7 @@ import {
 	type AppearanceAction,
 	type Item,
 } from 'pandora-common';
-import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
+import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
@@ -18,21 +18,21 @@ import crossIcon from '../../../assets/icons/cross.svg';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import strugglingAllow from '../../../assets/icons/struggling_allow.svg';
 import strugglingDeny from '../../../assets/icons/struggling_deny.svg';
-import { TextInput } from '../../../common/userInteraction/input/textInput';
-import { TOAST_OPTIONS_WARNING } from '../../../persistentToast';
-import { Button, IconButton } from '../../common/button/button';
-import { Column, Row } from '../../common/container/container';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
-import { FormCreateStringValidator } from '../../common/form/form';
-import { useConfirmDialog } from '../../dialog/dialog';
-import { WardrobeModuleConfig } from '../modules/_wardrobeModules';
-import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue';
-import { ActionWarningContent, WardrobeActionButton } from '../wardrobeComponents';
-import { useWardrobeContext } from '../wardrobeContext';
-import { useWardrobeTargetItem } from '../wardrobeUtils';
-import { WardrobeItemColorization } from './wardrobeItemColor';
-import { WardrobeItemName } from './wardrobeItemName';
-import { WardrobeRoomDeviceDeployment, WardrobeRoomDeviceSlots, WardrobeRoomDeviceWearable } from './wardrobeItemRoomDevice';
+import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
+import { Button, IconButton } from '../../common/button/button.tsx';
+import { Column, Row } from '../../common/container/container.tsx';
+import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
+import { FormCreateStringValidator } from '../../common/form/form.tsx';
+import { useConfirmDialog } from '../../dialog/dialog.tsx';
+import { WardrobeModuleConfig } from '../modules/_wardrobeModules.tsx';
+import { useStaggeredAppearanceActionResult } from '../wardrobeCheckQueue.ts';
+import { ActionWarningContent, WardrobeActionButton } from '../wardrobeComponents.tsx';
+import { useWardrobeContext } from '../wardrobeContext.tsx';
+import { useWardrobeTargetItem } from '../wardrobeUtils.ts';
+import { WardrobeItemColorization } from './wardrobeItemColor.tsx';
+import { WardrobeItemName } from './wardrobeItemName.tsx';
+import { WardrobeRoomDeviceDeployment, WardrobeRoomDeviceSlots, WardrobeRoomDeviceWearable } from './wardrobeItemRoomDevice.tsx';
 
 export function WardrobeItemConfigMenu({
 	item,

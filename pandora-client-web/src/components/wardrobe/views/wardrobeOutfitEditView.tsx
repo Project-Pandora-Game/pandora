@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { clamp, first, noop } from 'lodash';
+import { clamp, first, noop } from 'lodash-es';
 import {
 	AssertNever,
 	AssetFrameworkOutfit,
@@ -12,20 +12,20 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useAssetManager } from '../../../assets/assetManager';
-import { TextInput } from '../../../common/userInteraction/input/textInput';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
-import { Button } from '../../common/button/button';
-import { Column, Row } from '../../common/container/container';
-import { useConfirmDialog } from '../../dialog/dialog';
-import { ExportDialog } from '../../exportImport/exportDialog';
-import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName';
-import { WardrobeTemplateEditMenu } from '../templateDetail/_wardrobeTemplateDetail';
-import { useWardrobeActionContext } from '../wardrobeActionContext';
-import { InventoryAssetPreview, WardrobeColorRibbon } from '../wardrobeComponents';
-import { useWardrobeContext } from '../wardrobeContext';
-import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
+import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { Button } from '../../common/button/button.tsx';
+import { Column, Row } from '../../common/container/container.tsx';
+import { useConfirmDialog } from '../../dialog/dialog.tsx';
+import { ExportDialog } from '../../exportImport/exportDialog.tsx';
+import { ResolveItemDisplayNameType } from '../itemDetail/wardrobeItemName.tsx';
+import { WardrobeTemplateEditMenu } from '../templateDetail/_wardrobeTemplateDetail.tsx';
+import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
+import { InventoryAssetPreview, WardrobeColorRibbon } from '../wardrobeComponents.tsx';
+import { useWardrobeContext } from '../wardrobeContext.tsx';
+import { WardrobeContextExtraItemActionComponent } from '../wardrobeTypes.ts';
 
 /* images */
 import deleteIcon from '../../../assets/icons/delete.svg';

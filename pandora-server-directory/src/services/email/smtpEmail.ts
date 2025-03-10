@@ -1,10 +1,10 @@
 import { GetLogger } from 'pandora-common';
-import { ENV } from '../../config';
+import { ENV } from '../../config.ts';
+import { BaseEmailSender } from './baseEmail.ts';
 const { EMAIL_SMTP_CONFIG, EMAIL_SMTP_PASSWORD } = ENV;
-import { BaseEmailSender } from './baseEmail';
 
 import type { Transporter } from 'nodemailer';
-import type { SentMessageInfo } from 'nodemailer/lib/smtp-transport';
+import type { SentMessageInfo } from 'nodemailer/lib/smtp-transport/index.js';
 
 export class SmtpEmail extends BaseEmailSender<SentMessageInfo> {
 

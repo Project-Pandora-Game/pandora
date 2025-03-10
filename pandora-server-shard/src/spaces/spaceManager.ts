@@ -1,7 +1,7 @@
 import { Assert, GetLogger, IShardSpaceDefinition, SpaceId } from 'pandora-common';
 import promClient from 'prom-client';
-import { assetManager } from '../assets/assetManager';
-import { PublicSpace } from './publicSpace';
+import { assetManager } from '../assets/assetManager.ts';
+import { PublicSpace } from './publicSpace.ts';
 
 const logger = GetLogger('SpaceManager');
 

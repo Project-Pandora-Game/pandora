@@ -1,10 +1,10 @@
 import { CommandBuilder, CreateCommand, ICommandExecutionContext, IEmpty } from 'pandora-common';
 import type { useNavigate } from 'react-router';
-import type { DirectoryConnector } from '../../networking/directoryConnector';
-import type { ShardConnector } from '../../networking/shardConnector';
-import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat';
-import type { IClientCommand } from '../../ui/components/chat/commandsProcessor';
-import type { GameState } from '../gameContext/gameStateContextProvider';
+import type { DirectoryConnector } from '../../networking/directoryConnector.ts';
+import type { ShardConnector } from '../../networking/shardConnector.ts';
+import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat.ts';
+import type { IClientCommand } from '../../ui/components/chat/commandsProcessor.ts';
+import type { GameState } from '../gameContext/gameStateContextProvider.tsx';
 
 export interface DirectMessageCommandExecutionContext extends ICommandExecutionContext {
 	directoryConnector: DirectoryConnector;

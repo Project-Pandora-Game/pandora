@@ -15,13 +15,13 @@ import {
 	type ServiceProviderDefinition,
 } from 'pandora-common';
 import { z } from 'zod';
-import { BrowserStorage } from '../../../browserStorage';
-import { KeyExchange } from '../../../crypto/keyExchange';
-import type { SymmetricEncryption } from '../../../crypto/symmetric';
-import type { DirectoryConnector } from '../../../networking/directoryConnector';
-import { Observable, type ReadonlyObservable } from '../../../observable';
-import type { ClientServices } from '../../clientServices';
-import { DirectMessageChat } from './directMessageChat';
+import { BrowserStorage } from '../../../browserStorage.ts';
+import { KeyExchange } from '../../../crypto/keyExchange.ts';
+import type { SymmetricEncryption } from '../../../crypto/symmetric.ts';
+import type { DirectoryConnector } from '../../../networking/directoryConnector.ts';
+import { Observable, type ReadonlyObservable } from '../../../observable.ts';
+import type { ClientServices } from '../../clientServices.ts';
+import { DirectMessageChat } from './directMessageChat.ts';
 
 export type DirectMessageCryptoState = 'notLoaded' | 'ready' | 'noPassword' | 'loadError' | 'generateError';
 

@@ -1,14 +1,14 @@
 import { ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { GIT_DESCRIBE } from '../../config/Environment';
-import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
-import { AccountSettings } from './accountSettings';
-import { CharacterSettings } from './characterSettings';
-import { GraphicsSettings } from './graphicsSettings';
-import { InterfaceSettings } from './interfaceSettings';
-import { NotificationSettings } from './notificationSettings';
-import { PermissionsSettings } from './permissionsSettings';
-import { SecuritySettings } from './securitySettings';
+import { GIT_DESCRIBE } from '../../config/Environment.ts';
+import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs.tsx';
+import { AccountSettings } from './accountSettings.tsx';
+import { CharacterSettings } from './characterSettings.tsx';
+import { GraphicsSettings } from './graphicsSettings.tsx';
+import { InterfaceSettings } from './interfaceSettings.tsx';
+import { NotificationSettings } from './notificationSettings.tsx';
+import { PermissionsSettings } from './permissionsSettings.tsx';
+import { SecuritySettings } from './securitySettings.tsx';
 import './settings.scss';
 
 export function Settings(): ReactElement | null {

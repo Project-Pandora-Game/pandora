@@ -1,7 +1,7 @@
 import { Assert } from 'pandora-common';
-import { ShardConnectionState, ShardConnector } from '../../src/networking/shardConnector';
-import { MockConnectionInfo } from '../mocks/networking/mockShardConnector';
-import { MockServiceManager } from '../testUtils';
+import { ShardConnectionState, ShardConnector } from '../../src/networking/shardConnector.ts';
+import { MockConnectionInfo } from '../mocks/networking/mockShardConnector.ts';
+import { MockServiceManager } from '../testUtils.tsx';
 
 describe('ShardConnector', () => {
 	const serviceManager = MockServiceManager();

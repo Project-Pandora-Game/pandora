@@ -1,21 +1,21 @@
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import { AccountId, AccountIdSchema, AssertNever, GetLogger } from 'pandora-common';
 import React, { useCallback, useMemo, useState, type ReactElement } from 'react';
 import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router';
-import { useAsyncEvent } from '../../common/useEvent';
-import { TextInput } from '../../common/userInteraction/input/textInput';
-import { KeyExchange } from '../../crypto/keyExchange';
-import { useObservable } from '../../observable';
-import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
-import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat';
-import type { DirectMessageCryptoState } from '../../services/accountLogic/directMessages/directMessageManager';
-import { NotificationSource, useNotificationSuppressed } from '../../services/notificationHandler';
-import { useService } from '../../services/serviceProvider';
-import { Sleep } from '../../utility';
-import { Button } from '../common/button/button';
-import { Column, Row } from '../common/container/container';
-import { Scrollable } from '../common/scrollbar/scrollbar';
-import { DirectMessage } from '../directMessage/directMessage';
+import { useAsyncEvent } from '../../common/useEvent.ts';
+import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
+import { KeyExchange } from '../../crypto/keyExchange.ts';
+import { useObservable } from '../../observable.ts';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
+import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat.ts';
+import type { DirectMessageCryptoState } from '../../services/accountLogic/directMessages/directMessageManager.ts';
+import { NotificationSource, useNotificationSuppressed } from '../../services/notificationHandler.ts';
+import { useService } from '../../services/serviceProvider.tsx';
+import { Sleep } from '../../utility.ts';
+import { Button } from '../common/button/button.tsx';
+import { Column, Row } from '../common/container/container.tsx';
+import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
+import { DirectMessage } from '../directMessage/directMessage.tsx';
 import './directMessages.scss';
 
 export function DirectMessages(): React.ReactElement {

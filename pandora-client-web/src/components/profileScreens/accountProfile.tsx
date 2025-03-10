@@ -1,15 +1,15 @@
-import _, { noop } from 'lodash';
+import { noop, startCase } from 'lodash-es';
 import { AccountId, AccountPublicInfo, AccountRoleSchema, AssertNever, GetLogger, IClientDirectoryNormalResult, LIMIT_ACCOUNT_PROFILE_LENGTH } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast';
-import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
-import { Button } from '../common/button/button';
-import { Column, Row } from '../common/container/container';
-import { Scrollable } from '../common/scrollbar/scrollbar';
-import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { ProfileDescription } from './profileDescription';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
+import { Button } from '../common/button/button.tsx';
+import { Column, Row } from '../common/container/container.tsx';
+import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
+import { ProfileDescription } from './profileDescription.tsx';
 
 export function AccountProfile({ accountId }: { accountId: AccountId; }): ReactElement {
 	const accountData = useAccountProfileData(accountId);
@@ -58,7 +58,7 @@ function AccountProfileContent({ accountData }: { accountData: AccountPublicInfo
 							accountData.visibleRoles.length > 0 ? (
 								AccountRoleSchema.options
 									.filter((role) => accountData.visibleRoles.includes(role))
-									.map((role) => _.startCase(role))
+									.map((role) => startCase(role))
 									.join(', ')
 							) : (
 								<i>None</i>

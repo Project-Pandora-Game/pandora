@@ -1,15 +1,15 @@
 import { EMPTY, IsAuthorized, IShardTokenConnectInfo, IShardTokenType } from 'pandora-common';
 import { createContext, ReactElement, useContext, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useCurrentTime } from '../../../common/useCurrentTime';
-import { useAsyncEvent } from '../../../common/useEvent';
-import { Checkbox } from '../../../common/userInteraction/checkbox';
-import { Select } from '../../../common/userInteraction/select/select';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast';
-import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
-import { Button } from '../../common/button/button';
-import { useConfirmDialog } from '../../dialog/dialog';
-import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
+import { useCurrentTime } from '../../../common/useCurrentTime.ts';
+import { useAsyncEvent } from '../../../common/useEvent.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { Select } from '../../../common/userInteraction/select/select.tsx';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { Button } from '../../common/button/button.tsx';
+import { useConfirmDialog } from '../../dialog/dialog.tsx';
+import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
 import './shards.scss';
 
 const ShardListContext = createContext({

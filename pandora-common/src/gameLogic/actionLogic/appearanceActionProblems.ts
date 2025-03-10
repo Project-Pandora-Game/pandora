@@ -1,7 +1,7 @@
-import type { AppearanceValidationError } from '../../assets/appearanceValidation';
-import type { ModuleActionData, ModuleActionProblem } from '../../assets/modules';
-import type { Restriction } from '../../character/restrictionTypes';
-import type { CharacterModifierActionError } from '../characterModifiers/characterModifierData';
+import type { AppearanceValidationError } from '../../assets/appearanceValidation.ts';
+import type { ModuleActionData, ModuleActionProblem } from '../../assets/modules.ts';
+import type { Restriction } from '../../character/restrictionTypes.ts';
+import type { CharacterModifierActionError } from '../characterModifiers/characterModifierData.ts';
 
 export type InvalidActionReason = 'noDeleteRoomDeviceWearable' | 'noDeleteDeployedRoomDevice';
 

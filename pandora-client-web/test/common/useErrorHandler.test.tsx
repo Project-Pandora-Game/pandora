@@ -1,10 +1,11 @@
-import { act } from 'react';
 import { renderHook } from '@testing-library/react';
-import { noop } from 'lodash';
-import { useErrorHandler } from '../../src/common/useErrorHandler';
+import { noop } from 'lodash-es';
+import { act } from 'react';
+import { useErrorHandler } from '../../src/common/useErrorHandler.ts';
+const jest = import.meta.jest; // Jest is not properly injected in ESM
 
 describe('useErrorHandler', () => {
-	let consoleError: jest.SpyInstance;
+	let consoleError: jest.Spied<typeof console.error>;
 
 	beforeAll(() => {
 		consoleError = jest.spyOn(console, 'error');

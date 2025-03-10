@@ -1,13 +1,13 @@
-import type { CharacterId } from '../../character';
-import { AssertNever } from '../../utility/misc';
-import { AppearanceCharacterManipulator, AppearanceRootManipulator } from '../appearanceHelpers';
-import { ActionTargetSelector } from '../appearanceTypes';
-import { AppearanceItems } from '../appearanceValidation';
-import type { AssetManager } from '../assetManager';
-import { FilterItemWearable } from '../item';
-import type { AssetFrameworkCharacterState } from '../state/characterState';
-import type { AssetFrameworkGlobalState } from '../state/globalState';
-import type { AssetFrameworkRoomState } from '../state/roomState';
+import type { CharacterId } from '../../character/index.ts';
+import { AssertNever } from '../../utility/misc.ts';
+import { AppearanceCharacterManipulator, AppearanceRootManipulator } from '../appearanceHelpers.ts';
+import { ActionTargetSelector } from '../appearanceTypes.ts';
+import { AppearanceItems } from '../appearanceValidation.ts';
+import type { AssetManager } from '../assetManager.ts';
+import { FilterItemWearable } from '../item/index.ts';
+import type { AssetFrameworkCharacterState } from '../state/characterState.ts';
+import type { AssetFrameworkGlobalState } from '../state/globalState.ts';
+import type { AssetFrameworkRoomState } from '../state/roomState.ts';
 
 export class AssetFrameworkGlobalStateManipulator {
 	public readonly assetManager: AssetManager;

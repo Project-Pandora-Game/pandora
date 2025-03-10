@@ -1,11 +1,11 @@
-import { AssertNotNullable } from '../../utility/misc';
-import { ArrayIncludesGuard } from '../../validation';
-import type { GameLogicCharacterClient } from '../character/characterClient';
-import { IPermissionProvider } from '../permissions';
-import { GameLogicPermissionClient } from '../permissions/permissionClient';
-import { INTERACTION_IDS, InteractionId } from './_interactionConfig';
-import { GameLogicInteractionClient } from './interaction';
-import { InteractionSubsystem } from './interactionSubsystem';
+import { AssertNotNullable } from '../../utility/misc.ts';
+import { ArrayIncludesGuard } from '../../validation.ts';
+import type { GameLogicCharacterClient } from '../character/characterClient.ts';
+import { IPermissionProvider } from '../permissions/index.ts';
+import { GameLogicPermissionClient } from '../permissions/permissionClient.ts';
+import { INTERACTION_IDS, InteractionId } from './_interactionConfig.ts';
+import { GameLogicInteractionClient } from './interaction.ts';
+import { InteractionSubsystem } from './interactionSubsystem.ts';
 
 export class InteractionSubsystemClient extends InteractionSubsystem implements IPermissionProvider<GameLogicPermissionClient> {
 	private readonly interactions: ReadonlyMap<InteractionId, GameLogicInteractionClient>;

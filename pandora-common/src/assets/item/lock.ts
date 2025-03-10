@@ -1,19 +1,19 @@
 import type { Immutable } from 'immer';
 
-import { ItemInteractionType } from '../../character/restrictionTypes';
-import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions';
-import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation';
-import type { Asset } from '../asset';
-import type { IExportOptions } from '../modules/common';
-import type { AssetProperties } from '../properties';
-import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base';
+import { ItemInteractionType } from '../../character/restrictionTypes.ts';
+import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
+import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation.ts';
+import type { Asset } from '../asset.ts';
+import type { IExportOptions } from '../modules/common.ts';
+import type { AssetProperties } from '../properties.ts';
+import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base.ts';
 
-import { AssertNever, MemoizeNoArg } from '../../utility/misc';
+import { AssertNever, MemoizeNoArg } from '../../utility/misc.ts';
 
-import { LockAction, LockLogic } from '../../gameLogic/locks/lockLogic';
-import { ItemBase, ItemBaseProps } from './_internal';
+import { LockAction, LockLogic } from '../../gameLogic/locks/lockLogic.ts';
+import { ItemBase, ItemBaseProps } from './_internal.ts';
 
-declare module './_internal' {
+declare module './_internal.ts' {
 	interface InternalItemTypeMap {
 		lock: ItemLock;
 	}

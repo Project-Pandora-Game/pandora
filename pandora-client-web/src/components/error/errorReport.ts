@@ -1,11 +1,11 @@
-import { ErrorInfo } from 'react';
-import { GAME_VERSION } from '../../config/Environment';
-import { DirectoryConnectionState } from '../../networking/directoryConnector';
-import { ShardConnectionState } from '../../networking/shardConnector';
-import { DebugData } from './debugContextProvider';
-import { isWebGLSupported, isWebGPUSupported } from 'pixi.js';
 import bowser from 'bowser';
 import { IsNotNullable } from 'pandora-common';
+import { isWebGLSupported, isWebGPUSupported } from 'pixi.js';
+import { ErrorInfo } from 'react';
+import { GAME_VERSION } from '../../config/Environment.ts';
+import { DirectoryConnectionState } from '../../networking/directoryConnector.ts';
+import { ShardConnectionState } from '../../networking/shardConnector.ts';
+import { DebugData } from './debugContextProvider.tsx';
 
 interface ReportSection {
 	heading: string;

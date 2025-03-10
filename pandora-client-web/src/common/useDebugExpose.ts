@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { USER_DEBUG } from '../config/Environment';
+import { USER_DEBUG } from '../config/Environment.ts';
 
 export function useDebugExpose(name: string, value: unknown): void {
 	if (USER_DEBUG) {

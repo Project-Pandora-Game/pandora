@@ -1,5 +1,5 @@
 import type { AccountRole } from 'pandora-common';
-import type { ActorIdentity, ActorRoles } from './actorIdentity';
+import type { ActorIdentity, ActorRoles } from './actorIdentity.ts';
 
 class PandoraRoles implements ActorRoles {
 	public isAuthorized(_role: AccountRole): boolean {

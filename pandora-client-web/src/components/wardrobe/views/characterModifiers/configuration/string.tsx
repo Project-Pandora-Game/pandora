@@ -1,5 +1,5 @@
 import { GetLogger, type ModifierConfigurationEntryDefinition } from 'pandora-common';
-import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/dist/gameLogic/characterModifiers/helpers/configurationBuilder';
+import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/dist/gameLogic/characterModifiers/helpers/configurationBuilder.js';
 import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
@@ -7,10 +7,10 @@ import type { Promisable } from 'type-fest';
 import { useAsyncEvent } from '../../../../../common/useEvent';
 import { TextInput } from '../../../../../common/userInteraction/input/textInput';
 import { TOAST_OPTIONS_ERROR } from '../../../../../persistentToast';
-import { Button } from '../../../../common/button/button';
-import { Column, Row } from '../../../../common/container/container';
-import { FieldsetToggle } from '../../../../common/fieldsetToggle';
-import { FormCreateStringValidator, FormError } from '../../../../common/form/form';
+import { Button } from '../../../../common/button/button.tsx';
+import { Column, Row } from '../../../../common/container/container.tsx';
+import { FieldsetToggle } from '../../../../common/fieldsetToggle/index.tsx';
+import { FormCreateStringValidator, FormError } from '../../../../common/form/form.tsx';
 
 export function WardrobeCharacterModifierConfigString({ definition, value, onChange }: {
 	definition: ModifierConfigurationEntryDefinition<'string'>;

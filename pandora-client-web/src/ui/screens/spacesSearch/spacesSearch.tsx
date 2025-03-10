@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import {
 	AssertNever,
 	AssertNotNullable,
@@ -17,7 +17,7 @@ import {
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager';
+import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager.tsx';
 import closedDoorLocked from '../../../assets/icons/closed-door-locked.svg';
 import closedDoor from '../../../assets/icons/closed-door.svg';
 import forbiddenIcon from '../../../assets/icons/forbidden.svg';
@@ -26,20 +26,20 @@ import lockIcon from '../../../assets/icons/lock.svg';
 import publicDoor from '../../../assets/icons/public-door.svg';
 import shieldSlashedIcon from '../../../assets/icons/shield-slashed.svg';
 import shieldIcon from '../../../assets/icons/shield.svg';
-import { useAsyncEvent } from '../../../common/useEvent';
-import { useAccountContacts } from '../../../components/accountContacts/accountContactContext';
-import { Button } from '../../../components/common/button/button';
-import { Column, Row } from '../../../components/common/container/container';
-import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog';
-import { useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider';
-import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider';
-import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider';
-import { ContextHelpButton } from '../../../components/help/contextHelpButton';
-import { useObservable } from '../../../observable';
-import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks';
-import { useIsNarrowScreen } from '../../../styles/mediaQueries';
-import { DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration';
+import { useAsyncEvent } from '../../../common/useEvent.ts';
+import { useAccountContacts } from '../../../components/accountContacts/accountContactContext.ts';
+import { Button } from '../../../components/common/button/button.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
+import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog.tsx';
+import { useDirectoryChangeListener, useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
+import { useCharacterRestrictionsManager, useGameStateOptional, useSpaceInfo, useSpaceInfoOptional } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { usePlayer, usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
+import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { useObservable } from '../../../observable.ts';
+import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
+import { DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration.tsx';
 import './spacesSearch.scss';
 
 const TIPS: readonly string[] = [

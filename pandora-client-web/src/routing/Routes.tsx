@@ -2,32 +2,32 @@ import { IsAuthorized, IsObject } from 'pandora-common';
 import { ComponentType, lazy, ReactElement, Suspense, useEffect } from 'react';
 import { useNavigate } from 'react-router';
 import { Navigate, NavigateOptions, Route, Routes, useLocation } from 'react-router-dom';
-import { AccountContacts } from '../components/accountContacts/accountContacts';
-import { CharacterCreate } from '../components/characterCreate/characterCreate';
-import { CharacterSelect } from '../components/characterSelect/characterSelect';
-import { ModalDialog } from '../components/dialog/dialog';
-import { useAuthTokenIsValid } from '../components/gameContext/directoryConnectorContextProvider';
-import { useGameStateOptional } from '../components/gameContext/gameStateContextProvider';
-import { usePlayerData } from '../components/gameContext/playerContextProvider';
-import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider';
-import { AuthPage } from '../components/login/authPage';
-import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens';
-import { Settings } from '../components/settings/settings';
-import { WardrobeRouter } from '../components/wardrobe/wardrobe';
-import { ShardConnectionState } from '../networking/shardConnector';
-import { useNullableObservable, useObservable } from '../observable';
-import { useCurrentAccount } from '../services/accountLogic/accountManagerHooks';
-import { useService } from '../services/serviceProvider';
-import { Freeze } from '../ui/components/common/freeze';
-import { RoomScreen } from '../ui/screens/room/room';
-import { SpaceConfiguration, SpaceCreate } from '../ui/screens/spaceConfiguration/spaceConfiguration';
-import { SpaceJoin } from '../ui/screens/spaceJoin/spaceJoin';
-import { SpacesSearch } from '../ui/screens/spacesSearch/spacesSearch';
-import { authPagePathsAndComponents } from './authRoutingData';
+import { AccountContacts } from '../components/accountContacts/accountContacts.tsx';
+import { CharacterCreate } from '../components/characterCreate/characterCreate.tsx';
+import { CharacterSelect } from '../components/characterSelect/characterSelect.tsx';
+import { ModalDialog } from '../components/dialog/dialog.tsx';
+import { useAuthTokenIsValid } from '../components/gameContext/directoryConnectorContextProvider.tsx';
+import { useGameStateOptional } from '../components/gameContext/gameStateContextProvider.tsx';
+import { usePlayerData } from '../components/gameContext/playerContextProvider.tsx';
+import { useShardConnector } from '../components/gameContext/shardConnectorContextProvider.tsx';
+import { AuthPage } from '../components/login/authPage.tsx';
+import { AccountProfileScreenRouter, CharacterProfileScreenRouter } from '../components/profileScreens/profileScreens.tsx';
+import { Settings } from '../components/settings/settings.tsx';
+import { WardrobeRouter } from '../components/wardrobe/wardrobe.tsx';
+import { ShardConnectionState } from '../networking/shardConnector.ts';
+import { useNullableObservable, useObservable } from '../observable.ts';
+import { useCurrentAccount } from '../services/accountLogic/accountManagerHooks.ts';
+import { useService } from '../services/serviceProvider.tsx';
+import { Freeze } from '../ui/components/common/freeze.tsx';
+import { RoomScreen } from '../ui/screens/room/room.tsx';
+import { SpaceConfiguration, SpaceCreate } from '../ui/screens/spaceConfiguration/spaceConfiguration.tsx';
+import { SpaceJoin } from '../ui/screens/spaceJoin/spaceJoin.tsx';
+import { SpacesSearch } from '../ui/screens/spacesSearch/spacesSearch.tsx';
+import { authPagePathsAndComponents } from './authRoutingData.ts';
 
 // Lazily loaded screens
-const Management = lazy(() => import('../components/management'));
-const Wiki = lazy(() => import('../components/wiki/wiki'));
+const Management = lazy(() => import('../components/management/index.tsx'));
+const Wiki = lazy(() => import('../components/wiki/wiki.tsx'));
 
 export function PandoraRoutes(): ReactElement {
 	return (

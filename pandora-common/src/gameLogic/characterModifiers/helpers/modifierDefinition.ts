@@ -1,12 +1,12 @@
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { z } from 'zod';
-import { Assert, AssertNever } from '../../../utility';
-import type { PermissionConfigDefault, PermissionType } from '../../permissions';
-import type { CharacterModifierStrictnessCategory } from '../characterModifierBaseData';
-import type { CharacterModifierEffectData } from '../characterModifierData';
-import type { CharacterModifierProperties, CharacterModifierPropertiesApplier } from '../characterModifierProperties';
-import type { ModifierConfigurationBase } from '../configuration';
-import { CharacterModifierBuildConfigurationSchema, type CharacterModifierBuildConfigurationSchemaType } from './configurationBuilder';
+import { Assert, AssertNever } from '../../../utility/index.ts';
+import type { PermissionConfigDefault, PermissionType } from '../../permissions/index.ts';
+import type { CharacterModifierStrictnessCategory } from '../characterModifierBaseData.ts';
+import type { CharacterModifierEffectData } from '../characterModifierData.ts';
+import type { CharacterModifierProperties, CharacterModifierPropertiesApplier } from '../characterModifierProperties.ts';
+import type { ModifierConfigurationBase } from '../configuration/index.ts';
+import { CharacterModifierBuildConfigurationSchema, type CharacterModifierBuildConfigurationSchemaType } from './configurationBuilder.ts';
 
 /** Base type for a character modifier type definition. */
 export interface CharacterModifierTypeDefinitionBase {

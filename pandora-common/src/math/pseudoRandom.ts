@@ -1,4 +1,4 @@
-import { Assert } from '../utility';
+import { Assert } from '../utility/index.ts';
 
 /* eslint-disable no-bitwise */
 export class PseudoRandom {

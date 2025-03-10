@@ -1,4 +1,5 @@
-import { HearingImpairment, HearingImpairmentSettings } from '../../src/chat/hearingImpairment';
+import { beforeEach, describe, expect, it } from '@jest/globals';
+import { HearingImpairment, HearingImpairmentSettings } from '../../src/chat/hearingImpairment.ts';
 
 describe('HearingImpairment', () => {
 	describe('distort()', () => {

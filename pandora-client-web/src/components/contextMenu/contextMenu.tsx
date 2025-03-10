@@ -1,12 +1,12 @@
 import classNames from 'classnames';
-import { clamp } from 'lodash';
-import React, { ForwardedRef, ReactElement, useState, useEffect, useImperativeHandle, forwardRef, RefObject, useCallback, useRef, useMemo } from 'react';
-import { CommonProps } from '../../common/reactTypes';
-import { useEvent } from '../../common/useEvent';
-import { useMounted } from '../../common/useMounted';
+import { clamp } from 'lodash-es';
+import React, { ForwardedRef, forwardRef, ReactElement, RefObject, useCallback, useEffect, useImperativeHandle, useMemo, useRef, useState } from 'react';
+import { CommonProps } from '../../common/reactTypes.ts';
+import { useEvent } from '../../common/useEvent.ts';
+import { useMounted } from '../../common/useMounted.ts';
+import { Column } from '../common/container/container.tsx';
+import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
 import './contextMenu.scss';
-import { Scrollable } from '../common/scrollbar/scrollbar';
-import { Column } from '../common/container/container';
 
 type ContextMenuHandle = {
 	onContextMenu: (event: React.MouseEvent<HTMLDivElement>) => void;

@@ -1,11 +1,10 @@
+import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import { MongoMemoryServer } from 'mongodb-memory-server-core';
-import { CreateAccountData } from '../../src/account/account';
-import { PrehashPassword } from '../../src/database/mockDb';
-import MongoDatabase, { MONGODB_SERVER_VERSION } from '../../src/database/mongoDb';
-import RunDbTests from './db';
 import { Assert } from 'pandora-common';
-
-// @jest
+import { CreateAccountData } from '../../src/account/account.ts';
+import { PrehashPassword } from '../../src/database/mockDb.ts';
+import MongoDatabase, { MONGODB_SERVER_VERSION } from '../../src/database/mongoDb.ts';
+import RunDbTests from './db.ts';
 
 let db: MongoDatabase | null = null;
 

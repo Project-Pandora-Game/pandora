@@ -1,9 +1,9 @@
-import { TypedEventEmitter } from '../../event';
-import type { GameLogicCharacter } from '../character';
-import { GameLogicPermission, GameLogicPermissionServer } from '../permissions';
-import { GameLogicPermissionClient } from '../permissions/permissionClient';
-import type { CharacterModifierTypeConfig } from './characterModifierData';
-import { CHARACTER_MODIFIER_TYPE_DEFINITION, CharacterModifierType } from './modifierTypes/_index';
+import { TypedEventEmitter } from '../../event.ts';
+import type { GameLogicCharacter } from '../character/index.ts';
+import { GameLogicPermission, GameLogicPermissionServer } from '../permissions/index.ts';
+import { GameLogicPermissionClient } from '../permissions/permissionClient.ts';
+import type { CharacterModifierTypeConfig } from './characterModifierData.ts';
+import { CHARACTER_MODIFIER_TYPE_DEFINITION, CharacterModifierType } from './modifierTypes/_index.ts';
 
 export type GameLogicModifierTypeEvents = {
 	configChanged: void;

@@ -1,6 +1,6 @@
 import { ServiceManager } from 'pandora-common';
-import type { ClientServices } from '../../services/clientServices';
-import { EditorShardConnectionManagerServiceProvider } from './editorShardConnectionManager';
+import type { ClientServices } from '../../services/clientServices.ts';
+import { EditorShardConnectionManagerServiceProvider } from './editorShardConnectionManager.ts';
 
 /**
  * Generates an un-initialized service manager containing all editor services.

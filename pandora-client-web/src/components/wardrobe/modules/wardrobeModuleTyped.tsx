@@ -3,12 +3,12 @@ import {
 	FormatTimeInterval,
 	MessageSubstitute,
 } from 'pandora-common';
-import type { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed';
+import type { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed.js';
 import { ReactElement, useMemo } from 'react';
-import { useCurrentTime } from '../../../common/useCurrentTime';
-import { Column, Row } from '../../common/container/container';
-import { WardrobeActionButton } from '../wardrobeComponents';
-import type { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
+import { useCurrentTime } from '../../../common/useCurrentTime.ts';
+import { Column, Row } from '../../common/container/container.tsx';
+import { WardrobeActionButton } from '../wardrobeComponents.tsx';
+import type { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes.ts';
 
 export function WardrobeModuleConfigTyped({ target, item, moduleName, m }: WardrobeModuleProps<ItemModuleTyped>): ReactElement {
 	const now = useCurrentTime();

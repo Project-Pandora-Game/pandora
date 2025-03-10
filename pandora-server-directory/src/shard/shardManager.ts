@@ -1,7 +1,7 @@
 import { Assert, IDirectoryShardInfo, IShardTokenType } from 'pandora-common';
-import { Shard } from './shard';
 import promClient from 'prom-client';
-import { IConnectedTokenInfo } from './shardTokenStore';
+import { Shard } from './shard.ts';
+import { IConnectedTokenInfo } from './shardTokenStore.ts';
 
 /** Time (in ms) after which manager prunes account without any active connection */
 export const SHARD_TIMEOUT = 10_000;

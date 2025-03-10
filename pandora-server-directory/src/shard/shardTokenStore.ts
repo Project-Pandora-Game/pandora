@@ -1,12 +1,12 @@
 import { GetLogger, HTTP_HEADER_SHARD_SECRET, IClientDirectoryArgument, IShardTokenInfo, IShardTokenType } from 'pandora-common';
-import type { Account } from '../account/account';
-import { ENV } from '../config';
+import type { Account } from '../account/account.ts';
+import { ENV } from '../config.ts';
 const { SHARD_SHARED_SECRET } = ENV;
 
-import { GetDatabase } from '../database/databaseProvider';
-import { TokenStoreBase } from './tokenStoreBase';
 import type { IncomingMessage } from 'http';
 import type { Socket } from 'socket.io';
+import { GetDatabase } from '../database/databaseProvider.ts';
+import { TokenStoreBase } from './tokenStoreBase.ts';
 
 const TOKEN_ID_LENGTH = 16;
 const TOKEN_SECRET_LENGTH = 18;

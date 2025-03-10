@@ -4,10 +4,10 @@ import {
 	type ServiceConfigBase,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
-import type { ShardConnector } from '../../networking/shardConnector';
-import { Observable, type ReadonlyObservable } from '../../observable';
-import type { ClientServices } from '../../services/clientServices';
-import type { IShardConnectionManager } from '../../services/shardConnectionManager';
+import type { ShardConnector } from '../../networking/shardConnector.ts';
+import { Observable, type ReadonlyObservable } from '../../observable.ts';
+import type { ClientServices } from '../../services/clientServices.ts';
+import type { IShardConnectionManager } from '../../services/shardConnectionManager.ts';
 
 type EditorShardConnectionManagerServiceConfig = Satisfies<{
 	dependencies: Pick<ClientServices, never>;

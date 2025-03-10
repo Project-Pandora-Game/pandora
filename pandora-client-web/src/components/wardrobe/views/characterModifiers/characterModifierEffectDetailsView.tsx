@@ -6,9 +6,9 @@ import {
 } from 'pandora-common';
 import { ReactElement } from 'react';
 import crossIcon from '../../../../assets/icons/cross.svg';
-import { IconButton } from '../../../common/button/button';
-import { Column, Row } from '../../../common/container/container';
-import { WardrobeCharacterModifierConfig } from './configuration/_index';
+import { IconButton } from '../../../common/button/button.tsx';
+import { Column, Row } from '../../../common/container/container.tsx';
+import { WardrobeCharacterModifierConfig } from './configuration/_index.tsx';
 
 interface WardrobeCharacterModifierEffectDetailsViewProps {
 	target: CharacterId;

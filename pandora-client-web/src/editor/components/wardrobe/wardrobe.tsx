@@ -14,23 +14,23 @@ import {
 	StartActionAttempt,
 } from 'pandora-common';
 import { ReactElement, ReactNode, useEffect, useMemo, useState } from 'react';
-import { useAssetManager } from '../../../assets/assetManager';
-import { Checkbox } from '../../../common/userInteraction/checkbox';
-import { Column, Row } from '../../../components/common/container/container';
-import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle';
-import { WardrobeItemConfigMenu } from '../../../components/wardrobe/itemDetail/_wardrobeItemDetail';
-import { InventoryAssetView } from '../../../components/wardrobe/views/wardrobeAssetView';
-import { InventoryItemView } from '../../../components/wardrobe/views/wardrobeItemView';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
+import { FieldsetToggle } from '../../../components/common/fieldsetToggle/fieldsetToggle.tsx';
+import { WardrobeItemConfigMenu } from '../../../components/wardrobe/itemDetail/_wardrobeItemDetail.tsx';
+import { InventoryAssetView } from '../../../components/wardrobe/views/wardrobeAssetView.tsx';
+import { InventoryItemView } from '../../../components/wardrobe/views/wardrobeItemView.tsx';
 import '../../../components/wardrobe/wardrobe.scss';
-import { WardrobeActionContext, wardrobeActionContext } from '../../../components/wardrobe/wardrobeActionContext';
-import { WardrobeActionRandomizeButton } from '../../../components/wardrobe/wardrobeComponents';
-import { useWardrobeContext, wardrobeContext } from '../../../components/wardrobe/wardrobeContext';
-import { useWardrobeItems } from '../../../components/wardrobe/wardrobeItems';
-import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocuser, WardrobeHeldItem } from '../../../components/wardrobe/wardrobeTypes';
-import { WardrobeFocusesItem } from '../../../components/wardrobe/wardrobeUtils';
-import { Observable, useObservable } from '../../../observable';
-import { useEditor, useEditorState } from '../../editorContextProvider';
-import { useEditorCharacterState } from '../../graphics/character/appearanceEditor';
+import { WardrobeActionContext, wardrobeActionContext } from '../../../components/wardrobe/wardrobeActionContext.tsx';
+import { WardrobeActionRandomizeButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
+import { useWardrobeContext, wardrobeContext } from '../../../components/wardrobe/wardrobeContext.tsx';
+import { useWardrobeItems } from '../../../components/wardrobe/wardrobeItems.tsx';
+import { WardrobeContext, WardrobeContextExtraItemActionComponent, WardrobeFocuser, WardrobeHeldItem } from '../../../components/wardrobe/wardrobeTypes.ts';
+import { WardrobeFocusesItem } from '../../../components/wardrobe/wardrobeUtils.ts';
+import { Observable, useObservable } from '../../../observable.ts';
+import { useEditor, useEditorState } from '../../editorContextProvider.tsx';
+import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
 
 export const EDITOR_SPACE_CONTEXT = {
 	features: [

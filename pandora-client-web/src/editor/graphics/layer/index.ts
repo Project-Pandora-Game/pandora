@@ -1,2 +1,2 @@
-export * from './resultLayer';
-export * from './setupLayer';
+export * from './resultLayer.tsx';
+export * from './setupLayer.tsx';

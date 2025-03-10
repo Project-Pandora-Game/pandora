@@ -8,10 +8,10 @@ import {
 	type AccountId,
 	type IDirectoryDirectMessage,
 } from 'pandora-common';
-import { GetDatabase } from '../database/databaseProvider';
-import type { DatabaseDirectMessage, DatabaseDirectMessageInfo } from '../database/databaseStructure';
-import { Account, GetDirectMessageId } from './account';
-import { accountManager } from './accountManager';
+import { GetDatabase } from '../database/databaseProvider.ts';
+import type { DatabaseDirectMessage, DatabaseDirectMessageInfo } from '../database/databaseStructure.ts';
+import { Account, GetDirectMessageId } from './account.ts';
+import { accountManager } from './accountManager.ts';
 
 let lastMessageTime = 0;
 /** TODO: handle host machine time jumping backwards */

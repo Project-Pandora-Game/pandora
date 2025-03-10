@@ -103,7 +103,7 @@ export default tsEslint.config(
 					'.hooks/**',
 					'**/eslint.config.js',
 					'**/pandora-tests/**/*.ts',
-					'**/pandora-client-web/test/**',
+					'**/pandora-*/test/**',
 					'**/pandora-client-web/webpack.config.ts',
 				],
 			}],

@@ -1,14 +1,14 @@
-import type { AssetManager } from '../../assets/assetManager';
-import type { ICharacterData } from '../../character';
-import { Logger } from '../../logging';
-import { AssertNever } from '../../utility/misc';
-import { AssetPreferencesSubsystemServer } from '../assetPreferences';
-import { MakeDefaultCharacterModifierSystemData } from '../characterModifiers/characterModifierData';
-import { CharacterModifiersSubsystemServer } from '../characterModifiers/characterModifiersSubsystemServer';
-import { MakeDefaultInteractionSystemData } from '../interactions/interactionData';
-import { InteractionSubsystemServer } from '../interactions/interactionSubsystemServer';
-import { GameLogicPermissionServer, IPermissionProvider, PermissionGroup } from '../permissions';
-import { GameLogicCharacter } from './character';
+import type { AssetManager } from '../../assets/assetManager.ts';
+import type { ICharacterData } from '../../character/index.ts';
+import { Logger } from '../../logging.ts';
+import { AssertNever } from '../../utility/misc.ts';
+import { AssetPreferencesSubsystemServer } from '../assetPreferences/index.ts';
+import { MakeDefaultCharacterModifierSystemData } from '../characterModifiers/characterModifierData.ts';
+import { CharacterModifiersSubsystemServer } from '../characterModifiers/characterModifiersSubsystemServer.ts';
+import { MakeDefaultInteractionSystemData } from '../interactions/interactionData.ts';
+import { InteractionSubsystemServer } from '../interactions/interactionSubsystemServer.ts';
+import { GameLogicPermissionServer, IPermissionProvider, PermissionGroup } from '../permissions/index.ts';
+import { GameLogicCharacter } from './character.ts';
 
 export class GameLogicCharacterServer extends GameLogicCharacter {
 	public readonly _data: ICharacterData;

@@ -1,9 +1,9 @@
 import { screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { RegistrationForm } from '../../../../src/components/login/forms/registrationForm';
-import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
-import { RenderWithRouterAndProviders } from '../../../testUtils';
-import { INVALID_DISPLAY_NAMES, INVALID_EMAILS, INVALID_USERNAMES } from '../loginTestData';
+import { RegistrationForm } from '../../../../src/components/login/forms/registrationForm.tsx';
+import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils.ts';
+import { RenderWithRouterAndProviders } from '../../../testUtils.tsx';
+import { INVALID_DISPLAY_NAMES, INVALID_EMAILS, INVALID_USERNAMES } from '../loginTestData.ts';
 
 describe('Registration Form', () => {
 	const defaultUsername = 'test-user';

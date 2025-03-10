@@ -11,7 +11,7 @@
 			]
 		},
 		"overrides": {
-			"@octokit/types": "13.5.0",
+			"@octokit/types": "13.8.0",
 			"superstatic>re2": "-"
 		},
 		"patchedDependencies": {

@@ -29,7 +29,7 @@ const CHARACTER_MODIFIER_LOCK_DEFINITIONS_INTERNAL = {
 		},
 	},
 	timer: {
-		name: 'Timer Lock',
+		name: 'Timer Lock (24h)',
 		lockSetup: {
 			timer: {
 				maxDuration: 24 * 60 * 60 * 1000,

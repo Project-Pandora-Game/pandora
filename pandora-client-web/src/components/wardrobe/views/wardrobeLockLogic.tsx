@@ -346,6 +346,10 @@ function PasswordInput<TActionContext>({
 	);
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const MINUTE_MS = 60 * 1000;
+
 function TimerInput({
 	value,
 	onChange,
@@ -358,16 +362,13 @@ function TimerInput({
 	pendingAttempt?: boolean;
 	showInvalidWarning?: boolean;
 }) {
-	const hourMs = 3_600_000;
-	const minuteMs = 60_000;
-
 	const id = useId();
 
 	const inputValues = useMemo(() => {
 		return {
-			hours: Math.floor(value / hourMs),
-			minutes: Math.floor(value / minuteMs) % 60,
-			seconds: Math.floor(value / 1_000) % 60,
+			days: Math.floor(value / DAY_MS),
+			hours: Math.floor(value / HOUR_MS) % 24,
+			minutes: Math.floor(value / MINUTE_MS) % 60,
 		};
 	}, [value]);
 
@@ -377,9 +378,9 @@ function TimerInput({
 		}
 
 		return {
-			hours: Math.floor(timer.maxDuration / hourMs),
-			minutes: (timer.maxDuration > (59 * minuteMs)) ? 59 : Math.floor(timer.maxDuration / minuteMs),
-			seconds: (timer.maxDuration > 59_000) ? 59 : Math.floor(timer.maxDuration / 1_000),
+			days: Math.floor(timer.maxDuration / DAY_MS),
+			hours: (timer.maxDuration > (23 * HOUR_MS)) ? 23 : Math.floor(timer.maxDuration / HOUR_MS),
+			minutes: (timer.maxDuration > (59 * MINUTE_MS)) ? 59 : Math.floor(timer.maxDuration / MINUTE_MS),
 		};
 	}, [value, inputValues, timer]);
 
@@ -387,16 +388,16 @@ function TimerInput({
 		onChange(Math.min(timer.maxDuration, newValue));
 	}, [onChange, timer]);
 
+	const setDays = useCallback((newValue: number) => {
+		updateTimer(value + (newValue - inputValues.days) * DAY_MS);
+	}, [value, updateTimer, inputValues]);
+
 	const setHours = useCallback((newValue: number) => {
-		updateTimer(value + (newValue - inputValues.hours) * hourMs);
+		updateTimer(value + (newValue - inputValues.hours) * HOUR_MS);
 	}, [value, updateTimer, inputValues]);
 
 	const setMinutes = useCallback((newValue: number) => {
-		updateTimer(value + (newValue - inputValues.minutes) * minuteMs);
-	}, [value, updateTimer, inputValues]);
-
-	const setSeconds = useCallback((newValue: number) => {
-		updateTimer(value + (newValue - inputValues.seconds) * 1_000);
+		updateTimer(value + (newValue - inputValues.minutes) * MINUTE_MS);
 	}, [value, updateTimer, inputValues]);
 
 	return (
@@ -405,6 +406,17 @@ function TimerInput({
 				Timer
 			</label>
 			<Row alignY='center'>
+				<NumberInput
+					id={ `${id}-days` }
+					min={ 0 }
+					max={ maximums.days }
+					step={ 1 }
+					value={ pendingAttempt ? NaN : inputValues.days }
+					onChange={ setDays }
+					disabled={ pendingAttempt }
+				/>
+				<label htmlFor={ `${id}-days` }>Days</label>
+				{ ' : ' }
 				<NumberInput
 					id={ `${id}-hours` }
 					min={ 0 }
@@ -426,17 +438,6 @@ function TimerInput({
 					disabled={ pendingAttempt }
 				/>
 				<label htmlFor={ `${id}-minutes` }>Minutes</label>
-				{ ' : ' }
-				<NumberInput
-					id={ `${id}-seconds` }
-					min={ 0 }
-					max={ maximums.seconds }
-					step={ 1 }
-					value={ pendingAttempt ? NaN : inputValues.seconds }
-					onChange={ setSeconds }
-					disabled={ pendingAttempt }
-				/>
-				<label htmlFor={ `${id}-seconds` }>Seconds</label>
 			</Row>
 		</Row>
 	);

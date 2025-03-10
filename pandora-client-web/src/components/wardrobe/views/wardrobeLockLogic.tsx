@@ -358,9 +358,9 @@ function TimerInput({
 	pendingAttempt?: boolean;
 	showInvalidWarning?: boolean;
 }) {
-	const dayMs = 86_400_000;
-	const hourMs = 3_600_000;
-	const minuteMs = 60_000;
+	const dayMs = 24 * 60 * 60 * 1000;
+	const hourMs = 60 * 60 * 1000;
+	const minuteMs = 60 * 1000;
 
 	const id = useId();
 

@@ -46,6 +46,7 @@ export default tsEslint.config(
 		rules: {
 			// Disabled recommended rules
 			'@typescript-eslint/no-inferrable-types': 'off',
+			'import/no-unresolved': 'off', // Breaks with "exports" mappings (https://github.com/import-js/eslint-plugin-import/issues/2703)
 			// NOs
 			'@typescript-eslint/ban-ts-comment': [
 				'error',
@@ -92,9 +93,6 @@ export default tsEslint.config(
 			'operator-assignment': 'warn',
 			'prefer-object-spread': 'warn',
 			'import/no-cycle': 'warn',
-			'import/no-unresolved': ['warn', {
-				'ignore': ['^(pandora-common($|/dist)|pixi.js/|typescript-eslint)'],
-			}],
 			'import/no-internal-modules': ['error', {
 				'forbid': ['pandora-common/src/**'],
 			}],

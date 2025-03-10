@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { SetupTestingEnv, TestOpenPandora } from './utils/helpers';
+import { expect, test } from '@playwright/test';
+import { SetupTestingEnv, TestOpenPandora } from './utils/helpers.ts';
 
 SetupTestingEnv();
 

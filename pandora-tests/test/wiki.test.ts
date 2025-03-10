@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { SetupTestingEnv, TestOpenPandora } from './utils/helpers';
-import { TestStartDirectory } from './utils/server';
+import { SetupTestingEnv, TestOpenPandora } from './utils/helpers.ts';
+import { TestStartDirectory } from './utils/server.ts';
 
 SetupTestingEnv();
 

@@ -1,6 +1,6 @@
 import { ConsoleMessage, Page, expect, test } from '@playwright/test';
-import { CoverageProcessPage } from './coverage';
-import { InternalSetupTestingEnvDirectory } from './server';
+import { CoverageProcessPage } from './coverage.ts';
+import { InternalSetupTestingEnvDirectory } from './server.ts';
 
 const handleLog = (message: ConsoleMessage) => {
 	if (message.type() === 'error') {

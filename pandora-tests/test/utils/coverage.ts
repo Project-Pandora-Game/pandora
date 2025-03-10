@@ -1,10 +1,10 @@
 /* eslint-disable no-console */
 import { Page } from '@playwright/test';
+import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
-import * as crypto from 'crypto';
-import { TEST_CLIENT_DIR, TEST_CLIENT_DIST_DIR, TEST_COVERAGE_TEMP } from '../_setup/config';
 import v8ToIstanbul from 'v8-to-istanbul';
+import { TEST_CLIENT_DIR, TEST_CLIENT_DIST_DIR, TEST_COVERAGE_TEMP } from '../_setup/config.ts';
 
 type FilterType<T, F> = T extends F ? T : never;
 

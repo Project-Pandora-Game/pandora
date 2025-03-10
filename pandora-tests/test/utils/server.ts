@@ -1,10 +1,10 @@
-import { Assert, AssertNotNullable, EnvStringify } from './utils';
-import { spawn, fork, type ChildProcess } from 'child_process';
-import { PNPM_EXECUTABLE, TEST_COVERAGE_TEMP, TEST_DIRECTORY_PORT, TEST_PROJECT_PANDORA_DIR, TEST_SERVER_DIRECTORY_ENTRYPOINT, TEST_SERVER_DIRECTORY_TEST_DIR, TEST_TEMP } from '../_setup/config';
 import { test } from '@playwright/test';
+import { fork, spawn, type ChildProcess } from 'child_process';
 import path from 'path';
+import { PNPM_EXECUTABLE, TEST_COVERAGE_TEMP, TEST_DIRECTORY_PORT, TEST_PROJECT_PANDORA_DIR, TEST_SERVER_DIRECTORY_ENTRYPOINT, TEST_SERVER_DIRECTORY_TEST_DIR, TEST_TEMP } from '../_setup/config.ts';
+import { Assert, AssertNotNullable, EnvStringify } from './utils.ts';
 
-import type { ENV } from 'pandora-server-directory/src/config';
+import type { ENV } from 'pandora-server-directory/src/config.ts';
 
 export type DirectoryEnvSetup = Partial<typeof ENV>;
 

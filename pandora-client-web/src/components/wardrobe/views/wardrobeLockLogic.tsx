@@ -358,6 +358,7 @@ function TimerInput({
 	pendingAttempt?: boolean;
 	showInvalidWarning?: boolean;
 }) {
+	const dayMs = 86_400_000;
 	const hourMs = 3_600_000;
 	const minuteMs = 60_000;
 
@@ -365,9 +366,9 @@ function TimerInput({
 
 	const inputValues = useMemo(() => {
 		return {
-			hours: Math.floor(value / hourMs),
+			days: Math.floor(value / dayMs),
+			hours: Math.floor(value / hourMs) % 24,
 			minutes: Math.floor(value / minuteMs) % 60,
-			seconds: Math.floor(value / 1_000) % 60,
 		};
 	}, [value]);
 
@@ -377,15 +378,19 @@ function TimerInput({
 		}
 
 		return {
-			hours: Math.floor(timer.maxDuration / hourMs),
+			days: Math.floor(timer.maxDuration / dayMs),
+			hours: (timer.maxDuration > (23 * hourMs)) ? 23 : Math.floor(timer.maxDuration / hourMs),
 			minutes: (timer.maxDuration > (59 * minuteMs)) ? 59 : Math.floor(timer.maxDuration / minuteMs),
-			seconds: (timer.maxDuration > 59_000) ? 59 : Math.floor(timer.maxDuration / 1_000),
 		};
 	}, [value, inputValues, timer]);
 
 	const updateTimer = useCallback((newValue: number) => {
 		onChange(Math.min(timer.maxDuration, newValue));
 	}, [onChange, timer]);
+
+	const setDays = useCallback((newValue: number) => {
+		updateTimer(value + (newValue - inputValues.days) * dayMs);
+	}, [value, updateTimer, inputValues]);
 
 	const setHours = useCallback((newValue: number) => {
 		updateTimer(value + (newValue - inputValues.hours) * hourMs);
@@ -395,16 +400,23 @@ function TimerInput({
 		updateTimer(value + (newValue - inputValues.minutes) * minuteMs);
 	}, [value, updateTimer, inputValues]);
 
-	const setSeconds = useCallback((newValue: number) => {
-		updateTimer(value + (newValue - inputValues.seconds) * 1_000);
-	}, [value, updateTimer, inputValues]);
-
 	return (
 		<Row className='WardrobeInputRow'>
 			<label htmlFor={ id }>
 				Timer
 			</label>
 			<Row alignY='center'>
+				<NumberInput
+					id={ `${id}-days` }
+					min={ 0 }
+					max={ maximums.days }
+					step={ 1 }
+					value={ pendingAttempt ? NaN : inputValues.days }
+					onChange={ setDays }
+					disabled={ pendingAttempt }
+				/>
+				<label htmlFor={ `${id}-days` }>Days</label>
+				{ ' : ' }
 				<NumberInput
 					id={ `${id}-hours` }
 					min={ 0 }
@@ -426,17 +438,6 @@ function TimerInput({
 					disabled={ pendingAttempt }
 				/>
 				<label htmlFor={ `${id}-minutes` }>Minutes</label>
-				{ ' : ' }
-				<NumberInput
-					id={ `${id}-seconds` }
-					min={ 0 }
-					max={ maximums.seconds }
-					step={ 1 }
-					value={ pendingAttempt ? NaN : inputValues.seconds }
-					onChange={ setSeconds }
-					disabled={ pendingAttempt }
-				/>
-				<label htmlFor={ `${id}-seconds` }>Seconds</label>
 			</Row>
 		</Row>
 	);

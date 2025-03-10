@@ -346,6 +346,10 @@ function PasswordInput<TActionContext>({
 	);
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+const HOUR_MS = 60 * 60 * 1000;
+const MINUTE_MS = 60 * 1000;
+
 function TimerInput({
 	value,
 	onChange,
@@ -358,17 +362,13 @@ function TimerInput({
 	pendingAttempt?: boolean;
 	showInvalidWarning?: boolean;
 }) {
-	const dayMs = 24 * 60 * 60 * 1000;
-	const hourMs = 60 * 60 * 1000;
-	const minuteMs = 60 * 1000;
-
 	const id = useId();
 
 	const inputValues = useMemo(() => {
 		return {
-			days: Math.floor(value / dayMs),
-			hours: Math.floor(value / hourMs) % 24,
-			minutes: Math.floor(value / minuteMs) % 60,
+			days: Math.floor(value / DAY_MS),
+			hours: Math.floor(value / HOUR_MS) % 24,
+			minutes: Math.floor(value / MINUTE_MS) % 60,
 		};
 	}, [value]);
 
@@ -378,9 +378,9 @@ function TimerInput({
 		}
 
 		return {
-			days: Math.floor(timer.maxDuration / dayMs),
-			hours: (timer.maxDuration > (23 * hourMs)) ? 23 : Math.floor(timer.maxDuration / hourMs),
-			minutes: (timer.maxDuration > (59 * minuteMs)) ? 59 : Math.floor(timer.maxDuration / minuteMs),
+			days: Math.floor(timer.maxDuration / DAY_MS),
+			hours: (timer.maxDuration > (23 * HOUR_MS)) ? 23 : Math.floor(timer.maxDuration / HOUR_MS),
+			minutes: (timer.maxDuration > (59 * MINUTE_MS)) ? 59 : Math.floor(timer.maxDuration / MINUTE_MS),
 		};
 	}, [value, inputValues, timer]);
 
@@ -389,15 +389,15 @@ function TimerInput({
 	}, [onChange, timer]);
 
 	const setDays = useCallback((newValue: number) => {
-		updateTimer(value + (newValue - inputValues.days) * dayMs);
+		updateTimer(value + (newValue - inputValues.days) * DAY_MS);
 	}, [value, updateTimer, inputValues]);
 
 	const setHours = useCallback((newValue: number) => {
-		updateTimer(value + (newValue - inputValues.hours) * hourMs);
+		updateTimer(value + (newValue - inputValues.hours) * HOUR_MS);
 	}, [value, updateTimer, inputValues]);
 
 	const setMinutes = useCallback((newValue: number) => {
-		updateTimer(value + (newValue - inputValues.minutes) * minuteMs);
+		updateTimer(value + (newValue - inputValues.minutes) * MINUTE_MS);
 	}, [value, updateTimer, inputValues]);
 
 	return (

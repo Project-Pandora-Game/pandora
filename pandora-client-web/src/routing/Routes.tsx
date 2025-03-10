@@ -26,8 +26,8 @@ import { SpacesSearch } from '../ui/screens/spacesSearch/spacesSearch.tsx';
 import { authPagePathsAndComponents } from './authRoutingData.ts';
 
 // Lazily loaded screens
-const Management = lazy(() => import('../components/management'));
-const Wiki = lazy(() => import('../components/wiki/wiki'));
+const Management = lazy(() => import('../components/management/index.tsx'));
+const Wiki = lazy(() => import('../components/wiki/wiki.tsx'));
 
 export function PandoraRoutes(): ReactElement {
 	return (

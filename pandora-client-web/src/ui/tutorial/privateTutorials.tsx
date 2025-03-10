@@ -8,7 +8,7 @@ import type { TutorialConfig, TutorialDisableReason } from './tutorialSystem/tut
 import { TutorialRunner } from './tutorialSystem/tutorialRunner.ts';
 import { ActiveTutorial } from './tutorialSystem/tutorialService.tsx';
 
-const PrivateRoomTutorialListContent = React.lazy(() => import('./privateTutorialsList'));
+const PrivateRoomTutorialListContent = React.lazy(() => import('./privateTutorialsList.tsx'));
 
 export function PrivateRoomTutorialList(): ReactElement {
 	const activeTutorial = useObservable(ActiveTutorial);

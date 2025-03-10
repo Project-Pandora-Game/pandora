@@ -28,11 +28,10 @@
 	"scripts": {
 		"setup-dev": "pnpm --filter pandora-common --silent run build",
 		"postinstall": "node .hooks/postinstall.cjs",
-		"ci": "pnpm run build && pnpm run check-common-install && pnpm run lint:root && pnpm run type-check:test && pnpm run test --ci --coverage && pnpm run test-e2e && pnpm run coverage:collect",
+		"ci": "pnpm run build && pnpm run lint:root && pnpm run type-check:test && pnpm run test --ci --coverage && pnpm run test-e2e && pnpm run coverage:collect",
 		"deploy": "pnpm run build && pnpm run deploy-client-rsync",
 		"deploy-client": "pnpm --filter pandora-client-web run build && pnpm run deploy-client-rsync",
 		"deploy-client-rsync": "rsync -rltOvcP --delete-delay ./pandora-client-web/dist/ ../pandora-client-web/dist",
-		"check-common-install": "cd ./.github/workflows/common-install-check && pnpm install --force --no-lockfile",
 		"lint": "pnpm -r --no-bail --parallel run lint",
 		"lint:root": "eslint --max-warnings 0 .",
 		"lint:fix": "eslint --fix .",

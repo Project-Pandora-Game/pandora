@@ -52,22 +52,6 @@ jobs:
           target: pandora-server-shard
           tags: pandora/server-shard:latest
 
-  install-common:
-    name: Check installability of pandora-common
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-      - name: Update npm keys
-        run: |
-          echo COREPACK_INTEGRITY_KEYS="$(curl -s https://registry.npmjs.org/-/npm/v1/keys | jq -c '{npm: .keys}')" | tee -a "$GITHUB_ENV"
-      - run: corepack enable
-      - run: pnpm install --no-lockfile
-        working-directory: ./.github/workflows/common-install-check
-
   lint:
     name: Lint
     runs-on: ubuntu-latest

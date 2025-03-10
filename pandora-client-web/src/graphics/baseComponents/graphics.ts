@@ -1,6 +1,6 @@
 import { Graphics as PixiGraphics, GraphicsContext as PixiGraphicsContext } from 'pixi.js';
-import { RegisterPixiComponent, type DisplayObjectEventNames, type PixiComponentProps, type PixiDisplayObjectWriteableProps } from '../reconciler/component';
-import { CONTAINER_AUTO_PROPS, CONTAINER_EVENTS, type ContainerEventMap } from './container';
+import { RegisterPixiComponent, type DisplayObjectEventNames, type PixiComponentProps, type PixiDisplayObjectWriteableProps } from '../reconciler/component.ts';
+import { CONTAINER_AUTO_PROPS, CONTAINER_EVENTS, type ContainerEventMap } from './container.ts';
 
 const GRAPHICS_AUTO_PROPS = {
 	...CONTAINER_AUTO_PROPS,

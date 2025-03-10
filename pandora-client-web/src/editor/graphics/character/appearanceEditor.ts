@@ -1,6 +1,6 @@
 import { downloadZip, InputWithSizeMeta } from 'client-zip';
 import { Immutable } from 'immer';
-import { cloneDeep } from 'lodash';
+import { cloneDeep } from 'lodash-es';
 import {
 	ActionSpaceContext,
 	AppearanceAction,
@@ -34,14 +34,14 @@ import {
 	type AssetFrameworkGlobalState,
 } from 'pandora-common';
 import { Texture } from 'pixi.js';
-import { AssetGraphics, AssetGraphicsLayer } from '../../../assets/assetGraphics';
-import { IGraphicsLoader } from '../../../assets/graphicsManager';
-import { CharacterEvents, ICharacter } from '../../../character/character';
-import { DownloadAsFile } from '../../../common/downloadHelper';
-import { LoadArrayBufferImageResource, StripAssetHash } from '../../../graphics/utility';
-import { EDITOR_SPACE_CONTEXT } from '../../components/wardrobe/wardrobe';
-import { Editor } from '../../editor';
-import { useEditorState } from '../../editorContextProvider';
+import { AssetGraphics, AssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
+import { IGraphicsLoader } from '../../../assets/graphicsManager.ts';
+import { CharacterEvents, ICharacter } from '../../../character/character.ts';
+import { DownloadAsFile } from '../../../common/downloadHelper.ts';
+import { LoadArrayBufferImageResource, StripAssetHash } from '../../../graphics/utility.ts';
+import { EDITOR_SPACE_CONTEXT } from '../../components/wardrobe/wardrobe.tsx';
+import { Editor } from '../../editor.tsx';
+import { useEditorState } from '../../editorContextProvider.tsx';
 
 export interface EditorActionContext {
 	dryRun?: boolean;

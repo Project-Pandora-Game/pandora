@@ -1,6 +1,6 @@
 import type { TutorialId } from 'pandora-common';
 import type { ReactNode } from 'react';
-import type { TutorialFlags } from './tutorialExternalConditions';
+import type { TutorialFlags } from './tutorialExternalConditions.tsx';
 
 export type TutorialDisableReason = 'workInProgress';
 

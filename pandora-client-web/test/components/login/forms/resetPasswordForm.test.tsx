@@ -1,9 +1,9 @@
 import { screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
-import { ResetPasswordForm } from '../../../../src/components/login/forms/resetPasswordForm';
-import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
-import { RenderWithRouterAndProviders } from '../../../testUtils';
-import { INVALID_FORMAT_TOKENS, INVALID_LENGTH_TOKENS, INVALID_USERNAMES } from '../loginTestData';
+import { ResetPasswordForm } from '../../../../src/components/login/forms/resetPasswordForm.tsx';
+import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils.ts';
+import { RenderWithRouterAndProviders } from '../../../testUtils.tsx';
+import { INVALID_FORMAT_TOKENS, INVALID_LENGTH_TOKENS, INVALID_USERNAMES } from '../loginTestData.ts';
 
 describe('Reset Password Form', () => {
 	const defaultUsername = 'test-user';

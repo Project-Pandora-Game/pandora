@@ -1,5 +1,5 @@
 import { Container as PixiContainer, type ContainerChild, type ContainerEvents } from 'pixi.js';
-import { RegisterPixiComponent, type DisplayObjectEventNames, type PixiDisplayObjectWriteableProps } from '../reconciler/component';
+import { RegisterPixiComponent, type DisplayObjectEventNames, type PixiDisplayObjectWriteableProps } from '../reconciler/component.ts';
 
 export const CONTAINER_AUTO_PROPS = {
 	renderable: true,

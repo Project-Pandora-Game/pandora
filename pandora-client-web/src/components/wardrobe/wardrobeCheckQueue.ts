@@ -6,9 +6,9 @@ import {
 	ApplyAction,
 } from 'pandora-common';
 import { useCallback, useRef, useState } from 'react';
-import { CalculationQueue, useCalculateInQueue } from '../../common/calculationQueue';
-import { useCheckAddPermissions } from '../gameContext/permissionCheckProvider';
-import { useWardrobeActionContext } from './wardrobeActionContext';
+import { CalculationQueue, useCalculateInQueue } from '../../common/calculationQueue.ts';
+import { useCheckAddPermissions } from '../gameContext/permissionCheckProvider.tsx';
+import { useWardrobeActionContext } from './wardrobeActionContext.tsx';
 
 const calculationQueue = new CalculationQueue({
 	immediate: 0,

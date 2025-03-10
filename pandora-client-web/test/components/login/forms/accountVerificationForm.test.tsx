@@ -1,11 +1,12 @@
 import { RenderResult, screen, waitFor } from '@testing-library/react';
 import { userEvent } from '@testing-library/user-event';
 import { ReactElement } from 'react';
-import { authFormDataContext, AuthFormDataState } from '../../../../src/components/login/authFormDataProvider';
-import { AccountVerificationForm } from '../../../../src/components/login/forms/accountVerificationForm';
-import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils';
-import { RenderWithRouterAndProviders } from '../../../testUtils';
-import { INVALID_FORMAT_TOKENS, INVALID_LENGTH_TOKENS } from '../loginTestData';
+import { authFormDataContext, AuthFormDataState } from '../../../../src/components/login/authFormDataProvider.tsx';
+import { AccountVerificationForm } from '../../../../src/components/login/forms/accountVerificationForm.tsx';
+import { ExpectFieldToBeInvalid, TestFieldIsRendered, TestSubmitButtonIsRendered } from '../../../formTestUtils.ts';
+import { RenderWithRouterAndProviders } from '../../../testUtils.tsx';
+import { INVALID_FORMAT_TOKENS, INVALID_LENGTH_TOKENS } from '../loginTestData.ts';
+const jest = import.meta.jest; // Jest is not properly injected in ESM
 
 describe('Account Verification Form', () => {
 	const username = 'test-user';

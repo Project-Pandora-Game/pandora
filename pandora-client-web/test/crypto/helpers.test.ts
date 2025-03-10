@@ -1,4 +1,4 @@
-import { ArrayToBase64, Base64ToArray, HashSHA512Base64, GenerateIV } from '../../src/crypto/helpers';
+import { ArrayToBase64, Base64ToArray, GenerateIV, HashSHA512Base64 } from '../../src/crypto/helpers.ts';
 
 describe('ArrayToBase64', () => {
 	const cases = [

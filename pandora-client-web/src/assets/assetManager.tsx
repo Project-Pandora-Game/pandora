@@ -1,13 +1,13 @@
 import { Immutable } from 'immer';
 import { Asset, AssetManager, AssetsDefinitionFile, AssetsGraphicsDefinitionFile, GetLogger } from 'pandora-common';
 import { toast } from 'react-toastify';
-import { Column } from '../components/common/container/container';
-import { DEVELOPMENT } from '../config/Environment';
-import { ConfigServerIndex } from '../config/searchArgs';
-import { Observable, useObservable } from '../observable';
-import { TOAST_OPTIONS_INFO } from '../persistentToast';
-import { URLGraphicsLoader } from './graphicsLoader';
-import { GraphicsManager, GraphicsManagerInstance } from './graphicsManager';
+import { Column } from '../components/common/container/container.tsx';
+import { DEVELOPMENT } from '../config/Environment.ts';
+import { ConfigServerIndex } from '../config/searchArgs.ts';
+import { Observable, useObservable } from '../observable.ts';
+import { TOAST_OPTIONS_INFO } from '../persistentToast.ts';
+import { URLGraphicsLoader } from './graphicsLoader.ts';
+import { GraphicsManager, GraphicsManagerInstance } from './graphicsManager.ts';
 
 const logger = GetLogger('AssetManager');
 

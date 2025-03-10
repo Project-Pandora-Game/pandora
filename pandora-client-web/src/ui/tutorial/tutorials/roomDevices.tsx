@@ -1,4 +1,4 @@
-import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
+import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
 // TODO: Room devices
 // (spawn room device, deploy it, move it, entering, leaving, storing; final note on permissions)

@@ -1,4 +1,4 @@
-import { KeyExchange } from '../../src/crypto/keyExchange';
+import { KeyExchange } from '../../src/crypto/keyExchange.ts';
 
 let exchange1!: KeyExchange;
 let exchange2!: KeyExchange;

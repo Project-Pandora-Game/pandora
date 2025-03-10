@@ -1,20 +1,20 @@
-import { range } from 'lodash';
+import { range } from 'lodash-es';
 import { ACCOUNT_SETTINGS_DEFAULT, AccountSettings, AccountSettingsSchema, GetLogger, type HexColorString } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
-import { useAsyncEvent } from '../../common/useEvent';
-import { LIVE_UPDATE_THROTTLE } from '../../config/Environment';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { useAccountSettings, useCurrentAccount, useModifiedAccountSettings } from '../../services/accountLogic/accountManagerHooks';
-import { Button } from '../common/button/button';
-import { ColorInput } from '../common/colorInput/colorInput';
-import { Column, Row } from '../common/container/container';
-import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator';
-import { useConfirmDialog } from '../dialog/dialog';
-import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { SelectAccountSettings, ToggleAccountSetting } from './helpers/accountSettings';
-import { SelectSettingInput } from './helpers/settingsInputs';
+import { useAsyncEvent } from '../../common/useEvent.ts';
+import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import { useAccountSettings, useCurrentAccount, useModifiedAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
+import { Button } from '../common/button/button.tsx';
+import { ColorInput } from '../common/colorInput/colorInput.tsx';
+import { Column, Row } from '../common/container/container.tsx';
+import { SelectionIndicator } from '../common/selectionIndicator/selectionIndicator.tsx';
+import { useConfirmDialog } from '../dialog/dialog.tsx';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
+import { SelectAccountSettings, ToggleAccountSetting } from './helpers/accountSettings.tsx';
+import { SelectSettingInput } from './helpers/settingsInputs.tsx';
 
 export function InterfaceSettings(): ReactElement | null {
 	const account = useCurrentAccount();

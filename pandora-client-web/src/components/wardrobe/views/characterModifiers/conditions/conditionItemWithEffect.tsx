@@ -2,10 +2,10 @@ import { EFFECT_NAMES, EffectNameSchema, EFFECTS_DEFAULT, KnownObject, type Effe
 import { useState, type ReactElement } from 'react';
 import { NumberInput } from '../../../../../common/userInteraction/input/numberInput';
 import { Select } from '../../../../../common/userInteraction/select/select';
-import { Button } from '../../../../common/button/button';
-import { Column, Row } from '../../../../common/container/container';
-import { ModalDialog } from '../../../../dialog/dialog';
-import type { CharacterModifierConditionListEntryProps } from './characterModifierCondition';
+import { Button } from '../../../../common/button/button.tsx';
+import { Column, Row } from '../../../../common/container/container.tsx';
+import { ModalDialog } from '../../../../dialog/dialog.tsx';
+import type { CharacterModifierConditionListEntryProps } from './characterModifierCondition.tsx';
 
 export function ConditionItemWithEffect({ condition, setCondition, invert, setInvert, processing }: CharacterModifierConditionListEntryProps<'hasItemWithEffect'>): ReactElement {
 	const [showDialog, setShowDialog] = useState(false);

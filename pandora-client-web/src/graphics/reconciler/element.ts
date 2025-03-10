@@ -1,6 +1,6 @@
 import { Assert, AssertNever, GetLogger, KnownObject, TypedEventEmitter, type Logger } from 'pandora-common';
 import { Container, type EventEmitter } from 'pixi.js';
-import { ParsePixiPointLike, PixiComponentIsPrivateProperty, PixiComponentIsSpecialProperty, type PixiComponentConfig, type PixiComponentProps, type PixiDisplayObjectWriteableProps } from './component';
+import { ParsePixiPointLike, PixiComponentIsPrivateProperty, PixiComponentIsSpecialProperty, type PixiComponentConfig, type PixiComponentProps, type PixiDisplayObjectWriteableProps } from './component.ts';
 
 /** Checks if this container supports children. */
 function ElementSupportsChildren(element: Container): boolean {

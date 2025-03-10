@@ -1,4 +1,4 @@
-import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
+import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
 // TODO: Contacts and DMs
 // (talk about adding to contacts, seeing contacts online, blocking someone and its effects, and ability to send DMs)

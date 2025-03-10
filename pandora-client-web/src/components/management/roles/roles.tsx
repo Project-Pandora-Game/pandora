@@ -1,13 +1,13 @@
 import { AccountRole, ConfiguredAccountRole, ConfiguredAccountRoleSchema, IAccountRoleManageInfo, IRoleManageInfo, IsAuthorized, ZodMatcher } from 'pandora-common';
 import { createContext, ReactElement, useContext, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useAsyncEvent } from '../../../common/useEvent';
-import { Checkbox } from '../../../common/userInteraction/checkbox';
-import { NumberInput } from '../../../common/userInteraction/input/numberInput';
-import { Select } from '../../../common/userInteraction/select/select';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast';
-import { Button } from '../../common/button/button';
-import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider';
+import { useAsyncEvent } from '../../../common/useEvent.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
+import { Select } from '../../../common/userInteraction/select/select.tsx';
+import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { Button } from '../../common/button/button.tsx';
+import { useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
 import './roles.scss';
 
 const RoleListContext = createContext({

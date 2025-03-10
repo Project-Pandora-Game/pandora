@@ -5,11 +5,11 @@ import { useMemo, useRef, useState, type ReactElement } from 'react';
 import { useAssetManager } from '../../../../../assets/assetManager';
 import { TextInput } from '../../../../../common/userInteraction/input/textInput';
 import { useInputAutofocus } from '../../../../../common/userInteraction/inputAutofocus';
-import { Button } from '../../../../common/button/button';
-import { Column, Row } from '../../../../common/container/container';
-import { ModalDialog } from '../../../../dialog/dialog';
-import { InventoryAttributePreview } from '../../../wardrobeComponents';
-import type { CharacterModifierConditionListEntryProps } from './characterModifierCondition';
+import { Button } from '../../../../common/button/button.tsx';
+import { Column, Row } from '../../../../common/container/container.tsx';
+import { ModalDialog } from '../../../../dialog/dialog.tsx';
+import { InventoryAttributePreview } from '../../../wardrobeComponents.tsx';
+import type { CharacterModifierConditionListEntryProps } from './characterModifierCondition.tsx';
 
 export function ConditionItemWithAttribute({ condition, setCondition, invert, setInvert, processing }: CharacterModifierConditionListEntryProps<'hasItemWithAttribute'>): ReactElement {
 	const [showDialog, setShowDialog] = useState(false);

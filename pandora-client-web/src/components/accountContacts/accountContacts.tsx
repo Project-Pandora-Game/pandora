@@ -1,18 +1,18 @@
-import _ from 'lodash';
+import { capitalize } from 'lodash-es';
 import { AccountId, IAccountContact, IAccountFriendStatus } from 'pandora-common';
 import React, { useCallback, useMemo } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { useAsyncEvent } from '../../common/useEvent';
-import { useKeyDownEvent } from '../../common/useKeyDownEvent';
-import { NotificationSource, useNotificationSuppressed } from '../../services/notificationHandler';
-import { Button } from '../common/button/button';
-import { DivContainer, Row } from '../common/container/container';
-import { Scrollable } from '../common/scrollbar/scrollbar';
-import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs';
-import { useConfirmDialog } from '../dialog/dialog';
-import { DirectMessages } from '../directMessages/directMessages';
-import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
-import { AccountContactChangeHandleResult, useAccountContacts, useFriendStatus } from './accountContactContext';
+import { useAsyncEvent } from '../../common/useEvent.ts';
+import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
+import { NotificationSource, useNotificationSuppressed } from '../../services/notificationHandler.ts';
+import { Button } from '../common/button/button.tsx';
+import { DivContainer, Row } from '../common/container/container.tsx';
+import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
+import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs.tsx';
+import { useConfirmDialog } from '../dialog/dialog.tsx';
+import { DirectMessages } from '../directMessages/directMessages.tsx';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
+import { AccountContactChangeHandleResult, useAccountContacts, useFriendStatus } from './accountContactContext.ts';
 import './accountContacts.scss';
 
 export function AccountContacts() {
@@ -53,7 +53,7 @@ function AccountContactHeader({ type }: { type: IAccountContact['type']; }) {
 
 	return (
 		<>
-			{ type === 'friend' ? 'Contacts' : _.capitalize(type) } ({ count })
+			{ type === 'friend' ? 'Contacts' : capitalize(type) } ({ count })
 		</>
 	);
 }

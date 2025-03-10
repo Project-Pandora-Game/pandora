@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { ExternalLink } from '../common/link/externalLink';
+import { ExternalLink } from '../common/link/externalLink.tsx';
 
 // ********************************
 // Update both of these variables whenever you make any changes to EULA and/or Privacy Policy!

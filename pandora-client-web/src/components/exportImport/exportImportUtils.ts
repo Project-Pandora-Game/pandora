@@ -1,6 +1,6 @@
-import { Assert } from 'pandora-common';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { compressToBase64, decompressFromBase64 } from 'lz-string';
+import { Assert } from 'pandora-common';
 
 const EXPORT_FORMAT_TYPE_PREFIX = 'Pandora';
 const EXPORT_FORMAT_VERSION = 1;

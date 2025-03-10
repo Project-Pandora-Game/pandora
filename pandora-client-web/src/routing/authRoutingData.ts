@@ -1,11 +1,11 @@
 import { ComponentType } from 'react';
-import { AccountVerificationForm } from '../components/login/forms/accountVerificationForm';
-import { ForgotPasswordForm } from '../components/login/forms/forgotPasswordForm';
-import { LoginForm } from '../components/login/forms/loginForm';
-import { RegistrationForm } from '../components/login/forms/registrationForm';
-import { ResendVerificationForm } from '../components/login/forms/resendVerificationForm';
-import { ResetPasswordForm } from '../components/login/forms/resetPasswordForm';
-import { ResendVerificationAdvancedForm } from '../components/login/forms/resendVerificationAdvancedForm';
+import { AccountVerificationForm } from '../components/login/forms/accountVerificationForm.tsx';
+import { ForgotPasswordForm } from '../components/login/forms/forgotPasswordForm.tsx';
+import { LoginForm } from '../components/login/forms/loginForm.tsx';
+import { RegistrationForm } from '../components/login/forms/registrationForm.tsx';
+import { ResendVerificationAdvancedForm } from '../components/login/forms/resendVerificationAdvancedForm.tsx';
+import { ResendVerificationForm } from '../components/login/forms/resendVerificationForm.tsx';
+import { ResetPasswordForm } from '../components/login/forms/resetPasswordForm.tsx';
 
 export enum AuthPagePath {
 	LOGIN = '/login',

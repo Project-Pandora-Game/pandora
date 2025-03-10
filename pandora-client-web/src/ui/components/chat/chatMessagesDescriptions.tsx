@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import {
 	AssertNever,
 	EvalItemPath,
@@ -15,12 +15,12 @@ import {
 	type ItemContainerPath,
 } from 'pandora-common';
 import { ReactElement } from 'react';
-import { useAssetManager } from '../../../assets/assetManager';
-import { useCharacterDataOptional, type IChatroomCharacter } from '../../../character/character';
-import { useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider';
-import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName';
-import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks';
-import { DescribeAsset } from './chatMessages';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
+import { useCharacterDataOptional, type IChatroomCharacter } from '../../../character/character.ts';
+import { useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
+import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { DescribeAsset } from './chatMessages.tsx';
 
 interface DescribeGameLogicActionProps<TAction extends AppearanceActionType = AppearanceActionType> {
 	action: Immutable<AppearanceAction<TAction>>;

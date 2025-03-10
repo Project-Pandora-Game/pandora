@@ -1,16 +1,16 @@
 import { RenderResult, screen } from '@testing-library/react';
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import { ComponentType } from 'react';
-import { AuthFormData, authFormDataContext } from '../../../src/components/login/authFormDataProvider';
-import { AuthFormRouter } from '../../../src/components/login/authFormRouter';
-import { AccountVerificationForm } from '../../../src/components/login/forms/accountVerificationForm';
-import { ForgotPasswordForm } from '../../../src/components/login/forms/forgotPasswordForm';
-import { LoginForm } from '../../../src/components/login/forms/loginForm';
-import { RegistrationForm } from '../../../src/components/login/forms/registrationForm';
-import { ResendVerificationForm } from '../../../src/components/login/forms/resendVerificationForm';
-import { ResetPasswordForm } from '../../../src/components/login/forms/resetPasswordForm';
-import { authPagePathsAndComponents } from '../../../src/routing/authRoutingData';
-import { RenderWithRouterAndProviders } from '../../testUtils';
+import { AuthFormData, authFormDataContext } from '../../../src/components/login/authFormDataProvider.tsx';
+import { AuthFormRouter } from '../../../src/components/login/authFormRouter.tsx';
+import { AccountVerificationForm } from '../../../src/components/login/forms/accountVerificationForm.tsx';
+import { ForgotPasswordForm } from '../../../src/components/login/forms/forgotPasswordForm.tsx';
+import { LoginForm } from '../../../src/components/login/forms/loginForm.tsx';
+import { RegistrationForm } from '../../../src/components/login/forms/registrationForm.tsx';
+import { ResendVerificationForm } from '../../../src/components/login/forms/resendVerificationForm.tsx';
+import { ResetPasswordForm } from '../../../src/components/login/forms/resetPasswordForm.tsx';
+import { authPagePathsAndComponents } from '../../../src/routing/authRoutingData.ts';
+import { RenderWithRouterAndProviders } from '../../testUtils.tsx';
 
 const originalCrypto = window.crypto;
 

@@ -9,24 +9,24 @@ import {
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
-import { Character, IChatroomCharacter } from '../../character/character';
-import { useObservable } from '../../observable';
-import { CharacterRestrictionOverrideWarningContent } from '../characterRestrictionOverride/characterRestrictionOverride';
-import { Tab, TabContainer, type TabConfig } from '../common/tabs/tabs';
-import { useGameState, useSpaceCharacters, useSpaceInfo } from '../gameContext/gameStateContextProvider';
-import { usePlayer } from '../gameContext/playerContextProvider';
-import { WardrobeExpressionGui } from './views/wardrobeExpressionsView';
-import { WardrobePoseGui } from './views/wardrobePoseView';
-import { WardrobeRandomizationGui } from './views/wardrobeRandomizationView';
+import { Character, IChatroomCharacter } from '../../character/character.ts';
+import { useObservable } from '../../observable.ts';
+import { CharacterRestrictionOverrideWarningContent } from '../characterRestrictionOverride/characterRestrictionOverride.tsx';
+import { Tab, TabContainer, type TabConfig } from '../common/tabs/tabs.tsx';
+import { useGameState, useSpaceCharacters, useSpaceInfo } from '../gameContext/gameStateContextProvider.tsx';
+import { usePlayer } from '../gameContext/playerContextProvider.tsx';
+import { WardrobeExpressionGui } from './views/wardrobeExpressionsView.tsx';
+import { WardrobePoseGui } from './views/wardrobePoseView.tsx';
+import { WardrobeRandomizationGui } from './views/wardrobeRandomizationView.tsx';
 import './wardrobe.scss';
-import { useWardrobeActionContext, WardrobeActionContextProvider } from './wardrobeActionContext';
-import { WardrobeBodyManipulation } from './wardrobeBody';
-import { useWardrobeContext, WardrobeContextProvider } from './wardrobeContext';
-import { WardrobeEffectsModifiers } from './wardrobeEffectsModifiers';
-import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphics';
-import { WardrobeItemPreferences } from './wardrobeItemPreferences';
-import { WardrobeItemManipulation } from './wardrobeItems';
-import { WardrobeFocusSchema } from './wardrobeTypes';
+import { useWardrobeActionContext, WardrobeActionContextProvider } from './wardrobeActionContext.tsx';
+import { WardrobeBodyManipulation } from './wardrobeBody.tsx';
+import { useWardrobeContext, WardrobeContextProvider } from './wardrobeContext.tsx';
+import { WardrobeEffectsModifiers } from './wardrobeEffectsModifiers.tsx';
+import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphics.tsx';
+import { WardrobeItemPreferences } from './wardrobeItemPreferences.tsx';
+import { WardrobeItemManipulation } from './wardrobeItems.tsx';
+import { WardrobeFocusSchema } from './wardrobeTypes.ts';
 
 export const WardrobeLocationStateSchema = z.object({
 	initialFocus: WardrobeFocusSchema.optional(),

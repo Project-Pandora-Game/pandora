@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { Immutable } from 'immer';
-import { min } from 'lodash';
+import { min } from 'lodash-es';
 import {
 	AssertNever,
 	AssetFrameworkCharacterState,
@@ -16,28 +16,28 @@ import {
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, ReactNode, useCallback, useId, useMemo, useRef, useState } from 'react';
-import { useAssetManager } from '../../assets/assetManager';
-import { Character, IChatroomCharacter } from '../../character/character';
-import { Checkbox } from '../../common/userInteraction/checkbox';
-import { Container } from '../../graphics/baseComponents/container';
-import { Graphics } from '../../graphics/baseComponents/graphics';
-import { PixiViewportSetupCallback, type PixiViewportRef } from '../../graphics/baseComponents/pixiViewport';
-import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, type GraphicsCharacterLayerFilter } from '../../graphics/graphicsCharacter';
-import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene';
-import { useGraphicsSmoothMovementEnabled } from '../../graphics/graphicsSettings';
-import { CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION, RoomCharacter, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter';
-import { RoomDevice } from '../../graphics/room/roomDevice';
-import { RoomProjectionResolver, usePlayerVisionFilters, useRoomViewProjection } from '../../graphics/room/roomScene';
-import { useObservable } from '../../observable';
-import { serviceManagerContext } from '../../services/serviceProvider';
-import { Button } from '../common/button/button';
-import { Column, Row } from '../common/container/container';
-import { useSpaceInfo } from '../gameContext/gameStateContextProvider';
-import { THEME_NORMAL_BACKGROUND } from '../gameContext/interfaceSettingsProvider';
-import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider';
-import { WardrobeActionAttemptOverlay } from './views/wardrobeActionAttempt';
-import { WardrobeCurrentEffectsView } from './views/wardrobeCurrentEffectsView';
-import { useWardrobeContext } from './wardrobeContext';
+import { useAssetManager } from '../../assets/assetManager.tsx';
+import { Character, IChatroomCharacter } from '../../character/character.ts';
+import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
+import { Container } from '../../graphics/baseComponents/container.ts';
+import { Graphics } from '../../graphics/baseComponents/graphics.ts';
+import { PixiViewportSetupCallback, type PixiViewportRef } from '../../graphics/baseComponents/pixiViewport.tsx';
+import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, type GraphicsCharacterLayerFilter } from '../../graphics/graphicsCharacter.tsx';
+import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene.tsx';
+import { useGraphicsSmoothMovementEnabled } from '../../graphics/graphicsSettings.tsx';
+import { CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION, RoomCharacter, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter.tsx';
+import { RoomDevice } from '../../graphics/room/roomDevice.tsx';
+import { RoomProjectionResolver, usePlayerVisionFilters, useRoomViewProjection } from '../../graphics/room/roomScene.tsx';
+import { useObservable } from '../../observable.ts';
+import { serviceManagerContext } from '../../services/serviceProvider.tsx';
+import { Button } from '../common/button/button.tsx';
+import { Column, Row } from '../common/container/container.tsx';
+import { useSpaceInfo } from '../gameContext/gameStateContextProvider.tsx';
+import { THEME_NORMAL_BACKGROUND } from '../gameContext/interfaceSettingsProvider.tsx';
+import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider.tsx';
+import { WardrobeActionAttemptOverlay } from './views/wardrobeActionAttempt.tsx';
+import { WardrobeCurrentEffectsView } from './views/wardrobeCurrentEffectsView.tsx';
+import { useWardrobeContext } from './wardrobeContext.tsx';
 
 export function WardrobeCharacterPreview({ character, characterState, globalState, isPreview = false, allowHideItems = false, showCharacterEffects = false }: {
 	character: IChatroomCharacter;

@@ -1,15 +1,15 @@
 import { Service, type AccountSettings, type Satisfies, type ServiceConfigBase, type ServiceProviderDefinition } from 'pandora-common';
 import { useCallback, useEffect } from 'react';
-import { useDocumentVisibility } from '../common/useDocumentVisibility';
-import { Observable, ReadonlyObservable } from '../observable';
-import type { ClientServices } from './clientServices';
-import { useService } from './serviceProvider';
-import { GetAccountSettings } from './accountLogic/accountManagerHooks';
+import { useDocumentVisibility } from '../common/useDocumentVisibility.ts';
+import { Observable, ReadonlyObservable } from '../observable.ts';
+import { GetAccountSettings } from './accountLogic/accountManagerHooks.ts';
+import type { ClientServices } from './clientServices.ts';
+import { useService } from './serviceProvider.tsx';
 
 /* The audio files that can be played */
-import audioBing from '../audio/bing.mp3';
 import audioAlert from '../audio/alert.mp3';
 import audioBell from '../audio/bell.mp3';
+import audioBing from '../audio/bing.mp3';
 import audioDingDing from '../audio/ding-ding.mp3';
 
 type NotificationHeader<T extends ReadonlyObservable<readonly unknown[]> = ReadonlyObservable<readonly unknown[]>> = {

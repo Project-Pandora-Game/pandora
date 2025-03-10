@@ -2,8 +2,8 @@ import type { Immutable } from 'immer';
 import { CharacterSize, GetLogger, TypedEventEmitter } from 'pandora-common';
 import { useCallback, useSyncExternalStore } from 'react';
 import { z } from 'zod';
-import { BrowserStorage } from '../../browserStorage';
-import type { GraphicsSettings } from '../../graphics/graphicsSettings';
+import { BrowserStorage } from '../../browserStorage.ts';
+import type { GraphicsSettings } from '../../graphics/graphicsSettings.tsx';
 
 /**
  * List of resolutions to try in format [width, height, textureResolution].

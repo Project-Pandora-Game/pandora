@@ -2,12 +2,12 @@ import { AssertNever, IsSimpleToken, PasswordSchema, SIMPLE_TOKEN_LENGTH, UserNa
 import { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { useNavigate } from 'react-router';
-import { FormInput } from '../../../common/userInteraction/input/formInput';
-import { DEVELOPMENT } from '../../../config/Environment';
-import { useDirectoryPasswordResetConfirm } from '../../../networking/account_manager';
-import { Button } from '../../common/button/button';
-import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form';
-import { LocationStateMessage } from '../../common/locationStateMessage/locationStateMessage';
+import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
+import { DEVELOPMENT } from '../../../config/Environment.ts';
+import { useDirectoryPasswordResetConfirm } from '../../../networking/account_manager.ts';
+import { Button } from '../../common/button/button.tsx';
+import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
+import { LocationStateMessage } from '../../common/locationStateMessage/locationStateMessage.tsx';
 
 export interface ResetPasswordFormData {
 	username: string;

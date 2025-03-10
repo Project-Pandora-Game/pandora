@@ -1,21 +1,21 @@
 import { Assert } from 'pandora-common';
 import React, { type ReactElement } from 'react';
-import { Column, Row } from '../../components/common/container/container';
-import { useObservable } from '../../observable';
-import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks';
-import { TUTORIAL_ROOM } from './tutorials/room';
-import { TUTORIAL_ROOM_DEVICES } from './tutorials/roomDevices';
-import { TUTORIAL_SAFEMODE } from './tutorials/safemode';
-import { TUTORIAL_SETTINGS_PROFILE } from './tutorials/settingsProfile';
-import { TUTORIAL_SPACE_MANAGEMENT } from './tutorials/spaceManagement';
-import { TUTORIAL_TUTORIALS } from './tutorials/tutorials';
-import { TUTORIAL_WARDROBE_BODY } from './tutorials/wardrobeBody';
-import { TUTORIAL_WARDROBE_ITEMS } from './tutorials/wardrobeItems';
-import { TUTORIAL_WARDROBE_LOCKS_STORAGES } from './tutorials/wardrobeLocksStorages';
-import { TUTORIAL_WARDROBE_POSING_EXPRESSIONS } from './tutorials/wardrobePoseExpressions';
-import { TUTORIAL_WARDROBE_ROOM_INVENTORY } from './tutorials/wardrobeRoomInventory';
-import type { TutorialConfig, TutorialDisableReason } from './tutorialSystem/tutorialConfig';
-import { ActiveTutorial } from './tutorialSystem/tutorialService';
+import { Column, Row } from '../../components/common/container/container.tsx';
+import { useObservable } from '../../observable.ts';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
+import { TUTORIAL_ROOM } from './tutorials/room.tsx';
+import { TUTORIAL_ROOM_DEVICES } from './tutorials/roomDevices.tsx';
+import { TUTORIAL_SAFEMODE } from './tutorials/safemode.tsx';
+import { TUTORIAL_SETTINGS_PROFILE } from './tutorials/settingsProfile.tsx';
+import { TUTORIAL_SPACE_MANAGEMENT } from './tutorials/spaceManagement.tsx';
+import { TUTORIAL_TUTORIALS } from './tutorials/tutorials.tsx';
+import { TUTORIAL_WARDROBE_BODY } from './tutorials/wardrobeBody.tsx';
+import { TUTORIAL_WARDROBE_ITEMS } from './tutorials/wardrobeItems.tsx';
+import { TUTORIAL_WARDROBE_LOCKS_STORAGES } from './tutorials/wardrobeLocksStorages.tsx';
+import { TUTORIAL_WARDROBE_POSING_EXPRESSIONS } from './tutorials/wardrobePoseExpressions.tsx';
+import { TUTORIAL_WARDROBE_ROOM_INVENTORY } from './tutorials/wardrobeRoomInventory.tsx';
+import type { TutorialConfig, TutorialDisableReason } from './tutorialSystem/tutorialConfig.ts';
+import { ActiveTutorial } from './tutorialSystem/tutorialService.tsx';
 
 export const PRIVATE_TUTORIALS: TutorialConfig[] = [
 	TUTORIAL_TUTORIALS,

@@ -1,7 +1,7 @@
 import { CommandStepProcessor, ICharacterRoomData, ICommandExecutionContext, ItemIdSchema, type ActionTargetSelector, type ItemPath } from 'pandora-common';
-import type { Character } from '../../../character/character';
-import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName';
-import type { ICommandExecutionContextClient } from './commandsProcessor';
+import type { Character } from '../../../character/character.ts';
+import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
+import type { ICommandExecutionContextClient } from './commandsProcessor.ts';
 
 type ICommandClientNeededContext<RequiredKeys extends Exclude<keyof ICommandExecutionContextClient, keyof ICommandExecutionContext>> =
 	Pick<ICommandExecutionContextClient, (keyof ICommandExecutionContext) | RequiredKeys>;

@@ -22,14 +22,14 @@ import {
 	type ServiceConfigBase,
 	type ServiceProviderDefinition,
 } from 'pandora-common';
-import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceOneshotMessages, type SocketInterfaceRespondedMessages } from 'pandora-common/dist/networking/helpers';
+import { SocketInterfaceRequest, SocketInterfaceResponse, type SocketInterfaceOneshotMessages, type SocketInterfaceRespondedMessages } from 'pandora-common/dist/networking/helpers.js';
 import { z } from 'zod';
-import { BrowserStorage } from '../browserStorage';
-import { AccountContactContext } from '../components/accountContacts/accountContactContext';
-import { Observable, ReadonlyObservable } from '../observable';
-import { PersistentToast } from '../persistentToast';
-import type { ClientServices } from '../services/clientServices';
-import type { Connector, SocketIOConnectorFactory } from './socketio_connector';
+import { BrowserStorage } from '../browserStorage.ts';
+import { AccountContactContext } from '../components/accountContacts/accountContactContext.ts';
+import { Observable, ReadonlyObservable } from '../observable.ts';
+import { PersistentToast } from '../persistentToast.ts';
+import type { ClientServices } from '../services/clientServices.ts';
+import type { Connector, SocketIOConnectorFactory } from './socketio_connector.ts';
 
 export type LoginResponse = 'ok' | 'verificationRequired' | 'invalidToken' | 'unknownCredentials' | 'invalidSecondFactor';
 

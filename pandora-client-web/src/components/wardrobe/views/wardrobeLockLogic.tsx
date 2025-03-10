@@ -10,15 +10,15 @@ import {
 	type LockSetup,
 } from 'pandora-common';
 import React, { useCallback, useEffect, useId, useMemo, useState, type ReactElement } from 'react';
-import { useCharacterRestrictionManager } from '../../../character/character';
-import type { ChildrenProps } from '../../../common/reactTypes';
-import { useCurrentTime } from '../../../common/useCurrentTime';
-import { Checkbox } from '../../../common/userInteraction/checkbox';
-import { NumberInput } from '../../../common/userInteraction/input/numberInput';
-import { TextInput } from '../../../common/userInteraction/input/textInput';
-import { Column, Row } from '../../common/container/container';
-import { usePlayerState } from '../../gameContext/playerContextProvider';
-import { useWardrobeActionContext } from '../wardrobeActionContext';
+import { useCharacterRestrictionManager } from '../../../character/character.ts';
+import type { ChildrenProps } from '../../../common/reactTypes.ts';
+import { useCurrentTime } from '../../../common/useCurrentTime.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
+import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { Column, Row } from '../../common/container/container.tsx';
+import { usePlayerState } from '../../gameContext/playerContextProvider.tsx';
+import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
 
 export interface WardrobeLockLogicExecuteButtonProps<TActionContext> extends ChildrenProps {
 	disabled: boolean;

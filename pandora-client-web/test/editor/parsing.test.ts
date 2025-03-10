@@ -1,5 +1,5 @@
 import { LayerImageOverride, TransformDefinition } from 'pandora-common';
-import { ParseCondition, ParseLayerImageOverride, ParseLayerImageOverrides, ParseTransforms, SerializeLayerImageOverride, SerializeLayerImageOverrides, SerializeTransforms, SplitAndClean } from '../../src/editor/parsing';
+import { ParseCondition, ParseLayerImageOverride, ParseLayerImageOverrides, ParseTransforms, SerializeLayerImageOverride, SerializeLayerImageOverrides, SerializeTransforms, SplitAndClean } from '../../src/editor/parsing.ts';
 
 describe('SplitAndClean()', () => {
 	it('should split but trim and filter out items', () => {

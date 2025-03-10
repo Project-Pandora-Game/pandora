@@ -1,14 +1,14 @@
 import { GetLogger } from 'pandora-common';
 import { createRef, ErrorInfo, PureComponent, ReactElement } from 'react';
 import { toast } from 'react-toastify';
-import { CopyToClipboard } from '../../common/clipboard';
-import { ChildrenProps } from '../../common/reactTypes';
-import { NODE_ENV } from '../../config/Environment';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { Button } from '../common/button/button';
-import { Row } from '../common/container/container';
-import { DebugContext, debugContext } from './debugContextProvider';
-import { BuildErrorReport } from './errorReport';
+import { CopyToClipboard } from '../../common/clipboard.ts';
+import { ChildrenProps } from '../../common/reactTypes.ts';
+import { NODE_ENV } from '../../config/Environment.ts';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import { Button } from '../common/button/button.tsx';
+import { Row } from '../common/container/container.tsx';
+import { DebugContext, debugContext } from './debugContextProvider.tsx';
+import { BuildErrorReport } from './errorReport.ts';
 import './rootErrorBoundary.scss';
 
 export enum ReportCopyState {

@@ -1,10 +1,11 @@
 /// <reference types="@types/node" />
 /// <reference types="@types/jest" />
+import { jest } from '@jest/globals';
 import '@testing-library/jest-dom';
-import { Assert, logConfig, LogLevel, SetConsoleOutput } from 'pandora-common';
 import { webcrypto } from 'crypto';
-import { TextEncoder, TextDecoder } from 'util';
-import { TEST_DIRECTORY_ADDRESS } from './testEnv';
+import { Assert, logConfig, LogLevel, SetConsoleOutput } from 'pandora-common';
+import { TextDecoder, TextEncoder } from 'util';
+import { TEST_DIRECTORY_ADDRESS } from './testEnv.ts';
 
 Assert(typeof globalThis.TextEncoder === 'undefined');
 globalThis.TextEncoder = TextEncoder;
@@ -37,7 +38,7 @@ globalThis.Worker = class Worker {
 
 // Polyfill ResizeObserver as JSDom doesn't support it
 Assert(typeof globalThis.ResizeObserver === 'undefined');
-globalThis.ResizeObserver = jest.fn().mockImplementation(() => ({
+globalThis.ResizeObserver = jest.fn<() => ResizeObserver>().mockImplementation(() => ({
 	observe: jest.fn(),
 	unobserve: jest.fn(),
 	disconnect: jest.fn(),
@@ -47,7 +48,7 @@ globalThis.ResizeObserver = jest.fn().mockImplementation(() => ({
 Assert(typeof globalThis.matchMedia === 'undefined');
 Object.defineProperty(globalThis, 'matchMedia', {
 	writable: true,
-	value: jest.fn().mockImplementation((query: string): ReturnType<typeof globalThis.matchMedia> => ({
+	value: jest.fn<typeof globalThis.matchMedia>().mockImplementation((query: string): ReturnType<typeof globalThis.matchMedia> => ({
 		matches: false,
 		media: query,
 		onchange: null,
@@ -55,7 +56,7 @@ Object.defineProperty(globalThis, 'matchMedia', {
 		removeListener: jest.fn(),
 		addEventListener: jest.fn(),
 		removeEventListener: jest.fn(),
-		dispatchEvent: jest.fn(),
+		dispatchEvent: jest.fn<() => boolean>().mockReturnValue(true),
 	})),
 });
 

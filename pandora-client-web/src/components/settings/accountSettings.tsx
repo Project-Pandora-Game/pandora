@@ -1,4 +1,4 @@
-import _, { uniq } from 'lodash';
+import { startCase, uniq } from 'lodash-es';
 import {
 	ACCOUNT_ROLES_CONFIG,
 	ACCOUNT_SETTINGS_LIMITED_LIMITS,
@@ -14,22 +14,22 @@ import {
 import { ReactElement, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { useColorInput } from '../../common/useColorInput';
-import { useCurrentTime } from '../../common/useCurrentTime';
-import { useEvent } from '../../common/useEvent';
-import { useMounted } from '../../common/useMounted';
-import { Checkbox } from '../../common/userInteraction/checkbox';
-import { TextInput } from '../../common/userInteraction/input/textInput';
-import { ConfigShowGitHubIntegration } from '../../config/searchArgs';
-import { useObservable } from '../../observable';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks';
-import { Button } from '../common/button/button';
-import { ColorInput } from '../common/colorInput/colorInput';
-import { FormCreateStringValidator } from '../common/form/form';
-import { ExternalLink } from '../common/link/externalLink';
-import { useConfirmDialog } from '../dialog/dialog';
-import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider';
+import { useColorInput } from '../../common/useColorInput.ts';
+import { useCurrentTime } from '../../common/useCurrentTime.ts';
+import { useEvent } from '../../common/useEvent.ts';
+import { useMounted } from '../../common/useMounted.ts';
+import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
+import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
+import { ConfigShowGitHubIntegration } from '../../config/searchArgs.ts';
+import { useObservable } from '../../observable.ts';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
+import { Button } from '../common/button/button.tsx';
+import { ColorInput } from '../common/colorInput/colorInput.tsx';
+import { FormCreateStringValidator } from '../common/form/form.tsx';
+import { ExternalLink } from '../common/link/externalLink.tsx';
+import { useConfirmDialog } from '../dialog/dialog.tsx';
+import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 
 export function AccountSettings(): ReactElement | null {
 	const navigate = useNavigate();
@@ -210,7 +210,7 @@ function AccountRole({ role, data }: { role: AccountRole; data?: { expires?: num
 
 	return (
 		<tr>
-			<td>{ _.startCase(role) }</td>
+			<td>{ startCase(role) }</td>
 			<td>
 				<Checkbox checked={ visible } onChange={ onSetVisible } />
 			</td>

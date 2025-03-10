@@ -6,9 +6,9 @@ import {
 	ItemColorBundle,
 } from 'pandora-common';
 import { ReactElement } from 'react';
-import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment';
-import { ColorInputRGBA } from '../../common/colorInput/colorInput';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
+import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
+import { ColorInputRGBA } from '../../common/colorInput/colorInput.tsx';
+import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
 
 export function WardrobeTemplateColorization({ asset, color, onChange }: {
 	asset: Asset<'bodypart' | 'personal' | 'roomDevice'>;

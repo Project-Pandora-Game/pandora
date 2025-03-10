@@ -1,7 +1,8 @@
-import { act } from 'react';
 import { renderHook, RenderHookResult } from '@testing-library/react';
-import { ObservableProperty, Observable, useObservable } from '../src/observable';
 import { TypedEventEmitter } from 'pandora-common';
+import { act } from 'react';
+import { Observable, ObservableProperty, useObservable } from '../src/observable.ts';
+const jest = import.meta.jest; // Jest is not properly injected in ESM
 
 describe('Observable', () => {
 	type T = { mockValue: string; };

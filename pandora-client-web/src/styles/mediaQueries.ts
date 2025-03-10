@@ -1,4 +1,4 @@
-import { useMediaQuery } from '../common/useMediaQuery';
+import { useMediaQuery } from '../common/useMediaQuery.ts';
 
 export function useIsPortrait(): boolean {
 	return useMediaQuery('(orientation: portrait)');

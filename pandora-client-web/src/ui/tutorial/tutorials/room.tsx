@@ -1,6 +1,6 @@
-import { ExternalLink } from '../../../components/common/link/externalLink';
-import { usePlayerData } from '../../../components/gameContext/playerContextProvider';
-import { MakeTutorialConditionFlag, type TutorialConfig } from '../tutorialSystem/tutorialConfig';
+import { ExternalLink } from '../../../components/common/link/externalLink.tsx';
+import { usePlayerData } from '../../../components/gameContext/playerContextProvider.tsx';
+import { MakeTutorialConditionFlag, type TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
 export const TUTORIAL_ROOM: TutorialConfig = {
 	id: 'room',

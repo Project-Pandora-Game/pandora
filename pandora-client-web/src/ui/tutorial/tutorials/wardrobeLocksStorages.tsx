@@ -1,4 +1,4 @@
-import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
+import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
 // TODO: Locks and storages
 // (starting with storages, then continuing onto lock slots, potentially getting through all major lock types)

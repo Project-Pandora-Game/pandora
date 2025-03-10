@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import type { ZodType, ZodTypeDef } from 'zod';
-import { Observable, useObservable } from './observable';
+import { Observable, useObservable } from './observable.ts';
 
 const BROWSER_STORAGES_LOCAL = new Map<string, BrowserStorage<unknown>>();
 const BROWSER_STORAGES_SESSION = new Map<string, BrowserStorage<unknown>>();

@@ -1,14 +1,14 @@
 import { ReactElement, useMemo } from 'react';
-import { useAssetManager } from '../../../assets/assetManager';
-import { Container } from '../../../graphics/baseComponents/container';
-import { useObservable } from '../../../observable';
-import { useEditor } from '../../editorContextProvider';
-import { DraggableBone } from '../draggable';
-import { SetupLayer, SetupLayerSelected } from '../layer';
-import { EDITOR_LAYER_Z_INDEX_EXTRA } from '../layer/editorLayer';
-import { PointTemplateEditLayer } from '../pointTemplateEditor';
-import { useEditorCharacterState } from './appearanceEditor';
-import { GraphicsCharacterEditor } from './editorCharacter';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
+import { Container } from '../../../graphics/baseComponents/container.ts';
+import { useObservable } from '../../../observable.ts';
+import { useEditor } from '../../editorContextProvider.tsx';
+import { DraggableBone } from '../draggable.tsx';
+import { EDITOR_LAYER_Z_INDEX_EXTRA } from '../layer/editorLayer.tsx';
+import { SetupLayer, SetupLayerSelected } from '../layer/index.ts';
+import { PointTemplateEditLayer } from '../pointTemplateEditor.tsx';
+import { useEditorCharacterState } from './appearanceEditor.ts';
+import { GraphicsCharacterEditor } from './editorCharacter.tsx';
 
 export function SetupCharacter(): ReactElement {
 	const editor = useEditor();

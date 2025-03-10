@@ -1,8 +1,8 @@
 import classNames from 'classnames';
 import { ReactElement, useEffect, useState } from 'react';
-import { CommonProps } from '../../common/reactTypes';
-import { useContextMenuPosition } from '../contextMenu/contextMenu';
-import { DialogInPortal } from '../dialog/dialog';
+import { CommonProps } from '../../common/reactTypes.ts';
+import { useContextMenuPosition } from '../contextMenu/contextMenu.tsx';
+import { DialogInPortal } from '../dialog/dialog.tsx';
 import './hoverElement.scss';
 
 type HoverElementProps = CommonProps & {

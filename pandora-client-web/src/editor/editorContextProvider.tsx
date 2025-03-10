@@ -1,16 +1,16 @@
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import { AssetFrameworkGlobalState, type ServiceManager } from 'pandora-common';
 import { createContext, ReactElement, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
-import { AnchorAutoscroll } from '../common/anchorAutoscroll';
-import type { ChildrenProps } from '../common/reactTypes';
-import { useDebugExpose } from '../common/useDebugExpose';
-import { Dialogs } from '../components/dialog/dialog';
-import { DebugContextProvider, useDebugContext } from '../components/error/debugContextProvider';
-import { RootErrorBoundary } from '../components/error/rootErrorBoundary';
-import { permissionCheckContext, PermissionCheckServiceBase } from '../components/gameContext/permissionCheckProvider';
-import type { ClientServices } from '../services/clientServices';
-import { ServiceManagerContextProvider } from '../services/serviceProvider';
-import { Editor } from './editor';
+import { AnchorAutoscroll } from '../common/anchorAutoscroll.tsx';
+import type { ChildrenProps } from '../common/reactTypes.ts';
+import { useDebugExpose } from '../common/useDebugExpose.ts';
+import { Dialogs } from '../components/dialog/dialog.tsx';
+import { DebugContextProvider, useDebugContext } from '../components/error/debugContextProvider.tsx';
+import { RootErrorBoundary } from '../components/error/rootErrorBoundary.tsx';
+import { permissionCheckContext, PermissionCheckServiceBase } from '../components/gameContext/permissionCheckProvider.tsx';
+import type { ClientServices } from '../services/clientServices.ts';
+import { ServiceManagerContextProvider } from '../services/serviceProvider.tsx';
+import { Editor } from './editor.tsx';
 
 export const EditorContext = createContext({
 	editor: null as Editor | null,

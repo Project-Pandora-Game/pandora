@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { ReactElement } from 'react';
-import { DivContainer, DivContainerProps } from '../container/container';
+import { DivContainer, DivContainerProps } from '../container/container.tsx';
 import './selectionIndicator.scss';
 
 export interface SelectionIndicatorProps extends DivContainerProps {

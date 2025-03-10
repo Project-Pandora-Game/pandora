@@ -1,3 +1,5 @@
+import classNames from 'classnames';
+import { isEqual } from 'lodash-es';
 import {
 	AppearanceActionProcessingContext,
 	AssertNever,
@@ -13,22 +15,20 @@ import {
 } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
-import { useAssetManager } from '../../../../assets/assetManager';
-import type { ICharacter } from '../../../../character/character';
-import { useAsyncEvent } from '../../../../common/useEvent';
-import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast';
-import { RenderChatPart } from '../../../../ui/components/chat/chatMessages';
-import { ChatParser } from '../../../../ui/components/chat/chatParser';
-import { Column } from '../../../common/container/container';
-import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProvider';
-import { useShardConnector } from '../../../gameContext/shardConnectorContextProvider';
-import { PermissionSettingEntry } from '../../../settings/permissionsSettings';
-import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../../wardrobeActionContext';
-import { ActionWarningContent, WardrobeActionButtonElement } from '../../wardrobeComponents';
+import { useAssetManager } from '../../../../assets/assetManager.tsx';
+import type { ICharacter } from '../../../../character/character.ts';
+import { useAsyncEvent } from '../../../../common/useEvent.ts';
+import { TOAST_OPTIONS_ERROR } from '../../../../persistentToast.ts';
+import { RenderChatPart } from '../../../../ui/components/chat/chatMessages.tsx';
+import { ChatParser } from '../../../../ui/components/chat/chatParser.ts';
+import { Column } from '../../../common/container/container.tsx';
+import { useCheckAddPermissions } from '../../../gameContext/permissionCheckProvider.tsx';
+import { useShardConnector } from '../../../gameContext/shardConnectorContextProvider.tsx';
+import { PermissionSettingEntry } from '../../../settings/permissionsSettings.tsx';
+import { useWardrobeActionContext, useWardrobePermissionRequestCallback } from '../../wardrobeActionContext.tsx';
+import { ActionWarningContent, WardrobeActionButtonElement } from '../../wardrobeComponents.tsx';
+import { CharacterModifierImportTemplateDialog } from './characterModifierImport.tsx';
 import './characterModifierTypeDetailsView.scss';
-import classNames from 'classnames';
-import { isEqual } from 'lodash';
-import { CharacterModifierImportTemplateDialog } from './characterModifierImport';
 
 export function WardrobeCharacterModifierTypeDetailsView({ type, character, focusModifierInstance }: {
 	type: CharacterModifierType;

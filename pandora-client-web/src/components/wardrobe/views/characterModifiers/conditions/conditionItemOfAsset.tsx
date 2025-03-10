@@ -4,12 +4,12 @@ import { useMemo, useRef, useState, type ReactElement } from 'react';
 import { useAssetManager } from '../../../../../assets/assetManager';
 import { TextInput } from '../../../../../common/userInteraction/input/textInput';
 import { useInputAutofocus } from '../../../../../common/userInteraction/inputAutofocus';
-import { Button } from '../../../../common/button/button';
-import { Column, Row } from '../../../../common/container/container';
-import { ModalDialog } from '../../../../dialog/dialog';
-import { InventoryAssetPreview } from '../../../wardrobeComponents';
-import { useOrderedAssets } from '../../wardrobeAssetView';
-import type { CharacterModifierConditionListEntryProps } from './characterModifierCondition';
+import { Button } from '../../../../common/button/button.tsx';
+import { Column, Row } from '../../../../common/container/container.tsx';
+import { ModalDialog } from '../../../../dialog/dialog.tsx';
+import { InventoryAssetPreview } from '../../../wardrobeComponents.tsx';
+import { useOrderedAssets } from '../../wardrobeAssetView.tsx';
+import type { CharacterModifierConditionListEntryProps } from './characterModifierCondition.tsx';
 
 export function ConditionItemOfAsset({ condition, setCondition, invert, setInvert, processing }: CharacterModifierConditionListEntryProps<'hasItemOfAsset'>): ReactElement {
 	const [showDialog, setShowDialog] = useState(false);

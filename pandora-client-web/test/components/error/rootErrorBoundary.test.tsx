@@ -1,20 +1,21 @@
 import { render, RenderResult, screen, waitFor } from '@testing-library/react';
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import { Logger } from 'pandora-common';
 import { ReactElement, useEffect } from 'react';
-import { debugContext, DebugData } from '../../../src/components/error/debugContextProvider';
-import { MAX_ERROR_STACK_LINES } from '../../../src/components/error/errorReport';
-import { RootErrorBoundary } from '../../../src/components/error/rootErrorBoundary';
-import { DirectoryConnectionState } from '../../../src/networking/directoryConnector';
-import { ShardConnectionState } from '../../../src/networking/shardConnector';
-import { MockDebugData } from '../../mocks/error/errorMocks';
+import { debugContext, DebugData } from '../../../src/components/error/debugContextProvider.tsx';
+import { MAX_ERROR_STACK_LINES } from '../../../src/components/error/errorReport.ts';
+import { RootErrorBoundary } from '../../../src/components/error/rootErrorBoundary.tsx';
+import { DirectoryConnectionState } from '../../../src/networking/directoryConnector.ts';
+import { ShardConnectionState } from '../../../src/networking/shardConnector.ts';
+import { MockDebugData } from '../../mocks/error/errorMocks.ts';
+const jest = import.meta.jest; // Jest is not properly injected in ESM
 
 describe('RootErrorBoundary', () => {
 	const setDebugData = jest.fn();
 	let debugData: DebugData;
 	let error: Error;
-	let consoleError: jest.SpyInstance;
-	let loggerFatal: jest.SpyInstance;
+	let consoleError: jest.Spied<typeof console.error>;
+	let loggerFatal: jest.Spied<Logger['fatal']>;
 
 	beforeAll(() => {
 		consoleError = jest.spyOn(console, 'error');

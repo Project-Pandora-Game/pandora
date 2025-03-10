@@ -1,21 +1,21 @@
 import type { ServiceManager } from 'pandora-common';
 import { ReactElement } from 'react';
-import { AnchorAutoscroll } from '../../common/anchorAutoscroll';
-import { ChildrenProps } from '../../common/reactTypes';
-import type { ClientServices } from '../../services/clientServices';
-import { ServiceManagerContextProvider } from '../../services/serviceProvider';
-import { ChatInputContextProvider } from '../../ui/components/chat/chatInput';
-import { RoomItemDialogsProvider } from '../../ui/screens/room/roomItemDialog';
-import { TutorialService } from '../../ui/tutorial/tutorialSystem/tutorialService';
-import { CharacterRestrictionOverrideDialogContext } from '../characterRestrictionOverride/characterRestrictionOverride';
-import { DebugContextProvider } from '../error/debugContextProvider';
-import { RootErrorBoundary } from '../error/rootErrorBoundary';
-import { DirectoryConnectorServices } from './directoryConnectorContextProvider';
-import { InterfaceSettingsProvider } from './interfaceSettingsProvider';
-import { NotificationProvider } from './notificationProvider';
-import { PermissionCheckServiceProvider } from './permissionCheckProvider';
-import { SecondFactorProvider } from './secondFactorProvider';
-import { ShardConnectorContextProvider } from './shardConnectorContextProvider';
+import { AnchorAutoscroll } from '../../common/anchorAutoscroll.tsx';
+import { ChildrenProps } from '../../common/reactTypes.ts';
+import type { ClientServices } from '../../services/clientServices.ts';
+import { ServiceManagerContextProvider } from '../../services/serviceProvider.tsx';
+import { ChatInputContextProvider } from '../../ui/components/chat/chatInput.tsx';
+import { RoomItemDialogsProvider } from '../../ui/screens/room/roomItemDialog.tsx';
+import { TutorialService } from '../../ui/tutorial/tutorialSystem/tutorialService.tsx';
+import { CharacterRestrictionOverrideDialogContext } from '../characterRestrictionOverride/characterRestrictionOverride.tsx';
+import { DebugContextProvider } from '../error/debugContextProvider.tsx';
+import { RootErrorBoundary } from '../error/rootErrorBoundary.tsx';
+import { DirectoryConnectorServices } from './directoryConnectorContextProvider.tsx';
+import { InterfaceSettingsProvider } from './interfaceSettingsProvider.tsx';
+import { NotificationProvider } from './notificationProvider.tsx';
+import { PermissionCheckServiceProvider } from './permissionCheckProvider.tsx';
+import { SecondFactorProvider } from './secondFactorProvider.tsx';
+import { ShardConnectorContextProvider } from './shardConnectorContextProvider.tsx';
 
 export interface GameContextProviderProps extends ChildrenProps {
 	serviceManager: ServiceManager<ClientServices>;

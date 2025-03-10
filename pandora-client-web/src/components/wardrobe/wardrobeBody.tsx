@@ -6,17 +6,17 @@ import {
 	Item,
 } from 'pandora-common';
 import { ReactElement, useEffect, useLayoutEffect, useMemo } from 'react';
-import { useAssetManager } from '../../assets/assetManager';
-import { ICharacter } from '../../character/character';
-import { useObservable } from '../../observable';
-import { Tab, TabContainer } from '../common/tabs/tabs';
-import { WardrobeItemConfigMenu } from './itemDetail/_wardrobeItemDetail';
-import { InventoryAssetView } from './views/wardrobeAssetView';
-import { WardrobeBodySizeEditor } from './views/wardrobeBodySizeView';
-import { InventoryItemView } from './views/wardrobeItemView';
-import { InventoryOutfitView } from './views/wardrobeOutfitView';
-import { useWardrobeContext } from './wardrobeContext';
-import { WardrobeFocusesItem } from './wardrobeUtils';
+import { useAssetManager } from '../../assets/assetManager.tsx';
+import { ICharacter } from '../../character/character.ts';
+import { useObservable } from '../../observable.ts';
+import { Tab, TabContainer } from '../common/tabs/tabs.tsx';
+import { WardrobeItemConfigMenu } from './itemDetail/_wardrobeItemDetail.tsx';
+import { InventoryAssetView } from './views/wardrobeAssetView.tsx';
+import { WardrobeBodySizeEditor } from './views/wardrobeBodySizeView.tsx';
+import { InventoryItemView } from './views/wardrobeItemView.tsx';
+import { InventoryOutfitView } from './views/wardrobeOutfitView.tsx';
+import { useWardrobeContext } from './wardrobeContext.tsx';
+import { WardrobeFocusesItem } from './wardrobeUtils.ts';
 
 export function WardrobeBodyManipulation({ className, character, characterState }: {
 	className?: string;

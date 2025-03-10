@@ -1,12 +1,12 @@
 import type { Immutable } from 'immer';
 import { AppearanceActionProcessingContext, FinishActionAttempt, type AppearanceAction, type AssetFrameworkCharacterState, type CharacterActionAttempt } from 'pandora-common';
 import { ReactElement, useCallback, useMemo } from 'react';
-import type { IChatroomCharacter } from '../../../character/character';
-import { DescribeGameLogicAction } from '../../../ui/components/chat/chatMessagesDescriptions';
-import { Column, Row } from '../../common/container/container';
-import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider';
-import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobeExecuteChecked } from '../wardrobeActionContext';
-import { GameLogicActionButton, WardrobeActionButtonElement } from '../wardrobeComponents';
+import type { IChatroomCharacter } from '../../../character/character.ts';
+import { DescribeGameLogicAction } from '../../../ui/components/chat/chatMessagesDescriptions.tsx';
+import { Column, Row } from '../../common/container/container.tsx';
+import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider.tsx';
+import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobeExecuteChecked } from '../wardrobeActionContext.tsx';
+import { GameLogicActionButton, WardrobeActionButtonElement } from '../wardrobeComponents.tsx';
 
 export function WardrobeActionAttemptOverlay({ character }: {
 	character: IChatroomCharacter;

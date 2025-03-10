@@ -7,12 +7,12 @@ import {
 } from 'pandora-common';
 import { ReactElement, ReactNode, useState } from 'react';
 import importIcon from '../../../../assets/icons/import.svg';
-import type { ICharacter } from '../../../../character/character';
-import { useAccountSettings } from '../../../../services/accountLogic/accountManagerHooks';
-import { Button } from '../../../common/button/button';
-import { DivContainer, Row } from '../../../common/container/container';
-import { ResolveItemDisplayNameType } from '../../itemDetail/wardrobeItemName';
-import { CharacterModifierImportDialog } from './characterModifierImport';
+import type { ICharacter } from '../../../../character/character.ts';
+import { useAccountSettings } from '../../../../services/accountLogic/accountManagerHooks.ts';
+import { Button } from '../../../common/button/button.tsx';
+import { DivContainer, Row } from '../../../common/container/container.tsx';
+import { ResolveItemDisplayNameType } from '../../itemDetail/wardrobeItemName.tsx';
+import { CharacterModifierImportDialog } from './characterModifierImport.tsx';
 import './characterModifierInstanceView.scss';
 
 export function WardrobeCharacterModifierFullInstanceView({ character, modifiers, modifierEffects, currentlyFocusedModifier, focusModifierInstance }: {

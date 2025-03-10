@@ -20,10 +20,10 @@ import {
 	Fragment,
 	ReactElement,
 } from 'react';
-import { useGameState, useGlobalState, useStateFindItemById } from '../../../components/gameContext/gameStateContextProvider';
-import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName';
-import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList';
-import { RenderedLink } from '../../screens/spaceJoin/spaceJoin';
+import { useGameState, useGlobalState, useStateFindItemById } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
+import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
+import { RenderedLink } from '../../screens/spaceJoin/spaceJoin.tsx';
 
 export type IChatDeletedMessageProcessed = IChatMessageDeleted & {
 	/** Time the message was sent, guaranteed to be unique */

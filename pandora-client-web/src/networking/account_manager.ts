@@ -1,11 +1,11 @@
 import { EMPTY, GetLogger, type IClientDirectoryPromiseResult } from 'pandora-common';
 import { useCallback } from 'react';
 import { toast } from 'react-toastify';
-import { useDirectoryConnector } from '../components/gameContext/directoryConnectorContextProvider';
-import { PrehashPassword } from '../crypto/helpers';
-import { TOAST_OPTIONS_ERROR } from '../persistentToast';
-import { useService } from '../services/serviceProvider';
-import { LoginResponse } from './directoryConnector';
+import { useDirectoryConnector } from '../components/gameContext/directoryConnectorContextProvider.tsx';
+import { PrehashPassword } from '../crypto/helpers.ts';
+import { TOAST_OPTIONS_ERROR } from '../persistentToast.ts';
+import { useService } from '../services/serviceProvider.tsx';
+import { LoginResponse } from './directoryConnector.ts';
 
 //#region Callback type definitions
 

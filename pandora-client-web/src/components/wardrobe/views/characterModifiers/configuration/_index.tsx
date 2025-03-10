@@ -1,12 +1,12 @@
 import { AssertNever, type ModifierConfigurationEntryDefinition } from 'pandora-common';
 import { type ReactElement } from 'react';
 import type { Promisable } from 'type-fest';
-import { WardrobeCharacterModifierConfigCharacterList } from './characterList';
-import { WardrobeCharacterModifierConfigNumber } from './number';
-import { WardrobeCharacterModifierConfigString } from './string';
-import { WardrobeCharacterModifierConfigStringList } from './stringList';
+import { WardrobeCharacterModifierConfigCharacterList } from './characterList.tsx';
+import { WardrobeCharacterModifierConfigNumber } from './number.tsx';
+import { WardrobeCharacterModifierConfigString } from './string.tsx';
+import { WardrobeCharacterModifierConfigStringList } from './stringList.tsx';
 import './style.scss';
-import { WardrobeCharacterModifierConfigToggle } from './toggle';
+import { WardrobeCharacterModifierConfigToggle } from './toggle.tsx';
 
 export function WardrobeCharacterModifierConfig({ definition, ...props }: {
 	definition: ModifierConfigurationEntryDefinition;

@@ -1,27 +1,27 @@
-import { throttle } from 'lodash';
+import { throttle } from 'lodash-es';
 import { Assert, CharacterSize, type AssetFrameworkCharacterState, type BoneDefinition, type PartialAppearancePose } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
-import { useAssetManager } from '../../assets/assetManager';
-import { useCharacterData } from '../../character/character';
-import { useEvent } from '../../common/useEvent';
-import { usePlayer } from '../../components/gameContext/playerContextProvider';
-import { useWardrobeExecuteCallback, WardrobeActionContextProvider } from '../../components/wardrobe/wardrobeActionContext';
-import { LIVE_UPDATE_THROTTLE } from '../../config/Environment';
-import { TOAST_OPTIONS_WARNING } from '../../persistentToast';
-import { useRoomScreenContext } from '../../ui/screens/room/roomContext';
-import { useCanMoveCharacter, useCanPoseCharacter } from '../../ui/screens/room/roomPermissionChecks';
-import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator';
-import { Container } from '../baseComponents/container';
-import { Graphics } from '../baseComponents/graphics';
-import { TransitionedContainer } from '../common/transitions/transitionedContainer';
-import { type PointLike } from '../graphicsCharacter';
-import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings';
-import { MovementHelperGraphics } from '../movementHelper';
-import { useTickerRef } from '../reconciler/tick';
-import { GetAngle } from '../utility';
-import { CHARACTER_WAIT_DRAG_THRESHOLD, PIVOT_TO_LABEL_OFFSET, useRoomCharacterPosition, type CharacterStateProps, type RoomCharacterInteractiveProps } from './roomCharacter';
+import { useAssetManager } from '../../assets/assetManager.tsx';
+import { useCharacterData } from '../../character/character.ts';
+import { useEvent } from '../../common/useEvent.ts';
+import { usePlayer } from '../../components/gameContext/playerContextProvider.tsx';
+import { useWardrobeExecuteCallback, WardrobeActionContextProvider } from '../../components/wardrobe/wardrobeActionContext.tsx';
+import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
+import { TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
+import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
+import { useCanMoveCharacter, useCanPoseCharacter } from '../../ui/screens/room/roomPermissionChecks.tsx';
+import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
+import { Container } from '../baseComponents/container.ts';
+import { Graphics } from '../baseComponents/graphics.ts';
+import { TransitionedContainer } from '../common/transitions/transitionedContainer.ts';
+import { type PointLike } from '../graphicsCharacter.tsx';
+import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
+import { MovementHelperGraphics } from '../movementHelper.tsx';
+import { useTickerRef } from '../reconciler/tick.ts';
+import { GetAngle } from '../utility.ts';
+import { CHARACTER_WAIT_DRAG_THRESHOLD, PIVOT_TO_LABEL_OFFSET, useRoomCharacterPosition, type CharacterStateProps, type RoomCharacterInteractiveProps } from './roomCharacter.tsx';
 
 export function RoomCharacterMovementTool({
 	globalState,

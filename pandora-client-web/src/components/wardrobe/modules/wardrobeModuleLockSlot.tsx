@@ -5,21 +5,21 @@ import {
 	type AppearanceAction,
 	type ItemPath,
 } from 'pandora-common';
-import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot';
+import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
 import React, { ReactElement, useCallback, useMemo } from 'react';
-import { useAssetManager } from '../../../assets/assetManager';
+import { useAssetManager } from '../../../assets/assetManager.tsx';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import closedLock from '../../../assets/icons/lock_closed.svg';
 import emptyLock from '../../../assets/icons/lock_empty.svg';
 import openLock from '../../../assets/icons/lock_open.svg';
-import { Column, Row } from '../../common/container/container';
-import { FieldsetToggle } from '../../common/fieldsetToggle';
-import { WardrobeItemName } from '../itemDetail/wardrobeItemName';
-import { WardrobeLockLogicLocked, WardrobeLockLogicUnlocked, type WardrobeLockLogicExecuteButtonProps } from '../views/wardrobeLockLogic';
-import type { WardrobeExecuteCheckedResult } from '../wardrobeActionContext';
-import { WardrobeActionButton } from '../wardrobeComponents';
-import { useWardrobeContext } from '../wardrobeContext';
-import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes';
+import { Column, Row } from '../../common/container/container.tsx';
+import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
+import { WardrobeItemName } from '../itemDetail/wardrobeItemName.tsx';
+import { WardrobeLockLogicLocked, WardrobeLockLogicUnlocked, type WardrobeLockLogicExecuteButtonProps } from '../views/wardrobeLockLogic.tsx';
+import type { WardrobeExecuteCheckedResult } from '../wardrobeActionContext.tsx';
+import { WardrobeActionButton } from '../wardrobeComponents.tsx';
+import { useWardrobeContext } from '../wardrobeContext.tsx';
+import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes.ts';
 
 export function WardrobeModuleConfigLockSlot({ target, item, moduleName, m }: WardrobeModuleProps<ItemModuleLockSlot>): ReactElement {
 	const { focuser } = useWardrobeContext();

@@ -1,10 +1,10 @@
 import { produce } from 'immer';
-import { pick } from 'lodash';
+import { pick } from 'lodash-es';
 import { IDirectoryShardInfo, IDirectoryStatus, IsObject } from 'pandora-common';
 import { createContext, ReactElement, useCallback, useContext, useMemo, useState } from 'react';
-import { ChildrenProps } from '../../common/reactTypes';
-import { DirectoryConnectionState } from '../../networking/directoryConnector';
-import { ShardConnectionState } from '../../networking/shardConnector';
+import { ChildrenProps } from '../../common/reactTypes.ts';
+import { DirectoryConnectionState } from '../../networking/directoryConnector.ts';
+import { ShardConnectionState } from '../../networking/shardConnector.ts';
 
 export interface DebugData {
 	editor?: true;

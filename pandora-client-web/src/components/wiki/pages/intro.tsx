@@ -1,8 +1,8 @@
 import { ReactElement } from 'react';
 import { Link } from 'react-router-dom';
-import { Row } from '../../common/container/container';
-import { ExternalLink } from '../../common/link/externalLink';
-import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/gameStateContextProvider';
+import { Row } from '../../common/container/container.tsx';
+import { ExternalLink } from '../../common/link/externalLink.tsx';
+import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/gameStateContextProvider.tsx';
 
 export function WikiIntroduction(): ReactElement {
 	return (

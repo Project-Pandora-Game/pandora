@@ -1,10 +1,10 @@
-import { act } from 'react';
 import { renderHook } from '@testing-library/react';
-import { DebugContextProvider, useDebugContext } from '../../../src/components/error/debugContextProvider';
-import { DirectoryConnectionState } from '../../../src/networking/directoryConnector';
-import { ShardConnectionState } from '../../../src/networking/shardConnector';
-import { MockDebugData } from '../../mocks/error/errorMocks';
-import { MockConnectionInfo } from '../../mocks/networking/mockShardConnector';
+import { act } from 'react';
+import { DebugContextProvider, useDebugContext } from '../../../src/components/error/debugContextProvider.tsx';
+import { DirectoryConnectionState } from '../../../src/networking/directoryConnector.ts';
+import { ShardConnectionState } from '../../../src/networking/shardConnector.ts';
+import { MockDebugData } from '../../mocks/error/errorMocks.ts';
+import { MockConnectionInfo } from '../../mocks/networking/mockShardConnector.ts';
 
 describe('DebugContextProvider', () => {
 	it('should initially provide an empty debug data object', () => {

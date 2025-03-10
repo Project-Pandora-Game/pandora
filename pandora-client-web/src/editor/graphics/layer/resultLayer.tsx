@@ -1,20 +1,20 @@
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { Assert } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
-import { useLayerDefinition, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations';
+import { useLayerDefinition, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
 import dotTexture from '../../../assets/editor/dotTexture.png';
-import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator';
-import { Container } from '../../../graphics/baseComponents/container';
-import { Graphics } from '../../../graphics/baseComponents/graphics';
-import { Sprite } from '../../../graphics/baseComponents/sprite';
-import { GraphicsLayerProps, useLayerVertices } from '../../../graphics/graphicsLayer';
-import { useTexture } from '../../../graphics/useTexture';
-import { MeshFaceIsCW } from '../../../graphics/utility';
-import { useNullableObservable, useObservable } from '../../../observable';
-import { PreviewCutterRectangle } from '../../components/previewCutter/previewCutter';
-import { useEditor } from '../../editorContextProvider';
-import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer';
+import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
+import { Container } from '../../../graphics/baseComponents/container.ts';
+import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
+import { Sprite } from '../../../graphics/baseComponents/sprite.ts';
+import { GraphicsLayerProps, useLayerVertices } from '../../../graphics/graphicsLayer.tsx';
+import { useTexture } from '../../../graphics/useTexture.ts';
+import { MeshFaceIsCW } from '../../../graphics/utility.ts';
+import { useNullableObservable, useObservable } from '../../../observable.ts';
+import { PreviewCutterRectangle } from '../../components/previewCutter/previewCutter.tsx';
+import { useEditor } from '../../editorContextProvider.tsx';
+import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer.tsx';
 
 export function ResultLayer({
 	layer,

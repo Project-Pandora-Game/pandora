@@ -1,4 +1,4 @@
-import type { TutorialConfig } from '../tutorialSystem/tutorialConfig';
+import type { TutorialConfig } from '../tutorialSystem/tutorialConfig.ts';
 
 // TODO: Room inventory (storing and picking up items)
 export const TUTORIAL_WARDROBE_ROOM_INVENTORY: TutorialConfig = {

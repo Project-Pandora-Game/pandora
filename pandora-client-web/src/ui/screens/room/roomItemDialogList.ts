@@ -1,5 +1,5 @@
 import type { ItemId } from 'pandora-common';
-import { Observable } from '../../../observable';
+import { Observable } from '../../../observable.ts';
 
 export interface RoomItemDialogDefinition {
 	itemId: ItemId;

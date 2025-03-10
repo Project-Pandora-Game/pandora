@@ -1,9 +1,9 @@
 import { downloadZip, InputWithSizeMeta } from 'client-zip';
 import { Immutable } from 'immer';
-import { TypedEventEmitter, Assert, Asset, AssetDefinition, AssetGraphicsDefinition, AssetId, AssetsDefinitionFile } from 'pandora-common';
-import { AssetManagerClient, GetCurrentAssetManager, UpdateAssetManager, useAssetManager } from '../../assets/assetManager';
-import { ObservableProperty, ObservableClass } from '../../observable';
-import { DownloadAsFile } from '../../common/downloadHelper';
+import { Assert, Asset, AssetDefinition, AssetGraphicsDefinition, AssetId, AssetsDefinitionFile, TypedEventEmitter } from 'pandora-common';
+import { AssetManagerClient, GetCurrentAssetManager, UpdateAssetManager, useAssetManager } from '../../assets/assetManager.tsx';
+import { DownloadAsFile } from '../../common/downloadHelper.ts';
+import { ObservableClass, ObservableProperty } from '../../observable.ts';
 
 export const ASSET_ID_PART_REGEX = /^[a-z][a-z0-9]*([-_][a-z0-9]+)*$/;
 

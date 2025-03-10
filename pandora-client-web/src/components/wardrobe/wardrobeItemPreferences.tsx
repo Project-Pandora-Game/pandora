@@ -1,23 +1,23 @@
 import classNames from 'classnames';
 import { Immutable } from 'immer';
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import { AssertNever, Asset, AssetAttributeDefinition, AssetId, AssetPreference, AssetPreferenceType, AssetPreferenceTypeSchema, AttributePreferenceType, AttributePreferenceTypeSchema, CloneDeepMutable, EMPTY_ARRAY, KnownObject, ResolveAssetPreference } from 'pandora-common';
 import { ReactElement, createContext, useCallback, useContext, useId, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
-import { useAssetManager } from '../../assets/assetManager';
-import { useBrowserStorage } from '../../browserStorage';
-import { Checkbox } from '../../common/userInteraction/checkbox';
-import { TextInput } from '../../common/userInteraction/input/textInput';
-import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus';
-import { Select, type SelectProps } from '../../common/userInteraction/select/select';
-import { TOAST_OPTIONS_ERROR } from '../../persistentToast';
-import { Column, Row } from '../common/container/container';
-import { Scrollable } from '../common/scrollbar/scrollbar';
-import { Tab, TabContainer } from '../common/tabs/tabs';
-import { useShardConnector } from '../gameContext/shardConnectorContextProvider';
-import { WardrobeAssetList, useAssetPreference, useAssetPreferenceResolver, useAssetPreferences } from './views/wardrobeAssetView';
-import { InventoryAssetPreview, InventoryAttributePreview } from './wardrobeComponents';
+import { useAssetManager } from '../../assets/assetManager.tsx';
+import { useBrowserStorage } from '../../browserStorage.ts';
+import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
+import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
+import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus.ts';
+import { Select, type SelectProps } from '../../common/userInteraction/select/select.tsx';
+import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import { Column, Row } from '../common/container/container.tsx';
+import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
+import { Tab, TabContainer } from '../common/tabs/tabs.tsx';
+import { useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
+import { WardrobeAssetList, useAssetPreference, useAssetPreferenceResolver, useAssetPreferences } from './views/wardrobeAssetView.tsx';
+import { InventoryAssetPreview, InventoryAttributePreview } from './wardrobeComponents.tsx';
 
 type ItemPreferencesFocus = {
 	type: 'none';

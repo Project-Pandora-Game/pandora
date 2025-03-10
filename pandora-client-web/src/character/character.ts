@@ -1,5 +1,5 @@
 import { freeze } from 'immer';
-import { noop } from 'lodash';
+import { noop } from 'lodash-es';
 import {
 	ActionSpaceContext,
 	Assert,
@@ -22,7 +22,7 @@ import {
 	type AssetFrameworkGlobalState,
 } from 'pandora-common';
 import { useCallback, useMemo, useSyncExternalStore } from 'react';
-import type { PlayerCharacter } from './player';
+import type { PlayerCharacter } from './player.ts';
 
 export interface ICharacter<T extends ICharacterPublicData = ICharacterPublicData> extends ITypedEventEmitter<CharacterEvents<T>> {
 	readonly type: 'character';

@@ -1,8 +1,8 @@
 import type { ServiceManager } from 'pandora-common';
 import { createContext, useContext, type ReactElement } from 'react';
-import type { ChildrenProps } from '../common/reactTypes';
-import { useDebugExpose } from '../common/useDebugExpose';
-import type { ClientServices } from './clientServices';
+import type { ChildrenProps } from '../common/reactTypes.ts';
+import { useDebugExpose } from '../common/useDebugExpose.ts';
+import type { ClientServices } from './clientServices.ts';
 
 export const serviceManagerContext = createContext<ServiceManager<ClientServices> | undefined>(undefined);
 

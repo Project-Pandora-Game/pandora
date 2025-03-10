@@ -1,10 +1,11 @@
+// @ts-check
 /* eslint-env node */
 /**
  * For a detailed explanation regarding each configuration property and type check, visit:
  * https://jestjs.io/docs/configuration
- * @type { import('jest').Config }
+ * @type { import('ts-jest').JestConfigWithTsJest }
  */
-module.exports = {
+export default {
 	clearMocks: true,
 	collectCoverageFrom: ['src/**/*.ts', 'src/**/*.tsx'],
 	coverageDirectory: 'coverage',
@@ -19,17 +20,15 @@ module.exports = {
 		'\\.s?css$': '<rootDir>/test/stubs/stylesheetStub.ts',
 		'react-reverse-portal': '<rootDir>/node_modules/react-reverse-portal/dist/cjs/index.js',
 	},
-	resolver: '<rootDir>/test/resolver.js',
+	resolver: '<rootDir>/test/resolver.cjs',
 	testEnvironment: 'jsdom',
 	setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
-	transformIgnorePatterns: [],
+	extensionsToTreatAsEsm: ['.ts', '.tsx', '.mts'],
 	transform: {
 		'^.+\\.tsx?$': ['ts-jest', {
 			tsconfig: './test/tsconfig.json',
 			isolatedModules: true,
-		}],
-		'^.+\\.mjsx?$': ['babel-jest', {
-			'presets': ['@babel/preset-env'],
+			useESM: true,
 		}],
 	},
 };

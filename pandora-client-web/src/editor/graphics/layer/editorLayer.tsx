@@ -1,8 +1,8 @@
 import { Texture } from 'pixi.js';
 import { ReactElement, useEffect, useMemo, useReducer } from 'react';
-import { GraphicsLayer, GraphicsLayerProps } from '../../../graphics/graphicsLayer';
-import { useEditor } from '../../editorContextProvider';
-import { EditorAssetGraphics } from '../character/appearanceEditor';
+import { GraphicsLayer, GraphicsLayerProps } from '../../../graphics/graphicsLayer.tsx';
+import { useEditor } from '../../editorContextProvider.tsx';
+import { EditorAssetGraphics } from '../character/appearanceEditor.ts';
 
 export const EDITOR_LAYER_Z_INDEX_EXTRA = 10000;
 

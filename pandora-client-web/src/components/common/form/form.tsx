@@ -3,7 +3,7 @@ import { capitalize } from 'lodash-es';
 import { GetLogger } from 'pandora-common';
 import { FormEvent, HTMLProps, ReactElement, RefAttributes, useCallback } from 'react';
 import { FieldError } from 'react-hook-form';
-import { Link, type LinkProps } from 'react-router-dom';
+import { Link, type LinkProps } from 'react-router';
 import type { Promisable } from 'type-fest';
 import { z } from 'zod';
 import { CommonProps } from '../../../common/reactTypes.ts';

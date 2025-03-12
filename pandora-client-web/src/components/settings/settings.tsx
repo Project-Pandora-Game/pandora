@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { GIT_DESCRIBE } from '../../config/Environment.ts';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs.tsx';
 import { AccountSettings } from './accountSettings.tsx';

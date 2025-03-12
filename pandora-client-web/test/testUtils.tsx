@@ -3,7 +3,7 @@ import { InitialEntry } from 'history';
 import { noop } from 'lodash-es';
 import { Assert, ServiceManager } from 'pandora-common';
 import { ComponentType, ReactElement, useEffect, useMemo } from 'react';
-import { MemoryRouter, useLocation } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router';
 import { ChildrenProps } from '../src/common/reactTypes.ts';
 import { DebugContext, debugContext, DebugData } from '../src/components/error/debugContextProvider.tsx';
 import { DirectoryConnectorServiceProvider } from '../src/networking/directoryConnector.ts';

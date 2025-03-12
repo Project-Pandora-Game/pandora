@@ -1,7 +1,7 @@
 import { AssertNever, FormatTimeInterval, IsEmail, UserNameSchema } from 'pandora-common';
 import { ReactElement, useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { useDirectoryResendVerificationAdvanced } from '../../../networking/account_manager.ts';

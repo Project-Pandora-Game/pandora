@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 export function WikiSafety(): ReactElement {
 	return (

@@ -1,7 +1,7 @@
 import { nanoid } from 'nanoid';
 import { CharacterInputNameSchema, IsValidCharacterName } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router';
 import { useCreateCharacter } from '../../character/player.ts';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';

@@ -31,7 +31,7 @@ import {
 	type SpaceGhostManagementConfig,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager.tsx';
 import { CopyToClipboard } from '../../../common/clipboard.ts';

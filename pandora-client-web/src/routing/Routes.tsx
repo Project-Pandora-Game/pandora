@@ -1,7 +1,6 @@
 import { IsAuthorized, IsObject } from 'pandora-common';
 import { ComponentType, lazy, ReactElement, Suspense, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import { Navigate, NavigateOptions, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, NavigateOptions, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { AccountContacts } from '../components/accountContacts/accountContacts.tsx';
 import { CharacterCreate } from '../components/characterCreate/characterCreate.tsx';
 import { CharacterSelect } from '../components/characterSelect/characterSelect.tsx';

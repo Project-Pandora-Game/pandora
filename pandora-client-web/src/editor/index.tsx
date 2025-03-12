@@ -1,7 +1,7 @@
 import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css' with { type: 'css' };
 import { GraphicsManager } from '../assets/graphicsManager.ts';

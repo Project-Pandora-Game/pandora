@@ -15,7 +15,7 @@ import {
 	type SpacePublicSetting,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager.tsx';
 import closedDoorLocked from '../../../assets/icons/closed-door-locked.svg';

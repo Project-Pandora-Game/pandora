@@ -4,7 +4,7 @@ import React, {
 	useMemo,
 	type ReactNode,
 } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router';
 import listIcon from '../../../assets/icons/list.svg';
 import settingIcon from '../../../assets/icons/setting.svg';
 import shieldIcon from '../../../assets/icons/shield.svg';

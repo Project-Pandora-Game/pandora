@@ -12,7 +12,7 @@ import {
 	TimeSpanMs,
 } from 'pandora-common';
 import { ReactElement, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { useColorInput } from '../../common/useColorInput.ts';
 import { useCurrentTime } from '../../common/useCurrentTime.ts';

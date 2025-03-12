@@ -1,6 +1,6 @@
 import { IsObject } from 'pandora-common';
 import { ReactElement, ReactNode, useCallback } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router';
 
 export function BackLink({ children }: {
 	children: ReactNode;

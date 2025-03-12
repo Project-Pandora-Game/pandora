@@ -1,7 +1,7 @@
 import { noop, startCase } from 'lodash-es';
 import { AccountId, AccountPublicInfo, AccountRoleSchema, AssertNever, GetLogger, IClientDirectoryNormalResult, LIMIT_ACCOUNT_PROFILE_LENGTH } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { toast } from 'react-toastify';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';

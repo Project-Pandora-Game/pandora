@@ -1,7 +1,7 @@
 import { capitalize } from 'lodash-es';
 import { AccountId, IAccountContact, IAccountFriendStatus } from 'pandora-common';
 import React, { useCallback, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
 import { NotificationSource, useNotificationSuppressed } from '../../services/notificationHandler.ts';

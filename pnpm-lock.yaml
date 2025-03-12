@@ -122,9 +122,6 @@ importers:
       react-router:
         specifier: 7.3.0
         version: 7.3.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      react-router-dom:
-        specifier: 7.3.0
-        version: 7.3.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       react-switch:
         specifier: 7.1.0
         version: 7.1.0(patch_hash=a5b1c889d91899e366ca093336c6507186d2c7804e402c8b7830cb27401c10b6)(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -186,9 +183,6 @@ importers:
       '@types/react-reconciler':
         specifier: 0.31.0
         version: 0.31.0(@types/react@19.0.10)
-      '@types/react-router-dom':
-        specifier: 5.3.3
-        version: 5.3.3
       '@types/webpack':
         specifier: 5.28.5
         version: 5.28.5(webpack-cli@6.0.1)
@@ -1825,9 +1819,6 @@ packages:
   '@types/graceful-fs@4.1.9':
     resolution: {integrity: sha512-olP3sd1qOEe5dXTSaFvQG+02VdRXcdytWLAZsAq1PecU8uqQAhkrnbli7DagjtXKW/Bl7YJbUsa8MPcuc8LHEQ==}
 
-  '@types/history@4.7.11':
-    resolution: {integrity: sha512-qjDJRrmvBMiTx+jyLxvLfJU7UznFuokDv4f3WRuriHKERccVpFU+8XMQUAbDzoiJCsmexxRExQeMwwCdamSKDA==}
-
   '@types/html-minifier-terser@6.1.0':
     resolution: {integrity: sha512-oh/6byDPnL1zeNXFrDXFLyZjkr1MsBG667IM792caf1L2UPOOMf65NFzjUH/ltyfwjAGfs1rsX1eftK0jC/KIg==}
 
@@ -1906,12 +1897,6 @@ packages:
     resolution: {integrity: sha512-wa1KtV3SHKnWeLHfZFg/7nrPSe/Ejdn+qbanNX4V6i9I7C3ECKPfBnC1KM3ef58KFWEohLmTvoTH5XuEIKGX2g==}
     peerDependencies:
       '@types/react': '*'
-
-  '@types/react-router-dom@5.3.3':
-    resolution: {integrity: sha512-kpqnYK4wcdm5UaWI3fLcELopqLrHgLqNsdpHauzlQktfkHL3npOSwtj1Uz9oKBAzs7lFtVkV8j83voAz2D8fhw==}
-
-  '@types/react-router@5.1.20':
-    resolution: {integrity: sha512-jGjmu/ZqS7FjSH6owMcD5qpq19+1RS9DeVRqfl1FeBMxTDQAGwlMWOcs52NDoXaNKyG3d1cYQFMs9rCrb88o9Q==}
 
   '@types/react@19.0.10':
     resolution: {integrity: sha512-JuRQ9KXLEjaUNjTWpzuR231Z2WpIwczOkBEIvbHNCzQefFIT0L8IqE6NV6ULLyC1SI/i234JnDoMkfg+RjQj2g==}
@@ -5383,13 +5368,6 @@ packages:
       react: '>=16.3.0'
       react-dom: '>=16.3.0'
 
-  react-router-dom@7.3.0:
-    resolution: {integrity: sha512-z7Q5FTiHGgQfEurX/FBinkOXhWREJIAB2RiU24lvcBa82PxUpwqvs/PAXb9lJyPjTs2jrl6UkLvCZVGJPeNuuQ==}
-    engines: {node: '>=20.0.0'}
-    peerDependencies:
-      react: '>=18'
-      react-dom: '>=18'
-
   react-router@7.3.0:
     resolution: {integrity: sha512-466f2W7HIWaNXTKM5nHTqNxLrHTyXybm7R0eBlVSt0k/u55tTCDO194OIx/NrYD4TS5SXKTNekXfT37kMKUjgw==}
     engines: {node: '>=20.0.0'}
@@ -6989,7 +6967,7 @@ snapshots:
       '@babel/traverse': 7.26.9
       '@babel/types': 7.26.9
       convert-source-map: 2.0.0
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -7147,7 +7125,7 @@ snapshots:
       '@babel/parser': 7.26.9
       '@babel/template': 7.26.9
       '@babel/types': 7.26.9
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -8372,8 +8350,6 @@ snapshots:
     dependencies:
       '@types/node': 22.13.10
 
-  '@types/history@4.7.11': {}
-
   '@types/html-minifier-terser@6.1.0': {}
 
   '@types/http-errors@2.0.4': {}
@@ -8449,17 +8425,6 @@ snapshots:
 
   '@types/react-reconciler@0.31.0(@types/react@19.0.10)':
     dependencies:
-      '@types/react': 19.0.10
-
-  '@types/react-router-dom@5.3.3':
-    dependencies:
-      '@types/history': 4.7.11
-      '@types/react': 19.0.10
-      '@types/react-router': 5.1.20
-
-  '@types/react-router@5.1.20':
-    dependencies:
-      '@types/history': 4.7.11
       '@types/react': 19.0.10
 
   '@types/react@19.0.10':
@@ -8765,7 +8730,7 @@ snapshots:
 
   agent-base@6.0.2:
     dependencies:
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
 
@@ -9568,6 +9533,10 @@ snapshots:
     dependencies:
       ms: 2.1.3
 
+  debug@4.4.0:
+    dependencies:
+      ms: 2.1.3
+
   debug@4.4.0(supports-color@5.5.0):
     dependencies:
       ms: 2.1.3
@@ -10268,6 +10237,8 @@ snapshots:
 
   flatted@3.3.3: {}
 
+  follow-redirects@1.15.9: {}
+
   follow-redirects@1.15.9(debug@4.4.0):
     optionalDependencies:
       debug: 4.4.0(supports-color@5.5.0)
@@ -10552,7 +10523,7 @@ snapshots:
     dependencies:
       '@tootallnate/once': 2.0.0
       agent-base: 6.0.2
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
 
@@ -10571,7 +10542,7 @@ snapshots:
   http-proxy@1.18.1:
     dependencies:
       eventemitter3: 4.0.7
-      follow-redirects: 1.15.9(debug@4.4.0)
+      follow-redirects: 1.15.9
       requires-port: 1.0.0
     transitivePeerDependencies:
       - debug
@@ -10579,7 +10550,7 @@ snapshots:
   https-proxy-agent@5.0.1:
     dependencies:
       agent-base: 6.0.2
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
     transitivePeerDependencies:
       - supports-color
 
@@ -10891,7 +10862,7 @@ snapshots:
 
   istanbul-lib-source-maps@4.0.1:
     dependencies:
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
       istanbul-lib-coverage: 3.2.2
       source-map: 0.6.1
     transitivePeerDependencies:
@@ -12466,12 +12437,6 @@ snapshots:
       react-draggable: 4.4.6(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       tslib: 2.6.2
 
-  react-router-dom@7.3.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
-    dependencies:
-      react: 19.0.0
-      react-dom: 19.0.0(react@19.0.0)
-      react-router: 7.3.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-
   react-router@7.3.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
     dependencies:
       '@types/cookie': 0.6.0
@@ -13001,7 +12966,7 @@ snapshots:
 
   spdy-transport@3.0.0:
     dependencies:
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
       detect-node: 2.1.0
       hpack.js: 2.1.6
       obuf: 1.1.2
@@ -13012,7 +12977,7 @@ snapshots:
 
   spdy@4.0.2:
     dependencies:
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
       handle-thing: 2.0.1
       http-deceiver: 1.2.7
       select-hose: 2.0.0

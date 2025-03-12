@@ -1,6 +1,6 @@
 import { LIMIT_CHARACTER_COUNT } from 'pandora-common';
 import { ReactElement } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { ExternalLink } from '../../common/link/externalLink.tsx';
 
 export function WikiCharacters(): ReactElement {

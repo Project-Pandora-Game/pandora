@@ -1,7 +1,7 @@
 import { AssertNever, IsEmail } from 'pandora-common';
 import { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { useDirectoryResendVerification } from '../../../networking/account_manager.ts';
 import { Button } from '../../common/button/button.tsx';

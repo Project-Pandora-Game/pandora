@@ -1,7 +1,7 @@
 import { AssertNever, ICharacterPrivateData, PRONOUNS, type PronounKey } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { useColorInput } from '../../common/useColorInput.ts';
 import { FormInput } from '../../common/userInteraction/input/formInput.tsx';

@@ -7,7 +7,7 @@ import {
 	type ActionTargetSelector,
 } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
-import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router';
 import { z } from 'zod';
 import { Character, IChatroomCharacter } from '../../character/character.ts';
 import { useObservable } from '../../observable.ts';

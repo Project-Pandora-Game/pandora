@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { IsObject } from 'pandora-common';
 import { HTMLProps, ReactElement } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router';
 
 export interface LocationStateMessageProps extends HTMLProps<HTMLParagraphElement> {
 	children?: never;

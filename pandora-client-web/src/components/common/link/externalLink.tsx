@@ -6,9 +6,23 @@ import { ModalDialog } from '../../dialog/dialog.tsx';
 import { Button } from '../button/button.tsx';
 import { Column, Row } from '../container/container.tsx';
 
-function ExternalLinkImpl({ children, ...props }: Omit<React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>, 'target' | 'referrerPolicy' | 'rel'>, ref: React.ForwardedRef<HTMLAnchorElement>): ReactElement {
+export type ExternalLinkProps = Omit<React.DetailedHTMLProps<React.AnchorHTMLAttributes<HTMLAnchorElement>, HTMLAnchorElement>, 'target' | 'referrerPolicy' | 'rel'> & {
+	/**
+	 * Whether to send referrer
+	 * @default false
+	 */
+	sendReferrer?: boolean;
+};
+
+function ExternalLinkImpl({ children, sendReferrer = false, ...props }: ExternalLinkProps, ref: React.ForwardedRef<HTMLAnchorElement>): ReactElement {
 	return (
-		<a { ...props } ref={ ref } target='_blank' referrerPolicy='no-referrer' rel='external noopener noreferrer nofollow'>
+		<a
+			{ ...props }
+			ref={ ref }
+			target='_blank'
+			referrerPolicy={ sendReferrer ? 'origin' : 'no-referrer' }
+			rel={ sendReferrer ? 'external noopener nofollow' : 'external noopener noreferrer nofollow' }
+		>
 			{ children }
 		</a>
 	);

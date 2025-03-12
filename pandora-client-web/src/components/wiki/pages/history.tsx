@@ -14,7 +14,7 @@ export function WikiHistory(): ReactElement {
 				cannot realistically be solved.<br />
 				It was an often voiced desire from parts of the community to have an alternative to BC and therefore talks about making a new platform started.
 				In August 2021, "Project Pandora" officially started with the creation of the{ ' ' }
-				<ExternalLink href='https://discord.gg/EnaPvuQf8d'>
+				<ExternalLink href='https://discord.gg/EnaPvuQf8d' sendReferrer>
 					Pandora Discord
 				</ExternalLink>
 				.<br />

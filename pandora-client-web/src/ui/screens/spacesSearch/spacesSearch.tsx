@@ -15,7 +15,7 @@ import {
 	type SpacePublicSetting,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
-import { Navigate, useLocation, useNavigate } from 'react-router';
+import { Navigate, useLocation } from 'react-router';
 import { toast } from 'react-toastify';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager.tsx';
 import closedDoorLocked from '../../../assets/icons/closed-door-locked.svg';
@@ -37,6 +37,7 @@ import { usePlayer, usePlayerState } from '../../../components/gameContext/playe
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { useObservable } from '../../../observable.ts';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useIsNarrowScreen } from '../../../styles/mediaQueries.ts';
 import { DESCRIPTION_TEXTBOX_SIZE, SPACE_FEATURES, SpaceOwnershipRemoval } from '../spaceConfiguration/spaceConfiguration.tsx';
@@ -58,7 +59,7 @@ const TIPS: readonly string[] = [
 ];
 
 export function SpacesSearch(): ReactElement {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const spaceInfo = useSpaceInfo();
 	const list = useSpacesList();
 
@@ -136,7 +137,7 @@ function SpaceSearchList({ list }: {
 	list: SpaceListInfo[];
 }): ReactElement {
 	const isNarrowScreen = useIsNarrowScreen();
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const account = useCurrentAccount();
 	AssertNotNullable(account);
 
@@ -568,7 +569,7 @@ function GuardedJoinButton({ children, spaceId, inviteId, redirectBeforeLeave }:
 // TODO: remove some of this when we automate leave process was added
 function GuardedJoinButtonWithLeave({ spaceId, inviteId, redirectBeforeLeave }: { spaceId: SpaceId; inviteId?: SpaceInviteId; redirectBeforeLeave?: boolean; }) {
 	const { pathname } = useLocation();
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const directoryConnector = useDirectoryConnector();
 	const { player, globalState } = usePlayerState();
 	const roomDeviceLink = useCharacterRestrictionsManager(globalState, player, (manager) => manager.getRoomDeviceLink());

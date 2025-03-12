@@ -1,6 +1,6 @@
 import { ReactElement } from 'react';
-import { useNavigate } from 'react-router';
 import { GIT_DESCRIBE } from '../../config/Environment.ts';
+import { useNavigatePandora } from '../../routing/navigate.ts';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs.tsx';
 import { AccountSettings } from './accountSettings.tsx';
 import { CharacterSettings } from './characterSettings.tsx';
@@ -12,7 +12,7 @@ import { SecuritySettings } from './securitySettings.tsx';
 import './settings.scss';
 
 export function Settings(): ReactElement | null {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 
 	return (
 		<>

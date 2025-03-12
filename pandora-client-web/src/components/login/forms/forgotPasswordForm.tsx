@@ -1,9 +1,9 @@
 import { AssertNever, EmailAddressSchema } from 'pandora-common';
 import { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { useDirectoryPasswordReset } from '../../../networking/account_manager.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { Button } from '../../common/button/button.tsx';
 import { Form, FormCreateStringValidator, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
 import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha.tsx';
@@ -13,7 +13,7 @@ export interface ForgotPasswordFormData {
 }
 
 export function ForgotPasswordForm(): ReactElement {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const passwordReset = useDirectoryPasswordReset();
 	const [captchaToken, setCaptchaToken] = useState('');
 	const [captchaFailed, setCaptchaFailed] = useState(false);

@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import { GetLogger, IDirectoryAccountInfo, LIMIT_DIRECT_MESSAGE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { useAutoScroll } from '../../common/useAutoScroll.ts';
 import { useEvent } from '../../common/useEvent.ts';
@@ -10,6 +9,7 @@ import { useTextFormattingOnKeyboardEvent } from '../../common/useTextFormatting
 import { useInputAutofocus } from '../../common/userInteraction/inputAutofocus.ts';
 import { useObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { LoadedDirectMessage } from '../../services/accountLogic/directMessages/directMessageChat.ts';
 import { AutoCompleteHint, IChatInputHandler, chatInputContext, useChatInput } from '../../ui/components/chat/chatInput.tsx';
@@ -121,7 +121,7 @@ function useDirectMessageCommandContext(displayError: boolean): ICommandInvokeCo
 	const shardConnector = useShardConnector();
 	const gameState = useGameStateOptional();
 	const { chat, encryption } = useDirectMessageChat();
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 
 	const sendMessage = useCallback<DirectMessageCommandExecutionContext['sendMessage']>(async (message, editing) => {
 		const encrypted = message.length === 0 ? '' : await encryption.service.encrypt(message);

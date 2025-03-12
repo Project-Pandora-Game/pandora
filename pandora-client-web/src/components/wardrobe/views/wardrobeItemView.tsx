@@ -22,10 +22,10 @@ import {
 import { IItemModule } from 'pandora-common/dist/assets/modules/common.js';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
 import React, { ReactElement, useEffect, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer.tsx';
 import { useObservable } from '../../../observable.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { Button } from '../../common/button/button.tsx';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider.tsx';
@@ -51,7 +51,7 @@ export function InventoryItemView({
 	const focus = useObservable(focuser.current);
 	const appearance = useWardrobeTargetItems(targetSelector);
 	const itemCount = useMemo(() => AppearanceItemsCalculateTotalCount(appearance), [appearance]);
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 
 	const containerAccessCheckInitial = useMemo(() => {
 		const processingContext = new AppearanceActionProcessingContext(actions, globalState);

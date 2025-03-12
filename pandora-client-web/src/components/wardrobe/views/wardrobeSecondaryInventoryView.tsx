@@ -10,9 +10,9 @@ import {
 	type AppearanceItems,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import { useItemColorRibbon } from '../../../graphics/graphicsLayer.tsx';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { Button } from '../../common/button/button.tsx';
 import { WardrobeItemName } from '../itemDetail/wardrobeItemName.tsx';
@@ -32,7 +32,7 @@ export function SecondaryInventoryView({ title, secondaryTarget, secondaryTarget
 	const { globalState } = useWardrobeActionContext();
 	const { extraItemActions, heldItem } = useWardrobeContext();
 	const { wardrobeExtraActionButtons } = useAccountSettings();
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 
 	const extraItemAction = useCallback<WardrobeContextExtraItemActionComponent>(({ target, item }) => {
 		if (!wardrobeExtraActionButtons)

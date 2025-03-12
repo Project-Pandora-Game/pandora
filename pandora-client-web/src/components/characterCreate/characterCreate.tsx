@@ -1,10 +1,11 @@
 import { nanoid } from 'nanoid';
 import { CharacterInputNameSchema, IsValidCharacterName } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
-import { Navigate, useNavigate } from 'react-router';
+import { Navigate } from 'react-router';
 import { useCreateCharacter } from '../../character/player.ts';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
+import { useNavigatePandora } from '../../routing/navigate.ts';
 import { Button } from '../common/button/button.tsx';
 import { Form, FormCreateStringValidator, FormError, FormErrorMessage, FormField } from '../common/form/form.tsx';
 import { useGameStateOptional } from '../gameContext/gameStateContextProvider.tsx';
@@ -16,7 +17,7 @@ export function CharacterCreate(): ReactElement | null {
 	const [characterName, setCharacterName] = useState('');
 	const [errorMessage, setErrorMessage] = useState('');
 
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 
 	const player = usePlayer();
 	const playerData = usePlayerData();

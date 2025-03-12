@@ -1,10 +1,10 @@
 import { AssertNever, IsSimpleToken, PasswordSchema, SIMPLE_TOKEN_LENGTH, UserNameSchema } from 'pandora-common';
 import { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { DEVELOPMENT } from '../../../config/Environment.ts';
 import { useDirectoryPasswordResetConfirm } from '../../../networking/account_manager.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { Button } from '../../common/button/button.tsx';
 import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
 import { LocationStateMessage } from '../../common/locationStateMessage/locationStateMessage.tsx';
@@ -17,7 +17,7 @@ export interface ResetPasswordFormData {
 }
 
 export function ResetPasswordForm(): ReactElement {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const [errorMessage, setErrorMessage] = useState('');
 	const passwordResetConfirm = useDirectoryPasswordResetConfirm();
 	const {

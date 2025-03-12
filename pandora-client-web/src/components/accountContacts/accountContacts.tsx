@@ -1,9 +1,10 @@
 import { capitalize } from 'lodash-es';
 import { AccountId, IAccountContact, IAccountFriendStatus } from 'pandora-common';
 import React, { useCallback, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useLocation } from 'react-router';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
+import { useNavigatePandora } from '../../routing/navigate.ts';
 import { NotificationSource, useNotificationSuppressed } from '../../services/notificationHandler.ts';
 import { Button } from '../common/button/button.tsx';
 import { DivContainer, Row } from '../common/container/container.tsx';
@@ -16,7 +17,7 @@ import { AccountContactChangeHandleResult, useAccountContacts, useFriendStatus }
 import './accountContacts.scss';
 
 export function AccountContacts() {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 
 	useKeyDownEvent(React.useCallback(() => {
 		navigate('/');
@@ -212,7 +213,7 @@ function ShowFriends() {
 }
 
 export function useGoToDM(id: AccountId) {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	return useCallback(() => {
 		navigate(`/contacts/dm/${id}`);
 	}, [id, navigate]);
@@ -235,7 +236,7 @@ function FriendRow({
 }) {
 	const directory = useDirectoryConnector();
 	const confirm = useConfirmDialog();
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const location = useLocation();
 
 	const [unfriend, processing] = useAsyncEvent(async () => {

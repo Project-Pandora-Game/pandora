@@ -1,7 +1,6 @@
 import classNames from 'classnames';
 import { IsAuthorized } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
-import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import friendsIcon from '../../assets/icons/friends.svg';
 import managementIcon from '../../assets/icons/management.svg';
@@ -10,6 +9,7 @@ import settingsIcon from '../../assets/icons/setting.svg';
 import wikiIcon from '../../assets/icons/wiki.svg';
 import { useObservable, useObservableMultiple } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat.ts';
 import { NotificationSource, useNotification, type NotificationHeaderKeys } from '../../services/notificationHandler.ts';
@@ -59,7 +59,7 @@ function RightHeader({ onAnyClick }: {
 	onAnyClick?: () => void;
 }): ReactElement {
 	const currentAccount = useCurrentAccount();
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const loggedIn = currentAccount != null;
 
 	const isDeveloper = currentAccount?.roles !== undefined && IsAuthorized(currentAccount.roles, 'developer');
@@ -144,7 +144,7 @@ function NotificationButton({ icon, title, type, onClick }: {
 function FriendsHeaderButton({ onClickExtra }: {
 	onClickExtra?: () => void;
 }): ReactElement {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const directMessageManager = useService('directMessageManager');
 	const notifyDirectMessage = useNotification(NotificationSource.DIRECT_MESSAGE);
 	const unreadDirectMessageCount = useObservableMultiple(

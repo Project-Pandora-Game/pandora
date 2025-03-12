@@ -1,9 +1,9 @@
 import { AssertNever, IsEmail } from 'pandora-common';
 import { ReactElement, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { useDirectoryResendVerification } from '../../../networking/account_manager.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { Button } from '../../common/button/button.tsx';
 import { Form, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
 import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha.tsx';
@@ -13,7 +13,7 @@ export interface ResendVerificationFormData {
 }
 
 export function ResendVerificationForm(): ReactElement {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const resendVerification = useDirectoryResendVerification();
 	const [captchaToken, setCaptchaToken] = useState('');
 	const [captchaFailed, setCaptchaFailed] = useState(false);

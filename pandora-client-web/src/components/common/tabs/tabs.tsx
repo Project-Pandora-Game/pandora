@@ -1,8 +1,9 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import React, { forwardRef, ReactElement, ReactNode, useEffect, useImperativeHandle, useMemo, useState, type ForwardedRef } from 'react';
-import { matchPath, Navigate, resolvePath, Route, Routes, useLocation, useNavigate } from 'react-router';
+import { matchPath, Navigate, resolvePath, Route, Routes, useLocation } from 'react-router';
 import { ChildrenProps } from '../../../common/reactTypes.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useRoutingParentPath } from '../../../routing/routingUtils.ts';
 import { LocalErrorBoundary } from '../../error/localErrorBoundary.tsx';
 import { Column } from '../container/container.tsx';
@@ -185,7 +186,7 @@ export function UrlTabContainer({
 }): ReactElement {
 	const { pathnameBase } = useRoutingParentPath();
 	const { pathname } = useLocation();
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 
 	const defaultTabPath = useMemo(() => {
 		const defaultTab = children.find((c) => c && c.props.default);

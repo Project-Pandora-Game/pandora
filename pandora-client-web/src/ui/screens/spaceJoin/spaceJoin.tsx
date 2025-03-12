@@ -1,9 +1,10 @@
 import { GetLogger, SpaceId, SpaceIdSchema, SpaceInviteId, SpaceInviteIdSchema, type SpaceExtendedInfoResponse } from 'pandora-common';
 import React, { ReactElement } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router';
+import { useLocation, useParams } from 'react-router';
 import { DivContainer } from '../../../components/common/container/container.tsx';
 import { ExternalLink, UntrustedLink } from '../../../components/common/link/externalLink.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { SpaceDetails, useSpaceExtendedInfo } from '../spacesSearch/spacesSearch.tsx';
 import './spaceJoin.scss';
 
@@ -50,7 +51,7 @@ export function SpaceJoin(): ReactElement {
 
 function QuerySpaceInfo({ spaceId, invite }: { spaceId: SpaceId; invite?: SpaceInviteId; }): ReactElement {
 	const info = useSpaceExtendedInfo(spaceId, invite);
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 
 	if (info === undefined) {
 		return (

@@ -2,7 +2,6 @@ import { omit } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import { AppearanceAction, EvalItemPath, ItemId, ItemRoomDevice } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { ICharacter, useCharacterData, useCharacterDataOptional } from '../../../character/character.ts';
 import { ChildrenProps } from '../../../common/reactTypes.ts';
@@ -18,6 +17,7 @@ import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe
 import { ActionWarningContent } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { PointLike } from '../../../graphics/graphicsCharacter.tsx';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext.tsx';
 import { useIsRoomConstructionModeEnabled } from '../roomDevice.tsx';
 
@@ -291,7 +291,7 @@ function DeviceContextMenuCurrent({ device, position, onClose }: {
 	const player = usePlayer();
 	const gameState = useGameStateOptional();
 	const [menu, setMenu] = useState<'main'>('main');
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 
 	const onCloseActual = useCallback(() => {
 		setMenu('main');

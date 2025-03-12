@@ -3,7 +3,6 @@ import { SplitContainerPath } from 'pandora-common';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed.js';
 import { useCallback, useEffect, useState, type ReactElement } from 'react';
-import { useNavigate } from 'react-router';
 import deleteIcon from '../../../assets/icons/delete.svg';
 import pinOutlineIcon from '../../../assets/icons/pin-outline.svg';
 import pinSolidIcon from '../../../assets/icons/pin-solid.svg';
@@ -22,6 +21,7 @@ import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComp
 import { WardrobeExternalContextProvider } from '../../../components/wardrobe/wardrobeContext.tsx';
 import { useWardrobeTargetItem } from '../../../components/wardrobe/wardrobeUtils.ts';
 import { useObservable } from '../../../observable.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import './roomItemDialog.scss';
 import { RoomItemDialogs, RoomItemDialogsShouldShow, type RoomItemDialogDefinition } from './roomItemDialogList.ts';
 
@@ -177,7 +177,7 @@ function RoomItemDialogContentSection({ name, open, onHeaderClick, children }: C
 }
 
 function RoomItemDialogContentInfo({ item, path, target, close }: RoomItemDialogContentProps): ReactElement {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 
 	return (
 		<>

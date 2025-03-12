@@ -1,9 +1,10 @@
 import { cloneDeep } from 'lodash-es';
 import { nanoid } from 'nanoid';
+import type { AssetManager } from '../../assets/assetManager.ts';
 import { GetRestrictionOverrideConfig } from '../../assets/state/characterStateTypes.ts';
 import type { AssetFrameworkGlobalState } from '../../assets/state/globalState.ts';
 import { LIMIT_CHARACTER_MODIFIER_INSTANCE_COUNT } from '../../inputLimits.ts';
-import { Logger } from '../../logging.ts';
+import { GetLogger, Logger } from '../../logging.ts';
 import type { CurrentSpaceInfo } from '../../space/index.ts';
 import { AssertNever, AssertNotNullable } from '../../utility/misc.ts';
 import { ArrayIncludesGuard } from '../../validation.ts';
@@ -18,17 +19,19 @@ import { GameLogicModifierTypeServer } from './characterModifierType.ts';
 import { CHARACTER_MODIFIER_TYPE_DEFINITION, CHARACTER_MODIFIER_TYPES, type CharacterModifierType } from './modifierTypes/_index.ts';
 
 export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsystem implements IPermissionProvider<GameLogicPermissionServer> {
+	private _assetManager: AssetManager;
 	public readonly character: GameLogicCharacter;
 
 	private readonly modifierTypes: ReadonlyMap<CharacterModifierType, GameLogicModifierTypeServer>;
-	private readonly _modifierInstances: GameLogicModifierInstanceServer[];
+	private _modifierInstances: GameLogicModifierInstanceServer[];
 
-	public get modiferInstances(): readonly GameLogicModifierInstanceServer[] {
+	public get modifierInstances(): readonly GameLogicModifierInstanceServer[] {
 		return this._modifierInstances;
 	}
 
-	constructor(character: GameLogicCharacter, data: CharacterModifierSystemData, logger: Logger) {
+	constructor(character: GameLogicCharacter, data: CharacterModifierSystemData, assetManager: AssetManager, logger: Logger) {
 		super();
+		this._assetManager = assetManager;
 		this.character = character;
 		// Load data
 		const modifierTypes = new Map<CharacterModifierType, GameLogicModifierTypeServer>();
@@ -47,8 +50,9 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 		// Load instances
 		this._modifierInstances = data.modifiers.map((m) => new GameLogicModifierInstanceServer(
 			m,
-			logger.prefixMessages(`Load modifier '${m.type}':`)),
-		);
+			assetManager,
+			logger.prefixMessages(`Load modifier '${m.type}':`),
+		));
 
 		// Link up events
 		for (const type of this.modifierTypes.values()) {
@@ -56,6 +60,24 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 				this.emit('dataChanged', undefined);
 			});
 		}
+	}
+
+	public reloadAssetManager(manager: AssetManager) {
+		const logger = GetLogger('CharacterModifiersSubsystemServer');
+
+		this._assetManager = manager;
+
+		// Re-create all modifier instances with new manager
+		this._modifierInstances = this._modifierInstances
+			.map((m) => m.getData())
+			.map((m) => new GameLogicModifierInstanceServer(
+				m,
+				manager,
+				logger.prefixMessages(`Asset manager reload for modifier '${m.type}':`),
+			));
+
+		this.emit('modifiersChanged', undefined);
+		this.emit('dataChanged', undefined);
 	}
 
 	/**
@@ -87,7 +109,7 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 			lockExceptions: [],
 		};
 
-		this._modifierInstances.push(new GameLogicModifierInstanceServer(instanceData));
+		this._modifierInstances.push(new GameLogicModifierInstanceServer(instanceData, this._assetManager));
 
 		this.emit('modifiersChanged', undefined);
 		this.emit('dataChanged', undefined);
@@ -170,7 +192,7 @@ export class CharacterModifiersSubsystemServer extends CharacterModifiersSubsyst
 		let result: GameLogicModifierLockActionResult;
 		switch (action.action) {
 			case 'addLock':
-				result = instance.addLock(action.lockType);
+				result = instance.addLock(action.lockAsset);
 				break;
 
 			case 'removeLock':

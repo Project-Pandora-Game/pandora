@@ -5,7 +5,6 @@ import {
 	Assert,
 	AssertNever,
 	BadMessageError,
-	CHARACTER_MODIFIER_LOCK_DEFINITIONS,
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
 	CharacterId,
 	CharacterModifierActionCheckAdd,
@@ -590,7 +589,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const checkResult = client.character.checkAction((ctx) => CharacterModifierActionCheckReorder(
 			ctx,
 			target,
-			targetCharacter.gameLogicCharacter.characterModifiers.modiferInstances,
+			targetCharacter.gameLogicCharacter.characterModifiers.modifierInstances,
 			modifier,
 			shift,
 		));
@@ -849,20 +848,25 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				const name = modifierInstance.name || CHARACTER_MODIFIER_TYPE_DEFINITION[modifierInstance.type].visibleName;
 
 				switch (action.action) {
-					case 'addLock':
+					case 'addLock': {
+						const lockAsset = player.appearance.getAssetManager().getAssetById(action.lockAsset);
 						space.handleActionMessage({
 							id: 'characterModifierLockAdd',
 							character,
 							sendTo: [target],
 							dictionary: {
 								'MODIFIER_NAME': name,
-								'LOCK_TYPE': CHARACTER_MODIFIER_LOCK_DEFINITIONS[action.lockType].name,
+								'LOCK_TYPE': (
+									lockAsset?.definition.chat?.chatDescriptor ||
+									lockAsset?.definition.name
+								) ?? `[UNKNOWN ASSET '${action.lockAsset}']`,
 							},
 						});
+					}
 						break;
 					case 'removeLock':
 						space.handleActionMessage({
-							id: 'characterModifierLockAdd',
+							id: 'characterModifierLockRemove',
 							character,
 							sendTo: [target],
 							dictionary: {

@@ -2,12 +2,10 @@ import classNames from 'classnames';
 import {
 	AppearanceActionProcessingContext,
 	AssertNever,
-	CHARACTER_MODIFIER_LOCK_DEFINITIONS,
 	CharacterModifierActionCheckLockModify,
-	CharacterModifierLockType,
 	GetLogger,
-	KnownObject,
 	type AppearanceActionData,
+	type Asset,
 	type CharacterModifierLockAction,
 	type GameLogicModifierInstanceClient,
 	type IClientShardNormalResult,
@@ -16,6 +14,7 @@ import {
 } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
+import { useAssetManager } from '../../../../assets/assetManager.tsx';
 import deleteIcon from '../../../../assets/icons/delete.svg';
 import closedLock from '../../../../assets/icons/lock_closed.svg';
 import emptyLock from '../../../../assets/icons/lock_empty.svg';
@@ -73,7 +72,7 @@ export function WardrobeCharacterModifierLock({ character, instance }: WardrobeC
 					<img width='21' height='33' src={ openLock } />
 					<Row padding='medium' alignY='center'>
 						<span>
-							Lock: { CHARACTER_MODIFIER_LOCK_DEFINITIONS[lock.type].name } (unlocked)
+							Lock: { lock.asset.definition.name } (unlocked)
 						</span>
 					</Row>
 				</Row>
@@ -94,7 +93,7 @@ export function WardrobeCharacterModifierLock({ character, instance }: WardrobeC
 				<img width='21' height='33' src={ closedLock } />
 				<Row padding='medium' alignY='center'>
 					<span>
-						Locked with: { CHARACTER_MODIFIER_LOCK_DEFINITIONS[lock.type].name }
+						Locked with: { lock.asset.definition.name }
 					</span>
 				</Row>
 			</Row>
@@ -134,20 +133,25 @@ function WardrobeCharacterModifierLockUnlocked({ character, instance, lockLogic 
 }
 
 function WardrobeCharacterModifierLockSelectionDialog({ character, instance, close }: WardrobeCharacterModifierLockProps & { close: () => void; }): ReactElement {
+	const assetList = useAssetManager().assetList;
+
 	return (
 		<ModalDialog>
 			<Column>
 				<h2>Select lock</h2>
 				{
-					KnownObject.keys(CHARACTER_MODIFIER_LOCK_DEFINITIONS).map((type) => (
-						<WardrobeCharacterModifierLockAddButton
-							key={ type }
-							lockType={ type }
-							character={ character }
-							instance={ instance }
-							close={ close }
-						/>
-					))
+					assetList
+						.filter((a) => a.isType('lock'))
+						.filter((a) => a.canBeSpawned())
+						.map((a) => (
+							<WardrobeCharacterModifierLockAddButton
+								key={ a.id }
+								lockAsset={ a }
+								character={ character }
+								instance={ instance }
+								close={ close }
+							/>
+						))
 				}
 				<hr className='fill-x' />
 				<Button
@@ -162,11 +166,11 @@ function WardrobeCharacterModifierLockSelectionDialog({ character, instance, clo
 	);
 }
 
-function WardrobeCharacterModifierLockAddButton({ character, instance, lockType, close }: WardrobeCharacterModifierLockProps & { close: () => void; lockType: CharacterModifierLockType; }): ReactElement {
+function WardrobeCharacterModifierLockAddButton({ character, instance, lockAsset, close }: WardrobeCharacterModifierLockProps & { close: () => void; lockAsset: Asset<'lock'>; }): ReactElement {
 	const action = useMemo((): CharacterModifierLockAction => ({
 		action: 'addLock',
-		lockType,
-	}), [lockType]);
+		lockAsset: lockAsset.id,
+	}), [lockAsset]);
 
 	const { actions, globalState } = useWardrobeActionContext();
 	const shard = useShardConnector();
@@ -235,7 +239,7 @@ function WardrobeCharacterModifierLockAddButton({ character, instance, lockType,
 			onClick={ onClick }
 			disabled={ processing || processingPermissionRequest }
 		>
-			{ CHARACTER_MODIFIER_LOCK_DEFINITIONS[lockType].name }
+			{ lockAsset.definition.name }
 		</WardrobeActionButtonElement>
 	);
 }

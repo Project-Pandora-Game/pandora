@@ -1,12 +1,13 @@
 import { cloneDeep } from 'lodash-es';
 import { z } from 'zod';
+import { AssetIdSchema } from '../../assets/base.ts';
 import { CharacterIdSchema } from '../../character/characterTypes.ts';
 import { LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT } from '../../inputLimits.ts';
 import { ZodArrayWithInvalidDrop } from '../../validation.ts';
 import { LockActionSchema, type LockActionLockProblem, type LockActionShowPasswordProblem, type LockActionUnlockProblem } from '../locks/lockLogic.ts';
 import { PermissionConfigSchema } from '../permissions/index.ts';
 import { CharacterModifierConfigurationSchema, CharacterModifierIdSchema, CharacterModifierNameSchema, CharacterModifierTypeGenericIdSchema } from './characterModifierBaseData.ts';
-import { CharacterModifierLockSchema, CharacterModifierLockTypeSchema } from './characterModifierLocks.ts';
+import { CharacterModifierLockSchema } from './characterModifierLocks.ts';
 import { CharacterModifierConditionChainSchema } from './conditions/characterModifierConditionChain.ts';
 import { CharacterModifierTypeSchema } from './modifierTypes/_index.ts';
 
@@ -27,7 +28,7 @@ export const CharacterModifierInstanceDataSchema = z.object({
 	config: CharacterModifierConfigurationSchema,
 	conditions: CharacterModifierConditionChainSchema.catch(() => []),
 	/** Lock on the modifier, if any */
-	lock: CharacterModifierLockSchema.optional(),
+	lock: CharacterModifierLockSchema.optional().catch(undefined),
 	/** List of characters that can simply ignore any locked lock on it */
 	lockExceptions: CharacterIdSchema.array().max(LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT).catch(() => []),
 });
@@ -74,7 +75,7 @@ export type CharacterModifierConfigurationChange = z.infer<typeof CharacterModif
 export const CharacterModifierLockActionSchema = z.discriminatedUnion('action', [
 	z.object({
 		action: z.literal('addLock'),
-		lockType: CharacterModifierLockTypeSchema,
+		lockAsset: AssetIdSchema,
 	}),
 	z.object({
 		action: z.literal('removeLock'),

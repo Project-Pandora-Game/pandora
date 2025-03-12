@@ -184,6 +184,8 @@ export class LockLogic {
 									reason: 'noStoredPassword',
 								};
 							}
+							// Hidden password should be validated on both load and when set
+							Assert(LockLogic.validatePassword(this.lockSetup, this.lockData.hidden.password));
 							hidden = {
 								side: 'server',
 								password: this.lockData.hidden.password,
@@ -335,6 +337,7 @@ export class LockLogic {
 					}
 					break;
 				case 'server':
+					// Remove password if it got invalid
 					if (lockData.hidden.password != null && !LockLogic.validatePassword(lockSetup, lockData.hidden.password, logger)) {
 						delete lockData.hidden.password;
 					}
@@ -343,7 +346,7 @@ export class LockLogic {
 						delete lockData.locked;
 					}
 					if (lockData.hidden.password == null && lockData.hidden.passwordSetBy != null) {
-						logger?.warning(`Lock has password set by but no password`);
+						logger?.warning(`Lock has passwordSetBy but no password`);
 						delete lockData.hidden.passwordSetBy;
 					}
 					break;

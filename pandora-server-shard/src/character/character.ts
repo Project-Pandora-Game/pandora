@@ -262,7 +262,12 @@ export class Character {
 	}
 
 	public reloadAssetManager(manager: AssetManager) {
+		// Spaces need to be updated first
+		// By this point we can assume all public spaces were reloaded
 		this._personalSpace.reloadAssetManager(manager);
+
+		// Reload character logic after space is reloaded - data from character logic is asynchronously presented to clients anyway
+		this.gameLogicCharacter.reloadAssetManager(manager);
 	}
 
 	public update(data: IShardCharacterDefinition) {

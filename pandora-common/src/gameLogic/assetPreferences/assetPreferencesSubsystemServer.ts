@@ -71,6 +71,16 @@ export class AssetPreferencesSubsystemServer extends AssetPreferencesSubsystem i
 		return data;
 	}
 
+	public reloadAssetManager(manager: AssetManager) {
+		// Cleanup preferences data based on mew manager
+		this._publicPreferences = CloneDeepMutable(this._publicPreferences);
+		const changed = CleanupAssetPreferences(manager, this._publicPreferences);
+		freeze(this._publicPreferences, true);
+		if (changed) {
+			this.emit('dataChanged', undefined);
+		}
+	}
+
 	public override getPreferencePermission(preference: AssetPreferenceType): GameLogicPermissionServer | null {
 		return this._permissions.get(preference) ?? null;
 	}

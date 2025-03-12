@@ -95,20 +95,13 @@ export class ItemLock extends ItemBase<'lock'> {
 	}
 
 	public lockAction(context: AppearanceModuleActionContext, action: LockAction): ItemLock | null {
-		if (action.action === 'showPassword') {
-			// 'blockSelf' has no meaning for showPassword
-			return this.showPassword(context);
-		}
-
-		if (action.password != null && !LockLogic.validatePassword(this.lockLogic.lockSetup, action.password)) {
-			return null;
-		}
-
 		switch (action.action) {
 			case 'lock':
 				return this.lock(context, action);
 			case 'unlock':
 				return this.unlock(context, action);
+			case 'showPassword':
+				return this.showPassword(context);
 		}
 		AssertNever(action);
 	}

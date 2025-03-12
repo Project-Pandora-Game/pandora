@@ -18,6 +18,7 @@ export default {
 		'json',
 		'text-summary',
 	],
+	coverageProvider: 'v8',
 	errorOnDeprecated: true,
 	watchPathIgnorePatterns: ['globalConfig'],
 	setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],

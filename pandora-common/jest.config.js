@@ -14,6 +14,7 @@ export default {
 		'json',
 		'text-summary',
 	],
+	coverageProvider: 'v8',
 	errorOnDeprecated: true,
 	setupFilesAfterEnv: ['<rootDir>/test/setup.ts'],
 	extensionsToTreatAsEsm: ['.ts', '.tsx', '.mts'],

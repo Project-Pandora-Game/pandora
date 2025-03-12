@@ -32,8 +32,6 @@ const Wiki = lazy(() => import('../components/wiki/wiki.tsx'));
 export function PandoraRoutes(): ReactElement {
 	return (
 		<Routes>
-			<Route path='*' element={ <DefaultFallback /> } />
-
 			{ authPagePathsAndComponents.map(([path, component]) => (
 				<Route key={ path } path={ path } element={ <AuthPageFallback component={ component } /> } />
 			)) }
@@ -63,6 +61,8 @@ export function PandoraRoutes(): ReactElement {
 					<Wiki />
 				</Suspense>
 			} />
+
+			<Route path='*' element={ <DefaultFallback /> } />
 		</Routes>
 	);
 }

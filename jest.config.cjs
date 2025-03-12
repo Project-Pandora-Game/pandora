@@ -33,6 +33,7 @@ function loadProjectConfig(dir) {
 
 	delete resultConfig.collectCoverageFrom;
 	delete resultConfig.coverageDirectory;
+	delete resultConfig.coverageProvider;
 
 	return resultConfig;
 }

@@ -1,8 +1,9 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import React, { forwardRef, ReactElement, ReactNode, useEffect, useImperativeHandle, useMemo, useState, type ForwardedRef } from 'react';
-import { matchPath, Navigate, resolvePath, Route, Routes, useLocation, useNavigate, useResolvedPath } from 'react-router';
+import { matchPath, Navigate, resolvePath, Route, Routes, useLocation, useNavigate } from 'react-router';
 import { ChildrenProps } from '../../../common/reactTypes.ts';
+import { useRoutingParentPath } from '../../../routing/routingUtils.ts';
 import { LocalErrorBoundary } from '../../error/localErrorBoundary.tsx';
 import { Column } from '../container/container.tsx';
 import './tabs.scss';
@@ -182,27 +183,34 @@ export function UrlTabContainer({
 	 */
 	noImplicitDefaultTab?: boolean;
 }): ReactElement {
-	const routerPath = useResolvedPath('').pathname;
+	const { pathnameBase } = useRoutingParentPath();
 	const { pathname } = useLocation();
 	const navigate = useNavigate();
 
 	const defaultTabPath = useMemo(() => {
 		const defaultTab = children.find((c) => c && c.props.default);
-		return (defaultTab ?? (noImplicitDefaultTab ? undefined : children.find((c) => !!c)))?.props.urlChunk ?? '';
+		return (defaultTab ?? (noImplicitDefaultTab ? undefined : children.find((c) => !!c)))?.props.urlChunk;
 	}, [children, noImplicitDefaultTab]);
 
-	const tabs = useMemo<(TabConfig | undefined)[]>(() => children.map((c): TabConfig | undefined => (c == null ? undefined : {
-		name: c.props.name,
-		active: (c.props.urlChunk != null) ? matchPath({ path: resolvePath(c.props.urlChunk, routerPath).pathname + (c.props.urlChunk ? '/*' : '') }, pathname) != null : false,
-		onClick: c.props.onClick ?? (() => (c.props.urlChunk != null) ? navigate(c.props.urlChunk) : undefined),
-		tabClassName: c.props.tabClassName,
-	})), [children, navigate, routerPath, pathname]);
+	const tabs = useMemo<(TabConfig | undefined)[]>(() => children.map((c): TabConfig | undefined => {
+		if (c == null)
+			return undefined;
+
+		const path = c.props.urlChunk != null ? resolvePath(c.props.urlChunk, pathnameBase).pathname : null;
+
+		return {
+			name: c.props.name,
+			active: (path != null) ? matchPath({ path: path + (c.props.urlChunk ? '/*' : '') }, pathname) != null : false,
+			onClick: c.props.onClick ?? (() => (path != null) ? navigate(path) : undefined),
+			tabClassName: c.props.tabClassName,
+		};
+	}), [children, navigate, pathnameBase, pathname]);
 
 	return (
 		<Tabulation tabs={ tabs } className={ className } collapsable={ collapsable } tabsPosition={ tabsPosition } allowWrap={ allowWrap }>
 			<Routes>
 				{
-					children.map((tab, index) => (tab && tab.props.urlChunk != null && (
+					children.map((tab, index) => (tab && tab.props.urlChunk != null ? (
 						tab.props.urlChunk ? (
 							<Route
 								key={ index }
@@ -217,20 +225,20 @@ export function UrlTabContainer({
 							<Route
 								key={ index }
 								element={ (
-									<React.Fragment key='index'>
+									<React.Fragment key='!index'>
 										{ tab }
 									</React.Fragment>
 								) }
 								index
 							/>
 						)
-					)))
+					) : null))
 				}
 				{
-					defaultTabPath ? (
+					defaultTabPath != null ? (
 						<Route
 							path='*'
-							element={ <Navigate to={ defaultTabPath } replace /> }
+							element={ <Navigate to={ resolvePath(defaultTabPath, pathnameBase) } replace /> }
 						/>
 					) : null
 				}

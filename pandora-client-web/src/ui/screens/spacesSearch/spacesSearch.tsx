@@ -611,7 +611,7 @@ function GuardedJoinButtonWithLeave({ spaceId, inviteId, redirectBeforeLeave }: 
 	if (redirectBeforeLeave && !pathname.startsWith('/space/join')) {
 		return (
 			<Button onClick={ () => {
-				navigate(`/space/join/${spaceId.split('/')[1]}${inviteId ? `?invite=${inviteId}` : ''}`);
+				navigate(`/space/join/${encodeURIComponent(spaceId)}${inviteId ? `?invite=${encodeURIComponent(inviteId)}` : ''}`);
 			} }>
 				Go To Invite URL
 			</Button>

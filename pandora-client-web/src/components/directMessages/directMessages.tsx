@@ -6,6 +6,7 @@ import { useAsyncEvent } from '../../common/useEvent.ts';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { KeyExchange } from '../../crypto/keyExchange.ts';
 import { useObservable } from '../../observable.ts';
+import { useRoutingParentPath } from '../../routing/routingUtils.ts';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat.ts';
 import type { DirectMessageCryptoState } from '../../services/accountLogic/directMessages/directMessageManager.ts';
@@ -19,11 +20,13 @@ import { DirectMessage } from '../directMessage/directMessage.tsx';
 import './directMessages.scss';
 
 export function DirectMessages(): React.ReactElement {
+	const { pathnameBase } = useRoutingParentPath();
+
 	return (
 		<Routes>
 			<Route index element={ <DirectMessagesInner /> } />
 			<Route path=':accountId' element={ <DirectMessagesInner /> } />
-			<Route path='*' element={ <Navigate to='' replace /> } />
+			<Route path='*' element={ <Navigate to={ pathnameBase } replace /> } />
 		</Routes>
 	);
 }

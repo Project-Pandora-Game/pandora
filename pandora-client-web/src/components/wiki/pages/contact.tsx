@@ -10,8 +10,8 @@ export function WikiContact(): ReactElement {
 			</p>
 			<p>
 				Using our Discord server:<br />
-				<ExternalLink href='https://discord.gg/EnaPvuQf8d'>
-					<img src='https://discord.com/api/guilds/872284471611760720/widget.png?style=banner2' alt='Discord invite' />
+				<ExternalLink href='https://discord.gg/EnaPvuQf8d' sendReferrer>
+					<img src='https://discord.com/api/guilds/872284471611760720/widget.png?style=banner2' alt='Discord invite' crossOrigin='anonymous' />
 				</ExternalLink>
 			</p>
 

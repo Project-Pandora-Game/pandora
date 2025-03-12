@@ -3,7 +3,7 @@ import { ReactElement } from 'react';
 import { useParams } from 'react-router';
 import { Column } from '../common/container/container.tsx';
 import { BackLink, useNavigateBack } from '../common/link/back.tsx';
-import { Tab, TabContainer } from '../common/tabs/tabs.tsx';
+import { Tab, TabContainer, UrlTab, UrlTabContainer } from '../common/tabs/tabs.tsx';
 import { useSpaceCharacters } from '../gameContext/gameStateContextProvider.tsx';
 import { AccountProfile } from './accountProfile.tsx';
 import { CharacterProfile } from './characterProfile.tsx';
@@ -30,15 +30,15 @@ function CharacterProfileScreen({ characterId }: { characterId: CharacterId; }):
 
 	return (
 		<div className='profileScreen'>
-			<TabContainer className='flex-1'>
-				<Tab name='Character'>
+			<UrlTabContainer className='flex-1'>
+				<UrlTab name='Character' urlChunk=''>
 					<CharacterProfile characterId={ character.id } />
-				</Tab>
-				<Tab name='Account'>
+				</UrlTab>
+				<UrlTab name='Account' urlChunk='account'>
 					<AccountProfile accountId={ character.data.accountId } />
-				</Tab>
-				<Tab name='◄ Back' tabClassName='slim' onClick={ navigateBack } />
-			</TabContainer>
+				</UrlTab>
+				<UrlTab name='◄ Back' tabClassName='slim' onClick={ navigateBack } />
+			</UrlTabContainer>
 		</div>
 	);
 }

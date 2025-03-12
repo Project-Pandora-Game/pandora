@@ -1,6 +1,6 @@
-import { SpaceId, SpaceIdSchema, SpaceInviteId, SpaceInviteIdSchema, type SpaceExtendedInfoResponse } from 'pandora-common';
+import { GetLogger, SpaceId, SpaceIdSchema, SpaceInviteId, SpaceInviteIdSchema, type SpaceExtendedInfoResponse } from 'pandora-common';
 import React, { ReactElement } from 'react';
-import { useLocation, useNavigate } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 import { DivContainer } from '../../../components/common/container/container.tsx';
 import { ExternalLink, UntrustedLink } from '../../../components/common/link/externalLink.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
@@ -8,16 +8,30 @@ import { SpaceDetails, useSpaceExtendedInfo } from '../spacesSearch/spacesSearch
 import './spaceJoin.scss';
 
 export function SpaceJoin(): ReactElement {
-	const { pathname, search } = useLocation();
+	const { spaceId: spaceIdParam } = useParams();
+	const { search } = useLocation();
+
 	const { spaceId, invite } = React.useMemo(() => {
-		const spaceResult = SpaceIdSchema.safeParse(`s/${decodeURIComponent(pathname.split('/').pop() ?? '')}`);
+		let tmpSpaceId = spaceIdParam;
+		if (tmpSpaceId && !tmpSpaceId?.startsWith('s/')) {
+			tmpSpaceId = 's/' + tmpSpaceId;
+		}
+		try {
+			if (tmpSpaceId) {
+				tmpSpaceId = decodeURIComponent(tmpSpaceId);
+			}
+		} catch (error) {
+			GetLogger('SpaceJoin').alert('Error decoding space invite component:', error);
+			tmpSpaceId = undefined;
+		}
+		const spaceResult = SpaceIdSchema.safeParse(tmpSpaceId);
 		const inviteResult = SpaceInviteIdSchema.safeParse(new URLSearchParams(search).get('invite'));
 
 		return {
 			spaceId: spaceResult.success ? spaceResult.data : undefined,
 			invite: inviteResult.success ? inviteResult.data : undefined,
 		};
-	}, [pathname, search]);
+	}, [spaceIdParam, search]);
 
 	if (!spaceId) {
 		return (
@@ -60,10 +74,10 @@ const INVALID_INVITE_MESSAGES: Record<Exclude<SpaceExtendedInfoResponse['result'
 	noCharacter: 'You need to have a character selected to view invite details',
 };
 
-export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: string; invite?: string; }): ReactElement {
+export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: SpaceId; invite?: string; }): ReactElement {
 	const inviteResult = SpaceInviteIdSchema.safeParse(invite);
 	const [open, setOpen] = React.useState(false);
-	const info = useSpaceExtendedInfo(`s/${spaceId}`, inviteResult.success ? inviteResult.data : undefined);
+	const info = useSpaceExtendedInfo(spaceId, inviteResult.success ? inviteResult.data : undefined);
 
 	if (info == null) {
 		return (
@@ -91,14 +105,25 @@ export function SpaceInviteEmbed({ spaceId, invite }: { spaceId: string; invite?
 	);
 }
 
+const INVITE_PREFIX = '/space/join/';
 export function RenderedLink({ url, index }: { url: URL; index: number; }): ReactElement {
 	switch (url.hostname) {
 		case 'project-pandora.com':
 		case 'www.project-pandora.com':
-			if (url.pathname.startsWith('/space/join/')) {
+			if (url.pathname.startsWith(INVITE_PREFIX)) {
 				const invite = url.searchParams.get('invite') ?? undefined;
-				const spaceId = url.pathname.split('/').pop();
-				if (!spaceId)
+				let spaceId: string | undefined;
+				try {
+					spaceId = decodeURIComponent(url.pathname.slice(INVITE_PREFIX.length));
+				} catch (_error) {
+					// Ignore decoding errors silently
+					spaceId = undefined;
+				}
+				if (spaceId && !spaceId.startsWith('s/')) {
+					spaceId = 's/' + spaceId;
+				}
+				const parsedSpaceId = SpaceIdSchema.safeParse(spaceId);
+				if (!parsedSpaceId.success)
 					break;
 
 				return (
@@ -106,7 +131,7 @@ export function RenderedLink({ url, index }: { url: URL; index: number; }): Reac
 						<ExternalLink href={ url.href }>
 							{ url.href }
 						</ExternalLink>
-						<SpaceInviteEmbed key={ index } spaceId={ spaceId } invite={ invite } />
+						<SpaceInviteEmbed key={ index } spaceId={ parsedSpaceId.data } invite={ invite } />
 					</>
 				);
 			}

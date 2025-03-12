@@ -14,6 +14,7 @@ export default {
 		'json',
 		'text-summary',
 	],
+	coverageProvider: 'v8',
 	errorOnDeprecated: true,
 	moduleNameMapper: {
 		'\\.(png|jpe?g|gif|svg|eot|ttf|woff2?|mp3|wav)$': '<rootDir>/test/stubs/resourceStub.ts',

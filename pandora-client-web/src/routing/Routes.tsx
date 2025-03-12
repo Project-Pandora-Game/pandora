@@ -32,8 +32,6 @@ const Wiki = lazy(() => import('../components/wiki/wiki.tsx'));
 export function PandoraRoutes(): ReactElement {
 	return (
 		<Routes>
-			<Route path='*' element={ <DefaultFallback /> } />
-
 			{ authPagePathsAndComponents.map(([path, component]) => (
 				<Route key={ path } path={ path } element={ <AuthPageFallback component={ component } /> } />
 			)) }
@@ -45,11 +43,11 @@ export function PandoraRoutes(): ReactElement {
 
 			<Route path='/contacts/*' element={ <RequiresLogin element={ AccountContacts } /> } />
 			<Route path='/profiles/account/:accountId' element={ <RequiresLogin element={ AccountProfileScreenRouter } /> } />
-			<Route path='/profiles/character/:characterId' element={ <RequiresCharacter element={ CharacterProfileScreenRouter } /> } />
+			<Route path='/profiles/character/:characterId/*' element={ <RequiresCharacter element={ CharacterProfileScreenRouter } /> } />
 
 			<Route path='/room' element={ <RequiresCharacter element={ RoomScreen } /> } />
 			<Route path='/space/configuration' element={ <RequiresCharacter element={ SpaceConfiguration } /> } />
-			<Route path='/space/join/*' element={ <RequiresCharacter element={ SpaceJoin } /> } />
+			<Route path='/space/join/:spaceId' element={ <RequiresCharacter element={ SpaceJoin } /> } />
 
 			<Route path='/spaces/search' element={ <RequiresCharacter element={ SpacesSearch } /> } />
 			<Route path='/spaces/create' element={ <RequiresCharacter element={ SpaceCreate } /> } />
@@ -63,6 +61,8 @@ export function PandoraRoutes(): ReactElement {
 					<Wiki />
 				</Suspense>
 			} />
+
+			<Route path='*' element={ <DefaultFallback /> } />
 		</Routes>
 	);
 }

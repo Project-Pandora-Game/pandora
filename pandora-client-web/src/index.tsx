@@ -12,7 +12,6 @@ import { NODE_ENV, USER_DEBUG } from './config/Environment.ts';
 import { ConfigLogLevel, LoadSearchArgs } from './config/searchArgs.ts';
 import { ConfigurePixiSettings } from './graphics/pixiSettings.ts';
 import './index.scss';
-import { ROUTER_FUTURE_CONFIG } from './routing/config.ts';
 import { PandoraRoutes } from './routing/Routes.tsx';
 import { GenerateClientUsermodeServices } from './services/clientServices.ts';
 import './styles/fonts.scss';
@@ -47,7 +46,7 @@ async function Start(): Promise<void> {
 		<React.StrictMode>
 			<Dialogs location='global' />
 			<EulaGate>
-				<BrowserRouter future={ ROUTER_FUTURE_CONFIG }>
+				<BrowserRouter>
 					<GameContextProvider serviceManager={ serviceManager }>
 						<Header />
 						<div className='main-container'>

@@ -7,6 +7,7 @@ import { MemoryRouter, useLocation } from 'react-router-dom';
 import { ChildrenProps } from '../src/common/reactTypes.ts';
 import { DebugContext, debugContext, DebugData } from '../src/components/error/debugContextProvider.tsx';
 import { DirectoryConnectorServiceProvider } from '../src/networking/directoryConnector.ts';
+import { ROUTER_FUTURE_CONFIG } from '../src/routing/config.ts';
 import { GenerateClientUsermodeServices, type ClientServices } from '../src/services/clientServices.ts';
 import { ServiceManagerContextProvider } from '../src/services/serviceProvider.tsx';
 import { MockDebugData } from './mocks/error/errorMocks.ts';
@@ -98,7 +99,7 @@ export interface TestRouterProps extends LocationTrackerProps, ChildrenProps {
 
 export function TestRouter({ children, initialEntries, onPathnameUpdate }: TestRouterProps): ReactElement {
 	return (
-		<MemoryRouter initialEntries={ initialEntries }>
+		<MemoryRouter initialEntries={ initialEntries } future={ ROUTER_FUTURE_CONFIG }>
 			{ children }
 			<LocationTracker onPathnameUpdate={ onPathnameUpdate } />
 		</MemoryRouter>

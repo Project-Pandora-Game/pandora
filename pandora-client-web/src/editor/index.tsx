@@ -13,6 +13,7 @@ import { LoadSearchArgs } from '../config/searchArgs.ts';
 import { ConfigurePixiSettings } from '../graphics/pixiSettings.ts';
 import '../index.scss';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast.ts';
+import { ROUTER_FUTURE_CONFIG } from '../routing/config.ts';
 import { ScreenResolutionSerice } from '../services/screenResolution/screenResolution.ts';
 import '../styles/fonts.scss';
 import '../styles/globalUtils.scss';
@@ -53,7 +54,7 @@ async function Start(): Promise<void> {
 	createRoot(document.querySelector('#editor-root') as HTMLElement).render(
 		<React.StrictMode>
 			<EulaGate>
-				<BrowserRouter basename='/editor'>
+				<BrowserRouter basename='/editor' future={ ROUTER_FUTURE_CONFIG }>
 					<EditorContextProvider serviceManager={ serviceManager }>
 						<ToastContainer
 							theme='dark'

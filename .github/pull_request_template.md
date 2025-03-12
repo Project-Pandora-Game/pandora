@@ -36,18 +36,16 @@ This is, however, much less important than the "what", as that is more easily se
 ## Changelog
 
 <!--
-Write the name that you want to be used in the changelog (single line)
--->
-Authored by: Clare & Claudia
+Write the name that you want to be used in the changelog (single line) and the changelog itself, following the examples below.
 
-<!--
-Write a changelog following the examples below.
 The changelog should be aimed at players - it shouldn't contain technical details and it should be concise.
 Use past tense. For more complex changes you can write several points or include links to where interested people can find more details.
-Leave the changelog wrapped in a codeblock.
+Leave the changelog wrapped in a codeblock, but remove sections you didn't use at all.
 
 If the PR doesn't change anything users or asset developers can notice, it is fine to remove this section altogether.
 -->
+
+Authored by: Clare & Claudia
 
 ```md
 Platform changes:

@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { cloneDeep } from 'lodash-es';
-import type { AssetFrameworkGlobalState } from '../../assets/index.ts';
+import type { Asset, AssetFrameworkGlobalState, AssetId, AssetManager } from '../../assets/index.ts';
 import type { CharacterId } from '../../character/index.ts';
 import type { Logger } from '../../logging.ts';
 import type { CurrentSpaceInfo } from '../../space/index.ts';
@@ -10,12 +10,11 @@ import type { GameLogicCharacter } from '../character/character.ts';
 import { LockLogic, type LockAction, type LockActionContext } from '../locks/index.ts';
 import type { CharacterModifierConfiguration, CharacterModifierId } from './characterModifierBaseData.ts';
 import type { CharacterModifierEffectData, CharacterModifierInstanceClientData, CharacterModifierInstanceData } from './characterModifierData.ts';
-import { CHARACTER_MODIFIER_LOCK_DEFINITIONS, type CharacterModifierLockType } from './characterModifierLocks.ts';
 import { EvaluateCharacterModifierConditionChain, type CharacterModifierConditionChain } from './conditions/characterModifierConditionChain.ts';
 import { CHARACTER_MODIFIER_TYPE_DEFINITION, type CharacterModifierType, type CharacterModifierTypeDefinition } from './modifierTypes/_index.ts';
 
 export type GameLogicModifierLockInstance = {
-	type: CharacterModifierLockType;
+	asset: Asset<'lock'>;
 	logic: LockLogic;
 };
 
@@ -28,6 +27,7 @@ export type GameLogicModifierLockActionResult = {
 };
 
 export class GameLogicModifierInstance {
+	public readonly assetManager: AssetManager;
 	public readonly id: CharacterModifierId;
 	public readonly type: CharacterModifierType;
 	public readonly definition: CharacterModifierTypeDefinition;
@@ -64,7 +64,8 @@ export class GameLogicModifierInstance {
 		return this._lockExceptions;
 	}
 
-	constructor(data: CharacterModifierInstanceData | CharacterModifierInstanceClientData, logger?: Logger) {
+	constructor(data: CharacterModifierInstanceData | CharacterModifierInstanceClientData, assetManager: AssetManager, logger?: Logger) {
+		this.assetManager = assetManager;
 		this.definition = CHARACTER_MODIFIER_TYPE_DEFINITION[data.type];
 		this.id = data.id;
 		this.type = data.type;
@@ -72,16 +73,27 @@ export class GameLogicModifierInstance {
 		this._enabled = data.enabled;
 		this._config = this.definition.configSchema.parse(data.config);
 		this._conditions = data.conditions;
-		this._lock = data.lock != null ? {
-			type: data.lock.lockType,
-			logic: LockLogic.loadFromBundle(
-				CHARACTER_MODIFIER_LOCK_DEFINITIONS[data.lock.lockType].lockSetup, data.lock.lockData,
-				{
-					doLoadTimeCleanup: true,
-					logger,
-				},
-			),
-		} : null;
+		if (data.lock != null) {
+			const lockAsset = assetManager.getAssetById(data.lock.lockAsset);
+			if (lockAsset == null || !lockAsset.isType('lock')) {
+				logger?.warning('Modifier has unknown lock or the asset is not lock asset, removing lock.');
+				this._lock = null;
+			} else {
+				this._lock = {
+					asset: lockAsset,
+					logic: LockLogic.loadFromBundle(
+						lockAsset.definition.lockSetup,
+						data.lock.lockData,
+						{
+							doLoadTimeCleanup: true,
+							logger,
+						},
+					),
+				};
+			}
+		} else {
+			this._lock = null;
+		}
 		this._lockExceptions = data.lockExceptions;
 	}
 
@@ -94,7 +106,7 @@ export class GameLogicModifierInstance {
 			config: CloneDeepMutable(this.config),
 			conditions: CloneDeepMutable(this.conditions),
 			lock: this.lock != null ? {
-				lockType: this.lock.type,
+				lockAsset: this.lock.asset.id,
 				lockData: this.lock.logic.exportToClientBundle(),
 			} : undefined,
 			lockExceptions: CloneDeepMutable(this.lockExceptions),
@@ -239,14 +251,14 @@ export class GameLogicModifierInstance {
 }
 
 export class GameLogicModifierInstanceClient extends GameLogicModifierInstance {
-	constructor(data: CharacterModifierInstanceClientData, logger?: Logger) {
-		super(data, logger);
+	constructor(data: CharacterModifierInstanceClientData, assetManager: AssetManager, logger?: Logger) {
+		super(data, assetManager, logger);
 	}
 }
 
 export class GameLogicModifierInstanceServer extends GameLogicModifierInstance {
-	constructor(data: CharacterModifierInstanceData, logger?: Logger) {
-		super(data, logger);
+	constructor(data: CharacterModifierInstanceData, assetManager: AssetManager, logger?: Logger) {
+		super(data, assetManager, logger);
 	}
 
 	public getData(): CharacterModifierInstanceData {
@@ -258,7 +270,7 @@ export class GameLogicModifierInstanceServer extends GameLogicModifierInstance {
 			config: CloneDeepMutable(this.config),
 			conditions: CloneDeepMutable(this.conditions),
 			lock: this.lock != null ? {
-				lockType: this.lock.type,
+				lockAsset: this.lock.asset.id,
 				lockData: this.lock.logic.exportToServerBundle(),
 			} : undefined,
 			lockExceptions: CloneDeepMutable(this.lockExceptions),
@@ -288,14 +300,18 @@ export class GameLogicModifierInstanceServer extends GameLogicModifierInstance {
 		this._lockExceptions = cloneDeep(lockExceptions);
 	}
 
-	public addLock(lockType: CharacterModifierLockType): GameLogicModifierLockActionResult {
+	public addLock(lockAssetId: AssetId): GameLogicModifierLockActionResult {
 		if (this.lock != null)
 			return { result: 'failure', problems: [{ result: 'invalidAction' }] };
 
+		const lockAsset = this.assetManager.getAssetById(lockAssetId);
+		if (lockAsset == null || !lockAsset.isType('lock'))
+			return { result: 'failure', problems: [{ result: 'invalidAction' }] };
+
 		this._lock = {
-			type: lockType,
+			asset: lockAsset,
 			logic: LockLogic.loadFromBundle(
-				CHARACTER_MODIFIER_LOCK_DEFINITIONS[lockType].lockSetup,
+				lockAsset.definition.lockSetup,
 				undefined,
 				{ doLoadTimeCleanup: true },
 			),

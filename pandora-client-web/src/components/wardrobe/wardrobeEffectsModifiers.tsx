@@ -10,10 +10,12 @@ import {
 	type CharacterModifierEffectData,
 	type CharacterModifierId,
 	type CharacterModifierType,
+	type IClientShardNormalResult,
 	type IShardClientChangeEvents,
 	type PermissionGroup,
 } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
+import { useAssetManager } from '../../assets/assetManager.tsx';
 import { ICharacter, useCharacterRestrictionManager } from '../../character/character.ts';
 import { Column } from '../common/container/container.tsx';
 import { Tab, TabContainer, type TabContainerRef } from '../common/tabs/tabs.tsx';
@@ -216,9 +218,10 @@ export type ModifierInstanceListGetResult =
 
 const LISTEN_EVENTS: readonly IShardClientChangeEvents[] = ['permissions', 'characterModifiers'];
 function useCharacterModifierInstanceList(target: CharacterId): ModifierInstanceListGetResult | undefined {
-	const [data, setData] = useState<ModifierInstanceListGetResult>();
+	const [data, setData] = useState<IClientShardNormalResult['characterModifiersGet']>();
 
 	const shardConnector = useShardConnector();
+	const assetManager = useAssetManager();
 
 	const fetchData = useCallback(() => {
 		if (shardConnector == null) {
@@ -228,14 +231,7 @@ function useCharacterModifierInstanceList(target: CharacterId): ModifierInstance
 
 		shardConnector.awaitResponse('characterModifiersGet', { target })
 			.then((result) => {
-				if (result.result === 'ok') {
-					setData({
-						result: 'ok',
-						modifiers: result.modifiers.map((m) => new GameLogicModifierInstanceClient(m)),
-					});
-				} else {
-					setData(result);
-				}
+				setData(result);
 			}, (error) => {
 				GetLogger('useCharacterModifierInstanceList').warning(`Error getting character modifiers for character ${target}:`, error);
 			});
@@ -243,5 +239,13 @@ function useCharacterModifierInstanceList(target: CharacterId): ModifierInstance
 
 	useShardChangeListener(LISTEN_EVENTS, fetchData);
 
-	return data;
+	return useMemo((): ModifierInstanceListGetResult | undefined => {
+		if (data?.result === 'ok') {
+			return {
+				result: 'ok',
+				modifiers: data.modifiers.map((m) => new GameLogicModifierInstanceClient(m, assetManager)),
+			};
+		}
+		return data;
+	}, [data, assetManager]);
 }

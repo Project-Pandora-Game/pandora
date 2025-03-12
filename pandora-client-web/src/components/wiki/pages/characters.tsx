@@ -172,10 +172,10 @@ export function WikiCharacters(): ReactElement {
 				which modifiers you want others to be able to use on your character.
 			</p>
 			<p>
-				Character modifiers and their settings can be secured with locks - similar to items. In addition, you can list several characters who can
-				still edit the modifier even if it is locked.<br />
-				Note: Character modifier locks have similar names and effects as their item counterparts, but they are not the same. This also means they are not affected
-				by your set item limits. For example, if you have the password lock blocked, it is still available as a lock to lock down character modifiers.
+				Character modifiers and their settings can be secured with locks - similar to items. While these lock mechanisms are not physical lock items, they still
+				behave the same and also use the same item limits/preferences as their counterparts. For example, if you have the password lock item set to "prevent", it is
+				also blocked for locking character modifiers.<br />
+				In addition, you can list several characters who can still edit the modifier even if it is locked.
 			</p>
 			<ul>
 				<li>An added modifier can be set to "enabled" or "disabled" with the toggle on the top left. Disabled modifiers have no effect and their activation conditions are ignored.</li>

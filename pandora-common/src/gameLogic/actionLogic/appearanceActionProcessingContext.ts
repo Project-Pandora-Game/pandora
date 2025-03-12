@@ -12,6 +12,7 @@ import type {
 	ItemContainerPath,
 	ItemPath,
 } from '../../assets/appearanceTypes.ts';
+import type { AssetManager } from '../../assets/assetManager.ts';
 import type { Item, ItemId } from '../../assets/item/index.ts';
 import { AssetFrameworkGlobalStateManipulator } from '../../assets/manipulators/globalStateManipulator.ts';
 import { RoomInventory } from '../../assets/roomInventory.ts';
@@ -35,6 +36,7 @@ export class AppearanceActionProcessingContext {
 		return this._context.executionContext;
 	}
 
+	public readonly assetManager: AssetManager;
 	public readonly originalState: AssetFrameworkGlobalState;
 
 	public readonly manipulator: AssetFrameworkGlobalStateManipulator;
@@ -71,6 +73,7 @@ export class AppearanceActionProcessingContext {
 
 	constructor(context: AppearanceActionContext, initialState: AssetFrameworkGlobalState) {
 		this._context = context;
+		this.assetManager = initialState.assetManager;
 		this.originalState = initialState;
 
 		this.manipulator = new AssetFrameworkGlobalStateManipulator(this.originalState);

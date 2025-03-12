@@ -61,7 +61,7 @@ const CHAT_ACTIONS_DEF = {
 	characterModifierDisable: `SOURCE_CHARACTER disabled the "MODIFIER_NAME" modifier on you.`,
 	characterModifierRename: `SOURCE_CHARACTER renamed your "MODIFIER_NAME_OLD" modifier to "MODIFIER_NAME".`,
 	characterModifierReorder: `SOURCE_CHARACTER reordered your character modifiers.`,
-	characterModifierLockAdd: `SOURCE_CHARACTER added a LOCK_TYPE to the "MODIFIER_NAME" modifier on you.`,
+	characterModifierLockAdd: `SOURCE_CHARACTER added LOCK_TYPE to the "MODIFIER_NAME" modifier on you.`,
 	characterModifierLockRemove: `SOURCE_CHARACTER removed the lock from the "MODIFIER_NAME" modifier on you.`,
 	characterModifierLockLock: `SOURCE_CHARACTER locked your "MODIFIER_NAME" modifier.`,
 	characterModifierLockUnlock: `SOURCE_CHARACTER unlocked your "MODIFIER_NAME" modifier.`,

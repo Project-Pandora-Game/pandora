@@ -33,6 +33,7 @@ export class GameLogicCharacterServer extends GameLogicCharacter {
 		this.characterModifiers = new CharacterModifiersSubsystemServer(
 			this,
 			data.characterModifiers ?? MakeDefaultCharacterModifierSystemData(),
+			assetManager,
 			logger.prefixMessages('[CharacterModifiersSubsystem]'),
 		);
 
@@ -45,6 +46,11 @@ export class GameLogicCharacterServer extends GameLogicCharacter {
 		this.characterModifiers.on('dataChanged', () => {
 			this.emit('dataChanged', 'characterModifiers');
 		});
+	}
+
+	public reloadAssetManager(manager: AssetManager) {
+		this.assetPreferences.reloadAssetManager(manager);
+		this.characterModifiers.reloadAssetManager(manager);
 	}
 
 	protected override _getPermissionProvider(permissionGroup: PermissionGroup): IPermissionProvider<GameLogicPermissionServer> {

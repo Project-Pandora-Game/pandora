@@ -1,4 +1,5 @@
 import type { CharacterId, CharacterRestrictionsManager } from '../../character/index.ts';
+import { Assert } from '../../utility/misc.ts';
 import type { CharacterModifierId, CharacterModifierLockAction, CharacterModifierType, GameLogicModifierInstance } from '../characterModifiers/index.ts';
 import type { AppearanceActionProcessingContext, AppearanceActionProcessingResult } from './appearanceActionProcessingContext.ts';
 
@@ -131,8 +132,46 @@ export function CharacterModifierActionCheckLockModify(
 		checkTarget.character.characterModifiers.getModifierTypePermission(modifier.type),
 	);
 
-	// Lock actions can return problems in client validation state already
-	if (action.action === 'lockAction') {
+	if (action.action === 'addLock') {
+		// Lock needs not to be present
+		if (modifier.lock != null)
+			return ctx.invalid();
+
+		// Action must refer to lock asset
+		const lockAsset = ctx.assetManager.getAssetById(action.lockAsset);
+		if (lockAsset == null || !lockAsset.isType('lock') || !lockAsset.canBeSpawned())
+			return ctx.invalid();
+
+		// Must have permissions for the lock
+		player.checkUseAsset(ctx, checkTarget.appearance, lockAsset);
+	} else if (action.action === 'removeLock') {
+		// There needs to be a lock
+		if (modifier.lock == null)
+			return ctx.invalid();
+
+		Assert(modifier.assetManager === ctx.assetManager);
+		// Must have permissions for the lock
+		player.checkUseAsset(ctx, checkTarget.appearance, modifier.lock.asset);
+
+		// The lock needs to be unlocked (unless in safemode and targetting self)
+		if (modifier.lock.logic.isLocked() && !(player.forceAllowItemActions() && checkTarget.appearance.id === player.appearance.id)) {
+			ctx.addRestriction({
+				type: 'blockedAddRemove',
+				asset: modifier.lock.asset.id,
+				itemName: '',
+				self: false,
+			});
+		}
+	} else if (action.action === 'lockAction') {
+		// There needs to be a lock
+		if (modifier.lock == null)
+			return ctx.invalid();
+
+		Assert(modifier.assetManager === ctx.assetManager);
+		// Must have permissions for the lock
+		player.checkUseAsset(ctx, checkTarget.appearance, modifier.lock.asset);
+
+		// Lock actions can return problems in client validation state already
 		const result = modifier.doLockAction({
 			player,
 			isSelfAction: target === player.appearance.id,

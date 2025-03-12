@@ -601,10 +601,12 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 		},
 	);
 
+	const permaLink = `https://project-pandora.com/space/join/${encodeURIComponent(spaceId)}`;
+
 	const copyPublic = useCallback((ev: React.MouseEvent<HTMLElement>) => {
 		ev.stopPropagation();
-		CopyToClipboard(`https://project-pandora.com/space/join/${spaceId.split('/')[1]}`, () => toast('Copied invite to clipboard'));
-	}, [spaceId]);
+		CopyToClipboard(permaLink, () => toast('Copied invite to clipboard'));
+	}, [permaLink]);
 
 	useEffect(() => {
 		update();
@@ -617,7 +619,7 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 			<Column gap='medium'>
 				<div onClick={ copyPublic } className='permanentInvite'>
 					<span className='text'>Permanent public invite link:</span>
-					<span className='invite'>https://project-pandora.com/space/join/{ spaceId.split('/')[1] }</span>
+					<span className='invite'>{ permaLink }</span>
 				</div>
 				<Button onClick={ () => setShowCreation(true) }>Create New Invite</Button>
 				<table className='spaceInvitesTable'>
@@ -742,7 +744,7 @@ function SpaceInviteRow({ spaceId, invite, directoryConnector, update }: { space
 
 	const copy = useCallback((ev: React.MouseEvent<HTMLElement>) => {
 		ev.stopPropagation();
-		CopyToClipboard(`https://project-pandora.com/space/join/${spaceId.split('/')[1]}?invite=${invite.id}`, () => toast('Copied invite id to clipboard'));
+		CopyToClipboard(`https://project-pandora.com/space/join/${encodeURIComponent(spaceId)}?invite=${encodeURIComponent(invite.id)}`, () => toast('Copied invite id to clipboard'));
 	}, [spaceId, invite.id]);
 
 	let type: string;

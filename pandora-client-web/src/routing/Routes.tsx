@@ -47,7 +47,7 @@ export function PandoraRoutes(): ReactElement {
 
 			<Route path='/room' element={ <RequiresCharacter element={ RoomScreen } /> } />
 			<Route path='/space/configuration' element={ <RequiresCharacter element={ SpaceConfiguration } /> } />
-			<Route path='/space/join/*' element={ <RequiresCharacter element={ SpaceJoin } /> } />
+			<Route path='/space/join/:spaceId' element={ <RequiresCharacter element={ SpaceJoin } /> } />
 
 			<Route path='/spaces/search' element={ <RequiresCharacter element={ SpacesSearch } /> } />
 			<Route path='/spaces/create' element={ <RequiresCharacter element={ SpaceCreate } /> } />

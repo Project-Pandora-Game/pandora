@@ -33,7 +33,7 @@ export const DIRECT_MESSAGE_COMMANDS: readonly IClientCommand<DirectMessageComma
 						return;
 					}
 
-					const spaceId = gameState.currentSpace.value.id.split('/')[1];
+					const spaceId = gameState.currentSpace.value.id;
 					const resp = await directoryConnector.awaitResponse('spaceInvite', {
 						action: 'create',
 						data: {
@@ -42,7 +42,7 @@ export const DIRECT_MESSAGE_COMMANDS: readonly IClientCommand<DirectMessageComma
 						},
 					});
 					if (resp.result === 'created') {
-						await sendMessage(`https://project-pandora.com/space/join/${spaceId}?invite=${resp.invite.id}`);
+						await sendMessage(`https://project-pandora.com/space/join/${encodeURIComponent(spaceId)}?invite=${encodeURIComponent(resp.invite.id)}`);
 					} else {
 						displayError?.('Failed to create invite: ' + resp.result);
 					}

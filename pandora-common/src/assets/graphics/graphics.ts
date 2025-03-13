@@ -99,6 +99,7 @@ export const LayerStateOverridesSchema = z.object({
 export type LayerStateOverrides = z.infer<typeof LayerStateOverridesSchema>;
 
 export const LayerDefinitionSchema = RectangleSchema.extend({
+	type: z.literal('mesh').default('mesh'),
 	name: z.string().optional(),
 	priority: LayerPrioritySchema,
 	points: z.string(),

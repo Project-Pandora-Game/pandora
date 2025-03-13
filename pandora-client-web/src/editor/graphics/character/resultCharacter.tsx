@@ -39,7 +39,9 @@ export function ResultCharacter(): ReactElement {
 					</Container>
 				)
 			}
-			<PreviewCutterRectangle />
+			<Container zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }>
+				<PreviewCutterRectangle />
+			</Container>
 		</GraphicsCharacterEditor>
 	);
 }

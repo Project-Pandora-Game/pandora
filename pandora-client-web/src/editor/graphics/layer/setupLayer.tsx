@@ -81,7 +81,7 @@ export function SetupMeshLayerSelected({
 				.flatMap((p) => [uv[2 * p] * width + x, uv[2 * p + 1] * height + y]);
 			g
 				.poly(poly)
-				.stroke({ width: 1, color: 0x333333, alpha: 0.2 });
+				.stroke({ width: 1, color: 0x333333, alpha: 0.2, pixelLine: true });
 		}
 		// Draw nice points on top of triangles
 		for (const point of points) {

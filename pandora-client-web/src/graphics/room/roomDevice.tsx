@@ -424,11 +424,11 @@ function RoomDeviceDebugGraphics({ pivot }: {
 			// Vertical guide line
 			.moveTo(pivot.x, pivot.y - Math.max(100, pivot.y))
 			.lineTo(pivot.x, pivot.y + 100)
-			.stroke({ color: 0xffff00, width: 2, alpha: 0.5 })
+			.stroke({ color: 0xffff00, width: 1, alpha: 0.5, pixelLine: true })
 			// Ground line
 			.moveTo(pivot.x - Math.max(100, pivot.x), pivot.y)
 			.lineTo(pivot.x + Math.max(100, pivot.x), pivot.y)
-			.stroke({ color: 0xffff00, width: 2, alpha: 1 })
+			.stroke({ color: 0xffff00, width: 1, alpha: 1, pixelLine: true })
 			// Pivot point (wanted)
 			.circle(pivot.x, pivot.y, 5)
 			.fill(0xffff00)
@@ -725,10 +725,10 @@ function RoomDeviceLayerSlotCharacterDebugGraphics({ actualPivot }: {
 		g
 			// Mask area
 			.rect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
-			.stroke({ color: 0xffff00, width: 2 })
+			.stroke({ color: 0xffff00, width: 1, pixelLine: true })
 			// Character canvas standard area
 			.rect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
-			.stroke({ color: 0x00ff00, width: 2 })
+			.stroke({ color: 0x00ff00, width: 1, pixelLine: true })
 			// Pivot point
 			.circle(actualPivot.x, actualPivot.y, 5)
 			.fill(0xffaa00)

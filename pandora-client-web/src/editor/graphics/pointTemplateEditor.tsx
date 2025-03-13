@@ -98,7 +98,7 @@ export function PointTemplateEditLayer({ templateEditor }: {
 				.map((p) => triangles[i + p])
 				.flatMap((p) => [points[p].pos[0], points[p].pos[1]]);
 			g.poly(poly)
-				.stroke({ width: 1, color: 0x555555, alpha: 0.3 });
+				.stroke({ width: 1, color: 0x555555, alpha: 0.3, pixelLine: true });
 		}
 	}, [points, triangles]);
 

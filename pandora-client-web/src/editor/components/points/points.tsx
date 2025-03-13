@@ -2,7 +2,7 @@ import { Assert, CanonizePointTemplate, GetLogger } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
-import { AssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
+import type { AnyAssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
 import { useLayerName } from '../../../assets/assetGraphicsCalculations.ts';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager.ts';
@@ -48,7 +48,7 @@ export function PointsUI(): ReactElement {
 	);
 }
 
-export function LayerName({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
+export function LayerName({ layer }: { layer: AnyAssetGraphicsLayer; }): ReactElement {
 	return <>{ useLayerName(layer) }</>;
 }
 

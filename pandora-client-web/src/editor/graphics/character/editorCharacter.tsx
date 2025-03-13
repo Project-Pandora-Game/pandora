@@ -25,7 +25,7 @@ export function GraphicsCharacterEditor({
 		(layer) => {
 			if (previewOverridesEnabled) {
 				const def = layer.definition.value;
-				if (def.previewOverrides != null) {
+				if (def.type === 'mesh' && def.previewOverrides != null) {
 					return def.previewOverrides;
 				}
 			}

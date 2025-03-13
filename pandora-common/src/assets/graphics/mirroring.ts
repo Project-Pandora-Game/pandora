@@ -1,7 +1,8 @@
 import { Immutable } from 'immer';
 import { Assert, AssertNever } from '../../utility/misc.ts';
 import type { Condition } from './conditions.ts';
-import { CharacterSize, type LayerImageOverride, type LayerImageSetting } from './graphics.ts';
+import { CharacterSize } from './graphics.ts';
+import type { LayerImageOverride, LayerImageSetting } from './layers/common.ts';
 import type { PointDefinition, TransformDefinition } from './points.ts';
 
 export interface PointDefinitionCalculated extends PointDefinition {
@@ -100,7 +101,6 @@ export function MirrorLayerImageSetting(setting: Immutable<LayerImageSetting>): 
 	return {
 		...setting,
 		overrides: setting.overrides.map(MirrorImageOverride),
-		alphaOverrides: setting.alphaOverrides?.map(MirrorImageOverride),
 	};
 }
 

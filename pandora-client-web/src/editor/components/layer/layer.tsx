@@ -1,7 +1,8 @@
+import type { Immutable } from 'immer';
 import { capitalize } from 'lodash-es';
-import { Assert, LAYER_PRIORITIES, LayerPriority } from 'pandora-common';
+import { Assert, LAYER_PRIORITIES, LayerPriority, type LayerDefinition } from 'pandora-common';
 import React, { ReactElement, useMemo, useState, useSyncExternalStore } from 'react';
-import { AssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
+import { type AnyAssetGraphicsLayer, type AssetGraphicsLayerType } from '../../../assets/assetGraphics.ts';
 import { useGraphicsAsset, useLayerDefinition, useLayerImageSettingsForScalingStop, useLayerName } from '../../../assets/assetGraphicsCalculations.ts';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager.ts';
@@ -46,9 +47,15 @@ export function LayerUI(): ReactElement {
 	return (
 		<div className='editor-setupui' key={ `${asset.id}/${selectedLayer.index}:${selectedLayer.isMirror ? 'mirror' : ''}` }>
 			<LayerName layer={ selectedLayer } />
-			<hr />
-			<ColorizationSetting layer={ selectedLayer } graphics={ asset } />
-			<ColorPicker layer={ selectedLayer } asset={ asset } />
+			{
+				selectedLayer.isType('mesh') ? (
+					<>
+						<hr />
+						<ColorizationSetting layer={ selectedLayer } graphics={ asset } />
+						<ColorPicker layer={ selectedLayer } asset={ asset } />
+					</>
+				) : null
+			}
 			<hr />
 			<LayerHeightAndWidthSetting layer={ selectedLayer } _asset={ asset } />
 			<LayerOffsetSetting layer={ selectedLayer } _asset={ asset } />
@@ -59,17 +66,15 @@ export function LayerUI(): ReactElement {
 			<hr />
 			<LayerImageSelect layer={ selectedLayer } asset={ asset } />
 			<LayerImageOverridesTextarea layer={ selectedLayer } />
-			<LayerImageSelect layer={ selectedLayer } asset={ asset } asAlpha />
-			<LayerImageOverridesTextarea layer={ selectedLayer } asAlpha />
 			<hr />
 			<LayerScalingConfig layer={ selectedLayer } asset={ asset } />
 		</div>
 	);
 }
 
-function LayerName({ layer }: { layer: AssetGraphicsLayer; }): ReactElement | null {
+function LayerName({ layer }: { layer: AnyAssetGraphicsLayer; }): ReactElement | null {
 	const visibleName = useLayerName(layer);
-	const { name } = useLayerDefinition(layer);
+	const { name } = useObservable<Immutable<LayerDefinition>>(layer.definition);
 
 	return (
 		<>
@@ -102,10 +107,10 @@ function LayerName({ layer }: { layer: AssetGraphicsLayer; }): ReactElement | nu
 	);
 }
 
-function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; stop?: number; asAlpha?: boolean; }): ReactElement | null {
+function LayerImageSelect({ layer, asset, stop }: { layer: AnyAssetGraphicsLayer; asset: EditorAssetGraphics; stop?: number; }): ReactElement | null {
 	const imageList = useSyncExternalStore(asset.editor.getSubscriber('modifiedAssetsChange'), () => asset.loadedTextures);
 	const stopSettings = useLayerImageSettingsForScalingStop(layer, stop);
-	const layerImage = asAlpha ? (stopSettings.alphaImage ?? '') : stopSettings.image;
+	const layerImage = stopSettings.image;
 
 	const elements: ReactElement[] = [<option value='' key=''>[ None ]</option>];
 	for (const image of imageList) {
@@ -117,17 +122,17 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 	return (
 		<Row alignY='center'>
 			<label htmlFor='layer-image-select'>
-				{ asAlpha ? 'Alpha' : 'Layer' } image asset:
+				Layer image asset:
 				<ContextHelpButton>
 					<p>
 						Select the image you want to be used from the ones you uploaded in the Asset-tab.
 					</p>
 					<p>
-						{ asAlpha ?
+						{ layer.isType('alphaImageMesh') ?
 							'The image will be used as an alpha mask to hide parts of the images below from the same priority layer.' :
 							'The layer will show the assigned image based on the set overrides/stop points (if applicable).' }
 						<br />
-						{ asAlpha ?
+						{ layer.isType('alphaImageMesh') ?
 							'Most assets do not need alpha masks. Look at existing skirt/shoe assets for examples of mask usage.' :
 							'' }
 					</p>
@@ -138,11 +143,7 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 				className='flex'
 				value={ layerImage }
 				onChange={ (event) => {
-					if (asAlpha) {
-						layer.setAlphaImage(event.target.value, stop);
-					} else {
-						layer.setImage(event.target.value, stop);
-					}
+					layer.setImage(event.target.value, stop);
 				} }
 			>
 				{ elements }
@@ -151,7 +152,7 @@ function LayerImageSelect({ layer, asset, stop, asAlpha = false }: { layer: Asse
 	);
 }
 
-function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; graphics: EditorAssetGraphics; }): ReactElement | null {
+function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayerType<'mesh'>; graphics: EditorAssetGraphics; }): ReactElement | null {
 	const asset = useGraphicsAsset(graphics);
 	const colorization = useMemo(() => (asset.isType('bodypart') || asset.isType('personal')) ? (asset.definition.colorization ?? {}) : {}, [asset]);
 	const [value, setValue] = useUpdatedUserInput(useLayerDefinition(layer).colorizationKey, [layer]);
@@ -249,7 +250,7 @@ function ColorizationSetting({ layer, graphics }: { layer: AssetGraphicsLayer; g
 	);
 }
 
-function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
+function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayerType<'mesh'>; asset: EditorAssetGraphics; }): ReactElement | null {
 	const editor = asset.editor;
 
 	const visibleName = useLayerName(layer);
@@ -284,9 +285,8 @@ function ColorPicker({ layer, asset }: { layer: AssetGraphicsLayer; asset: Edito
 	);
 }
 
-function LayerHeightAndWidthSetting({ layer, _asset }: { layer: AssetGraphicsLayer; _asset: EditorAssetGraphics; }): ReactElement | null {
-	const height = useLayerDefinition(layer).height;
-	const width = useLayerDefinition(layer).width;
+function LayerHeightAndWidthSetting({ layer, _asset }: { layer: AnyAssetGraphicsLayer; _asset: EditorAssetGraphics; }): ReactElement | null {
+	const { width, height } = useObservable<Immutable<LayerDefinition>>(layer.definition);
 
 	const onChangeHeight = useEvent((newValue: number) => {
 		layer.setHeight(newValue);
@@ -346,9 +346,11 @@ function LayerHeightAndWidthSetting({ layer, _asset }: { layer: AssetGraphicsLay
 
 }
 
-function LayerOffsetSetting({ layer, _asset }: { layer: AssetGraphicsLayer; _asset: EditorAssetGraphics; }): ReactElement | null {
-	const layerXOffset = useLayerDefinition(layer).x;
-	const layerYOffset = useLayerDefinition(layer).y;
+function LayerOffsetSetting({ layer, _asset }: { layer: AnyAssetGraphicsLayer; _asset: EditorAssetGraphics; }): ReactElement | null {
+	const {
+		x: layerXOffset,
+		y: layerYOffset,
+	} = useObservable<Immutable<LayerDefinition>>(layer.definition);
 
 	const onChangeX = useEvent((newValue: number) => {
 		layer.setXOffset(newValue);
@@ -408,8 +410,10 @@ function LayerOffsetSetting({ layer, _asset }: { layer: AssetGraphicsLayer; _ass
 	);
 }
 
-function LayerPrioritySelect({ layer }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
-	const layerPriority = useLayerDefinition(layer).priority;
+function LayerPrioritySelect({ layer }: { layer: AnyAssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
+	const {
+		priority: layerPriority,
+	} = useObservable<Immutable<LayerDefinition>>(layer.definition);
 
 	const elements: ReactElement[] = [];
 
@@ -454,8 +458,8 @@ function LayerPrioritySelect({ layer }: { layer: AssetGraphicsLayer; asset: Edit
 	);
 }
 
-function LayerTemplateSelect({ layer }: { layer: AssetGraphicsLayer; }): ReactElement | null {
-	const { points } = useLayerDefinition(layer);
+function LayerTemplateSelect({ layer }: { layer: AnyAssetGraphicsLayer; }): ReactElement | null {
+	const { points } = useObservable<Immutable<LayerDefinition>>(layer.definition);
 	const graphicsManger = useObservable(GraphicsManagerInstance);
 
 	if (!graphicsManger)
@@ -518,8 +522,8 @@ function LayerTemplateSelect({ layer }: { layer: AssetGraphicsLayer; }): ReactEl
 	);
 }
 
-function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer; }): ReactElement | null {
-	const [value, setValue] = useUpdatedUserInput(useLayerDefinition(layer).pointType?.join(',') ?? '', [layer]);
+function LayerPointsFilterEdit({ layer }: { layer: AnyAssetGraphicsLayer; }): ReactElement | null {
+	const [value, setValue] = useUpdatedUserInput(useObservable<Immutable<LayerDefinition>>(layer.definition).pointType?.join(',') ?? '', [layer]);
 
 	const onChange = useEvent((e: React.ChangeEvent<HTMLTextAreaElement>) => {
 		setValue(e.target.value);
@@ -581,12 +585,12 @@ function LayerPointsFilterEdit({ layer }: { layer: AssetGraphicsLayer; }): React
 	);
 }
 
-function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: AssetGraphicsLayer; stop?: number; asAlpha?: boolean; }): ReactElement {
+function LayerImageOverridesTextarea({ layer, stop }: { layer: AnyAssetGraphicsLayer; stop?: number; }): ReactElement {
 	const assetManager = useAssetManager();
 	const stopSettings = useLayerImageSettingsForScalingStop(layer, stop);
 	const [value, setValue] = useUpdatedUserInput(
-		SerializeLayerImageOverrides(asAlpha ? (stopSettings.alphaOverrides ?? []) : stopSettings.overrides),
-		[layer, stop, asAlpha]);
+		SerializeLayerImageOverrides(stopSettings.overrides),
+		[layer, stop]);
 	const [error, setError] = useState<string | null>(null);
 
 	const onChange = useEvent((e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -594,11 +598,7 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 		try {
 			const result = ParseLayerImageOverrides(e.target.value, assetManager.getAllBones().map((b) => b.name));
 			setError(null);
-			if (asAlpha) {
-				layer.setAlphaOverrides(result, stop);
-			} else {
-				layer.setImageOverrides(result, stop);
-			}
+			layer.setImageOverrides(result, stop);
 		} catch (err) {
 			setError(err instanceof Error ? err.message : String(err));
 		}
@@ -608,7 +608,7 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 	return (
 		<Row alignY='center'>
 			<div>
-				{ asAlpha ? 'Alpha' : 'Image' } overrides:
+				Image overrides:
 				<ContextHelpButton>
 					<p>
 						This field lets you define conditions for when the chosen image should be replaced.<br />
@@ -673,9 +673,11 @@ function LayerImageOverridesTextarea({ layer, stop, asAlpha = false }: { layer: 
 	);
 }
 
-function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement {
+function LayerScalingConfig({ layer, asset }: { layer: AnyAssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement {
 	const assetManager = useAssetManager();
-	const layerScaling = useLayerDefinition(layer).scaling;
+	const {
+		scaling: layerScaling,
+	} = useObservable<Immutable<LayerDefinition>>(layer.definition);
 
 	const elements: ReactElement[] = [
 		<option value='' key=''>[ Nothing ]</option>,
@@ -739,7 +741,7 @@ function LayerScalingConfig({ layer, asset }: { layer: AssetGraphicsLayer; asset
 	);
 }
 
-function LayerScalingList({ layer, asset }: { layer: AssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
+function LayerScalingList({ layer, asset }: { layer: AnyAssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
 	// TODO: Base on actual stops; right now temporary for breasts
 	const possibleStops: [string, number][] = useMemo(() => [
 		['flat', -180],
@@ -751,7 +753,7 @@ function LayerScalingList({ layer, asset }: { layer: AssetGraphicsLayer; asset: 
 
 	const [toAdd, setToAdd] = useState('');
 
-	const scalingStops = useLayerDefinition(layer).scaling?.stops;
+	const scalingStops = useObservable<Immutable<LayerDefinition>>(layer.definition).scaling?.stops;
 
 	const optionsToAdd: ReactElement[] = [
 		<option value='' key=''></option>,

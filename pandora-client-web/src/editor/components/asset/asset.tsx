@@ -2,11 +2,12 @@ import classNames from 'classnames';
 import { AssetGraphicsDefinition, AssetGraphicsDefinitionSchema, GetLogger, ZodMatcher } from 'pandora-common';
 import React, { ReactElement, useState, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
-import { AssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
+import { type AnyAssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
 import { useLayerHasAlphaMasks, useLayerName } from '../../../assets/assetGraphicsCalculations.ts';
 import { useEvent } from '../../../common/useEvent.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
+import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
 import { useObservable } from '../../../observable.ts';
@@ -21,6 +22,7 @@ const IsAssetGraphicsDefinition = ZodMatcher(AssetGraphicsDefinitionSchema);
 export function AssetUI() {
 	const editor = useEditor();
 	const selectedAsset = useObservable(editor.targetAsset);
+	const [showAddLayer, setShowAddLayer] = useState(false);
 
 	if (!selectedAsset) {
 		return (
@@ -84,10 +86,18 @@ export function AssetUI() {
 			<AssetExportImport asset={ selectedAsset } />
 			<AssetLayerList asset={ selectedAsset } />
 			<Button onClick={ () => {
-				selectedAsset.addLayer();
+				setShowAddLayer(true);
 			} }>
 				Add layer
 			</Button>
+			{
+				showAddLayer ? (
+					<AddLayerUiDialog
+						close={ () => setShowAddLayer(false) }
+						selectedAsset={ selectedAsset }
+					/>
+				) : null
+			}
 			<h4>
 				Image management
 				<ContextHelpButton>
@@ -124,6 +134,33 @@ export function AssetUI() {
 			</label>
 			<AssetImageList asset={ selectedAsset } />
 		</div>
+	);
+}
+
+function AddLayerUiDialog({ close, selectedAsset }: { close: () => void; selectedAsset: EditorAssetGraphics; }): ReactElement {
+	return (
+		<ModalDialog>
+			<Column>
+				<Button onClick={ () => {
+					selectedAsset.addLayer('mesh');
+					close();
+				} }>
+					Add image layer
+				</Button>
+				<Button onClick={ () => {
+					selectedAsset.addLayer('alphaImageMesh');
+					close();
+				} }>
+					Add alpha image layer
+				</Button>
+				<hr className='fill-x' />
+				<Button onClick={ () => {
+					close();
+				} }>
+					Cancel
+				</Button>
+			</Column>
+		</ModalDialog>
 	);
 }
 
@@ -189,7 +226,7 @@ function AssetLayerList({ asset }: { asset: EditorAssetGraphics; }): ReactElemen
 	);
 }
 
-function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; layer: AssetGraphicsLayer; }): ReactElement {
+function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; layer: AnyAssetGraphicsLayer; }): ReactElement {
 	const editor = useEditor();
 	const isSelected = useObservable(editor.targetLayer) === layer;
 

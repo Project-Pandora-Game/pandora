@@ -1,6 +1,7 @@
 import { Texture } from 'pixi.js';
 import { ReactElement, useEffect, useMemo, useReducer } from 'react';
-import { GraphicsLayer, GraphicsLayerProps } from '../../../graphics/graphicsLayer.tsx';
+import { GraphicsLayer } from '../../../graphics/layers/graphicsLayer.tsx';
+import type { GraphicsLayerProps } from '../../../graphics/layers/graphicsLayerCommon.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
 import { EditorAssetGraphics } from '../character/appearanceEditor.ts';
 

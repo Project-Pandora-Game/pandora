@@ -1,6 +1,7 @@
 import { Draft, Immutable, freeze, produce } from 'immer';
 import {
 	Assert,
+	AssertNever,
 	AssetGraphicsDefinition,
 	AssetId,
 	CharacterSize,
@@ -12,26 +13,35 @@ import {
 	MirrorBoneLike,
 	MirrorImageOverride,
 	MirrorLayerImageSetting,
+	type GraphicsLayerType,
 } from 'pandora-common';
 import { MirrorPriority } from '../graphics/def.ts';
 import { Observable, ReadonlyObservable } from '../observable.ts';
 
-export class AssetGraphicsLayer {
+export class AssetGraphicsLayer<TLayer extends LayerDefinition> {
 	public readonly asset: AssetGraphics;
-	public mirror: AssetGraphicsLayer | undefined;
+	public mirror: AssetGraphicsLayer<TLayer> | undefined;
 	public readonly isMirror: boolean;
-	private _definition: Observable<Immutable<LayerDefinition>>;
+	private _definition: Observable<Immutable<TLayer>>;
 
-	public get definition(): ReadonlyObservable<Immutable<LayerDefinition>> {
+	public readonly type: TLayer['type'];
+
+	public isType<const TType extends GraphicsLayerType>(type: TType): this is AssetGraphicsLayer<Extract<LayerDefinition, { type: TType; }>> {
+		return this.type === type;
+	}
+
+	public get definition(): ReadonlyObservable<Immutable<TLayer>> {
 		return this._definition;
 	}
 
 	public get index(): number {
-		return this.isMirror && this.mirror ? this.mirror.index : this.asset.layers.indexOf(this);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+		return this.isMirror && this.mirror ? this.mirror.index : this.asset.layers.findIndex((l: AssetGraphicsLayer<any>) => l === this);
 	}
 
-	constructor(asset: AssetGraphics, definition: Immutable<LayerDefinition>, mirror?: AssetGraphicsLayer) {
+	constructor(asset: AssetGraphics, definition: Immutable<TLayer>, mirror?: AssetGraphicsLayer<TLayer>) {
 		this.asset = asset;
+		this.type = definition.type;
 		this._definition = new Observable(freeze(definition));
 		this.mirror = mirror;
 		this.isMirror = mirror !== undefined;
@@ -149,6 +159,7 @@ export class AssetGraphicsLayer {
 			return this.mirror.setColorizationKey(colorizationKey);
 
 		this._modifyDefinition((d) => {
+			Assert(d.type === 'mesh', 'Colorization key can only be set on mesh layer');
 			d.colorizationKey = colorizationKey === null ? undefined : colorizationKey;
 		});
 	}
@@ -180,24 +191,6 @@ export class AssetGraphicsLayer {
 		});
 	}
 
-	public setAlphaImage(image: string, stop?: number): void {
-		if (this.mirror && this.isMirror)
-			return this.mirror.setAlphaImage(image, stop);
-
-		this._modifyImageSettingsForScalingStop(stop, (settings) => {
-			settings.alphaImage = image || undefined;
-		});
-	}
-
-	public setAlphaOverrides(imageOverrides: LayerImageOverride[], stop?: number): void {
-		if (this.mirror && this.isMirror)
-			return this.mirror.setAlphaOverrides(imageOverrides.map(MirrorImageOverride), stop);
-
-		this._modifyImageSettingsForScalingStop(stop, (settings) => {
-			settings.alphaOverrides = imageOverrides.length > 0 ? imageOverrides.slice() : undefined;
-		});
-	}
-
 	public setName(name: string | undefined): void {
 		if (this.mirror && this.isMirror)
 			return this.mirror.setName(name);
@@ -208,11 +201,19 @@ export class AssetGraphicsLayer {
 	}
 }
 
+export type AnyAssetGraphicsLayer = {
+	[type in GraphicsLayerType]: AssetGraphicsLayer<Extract<LayerDefinition, { type: type; }>>;
+}[GraphicsLayerType];
+
+export type AssetGraphicsLayerType<TLayer extends GraphicsLayerType> = {
+	[type in TLayer]: AssetGraphicsLayer<Extract<LayerDefinition, { type: type; }>>;
+}[TLayer];
+
 export class AssetGraphics {
 	public readonly id: AssetId;
-	public layers!: readonly AssetGraphicsLayer[];
+	public layers!: readonly AnyAssetGraphicsLayer[];
 
-	public get allLayers(): AssetGraphicsLayer[] {
+	public get allLayers(): AnyAssetGraphicsLayer[] {
 		return this.layers.flatMap((l) => l.mirror ? [l, l.mirror] : [l]);
 	}
 
@@ -231,7 +232,13 @@ export class AssetGraphics {
 		};
 	}
 
-	protected createLayer(definition: Immutable<LayerDefinition>): AssetGraphicsLayer {
-		return new AssetGraphicsLayer(this, definition);
+	protected createLayer(definition: Immutable<LayerDefinition>): AnyAssetGraphicsLayer {
+		switch (definition.type) {
+			case 'mesh':
+				return new AssetGraphicsLayer<Extract<LayerDefinition, { type: 'mesh'; }>>(this, definition);
+			case 'alphaImageMesh':
+				return new AssetGraphicsLayer<Extract<LayerDefinition, { type: 'alphaImageMesh'; }>>(this, definition);
+		}
+		AssertNever(definition);
 	}
 }

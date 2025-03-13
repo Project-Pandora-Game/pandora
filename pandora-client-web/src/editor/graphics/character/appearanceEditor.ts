@@ -8,6 +8,7 @@ import {
 	AppearanceActionProcessingContext,
 	ApplyAction,
 	Assert,
+	AssertNever,
 	AssertNotNullable,
 	Asset,
 	ASSET_PREFERENCES_DEFAULT,
@@ -27,14 +28,14 @@ import {
 	GetLogger,
 	ICharacterRoomData,
 	ItemId,
-	LayerDefinition,
 	LayerImageSetting,
 	LayerMirror,
 	TypedEventEmitter,
 	type AssetFrameworkGlobalState,
+	type GraphicsLayerType,
 } from 'pandora-common';
 import { Texture } from 'pixi.js';
-import { AssetGraphics, AssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
+import { AssetGraphics, type AnyAssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
 import { IGraphicsLoader } from '../../../assets/graphicsManager.ts';
 import { CharacterEvents, ICharacter } from '../../../character/character.ts';
 import { DownloadAsFile } from '../../../common/downloadHelper.ts';
@@ -225,31 +226,50 @@ export class EditorAssetGraphics extends AssetGraphics {
 		this.onChangeHandler?.();
 	}
 
-	protected override createLayer(definition: LayerDefinition): AssetGraphicsLayer {
-		const layer = super.createLayer(definition);
-		return layer;
-	}
-
-	public addLayer(): void {
-		const newLayer = this.createLayer({
-			x: 0,
-			y: 0,
-			width: CharacterSize.WIDTH,
-			height: CharacterSize.HEIGHT,
-			priority: 'OVERLAY',
-			points: '',
-			mirror: LayerMirror.NONE,
-			colorizationKey: undefined,
-			image: {
-				image: '',
-				overrides: [],
-			},
-		});
+	public addLayer(type: GraphicsLayerType): void {
+		let newLayer: AnyAssetGraphicsLayer;
+		switch (type) {
+			case 'mesh':
+				newLayer = this.createLayer({
+					x: 0,
+					y: 0,
+					width: CharacterSize.WIDTH,
+					height: CharacterSize.HEIGHT,
+					priority: 'OVERLAY',
+					type: 'mesh',
+					points: '',
+					mirror: LayerMirror.NONE,
+					colorizationKey: undefined,
+					image: {
+						image: '',
+						overrides: [],
+					},
+				});
+				break;
+			case 'alphaImageMesh':
+				newLayer = this.createLayer({
+					x: 0,
+					y: 0,
+					width: CharacterSize.WIDTH,
+					height: CharacterSize.HEIGHT,
+					priority: 'OVERLAY',
+					type: 'alphaImageMesh',
+					points: '',
+					mirror: LayerMirror.NONE,
+					image: {
+						image: '',
+						overrides: [],
+					},
+				});
+				break;
+			default:
+				AssertNever(type);
+		}
 		this.layers = [...this.layers, newLayer];
 		this.onChange();
 	}
 
-	public deleteLayer(layer: AssetGraphicsLayer): void {
+	public deleteLayer(layer: AnyAssetGraphicsLayer): void {
 		const index = this.layers.indexOf(layer);
 		if (index < 0)
 			return;
@@ -259,7 +279,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		this.onChange();
 	}
 
-	public moveLayerRelative(layer: AssetGraphicsLayer, shift: number): void {
+	public moveLayerRelative(layer: AnyAssetGraphicsLayer, shift: number): void {
 		const currentPos = this.layers.indexOf(layer);
 		if (currentPos < 0)
 			return;
@@ -276,7 +296,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		this.onChange();
 	}
 
-	public setScaleAs(layer: AssetGraphicsLayer, scaleAs: string | null): void {
+	public setScaleAs(layer: AnyAssetGraphicsLayer, scaleAs: string | null): void {
 		if (layer.mirror && layer.isMirror) {
 			layer = layer.mirror;
 		}
@@ -293,7 +313,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		});
 	}
 
-	public addScalingStop(layer: AssetGraphicsLayer, value: number): void {
+	public addScalingStop(layer: AnyAssetGraphicsLayer, value: number): void {
 		if (layer.mirror && layer.isMirror) {
 			layer = layer.mirror;
 		}
@@ -313,7 +333,7 @@ export class EditorAssetGraphics extends AssetGraphics {
 		});
 	}
 
-	public removeScalingStop(layer: AssetGraphicsLayer, stop: number): void {
+	public removeScalingStop(layer: AnyAssetGraphicsLayer, stop: number): void {
 		if (layer.mirror && layer.isMirror) {
 			layer = layer.mirror;
 		}
@@ -383,13 +403,8 @@ export class EditorAssetGraphics extends AssetGraphics {
 					const layerImage = setting.image;
 					images.add(layerImage);
 					setting.image = StripAssetHash(layerImage);
-					const alphaImage = setting.alphaImage;
-					if (alphaImage) {
-						images.add(alphaImage);
-						setting.alphaImage = StripAssetHash(alphaImage);
-					}
 				}
-				for (const override of setting.overrides.concat(setting.alphaOverrides ?? [])) {
+				for (const override of setting.overrides) {
 					images.add(override.image);
 					override.image = StripAssetHash(override.image);
 				}

@@ -10,7 +10,7 @@ enableMapSet();
 export type Observer<T> = (value: T) => void;
 export type UnsubscribeCallback = () => void;
 
-export interface ReadonlyObservable<T> {
+export interface ReadonlyObservable<out T> {
 	readonly value: T;
 	subscribe(observer: Observer<T>, callImmediately?: boolean): UnsubscribeCallback;
 }

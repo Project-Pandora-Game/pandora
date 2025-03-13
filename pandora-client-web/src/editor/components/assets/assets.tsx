@@ -3,7 +3,7 @@ import { Assert, AssertNotNullable, Asset, AssetId, Item } from 'pandora-common'
 import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { AssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
+import { type AnyAssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
 import { useLayerName } from '../../../assets/assetGraphicsCalculations.ts';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
@@ -240,7 +240,7 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 	);
 }
 
-function AssetLayerElement({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
+function AssetLayerElement({ layer }: { layer: AnyAssetGraphicsLayer; }): ReactElement {
 	const editor = useEditor();
 	const alphaIndex = useSyncExternalStore<number>((changed) => {
 		return editor.on('layerOverrideChange', (changedLayer) => {

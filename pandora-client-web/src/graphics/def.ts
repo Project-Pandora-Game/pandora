@@ -10,10 +10,10 @@ import {
 	type LayerStateOverrides,
 } from 'pandora-common';
 import { useMemo } from 'react';
-import { AssetGraphicsLayer } from '../assets/assetGraphics.ts';
+import type { AnyAssetGraphicsLayer } from '../assets/assetGraphics.ts';
 
 export type LayerState = {
-	layer: AssetGraphicsLayer;
+	layer: AnyAssetGraphicsLayer;
 	item: Item | null;
 	state?: LayerStateOverrides;
 };

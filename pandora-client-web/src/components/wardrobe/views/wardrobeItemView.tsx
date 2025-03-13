@@ -23,7 +23,7 @@ import { IItemModule } from 'pandora-common/dist/assets/modules/common.js';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
 import React, { ReactElement, useEffect, useMemo, useRef } from 'react';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
-import { useItemColorRibbon } from '../../../graphics/graphicsLayer.tsx';
+import { useItemColorRibbon } from '../../../graphics/layers/graphicsLayerCommon.tsx';
 import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';

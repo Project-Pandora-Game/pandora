@@ -25,7 +25,7 @@ import { GRAPHICS_TEXTURE_RESOLUTION_SCALE, useGraphicsSettings } from '../graph
 import { EvaluateCondition } from '../graphics/utility.ts';
 import { useNullableObservable, useObservable, type ReadonlyObservable } from '../observable.ts';
 import { useAutomaticResolution } from '../services/screenResolution/screenResolution.ts';
-import type { AssetGraphics, AssetGraphicsLayer } from './assetGraphics.ts';
+import type { AnyAssetGraphicsLayer, AssetGraphics, AssetGraphicsLayer } from './assetGraphics.ts';
 import { useAssetManager } from './assetManager.tsx';
 import { GraphicsManagerInstance } from './graphicsManager.ts';
 
@@ -42,13 +42,13 @@ export function useGraphicsAsset(graphics: AssetGraphics): Asset {
 	return asset;
 }
 
-export function useLayerDefinition(layer: AssetGraphicsLayer): Immutable<LayerDefinition> {
+export function useLayerDefinition<TLayer extends LayerDefinition>(layer: AssetGraphicsLayer<TLayer>): Immutable<TLayer> {
 	return useObservable(layer.definition);
 }
 
 /** Constant for the most common case, so caches can just use reference to this object. */
 const SCALING_IMAGE_UV_EMPTY: Record<BoneName, number> = Object.freeze({});
-export function useLayerImageSource(evaluator: AppearanceConditionEvaluator, layer: AssetGraphicsLayer, item: Item | null): Immutable<{
+export function useLayerImageSource<TLayer extends LayerDefinition>(evaluator: AppearanceConditionEvaluator, layer: AssetGraphicsLayer<TLayer>, item: Item | null): Immutable<{
 	setting: Immutable<LayerImageSetting>;
 	image: string;
 	imageUv: Record<BoneName, number>;
@@ -97,7 +97,7 @@ export function useLayerImageSource(evaluator: AppearanceConditionEvaluator, lay
 	}, [evaluator, item, setting, scalingUv]);
 }
 
-export function LayerToImmediateName(layer: AssetGraphicsLayer): string {
+export function LayerToImmediateName<TLayer extends LayerDefinition>(layer: AssetGraphicsLayer<TLayer>): string {
 	let name = layer.definition.value.name || `Layer #${layer.index + 1}`;
 	if (layer.isMirror) {
 		name += ' (mirror)';
@@ -105,8 +105,8 @@ export function LayerToImmediateName(layer: AssetGraphicsLayer): string {
 	return name;
 }
 
-export function useLayerName(layer: AssetGraphicsLayer): string {
-	const d = useLayerDefinition(layer);
+export function useLayerName(layer: AnyAssetGraphicsLayer): string {
+	const d = useObservable<Immutable<LayerDefinition>>(layer.definition);
 	let name = d.name || `Layer #${layer.index + 1}`;
 	if (layer.isMirror) {
 		name += ' (mirror)';
@@ -159,7 +159,7 @@ export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalcul
 	return new Uint32Array(result);
 }
 
-export function useLayerMeshPoints(layer: AssetGraphicsLayer): {
+export function useLayerMeshPoints<TLayer extends LayerDefinition>(layer: AssetGraphicsLayer<TLayer>): {
 	readonly points: Immutable<PointDefinitionCalculated[]>;
 	readonly triangles: Uint32Array;
 } {
@@ -204,15 +204,12 @@ export function useLayerMeshPoints(layer: AssetGraphicsLayer): {
 	}, [layer, manager, templateOverrides, points, mirror, pointType, pointFilterMask]);
 }
 
-export function useLayerHasAlphaMasks(layer: AssetGraphicsLayer): boolean {
-	const d = useLayerDefinition(layer);
-
-	return [...d.scaling?.stops.map((s) => s[1]) ?? [], d.image]
-		.some((i) => !!i.alphaImage || !!i.alphaOverrides);
+export function useLayerHasAlphaMasks(layer: AnyAssetGraphicsLayer): boolean {
+	return layer.type === 'alphaImageMesh';
 }
 
-export function useLayerImageSettingsForScalingStop(layer: AssetGraphicsLayer, stop: number | null | undefined): Immutable<LayerImageSetting> {
-	const d = useLayerDefinition(layer);
+export function useLayerImageSettingsForScalingStop(layer: AnyAssetGraphicsLayer, stop: number | null | undefined): Immutable<LayerImageSetting> {
+	const d = useObservable<Immutable<LayerDefinition>>(layer.definition);
 	if (!stop)
 		return d.image;
 

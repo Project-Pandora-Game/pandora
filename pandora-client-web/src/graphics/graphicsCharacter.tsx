@@ -1,3 +1,4 @@
+import type { Immutable } from 'immer';
 import { nanoid } from 'nanoid';
 import {
 	Assert,
@@ -14,24 +15,26 @@ import {
 	MergeAssetProperties,
 	PseudoRandom,
 	ResolveAssetPreference,
+	type LayerDefinition,
 	type LayerPriority,
 	type LayerStateOverrides,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics.ts';
+import { AssetGraphics, type AnyAssetGraphicsLayer } from '../assets/assetGraphics.ts';
 import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { usePlayerData } from '../components/gameContext/playerContextProvider.tsx';
-import { Observable, useObservable, useObservableMultiple } from '../observable.ts';
+import { Observable, useObservable, useObservableMultiple, type ReadonlyObservable } from '../observable.ts';
 import { Container } from './baseComponents/container.ts';
 import { TransitionedContainer, type PixiTransitionedContainer, type TransitionedContainerCustomProps } from './common/transitions/transitionedContainer.ts';
 import { TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler.ts';
 import { LayerState, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority } from './def.ts';
-import { GraphicsLayer, GraphicsLayerProps, SwapCullingDirection, SwapCullingDirectionObservable } from './graphicsLayer.tsx';
 import { useGraphicsSettings } from './graphicsSettings.tsx';
 import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense.tsx';
+import { GraphicsLayer } from './layers/graphicsLayer.tsx';
+import { SwapCullingDirection, SwapCullingDirectionObservable, type GraphicsLayerProps } from './layers/graphicsLayerCommon.tsx';
 import { useTickerRef } from './reconciler/tick.ts';
 
 export type PointLike = {
@@ -72,11 +75,11 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 }
 
 export type GraphicsGetterFunction = (asset: AssetId) => AssetGraphics | undefined;
-export type LayerStateOverrideGetter = (layer: AssetGraphicsLayer) => LayerStateOverrides | undefined;
+export type LayerStateOverrideGetter = (layer: AnyAssetGraphicsLayer) => LayerStateOverrides | undefined;
 export type LayerGetSortOrder = (view: CharacterView) => readonly LayerPriority[];
 
 function useLayerPriorityResolver(states: readonly LayerState[]): ReadonlyMap<LayerState, LayerPriority> {
-	const layerDefinitions = useObservableMultiple(states.map((s) => s.layer.definition));
+	const layerDefinitions = useObservableMultiple(states.map((s): ReadonlyObservable<Immutable<LayerDefinition>> => s.layer.definition));
 	Assert(layerDefinitions.length === states.length);
 
 	return useMemo((): ReadonlyMap<LayerState, LayerPriority> => {

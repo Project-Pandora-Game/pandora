@@ -1,14 +1,14 @@
-import { AssetFrameworkCharacterState } from 'pandora-common';
+import { AssetFrameworkCharacterState, type LayerDefinition } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { Texture } from 'pixi.js';
 import { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react';
-import { AssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
+import { AssetGraphicsLayer, type AnyAssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
 import { useLayerDefinition, useLayerImageSource, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
 import { Sprite } from '../../../graphics/baseComponents/sprite.ts';
-import { GraphicsLayerProps, useItemColor, useLayerVertices } from '../../../graphics/graphicsLayer.tsx';
+import { useItemColor, useLayerVertices, type GraphicsLayerProps } from '../../../graphics/layers/graphicsLayerCommon.tsx';
 import { useTexture } from '../../../graphics/useTexture.ts';
 import { useEditorLayerStateOverride } from '../../editor.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
@@ -27,13 +27,28 @@ export function SetupLayer({
 }
 
 export function SetupLayerSelected({
+	layer,
+	...props
+}: {
+	characterState: AssetFrameworkCharacterState;
+	zIndex: number;
+	layer: AnyAssetGraphicsLayer;
+}): ReactElement | null {
+	switch (layer.type) {
+		case 'mesh':
+			return <SetupMeshLayerSelected { ...props } layer={ layer } />;
+	}
+	return null;
+}
+
+export function SetupMeshLayerSelected({
 	characterState,
 	zIndex,
 	layer,
 }: {
 	characterState: AssetFrameworkCharacterState;
 	zIndex: number;
-	layer: AssetGraphicsLayer;
+	layer: AssetGraphicsLayer<Extract<LayerDefinition, { type: 'mesh'; }>>;
 }): ReactElement {
 	const editor = useEditor();
 	const state = useEditorLayerStateOverride(layer);

@@ -1,11 +1,12 @@
 import { noop } from 'lodash-es';
 import { AccountId, AccountIdSchema, AssertNever, GetLogger } from 'pandora-common';
 import React, { useCallback, useMemo, useState, type ReactElement } from 'react';
-import { Navigate, Route, Routes, useNavigate, useParams } from 'react-router';
+import { Navigate, Route, Routes, useParams } from 'react-router';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { KeyExchange } from '../../crypto/keyExchange.ts';
 import { useObservable } from '../../observable.ts';
+import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useRoutingParentPath } from '../../routing/routingUtils.ts';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat.ts';
@@ -46,7 +47,7 @@ function DirectMessagesInner(): ReactElement {
 		return parsed.success ? parsed.data : null;
 	}, [accountId]);
 
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const select = useCallback((account: AccountId): void => {
 		navigate(`/contacts/dm/${account}`);
 	}, [navigate]);

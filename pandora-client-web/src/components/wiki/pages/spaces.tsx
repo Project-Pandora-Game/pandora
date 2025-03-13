@@ -1,6 +1,6 @@
 import { LIMIT_SPACE_BOUND_INVITES, LIMIT_SPACE_MAX_CHARACTER_NUMBER } from 'pandora-common';
 import { ReactElement } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/gameStateContextProvider.tsx';
 
 export function WikiSpaces(): ReactElement {

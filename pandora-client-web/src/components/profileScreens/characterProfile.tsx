@@ -1,6 +1,6 @@
 import { AssertNever, CharacterId, GetLogger, ICharacterRoomData, LIMIT_CHARACTER_PROFILE_LENGTH, PRONOUNS } from 'pandora-common';
 import { ReactElement, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { toast } from 'react-toastify';
 import { Character, useCharacterData } from '../../character/character.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';

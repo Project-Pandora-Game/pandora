@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import { Row } from '../../common/container/container.tsx';
 import { ExternalLink } from '../../common/link/externalLink.tsx';
 import { MESSAGE_EDIT_TIMEOUT } from '../../gameContext/gameStateContextProvider.tsx';

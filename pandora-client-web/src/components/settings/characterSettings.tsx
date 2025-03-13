@@ -1,7 +1,6 @@
 import { AssertNever, ICharacterPrivateData, PRONOUNS, type PronounKey } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useColorInput } from '../../common/useColorInput.ts';
 import { FormInput } from '../../common/userInteraction/input/formInput.tsx';
@@ -9,6 +8,7 @@ import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { Select } from '../../common/userInteraction/select/select.tsx';
 import { PrehashPassword } from '../../crypto/helpers.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast.ts';
+import { useNavigatePandora } from '../../routing/navigate.ts';
 import { Button } from '../common/button/button.tsx';
 import { ColorInput } from '../common/colorInput/colorInput.tsx';
 import { Column, Row } from '../common/container/container.tsx';
@@ -20,7 +20,7 @@ import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
 
 export function CharacterSettings(): ReactElement | null {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const playerData = usePlayerData();
 
 	if (!playerData)
@@ -117,7 +117,7 @@ interface CharacterDeleteFormData {
 }
 
 function DeleteCharacterDialog({ playerData, stage, setStage }: { playerData: Readonly<ICharacterPrivateData>; stage: number; setStage: (stage: number) => void; }): ReactElement | null {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const directoryConnector = useDirectoryConnector();
 	const [invalidPassword, setInvalidPassword] = React.useState('');
 	const [character, setCharacter] = React.useState('');

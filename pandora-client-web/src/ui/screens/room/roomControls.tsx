@@ -4,7 +4,7 @@ import React, {
 	useMemo,
 	type ReactNode,
 } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router';
 import listIcon from '../../../assets/icons/list.svg';
 import settingIcon from '../../../assets/icons/setting.svg';
 import shieldIcon from '../../../assets/icons/shield.svg';
@@ -24,6 +24,7 @@ import { USER_DEBUG } from '../../../config/Environment.ts';
 import { SettingDisplayCharacterName } from '../../../graphics/room/roomCharacter.tsx';
 import { DeviceOverlaySetting, DeviceOverlaySettingSchema, DeviceOverlayState } from '../../../graphics/room/roomDevice.tsx';
 import { useObservable } from '../../../observable.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useChatInput } from '../../components/chat/chatInput.tsx';
 import { PrivateRoomTutorialList } from '../../tutorial/privateTutorials.tsx';
 import { useRoomScreenContext } from './roomContext.tsx';
@@ -33,7 +34,7 @@ export function RoomControls(): ReactElement | null {
 	const spaceConfig = useSpaceInfo().config;
 	const characters = useSpaceCharacters();
 	const player = usePlayer();
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 
 	const friends = useFriendStatus();
 	const sortedCharacters = useMemo(() => {
@@ -106,7 +107,7 @@ export function RoomControls(): ReactElement | null {
 }
 
 export function PersonalSpaceControls(): ReactElement {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const player = usePlayer();
 	AssertNotNullable(player);
 
@@ -263,7 +264,7 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 	const spaceInfo = useSpaceInfo();
 	const playerId = usePlayerId();
 	const { setTarget } = useChatInput();
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const location = useLocation();
 	const globalState = useGlobalState(useGameState());
 	const { show: showRestrictionOverrideContext } = useRestrictionOverrideDialogContext();

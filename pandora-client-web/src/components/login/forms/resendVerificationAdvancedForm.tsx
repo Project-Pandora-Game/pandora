@@ -1,11 +1,11 @@
 import { AssertNever, FormatTimeInterval, IsEmail, UserNameSchema } from 'pandora-common';
 import { ReactElement, useCallback, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { useDirectoryResendVerificationAdvanced } from '../../../networking/account_manager.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { Button } from '../../common/button/button.tsx';
 import { Form, FormCreateStringValidator, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
 import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha.tsx';
@@ -17,7 +17,7 @@ export interface ResendVerificationAdvancedFormData {
 }
 
 export function ResendVerificationAdvancedForm(): ReactElement {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const resendVerificationAdvanced = useDirectoryResendVerificationAdvanced();
 	const [errorMessage, setErrorMessage] = useState('');
 	const [captchaToken, setCaptchaToken] = useState('');

@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import { clamp } from 'lodash-es';
 import { AssertNotNullable, CharacterId, ChatCharacterStatus, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 import settingsIcon from '../../../assets/icons/setting.svg';
@@ -21,6 +20,7 @@ import { usePlayerId } from '../../../components/gameContext/playerContextProvid
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider.tsx';
 import { useNullableObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useService } from '../../../services/serviceProvider.tsx';
 import { COMMANDS, GetChatModeDescription } from './commands.ts';
@@ -594,7 +594,7 @@ export function useChatCommandContext(): ICommandInvokeContext<ICommandExecution
 	const directoryConnector = useDirectoryConnector();
 	const accountManager = useService('accountManager');
 	const shardConnector = useShardConnector();
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	AssertNotNullable(shardConnector);
 
 	return useMemo((): ICommandInvokeContext<ICommandExecutionContextClient> => ({

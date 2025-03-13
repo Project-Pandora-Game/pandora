@@ -1,7 +1,7 @@
 import { GetLogger, IsSimpleToken, IsString, IsUsername } from 'pandora-common';
 import { ReactElement, useEffect } from 'react';
-import { useNavigate } from 'react-router';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { Button } from '../../common/button/button.tsx';
 import { Form, FormErrorMessage, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
 import { useAuthFormData } from '../authFormDataProvider.tsx';
@@ -13,7 +13,7 @@ const logger = GetLogger('AccountVerificationForm');
 
 export function AccountVerificationForm(): ReactElement {
 	const { state: { username, password, justRegistered } } = useAuthFormData();
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const { dirty, errorMessage, errors, onSubmit, isSubmitting, register } = useLoginForm(true);
 
 	useEffect(() => {

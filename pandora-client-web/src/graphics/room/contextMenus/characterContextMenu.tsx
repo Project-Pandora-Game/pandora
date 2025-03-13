@@ -2,7 +2,6 @@ import classNames from 'classnames';
 import { Immutable } from 'immer';
 import { AssertNever, AssertNotNullable, ICharacterRoomData, IDirectoryAccountInfo, SpaceClientInfo } from 'pandora-common';
 import { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router';
 import { toast } from 'react-toastify';
 import arrowAllIcon from '../../../assets/icons/arrow_all.svg';
 import bodyIcon from '../../../assets/icons/body.svg';
@@ -27,6 +26,7 @@ import { usePlayer } from '../../../components/gameContext/playerContextProvider
 import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
 import { PointLike } from '../../../graphics/graphicsCharacter.tsx';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useChatInput } from '../../../ui/components/chat/chatInput.tsx';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext.tsx';
@@ -395,7 +395,7 @@ export function CharacterContextMenuContent({ character, onClose }: {
 	character: Character<ICharacterRoomData>;
 	onClose: () => void;
 }): ReactElement | null {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const { setTarget } = useChatInput();
 	const player = usePlayer();
 	AssertNotNullable(player);

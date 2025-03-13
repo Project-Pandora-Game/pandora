@@ -1,7 +1,6 @@
 import { IsAuthorized, IsObject } from 'pandora-common';
 import { ComponentType, lazy, ReactElement, Suspense, useEffect } from 'react';
-import { useNavigate } from 'react-router';
-import { Navigate, NavigateOptions, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, NavigateOptions, Route, Routes, useLocation } from 'react-router';
 import { AccountContacts } from '../components/accountContacts/accountContacts.tsx';
 import { CharacterCreate } from '../components/characterCreate/characterCreate.tsx';
 import { CharacterSelect } from '../components/characterSelect/characterSelect.tsx';
@@ -24,6 +23,7 @@ import { SpaceConfiguration, SpaceCreate } from '../ui/screens/spaceConfiguratio
 import { SpaceJoin } from '../ui/screens/spaceJoin/spaceJoin.tsx';
 import { SpacesSearch } from '../ui/screens/spacesSearch/spacesSearch.tsx';
 import { authPagePathsAndComponents } from './authRoutingData.ts';
+import { useNavigatePandora } from './navigate.ts';
 
 // Lazily loaded screens
 const Management = lazy(() => import('../components/management/index.tsx'));
@@ -74,7 +74,7 @@ function RequiresLogin<TProps extends object>({ element: Element, preserveLocati
 	const isLoggedIn = useCurrentAccount() != null;
 	const hasAuthToken = useAuthTokenIsValid();
 	const location = useLocation();
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 
 	useEffect(() => {
 		if (!isLoggedIn && !hasAuthToken) {

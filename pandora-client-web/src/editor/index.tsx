@@ -1,7 +1,7 @@
 import { GetLogger, LogLevel, SetConsoleOutput } from 'pandora-common';
 import React, { ReactElement, useState } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router-dom';
+import { BrowserRouter } from 'react-router';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css' with { type: 'css' };
 import { GraphicsManager } from '../assets/graphicsManager.ts';
@@ -13,7 +13,6 @@ import { LoadSearchArgs } from '../config/searchArgs.ts';
 import { ConfigurePixiSettings } from '../graphics/pixiSettings.ts';
 import '../index.scss';
 import { TOAST_OPTIONS_ERROR } from '../persistentToast.ts';
-import { ROUTER_FUTURE_CONFIG } from '../routing/config.ts';
 import { ScreenResolutionSerice } from '../services/screenResolution/screenResolution.ts';
 import '../styles/fonts.scss';
 import '../styles/globalUtils.scss';
@@ -54,7 +53,7 @@ async function Start(): Promise<void> {
 	createRoot(document.querySelector('#editor-root') as HTMLElement).render(
 		<React.StrictMode>
 			<EulaGate>
-				<BrowserRouter basename='/editor' future={ ROUTER_FUTURE_CONFIG }>
+				<BrowserRouter basename='/editor'>
 					<EditorContextProvider serviceManager={ serviceManager }>
 						<ToastContainer
 							theme='dark'

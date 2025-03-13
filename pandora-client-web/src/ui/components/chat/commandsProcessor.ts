@@ -1,10 +1,10 @@
 import type { Immutable } from 'immer';
 import { CommandAutocompleteResult, CommandRunner, ICommandExecutionContext, IEmpty, LongestCommonPrefix, type AccountSettings, type AssetFrameworkGlobalState } from 'pandora-common';
-import type { useNavigate } from 'react-router';
 import type { PlayerCharacter } from '../../../character/player.ts';
 import type { GameState, IChatMessageSender } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
 import type { ShardConnector } from '../../../networking/shardConnector.ts';
+import type { NavigateFunctionPandora } from '../../../routing/navigate.ts';
 import type { AccountManager } from '../../../services/accountLogic/accountManager.ts';
 import type { IChatInputHandler } from './chatInput.tsx';
 
@@ -20,7 +20,7 @@ export interface ICommandExecutionContextClient extends ICommandExecutionContext
 	accountSettings: Immutable<AccountSettings>;
 	messageSender: IChatMessageSender;
 	inputHandlerContext: IChatInputHandler;
-	navigate: ReturnType<typeof useNavigate>;
+	navigate: NavigateFunctionPandora;
 }
 
 export type IClientCommand<TCommandExecutionContext extends ICommandExecutionContext> = {

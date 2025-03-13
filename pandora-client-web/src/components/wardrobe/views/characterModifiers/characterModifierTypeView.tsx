@@ -8,7 +8,7 @@ import {
 	type CharacterModifierTypeDefinition,
 } from 'pandora-common';
 import { ReactElement, ReactNode, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 import wikiIcon from '../../../../assets/icons/wiki.svg';
 import type { ICharacter } from '../../../../character/character.ts';
 import { TextInput } from '../../../../common/userInteraction/input/textInput.tsx';

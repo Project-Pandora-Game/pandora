@@ -1,11 +1,11 @@
 import { AssertNever, DisplayNameSchema, EmailAddressSchema, PasswordSchema, UserNameSchema } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { useForm, Validate } from 'react-hook-form';
-import { useNavigate } from 'react-router';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { DEVELOPMENT } from '../../../config/Environment.ts';
 import { useDirectoryRegister } from '../../../networking/account_manager.ts';
 import { useObservable } from '../../../observable.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { Button } from '../../common/button/button.tsx';
 import { Form, FormCreateStringValidator, FormField, FormFieldError, FormLink } from '../../common/form/form.tsx';
 import { FormFieldCaptcha } from '../../common/form/formFieldCaptcha.tsx';
@@ -31,7 +31,7 @@ export function RegistrationForm(): ReactElement {
 	const [invalidBetaKey, setInvalidBetaKey] = useState('');
 	const [captchaToken, setCaptchaToken] = useState('');
 	const [captchaFailed, setCaptchaFailed] = useState(false);
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const { setState: setAuthData } = useAuthFormData();
 	const {
 		formState: { errors, submitCount, isSubmitting },

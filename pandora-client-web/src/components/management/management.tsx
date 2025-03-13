@@ -1,7 +1,7 @@
 import { IsAuthorized } from 'pandora-common';
 import { ReactElement } from 'react';
-import { useNavigate } from 'react-router';
 import { useObservable } from '../../observable.ts';
+import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
@@ -11,7 +11,7 @@ import { Roles } from './roles/roles.tsx';
 import { Shards } from './shards/shards.tsx';
 
 export function ManagementRoutes(): ReactElement | null {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const directoryConnector = useDirectoryConnector();
 	const directoryStatus = useObservable(directoryConnector.directoryStatus);
 	const account = useCurrentAccount();

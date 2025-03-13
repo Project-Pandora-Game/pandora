@@ -1,6 +1,6 @@
 import { ReactElement, ReactNode } from 'react';
-import { useNavigate } from 'react-router';
 import { ChildrenProps } from '../../common/reactTypes.ts';
+import { useNavigatePandora } from '../../routing/navigate.ts';
 import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs.tsx';
 import { PrivacyPolicyContent } from '../Eula/privacyPolicy.tsx';
@@ -15,7 +15,7 @@ import { WikiSpaces } from './pages/spaces.tsx';
 import './wiki.scss';
 
 export default function Wiki(): ReactElement {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 
 	return (
 		<UrlTabContainer className='wiki' tabsPosition='left'>

@@ -12,7 +12,6 @@ import {
 	TimeSpanMs,
 } from 'pandora-common';
 import { ReactElement, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useColorInput } from '../../common/useColorInput.ts';
 import { useCurrentTime } from '../../common/useCurrentTime.ts';
@@ -23,6 +22,7 @@ import { TextInput } from '../../common/userInteraction/input/textInput.tsx';
 import { ConfigShowGitHubIntegration } from '../../config/searchArgs.ts';
 import { useObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
+import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import { Button } from '../common/button/button.tsx';
 import { ColorInput } from '../common/colorInput/colorInput.tsx';
@@ -32,7 +32,7 @@ import { useConfirmDialog } from '../dialog/dialog.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 
 export function AccountSettings(): ReactElement | null {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const account = useCurrentAccount();
 
 	if (!account)

@@ -1,7 +1,7 @@
 import { noop } from 'lodash-es';
 import { CharacterSelfInfo, EMPTY, GetLogger, IClientDirectoryNormalResult } from 'pandora-common';
 import { ReactElement, useCallback, useState } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { useCreateNewCharacter } from '../../networking/account_manager.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';

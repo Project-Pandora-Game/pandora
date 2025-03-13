@@ -31,7 +31,7 @@ import {
 	type SpaceGhostManagementConfig,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link, Navigate } from 'react-router';
 import { toast } from 'react-toastify';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager.tsx';
 import { CopyToClipboard } from '../../../common/clipboard.ts';
@@ -61,6 +61,7 @@ import devMode from '../../../icons/developer.svg';
 import pronounChange from '../../../icons/male-female.svg';
 import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import './spaceConfiguration.scss';
 
@@ -111,7 +112,7 @@ export function SpaceCreate(): ReactElement {
 export function SpaceConfiguration({ creation = false }: { creation?: boolean; } = {}): ReactElement | null {
 	const idPrefix = useId();
 
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const currentAccount = useCurrentAccount();
 	AssertNotNullable(currentAccount);
 	const create = useCreateSpace();
@@ -1111,7 +1112,7 @@ const SpaceConfigurationProgress = new PersistentToast();
 
 function useCreateSpace(): (config: SpaceDirectoryConfig) => Promise<void> {
 	const directoryConnector = useDirectoryConnector();
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	return useCallback(async (config) => {
 		try {
 			SpaceConfigurationProgress.show('progress', 'Creating space...');

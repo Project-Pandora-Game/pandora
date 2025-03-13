@@ -1,6 +1,6 @@
 import { LIMIT_CHARACTER_COUNT } from 'pandora-common';
 import { ReactElement } from 'react';
-import { Link } from 'react-router-dom';
+import { Link } from 'react-router';
 
 export function WikiNew(): ReactElement {
 	return (

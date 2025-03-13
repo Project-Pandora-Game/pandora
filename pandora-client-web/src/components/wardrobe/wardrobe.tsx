@@ -7,10 +7,11 @@ import {
 	type ActionTargetSelector,
 } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
-import { Link, Navigate, Route, Routes, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
 import { z } from 'zod';
 import { Character, IChatroomCharacter } from '../../character/character.ts';
 import { useObservable } from '../../observable.ts';
+import { useNavigatePandora } from '../../routing/navigate.ts';
 import { CharacterRestrictionOverrideWarningContent } from '../characterRestrictionOverride/characterRestrictionOverride.tsx';
 import { Tab, TabContainer, type TabConfig } from '../common/tabs/tabs.tsx';
 import { useGameState, useSpaceCharacters, useSpaceInfo } from '../gameContext/gameStateContextProvider.tsx';
@@ -129,7 +130,7 @@ function WardrobeRouterRoomInventory(): ReactElement {
 }
 
 function WardrobeRoom(): ReactElement {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const gameState = useGameState();
 	const characters = useSpaceCharacters();
 	const roomInfo = useObservable(gameState.currentSpace).config;
@@ -166,7 +167,7 @@ function WardrobeRoom(): ReactElement {
 function WardrobeCharacter({ character }: {
 	character: IChatroomCharacter;
 }): ReactElement {
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 	const { globalState } = useWardrobeActionContext();
 	const { actionPreviewState } = useWardrobeContext();
 	const characterState = globalState.characters.get(character.id);

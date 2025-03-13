@@ -1,6 +1,7 @@
 import { IsObject } from 'pandora-common';
 import { ReactElement, ReactNode, useCallback } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router';
+import { useNavigatePandora } from '../../../routing/navigate.ts';
 
 export function BackLink({ children }: {
 	children: ReactNode;
@@ -20,7 +21,7 @@ export function useBackLocation(): string {
 
 export function useNavigateBack(): () => void {
 	const backLocation = useBackLocation();
-	const navigate = useNavigate();
+	const navigate = useNavigatePandora();
 
 	return useCallback(() => {
 		navigate(backLocation);

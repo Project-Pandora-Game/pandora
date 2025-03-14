@@ -198,12 +198,20 @@ function WardrobeItemRequireFreeHandsCustomize({ wornItem, item }: { wornItem: I
 		type: 'customize',
 		target: targetSelector,
 		item,
+		chat: {
+			generic: '',
+			specific: '',
+		},
 		requireFreeHandsToUse: true,
 	}), [targetSelector, item]);
 	const actionSetOptional = React.useMemo<AppearanceAction>(() => ({
 		type: 'customize',
 		target: targetSelector,
 		item,
+		chat: {
+			generic: '',
+			specific: '',
+		},
 		requireFreeHandsToUse: false,
 	}), [targetSelector, item]);
 
@@ -289,15 +297,15 @@ function WardrobeItemNameAndDescriptionInfo({ item, itemPath, onStartEdit }: { i
 				</Row>
 				<Row alignY='center'>
 					<label htmlFor='custom-name'>Custom name:</label>
-					<span className='name'>{ item.name ?? ' ' }</span>
+					<span className='name'>{ item.name ?? '' }</span>
 				</Row>
 				<Row alignY='center'>
 					<label htmlFor='generic-name'>Generic name:</label>
-					<span className='name'>{ item.chat?.generic ?? ' ' }</span>
+					<span className='name'>{ item.chat?.generic ?? '' }</span>
 				</Row>
 				<Row alignY='center'>
 					<label htmlFor='specific-name'>Specific name:</label>
-					<span className='name'>{ item.chat?.specific ?? ' ' }</span>
+					<span className='name'>{ item.chat?.specific ?? '' }</span>
 				</Row>
 				<label>Description ({ item.description ? item.description.length : 0 } characters):</label>
 				<div className='flex-1 description'>
@@ -326,7 +334,10 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 	const cancelConfirm = useCallback(() => {
 		Promise.resolve()
 			.then(() => {
-				if (name !== (item.name ?? '') || description !== (item.description ?? '')) {
+				if (name !== (item.name ?? '') ||
+					description !== (item.description ?? '') ||
+					specific !== (item.chat?.specific ?? '') ||
+					generic !== (item.chat?.generic ?? '')) {
 					return confirm('Unsaved changes', <>Are you sure you want to discard your changes?</>);
 				}
 				return true;
@@ -339,7 +350,7 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 			.catch((err) => {
 				GetLogger('WardrobeItemNameAndDescriptionEdit').error('Error cancelling edit:', err);
 			});
-	}, [confirm, description, item.description, item.name, name, onEndEdit]);
+	}, [confirm, description, item.description, item.name, name, specific, item.chat?.specific, generic, item.chat?.generic, onEndEdit]);
 
 	const action = useMemo((): AppearanceAction => ({
 		type: 'customize',
@@ -365,12 +376,12 @@ function WardrobeItemNameAndDescriptionEdit({ item, itemPath, onEndEdit }: { ite
 					<TextInput id='custom-name' value={ name } onChange={ setName } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
 				</Row>
 				<Row alignY='center'>
-					<label htmlFor='custom-name'>Generic name:</label>
-					<TextInput id='custom-name' value={ item.chat?.generic ?? '' } onChange={ setGeneric } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
+					<label htmlFor='generic-name'>Generic name:</label>
+					<TextInput id='generic-name' value={ generic } onChange={ setGeneric } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
 				</Row>
 				<Row alignY='center'>
-					<label htmlFor='custom-name'>Specific name:</label>
-					<TextInput id='custom-name' value={ item.chat?.specific ?? '' } onChange={ setSpecific } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
+					<label htmlFor='specific-name'>Specific name:</label>
+					<TextInput id='specific-name' value={ specific } onChange={ setSpecific } maxLength={ LIMIT_ITEM_NAME_LENGTH } />
 				</Row>
 				{
 					nameError && (

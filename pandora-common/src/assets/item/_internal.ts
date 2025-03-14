@@ -228,7 +228,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		});
 	}
 
-	/** Returns a new item with the passed name and description */
+	/** Returns a new item with the passed name */
 	public customizeName(newName: string): Item<Type> {
 		let name: string | undefined = newName.trim();
 		if (name === '' || name === this.asset.definition.name)
@@ -237,7 +237,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 		return this.withProps({ name });
 	}
 
-	/** Returns a new item with the passed name and description */
+	/** Returns a new item with the passed description */
 	public customizeDescription(newDescription: string): Item<Type> {
 		let description: string | undefined = newDescription.trim();
 		if (description === '')
@@ -245,6 +245,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 
 		return this.withProps({ description });
 	}
+
 	/** Returns a new item with the passed name and description */
 	public customizeChat(newChat: ItemChatCustomMessages): Item<Type> {
 

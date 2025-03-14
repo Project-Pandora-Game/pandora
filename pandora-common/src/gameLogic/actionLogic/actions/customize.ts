@@ -73,6 +73,9 @@ export function ActionAppearanceCustomize({
 		if (action.description !== undefined) {
 			it = it.customizeDescription(action.description);
 		}
+		if ((action.chat?.generic !== undefined) || (action.chat?.specific !== undefined)) {
+			it = it.customizeChat(action.chat);
+		}
 
 		// Apply the new requireFreeHandsToUse value, if a new value is defined
 		if (action.requireFreeHandsToUse !== undefined && (it.isType('personal') || it.isType('roomDevice'))) {

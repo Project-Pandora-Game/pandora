@@ -9,6 +9,7 @@ export * from './base.ts';
 export * from './definitions.ts';
 export * from './effects.ts';
 export * from './graphics/index.ts';
+export * from './graphicsSource/index.ts';
 export * from './item/index.ts';
 export * from './itemLimits.ts';
 export * from './modules.ts';

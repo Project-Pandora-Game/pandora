@@ -2,8 +2,6 @@ import { Assert, CanonizePointTemplate, GetLogger } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
-import type { AnyAssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
-import { useLayerName } from '../../../assets/assetGraphicsCalculations.ts';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager.ts';
 import { useBrowserSessionStorage, useBrowserStorage } from '../../../browserStorage.ts';
@@ -46,10 +44,6 @@ export function PointsUI(): ReactElement {
 			<PointsHelperMathUi />
 		</div>
 	);
-}
-
-export function LayerName({ layer }: { layer: AnyAssetGraphicsLayer; }): ReactElement {
-	return <>{ useLayerName(layer) }</>;
 }
 
 export function PointsEditUi(): ReactElement | null {

@@ -1,9 +1,7 @@
 import classNames from 'classnames';
-import { AssetGraphicsDefinition, AssetGraphicsDefinitionSchema, GetLogger, ZodMatcher } from 'pandora-common';
+import { AssetSourceGraphicsDefinitionSchema, GetLogger } from 'pandora-common';
 import React, { ReactElement, useState, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
-import { type AnyAssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
-import { useLayerHasAlphaMasks, useLayerName } from '../../../assets/assetGraphicsCalculations.ts';
 import { useEvent } from '../../../common/useEvent.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
@@ -12,12 +10,12 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton.ts
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
 import { useObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
-import { EDITOR_ALPHA_ICONS, useEditorAssetLayers } from '../../editor.tsx';
+import { useLayerHasAlphaMasks, useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
+import type { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
+import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
+import { EDITOR_ALPHA_ICONS } from '../../editor.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
-import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor.ts';
 import './asset.scss';
-
-const IsAssetGraphicsDefinition = ZodMatcher(AssetGraphicsDefinitionSchema);
 
 export function AssetUI() {
 	const editor = useEditor();
@@ -185,15 +183,12 @@ function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactEle
 								file
 									.text()
 									.then((content) => {
-										const definition = JSON.parse(
+										const definition = AssetSourceGraphicsDefinitionSchema.parse(JSON.parse(
 											content
 												.split('\n')
 												.filter((line) => !line.trimStart().startsWith('//'))
 												.join('\n'),
-										) as AssetGraphicsDefinition;
-										if (!IsAssetGraphicsDefinition(definition)) {
-											throw new Error('Invalid format');
-										}
+										));
 										asset.load(definition);
 									})
 									.catch((err) => {
@@ -214,19 +209,19 @@ function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactEle
 
 function AssetLayerList({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
 	const editor = useEditor();
-	const layers = useEditorAssetLayers(asset, true);
+	const layers = useObservable(asset.layers);
 
 	return (
 		<div className='layerList'>
 			<Button onClick={ () => editor.targetLayer.value = null } className='slim' >Unselect layer</Button>
 			<ul>
-				{ layers.map((layer) => <AssetLayerListLayer key={ `${layer.index}` + (layer.isMirror ? 'm' : '') } asset={ asset } layer={ layer } />) }
+				{ layers.map((layer, index) => <AssetLayerListLayer key={ index } asset={ asset } layer={ layer } />) }
 			</ul>
 		</div>
 	);
 }
 
-function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; layer: AnyAssetGraphicsLayer; }): ReactElement {
+function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; layer: EditorAssetGraphicsLayer; }): ReactElement {
 	const editor = useEditor();
 	const isSelected = useObservable(editor.targetLayer) === layer;
 
@@ -255,13 +250,13 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 			>
 				{ name }
 			</button>
-			<Button className='slim hideDisabled' aria-label='move' disabled={ layer.isMirror } onClick={ () => asset.moveLayerRelative(layer, -1) } title='Move layer up'>
+			<Button className='slim hideDisabled' aria-label='move' onClick={ () => asset.moveLayerRelative(layer, -1) } title='Move layer up'>
 				🠉
 			</Button>
 			<Button className='slim' aria-label='hide' onClick={ toggleAlpha } title="Cycle layers's opacity">
 				{ EDITOR_ALPHA_ICONS[alphaIndex] }
 			</Button>
-			<Button className='slim hideDisabled' aria-label='delete' disabled={ layer.isMirror } onClick={ () => {
+			<Button className='slim hideDisabled' aria-label='delete' onClick={ () => {
 				// eslint-disable-next-line no-alert
 				if (!confirm(`Are you sure you want to delete layer '${name}'?`))
 					return;

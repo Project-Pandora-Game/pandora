@@ -1,9 +1,10 @@
 import { type Draft, type Immutable } from 'immer';
 import { cloneDeep } from 'lodash-es';
-import { EMPTY_ARRAY, type PointTemplate } from 'pandora-common';
+import { AssertNotNullable, EMPTY_ARRAY, type PointTemplate } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
 import { CalculatePointDefinitionsFromTemplate, CalculatePointsTriangles } from '../../assets/assetGraphicsCalculations.ts';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Container } from '../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../graphics/baseComponents/graphics.ts';
 import { Observable, useObservable } from '../../observable.ts';
@@ -43,12 +44,12 @@ export class PointTemplateEditor {
 
 	public getCurrent(): Immutable<PointTemplate> {
 		return this._editor.modifiedPointTemplates.value.get(this.templateName) ??
-			this._editor.manager.getTemplate(this.templateName) ??
+			GraphicsManagerInstance.value?.getTemplate(this.templateName) ??
 			EMPTY_ARRAY;
 	}
 
 	public modifyTemplate(recipe: (d: Draft<PointTemplate>) => void) {
-		const originalTemplate: PointTemplate = this._editor.manager.getTemplate(this.templateName) ?? [];
+		const originalTemplate: PointTemplate = GraphicsManagerInstance.value?.getTemplate(this.templateName) ?? [];
 
 		this._editor.modifiedPointTemplates.produceImmer((d) => {
 			const template = d.get(this.templateName) ?? cloneDeep(originalTemplate);
@@ -78,12 +79,14 @@ export function PointTemplateEditLayer({ templateEditor }: {
 }): ReactElement {
 	const editor = useEditor();
 	const editorModifiedTemplates = useObservable(editor.modifiedPointTemplates);
+	const graphicsManager = useObservable(GraphicsManagerInstance);
+	AssertNotNullable(graphicsManager);
 
 	const currentTemplate = useMemo((): Immutable<PointTemplate> => {
 		return editorModifiedTemplates.get(templateEditor.templateName) ??
-			editor.manager.getTemplate(templateEditor.templateName) ??
+			graphicsManager.getTemplate(templateEditor.templateName) ??
 			EMPTY_ARRAY;
-	}, [editor, editorModifiedTemplates, templateEditor]);
+	}, [graphicsManager, editorModifiedTemplates, templateEditor]);
 
 	const [points, triangles] = useMemo(() => {
 		const p = CalculatePointDefinitionsFromTemplate(currentTemplate);

@@ -1,8 +1,6 @@
 import type { Immutable } from 'immer';
 import { nanoid } from 'nanoid';
 import {
-	Assert,
-	AssertNotNullable,
 	Asset,
 	ASSET_PREFERENCES_DEFAULT,
 	AssetFrameworkCharacterState,
@@ -15,18 +13,17 @@ import {
 	MergeAssetProperties,
 	PseudoRandom,
 	ResolveAssetPreference,
-	type LayerDefinition,
 	type LayerPriority,
 	type LayerStateOverrides,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { AssetGraphics, type AnyAssetGraphicsLayer } from '../assets/assetGraphics.ts';
+import type { LoadedAssetGraphics } from '../assets/assetGraphics.ts';
 import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { usePlayerData } from '../components/gameContext/playerContextProvider.tsx';
-import { Observable, useObservable, useObservableMultiple, type ReadonlyObservable } from '../observable.ts';
+import { Observable, useNullableObservable, useObservable } from '../observable.ts';
 import { Container } from './baseComponents/container.ts';
 import { TransitionedContainer, type PixiTransitionedContainer, type TransitionedContainerCustomProps } from './common/transitions/transitionedContainer.ts';
 import { TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler.ts';
@@ -74,24 +71,9 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	onPointerMove?: (event: FederatedPointerEvent) => void;
 }
 
-export type GraphicsGetterFunction = (asset: AssetId) => AssetGraphics | undefined;
-export type LayerStateOverrideGetter = (layer: AnyAssetGraphicsLayer) => LayerStateOverrides | undefined;
+export type GraphicsGetterFunction = (asset: AssetId) => LoadedAssetGraphics | undefined;
+export type LayerStateOverrideGetter = (layer: Immutable<import('pandora-common').GraphicsLayer>) => LayerStateOverrides | undefined;
 export type LayerGetSortOrder = (view: CharacterView) => readonly LayerPriority[];
-
-function useLayerPriorityResolver(states: readonly LayerState[]): ReadonlyMap<LayerState, LayerPriority> {
-	const layerDefinitions = useObservableMultiple(states.map((s): ReadonlyObservable<Immutable<LayerDefinition>> => s.layer.definition));
-	Assert(layerDefinitions.length === states.length);
-
-	return useMemo((): ReadonlyMap<LayerState, LayerPriority> => {
-		const result = new Map<LayerState, LayerPriority>();
-		for (let i = 0; i < states.length; i++) {
-			const state = states[i];
-			const definition = layerDefinitions[i];
-			result.set(state, definition.priority);
-		}
-		return result;
-	}, [states, layerDefinitions]);
-}
 
 export const CHARACTER_PIVOT_POSITION: Readonly<PointLike> = {
 	x: CharacterSize.WIDTH / 2, // Middle of the character image
@@ -280,7 +262,8 @@ export function GraphicsCharacterWithManager({
 				continue;
 			}
 			result.push(
-				...graphics.allLayers.map<LayerState>((layer) => ({
+				...graphics.layers.map((layer, layerIndex): LayerState => ({
+					layerKey: `${item.id}-${layerIndex}`,
 					layer,
 					item,
 					state: layerStateOverrideGetter?.(layer),
@@ -297,21 +280,19 @@ export function GraphicsCharacterWithManager({
 
 	const effectivePose = effectiveCharacterState.actualPose;
 	const { view } = effectivePose;
-	const priorities = useLayerPriorityResolver(layers);
 	const sortOrder = useComputedLayerPriority(effectivePose);
 
 	const priorityLayers = useMemo<ReadonlyMap<LayerPriority, ReactElement>>(() => {
 		const result = new Map<LayerPriority, ReactElement>();
 		for (const layerState of layers) {
-			const priority = priorities.get(layerState);
-			AssertNotNullable(priority);
+			const priority = layerState.layer.priority;
 			const reverse = PRIORITY_ORDER_REVERSE_PRIORITIES.has(priority) !== (view === 'back');
 			const lowerLayer = result.get(priority);
 			const LayerElement = Layer ?? GraphicsLayer;
 
 			result.set(priority, (
 				<LayerElement
-					key={ `${(layerState.item ?? layerState.layer.asset).id}-${layerState.layer.index}` }
+					key={ layerState.layerKey }
 					zIndex={ reverse ? 1 : -1 }
 					lowerZIndex={ reverse ? 1 : -1 }
 					layer={ layerState.layer }
@@ -325,7 +306,7 @@ export function GraphicsCharacterWithManager({
 			));
 		}
 		return result;
-	}, [Layer, effectiveCharacterState, layers, priorities, view, characterBlinking]);
+	}, [Layer, effectiveCharacterState, layers, view, characterBlinking]);
 
 	const pivot = useMemo<PointLike>(() => (pivotExtra ?? { x: CHARACTER_PIVOT_POSITION.x, y: 0 }), [pivotExtra]);
 	const scale = useMemo<PointLike>(() => (scaleExtra ?? { x: view === 'back' ? -1 : 1, y: 1 }), [view, scaleExtra]);
@@ -375,9 +356,10 @@ export function GraphicsCharacterWithManager({
 
 export function GraphicsCharacter(props: GraphicsCharacterProps): ReactElement | null {
 	const manager = useObservable(GraphicsManagerInstance);
-	const graphicsGetter = useMemo<GraphicsGetterFunction | undefined>(() => manager?.getAssetGraphicsById.bind(manager), [manager]);
+	const assetGraphics = useNullableObservable(manager?.assetGraphics);
+	const graphicsGetter = useMemo<GraphicsGetterFunction | undefined>(() => assetGraphics == null ? undefined : ((id: AssetId) => assetGraphics[id]), [assetGraphics]);
 
-	if (!manager || !graphicsGetter)
+	if (!graphicsGetter)
 		return null;
 
 	return <GraphicsCharacterWithManager { ...props } graphicsGetter={ graphicsGetter } />;

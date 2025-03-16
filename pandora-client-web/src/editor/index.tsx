@@ -92,8 +92,8 @@ function AssetLoaderElement() {
 		setLoading(true);
 
 		try {
-			const [assetManager, graphicsManager] = await loadManager();
-			setEditor(new Editor(assetManager, graphicsManager));
+			const [assetManager] = await loadManager();
+			setEditor(new Editor(assetManager));
 		} catch (e) {
 			if (e instanceof Error) {
 				toast.error(`Failed to load:\n${e.message}`, TOAST_OPTIONS_ERROR);

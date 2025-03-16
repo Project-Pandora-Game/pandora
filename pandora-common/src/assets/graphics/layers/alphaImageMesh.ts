@@ -4,9 +4,8 @@ import { RectangleSchema } from '../common.ts';
 import { BoneNameSchema } from '../conditions.ts';
 import { LayerImageSettingSchema, LayerMirrorSchema, LayerPrioritySchema } from './common.ts';
 
-export const AlphaImageMeshLayerDefinitionSchema = RectangleSchema.extend({
+export const GraphicsAlphaImageMeshLayerSchema = RectangleSchema.extend({
 	type: z.literal('alphaImageMesh'),
-	name: z.string().optional(),
 	priority: LayerPrioritySchema,
 	points: z.string(),
 	pointType: z.array(z.string()).optional(),
@@ -19,4 +18,4 @@ export const AlphaImageMeshLayerDefinitionSchema = RectangleSchema.extend({
 		stops: z.array(z.tuple([z.number(), LayerImageSettingSchema])),
 	}).optional(),
 }).strict();
-export type AlphaImageMeshLayerDefinition = z.infer<typeof AlphaImageMeshLayerDefinitionSchema>;
+export type GraphicsAlphaImageMeshLayer = z.infer<typeof GraphicsAlphaImageMeshLayerSchema>;

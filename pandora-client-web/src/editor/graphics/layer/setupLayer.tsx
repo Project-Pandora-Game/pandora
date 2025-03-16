@@ -1,18 +1,18 @@
-import { AssetFrameworkCharacterState, type LayerDefinition } from 'pandora-common';
+import { AssetFrameworkCharacterState } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { Texture } from 'pixi.js';
 import { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react';
-import { AssetGraphicsLayer, type AnyAssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
-import { useLayerDefinition, useLayerImageSource, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
+import { useLayerImageSource, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
 import { Sprite } from '../../../graphics/baseComponents/sprite.ts';
 import { useItemColor, useLayerVertices, type GraphicsLayerProps } from '../../../graphics/layers/graphicsLayerCommon.tsx';
 import { useTexture } from '../../../graphics/useTexture.ts';
+import { useObservable } from '../../../observable.ts';
+import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
 import { useEditorLayerStateOverride } from '../../editor.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
-import { EditorAssetGraphics } from '../character/appearanceEditor.ts';
 import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer.tsx';
 
 export function SetupLayer({
@@ -32,7 +32,7 @@ export function SetupLayerSelected({
 }: {
 	characterState: AssetFrameworkCharacterState;
 	zIndex: number;
-	layer: AnyAssetGraphicsLayer;
+	layer: EditorAssetGraphicsLayer;
 }): ReactElement | null {
 	switch (layer.type) {
 		case 'mesh':
@@ -48,30 +48,31 @@ export function SetupMeshLayerSelected({
 }: {
 	characterState: AssetFrameworkCharacterState;
 	zIndex: number;
-	layer: AssetGraphicsLayer<Extract<LayerDefinition, { type: 'mesh'; }>>;
+	layer: EditorAssetGraphicsLayer<'mesh'>;
 }): ReactElement {
 	const editor = useEditor();
 	const state = useEditorLayerStateOverride(layer);
 	const item = characterState.items.find((i) => i.asset.id === layer.asset.id) ?? null;
 
-	const { points, triangles } = useLayerMeshPoints(layer);
-
-	const evaluator = useAppearanceConditionEvaluator(characterState);
-
+	const definition = useObservable(layer.definition);
 	const {
 		height,
 		width,
 		colorizationKey,
 		x, y,
-	} = useLayerDefinition(layer);
+	} = definition;
+
+	const { points, triangles } = useLayerMeshPoints(definition);
+
+	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	const {
 		image,
 		imageUv,
-	} = useLayerImageSource(evaluator, layer, item);
+	} = useLayerImageSource(evaluator, definition, item);
 
 	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, false, imageUv);
-	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true);
+	const uv = useLayerVertices(evaluatorUvPose, points, definition, item, true);
 
 	const drawWireFrame = useCallback((g: PIXI.GraphicsContext) => {
 		// Draw triangles
@@ -98,17 +99,12 @@ export function SetupMeshLayerSelected({
 
 	// TODO: Make editor asset's images observable
 	const editorGetTexture = useMemo<((image: string) => Texture) | undefined>(() => {
-		if (asset instanceof EditorAssetGraphics)
-			return (i) => asset.getTexture(i);
-		return undefined;
+		return (i) => asset.getTexture(i);
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [layer, editorGettersVersion]);
+	}, [asset, editorGettersVersion]);
 
 	useEffect(() => {
-		if (asset instanceof EditorAssetGraphics) {
-			return editor.on('modifiedAssetsChange', () => editorGettersUpdate());
-		}
-		return undefined;
+		return editor.on('modifiedAssetsChange', () => editorGettersUpdate());
 	}, [editor, asset]);
 
 	const texture = useTexture(image, undefined, editorGetTexture);

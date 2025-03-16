@@ -1,15 +1,14 @@
 import { z } from 'zod';
-import { ZodBase64Regex } from '../../../validation.ts';
-import { RectangleSchema } from '../common.ts';
-import { BoneNameSchema } from '../conditions.ts';
-import { LayerImageSettingSchema, LayerMirrorSchema, LayerPrioritySchema, LayerStateOverridesSchema } from './common.ts';
+import { RectangleSchema } from '../../graphics/common.ts';
+import { BoneNameSchema } from '../../graphics/conditions.ts';
+import { LayerImageSettingSchema, LayerMirrorSchema, LayerPrioritySchema, LayerStateOverridesSchema } from '../../graphics/layers/common.ts';
 
-export const GraphicsMeshLayerSchema = RectangleSchema.extend({
+export const GraphicsSourceMeshLayerSchema = RectangleSchema.extend({
 	type: z.literal('mesh'),
+	name: z.string().default(''),
 	priority: LayerPrioritySchema,
 	points: z.string(),
 	pointType: z.array(z.string()).optional(),
-	pointFilterMask: z.string().regex(ZodBase64Regex).optional(),
 	/** Overrides applied to this layer while generating an item preview. */
 	previewOverrides: LayerStateOverridesSchema.optional(),
 	mirror: LayerMirrorSchema,
@@ -21,4 +20,4 @@ export const GraphicsMeshLayerSchema = RectangleSchema.extend({
 		stops: z.array(z.tuple([z.number(), LayerImageSettingSchema])),
 	}).optional(),
 }).strict();
-export type GraphicsMeshLayer = z.infer<typeof GraphicsMeshLayerSchema>;
+export type GraphicsSourceMeshLayer = z.infer<typeof GraphicsSourceMeshLayerSchema>;

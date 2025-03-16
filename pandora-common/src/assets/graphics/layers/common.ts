@@ -46,8 +46,6 @@ export enum LayerMirror {
 	NONE,
 	/** Only imageOverrides are mirrored, points are selected */
 	SELECT,
-	/** Mirrors everything and creates the mirrored image */
-	FULL,
 }
 export const LayerMirrorSchema = z.nativeEnum(LayerMirror);
 

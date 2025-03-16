@@ -3,8 +3,6 @@ import { Assert, AssertNotNullable, Asset, AssetId, Item } from 'pandora-common'
 import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { type AnyAssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
-import { useLayerName } from '../../../assets/assetGraphicsCalculations.ts';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
@@ -14,9 +12,12 @@ import { Form, FormField, FormFieldError } from '../../../components/common/form
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
-import { IObservableClass, ObservableClass, ObservableProperty, useObservableProperty } from '../../../observable.ts';
+import { IObservableClass, ObservableClass, ObservableProperty, useNullableObservable, useObservable, useObservableProperty } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { ASSET_ID_PART_REGEX, AssetManagerEditor, AssetTreeViewCategory, useAssetManagerEditor } from '../../assets/assetManager.ts';
+import { useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
+import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
+import { EditorAssetGraphicsManager } from '../../assets/editorAssetGraphicsManager.ts';
 import { EDITOR_ALPHA_ICONS, useEditorLayerTint, useEditorTabContext } from '../../editor.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
@@ -24,10 +25,9 @@ import { PreviewCutter } from '../previewCutter/previewCutter.tsx';
 import './assets.scss';
 
 export function AssetsUI(): ReactElement {
-	const editor = useEditor();
 	const editorCharacterState = useEditorCharacterState();
 	const view = useAssetManagerEditor().assetTreeView;
-	const editorAssets = useSyncExternalStore((change) => editor.on('modifiedAssetsChange', change), () => editor.getModifiedAssetsList());
+	const editorAssets = useObservable(EditorAssetGraphicsManager.editedAssetGraphics);
 
 	return (
 		<div className='editor-setupui asset-ui'>
@@ -63,7 +63,7 @@ export function AssetsUI(): ReactElement {
 				</ContextHelpButton>
 			</h3>
 			<ul>
-				{ editorAssets.map((assetId) => <EditedAssetElement key={ assetId } assetId={ assetId } />) }
+				{ Array.from(editorAssets.values()).map((asset) => <EditedAssetElement key={ asset.id } assetId={ asset.id } />) }
 			</ul>
 			<h3>
 				All assets
@@ -200,14 +200,15 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 	}
 
 	const asset = item.asset;
-	const graphics = editor.getAssetGraphicsById(asset.id);
+	const editorAssetGraphics = useObservable(EditorAssetGraphicsManager.editedAssetGraphics).get(asset.id);
+	const layers = useNullableObservable(editorAssetGraphics?.layers) ?? [];
 
-	const alphaIndex = useSyncExternalStore<number>(editor.getSubscriber('layerOverrideChange'), () => editor.getLayersAlphaOverrideIndex(...(graphics?.allLayers ?? [])));
+	const alphaIndex = useSyncExternalStore<number>(editor.getSubscriber('layerOverrideChange'), () => editor.getLayersAlphaOverrideIndex(...layers));
 
 	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
-		if (graphics) {
-			editor.setLayerAlphaOverride(graphics.allLayers, alphaIndex + 1);
+		if (editorAssetGraphics) {
+			editor.setLayerAlphaOverride(layers, alphaIndex + 1);
 		}
 	};
 
@@ -234,13 +235,13 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 			</div>
 		}>
 			<ul>
-				{ graphics && graphics.allLayers.map((layer, index) => <AssetLayerElement key={ index } layer={ layer } />) }
+				{ layers.map((layer, index) => <AssetLayerElement key={ index } layer={ layer } />) }
 			</ul>
 		</ToggleLi>
 	);
 }
 
-function AssetLayerElement({ layer }: { layer: AnyAssetGraphicsLayer; }): ReactElement {
+function AssetLayerElement({ layer }: { layer: EditorAssetGraphicsLayer; }): ReactElement {
 	const editor = useEditor();
 	const alphaIndex = useSyncExternalStore<number>((changed) => {
 		return editor.on('layerOverrideChange', (changedLayer) => {

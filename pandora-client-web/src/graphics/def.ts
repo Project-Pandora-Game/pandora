@@ -7,13 +7,14 @@ import {
 	Item,
 	LAYER_PRIORITIES,
 	LayerPriority,
+	type GraphicsLayer,
 	type LayerStateOverrides,
 } from 'pandora-common';
 import { useMemo } from 'react';
-import type { AnyAssetGraphicsLayer } from '../assets/assetGraphics.ts';
 
 export type LayerState = {
-	layer: AnyAssetGraphicsLayer;
+	layerKey: string;
+	layer: Immutable<GraphicsLayer>;
 	item: Item | null;
 	state?: LayerStateOverrides;
 };

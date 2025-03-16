@@ -1,20 +1,18 @@
-import { produce, type Immutable } from 'immer';
+import type { Immutable } from 'immer';
 import {
 	AppearanceItems,
 	AssertNever,
 	AssetFrameworkCharacterState,
 	HexColorString,
 	Item,
-	LayerMirror,
+	type GraphicsLayer,
 	type GraphicsLayerType,
-	type LayerDefinition,
 	type LayerStateOverrides,
 	type PointDefinitionCalculated,
+	type Rectangle,
 } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import { ReactElement, createContext, useContext, useMemo } from 'react';
-import { AssetGraphicsLayer } from '../../assets/assetGraphics.ts';
-import { useLayerDefinition } from '../../assets/assetGraphicsCalculations.ts';
 import { ChildrenProps } from '../../common/reactTypes.ts';
 import { useObservable, type ReadonlyObservable } from '../../observable.ts';
 import { ConditionEvaluatorBase } from '../appearanceConditionEvaluator.ts';
@@ -61,52 +59,36 @@ export function EvalLayerVerticesTransform(evaluator: ConditionEvaluatorBase, it
 	return result;
 }
 
-export function useLayerVertices<TLayer extends LayerDefinition>(
+export function useLayerVertices(
 	evaluator: ConditionEvaluatorBase,
 	points: Immutable<PointDefinitionCalculated[]>,
-	layer: AssetGraphicsLayer<TLayer>,
+	layerArea: Immutable<Rectangle>,
 	item: Item | null,
 	normalize: boolean = false,
 ): Float32Array {
-	const layerDefinition = useLayerDefinition(layer);
-
-	// Mirror
-	const mirroredPoints = useMemo((): Immutable<PointDefinitionCalculated[]> => {
-		if (layerDefinition.mirror === LayerMirror.FULL) {
-			return produce(points, (draftPoints) => {
-				for (const point of draftPoints) {
-					// FIXME: This is likely wrong, but it isn't currently used anywhere (I kept old variant)
-					point.pos[0] -= layerDefinition.width;
-				}
-			});
-		}
-
-		return points;
-	}, [points, layerDefinition]);
-
 	return useMemo((): Float32Array => {
 		// Eval transform
-		const result = EvalLayerVerticesTransform(evaluator, item, mirroredPoints);
+		const result = EvalLayerVerticesTransform(evaluator, item, points);
 
 		// Normalize
 		if (normalize) {
 			const normalizedResult = new Float32Array(result.length);
 			for (let i = 0; i < result.length; i++) {
 				const odd = (i % 2) !== 0;
-				normalizedResult[i] = (result[i] - (odd ? layerDefinition.y : layerDefinition.x)) /
-					(odd ? layerDefinition.height : layerDefinition.width);
+				normalizedResult[i] = (result[i] - (odd ? layerArea.y : layerArea.x)) /
+					(odd ? layerArea.height : layerArea.width);
 			}
 			return normalizedResult;
 		}
 		return result;
-	}, [layerDefinition, evaluator, item, mirroredPoints, normalize]);
+	}, [layerArea, evaluator, item, points, normalize]);
 }
 
 export interface GraphicsLayerProps<TLayerType extends GraphicsLayerType = GraphicsLayerType> extends ChildrenProps {
 	characterState: AssetFrameworkCharacterState;
 	zIndex: number;
 	lowerZIndex: number;
-	layer: { [type in TLayerType]: AssetGraphicsLayer<Extract<LayerDefinition, { type: type; }>> }[TLayerType];
+	layer: Immutable<Extract<GraphicsLayer, { type: TLayerType; }>>;
 	item: Item | null;
 
 	/**

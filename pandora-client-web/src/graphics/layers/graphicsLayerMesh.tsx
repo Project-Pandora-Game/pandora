@@ -1,6 +1,6 @@
 import * as PIXI from 'pixi.js';
 import { ReactElement, useContext, useMemo } from 'react';
-import { useImageResolutionAlternative, useLayerDefinition, useLayerImageSource, useLayerMeshPoints } from '../../assets/assetGraphicsCalculations.ts';
+import { useImageResolutionAlternative, useLayerImageSource, useLayerMeshPoints } from '../../assets/assetGraphicsCalculations.ts';
 import { useNullableObservable } from '../../observable.ts';
 import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
@@ -27,10 +27,6 @@ export function GraphicsLayerMesh({
 	const evaluator = useAppearanceConditionEvaluator(characterState, currentlyBlinking);
 
 	const {
-		colorizationKey,
-	} = useLayerDefinition(layer);
-
-	const {
 		image,
 		imageUv,
 	} = useLayerImageSource(evaluator, layer, item);
@@ -42,7 +38,7 @@ export function GraphicsLayerMesh({
 
 	const texture = useTexture(useImageResolutionAlternative(image).image, undefined, getTexture);
 
-	const { color, alpha } = useItemColor(characterState.items, item, colorizationKey, state);
+	const { color, alpha } = useItemColor(characterState.items, item, layer.colorizationKey, state);
 
 	const { cullClockwise } = useContext(ContextCullClockwise);
 

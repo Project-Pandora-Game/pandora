@@ -1,4 +1,4 @@
-import { Assert } from 'pandora-common';
+import { AssertNever } from 'pandora-common';
 import { ReactElement } from 'react';
 import { GraphicsLayerAlphaImageMesh } from './graphicsLayerAlphaImageMesh.tsx';
 import type { GraphicsLayerProps } from './graphicsLayerCommon.tsx';
@@ -8,10 +8,11 @@ export function GraphicsLayer({
 	layer,
 	...props
 }: GraphicsLayerProps): ReactElement {
-	if (layer.isType('mesh')) {
-		return <GraphicsLayerMesh { ...props } layer={ layer } />;
-	} else if (layer.isType('alphaImageMesh')) {
-		return <GraphicsLayerAlphaImageMesh { ...props } layer={ layer } />;
+	switch (layer.type) {
+		case 'mesh':
+			return <GraphicsLayerMesh { ...props } layer={ layer } />;
+		case 'alphaImageMesh':
+			return <GraphicsLayerAlphaImageMesh { ...props } layer={ layer } />;
 	}
-	Assert(false, 'Unsupported layer type');
+	AssertNever(layer);
 }

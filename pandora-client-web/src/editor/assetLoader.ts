@@ -1,8 +1,9 @@
-import { AssetsDefinitionFile, AssetsGraphicsDefinitionFile } from 'pandora-common';
+import { AssetsDefinitionFile, GraphicsDefinitionFileSchema, GraphicsSourceDefinitionFileSchema } from 'pandora-common';
 import { URLGraphicsLoader } from '../assets/graphicsLoader.ts';
 import { GraphicsManager, GraphicsManagerInstance, IGraphicsLoader } from '../assets/graphicsManager.ts';
 import { EDITOR_ASSETS_ADDRESS, EDITOR_ASSETS_OFFICIAL_ADDRESS } from '../config/Environment.ts';
 import { AssetManagerEditor, EditorAssetManager } from './assets/assetManager.ts';
+import { EditorAssetGraphicsManager } from './assets/editorAssetGraphicsManager.ts';
 
 export async function LoadAssetsFromAssetDevServer(): Promise<[AssetManagerEditor, GraphicsManager]> {
 	return Load(new URLGraphicsLoader(EDITOR_ASSETS_ADDRESS + '/'));
@@ -24,8 +25,16 @@ async function Load(loader: IGraphicsLoader): Promise<[AssetManagerEditor, Graph
 
 	const assetManager = EditorAssetManager.loadAssetManager(hash, assetDefinitions);
 
+	const graphicsSourceHash = assetManager.graphicsSourceId;
+	const graphicsSourceDefinitions = GraphicsSourceDefinitionFileSchema.parse(JSON.parse(await loader.loadTextFile(`graphicsSource_${graphicsSourceHash}.json`)));
+
+	// Load graphics source definitions for editor
+	EditorAssetGraphicsManager.loadNewOriginalDefinitions(graphicsSourceDefinitions);
+
+	// Load runtime graphics definitions in editor
+	// TODO: These should be built from source definitions
 	const graphicsHash = assetManager.graphicsId;
-	const graphicsDefinitions = JSON.parse(await loader.loadTextFile(`graphics_${graphicsHash}.json`)) as AssetsGraphicsDefinitionFile;
+	const graphicsDefinitions = GraphicsDefinitionFileSchema.parse(JSON.parse(await loader.loadTextFile(`graphics_${graphicsHash}.json`)));
 
 	const graphicsManager = await GraphicsManager.create(loader, graphicsHash, graphicsDefinitions);
 	GraphicsManagerInstance.value = graphicsManager;

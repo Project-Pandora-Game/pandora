@@ -3,18 +3,15 @@ import { Immutable } from 'immer';
 import { maxBy, minBy } from 'lodash-es';
 import {
 	Assert,
-	Asset,
 	BitField,
 	BoneName,
 	CloneDeepMutable,
 	Item,
-	LayerDefinition,
 	LayerImageSetting,
-	LayerMirror,
 	MakeMirroredPoints,
-	MirrorPoint,
 	PointDefinition,
 	PointMatchesPointType,
+	type GraphicsLayer,
 	type PointDefinitionCalculated,
 	type PointTemplate,
 } from 'pandora-common';
@@ -25,8 +22,6 @@ import { GRAPHICS_TEXTURE_RESOLUTION_SCALE, useGraphicsSettings } from '../graph
 import { EvaluateCondition } from '../graphics/utility.ts';
 import { useNullableObservable, useObservable, type ReadonlyObservable } from '../observable.ts';
 import { useAutomaticResolution } from '../services/screenResolution/screenResolution.ts';
-import type { AnyAssetGraphicsLayer, AssetGraphics, AssetGraphicsLayer } from './assetGraphics.ts';
-import { useAssetManager } from './assetManager.tsx';
 import { GraphicsManagerInstance } from './graphicsManager.ts';
 
 export type AssetGraphicsResolverOverride = {
@@ -35,29 +30,13 @@ export type AssetGraphicsResolverOverride = {
 
 export const AssetGraphicsResolverOverrideContext = createContext<AssetGraphicsResolverOverride | null>(null);
 
-export function useGraphicsAsset(graphics: AssetGraphics): Asset {
-	const assetManager = useAssetManager();
-	const asset = assetManager.getAssetById(graphics.id);
-	Assert(asset, 'Asset not found');
-	return asset;
-}
-
-export function useLayerDefinition<TLayer extends LayerDefinition>(layer: AssetGraphicsLayer<TLayer>): Immutable<TLayer> {
-	return useObservable(layer.definition);
-}
-
 /** Constant for the most common case, so caches can just use reference to this object. */
 const SCALING_IMAGE_UV_EMPTY: Record<BoneName, number> = Object.freeze({});
-export function useLayerImageSource<TLayer extends LayerDefinition>(evaluator: AppearanceConditionEvaluator, layer: AssetGraphicsLayer<TLayer>, item: Item | null): Immutable<{
-	setting: Immutable<LayerImageSetting>;
-	image: string;
-	imageUv: Record<BoneName, number>;
-}> {
-	const {
-		image: scalingBaseimage,
-		scaling,
-	} = useLayerDefinition(layer);
-
+export function useLayerImageSource(
+	evaluator: AppearanceConditionEvaluator,
+	{ image: scalingBaseimage, scaling }: Pick<Immutable<GraphicsLayer>, 'image' | 'scaling'>,
+	item: Item | null,
+): Immutable<{ setting: Immutable<LayerImageSetting>; image: string; imageUv: Record<BoneName, number>; }> {
 	const [setting, scalingUv] = useMemo((): Immutable<[LayerImageSetting, scalingUv: Record<BoneName, number>]> => {
 		if (scaling) {
 			const value = evaluator.getBoneLikeValue(scaling.scaleBone);
@@ -97,47 +76,18 @@ export function useLayerImageSource<TLayer extends LayerDefinition>(evaluator: A
 	}, [evaluator, item, setting, scalingUv]);
 }
 
-export function LayerToImmediateName<TLayer extends LayerDefinition>(layer: AssetGraphicsLayer<TLayer>): string {
-	let name = layer.definition.value.name || `Layer #${layer.index + 1}`;
-	if (layer.isMirror) {
-		name += ' (mirror)';
-	}
-	return name;
-}
-
-export function useLayerName(layer: AnyAssetGraphicsLayer): string {
-	const d = useObservable<Immutable<LayerDefinition>>(layer.definition);
-	let name = d.name || `Layer #${layer.index + 1}`;
-	if (layer.isMirror) {
-		name += ' (mirror)';
-	}
-	return name;
-}
-
-const pointMirrorCache = new WeakMap<Immutable<PointDefinition[]>, Immutable<PointDefinition[]>>();
 const calculatedPointsCache = new WeakMap<Immutable<PointDefinition[]>, Immutable<PointDefinitionCalculated[]>>();
-export function CalculatePointDefinitionsFromTemplate(template: Immutable<PointTemplate>, mirrorPoints: boolean = false): Immutable<PointDefinitionCalculated[]> {
-	let points: Immutable<PointDefinition[]> = template;
-
-	if (mirrorPoints) {
-		let newPoints: Immutable<PointDefinition[]> | undefined = pointMirrorCache.get(points);
-		if (newPoints === undefined) {
-			newPoints = points.map(MirrorPoint);
-			pointMirrorCache.set(points, newPoints);
-		}
-		points = newPoints;
-	}
-
-	let result: Immutable<PointDefinitionCalculated[]> | undefined = calculatedPointsCache.get(points);
+export function CalculatePointDefinitionsFromTemplate(template: Immutable<PointTemplate>): Immutable<PointDefinitionCalculated[]> {
+	let result: Immutable<PointDefinitionCalculated[]> | undefined = calculatedPointsCache.get(template);
 	if (result === undefined) {
-		result = points
+		result = template
 			.map((point, index): PointDefinitionCalculated => ({
 				...CloneDeepMutable(point),
 				index,
 				isMirror: false,
 			}))
 			.flatMap(MakeMirroredPoints);
-		calculatedPointsCache.set(points, result);
+		calculatedPointsCache.set(template, result);
 	}
 	return result;
 }
@@ -159,7 +109,7 @@ export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalcul
 	return new Uint32Array(result);
 }
 
-export function useLayerMeshPoints<TLayer extends LayerDefinition>(layer: AssetGraphicsLayer<TLayer>): {
+export function useLayerMeshPoints({ points, pointType, pointFilterMask }: Pick<Immutable<GraphicsLayer>, 'points' | 'pointType' | 'pointFilterMask'>): {
 	readonly points: Immutable<PointDefinitionCalculated[]>;
 	readonly triangles: Uint32Array;
 } {
@@ -168,8 +118,6 @@ export function useLayerMeshPoints<TLayer extends LayerDefinition>(layer: AssetG
 	// causing (most likely) overlap, which would result in clipping.
 	// In some other cases this could lead to gaps or other visual artifacts
 	// Any optimization of unused points needs to be done *after* triangles are calculated
-	const { points, pointType, pointFilterMask, mirror } = useLayerDefinition(layer);
-
 	const manager = useObservable(GraphicsManagerInstance);
 	const templateOverrides = useNullableObservable(useContext(AssetGraphicsResolverOverrideContext)?.pointTemplates);
 
@@ -179,7 +127,7 @@ export function useLayerMeshPoints<TLayer extends LayerDefinition>(layer: AssetG
 			throw new Error(`Unknown template '${p}'`);
 		}
 
-		const calculatedPoints = CalculatePointDefinitionsFromTemplate(p, (layer.isMirror && mirror === LayerMirror.FULL));
+		const calculatedPoints = CalculatePointDefinitionsFromTemplate(p);
 		Assert(calculatedPoints.length < 65535, 'Points do not fit into indices');
 
 		const pointsFilter = new BitField(calculatedPoints.length);
@@ -201,23 +149,7 @@ export function useLayerMeshPoints<TLayer extends LayerDefinition>(layer: AssetG
 			points: calculatedPoints,
 			triangles: CalculatePointsTriangles(calculatedPoints, pointsFilter),
 		};
-	}, [layer, manager, templateOverrides, points, mirror, pointType, pointFilterMask]);
-}
-
-export function useLayerHasAlphaMasks(layer: AnyAssetGraphicsLayer): boolean {
-	return layer.type === 'alphaImageMesh';
-}
-
-export function useLayerImageSettingsForScalingStop(layer: AnyAssetGraphicsLayer, stop: number | null | undefined): Immutable<LayerImageSetting> {
-	const d = useObservable<Immutable<LayerDefinition>>(layer.definition);
-	if (!stop)
-		return d.image;
-
-	const res = d.scaling?.stops.find((s) => s[0] === stop)?.[1];
-	if (!res) {
-		throw new Error('Failed to get stop');
-	}
-	return res;
+	}, [manager, templateOverrides, points, pointType, pointFilterMask]);
 }
 
 export function useImageResolutionAlternative(image: string): {

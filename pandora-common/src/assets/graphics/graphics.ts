@@ -1,9 +1,8 @@
 import { z } from 'zod';
-import type { AssetId } from '../base.ts';
-import { type BoneType } from './conditions.ts';
-import { AlphaImageMeshLayerDefinitionSchema } from './layers/alphaImageMesh.ts';
-import { MeshLayerDefinitionSchema } from './layers/mesh.ts';
-import { type PointTemplate } from './points.ts';
+import { AssetIdSchema } from '../base.ts';
+import type { BoneType } from './conditions.ts';
+import { GraphicsLayerSchema } from './layer.ts';
+import { PointTemplateSchema } from './points.ts';
 
 export const CharacterSize = {
 	WIDTH: 1000,
@@ -23,20 +22,18 @@ export interface BoneDefinition {
 	type: BoneType;
 }
 
-export const LayerDefinitionSchema = z.discriminatedUnion('type', [
-	MeshLayerDefinitionSchema,
-	AlphaImageMeshLayerDefinitionSchema,
-]);
-export type LayerDefinition = z.infer<typeof LayerDefinitionSchema>;
-export type GraphicsLayerType = LayerDefinition['type'];
-
 export const AssetGraphicsDefinitionSchema = z.object({
-	layers: z.array(LayerDefinitionSchema),
+	layers: GraphicsLayerSchema.array(),
 }).strict();
 export type AssetGraphicsDefinition = z.infer<typeof AssetGraphicsDefinitionSchema>;
 
-export interface AssetsGraphicsDefinitionFile {
-	assets: Record<AssetId, AssetGraphicsDefinition>;
-	pointTemplates: Record<string, PointTemplate>;
-	imageFormats: Partial<Record<'avif' | 'webp', string>>;
-}
+export const GraphicsImageFormatSchema = z.enum(['avif', 'webp']);
+export type GraphicsImageFormat = z.infer<typeof GraphicsImageFormatSchema>;
+
+export const GraphicsDefinitionFileSchema = z.object({
+	assets: z.record(AssetIdSchema, AssetGraphicsDefinitionSchema),
+	pointTemplates: z.record(z.string(), PointTemplateSchema),
+	imageFormats: z.record(GraphicsImageFormatSchema, z.string()),
+});
+
+export type GraphicsDefinitionFile = z.infer<typeof GraphicsDefinitionFileSchema>;

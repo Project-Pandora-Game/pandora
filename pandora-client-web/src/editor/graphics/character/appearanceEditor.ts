@@ -1,5 +1,3 @@
-import { downloadZip, InputWithSizeMeta } from 'client-zip';
-import { Immutable } from 'immer';
 import { cloneDeep } from 'lodash-es';
 import {
 	ActionSpaceContext,
@@ -7,39 +5,25 @@ import {
 	AppearanceActionContext,
 	AppearanceActionProcessingContext,
 	ApplyAction,
-	Assert,
-	AssertNever,
 	AssertNotNullable,
 	Asset,
 	ASSET_PREFERENCES_DEFAULT,
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalStateContainer,
-	AssetGraphicsDefinition,
-	AssetGraphicsDefinitionSchema,
-	AssetId,
 	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
 	CharacterAppearance,
 	CharacterId,
 	CharacterRestrictionsManager,
-	CharacterSize,
 	CharacterView,
 	GameLogicCharacter,
 	GameLogicCharacterClient,
 	GetLogger,
 	ICharacterRoomData,
 	ItemId,
-	LayerImageSetting,
-	LayerMirror,
 	TypedEventEmitter,
 	type AssetFrameworkGlobalState,
-	type GraphicsLayerType,
 } from 'pandora-common';
-import { Texture } from 'pixi.js';
-import { AssetGraphics, type AnyAssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
-import { IGraphicsLoader } from '../../../assets/graphicsManager.ts';
 import { CharacterEvents, ICharacter } from '../../../character/character.ts';
-import { DownloadAsFile } from '../../../common/downloadHelper.ts';
-import { LoadArrayBufferImageResource, StripAssetHash } from '../../../graphics/utility.ts';
 import { EDITOR_SPACE_CONTEXT } from '../../components/wardrobe/wardrobe.tsx';
 import { Editor } from '../../editor.tsx';
 import { useEditorState } from '../../editorContextProvider.tsx';
@@ -203,262 +187,4 @@ export function useEditorCharacterState(): AssetFrameworkCharacterState {
 	AssertNotNullable(characterState);
 
 	return characterState;
-}
-
-export class EditorAssetGraphics extends AssetGraphics {
-	public readonly editor: Editor;
-	public onChangeHandler: (() => void) | undefined;
-
-	constructor(editor: Editor, id: AssetId, definition?: Immutable<AssetGraphicsDefinition>, onChange?: () => void) {
-		super(id, definition ?? {
-			layers: [],
-		});
-		this.editor = editor;
-		this.onChangeHandler = onChange;
-	}
-
-	public override load(definition: AssetGraphicsDefinition): void {
-		super.load(definition);
-		this.onChange();
-	}
-
-	protected onChange(): void {
-		this.onChangeHandler?.();
-	}
-
-	public addLayer(type: GraphicsLayerType): void {
-		let newLayer: AnyAssetGraphicsLayer;
-		switch (type) {
-			case 'mesh':
-				newLayer = this.createLayer({
-					x: 0,
-					y: 0,
-					width: CharacterSize.WIDTH,
-					height: CharacterSize.HEIGHT,
-					priority: 'OVERLAY',
-					type: 'mesh',
-					points: '',
-					mirror: LayerMirror.NONE,
-					colorizationKey: undefined,
-					image: {
-						image: '',
-						overrides: [],
-					},
-				});
-				break;
-			case 'alphaImageMesh':
-				newLayer = this.createLayer({
-					x: 0,
-					y: 0,
-					width: CharacterSize.WIDTH,
-					height: CharacterSize.HEIGHT,
-					priority: 'OVERLAY',
-					type: 'alphaImageMesh',
-					points: '',
-					mirror: LayerMirror.NONE,
-					image: {
-						image: '',
-						overrides: [],
-					},
-				});
-				break;
-			default:
-				AssertNever(type);
-		}
-		this.layers = [...this.layers, newLayer];
-		this.onChange();
-	}
-
-	public deleteLayer(layer: AnyAssetGraphicsLayer): void {
-		const index = this.layers.indexOf(layer);
-		if (index < 0)
-			return;
-
-		this.layers = this.layers.filter((l) => l !== layer);
-
-		this.onChange();
-	}
-
-	public moveLayerRelative(layer: AnyAssetGraphicsLayer, shift: number): void {
-		const currentPos = this.layers.indexOf(layer);
-		if (currentPos < 0)
-			return;
-
-		const newPos = currentPos + shift;
-		if (newPos < 0 && newPos >= this.layers.length)
-			return;
-
-		const newLayers = this.layers.slice();
-		newLayers.splice(currentPos, 1);
-		newLayers.splice(newPos, 0, layer);
-		this.layers = newLayers;
-
-		this.onChange();
-	}
-
-	public setScaleAs(layer: AnyAssetGraphicsLayer, scaleAs: string | null): void {
-		if (layer.mirror && layer.isMirror) {
-			layer = layer.mirror;
-		}
-
-		layer._modifyDefinition((d) => {
-			if (scaleAs) {
-				d.scaling = {
-					scaleBone: scaleAs,
-					stops: [],
-				};
-			} else {
-				d.scaling = undefined;
-			}
-		});
-	}
-
-	public addScalingStop(layer: AnyAssetGraphicsLayer, value: number): void {
-		if (layer.mirror && layer.isMirror) {
-			layer = layer.mirror;
-		}
-
-		if (value === 0 || !Number.isInteger(value) || value < -180 || value > 180) {
-			throw new Error('Invalid value supplied');
-		}
-
-		layer._modifyDefinition((d) => {
-			Assert(d.scaling, 'Cannot add scaling stop if not scaling');
-
-			if (d.scaling.stops.some((stop) => stop[0] === value))
-				return;
-
-			d.scaling.stops.push([value, cloneDeep(d.image)]);
-			d.scaling.stops.sort((a, b) => a[0] - b[0]);
-		});
-	}
-
-	public removeScalingStop(layer: AnyAssetGraphicsLayer, stop: number): void {
-		if (layer.mirror && layer.isMirror) {
-			layer = layer.mirror;
-		}
-
-		layer._modifyDefinition((d) => {
-			Assert(d.scaling, 'Cannot remove scaling stop if not scaling');
-
-			d.scaling.stops = d.scaling.stops.filter((s) => s[0] !== stop);
-		});
-	}
-
-	private readonly fileContents = new Map<string, ArrayBuffer>();
-	private readonly textures = new Map<string, Texture>([['', Texture.EMPTY]]);
-	private _loadedTextures: readonly string[] = [];
-	public get loadedTextures(): readonly string[] {
-		return this._loadedTextures;
-	}
-
-	public getTexture(image: string): Texture {
-		const texture = this.textures.get(image);
-		return texture ?? Texture.EMPTY;
-	}
-
-	public async addTextureFromArrayBuffer(name: string, buffer: ArrayBuffer): Promise<void> {
-		const texture = new Texture({
-			source: await LoadArrayBufferImageResource(buffer),
-			label: `Editor: ${name}`,
-		});
-		this.fileContents.set(name, buffer);
-		this.textures.set(name, texture);
-		if (!this._loadedTextures.includes(name)) {
-			this._loadedTextures = [...this._loadedTextures, name];
-		}
-		this.onChange();
-	}
-
-	public getTextureImageSource(name: string): string | null {
-		const buffer = this.fileContents.get(name);
-		if (!buffer)
-			return null;
-
-		return URL.createObjectURL(new Blob([buffer], { type: 'image/png' }));
-	}
-
-	public deleteTexture(name: string): void {
-		this.fileContents.delete(name);
-		this.textures.delete(name);
-		this._loadedTextures = this._loadedTextures.filter((t) => t !== name);
-		this.onChange();
-	}
-
-	public async addTexturesFromFiles(files: FileList): Promise<void> {
-		for (let i = 0; i < files.length; i++) {
-			const file = files.item(i);
-			if (!file || !file.name.endsWith('.png'))
-				continue;
-			const buffer = await file.arrayBuffer();
-			await this.addTextureFromArrayBuffer(file.name, buffer);
-		}
-	}
-
-	public loadAllUsedImages(loader: IGraphicsLoader): Promise<void> {
-		const images = new Set<string>();
-		for (const layer of this.layers) {
-			const processSetting = (setting: LayerImageSetting): void => {
-				{
-					const layerImage = setting.image;
-					images.add(layerImage);
-					setting.image = StripAssetHash(layerImage);
-				}
-				for (const override of setting.overrides) {
-					images.add(override.image);
-					override.image = StripAssetHash(override.image);
-				}
-			};
-			layer._modifyDefinition((d) => {
-				processSetting(d.image);
-				d.scaling?.stops.forEach((s) => processSetting(s[1]));
-			});
-		}
-		return Promise.allSettled(
-			Array.from(images.values())
-				.filter((image) => image.trim())
-				.map((image) =>
-					loader
-						.loadFileArrayBuffer(image)
-						.then((result) => this.addTextureFromArrayBuffer(StripAssetHash(image), result)),
-				),
-		).then(() => undefined);
-	}
-
-	public createDefinitionString(): string {
-		return `// THIS IS AN AUTOGENERATED FILE. DO NOT EDIT THIS FILE DIRECTLY.\n` +
-			JSON.stringify(AssetGraphicsDefinitionSchema.parse(this.export()), undefined, '\t').trim() +
-			'\n';
-	}
-
-	public async downloadZip(): Promise<void> {
-		const graphicsDefinitionContent = this.createDefinitionString();
-
-		const now = new Date();
-
-		const files: InputWithSizeMeta[] = [
-			{ name: 'graphics.json', lastModified: now, input: graphicsDefinitionContent },
-		];
-
-		for (const [name, image] of this.fileContents.entries()) {
-			files.push({
-				name,
-				input: image,
-				lastModified: now,
-			});
-		}
-
-		// get the ZIP stream in a Blob
-		const blob = await downloadZip(files, {
-			metadata: files,
-		}).blob();
-
-		DownloadAsFile(blob, `${this.id.replace(/^a\//, '').replaceAll('/', '_')}.zip`);
-	}
-
-	public async exportDefinitionToClipboard(): Promise<void> {
-		const graphicsDefinitionContent = this.createDefinitionString();
-
-		await navigator.clipboard.writeText(graphicsDefinitionContent);
-	}
 }

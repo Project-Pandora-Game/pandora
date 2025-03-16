@@ -36,7 +36,7 @@
 		"inter-ui": "4.1.0",
 		"lodash-es": "4.17.21",
 		"lz-string": "1.5.0",
-		"nanoid": "5.1.3",
+		"nanoid": "5.1.4",
 		"pandora-common": "workspace:*",
 		"pixi-viewport": "6.0.3",
 		"pixi.js": "8.7.3",

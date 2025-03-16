@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { AssetSourceGraphicsDefinitionSchema, GetLogger } from 'pandora-common';
-import React, { ReactElement, useState, useSyncExternalStore } from 'react';
+import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
 import { useEvent } from '../../../common/useEvent.ts';
 import { Button } from '../../../components/common/button/button.tsx';
@@ -9,7 +9,7 @@ import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
 import { useObservable } from '../../../observable.ts';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
 import { useLayerHasAlphaMasks, useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
 import type { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
 import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
@@ -163,11 +163,22 @@ function AddLayerUiDialog({ close, selectedAsset }: { close: () => void; selecte
 }
 
 function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
+	const exportToClipboard = useCallback(() => {
+		asset.exportDefinitionToClipboard()
+			.then(() => {
+				toast(`Copied to clipboard`, TOAST_OPTIONS_SUCCESS);
+			})
+			.catch((err) => {
+				GetLogger('AssetExportImport').error('Error exporing to clipboard:', err);
+				toast(`Error exporting to clipboard:\n${err}`, TOAST_OPTIONS_ERROR);
+			});
+	}, [asset]);
+
 	return (
 		<Column>
 			<Button onClick={ () => void asset.downloadZip() } className='flex-2' >Export archive</Button>
 			<Row>
-				<Button onClick={ () => void asset.exportDefinitionToClipboard() } className='flex-2' >Export definition to clipboard</Button>
+				<Button onClick={ exportToClipboard } className='flex-2' >Export definition to clipboard</Button>
 				<label htmlFor='asset-import-button' className='flex-1 hiddenUpload'>
 					{ /* eslint-disable-next-line react/forbid-elements */ }
 					<input

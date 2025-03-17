@@ -1,14 +1,14 @@
-import type { Immutable } from 'immer';
+import { produce, type Immutable } from 'immer';
 import type { Logger } from '../../logging.ts';
+import { BitField } from '../../utility/bitfield.ts';
+import { Assert, CloneDeepMutable } from '../../utility/misc.ts';
 import type { GraphicsAlphaImageMeshLayer } from '../graphics/layers/alphaImageMesh.ts';
+import { LayerMirror, MirrorPriority } from '../graphics/layers/common.ts';
 import type { GraphicsMeshLayer } from '../graphics/layers/mesh.ts';
+import { MakeMirroredPoints, MirrorBoneLike, MirrorLayerImageSetting, type PointDefinitionCalculated } from '../graphics/mirroring.ts';
+import { PointMatchesPointType } from '../graphics/points.ts';
 import type { GraphicsSourceAlphaImageMeshLayer } from '../graphicsSource/layers/alphaImageMesh.ts';
 import type { GraphicsSourceMeshLayer } from '../graphicsSource/layers/mesh.ts';
-import { MakeMirroredPoints, MirrorBoneLike, type PointDefinitionCalculated } from '../graphics/mirroring.ts';
-import { Assert, CloneDeepMutable } from '../../utility/misc.ts';
-import { LayerMirror } from '../graphics/layers/common.ts';
-import { BitField } from '../../utility/bitfield.ts';
-import { PointMatchesPointType } from '../graphics/points.ts';
 import type { GraphicsBuildContext } from './graphicsBuildContext.ts';
 import { ListLayerImageSettingImages, LoadLayerImageSetting, type LayerImageTrimArea } from './graphicsBuildImageResource.ts';
 import { TriangleRectangleOverlap } from './math/intersections.ts';
@@ -18,7 +18,7 @@ export async function LoadAssetImageLayer(
 	layer: Immutable<GraphicsSourceMeshLayer> | Immutable<GraphicsSourceAlphaImageMeshLayer>,
 	context: GraphicsBuildContext,
 	logger: Logger,
-): Promise<GraphicsMeshLayer | GraphicsAlphaImageMeshLayer> {
+): Promise<Immutable<(GraphicsMeshLayer | GraphicsAlphaImageMeshLayer)[]>> {
 	logger = logger.prefixMessages(`[Layer ${layer.name ?? '[unnamed]'}]`);
 
 	// const pointTemplate = GraphicsDatabase.getPointTemplate(layer.points);
@@ -226,5 +226,18 @@ export async function LoadAssetImageLayer(
 		result.height = imageTrimArea[3] - top;
 	}
 
-	return result;
+	let mirror: GraphicsMeshLayer | GraphicsAlphaImageMeshLayer | undefined;
+	if (result.mirror !== LayerMirror.NONE) {
+		mirror = produce(result, (d) => {
+			d.priority = MirrorPriority(d.priority);
+			d.pointType = d.pointType?.map(MirrorBoneLike);
+			d.image = MirrorLayerImageSetting(d.image);
+			d.scaling = d.scaling && {
+				...d.scaling,
+				stops: d.scaling.stops.map((stop) => [stop[0], MirrorLayerImageSetting(stop[1])]),
+			};
+		});
+	}
+
+	return mirror ? [result, mirror] : [result];
 }

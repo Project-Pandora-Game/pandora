@@ -1,9 +1,12 @@
 import type { Immutable } from 'immer';
-import { AssertNotNullable, EMPTY_ARRAY, LoadAssetLayer, type AssetGraphicsDefinition, type GraphicsBuildContext, type GraphicsBuildImageResource, type ImageBoundingBox, type Logger } from 'pandora-common';
-import { AssetGraphicsSourceMap } from '../../assets/assetGraphics.ts';
+import { AssertNotNullable, EMPTY_ARRAY, LoadAssetLayer, type AssetGraphicsDefinition, type GraphicsBuildContext, type GraphicsBuildImageResource, type GraphicsLayer, type ImageBoundingBox, type Logger } from 'pandora-common';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { ArrayToBase64 } from '../../crypto/helpers.ts';
 import type { EditorAssetGraphics } from './editorAssetGraphics.ts';
+import type { EditorAssetGraphicsLayer } from './editorAssetGraphicsLayer.ts';
+
+/** Map to editor asset graphics source layer. Only used in editor. */
+export const AssetGraphicsSourceMap = new WeakMap<Immutable<GraphicsLayer>, EditorAssetGraphicsLayer>();
 
 class EditorImageResource implements GraphicsBuildImageResource {
 	public readonly resultName: string;
@@ -45,14 +48,18 @@ export async function EditorBuildAssetGraphics(asset: EditorAssetGraphics, logge
 		},
 	};
 
-	return {
-		layers: await Promise.all(asset.layers.value.map((sourceLayer) => {
-			return LoadAssetLayer(sourceLayer.definition.value, assetLoadContext, logger)
-				.then((builtLayer) => {
-					// Add source map for the built layer
+	const layers = (await Promise.all(asset.layers.value.map((sourceLayer) =>
+		LoadAssetLayer(sourceLayer.definition.value, assetLoadContext, logger)
+			.then((layerBuildResult) => {
+				// Add source map for the built layer
+				for (const builtLayer of layerBuildResult) {
 					AssetGraphicsSourceMap.set(builtLayer, sourceLayer);
-					return builtLayer;
-				});
-		})),
+				}
+				return layerBuildResult;
+			}),
+	))).flat();
+
+	return {
+		layers,
 	};
 }

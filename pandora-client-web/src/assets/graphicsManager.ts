@@ -12,7 +12,6 @@ import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { BrowserStorage } from '../browserStorage.ts';
 import { Observable, useObservable, type ReadonlyObservable } from '../observable.ts';
-import { LoadAssetGraphics, type LoadedAssetGraphics } from './assetGraphics.ts';
 
 export interface IGraphicsLoaderStats {
 	inUseTextures: number;
@@ -171,14 +170,14 @@ const TransformGraphicsLoader = (() => {
 })();
 
 export class GraphicsManager {
-	private readonly _assetGraphics = new Observable<Readonly<Partial<Record<AssetId, LoadedAssetGraphics>>>>({});
+	private readonly _assetGraphics = new Observable<Immutable<Partial<Record<AssetId, AssetGraphicsDefinition>>>>({});
 	private readonly _pointTemplates: Map<string, Immutable<PointTemplate>> = new Map();
 	private _pointTemplateList: readonly string[] = [];
 
 	public readonly definitionsHash: string;
 	public readonly loader: IGraphicsLoader;
 
-	public get assetGraphics(): ReadonlyObservable<Readonly<Partial<Record<AssetId, LoadedAssetGraphics>>>> {
+	public get assetGraphics(): ReadonlyObservable<Immutable<Partial<Record<AssetId, AssetGraphicsDefinition>>>> {
 		return this._assetGraphics;
 	}
 
@@ -194,10 +193,6 @@ export class GraphicsManager {
 		return new GraphicsManager(newLoader, definitionsHash, data);
 	}
 
-	public getAssetGraphicsById(id: AssetId): LoadedAssetGraphics | undefined {
-		return this._assetGraphics.value[id];
-	}
-
 	public get pointTemplateList(): readonly string[] {
 		return this._pointTemplateList;
 	}
@@ -210,20 +205,7 @@ export class GraphicsManager {
 	}
 
 	private loadAssets(assets: Immutable<Partial<Record<AssetId, AssetGraphicsDefinition>>>): void {
-		// Reload all assets
-		const result: Partial<Record<AssetId, LoadedAssetGraphics>> = {};
-
-		for (const [id, definition] of Object.entries(assets)) {
-			if (!definition)
-				continue;
-
-			if (!id.startsWith('a/')) {
-				throw new Error(`Asset without valid prefix: ${id}`);
-			}
-			const asset = LoadAssetGraphics(definition);
-			result[id as AssetId] = asset;
-		}
-		this._assetGraphics.value = result;
+		this._assetGraphics.value = assets;
 	}
 
 	private loadPointTemplates(pointTemplates: Immutable<Record<string, PointTemplate>>): void {

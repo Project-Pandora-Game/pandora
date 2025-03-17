@@ -13,13 +13,13 @@ import {
 	MergeAssetProperties,
 	PseudoRandom,
 	ResolveAssetPreference,
+	type AssetGraphicsDefinition,
 	type LayerPriority,
 	type LayerStateOverrides,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { FederatedPointerEvent, Filter, Rectangle } from 'pixi.js';
 import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { LoadedAssetGraphics } from '../assets/assetGraphics.ts';
 import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { usePlayerData } from '../components/gameContext/playerContextProvider.tsx';
@@ -71,7 +71,7 @@ export interface GraphicsCharacterProps extends ChildrenProps {
 	onPointerMove?: (event: FederatedPointerEvent) => void;
 }
 
-export type GraphicsGetterFunction = (asset: AssetId) => LoadedAssetGraphics | undefined;
+export type GraphicsGetterFunction = (asset: AssetId) => Immutable<AssetGraphicsDefinition> | undefined;
 export type LayerStateOverrideGetter = (layer: Immutable<import('pandora-common').GraphicsLayer>) => LayerStateOverrides | undefined;
 export type LayerGetSortOrder = (view: CharacterView) => readonly LayerPriority[];
 

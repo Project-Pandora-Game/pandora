@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { type GraphicsLayer, type GraphicsSourceLayer, type LayerImageSetting } from 'pandora-common';
-import { AssetGraphicsSourceMap } from '../../assets/assetGraphics.ts';
 import { useObservable } from '../../observable.ts';
+import { AssetGraphicsSourceMap } from './editorAssetGraphicsBuilding.ts';
 import type { EditorAssetGraphicsLayer } from './editorAssetGraphicsLayer.ts';
 
 export function useLayerName(layer: EditorAssetGraphicsLayer): string {

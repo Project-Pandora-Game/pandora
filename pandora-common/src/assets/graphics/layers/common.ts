@@ -39,6 +39,21 @@ export const LAYER_PRIORITIES = [
 	'OVERLAY',
 ] as const;
 
+// Some priority layers should get mirrored when layer get mirrored
+export const PRIORITY_ORDER_MIRROR: Partial<Record<LayerPriority, LayerPriority>> = {
+	BELOW_ARM_LEFT: 'BELOW_ARM_RIGHT',
+	BELOW_ARM_RIGHT: 'BELOW_ARM_LEFT',
+
+	ARM_LEFT: 'ARM_RIGHT',
+	ARM_RIGHT: 'ARM_LEFT',
+
+	ABOVE_ARM_LEFT: 'ABOVE_ARM_RIGHT',
+	ABOVE_ARM_RIGHT: 'ABOVE_ARM_LEFT',
+};
+if (!(Object.entries(PRIORITY_ORDER_MIRROR)).every(([original, mirror]) => PRIORITY_ORDER_MIRROR[mirror] === original)) {
+	throw new Error('PRIORITY_ORDER_MIRROR not valid');
+}
+
 export const LayerPrioritySchema = z.enum(LAYER_PRIORITIES);
 export type LayerPriority = z.infer<typeof LayerPrioritySchema>;
 
@@ -71,3 +86,8 @@ export const LayerStateOverridesSchema = z.object({
 	alpha: z.number().optional(),
 });
 export type LayerStateOverrides = z.infer<typeof LayerStateOverridesSchema>;
+
+export function MirrorPriority(priority: LayerPriority): LayerPriority {
+	const mirrorPriority = PRIORITY_ORDER_MIRROR[priority];
+	return mirrorPriority != null ? mirrorPriority : priority;
+}

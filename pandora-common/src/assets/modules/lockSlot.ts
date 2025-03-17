@@ -15,9 +15,9 @@ import { ItemLock } from '../item/lock.ts';
 import type { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common.ts';
 
 export type IModuleConfigLockSlot<TProperties, TStaticData> = IModuleConfigCommon<'lockSlot', TProperties, TStaticData> & {
-	/** Properties applied when this slot isn't occupied by a lock */
-	emptyProperties?: TProperties;
-	/** Properties applied when the slot is occupied and locked, default to occupiedEffects */
+	/** Properties applied when this slot isn't occupied by a lock or is occupied by an unlocked lock */
+	unlockedProperties?: TProperties;
+	/** Properties applied when the slot is occupied and locked */
 	lockedProperties?: TProperties;
 };
 
@@ -60,8 +60,8 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 
 	public getStaticAttributes<TProperties, TStaticData>(config: Immutable<IModuleConfigLockSlot<TProperties, TStaticData>>, staticAttributesExtractor: (properties: Immutable<TProperties>) => ReadonlySet<string>): ReadonlySet<string> {
 		const result = new Set<string>();
-		if (config.emptyProperties != null) {
-			staticAttributesExtractor(config.emptyProperties).forEach((a) => result.add(a));
+		if (config.unlockedProperties != null) {
+			staticAttributesExtractor(config.unlockedProperties).forEach((a) => result.add(a));
 		}
 		if (config.lockedProperties != null) {
 			staticAttributesExtractor(config.lockedProperties).forEach((a) => result.add(a));
@@ -161,16 +161,16 @@ export class ItemModuleLockSlot<out TProperties = unknown, out TStaticData = unk
 	}
 
 	public getProperties(): readonly Immutable<TProperties>[] {
-		if (this.lock != null) {
-			if (this.config.lockedProperties != null && this.lock.isLocked()) {
+		if (this.lock != null && this.lock.isLocked()) {
+			if (this.config.lockedProperties != null) {
 				return [this.config.lockedProperties];
 			}
 
 			return [];
 		}
 
-		if (this.config.emptyProperties != null)
-			return [this.config.emptyProperties];
+		if (this.config.unlockedProperties != null)
+			return [this.config.unlockedProperties];
 
 		return [];
 	}

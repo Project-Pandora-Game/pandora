@@ -34,7 +34,6 @@ export const EDITOR_ALPHA_ICONS = ['⯀', '⬕', '⬚'];
 
 export class Editor extends TypedEventEmitter<{
 	layerOverrideChange: EditorAssetGraphicsLayer;
-	modifiedAssetsChange: undefined;
 	globalStateChange: true;
 }> {
 	public readonly globalState: AssetFrameworkGlobalStateContainer;

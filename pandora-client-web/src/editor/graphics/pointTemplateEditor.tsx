@@ -1,9 +1,8 @@
 import { type Draft, type Immutable } from 'immer';
-import { cloneDeep } from 'lodash-es';
-import { AssertNotNullable, EMPTY_ARRAY, type PointTemplate } from 'pandora-common';
+import { AssertNotNullable, CalculatePointsTrianglesFlat, CloneDeepMutable, EMPTY_ARRAY, type PointTemplate } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
-import { CalculatePointDefinitionsFromTemplate, CalculatePointsTriangles } from '../../assets/assetGraphicsCalculations.ts';
+import { CalculatePointDefinitionsFromTemplate } from '../../assets/assetGraphicsCalculations.ts';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Container } from '../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../graphics/baseComponents/graphics.ts';
@@ -49,10 +48,10 @@ export class PointTemplateEditor {
 	}
 
 	public modifyTemplate(recipe: (d: Draft<PointTemplate>) => void) {
-		const originalTemplate: PointTemplate = GraphicsManagerInstance.value?.getTemplate(this.templateName) ?? [];
+		const originalTemplate: Immutable<PointTemplate> = GraphicsManagerInstance.value?.getTemplate(this.templateName) ?? [];
 
 		this._editor.modifiedPointTemplates.produceImmer((d) => {
-			const template = d.get(this.templateName) ?? cloneDeep(originalTemplate);
+			const template = d.get(this.templateName) ?? CloneDeepMutable(originalTemplate);
 			recipe(template);
 			d.set(this.templateName, template);
 		});
@@ -90,7 +89,7 @@ export function PointTemplateEditLayer({ templateEditor }: {
 
 	const [points, triangles] = useMemo(() => {
 		const p = CalculatePointDefinitionsFromTemplate(currentTemplate);
-		const t = CalculatePointsTriangles(p);
+		const t = CalculatePointsTrianglesFlat(p);
 		return [p, t];
 	}, [currentTemplate]);
 

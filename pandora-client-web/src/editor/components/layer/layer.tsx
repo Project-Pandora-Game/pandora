@@ -1,7 +1,7 @@
 import type { Immutable } from 'immer';
 import { capitalize } from 'lodash-es';
 import { Assert, AssertNotNullable, LAYER_PRIORITIES, LayerPriority, type GraphicsSourceLayer } from 'pandora-common';
-import React, { ReactElement, useMemo, useState, useSyncExternalStore } from 'react';
+import React, { ReactElement, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager.ts';
 import { useEvent } from '../../../common/useEvent.ts';
@@ -109,8 +109,7 @@ function LayerName({ layer }: { layer: EditorAssetGraphicsLayer; }): ReactElemen
 }
 
 function LayerImageSelect({ layer, asset, stop }: { layer: EditorAssetGraphicsLayer; asset: EditorAssetGraphics; stop?: number; }): ReactElement | null {
-	const editor = useEditor();
-	const imageList = useSyncExternalStore(editor.getSubscriber('modifiedAssetsChange'), () => asset.loadedTextures);
+	const imageList = useObservable(asset.loadedTextures);
 	const stopSettings = useLayerImageSettingsForScalingStop(layer, stop);
 	const layerImage = stopSettings.image;
 

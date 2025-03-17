@@ -280,8 +280,7 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 }
 
 function AssetImageList({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
-	const editor = useEditor();
-	const imageList = useSyncExternalStore(editor.getSubscriber('modifiedAssetsChange'), () => asset.loadedTextures);
+	const imageList = useObservable(asset.loadedTextures);
 
 	const elements: ReactElement[] = [];
 

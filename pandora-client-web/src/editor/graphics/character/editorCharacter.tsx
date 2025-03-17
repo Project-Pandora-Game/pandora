@@ -3,6 +3,7 @@ import { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager.ts';
 import { GraphicsCharacterProps, GraphicsCharacterWithManager, GraphicsGetterFunction, LayerStateOverrideGetter } from '../../../graphics/graphicsCharacter.tsx';
 import { useNullableObservable, useObservable } from '../../../observable.ts';
+import { GetEditorSourceLayerForRuntimeLayer } from '../../assets/editorAssetCalculationHelpers.ts';
 import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
 import { usePreviewCutterOverridesEnabled } from '../../components/previewCutter/previewCutter.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
@@ -31,8 +32,7 @@ export function GraphicsCharacterEditor({
 					return layer.previewOverrides;
 				}
 			}
-			// TODO: Implement
-			const editorLayer: EditorAssetGraphicsLayer | null = null;
+			const editorLayer: EditorAssetGraphicsLayer | null = GetEditorSourceLayerForRuntimeLayer(layer);
 			return editorLayer != null ? editor.getLayerStateOverride(editorLayer) : undefined;
 		},
 		// eslint-disable-next-line react-hooks/exhaustive-deps
@@ -41,10 +41,6 @@ export function GraphicsCharacterEditor({
 
 	useEffect(() => {
 		return editor.on('layerOverrideChange', () => editorGettersUpdate());
-	}, [editor]);
-
-	useEffect(() => {
-		return editor.on('modifiedAssetsChange', () => editorGettersUpdate());
 	}, [editor]);
 
 	if (!graphicsGetter)

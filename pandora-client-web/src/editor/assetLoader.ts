@@ -5,15 +5,15 @@ import { EDITOR_ASSETS_ADDRESS, EDITOR_ASSETS_OFFICIAL_ADDRESS } from '../config
 import { AssetManagerEditor, EditorAssetManager } from './assets/assetManager.ts';
 import { EditorAssetGraphicsManager } from './assets/editorAssetGraphicsManager.ts';
 
-export async function LoadAssetsFromAssetDevServer(): Promise<[AssetManagerEditor, GraphicsManager]> {
+export async function LoadAssetsFromAssetDevServer(): Promise<AssetManagerEditor> {
 	return Load(new URLGraphicsLoader(EDITOR_ASSETS_ADDRESS + '/'));
 }
 
-export async function LoadAssetsFromOfficialLink(): Promise<[AssetManagerEditor, GraphicsManager]> {
+export async function LoadAssetsFromOfficialLink(): Promise<AssetManagerEditor> {
 	return Load(new URLGraphicsLoader(EDITOR_ASSETS_OFFICIAL_ADDRESS + '/'));
 }
 
-async function Load(loader: IGraphicsLoader): Promise<[AssetManagerEditor, GraphicsManager]> {
+async function Load(loader: IGraphicsLoader): Promise<AssetManagerEditor> {
 	let hash: string;
 	try {
 		hash = (await loader.loadTextFile('current')).trim();
@@ -28,16 +28,15 @@ async function Load(loader: IGraphicsLoader): Promise<[AssetManagerEditor, Graph
 	const graphicsSourceHash = assetManager.graphicsSourceId;
 	const graphicsSourceDefinitions = GraphicsSourceDefinitionFileSchema.parse(JSON.parse(await loader.loadTextFile(`graphicsSource_${graphicsSourceHash}.json`)));
 
-	// Load graphics source definitions for editor
-	EditorAssetGraphicsManager.loadNewOriginalDefinitions(graphicsSourceDefinitions);
-
-	// Load runtime graphics definitions in editor
-	// TODO: These should be built from source definitions
 	const graphicsHash = assetManager.graphicsId;
 	const graphicsDefinitions = GraphicsDefinitionFileSchema.parse(JSON.parse(await loader.loadTextFile(`graphics_${graphicsHash}.json`)));
 
+	// Load initial version of runtime graphics
 	const graphicsManager = await GraphicsManager.create(loader, graphicsHash, graphicsDefinitions);
 	GraphicsManagerInstance.value = graphicsManager;
 
-	return [assetManager, graphicsManager];
+	// Load graphics source definitions for editor
+	EditorAssetGraphicsManager.loadNewOriginalDefinitions(graphicsSourceDefinitions, graphicsDefinitions);
+
+	return assetManager;
 }

@@ -1,9 +1,9 @@
 import { Texture } from 'pixi.js';
-import { ReactElement, useEffect, useMemo, useReducer } from 'react';
+import { ReactElement, useMemo } from 'react';
 import { GraphicsLayer } from '../../../graphics/layers/graphicsLayer.tsx';
 import type { GraphicsLayerProps } from '../../../graphics/layers/graphicsLayerCommon.tsx';
-import { useEditorSourceLayerForRuntimeLayer } from '../../assets/editorAssetCalculationHelpers.ts';
-import { useEditor } from '../../editorContextProvider.tsx';
+import { useNullableObservable } from '../../../observable.ts';
+import { GetEditorSourceLayerForRuntimeLayer } from '../../assets/editorAssetCalculationHelpers.ts';
 
 export const EDITOR_LAYER_Z_INDEX_EXTRA = 10000;
 
@@ -12,27 +12,17 @@ export function EditorLayer({
 	layer,
 	...props
 }: GraphicsLayerProps): ReactElement {
-	const editor = useEditor();
-	const [editorGettersVersion, editorGettersUpdate] = useReducer((s: number) => s + 1, 0);
-	const editorLayer = useEditorSourceLayerForRuntimeLayer(layer);
+	const editorLayer = GetEditorSourceLayerForRuntimeLayer(layer);
 	const asset = editorLayer?.asset;
+	const editorAssetTextures = useNullableObservable(asset?.textures);
 
-	// TODO: Make editor asset's images observable
 	const editorGetTexture = useMemo<((image: string) => Texture) | undefined>(() => {
 		if (getTexture)
 			return getTexture;
-		if (asset != null)
-			return (image) => asset.getTexture(image);
+		if (editorAssetTextures != null)
+			return (image) => (editorAssetTextures.get(image) ?? Texture.EMPTY);
 		return undefined;
-	// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [getTexture, layer, editorGettersVersion]);
-
-	useEffect(() => {
-		if (asset != null) {
-			return editor.on('modifiedAssetsChange', () => editorGettersUpdate());
-		}
-		return undefined;
-	}, [editor, asset]);
+	}, [getTexture, editorAssetTextures]);
 
 	return (
 		<GraphicsLayer

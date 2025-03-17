@@ -6,6 +6,7 @@ import {
 	AssertNever,
 	AssetSourceGraphicsDefinitionSchema,
 	CharacterSize,
+	EMPTY_ARRAY,
 	LayerMirror,
 	type AssetId,
 	type AssetSourceGraphicsDefinition,
@@ -171,15 +172,14 @@ export class EditorAssetGraphics {
 	}
 
 	private readonly fileContents = new Map<string, ArrayBuffer>();
-	private readonly textures = new Map<string, Texture>([['', Texture.EMPTY]]);
-	private _loadedTextures: readonly string[] = [];
-	public get loadedTextures(): readonly string[] {
-		return this._loadedTextures;
+	private readonly _textures = new Observable<ReadonlyMap<string, Texture>>(new Map<string, Texture>([['', Texture.EMPTY]]));
+	public get textures(): ReadonlyObservable<ReadonlyMap<string, Texture>> {
+		return this._textures;
 	}
 
-	public getTexture(image: string): Texture {
-		const texture = this.textures.get(image);
-		return texture ?? Texture.EMPTY;
+	private _loadedTextures = new Observable<readonly string[]>(EMPTY_ARRAY);
+	public get loadedTextures(): ReadonlyObservable<readonly string[]> {
+		return this._loadedTextures;
 	}
 
 	public async addTextureFromArrayBuffer(name: string, buffer: ArrayBuffer): Promise<void> {
@@ -188,9 +188,11 @@ export class EditorAssetGraphics {
 			label: `Editor: ${name}`,
 		});
 		this.fileContents.set(name, buffer);
-		this.textures.set(name, texture);
-		if (!this._loadedTextures.includes(name)) {
-			this._loadedTextures = [...this._loadedTextures, name];
+		this._textures.produceImmer((d) => {
+			d.set(name, texture);
+		});
+		if (!this._loadedTextures.value.includes(name)) {
+			this._loadedTextures.produce((v) => [...v, name]);
 		}
 		this.onChange();
 	}
@@ -205,8 +207,10 @@ export class EditorAssetGraphics {
 
 	public deleteTexture(name: string): void {
 		this.fileContents.delete(name);
-		this.textures.delete(name);
-		this._loadedTextures = this._loadedTextures.filter((t) => t !== name);
+		this._textures.produceImmer((d) => {
+			d.delete(name);
+		});
+		this._loadedTextures.produce((v) => v.filter((t) => t !== name));
 		this.onChange();
 	}
 

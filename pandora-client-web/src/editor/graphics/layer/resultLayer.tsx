@@ -12,7 +12,7 @@ import { useLayerVertices, type GraphicsLayerProps } from '../../../graphics/lay
 import { useTexture } from '../../../graphics/useTexture.ts';
 import { MeshFaceIsCW } from '../../../graphics/utility.ts';
 import { useNullableObservable, useObservable } from '../../../observable.ts';
-import { useEditorSourceLayerForRuntimeLayer } from '../../assets/editorAssetCalculationHelpers.ts';
+import { GetEditorSourceLayerForRuntimeLayer } from '../../assets/editorAssetCalculationHelpers.ts';
 import { useEditor } from '../../editorContextProvider.tsx';
 import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer.tsx';
 
@@ -35,7 +35,7 @@ export function ResultMeshLayer({
 	...props
 }: GraphicsLayerProps<'mesh' | 'alphaImageMesh'>): ReactElement {
 	const editor = useEditor();
-	const editorLayer = useEditorSourceLayerForRuntimeLayer(layer);
+	const editorLayer = GetEditorSourceLayerForRuntimeLayer(layer);
 	const showHelpers = useObservable(editor.targetLayer) === editorLayer && editorLayer != null;
 
 	const { points: pointTemplate, x, y, width, height } = layer;

@@ -129,7 +129,7 @@ const TransformGraphicsLoader = (() => {
 		unsupported: z.array(z.string()),
 	}));
 
-	return async (loader: IGraphicsLoader, { imageFormats }: GraphicsDefinitionFile): Promise<IGraphicsLoader> => {
+	return async (loader: IGraphicsLoader, { imageFormats }: Immutable<GraphicsDefinitionFile>): Promise<IGraphicsLoader> => {
 		const promises: Promise<IGraphicsLoader | null>[] = [];
 		for (const [format, suffix] of Object.entries(imageFormats)) {
 			const test = formatTests[format];
@@ -172,7 +172,7 @@ const TransformGraphicsLoader = (() => {
 
 export class GraphicsManager {
 	private readonly _assetGraphics = new Observable<Readonly<Partial<Record<AssetId, LoadedAssetGraphics>>>>({});
-	private readonly _pointTemplates: Map<string, PointTemplate> = new Map();
+	private readonly _pointTemplates: Map<string, Immutable<PointTemplate>> = new Map();
 	private _pointTemplateList: readonly string[] = [];
 
 	public readonly definitionsHash: string;
@@ -182,14 +182,14 @@ export class GraphicsManager {
 		return this._assetGraphics;
 	}
 
-	private constructor(loader: IGraphicsLoader, definitionsHash: string, data: GraphicsDefinitionFile) {
+	constructor(loader: IGraphicsLoader, definitionsHash: string, data: Immutable<GraphicsDefinitionFile>) {
 		this.loader = loader;
 		this.definitionsHash = definitionsHash;
-		this.loadPointTemplates(data.pointTemplates);
+		this.loadPointTemplates(freeze(data.pointTemplates, true));
 		this.loadAssets(freeze(data.assets, true));
 	}
 
-	public static async create(loader: IGraphicsLoader, definitionsHash: string, data: GraphicsDefinitionFile): Promise<GraphicsManager> {
+	public static async create(loader: IGraphicsLoader, definitionsHash: string, data: Immutable<GraphicsDefinitionFile>): Promise<GraphicsManager> {
 		const newLoader = await TransformGraphicsLoader(loader, data);
 		return new GraphicsManager(newLoader, definitionsHash, data);
 	}
@@ -202,7 +202,7 @@ export class GraphicsManager {
 		return this._pointTemplateList;
 	}
 
-	public getTemplate(name: string): PointTemplate | undefined {
+	public getTemplate(name: string): Immutable<PointTemplate> | undefined {
 		if (!name)
 			return [];
 
@@ -226,7 +226,7 @@ export class GraphicsManager {
 		this._assetGraphics.value = result;
 	}
 
-	private loadPointTemplates(pointTemplates: Record<string, PointTemplate>): void {
+	private loadPointTemplates(pointTemplates: Immutable<Record<string, PointTemplate>>): void {
 		this._pointTemplates.clear();
 		for (const [name, template] of Object.entries(pointTemplates)) {
 			this._pointTemplates.set(name, template);

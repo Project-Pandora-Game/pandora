@@ -1,5 +1,6 @@
 import type { Immutable } from 'immer';
 import { type GraphicsLayer, type GraphicsSourceLayer, type LayerImageSetting } from 'pandora-common';
+import { AssetGraphicsSourceMap } from '../../assets/assetGraphics.ts';
 import { useObservable } from '../../observable.ts';
 import type { EditorAssetGraphicsLayer } from './editorAssetGraphicsLayer.ts';
 
@@ -26,7 +27,8 @@ export function useLayerImageSettingsForScalingStop(layer: EditorAssetGraphicsLa
 }
 
 /** Attempt to resolve an runtime layer to originating editor source layer. */
-export function useEditorSourceLayerForRuntimeLayer(_layer: Immutable<GraphicsLayer>): EditorAssetGraphicsLayer | null {
-	// TODO: Implement this mechanism
-	return null;
+export function GetEditorSourceLayerForRuntimeLayer(layer: Immutable<GraphicsLayer>): EditorAssetGraphicsLayer | null {
+	// It is safe to have this not as a hook, because we assume all layers are built from exactly one editor layer
+	// and the sourcemap is set right after build, before anything has a chance to use the layer
+	return AssetGraphicsSourceMap.get(layer) ?? null;
 }

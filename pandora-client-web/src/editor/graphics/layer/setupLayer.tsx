@@ -1,7 +1,7 @@
 import { AssetFrameworkCharacterState } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { Texture } from 'pixi.js';
-import { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react';
+import { ReactElement, useCallback, useMemo } from 'react';
 import { useLayerImageSource, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { Container } from '../../../graphics/baseComponents/container.ts';
@@ -12,7 +12,6 @@ import { useTexture } from '../../../graphics/useTexture.ts';
 import { useObservable } from '../../../observable.ts';
 import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
 import { useEditorLayerStateOverride } from '../../editor.tsx';
-import { useEditor } from '../../editorContextProvider.tsx';
 import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer.tsx';
 
 export function SetupLayer({
@@ -50,7 +49,6 @@ export function SetupMeshLayerSelected({
 	zIndex: number;
 	layer: EditorAssetGraphicsLayer<'mesh'>;
 }): ReactElement {
-	const editor = useEditor();
 	const state = useEditorLayerStateOverride(layer);
 	const item = characterState.items.find((i) => i.asset.id === layer.asset.id) ?? null;
 
@@ -93,19 +91,12 @@ export function SetupMeshLayerSelected({
 		}
 	}, [points, triangles, uv, x, y, width, height]);
 
-	const [editorGettersVersion, editorGettersUpdate] = useReducer((s: number) => s + 1, 0);
-
 	const asset = layer.asset;
+	const editorAssetTextures = useObservable(asset.textures);
 
-	// TODO: Make editor asset's images observable
 	const editorGetTexture = useMemo<((image: string) => Texture) | undefined>(() => {
-		return (i) => asset.getTexture(i);
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [asset, editorGettersVersion]);
-
-	useEffect(() => {
-		return editor.on('modifiedAssetsChange', () => editorGettersUpdate());
-	}, [editor, asset]);
+		return (i) => (editorAssetTextures.get(i) ?? Texture.EMPTY);
+	}, [editorAssetTextures]);
 
 	const texture = useTexture(image, undefined, editorGetTexture);
 

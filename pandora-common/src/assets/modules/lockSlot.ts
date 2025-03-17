@@ -17,8 +17,6 @@ import type { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleAction
 export type IModuleConfigLockSlot<TProperties, TStaticData> = IModuleConfigCommon<'lockSlot', TProperties, TStaticData> & {
 	/** Properties applied when this slot isn't occupied by a lock */
 	emptyProperties?: TProperties;
-	/** Properties applied when this slot is occupied by a lock */
-	occupiedProperties?: TProperties;
 	/** Properties applied when the slot is occupied and locked, default to occupiedEffects */
 	lockedProperties?: TProperties;
 };
@@ -64,9 +62,6 @@ export class LockSlotModuleDefinition implements IAssetModuleDefinition<'lockSlo
 		const result = new Set<string>();
 		if (config.emptyProperties != null) {
 			staticAttributesExtractor(config.emptyProperties).forEach((a) => result.add(a));
-		}
-		if (config.occupiedProperties != null) {
-			staticAttributesExtractor(config.occupiedProperties).forEach((a) => result.add(a));
 		}
 		if (config.lockedProperties != null) {
 			staticAttributesExtractor(config.lockedProperties).forEach((a) => result.add(a));
@@ -170,9 +165,6 @@ export class ItemModuleLockSlot<out TProperties = unknown, out TStaticData = unk
 			if (this.config.lockedProperties != null && this.lock.isLocked()) {
 				return [this.config.lockedProperties];
 			}
-
-			if (this.config.occupiedProperties != null)
-				return [this.config.occupiedProperties];
 
 			return [];
 		}

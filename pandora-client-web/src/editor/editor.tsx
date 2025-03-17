@@ -160,6 +160,14 @@ export class Editor extends TypedEventEmitter<{
 		this.targetAsset.value = graphics;
 	}
 
+	public discardAssetEdits(asset: AssetId): void {
+		if (this.targetAsset.value?.id === asset) {
+			this.targetAsset.value = null;
+		}
+
+		EditorAssetGraphicsManager.discardAssetEdits(asset);
+	}
+
 	public setBackgroundColor(color: HexColorString): void {
 		this.backgroundColor.value = color;
 		document.documentElement.style.setProperty('--editor-background-color', color);

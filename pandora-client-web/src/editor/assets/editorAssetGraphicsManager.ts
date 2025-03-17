@@ -87,8 +87,27 @@ export class EditorAssetGraphicsManagerClass {
 		return graphics;
 	}
 
+	public discardAssetEdits(asset: AssetId): void {
+		if (!this._editedAssetGraphics.value.has(asset))
+			return;
+
+		// Unregister edit and regenerate asset graphics
+		this._editedAssetGraphics.produce((d) => {
+			const result = new Map(d);
+			result.delete(asset);
+			return result;
+		});
+
+		this._editedGraphicsBuildCache.delete(asset);
+		this._reloadRuntimeGraphicsManager();
+	}
+
 	@AsyncSynchronized()
 	private async _onAssetDefinitionChanged(asset: EditorAssetGraphics): Promise<void> {
+		// Ignore if the asset is no longer being edited
+		if (this._editedAssetGraphics.value.get(asset.id) !== asset)
+			return;
+
 		const logger = this.logger.prefixMessages(`Graphics build for asset '${asset.id}':\n\t`);
 		try {
 			const graphicsDefinition = await EditorBuildAssetGraphics(asset, logger);

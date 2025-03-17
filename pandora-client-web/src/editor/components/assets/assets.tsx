@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { Assert, AssertNotNullable, Asset, AssetId, Item } from 'pandora-common';
+import { Assert, AssertNotNullable, Asset, AssetId, GetLogger, Item } from 'pandora-common';
 import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { toast } from 'react-toastify';
@@ -9,7 +9,7 @@ import { Button } from '../../../components/common/button/button.tsx';
 import { ColorInput } from '../../../components/common/colorInput/colorInput.tsx';
 import { Row } from '../../../components/common/container/container.tsx';
 import { Form, FormField, FormFieldError } from '../../../components/common/form/form.tsx';
-import { ModalDialog } from '../../../components/dialog/dialog.tsx';
+import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
 import { IObservableClass, ObservableClass, ObservableProperty, useNullableObservable, useObservable, useObservableProperty } from '../../../observable.ts';
@@ -159,6 +159,7 @@ function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 	const tabContext = useEditorTabContext();
 	const asset = useAssetManagerEditor().getAssetById(assetId);
 	AssertNotNullable(asset);
+	const confirm = useConfirmDialog();
 
 	function add() {
 		AssertNotNullable(asset);
@@ -167,10 +168,27 @@ function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 		}
 	}
 
+	const resetEditedAsset = useCallback(() => {
+		confirm(
+			'Discard all changes',
+			<p>Are you sure you want to <strong>DISCARD ALL CHANGES</strong> done to the '{ assetId }' asset and reload its current data from server?</p>,
+		)
+			.then((result) => {
+				if (result) {
+					editor.discardAssetEdits(assetId);
+				}
+			}, (err) => {
+				GetLogger('EditedAssetElement').error('Error asking for confirmation:', err);
+			});
+	}, [editor, assetId, confirm]);
+
 	return (
 		<li>
 			<span>{ StripAssetIdPrefix(assetId) }</span>
 			<div className='controls'>
+				<Button onClick={ resetEditedAsset }>
+					↺
+				</Button>
 				<Button onClick={ () => {
 					editor.startEditAsset(assetId);
 					if (!tabContext.activeTabs.includes('Asset')) {
@@ -223,7 +241,7 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 					🠉
 				</Button> }
 				<Button onClick={ () => appearance.removeItem(item.id) } title='Unequip item'>-</Button>
-				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity">{ EDITOR_ALPHA_ICONS[alphaIndex] }</Button>
+				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity" disabled={ editorAssetGraphics == null }>{ EDITOR_ALPHA_ICONS[alphaIndex] }</Button>
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);
 					if (!tabContext.activeTabs.includes('Asset')) {
@@ -234,9 +252,13 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 				</Button>
 			</div>
 		}>
-			<ul>
-				{ layers.map((layer, index) => <AssetLayerElement key={ index } layer={ layer } />) }
-			</ul>
+			{
+				editorAssetGraphics ? (
+					<ul>
+						{ layers.map((layer, index) => <AssetLayerElement key={ index } layer={ layer } />) }
+					</ul>
+				) : undefined
+			}
 		</ToggleLi>
 	);
 }
@@ -295,7 +317,8 @@ type ToggleLiProps<T extends { open: boolean; }> = React.DetailedHTMLProps<React
 };
 function ToggleLi<T extends { open: boolean; }>({ state, name, nameExtra, children, className, ...props }: ToggleLiProps<T>): ReactElement {
 	const open = useObservableProperty(state, 'open');
-	const spanClass = !children ? undefined : open ? 'opened' : 'closed';
+	const hasChildren = Array.isArray(children) ? children.some(Boolean) : !!children;
+	const spanClass = !hasChildren ? undefined : open ? 'opened' : 'closed';
 
 	const onClick = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();

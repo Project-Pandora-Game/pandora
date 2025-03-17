@@ -254,7 +254,7 @@ export function EditorWardrobeUI(): ReactElement {
 						</>
 					)
 				}
-				<hr />
+				<hr className='fill-x' />
 				<FieldsetToggle legend='Add Items' className='no-padding' open={ false } persistent='wardrobe-add-items'>
 					<InventoryAssetView
 						title='Create and use a new item'

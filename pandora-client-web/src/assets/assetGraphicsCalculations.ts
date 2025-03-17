@@ -1,10 +1,10 @@
-import Delaunator from 'delaunator';
 import { Immutable } from 'immer';
 import { maxBy, minBy } from 'lodash-es';
 import {
 	Assert,
 	BitField,
 	BoneName,
+	CalculatePointsTrianglesFlat,
 	CloneDeepMutable,
 	Item,
 	LayerImageSetting,
@@ -92,23 +92,6 @@ export function CalculatePointDefinitionsFromTemplate(template: Immutable<PointT
 	return result;
 }
 
-const delaunatorCache = new WeakMap<Immutable<PointDefinitionCalculated[]>, Delaunator<number[]>>();
-export function CalculatePointsTriangles(points: Immutable<PointDefinitionCalculated[]>, pointFilter?: BitField): Uint32Array {
-	const result: number[] = [];
-	let delaunator: Delaunator<number[]> | undefined = delaunatorCache.get(points);
-	if (delaunator === undefined) {
-		delaunator = new Delaunator(points.flatMap((point) => point.pos));
-		delaunatorCache.set(points, delaunator);
-	}
-	for (let i = 0; i < delaunator.triangles.length; i += 3) {
-		const t = [i, i + 1, i + 2].map((tp) => delaunator.triangles[tp]);
-		if (pointFilter == null || t.every((tp) => pointFilter.get(tp))) {
-			result.push(...t);
-		}
-	}
-	return new Uint32Array(result);
-}
-
 export function useLayerMeshPoints({ points, pointType, pointFilterMask }: Pick<Immutable<GraphicsLayer>, 'points' | 'pointType' | 'pointFilterMask'>): {
 	readonly points: Immutable<PointDefinitionCalculated[]>;
 	readonly triangles: Uint32Array;
@@ -147,7 +130,7 @@ export function useLayerMeshPoints({ points, pointType, pointFilterMask }: Pick<
 
 		return {
 			points: calculatedPoints,
-			triangles: CalculatePointsTriangles(calculatedPoints, pointsFilter),
+			triangles: CalculatePointsTrianglesFlat(calculatedPoints, pointsFilter),
 		};
 	}, [manager, templateOverrides, points, pointType, pointFilterMask]);
 }

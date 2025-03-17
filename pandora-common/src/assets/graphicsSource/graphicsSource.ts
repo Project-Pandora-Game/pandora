@@ -8,8 +8,15 @@ export const AssetSourceGraphicsDefinitionSchema = z.object({
 }).strict();
 export type AssetSourceGraphicsDefinition = z.infer<typeof AssetSourceGraphicsDefinitionSchema>;
 
+export const AssetSourceGraphicsInfoSchema = z.object({
+	definition: AssetSourceGraphicsDefinitionSchema,
+	/** Map containing mappings between original image and image resource final name. */
+	originalImagesMap: z.record(z.string(), z.string()),
+});
+export type AssetSourceGraphicsInfo = z.infer<typeof AssetSourceGraphicsInfoSchema>;
+
 export const GraphicsSourceDefinitionFileSchema = z.object({
-	assets: z.record(AssetIdSchema, AssetSourceGraphicsDefinitionSchema),
+	assets: z.record(AssetIdSchema, AssetSourceGraphicsInfoSchema),
 	pointTemplates: z.record(z.string(), PointTemplateSchema),
 });
 

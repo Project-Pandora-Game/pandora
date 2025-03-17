@@ -5,12 +5,13 @@ import {
 	GetLogger,
 	type AssetGraphicsDefinition,
 	type AssetId,
-	type AssetSourceGraphicsDefinition,
+	type AssetSourceGraphicsInfo,
 	type GraphicsDefinitionFile,
 	type GraphicsSourceDefinitionFile,
 } from 'pandora-common';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
+import { ToastHandlePromise } from '../../persistentToast.ts';
 import { EditorAssetGraphics } from './editorAssetGraphics.ts';
 import { EditorBuildAssetGraphics } from './editorAssetGraphicsBuilding.ts';
 
@@ -38,19 +39,24 @@ export class EditorAssetGraphicsManagerClass {
 	}
 
 	public startEditAsset(asset: AssetId): EditorAssetGraphics {
+		Assert(GraphicsManagerInstance.value != null, 'Runtime graphics manager should be loaded before editor graphics manager');
+
 		const existingGraphics = this._editedAssetGraphics.value.get(asset);
 		if (existingGraphics != null) {
 			return existingGraphics;
 		}
 
-		let sourceDefinition: Immutable<AssetSourceGraphicsDefinition> | undefined = this._originalSourceDefinitions.assets[asset];
+		let sourceInfo: Immutable<AssetSourceGraphicsInfo> | undefined = this._originalSourceDefinitions.assets[asset];
 		// If the asst had no graphics before, create empty one
-		if (sourceDefinition == null) {
-			sourceDefinition = {
-				layers: [],
+		if (sourceInfo == null) {
+			sourceInfo = {
+				definition: {
+					layers: [],
+				},
+				originalImagesMap: {},
 			};
 		}
-		const graphics = new EditorAssetGraphics(asset, sourceDefinition, () => {
+		const graphics = new EditorAssetGraphics(asset, sourceInfo.definition, () => {
 			this._onAssetDefinitionChanged(graphics)
 				.catch((err) => {
 					this.logger.error('Crash in asset definition change handler:', err);
@@ -68,9 +74,15 @@ export class EditorAssetGraphicsManagerClass {
 				this.logger.error('Crash in asset definition change handler:', err);
 			});
 
-		// TODO
-		// graphics.loadAllUsedImages(this.manager.loader)
-		// 	.catch((err) => logger.error('Error importing asset for editing', err));
+		ToastHandlePromise(
+			graphics.loadAllUsedImages(GraphicsManagerInstance.value.loader, sourceInfo.originalImagesMap),
+			{
+				pending: 'Importing asset images...',
+				success: 'Asset successfully loaded',
+				error: 'Error loading asset images, check console for details',
+			},
+		)
+			.catch((err) => this.logger.error('Error importing asset for editing:', err));
 
 		return graphics;
 	}

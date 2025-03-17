@@ -12,12 +12,11 @@ import {
 	type AssetSourceGraphicsDefinition,
 	type GraphicsLayerType,
 	type GraphicsSourceLayer,
-	type LayerImageSetting,
 } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import type { IGraphicsLoader } from '../../assets/graphicsManager.ts';
 import { DownloadAsFile } from '../../common/downloadHelper.ts';
-import { LoadArrayBufferImageResource, StripAssetHash } from '../../graphics/utility.ts';
+import { LoadArrayBufferImageResource } from '../../graphics/utility.ts';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
 import { EditorAssetGraphicsLayer, EditorAssetGraphicsLayerContainer } from './editorAssetGraphicsLayer.ts';
 
@@ -224,33 +223,13 @@ export class EditorAssetGraphics {
 		}
 	}
 
-	public loadAllUsedImages(loader: IGraphicsLoader): Promise<void> {
-		const images = new Set<string>();
-		for (const layer of this._layers.value) {
-			// TODO: FIXME
-			const processSetting = (setting: LayerImageSetting): void => {
-				{
-					const layerImage = setting.image;
-					images.add(layerImage);
-					setting.image = StripAssetHash(layerImage);
-				}
-				for (const override of setting.overrides) {
-					images.add(override.image);
-					override.image = StripAssetHash(override.image);
-				}
-			};
-			layer._modifyDefinition((d) => {
-				processSetting(d.image);
-				d.scaling?.stops.forEach((s) => processSetting(s[1]));
-			});
-		}
+	public loadAllUsedImages(loader: IGraphicsLoader, originalImagesMap: Record<string, string>): Promise<void> {
 		return Promise.allSettled(
-			Array.from(images.values())
-				.filter((image) => image.trim())
-				.map((image) =>
+			Object.entries(originalImagesMap)
+				.map(([image, source]) =>
 					loader
-						.loadFileArrayBuffer(image)
-						.then((result) => this.addTextureFromArrayBuffer(StripAssetHash(image), result)),
+						.loadFileArrayBuffer(source)
+						.then((result) => this.addTextureFromArrayBuffer(image, result)),
 				),
 		).then(() => undefined);
 	}

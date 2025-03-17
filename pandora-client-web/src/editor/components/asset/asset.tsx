@@ -9,7 +9,7 @@ import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
 import { useObservable } from '../../../observable.ts';
-import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS, ToastHandlePromise } from '../../../persistentToast.ts';
 import { useLayerHasAlphaMasks, useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
 import type { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
 import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
@@ -118,10 +118,16 @@ export function AssetUI() {
 					type='file'
 					onChange={ (e) => {
 						if (e.target.files) {
-							selectedAsset
-								.addTexturesFromFiles(e.target.files)
+							ToastHandlePromise(
+								selectedAsset.addTexturesFromFiles(e.target.files),
+								{
+									pending: 'Importing asset images...',
+									success: 'Images loaded',
+									error: 'Error loading asset images, check console for details',
+								},
+							)
 								.catch((err) => {
-									toast(`Load failed: \n${String(err)}`, TOAST_OPTIONS_ERROR);
+									GetLogger('AssetUI').error('Error importing asset images:', err);
 								});
 						}
 					} }

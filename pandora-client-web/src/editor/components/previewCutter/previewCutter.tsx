@@ -74,7 +74,7 @@ function PreviewCutterRectangleInner({
 				size + PREVIEW_CUTTER_LINE_WIDTH,
 				size + PREVIEW_CUTTER_LINE_WIDTH,
 			)
-			.stroke({ width: PREVIEW_CUTTER_LINE_WIDTH, color, alpha: 1 });
+			.stroke({ width: PREVIEW_CUTTER_LINE_WIDTH, color, alpha: 1, pixelLine: true });
 	}, [dragging, size]);
 	const onPointerDown = React.useCallback((ev: PIXI.FederatedPointerEvent) => {
 		ev.stopPropagation();

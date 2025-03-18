@@ -480,7 +480,20 @@ export interface AssetsDefinitionFile {
 	bones: Record<string, BoneDefinitionCompressed>;
 	posePresets: AssetsPosePresets;
 	bodyparts: AssetBodyPart[];
+	/**
+	 * "ID" hash of a file containing runtime graphics definitions.
+	 *
+	 * The file can be found relative to assets source, at path `./graphics_${graphicsId}.json`
+	 * @see GraphicsDefinitionFile
+	 */
 	graphicsId: string;
+	/**
+	 * "ID" hash of a file containing source graphics definitions, mainly for use in the editor.
+	 *
+	 * The file can be found relative to assets source, at path `./graphicsSource_${graphicsId}.json`
+	 * @see GraphicsSourceDefinitionFile
+	 */
+	graphicsSourceId: string;
 	backgroundTags: Record<string, RoomBackgroundTagDefinition>;
 	backgrounds: RoomBackgroundInfo[];
 	attributes: Record<string, AssetAttributeDefinition>;

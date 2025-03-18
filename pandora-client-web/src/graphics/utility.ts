@@ -28,10 +28,6 @@ export function StripAssetIdPrefix(id: AssetId): string {
 	return id.replace(/^a\//, '');
 }
 
-export function StripAssetHash(name: string): string {
-	return name.replace(/_[a-z0-9_-]{43}(?=\.[a-z]+$)/i, '');
-}
-
 function ImageToCanvas(image: HTMLImageElement): HTMLCanvasElement {
 	Assert(image.complete);
 

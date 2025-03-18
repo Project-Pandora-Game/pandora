@@ -7,13 +7,14 @@ import {
 	Item,
 	LAYER_PRIORITIES,
 	LayerPriority,
+	type GraphicsLayer,
 	type LayerStateOverrides,
 } from 'pandora-common';
 import { useMemo } from 'react';
-import { AssetGraphicsLayer } from '../assets/assetGraphics.ts';
 
 export type LayerState = {
-	layer: AssetGraphicsLayer;
+	layerKey: string;
+	layer: Immutable<GraphicsLayer>;
 	item: Item | null;
 	state?: LayerStateOverrides;
 };
@@ -124,23 +125,3 @@ export const PRIORITY_ORDER_REVERSE_PRIORITIES: ReadonlySet<LayerPriority> = new
 	'BELOW_ARM_RIGHT',
 ] satisfies LayerPriority[]);
 
-// Some priority layers should get mirrored when layer get mirrored
-export const PRIORITY_ORDER_MIRROR: Partial<Record<LayerPriority, LayerPriority>> = {
-	BELOW_ARM_LEFT: 'BELOW_ARM_RIGHT',
-	BELOW_ARM_RIGHT: 'BELOW_ARM_LEFT',
-
-	ARM_LEFT: 'ARM_RIGHT',
-	ARM_RIGHT: 'ARM_LEFT',
-
-	ABOVE_ARM_LEFT: 'ABOVE_ARM_RIGHT',
-	ABOVE_ARM_RIGHT: 'ABOVE_ARM_LEFT',
-};
-
-if (!(Object.entries(PRIORITY_ORDER_MIRROR)).every(([original, mirror]) => PRIORITY_ORDER_MIRROR[mirror] === original)) {
-	throw new Error('PRIORITY_ORDER_MIRROR not valid');
-}
-
-export function MirrorPriority(priority: LayerPriority): LayerPriority {
-	const mirrorPriority = PRIORITY_ORDER_MIRROR[priority];
-	return mirrorPriority != null ? mirrorPriority : priority;
-}

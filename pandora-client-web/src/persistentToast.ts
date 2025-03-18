@@ -43,6 +43,36 @@ export const TOAST_OPTIONS_PENDING: ToastOptions = {
 	draggable: false,
 };
 
+type ToastPromiseContent = Record<'pending' | 'success' | 'error', React.ReactNode>;
+export function ToastHandlePromise<T>(promise: Promise<T>, content: ToastPromiseContent): Promise<T> {
+	return toast.promise<T>(
+		promise,
+		{
+			pending: {
+				...TOAST_OPTIONS_PENDING,
+				render: content.pending,
+			},
+			success: {
+				...TOAST_OPTIONS_SUCCESS,
+				data: undefined,
+				render: content.success,
+			},
+			error: {
+				...TOAST_OPTIONS_ERROR,
+				render: content.error,
+			},
+		},
+		{
+			type: 'default',
+			isLoading: true,
+			autoClose: false,
+			closeOnClick: false,
+			closeButton: false,
+			draggable: false,
+		},
+	);
+}
+
 export class PersistentToast {
 	private id: string | number | null = null;
 	private shouldShow: boolean = false;

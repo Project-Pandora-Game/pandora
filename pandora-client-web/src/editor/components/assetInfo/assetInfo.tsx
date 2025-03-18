@@ -5,13 +5,13 @@ import { EFFECTS_DEFAULT, EffectsDefinition } from 'pandora-common/dist/assets/e
 import { IModuleConfigCommon } from 'pandora-common/dist/assets/modules/common.js';
 import { IModuleConfigTyped, IModuleTypedOption } from 'pandora-common/dist/assets/modules/typed.js';
 import { ReactElement, useId, useMemo } from 'react';
-import { useGraphicsAsset } from '../../../assets/assetGraphicsCalculations.ts';
 import { Row } from '../../../components/common/container/container.tsx';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.tsx';
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
 import { useObservable } from '../../../observable.ts';
+import { useAssetManagerEditor } from '../../assets/assetManager.ts';
+import type { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
 import { useEditor } from '../../editorContextProvider.tsx';
-import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor.ts';
 
 export function AssetInfoUI(): ReactElement {
 	const editor = useEditor();
@@ -29,9 +29,9 @@ export function AssetInfoUI(): ReactElement {
 }
 
 function AssetInfoUIImpl({ graphics }: { graphics: EditorAssetGraphics; }): ReactElement | null {
-	const asset = useGraphicsAsset(graphics);
+	const asset = useAssetManagerEditor().getAssetById(graphics.id);
 
-	if (!asset.isType('bodypart') && !asset.isType('personal'))
+	if (asset == null || !asset.isType('bodypart') && !asset.isType('personal'))
 		return null;
 
 	const definition = asset.definition;

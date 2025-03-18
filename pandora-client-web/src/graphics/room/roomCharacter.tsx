@@ -32,8 +32,9 @@ import { Sprite } from '../baseComponents/sprite.ts';
 import { Text } from '../baseComponents/text.ts';
 import { TransitionedContainer } from '../common/transitions/transitionedContainer.ts';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter.tsx';
-import { MASK_SIZE, SwapCullingDirection } from '../graphicsLayer.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
+import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
+import { SwapCullingDirection } from '../layers/graphicsLayerCommon.tsx';
 import { useTickerRef } from '../reconciler/tick.ts';
 import { useTexture } from '../useTexture.ts';
 import { CalculateCharacterDeviceSlotPosition } from './roomDevice.tsx';
@@ -486,10 +487,10 @@ function RoomCharacterDebugGraphicsInner({ pivot }: {
 			.stroke({ color: 0x000000, width: 1 })
 			// Mask area
 			.rect(-MASK_SIZE.x, -MASK_SIZE.y, MASK_SIZE.width, MASK_SIZE.height)
-			.stroke({ color: 0xffff00, width: 2 })
+			.stroke({ color: 0xffff00, width: 1, pixelLine: true })
 			// Character canvas standard area
 			.rect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
-			.stroke({ color: 0x00ff00, width: 2 });
+			.stroke({ color: 0x00ff00, width: 1, pixelLine: true });
 	}, [pivot]);
 
 	return (

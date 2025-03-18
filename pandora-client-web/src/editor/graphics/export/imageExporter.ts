@@ -1,5 +1,4 @@
-import Delaunator from 'delaunator';
-import { CharacterSize, Rectangle, Size } from 'pandora-common';
+import { CalculatePointsTrianglesRaw, CharacterSize, Rectangle, Size } from 'pandora-common';
 import { Application, Container, Matrix, Mesh, MeshGeometry, RenderTexture, Texture } from 'pixi.js';
 import { AssertDataString, DataString } from '../../../common/downloadHelper.ts';
 
@@ -59,7 +58,7 @@ class TextureCutter extends Container {
 			point[0] / width,
 			point[1] / height,
 		])));
-		const triangles = new Delaunator(points.flat()).triangles;
+		const triangles = CalculatePointsTrianglesRaw(points);
 		const geometry = new MeshGeometry({
 			positions: vertices,
 			uvs: uv,

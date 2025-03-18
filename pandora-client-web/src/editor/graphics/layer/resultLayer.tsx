@@ -1,31 +1,44 @@
 import { isEqual } from 'lodash-es';
-import { Assert } from 'pandora-common';
+import { Assert, AssertNever } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
-import { useLayerDefinition, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
+import { useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
 import dotTexture from '../../../assets/editor/dotTexture.png';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
 import { Sprite } from '../../../graphics/baseComponents/sprite.ts';
-import { GraphicsLayerProps, useLayerVertices } from '../../../graphics/graphicsLayer.tsx';
+import { useLayerVertices, type GraphicsLayerProps } from '../../../graphics/layers/graphicsLayerCommon.tsx';
 import { useTexture } from '../../../graphics/useTexture.ts';
 import { MeshFaceIsCW } from '../../../graphics/utility.ts';
 import { useNullableObservable, useObservable } from '../../../observable.ts';
-import { PreviewCutterRectangle } from '../../components/previewCutter/previewCutter.tsx';
+import { GetEditorSourceLayerForRuntimeLayer } from '../../assets/editorAssetCalculationHelpers.ts';
 import { useEditor } from '../../editorContextProvider.tsx';
 import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer.tsx';
 
 export function ResultLayer({
 	layer,
+	...props
+}: GraphicsLayerProps): ReactElement {
+	switch (layer.type) {
+		case 'mesh':
+		case 'alphaImageMesh':
+			return <ResultMeshLayer { ...props } layer={ layer } />;
+	}
+	AssertNever(layer);
+}
+
+export function ResultMeshLayer({
+	layer,
 	item,
 	characterState,
 	...props
-}: GraphicsLayerProps): ReactElement {
+}: GraphicsLayerProps<'mesh' | 'alphaImageMesh'>): ReactElement {
 	const editor = useEditor();
-	const showHelpers = useObservable(editor.targetLayer) === layer;
+	const editorLayer = GetEditorSourceLayerForRuntimeLayer(layer);
+	const showHelpers = useObservable(editor.targetLayer) === editorLayer && editorLayer != null;
 
-	const { points: pointTemplate, x, y, width, height } = useLayerDefinition(layer);
+	const { points: pointTemplate, x, y, width, height } = layer;
 	const { points, triangles } = useLayerMeshPoints(layer);
 
 	const evaluator = useAppearanceConditionEvaluator(characterState);
@@ -35,7 +48,7 @@ export function ResultLayer({
 	const drawWireFrame = useCallback((g: PIXI.GraphicsContext) => {
 		// Borders of the layer
 		g.rect(x, y, width, height)
-			.stroke({ width: 2, color: 0x000088, alpha: 0.6 });
+			.stroke({ width: 2, color: 0x000088, alpha: 0.6, pixelLine: true });
 
 		// Wireframe of the points template
 		for (let i = 0; i < triangles.length; i += 3) {
@@ -52,10 +65,10 @@ export function ResultLayer({
 			if (isCCW) {
 				g
 					.fill({ color: 0xff4444, alpha: 0.8 })
-					.stroke({ width: 2, color: 0xff0000, alpha: 0.8 });
+					.stroke({ width: 2, color: 0xff0000, alpha: 0.8, pixelLine: true });
 			} else {
 				g
-					.stroke({ width: 1, color: 0x333333, alpha: 0.2 });
+					.stroke({ width: 1, color: 0x333333, alpha: 0.2, pixelLine: true });
 			}
 		}
 	}, [triangles, vertices, x, y, width, height]);
@@ -108,7 +121,6 @@ export function ResultLayer({
 					</Container>
 				)
 			}
-			<PreviewCutterRectangle />
 		</>
 	);
 }

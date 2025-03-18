@@ -1,18 +1,17 @@
 import { AssetFrameworkCharacterState } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { Texture } from 'pixi.js';
-import { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react';
-import { AssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
-import { useLayerDefinition, useLayerImageSource, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
+import { ReactElement, useCallback, useMemo } from 'react';
+import { useLayerImageSource, useLayerMeshPoints } from '../../../assets/assetGraphicsCalculations.ts';
 import { useAppearanceConditionEvaluator } from '../../../graphics/appearanceConditionEvaluator.ts';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
 import { Sprite } from '../../../graphics/baseComponents/sprite.ts';
-import { GraphicsLayerProps, useItemColor, useLayerVertices } from '../../../graphics/graphicsLayer.tsx';
+import { useItemColor, useLayerVertices, type GraphicsLayerProps } from '../../../graphics/layers/graphicsLayerCommon.tsx';
 import { useTexture } from '../../../graphics/useTexture.ts';
+import { useObservable } from '../../../observable.ts';
+import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
 import { useEditorLayerStateOverride } from '../../editor.tsx';
-import { useEditor } from '../../editorContextProvider.tsx';
-import { EditorAssetGraphics } from '../character/appearanceEditor.ts';
 import { EDITOR_LAYER_Z_INDEX_EXTRA, EditorLayer } from './editorLayer.tsx';
 
 export function SetupLayer({
@@ -27,36 +26,51 @@ export function SetupLayer({
 }
 
 export function SetupLayerSelected({
+	layer,
+	...props
+}: {
+	characterState: AssetFrameworkCharacterState;
+	zIndex: number;
+	layer: EditorAssetGraphicsLayer;
+}): ReactElement | null {
+	switch (layer.type) {
+		case 'mesh':
+			return <SetupMeshLayerSelected { ...props } layer={ layer } />;
+	}
+	return null;
+}
+
+export function SetupMeshLayerSelected({
 	characterState,
 	zIndex,
 	layer,
 }: {
 	characterState: AssetFrameworkCharacterState;
 	zIndex: number;
-	layer: AssetGraphicsLayer;
+	layer: EditorAssetGraphicsLayer<'mesh'>;
 }): ReactElement {
-	const editor = useEditor();
 	const state = useEditorLayerStateOverride(layer);
 	const item = characterState.items.find((i) => i.asset.id === layer.asset.id) ?? null;
 
-	const { points, triangles } = useLayerMeshPoints(layer);
-
-	const evaluator = useAppearanceConditionEvaluator(characterState);
-
+	const definition = useObservable(layer.definition);
 	const {
 		height,
 		width,
 		colorizationKey,
 		x, y,
-	} = useLayerDefinition(layer);
+	} = definition;
+
+	const { points, triangles } = useLayerMeshPoints(definition);
+
+	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	const {
 		image,
 		imageUv,
-	} = useLayerImageSource(evaluator, layer, item);
+	} = useLayerImageSource(evaluator, definition, item);
 
 	const evaluatorUvPose = useAppearanceConditionEvaluator(characterState, false, imageUv);
-	const uv = useLayerVertices(evaluatorUvPose, points, layer, item, true);
+	const uv = useLayerVertices(evaluatorUvPose, points, definition, item, true);
 
 	const drawWireFrame = useCallback((g: PIXI.GraphicsContext) => {
 		// Draw triangles
@@ -66,7 +80,7 @@ export function SetupLayerSelected({
 				.flatMap((p) => [uv[2 * p] * width + x, uv[2 * p + 1] * height + y]);
 			g
 				.poly(poly)
-				.stroke({ width: 1, color: 0x333333, alpha: 0.2 });
+				.stroke({ width: 1, color: 0x333333, alpha: 0.2, pixelLine: true });
 		}
 		// Draw nice points on top of triangles
 		for (const point of points) {
@@ -77,24 +91,12 @@ export function SetupLayerSelected({
 		}
 	}, [points, triangles, uv, x, y, width, height]);
 
-	const [editorGettersVersion, editorGettersUpdate] = useReducer((s: number) => s + 1, 0);
-
 	const asset = layer.asset;
+	const editorAssetTextures = useObservable(asset.textures);
 
-	// TODO: Make editor asset's images observable
 	const editorGetTexture = useMemo<((image: string) => Texture) | undefined>(() => {
-		if (asset instanceof EditorAssetGraphics)
-			return (i) => asset.getTexture(i);
-		return undefined;
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [layer, editorGettersVersion]);
-
-	useEffect(() => {
-		if (asset instanceof EditorAssetGraphics) {
-			return editor.on('modifiedAssetsChange', () => editorGettersUpdate());
-		}
-		return undefined;
-	}, [editor, asset]);
+		return (i) => (editorAssetTextures.get(i) ?? Texture.EMPTY);
+	}, [editorAssetTextures]);
 
 	const texture = useTexture(image, undefined, editorGetTexture);
 

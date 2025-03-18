@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { capitalize } from 'lodash-es';
-import { Assert, AssertNotNullable, LAYER_PRIORITIES, LayerPriority, type GraphicsSourceLayer } from 'pandora-common';
+import { Assert, AssertNotNullable, LAYER_PRIORITIES, LayerMirror, LayerMirrorSchema, LayerPriority, type GraphicsSourceLayer } from 'pandora-common';
 import React, { ReactElement, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager.ts';
@@ -64,6 +64,7 @@ export function LayerUI(): ReactElement {
 			<LayerPrioritySelect layer={ selectedLayer } asset={ asset } />
 			<LayerTemplateSelect layer={ selectedLayer } />
 			<LayerPointsFilterEdit layer={ selectedLayer } />
+			<LayerMirrorSelect layer={ selectedLayer } asset={ asset } />
 			<hr />
 			<LayerImageSelect layer={ selectedLayer } asset={ asset } />
 			<LayerImageOverridesTextarea layer={ selectedLayer } />
@@ -512,7 +513,7 @@ function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsLayer; }): R
 					const source = event.target.value.substring(2);
 					const template = graphicsManger?.getTemplate(source);
 					Assert(template != null, 'Unknown point template');
-					layer._modifyDefinition((d) => {
+					layer.modifyDefinition((d) => {
 						d.points = source;
 					});
 				} }
@@ -583,6 +584,44 @@ function LayerPointsFilterEdit({ layer }: { layer: EditorAssetGraphicsLayer; }):
 				value={ value }
 				onChange={ onChange }
 			/>
+		</Row>
+	);
+}
+
+const LAYER_MIRROR_OPTIONS: Record<LayerMirror, string> = {
+	[LayerMirror.NONE]: 'None',
+	[LayerMirror.SELECT]: 'Duplicate and mirror',
+};
+function LayerMirrorSelect({ layer }: { layer: EditorAssetGraphicsLayer; asset: EditorAssetGraphics; }): ReactElement | null {
+	const {
+		mirror: layerMirror,
+	} = useObservable<Immutable<GraphicsSourceLayer>>(layer.definition);
+
+	const elements: ReactElement[] = [];
+
+	for (const [mirror, text] of Object.entries(LAYER_MIRROR_OPTIONS)) {
+		elements.push(
+			<option value={ mirror } key={ mirror }>{ text }</option>,
+		);
+	}
+
+	return (
+		<Row alignY='center'>
+			<label htmlFor='layer-mirror-select'>
+				Layer mirroring:
+			</label>
+			<Select
+				id='layer-mirror-select'
+				className='flex-1'
+				value={ String(layerMirror) }
+				onChange={ (event) => {
+					layer.modifyDefinition((d) => {
+						d.mirror = LayerMirrorSchema.parse(Number.parseInt(event.target.value));
+					});
+				} }
+			>
+				{ elements }
+			</Select>
 		</Row>
 	);
 }

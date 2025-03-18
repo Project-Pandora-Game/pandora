@@ -34,12 +34,12 @@ export class EditorAssetGraphicsLayerContainer<TLayer extends GraphicsSourceLaye
 		this._definition = new Observable(freeze(definition));
 	}
 
-	public _modifyDefinition(producer: (draft: Draft<Immutable<TLayer>>) => void): void {
+	public modifyDefinition(producer: (draft: Draft<Immutable<TLayer>>) => void): void {
 		this._definition.produceImmer(producer);
 	}
 
 	private _modifyImageSettingsForScalingStop(stop: number | null | undefined, producer: (draft: Draft<Immutable<LayerImageSetting>>) => void): void {
-		this._modifyDefinition((d) => {
+		this.modifyDefinition((d) => {
 			if (!stop) {
 				producer(d.image);
 				return;
@@ -53,14 +53,14 @@ export class EditorAssetGraphicsLayerContainer<TLayer extends GraphicsSourceLaye
 	}
 
 	public setPriority(priority: LayerPriority): void {
-		this._modifyDefinition((d) => {
+		this.modifyDefinition((d) => {
 			d.priority = priority;
 		});
 	}
 
 	public setHeight(height: number): void {
 		if (height > 0) {
-			this._modifyDefinition((d) => {
+			this.modifyDefinition((d) => {
 				d.height = height;
 			});
 		}
@@ -68,20 +68,20 @@ export class EditorAssetGraphicsLayerContainer<TLayer extends GraphicsSourceLaye
 
 	public setWidth(width: number): void {
 		if (width > 0) {
-			this._modifyDefinition((d) => {
+			this.modifyDefinition((d) => {
 				d.width = width;
 			});
 		}
 	}
 
 	public setXOffset(offset: number): void {
-		this._modifyDefinition((d) => {
+		this.modifyDefinition((d) => {
 			d.x = offset;
 		});
 	}
 
 	public setYOffset(offset: number): void {
-		this._modifyDefinition((d) => {
+		this.modifyDefinition((d) => {
 			d.y = offset;
 		});
 	}
@@ -89,14 +89,14 @@ export class EditorAssetGraphicsLayerContainer<TLayer extends GraphicsSourceLaye
 	public setColorizationKey(colorizationKey: string | null): void {
 		Assert(colorizationKey === null || colorizationKey.trim().length > 0, 'Colorization key must be null or non-empty');
 
-		this._modifyDefinition((d) => {
+		this.modifyDefinition((d) => {
 			Assert(d.type === 'mesh', 'Colorization key can only be set on mesh layer');
 			d.colorizationKey = colorizationKey === null ? undefined : colorizationKey;
 		});
 	}
 
 	public setPointType(pointType: string[]): void {
-		this._modifyDefinition((d) => {
+		this.modifyDefinition((d) => {
 			d.pointType = pointType.length === 0 ? undefined : pointType.slice();
 		});
 	}
@@ -114,7 +114,7 @@ export class EditorAssetGraphicsLayerContainer<TLayer extends GraphicsSourceLaye
 	}
 
 	public setName(name: string): void {
-		this._modifyDefinition((d) => {
+		this.modifyDefinition((d) => {
 			d.name = name;
 		});
 	}

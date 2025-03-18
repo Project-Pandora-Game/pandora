@@ -134,7 +134,7 @@ export class EditorAssetGraphics {
 	}
 
 	public setScaleAs(layer: EditorAssetGraphicsLayer, scaleAs: string | null): void {
-		layer._modifyDefinition((d) => {
+		layer.modifyDefinition((d) => {
 			if (scaleAs) {
 				d.scaling = {
 					scaleBone: scaleAs,
@@ -151,7 +151,7 @@ export class EditorAssetGraphics {
 			throw new Error('Invalid value supplied');
 		}
 
-		layer._modifyDefinition((d) => {
+		layer.modifyDefinition((d) => {
 			Assert(d.scaling, 'Cannot add scaling stop if not scaling');
 
 			if (d.scaling.stops.some((stop) => stop[0] === value))
@@ -163,7 +163,7 @@ export class EditorAssetGraphics {
 	}
 
 	public removeScalingStop(layer: EditorAssetGraphicsLayer, stop: number): void {
-		layer._modifyDefinition((d) => {
+		layer.modifyDefinition((d) => {
 			Assert(d.scaling, 'Cannot remove scaling stop if not scaling');
 
 			d.scaling.stops = d.scaling.stops.filter((s) => s[0] !== stop);

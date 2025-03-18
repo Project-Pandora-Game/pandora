@@ -2,7 +2,7 @@ import type { AssetId } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useReducer } from 'react';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager.ts';
 import { GraphicsCharacterProps, GraphicsCharacterWithManager, GraphicsGetterFunction, LayerStateOverrideGetter } from '../../../graphics/graphicsCharacter.tsx';
-import { useNullableObservable, useObservable } from '../../../observable.ts';
+import { useObservable } from '../../../observable.ts';
 import { GetEditorSourceLayerForRuntimeLayer } from '../../assets/editorAssetCalculationHelpers.ts';
 import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
 import { usePreviewCutterOverridesEnabled } from '../../components/previewCutter/previewCutter.tsx';
@@ -22,7 +22,7 @@ export function GraphicsCharacterEditor({
 	const [editorGettersVersion, editorGettersUpdate] = useReducer((s: number) => s + 1, 0);
 
 	const manager = useObservable(GraphicsManagerInstance);
-	const assetGraphics = useNullableObservable(manager?.assetGraphics);
+	const assetGraphics = manager?.assetGraphics;
 	const graphicsGetter = useMemo<GraphicsGetterFunction | undefined>(() => assetGraphics == null ? undefined : ((id: AssetId) => assetGraphics[id]), [assetGraphics]);
 
 	const layerStateOverrideGetter = useCallback<LayerStateOverrideGetter>(

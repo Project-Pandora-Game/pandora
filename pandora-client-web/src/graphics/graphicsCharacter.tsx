@@ -23,7 +23,7 @@ import { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 
 import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { usePlayerData } from '../components/gameContext/playerContextProvider.tsx';
-import { Observable, useNullableObservable, useObservable } from '../observable.ts';
+import { Observable, useObservable } from '../observable.ts';
 import { Container } from './baseComponents/container.ts';
 import { TransitionedContainer, type PixiTransitionedContainer, type TransitionedContainerCustomProps } from './common/transitions/transitionedContainer.ts';
 import { TransitionHandler, type TransitionHandlerValueProcessor } from './common/transitions/transitionHandler.ts';
@@ -356,7 +356,7 @@ export function GraphicsCharacterWithManager({
 
 export function GraphicsCharacter(props: GraphicsCharacterProps): ReactElement | null {
 	const manager = useObservable(GraphicsManagerInstance);
-	const assetGraphics = useNullableObservable(manager?.assetGraphics);
+	const assetGraphics = manager?.assetGraphics;
 	const graphicsGetter = useMemo<GraphicsGetterFunction | undefined>(() => assetGraphics == null ? undefined : ((id: AssetId) => assetGraphics[id]), [assetGraphics]);
 
 	if (!graphicsGetter)

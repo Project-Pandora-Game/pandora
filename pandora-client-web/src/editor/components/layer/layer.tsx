@@ -469,7 +469,7 @@ function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsLayer; }): R
 		return null;
 
 	const elements: ReactElement[] = [];
-	for (const t of graphicsManger.pointTemplateList) {
+	for (const t of graphicsManger.pointTemplates.keys()) {
 		const id = `t/${t}`;
 		elements.push(
 			<option value={ id } key={ id }>{ capitalize(t) }</option>,

@@ -11,7 +11,7 @@ import { Texture, type TextureSource } from 'pixi.js';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { BrowserStorage } from '../browserStorage.ts';
-import { Observable, useObservable, type ReadonlyObservable } from '../observable.ts';
+import { Observable, useObservable } from '../observable.ts';
 
 export interface IGraphicsLoaderStats {
 	inUseTextures: number;
@@ -170,22 +170,23 @@ const TransformGraphicsLoader = (() => {
 })();
 
 export class GraphicsManager {
-	private readonly _assetGraphics = new Observable<Immutable<Partial<Record<AssetId, AssetGraphicsDefinition>>>>({});
-	private readonly _pointTemplates: Map<string, Immutable<PointTemplate>> = new Map();
-	private _pointTemplateList: readonly string[] = [];
-
 	public readonly definitionsHash: string;
 	public readonly loader: IGraphicsLoader;
 
-	public get assetGraphics(): ReadonlyObservable<Immutable<Partial<Record<AssetId, AssetGraphicsDefinition>>>> {
-		return this._assetGraphics;
-	}
+	public readonly assetGraphics: Immutable<Partial<Record<AssetId, AssetGraphicsDefinition>>>;
+	public readonly pointTemplates: ReadonlyMap<string, Immutable<PointTemplate>>;
 
 	constructor(loader: IGraphicsLoader, definitionsHash: string, data: Immutable<GraphicsDefinitionFile>) {
 		this.loader = loader;
 		this.definitionsHash = definitionsHash;
-		this.loadPointTemplates(freeze(data.pointTemplates, true));
-		this.loadAssets(freeze(data.assets, true));
+		// Load point templates
+		const pointTemplates = new Map<string, Immutable<PointTemplate>>();
+		for (const [name, template] of Object.entries(freeze(data.pointTemplates, true))) {
+			pointTemplates.set(name, template);
+		}
+		this.pointTemplates = pointTemplates;
+		// Load assets
+		this.assetGraphics = freeze(data.assets, true);
 	}
 
 	public static async create(loader: IGraphicsLoader, definitionsHash: string, data: Immutable<GraphicsDefinitionFile>): Promise<GraphicsManager> {
@@ -193,27 +194,11 @@ export class GraphicsManager {
 		return new GraphicsManager(newLoader, definitionsHash, data);
 	}
 
-	public get pointTemplateList(): readonly string[] {
-		return this._pointTemplateList;
-	}
-
 	public getTemplate(name: string): Immutable<PointTemplate> | undefined {
 		if (!name)
 			return [];
 
-		return this._pointTemplates.get(name);
-	}
-
-	private loadAssets(assets: Immutable<Partial<Record<AssetId, AssetGraphicsDefinition>>>): void {
-		this._assetGraphics.value = assets;
-	}
-
-	private loadPointTemplates(pointTemplates: Immutable<Record<string, PointTemplate>>): void {
-		this._pointTemplates.clear();
-		for (const [name, template] of Object.entries(pointTemplates)) {
-			this._pointTemplates.set(name, template);
-		}
-		this._pointTemplateList = Array.from(this._pointTemplates.keys());
+		return this.pointTemplates.get(name);
 	}
 }
 

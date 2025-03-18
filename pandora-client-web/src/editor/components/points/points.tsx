@@ -281,7 +281,7 @@ function SelectTemplateToEdit(): ReactElement | null {
 			>
 				<option value='' key=''>[ None ]</option>
 				{
-					graphicsManger.pointTemplateList.map((t) => (
+					Array.from(graphicsManger.pointTemplates.keys()).map((t) => (
 						<option value={ `t/${t}` } key={ `t/${t}` }>{ t }</option>
 					))
 				}

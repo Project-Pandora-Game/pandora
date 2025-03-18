@@ -19,11 +19,17 @@ async function Load(loader: IGraphicsLoader): Promise<AssetManagerEditor> {
 		hash = (await loader.loadTextFile('current')).trim();
 	} catch (_error) {
 		throw new Error('Failed to get the assets version.\nIs the target server running and reachable?');
-
 	}
-	const assetDefinitions = JSON.parse(await loader.loadTextFile(`assets_${hash}.json`)) as AssetsDefinitionFile;
 
-	const assetManager = EditorAssetManager.loadAssetManager(hash, assetDefinitions);
+	return await LoadEditorAssets(loader, hash);
+}
+
+export let EditorLoadedVersionHash: string = '';
+
+export async function LoadEditorAssets(loader: IGraphicsLoader, versionHash: string): Promise<AssetManagerEditor> {
+	const assetDefinitions = JSON.parse(await loader.loadTextFile(`assets_${versionHash}.json`)) as AssetsDefinitionFile;
+
+	const assetManager = EditorAssetManager.loadAssetManager(versionHash, assetDefinitions);
 
 	const graphicsSourceHash = assetManager.graphicsSourceId;
 	const graphicsSourceDefinitions = GraphicsSourceDefinitionFileSchema.parse(JSON.parse(await loader.loadTextFile(`graphicsSource_${graphicsSourceHash}.json`)));
@@ -32,11 +38,13 @@ async function Load(loader: IGraphicsLoader): Promise<AssetManagerEditor> {
 	const graphicsDefinitions = GraphicsDefinitionFileSchema.parse(JSON.parse(await loader.loadTextFile(`graphics_${graphicsHash}.json`)));
 
 	// Load initial version of runtime graphics
-	const graphicsManager = await GraphicsManager.create(loader, graphicsHash, graphicsDefinitions);
+	const graphicsManager = new GraphicsManager(loader, graphicsHash, graphicsDefinitions);
 	GraphicsManagerInstance.value = graphicsManager;
 
 	// Load graphics source definitions for editor
 	EditorAssetGraphicsManager.loadNewOriginalDefinitions(graphicsSourceDefinitions, graphicsDefinitions);
+
+	EditorLoadedVersionHash = versionHash;
 
 	return assetManager;
 }

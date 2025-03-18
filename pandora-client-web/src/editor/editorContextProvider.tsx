@@ -10,6 +10,7 @@ import { RootErrorBoundary } from '../components/error/rootErrorBoundary.tsx';
 import { permissionCheckContext, PermissionCheckServiceBase } from '../components/gameContext/permissionCheckProvider.tsx';
 import type { ClientServices } from '../services/clientServices.ts';
 import { ServiceManagerContextProvider } from '../services/serviceProvider.tsx';
+import { EditorAssetUpdateService } from './assets/editorAssetUpdater.tsx';
 import { Editor } from './editor.tsx';
 
 export const EditorContext = createContext({
@@ -37,6 +38,11 @@ export function EditorContextProvider({ children, serviceManager }: EditorContex
 					<Dialogs location='global' />
 					<Dialogs location='mainOverlay' />
 					<AnchorAutoscroll />
+					{
+						editor != null ? (
+							<EditorAssetUpdateService />
+						) : null
+					}
 					<EditorContext.Provider value={ context }>
 						<PermissionCheckServiceProvider>
 							{ children }

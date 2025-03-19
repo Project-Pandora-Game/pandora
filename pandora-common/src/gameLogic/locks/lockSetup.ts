@@ -18,6 +18,11 @@ export interface LockSetup {
 		/** Max allowed time (in ms) lock can be locked for */
 		maxDuration: number;
 	};
+	/** Configuration to enable fingerprint on this lock */
+	fingerprint?: {
+		/** Max allowed fingerprints that can be registered on the lock */
+		maxFingerprints: number;
+	};
 	/**
 	 * Affects how character can interact with locks on items they are wearing:
 	 * - `false` - Character can freely interact the the lock

@@ -26,11 +26,12 @@ export function AppearanceActionProblemShouldHide(result: AppearanceActionProble
 	return false;
 }
 
-function RenderLockLogicActionProblem(lockDescription: string, action: 'lock' | 'unlock' | 'showPassword', problem: LockActionProblem): string {
+function RenderLockLogicActionProblem(lockDescription: string, action: 'lock' | 'unlock' | 'showPassword' | 'updateFingerprint', problem: LockActionProblem): string {
 	const actionDescription: Record<typeof action, string> = {
 		lock: 'be locked',
 		unlock: 'be unlocked',
 		showPassword: 'have its password displayed',
+		updateFingerprint: 'have its fingerprints updated',
 	};
 
 	switch (problem) {
@@ -50,6 +51,12 @@ function RenderLockLogicActionProblem(lockDescription: string, action: 'lock' | 
 			return `The ${lockDescription} cannot yet ${actionDescription[action]} as the timer is still running.`;
 		case 'notAllowed':
 			return `You are not allowed to view the password.`;
+		case 'noRegisteredPrints':
+			return `The ${lockDescription} cannot ${actionDescription[action]} because it has no registered fingerprints.`;
+		case 'printNotRegistered':
+			return `The ${lockDescription} cannot ${actionDescription[action]} because your fingerprint is not registered.`;
+		case 'tooManyPrints':
+			return `The ${lockDescription} cannot ${actionDescription[action]} as all slots are full.`;
 	}
 
 	AssertNever(problem);

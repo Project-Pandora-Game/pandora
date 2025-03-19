@@ -102,6 +102,8 @@ export class ItemLock extends ItemBase<'lock'> {
 				return this.unlock(context, action);
 			case 'showPassword':
 				return this.showPassword(context);
+			case 'updateFingerprint':
+				return this.updateFingerprint(context, action);
 		}
 		AssertNever(action);
 	}
@@ -211,6 +213,36 @@ export class ItemLock extends ItemBase<'lock'> {
 				addProblem({
 					type: 'lockInteractionPrevented',
 					moduleAction: 'showPassword',
+					reason: result.reason,
+					asset: this.asset.id,
+					itemName: this.name ?? '',
+				});
+				return this;
+
+			case 'invalid':
+				return null;
+		}
+
+		AssertNever(result);
+	}
+
+	public updateFingerprint({ addProblem, processingContext, target, module }: AppearanceModuleActionContext, action: Extract<LockAction, { action: 'updateFingerprint'; }>): ItemLock | null {
+		const player = processingContext.getPlayerRestrictionManager();
+		// Updating the registered fingerprints on the lock modifies it
+		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.MODIFY);
+
+		const result = this.lockLogic.updateFingerprint(action);
+
+		switch (result.result) {
+			case 'ok':
+				return this.withProps({
+					lockLogic: result.newState,
+				});
+
+			case 'failed':
+				addProblem({
+					type: 'lockInteractionPrevented',
+					moduleAction: 'updateFingerprint',
 					reason: result.reason,
 					asset: this.asset.id,
 					itemName: this.name ?? '',

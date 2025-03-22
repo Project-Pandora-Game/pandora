@@ -186,7 +186,7 @@ function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 		<li>
 			<span>{ StripAssetIdPrefix(assetId) }</span>
 			<div className='controls'>
-				<Button onClick={ resetEditedAsset }>
+				<Button onClick={ resetEditedAsset } title='Discard changes to this asset'>
 					↺
 				</Button>
 				<Button onClick={ () => {

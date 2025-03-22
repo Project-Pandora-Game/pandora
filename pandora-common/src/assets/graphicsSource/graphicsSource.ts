@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { AssetIdSchema } from '../base.ts';
 import { PointTemplateSchema } from '../graphics/points.ts';
 import { GraphicsSourceLayerSchema } from './layer.ts';
+import { GraphicsSourceAutoMeshTemplateSchema } from './layers/autoMesh.ts';
 
 export const AssetSourceGraphicsDefinitionSchema = z.object({
 	layers: GraphicsSourceLayerSchema.array(),
@@ -18,6 +19,7 @@ export type AssetSourceGraphicsInfo = z.infer<typeof AssetSourceGraphicsInfoSche
 export const GraphicsSourceDefinitionFileSchema = z.object({
 	assets: z.record(AssetIdSchema, AssetSourceGraphicsInfoSchema),
 	pointTemplates: z.record(z.string(), PointTemplateSchema),
+	automeshTemplates: z.record(z.string(), GraphicsSourceAutoMeshTemplateSchema),
 });
 
 export type GraphicsSourceDefinitionFile = z.infer<typeof GraphicsSourceDefinitionFileSchema>;

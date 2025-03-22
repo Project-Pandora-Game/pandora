@@ -3,6 +3,7 @@ import type { Logger } from '../../logging.ts';
 import { AssertNever } from '../../utility/misc.ts';
 import type { GraphicsLayer } from '../graphics/layer.ts';
 import type { GraphicsSourceLayer } from '../graphicsSource/layer.ts';
+import { LoadAssetAutoMeshLayer } from './graphicsBuildAutoMeshLayer.ts';
 import type { GraphicsBuildContext } from './graphicsBuildContext.ts';
 import { LoadAssetImageLayer } from './graphicsBuildImageLayer.ts';
 
@@ -11,6 +12,8 @@ export async function LoadAssetLayer(layer: Immutable<GraphicsSourceLayer>, cont
 		case 'mesh':
 		case 'alphaImageMesh':
 			return await LoadAssetImageLayer(layer, context, logger);
+		case 'autoMesh':
+			return await LoadAssetAutoMeshLayer(layer, context, logger);
 	}
 	AssertNever(layer);
 }

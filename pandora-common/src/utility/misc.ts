@@ -329,6 +329,38 @@ export function IntervalSetUnion(a: ReadonlyIntervalSet, b: ReadonlyIntervalSet)
 }
 
 /**
+ * Generates combinations by taking values of multiple independent lists and creating an SQL-like join of them.
+ * @param lists - The lists to generate values from
+ * @example
+ * const sets = [
+ *    ["a", "b"],
+ *    ["c", "d"],
+ * ];
+ * const result = Array.from(GenerateDisjunctSetsCombinations(sets));
+ * // Result:
+ * result === [
+ *    ["a", "c"],
+ *    ["a", "d"],
+ *    ["b", "c"],
+ *    ["b", "d"],
+ * ];
+ */
+export function* GenerateMultipleListsFullJoin<T>(lists: readonly (readonly T[])[]): Generator<T[], void> {
+	if (lists.length === 0)
+		return;
+
+	const remainingLists = lists.slice(1);
+	for (const variant of lists[0]) {
+		if (remainingLists.length === 0) {
+			yield [variant];
+		}
+		for (const remainingVariant of GenerateMultipleListsFullJoin(remainingLists)) {
+			yield [variant, ...remainingVariant];
+		}
+	}
+}
+
+/**
  * Decorates a member function so it memoizes the result of the first call, the function must take no arguments
  */
 export function MemoizeNoArg<Return, This extends object>(method: () => Return, _context: ClassMethodDecoratorContext<This>) {

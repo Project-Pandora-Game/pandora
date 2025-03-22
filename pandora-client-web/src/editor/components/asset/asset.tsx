@@ -142,17 +142,25 @@ export function AssetUI() {
 }
 
 function AddLayerUiDialog({ close, selectedAsset }: { close: () => void; selectedAsset: EditorAssetGraphics; }): ReactElement {
+	const editor = useEditor();
+
 	return (
 		<ModalDialog>
 			<Column>
 				<Button onClick={ () => {
-					selectedAsset.addLayer('mesh');
+					editor.targetLayer.value = selectedAsset.addLayer('autoMesh');
+					close();
+				} }>
+					Add automatic image layer
+				</Button>
+				<Button onClick={ () => {
+					editor.targetLayer.value = selectedAsset.addLayer('mesh');
 					close();
 				} }>
 					Add image layer
 				</Button>
 				<Button onClick={ () => {
-					selectedAsset.addLayer('alphaImageMesh');
+					editor.targetLayer.value = selectedAsset.addLayer('alphaImageMesh');
 					close();
 				} }>
 					Add alpha image layer

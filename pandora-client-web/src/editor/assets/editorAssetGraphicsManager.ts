@@ -7,8 +7,10 @@ import {
 	type AssetId,
 	type AssetSourceGraphicsInfo,
 	type GraphicsDefinitionFile,
+	type GraphicsSourceAutoMeshTemplate,
 	type GraphicsSourceDefinitionFile,
 } from 'pandora-common';
+import { GetCurrentAssetManager } from '../../assets/assetManager.tsx';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
 import { ToastHandlePromise } from '../../persistentToast.ts';
@@ -19,7 +21,7 @@ import { EditorBuildAssetGraphics } from './editorAssetGraphicsBuilding.ts';
 export class EditorAssetGraphicsManagerClass {
 	private readonly logger = GetLogger('EditorAssetGraphicsManager');
 
-	private _originalSourceDefinitions: Immutable<GraphicsSourceDefinitionFile> = { assets: {}, pointTemplates: {} };
+	private _originalSourceDefinitions: Immutable<GraphicsSourceDefinitionFile> = { assets: {}, pointTemplates: {}, automeshTemplates: {} };
 	private _originalGraphicsDefinitions: Immutable<GraphicsDefinitionFile> = { assets: {}, pointTemplates: {}, imageFormats: {} };
 
 	private _editedAssetGraphics = new Observable<ReadonlyMap<AssetId, EditorAssetGraphics>>(new Map());
@@ -29,12 +31,22 @@ export class EditorAssetGraphicsManagerClass {
 		return this._editedAssetGraphics;
 	}
 
+	private _automeshTemplates: Observable<Immutable<Record<string, GraphicsSourceAutoMeshTemplate>>>;
+	public get automeshTemplates(): ReadonlyObservable<Immutable<Record<string, GraphicsSourceAutoMeshTemplate>>> {
+		return this._automeshTemplates;
+	}
+
+	constructor() {
+		this._automeshTemplates = new Observable(this._originalSourceDefinitions.automeshTemplates);
+	}
+
 	public loadNewOriginalDefinitions(
 		sourceDefinitions: Immutable<GraphicsSourceDefinitionFile>,
 		graphicsDefinitions: Immutable<GraphicsDefinitionFile>,
 	) {
 		this._originalSourceDefinitions = freeze(sourceDefinitions, true);
 		this._originalGraphicsDefinitions = freeze(graphicsDefinitions, true);
+		this._automeshTemplates.value = this._originalSourceDefinitions.automeshTemplates;
 		this._reloadRuntimeGraphicsManager();
 	}
 
@@ -110,7 +122,12 @@ export class EditorAssetGraphicsManagerClass {
 
 		const logger = this.logger.prefixMessages(`Graphics build for asset '${asset.id}':\n\t`);
 		try {
-			const graphicsDefinition = await EditorBuildAssetGraphics(asset, logger);
+			const logicAsset = GetCurrentAssetManager().getAssetById(asset.id);
+			if (logicAsset == null) {
+				throw new Error('Asset not found');
+			}
+
+			const graphicsDefinition = await EditorBuildAssetGraphics(asset, logicAsset, logger);
 			this._editedGraphicsBuildCache.set(asset.id, freeze(graphicsDefinition, true));
 		} catch (error) {
 			logger.error('Build failed with error:', error);

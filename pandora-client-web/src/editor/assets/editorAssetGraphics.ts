@@ -1,8 +1,6 @@
 import { downloadZip, type InputWithSizeMeta } from 'client-zip';
 import { freeze, type Immutable } from 'immer';
-import { cloneDeep } from 'lodash-es';
 import {
-	Assert,
 	AssertNever,
 	AssetSourceGraphicsDefinitionSchema,
 	CharacterSize,
@@ -10,8 +8,8 @@ import {
 	LayerMirror,
 	type AssetId,
 	type AssetSourceGraphicsDefinition,
-	type GraphicsLayerType,
 	type GraphicsSourceLayer,
+	type GraphicsSourceLayerType,
 } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import type { IGraphicsLoader } from '../../assets/graphicsManager.ts';
@@ -57,7 +55,7 @@ export class EditorAssetGraphics {
 		this.onChangeHandler?.();
 	}
 
-	public addLayer(type: GraphicsLayerType): void {
+	public addLayer(type: GraphicsSourceLayerType): EditorAssetGraphicsLayer {
 		let layerDefinition: GraphicsSourceLayer;
 		switch (type) {
 			case 'mesh':
@@ -95,6 +93,24 @@ export class EditorAssetGraphics {
 					},
 				};
 				break;
+			case 'autoMesh':
+				layerDefinition = {
+					x: 0,
+					y: 0,
+					width: CharacterSize.WIDTH,
+					height: CharacterSize.HEIGHT,
+					name: '',
+					type: 'autoMesh',
+					automeshTemplate: '',
+					graphicalLayers: [
+						{ name: '' },
+					],
+					variables: [],
+					imageMap: {
+						'': [''],
+					},
+				};
+				break;
 			default:
 				AssertNever(type);
 		}
@@ -104,6 +120,7 @@ export class EditorAssetGraphics {
 		});
 		this._layers.produce((v) => [...v, newLayer]);
 		this.onChange();
+		return newLayer;
 	}
 
 	public deleteLayer(layer: EditorAssetGraphicsLayer): void {
@@ -131,43 +148,6 @@ export class EditorAssetGraphics {
 		this._layers.value = newLayers;
 
 		this.onChange();
-	}
-
-	public setScaleAs(layer: EditorAssetGraphicsLayer, scaleAs: string | null): void {
-		layer.modifyDefinition((d) => {
-			if (scaleAs) {
-				d.scaling = {
-					scaleBone: scaleAs,
-					stops: [],
-				};
-			} else {
-				d.scaling = undefined;
-			}
-		});
-	}
-
-	public addScalingStop(layer: EditorAssetGraphicsLayer, value: number): void {
-		if (value === 0 || !Number.isInteger(value) || value < -180 || value > 180) {
-			throw new Error('Invalid value supplied');
-		}
-
-		layer.modifyDefinition((d) => {
-			Assert(d.scaling, 'Cannot add scaling stop if not scaling');
-
-			if (d.scaling.stops.some((stop) => stop[0] === value))
-				return;
-
-			d.scaling.stops.push([value, cloneDeep(d.image)]);
-			d.scaling.stops.sort((a, b) => a[0] - b[0]);
-		});
-	}
-
-	public removeScalingStop(layer: EditorAssetGraphicsLayer, stop: number): void {
-		layer.modifyDefinition((d) => {
-			Assert(d.scaling, 'Cannot remove scaling stop if not scaling');
-
-			d.scaling.stops = d.scaling.stops.filter((s) => s[0] !== stop);
-		});
 	}
 
 	private readonly fileContents = new Map<string, ArrayBuffer>();

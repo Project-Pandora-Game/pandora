@@ -2,10 +2,8 @@ import { Draft, Immutable, freeze } from 'immer';
 import {
 	Assert,
 	AssertNever,
-	LayerImageOverride,
-	LayerImageSetting,
-	LayerPriority,
 	type GraphicsSourceAlphaImageMeshLayer,
+	type GraphicsSourceAutoMeshLayer,
 	type GraphicsSourceLayer,
 	type GraphicsSourceLayerType,
 	type GraphicsSourceMeshLayer,
@@ -36,26 +34,6 @@ export class EditorAssetGraphicsLayerContainer<TLayer extends GraphicsSourceLaye
 
 	public modifyDefinition(producer: (draft: Draft<Immutable<TLayer>>) => void): void {
 		this._definition.produceImmer(producer);
-	}
-
-	private _modifyImageSettingsForScalingStop(stop: number | null | undefined, producer: (draft: Draft<Immutable<LayerImageSetting>>) => void): void {
-		this.modifyDefinition((d) => {
-			if (!stop) {
-				producer(d.image);
-				return;
-			}
-			const res = d.scaling?.stops.find((s) => s[0] === stop)?.[1];
-			if (!res) {
-				throw new Error('Failed to get stop');
-			}
-			producer(res);
-		});
-	}
-
-	public setPriority(priority: LayerPriority): void {
-		this.modifyDefinition((d) => {
-			d.priority = priority;
-		});
 	}
 
 	public setHeight(height: number): void {
@@ -95,24 +73,6 @@ export class EditorAssetGraphicsLayerContainer<TLayer extends GraphicsSourceLaye
 		});
 	}
 
-	public setPointType(pointType: string[]): void {
-		this.modifyDefinition((d) => {
-			d.pointType = pointType.length === 0 ? undefined : pointType.slice();
-		});
-	}
-
-	public setImage(image: string, stop?: number): void {
-		this._modifyImageSettingsForScalingStop(stop, (settings) => {
-			settings.image = image;
-		});
-	}
-
-	public setImageOverrides(imageOverrides: LayerImageOverride[], stop?: number): void {
-		this._modifyImageSettingsForScalingStop(stop, (settings) => {
-			settings.overrides = imageOverrides.slice();
-		});
-	}
-
 	public setName(name: string): void {
 		this.modifyDefinition((d) => {
 			d.name = name;
@@ -125,6 +85,8 @@ export class EditorAssetGraphicsLayerContainer<TLayer extends GraphicsSourceLaye
 				return new EditorAssetGraphicsLayerContainer<GraphicsSourceMeshLayer>(asset, definition);
 			case 'alphaImageMesh':
 				return new EditorAssetGraphicsLayerContainer<GraphicsSourceAlphaImageMeshLayer>(asset, definition);
+			case 'autoMesh':
+				return new EditorAssetGraphicsLayerContainer<GraphicsSourceAutoMeshLayer>(asset, definition);
 			default:
 		}
 		AssertNever(definition);

@@ -21,7 +21,6 @@ export async function LoadAssetImageLayer(
 ): Promise<Immutable<(GraphicsMeshLayer | GraphicsAlphaImageMeshLayer)[]>> {
 	logger = logger.prefixMessages(`[Layer ${layer.name ?? '[unnamed]'}]`);
 
-	// const pointTemplate = GraphicsDatabase.getPointTemplate(layer.points);
 	const pointTemplate = context.getPointTemplate(layer.points);
 
 	if (pointTemplate == null) {
@@ -200,7 +199,6 @@ export async function LoadAssetImageLayer(
 		points: layer.points,
 		pointType: layer.pointType?.slice(),
 		pointFilterMask: layerPointFilterMask,
-		mirror: layer.mirror,
 		image: LoadLayerImageSetting(layer.image, context, normalizedImageTrimArea),
 		scaling: layer.scaling && {
 			scaleBone: layer.scaling.scaleBone,
@@ -227,7 +225,7 @@ export async function LoadAssetImageLayer(
 	}
 
 	let mirror: GraphicsMeshLayer | GraphicsAlphaImageMeshLayer | undefined;
-	if (result.mirror !== LayerMirror.NONE) {
+	if (layer.mirror !== LayerMirror.NONE) {
 		mirror = produce(result, (d) => {
 			d.priority = MirrorPriority(d.priority);
 			d.pointType = d.pointType?.map(MirrorBoneLike);

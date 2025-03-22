@@ -1,9 +1,10 @@
 import type { Immutable } from 'immer';
-import { AssertNotNullable, EMPTY_ARRAY, LoadAssetLayer, type AssetGraphicsDefinition, type GraphicsBuildContext, type GraphicsBuildImageResource, type GraphicsLayer, type ImageBoundingBox, type Logger } from 'pandora-common';
+import { AssertNotNullable, EMPTY_ARRAY, LoadAssetLayer, type Asset, type AssetGraphicsDefinition, type GraphicsBuildContext, type GraphicsBuildImageResource, type GraphicsLayer, type ImageBoundingBox, type Logger } from 'pandora-common';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { ArrayToBase64 } from '../../crypto/helpers.ts';
 import type { EditorAssetGraphics } from './editorAssetGraphics.ts';
 import type { EditorAssetGraphicsLayer } from './editorAssetGraphicsLayer.ts';
+import { EditorAssetGraphicsManager } from './editorAssetGraphicsManager.ts';
 
 /** Map to editor asset graphics source layer. Only used in editor. */
 export const AssetGraphicsSourceMap = new WeakMap<Immutable<GraphicsLayer>, EditorAssetGraphicsLayer>();
@@ -32,21 +33,35 @@ class EditorImageResource implements GraphicsBuildImageResource {
 	}
 }
 
-export async function EditorBuildAssetGraphics(asset: EditorAssetGraphics, logger: Logger): Promise<Immutable<AssetGraphicsDefinition>> {
+export function EditorBuildAssetGraphicsContext(logicAsset: Asset): GraphicsBuildContext {
 	const graphicsManager = GraphicsManagerInstance.value;
 	AssertNotNullable(graphicsManager);
 
-	const assetLoadContext: GraphicsBuildContext = {
+	const builtAssetData: GraphicsBuildContext['builtAssetData'] = {
+		modules: (logicAsset.isType('personal') || logicAsset.isType('bodypart')) ? (
+			logicAsset.definition.modules
+		) : undefined,
+	};
+
+	return {
 		generateOptimizedTextures: false,
 		generateResolutions: EMPTY_ARRAY,
 		getPointTemplate(name) {
 			return graphicsManager.getTemplate(name);
 		},
+		getAutomeshTemplate(name) {
+			return EditorAssetGraphicsManager.automeshTemplates.value[name];
+		},
 		bufferToBase64: ArrayToBase64,
 		loadImage(image) {
 			return new EditorImageResource(image);
 		},
+		builtAssetData,
 	};
+}
+
+export async function EditorBuildAssetGraphics(asset: EditorAssetGraphics, logicAsset: Asset, logger: Logger): Promise<Immutable<AssetGraphicsDefinition>> {
+	const assetLoadContext: GraphicsBuildContext = EditorBuildAssetGraphicsContext(logicAsset);
 
 	const layers = (await Promise.all(asset.layers.value.map((sourceLayer) =>
 		LoadAssetLayer(sourceLayer.definition.value, assetLoadContext, logger)

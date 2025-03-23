@@ -78,6 +78,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			spawnedBy: bundle.spawnedBy,
 			color: ItemBase._loadColorBundle(asset, bundle.color),
 			name: bundle.name,
+			chat: bundle.chat,
 			description: bundle.description,
 		};
 	}

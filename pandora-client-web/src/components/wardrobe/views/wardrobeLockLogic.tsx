@@ -18,7 +18,7 @@ import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
-import { CharacterListInputActionButtons, type CharacterListInputAddButtonProps, type CharacterListInputRemoveButtonProps } from '../../common/characterListInput/characterListInput.tsx';
+import { CharacterListInputActionButtons, CharacterListInputActions, type CharacterListInputAddButtonProps, type CharacterListInputRemoveButtonProps } from '../../common/characterListInput/characterListInput.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
 import { usePlayerState } from '../../gameContext/playerContextProvider.tsx';
 import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
@@ -102,6 +102,13 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 	const [invalidPassword, setInvalidPassword] = useState<string | undefined>(undefined);
 	const [clearLastPassword, setClearLastPassword] = useState(false);
 
+	const registeredFingerprints = useMemo(() => {
+		if (lockLogic.lockSetup.fingerprint == null)
+			return [];
+
+		return lockLogic.lockData.fingerprint?.registered ?? [];
+	}, [lockLogic]);
+
 	// Attempted action for locking or unlocking the lock
 	const [currentlyAttempting, setCurrentlyAttempting] = useState<boolean>(false);
 
@@ -146,6 +153,19 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 						<Row className='WardrobeInputRow'>
 							{ timerText }
 						</Row>
+					</Column>
+				) : null
+			}
+			{
+				lockLogic.lockSetup.fingerprint ? (
+					<Column className='WardrobeLockFingerprint'>
+						<Row className='WardrobeInputRow'>
+							<label>Registered fingerprints:</label>
+						</Row>
+						<CharacterListInputActions
+							value={ registeredFingerprints }
+							max={ lockLogic.lockSetup.fingerprint.maxFingerprints }
+						/>
 					</Column>
 				) : null
 			}

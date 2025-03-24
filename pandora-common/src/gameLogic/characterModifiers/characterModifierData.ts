@@ -4,7 +4,7 @@ import { AssetIdSchema } from '../../assets/base.ts';
 import { CharacterIdSchema } from '../../character/characterTypes.ts';
 import { LIMIT_CHARACTER_MODIFIER_CONFIG_CHARACTER_LIST_COUNT } from '../../inputLimits.ts';
 import { ZodArrayWithInvalidDrop } from '../../validation.ts';
-import { LockActionSchema, type LockActionLockProblem, type LockActionShowPasswordProblem, type LockActionUnlockProblem } from '../locks/lockLogic.ts';
+import { LockActionSchema, type LockActionLockProblem, type LockActionShowPasswordProblem, type LockActionUnlockProblem, type LockActionUpdateFingerprintProblem } from '../locks/lockLogic.ts';
 import { PermissionConfigSchema } from '../permissions/index.ts';
 import { CharacterModifierConfigurationSchema, CharacterModifierIdSchema, CharacterModifierNameSchema, CharacterModifierTypeGenericIdSchema } from './characterModifierBaseData.ts';
 import { CharacterModifierLockSchema } from './characterModifierLocks.ts';
@@ -102,6 +102,11 @@ export type CharacterModifierActionError =
 		type: 'lockInteractionPrevented';
 		moduleAction: 'showPassword';
 		reason: LockActionShowPasswordProblem;
+	}
+	| {
+		type: 'lockInteractionPrevented';
+		moduleAction: 'updateFingerprint';
+		reason: LockActionUpdateFingerprintProblem;
 	};
 
 /** Data of modifier instance effect - put onto a character if the modifier is active */

@@ -899,6 +899,16 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 							case 'showPassword':
 								// No message for show password
 								break;
+							case 'updateFingerprint':
+								space.handleActionMessage({
+									id: 'characterModifierLockUpdateFingerprint',
+									character,
+									sendTo: [target],
+									dictionary: {
+										'MODIFIER_NAME': name,
+									},
+								});
+								break;
 							default:
 								AssertNever(action.lockAction);
 						}

@@ -1,22 +1,23 @@
 import classNames from 'classnames';
-import { Assert, AssertNotNullable, Asset, AssetId, Item } from 'pandora-common';
+import { Assert, AssertNotNullable, Asset, AssetId, GetLogger, Item } from 'pandora-common';
 import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
 import { useForm, Validate } from 'react-hook-form';
 import { toast } from 'react-toastify';
-import { AssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
-import { useLayerName } from '../../../assets/assetGraphicsCalculations.ts';
 import { FormInput } from '../../../common/userInteraction/input/formInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { ColorInput } from '../../../components/common/colorInput/colorInput.tsx';
 import { Row } from '../../../components/common/container/container.tsx';
 import { Form, FormField, FormFieldError } from '../../../components/common/form/form.tsx';
-import { ModalDialog } from '../../../components/dialog/dialog.tsx';
+import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
-import { IObservableClass, ObservableClass, ObservableProperty, useObservableProperty } from '../../../observable.ts';
+import { IObservableClass, ObservableClass, ObservableProperty, useNullableObservable, useObservable, useObservableProperty } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { ASSET_ID_PART_REGEX, AssetManagerEditor, AssetTreeViewCategory, useAssetManagerEditor } from '../../assets/assetManager.ts';
+import { useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
+import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
+import { EditorAssetGraphicsManager } from '../../assets/editorAssetGraphicsManager.ts';
 import { EDITOR_ALPHA_ICONS, useEditorLayerTint, useEditorTabContext } from '../../editor.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
 import { useEditorCharacterState } from '../../graphics/character/appearanceEditor.ts';
@@ -24,10 +25,9 @@ import { PreviewCutter } from '../previewCutter/previewCutter.tsx';
 import './assets.scss';
 
 export function AssetsUI(): ReactElement {
-	const editor = useEditor();
 	const editorCharacterState = useEditorCharacterState();
 	const view = useAssetManagerEditor().assetTreeView;
-	const editorAssets = useSyncExternalStore((change) => editor.on('modifiedAssetsChange', change), () => editor.getModifiedAssetsList());
+	const editorAssets = useObservable(EditorAssetGraphicsManager.editedAssetGraphics);
 
 	return (
 		<div className='editor-setupui asset-ui'>
@@ -63,7 +63,7 @@ export function AssetsUI(): ReactElement {
 				</ContextHelpButton>
 			</h3>
 			<ul>
-				{ editorAssets.map((assetId) => <EditedAssetElement key={ assetId } assetId={ assetId } />) }
+				{ Array.from(editorAssets.values()).map((asset) => <EditedAssetElement key={ asset.id } assetId={ asset.id } />) }
 			</ul>
 			<h3>
 				All assets
@@ -159,6 +159,7 @@ function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 	const tabContext = useEditorTabContext();
 	const asset = useAssetManagerEditor().getAssetById(assetId);
 	AssertNotNullable(asset);
+	const confirm = useConfirmDialog();
 
 	function add() {
 		AssertNotNullable(asset);
@@ -167,10 +168,27 @@ function EditedAssetElement({ assetId }: { assetId: AssetId; }): ReactElement {
 		}
 	}
 
+	const resetEditedAsset = useCallback(() => {
+		confirm(
+			'Discard all changes',
+			<p>Are you sure you want to <strong>DISCARD ALL CHANGES</strong> done to the '{ assetId }' asset and reload its current data from server?</p>,
+		)
+			.then((result) => {
+				if (result) {
+					editor.discardAssetEdits(assetId);
+				}
+			}, (err) => {
+				GetLogger('EditedAssetElement').error('Error asking for confirmation:', err);
+			});
+	}, [editor, assetId, confirm]);
+
 	return (
 		<li>
 			<span>{ StripAssetIdPrefix(assetId) }</span>
 			<div className='controls'>
+				<Button onClick={ resetEditedAsset }>
+					↺
+				</Button>
 				<Button onClick={ () => {
 					editor.startEditAsset(assetId);
 					if (!tabContext.activeTabs.includes('Asset')) {
@@ -200,14 +218,15 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 	}
 
 	const asset = item.asset;
-	const graphics = editor.getAssetGraphicsById(asset.id);
+	const editorAssetGraphics = useObservable(EditorAssetGraphicsManager.editedAssetGraphics).get(asset.id);
+	const layers = useNullableObservable(editorAssetGraphics?.layers) ?? [];
 
-	const alphaIndex = useSyncExternalStore<number>(editor.getSubscriber('layerOverrideChange'), () => editor.getLayersAlphaOverrideIndex(...(graphics?.allLayers ?? [])));
+	const alphaIndex = useSyncExternalStore<number>(editor.getSubscriber('layerOverrideChange'), () => editor.getLayersAlphaOverrideIndex(...layers));
 
 	const toggleAlpha = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();
-		if (graphics) {
-			editor.setLayerAlphaOverride(graphics.allLayers, alphaIndex + 1);
+		if (editorAssetGraphics) {
+			editor.setLayerAlphaOverride(layers, alphaIndex + 1);
 		}
 	};
 
@@ -222,7 +241,7 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 					🠉
 				</Button> }
 				<Button onClick={ () => appearance.removeItem(item.id) } title='Unequip item'>-</Button>
-				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity">{ EDITOR_ALPHA_ICONS[alphaIndex] }</Button>
+				<Button className='slim' onClick={ toggleAlpha } title="Cycle asset's opacity" disabled={ editorAssetGraphics == null }>{ EDITOR_ALPHA_ICONS[alphaIndex] }</Button>
 				<Button onClick={ () => {
 					editor.startEditAsset(asset.id);
 					if (!tabContext.activeTabs.includes('Asset')) {
@@ -233,14 +252,18 @@ function ItemElement({ item }: { item: Item; }): ReactElement {
 				</Button>
 			</div>
 		}>
-			<ul>
-				{ graphics && graphics.allLayers.map((layer, index) => <AssetLayerElement key={ index } layer={ layer } />) }
-			</ul>
+			{
+				editorAssetGraphics ? (
+					<ul>
+						{ layers.map((layer, index) => <AssetLayerElement key={ index } layer={ layer } />) }
+					</ul>
+				) : undefined
+			}
 		</ToggleLi>
 	);
 }
 
-function AssetLayerElement({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
+function AssetLayerElement({ layer }: { layer: EditorAssetGraphicsLayer; }): ReactElement {
 	const editor = useEditor();
 	const alphaIndex = useSyncExternalStore<number>((changed) => {
 		return editor.on('layerOverrideChange', (changedLayer) => {
@@ -294,7 +317,8 @@ type ToggleLiProps<T extends { open: boolean; }> = React.DetailedHTMLProps<React
 };
 function ToggleLi<T extends { open: boolean; }>({ state, name, nameExtra, children, className, ...props }: ToggleLiProps<T>): ReactElement {
 	const open = useObservableProperty(state, 'open');
-	const spanClass = !children ? undefined : open ? 'opened' : 'closed';
+	const hasChildren = Array.isArray(children) ? children.some(Boolean) : !!children;
+	const spanClass = !hasChildren ? undefined : open ? 'opened' : 'closed';
 
 	const onClick = (event: React.MouseEvent<HTMLElement>) => {
 		event.stopPropagation();

@@ -1,5 +1,5 @@
 import { Immutable } from 'immer';
-import { Asset, AssetManager, AssetsDefinitionFile, AssetsGraphicsDefinitionFile, GetLogger } from 'pandora-common';
+import { Asset, AssetManager, AssetsDefinitionFile, GetLogger, GraphicsDefinitionFileSchema } from 'pandora-common';
 import { toast } from 'react-toastify';
 import { Column } from '../components/common/container/container.tsx';
 import { DEVELOPMENT } from '../config/Environment.ts';
@@ -79,7 +79,7 @@ export function LoadAssetDefinitions(definitionsHash: string, data: Immutable<As
 	void (async () => {
 		try {
 			const json = await currentLoader.loadTextFile(`graphics_${lastGraphicsHash}.json`);
-			const graphics = JSON.parse(json) as AssetsGraphicsDefinitionFile;
+			const graphics = GraphicsDefinitionFileSchema.parse(JSON.parse(json));
 			GraphicsManagerInstance.value = await GraphicsManager.create(currentLoader, data.graphicsId, graphics);
 			logger.info(`Loaded graphics, version: ${data.graphicsId}`);
 		} catch (err) {

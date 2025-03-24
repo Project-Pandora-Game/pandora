@@ -2,8 +2,6 @@ import { Assert, CanonizePointTemplate, GetLogger } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
-import { AssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
-import { useLayerName } from '../../../assets/assetGraphicsCalculations.ts';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager.ts';
 import { useBrowserSessionStorage, useBrowserStorage } from '../../../browserStorage.ts';
@@ -46,10 +44,6 @@ export function PointsUI(): ReactElement {
 			<PointsHelperMathUi />
 		</div>
 	);
-}
-
-export function LayerName({ layer }: { layer: AssetGraphicsLayer; }): ReactElement {
-	return <>{ useLayerName(layer) }</>;
 }
 
 export function PointsEditUi(): ReactElement | null {
@@ -287,7 +281,7 @@ function SelectTemplateToEdit(): ReactElement | null {
 			>
 				<option value='' key=''>[ None ]</option>
 				{
-					graphicsManger.pointTemplateList.map((t) => (
+					Array.from(graphicsManger.pointTemplates.keys()).map((t) => (
 						<option value={ `t/${t}` } key={ `t/${t}` }>{ t }</option>
 					))
 				}

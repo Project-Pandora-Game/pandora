@@ -12,7 +12,7 @@ import {
 } from 'pandora-common';
 import { ReactElement, useMemo } from 'react';
 import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
-import { useItemColorString } from '../../../graphics/graphicsLayer.tsx';
+import { useItemColorString } from '../../../graphics/layers/graphicsLayerCommon.tsx';
 import { ColorInputRGBA } from '../../common/colorInput/colorInput.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
 import { useWardrobeExecuteCallback } from '../wardrobeActionContext.tsx';

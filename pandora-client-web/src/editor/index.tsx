@@ -4,7 +4,6 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css' with { type: 'css' };
-import { GraphicsManager } from '../assets/graphicsManager.ts';
 import { useEvent } from '../common/useEvent.ts';
 import { EulaGate } from '../components/Eula/index.tsx';
 import { Button } from '../components/common/button/button.tsx';
@@ -84,7 +83,7 @@ function AssetLoaderElement() {
 	const setEditor = useSetEditor();
 	const [pending, setPending] = useState(false);
 
-	const load = useEvent(async (setLoading: (loading: boolean) => void, loadManager: () => Promise<[AssetManagerEditor, GraphicsManager]>) => {
+	const load = useEvent(async (setLoading: (loading: boolean) => void, loadManager: () => Promise<AssetManagerEditor>) => {
 		if (pending)
 			return;
 
@@ -92,8 +91,8 @@ function AssetLoaderElement() {
 		setLoading(true);
 
 		try {
-			const [assetManager, graphicsManager] = await loadManager();
-			setEditor(new Editor(assetManager, graphicsManager));
+			const assetManager = await loadManager();
+			setEditor(new Editor(assetManager));
 		} catch (e) {
 			if (e instanceof Error) {
 				toast.error(`Failed to load:\n${e.message}`, TOAST_OPTIONS_ERROR);
@@ -122,7 +121,7 @@ function AssetLoaderElement() {
 	);
 }
 
-function ButtonLoadDirectLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<[AssetManagerEditor, GraphicsManager]>) => Promise<void>; }): ReactElement | null {
+function ButtonLoadDirectLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<AssetManagerEditor>) => Promise<void>; }): ReactElement | null {
 	const [loading, setLoading] = useState(false);
 
 	return (
@@ -130,7 +129,7 @@ function ButtonLoadDirectLink({ pending, load }: { pending: boolean; load: (setL
 	);
 }
 
-function ButtonLoadOfficialLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<[AssetManagerEditor, GraphicsManager]>) => Promise<void>; }): ReactElement {
+function ButtonLoadOfficialLink({ pending, load }: { pending: boolean; load: (setLoading: (loading: boolean) => void, loadManager: () => Promise<AssetManagerEditor>) => Promise<void>; }): ReactElement {
 	const [loading, setLoading] = useState(false);
 
 	return (

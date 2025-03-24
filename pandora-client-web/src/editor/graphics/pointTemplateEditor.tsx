@@ -1,9 +1,9 @@
 import { type Draft, type Immutable } from 'immer';
-import { cloneDeep } from 'lodash-es';
-import { EMPTY_ARRAY, type PointTemplate } from 'pandora-common';
+import { AssertNotNullable, CalculatePointsTrianglesFlat, CloneDeepMutable, EMPTY_ARRAY, type PointTemplate } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
-import { CalculatePointDefinitionsFromTemplate, CalculatePointsTriangles } from '../../assets/assetGraphicsCalculations.ts';
+import { CalculatePointDefinitionsFromTemplate } from '../../assets/assetGraphicsCalculations.ts';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Container } from '../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../graphics/baseComponents/graphics.ts';
 import { Observable, useObservable } from '../../observable.ts';
@@ -43,15 +43,15 @@ export class PointTemplateEditor {
 
 	public getCurrent(): Immutable<PointTemplate> {
 		return this._editor.modifiedPointTemplates.value.get(this.templateName) ??
-			this._editor.manager.getTemplate(this.templateName) ??
+			GraphicsManagerInstance.value?.getTemplate(this.templateName) ??
 			EMPTY_ARRAY;
 	}
 
 	public modifyTemplate(recipe: (d: Draft<PointTemplate>) => void) {
-		const originalTemplate: PointTemplate = this._editor.manager.getTemplate(this.templateName) ?? [];
+		const originalTemplate: Immutable<PointTemplate> = GraphicsManagerInstance.value?.getTemplate(this.templateName) ?? [];
 
 		this._editor.modifiedPointTemplates.produceImmer((d) => {
-			const template = d.get(this.templateName) ?? cloneDeep(originalTemplate);
+			const template = d.get(this.templateName) ?? CloneDeepMutable(originalTemplate);
 			recipe(template);
 			d.set(this.templateName, template);
 		});
@@ -78,16 +78,18 @@ export function PointTemplateEditLayer({ templateEditor }: {
 }): ReactElement {
 	const editor = useEditor();
 	const editorModifiedTemplates = useObservable(editor.modifiedPointTemplates);
+	const graphicsManager = useObservable(GraphicsManagerInstance);
+	AssertNotNullable(graphicsManager);
 
 	const currentTemplate = useMemo((): Immutable<PointTemplate> => {
 		return editorModifiedTemplates.get(templateEditor.templateName) ??
-			editor.manager.getTemplate(templateEditor.templateName) ??
+			graphicsManager.getTemplate(templateEditor.templateName) ??
 			EMPTY_ARRAY;
-	}, [editor, editorModifiedTemplates, templateEditor]);
+	}, [graphicsManager, editorModifiedTemplates, templateEditor]);
 
 	const [points, triangles] = useMemo(() => {
 		const p = CalculatePointDefinitionsFromTemplate(currentTemplate);
-		const t = CalculatePointsTriangles(p);
+		const t = CalculatePointsTrianglesFlat(p);
 		return [p, t];
 	}, [currentTemplate]);
 
@@ -98,7 +100,7 @@ export function PointTemplateEditLayer({ templateEditor }: {
 				.map((p) => triangles[i + p])
 				.flatMap((p) => [points[p].pos[0], points[p].pos[1]]);
 			g.poly(poly)
-				.stroke({ width: 1, color: 0x555555, alpha: 0.3 });
+				.stroke({ width: 1, color: 0x555555, alpha: 0.3, pixelLine: true });
 		}
 	}, [points, triangles]);
 

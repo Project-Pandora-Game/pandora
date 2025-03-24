@@ -2,6 +2,7 @@ import { ReactElement, useMemo } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { Container } from '../../../graphics/baseComponents/container.ts';
 import { useObservable } from '../../../observable.ts';
+import { PreviewCutterRectangle } from '../../components/previewCutter/previewCutter.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
 import { DraggableBone } from '../draggable.tsx';
 import { EDITOR_LAYER_Z_INDEX_EXTRA } from '../layer/editorLayer.tsx';
@@ -38,6 +39,9 @@ export function ResultCharacter(): ReactElement {
 					</Container>
 				)
 			}
+			<Container zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }>
+				<PreviewCutterRectangle />
+			</Container>
 		</GraphicsCharacterEditor>
 	);
 }

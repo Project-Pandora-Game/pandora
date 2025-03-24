@@ -10,9 +10,17 @@ export const ASSET_ID_PART_REGEX = /^[a-z][a-z0-9]*([-_][a-z0-9]+)*$/;
 export class AssetManagerEditor extends AssetManagerClient {
 
 	public readonly assetTreeView: AssetTreeView = new AssetTreeViewClass;
+	public readonly injectedAssets: Record<AssetId, AssetDefinition>;
 
-	constructor(definitionsHash?: string, data?: Immutable<AssetsDefinitionFile>) {
-		super('editor:' + (definitionsHash ?? ''), data);
+	constructor(definitionsHash: string, data: Immutable<AssetsDefinitionFile>, injectedAssets: Record<AssetId, AssetDefinition> = {}) {
+		super('editor:' + (definitionsHash ?? ''), {
+			...data,
+			assets: {
+				...injectedAssets,
+				...data.assets,
+			},
+		});
+		this.injectedAssets = injectedAssets;
 		this.assetTreeView.update(this.assetList);
 	}
 
@@ -58,12 +66,8 @@ export class AssetManagerEditor extends AssetManagerClient {
 			};
 		}
 
-		EditorAssetManager.loadAssetManager(currentManager.definitionsHash, {
-			...currentManager.rawData,
-			assets: {
-				...currentManager.rawData.assets,
-				[id]: definition,
-			},
+		EditorAssetManager.loadAssetManager(currentManager.definitionsHash, currentManager.rawData, {
+			[id]: definition,
 		});
 
 		// Download the definition
@@ -86,6 +90,8 @@ DefineAsset({
 			default: '#FFFFFF',
 		},
 	},
+	// Add name of the preview file, optimally created using the editor. For other examples look at other assets.
+	preview: undefined,
 	// Info about who owns the asset(s)
 	ownership: {
 		// Same as the author of git commits present in PR, has responsibility for this asset
@@ -148,8 +154,20 @@ DefineAsset({
 export const EditorAssetManager = new class extends TypedEventEmitter<{
 	assetMangedChanged: AssetManagerEditor;
 }> {
-	public loadAssetManager(definitionsHash?: string, data?: Immutable<AssetsDefinitionFile>): AssetManagerEditor {
-		const manager = new AssetManagerEditor(definitionsHash, data);
+	public loadAssetManager(
+		definitionsHash: string,
+		data: Immutable<AssetsDefinitionFile>,
+		injectAdditionalAssets?: Record<AssetId, AssetDefinition>,
+	): AssetManagerEditor {
+		const currentManager = GetCurrentAssetManager();
+		if (currentManager != null && currentManager instanceof AssetManagerEditor) {
+			injectAdditionalAssets = injectAdditionalAssets != null ? {
+				...currentManager.injectedAssets,
+				...injectAdditionalAssets,
+			} : currentManager.injectedAssets;
+		}
+
+		const manager = new AssetManagerEditor(definitionsHash, data, injectAdditionalAssets);
 		loaded = true;
 		UpdateAssetManager(manager);
 		this.emit('assetMangedChanged', manager);
@@ -160,10 +178,7 @@ export const EditorAssetManager = new class extends TypedEventEmitter<{
 let loaded = false;
 
 export function useAssetManagerEditor(): AssetManagerEditor {
-	if (!loaded) {
-		UpdateAssetManager(new AssetManagerEditor());
-		loaded = true;
-	}
+	Assert(loaded, 'Attempt to use AssetManagerEditor before it is loaded.');
 	const assetManager = useAssetManager();
 	Assert(assetManager instanceof AssetManagerEditor);
 	return assetManager;

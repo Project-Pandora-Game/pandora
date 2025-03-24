@@ -11,7 +11,7 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo } from 'react';
 import deleteIcon from '../../../assets/icons/delete.svg';
-import { useItemColorRibbon } from '../../../graphics/graphicsLayer.tsx';
+import { useItemColorRibbon } from '../../../graphics/layers/graphicsLayerCommon.tsx';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { Button } from '../../common/button/button.tsx';

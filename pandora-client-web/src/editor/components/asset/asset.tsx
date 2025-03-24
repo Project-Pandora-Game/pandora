@@ -1,26 +1,26 @@
 import classNames from 'classnames';
-import { AssetGraphicsDefinition, AssetGraphicsDefinitionSchema, GetLogger, ZodMatcher } from 'pandora-common';
-import React, { ReactElement, useState, useSyncExternalStore } from 'react';
+import { AssetSourceGraphicsDefinitionSchema, GetLogger } from 'pandora-common';
+import React, { ReactElement, useCallback, useState, useSyncExternalStore } from 'react';
 import { toast } from 'react-toastify';
-import { AssetGraphicsLayer } from '../../../assets/assetGraphics.ts';
-import { useLayerHasAlphaMasks, useLayerName } from '../../../assets/assetGraphicsCalculations.ts';
 import { useEvent } from '../../../common/useEvent.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
+import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
 import { useObservable } from '../../../observable.ts';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
-import { EDITOR_ALPHA_ICONS, useEditorAssetLayers } from '../../editor.tsx';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS, ToastHandlePromise } from '../../../persistentToast.ts';
+import { useLayerHasAlphaMasks, useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
+import type { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
+import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
+import { EDITOR_ALPHA_ICONS } from '../../editor.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
-import { EditorAssetGraphics } from '../../graphics/character/appearanceEditor.ts';
 import './asset.scss';
-
-const IsAssetGraphicsDefinition = ZodMatcher(AssetGraphicsDefinitionSchema);
 
 export function AssetUI() {
 	const editor = useEditor();
 	const selectedAsset = useObservable(editor.targetAsset);
+	const [showAddLayer, setShowAddLayer] = useState(false);
 
 	if (!selectedAsset) {
 		return (
@@ -84,10 +84,18 @@ export function AssetUI() {
 			<AssetExportImport asset={ selectedAsset } />
 			<AssetLayerList asset={ selectedAsset } />
 			<Button onClick={ () => {
-				selectedAsset.addLayer();
+				setShowAddLayer(true);
 			} }>
 				Add layer
 			</Button>
+			{
+				showAddLayer ? (
+					<AddLayerUiDialog
+						close={ () => setShowAddLayer(false) }
+						selectedAsset={ selectedAsset }
+					/>
+				) : null
+			}
 			<h4>
 				Image management
 				<ContextHelpButton>
@@ -110,10 +118,16 @@ export function AssetUI() {
 					type='file'
 					onChange={ (e) => {
 						if (e.target.files) {
-							selectedAsset
-								.addTexturesFromFiles(e.target.files)
+							ToastHandlePromise(
+								selectedAsset.addTexturesFromFiles(e.target.files),
+								{
+									pending: 'Importing asset images...',
+									success: 'Images loaded',
+									error: 'Error loading asset images, check console for details',
+								},
+							)
 								.catch((err) => {
-									toast(`Load failed: \n${String(err)}`, TOAST_OPTIONS_ERROR);
+									GetLogger('AssetUI').error('Error importing asset images:', err);
 								});
 						}
 					} }
@@ -127,12 +141,50 @@ export function AssetUI() {
 	);
 }
 
+function AddLayerUiDialog({ close, selectedAsset }: { close: () => void; selectedAsset: EditorAssetGraphics; }): ReactElement {
+	return (
+		<ModalDialog>
+			<Column>
+				<Button onClick={ () => {
+					selectedAsset.addLayer('mesh');
+					close();
+				} }>
+					Add image layer
+				</Button>
+				<Button onClick={ () => {
+					selectedAsset.addLayer('alphaImageMesh');
+					close();
+				} }>
+					Add alpha image layer
+				</Button>
+				<hr className='fill-x' />
+				<Button onClick={ () => {
+					close();
+				} }>
+					Cancel
+				</Button>
+			</Column>
+		</ModalDialog>
+	);
+}
+
 function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
+	const exportToClipboard = useCallback(() => {
+		asset.exportDefinitionToClipboard()
+			.then(() => {
+				toast(`Copied to clipboard`, TOAST_OPTIONS_SUCCESS);
+			})
+			.catch((err) => {
+				GetLogger('AssetExportImport').error('Error exporing to clipboard:', err);
+				toast(`Error exporting to clipboard:\n${err}`, TOAST_OPTIONS_ERROR);
+			});
+	}, [asset]);
+
 	return (
 		<Column>
 			<Button onClick={ () => void asset.downloadZip() } className='flex-2' >Export archive</Button>
 			<Row>
-				<Button onClick={ () => void asset.exportDefinitionToClipboard() } className='flex-2' >Export definition to clipboard</Button>
+				<Button onClick={ exportToClipboard } className='flex-2' >Export definition to clipboard</Button>
 				<label htmlFor='asset-import-button' className='flex-1 hiddenUpload'>
 					{ /* eslint-disable-next-line react/forbid-elements */ }
 					<input
@@ -148,15 +200,12 @@ function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactEle
 								file
 									.text()
 									.then((content) => {
-										const definition = JSON.parse(
+										const definition = AssetSourceGraphicsDefinitionSchema.parse(JSON.parse(
 											content
 												.split('\n')
 												.filter((line) => !line.trimStart().startsWith('//'))
 												.join('\n'),
-										) as AssetGraphicsDefinition;
-										if (!IsAssetGraphicsDefinition(definition)) {
-											throw new Error('Invalid format');
-										}
+										));
 										asset.load(definition);
 									})
 									.catch((err) => {
@@ -177,19 +226,19 @@ function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactEle
 
 function AssetLayerList({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
 	const editor = useEditor();
-	const layers = useEditorAssetLayers(asset, true);
+	const layers = useObservable(asset.layers);
 
 	return (
 		<div className='layerList'>
 			<Button onClick={ () => editor.targetLayer.value = null } className='slim' >Unselect layer</Button>
 			<ul>
-				{ layers.map((layer) => <AssetLayerListLayer key={ `${layer.index}` + (layer.isMirror ? 'm' : '') } asset={ asset } layer={ layer } />) }
+				{ layers.map((layer, index) => <AssetLayerListLayer key={ index } asset={ asset } layer={ layer } />) }
 			</ul>
 		</div>
 	);
 }
 
-function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; layer: AssetGraphicsLayer; }): ReactElement {
+function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; layer: EditorAssetGraphicsLayer; }): ReactElement {
 	const editor = useEditor();
 	const isSelected = useObservable(editor.targetLayer) === layer;
 
@@ -218,13 +267,13 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 			>
 				{ name }
 			</button>
-			<Button className='slim hideDisabled' aria-label='move' disabled={ layer.isMirror } onClick={ () => asset.moveLayerRelative(layer, -1) } title='Move layer up'>
+			<Button className='slim hideDisabled' aria-label='move' onClick={ () => asset.moveLayerRelative(layer, -1) } title='Move layer up'>
 				🠉
 			</Button>
 			<Button className='slim' aria-label='hide' onClick={ toggleAlpha } title="Cycle layers's opacity">
 				{ EDITOR_ALPHA_ICONS[alphaIndex] }
 			</Button>
-			<Button className='slim hideDisabled' aria-label='delete' disabled={ layer.isMirror } onClick={ () => {
+			<Button className='slim hideDisabled' aria-label='delete' onClick={ () => {
 				// eslint-disable-next-line no-alert
 				if (!confirm(`Are you sure you want to delete layer '${name}'?`))
 					return;
@@ -237,8 +286,7 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 }
 
 function AssetImageList({ asset }: { asset: EditorAssetGraphics; }): ReactElement {
-	const editor = useEditor();
-	const imageList = useSyncExternalStore(editor.getSubscriber('modifiedAssetsChange'), () => asset.loadedTextures);
+	const imageList = useObservable(asset.loadedTextures);
 
 	const elements: ReactElement[] = [];
 

@@ -1,10 +1,17 @@
-import { AssetGraphicsDefinition, AssetId, AssetsGraphicsDefinitionFile, PointTemplate, TypedEventEmitter, type ITypedEventEmitter } from 'pandora-common';
+import { freeze, type Immutable } from 'immer';
+import {
+	AssetGraphicsDefinition,
+	AssetId,
+	GraphicsDefinitionFile,
+	PointTemplate,
+	TypedEventEmitter,
+	type ITypedEventEmitter,
+} from 'pandora-common';
 import { Texture, type TextureSource } from 'pixi.js';
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { BrowserStorage } from '../browserStorage.ts';
 import { Observable, useObservable } from '../observable.ts';
-import { AssetGraphics } from './assetGraphics.ts';
 
 export interface IGraphicsLoaderStats {
 	inUseTextures: number;
@@ -121,7 +128,7 @@ const TransformGraphicsLoader = (() => {
 		unsupported: z.array(z.string()),
 	}));
 
-	return async (loader: IGraphicsLoader, { imageFormats }: AssetsGraphicsDefinitionFile): Promise<IGraphicsLoader> => {
+	return async (loader: IGraphicsLoader, { imageFormats }: Immutable<GraphicsDefinitionFile>): Promise<IGraphicsLoader> => {
 		const promises: Promise<IGraphicsLoader | null>[] = [];
 		for (const [format, suffix] of Object.entries(imageFormats)) {
 			const test = formatTests[format];
@@ -163,76 +170,35 @@ const TransformGraphicsLoader = (() => {
 })();
 
 export class GraphicsManager {
-	private readonly _assetGraphics: Map<AssetId, AssetGraphics> = new Map();
-	private readonly _pointTemplates: Map<string, PointTemplate> = new Map();
-	private _pointTemplateList: readonly string[] = [];
-
 	public readonly definitionsHash: string;
 	public readonly loader: IGraphicsLoader;
 
-	private constructor(loader: IGraphicsLoader, definitionsHash: string, data: AssetsGraphicsDefinitionFile) {
+	public readonly assetGraphics: Immutable<Partial<Record<AssetId, AssetGraphicsDefinition>>>;
+	public readonly pointTemplates: ReadonlyMap<string, Immutable<PointTemplate>>;
+
+	constructor(loader: IGraphicsLoader, definitionsHash: string, data: Immutable<GraphicsDefinitionFile>) {
 		this.loader = loader;
 		this.definitionsHash = definitionsHash;
-		this.loadPointTemplates(data.pointTemplates);
-		this.loadAssets(data.assets);
+		// Load point templates
+		const pointTemplates = new Map<string, Immutable<PointTemplate>>();
+		for (const [name, template] of Object.entries(freeze(data.pointTemplates, true))) {
+			pointTemplates.set(name, template);
+		}
+		this.pointTemplates = pointTemplates;
+		// Load assets
+		this.assetGraphics = freeze(data.assets, true);
 	}
 
-	public static async create(loader: IGraphicsLoader, definitionsHash: string, data: AssetsGraphicsDefinitionFile): Promise<GraphicsManager> {
+	public static async create(loader: IGraphicsLoader, definitionsHash: string, data: Immutable<GraphicsDefinitionFile>): Promise<GraphicsManager> {
 		const newLoader = await TransformGraphicsLoader(loader, data);
 		return new GraphicsManager(newLoader, definitionsHash, data);
 	}
 
-	public getAllAssetsGraphics(): AssetGraphics[] {
-		return [...this._assetGraphics.values()];
-	}
-
-	public getAssetGraphicsById(id: AssetId): AssetGraphics | undefined {
-		return this._assetGraphics.get(id);
-	}
-
-	public get pointTemplateList(): readonly string[] {
-		return this._pointTemplateList;
-	}
-
-	public getTemplate(name: string): PointTemplate | undefined {
+	public getTemplate(name: string): Immutable<PointTemplate> | undefined {
 		if (!name)
 			return [];
 
-		return this._pointTemplates.get(name);
-	}
-
-	private loadAssets(assets: Record<AssetId, AssetGraphicsDefinition>): void {
-		// First unload no-longer existing assets
-		for (const id of this._assetGraphics.keys()) {
-			if (assets[id] === undefined) {
-				this._assetGraphics.delete(id);
-			}
-		}
-		// Then load or update all defined assets
-		for (const [id, definition] of Object.entries(assets)) {
-			if (!id.startsWith('a/')) {
-				throw new Error(`Asset without valid prefix: ${id}`);
-			}
-			let asset = this._assetGraphics.get(id as AssetId);
-			if (asset) {
-				asset.load(definition);
-			} else {
-				asset = this.createAssetGraphics(id as AssetId, definition);
-				this._assetGraphics.set(id as AssetId, asset);
-			}
-		}
-	}
-
-	private loadPointTemplates(pointTemplates: Record<string, PointTemplate>): void {
-		this._pointTemplates.clear();
-		for (const [name, template] of Object.entries(pointTemplates)) {
-			this._pointTemplates.set(name, template);
-		}
-		this._pointTemplateList = Array.from(this._pointTemplates.keys());
-	}
-
-	protected createAssetGraphics(id: AssetId, data: AssetGraphicsDefinition): AssetGraphics {
-		return new AssetGraphics(id, data);
+		return this.pointTemplates.get(name);
 	}
 }
 

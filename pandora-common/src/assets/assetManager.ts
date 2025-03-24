@@ -17,6 +17,7 @@ export class AssetManager {
 
 	public readonly definitionsHash: string;
 	public readonly graphicsId: string;
+	public readonly graphicsSourceId: string;
 	public readonly rawData: Immutable<AssetsDefinitionFile>;
 
 	public readonly backgroundTags: ReadonlyMap<string, RoomBackgroundTagDefinition>;
@@ -78,6 +79,7 @@ export class AssetManager {
 			posePresets: [],
 			bodyparts: [],
 			graphicsId: '',
+			graphicsSourceId: '',
 			backgroundTags: {},
 			backgrounds: [],
 			attributes: {},
@@ -93,6 +95,7 @@ export class AssetManager {
 
 		this.bodyparts = fullData.bodyparts;
 		this.graphicsId = fullData.graphicsId;
+		this.graphicsSourceId = fullData.graphicsSourceId;
 		this._posePresets = fullData.posePresets;
 		this._backgrounds = fullData.backgrounds;
 		this.randomization = fullData.randomization;

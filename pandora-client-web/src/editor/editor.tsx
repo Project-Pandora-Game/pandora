@@ -1,19 +1,19 @@
 import type { Immutable } from 'immer';
 import { noop } from 'lodash-es';
-import { Assert, AssertNotNullable, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkRoomState, AssetId, CharacterSize, GetLogger, HexColorString, ParseArrayNotEmpty, TypedEventEmitter, type LayerStateOverrides, type PointTemplate } from 'pandora-common';
+import { Assert, AssertNotNullable, AssetFrameworkCharacterState, AssetFrameworkGlobalState, AssetFrameworkGlobalStateContainer, AssetFrameworkRoomState, AssetId, CharacterSize, GetLogger, HexColorString, ParseArrayNotEmpty, TypedEventEmitter, type GraphicsSourceLayer, type LayerStateOverrides, type PointTemplate } from 'pandora-common';
 import { createContext, ReactElement, useContext, useMemo, useSyncExternalStore } from 'react';
 import { z } from 'zod';
-import { AssetGraphics, AssetGraphicsLayer } from '../assets/assetGraphics.ts';
-import { useGraphicsAsset, useLayerDefinition } from '../assets/assetGraphicsCalculations.ts';
 import { GetCurrentAssetManager } from '../assets/assetManager.tsx';
-import { GraphicsManager } from '../assets/graphicsManager.ts';
 import { useBrowserStorage } from '../browserStorage.ts';
 import { useEvent } from '../common/useEvent.ts';
 import { Select } from '../common/userInteraction/select/select.tsx';
 import { Button } from '../components/common/button/button.tsx';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary.tsx';
-import { Observable } from '../observable.ts';
-import { AssetManagerEditor, EditorAssetManager } from './assets/assetManager.ts';
+import { Observable, useObservable } from '../observable.ts';
+import { AssetManagerEditor, EditorAssetManager, useAssetManagerEditor } from './assets/assetManager.ts';
+import type { EditorAssetGraphics } from './assets/editorAssetGraphics.ts';
+import type { EditorAssetGraphicsLayer } from './assets/editorAssetGraphicsLayer.ts';
+import { EditorAssetGraphicsManager } from './assets/editorAssetGraphicsManager.ts';
 import { AssetUI } from './components/asset/asset.tsx';
 import { AssetInfoUI } from './components/assetInfo/assetInfo.tsx';
 import { AssetsUI } from './components/assets/assets.tsx';
@@ -23,7 +23,7 @@ import { PointsUI } from './components/points/points.tsx';
 import { EditorWardrobeUI } from './components/wardrobe/wardrobe.tsx';
 import './editor.scss';
 import { useEditor } from './editorContextProvider.tsx';
-import { EDITOR_CHARACTER_ID, EditorAssetGraphics, EditorCharacter } from './graphics/character/appearanceEditor.ts';
+import { EDITOR_CHARACTER_ID, EditorCharacter } from './graphics/character/appearanceEditor.ts';
 import { EditorResultScene, EditorSetupScene } from './graphics/editorScene.tsx';
 import type { PointTemplateEditor } from './graphics/pointTemplateEditor.tsx';
 
@@ -33,18 +33,16 @@ export const EDITOR_ALPHAS = [1, 0.6, 0];
 export const EDITOR_ALPHA_ICONS = ['⯀', '⬕', '⬚'];
 
 export class Editor extends TypedEventEmitter<{
-	layerOverrideChange: AssetGraphicsLayer;
-	modifiedAssetsChange: undefined;
+	layerOverrideChange: EditorAssetGraphicsLayer;
 	globalStateChange: true;
 }> {
-	public readonly manager: GraphicsManager;
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
 	public readonly character: EditorCharacter;
 
 	public readonly showBones = new Observable<boolean>(false);
 
 	public readonly targetAsset = new Observable<EditorAssetGraphics | null>(null);
-	public readonly targetLayer = new Observable<AssetGraphicsLayer | null>(null);
+	public readonly targetLayer = new Observable<EditorAssetGraphicsLayer | null>(null);
 
 	public readonly targetTemplate = new Observable<PointTemplateEditor | null>(null);
 
@@ -55,7 +53,7 @@ export class Editor extends TypedEventEmitter<{
 
 	public readonly modifiedPointTemplates = new Observable<ReadonlyMap<string, Immutable<PointTemplate>>>(new Map());
 
-	constructor(assetManager: AssetManagerEditor, graphicsManager: GraphicsManager) {
+	constructor(assetManager: AssetManagerEditor) {
 		super();
 
 		this.targetAsset.subscribe((asset) => {
@@ -71,8 +69,6 @@ export class Editor extends TypedEventEmitter<{
 				layer = null;
 			}
 		});
-
-		this.manager = graphicsManager;
 
 		this.globalState = new AssetFrameworkGlobalStateContainer(
 			logger.prefixMessages('[Asset framework state]'),
@@ -97,7 +93,7 @@ export class Editor extends TypedEventEmitter<{
 
 		// Prevent loosing progress
 		window.addEventListener('beforeunload', (event) => {
-			if (this.editorGraphics.size > 0) {
+			if (EditorAssetGraphicsManager.editedAssetGraphics.value.size > 0) {
 				event.preventDefault();
 				// eslint-disable-next-line @typescript-eslint/no-deprecated
 				return event.returnValue = 'Are you sure you want to exit?';
@@ -106,24 +102,13 @@ export class Editor extends TypedEventEmitter<{
 		}, { capture: true });
 	}
 
-	private readonly editorGraphics = new Map<AssetId, EditorAssetGraphics>();
-	private editorGraphicsKeys: readonly AssetId[] = [];
+	private readonly layerStateOverrides = new WeakMap<EditorAssetGraphicsLayer, LayerStateOverrides>();
 
-	public getModifiedAssetsList(): readonly AssetId[] {
-		return this.editorGraphicsKeys;
-	}
-
-	public getAssetGraphicsById(id: AssetId): AssetGraphics | undefined {
-		return this.editorGraphics.get(id) ?? this.manager.getAssetGraphicsById(id);
-	}
-
-	private readonly layerStateOverrides = new WeakMap<AssetGraphicsLayer, LayerStateOverrides>();
-
-	public getLayerStateOverride(layer: AssetGraphicsLayer): LayerStateOverrides | undefined {
+	public getLayerStateOverride(layer: EditorAssetGraphicsLayer): LayerStateOverrides | undefined {
 		return this.layerStateOverrides.get(layer);
 	}
 
-	public setLayerStateOverride(layer: AssetGraphicsLayer, override: LayerStateOverrides | undefined): void {
+	public setLayerStateOverride(layer: EditorAssetGraphicsLayer, override: LayerStateOverrides | undefined): void {
 		if (override) {
 			this.layerStateOverrides.set(layer, override);
 		} else {
@@ -132,7 +117,7 @@ export class Editor extends TypedEventEmitter<{
 		this.emit('layerOverrideChange', layer);
 	}
 
-	public getLayersAlphaOverrideIndex(...layers: AssetGraphicsLayer[]): number {
+	public getLayersAlphaOverrideIndex(...layers: EditorAssetGraphicsLayer[]): number {
 		return layers.reduce<number | undefined>((prev, layer) => {
 			const alpha = this.getLayerStateOverride(layer)?.alpha ?? 1;
 			const index = EDITOR_ALPHAS.indexOf(alpha);
@@ -142,7 +127,7 @@ export class Editor extends TypedEventEmitter<{
 		}, undefined) ?? 0;
 	}
 
-	public setLayerAlphaOverride(layers: readonly AssetGraphicsLayer[], index: number): void {
+	public setLayerAlphaOverride(layers: readonly EditorAssetGraphicsLayer[], index: number): void {
 		const newAlpha = EDITOR_ALPHAS[index % EDITOR_ALPHAS.length];
 		for (const layer of layers) {
 			this.setLayerStateOverride(layer, {
@@ -152,7 +137,7 @@ export class Editor extends TypedEventEmitter<{
 		}
 	}
 
-	public setLayerTint(layer: AssetGraphicsLayer, tint: number | undefined): void {
+	public setLayerTint(layer: EditorAssetGraphicsLayer, tint: number | undefined): void {
 		this.setLayerStateOverride(layer, {
 			...this.getLayerStateOverride(layer),
 			color: tint,
@@ -160,44 +145,27 @@ export class Editor extends TypedEventEmitter<{
 	}
 
 	public startEditAsset(asset: AssetId): void {
-		let graphics = this.editorGraphics.get(asset);
-		if (!graphics) {
-			const originalGraphics = this.manager.getAssetGraphicsById(asset);
-			graphics = new EditorAssetGraphics(
-				this,
-				asset,
-				originalGraphics?.export(),
-				() => {
-					this.emit('modifiedAssetsChange', undefined);
-				},
-			);
-			this.editorGraphics.set(asset, graphics);
-			this.editorGraphicsKeys = Array.from(this.editorGraphics.keys());
+		const newEdit = !EditorAssetGraphicsManager.editedAssetGraphics.value.has(asset);
+		const graphics = EditorAssetGraphicsManager.startEditAsset(asset);
 
-			// Copy overrides of old layers onto new asset
-			const originalAllLayers = originalGraphics?.allLayers;
-			const graphicsAllLayers = graphics.allLayers;
-			if (originalAllLayers?.length === graphicsAllLayers.length) {
-				for (let i = 0; i < originalAllLayers.length; i++) {
-					const override = this.layerStateOverrides.get(originalAllLayers[i]);
-					if (override) {
-						this.setLayerStateOverride(graphicsAllLayers[i], override);
-					}
-				}
-			}
-
-			this.emit('modifiedAssetsChange', undefined);
-			graphics.loadAllUsedImages(this.manager.loader)
-				.catch((err) => logger.error('Error importing asset for editing', err));
-
-			// Wear this asset if not currently wearing it (but only if starting edit for the first time)
+		// Wear this asset if not currently wearing it (but only if starting edit for the first time)
+		if (newEdit) {
 			if (this.character.getAppearance().listItemsByAsset(asset).length === 0) {
 				const actualAsset = GetCurrentAssetManager().getAssetById(asset);
 				AssertNotNullable(actualAsset);
 				this.character.getAppearance().addItem(actualAsset);
 			}
 		}
+
 		this.targetAsset.value = graphics;
+	}
+
+	public discardAssetEdits(asset: AssetId): void {
+		if (this.targetAsset.value?.id === asset) {
+			this.targetAsset.value = null;
+		}
+
+		EditorAssetGraphicsManager.discardAssetEdits(asset);
 	}
 
 	public setBackgroundColor(color: HexColorString): void {
@@ -206,7 +174,7 @@ export class Editor extends TypedEventEmitter<{
 	}
 }
 
-export function useEditorLayerStateOverride(layer: AssetGraphicsLayer): LayerStateOverrides | undefined {
+export function useEditorLayerStateOverride(layer: EditorAssetGraphicsLayer): LayerStateOverrides | undefined {
 	const editor = useEditor();
 	return useSyncExternalStore((changed) => {
 		return editor.on('layerOverrideChange', (changedLayer) => {
@@ -217,28 +185,23 @@ export function useEditorLayerStateOverride(layer: AssetGraphicsLayer): LayerSta
 	}, () => editor.getLayerStateOverride(layer));
 }
 
-export function useEditorLayerTint(layer: AssetGraphicsLayer): number {
+export function useEditorLayerTint(layer: EditorAssetGraphicsLayer): number {
 	const override = useEditorLayerStateOverride(layer);
-	const { colorizationKey } = useLayerDefinition(layer);
-	const asset = useGraphicsAsset(layer.asset);
+	const layerDefinition = useObservable<Immutable<GraphicsSourceLayer>>(layer.definition);
+	const asset = useAssetManagerEditor().getAssetById(layer.asset.id);
 	if (override?.color !== undefined) {
 		return override.color;
 	}
-	if (asset.isType('bodypart') || asset.isType('personal')) {
+	if (asset != null && (asset.isType('bodypart') || asset.isType('personal'))) {
 		const { colorization } = asset.definition;
-		if (colorization && colorizationKey) {
-			const value = colorization[colorizationKey];
+		if (colorization && layerDefinition.type === 'mesh' && layerDefinition.colorizationKey) {
+			const value = colorization[layerDefinition.colorizationKey];
 			if (value) {
 				return parseInt(value.default.substring(1), 16);
 			}
 		}
 	}
 	return 0xffffff;
-}
-
-export function useEditorAssetLayers(asset: EditorAssetGraphics, includeMirror: boolean): readonly AssetGraphicsLayer[] {
-	const layers = useSyncExternalStore((change) => asset.editor.on('modifiedAssetsChange', change), () => asset.layers);
-	return includeMirror ? layers.flatMap((l) => l.mirror ? [l, l.mirror] : [l]) : layers;
 }
 
 const TABS = [

@@ -69,7 +69,7 @@ export function EditorScene({
 	const borderDraw = useCallback((g: PIXI.GraphicsContext) => {
 		g
 			.rect(0, 0, CharacterSize.WIDTH, CharacterSize.HEIGHT)
-			.stroke({ width: 2, color: 0x404040 });
+			.stroke({ width: 2, color: 0x404040, pixelLine: true });
 	}, []);
 
 	const viewportConfig = useCallback<PixiViewportSetupCallback>((viewport) => {

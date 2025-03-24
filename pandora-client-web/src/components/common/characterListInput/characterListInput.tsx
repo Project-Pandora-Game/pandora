@@ -5,6 +5,7 @@ import { useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import type { Promisable } from 'type-fest';
 import crossIcon from '../../../assets/icons/cross.svg';
+import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { useAsyncEvent, useEvent } from '../../../common/useEvent.ts';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
@@ -64,25 +65,19 @@ export type CharacterListInputActionsProps = Omit<CharacterListInputProps, 'onCh
 };
 
 export function CharacterListInputActions({
-	value,
-	max,
 	onAdd,
 	onRemove,
-	noLimitHeight = false,
-	allowSelf = 'any',
+	...props
 }: CharacterListInputActionsProps): ReactElement {
-	const valueOrdered = useMemo(() => value.slice().sort(CompareCharacterIds), [value]);
-
-	const [showDialog, setShowDialog] = useState(false);
-
-	const [executeAdd, processingAdd] = useAsyncEvent(async (characterToAdd: CharacterId) => {
+	const [executeAdd, processingAdd] = useAsyncEvent(async (characterToAdd: CharacterId, callback?: () => void) => {
 		if (onAdd == null)
 			throw new Error('Adding character not supported');
 
 		await onAdd(characterToAdd);
-	}, () => {
-		// Close the input dialog after the change
-		setShowDialog(false);
+		return callback;
+	}, (callback) => {
+		// Run any passed callback on success
+		callback?.();
 	}, {
 		errorHandler: (err) => {
 			GetLogger('CharacterListInput').error('Failed to add character:', err);
@@ -104,6 +99,96 @@ export function CharacterListInputActions({
 
 	const processing = processingAdd || processingRemove;
 
+	const actionButtonContext = useMemo(() => ({
+		executeAdd,
+		executeRemove,
+		processing,
+	}), [executeAdd, executeRemove, processing]);
+
+	const addButton = useMemo((): CharacterListInputActionButtonsProps<typeof actionButtonContext>['AddButton'] => {
+		if (onRemove == null)
+			return undefined;
+
+		return function AddButton({ addId, onExecute, children, actionContext, slim, disabled }) {
+			return (
+				<Button
+					onClick={ () => {
+						if (addId != null) {
+							actionContext.executeAdd(addId, onExecute);
+						}
+					} }
+					disabled={ disabled || actionContext.processing }
+					slim={ slim }
+				>
+					{ children }
+				</Button>
+			);
+		};
+	}, [onRemove]);
+
+	const removeButton = useMemo((): CharacterListInputActionButtonsProps<typeof actionButtonContext>['RemoveButton'] => {
+		if (onRemove == null)
+			return undefined;
+
+		return function RemoveButton({ removeId, actionContext }) {
+			return (
+				<IconButton
+					src={ crossIcon }
+					alt='Remove entry'
+					onClick={ () => {
+						actionContext.executeRemove(removeId);
+					} }
+					slim
+					disabled={ actionContext.processing }
+				/>
+			);
+		};
+	}, [onRemove]);
+
+	return (
+		<CharacterListInputActionButtons<typeof actionButtonContext>
+			{ ...props }
+			actionContext={ actionButtonContext }
+			AddButton={ addButton }
+			RemoveButton={ removeButton }
+		/>
+	);
+}
+
+export interface CharacterListInputAddButtonProps<TActionContext> extends ChildrenProps {
+	addId: CharacterId | null;
+	slim: boolean;
+	onExecute?: () => void;
+	disabled: boolean;
+	actionContext: TActionContext;
+}
+
+export interface CharacterListInputRemoveButtonProps<TActionContext> {
+	removeId: CharacterId;
+	actionContext: TActionContext;
+}
+
+export type CharacterListInputActionButtonsProps<TActionContext> = Omit<CharacterListInputProps, 'onChange'> & {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	AddButton?: React.FC<CharacterListInputAddButtonProps<TActionContext>>;
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	RemoveButton?: React.FC<CharacterListInputRemoveButtonProps<TActionContext>>;
+	actionContext: TActionContext;
+};
+
+export function CharacterListInputActionButtons<TActionContext>({
+	value,
+	max,
+	AddButton,
+	RemoveButton,
+	actionContext,
+	noLimitHeight = false,
+	allowSelf = 'any',
+}: CharacterListInputActionButtonsProps<TActionContext>): ReactElement {
+	const valueOrdered = useMemo(() => value.slice().sort(CompareCharacterIds), [value]);
+
+	const [showDialog, setShowDialog] = useState(false);
+
 	return (
 		<Column gap='medium'>
 			<Column padding='small' gap='small' overflowY='auto' className={ classNames('characterListInput', noLimitHeight ? null : 'limitHeight') }>
@@ -113,10 +198,8 @@ export function CharacterListInputActions({
 							<CharacterListItem
 								key={ c }
 								id={ c }
-								remove={ onRemove != null ? (() => {
-									executeRemove(c);
-								}) : undefined }
-								disabledRemove={ processing }
+								actionContext={ actionContext }
+								RemoveButton={ RemoveButton }
 							/>
 						))
 					) : (
@@ -125,13 +208,13 @@ export function CharacterListInputActions({
 				}
 			</Column>
 			{
-				onAdd != null ? (
+				AddButton != null ? (
 					<Row alignX='space-between' alignY='center'>
 						<Button
 							onClick={ () => {
 								setShowDialog(true);
 							} }
-							disabled={ processing || (max != null && value.length >= max) }
+							disabled={ max != null && value.length >= max }
 							slim
 						>
 							Add a character
@@ -145,15 +228,15 @@ export function CharacterListInputActions({
 				) : null
 			}
 			{
-				(onAdd != null && showDialog) ? (
+				(AddButton != null && showDialog) ? (
 					<CharacterListQuickSelectDialog
 						value={ value }
-						executeAdd={ executeAdd }
-						disabled={ processing }
 						close={ () => {
 							setShowDialog(false);
 						} }
 						allowSelf={ allowSelf }
+						AddButton={ AddButton }
+						actionContext={ actionContext }
 					/>
 				) : null
 			}
@@ -161,10 +244,11 @@ export function CharacterListInputActions({
 	);
 }
 
-function CharacterListItem({ id, remove, disabledRemove }: {
+function CharacterListItem<TActionContext>({ id, RemoveButton, actionContext }: {
 	id: CharacterId;
-	remove?: () => void;
-	disabledRemove?: boolean;
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	RemoveButton?: React.FC<CharacterListInputRemoveButtonProps<TActionContext>>;
+	actionContext: TActionContext;
 }): ReactElement {
 	const characters = useSpaceCharacters();
 	const character = characters.find((c) => c.id === id);
@@ -175,13 +259,10 @@ function CharacterListItem({ id, remove, disabledRemove }: {
 				{ useResolveCharacterName(id) ?? '[unknown]' } ({ id }) { character?.isPlayer() ? '[You]' : '' }
 			</span>
 			{
-				remove != null ? (
-					<IconButton
-						src={ crossIcon }
-						alt='Remove entry'
-						onClick={ remove }
-						slim
-						disabled={ disabledRemove }
+				RemoveButton != null ? (
+					<RemoveButton
+						actionContext={ actionContext }
+						removeId={ id }
 					/>
 				) : null
 			}
@@ -189,12 +270,13 @@ function CharacterListItem({ id, remove, disabledRemove }: {
 	);
 }
 
-function CharacterListQuickSelectDialog({ value, executeAdd, disabled, allowSelf, close }: {
+function CharacterListQuickSelectDialog<TActionContext>({ value, allowSelf, close, AddButton, actionContext }: {
 	value: readonly CharacterId[];
-	executeAdd: (characterToAdd: CharacterId) => void;
-	disabled: boolean;
 	close: () => void;
 	allowSelf: SelfSelect;
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	AddButton: React.FC<CharacterListInputAddButtonProps<TActionContext>>;
+	actionContext: TActionContext;
 }): ReactElement {
 	const currentAccount = useCurrentAccount();
 	const [dialogCharacterId, setDialogCharacterId] = useState<CharacterId | null>(null);
@@ -237,16 +319,15 @@ function CharacterListQuickSelectDialog({ value, executeAdd, disabled, allowSelf
 					>
 						Cancel
 					</Button>
-					<Button
-						onClick={ () => {
-							if (dialogCharacterId != null) {
-								executeAdd(dialogCharacterId);
-							}
-						} }
-						disabled={ disabled }
+					<AddButton
+						addId={ dialogCharacterId }
+						actionContext={ actionContext }
+						onExecute={ close }
+						slim={ false }
+						disabled={ dialogCharacterId == null || value.includes(dialogCharacterId) }
 					>
 						Confirm
-					</Button>
+					</AddButton>
 				</Row>
 				<hr className='fill-x' />
 				<fieldset>
@@ -257,16 +338,16 @@ function CharacterListQuickSelectDialog({ value, executeAdd, disabled, allowSelf
 								.filter((c) => allowSelf === 'any' || !c.isPlayer())
 								.filter((c) => allowSelf !== 'none' || c.data.accountId !== currentAccount?.id)
 								.map((c) => (
-									<Button
+									<AddButton
 										key={ c.id }
+										addId={ c.id }
+										actionContext={ actionContext }
+										onExecute={ close }
 										slim
-										onClick={ () => {
-											executeAdd(c.id);
-										} }
-										disabled={ disabled || value.includes(c.id) }
+										disabled={ value.includes(c.id) }
 									>
 										{ c.name } ({ c.id })  { c.isPlayer() ? '[You]' : '' }  { value.includes(c.id) ? '[Already in the list]' : '' }
-									</Button>
+									</AddButton>
 								))
 						}
 					</Column>

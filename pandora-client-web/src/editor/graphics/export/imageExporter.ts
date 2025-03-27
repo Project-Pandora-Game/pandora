@@ -31,16 +31,14 @@ export class ImageExporter {
 			resolution: 1,
 			antialias: true,
 		});
-		WithCullingDisabled(container, () => {
-			const transform = new Matrix()
-				.translate(-rect.x, -rect.y)
-				.scale(resultSize.width / rect.width, resultSize.height / rect.height);
-			this.app.renderer.render({
-				container,
-				target: renderTexture,
-				transform,
-				clearColor: [0, 0, 0, 0],
-			});
+		const transform = new Matrix()
+			.translate(-rect.x, -rect.y)
+			.scale(resultSize.width / rect.width, resultSize.height / rect.height);
+		this.app.renderer.render({
+			container,
+			target: renderTexture,
+			transform,
+			clearColor: [0, 0, 0, 0],
 		});
 		renderTexture.source.updateMipmaps();
 		const result = await this.app.renderer.extract.base64({ target: renderTexture, format });
@@ -71,36 +69,5 @@ class TextureCutter extends Container {
 		mesh.y = points.reduce((y, point) => Math.min(y, point[1]), Infinity) * -1;
 		this.width = points.reduce((w, point) => Math.max(w, point[0]), 0) - this.x;
 		this.height = points.reduce((h, point) => Math.max(h, point[1]), 0) - this.y;
-	}
-}
-
-/**
- * TODO: Remove this function when pixi.js fixes the bug or if we find a better way to do this.
- */
-function WithCullingDisabled(object: unknown, action: () => void) {
-	const visited = new Set<Container>();
-	const restore: Mesh[] = [];
-	const disableCulling = (target: unknown) => {
-		if (target instanceof Container) {
-			if (visited.has(target as Container)) {
-				return;
-			}
-			visited.add(target as Container);
-			if (target instanceof Mesh) {
-				if (target.state.culling) {
-					restore.push(target as Mesh);
-					target.state.culling = false;
-				}
-			}
-			target.children?.forEach(disableCulling);
-		}
-	};
-	disableCulling(object);
-	try {
-		action();
-	} finally {
-		restore.forEach((mesh) => {
-			mesh.state.culling = true;
-		});
 	}
 }

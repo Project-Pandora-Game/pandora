@@ -31,7 +31,7 @@ import { LayerState, PRIORITY_ORDER_REVERSE_PRIORITIES, useComputedLayerPriority
 import { useGraphicsSettings } from './graphicsSettings.tsx';
 import { GraphicsSuspense } from './graphicsSuspense/graphicsSuspense.tsx';
 import { GraphicsLayer } from './layers/graphicsLayer.tsx';
-import { SwapCullingDirection, SwapCullingDirectionObservable, type GraphicsLayerProps } from './layers/graphicsLayerCommon.tsx';
+import { SwapCullingDirectionObservable, type GraphicsLayerProps } from './layers/graphicsLayerCommon.tsx';
 import { useTickerRef } from './reconciler/tick.ts';
 
 export type PointLike = {
@@ -338,17 +338,15 @@ export function GraphicsCharacterWithManager({
 			onTransitionTick={ onTransitionTick }
 		>
 			<GraphicsSuspense loadingCirclePosition={ { x: 500, y: 750 } } sortableChildren>
-				<SwapCullingDirection uniqueKey='filter' swap={ filters != null && filters.length > 0 }>
-					<SwapCullingDirectionObservable swap={ swapCullingScale }>
-						{
-							sortOrder.map((priority, i) => {
-								const layer = priorityLayers.get(priority);
-								return layer ? <Container key={ priority } zIndex={ i }>{ layer }</Container> : null;
-							})
-						}
-						{ children }
-					</SwapCullingDirectionObservable>
-				</SwapCullingDirection>
+				<SwapCullingDirectionObservable swap={ swapCullingScale }>
+					{
+						sortOrder.map((priority, i) => {
+							const layer = priorityLayers.get(priority);
+							return layer ? <Container key={ priority } zIndex={ i }>{ layer }</Container> : null;
+						})
+					}
+					{ children }
+				</SwapCullingDirectionObservable>
 			</GraphicsSuspense>
 		</TransitionedContainer>
 	);

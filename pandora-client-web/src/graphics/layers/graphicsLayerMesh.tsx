@@ -40,12 +40,11 @@ export function GraphicsLayerMesh({
 
 	const { color, alpha } = useItemColor(characterState.items, item, layer.colorizationKey, state);
 
-	const { cullClockwise } = useContext(ContextCullClockwise);
+	const cullClockwise = useContext(ContextCullClockwise);
 
 	const cullingState = useMemo(() => {
 		const pixiState = PIXI.State.for2d();
 		pixiState.culling = true;
-		// There is some strange thing in Pixi, that when things go through filter, they switch direction for some strange reason
 		pixiState.clockwiseFrontFace = cullClockwise;
 		return pixiState;
 	}, [cullClockwise]);

@@ -108,30 +108,20 @@ export interface GraphicsLayerProps<TLayerType extends GraphicsLayerType = Graph
 	getTexture?: (path: string) => Texture;
 }
 
-export const ContextCullClockwise = createContext<{
-	cullClockwise: boolean;
-	uniqueSwaps: readonly string[];
-}>({ cullClockwise: false, uniqueSwaps: [] });
+export const ContextCullClockwise = createContext<boolean>(false);
 
-export function SwapCullingDirection({ children, swap = true, uniqueKey }: ChildrenProps & { swap?: boolean; uniqueKey?: string; }): ReactElement {
-	const { cullClockwise, uniqueSwaps } = useContext(ContextCullClockwise);
-	if (uniqueKey) {
-		swap &&= !uniqueSwaps.includes(uniqueKey);
-	}
-	const newValue = useMemo(() => ({
-		cullClockwise: swap ? !cullClockwise : cullClockwise,
-		uniqueSwaps: (swap && uniqueKey) ? [...uniqueSwaps, uniqueKey] : uniqueSwaps,
-	}), [cullClockwise, swap, uniqueKey, uniqueSwaps]);
+export function SwapCullingDirection({ children, swap = true }: ChildrenProps & { swap?: boolean; }): ReactElement {
+	const cullClockwise = useContext(ContextCullClockwise);
 	return (
-		<ContextCullClockwise.Provider value={ newValue }>
+		<ContextCullClockwise.Provider value={ swap ? !cullClockwise : cullClockwise }>
 			{ children }
 		</ContextCullClockwise.Provider>
 	);
 }
 
-export function SwapCullingDirectionObservable({ children, swap, uniqueKey }: ChildrenProps & { swap: ReadonlyObservable<boolean>; uniqueKey?: string; }): ReactElement {
+export function SwapCullingDirectionObservable({ children, swap }: ChildrenProps & { swap: ReadonlyObservable<boolean>; }): ReactElement {
 	return (
-		<SwapCullingDirection swap={ useObservable(swap) } uniqueKey={ uniqueKey }>
+		<SwapCullingDirection swap={ useObservable(swap) }>
 			{ children }
 		</SwapCullingDirection>
 	);

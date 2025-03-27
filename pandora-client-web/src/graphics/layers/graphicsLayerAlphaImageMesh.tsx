@@ -17,7 +17,7 @@ import { GraphicsMaskLayer } from '../graphicsMaskLayer.ts';
 import { useGraphicsSettings } from '../graphicsSettings.tsx';
 import { usePixiApp, usePixiAppOptional } from '../reconciler/appContext.ts';
 import { useTexture } from '../useTexture.ts';
-import { SwapCullingDirection, useLayerVertices, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
+import { useLayerVertices, type GraphicsLayerProps } from './graphicsLayerCommon.tsx';
 
 export function GraphicsLayerAlphaImageMesh({
 	characterState,
@@ -175,9 +175,7 @@ function MaskContainerPixi({
 	return (
 		<>
 			<Container ref={ setMaskContainer } zIndex={ zIndex }>
-				<SwapCullingDirection uniqueKey='filter'>
-					{ children }
-				</SwapCullingDirection>
+				{ children }
 			</Container>
 			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_SIZE.x } y={ -MASK_SIZE.y } />
 		</>
@@ -263,9 +261,7 @@ function MaskContainerCustom({
 	return (
 		<>
 			<Container ref={ setMaskContainer } zIndex={ zIndex }>
-				<SwapCullingDirection uniqueKey='filter'>
-					{ children }
-				</SwapCullingDirection>
+				{ children }
 			</Container>
 			<Sprite texture={ Texture.WHITE } ref={ setMaskSprite } renderable={ false } x={ -MASK_SIZE.x } y={ -MASK_SIZE.y } />
 		</>

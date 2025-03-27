@@ -16,6 +16,8 @@
 		"patchedDependencies": {
 			"react-switch": "patches/react-switch.patch"
 		},
+		"allowUnusedPatches": false,
+		"ignorePatchFailures": false,
 		"onlyBuiltDependencies": [
 			"argon2"
 		],

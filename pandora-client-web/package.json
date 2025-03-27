@@ -38,7 +38,7 @@
 		"nanoid": "5.1.5",
 		"pandora-common": "workspace:*",
 		"pixi-viewport": "6.0.3",
-		"pixi.js": "8.7.3",
+		"pixi.js": "8.9.1",
 		"react": "19.0.0",
 		"react-dom": "19.0.0",
 		"react-hook-form": "7.54.2",

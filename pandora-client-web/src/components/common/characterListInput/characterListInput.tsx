@@ -64,6 +64,12 @@ export type CharacterListInputActionsProps = Omit<CharacterListInputProps, 'onCh
 	onRemove?: (characterToRemove: CharacterId) => Promisable<void>;
 };
 
+type CharacterListInputActionsContext = {
+	executeAdd: (characterToAdd: CharacterId, callback?: (() => void) | undefined) => void;
+	executeRemove: (characterToRemove: CharacterId) => void;
+	processing: boolean;
+};
+
 export function CharacterListInputActions({
 	onAdd,
 	onRemove,
@@ -99,58 +105,48 @@ export function CharacterListInputActions({
 
 	const processing = processingAdd || processingRemove;
 
-	const actionButtonContext = useMemo(() => ({
+	const actionButtonContext = useMemo((): CharacterListInputActionsContext => ({
 		executeAdd,
 		executeRemove,
 		processing,
 	}), [executeAdd, executeRemove, processing]);
 
-	const addButton = useMemo((): CharacterListInputActionButtonsProps<typeof actionButtonContext>['AddButton'] => {
-		if (onRemove == null)
-			return undefined;
-
-		return function AddButton({ addId, onExecute, children, actionContext, slim, disabled }) {
-			return (
-				<Button
-					onClick={ () => {
-						if (addId != null) {
-							actionContext.executeAdd(addId, onExecute);
-						}
-					} }
-					disabled={ disabled || actionContext.processing }
-					slim={ slim }
-				>
-					{ children }
-				</Button>
-			);
-		};
-	}, [onRemove]);
-
-	const removeButton = useMemo((): CharacterListInputActionButtonsProps<typeof actionButtonContext>['RemoveButton'] => {
-		if (onRemove == null)
-			return undefined;
-
-		return function RemoveButton({ removeId, actionContext }) {
-			return (
-				<IconButton
-					src={ crossIcon }
-					alt='Remove entry'
-					onClick={ () => {
-						actionContext.executeRemove(removeId);
-					} }
-					slim
-					disabled={ actionContext.processing }
-				/>
-			);
-		};
-	}, [onRemove]);
-
 	return (
-		<CharacterListInputActionButtons<typeof actionButtonContext>
+		<CharacterListInputActionButtons<CharacterListInputActionsContext>
 			{ ...props }
 			actionContext={ actionButtonContext }
-			AddButton={ addButton }
-			RemoveButton={ removeButton }
+			AddButton={ onAdd != null ? CharacterListInputActionsAddButton : undefined }
+			RemoveButton={ onRemove != null ? CharacterListInputActionsRemoveButton : undefined }
+		/>
+	);
+}
+
+function CharacterListInputActionsAddButton({ addId, onExecute, children, actionContext, slim, disabled }: CharacterListInputAddButtonProps<CharacterListInputActionsContext>) {
+	return (
+		<Button
+			onClick={ () => {
+				if (addId != null) {
+					actionContext.executeAdd(addId, onExecute);
+				}
+			} }
+			disabled={ disabled || actionContext.processing }
+			slim={ slim }
+		>
+			{ children }
+		</Button>
+	);
+}
+
+function CharacterListInputActionsRemoveButton({ removeId, actionContext }: CharacterListInputRemoveButtonProps<CharacterListInputActionsContext>) {
+	return (
+		<IconButton
+			src={ crossIcon }
+			alt='Remove entry'
+			onClick={ () => {
+				actionContext.executeRemove(removeId);
+			} }
+			slim
+			disabled={ actionContext.processing }
 		/>
 	);
 }

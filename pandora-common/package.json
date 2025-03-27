@@ -31,7 +31,7 @@
 	"dependencies": {
 		"@types/async-lock": "1.4.2",
 		"@types/lodash-es": "4.17.12",
-		"@types/node": "22.13.13",
+		"@types/node": "22.13.14",
 		"async-lock": "1.4.1",
 		"delaunator": "5.0.1",
 		"immer": "10.1.1",

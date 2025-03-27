@@ -65,8 +65,8 @@ export function GetRestrictionOverrideConfig(type?: RestrictionOverride['type'] 
 export const AppearanceBundleSchema = z.object({
 	requestedPose: AppearancePoseSchema.catch(() => GetDefaultAppearancePose()),
 	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
-	restrictionOverride: RestrictionOverrideSchema.optional().catch(() => undefined),
-	attemptingAction: CharacterActionAttemptSchema.optional(),
+	restrictionOverride: RestrictionOverrideSchema.optional().catch(undefined),
+	attemptingAction: CharacterActionAttemptSchema.optional().catch(undefined),
 	clientOnly: z.boolean().optional(),
 });
 export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;

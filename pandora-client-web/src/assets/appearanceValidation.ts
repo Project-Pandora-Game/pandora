@@ -54,7 +54,7 @@ function RenderLockLogicActionProblem(lockDescription: string, action: 'lock' | 
 		case 'noRegisteredPrints':
 			return `The ${lockDescription} cannot ${actionDescription[action]} because it has no registered fingerprints.`;
 		case 'printNotRegistered':
-			return `The ${lockDescription} cannot ${actionDescription[action]} because your fingerprint is not registered.`;
+			return `The ${lockDescription} cannot ${actionDescription[action]} because your fingerprint is not recognized.`;
 		case 'tooManyPrints':
 			return `The ${lockDescription} cannot ${actionDescription[action]} as all slots are full.`;
 	}

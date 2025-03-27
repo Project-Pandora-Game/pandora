@@ -183,7 +183,7 @@ function DescribeGameLogicActionModuleAction({ action, globalState }: DescribeGa
 					actionDescription = <>Remember the password of the lock in the "{ moduleName.replace(/lock slot\s*(:\s*)?/i, '') }" lock slot</>;
 					break;
 				case 'updateFingerprint':
-					actionDescription = <>Update the list of registered fingerprints in the lock in the "{ moduleName.replace(/lock slot\s*(:\s*)?/i, '') }" lock slot</>;
+					actionDescription = <>Update the registered fingerprints of the lock in the "{ moduleName.replace(/lock slot\s*(:\s*)?/i, '') }" lock slot</>;
 					break;
 				default:
 					AssertNever(action.action.lockAction);

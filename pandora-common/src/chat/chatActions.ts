@@ -65,7 +65,7 @@ const CHAT_ACTIONS_DEF = {
 	characterModifierLockRemove: `SOURCE_CHARACTER removed the lock from the "MODIFIER_NAME" modifier on you.`,
 	characterModifierLockLock: `SOURCE_CHARACTER locked your "MODIFIER_NAME" modifier.`,
 	characterModifierLockUnlock: `SOURCE_CHARACTER unlocked your "MODIFIER_NAME" modifier.`,
-	characterModifierLockUpdateFingerprint: `SOURCE_CHARACTER changed the registered fingerprints on your "MODIFIER_NAME" modifier.`,
+	characterModifierLockUpdateFingerprint: `SOURCE_CHARACTER changed the registered fingerprints of the lock on your "MODIFIER_NAME" modifier.`,
 	characterModifierLockExceptionsChange: `SOURCE_CHARACTER changed the list of characters who can bypass locks on your "MODIFIER_NAME" modifier.`,
 
 	// Gambling related

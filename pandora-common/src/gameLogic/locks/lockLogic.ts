@@ -280,7 +280,7 @@ export class LockLogic {
 			}
 		}
 
-		if (this.lockSetup.fingerprint != null && !player.forceAllowItemActions()) {
+		if (this.lockSetup.fingerprint != null && !isEmpty(this.lockData.fingerprint?.registered) && !player.forceAllowItemActions()) {
 			if (!this.lockData.fingerprint?.registered.includes(player.appearance.id)) {
 				return {
 					result: 'failed',
@@ -362,15 +362,16 @@ export class LockLogic {
 		const oldPrints = this.lockData.fingerprint?.registered ?? [];
 		let newPrints = oldPrints;
 
-		if (registered === oldPrints?.includes(character)) {
-			// Cannot register if already registered, or vice versa
+		if (registered === oldPrints.includes(character)) {
+			// Cannot register if already registered, or vice versa, no need to update state
 			return {
-				result: 'invalid',
+				result: 'ok',
+				newState: this,
 			};
 		}
 
 		if (registered) {
-			if (oldPrints.length >= this.lockSetup.fingerprint?.maxFingerprints) {
+			if (oldPrints.length >= this.lockSetup.fingerprint.maxFingerprints) {
 				return {
 					result: 'failed',
 					reason: 'tooManyPrints',
@@ -384,7 +385,7 @@ export class LockLogic {
 
 		const lockData: Immutable<LockDataBundle> = produce(this.lockData, ((data) => {
 			data.fingerprint = {
-				registered: [...newPrints].sort(CompareCharacterIds),
+				registered: newPrints.toSorted(CompareCharacterIds),
 			};
 		}));
 

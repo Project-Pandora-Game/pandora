@@ -226,7 +226,7 @@ export class ItemLock extends ItemBase<'lock'> {
 		AssertNever(result);
 	}
 
-	public updateFingerprint({ addProblem, processingContext, target, module }: AppearanceModuleActionContext, action: Extract<LockAction, { action: 'updateFingerprint'; }>): ItemLock | null {
+	public updateFingerprint({ messageHandler, addProblem, processingContext, target, module }: AppearanceModuleActionContext, action: Extract<LockAction, { action: 'updateFingerprint'; }>): ItemLock | null {
 		const player = processingContext.getPlayerRestrictionManager();
 		// Updating the registered fingerprints on the lock modifies it
 		player.checkUseItemDirect(processingContext, target, module, this, ItemInteractionType.MODIFY);
@@ -235,6 +235,9 @@ export class ItemLock extends ItemBase<'lock'> {
 
 		switch (result.result) {
 			case 'ok':
+				messageHandler({
+					id: 'lockUpdateFingerprint',
+				});
 				return this.withProps({
 					lockLogic: result.newState,
 				});

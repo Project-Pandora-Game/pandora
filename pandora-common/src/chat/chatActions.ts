@@ -76,6 +76,9 @@ const CHAT_ACTIONS_DEF = {
 	gamblingRockPaperScissorsSet: `SOURCE_CHARACTER is ready to show rock, paper, or scissors when the 'show' command is given.`,
 	gamblingRockPaperScissorsResult: `Rock was shown by ROCK_CHARACTERS. Paper was shown by PAPER_CHARACTERS. Scissors were shown by SCISSORS_CHARACTERS.`,
 
+	// Lock actions
+	lockUpdateFingerprint: `SOURCE_CHARACTER changed the registered fingerprints of ITEM_ASSET_NAME on ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
+
 	//#endregion
 };
 

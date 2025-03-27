@@ -121,12 +121,9 @@ export class ItemLock extends ItemBase<'lock'> {
 
 		switch (result.result) {
 			case 'ok':
-				if (this.asset.definition.chat?.actionLock) {
-					messageHandler({
-						id: 'custom',
-						customText: this.asset.definition.chat.actionLock,
-					});
-				}
+				messageHandler({
+					id: 'lockLock',
+				});
 				return this.withProps({
 					lockLogic: result.newState,
 				});
@@ -161,12 +158,9 @@ export class ItemLock extends ItemBase<'lock'> {
 
 		switch (result.result) {
 			case 'ok':
-				if (this.asset.definition.chat?.actionUnlock) {
-					messageHandler({
-						id: 'custom',
-						customText: this.asset.definition.chat.actionUnlock,
-					});
-				}
+				messageHandler({
+					id: 'lockUnlock',
+				});
 				return this.withProps({
 					lockLogic: result.newState,
 				});

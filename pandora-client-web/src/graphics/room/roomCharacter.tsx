@@ -34,7 +34,6 @@ import { TransitionedContainer } from '../common/transitions/transitionedContain
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
-import { SwapCullingDirection } from '../layers/graphicsLayerCommon.tsx';
 import { useTickerRef } from '../reconciler/tick.ts';
 import { useTexture } from '../useTexture.ts';
 import { CalculateCharacterDeviceSlotPosition } from './roomDevice.tsx';
@@ -419,59 +418,57 @@ function RoomCharacterDisplay({
 			transitionDuration={ movementTransitionDuration }
 			tickerRef={ transitionTickerRef }
 		>
-			<SwapCullingDirection uniqueKey='filter' swap={ filters.length > 0 }>
-				<GraphicsCharacter
-					characterState={ characterState }
-					position={ { x: 0, y: -yOffsetExtra } }
-					scale={ { x: scaleX, y: 1 } }
-					pivot={ pivot }
-					angle={ rotationAngle }
-					useBlinking
-					movementTransitionDuration={ movementTransitionDuration }
-				>
-					{
-						!debugConfig?.characterDebugOverlay ? null : (
-							<Container zIndex={ 99999 }>
-								<RoomCharacterDebugGraphicsInner pivot={ pivot } />
-							</Container>
-						)
-					}
-				</GraphicsCharacter>
-				{
-					showName ? (
-						<Text
-							anchor={ { x: 0.5, y: 0.5 } }
-							position={ { x: labelX, y: labelY } }
-							style={ new TextStyle({
-								fontFamily: THEME_FONT.slice(),
-								fontSize: 32 * fontScale,
-								fill: settings.labelColor,
-								align: 'center',
-								dropShadow: { blur: 4 },
-							}) }
-							text={ name }
-						/>
-					) : null
-				}
-				{
-					!showDisconnectedIcon ? null : (
-						<Sprite
-							anchor={ { x: 0.5, y: 0.5 } }
-							texture={ disconnectedIconTexture }
-							position={ { x: labelX, y: disconnectedIconY } }
-							width={ 64 }
-							height={ 64 }
-						/>
-					)
-				}
+			<GraphicsCharacter
+				characterState={ characterState }
+				position={ { x: 0, y: -yOffsetExtra } }
+				scale={ { x: scaleX, y: 1 } }
+				pivot={ pivot }
+				angle={ rotationAngle }
+				useBlinking
+				movementTransitionDuration={ movementTransitionDuration }
+			>
 				{
 					!debugConfig?.characterDebugOverlay ? null : (
 						<Container zIndex={ 99999 }>
-							<RoomCharacterDebugGraphicsOuter pivot={ pivot } hitArea={ hitArea } />
+							<RoomCharacterDebugGraphicsInner pivot={ pivot } />
 						</Container>
 					)
 				}
-			</SwapCullingDirection>
+			</GraphicsCharacter>
+			{
+				showName ? (
+					<Text
+						anchor={ { x: 0.5, y: 0.5 } }
+						position={ { x: labelX, y: labelY } }
+						style={ new TextStyle({
+							fontFamily: THEME_FONT.slice(),
+							fontSize: 32 * fontScale,
+							fill: settings.labelColor,
+							align: 'center',
+							dropShadow: { blur: 4 },
+						}) }
+						text={ name }
+					/>
+				) : null
+			}
+			{
+				!showDisconnectedIcon ? null : (
+					<Sprite
+						anchor={ { x: 0.5, y: 0.5 } }
+						texture={ disconnectedIconTexture }
+						position={ { x: labelX, y: disconnectedIconY } }
+						width={ 64 }
+						height={ 64 }
+					/>
+				)
+			}
+			{
+				!debugConfig?.characterDebugOverlay ? null : (
+					<Container zIndex={ 99999 }>
+						<RoomCharacterDebugGraphicsOuter pivot={ pivot } hitArea={ hitArea } />
+					</Container>
+				)
+			}
 		</TransitionedContainer>
 	);
 }

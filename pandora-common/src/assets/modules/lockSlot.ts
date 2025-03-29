@@ -214,6 +214,7 @@ export class ItemModuleLockSlot<out TProperties = unknown, out TStaticData = unk
 		switch (lockAction.action) {
 			case 'lock':
 			case 'unlock':
+			case 'updateFingerprint':
 				return this.interactionType;
 			case 'showPassword':
 				return ItemInteractionType.ACCESS_ONLY;

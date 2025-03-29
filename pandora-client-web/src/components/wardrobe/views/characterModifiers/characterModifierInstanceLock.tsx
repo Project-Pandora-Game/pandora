@@ -333,6 +333,8 @@ function WardrobeCharacterModifierLockActionButton({
 	children,
 	actionContext,
 	onExecute,
+	iconButton,
+	slim,
 }: WardrobeLockLogicExecuteButtonProps<WardrobeCharacterModifierLockActionButtonContext>): ReactElement {
 	const { character, instance } = actionContext;
 
@@ -424,6 +426,10 @@ function WardrobeCharacterModifierLockActionButton({
 			check={ check }
 			onClick={ onClick }
 			disabled={ disabled || processing || processingPermissionRequest }
+			className={ classNames(
+				slim ? 'slim' : null,
+				iconButton ? 'IconButton' : null,
+			) }
 		>
 			{ children }
 		</WardrobeActionButtonElement>

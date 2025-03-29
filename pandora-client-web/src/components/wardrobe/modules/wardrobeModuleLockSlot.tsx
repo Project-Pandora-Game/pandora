@@ -226,6 +226,8 @@ function WardrobeLockSlotActionButton({
 	children,
 	actionContext,
 	onExecute,
+	slim,
+	iconButton,
 }: WardrobeLockLogicExecuteButtonProps<WardrobeLockSlotActionButtonContext>): ReactElement {
 	const { target, item, moduleName } = actionContext;
 
@@ -251,6 +253,10 @@ function WardrobeLockSlotActionButton({
 			action={ action }
 			onCurrentAttempt={ onCurrentAttempt }
 			onExecute={ onExecute }
+			className={ classNames(
+				slim ? 'slim' : null,
+				iconButton ? 'IconButton' : null,
+			) }
 		>
 			{ children }
 		</WardrobeActionButton>

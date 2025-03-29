@@ -137,6 +137,8 @@ export class GameLogicModifierInstance {
 			case 'showPassword':
 				return this.lockShowPassword(ctx);
 				break;
+			case 'updateFingerprint':
+				return this.lockUpdateFingerprint(ctx, action);
 		}
 		AssertNever(action);
 	}
@@ -236,6 +238,42 @@ export class GameLogicModifierInstance {
 							reason: {
 								type: 'lockInteractionPrevented',
 								moduleAction: 'showPassword',
+								reason: result.reason,
+							},
+						},
+					],
+				};
+
+			case 'invalid':
+				return { result: 'failure', problems: [{ result: 'invalidAction' }] };
+		}
+
+		AssertNever(result);
+	}
+
+	public lockUpdateFingerprint(ctx: LockActionContext, action: Extract<LockAction, { action: 'updateFingerprint'; }>): GameLogicModifierLockActionResult {
+		if (this._lock == null) {
+			return { result: 'failure', problems: [{ result: 'invalidAction' }] };
+		}
+
+		const result = this._lock.logic.updateFingerprint(action);
+
+		switch (result.result) {
+			case 'ok':
+				if (ctx.executionContext === 'act') {
+					this._lock.logic = result.newState;
+				}
+				return { result: 'ok' };
+
+			case 'failed':
+				return {
+					result: 'failure',
+					problems: [
+						{
+							result: 'characterModifierActionError',
+							reason: {
+								type: 'lockInteractionPrevented',
+								moduleAction: 'updateFingerprint',
 								reason: result.reason,
 							},
 						},

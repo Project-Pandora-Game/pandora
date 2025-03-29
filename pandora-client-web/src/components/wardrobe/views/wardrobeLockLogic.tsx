@@ -6,16 +6,19 @@ import {
 	LockLogic,
 	MessageSubstitute,
 	type AppearanceActionData,
+	type CharacterId,
 	type LockAction,
 	type LockSetup,
 } from 'pandora-common';
 import React, { useCallback, useEffect, useId, useMemo, useState, type ReactElement } from 'react';
+import crossIcon from '../../../assets/icons/cross.svg';
 import { useCharacterRestrictionManager } from '../../../character/character.ts';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { CharacterListInputActionButtons, CharacterListInputActions, type CharacterListInputAddButtonProps, type CharacterListInputRemoveButtonProps } from '../../common/characterListInput/characterListInput.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
 import { usePlayerState } from '../../gameContext/playerContextProvider.tsx';
 import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
@@ -27,6 +30,8 @@ export interface WardrobeLockLogicExecuteButtonProps<TActionContext> extends Chi
 	lockAction: LockAction;
 	onCurrentlyAttempting?: (attempting: boolean) => void;
 	actionContext: TActionContext;
+	iconButton?: boolean;
+	slim?: boolean;
 }
 
 export interface WardrobeLockLogicProps<TActionContext> {
@@ -97,6 +102,13 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 	const [invalidPassword, setInvalidPassword] = useState<string | undefined>(undefined);
 	const [clearLastPassword, setClearLastPassword] = useState(false);
 
+	const registeredFingerprints = useMemo(() => {
+		if (lockLogic.lockSetup.fingerprint == null)
+			return [];
+
+		return lockLogic.lockData.fingerprint?.registered ?? [];
+	}, [lockLogic]);
+
 	// Attempted action for locking or unlocking the lock
 	const [currentlyAttempting, setCurrentlyAttempting] = useState<boolean>(false);
 
@@ -141,6 +153,19 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 						<Row className='WardrobeInputRow'>
 							{ timerText }
 						</Row>
+					</Column>
+				) : null
+			}
+			{
+				lockLogic.lockSetup.fingerprint ? (
+					<Column className='WardrobeLockFingerprint'>
+						<Row className='WardrobeInputRow'>
+							<label>Registered fingerprints:</label>
+						</Row>
+						<CharacterListInputActions
+							value={ registeredFingerprints }
+							max={ lockLogic.lockSetup.fingerprint.maxFingerprints }
+						/>
 					</Column>
 				) : null
 			}
@@ -220,6 +245,18 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 					</Column>
 				) : null
 			}
+			{
+				lockLogic.lockSetup.fingerprint ? (
+					<Column className='WardrobeLockFingerprint'>
+						<CharacterList<TActionContext>
+							ActionButton={ ActionButton }
+							actionContext={ actionContext }
+							content={ lockLogic.lockData.fingerprint?.registered ?? [] }
+							fingerprint={ lockLogic.lockSetup.fingerprint }
+						/>
+					</Column>
+				) : null
+			}
 			<ActionButton
 				disabled={ !allowExecute && !currentlyAttempting }
 				lockAction={ action }
@@ -229,6 +266,92 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 				Lock
 			</ActionButton>
 		</>
+	);
+}
+
+function CharacterList<TActionContext>({
+	fingerprint,
+	content,
+	ActionButton,
+	actionContext,
+}: {
+	fingerprint: Immutable<NonNullable<LockSetup['fingerprint']>>;
+	content: readonly CharacterId[];
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	ActionButton: React.FC<WardrobeLockLogicExecuteButtonProps<TActionContext>>;
+	actionContext: TActionContext;
+}) {
+
+	const ctx = useMemo((): CharacterListButtonContext<TActionContext> => ({
+		ActionButton,
+		outerActionContext: actionContext,
+	}), [ActionButton, actionContext]);
+
+	return (
+		<CharacterListInputActionButtons<CharacterListButtonContext<TActionContext>>
+			value={ content }
+			max={ fingerprint.maxFingerprints }
+			actionContext={ ctx }
+			allowSelf='any'
+			AddButton={ CharacterListAddButton }
+			RemoveButton={ CharacterListRemoveButton }
+		/>
+	);
+}
+
+interface CharacterListButtonContext<TActionContext> {
+	// eslint-disable-next-line @typescript-eslint/naming-convention
+	ActionButton: React.FC<WardrobeLockLogicExecuteButtonProps<TActionContext>>;
+	outerActionContext: TActionContext;
+}
+
+function CharacterListAddButton<TActionContext>({
+	addId,
+	actionContext: { outerActionContext, ActionButton },
+	disabled,
+	slim,
+	children,
+	onExecute,
+}: CharacterListInputAddButtonProps<CharacterListButtonContext<TActionContext>>) {
+	const lockAction: LockAction = {
+		action: 'updateFingerprint',
+		character: addId ?? 'c0',
+		registered: true,
+	};
+
+	return (
+		<ActionButton
+			actionContext={ outerActionContext }
+			disabled={ addId == null || disabled }
+			lockAction={ lockAction }
+			onExecute={ onExecute }
+			slim={ slim }
+		>
+			{ children }
+		</ActionButton>
+	);
+}
+
+function CharacterListRemoveButton<TActionContext>({
+	removeId,
+	actionContext: { outerActionContext, ActionButton },
+}: CharacterListInputRemoveButtonProps<CharacterListButtonContext<TActionContext>>) {
+	const lockAction: LockAction = {
+		action: 'updateFingerprint',
+		character: removeId,
+		registered: false,
+	};
+
+	return (
+		<ActionButton
+			actionContext={ outerActionContext }
+			lockAction={ lockAction }
+			disabled={ false }
+			iconButton
+			slim
+		>
+			<img src={ crossIcon } alt='Quick-action mode' />
+		</ActionButton>
 	);
 }
 

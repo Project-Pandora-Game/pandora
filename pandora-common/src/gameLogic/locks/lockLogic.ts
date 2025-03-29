@@ -1,6 +1,8 @@
 import { freeze, produce, type Immutable } from 'immer';
+import { isEmpty } from 'lodash-es';
 import { z } from 'zod';
 import type { IItemLoadContext } from '../../assets/item/base.ts';
+import { CharacterIdSchema, CompareCharacterIds } from '../../character/characterTypes.ts';
 import type { CharacterRestrictionsManager } from '../../character/restrictionsManager.ts';
 import type { Logger } from '../../logging.ts';
 import { Assert, AssertNever, AssertNotNullable, CloneDeepMutable } from '../../utility/misc.ts';
@@ -21,16 +23,22 @@ export const LockActionSchema = z.discriminatedUnion('action', [
 		clearLastPassword: z.boolean().optional(),
 	}),
 	z.object({
+		action: z.literal('updateFingerprint'),
+		character: CharacterIdSchema,
+		registered: z.boolean(),
+	}),
+	z.object({
 		action: z.literal('showPassword'),
 	}),
 ]);
 export type LockAction = z.infer<typeof LockActionSchema>;
 
-export type LockActionLockProblem = 'blockSelf' | 'noStoredPassword' | 'invalidPassword' | 'noTimerSet' | 'invalidTimer';
-export type LockActionUnlockProblem = 'blockSelf' | 'wrongPassword' | 'timerRunning';
+export type LockActionLockProblem = 'blockSelf' | 'noStoredPassword' | 'invalidPassword' | 'noTimerSet' | 'invalidTimer' | 'noRegisteredPrints';
+export type LockActionUnlockProblem = 'blockSelf' | 'wrongPassword' | 'timerRunning' | 'printNotRegistered';
 export type LockActionShowPasswordProblem = 'notAllowed';
+export type LockActionUpdateFingerprintProblem = 'tooManyPrints';
 
-export type LockActionProblem = LockActionLockProblem | LockActionUnlockProblem | LockActionShowPasswordProblem;
+export type LockActionProblem = LockActionLockProblem | LockActionUnlockProblem | LockActionShowPasswordProblem | LockActionUpdateFingerprintProblem;
 
 export type LockActionLockResult = {
 	result: 'ok';
@@ -58,6 +66,16 @@ export type LockActionShowPasswordResult = {
 } | {
 	result: 'failed';
 	reason: LockActionShowPasswordProblem;
+} | {
+	result: 'invalid';
+};
+
+export type LockActionUpdateFingerprintResult = {
+	result: 'ok';
+	newState: LockLogic;
+} | {
+	result: 'failed';
+	reason: LockActionUpdateFingerprintProblem;
 } | {
 	result: 'invalid';
 };
@@ -159,6 +177,15 @@ export class LockLogic {
 			lockedUntil = lockTime + timer;
 		}
 
+		if (this.lockSetup.fingerprint != null) {
+			if (isEmpty(this.lockData?.fingerprint?.registered)) {
+				return {
+					result: 'failed',
+					reason: 'noRegisteredPrints',
+				};
+			}
+		}
+
 		let hidden: LockDataBundle['hidden'] | undefined;
 		if (this.lockSetup.password != null) {
 			if (password == null) {
@@ -253,6 +280,15 @@ export class LockLogic {
 			}
 		}
 
+		if (this.lockSetup.fingerprint != null && !isEmpty(this.lockData.fingerprint?.registered) && !player.forceAllowItemActions()) {
+			if (!this.lockData.fingerprint?.registered.includes(player.appearance.id)) {
+				return {
+					result: 'failed',
+					reason: 'printNotRegistered',
+				};
+			}
+		}
+
 		if (this.lockSetup.password != null && !player.forceAllowItemActions() && executionContext === 'act') {
 			if (this.lockData.hidden?.side === 'server' && !LockLogic._isEqualPassword(this.lockSetup, this.lockData.hidden.password, password)) {
 				return {
@@ -312,6 +348,50 @@ export class LockLogic {
 		return {
 			result: 'ok',
 			password: this.lockData.hidden.password,
+		};
+	}
+
+	public updateFingerprint({ character, registered }: Extract<LockAction, { action: 'updateFingerprint'; }>): LockActionUpdateFingerprintResult {
+		if (this.isLocked() || this.lockSetup.fingerprint == null) {
+			return {
+				result: 'invalid',
+			};
+		}
+
+		// Allow null for no prints registered, set default here for simplicity
+		const oldPrints = this.lockData.fingerprint?.registered ?? [];
+		let newPrints = oldPrints;
+
+		if (registered === oldPrints.includes(character)) {
+			// Cannot register if already registered, or vice versa, no need to update state
+			return {
+				result: 'ok',
+				newState: this,
+			};
+		}
+
+		if (registered) {
+			if (oldPrints.length >= this.lockSetup.fingerprint.maxFingerprints) {
+				return {
+					result: 'failed',
+					reason: 'tooManyPrints',
+				};
+			}
+
+			newPrints = [...oldPrints, character];
+		} else {
+			newPrints = oldPrints.filter((c) => c !== character);
+		}
+
+		const lockData: Immutable<LockDataBundle> = produce(this.lockData, ((data) => {
+			data.fingerprint = {
+				registered: newPrints.toSorted(CompareCharacterIds),
+			};
+		}));
+
+		return {
+			result: 'ok',
+			newState: new LockLogic(this.lockSetup, lockData),
 		};
 	}
 

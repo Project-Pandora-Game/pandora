@@ -78,7 +78,7 @@ const CHAT_ACTIONS_DEF = {
 
 	// Lock actions
 	lockLock: `SOURCE_CHARACTER clicked ITEM_ASSET_NAME on ITEM_CONTAINER_SIMPLE_DYNAMIC shut.`,
-	lockUnlock: `SOURCE_CHARACTER unlocked ITEM_ASSET_NAME on ITEM_CONTAINER_SIMPLE_DYNAMIC`,
+	lockUnlock: `SOURCE_CHARACTER unlocked ITEM_ASSET_NAME on ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
 	lockUpdateFingerprint: `SOURCE_CHARACTER changed the registered fingerprints of ITEM_ASSET_NAME on ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
 
 	//#endregion

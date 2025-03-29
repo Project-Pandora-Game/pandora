@@ -375,10 +375,6 @@ export interface LockAssetDefinition<A extends AssetDefinitionExtraArgs = AssetD
 	chat?: {
 		/** How items of this asset are referred to in chat (defaults to asset's name) */
 		chatDescriptor?: string;
-		/** Message for when this item is locked */
-		actionLock?: string;
-		/** Message for when this item is unlocked */
-		actionUnlock?: string;
 	};
 	/**
 	 * Text to show when the lock is locked.

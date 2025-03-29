@@ -65,6 +65,7 @@ const CHAT_ACTIONS_DEF = {
 	characterModifierLockRemove: `SOURCE_CHARACTER removed the lock from the "MODIFIER_NAME" modifier on you.`,
 	characterModifierLockLock: `SOURCE_CHARACTER locked your "MODIFIER_NAME" modifier.`,
 	characterModifierLockUnlock: `SOURCE_CHARACTER unlocked your "MODIFIER_NAME" modifier.`,
+	characterModifierLockUpdateFingerprint: `SOURCE_CHARACTER changed the registered fingerprints of the lock on your "MODIFIER_NAME" modifier.`,
 	characterModifierLockExceptionsChange: `SOURCE_CHARACTER changed the list of characters who can bypass locks on your "MODIFIER_NAME" modifier.`,
 
 	// Gambling related
@@ -74,6 +75,11 @@ const CHAT_ACTIONS_DEF = {
 	gamblingDiceHiddenResult: `You rolled DICE_COUNT and the result is DICE_RESULT.`,
 	gamblingRockPaperScissorsSet: `SOURCE_CHARACTER is ready to show rock, paper, or scissors when the 'show' command is given.`,
 	gamblingRockPaperScissorsResult: `Rock was shown by ROCK_CHARACTERS. Paper was shown by PAPER_CHARACTERS. Scissors were shown by SCISSORS_CHARACTERS.`,
+
+	// Lock actions
+	lockLock: `SOURCE_CHARACTER clicked ITEM_ASSET_NAME on ITEM_CONTAINER_SIMPLE_DYNAMIC shut.`,
+	lockUnlock: `SOURCE_CHARACTER unlocked ITEM_ASSET_NAME on ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
+	lockUpdateFingerprint: `SOURCE_CHARACTER changed the registered fingerprints of ITEM_ASSET_NAME on ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
 
 	//#endregion
 };

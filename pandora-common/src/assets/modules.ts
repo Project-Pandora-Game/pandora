@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { ZodDiscriminatedUnionOption, z } from 'zod';
-import type { LockActionLockProblem, LockActionShowPasswordProblem, LockActionUnlockProblem } from '../gameLogic/locks/lockLogic.ts';
+import type { LockActionLockProblem, LockActionShowPasswordProblem, LockActionUnlockProblem, LockActionUpdateFingerprintProblem } from '../gameLogic/locks/lockLogic.ts';
 import { Assert, AssertNever, ParseArrayNotEmpty, Satisfies } from '../utility/misc.ts';
 import { RecordUnpackSubobjectProperties } from '../validation.ts';
 import type { AssetId } from './base.ts';
@@ -61,6 +61,12 @@ export type ModuleActionProblem =
 		type: 'lockInteractionPrevented';
 		moduleAction: 'showPassword';
 		reason: LockActionShowPasswordProblem;
+		asset: AssetId;
+		itemName: string;
+	} | {
+		type: 'lockInteractionPrevented';
+		moduleAction: 'updateFingerprint';
+		reason: LockActionUpdateFingerprintProblem;
 		asset: AssetId;
 		itemName: string;
 	}

@@ -12,6 +12,9 @@ export const LockDataBundleSchema = z.object({
 		/** Time the timer on the lock will expire, if lock includes a timer */
 		lockedUntil: z.number().int().nonnegative().optional(),
 	}).optional(),
+	fingerprint: z.object({
+		registered: CharacterIdSchema.array().readonly(),
+	}).optional(),
 	hidden: z.discriminatedUnion('side', [
 		z.object({
 			side: z.literal('server'),

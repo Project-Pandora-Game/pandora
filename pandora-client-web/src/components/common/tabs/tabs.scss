@@ -76,7 +76,7 @@ $header-height: 2em;
 	&.tab-position-top.allow-wrap {
 		>.header {
 			overflow-x: hidden;
-			flex-flow: row wrap-reverse;
+			flex-flow: row wrap;
 			justify-content: flex-end;
 			row-gap: max(2px, 0.1em);
 		}

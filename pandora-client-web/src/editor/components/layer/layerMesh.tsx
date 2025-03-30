@@ -1,10 +1,9 @@
 import { capitalize, cloneDeep } from 'lodash-es';
-import { Assert, AssertNotNullable, LAYER_PRIORITIES, LayerMirror, LayerMirrorSchema, LayerPriority } from 'pandora-common';
-import React, { ReactElement, useMemo, useState } from 'react';
+import { Assert, LAYER_PRIORITIES, LayerMirror, LayerMirrorSchema, LayerPriority } from 'pandora-common';
+import React, { ReactElement, useId, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager.ts';
 import { useEvent } from '../../../common/useEvent.ts';
-import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
 import { Button } from '../../../components/common/button/button.tsx';
@@ -12,7 +11,6 @@ import { ColorInput } from '../../../components/common/colorInput/colorInput.tsx
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { useObservable } from '../../../observable.ts';
-import { useAssetManagerEditor } from '../../assets/assetManager.ts';
 import { useLayerImageSettingsForScalingStop, useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
 import { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
 import { type EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
@@ -31,7 +29,7 @@ export function LayerMeshUI({ asset, layer }: {
 				(layer.type === 'mesh') ? (
 					<>
 						<hr />
-						<ColorizationSetting layer={ layer } graphics={ asset } />
+						<ColorizationSetting layer={ layer } />
 						<ColorPicker layer={ layer } asset={ asset } />
 					</>
 				) : null
@@ -108,102 +106,84 @@ function LayerImageSelect({ layer, asset, stop }: { layer: EditorAssetGraphicsLa
 	);
 }
 
-function ColorizationSetting({ layer, graphics }: { layer: EditorAssetGraphicsLayer<'mesh'>; graphics: EditorAssetGraphics; }): ReactElement | null {
-	const asset = useAssetManagerEditor().getAssetById(graphics.id);
-	AssertNotNullable(asset);
-	const colorization = useMemo(() => (asset.isType('bodypart') || asset.isType('personal')) ? (asset.definition.colorization ?? {}) : {}, [asset]);
-	const [value, setValue] = useUpdatedUserInput(useObservable(layer.definition).colorizationKey, [layer]);
-
-	const colorLayerName = useMemo(() => {
-		if (value == null)
-			return '[ Not colorable ]';
-		if (colorization[value] == null)
-			return '[ Invalid key ]';
-		const { name, group } = colorization[value];
-		if (name == null) {
-			if (group == null)
-				return '[ Not colorable by user ]';
-
-			return `[ Not colorable by user, control group: '${group}' ]`;
-		} else if (group != null) {
-			return `${name} (control group: '${group}')`;
-		}
-		return name;
-	}, [value, colorization]);
-
+function ColorizationSetting({ layer }: { layer: EditorAssetGraphicsLayer<'mesh'>; }): ReactElement | null {
+	const value = useObservable(layer.definition).colorizationKey ?? '';
 	const onChange = useEvent((newValue: string) => {
-		const trimmed = newValue.trim();
-		setValue(trimmed ? trimmed : undefined);
-		layer.setColorizationKey(trimmed ? trimmed : null);
+		layer.modifyDefinition((d) => {
+			d.colorizationKey = newValue || undefined;
+		});
 	});
 
+	const assetManager = useAssetManager();
+	const asset = assetManager.getAssetById(layer.asset.id);
+	const id = useId();
+
+	if (asset == null || !(asset.isType('personal') || asset.isType('bodypart')))
+		return null;
+
+	const colorization = asset.definition.colorization;
+
+	const elements: ReactElement[] = [];
+	for (const [colorId, color] of Object.entries(colorization ?? {})) {
+		elements.push(
+			<option value={ colorId } key={ colorId }>{ color.name || `${colorId} (hidden)` }{ color.group ? ` (group: '${color.group}')` : '' }</option>,
+		);
+	}
+	if (value && colorization?.[value] == null) {
+		elements.push(
+			<option value={ value } key={ value }>[ ERROR: Unknown key '{ value }' ]</option>,
+		);
+	}
+
 	return (
-		<>
-			<Row alignY='center'>
-				<label
-					htmlFor='layer-colorization'
-				>
-					Colorization key:
-					<ContextHelpButton>
-						<p>
-							This selects the key of the color this layer should use for tinting the asset image.<br />
-						</p>
-						<p>
-							In the asset.ts file of the asset, you already have or will create later,<br />
-							there is a setting 'colorization' about the default colors the asset uses.
-						</p>
-						<p>
-							To prevent this layer from being colorable, set this value to an empty string.
-						</p>
-						<p>
-							This key can be set in advance even if it is not yet defined in the asset.ts file.<br />
-							Colorization name will be set to '[ Invalid key ]' in this case.<br />
-							The recommendation is to revisit layer coloring after you complete the '*.asset.ts' file.
-						</p>
-					</ContextHelpButton>
-				</label>
-				<TextInput
-					id='layer-colorization'
-					value={ value ?? '' }
-					onChange={ onChange }
-					className='flex-1'
-				/>
-			</Row>
-			<Row alignY='center'>
-				<label
-					htmlFor='layer-colorization-name'
-				>
-					Colorization name:
-					<ContextHelpButton>
-						<p>
-							This value shows the corresponding name of the color setting from the<br />
-							'*.asset.ts' file based on the input value of 'Colorization key'.<br />
-							You cannot edit this field, as you cannot define new colors and<br />
-							their names in the editor but only in the asset code (*.asset.ts file).
-						</p>
-						<p>
-							If the colorization definition also has an inheritance group,<br />
-							it will be shown here. If the group is active, then this layer<br />
-							will inherit the color of any item with the same group.
-						</p>
-						<p>
-							The inheritance group will always be active if the colorization doesn't have a name.<br />
-							Otherwise, it can be activated by the 'overrideColorKey' asset property.
-						</p>
-						<p>
-							To prevent an item from being the base of color group inheritance,<br />
-							you can set the 'excludeFromColorInheritance' property to list the color key.
-						</p>
-					</ContextHelpButton>
-				</label>
-				<TextInput
-					id='layer-colorization-name'
-					value={ colorLayerName }
-					readOnly
-					className='flex-1'
-				/>
-			</Row>
-		</>
+		<Row alignY='center'>
+			<label htmlFor={ id }>
+				Color:
+			</label>
+			<ContextHelpButton>
+				<p>
+					This selects the key of the color this layer should use for tinting the asset image.<br />
+				</p>
+				<p>
+					In the asset.ts file of the asset, that you already have or will create later,<br />
+					there is a setting 'colorization' about the default colors the asset uses.
+				</p>
+				<p>
+					To prevent this layer from being colorable, set this value to "None".
+				</p>
+				<p>
+					You cannot define new colors and their names in the editor but only in the asset code (*.asset.ts file).
+				</p>
+				<p>
+					If the colorization definition also has an inheritance group, it will be shown here.<br />
+					If the group is active, then this layer will inherit the color of any item with the same group.
+				</p>
+				<p>
+					The inheritance group will always be active if the colorization doesn't have a name.<br />
+					Otherwise, it can be activated by the 'overrideColorKey' asset property.
+				</p>
+				<p>
+					To prevent an item from being the base of color group inheritance,<br />
+					you can set the 'excludeFromColorInheritance' property to list the color key.
+				</p>
+			</ContextHelpButton>
+			<Select
+				id={ id }
+				className='flex-1'
+				value={ value }
+				onChange={ (event) => {
+					const newValue = event.target.value;
+					if (newValue && colorization?.[newValue] == null) {
+						return;
+					}
+					onChange(newValue);
+				} }
+				noScrollChange
+			>
+				<option value='' key='!empty'>- None -</option>
+				{ elements }
+			</Select>
+		</Row>
 	);
 }
 
@@ -217,18 +197,18 @@ function ColorPicker({ layer }: { layer: EditorAssetGraphicsLayer<'mesh'>; asset
 		<Row alignY='center'>
 			<label>
 				Layer tint:
-				<ContextHelpButton>
-					<p>
-						You can manually select the layer tint by pressing on the rectangle.<br />
-						This color is only valid for testing in the editor and is not saved!<br />
-						You cannot define new colors in the editor but only in the asset<br />
-						code (*.asset.ts file).<br />
-						Per default, the rectangle shows the color of the selected color index<br />
-						in the 'Colorization index' drop-down menu.<br />
-						The button on the right resets the color to the color of the selected index.
-					</p>
-				</ContextHelpButton>
 			</label>
+			<ContextHelpButton>
+				<p>
+					You can manually select the layer tint by pressing on the rectangle.<br />
+					This color is only valid for testing in the editor and is not saved!<br />
+					You cannot define new colors in the editor but only in the asset<br />
+					code (*.asset.ts file).<br />
+					Per default, the rectangle shows the color of the selected color index<br />
+					in the 'Colorization index' drop-down menu.<br />
+					The button on the right resets the color to the color of the selected index.
+				</p>
+			</ContextHelpButton>
 			<ColorInput
 				hideTextInput
 				title={ `Layer '${visibleName}' tint` }

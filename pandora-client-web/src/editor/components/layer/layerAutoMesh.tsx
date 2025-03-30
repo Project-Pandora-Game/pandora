@@ -300,7 +300,7 @@ function LayerAutomeshGraphicalLayerItemColorization({ value, onChange, layer }:
 	const elements: ReactElement[] = [];
 	for (const [colorId, color] of Object.entries(colorization ?? {})) {
 		elements.push(
-			<option value={ colorId } key={ colorId }>{ color.name || `${colorId} (hidden)` }</option>,
+			<option value={ colorId } key={ colorId }>{ color.name || `${colorId} (hidden)` }{ color.group ? ` (group: '${color.group}')` : '' }</option>,
 		);
 	}
 	if (value && colorization?.[value] == null) {

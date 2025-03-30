@@ -1,6 +1,5 @@
 import { Draft, Immutable, freeze } from 'immer';
 import {
-	Assert,
 	AssertNever,
 	type GraphicsSourceAlphaImageMeshLayer,
 	type GraphicsSourceAutoMeshLayer,
@@ -61,15 +60,6 @@ export class EditorAssetGraphicsLayerContainer<TLayer extends GraphicsSourceLaye
 	public setYOffset(offset: number): void {
 		this.modifyDefinition((d) => {
 			d.y = offset;
-		});
-	}
-
-	public setColorizationKey(colorizationKey: string | null): void {
-		Assert(colorizationKey === null || colorizationKey.trim().length > 0, 'Colorization key must be null or non-empty');
-
-		this.modifyDefinition((d) => {
-			Assert(d.type === 'mesh', 'Colorization key can only be set on mesh layer');
-			d.colorizationKey = colorizationKey === null ? undefined : colorizationKey;
 		});
 	}
 

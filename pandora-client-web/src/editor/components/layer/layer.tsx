@@ -9,6 +9,7 @@ import { useObservable } from '../../../observable.ts';
 import { useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
 import { type EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
 import { useEditor } from '../../editorContextProvider.tsx';
+import './layer.scss';
 import { LayerAutoMeshUI } from './layerAutoMesh.tsx';
 import { LayerMeshUI } from './layerMesh.tsx';
 

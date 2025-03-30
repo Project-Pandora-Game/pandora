@@ -1,0 +1,28 @@
+.editor-setupui .layer-size-setup {
+	display: grid;
+	grid-template:
+		"title title title title" 1.75em
+		"xLabel xInput yLabel yInput" 1.75em
+		/ 20% minmax(0, 1fr) 20% minmax(0, 1fr);
+	gap: 0.5em 0.25em;
+	margin: 0.25em 0;
+	align-items: center;
+
+	.area-title {
+		grid-area: title;
+	}
+	.area-xLabel {
+		grid-area: xLabel;
+		justify-self: end;
+	}
+	.area-xInput {
+		grid-area: xInput;
+	}
+	.area-yLabel {
+		grid-area: yLabel;
+		justify-self: end;
+	}
+	.area-yInput {
+		grid-area: yInput;
+	}
+}

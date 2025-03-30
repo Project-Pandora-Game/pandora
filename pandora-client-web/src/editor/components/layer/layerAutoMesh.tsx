@@ -19,6 +19,7 @@ import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Button, IconButton } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
+import { Tab, TabContainer } from '../../../components/common/tabs/tabs.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { useObservable } from '../../../observable.ts';
@@ -38,18 +39,25 @@ export function LayerAutoMeshUI({ asset, layer }: {
 			<LayerHeightAndWidthSetting layer={ layer } asset={ asset } />
 			<LayerOffsetSetting layer={ layer } asset={ asset } />
 			<hr />
-			<h4>Template</h4>
-			<LayerAutomeshTemplateSelect layer={ layer } />
-			<LayerAutomeshPartsDiable layer={ layer } />
-			<hr />
-			<h4>Graphical layers</h4>
-			<LayerAutomeshGraphicalLayers layer={ layer } />
-			<hr />
-			<h4>Variables</h4>
-			<LayerAutomeshVariables layer={ layer } />
-			<hr />
-			<h4>Images</h4>
-			<LayerAutomeshImages layer={ layer } />
+			<TabContainer allowWrap>
+				<Tab name='Template'>
+					<hr />
+					<LayerAutomeshTemplateSelect layer={ layer } />
+					<LayerAutomeshPartsDiable layer={ layer } />
+				</Tab>
+				<Tab name='Graphical layers'>
+					<hr />
+					<LayerAutomeshGraphicalLayers layer={ layer } />
+				</Tab>
+				<Tab name='Variables'>
+					<hr />
+					<LayerAutomeshVariables layer={ layer } />
+				</Tab>
+				<Tab name='Images'>
+					<hr />
+					<LayerAutomeshImages layer={ layer } />
+				</Tab>
+			</TabContainer>
 		</>
 	);
 }

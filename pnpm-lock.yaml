@@ -136,8 +136,8 @@ importers:
         specifier: 29.7.0
         version: 29.7.0
       '@pmmmwh/react-refresh-webpack-plugin':
-        specifier: 0.5.15
-        version: 0.5.15(@types/webpack@5.28.5(webpack-cli@6.0.1))(react-refresh@0.17.0)(type-fest@4.38.0)(webpack-dev-server@5.2.1)(webpack@5.98.0)
+        specifier: 0.5.16
+        version: 0.5.16(@types/webpack@5.28.5(webpack-cli@6.0.1))(react-refresh@0.17.0)(type-fest@4.38.0)(webpack-dev-server@5.2.1)(webpack@5.98.0)
       '@testing-library/jest-dom':
         specifier: 6.6.3
         version: 6.6.3
@@ -1455,8 +1455,8 @@ packages:
     engines: {node: '>=18'}
     hasBin: true
 
-  '@pmmmwh/react-refresh-webpack-plugin@0.5.15':
-    resolution: {integrity: sha512-LFWllMA55pzB9D34w/wXUCf8+c+IYKuJDgxiZ3qMhl64KRMBHYM1I3VdGaD2BV5FNPV2/S2596bppxHbv2ZydQ==}
+  '@pmmmwh/react-refresh-webpack-plugin@0.5.16':
+    resolution: {integrity: sha512-kLQc9xz6QIqd2oIYyXRUiAp79kGpFBm3fEM9ahfG1HI0WI5gdZ2OVHWdmZYnwODt7ISck+QuQ6sBPrtvUBML7Q==}
     engines: {node: '>= 10.13'}
     peerDependencies:
       '@types/webpack': 4.x || 5.x
@@ -7868,7 +7868,7 @@ snapshots:
     dependencies:
       playwright: 1.51.1
 
-  '@pmmmwh/react-refresh-webpack-plugin@0.5.15(@types/webpack@5.28.5(webpack-cli@6.0.1))(react-refresh@0.17.0)(type-fest@4.38.0)(webpack-dev-server@5.2.1)(webpack@5.98.0)':
+  '@pmmmwh/react-refresh-webpack-plugin@0.5.16(@types/webpack@5.28.5(webpack-cli@6.0.1))(react-refresh@0.17.0)(type-fest@4.38.0)(webpack-dev-server@5.2.1)(webpack@5.98.0)':
     dependencies:
       ansi-html: 0.0.9
       core-js-pure: 3.41.0

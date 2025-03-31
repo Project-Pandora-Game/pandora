@@ -579,17 +579,29 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsLayer<'autoM
 	}
 
 	const uiVariants: ReactElement[] = [];
+	const validCombinationIds = new Set<string>();
+	const missingCombinations = new Map<string, string>();
 
 	for (const combination of (variants.length > 0 ? GenerateMultipleListsFullJoin(variants) : [[GRAPHICS_AUTOMESH_LAYER_DEFAULT_VARIANT]])) {
 		const combinationId = combination.map((c) => c.id).join(':');
 		const combinationName = combination.map((c) => c.name).join(' | ');
+		validCombinationIds.add(combinationId);
 
 		const imageLayers: (readonly string[]) | undefined = imageMap[combinationId];
 		if (imageLayers == null) {
+			missingCombinations.set(combinationId, combinationName);
 			uiVariants.push(
 				<Column key={ combinationId }>
 					<strong>{ combinationName }</strong>
 					<span>Error: Missing mapped image for generated combination</span>
+					<Button onClick={ () => {
+						layer.modifyDefinition((d) => {
+							Assert(d.imageMap[combinationId] == null);
+							d.imageMap[combinationId] = new Array<string>(graphicalLayers.length).fill('');
+						});
+					} } slim>
+						Add mapping
+					</Button>
 				</Column>,
 			);
 		} else if (imageLayers.length !== graphicalLayers.length) {
@@ -635,6 +647,56 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsLayer<'autoM
 
 	return (
 		<Column gap='medium'>
+			{
+				Object.keys(imageMap)
+					.filter((k) => !validCombinationIds.has(k))
+					.map((k) => (
+						<Column key={ k }>
+							<strong>{ k }</strong>
+							<span>Error: Unknown variant</span>
+							{
+								(missingCombinations.size > 0 && imageMap[k]?.length === graphicalLayers.length) ? (
+									<Row alignY='center'>
+										<label htmlFor={ `${id}-${k}-remap` }>
+											Remap to:
+										</label>
+										<Select
+											id={ `${id}-${k}-remap` }
+											className='flex-1'
+											value=''
+											onChange={ (event) => {
+												if (!event.target.value)
+													return;
+												layer.modifyDefinition((d) => {
+													const map = d.imageMap[k];
+													Assert(map != null, 'Failed to get map');
+													Assert(map.length === graphicalLayers.length);
+													d.imageMap[event.target.value] = map;
+													delete d.imageMap[k];
+												});
+											} }
+											noScrollChange
+										>
+											<option value=''>- Select variant -</option>
+											{
+												Array.from(missingCombinations).map(([variant, variantName]) => (
+													<option key={ variant } value={ variant }>{ variantName }</option>
+												))
+											}
+										</Select>
+									</Row>
+								) : null
+							}
+							<Button onClick={ () => {
+								layer.modifyDefinition((d) => {
+									delete d.imageMap[k];
+								});
+							} } slim>
+								Delete
+							</Button>
+						</Column>
+					))
+			}
 			{ uiVariants }
 		</Column>
 	);

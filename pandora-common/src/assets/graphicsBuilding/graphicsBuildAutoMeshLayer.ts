@@ -78,6 +78,8 @@ export async function LoadAssetAutoMeshLayer(
 		variants.push(values);
 	}
 
+	const unusedImageMaps = new Set<string>(Object.keys(layer.imageMap));
+
 	// Run through automesh template parts and process each of them individually
 	for (const templatePart of automeshTemplate.parts) {
 		if (layer.disabledTemplateParts?.includes(templatePart.id))
@@ -97,6 +99,7 @@ export async function LoadAssetAutoMeshLayer(
 				// Conditions inside combination are joined with "AND" and we want "AND" across all combinations.
 				const combinationCondition: AtomicCondition[] = combination.map((c) => c.condition).flat();
 
+				unusedImageMaps.delete(combinationId);
 				const imageLayers: (readonly string[]) | undefined = layer.imageMap[combinationId];
 				let image: string;
 				if (imageLayers == null) {
@@ -133,6 +136,10 @@ export async function LoadAssetAutoMeshLayer(
 				},
 			});
 		}
+	}
+
+	if (unusedImageMaps.size > 0) {
+		logger.warning('Following image mappings are unused:', Array.from(unusedImageMaps).join(', '));
 	}
 
 	return (await Promise.all(resultLayers.map((l) => LoadAssetImageLayer(l, context, logger.prefixMessages('Autogenerate layer:\n\t')))))

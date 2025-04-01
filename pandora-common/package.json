@@ -37,7 +37,7 @@
 		"immer": "10.1.1",
 		"lodash-es": "4.17.21",
 		"nanoid": "5.1.5",
-		"type-fest": "4.38.0",
+		"type-fest": "4.39.0",
 		"zod": "3.24.2"
 	},
 	"devDependencies": {

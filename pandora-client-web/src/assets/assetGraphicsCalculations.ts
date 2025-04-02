@@ -15,20 +15,14 @@ import {
 	type PointDefinitionCalculated,
 	type PointTemplate,
 } from 'pandora-common';
-import { createContext, useContext, useMemo } from 'react';
+import { useMemo } from 'react';
 import { Base64ToArray } from '../crypto/helpers.ts';
 import { AppearanceConditionEvaluator } from '../graphics/appearanceConditionEvaluator.ts';
 import { GRAPHICS_TEXTURE_RESOLUTION_SCALE, useGraphicsSettings } from '../graphics/graphicsSettings.tsx';
 import { EvaluateCondition } from '../graphics/utility.ts';
-import { useNullableObservable, useObservable, type ReadonlyObservable } from '../observable.ts';
+import { useObservable } from '../observable.ts';
 import { useAutomaticResolution } from '../services/screenResolution/screenResolution.ts';
 import { GraphicsManagerInstance } from './graphicsManager.ts';
-
-export type AssetGraphicsResolverOverride = {
-	pointTemplates?: ReadonlyObservable<ReadonlyMap<string, Immutable<PointTemplate>>>;
-};
-
-export const AssetGraphicsResolverOverrideContext = createContext<AssetGraphicsResolverOverride | null>(null);
 
 /** Constant for the most common case, so caches can just use reference to this object. */
 const SCALING_IMAGE_UV_EMPTY: Record<BoneName, number> = Object.freeze({});
@@ -102,10 +96,9 @@ export function useLayerMeshPoints({ points, pointType, pointFilterMask }: Pick<
 	// In some other cases this could lead to gaps or other visual artifacts
 	// Any optimization of unused points needs to be done *after* triangles are calculated
 	const manager = useObservable(GraphicsManagerInstance);
-	const templateOverrides = useNullableObservable(useContext(AssetGraphicsResolverOverrideContext)?.pointTemplates);
 
 	return useMemo((): ReturnType<typeof useLayerMeshPoints> => {
-		const p = templateOverrides?.get(points) ?? manager?.getTemplate(points);
+		const p = manager?.getTemplate(points);
 		if (!p) {
 			throw new Error(`Unknown template '${p}'`);
 		}
@@ -132,7 +125,7 @@ export function useLayerMeshPoints({ points, pointType, pointFilterMask }: Pick<
 			points: calculatedPoints,
 			triangles: CalculatePointsTrianglesFlat(calculatedPoints, pointsFilter),
 		};
-	}, [manager, templateOverrides, points, pointType, pointFilterMask]);
+	}, [manager, points, pointType, pointFilterMask]);
 }
 
 export function useImageResolutionAlternative(image: string): {

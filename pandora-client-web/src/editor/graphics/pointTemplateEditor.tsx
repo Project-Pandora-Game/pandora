@@ -1,5 +1,5 @@
-import { type Draft, type Immutable } from 'immer';
-import { AssertNotNullable, CalculatePointsTrianglesFlat, CloneDeepMutable, EMPTY_ARRAY, type PointTemplate } from 'pandora-common';
+import { freeze, type Draft, type Immutable } from 'immer';
+import { AssertNotNullable, CalculatePointsTrianglesFlat, CloneDeepMutable, EMPTY_ARRAY, type PointTemplate, type PointTemplateSource } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo } from 'react';
 import { CalculatePointDefinitionsFromTemplate } from '../../assets/assetGraphicsCalculations.ts';
@@ -7,10 +7,14 @@ import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Container } from '../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../graphics/baseComponents/graphics.ts';
 import { Observable, useObservable } from '../../observable.ts';
+import { EditorAssetGraphicsManager } from '../assets/editorAssetGraphicsManager.ts';
 import type { Editor } from '../editor.tsx';
-import { useEditor } from '../editorContextProvider.tsx';
 import { DraggablePoint, DraggablePointDisplay } from './draggable.tsx';
 import { EDITOR_LAYER_Z_INDEX_EXTRA } from './layer/editorLayer.tsx';
+
+const DEFAULT_POINT_TEMPLATE = freeze<Immutable<PointTemplateSource>>({
+	points: EMPTY_ARRAY,
+}, true);
 
 /**
  * Class containing utility methods for manipulating a point template
@@ -33,7 +37,7 @@ export class PointTemplateEditor {
 		y = Math.round(y);
 
 		this.modifyTemplate((d) => {
-			d.push({
+			d.points.push({
 				pos: [x, y],
 				mirror: false,
 				transforms: [],
@@ -41,16 +45,16 @@ export class PointTemplateEditor {
 		});
 	}
 
-	public getCurrent(): Immutable<PointTemplate> {
-		return this._editor.modifiedPointTemplates.value.get(this.templateName) ??
-			GraphicsManagerInstance.value?.getTemplate(this.templateName) ??
-			EMPTY_ARRAY;
+	public getCurrent(): Immutable<PointTemplateSource> {
+		return EditorAssetGraphicsManager.editedPointTemplates.value.get(this.templateName) ??
+			EditorAssetGraphicsManager.originalPointTempalates[this.templateName] ??
+			DEFAULT_POINT_TEMPLATE;
 	}
 
-	public modifyTemplate(recipe: (d: Draft<PointTemplate>) => void) {
-		const originalTemplate: Immutable<PointTemplate> = GraphicsManagerInstance.value?.getTemplate(this.templateName) ?? [];
+	public modifyTemplate(recipe: (d: Draft<PointTemplateSource>) => void) {
+		const originalTemplate: Immutable<PointTemplateSource> = EditorAssetGraphicsManager.originalPointTempalates[this.templateName] ?? DEFAULT_POINT_TEMPLATE;
 
-		this._editor.modifiedPointTemplates.produceImmer((d) => {
+		EditorAssetGraphicsManager.editedPointTemplates.produceImmer((d) => {
 			const template = d.get(this.templateName) ?? CloneDeepMutable(originalTemplate);
 			recipe(template);
 			d.set(this.templateName, template);
@@ -60,7 +64,7 @@ export class PointTemplateEditor {
 	}
 
 	private _refreshPoints(): void {
-		const points = CalculatePointDefinitionsFromTemplate(this.getCurrent());
+		const points = CalculatePointDefinitionsFromTemplate(this.getCurrent().points);
 		const currentPoints = this.points.value;
 		if (currentPoints.length === points.length) {
 			for (let i = 0; i < points.length; i++) {
@@ -76,13 +80,12 @@ export class PointTemplateEditor {
 export function PointTemplateEditLayer({ templateEditor }: {
 	templateEditor: PointTemplateEditor;
 }): ReactElement {
-	const editor = useEditor();
-	const editorModifiedTemplates = useObservable(editor.modifiedPointTemplates);
+	const editorModifiedTemplates = useObservable(EditorAssetGraphicsManager.editedPointTemplates);
 	const graphicsManager = useObservable(GraphicsManagerInstance);
 	AssertNotNullable(graphicsManager);
 
 	const currentTemplate = useMemo((): Immutable<PointTemplate> => {
-		return editorModifiedTemplates.get(templateEditor.templateName) ??
+		return editorModifiedTemplates.get(templateEditor.templateName)?.points ??
 			graphicsManager.getTemplate(templateEditor.templateName) ??
 			EMPTY_ARRAY;
 	}, [graphicsManager, editorModifiedTemplates, templateEditor]);

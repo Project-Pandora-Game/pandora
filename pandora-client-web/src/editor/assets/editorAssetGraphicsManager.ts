@@ -9,6 +9,8 @@ import {
 	type GraphicsDefinitionFile,
 	type GraphicsSourceAutoMeshTemplate,
 	type GraphicsSourceDefinitionFile,
+	type PointTemplate,
+	type PointTemplateSource,
 } from 'pandora-common';
 import { GetCurrentAssetManager } from '../../assets/assetManager.tsx';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
@@ -36,8 +38,16 @@ export class EditorAssetGraphicsManagerClass {
 		return this._automeshTemplates;
 	}
 
+	public readonly editedPointTemplates = new Observable<ReadonlyMap<string, Immutable<PointTemplateSource>>>(new Map());
+	public get originalPointTempalates(): Immutable<Partial<GraphicsSourceDefinitionFile['pointTemplates']>> {
+		return this._originalSourceDefinitions.pointTemplates;
+	}
+
 	constructor() {
 		this._automeshTemplates = new Observable(this._originalSourceDefinitions.automeshTemplates);
+		this.editedPointTemplates.subscribe(() => {
+			this._reloadRuntimeGraphicsManager();
+		});
 	}
 
 	public loadNewOriginalDefinitions(
@@ -149,9 +159,17 @@ export class EditorAssetGraphicsManagerClass {
 		}
 		freeze(assets);
 
+		const pointTemplates: Record<string, Immutable<PointTemplate>> = {
+			...this._originalGraphicsDefinitions.pointTemplates,
+		};
+		for (const [id, template] of this.editedPointTemplates.value) {
+			pointTemplates[id] = template.points;
+		}
+
 		const graphicsDefinitions: Immutable<GraphicsDefinitionFile> = {
 			...this._originalGraphicsDefinitions,
 			assets,
+			pointTemplates,
 		};
 		freeze(graphicsDefinitions);
 		this._editorGraphicsVersion++;

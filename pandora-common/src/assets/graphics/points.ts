@@ -1,101 +1,50 @@
 import type { Immutable } from 'immer';
 import { z } from 'zod';
-import { AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
 import { CoordinatesCompressedSchema, CoordinatesSchema } from './common.ts';
 import { BoneNameSchema, ConditionSchema } from './conditions.ts';
 
-const TransformDefinitionBaseSchema = z.object({
-	condition: ConditionSchema.optional(),
-});
-
 export const TransformDefinitionSchema = z.discriminatedUnion('type', [
-	TransformDefinitionBaseSchema.extend({
+	z.object({
 		type: z.literal('rotate'),
-		value: z.number(),
 		bone: BoneNameSchema,
+		value: z.number(),
+		condition: ConditionSchema.optional(),
 	}),
-	TransformDefinitionBaseSchema.extend({
+	z.object({
 		type: z.literal('shift'),
+		bone: BoneNameSchema,
 		value: CoordinatesSchema,
-		bone: BoneNameSchema,
+		condition: ConditionSchema.optional(),
 	}),
-	TransformDefinitionBaseSchema.extend({
+	z.object({
 		type: z.literal('const-rotate'),
-		value: z.number(),
 		bone: BoneNameSchema,
+		value: z.number(),
+		condition: ConditionSchema.optional(),
 	}),
-	TransformDefinitionBaseSchema.extend({
+	z.object({
 		type: z.literal('const-shift'),
 		value: CoordinatesSchema,
+		condition: ConditionSchema.optional(),
 	}),
 ]);
 export type TransformDefinition = z.infer<typeof TransformDefinitionSchema>;
-/**
- * Creates a copy of the transform definition in a monomorphic form
- * @param def - The definition to canonize
- */
-export function CanonizeTransformDefinition(def: Immutable<TransformDefinition>): TransformDefinition {
-	switch (def.type) {
-		case 'rotate':
-			return {
-				type: def.type,
-				bone: def.bone,
-				value: def.value,
-				condition: CloneDeepMutable(def.condition),
-			};
-		case 'shift':
-			return {
-				type: def.type,
-				bone: def.bone,
-				value: def.value,
-				condition: CloneDeepMutable(def.condition),
-			};
-		case 'const-rotate':
-			return {
-				type: def.type,
-				bone: def.bone,
-				value: def.value,
-				condition: CloneDeepMutable(def.condition),
-			};
-		case 'const-shift':
-			return {
-				type: def.type,
-				value: def.value,
-				condition: CloneDeepMutable(def.condition),
-			};
-	}
-	AssertNever(def);
-}
 
 export const PointDefinitionSchema = z.object({
 	pos: CoordinatesCompressedSchema,
-	transforms: z.array(TransformDefinitionSchema),
 	mirror: z.boolean(),
 	pointType: z.string().optional(),
+	transforms: TransformDefinitionSchema.array(),
 });
 export type PointDefinition = z.infer<typeof PointDefinitionSchema>;
-/**
- * Creates a copy of the definition in a monomorphic form
- * @param def - The definition to canonize
- */
-export function CanonizePointDefinition(def: Immutable<PointDefinition>): PointDefinition {
-	return {
-		pos: [def.pos[0], def.pos[1]],
-		mirror: def.mirror,
-		pointType: def.pointType,
-		transforms: def.transforms.map(CanonizeTransformDefinition),
-	};
-}
 
 export const PointTemplateSchema = z.array(PointDefinitionSchema);
 export type PointTemplate = z.infer<typeof PointTemplateSchema>;
-/**
- * Creates a copy of the template in a monomorphic form
- * @param template - The template to canonize
- */
-export function CanonizePointTemplate(template: Immutable<PointTemplate>): PointTemplate {
-	return template.map(CanonizePointDefinition);
-}
+
+export const PointTemplateSourceSchema = z.object({
+	points: PointTemplateSchema,
+});
+export type PointTemplateSource = z.infer<typeof PointTemplateSourceSchema>;
 
 export function PointMatchesPointType({ pointType }: Immutable<PointDefinition>, pointTypes?: readonly string[]): boolean {
 	// If point has no type, include it

@@ -75,7 +75,7 @@ export async function LoadAssetImageLayer(
 		}
 
 		// Calculate the actual points first (such as resolving mirrored points)
-		const calculatedPoints: Immutable<PointDefinitionCalculated[]> = pointTemplate
+		const calculatedPoints: Immutable<PointDefinitionCalculated[]> = pointTemplate.points
 			.map((point, index): PointDefinitionCalculated => ({
 				...CloneDeepMutable(point),
 				index,

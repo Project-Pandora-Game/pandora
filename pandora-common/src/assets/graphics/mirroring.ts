@@ -7,7 +7,6 @@ import type { PointDefinition, TransformDefinition } from './points.ts';
 
 export interface PointDefinitionCalculated extends PointDefinition {
 	index: number;
-	mirrorPoint?: PointDefinitionCalculated;
 	isMirror: boolean;
 }
 
@@ -104,12 +103,13 @@ export function MirrorLayerImageSetting(setting: Immutable<LayerImageSetting>): 
 	};
 }
 
-export function MirrorPoint(point: Immutable<PointDefinition>): PointDefinition {
+export function MirrorPoint(point: PointDefinitionCalculated): PointDefinitionCalculated {
 	return {
-		pos: [...point.pos],
-		mirror: point.mirror,
+		...point,
+		pos: [CharacterSize.WIDTH - point.pos[0], point.pos[1]],
 		transforms: point.transforms.map(MirrorTransform),
 		pointType: MirrorBoneLike(point.pointType),
+		isMirror: true,
 	};
 }
 
@@ -117,20 +117,8 @@ export function MakeMirroredPoints(point: PointDefinitionCalculated): [PointDefi
 	if (!point.mirror)
 		return [point];
 
-	const { pos, transforms, pointType } = point;
-
-	const point1: PointDefinitionCalculated = { ...point };
-
-	const point2: PointDefinitionCalculated = {
-		...point,
-		pos: [CharacterSize.WIDTH - pos[0], pos[1]],
-		transforms: transforms.map(MirrorTransform),
-		pointType: MirrorBoneLike(pointType),
-		isMirror: true,
-	};
-
-	point1.mirrorPoint = point2;
-	point2.mirrorPoint = point1;
+	const point1: PointDefinitionCalculated = point;
+	const point2: PointDefinitionCalculated = MirrorPoint(point);
 
 	return [point1, point2];
 }

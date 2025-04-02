@@ -14,11 +14,11 @@ import { ListLayerImageSettingImages, LoadLayerImageSetting, type LayerImageTrim
 import { TriangleRectangleOverlap } from './math/intersections.ts';
 import { CalculatePointsTriangles } from './math/triangulation.ts';
 
-export async function LoadAssetImageLayer(
+async function LoadAssetImageLayerSingle(
 	layer: Immutable<GraphicsSourceMeshLayer> | Immutable<GraphicsSourceAlphaImageMeshLayer>,
 	context: GraphicsBuildContext,
 	logger: Logger,
-): Promise<Immutable<(GraphicsMeshLayer | GraphicsAlphaImageMeshLayer)[]>> {
+): Promise<Immutable<GraphicsMeshLayer | GraphicsAlphaImageMeshLayer>> {
 	logger = logger.prefixMessages(`[Layer ${layer.name ?? '[unnamed]'}]`);
 
 	const pointTemplate = context.getPointTemplate(layer.points);
@@ -84,19 +84,10 @@ export async function LoadAssetImageLayer(
 			}))
 			.flatMap(MakeMirroredPoints);
 
-		// Calculate layer's point types (including mirrored ones)
-		let pointTypes = layer.pointType;
-		if (layer.mirror !== LayerMirror.NONE && pointTypes != null) {
-			pointTypes = [
-				...pointTypes,
-				...pointTypes.map(MirrorBoneLike),
-			];
-		}
-
 		// Calculate point type filter
 		const pointTypeFilter = new BitField(calculatedPoints.length);
 		for (let i = 0; i < calculatedPoints.length; i++) {
-			pointTypeFilter.set(i, PointTypeMatchesPointTypeFilter(calculatedPoints[i].pointType, pointTypes));
+			pointTypeFilter.set(i, PointTypeMatchesPointTypeFilter(calculatedPoints[i].pointType, layer.pointType));
 		}
 
 		// Generate the mesh triangles
@@ -206,13 +197,13 @@ export async function LoadAssetImageLayer(
 		}
 
 		// Validate point types against the layer priority they should be used with
-let allowedLayerPriorities: Set<LayerPriority> | true = new Set<LayerPriority>(ALWAYS_ALLOWED_LAYER_PRIORITIES);
+		let allowedLayerPriorities: Set<LayerPriority> | true = new Set<LayerPriority>(ALWAYS_ALLOWED_LAYER_PRIORITIES);
 		for (const matchedPointType of usedPointTypes) {
 			const pointTypeMetadata = pointTemplate.pointTypes[matchedPointType];
 			if (pointTypeMetadata == null)
 				continue; // This is a point template error and is already reported by point template validation
 
-// TODO: This is what we want, but it is too strict for now
+			// TODO: This is what we want, but it is too strict for now
 			/*
 			if (pointTypeMetadata.allowedPriorities !== '*' &&
 				!pointTypeMetadata.allowedPriorities.includes(layer.priority) &&
@@ -223,7 +214,7 @@ let allowedLayerPriorities: Set<LayerPriority> | true = new Set<LayerPriority>(A
 					`Filter out this point type or use one of allowed priorities: ${pointTypeMetadata.allowedPriorities.concat(ALWAYS_ALLOWED_LAYER_PRIORITIES).join(', ')}`,
 				);
 			}
-*/
+			*/
 
 			// If any used point type allows this priority, we allow it
 			if (allowedLayerPriorities !== true && usedPointTypes.size > 0) {
@@ -289,18 +280,38 @@ let allowedLayerPriorities: Set<LayerPriority> | true = new Set<LayerPriority>(A
 		result.height = imageTrimArea[3] - top;
 	}
 
-	let mirror: GraphicsMeshLayer | GraphicsAlphaImageMeshLayer | undefined;
+	return result;
+}
+
+export async function LoadAssetImageLayer(
+	layer: Immutable<GraphicsSourceMeshLayer> | Immutable<GraphicsSourceAlphaImageMeshLayer>,
+	context: GraphicsBuildContext,
+	logger: Logger,
+): Promise<Immutable<(GraphicsMeshLayer | GraphicsAlphaImageMeshLayer)[]>> {
 	if (layer.mirror !== LayerMirror.NONE) {
-		mirror = produce(result, (d) => {
-			d.priority = MirrorPriority(d.priority);
-			d.pointType = d.pointType?.map(MirrorBoneLike);
-			d.image = MirrorLayerImageSetting(d.image);
-			d.scaling = d.scaling && {
-				...d.scaling,
-				stops: d.scaling.stops.map((stop) => [stop[0], MirrorLayerImageSetting(stop[1])]),
-			};
-		});
+		return await Promise.all([
+			LoadAssetImageLayerSingle(
+				layer,
+				context,
+				logger,
+			),
+			LoadAssetImageLayerSingle(
+				produce(layer, (d) => {
+					d.priority = MirrorPriority(d.priority);
+					d.pointType = d.pointType?.map(MirrorBoneLike);
+					d.image = MirrorLayerImageSetting(d.image);
+					d.scaling = d.scaling && {
+						...d.scaling,
+						stops: d.scaling.stops.map((stop) => [stop[0], MirrorLayerImageSetting(stop[1])]),
+					};
+				}),
+				context,
+				logger,
+			),
+		]);
 	}
 
-	return mirror ? [result, mirror] : [result];
+	return [
+		await LoadAssetImageLayerSingle(layer, context, logger),
+	];
 }

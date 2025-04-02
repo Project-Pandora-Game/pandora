@@ -13,6 +13,7 @@ import { DraggablePoint, DraggablePointDisplay } from './draggable.tsx';
 import { EDITOR_LAYER_Z_INDEX_EXTRA } from './layer/editorLayer.tsx';
 
 const DEFAULT_POINT_TEMPLATE = freeze<Immutable<PointTemplateSource>>({
+	pointTypes: {},
 	points: EMPTY_ARRAY,
 }, true);
 

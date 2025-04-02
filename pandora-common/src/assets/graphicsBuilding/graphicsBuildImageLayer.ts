@@ -3,10 +3,10 @@ import type { Logger } from '../../logging.ts';
 import { BitField } from '../../utility/bitfield.ts';
 import { Assert, CloneDeepMutable } from '../../utility/misc.ts';
 import type { GraphicsAlphaImageMeshLayer } from '../graphics/layers/alphaImageMesh.ts';
-import { LayerMirror, MirrorPriority } from '../graphics/layers/common.ts';
+import { LayerMirror, LayerPriority, LayerPrioritySchema, MirrorPriority } from '../graphics/layers/common.ts';
 import type { GraphicsMeshLayer } from '../graphics/layers/mesh.ts';
 import { MakeMirroredPoints, MirrorBoneLike, MirrorLayerImageSetting, type PointDefinitionCalculated } from '../graphics/mirroring.ts';
-import { PointMatchesPointType } from '../graphics/points.ts';
+import { ALWAYS_ALLOWED_LAYER_PRIORITIES, PointTypeMatchesPointTypeFilter } from '../graphics/points.ts';
 import type { GraphicsSourceAlphaImageMeshLayer } from '../graphicsSource/layers/alphaImageMesh.ts';
 import type { GraphicsSourceMeshLayer } from '../graphicsSource/layers/mesh.ts';
 import type { GraphicsBuildContext } from './graphicsBuildContext.ts';
@@ -46,11 +46,12 @@ export async function LoadAssetImageLayer(
 
 	let layerPointFilterMask: string | undefined;
 	let imageTrimArea: LayerImageTrimArea = null;
-	if (!context.generateOptimizedTextures) {
+	if (!context.runImageBasedChecks && !context.generateOptimizedTextures) {
 		// NOOP
 	} else if (hasUvManipulation) {
 		logger.debug('Layer has UV manipulation, skipping texture optimization');
 	} else {
+		Assert(context.runImageBasedChecks, 'generateOptimizedTextures should only be used with runImageBasedChecks');
 		// Get all the images and their bounding boxes for this layer
 		const images = Array.from(new Set([
 			...ListLayerImageSettingImages(layer.image, context),
@@ -95,7 +96,7 @@ export async function LoadAssetImageLayer(
 		// Calculate point type filter
 		const pointTypeFilter = new BitField(calculatedPoints.length);
 		for (let i = 0; i < calculatedPoints.length; i++) {
-			pointTypeFilter.set(i, PointMatchesPointType(calculatedPoints[i], pointTypes));
+			pointTypeFilter.set(i, PointTypeMatchesPointTypeFilter(calculatedPoints[i].pointType, pointTypes));
 		}
 
 		// Generate the mesh triangles
@@ -133,7 +134,7 @@ export async function LoadAssetImageLayer(
 				break;
 			}
 		}
-		if (layerPointFilterMaskNeedsSave) {
+		if (layerPointFilterMaskNeedsSave && context.generateOptimizedTextures) {
 			layerPointFilterMask = context.bufferToBase64(pointFilter.buffer);
 		}
 
@@ -179,6 +180,70 @@ export async function LoadAssetImageLayer(
 			//    (imageTrimArea[3] > layer.height ? `\t\tBottom: ${(imageTrimArea[3] - layer.height)}\n` : ''),
 			// );
 			imageTrimArea = null;
+		} else if (!context.generateOptimizedTextures) {
+			imageTrimArea = null;
+		}
+
+		// Collect point types that are actually used
+		const usedPointTypes = new Set<string>();
+		for (let i = 0; i < calculatedPoints.length; i++) {
+			const point = calculatedPoints[i];
+			if (!pointFilter.get(i))
+				continue;
+
+			if (point.pointType) {
+				usedPointTypes.add(point.pointType);
+			}
+		}
+
+		// Validate that layer actually uses its declared point types
+		if (layer.pointType != null) {
+			for (const layerPointType of layer.pointType) {
+				if (!Array.from(usedPointTypes).some((type) => PointTypeMatchesPointTypeFilter(type, [layerPointType]))) {
+					logger.warning(`Layer declares usage of point type '${layerPointType}', but it is not actually used.`);
+				}
+			}
+		}
+
+		// Validate point types against the layer priority they should be used with
+let allowedLayerPriorities: Set<LayerPriority> | true = new Set<LayerPriority>(ALWAYS_ALLOWED_LAYER_PRIORITIES);
+		for (const matchedPointType of usedPointTypes) {
+			const pointTypeMetadata = pointTemplate.pointTypes[matchedPointType];
+			if (pointTypeMetadata == null)
+				continue; // This is a point template error and is already reported by point template validation
+
+// TODO: This is what we want, but it is too strict for now
+			/*
+			if (pointTypeMetadata.allowedPriorities !== '*' &&
+				!pointTypeMetadata.allowedPriorities.includes(layer.priority) &&
+				!ALWAYS_ALLOWED_LAYER_PRIORITIES.includes(layer.priority)
+			) {
+				logger.warning(
+					`Layer uses point type '${matchedPointType}' of template '${layer.points}', but this combination doesn't allow using priority '${layer.priority}'.\n\t` +
+					`Filter out this point type or use one of allowed priorities: ${pointTypeMetadata.allowedPriorities.concat(ALWAYS_ALLOWED_LAYER_PRIORITIES).join(', ')}`,
+				);
+			}
+*/
+
+			// If any used point type allows this priority, we allow it
+			if (allowedLayerPriorities !== true && usedPointTypes.size > 0) {
+				if (pointTypeMetadata.allowedPriorities === '*') {
+					allowedLayerPriorities = true;
+				} else {
+					for (const priority of pointTypeMetadata.allowedPriorities) {
+						allowedLayerPriorities.add(priority);
+					}
+				}
+			}
+		}
+
+		if (allowedLayerPriorities !== true && !allowedLayerPriorities.has(layer.priority)) {
+			logger.warning(
+				`Layer's priority is not allowed based on the combination of its template and used points.\n\t` +
+				`Use one of the following priorities: ${Array.from(allowedLayerPriorities)
+					.sort((a, b) => LayerPrioritySchema.options.indexOf(a) - LayerPrioritySchema.options.indexOf(b))
+					.join(', ')}`,
+			);
 		}
 	}
 

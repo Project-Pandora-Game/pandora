@@ -44,6 +44,7 @@ export function EditorBuildAssetGraphicsContext(logicAsset: Asset): GraphicsBuil
 	};
 
 	return {
+		runImageBasedChecks: false,
 		generateOptimizedTextures: false,
 		generateResolutions: EMPTY_ARRAY,
 		getPointTemplate(name) {

@@ -5,6 +5,7 @@ import type { AssetModuleDefinition } from '../modules.ts';
 import type { GraphicsBuildImageResource } from './graphicsBuildImageResource.ts';
 
 export interface GraphicsBuildContext {
+	readonly runImageBasedChecks: boolean;
 	readonly generateOptimizedTextures: boolean;
 	readonly generateResolutions: readonly number[];
 

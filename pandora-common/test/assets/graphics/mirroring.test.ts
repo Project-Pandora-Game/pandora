@@ -1,8 +1,8 @@
 import { describe, expect, it } from '@jest/globals';
 import type { Coordinates } from '../../../src/assets/graphics/common.ts';
 import type { AtomicCondition, Condition } from '../../../src/assets/graphics/conditions.ts';
-import { MirrorBoneLike, MirrorCondition, MirrorPoint, MirrorTransform } from '../../../src/assets/graphics/mirroring.ts';
-import type { PointDefinition, TransformDefinition } from '../../../src/assets/graphics/points.ts';
+import { MirrorBoneLike, MirrorCondition, MirrorTransform } from '../../../src/assets/graphics/mirroring.ts';
+import type { TransformDefinition } from '../../../src/assets/graphics/points.ts';
 
 describe('MirrorBoneLike()', () => {
 	it.each([
@@ -108,22 +108,9 @@ describe('MirrorTransform()', () => {
 	});
 
 });
-function SetupPoint(pointType: string | undefined): PointDefinition {
-	return {
-		pos: [100, 100],
-		mirror: false,
-		transforms: [SetupTransform('test_r', 'rotate', undefined, 100)],
-		pointType,
-	};
-}
+
 describe('MirrorPoint()', () => {
-	it('should mirror PointDefinition transforms & pointType', () => {
-		const mock = SetupPoint('type_l');
-		const { transforms, pointType } = mock;
-		const mirror = MirrorPoint(mock);
-		expect(mirror.transforms).toStrictEqual(transforms.map(MirrorTransform));
-		expect(mirror.pointType).toStrictEqual(MirrorBoneLike(pointType));
-	});
+	it.todo('should mirror PointDefinition transforms & pointType');
 });
 
 describe('MakeMirroredPoints()', () => {

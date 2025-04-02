@@ -47,7 +47,8 @@ export function EditorBuildAssetGraphicsContext(logicAsset: Asset): GraphicsBuil
 		generateOptimizedTextures: false,
 		generateResolutions: EMPTY_ARRAY,
 		getPointTemplate(name) {
-			return graphicsManager.getTemplate(name);
+			return EditorAssetGraphicsManager.editedPointTemplates.value.get(name) ??
+				EditorAssetGraphicsManager.originalPointTempalates[name];
 		},
 		getAutomeshTemplate(name) {
 			return EditorAssetGraphicsManager.automeshTemplates.value[name];

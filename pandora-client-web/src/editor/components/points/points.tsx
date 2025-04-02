@@ -1,4 +1,4 @@
-import { Assert, CanonizePointTemplate, GetLogger } from 'pandora-common';
+import { Assert, GetLogger } from 'pandora-common';
 import React, { ReactElement, useCallback, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
@@ -56,7 +56,7 @@ export function PointsEditUi(): ReactElement | null {
 		if (selectedTemplate == null)
 			return;
 
-		const result = JSON.stringify(CanonizePointTemplate(selectedTemplate.getCurrent()), undefined, '\t').trim() + '\n';
+		const result = JSON.stringify(selectedTemplate.getCurrent(), undefined, '\t').trim() + '\n';
 		navigator.clipboard.writeText(result)
 			.then(() => {
 				toast(`Copied to clipboard`, TOAST_OPTIONS_SUCCESS);

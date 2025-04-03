@@ -8,7 +8,7 @@ export const GraphicsMeshLayerSchema = RectangleSchema.extend({
 	type: z.literal('mesh'),
 	priority: LayerPrioritySchema,
 	points: z.string(),
-	pointType: z.array(z.string()).optional(),
+	pointType: z.string().array().optional(),
 	pointFilterMask: z.string().regex(ZodBase64Regex).optional(),
 	/** Overrides applied to this layer while generating an item preview. */
 	previewOverrides: LayerStateOverridesSchema.optional(),

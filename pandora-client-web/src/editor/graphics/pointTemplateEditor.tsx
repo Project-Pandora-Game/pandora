@@ -41,6 +41,7 @@ export class PointTemplateEditor {
 			d.points.push({
 				pos: [x, y],
 				mirror: false,
+				pointType: '',
 				transforms: [],
 			});
 		});

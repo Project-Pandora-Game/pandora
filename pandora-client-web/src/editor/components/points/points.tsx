@@ -340,7 +340,7 @@ function PointConfiguration({ point }: { point: DraggablePoint; }): ReactElement
 				<TextInput
 					id='point-type'
 					spellCheck='false'
-					value={ pointType ?? '' }
+					value={ pointType }
 					onChange={ (newValue) => point.setPointType(newValue) }
 				/>
 			</div>

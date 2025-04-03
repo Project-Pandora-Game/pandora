@@ -8,7 +8,7 @@ export const GraphicsAlphaImageMeshLayerSchema = RectangleSchema.extend({
 	type: z.literal('alphaImageMesh'),
 	priority: LayerPrioritySchema,
 	points: z.string(),
-	pointType: z.array(z.string()).optional(),
+	pointType: z.string().array().optional(),
 	pointFilterMask: z.string().regex(ZodBase64Regex).optional(),
 
 	image: LayerImageSettingSchema,

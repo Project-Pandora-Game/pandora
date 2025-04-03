@@ -8,7 +8,7 @@ export const GraphicsSourceAutoMeshTemplateSchema = z.object({
 	parts: z.object({
 		id: z.string(),
 		priority: LayerPrioritySchema,
-		pointType: z.array(z.string()).optional(),
+		pointType: z.string().array().optional(),
 		mirror: LayerMirrorSchema.optional(),
 	}).array(),
 });

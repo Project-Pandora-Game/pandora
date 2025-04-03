@@ -6,7 +6,7 @@ import type { GraphicsAlphaImageMeshLayer } from '../graphics/layers/alphaImageM
 import { LayerMirror, LayerPriority, LayerPrioritySchema, MirrorPriority } from '../graphics/layers/common.ts';
 import type { GraphicsMeshLayer } from '../graphics/layers/mesh.ts';
 import { MakeMirroredPoints, MirrorBoneLike, MirrorLayerImageSetting, type PointDefinitionCalculated } from '../graphics/mirroring.ts';
-import { ALWAYS_ALLOWED_LAYER_PRIORITIES, PointTypeMatchesPointTypeFilter } from '../graphics/points.ts';
+import { ALWAYS_ALLOWED_LAYER_PRIORITIES } from '../graphics/points.ts';
 import type { GraphicsSourceAlphaImageMeshLayer } from '../graphicsSource/layers/alphaImageMesh.ts';
 import type { GraphicsSourceMeshLayer } from '../graphicsSource/layers/mesh.ts';
 import type { GraphicsBuildContext } from './graphicsBuildContext.ts';
@@ -87,7 +87,7 @@ async function LoadAssetImageLayerSingle(
 		// Calculate point type filter
 		const pointTypeFilter = new BitField(calculatedPoints.length);
 		for (let i = 0; i < calculatedPoints.length; i++) {
-			pointTypeFilter.set(i, PointTypeMatchesPointTypeFilter(calculatedPoints[i].pointType, layer.pointType));
+			pointTypeFilter.set(i, layer.pointType == null || layer.pointType.includes(calculatedPoints[i].pointType));
 		}
 
 		// Generate the mesh triangles
@@ -182,15 +182,13 @@ async function LoadAssetImageLayerSingle(
 			if (!pointFilter.get(i))
 				continue;
 
-			if (point.pointType) {
-				usedPointTypes.add(point.pointType);
-			}
+			usedPointTypes.add(point.pointType);
 		}
 
 		// Validate that layer actually uses its declared point types
 		if (layer.pointType != null) {
 			for (const layerPointType of layer.pointType) {
-				if (!Array.from(usedPointTypes).some((type) => PointTypeMatchesPointTypeFilter(type, [layerPointType]))) {
+				if (!usedPointTypes.has(layerPointType)) {
 					logger.warning(`Layer declares usage of point type '${layerPointType}', but it is not actually used.`);
 				}
 			}
@@ -230,7 +228,7 @@ async function LoadAssetImageLayerSingle(
 
 		if (allowedLayerPriorities !== true && !allowedLayerPriorities.has(layer.priority)) {
 			logger.warning(
-				`Layer's priority is not allowed based on the combination of its template and used points.\n\t` +
+				`Layer's priority '${layer.priority}' is not allowed based on the combination of its template and used points.\n\t` +
 				`Use one of the following priorities: ${Array.from(allowedLayerPriorities)
 					.sort((a, b) => LayerPrioritySchema.options.indexOf(a) - LayerPrioritySchema.options.indexOf(b))
 					.join(', ')}`,

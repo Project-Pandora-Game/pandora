@@ -74,13 +74,11 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 		);
 	}, [lockLogic, lockedText, now]);
 	const timeLeft = useMemo(() => {
-		const lockedData = lockLogic.lockData.locked;
-		Assert(lockedData != null);
-
-		const { lockedUntil } = lockedData;
-		if (lockedUntil == null)
+		const lockedDataTimer = lockLogic.lockData.timer;
+		if (lockedDataTimer == null)
 			return null;
 
+		const { lockedUntil } = lockedDataTimer;
 		if (now >= lockedUntil)
 			return 0;
 

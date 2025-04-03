@@ -247,8 +247,10 @@ export class LockLogic {
 				id: player.appearance.id,
 				name: player.appearance.character.name,
 				time: lockTime,
-				lockedUntil,
 			};
+			data.timer = lockedUntil != null ? {
+				lockedUntil,
+			} : undefined;
 		});
 
 		return {
@@ -269,10 +271,10 @@ export class LockLogic {
 			};
 		}
 
-		if (this.lockSetup.timer != null && this.lockData.locked?.lockedUntil != null && !player.forceAllowItemActions()) {
+		if (this.lockSetup.timer != null && this.lockData.locked != null && this.lockData.timer != null && !player.forceAllowItemActions()) {
 
 			// Disallow unlock if timer is still running, except for the player that locked it
-			if ((Date.now() < this.lockData.locked.lockedUntil) && this.lockData.locked.id !== player.appearance.id) {
+			if ((Date.now() < this.lockData.timer.lockedUntil) && this.lockData.locked.id !== player.appearance.id) {
 				return {
 					result: 'failed',
 					reason: 'timerRunning',

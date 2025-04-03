@@ -1,7 +1,7 @@
 import { produce, type Immutable } from 'immer';
 import type { Logger } from '../../logging.ts';
 import { BitField } from '../../utility/bitfield.ts';
-import { Assert, CloneDeepMutable } from '../../utility/misc.ts';
+import { Assert, CloneDeepMutable, EMPTY_ARRAY } from '../../utility/misc.ts';
 import type { GraphicsAlphaImageMeshLayer } from '../graphics/layers/alphaImageMesh.ts';
 import { LayerMirror, LayerPriority, LayerPrioritySchema, MirrorPriority } from '../graphics/layers/common.ts';
 import type { GraphicsMeshLayer } from '../graphics/layers/mesh.ts';
@@ -183,6 +183,21 @@ async function LoadAssetImageLayerSingle(
 				continue;
 
 			usedPointTypes.add(point.pointType);
+		}
+
+		// Collect required point types
+		for (const matchedPointType of usedPointTypes) {
+			const pointTypeMetadata = pointTemplate.pointTypes[matchedPointType];
+			if (pointTypeMetadata == null)
+				continue; // This is a point template error and is already reported by point template validation
+
+			for (const requiredType of (pointTypeMetadata.requiredPointTypes ?? EMPTY_ARRAY)) {
+				usedPointTypes.add(requiredType);
+
+				if (layer.pointType != null && !layer.pointType.includes(requiredType)) {
+					logger.warning(`Layer that uses point type '${matchedPointType}' should also enable point type '${requiredType}'.`);
+				}
+			}
 		}
 
 		// Validate that layer actually uses its declared point types

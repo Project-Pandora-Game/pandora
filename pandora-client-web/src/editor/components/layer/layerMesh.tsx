@@ -1,9 +1,10 @@
-import { capitalize, cloneDeep } from 'lodash-es';
+import { capitalize, cloneDeep, remove, uniq } from 'lodash-es';
 import { Assert, LAYER_PRIORITIES, LayerMirror, LayerMirrorSchema, LayerPriority } from 'pandora-common';
 import React, { ReactElement, useId, useMemo, useState } from 'react';
 import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../../assets/graphicsManager.ts';
 import { useEvent } from '../../../common/useEvent.ts';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
 import { Button } from '../../../components/common/button/button.tsx';
@@ -14,6 +15,7 @@ import { useObservable } from '../../../observable.ts';
 import { useLayerImageSettingsForScalingStop, useLayerName } from '../../assets/editorAssetCalculationHelpers.ts';
 import { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
 import { type EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
+import { EditorAssetGraphicsManager } from '../../assets/editorAssetGraphicsManager.ts';
 import { useEditorLayerTint } from '../../editor.tsx';
 import { useEditor } from '../../editorContextProvider.tsx';
 import { ParseLayerImageOverrides, SerializeLayerImageOverrides } from '../../parsing.ts';
@@ -337,26 +339,17 @@ function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsLayer<'mesh'
 }
 
 function LayerPointsFilterEdit({ layer }: { layer: EditorAssetGraphicsLayer<'mesh' | 'alphaImageMesh'>; }): ReactElement | null {
-	const [value, setValue] = useUpdatedUserInput(useObservable(layer.definition).pointType?.join(',') ?? '', [layer]);
+	const { points, pointType } = useObservable(layer.definition);
+	const template = useObservable(EditorAssetGraphicsManager.editedPointTemplates).get(points) ??
+		EditorAssetGraphicsManager.originalPointTempalates[points];
 
-	const onChange = useEvent((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-		setValue(e.target.value);
-		const pointType = e.target.value
-			.split(',')
-			.map((t) => t.trim())
-			.filter((t) => !!t);
-		layer.modifyDefinition((d) => {
-			d.pointType = pointType.length === 0 ? undefined : pointType.slice();
-		});
-	});
-	// TODO: Consider rephrasing when we have separated arms/hands/legs into more types.
+	// TODO: Consider rephrasing this.
 	return (
-		<Row alignY='center'>
-			<div>
-				Point type filter (comma separated):
+		<fieldset>
+			<legend>
+				Point type filter
 				<ContextHelpButton>
 					<p>
-						<b>This is an advanced topic, rarely needed.</b><br />
 						The 'point type filter' field lets you list the names of point types the image of<br />
 						this layer will touch. For instance, 'body' is the name of all points on the body,<br />
 						whereas 'bodyarms' are the few points that are both part of the body as well as<br />
@@ -389,14 +382,63 @@ function LayerPointsFilterEdit({ layer }: { layer: EditorAssetGraphicsLayer<'mes
 						poses, wrong point types (together with missing splits) here can be a cause of this.
 					</p>
 				</ContextHelpButton>
-			</div>
-			<textarea
-				spellCheck='false'
-				aria-label='layer points filter'
-				value={ value }
-				onChange={ onChange }
-			/>
-		</Row>
+			</legend>
+			<ul style={ { columns: '5em 3' } }>
+				{
+					pointType
+						?.filter((p) => template == null || !Object.hasOwn(template.pointTypes, p))
+						.map((p) => (
+							<li key={ p }>
+								<label>
+									<Checkbox
+										checked
+										onChange={ () => {
+											layer.modifyDefinition((d) => {
+												d.pointType = pointType.filter((pf) => pf !== p);
+											});
+										} }
+									/>
+									<s>{ p }</s>
+								</label>
+							</li>
+						))
+				}
+				{
+					Object.keys(template?.pointTypes ?? {})
+						.map((p) => (
+							<li key={ p }>
+								<label>
+									<Checkbox
+										checked={ pointType == null || pointType.includes(p) }
+										onChange={ (checked) => {
+											const newValue = uniq(pointType?.slice() ?? []);
+											if (checked) {
+												if (!newValue.includes(p)) {
+													newValue.push(p);
+												}
+											} else {
+												remove(newValue, (pf) => pf === p);
+											}
+											const keys = Object.keys(template?.pointTypes ?? {});
+											newValue.sort((a, b) => keys.indexOf(a) - keys.indexOf(b));
+
+											const allMatch = keys.every((pf) => newValue.includes(pf));
+											layer.modifyDefinition((d) => {
+												if (allMatch) {
+													delete d.pointType;
+												} else {
+													d.pointType = newValue;
+												}
+											});
+										} }
+									/>
+									{ p }
+								</label>
+							</li>
+						))
+				}
+			</ul>
+		</fieldset>
 	);
 }
 

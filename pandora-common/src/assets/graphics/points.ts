@@ -33,7 +33,7 @@ export type TransformDefinition = z.infer<typeof TransformDefinitionSchema>;
 export const PointDefinitionSchema = z.object({
 	pos: CoordinatesCompressedSchema,
 	mirror: z.boolean(),
-	pointType: z.string().optional(),
+	pointType: z.string(),
 	transforms: TransformDefinitionSchema.array(),
 });
 export type PointDefinition = z.infer<typeof PointDefinitionSchema>;
@@ -56,19 +56,3 @@ export const PointTemplateSourceSchema = z.object({
 	points: PointTemplateSchema,
 });
 export type PointTemplateSource = z.infer<typeof PointTemplateSourceSchema>;
-
-export function PointTypeMatchesPointTypeFilter(pointType: string | undefined, pointTypesFilter?: readonly string[]): boolean {
-	// If point has no type, include it
-	return !pointType ||
-		// If there is no requirement on point types, include all
-		!pointTypesFilter ||
-		// If the point type is included exactly, include it
-		pointTypesFilter.includes(pointType) ||
-		// If the point type doesn't have side, include it if wanted types have sided one
-		!(/_[lr]$/.test(pointType)) && (
-			pointTypesFilter.includes(pointType + '_r') ||
-			pointTypesFilter.includes(pointType + '_l')
-		) ||
-		// If the point type has side, include it if wanted types have base one
-		pointTypesFilter.includes(pointType.replace(/_[lr]$/, ''));
-}

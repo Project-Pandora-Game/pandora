@@ -44,6 +44,8 @@ export type PointTemplate = z.infer<typeof PointTemplateSchema>;
 export const PointTemplateSourcePointTypeDataSchema = z.object({
 	/** Which priorities this point type can be used on, or '*' if on any priority. */
 	allowedPriorities: LayerPrioritySchema.array().or(z.literal('*')),
+	/** List of point types that should be included if this one is. */
+	requiredPointTypes: z.string().array().optional(),
 });
 /** List of priorities that any point can use, even if its point type metadata doesn't allow it otherwise. */
 export const ALWAYS_ALLOWED_LAYER_PRIORITIES: readonly LayerPriority[] = [

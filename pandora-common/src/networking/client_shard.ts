@@ -134,6 +134,10 @@ export const ClientShardSchema = {
 				type: z.literal('rps'), // Rock Paper Scissors
 				choice: z.enum(['rock', 'paper', 'scissors', 'show']),
 			}),
+			z.object({
+				type: z.literal('cards'), //Deck of Cards
+				createDeck: z.boolean(),
+			}),
 		]),
 		response: null,
 	},

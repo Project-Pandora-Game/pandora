@@ -9,6 +9,7 @@ import {
 	type CharacterId,
 	type LockAction,
 	type LockSetup,
+	type LockTimerOptions,
 } from 'pandora-common';
 import React, { useCallback, useEffect, useId, useMemo, useState, type ReactElement } from 'react';
 import crossIcon from '../../../assets/icons/cross.svg';
@@ -184,6 +185,7 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 	const [password, setPassword] = useState<string>('');
 	const [useOldPassword, setUseOldPassword] = useState(false);
 	const [timer, setTimer] = useState<number>(0);
+	const [timerAllowEarly, setTimerAllowEarly] = useState(true);
 
 	// Attempted action for locking or unlocking the lock
 	const [currentlyAttempting, setCurrentlyAttempting] = useState<boolean>(false);
@@ -198,13 +200,20 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 			setUseOldPassword(false);
 	}, [lockLogic.hasPassword]);
 
+	const timerOptions = useMemo((): LockTimerOptions => {
+		return {
+			timer,
+			allowEarlyUnlock: timerAllowEarly,
+		};
+	}, [timer, timerAllowEarly]);
+
 	const action = useMemo((): LockAction => ({
 		action: 'lock',
 		password: currentlyAttempting ? undefined :
 					useOldPassword ? undefined :
 					(password || undefined),
-		timer: currentlyAttempting ? undefined : (timer || undefined),
-	}), [currentlyAttempting, password, timer, useOldPassword]);
+		timerOptions: currentlyAttempting ? undefined : (timerOptions || undefined),
+	}), [currentlyAttempting, password, timerOptions, useOldPassword]);
 
 	return (
 		<>
@@ -234,6 +243,10 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 			{
 				lockLogic.lockSetup.timer ? (
 					<Column className='WardrobeLockTimer'>
+						<Row className='WardrobeInputRow'>
+							<label>Can be unlocked early by the locker</label>
+							<Checkbox checked={ timerAllowEarly } onChange={ setTimerAllowEarly } />
+						</Row>
 						<TimerInput
 							value={ timer }
 							onChange={ setTimer }

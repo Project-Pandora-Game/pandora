@@ -10,12 +10,19 @@ import type { AppearanceActionContext } from '../actionLogic/appearanceActions.t
 import type { LockDataBundle } from './lockData.ts';
 import type { LockSetup } from './lockSetup.ts';
 
+export const LockTimerOptionsSchema = z.object({
+	/** How long (in ms) the lock should be locked for, if it includes a timer. */
+	timer: z.number().int().nonnegative().optional(),
+	/** Whether the character that locked it is allowed to unlock the timer early, default true */
+	allowEarlyUnlock: z.boolean().optional(),
+});
+export type LockTimerOptions = z.infer<typeof LockTimerOptionsSchema>;
+
 export const LockActionSchema = z.discriminatedUnion('action', [
 	z.object({
 		action: z.literal('lock'),
 		password: z.string().optional(),
-		/** How long (in ms) the lock should be locked for, if it includes a timer. */
-		timer: z.number().int().nonnegative().optional(),
+		timerOptions: LockTimerOptionsSchema.optional(),
 	}),
 	z.object({
 		action: z.literal('unlock'),
@@ -143,7 +150,7 @@ export class LockLogic {
 		return this.lockData.locked != null;
 	}
 
-	public lock({ player, executionContext, isSelfAction }: LockActionContext, { password, timer }: Extract<LockAction, { action: 'lock'; }>): LockActionLockResult {
+	public lock({ player, executionContext, isSelfAction }: LockActionContext, { password, timerOptions }: Extract<LockAction, { action: 'lock'; }>): LockActionLockResult {
 		if (this.isLocked())
 			return { result: 'invalid' };
 
@@ -156,8 +163,9 @@ export class LockLogic {
 		}
 
 		const lockTime = Date.now();
-		let lockedUntil: number | undefined;
+		let timerData: LockDataBundle['timer'] | undefined;
 		if (this.lockSetup.timer != null) {
+			let timer = timerOptions?.timer;
 			if (timer == null) {
 				if (executionContext !== 'clientOnlyVerify') {
 					return {
@@ -174,7 +182,10 @@ export class LockLogic {
 					reason: 'invalidTimer',
 				};
 			}
-			lockedUntil = lockTime + timer;
+			timerData = {
+				lockedUntil: lockTime + timer,
+				allowEarlyUnlock: timerOptions?.allowEarlyUnlock ?? true,
+			};
 		}
 
 		if (this.lockSetup.fingerprint != null) {
@@ -248,9 +259,7 @@ export class LockLogic {
 				name: player.appearance.character.name,
 				time: lockTime,
 			};
-			data.timer = lockedUntil != null ? {
-				lockedUntil,
-			} : undefined;
+			data.timer = timerData;
 		});
 
 		return {
@@ -273,8 +282,8 @@ export class LockLogic {
 
 		if (this.lockSetup.timer != null && this.lockData.locked != null && this.lockData.timer != null && !player.forceAllowItemActions()) {
 
-			// Disallow unlock if timer is still running, except for the player that locked it
-			if ((Date.now() < this.lockData.timer.lockedUntil) && this.lockData.locked.id !== player.appearance.id) {
+			// Disallow unlock if timer is still running, except for the player that locked it, unless disallowed
+			if ((Date.now() < this.lockData.timer.lockedUntil) && (this.lockData.locked.id !== player.appearance.id || !this.lockData.timer.allowEarlyUnlock)) {
 				return {
 					result: 'failed',
 					reason: 'timerRunning',

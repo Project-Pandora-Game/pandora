@@ -3,6 +3,7 @@ import {
 	Assert,
 	AssertNever,
 	FormatTimeInterval,
+	GetLogger,
 	LockLogic,
 	MessageSubstitute,
 	type AppearanceActionData,
@@ -21,6 +22,7 @@ import { NumberInput } from '../../../common/userInteraction/input/numberInput.t
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { CharacterListInputActionButtons, CharacterListInputActions, type CharacterListInputAddButtonProps, type CharacterListInputRemoveButtonProps } from '../../common/characterListInput/characterListInput.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
+import { useConfirmDialog } from '../../dialog/dialog.tsx';
 import { usePlayerState } from '../../gameContext/playerContextProvider.tsx';
 import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
 
@@ -193,6 +195,7 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 	const [useOldPassword, setUseOldPassword] = useState(false);
 	const [timer, setTimer] = useState<number>(0);
 	const [timerAllowEarly, setTimerAllowEarly] = useState(true);
+	const confirm = useConfirmDialog();
 
 	// Attempted action for locking or unlocking the lock
 	const [currentlyAttempting, setCurrentlyAttempting] = useState<boolean>(false);
@@ -213,6 +216,21 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 			allowEarlyUnlock: timerAllowEarly,
 		};
 	}, [timer, timerAllowEarly]);
+
+	const setTimerAllowEarlyWithConfirm = useCallback((newValue: boolean) => {
+		if (newValue) {
+			setTimerAllowEarly(newValue);
+			return;
+		}
+
+		confirm('Confirm disallow early unlock', <>Are you sure you want to disallow the locker to unlock before the timer runs out?</>)
+			.then((confirmed) => {
+				if (confirmed) {
+					setTimerAllowEarly(newValue);
+				}
+			})
+			.catch((err) => GetLogger('WardrobeLockLogic').error('Error locking lock slot:', err));
+	}, [setTimerAllowEarly, confirm]);
 
 	const action = useMemo((): LockAction => ({
 		action: 'lock',
@@ -252,7 +270,7 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 					<Column className='WardrobeLockTimer'>
 						<Row className='WardrobeInputRow'>
 							<label>Can be unlocked early by the locker</label>
-							<Checkbox checked={ timerAllowEarly } onChange={ setTimerAllowEarly } />
+							<Checkbox checked={ timerAllowEarly } onChange={ setTimerAllowEarlyWithConfirm } />
 						</Row>
 						<TimerInput
 							value={ timer }

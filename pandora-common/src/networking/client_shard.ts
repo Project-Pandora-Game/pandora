@@ -141,6 +141,7 @@ export const ClientShardSchema = {
 			z.object({
 				type: z.literal('cards'), //Deck of Cards
 				createDeck: z.boolean(),
+				dealCard: z.boolean(),
 			}),
 		]),
 		response: null,

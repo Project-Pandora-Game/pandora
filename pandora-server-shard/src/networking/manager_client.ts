@@ -53,6 +53,19 @@ const messagesMetric = new promClient.Counter({
 	labelNames: ['messageType'],
 });
 
+// Define Suits and Ranks
+const suits = ['\u2665', //hearts
+	'\u2666', //diamonds
+	'\u2663', //clubs
+	'\u2660']; //spades
+const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+
+// Define Card Type
+type Card = {
+	suit: string;
+	rank: string;
+};
+
 /** Class that stores all currently connected clients */
 export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientShard, ClientConnection> {
 	private readonly _connectedClients: Set<ClientConnection> = new Set();
@@ -60,6 +73,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	private readonly messageHandler: MessageHandler<IClientShard, ClientConnection>;
 
 	private readonly rockPaperScissorsStatus = new WeakMap<Character, { time: number; choice: 'rock' | 'paper' | 'scissors'; }>();
+
+	private readonly currentCardDeck: Card[] = [];
 
 	public async onMessage<K extends keyof IClientShard>(
 		messageType: K,
@@ -319,10 +334,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!client.character)
 			throw new BadMessageError();
 
-		// Define Suits and Ranks
-		const suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
-		const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-
 		const space = client.character.getOrLoadSpace();
 
 		const character: ActionHandlerMessageTargetCharacter = {
@@ -420,30 +431,37 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				break;
 			}
 			case 'cards':
-				// Define Card Type
-				type Card = {
-					suit: string;
-					rank: string;
-				};
-
 				if (game.createDeck) {
-					// Create deck
-					const deck: Card[] = [];
 					for (const suit of suits) {
 						for (const rank of ranks) {
-							deck.push({ suit, rank });
+							this.currentCardDeck.push({ suit, rank });
 						}
 					}
 					// Shuffle
-					for (let i = deck.length - 1; i > 0; i--) {
+					for (let i = this.currentCardDeck.length - 1; i > 0; i--) {
 						const j = Math.floor(Math.random() * (i + 1));
-						[deck[i], deck[j]] = [deck[j], deck[i]];
+						[this.currentCardDeck[i], this.currentCardDeck[j]] = [this.currentCardDeck[j], this.currentCardDeck[i]];
 					}
 					space.handleActionMessage({
 						id: 'gamblingDeckCreation',
 						character,
-						dictionary: {},
 					});
+				} else if (game.dealCard) {
+					const card = this.currentCardDeck.pop();
+
+					if (card) {
+						space.handleActionMessage({
+							id: 'gamblingDeckDealOpen',
+							character,
+							dictionary: {
+								'CARD': `${card.rank} ${card.suit}`,
+							},
+						});
+					} else {
+						space.handleActionMessage({
+							id: 'gamblingDeckEmpty',
+						});
+					}
 				}
 				break;
 			default:

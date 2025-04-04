@@ -325,22 +325,26 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		key: ['deck'],
 		description: 'Creates a card deck',
 		longDescription: 'Creates an ordinary shuffled deck of 52 cards',
-		usage: 'create | deal <cards> <character> [/secret] ',
+		usage: 'create | deal ',
 		handler: CreateClientCommand()
 			.argument('options', {
 				preparse: 'allTrimmed',
 				parse: (input) => {
 					let createDeck = false;
+					let dealCard = false;
 					input = input.toUpperCase();
 					if (input !== '') {
-						if (input !== 'CREATE') {
+						if (input === 'CREATE') {
+							createDeck = true;
+						} else if (input.startsWith('DEAL')) {
+							dealCard = true;
+						} else {
 							return { success: false, error: `Invalid options: '${input}'` };
 						}
-						createDeck = true;
 					} else {
 						return { success: false, error: `Invalid options: '${input}'` };
 					}
-					return { success: true, value: { createDeck } };
+					return { success: true, value: { createDeck, dealCard } };
 				},
 			})
 			.handler(({ shardConnector }, { options }) => {

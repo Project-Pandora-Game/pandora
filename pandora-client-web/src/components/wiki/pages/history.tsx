@@ -80,22 +80,25 @@ export function WikiHistory(): ReactElement {
 				</li>
 			</ul>
 
-			<h4>The people behind Pandora (Last updated: 1-11-2023)</h4>
+			<h4>The people behind Pandora (Last updated: 04-04-2025)</h4>
 			<br />
 			<strong>Lead Developers</strong>
 			<ul>
-				<li>Ace</li>
 				<li>Claudia</li>
-				<li>Ellie</li>
 				<li>Jomshir (Clare)</li>
 				<li>Sekkmer</li>
 			</ul>
 			<strong>Developers</strong>
 			<ul>
+				<li>Ace</li>
+				<li>Ellie</li>
 				<li>Kane (Hareo)</li>
+				<li>Livie53</li>
 				<li>Nina</li>
 				<li>Nythaleath</li>
 				<li>Sandrine</li>
+				<li>Shikifet</li>
+				<li>Taja</li>
 				<li>TechTheAwesome</li>
 				<li>Titania</li>
 			</ul>

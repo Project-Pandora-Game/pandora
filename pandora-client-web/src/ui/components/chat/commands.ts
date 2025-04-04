@@ -321,6 +321,20 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				return true;
 			}),
 	},
+	{
+		key: ['deck'],
+		description: 'Creates a card deck',
+		longDescription: 'Creates an ordinary deck of 52 cards',
+		usage: '',
+		handler: CreateClientCommand()
+			.handler(({ shardConnector }) => {
+				shardConnector.sendMessage('gamblingAction', {
+					type: 'cards',
+					createDeck: true,
+				});
+				return true;
+			}),
+	},
 	//#endregion
 	//#region Commands to change the player's pose
 	{

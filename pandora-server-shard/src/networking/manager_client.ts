@@ -425,6 +425,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				}
 				break;
 			}
+			case 'cards':
+				break;
 			default:
 				AssertNever(game);
 		}

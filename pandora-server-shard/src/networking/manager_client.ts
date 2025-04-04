@@ -319,12 +319,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!client.character)
 			throw new BadMessageError();
 
+		// Define Suits and Ranks
+		const suits = ['Hearts', 'Diamonds', 'Clubs', 'Spades'];
+		const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+
+		const space = client.character.getOrLoadSpace();
+
 		const character: ActionHandlerMessageTargetCharacter = {
 			type: 'character',
 			id: client.character.id,
 		};
 
-		const space = client.character.getOrLoadSpace();
 		switch (game.type) {
 			case 'coinFlip':
 				space.handleActionMessage({
@@ -415,6 +420,31 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				break;
 			}
 			case 'cards':
+				// Define Card Type
+				type Card = {
+					suit: string;
+					rank: string;
+				};
+
+				if (game.createDeck) {
+					// Create deck
+					const deck: Card[] = [];
+					for (const suit of suits) {
+						for (const rank of ranks) {
+							deck.push({ suit, rank });
+						}
+					}
+					// Shuffle
+					for (let i = deck.length - 1; i > 0; i--) {
+						const j = Math.floor(Math.random() * (i + 1));
+						[deck[i], deck[j]] = [deck[j], deck[i]];
+					}
+					space.handleActionMessage({
+						id: 'gamblingDeckCreation',
+						character,
+						dictionary: {},
+					});
+				}
 				break;
 			default:
 				AssertNever(game);

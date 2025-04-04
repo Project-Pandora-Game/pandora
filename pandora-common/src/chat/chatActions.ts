@@ -84,6 +84,7 @@ const CHAT_ACTIONS_DEF = {
 	gamblingDiceHiddenResult: `You rolled DICE_COUNT and the result is DICE_RESULT.`,
 	gamblingRockPaperScissorsSet: `SOURCE_CHARACTER is ready to show rock, paper, or scissors when the 'show' command is given.`,
 	gamblingRockPaperScissorsResult: `Rock was shown by ROCK_CHARACTERS. Paper was shown by PAPER_CHARACTERS. Scissors were shown by SCISSORS_CHARACTERS.`,
+	gamblingDeckCreation: 'A new deck of cards has been created for SOURCE_CHARACTER.',
 
 	// Lock actions
 	lockLock: `SOURCE_CHARACTER clicked ITEM_ASSET_NAME on ITEM_CONTAINER_SIMPLE_DYNAMIC shut.`,

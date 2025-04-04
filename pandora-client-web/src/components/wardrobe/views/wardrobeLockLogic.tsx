@@ -149,6 +149,13 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 			{
 				lockLogic.lockSetup.timer ? (
 					<Column className='WardrobeLockTimer'>
+						{
+							lockLogic.lockData.timer?.allowEarlyUnlock ? null : (
+								<Row className='WardrobeInputRow'>
+									Cannot be unlocked early
+								</Row>
+							)
+						}
 						<Row className='WardrobeInputRow'>
 							{ timerText }
 						</Row>

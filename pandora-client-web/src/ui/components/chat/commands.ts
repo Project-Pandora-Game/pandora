@@ -306,7 +306,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 								return { success: false, error: 'Maximum sides (100)/ dice (10) exceeded' };
 							}
 						} else {
-							return { success: false, error: `Invalid Options: '${input}'` };
+							return { success: false, error: `Invalid options: '${input}'` };
 						} // RegEx test
 					}
 					return { success: true, value: { dice, sides, hidden } };
@@ -323,13 +323,29 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 	{
 		key: ['deck'],
 		description: 'Creates a card deck',
-		longDescription: 'Creates an ordinary deck of 52 cards',
-		usage: '',
+		longDescription: 'Creates an ordinary shuffled deck of 52 cards',
+		usage: 'create | deal <cards> <character> [/secret] ',
 		handler: CreateClientCommand()
-			.handler(({ shardConnector }) => {
+			.argument('options', {
+				preparse: 'allTrimmed',
+				parse: (input) => {
+					let createDeck = false;
+					input = input.toUpperCase();
+					if (input !== '') {
+						if (input !== 'CREATE') {
+							return { success: false, error: `Invalid options: '${input}'` };
+						}
+						createDeck = true;
+					} else {
+						return { success: false, error: `Invalid options: '${input}'` };
+					}
+					return { success: true, value: { createDeck } };
+				},
+			})
+			.handler(({ shardConnector }, { options }) => {
 				shardConnector.sendMessage('gamblingAction', {
 					type: 'cards',
-					createDeck: true,
+					...options,
 				});
 				return true;
 			}),

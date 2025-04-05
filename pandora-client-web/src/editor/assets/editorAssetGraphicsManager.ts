@@ -162,7 +162,14 @@ export class EditorAssetGraphicsManagerClass {
 				}
 				logResult.logs.push({
 					logLevel: level,
-					content: [prefix, ...message.map(AnyToString)].join(' '),
+					content: [prefix, ...message.map((part) => {
+						if (part && part instanceof Error) {
+							// Custom error format without stack, as that is anyway useless with our minification
+							return `[${part.name}: ${part.message}]`;
+						}
+
+						return AnyToString(part);
+					})].join(' '),
 				});
 			},
 		};

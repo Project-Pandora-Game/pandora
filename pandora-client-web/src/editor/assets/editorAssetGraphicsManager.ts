@@ -1,14 +1,19 @@
 import { freeze, type Immutable } from 'immer';
 import {
+	AnyToString,
 	Assert,
 	AsyncSynchronized,
 	GetLogger,
+	Logger,
+	LogLevel,
 	type AssetGraphicsDefinition,
 	type AssetId,
 	type AssetSourceGraphicsInfo,
 	type GraphicsDefinitionFile,
 	type GraphicsSourceAutoMeshTemplate,
 	type GraphicsSourceDefinitionFile,
+	type LoggerConfig,
+	type LogOutputDefinition,
 	type PointTemplate,
 	type PointTemplateSource,
 } from 'pandora-common';
@@ -16,7 +21,7 @@ import { GetCurrentAssetManager } from '../../assets/assetManager.tsx';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
 import { ToastHandlePromise } from '../../persistentToast.ts';
-import { EditorAssetGraphics } from './editorAssetGraphics.ts';
+import { EditorAssetGraphics, type EditorAssetGraphicsBuildLogResult } from './editorAssetGraphics.ts';
 import { EditorBuildAssetGraphics } from './editorAssetGraphicsBuilding.ts';
 
 /** Class that handles "source" asset graphics inside editor. */
@@ -58,6 +63,15 @@ export class EditorAssetGraphicsManagerClass {
 		this._originalGraphicsDefinitions = freeze(graphicsDefinitions, true);
 		this._automeshTemplates.value = this._originalSourceDefinitions.automeshTemplates;
 		this._reloadRuntimeGraphicsManager();
+
+		// Rebuild every single edited asset asynchronously, as asset manager might have changed
+		Array.from(this.editedAssetGraphics.value.values())
+			.forEach((a) => {
+				this._onAssetDefinitionChanged(a)
+					.catch((err) => {
+						this.logger.error('Crash in asset definition change handler, during rebuild:', err);
+					});
+			});
 	}
 
 	public startEditAsset(asset: AssetId): EditorAssetGraphics {
@@ -130,7 +144,36 @@ export class EditorAssetGraphicsManagerClass {
 		if (this._editedAssetGraphics.value.get(asset.id) !== asset)
 			return;
 
-		const logger = this.logger.prefixMessages(`Graphics build for asset '${asset.id}':\n\t`);
+		const logResult: EditorAssetGraphicsBuildLogResult = {
+			errors: 0,
+			warnings: 0,
+			logs: [],
+		};
+		const buildLogConfigOutput: LogOutputDefinition = {
+			logLevel: LogLevel.DEBUG,
+			logLevelOverrides: {},
+			supportsColor: false,
+			// onMessage: (prefix: string, message: unknown[], level: LogLevel) => void;
+			onMessage(prefix, message, level) {
+				if (level <= LogLevel.ERROR) {
+					logResult.errors++;
+				} else if (level <= LogLevel.WARNING) {
+					logResult.warnings++;
+				}
+				logResult.logs.push({
+					logLevel: level,
+					content: [prefix, ...message.map(AnyToString)].join(' '),
+				});
+			},
+		};
+		const buildLogConfig: LoggerConfig = {
+			printTime: false,
+			timeLocale: undefined,
+			onFatal: [],
+			logOutputs: [buildLogConfigOutput],
+		};
+		const logger = new Logger('Build', '', buildLogConfig);
+
 		try {
 			const logicAsset = GetCurrentAssetManager().getAssetById(asset.id);
 			if (logicAsset == null) {
@@ -142,6 +185,7 @@ export class EditorAssetGraphicsManagerClass {
 		} catch (error) {
 			logger.error('Build failed with error:', error);
 		}
+		asset.buildLog.value = logResult;
 
 		this._reloadRuntimeGraphicsManager();
 	}

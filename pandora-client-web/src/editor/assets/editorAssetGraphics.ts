@@ -10,6 +10,7 @@ import {
 	type AssetSourceGraphicsDefinition,
 	type GraphicsSourceLayer,
 	type GraphicsSourceLayerType,
+	type LogLevel,
 } from 'pandora-common';
 import { Texture } from 'pixi.js';
 import type { IGraphicsLoader } from '../../assets/graphicsManager.ts';
@@ -17,6 +18,15 @@ import { DownloadAsFile } from '../../common/downloadHelper.ts';
 import { LoadArrayBufferImageResource } from '../../graphics/utility.ts';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
 import { EditorAssetGraphicsLayer, EditorAssetGraphicsLayerContainer } from './editorAssetGraphicsLayer.ts';
+
+export interface EditorAssetGraphicsBuildLogResult {
+	warnings: number;
+	errors: number;
+	logs: {
+		logLevel: LogLevel;
+		content: string;
+	}[];
+}
 
 export class EditorAssetGraphics {
 	public readonly id: AssetId;
@@ -26,6 +36,8 @@ export class EditorAssetGraphics {
 	public get layers(): ReadonlyObservable<readonly EditorAssetGraphicsLayer[]> {
 		return this._layers;
 	}
+
+	public readonly buildLog = new Observable<Immutable<EditorAssetGraphicsBuildLogResult> | null>(null);
 
 	constructor(id: AssetId, definition: Immutable<AssetSourceGraphicsDefinition>, onChange?: () => void) {
 		this.id = id;

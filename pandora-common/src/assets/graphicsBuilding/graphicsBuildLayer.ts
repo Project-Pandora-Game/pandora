@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import type { Logger } from '../../logging.ts';
+import type { Logger } from '../../logging/logger.ts';
 import { AssertNever } from '../../utility/misc.ts';
 import type { GraphicsLayer } from '../graphics/layer.ts';
 import type { GraphicsSourceLayer } from '../graphicsSource/layer.ts';

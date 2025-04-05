@@ -1,6 +1,6 @@
 import type { AssetManager } from '../../assets/assetManager.ts';
 import type { ICharacterData } from '../../character/index.ts';
-import { Logger } from '../../logging.ts';
+import type { Logger } from '../../logging/logger.ts';
 import { AssertNever } from '../../utility/misc.ts';
 import { AssetPreferencesSubsystemServer } from '../assetPreferences/index.ts';
 import { MakeDefaultCharacterModifierSystemData } from '../characterModifiers/characterModifierData.ts';

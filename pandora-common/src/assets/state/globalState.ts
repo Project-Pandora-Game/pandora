@@ -1,7 +1,7 @@
 import { freeze } from 'immer';
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../../character/characterTypes.ts';
-import { Logger } from '../../logging.ts';
+import type { Logger } from '../../logging/logger.ts';
 import { Assert, AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility/misc.ts';
 import { EvalContainerPath } from '../appearanceHelpers.ts';
 import { ActionTargetSelector, type ItemContainerPath, type ItemPath } from '../appearanceTypes.ts';

@@ -1,4 +1,4 @@
-import { Logger } from '../../logging.ts';
+import type { Logger } from '../../logging/logger.ts';
 import { AssertNotNullable } from '../../utility/misc.ts';
 import { ArrayIncludesGuard } from '../../validation.ts';
 import type { GameLogicCharacter } from '../character/character.ts';

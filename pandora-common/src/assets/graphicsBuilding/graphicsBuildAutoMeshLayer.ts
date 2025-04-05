@@ -89,6 +89,8 @@ export async function LoadAssetAutoMeshLayer(
 			const graphicalLayer = layer.graphicalLayers[i];
 			const imageVariants: LayerImageOverride[] = [];
 
+			const localLogger = logger.prefixMessages(`[Part ${templatePart.id}, Graphical layer '${graphicalLayer.name}']`);
+
 			if (graphicalLayer.imageOverrides != null) {
 				imageVariants.push(...CloneDeepMutable(graphicalLayer.imageOverrides));
 			}
@@ -103,10 +105,10 @@ export async function LoadAssetAutoMeshLayer(
 				const imageLayers: (readonly string[]) | undefined = layer.imageMap[combinationId];
 				let image: string;
 				if (imageLayers == null) {
-					logger.warning('Missing mapped image for generated combination', combinationName);
+					localLogger.warning('Missing mapped image for generated combination', combinationName);
 					image = '';
 				} else if (imageLayers.length !== layer.graphicalLayers.length) {
-					logger.warning('Mapped image combination does not match graphical layer count for combination', combinationName);
+					localLogger.warning('Mapped image combination does not match graphical layer count for combination', combinationName);
 					image = '';
 				} else {
 					image = imageLayers[i];

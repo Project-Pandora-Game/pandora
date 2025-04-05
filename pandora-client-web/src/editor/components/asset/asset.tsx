@@ -248,7 +248,7 @@ function AssetBuildResult({ asset }: { asset: EditorAssetGraphics; }): ReactElem
 				<span className='flex-grow-10'>
 					{
 						buildLog.errors > 0 ? (
-							`⚠️ ${buildLog.errors} problems`
+							`‼️ ${buildLog.errors} errors`
 						) : buildLog.warnings > 0 ? (
 							`⚠️ ${buildLog.warnings} warnings`
 						) : (

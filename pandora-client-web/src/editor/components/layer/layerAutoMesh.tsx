@@ -346,7 +346,7 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsLayer<'au
 		if (asset == null)
 			return;
 
-		const buildContext = EditorBuildAssetGraphicsContext(asset);
+		const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset);
 		const existingVariants: AutoMeshLayerGenerateVariableValue[][] = [];
 
 		for (const variable of variables) {
@@ -388,7 +388,7 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsLayer<'au
 			return;
 		}
 
-		const buildContext = EditorBuildAssetGraphicsContext(asset);
+		const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset);
 		const existingVariants: AutoMeshLayerGenerateVariableValue[][] = [];
 
 		for (const variable of variables) {
@@ -457,6 +457,7 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsLayer<'au
 				showAddVariableDialog ? (
 					<LayerAutomeshVariableAddDialog
 						addVariable={ addVariable }
+						layer={ layer }
 						asset={ asset }
 						close={ () => setShowAddVariableDialog(false) }
 					/>
@@ -494,14 +495,15 @@ function LayerAutomeshVariableItem({ variable, index, remove, reorder }: {
 	);
 }
 
-function LayerAutomeshVariableAddDialog({ close, asset, addVariable }: {
+function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 	close: () => void;
+	layer: EditorAssetGraphicsLayer<'autoMesh'>;
 	asset: Asset;
 	addVariable: (newVariable: GraphicsSourceAutoMeshLayerVariable) => void;
 }): ReactElement {
 	const [selectedType, setSelectedType] = useState<GraphicsSourceAutoMeshLayerVariable['type'] | null>(null);
 
-	const buildContext = EditorBuildAssetGraphicsContext(asset);
+	const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset);
 
 	return (
 		<ModalDialog>
@@ -569,7 +571,7 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsLayer<'autoM
 		);
 	}
 
-	const buildContext = EditorBuildAssetGraphicsContext(asset);
+	const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset);
 	const variants: AutoMeshLayerGenerateVariableValue[][] = [];
 
 	for (const variable of variables) {

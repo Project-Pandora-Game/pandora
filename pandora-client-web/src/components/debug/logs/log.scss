@@ -6,6 +6,7 @@
 	padding: 0.25em;
 	white-space: pre-wrap;
 	overflow-wrap: break-word;
+	user-select: text;
 
 	&.loglevel-fatal {
 		color: #000;

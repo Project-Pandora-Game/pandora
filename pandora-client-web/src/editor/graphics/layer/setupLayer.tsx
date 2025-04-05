@@ -87,9 +87,9 @@ export function SetupMeshLayerSelected({
 		// Draw nice points on top of triangles
 		for (const point of points) {
 			g
-				.circle(point.pos[0], point.pos[1], 2.5)
+				.circle(point.pos[0], point.pos[1], 2)
 				.fill({ color: 0xcccccc, alpha: 0.8 })
-				.stroke({ width: 1, color: 0x000000, alpha: 0.8 });
+				.stroke({ width: 1, color: 0x000000, alpha: 0.8, pixelLine: true });
 		}
 	}, [points, triangles, uv, x, y, width, height]);
 
@@ -169,9 +169,9 @@ export function SetupAlphaImageMeshLayerSelected({
 		// Draw nice points on top of triangles
 		for (const point of points) {
 			g
-				.circle(point.pos[0], point.pos[1], 2.5)
+				.circle(point.pos[0], point.pos[1], 2)
 				.fill({ color: 0xcccccc, alpha: 0.8 })
-				.stroke({ width: 1, color: 0x000000, alpha: 0.8 });
+				.stroke({ width: 1, color: 0x000000, alpha: 0.8, pixelLine: true });
 		}
 	}, [points, triangles, uv, x, y, width, height]);
 

@@ -411,7 +411,7 @@ function LayerPointsFilterEdit({ layer }: { layer: EditorAssetGraphicsLayer<'mes
 									<Checkbox
 										checked={ pointType == null || pointType.includes(p) }
 										onChange={ (checked) => {
-											const newValue = uniq(pointType?.slice() ?? []);
+											const newValue = uniq(pointType?.slice() ?? Object.keys(template?.pointTypes ?? {}));
 											if (checked) {
 												if (!newValue.includes(p)) {
 													newValue.push(p);

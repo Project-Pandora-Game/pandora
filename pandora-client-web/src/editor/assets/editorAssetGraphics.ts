@@ -38,6 +38,7 @@ export class EditorAssetGraphics {
 	}
 
 	public readonly buildLog = new Observable<Immutable<EditorAssetGraphicsBuildLogResult> | null>(null);
+	public readonly buildTextures = new Observable<ReadonlyMap<string, Texture> | null>(null);
 
 	constructor(id: AssetId, definition: Immutable<AssetSourceGraphicsDefinition>, onChange?: () => void) {
 		this.id = id;

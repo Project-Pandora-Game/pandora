@@ -15,14 +15,17 @@ export function EditorLayer({
 	const editorLayer = GetEditorSourceLayerForRuntimeLayer(layer);
 	const asset = editorLayer?.asset;
 	const editorAssetTextures = useNullableObservable(asset?.textures);
+	const editorAssetBuildTextures = useNullableObservable(asset?.buildTextures);
 
 	const editorGetTexture = useMemo<((image: string) => Texture) | undefined>(() => {
 		if (getTexture)
 			return getTexture;
+		if (editorAssetBuildTextures != null)
+			return (image) => (editorAssetBuildTextures.get(image) ?? Texture.EMPTY);
 		if (editorAssetTextures != null)
 			return (image) => (editorAssetTextures.get(image) ?? Texture.EMPTY);
 		return undefined;
-	}, [getTexture, editorAssetTextures]);
+	}, [getTexture, editorAssetBuildTextures, editorAssetTextures]);
 
 	return (
 		<GraphicsLayer

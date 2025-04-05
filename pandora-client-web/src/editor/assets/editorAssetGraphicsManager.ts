@@ -17,6 +17,7 @@ import {
 	type PointTemplate,
 	type PointTemplateSource,
 } from 'pandora-common';
+import type { Texture } from 'pixi.js';
 import { GetCurrentAssetManager } from '../../assets/assetManager.tsx';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
@@ -180,6 +181,7 @@ export class EditorAssetGraphicsManagerClass {
 			logOutputs: [buildLogConfigOutput],
 		};
 		const logger = new Logger('Build', '', buildLogConfig);
+		const buildTextures = new Map<string, Texture>();
 
 		try {
 			const logicAsset = GetCurrentAssetManager().getAssetById(asset.id);
@@ -187,8 +189,9 @@ export class EditorAssetGraphicsManagerClass {
 				throw new Error('Asset not found');
 			}
 
-			const graphicsDefinition = await EditorBuildAssetGraphics(asset, logicAsset, logger);
+			const graphicsDefinition = await EditorBuildAssetGraphics(asset, logicAsset, logger, buildTextures);
 			this._editedGraphicsBuildCache.set(asset.id, freeze(graphicsDefinition, true));
+			asset.buildTextures.value = buildTextures;
 		} catch (error) {
 			logger.error('Build failed with error:', error);
 		}

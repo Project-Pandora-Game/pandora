@@ -13,13 +13,14 @@ export const PIXI_APPLICATION_OPTIONS: Readonly<Partial<ApplicationOptions>> = {
 	antialias: false,
 };
 
-export async function CreatePixiApplication(multiView: boolean = false): Promise<Application> {
+export async function CreatePixiApplication(multiView: boolean = false, backgroundAlpha: number = 1): Promise<Application> {
 	const app = new Application();
 	await app.init({
 		...cloneDeep(PIXI_APPLICATION_OPTIONS),
 		autoDensity: true,
 		autoStart: false,
 		multiView,
+		backgroundAlpha,
 	});
 	return app;
 }

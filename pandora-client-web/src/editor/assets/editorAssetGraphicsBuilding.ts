@@ -1,9 +1,10 @@
-import { freeze, type Immutable } from 'immer';
+import { type Immutable } from 'immer';
 import { Assert, AssertNotNullable, EMPTY_ARRAY, LoadAssetLayer, type Asset, type AssetGraphicsDefinition, type GraphicsBuildContext, type GraphicsBuildImageResource, type GraphicsLayer, type ImageBoundingBox, type Logger } from 'pandora-common';
-import { Application, Rectangle, Sprite, Texture } from 'pixi.js';
+import { Application, Rectangle, Texture } from 'pixi.js';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { ArrayToBase64 } from '../../crypto/helpers.ts';
 import { CreatePixiApplication } from '../../graphics/graphicsAppManager.ts';
+import { GetTextureBoundingBox } from '../../graphics/utility/textureBoundingBox.ts';
 import type { EditorAssetGraphics } from './editorAssetGraphics.ts';
 import type { EditorAssetGraphicsLayer } from './editorAssetGraphicsLayer.ts';
 import { EditorAssetGraphicsManager } from './editorAssetGraphicsManager.ts';
@@ -13,8 +14,6 @@ export const AssetGraphicsSourceMap = new WeakMap<Immutable<GraphicsLayer>, Edit
 
 let BuildingPixiApplication: Application | null = null;
 let BuildingPixiApplicationPromise: Promise<Application> | null = null;
-
-const TextureBoundingBoxCache = new WeakMap<Texture, ImageBoundingBox>();
 
 class EditorImageResource implements GraphicsBuildImageResource {
 	public readonly resultName: string;
@@ -64,10 +63,6 @@ class EditorImageResource implements GraphicsBuildImageResource {
 		// NOOP
 	}
 	public async getContentBoundingBox(): Promise<ImageBoundingBox> {
-		const cachedResult = TextureBoundingBoxCache.get(this.texture);
-		if (cachedResult !== undefined)
-			return cachedResult;
-
 		if (BuildingPixiApplicationPromise == null) {
 			BuildingPixiApplicationPromise = CreatePixiApplication(false, 0);
 		}
@@ -75,83 +70,7 @@ class EditorImageResource implements GraphicsBuildImageResource {
 			BuildingPixiApplication = await BuildingPixiApplicationPromise;
 		}
 
-		const { width, height } = this.texture.frame;
-		Assert(width === this.texture.source.pixelWidth);
-		Assert(height === this.texture.source.pixelHeight);
-
-		Assert(BuildingPixiApplication.canvas instanceof HTMLCanvasElement, 'Expected app.view to be an HTMLCanvasElement');
-
-		BuildingPixiApplication.renderer.resolution = 1;
-		BuildingPixiApplication.renderer.resize(width, height);
-		BuildingPixiApplication.renderer.background.color = 0x000000;
-		BuildingPixiApplication.renderer.background.alpha = 0;
-
-		BuildingPixiApplication.stage.removeChildren();
-		const sprite = new Sprite(this.texture);
-		BuildingPixiApplication.stage.addChild(sprite);
-		BuildingPixiApplication.render();
-		BuildingPixiApplication.stage.removeChild(sprite);
-
-		const canvas = document.createElement('canvas');
-		canvas.width = width;
-		canvas.height = height;
-		const context = canvas.getContext('2d', { willReadFrequently: true });
-		Assert(context != null);
-		context.clearRect(0, 0, width, height);
-		context.drawImage(BuildingPixiApplication.canvas, 0, 0, width, height);
-		const imageData = context.getImageData(0, 0, width, height, { colorSpace: 'srgb' });
-
-		Assert(imageData.width === width);
-		Assert(imageData.height === height);
-		Assert(imageData.data.length === (4 * width * height));
-
-		let left = width - 1;
-		let top = height - 1;
-		let rightExclusive = 0;
-		let bottomExclusive = 0;
-
-		for (let y = 0; y < height; y++) {
-			for (let x = 0; x < width; x++) {
-				const i = 4 * (y * width + x) + 3;
-
-				// Check if the pixel is non-transparent
-				if (imageData.data[i] > 0) {
-					left = Math.min(left, x);
-					top = Math.min(top, y);
-					rightExclusive = Math.max(rightExclusive, x + 1);
-					bottomExclusive = Math.max(bottomExclusive, y + 1);
-				}
-			}
-		}
-
-		let result: ImageBoundingBox;
-
-		// Special case if the image is empty
-		if (left === (width - 1) && top === (height - 1) && rightExclusive === 0 && bottomExclusive === 0) {
-			result = {
-				left: 0,
-				top: 0,
-				rightExclusive: 0,
-				bottomExclusive: 0,
-				width,
-				height,
-			};
-		} else {
-			Assert(left < rightExclusive);
-			Assert(top < bottomExclusive);
-			result = {
-				left,
-				top,
-				rightExclusive,
-				bottomExclusive,
-				width,
-				height,
-			};
-		}
-
-		freeze(result);
-		TextureBoundingBoxCache.set(this.texture, result);
-		return result;
+		return GetTextureBoundingBox(this.texture, BuildingPixiApplication);
 	}
 }
 

@@ -1,5 +1,5 @@
 import type { CharacterId } from '../character/index.ts';
-import { Logger } from '../logging.ts';
+import { Logger } from '../logging/logger.ts';
 import { Assert, ShuffleArray } from '../utility/misc.ts';
 import type { AssetManager } from './assetManager.ts';
 import type { AssetId } from './base.ts';

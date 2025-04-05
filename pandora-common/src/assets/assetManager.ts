@@ -1,6 +1,6 @@
 import { freeze, Immutable } from 'immer';
 import type { CharacterId } from '../character/characterTypes.ts';
-import type { Logger } from '../logging.ts';
+import type { Logger } from '../logging/logger.ts';
 import { Assert, AssertNotNullable, CloneDeepMutable } from '../utility/misc.ts';
 import { Asset } from './asset.ts';
 import type { AssetId } from './base.ts';

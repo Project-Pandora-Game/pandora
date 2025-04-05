@@ -1,5 +1,5 @@
 import { freeze, type Immutable } from 'immer';
-import type { Logger } from '../../logging.ts';
+import type { Logger } from '../../logging/logger.ts';
 import { Assert, AssertNever, CloneDeepMutable, GenerateMultipleListsFullJoin } from '../../utility/misc.ts';
 import type { AtomicCondition } from '../graphics/conditions.ts';
 import type { GraphicsLayer } from '../graphics/layer.ts';

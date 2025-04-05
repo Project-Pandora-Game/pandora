@@ -1,4 +1,4 @@
-import { logConfig, LogLevel, SetConsoleOutput } from '../src/logging.ts';
+import { logConfig, LogLevel, SetConsoleOutput } from '../src/logging/index.ts';
 
 // Logging setup
 SetConsoleOutput(LogLevel.FATAL);

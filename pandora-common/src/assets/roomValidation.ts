@@ -1,4 +1,4 @@
-import { Logger } from '../logging.ts';
+import { Logger } from '../logging/logger.ts';
 import type { AppearanceItems, AppearanceValidationResult } from './appearanceValidation.ts';
 import type { AssetManager } from './assetManager.ts';
 import { ValidateItemsPrefix } from './validation.ts';

@@ -1,5 +1,5 @@
 import { produce, type Immutable } from 'immer';
-import type { Logger } from '../../logging.ts';
+import type { Logger } from '../../logging/logger.ts';
 import { BitField } from '../../utility/bitfield.ts';
 import { Assert, CloneDeepMutable, EMPTY_ARRAY } from '../../utility/misc.ts';
 import type { GraphicsAlphaImageMeshLayer } from '../graphics/layers/alphaImageMesh.ts';

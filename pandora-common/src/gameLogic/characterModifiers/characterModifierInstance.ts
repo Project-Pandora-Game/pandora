@@ -2,7 +2,7 @@ import type { Immutable } from 'immer';
 import { cloneDeep } from 'lodash-es';
 import type { Asset, AssetFrameworkGlobalState, AssetId, AssetManager } from '../../assets/index.ts';
 import type { CharacterId } from '../../character/index.ts';
-import type { Logger } from '../../logging.ts';
+import type { Logger } from '../../logging/logger.ts';
 import type { CurrentSpaceInfo } from '../../space/index.ts';
 import { AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
 import type { AppearanceActionProblem } from '../actionLogic/appearanceActionProblems.ts';

@@ -68,8 +68,12 @@ export function EditorScene({
 			.stroke({ width: 2, color: 0x404040, pixelLine: true });
 	}, []);
 
-	const viewportConfig = useCallback<PixiViewportSetupCallback>((viewport) => {
+	const viewportConfig = useCallback<PixiViewportSetupCallback>((viewport, params) => {
 		viewport
+			.clampZoom({
+				minScale: Math.min(params.height / params.worldHeight, params.width / params.worldWidth) * 0.2,
+				maxScale: 10,
+			})
 			.drag({ clampWheel: true })
 			.wheel({ smooth: 10, percent: 0.1 })
 			.pinch({ noDrag: false, percent: 2 })

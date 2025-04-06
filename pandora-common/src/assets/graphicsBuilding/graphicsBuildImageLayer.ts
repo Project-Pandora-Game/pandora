@@ -159,15 +159,14 @@ async function LoadAssetImageLayerSingle(
 			logger.warning('Trim area has non-positive height. Does the layer have no useful triangles?');
 			imageTrimArea = null;
 		} else if (imageTrimArea[0] < 0 || imageTrimArea[1] < 0 || imageTrimArea[2] > layer.width || imageTrimArea[3] > layer.height) {
-			// TODO: Un-silence this once current problems are fixed
-			// logger.warning(
-			//    'Layer does not cover the used part of the mesh. This might cause graphical glitches.\n' +
-			//    '\tOverflow:\n' +
-			//    (imageTrimArea[0] < 0 ? `\t\tLeft: ${-imageTrimArea[0]}\n` : '') +
-			//    (imageTrimArea[1] < 0 ? `\t\tTop: ${-imageTrimArea[1]}\n` : '') +
-			//    (imageTrimArea[2] > layer.width ? `\t\tRight: ${(imageTrimArea[2] - layer.width)}\n` : '') +
-			//    (imageTrimArea[3] > layer.height ? `\t\tBottom: ${(imageTrimArea[3] - layer.height)}\n` : ''),
-			// );
+			logger.warning(
+				'Layer does not cover the used part of the mesh. This might cause graphical glitches.\n' +
+				'\tOverflow:\n' +
+				(imageTrimArea[0] < 0 ? `\t\tLeft: ${-imageTrimArea[0]}\n` : '') +
+				(imageTrimArea[1] < 0 ? `\t\tTop: ${-imageTrimArea[1]}\n` : '') +
+				(imageTrimArea[2] > layer.width ? `\t\tRight: ${(imageTrimArea[2] - layer.width)}\n` : '') +
+				(imageTrimArea[3] > layer.height ? `\t\tBottom: ${(imageTrimArea[3] - layer.height)}\n` : ''),
+			);
 			imageTrimArea = null;
 		} else if (!context.generateOptimizedTextures) {
 			imageTrimArea = null;

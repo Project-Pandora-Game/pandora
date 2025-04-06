@@ -77,11 +77,12 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 		);
 	}, [lockLogic, lockedText, now]);
 	const timeLeft = useMemo(() => {
-		const lockedDataTimer = lockLogic.lockData.timer;
-		if (lockedDataTimer == null)
-			return null;
+		const lockedData = lockLogic.lockData.locked;
+		Assert(lockedData != null);
 
-		const { lockedUntil } = lockedDataTimer;
+		const { lockedUntil } = lockedData;
+		if (lockedUntil == null)
+			return null;
 		if (now >= lockedUntil)
 			return 0;
 
@@ -152,7 +153,7 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 				lockLogic.lockSetup.timer ? (
 					<Column className='WardrobeLockTimer'>
 						{
-							lockLogic.lockData.timer?.allowEarlyUnlock ? null : (
+							lockLogic.lockData.locked?.disallowEarlyUnlock == null ? null : (
 								<Row className='WardrobeInputRow'>
 									Cannot be unlocked early
 								</Row>
@@ -223,7 +224,7 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 			return;
 		}
 
-		confirm('Confirm disallow early unlock', <>Are you sure you want to disallow the locker to unlock before the timer runs out?</>)
+		confirm('Confirm disallowing early unlock', <>Are you sure you want to prevent yourself from being able to unlock the lock before the timer runs out?</>)
 			.then((confirmed) => {
 				if (confirmed) {
 					setTimerAllowEarly(newValue);
@@ -269,8 +270,8 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 				lockLogic.lockSetup.timer ? (
 					<Column className='WardrobeLockTimer'>
 						<Row className='WardrobeInputRow'>
-							<label>Can be unlocked early by the locker</label>
 							<Checkbox checked={ timerAllowEarly } onChange={ setTimerAllowEarlyWithConfirm } />
+							<label>The lock can be unlocked by you even the before timer runs out</label>
 						</Row>
 						<TimerInput
 							value={ timer }

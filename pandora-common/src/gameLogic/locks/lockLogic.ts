@@ -12,9 +12,9 @@ import type { LockSetup } from './lockSetup.ts';
 
 export const LockTimerOptionsSchema = z.object({
 	/** How long (in ms) the lock should be locked for, if it includes a timer. */
-	timer: z.number().int().nonnegative().optional(),
+	timer: z.number().int().nonnegative(),
 	/** Whether the character that locked it is allowed to unlock the timer early, default true */
-	allowEarlyUnlock: z.boolean().optional(),
+	allowEarlyUnlock: z.boolean(),
 });
 export type LockTimerOptions = z.infer<typeof LockTimerOptionsSchema>;
 
@@ -163,7 +163,7 @@ export class LockLogic {
 		}
 
 		const lockTime = Date.now();
-		let timerData: LockDataBundle['timer'] | undefined;
+		let lockedUntil: number | undefined;
 		if (this.lockSetup.timer != null) {
 			let timer = timerOptions?.timer;
 			if (timer == null) {
@@ -182,10 +182,7 @@ export class LockLogic {
 					reason: 'invalidTimer',
 				};
 			}
-			timerData = {
-				lockedUntil: lockTime + timer,
-				allowEarlyUnlock: timerOptions?.allowEarlyUnlock ?? true,
-			};
+			lockedUntil = lockTime + timer;
 		}
 
 		if (this.lockSetup.fingerprint != null) {
@@ -258,8 +255,9 @@ export class LockLogic {
 				id: player.appearance.id,
 				name: player.appearance.character.name,
 				time: lockTime,
+				lockedUntil,
+				disallowEarlyUnlock: timerOptions?.allowEarlyUnlock,
 			};
-			data.timer = timerData;
 		});
 
 		return {
@@ -280,10 +278,10 @@ export class LockLogic {
 			};
 		}
 
-		if (this.lockSetup.timer != null && this.lockData.locked != null && this.lockData.timer != null && !player.forceAllowItemActions()) {
+		if (this.lockSetup.timer != null && this.lockData.locked?.lockedUntil != null && !player.forceAllowItemActions()) {
 
 			// Disallow unlock if timer is still running, except for the player that locked it, unless disallowed
-			if ((Date.now() < this.lockData.timer.lockedUntil) && (this.lockData.locked.id !== player.appearance.id || !this.lockData.timer.allowEarlyUnlock)) {
+			if ((Date.now() < this.lockData.locked.lockedUntil) && (this.lockData.locked.id !== player.appearance.id || this.lockData.locked.disallowEarlyUnlock)) {
 				return {
 					result: 'failed',
 					reason: 'timerRunning',

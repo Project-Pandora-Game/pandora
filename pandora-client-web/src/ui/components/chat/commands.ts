@@ -322,35 +322,32 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 			}),
 	},
 	{
-		key: ['deck'],
+		key: ['deck_create'],
 		description: 'Creates a card deck',
 		longDescription: 'Creates an ordinary shuffled deck of 52 cards',
-		usage: 'create | deal ',
+		usage: '',
 		handler: CreateClientCommand()
-			.argument('options', {
-				preparse: 'allTrimmed',
-				parse: (input) => {
-					let createDeck = false;
-					let dealCard = false;
-					input = input.toUpperCase();
-					if (input !== '') {
-						if (input === 'CREATE') {
-							createDeck = true;
-						} else if (input.startsWith('DEAL')) {
-							dealCard = true;
-						} else {
-							return { success: false, error: `Invalid options: '${input}'` };
-						}
-					} else {
-						return { success: false, error: `Invalid options: '${input}'` };
-					}
-					return { success: true, value: { createDeck, dealCard } };
-				},
-			})
-			.handler(({ shardConnector }, { options }) => {
+			.handler(({ shardConnector }) => {
 				shardConnector.sendMessage('gamblingAction', {
 					type: 'cards',
-					...options,
+					createDeck: true,
+					dealCard: false,
+				});
+				return true;
+			}),
+	},
+	{
+		key: ['deck_deal'],
+		description: 'Deals a card',
+		longDescription: 'Deals a card from a previously created deck. Either face up or face down',
+		usage: '<target> [/secret]',
+		handler: CreateClientCommand()
+			.argument('target', CommandStepOptional(CommandSelectorCharacter({ allowSelf: 'any' })))
+			.handler(({ shardConnector }) => {
+				shardConnector.sendMessage('gamblingAction', {
+					type: 'cards',
+					createDeck: false,
+					dealCard: true,
 				});
 				return true;
 			}),

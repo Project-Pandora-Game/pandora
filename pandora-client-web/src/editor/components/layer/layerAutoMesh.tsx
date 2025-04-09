@@ -612,7 +612,7 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsLayer<'autoM
 		return null;
 
 	const imageSelectElements: ReactElement[] = [<option value='' key=''>[ None ]</option>];
-	for (const image of imageList) {
+	for (const image of imageList.toSorted((a, b) => a.localeCompare(b))) {
 		imageSelectElements.push(
 			<option value={ image } key={ image }>{ image }</option>,
 		);

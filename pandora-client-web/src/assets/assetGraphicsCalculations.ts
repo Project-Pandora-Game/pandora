@@ -24,7 +24,7 @@ import { useAutomaticResolution } from '../services/screenResolution/screenResol
 import { GraphicsManagerInstance } from './graphicsManager.ts';
 
 /** Constant for the most common case, so caches can just use reference to this object. */
-const SCALING_IMAGE_UV_EMPTY: Record<BoneName, number> = Object.freeze({});
+export const SCALING_IMAGE_UV_EMPTY: Record<BoneName, number> = Object.freeze({});
 export function useLayerImageSource(
 	evaluator: AppearanceConditionEvaluator,
 	{ image: scalingBaseimage, scaling }: Pick<Immutable<GraphicsLayer>, 'image' | 'scaling'>,

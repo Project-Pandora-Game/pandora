@@ -18,8 +18,16 @@ export const WEBPACK_CONFIG = {
 export const CLIENT_CONFIG = {
 	...WEBPACK_BASE_CONFIG,
 	GAME_NAME: z.string().optional(),
-	GAME_VERSION: z.string().optional(),
 	NODE_ENV: z.enum(['production', 'development', 'test']),
 	GIT_COMMIT_HASH: z.string().optional(),
 	GIT_DESCRIBE: z.string().optional(),
+	BUILD_TIME: z.number().default(0),
 } as const;
+
+/** Content of the version.json file used for for checking for new version availability */
+export const VersionDataSchema = z.object({
+	gitDescribe: z.string(),
+	gitCommitHash: z.string(),
+	buildTime: z.number(),
+});
+export type VersionData = z.infer<typeof VersionDataSchema>;

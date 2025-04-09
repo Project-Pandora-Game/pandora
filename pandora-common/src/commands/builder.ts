@@ -1,5 +1,7 @@
 import { IEmpty } from '../networking/index.ts';
-import { CommandRunner, CommandRunnerArgParser, CommandRunnerExecutor, CommandStepProcessor, CommandExecutorOptions, ICommandExecutionContext } from './executor.ts';
+import { KnownObject } from '../utility/misc.ts';
+import { CommandExecutorOptions, CommandRunner, CommandRunnerArgParser, CommandRunnerExecutor, CommandRunnerFork, CommandStepProcessor, ICommandExecutionContext } from './executor.ts';
+import { CommandSelectorEnum } from './selectors.ts';
 
 interface CommandBuilderSource<
 	Context extends ICommandExecutionContext,
@@ -41,6 +43,11 @@ class CommandBuilderStep<
 	}
 }
 
+export interface CommandForkDescriptor<Context extends ICommandExecutionContext, StartArguments extends Record<string, never>> {
+	description: string;
+	handler: CommandRunner<Context, StartArguments>;
+}
+
 export class CommandBuilder<
 	Context extends ICommandExecutionContext,
 	EntryArguments extends Record<string, never>,
@@ -79,6 +86,25 @@ export class CommandBuilder<
 		}
 		const executor = new CommandRunnerExecutor<Context, EntryArguments>(options, handler!);
 		return this.parent.build(executor);
+	}
+
+	public fork<const ArgumentName extends string, const ForkOptions extends string>(
+		name: ArgumentName,
+		build: (ctx: NoInfer<CommandBuilder<Context, EntryArguments & { [i in ArgumentName]: ForkOptions; }, EntryArguments & { [i in ArgumentName]: ForkOptions; }>>) => Record<ForkOptions, NoInfer<CommandForkDescriptor<Context, EntryArguments & { [i in ArgumentName]: ForkOptions; }>>>,
+	): ArgumentName extends keyof EntryArguments ? never : CommandRunner<Context, StartArguments>;
+	public fork<const ArgumentName extends string, const ForkOptions extends string>(
+		name: ArgumentName,
+		build: (ctx: NoInfer<CommandBuilder<Context, EntryArguments & { [i in ArgumentName]: ForkOptions; }, EntryArguments & { [i in ArgumentName]: ForkOptions; }>>) => Record<ForkOptions, NoInfer<CommandForkDescriptor<Context, EntryArguments & { [i in ArgumentName]: ForkOptions; }>>>,
+	): CommandRunner<Context, StartArguments> {
+		const innerRoot = new CommandBuilderRoot<Context, EntryArguments & { [i in ArgumentName]: ForkOptions; }>();
+		const ctx = new CommandBuilder(innerRoot);
+		const descriptor = build(ctx);
+
+		const options = KnownObject.entries(descriptor)
+			.map(([k, v]) => [k, v.description] as const);
+
+		return this.argument(name, CommandSelectorEnum(options, true))
+			.parent.build(new CommandRunnerFork(name, descriptor));
 	}
 }
 

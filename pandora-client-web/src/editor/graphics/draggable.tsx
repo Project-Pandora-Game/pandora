@@ -127,7 +127,7 @@ export class DraggablePoint {
 		this._definition = new Observable(point);
 	}
 
-	private get index(): number {
+	public get index(): number {
 		return this._definition.value.index;
 	}
 
@@ -139,8 +139,8 @@ export class DraggablePoint {
 		const index = this.index;
 
 		this.template.modifyTemplate((d) => {
-			Assert(d.length > index);
-			producer(d[index]);
+			Assert(d.points.length > index);
+			producer(d.points[index]);
 		});
 	}
 
@@ -183,8 +183,8 @@ export class DraggablePoint {
 		const index = this.index;
 		// TODO: Make idempotent
 		this.template.modifyTemplate((d) => {
-			Assert(d.length > index);
-			d.splice(index, 1);
+			Assert(d.points.length > index);
+			d.points.splice(index, 1);
 		});
 	}
 }

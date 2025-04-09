@@ -6,7 +6,7 @@ import { createContext } from 'react';
 import type ReactReconciler from 'react-reconciler';
 import type { Lane } from 'react-reconciler';
 import { DefaultEventPriority } from 'react-reconciler/constants.js';
-import { GAME_VERSION } from '../../config/Environment.ts';
+import { GIT_COMMIT_HASH } from '../../config/Environment.ts';
 import { PIXI_REGISTERED_COMPONENTS } from './component.ts';
 import { PixiInternalElementInstance, type PixiRootContainer } from './element.ts';
 
@@ -149,7 +149,7 @@ function MakeUnsupportedShim(reason: string): () => never {
 
 export const PIXI_FIBER_HOST_CONFIG: PixiHostConfig = {
 	// Debug tools info
-	rendererVersion: GAME_VERSION ?? '0.0.0',
+	rendererVersion: '1.0.0+' + GIT_COMMIT_HASH,
 	rendererPackageName: 'pandora-client-web/pixi-renderer',
 	extraDevToolsConfig: null,
 

@@ -1,12 +1,12 @@
 import { produce, type Immutable } from 'immer';
-import type { Logger } from '../../logging.ts';
+import type { Logger } from '../../logging/logger.ts';
 import { BitField } from '../../utility/bitfield.ts';
-import { Assert, CloneDeepMutable } from '../../utility/misc.ts';
+import { Assert, CloneDeepMutable, EMPTY_ARRAY } from '../../utility/misc.ts';
 import type { GraphicsAlphaImageMeshLayer } from '../graphics/layers/alphaImageMesh.ts';
 import { LayerMirror, MirrorPriority } from '../graphics/layers/common.ts';
 import type { GraphicsMeshLayer } from '../graphics/layers/mesh.ts';
 import { MakeMirroredPoints, MirrorBoneLike, MirrorLayerImageSetting, type PointDefinitionCalculated } from '../graphics/mirroring.ts';
-import { PointMatchesPointType } from '../graphics/points.ts';
+import { ALWAYS_ALLOWED_LAYER_PRIORITIES } from '../graphics/points.ts';
 import type { GraphicsSourceAlphaImageMeshLayer } from '../graphicsSource/layers/alphaImageMesh.ts';
 import type { GraphicsSourceMeshLayer } from '../graphicsSource/layers/mesh.ts';
 import type { GraphicsBuildContext } from './graphicsBuildContext.ts';
@@ -14,14 +14,11 @@ import { ListLayerImageSettingImages, LoadLayerImageSetting, type LayerImageTrim
 import { TriangleRectangleOverlap } from './math/intersections.ts';
 import { CalculatePointsTriangles } from './math/triangulation.ts';
 
-export async function LoadAssetImageLayer(
+async function LoadAssetImageLayerSingle(
 	layer: Immutable<GraphicsSourceMeshLayer> | Immutable<GraphicsSourceAlphaImageMeshLayer>,
 	context: GraphicsBuildContext,
 	logger: Logger,
-): Promise<Immutable<(GraphicsMeshLayer | GraphicsAlphaImageMeshLayer)[]>> {
-	logger = logger.prefixMessages(`[Layer ${layer.name ?? '[unnamed]'}]`);
-
-	// const pointTemplate = GraphicsDatabase.getPointTemplate(layer.points);
+): Promise<Immutable<GraphicsMeshLayer | GraphicsAlphaImageMeshLayer>> {
 	const pointTemplate = context.getPointTemplate(layer.points);
 
 	if (pointTemplate == null) {
@@ -47,11 +44,12 @@ export async function LoadAssetImageLayer(
 
 	let layerPointFilterMask: string | undefined;
 	let imageTrimArea: LayerImageTrimArea = null;
-	if (!context.generateOptimizedTextures) {
+	if (!context.runImageBasedChecks && !context.generateOptimizedTextures) {
 		// NOOP
 	} else if (hasUvManipulation) {
 		logger.debug('Layer has UV manipulation, skipping texture optimization');
 	} else {
+		Assert(context.runImageBasedChecks, 'generateOptimizedTextures should only be used with runImageBasedChecks');
 		// Get all the images and their bounding boxes for this layer
 		const images = Array.from(new Set([
 			...ListLayerImageSettingImages(layer.image, context),
@@ -76,7 +74,7 @@ export async function LoadAssetImageLayer(
 		}
 
 		// Calculate the actual points first (such as resolving mirrored points)
-		const calculatedPoints: Immutable<PointDefinitionCalculated[]> = pointTemplate
+		const calculatedPoints: Immutable<PointDefinitionCalculated[]> = pointTemplate.points
 			.map((point, index): PointDefinitionCalculated => ({
 				...CloneDeepMutable(point),
 				index,
@@ -84,19 +82,10 @@ export async function LoadAssetImageLayer(
 			}))
 			.flatMap(MakeMirroredPoints);
 
-		// Calculate layer's point types (including mirrored ones)
-		let pointTypes = layer.pointType;
-		if (layer.mirror !== LayerMirror.NONE && pointTypes != null) {
-			pointTypes = [
-				...pointTypes,
-				...pointTypes.map(MirrorBoneLike),
-			];
-		}
-
 		// Calculate point type filter
 		const pointTypeFilter = new BitField(calculatedPoints.length);
 		for (let i = 0; i < calculatedPoints.length; i++) {
-			pointTypeFilter.set(i, PointMatchesPointType(calculatedPoints[i], pointTypes));
+			pointTypeFilter.set(i, layer.pointType == null || layer.pointType.includes(calculatedPoints[i].pointType));
 		}
 
 		// Generate the mesh triangles
@@ -134,7 +123,7 @@ export async function LoadAssetImageLayer(
 				break;
 			}
 		}
-		if (layerPointFilterMaskNeedsSave) {
+		if (layerPointFilterMaskNeedsSave && context.generateOptimizedTextures) {
 			layerPointFilterMask = context.bufferToBase64(pointFilter.buffer);
 		}
 
@@ -170,16 +159,68 @@ export async function LoadAssetImageLayer(
 			logger.warning('Trim area has non-positive height. Does the layer have no useful triangles?');
 			imageTrimArea = null;
 		} else if (imageTrimArea[0] < 0 || imageTrimArea[1] < 0 || imageTrimArea[2] > layer.width || imageTrimArea[3] > layer.height) {
-			// TODO: Un-silence this once current problems are fixed
-			// logger.warning(
-			//    'Layer does not cover the used part of the mesh. This might cause graphical glitches.\n' +
-			//    '\tOverflow:\n' +
-			//    (imageTrimArea[0] < 0 ? `\t\tLeft: ${-imageTrimArea[0]}\n` : '') +
-			//    (imageTrimArea[1] < 0 ? `\t\tTop: ${-imageTrimArea[1]}\n` : '') +
-			//    (imageTrimArea[2] > layer.width ? `\t\tRight: ${(imageTrimArea[2] - layer.width)}\n` : '') +
-			//    (imageTrimArea[3] > layer.height ? `\t\tBottom: ${(imageTrimArea[3] - layer.height)}\n` : ''),
-			// );
+			logger.warning(
+				'Layer does not cover the used part of the mesh. This might cause graphical glitches.\n' +
+				'\tOverflow:\n' +
+				(imageTrimArea[0] < 0 ? `\t\tLeft: ${-imageTrimArea[0]}\n` : '') +
+				(imageTrimArea[1] < 0 ? `\t\tTop: ${-imageTrimArea[1]}\n` : '') +
+				(imageTrimArea[2] > layer.width ? `\t\tRight: ${(imageTrimArea[2] - layer.width)}\n` : '') +
+				(imageTrimArea[3] > layer.height ? `\t\tBottom: ${(imageTrimArea[3] - layer.height)}\n` : ''),
+			);
 			imageTrimArea = null;
+		} else if (!context.generateOptimizedTextures) {
+			imageTrimArea = null;
+		}
+
+		// Collect point types that are actually used
+		const usedPointTypes = new Set<string>();
+		for (let i = 0; i < calculatedPoints.length; i++) {
+			const point = calculatedPoints[i];
+			if (!pointFilter.get(i))
+				continue;
+
+			usedPointTypes.add(point.pointType);
+		}
+
+		// Collect required point types
+		for (const matchedPointType of usedPointTypes) {
+			const pointTypeMetadata = pointTemplate.pointTypes[matchedPointType];
+			if (pointTypeMetadata == null)
+				continue; // This is a point template error and is already reported by point template validation
+
+			for (const requiredType of (pointTypeMetadata.requiredPointTypes ?? EMPTY_ARRAY)) {
+				usedPointTypes.add(requiredType);
+
+				if (layer.pointType != null && !layer.pointType.includes(requiredType)) {
+					logger.warning(`Layer that uses point type '${matchedPointType}' should also enable point type '${requiredType}'.`);
+				}
+			}
+		}
+
+		// Validate that layer actually uses its declared point types
+		if (layer.pointType != null) {
+			for (const layerPointType of layer.pointType) {
+				if (!usedPointTypes.has(layerPointType)) {
+					logger.warning(`Layer declares usage of point type '${layerPointType}', but it is not actually used.`);
+				}
+			}
+		}
+
+		// Validate point types against the layer priority they should be used with
+		for (const matchedPointType of usedPointTypes) {
+			const pointTypeMetadata = pointTemplate.pointTypes[matchedPointType];
+			if (pointTypeMetadata == null)
+				continue; // This is a point template error and is already reported by point template validation
+
+			if (pointTypeMetadata.allowedPriorities !== '*' &&
+				!pointTypeMetadata.allowedPriorities.includes(layer.priority) &&
+				!ALWAYS_ALLOWED_LAYER_PRIORITIES.includes(layer.priority)
+			) {
+				logger.warning(
+					`Layer uses point type '${matchedPointType}' of template '${layer.points}', but this combination doesn't allow using priority '${layer.priority}'.\n\t` +
+					`Filter out this point type or use one of allowed priorities: ${pointTypeMetadata.allowedPriorities.concat(ALWAYS_ALLOWED_LAYER_PRIORITIES).join(', ')}`,
+				);
+			}
 		}
 	}
 
@@ -200,7 +241,6 @@ export async function LoadAssetImageLayer(
 		points: layer.points,
 		pointType: layer.pointType?.slice(),
 		pointFilterMask: layerPointFilterMask,
-		mirror: layer.mirror,
 		image: LoadLayerImageSetting(layer.image, context, normalizedImageTrimArea),
 		scaling: layer.scaling && {
 			scaleBone: layer.scaling.scaleBone,
@@ -226,18 +266,36 @@ export async function LoadAssetImageLayer(
 		result.height = imageTrimArea[3] - top;
 	}
 
-	let mirror: GraphicsMeshLayer | GraphicsAlphaImageMeshLayer | undefined;
-	if (result.mirror !== LayerMirror.NONE) {
-		mirror = produce(result, (d) => {
-			d.priority = MirrorPriority(d.priority);
-			d.pointType = d.pointType?.map(MirrorBoneLike);
-			d.image = MirrorLayerImageSetting(d.image);
-			d.scaling = d.scaling && {
-				...d.scaling,
-				stops: d.scaling.stops.map((stop) => [stop[0], MirrorLayerImageSetting(stop[1])]),
-			};
-		});
+	return result;
+}
+
+export async function LoadAssetImageLayer(
+	layer: Immutable<GraphicsSourceMeshLayer> | Immutable<GraphicsSourceAlphaImageMeshLayer>,
+	context: GraphicsBuildContext,
+	logger: Logger,
+): Promise<Immutable<(GraphicsMeshLayer | GraphicsAlphaImageMeshLayer)[]>> {
+	const resultLayer = await LoadAssetImageLayerSingle(
+		layer,
+		context,
+		logger.prefixMessages(`[Layer ${layer.name ?? '[unnamed]'}]`),
+	);
+
+	if (layer.mirror !== LayerMirror.NONE) {
+		const resultMirror = await LoadAssetImageLayerSingle(
+			produce(layer, (d) => {
+				d.priority = MirrorPriority(d.priority);
+				d.pointType = d.pointType?.map(MirrorBoneLike);
+				d.image = MirrorLayerImageSetting(d.image);
+				d.scaling = d.scaling && {
+					...d.scaling,
+					stops: d.scaling.stops.map((stop) => [stop[0], MirrorLayerImageSetting(stop[1])]),
+				};
+			}),
+			context,
+			logger.prefixMessages(`[Mirrored layer ${layer.name ?? '[unnamed]'}]`),
+		);
+		return [resultLayer, resultMirror];
 	}
 
-	return mirror ? [result, mirror] : [result];
+	return [resultLayer];
 }

@@ -5,7 +5,8 @@ import { toast } from 'react-toastify';
 import { useEvent } from '../../../common/useEvent.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
-import { ModalDialog } from '../../../components/dialog/dialog.tsx';
+import { LogItem } from '../../../components/debug/logs/log.tsx';
+import { DraggableDialog, ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
 import { useObservable } from '../../../observable.ts';
@@ -82,6 +83,7 @@ export function AssetUI() {
 				</ContextHelpButton>
 			</h3>
 			<AssetExportImport asset={ selectedAsset } />
+			<AssetBuildResult asset={ selectedAsset } />
 			<AssetLayerList asset={ selectedAsset } />
 			<Button onClick={ () => {
 				setShowAddLayer(true);
@@ -142,17 +144,25 @@ export function AssetUI() {
 }
 
 function AddLayerUiDialog({ close, selectedAsset }: { close: () => void; selectedAsset: EditorAssetGraphics; }): ReactElement {
+	const editor = useEditor();
+
 	return (
 		<ModalDialog>
 			<Column>
 				<Button onClick={ () => {
-					selectedAsset.addLayer('mesh');
+					editor.targetLayer.value = selectedAsset.addLayer('autoMesh');
+					close();
+				} }>
+					Add automatic image layer
+				</Button>
+				<Button onClick={ () => {
+					editor.targetLayer.value = selectedAsset.addLayer('mesh');
 					close();
 				} }>
 					Add image layer
 				</Button>
 				<Button onClick={ () => {
-					selectedAsset.addLayer('alphaImageMesh');
+					editor.targetLayer.value = selectedAsset.addLayer('alphaImageMesh');
 					close();
 				} }>
 					Add alpha image layer
@@ -215,12 +225,72 @@ function AssetExportImport({ asset }: { asset: EditorAssetGraphics; }): ReactEle
 							}
 						} }
 					/>
-					<span className='Button default'>
+					<span className='Button default fill'>
 						Import
 					</span>
 				</label>
 			</Row>
 		</Column>
+	);
+}
+
+function AssetBuildResult({ asset }: { asset: EditorAssetGraphics; }): ReactElement | null {
+	const buildLog = useObservable(asset.buildLog);
+	const [showDialog, setShowDialog] = useState(false);
+
+	if (buildLog == null)
+		return null;
+
+	return (
+		<fieldset>
+			<legend>Graphics build result</legend>
+			<Row wrap alignY='center'>
+				<span className='flex-grow-10'>
+					{
+						buildLog.errors > 0 ? (
+							`‼️ ${buildLog.errors} errors`
+						) : buildLog.warnings > 0 ? (
+							`⚠️ ${buildLog.warnings} warnings`
+						) : (
+							'✅ No problems'
+						)
+					}
+				</span>
+				<Button
+					className='flex-grow-1'
+					slim
+					onClick={ () => {
+						setShowDialog((s) => !s);
+					} }
+				>
+					View log
+				</Button>
+			</Row>
+			{
+				showDialog ? (
+					<DraggableDialog
+						title={ `Build log for asset ${asset.id}` }
+						close={ () => {
+							setShowDialog(false);
+						} }
+						allowShade
+					>
+						<Column gap='small'>
+							{
+								buildLog.logs.map((l, i) => (
+									<LogItem key={ i } logLevel={ l.logLevel }>{ l.content }</LogItem>
+								))
+							}
+							{
+								buildLog.logs.length === 0 ? (
+									<i>No problems to report</i>
+								) : null
+							}
+						</Column>
+					</DraggableDialog>
+				) : null
+			}
+		</fieldset>
 	);
 }
 

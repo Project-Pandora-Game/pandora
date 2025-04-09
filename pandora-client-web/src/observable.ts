@@ -127,6 +127,9 @@ export class StaticObservable<T> implements ReadonlyObservable<T> {
 
 export const NULL_OBSERVABLE: ReadonlyObservable<null> = new StaticObservable(null);
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function useObservable<TObservable extends ReadonlyObservable<any>>(obs: TObservable): TObservable['value'];
+export function useObservable<T>(obs: ReadonlyObservable<T>): T;
 export function useObservable<T>(obs: ReadonlyObservable<T>): T {
 	return useSyncExternalStore((cb) => obs.subscribe(cb), () => obs.value);
 }

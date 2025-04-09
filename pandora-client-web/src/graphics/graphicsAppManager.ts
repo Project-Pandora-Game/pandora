@@ -13,12 +13,14 @@ export const PIXI_APPLICATION_OPTIONS: Readonly<Partial<ApplicationOptions>> = {
 	antialias: false,
 };
 
-async function CreateApplication(): Promise<Application> {
+export async function CreatePixiApplication(multiView: boolean = false, backgroundAlpha: number = 1): Promise<Application> {
 	const app = new Application();
 	await app.init({
 		...cloneDeep(PIXI_APPLICATION_OPTIONS),
 		autoDensity: true,
 		autoStart: false,
+		multiView,
+		backgroundAlpha,
 	});
 	return app;
 }
@@ -57,7 +59,7 @@ export class GraphicsApplicationManager extends TypedEventEmitter<{
 
 	constructor() {
 		super();
-		CreateApplication()
+		CreatePixiApplication()
 			.then((app) => {
 				this._failed = false;
 				this._app = app;

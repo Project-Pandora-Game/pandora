@@ -15,7 +15,7 @@ import type { InternalItemTypeMap, ItemBase } from './_internal.ts';
 import type { RoomDeviceBundle } from './roomDevice.ts';
 import type { RoomDeviceLink } from './roomDeviceWearablePart.ts';
 
-import { Logger } from '../../logging.ts';
+import type { Logger } from '../../logging/logger.ts';
 import { HexRGBAColorString, HexRGBAColorStringSchema, ZodTemplateString } from '../../validation.ts';
 
 export const ItemIdSchema = ZodTemplateString<`i/${string}`>(z.string(), /^i\//);

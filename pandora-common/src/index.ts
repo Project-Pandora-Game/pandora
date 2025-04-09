@@ -7,7 +7,7 @@ export * from './environment.ts';
 export * from './event.ts';
 export * from './gameLogic/index.ts';
 export * from './inputLimits.ts';
-export * from './logging.ts';
+export * from './logging/index.ts';
 export * from './math/index.ts';
 export * from './networking/index.ts';
 export * from './security.ts';

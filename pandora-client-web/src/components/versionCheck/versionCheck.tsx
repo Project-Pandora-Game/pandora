@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMounted } from '../../common/useMounted.ts';
-import { GIT_COMMIT_HASH, NODE_ENV, USER_DEBUG } from '../../config/Environment.ts';
+import { VersionDataSchema, type VersionData } from '../../config/definition.ts';
+import { BUILD_TIME, GIT_COMMIT_HASH, NODE_ENV, USER_DEBUG } from '../../config/Environment.ts';
 import { NotificationSource, useNotification } from '../../services/notificationHandler.ts';
 import { Button } from '../common/button/button.tsx';
 import { Row } from '../common/container/container.tsx';
@@ -14,7 +15,7 @@ export function VersionCheck() {
 }
 
 function VersionCheckImpl() {
-	const [nextVersion, setNextVersion] = useState('');
+	const [nextVersion, setNextVersion] = useState<VersionData | null>();
 	const [ignoredVersion, setIgnoredVersion] = useState('');
 	const notifiedRef = useRef(false);
 	const notify = useNotification(NotificationSource.VERSION_CHANGED);
@@ -25,7 +26,7 @@ function VersionCheckImpl() {
 		const cleanup = setInterval(() => {
 			GetCurrentVersion()
 				.then((version) => {
-					if (mounted && version !== GIT_COMMIT_HASH) {
+					if (mounted && version.gitCommitHash !== GIT_COMMIT_HASH) {
 						setNextVersion(version);
 						if (!notifiedRef.current) {
 							notifiedRef.current = true;
@@ -34,7 +35,7 @@ function VersionCheckImpl() {
 							});
 						}
 					} else {
-						setNextVersion('');
+						setNextVersion(null);
 					}
 				})
 				.catch(() => { /** noop */ });
@@ -42,7 +43,7 @@ function VersionCheckImpl() {
 		return () => clearInterval(cleanup);
 	}, [mounted, notify]);
 
-	if (!nextVersion || nextVersion === ignoredVersion) {
+	if (nextVersion == null || nextVersion.gitCommitHash === ignoredVersion) {
 		return null;
 	}
 
@@ -52,16 +53,16 @@ function VersionCheckImpl() {
 				You are running an outdated version of Project Pandora.
 			</h3>
 			<p>
-				Currently running version: { GIT_COMMIT_HASH }
+				Currently running version: { GIT_COMMIT_HASH } from { new Date(BUILD_TIME).toLocaleDateString() }
 			</p>
 			<p>
-				New version: { nextVersion }
+				New version: { nextVersion.gitCommitHash } from { new Date(nextVersion.buildTime).toLocaleDateString() }
 			</p>
 			<p>
 				Please reload the page to get the newest version.
 			</p>
 			<Row alignX='space-between'>
-				<Button onClick={ () => setIgnoredVersion(nextVersion) }>
+				<Button onClick={ () => setIgnoredVersion(nextVersion.gitCommitHash) }>
 					Cancel
 				</Button>
 				<Button onClick={ () => window.location.reload() }>Reload</Button>
@@ -70,8 +71,7 @@ function VersionCheckImpl() {
 	);
 }
 
-async function GetCurrentVersion(): Promise<string> {
+async function GetCurrentVersion(): Promise<VersionData> {
 	const result = await fetch(`/version.json?${Date.now()}`);
-	const json = await result.json() as { gitCommitHash: string; };
-	return json.gitCommitHash;
+	return VersionDataSchema.parse(await result.json());
 }

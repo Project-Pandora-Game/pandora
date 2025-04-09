@@ -1,6 +1,6 @@
 import { freeze } from 'immer';
 import { z } from 'zod';
-import { Logger } from '../../logging.ts';
+import type { Logger } from '../../logging/logger.ts';
 import { Assert, MemoizeNoArg } from '../../utility/misc.ts';
 import { ZodArrayWithInvalidDrop } from '../../validation.ts';
 import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation.ts';

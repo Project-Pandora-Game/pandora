@@ -3,7 +3,6 @@ import { throttle } from 'lodash-es';
 import { AssertNotNullable, CharacterSize, GetLogger, type HexColorString } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef } from 'react';
-import { AssetGraphicsResolverOverrideContext, type AssetGraphicsResolverOverride } from '../../assets/assetGraphicsCalculations.ts';
 import { DownloadAsFile } from '../../common/downloadHelper.ts';
 import { CommonProps } from '../../common/reactTypes.ts';
 import { useEvent } from '../../common/useEvent.ts';
@@ -59,9 +58,6 @@ export function EditorScene({
 		contentRef,
 		appRef,
 	}), []);
-	const graphicsOverridesContext = useMemo((): AssetGraphicsResolverOverride => ({
-		pointTemplates: editor.modifiedPointTemplates,
-	}), [editor]);
 
 	const backgroundColor = Number.parseInt(useObservable(editor.backgroundColor).substring(1, 7), 16);
 	const character = editor.character;
@@ -72,8 +68,12 @@ export function EditorScene({
 			.stroke({ width: 2, color: 0x404040, pixelLine: true });
 	}, []);
 
-	const viewportConfig = useCallback<PixiViewportSetupCallback>((viewport) => {
+	const viewportConfig = useCallback<PixiViewportSetupCallback>((viewport, params) => {
 		viewport
+			.clampZoom({
+				minScale: Math.min(params.height / params.worldHeight, params.width / params.worldWidth) * 0.2,
+				maxScale: 10,
+			})
 			.drag({ clampWheel: true })
 			.wheel({ smooth: 10, percent: 0.1 })
 			.pinch({ noDrag: false, percent: 2 })
@@ -169,11 +169,9 @@ export function EditorScene({
 				draw={ borderDraw }
 			/>
 			<EditorSceneContext.Provider value={ sceneContext }>
-				<AssetGraphicsResolverOverrideContext.Provider value={ graphicsOverridesContext }>
-					<Container zIndex={ 10 } ref={ contentRef }>
-						{ children }
-					</Container>
-				</AssetGraphicsResolverOverrideContext.Provider>
+				<Container zIndex={ 10 } ref={ contentRef }>
+					{ children }
+				</Container>
 			</EditorSceneContext.Provider>
 		</GraphicsScene>
 	);

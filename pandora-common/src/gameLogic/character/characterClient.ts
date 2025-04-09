@@ -1,5 +1,5 @@
 import type { Immutable } from 'immer';
-import { Logger } from '../../logging.ts';
+import type { Logger } from '../../logging/logger.ts';
 import type { ICharacterRoomData } from '../../networking/shard_client.ts';
 import { AssertNever } from '../../utility/misc.ts';
 import { AssetPreferencesSubsystemClient } from '../assetPreferences/index.ts';

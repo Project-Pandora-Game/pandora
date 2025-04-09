@@ -1,18 +1,28 @@
 import { freeze, type Immutable } from 'immer';
 import {
+	AnyToString,
 	Assert,
 	AsyncSynchronized,
 	GetLogger,
+	Logger,
+	LogLevel,
 	type AssetGraphicsDefinition,
 	type AssetId,
 	type AssetSourceGraphicsInfo,
 	type GraphicsDefinitionFile,
 	type GraphicsSourceDefinitionFile,
+	type LoggerConfig,
+	type LogOutputDefinition,
+	type PointTemplate,
+	type PointTemplateSource,
 } from 'pandora-common';
+import type { Texture } from 'pixi.js';
+import { useMemo } from 'react';
+import { GetCurrentAssetManager } from '../../assets/assetManager.tsx';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
-import { Observable, type ReadonlyObservable } from '../../observable.ts';
+import { Observable, useObservable, type ReadonlyObservable } from '../../observable.ts';
 import { ToastHandlePromise } from '../../persistentToast.ts';
-import { EditorAssetGraphics } from './editorAssetGraphics.ts';
+import { EditorAssetGraphics, type EditorAssetGraphicsBuildLogResult } from './editorAssetGraphics.ts';
 import { EditorBuildAssetGraphics } from './editorAssetGraphicsBuilding.ts';
 
 /** Class that handles "source" asset graphics inside editor. */
@@ -29,6 +39,17 @@ export class EditorAssetGraphicsManagerClass {
 		return this._editedAssetGraphics;
 	}
 
+	public readonly editedPointTemplates = new Observable<ReadonlyMap<string, Immutable<PointTemplateSource>>>(new Map());
+	public get originalPointTempalates(): Immutable<Partial<GraphicsSourceDefinitionFile['pointTemplates']>> {
+		return this._originalSourceDefinitions.pointTemplates;
+	}
+
+	constructor() {
+		this.editedPointTemplates.subscribe(() => {
+			this._reloadRuntimeGraphicsManager();
+		});
+	}
+
 	public loadNewOriginalDefinitions(
 		sourceDefinitions: Immutable<GraphicsSourceDefinitionFile>,
 		graphicsDefinitions: Immutable<GraphicsDefinitionFile>,
@@ -36,6 +57,15 @@ export class EditorAssetGraphicsManagerClass {
 		this._originalSourceDefinitions = freeze(sourceDefinitions, true);
 		this._originalGraphicsDefinitions = freeze(graphicsDefinitions, true);
 		this._reloadRuntimeGraphicsManager();
+
+		// Rebuild every single edited asset asynchronously, as asset manager might have changed
+		Array.from(this.editedAssetGraphics.value.values())
+			.forEach((a) => {
+				this._onAssetDefinitionChanged(a)
+					.catch((err) => {
+						this.logger.error('Crash in asset definition change handler, during rebuild:', err);
+					});
+			});
 	}
 
 	public startEditAsset(asset: AssetId): EditorAssetGraphics {
@@ -108,13 +138,57 @@ export class EditorAssetGraphicsManagerClass {
 		if (this._editedAssetGraphics.value.get(asset.id) !== asset)
 			return;
 
-		const logger = this.logger.prefixMessages(`Graphics build for asset '${asset.id}':\n\t`);
+		const logResult: EditorAssetGraphicsBuildLogResult = {
+			errors: 0,
+			warnings: 0,
+			logs: [],
+		};
+		const buildLogConfigOutput: LogOutputDefinition = {
+			logLevel: LogLevel.DEBUG,
+			logLevelOverrides: {},
+			supportsColor: false,
+			// onMessage: (prefix: string, message: unknown[], level: LogLevel) => void;
+			onMessage(prefix, message, level) {
+				if (level <= LogLevel.ERROR) {
+					logResult.errors++;
+				} else if (level <= LogLevel.WARNING) {
+					logResult.warnings++;
+				}
+				logResult.logs.push({
+					logLevel: level,
+					content: [prefix, ...message.map((part) => {
+						if (part && part instanceof Error) {
+							// Custom error format without stack, as that is anyway useless with our minification
+							return `[${part.name}: ${part.message}]`;
+						}
+
+						return AnyToString(part);
+					})].join(' '),
+				});
+			},
+		};
+		const buildLogConfig: LoggerConfig = {
+			printTime: false,
+			timeLocale: undefined,
+			onFatal: [],
+			logOutputs: [buildLogConfigOutput],
+		};
+		const logger = new Logger('Build', '', buildLogConfig);
+		const buildTextures = new Map<string, Texture>();
+
 		try {
-			const graphicsDefinition = await EditorBuildAssetGraphics(asset, logger);
+			const logicAsset = GetCurrentAssetManager().getAssetById(asset.id);
+			if (logicAsset == null) {
+				throw new Error('Asset not found');
+			}
+
+			const graphicsDefinition = await EditorBuildAssetGraphics(asset, logicAsset, logger, buildTextures);
 			this._editedGraphicsBuildCache.set(asset.id, freeze(graphicsDefinition, true));
+			asset.buildTextures.value = buildTextures;
 		} catch (error) {
 			logger.error('Build failed with error:', error);
 		}
+		asset.buildLog.value = logResult;
 
 		this._reloadRuntimeGraphicsManager();
 	}
@@ -132,9 +206,17 @@ export class EditorAssetGraphicsManagerClass {
 		}
 		freeze(assets);
 
+		const pointTemplates: Record<string, Immutable<PointTemplate>> = {
+			...this._originalGraphicsDefinitions.pointTemplates,
+		};
+		for (const [id, template] of this.editedPointTemplates.value) {
+			pointTemplates[id] = template.points;
+		}
+
 		const graphicsDefinitions: Immutable<GraphicsDefinitionFile> = {
 			...this._originalGraphicsDefinitions,
 			assets,
+			pointTemplates,
 		};
 		freeze(graphicsDefinitions);
 		this._editorGraphicsVersion++;
@@ -149,3 +231,25 @@ export class EditorAssetGraphicsManagerClass {
 }
 
 export const EditorAssetGraphicsManager = new EditorAssetGraphicsManagerClass();
+
+export function useEditorPointTemplates(): ReadonlyMap<string, Immutable<PointTemplateSource>> {
+	const modifiedTemplates = useObservable(EditorAssetGraphicsManager.editedPointTemplates);
+	const originalPointTemplates = EditorAssetGraphicsManager.originalPointTempalates;
+
+	return useMemo((): ReadonlyMap<string, Immutable<PointTemplateSource>> => {
+		const result = new Map<string, Immutable<PointTemplateSource>>();
+
+		for (const [k, v] of Object.entries(originalPointTemplates)) {
+			if (!v)
+				continue;
+
+			result.set(k, v);
+		}
+
+		for (const [k, v] of modifiedTemplates) {
+			result.set(k, v);
+		}
+
+		return result;
+	}, [originalPointTemplates, modifiedTemplates]);
+}

@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, jest } from '@jest/globals';
 import { remove } from 'lodash-es';
-import { AnyToString, GetLogger, logConfig, Logger, LogLevel, LogOutputDefinition, SetConsoleOutput } from '../src/logging.ts';
+import { AnyToString, GetLogger, logConfig, Logger, LogLevel, LogOutputDefinition, SetConsoleOutput } from '../src/logging/index.ts';
 
 describe('GetLogger()', () => {
 	it('should return an instance of Logger', () => {

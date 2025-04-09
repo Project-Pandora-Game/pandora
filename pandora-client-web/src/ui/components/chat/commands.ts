@@ -403,7 +403,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 	{
 		key: ['blush'],
 		/*
-			This manipulates the blushing of a player. The main challenge here was the incredilble flexible way,
+			This manipulates the blushing of a player. The main challenge here was the incredible flexible way,
 			pandora handles assets. Currently we only have one blushing variant, but it may be that we will have
 			other variants with more or less levels than the current one. So this flexibility had to be dealt with
 			when the item was selected. Hopefully the way how 'blush' is extracted from the player can work
@@ -411,7 +411,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		*/
 		description: 'Increase or decrease your blushing',
 		longDescription: '',
-		usage: '+ | - | min | max',
+		usage: '<+ | - | min | max>',
 		handler: CreateClientCommand()
 			.argument('options', CommandSelectorEnum(['+', '-', 'min', 'max']))
 			.handler(({ gameState, player }, { options }) => {

@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid';
-import { GetLogger, Logger } from '../logging.ts';
+import type { Logger } from '../logging/logger.ts';
+import { GetLogger } from '../logging/logging.ts';
 import { AssertNotNullable } from '../utility/misc.ts';
 import { IsObject } from '../validation.ts';
 import { DEFAULT_ACK_TIMEOUT, MESSAGE_HANDLER_DEBUG_ALL, MESSAGE_HANDLER_DEBUG_MESSAGES } from './config.ts';

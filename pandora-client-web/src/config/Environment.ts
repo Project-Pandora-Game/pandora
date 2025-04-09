@@ -7,7 +7,6 @@ export const EnvParser = CreateEnvParser(CLIENT_CONFIG);
 export const ENV = EnvParser();
 
 export const GAME_NAME = ENV.GAME_NAME;
-export const GAME_VERSION = ENV.GAME_VERSION;
 export const NODE_ENV = ENV.NODE_ENV;
 export const DIRECTORY_ADDRESS = ENV.DIRECTORY_ADDRESS;
 export const EDITOR_ASSETS_ADDRESS = ENV.EDITOR_ASSETS_ADDRESS;
@@ -17,6 +16,7 @@ export const DEVELOPMENT = NODE_ENV === 'development';
 export const USER_DEBUG = DEVELOPMENT || ENV.USER_DEBUG;
 export const GIT_COMMIT_HASH = ENV.GIT_COMMIT_HASH;
 export const GIT_DESCRIBE = ENV.GIT_DESCRIBE;
+export const BUILD_TIME = ENV.BUILD_TIME;
 
 // Values that make sense to tweak globally, but not necessarily through Env
 

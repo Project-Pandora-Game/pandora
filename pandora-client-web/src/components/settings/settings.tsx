@@ -1,5 +1,5 @@
 import { ReactElement } from 'react';
-import { GIT_DESCRIBE } from '../../config/Environment.ts';
+import { BUILD_TIME, GIT_DESCRIBE } from '../../config/Environment.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs.tsx';
 import { AccountSettings } from './accountSettings.tsx';
@@ -42,7 +42,7 @@ export function Settings(): ReactElement | null {
 					<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
 				</UrlTabContainer>
 			</div>
-			<footer>Version: { GIT_DESCRIBE }</footer>
+			<footer>Version: { GIT_DESCRIBE } from { new Date(BUILD_TIME).toLocaleDateString() }</footer>
 		</>
 	);
 }

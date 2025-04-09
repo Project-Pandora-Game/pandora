@@ -1,0 +1,37 @@
+// Styles in this file are intentionally not themed
+
+.LogItem {
+	color: #eee;
+	background: #141a1b;
+	padding: 0.25em;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+	user-select: text;
+
+	&.loglevel-fatal {
+		color: #000;
+		background: #ff0000;
+	}
+
+	&.loglevel-error {
+		background: color-mix(in srgb, #141a1b, #ff0000 35%);
+	}
+
+	&.loglevel-warning {
+		background: color-mix(in srgb, #141a1b, #ffa500 35%);
+	}
+
+	&.loglevel-alert {
+		background: color-mix(in srgb, #141a1b, #ffff00 35%);
+	}
+
+	// No change for loglevel-info
+
+	&.loglevel-verbose {
+		color: #71d471;
+	}
+
+	&.loglevel-debug {
+		color: #029494;
+	}
+}

@@ -12,13 +12,13 @@ import postcssPresetEnv from 'postcss-preset-env';
 import ReactRefreshTypeScript from 'react-refresh-typescript';
 import webpack from 'webpack';
 import 'webpack-dev-server';
-import packageJson from './package.json' with { type: 'json' };
 
 import { CreateEnvParser, type EnvInputJson } from 'pandora-common';
-import { WEBPACK_CONFIG, type CLIENT_CONFIG } from './src/config/definition.ts';
+import { WEBPACK_CONFIG, type CLIENT_CONFIG, type VersionData } from './src/config/definition.ts';
 
 const GIT_COMMIT_HASH = execSync('git rev-parse --short HEAD').toString().trim();
 const GIT_DESCRIBE = execSync('git describe --tags --always --dirty').toString().trim();
+const BUILD_TIME = 1000 * Math.floor(Date.now() / 1000);
 
 // Load .env file
 config();
@@ -144,7 +144,6 @@ function GeneratePlugins(env: WebpackEnv): webpack.WebpackPluginInstance[] {
 		new webpack.DefinePlugin({
 			'process.env': JSON.stringify({
 				NODE_ENV: env.prod ? 'production' : 'development',
-				GAME_VERSION: packageJson.version,
 				GAME_NAME,
 				DIRECTORY_ADDRESS,
 				EDITOR_ASSETS_ADDRESS,
@@ -153,6 +152,7 @@ function GeneratePlugins(env: WebpackEnv): webpack.WebpackPluginInstance[] {
 				USER_DEBUG,
 				GIT_COMMIT_HASH,
 				GIT_DESCRIBE,
+				BUILD_TIME,
 			} satisfies EnvInputJson<typeof CLIENT_CONFIG>),
 		}),
 		new HtmlWebpackPlugin({
@@ -171,8 +171,8 @@ function GeneratePlugins(env: WebpackEnv): webpack.WebpackPluginInstance[] {
 		new GenerateStringPlugin('version.json', JSON.stringify({
 			gitDescribe: GIT_DESCRIBE,
 			gitCommitHash: GIT_COMMIT_HASH,
-			version: packageJson.version,
-		})),
+			buildTime: BUILD_TIME,
+		} satisfies VersionData)),
 	];
 
 	if (env.prod) {

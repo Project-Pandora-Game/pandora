@@ -14,8 +14,8 @@ export function useLayerHasAlphaMasks(layer: EditorAssetGraphicsLayer): boolean 
 	return layer.type === 'alphaImageMesh';
 }
 
-export function useLayerImageSettingsForScalingStop(layer: EditorAssetGraphicsLayer, stop: number | null | undefined): Immutable<LayerImageSetting> {
-	const d = useObservable<Immutable<GraphicsSourceLayer>>(layer.definition);
+export function useLayerImageSettingsForScalingStop(layer: EditorAssetGraphicsLayer<'mesh' | 'alphaImageMesh'>, stop: number | null | undefined): Immutable<LayerImageSetting> {
+	const d = useObservable(layer.definition);
 	if (!stop)
 		return d.image;
 

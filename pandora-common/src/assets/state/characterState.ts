@@ -2,7 +2,7 @@ import { Immutable, freeze } from 'immer';
 import { clamp, cloneDeep, isEqual } from 'lodash-es';
 import type { CharacterId } from '../../character/index.ts';
 import { RedactSensitiveActionData } from '../../gameLogic/actionLogic/actionUtils.ts';
-import { Logger } from '../../logging.ts';
+import type { Logger } from '../../logging/logger.ts';
 import { Assert, CloneDeepMutable, IsNotNullable, MemoizeNoArg } from '../../utility/misc.ts';
 import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';

@@ -1,11 +1,11 @@
 import classNames from 'classnames';
 import { ReactElement, useEffect, useReducer, useState } from 'react';
-import { EXTRA_ASSETS_ADDRESS, GAME_NAME, GAME_VERSION } from '../../config/Environment.ts';
+import { BUILD_TIME, EXTRA_ASSETS_ADDRESS, GAME_NAME } from '../../config/Environment.ts';
 import { Column, Row } from '../common/container/container.tsx';
 import './loginTeaser.scss';
 
 const TEASER_CONTENTS: [string, string][] = [
-	[`Welcome to ${ GAME_NAME } (version ${ GAME_VERSION })`, 'preview_1.png'],
+	[`Welcome to ${ GAME_NAME } (version ${ new Date(BUILD_TIME).toLocaleDateString() })`, 'preview_1.png'],
 	[`${ GAME_NAME } is an adult roleplaying community centered around the practice of BDSM.`, 'preview_2.png'],
 	['We aim to provide a safe and welcoming environment for like-minded individuals to explore their kinks.', 'preview_3.png'],
 	[`${ GAME_NAME } is a free open-source licensed platform. Feel invited to help building it up further.`, 'preview_4.png'],

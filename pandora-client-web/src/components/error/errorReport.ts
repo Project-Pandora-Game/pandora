@@ -2,7 +2,7 @@ import bowser from 'bowser';
 import { IsNotNullable } from 'pandora-common';
 import { isWebGLSupported, isWebGPUSupported } from 'pixi.js';
 import { ErrorInfo } from 'react';
-import { GAME_VERSION } from '../../config/Environment.ts';
+import { BUILD_TIME, GIT_COMMIT_HASH } from '../../config/Environment.ts';
 import { DirectoryConnectionState } from '../../networking/directoryConnector.ts';
 import { ShardConnectionState } from '../../networking/shardConnector.ts';
 import { DebugData } from './debugContextProvider.tsx';
@@ -99,7 +99,7 @@ function BuildDiagnosticsSection(): ReportSection {
 	const details = [
 		`Location: ${window.location.href}`,
 		`User agent: ${window.navigator.userAgent}`,
-		`Game version: ${GAME_VERSION}`,
+		`Game version: ${GIT_COMMIT_HASH} from ${new Date(BUILD_TIME).toISOString()}`,
 		`Local time: ${new Date().toISOString()}`,
 		`WebGL supported: ${String(isWebGLSupported())}`,
 		// FIXME: Think about how to resolve this promise

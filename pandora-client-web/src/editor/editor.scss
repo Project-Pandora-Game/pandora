@@ -119,6 +119,16 @@
 	hr {
 		width: 100%;
 	}
+
+	.smallIconButton {
+		width: 2em;
+		height: 2em;
+	}
+}
+
+.editor-highlightedArea {
+	background: common.$theme-normal-background-secondary;
+	border: 1px solid common.$theme-separator;
 }
 
 .editor-wardrobe {

@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { IItemLoadContext } from '../../assets/item/base.ts';
 import { CharacterIdSchema, CompareCharacterIds } from '../../character/characterTypes.ts';
 import type { CharacterRestrictionsManager } from '../../character/restrictionsManager.ts';
-import type { Logger } from '../../logging.ts';
+import type { Logger } from '../../logging/logger.ts';
 import { Assert, AssertNever, AssertNotNullable, CloneDeepMutable } from '../../utility/misc.ts';
 import type { AppearanceActionContext } from '../actionLogic/appearanceActions.ts';
 import type { LockDataBundle } from './lockData.ts';

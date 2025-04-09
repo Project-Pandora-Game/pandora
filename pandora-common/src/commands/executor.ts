@@ -1,4 +1,6 @@
 import type { IEmpty } from '../networking/index.ts';
+import { Assert } from '../utility/misc.ts';
+import type { CommandForkDescriptor } from './builder.ts';
 import { CommandArgumentNeedsQuotes, CommandArgumentQuote, CommandParseQuotedString, CommandParseQuotedStringTrim } from './parsers.ts';
 
 export interface ICommandExecutionContext {
@@ -24,6 +26,10 @@ export interface CommandStepProcessor<ResultType, Context extends ICommandExecut
 	preparse: CommandStepPreparseProcessor | 'all' | 'allTrimmed' | 'quotedArg' | 'quotedArgTrimmed';
 	parse(input: string, context: Context, args: EntryArguments): { success: true; value: ResultType; } | { success: false; error: string; };
 	autocomplete?(input: string, context: Context, args: EntryArguments): CommandAutocompleteOption[];
+	/** If set to true, the autocomplete header will show value if already chosen */
+	autocompleteShowValue?: boolean;
+	/** Custom value to show instead of argument name */
+	autocompleteCustomName?: string;
 }
 
 export function CommandStepOptional<ResultType, Context extends ICommandExecutionContext = ICommandExecutionContext, EntryArguments extends Record<string, never> = IEmpty>(
@@ -149,7 +155,7 @@ export class CommandRunnerArgParser<
 			const shouldQuote = isQuotedPreprocessor && options.some(({ replaceValue }) => CommandArgumentNeedsQuotes(replaceValue));
 
 			return options.length > 0 ? {
-				header: `\u25b6<${this.name}>\u25c0 ${this.next.predictHeader()}`,
+				header: `\u25b6<${this.processor.autocompleteCustomName ?? this.name}>\u25c0 ${this.next.predictHeader()}`,
 				options: options.map(({ displayValue, replaceValue }) => ({
 					displayValue,
 					replaceValue: shouldQuote ? CommandArgumentQuote(replaceValue, true) : replaceValue,
@@ -169,7 +175,7 @@ export class CommandRunnerArgParser<
 			[this.name]: parsed.value,
 		}, rest);
 		return nextResult != null ? {
-			header: `<${this.name}> ${nextResult.header}`,
+			header: (this.processor.autocompleteShowValue === true ? (isQuotedPreprocessor ? CommandArgumentQuote(value) : value) : `<${this.name}>`) + ` ${nextResult.header}`,
 			options: nextResult.options.map(({ replaceValue, displayValue }) => ({
 				replaceValue: (isQuotedPreprocessor ? CommandArgumentQuote(value) : value) + ' ' + replaceValue,
 				displayValue,
@@ -179,7 +185,43 @@ export class CommandRunnerArgParser<
 	}
 
 	public predictHeader(): string {
-		return `<${this.name}> ${this.next.predictHeader()}`;
+		return `<${this.processor.autocompleteCustomName ?? this.name}> ${this.next.predictHeader()}`;
 	}
 
+}
+
+export class CommandRunnerFork<
+	Context extends ICommandExecutionContext,
+	EntryArguments extends Record<string, never>,
+	ArgumentName extends string,
+	ForkOptions extends string,
+> implements CommandRunner<Context, EntryArguments & { [i in ArgumentName]: ForkOptions; }> {
+
+	private readonly argument: ArgumentName;
+	private readonly descriptor: Record<ForkOptions, CommandForkDescriptor<Context, EntryArguments>>;
+
+	constructor(argument: ArgumentName, descriptor: Record<ForkOptions, CommandForkDescriptor<Context, EntryArguments>>) {
+		this.argument = argument;
+		this.descriptor = descriptor;
+	}
+
+	public run(context: Context, args: EntryArguments & { [i in ArgumentName]: ForkOptions; }, input: string): boolean {
+		const optionName: ForkOptions = args[this.argument];
+		Assert(Object.hasOwn(this.descriptor, optionName));
+		const option = this.descriptor[optionName];
+
+		return option.handler.run(context, args, input);
+	}
+
+	public autocomplete(context: Context, args: EntryArguments & { [i in ArgumentName]: ForkOptions; }, input: string): CommandAutocompleteResult {
+		const optionName: ForkOptions = args[this.argument];
+		Assert(Object.hasOwn(this.descriptor, optionName));
+		const option = this.descriptor[optionName];
+
+		return option.handler.autocomplete(context, args, input);
+	}
+
+	public predictHeader(): string {
+		return '\u2026';
+	}
 }

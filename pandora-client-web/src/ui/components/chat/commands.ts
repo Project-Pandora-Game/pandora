@@ -1,12 +1,12 @@
 import { capitalize } from 'lodash-es';
-import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandBuilder, CommandStepOptional, CommandStepProcessor, CreateCommand, FilterItemType, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE } from 'pandora-common';
+import { AccountId, AccountIdSchema, AssertNever, ChatTypeDetails, CommandBuilder, CommandSelectorEnum, CommandStepOptional, CommandStepProcessor, CreateCommand, FilterItemType, IChatType, IClientDirectoryArgument, IEmpty, LONGDESC_RAW, LONGDESC_THIRD_PERSON, LONGDESC_TOGGLE_MODE } from 'pandora-common';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed.js';
 import { toast } from 'react-toastify';
 import { IsSpaceAdmin } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
 import { ChatMode } from './chatInput.tsx';
-import { CommandSelectorCharacter, CommandSelectorEnum, CommandSelectorGameLogicActionTarget, CommandSelectorItem } from './commandsHelpers.ts';
+import { CommandSelectorCharacter, CommandSelectorGameLogicActionTarget, CommandSelectorItem } from './commandsHelpers.ts';
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor.ts';
 
 function CreateClientCommand(): CommandBuilder<ICommandExecutionContextClient, IEmpty, IEmpty> {
@@ -251,16 +251,33 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		description: 'Play rock paper scissors with people in the same room.',
 		longDescription: `Allows each player to secretly choose rock, paper, or scissors.
 			If anyone uses 'show', all players with a recent pick will reveal their choice. (alternative command: '/rps')`,
-		usage: 'rock | paper | scissors | show',
+		usage: '<choose | show> \u2026',
 		handler: CreateClientCommand()
-			.argument('option', CommandSelectorEnum(['rock', 'paper', 'scissors', 'show']))
-			.handler(({ shardConnector }, { option }) => {
-				shardConnector.sendMessage('gamblingAction', {
-					type: 'rps',
-					choice: option,
-				});
-				return true;
-			}),
+			.fork('action', (ctx) => ({
+				choose: {
+					description: 'Choose what you will play in the next round',
+					handler: ctx
+						.argument('option', CommandSelectorEnum(['rock', 'paper', 'scissors']))
+						.handler(({ shardConnector }, { option }) => {
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'rps',
+								choice: option,
+							});
+							return true;
+						}),
+				},
+				show: {
+					description: 'Reveal the choice of all players',
+					handler: ctx
+						.handler(({ shardConnector }) => {
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'rps',
+								choice: 'show',
+							});
+							return true;
+						}),
+				},
+			})),
 	},
 	{
 		key: ['dice'],

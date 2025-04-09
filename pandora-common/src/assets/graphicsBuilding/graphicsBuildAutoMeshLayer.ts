@@ -53,21 +53,21 @@ export async function LoadAssetAutoMeshLayer(
 	logger = logger.prefixMessages(`[Layer ${layer.name || '[unnamed]'}]`);
 
 	// Short circuit to allow for not-yet-configured layers
-	if (!layer.automeshTemplate) {
+	if (!layer.points || !layer.automeshTemplate) {
 		logger.warning('Layer is empty');
 		return [];
 	}
 
-	const automeshTemplate = context.getAutomeshTemplate(layer.automeshTemplate);
+	const pointTemplate = context.getPointTemplate(layer.points);
+	if (pointTemplate == null) {
+		throw new Error(`Layer ${layer.name ?? '[unnamed]'} refers to unknown template '${layer.points}'`);
+	}
+
+	const automeshTemplate = pointTemplate.automeshTemplates?.[layer.automeshTemplate];
 	const resultLayers: Immutable<GraphicsSourceMeshLayer>[] = [];
 
 	if (automeshTemplate == null) {
 		throw new Error(`Layer ${layer.name || '[unnamed]'} refers to unknown automesh template '${layer.automeshTemplate}'`);
-	}
-
-	// Validate points early to avoid confusing errors
-	if (context.getPointTemplate(automeshTemplate.points) == null) {
-		throw new Error(`Automesh template ${layer.automeshTemplate} refers to unknown point template '${automeshTemplate.points}'`);
 	}
 
 	const variants: AutoMeshLayerGenerateVariableValue[][] = [];
@@ -128,7 +128,7 @@ export async function LoadAssetAutoMeshLayer(
 				type: 'mesh',
 				name: `${layer.name || '[unnamed]'}:${templatePart.id}:${graphicalLayer.name || `#${i + 1}`}`,
 				priority: templatePart.priority,
-				points: automeshTemplate.points,
+				points: layer.points,
 				pointType: templatePart.pointType,
 				mirror: templatePart.mirror ?? LayerMirror.NONE,
 				colorizationKey: graphicalLayer.colorizationKey,

@@ -114,6 +114,7 @@ export class EditorAssetGraphics {
 					height: CharacterSize.HEIGHT,
 					name: '',
 					type: 'autoMesh',
+					points: '',
 					automeshTemplate: '',
 					graphicalLayers: [
 						{ name: '' },

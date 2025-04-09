@@ -4,7 +4,6 @@ import { LayerImageOverrideSchema, LayerMirrorSchema, LayerPrioritySchema } from
 
 export const GraphicsSourceAutoMeshTemplateSchema = z.object({
 	name: z.string(),
-	points: z.string(),
 	parts: z.object({
 		id: z.string(),
 		priority: LayerPrioritySchema,
@@ -32,6 +31,7 @@ export type GraphicsSourceAutoMeshLayerVariable = z.infer<typeof GraphicsSourceA
 export const GraphicsSourceAutoMeshLayerSchema = RectangleSchema.extend({
 	type: z.literal('autoMesh'),
 	name: z.string(),
+	points: z.string(),
 	automeshTemplate: z.string(),
 	disabledTemplateParts: z.string().array().optional(),
 	graphicalLayers: GraphicsSourceAutoMeshGraphicalLayerSchema.array(),

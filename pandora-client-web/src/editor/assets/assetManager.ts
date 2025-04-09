@@ -193,6 +193,7 @@ class AssetTreeViewClass {
 	}
 
 	public update(assets: readonly Asset[]) {
+		const oldCategories = new Map(this._categories);
 		this._categories.clear();
 		for (const asset of assets) {
 			const [, category, name] = /^a\/([^/]+)\/([^/]+)$/.exec(asset.id) || [];
@@ -204,6 +205,13 @@ class AssetTreeViewClass {
 				this._categories.set(category, categoryTreeView = new AssetTreeViewCategoryClass(category));
 			}
 			categoryTreeView.set(name, asset);
+		}
+		// Reopen categories that were open before
+		for (const [name, category] of oldCategories) {
+			const newCategory = this._categories.get(name);
+			if (newCategory != null && category.open) {
+				newCategory.open = true;
+			}
 		}
 	}
 }

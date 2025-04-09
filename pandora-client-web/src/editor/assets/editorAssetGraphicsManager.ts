@@ -10,7 +10,6 @@ import {
 	type AssetId,
 	type AssetSourceGraphicsInfo,
 	type GraphicsDefinitionFile,
-	type GraphicsSourceAutoMeshTemplate,
 	type GraphicsSourceDefinitionFile,
 	type LoggerConfig,
 	type LogOutputDefinition,
@@ -18,9 +17,10 @@ import {
 	type PointTemplateSource,
 } from 'pandora-common';
 import type { Texture } from 'pixi.js';
+import { useMemo } from 'react';
 import { GetCurrentAssetManager } from '../../assets/assetManager.tsx';
 import { GraphicsManager, GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
-import { Observable, type ReadonlyObservable } from '../../observable.ts';
+import { Observable, useObservable, type ReadonlyObservable } from '../../observable.ts';
 import { ToastHandlePromise } from '../../persistentToast.ts';
 import { EditorAssetGraphics, type EditorAssetGraphicsBuildLogResult } from './editorAssetGraphics.ts';
 import { EditorBuildAssetGraphics } from './editorAssetGraphicsBuilding.ts';
@@ -29,7 +29,7 @@ import { EditorBuildAssetGraphics } from './editorAssetGraphicsBuilding.ts';
 export class EditorAssetGraphicsManagerClass {
 	private readonly logger = GetLogger('EditorAssetGraphicsManager');
 
-	private _originalSourceDefinitions: Immutable<GraphicsSourceDefinitionFile> = { assets: {}, pointTemplates: {}, automeshTemplates: {} };
+	private _originalSourceDefinitions: Immutable<GraphicsSourceDefinitionFile> = { assets: {}, pointTemplates: {} };
 	private _originalGraphicsDefinitions: Immutable<GraphicsDefinitionFile> = { assets: {}, pointTemplates: {}, imageFormats: {} };
 
 	private _editedAssetGraphics = new Observable<ReadonlyMap<AssetId, EditorAssetGraphics>>(new Map());
@@ -39,18 +39,12 @@ export class EditorAssetGraphicsManagerClass {
 		return this._editedAssetGraphics;
 	}
 
-	private _automeshTemplates: Observable<Immutable<Record<string, GraphicsSourceAutoMeshTemplate>>>;
-	public get automeshTemplates(): ReadonlyObservable<Immutable<Record<string, GraphicsSourceAutoMeshTemplate>>> {
-		return this._automeshTemplates;
-	}
-
 	public readonly editedPointTemplates = new Observable<ReadonlyMap<string, Immutable<PointTemplateSource>>>(new Map());
 	public get originalPointTempalates(): Immutable<Partial<GraphicsSourceDefinitionFile['pointTemplates']>> {
 		return this._originalSourceDefinitions.pointTemplates;
 	}
 
 	constructor() {
-		this._automeshTemplates = new Observable(this._originalSourceDefinitions.automeshTemplates);
 		this.editedPointTemplates.subscribe(() => {
 			this._reloadRuntimeGraphicsManager();
 		});
@@ -62,7 +56,6 @@ export class EditorAssetGraphicsManagerClass {
 	) {
 		this._originalSourceDefinitions = freeze(sourceDefinitions, true);
 		this._originalGraphicsDefinitions = freeze(graphicsDefinitions, true);
-		this._automeshTemplates.value = this._originalSourceDefinitions.automeshTemplates;
 		this._reloadRuntimeGraphicsManager();
 
 		// Rebuild every single edited asset asynchronously, as asset manager might have changed
@@ -238,3 +231,25 @@ export class EditorAssetGraphicsManagerClass {
 }
 
 export const EditorAssetGraphicsManager = new EditorAssetGraphicsManagerClass();
+
+export function useEditorPointTemplates(): ReadonlyMap<string, Immutable<PointTemplateSource>> {
+	const modifiedTemplates = useObservable(EditorAssetGraphicsManager.editedPointTemplates);
+	const originalPointTemplates = EditorAssetGraphicsManager.originalPointTempalates;
+
+	return useMemo((): ReadonlyMap<string, Immutable<PointTemplateSource>> => {
+		const result = new Map<string, Immutable<PointTemplateSource>>();
+
+		for (const [k, v] of Object.entries(originalPointTemplates)) {
+			if (!v)
+				continue;
+
+			result.set(k, v);
+		}
+
+		for (const [k, v] of modifiedTemplates) {
+			result.set(k, v);
+		}
+
+		return result;
+	}, [originalPointTemplates, modifiedTemplates]);
+}

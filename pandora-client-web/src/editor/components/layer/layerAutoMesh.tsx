@@ -1,4 +1,5 @@
 import type { Draft, Immutable } from 'immer';
+import { capitalize } from 'lodash-es';
 import {
 	Assert,
 	AssertNever,
@@ -26,7 +27,7 @@ import { useObservable } from '../../../observable.ts';
 import type { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
 import { EditorBuildAssetGraphicsContext } from '../../assets/editorAssetGraphicsBuilding.ts';
 import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
-import { EditorAssetGraphicsManager } from '../../assets/editorAssetGraphicsManager.ts';
+import { useEditorPointTemplates } from '../../assets/editorAssetGraphicsManager.ts';
 import { LayerHeightAndWidthSetting, LayerOffsetSetting } from './layerCommon.tsx';
 
 export function LayerAutoMeshUI({ asset, layer }: {
@@ -42,6 +43,7 @@ export function LayerAutoMeshUI({ asset, layer }: {
 			<TabContainer allowWrap>
 				<Tab name='Template'>
 					<hr />
+					<LayerTemplateSelect layer={ layer } />
 					<LayerAutomeshTemplateSelect layer={ layer } />
 					<LayerAutomeshPartsDiable layer={ layer } />
 				</Tab>
@@ -62,18 +64,81 @@ export function LayerAutoMeshUI({ asset, layer }: {
 	);
 }
 
-function LayerAutomeshTemplateSelect({ layer }: { layer: EditorAssetGraphicsLayer<'autoMesh'>; }): ReactElement {
-	const id = useId();
-	const { automeshTemplate } = useObservable(layer.definition);
-	const allAutomeshTemplates = useObservable(EditorAssetGraphicsManager.automeshTemplates);
+function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsLayer<'autoMesh'>; }): ReactElement | null {
+	const { points } = useObservable(layer.definition);
+	const pointTemplates = useEditorPointTemplates();
 
 	const elements: ReactElement[] = [];
-	for (const [templateId, template] of Object.entries(allAutomeshTemplates)) {
+	for (const [t, template] of pointTemplates) {
+		if (!template.automeshTemplates)
+			continue;
+
+		elements.push(
+			<option value={ t } key={ t }>{ capitalize(t) }</option>,
+		);
+	}
+	return (
+		<Row alignY='center'>
+			<label htmlFor='layer-template-select'>
+				Template:
+				<ContextHelpButton>
+					<p>
+						This is a very important selector.<br />
+						It lets you define the set of points this layer should use for<br />
+						transformations based on pose changes.
+					</p>
+					<p>
+						The templates should be self-explanatory.<br />
+						If you make any asset that should change alongside body changes,<br />
+						you use 'body' - unless it is an asset where a more specialized<br />
+						template exists, e.g. 'shirt' for tops, or 'skirt_short/skirt_long'.
+					</p>
+					<p>
+						A special template is 'static'. This one covers the whole canvas<br />
+						and does not use any transformations. That way, it can be used for images<br />
+						that should always be on the same spot in the same size.
+					</p>
+					<p>
+						If you cannot find a suitable template for your purpose or the<br />
+						chosen template cuts off parts of your image: Please get help on<br />
+						Discord, as you either need custom points for this layer or we<br />
+						need to make a new template for your asset.
+					</p>
+				</ContextHelpButton>
+			</label>
+			<Select
+				id='layer-template-select'
+				className='flex-1'
+				value={ points }
+				onChange={ (event) => {
+					const id = event.target.value;
+					const template = pointTemplates?.get(id);
+					Assert(id === '' || template != null, 'Unknown point template');
+					layer.modifyDefinition((d) => {
+						d.points = id;
+					});
+				} }
+			>
+				<option value='' key='!empty'>[ No points ]</option>
+				{ elements }
+			</Select>
+		</Row>
+	);
+}
+
+function LayerAutomeshTemplateSelect({ layer }: { layer: EditorAssetGraphicsLayer<'autoMesh'>; }): ReactElement {
+	const id = useId();
+	const { points, automeshTemplate } = useObservable(layer.definition);
+	const pointTemplate = useEditorPointTemplates().get(points);
+	const allAutomeshTemplates = pointTemplate?.automeshTemplates;
+
+	const elements: ReactElement[] = [];
+	for (const [templateId, template] of Object.entries(allAutomeshTemplates ?? {})) {
 		elements.push(
 			<option value={ templateId } key={ templateId }>{ template.name }</option>,
 		);
 	}
-	if (automeshTemplate && allAutomeshTemplates[automeshTemplate] == null) {
+	if (automeshTemplate && allAutomeshTemplates?.[automeshTemplate] == null) {
 		elements.push(
 			<option value={ automeshTemplate } key={ automeshTemplate }>[ ERROR: Unknown template '{ automeshTemplate }' ]</option>,
 		);
@@ -83,30 +148,11 @@ function LayerAutomeshTemplateSelect({ layer }: { layer: EditorAssetGraphicsLaye
 		<>
 			<Row alignY='center'>
 				<label htmlFor={ id }>
-					Template:
+					Template variant:
 					<ContextHelpButton>
 						<p>
-							This is a very important selector.<br />
-							It lets you define how the whole layer behaves.
-						</p>
-						<p>
-							The templates should be self-explanatory.<br />
-							If you make any asset that should change alongside body changes,<br />
-							you use 'body' - unless it is an asset where a more specialized<br />
-							template exists, e.g. 'shirt' for tops, or short/long skirt.
-						</p>
-						<p>
-							A special template is 'static'. This one covers the whole canvas<br />
-							and does not use any transformations. That way, it can be used for images<br />
-							that should always be on the same spot in the same size.<br />
-							The 'static (split)' template covers left and right side of the character separately,<br />
-							allowing you to configure only the left side while right side is generated automatically.
-						</p>
-						<p>
-							If you cannot find a suitable template for your purpose or the<br />
-							chosen template cuts off parts of your image: Please get help on<br />
-							Discord, as you either need custom points for this layer or we<br />
-							need to make a new template for your asset.
+							This selector lets you select a variant of how to automatically generate layers.<br />
+							The available options change depending on the selected template.
 						</p>
 					</ContextHelpButton>
 				</label>
@@ -114,9 +160,10 @@ function LayerAutomeshTemplateSelect({ layer }: { layer: EditorAssetGraphicsLaye
 					id={ id }
 					className='flex-1'
 					value={ automeshTemplate }
+					disabled={ allAutomeshTemplates == null }
 					onChange={ (event) => {
 						const value = event.target.value;
-						if (value && allAutomeshTemplates[value] == null) {
+						if (value && allAutomeshTemplates?.[value] == null) {
 							return;
 						}
 						layer.modifyDefinition((d) => {
@@ -135,10 +182,10 @@ function LayerAutomeshTemplateSelect({ layer }: { layer: EditorAssetGraphicsLaye
 }
 
 function LayerAutomeshPartsDiable({ layer }: { layer: EditorAssetGraphicsLayer<'autoMesh'>; }): ReactElement {
-	const { automeshTemplate, disabledTemplateParts } = useObservable(layer.definition);
-	const allAutomeshTemplates = useObservable(EditorAssetGraphicsManager.automeshTemplates);
+	const { points, automeshTemplate, disabledTemplateParts } = useObservable(layer.definition);
+	const pointTemplate = useEditorPointTemplates().get(points);
 
-	const selectedTemplate = automeshTemplate ? allAutomeshTemplates[automeshTemplate] : undefined;
+	const selectedTemplate = automeshTemplate ? pointTemplate?.automeshTemplates?.[automeshTemplate] : undefined;
 	const validPartIds = selectedTemplate ? selectedTemplate.parts.map((p) => p.id) : [];
 
 	return (

@@ -94,9 +94,6 @@ export function EditorBuildAssetGraphicsContext(asset: EditorAssetGraphics, logi
 			return EditorAssetGraphicsManager.editedPointTemplates.value.get(name) ??
 				EditorAssetGraphicsManager.originalPointTempalates[name];
 		},
-		getAutomeshTemplate(name) {
-			return EditorAssetGraphicsManager.automeshTemplates.value[name];
-		},
 		bufferToBase64: ArrayToBase64,
 		loadImage(image) {
 			const texture = textures.get(image);

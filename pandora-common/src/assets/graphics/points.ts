@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { GraphicsSourceAutoMeshTemplateSchema } from '../graphicsSource/layers/autoMesh.ts';
 import { CoordinatesCompressedSchema, CoordinatesSchema } from './common.ts';
 import { BoneNameSchema, ConditionSchema } from './conditions.ts';
 import { LayerPrioritySchema, type LayerPriority } from './layers/common.ts';
@@ -55,6 +56,7 @@ export const ALWAYS_ALLOWED_LAYER_PRIORITIES: readonly LayerPriority[] = [
 
 export const PointTemplateSourceSchema = z.object({
 	pointTypes: z.record(z.string(), PointTemplateSourcePointTypeDataSchema).default({}),
+	automeshTemplates: z.record(z.string(), GraphicsSourceAutoMeshTemplateSchema).optional(),
 	points: PointTemplateSchema,
 });
 export type PointTemplateSource = z.infer<typeof PointTemplateSourceSchema>;

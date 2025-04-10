@@ -28,6 +28,7 @@ import {
 	PermissionSetup,
 	RedactSensitiveActionData,
 	StartActionAttempt,
+	CardDeck,
 	type AppearanceAction,
 	type AppearanceActionProcessingResult,
 	type CharacterRestrictionsManager,
@@ -53,19 +54,6 @@ const messagesMetric = new promClient.Counter({
 	labelNames: ['messageType'],
 });
 
-// Define Suits and Ranks
-const suits = ['\u2665', //hearts
-	'\u2666', //diamonds
-	'\u2663', //clubs
-	'\u2660']; //spades
-const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-
-// Define Card Type
-type Card = {
-	suit: string;
-	rank: string;
-};
-
 /** Class that stores all currently connected clients */
 export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientShard, ClientConnection> {
 	private readonly _connectedClients: Set<ClientConnection> = new Set();
@@ -74,7 +62,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 	private readonly rockPaperScissorsStatus = new WeakMap<Character, { time: number; choice: 'rock' | 'paper' | 'scissors'; }>();
 
-	private readonly currentCardDeck: Card[] = [];
+	private readonly currentCardDeck = new CardDeck();
 
 	public async onMessage<K extends keyof IClientShard>(
 		messageType: K,
@@ -432,22 +420,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			}
 			case 'cards':
 				if (game.createDeck) {
-					for (const suit of suits) {
-						for (const rank of ranks) {
-							this.currentCardDeck.push({ suit, rank });
-						}
-					}
-					// Shuffle
-					for (let i = this.currentCardDeck.length - 1; i > 0; i--) {
-						const j = Math.floor(Math.random() * (i + 1));
-						[this.currentCardDeck[i], this.currentCardDeck[j]] = [this.currentCardDeck[j], this.currentCardDeck[i]];
-					}
+					this.currentCardDeck.create();
 					space.handleActionMessage({
 						id: 'gamblingDeckCreation',
 						character,
 					});
 				} else if (game.dealCard) {
-					const card = this.currentCardDeck.pop();
+					const card = this.currentCardDeck.deal();
 
 					if (card) {
 						space.handleActionMessage({

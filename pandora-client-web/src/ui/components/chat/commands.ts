@@ -330,7 +330,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		handler: CreateClientCommand()
 			.fork('action', (ctx) => ({
 				create: {
-					description: 'Create a deck of 52 cards for you.',
+					description: 'Create a deck of 52 cards for the current space.',
 					handler: ctx
 						.handler(({ shardConnector }) => {
 							shardConnector.sendMessage('gamblingAction', {
@@ -341,7 +341,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 						}),
 				},
 				deal: {
-					description: 'Deal one card from your deck to a player or the room',
+					description: `Deal one card from the space's deck to a player or the room`,
 					handler: ctx
 						.argument('target', CommandStepOptional(CommandSelectorCharacter({ allowSelf: 'any' })))
 						.argument('option', CommandSelectorEnum(['', '/hidden']))
@@ -376,22 +376,6 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 						}),
 				},
 			})),
-	},
-	{
-		key: ['deck_deal'],
-		description: 'Deals a card',
-		longDescription: 'Deals a card from a previously created deck. Either face up or face down',
-		usage: '<target> [/secret]',
-		handler: CreateClientCommand()
-			.argument('target', CommandStepOptional(CommandSelectorCharacter({ allowSelf: 'any' })))
-			.handler(({ shardConnector }) => {
-				shardConnector.sendMessage('gamblingAction', {
-					type: 'cards',
-					createDeck: false,
-					dealCard: true,
-				});
-				return true;
-			}),
 	},
 	//#endregion
 	//#region Commands to change the player's pose

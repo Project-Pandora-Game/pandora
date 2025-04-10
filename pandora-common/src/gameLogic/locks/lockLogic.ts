@@ -256,7 +256,7 @@ export class LockLogic {
 				name: player.appearance.character.name,
 				time: lockTime,
 				lockedUntil,
-				disallowEarlyUnlock: timerOptions?.allowEarlyUnlock,
+				disallowEarlyUnlock: !timerOptions?.allowEarlyUnlock,
 			};
 		});
 

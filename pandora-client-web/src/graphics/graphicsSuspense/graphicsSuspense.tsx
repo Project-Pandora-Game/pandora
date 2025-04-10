@@ -36,7 +36,6 @@ export function GraphicsSuspense({
 		<>
 			<Container
 				ref={ manager.updateContainerRef }
-				visible={ false }
 				sortableChildren={ sortableChildren }
 			>
 				<GraphicsSuspenseContext.Provider value={ manager }>

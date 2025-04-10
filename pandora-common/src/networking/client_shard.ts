@@ -148,8 +148,10 @@ export const ClientShardSchema = {
 			}),
 			z.object({
 				type: z.literal('cards'), //Deck of Cards
-				createDeck: z.boolean(),
-				dealCard: z.boolean(),
+				targetId: z.string().optional(),
+				createDeck: z.boolean().optional(),
+				dealCard: z.boolean().optional(),
+				dealHidden: z.boolean().optional(),
 			}),
 		]),
 		response: null,

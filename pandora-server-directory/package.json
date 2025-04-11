@@ -45,7 +45,7 @@
 		"argon2": "0.41.1",
 		"async-lock": "1.4.1",
 		"discord.js": "14.18.0",
-		"dotenv": "16.4.7",
+		"dotenv": "16.5.0",
 		"express": "4.21.2",
 		"json-diff": "1.0.6",
 		"lodash-es": "4.17.21",

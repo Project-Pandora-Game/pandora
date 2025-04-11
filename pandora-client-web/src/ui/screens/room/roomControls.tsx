@@ -27,6 +27,7 @@ import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useChatInput } from '../../components/chat/chatInput.tsx';
 import { PrivateRoomTutorialList } from '../../tutorial/privateTutorials.tsx';
+import { CharacterPreviewGenerationButton } from './characterPreviewGeneration.tsx';
 import { useRoomScreenContext } from './roomContext.tsx';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
 
@@ -159,6 +160,9 @@ export function PersonalSpaceControls(): ReactElement {
 				<Button onClick={ () => navigate('/spaces/search') } >
 					<img src={ listIcon } />List of spaces
 				</Button>
+			</Row>
+			<Row padding='small'>
+				<CharacterPreviewGenerationButton />
 			</Row>
 			&nbsp;
 			<PrivateRoomTutorialList />

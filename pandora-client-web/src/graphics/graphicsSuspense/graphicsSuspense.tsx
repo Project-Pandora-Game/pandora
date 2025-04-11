@@ -1,6 +1,6 @@
 import { TypedEventEmitter } from 'pandora-common';
 import * as PIXI from 'pixi.js';
-import { ReactElement, ReactNode, createContext, useContext, useLayoutEffect, useMemo } from 'react';
+import { ReactElement, ReactNode, createContext, useContext, useLayoutEffect, useMemo, useRef } from 'react';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { PointLike } from '../graphicsCharacter.tsx';
@@ -13,7 +13,7 @@ const PROGRESS_GRACE_PERIOD = 500;
 /** Base radius used for loading graphics. Needs to be decently big to avoid artifacts */
 const LOADING_PROGRESS_BASE_RADIUS = 100;
 
-const GraphicsSuspenseContext = createContext<GraphicsSuspenseManager | null>(null);
+export const GraphicsSuspenseContext = createContext<GraphicsSuspenseRegister | null>(null);
 
 export function GraphicsSuspense({
 	children,
@@ -26,11 +26,18 @@ export function GraphicsSuspense({
 	loadingCircleRadius?: number;
 	sortableChildren?: boolean;
 }): ReactElement {
-	const manager = useMemo(() => new GraphicsSuspenseManager(), []);
+	const parentManager = useContext(GraphicsSuspenseContext);
+	const managerRef = useRef<GraphicsSuspenseManagerWithGraphics>(undefined);
+	managerRef.current ??= new GraphicsSuspenseManagerWithGraphics();
+	const manager = managerRef.current;
 
 	const finalLoadingRadius = loadingCircleRadius ?? Math.max(10, loadingCirclePosition != null ? (
 		Math.ceil(0.1 * Math.min(loadingCirclePosition.x, loadingCirclePosition.y))
 	) : 0);
+
+	useLayoutEffect(() => {
+		return parentManager?.registerAsset(manager);
+	}, [parentManager, manager]);
 
 	return (
 		<>
@@ -76,18 +83,79 @@ export function useRegisterSuspenseAsset(): GraphicsSuspenseAsset {
 	return asset;
 }
 
-class GraphicsSuspenseManager {
-	private readonly _initTime = Date.now();
-	private readonly _assets = new Set<GraphicsSuspenseAsset>();
+interface GraphicsSuspenseRegister {
+	registerAsset(asset: GraphicsSuspenseAsset): () => void;
+}
 
-	private _currentContainer: PIXI.Container | null = null;
-	private _currentProgressGraphics: PIXI.Graphics | null = null;
+class GraphicsSuspenseAsset extends TypedEventEmitter<{ update: void; }> {
+	private _isReady: boolean = false;
 
-	private _ready: boolean = false;
-	private _showProgress: boolean = true;
-	private _loadingProgress: number = 0;
+	public get isReady(): boolean {
+		return this._isReady;
+	}
 
-	private _showProgressDelayTimer: number | null = null;
+	public setReady(value: boolean) {
+		if (this._isReady === value)
+			return;
+
+		this._isReady = value;
+		this.emit('update', undefined);
+	}
+}
+
+export class GraphicsSuspenseManager extends GraphicsSuspenseAsset implements GraphicsSuspenseRegister {
+	protected readonly _initTime = Date.now();
+	protected readonly _assets = new Set<GraphicsSuspenseAsset>();
+
+	protected _ready: boolean = false;
+	protected _loadingProgress: number = 0;
+
+	public registerAsset(asset: GraphicsSuspenseAsset): () => void {
+		this._assets.add(asset);
+
+		const handlerCleanup = asset.on('update', () => {
+			this._update();
+		});
+		this._update();
+
+		return () => {
+			handlerCleanup();
+			this._assets.delete(asset);
+			this._update();
+		};
+	}
+
+	protected _update(): void {
+		let total = 1;
+		let ready = 1;
+		for (const asset of this._assets) {
+			total++;
+			if (asset.isReady) {
+				ready++;
+			}
+		}
+
+		const allReady = (ready === total);
+		this.setReady(allReady);
+
+		// If the previous state or new state is ready, check about changing to the stable state if the stabilization period passed
+		let readyStable = false;
+		if ((allReady || this._ready) && (Date.now() >= this._initTime + CREATION_STABILIZATION_PERIOD)) {
+			readyStable = true;
+		}
+
+		this._loadingProgress = allReady ? 1 : ready / total;
+		this._ready = allReady || readyStable;
+	}
+}
+
+class GraphicsSuspenseManagerWithGraphics extends GraphicsSuspenseManager {
+	protected _currentContainer: PIXI.Container | null = null;
+	protected _currentProgressGraphics: PIXI.Graphics | null = null;
+
+	protected _showProgress: boolean = true;
+
+	protected _showProgressDelayTimer: number | null = null;
 
 	public readonly updateContainerRef = (container: PIXI.Container | null) => {
 		if (this._currentContainer != null) {
@@ -107,41 +175,8 @@ class GraphicsSuspenseManager {
 		this._updateGraphics();
 	};
 
-	public registerAsset(asset: GraphicsSuspenseAsset): () => void {
-		this._assets.add(asset);
-
-		const handlerCleanup = asset.on('update', () => {
-			this._update();
-		});
-		this._update();
-
-		return () => {
-			handlerCleanup();
-			this._assets.delete(asset);
-			this._update();
-		};
-	}
-
-	private _update(): void {
-		let total = 1;
-		let ready = 1;
-		for (const asset of this._assets) {
-			total++;
-			if (asset.isReady) {
-				ready++;
-			}
-		}
-
-		const allReady = (ready === total);
-
-		// If the previous state or new state is ready, check about changing to the stable state if the stabilization period passed
-		let readyStable = false;
-		if ((allReady || this._ready) && (Date.now() >= this._initTime + CREATION_STABILIZATION_PERIOD)) {
-			readyStable = true;
-		}
-
-		this._loadingProgress = allReady ? 1 : ready / total;
-		this._ready = allReady || readyStable;
+	protected override _update(): void {
+		super._update();
 		if (!this._ready) {
 			this._showProgress = true;
 		} else if (this._loadingProgress === 1) {
@@ -190,21 +225,5 @@ class GraphicsSuspenseManager {
 			}
 			PixiElementRequestUpdate(this._currentProgressGraphics);
 		}
-	}
-}
-
-class GraphicsSuspenseAsset extends TypedEventEmitter<{ update: void; }> {
-	private _isReady: boolean = false;
-
-	public get isReady(): boolean {
-		return this._isReady;
-	}
-
-	public setReady(value: boolean) {
-		if (this._isReady === value)
-			return;
-
-		this._isReady = value;
-		this.emit('update', undefined);
 	}
 }

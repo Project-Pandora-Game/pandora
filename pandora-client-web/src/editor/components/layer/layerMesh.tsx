@@ -341,7 +341,7 @@ function LayerTemplateSelect({ layer }: { layer: EditorAssetGraphicsLayer<'mesh'
 function LayerPointsFilterEdit({ layer }: { layer: EditorAssetGraphicsLayer<'mesh' | 'alphaImageMesh'>; }): ReactElement | null {
 	const { points, pointType } = useObservable(layer.definition);
 	const template = useObservable(EditorAssetGraphicsManager.editedPointTemplates).get(points) ??
-		EditorAssetGraphicsManager.originalPointTempalates[points];
+		EditorAssetGraphicsManager.originalPointTemplates[points];
 
 	// TODO: Consider rephrasing this.
 	return (

@@ -2,7 +2,7 @@
 
 .LoginTeaser {
 	@include common.flex(column);
-	width: min(95vw, 45em);
+	width: min(95vw, 42.6em);
 	min-height: min(90vh, 25em);
 	background: common.$theme-auth-routerbox-background;
 	color: common.$theme-auth-routerbox-text;

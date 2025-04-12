@@ -40,7 +40,7 @@ export class EditorAssetGraphicsManagerClass {
 	}
 
 	public readonly editedPointTemplates = new Observable<ReadonlyMap<string, Immutable<PointTemplateSource>>>(new Map());
-	public get originalPointTempalates(): Immutable<Partial<GraphicsSourceDefinitionFile['pointTemplates']>> {
+	public get originalPointTemplates(): Immutable<Partial<GraphicsSourceDefinitionFile['pointTemplates']>> {
 		return this._originalSourceDefinitions.pointTemplates;
 	}
 
@@ -234,7 +234,7 @@ export const EditorAssetGraphicsManager = new EditorAssetGraphicsManagerClass();
 
 export function useEditorPointTemplates(): ReadonlyMap<string, Immutable<PointTemplateSource>> {
 	const modifiedTemplates = useObservable(EditorAssetGraphicsManager.editedPointTemplates);
-	const originalPointTemplates = EditorAssetGraphicsManager.originalPointTempalates;
+	const originalPointTemplates = EditorAssetGraphicsManager.originalPointTemplates;
 
 	return useMemo((): ReadonlyMap<string, Immutable<PointTemplateSource>> => {
 		const result = new Map<string, Immutable<PointTemplateSource>>();

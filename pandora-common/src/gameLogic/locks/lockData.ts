@@ -11,8 +11,12 @@ export const LockDataBundleSchema = z.object({
 		time: z.number(),
 		/** Time the timer on the lock will expire, if lock includes a timer */
 		lockedUntil: z.number().int().nonnegative().optional(),
+		/** Whether the character that locked it is allowed to unlock the timer early */
+		disallowEarlyUnlock: z.boolean().optional(),
 	}).optional(),
+	/** Data applicable only to locks with fingerprint */
 	fingerprint: z.object({
+		/** Registered prints on the lock */
 		registered: CharacterIdSchema.array().readonly(),
 	}).optional(),
 	hidden: z.discriminatedUnion('side', [

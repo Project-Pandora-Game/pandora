@@ -49,12 +49,12 @@ export class PointTemplateEditor {
 
 	public getCurrent(): Immutable<PointTemplateSource> {
 		return EditorAssetGraphicsManager.editedPointTemplates.value.get(this.templateName) ??
-			EditorAssetGraphicsManager.originalPointTempalates[this.templateName] ??
+			EditorAssetGraphicsManager.originalPointTemplates[this.templateName] ??
 			DEFAULT_POINT_TEMPLATE;
 	}
 
 	public modifyTemplate(recipe: (d: Draft<PointTemplateSource>) => void) {
-		const originalTemplate: Immutable<PointTemplateSource> = EditorAssetGraphicsManager.originalPointTempalates[this.templateName] ?? DEFAULT_POINT_TEMPLATE;
+		const originalTemplate: Immutable<PointTemplateSource> = EditorAssetGraphicsManager.originalPointTemplates[this.templateName] ?? DEFAULT_POINT_TEMPLATE;
 
 		EditorAssetGraphicsManager.editedPointTemplates.produceImmer((d) => {
 			const template = d.get(this.templateName) ?? CloneDeepMutable(originalTemplate);

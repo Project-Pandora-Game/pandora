@@ -92,7 +92,7 @@ export function EditorBuildAssetGraphicsContext(asset: EditorAssetGraphics, logi
 		generateResolutions: EMPTY_ARRAY,
 		getPointTemplate(name) {
 			return EditorAssetGraphicsManager.editedPointTemplates.value.get(name) ??
-				EditorAssetGraphicsManager.originalPointTempalates[name];
+				EditorAssetGraphicsManager.originalPointTemplates[name];
 		},
 		bufferToBase64: ArrayToBase64,
 		loadImage(image) {

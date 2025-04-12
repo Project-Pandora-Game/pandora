@@ -3,12 +3,14 @@ import {
 	Assert,
 	AssertNever,
 	FormatTimeInterval,
+	GetLogger,
 	LockLogic,
 	MessageSubstitute,
 	type AppearanceActionData,
 	type CharacterId,
 	type LockAction,
 	type LockSetup,
+	type LockTimerOptions,
 } from 'pandora-common';
 import React, { useCallback, useEffect, useId, useMemo, useState, type ReactElement } from 'react';
 import crossIcon from '../../../assets/icons/cross.svg';
@@ -20,6 +22,7 @@ import { NumberInput } from '../../../common/userInteraction/input/numberInput.t
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { CharacterListInputActionButtons, CharacterListInputActions, type CharacterListInputAddButtonProps, type CharacterListInputRemoveButtonProps } from '../../common/characterListInput/characterListInput.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
+import { useConfirmDialog } from '../../dialog/dialog.tsx';
 import { usePlayerState } from '../../gameContext/playerContextProvider.tsx';
 import { useWardrobeActionContext } from '../wardrobeActionContext.tsx';
 
@@ -80,7 +83,6 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 		const { lockedUntil } = lockedData;
 		if (lockedUntil == null)
 			return null;
-
 		if (now >= lockedUntil)
 			return 0;
 
@@ -150,6 +152,13 @@ export function WardrobeLockLogicLocked<TActionContext>({ lockLogic, ActionButto
 			{
 				lockLogic.lockSetup.timer ? (
 					<Column className='WardrobeLockTimer'>
+						{
+							lockLogic.lockData.locked?.disallowEarlyUnlock === true ? (
+								<Row className='WardrobeInputRow'>
+									Cannot be unlocked early
+								</Row>
+							) : null
+						}
 						<Row className='WardrobeInputRow'>
 							{ timerText }
 						</Row>
@@ -186,6 +195,9 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 	const [password, setPassword] = useState<string>('');
 	const [useOldPassword, setUseOldPassword] = useState(false);
 	const [timer, setTimer] = useState<number>(0);
+	const [timerAllowEarly, setTimerAllowEarly] = useState(true);
+	const confirm = useConfirmDialog();
+	const id = useId();
 
 	// Attempted action for locking or unlocking the lock
 	const [currentlyAttempting, setCurrentlyAttempting] = useState<boolean>(false);
@@ -200,13 +212,35 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 			setUseOldPassword(false);
 	}, [lockLogic.hasPassword]);
 
+	const timerOptions = useMemo((): LockTimerOptions => {
+		return {
+			timer,
+			allowEarlyUnlock: timerAllowEarly,
+		};
+	}, [timer, timerAllowEarly]);
+
+	const setTimerAllowEarlyWithConfirm = useCallback((newValue: boolean) => {
+		if (newValue) {
+			setTimerAllowEarly(newValue);
+			return;
+		}
+
+		confirm('Confirm disallowing early unlock', <>Are you sure you want to prevent yourself from being able to unlock the lock before the timer runs out?</>)
+			.then((confirmed) => {
+				if (confirmed) {
+					setTimerAllowEarly(newValue);
+				}
+			})
+			.catch((err) => GetLogger('WardrobeLockLogic').error('Error locking lock slot:', err));
+	}, [setTimerAllowEarly, confirm]);
+
 	const action = useMemo((): LockAction => ({
 		action: 'lock',
 		password: currentlyAttempting ? undefined :
 					useOldPassword ? undefined :
 					(password || undefined),
-		timer: currentlyAttempting ? undefined : (timer || undefined),
-	}), [currentlyAttempting, password, timer, useOldPassword]);
+		timerOptions: currentlyAttempting ? undefined : (timerOptions || undefined),
+	}), [currentlyAttempting, password, timerOptions, useOldPassword]);
 
 	return (
 		<>
@@ -236,6 +270,10 @@ export function WardrobeLockLogicUnlocked<TActionContext>({ lockLogic, ActionBut
 			{
 				lockLogic.lockSetup.timer ? (
 					<Column className='WardrobeLockTimer'>
+						<Row className='WardrobeInputRow'>
+							<Checkbox id={ `${id}-timerAllowEarly` } checked={ timerAllowEarly } onChange={ setTimerAllowEarlyWithConfirm } />
+							<label htmlFor={ `${id}-timerAllowEarly` }>The lock can be unlocked by you even the before timer runs out</label>
+						</Row>
 						<TimerInput
 							value={ timer }
 							onChange={ setTimer }

@@ -1,5 +1,44 @@
 @use '../../styles/common';
 
+@property --x {
+	syntax: '<percentage>';
+	initial-value: 50%;
+	inherits: true;
+}
+
+@property --y {
+	syntax: '<percentage>';
+	initial-value: 0%;
+	inherits: true;
+}
+
+@keyframes borderRotation {
+	0% {
+		--x: 100%;
+		--y: 5%;
+	}
+	20% {
+		--x: 100%;
+		--y: 50%;
+	}
+	40% {
+		--x: 100%;
+		--y: 100%;
+	}
+	60% {
+		--x: 50%;
+		--y: 100%;
+	}
+	80% {
+		--x: 0%;
+		--y: 50%;
+	}
+	100% {
+		--x: 100%;
+		--y: 0%;
+	}
+}
+
 .character-select {
 	width: 100%;
 	display: flex;
@@ -16,10 +55,12 @@
 		width: min(min(16em, 60vh), 80vw);
 		padding: 1em;
 		border-radius: 0.3em;
-		border: 1em solid common.$theme-characterselect-card-edge;
-		border-style: ridge;
+		border: 0.5em solid common.$theme-characterselect-card-edge;
 		background: common.$theme-characterselect-card-outerborder;
 		box-shadow: common.$theme-characterselect-card-shadow;
+		border-image: conic-gradient(from 90deg, common.$theme-characterselect-card-shine, common.$theme-characterselect-card-edge 0.1turn, common.$theme-characterselect-card-edge 0.15turn, common.$theme-characterselect-card-shine 0.25turn) 30;
+		animation: borderRotate 18000ms linear infinite forwards;
+		border-image: radial-gradient(ellipse at var(--x) var(--y), common.$theme-characterselect-card-edge, common.$theme-characterselect-card-edge 10%, common.$theme-characterselect-card-shine 50%) 30;
 
 		.border {
 			@include common.center-flex(column);
@@ -45,11 +86,10 @@
 
 			.frame {
 				background: common.$theme-characterselect-card-frame-background;
-				border: max(0.1em, 2px) solid common.$theme-characterselect-card-frame-border;
 				box-shadow: common.$theme-characterselect-card-frame-shadow;
 				width: 5em;
 				height: 5em;
-				padding: 1em;
+				padding: 0.45em;
 				overflow: hidden;
 
 				img {
@@ -80,5 +120,25 @@
 		&:focus-visible {
 			outline: 0.25em solid common.$theme-characterselect-card-visiblefocus-outline;
 		}
+	}
+
+	.card:nth-child(1) {
+		animation: borderRotation 17000ms linear infinite forwards;
+	}
+
+	.card:nth-child(2) {
+		animation: borderRotation 20000ms linear infinite forwards;
+	}
+
+	.card:nth-child(3) {
+		animation: borderRotation 18000ms linear infinite forwards;
+	}
+
+	.card:nth-child(4) {
+		animation: borderRotation 21000ms linear infinite forwards;
+	}
+
+	.card:nth-child(5) {
+		animation: borderRotation 19000ms linear infinite forwards;
 	}
 }

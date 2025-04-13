@@ -301,20 +301,21 @@ $theme-tutorial-highlight-top-2: #ffa50040;
 
 //#region Character selection
 
-$theme-characterselect-card-shadow: 0 0 1.2em 0.2em rgba(0, 0, 0, 0.5) inset, 0 0.9em 3.5em 0.6em rgba(0, 0, 0, 0.3);
-$theme-characterselect-card-edge: #322319;
-$theme-characterselect-card-outerborder: #414446;
-$theme-characterselect-card-innerborder: #212224;
-$theme-characterselect-card-background: #a8acb1;
+$theme-characterselect-card-shadow: 0 0 1.2em 0.2em #00000077 inset, 0 0.9em 3.5em 0.6em #00000044;
+$theme-characterselect-card-edge: #272b31;
+$theme-characterselect-card-shine: #000000e6;
+$theme-characterselect-card-outerborder: #242527;
+$theme-characterselect-card-innerborder: #131314;
+$theme-characterselect-card-background: #7c8693;
 $theme-characterselect-card-hover-background: color-mix(in srgb, #616569, $theme-accent-color 35%);
 $theme-characterselect-card-text: #000;
 $theme-characterselect-card-text-dim: #333;
 $theme-characterselect-card-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%);
 $theme-characterselect-card-extrainfo-background: #053bb1;
 $theme-characterselect-card-extrainfo-text: #eee;
-$theme-characterselect-card-frame-background: $theme-normal-background;
-$theme-characterselect-card-frame-border: #eee;
-$theme-characterselect-card-frame-shadow: inset -0.1em 0.75em 1.5em #ffffff9a, inset 0 0 0.25em #ffffff9a;
+$theme-characterselect-card-frame-background: #fff;
+$theme-characterselect-card-frame-border: #778b9d;
+$theme-characterselect-card-frame-shadow: inset -0.1em 0.15em 0.3em #00000077, inset 0 0 0.15em #00000077;
 
 //#endregion
 

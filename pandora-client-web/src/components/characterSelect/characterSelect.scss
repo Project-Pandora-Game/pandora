@@ -15,7 +15,9 @@
 		height: min(min(20em, 75vh), 100vw);
 		width: min(min(16em, 60vh), 80vw);
 		padding: 1em;
-		border-radius: 0.2em;
+		border-radius: 0.3em;
+		border: 1em solid common.$theme-characterselect-card-edge;
+		border-style: ridge;
 		background: common.$theme-characterselect-card-outerborder;
 		box-shadow: common.$theme-characterselect-card-shadow;
 
@@ -29,6 +31,7 @@
 			background: common.$theme-characterselect-card-background;
 			color: common.$theme-characterselect-card-text;
 			border: 0.2em solid common.$theme-characterselect-card-innerborder;
+			box-shadow: common.$theme-characterselect-card-shadow;
 
 			.label {
 				position: absolute;
@@ -43,7 +46,6 @@
 			.frame {
 				background: common.$theme-characterselect-card-frame-background;
 				border: max(0.1em, 2px) solid common.$theme-characterselect-card-frame-border;
-				border-radius: 0.25em;
 				box-shadow: common.$theme-characterselect-card-frame-shadow;
 				width: 5em;
 				height: 5em;
@@ -58,8 +60,14 @@
 			}
 
 			.title {
-				font-size: 1.2em;
+				font-size: 1.1em;
 				text-align: center;
+				overflow-wrap: anywhere;
+			}
+
+			.id {
+				font-size: 0.7em;
+				color: common.$theme-characterselect-card-text-dim;
 			}
 		}
 

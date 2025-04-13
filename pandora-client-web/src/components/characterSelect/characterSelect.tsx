@@ -85,7 +85,7 @@ function CharacterListItem({ id, name, preview, state, onClick }: CharacterListI
 				<State state={ state } />
 				<div className='title'>{ name }</div>
 				<Preview name={ name } preview={ preview } />
-				{ id && <p>{ id }</p> }
+				<div className='id'>{ id && <p>{ id }</p> }</div>
 			</div>
 		</button>
 	);

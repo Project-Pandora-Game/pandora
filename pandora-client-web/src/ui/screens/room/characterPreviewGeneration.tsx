@@ -8,12 +8,13 @@ import { NumberInput } from '../../../common/userInteraction/input/numberInput.t
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
+import { GetDirectoryUrl, useAuthTokenHeader } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
 import { GraphicsCharacter, type PointLike } from '../../../graphics/graphicsCharacter.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
 import { RenderGraphicsTreeInBackground } from '../../../graphics/utility/renderInBackground.tsx';
-import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
+import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
 import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
 
 const CHARACTER_PREVIEW_SIZE = 64;
@@ -52,6 +53,7 @@ export function CharacterPreviewDialog({ close }: {
 	close: () => void;
 }): ReactElement {
 	const serviceManager = useServiceManager();
+	const auth = useAuthTokenHeader();
 	const { playerState } = usePlayerState();
 
 	const [previewAreaRadius, setPreviewAreaRadius] = useState(PREVIEW_AREA_SIZE_DEFAULT);
@@ -104,6 +106,9 @@ export function CharacterPreviewDialog({ close }: {
 	}, []);
 
 	const [createPreview, processing] = useAsyncEvent(async () => {
+		if (!auth)
+			return;
+
 		const preview = await RenderGraphicsTreeInBackground(
 			(
 				<serviceManagerContext.Provider value={ serviceManager }>
@@ -124,22 +129,33 @@ export function CharacterPreviewDialog({ close }: {
 			0xffffff,
 		);
 
-		const result = await new Promise<string>((resolve, reject) => {
+		await new Promise<void>((resolve, reject) => {
 			preview.toBlob((blob) => {
 				if (!blob) {
 					reject(new Error('Canvas.toBlob failed!'));
 					return;
 				}
 
-				const reader = new FileReader();
-
-				reader.onload = () => resolve(reader.result as string);
-				reader.onerror = reject;
-				reader.readAsDataURL(blob);
+				fetch(new URL(`pandora/character/${encodeURIComponent(playerState.id)}/preview`, GetDirectoryUrl()), {
+					method: 'PUT',
+					body: blob,
+					headers: {
+						Authorization: auth,
+					},
+					mode: 'cors',
+				})
+					.then((result) => {
+						resolve();
+						if (result.ok) {
+							toast('Preview successfully updated', TOAST_OPTIONS_SUCCESS);
+							close();
+						} else {
+							GetLogger('CharacterPreviewDialog').error('Error saving preview:', result.status, result.statusText);
+							toast('Error saving preview', TOAST_OPTIONS_ERROR);
+						}
+					}, reject);
 			}, 'image/png');
 		});
-
-		window.open(result, '_blank');
 	}, null, {
 		errorHandler(error) {
 			GetLogger('CharacterPreviewDialog').error('Error creating preview:', error);

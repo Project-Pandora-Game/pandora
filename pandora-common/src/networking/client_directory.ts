@@ -306,15 +306,6 @@ export const ClientDirectorySchema = {
 		request: z.object({}),
 		response: ZodCast<{ result: 'ok' | 'maxCharactersReached' | ShardError; }>(),
 	},
-	updateCharacter: { // TODO: Not yet implemented
-		request: z.object({
-			id: CharacterIdSchema,
-			preview: z.string().optional(),
-		}),
-		response: z.object({
-			result: z.boolean(),
-		}),
-	},
 	deleteCharacter: {
 		request: z.object({
 			id: CharacterIdSchema,

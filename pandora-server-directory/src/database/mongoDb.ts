@@ -1,6 +1,6 @@
 import AsyncLock from 'async-lock';
 import { cloneDeep } from 'lodash-es';
-import { CollationOptions, Db, MongoClient, MongoServerError } from 'mongodb';
+import { Binary, CollationOptions, Db, MongoClient, MongoServerError } from 'mongodb';
 import type { MongoMemoryServer } from 'mongodb-memory-server-core';
 import { nanoid } from 'nanoid';
 import {
@@ -112,10 +112,14 @@ const accountCollection = new ValidatedCollection(
 	],
 );
 
+const CharacterDatabaseDataSchema = CharacterDataSchema.extend({
+	preview: z.instanceof(Binary).optional().catch(undefined),
+});
+
 const characterCollection = new ValidatedCollection(
 	logger,
 	CHARACTERS_COLLECTION_NAME,
-	CharacterDataSchema,
+	CharacterDatabaseDataSchema,
 	[
 		{
 			name: 'id',
@@ -395,7 +399,7 @@ export default class MongoDatabase implements PandoraDatabase {
 	public async getCharactersForAccount(accountId: number): Promise<DatabaseCharacterSelfInfo[]> {
 		const result: DatabaseCharacterSelfInfo[] = await this._characters
 			.find({ accountId })
-			.project<Pick<ICharacterData, 'id' | 'name' | 'preview' | 'currentSpace' | 'inCreation'>>({ _id: 0, id: 1, name: 1, preview: 1, currentSpace: 1, inCreation: 1 })
+			.project<Pick<ICharacterData, 'id' | 'name' | 'currentSpace' | 'inCreation'>>({ _id: 0, id: 1, name: 1, currentSpace: 1, inCreation: 1 })
 			.toArray();
 
 		return result;
@@ -463,6 +467,27 @@ export default class MongoDatabase implements PandoraDatabase {
 			},
 		);
 		return result?.accessId ?? null;
+	}
+
+	public async getCharacterPreview(id: CharacterId): Promise<Uint8Array | null> {
+		const character = await this._characters.findOne<Pick<z.infer<typeof CharacterDatabaseDataSchema>, 'preview'>>({ id }, { projection: { preview: 1 } });
+		if (!character || character.preview == null)
+			return null;
+
+		return character.preview.buffer;
+	}
+
+	public async setCharacterPreview(id: CharacterId, preview: Uint8Array): Promise<boolean> {
+		const { matchedCount } = await this._characters
+			.updateOne({
+				id,
+			}, {
+				$set: {
+					preview: new Binary(preview, Binary.SUBTYPE_DEFAULT),
+				},
+			});
+		Assert(matchedCount <= 1);
+		return matchedCount === 1;
 	}
 
 	public async getCharactersInSpace(spaceId: SpaceId): Promise<{
@@ -725,7 +750,6 @@ export default class MongoDatabase implements PandoraDatabase {
 								character: {
 									id: character.id,
 									name: character.name,
-									preview: character.preview,
 									currentSpace: typeof character.currentRoom === 'string' ? UpdateSpaceId(character.currentRoom) : null,
 									inCreation: character.inCreation,
 								},
@@ -764,7 +788,6 @@ export default class MongoDatabase implements PandoraDatabase {
 						{
 							$set: {
 								currentSpace: migrationInfo.character.currentSpace,
-								preview: migrationInfo.character.preview,
 							},
 						},
 					);

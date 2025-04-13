@@ -125,6 +125,20 @@ export interface PandoraDatabase extends ServerService {
 	setCharacterAccess(id: CharacterId): Promise<string | null>;
 
 	/**
+	 * Gets the characters binary preview data.
+	 * @param id - Id of character
+	 * @returns The preview or `null` if character not found or preview is not set
+	 */
+	getCharacterPreview(id: CharacterId): Promise<Uint8Array | null>;
+
+	/**
+	 * Sets a preview for a character.
+	 * @param id - Id of character
+	 * @param preview - The preview to save
+	 */
+	setCharacterPreview(id: CharacterId, preview: Uint8Array): Promise<boolean>;
+
+	/**
 	 * Lists all characters that are in a given space
 	 * @param space - The id of a space to query for
 	 */

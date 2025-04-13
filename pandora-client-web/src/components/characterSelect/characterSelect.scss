@@ -1,12 +1,12 @@
 @use '../../styles/common';
 
-@property --x {
+@property --borderRotationX {
 	syntax: '<percentage>';
 	initial-value: 50%;
 	inherits: true;
 }
 
-@property --y {
+@property --borderRotationY {
 	syntax: '<percentage>';
 	initial-value: 0%;
 	inherits: true;
@@ -14,28 +14,24 @@
 
 @keyframes borderRotation {
 	0% {
-		--x: 100%;
-		--y: 5%;
+		--borderRotationX: 100%;
+		--borderRotationY: 0%;
 	}
-	20% {
-		--x: 100%;
-		--y: 50%;
+	28% {
+		--borderRotationX: 100%;
+		--borderRotationY: 100%;
 	}
-	40% {
-		--x: 100%;
-		--y: 100%;
+	50% {
+		--borderRotationX: 0%;
+		--borderRotationY: 100%;
 	}
-	60% {
-		--x: 50%;
-		--y: 100%;
-	}
-	80% {
-		--x: 0%;
-		--y: 50%;
+	78% {
+		--borderRotationX: 0%;
+		--borderRotationY: 0%;
 	}
 	100% {
-		--x: 100%;
-		--y: 0%;
+		--borderRotationX: 100%;
+		--borderRotationY: 0%;
 	}
 }
 
@@ -58,7 +54,14 @@
 		border: 0.5em solid common.$theme-characterselect-card-edge;
 		background: common.$theme-characterselect-card-outerborder;
 		box-shadow: common.$theme-characterselect-card-shadow;
-		border-image: radial-gradient(ellipse at var(--x) var(--y), common.$theme-characterselect-card-edge, common.$theme-characterselect-card-edge 10%, common.$theme-characterselect-card-shine 60%) 30;
+		--borderRotationX: 80%;
+		--borderRotationY: 0%;
+		border-image: radial-gradient(ellipse at var(--borderRotationX) var(--borderRotationY), common.$theme-characterselect-card-edge, common.$theme-characterselect-card-edge 10%, common.$theme-characterselect-card-shine 60%) 30;
+		animation: borderRotation 20000ms linear infinite forwards;
+
+		@media (prefers-reduced-motion) {
+			animation: none;
+		}
 
 		.border {
 			@include common.center-flex(column);
@@ -83,17 +86,26 @@
 			}
 
 			.frame {
-				background: common.$theme-characterselect-card-frame-background;
-				box-shadow: common.$theme-characterselect-card-frame-shadow;
-				width: 5em;
-				height: 5em;
-				padding: 0.45em;
-				overflow: hidden;
+				position: relative;
+				width: 4.3em;
+				height: 4.3em;
+				overflow: clip;
 
 				img {
 					object-fit: contain;
 					width: 100%;
 					height: 100%;
+				}
+
+				&:not(.placeholder) {
+					background: common.$theme-characterselect-card-frame-background;
+
+					&::after {
+						content: '';
+						position: absolute;
+						box-shadow: common.$theme-characterselect-card-frame-shadow;
+						inset: 0;
+					}
 				}
 			}
 
@@ -104,7 +116,7 @@
 			}
 
 			.id {
-				font-size: 0.7em;
+				font-size: 0.8em;
 				color: common.$theme-characterselect-card-text-dim;
 			}
 		}
@@ -120,23 +132,9 @@
 		}
 	}
 
-	.card:nth-child(1) {
-		animation: borderRotation 17000ms linear infinite forwards;
-	}
-
-	.card:nth-child(2) {
-		animation: borderRotation 20000ms linear infinite forwards;
-	}
-
-	.card:nth-child(3) {
-		animation: borderRotation 18000ms linear infinite forwards;
-	}
-
-	.card:nth-child(4) {
-		animation: borderRotation 21000ms linear infinite forwards;
-	}
-
-	.card:nth-child(5) {
-		animation: borderRotation 19000ms linear infinite forwards;
+	@for $num from 1 through 5 {
+		.card:nth-child(5n+#{$num}) {
+			animation-delay: ((($num - 1) * 3) % 5) * -2000ms;
+		}
 	}
 }

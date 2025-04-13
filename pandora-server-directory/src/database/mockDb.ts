@@ -50,9 +50,13 @@ export function PrehashPassword(password: string): string {
 
 const logger = GetLogger('db');
 
+type ICharacterDatabaseData = ICharacterData & {
+	preview?: Uint8Array;
+};
+
 export class MockDatabase implements PandoraDatabase {
 	private accountDb: Set<DatabaseAccountWithSecure> = new Set();
-	private characterDb: Map<CharacterId, ICharacterData> = new Map();
+	private characterDb: Map<CharacterId, ICharacterDatabaseData> = new Map();
 	private spacesDb: Map<SpaceId, SpaceData> = new Map();
 	private configDb: Map<DatabaseConfigType, DatabaseConfigData<DatabaseConfigType>> = new Map();
 	private directMessagesDb: Map<DirectMessageAccounts, DatabaseDirectMessageAccounts> = new Map();
@@ -201,7 +205,6 @@ export class MockDatabase implements PandoraDatabase {
 				.map((c): DatabaseCharacterSelfInfo => ({
 					id: c.id,
 					name: c.name,
-					preview: c.preview,
 					currentSpace: c.currentSpace,
 					inCreation: c.inCreation,
 				})),
@@ -256,6 +259,23 @@ export class MockDatabase implements PandoraDatabase {
 
 		char.accessId = nanoid(8);
 		return Promise.resolve(char.accessId);
+	}
+
+	public getCharacterPreview(id: CharacterId): Promise<Uint8Array | null> {
+		const char = this.characterDb.get(id);
+		if (!char)
+			return Promise.resolve(null);
+
+		return Promise.resolve(cloneDeep(char.preview ?? null));
+	}
+
+	public setCharacterPreview(id: CharacterId, preview: Uint8Array): Promise<boolean> {
+		const char = this.characterDb.get(id);
+		if (char == null)
+			return Promise.resolve(false);
+
+		char.preview = cloneDeep(preview);
+		return Promise.resolve(true);
 	}
 
 	public getCharactersInSpace(spaceId: SpaceId): Promise<{

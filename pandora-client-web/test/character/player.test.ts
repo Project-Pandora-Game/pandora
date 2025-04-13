@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash-es';
-import { ASSET_PREFERENCES_DEFAULT, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, ICharacterData, ICharacterRoomData } from 'pandora-common';
+import { ASSET_PREFERENCES_DEFAULT, CHARACTER_DEFAULT_PUBLIC_SETTINGS, CharacterSize, ICharacterRoomData, type ICharacterPrivateData } from 'pandora-common';
 import { PlayerCharacter } from '../../src/character/player.ts';
 const jest = import.meta.jest; // Jest is not properly injected in ESM
 
@@ -32,22 +32,19 @@ describe('PlayerCharacter', () => {
 		});
 	});
 
-	function createPlayer(overrides?: Partial<ICharacterData>): void {
+	function createPlayer(overrides?: Partial<ICharacterPrivateData>): void {
 		player = new PlayerCharacter(MockPlayerData(overrides));
 		onUpdateUnsubscribe = player.on('update', updateListener);
 	}
 });
 
-function MockPlayerData(overrides?: Partial<ICharacterData & ICharacterRoomData>): ICharacterData & ICharacterRoomData {
+function MockPlayerData(overrides?: Partial<ICharacterPrivateData & ICharacterRoomData>): ICharacterPrivateData & ICharacterRoomData {
 	return {
 		id: 'c123',
 		accountId: 0,
 		name: 'mock',
 		profileDescription: 'A mock player',
-		preview: '',
-		currentSpace: null,
 		created: 0,
-		accessId: 'mockID',
 		settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 		assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 		position: [CharacterSize.WIDTH / 2, 0, 0],

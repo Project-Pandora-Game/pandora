@@ -13,12 +13,11 @@ import {
 } from 'pandora-common';
 import type { DatabaseCharacterSelfInfo } from './databaseStructure.ts';
 
-export function CreateCharacter(accountId: number, id: CharacterId): [DatabaseCharacterSelfInfo, ICharacterData] {
+export function CreateCharacter(accountId: number, id: CharacterId): [DatabaseCharacterSelfInfo, Omit<ICharacterData, 'preview'>] {
 	const info: DatabaseCharacterSelfInfo = {
 		inCreation: true,
 		id,
 		name: '',
-		preview: '',
 		currentSpace: null,
 	};
 
@@ -27,7 +26,6 @@ export function CreateCharacter(accountId: number, id: CharacterId): [DatabaseCh
 		id,
 		accountId,
 		name: info.name,
-		preview: '',
 		currentSpace: null,
 		profileDescription: '',
 		created: -1,

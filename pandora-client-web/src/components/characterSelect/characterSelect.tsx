@@ -1,12 +1,14 @@
+import classNames from 'classnames';
 import { noop } from 'lodash-es';
-import { CharacterSelfInfo, EMPTY, GetLogger, IClientDirectoryNormalResult } from 'pandora-common';
-import { ReactElement, useCallback, useState } from 'react';
+import { CharacterSelfInfo, EMPTY, GetLogger, IClientDirectoryNormalResult, type CharacterId } from 'pandora-common';
+import { ReactElement, useCallback, useEffect, useState } from 'react';
 import { Navigate } from 'react-router';
 import { toast } from 'react-toastify';
+import profileIcon from '../../assets/icons/profile.svg';
 import { useCreateNewCharacter } from '../../networking/account_manager.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { useService } from '../../services/serviceProvider.tsx';
-import { useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
+import { GetDirectoryUrl, useAuthTokenHeader, useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
 import './characterSelect.scss';
 
@@ -78,13 +80,17 @@ type CharacterListItemProps = Partial<CharacterSelfInfo> & {
 	onClick: () => void;
 };
 
-function CharacterListItem({ id, name, preview, state, onClick }: CharacterListItemProps): ReactElement {
+function CharacterListItem({ id, name, state, onClick }: CharacterListItemProps): ReactElement {
 	return (
 		<button className='card' onClick={ onClick }>
 			<div className='border'>
 				<State state={ state } />
 				<div className='title'>{ name }</div>
-				<Preview name={ name } preview={ preview } />
+				{
+					id != null ? (
+						<Preview name={ name } id={ id } />
+					) : null
+				}
 				<div className='id'>{ id && <p>{ id }</p> }</div>
 			</div>
 		</button>
@@ -102,22 +108,56 @@ function State({ state }: { state?: string; }): ReactElement | null {
 
 interface PreviewProps {
 	name: string;
-	preview?: string;
+	id: CharacterId;
 }
 
-const DEBUG_PREVIEW_PREVIEW = false;
-function Preview({ name, preview }: PreviewProps): ReactElement | null {
-	if (!preview) {
-		if (DEBUG_PREVIEW_PREVIEW && preview != null) {
-			return <div className='frame' />;
-		}
-		return null;
-	}
+function Preview({ name, id }: PreviewProps): ReactElement | null {
+	const [preview, setPreview] = useState<string | null>(null);
+	const auth = useAuthTokenHeader();
+
+	useEffect(() => {
+		if (!auth)
+			return;
+
+		let valid = true;
+
+		fetch(new URL(`pandora/character/${encodeURIComponent(id)}/preview`, GetDirectoryUrl()), {
+			headers: {
+				Authorization: auth,
+			},
+		})
+			.then((result) => {
+				if (!result.ok) {
+					throw new Error(`Request failed: ${result.status} ${result.statusText}`);
+				}
+				return result;
+			})
+			.then((result) => result.blob())
+			.then((blob) => new Promise<string>((resolve, reject) => {
+				const reader = new FileReader();
+
+				reader.onload = () => resolve(reader.result as string);
+				reader.onerror = reject;
+				reader.readAsDataURL(blob);
+			}))
+			.then((image) => {
+				if (valid) {
+					setPreview(image);
+				}
+			})
+			.catch((err) => {
+				GetLogger('CharacterListPreview').warning(`Error getting preview for character ${id}:`, err);
+			});
+
+		return () => {
+			valid = false;
+		};
+	}, [id, auth]);
 
 	return (
-		<div className='frame'>
+		<div className={ classNames('frame', preview == null ? 'placeholder' : null) }>
 			<img
-				src={ `data:image/png;base64,${preview}` }
+				src={ preview ?? profileIcon }
 				alt={ `Preview image for ${name}` }
 			/>
 		</div>

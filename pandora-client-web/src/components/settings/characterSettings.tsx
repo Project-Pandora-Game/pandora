@@ -9,6 +9,7 @@ import { Select } from '../../common/userInteraction/select/select.tsx';
 import { PrehashPassword } from '../../crypto/helpers.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../persistentToast.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
+import { CharacterPreviewGenerationButton } from '../../ui/screens/room/characterPreviewGeneration.tsx';
 import { Button } from '../common/button/button.tsx';
 import { ColorInput } from '../common/colorInput/colorInput.tsx';
 import { Column, Row } from '../common/container/container.tsx';
@@ -39,6 +40,7 @@ export function CharacterSettings(): ReactElement | null {
 			</Button>
 			<LabelColor playerData={ playerData } />
 			<Pronouns playerData={ playerData } />
+			<Preview />
 			<DeleteCharacter playerData={ playerData } />
 		</>
 	);
@@ -89,6 +91,17 @@ function Pronouns({ playerData }: { playerData: Readonly<ICharacterPrivateData>;
 					disabled={ !allowChange || pronoun === playerData.settings.pronoun }>
 					Save
 				</Button>
+			</div>
+		</fieldset>
+	);
+}
+
+function Preview(): ReactElement {
+	return (
+		<fieldset>
+			<legend>Preview</legend>
+			<div className='input-row'>
+				<CharacterPreviewGenerationButton />
 			</div>
 		</fieldset>
 	);

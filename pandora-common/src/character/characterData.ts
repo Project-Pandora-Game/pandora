@@ -54,11 +54,10 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	accessId: z.string(),
 	appearance: AppearanceBundleSchema.optional(),
 	/**
-	 * TODO: Not yet implemented
-	 *
 	 * A character preview image, used in the character picker.
+	 * Stored as binary data in database.
 	 */
-	preview: z.string(),
+	preview: z.unknown().optional(),
 	/** The space the character is currently in. `null` means personal space. */
 	currentSpace: SpaceIdSchema.nullable().default(null),
 	// TODO(spaces): Migrate this to be a personalSpace data
@@ -77,7 +76,6 @@ export type ICharacterData = z.infer<typeof CharacterDataSchema>;
 
 export const CHARACTER_DIRECTORY_UPDATEABLE_PROPERTIES = [
 	'accessId',
-	'preview',
 	'currentSpace',
 ] as const satisfies readonly (keyof ICharacterData)[];
 export const CharacterDataDirectoryUpdateSchema = CharacterDataSchema.pick(ArrayToRecordKeys(CHARACTER_DIRECTORY_UPDATEABLE_PROPERTIES, true)).partial();
@@ -114,7 +112,6 @@ export type ICharacterDataShard = z.infer<typeof CharacterDataShardSchema>;
 export const CharacterSelfInfoSchema = z.object({
 	id: CharacterIdSchema,
 	name: z.string(),
-	preview: z.string(),
 	state: z.string(),
 	currentSpace: SpaceIdSchema.nullable(),
 	inCreation: z.literal(true).optional(),

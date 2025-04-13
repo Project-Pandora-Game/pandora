@@ -6,12 +6,12 @@ import {
 	CharacterId,
 	CloneDeepMutable,
 	GetLogger,
-	ICharacterData,
 	IDirectoryCharacterConnectionInfo,
 	Logger,
 	NOT_NARROWING_TRUE,
 	SpaceId,
 	SpaceInviteId,
+	type ICharacterData,
 	type ICharacterDataDirectoryUpdate,
 } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -85,7 +85,7 @@ export class CharacterInfo {
 	}
 
 	@AsyncSynchronized('object')
-	public async finishCharacterCreation(): Promise<ICharacterData | null> {
+	public async finishCharacterCreation(): Promise<Pick<ICharacterData, 'id' | 'name' | 'created'> | null> {
 		if (this._invalid || !this.inCreation)
 			return null;
 

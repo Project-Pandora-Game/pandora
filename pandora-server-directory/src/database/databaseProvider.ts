@@ -3,6 +3,7 @@ import type {
 	CharacterId,
 	ICharacterData,
 	ICharacterDataDirectoryUpdate,
+	ICharacterDataShard,
 	ICharacterDataShardUpdate,
 	ServerService,
 	SpaceData,
@@ -98,7 +99,7 @@ export interface PandoraDatabase extends ServerService {
 	 * Finish the character creation process
 	 * @param accountId - Id of account to create character for
 	 */
-	finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<ICharacterData | null>;
+	finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<Pick<ICharacterData, 'id' | 'name' | 'created'> | null>;
 
 	/**
 	 * Update character's info
@@ -217,7 +218,7 @@ export interface PandoraDatabase extends ServerService {
 	 * @param id - Id of character
 	 * @param accessId - Id of access or false to generate a new one
 	 */
-	getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null>;
+	getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterDataShard | null>;
 
 	//#endregion
 

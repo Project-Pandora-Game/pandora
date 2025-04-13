@@ -83,6 +83,7 @@ export const CHARACTER_DIRECTORY_UPDATEABLE_PROPERTIES = [
 export const CharacterDataDirectoryUpdateSchema = CharacterDataSchema.pick(ArrayToRecordKeys(CHARACTER_DIRECTORY_UPDATEABLE_PROPERTIES, true)).partial();
 export type ICharacterDataDirectoryUpdate = z.infer<typeof CharacterDataDirectoryUpdateSchema>;
 
+/** Properties of character data that Shard is allowed to update */
 export const CHARACTER_SHARD_UPDATEABLE_PROPERTIES = [
 	'name',
 	'profileDescription',
@@ -97,6 +98,18 @@ export const CHARACTER_SHARD_UPDATEABLE_PROPERTIES = [
 ] as const satisfies readonly Exclude<keyof ICharacterData, ((typeof CHARACTER_DIRECTORY_UPDATEABLE_PROPERTIES)[number])>[];
 export const CharacterDataShardUpdateSchema = CharacterDataSchema.pick(ArrayToRecordKeys(CHARACTER_SHARD_UPDATEABLE_PROPERTIES, true)).partial();
 export type ICharacterDataShardUpdate = z.infer<typeof CharacterDataShardUpdateSchema>;
+
+/** Properties of character data that Shard is allowed to access */
+export const CHARACTER_SHARD_VISIBLE_PROPERTIES = [
+	...CHARACTER_SHARD_UPDATEABLE_PROPERTIES,
+	'id',
+	'accountId',
+	'accessId',
+	'inCreation',
+	'created',
+] as const satisfies readonly (keyof ICharacterData)[];
+export const CharacterDataShardSchema = CharacterDataSchema.pick(ArrayToRecordKeys(CHARACTER_SHARD_VISIBLE_PROPERTIES, true));
+export type ICharacterDataShard = z.infer<typeof CharacterDataShardSchema>;
 
 export const CharacterSelfInfoSchema = z.object({
 	id: CharacterIdSchema,

@@ -4,6 +4,7 @@ import { nanoid } from 'nanoid';
 import {
 	AccountId,
 	ArrayToRecordKeys,
+	CHARACTER_SHARD_VISIBLE_PROPERTIES,
 	CharacterId,
 	GetLogger,
 	ICharacterData,
@@ -16,6 +17,7 @@ import {
 	SpaceDataShardUpdate,
 	SpaceDirectoryData,
 	SpaceId,
+	type ICharacterDataShard,
 } from 'pandora-common';
 import { CreateAccountData } from '../account/account.ts';
 import type { PandoraDatabase } from './databaseProvider.ts';
@@ -217,7 +219,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve(cloneDeep(info));
 	}
 
-	public finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<ICharacterData | null> {
+	public finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<Pick<ICharacterData, 'id' | 'name' | 'created'> | null> {
 		const char = this.characterDb.get(characterId);
 		if (char?.accountId !== accountId || !char?.inCreation)
 			return Promise.resolve(null);
@@ -225,7 +227,7 @@ export class MockDatabase implements PandoraDatabase {
 		char.inCreation = undefined;
 		char.created = Date.now();
 
-		return Promise.resolve(cloneDeep(char));
+		return Promise.resolve(pick(cloneDeep(char), ['id', 'name', 'created']));
 	}
 
 	public updateCharacter(id: CharacterId, data: ICharacterDataDirectoryUpdate & ICharacterDataShardUpdate, accessId: string | null): Promise<boolean> {
@@ -394,7 +396,7 @@ export class MockDatabase implements PandoraDatabase {
 		return Promise.resolve();
 	}
 
-	public getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null> {
+	public getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterDataShard | null> {
 		const char = this.characterDb.get(id);
 		if (!char)
 			return Promise.resolve(null);
@@ -404,7 +406,7 @@ export class MockDatabase implements PandoraDatabase {
 		else if (accessId !== char.accessId)
 			return Promise.resolve(null);
 
-		return Promise.resolve(cloneDeep(char));
+		return Promise.resolve(pick(cloneDeep(char), CHARACTER_SHARD_VISIBLE_PROPERTIES));
 	}
 
 	public getAccountContacts(accountId: AccountId): Promise<DatabaseAccountContact[]> {

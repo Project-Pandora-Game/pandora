@@ -1,5 +1,5 @@
 import type { AssetManager } from '../../assets/assetManager.ts';
-import type { ICharacterData } from '../../character/index.ts';
+import type { ICharacterDataShard } from '../../character/index.ts';
 import type { Logger } from '../../logging/logger.ts';
 import { AssertNever } from '../../utility/misc.ts';
 import { AssetPreferencesSubsystemServer } from '../assetPreferences/index.ts';
@@ -11,15 +11,12 @@ import { GameLogicPermissionServer, IPermissionProvider, PermissionGroup } from 
 import { GameLogicCharacter } from './character.ts';
 
 export class GameLogicCharacterServer extends GameLogicCharacter {
-	public readonly _data: ICharacterData;
-
 	public override readonly interactions: InteractionSubsystemServer;
 	public override readonly assetPreferences: AssetPreferencesSubsystemServer;
 	public override readonly characterModifiers: CharacterModifiersSubsystemServer;
 
-	constructor(data: ICharacterData, assetManager: AssetManager, logger: Logger) {
+	constructor(data: ICharacterDataShard, assetManager: AssetManager, logger: Logger) {
 		super(data);
-		this._data = data;
 		this.interactions = new InteractionSubsystemServer(
 			this,
 			data.interactionConfig ?? MakeDefaultInteractionSystemData(),

@@ -11,7 +11,7 @@ import {
 	AssetPreferencesPublic,
 	AsyncSynchronized,
 	CHARACTER_SHARD_UPDATEABLE_PROPERTIES,
-	CharacterDataSchema,
+	CharacterDataShardSchema,
 	CharacterId,
 	CharacterRestrictionsManager,
 	CharacterRoomPosition,
@@ -21,7 +21,6 @@ import {
 	GenerateInitialRoomPosition,
 	GetDefaultAppearanceBundle,
 	GetLogger,
-	ICharacterData,
 	ICharacterDataShardUpdate,
 	ICharacterPrivateData,
 	ICharacterPublicData,
@@ -42,6 +41,7 @@ import {
 	SpaceId,
 	type AppearanceActionProcessingResult,
 	type ChatMessageFilterMetadata,
+	type ICharacterDataShard,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -72,7 +72,7 @@ type ICharacterPrivateDataChange = Omit<ICharacterDataShardUpdate, keyof ICharac
 type ManuallyGeneratedKeys = 'appearance' | 'personalRoom';
 
 export class Character {
-	private readonly data: Omit<ICharacterData, ManuallyGeneratedKeys>;
+	private readonly data: Omit<ICharacterDataShard, ManuallyGeneratedKeys>;
 	public accountData: IShardAccountDefinition;
 	public connectSecret: string | null;
 	public lastOnline: number;
@@ -190,7 +190,7 @@ export class Character {
 		this.modified.add('position');
 	}
 
-	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string | null, spaceId: SpaceId | null) {
+	constructor(data: ICharacterDataShard, account: IShardAccountDefinition, connectSecret: string | null, spaceId: SpaceId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
 		this.data = data;
 		this.accountData = account;
@@ -442,12 +442,12 @@ export class Character {
 		}
 	}
 
-	public static async load(id: CharacterId, accessId: string): Promise<ICharacterData | null> {
+	public static async load(id: CharacterId, accessId: string): Promise<ICharacterDataShard | null> {
 		const character = await GetDatabase().getCharacter(id, accessId);
 		if (character === false) {
 			return null;
 		}
-		const result = await CharacterDataSchema.safeParseAsync(character);
+		const result = await CharacterDataShardSchema.safeParseAsync(character);
 		if (!result.success) {
 			logger.error(`Failed to load character ${id}: `, result.error);
 			return null;
@@ -585,9 +585,9 @@ export class Character {
 		}
 	}
 
-	private setValue<Key extends keyof ICharacterPublicDataChange>(key: Key, value: ICharacterData[Key], intoSpace: true): void;
-	private setValue<Key extends keyof ICharacterPrivateDataChange>(key: Key, value: ICharacterData[Key], intoSpace: false): void;
-	private setValue<Key extends keyof Omit<ICharacterDataShardUpdate, ManuallyGeneratedKeys>>(key: Key, value: ICharacterData[Key], intoSpace: boolean): void {
+	private setValue<Key extends keyof ICharacterPublicDataChange>(key: Key, value: ICharacterDataShard[Key], intoSpace: true): void;
+	private setValue<Key extends keyof ICharacterPrivateDataChange>(key: Key, value: ICharacterDataShard[Key], intoSpace: false): void;
+	private setValue<Key extends keyof Omit<ICharacterDataShardUpdate, ManuallyGeneratedKeys>>(key: Key, value: ICharacterDataShard[Key], intoSpace: boolean): void {
 		if (this.data[key] === value)
 			return;
 

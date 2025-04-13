@@ -1,12 +1,12 @@
-import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified, SocketInterfaceDefinition } from './helpers.ts';
-import { CharacterIdSchema } from '../character/characterTypes.ts';
-import { CharacterDataSchema, CharacterDataShardUpdateSchema, ICharacterData } from '../character/characterData.ts';
-import { DirectoryShardUpdateSchema, ShardCharacterDefinitionSchema, ShardSpaceDefinitionSchema } from './directory_shard.ts';
-import { SpaceDataShardUpdateSchema, SpaceData, SpaceIdSchema, ShardFeatureSchema } from '../space/space.ts';
+import { Immutable } from 'immer';
 import { z } from 'zod';
+import { CharacterDataSchema, CharacterDataShardUpdateSchema, type ICharacterDataShard } from '../character/characterData.ts';
+import { CharacterIdSchema } from '../character/characterTypes.ts';
+import { ShardFeatureSchema, SpaceData, SpaceDataShardUpdateSchema, SpaceIdSchema } from '../space/space.ts';
 import { Satisfies } from '../utility/misc.ts';
 import { ZodCast } from '../validation.ts';
-import { Immutable } from 'immer';
+import { DirectoryShardUpdateSchema, ShardCharacterDefinitionSchema, ShardSpaceDefinitionSchema } from './directory_shard.ts';
+import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
 export const ShardDirectorySchema = {
 	shardRegister: {
@@ -58,7 +58,11 @@ export const ShardDirectorySchema = {
 		request: z.object({
 			id: CharacterIdSchema,
 		}),
-		response: CharacterDataSchema,
+		response: CharacterDataSchema.pick({
+			id: true,
+			name: true,
+			created: true,
+		}),
 	},
 
 	//#region Database
@@ -69,7 +73,7 @@ export const ShardDirectorySchema = {
 		}),
 		response: z.object({
 			// Response is intentionally not checked, as DB might contain outdated data and migration happens on the shard
-			result: ZodCast<ICharacterData>().nullable(),
+			result: ZodCast<ICharacterDataShard>().nullable(),
 		}),
 	},
 	setCharacter: {

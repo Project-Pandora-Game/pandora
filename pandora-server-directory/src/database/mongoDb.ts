@@ -9,6 +9,7 @@ import {
 	Assert,
 	AssertNotNullable,
 	AsyncSynchronized,
+	CHARACTER_SHARD_VISIBLE_PROPERTIES,
 	CharacterDataSchema,
 	CharacterId,
 	CharacterIdSchema,
@@ -26,6 +27,7 @@ import {
 	SpaceIdSchema,
 	ZodCast,
 	ZodTemplateString,
+	type ICharacterDataShard,
 } from 'pandora-common';
 import { z } from 'zod';
 import { ENV } from '../config.ts';
@@ -413,11 +415,14 @@ export default class MongoDatabase implements PandoraDatabase {
 		return info;
 	}
 
-	public async finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<ICharacterData | null> {
-		const result = await this._characters.findOneAndUpdate(
+	public async finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<Pick<ICharacterData, 'id' | 'name' | 'created'> | null> {
+		const result: Pick<ICharacterData, 'id' | 'name' | 'created' | 'inCreation'> | null = await this._characters.findOneAndUpdate(
 			{ accountId, id: characterId, inCreation: true },
 			{ $set: { created: Date.now() }, $unset: { inCreation: '' } },
-			{ returnDocument: 'after' },
+			{
+				returnDocument: 'after',
+				projection: { _id: 0, id: 1, name: 1, created: 1, inCreation: 1 },
+			},
 		);
 		if (!result || result.inCreation !== undefined)
 			return null;
@@ -449,7 +454,14 @@ export default class MongoDatabase implements PandoraDatabase {
 	}
 
 	public async setCharacterAccess(id: CharacterId): Promise<string | null> {
-		const result = await this._characters.findOneAndUpdate({ id }, { $set: { accessId: nanoid(8) } }, { returnDocument: 'after' });
+		const result = await this._characters.findOneAndUpdate(
+			{ id },
+			{ $set: { accessId: nanoid(8) } },
+			{
+				returnDocument: 'after',
+				projection: { accessId: 1 },
+			},
+		);
 		return result?.accessId ?? null;
 	}
 
@@ -595,14 +607,21 @@ export default class MongoDatabase implements PandoraDatabase {
 		await this._accounts.updateOne({ id: accountId }, { $set: { directMessages: directMessageInfo } });
 	}
 
-	public async getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null> {
+	public async getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterDataShard | null> {
 		if (accessId === false) {
 			accessId = nanoid(8);
-			const result = await this._characters.findOneAndUpdate({ id }, { $set: { accessId } }, { returnDocument: 'after' });
+			const result: Pick<ICharacterData, (typeof CHARACTER_SHARD_VISIBLE_PROPERTIES)[number]> | null = await this._characters.findOneAndUpdate(
+				{ id },
+				{ $set: { accessId } },
+				{
+					returnDocument: 'after',
+					projection: ArrayToRecordKeys(CHARACTER_SHARD_VISIBLE_PROPERTIES, 1),
+				},
+			);
 			return result ? result : null;
 		}
 
-		const character = await this._characters.findOne({ id, accessId });
+		const character = await this._characters.findOne<Pick<ICharacterData, (typeof CHARACTER_SHARD_VISIBLE_PROPERTIES)[number]>>({ id, accessId }, { projection: ArrayToRecordKeys(CHARACTER_SHARD_VISIBLE_PROPERTIES, 1) });
 		if (!character)
 			return null;
 

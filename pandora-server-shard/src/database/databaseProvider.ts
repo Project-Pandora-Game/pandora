@@ -1,6 +1,6 @@
 import type {
 	CharacterId,
-	ICharacterData,
+	ICharacterDataShard,
 	ICharacterDataShardUpdate,
 	ServerService,
 	SpaceData,
@@ -17,7 +17,7 @@ export interface ShardDatabase extends ServerService {
 	 * Get a character's data
 	 * @param id - Id of character
 	 */
-	getCharacter(id: CharacterId, accessId: string): Promise<ICharacterData | null | false>;
+	getCharacter(id: CharacterId, accessId: string): Promise<ICharacterDataShard | null | false>;
 
 	/**
 	 * Update a character's data

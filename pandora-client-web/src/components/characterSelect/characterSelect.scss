@@ -58,9 +58,7 @@
 		border: 0.5em solid common.$theme-characterselect-card-edge;
 		background: common.$theme-characterselect-card-outerborder;
 		box-shadow: common.$theme-characterselect-card-shadow;
-		border-image: conic-gradient(from 90deg, common.$theme-characterselect-card-shine, common.$theme-characterselect-card-edge 0.1turn, common.$theme-characterselect-card-edge 0.15turn, common.$theme-characterselect-card-shine 0.25turn) 30;
-		animation: borderRotate 18000ms linear infinite forwards;
-		border-image: radial-gradient(ellipse at var(--x) var(--y), common.$theme-characterselect-card-edge, common.$theme-characterselect-card-edge 10%, common.$theme-characterselect-card-shine 50%) 30;
+		border-image: radial-gradient(ellipse at var(--x) var(--y), common.$theme-characterselect-card-edge, common.$theme-characterselect-card-edge 10%, common.$theme-characterselect-card-shine 60%) 30;
 
 		.border {
 			@include common.center-flex(column);

@@ -1,7 +1,7 @@
 import React, { type ChangeEvent } from 'react';
 
 /** Dictates how long will the element definitely not update for after being modified */
-const INPUT_CHANGE_COOLDOWN_PERIOD = 1_000;
+const INPUT_CHANGE_COOLDOWN_PERIOD = 500;
 
 export interface InputBaseProps<TValue> {
 	value: TValue;

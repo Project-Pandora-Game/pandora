@@ -16,9 +16,9 @@ export function usePlayerState(): {
 	globalState: AssetFrameworkGlobalState;
 	playerState: AssetFrameworkCharacterState;
 } {
-	const player = usePlayer();
-	AssertNotNullable(player);
-	const globalState = useGlobalState(useGameState());
+	const gameState = useGameState();
+	const player = gameState.player;
+	const globalState = useGlobalState(gameState);
 	const playerState = useCharacterState(globalState, player.id);
 	AssertNotNullable(playerState);
 

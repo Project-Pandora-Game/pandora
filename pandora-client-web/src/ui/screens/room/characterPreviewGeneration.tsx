@@ -1,28 +1,32 @@
-import { CharacterSize, GetLogger, type Rectangle } from 'pandora-common';
+import type { Immutable } from 'immer';
+import { CHARACTER_SETTINGS_DEFAULT, CharacterSize, GetLogger, type AssetFrameworkCharacterState, type CharacterSettings, type Rectangle, type ServiceManager } from 'pandora-common';
 import type { GraphicsContext } from 'pixi.js';
-import { useCallback, useMemo, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { toast } from 'react-toastify';
 import profileIcon from '../../../assets/icons/profile.svg';
-import { useAsyncEvent } from '../../../common/useEvent.ts';
-import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
+import { useCharacterDataOptional } from '../../../character/character.ts';
+import { useAsyncEvent, useEvent } from '../../../common/useEvent.ts';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { GetDirectoryUrl, useAuthTokenHeader } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
+import { useGameStateOptional, useGlobalState } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
+import { useCharacterSettingDriver } from '../../../components/settings/helpers/characterSettings.tsx';
+import { NumberSettingInput, ToggleSettingInput, useSubsettingDriver } from '../../../components/settings/helpers/settingsInputs.tsx';
 import { Graphics } from '../../../graphics/baseComponents/graphics.ts';
 import { GraphicsCharacter, type PointLike } from '../../../graphics/graphicsCharacter.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
 import { RenderGraphicsTreeInBackground } from '../../../graphics/utility/renderInBackground.tsx';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_SUCCESS } from '../../../persistentToast.ts';
+import type { ClientServices } from '../../../services/clientServices.ts';
 import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
 
 const CHARACTER_PREVIEW_SIZE = 64;
 const PREVIEW_PREVIEW_BORDER = 32;
 const PREVIEW_AREA_SIZE_MIN = 20;
 const PREVIEW_AREA_SIZE_MAX = Math.floor(Math.min(CharacterSize.WIDTH, CharacterSize.HEIGHT) / 2);
-const PREVIEW_AREA_SIZE_DEFAULT = 128;
-const PREVIEW_Y_OFFSET_DEFAULT = 310;
+const PREVIEW_AUTOGENERATE_TIMER = 10 * 60_000; // 10m
 
 export function CharacterPreviewGenerationButton(): ReactElement {
 	const [showDialog, setShowDialog] = useState(false);
@@ -49,6 +53,61 @@ export function CharacterPreviewGenerationButton(): ReactElement {
 	);
 }
 
+async function CreateAndSaveCharacterPreview(
+	characterState: AssetFrameworkCharacterState,
+	settings: Immutable<CharacterSettings['previewGeneration']>,
+	serviceManager: ServiceManager<ClientServices>,
+	authToken: string,
+): Promise<void> {
+	const { areaSize, areaYOffset } = settings;
+	const scale = CHARACTER_PREVIEW_SIZE / (2 * areaSize);
+
+	const preview = await RenderGraphicsTreeInBackground(
+		(
+			<serviceManagerContext.Provider value={ serviceManager }>
+				<GraphicsCharacter
+					position={ { x: CHARACTER_PREVIEW_SIZE / 2, y: CHARACTER_PREVIEW_SIZE / 2 } }
+					pivot={ { x: (CharacterSize.WIDTH / 2), y: areaYOffset } }
+					scale={ { x: scale, y: scale } }
+					characterState={ characterState.produceWithPose({ view: 'front' }, true) }
+				/>
+			</serviceManagerContext.Provider>
+		),
+		{
+			x: 0,
+			y: 0,
+			width: CHARACTER_PREVIEW_SIZE,
+			height: CHARACTER_PREVIEW_SIZE,
+		},
+		0xffffff,
+	);
+
+	await new Promise<void>((resolve, reject) => {
+		preview.toBlob((blob) => {
+			if (!blob) {
+				reject(new Error('Canvas.toBlob failed!'));
+				return;
+			}
+
+			fetch(new URL(`pandora/character/${encodeURIComponent(characterState.id)}/preview`, GetDirectoryUrl()), {
+				method: 'PUT',
+				body: blob,
+				headers: {
+					Authorization: authToken,
+				},
+				mode: 'cors',
+			})
+				.then((result) => {
+					if (result.ok) {
+						resolve();
+					} else {
+						reject(new Error(`Error saving preview: ${result.status} ${result.statusText}`));
+					}
+				}, reject);
+		}, 'image/png');
+	});
+}
+
 export function CharacterPreviewDialog({ close }: {
 	close: () => void;
 }): ReactElement {
@@ -56,8 +115,13 @@ export function CharacterPreviewDialog({ close }: {
 	const auth = useAuthTokenHeader();
 	const { playerState } = usePlayerState();
 
-	const [previewAreaRadius, setPreviewAreaRadius] = useState(PREVIEW_AREA_SIZE_DEFAULT);
-	const [previewYOffset, setPreviewYOffset] = useState(PREVIEW_Y_OFFSET_DEFAULT);
+	const settingsDriver = useCharacterSettingDriver('previewGeneration');
+	const automaticDriver = useSubsettingDriver(settingsDriver, 'auto');
+	const areaSizeDriver = useSubsettingDriver(settingsDriver, 'areaSize');
+	const areaYOffsetDriver = useSubsettingDriver(settingsDriver, 'areaYOffset');
+
+	const previewAreaRadius = areaSizeDriver.currentValue ?? areaSizeDriver.defaultValue;
+	const previewYOffset = areaYOffsetDriver.currentValue ?? areaYOffsetDriver.defaultValue;
 
 	const scale = CHARACTER_PREVIEW_SIZE / (2 * previewAreaRadius);
 
@@ -109,57 +173,13 @@ export function CharacterPreviewDialog({ close }: {
 		if (!auth)
 			return;
 
-		const preview = await RenderGraphicsTreeInBackground(
-			(
-				<serviceManagerContext.Provider value={ serviceManager }>
-					<GraphicsCharacter
-						position={ { x: CHARACTER_PREVIEW_SIZE / 2, y: CHARACTER_PREVIEW_SIZE / 2 } }
-						pivot={ { x: (CharacterSize.WIDTH / 2), y: previewYOffset } }
-						scale={ { x: scale, y: scale } }
-						characterState={ playerState.produceWithPose({ view: 'front' }, true) }
-					/>
-				</serviceManagerContext.Provider>
-			),
-			{
-				x: 0,
-				y: 0,
-				width: CHARACTER_PREVIEW_SIZE,
-				height: CHARACTER_PREVIEW_SIZE,
-			},
-			0xffffff,
-		);
-
-		await new Promise<void>((resolve, reject) => {
-			preview.toBlob((blob) => {
-				if (!blob) {
-					reject(new Error('Canvas.toBlob failed!'));
-					return;
-				}
-
-				fetch(new URL(`pandora/character/${encodeURIComponent(playerState.id)}/preview`, GetDirectoryUrl()), {
-					method: 'PUT',
-					body: blob,
-					headers: {
-						Authorization: auth,
-					},
-					mode: 'cors',
-				})
-					.then((result) => {
-						resolve();
-						if (result.ok) {
-							toast('Preview successfully updated', TOAST_OPTIONS_SUCCESS);
-							close();
-						} else {
-							GetLogger('CharacterPreviewDialog').error('Error saving preview:', result.status, result.statusText);
-							toast('Error saving preview', TOAST_OPTIONS_ERROR);
-						}
-					}, reject);
-			}, 'image/png');
-		});
+		await CreateAndSaveCharacterPreview(playerState, settingsDriver.currentValue ?? settingsDriver.defaultValue, serviceManager, auth);
+		toast('Preview successfully updated', TOAST_OPTIONS_SUCCESS);
+		close();
 	}, null, {
 		errorHandler(error) {
-			GetLogger('CharacterPreviewDialog').error('Error creating preview:', error);
-			toast('Error creating preview', TOAST_OPTIONS_ERROR);
+			GetLogger('CharacterPreviewDialog').error('Error updating preview:', error);
+			toast('Error updating preview', TOAST_OPTIONS_ERROR);
 		},
 	});
 
@@ -184,59 +204,35 @@ export function CharacterPreviewDialog({ close }: {
 						/>
 					</GraphicsSceneBackgroundRenderer>
 				</Column>
-				<Column gap='small' padding='small'>
+				<Column gap='medium' padding='small'>
 					<fieldset>
 						<legend>Zoom</legend>
-						<Row alignY='center' gap='medium'>
-							<NumberInput
-								aria-label='Zoom'
-								className='flex-6 zero-width'
-								rangeSlider
-								min={ PREVIEW_AREA_SIZE_MIN }
-								max={ PREVIEW_AREA_SIZE_MAX }
-								step={ 1 }
-								value={ previewAreaRadius }
-								onChange={ setPreviewAreaRadius }
-								disabled={ processing }
-							/>
-							<NumberInput
-								aria-label='Zoom'
-								className='flex-grow-1 value'
-								min={ PREVIEW_AREA_SIZE_MIN }
-								max={ PREVIEW_AREA_SIZE_MAX }
-								step={ 1 }
-								value={ previewAreaRadius }
-								onChange={ setPreviewAreaRadius }
-								disabled={ processing }
-							/>
-						</Row>
+						<NumberSettingInput
+							label='Zoom'
+							driver={ areaSizeDriver }
+							min={ PREVIEW_AREA_SIZE_MIN }
+							max={ PREVIEW_AREA_SIZE_MAX }
+							step={ 1 }
+							withSlider
+							disabled={ processing }
+						/>
 					</fieldset>
 					<fieldset>
 						<legend>Camera height</legend>
-						<Row alignY='center' gap='medium'>
-							<NumberInput
-								aria-label='Camera height'
-								className='flex-6 zero-width'
-								rangeSlider
-								min={ 0 }
-								max={ CharacterSize.HEIGHT }
-								step={ 1 }
-								value={ previewYOffset }
-								onChange={ setPreviewYOffset }
-								disabled={ processing }
-							/>
-							<NumberInput
-								aria-label='Camera height'
-								className='flex-grow-1 value'
-								min={ 0 }
-								max={ CharacterSize.HEIGHT }
-								step={ 1 }
-								value={ previewYOffset }
-								onChange={ setPreviewYOffset }
-								disabled={ processing }
-							/>
-						</Row>
+						<NumberSettingInput
+							label='Camera height'
+							driver={ areaYOffsetDriver }
+							min={ 0 }
+							max={ CharacterSize.HEIGHT }
+							step={ 1 }
+							withSlider
+							disabled={ processing }
+						/>
 					</fieldset>
+					<ToggleSettingInput
+						label='Regularly update preview automatically'
+						driver={ automaticDriver }
+					/>
 					<div className='flex-1' />
 					<Row alignX='space-between'>
 						<Button
@@ -255,4 +251,69 @@ export function CharacterPreviewDialog({ close }: {
 			</Row>
 		</ModalDialog>
 	);
+}
+
+export function CharacterPreviewAutogenerationService(): null {
+	const serviceManager = useServiceManager();
+	const auth = useAuthTokenHeader();
+
+	const gameState = useGameStateOptional();
+	const player = gameState?.player;
+	const globalState = useGlobalState(gameState);
+	const playerState = player != null ? globalState?.characters.get(player.id) : undefined;
+
+	const playerData = useCharacterDataOptional(player ?? null);
+
+	const previewGeneration = playerData?.settings.previewGeneration ?? CHARACTER_SETTINGS_DEFAULT.previewGeneration;
+	const enablePreviewGeneration = playerData != null && !!auth && previewGeneration.auto && !playerData.inCreation;
+
+	const lastUpdateRef = useRef<AssetFrameworkCharacterState>(null);
+
+	const updatePreview = useEvent(() => {
+		if (!auth || playerState == null)
+			return;
+
+		if (lastUpdateRef.current === playerState)
+			return;
+
+		CreateAndSaveCharacterPreview(playerState, previewGeneration, serviceManager, auth)
+			.then(() => {
+				lastUpdateRef.current = playerState;
+				GetLogger('CharacterPreviewAutogenerationService')
+					.verbose('Updated character preview in the background');
+			})
+			.catch((err) => {
+				GetLogger('CharacterPreviewAutogenerationService')
+					.error('Failed to update character preview in background:', err);
+			});
+	});
+
+	useEffect(() => {
+		const id = player?.id;
+		if (!enablePreviewGeneration || id == null)
+			return;
+
+		// Check whether the character has a preview and if not generate one immediately
+		fetch(new URL(`pandora/character/${encodeURIComponent(id)}/preview`, GetDirectoryUrl()), {
+			headers: {
+				Authorization: auth,
+			},
+		})
+			.then((result) => {
+				if (result.status === 404) {
+					// No preview for this character yet, generate it
+					updatePreview();
+				}
+			})
+			.catch(() => {
+				// Ignore
+			});
+
+		const interval = setInterval(updatePreview, PREVIEW_AUTOGENERATE_TIMER);
+		return () => {
+			clearInterval(interval);
+		};
+	}, [updatePreview, auth, player?.id, enablePreviewGeneration]);
+
+	return null;
 }

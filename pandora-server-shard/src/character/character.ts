@@ -671,7 +671,7 @@ export class Character {
 
 		this.setValue('settings', newSettings, false);
 
-		if (settings.some((setting) => CHARACTER_PUBLIC_SETTINGS.includes(setting))) {
+		if (CHARACTER_PUBLIC_SETTINGS.some((setting) => settings.includes(setting))) {
 			this._onPublicSettingsChanged();
 		}
 	}

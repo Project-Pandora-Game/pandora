@@ -6,12 +6,27 @@ import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select.tsx';
 import { Button } from '../../common/button/button.tsx';
 import { Row } from '../../common/container/container.tsx';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 
 export interface SettingDriver<T> {
 	currentValue: NoInfer<T | undefined>;
 	defaultValue: T;
 	onChange: NoInfer<(newValue: T) => void>;
 	onReset?: () => void;
+}
+
+export function useSubsettingDriver<const T extends object, const TSetting extends keyof T>(parentDriver: SettingDriver<T>, property: TSetting): SettingDriver<T[TSetting]> {
+	return useMemo((): SettingDriver<T[TSetting]> => ({
+		currentValue: parentDriver.currentValue?.[property],
+		defaultValue: parentDriver.defaultValue[property],
+		onChange(newValue) {
+			const result: T = {
+				...(parentDriver.currentValue ?? parentDriver.defaultValue),
+				[property]: newValue,
+			};
+			return parentDriver.onChange(result);
+		},
+	}), [parentDriver, property]);
 }
 
 export function ToggleSettingInput({ driver, label, deps = EMPTY_ARRAY }: {
@@ -33,18 +48,14 @@ export function ToggleSettingInput({ driver, label, deps = EMPTY_ARRAY }: {
 		},
 	});
 
-	const onInputChange = (newValue: boolean) => {
-		setValue(newValue);
-	};
-
 	const id = `setting-${useId()}`;
 
 	return (
-		<div className='input-row'>
+		<Row alignX='space-between' alignY='center' gap='medium'>
 			<Checkbox
 				id={ id }
 				checked={ value ?? driver.defaultValue }
-				onChange={ onInputChange }
+				onChange={ setValue }
 			/>
 			<label
 				htmlFor={ id }
@@ -59,7 +70,69 @@ export function ToggleSettingInput({ driver, label, deps = EMPTY_ARRAY }: {
 			>
 				↺
 			</Button>
-		</div>
+		</Row>
+	);
+}
+
+export function NumberSettingInput({ driver, label, deps = EMPTY_ARRAY, withSlider = false, min, max, step, disabled = false }: {
+	driver: Readonly<SettingDriver<number>>;
+	label: string;
+	deps?: DependencyList;
+	withSlider?: boolean;
+	min?: number;
+	max?: number;
+	step?: number;
+	disabled?: boolean;
+}): ReactElement {
+	const [value, setValue] = useRemotelyUpdatedUserInput(driver.currentValue, deps, {
+		updateCallback(newValue) {
+			if (newValue === undefined) {
+				if (driver.onReset) {
+					driver.onReset();
+				} else {
+					driver.onChange(driver.defaultValue);
+				}
+			} else {
+				driver.onChange(newValue);
+			}
+		},
+	});
+
+	return (
+		<Row alignY='center' gap='medium'>
+			{
+				withSlider && min != null && max != null ? (
+					<NumberInput
+						aria-label={ label }
+						className='flex-6 zero-width'
+						rangeSlider
+						min={ min }
+						max={ max }
+						step={ step }
+						value={ value ?? driver.defaultValue }
+						onChange={ setValue }
+						disabled={ disabled }
+					/>
+				) : null
+			}
+			<NumberInput
+				aria-label={ label }
+				className='flex-grow-1 value'
+				min={ min }
+				max={ max }
+				step={ step }
+				value={ value ?? driver.defaultValue }
+				onChange={ setValue }
+				disabled={ disabled }
+			/>
+			<Button
+				className='slim'
+				onClick={ () => setValue(undefined) }
+				disabled={ value === undefined }
+			>
+				↺
+			</Button>
+		</Row>
 	);
 }
 

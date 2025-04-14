@@ -5,9 +5,18 @@ import { PronounKeySchema } from './pronouns.ts';
 
 //#region Settings declarations
 
+export const CharacterPreviewGenerationSettings = z.object({
+	/** Whether preview should automatically update in the background, regularly */
+	auto: z.boolean(),
+	/** Radius of character canvas area size used for the preview */
+	areaSize: z.number().int().nonnegative(),
+	areaYOffset: z.number().int().nonnegative(),
+});
+
 export const CharacterSettingsSchema = z.object({
 	labelColor: HexColorStringSchema,
 	pronoun: PronounKeySchema,
+	previewGeneration: CharacterPreviewGenerationSettings,
 });
 
 export type CharacterSettings = z.infer<typeof CharacterSettingsSchema>;
@@ -15,6 +24,11 @@ export type CharacterSettings = z.infer<typeof CharacterSettingsSchema>;
 export const CHARACTER_SETTINGS_DEFAULT = Object.freeze<CharacterSettings>({
 	labelColor: '#ffffff',
 	pronoun: 'she',
+	previewGeneration: {
+		auto: true,
+		areaSize: 128,
+		areaYOffset: 300,
+	},
 });
 
 export const CHARACTER_PUBLIC_SETTINGS = [

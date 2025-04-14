@@ -20,8 +20,6 @@ export type SpaceId = z.infer<typeof SpaceIdSchema>;
 export const SpaceFeatureSchema = z.enum([
 	// Allows characters inside to change their body
 	'allowBodyChanges',
-	// Allows characters inside to change their pronouns
-	'allowPronounChanges',
 	// Enables development options for the space
 	'development',
 ]);
@@ -134,7 +132,7 @@ export type SpaceGhostManagementConfig = z.infer<typeof SpaceGhostManagementConf
 
 export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 	/** The requested features */
-	features: z.array(SpaceFeatureSchema).max(SpaceFeatureSchema.options.length),
+	features: ZodArrayWithInvalidDrop(SpaceFeatureSchema, z.string(), SpaceFeatureSchema.options.length),
 	/**
 	 * Development options, may get ignored if requested features don't include 'development'
 	 */

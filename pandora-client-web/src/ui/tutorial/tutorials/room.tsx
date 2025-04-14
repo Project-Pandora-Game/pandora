@@ -500,11 +500,11 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								The "Personal space" tab allows you to do many actions, most of which will be explained in later tutorials.
+								The "Personal space" tab allows you to do many actions, most of which will be explained in later tutorials. The most important one is surely the button to list other spaces.
 							</p>
 							<p>
-								The part we would like to point out right now is the list of characters currently inside this space.<br />
-								As this is a personal space, you can only see yourself here, but in a public room you can always see everyone currently inside using this list.
+								That said, the part we would like to point out right now is the list of characters currently inside this space near the top of the tab.<br />
+								As this is a personal space, you can only see yourself here, but in other spaces you can always see everyone currently inside using this list.
 							</p>
 						</>
 					),

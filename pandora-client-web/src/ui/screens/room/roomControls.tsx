@@ -1,4 +1,4 @@
-import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
+import { AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, ICharacterRoomData } from 'pandora-common';
 import React, {
 	ReactElement, useCallback,
 	useMemo,
@@ -27,6 +27,7 @@ import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useChatInput } from '../../components/chat/chatInput.tsx';
 import { PrivateRoomTutorialList } from '../../tutorial/privateTutorials.tsx';
+import { CharacterPreviewGenerationButton } from './characterPreviewGeneration.tsx';
 import { useRoomScreenContext } from './roomContext.tsx';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
 
@@ -159,6 +160,9 @@ export function PersonalSpaceControls(): ReactElement {
 				<Button onClick={ () => navigate('/spaces/search') } >
 					<img src={ listIcon } />List of spaces
 				</Button>
+			</Row>
+			<Row padding='small'>
+				<CharacterPreviewGenerationButton />
 			</Row>
 			&nbsp;
 			<PrivateRoomTutorialList />
@@ -300,7 +304,7 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 			<legend className={ char.isPlayer() ? 'player' : '' }>
 				<button onClick={ openMenu }>
 					<span>
-						<span className='colorStrip' style={ { color: data.settings.labelColor } }><b>{ '/// ' }</b></span>
+						<span className='colorStrip' style={ { color: data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor } }><b>{ '/// ' }</b></span>
 						<span onClick={ () => setTarget(data.id) }><b>{ data.name }</b></span>
 						<span> / { data.id } / { data.accountId }</span>
 					</span>

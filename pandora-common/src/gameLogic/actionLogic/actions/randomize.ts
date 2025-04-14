@@ -173,5 +173,14 @@ export function ActionAppearanceRandomize({
 	// Try to assign the new appearance
 	characterManipulator.resetItemsTo(newAppearance);
 
+	// Reset character pose
+	if (!processingContext.manipulator.produceCharacterState(character.appearance.id, (c) => c.produceWithPose(
+		assetManager.randomization.pose,
+		kind === 'full' ? true : 'pose',
+		true,
+	))) {
+		return processingContext.invalid();
+	}
+
 	return processingContext.finalize();
 }

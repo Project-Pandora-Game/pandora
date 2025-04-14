@@ -1,5 +1,40 @@
 @use '../../styles/common';
 
+@property --borderRotationX {
+	syntax: '<percentage>';
+	initial-value: 50%;
+	inherits: true;
+}
+
+@property --borderRotationY {
+	syntax: '<percentage>';
+	initial-value: 0%;
+	inherits: true;
+}
+
+@keyframes borderRotation {
+	0% {
+		--borderRotationX: 100%;
+		--borderRotationY: 0%;
+	}
+	28% {
+		--borderRotationX: 100%;
+		--borderRotationY: 100%;
+	}
+	50% {
+		--borderRotationX: 0%;
+		--borderRotationY: 100%;
+	}
+	78% {
+		--borderRotationX: 0%;
+		--borderRotationY: 0%;
+	}
+	100% {
+		--borderRotationX: 100%;
+		--borderRotationY: 0%;
+	}
+}
+
 .character-select {
 	width: 100%;
 	display: flex;
@@ -15,9 +50,18 @@
 		height: min(min(20em, 75vh), 100vw);
 		width: min(min(16em, 60vh), 80vw);
 		padding: 1em;
-		border-radius: 0.2em;
+		border-radius: 0.3em;
+		border: 0.5em solid common.$theme-characterselect-card-edge;
 		background: common.$theme-characterselect-card-outerborder;
 		box-shadow: common.$theme-characterselect-card-shadow;
+		--borderRotationX: 80%;
+		--borderRotationY: 0%;
+		border-image: radial-gradient(ellipse at var(--borderRotationX) var(--borderRotationY), common.$theme-characterselect-card-edge, common.$theme-characterselect-card-edge 10%, common.$theme-characterselect-card-shine 60%) 30;
+		animation: borderRotation 20000ms linear infinite forwards;
+
+		@media (prefers-reduced-motion) {
+			animation: none;
+		}
 
 		.border {
 			@include common.center-flex(column);
@@ -29,6 +73,7 @@
 			background: common.$theme-characterselect-card-background;
 			color: common.$theme-characterselect-card-text;
 			border: 0.2em solid common.$theme-characterselect-card-innerborder;
+			box-shadow: common.$theme-characterselect-card-shadow;
 
 			.label {
 				position: absolute;
@@ -41,25 +86,52 @@
 			}
 
 			.frame {
-				background: common.$theme-characterselect-card-frame-background;
-				border: max(0.1em, 2px) solid common.$theme-characterselect-card-frame-border;
-				border-radius: 0.25em;
-				box-shadow: common.$theme-characterselect-card-frame-shadow;
-				width: 5em;
-				height: 5em;
-				padding: 1em;
-				overflow: hidden;
+				position: relative;
+				width: 4.3em;
+				height: 4.3em;
+				overflow: clip;
 
 				img {
 					object-fit: contain;
 					width: 100%;
 					height: 100%;
 				}
+
+				&:not(.placeholder) {
+					background: common.$theme-characterselect-card-frame-background;
+
+					&::after {
+						content: '';
+						position: absolute;
+						box-shadow: common.$theme-characterselect-card-frame-shadow;
+						inset: 0;
+					}
+				}
+			}
+
+			.logo {
+				position: absolute;
+				bottom: 1.5em;
+				width: 6em;
+				height: 2em;
+
+				img {
+					object-fit: contain;
+					width: 100%;
+					height: 100%;
+					opacity: 0.3;
+				}
 			}
 
 			.title {
-				font-size: 1.2em;
+				font-size: 1.1em;
 				text-align: center;
+				overflow-wrap: anywhere;
+			}
+
+			.id {
+				font-size: 0.8em;
+				color: common.$theme-characterselect-card-text-dim;
 			}
 		}
 
@@ -71,6 +143,12 @@
 
 		&:focus-visible {
 			outline: 0.25em solid common.$theme-characterselect-card-visiblefocus-outline;
+		}
+	}
+
+	@for $num from 1 through 5 {
+		.card:nth-child(5n+#{$num}) {
+			animation-delay: ((($num - 1) * 3) % 5) * -2000ms;
 		}
 	}
 }

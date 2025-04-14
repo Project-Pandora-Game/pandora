@@ -1,5 +1,5 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from '@jest/globals';
-import { cloneDeep } from 'lodash-es';
+import { cloneDeep, pick } from 'lodash-es';
 import { Assert, AssertNotNullable, logConfig, LogLevel } from 'pandora-common';
 import { CreateAccountData } from '../../src/account/account.ts';
 import { GenerateAccountSecureData, GenerateEmailHash } from '../../src/account/accountSecure.ts';
@@ -310,12 +310,12 @@ export default function RunDbTests(initDb: () => Promise<PandoraDatabase>, close
 			expect(result).not.toBeNull();
 
 			// Character not in creation after finalize
-			const characterData2 = await db.getCharacter(char.id, result?.accessId ?? '');
+			const characterData2 = await db.getCharacter(char.id, false);
 			expect(characterData2?.inCreation).toBeUndefined();
 
 			// Returns the data
 			expect(result).not.toBe(characterData2);
-			expect(result).toStrictEqual(characterData2);
+			expect(result).toStrictEqual(pick(characterData2, ['id', 'name', 'created']));
 
 			// Fails on second finalize
 			await expect(db.finalizeCharacter(accountId2, char.id)).resolves.toBeNull();

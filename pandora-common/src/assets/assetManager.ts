@@ -86,6 +86,7 @@ export class AssetManager {
 			randomization: {
 				body: [],
 				clothes: [],
+				pose: {},
 			},
 			characterModifierTemplates: {},
 			...data,

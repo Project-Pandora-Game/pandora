@@ -22,7 +22,6 @@ export class PersonalSpace extends Space {
 			maxUsers: 1,
 			features: [
 				'allowBodyChanges',
-				'allowPronounChanges',
 			],
 			banned: [],
 			admin: [],

@@ -1,5 +1,14 @@
 import type { Immutable } from 'immer';
-import { CommandAutocompleteResult, CommandRunner, ICommandExecutionContext, IEmpty, LongestCommonPrefix, type AccountSettings, type AssetFrameworkGlobalState } from 'pandora-common';
+import {
+	CommandAutocompleteResult,
+	CommandRunner,
+	ICommandExecutionContext,
+	IEmpty,
+	LongestCommonPrefix,
+	type AccountSettings,
+	type AssetFrameworkGlobalState,
+	type CharacterSettings,
+} from 'pandora-common';
 import type { PlayerCharacter } from '../../../character/player.ts';
 import type { GameState, IChatMessageSender } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
@@ -18,6 +27,7 @@ export interface ICommandExecutionContextClient extends ICommandExecutionContext
 	globalState: AssetFrameworkGlobalState;
 	player: PlayerCharacter;
 	accountSettings: Immutable<AccountSettings>;
+	characterSettings: Immutable<CharacterSettings>;
 	messageSender: IChatMessageSender;
 	inputHandlerContext: IChatInputHandler;
 	navigate: NavigateFunctionPandora;

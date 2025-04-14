@@ -7,6 +7,7 @@ import { GetLogger, ServerService } from 'pandora-common';
 import { ENV } from '../config.ts';
 import { MetricsServe } from '../metrics.ts';
 import { GitHubVerifierAPI } from '../services/github/githubVerify.ts';
+import { PandoraPublicApi } from './manager_client_api.ts';
 import { SocketIOServerClient } from './socketio_client_server.ts';
 import { SocketIOServerShard } from './socketio_shard_server.ts';
 const { SERVER_HTTPS_CERT, SERVER_HTTPS_KEY, SERVER_PORT, TRUSTED_REVERSE_PROXY_HOPS } = ENV;
@@ -57,6 +58,7 @@ export const HttpServer = new class HttpServer implements ServerService {
 		expressApp.use('/metrics', MetricsServe());
 		// APIs
 		expressApp.use('/api/github', GitHubVerifierAPI());
+		expressApp.use('/pandora', PandoraPublicApi());
 		// Attach socket.io servers
 		new SocketIOServerClient(server);
 		new SocketIOServerShard(server);

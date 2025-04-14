@@ -66,6 +66,9 @@ export const LIMIT_ACCOUNT_PROFILE_LENGTH = 5_000;
 /** The maximum length of a character profile description */
 export const LIMIT_CHARACTER_PROFILE_LENGTH = 10_000;
 
+/** The maximum size of character preview */
+export const LIMIT_CHARACTER_PREVIEW_SIZE = 10 * 1024; // 10kb
+
 /** The maximum length of an outfit name */
 export const LIMIT_OUTFIT_NAME_LENGTH = 48;
 

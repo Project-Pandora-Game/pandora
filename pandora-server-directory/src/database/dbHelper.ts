@@ -3,7 +3,6 @@ import { nanoid } from 'nanoid';
 import {
 	ASSET_PREFERENCES_DEFAULT,
 	AccountId,
-	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
 	CharacterId,
 	ICharacterData,
 	ROOM_INVENTORY_BUNDLE_DEFAULT,
@@ -13,12 +12,11 @@ import {
 } from 'pandora-common';
 import type { DatabaseCharacterSelfInfo } from './databaseStructure.ts';
 
-export function CreateCharacter(accountId: number, id: CharacterId): [DatabaseCharacterSelfInfo, ICharacterData] {
+export function CreateCharacter(accountId: number, id: CharacterId): [DatabaseCharacterSelfInfo, Omit<ICharacterData, 'preview'>] {
 	const info: DatabaseCharacterSelfInfo = {
 		inCreation: true,
 		id,
 		name: '',
-		preview: '',
 		currentSpace: null,
 	};
 
@@ -27,12 +25,11 @@ export function CreateCharacter(accountId: number, id: CharacterId): [DatabaseCh
 		id,
 		accountId,
 		name: info.name,
-		preview: '',
 		currentSpace: null,
 		profileDescription: '',
 		created: -1,
 		accessId: nanoid(8),
-		settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
+		settings: {},
 		assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 		position: [-1, -1, 0],
 	};

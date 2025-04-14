@@ -19,7 +19,9 @@ export class PlayerCharacter extends Character<ICharacterPrivateData & ICharacte
 	}
 
 	public setCreationComplete(): void {
-		delete this._data.inCreation;
+		const newData = { ...this._data };
+		delete newData.inCreation;
+		this._data = newData;
 		this.emit('update', this._data);
 	}
 }

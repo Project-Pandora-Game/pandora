@@ -1,6 +1,6 @@
 import { omit } from 'lodash-es';
 import { nanoid } from 'nanoid';
-import { AppearanceAction, EvalItemPath, ItemId, ItemRoomDevice } from 'pandora-common';
+import { AppearanceAction, CHARACTER_SETTINGS_DEFAULT, EvalItemPath, ItemId, ItemRoomDevice, type ICharacterRoomData } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { ICharacter, useCharacterData, useCharacterDataOptional } from '../../../character/character.ts';
@@ -139,7 +139,7 @@ function LeaveDeviceMenu({ device, close }: {
 function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 	device: ItemRoomDevice;
 	slot: string;
-	character: ICharacter;
+	character: ICharacter<ICharacterRoomData>;
 	close: () => void;
 }) {
 	const characterData = useCharacterData(character);
@@ -168,7 +168,7 @@ function OccupyDeviceSlotMenu({ device, slot, character, close }: {
 			disabled={ processing }
 			className={ available ? '' : 'text-strikethrough' }
 			style={ {
-				backgroundColor: `${characterData.settings.labelColor}44`,
+				backgroundColor: `${characterData.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor}44`,
 			} }
 		>
 			{ character.name } ({ character.id })
@@ -209,7 +209,7 @@ function DeviceSlotMenu({ slot, device, position, close, closeSlot }: {
 				<button
 					onClick={ onSelectCharacter }
 					style={ {
-						backgroundColor: characterData != null ? `${characterData.settings.labelColor}44` : undefined,
+						backgroundColor: characterData != null ? `${characterData.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor}44` : undefined,
 					} }
 				>
 					{ character?.name } ({ occupancy })

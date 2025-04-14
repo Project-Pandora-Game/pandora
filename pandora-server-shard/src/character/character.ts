@@ -10,8 +10,10 @@ import {
 	AssetManager,
 	AssetPreferencesPublic,
 	AsyncSynchronized,
+	CHARACTER_PUBLIC_SETTINGS,
+	CHARACTER_SETTINGS_DEFAULT,
 	CHARACTER_SHARD_UPDATEABLE_PROPERTIES,
-	CharacterDataSchema,
+	CharacterDataShardSchema,
 	CharacterId,
 	CharacterRestrictionsManager,
 	CharacterRoomPosition,
@@ -21,11 +23,9 @@ import {
 	GenerateInitialRoomPosition,
 	GetDefaultAppearanceBundle,
 	GetLogger,
-	ICharacterData,
 	ICharacterDataShardUpdate,
 	ICharacterPrivateData,
 	ICharacterPublicData,
-	ICharacterPublicSettings,
 	ICharacterRoomData,
 	IChatMessage,
 	IShardAccountDefinition,
@@ -41,7 +41,10 @@ import {
 	RoomBackgroundData,
 	SpaceId,
 	type AppearanceActionProcessingResult,
+	type CharacterSettings,
+	type CharacterSettingsKeys,
 	type ChatMessageFilterMetadata,
+	type ICharacterDataShard,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -53,7 +56,7 @@ import { SpaceManager } from '../spaces/spaceManager.ts';
 
 import { Immutable } from 'immer';
 import { diffString } from 'json-diff';
-import { isEqual, pick } from 'lodash-es';
+import { clone, cloneDeep, isEqual, pick } from 'lodash-es';
 
 /** Time (in ms) after which manager prunes character without any active connection */
 export const CHARACTER_TIMEOUT = 30_000;
@@ -72,7 +75,7 @@ type ICharacterPrivateDataChange = Omit<ICharacterDataShardUpdate, keyof ICharac
 type ManuallyGeneratedKeys = 'appearance' | 'personalRoom';
 
 export class Character {
-	private readonly data: Omit<ICharacterData, ManuallyGeneratedKeys>;
+	private readonly data: Omit<ICharacterDataShard, ManuallyGeneratedKeys>;
 	public accountData: IShardAccountDefinition;
 	public connectSecret: string | null;
 	public lastOnline: number;
@@ -159,10 +162,6 @@ export class Character {
 		return this.connectSecret != null;
 	}
 
-	public get settings(): Readonly<ICharacterPublicSettings> {
-		return this.data.settings;
-	}
-
 	public get assetPreferences(): Immutable<AssetPreferencesPublic> {
 		return this.gameLogicCharacter.assetPreferences.currentPreferences;
 	}
@@ -190,7 +189,7 @@ export class Character {
 		this.modified.add('position');
 	}
 
-	constructor(data: ICharacterData, account: IShardAccountDefinition, connectSecret: string | null, spaceId: SpaceId | null) {
+	constructor(data: ICharacterDataShard, account: IShardAccountDefinition, connectSecret: string | null, spaceId: SpaceId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
 		this.data = data;
 		this.accountData = account;
@@ -442,12 +441,12 @@ export class Character {
 		}
 	}
 
-	public static async load(id: CharacterId, accessId: string): Promise<ICharacterData | null> {
+	public static async load(id: CharacterId, accessId: string): Promise<ICharacterDataShard | null> {
 		const character = await GetDatabase().getCharacter(id, accessId);
 		if (character === false) {
 			return null;
 		}
-		const result = await CharacterDataSchema.safeParseAsync(character);
+		const result = await CharacterDataShardSchema.safeParseAsync(character);
 		if (!result.success) {
 			logger.error(`Failed to load character ${id}: `, result.error);
 			return null;
@@ -465,14 +464,25 @@ export class Character {
 		return result.data;
 	}
 
+	/**
+	 * Resolves full character settings to their effective values.
+	 * @returns The settings that apply to this character.
+	 */
+	public getEffectiveSettings(): Readonly<CharacterSettings> {
+		return {
+			...CHARACTER_SETTINGS_DEFAULT,
+			...this.data.settings,
+		};
+	}
+
 	public getRoomData(): ICharacterRoomData {
 		return {
 			id: this.id,
 			accountId: this.accountId,
 			name: this.name,
 			profileDescription: this.profileDescription,
-			settings: this.settings,
 			position: this.position,
+			publicSettings: cloneDeep(pick(this.data.settings, CHARACTER_PUBLIC_SETTINGS)),
 			isOnline: this.isOnline,
 			assetPreferences: this.assetPreferences,
 		};
@@ -481,6 +491,7 @@ export class Character {
 	public getPrivateData(): ICharacterPrivateData & ICharacterRoomData {
 		return {
 			...this.getRoomData(),
+			settings: cloneDeep(this.data.settings),
 			inCreation: this.data.inCreation,
 			created: this.data.created,
 		};
@@ -585,9 +596,9 @@ export class Character {
 		}
 	}
 
-	private setValue<Key extends keyof ICharacterPublicDataChange>(key: Key, value: ICharacterData[Key], intoSpace: true): void;
-	private setValue<Key extends keyof ICharacterPrivateDataChange>(key: Key, value: ICharacterData[Key], intoSpace: false): void;
-	private setValue<Key extends keyof Omit<ICharacterDataShardUpdate, ManuallyGeneratedKeys>>(key: Key, value: ICharacterData[Key], intoSpace: boolean): void {
+	private setValue<Key extends keyof ICharacterPublicDataChange>(key: Key, value: ICharacterDataShard[Key], intoSpace: true): void;
+	private setValue<Key extends keyof ICharacterPrivateDataChange>(key: Key, value: ICharacterDataShard[Key], intoSpace: false): void;
+	private setValue<Key extends keyof Omit<ICharacterDataShardUpdate, ManuallyGeneratedKeys>>(key: Key, value: ICharacterDataShard[Key], intoSpace: boolean): void {
 		if (this.data[key] === value)
 			return;
 
@@ -635,18 +646,34 @@ export class Character {
 		this.modified.add('personalRoom');
 	}
 
-	public setPublicSettings(settings: Partial<ICharacterPublicSettings>): void {
-		const space = this.getOrLoadSpace();
-		if (!space.getInfo().features.includes('allowPronounChanges')) {
-			delete settings.pronoun;
-		}
-		if (Object.keys(settings).length === 0)
-			return;
+	private _onPublicSettingsChanged(): void {
+		this._sendDataUpdate({
+			publicSettings: this.getRoomData().publicSettings,
+		});
+	}
 
+	public changeSettings(settings: Partial<CharacterSettings>): void {
 		this.setValue('settings', {
-			...this.settings,
+			...this.data.settings,
 			...settings,
-		}, true);
+		}, false);
+
+		if (CHARACTER_PUBLIC_SETTINGS.some((setting) => Object.hasOwn(settings, setting))) {
+			this._onPublicSettingsChanged();
+		}
+	}
+
+	public resetSettings(settings: readonly CharacterSettingsKeys[]): void {
+		const newSettings = clone(this.data.settings);
+		for (const setting of settings) {
+			delete newSettings[setting];
+		}
+
+		this.setValue('settings', newSettings, false);
+
+		if (CHARACTER_PUBLIC_SETTINGS.some((setting) => settings.includes(setting))) {
+			this._onPublicSettingsChanged();
+		}
 	}
 
 	public setAssetPreferences(newPreferences: Partial<AssetPreferencesPublic>): 'ok' | 'invalid' {

@@ -166,8 +166,12 @@ function ChatroomGraphicsRatio(): ReactElement {
 	return (
 		<>
 			<SelectSettingInput<string>
-				currentValue={ modifiedSettings?.interfaceChatroomGraphicsRatioHorizontal?.toString() }
-				defaultValue={ ACCOUNT_SETTINGS_DEFAULT.interfaceChatroomGraphicsRatioHorizontal.toString() }
+				driver={ {
+					currentValue: modifiedSettings?.interfaceChatroomGraphicsRatioHorizontal?.toString(),
+					defaultValue: ACCOUNT_SETTINGS_DEFAULT.interfaceChatroomGraphicsRatioHorizontal.toString(),
+					onChange: (v) => onChange('interfaceChatroomGraphicsRatioHorizontal', v),
+					onReset: () => onReset('interfaceChatroomGraphicsRatioHorizontal'),
+				} }
 				label='Chatroom graphics to chat ratio (in landscape mode)'
 				stringify={
 					Object.fromEntries(
@@ -178,12 +182,14 @@ function ChatroomGraphicsRatio(): ReactElement {
 					)
 				}
 				schema={ z.string() }
-				onChange={ (v) => onChange('interfaceChatroomGraphicsRatioHorizontal', v) }
-				onReset={ () => onReset('interfaceChatroomGraphicsRatioHorizontal') }
 			/>
 			<SelectSettingInput<string>
-				currentValue={ modifiedSettings?.interfaceChatroomGraphicsRatioVertical?.toString() }
-				defaultValue={ ACCOUNT_SETTINGS_DEFAULT.interfaceChatroomGraphicsRatioVertical.toString() }
+				driver={ {
+					currentValue: modifiedSettings?.interfaceChatroomGraphicsRatioVertical?.toString(),
+					defaultValue: ACCOUNT_SETTINGS_DEFAULT.interfaceChatroomGraphicsRatioVertical.toString(),
+					onChange: (v) => onChange('interfaceChatroomGraphicsRatioVertical', v),
+					onReset: () => onReset('interfaceChatroomGraphicsRatioVertical'),
+				} }
 				label='Chatroom graphics to chat ratio (in portrait mode)'
 				stringify={
 					Object.fromEntries(
@@ -194,8 +200,6 @@ function ChatroomGraphicsRatio(): ReactElement {
 					)
 				}
 				schema={ z.string() }
-				onChange={ (v) => onChange('interfaceChatroomGraphicsRatioVertical', v) }
-				onReset={ () => onReset('interfaceChatroomGraphicsRatioVertical') }
 			/>
 		</>
 	);

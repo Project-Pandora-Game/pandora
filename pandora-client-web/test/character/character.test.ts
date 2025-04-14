@@ -2,7 +2,6 @@ import { renderHook } from '@testing-library/react';
 import { cloneDeep } from 'lodash-es';
 import {
 	ASSET_PREFERENCES_DEFAULT,
-	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
 	ICharacterData,
 	ICharacterRoomData,
 } from 'pandora-common';
@@ -17,7 +16,7 @@ const mockData: ICharacterRoomData = {
 	accountId: 0,
 	name: 'mock',
 	profileDescription: 'A mock character',
-	settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
+	publicSettings: {},
 	assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 	position: [0, 0, 0],
 	isOnline: true,

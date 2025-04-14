@@ -1,4 +1,6 @@
 import {
+	ArrayToRecordKeys,
+	CHARACTER_SHARD_VISIBLE_PROPERTIES,
 	CharacterId,
 	GetLogger,
 	ICharacterData,
@@ -6,6 +8,7 @@ import {
 	SpaceData,
 	SpaceDataShardUpdate,
 	SpaceId,
+	type ICharacterDataShard,
 } from 'pandora-common';
 import { ENV } from '../config.ts';
 import type { ShardDatabase } from './databaseProvider.ts';
@@ -52,8 +55,10 @@ export default class MongoDatabase implements ShardDatabase {
 		await this._client.close();
 	}
 
-	public async getCharacter(id: CharacterId, accessId: string): Promise<ICharacterData | null | false> {
-		const character = await this._characters.findOne({ id, accessId });
+	public async getCharacter(id: CharacterId, accessId: string): Promise<ICharacterDataShard | null | false> {
+		const character = await this._characters.findOne<Pick<ICharacterData, (typeof CHARACTER_SHARD_VISIBLE_PROPERTIES)[number]>>({ id, accessId }, {
+			projection: ArrayToRecordKeys(CHARACTER_SHARD_VISIBLE_PROPERTIES, 1),
+		});
 		if (!character)
 			return null;
 

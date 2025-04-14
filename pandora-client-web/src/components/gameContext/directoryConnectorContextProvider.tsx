@@ -25,6 +25,11 @@ function GetDirectoryAddress(): string {
 	return directoryAddress;
 }
 
+export function GetDirectoryUrl(): URL {
+	const address = GetDirectoryAddress();
+	return new URL((address.startsWith('/') ? (window.location.origin + address) : address) + (address.endsWith('/') ? '' : '/'));
+}
+
 const logger = GetLogger('DirectoryConnectorServices');
 
 export function DirectoryConnectorServices(): null {
@@ -78,6 +83,15 @@ export function useDirectoryChangeListener(
 export function useAuthToken(): AuthToken | undefined {
 	const directoryConnector = useDirectoryConnector();
 	return useObservable(directoryConnector.authToken);
+}
+
+export function useAuthTokenHeader(): string | undefined {
+	const directoryConnector = useDirectoryConnector();
+	const token = useObservable(directoryConnector.authToken);
+	if (!token)
+		return;
+
+	return `Basic ${btoa(btoa(token.username) + ':' + token.value)}`;
 }
 
 export function useAuthTokenIsValid(): boolean {

@@ -36,7 +36,6 @@ export const EDITOR_SPACE_CONTEXT = {
 	features: [
 		'development',
 		'allowBodyChanges',
-		'allowPronounChanges',
 	],
 	isAdmin: () => true,
 	development: {

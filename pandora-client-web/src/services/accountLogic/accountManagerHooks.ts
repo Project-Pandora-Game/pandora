@@ -18,7 +18,7 @@ export function useCurrentAccount(): IDirectoryAccountInfo | null {
  * Gets modified settings for the current account.
  * @returns The partial settings object, or `undefined` if no account is loaded.
  */
-export function useModifiedAccountSettings(): Immutable<Partial<AccountSettings>> | undefined {
+export function useModifiedAccountSettings(): Partial<Immutable<AccountSettings>> | undefined {
 	// Get account manually to avoid error in the editor
 	return useNullableObservable(useServiceOptional('accountManager')?.currentAccount)?.settings;
 }

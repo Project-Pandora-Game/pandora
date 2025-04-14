@@ -103,7 +103,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			// Character management
 			listCharacters: this.handleListCharacters.bind(this),
 			createCharacter: this.handleCreateCharacter.bind(this),
-			updateCharacter: this.handleUpdateCharacter.bind(this),
 			deleteCharacter: this.handleDeleteCharacter.bind(this),
 
 			// Character connection, shard interaction
@@ -388,22 +387,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const result = await loadedCharacter.connect(connection);
 
 		return { result };
-	}
-
-	private async handleUpdateCharacter({ id, preview }: IClientDirectoryArgument['updateCharacter'], connection: ClientConnection): IClientDirectoryPromiseResult['updateCharacter'] {
-		if (!connection.isLoggedIn())
-			throw new BadMessageError();
-
-		const character = connection.account.characters.get(id);
-
-		if (!character)
-			throw new BadMessageError();
-
-		await character.updateDirectoryData({ preview });
-
-		return {
-			result: true,
-		};
 	}
 
 	private async handleDeleteCharacter({ id, passwordSha512 }: IClientDirectoryArgument['deleteCharacter'], connection: ClientConnection): IClientDirectoryPromiseResult['deleteCharacter'] {

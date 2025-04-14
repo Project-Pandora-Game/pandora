@@ -10,6 +10,8 @@ import {
 	AssetManager,
 	AssetPreferencesPublic,
 	AsyncSynchronized,
+	CHARACTER_PUBLIC_SETTINGS,
+	CHARACTER_SETTINGS_DEFAULT,
 	CHARACTER_SHARD_UPDATEABLE_PROPERTIES,
 	CharacterDataShardSchema,
 	CharacterId,
@@ -24,7 +26,6 @@ import {
 	ICharacterDataShardUpdate,
 	ICharacterPrivateData,
 	ICharacterPublicData,
-	ICharacterPublicSettings,
 	ICharacterRoomData,
 	IChatMessage,
 	IShardAccountDefinition,
@@ -40,6 +41,8 @@ import {
 	RoomBackgroundData,
 	SpaceId,
 	type AppearanceActionProcessingResult,
+	type CharacterSettings,
+	type CharacterSettingsKeys,
 	type ChatMessageFilterMetadata,
 	type ICharacterDataShard,
 } from 'pandora-common';
@@ -53,7 +56,7 @@ import { SpaceManager } from '../spaces/spaceManager.ts';
 
 import { Immutable } from 'immer';
 import { diffString } from 'json-diff';
-import { isEqual, pick } from 'lodash-es';
+import { clone, cloneDeep, isEqual, pick } from 'lodash-es';
 
 /** Time (in ms) after which manager prunes character without any active connection */
 export const CHARACTER_TIMEOUT = 30_000;
@@ -157,10 +160,6 @@ export class Character {
 
 	public get isOnline(): boolean {
 		return this.connectSecret != null;
-	}
-
-	public get settings(): Readonly<ICharacterPublicSettings> {
-		return this.data.settings;
 	}
 
 	public get assetPreferences(): Immutable<AssetPreferencesPublic> {
@@ -465,14 +464,25 @@ export class Character {
 		return result.data;
 	}
 
+	/**
+	 * Resolves full character settings to their effective values.
+	 * @returns The settings that apply to this character.
+	 */
+	public getEffectiveSettings(): Readonly<CharacterSettings> {
+		return {
+			...CHARACTER_SETTINGS_DEFAULT,
+			...this.data.settings,
+		};
+	}
+
 	public getRoomData(): ICharacterRoomData {
 		return {
 			id: this.id,
 			accountId: this.accountId,
 			name: this.name,
 			profileDescription: this.profileDescription,
-			settings: this.settings,
 			position: this.position,
+			publicSettings: cloneDeep(pick(this.data.settings, CHARACTER_PUBLIC_SETTINGS)),
 			isOnline: this.isOnline,
 			assetPreferences: this.assetPreferences,
 		};
@@ -481,6 +491,7 @@ export class Character {
 	public getPrivateData(): ICharacterPrivateData & ICharacterRoomData {
 		return {
 			...this.getRoomData(),
+			settings: cloneDeep(this.data.settings),
 			inCreation: this.data.inCreation,
 			created: this.data.created,
 		};
@@ -635,14 +646,34 @@ export class Character {
 		this.modified.add('personalRoom');
 	}
 
-	public setPublicSettings(settings: Partial<ICharacterPublicSettings>): void {
-		if (Object.keys(settings).length === 0)
-			return;
+	private _onPublicSettingsChanged(): void {
+		this._sendDataUpdate({
+			publicSettings: this.getRoomData().publicSettings,
+		});
+	}
 
+	public changeSettings(settings: Partial<CharacterSettings>): void {
 		this.setValue('settings', {
-			...this.settings,
+			...this.data.settings,
 			...settings,
-		}, true);
+		}, false);
+
+		if (CHARACTER_PUBLIC_SETTINGS.some((setting) => Object.hasOwn(settings, setting))) {
+			this._onPublicSettingsChanged();
+		}
+	}
+
+	public resetSettings(settings: readonly CharacterSettingsKeys[]): void {
+		const newSettings = clone(this.data.settings);
+		for (const setting of settings) {
+			delete newSettings[setting];
+		}
+
+		this.setValue('settings', newSettings, false);
+
+		if (settings.some((setting) => CHARACTER_PUBLIC_SETTINGS.includes(setting))) {
+			this._onPublicSettingsChanged();
+		}
 	}
 
 	public setAssetPreferences(newPreferences: Partial<AssetPreferencesPublic>): 'ok' | 'invalid' {

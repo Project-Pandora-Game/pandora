@@ -7,24 +7,28 @@ import { Select, type SelectProps } from '../../../common/userInteraction/select
 import { Button } from '../../common/button/button.tsx';
 import { Row } from '../../common/container/container.tsx';
 
-export function ToggleSettingInput({ currentValue, defaultValue, label, onChange, onReset, deps = EMPTY_ARRAY }: {
-	currentValue: boolean | undefined;
-	defaultValue: boolean;
-	label: string;
-	onChange: (newValue: boolean) => void;
+export interface SettingDriver<T> {
+	currentValue: NoInfer<T | undefined>;
+	defaultValue: T;
+	onChange: NoInfer<(newValue: T) => void>;
 	onReset?: () => void;
+}
+
+export function ToggleSettingInput({ driver, label, deps = EMPTY_ARRAY }: {
+	driver: Readonly<SettingDriver<boolean>>;
+	label: string;
 	deps?: DependencyList;
 }): ReactElement {
-	const [value, setValue] = useRemotelyUpdatedUserInput(currentValue, deps, {
+	const [value, setValue] = useRemotelyUpdatedUserInput(driver.currentValue, deps, {
 		updateCallback(newValue) {
 			if (newValue === undefined) {
-				if (onReset) {
-					onReset();
+				if (driver.onReset) {
+					driver.onReset();
 				} else {
-					onChange(defaultValue);
+					driver.onChange(driver.defaultValue);
 				}
 			} else {
-				onChange(newValue);
+				driver.onChange(newValue);
 			}
 		},
 	});
@@ -39,7 +43,7 @@ export function ToggleSettingInput({ currentValue, defaultValue, label, onChange
 		<div className='input-row'>
 			<Checkbox
 				id={ id }
-				checked={ value ?? defaultValue }
+				checked={ value ?? driver.defaultValue }
 				onChange={ onInputChange }
 			/>
 			<label
@@ -59,28 +63,25 @@ export function ToggleSettingInput({ currentValue, defaultValue, label, onChange
 	);
 }
 
-export function SelectSettingInput<TValue extends string>({ currentValue, defaultValue, label, stringify, optionOrder, schema, onChange, onReset, deps, children }: {
-	currentValue: TValue | undefined;
-	defaultValue: TValue;
+export function SelectSettingInput<TValue extends string>({ driver, label, stringify, optionOrder, schema, deps, children }: {
+	driver: Readonly<SettingDriver<TValue>>;
 	label: ReactNode;
-	stringify: Readonly<Record<TValue, string | (() => string)>>;
-	optionOrder?: readonly TValue[];
-	schema: ZodSchema<TValue, ZodTypeDef, unknown>;
-	onChange: (newValue: TValue) => void;
-	onReset?: () => void;
+	stringify: NoInfer<Readonly<Record<TValue, string | (() => string)>>>;
+	optionOrder?: NoInfer<readonly TValue[]>;
+	schema: NoInfer<ZodSchema<TValue, ZodTypeDef, unknown>>;
 	deps?: DependencyList;
 	children?: ReactNode;
 }): ReactElement {
-	const [value, setValue] = useRemotelyUpdatedUserInput<TValue | undefined>(currentValue, deps, {
+	const [value, setValue] = useRemotelyUpdatedUserInput<TValue | undefined>(driver.currentValue, deps, {
 		updateCallback(newValue) {
 			if (newValue === undefined) {
-				if (onReset) {
-					onReset();
+				if (driver.onReset) {
+					driver.onReset();
 				} else {
-					onChange(defaultValue);
+					driver.onChange(driver.defaultValue);
 				}
 			} else {
-				onChange(newValue);
+				driver.onChange(newValue);
 			}
 		},
 	});
@@ -113,7 +114,7 @@ export function SelectSettingInput<TValue extends string>({ currentValue, defaul
 				<Select
 					id={ id }
 					className='flex-1'
-					value={ value ?? defaultValue }
+					value={ value ?? driver.defaultValue }
 					onChange={ onInputChange }
 				>
 					{ options }

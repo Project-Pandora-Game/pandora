@@ -7,21 +7,10 @@ import { InteractionSystemDataSchema } from '../gameLogic/interactions/interacti
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits.ts';
 import { SpaceIdSchema } from '../space/space.ts';
 import { ArrayToRecordKeys } from '../utility/misc.ts';
-import { CharacterNameSchema, HexColorStringSchema, ZodTruncate } from '../validation.ts';
+import { CharacterNameSchema, ZodTruncate } from '../validation.ts';
 import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesServerSchema } from './assetPreferences.ts';
+import { CharacterSettingsSchema } from './characterSettings.ts';
 import { CharacterIdSchema } from './characterTypes.ts';
-import { PronounKeySchema } from './pronouns.ts';
-
-export const CharacterPublicSettingsSchema = z.object({
-	labelColor: HexColorStringSchema.catch('#ffffff'),
-	pronoun: PronounKeySchema.catch('she'),
-});
-export type ICharacterPublicSettings = z.infer<typeof CharacterPublicSettingsSchema>;
-
-export const CHARACTER_DEFAULT_PUBLIC_SETTINGS: Readonly<ICharacterPublicSettings> = {
-	labelColor: '#ffffff',
-	pronoun: 'she',
-};
 
 export const CharacterRoomPositionSchema = z.tuple([z.number().int(), z.number().int(), z.number().int()])
 	.catch([0, 0, 0])
@@ -34,7 +23,6 @@ export const CharacterPublicDataSchema = z.object({
 	accountId: AccountIdSchema,
 	name: CharacterNameSchema,
 	profileDescription: z.string().default('').transform(ZodTruncate(LIMIT_CHARACTER_PROFILE_LENGTH)),
-	settings: CharacterPublicSettingsSchema.default(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
 });
 /** Data about character, that is visible to everyone in the same space */
 export type ICharacterPublicData = z.infer<typeof CharacterPublicDataSchema>;
@@ -45,6 +33,15 @@ export type ICharacterMinimalData = Pick<ICharacterPublicData, 'id' | 'name' | '
 export const CharacterPrivateDataSchema = CharacterPublicDataSchema.extend({
 	inCreation: z.literal(true).optional(),
 	created: z.number(),
+	/**
+	 * Settings of the account.
+	 *
+	 * This representation of the settings is sparse; only modified settings are saved.
+	 * Settings modified to the default are saved as well, so potential change of default wouldn't change the user-selected setting.
+	 * This lets us both save on stored data, but also change defaults for users that never changed it themselves.
+	 * Also lets us show non-default settings to users with a button to reset them.
+	 */
+	settings: CharacterSettingsSchema.partial(),
 });
 /** Data about character, that is visible only to the character itself */
 export type ICharacterPrivateData = z.infer<typeof CharacterPrivateDataSchema>;

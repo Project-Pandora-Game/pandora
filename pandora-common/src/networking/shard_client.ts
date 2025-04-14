@@ -2,8 +2,9 @@ import { Immutable } from 'immer';
 import { z } from 'zod';
 import type { AssetsDefinitionFile } from '../assets/definitions.ts';
 import { AssetFrameworkGlobalStateClientBundle } from '../assets/state/globalState.ts';
-import { AssetPreferencesPublic, CharacterIdSchema, CharacterPrivateDataSchema } from '../character/index.ts';
 import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData.ts';
+import type { CharacterPublicSettings } from '../character/characterSettings.ts';
+import { AssetPreferencesPublic, CharacterIdSchema, CharacterPrivateDataSchema } from '../character/index.ts';
 import { ChatCharacterStatusSchema, type IChatMessage } from '../chat/chat.ts';
 import { AppearanceActionSchema, CharacterModifierEffectDataSchema } from '../gameLogic/index.ts';
 import { PermissionConfigSchema, PermissionSetupSchema } from '../gameLogic/permissions/permissionData.ts';
@@ -16,6 +17,7 @@ export type ICharacterRoomData = ICharacterPublicData & {
 	assetPreferences: AssetPreferencesPublic;
 	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
 	position: CharacterRoomPosition;
+	publicSettings: Partial<CharacterPublicSettings>;
 	isOnline: boolean;
 };
 

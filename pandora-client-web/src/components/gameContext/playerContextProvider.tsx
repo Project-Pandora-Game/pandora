@@ -1,4 +1,5 @@
-import { AssertNotNullable, AssetFrameworkCharacterState, CharacterId, ICharacterPrivateData, ICharacterRoomData, type AssetFrameworkGlobalState } from 'pandora-common';
+import type { Immutable } from 'immer';
+import { AssertNotNullable, AssetFrameworkCharacterState, CHARACTER_SETTINGS_DEFAULT, CharacterId, ICharacterPrivateData, ICharacterRoomData, type AssetFrameworkGlobalState, type CharacterSettings } from 'pandora-common';
 import { useMemo } from 'react';
 import { useCharacterDataOptional } from '../../character/character.ts';
 import { PlayerCharacter } from '../../character/player.ts';
@@ -36,4 +37,24 @@ export function usePlayerData(): Readonly<ICharacterPrivateData & ICharacterRoom
 export function usePlayerId(): CharacterId | null {
 	const player = usePlayer();
 	return player?.id ?? null;
+}
+
+/**
+ * Gets modified settings for the current character.
+ * @returns The partial settings object, or `undefined` if no character is loaded.
+ */
+export function useModifiedCharacterSettings(): Partial<Immutable<CharacterSettings>> | undefined {
+	return usePlayerData()?.settings;
+}
+
+/**
+ * Resolves full character settings to their effective values.
+ * @returns The settings that apply to this account.
+ */
+export function useCharacterSettings(): Immutable<CharacterSettings> {
+	const modifiedSettings = useModifiedCharacterSettings();
+	return useMemo((): Immutable<CharacterSettings> => ({
+		...CHARACTER_SETTINGS_DEFAULT,
+		...modifiedSettings,
+	}), [modifiedSettings]);
 }

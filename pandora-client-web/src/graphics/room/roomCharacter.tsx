@@ -4,6 +4,7 @@ import {
 	AssertNever,
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
+	CHARACTER_SETTINGS_DEFAULT,
 	CharacterRoomPosition,
 	CharacterSize,
 	ICharacterRoomData,
@@ -346,7 +347,7 @@ function RoomCharacterDisplay({
 	const {
 		name,
 		position: dataPosition,
-		settings,
+		publicSettings: { labelColor },
 		isOnline,
 	} = useCharacterData(character);
 
@@ -443,7 +444,7 @@ function RoomCharacterDisplay({
 						style={ new TextStyle({
 							fontFamily: THEME_FONT.slice(),
 							fontSize: 32 * fontScale,
-							fill: settings.labelColor,
+							fill: labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor,
 							align: 'center',
 							dropShadow: { blur: 4 },
 						}) }

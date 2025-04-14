@@ -1,4 +1,4 @@
-import { AssertNotNullable, ICharacterRoomData } from 'pandora-common';
+import { AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, ICharacterRoomData } from 'pandora-common';
 import React, {
 	ReactElement, useCallback,
 	useMemo,
@@ -304,7 +304,7 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 			<legend className={ char.isPlayer() ? 'player' : '' }>
 				<button onClick={ openMenu }>
 					<span>
-						<span className='colorStrip' style={ { color: data.settings.labelColor } }><b>{ '/// ' }</b></span>
+						<span className='colorStrip' style={ { color: data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor } }><b>{ '/// ' }</b></span>
 						<span onClick={ () => setTarget(data.id) }><b>{ data.name }</b></span>
 						<span> / { data.id } / { data.accountId }</span>
 					</span>

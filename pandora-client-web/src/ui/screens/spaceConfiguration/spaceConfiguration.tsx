@@ -545,15 +545,17 @@ function GhostManagement({ config, setConfig, canEdit }: {
 				/>
 			</Column>
 			<SelectSettingInput<SpaceGhostManagementConfig['ignore']>
-				currentValue={ config.ignore }
-				defaultValue='admin'
-				label='Ignore characters that are'
-				onChange={ (newValue) => {
-					setConfig({
-						...config,
-						ignore: newValue,
-					});
+				driver={ {
+					currentValue: config.ignore,
+					defaultValue: 'admin',
+					onChange(newValue) {
+						setConfig({
+							...config,
+							ignore: newValue,
+						});
+					},
 				} }
+				label='Ignore characters that are'
 				schema={ SpaceGhostManagementConfigSchema.shape.ignore }
 				stringify={ {
 					none: '[None] (all characters are affected)',

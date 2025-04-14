@@ -1,12 +1,13 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
 import { AssetPreferencesPublicSchema } from '../character/assetPreferences.ts';
-import { CharacterPublicSettingsSchema, CharacterRoomPositionSchema } from '../character/characterData.ts';
+import { CharacterRoomPositionSchema } from '../character/characterData.ts';
+import { CharacterSettingsKeysSchema, CharacterSettingsSchema } from '../character/characterSettings.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
 import { ChatCharacterStatusSchema, ClientChatMessagesSchema } from '../chat/chat.ts';
-import { CharacterModifierConfigurationChangeSchema, CharacterModifierIdSchema, CharacterModifierInstanceClientDataSchema, CharacterModifierLockActionSchema, CharacterModifierTemplateSchema, PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic/index.ts';
 import { AppearanceActionSchema } from '../gameLogic/actionLogic/actions/_index.ts';
 import { AppearanceActionData, AppearanceActionProblem } from '../gameLogic/actionLogic/appearanceActionProblems.ts';
+import { CharacterModifierConfigurationChangeSchema, CharacterModifierIdSchema, CharacterModifierInstanceClientDataSchema, CharacterModifierLockActionSchema, CharacterModifierTemplateSchema, PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic/index.ts';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits.ts';
 import { Satisfies } from '../utility/misc.ts';
 import { CharacterInputNameSchema, ZodCast } from '../validation.ts';
@@ -101,9 +102,20 @@ export const ClientShardSchema = {
 			}),
 		]),
 	},
-	updateSettings: {
-		request: CharacterPublicSettingsSchema.partial(),
-		response: null,
+	changeSettings: {
+		request: z.discriminatedUnion('type', [
+			z.object({
+				type: z.literal('set'),
+				settings: CharacterSettingsSchema.partial(),
+			}),
+			z.object({
+				type: z.literal('reset'),
+				settings: CharacterSettingsKeysSchema.array().max(CharacterSettingsKeysSchema.options.length),
+			}),
+		]),
+		response: z.object({
+			result: z.literal('ok'),
+		}),
 	},
 	updateAssetPreferences: {
 		request: AssetPreferencesPublicSchema.partial(),

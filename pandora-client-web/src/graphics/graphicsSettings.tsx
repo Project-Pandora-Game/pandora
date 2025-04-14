@@ -1,9 +1,11 @@
+import type { Immutable } from 'immer';
 import { AssertNever, CloneDeepMutable } from 'pandora-common';
 import { useMemo } from 'react';
 import { z } from 'zod';
 import { GraphicsManagerInstance } from '../assets/graphicsManager.ts';
 import { BrowserStorage } from '../browserStorage.ts';
 import { useMediaQuery } from '../common/useMediaQuery.ts';
+import type { SettingDriver } from '../components/settings/helpers/settingsInputs.tsx';
 import { useObservable } from '../observable.ts';
 
 export const GraphicsSettingsSchema = z.object({
@@ -27,7 +29,7 @@ export const GRAPHICS_SETTINGS_DEFAULT: Readonly<GraphicsSettings> = {
 	alphamaskEngine: 'disabled',
 } as const;
 
-export const GraphicsSettingsStorage = BrowserStorage.create<Partial<GraphicsSettings>>('settings.graphics', {}, GraphicsSettingsSchema.partial());
+export const GraphicsSettingsStorage = BrowserStorage.create<Partial<Immutable<GraphicsSettings>>>('settings.graphics', {}, GraphicsSettingsSchema.partial());
 // Add a hook to purge the current graphics loader cache when the graphics settins change in any way
 // (most of the changes cause different textures to be loaded, so get rid of old ones)
 GraphicsSettingsStorage.subscribe(() => {
@@ -60,6 +62,22 @@ export function ResetGraphicsSettings(settings: readonly (keyof GraphicsSettings
 		}
 		return newValue;
 	});
+}
+
+export function useGraphicsSettingDriver<const Setting extends keyof GraphicsSettings>(setting: Setting): SettingDriver<Immutable<GraphicsSettings>[Setting]> {
+	const settings = useObservable(GraphicsSettingsStorage);
+	const currentValue: Immutable<GraphicsSettings>[Setting] | undefined = settings[setting];
+
+	return useMemo((): SettingDriver<Immutable<GraphicsSettings>[Setting]> => ({
+		currentValue,
+		defaultValue: GRAPHICS_SETTINGS_DEFAULT[setting],
+		onChange(newValue) {
+			SetGraphicsSettings({ [setting]: newValue });
+		},
+		onReset() {
+			ResetGraphicsSettings([setting]);
+		},
+	}), [currentValue, setting]);
 }
 
 //#region Setting-specific helpers and values

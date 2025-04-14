@@ -1,4 +1,4 @@
-import { AssertNever, CharacterId, GetLogger, ICharacterRoomData, LIMIT_CHARACTER_PROFILE_LENGTH, PRONOUNS } from 'pandora-common';
+import { AssertNever, CHARACTER_SETTINGS_DEFAULT, CharacterId, GetLogger, ICharacterRoomData, LIMIT_CHARACTER_PROFILE_LENGTH, PRONOUNS } from 'pandora-common';
 import { ReactElement, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'react-toastify';
@@ -37,7 +37,8 @@ function CharacterProfileContent({ character, gameState }: { character: Characte
 	const characterState = useCharacterState(globalState, character.id);
 	const isNarrowScreen = useIsNarrowScreen();
 
-	const pronouns = PRONOUNS[characterData.settings.pronoun];
+	const pronouns = PRONOUNS[characterData.publicSettings.pronoun ?? CHARACTER_SETTINGS_DEFAULT.pronoun];
+	const labelColor = characterData.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor;
 
 	return (
 		<Row className='profileView flex-1' gap='none' overflowY='hidden'>
@@ -52,7 +53,7 @@ function CharacterProfileContent({ character, gameState }: { character: Characte
 					<strong
 						className='selectable'
 						style={ {
-							textShadow: `${characterData.settings.labelColor} 1px 2px`,
+							textShadow: `${labelColor} 1px 2px`,
 						} }
 					>
 						{ characterData.name }
@@ -78,13 +79,13 @@ function CharacterProfileContent({ character, gameState }: { character: Characte
 							{
 								isPlayer ? (
 									<Link to='/settings/character' className='center-flex'>
-										<div className='labelColorMark' style={ { backgroundColor: characterData.settings.labelColor } } />
+										<div className='labelColorMark' style={ { backgroundColor: labelColor } } />
 									</Link>
 								) : (
-									<div className='labelColorMark' style={ { backgroundColor: characterData.settings.labelColor } } />
+									<div className='labelColorMark' style={ { backgroundColor: labelColor } } />
 								)
 							}
-							<span className='selectable'>{ characterData.settings.labelColor.toUpperCase() }</span>
+							<span className='selectable'>{ labelColor.toUpperCase() }</span>
 						</Row>
 						<CharacterProfileDescription profileDescription={ characterData.profileDescription } allowEdit={ isPlayer } />
 					</Column>

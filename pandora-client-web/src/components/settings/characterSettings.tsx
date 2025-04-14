@@ -1,4 +1,4 @@
-import { AssertNever, ICharacterPrivateData, PRONOUNS, type PronounKey } from 'pandora-common';
+import { AssertNever, ICharacterPrivateData, PronounKeySchema, PRONOUNS } from 'pandora-common';
 import React, { ReactElement } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
@@ -17,7 +17,7 @@ import { Form, FormField, FormFieldError } from '../common/form/form.tsx';
 import { ModalDialog } from '../dialog/dialog.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
-import { useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
+import { useCharacterSettingDriver } from './helpers/characterSettings.tsx';
 
 export function CharacterSettings(): ReactElement | null {
 	const navigate = useNavigatePandora();
@@ -37,17 +37,18 @@ export function CharacterSettings(): ReactElement | null {
 			} }>
 				Edit your character profile
 			</Button>
-			<LabelColor playerData={ playerData } />
-			<Pronouns playerData={ playerData } />
+			<LabelColor />
+			<Pronouns />
 			<Preview />
 			<DeleteCharacter playerData={ playerData } />
 		</>
 	);
 }
 
-function LabelColor({ playerData }: { playerData: Readonly<ICharacterPrivateData>; }): ReactElement {
-	const shardConnector = useShardConnector();
-	const [color, setColor] = useColorInput(playerData.settings.labelColor);
+function LabelColor(): ReactElement {
+	const settingDriver = useCharacterSettingDriver('labelColor');
+	const currentEffectiveValue = settingDriver.currentValue ?? settingDriver.defaultValue;
+	const [color, setColor] = useColorInput(currentEffectiveValue);
 
 	return (
 		<fieldset>
@@ -57,8 +58,8 @@ function LabelColor({ playerData }: { playerData: Readonly<ICharacterPrivateData
 				<ColorInput initialValue={ color } onChange={ setColor } title='Name' />
 				<Button
 					className='slim'
-					onClick={ () => shardConnector?.sendMessage('updateSettings', { labelColor: color }) }
-					disabled={ color === playerData.settings.labelColor?.toUpperCase() }>
+					onClick={ () => settingDriver.onChange(color) }
+					disabled={ color === currentEffectiveValue.toUpperCase() }>
 					Save
 				</Button>
 			</div>
@@ -66,16 +67,17 @@ function LabelColor({ playerData }: { playerData: Readonly<ICharacterPrivateData
 	);
 }
 
-function Pronouns({ playerData }: { playerData: Readonly<ICharacterPrivateData>; }): ReactElement {
-	const shardConnector = useShardConnector();
-	const [pronoun, setPronoun] = React.useState(playerData.settings.pronoun);
+function Pronouns(): ReactElement {
+	const settingDriver = useCharacterSettingDriver('pronoun');
+	const currentEffectiveValue = settingDriver.currentValue ?? settingDriver.defaultValue;
+	const [pronoun, setPronoun] = React.useState(currentEffectiveValue);
 
 	return (
 		<fieldset>
 			<legend>Pronouns</legend>
 			<div className='input-row'>
 				<label>Pronoun</label>
-				<Select value={ pronoun } onChange={ (ev) => setPronoun(ev.target.value as PronounKey) }>
+				<Select value={ pronoun } onChange={ (ev) => setPronoun(PronounKeySchema.parse(ev.target.value)) }>
 					{ Object.entries(PRONOUNS).map(([key, value]) => (
 						<option key={ key } value={ key }>
 							{ Object.values(value).join('/') }
@@ -84,8 +86,8 @@ function Pronouns({ playerData }: { playerData: Readonly<ICharacterPrivateData>;
 				</Select>
 				<Button
 					className='slim'
-					onClick={ () => shardConnector?.sendMessage('updateSettings', { pronoun }) }
-					disabled={ pronoun === playerData.settings.pronoun }>
+					onClick={ () => settingDriver.onChange(pronoun) }
+					disabled={ pronoun === currentEffectiveValue }>
 					Save
 				</Button>
 			</div>

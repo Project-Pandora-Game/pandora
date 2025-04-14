@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { capitalize, noop } from 'lodash-es';
-import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CHARACTER_SETTINGS_DEFAULT, CharacterId, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'react-toastify';
@@ -559,7 +559,7 @@ function PermissionPromptDialog({ prompt, dismiss, gameState }: {
 		<DraggableDialog title='Permission Prompt' close={ dismiss } hiddenClose highlight={ !isSafe }>
 			<Row alignX='center'>
 				<h2>
-					<span style={ { textShadow: `${source.data.settings.labelColor} 1px 2px` } }>
+					<span style={ { textShadow: `${source.data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor} 1px 2px` } }>
 						{ source.name }
 					</span>
 					{ ' ' }

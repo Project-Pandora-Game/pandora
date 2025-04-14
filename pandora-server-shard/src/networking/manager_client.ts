@@ -79,7 +79,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			roomCharacterMove: this.handleRoomCharacterMove.bind(this),
 			gameLogicAction: this.handleGameLogicAction.bind(this),
 			requestPermission: this.handleRequestPermission.bind(this),
-			updateSettings: this.handleUpdateSettings.bind(this),
+			changeSettings: this.handleChangeSettings.bind(this),
 			updateAssetPreferences: this.handleUpdateAssetPreferences.bind(this),
 			updateCharacterDescription: this.handleUpdateCharacterDescription.bind(this),
 			gamblingAction: this.handleGamblingAction.bind(this),
@@ -293,11 +293,19 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result: 'promptSent' };
 	}
 
-	private handleUpdateSettings(settings: IClientShardArgument['updateSettings'], client: ClientConnection): void {
+	private handleChangeSettings(request: IClientShardArgument['changeSettings'], client: ClientConnection): IClientShardNormalResult['changeSettings'] {
 		if (!client.character)
 			throw new BadMessageError();
 
-		client.character.setPublicSettings(settings);
+		if (request.type === 'set') {
+			client.character.changeSettings(request.settings);
+		} else if (request.type === 'reset') {
+			client.character.resetSettings(request.settings);
+		} else {
+			AssertNever(request);
+		}
+
+		return { result: 'ok' };
 	}
 
 	private handleUpdateAssetPreferences(preferences: IClientShardArgument['updateAssetPreferences'], client: ClientConnection): IClientShardNormalResult['updateAssetPreferences'] {

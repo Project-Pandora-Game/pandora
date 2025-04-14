@@ -3,7 +3,6 @@ import { nanoid } from 'nanoid';
 import {
 	ASSET_PREFERENCES_DEFAULT,
 	AccountId,
-	CHARACTER_DEFAULT_PUBLIC_SETTINGS,
 	CharacterId,
 	ICharacterData,
 	ROOM_INVENTORY_BUNDLE_DEFAULT,
@@ -30,7 +29,7 @@ export function CreateCharacter(accountId: number, id: CharacterId): [DatabaseCh
 		profileDescription: '',
 		created: -1,
 		accessId: nanoid(8),
-		settings: cloneDeep(CHARACTER_DEFAULT_PUBLIC_SETTINGS),
+		settings: {},
 		assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 		position: [-1, -1, 0],
 	};

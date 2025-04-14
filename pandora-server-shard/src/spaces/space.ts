@@ -531,7 +531,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 					type: message.type,
 					id,
 					insertId: editId,
-					from: { id: from.id, name: from.name, labelColor: from.settings.labelColor },
+					from: { id: from.id, name: from.name, labelColor: from.getEffectiveSettings().labelColor },
 					parts: message.parts,
 					time: this.nextMessageTime(),
 				});
@@ -544,8 +544,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 					type: message.type,
 					id,
 					insertId: editId,
-					from: { id: from.id, name: from.name, labelColor: from.settings.labelColor },
-					to: { id: target.id, name: target.name, labelColor: target.settings.labelColor },
+					from: { id: from.id, name: from.name, labelColor: from.getEffectiveSettings().labelColor },
+					to: { id: target.id, name: target.name, labelColor: target.getEffectiveSettings().labelColor },
 					parts: message.parts,
 					time: this.nextMessageTime(),
 				});
@@ -648,8 +648,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			type: 'character',
 			id: char.id,
 			name: char.name,
-			pronoun: char.settings.pronoun,
-			labelColor: char.settings.labelColor,
+			pronoun: char.getEffectiveSettings().pronoun,
+			labelColor: char.getEffectiveSettings().labelColor,
 		};
 		this.actionCache.set(id, { result });
 

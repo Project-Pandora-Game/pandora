@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { clamp } from 'lodash-es';
-import { AssertNotNullable, CharacterId, ChatCharacterStatus, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly } from 'pandora-common';
+import { AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, ChatCharacterStatus, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
@@ -16,7 +16,7 @@ import { Column, Row } from '../../../components/common/container/container.tsx'
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { useDirectoryConnector } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { ChatSendError, IMessageParseOptions, useChatCharacterStatus, useChatMessageSender, useChatSetPlayerStatus, useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
-import { usePlayerId } from '../../../components/gameContext/playerContextProvider.tsx';
+import { useCharacterSettings, usePlayerId } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider.tsx';
 import { useNullableObservable } from '../../../observable.ts';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
@@ -494,7 +494,7 @@ function TypingIndicator(): ReactElement {
 			<Row className='flex-1' wrap>
 				{ statuses.map(({ data, status }) => (
 					<span key={ data.id }>
-						<span style={ { color: data.settings.labelColor } }>{ data.name } </span>
+						<span style={ { color: data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor } }>{ data.name } </span>
 						({ data.id })
 						{ ' is ' }
 						{ status }
@@ -542,7 +542,7 @@ function Modifiers({ scroll }: { scroll: (forceScroll: boolean) => void; }): Rea
 			{ target && (
 				<span>
 					{ 'Whispering to ' }
-					<span style={ { color: target.data.settings.labelColor } }>{ target.data.name }</span>
+					<span style={ { color: target.data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor } }>{ target.data.name }</span>
 					{ ' ' }
 					({ target.data.id })
 					{ ' ' }
@@ -590,6 +590,7 @@ export function useChatCommandContext(): ICommandInvokeContext<ICommandExecution
 	const sender = useChatMessageSender();
 	const chatInput = useChatInput();
 	const accountSettings = useAccountSettings();
+	const characterSettings = useCharacterSettings();
 
 	const directoryConnector = useDirectoryConnector();
 	const accountManager = useService('accountManager');
@@ -608,10 +609,11 @@ export function useChatCommandContext(): ICommandInvokeContext<ICommandExecution
 		globalState,
 		player: gameState.player,
 		accountSettings,
+		characterSettings,
 		messageSender: sender,
 		inputHandlerContext: chatInput,
 		navigate,
-	}), [chatInput, gameState, globalState, accountSettings, directoryConnector, accountManager, navigate, sender, shardConnector]);
+	}), [chatInput, gameState, globalState, accountSettings, characterSettings, directoryConnector, accountManager, navigate, sender, shardConnector]);
 }
 
 export function AutoCompleteHint<TCommandExecutionContext extends ICommandExecutionContext>({ ctx, commands }: {

@@ -1,6 +1,14 @@
+import { AssertNotNullable, TypedEventEmitter } from 'pandora-common';
 import type { Ticker } from 'pixi.js';
-import { useCallback, useEffect, useRef, type RefObject } from 'react';
-import { usePixiAppOptional } from './appContext.ts';
+import { createContext, useCallback, useContext, useEffect, useRef, type RefObject } from 'react';
+
+export const PixiTickerContext = createContext<PixiTicker | null>(null);
+
+export class PixiTicker extends TypedEventEmitter<{ tick: Ticker; }> {
+	public readonly tick = (ticker: Ticker): void => {
+		this.emit('tick', ticker);
+	};
+}
 
 /**
  * Adds a tick handler that is called each time a Pixi tick happens (so each time there is a render of the tree)
@@ -8,24 +16,15 @@ import { usePixiAppOptional } from './appContext.ts';
  * @param enabled - Whether this callback is enabled or not (allowing to disable the tick without calling the hook conditionally)
  */
 export function usePixiTick(callback: (ticker: Ticker) => void, enabled: boolean = true) {
-	const app = usePixiAppOptional();
+	const tickerContext = useContext(PixiTickerContext);
+	AssertNotNullable(tickerContext);
 
 	useEffect(() => {
-		if (app == null || !enabled)
+		if (!enabled)
 			return;
 
-		const ticker = app.ticker;
-
-		const tick = (tickerRef: Ticker) => {
-			callback(tickerRef);
-		};
-
-		ticker.add(tick);
-
-		return () => {
-			ticker.remove(tick);
-		};
-	}, [app, callback, enabled]);
+		return tickerContext.on('tick', callback);
+	}, [tickerContext, callback, enabled]);
 }
 
 export type TickerRef = RefObject<((ticker: Ticker) => void) | null>;
@@ -35,7 +34,7 @@ export function useTickerRef(): TickerRef {
 
 	const callback = useCallback((ticker: Ticker) => {
 		ref.current?.(ticker);
-	}, [ref]);
+	}, []);
 	usePixiTick(callback);
 
 	return ref;

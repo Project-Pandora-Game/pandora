@@ -17,8 +17,12 @@ PixiFiber.injectIntoDevTools();
 
 /** A root handle for working with a Pixi React root. */
 export type PixiRoot = {
-	/** Render element into the root, replacing any existing content. */
-	render: (element: ReactNode) => void;
+	/**
+	 * Render element into the root, replacing any existing content.
+	 * @param element - The element to render
+	 * @param sync - Whether to sync all the work, default `false`.
+	 */
+	render: (element: ReactNode, sync?: boolean) => void;
 	/** Unmount the root - removing all elements and performing any necessary cleanup. */
 	unmount: () => void;
 	/** Emitter used for delivering update events for lazy rendering. */
@@ -58,8 +62,17 @@ export function CreatePixiRoot(rootContainer: Container): PixiRoot {
 
 	// Return a handle for the root, allowing it to be manipulated.
 	return {
-		render(element) {
-			PixiFiber.updateContainer(element, container);
+		render(element, sync = false) {
+			if (sync) {
+				// @ts-expect-error: No reconciler typings for React 19 are available yet.
+				PixiFiber.updateContainerSync(element, container);
+				// @ts-expect-error: No reconciler typings for React 19 are available yet.
+				PixiFiber.flushSyncWork();
+				// Flush any pending "passive" work
+				PixiFiber.flushPassiveEffects();
+			} else {
+				PixiFiber.updateContainer(element, container);
+			}
 		},
 		unmount() {
 			// Clear all children of the container

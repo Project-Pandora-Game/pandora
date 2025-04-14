@@ -5,6 +5,7 @@ import { ChildrenProps } from '../../common/reactTypes.ts';
 import type { ClientServices } from '../../services/clientServices.ts';
 import { ServiceManagerContextProvider } from '../../services/serviceProvider.tsx';
 import { ChatInputContextProvider } from '../../ui/components/chat/chatInput.tsx';
+import { CharacterPreviewAutogenerationService } from '../../ui/screens/room/characterPreviewGeneration.tsx';
 import { RoomItemDialogsProvider } from '../../ui/screens/room/roomItemDialog.tsx';
 import { TutorialService } from '../../ui/tutorial/tutorialSystem/tutorialService.tsx';
 import { CharacterRestrictionOverrideDialogContext } from '../characterRestrictionOverride/characterRestrictionOverride.tsx';
@@ -49,6 +50,7 @@ function MiscProviders({ children }: ChildrenProps): ReactElement {
 				<TutorialService />
 				<InterfaceSettingsProvider />
 				<RoomItemDialogsProvider />
+				<CharacterPreviewAutogenerationService />
 
 				{ children }
 			</PermissionCheckServiceProvider>

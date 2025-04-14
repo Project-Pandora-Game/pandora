@@ -10,6 +10,7 @@ import { GetApplicationManager, ReleaseApplicationManager, type GraphicsApplicat
 import { DEFAULT_BACKGROUND_COLOR } from './graphicsScene.tsx';
 import { PixiAppContext } from './reconciler/appContext.ts';
 import { CreatePixiRoot, type PixiRoot } from './reconciler/reconciler.ts';
+import { PixiTicker, PixiTickerContext } from './reconciler/tick.ts';
 
 export interface GraphicsSceneRendererProps extends ChildrenProps {
 	container: HTMLDivElement;
@@ -30,6 +31,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 	private appManager: GraphicsApplicationManager | null = null;
 	private _appManagerCleanupCallback: undefined | (() => void);
 	private app: Application | null = null;
+	private readonly ticker = new PixiTicker();
 
 	private readonly logger = GetLogger('GraphicsSceneRendererShared');
 
@@ -141,6 +143,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 		app.renderer.background.color = backgroundColor;
 		app.renderer.background.alpha = backgroundAlpha;
 		container.appendChild(app.canvas);
+		this.app.ticker.add(this.ticker.tick);
 		onMount?.(this.app);
 
 		this.root = CreatePixiRoot(this.app.stage);
@@ -175,6 +178,7 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 					children: true,
 				}));
 
+			this.app.ticker.remove(this.ticker.tick);
 			this.app.canvas.remove();
 			this.app = null;
 		}
@@ -213,7 +217,13 @@ class GraphicsSceneRendererSharedImpl extends React.Component<Omit<GraphicsScene
 	public getChildren() {
 		const { children } = this.props;
 		AssertNotNullable(this.app);
-		return <PixiAppContext.Provider value={ this.app }>{ children }</PixiAppContext.Provider>;
+		return (
+			<PixiAppContext.Provider value={ this.app }>
+				<PixiTickerContext.Provider value={ this.ticker }>
+					{ children }
+				</PixiTickerContext.Provider>
+			</PixiAppContext.Provider>
+		);
 	}
 
 	public override componentDidCatch(error: unknown, errorInfo: unknown) {
@@ -275,6 +285,7 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 
 	private _appManager: GraphicsApplicationManager | null = null;
 	private _app: Application | null = null;
+	private readonly ticker = new PixiTicker();
 
 	public override render(): React.ReactNode {
 		const { renderArea } = this.props;
@@ -363,6 +374,8 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 			return;
 		this._needsUpdate = false;
 
+		const { renderArea } = this.props;
+
 		// Check if we can render now, otherwise re-queue
 		if (this._stage == null || this._canvasRef == null || !this._mountApp()) {
 			this.needsRenderUpdate();
@@ -371,12 +384,13 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 
 		AssertNotNullable(this._app);
 
+		this._app.ticker.addOnce((t) => this.ticker.tick(t));
 		this._app.ticker.update();
 
 		const outContext = this._canvasRef.getContext('2d');
 		if (outContext) {
-			outContext.clearRect(0, 0, this._canvasRef.width, this._canvasRef.height);
-			outContext.drawImage(this._app.canvas, 0, 0, this._canvasRef.width, this._canvasRef.height);
+			outContext.clearRect(0, 0, renderArea.width, renderArea.height);
+			outContext.drawImage(this._app.canvas, 0, 0, renderArea.width, renderArea.height);
 		} else {
 			this.logger.warning('Failed to get output 2d context');
 		}
@@ -437,7 +451,11 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 
 	public getChildren() {
 		const { children } = this.props;
-		return <>{ children }</>;
+		return (
+			<PixiTickerContext.Provider value={ this.ticker }>
+				{ children }
+			</PixiTickerContext.Provider>
+		);
 	}
 
 	public override componentDidCatch(error: unknown, errorInfo: unknown) {

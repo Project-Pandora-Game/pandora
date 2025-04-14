@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { capitalize, noop } from 'lodash-es';
-import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CharacterId, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
+import { ASSET_PREFERENCES_PERMISSIONS, AssertNever, AssetPreferenceType, CHARACTER_SETTINGS_DEFAULT, CharacterId, EMPTY, GetLogger, IClientShardNormalResult, IInteractionConfig, INTERACTION_CONFIG, INTERACTION_IDS, InteractionId, KnownObject, MakePermissionConfigFromDefault, PERMISSION_MAX_CHARACTER_OVERRIDES, PermissionConfig, PermissionConfigChangeSelector, PermissionConfigChangeType, PermissionGroup, PermissionSetup, PermissionType } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Link } from 'react-router';
 import { toast } from 'react-toastify';
@@ -183,7 +183,7 @@ function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
 function ItemLimitsPermissions(): ReactElement {
 	return (
 		<fieldset>
-			<legend>Item Limits</legend>
+			<legend>Item limits</legend>
 			<i>Allow other characters to interact with worn items and to add new items that are marked in the item limits as...</i>
 			<Column gap='none' className='permission-list'>
 				{
@@ -559,7 +559,7 @@ function PermissionPromptDialog({ prompt, dismiss, gameState }: {
 		<DraggableDialog title='Permission Prompt' close={ dismiss } hiddenClose highlight={ !isSafe }>
 			<Row alignX='center'>
 				<h2>
-					<span style={ { textShadow: `${source.data.settings.labelColor} 1px 2px` } }>
+					<span style={ { textShadow: `${source.data.publicSettings.labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor} 1px 2px` } }>
 						{ source.name }
 					</span>
 					{ ' ' }

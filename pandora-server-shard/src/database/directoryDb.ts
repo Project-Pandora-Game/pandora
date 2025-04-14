@@ -2,11 +2,11 @@ import { omit } from 'lodash-es';
 import {
 	CharacterId,
 	GetLogger,
-	ICharacterData,
 	ICharacterDataShardUpdate,
 	SpaceData,
 	SpaceDataShardUpdate,
 	SpaceId,
+	type ICharacterDataShard,
 } from 'pandora-common';
 import { DirectoryConnectionState, DirectoryConnector } from '../networking/socketio_directory_connector.ts';
 import type { ShardDatabase } from './databaseProvider.ts';
@@ -21,7 +21,7 @@ export default class DirectoryDatabase implements ShardDatabase {
 			logger.info('Initialized Directory database');
 	}
 
-	public async getCharacter(id: CharacterId, accessId: string): Promise<ICharacterData | null | false> {
+	public async getCharacter(id: CharacterId, accessId: string): Promise<ICharacterDataShard | null | false> {
 		if (DirectoryConnector.state !== DirectoryConnectionState.CONNECTED)
 			return false;
 

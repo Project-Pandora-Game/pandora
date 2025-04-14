@@ -2,7 +2,7 @@ import { FormatBytes } from 'pandora-common';
 import { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { z } from 'zod';
 import { GraphicsManagerInstance, type IGraphicsLoaderStats } from '../../assets/graphicsManager.ts';
-import { GRAPHICS_SETTINGS_DEFAULT, GraphicsSettingsSchema, GraphicsSettingsStorage, ResetGraphicsSettings, SetGraphicsSettings, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings } from '../../graphics/graphicsSettings.tsx';
+import { GraphicsSettingsSchema, useGraphicsSettingDriver, useGraphicsSmoothMovementAutoEnabledExplain, type GraphicsSettings } from '../../graphics/graphicsSettings.tsx';
 import { useObservable } from '../../observable.ts';
 import { useAutomaticResolution } from '../../services/screenResolution/screenResolution.ts';
 import { Button } from '../common/button/button.tsx';
@@ -21,7 +21,6 @@ export function GraphicsSettings(): ReactElement | null {
 }
 
 function EffectsSettings(): ReactElement {
-	const { effectBlinking, smoothMovement } = useObservable(GraphicsSettingsStorage);
 	const smoothMovementAutoValue = useGraphicsSmoothMovementAutoEnabledExplain();
 
 	const SMOOTH_MOVEMENT_DESCRIPTIONS = useMemo((): Record<GraphicsSettings['smoothMovement'], string | (() => string)> => ({
@@ -34,29 +33,20 @@ function EffectsSettings(): ReactElement {
 		<fieldset>
 			<legend>Effects</legend>
 			<ToggleSettingInput
-				currentValue={ effectBlinking }
-				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.effectBlinking }
+				driver={ useGraphicsSettingDriver('effectBlinking') }
 				label='Eye blinking of characters'
-				onChange={ (newValue) => {
-					SetGraphicsSettings({ effectBlinking: newValue });
-				} }
-				onReset={ () => ResetGraphicsSettings(['effectBlinking']) }
 			/>
 			<SelectSettingInput<GraphicsSettings['smoothMovement']>
-				currentValue={ smoothMovement }
-				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.smoothMovement }
+				driver={ useGraphicsSettingDriver('smoothMovement') }
 				label='Smooth movement'
 				stringify={ SMOOTH_MOVEMENT_DESCRIPTIONS }
 				schema={ GraphicsSettingsSchema.shape.smoothMovement }
-				onChange={ (v) => SetGraphicsSettings({ smoothMovement: v }) }
-				onReset={ () => ResetGraphicsSettings(['smoothMovement']) }
 			/>
 		</fieldset>
 	);
 }
 
 function QualitySettings(): ReactElement {
-	const { renderResolution, textureResolution, alphamaskEngine } = useObservable(GraphicsSettingsStorage);
 
 	const ALPHAMASK_ENGINES_DESCRIPTIONS: Record<GraphicsSettings['alphamaskEngine'], string> = {
 		pixi: 'Pixi.js',
@@ -73,12 +63,21 @@ function QualitySettings(): ReactElement {
 		'0.25': '25%',
 	}), [automaticTextureResolution]);
 
+	const renderResolutionDriver = useGraphicsSettingDriver('renderResolution');
+
 	return (
 		<fieldset>
 			<legend>Quality</legend>
 			<SelectSettingInput<string>
-				currentValue={ renderResolution?.toString() }
-				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.renderResolution.toString() }
+				driver={ {
+					currentValue: renderResolutionDriver.currentValue?.toString(),
+					defaultValue: renderResolutionDriver.defaultValue.toString(),
+					onChange(v) {
+						const newValue = GraphicsSettingsSchema.shape.renderResolution.parse(Number.parseInt(v, 10));
+						return renderResolutionDriver.onChange(newValue);
+					},
+					onReset: renderResolutionDriver.onReset,
+				} }
 				label='Render resolution'
 				stringify={
 					Object.fromEntries(
@@ -88,25 +87,16 @@ function QualitySettings(): ReactElement {
 				}
 				optionOrder={ [100, 90, 80, 65, 50, 25, 0].map(String) }
 				schema={ z.string() }
-				onChange={ (v) => {
-					const newValue = GraphicsSettingsSchema.shape.renderResolution.parse(Number.parseInt(v, 10));
-					SetGraphicsSettings({ renderResolution: newValue });
-				} }
-				onReset={ () => ResetGraphicsSettings(['renderResolution']) }
 			/>
 			<SelectSettingInput<GraphicsSettings['textureResolution']>
-				currentValue={ textureResolution }
-				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.textureResolution }
+				driver={ useGraphicsSettingDriver('textureResolution') }
 				label='Texture resolution'
 				stringify={ GRAPHICS_TEXTURE_RESOLUTION_DESCRIPTIONS }
 				optionOrder={ ['auto', '1', '0.5', '0.25'] }
 				schema={ GraphicsSettingsSchema.shape.textureResolution }
-				onChange={ (v) => SetGraphicsSettings({ textureResolution: v }) }
-				onReset={ () => ResetGraphicsSettings(['textureResolution']) }
 			/>
 			<SelectSettingInput<GraphicsSettings['alphamaskEngine']>
-				currentValue={ alphamaskEngine }
-				defaultValue={ GRAPHICS_SETTINGS_DEFAULT.alphamaskEngine }
+				driver={ useGraphicsSettingDriver('alphamaskEngine') }
 				label={
 					<>
 						Alphamasking engine
@@ -134,8 +124,6 @@ function QualitySettings(): ReactElement {
 				}
 				stringify={ ALPHAMASK_ENGINES_DESCRIPTIONS }
 				schema={ GraphicsSettingsSchema.shape.alphamaskEngine }
-				onChange={ (v) => SetGraphicsSettings({ alphamaskEngine: v }) }
-				onReset={ () => ResetGraphicsSettings(['alphamaskEngine']) }
 			/>
 		</fieldset>
 	);

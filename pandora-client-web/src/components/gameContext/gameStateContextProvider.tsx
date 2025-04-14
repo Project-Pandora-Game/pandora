@@ -1,5 +1,5 @@
 import { freeze, Immutable } from 'immer';
-import { isEqual } from 'lodash-es';
+import { isEqual, noop } from 'lodash-es';
 import {
 	ActionSpaceContext,
 	AssetFrameworkCharacterState,
@@ -725,12 +725,17 @@ export function useChatCharacterStatus(): { data: ICharacterRoomData; status: Ch
 	}, [characters, status, gameState]);
 }
 
-export function useGlobalState(context: GameState): AssetFrameworkGlobalState {
+export function useGlobalState(context: GameState): AssetFrameworkGlobalState;
+export function useGlobalState(context: GameState | null): AssetFrameworkGlobalState | null;
+export function useGlobalState(context: GameState | null): AssetFrameworkGlobalState | null {
 	return useSyncExternalStore((onChange) => {
+		if (context == null)
+			return noop;
+
 		return context.on('globalStateChange', () => {
 			onChange();
 		});
-	}, () => context.globalState.currentState);
+	}, () => (context?.globalState.currentState ?? null));
 }
 
 export function useCharacterState(globalState: AssetFrameworkGlobalState, id: CharacterId | null): AssetFrameworkCharacterState | null {

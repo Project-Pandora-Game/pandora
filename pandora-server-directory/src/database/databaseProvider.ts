@@ -3,6 +3,7 @@ import type {
 	CharacterId,
 	ICharacterData,
 	ICharacterDataDirectoryUpdate,
+	ICharacterDataShard,
 	ICharacterDataShardUpdate,
 	ServerService,
 	SpaceData,
@@ -98,7 +99,7 @@ export interface PandoraDatabase extends ServerService {
 	 * Finish the character creation process
 	 * @param accountId - Id of account to create character for
 	 */
-	finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<ICharacterData | null>;
+	finalizeCharacter(accountId: AccountId, characterId: CharacterId): Promise<Pick<ICharacterData, 'id' | 'name' | 'created'> | null>;
 
 	/**
 	 * Update character's info
@@ -122,6 +123,20 @@ export interface PandoraDatabase extends ServerService {
 	 * @return - New access id
 	 */
 	setCharacterAccess(id: CharacterId): Promise<string | null>;
+
+	/**
+	 * Gets the characters binary preview data.
+	 * @param id - Id of character
+	 * @returns The preview or `null` if character not found or preview is not set
+	 */
+	getCharacterPreview(id: CharacterId): Promise<Uint8Array | null>;
+
+	/**
+	 * Sets a preview for a character.
+	 * @param id - Id of character
+	 * @param preview - The preview to save
+	 */
+	setCharacterPreview(id: CharacterId, preview: Uint8Array): Promise<boolean>;
 
 	/**
 	 * Lists all characters that are in a given space
@@ -217,7 +232,7 @@ export interface PandoraDatabase extends ServerService {
 	 * @param id - Id of character
 	 * @param accessId - Id of access or false to generate a new one
 	 */
-	getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterData | null>;
+	getCharacter(id: CharacterId, accessId: string | false): Promise<ICharacterDataShard | null>;
 
 	//#endregion
 

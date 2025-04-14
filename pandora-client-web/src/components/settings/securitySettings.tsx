@@ -52,7 +52,7 @@ function ConnectedClients(): ReactElement {
 
 	return (
 		<fieldset>
-			<legend>Connected Clients</legend>
+			<legend>Connected clients</legend>
 			<Column>
 				<CurrentSessionInfo refresh={ load } processing={ processing } />
 				<ConnectedClientsList connections={ connections } />
@@ -283,7 +283,7 @@ function PasswordChange({ account }: { account: IDirectoryAccountInfo; }): React
 
 	return (
 		<fieldset>
-			<legend>Password Change</legend>
+			<legend>Password change</legend>
 			<Form dirty={ submitCount > 0 } onSubmit={ onSubmit }>
 				<FormField>
 					<label htmlFor='password-change-old'>Old password</label>

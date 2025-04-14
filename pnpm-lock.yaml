@@ -195,6 +195,9 @@ importers:
       css-minimizer-webpack-plugin:
         specifier: 7.0.2
         version: 7.0.2(webpack@5.99.5)
+      cssnano-preset-lite:
+        specifier: 4.0.3
+        version: 4.0.3(postcss@8.5.3)
       dotenv:
         specifier: 16.5.0
         version: 16.5.0
@@ -2822,6 +2825,12 @@ packages:
 
   cssnano-preset-default@7.0.6:
     resolution: {integrity: sha512-ZzrgYupYxEvdGGuqL+JKOY70s7+saoNlHSCK/OGn1vB2pQK8KSET8jvenzItcY+kA7NoWvfbb/YhlzuzNKjOhQ==}
+    engines: {node: ^18.12.0 || ^20.9.0 || >=22.0}
+    peerDependencies:
+      postcss: ^8.4.31
+
+  cssnano-preset-lite@4.0.3:
+    resolution: {integrity: sha512-/ckjMDvs0D7RrG2L/tVqEbfj7DmcRRVXShOBxVCJIYZZ7qnN55Ug05bBD+s6nAmx64IFpmJup8gysXwQ4zFCvg==}
     engines: {node: ^18.12.0 || ^20.9.0 || >=22.0}
     peerDependencies:
       postcss: ^8.4.31
@@ -9531,6 +9540,14 @@ snapshots:
       postcss-reduce-transforms: 7.0.0(postcss@8.5.3)
       postcss-svgo: 7.0.1(postcss@8.5.3)
       postcss-unique-selectors: 7.0.3(postcss@8.5.3)
+
+  cssnano-preset-lite@4.0.3(postcss@8.5.3):
+    dependencies:
+      cssnano-utils: 5.0.0(postcss@8.5.3)
+      postcss: 8.5.3
+      postcss-discard-comments: 7.0.3(postcss@8.5.3)
+      postcss-discard-empty: 7.0.0(postcss@8.5.3)
+      postcss-normalize-whitespace: 7.0.0(postcss@8.5.3)
 
   cssnano-utils@5.0.0(postcss@8.5.3):
     dependencies:

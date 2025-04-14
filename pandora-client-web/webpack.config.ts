@@ -236,7 +236,12 @@ function GenerateRules(env: WebpackEnv): webpack.RuleSetRule[] {
 function GenerateMinimizer(env: WebpackEnv): WebpackMinimizer[] {
 	const minimizer: WebpackMinimizer[] = ['...'];
 	if (env.prod) {
-		minimizer.push(new CssMinimizerPlugin());
+		minimizer.push(new CssMinimizerPlugin({
+			minimizerOptions: {
+				// Use lite preset, as some transforms done by the minimizer can have unexpected consequences
+				preset: 'lite',
+			},
+		}));
 	}
 	return minimizer;
 }

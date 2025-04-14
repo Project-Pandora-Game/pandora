@@ -34,7 +34,7 @@ export function CharacterPreviewGenerationButton(): ReactElement {
 					setShowDialog(true);
 				} }
 			>
-				<img src={ profileIcon } />Character preview
+				<img src={ profileIcon } />Set character preview icon
 			</Button>
 			{
 				showDialog ? (

@@ -99,7 +99,7 @@ function Pronouns({ playerData }: { playerData: Readonly<ICharacterPrivateData>;
 function Preview(): ReactElement {
 	return (
 		<fieldset>
-			<legend>Preview</legend>
+			<legend>Preview Icon</legend>
 			<div className='input-row'>
 				<CharacterPreviewGenerationButton />
 			</div>
@@ -112,7 +112,7 @@ function DeleteCharacter({ playerData }: { playerData: Readonly<ICharacterPrivat
 
 	return (
 		<fieldset>
-			<legend>Character Deletion</legend>
+			<legend>Character deletion</legend>
 			<Column>
 				<label>This action is irreversible, there is no going back. Please be certain.</label>
 				<Button theme='danger' onClick={ () => setStage(1) }>

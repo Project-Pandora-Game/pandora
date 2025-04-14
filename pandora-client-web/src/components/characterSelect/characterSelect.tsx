@@ -10,6 +10,7 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { useService } from '../../services/serviceProvider.tsx';
 import { GetDirectoryUrl, useAuthTokenHeader, useDirectoryChangeListener, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
+import pandoraLogo from '../../assets/icons/pandora.svg';
 import './characterSelect.scss';
 
 /**
@@ -91,7 +92,10 @@ function CharacterListItem({ id, name, state, onClick }: CharacterListItemProps)
 						<Preview name={ name } id={ id } />
 					) : null
 				}
-				<div className='id'>{ id && <p>{ id }</p> }</div>
+				<div className='id'>{ id && <p>{ 'ID: ' + id }</p> }</div>
+				<div className='logo'>
+					<img src={ pandoraLogo } alt='Pandora Logo' />
+				</div>
 			</div>
 		</button>
 	);

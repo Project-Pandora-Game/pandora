@@ -11,7 +11,7 @@ import type { ArmFingers, ArmPose, ArmRotation, ArmSegmentOrder, BoneDefinitionC
 import type { AssetModuleDefinition } from './modules.ts';
 import type { AssetProperties } from './properties.ts';
 import type { RoomDeviceProperties } from './roomDeviceProperties.ts';
-import type { AssetsPosePreset, AssetsPosePresets } from './state/characterStatePose.ts';
+import type { AssetsPosePreset, AssetsPosePresets, PartialAppearancePose } from './state/characterStatePose.ts';
 
 // Each asset must have a size (bodyparts and only bodyparts have `bodypart` size)
 // The size is used to make sure you cannot infinitely recurse storing items into one another
@@ -449,6 +449,11 @@ export type AppearanceRandomizationData<A extends AssetDefinitionExtraArgs = Ass
 	body: readonly A['attributes'][];
 	/** List of attributes for generating clothing */
 	clothes: readonly A['attributes'][];
+	/**
+	 * The pose into which will character be reset during randomization.
+	 * We do this mainly to avoid bunch of T-Pose characters running around.
+	 */
+	pose: PartialAppearancePose<A['bones']>;
 };
 
 export type RoomBackgroundInfo = RoomBackgroundData & {

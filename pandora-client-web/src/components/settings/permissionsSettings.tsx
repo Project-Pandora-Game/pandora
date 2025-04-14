@@ -183,7 +183,7 @@ function InteractionSettings({ id }: { id: InteractionId; }): ReactElement {
 function ItemLimitsPermissions(): ReactElement {
 	return (
 		<fieldset>
-			<legend>Item Limits</legend>
+			<legend>Item limits</legend>
 			<i>Allow other characters to interact with worn items and to add new items that are marked in the item limits as...</i>
 			<Column gap='none' className='permission-list'>
 				{

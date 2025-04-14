@@ -58,7 +58,6 @@ import { ContextHelpButton } from '../../../components/help/contextHelpButton.ts
 import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs.tsx';
 import bodyChange from '../../../icons/body-change.svg';
 import devMode from '../../../icons/developer.svg';
-import pronounChange from '../../../icons/male-female.svg';
 import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
@@ -92,11 +91,6 @@ export const SPACE_FEATURES: { id: SpaceFeature; name: string; icon: string; }[]
 		id: 'allowBodyChanges',
 		name: 'Allow changes to character bodies',
 		icon: bodyChange,
-	},
-	{
-		id: 'allowPronounChanges',
-		name: 'Allow changes to character pronouns',
-		icon: pronounChange,
 	},
 	{
 		id: 'development',

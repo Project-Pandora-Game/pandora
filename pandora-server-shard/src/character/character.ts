@@ -636,10 +636,6 @@ export class Character {
 	}
 
 	public setPublicSettings(settings: Partial<ICharacterPublicSettings>): void {
-		const space = this.getOrLoadSpace();
-		if (!space.getInfo().features.includes('allowPronounChanges')) {
-			delete settings.pronoun;
-		}
 		if (Object.keys(settings).length === 0)
 			return;
 

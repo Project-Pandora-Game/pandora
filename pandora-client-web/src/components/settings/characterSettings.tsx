@@ -16,7 +16,6 @@ import { Column, Row } from '../common/container/container.tsx';
 import { Form, FormField, FormFieldError } from '../common/form/form.tsx';
 import { ModalDialog } from '../dialog/dialog.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
-import { useSpaceFeatures } from '../gameContext/gameStateContextProvider.tsx';
 import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
 import { useShardConnector } from '../gameContext/shardConnectorContextProvider.tsx';
 
@@ -70,15 +69,13 @@ function LabelColor({ playerData }: { playerData: Readonly<ICharacterPrivateData
 function Pronouns({ playerData }: { playerData: Readonly<ICharacterPrivateData>; }): ReactElement {
 	const shardConnector = useShardConnector();
 	const [pronoun, setPronoun] = React.useState(playerData.settings.pronoun);
-	const features = useSpaceFeatures();
-	const allowChange = features == null || features.includes('allowPronounChanges');
 
 	return (
 		<fieldset>
 			<legend>Pronouns</legend>
 			<div className='input-row'>
 				<label>Pronoun</label>
-				<Select value={ pronoun } onChange={ (ev) => setPronoun(ev.target.value as PronounKey) } disabled={ !allowChange }>
+				<Select value={ pronoun } onChange={ (ev) => setPronoun(ev.target.value as PronounKey) }>
 					{ Object.entries(PRONOUNS).map(([key, value]) => (
 						<option key={ key } value={ key }>
 							{ Object.values(value).join('/') }
@@ -88,7 +85,7 @@ function Pronouns({ playerData }: { playerData: Readonly<ICharacterPrivateData>;
 				<Button
 					className='slim'
 					onClick={ () => shardConnector?.sendMessage('updateSettings', { pronoun }) }
-					disabled={ !allowChange || pronoun === playerData.settings.pronoun }>
+					disabled={ pronoun === playerData.settings.pronoun }>
 					Save
 				</Button>
 			</div>

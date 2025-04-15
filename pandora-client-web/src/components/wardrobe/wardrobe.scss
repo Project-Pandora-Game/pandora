@@ -645,7 +645,7 @@ $drop-overlay-gap: 0.3em;
 	padding: 0.5em;
 	display: flex;
 	flex-flow: column;
-	gap: 0.5em;
+	gap: common.spacing('small');
 
 	>h3 {
 		margin-left: 2rem;
@@ -666,17 +666,17 @@ $drop-overlay-gap: 0.3em;
 			&.pose-unavailable {
 				opacity: 60%;
 			}
+		}
 
-			button.IconButton {
-				canvas {
-					width: 5em;
-					height: 5em;
-				}
+		button.IconButton {
+			canvas {
+				width: 5em;
+				height: 5em;
+			}
 
-				span {
-					width: 0;
-					min-width: 100%;
-				}
+			span {
+				width: 0;
+				min-width: 100%;
 			}
 		}
 	}

@@ -50,6 +50,10 @@ import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobePermis
 import { ActionWarning, ActionWarningContent, CheckResultToClassName } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 
+import bodyIcon from '../../../assets/icons/body.svg';
+import itemSettingIcon from '../../../assets/icons/item_setting.svg';
+import starIcon from '../../../assets/icons/star.svg';
+
 type CheckedPosePreset = {
 	active: boolean;
 	requested: boolean;
@@ -122,36 +126,30 @@ function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterSta
 	return presets;
 }
 
-function WardrobePoseCategoriesInternal({ poses, setPose, characterState }: {
-	poses: AssetsPosePresets;
+function WardrobePoseCategoryInternal({ poseCategory, setPose, characterState }: {
+	poseCategory: AssetsPosePresets[number];
 	characterState: AssetFrameworkCharacterState;
 	setPose: (pose: PartialAppearancePose) => void;
 }): ReactElement {
 	return (
-		<>
-			{ poses.map((poseCategory, poseCategoryIndex) => (
-				<React.Fragment key={ poseCategoryIndex }>
-					<FieldsetToggle legend={ poseCategory.category } persistent={ 'bone-ui-pose-' + poseCategory.category }>
-						<Row
-							className='pose-row'
-							gap='tiny'
-							wrap
-						>
-							{
-								poseCategory.poses.map((preset, presetIndex) => (
-									<PoseButton key={ presetIndex }
-										preset={ preset }
-										preview={ preset.preview ?? poseCategory.preview }
-										characterState={ characterState }
-										setPose={ setPose }
-									/>
-								))
-							}
-						</Row>
-					</FieldsetToggle>
-				</React.Fragment>
-			)) }
-		</>
+		<FieldsetToggle legend={ poseCategory.category } persistent={ 'bone-ui-pose-' + poseCategory.category }>
+			<Row
+				className='pose-row'
+				gap='tiny'
+				wrap
+			>
+				{
+					poseCategory.poses.map((preset, presetIndex) => (
+						<PoseButton key={ presetIndex }
+							preset={ preset }
+							preview={ preset.preview ?? poseCategory.preview }
+							characterState={ characterState }
+							setPose={ setPose }
+						/>
+					))
+				}
+			</Row>
+		</FieldsetToggle>
 	);
 }
 
@@ -159,7 +157,15 @@ export function WardrobePoseCategories({ characterState, setPose }: { characterS
 	const { wardrobeItemDisplayNameType } = useAccountSettings();
 	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, wardrobeItemDisplayNameType), [characterState, wardrobeItemDisplayNameType]);
 	return (
-		<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
+		<>
+			{ poses.map((poseCategory, poseCategoryIndex) => (
+				<WardrobePoseCategoryInternal key={ poseCategoryIndex }
+					poseCategory={ poseCategory }
+					characterState={ characterState }
+					setPose={ setPose }
+				/>
+			)) }
+		</>
 	);
 }
 
@@ -398,8 +404,9 @@ export function WardrobePoseGui({ character, characterState }: {
 		});
 	});
 
-	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, wardrobeItemDisplayNameType), [characterState, wardrobeItemDisplayNameType]);
+	const [focusedCategory, setFocusedCategory] = useState<'custom' | 'basic' | 'manual' | number>('custom');
 
+	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, wardrobeItemDisplayNameType), [characterState, wardrobeItemDisplayNameType]);
 	const setPose = useMemo(() => throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
 
 	const actualPoseDiffers = !isEqual(characterState.requestedPose, characterState.actualPose);
@@ -431,29 +438,111 @@ export function WardrobePoseGui({ character, characterState }: {
 							Stay in it
 						</Button>
 					</Row>
-					<WardrobeStoredPosePresets setPose={ setPose } characterState={ characterState } />
-					<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
-					<RoomManualYOffsetControl character={ character } />
-					<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
-						<Column>
-							<WardrobeArmPoses characterState={ characterState } setPose={ setPose } />
-							<WardrobeLegsPose characterState={ characterState } setPose={ setPose } />
-							<br />
+					<Column className='fill-x' padding='medium' gap='small'>
+						<Row
+							className='pose-row'
+							gap='small'
+							wrap
+						>
+							<Button
+								theme={ focusedCategory === 'custom' ? 'defaultActive' : 'default' }
+								onClick={ () => setFocusedCategory('custom') }
+							>
+								<img src={ starIcon } alt='Custom poses' />
+								<span>&nbsp;Custom poses</span>
+							</Button>
+							<Button
+								theme={ focusedCategory === 'basic' ? 'defaultActive' : 'default' }
+								onClick={ () => setFocusedCategory('basic') }
+							>
+								<img src={ bodyIcon } alt='Quick posing' />
+								<span>&nbsp;Quick posing</span>
+							</Button>
+							<Button
+								theme={ focusedCategory === 'manual' ? 'defaultActive' : 'default' }
+								onClick={ () => setFocusedCategory('manual') }
+							>
+								<img src={ itemSettingIcon } alt='Manual posing' />
+								<span>&nbsp;Manual posing</span>
+
+							</Button>
+						</Row>
+						<Row
+							className='pose-row'
+							gap='small'
+							wrap
+						>
 							{
-								allBones
-									.filter((bone) => bone.type === 'pose')
-									.map((bone) => (
-										<BoneRowElement key={ bone.name } definition={ bone } characterState={ characterState } onChange={ (value) => {
-											setPose({
-												bones: {
-													[bone.name]: value,
-												},
-											});
-										} } />
-									))
+								poses.map((poseCategory, poseCategoryIndex) => (poseCategory.preview != null ? (
+									<Button
+										key={ poseCategoryIndex }
+										theme={ focusedCategory === poseCategoryIndex ? 'defaultActive' : 'default' }
+										onClick={ () => setFocusedCategory(poseCategoryIndex) }
+										className='IconButton'
+										slim
+									>
+										<Column className='fill-y'>
+											<PoseButtonPreview
+												assetManager={ characterState.assetManager }
+												pose={ {} }
+												preview={ poseCategory.preview }
+											/>
+											<span>{ poseCategory.category }</span>
+										</Column>
+									</Button>
+								) : null))
 							}
-						</Column>
-					</FieldsetToggle>
+						</Row>
+					</Column>
+					<hr className='fill-x' />
+					{
+						focusedCategory === 'custom' ? (
+							<WardrobeStoredPosePresets setPose={ setPose } characterState={ characterState } />
+						) : focusedCategory === 'basic' ? (
+							<>
+								{
+									poses
+										.filter((category) => category.preview == null)
+										.map((poseCategory, poseCategoryIndex) => (
+											<WardrobePoseCategoryInternal key={ poseCategoryIndex }
+												poseCategory={ poseCategory }
+												characterState={ characterState }
+												setPose={ setPose }
+											/>
+										))
+								}
+								<RoomManualYOffsetControl character={ character } />
+							</>
+						) : focusedCategory === 'manual' ? (
+							<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
+								<Column>
+									<WardrobeArmPoses characterState={ characterState } setPose={ setPose } />
+									<WardrobeLegsPose characterState={ characterState } setPose={ setPose } />
+									<RoomManualYOffsetControl character={ character } />
+									<br />
+									{
+										allBones
+											.filter((bone) => bone.type === 'pose')
+											.map((bone) => (
+												<BoneRowElement key={ bone.name } definition={ bone } characterState={ characterState } onChange={ (value) => {
+													setPose({
+														bones: {
+															[bone.name]: value,
+														},
+													});
+												} } />
+											))
+									}
+								</Column>
+							</FieldsetToggle>
+						) : poses.length > focusedCategory ? (
+							<WardrobePoseCategoryInternal key={ focusedCategory }
+								poseCategory={ poses[focusedCategory] }
+								characterState={ characterState }
+								setPose={ setPose }
+							/>
+						) : null
+					}
 				</WardrobePoseGuiGate>
 			</div>
 		</div>
@@ -536,7 +625,6 @@ export function PoseButton({ preset, preview, setPose, characterState }: {
 				slim
 				onClick={ () => setPose(pose) }
 				className={ preview != null ? 'IconButton flex-1' : 'flex-1' }
-				title={ name }
 			>
 				{
 					preview != null ? (

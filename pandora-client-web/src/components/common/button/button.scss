@@ -36,10 +36,8 @@
 				border-color: map.get($theme-data, "disabled-border");
 			}
 
-			&.IconButton {
-				img, canvas {
-					filter: map.get($theme-data, "icon-filter");
-				}
+			img, canvas {
+				filter: map.get($theme-data, "icon-filter");
 			}
 		}
 	}

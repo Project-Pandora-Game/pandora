@@ -9,18 +9,19 @@ const SHARED_APP_MAX_COUNT = 2;
 export const PIXI_APPLICATION_OPTIONS: Readonly<Partial<ApplicationOptions>> = {
 	backgroundColor: 0x1099bb,
 	resolution: window.devicePixelRatio || 1,
+	// Alpha needs to start on a value < 1, otherwise it fails to initialize transparency correctly and cannot be enabled later on
+	backgroundAlpha: 0,
 	// Antialias **NEEDS** to be explicitly disabled - having it enabled causes seams when using filters (such as alpha masks)
 	antialias: false,
 };
 
-export async function CreatePixiApplication(multiView: boolean = false, backgroundAlpha: number = 1): Promise<Application> {
+export async function CreatePixiApplication(multiView: boolean = false): Promise<Application> {
 	const app = new Application();
 	await app.init({
 		...cloneDeep(PIXI_APPLICATION_OPTIONS),
 		autoDensity: true,
 		autoStart: false,
 		multiView,
-		backgroundAlpha,
 	});
 	return app;
 }

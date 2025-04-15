@@ -3,7 +3,7 @@ import { clamp, isEqual } from 'lodash-es';
 import { z } from 'zod';
 import type { Satisfies } from '../../utility/misc.ts';
 import type { AssetManager } from '../assetManager.ts';
-import type { BoneType, CharacterView, LegsPose } from '../graphics/index.ts';
+import type { BoneType, CharacterView, LayerPriority, LegsPose } from '../graphics/index.ts';
 import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, CharacterViewSchema, LegsPoseSchema } from '../graphics/index.ts';
 
 export const AppearanceArmPoseSchema = z.object({
@@ -72,14 +72,24 @@ export const PartialAppearancePoseSchema = z.object({
 });
 type __satisfies__PartialAppearancePoseSchema = Satisfies<PartialAppearancePose<string>, z.infer<typeof PartialAppearancePoseSchema>>;
 
+export type AssetsPosePresetPreview = {
+	x?: number;
+	y: number;
+	size: number;
+	basePose?: PartialAppearancePose;
+	highlight?: readonly LayerPriority[];
+};
+
 export type AssetsPosePreset<Bones extends BoneName = BoneName> = PartialAppearancePose<Bones> & {
 	name: string;
 	optional?: PartialAppearancePose<Bones>;
+	preview?: AssetsPosePresetPreview;
 };
 
 export type AssetsPosePresets<Bones extends BoneName = BoneName> = {
 	category: string;
 	poses: AssetsPosePreset<Bones>[];
+	preview?: AssetsPosePresetPreview;
 }[];
 
 export function MergePartialAppearancePoses(base: Immutable<PartialAppearancePose>, extend?: Immutable<PartialAppearancePose>): PartialAppearancePose {
@@ -92,8 +102,8 @@ export function MergePartialAppearancePoses(base: Immutable<PartialAppearancePos
 		leftArm: { ...base.leftArm, ...extend.leftArm },
 		rightArm: { ...base.rightArm, ...extend.rightArm },
 		armsOrder: { ...base.armsOrder, ...extend.armsOrder },
-		legs: base.legs ?? extend.legs,
-		view: base.view ?? extend.view,
+		legs: extend.legs ?? base.legs,
+		view: extend.view ?? base.view,
 	};
 }
 

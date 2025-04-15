@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid';
 import {
 	AssertNotNullable,
 	AssetFrameworkPosePresetSchema,
+	CharacterSize,
 	GetLogger,
 	LIMIT_POSE_PRESET_NAME_LENGTH,
 	type AppearanceArmPose,
@@ -10,26 +11,29 @@ import {
 	type AssetFrameworkCharacterState,
 	type AssetFrameworkPosePreset,
 	type AssetFrameworkPosePresetWithId,
+	type AssetsPosePreset,
 	type BoneDefinition,
 	type PartialAppearancePose,
 } from 'pandora-common';
-import React, { type ReactNode } from 'react';
+import React, { useMemo, type ReactNode } from 'react';
 import { toast } from 'react-toastify';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
-import { Button } from '../../common/button/button.tsx';
-import { Column, DivContainer, Row } from '../../common/container/container.tsx';
+import { Button, IconButton } from '../../common/button/button.tsx';
+import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/fieldsetToggle.tsx';
 import { DraggableDialog } from '../../dialog/dialog.tsx';
 import { ExportDialog } from '../../exportImport/exportDialog.tsx';
 import { ImportDialog } from '../../exportImport/importDialog.tsx';
 import { useDirectoryChangeListener, useDirectoryConnector } from '../../gameContext/directoryConnectorContextProvider.tsx';
-import { GetVisibleBoneName } from '../views/wardrobePoseView.tsx';
+import { GetVisibleBoneName, PoseButton } from '../views/wardrobePoseView.tsx';
 
 import deleteIcon from '../../../assets/icons/delete.svg';
+import diskIcon from '../../../assets/icons/disk.svg';
 import editIcon from '../../../assets/icons/edit.svg';
 import exportIcon from '../../../assets/icons/export.svg';
+import importIcon from '../../../assets/icons/import.svg';
 import triangleDown from '../../../assets/icons/triangle_down.svg';
 import triangleUp from '../../../assets/icons/triangle_up.svg';
 
@@ -41,25 +45,44 @@ type WardrobeStoredPosePresetsProps = {
 };
 
 export function WardrobeStoredPosePresets(props: WardrobeStoredPosePresetsProps): ReactNode {
+	return (
+		<FieldsetToggle legend='Custom poses' persistent='bone-ui-pose-stored'>
+			<PosePresetContextProvider { ...props }>
+				<WardrobeStoredPosePresetsContent />
+			</PosePresetContextProvider>
+		</FieldsetToggle>
+	);
+}
+
+function WardrobeStoredPosePresetsContent(): ReactNode {
 	const [showEditSaved, setShowEditSaved] = React.useState(false);
 	const openEditSaved = React.useCallback(() => setShowEditSaved(true), []);
 	const closeEditSaved = React.useCallback(() => setShowEditSaved(false), []);
 
+	const { presets } = usePosePresetContext();
+	const empty = presets.length === 0;
+
 	return (
-		<FieldsetToggle legend='Stored poses' persistent='bone-ui-pose-stored'>
-			<PosePresetContextProvider { ...props }>
-				<Column>
-					<Row className='pose-row' gap='tiny' wrap>
-						<PosePresetCreateButton />
-						<Button slim className='flex-1' onClick={ openEditSaved }>Edit saved</Button>
-						<PosePresetImportButton />
-					</Row>
-					<PosePresetButtons />
-				</Column>
-				{ showEditSaved && <PosePresetEditDialog close={ closeEditSaved } /> }
-				<PosePresetEditing />
-			</PosePresetContextProvider>
-		</FieldsetToggle>
+		<>
+			<Row alignY={ empty ? 'center' : 'start' } padding={ empty ? 'small' : undefined } gap='small'>
+				{
+					empty ? (
+						<span className='flex-1'>
+							No custom poses stored. You can create one with the button on the right.
+						</span>
+					) : (
+						<PosePresetButtons />
+					)
+				}
+				<IconButton
+					src={ editIcon }
+					alt='Edit'
+					onClick={ openEditSaved }
+				/>
+			</Row>
+			{ showEditSaved && <PosePresetEditDialog close={ closeEditSaved } /> }
+			<PosePresetEditing />
+		</>
 	);
 }
 
@@ -171,7 +194,10 @@ function PosePresetImportButton(): ReactNode {
 
 	return (
 		<>
-			<Button slim className='flex-1' onClick={ open }>Import</Button>
+			<Button onClick={ open } slim>
+				<img src={ importIcon } alt='Import' />
+				<span>&nbsp;Import</span>
+			</Button>
 			{
 				show && (
 					<ImportDialog
@@ -191,7 +217,7 @@ function PosePresetButtons(): ReactNode {
 	const { presets } = usePosePresetContext();
 
 	return (
-		<Row className='pose-row' gap='tiny' wrap>
+		<Row className='pose-row flex-1' gap='tiny' wrap>
 			{ presets.map((preset) => <PosePresetButton key={ preset.id } preset={ preset } />) }
 		</Row>
 	);
@@ -199,12 +225,21 @@ function PosePresetButtons(): ReactNode {
 
 function PosePresetButton({ preset }: { preset: AssetFrameworkPosePresetWithId; }): ReactNode {
 	const { setPose, characterState } = usePosePresetContext();
+	const assetManager = characterState.assetManager;
 
-	const onClick = React.useCallback(() => {
-		const pose = { ...preset.pose };
+	const loadedPreset = useMemo((): AssetsPosePreset => {
+		const pose: AssetsPosePreset = {
+			...preset.pose,
+			name: preset.name,
+			preview: {
+				y: 0,
+				size: Math.max(CharacterSize.WIDTH, CharacterSize.HEIGHT),
+				basePose: assetManager.randomization.pose,
+			},
+		};
 		if (pose.bones != null) {
 			const bones: Record<string, number> = {};
-			const allBones = characterState.assetManager.getAllBones();
+			const allBones = assetManager.getAllBones();
 			for (const [bone, value] of Object.entries(pose.bones)) {
 				if (value == null)
 					continue;
@@ -217,15 +252,16 @@ function PosePresetButton({ preset }: { preset: AssetFrameworkPosePresetWithId; 
 			}
 			pose.bones = bones;
 		}
-		setPose(preset.pose);
-	}, [preset, setPose, characterState.assetManager]);
+		return pose;
+	}, [assetManager, preset]);
 
 	return (
-		<DivContainer padding='tiny' className='pose'>
-			<Button slim className='flex-1' onClick={ onClick }>
-				{ preset.name }
-			</Button>
-		</DivContainer>
+		<PoseButton
+			preset={ loadedPreset }
+			preview={ loadedPreset.preview }
+			characterState={ characterState }
+			setPose={ setPose }
+		/>
 	);
 }
 
@@ -257,8 +293,9 @@ function PosePresetCreateButton(): ReactNode {
 	}, [edit, setEdit]);
 
 	return (
-		<Button slim className='flex-1' onClick={ onClick } disabled={ edit != null } >
-			Save current
+		<Button onClick={ onClick } disabled={ edit != null } slim>
+			<img src={ diskIcon } alt='Save current' />
+			<span>&nbsp;Save current</span>
 		</Button>
 	);
 }
@@ -525,6 +562,10 @@ function PosePresetEditDialog({ close }: { close: () => void; }): ReactNode {
 	const { presets } = usePosePresetContext();
 	return (
 		<DraggableDialog title='Edit saved poses' close={ close }>
+			<Row alignX='end'>
+				<PosePresetCreateButton />
+				<PosePresetImportButton />
+			</Row>
 			<table className='pose-presets-table'>
 				<thead>
 					<tr>

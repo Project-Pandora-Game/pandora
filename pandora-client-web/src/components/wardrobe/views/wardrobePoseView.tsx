@@ -10,6 +10,7 @@ import {
 	BONE_MAX,
 	BONE_MIN,
 	BoneDefinition,
+	CharacterSize,
 	CloneDeepMutable,
 	LegsPoseSchema,
 	MergePartialAppearancePoses,
@@ -17,6 +18,8 @@ import {
 	ProduceAppearancePose,
 	type AppearanceLimitTree,
 	type ArmPose,
+	type AssetManager,
+	type AssetsPosePresetPreview,
 	type ItemDisplayNameType,
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
@@ -31,7 +34,10 @@ import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
 import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
+import { GraphicsCharacter, type GraphicsCharacterLayerFilter, type LayerStateOverrideGetter } from '../../../graphics/graphicsCharacter.tsx';
+import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import { Button } from '../../common/button/button.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
@@ -133,7 +139,12 @@ function WardrobePoseCategoriesInternal({ poses, setPose, characterState }: {
 						>
 							{
 								poseCategory.poses.map((preset, presetIndex) => (
-									<PoseButton key={ presetIndex } preset={ preset } characterState={ characterState } setPose={ setPose } />
+									<PoseButton key={ presetIndex }
+										preset={ preset }
+										preview={ preset.preview ?? poseCategory.preview }
+										characterState={ characterState }
+										setPose={ setPose }
+									/>
 								))
 							}
 						</Row>
@@ -420,8 +431,8 @@ export function WardrobePoseGui({ character, characterState }: {
 							Stay in it
 						</Button>
 					</Row>
-					<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
 					<WardrobeStoredPosePresets setPose={ setPose } characterState={ characterState } />
+					<WardrobePoseCategoriesInternal poses={ poses } characterState={ characterState } setPose={ setPose } />
 					<RoomManualYOffsetControl character={ character } />
 					<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
 						<Column>
@@ -502,8 +513,9 @@ export function WardrobePoseGuiGate({ children }: ChildrenProps): ReactElement {
 	);
 }
 
-function PoseButton({ preset, setPose, characterState }: {
+export function PoseButton({ preset, preview, setPose, characterState }: {
 	preset: AssetsPosePreset;
+	preview?: AssetsPosePresetPreview;
 	characterState: AssetFrameworkCharacterState;
 	setPose: (pose: PartialAppearancePose) => void;
 }): ReactElement {
@@ -523,11 +535,78 @@ function PoseButton({ preset, setPose, characterState }: {
 			<Button
 				slim
 				onClick={ () => setPose(pose) }
-				className='flex-1'
+				className={ preview != null ? 'IconButton flex-1' : 'flex-1' }
+				title={ name }
 			>
-				{ name }
+				{
+					preview != null ? (
+						<Column className='fill-y'>
+							<PoseButtonPreview
+								assetManager={ characterState.assetManager }
+								pose={ pose }
+								preview={ preview }
+							/>
+							<span>{ name }</span>
+						</Column>
+					) : (
+						<>{ name }</>
+					)
+				}
 			</Button>
 		</SelectionIndicator>
+	);
+}
+
+const PREVIEW_COLOR = 0xcccccc;
+const PREVIEW_COLOR_DIM = 0x666666;
+
+function PoseButtonPreview({ assetManager, pose, preview }: {
+	assetManager: AssetManager;
+	pose: PartialAppearancePose;
+	preview: AssetsPosePresetPreview;
+}): ReactElement {
+	const layerStateOverrideGetter = useCallback<LayerStateOverrideGetter>((layer) => {
+		if (layer.type === 'mesh' && layer.previewOverrides != null) {
+			return {
+				color: (preview.highlight == null || preview.highlight.includes(layer.priority)) ? PREVIEW_COLOR : PREVIEW_COLOR_DIM,
+				alpha: layer.previewOverrides.alpha,
+			};
+		}
+		return undefined;
+	}, [preview]);
+
+	const layerFilter = useCallback<GraphicsCharacterLayerFilter>((layer) => {
+		return layer.layer.type === 'mesh' && layer.layer.previewOverrides != null;
+	}, []);
+
+	const previewCharacterState = useMemo((): AssetFrameworkCharacterState => {
+		return AssetFrameworkCharacterState
+			.createDefault(assetManager, 'c0')
+			.produceWithPose(preview.basePose ?? {}, 'pose')
+			.produceWithPose(pose, 'pose');
+	}, [assetManager, pose, preview]);
+
+	const previewSize = 128 * (window.devicePixelRatio || 1);
+	const scale = previewSize / preview.size;
+
+	return (
+		<GraphicsSceneBackgroundRenderer
+			renderArea={ { x: 0, y: 0, width: previewSize, height: previewSize } }
+			resolution={ 1 }
+			backgroundColor={ 0 }
+			backgroundAlpha={ 0 }
+			forwardContexts={ [serviceManagerContext] }
+		>
+			<GraphicsCharacter
+				position={ { x: previewSize / 2, y: previewSize / 2 } }
+				pivot={ { x: (preview.x ?? ((CharacterSize.WIDTH - preview.size) / 2)) + preview.size / 2, y: preview.y + preview.size / 2 } }
+				scale={ { x: scale * (previewCharacterState.actualPose.view === 'back' ? -1 : 1), y: scale } }
+				angle={ previewCharacterState.actualPose.bones.character_rotation || 0 }
+				characterState={ previewCharacterState }
+				layerStateOverrideGetter={ layerStateOverrideGetter }
+				layerFilter={ layerFilter }
+			/>
+		</GraphicsSceneBackgroundRenderer>
 	);
 }
 

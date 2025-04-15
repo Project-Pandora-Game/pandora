@@ -666,6 +666,18 @@ $drop-overlay-gap: 0.3em;
 			&.pose-unavailable {
 				opacity: 60%;
 			}
+
+			button.IconButton {
+				canvas {
+					width: 5em;
+					height: 5em;
+				}
+
+				span {
+					width: 0;
+					min-width: 100%;
+				}
+			}
 		}
 	}
 

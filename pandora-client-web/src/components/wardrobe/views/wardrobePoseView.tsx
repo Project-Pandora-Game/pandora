@@ -447,6 +447,8 @@ export function WardrobePoseGui({ character, characterState }: {
 							<Button
 								theme={ focusedCategory === 'custom' ? 'defaultActive' : 'default' }
 								onClick={ () => setFocusedCategory('custom') }
+								className='IconButton'
+								slim
 							>
 								<img src={ starIcon } alt='Custom poses' />
 								<span>&nbsp;Custom poses</span>
@@ -454,6 +456,8 @@ export function WardrobePoseGui({ character, characterState }: {
 							<Button
 								theme={ focusedCategory === 'basic' ? 'defaultActive' : 'default' }
 								onClick={ () => setFocusedCategory('basic') }
+								className='IconButton'
+								slim
 							>
 								<img src={ bodyIcon } alt='Quick posing' />
 								<span>&nbsp;Quick posing</span>
@@ -461,6 +465,8 @@ export function WardrobePoseGui({ character, characterState }: {
 							<Button
 								theme={ focusedCategory === 'manual' ? 'defaultActive' : 'default' }
 								onClick={ () => setFocusedCategory('manual') }
+								className='IconButton'
+								slim
 							>
 								<img src={ itemSettingIcon } alt='Manual posing' />
 								<span>&nbsp;Manual posing</span>
@@ -514,7 +520,7 @@ export function WardrobePoseGui({ character, characterState }: {
 								<RoomManualYOffsetControl character={ character } />
 							</>
 						) : focusedCategory === 'manual' ? (
-							<FieldsetToggle legend='Manual pose' persistent='bone-ui-dev-pose'>
+							<FieldsetToggle legend='Manual posing' persistent='bone-ui-dev-pose'>
 								<Column>
 									<WardrobeArmPoses characterState={ characterState } setPose={ setPose } />
 									<WardrobeLegsPose characterState={ characterState } setPose={ setPose } />

@@ -169,7 +169,7 @@
 		background: common.$theme-spaceconfig-backgroundselect-list-background;
 		color: common.$theme-spaceconfig-backgroundselect-list-text;
 
-		@media only screen and (max-width: 719px) {
+		@media only screen and (width < 48rem) {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 

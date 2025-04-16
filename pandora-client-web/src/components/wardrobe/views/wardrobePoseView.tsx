@@ -454,7 +454,6 @@ export function WardrobePoseGui({ character, characterState }: {
 							>
 								<img src={ itemSettingIcon } alt='Manual posing' />
 								<span>&nbsp;Manual posing</span>
-
 							</Button>
 						</Row>
 						<Row
@@ -471,7 +470,7 @@ export function WardrobePoseGui({ character, characterState }: {
 										className='IconButton PoseButton'
 										slim
 									>
-										<Column className='fill-y'>
+										<Column className='fill'>
 											<PoseButtonPreview
 												assetManager={ characterState.assetManager }
 												preset={ EMPTY_POSE }
@@ -640,7 +639,7 @@ export function PoseButton({ preset, preview, setPose, characterState }: {
 			>
 				{
 					preview != null ? (
-						<Column className='fill-y'>
+						<Column className='fill'>
 							<PoseButtonPreview
 								assetManager={ characterState.assetManager }
 								preset={ preset }
@@ -743,11 +742,15 @@ function PoseButtonPreview({ assetManager, preset, preview }: {
 	assetManager: AssetManager;
 	preset: Omit<Immutable<AssetsPosePreset>, 'name' | 'preview'>;
 	preview: Immutable<AssetsPosePresetPreview>;
-}): ReactElement {
+}): ReactElement | null {
 	const serviceManager = useServiceManager();
 	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const { wardrobePosePreview } = useAccountSettings();
 
 	useEffect(() => {
+		if (!wardrobePosePreview)
+			return;
+
 		let valid = true;
 
 		GeneratePosePreview(assetManager, preview, preset, serviceManager)
@@ -769,7 +772,10 @@ function PoseButtonPreview({ assetManager, preset, preview }: {
 		return () => {
 			valid = false;
 		};
-	}, [assetManager, preset, preview, serviceManager]);
+	}, [assetManager, preset, preview, serviceManager, wardrobePosePreview]);
+
+	if (!wardrobePosePreview)
+		return null;
 
 	return (
 		<canvas

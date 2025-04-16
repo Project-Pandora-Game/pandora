@@ -39,6 +39,7 @@ interface WindowWithSharedApps extends Window {
 
 const SharedApps: GraphicsApplicationManager[] = (USER_DEBUG && Array.isArray((window as WindowWithSharedApps).pandoraPixiApps)) ? ((window as WindowWithSharedApps).pandoraPixiApps ?? []) : [];
 const AvailableApps: GraphicsApplicationManager[] = (USER_DEBUG && Array.isArray((window as WindowWithSharedApps).pandoraPixiAppsAvailable)) ? ((window as WindowWithSharedApps).pandoraPixiAppsAvailable ?? []) : [];
+const ManagerQueue: ((manager: GraphicsApplicationManager) => void)[] = [];
 
 if (USER_DEBUG) {
 	(window as WindowWithSharedApps).pandoraPixiApps = SharedApps;
@@ -113,6 +114,25 @@ export function GetApplicationManager(): GraphicsApplicationManager | null {
 	return app ?? null;
 }
 
+export function WaitForApplicationManager(): Promise<GraphicsApplicationManager> {
+	return new Promise<GraphicsApplicationManager>((resolve) => {
+		// Try to get one synchronously first
+		const syncManager = GetApplicationManager();
+		if (syncManager != null) {
+			resolve(syncManager);
+		} else {
+			ManagerQueue.push(resolve);
+		}
+	});
+}
+
 export function ReleaseApplicationManager(app: GraphicsApplicationManager): void {
+	const queueWaiter = ManagerQueue.shift();
+	if (queueWaiter != null) {
+		queueMicrotask(() => {
+			queueWaiter(app);
+		});
+		return;
+	}
 	AvailableApps.push(app);
 }

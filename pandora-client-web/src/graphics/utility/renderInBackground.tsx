@@ -1,7 +1,7 @@
 import { Assert, AssertNotNullable, type Rectangle } from 'pandora-common';
 import { Application, Container } from 'pixi.js';
 import type { ReactNode } from 'react';
-import { GetApplicationManager, ReleaseApplicationManager, type GraphicsApplicationManager } from '../graphicsAppManager.ts';
+import { ReleaseApplicationManager, WaitForApplicationManager, type GraphicsApplicationManager } from '../graphicsAppManager.ts';
 import { DEFAULT_BACKGROUND_COLOR } from '../graphicsScene.tsx';
 import { GraphicsSuspenseContext, GraphicsSuspenseManager } from '../graphicsSuspense/graphicsSuspense.tsx';
 import { CreatePixiRoot } from '../reconciler/reconciler.ts';
@@ -54,10 +54,7 @@ export async function RenderGraphicsTreeInBackground(
 		});
 
 		// Get ourselves an App for rendering
-		appManager = GetApplicationManager();
-		if (!appManager) {
-			throw new Error('Failed to get Pixi application manager for rendering.');
-		}
+		appManager = await WaitForApplicationManager();
 
 		app = await new Promise<Application>((resolve) => {
 			AssertNotNullable(appManager);

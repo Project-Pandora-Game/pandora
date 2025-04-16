@@ -59,6 +59,10 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	interactionConfig: InteractionSystemDataSchema.optional(),
 	assetPreferences: AssetPreferencesServerSchema.default(ASSET_PREFERENCES_DEFAULT),
 	characterModifiers: CharacterModifierSystemDataSchema.optional(),
+	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
+	roomId: z.string().nullable().optional().catch(undefined),
+	position: CharacterRoomPositionSchema,
+
 });
 /** Data about character, as seen by server */
 export type ICharacterData = z.infer<typeof CharacterDataSchema>;

@@ -1,3 +1,5 @@
+import { z } from 'zod';
+
 // Define Suits and Ranks
 const suits = ['\u2665', //hearts
 	'\u2666', //diamonds
@@ -16,11 +18,25 @@ export class Card {
 	}
 }
 
+export const CardSchema = z.object({
+	suit: z.string(),
+	rank: z.string(),
+});
+
 export class CardDeck {
 	private deck: Card[] = [];
 
 	private addCard(c: Card) {
 		this.deck.push(c);
+	}
+
+	//zod hack...
+	public static fromDeck(deck: Card[]): CardDeck {
+		const instance = new CardDeck();
+		for (const card of deck) {
+			instance.addCard(card);
+		}
+		return instance;
 	}
 
 	public deal() {
@@ -40,4 +56,3 @@ export class CardDeck {
 		}
 	}
 }
-

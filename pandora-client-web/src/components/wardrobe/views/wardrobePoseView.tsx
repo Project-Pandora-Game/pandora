@@ -1,9 +1,11 @@
 import classNames from 'classnames';
+import type { Immutable } from 'immer';
 import { capitalize, isEqual, throttle } from 'lodash-es';
 import {
 	AppearanceActionProcessingContext,
 	AppearanceItemProperties,
 	ArmRotationSchema,
+	Assert,
 	AssetFrameworkCharacterState,
 	AssetsPosePreset,
 	AssetsPosePresets,
@@ -12,6 +14,7 @@ import {
 	BoneDefinition,
 	CharacterSize,
 	CloneDeepMutable,
+	GetLogger,
 	LegsPoseSchema,
 	MergePartialAppearancePoses,
 	PartialAppearancePose,
@@ -19,11 +22,16 @@ import {
 	type AppearanceLimitTree,
 	type ArmPose,
 	type AssetManager,
+	type AssetsPosePresetCategory,
 	type AssetsPosePresetPreview,
 	type ItemDisplayNameType,
+	type ServiceManager,
 } from 'pandora-common';
-import React, { ReactElement, useCallback, useId, useMemo, useState } from 'react';
+import React, { ReactElement, useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { z } from 'zod';
+import bodyIcon from '../../../assets/icons/body.svg';
+import itemSettingIcon from '../../../assets/icons/item_setting.svg';
+import starIcon from '../../../assets/icons/star.svg';
 import { useBrowserStorage } from '../../../browserStorage.ts';
 import { IChatroomCharacter, useCharacterData } from '../../../character/character.ts';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
@@ -35,9 +43,10 @@ import { NumberInput } from '../../../common/userInteraction/input/numberInput.t
 import { useUpdatedUserInput } from '../../../common/useSyncUserInput.ts';
 import { LIVE_UPDATE_THROTTLE } from '../../../config/Environment.ts';
 import { GraphicsCharacter, type GraphicsCharacterLayerFilter, type LayerStateOverrideGetter } from '../../../graphics/graphicsCharacter.tsx';
-import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
+import { RenderGraphicsTreeInBackground } from '../../../graphics/utility/renderInBackground.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
+import type { ClientServices } from '../../../services/clientServices.ts';
+import { serviceManagerContext, useServiceManager } from '../../../services/serviceProvider.tsx';
 import { Button } from '../../common/button/button.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
@@ -50,10 +59,6 @@ import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobePermis
 import { ActionWarning, ActionWarningContent, CheckResultToClassName } from '../wardrobeComponents.tsx';
 import { useWardrobeContext } from '../wardrobeContext.tsx';
 
-import bodyIcon from '../../../assets/icons/body.svg';
-import itemSettingIcon from '../../../assets/icons/item_setting.svg';
-import starIcon from '../../../assets/icons/star.svg';
-
 type CheckedPosePreset = {
 	active: boolean;
 	requested: boolean;
@@ -61,6 +66,8 @@ type CheckedPosePreset = {
 	pose: PartialAppearancePose;
 	name: string;
 };
+
+const EMPTY_POSE = Object.freeze<PartialAppearancePose>({});
 
 const CHARACTER_STATE_LIMITS_CACHE = new WeakMap<AssetFrameworkCharacterState, AppearanceLimitTree>();
 function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkCharacterState): CheckedPosePreset {
@@ -101,9 +108,9 @@ function CheckPosePreset(pose: AssetsPosePreset, characterState: AssetFrameworkC
 	};
 }
 
-function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState, itemDisplayNameType: ItemDisplayNameType): AssetsPosePresets {
+function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterState, itemDisplayNameType: ItemDisplayNameType): Immutable<AssetsPosePresets> {
 	const assetManager = characterState.assetManager;
-	const presets: AssetsPosePresets = assetManager.getPosePresets();
+	const presets: Immutable<AssetsPosePresetCategory>[] = assetManager.posePresets.slice();
 	for (const item of characterState.items) {
 		// Collect custom pose presets from room device and personal items that provide them
 		if (!item.isType('bodypart') && !item.isType('personal') && !item.isType('roomDeviceWearablePart'))
@@ -127,7 +134,7 @@ function GetFilteredAssetsPosePresets(characterState: AssetFrameworkCharacterSta
 }
 
 function WardrobePoseCategoryInternal({ poseCategory, setPose, characterState }: {
-	poseCategory: AssetsPosePresets[number];
+	poseCategory: Immutable<AssetsPosePresetCategory>;
 	characterState: AssetFrameworkCharacterState;
 	setPose: (pose: PartialAppearancePose) => void;
 }): ReactElement {
@@ -467,7 +474,7 @@ export function WardrobePoseGui({ character, characterState }: {
 										<Column className='fill-y'>
 											<PoseButtonPreview
 												assetManager={ characterState.assetManager }
-												pose={ {} }
+												preset={ EMPTY_POSE }
 												preview={ poseCategory.preview }
 											/>
 											<span>{ poseCategory.category }</span>
@@ -608,8 +615,8 @@ export function WardrobePoseGuiGate({ children }: ChildrenProps): ReactElement {
 }
 
 export function PoseButton({ preset, preview, setPose, characterState }: {
-	preset: AssetsPosePreset;
-	preview?: AssetsPosePresetPreview;
+	preset: Immutable<AssetsPosePreset>;
+	preview?: Immutable<AssetsPosePresetPreview>;
 	characterState: AssetFrameworkCharacterState;
 	setPose: (pose: PartialAppearancePose) => void;
 }): ReactElement {
@@ -636,7 +643,7 @@ export function PoseButton({ preset, preview, setPose, characterState }: {
 						<Column className='fill-y'>
 							<PoseButtonPreview
 								assetManager={ characterState.assetManager }
-								pose={ pose }
+								preset={ preset }
 								preview={ preview }
 							/>
 							<span>{ name }</span>
@@ -652,13 +659,42 @@ export function PoseButton({ preset, preview, setPose, characterState }: {
 
 const PREVIEW_COLOR = 0xcccccc;
 const PREVIEW_COLOR_DIM = 0x666666;
+const PREVIEW_SIZE = 128 * (window.devicePixelRatio || 1);
 
-function PoseButtonPreview({ assetManager, pose, preview }: {
-	assetManager: AssetManager;
-	pose: PartialAppearancePose;
-	preview: AssetsPosePresetPreview;
-}): ReactElement {
-	const layerStateOverrideGetter = useCallback<LayerStateOverrideGetter>((layer) => {
+const PREVIEW_CACHE = new WeakMap<
+	AssetManager,
+	WeakMap<
+		Immutable<AssetsPosePresetPreview>,
+		WeakMap<
+			Omit<Immutable<AssetsPosePreset>, 'name' | 'preview'>,
+			HTMLCanvasElement
+		>
+	>
+>();
+
+async function GeneratePosePreview(
+	assetManager: AssetManager,
+	preview: Immutable<AssetsPosePresetPreview>,
+	preset: Omit<Immutable<AssetsPosePreset>, 'name' | 'preview'>,
+	serviceManager: ServiceManager<ClientServices>,
+): Promise<HTMLCanvasElement> {
+	// Get a cache
+	let managerCache = PREVIEW_CACHE.get(assetManager);
+	if (managerCache == null) {
+		PREVIEW_CACHE.set(assetManager, (managerCache = new WeakMap()));
+	}
+
+	let previewCache = managerCache.get(preview);
+	if (previewCache == null) {
+		managerCache.set(preview, (previewCache = new WeakMap()));
+	}
+
+	let result = previewCache.get(preset);
+	if (result != null) {
+		return result;
+	}
+
+	const layerStateOverrideGetter: LayerStateOverrideGetter = (layer) => {
 		if (layer.type === 'mesh' && layer.previewOverrides != null) {
 			return {
 				color: (preview.highlight == null || preview.highlight.includes(layer.priority)) ? PREVIEW_COLOR : PREVIEW_COLOR_DIM,
@@ -666,30 +702,24 @@ function PoseButtonPreview({ assetManager, pose, preview }: {
 			};
 		}
 		return undefined;
-	}, [preview]);
+	};
 
-	const layerFilter = useCallback<GraphicsCharacterLayerFilter>((layer) => {
+	const layerFilter: GraphicsCharacterLayerFilter = (layer) => {
 		return layer.layer.type === 'mesh' && layer.layer.previewOverrides != null;
-	}, []);
+	};
 
-	const previewCharacterState = useMemo((): AssetFrameworkCharacterState => {
-		return AssetFrameworkCharacterState
-			.createDefault(assetManager, 'c0')
-			.produceWithPose(preview.basePose ?? {}, 'pose')
-			.produceWithPose(pose, 'pose');
-	}, [assetManager, pose, preview]);
+	const pose = MergePartialAppearancePoses(preset, preset.optional);
+
+	const previewCharacterState = AssetFrameworkCharacterState
+		.createDefault(assetManager, 'c0')
+		.produceWithPose(preview.basePose ?? {}, 'pose')
+		.produceWithPose(pose, 'pose');
 
 	const previewSize = 128 * (window.devicePixelRatio || 1);
 	const scale = previewSize / preview.size;
 
-	return (
-		<GraphicsSceneBackgroundRenderer
-			renderArea={ { x: 0, y: 0, width: previewSize, height: previewSize } }
-			resolution={ 1 }
-			backgroundColor={ 0 }
-			backgroundAlpha={ 0 }
-			forwardContexts={ [serviceManagerContext] }
-		>
+	result = await RenderGraphicsTreeInBackground(
+		<serviceManagerContext.Provider value={ serviceManager }>
 			<GraphicsCharacter
 				position={ { x: previewSize / 2, y: previewSize / 2 } }
 				pivot={ { x: (preview.x ?? ((CharacterSize.WIDTH - preview.size) / 2)) + preview.size / 2, y: preview.y + preview.size / 2 } }
@@ -699,7 +729,54 @@ function PoseButtonPreview({ assetManager, pose, preview }: {
 				layerStateOverrideGetter={ layerStateOverrideGetter }
 				layerFilter={ layerFilter }
 			/>
-		</GraphicsSceneBackgroundRenderer>
+		</serviceManagerContext.Provider>,
+		{ x: 0, y: 0, width: previewSize, height: previewSize },
+		0,
+		0,
+	);
+	previewCache.set(preset, result);
+
+	return result;
+}
+
+function PoseButtonPreview({ assetManager, preset, preview }: {
+	assetManager: AssetManager;
+	preset: Omit<Immutable<AssetsPosePreset>, 'name' | 'preview'>;
+	preview: Immutable<AssetsPosePresetPreview>;
+}): ReactElement {
+	const serviceManager = useServiceManager();
+	const canvasRef = useRef<HTMLCanvasElement>(null);
+
+	useEffect(() => {
+		let valid = true;
+
+		GeneratePosePreview(assetManager, preview, preset, serviceManager)
+			.then((result) => {
+				if (!valid || canvasRef.current == null)
+					return;
+
+				const { width, height } = canvasRef.current;
+				const ctx = canvasRef.current.getContext('2d');
+				Assert(ctx != null);
+				ctx.clearRect(0, 0, width, height);
+				ctx.drawImage(result, 0, 0, width, height);
+			})
+			.catch((err) => {
+				GetLogger('PoseButtonPreview')
+					.error('Error generating preview:', err);
+			});
+
+		return () => {
+			valid = false;
+		};
+	}, [assetManager, preset, preview, serviceManager]);
+
+	return (
+		<canvas
+			ref={ canvasRef }
+			width={ PREVIEW_SIZE }
+			height={ PREVIEW_SIZE }
+		/>
 	);
 }
 

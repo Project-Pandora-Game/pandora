@@ -86,11 +86,13 @@ export type AssetsPosePreset<Bones extends BoneName = BoneName> = PartialAppeara
 	preview?: AssetsPosePresetPreview;
 };
 
-export type AssetsPosePresets<Bones extends BoneName = BoneName> = {
+export type AssetsPosePresetCategory<Bones extends BoneName = BoneName> = {
 	category: string;
 	poses: AssetsPosePreset<Bones>[];
 	preview?: AssetsPosePresetPreview;
-}[];
+};
+
+export type AssetsPosePresets<Bones extends BoneName = BoneName> = AssetsPosePresetCategory<Bones>[];
 
 export function MergePartialAppearancePoses(base: Immutable<PartialAppearancePose>, extend?: Immutable<PartialAppearancePose>): PartialAppearancePose {
 	if (extend == null)

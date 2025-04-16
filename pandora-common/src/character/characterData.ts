@@ -11,6 +11,19 @@ import { CharacterNameSchema, ZodTruncate } from '../validation.ts';
 import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesServerSchema } from './assetPreferences.ts';
 import { CharacterSettingsSchema } from './characterSettings.ts';
 import { CharacterIdSchema } from './characterTypes.ts';
+import { PronounKeySchema } from './pronouns.ts';
+
+
+export const CharacterPublicSettingsSchema = z.object({
+	labelColor: HexColorStringSchema.catch('#ffffff'),
+	pronoun: PronounKeySchema.catch('she'),
+});
+export type ICharacterPublicSettings = z.infer<typeof CharacterPublicSettingsSchema>;
+
+export const CHARACTER_DEFAULT_PUBLIC_SETTINGS: Readonly<ICharacterPublicSettings> = {
+	labelColor: '#ffffff',
+	pronoun: 'she',
+};
 
 export const CharacterRoomPositionSchema = z.tuple([z.number().int(), z.number().int(), z.number().int()])
 	.catch([0, 0, 0])
@@ -69,6 +82,9 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
 	roomId: z.string().nullable().optional().catch(undefined),
 	position: CharacterRoomPositionSchema,
+	// Card game related optional data
+	hand: z.array(CardSchema).optional(),
+	deck: z.array(CardSchema).optional(),
 });
 /** Data about character, as seen by server */
 export type ICharacterData = z.infer<typeof CharacterDataSchema>;

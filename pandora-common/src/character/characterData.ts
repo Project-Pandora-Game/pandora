@@ -6,6 +6,7 @@ import { CharacterModifierSystemDataSchema } from '../gameLogic/characterModifie
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData.ts';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits.ts';
 import { SpaceIdSchema } from '../space/space.ts';
+import { CardSchema } from '../utility/cards.ts';
 import { ArrayToRecordKeys } from '../utility/misc.ts';
 import { CharacterNameSchema, ZodTruncate } from '../validation.ts';
 import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesServerSchema } from './assetPreferences.ts';
@@ -67,6 +68,9 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
 	roomId: z.string().nullable().optional().catch(undefined),
 	position: CharacterRoomPositionSchema,
+	// Card game related optional data
+	hand: z.array(CardSchema).optional(),
+	deck: z.array(CardSchema).optional(),
 });
 /** Data about character, as seen by server */
 export type ICharacterData = z.infer<typeof CharacterDataSchema>;

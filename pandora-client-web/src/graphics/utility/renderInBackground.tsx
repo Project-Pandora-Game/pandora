@@ -38,8 +38,8 @@ export async function RenderGraphicsTreeInBackground(
 			</PixiTickerContext.Provider>
 		), true);
 
-		// Wait until next tick to process microtasks
-		await Promise.resolve();
+		// Flush the render
+		await root.flush();
 
 		// Wait until suspense reports ready
 		await new Promise<void>((resolve) => {
@@ -78,6 +78,11 @@ export async function RenderGraphicsTreeInBackground(
 		app.stage.addChild(stage);
 
 		// Setup and run ticker to render the stage
+		app.ticker.addOnce((t) => ticker.tick(t));
+		app.ticker.update();
+
+		// Flush any changes that happened due to the above and repeat (some changes simply need two frames to propagate properly)
+		await root.flush();
 		app.ticker.addOnce((t) => ticker.tick(t));
 		app.ticker.update();
 

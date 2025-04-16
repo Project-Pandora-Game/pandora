@@ -67,18 +67,28 @@ function WardrobeStoredPosePresetsContent(): ReactNode {
 			<Row alignY={ empty ? 'center' : 'start' } padding={ empty ? 'small' : undefined } gap='small'>
 				{
 					empty ? (
-						<span className='flex-1'>
-							No custom poses stored. You can create one with the button on the right.
-						</span>
+						<>
+							<span className='flex-1'>
+								No custom poses stored. You can create one with the button on the right.
+							</span>
+							<IconButton
+								src={ editIcon }
+								alt='Edit'
+								onClick={ openEditSaved }
+							/>
+						</>
 					) : (
-						<PosePresetButtons />
+						<div className='pose-row flex-1'>
+							{ presets.map((preset) => <PosePresetButton key={ preset.id } preset={ preset } />) }
+							<IconButton
+								className='editButton'
+								src={ editIcon }
+								alt='Edit'
+								onClick={ openEditSaved }
+							/>
+						</div>
 					)
 				}
-				<IconButton
-					src={ editIcon }
-					alt='Edit'
-					onClick={ openEditSaved }
-				/>
 			</Row>
 			{ showEditSaved && <PosePresetEditDialog close={ closeEditSaved } /> }
 			<PosePresetEditing />
@@ -210,16 +220,6 @@ function PosePresetImportButton(): ReactNode {
 				)
 			}
 		</>
-	);
-}
-
-function PosePresetButtons(): ReactNode {
-	const { presets } = usePosePresetContext();
-
-	return (
-		<Row className='pose-row flex-1' gap='tiny' wrap>
-			{ presets.map((preset) => <PosePresetButton key={ preset.id } preset={ preset } />) }
-		</Row>
 	);
 }
 

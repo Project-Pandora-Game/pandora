@@ -140,11 +140,7 @@ function WardrobePoseCategoryInternal({ poseCategory, setPose, characterState }:
 }): ReactElement {
 	return (
 		<FieldsetToggle legend={ poseCategory.category } persistent={ 'bone-ui-pose-' + poseCategory.category }>
-			<Row
-				className='pose-row'
-				gap='tiny'
-				wrap
-			>
+			<div className='pose-row'>
 				{
 					poseCategory.poses.map((preset, presetIndex) => (
 						<PoseButton key={ presetIndex }
@@ -155,7 +151,7 @@ function WardrobePoseCategoryInternal({ poseCategory, setPose, characterState }:
 						/>
 					))
 				}
-			</Row>
+			</div>
 		</FieldsetToggle>
 	);
 }
@@ -423,11 +419,7 @@ export function WardrobePoseGui({ character, characterState }: {
 			<div className='bone-ui'>
 				<WardrobePoseGuiGate>
 					<Column className='fill-x' padding='medium' gap='small'>
-						<Row
-							className='pose-row'
-							gap='small'
-							wrap
-						>
+						<div className='pose-row category'>
 							<Button
 								theme={ focusedCategory === 'custom' ? 'defaultActive' : 'default' }
 								onClick={ () => setFocusedCategory('custom') }
@@ -455,12 +447,8 @@ export function WardrobePoseGui({ character, characterState }: {
 								<img src={ itemSettingIcon } alt='Manual posing' />
 								<span>&nbsp;Manual posing</span>
 							</Button>
-						</Row>
-						<Row
-							className='pose-row'
-							gap='small'
-							wrap
-						>
+						</div>
+						<div className='pose-row category'>
 							{
 								poses.map((poseCategory, poseCategoryIndex) => (poseCategory.preview != null ? (
 									<Button
@@ -481,7 +469,7 @@ export function WardrobePoseGui({ character, characterState }: {
 									</Button>
 								) : null))
 							}
-						</Row>
+						</div>
 					</Column>
 					<Row
 						className={ actualPoseDiffers ? '' : 'invisible' }

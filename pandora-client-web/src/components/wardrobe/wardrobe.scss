@@ -660,32 +660,29 @@ $drop-overlay-gap: 0.3em;
 	}
 
 	.pose-row {
-		margin: 0 1em;
-
 		.pose {
 			&.pose-unavailable {
 				opacity: 60%;
 			}
 		}
 
-		button.IconButton {
+		button.PoseButton {
+			width: 5.5em;
+
 			canvas {
-				width: 5em;
-				height: 5em;
+				width: 100%;
+			}
+
+			img {
+				width: 80%;
+				height: 2.6em;
 			}
 
 			span {
 				width: 0;
 				min-width: 100%;
 			}
-
-			img {
-				width: 4.7em;
-				height: 2.6em;
-			}
 		}
-
-
 	}
 
 	.armPositioningTable {

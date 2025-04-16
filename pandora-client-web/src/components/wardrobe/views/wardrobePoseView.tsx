@@ -415,6 +415,68 @@ export function WardrobePoseGui({ character, characterState }: {
 		<div className='inventoryView'>
 			<div className='bone-ui'>
 				<WardrobePoseGuiGate>
+					<Column className='fill-x' padding='medium' gap='small'>
+						<Row
+							className='pose-row'
+							gap='small'
+							wrap
+						>
+							<Button
+								theme={ focusedCategory === 'custom' ? 'defaultActive' : 'default' }
+								onClick={ () => setFocusedCategory('custom') }
+								className='IconButton PoseButton'
+								slim
+							>
+								<img src={ starIcon } alt='Custom poses' />
+								<span>&nbsp;Custom poses</span>
+							</Button>
+							<Button
+								theme={ focusedCategory === 'basic' ? 'defaultActive' : 'default' }
+								onClick={ () => setFocusedCategory('basic') }
+								className='IconButton PoseButton'
+								slim
+							>
+								<img src={ bodyIcon } alt='Quick posing' />
+								<span>&nbsp;Quick posing</span>
+							</Button>
+							<Button
+								theme={ focusedCategory === 'manual' ? 'defaultActive' : 'default' }
+								onClick={ () => setFocusedCategory('manual') }
+								className='IconButton PoseButton'
+								slim
+							>
+								<img src={ itemSettingIcon } alt='Manual posing' />
+								<span>&nbsp;Manual posing</span>
+
+							</Button>
+						</Row>
+						<Row
+							className='pose-row'
+							gap='small'
+							wrap
+						>
+							{
+								poses.map((poseCategory, poseCategoryIndex) => (poseCategory.preview != null ? (
+									<Button
+										key={ poseCategoryIndex }
+										theme={ focusedCategory === poseCategoryIndex ? 'defaultActive' : 'default' }
+										onClick={ () => setFocusedCategory(poseCategoryIndex) }
+										className='IconButton PoseButton'
+										slim
+									>
+										<Column className='fill-y'>
+											<PoseButtonPreview
+												assetManager={ characterState.assetManager }
+												pose={ {} }
+												preview={ poseCategory.preview }
+											/>
+											<span>{ poseCategory.category }</span>
+										</Column>
+									</Button>
+								) : null))
+							}
+						</Row>
+					</Column>
 					<Row
 						className={ actualPoseDiffers ? '' : 'invisible' }
 						alignX='center'
@@ -438,69 +500,6 @@ export function WardrobePoseGui({ character, characterState }: {
 							Stay in it
 						</Button>
 					</Row>
-					<Column className='fill-x' padding='medium' gap='small'>
-						<Row
-							className='pose-row'
-							gap='small'
-							wrap
-						>
-							<Button
-								theme={ focusedCategory === 'custom' ? 'defaultActive' : 'default' }
-								onClick={ () => setFocusedCategory('custom') }
-								className='IconButton'
-								slim
-							>
-								<img src={ starIcon } alt='Custom poses' />
-								<span>&nbsp;Custom poses</span>
-							</Button>
-							<Button
-								theme={ focusedCategory === 'basic' ? 'defaultActive' : 'default' }
-								onClick={ () => setFocusedCategory('basic') }
-								className='IconButton'
-								slim
-							>
-								<img src={ bodyIcon } alt='Quick posing' />
-								<span>&nbsp;Quick posing</span>
-							</Button>
-							<Button
-								theme={ focusedCategory === 'manual' ? 'defaultActive' : 'default' }
-								onClick={ () => setFocusedCategory('manual') }
-								className='IconButton'
-								slim
-							>
-								<img src={ itemSettingIcon } alt='Manual posing' />
-								<span>&nbsp;Manual posing</span>
-
-							</Button>
-						</Row>
-						<Row
-							className='pose-row'
-							gap='small'
-							wrap
-						>
-							{
-								poses.map((poseCategory, poseCategoryIndex) => (poseCategory.preview != null ? (
-									<Button
-										key={ poseCategoryIndex }
-										theme={ focusedCategory === poseCategoryIndex ? 'defaultActive' : 'default' }
-										onClick={ () => setFocusedCategory(poseCategoryIndex) }
-										className='IconButton'
-										slim
-									>
-										<Column className='fill-y'>
-											<PoseButtonPreview
-												assetManager={ characterState.assetManager }
-												pose={ {} }
-												preview={ poseCategory.preview }
-											/>
-											<span>{ poseCategory.category }</span>
-										</Column>
-									</Button>
-								) : null))
-							}
-						</Row>
-					</Column>
-					<hr className='fill-x' />
 					{
 						focusedCategory === 'custom' ? (
 							<WardrobeStoredPosePresets setPose={ setPose } characterState={ characterState } />
@@ -630,7 +629,7 @@ export function PoseButton({ preset, preview, setPose, characterState }: {
 			<Button
 				slim
 				onClick={ () => setPose(pose) }
-				className={ preview != null ? 'IconButton flex-1' : 'flex-1' }
+				className={ preview != null ? 'IconButton PoseButton flex-1' : 'flex-1 PoseButton' }
 			>
 				{
 					preview != null ? (

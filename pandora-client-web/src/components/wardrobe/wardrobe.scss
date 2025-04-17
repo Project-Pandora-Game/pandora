@@ -741,6 +741,37 @@ $drop-overlay-gap: 0.3em;
 	}
 }
 
+.expressions-ui {
+	.item-select-row {
+		display: grid;
+		grid-template-columns: repeat(auto-fill, 5.5em);
+		justify-content: start;
+		grid-auto-rows: auto;
+		gap: common.spacing('small');
+		padding: common.spacing('medium');
+
+		button {
+			width: 100%;
+
+			.itemPreview {
+				width: 80%;
+
+				&.image {
+					width: 100%;
+					img {
+						filter: none;
+					}
+				}
+			}
+
+			.itemName {
+				width: 0;
+				min-width: 100%;
+			}
+		}
+	}
+}
+
 .action-warning, .attribute-description {
 	background: common.$theme-hoverdialog-background;
 	color: common.$theme-hoverdialog-text;

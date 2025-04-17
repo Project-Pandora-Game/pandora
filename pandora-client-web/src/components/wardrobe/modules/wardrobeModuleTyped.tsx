@@ -54,8 +54,8 @@ export function WardrobeModuleConfigTyped({ target, item, moduleName, m }: Wardr
 	}), [m.activeVariant, m.config, target, item, moduleName]);
 
 	return (
-		<Column padding='medium'>
-			<Row padding='medium' wrap>
+		<Column padding='medium' gap='medium'>
+			<Row wrap>
 				{ rows }
 			</Row>
 			{ customText }
@@ -89,8 +89,8 @@ export function WardrobeModuleTemplateConfigTyped({ definition, template, onTemp
 	}), [definition, template, onTemplateChange]);
 
 	return (
-		<Column padding='medium'>
-			<Row padding='medium' wrap>
+		<Column padding='medium' gap='medium'>
+			<Row wrap>
 				{ rows }
 			</Row>
 		</Column>

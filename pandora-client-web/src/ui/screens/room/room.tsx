@@ -1,7 +1,8 @@
-import { ReactElement } from 'react';
-import { DivContainer } from '../../../components/common/container/container.tsx';
+import type { Immutable } from 'immer';
+import { ReactElement, useCallback, useState } from 'react';
+import { Column, DivContainer } from '../../../components/common/container/container.tsx';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
-import { Tab, TabContainer } from '../../../components/common/tabs/tabs.tsx';
+import { Tab, TabContainer, type TabConfig } from '../../../components/common/tabs/tabs.tsx';
 import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { WardrobeExpressionGui } from '../../../components/wardrobe/views/wardrobeExpressionsView.tsx';
@@ -9,7 +10,7 @@ import { WardrobePoseGui } from '../../../components/wardrobe/views/wardrobePose
 import { WardrobeExternalContextProvider } from '../../../components/wardrobe/wardrobeContext.tsx';
 import { RoomScene } from '../../../graphics/room/roomScene.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { useIsPortrait } from '../../../styles/mediaQueries.ts';
+import { useIsLowScreen, useIsPortrait } from '../../../styles/mediaQueries.ts';
 import { Chat } from '../../components/chat/chat.tsx';
 import './chatArea.scss';
 import './room.scss';
@@ -35,52 +36,73 @@ export function RoomScreen(): ReactElement | null {
 				direction={ isPortrait ? 'column' : 'row' }
 			>
 				<RoomScene className={ `room-scene flex-${chatroomGraphicsRatio}` } />
-				<InteractionBox className={ `interactionArea flex-${chatroomChatRatio}` } />
+				<InteractionBox isPortrait={ isPortrait } className={ `interactionArea flex-${chatroomChatRatio}` } />
 			</DivContainer>
 		</RoomScreenContextProvider>
 	);
 }
 
-function InteractionBox({ className }: {
+function InteractionBox({ isPortrait, className }: {
+	isPortrait: boolean;
 	className?: string;
 }): ReactElement {
+	const [chatOpen, setChatOpen] = useState<boolean>(false);
+	const { interfaceChatroomHorizontalChatSplit } = useAccountSettings();
 	const { player, playerState } = usePlayerState();
 	const spaceInfo = useSpaceInfo();
+	const isLowScreen = useIsLowScreen();
 	const isPersonalSpace = spaceInfo.id == null;
 
+	const splitChat = interfaceChatroomHorizontalChatSplit && !isPortrait && !isLowScreen;
+
+	const onTabOpen = useCallback((tab: Immutable<TabConfig>) => {
+		setChatOpen(tab.name === 'Chat');
+	}, []);
+
 	return (
-		<TabContainer className={ className } collapsable>
+		<Column className={ className } gap='none'>
+			<TabContainer className={ (chatOpen && splitChat) ? '' : 'flex-2 zero-height' } onTabOpen={ onTabOpen } collapsable>
+				{
+					isPersonalSpace ? (
+						<Tab name='Personal space'>
+							<Scrollable className='controls-container flex-1'>
+								<PersonalSpaceControls />
+							</Scrollable>
+						</Tab>
+					) : null
+				}
+				<Tab name='Chat'>
+					{
+						!splitChat ? (
+							<Chat />
+						) : null
+					}
+				</Tab>
+				{
+					!isPersonalSpace ? (
+						<Tab name='Room'>
+							<Scrollable className='controls-container flex-1'>
+								<RoomControls />
+							</Scrollable>
+						</Tab>
+					) : null
+				}
+				<Tab name='Pose'>
+					<WardrobeExternalContextProvider target={ player.actionSelector }>
+						<WardrobePoseGui character={ player } characterState={ playerState } />
+					</WardrobeExternalContextProvider>
+				</Tab>
+				<Tab name='Expressions'>
+					<WardrobeExternalContextProvider target={ player.actionSelector }>
+						<WardrobeExpressionGui character={ player } characterState={ playerState } />
+					</WardrobeExternalContextProvider>
+				</Tab>
+			</TabContainer>
 			{
-				isPersonalSpace ? (
-					<Tab name='Personal space'>
-						<Scrollable className='controls-container flex-1'>
-							<PersonalSpaceControls />
-						</Scrollable>
-					</Tab>
+				splitChat ? (
+					<Chat />
 				) : null
 			}
-			<Tab name='Chat'>
-				<Chat />
-			</Tab>
-			{
-				!isPersonalSpace ? (
-					<Tab name='Room'>
-						<Scrollable className='controls-container flex-1'>
-							<RoomControls />
-						</Scrollable>
-					</Tab>
-				) : null
-			}
-			<Tab name='Pose'>
-				<WardrobeExternalContextProvider target={ player.actionSelector }>
-					<WardrobePoseGui character={ player } characterState={ playerState } />
-				</WardrobeExternalContextProvider>
-			</Tab>
-			<Tab name='Expressions'>
-				<WardrobeExternalContextProvider target={ player.actionSelector }>
-					<WardrobeExpressionGui character={ player } characterState={ playerState } />
-				</WardrobeExternalContextProvider>
-			</Tab>
-		</TabContainer>
+		</Column>
 	);
 }

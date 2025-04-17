@@ -14,7 +14,7 @@ export function WikiCharacters(): ReactElement {
 				An account in Pandora allows you to create a limited amount of characters (currently { LIMIT_CHARACTER_COUNT }).
 				You cannot rename a character or give it a nickname currently.<br />
 				Characters can assume a large number of different poses and can turn around. You can expand the manual pose section of
-				the "Poses"-tab to assume custom poses.
+				the "Pose"-tab to assume custom poses.
 			</p>
 			<p>
 				Every character has their

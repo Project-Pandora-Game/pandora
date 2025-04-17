@@ -46,6 +46,7 @@ export type GraphicsCharacterLayerFilter = (layer: LayerState) => boolean;
 export interface GraphicsCharacterProps extends ChildrenProps {
 	layer?: (props: GraphicsLayerProps) => ReactElement;
 	layerFilter?: GraphicsCharacterLayerFilter;
+	layerStateOverrideGetter?: LayerStateOverrideGetter;
 	characterState: AssetFrameworkCharacterState;
 	position?: PointLike;
 	scale?: PointLike;
@@ -119,7 +120,6 @@ export function GraphicsCharacterWithManager({
 	...graphicsProps
 }: GraphicsCharacterProps & {
 	graphicsGetter: GraphicsGetterFunction;
-	layerStateOverrideGetter?: LayerStateOverrideGetter;
 }): ReactElement {
 	const { effectBlinking } = useGraphicsSettings();
 

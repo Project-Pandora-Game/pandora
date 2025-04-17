@@ -277,6 +277,7 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 	private readonly logger = GetLogger('BackgroundRenderer');
 
 	private _needsUpdate: boolean = false;
+	private _abortRenderRequest: undefined | (() => void);
 	private _cleanupUpdateCallback: undefined | (() => void);
 
 	private _canvasRef: HTMLCanvasElement | null = null;
@@ -352,6 +353,10 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 		this._cleanupUpdateCallback?.();
 		this._cleanupUpdateCallback = undefined;
 
+		this._abortRenderRequest?.();
+		this._abortRenderRequest = undefined;
+		this._needsUpdate = false;
+
 		this._root.unmount();
 		this._root = null;
 
@@ -365,11 +370,13 @@ class GraphicsSceneBackgroundRendererImpl extends React.Component<Omit<GraphicsS
 	public readonly needsRenderUpdate = () => {
 		if (!this._needsUpdate) {
 			this._needsUpdate = true;
-			backgroundRenderingQueue.calculate('normal', this.renderStage);
+			this._abortRenderRequest?.();
+			this._abortRenderRequest = backgroundRenderingQueue.calculate('normal', this.renderStage);
 		}
 	};
 
-	public readonly renderStage = () => {
+	private readonly renderStage = () => {
+		this._abortRenderRequest = undefined;
 		if (!this._needsUpdate)
 			return;
 		this._needsUpdate = false;

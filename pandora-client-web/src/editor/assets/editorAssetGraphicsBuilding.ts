@@ -64,7 +64,7 @@ class EditorImageResource implements GraphicsBuildImageResource {
 	}
 	public async getContentBoundingBox(): Promise<ImageBoundingBox> {
 		if (BuildingPixiApplicationPromise == null) {
-			BuildingPixiApplicationPromise = CreatePixiApplication(false, 0);
+			BuildingPixiApplicationPromise = CreatePixiApplication(false);
 		}
 		if (BuildingPixiApplication == null) {
 			BuildingPixiApplication = await BuildingPixiApplicationPromise;

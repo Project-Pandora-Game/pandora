@@ -23,6 +23,11 @@ export type PixiRoot = {
 	 * @param sync - Whether to sync all the work, default `false`.
 	 */
 	render: (element: ReactNode, sync?: boolean) => void;
+	/**
+	 * Flush all pending changes
+	 * @returns Promise of completion
+	 */
+	flush: () => Promise<void>;
 	/** Unmount the root - removing all elements and performing any necessary cleanup. */
 	unmount: () => void;
 	/** Emitter used for delivering update events for lazy rendering. */
@@ -73,6 +78,15 @@ export function CreatePixiRoot(rootContainer: Container): PixiRoot {
 			} else {
 				PixiFiber.updateContainer(element, container);
 			}
+		},
+		flush() {
+			return new Promise((resolve) => {
+				// @ts-expect-error: No reconciler typings for React 19 are available yet.
+				PixiFiber.flushSyncWork();
+				// Flush any pending "passive" work
+				PixiFiber.flushPassiveEffects();
+				resolve();
+			});
 		},
 		unmount() {
 			// Clear all children of the container

@@ -13,6 +13,7 @@ import {
 	BONE_MIN,
 	BoneDefinition,
 	CharacterSize,
+	CharacterViewSchema,
 	CloneDeepMutable,
 	GetLogger,
 	LegsPoseSchema,
@@ -169,6 +170,38 @@ export function WardrobePoseCategories({ characterState, setPose }: { characterS
 				/>
 			)) }
 		</>
+	);
+}
+
+export function WardrobeViewPose({ setPose, characterState }: {
+	characterState: AssetFrameworkCharacterState;
+	setPose: (_: Omit<AssetsPosePreset, 'name'>) => void;
+}) {
+	return (
+		<table className='armPositioningTable'>
+			<tbody>
+				<tr>
+					<td>View</td>
+					<td>
+						<Row gap='tiny' wrap>
+							{
+								CharacterViewSchema.options.map((o) => (
+									<PoseButton
+										key={ o }
+										preset={ {
+											name: capitalize(o),
+											view: o,
+										} }
+										characterState={ characterState }
+										setPose={ setPose }
+									/>
+								))
+							}
+						</Row>
+					</td>
+				</tr>
+			</tbody>
+		</table>
 	);
 }
 
@@ -516,6 +549,7 @@ export function WardrobePoseGui({ character, characterState }: {
 						) : focusedCategory === 'manual' ? (
 							<FieldsetToggle legend='Manual posing' persistent='bone-ui-dev-pose'>
 								<Column>
+									<WardrobeViewPose characterState={ characterState } setPose={ setPose } />
 									<WardrobeArmPoses characterState={ characterState } setPose={ setPose } />
 									<WardrobeLegsPose characterState={ characterState } setPose={ setPose } />
 									<RoomManualYOffsetControl character={ character } />

@@ -659,6 +659,14 @@ $drop-overlay-gap: 0.3em;
 		padding: 0 0.5em;
 	}
 
+	.pose-row, .armPositioningTable {
+		.pose {
+			&.pose-unavailable {
+				opacity: 50%;
+			}
+		}
+	}
+
 	.pose-row {
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(5.5em, 1fr));
@@ -676,12 +684,6 @@ $drop-overlay-gap: 0.3em;
 			grid-column: -2 / -1;
 			grid-row: 1 / span 1;
 			place-self: start end;
-		}
-
-		.pose {
-			&.pose-unavailable {
-				opacity: 60%;
-			}
 		}
 
 		button.PoseButton {
@@ -711,6 +713,10 @@ $drop-overlay-gap: 0.3em;
 			border-collapse: collapse;
 			padding: 0.25em;
 			text-align: center;
+		}
+
+		td:nth-child(1) {
+			width: 6em;
 		}
 	}
 

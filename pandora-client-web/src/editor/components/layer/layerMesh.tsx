@@ -528,7 +528,7 @@ function LayerImageOverridesTextarea({ layer, stop }: { layer: EditorAssetGraphi
 						If it is the name of a module you need to prefix it with 'm_' such as m_[modulename].
 					</p>
 					<p>
-						The value of a bone can be between -180 and 180 (see Poses-tab).<br />
+						The value of a bone can be between -180 and 180 (see Pose-tab).<br />
 						The value of a module is typically the id of the related variant.
 					</p>
 					<p>

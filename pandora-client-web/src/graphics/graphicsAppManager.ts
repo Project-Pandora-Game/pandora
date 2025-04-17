@@ -9,18 +9,19 @@ const SHARED_APP_MAX_COUNT = 2;
 export const PIXI_APPLICATION_OPTIONS: Readonly<Partial<ApplicationOptions>> = {
 	backgroundColor: 0x1099bb,
 	resolution: window.devicePixelRatio || 1,
+	// Alpha needs to start on a value < 1, otherwise it fails to initialize transparency correctly and cannot be enabled later on
+	backgroundAlpha: 0,
 	// Antialias **NEEDS** to be explicitly disabled - having it enabled causes seams when using filters (such as alpha masks)
 	antialias: false,
 };
 
-export async function CreatePixiApplication(multiView: boolean = false, backgroundAlpha: number = 1): Promise<Application> {
+export async function CreatePixiApplication(multiView: boolean = false): Promise<Application> {
 	const app = new Application();
 	await app.init({
 		...cloneDeep(PIXI_APPLICATION_OPTIONS),
 		autoDensity: true,
 		autoStart: false,
 		multiView,
-		backgroundAlpha,
 	});
 	return app;
 }
@@ -38,6 +39,7 @@ interface WindowWithSharedApps extends Window {
 
 const SharedApps: GraphicsApplicationManager[] = (USER_DEBUG && Array.isArray((window as WindowWithSharedApps).pandoraPixiApps)) ? ((window as WindowWithSharedApps).pandoraPixiApps ?? []) : [];
 const AvailableApps: GraphicsApplicationManager[] = (USER_DEBUG && Array.isArray((window as WindowWithSharedApps).pandoraPixiAppsAvailable)) ? ((window as WindowWithSharedApps).pandoraPixiAppsAvailable ?? []) : [];
+const ManagerQueue: ((manager: GraphicsApplicationManager) => void)[] = [];
 
 if (USER_DEBUG) {
 	(window as WindowWithSharedApps).pandoraPixiApps = SharedApps;
@@ -112,6 +114,25 @@ export function GetApplicationManager(): GraphicsApplicationManager | null {
 	return app ?? null;
 }
 
+export function WaitForApplicationManager(): Promise<GraphicsApplicationManager> {
+	return new Promise<GraphicsApplicationManager>((resolve) => {
+		// Try to get one synchronously first
+		const syncManager = GetApplicationManager();
+		if (syncManager != null) {
+			resolve(syncManager);
+		} else {
+			ManagerQueue.push(resolve);
+		}
+	});
+}
+
 export function ReleaseApplicationManager(app: GraphicsApplicationManager): void {
+	const queueWaiter = ManagerQueue.shift();
+	if (queueWaiter != null) {
+		queueMicrotask(() => {
+			queueWaiter(app);
+		});
+		return;
+	}
 	AvailableApps.push(app);
 }

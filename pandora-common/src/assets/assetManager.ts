@@ -12,7 +12,6 @@ import type { AssetsPosePresets } from './state/characterStatePose.ts';
 export class AssetManager {
 	protected readonly _assets: ReadonlyMap<AssetId, Asset>;
 	protected readonly _bones: ReadonlyMap<string, BoneDefinition>;
-	protected readonly _posePresets: Immutable<AssetsPosePresets>;
 	protected readonly _backgrounds: readonly Immutable<RoomBackgroundInfo>[];
 
 	public readonly definitionsHash: string;
@@ -25,6 +24,7 @@ export class AssetManager {
 	public readonly bodyparts: readonly AssetBodyPart[];
 	public readonly randomization: AppearanceRandomizationData;
 	public readonly characterModifierTemplates: Immutable<CharacterModifierInbuiltTemplates>;
+	public readonly posePresets: Immutable<AssetsPosePresets>;
 
 	public getAllAssets(): Asset[] {
 		return [...this._assets.values()];
@@ -36,10 +36,6 @@ export class AssetManager {
 
 	public getAllBones(): BoneDefinition[] {
 		return [...this._bones.values()];
-	}
-
-	public getPosePresets(): AssetsPosePresets {
-		return CloneDeepMutable(this._posePresets);
 	}
 
 	public getBackgrounds(): readonly RoomBackgroundInfo[] {
@@ -97,7 +93,7 @@ export class AssetManager {
 		this.bodyparts = fullData.bodyparts;
 		this.graphicsId = fullData.graphicsId;
 		this.graphicsSourceId = fullData.graphicsSourceId;
-		this._posePresets = fullData.posePresets;
+		this.posePresets = fullData.posePresets;
 		this._backgrounds = fullData.backgrounds;
 		this.randomization = fullData.randomization;
 		this.characterModifierTemplates = fullData.characterModifierTemplates;

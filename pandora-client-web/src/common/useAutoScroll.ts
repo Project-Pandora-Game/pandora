@@ -13,7 +13,7 @@ import { useEvent } from './useEvent.ts';
  */
 export function useAutoScroll<Element extends HTMLElement>(deps: DependencyList = []): [
 	React.RefObject<Element | null>,
-	(forceScroll: boolean) => void,
+	(forceScroll: boolean, behavior?: ScrollBehavior) => void,
 	boolean,
 ] {
 	const ref = useRef<Element>(null);
@@ -46,10 +46,10 @@ export function useAutoScroll<Element extends HTMLElement>(deps: DependencyList 
 		}
 	}, [isAtEnd]);
 
-	const scroll = useCallback((forceScroll: boolean) => {
+	const scroll = useCallback((forceScroll: boolean, behavior: ScrollBehavior = 'smooth') => {
 		if (ref.current && (autoScroll || forceScroll) && ref.current.scrollHeight > 0) {
 			isScrolling.current = true;
-			ref.current.scrollTo({ top: ref.current.scrollHeight, behavior: 'smooth' });
+			ref.current.scrollTo({ top: ref.current.scrollHeight, behavior });
 		}
 	}, [autoScroll]);
 

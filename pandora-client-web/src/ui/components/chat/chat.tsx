@@ -80,6 +80,17 @@ export function Chat(): ReactElement | null {
 		return result;
 	}, [messages, injectedMessages, playerId]);
 
+	const resizeObserver = useMemo(() => new ResizeObserver(() => scroll(false, 'instant')), [scroll]);
+	const messagesDivHandler = useCallback((div: HTMLDivElement | null) => {
+		if (messagesDiv.current != null) {
+			resizeObserver.unobserve(messagesDiv.current);
+		}
+		messagesDiv.current = div;
+		if (div != null) {
+			resizeObserver.observe(div);
+		}
+	}, [messagesDiv, resizeObserver]);
+
 	if (!shardConnector)
 		return null;
 
@@ -98,7 +109,7 @@ export function Chat(): ReactElement | null {
 				) }
 			>
 				<Scrollable
-					ref={ messagesDiv }
+					ref={ messagesDivHandler }
 					className='fill'
 					tabIndex={ 1 }
 				>

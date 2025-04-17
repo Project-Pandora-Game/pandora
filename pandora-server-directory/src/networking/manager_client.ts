@@ -123,7 +123,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			storedOutfitsGetAll: this.handleStoredOutfitsGetAll.bind(this),
 			storedOutfitsSave: this.handleStoredOutfitsSave.bind(this),
 
-			// Poses
+			// Pose
 			storedPosePresetsGetAll: this.handleStoredPosePresetsGetAll.bind(this),
 			storedPosePresetsSave: this.handleStoredPosePresetsSave.bind(this),
 

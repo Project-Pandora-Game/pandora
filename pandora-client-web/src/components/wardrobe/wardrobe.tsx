@@ -210,7 +210,7 @@ function WardrobeCharacter({ character }: {
 							<WardrobeBodyManipulation character={ character } characterState={ characterState } />
 						</div>
 					</Tab>
-					<Tab name='Poses & Expressions'>
+					<Tab name='Pose & Expressions'>
 						<div className='wardrobe-pane'>
 							<div className='wardrobe-ui'>
 								<WardrobePoseGui character={ character } characterState={ characterState } />

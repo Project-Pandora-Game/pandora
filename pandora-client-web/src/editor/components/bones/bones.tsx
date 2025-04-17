@@ -69,7 +69,7 @@ export function BoneUI(): ReactElement {
 				Pose bones
 				<ContextHelpButton>
 					<p>
-						The "Poses"-tab enables you to manipulate the bones/poses of the editor character, visible in the "Preview"-tab.<br />
+						The "Pose"-tab enables you to manipulate the bones/poses of the editor character, visible in the "Preview"-tab.<br />
 						You can manipulate each bone in two directions via either the slider for a quick and rough movement,<br />
 						or the number field for a more fine-grained setting.<br />
 						The middle position, or number 0, is the neutral position for each slider - the position in which<br />

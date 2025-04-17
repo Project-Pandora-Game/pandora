@@ -45,6 +45,14 @@ export const AccountSettingsSchema = z.object({
 	 */
 	wardrobeBigPreview: z.enum(['icon', 'image']),
 	/**
+	 * Show previews for poses
+	 */
+	wardrobePosePreview: z.boolean(),
+	/**
+	 * Sets the default category selection in the posing tab.
+	 */
+	wardrobePosingCategoryDefault: z.enum(['custom', 'basic', 'manual']),
+	/**
 	 * Controls how item names appear in wardrobe
 	 */
 	wardrobeItemDisplayNameType: ItemDisplayNameTypeSchema,
@@ -64,6 +72,10 @@ export const AccountSettingsSchema = z.object({
 	 * Controls how many parts (of 10 total) the room graphics takes, while in vertical mode
 	 */
 	interfaceChatroomGraphicsRatioVertical: z.number().int().min(1).max(9),
+	/**
+	 * Split the controls between "Room"/"Pose"/"Expressions" in the horizontal chat view, if the screen is tall enough
+	 */
+	interfaceChatroomHorizontalChatSplit: z.boolean(),
 	/**
 	 * Controls how offline characters are displayed in a room:
 	 * - None: No difference between online and offline characters
@@ -111,11 +123,14 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	wardrobeOutfitsPreview: 'small',
 	wardrobeSmallPreview: 'image',
 	wardrobeBigPreview: 'image',
+	wardrobePosingCategoryDefault: 'custom',
+	wardrobePosePreview: true,
 	wardrobeItemDisplayNameType: 'custom',
 	wardrobeItemRequireFreeHandsToUseDefault: 'useAssetValue',
 	interfaceAccentColor: '#3daee9',
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,
+	interfaceChatroomHorizontalChatSplit: true,
 	interfaceChatroomOfflineCharacterFilter: 'ghost',
 	interfaceChatroomChatFontSize: 'm',
 	interfaceChatroomCharacterNameFontSize: 'm',

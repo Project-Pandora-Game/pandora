@@ -1,7 +1,7 @@
 import { Assert, AssertNotNullable, type Rectangle } from 'pandora-common';
 import { Application, Container } from 'pixi.js';
 import type { ReactNode } from 'react';
-import { GetApplicationManager, ReleaseApplicationManager, type GraphicsApplicationManager } from '../graphicsAppManager.ts';
+import { ReleaseApplicationManager, WaitForApplicationManager, type GraphicsApplicationManager } from '../graphicsAppManager.ts';
 import { DEFAULT_BACKGROUND_COLOR } from '../graphicsScene.tsx';
 import { GraphicsSuspenseContext, GraphicsSuspenseManager } from '../graphicsSuspense/graphicsSuspense.tsx';
 import { CreatePixiRoot } from '../reconciler/reconciler.ts';
@@ -38,8 +38,8 @@ export async function RenderGraphicsTreeInBackground(
 			</PixiTickerContext.Provider>
 		), true);
 
-		// Wait until next tick to process microtasks
-		await Promise.resolve();
+		// Flush the render
+		await root.flush();
 
 		// Wait until suspense reports ready
 		await new Promise<void>((resolve) => {
@@ -54,10 +54,7 @@ export async function RenderGraphicsTreeInBackground(
 		});
 
 		// Get ourselves an App for rendering
-		appManager = GetApplicationManager();
-		if (!appManager) {
-			throw new Error('Failed to get Pixi application manager for rendering.');
-		}
+		appManager = await WaitForApplicationManager();
 
 		app = await new Promise<Application>((resolve) => {
 			AssertNotNullable(appManager);
@@ -81,6 +78,11 @@ export async function RenderGraphicsTreeInBackground(
 		app.stage.addChild(stage);
 
 		// Setup and run ticker to render the stage
+		app.ticker.addOnce((t) => ticker.tick(t));
+		app.ticker.update();
+
+		// Flush any changes that happened due to the above and repeat (some changes simply need two frames to propagate properly)
+		await root.flush();
 		app.ticker.addOnce((t) => ticker.tick(t));
 		app.ticker.update();
 

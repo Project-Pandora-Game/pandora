@@ -422,7 +422,7 @@ export const ClientDirectorySchema = {
 	},
 	//#endregion
 
-	//#region Poses
+	//#region Pose
 	storedPosePresetsGetAll: {
 		request: z.object({}),
 		response: z.object({

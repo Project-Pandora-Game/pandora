@@ -73,7 +73,7 @@ export const AccountSettingsSchema = z.object({
 	 */
 	interfaceChatroomGraphicsRatioVertical: z.number().int().min(1).max(9),
 	/**
-	 * Split the controls between "Room"/"Poses"/"Express" in the horizontal chat view, if the screen is tall enough
+	 * Split the controls between "Room"/"Pose"/"Expressions" in the horizontal chat view, if the screen is tall enough
 	 */
 	interfaceChatroomHorizontalChatSplit: z.boolean(),
 	/**

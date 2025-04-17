@@ -14,7 +14,7 @@ export function WikiCharacters(): ReactElement {
 				An account in Pandora allows you to create a limited amount of characters (currently { LIMIT_CHARACTER_COUNT }).
 				You cannot rename a character or give it a nickname currently.<br />
 				Characters can assume a large number of different poses and can turn around. You can expand the manual pose section of
-				the "Poses"-tab to assume custom poses.
+				the "Pose"-tab to assume custom poses.
 			</p>
 			<p>
 				Every character has their
@@ -79,10 +79,10 @@ export function WikiCharacters(): ReactElement {
 				<li>If you have problems dragging the name because it is too small, you can zoom in with mouse wheel or pinch-to-zoom gesture.</li>
 				<li>Items can prevent character movement.</li>
 				<li>
-					The "Character Y Offset" value inside the "Poses"-tab can shift your character upwards and downwards alongside the z-axis
+					The "Character Y Offset" value inside the "Pose"-tab can shift your character upwards and downwards alongside the z-axis
 					without changing your character's relative size in an unrealistic way.
 				</li>
-				<li>Characters can also rotate by up to 360 degrees under the "Poses"-tab.</li>
+				<li>Characters can also rotate by up to 360 degrees under the "Pose"-tab.</li>
 			</ul>
 
 			<h4 id='CH_Character_context_menu'>Character context menu</h4>

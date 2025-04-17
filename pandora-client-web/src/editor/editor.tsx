@@ -204,7 +204,7 @@ export function useEditorLayerTint(layer: EditorAssetGraphicsLayer): number {
 
 const TABS = [
 	['Wardrobe', 'editor-ui', EditorWardrobeUI],
-	['Poses', 'editor-ui', BoneUI],
+	['Pose', 'editor-ui', BoneUI],
 	['Items', 'editor-ui', AssetsUI],
 	['Asset', 'editor-ui', AssetUI],
 	['Layer', 'editor-ui', LayerUI],

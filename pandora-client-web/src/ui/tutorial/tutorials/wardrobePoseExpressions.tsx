@@ -2,7 +2,7 @@ import { MakeTutorialConditionFlag, type TutorialConfig } from '../tutorialSyste
 
 export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 	id: 'wardrobePoseExpressions',
-	name: `Character interactions: Poses and Expressions`,
+	name: `Character interactions: Pose and Expressions`,
 	description: (
 		<p>
 			This tutorial will teach you about posing your character and changing its expression.
@@ -40,7 +40,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 								Let's start by switching to your character's Pose tab.<br />
 								This is where you can find pre-defined pose templates, your own custom pose templates, and manual posing controls.
 							</p>
-							<p>To proceed with the tutorial, open the "Poses" tab.</p>
+							<p>To proceed with the tutorial, open the "Pose" tab.</p>
 						</>
 					),
 					conditions: [{
@@ -83,7 +83,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 					}],
 				},
 				{
-					text: <p>Please switch back to the "Poses" tab.</p>,
+					text: <p>Please switch back to the "Pose" tab.</p>,
 					hideWhenCompleted: true,
 					conditions: [{
 						type: 'elementQuery',
@@ -161,7 +161,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 					}],
 				},
 				{
-					text: <p>Please switch back to the "Poses" tab.</p>,
+					text: <p>Please switch back to the "Pose" tab.</p>,
 					hideWhenCompleted: true,
 					conditions: [{
 						type: 'elementQuery',
@@ -225,7 +225,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 					}],
 				},
 				{
-					text: <p>Please switch back to the "Poses" tab.</p>,
+					text: <p>Please switch back to the "Pose" tab.</p>,
 					hideWhenCompleted: true,
 					conditions: [{
 						type: 'elementQuery',
@@ -374,7 +374,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							In the context menu, select "Poses" to enter the posing mode that allows you to make changes to the current pose.
+							In the context menu, select "Pose" to enter the posing mode that allows you to make changes to the current pose.
 						</p>
 					),
 					highlight: [{
@@ -403,7 +403,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 							<p>
 								In this mode you can see circles over the character's body that you can drag to rotate the various joints/bones of
 								the character body (move or minimize this popup if needed).
-								Each one matches a slider from the "Manual pose" section in the "Poses" tab.<br />
+								Each one matches a slider from the "Manual pose" section in the "Pose" tab.<br />
 								Hint: To achieve the most accurate rotation control, hold a circle and drag in the direction of the arrow on it and only then drag
 								in a circle around the bone with some distance to it for a better control of the angle of the desired rotation.
 							</p>
@@ -471,7 +471,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							It is important to note, that the "Poses" and "Expression" tabs only allow you to alter your own character.
+							It is important to note, that the "Pose" and "Expression" tabs only allow you to alter your own character.
 							If you want to make such changes to another character in the same room, you can find the same two tabs in the wardrobe of any character.
 							That said, changes to another character might require the other party's permission first.
 						</p>

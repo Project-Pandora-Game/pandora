@@ -247,8 +247,8 @@ function WardrobeSettings(): ReactElement {
 			<legend>Wardrobe UI</legend>
 			<WardrobeShowExtraButtons />
 			<WardrobeHoverPreview />
-			<ToggleAccountSetting setting='wardrobePosePreview' label='Show previews in the "Poses" menu' />
-			<SelectAccountSettings setting='wardrobePosingCategoryDefault' label='Select the default category in the "Poses" menu' stringify={ WARDROBE_POSING_CATEGORY_DEFAULT } />
+			<ToggleAccountSetting setting='wardrobePosePreview' label='Show previews in the "Pose" menu' />
+			<SelectAccountSettings setting='wardrobePosingCategoryDefault' label='Select the default category in the "Pose" menu' stringify={ WARDROBE_POSING_CATEGORY_DEFAULT } />
 			<SelectAccountSettings setting='wardrobeOutfitsPreview' label='Saved item collection previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
 			<SelectAccountSettings setting='wardrobeSmallPreview' label='Item previews: List mode with small previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
 			<SelectAccountSettings setting='wardrobeBigPreview' label='Item previews: Grid mode with big previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />

@@ -47,7 +47,7 @@ export function WikiIntroduction(): ReactElement {
 
 			<h4>1. Dynamically generated body model with many poses and free arm movement</h4>
 			<p>
-				By opening the character menu by clicking on your character name as well as under the "Poses"-tab, you will find the ability to freely move arms and legs.
+				By opening the character menu by clicking on your character name as well as under the "Pose"-tab, you will find the ability to freely move arms and legs.
 				The "Body"-tab in the <Link to='/wiki/characters#CH_Character_wardrobe'>wardrobe</Link> lets you manage <Link to='/wiki/items#IT_Body_parts'>body parts</Link>.
 			</p>
 

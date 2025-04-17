@@ -407,7 +407,8 @@ export function WardrobePoseGui({ character, characterState }: {
 		});
 	});
 
-	const [focusedCategory, setFocusedCategory] = useState<'custom' | 'basic' | 'manual' | number>('custom');
+	const { wardrobePosingCategoryDefault } = useAccountSettings();
+	const [focusedCategory, setFocusedCategory] = useState<'custom' | 'basic' | 'manual' | number>(wardrobePosingCategoryDefault);
 
 	const poses = useMemo(() => GetFilteredAssetsPosePresets(characterState, wardrobeItemDisplayNameType), [characterState, wardrobeItemDisplayNameType]);
 	const setPose = useMemo(() => throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);

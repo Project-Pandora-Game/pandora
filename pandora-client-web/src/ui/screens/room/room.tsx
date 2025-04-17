@@ -87,7 +87,7 @@ function InteractionBox({ isPortrait, className }: {
 						</Tab>
 					) : null
 				}
-				<Tab name='Pose'>
+				<Tab name='Poses'>
 					<WardrobeExternalContextProvider target={ player.actionSelector }>
 						<WardrobePoseGui character={ player } characterState={ playerState } />
 					</WardrobeExternalContextProvider>

@@ -49,6 +49,10 @@ export const AccountSettingsSchema = z.object({
 	 */
 	wardrobePosePreview: z.boolean(),
 	/**
+	 * Sets the default category selection in the posing tab.
+	 */
+	wardrobePosingCategoryDefault: z.enum(['custom', 'basic', 'manual']),
+	/**
 	 * Controls how item names appear in wardrobe
 	 */
 	wardrobeItemDisplayNameType: ItemDisplayNameTypeSchema,
@@ -69,7 +73,7 @@ export const AccountSettingsSchema = z.object({
 	 */
 	interfaceChatroomGraphicsRatioVertical: z.number().int().min(1).max(9),
 	/**
-	 * Split the controls between "Room"/"Pose"/"Express" in the horizontal chat view, if the screen is tall enough
+	 * Split the controls between "Room"/"Poses"/"Express" in the horizontal chat view, if the screen is tall enough
 	 */
 	interfaceChatroomHorizontalChatSplit: z.boolean(),
 	/**
@@ -119,6 +123,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	wardrobeOutfitsPreview: 'small',
 	wardrobeSmallPreview: 'image',
 	wardrobeBigPreview: 'image',
+	wardrobePosingCategoryDefault: 'custom',
 	wardrobePosePreview: true,
 	wardrobeItemDisplayNameType: 'custom',
 	wardrobeItemRequireFreeHandsToUseDefault: 'useAssetValue',

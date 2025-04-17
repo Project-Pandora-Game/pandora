@@ -18,7 +18,7 @@ export function WikiSpaces(): ReactElement {
 			</p>
 			<ul>
 				<li>the "Room"-tab that gives you interaction and configuration possibilities for the room your are currently in, as well as the space the room is a part of</li>
-				<li>the "Pose"-tab that lets you change your character's pose</li>
+				<li>the "Poses"-tab that lets you change your character's pose</li>
 				<li>the "Expressions"-tab that lets you change your character's facial expressions and body states</li>
 			</ul>
 

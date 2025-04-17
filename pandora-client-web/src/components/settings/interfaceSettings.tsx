@@ -247,7 +247,8 @@ function WardrobeSettings(): ReactElement {
 			<legend>Wardrobe UI</legend>
 			<WardrobeShowExtraButtons />
 			<WardrobeHoverPreview />
-			<ToggleAccountSetting setting='wardrobePosePreview' label='Show previews in the "Pose" menu' />
+			<ToggleAccountSetting setting='wardrobePosePreview' label='Show previews in the "Poses" menu' />
+			<SelectAccountSettings setting='wardrobePosingCategoryDefault' label='Select the default category in the "Poses" menu' stringify={ WARDROBE_POSING_CATEGORY_DEFAULT } />
 			<SelectAccountSettings setting='wardrobeOutfitsPreview' label='Saved item collection previews' stringify={ WARDROBE_PREVIEWS_DESCRIPTION } />
 			<SelectAccountSettings setting='wardrobeSmallPreview' label='Item previews: List mode with small previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
 			<SelectAccountSettings setting='wardrobeBigPreview' label='Item previews: Grid mode with big previews' stringify={ WARDROBE_PREVIEW_TYPE_DESCRIPTION } />
@@ -264,6 +265,12 @@ function WardrobeShowExtraButtons(): ReactElement {
 function WardrobeHoverPreview(): ReactElement {
 	return <ToggleAccountSetting setting='wardrobeHoverPreview' label='Show preview when hovering over action button' />;
 }
+
+const WARDROBE_POSING_CATEGORY_DEFAULT: Record<AccountSettings['wardrobePosingCategoryDefault'], string> = {
+	custom: 'Custom poses',
+	basic: 'Quick posing',
+	manual: 'Manual posing',
+};
 
 const WARDROBE_PREVIEWS_DESCRIPTION: Record<AccountSettings['wardrobeOutfitsPreview'], string> = {
 	disabled: 'Disabled (better performance)',

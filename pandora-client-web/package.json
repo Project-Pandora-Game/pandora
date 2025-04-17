@@ -45,7 +45,7 @@
 		"react-reconciler": "0.32.0",
 		"react-reverse-portal": "2.3.0",
 		"react-rnd": "10.5.2",
-		"react-router": "7.5.0",
+		"react-router": "7.5.1",
 		"react-switch": "7.1.0",
 		"react-toastify": "10.0.6",
 		"socket.io-client": "4.8.1",

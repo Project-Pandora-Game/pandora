@@ -56,7 +56,105 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							The tab shows a large selection of default presets, divided into different categories.<br />
+							By default, the "Custom poses" category is selected.<br />
+							Note that you can change which of the three top posing categories is selected by default in the interface settings.<br />
+						</p>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [
+						{
+							query: '.bone-ui button',
+							filter: (e) => e.innerText.includes('Custom poses'),
+						},
+					],
+				},
+				{
+					text: (
+						<p>
+							The 'Custom poses' category lets you create and manage your own pose presets. Naturally, a new account does not yet have any.<br />
+							<br />
+							After posing your character manually as desired (more on how to do manual posing in a later part of this tutorial),
+							you can use this section to save the current pose to your Pandora account or export it as a file or text string.
+							You can select which joints/bones of the body will be included in the preset. Not including something means the preset will not change the according current value.<br />
+							<br />
+							A button for any saved custom pose preset will be listed in this section afterwards. You can manage all stored poses with the edit button.
+							Any exported pose can be imported again, as long as you still have a free pose preset slot, as storing custom poses on the account has a limit.
+						</p>
+					),
+					conditions: [{ type: 'next' }],
+					highlight: [
+						{
+							query: '.fieldset-toggle',
+							filter: (e) => e.innerText.includes('Custom poses'),
+						},
+						{
+							query: '.dialog-header',
+							filter: (e) => e.innerText.includes('Edit saved poses'),
+						},
+					],
+				},
+				{
+					text: (
+						<p>
+							To proceed with the tutorial, switch to the "Quick posing" category.
+						</p>
+					),
+					conditions: [{
+						type: 'elementQuery',
+						query: '.bone-ui .defaultActive',
+						filter: (e) => e.innerText.includes('Quick posing'),
+					}],
+					highlight: [
+						{
+							query: '.bone-ui button',
+							filter: (e) => e.innerText.includes('Quick posing'),
+						},
+					],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <p>Please switch back to the room screen.</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: '/room',
+					}],
+				},
+				{
+					text: <p>Please switch back to the "Pose" tab.</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.roomScreen .tab.active',
+						filter: (e) => e.innerText.includes('Pose'),
+					}],
+					highlight: [{
+						query: '.roomScreen .tab',
+						filter: (e) => e.innerText.includes('Pose'),
+					}],
+				},
+				{
+					text: <p>Please switch back to the "Quick posing" category.</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.bone-ui .defaultActive',
+						filter: (e) => e.innerText.includes('Quick posing'),
+					}],
+					highlight: [
+						{
+							query: '.bone-ui button',
+							filter: (e) => e.innerText.includes('Quick posing'),
+						},
+					],
+				},
+				{
+					text: (
+						<p>
+							Now the section after the category buttons changed and shows several options.<br />
 							The first one is "View" - it allows you to turn your character by spinning it around by 180 degrees.<br />
 							<br />
 							Note: The same can also be achieved by using the '/turn' command in the chat (or the short variant '/t').
@@ -70,73 +168,10 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 						},
 					],
 				},
-			],
-		},
-		{
-			steps: [
-				{
-					text: <p>Please switch back to the room screen.</p>,
-					hideWhenCompleted: true,
-					conditions: [{
-						type: 'url',
-						url: '/room',
-					}],
-				},
-				{
-					text: <p>Please switch back to the "Pose" tab.</p>,
-					hideWhenCompleted: true,
-					conditions: [{
-						type: 'elementQuery',
-						query: '.roomScreen .tab.active',
-						filter: (e) => e.innerText.includes('Pose'),
-					}],
-					highlight: [{
-						query: '.roomScreen .tab',
-						filter: (e) => e.innerText.includes('Pose'),
-					}],
-				},
 				{
 					text: (
 						<p>
-							When you scroll down a bit, the three arm posing presets sections are next.<br />
-							Arms can be moved at their shoulder and elbow joints.
-							Each arm can also either be in the front or behind the body.
-							This can be controlled individually, including each hand.
-						</p>
-					),
-					conditions: [{ type: 'next' }],
-					highlight: [
-						{
-							query: '.fieldset-toggle',
-							filter: (e) => e.innerText.includes('Arms ('),
-						},
-					],
-				},
-				{
-					text: (
-						<p>
-							If you scroll further down, you can see the next four sections. These are leg posing presets, grouped into standing, kneeling, and sitting poses.
-							Legs can be moved at their hip joints.
-							Each leg can be controlled individually.<br />
-							Characters can also stand on their toes.
-						</p>
-					),
-					conditions: [{ type: 'next' }],
-					highlight: [
-						{
-							query: '.fieldset-toggle',
-							filter: (e) => e.innerText.includes('Legs ('),
-						},
-						{
-							query: '.fieldset-toggle',
-							filter: (e) => e.innerText.includes('Toes'),
-						},
-					],
-				},
-				{
-					text: (
-						<p>
-							Next, there is the presets section that lets you quickly rotate your character in the 4 main directions, such as sideways and upside down.<br />
+							When you scroll down a bit, there is a section that lets you quickly rotate your character in the 4 main directions, such as sideways and upside down.<br />
 							The center of rotation is where character's feet usually touch the floor.
 						</p>
 					),
@@ -148,60 +183,15 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 						},
 					],
 				},
-			],
-		},
-		{
-			steps: [
-				{
-					text: <p>Please switch back to the room screen.</p>,
-					hideWhenCompleted: true,
-					conditions: [{
-						type: 'url',
-						url: '/room',
-					}],
-				},
-				{
-					text: <p>Please switch back to the "Pose" tab.</p>,
-					hideWhenCompleted: true,
-					conditions: [{
-						type: 'elementQuery',
-						query: '.roomScreen .tab.active',
-						filter: (e) => e.innerText.includes('Pose'),
-					}],
-					highlight: [{
-						query: '.roomScreen .tab',
-						filter: (e) => e.innerText.includes('Pose'),
-					}],
-				},
 				{
 					text: (
 						<p>
-							The 'Stored poses' category lets you create and manage your own pose presets.<br />
-							<br />
-							After posing your character manually as desired (more on how to do manual posing in a later part of this tutorial)
-							you can use this section to save the current pose to your Pandora account or export it as a file or text string.
-							You can select which joints/bones of the body will be included in the preset. Not including something means the preset will not change the according current value.<br />
-							<br />
-							A button for any saved custom pose preset will be listed in this section afterwards. You can manage all stored poses with the edit button in the middle.
-							Any exported pose can be imported again, as long as you still have a free pose preset slot, as storing custom poses on the account has a limit.
-						</p>
-					),
-					conditions: [{ type: 'next' }],
-					highlight: [
-						{
-							query: '.fieldset-toggle',
-							filter: (e) => e.innerText.includes('Stored poses'),
-						},
-					],
-				},
-				{
-					text: (
-						<p>
-							The 'Character Y Offset' input field lets you enter a positive or negative number that will "levitate" your character above the floor (or below it).<br />
+							Lastly, the 'Character Y Offset' input field lets you enter a positive or negative number that will "levitate" your character above the floor (or below it).<br />
 							<br />
 							This feature can be useful in certain situations, for example to show a character on top of objects in a perspectively correct way,
 							to simulate hanging from the ceiling, or to slowly appear behind an object by slowly increasing the value.<br />
 							You can use the button next to the input field to reset the value back to zero quickly.
+							Feel free to experiment with this and proceed to the next step afterwards.
 						</p>
 					),
 					conditions: [{ type: 'next' }],
@@ -240,7 +230,67 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							At the bottom of the tab are the manual posing controls. Using these, you can manipulate every joint and bone and adjust
+							To proceed with the tutorial, scroll back up and switch to the "Manual posing" category.<br />
+							<br />
+							Note that the other remaining six categories show a selection of different predefined pose templates for your convenience.
+						</p>
+					),
+					conditions: [{
+						type: 'elementQuery',
+						query: '.bone-ui .defaultActive',
+						filter: (e) => e.innerText.includes('Manual posing'),
+					}],
+					highlight: [
+						{
+							query: '.bone-ui button',
+							filter: (e) => e.innerText.includes('Manual posing'),
+						},
+					],
+				},
+			],
+		},
+		{
+			steps: [
+				{
+					text: <p>Please switch back to the room screen.</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'url',
+						url: '/room',
+					}],
+				},
+				{
+					text: <p>Please switch back to the "Pose" tab.</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.roomScreen .tab.active',
+						filter: (e) => e.innerText.includes('Pose'),
+					}],
+					highlight: [{
+						query: '.roomScreen .tab',
+						filter: (e) => e.innerText.includes('Pose'),
+					}],
+				},
+				{
+					text: <p>Please switch back to the "Manual posing" category.</p>,
+					hideWhenCompleted: true,
+					conditions: [{
+						type: 'elementQuery',
+						query: '.bone-ui .defaultActive',
+						filter: (e) => e.innerText.includes('Manual posing'),
+					}],
+					highlight: [
+						{
+							query: '.bone-ui button',
+							filter: (e) => e.innerText.includes('Manual posing'),
+						},
+					],
+				},
+				{
+					text: (
+						<p>
+							This category contains manual posing controls. Using these, you can manipulate every joint and bone and adjust
 							each hand configuration.<br />
 							There also exists an alternative interface for manual posing. More on that later.
 						</p>
@@ -262,12 +312,12 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 					hideWhenCompleted: true,
 					highlight: [{
 						query: '.fieldset-toggle-legend',
-						filter: (e) => e.innerText.includes('Manual pose'),
+						filter: (e) => e.innerText.includes('Manual posing'),
 					}],
 					conditions: [{
 						type: 'elementQuery',
 						query: '.fieldset-toggle-legend.open',
-						filter: (e) => e.innerText.includes('Manual pose'),
+						filter: (e) => e.innerText.includes('Manual posing'),
 					}],
 				},
 				{
@@ -312,22 +362,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							The last section lets you manually set the rotation for every available body joint/bone, as well as the character rotation itself,
-							from minus 180 to plus 180 degrees.
-							This can be useful for fine-tuning a pose.<br />
-						</p>
-					),
-					conditions: [{ type: 'next' }],
-					highlight: [
-						{
-							query: '.fieldset-toggle:has(> .bone-rotation)',
-						},
-					],
-				},
-				{
-					text: (
-						<p>
-							Feel free to experiment with the features in this tab before continuing.<br />
+							Feel free to experiment with the features, including the sliders further down in this tab, before continuing.<br />
 							In the next step, the alternative user interface for manual posing will be explained.
 						</p>
 					),
@@ -455,7 +490,9 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 				{
 					text: (
 						<p>
-							This tab shows a number of expression modules you can interact with.<br />
+							This tab shows all body assets that have expression modules you can interact with.<br />
+							Feel free to click on any of them to show the modules they have at the bottom of the tab.<br />
+							<br />
 							If you played around with your character's body parts in the wardrobe,
 							you might notice that these options exactly match the options on your current body parts.
 							This is because the purpose of this menu is to offer a quick way to interact with a few select modules from the parts of your body.
@@ -464,7 +501,7 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 					conditions: [{ type: 'next' }],
 					highlight: [
 						{
-							query: '.fieldset-toggle',
+							query: '.item-select-row',
 						},
 					],
 				},

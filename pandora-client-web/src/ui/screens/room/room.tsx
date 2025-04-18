@@ -53,7 +53,7 @@ function InteractionBox({ isPortrait, className }: {
 	const isLowScreen = useIsLowScreen();
 	const isPersonalSpace = spaceInfo.id == null;
 
-	const splitChat = interfaceChatroomHorizontalChatSplit && !isPortrait && !isLowScreen && !isPersonalSpace;
+	const splitChat = interfaceChatroomHorizontalChatSplit && !isPortrait && !isLowScreen;
 
 	const onTabOpen = useCallback((tab: Immutable<TabConfig>) => {
 		setChatOpen(tab.name === 'Chat');

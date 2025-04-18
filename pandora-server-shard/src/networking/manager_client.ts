@@ -418,31 +418,36 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				}
 				break;
 			}
-			case 'cards':
+			case 'cards': {
 				if (game.createDeck) {
-					this.currentCardDeck.create();
-					space.handleActionMessage({
-						id: 'gamblingDeckCreation',
-						character,
-					});
-				} else if (game.dealCard) {
-					const card = this.currentCardDeck.deal();
-
-					if (card) {
+					const target = game.targetId ? space.getCharacterById(game.targetId) : space.getCharacterById(character.id);
+					if (target) {
+						target.getRoomData().deck = new CardDeck();
 						space.handleActionMessage({
-							id: 'gamblingDeckDealOpen',
+							id: 'gamblingDeckCreation',
 							character,
-							dictionary: {
-								'CARD': `${card.rank} ${card.suit}`,
-							},
 						});
-					} else {
-						space.handleActionMessage({
-							id: 'gamblingDeckEmpty',
-						});
+					} else if (game.dealCard) {
+						// Deals a card to a character or openly
+						const card = space.getCharacterById(character.id)?.getRoomData().deck.deal();
+
+						if (card) {
+							space.handleActionMessage({
+								id: 'gamblingDeckDealOpen',
+								character,
+								dictionary: {
+									'CARD': `${card.rank} ${card.suit}`,
+								},
+							});
+						} else {
+							space.handleActionMessage({
+								id: 'gamblingDeckEmpty',
+							});
+						}
 					}
 				}
 				break;
+			}
 			default:
 				AssertNever(game);
 		}

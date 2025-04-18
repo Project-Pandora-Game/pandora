@@ -12,6 +12,11 @@ import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesServerSchema } from './asset
 import { CharacterSettingsSchema } from './characterSettings.ts';
 import { CharacterIdSchema } from './characterTypes.ts';
 
+export const CharacterRoomPositionSchema = z.tuple([z.number().int(), z.number().int(), z.number().int()])
+	.catch([0, 0, 0])
+	.readonly();
+export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: number];
+
 /** Data about character, that is visible to everyone in the same space */
 export const CharacterPublicDataSchema = z.object({
 	id: CharacterIdSchema,
@@ -41,7 +46,9 @@ export const CharacterPrivateDataSchema = CharacterPublicDataSchema.extend({
 /** Data about character, that is visible only to the character itself */
 export type ICharacterPrivateData = z.infer<typeof CharacterPrivateDataSchema>;
 
-/** Data about character, as seen by server */
+/** Data about character, as seen by server.
+ * All of this is persisted in the Pandora database
+ **/
 export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	accessId: z.string(),
 	appearance: AppearanceBundleSchema.optional(),
@@ -62,7 +69,6 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
 	roomId: z.string().nullable().optional().catch(undefined),
 	position: CharacterRoomPositionSchema,
-
 });
 /** Data about character, as seen by server */
 export type ICharacterData = z.infer<typeof CharacterDataSchema>;

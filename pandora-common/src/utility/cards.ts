@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 // Define Suits and Ranks
 const suits = ['\u2665', //hearts
 	'\u2666', //diamonds
@@ -17,11 +15,6 @@ export class Card {
 		this.rank = r;
 	}
 }
-
-export const CardSchema = z.object({
-	suit: z.string(),
-	rank: z.string(),
-});
 
 export class CardDeck {
 	private deck: Card[] = [];

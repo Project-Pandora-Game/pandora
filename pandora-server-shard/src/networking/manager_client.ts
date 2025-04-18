@@ -28,6 +28,7 @@ import {
 	PermissionSetup,
 	RedactSensitiveActionData,
 	StartActionAttempt,
+	CardDeck,
 	type AppearanceAction,
 	type AppearanceActionProcessingResult,
 	type CharacterRestrictionsManager,
@@ -60,6 +61,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	private readonly messageHandler: MessageHandler<IClientShard, ClientConnection>;
 
 	private readonly rockPaperScissorsStatus = new WeakMap<Character, { time: number; choice: 'rock' | 'paper' | 'scissors'; }>();
+
+	private readonly currentCardDeck = new CardDeck();
 
 	public async onMessage<K extends keyof IClientShard>(
 		messageType: K,
@@ -330,12 +333,13 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		if (!client.character)
 			throw new BadMessageError();
 
+		const space = client.character.getOrLoadSpace();
+
 		const character: ActionHandlerMessageTargetCharacter = {
 			type: 'character',
 			id: client.character.id,
 		};
 
-		const space = client.character.getOrLoadSpace();
 		switch (game.type) {
 			case 'coinFlip':
 				space.handleActionMessage({
@@ -422,6 +426,36 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 						id: 'gamblingRockPaperScissorsSet',
 						character,
 					});
+				}
+				break;
+			}
+			case 'cards': {
+				if (game.createDeck) {
+					const target = game.targetId ? space.getCharacterById(game.targetId) : space.getCharacterById(character.id);
+					if (target) {
+						target.getRoomData().deck = new CardDeck();
+						space.handleActionMessage({
+							id: 'gamblingDeckCreation',
+							character,
+						});
+					} else if (game.dealCard) {
+						// Deals a card to a character or openly
+						const card = space.getCharacterById(character.id)?.getRoomData().deck.deal();
+
+						if (card) {
+							space.handleActionMessage({
+								id: 'gamblingDeckDealOpen',
+								character,
+								dictionary: {
+									'CARD': `${card.rank} ${card.suit}`,
+								},
+							});
+						} else {
+							space.handleActionMessage({
+								id: 'gamblingDeckEmpty',
+							});
+						}
+					}
 				}
 				break;
 			}

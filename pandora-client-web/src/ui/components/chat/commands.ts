@@ -306,7 +306,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 								return { success: false, error: 'Maximum sides (100)/ dice (10) exceeded' };
 							}
 						} else {
-							return { success: false, error: `Invalid Options: '${input}'` };
+							return { success: false, error: `Invalid options: '${input}'` };
 						} // RegEx test
 					}
 					return { success: true, value: { dice, sides, hidden } };
@@ -319,6 +319,62 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				});
 				return true;
 			}),
+	},
+	{
+		key: ['cards'],
+		description: 'Play a game of cards',
+		longDescription: `You can 'create' an ordinary deck of cards, 'deal' cards open or face down to player or the room
+		or 'show' the crads that were dealt to you`,
+		usage: 'create | deal <target> /hidden | show',
+		handler: CreateClientCommand()
+			.fork('action', (ctx) => ({
+				create: {
+					description: 'Create a deck of 52 cards for the current space.',
+					handler: ctx
+						.handler(({ shardConnector }) => {
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'cards',
+								createDeck: true,
+							});
+							return true;
+						}),
+				},
+				deal: {
+					description: `Deal one card from the space's deck to a player or the room`,
+					handler: ctx
+						.argument('target', CommandStepOptional(CommandSelectorCharacter({ allowSelf: 'any' })))
+						.argument('option', CommandSelectorEnum(['', '/hidden']))
+						.handler(({ shardConnector }, { target, option }) => {
+							if (target) { //Deal card to player
+								shardConnector.sendMessage('gamblingAction', {
+									type: 'cards',
+									targetId: target.data.id,
+									dealCard: true,
+									dealHidden: option === '/hidden',
+								});
+							} else { //Deal card to room
+								shardConnector.sendMessage('gamblingAction', {
+									type: 'cards',
+									dealCard: true,
+									dealHidden: false, // Cards to the room are always dealt openly
+								});
+							}
+							return true;
+						}),
+				},
+				show: {
+					description: 'Reveal the cards that were dealt to you.',
+					handler: ctx
+						.handler(({ shardConnector }) => {
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'cards',
+								createDeck: false,
+								dealCard: true,
+							});
+							return true;
+						}),
+				},
+			})),
 	},
 	//#endregion
 	//#region Commands to change the player's pose

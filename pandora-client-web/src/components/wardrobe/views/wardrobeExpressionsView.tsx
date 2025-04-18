@@ -43,10 +43,8 @@ export function WardrobeExpressionGui({ characterState }: {
 								className='IconButton'
 								slim
 							>
-								<Column className='fill' alignX='center'>
-									<InventoryAssetPreview asset={ item.asset } small />
-									<WardrobeItemName item={ item } />
-								</Column>
+								<InventoryAssetPreview asset={ item.asset } small />
+								<WardrobeItemName item={ item } />
 							</Button>
 						))
 					}

@@ -688,19 +688,30 @@ $drop-overlay-gap: 0.3em;
 
 		button.PoseButton {
 			width: 100%;
+			flex-flow: column;
+			justify-content: start;
 
 			canvas {
 				width: 100%;
+				height: unset;
+				filter: none;
 			}
 
 			img {
-				width: 80%;
-				height: 2.6em;
+				width: 60%;
+				height: unset;
+				aspect-ratio: 1;
 			}
 
 			span {
 				width: 0;
 				min-width: 100%;
+			}
+
+			&.compact {
+				canvas {
+					width: 70%;
+				}
 			}
 		}
 	}
@@ -752,12 +763,13 @@ $drop-overlay-gap: 0.3em;
 
 		button {
 			width: 100%;
+			flex-flow: column;
+			justify-content: start;
 
 			.itemPreview {
-				width: 80%;
+				width: 70%;
 
 				&.image {
-					width: 100%;
 					img {
 						filter: none;
 					}

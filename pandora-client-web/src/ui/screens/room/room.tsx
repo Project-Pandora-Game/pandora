@@ -60,7 +60,7 @@ function InteractionBox({ isPortrait, className }: {
 	}, []);
 
 	return (
-		<Column className={ className } gap='none'>
+		<Column className={ className } gap={ splitChat && !chatOpen ? 'tiny' : 'none' }>
 			<TabContainer className={ (chatOpen && splitChat) ? '' : 'flex-2 zero-height' } onTabOpen={ onTabOpen } collapsable>
 				{
 					isPersonalSpace ? (

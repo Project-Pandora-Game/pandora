@@ -8,7 +8,7 @@ const TEASER_CONTENTS: [string, string][] = [
 	[`Welcome to ${ GAME_NAME } (version ${ new Date(BUILD_TIME).toLocaleDateString() })`, 'preview_1.png'],
 	[`${ GAME_NAME } is an adult roleplaying community centered around the practice of BDSM.`, 'preview_2.png'],
 	['We aim to provide a safe and welcoming environment for like-minded individuals to explore their kinks with a customizable character.', 'preview_3.png'],
-	[`${ GAME_NAME } is a free open-source licensed roleplaying platform. Please feel invited to help building it up further.`, 'preview_4.png'],
+	[`${ GAME_NAME } is a free open-source licensed roleplaying platform. Feel invited to help building it up further.`, 'preview_4.png'],
 ];
 
 export function LoginTeaser(): ReactElement {

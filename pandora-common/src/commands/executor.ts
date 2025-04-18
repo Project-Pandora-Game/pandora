@@ -154,13 +154,13 @@ export class CommandRunnerArgParser<
 				this.processor.autocomplete(value, context, args);
 			const shouldQuote = isQuotedPreprocessor && options.some(({ replaceValue }) => CommandArgumentNeedsQuotes(replaceValue));
 
-			return options.length > 0 ? {
+			return {
 				header: `\u25b6<${this.processor.autocompleteCustomName ?? this.name}>\u25c0 ${this.next.predictHeader()}`,
-				options: options.map(({ displayValue, replaceValue }) => ({
-					displayValue,
+				options: options.map(({ replaceValue, ...optionProps }): CommandAutocompleteOption => ({
+					...optionProps,
 					replaceValue: shouldQuote ? CommandArgumentQuote(replaceValue, true) : replaceValue,
 				})),
-			} : null;
+			};
 		}
 
 		// Otherwise we continue
@@ -176,9 +176,9 @@ export class CommandRunnerArgParser<
 		}, rest);
 		return nextResult != null ? {
 			header: (this.processor.autocompleteShowValue === true ? (isQuotedPreprocessor ? CommandArgumentQuote(value) : value) : `<${this.name}>`) + ` ${nextResult.header}`,
-			options: nextResult.options.map(({ replaceValue, displayValue }) => ({
+			options: nextResult.options.map(({ replaceValue, ...optionProps }): CommandAutocompleteOption => ({
+				...optionProps,
 				replaceValue: (isQuotedPreprocessor ? CommandArgumentQuote(value) : value) + ' ' + replaceValue,
-				displayValue,
 			})),
 		} : null;
 

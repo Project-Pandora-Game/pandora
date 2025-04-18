@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { GetLogger, IDirectoryAccountInfo, LIMIT_DIRECT_MESSAGE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from 'pandora-common';
+import { AssertNever, GetLogger, IDirectoryAccountInfo, LIMIT_DIRECT_MESSAGE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAutoScroll } from '../../common/useAutoScroll.ts';
@@ -259,6 +259,7 @@ function DirectChannelInputImpl(_: unknown, ref: React.ForwardedRef<HTMLTextArea
 	const chat = ctx.chat;
 	const info = useObservable(chat.displayInfo);
 	const { editing, setEditing, setAutocompleteHint, allowCommands } = useChatInput();
+	const { chatCommandHintBehavior } = useAccountSettings();
 
 	const handleSend = (input: string) => {
 		setAutocompleteHint(null);
@@ -318,7 +319,13 @@ function DirectChannelInputImpl(_: unknown, ref: React.ForwardedRef<HTMLTextArea
 
 				textarea.value = replacementStart + textarea.value.slice(inputPosition).trimStart();
 				textarea.setSelectionRange(replacementStart.length, replacementStart.length, 'none');
-				setAutocompleteHint(autocompleteResult);
+				if (chatCommandHintBehavior === 'always-show') {
+					setAutocompleteHint(autocompleteResult);
+				} else if (chatCommandHintBehavior === 'on-tab') {
+					setAutocompleteHint(autocompleteResult.nextSegment ? null : autocompleteResult);
+				} else {
+					AssertNever(chatCommandHintBehavior);
+				}
 
 			} catch (error) {
 				if (error instanceof Error) {
@@ -340,11 +347,32 @@ function DirectChannelInputImpl(_: unknown, ref: React.ForwardedRef<HTMLTextArea
 
 			const autocompleteResult = CommandAutocomplete(input, ctx, DIRECT_MESSAGE_COMMANDS);
 
-			setAutocompleteHint({
-				replace: textarea.value,
-				result: autocompleteResult,
-				index: null,
-			});
+			if (chatCommandHintBehavior === 'always-show') {
+				setAutocompleteHint({
+					replace: textarea.value,
+					result: autocompleteResult,
+					index: null,
+					nextSegment: false,
+				});
+			} else if (chatCommandHintBehavior === 'on-tab') {
+				if (autocompleteResult != null &&
+					autocompleteResult.options.length === 1 &&
+					autocompleteResult.options[0].replaceValue === input &&
+					!!autocompleteResult.options[0].longDescription
+				) {
+					// Display segments with long description anyway, if they match exactly
+					setAutocompleteHint({
+						replace: textarea.value,
+						result: autocompleteResult,
+						index: null,
+						nextSegment: false,
+					});
+				} else {
+					setAutocompleteHint(null);
+				}
+			} else {
+				AssertNever(chatCommandHintBehavior);
+			}
 		} else {
 			setAutocompleteHint(null);
 		}

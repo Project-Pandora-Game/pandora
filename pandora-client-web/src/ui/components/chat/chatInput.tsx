@@ -1,6 +1,6 @@
 import classNames from 'classnames';
 import { clamp } from 'lodash-es';
-import { AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, ChatCharacterStatus, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly } from 'pandora-common';
+import { AssertNever, AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, CharacterId, ChatCharacterStatus, EMPTY_ARRAY, GetLogger, IChatType, ICommandExecutionContext, SpaceIdSchema, ZodTransformReadonly } from 'pandora-common';
 import React, { createContext, ForwardedRef, forwardRef, ReactElement, ReactNode, RefObject, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
@@ -158,7 +158,7 @@ export function ChatInputContextProvider({ children }: { children: React.ReactNo
 			allowCommands: editing == null && !mode?.raw,
 			ref,
 		};
-	}, [target, editing, setEditing, autocompleteHint, showSelector, setShowSelector, setAutocompleteHint, playerId, characters, mode]);
+	}, [target, editing, setEditing, autocompleteHint, showSelector, setShowSelector, playerId, characters, mode]);
 
 	return (
 		<chatInputContext.Provider value={ context }>
@@ -208,6 +208,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 	const sender = useChatMessageSender();
 	const chatInput = useChatInput();
 	const { target, editing, setEditing, setValue, setAutocompleteHint, mode, allowCommands } = chatInput;
+	const { chatCommandHintBehavior } = useAccountSettings();
 
 	const shardConnector = useShardConnector();
 	AssertNotNullable(shardConnector);
@@ -240,11 +241,32 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 
 			const autocompleteResult = CommandAutocomplete(input, commandInvokeContext, COMMANDS);
 
-			setAutocompleteHint({
-				replace: textarea.value,
-				result: autocompleteResult,
-				index: null,
-			});
+			if (chatCommandHintBehavior === 'always-show') {
+				setAutocompleteHint({
+					replace: textarea.value,
+					result: autocompleteResult,
+					index: null,
+					nextSegment: false,
+				});
+			} else if (chatCommandHintBehavior === 'on-tab') {
+				if (autocompleteResult != null &&
+					autocompleteResult.options.length === 1 &&
+					autocompleteResult.options[0].replaceValue === input &&
+					!!autocompleteResult.options[0].longDescription
+				) {
+					// Display segments with long description anyway, if they match exactly
+					setAutocompleteHint({
+						replace: textarea.value,
+						result: autocompleteResult,
+						index: null,
+						nextSegment: false,
+					});
+				} else {
+					setAutocompleteHint(null);
+				}
+			} else {
+				AssertNever(chatCommandHintBehavior);
+			}
 		} else {
 			setAutocompleteHint(null);
 		}
@@ -329,7 +351,13 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 
 				textarea.value = replacementStart + textarea.value.slice(inputPosition).trimStart();
 				textarea.setSelectionRange(replacementStart.length, replacementStart.length, 'none');
-				setAutocompleteHint(autocompleteResult);
+				if (chatCommandHintBehavior === 'always-show') {
+					setAutocompleteHint(autocompleteResult);
+				} else if (chatCommandHintBehavior === 'on-tab') {
+					setAutocompleteHint(autocompleteResult.nextSegment ? null : autocompleteResult);
+				} else {
+					AssertNever(chatCommandHintBehavior);
+				}
 
 			} catch (error) {
 				if (error instanceof Error) {
@@ -621,6 +649,7 @@ export function AutoCompleteHint<TCommandExecutionContext extends ICommandExecut
 	commands: readonly IClientCommand<TCommandExecutionContext>[];
 }): ReactElement | null {
 	const { autocompleteHint, ref, setAutocompleteHint, allowCommands } = useChatInput();
+	const { chatCommandHintBehavior } = useAccountSettings();
 	const selectedElementRef = useRef<HTMLSpanElement>(null);
 
 	useEffect(() => {
@@ -674,13 +703,20 @@ export function AutoCompleteHint<TCommandExecutionContext extends ICommandExecut
 											textarea.focus();
 											textarea.setSelectionRange(input.length + 1, input.length + 1, 'none');
 
-											const autocompleteResult = CommandAutocomplete(input, ctx, commands);
-
-											setAutocompleteHint({
+											const autocompleteResult: AutocompleteDisplayData = {
 												replace: textarea.value,
-												result: autocompleteResult,
+												result: CommandAutocomplete(input, ctx, commands),
 												index: null,
-											});
+												nextSegment: true,
+											};
+
+											if (chatCommandHintBehavior === 'always-show') {
+												setAutocompleteHint(autocompleteResult);
+											} else if (chatCommandHintBehavior === 'on-tab') {
+												setAutocompleteHint(autocompleteResult.nextSegment ? null : autocompleteResult);
+											} else {
+												AssertNever(chatCommandHintBehavior);
+											}
 										} }
 									>
 										{ option.displayValue }

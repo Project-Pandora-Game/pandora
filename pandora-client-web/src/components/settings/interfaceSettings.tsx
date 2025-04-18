@@ -129,6 +129,7 @@ function ChatroomSettings(): ReactElement {
 			<legend>Chatroom UI</legend>
 			<ChatroomGraphicsRatio />
 			<ChatroomChatFontSize />
+			<ChatroomChatCommandHintBehavior />
 			<ChatroomCharacterNameFontSize />
 			<ChatroomOfflineCharacters />
 			<SelectAccountSettings setting='interfaceChatroomItemDisplayNameType' label='Item name display' stringify={ ITEM_DISPLAY_NAME_TYPE_DESCRIPTION } />
@@ -228,6 +229,15 @@ function ChatroomChatFontSize(): ReactElement {
 	}), []);
 
 	return <SelectAccountSettings setting='interfaceChatroomChatFontSize' label='Font size of main chat and direct messages' stringify={ SELECTION_DESCRIPTIONS } />;
+}
+
+function ChatroomChatCommandHintBehavior(): ReactElement {
+	const SELECTION_DESCRIPTIONS = useMemo((): Record<AccountSettings['chatCommandHintBehavior'], string> => ({
+		'always-show': 'Always shown while typing a command',
+		'on-tab': 'Shown only when requested by pressing [Tab]',
+	}), []);
+
+	return <SelectAccountSettings setting='chatCommandHintBehavior' label='Command hint behavior' stringify={ SELECTION_DESCRIPTIONS } />;
 }
 
 function ChatroomOfflineCharacters(): ReactElement {

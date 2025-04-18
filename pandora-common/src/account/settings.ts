@@ -95,6 +95,12 @@ export const AccountSettingsSchema = z.object({
 	/** Controls how item names appear in chat action messages */
 	interfaceChatroomItemDisplayNameType: ItemDisplayNameTypeSchema,
 	/**
+	 * How should command autocomplete behave.
+	 * - `always-show` - The help is always shown while typing a command
+	 * - `on-tab` The help is shown only when explicitly requested by pressing Tab
+	 */
+	chatCommandHintBehavior: z.enum(['always-show', 'on-tab']),
+	/**
 	 * Sets what sound should be played, when someone enters the room
 	 * @default ''
 	 */
@@ -135,6 +141,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceChatroomChatFontSize: 'm',
 	interfaceChatroomCharacterNameFontSize: 'm',
 	interfaceChatroomItemDisplayNameType: 'custom',
+	chatCommandHintBehavior: 'always-show',
 	notificationRoomEntrySound: '',
 	notificationVolume: '100',
 	tutorialCompleted: EMPTY_ARRAY,

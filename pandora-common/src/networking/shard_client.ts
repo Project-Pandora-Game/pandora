@@ -9,6 +9,7 @@ import { AppearanceActionSchema, CharacterModifierEffectDataSchema } from '../ga
 import { PermissionConfigSchema, PermissionSetupSchema } from '../gameLogic/permissions/permissionData.ts';
 import { SpaceClientInfoSchema, SpaceIdSchema } from '../space/space.ts';
 import { Satisfies } from '../utility/misc.ts';
+import { CardDeck, Card } from '../utility/cards.ts';
 import { ZodCast } from '../validation.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
@@ -17,6 +18,10 @@ export type ICharacterRoomData = ICharacterPublicData & {
 	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
 	position: CharacterRoomPosition;
 	isOnline: boolean;
+	// Card game related optional data
+	hand: Card[];
+	deck: CardDeck;
+
 };
 
 export const SpaceCharacterModifierEffectDataSchema = z.record(CharacterIdSchema, CharacterModifierEffectDataSchema.array());

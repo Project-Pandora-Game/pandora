@@ -6,7 +6,6 @@ import { CharacterModifierSystemDataSchema } from '../gameLogic/characterModifie
 import { InteractionSystemDataSchema } from '../gameLogic/interactions/interactionData.ts';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits.ts';
 import { SpaceIdSchema } from '../space/space.ts';
-import { CardSchema } from '../utility/cards.ts';
 import { ArrayToRecordKeys } from '../utility/misc.ts';
 import { CharacterNameSchema, ZodTruncate } from '../validation.ts';
 import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesServerSchema } from './assetPreferences.ts';
@@ -47,7 +46,9 @@ export const CharacterPrivateDataSchema = CharacterPublicDataSchema.extend({
 /** Data about character, that is visible only to the character itself */
 export type ICharacterPrivateData = z.infer<typeof CharacterPrivateDataSchema>;
 
-/** Data about character, as seen by server */
+/** Data about character, as seen by server.
+ * All of this is persisted in the Pandora database
+ **/
 export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	accessId: z.string(),
 	appearance: AppearanceBundleSchema.optional(),
@@ -68,9 +69,6 @@ export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
 	roomId: z.string().nullable().optional().catch(undefined),
 	position: CharacterRoomPositionSchema,
-	// Card game related optional data
-	hand: z.array(CardSchema).optional(),
-	deck: z.array(CardSchema).optional(),
 });
 /** Data about character, as seen by server */
 export type ICharacterData = z.infer<typeof CharacterDataSchema>;

@@ -695,12 +695,16 @@ $drop-overlay-gap: 0.3em;
 
 			img {
 				width: 80%;
-				height: 2.6em;
+				height: 2.9em;
 			}
 
 			span {
 				width: 0;
 				min-width: 100%;
+			}
+
+			&.compact {
+				height: 6.5em;
 			}
 		}
 	}
@@ -754,10 +758,10 @@ $drop-overlay-gap: 0.3em;
 			width: 100%;
 
 			.itemPreview {
-				width: 80%;
+				width: 78%;
 
 				&.image {
-					width: 100%;
+					width: 80%;
 					img {
 						filter: none;
 					}

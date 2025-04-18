@@ -489,7 +489,7 @@ export function WardrobePoseGui({ character, characterState }: {
 										key={ poseCategoryIndex }
 										theme={ focusedCategory === poseCategoryIndex ? 'defaultActive' : 'default' }
 										onClick={ () => setFocusedCategory(poseCategoryIndex) }
-										className='IconButton PoseButton'
+										className='IconButton PoseButton compact'
 										slim
 									>
 										<Column className='fill'>

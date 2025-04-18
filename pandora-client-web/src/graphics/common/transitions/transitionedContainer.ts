@@ -92,13 +92,14 @@ export class PixiTransitionedContainer extends PixiContainer {
 
 	constructor(props: AppliedProps) {
 		super();
+		this._onTransitionTick = props.onTransitionTick;
 
 		// Init the transition handlers (needs to be done manually due to possibility of different transition functions)
 		this._transitionHandlers = this._createTransitionHandlers(props);
+		this._onTransitionTick?.(this); // Notify about change immediately as creation already applies the props
 
 		// Init ticker ref
-		this._onTransitionTick = props.onTransitionTick;
-		props.tickerRef.current = this._onTick.bind(this);
+		props.tickerRef.current = this._onTick;
 	}
 
 	private _createTransitionHandlers({ transitionDuration, transitionDelay, perPropertyTransitionDuration, perPropertyTransitionDelay, ...initialValues }: AppliedProps): typeof this._transitionHandlers {
@@ -211,7 +212,7 @@ export class PixiTransitionedContainer extends PixiContainer {
 		// Update ticker
 		if (oldProps.tickerRef !== newProps.tickerRef) {
 			oldProps.tickerRef.current = null;
-			newProps.tickerRef.current = this._onTick.bind(this);
+			newProps.tickerRef.current = this._onTick;
 		}
 		this._onTransitionTick = newProps.onTransitionTick;
 
@@ -222,6 +223,7 @@ export class PixiTransitionedContainer extends PixiContainer {
 			oldProps.perPropertyTransitionDelay !== newProps.perPropertyTransitionDelay
 		) {
 			this._transitionHandlers = this._createTransitionHandlers(newProps);
+			this._onTransitionTick?.(this); // Notify about change immediately as creation already applies the props
 			this._requestUpdate();
 			return;
 		}
@@ -282,7 +284,7 @@ export class PixiTransitionedContainer extends PixiContainer {
 		}
 	}
 
-	private _onTick(ticker: Ticker): void {
+	private readonly _onTick = (ticker: Ticker): void => {
 		if (this.destroyed)
 			return;
 
@@ -301,7 +303,7 @@ export class PixiTransitionedContainer extends PixiContainer {
 		if (needsFurtherUpdates) {
 			this._requestUpdate();
 		}
-	}
+	};
 
 	private _requestUpdate() {
 		PixiElementRequestUpdate(this);

@@ -20,7 +20,6 @@
 	}
 
 	>.interactionArea {
-		min-width: min(20em, 100%);
 		min-height: min(10vw, 100%);
 		border-left: max(2px, 0.1em) solid common.$theme-room-separator;
 		background: common.$theme-room-background;
@@ -31,6 +30,7 @@
 	background: common.$theme-room-controls-background;
 	color: common.$theme-room-controls-text;
 	border: 2px solid common.$theme-room-controls-border;
+	contain: size;
 	min-width: min(20em, 90vw);
 }
 

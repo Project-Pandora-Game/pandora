@@ -7,12 +7,15 @@
 	background: common.$theme-chat-background;
 	color: common.$theme-chat-text;
 	overflow: hidden;
+	contain: size;
+	min-width: min(20em, 90vw);
 
 	> .messagesArea {
 		position: relative;
 		flex: 1;
 		overflow: hidden;
 		user-select: text;
+		contain: strict;
 
 		.messagesContainer {
 			padding: 0 0 0.25em 0;

@@ -24,7 +24,7 @@ export interface TabConfig {
 }
 
 export function Tabulation({ children, className, collapsable, tabsPosition = 'top', allowWrap = false, tabs }: {
-	children: ReactNode;
+	children?: ReactNode;
 	className?: string;
 	collapsable?: true;
 	tabs: readonly (TabConfig | undefined)[];
@@ -110,7 +110,7 @@ export const TabContainer = forwardRef(function TabContainer({
 		return defaultTab >= 0 ? defaultTab : children.findIndex((c) => !!c);
 	});
 
-	const tabs = useMemo<(TabConfig | undefined)[]>(() => children.map((c, index): TabConfig | undefined => (c == null ? undefined : {
+	const tabs = useMemo((): (TabConfig | undefined)[] => children.map((c, index): TabConfig | undefined => (c == null ? undefined : {
 		name: c.props.name,
 		active: index === currentTab,
 		onClick: c.props.onClick ?? (() => setTab(index)),

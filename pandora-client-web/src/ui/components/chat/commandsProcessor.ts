@@ -8,6 +8,7 @@ import {
 	type AccountSettings,
 	type AssetFrameworkGlobalState,
 	type CharacterSettings,
+	type CommandAutocompleteOption,
 } from 'pandora-common';
 import type { PlayerCharacter } from '../../../character/player.ts';
 import type { GameState, IChatMessageSender } from '../../../components/gameContext/gameStateContextProvider.tsx';
@@ -105,7 +106,7 @@ export function CommandAutocomplete<TCommandExecutionContext extends ICommandExe
 	if (!spacing) {
 		const options = commands
 			.filter((c) => c.key[0].startsWith(commandName))
-			.map((c) => ({
+			.map((c): CommandAutocompleteOption => ({
 				replaceValue: c.key[0],
 				displayValue: `/${c.key[0]}${c.usage ? ' ' + c.usage : ''} - ${c.description}`,
 				longDescription: c.longDescription,
@@ -121,9 +122,9 @@ export function CommandAutocomplete<TCommandExecutionContext extends ICommandExe
 
 		return autocompleteResult != null ? {
 			header: `/${commandName} ${autocompleteResult.header}`,
-			options: autocompleteResult.options.map(({ replaceValue, displayValue }) => ({
+			options: autocompleteResult.options.map(({ replaceValue, ...optionProps }) => ({
+				...optionProps,
 				replaceValue: commandName + ' ' + replaceValue,
-				displayValue,
 			})),
 		} : null;
 	}
@@ -135,6 +136,11 @@ export interface AutocompleteDisplayData {
 	result: CommandAutocompleteResult;
 	replace: string;
 	index: number | null;
+	/**
+	 * Whether the autocompletion result is for a different segment than the message requested it for.
+	 * This happens when the current segment was completed fully and the completion moved to the next argument
+	 */
+	nextSegment: boolean;
 }
 
 let autocompleteLastQuery: string | null = null;
@@ -152,6 +158,7 @@ export function CommandAutocompleteCycle<TCommandExecutionContext extends IComma
 			replace,
 			result: autocompleteLastResult,
 			index: autocompleteCurrentIndex,
+			nextSegment: false,
 		};
 	}
 	autocompleteLastQuery = null;
@@ -159,14 +166,17 @@ export function CommandAutocompleteCycle<TCommandExecutionContext extends IComma
 	if (!autocompleteLastResult || autocompleteLastResult.options.length === 0) {
 		return {
 			replace: msg,
-			result: null,
+			result: autocompleteLastResult,
 			index: null,
+			nextSegment: false,
 		};
 	} else if (autocompleteLastResult.options.length === 1) {
+		const replace = autocompleteLastResult.options[0].replaceValue + ' ';
 		return {
-			replace: autocompleteLastResult.options[0].replaceValue + ' ',
-			result: CommandAutocomplete(autocompleteLastResult.options[0].replaceValue + ' ', ctx, commands),
+			replace,
+			result: CommandAutocomplete(replace, ctx, commands),
 			index: null,
+			nextSegment: true,
 		};
 	}
 	const best = LongestCommonPrefix(autocompleteLastResult.options.map((i) => i.replaceValue));
@@ -178,5 +188,6 @@ export function CommandAutocompleteCycle<TCommandExecutionContext extends IComma
 		replace: bestReplacement,
 		result: autocompleteLastResult,
 		index: null,
+		nextSegment: false,
 	};
 }

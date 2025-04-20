@@ -5,7 +5,7 @@
 	overflow-y: auto;
 
 	&.scrollable-always {
-		overflow-x: scroll;
+		overflow-y: scroll;
 	}
 }
 
@@ -14,7 +14,7 @@
 	overflow-y: hidden;
 
 	&.scrollable-always {
-		overflow-y: scroll;
+		overflow-x: scroll;
 	}
 }
 

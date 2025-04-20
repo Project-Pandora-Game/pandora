@@ -489,17 +489,15 @@ export function WardrobePoseGui({ character, characterState }: {
 										key={ poseCategoryIndex }
 										theme={ focusedCategory === poseCategoryIndex ? 'defaultActive' : 'default' }
 										onClick={ () => setFocusedCategory(poseCategoryIndex) }
-										className='IconButton PoseButton'
+										className='IconButton PoseButton compact'
 										slim
 									>
-										<Column className='fill'>
-											<PoseButtonPreview
-												assetManager={ characterState.assetManager }
-												preset={ EMPTY_POSE }
-												preview={ poseCategory.preview }
-											/>
-											<span>{ poseCategory.category }</span>
-										</Column>
+										<PoseButtonPreview
+											assetManager={ characterState.assetManager }
+											preset={ EMPTY_POSE }
+											preview={ poseCategory.preview }
+										/>
+										<span>{ poseCategory.category }</span>
 									</Button>
 								) : null))
 							}
@@ -662,14 +660,14 @@ export function PoseButton({ preset, preview, setPose, characterState }: {
 			>
 				{
 					preview != null ? (
-						<Column className='fill'>
+						<>
 							<PoseButtonPreview
 								assetManager={ characterState.assetManager }
 								preset={ preset }
 								preview={ preview }
 							/>
 							<span>{ name }</span>
-						</Column>
+						</>
 					) : (
 						<>{ name }</>
 					)

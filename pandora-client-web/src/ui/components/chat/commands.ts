@@ -286,6 +286,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		usage: `([sides] | <count>d<sides>) [/secret]`,
 		handler: CreateClientCommand()
 			.argument('options', {
+				autocompleteCustomName: '([sides] | <count>d<sides>) [/secret]',
 				preparse: 'allTrimmed',
 				parse: (input) => {
 					let dice = 1;

@@ -81,11 +81,6 @@ export async function RenderGraphicsTreeInBackground(
 		app.ticker.addOnce((t) => ticker.tick(t));
 		app.ticker.update();
 
-		// Flush any changes that happened due to the above and repeat (some changes simply need two frames to propagate properly)
-		await root.flush();
-		app.ticker.addOnce((t) => ticker.tick(t));
-		app.ticker.update();
-
 		// Create our result canvas and copy the result out
 		const resultCanvas = document.createElement('canvas');
 		resultCanvas.width = frame.width;

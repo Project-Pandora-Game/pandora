@@ -129,6 +129,7 @@ function ChatroomSettings(): ReactElement {
 			<legend>Chatroom UI</legend>
 			<ChatroomGraphicsRatio />
 			<ChatroomChatFontSize />
+			<ChatroomChatCommandHintBehavior />
 			<ChatroomCharacterNameFontSize />
 			<ChatroomOfflineCharacters />
 			<SelectAccountSettings setting='interfaceChatroomItemDisplayNameType' label='Item name display' stringify={ ITEM_DISPLAY_NAME_TYPE_DESCRIPTION } />
@@ -183,7 +184,7 @@ function ChatroomGraphicsRatio(): ReactElement {
 				}
 				schema={ z.string() }
 			/>
-			<ToggleAccountSetting setting='interfaceChatroomHorizontalChatSplit' label='Always show chat in landscape mode (on sufficiently large displays)' />
+			<SelectAccountSettings setting='interfaceChatroomChatSplitHorizontal' label='Always show chat in landscape mode (on large enough displays)' stringify={ INTERFACE_CHATROOM_CHAT_SPLIT_HORIZONTAL } />
 			<SelectSettingInput<string>
 				driver={ {
 					currentValue: modifiedSettings?.interfaceChatroomGraphicsRatioVertical?.toString(),
@@ -202,6 +203,7 @@ function ChatroomGraphicsRatio(): ReactElement {
 				}
 				schema={ z.string() }
 			/>
+			<SelectAccountSettings setting='interfaceChatroomChatSplitVertical' label='Always show chat in portrait mode (on large enough displays)' stringify={ INTERFACE_CHATROOM_CHAT_SPLIT_VERTICAL } />
 		</>
 	);
 }
@@ -228,6 +230,15 @@ function ChatroomChatFontSize(): ReactElement {
 	}), []);
 
 	return <SelectAccountSettings setting='interfaceChatroomChatFontSize' label='Font size of main chat and direct messages' stringify={ SELECTION_DESCRIPTIONS } />;
+}
+
+function ChatroomChatCommandHintBehavior(): ReactElement {
+	const SELECTION_DESCRIPTIONS = useMemo((): Record<AccountSettings['chatCommandHintBehavior'], string> => ({
+		'always-show': 'Always shown while typing a command',
+		'on-tab': 'Shown only when requested by pressing [Tab]',
+	}), []);
+
+	return <SelectAccountSettings setting='chatCommandHintBehavior' label='Command hint behavior' stringify={ SELECTION_DESCRIPTIONS } />;
 }
 
 function ChatroomOfflineCharacters(): ReactElement {
@@ -265,6 +276,18 @@ function WardrobeShowExtraButtons(): ReactElement {
 function WardrobeHoverPreview(): ReactElement {
 	return <ToggleAccountSetting setting='wardrobeHoverPreview' label='Show preview when hovering over action button' />;
 }
+
+const INTERFACE_CHATROOM_CHAT_SPLIT_HORIZONTAL: Record<AccountSettings['interfaceChatroomChatSplitHorizontal'], string> = {
+	disabled: 'Do not show chat in other tabs',
+	horizontal: 'Show chat at the bottom of the tab',
+	vertical: 'Show chat on the left of the tab',
+};
+
+const INTERFACE_CHATROOM_CHAT_SPLIT_VERTICAL: Record<AccountSettings['interfaceChatroomChatSplitVertical'], string> = {
+	disabled: 'Do not show chat in other tabs',
+	horizontal: 'Show chat at the bottom of the tab',
+	vertical: 'Show chat on the left of the tab',
+};
 
 const WARDROBE_POSING_CATEGORY_DEFAULT: Record<AccountSettings['wardrobePosingCategoryDefault'], string> = {
 	custom: 'Custom poses',

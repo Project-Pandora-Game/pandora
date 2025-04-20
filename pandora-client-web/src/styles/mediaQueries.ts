@@ -20,5 +20,5 @@ export function useIsVeryNarrowScreen(): boolean {
  * Returns whether the screen is small in the vertical axis
  */
 export function useIsLowScreen(): boolean {
-	return useMediaQuery('only screen and (height < 27rem)');
+	return useMediaQuery('only screen and (height < 40rem)');
 }

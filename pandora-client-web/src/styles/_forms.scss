@@ -37,6 +37,7 @@ input[type=color] {
 }
 
 select {
+	max-width: 100%;
 	font-size: 1em;
 	padding: 0.5em;
 	border: 1px solid common.$theme-input-border;

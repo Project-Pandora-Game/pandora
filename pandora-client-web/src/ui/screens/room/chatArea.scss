@@ -7,12 +7,15 @@
 	background: common.$theme-chat-background;
 	color: common.$theme-chat-text;
 	overflow: hidden;
+	contain: size;
+	min-width: min(20em, 90vw);
 
 	> .messagesArea {
 		position: relative;
 		flex: 1;
 		overflow: hidden;
 		user-select: text;
+		contain: size style;
 
 		.messagesContainer {
 			padding: 0 0 0.25em 0;
@@ -22,6 +25,7 @@
 			padding: 0.1em 0.1em 0.1em 0.25em;
 			white-space: pre-wrap;
 			overflow-wrap: break-word;
+			contain: layout style;
 
 			&:not(:hover):not(.serverMessage):not(.action) {
 				// Prevent Zalgo text from getting weird (but still show it if the message is hovered)

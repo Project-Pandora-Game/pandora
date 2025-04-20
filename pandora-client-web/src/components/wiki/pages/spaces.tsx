@@ -36,6 +36,7 @@ export function WikiSpaces(): ReactElement {
 				<li><Link to='#SP_Leaving_a_space'>Leaving a space</Link></li>
 				<li><Link to='#SP_Personal_space'>Personal space</Link></li>
 				<li><Link to='#SP_Room_inventory'>Room inventory</Link></li>
+				<li><Link to='#SP_Room_chat_Chat_visibility'>Room chat: Chat visibility</Link></li>
 				<li><Link to='#SP_Room_chat_Chat_commands'>Room chat: Chat commands</Link></li>
 				<li><Link to='#SP_Room_chat_Chat_modes'>Room chat: Chat modes</Link></li>
 				<li><Link to='#SP_Room_chat_Editing_text'>Room chat: Editing text</Link></li>
@@ -242,6 +243,15 @@ export function WikiSpaces(): ReactElement {
 				up <Link to='#SP_Space_ownership'>ownership</Link> of a space.
 				Clicking on an item in the list opens its edit-view on the right
 				side. <Link to='/wiki/items#IT_Room-level_items'>Room devices</Link> can be deployed to the room background in the edit-view by permitted parties.
+			</p>
+
+			<h4 id='SP_Room_chat_Chat_visibility'>Room chat: Chat visibility</h4>
+			<p>
+				By default, the chat is only shown in the dedicated chat tab of the main view inside a space.
+				You can optionally set that the chat also stays visible in the other room tabs.
+				For that, there are two "Always show chat in ..." drop-down boxes in "Settings { '>' } Interface { '>' } Chatroom UI".
+				One for when you use Pandora in landscape orientation and one for a portrait orientation of your device or window. You can set both at the same time.<br />
+				If you see no change from this setting, your device display or window size is likely too small to show the chosen option in a meaningful way.
 			</p>
 
 			<h4 id='SP_Room_chat_Chat_commands'>Room chat: Chat commands</h4>

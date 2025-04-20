@@ -73,9 +73,13 @@ export const AccountSettingsSchema = z.object({
 	 */
 	interfaceChatroomGraphicsRatioVertical: z.number().int().min(1).max(9),
 	/**
-	 * Split the controls between "Room"/"Pose"/"Expressions" in the horizontal chat view, if the screen is tall enough
+	 * Split the controls between "Room"/"Pose"/"Expressions" when Pandora is in landscape orientation, if the screen is big enough
 	 */
-	interfaceChatroomHorizontalChatSplit: z.boolean(),
+	interfaceChatroomChatSplitHorizontal: z.enum(['disabled', 'horizontal', 'vertical']),
+	/**
+	 * Split the controls between "Room"/"Pose"/"Expressions" when Pandora is in portrait orientation, if the screen is big enough
+	 */
+	interfaceChatroomChatSplitVertical: z.enum(['disabled', 'horizontal', 'vertical']),
 	/**
 	 * Controls how offline characters are displayed in a room:
 	 * - None: No difference between online and offline characters
@@ -94,6 +98,12 @@ export const AccountSettingsSchema = z.object({
 	interfaceChatroomCharacterNameFontSize: z.enum(['xs', 's', 'm', 'l', 'xl']),
 	/** Controls how item names appear in chat action messages */
 	interfaceChatroomItemDisplayNameType: ItemDisplayNameTypeSchema,
+	/**
+	 * How should command autocomplete behave.
+	 * - `always-show` - The help is always shown while typing a command
+	 * - `on-tab` The help is shown only when explicitly requested by pressing Tab
+	 */
+	chatCommandHintBehavior: z.enum(['always-show', 'on-tab']),
 	/**
 	 * Sets what sound should be played, when someone enters the room
 	 * @default ''
@@ -123,18 +133,20 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	wardrobeOutfitsPreview: 'small',
 	wardrobeSmallPreview: 'image',
 	wardrobeBigPreview: 'image',
-	wardrobePosingCategoryDefault: 'custom',
 	wardrobePosePreview: true,
+	wardrobePosingCategoryDefault: 'custom',
 	wardrobeItemDisplayNameType: 'custom',
 	wardrobeItemRequireFreeHandsToUseDefault: 'useAssetValue',
 	interfaceAccentColor: '#3daee9',
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,
-	interfaceChatroomHorizontalChatSplit: true,
+	interfaceChatroomChatSplitHorizontal: 'disabled',
+	interfaceChatroomChatSplitVertical: 'disabled',
 	interfaceChatroomOfflineCharacterFilter: 'ghost',
 	interfaceChatroomChatFontSize: 'm',
 	interfaceChatroomCharacterNameFontSize: 'm',
 	interfaceChatroomItemDisplayNameType: 'custom',
+	chatCommandHintBehavior: 'always-show',
 	notificationRoomEntrySound: '',
 	notificationVolume: '100',
 	tutorialCompleted: EMPTY_ARRAY,

@@ -248,8 +248,10 @@ export function WikiSpaces(): ReactElement {
 			<h4 id='SP_Room_chat_Chat_visibility'>Room chat: Chat visibility</h4>
 			<p>
 				By default, the chat is only shown in the dedicated chat tab of the main view inside a space.
-				You can optionally set that the chat also stays visible in the other room tabs while using Pandora in landscape orientation.
-				For that, you need to toggle "Always show chat ..." in "Settings { '>' } Interface { '>' } Chatroom UI".
+				You can optionally set that the chat also stays visible in the other room tabs.
+				For that, there are two "Always show chat in ..." drop-down boxes in "Settings { '>' } Interface { '>' } Chatroom UI".
+				One for when you use Pandora in landscape orientation and one for a portrait orientation of your device or window. You can set both at the same time.<br />
+				If you see no change from this setting, your device display or window size is likely too small to show the chosen option in a meaningful way.
 			</p>
 
 			<h4 id='SP_Room_chat_Chat_commands'>Room chat: Chat commands</h4>

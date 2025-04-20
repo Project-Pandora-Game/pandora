@@ -15,7 +15,7 @@
 		flex: 1;
 		overflow: hidden;
 		user-select: text;
-		contain: strict;
+		contain: size style;
 
 		.messagesContainer {
 			padding: 0 0 0.25em 0;
@@ -25,6 +25,7 @@
 			padding: 0.1em 0.1em 0.1em 0.25em;
 			white-space: pre-wrap;
 			overflow-wrap: break-word;
+			contain: layout style;
 
 			&:not(:hover):not(.serverMessage):not(.action) {
 				// Prevent Zalgo text from getting weird (but still show it if the message is hovered)

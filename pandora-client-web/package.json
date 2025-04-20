@@ -41,7 +41,7 @@
 		"pixi.js": "8.9.1",
 		"react": "19.1.0",
 		"react-dom": "19.1.0",
-		"react-hook-form": "7.55.0",
+		"react-hook-form": "7.56.0",
 		"react-reconciler": "0.32.0",
 		"react-reverse-portal": "2.3.0",
 		"react-rnd": "10.5.2",
@@ -84,7 +84,7 @@
 		"postcss": "8.5.3",
 		"postcss-flexbugs-fixes": "5.0.2",
 		"postcss-loader": "8.1.1",
-		"postcss-preset-env": "10.1.5",
+		"postcss-preset-env": "10.1.6",
 		"react-refresh": "0.17.0",
 		"react-refresh-typescript": "2.0.10",
 		"rimraf": "6.0.1",
@@ -99,7 +99,7 @@
 		"type-fest": "4.40.0",
 		"typescript": "5.8.3",
 		"url-loader": "4.1.1",
-		"webpack": "5.99.5",
+		"webpack": "5.99.6",
 		"webpack-cli": "6.0.1",
 		"webpack-dev-server": "5.2.1"
 	}

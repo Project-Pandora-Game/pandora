@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { ReactElement, useCallback, useState } from 'react';
-import { Column, DivContainer } from '../../../components/common/container/container.tsx';
+import { Column, DivContainer, Row } from '../../../components/common/container/container.tsx';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
 import { Tab, TabContainer, type TabConfig } from '../../../components/common/tabs/tabs.tsx';
 import { useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
@@ -10,7 +10,7 @@ import { WardrobePoseGui } from '../../../components/wardrobe/views/wardrobePose
 import { WardrobeExternalContextProvider } from '../../../components/wardrobe/wardrobeContext.tsx';
 import { RoomScene } from '../../../graphics/room/roomScene.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { useIsLowScreen, useIsPortrait } from '../../../styles/mediaQueries.ts';
+import { useIsLowScreen, useIsNarrowScreen, useIsPortrait } from '../../../styles/mediaQueries.ts';
 import { Chat } from '../../components/chat/chat.tsx';
 import './chatArea.scss';
 import './room.scss';
@@ -47,33 +47,46 @@ function InteractionBox({ isPortrait, className }: {
 	className?: string;
 }): ReactElement {
 	const [chatOpen, setChatOpen] = useState<boolean>(false);
-	const { interfaceChatroomHorizontalChatSplit } = useAccountSettings();
+	const { interfaceChatroomChatSplitHorizontal, interfaceChatroomChatSplitVertical } = useAccountSettings();
 	const { player, playerState } = usePlayerState();
 	const spaceInfo = useSpaceInfo();
 	const isLowScreen = useIsLowScreen();
+	const isNarrowScreen = useIsNarrowScreen();
 	const isPersonalSpace = spaceInfo.id == null;
 
-	const splitChat = interfaceChatroomHorizontalChatSplit && !isPortrait && !isLowScreen;
+	const splitChatHorizontal =
+		(interfaceChatroomChatSplitHorizontal === 'horizontal' && !isPortrait && !isLowScreen) ||
+		(interfaceChatroomChatSplitVertical === 'horizontal' && isPortrait && !isLowScreen);
+	const splitChatVertical =
+		(interfaceChatroomChatSplitHorizontal === 'vertical' && !isPortrait && !isNarrowScreen) ||
+		(interfaceChatroomChatSplitVertical === 'vertical' && isPortrait && !isNarrowScreen);
 
 	const onTabOpen = useCallback((tab: Immutable<TabConfig>) => {
 		setChatOpen(tab.name === 'Chat');
 	}, []);
 
 	return (
-		<Column className={ className } gap={ splitChat && !chatOpen ? 'tiny' : 'none' }>
-			<TabContainer className={ (chatOpen && splitChat) ? '' : 'flex-2 zero-height' } onTabOpen={ onTabOpen } collapsable>
+		<Column className={ className } gap={ splitChatHorizontal && !chatOpen ? 'tiny' : 'none' }>
+			<TabContainer className={ (chatOpen && splitChatHorizontal) ? '' : 'flex-2 zero-height' } onTabOpen={ onTabOpen } collapsable>
 				{
 					isPersonalSpace ? (
 						<Tab name='Personal space'>
-							<Scrollable className='controls-container flex-1'>
-								<PersonalSpaceControls />
-							</Scrollable>
+							<Row className='fill-y' gap={ 'none' }>
+								{
+									splitChatVertical ? (
+										<Chat />
+									) : null
+								}
+								<Scrollable className='controls-container flex-1'>
+									<PersonalSpaceControls />
+								</Scrollable>
+							</Row>
 						</Tab>
 					) : null
 				}
 				<Tab name='Chat'>
 					{
-						!splitChat ? (
+						!splitChatHorizontal ? (
 							<Chat />
 						) : null
 					}
@@ -81,25 +94,46 @@ function InteractionBox({ isPortrait, className }: {
 				{
 					!isPersonalSpace ? (
 						<Tab name='Room'>
-							<Scrollable className='controls-container flex-1'>
-								<RoomControls />
-							</Scrollable>
+							<Row className='fill-y' gap={ 'none' }>
+								{
+									splitChatVertical ? (
+										<Chat />
+									) : null
+								}
+								<Scrollable className='controls-container flex-1'>
+									<RoomControls />
+								</Scrollable>
+							</Row>
 						</Tab>
 					) : null
 				}
 				<Tab name='Pose'>
-					<WardrobeExternalContextProvider target={ player.actionSelector }>
-						<WardrobePoseGui character={ player } characterState={ playerState } />
-					</WardrobeExternalContextProvider>
+					<Row className='fill-y' gap={ 'none' }>
+						{
+							splitChatVertical ? (
+								<Chat />
+							) : null
+						}
+						<WardrobeExternalContextProvider target={ player.actionSelector }>
+							<WardrobePoseGui character={ player } characterState={ playerState } />
+						</WardrobeExternalContextProvider>
+					</Row>
 				</Tab>
 				<Tab name='Expressions'>
-					<WardrobeExternalContextProvider target={ player.actionSelector }>
-						<WardrobeExpressionGui character={ player } characterState={ playerState } />
-					</WardrobeExternalContextProvider>
+					<Row className='fill-y' gap={ 'none' }>
+						{
+							splitChatVertical ? (
+								<Chat />
+							) : null
+						}
+						<WardrobeExternalContextProvider target={ player.actionSelector }>
+							<WardrobeExpressionGui character={ player } characterState={ playerState } />
+						</WardrobeExternalContextProvider>
+					</Row>
 				</Tab>
 			</TabContainer>
 			{
-				splitChat ? (
+				splitChatHorizontal ? (
 					<Chat />
 				) : null
 			}

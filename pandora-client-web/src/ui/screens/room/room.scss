@@ -31,6 +31,7 @@
 	background: common.$theme-room-controls-background;
 	color: common.$theme-room-controls-text;
 	border: 2px solid common.$theme-room-controls-border;
+	min-width: min(20em, 90vw);
 }
 
 .space-warning {

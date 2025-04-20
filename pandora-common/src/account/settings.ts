@@ -73,9 +73,13 @@ export const AccountSettingsSchema = z.object({
 	 */
 	interfaceChatroomGraphicsRatioVertical: z.number().int().min(1).max(9),
 	/**
-	 * Split the controls between "Room"/"Pose"/"Expressions" in the horizontal chat view, if the screen is tall enough
+	 * Split the controls between "Room"/"Pose"/"Expressions" when Pandora is in landscape orientation, if the screen is big enough
 	 */
-	interfaceChatroomHorizontalChatSplit: z.boolean(),
+	interfaceChatroomChatSplitHorizontal: z.enum(['disabled', 'horizontal', 'vertical']),
+	/**
+	 * Split the controls between "Room"/"Pose"/"Expressions" when Pandora is in portrait orientation, if the screen is big enough
+	 */
+	interfaceChatroomChatSplitVertical: z.enum(['disabled', 'horizontal', 'vertical']),
 	/**
 	 * Controls how offline characters are displayed in a room:
 	 * - None: No difference between online and offline characters
@@ -136,7 +140,8 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceAccentColor: '#3daee9',
 	interfaceChatroomGraphicsRatioHorizontal: 7,
 	interfaceChatroomGraphicsRatioVertical: 4,
-	interfaceChatroomHorizontalChatSplit: false,
+	interfaceChatroomChatSplitHorizontal: 'disabled',
+	interfaceChatroomChatSplitVertical: 'disabled',
 	interfaceChatroomOfflineCharacterFilter: 'ghost',
 	interfaceChatroomChatFontSize: 'm',
 	interfaceChatroomCharacterNameFontSize: 'm',

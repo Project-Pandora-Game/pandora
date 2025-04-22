@@ -1,8 +1,12 @@
+import { z } from 'zod';
+
 // Define Suits and Ranks
-const suits = ['\u2665', //hearts
+const suits = [
+	'\u2665', //hearts
 	'\u2666', //diamonds
 	'\u2663', //clubs
-	'\u2660']; //spades
+	'\u2660', //spades
+];
 const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 
 // Define Card Type
@@ -10,11 +14,21 @@ export class Card {
 	public readonly suit: string;
 	public readonly rank: string;
 
-	constructor(s: string, r: string) {
-		this.suit = s;
-		this.rank = r;
+	constructor(s?: string, r?: string) {
+		this.suit = s ? s : '\u2665';
+		this.rank = r ? r : '2';
 	}
 }
+
+// Define allowed values
+const SuitSchema = z.enum(['u2665', 'u2666', 'u2663', 'u2660']);
+const RankSchema = z.enum(['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']);
+
+// Validate a plain object and then create a class instance
+export const CardSchema = z.object({
+	suit: SuitSchema,
+	rank: RankSchema,
+}).transform((data) => new Card(data.suit, data.rank));
 
 export class CardDeck {
 	private deck: Card[] = [];
@@ -40,7 +54,17 @@ export class CardDeck {
 		return this.deck.length > 0 ? this.deck.pop() : null;
 	}
 
-	constructor() {
-		this.create();
+	constructor(cards?: Card[]) {
+		if (cards) {
+			for (const card of cards)
+				this.addCard(card);
+		} else {
+			this.create();
+		}
 	}
 }
+
+export const CardDeckSchema = z.array(CardSchema).transform((cards) => {
+	const deck = new CardDeck(cards);
+	return deck;
+});

@@ -40,6 +40,8 @@ import {
 	ResolveAssetPreference,
 	RoomBackgroundData,
 	SpaceId,
+	Card,
+	CardDeck,
 	type AppearanceActionProcessingResult,
 	type CharacterSettings,
 	type CharacterSettingsKeys,
@@ -165,6 +167,10 @@ export class Character {
 	public get assetPreferences(): Immutable<AssetPreferencesPublic> {
 		return this.gameLogicCharacter.assetPreferences.currentPreferences;
 	}
+
+	public readonly hand: Card[] = [];
+
+	public readonly deck = new CardDeck();
 
 	public readonly gameLogicCharacter: GameLogicCharacterServer;
 
@@ -485,6 +491,8 @@ export class Character {
 			publicSettings: cloneDeep(pick(this.data.settings, CHARACTER_PUBLIC_SETTINGS)),
 			isOnline: this.isOnline,
 			assetPreferences: this.assetPreferences,
+			hand: this.hand,
+			deck: this.deck,
 		};
 	}
 

@@ -432,8 +432,8 @@ importers:
         specifier: 0.7.3
         version: 0.7.3
       discord-api-types:
-        specifier: 0.37.120
-        version: 0.37.120
+        specifier: 0.38.1
+        version: 0.38.1
       jest:
         specifier: 29.7.0
         version: 29.7.0(@types/node@22.14.1)
@@ -529,8 +529,8 @@ importers:
         specifier: 0.7.3
         version: 0.7.3
       discord-api-types:
-        specifier: 0.37.120
-        version: 0.37.120
+        specifier: 0.38.1
+        version: 0.38.1
       jest:
         specifier: 29.7.0
         version: 29.7.0(@types/node@22.14.1)
@@ -2961,6 +2961,9 @@ packages:
 
   discord-api-types@0.37.120:
     resolution: {integrity: sha512-7xpNK0EiWjjDFp2nAhHXezE4OUWm7s1zhc/UXXN6hnFFU8dfoPHgV0Hx0RPiCa3ILRpdeh152icc68DGCyXYIw==}
+
+  discord-api-types@0.38.1:
+    resolution: {integrity: sha512-vsjsqjAuxsPhiwbPjTBeGQaDPlizFmSkU0mTzFGMgRxqCDIRBR7iTY74HacpzrDV0QtERHRKQEk1tq7drZUtHg==}
 
   discord.js@14.18.0:
     resolution: {integrity: sha512-SvU5kVUvwunQhN2/+0t55QW/1EHfB1lp0TtLZUSXVHDmyHTrdOj5LRKdR0zLcybaA15F+NtdWuWmGOX9lE+CAw==}
@@ -9561,6 +9564,8 @@ snapshots:
   diff-sequences@29.6.3: {}
 
   discord-api-types@0.37.120: {}
+
+  discord-api-types@0.38.1: {}
 
   discord.js@14.18.0:
     dependencies:

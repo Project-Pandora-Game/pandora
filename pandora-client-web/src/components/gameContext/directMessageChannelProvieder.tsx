@@ -1,7 +1,7 @@
 import { AssertNever, AssertNotNullable, GetLogger } from 'pandora-common';
 import { ReactElement, Suspense, createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { ChildrenProps } from '../../common/reactTypes.ts';
-import { useNullableObservable } from '../../observable.ts';
+import { useNullableObservable, useObservable } from '../../observable.ts';
 import type { ChatEncryption, DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat.ts';
 import { useService } from '../../services/serviceProvider.tsx';
 
@@ -15,13 +15,14 @@ const directMessageContext = createContext<DirectMessageChatContext | null>(null
 export function DirectMessageChannelProvider({ accountId, children }: ChildrenProps & { accountId: number; }): ReactElement {
 	const directMessageManager = useService('directMessageManager');
 	const [closed, setClosed] = useState(false);
+	const chats = useObservable(directMessageManager.chats);
 
 	const chat = useMemo(() => {
 		if (closed)
 			return null;
 
-		return directMessageManager.getChat(accountId);
-	}, [directMessageManager, accountId, closed]);
+		return chats.find((c) => c.id === accountId) ?? null;
+	}, [chats, accountId, closed]);
 
 	const state = useNullableObservable(chat?.state);
 	const encryption = useNullableObservable(chat?.encryption);
@@ -40,14 +41,19 @@ export function DirectMessageChannelProvider({ accountId, children }: ChildrenPr
 	}), [directMessageManager, accountId]);
 
 	useEffect(() => {
-		if (chat != null && chat.state.value !== 'ready') {
+		if (closed)
+			return;
+
+		if (chat == null) {
+			void directMessageManager.getChat(accountId);
+		} else if (chat.state.value !== 'ready') {
 			chat.load()
 				.catch((err) => {
 					GetLogger('DirectMessageChannelProvider')
 						.error('Failed to load chat:', err);
 				});
 		}
-	}, [chat]);
+	}, [accountId, chat, closed, directMessageManager]);
 
 	const ctx = useMemo((): DirectMessageChatContext | null => {
 		if (chat == null || state !== 'ready' || encryption == null)
@@ -59,12 +65,12 @@ export function DirectMessageChannelProvider({ accountId, children }: ChildrenPr
 		};
 	}, [chat, encryption, state]);
 
-	if (chat == null || state == null) {
+	if (closed) {
 		return <DirectMessageChannelError channel={ chat } message='Chat closed' />;
-	} else if (state === 'notLoaded') {
+	} else if (chat == null || state == null || state === 'notLoaded') {
 		return (
 			<span className='loading'>
-				Account: { chat?.id ?? 'unknown' }
+				Account: { chat?.id ?? accountId }
 				<br />
 				Loading...
 			</span>

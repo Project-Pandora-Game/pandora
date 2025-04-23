@@ -26,7 +26,7 @@ export type AssetFrameworkGlobalStateClientBundle = AssetFrameworkGlobalStateBun
 };
 
 /**
- * Class that stores immutable state for whole current context (so usually room or only the character if not in room).
+ * Class that stores immutable state for whole current context (so the current space, be it private or public one).
  *
  * The class is immutable.
  */

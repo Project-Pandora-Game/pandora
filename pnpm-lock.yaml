@@ -356,8 +356,8 @@ importers:
         specifier: 21.1.1
         version: 21.1.1
       argon2:
-        specifier: 0.41.1
-        version: 0.41.1
+        specifier: 0.43.0
+        version: 0.43.0
       async-lock:
         specifier: 1.4.1
         version: 1.4.1
@@ -2201,8 +2201,8 @@ packages:
   archy@1.0.0:
     resolution: {integrity: sha512-Xg+9RwCg/0p32teKdGMPTPnVXKD0w3DfHnFTficozsAgsvq2XenPJq/MYpzzQ/v8zrOyJn6Ds39VA4JIDwFfqw==}
 
-  argon2@0.41.1:
-    resolution: {integrity: sha512-dqCW8kJXke8Ik+McUcMDltrbuAWETPyU6iq+4AhxqKphWi7pChB/Zgd/Tp/o8xRLbg8ksMj46F/vph9wnxpTzQ==}
+  argon2@0.43.0:
+    resolution: {integrity: sha512-u/HKLcbWShVDhkfwI4hWyiUf3qyX8QhTfaIv2cWE18uqhXCmR5hb6Ed7oqYi2KCQegeAnRhiFzbjzm7i5yl1GA==}
     engines: {node: '>=16.17.0'}
 
   argparse@1.0.10:
@@ -8753,7 +8753,7 @@ snapshots:
 
   archy@1.0.0: {}
 
-  argon2@0.41.1:
+  argon2@0.43.0:
     dependencies:
       '@phc/format': 1.0.0
       node-addon-api: 8.3.1

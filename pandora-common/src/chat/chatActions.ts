@@ -86,8 +86,10 @@ const CHAT_ACTIONS_DEF = {
 	gamblingRockPaperScissorsResult: `Rock was shown by ROCK_CHARACTERS. Paper was shown by PAPER_CHARACTERS. Scissors were shown by SCISSORS_CHARACTERS.`,
 	gamblingDeckCreation: 'A new deck of cards has been created for SOURCE_CHARACTER.',
 	gamblingDeckDealOpen: 'SOURCE_CHARACTER deals CARD.',
-	gamblingDeckDealPlayerOpen: 'SOURCE_CHARACTER deals CARD.',
+	gamblingDeckDealPlayerOpen: 'SOURCE_CHARACTER deals CARD to TARGET_CHARACTER.',
 	gamblingDeckDealPlayerSecret: 'SOURCE_CHARACTER deals a card face down to TARGET_CHARACTER.',
+	gamblingDeckHandCheck: 'You are currently holding HAND',
+	gamblingDeckHandReveal: 'SOURCE_CHARACTER shows his hand and reveals HAND',
 	gamblingDeckEmpty: 'There are no cards left in the deck',
 
 	// Lock actions

@@ -421,41 +421,69 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			case 'cards': {
 				const player = space.getCharacterById(character.id);
 				if (player) {
-					if (game.createDeck) {
-						player.getRoomData().deck = new CardDeck();
-						space.handleActionMessage({
-							id: 'gamblingDeckCreation',
-							character,
-						});
-					} else if (game.dealCard) {
-						// Deals a card to a character or openly
-						const card = player.getRoomData().deck.deal();
+					switch (game.msgOption) {
+						case 'create': {
+							player.getRoomData().deck = new CardDeck();
+							space.handleActionMessage({
+								id: 'gamblingDeckCreation',
+								character,
+							});
+							break;
+						}
+						case 'deal': {
+							// Deals a card to a character or openly
+							const card = player.getRoomData().deck.deal();
 
-						if (card) {
-							if (game.targetId) {
-								// Deal card to player
-								space.handleActionMessage({
-									id: game.dealHidden ? 'gamblingDeckDealPlayerSecret' : 'gamblingDeckDealPlayerOpen',
-									character,
-									dictionary: {
-										'CARD': `${card.rank} ${card.suit}`,
-										'TARGET_CHARACTER': `${space.getCharacterById(game.targetId)?.name}`,
-									},
-								});
+							if (card) {
+								if (game.targetId) {
+									// Deal card to player
+									space.handleActionMessage({
+										id: game.dealHidden ? 'gamblingDeckDealPlayerSecret' : 'gamblingDeckDealPlayerOpen',
+										character,
+										dictionary: {
+											'CARD': `${card.rank} ${card.suit}`,
+											'TARGET_CHARACTER': `${space.getCharacterById(game.targetId)?.name}`,
+										},
+									});
+								} else {
+									space.handleActionMessage({
+										id: 'gamblingDeckDealOpen',
+										character,
+										dictionary: {
+											'CARD': `${card.rank} ${card.suit}`,
+										},
+									});
+								}
 							} else {
 								space.handleActionMessage({
-									id: 'gamblingDeckDealOpen',
-									character,
-									dictionary: {
-										'CARD': `${card.rank} ${card.suit}`,
-									},
+									id: 'gamblingDeckEmpty',
 								});
 							}
-						} else {
-							space.handleActionMessage({
-								id: 'gamblingDeckEmpty',
-							});
+							break;
 						}
+						case 'check': {
+							space.handleActionMessage({
+								id: 'gamblingDeckHandCheck',
+								character,
+								sendTo: [client.character.id],
+								dictionary: {
+									'HAND': player.getRoomData().hand.toString(),
+								},
+							});
+							break;
+						}
+						case 'reveal': {
+							space.handleActionMessage({
+								id: 'gamblingDeckHandReveal',
+								character,
+								dictionary: {
+									'HAND': player.getRoomData().hand.toString(),
+								},
+							});
+							break;
+						}
+						default:
+							AssertNever(game.msgOption);
 					}
 				}
 				break;

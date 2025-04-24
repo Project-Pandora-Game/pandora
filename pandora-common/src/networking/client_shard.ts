@@ -141,9 +141,8 @@ export const ClientShardSchema = {
 			z.object({
 				type: z.literal('cards'), //Deck of Cards
 				targetId: CharacterIdSchema.optional(),
-				createDeck: z.boolean().optional(),
-				dealCard: z.boolean().optional(),
-				dealHidden: z.boolean().optional(),
+				msgOption: z.enum(['create', 'deal', 'check', 'reveal']),
+				dealHidden: z.boolean().default(false).optional(),
 			}),
 		]),
 		response: null,

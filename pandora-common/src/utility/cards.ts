@@ -14,9 +14,19 @@ export class Card {
 	public readonly suit: string;
 	public readonly rank: string;
 
+	public toString() {
+		return `${this.rank}${this.suit}`;
+	}
+
 	constructor(s?: string, r?: string) {
 		this.suit = s ? s : '\u2665';
 		this.rank = r ? r : '2';
+	}
+}
+
+export class CardArray extends Array<Card> {
+	public override toString(): string {
+		return `[ ${this.map((card) => card.toString()).join(', ')} ]`;
 	}
 }
 

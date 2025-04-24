@@ -36,13 +36,13 @@ import {
 	ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE,
 	ResolveAssetPreference,
 	SpaceId,
-	Card,
 	CardDeck,
 	type AppearanceActionProcessingResult,
 	type CharacterSettings,
 	type CharacterSettingsKeys,
 	type ChatMessageFilterMetadata,
 	type ICharacterDataShard,
+	type CardArray,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -164,7 +164,7 @@ export class Character {
 		return this.gameLogicCharacter.assetPreferences.currentPreferences;
 	}
 
-	public readonly hand: Card[] = [];
+	public readonly hand: CardArray = [];
 
 	public readonly deck = new CardDeck();
 

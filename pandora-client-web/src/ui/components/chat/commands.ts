@@ -324,9 +324,9 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 	{
 		key: ['cards'],
 		description: 'Play a game of cards',
-		longDescription: `You can 'create' an ordinary deck of cards, 'deal' cards open or face down to player or the room
-		or 'show' the crads that were dealt to you`,
-		usage: 'create | deal <target> /hidden | show',
+		longDescription: `You can 'create' an ordinary deck of cards, 'deal' cards open or face down to player or the room,
+		'check' your hand or 'show' the crads that were dealt to you`,
+		usage: 'create | deal <target> /hidden | check | show',
 		handler: CreateClientCommand()
 			.fork('action', (ctx) => ({
 				create: {
@@ -335,7 +335,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 						.handler(({ shardConnector }) => {
 							shardConnector.sendMessage('gamblingAction', {
 								type: 'cards',
-								createDeck: true,
+								msgOption: 'create',
 							});
 							return true;
 						}),
@@ -346,31 +346,41 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 						.argument('target', CommandStepOptional(CommandSelectorCharacter({ allowSelf: 'any' })))
 						.argument('option', CommandSelectorEnum(['', '/hidden']))
 						.handler(({ shardConnector }, { target, option }) => {
-							if (target) { //Deal card to player
+							if (target) { //Deal card to a player
 								shardConnector.sendMessage('gamblingAction', {
 									type: 'cards',
 									targetId: target.data.id,
-									dealCard: true,
+									msgOption: 'deal',
 									dealHidden: option === '/hidden',
 								});
 							} else { //Deal card to room
 								shardConnector.sendMessage('gamblingAction', {
 									type: 'cards',
-									dealCard: true,
+									msgOption: 'deal',
 									dealHidden: false, // Cards to the room are always dealt openly
 								});
 							}
 							return true;
 						}),
 				},
-				show: {
+				reveal: {
 					description: 'Reveal the cards that were dealt to you.',
 					handler: ctx
 						.handler(({ shardConnector }) => {
 							shardConnector.sendMessage('gamblingAction', {
 								type: 'cards',
-								createDeck: false,
-								dealCard: true,
+								msgOption: 'reveal',
+							});
+							return true;
+						}),
+				},
+				check: {
+					description: 'Have a look at the cards that were dealt to you',
+					handler: ctx
+						.handler(({ shardConnector }) => {
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'cards',
+								msgOption: 'check',
 							});
 							return true;
 						}),

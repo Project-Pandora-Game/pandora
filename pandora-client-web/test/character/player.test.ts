@@ -1,5 +1,5 @@
 import { cloneDeep } from 'lodash-es';
-import { ASSET_PREFERENCES_DEFAULT, CharacterSize, ICharacterRoomData, type ICharacterPrivateData } from 'pandora-common';
+import { ASSET_PREFERENCES_DEFAULT, CardDeck, CharacterSize, ICharacterRoomData, type ICharacterPrivateData } from 'pandora-common';
 import { PlayerCharacter } from '../../src/character/player.ts';
 const jest = import.meta.jest; // Jest is not properly injected in ESM
 
@@ -50,6 +50,8 @@ function MockPlayerData(overrides?: Partial<ICharacterPrivateData & ICharacterRo
 		assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 		position: [CharacterSize.WIDTH / 2, 0, 0],
 		isOnline: true,
+		hand: [],
+		deck: new CardDeck(),
 		...overrides,
 	};
 }

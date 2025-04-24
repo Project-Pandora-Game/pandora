@@ -50,6 +50,8 @@ function MockPlayerData(overrides?: Partial<ICharacterPrivateData & ICharacterRo
 		publicSettings: {},
 		assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 		isOnline: true,
+		hand: [],
+		deck: new CardDeck(),
 		...overrides,
 	};
 }

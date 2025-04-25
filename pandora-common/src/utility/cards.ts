@@ -2,10 +2,10 @@ import { z } from 'zod';
 
 // Define Suits and Ranks
 const suits = [
-	'\u2665', //hearts
-	'\u2666', //diamonds
-	'\u2663', //clubs
-	'\u2660', //spades
+	'\u2661', //hearts
+	'\u2662', //diamonds
+	'\u2667', //clubs
+	'\u2664', //spades
 ];
 const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
 
@@ -47,7 +47,7 @@ export class CardDeck {
 		this.deck.push(c);
 	}
 
-	private create() {
+	public create() {
 		for (const suit of suits) {
 			for (const rank of ranks) {
 				this.addCard(new Card(suit, rank));
@@ -68,8 +68,6 @@ export class CardDeck {
 		if (cards) {
 			for (const card of cards)
 				this.addCard(card);
-		} else {
-			this.create();
 		}
 	}
 }

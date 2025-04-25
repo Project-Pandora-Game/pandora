@@ -423,7 +423,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 				if (player) {
 					switch (game.msgOption) {
 						case 'create': {
-							player.getRoomData().deck = new CardDeck();
+							player.getRoomData().deck.create();
 							space.handleActionMessage({
 								id: 'gamblingDeckCreation',
 								character,
@@ -436,15 +436,30 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 							if (card) {
 								if (game.targetId) {
-									// Deal card to player
-									space.handleActionMessage({
-										id: game.dealHidden ? 'gamblingDeckDealPlayerSecret' : 'gamblingDeckDealPlayerOpen',
-										character,
-										dictionary: {
-											'CARD': `${card.rank} ${card.suit}`,
-											'TARGET_CHARACTER': `${space.getCharacterById(game.targetId)?.name}`,
-										},
-									});
+									const dict = {
+										'CARD': `${card.rank} ${card.suit}`,
+										'TARGET_CHARACTER': `${space.getCharacterById(game.targetId)?.name}`,
+									};
+										// Deal card to player
+									if (game.dealHidden) {
+										space.handleActionMessage({
+											id: 'gamblingDeckDealPlayerSecret',
+											character,
+											dictionary: dict,
+										});
+										space.handleActionMessage({
+											id: 'gamblingDeckDealToYou',
+											character,
+											sendTo: [game.targetId],
+											dictionary: dict,
+										});
+									} else {
+										space.handleActionMessage({
+											id: 'gamblingDeckDealPlayerOpen',
+											character,
+											dictionary: dict,
+										});
+									}
 								} else {
 									space.handleActionMessage({
 										id: 'gamblingDeckDealOpen',

@@ -1,5 +1,5 @@
 import classNames from 'classnames';
-import { IsAuthorized } from 'pandora-common';
+import { GetLogger, IsAuthorized } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import friendsIcon from '../../assets/icons/friends.svg';
@@ -25,23 +25,64 @@ import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProv
 import { HeaderButton } from './HeaderButton.tsx';
 import './header.scss';
 import { LeaveButton } from './leaveButton.tsx';
+import { GetDirectoryUrl, useAuthTokenHeader } from '../gameContext/directoryConnectorContextProvider.tsx';
+import { Link } from 'react-router';
 
 function LeftHeader(): ReactElement {
 	const connectionInfo = useShardConnectionInfo();
 
 	const characterData = usePlayerData();
 	const characterName = (characterData && !characterData.inCreation) ? characterData.name : null;
+	const [preview, setPreview] = useState<string | null>(null);
+	const auth = useAuthTokenHeader();
+
+	useEffect(() => {
+		if (!auth || !connectionInfo)
+			return;
+
+		let valid = true;
+
+		fetch(new URL(`pandora/character/${encodeURIComponent(connectionInfo.characterId)}/preview`, GetDirectoryUrl()), {
+			headers: {
+				Authorization: auth,
+			},
+		})
+			.then((result) => {
+				if (!result.ok) {
+					throw new Error(`Request failed: ${result.status} ${result.statusText}`);
+				}
+				return result;
+			})
+			.then((result) => result.blob())
+			.then((blob) => new Promise<string>((resolve, reject) => {
+				const reader = new FileReader();
+
+				reader.onload = () => resolve(reader.result as string);
+				reader.onerror = reject;
+				reader.readAsDataURL(blob);
+			}))
+			.then((image) => {
+				if (valid) {
+					setPreview(image);
+				}
+			})
+			.catch((err) => {
+				GetLogger('CharacterListPreview').warning(`Error getting preview for character ${connectionInfo.characterId}:`, err);
+			});
+
+		return () => {
+			valid = false;
+		};
+	});
 
 	return (
 		<div className='leftHeader flex'>
-			{ /*
-			<div className="headerButton"><img className='avatar' src='/iconClare.png' />Clare</div>
-			<div className="headerButton">Inventory</div>
-			<div className="headerButton">Room</div>
-			*/ }
 			{ connectionInfo && (
 				<span>
 					<span className='label'>Current character:</span>
+					<Link to={ `/wardrobe/character/${connectionInfo.characterId}` } >
+						<img className='avatar' src={ preview ?? undefined } />
+					</Link>
 					{ characterName ?? `[Character ${connectionInfo.characterId}]` }
 				</span>
 			) }

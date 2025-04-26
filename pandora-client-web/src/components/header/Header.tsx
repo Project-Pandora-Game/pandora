@@ -19,14 +19,13 @@ import { AccountContactContext, useAccountContacts } from '../accountContacts/ac
 import { IconHamburger } from '../common/button/domIcons.tsx';
 import { Column, Row } from '../common/container/container.tsx';
 import { DialogInPortal } from '../dialog/dialog.tsx';
+import { GetDirectoryUrl, useAuthTokenHeader } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { useNotificationHeader } from '../gameContext/notificationProvider.tsx';
 import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider.tsx';
 import { HeaderButton } from './HeaderButton.tsx';
 import './header.scss';
 import { LeaveButton } from './leaveButton.tsx';
-import { GetDirectoryUrl, useAuthTokenHeader } from '../gameContext/directoryConnectorContextProvider.tsx';
-import { Link } from 'react-router';
 
 function LeftHeader(): ReactElement {
 	const connectionInfo = useShardConnectionInfo();
@@ -67,7 +66,7 @@ function LeftHeader(): ReactElement {
 				}
 			})
 			.catch((err) => {
-				GetLogger('CharacterListPreview').warning(`Error getting preview for character ${connectionInfo.characterId}:`, err);
+				GetLogger('LeftHeader').warning(`Error getting preview for character ${connectionInfo.characterId}:`, err);
 			});
 
 		return () => {
@@ -75,16 +74,23 @@ function LeftHeader(): ReactElement {
 		};
 	});
 
+	const navigate = useNavigatePandora();
+	const goToWardrobe = useCallback(() => {
+		if (connectionInfo != null) {
+			navigate(`/wardrobe/character/${connectionInfo.characterId}`);
+		}
+	}, [navigate, connectionInfo]);
+
 	return (
 		<div className='leftHeader flex'>
 			{ connectionInfo && (
-				<span>
-					<span className='label'>Current character:</span>
-					<Link to={ `/wardrobe/character/${connectionInfo.characterId}` } >
-						<img className='avatar' src={ preview ?? undefined } />
-					</Link>
-					{ characterName ?? `[Character ${connectionInfo.characterId}]` }
-				</span>
+				<button onClick={ goToWardrobe } title='Go to wardrobe' className='HeaderButton currentCharacter'>
+					{ preview ? (<img className='avatar' src={ preview } />) : null }
+					<span>
+						<span className='label'>Current character:</span>
+						{ characterName ?? `[Character ${connectionInfo.characterId}]` }
+					</span>
+				</button>
 			) }
 			{ !connectionInfo && (
 				<span>

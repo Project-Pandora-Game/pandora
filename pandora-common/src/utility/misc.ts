@@ -89,6 +89,11 @@ export function AssertNotNullable<T>(value: Nullable<T>): asserts value is NonNu
 	}
 }
 
+export function ParseNotNullable<T>(value: Nullable<T>): NonNullable<T> {
+	AssertNotNullable(value);
+	return value;
+}
+
 /**
  * Checks if the passed value is an array, typing it as a readonly array.
  * @param value - The value to check

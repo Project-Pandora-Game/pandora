@@ -7,6 +7,7 @@ export const TEST_ASSET_GROUP_BODY: AssetDefinition<AssetType, AssetTestExtraArg
 	import('./back_hair_short.test_asset.ts'),
 	import('./base.test_asset.ts'),
 	import('./eyes.test_asset.ts'),
+	import('./eyes2.test_asset.ts'),
 	import('./front_hair1.test_asset.ts'),
 	import('./front_hair2.test_asset.ts'),
 	import('./head.test_asset.ts'),

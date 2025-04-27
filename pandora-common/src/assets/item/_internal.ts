@@ -1,4 +1,5 @@
 import type { Immutable } from 'immer';
+import { isEqual } from 'lodash-es';
 import type { Writeable } from 'zod';
 
 import type { CharacterId, ItemInteractionType } from '../../character/index.ts';
@@ -218,8 +219,14 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 
 	/** Colors this item with passed color, returning new item with modified color */
 	public changeColor(color: ItemColorBundle): Item<Type> {
+		const newColor = ItemBase._loadColorBundle(this.asset, color);
+		if (isEqual(newColor, this.color)) {
+			Assert(this.isType(this.type));
+			return this;
+		}
+
 		return this.withProps({
-			color: ItemBase._loadColorBundle(this.asset, color),
+			color: newColor,
 		});
 	}
 

@@ -3,7 +3,7 @@ import { Assert, ParseNotNullable } from '../../../../src/index.ts';
 import { TestAssetsLoadAssetManager } from '../../../assets/_testData/testAssetsDefinition.ts';
 import { TestCreateCharacterState, TestCreateGlobalState } from '../../../assets/assetsTestingHelpers.ts';
 import { TestCreateGameLogicCharacter } from '../../character/characterTestingHelpers.ts';
-import { TestActionExpectValidResult, TestCreateActionContext, TestDoImmediateAction } from '../actionTestingHelpers.ts';
+import { TestActionExpectValidResult, TestCreateActionContext, TestDoImmediateAction, TestStateExtractAssets } from '../actionTestingHelpers.ts';
 
 describe('ActionCreate', () => {
 	it('Creates a non-unique bodypart', () => {
@@ -14,12 +14,7 @@ describe('ActionCreate', () => {
 		]);
 
 		// Before the test the worn assets look like this
-		expect(baseState.characters.get(character.id)?.items.map((i) => i.asset.id)).toEqual([
-			'a/body/base',
-			'a/body/head',
-			'a/body/eyes',
-			'a/body/lips',
-		]);
+		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
 
 		// Do the action
 		const result = TestDoImmediateAction(
@@ -40,14 +35,7 @@ describe('ActionCreate', () => {
 
 		// Check the result
 		TestActionExpectValidResult(result);
-
-		expect(result.resultState.characters.get(character.id)?.items.map((i) => i.asset.id)).toEqual([
-			'a/body/base',
-			'a/body/head',
-			'a/body/eyes',
-			'a/body/lips',
-			'a/body/front_hair1',
-		]);
+		expect(TestStateExtractAssets(result.resultState.characters.get(character.id)?.items)).toMatchSnapshot();
 	});
 
 	it('Creates a non-unique bodypart and reorders it in place', () => {
@@ -70,13 +58,7 @@ describe('ActionCreate', () => {
 		]);
 
 		// Before the test the worn assets look like this
-		expect(baseState.characters.get(character.id)?.items.map((i) => i.asset.id)).toEqual([
-			'a/body/base',
-			'a/body/head',
-			'a/body/eyes',
-			'a/body/lips',
-			'a/body/front_hair1',
-		]);
+		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
 
 		// Do the action
 		const result = TestDoImmediateAction(
@@ -97,15 +79,7 @@ describe('ActionCreate', () => {
 
 		// Check the result
 		TestActionExpectValidResult(result);
-
-		expect(result.resultState.characters.get(character.id)?.items.map((i) => i.asset.id)).toEqual([
-			'a/body/base',
-			'a/body/head',
-			'a/body/eyes',
-			'a/body/lips',
-			'a/body/back_hair_normal', // Reordered - not at the end
-			'a/body/front_hair1',
-		]);
+		expect(TestStateExtractAssets(result.resultState.characters.get(character.id)?.items)).toMatchSnapshot();
 	});
 
 	it('Creates a unique bodypart and replaces the old one', () => {
@@ -116,12 +90,7 @@ describe('ActionCreate', () => {
 		]);
 
 		// Before the test the worn assets look like this
-		expect(baseState.characters.get(character.id)?.items.map((i) => i.asset.id)).toEqual([
-			'a/body/base',
-			'a/body/head',
-			'a/body/eyes',
-			'a/body/lips',
-		]);
+		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
 
 		// Do the action
 		const result = TestDoImmediateAction(
@@ -142,13 +111,7 @@ describe('ActionCreate', () => {
 
 		// Check the result
 		TestActionExpectValidResult(result);
-
-		expect(result.resultState.characters.get(character.id)?.items.map((i) => i.asset.id)).toEqual([
-			'a/body/base',
-			'a/body/head',
-			'a/body/eyes2',
-			'a/body/lips',
-		]);
+		expect(TestStateExtractAssets(result.resultState.characters.get(character.id)?.items)).toMatchSnapshot();
 	});
 
 	it('Creates a wearable asset', () => {
@@ -159,12 +122,7 @@ describe('ActionCreate', () => {
 		]);
 
 		// Before the test the worn assets look like this
-		expect(baseState.characters.get(character.id)?.items.map((i) => i.asset.id)).toEqual([
-			'a/body/base',
-			'a/body/head',
-			'a/body/eyes',
-			'a/body/lips',
-		]);
+		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
 
 		// Do the action
 		const result = TestDoImmediateAction(
@@ -185,14 +143,7 @@ describe('ActionCreate', () => {
 
 		// Check the result
 		TestActionExpectValidResult(result);
-
-		expect(result.resultState.characters.get(character.id)?.items.map((i) => i.asset.id)).toEqual([
-			'a/body/base',
-			'a/body/head',
-			'a/body/eyes',
-			'a/body/lips',
-			'a/panties/style1',
-		]);
+		expect(TestStateExtractAssets(result.resultState.characters.get(character.id)?.items)).toMatchSnapshot();
 	});
 
 	it('Creates a wearable asset and another one ordered before it', () => {
@@ -203,12 +154,7 @@ describe('ActionCreate', () => {
 		]);
 
 		// Before the test the worn assets look like this
-		expect(baseState.characters.get(character.id)?.items.map((i) => i.asset.id)).toEqual([
-			'a/body/base',
-			'a/body/head',
-			'a/body/eyes',
-			'a/body/lips',
-		]);
+		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
 
 		// Do the actions
 		const intermediateResult = TestDoImmediateAction(
@@ -254,14 +200,6 @@ describe('ActionCreate', () => {
 
 		// Check the final result
 		TestActionExpectValidResult(result);
-
-		expect(result.resultState.characters.get(character.id)?.items.map((i) => i.asset.id)).toEqual([
-			'a/body/base',
-			'a/body/head',
-			'a/body/eyes',
-			'a/body/lips',
-			'a/headwear/top_hat',
-			'a/panties/style1',
-		]);
+		expect(TestStateExtractAssets(result.resultState.characters.get(character.id)?.items)).toMatchSnapshot();
 	});
 });

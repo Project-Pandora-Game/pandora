@@ -7,8 +7,11 @@ import {
 	type AppearanceAction,
 	type AppearanceActionContext,
 	type AppearanceActionProcessingResult,
+	type AppearanceActionProcessingResultInvalid,
 	type AppearanceActionProcessingResultValid,
+	type AppearanceItems,
 	type AssetFrameworkGlobalState,
+	type AssetId,
 	type CharacterId,
 	type GameLogicCharacter,
 	type SpaceFeature,
@@ -71,4 +74,34 @@ export function TestActionExpectValidResult(result: AppearanceActionProcessingRe
 		expect(result.valid).toBe(true);
 		Assert(false);
 	}
+}
+
+export function TestActionExpectFail(result: AppearanceActionProcessingResult): asserts result is AppearanceActionProcessingResultInvalid {
+	if (result.valid) {
+		expect(result.valid).toBe(false);
+		Assert(false);
+	}
+
+	expect(result.problems).toMatchSnapshot('problems');
+}
+
+type TestSimpleItemDescriptor = {
+	asset: AssetId;
+	modules?: Record<string, TestSimpleItemDescriptor[]>;
+};
+
+export function TestStateExtractAssets(items: AppearanceItems | undefined): TestSimpleItemDescriptor[] | undefined {
+	return items?.map((i) => {
+		const result: TestSimpleItemDescriptor = {
+			asset: i.asset.id,
+		};
+		for (const [moduleName] of i.getModules()) {
+			const moduleItems = TestStateExtractAssets(i.getModuleItems(moduleName));
+			if (moduleItems != null && moduleItems.length > 0) {
+				result.modules ??= {};
+				result.modules[moduleName] = moduleItems;
+			}
+		}
+		return result;
+	});
 }

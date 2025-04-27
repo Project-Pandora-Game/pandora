@@ -1,5 +1,5 @@
 import { expect } from '@jest/globals';
-import { freeze } from 'immer';
+import { freeze, type Immutable } from 'immer';
 import {
 	AssertNotNullable,
 	AssetFrameworkCharacterState,
@@ -9,10 +9,11 @@ import {
 	type AssetId,
 	type AssetManager,
 	type GameLogicCharacter,
+	type ItemTemplate,
 } from '../../src/index.ts';
 
 /** Create a character state in a deterministic way */
-export function TestCreateCharacterState(assetManager: AssetManager, logicCharacter: GameLogicCharacter): AssetFrameworkCharacterState {
+export function TestCreateCharacterState(assetManager: AssetManager, logicCharacter: GameLogicCharacter, additionalAssets?: (AssetId | Immutable<ItemTemplate>)[]): AssetFrameworkCharacterState {
 	const TEST_ASSETS: AssetId[] = [
 		'a/body/base',
 		'a/body/head',
@@ -30,6 +31,16 @@ export function TestCreateCharacterState(assetManager: AssetManager, logicCharac
 		const item = assetManager.createItem(`i/${logicCharacter.id}:${i}`, asset, logicCharacter);
 		return item.exportToBundle({});
 	});
+	if (additionalAssets != null) {
+		for (let add of additionalAssets) {
+			if (typeof add === 'string') {
+				add = { asset: add };
+			}
+			const item = assetManager.createItemFromTemplate(add, logicCharacter);
+			AssertNotNullable(item);
+			baseBundle.items.push(item.exportToBundle({}));
+		}
+	}
 
 	// Update bones as base bundle doesn't define them explicitly, but we expect that in the character bundle
 	baseBundle.requestedPose.bones = {};

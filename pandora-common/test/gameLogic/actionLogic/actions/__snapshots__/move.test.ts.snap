@@ -1,0 +1,317 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ActionMoveItem Fails if reordering between bodyparts 1`] = `
+[
+  {
+    "asset": "a/body/base",
+  },
+  {
+    "asset": "a/body/head",
+  },
+  {
+    "asset": "a/body/eyes",
+  },
+  {
+    "asset": "a/body/lips",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/headwear/top_hat",
+  },
+]
+`;
+
+exports[`ActionMoveItem Fails if reordering between bodyparts: problems 1`] = `
+[
+  {
+    "result": "validationError",
+    "validationError": {
+      "problem": "bodypartError",
+      "problemDetail": "incorrectOrder",
+    },
+  },
+]
+`;
+
+exports[`ActionMoveItem Fails if reordering out of bounds downwards 1`] = `
+[
+  {
+    "asset": "a/body/base",
+  },
+  {
+    "asset": "a/body/head",
+  },
+  {
+    "asset": "a/body/eyes",
+  },
+  {
+    "asset": "a/body/lips",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/headwear/top_hat",
+  },
+]
+`;
+
+exports[`ActionMoveItem Fails if reordering out of bounds downwards: problems 1`] = `
+[
+  {
+    "reason": undefined,
+    "result": "invalidAction",
+  },
+]
+`;
+
+exports[`ActionMoveItem Fails if reordering out of bounds upwards 1`] = `
+[
+  {
+    "asset": "a/body/base",
+  },
+  {
+    "asset": "a/body/head",
+  },
+  {
+    "asset": "a/body/eyes",
+  },
+  {
+    "asset": "a/body/lips",
+  },
+  {
+    "asset": "a/headwear/top_hat",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+]
+`;
+
+exports[`ActionMoveItem Fails if reordering out of bounds upwards: problems 1`] = `
+[
+  {
+    "reason": undefined,
+    "result": "invalidAction",
+  },
+]
+`;
+
+exports[`ActionMoveItem Reorders item downwards 1`] = `
+[
+  {
+    "asset": "a/body/base",
+  },
+  {
+    "asset": "a/body/head",
+  },
+  {
+    "asset": "a/body/eyes",
+  },
+  {
+    "asset": "a/body/lips",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/headwear/top_hat",
+  },
+]
+`;
+
+exports[`ActionMoveItem Reorders item downwards 2`] = `
+[
+  {
+    "asset": "a/body/base",
+  },
+  {
+    "asset": "a/body/head",
+  },
+  {
+    "asset": "a/body/eyes",
+  },
+  {
+    "asset": "a/body/lips",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/headwear/top_hat",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+]
+`;
+
+exports[`ActionMoveItem Reorders item downwards by more than one 1`] = `
+[
+  {
+    "asset": "a/body/base",
+  },
+  {
+    "asset": "a/body/head",
+  },
+  {
+    "asset": "a/body/eyes",
+  },
+  {
+    "asset": "a/body/lips",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/headwear/top_hat",
+  },
+]
+`;
+
+exports[`ActionMoveItem Reorders item downwards by more than one 2`] = `
+[
+  {
+    "asset": "a/body/base",
+  },
+  {
+    "asset": "a/body/head",
+  },
+  {
+    "asset": "a/body/eyes",
+  },
+  {
+    "asset": "a/body/lips",
+  },
+  {
+    "asset": "a/headwear/top_hat",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+]
+`;
+
+exports[`ActionMoveItem Reorders item upwards 1`] = `
+[
+  {
+    "asset": "a/body/base",
+  },
+  {
+    "asset": "a/body/head",
+  },
+  {
+    "asset": "a/body/eyes",
+  },
+  {
+    "asset": "a/body/lips",
+  },
+  {
+    "asset": "a/headwear/top_hat",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+]
+`;
+
+exports[`ActionMoveItem Reorders item upwards 2`] = `
+[
+  {
+    "asset": "a/body/base",
+  },
+  {
+    "asset": "a/body/head",
+  },
+  {
+    "asset": "a/body/eyes",
+  },
+  {
+    "asset": "a/body/lips",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/headwear/top_hat",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+]
+`;
+
+exports[`ActionMoveItem Reorders item upwards by more than one 1`] = `
+[
+  {
+    "asset": "a/body/base",
+  },
+  {
+    "asset": "a/body/head",
+  },
+  {
+    "asset": "a/body/eyes",
+  },
+  {
+    "asset": "a/body/lips",
+  },
+  {
+    "asset": "a/headwear/top_hat",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+]
+`;
+
+exports[`ActionMoveItem Reorders item upwards by more than one 2`] = `
+[
+  {
+    "asset": "a/body/base",
+  },
+  {
+    "asset": "a/body/head",
+  },
+  {
+    "asset": "a/body/eyes",
+  },
+  {
+    "asset": "a/body/lips",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/headwear/top_hat",
+  },
+]
+`;

@@ -1,5 +1,6 @@
 import { Immutable, freeze } from 'immer';
 import { clamp, cloneDeep, isEqual } from 'lodash-es';
+import type { Writable } from 'type-fest';
 import type { CharacterId } from '../../character/index.ts';
 import { RedactSensitiveActionData } from '../../gameLogic/actionLogic/actionUtils.ts';
 import type { Logger } from '../../logging/logger.ts';
@@ -11,7 +12,7 @@ import { BoneType } from '../graphics/index.ts';
 import { Item, type ItemRoomDeviceWearablePart } from '../item/index.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
-import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type CharacterActionAttempt, type RestrictionOverride } from './characterStateTypes.ts';
+import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type AppearanceClientDeltaBundle, type CharacterActionAttempt, type RestrictionOverride } from './characterStateTypes.ts';
 import type { AssetFrameworkRoomState } from './roomState.ts';
 
 type AssetFrameworkCharacterStateProps = {
@@ -91,6 +92,93 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			}) : undefined,
 			clientOnly: true,
 		};
+	}
+
+	public exportToClientDeltaBundle(originalState: AssetFrameworkCharacterState, options: IExportOptions = {}): AppearanceClientDeltaBundle {
+		Assert(this.assetManager === originalState.assetManager);
+		Assert(this.id === originalState.id);
+		options.clientOnly = true;
+
+		const result: AppearanceClientDeltaBundle = {};
+
+		if (this.items !== originalState.items) {
+			result.items = this.items.map((item) => item.exportToBundle(options));
+		}
+		if (this.requestedPose !== originalState.requestedPose) {
+			result.requestedPose = cloneDeep(this.requestedPose);
+		}
+		if (this.restrictionOverride !== originalState.restrictionOverride) {
+			result.restrictionOverride = this.restrictionOverride ?? null;
+		}
+		if (this.attemptingAction !== originalState.attemptingAction) {
+			result.attemptingAction = this.attemptingAction != null ? ({
+				action: RedactSensitiveActionData(this.attemptingAction.action),
+				start: this.attemptingAction.start,
+				finishAfter: this.attemptingAction.finishAfter,
+			}) : null;
+		}
+
+		return result;
+	}
+
+	public applyClientDeltaBundle(bundle: AppearanceClientDeltaBundle, roomState: AssetFrameworkRoomState | null, logger: Logger | undefined): AssetFrameworkCharacterState {
+		const update: Writable<Partial<AssetFrameworkCharacterStateProps>> = {};
+
+		if (bundle.items !== undefined) {
+			update.items = bundle.items.map((itemBundle) => {
+				const asset = this.assetManager.getAssetById(itemBundle.asset);
+				Assert(asset != null, `DESYNC: Unknown asset ${itemBundle.asset}`);
+
+				let item = this.assetManager.loadItemFromBundle(asset, itemBundle, logger);
+
+				// Properly link room device wearable parts
+				if (item.isType('roomDeviceWearablePart')) {
+					const link = item.roomDeviceLink;
+					const device = roomState?.items.find((roomItem) => roomItem.id === link?.device);
+					if (device?.isType('roomDevice')) {
+						item = item.updateRoomStateLink(device);
+					}
+				}
+
+				Assert(item.isWearable(), 'DESYNC: Received non-wearable item on character');
+				return item;
+			});
+		}
+
+		if (bundle.requestedPose !== undefined) {
+			const requestedPose = cloneDeep(bundle.requestedPose);
+			// Load the bones manually, as they might change and are not validated by Zod; instead depend on assetManager
+			requestedPose.bones = {};
+			for (const bone of this.assetManager.getAllBones()) {
+				const value = bundle.requestedPose.bones[bone.name];
+				requestedPose.bones[bone.name] = (value != null && Number.isInteger(value)) ? clamp(value, BONE_MIN, BONE_MAX) : 0;
+			}
+			if (logger) {
+				for (const k of Object.keys(bundle.requestedPose.bones)) {
+					if (requestedPose.bones[k] == null) {
+						logger.warning(`Skipping unknown pose bone ${k}`);
+					}
+				}
+			}
+			update.requestedPose = requestedPose;
+		}
+
+		if (bundle.restrictionOverride !== undefined) {
+			update.restrictionOverride = bundle.restrictionOverride != null ? bundle.restrictionOverride : undefined;
+		}
+
+		if (bundle.attemptingAction !== undefined) {
+			update.attemptingAction = bundle.attemptingAction;
+		}
+
+		// Create the final state
+		const resultState = freeze(
+			new AssetFrameworkCharacterState(this, update).updateRoomStateLink(roomState, false),
+			true,
+		);
+
+		Assert(resultState.isValid(roomState), 'State is invalid after delta update');
+		return resultState;
 	}
 
 	@MemoizeNoArg

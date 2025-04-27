@@ -72,6 +72,14 @@ export const AppearanceBundleSchema = z.object({
 export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;
 export type AppearanceClientBundle = AppearanceBundle & { clientOnly: true; };
 
+export const AppearanceClientDeltaBundleSchema = z.object({
+	requestedPose: AppearancePoseSchema.optional(),
+	items: ItemBundleSchema.array().optional(),
+	restrictionOverride: RestrictionOverrideSchema.nullable().optional(),
+	attemptingAction: CharacterActionAttemptSchema.nullable().optional(),
+});
+export type AppearanceClientDeltaBundle = z.infer<typeof AppearanceClientDeltaBundleSchema>;
+
 export function GetDefaultAppearanceBundle(): AppearanceBundle {
 	return {
 		items: [],

@@ -11,7 +11,7 @@ import { AssetManager } from '../assetManager.ts';
 import type { Item } from '../item/base.ts';
 import { IExportOptions } from '../modules/common.ts';
 import { AssetFrameworkCharacterState } from './characterState.ts';
-import { AppearanceBundleSchema, AppearanceClientBundle } from './characterStateTypes.ts';
+import { AppearanceBundleSchema, AppearanceClientBundle, AppearanceClientDeltaBundleSchema } from './characterStateTypes.ts';
 import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClientBundle } from './roomState.ts';
 
 export const AssetFrameworkGlobalStateBundleSchema = z.object({
@@ -27,10 +27,15 @@ export type AssetFrameworkGlobalStateClientBundle = AssetFrameworkGlobalStateBun
 	clientOnly: true;
 };
 
+const AssetFrameworkGlobalStateCharacterClientDeltaSchema = z.union([
+	z.tuple([z.literal('full'), AppearanceBundleSchema]),
+	z.tuple([z.literal('delta'), AppearanceClientDeltaBundleSchema]),
+	z.null(),
+]);
 export const AssetFrameworkGlobalStateClientDeltaBundleSchema = z.object({
 	originalStateId: z.string(),
 	targetStateId: z.string(),
-	characters: z.record(CharacterIdSchema, AppearanceBundleSchema.nullable()).optional(),
+	characters: z.record(CharacterIdSchema, AssetFrameworkGlobalStateCharacterClientDeltaSchema).optional(),
 	room: RoomInventoryBundleSchema.optional(),
 });
 export type AssetFrameworkGlobalStateClientDeltaBundle = z.infer<typeof AssetFrameworkGlobalStateClientDeltaBundleSchema>;
@@ -164,6 +169,7 @@ export class AssetFrameworkGlobalState {
 	}
 
 	public exportToClientDeltaBundle(originalState: AssetFrameworkGlobalState, options: IExportOptions = {}): AssetFrameworkGlobalStateClientDeltaBundle {
+		Assert(this.assetManager === originalState.assetManager);
 		options.clientOnly = true;
 
 		const result: AssetFrameworkGlobalStateClientDeltaBundle = {
@@ -184,7 +190,11 @@ export class AssetFrameworkGlobalState {
 			const originalCharacter = originalState.characters.get(id);
 			if (originalCharacter !== character) {
 				result.characters ??= {};
-				result.characters[id] = character.exportToClientBundle(options);
+				if (originalCharacter != null) {
+					result.characters[id] = ['delta', character.exportToClientDeltaBundle(originalCharacter, options)];
+				} else {
+					result.characters[id] = ['full', character.exportToClientBundle(options)];
+				}
 			}
 		}
 
@@ -211,11 +221,20 @@ export class AssetFrameworkGlobalState {
 				const characterId = CharacterIdSchema.parse(key);
 				if (characterData == null) {
 					newCharacters.delete(characterId);
-				} else {
+				} else if (characterData[0] === 'full') {
 					newCharacters.set(
 						characterId,
-						AssetFrameworkCharacterState.loadFromBundle(this.assetManager, characterId, characterData, room, logger),
+						AssetFrameworkCharacterState.loadFromBundle(this.assetManager, characterId, characterData[1], room, logger),
 					);
+				} else if (characterData[0] === 'delta') {
+					const originalCharacter = this.characters.get(characterId);
+					Assert(originalCharacter != null, 'DESYNC: Character to update not found');
+					newCharacters.set(
+						characterId,
+						originalCharacter.applyClientDeltaBundle(characterData[1], room, logger),
+					);
+				} else {
+					AssertNever(characterData);
 				}
 			}
 			characters = newCharacters;

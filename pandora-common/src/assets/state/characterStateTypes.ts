@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { AppearanceActionSchema } from '../../gameLogic/actionLogic/index.ts';
 import { ZodArrayWithInvalidDrop } from '../../validation.ts';
 import { ItemBundleSchema } from '../item/unified.ts';
-import { AppearancePoseSchema, GetDefaultAppearancePose } from './characterStatePose.ts';
+import { AppearancePoseSchema, GetDefaultAppearancePose, PartialAppearancePoseSchema } from './characterStatePose.ts';
 
 export const RestrictionOverrideSchema = z.object({
 	type: z.enum(['safemode', 'timeout']),
@@ -73,7 +73,7 @@ export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;
 export type AppearanceClientBundle = AppearanceBundle & { clientOnly: true; };
 
 export const AppearanceClientDeltaBundleSchema = z.object({
-	requestedPose: AppearancePoseSchema.optional(),
+	requestedPose: PartialAppearancePoseSchema.optional(),
 	items: ItemBundleSchema.array().optional(),
 	restrictionOverride: RestrictionOverrideSchema.nullable().optional(),
 	attemptingAction: CharacterActionAttemptSchema.nullable().optional(),

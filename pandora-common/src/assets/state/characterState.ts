@@ -11,7 +11,7 @@ import { WearableAssetType } from '../definitions.ts';
 import { BoneType } from '../graphics/index.ts';
 import { Item, type ItemRoomDeviceWearablePart } from '../item/index.ts';
 import type { IExportOptions } from '../modules/common.ts';
-import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
+import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, CalculateAppearancePosesDelta, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
 import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type AppearanceClientDeltaBundle, type CharacterActionAttempt, type RestrictionOverride } from './characterStateTypes.ts';
 import type { AssetFrameworkRoomState } from './roomState.ts';
 
@@ -105,7 +105,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			result.items = this.items.map((item) => item.exportToBundle(options));
 		}
 		if (this.requestedPose !== originalState.requestedPose) {
-			result.requestedPose = cloneDeep(this.requestedPose);
+			result.requestedPose = cloneDeep(CalculateAppearancePosesDelta(this.assetManager, originalState.requestedPose, this.requestedPose));
 		}
 		if (this.restrictionOverride !== originalState.restrictionOverride) {
 			result.restrictionOverride = this.restrictionOverride ?? null;
@@ -146,21 +146,11 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		}
 
 		if (bundle.requestedPose !== undefined) {
-			const requestedPose = cloneDeep(bundle.requestedPose);
-			// Load the bones manually, as they might change and are not validated by Zod; instead depend on assetManager
-			requestedPose.bones = {};
-			for (const bone of this.assetManager.getAllBones()) {
-				const value = bundle.requestedPose.bones[bone.name];
-				requestedPose.bones[bone.name] = (value != null && Number.isInteger(value)) ? clamp(value, BONE_MIN, BONE_MAX) : 0;
-			}
-			if (logger) {
-				for (const k of Object.keys(bundle.requestedPose.bones)) {
-					if (requestedPose.bones[k] == null) {
-						logger.warning(`Skipping unknown pose bone ${k}`);
-					}
-				}
-			}
-			update.requestedPose = requestedPose;
+			update.requestedPose = ProduceAppearancePose(
+				this.requestedPose,
+				{ assetManager: this.assetManager },
+				bundle.requestedPose,
+			);
 		}
 
 		if (bundle.restrictionOverride !== undefined) {

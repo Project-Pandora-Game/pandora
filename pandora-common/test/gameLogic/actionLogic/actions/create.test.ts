@@ -34,7 +34,7 @@ describe('ActionCreate', () => {
 					asset: 'a/body/front_hair1',
 				},
 			},
-			TestCreateActionContext(character),
+			TestCreateActionContext(character, { spaceFeatures: ['allowBodyChanges'] }),
 			baseState,
 		);
 
@@ -91,7 +91,7 @@ describe('ActionCreate', () => {
 					asset: 'a/body/back_hair_normal',
 				},
 			},
-			TestCreateActionContext(character),
+			TestCreateActionContext(character, { spaceFeatures: ['allowBodyChanges'] }),
 			baseState,
 		);
 
@@ -246,7 +246,7 @@ describe('ActionCreate', () => {
 				itemTemplate: {
 					asset: 'a/headwear/top_hat',
 				},
-				insertBefore: items ? items[items.length - 1].id : undefined,
+				insertBefore: items?.[items.length - 1].id,
 			},
 			TestCreateActionContext(character),
 			intermediateResult.resultState,

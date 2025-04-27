@@ -150,4 +150,118 @@ describe('ActionCreate', () => {
 			'a/body/lips',
 		]);
 	});
+
+	it('Creates a wearable asset', () => {
+		const assetManager = TestAssetsLoadAssetManager();
+		const character = TestCreateGameLogicCharacter(1, 'c1');
+		const baseState = TestCreateGlobalState(assetManager, [
+			TestCreateCharacterState(assetManager, character),
+		]);
+
+		// Before the test the worn assets look like this
+		expect(baseState.characters.get(character.id)?.items.map((i) => i.asset.id)).toEqual([
+			'a/body/base',
+			'a/body/head',
+			'a/body/eyes',
+			'a/body/lips',
+		]);
+
+		// Do the action
+		const result = TestDoImmediateAction(
+			{
+				type: 'create',
+				target: {
+					type: 'character',
+					characterId: character.id,
+				},
+				container: [],
+				itemTemplate: {
+					asset: 'a/panties/style1',
+				},
+			},
+			TestCreateActionContext(character),
+			baseState,
+		);
+
+		// Check the result
+		TestActionExpectValidResult(result);
+
+		expect(result.resultState.characters.get(character.id)?.items.map((i) => i.asset.id)).toEqual([
+			'a/body/base',
+			'a/body/head',
+			'a/body/eyes',
+			'a/body/lips',
+			'a/panties/style1',
+		]);
+	});
+
+	it('Creates a wearable asset and another one ordered before it', () => {
+		const assetManager = TestAssetsLoadAssetManager();
+		const character = TestCreateGameLogicCharacter(1, 'c1');
+		const baseState = TestCreateGlobalState(assetManager, [
+			TestCreateCharacterState(assetManager, character),
+		]);
+
+		// Before the test the worn assets look like this
+		expect(baseState.characters.get(character.id)?.items.map((i) => i.asset.id)).toEqual([
+			'a/body/base',
+			'a/body/head',
+			'a/body/eyes',
+			'a/body/lips',
+		]);
+
+		// Do the actions
+		const intermediateResult = TestDoImmediateAction(
+			{
+				type: 'create',
+				target: {
+					type: 'character',
+					characterId: character.id,
+				},
+				container: [],
+				itemTemplate: {
+					asset: 'a/panties/style1',
+				},
+			},
+			TestCreateActionContext(character),
+			baseState,
+		);
+
+		// Check the intermediate result
+		TestActionExpectValidResult(intermediateResult);
+
+		const items = intermediateResult.resultState.getItems({
+			type: 'character',
+			characterId: character.id,
+		});
+
+		const result = TestDoImmediateAction(
+			{
+				type: 'create',
+				target: {
+					type: 'character',
+					characterId: character.id,
+				},
+				container: [],
+				itemTemplate: {
+					asset: 'a/headwear/top_hat',
+				},
+				insertBefore: items ? items[items.length - 1].id : undefined,
+			},
+			TestCreateActionContext(character),
+			intermediateResult.resultState,
+		);
+
+		// Check the final result
+		TestActionExpectValidResult(result);
+
+		expect(result.resultState.characters.get(character.id)?.items.map((i) => i.asset.id)).toEqual([
+			'a/body/base',
+			'a/body/head',
+			'a/body/eyes',
+			'a/body/lips',
+			'a/headwear/top_hat',
+			'a/panties/style1',
+		]);
+	});
 });

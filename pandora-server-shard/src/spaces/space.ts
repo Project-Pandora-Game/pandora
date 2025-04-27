@@ -1,5 +1,6 @@
+import { freeze } from 'immer';
 import { diffString } from 'json-diff';
-import { chain, isEqual, omit } from 'lodash-es';
+import { chain, cloneDeep, isEqual, omit } from 'lodash-es';
 import {
 	AccountId,
 	ActionHandlerMessage,
@@ -32,6 +33,7 @@ import {
 	RoomInventory,
 	RoomInventoryBundle,
 	ServerRoom,
+	SpaceCharacterModifierEffectCalculateUpdate,
 	SpaceClientInfo,
 	SpaceDirectoryConfig,
 	SpaceId,
@@ -42,6 +44,7 @@ import {
 	type IChatMessageAction,
 	type IClientShardNormalResult,
 	type SpaceCharacterModifierEffectData,
+	type SpaceCharacterModifierEffectDataUpdate,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager.ts';
 import type { Character } from '../character/character.ts';
@@ -65,6 +68,9 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public get currentState(): AssetFrameworkGlobalState {
 		return this._gameState.currentState;
 	}
+
+	/** Data for what character modifier effects were sent to the room last, used for creating delta updates when effects change */
+	private _lastSentModifierEffects: SpaceCharacterModifierEffectData = {};
 
 	public abstract get id(): SpaceId | null;
 	public abstract get owners(): readonly AccountId[];
@@ -199,13 +205,13 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 		this.sendUpdateToAllCharacters({
 			globalState: newState.exportToClientDeltaBundle(oldState),
-			characterModifierEffects: this.getCharacterModifierEffects(),
+			characterModifierEffects: this.getAndApplyCharacterModifierEffectsUpdate(),
 		});
 	}
 
 	public onCharacterModifiersChanged(): void {
 		this.sendUpdateToAllCharacters({
-			characterModifierEffects: this.getCharacterModifierEffects(),
+			characterModifierEffects: this.getAndApplyCharacterModifierEffectsUpdate(),
 		});
 	}
 
@@ -227,7 +233,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		};
 	}
 
-	public getCharacterModifierEffects(): SpaceCharacterModifierEffectData {
+	/** Calculates current modifier effects for all characters in the space */
+	protected getCharacterModifierEffects(): SpaceCharacterModifierEffectData {
 		const result: SpaceCharacterModifierEffectData = {};
 
 		const gameState = this.currentState;
@@ -236,10 +243,18 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			config: this.getInfo(),
 		};
 		for (const character of this.characters) {
-			result[character.id] = character.gameLogicCharacter.characterModifiers.getActiveEffects(gameState, spaceInfo);
+			result[character.id] = freeze(cloneDeep(character.gameLogicCharacter.characterModifiers.getActiveEffects(gameState, spaceInfo)), true);
 		}
 
 		return result;
+	}
+
+	/** Calculates an update for character modifier effects from the last time this function was called. The update is idempotent. */
+	protected getAndApplyCharacterModifierEffectsUpdate(): SpaceCharacterModifierEffectDataUpdate | undefined {
+		const newEffects = this.getCharacterModifierEffects();
+		const update = SpaceCharacterModifierEffectCalculateUpdate(this._lastSentModifierEffects, newEffects);
+		this._lastSentModifierEffects = newEffects;
+		return update;
 	}
 
 	public getActionSpaceContext(): ActionSpaceContext {
@@ -376,7 +391,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			// Send update to current characters
 			this.sendUpdateToAllCharacters({
 				globalState: newState.exportToClientDeltaBundle(originalState),
-				characterModifierEffects: this.getCharacterModifierEffects(),
+				characterModifierEffects: this.getAndApplyCharacterModifierEffectsUpdate(),
 				join: character.getRoomData(),
 			});
 			// Send update to joining character
@@ -414,7 +429,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			this._gameState.setState(newState);
 			this.sendUpdateToAllCharacters({
 				globalState: newState.exportToClientDeltaBundle(originalState),
-				characterModifierEffects: this.getCharacterModifierEffects(),
+				characterModifierEffects: this.getAndApplyCharacterModifierEffectsUpdate(),
 				leave: character.id,
 			});
 

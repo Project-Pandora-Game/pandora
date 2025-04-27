@@ -24,6 +24,7 @@ import {
 	IShardClientArgument,
 	Item,
 	ItemPath,
+	KnownObject,
 	LIMIT_CHAT_MESSAGE_LENGTH,
 	Logger,
 	MakePermissionConfigFromDefault,
@@ -299,7 +300,16 @@ export class GameState extends TypedEventEmitter<{
 			this._updateGlobalStateDelta(globalState);
 		}
 		if (characterModifierEffects != null) {
-			this.characterModifierEffects.value = freeze(characterModifierEffects, true);
+			freeze(characterModifierEffects, true);
+			this.characterModifierEffects.produceImmer((d) => {
+				for (const [k, v] of KnownObject.entries(characterModifierEffects)) {
+					if (v == null) {
+						delete d[k];
+					} else {
+						d[k] = v;
+					}
+				}
+			});
 		}
 		logger.debug('Updated data', data);
 	}

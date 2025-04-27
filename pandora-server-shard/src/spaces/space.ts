@@ -110,7 +110,11 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	}
 
 	public reloadAssetManager(manager: AssetManager) {
-		this._gameState.reloadAssetManager(manager);
+		// Suppress update during asset manager reload, as creating a delta update with different managers is illegal
+		// This way clients will get new data as they receive new asset manager data later
+		this.runWithSuppressedUpdates(() => {
+			this._gameState.reloadAssetManager(manager);
+		});
 
 		// Background definition might have changed, make sure all characters are still inside range
 		const update: GameStateUpdate = {};

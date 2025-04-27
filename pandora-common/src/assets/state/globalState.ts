@@ -13,7 +13,7 @@ import type { AppearanceItems } from '../item/index.ts';
 import { IExportOptions } from '../modules/common.ts';
 import { AssetFrameworkCharacterState } from './characterState.ts';
 import { AppearanceBundleSchema, AppearanceClientBundle, AppearanceClientDeltaBundleSchema } from './characterStateTypes.ts';
-import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClientBundle } from './roomState.ts';
+import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClientBundle, RoomInventoryClientDeltaBundleSchema } from './roomState.ts';
 
 export const AssetFrameworkGlobalStateBundleSchema = z.object({
 	stateId: z.string().default(''),
@@ -37,7 +37,7 @@ export const AssetFrameworkGlobalStateClientDeltaBundleSchema = z.object({
 	originalStateId: z.string(),
 	targetStateId: z.string(),
 	characters: z.record(CharacterIdSchema, AssetFrameworkGlobalStateCharacterClientDeltaSchema).optional(),
-	room: RoomInventoryBundleSchema.optional(),
+	room: RoomInventoryClientDeltaBundleSchema.optional(),
 });
 export type AssetFrameworkGlobalStateClientDeltaBundle = z.infer<typeof AssetFrameworkGlobalStateClientDeltaBundleSchema>;
 
@@ -201,7 +201,7 @@ export class AssetFrameworkGlobalState {
 
 		// Check if room changed
 		if (originalState.room !== this.room) {
-			result.room = this.room.exportToClientBundle(options);
+			result.room = this.room.exportToClientDeltaBundle(originalState.room, options);
 		}
 
 		return result;
@@ -212,7 +212,7 @@ export class AssetFrameworkGlobalState {
 
 		let room = this.room;
 		if (bundle.room != null) {
-			room = AssetFrameworkRoomState.loadFromBundle(this.assetManager, bundle.room, logger);
+			room = this.room.applyClientDeltaBundle(bundle.room, logger);
 		}
 
 		let characters = this.characters;

@@ -5,7 +5,7 @@ import { Assert, MemoizeNoArg } from '../../utility/misc.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { Item } from '../item/base.ts';
-import { AppearanceItemsBundleSchema, type AppearanceItems } from '../item/items.ts';
+import { AppearanceItemsBundleSchema, AppearanceItemsDeltaBundleSchema, ApplyAppearanceItemsDeltaBundle, CalculateAppearanceItemsDeltaBundle, type AppearanceItems } from '../item/items.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation.ts';
 
@@ -16,6 +16,11 @@ export const RoomInventoryBundleSchema = z.object({
 
 export type RoomInventoryBundle = z.infer<typeof RoomInventoryBundleSchema>;
 export type RoomInventoryClientBundle = RoomInventoryBundle & { clientOnly: true; };
+
+export const RoomInventoryClientDeltaBundleSchema = z.object({
+	items: AppearanceItemsDeltaBundleSchema.optional(),
+});
+export type RoomInventoryClientDeltaBundle = z.infer<typeof RoomInventoryClientDeltaBundleSchema>;
 
 export const ROOM_INVENTORY_BUNDLE_DEFAULT: RoomInventoryBundle = {
 	items: [],
@@ -67,6 +72,35 @@ export class AssetFrameworkRoomState {
 			items: this.items.map((item) => item.exportToBundle(options)),
 			clientOnly: true,
 		};
+	}
+
+	public exportToClientDeltaBundle(originalState: AssetFrameworkRoomState, options: IExportOptions = {}): RoomInventoryClientDeltaBundle {
+		Assert(this.assetManager === originalState.assetManager);
+		options.clientOnly = true;
+
+		const result: RoomInventoryClientDeltaBundle = {};
+
+		if (this.items !== originalState.items) {
+			result.items = CalculateAppearanceItemsDeltaBundle(originalState.items, this.items, options);
+		}
+
+		return result;
+	}
+
+	public applyClientDeltaBundle(bundle: RoomInventoryClientDeltaBundle, logger: Logger | undefined): AssetFrameworkRoomState {
+		let items = this.items;
+
+		if (bundle.items !== undefined) {
+			items = ApplyAppearanceItemsDeltaBundle(this.assetManager, this.items, bundle.items, logger);
+		}
+
+		const resultState = freeze(new AssetFrameworkRoomState(
+			this.assetManager,
+			items,
+		), true);
+
+		Assert(resultState.isValid(), 'State is invalid after delta update');
+		return resultState;
 	}
 
 	public produceWithItems(newItems: AppearanceItems): AssetFrameworkRoomState {

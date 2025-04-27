@@ -1,7 +1,7 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
 import type { AssetsDefinitionFile } from '../assets/definitions.ts';
-import { AssetFrameworkGlobalStateClientBundle } from '../assets/state/globalState.ts';
+import { AssetFrameworkGlobalStateClientBundle, AssetFrameworkGlobalStateClientDeltaBundleSchema } from '../assets/state/globalState.ts';
 import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData.ts';
 import type { CharacterPublicSettings } from '../character/characterSettings.ts';
 import { AssetPreferencesPublic, CharacterIdSchema, CharacterPrivateDataSchema } from '../character/index.ts';
@@ -33,7 +33,7 @@ export const SpaceLoadDataSchema = z.object({
 export type SpaceLoadData = z.infer<typeof SpaceLoadDataSchema>;
 
 export const GameStateUpdateSchema = z.object({
-	globalState: ZodCast<AssetFrameworkGlobalStateClientBundle>().optional(),
+	globalState: AssetFrameworkGlobalStateClientDeltaBundleSchema.optional(),
 	info: SpaceClientInfoSchema.partial().optional(),
 	leave: CharacterIdSchema.optional(),
 	join: ZodCast<ICharacterRoomData>().optional(),

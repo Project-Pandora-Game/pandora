@@ -1,6 +1,7 @@
 import { expect } from '@jest/globals';
 import { freeze, type Immutable } from 'immer';
 import {
+	Assert,
 	AssertNotNullable,
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
@@ -98,4 +99,30 @@ export function TestVerifyGlobalStateExportImport(state: AssetFrameworkGlobalSta
 	const loadedClientState = AssetFrameworkGlobalState.loadFromBundle(state.assetManager, clientBundle, undefined);
 
 	expect(loadedClientState.exportToClientBundle()).toStrictEqual(clientBundle);
+}
+
+export function TestVerifyGlobalStateDelta(originalState: AssetFrameworkGlobalState, targetState: AssetFrameworkGlobalState): void {
+	Assert(originalState.assetManager === targetState.assetManager);
+	if (originalState === targetState)
+		return;
+
+	// The states should have a different state id
+	// (this is technically flaky, but the chance of a collission here is really small)
+	expect(originalState.getStateId()).not.toBe(targetState.getStateId());
+
+	// Create delta update
+	const update = targetState.exportToClientDeltaBundle(originalState);
+	freeze(update, true);
+
+	// Get client equivalents for the states
+	const originalClientState = AssetFrameworkGlobalState.loadFromBundle(originalState.assetManager, originalState.exportToClientBundle(), undefined);
+	const targetClientBundle = targetState.exportToClientBundle();
+	const targetClientState = AssetFrameworkGlobalState.loadFromBundle(targetState.assetManager, targetClientBundle, undefined);
+
+	// Apply bundle to original client state
+	const updatedClientState = originalClientState.applyClientDeltaBundle(update, undefined);
+
+	// We must arrive at the same result
+	expect(updatedClientState.exportToClientBundle()).toStrictEqual(targetClientBundle);
+	expect(updatedClientState).toStrictEqual(targetClientState);
 }

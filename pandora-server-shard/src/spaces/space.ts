@@ -194,7 +194,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			return;
 
 		this.sendUpdateToAllCharacters({
-			globalState: newState.exportToClientBundle(),
+			globalState: newState.exportToClientDeltaBundle(oldState),
 			characterModifierEffects: this.getCharacterModifierEffects(),
 		});
 	}
@@ -338,7 +338,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		const logger = this.logger.prefixMessages(`Character ${character.id} join:`);
 
 		this.runWithSuppressedUpdates(() => {
-			let newState = this._gameState.currentState;
+			const originalState = this._gameState.currentState;
+			let newState = originalState;
 
 			// Add the character to the room
 			this.characters.add(character);
@@ -369,16 +370,15 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			this._gameState.setState(newState);
 
 			// Send update to current characters
-			const globalState = this._gameState.currentState.exportToClientBundle();
 			this.sendUpdateToAllCharacters({
-				globalState,
+				globalState: newState.exportToClientDeltaBundle(originalState),
 				characterModifierEffects: this.getCharacterModifierEffects(),
 				join: character.getRoomData(),
 			});
 			// Send update to joining character
 			character.setSpace(this, newAppearanceBundle);
 			character.connection?.sendMessage('gameStateLoad', {
-				globalState,
+				globalState: newState.exportToClientBundle(),
 				space: this.getLoadData(),
 			});
 		});
@@ -395,7 +395,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public characterRemove(character: Character): void {
 		this.runWithSuppressedUpdates(() => {
 			// Remove character
-			let newState = this._gameState.currentState;
+			const originalState = this._gameState.currentState;
+			let newState = originalState;
 			const characterAppearance = newState.characters.get(character.id)?.exportToBundle();
 			AssertNotNullable(characterAppearance);
 
@@ -408,7 +409,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			// Update anyone remaining in the space
 			this._gameState.setState(newState);
 			this.sendUpdateToAllCharacters({
-				globalState: this._gameState.currentState.exportToClientBundle(),
+				globalState: newState.exportToClientDeltaBundle(originalState),
 				characterModifierEffects: this.getCharacterModifierEffects(),
 				leave: character.id,
 			});

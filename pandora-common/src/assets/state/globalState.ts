@@ -1,4 +1,5 @@
 import { freeze } from 'immer';
+import { nanoid } from 'nanoid';
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../../character/characterTypes.ts';
 import type { Logger } from '../../logging/logger.ts';
@@ -14,6 +15,7 @@ import { AppearanceBundleSchema, AppearanceClientBundle } from './characterState
 import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClientBundle } from './roomState.ts';
 
 export const AssetFrameworkGlobalStateBundleSchema = z.object({
+	stateId: z.string().default(''),
 	characters: z.record(CharacterIdSchema, AppearanceBundleSchema),
 	room: RoomInventoryBundleSchema,
 	clientOnly: z.boolean().optional(),
@@ -25,6 +27,14 @@ export type AssetFrameworkGlobalStateClientBundle = AssetFrameworkGlobalStateBun
 	clientOnly: true;
 };
 
+export const AssetFrameworkGlobalStateClientDeltaBundleSchema = z.object({
+	originalStateId: z.string(),
+	targetStateId: z.string(),
+	characters: z.record(CharacterIdSchema, AppearanceBundleSchema.nullable()).optional(),
+	room: RoomInventoryBundleSchema.optional(),
+});
+export type AssetFrameworkGlobalStateClientDeltaBundle = z.infer<typeof AssetFrameworkGlobalStateClientDeltaBundleSchema>;
+
 /**
  * Class that stores immutable state for whole current context (so the current space, be it private or public one).
  *
@@ -35,18 +45,36 @@ export class AssetFrameworkGlobalState {
 	public readonly characters: ReadonlyMap<CharacterId, AssetFrameworkCharacterState>;
 	public readonly room: AssetFrameworkRoomState;
 
+	/**
+	 * Randomly generated ID of this state, used for detecting desyncs.
+	 * Internally it is generated lazily to avoid creating it for every intermediate state during an action.
+	 */
+	private _stateId?: string;
+
 	private constructor(
 		assetManager: AssetManager,
 		characters: ReadonlyMap<CharacterId, AssetFrameworkCharacterState>,
 		room: AssetFrameworkRoomState,
+		stateId?: string,
 	) {
 		this.assetManager = assetManager;
 		this.characters = characters;
 		this.room = room;
+		this._stateId = stateId;
 	}
 
 	public getCharacterState(character: CharacterId): AssetFrameworkCharacterState | null {
 		return this.characters.get(character) ?? null;
+	}
+
+	/**
+	 * Returns a random ID for this state, used for detecting desyncs.
+	 */
+	public getStateId(): string {
+		if (this._stateId == null) {
+			this._stateId = nanoid(8);
+		}
+		return this._stateId;
 	}
 
 	public isValid(): boolean {
@@ -110,8 +138,9 @@ export class AssetFrameworkGlobalState {
 
 	public exportToBundle(): AssetFrameworkGlobalStateBundle {
 		const result: AssetFrameworkGlobalStateBundle = {
+			stateId: this.getStateId(),
 			characters: {},
-			room: this.room?.exportToBundle() ?? null,
+			room: this.room.exportToBundle(),
 		};
 
 		for (const [characterId, characterState] of this.characters) {
@@ -123,14 +152,84 @@ export class AssetFrameworkGlobalState {
 	public exportToClientBundle(options: IExportOptions = {}): AssetFrameworkGlobalStateClientBundle {
 		options.clientOnly = true;
 		const result: AssetFrameworkGlobalStateClientBundle = {
+			stateId: this.getStateId(),
 			characters: {},
-			room: this.room?.exportToClientBundle(options) ?? null,
+			room: this.room.exportToClientBundle(options),
 			clientOnly: true,
 		};
 		for (const [characterId, characterState] of this.characters) {
 			result.characters[characterId] = characterState.exportToClientBundle(options);
 		}
 		return result;
+	}
+
+	public exportToClientDeltaBundle(originalState: AssetFrameworkGlobalState, options: IExportOptions = {}): AssetFrameworkGlobalStateClientDeltaBundle {
+		options.clientOnly = true;
+
+		const result: AssetFrameworkGlobalStateClientDeltaBundle = {
+			originalStateId: originalState.getStateId(),
+			targetStateId: this.getStateId(),
+		};
+
+		// Find removed characters
+		for (const id of originalState.characters.keys()) {
+			if (!this.characters.has(id)) {
+				result.characters ??= {};
+				result.characters[id] = null;
+			}
+		}
+
+		// Find added or updated characters
+		for (const [id, character] of this.characters) {
+			const originalCharacter = originalState.characters.get(id);
+			if (originalCharacter !== character) {
+				result.characters ??= {};
+				result.characters[id] = character.exportToClientBundle(options);
+			}
+		}
+
+		// Check if room changed
+		if (originalState.room !== this.room) {
+			result.room = this.room.exportToClientBundle(options);
+		}
+
+		return result;
+	}
+
+	public applyClientDeltaBundle(bundle: AssetFrameworkGlobalStateClientDeltaBundle, logger: Logger | undefined): AssetFrameworkGlobalState {
+		Assert(this.getStateId() === bundle.originalStateId, 'DESYNC: Mismatch in state id when applying delta bundle');
+
+		let room = this.room;
+		if (bundle.room != null) {
+			room = AssetFrameworkRoomState.loadFromBundle(this.assetManager, bundle.room, logger);
+		}
+
+		let characters = this.characters;
+		if (bundle.characters != null) {
+			const newCharacters = new Map(characters);
+			for (const [key, characterData] of Object.entries(bundle.characters)) {
+				const characterId = CharacterIdSchema.parse(key);
+				if (characterData == null) {
+					newCharacters.delete(characterId);
+				} else {
+					newCharacters.set(
+						characterId,
+						AssetFrameworkCharacterState.loadFromBundle(this.assetManager, characterId, characterData, room, logger),
+					);
+				}
+			}
+			characters = newCharacters;
+		}
+
+		const resultState = new AssetFrameworkGlobalState(
+			this.assetManager,
+			characters,
+			room,
+			bundle.targetStateId,
+		);
+
+		Assert(resultState.isValid(), 'State is invalid after delta update');
+		return resultState;
 	}
 
 	public produceCharacterState(character: CharacterId, producer: (currentState: AssetFrameworkCharacterState) => AssetFrameworkCharacterState | null): AssetFrameworkGlobalState | null {
@@ -251,6 +350,7 @@ export class AssetFrameworkGlobalState {
 			assetManager,
 			characters,
 			room,
+			bundle.stateId,
 		);
 
 		Assert(resultState.isValid(), 'State is invalid after load');

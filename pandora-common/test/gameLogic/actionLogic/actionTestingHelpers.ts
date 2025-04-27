@@ -16,7 +16,7 @@ import {
 	type GameLogicCharacter,
 	type SpaceFeature,
 } from '../../../src/index.ts';
-import { TestVerifyGlobalStateExportImport } from '../../assets/assetsTestingHelpers.ts';
+import { TestVerifyGlobalStateDelta, TestVerifyGlobalStateExportImport } from '../../assets/assetsTestingHelpers.ts';
 
 export function TestCreateActionContext(player: GameLogicCharacter, options?: {
 	executionContext?: AppearanceActionContext['executionContext'];
@@ -58,11 +58,13 @@ export function TestDoImmediateAction(
 	initialState: AssetFrameworkGlobalState,
 ): AppearanceActionProcessingResult {
 	const result = DoImmediateAction(action, context, initialState);
+	expect(result.originalState).toBe(initialState);
 
 	if (result.valid) {
 		// If result is valid, run some common checks on the resulting state
 		expect(result.resultState.isValid()).toBe(true);
 		TestVerifyGlobalStateExportImport(result.resultState);
+		TestVerifyGlobalStateDelta(result.originalState, result.resultState);
 	}
 
 	return result;

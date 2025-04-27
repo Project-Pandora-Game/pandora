@@ -40,6 +40,7 @@ import {
 	ZodCast,
 	type ActionTargetSelector,
 	type AppearanceAction,
+	type AssetFrameworkGlobalStateClientDeltaBundle,
 	type CurrentSpaceInfo,
 	type IChatMessageActionTargetCharacter,
 	type IClientShardPromiseResult,
@@ -295,7 +296,7 @@ export class GameState extends TypedEventEmitter<{
 			}
 		}
 		if (globalState) {
-			this._updateGlobalState(globalState);
+			this._updateGlobalStateDelta(globalState);
 		}
 		if (characterModifierEffects != null) {
 			this.characterModifierEffects.value = freeze(characterModifierEffects, true);
@@ -331,6 +332,12 @@ export class GameState extends TypedEventEmitter<{
 		this.globalState.setState(
 			AssetFrameworkGlobalState
 				.loadFromBundle(GetCurrentAssetManager(), bundle, this.logger.prefixMessages('State bundle load:')),
+		);
+	}
+
+	private _updateGlobalStateDelta(bundle: AssetFrameworkGlobalStateClientDeltaBundle): void {
+		this.globalState.setState(
+			this.globalState.currentState.applyClientDeltaBundle(bundle, this.logger.prefixMessages('State bundle delta update:')),
 		);
 	}
 

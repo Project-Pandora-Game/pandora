@@ -407,6 +407,9 @@ export class AssetFrameworkGlobalStateContainer {
 		const oldState = this._currentState;
 		const bundle = oldState.exportToBundle();
 
+		// Reset bundle state id, as change of assets definitions can be unpredictable
+		bundle.stateId = nanoid(8);
+
 		const newState = AssetFrameworkGlobalState.loadFromBundle(
 			assetManager,
 			bundle,

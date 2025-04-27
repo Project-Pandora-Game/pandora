@@ -52,11 +52,10 @@ function ConditionItemWithAttributeDialog({ condition, setCondition, close }: Pi
 	const flt = filter.toLowerCase().trim().split(/\s+/);
 	const finalAttributes = useMemo(() => (
 		[...assetManager.attributes.entries()]
-			.filter(([a, definition]) => (definition.useAsAssetPreference ?? true) || a === effectiveAttribute)
 			.filter(([_attribute, definition]) => flt.every((f) => {
 				return definition.name.toLowerCase().includes(f);
 			}))
-	), [assetManager, flt, effectiveAttribute]);
+	), [assetManager, flt]);
 
 	const filterInput = useRef<TextInput>(null);
 	useInputAutofocus(filterInput);

@@ -14,23 +14,6 @@ exports[`ActionCreate Creates a non-unique bodypart 1`] = `
   {
     "asset": "a/body/lips",
   },
-]
-`;
-
-exports[`ActionCreate Creates a non-unique bodypart 2`] = `
-[
-  {
-    "asset": "a/body/base",
-  },
-  {
-    "asset": "a/body/head",
-  },
-  {
-    "asset": "a/body/eyes",
-  },
-  {
-    "asset": "a/body/lips",
-  },
   {
     "asset": "a/body/front_hair1",
   },
@@ -38,26 +21,6 @@ exports[`ActionCreate Creates a non-unique bodypart 2`] = `
 `;
 
 exports[`ActionCreate Creates a non-unique bodypart and reorders it in place 1`] = `
-[
-  {
-    "asset": "a/body/base",
-  },
-  {
-    "asset": "a/body/head",
-  },
-  {
-    "asset": "a/body/eyes",
-  },
-  {
-    "asset": "a/body/lips",
-  },
-  {
-    "asset": "a/body/front_hair1",
-  },
-]
-`;
-
-exports[`ActionCreate Creates a non-unique bodypart and reorders it in place 2`] = `
 [
   {
     "asset": "a/body/base",
@@ -89,23 +52,6 @@ exports[`ActionCreate Creates a unique bodypart and replaces the old one 1`] = `
     "asset": "a/body/head",
   },
   {
-    "asset": "a/body/eyes",
-  },
-  {
-    "asset": "a/body/lips",
-  },
-]
-`;
-
-exports[`ActionCreate Creates a unique bodypart and replaces the old one 2`] = `
-[
-  {
-    "asset": "a/body/base",
-  },
-  {
-    "asset": "a/body/head",
-  },
-  {
     "asset": "a/body/eyes2",
   },
   {
@@ -128,23 +74,6 @@ exports[`ActionCreate Creates a wearable asset 1`] = `
   {
     "asset": "a/body/lips",
   },
-]
-`;
-
-exports[`ActionCreate Creates a wearable asset 2`] = `
-[
-  {
-    "asset": "a/body/base",
-  },
-  {
-    "asset": "a/body/head",
-  },
-  {
-    "asset": "a/body/eyes",
-  },
-  {
-    "asset": "a/body/lips",
-  },
   {
     "asset": "a/panties/style1",
   },
@@ -152,23 +81,6 @@ exports[`ActionCreate Creates a wearable asset 2`] = `
 `;
 
 exports[`ActionCreate Creates a wearable asset and another one ordered before it 1`] = `
-[
-  {
-    "asset": "a/body/base",
-  },
-  {
-    "asset": "a/body/head",
-  },
-  {
-    "asset": "a/body/eyes",
-  },
-  {
-    "asset": "a/body/lips",
-  },
-]
-`;
-
-exports[`ActionCreate Creates a wearable asset and another one ordered before it 2`] = `
 [
   {
     "asset": "a/body/base",

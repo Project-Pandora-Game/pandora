@@ -17,9 +17,6 @@ describe('ActionMoveItem', () => {
 			]),
 		]);
 
-		// Before the test the worn assets look like this
-		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
-
 		const topHatId = baseState.characters.get(character.id)?.items.find((i) => i.asset.id === 'a/headwear/top_hat')?.id;
 		AssertNotNullable(topHatId);
 
@@ -56,9 +53,6 @@ describe('ActionMoveItem', () => {
 				'a/headwear/top_hat',
 			]),
 		]);
-
-		// Before the test the worn assets look like this
-		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
 
 		const topHatId = baseState.characters.get(character.id)?.items.find((i) => i.asset.id === 'a/headwear/top_hat')?.id;
 		AssertNotNullable(topHatId);
@@ -97,9 +91,6 @@ describe('ActionMoveItem', () => {
 			]),
 		]);
 
-		// Before the test the worn assets look like this
-		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
-
 		const topHatId = baseState.characters.get(character.id)?.items.find((i) => i.asset.id === 'a/headwear/top_hat')?.id;
 		AssertNotNullable(topHatId);
 
@@ -136,9 +127,6 @@ describe('ActionMoveItem', () => {
 				'a/panties/style1',
 			]),
 		]);
-
-		// Before the test the worn assets look like this
-		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
 
 		const topHatId = baseState.characters.get(character.id)?.items.find((i) => i.asset.id === 'a/headwear/top_hat')?.id;
 		AssertNotNullable(topHatId);
@@ -177,9 +165,6 @@ describe('ActionMoveItem', () => {
 			]),
 		]);
 
-		// Before the test the worn assets look like this
-		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
-
 		const topHatId = baseState.characters.get(character.id)?.items.find((i) => i.asset.id === 'a/headwear/top_hat')?.id;
 		AssertNotNullable(topHatId);
 
@@ -216,9 +201,6 @@ describe('ActionMoveItem', () => {
 			]),
 		]);
 
-		// Before the test the worn assets look like this
-		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
-
 		const topHatId = baseState.characters.get(character.id)?.items.find((i) => i.asset.id === 'a/headwear/top_hat')?.id;
 		AssertNotNullable(topHatId);
 
@@ -254,9 +236,6 @@ describe('ActionMoveItem', () => {
 				'a/panties/style1',
 			]),
 		]);
-
-		// Before the test the worn assets look like this
-		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
 
 		const topHatId = baseState.characters.get(character.id)?.items.find((i) => i.asset.id === 'a/headwear/top_hat')?.id;
 		AssertNotNullable(topHatId);

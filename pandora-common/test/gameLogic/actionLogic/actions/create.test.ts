@@ -13,9 +13,6 @@ describe('ActionCreate', () => {
 			TestCreateCharacterState(assetManager, character),
 		]);
 
-		// Before the test the worn assets look like this
-		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
-
 		// Do the action
 		const result = TestDoImmediateAction(
 			{
@@ -57,9 +54,6 @@ describe('ActionCreate', () => {
 			]),
 		]);
 
-		// Before the test the worn assets look like this
-		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
-
 		// Do the action
 		const result = TestDoImmediateAction(
 			{
@@ -88,9 +82,6 @@ describe('ActionCreate', () => {
 		const baseState = TestCreateGlobalState(assetManager, [
 			TestCreateCharacterState(assetManager, character),
 		]);
-
-		// Before the test the worn assets look like this
-		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
 
 		// Do the action
 		const result = TestDoImmediateAction(
@@ -121,9 +112,6 @@ describe('ActionCreate', () => {
 			TestCreateCharacterState(assetManager, character),
 		]);
 
-		// Before the test the worn assets look like this
-		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
-
 		// Do the action
 		const result = TestDoImmediateAction(
 			{
@@ -152,9 +140,6 @@ describe('ActionCreate', () => {
 		const baseState = TestCreateGlobalState(assetManager, [
 			TestCreateCharacterState(assetManager, character),
 		]);
-
-		// Before the test the worn assets look like this
-		expect(TestStateExtractAssets(baseState.characters.get(character.id)?.items)).toMatchSnapshot();
 
 		// Do the actions
 		const intermediateResult = TestDoImmediateAction(

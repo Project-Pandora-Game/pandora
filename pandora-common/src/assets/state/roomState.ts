@@ -2,16 +2,15 @@ import { freeze } from 'immer';
 import { z } from 'zod';
 import type { Logger } from '../../logging/logger.ts';
 import { Assert, MemoizeNoArg } from '../../utility/misc.ts';
-import { ZodArrayWithInvalidDrop } from '../../validation.ts';
-import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation.ts';
+import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { Item } from '../item/base.ts';
-import { ItemBundleSchema } from '../item/unified.ts';
+import { AppearanceItemsBundleSchema, type AppearanceItems } from '../item/items.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import { RoomInventoryLoadAndValidate, ValidateRoomInventoryItems } from '../roomValidation.ts';
 
 export const RoomInventoryBundleSchema = z.object({
-	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
+	items: AppearanceItemsBundleSchema,
 	clientOnly: z.boolean().optional(),
 });
 

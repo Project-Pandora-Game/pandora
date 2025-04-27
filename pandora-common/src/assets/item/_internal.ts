@@ -4,13 +4,14 @@ import type { Writeable } from 'zod';
 import type { CharacterId, ItemInteractionType } from '../../character/index.ts';
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
 import type { HexRGBAColorString } from '../../validation.ts';
-import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation.ts';
+import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { Asset } from '../asset.ts';
 import type { AssetManager } from '../assetManager.ts';
 import type { AssetColorization, AssetType, WearableAssetType } from '../definitions.ts';
 import type { ItemModuleAction } from '../modules.ts';
 import type { IExportOptions, IItemModule } from '../modules/common.ts';
 import type { ColorGroupResult, IItemLoadContext, IItemValidationContext, Item, ItemBundle, ItemColorBundle, ItemId, ItemTemplate } from './base.ts';
+import type { AppearanceItems } from './items.ts';
 
 import type { IChatMessageActionItem } from '../../chat/index.ts';
 import { Assert, MemoizeNoArg } from '../../utility/misc.ts';

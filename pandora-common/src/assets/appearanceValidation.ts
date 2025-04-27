@@ -3,14 +3,12 @@ import { Logger } from '../logging/logger.ts';
 import { Assert, ShuffleArray } from '../utility/misc.ts';
 import type { AssetManager } from './assetManager.ts';
 import type { AssetId } from './base.ts';
-import type { AssetType, WearableAssetType } from './definitions.ts';
+import type { WearableAssetType } from './definitions.ts';
 import type { Item } from './item/index.ts';
+import type { AppearanceItems } from './item/items.ts';
 import { AssetPropertiesResult, CreateAssetPropertiesResult, MergeAssetProperties } from './properties.ts';
 import type { AssetFrameworkRoomState } from './state/roomState.ts';
 import { ValidateItemsPrefix } from './validation.ts';
-
-/** Appearance items are immutable, so changes can be created as new object, tested, and only then applied */
-export type AppearanceItems<Type extends AssetType = AssetType> = readonly Item<Type>[];
 
 export type AppearanceValidationError =
 	| {

@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { AppearanceActionSchema } from '../../gameLogic/actionLogic/index.ts';
-import { ZodArrayWithInvalidDrop } from '../../validation.ts';
-import { ItemBundleSchema } from '../item/unified.ts';
+import { AppearanceItemsBundleSchema, AppearanceItemsDeltaBundleSchema } from '../item/items.ts';
 import { AppearancePoseSchema, GetDefaultAppearancePose, PartialAppearancePoseSchema } from './characterStatePose.ts';
 
 export const RestrictionOverrideSchema = z.object({
@@ -64,7 +63,7 @@ export function GetRestrictionOverrideConfig(type?: RestrictionOverride['type'] 
 
 export const AppearanceBundleSchema = z.object({
 	requestedPose: AppearancePoseSchema.catch(() => GetDefaultAppearancePose()),
-	items: ZodArrayWithInvalidDrop(ItemBundleSchema, z.record(z.unknown())),
+	items: AppearanceItemsBundleSchema,
 	restrictionOverride: RestrictionOverrideSchema.optional().catch(undefined),
 	attemptingAction: CharacterActionAttemptSchema.optional().catch(undefined),
 	clientOnly: z.boolean().optional(),
@@ -74,7 +73,7 @@ export type AppearanceClientBundle = AppearanceBundle & { clientOnly: true; };
 
 export const AppearanceClientDeltaBundleSchema = z.object({
 	requestedPose: PartialAppearancePoseSchema.optional(),
-	items: ItemBundleSchema.array().optional(),
+	items: AppearanceItemsDeltaBundleSchema.optional(),
 	restrictionOverride: RestrictionOverrideSchema.nullable().optional(),
 	attemptingAction: CharacterActionAttemptSchema.nullable().optional(),
 });

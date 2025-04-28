@@ -27,7 +27,7 @@ test.describe('EULA', () => {
 		// Disagree button should navigate away from pandora
 		await page.getByRole('button', { name: 'Disagree' }).click();
 
-		await page.waitForURL('about:blank');
+		await page.waitForFunction(() => window.location.href === 'about:blank');
 	});
 
 	test('EULA guards non-index pages', async ({ page }) => {

@@ -633,7 +633,7 @@ function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 								setSelectedType('blink');
 							} }
 						>
-							Based on blinking
+							Based on eye blinking
 						</Button>
 					</Column>
 					{

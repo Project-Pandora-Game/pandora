@@ -79,7 +79,8 @@ async function CreateAndSaveCharacterPreview(
 			width: CHARACTER_PREVIEW_SIZE,
 			height: CHARACTER_PREVIEW_SIZE,
 		},
-		0xffffff,
+		0,
+		0,
 	);
 
 	await new Promise<void>((resolve, reject) => {

@@ -4,8 +4,8 @@ import type { CharacterRestrictionsManager } from '../character/restrictionsMana
 import type { ChatActionId, IChatMessageAction, IChatMessageActionTargetCharacter, IChatMessageActionTargetRoomInventory } from '../chat/index.ts';
 import type { GameLogicCharacter } from '../gameLogic/character/index.ts';
 import type { ActionSpaceContext } from '../space/space.ts';
-import type { AppearanceItems } from './appearanceValidation.ts';
 import { ItemIdSchema, type Item } from './item/base.ts';
+import type { AppearanceItems } from './item/items.ts';
 import type { AssetFrameworkCharacterState } from './state/characterState.ts';
 
 export const ItemContainerPathSchema = z.array(

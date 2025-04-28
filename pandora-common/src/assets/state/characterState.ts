@@ -1,17 +1,18 @@
 import { Immutable, freeze } from 'immer';
 import { clamp, cloneDeep, isEqual } from 'lodash-es';
+import type { Writable } from 'type-fest';
 import type { CharacterId } from '../../character/index.ts';
 import { RedactSensitiveActionData } from '../../gameLogic/actionLogic/actionUtils.ts';
 import type { Logger } from '../../logging/logger.ts';
 import { Assert, CloneDeepMutable, IsNotNullable, MemoizeNoArg } from '../../utility/misc.ts';
-import { AppearanceItemProperties, AppearanceItems, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation.ts';
+import { AppearanceItemProperties, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { WearableAssetType } from '../definitions.ts';
 import { BoneType } from '../graphics/index.ts';
-import { Item, type ItemRoomDeviceWearablePart } from '../item/index.ts';
+import { ApplyAppearanceItemsDeltaBundle, CalculateAppearanceItemsDeltaBundle, Item, type AppearanceItems, type ItemRoomDeviceWearablePart } from '../item/index.ts';
 import type { IExportOptions } from '../modules/common.ts';
-import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
-import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type CharacterActionAttempt, type RestrictionOverride } from './characterStateTypes.ts';
+import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, CalculateAppearancePosesDelta, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
+import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type AppearanceClientDeltaBundle, type CharacterActionAttempt, type RestrictionOverride } from './characterStateTypes.ts';
 import type { AssetFrameworkRoomState } from './roomState.ts';
 
 type AssetFrameworkCharacterStateProps = {
@@ -91,6 +92,81 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			}) : undefined,
 			clientOnly: true,
 		};
+	}
+
+	public exportToClientDeltaBundle(originalState: AssetFrameworkCharacterState, options: IExportOptions = {}): AppearanceClientDeltaBundle {
+		Assert(this.assetManager === originalState.assetManager);
+		Assert(this.id === originalState.id);
+		options.clientOnly = true;
+
+		const result: AppearanceClientDeltaBundle = {};
+
+		if (this.items !== originalState.items) {
+			result.items = CalculateAppearanceItemsDeltaBundle(originalState.items, this.items, options);
+		}
+		if (this.requestedPose !== originalState.requestedPose) {
+			result.requestedPose = cloneDeep(CalculateAppearancePosesDelta(this.assetManager, originalState.requestedPose, this.requestedPose));
+		}
+		if (this.restrictionOverride !== originalState.restrictionOverride) {
+			result.restrictionOverride = this.restrictionOverride ?? null;
+		}
+		if (this.attemptingAction !== originalState.attemptingAction) {
+			result.attemptingAction = this.attemptingAction != null ? ({
+				action: RedactSensitiveActionData(this.attemptingAction.action),
+				start: this.attemptingAction.start,
+				finishAfter: this.attemptingAction.finishAfter,
+			}) : null;
+		}
+
+		return result;
+	}
+
+	public applyClientDeltaBundle(bundle: AppearanceClientDeltaBundle, roomState: AssetFrameworkRoomState | null, logger: Logger | undefined): AssetFrameworkCharacterState {
+		const update: Writable<Partial<AssetFrameworkCharacterStateProps>> = {};
+
+		if (bundle.items !== undefined) {
+			const newItems = ApplyAppearanceItemsDeltaBundle(this.assetManager, this.items, bundle.items, logger)
+				.map((item) => {
+					// Properly link room device wearable parts
+					if (item.isType('roomDeviceWearablePart')) {
+						const link = item.roomDeviceLink;
+						const device = roomState?.items.find((roomItem) => roomItem.id === link?.device);
+						if (device?.isType('roomDevice')) {
+							item = item.updateRoomStateLink(device);
+						}
+					}
+
+					return item;
+				});
+
+			Assert(newItems.every((it) => it.isWearable()), 'DESYNC: Received non-wearable item on character');
+			update.items = newItems;
+		}
+
+		if (bundle.requestedPose !== undefined) {
+			update.requestedPose = ProduceAppearancePose(
+				this.requestedPose,
+				{ assetManager: this.assetManager },
+				bundle.requestedPose,
+			);
+		}
+
+		if (bundle.restrictionOverride !== undefined) {
+			update.restrictionOverride = bundle.restrictionOverride != null ? bundle.restrictionOverride : undefined;
+		}
+
+		if (bundle.attemptingAction !== undefined) {
+			update.attemptingAction = bundle.attemptingAction;
+		}
+
+		// Create the final state
+		const resultState = freeze(
+			new AssetFrameworkCharacterState(this, update).updateRoomStateLink(roomState, false),
+			true,
+		);
+
+		Assert(resultState.isValid(roomState), 'State is invalid after delta update');
+		return resultState;
 	}
 
 	@MemoizeNoArg

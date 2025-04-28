@@ -88,6 +88,7 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 		this._cryptoState.value = 'notLoaded';
 	}
 
+	@AsyncSynchronized()
 	public async passwordChange(username: string, password: string): Promise<{ cryptoKey: IAccountCryptoKey; onSuccess: () => void; }> {
 		if (this.#crypto == null) {
 			throw new Error('Crypto not loaded');
@@ -115,24 +116,28 @@ export class DirectMessageManager extends Service<DirectMessageManagerServiceCon
 		this.logger.debug('Account or key changed, reloading crypto');
 		// Clear the existing info, it will be re-fetched anyway
 		this._chats.value = [];
-		this.#crypto = undefined;
-		this._cryptoState.value = 'notLoaded';
 
-		const cryptoPassword = DmCryptoPassword.value;
-		if (cryptoPassword != null) {
-			if (account.cryptoKey) {
-				const loadResult = await this.loadKey(account.cryptoKey, cryptoPassword);
-				if (loadResult !== 'ok') {
-					this._cryptoState.value = 'loadError';
+		// Reload crypto only if needed
+		if (this.#crypto == null || account.cryptoKey == null || (await this.#crypto.exportPublicKey()) !== account.cryptoKey.publicKey) {
+			this.#crypto = undefined;
+			this._cryptoState.value = 'notLoaded';
+
+			const cryptoPassword = DmCryptoPassword.value;
+			if (cryptoPassword != null) {
+				if (account.cryptoKey) {
+					const loadResult = await this.loadKey(account.cryptoKey, cryptoPassword);
+					if (loadResult !== 'ok') {
+						this._cryptoState.value = 'loadError';
+					}
+				} else {
+					if (!await this.regenerateKey(cryptoPassword)) {
+						this._cryptoState.value = 'generateError';
+					}
 				}
 			} else {
-				if (!await this.regenerateKey(cryptoPassword)) {
-					this._cryptoState.value = 'generateError';
-				}
+				this.logger.error('Failed to load crypto: We have an account, but no crypto password');
+				this._cryptoState.value = 'noPassword';
 			}
-		} else {
-			this.logger.error('Failed to load crypto: We have an account, but no crypto password');
-			this._cryptoState.value = 'noPassword';
 		}
 
 		// Load chats only after we attempted to decode key - chats might decrypt themselves eagerly if they can.

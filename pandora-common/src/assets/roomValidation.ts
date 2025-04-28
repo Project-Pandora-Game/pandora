@@ -1,6 +1,7 @@
 import { Logger } from '../logging/logger.ts';
-import type { AppearanceItems, AppearanceValidationResult } from './appearanceValidation.ts';
+import type { AppearanceValidationResult } from './appearanceValidation.ts';
 import type { AssetManager } from './assetManager.ts';
+import type { AppearanceItems } from './item/items.ts';
 import { ValidateItemsPrefix } from './validation.ts';
 
 /** Validates items prefix, ignoring required items */

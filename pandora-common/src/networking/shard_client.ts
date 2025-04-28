@@ -1,12 +1,12 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
 import type { AssetsDefinitionFile } from '../assets/definitions.ts';
-import { AssetFrameworkGlobalStateClientBundle } from '../assets/state/globalState.ts';
+import { AssetFrameworkGlobalStateClientBundle, AssetFrameworkGlobalStateClientDeltaBundleSchema } from '../assets/state/globalState.ts';
 import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData.ts';
 import type { CharacterPublicSettings } from '../character/characterSettings.ts';
 import { AssetPreferencesPublic, CharacterIdSchema, CharacterPrivateDataSchema } from '../character/index.ts';
 import { ChatCharacterStatusSchema, type IChatMessage } from '../chat/chat.ts';
-import { AppearanceActionSchema, CharacterModifierEffectDataSchema } from '../gameLogic/index.ts';
+import { AppearanceActionSchema, SpaceCharacterModifierEffectDataSchema, SpaceCharacterModifierEffectDataUpdateSchema } from '../gameLogic/index.ts';
 import { PermissionConfigSchema, PermissionSetupSchema } from '../gameLogic/permissions/permissionData.ts';
 import { SpaceClientInfoSchema, SpaceIdSchema } from '../space/space.ts';
 import { Satisfies } from '../utility/misc.ts';
@@ -21,9 +21,6 @@ export type ICharacterRoomData = ICharacterPublicData & {
 	isOnline: boolean;
 };
 
-export const SpaceCharacterModifierEffectDataSchema = z.record(CharacterIdSchema, CharacterModifierEffectDataSchema.array());
-export type SpaceCharacterModifierEffectData = z.infer<typeof SpaceCharacterModifierEffectDataSchema>;
-
 export const SpaceLoadDataSchema = z.object({
 	id: SpaceIdSchema.nullable(),
 	info: SpaceClientInfoSchema,
@@ -33,12 +30,12 @@ export const SpaceLoadDataSchema = z.object({
 export type SpaceLoadData = z.infer<typeof SpaceLoadDataSchema>;
 
 export const GameStateUpdateSchema = z.object({
-	globalState: ZodCast<AssetFrameworkGlobalStateClientBundle>().optional(),
+	globalState: AssetFrameworkGlobalStateClientDeltaBundleSchema.optional(),
 	info: SpaceClientInfoSchema.partial().optional(),
 	leave: CharacterIdSchema.optional(),
 	join: ZodCast<ICharacterRoomData>().optional(),
 	characters: z.record(CharacterIdSchema, ZodCast<Partial<ICharacterRoomData>>()).optional(),
-	characterModifierEffects: SpaceCharacterModifierEffectDataSchema.optional(),
+	characterModifierEffects: SpaceCharacterModifierEffectDataUpdateSchema.optional(),
 });
 export type GameStateUpdate = z.infer<typeof GameStateUpdateSchema>;
 

@@ -1,7 +1,8 @@
 import { freeze, type Immutable } from 'immer';
+import { capitalize } from 'lodash-es';
 import type { Logger } from '../../logging/logger.ts';
 import { Assert, AssertNever, CloneDeepMutable, GenerateMultipleListsFullJoin } from '../../utility/misc.ts';
-import type { AtomicCondition } from '../graphics/conditions.ts';
+import { ArmFingersSchema, ArmRotationSchema, CharacterViewSchema, LegsPoseSchema, type AtomicCondition } from '../graphics/conditions.ts';
 import type { GraphicsLayer } from '../graphics/layer.ts';
 import { LayerMirror, type LayerImageOverride } from '../graphics/layers/common.ts';
 import type { GraphicsSourceAutoMeshLayer, GraphicsSourceAutoMeshLayerVariable, GraphicsSourceMeshLayer } from '../graphicsSource/index.ts';
@@ -35,8 +36,61 @@ export function AutoMeshLayerGenerateVariableData(config: Immutable<GraphicsSour
 				},
 			],
 		}));
+	} else if (config.type === 'attribute') {
+		return [
+			{
+				id: config.attribute,
+				name: config.attribute,
+				condition: [{ attribute: config.attribute }],
+			},
+			{
+				id: '!' + config.attribute,
+				name: 'Not ' + config.attribute,
+				condition: [{ attribute: '!' + config.attribute }],
+			},
+		];
+	} else if (config.type === 'view') {
+		return CharacterViewSchema.options.map((o): AutoMeshLayerGenerateVariableValue => ({
+			id: o,
+			name: capitalize(o),
+			condition: [{ view: o }],
+		}));
+	} else if (config.type === 'armRotation') {
+		return ArmRotationSchema.options.map((o): AutoMeshLayerGenerateVariableValue => ({
+			id: o,
+			name: capitalize(config.side) + ' arm ' + o,
+			condition: [{
+				armType: 'rotation',
+				side: config.side,
+				operator: '=',
+				value: o,
+			}],
+		}));
+	} else if (config.type === 'armFingers') {
+		return ArmFingersSchema.options.map((o): AutoMeshLayerGenerateVariableValue => ({
+			id: o,
+			name: capitalize(config.side) + ' arm fingers ' + o,
+			condition: [{
+				armType: 'fingers',
+				side: config.side,
+				operator: '=',
+				value: o,
+			}],
+		}));
+	} else if (config.type === 'legsState') {
+		return LegsPoseSchema.options.map((o): AutoMeshLayerGenerateVariableValue => ({
+			id: o,
+			name: capitalize(o),
+			condition: [{ legs: o }],
+		}));
+	} else if (config.type === 'blink') {
+		return [false, true].map((o): AutoMeshLayerGenerateVariableValue => ({
+			id: o ? 'blink' : '!blink',
+			name: o ? 'Eyes blink' : 'Eyes normal',
+			condition: [{ blinking: o }],
+		}));
 	}
-	AssertNever(config.type);
+	AssertNever(config);
 }
 
 export const GRAPHICS_AUTOMESH_LAYER_DEFAULT_VARIANT = freeze<AutoMeshLayerGenerateVariableValue>({

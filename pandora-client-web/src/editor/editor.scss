@@ -129,6 +129,10 @@
 .editor-highlightedArea {
 	background: common.$theme-normal-background-secondary;
 	border: 1px solid common.$theme-separator;
+
+	&.attributeList {
+		max-height: 80vh;
+	}
 }
 
 .editor-wardrobe {

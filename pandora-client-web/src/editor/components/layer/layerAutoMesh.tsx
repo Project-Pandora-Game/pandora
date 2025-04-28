@@ -7,6 +7,7 @@ import {
 	GenerateMultipleListsFullJoin,
 	GRAPHICS_AUTOMESH_LAYER_DEFAULT_VARIANT,
 	KnownObject,
+	LegsPoseSchema,
 	type Asset,
 	type AutoMeshLayerGenerateVariableValue,
 	type GraphicsSourceAutoMeshGraphicalLayer,
@@ -23,7 +24,9 @@ import { Column, Row } from '../../../components/common/container/container.tsx'
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs.tsx';
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
+import { InventoryAttributePreview } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { useObservable } from '../../../observable.ts';
+import { useAssetManagerEditor } from '../../assets/assetManager.ts';
 import type { EditorAssetGraphics } from '../../assets/editorAssetGraphics.ts';
 import { EditorBuildAssetGraphicsContext } from '../../assets/editorAssetGraphicsBuilding.ts';
 import type { EditorAssetGraphicsLayer } from '../../assets/editorAssetGraphicsLayer.ts';
@@ -526,7 +529,25 @@ function LayerAutomeshVariableItem({ variable, index, remove, reorder }: {
 				variable.type === 'typedModule' ? (
 					<span className='flex-1'>Based on typed module '{ variable.module }'</span>
 				) :
-				AssertNever(variable.type)
+				variable.type === 'attribute' ? (
+					<span className='flex-1'>Based on presence of attribute '{ variable.attribute }'</span>
+				) :
+				variable.type === 'view' ? (
+					<span className='flex-1'>Based on front/back view</span>
+				) :
+				variable.type === 'armRotation' ? (
+					<span className='flex-1'>Based on the rotation of the { variable.side } arm</span>
+				) :
+				variable.type === 'armFingers' ? (
+					<span className='flex-1'>Based on the fingers of the { variable.side } arm</span>
+				) :
+				variable.type === 'legsState' ? (
+					<span className='flex-1'>Based on the state of the legs</span>
+				) :
+				variable.type === 'blink' ? (
+					<span className='flex-1'>Based on eyes blinking</span>
+				) :
+				AssertNever(variable)
 			}
 			<Button className='slim' disabled={ index === 0 } aria-label='move' onClick={ () => reorder(-1) } title='Move up'>
 				🠉
@@ -548,6 +569,7 @@ function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 	asset: Asset;
 	addVariable: (newVariable: GraphicsSourceAutoMeshLayerVariable) => void;
 }): ReactElement {
+	const assetManager = useAssetManagerEditor();
 	const [selectedType, setSelectedType] = useState<GraphicsSourceAutoMeshLayerVariable['type'] | null>(null);
 
 	const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset);
@@ -564,6 +586,54 @@ function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 							} }
 						>
 							Based on typed module
+						</Button>
+						<Button
+							theme={ selectedType === 'attribute' ? 'defaultActive' : 'default' }
+							onClick={ () => {
+								setSelectedType('attribute');
+							} }
+						>
+							Based on presence of attribute
+						</Button>
+						<Button
+							theme={ selectedType === 'view' ? 'defaultActive' : 'default' }
+							onClick={ () => {
+								setSelectedType('view');
+							} }
+						>
+							Based on front/back view
+						</Button>
+						<Button
+							theme={ selectedType === 'armRotation' ? 'defaultActive' : 'default' }
+							onClick={ () => {
+								setSelectedType('armRotation');
+							} }
+						>
+							Based on arm rotation
+						</Button>
+						<Button
+							theme={ selectedType === 'armFingers' ? 'defaultActive' : 'default' }
+							onClick={ () => {
+								setSelectedType('armFingers');
+							} }
+						>
+							Based on arm finger state
+						</Button>
+						<Button
+							theme={ selectedType === 'legsState' ? 'defaultActive' : 'default' }
+							onClick={ () => {
+								setSelectedType('legsState');
+							} }
+						>
+							Based on legs state
+						</Button>
+						<Button
+							theme={ selectedType === 'blink' ? 'defaultActive' : 'default' }
+							onClick={ () => {
+								setSelectedType('blink');
+							} }
+						>
+							Based on blinking
 						</Button>
 					</Column>
 					{
@@ -588,7 +658,115 @@ function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 										))
 								}
 							</Column>
-						) : null
+						) :
+						selectedType === 'attribute' ? (
+							<Column className='editor-highlightedArea attributeList' padding='small' overflowY='scroll'>
+								{
+									[...assetManager.attributes.entries()]
+										.map(([a, definition]) => (
+											<button
+												key={ a }
+												className='inventoryViewItem listMode small allowed'
+												onClick={ () => {
+													addVariable({
+														type: 'attribute',
+														attribute: a,
+													});
+													close();
+												} }>
+												<InventoryAttributePreview attribute={ a } />
+												<span className='itemName'>{ definition.name }</span>
+											</button>
+										))
+								}
+							</Column>
+						) :
+						selectedType === 'view' ? (
+							<Column className='editor-highlightedArea' padding='small'>
+								<Button
+									onClick={ () => {
+										addVariable({
+											type: 'view',
+										});
+										close();
+									} }
+								>
+									Front/Back
+								</Button>
+							</Column>
+						) :
+						selectedType === 'armRotation' ? (
+							<Column className='editor-highlightedArea' padding='small'>
+								{
+									(['left', 'right'] as const).map((side, i) => (
+										<Button
+											key={ side }
+											onClick={ () => {
+												addVariable({
+													type: 'armRotation',
+													side,
+												});
+												close();
+											} }
+										>
+											{ capitalize(side) }{ i === 0 ? ' (primary)' : null }
+										</Button>
+									))
+								}
+							</Column>
+						) :
+						selectedType === 'armFingers' ? (
+							<Column className='editor-highlightedArea' padding='small'>
+								{
+									(['left', 'right'] as const).map((side, i) => (
+										<Button
+											key={ side }
+											onClick={ () => {
+												addVariable({
+													type: 'armFingers',
+													side,
+												});
+												close();
+											} }
+										>
+											{ capitalize(side) }{ i === 0 ? ' (primary)' : null }
+										</Button>
+									))
+								}
+							</Column>
+						) :
+						selectedType === 'legsState' ? (
+							<Column className='editor-highlightedArea' padding='small'>
+								<Button
+									onClick={ () => {
+										addVariable({
+											type: 'legsState',
+										});
+										close();
+									} }
+								>
+									{ LegsPoseSchema.options.map(capitalize).join('/') }
+								</Button>
+							</Column>
+						) :
+						selectedType === 'blink' ? (
+							<Column className='editor-highlightedArea' padding='small'>
+								<Button
+									onClick={ () => {
+										addVariable({
+											type: 'blink',
+										});
+										close();
+									} }
+								>
+									Blinking
+								</Button>
+							</Column>
+						) :
+						selectedType === null ? (
+							null
+						) :
+						AssertNever(selectedType)
 					}
 				</Row>
 				<Button onClick={ () => {

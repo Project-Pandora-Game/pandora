@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { RectangleSchema } from '../../graphics/common.ts';
+import { AttributeNameSchema } from '../../graphics/conditions.ts';
 import { LayerImageOverrideSchema, LayerMirrorSchema, LayerPrioritySchema } from '../../graphics/layers/common.ts';
 
 export const GraphicsSourceAutoMeshTemplateSchema = z.object({
@@ -24,6 +25,27 @@ export const GraphicsSourceAutoMeshLayerVariableSchema = z.discriminatedUnion('t
 	z.object({
 		type: z.literal('typedModule'),
 		module: z.string(),
+	}),
+	z.object({
+		type: z.literal('attribute'),
+		attribute: AttributeNameSchema,
+	}),
+	z.object({
+		type: z.literal('view'),
+	}),
+	z.object({
+		type: z.literal('armRotation'),
+		side: z.enum(['left', 'right']),
+	}),
+	z.object({
+		type: z.literal('armFingers'),
+		side: z.enum(['left', 'right']),
+	}),
+	z.object({
+		type: z.literal('legsState'),
+	}),
+	z.object({
+		type: z.literal('blink'),
 	}),
 ]);
 export type GraphicsSourceAutoMeshLayerVariable = z.infer<typeof GraphicsSourceAutoMeshLayerVariableSchema>;

@@ -9,8 +9,8 @@ describe('ActionDelete', () => {
 	it('Deletes worn item', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character, [
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room, [
 				'a/panties/style1',
 				'a/panties/style1',
 				'a/headwear/top_hat',
@@ -45,8 +45,8 @@ describe('ActionDelete', () => {
 	it('Deletes optional bodypart item', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character, [
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room, [
 				'a/body/front_hair1',
 				'a/headwear/top_hat',
 			]),
@@ -80,8 +80,8 @@ describe('ActionDelete', () => {
 	it('Fails if manipulating bodypart in space that does not allow it', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character, [
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room, [
 				'a/headwear/top_hat',
 			]),
 		]);
@@ -113,8 +113,8 @@ describe('ActionDelete', () => {
 	it('Fails if deleting required bodypart', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character, [
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room, [
 				'a/headwear/top_hat',
 			]),
 		]);
@@ -146,8 +146,8 @@ describe('ActionDelete', () => {
 	it('Fails if deleting nonexistent item', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character),
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room),
 		]);
 
 		// Do the action

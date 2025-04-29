@@ -36,7 +36,7 @@ import {
 	KnownObject,
 	Logger,
 	NOT_NARROWING_FALSE,
-	ROOM_INVENTORY_BUNDLE_DEFAULT,
+	ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE,
 	ResolveAssetPreference,
 	RoomBackgroundData,
 	SpaceId,
@@ -196,7 +196,7 @@ export class Character {
 		this.connectSecret = connectSecret;
 		this.lastOnline = Date.now();
 
-		this._personalSpace = new PersonalSpace(this, data.personalRoom?.inventory ?? CloneDeepMutable(ROOM_INVENTORY_BUNDLE_DEFAULT));
+		this._personalSpace = new PersonalSpace(this, data.personalRoom?.inventory ?? CloneDeepMutable(ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE));
 
 		const originalInteractionConfig = data.interactionConfig;
 		const originalAssetPreferencesConfig = CloneDeepMutable(data.assetPreferences);

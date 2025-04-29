@@ -6,7 +6,6 @@ import {
 	AssertNotNullable,
 	AssetManager,
 	CloneDeepMutable,
-	DEFAULT_BACKGROUND,
 	EMPTY,
 	FormatTimeInterval,
 	GetLogger,
@@ -28,6 +27,7 @@ import {
 	SpacePublicSettingSchema,
 	ZodMatcher,
 	type CurrentSpaceInfo,
+	type RoomGeometryConfig,
 	type SpaceGhostManagementConfig,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
@@ -944,8 +944,8 @@ function BackgroundInfo({ background }: { background: string; }): ReactElement {
 
 function BackgroundSelectDialog({ hide, current, select }: {
 	hide: () => void;
-	current: string | SpaceDirectoryConfig['background'];
-	select: (background: SpaceDirectoryConfig['background']) => void;
+	current: string | RoomGeometryConfig;
+	select: (background: RoomGeometryConfig) => void;
 }): ReactElement | null {
 	const assetManager = useAssetManager();
 	const [selectedBackground, setSelectedBackground] = useState(current);

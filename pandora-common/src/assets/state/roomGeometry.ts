@@ -1,11 +1,11 @@
-import { Immutable } from 'immer';
+import { freeze, type Immutable } from 'immer';
 import { clamp } from 'lodash-es';
 import { z } from 'zod';
-import type { AssetManager } from '../assets/assetManager.ts';
-import { CharacterSize } from '../assets/graphics/graphics.ts';
-import type { CharacterRoomPosition } from '../character/characterData.ts';
-import { CloneDeepMutable } from '../utility/misc.ts';
-import { HexColorString } from '../validation.ts';
+import type { CharacterRoomPosition } from '../../character/characterData.ts';
+import { AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
+import { HexColorStringSchema } from '../../validation.ts';
+import type { AssetManager } from '../assetManager.ts';
+import { CharacterSize } from '../graphics/graphics.ts';
 
 export const RoomBackgroundDataSchema = z.object({
 	/** The background image of a room */
@@ -31,7 +31,23 @@ export const RoomBackgroundDataSchema = z.object({
 });
 export type RoomBackgroundData = z.infer<typeof RoomBackgroundDataSchema>;
 
-export const DEFAULT_BACKGROUND = {
+export const RoomGeometryConfigSchema = z.discriminatedUnion('type', [
+	z.object({
+		type: z.enum(['defaultPersonalSpace', 'defaultPublicSpace']),
+	}),
+	z.object({
+		type: z.literal('premade'),
+		id: z.string(),
+	}),
+	RoomBackgroundDataSchema
+		.extend({
+			type: z.literal('plain'),
+			image: HexColorStringSchema.catch('#1099bb'), // Overrides parent property
+		}),
+]);
+export type RoomGeometryConfig = z.infer<typeof RoomGeometryConfigSchema>;
+
+const FALLBACK_ROOM_BACKGROUND = freeze<Immutable<RoomBackgroundData>>({
 	image: '#1099bb',
 	imageSize: [4000, 2000],
 	floorArea: [4000, 2000],
@@ -39,7 +55,7 @@ export const DEFAULT_BACKGROUND = {
 	ceiling: 0,
 	cameraCenterOffset: [0, 0],
 	cameraFov: 80,
-} as const satisfies Immutable<RoomBackgroundData & { image: HexColorString; }>;
+}, true);
 
 /**
  * Resolves room background data into effective background info
@@ -47,22 +63,20 @@ export const DEFAULT_BACKGROUND = {
  * @param background - The background to resolve
  * @param baseUrl - Base URL to use for resolving image path, otherwise no change
  */
-export function ResolveBackground(assetManager: AssetManager, background: string | Immutable<RoomBackgroundData>, baseUrl?: string): Immutable<RoomBackgroundData> {
-	let roomBackground: Immutable<RoomBackgroundData> = DEFAULT_BACKGROUND;
-
-	if (typeof background === 'string') {
-		const definition = assetManager.getBackgroundById(background);
-		if (definition) {
-			roomBackground = baseUrl ? {
-				...definition,
-				image: baseUrl + definition.image,
-			} : definition;
-		}
-	} else {
-		roomBackground = background;
+export function ResolveBackground(assetManager: AssetManager, roomGeometryConfig: Immutable<RoomGeometryConfig>): Immutable<RoomBackgroundData> | null {
+	switch (roomGeometryConfig.type) {
+		case 'defaultPersonalSpace':
+		case 'defaultPublicSpace':
+			// Try to use the first background (if there is some)
+			// otherwise default to the default, solid-color background (important for tests that don't have any assets).
+			return assetManager.getBackgrounds()[0] ?? FALLBACK_ROOM_BACKGROUND;
+		case 'premade':
+			return assetManager.getBackgroundById(roomGeometryConfig.id);
+		case 'plain':
+			return roomGeometryConfig;
+		default:
+			AssertNever(roomGeometryConfig);
 	}
-
-	return roomBackground;
 }
 
 export const RoomBackgroundCalibrationDataSchema = z.object({

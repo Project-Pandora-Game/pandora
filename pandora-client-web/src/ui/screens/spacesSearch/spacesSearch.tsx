@@ -5,7 +5,6 @@ import {
 	AssertNotNullable,
 	EMPTY,
 	GetLogger,
-	ResolveBackground,
 	SpaceExtendedInfoResponse,
 	SpaceId,
 	SpaceInvite,
@@ -17,7 +16,6 @@ import {
 import React, { ReactElement, ReactNode, useCallback, useEffect, useMemo, useReducer, useState } from 'react';
 import { Navigate, useLocation } from 'react-router';
 import { toast } from 'react-toastify';
-import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager.tsx';
 import closedDoorLocked from '../../../assets/icons/closed-door-locked.svg';
 import closedDoor from '../../../assets/icons/closed-door.svg';
 import forbiddenIcon from '../../../assets/icons/forbidden.svg';
@@ -340,7 +338,6 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 	redirectBeforeLeave?: boolean;
 	closeText?: string;
 }): ReactElement {
-	const assetManager = useAssetManager();
 	const directoryConnector = useDirectoryConnector();
 	const confirm = useConfirmDialog();
 	const contacts = useAccountContacts('friend');
@@ -409,8 +406,6 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 		},
 	);
 
-	const background = info.background ? ResolveBackground(assetManager, info.background, GetAssetsSourceUrl()).image : '';
-
 	const userIsOwner = !!info.isOwner;
 	const hasOnlineAdmin = info.characters.some((c) => c.isAdmin && c.isOnline);
 	const isPublic = info.public === 'public-with-admin' || info.public === 'public-with-anyone';
@@ -443,11 +438,6 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 			<Row className='ownership' alignY='center'>
 				Owned by: { info.owners.join(', ') }
 			</Row>
-			{
-				(background !== '' && !background.startsWith('#')) ? (
-					<img className='preview' src={ background } />
-				) : null
-			}
 			<Row className='features' wrap>
 				{
 					featureIcons.map(([icon, name, extraClassNames], i) => (

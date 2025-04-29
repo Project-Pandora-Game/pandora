@@ -9,7 +9,6 @@ import {
 	FilterItemType,
 	ICharacterRoomData,
 	ItemRoomDevice,
-	ResolveBackground,
 	RoomBackgroundData,
 	SpaceClientInfo,
 } from 'pandora-common';
@@ -17,7 +16,6 @@ import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
 import { Filter, Rectangle } from 'pixi.js';
 import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
-import { useAssetManager } from '../../assets/assetManager.tsx';
 import { Character, useCharacterData, useCharacterRestrictionManager } from '../../character/character.ts';
 import { CommonProps } from '../../common/reactTypes.ts';
 import { useEvent } from '../../common/useEvent.ts';
@@ -71,8 +69,6 @@ export function RoomGraphicsScene({
 	debugConfig,
 	onPointerDown,
 }: RoomGraphicsSceneProps): ReactElement {
-	const assetManager = useAssetManager();
-
 	const {
 		roomSceneMode,
 	} = useRoomScreenContext();
@@ -80,17 +76,15 @@ export function RoomGraphicsScene({
 	const roomState = globalState.room;
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
 	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
-		const resolved = ResolveBackground(assetManager, info.background);
-
 		if (debugConfig?.enabled && debugConfig.roomScalingHelperData != null && info.features.includes('development')) {
-			return CalculateBackgroundDataFromCalibrationData(resolved.image, {
+			return CalculateBackgroundDataFromCalibrationData(roomState.roomBackground.image, {
 				...debugConfig.roomScalingHelperData,
-				imageSize: resolved.imageSize,
+				imageSize: roomState.roomBackground.imageSize,
 			});
 		}
 
-		return resolved;
-	}, [assetManager, info, debugConfig]);
+		return roomState.roomBackground;
+	}, [roomState, info, debugConfig]);
 
 	const projectionResolver = useRoomViewProjection(roomBackground);
 

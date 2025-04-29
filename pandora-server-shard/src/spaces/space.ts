@@ -29,7 +29,6 @@ import {
 	IShardClient,
 	IsValidRoomPosition,
 	Logger,
-	ResolveBackground,
 	RoomInventory,
 	RoomInventoryBundle,
 	ServerRoom,
@@ -129,7 +128,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		// Put characters into correct place if needed
 		// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
 		if (!this.getInfo().features.includes('development')) {
-			const roomBackground = ResolveBackground(assetManager, this.config.background);
+			const roomBackground = this.currentState.room.roomBackground;
 			for (const character of this.characters) {
 				if (!IsValidRoomPosition(roomBackground, character.position)) {
 					character.position = GenerateInitialRoomPosition(roomBackground);
@@ -199,6 +198,16 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 		for (const character of changes.characters) {
 			this.getCharacterById(character)?.onAppearanceChanged();
+		}
+
+		// Put characters into correct place if needed
+		if (newState.room.roomBackground !== oldState.room.roomBackground) {
+			const roomBackground = this.currentState.room.roomBackground;
+			for (const character of this.characters) {
+				if (!IsValidRoomPosition(roomBackground, character.position)) {
+					character.position = GenerateInitialRoomPosition(roomBackground);
+				}
+			}
 		}
 
 		if (this._suppressUpdates)
@@ -306,9 +315,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public updateCharacterPosition(source: Character, id: CharacterId, newPosition: CharacterRoomPosition): void {
 		// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
 		if (!this.getInfo().features.includes('development')) {
-			const roomBackground = ResolveBackground(assetManager, this.config.background);
-
-			if (!IsValidRoomPosition(roomBackground, newPosition)) {
+			if (!IsValidRoomPosition(this.currentState.room.roomBackground, newPosition)) {
 				return;
 			}
 		}
@@ -353,8 +360,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 	public characterAdd(character: Character, appearance: AppearanceBundle): void {
 		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
-		const roomBackground = ResolveBackground(assetManager, this.config.background);
-		character.initRoomPosition(this.id, roomBackground);
+		character.initRoomPosition(this.id, this.currentState.room.roomBackground);
 		const logger = this.logger.prefixMessages(`Character ${character.id} join:`);
 
 		this.runWithSuppressedUpdates(() => {

@@ -330,13 +330,13 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 	}
 
 	public static loadFromBundle(
-assetManager: AssetManager,
-characterId: CharacterId,
-bundle: AppearanceBundle | undefined,
-roomState: AssetFrameworkRoomState,
-logger: Logger | undefined,
-): AssetFrameworkCharacterState {
-const fixup = bundle?.clientOnly !== true;
+		assetManager: AssetManager,
+		characterId: CharacterId,
+		bundle: AppearanceBundle | undefined,
+		roomState: AssetFrameworkRoomState,
+		logger: Logger | undefined,
+	): AssetFrameworkCharacterState {
+		const fixup = bundle?.clientOnly !== true;
 
 		bundle = AppearanceBundleSchema.parse(bundle ?? GetDefaultAppearanceBundle());
 
@@ -346,9 +346,7 @@ const fixup = bundle?.clientOnly !== true;
 			// Load asset and skip if unknown
 			const asset = assetManager.getAssetById(itemBundle.asset);
 			if (asset === undefined) {
-if (!fixup) {
-					Assert(false, `DESYNC: Unknown asset ${itemBundle.asset}`);
-				}
+				Assert(fixup, `DESYNC: Unknown asset ${itemBundle.asset}`);
 				logger?.warning(`Skipping unknown asset ${itemBundle.asset}`);
 				continue;
 			}
@@ -370,8 +368,8 @@ if (!fixup) {
 		// Validate and add all items
 		let newItems: AppearanceItems<WearableAssetType>;
 		if (fixup) {
-newItems = CharacterAppearanceLoadAndValidate(assetManager, loadedItems, { id: characterId }, roomState, logger);
-} else {
+			newItems = CharacterAppearanceLoadAndValidate(assetManager, loadedItems, { id: characterId }, roomState, logger);
+		} else {
 			Assert(loadedItems.every((it) => it.isWearable()), 'DESYNC: Received non-wearable item on character');
 			newItems = loadedItems;
 		}

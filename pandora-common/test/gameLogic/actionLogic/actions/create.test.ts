@@ -9,8 +9,8 @@ describe('ActionCreate', () => {
 	it('Creates a non-unique bodypart', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character),
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room),
 		]);
 
 		// Do the action
@@ -38,7 +38,6 @@ describe('ActionCreate', () => {
 	it('Creates a non-unique bodypart and reorders it in place', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseCharacterState = TestCreateCharacterState(assetManager, character);
 
 		// Add front hair, as back hair should be inserted below front hair
 		const frontHair = assetManager.createItem(
@@ -47,11 +46,14 @@ describe('ActionCreate', () => {
 			character,
 		);
 		Assert(frontHair.isType('bodypart'));
-		const baseState = TestCreateGlobalState(assetManager, [
-			baseCharacterState.produceWithItems([
-				...baseCharacterState.items,
-				frontHair,
-			]),
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => {
+				const baseCharacterState = TestCreateCharacterState(assetManager, character, room);
+				return baseCharacterState.produceWithItems([
+					...baseCharacterState.items,
+					frontHair,
+				]);
+			},
 		]);
 
 		// Do the action
@@ -79,8 +81,8 @@ describe('ActionCreate', () => {
 	it('Creates a unique bodypart and replaces the old one', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character),
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room),
 		]);
 
 		// Do the action
@@ -108,8 +110,8 @@ describe('ActionCreate', () => {
 	it('Creates a wearable asset', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character),
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room),
 		]);
 
 		// Do the action
@@ -137,8 +139,8 @@ describe('ActionCreate', () => {
 	it('Creates a wearable asset and another one ordered before it', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character),
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room),
 		]);
 
 		// Do the actions

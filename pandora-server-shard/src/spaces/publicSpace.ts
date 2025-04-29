@@ -5,11 +5,8 @@ import {
 	AssertNever,
 	AsyncSynchronized,
 	GameStateUpdate,
-	GenerateInitialRoomPosition,
 	GetLogger,
 	IShardSpaceDefinition,
-	IsValidRoomPosition,
-	ResolveBackground,
 	SPACE_SHARD_UPDATEABLE_PROPERTIES,
 	SpaceData,
 	SpaceDataSchema,
@@ -17,7 +14,6 @@ import {
 	SpaceDirectoryConfig,
 	SpaceId,
 } from 'pandora-common';
-import { assetManager } from '../assets/assetManager.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DirectoryConnector } from '../networking/socketio_directory_connector.ts';
 import { Space } from './space.ts';
@@ -59,20 +55,6 @@ export class PublicSpace extends Space {
 			info: this.getInfo(),
 		};
 
-		// Put characters into correct place if needed
-		{
-			const roomBackground = ResolveBackground(assetManager, this.data.config.background);
-			for (const character of this.characters) {
-				if (!IsValidRoomPosition(roomBackground, character.position)) {
-					character.position = GenerateInitialRoomPosition(roomBackground);
-
-					update.characters ??= {};
-					update.characters[character.id] = {
-						position: character.position,
-					};
-				}
-			}
-		}
 		// Character modifiers might depend on space config
 		update.characterModifierEffects = this.getAndApplyCharacterModifierEffectsUpdate();
 

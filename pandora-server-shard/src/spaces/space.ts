@@ -56,6 +56,7 @@ const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
 export const SPACE_TICK_INTERVAL = 60_000;
 
 export abstract class Space extends ServerRoom<IShardClient> {
+	public readonly id: SpaceId | null;
 
 	protected readonly characters: Set<Character> = new Set();
 	protected readonly history = new Map<CharacterId, Map<number, number>>();
@@ -72,14 +73,14 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	/** Data for what character modifier effects were sent to the room last, used for creating delta updates when effects change */
 	private _lastSentModifierEffects: SpaceCharacterModifierEffectData = {};
 
-	public abstract get id(): SpaceId | null;
 	public abstract get owners(): readonly AccountId[];
 	public abstract get config(): SpaceDirectoryConfig;
 
 	protected readonly logger: Logger;
 
-	constructor(inventory: RoomInventoryBundle, logger: Logger) {
+	constructor(id: SpaceId | null, inventory: RoomInventoryBundle, logger: Logger) {
 		super();
+		this.id = id;
 		this.logger = logger;
 		this.logger.verbose('Loaded');
 
@@ -90,7 +91,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		const initialState = AssetFrameworkGlobalState.createDefault(
 			assetManager,
 			AssetFrameworkRoomState
-				.loadFromBundle(assetManager, inventory, this.logger.prefixMessages('Room inventory load:')),
+				.loadFromBundle(assetManager, inventory, id, this.logger.prefixMessages('Room inventory load:')),
 		);
 
 		// Check if room state changed and if it did queue saving the changes

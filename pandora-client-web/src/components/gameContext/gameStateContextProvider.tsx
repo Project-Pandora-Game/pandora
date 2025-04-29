@@ -181,7 +181,7 @@ export class GameState extends TypedEventEmitter<{
 		}
 
 		const loadedGlobalState = AssetFrameworkGlobalState
-			.loadFromBundle(GetCurrentAssetManager(), globalState, this.logger.prefixMessages('State bundle load:'));
+			.loadFromBundle(GetCurrentAssetManager(), globalState, id, this.logger.prefixMessages('State bundle load:'));
 
 		this.globalState = new AssetFrameworkGlobalStateContainer(
 			this.logger,
@@ -246,7 +246,7 @@ export class GameState extends TypedEventEmitter<{
 		}
 		this._updateCharacters(characters);
 		logger.debug('Loaded data', data);
-		this._updateGlobalState(data.globalState);
+		this._updateGlobalState(id, data.globalState);
 		this.characterModifierEffects.value = freeze(characterModifierEffects, true);
 	}
 
@@ -335,13 +335,13 @@ export class GameState extends TypedEventEmitter<{
 		});
 	}
 
-	private _updateGlobalState(bundle: AssetFrameworkGlobalStateClientBundle): void {
+	private _updateGlobalState(spaceId: SpaceId | null, bundle: AssetFrameworkGlobalStateClientBundle): void {
 		if (!bundle.clientOnly) {
 			this.logger.error('Received global state update that is not client-only');
 		}
 		this.globalState.setState(
 			AssetFrameworkGlobalState
-				.loadFromBundle(GetCurrentAssetManager(), bundle, this.logger.prefixMessages('State bundle load:')),
+				.loadFromBundle(GetCurrentAssetManager(), bundle, spaceId, this.logger.prefixMessages('State bundle load:')),
 		);
 	}
 

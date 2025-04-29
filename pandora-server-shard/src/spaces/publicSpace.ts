@@ -23,12 +23,9 @@ import { DirectoryConnector } from '../networking/socketio_directory_connector.t
 import { Space } from './space.ts';
 
 export class PublicSpace extends Space {
+	public override readonly id: SpaceId;
 	private readonly data: IShardSpaceDefinition;
 	private readonly _modified: Set<keyof SpaceDataShardUpdate> = new Set();
-
-	public override get id(): SpaceId {
-		return this.data.id;
-	}
 
 	public get accessId(): string {
 		return this.data.accessId;
@@ -43,7 +40,8 @@ export class PublicSpace extends Space {
 	}
 
 	constructor(data: SpaceData) {
-		super(data.inventory, GetLogger('Space', `[PublicSpace ${data.id}]`));
+		super(data.id, data.inventory, GetLogger('Space', `[PublicSpace ${data.id}]`));
+		this.id = data.id;
 		this.data = data;
 	}
 

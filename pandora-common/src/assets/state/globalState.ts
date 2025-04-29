@@ -3,6 +3,7 @@ import { nanoid } from 'nanoid';
 import { z } from 'zod';
 import { CharacterId, CharacterIdSchema } from '../../character/characterTypes.ts';
 import type { Logger } from '../../logging/logger.ts';
+import type { SpaceId } from '../../space/index.ts';
 import { Assert, AssertNever, AssertNotNullable, MemoizeNoArg } from '../../utility/misc.ts';
 import { EvalContainerPath } from '../appearanceHelpers.ts';
 import { ActionTargetSelector, type ItemContainerPath, type ItemPath } from '../appearanceTypes.ts';
@@ -352,10 +353,10 @@ export class AssetFrameworkGlobalState {
 		return freeze(instance, true);
 	}
 
-	public static loadFromBundle(assetManager: AssetManager, bundle: AssetFrameworkGlobalStateBundle, logger: Logger | undefined): AssetFrameworkGlobalState {
+	public static loadFromBundle(assetManager: AssetManager, bundle: AssetFrameworkGlobalStateBundle, spaceId: SpaceId | null, logger: Logger | undefined): AssetFrameworkGlobalState {
 		const characters = new Map<CharacterId, AssetFrameworkCharacterState>();
 
-		const room = AssetFrameworkRoomState.loadFromBundle(assetManager, bundle.room, logger);
+		const room = AssetFrameworkRoomState.loadFromBundle(assetManager, bundle.room, spaceId, logger);
 
 		for (const [key, characterData] of Object.entries(bundle.characters)) {
 			AssertNotNullable(characterData);
@@ -414,6 +415,7 @@ export class AssetFrameworkGlobalStateContainer {
 		const newState = AssetFrameworkGlobalState.loadFromBundle(
 			assetManager,
 			bundle,
+			oldState.room.spaceId,
 			this._logger.prefixMessages('Asset manager reload:'),
 		);
 		Assert(newState.isValid());

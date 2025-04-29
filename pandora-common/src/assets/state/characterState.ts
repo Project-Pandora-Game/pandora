@@ -4,6 +4,7 @@ import type { Writable } from 'type-fest';
 import type { CharacterId } from '../../character/index.ts';
 import { RedactSensitiveActionData } from '../../gameLogic/actionLogic/actionUtils.ts';
 import type { Logger } from '../../logging/logger.ts';
+import type { SpaceId } from '../../space/index.ts';
 import { Assert, CloneDeepMutable, IsNotNullable, MemoizeNoArg } from '../../utility/misc.ts';
 import { AppearanceItemProperties, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
@@ -22,6 +23,8 @@ type AssetFrameworkCharacterStateProps = {
 	readonly requestedPose: AppearancePose;
 	readonly restrictionOverride?: RestrictionOverride;
 	readonly attemptingAction: Immutable<CharacterActionAttempt> | null;
+	/** Character's current space - mainly used for detecting space change (as shard has no control over that) and resetting relevant data when needed. */
+	readonly space: SpaceId | null;
 };
 
 /**
@@ -37,6 +40,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 	public readonly restrictionOverride?: RestrictionOverride;
 
 	public readonly attemptingAction: Immutable<CharacterActionAttempt> | null;
+	public readonly space: SpaceId | null;
 
 	public get actualPose(): Immutable<AppearancePose> {
 		return this._generateActualPose();
@@ -52,13 +56,24 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		// allow override restrictionOverride with undefined (override: { restrictionOverride: undefined })
 		this.restrictionOverride = 'restrictionOverride' in override ? override.restrictionOverride : props.restrictionOverride;
 		this.attemptingAction = override.attemptingAction !== undefined ? override.attemptingAction : props.attemptingAction;
+		this.space = override.space !== undefined ? override.space : props.space;
 	}
 
-	public isValid(roomState: AssetFrameworkRoomState | null): boolean {
+	public isValid(roomState: AssetFrameworkRoomState): boolean {
 		return this.validate(roomState).success;
 	}
 
-	public validate(roomState: AssetFrameworkRoomState | null): AppearanceValidationResult {
+	public validate(roomState: AssetFrameworkRoomState): AppearanceValidationResult {
+		// We expect that character is always in a specific state and updated to match it
+		if (roomState.spaceId !== this.space) {
+			return {
+				success: false,
+				error: {
+					problem: 'invalid',
+				},
+			};
+		}
+
 		{
 			const r = ValidateAppearanceItems(this.assetManager, this.items, roomState);
 			if (!r.success)
@@ -76,6 +91,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			requestedPose: cloneDeep(this.requestedPose),
 			restrictionOverride: this.restrictionOverride,
 			attemptingAction: CloneDeepMutable(this.attemptingAction) ?? undefined,
+			space: this.space,
 		};
 	}
 
@@ -90,6 +106,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				start: this.attemptingAction.start,
 				finishAfter: this.attemptingAction.finishAfter,
 			}) : undefined,
+			space: this.space,
 			clientOnly: true,
 		};
 	}
@@ -117,11 +134,14 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				finishAfter: this.attemptingAction.finishAfter,
 			}) : null;
 		}
+		if (this.space !== originalState.space) {
+			result.space = this.space;
+		}
 
 		return result;
 	}
 
-	public applyClientDeltaBundle(bundle: AppearanceClientDeltaBundle, roomState: AssetFrameworkRoomState | null, logger: Logger | undefined): AssetFrameworkCharacterState {
+	public applyClientDeltaBundle(bundle: AppearanceClientDeltaBundle, roomState: AssetFrameworkRoomState, logger: Logger | undefined): AssetFrameworkCharacterState {
 		const update: Writable<Partial<AssetFrameworkCharacterStateProps>> = {};
 
 		if (bundle.items !== undefined) {
@@ -157,6 +177,9 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 
 		if (bundle.attemptingAction !== undefined) {
 			update.attemptingAction = bundle.attemptingAction;
+		}
+		if (bundle.space !== undefined) {
+			update.space = bundle.space;
 		}
 
 		// Create the final state
@@ -267,11 +290,11 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		return new AssetFrameworkCharacterState(this, { attemptingAction: freeze(action, true) });
 	}
 
-	public updateRoomStateLink(roomInventory: AssetFrameworkRoomState | null, revalidate: boolean): AssetFrameworkCharacterState {
+	public updateRoomStateLink(roomInventory: AssetFrameworkRoomState, revalidate: boolean): AssetFrameworkCharacterState {
 		let updatedItems: AppearanceItems<WearableAssetType> = this.items.map((item) => {
 			if (item.isType('roomDeviceWearablePart')) {
 				const link = item.roomDeviceLink;
-				if (!roomInventory || !link)
+				if (!link)
 					return item.updateRoomStateLink(null);
 
 				// Target device must exist
@@ -302,11 +325,19 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		});
 	}
 
-	public static createDefault(assetManager: AssetManager, characterId: CharacterId): AssetFrameworkCharacterState {
-		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, undefined, null, undefined);
+	public static createDefault(assetManager: AssetManager, characterId: CharacterId, roomState: AssetFrameworkRoomState): AssetFrameworkCharacterState {
+		return AssetFrameworkCharacterState.loadFromBundle(assetManager, characterId, undefined, roomState, undefined);
 	}
 
-	public static loadFromBundle(assetManager: AssetManager, characterId: CharacterId, bundle: AppearanceBundle | undefined, roomState: AssetFrameworkRoomState | null, logger: Logger | undefined): AssetFrameworkCharacterState {
+	public static loadFromBundle(
+assetManager: AssetManager,
+characterId: CharacterId,
+bundle: AppearanceBundle | undefined,
+roomState: AssetFrameworkRoomState,
+logger: Logger | undefined,
+): AssetFrameworkCharacterState {
+const fixup = bundle?.clientOnly !== true;
+
 		bundle = AppearanceBundleSchema.parse(bundle ?? GetDefaultAppearanceBundle());
 
 		// Load all items
@@ -315,6 +346,9 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			// Load asset and skip if unknown
 			const asset = assetManager.getAssetById(itemBundle.asset);
 			if (asset === undefined) {
+if (!fixup) {
+					Assert(false, `DESYNC: Unknown asset ${itemBundle.asset}`);
+				}
 				logger?.warning(`Skipping unknown asset ${itemBundle.asset}`);
 				continue;
 			}
@@ -334,7 +368,13 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		}
 
 		// Validate and add all items
-		const newItems = CharacterAppearanceLoadAndValidate(assetManager, loadedItems, { id: characterId }, roomState, logger);
+		let newItems: AppearanceItems<WearableAssetType>;
+		if (fixup) {
+newItems = CharacterAppearanceLoadAndValidate(assetManager, loadedItems, { id: characterId }, roomState, logger);
+} else {
+			Assert(loadedItems.every((it) => it.isWearable()), 'DESYNC: Received non-wearable item on character');
+			newItems = loadedItems;
+		}
 
 		// Load pose
 		const requestedPose = cloneDeep(bundle.requestedPose);
@@ -361,6 +401,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				requestedPose,
 				restrictionOverride: bundle.restrictionOverride,
 				attemptingAction: bundle.attemptingAction ?? null,
+				space: roomState.spaceId,
 			}).updateRoomStateLink(roomState, true),
 			true,
 		);

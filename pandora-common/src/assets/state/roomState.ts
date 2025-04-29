@@ -1,6 +1,7 @@
 import { freeze } from 'immer';
 import { z } from 'zod';
 import type { Logger } from '../../logging/logger.ts';
+import type { SpaceId } from '../../space/index.ts';
 import { Assert, MemoizeNoArg } from '../../utility/misc.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
@@ -27,19 +28,22 @@ export const ROOM_INVENTORY_BUNDLE_DEFAULT: RoomInventoryBundle = {
 };
 
 /**
- * State of an room. Immutable.
+ * State of an space. Immutable.
  */
 export class AssetFrameworkRoomState {
 	public readonly type = 'roomInventory';
 	public readonly assetManager: AssetManager;
+	public readonly spaceId: SpaceId | null;
 
 	public readonly items: AppearanceItems;
 
 	private constructor(
 		assetManager: AssetManager,
+		spaceId: SpaceId | null,
 		items: AppearanceItems,
 	) {
 		this.assetManager = assetManager;
+		this.spaceId = spaceId;
 		this.items = items;
 	}
 
@@ -76,6 +80,7 @@ export class AssetFrameworkRoomState {
 
 	public exportToClientDeltaBundle(originalState: AssetFrameworkRoomState, options: IExportOptions = {}): RoomInventoryClientDeltaBundle {
 		Assert(this.assetManager === originalState.assetManager);
+		Assert(this.spaceId === originalState.spaceId);
 		options.clientOnly = true;
 
 		const result: RoomInventoryClientDeltaBundle = {};
@@ -96,6 +101,7 @@ export class AssetFrameworkRoomState {
 
 		const resultState = freeze(new AssetFrameworkRoomState(
 			this.assetManager,
+			this.spaceId,
 			items,
 		), true);
 
@@ -106,15 +112,16 @@ export class AssetFrameworkRoomState {
 	public produceWithItems(newItems: AppearanceItems): AssetFrameworkRoomState {
 		return new AssetFrameworkRoomState(
 			this.assetManager,
+			this.spaceId,
 			newItems,
 		);
 	}
 
-	public static createDefault(assetManager: AssetManager): AssetFrameworkRoomState {
-		return AssetFrameworkRoomState.loadFromBundle(assetManager, ROOM_INVENTORY_BUNDLE_DEFAULT, undefined);
+	public static createDefault(assetManager: AssetManager, spaceId: SpaceId | null): AssetFrameworkRoomState {
+		return AssetFrameworkRoomState.loadFromBundle(assetManager, ROOM_INVENTORY_BUNDLE_DEFAULT, spaceId, undefined);
 	}
 
-	public static loadFromBundle(assetManager: AssetManager, bundle: RoomInventoryBundle, logger: Logger | undefined): AssetFrameworkRoomState {
+	public static loadFromBundle(assetManager: AssetManager, bundle: RoomInventoryBundle, spaceId: SpaceId | null, logger: Logger | undefined): AssetFrameworkRoomState {
 		const parsed = RoomInventoryBundleSchema.parse(bundle);
 
 		// Load all items
@@ -137,6 +144,7 @@ export class AssetFrameworkRoomState {
 		// Create the final state
 		const resultState = freeze(new AssetFrameworkRoomState(
 			assetManager,
+			spaceId,
 			newItems,
 		), true);
 

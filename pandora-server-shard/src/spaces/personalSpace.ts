@@ -7,8 +7,6 @@ import { Space } from './space.ts';
 export class PersonalSpace extends Space {
 	private readonly _character: Character;
 
-	public readonly id: null = null;
-
 	public override get owners(): readonly AccountId[] {
 		return [this._character.accountId];
 	}
@@ -34,7 +32,7 @@ export class PersonalSpace extends Space {
 	}
 
 	constructor(character: Character, inventory: RoomInventoryBundle) {
-		super(inventory, GetLogger('Space', `[PersonalSpace ${character.id}]`));
+		super(null, inventory, GetLogger('Space', `[PersonalSpace ${character.id}]`));
 		this._character = character;
 	}
 

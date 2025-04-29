@@ -7,6 +7,7 @@ import {
 	ArmRotationSchema,
 	Assert,
 	AssetFrameworkCharacterState,
+	AssetFrameworkRoomState,
 	AssetsPosePreset,
 	AssetsPosePresets,
 	BONE_MAX,
@@ -730,8 +731,9 @@ async function GeneratePosePreview(
 
 	const pose = MergePartialAppearancePoses(preset, preset.optional);
 
+	const spaceState = AssetFrameworkRoomState.createDefault(assetManager, null);
 	const previewCharacterState = AssetFrameworkCharacterState
-		.createDefault(assetManager, 'c0')
+		.createDefault(assetManager, 'c0', spaceState)
 		.produceWithPose(preview.basePose ?? {}, 'pose')
 		.produceWithPose(pose, 'pose');
 

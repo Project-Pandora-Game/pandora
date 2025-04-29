@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { AppearanceActionSchema } from '../../gameLogic/actionLogic/index.ts';
+import { SpaceIdSchema } from '../../space/index.ts';
 import { AppearanceItemsBundleSchema, AppearanceItemsDeltaBundleSchema } from '../item/items.ts';
 import { AppearancePoseSchema, GetDefaultAppearancePose, PartialAppearancePoseSchema } from './characterStatePose.ts';
 
@@ -66,6 +67,8 @@ export const AppearanceBundleSchema = z.object({
 	items: AppearanceItemsBundleSchema,
 	restrictionOverride: RestrictionOverrideSchema.optional().catch(undefined),
 	attemptingAction: CharacterActionAttemptSchema.optional().catch(undefined),
+	/** Character's current space - mainly used for detecting space change (as shard has no control over that) and resetting relevant data when needed. */
+	space: SpaceIdSchema.nullable(),
 	clientOnly: z.boolean().optional(),
 });
 export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;
@@ -76,6 +79,7 @@ export const AppearanceClientDeltaBundleSchema = z.object({
 	items: AppearanceItemsDeltaBundleSchema.optional(),
 	restrictionOverride: RestrictionOverrideSchema.nullable().optional(),
 	attemptingAction: CharacterActionAttemptSchema.nullable().optional(),
+	space: SpaceIdSchema.nullable().optional(),
 });
 export type AppearanceClientDeltaBundle = z.infer<typeof AppearanceClientDeltaBundleSchema>;
 
@@ -83,5 +87,6 @@ export function GetDefaultAppearanceBundle(): AppearanceBundle {
 	return {
 		items: [],
 		requestedPose: GetDefaultAppearancePose(),
+		space: null,
 	};
 }

@@ -1,21 +1,21 @@
 @use '../../../styles/common';
 
 .spaceConfigurationScreen {
-	width: min(100%, 60em);
-	margin: 0 auto;
+	display: flex;
+	flex-flow: column;
+	overflow: hidden;
 
-	&>* {
-		margin-top: 0.5em;
-	}
+	.tab-wrapper {
+		width: 100%;
+		flex: 1;
+		contain: size;
+		overflow: auto;
 
-	.spaceConfigurationScreen-tab {
 		border-top: 2px solid common.$theme-separator;
-		padding: 0.5em;
 	}
 
 	.input-container {
 		@include common.flex(column);
-		margin-top: 1em;
 		gap: 0.5em;
 		width: 100%;
 
@@ -198,6 +198,12 @@
 		a:active {
 			outline: none;
 		}
+	}
+
+	.solidBackgroundOptions {
+		min-height: fit-content;
+		background: common.$theme-spaceconfig-backgroundselect-list-background;
+		color: common.$theme-spaceconfig-backgroundselect-list-text;
 	}
 
 	.footer {

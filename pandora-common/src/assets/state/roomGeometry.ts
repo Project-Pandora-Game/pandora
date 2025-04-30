@@ -47,6 +47,17 @@ export const RoomGeometryConfigSchema = z.discriminatedUnion('type', [
 ]);
 export type RoomGeometryConfig = z.infer<typeof RoomGeometryConfigSchema>;
 
+export const DEFAULT_PLAIN_BACKGROUND = freeze<Immutable<RoomGeometryConfig>>({
+	type: 'plain',
+	image: '#1099bb',
+	imageSize: [4000, 2000],
+	floorArea: [4000, 2000],
+	areaCoverage: 1,
+	ceiling: 0,
+	cameraCenterOffset: [0, 0],
+	cameraFov: 80,
+}, true);
+
 const FALLBACK_ROOM_BACKGROUND = freeze<Immutable<RoomBackgroundData>>({
 	image: '#1099bb',
 	imageSize: [4000, 2000],

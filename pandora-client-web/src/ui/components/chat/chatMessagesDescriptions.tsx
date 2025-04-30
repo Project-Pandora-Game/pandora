@@ -58,6 +58,8 @@ export function DescribeGameLogicAction({ action, ...props }: DescribeGameLogicA
 			return <DescribeGameLogicActionRoomDeviceEnter action={ action } { ...props } />;
 		case 'roomDeviceLeave':
 			return <DescribeGameLogicActionRoomDeviceLeave action={ action } { ...props } />;
+		case 'roomConfigure':
+			return <DescribeGameLogicActionRoomConfigure action={ action } { ...props } />;
 		case 'actionAttemptInterrupt':
 			return <DescribeGameLogicActionInterrupt action={ action } { ...props } />;
 	}
@@ -275,6 +277,10 @@ function DescribeGameLogicActionRoomDeviceLeave({ action, actionOriginator, glob
 			{ ' from' } the "{ slotName }" slot of the <DescribeItem item={ item } />.
 		</>
 	);
+}
+
+function DescribeGameLogicActionRoomConfigure(_props: DescribeGameLogicActionProps<'roomConfigure'>): ReactElement {
+	return <>Update the room's configuration.</>;
 }
 
 function DescribeGameLogicActionInterrupt({ action }: DescribeGameLogicActionProps<'actionAttemptInterrupt'>): ReactElement {

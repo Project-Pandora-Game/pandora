@@ -68,7 +68,7 @@ export const AppearanceBundleSchema = z.object({
 	restrictionOverride: RestrictionOverrideSchema.optional().catch(undefined),
 	attemptingAction: CharacterActionAttemptSchema.optional().catch(undefined),
 	/** Character's current space - mainly used for detecting space change (as shard has no control over that) and resetting relevant data when needed. */
-	space: SpaceIdSchema.nullable(),
+	space: SpaceIdSchema.nullable().catch(null),
 	clientOnly: z.boolean().optional(),
 });
 export type AppearanceBundle = z.infer<typeof AppearanceBundleSchema>;

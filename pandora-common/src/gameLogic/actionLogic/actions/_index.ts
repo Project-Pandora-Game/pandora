@@ -14,6 +14,7 @@ import { ActionMoveItem, AppearanceActionMove } from './move.ts';
 import { ActionPose, AppearanceActionPose } from './pose.ts';
 import { ActionAppearanceRandomize, AppearanceActionRandomize } from './randomize.ts';
 import { ActionRestrictionOverrideChange, AppearanceActionRestrictionOverrideChange } from './restrictionOverrideChange.ts';
+import { ActionRoomConfigure, AppearanceActionRoomConfigure } from './roomConfigure.ts';
 import { ActionRoomDeviceDeploy, AppearanceActionRoomDeviceDeploy } from './roomDeviceDeploy.ts';
 import { ActionRoomDeviceEnter, AppearanceActionRoomDeviceEnter } from './roomDeviceEnter.ts';
 import { ActionRoomDeviceLeave, AppearanceActionRoomDeviceLeave } from './roomDeviceLeave.ts';
@@ -34,6 +35,7 @@ export const AppearanceActionSchema = z.discriminatedUnion('type', [
 	AppearanceActionRoomDeviceDeploy,
 	AppearanceActionRoomDeviceEnter,
 	AppearanceActionRoomDeviceLeave,
+	AppearanceActionRoomConfigure,
 	AppearanceActionAttemptInterruptSchema,
 ]);
 type AppearanceActionBase = z.infer<typeof AppearanceActionSchema>;
@@ -93,6 +95,8 @@ function ApplyActionBase(
 			return ActionRoomDeviceEnter({ ...arg, action });
 		case 'roomDeviceLeave':
 			return ActionRoomDeviceLeave({ ...arg, action });
+		case 'roomConfigure':
+			return ActionRoomConfigure({ ...arg, action });
 		case 'actionAttemptInterrupt':
 			return ActionAttemptInterrupt({ ...arg, action });
 		default:

@@ -126,6 +126,9 @@ export class AssetFrameworkRoomState implements AssetFrameworkRoomStateProps {
 
 		if (bundle.roomGeometry !== undefined) {
 			update.roomGeometryConfig = bundle.roomGeometry;
+			const roomBackground = ResolveBackground(this.assetManager, bundle.roomGeometry);
+			Assert(roomBackground != null, 'DESYNC: Failed to resolve room background');
+			update.roomBackground = roomBackground;
 		}
 
 		const resultState = freeze(new AssetFrameworkRoomState(this, update), true);

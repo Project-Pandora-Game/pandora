@@ -21,6 +21,7 @@ import {
 	RoomBackgroundTagDefinition,
 	SpaceBaseInfoSchema,
 	SpaceDirectoryConfig,
+	SpaceDirectoryConfigSchema,
 	SpaceFeature,
 	SpaceGhostManagementConfigSchema,
 	SpaceId,
@@ -203,19 +204,6 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 				creation ? 'creation' : 'configuration',
 			) }
 		>
-			{
-				creation ? (
-					<Column padding='medium' alignX='center'>
-						<Button className='short'
-							onClick={ commit }
-							disabled={ processingCommit }
-						>
-							Create space
-						</Button>
-						<Row padding='tiny' />
-					</Column>
-				) : null
-			}
 			<TabContainer className='flex-1' allowWrap>
 				<Tab name='General'>
 					<SpaceConfigurationTab { ...tabProps } element={ SpaceConfigurationGeneral } />
@@ -235,6 +223,18 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 				}
 				<Tab name='◄ Close' tabClassName='slim' onClick={ onCloseClick } />
 			</TabContainer>
+			{
+				creation ? (
+					<Column padding='medium' alignX='center'>
+						<Button className='creationButton'
+							onClick={ commit }
+							disabled={ processingCommit }
+						>
+							Create space
+						</Button>
+					</Column>
+				) : null
+			}
 			{
 				showCommitDialog ? (
 					<ModalDialog>
@@ -292,7 +292,7 @@ function SpaceConfigurationTab({ element: Element, ...props }: SpaceConfiguratio
 	return (
 		<div className='tab-wrapper'>
 			<Column className='flex-1' alignX='center'>
-				<Column className='flex-grow-1' alignY='center' padding='large'>
+				<Column className='flex-grow-1' alignY='center' padding='large' gap='large'>
 					<Element { ...props } />
 				</Column>
 			</Column>
@@ -324,7 +324,6 @@ function SpaceConfigurationGeneral({
 					/>
 				</div>
 			</fieldset>
-			<Row />
 			<fieldset>
 				<legend>Space visibility</legend>
 				<div className='input-container'>
@@ -366,6 +365,7 @@ function SpaceConfigurationGeneral({
 						</ContextHelpButton>
 					</label>
 					<Select
+						className='contain-size'
 						value={ currentConfig.public }
 						onChange={ (e) => updateConfig({ public: SpacePublicSettingSchema.parse(e.target.value) }) }
 						noScrollChange
@@ -378,7 +378,6 @@ function SpaceConfigurationGeneral({
 					</Select>
 				</div>
 			</fieldset>
-			<Row />
 			<fieldset>
 				<legend>Space presentation</legend>
 				<div className='input-container'>
@@ -391,7 +390,6 @@ function SpaceConfigurationGeneral({
 					/>
 					{ canEdit && !IsValidName(currentConfig.name) ? (<div className='error'>Invalid name</div>) : null }
 				</div>
-				<Row />
 				<div className='input-container'>
 					<label>Space description ({ currentConfig.description.length }/{ LIMIT_SPACE_DESCRIPTION_LENGTH } characters)</label>
 					<textarea
@@ -423,7 +421,6 @@ function SpaceConfigurationGeneral({
 					{ canEdit && !IsValidEntryText(currentConfig.entryText) ? (<div className='error'>Invalid entry text</div>) : null }
 				</div>
 			</fieldset>
-			<Row />
 			{
 				creation ? (
 					<div className='input-container'>
@@ -513,7 +510,6 @@ function SpaceConfigurationRights({
 					</Row>
 				</div>
 			</fieldset>
-			<Row />
 			<fieldset>
 				<legend>Permission lists</legend>
 				<div className='input-container'>
@@ -542,7 +538,6 @@ function SpaceConfigurationRights({
 					<NumberListArea values={ currentConfig.allow } setValues={ (allow) => updateConfig({ allow }) } readOnly={ !canEdit } invalid={ invalidAllow } />
 				</div>
 			</fieldset>
-			<Row />
 			<fieldset>
 				<legend>Offline character management</legend>
 				<Column>
@@ -576,7 +571,6 @@ function SpaceConfigurationRights({
 					}
 				</Column>
 			</fieldset>
-			<Row />
 			{ (!creation && currentSpaceInfo?.id != null) && <SpaceInvites spaceId={ currentSpaceInfo.id } isPlayerAdmin={ isPlayerAdmin } /> }
 		</>
 	);
@@ -715,7 +709,7 @@ function GhostManagement({ config, setConfig, canEdit }: {
 
 	return (
 		<>
-			<Column>
+			<Column gap='small'>
 				<label>Autokick offline characters after (minutes)</label>
 				<NumberInput
 					min={ 0 }
@@ -799,13 +793,14 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 	return (
 		<fieldset>
 			<legend>Space invites management</legend>
-			<Column gap='medium'>
-				<div onClick={ copyPublic } className='permanentInvite'>
-					<span className='text'>Permanent public invite link:</span>
-					<span className='invite'>{ permaLink }</span>
-				</div>
-				<Button onClick={ () => setShowCreation(true) }>Create New Invite</Button>
-				<Row />
+			<Column gap='large'>
+				<Column gap='medium'>
+					<div onClick={ copyPublic } className='permanentInvite'>
+						<span className='text'>Permanent public invite link:</span>
+						<span className='invite'>{ permaLink }</span>
+					</div>
+					<Button onClick={ () => setShowCreation(true) }>Create New Invite</Button>
+				</Column>
 				<table className='spaceInvitesTable'>
 					<thead>
 						<tr>
@@ -1360,6 +1355,12 @@ function useCreateSpace(): (config: SpaceDirectoryConfig) => Promise<void> {
 	const directoryConnector = useDirectoryConnector();
 	const navigate = useNavigatePandora();
 	return useCallback(async (config) => {
+		const validatedConfig = SpaceDirectoryConfigSchema.safeParse(config);
+		if (!validatedConfig.success) {
+			const issue = validatedConfig.error.issues.length > 0 ? validatedConfig.error.issues[0] : undefined;
+			SpaceConfigurationProgress.show('error', `Error during space creation:\nInvalid data${issue ? (`:\n\t"${issue.path.join('/')}" ${issue.message}`) : ''}`);
+			return;
+		}
 		try {
 			SpaceConfigurationProgress.show('progress', 'Creating space...');
 			const result = await directoryConnector.awaitResponse('spaceCreate', config);

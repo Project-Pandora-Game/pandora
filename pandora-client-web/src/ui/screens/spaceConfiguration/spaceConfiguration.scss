@@ -4,12 +4,17 @@
 	display: flex;
 	flex-flow: column;
 	overflow: hidden;
+	gap: common.spacing('medium');
+
+	.creationButton {
+		width: max(50vw, min(90%, 30em));
+	}
 
 	fieldset {
 		display: flex;
 		flex-direction: column;
-		gap: common.spacing('medium');
-		min-width: 30em;
+		gap: common.spacing('large');
+		min-width: min(100%, 30em);
 		background: common.$theme-settings-fieldset-background;
 		color: common.$theme-settings-fieldset-text;
 		border: 1px solid common.$theme-settings-fieldset-border;
@@ -37,9 +42,9 @@
 		border-top: 2px solid common.$theme-separator;
 	}
 
-	.input-container {
+	.input-container, .input-section {
 		@include common.flex(column);
-		gap: 0.5em;
+		gap: common.spacing('small');
 		width: 100%;
 
 		ul {

@@ -50,7 +50,6 @@ import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { ColorInput } from '../../../components/common/colorInput/colorInput.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
-import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.tsx';
 import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs.tsx';
 import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog.tsx';
@@ -59,8 +58,11 @@ import {
 	useDirectoryConnector,
 } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
 import { IsSpaceAdmin, useGameState, useGlobalState, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs.tsx';
+import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
+import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import bodyChange from '../../../icons/body-change.svg';
 import devMode from '../../../icons/developer.svg';
 import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
@@ -68,9 +70,6 @@ import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast.t
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import './spaceConfiguration.scss';
-import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
-import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
-import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 
 export const DESCRIPTION_TEXTBOX_SIZE = 16;
 const IsValidName = ZodMatcher(SpaceBaseInfoSchema.shape.name);
@@ -310,61 +309,26 @@ function SpaceConfigurationGeneral({
 
 	return (
 		<>
-			<div className='input-container'>
-				<label>Space name ({ currentConfig.name.length }/{ LIMIT_SPACE_NAME_LENGTH } characters)</label>
-				<TextInput
-					autoComplete='none'
-					value={ currentConfig.name }
-					onChange={ (newValue) => updateConfig({ name: newValue }) }
-					readOnly={ !canEdit }
-				/>
-				{ canEdit && !IsValidName(currentConfig.name) ? (<div className='error'>Invalid name</div>) : null }
-			</div>
-			<div className='input-container'>
-				<label>Space size (maximum number of characters allowed inside - from 1 to { LIMIT_SPACE_MAX_CHARACTER_NUMBER })</label>
-				<NumberInput
-					autoComplete='none'
-					value={ currentConfig.maxUsers }
-					min={ 1 }
-					max={ LIMIT_SPACE_MAX_CHARACTER_NUMBER }
-					readOnly={ !canEdit }
-					onChange={ (newValue) => updateConfig({ maxUsers: newValue }) }
-				/>
-			</div>
-			<FieldsetToggle legend='Presentation and access'>
+			<fieldset>
+				<legend>Space size</legend>
 				<div className='input-container'>
-					<label>Space description ({ currentConfig.description.length }/{ LIMIT_SPACE_DESCRIPTION_LENGTH } characters)</label>
-					<textarea
-						value={ currentConfig.description }
-						onChange={ (event) => updateConfig({ description: event.target.value }) }
+					<label>(maximum number of characters allowed inside - from 1 to { LIMIT_SPACE_MAX_CHARACTER_NUMBER })</label>
+					<NumberInput
+						autoComplete='none'
+						value={ currentConfig.maxUsers }
+						min={ 1 }
+						max={ LIMIT_SPACE_MAX_CHARACTER_NUMBER }
 						readOnly={ !canEdit }
-						rows={ DESCRIPTION_TEXTBOX_SIZE }
+						onChange={ (newValue) => updateConfig({ maxUsers: newValue }) }
 					/>
-					{ canEdit && !IsValidDescription(currentConfig.description) ? (<div className='error'>Invalid description</div>) : null }
 				</div>
+			</fieldset>
+			<Row />
+			<fieldset>
+				<legend>Space visibility</legend>
 				<div className='input-container'>
 					<label>
-						Entry text
-						<ContextHelpButton>
-							<p>
-								This text is shown to a new player entering the space.<br />
-								Use it to describe special features of the room, <br />
-								like things that are not shown, smells, temperature and so on.
-							</p>
-						</ContextHelpButton>
-						({ currentConfig.entryText.length }/{ LIMIT_SPACE_ENTRYTEXT_LENGTH } characters)
-					</label>
-					<textarea
-						value={ currentConfig.entryText }
-						onChange={ (event) => updateConfig({ entryText: event.target.value }) }
-						readOnly={ !canEdit }
-						rows={ ENTRY_TEXT_TEXTBOX_SIZE }
-					/>
-					{ canEdit && !IsValidEntryText(currentConfig.entryText) ? (<div className='error'>Invalid entry text</div>) : null }
-				</div>
-				<div className='input-container'>
-					<label>
-						Space visibility
+						Finding and accessing this space
 						<ContextHelpButton>
 							<p>
 								This setting affects who can see and enter this space.<br />
@@ -372,28 +336,28 @@ function SpaceConfigurationGeneral({
 							</p>
 							<h3>Locked</h3>
 							<ul>
-								<li>Owners, Admins and Allow-listed users can see this space.</li>
+								<li>Owners, Admins and "Allowed users" users can see this space.</li>
 								<li>Owners and Admins can join at any time. They are asked for confirmation before entering.</li>
 								<li>"Join-me" invitations can be created only by Owners and Admins. Anyone can join using them.</li>
 								<li>"Space-bound" invitations cannot be used. Existing space-bound invitations are kept for when the space is unlocked.</li>
 							</ul>
 							<h3>Private</h3>
 							<ul>
-								<li>Owners, Admins and Allow-listed users can see this space.</li>
-								<li>Owners, Admins and Allow-listed users can join at any time.</li>
+								<li>Owners, Admins and "Allowed users" users can see this space.</li>
+								<li>Owners, Admins and "Allowed users" users can join at any time.</li>
 								<li>"Join-me" invitations can be created only by Owners and Admins. Anyone can join using them.</li>
 								<li>"Space-bound" invitations can be used to join.</li>
 							</ul>
 							<h3>Public while an admin is inside</h3>
 							<ul>
-								<li>Anyone can see this space while there currently is an <strong>online admin</strong> inside. Otherwise only Owners, Admins and Allow-listed users can see it.</li>
+								<li>Anyone can see this space while there currently is an <strong>online admin</strong> inside. Otherwise only Owners, Admins and "Allowed users" users can see it.</li>
 								<li>Anyone non-banned who can see this space can join at any time.</li>
 								<li>"Join-me" invitations can be created and used by anyone.</li>
 								<li>"Space-bound" invitations can be used to join.</li>
 							</ul>
 							<h3>Public</h3>
 							<ul>
-								<li>Anyone can see this space while there currently is <strong>any online character</strong> inside. Otherwise only Owners, Admins and Allow-listed users can see it.</li>
+								<li>Anyone can see this space while there currently is <strong>any online character</strong> inside. Otherwise only Owners, Admins and "Allowed users" users can see it.</li>
 								<li>Anyone non-banned who can see this space can join at any time.</li>
 								<li>"Join-me" invitations can be created and used by anyone.</li>
 								<li>"Space-bound" invitations can be used to join.</li>
@@ -412,7 +376,53 @@ function SpaceConfigurationGeneral({
 						<option value='public-with-anyone'>Public</option>
 					</Select>
 				</div>
-			</FieldsetToggle>
+			</fieldset>
+			<Row />
+			<fieldset>
+				<legend>Space presentation</legend>
+				<div className='input-container'>
+					<label>Space name ({ currentConfig.name.length }/{ LIMIT_SPACE_NAME_LENGTH } characters)</label>
+					<TextInput
+						autoComplete='none'
+						value={ currentConfig.name }
+						onChange={ (newValue) => updateConfig({ name: newValue }) }
+						readOnly={ !canEdit }
+					/>
+					{ canEdit && !IsValidName(currentConfig.name) ? (<div className='error'>Invalid name</div>) : null }
+				</div>
+				<Row gap='tiny' wrap></Row>
+				<div className='input-container'>
+					<label>Space description ({ currentConfig.description.length }/{ LIMIT_SPACE_DESCRIPTION_LENGTH } characters)</label>
+					<textarea
+						value={ currentConfig.description }
+						onChange={ (event) => updateConfig({ description: event.target.value }) }
+						readOnly={ !canEdit }
+						rows={ DESCRIPTION_TEXTBOX_SIZE }
+					/>
+					{ canEdit && !IsValidDescription(currentConfig.description) ? (<div className='error'>Invalid description</div>) : null }
+				</div>
+				<div className='input-container'>
+					<label>
+						Entry message
+						<ContextHelpButton>
+							<p>
+								This text is shown to a new player entering the space.<br />
+								Use it for a narrative, instructions, or to describe special features<br />
+								of the room, like things that are not shown, smells, temperature and so on.
+							</p>
+						</ContextHelpButton>
+						({ currentConfig.entryText.length }/{ LIMIT_SPACE_ENTRYTEXT_LENGTH } characters)
+					</label>
+					<textarea
+						value={ currentConfig.entryText }
+						onChange={ (event) => updateConfig({ entryText: event.target.value }) }
+						readOnly={ !canEdit }
+						rows={ ENTRY_TEXT_TEXTBOX_SIZE }
+					/>
+					{ canEdit && !IsValidEntryText(currentConfig.entryText) ? (<div className='error'>Invalid entry text</div>) : null }
+				</div>
+			</fieldset>
+			<Row />
 			{
 				creation ? (
 					<div className='input-container'>
@@ -492,7 +502,8 @@ function SpaceConfigurationRights({
 
 	return (
 		<>
-			<FieldsetToggle legend='Ownership'>
+			<fieldset>
+				<legend>Ownership</legend>
 				<div className='input-container'>
 					<label>Owners</label>
 					<Row>
@@ -500,8 +511,10 @@ function SpaceConfigurationRights({
 						{ !creation && currentSpaceInfo?.id != null && isPlayerOwner ? <SpaceOwnershipRemoval id={ currentSpaceInfo.id } name={ currentSpaceInfo.config.name } /> : null }
 					</Row>
 				</div>
-			</FieldsetToggle>
-			<FieldsetToggle legend='Permission lists'>
+			</fieldset>
+			<Row gap='tiny' wrap></Row>
+			<fieldset>
+				<legend>Permission lists</legend>
 				<div className='input-container'>
 					<label>Admins</label>
 					<NumberListArea values={ currentConfig.admin } setValues={ (admin) => updateConfig({ admin }) } readOnly={ !canEdit } />
@@ -511,11 +524,26 @@ function SpaceConfigurationRights({
 					<NumberListArea values={ currentConfig.banned } setValues={ (banned) => updateConfig({ banned }) } readOnly={ !canEdit } invalid={ invalidBans } />
 				</div>
 				<div className='input-container'>
-					<label>Allowed users</label>
+					<label>
+						Allowed users
+						<ContextHelpButton>
+							<p>
+								"Allowed users" have special access rights to this space.<br />
+							</p>
+							<ul>
+								<li>They can always see this space in their list of spaces, even while it is empty.</li>
+								<li>They can always join the space while it is public or private.</li>
+								<li>They can see who is currently inside without joining, unless the space is locked.</li>
+								<li>They also cannot join the space while it is locked.</li>
+							</ul>
+						</ContextHelpButton>
+					</label>
 					<NumberListArea values={ currentConfig.allow } setValues={ (allow) => updateConfig({ allow }) } readOnly={ !canEdit } invalid={ invalidAllow } />
 				</div>
-			</FieldsetToggle>
-			<FieldsetToggle legend='Offline character management'>
+			</fieldset>
+			<Row gap='tiny' wrap></Row>
+			<fieldset>
+				<legend>Offline character management</legend>
 				<Column>
 					<Row>
 						<Checkbox
@@ -546,7 +574,8 @@ function SpaceConfigurationRights({
 								) : null
 					}
 				</Column>
-			</FieldsetToggle>
+			</fieldset>
+			<Row gap='tiny' wrap></Row>
 			{ (!creation && currentSpaceInfo?.id != null) && <SpaceInvites spaceId={ currentSpaceInfo.id } isPlayerAdmin={ isPlayerAdmin } /> }
 		</>
 	);
@@ -586,7 +615,8 @@ function SpaceConfigurationRoomInner({
 	const [showBackgrounds, setShowBackgrounds] = useState(false);
 
 	return (
-		<FieldsetToggle legend='Background'>
+		<fieldset>
+			<legend>Room background</legend>
 			{ showBackgrounds && <BackgroundSelectDialog
 				hide={ () => setShowBackgrounds(false) }
 				current={ globalState.room.roomGeometryConfig }
@@ -599,7 +629,7 @@ function SpaceConfigurationRoomInner({
 					Select a background
 				</Button>
 			</Column>
-		</FieldsetToggle>
+		</fieldset>
 	);
 }
 
@@ -766,13 +796,15 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 	const addInvite = useCallback((invite: SpaceInvite) => setInvites((inv) => [...inv, invite]), []);
 
 	return (
-		<FieldsetToggle legend='Invites'>
+		<fieldset>
+			<legend>Space invites management</legend>
 			<Column gap='medium'>
 				<div onClick={ copyPublic } className='permanentInvite'>
 					<span className='text'>Permanent public invite link:</span>
 					<span className='invite'>{ permaLink }</span>
 				</div>
 				<Button onClick={ () => setShowCreation(true) }>Create New Invite</Button>
+				<Row gap='tiny' wrap></Row>
 				<table className='spaceInvitesTable'>
 					<thead>
 						<tr>
@@ -795,7 +827,7 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 				</table>
 				{ showCreation && <SpaceInviteCreation closeDialog={ () => setShowCreation(false) } addInvite={ addInvite } isPlayerAdmin={ isPlayerAdmin } /> }
 			</Column>
-		</FieldsetToggle>
+		</fieldset>
 	);
 }
 
@@ -947,7 +979,7 @@ export function SpaceOwnershipRemoval({ buttonClassName, ...data }: { id: SpaceI
 	const [state, setState] = useState<boolean>(false);
 	return (
 		<>
-			<Button className={ buttonClassName } onClick={ () => setState(true) }>Give up space ownership</Button>
+			<Button className={ buttonClassName } onClick={ () => setState(true) }>Give up your space ownership</Button>
 			{
 				state ? (
 					<SpaceOwnershipRemovalDialog { ...data } closeDialog={ () => setState(false) } />
@@ -1080,7 +1112,7 @@ function BackgroundInfo({ background }: { background: Immutable<RoomBackgroundDa
 	}
 
 	return (
-		<Row alignX='space-between' className='backgroundInfo'>
+		<Row alignX='center' className='backgroundInfo'>
 			<div className='preview'>
 				<img src={ GetAssetsSourceUrl() + background.image } />
 			</div>

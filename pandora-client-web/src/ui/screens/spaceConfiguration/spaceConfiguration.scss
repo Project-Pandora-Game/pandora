@@ -5,6 +5,29 @@
 	flex-flow: column;
 	overflow: hidden;
 
+	fieldset {
+		display: flex;
+		flex-direction: column;
+		gap: common.spacing('medium');
+		min-width: 30em;
+		background: common.$theme-settings-fieldset-background;
+		color: common.$theme-settings-fieldset-text;
+		border: 1px solid common.$theme-settings-fieldset-border;
+		border-radius: 0.5em;
+		padding-bottom: 0.8em;
+
+		>legend {
+			font-size: 1.2em;
+			font-weight: bold;
+			margin-bottom: 0.5em;
+			background: common.$theme-settings-fieldset-legend-background;
+			color: common.$theme-settings-fieldset-legend-text;
+			border: 1px solid common.$theme-settings-fieldset-border;
+			border-radius: 0.5em;
+			padding: 0.2em;
+		}
+	}
+
 	.tab-wrapper {
 		width: 100%;
 		flex: 1;

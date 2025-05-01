@@ -205,13 +205,14 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 		>
 			{
 				creation ? (
-					<Column padding='medium'>
-						<Button
+					<Column padding='medium' alignX='center'>
+						<Button className='short'
 							onClick={ commit }
 							disabled={ processingCommit }
 						>
 							Create space
 						</Button>
+						<Row padding='tiny' />
 					</Column>
 				) : null
 			}
@@ -390,7 +391,7 @@ function SpaceConfigurationGeneral({
 					/>
 					{ canEdit && !IsValidName(currentConfig.name) ? (<div className='error'>Invalid name</div>) : null }
 				</div>
-				<Row gap='tiny' wrap></Row>
+				<Row />
 				<div className='input-container'>
 					<label>Space description ({ currentConfig.description.length }/{ LIMIT_SPACE_DESCRIPTION_LENGTH } characters)</label>
 					<textarea
@@ -512,7 +513,7 @@ function SpaceConfigurationRights({
 					</Row>
 				</div>
 			</fieldset>
-			<Row gap='tiny' wrap></Row>
+			<Row />
 			<fieldset>
 				<legend>Permission lists</legend>
 				<div className='input-container'>
@@ -541,7 +542,7 @@ function SpaceConfigurationRights({
 					<NumberListArea values={ currentConfig.allow } setValues={ (allow) => updateConfig({ allow }) } readOnly={ !canEdit } invalid={ invalidAllow } />
 				</div>
 			</fieldset>
-			<Row gap='tiny' wrap></Row>
+			<Row />
 			<fieldset>
 				<legend>Offline character management</legend>
 				<Column>
@@ -575,7 +576,7 @@ function SpaceConfigurationRights({
 					}
 				</Column>
 			</fieldset>
-			<Row gap='tiny' wrap></Row>
+			<Row />
 			{ (!creation && currentSpaceInfo?.id != null) && <SpaceInvites spaceId={ currentSpaceInfo.id } isPlayerAdmin={ isPlayerAdmin } /> }
 		</>
 	);
@@ -804,7 +805,7 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 					<span className='invite'>{ permaLink }</span>
 				</div>
 				<Button onClick={ () => setShowCreation(true) }>Create New Invite</Button>
-				<Row gap='tiny' wrap></Row>
+				<Row />
 				<table className='spaceInvitesTable'>
 					<thead>
 						<tr>

@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { RoomGeometryConfigSchema } from '../../../assets/state/roomGeometry.ts';
+import { GenerateInitialRoomPosition, IsValidRoomPosition, RoomGeometryConfigSchema } from '../../../assets/state/roomGeometry.ts';
+import { AssertNever } from '../../../utility/misc.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
 
@@ -23,6 +24,24 @@ export function ActionRoomConfigure({
 
 		if (!processingContext.manipulator.produceRoomState((r) => r.produceWithRoomGeometry(roomGeometry)))
 			return processingContext.invalid();
+
+		const newBackground = processingContext.manipulator.currentState.room.roomBackground;
+
+		// Put characters into correct place if needed
+		processingContext.manipulator.produceMapCharacters((c) => {
+			if (c.position.type === 'normal') {
+				if (!IsValidRoomPosition(newBackground, c.position.position)) {
+					return c.produceWithSpacePosition({
+						type: 'normal',
+						position: GenerateInitialRoomPosition(newBackground),
+					});
+				}
+			} else {
+				AssertNever(c.position.type);
+			}
+
+			return c;
+		});
 	}
 
 	// Change message to chat

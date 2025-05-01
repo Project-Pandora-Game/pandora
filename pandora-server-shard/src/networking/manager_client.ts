@@ -76,7 +76,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			chatMessage: this.handleChatMessage.bind(this),
 			chatStatus: this.handleChatStatus.bind(this),
 			chatMessageAck: this.handleChatMessageAck.bind(this),
-			roomCharacterMove: this.handleRoomCharacterMove.bind(this),
 			gameLogicAction: this.handleGameLogicAction.bind(this),
 			requestPermission: this.handleRequestPermission.bind(this),
 			changeSettings: this.handleChangeSettings.bind(this),
@@ -164,16 +163,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		const character = client.character;
 
 		space.updateStatus(character, status, target);
-	}
-
-	private handleRoomCharacterMove({ id, position }: IClientShardArgument['roomCharacterMove'], client: ClientConnection): void {
-		if (!client.character)
-			throw new BadMessageError();
-
-		const space = client.character.getOrLoadSpace();
-		const character = client.character;
-
-		space.updateCharacterPosition(character, id ?? character.id, position);
 	}
 
 	private handleGameLogicAction(request: IClientShardArgument['gameLogicAction'], client: ClientConnection): IClientShardNormalResult['gameLogicAction'] {

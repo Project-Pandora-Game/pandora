@@ -13,7 +13,6 @@ export function TestCreateGameLogicCharacter(accountId: AccountId, id: Character
 			assets: {},
 			attributes: {},
 		},
-		position: [0, 0, 0],
 		publicSettings: {},
 		isOnline: true,
 	};

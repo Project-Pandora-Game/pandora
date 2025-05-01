@@ -9,7 +9,7 @@ import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.tsx';
-import { useGameState, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { useCharacterState, useGameState, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { USER_DEBUG } from '../../../config/Environment.ts';
 import { useObservable } from '../../../observable.ts';
 
@@ -347,13 +347,16 @@ function ChatroomDebugCharacterView({
 	character: Character<ICharacterRoomData>;
 }): ReactElement {
 	const characterData = useCharacterData(character);
+	const gameState = useGameState();
+	const globalState = useGlobalState(gameState);
+	const playerState = useCharacterState(globalState, characterData.id);
 
 	return (
 		<Column padding='small' gap='none'>
 			<span>Name: { characterData.name }</span>
 			<span>Character ID: { characterData.id }</span>
 			<span>Account ID: { characterData.accountId }</span>
-			<span>Position: { `[${characterData.position[0]}, ${characterData.position[1]}]` }</span>
+			<span>Position: { JSON.stringify(playerState?.position) }</span>
 		</Column>
 	);
 }

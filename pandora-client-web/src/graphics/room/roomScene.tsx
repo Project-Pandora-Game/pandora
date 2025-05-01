@@ -23,9 +23,7 @@ import { useActionSpaceContext, useCharacterState, useGameState, useGlobalState,
 import { THEME_NORMAL_BACKGROUND } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { permissionCheckContext } from '../../components/gameContext/permissionCheckProvider.tsx';
 import { usePlayer, usePlayerState } from '../../components/gameContext/playerContextProvider.tsx';
-import { useShardConnector } from '../../components/gameContext/shardConnectorContextProvider.tsx';
 import { wardrobeActionContext } from '../../components/wardrobe/wardrobeActionContext.tsx';
-import { ShardConnector } from '../../networking/shardConnector.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { serviceManagerContext } from '../../services/serviceProvider.tsx';
 import { roomScreenContext, useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
@@ -49,7 +47,6 @@ const BASE_BOUNCE_OPTIONS: IBounceOptions = {
 
 interface RoomGraphicsSceneProps extends CommonProps {
 	characters: readonly Character<ICharacterRoomData>[];
-	shard: ShardConnector | null;
 	gameState: GameState;
 	globalState: AssetFrameworkGlobalState;
 	info: Immutable<SpaceClientInfo>;
@@ -62,7 +59,6 @@ export function RoomGraphicsScene({
 	className,
 	children,
 	characters,
-	shard,
 	gameState,
 	globalState,
 	info,
@@ -193,7 +189,6 @@ export function RoomGraphicsScene({
 							spaceInfo={ info }
 							debugConfig={ debugConfig }
 							projectionResolver={ projectionResolver }
-							shard={ shard }
 						/>
 					))
 				}
@@ -220,7 +215,6 @@ export function RoomGraphicsScene({
 							spaceInfo={ info }
 							debugConfig={ debugConfig }
 							projectionResolver={ projectionResolver }
-							shard={ shard }
 						/>
 					) : null))
 				}
@@ -233,7 +227,6 @@ export function RoomGraphicsScene({
 							spaceInfo={ info }
 							debugConfig={ debugConfig }
 							projectionResolver={ projectionResolver }
-							shard={ shard }
 						/>
 					) : null))
 				}
@@ -472,7 +465,6 @@ export function RoomScene({ className }: {
 	const gameState = useGameState();
 	const info = useSpaceInfo();
 	const characters = useSpaceCharacters();
-	const shard = useShardConnector();
 
 	const {
 		contextMenuFocus,
@@ -502,7 +494,6 @@ export function RoomScene({ className }: {
 		<RoomGraphicsScene
 			className={ className }
 			characters={ characters }
-			shard={ shard }
 			gameState={ gameState }
 			globalState={ globalState }
 			info={ info.config }

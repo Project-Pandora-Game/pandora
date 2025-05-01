@@ -11,6 +11,7 @@ import {
 	AssetFrameworkRoomState,
 	CloneDeepMutable,
 	CreateItemBundleFromTemplate,
+	GetDefaultAppearanceBundle,
 	GetLogger,
 	ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE,
 	ItemContainerPath,
@@ -359,11 +360,9 @@ function OutfitPreview({ outfit }: {
 			}
 		}
 
-		const characterBundle: AppearanceBundle = {
-			items: templateBundle,
-			requestedPose: CloneDeepMutable(baseCharacterState.requestedPose),
-			space: null,
-		};
+		const characterBundle: AppearanceBundle = GetDefaultAppearanceBundle();
+		characterBundle.items = templateBundle;
+		characterBundle.requestedPose = CloneDeepMutable(baseCharacterState.requestedPose);
 		const previewSpaceState = AssetFrameworkRoomState.createDefault(assetManager, null);
 		const previewCharacterState = AssetFrameworkCharacterState.loadFromBundle(assetManager, baseCharacterState.id, characterBundle, previewSpaceState, undefined);
 		return [

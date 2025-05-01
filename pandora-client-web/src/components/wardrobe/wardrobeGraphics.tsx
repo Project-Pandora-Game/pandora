@@ -198,7 +198,6 @@ export function CharacterPreview({ character, characterState, globalState, hideC
 			{
 				roomBackground ? (
 					<WardrobeRoomBackground
-						character={ character }
 						characterState={ characterState }
 						roomBackground={ roomBackground }
 						projectionResolver={ projectionResolver }
@@ -212,15 +211,13 @@ export function CharacterPreview({ character, characterState, globalState, hideC
 function WardrobeRoomBackground({
 	roomBackground,
 	projectionResolver,
-	character,
 	characterState,
 }: {
 	roomBackground: Immutable<RoomBackgroundData>;
 	projectionResolver: Immutable<RoomProjectionResolver>;
-	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const { position, scale, pivot, yOffset } = useRoomCharacterPosition(character.data.position, characterState, projectionResolver);
+	const { position, scale, pivot, yOffset } = useRoomCharacterPosition(characterState, projectionResolver);
 	const filters = usePlayerVisionFilters(false);
 
 	const inverseScale = 1 / scale;

@@ -1,7 +1,6 @@
 import { freeze, type Immutable } from 'immer';
 import { clamp } from 'lodash-es';
 import { z } from 'zod';
-import type { CharacterRoomPosition } from '../../character/characterData.ts';
 import { AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
 import { HexColorStringSchema } from '../../validation.ts';
 import type { AssetManager } from '../assetManager.ts';
@@ -117,7 +116,20 @@ export function CalculateBackgroundDataFromCalibrationData(image: string, calibr
 	};
 }
 
-export function IsValidRoomPosition(roomBackground: Immutable<RoomBackgroundData>, position: CharacterRoomPosition): boolean {
+export const CharacterRoomPositionSchema: z.ZodType<CharacterRoomPosition, z.ZodTypeDef, unknown> = z.tuple([z.number().int(), z.number().int(), z.number().int()])
+	.catch([0, 0, 0])
+	.readonly();
+export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: number];
+
+export const CharacterSpacePositionSchema = z.discriminatedUnion('type', [
+	z.object({
+		type: z.literal('normal'),
+		position: CharacterRoomPositionSchema,
+	}),
+]);
+export type CharacterSpacePosition = z.infer<typeof CharacterSpacePositionSchema>;
+
+export function IsValidRoomPosition(roomBackground: Immutable<RoomBackgroundData>, position: Immutable<CharacterRoomPosition>): boolean {
 	const minX = -Math.floor(roomBackground.floorArea[0] / 2);
 	const maxX = Math.floor(roomBackground.floorArea[0] / 2);
 	const minY = 0;

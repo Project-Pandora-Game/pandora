@@ -36,6 +36,8 @@ export function DescribeGameLogicAction({ action, ...props }: DescribeGameLogicA
 			return <DescribeGameLogicActionDelete action={ action } { ...props } />;
 		case 'transfer':
 			return <DescribeGameLogicActionTransfer action={ action } { ...props } />;
+		case 'moveCharacter':
+			return <DescribeGameLogicActionMoveCharacter action={ action } { ...props } />;
 		case 'pose':
 			return <DescribeGameLogicActionPose action={ action } { ...props } />;
 		case 'body':
@@ -112,6 +114,10 @@ function DescribeGameLogicActionTransfer({ action, globalState }: DescribeGameLo
 			{ isTargetPhysicallyEquipped ? ' onto' : ' into' } <DescribeContainer target={ action.target } container={ action.container } globalState={ globalState } />.
 		</>
 	);
+}
+
+function DescribeGameLogicActionMoveCharacter({ action }: DescribeGameLogicActionProps<'moveCharacter'>): ReactElement {
+	return <>Move <DescribeSpaceCharacter id={ action.target.characterId } form='normal' />.</>;
 }
 
 function DescribeGameLogicActionPose({ action }: DescribeGameLogicActionProps<'pose'>): ReactElement {

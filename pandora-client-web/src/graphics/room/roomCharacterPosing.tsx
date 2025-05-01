@@ -4,7 +4,6 @@ import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../assets/assetManager.tsx';
-import { useCharacterData } from '../../character/character.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { usePlayer } from '../../components/gameContext/playerContextProvider.tsx';
 import { useWardrobeExecuteCallback, WardrobeActionContextProvider } from '../../components/wardrobe/wardrobeActionContext.tsx';
@@ -47,27 +46,30 @@ function RoomCharacterMovementToolImpl({
 	character,
 	characterState,
 	projectionResolver,
-	shard,
 }: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
 	const id = characterState.id;
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
+	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 
 	const {
 		setRoomSceneMode,
 	} = useRoomScreenContext();
 
-	const setPositionRaw = useCallback((newX: number, newY: number, newYOffset: number) => {
-		shard?.sendMessage('roomCharacterMove', {
-			id,
-			position: projectionResolver.fixupPosition([newX, newY, newYOffset]),
+	const setPositionRaw = useEvent((newX: number, newY: number, newYOffset: number) => {
+		execute({
+			type: 'moveCharacter',
+			target: {
+				type: 'character',
+				characterId: id,
+			},
+			moveTo: {
+				type: 'normal',
+				position: projectionResolver.fixupPosition([newX, newY, newYOffset]),
+			},
 		});
-	}, [id, projectionResolver, shard]);
+	});
 
 	const setPositionThrottled = useMemo(() => throttle(setPositionRaw, LIVE_UPDATE_THROTTLE), [setPositionRaw]);
-
-	const {
-		position: dataPosition,
-	} = useCharacterData(character);
 
 	const {
 		position,
@@ -75,7 +77,7 @@ function RoomCharacterMovementToolImpl({
 		scale,
 		pivot,
 		rotationAngle,
-	} = useRoomCharacterPosition(dataPosition, characterState, projectionResolver);
+	} = useRoomCharacterPosition(characterState, projectionResolver);
 	const backView = characterState.actualPose.view === 'back';
 	const scaleX = backView ? -1 : 1;
 
@@ -109,7 +111,7 @@ function RoomCharacterMovementToolImpl({
 
 			const newYOffset = labelY - dragPointerEnd.y;
 
-			setPositionThrottled(dataPosition[0], dataPosition[1], newYOffset);
+			setPositionThrottled(characterState.position.position[0], characterState.position.position[1], newYOffset);
 		}
 	});
 
@@ -134,7 +136,7 @@ function RoomCharacterMovementToolImpl({
 			if (pointerDownTarget.current === 'pos') {
 				setRoomSceneMode({ mode: 'normal' });
 			} else if (pointerDownTarget.current === 'offset') {
-				setPositionThrottled(dataPosition[0], dataPosition[1], 0);
+				setPositionThrottled(characterState.position.position[0], characterState.position.position[1], 0);
 			}
 		}
 		pointerDown.current = null;
@@ -268,16 +270,12 @@ function RoomCharacterPosingToolImpl({
 	const setPose = useMemo(() => throttle(setPoseDirect, LIVE_UPDATE_THROTTLE), [setPoseDirect]);
 
 	const {
-		position: dataPosition,
-	} = useCharacterData(character);
-
-	const {
 		position,
 		yOffsetExtra,
 		scale,
 		pivot,
 		rotationAngle,
-	} = useRoomCharacterPosition(dataPosition, characterState, projectionResolver);
+	} = useRoomCharacterPosition(characterState, projectionResolver);
 	const backView = characterState.actualPose.view === 'back';
 	const scaleX = backView ? -1 : 1;
 

@@ -5,7 +5,7 @@ import type { CharacterId } from '../../character/index.ts';
 import { RedactSensitiveActionData } from '../../gameLogic/actionLogic/actionUtils.ts';
 import type { Logger } from '../../logging/logger.ts';
 import type { SpaceId } from '../../space/index.ts';
-import { Assert, CloneDeepMutable, IsNotNullable, MemoizeNoArg } from '../../utility/misc.ts';
+import { Assert, AssertNever, CloneDeepMutable, IsNotNullable, MemoizeNoArg } from '../../utility/misc.ts';
 import { AppearanceItemProperties, AppearanceValidationResult, CharacterAppearanceLoadAndValidate, ValidateAppearanceItems } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { WearableAssetType } from '../definitions.ts';
@@ -14,6 +14,7 @@ import { ApplyAppearanceItemsDeltaBundle, CalculateAppearanceItemsDeltaBundle, I
 import type { IExportOptions } from '../modules/common.ts';
 import { AppearancePose, AssetsPosePreset, BONE_MAX, BONE_MIN, CalculateAppearancePosesDelta, MergePartialAppearancePoses, PartialAppearancePose, ProduceAppearancePose } from './characterStatePose.ts';
 import { AppearanceBundleSchema, GetDefaultAppearanceBundle, GetRestrictionOverrideConfig, type AppearanceBundle, type AppearanceClientBundle, type AppearanceClientDeltaBundle, type CharacterActionAttempt, type RestrictionOverride } from './characterStateTypes.ts';
+import { GenerateInitialRoomPosition, IsValidRoomPosition, type CharacterSpacePosition } from './roomGeometry.ts';
 import type { AssetFrameworkRoomState } from './roomState.ts';
 
 type AssetFrameworkCharacterStateProps = {
@@ -23,6 +24,8 @@ type AssetFrameworkCharacterStateProps = {
 	readonly requestedPose: AppearancePose;
 	readonly restrictionOverride?: RestrictionOverride;
 	readonly attemptingAction: Immutable<CharacterActionAttempt> | null;
+	/** Character's position within a space */
+	readonly position: Immutable<CharacterSpacePosition>;
 	/** Character's current space - mainly used for detecting space change (as shard has no control over that) and resetting relevant data when needed. */
 	readonly space: SpaceId | null;
 };
@@ -40,6 +43,8 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 	public readonly restrictionOverride?: RestrictionOverride;
 
 	public readonly attemptingAction: Immutable<CharacterActionAttempt> | null;
+
+	public readonly position: Immutable<CharacterSpacePosition>;
 	public readonly space: SpaceId | null;
 
 	public get actualPose(): Immutable<AppearancePose> {
@@ -56,6 +61,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		// allow override restrictionOverride with undefined (override: { restrictionOverride: undefined })
 		this.restrictionOverride = 'restrictionOverride' in override ? override.restrictionOverride : props.restrictionOverride;
 		this.attemptingAction = override.attemptingAction !== undefined ? override.attemptingAction : props.attemptingAction;
+		this.position = override.position ?? props.position;
 		this.space = override.space !== undefined ? override.space : props.space;
 	}
 
@@ -91,6 +97,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			requestedPose: cloneDeep(this.requestedPose),
 			restrictionOverride: this.restrictionOverride,
 			attemptingAction: CloneDeepMutable(this.attemptingAction) ?? undefined,
+			position: cloneDeep(this.position),
 			space: this.space,
 		};
 	}
@@ -106,6 +113,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				start: this.attemptingAction.start,
 				finishAfter: this.attemptingAction.finishAfter,
 			}) : undefined,
+			position: cloneDeep(this.position),
 			space: this.space,
 			clientOnly: true,
 		};
@@ -133,6 +141,9 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				start: this.attemptingAction.start,
 				finishAfter: this.attemptingAction.finishAfter,
 			}) : null;
+		}
+		if (this.position !== originalState.position) {
+			result.position = cloneDeep(this.position);
 		}
 		if (this.space !== originalState.space) {
 			result.space = this.space;
@@ -177,6 +188,10 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 
 		if (bundle.attemptingAction !== undefined) {
 			update.attemptingAction = bundle.attemptingAction;
+		}
+
+		if (bundle.position !== undefined) {
+			update.position = freeze(bundle.position, true);
 		}
 		if (bundle.space !== undefined) {
 			update.space = bundle.space;
@@ -290,6 +305,13 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 		return new AssetFrameworkCharacterState(this, { attemptingAction: freeze(action, true) });
 	}
 
+	public produceWithSpacePosition(position: CharacterSpacePosition): AssetFrameworkCharacterState {
+		if (isEqual(position, this.position))
+			return this;
+
+		return new AssetFrameworkCharacterState(this, { position: freeze(position, true) });
+	}
+
 	public updateRoomStateLink(roomInventory: AssetFrameworkRoomState, revalidate: boolean): AssetFrameworkCharacterState {
 		let updatedItems: AppearanceItems<WearableAssetType> = this.items.map((item) => {
 			if (item.isType('roomDeviceWearablePart')) {
@@ -390,6 +412,28 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 			}
 		}
 
+		// Load space position
+		let position = freeze(bundle.position, true);
+		if (roomState.spaceId !== bundle.space) {
+			Assert(fixup, 'DESYNC: Character is in different space');
+			position = {
+				type: 'normal',
+				position: GenerateInitialRoomPosition(roomState.roomBackground),
+			};
+		} else if (fixup) {
+			// Put the character into correct place if needed
+			// We intentionally don't do this on the client to allow server to put character outside of marked room
+			// This is mainly useful in development when calibrating a background
+			const positionValid = position.type === 'normal' ? IsValidRoomPosition(roomState.roomBackground, position.position) :
+				AssertNever(position.type);
+			if (!positionValid) {
+				position = {
+					type: 'normal',
+					position: GenerateInitialRoomPosition(roomState.roomBackground),
+				};
+			}
+		}
+
 		// Create the final state
 		const resultState = freeze(
 			new AssetFrameworkCharacterState({
@@ -399,6 +443,7 @@ export class AssetFrameworkCharacterState implements AssetFrameworkCharacterStat
 				requestedPose,
 				restrictionOverride: bundle.restrictionOverride,
 				attemptingAction: bundle.attemptingAction ?? null,
+				position,
 				space: roomState.spaceId,
 			}).updateRoomStateLink(roomState, true),
 			true,

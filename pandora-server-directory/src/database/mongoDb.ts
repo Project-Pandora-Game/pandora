@@ -13,6 +13,7 @@ import {
 	CharacterDataSchema,
 	CharacterId,
 	CharacterIdSchema,
+	CloneDeepMutable,
 	GetLogger,
 	HexColorStringSchema,
 	ICharacterData,
@@ -1009,6 +1010,51 @@ export default class MongoDatabase implements PandoraDatabase {
 							},
 							$set: {
 								'inventory.roomGeometry': newBackground,
+							},
+						},
+					);
+					Assert(matchedCount === 1);
+				}
+			},
+		});
+
+		await characterCollection.doManualMigration(this._client, this._db, {
+			oldSchema: CharacterDatabaseDataSchema.pick({ id: true, appearance: true, personalRoom: true }).extend({
+				roomId: SpaceIdSchema.nullable().optional(),
+				position: z.tuple([z.number().int(), z.number().int(), z.number().int()]).optional(),
+			}),
+			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+				for await (const character of oldStream) {
+					if (character == null || character.position == null)
+						continue;
+
+					requireFullMigration = true;
+					migrationLogger.verbose(`Migrating character position for ${character.id}`);
+
+					const newAppearance = CloneDeepMutable(character.appearance);
+					if (newAppearance != null) {
+						newAppearance.position = {
+							type: 'normal',
+							position: character.position,
+						};
+						newAppearance.space = character.roomId ?? null;
+					}
+
+					const newPersonalRoom = CloneDeepMutable(character.personalRoom);
+					if (newPersonalRoom != null) {
+						newPersonalRoom.inventory.roomGeometry = { type: 'defaultPersonalSpace' };
+					}
+
+					const { matchedCount } = await oldCollection.updateOne(
+						{ id: character.id },
+						{
+							$unset: {
+								roomId: true,
+								position: true,
+							},
+							$set: {
+								appearance: newAppearance,
+								personalRoom: newPersonalRoom,
 							},
 						},
 					);

@@ -16,11 +16,9 @@ import {
 	CharacterDataShardSchema,
 	CharacterId,
 	CharacterRestrictionsManager,
-	CharacterRoomPosition,
 	CleanupAssetPreferences,
 	CloneDeepMutable,
 	GameLogicCharacterServer,
-	GenerateInitialRoomPosition,
 	GetDefaultAppearanceBundle,
 	GetLogger,
 	ICharacterDataShardUpdate,
@@ -32,13 +30,11 @@ import {
 	IShardCharacterDefinition,
 	IShardClientChangeEvents,
 	IsAuthorized,
-	IsValidRoomPosition,
 	KnownObject,
 	Logger,
 	NOT_NARROWING_FALSE,
 	ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE,
 	ResolveAssetPreference,
-	RoomBackgroundData,
 	SpaceId,
 	type AppearanceActionProcessingResult,
 	type CharacterSettings,
@@ -169,25 +165,6 @@ export class Character {
 	public readonly gameLogicCharacter: GameLogicCharacterServer;
 
 	private logger: Logger;
-
-	public set position(value: CharacterRoomPosition) {
-		this.data.position = value;
-		this.modified.add('position');
-	}
-
-	public get position(): CharacterRoomPosition {
-		return this.data.position;
-	}
-
-	public initRoomPosition(spaceId: SpaceId | null, roomBackground: Immutable<RoomBackgroundData>) {
-		if (this.data.roomId === spaceId && IsValidRoomPosition(roomBackground, this.data.position)) {
-			return;
-		}
-		this.data.roomId = spaceId;
-		this.data.position = GenerateInitialRoomPosition(roomBackground);
-		this.modified.add('roomId');
-		this.modified.add('position');
-	}
 
 	constructor(data: ICharacterDataShard, account: IShardAccountDefinition, connectSecret: string | null, spaceId: SpaceId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
@@ -488,7 +465,6 @@ export class Character {
 			accountDisplayName: this.accountData.displayName,
 			name: this.name,
 			profileDescription: this.profileDescription,
-			position: this.position,
 			publicSettings: cloneDeep(pick(this.data.settings, CHARACTER_PUBLIC_SETTINGS)),
 			isOnline: this.isOnline,
 			assetPreferences: this.assetPreferences,

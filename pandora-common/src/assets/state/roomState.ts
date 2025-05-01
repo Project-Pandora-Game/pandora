@@ -2,7 +2,7 @@ import { freeze, Immutable } from 'immer';
 import type { Writable } from 'type-fest';
 import { z } from 'zod';
 import type { Logger } from '../../logging/logger.ts';
-import { type SpaceId } from '../../space/index.ts';
+import type { SpaceId } from '../../space/index.ts';
 import { Assert, AssertNotNullable, CloneDeepMutable, MemoizeNoArg } from '../../utility/misc.ts';
 import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';

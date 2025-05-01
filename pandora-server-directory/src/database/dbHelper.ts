@@ -32,7 +32,6 @@ export function CreateCharacter(accountId: number, id: CharacterId): [DatabaseCh
 		accessId: nanoid(8),
 		settings: {},
 		assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
-		position: [-1, -1, 0],
 	};
 
 	return [info, char];

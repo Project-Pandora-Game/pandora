@@ -15,19 +15,15 @@ import {
 	AssetFrameworkRoomState,
 	AssetManager,
 	CharacterId,
-	CharacterRoomPosition,
 	ChatCharacterStatus,
-	CloneDeepMutable,
 	EMPTY_ARRAY,
 	GameStateUpdate,
-	GenerateInitialRoomPosition,
 	IChatMessage,
 	IChatMessageActionTargetCharacter,
 	IChatMessageDirectoryAction,
 	IChatSegment,
 	IClientMessage,
 	IShardClient,
-	IsValidRoomPosition,
 	Logger,
 	RoomInventory,
 	RoomInventoryBundle,
@@ -125,22 +121,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		// Background definition might have changed, make sure all characters are still inside range
 		const update: GameStateUpdate = {};
 
-		// Put characters into correct place if needed
-		// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
-		if (!this.getInfo().features.includes('development')) {
-			const roomBackground = this.currentState.room.roomBackground;
-			for (const character of this.characters) {
-				if (!IsValidRoomPosition(roomBackground, character.position)) {
-					character.position = GenerateInitialRoomPosition(roomBackground);
-
-					update.characters ??= {};
-					update.characters[character.id] = {
-						position: character.position,
-					};
-				}
-			}
-		}
-
 		if (update.characters) {
 			this.sendUpdateToAllCharacters(update);
 		}
@@ -198,16 +178,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 		for (const character of changes.characters) {
 			this.getCharacterById(character)?.onAppearanceChanged();
-		}
-
-		// Put characters into correct place if needed
-		if (newState.room.roomBackground !== oldState.room.roomBackground) {
-			const roomBackground = this.currentState.room.roomBackground;
-			for (const character of this.characters) {
-				if (!IsValidRoomPosition(roomBackground, character.position)) {
-					character.position = GenerateInitialRoomPosition(roomBackground);
-				}
-			}
 		}
 
 		if (this._suppressUpdates)
@@ -312,38 +282,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		return false;
 	}
 
-	public updateCharacterPosition(source: Character, id: CharacterId, newPosition: CharacterRoomPosition): void {
-		// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
-		if (!this.getInfo().features.includes('development')) {
-			if (!IsValidRoomPosition(this.currentState.room.roomBackground, newPosition)) {
-				return;
-			}
-		}
-
-		const character = this.getCharacterById(id);
-		if (!character) {
-			return;
-		}
-		// If moving self, must not be restricted by items
-		if (character.id === source.id) {
-			const restrictionManager = character.getRestrictionManager();
-			if (restrictionManager.getEffects().blockRoomMovement)
-				return;
-		}
-		// Only admin can move other characters
-		if (character.id !== source.id && !this.isAdmin(source)) {
-			return;
-		}
-		character.position = CloneDeepMutable(newPosition);
-		this.sendUpdateToAllCharacters({
-			characters: {
-				[character.id]: {
-					position: character.position,
-				},
-			},
-		});
-	}
-
 	public getAllCharacters(): Character[] {
 		return [...this.characters.values()];
 	}
@@ -359,8 +297,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	}
 
 	public characterAdd(character: Character, appearance: AppearanceBundle): void {
-		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
-		character.initRoomPosition(this.id, this.currentState.room.roomBackground);
 		const logger = this.logger.prefixMessages(`Character ${character.id} join:`);
 
 		this.runWithSuppressedUpdates(() => {

@@ -14,6 +14,7 @@ import { ZodCast } from '../validation.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
 export type ICharacterRoomData = ICharacterPublicData & {
+	accountDisplayName: string;
 	assetPreferences: AssetPreferencesPublic;
 	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
 	position: CharacterRoomPosition;

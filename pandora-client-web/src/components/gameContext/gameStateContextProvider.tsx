@@ -39,6 +39,7 @@ import {
 	SpaceIdSchema,
 	TypedEventEmitter,
 	ZodCast,
+	type AccountId,
 	type ActionTargetSelector,
 	type AppearanceAction,
 	type AssetFrameworkGlobalStateClientDeltaBundle,
@@ -64,6 +65,7 @@ import type { NotificationData } from '../../services/notificationHandler.ts';
 import { IChatMessageProcessed } from '../../ui/components/chat/chatMessages.tsx';
 import { ChatParser } from '../../ui/components/chat/chatParser.ts';
 import { useShardConnector } from './shardConnectorContextProvider.tsx';
+import { useAccountContacts } from '../accountContacts/accountContactContext.ts';
 
 const logger = GetLogger('GameState');
 
@@ -671,6 +673,31 @@ export function useResolveCharacterName(characterId: CharacterId): string | null
 	const data = useCharacterDataOptional(character ?? null);
 
 	return (data != null) ? data.name : null;
+}
+
+export function useResolveAccountName(accountId: AccountId): string | null {
+	const currentAccount = useCurrentAccount();
+
+	// Look through contacts
+	const contacts = useAccountContacts(null);
+	const contact = contacts.find((a) => a.id === accountId);
+
+	// Look through space characters to see if we find character of this account
+	const characters = useSpaceCharacters();
+	const character = characters.find((c) => c.data.accountId === accountId);
+	const characterData = useCharacterDataOptional(character ?? null);
+
+	if (accountId === 0) {
+		return '[[Pandora]]';
+	} else if (currentAccount?.id === accountId) {
+		return currentAccount.displayName;
+	} else if (contact != null) {
+		return contact.displayName;
+	} else if (characterData != null) {
+		return characterData.accountDisplayName;
+	}
+
+	return null;
 }
 
 export function useSpaceInfo(): Immutable<CurrentSpaceInfo> {

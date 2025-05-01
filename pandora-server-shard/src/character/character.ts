@@ -277,6 +277,7 @@ export class Character {
 		if (data.account.id !== this.data.accountId) {
 			throw new Error('Character update changes account');
 		}
+		const oldData = this.accountData;
 		this.accountData = data.account;
 		if (data.accessId !== this.data.accessId) {
 			this.logger.warning('Access id changed! This could be a bug');
@@ -311,6 +312,11 @@ export class Character {
 			}
 		}
 		this.linkSpace(data.space);
+		if (data.account.displayName !== oldData.displayName) {
+			this._sendDataUpdate({
+				accountDisplayName: data.account.displayName,
+			});
+		}
 	}
 
 	public isAuthorized(role: AccountRole): boolean {
@@ -479,6 +485,7 @@ export class Character {
 		return {
 			id: this.id,
 			accountId: this.accountId,
+			accountDisplayName: this.accountData.displayName,
 			name: this.name,
 			profileDescription: this.profileDescription,
 			position: this.position,

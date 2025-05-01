@@ -60,6 +60,7 @@ import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { AccountListInput } from '../../components/accountListInput/accountListInput.tsx';
 import { BackgroundSelectDialog } from './backgroundSelect.tsx';
 import './spaceConfiguration.scss';
 
@@ -496,37 +497,59 @@ function SpaceConfigurationRights({
 				<div className='input-container'>
 					<label>Owners</label>
 					<Row>
-						<NumberListArea className='flex-1' values={ owners } setValues={ () => { /* NOOP */ } } readOnly />
+						<Column className='flex-1'>
+							<AccountListInput
+								value={ owners }
+								allowSelf
+							/>
+						</Column>
 						{ !creation && currentSpaceInfo?.id != null && isPlayerOwner ? <SpaceOwnershipRemoval id={ currentSpaceInfo.id } name={ currentSpaceInfo.config.name } /> : null }
 					</Row>
 				</div>
 			</fieldset>
 			<fieldset>
-				<legend>Permission lists</legend>
+				<legend>Admins</legend>
 				<div className='input-container'>
-					<label>Admins</label>
-					<NumberListArea values={ currentConfig.admin } setValues={ (admin) => updateConfig({ admin }) } readOnly={ !canEdit } />
+					<AccountListInput
+						value={ currentConfig.admin }
+						onChange={ canEdit ? ((admin) => updateConfig({ admin: admin.slice() })) : undefined }
+						allowSelf
+					/>
 				</div>
+			</fieldset>
+			<fieldset>
+				<legend>Banned users</legend>
 				<div className='input-container'>
-					<label>Banned users</label>
-					<NumberListArea values={ currentConfig.banned } setValues={ (banned) => updateConfig({ banned }) } readOnly={ !canEdit } invalid={ invalidBans } />
+					<AccountListInput
+						value={ currentConfig.banned }
+						onChange={ canEdit ? ((banned) => updateConfig({ banned: banned.slice() })) : undefined }
+						allowSelf
+					/>
+					<NumberListWarning values={ currentConfig.banned } invalid={ invalidBans } />
 				</div>
+			</fieldset>
+			<fieldset>
+				<legend>
+					<span>Allowed users</span>
+					<ContextHelpButton>
+						<p>
+							"Allowed users" have special access rights to this space.<br />
+						</p>
+						<ul>
+							<li>They can always see this space in their list of spaces, even while it is empty.</li>
+							<li>They can always join the space while it is public or private.</li>
+							<li>They can see who is currently inside without joining, unless the space is locked.</li>
+							<li>They also cannot join the space while it is locked.</li>
+						</ul>
+					</ContextHelpButton>
+				</legend>
 				<div className='input-container'>
-					<label>
-						Allowed users
-						<ContextHelpButton>
-							<p>
-								"Allowed users" have special access rights to this space.<br />
-							</p>
-							<ul>
-								<li>They can always see this space in their list of spaces, even while it is empty.</li>
-								<li>They can always join the space while it is public or private.</li>
-								<li>They can see who is currently inside without joining, unless the space is locked.</li>
-								<li>They also cannot join the space while it is locked.</li>
-							</ul>
-						</ContextHelpButton>
-					</label>
-					<NumberListArea values={ currentConfig.allow } setValues={ (allow) => updateConfig({ allow }) } readOnly={ !canEdit } invalid={ invalidAllow } />
+					<AccountListInput
+						value={ currentConfig.allow }
+						onChange={ canEdit ? ((allow) => updateConfig({ allow: allow.slice() })) : undefined }
+						allowSelf
+					/>
+					<NumberListWarning values={ currentConfig.allow } invalid={ invalidAllow } />
 				</div>
 			</fieldset>
 			<fieldset>
@@ -1022,19 +1045,11 @@ function SpaceOwnershipRemovalDialog({ id, name, closeDialog }: { id: SpaceId; n
 	);
 }
 
-function NumberListArea({ values, setValues, readOnly, invalid, ...props }: {
+function NumberListWarning({ values, invalid }: {
 	values: readonly number[];
-	setValues: (newValue: number[]) => void;
-	readOnly: boolean;
-	className?: string;
-	invalid?: { note: string; when: { reason: string; list: readonly number[]; }[]; };
-}): ReactElement {
-	const [text, setText] = useState(values.join(', '));
-
+	invalid: { note: string; when: { reason: string; list: readonly number[]; }[]; };
+}): ReactElement | null {
 	const invalidWarning = useMemo(() => {
-		if (!invalid)
-			return null;
-
 		const result: ReactNode[] = [];
 
 		for (const { reason, list } of invalid.when) {
@@ -1052,44 +1067,12 @@ function NumberListArea({ values, setValues, readOnly, invalid, ...props }: {
 		return result;
 	}, [invalid, values]);
 
-	const onChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
-		const value = event.target.value;
-		const split = value.split(',');
-		const last = split[split.length - 1];
-		const unique = new Set<number>();
-		const rest = split
-			.slice(0, split.length - 1)
-			.map((str) => Number.parseInt(str.trim(), 10))
-			.filter((n) => Number.isInteger(n))
-			.filter((n) => n > 0)
-			.filter((n) => !unique.has(n) && unique.add(n));
-
-		const lastNumber = Number.parseInt(last.trim(), 10);
-		if (Number.isInteger(lastNumber) && lastNumber > 0) {
-			if (!unique.has(lastNumber)) {
-				rest.push(lastNumber);
-				setText(rest.join(', '));
-			} else {
-				setText(rest.join(', ') + ', ' + lastNumber.toString());
-			}
-			setValues(rest);
-		} else if (last === '' && value[value.length - 1] === ',') {
-			setText(rest.join(', ') + ',');
-			setValues(rest);
-		} else if (last === '') {
-			setText(rest.join(','));
-			setValues(rest);
-		} else {
-			setText(rest.join(', ') + ',' + last);
-			setValues(rest);
-		}
-	}, [setValues]);
+	if (!invalidWarning) {
+		return null;
+	}
 
 	return (
-		<>
-			<textarea value={ text } onChange={ onChange } readOnly={ readOnly } { ...props } />
-			{ invalidWarning && <Column gap='none'>{ invalidWarning }</Column> }
-		</>
+		<Column gap='none'>{ invalidWarning }</Column>
 	);
 }
 

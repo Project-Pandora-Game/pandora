@@ -42,6 +42,7 @@ function MockPlayerData(overrides?: Partial<ICharacterPrivateData & ICharacterRo
 	return {
 		id: 'c123',
 		accountId: 0,
+		accountDisplayName: 'mockPlayer',
 		name: 'mock',
 		profileDescription: 'A mock player',
 		created: 0,

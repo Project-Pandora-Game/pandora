@@ -156,6 +156,7 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 		this.data = {
 			id: this.id,
 			accountId: 0,
+			accountDisplayName: 'EditorCharacter',
 			name: 'EditorCharacter',
 			profileDescription: 'An editor character',
 			publicSettings: {},

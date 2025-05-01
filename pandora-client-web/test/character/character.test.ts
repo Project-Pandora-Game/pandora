@@ -14,6 +14,7 @@ import {
 const mockData: ICharacterRoomData = {
 	id: 'c123',
 	accountId: 0,
+	accountDisplayName: 'mockAccount',
 	name: 'mock',
 	profileDescription: 'A mock character',
 	publicSettings: {},

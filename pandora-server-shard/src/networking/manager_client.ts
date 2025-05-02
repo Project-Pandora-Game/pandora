@@ -28,7 +28,7 @@ import {
 	PermissionSetup,
 	RedactSensitiveActionData,
 	StartActionAttempt,
-	CardDeck,
+	CardGame,
 	type AppearanceAction,
 	type AppearanceActionProcessingResult,
 	type CharacterRestrictionsManager,
@@ -61,8 +61,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	private readonly messageHandler: MessageHandler<IClientShard, ClientConnection>;
 
 	private readonly rockPaperScissorsStatus = new WeakMap<Character, { time: number; choice: 'rock' | 'paper' | 'scissors'; }>();
-
-	private readonly currentCardDeck = new CardDeck();
 
 	public async onMessage<K extends keyof IClientShard>(
 		messageType: K,
@@ -421,84 +419,122 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			case 'cards': {
 				const player = space.getCharacterById(character.id);
 				if (player) {
-					switch (game.msgOption) {
-						case 'create': {
-							player.getRoomData().deck.create();
-							space.handleActionMessage({
-								id: 'gamblingDeckCreation',
-								character,
-							});
-							break;
-						}
-						case 'deal': {
-							// Deals a card to a character or openly
-							const card = player.getRoomData().deck.deal();
-
-							if (card) {
-								if (game.targetId) {
-									const dict = {
-										'CARD': `${card.rank} ${card.suit}`,
-										'TARGET_CHARACTER': `${space.getCharacterById(game.targetId)?.name}`,
-									};
-										// Deal card to player
-									if (game.dealHidden) {
+					if (!game.card) {
+						//This is a real command and no internal message
+						switch (game.msgOption) {
+							case 'create': {
+								space.cardGame = new CardGame(character.id);
+								space.handleActionMessage({
+									id: 'gamblingDeckCreation',
+									character,
+								});
+								break;
+							}
+							case 'stop': {
+								break;
+							}
+							case 'join': {
+								if (space.cardGame) {
+									if (space.cardGame?.joinGame(character.id)) {
 										space.handleActionMessage({
-											id: 'gamblingDeckDealPlayerSecret',
+											id: 'gamblingDeckJoined',
 											character,
-											dictionary: dict,
-										});
-										space.handleActionMessage({
-											id: 'gamblingDeckDealToYou',
-											character,
-											sendTo: [game.targetId],
-											dictionary: dict,
 										});
 									} else {
 										space.handleActionMessage({
-											id: 'gamblingDeckDealPlayerOpen',
+											id: 'gamblingDeckJoinedAlready',
+											sendTo: [character.id],
 											character,
-											dictionary: dict,
 										});
 									}
 								} else {
 									space.handleActionMessage({
-										id: 'gamblingDeckDealOpen',
+										id: 'gamblingDeckNoGame',
+										sendTo: [character.id],
 										character,
-										dictionary: {
-											'CARD': `${card.rank} ${card.suit}`,
-										},
 									});
 								}
-							} else {
-								space.handleActionMessage({
-									id: 'gamblingDeckEmpty',
-								});
+								break;
 							}
-							break;
+							case 'deal': {
+								// Deals a card to a character or openly
+								if (space.cardGame) {
+									const card = space.cardGame.dealTo(game.targetId);
+									if (!card) {
+										space.handleActionMessage({
+											id: 'gamblingDeckEmpty',
+										});
+									} else {
+										if (game.targetId) {
+											if (!game.dealHidden) {
+												space.handleActionMessage({
+													id: 'gamblingDeckDealPlayerOpen',
+													character,
+													dictionary: {
+														'TARGET_CHARACTER': `${space.getCharacterById(game.targetId)?.name}`,
+														'CARD': card.toString(),
+													},
+												});
+											} else {
+												space.handleActionMessage({
+													id: 'gamblingDeckDealPlayerSecret',
+													character,
+													dictionary: {
+														'TARGET_CHARACTER': `${space.getCharacterById(game.targetId)?.name}`,
+													},
+												});
+												space.handleActionMessage({
+													id: 'gamblingDeckDealToYou',
+													character,
+													dictionary: {
+														'CARD': card.toString(),
+													},
+												});
+											}
+										} else {
+											//Dealt to the room openly
+											space.handleActionMessage({
+												id: 'gamblingDeckDealOpen',
+												character,
+												dictionary: {
+													'CARD': card.toString(),
+												},
+											});
+										}
+									}
+								} else {
+									space.handleActionMessage({
+										id: 'gamblingDeckNoGame',
+										sendTo: [character.id],
+										character,
+									});
+								}
+								break;
+							}
+							case 'check': {
+								space.handleActionMessage({
+									id: 'gamblingDeckHandCheck',
+									character,
+									sendTo: [client.character.id],
+									dictionary: {
+									// 'HAND': player.getRoomData().hand.toString(),
+									},
+								});
+								break;
+							}
+							case 'reveal': {
+								space.handleActionMessage({
+									id: 'gamblingDeckHandReveal',
+									character,
+									dictionary: {
+									// 'HAND': player.getRoomData().hand.toString(),
+									},
+								});
+								break;
+							}
+							default:
+								AssertNever(game.msgOption);
 						}
-						case 'check': {
-							space.handleActionMessage({
-								id: 'gamblingDeckHandCheck',
-								character,
-								sendTo: [client.character.id],
-								dictionary: {
-									'HAND': player.getRoomData().hand.toString(),
-								},
-							});
-							break;
-						}
-						case 'reveal': {
-							space.handleActionMessage({
-								id: 'gamblingDeckHandReveal',
-								character,
-								dictionary: {
-									'HAND': player.getRoomData().hand.toString(),
-								},
-							});
-							break;
-						}
-						default:
-							AssertNever(game.msgOption);
 					}
 				}
 				break;

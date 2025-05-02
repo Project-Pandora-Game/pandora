@@ -11,7 +11,6 @@ import { CharacterNameSchema, ZodTruncate } from '../validation.ts';
 import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesServerSchema } from './assetPreferences.ts';
 import { CharacterSettingsSchema } from './characterSettings.ts';
 import { CharacterIdSchema } from './characterTypes.ts';
-import { CardSchema, CardDeckSchema } from '../utility/cards.ts';
 
 export const CharacterRoomPositionSchema = z.tuple([z.number().int(), z.number().int(), z.number().int()])
 	.catch([0, 0, 0])
@@ -24,8 +23,6 @@ export const CharacterPublicDataSchema = z.object({
 	accountId: AccountIdSchema,
 	name: CharacterNameSchema,
 	profileDescription: z.string().default('').transform(ZodTruncate(LIMIT_CHARACTER_PROFILE_LENGTH)),
-	hand: CardSchema.array().optional(),
-	deck: CardDeckSchema.optional(),
 });
 /** Data about character, that is visible to everyone in the same space */
 export type ICharacterPublicData = z.infer<typeof CharacterPublicDataSchema>;

@@ -324,13 +324,13 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 	{
 		key: ['cards'],
 		description: 'Play a game of cards',
-		longDescription: `You can 'create' an ordinary deck of cards, 'deal' cards open or face down to player or the room,
+		longDescription: `You can 'create' or 'stop' a game of cards, 'join' an existing one, 'deal' cards open or face down to player or the room,
 		'check' your hand or 'show' the crads that were dealt to you`,
-		usage: 'create | deal <target> /hidden | check | show',
+		usage: 'create | stop | join | deal <target> /hidden | check | show',
 		handler: CreateClientCommand()
 			.fork('action', (ctx) => ({
 				create: {
-					description: 'Create a deck of 52 cards for the current space.',
+					description: 'Create a new game with a deck of 52 cards for the current space.',
 					handler: ctx
 						.handler(({ shardConnector }) => {
 							shardConnector.sendMessage('gamblingAction', {
@@ -340,8 +340,30 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 							return true;
 						}),
 				},
+				stop: {
+					description: 'Stop an ongoing game. Only possible for the creator of the game.',
+					handler: ctx
+						.handler(({ shardConnector }) => {
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'cards',
+								msgOption: 'stop',
+							});
+							return true;
+						}),
+				},
+				join: {
+					description: 'Join an ongoing game.',
+					handler: ctx
+						.handler(({ shardConnector }) => {
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'cards',
+								msgOption: 'join',
+							});
+							return true;
+						}),
+				},
 				deal: {
-					description: `Deal one card from the space's deck to a player or the room`,
+					description: `Deal one card from the space's deck to a player or the room. Only possible for the game creator.`,
 					handler: ctx
 						.argument('target', CommandStepOptional(CommandSelectorCharacter({ allowSelf: 'any' })))
 						.argument('option', CommandSelectorEnum(['', '/hidden']))

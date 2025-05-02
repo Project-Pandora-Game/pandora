@@ -55,7 +55,12 @@ function RoomCharacterMovementToolImpl({
 		setRoomSceneMode,
 	} = useRoomScreenContext();
 
+	const disableManualMove = characterState.position.following != null;
+
 	const setPositionRaw = useEvent((newX: number, newY: number, newYOffset: number) => {
+		if (disableManualMove)
+			return;
+
 		execute({
 			type: 'moveCharacter',
 			target: {
@@ -315,11 +320,14 @@ function RoomCharacterPosingToolImpl({
 						))
 				}
 				{
-					canMoveCharacter ? (
+					canMoveCharacter !== 'forbidden' ? (
 						<SwitchModeMovementButton
 							position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 } }
 							radius={ 40 }
 							onClick={ () => {
+								if (canMoveCharacter === 'prompt') {
+									toast(`Attempting to move this character will ask them for permission.`, TOAST_OPTIONS_WARNING);
+								}
 								setRoomSceneMode({ mode: 'moveCharacter', characterId: id });
 							} }
 						/>

@@ -87,7 +87,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 			assetManager,
 			AssetFrameworkRoomState
 				.loadFromBundle(assetManager, inventory, id, this.logger.prefixMessages('Room inventory load:')),
-		);
+		).runAutomaticActions();
 
 		// Check if room state changed and if it did queue saving the changes
 		{

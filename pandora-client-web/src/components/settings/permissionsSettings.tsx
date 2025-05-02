@@ -13,6 +13,7 @@ import lock from '../../assets/icons/lock.svg';
 import modificationEdit from '../../assets/icons/modification-edit.svg';
 import modificationLock from '../../assets/icons/modification-lock.svg';
 import modificationView from '../../assets/icons/modification-view.svg';
+import movement from '../../assets/icons/movement.svg';
 import onOff from '../../assets/icons/on-off.svg';
 import promptIcon from '../../assets/icons/prompt.svg';
 import allow from '../../assets/icons/public.svg';
@@ -97,6 +98,8 @@ function GetIcon(icon: string): string {
 			return toggle;
 		case 'device':
 			return deviceSvg;
+		case 'movement':
+			return movement;
 		case 'modification-edit':
 			return modificationEdit;
 		case 'modification-lock':

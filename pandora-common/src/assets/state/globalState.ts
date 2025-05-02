@@ -14,6 +14,7 @@ import type { AppearanceItems } from '../item/index.ts';
 import { IExportOptions } from '../modules/common.ts';
 import { AssetFrameworkCharacterState } from './characterState.ts';
 import { AppearanceBundleSchema, AppearanceClientBundle, AppearanceClientDeltaBundleSchema } from './characterStateTypes.ts';
+import { GlobalStateAutoProcessCharacterPositions } from './roomGeometry.ts';
 import { AssetFrameworkRoomState, RoomInventoryBundleSchema, RoomInventoryClientBundle, RoomInventoryClientDeltaBundleSchema } from './roomState.ts';
 
 export const AssetFrameworkGlobalStateBundleSchema = z.object({
@@ -300,6 +301,9 @@ export class AssetFrameworkGlobalState {
 	}
 
 	public withCharacter(characterId: CharacterId, characterState: AssetFrameworkCharacterState | null): AssetFrameworkGlobalState {
+		if ((this.characters.get(characterId) ?? null) === characterState)
+			return this;
+
 		const newCharacters = new Map(this.characters);
 
 		if (characterState == null) {
@@ -314,6 +318,13 @@ export class AssetFrameworkGlobalState {
 			newCharacters,
 			this.room,
 		);
+	}
+
+	public runAutomaticActions(): AssetFrameworkGlobalState {
+		// eslint-disable-next-line @typescript-eslint/no-this-alias
+		let result: AssetFrameworkGlobalState = this;
+		result = GlobalStateAutoProcessCharacterPositions(result);
+		return result;
 	}
 
 	public listChanges(oldState: AssetFrameworkGlobalState): {
@@ -417,7 +428,7 @@ export class AssetFrameworkGlobalStateContainer {
 			bundle,
 			oldState.room.spaceId,
 			this._logger.prefixMessages('Asset manager reload:'),
-		);
+		).runAutomaticActions();
 		Assert(newState.isValid());
 		this._currentState = newState;
 		this._onChange(newState, oldState);

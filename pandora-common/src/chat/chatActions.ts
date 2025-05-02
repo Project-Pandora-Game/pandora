@@ -53,6 +53,12 @@ const CHAT_ACTIONS_DEF = {
 	/** Room admin clears saved character id from slot, while target character is not in the room */
 	roomDeviceSlotClear: `SOURCE_CHARACTER freed up ITEM_ASSET_NAME for new usage.`,
 
+	// Character position related
+	characterPositionFollowStartLead: `SOURCE_CHARACTER started leading of TARGET_CHARACTER.`,
+	characterPositionFollowStopLead: `SOURCE_CHARACTER stopped leading of TARGET_CHARACTER.`,
+	characterPositionFollowStartFollow: `SOURCE_CHARACTER started following TARGET_CHARACTER.`,
+	characterPositionFollowStopFollow: `SOURCE_CHARACTER stopped following TARGET_CHARACTER.`,
+
 	// Character modifiers
 	characterModifierAdd: `SOURCE_CHARACTER added a new "MODIFIER_NAME" modifier on you.`,
 	characterModifierRemove: `SOURCE_CHARACTER removed the "MODIFIER_NAME" modifier from you.`,

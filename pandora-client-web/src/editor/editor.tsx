@@ -81,7 +81,8 @@ export class Editor extends TypedEventEmitter<{
 					AssetFrameworkCharacterState
 						.createDefault(assetManager, EDITOR_CHARACTER_ID, spaceState)
 						.produceWithRestrictionOverride({ type: 'safemode', allowLeaveAt: 0 }),
-				),
+				)
+				.runAutomaticActions(),
 		);
 
 		this.character = new EditorCharacter(this);

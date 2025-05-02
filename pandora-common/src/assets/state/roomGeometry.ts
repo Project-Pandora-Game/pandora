@@ -1,10 +1,14 @@
-import { freeze, type Immutable } from 'immer';
-import { clamp } from 'lodash-es';
+import { freeze, produce, type Immutable } from 'immer';
+import { clamp, isEqual } from 'lodash-es';
+import type { Writable } from 'type-fest';
 import { z } from 'zod';
-import { AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
+import { CharacterIdSchema } from '../../character/characterTypes.ts';
+import { Assert, AssertNever, CloneDeepMutable } from '../../utility/misc.ts';
 import { HexColorStringSchema } from '../../validation.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { CharacterSize } from '../graphics/graphics.ts';
+import type { AssetFrameworkCharacterState } from './characterState.ts';
+import type { AssetFrameworkGlobalState } from './globalState.ts';
 
 export const RoomBackgroundDataSchema = z.object({
 	/** The background image of a room */
@@ -121,21 +125,42 @@ export const CharacterRoomPositionSchema: z.ZodType<CharacterRoomPosition, z.Zod
 	.readonly();
 export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: number];
 
+export const CharacterRoomPositionFollowSchema = z.discriminatedUnion('followType', [
+	z.object({
+		followType: z.literal('relativeLock'),
+		target: CharacterIdSchema,
+		delta: CharacterRoomPositionSchema,
+	}),
+	z.object({
+		followType: z.literal('leash'),
+		target: CharacterIdSchema,
+		distance: z.number().int().nonnegative(),
+	}),
+]);
+export type CharacterRoomPositionFollow = z.infer<typeof CharacterRoomPositionFollowSchema>;
+
 export const CharacterSpacePositionSchema = z.discriminatedUnion('type', [
 	z.object({
 		type: z.literal('normal'),
 		position: CharacterRoomPositionSchema,
+		following: CharacterRoomPositionFollowSchema.optional(),
 	}),
 ]);
 export type CharacterSpacePosition = z.infer<typeof CharacterSpacePositionSchema>;
 
 export function IsValidRoomPosition(roomBackground: Immutable<RoomBackgroundData>, position: Immutable<CharacterRoomPosition>): boolean {
+	const { minX, maxX, minY, maxY } = GetRoomPositionBounds(roomBackground);
+
+	return position[0] >= minX && position[0] <= maxX && position[1] >= minY && position[1] <= maxY;
+}
+
+export function GetRoomPositionBounds(roomBackground: Immutable<RoomBackgroundData>): { minX: number; maxX: number; minY: number; maxY: number; } {
 	const minX = -Math.floor(roomBackground.floorArea[0] / 2);
 	const maxX = Math.floor(roomBackground.floorArea[0] / 2);
 	const minY = 0;
 	const maxY = roomBackground.floorArea[1];
 
-	return position[0] >= minX && position[0] <= maxX && position[1] >= minY || position[1] <= maxY;
+	return { minX, maxX, minY, maxY };
 }
 
 export function GenerateInitialRoomPosition(roomBackground: Immutable<RoomBackgroundData>): CharacterRoomPosition {
@@ -167,4 +192,73 @@ export function GenerateInitialRoomPosition(roomBackground: Immutable<RoomBackgr
 		clamp(Math.round(startPointY), minY, maxY),
 		0,
 	];
+}
+
+export function CharacterCanBeFollowed(character: AssetFrameworkCharacterState): boolean {
+	const followTargetPosition = character.position;
+	// Target character must be in a normal movement mode without any follow themselves (chaining is not allowed for now)
+	if (followTargetPosition.type !== 'normal' || followTargetPosition.following != null) {
+		return false;
+	}
+	// Characters in room devices cannot be followed
+	if (character.items.some((i) => i.isType('roomDeviceWearablePart')))
+		return false;
+
+	return true;
+}
+
+export function GlobalStateAutoProcessCharacterPositions(globalState: AssetFrameworkGlobalState): AssetFrameworkGlobalState {
+	let result: AssetFrameworkGlobalState = globalState;
+	for (const characterId of Array.from(globalState.characters.keys())) {
+		let character = result.characters.get(characterId);
+		Assert(character != null);
+		if (character.position.type === 'normal' && character.position.following != null) {
+			const following = character.position.following;
+			const followTarget = globalState.getCharacterState(following.target);
+			if (followTarget == null || !CharacterCanBeFollowed(followTarget)) {
+				character = character.produceWithSpacePosition(produce(character.position, (d) => {
+					delete d.following;
+				}));
+			} else if (following.followType === 'relativeLock') {
+				// In relative lock always maintain relative position
+				const position: Writable<CharacterRoomPosition> = CloneDeepMutable(followTarget.position.position);
+				for (let i = 0; i <= 2; i++) {
+					position[i] += following.delta[i];
+				}
+				const { minX, maxX, minY, maxY } = GetRoomPositionBounds(globalState.room.roomBackground);
+				position[0] = clamp(position[0], minX, maxX);
+				position[1] = clamp(position[1], minY, maxY);
+				if (!isEqual(position, character.position.position)) {
+					character = character.produceWithSpacePosition(produce(character.position, (d) => {
+						d.position = position;
+					}));
+				}
+			} else if (following.followType === 'leash') {
+				// Leash works by pulling characters closer to gether if they are too far apart, keeping direction vector
+				const deltaVector: Writable<CharacterRoomPosition> = CloneDeepMutable(character.position.position);
+				for (let i = 0; i <= 2; i++) {
+					deltaVector[i] -= followTarget.position.position[i];
+				}
+				const currentDistance = Math.hypot(...deltaVector);
+				if (currentDistance > following.distance) {
+					const ratio = following.distance / currentDistance;
+					for (let i = 0; i <= 2; i++) {
+						deltaVector[i] = followTarget.position.position[i] + Math.round(deltaVector[i] * ratio);
+					}
+					const { minX, maxX, minY, maxY } = GetRoomPositionBounds(globalState.room.roomBackground);
+					deltaVector[0] = clamp(deltaVector[0], minX, maxX);
+					deltaVector[1] = clamp(deltaVector[1], minY, maxY);
+					character = character.produceWithSpacePosition(produce(character.position, (d) => {
+						d.position = deltaVector;
+					}));
+				}
+			} else {
+				AssertNever(following);
+			}
+		}
+
+		result = result.withCharacter(characterId, character);
+	}
+
+	return result;
 }

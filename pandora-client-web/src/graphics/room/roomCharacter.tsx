@@ -242,7 +242,12 @@ function RoomCharacterInteractiveImpl({
 		scale,
 	} = useRoomCharacterPosition(characterState, projectionResolver);
 
+	const disableManualMove = characterState.position.following != null;
+
 	const setPositionRaw = useEvent((newX: number, newY: number) => {
+		if (disableManualMove)
+			return;
+
 		execute({
 			type: 'moveCharacter',
 			target: {

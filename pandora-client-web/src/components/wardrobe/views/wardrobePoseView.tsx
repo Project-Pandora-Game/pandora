@@ -870,7 +870,12 @@ function RoomManualYOffsetControl({ characterState }: {
 
 	const [yOffset, setYOffsetLocal] = useUpdatedUserInput(characterState.position.position[2], [characterState.id]);
 
+	const disableManualMove = characterState.position.following != null;
+
 	const setYOffset = useEvent((newYOffset: number) => {
+		if (disableManualMove)
+			return;
+
 		const position = characterState.position.position;
 		setYOffsetLocal(newYOffset);
 		execute({
@@ -889,8 +894,8 @@ function RoomManualYOffsetControl({ characterState }: {
 	return (
 		<Row padding='small'>
 			<Row alignY='center'>Character Y Offset:</Row>
-			<NumberInput className='positioning-input' step={ 1 } value={ yOffset } onChange={ setYOffset } />
-			<Button className='slim' onClick={ () => setYOffset(0) } disabled={ yOffset === 0 }>
+			<NumberInput className='positioning-input' step={ 1 } value={ yOffset } onChange={ setYOffset } disabled={ disableManualMove } />
+			<Button className='slim' onClick={ () => setYOffset(0) } disabled={ disableManualMove || yOffset === 0 }>
 				↺
 			</Button>
 		</Row>

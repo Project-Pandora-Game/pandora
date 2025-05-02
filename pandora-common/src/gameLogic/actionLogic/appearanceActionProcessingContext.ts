@@ -237,7 +237,8 @@ export class AppearanceActionProcessingContext {
 	}
 
 	public finalize(): AppearanceActionProcessingResultValid | AppearanceActionProcessingResultInvalid {
-		const validationResult = this.manipulator.currentState.validate();
+		const resultState = this.manipulator.currentState.runAutomaticActions();
+		const validationResult = resultState.validate();
 		if (!validationResult.success) {
 			this.addProblem({
 				result: 'validationError',
@@ -247,7 +248,7 @@ export class AppearanceActionProcessingContext {
 		if (this._actionProblems.length > 0)
 			return new AppearanceActionProcessingResultInvalid(this);
 
-		return new AppearanceActionProcessingResultValid(this, this.manipulator.currentState);
+		return new AppearanceActionProcessingResultValid(this, resultState);
 	}
 
 	/**

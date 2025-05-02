@@ -12,6 +12,7 @@ import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits.ts';
 import { Satisfies } from '../utility/misc.ts';
 import { CharacterInputNameSchema, ZodCast } from '../validation.ts';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
+import { CardSchema } from '../utility/cards.ts';
 
 /** Client->Shard messages */
 export const ClientShardSchema = {
@@ -147,10 +148,11 @@ export const ClientShardSchema = {
 				choice: z.enum(['rock', 'paper', 'scissors', 'show']),
 			}),
 			z.object({
-				type: z.literal('cards'), //Deck of Cards
+				type: z.literal('cards'), //Card game related messages
 				targetId: CharacterIdSchema.optional(),
-				msgOption: z.enum(['create', 'deal', 'check', 'reveal']),
+				msgOption: z.enum(['create', 'stop', 'join', 'deal', 'check', 'reveal']),
 				dealHidden: z.boolean().default(false).optional(),
+				card: CardSchema.optional(),
 			}),
 		]),
 		response: null,

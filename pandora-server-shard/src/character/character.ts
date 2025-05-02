@@ -40,13 +40,11 @@ import {
 	ResolveAssetPreference,
 	RoomBackgroundData,
 	SpaceId,
-	CardDeck,
 	type AppearanceActionProcessingResult,
 	type CharacterSettings,
 	type CharacterSettingsKeys,
 	type ChatMessageFilterMetadata,
 	type ICharacterDataShard,
-	type CardArray,
 } from 'pandora-common';
 import { assetManager } from '../assets/assetManager.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
@@ -167,10 +165,6 @@ export class Character {
 	public get assetPreferences(): Immutable<AssetPreferencesPublic> {
 		return this.gameLogicCharacter.assetPreferences.currentPreferences;
 	}
-
-	public readonly hand: CardArray = [];
-
-	public readonly deck = new CardDeck();
 
 	public readonly gameLogicCharacter: GameLogicCharacterServer;
 
@@ -491,8 +485,6 @@ export class Character {
 			publicSettings: cloneDeep(pick(this.data.settings, CHARACTER_PUBLIC_SETTINGS)),
 			isOnline: this.isOnline,
 			assetPreferences: this.assetPreferences,
-			hand: this.hand,
-			deck: this.deck,
 		};
 	}
 

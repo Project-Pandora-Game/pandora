@@ -72,8 +72,8 @@ export function RoomGraphicsScene({
 	const roomState = globalState.room;
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
 	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
-		if (debugConfig?.enabled && debugConfig.roomScalingHelperData != null && info.features.includes('development')) {
-			return CalculateBackgroundDataFromCalibrationData(roomState.roomBackground.image, {
+		if (debugConfig?.enabled && debugConfig.roomScalingHelperData != null && roomState.roomBackground.graphics.type === 'image' && info.features.includes('development')) {
+			return CalculateBackgroundDataFromCalibrationData(roomState.roomBackground.graphics.image, {
 				...debugConfig.roomScalingHelperData,
 				imageSize: roomState.roomBackground.imageSize,
 			});
@@ -253,8 +253,7 @@ export function RoomGraphicsScene({
 			}
 			<GraphicsBackground
 				zIndex={ -1000 }
-				background={ roomBackground.image }
-				backgroundSize={ roomBackground.imageSize }
+				background={ roomBackground }
 				backgroundFilters={ usePlayerVisionFilters(false) }
 			/>
 		</GraphicsScene>

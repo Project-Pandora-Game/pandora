@@ -1077,14 +1077,14 @@ function NumberListWarning({ values, invalid }: {
 }
 
 function BackgroundInfo({ background }: { background: Immutable<RoomBackgroundData>; }): ReactElement | null {
-	if (background.image.startsWith('#')) {
+	if (background.graphics.type !== 'image' || background.graphics.image.startsWith('#')) {
 		return null;
 	}
 
 	return (
 		<Row alignX='center' className='backgroundInfo'>
 			<div className='preview'>
-				<img src={ GetAssetsSourceUrl() + background.image } />
+				<img src={ GetAssetsSourceUrl() + background.graphics.image } />
 			</div>
 		</Row>
 	);

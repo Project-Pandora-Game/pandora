@@ -993,12 +993,6 @@ export default class MongoDatabase implements PandoraDatabase {
 						} : {
 							type: 'plain',
 							image: space.config.background.image,
-							imageSize: space.config.background.imageSize,
-							floorArea: space.config.background.floorArea,
-							areaCoverage: space.config.background.areaCoverage,
-							ceiling: space.config.background.ceiling,
-							cameraCenterOffset: space.config.background.cameraCenterOffset,
-							cameraFov: space.config.background.cameraFov,
 						}
 					);
 

@@ -164,7 +164,6 @@ export function ChatroomDebugConfigView(): ReactElement {
 								/>
 								<NumberInput
 									min={ 0.01 }
-									max={ 2 }
 									step={ 0.01 }
 									value={ chatroomDebugConfig.roomScalingHelperData.areaCoverage }
 									onChange={ (newValue) => {

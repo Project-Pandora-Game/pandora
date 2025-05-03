@@ -1,7 +1,8 @@
-import { Immutable } from 'immer';
+import { Immutable, produce } from 'immer';
 import { uniq } from 'lodash-es';
 import {
 	AssetManager,
+	CharacterSize,
 	CloneDeepMutable,
 	DEFAULT_PLAIN_BACKGROUND,
 	EMPTY_ARRAY,
@@ -12,6 +13,8 @@ import {
 } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager.tsx';
+import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
+import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus.ts';
 import { Button } from '../../../components/common/button/button.tsx';
@@ -83,35 +86,6 @@ export function BackgroundSelectDialog({ hide, current }: {
 					</div>
 				</div>
 				<div className='backgrounds'>
-					{ backgroundsToShow
-						.map((b) => (
-							<SelectionIndicator key={ b.id }
-								padding='tiny'
-								selected={ selectedBackground.type === 'premade' && selectedBackground.id === b.id }
-								active={ current.type === 'premade' && current.id === b.id }
-							>
-								<Button
-									className='fill'
-									onClick={ () => {
-										setSelectedBackground({
-											type: 'premade',
-											id: b.id,
-										});
-									} }
-								>
-									<Column
-										alignX='center'
-										alignY='center'
-										className='details fill'
-									>
-										<div className='preview'>
-											<img src={ GetAssetsSourceUrl() + b.preview } />
-										</div>
-										<div className='name'>{ b.name }</div>
-									</Column>
-								</Button>
-							</SelectionIndicator>
-						)) }
 					<SelectionIndicator
 						padding='tiny'
 						selected={ selectedBackground.type === 'plain' }
@@ -129,6 +103,40 @@ export function BackgroundSelectDialog({ hide, current }: {
 								className='details fill'
 							>
 								<div className='name'>[ Solid-color background ]</div>
+							</Column>
+						</Button>
+					</SelectionIndicator>
+					<SelectionIndicator
+						padding='tiny'
+						selected={ selectedBackground.type === '3dBox' }
+						active={ current.type === '3dBox' }
+					>
+						<Button
+							className='fill'
+							onClick={ () => {
+								setSelectedBackground({
+									type: '3dBox',
+									floorArea: [6000, 1500],
+									ceiling: 2000,
+									cameraFov: 80,
+									cameraHeight: 1200,
+									graphics: {
+										type: '3dBox',
+										floor: '#880000',
+										wallBack: '#505050',
+										wallLeft: '#404040',
+										wallRight: '#404040',
+										ceiling: '#808080',
+									},
+								});
+							} }
+						>
+							<Column
+								alignX='center'
+								alignY='center'
+								className='details fill'
+							>
+								<div className='name'>[ Custom 3D box ]</div>
 							</Column>
 						</Button>
 					</SelectionIndicator>
@@ -172,6 +180,35 @@ export function BackgroundSelectDialog({ hide, current }: {
 							</Column>
 						</Button>
 					</SelectionIndicator>
+					{ backgroundsToShow
+						.map((b) => (
+							<SelectionIndicator key={ b.id }
+								padding='tiny'
+								selected={ selectedBackground.type === 'premade' && selectedBackground.id === b.id }
+								active={ current.type === 'premade' && current.id === b.id }
+							>
+								<Button
+									className='fill'
+									onClick={ () => {
+										setSelectedBackground({
+											type: 'premade',
+											id: b.id,
+										});
+									} }
+								>
+									<Column
+										alignX='center'
+										alignY='center'
+										className='details fill'
+									>
+										<div className='preview'>
+											<img src={ GetAssetsSourceUrl() + b.preview } />
+										</div>
+										<div className='name'>{ b.name }</div>
+									</Column>
+								</Button>
+							</SelectionIndicator>
+						)) }
 				</div>
 				{
 					selectedBackground.type === 'plain' ? (
@@ -183,6 +220,224 @@ export function BackgroundSelectDialog({ hide, current }: {
 									onChange={ (color) => setSelectedBackground({ ...selectedBackground, image: color }) }
 									title='Background color'
 									classNameTextInput='flex-1'
+								/>
+							</Row>
+						</Column>
+					) : null
+				}
+				{
+					selectedBackground.type === '3dBox' ? (
+						<Column className='solidBackgroundOptions' padding='medium'>
+							<Row alignY='center' gap='medium'>
+								<span className='flex-1'>Room width</span>
+								<NumberInput
+									className='flex-6 zero-width'
+									rangeSlider
+									aria-label='Room width'
+									min={ CharacterSize.WIDTH }
+									max={ 10_000 }
+									step={ 1 }
+									value={ selectedBackground.floorArea[0] }
+									onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
+										d.floorArea[0] = newValue;
+									})) }
+								/>
+								<NumberInput
+									className='flex-grow-1 value'
+									aria-label='Room width'
+									min={ CharacterSize.WIDTH }
+									max={ 10_000 }
+									step={ 1 }
+									value={ selectedBackground.floorArea[0] }
+									onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
+										d.floorArea[0] = newValue;
+									})) }
+								/>
+							</Row>
+							<Row alignY='center' gap='medium'>
+								<span className='flex-1'>Room depth</span>
+								<NumberInput
+									className='flex-6 zero-width'
+									rangeSlider
+									aria-label='Room depth'
+									min={ 0 }
+									max={ 10_000 }
+									step={ 1 }
+									value={ selectedBackground.floorArea[1] }
+									onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
+										d.floorArea[1] = newValue;
+									})) }
+								/>
+								<NumberInput
+									className='flex-grow-1 value'
+									aria-label='Room depth'
+									min={ 0 }
+									max={ 10_000 }
+									step={ 1 }
+									value={ selectedBackground.floorArea[1] }
+									onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
+										d.floorArea[1] = newValue;
+									})) }
+								/>
+							</Row>
+							<Row alignY='center' gap='medium'>
+								<span className='flex-1'>Room height</span>
+								<NumberInput
+									className='flex-6 zero-width'
+									rangeSlider
+									aria-label='Room height'
+									min={ CharacterSize.HEIGHT }
+									max={ 10_000 }
+									step={ 1 }
+									value={ selectedBackground.ceiling }
+									onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
+										d.ceiling = newValue;
+									})) }
+								/>
+								<NumberInput
+									className='flex-grow-1 value'
+									aria-label='Room height'
+									min={ CharacterSize.HEIGHT }
+									max={ 10_000 }
+									step={ 1 }
+									value={ selectedBackground.ceiling }
+									onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
+										d.ceiling = newValue;
+									})) }
+								/>
+							</Row>
+							<Row alignY='center' gap='medium'>
+								<span className='flex-1'>Camera FOV</span>
+								<NumberInput
+									className='flex-6 zero-width'
+									rangeSlider
+									aria-label='Camera FOV'
+									min={ 1 }
+									max={ 135 }
+									step={ 1 }
+									value={ selectedBackground.cameraFov }
+									onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
+										d.cameraFov = newValue;
+									})) }
+								/>
+								<NumberInput
+									className='flex-grow-1 value'
+									aria-label='Camera FOV'
+									min={ 1 }
+									max={ 135 }
+									step={ 1 }
+									value={ selectedBackground.cameraFov }
+									onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
+										d.cameraFov = newValue;
+									})) }
+								/>
+							</Row>
+							<Row alignY='center' gap='medium'>
+								<span className='flex-1'>Camera height</span>
+								<NumberInput
+									className='flex-6 zero-width'
+									rangeSlider
+									aria-label='Camera height'
+									min={ 0 }
+									max={ 10_000 }
+									step={ 1 }
+									value={ selectedBackground.cameraHeight }
+									onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
+										d.cameraHeight = newValue;
+									})) }
+								/>
+								<NumberInput
+									className='flex-grow-1 value'
+									aria-label='Camera height'
+									min={ 0 }
+									max={ 10_000 }
+									step={ 1 }
+									value={ selectedBackground.cameraHeight }
+									onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
+										d.cameraHeight = newValue;
+									})) }
+								/>
+							</Row>
+							<Row alignY='center'>
+								<span className='flex-1'>Floor</span>
+								<ColorInput
+									initialValue={ selectedBackground.graphics.floor }
+									onChange={ (color) => setSelectedBackground(produce(selectedBackground, (d) => {
+										d.graphics.floor = color;
+									})) }
+									title='Background floor color'
+									classNameTextInput='flex-2'
+								/>
+							</Row>
+							<Row alignY='center'>
+								<span className='flex-1'>Back wall</span>
+								<ColorInput
+									initialValue={ selectedBackground.graphics.wallBack }
+									onChange={ (color) => setSelectedBackground(produce(selectedBackground, (d) => {
+										d.graphics.wallBack = color;
+									})) }
+									title='Background back wall color'
+									classNameTextInput='flex-2'
+								/>
+							</Row>
+							<Row alignY='center'>
+								<span className='flex-1'>Left wall</span>
+								<Checkbox
+									checked={ selectedBackground.graphics.wallLeft != null }
+									onChange={ (checked) => {
+										setSelectedBackground(produce(selectedBackground, (d) => {
+											d.graphics.wallLeft = checked ? '#000000' : null;
+										}));
+									} }
+								/>
+								<ColorInput
+									initialValue={ selectedBackground.graphics.wallLeft ?? '#000000' }
+									disabled={ selectedBackground.graphics.wallLeft == null }
+									onChange={ (color) => setSelectedBackground(produce(selectedBackground, (d) => {
+										d.graphics.wallLeft = color;
+									})) }
+									title='Background left wall color'
+									classNameTextInput='flex-2'
+								/>
+							</Row>
+							<Row alignY='center'>
+								<span className='flex-1'>Right wall</span>
+								<Checkbox
+									checked={ selectedBackground.graphics.wallRight != null }
+									onChange={ (checked) => {
+										setSelectedBackground(produce(selectedBackground, (d) => {
+											d.graphics.wallRight = checked ? '#000000' : null;
+										}));
+									} }
+								/>
+								<ColorInput
+									initialValue={ selectedBackground.graphics.wallRight ?? '#000000' }
+									disabled={ selectedBackground.graphics.wallRight == null }
+									onChange={ (color) => setSelectedBackground(produce(selectedBackground, (d) => {
+										d.graphics.wallRight = color;
+									})) }
+									title='Background right wall color'
+									classNameTextInput='flex-2'
+								/>
+							</Row>
+							<Row alignY='center'>
+								<span className='flex-1'>Ceiling</span>
+								<Checkbox
+									checked={ selectedBackground.graphics.ceiling != null }
+									onChange={ (checked) => {
+										setSelectedBackground(produce(selectedBackground, (d) => {
+											d.graphics.ceiling = checked ? '#000000' : null;
+										}));
+									} }
+								/>
+								<ColorInput
+									initialValue={ selectedBackground.graphics.ceiling ?? '#000000' }
+									disabled={ selectedBackground.graphics.ceiling == null }
+									onChange={ (color) => setSelectedBackground(produce(selectedBackground, (d) => {
+										d.graphics.ceiling = color;
+									})) }
+									title='Background ceiling color'
+									classNameTextInput='flex-2'
 								/>
 							</Row>
 						</Column>

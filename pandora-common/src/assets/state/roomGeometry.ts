@@ -10,9 +10,28 @@ import { CharacterSize } from '../graphics/graphics.ts';
 import type { AssetFrameworkCharacterState } from './characterState.ts';
 import type { AssetFrameworkGlobalState } from './globalState.ts';
 
+export const RoomBackgroundGraphicsSchema3dBoxSchema = z.object({
+	type: z.literal('3dBox'),
+	floor: HexColorStringSchema,
+	wallBack: HexColorStringSchema,
+	wallLeft: HexColorStringSchema.nullable(),
+	wallRight: HexColorStringSchema.nullable(),
+	ceiling: HexColorStringSchema.nullable(),
+});
+export type RoomBackgroundGraphicsSchema3dBox = z.infer<typeof RoomBackgroundGraphicsSchema3dBoxSchema>;
+
+export const RoomBackgroundGraphicsSchema = z.discriminatedUnion('type', [
+	z.object({
+		type: z.literal('image'),
+		image: z.string(),
+	}),
+	RoomBackgroundGraphicsSchema3dBoxSchema,
+]);
+export type RoomBackgroundGraphics = z.infer<typeof RoomBackgroundGraphicsSchema>;
+
 export const RoomBackgroundDataSchema = z.object({
-	/** The background image of a room */
-	image: z.string(),
+	/** Graphics of the background */
+	graphics: RoomBackgroundGraphicsSchema,
 
 	/** The size of the image, in pixels */
 	imageSize: z.tuple([z.number().int().min(0), z.number().int().min(0)]),
@@ -42,33 +61,24 @@ export const RoomGeometryConfigSchema = z.discriminatedUnion('type', [
 		type: z.literal('premade'),
 		id: z.string(),
 	}),
-	RoomBackgroundDataSchema
-		.extend({
-			type: z.literal('plain'),
-			image: HexColorStringSchema.catch('#1099bb'), // Overrides parent property
-		}),
+	z.object({
+		type: z.literal('plain'),
+		image: HexColorStringSchema.catch('#1099bb'),
+	}),
+	z.object({
+		type: z.literal('3dBox'),
+		graphics: RoomBackgroundGraphicsSchema3dBoxSchema,
+		floorArea: z.tuple([z.number().int().min(CharacterSize.WIDTH), z.number().int().min(0)]),
+		ceiling: z.number().min(CharacterSize.HEIGHT),
+		cameraFov: z.number().min(0.1).max(135),
+		cameraHeight: z.number().int().min(0),
+	}),
 ]);
 export type RoomGeometryConfig = z.infer<typeof RoomGeometryConfigSchema>;
 
 export const DEFAULT_PLAIN_BACKGROUND = freeze<Immutable<RoomGeometryConfig>>({
 	type: 'plain',
 	image: '#1099bb',
-	imageSize: [4000, 2000],
-	floorArea: [4000, 2000],
-	areaCoverage: 1,
-	ceiling: 0,
-	cameraCenterOffset: [0, 0],
-	cameraFov: 80,
-}, true);
-
-const FALLBACK_ROOM_BACKGROUND = freeze<Immutable<RoomBackgroundData>>({
-	image: '#1099bb',
-	imageSize: [4000, 2000],
-	floorArea: [4000, 2000],
-	areaCoverage: 1,
-	ceiling: 0,
-	cameraCenterOffset: [0, 0],
-	cameraFov: 80,
 }, true);
 
 /**
@@ -83,11 +93,32 @@ export function ResolveBackground(assetManager: AssetManager, roomGeometryConfig
 		case 'defaultPublicSpace':
 			// Try to use the first background (if there is some)
 			// otherwise default to the default, solid-color background (important for tests that don't have any assets).
-			return assetManager.getBackgrounds()[0] ?? FALLBACK_ROOM_BACKGROUND;
+			return assetManager.getBackgrounds()[0] ?? ResolveBackground(assetManager, DEFAULT_PLAIN_BACKGROUND);
 		case 'premade':
 			return assetManager.getBackgroundById(roomGeometryConfig.id);
 		case 'plain':
-			return roomGeometryConfig;
+			return {
+				graphics: {
+					type: 'image',
+					image: roomGeometryConfig.image,
+				},
+				imageSize: [4000, 2000],
+				floorArea: [4000, 2000],
+				areaCoverage: 1,
+				ceiling: 0,
+				cameraCenterOffset: [0, 0],
+				cameraFov: 80,
+			};
+		case '3dBox':
+			return {
+				graphics: roomGeometryConfig.graphics,
+				imageSize: [roomGeometryConfig.floorArea[0], roomGeometryConfig.ceiling],
+				floorArea: roomGeometryConfig.floorArea,
+				areaCoverage: 1,
+				ceiling: roomGeometryConfig.ceiling,
+				cameraCenterOffset: [0, roomGeometryConfig.cameraHeight - 0.5 * roomGeometryConfig.ceiling],
+				cameraFov: roomGeometryConfig.cameraFov,
+			};
 		default:
 			AssertNever(roomGeometryConfig);
 	}
@@ -110,7 +141,10 @@ export function CalculateBackgroundDataFromCalibrationData(image: string, calibr
 	const floorAreaDepth = calibrationData.areaDepthRatio * renderedAreaWidth;
 
 	return {
-		image,
+		graphics: {
+			type: 'image',
+			image,
+		},
 		imageSize: CloneDeepMutable(calibrationData.imageSize),
 		floorArea: [Math.floor(floorAreaWidth), Math.floor(floorAreaDepth)],
 		areaCoverage: calibrationData.areaCoverage,

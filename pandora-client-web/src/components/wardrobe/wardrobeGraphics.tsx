@@ -223,14 +223,17 @@ function WardrobeRoomBackground({
 	const inverseScale = 1 / scale;
 
 	return (
-		<GraphicsBackground
-			zIndex={ -1000 }
-			background={ roomBackground.image }
+		<Container
 			x={ pivot.x - position.x * inverseScale }
 			y={ pivot.y + yOffset - position.y * inverseScale }
-			backgroundSize={ [roomBackground.imageSize[0] * inverseScale, roomBackground.imageSize[1] * inverseScale] }
-			backgroundFilters={ filters }
-		/>
+			zIndex={ -1000 }
+			scale={ inverseScale }
+		>
+			<GraphicsBackground
+				background={ roomBackground }
+				backgroundFilters={ filters }
+			/>
+		</Container>
 	);
 }
 
@@ -408,8 +411,7 @@ export function RoomPreview({
 				</Container>
 				<GraphicsBackground
 					zIndex={ -1000 }
-					background={ roomBackground.image }
-					backgroundSize={ roomBackground.imageSize }
+					background={ roomBackground }
 					backgroundFilters={ usePlayerVisionFilters(false) }
 				/>
 			</Container>

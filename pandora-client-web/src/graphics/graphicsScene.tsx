@@ -1,14 +1,18 @@
 import classNames from 'classnames';
-import { CharacterSize } from 'pandora-common';
-import { type Application, Filter } from 'pixi.js';
+import type { Immutable } from 'immer';
+import { AssertNever, CharacterSize, GetRoomPositionBounds, type RoomBackgroundData, type RoomBackgroundGraphics } from 'pandora-common';
+import { type Application, Filter, Texture } from 'pixi.js';
 import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useImageResolutionAlternative } from '../assets/assetGraphicsCalculations.ts';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary.tsx';
+import { Container } from './baseComponents/container.ts';
+import { PixiMesh } from './baseComponents/mesh.tsx';
 import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback } from './baseComponents/pixiViewport.tsx';
 import { Sprite } from './baseComponents/sprite.ts';
 import { GraphicsSceneRendererShared } from './graphicsSceneRenderer.tsx';
 import { useGraphicsSettings } from './graphicsSettings.tsx';
+import { useRoomViewProjection } from './room/roomScene.tsx';
 import { useTexture } from './useTexture.ts';
 
 export type GraphicsSceneProps = {
@@ -117,34 +121,54 @@ function GraphicsSceneCore({
 
 export function GraphicsBackground({
 	background,
+	backgroundFilters,
+	zIndex,
+}: {
+	background: Immutable<RoomBackgroundData>;
+	backgroundFilters?: Filter[];
+	zIndex?: number;
+}): ReactElement | null {
+	if (background.graphics.type === 'image') {
+		return (
+			<GraphicsBackgroundImage
+				graphics={ background.graphics }
+				backgroundSize={ background.imageSize }
+				backgroundFilters={ backgroundFilters }
+				zIndex={ zIndex }
+			/>
+		);
+	} else if (background.graphics.type === '3dBox') {
+		return (
+			<GraphicsBackground3DBox
+				graphics={ background.graphics }
+				background={ background }
+				backgroundFilters={ backgroundFilters }
+				zIndex={ zIndex }
+			/>
+		);
+	}
+
+	AssertNever(background.graphics);
+}
+
+function GraphicsBackgroundImage({
+	graphics,
 	backgroundSize,
 	backgroundFilters,
 	zIndex,
-	x,
-	y,
 }: {
-	background?: string | number;
-	backgroundSize?: readonly [number, number];
+	graphics: Immutable<Extract<RoomBackgroundGraphics, { type: 'image'; }>>;
+	backgroundSize: readonly [number, number];
 	backgroundFilters?: Filter[];
 	zIndex?: number;
-	x?: number;
-	y?: number;
 }): ReactElement | null {
 	const backgroundResult = useMemo<{
 		backgroundTint: number;
 		backgroundAlpha: number;
 		backgroundImage: string;
 	}>(() => {
-		// Number is color in pixi format
-		if (typeof background === 'number') {
-			return {
-				backgroundTint: background,
-				backgroundAlpha: 1,
-				backgroundImage: '*',
-			};
-		}
 		// If background is not defined, use default one
-		if (!background) {
+		if (!graphics.image) {
 			return {
 				backgroundTint: DEFAULT_BACKGROUND_COLOR,
 				backgroundAlpha: 1,
@@ -152,10 +176,10 @@ export function GraphicsBackground({
 			};
 		}
 		// Parse color in hex format, with optional alpha
-		if (/^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(background)) {
+		if (/^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(graphics.image)) {
 			return {
-				backgroundTint: parseInt(background.substring(1, 7), 16),
-				backgroundAlpha: background.length > 7 ? (parseInt(background.substring(7, 9), 16) / 255) : 1,
+				backgroundTint: parseInt(graphics.image.substring(1, 7), 16),
+				backgroundAlpha: graphics.image.length > 7 ? (parseInt(graphics.image.substring(7, 9), 16) / 255) : 1,
 				backgroundImage: '*',
 			};
 		}
@@ -163,23 +187,136 @@ export function GraphicsBackground({
 		return {
 			backgroundTint: 0xffffff,
 			backgroundAlpha: 1,
-			backgroundImage: background,
+			backgroundImage: graphics.image,
 		};
-	}, [background]);
+	}, [graphics]);
 
 	const backgroundTexture = useTexture(useImageResolutionAlternative(backgroundResult.backgroundImage).image, true);
 
 	return (
 		<Sprite
-			x={ x ?? 0 }
-			y={ y ?? 0 }
-			width={ backgroundSize?.[0] }
-			height={ backgroundSize?.[1] }
+			width={ backgroundSize[0] }
+			height={ backgroundSize[1] }
 			zIndex={ zIndex }
 			texture={ backgroundTexture }
 			tint={ backgroundResult.backgroundTint }
 			filters={ backgroundFilters }
 		/>
+	);
+}
+
+function GraphicsBackground3DBox({
+	graphics,
+	background,
+	backgroundFilters,
+	zIndex,
+}: {
+	graphics: Immutable<Extract<RoomBackgroundGraphics, { type: '3dBox'; }>>;
+	background: Immutable<RoomBackgroundData>;
+	backgroundFilters?: Filter[];
+	zIndex?: number;
+}): ReactElement | null {
+	type Part = {
+		vertices: Float32Array;
+		uvs: Float32Array;
+		indices: Uint32Array;
+		tint: number;
+	};
+
+	const projection = useRoomViewProjection(background);
+
+	const parts = useMemo((): Part[] => {
+		const result: Part[] = [];
+		const uvs = new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]);
+		const indices = new Uint32Array([0, 1, 2, 2, 3, 0]);
+
+		const { ceiling } = background;
+		const { minX, maxX, minY, maxY } = GetRoomPositionBounds(background);
+
+		result.push({
+			vertices: new Float32Array([
+				...projection.transform(minX, minY, 0),
+				...projection.transform(maxX, minY, 0),
+				...projection.transform(maxX, maxY, 0),
+				...projection.transform(minX, maxY, 0),
+			]),
+			uvs,
+			indices,
+			tint: parseInt(graphics.floor.substring(1, 7), 16),
+		});
+
+		result.push({
+			vertices: new Float32Array([
+				...projection.transform(minX, maxY, 0),
+				...projection.transform(maxX, maxY, 0),
+				...projection.transform(maxX, maxY, ceiling),
+				...projection.transform(minX, maxY, ceiling),
+			]),
+			uvs,
+			indices,
+			tint: parseInt(graphics.wallBack.substring(1, 7), 16),
+		});
+
+		if (graphics.wallLeft != null) {
+			result.push({
+				vertices: new Float32Array([
+					...projection.transform(minX, minY, 0),
+					...projection.transform(minX, maxY, 0),
+					...projection.transform(minX, maxY, ceiling),
+					...projection.transform(minX, minY, ceiling),
+				]),
+				uvs,
+				indices,
+				tint: parseInt(graphics.wallLeft.substring(1, 7), 16),
+			});
+		}
+
+		if (graphics.wallRight != null) {
+			result.push({
+				vertices: new Float32Array([
+					...projection.transform(maxX, maxY, 0),
+					...projection.transform(maxX, minY, 0),
+					...projection.transform(maxX, minY, ceiling),
+					...projection.transform(maxX, maxY, ceiling),
+				]),
+				uvs,
+				indices,
+				tint: parseInt(graphics.wallRight.substring(1, 7), 16),
+			});
+		}
+
+		if (graphics.ceiling != null) {
+			result.push({
+				vertices: new Float32Array([
+					...projection.transform(minX, minY, ceiling),
+					...projection.transform(maxX, minY, ceiling),
+					...projection.transform(maxX, maxY, ceiling),
+					...projection.transform(minX, maxY, ceiling),
+				]),
+				uvs,
+				indices,
+				tint: parseInt(graphics.ceiling.substring(1, 7), 16),
+			});
+		}
+
+		return result;
+	}, [graphics, background, projection]);
+
+	return (
+		<Container zIndex={ zIndex } filters={ backgroundFilters }>
+			{
+				parts.map((p, i) => (
+					<PixiMesh
+						key={ i }
+						texture={ Texture.WHITE }
+						vertices={ p.vertices }
+						uvs={ p.uvs }
+						indices={ p.indices }
+						tint={ p.tint }
+					/>
+				))
+			}
+		</Container>
 	);
 }
 

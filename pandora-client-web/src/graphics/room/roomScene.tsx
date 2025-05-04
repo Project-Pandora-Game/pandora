@@ -9,13 +9,17 @@ import {
 	FilterItemType,
 	ICharacterRoomData,
 	ItemRoomDevice,
+	RectangleSchema,
 	RoomBackgroundData,
 	SpaceClientInfo,
+	SpaceIdSchema,
 } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
 import { Filter, Rectangle } from 'pixi.js';
 import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
+import { z as zod } from 'zod';
+import { BrowserStorage } from '../../browserStorage.ts';
 import { Character, useCharacterData, useCharacterRestrictionManager } from '../../character/character.ts';
 import { CommonProps } from '../../common/reactTypes.ts';
 import { useEvent } from '../../common/useEvent.ts';
@@ -30,7 +34,7 @@ import { roomScreenContext, useRoomScreenContext } from '../../ui/screens/room/r
 import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
-import { PixiViewportRef, PixiViewportSetupCallback } from '../baseComponents/pixiViewport.tsx';
+import { PixiViewportRef, PixiViewportSetupCallback, type PixiViewportProps } from '../baseComponents/pixiViewport.tsx';
 import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphicsScene.tsx';
 import { RoomCharacterInteractive } from './roomCharacter.tsx';
 import { RoomCharacterMovementTool, RoomCharacterPosingTool } from './roomCharacterPosing.tsx';
@@ -53,6 +57,14 @@ interface RoomGraphicsSceneProps extends CommonProps {
 	debugConfig: ChatroomDebugConfig;
 	onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void;
 }
+
+const RoomViewportLastPositionDataSchema = zod.object({
+	spaceId: SpaceIdSchema.nullable(),
+	roomBackgroundWidth: zod.number(),
+	roomBackgroundHeight: zod.number(),
+	visibleArea: RectangleSchema,
+}).nullable();
+const RoomViewportLastPosition = BrowserStorage.createSession('room.viewport.lastPosition', null, RoomViewportLastPositionDataSchema);
 
 export function RoomGraphicsScene({
 	id,
@@ -81,6 +93,7 @@ export function RoomGraphicsScene({
 
 		return roomState.roomBackground;
 	}, [roomState, info, debugConfig]);
+	const spaceId = roomState.spaceId;
 
 	const projectionResolver = useRoomViewProjection(roomBackground);
 
@@ -147,7 +160,29 @@ export function RoomGraphicsScene({
 				...BASE_BOUNCE_OPTIONS,
 				bounceBox: new Rectangle(-BONCE_OVERFLOW, -BONCE_OVERFLOW, roomBackgroundWidth + 2 * BONCE_OVERFLOW, roomBackgroundHeight + 2 * BONCE_OVERFLOW),
 			});
-	}, [roomBackgroundWidth, roomBackgroundHeight]);
+
+		const lastState = RoomViewportLastPosition.value;
+		if (lastState != null && lastState.spaceId === spaceId && lastState.roomBackgroundHeight === roomBackgroundHeight && lastState.roomBackgroundWidth === roomBackgroundWidth) {
+			viewport.fit(false, lastState.visibleArea.width, lastState.visibleArea.height);
+			viewport.moveCenter(lastState.visibleArea.x + lastState.visibleArea.width / 2, lastState.visibleArea.y + lastState.visibleArea.height / 2);
+		} else {
+			RoomViewportLastPosition.value = null;
+		}
+	}, [roomBackgroundWidth, roomBackgroundHeight, spaceId]);
+
+	const viewportOnMove = useCallback<PixiViewportProps['onMove'] & {}>((viewport) => {
+		RoomViewportLastPosition.value = {
+			spaceId,
+			roomBackgroundWidth: viewport.worldWidth,
+			roomBackgroundHeight: viewport.worldHeight,
+			visibleArea: {
+				x: clamp(viewport.corner.x, 0, viewport.worldWidth),
+				y: clamp(viewport.corner.y, 0, viewport.worldHeight),
+				width: clamp(viewport.screenWidth / viewport.scale.x, 1, viewport.worldWidth),
+				height: clamp(viewport.screenHeight / viewport.scale.y, 1, viewport.worldHeight),
+			},
+		};
+	}, [spaceId]);
 
 	const viewportRef = useRef<PixiViewportRef>(null);
 
@@ -172,11 +207,12 @@ export function RoomGraphicsScene({
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
 		viewportRef,
+		viewportOnMove,
 		forwardContexts: [serviceManagerContext, roomScreenContext, wardrobeActionContext, permissionCheckContext],
 		worldWidth: roomBackgroundWidth,
 		worldHeight: roomBackgroundHeight,
 		backgroundColor: Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16),
-	}), [viewportConfig, roomBackgroundWidth, roomBackgroundHeight]);
+	}), [viewportConfig, viewportOnMove, roomBackgroundWidth, roomBackgroundHeight]);
 
 	return (
 		<GraphicsScene

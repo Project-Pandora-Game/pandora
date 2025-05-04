@@ -1,14 +1,14 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
 import { AssertNever, CharacterSize, GetRoomPositionBounds, type RoomBackgroundData, type RoomBackgroundGraphics } from 'pandora-common';
-import { type Application, Filter, Texture } from 'pixi.js';
+import { Filter, Texture, type Application } from 'pixi.js';
 import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useImageResolutionAlternative } from '../assets/assetGraphicsCalculations.ts';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary.tsx';
 import { Container } from './baseComponents/container.ts';
 import { PixiMesh } from './baseComponents/mesh.tsx';
-import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback } from './baseComponents/pixiViewport.tsx';
+import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback, type PixiViewportProps } from './baseComponents/pixiViewport.tsx';
 import { Sprite } from './baseComponents/sprite.ts';
 import { GraphicsSceneRendererShared } from './graphicsSceneRenderer.tsx';
 import { useGraphicsSettings } from './graphicsSettings.tsx';
@@ -17,6 +17,7 @@ import { useTexture } from './useTexture.ts';
 
 export type GraphicsSceneProps = {
 	viewportConfig?: PixiViewportSetupCallback;
+	viewportOnMove?: PixiViewportProps['onMove'];
 	viewportRef?: Ref<PixiViewportRef>;
 	worldWidth?: number;
 	worldHeight?: number;
@@ -35,6 +36,7 @@ function GraphicsSceneCore({
 	div,
 	resolution,
 	viewportConfig,
+	viewportOnMove,
 	viewportRef,
 	worldWidth,
 	worldHeight,
@@ -110,6 +112,7 @@ function GraphicsSceneCore({
 				worldWidth={ worldWidth ?? CharacterSize.WIDTH }
 				worldHeight={ worldHeight ?? CharacterSize.HEIGHT }
 				setup={ viewportSetup }
+				onMove={ viewportOnMove }
 				ref={ viewportRef }
 				sortableChildren
 			>

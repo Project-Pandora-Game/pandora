@@ -1077,9 +1077,6 @@ function NumberListWarning({ values, invalid }: {
 }
 
 function BackgroundInfo({ background }: { background: Immutable<RoomBackgroundData>; }): ReactElement | null {
-	if (background.graphics === undefined) {
-		return null;
-	}
 	if (background.graphics.type !== 'image' || background.graphics.image.startsWith('#')) {
 		return null;
 	}

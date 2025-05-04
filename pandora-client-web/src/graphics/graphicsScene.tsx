@@ -128,6 +128,9 @@ export function GraphicsBackground({
 	backgroundFilters?: Filter[];
 	zIndex?: number;
 }): ReactElement | null {
+	if (background.graphics === undefined) {
+		return null;
+	}
 	if (background.graphics.type === 'image') {
 		return (
 			<GraphicsBackgroundImage

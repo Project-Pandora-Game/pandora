@@ -472,6 +472,15 @@ export interface RoomBackgroundTagDefinition {
 	category: string;
 }
 
+export type AssetsTileTextureInfo = {
+	/** The unique identifier for this texture */
+	id: string;
+	/** The visible name for this texture */
+	name: string;
+	/** File with the texture */
+	image: string;
+};
+
 export type CharacterModifierInbuiltTemplates = {
 	[Type in CharacterModifierType]?: (Extract<CharacterModifierSpecificTemplate, { type: Type; }>)[];
 };
@@ -497,6 +506,8 @@ export interface AssetsDefinitionFile {
 	graphicsSourceId: string;
 	backgroundTags: Record<string, RoomBackgroundTagDefinition>;
 	backgrounds: RoomBackgroundInfo[];
+	/** Tiles usable for custom backgrounds. Each describes a texture that can be used. */
+	tileTextures: AssetsTileTextureInfo[];
 	attributes: Record<string, AssetAttributeDefinition>;
 	randomization: AppearanceRandomizationData;
 	characterModifierTemplates: CharacterModifierInbuiltTemplates;

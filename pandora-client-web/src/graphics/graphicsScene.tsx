@@ -1,9 +1,10 @@
 import classNames from 'classnames';
 import type { Immutable } from 'immer';
-import { AssertNever, CharacterSize, GetRoomPositionBounds, type RoomBackgroundData, type RoomBackgroundGraphics } from 'pandora-common';
-import { Filter, Texture, type Application } from 'pixi.js';
+import { AssertNever, CharacterSize, GetRoomPositionBounds, type RoomBackground3dBoxSide, type RoomBackgroundData, type RoomBackgroundGraphics } from 'pandora-common';
+import { Filter, type Application } from 'pixi.js';
 import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useImageResolutionAlternative } from '../assets/assetGraphicsCalculations.ts';
+import { useAssetManager } from '../assets/assetManager.tsx';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary.tsx';
 import { Container } from './baseComponents/container.ts';
@@ -208,6 +209,12 @@ function GraphicsBackgroundImage({
 	);
 }
 
+type GraphicsBackground3DBoxPart = {
+	vertices: Float32Array;
+	uvs: Float32Array;
+	indices: Uint32Array;
+	data: RoomBackground3dBoxSide;
+};
 function GraphicsBackground3DBox({
 	graphics,
 	background,
@@ -219,17 +226,11 @@ function GraphicsBackground3DBox({
 	backgroundFilters?: Filter[];
 	zIndex?: number;
 }): ReactElement | null {
-	type Part = {
-		vertices: Float32Array;
-		uvs: Float32Array;
-		indices: Uint32Array;
-		tint: number;
-	};
-
 	const projection = useRoomViewProjection(background);
 
-	const parts = useMemo((): Part[] => {
-		const result: Part[] = [];
+	const parts = useMemo((): GraphicsBackground3DBoxPart[] => {
+		// TODO: Generate tiles instead of stretching the texture like this
+		const result: GraphicsBackground3DBoxPart[] = [];
 		const uvs = new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]);
 		const indices = new Uint32Array([0, 1, 2, 2, 3, 0]);
 
@@ -245,7 +246,7 @@ function GraphicsBackground3DBox({
 			]),
 			uvs,
 			indices,
-			tint: parseInt(graphics.floor.substring(1, 7), 16),
+			data: graphics.floor,
 		});
 
 		result.push({
@@ -257,7 +258,7 @@ function GraphicsBackground3DBox({
 			]),
 			uvs,
 			indices,
-			tint: parseInt(graphics.wallBack.substring(1, 7), 16),
+			data: graphics.wallBack,
 		});
 
 		if (graphics.wallLeft != null) {
@@ -270,7 +271,7 @@ function GraphicsBackground3DBox({
 				]),
 				uvs,
 				indices,
-				tint: parseInt(graphics.wallLeft.substring(1, 7), 16),
+				data: graphics.wallLeft,
 			});
 		}
 
@@ -284,7 +285,7 @@ function GraphicsBackground3DBox({
 				]),
 				uvs,
 				indices,
-				tint: parseInt(graphics.wallRight.substring(1, 7), 16),
+				data: graphics.wallRight,
 			});
 		}
 
@@ -298,7 +299,7 @@ function GraphicsBackground3DBox({
 				]),
 				uvs,
 				indices,
-				tint: parseInt(graphics.ceiling.substring(1, 7), 16),
+				data: graphics.ceiling,
 			});
 		}
 
@@ -309,17 +310,32 @@ function GraphicsBackground3DBox({
 		<Container zIndex={ zIndex } filters={ backgroundFilters }>
 			{
 				parts.map((p, i) => (
-					<PixiMesh
+					<GraphicsBackground3DBoxSide
 						key={ i }
-						texture={ Texture.WHITE }
-						vertices={ p.vertices }
-						uvs={ p.uvs }
-						indices={ p.indices }
-						tint={ p.tint }
+						part={ p }
 					/>
 				))
 			}
 		</Container>
+	);
+}
+
+function GraphicsBackground3DBoxSide({ part }: {
+	part: GraphicsBackground3DBoxPart;
+}) {
+	const assetManager = useAssetManager();
+	const tileInfo = (!!part.data.texture && part.data.texture !== '*') ? assetManager.tileTextures.get(part.data.texture) : undefined;
+
+	const texture = useTexture(tileInfo?.image ?? '*');
+
+	return (
+		<PixiMesh
+			texture={ texture }
+			vertices={ part.vertices }
+			uvs={ part.uvs }
+			indices={ part.indices }
+			tint={ parseInt(part.data.tint.substring(1, 7), 16) }
+		/>
 	);
 }
 

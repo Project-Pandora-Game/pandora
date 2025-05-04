@@ -10,13 +10,18 @@ import { CharacterSize } from '../graphics/graphics.ts';
 import type { AssetFrameworkCharacterState } from './characterState.ts';
 import type { AssetFrameworkGlobalState } from './globalState.ts';
 
+export const RoomBackground3dBoxSideSchema = z.object({
+	texture: z.string(),
+	tint: HexColorStringSchema,
+}).catch({ texture: '*', tint: '#000000' });
+export type RoomBackground3dBoxSide = z.infer<typeof RoomBackground3dBoxSideSchema>;
 export const RoomBackgroundGraphicsSchema3dBoxSchema = z.object({
 	type: z.literal('3dBox'),
-	floor: HexColorStringSchema,
-	wallBack: HexColorStringSchema,
-	wallLeft: HexColorStringSchema.nullable(),
-	wallRight: HexColorStringSchema.nullable(),
-	ceiling: HexColorStringSchema.nullable(),
+	floor: RoomBackground3dBoxSideSchema,
+	wallBack: RoomBackground3dBoxSideSchema,
+	wallLeft: RoomBackground3dBoxSideSchema.nullable(),
+	wallRight: RoomBackground3dBoxSideSchema.nullable(),
+	ceiling: RoomBackground3dBoxSideSchema.nullable(),
 });
 export type RoomBackgroundGraphicsSchema3dBox = z.infer<typeof RoomBackgroundGraphicsSchema3dBoxSchema>;
 

@@ -4,7 +4,7 @@ import type { Logger } from '../logging/logger.ts';
 import { Assert, AssertNotNullable, CloneDeepMutable } from '../utility/misc.ts';
 import { Asset } from './asset.ts';
 import type { AssetId } from './base.ts';
-import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetsDefinitionFile, AssetType, RoomBackgroundInfo, RoomBackgroundTagDefinition, type CharacterModifierInbuiltTemplates } from './definitions.ts';
+import { AppearanceRandomizationData, AssetAttributeDefinition, AssetBodyPart, AssetsDefinitionFile, AssetType, RoomBackgroundInfo, RoomBackgroundTagDefinition, type AssetsTileTextureInfo, type CharacterModifierInbuiltTemplates } from './definitions.ts';
 import { BoneDefinition, BoneDefinitionCompressed, CharacterSize } from './graphics/index.ts';
 import { CreateItemBundleFromTemplate, Item, ItemBundle, ItemTemplate, LoadItemFromBundle, type IItemCreationContext, type ItemId } from './item/index.ts';
 import type { AssetsPosePresets } from './state/characterStatePose.ts';
@@ -20,6 +20,7 @@ export class AssetManager {
 	public readonly rawData: Immutable<AssetsDefinitionFile>;
 
 	public readonly backgroundTags: ReadonlyMap<string, RoomBackgroundTagDefinition>;
+	public readonly tileTextures: ReadonlyMap<string, Immutable<AssetsTileTextureInfo>>;
 	public readonly attributes: ReadonlyMap<string, Immutable<AssetAttributeDefinition>>;
 	public readonly bodyparts: readonly AssetBodyPart[];
 	public readonly randomization: AppearanceRandomizationData;
@@ -78,6 +79,7 @@ export class AssetManager {
 			graphicsSourceId: '',
 			backgroundTags: {},
 			backgrounds: [],
+			tileTextures: [],
 			attributes: {},
 			randomization: {
 				body: [],
@@ -106,6 +108,16 @@ export class AssetManager {
 		}
 
 		this.backgroundTags = tags;
+		//#endregion
+
+		//#region Load tile textures
+		const tileTextures = new Map<string, Immutable<AssetsTileTextureInfo>>();
+
+		for (const texture of fullData.tileTextures) {
+			tileTextures.set(texture.id, texture);
+		}
+
+		this.tileTextures = tileTextures;
 		//#endregion
 
 		//#region Load bones

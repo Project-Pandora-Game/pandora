@@ -126,6 +126,8 @@
 			.preview {
 				@include common.center-flex;
 				flex: 1;
+				contain: size;
+				width: 100%;
 
 				img {
 					max-width: 100%;

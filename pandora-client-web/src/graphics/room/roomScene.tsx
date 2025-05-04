@@ -151,17 +151,19 @@ export function RoomGraphicsScene({
 
 	const viewportRef = useRef<PixiViewportRef>(null);
 
-	let reset = false;
-
 	const onDoubleClick = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
-		if (reset) {
-			reset = !reset;
-			viewportRef.current?.center(),
+		const viewport = viewportRef.current?.viewport;
+		if (viewport == null)
+			return;
+
+		const outerZoomScale = viewport.findFit(viewport.worldWidth, viewport.worldHeight);
+
+		if (Math.abs(Math.max(viewport.scale.x, viewport.scale.y) - outerZoomScale) > Number.EPSILON) {
+			viewportRef.current?.center();
 			event.stopPropagation();
 			event.preventDefault();
 		} else {
-			reset = !reset;
-			viewportRef.current?.fit(),
+			viewportRef.current?.fitCover();
 			event.stopPropagation();
 			event.preventDefault();
 		}

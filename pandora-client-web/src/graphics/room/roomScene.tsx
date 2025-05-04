@@ -151,10 +151,20 @@ export function RoomGraphicsScene({
 
 	const viewportRef = useRef<PixiViewportRef>(null);
 
+	let reset = false;
+
 	const onDoubleClick = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
-		viewportRef.current?.center();
-		event.stopPropagation();
-		event.preventDefault();
+		if (reset) {
+			reset = !reset;
+			viewportRef.current?.center(),
+			event.stopPropagation();
+			event.preventDefault();
+		} else {
+			reset = !reset;
+			viewportRef.current?.fit(),
+			event.stopPropagation();
+			event.preventDefault();
+		}
 	});
 
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({

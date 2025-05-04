@@ -110,6 +110,7 @@ const PixiViewportComponent = RegisterPixiComponent<Viewport, never, ContainerEv
 export type PixiViewportRef = {
 	getCenter(): Point | undefined;
 	center(): void;
+	fit(): void;
 };
 
 export const PixiViewport = forwardRef<PixiViewportRef, PixiViewportProps>((props, ref) => {
@@ -122,6 +123,13 @@ export const PixiViewport = forwardRef<PixiViewportRef, PixiViewportProps>((prop
 			if (!viewPort)
 				return;
 			viewPort.fit();
+			viewPort.moveCenter(viewPort.worldWidth / 2, viewPort.worldHeight / 2);
+			PixiElementRequestUpdate(viewPort);
+		},
+		fit: () => {
+			if (!viewPort)
+				return;
+			viewPort.fitHeight(),
 			viewPort.moveCenter(viewPort.worldWidth / 2, viewPort.worldHeight / 2);
 			PixiElementRequestUpdate(viewPort);
 		},

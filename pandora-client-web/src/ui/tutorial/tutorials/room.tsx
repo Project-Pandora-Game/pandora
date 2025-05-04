@@ -207,7 +207,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 						<p>
 							You can use your mouse and drag any empty space to move the camera around (or drag with your finger on a touchscreen).<br />
 							Mouse wheel (desktop) or pinching gesture (mobile) can be used to zoom in or out.<br />
-							Finally, double-clicking any empty space will reset the camera to show the whole room.
+							Finally, a double-click/double-tap on any empty space will reset the camera to fit the room to the screen.
 						</p>
 					),
 					conditions: [{ type: 'next' }],

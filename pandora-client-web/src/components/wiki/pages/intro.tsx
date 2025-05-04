@@ -88,7 +88,8 @@ export function WikiIntroduction(): ReactElement {
 			<h4>5. Free character placement and movement inside rooms</h4>
 			<p>
 				You can freely move your character inside a room by dragging them by the name below the character.
-				Space admins can also move other characters this way. <Link to='/wiki/characters#CH_Character_movement'>More information here</Link>.
+				While permitted, you can also move other characters individually or together with your
+				character. <Link to='/wiki/characters#CH_Character_movement'>More information here</Link>.
 			</p>
 
 			<h4>6. Room-level furniture and devices that can be placed freely and that persist with the lifetime of the room</h4>
@@ -168,7 +169,6 @@ export function WikiIntroduction(): ReactElement {
 
 			That's not all of course! We have many exciting features planned for the future. In no particular order:
 			<ul>
-				<li>Character modifiers - putting effects and rules on characters with deeply customizable activation conditions and lock support</li>
 				<li>Expanding the notification options</li>
 				<li>More customization options for items, for instance creating items with their configuration permanently frozen</li>
 				<li>Further improved UI with focus on better usability and potentially more design themes</li>

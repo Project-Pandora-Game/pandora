@@ -71,18 +71,29 @@ export function WikiCharacters(): ReactElement {
 
 			<h4 id='CH_Character_movement'>Character movement</h4>
 			<p>
-				You can move your character over the canvas by dragging the name under it. Space admins can also move other characters inside their rooms.
-				When you move next to a <Link to='/wiki/items#IT_Room-level_items'>room device</Link> and interact with the blue icon under it, you can enter
-				a character slot of the device, if it has one.
+				You can move your character inside a room by dragging the name under it. Alternatively, you can activate a dedicated move mode
+				in a character's menu that you can open by clicking on the character name in the room itself or in the character list in the "Room"-tab.<br />
+				In this menu, you can also select "Lead / Follow" on other characters, if you have the according <Link to='#CH_Character_permissions'>permission</Link>.
+				This activates a special move mode where one character moves with the other one: Either as if they were glued together
+				(keep relative position) or by following as if on a leash (keep distance). The distance can be configured in the menu.
+				The default values are set based on the current distance between you and the character you want to follow or lead around.
+				The character being lead or following can no longer be moved until anyone stops this movement mode.
 			</p>
 			<ul>
+				<li>You can lead several characters at the same time, but you cannot chain following characters.</li>
+				<li>While having the according <Link to='#CH_Character_permissions'>permission</Link>, other characters are also able to move your character.</li>
+				<li>Space admins are always permitted to move other characters inside their rooms.</li>
+				<li>
+					When you move next to a <Link to='/wiki/items#IT_Room-level_items'>room device</Link> and interact with the blue icon under it, you can enter
+					a character slot of the device, if it has one.
+				</li>
 				<li>If you have problems dragging the name because it is too small, you can zoom in with mouse wheel or pinch-to-zoom gesture.</li>
 				<li>Items can prevent character movement.</li>
+				<li>Characters can also by rotated by up to 360 degrees in the "Pose"-tab.</li>
 				<li>
 					The "Character Y Offset" value inside the "Pose"-tab can shift your character upwards and downwards alongside the z-axis
 					without changing your character's relative size in an unrealistic way.
 				</li>
-				<li>Characters can also rotate by up to 360 degrees under the "Pose"-tab.</li>
 			</ul>
 
 			<h4 id='CH_Character_context_menu'>Character context menu</h4>

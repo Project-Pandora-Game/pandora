@@ -1,6 +1,6 @@
 import type { Immutable } from 'immer';
 import { AssertNever, GetRoomPositionBounds, type RoomBackground3dBoxSide, type RoomBackgroundData, type RoomBackgroundGraphics } from 'pandora-common';
-import { Filter } from 'pixi.js';
+import { Filter, Texture } from 'pixi.js';
 import { ReactElement, useMemo } from 'react';
 import { useImageResolutionAlternative } from '../assets/assetGraphicsCalculations.ts';
 import { useAssetManager } from '../assets/assetManager.tsx';
@@ -103,6 +103,12 @@ type GraphicsBackground3DBoxPart = {
 	indices: Uint32Array;
 	data: RoomBackground3dBoxSide;
 };
+export const GRAPHICS_BACKGROUND_TILE_SIZE = 128;
+/**
+ * We subdivide title to reduce warping effect along the diagonal with our perspective transform.
+ * This variable defines how many levels of subdivision happen.
+ */
+export const GRAPHICS_BACKGROUND_TILE_SUBDIVISION = 2;
 function GraphicsBackground3DBox({
 	graphics,
 	background,
@@ -117,78 +123,101 @@ function GraphicsBackground3DBox({
 	const projection = useRoomViewProjection(background);
 
 	const parts = useMemo((): GraphicsBackground3DBoxPart[] => {
-		// TODO: Generate tiles instead of stretching the texture like this
 		const result: GraphicsBackground3DBoxPart[] = [];
-		const uvs = new Float32Array([0, 0, 1, 0, 1, 1, 0, 1]);
-		const indices = new Uint32Array([0, 1, 2, 2, 3, 0]);
 
 		const { ceiling } = background;
 		const { minX, maxX, minY, maxY } = GetRoomPositionBounds(background);
 
-		result.push({
-			vertices: new Float32Array([
-				...projection.transform(minX, minY, 0),
-				...projection.transform(maxX, minY, 0),
-				...projection.transform(maxX, maxY, 0),
-				...projection.transform(minX, maxY, 0),
-			]),
-			uvs,
-			indices,
-			data: graphics.floor,
-		});
+		function CreateTiledMesh(width: number, height: number, data: RoomBackground3dBoxSide, transform: (u: number, v: number) => [x: number, y: number]): GraphicsBackground3DBoxPart {
+			const tileSize = GRAPHICS_BACKGROUND_TILE_SIZE * data.tileScale;
+			const squareSize = tileSize / (2 ** GRAPHICS_BACKGROUND_TILE_SUBDIVISION);
+			const widthCount = Math.ceil(width / squareSize);
+			const heightCount = Math.ceil(height / squareSize);
+			const vertexCount = (widthCount + 1) * (heightCount + 1);
 
-		result.push({
-			vertices: new Float32Array([
-				...projection.transform(minX, maxY, 0),
-				...projection.transform(maxX, maxY, 0),
-				...projection.transform(maxX, maxY, ceiling),
-				...projection.transform(minX, maxY, ceiling),
-			]),
-			uvs,
-			indices,
-			data: graphics.wallBack,
-		});
+			const vertices = new Float32Array(2 * vertexCount);
+			const uvs = new Float32Array(2 * vertexCount);
+			const indices = new Uint32Array((2 * 3 * widthCount * heightCount));
 
-		if (graphics.wallLeft != null) {
-			result.push({
-				vertices: new Float32Array([
-					...projection.transform(minX, minY, 0),
-					...projection.transform(minX, maxY, 0),
-					...projection.transform(minX, maxY, ceiling),
-					...projection.transform(minX, minY, ceiling),
-				]),
+			// Generate vertices
+			for (let y = 0; y <= heightCount; y++) {
+				for (let x = 0; x <= widthCount; x++) {
+					const index = 2 * (y * (widthCount + 1) + x);
+					const xCoordinate = Math.min(x * squareSize, width);
+					const yCoordinate = Math.min(y * squareSize, height);
+					const [remmappedX, remmappedY] = transform(xCoordinate, yCoordinate);
+					vertices[index] = remmappedX;
+					vertices[index + 1] = remmappedY;
+					uvs[index] = (data.rotate ? yCoordinate : xCoordinate) / tileSize;
+					uvs[index + 1] = (data.rotate ? xCoordinate : yCoordinate) / tileSize;
+				}
+			}
+
+			// Generate triangles
+			let indicesIndex = 0;
+			for (let y = 0; y < heightCount; y++) {
+				for (let x = 0; x < widthCount; x++) {
+					const vertexA = (y * (widthCount + 1) + x);
+					const vertexB = (y * (widthCount + 1) + x + 1);
+					const vertexC = ((y + 1) * (widthCount + 1) + x + 1);
+					const vertexD = ((y + 1) * (widthCount + 1) + x);
+
+					indices[indicesIndex++] = vertexA;
+					indices[indicesIndex++] = vertexB;
+					indices[indicesIndex++] = vertexC;
+					indices[indicesIndex++] = vertexC;
+					indices[indicesIndex++] = vertexD;
+					indices[indicesIndex++] = vertexA;
+				}
+			}
+
+			return {
+				vertices,
 				uvs,
 				indices,
-				data: graphics.wallLeft,
-			});
+				data,
+			};
+		}
+
+		result.push(CreateTiledMesh(
+			maxX - minX,
+			maxY - minY,
+			graphics.floor,
+			(u, v) => projection.transform(minX + u, minY + v, 0),
+		));
+
+		result.push(CreateTiledMesh(
+			maxX - minX,
+			ceiling - 0,
+			graphics.wallBack,
+			(u, v) => projection.transform(minX + u, maxY, v),
+		));
+
+		if (graphics.wallLeft != null) {
+			result.push(CreateTiledMesh(
+				maxY - minY,
+				ceiling - 0,
+				graphics.wallLeft,
+				(u, v) => projection.transform(minX, minY + u, v),
+			));
 		}
 
 		if (graphics.wallRight != null) {
-			result.push({
-				vertices: new Float32Array([
-					...projection.transform(maxX, maxY, 0),
-					...projection.transform(maxX, minY, 0),
-					...projection.transform(maxX, minY, ceiling),
-					...projection.transform(maxX, maxY, ceiling),
-				]),
-				uvs,
-				indices,
-				data: graphics.wallRight,
-			});
+			result.push(CreateTiledMesh(
+				maxY - minY,
+				ceiling - 0,
+				graphics.wallRight,
+				(u, v) => projection.transform(maxX, minY + u, v),
+			));
 		}
 
 		if (graphics.ceiling != null) {
-			result.push({
-				vertices: new Float32Array([
-					...projection.transform(minX, minY, ceiling),
-					...projection.transform(maxX, minY, ceiling),
-					...projection.transform(maxX, maxY, ceiling),
-					...projection.transform(minX, maxY, ceiling),
-				]),
-				uvs,
-				indices,
-				data: graphics.ceiling,
-			});
+			result.push(CreateTiledMesh(
+				maxX - minX,
+				maxY - minY,
+				graphics.ceiling,
+				(u, v) => projection.transform(minX + u, minY + v, ceiling),
+			));
 		}
 
 		return result;
@@ -215,6 +244,12 @@ function GraphicsBackground3DBoxSide({ part }: {
 	const tileInfo = (!!part.data.texture && part.data.texture !== '*') ? assetManager.tileTextures.get(part.data.texture) : undefined;
 
 	const texture = useTexture(tileInfo?.image ?? '*');
+
+	if (texture !== Texture.WHITE && texture !== Texture.EMPTY) {
+		const sourceStyle = texture.source.style;
+		sourceStyle.addressMode = 'repeat';
+		sourceStyle.update();
+	}
 
 	return (
 		<PixiMesh

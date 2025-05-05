@@ -137,6 +137,12 @@
 					object-fit: contain;
 					box-shadow: 0.3em 0.3em 0.2em common.$themecolor-shadow;
 				}
+
+				&.rotate-90 {
+					img {
+						transform: rotate(90deg);
+					}
+				}
 			}
 
 			.name {

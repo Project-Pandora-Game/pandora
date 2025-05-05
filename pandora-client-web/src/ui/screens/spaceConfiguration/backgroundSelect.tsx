@@ -1,3 +1,4 @@
+import classNames from 'classnames';
 import { Immutable, produce } from 'immer';
 import { noop, uniq } from 'lodash-es';
 import {
@@ -9,6 +10,7 @@ import {
 	EMPTY_ARRAY,
 	ParseNotNullable,
 	ResolveBackground,
+	RoomBackground3dBoxSideSchema,
 	RoomBackgroundInfo,
 	RoomBackgroundTagDefinition,
 	type AppearanceAction,
@@ -29,15 +31,15 @@ import { SelectionIndicator } from '../../../components/common/selectionIndicato
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { Container } from '../../../graphics/baseComponents/container.ts';
+import { GRAPHICS_BACKGROUND_TILE_SIZE, GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import './backgroundSelect.scss';
-import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 
 const DEFAULT_BACKGROUND_3D_BOX: Extract<Immutable<RoomGeometryConfig>, { type: '3dBox'; }> = {
 	type: '3dBox',
-	floorArea: [6000, 1500],
-	ceiling: 2000,
+	floorArea: [Math.ceil(6000 / GRAPHICS_BACKGROUND_TILE_SIZE) * GRAPHICS_BACKGROUND_TILE_SIZE, Math.ceil(1500 / GRAPHICS_BACKGROUND_TILE_SIZE) * GRAPHICS_BACKGROUND_TILE_SIZE],
+	ceiling: Math.ceil(2000 / GRAPHICS_BACKGROUND_TILE_SIZE) * GRAPHICS_BACKGROUND_TILE_SIZE,
 	cameraFov: 80,
 	cameraHeight: 1200,
 	graphics: {
@@ -45,22 +47,32 @@ const DEFAULT_BACKGROUND_3D_BOX: Extract<Immutable<RoomGeometryConfig>, { type: 
 		floor: {
 			texture: '*',
 			tint: '#880000',
+			rotate: false,
+			tileScale: 2,
 		},
 		wallBack: {
 			texture: '*',
 			tint: '#505050',
+			rotate: false,
+			tileScale: 2,
 		},
 		wallLeft: {
 			texture: '*',
 			tint: '#404040',
+			rotate: false,
+			tileScale: 2,
 		},
 		wallRight: {
 			texture: '*',
 			tint: '#404040',
+			rotate: false,
+			tileScale: 2,
 		},
 		ceiling: {
 			texture: '*',
 			tint: '#808080',
+			rotate: false,
+			tileScale: 2,
 		},
 	},
 };
@@ -286,9 +298,9 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 							className='flex-6 zero-width'
 							rangeSlider
 							aria-label='Room width'
-							min={ CharacterSize.WIDTH }
-							max={ 10_000 }
-							step={ 1 }
+							min={ Math.ceil(CharacterSize.WIDTH / GRAPHICS_BACKGROUND_TILE_SIZE) * GRAPHICS_BACKGROUND_TILE_SIZE }
+							max={ 128 * GRAPHICS_BACKGROUND_TILE_SIZE }
+							step={ GRAPHICS_BACKGROUND_TILE_SIZE }
 							value={ selectedBackground.floorArea[0] }
 							onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
 								d.floorArea[0] = newValue;
@@ -297,8 +309,8 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 						<NumberInput
 							className='flex-grow-1 value'
 							aria-label='Room width'
-							min={ CharacterSize.WIDTH }
-							max={ 10_000 }
+							min={ Math.ceil(CharacterSize.WIDTH / GRAPHICS_BACKGROUND_TILE_SIZE) * GRAPHICS_BACKGROUND_TILE_SIZE }
+							max={ 128 * GRAPHICS_BACKGROUND_TILE_SIZE }
 							step={ 1 }
 							value={ selectedBackground.floorArea[0] }
 							onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
@@ -313,8 +325,8 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 							rangeSlider
 							aria-label='Room depth'
 							min={ 0 }
-							max={ 10_000 }
-							step={ 1 }
+							max={ 128 * GRAPHICS_BACKGROUND_TILE_SIZE }
+							step={ GRAPHICS_BACKGROUND_TILE_SIZE }
 							value={ selectedBackground.floorArea[1] }
 							onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
 								d.floorArea[1] = newValue;
@@ -324,7 +336,7 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 							className='flex-grow-1 value'
 							aria-label='Room depth'
 							min={ 0 }
-							max={ 10_000 }
+							max={ 128 * GRAPHICS_BACKGROUND_TILE_SIZE }
 							step={ 1 }
 							value={ selectedBackground.floorArea[1] }
 							onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
@@ -338,9 +350,9 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 							className='flex-6 zero-width'
 							rangeSlider
 							aria-label='Room height'
-							min={ CharacterSize.HEIGHT }
-							max={ 10_000 }
-							step={ 1 }
+							min={ Math.ceil(CharacterSize.HEIGHT / GRAPHICS_BACKGROUND_TILE_SIZE) * GRAPHICS_BACKGROUND_TILE_SIZE }
+							max={ 128 * GRAPHICS_BACKGROUND_TILE_SIZE }
+							step={ GRAPHICS_BACKGROUND_TILE_SIZE }
 							value={ selectedBackground.ceiling }
 							onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
 								d.ceiling = newValue;
@@ -349,8 +361,8 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 						<NumberInput
 							className='flex-grow-1 value'
 							aria-label='Room height'
-							min={ CharacterSize.HEIGHT }
-							max={ 10_000 }
+							min={ Math.ceil(CharacterSize.HEIGHT / GRAPHICS_BACKGROUND_TILE_SIZE) * GRAPHICS_BACKGROUND_TILE_SIZE }
+							max={ 128 * GRAPHICS_BACKGROUND_TILE_SIZE }
 							step={ 1 }
 							value={ selectedBackground.ceiling }
 							onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
@@ -402,7 +414,7 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 							className='flex-grow-1 value'
 							aria-label='Camera height'
 							min={ 0 }
-							max={ 10_000 }
+							max={ 128 * GRAPHICS_BACKGROUND_TILE_SIZE }
 							step={ 1 }
 							value={ selectedBackground.cameraHeight }
 							onChange={ (newValue) => setSelectedBackground(produce(selectedBackground, (d) => {
@@ -582,6 +594,7 @@ function BackgroundSelectDialog3dBoxSideDialog({ current, value, onChange, title
 	onChange: (newValue: Immutable<RoomBackground3dBoxSide>) => void;
 	hide: () => void;
 }): ReactElement {
+	const id = useId();
 	const assetManager = useAssetManager();
 
 	return (
@@ -635,7 +648,7 @@ function BackgroundSelectDialog3dBoxSideDialog({ current, value, onChange, title
 										alignY='center'
 										className='details fill'
 									>
-										<div className='preview'>
+										<div className={ classNames('preview', value.rotate ? 'rotate-90' : null) }>
 											<img src={ GetAssetsSourceUrl() + b.image } />
 										</div>
 										<div className='name'>{ b.name }</div>
@@ -644,6 +657,46 @@ function BackgroundSelectDialog3dBoxSideDialog({ current, value, onChange, title
 							</SelectionIndicator>
 						)) }
 				</div>
+				<Column className='solidBackgroundOptions' padding='medium'>
+					<Row alignY='center'>
+						<Checkbox
+							id={ id + ':rotate' }
+							checked={ value.rotate }
+							onChange={ (checked) => {
+								onChange(produce(value, (d) => {
+									d.rotate = checked;
+								}));
+							} }
+						/>
+						<label htmlFor={ id + ':rotate' }>Rotate texture by 90°</label>
+					</Row>
+					<Row alignY='center' gap='medium'>
+						<span className='flex-1'>Tile scale</span>
+						<NumberInput
+							className='flex-6 zero-width'
+							rangeSlider
+							aria-label='Camera height'
+							min={ 1 }
+							max={ RoomBackground3dBoxSideSchema._def.innerType.shape.tileScale._def.innerType.maxValue ?? 10 }
+							step={ 1 }
+							value={ value.tileScale }
+							onChange={ (newValue) => onChange(produce(value, (d) => {
+								d.tileScale = newValue;
+							})) }
+						/>
+						<NumberInput
+							className='flex-grow-1 value'
+							aria-label='Camera height'
+							min={ 1 }
+							max={ RoomBackground3dBoxSideSchema._def.innerType.shape.tileScale._def.innerType.maxValue ?? 10 }
+							step={ 1 }
+							value={ value.tileScale }
+							onChange={ (newValue) => onChange(produce(value, (d) => {
+								d.tileScale = newValue;
+							})) }
+						/>
+					</Row>
+				</Column>
 				<Row className='footer' alignX='center' wrap>
 					<Button onClick={ hide }>Confirm</Button>
 				</Row>

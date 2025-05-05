@@ -29,10 +29,10 @@ import { SelectionIndicator } from '../../../components/common/selectionIndicato
 import { ModalDialog } from '../../../components/dialog/dialog.tsx';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
 import { Container } from '../../../graphics/baseComponents/container.ts';
-import { GraphicsBackground } from '../../../graphics/graphicsScene.tsx';
 import { GraphicsSceneBackgroundRenderer } from '../../../graphics/graphicsSceneRenderer.tsx';
 import { serviceManagerContext } from '../../../services/serviceProvider.tsx';
 import './backgroundSelect.scss';
+import { GraphicsBackground } from '../../../graphics/graphicsBackground.tsx';
 
 const DEFAULT_BACKGROUND_3D_BOX: Extract<Immutable<RoomGeometryConfig>, { type: '3dBox'; }> = {
 	type: '3dBox',

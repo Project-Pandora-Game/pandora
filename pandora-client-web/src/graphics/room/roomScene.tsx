@@ -35,7 +35,8 @@ import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomD
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { PixiViewportRef, PixiViewportSetupCallback, type PixiViewportProps } from '../baseComponents/pixiViewport.tsx';
-import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphicsScene.tsx';
+import { GraphicsBackground } from '../graphicsBackground.tsx';
+import { GraphicsScene, GraphicsSceneProps } from '../graphicsScene.tsx';
 import { RoomCharacterInteractive } from './roomCharacter.tsx';
 import { RoomCharacterMovementTool, RoomCharacterPosingTool } from './roomCharacterPosing.tsx';
 import { RoomDeviceInteractive, RoomDeviceMovementTool } from './roomDevice.tsx';

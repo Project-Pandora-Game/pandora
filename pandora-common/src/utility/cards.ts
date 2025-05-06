@@ -10,8 +10,8 @@ const suits = [
 ] as const;
 const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'] as const;
 
-// Define Card class
-export class Card {
+// Define CardGameCard class
+export class CardGameCard {
 	public readonly suit: string;
 	public readonly rank: string;
 
@@ -25,7 +25,7 @@ export class Card {
 	}
 }
 
-class CardArray extends Array<Card> {
+class CardArray extends Array<CardGameCard> {
 	public override toString(): string {
 		return `[ ${this.map((card) => card.toString()).join(', ')} ]`;
 	}
@@ -36,7 +36,7 @@ class CardArray extends Array<Card> {
 class CardDeck {
 	private deck: CardArray = [];
 
-	private addCard(c: Card) {
+	private addCard(c: CardGameCard) {
 		this.deck.push(c);
 	}
 
@@ -50,7 +50,7 @@ class CardDeck {
 	public create() {
 		for (const suit of suits) {
 			for (const rank of ranks) {
-				this.addCard(new Card(suit, rank));
+				this.addCard(new CardGameCard(suit, rank));
 			}
 		}
 		this.shuffle();
@@ -60,7 +60,7 @@ class CardDeck {
 		return this.deck.length > 0 ? this.deck.pop() : undefined;
 	}
 
-	constructor(cards?: Card[]) {
+	constructor(cards?: CardGameCard[]) {
 		if (cards) {
 			for (const card of cards)
 				this.addCard(card);
@@ -76,7 +76,7 @@ class CardPlayer {
 		return this.id;
 	}
 
-	public receiveCard(c: Card) {
+	public receiveCard(c: CardGameCard) {
 		this.hand.push(c);
 	}
 
@@ -89,7 +89,7 @@ class CardPlayer {
 	}
 }
 
-export class CardGame {
+export class CardGameGame {
 	private deck: CardDeck;
 	private dealer: CharacterId;
 	private spaceHand: CardArray;
@@ -129,12 +129,24 @@ export class CardGame {
 		if (player) {
 			return player.showHand();
 		} else {
-			return null;
+			return 'Nothing';
 		}
+	}
+
+	public getPlayerIds() {
+		return this.players.map((p) => p.getId());
 	}
 
 	public getSpaceHand() {
 		return this.spaceHand.toString();
+	}
+
+	public isDealer(p: CharacterId) {
+		return p === this.dealer;
+	}
+
+	public getDealerId() {
+		return this.dealer;
 	}
 
 	constructor(creator: CharacterId, d?: CardDeck) {
@@ -158,13 +170,14 @@ const SuitSchema = z.enum(suits);
 const RankSchema = z.enum(ranks);
 
 // Validate a plain object and then create a class instance
-export const CardSchema = z.object({
+export const CardGameCardSchema = z.object({
 	suit: SuitSchema,
 	rank: RankSchema,
-}).transform((data) => new Card(data.suit, data.rank));
+}).transform((data) => new CardGameCard(data.suit, data.rank));
 
-export const CardDeckSchema = z.array(CardSchema).transform((cards) => {
+/*
+export const CardGameCardDeckSchema = z.array(CardGameCardSchema).transform((cards) => {
 	const deck = new CardDeck(cards);
 	return deck;
 });
-
+*/

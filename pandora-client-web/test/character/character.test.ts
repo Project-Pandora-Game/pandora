@@ -2,7 +2,6 @@ import { renderHook } from '@testing-library/react';
 import { cloneDeep } from 'lodash-es';
 import {
 	ASSET_PREFERENCES_DEFAULT,
-	CardDeck,
 	ICharacterData,
 	ICharacterRoomData,
 } from 'pandora-common';
@@ -21,8 +20,6 @@ const mockData: ICharacterRoomData = {
 	publicSettings: {},
 	assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 	isOnline: true,
-	hand: [],
-	deck: new CardDeck(),
 };
 describe('Character', () => {
 	let mock: Character;

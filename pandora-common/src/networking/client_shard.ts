@@ -8,10 +8,10 @@ import { AppearanceActionSchema } from '../gameLogic/actionLogic/actions/_index.
 import { AppearanceActionData, AppearanceActionProblem } from '../gameLogic/actionLogic/appearanceActionProblems.ts';
 import { CharacterModifierConfigurationChangeSchema, CharacterModifierIdSchema, CharacterModifierInstanceClientDataSchema, CharacterModifierLockActionSchema, CharacterModifierTemplateSchema, PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic/index.ts';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits.ts';
+import { CardGameCardSchema } from '../utility/cards.ts';
 import { Satisfies } from '../utility/misc.ts';
 import { CharacterInputNameSchema, ZodCast } from '../validation.ts';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
-import { CardSchema } from '../utility/cards.ts';
 
 /** Client->Shard messages */
 export const ClientShardSchema = {
@@ -140,11 +140,11 @@ export const ClientShardSchema = {
 				choice: z.enum(['rock', 'paper', 'scissors', 'show']),
 			}),
 			z.object({
-				type: z.literal('cards'), //Card game related messages
+				type: z.literal('cards'), //CardGameCard game related messages
 				targetId: CharacterIdSchema.optional(),
 				msgOption: z.enum(['create', 'stop', 'join', 'deal', 'check', 'reveal']),
 				dealHidden: z.boolean().default(false).optional(),
-				card: CardSchema.optional(),
+				card: CardGameCardSchema.optional(),
 			}),
 		]),
 		response: null,

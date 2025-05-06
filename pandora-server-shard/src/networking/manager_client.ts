@@ -5,6 +5,7 @@ import {
 	Assert,
 	AssertNever,
 	BadMessageError,
+	CardGameGame,
 	CHARACTER_MODIFIER_TYPE_DEFINITION,
 	CharacterId,
 	CharacterModifierActionCheckAdd,
@@ -28,7 +29,6 @@ import {
 	PermissionSetup,
 	RedactSensitiveActionData,
 	StartActionAttempt,
-	CardGame,
 	type AppearanceAction,
 	type AppearanceActionProcessingResult,
 	type CharacterRestrictionsManager,
@@ -419,57 +419,70 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			case 'cards': {
 				const player = space.getCharacterById(character.id);
 				if (player) {
-					if (!game.card) {
-						//This is a real command and no internal message
+
+					if (space.cardGame) {
 						switch (game.msgOption) {
-							case 'create': {
-								space.cardGame = new CardGame(character.id);
+							case 'create':
+								// only one game can be there at a time
 								space.handleActionMessage({
-									id: 'gamblingDeckCreation',
+									id: 'gamblingCardGameAlreadyCreated',
 									character,
+									sendTo: [client.character.id],
+									dictionary: {
+										'DEALER': `${space.getCharacterById(space.cardGame.getDealerId())?.name}`,
+									},
 								});
 								break;
-							}
 							case 'stop': {
+								// stops the current game
+								if (space.cardGame.isDealer(client.character.id)) {
+									space.handleActionMessage({
+										id: 'gamblingCardGameStopped',
+										character,
+										sendTo: space.cardGame.getPlayerIds(), // Send messages only to players
+									});
+									space.cardGame = null;
+								} else {
+									space.handleActionMessage({
+										id: 'gamblingCardGameNotAllowed',
+										sendTo: [client.character.id],
+										character,
+									});
+								}
 								break;
 							}
 							case 'join': {
-								if (space.cardGame) {
-									if (space.cardGame?.joinGame(character.id)) {
-										space.handleActionMessage({
-											id: 'gamblingDeckJoined',
-											character,
-										});
-									} else {
-										space.handleActionMessage({
-											id: 'gamblingDeckJoinedAlready',
-											sendTo: [character.id],
-											character,
-										});
-									}
+								if (space.cardGame.joinGame(character.id)) {
+									space.handleActionMessage({
+										id: 'gamblingCardGameJoined',
+										character,
+										sendTo: space.cardGame.getPlayerIds(),
+									});
 								} else {
 									space.handleActionMessage({
-										id: 'gamblingDeckNoGame',
-										sendTo: [character.id],
+										id: 'gamblingCardGameJoinedAlready',
+										sendTo: [client.character.id],
 										character,
 									});
 								}
 								break;
 							}
 							case 'deal': {
-								// Deals a card to a character or openly
-								if (space.cardGame) {
+								if (space.cardGame.isDealer(client.character.id)) {
+									// Deals a card to a character or openly
 									const card = space.cardGame.dealTo(game.targetId);
 									if (!card) {
 										space.handleActionMessage({
-											id: 'gamblingDeckEmpty',
+											id: 'gamblingCardGameEmpty',
+											sendTo: [client.character.id],
 										});
 									} else {
 										if (game.targetId) {
 											if (!game.dealHidden) {
 												space.handleActionMessage({
-													id: 'gamblingDeckDealPlayerOpen',
+													id: 'gamblingCardGameDealPlayerOpen',
 													character,
+													sendTo: space.cardGame.getPlayerIds(), // Send messages only to players
 													dictionary: {
 														'TARGET_CHARACTER': `${space.getCharacterById(game.targetId)?.name}`,
 														'CARD': card.toString(),
@@ -477,15 +490,17 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 												});
 											} else {
 												space.handleActionMessage({
-													id: 'gamblingDeckDealPlayerSecret',
+													id: 'gamblingCardGameDealPlayerSecret',
 													character,
+													sendTo: space.cardGame.getPlayerIds(), // Send messages only to players
 													dictionary: {
 														'TARGET_CHARACTER': `${space.getCharacterById(game.targetId)?.name}`,
 													},
 												});
 												space.handleActionMessage({
-													id: 'gamblingDeckDealToYou',
+													id: 'gamblingCardGameDealToYou',
 													character,
+													sendTo: [game.targetId],
 													dictionary: {
 														'CARD': card.toString(),
 													},
@@ -494,8 +509,9 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 										} else {
 											//Dealt to the room openly
 											space.handleActionMessage({
-												id: 'gamblingDeckDealOpen',
+												id: 'gamblingCardGameDealOpen',
 												character,
+												sendTo: space.cardGame.getPlayerIds(), // Send messages only to players
 												dictionary: {
 													'CARD': card.toString(),
 												},
@@ -504,8 +520,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 									}
 								} else {
 									space.handleActionMessage({
-										id: 'gamblingDeckNoGame',
-										sendTo: [character.id],
+										id: 'gamblingCardGameNotAllowed',
+										sendTo: [client.character.id],
 										character,
 									});
 								}
@@ -513,27 +529,66 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 							}
 							case 'check': {
 								space.handleActionMessage({
-									id: 'gamblingDeckHandCheck',
+									id: 'gamblingCardGameHandCheck',
 									character,
 									sendTo: [client.character.id],
 									dictionary: {
-									// 'HAND': player.getRoomData().hand.toString(),
+										'HAND': space.cardGame.getPlayerHand(client.character.id),
 									},
 								});
 								break;
 							}
 							case 'reveal': {
-								space.handleActionMessage({
-									id: 'gamblingDeckHandReveal',
-									character,
-									dictionary: {
-									// 'HAND': player.getRoomData().hand.toString(),
-									},
-								});
+								if (space.cardGame.isDealer(client.character.id)) {
+									// Send the cards of all players to the players and end the game
+									const players = space.cardGame.getPlayerIds();
+									const spaceHand = space.cardGame.getSpaceHand();
+									// Remind players of the cards on the table
+									space.handleActionMessage({
+										id: 'gamblingCardGameHandReveal',
+										character,
+										sendTo: players,
+										dictionary: {
+											'HAND': space.cardGame.getSpaceHand(),
+											'ISARE': (spaceHand === 'Nothing' || spaceHand.length === 1) ? 'is' : 'are',
+										},
+									});
+									//Show the crads of all players
+									players.forEach((id) => space.handleActionMessage({
+										id: 'gamblingCardGameHandReveal',
+										character,
+										sendTo: players,
+										dictionary: {
+											'PLAYER': `${space.getCharacterById(id)?.name}`,
+											'HAND': `${space.cardGame?.getPlayerHand(id)}`,
+										},
+									}));
+									space.cardGame = null;
+								} else {
+									space.handleActionMessage({
+										id: 'gamblingCardGameNotAllowed',
+										sendTo: [client.character.id],
+										character,
+									});
+								}
 								break;
 							}
 							default:
 								AssertNever(game.msgOption);
+						}
+					} else {
+						if (game.msgOption === 'create') {
+							space.cardGame = new CardGameGame(character.id);
+							space.handleActionMessage({
+								id: 'gamblingCardGameCreation',
+								character,
+							});
+						} else {
+							space.handleActionMessage({
+								id: 'gamblingCardGameNoGame',
+								sendTo: [client.character.id],
+								character,
+							});
 						}
 					}
 				}

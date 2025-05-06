@@ -20,7 +20,6 @@ import {
 	ICharacterRoomData,
 	ItemId,
 	TypedEventEmitter,
-	CardDeck,
 	type AssetFrameworkGlobalState,
 } from 'pandora-common';
 import { CharacterEvents, ICharacter } from '../../../character/character.ts';
@@ -163,8 +162,6 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 			publicSettings: {},
 			isOnline: true,
 			assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
-			hand: [],
-			deck: new CardDeck(),
 		};
 		this.gameLogicCharacter = new GameLogicCharacterClient(() => this.data, this.logger.prefixMessages('[GameLogic]'));
 	}

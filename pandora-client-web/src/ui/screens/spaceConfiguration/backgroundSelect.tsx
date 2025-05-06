@@ -133,13 +133,13 @@ export function BackgroundSelectDialog({ hide, current }: {
 							}
 						} }
 					>
+						<option value='3dBox'>Custom 3D box</option>
 						{
 							assetManager.getBackgrounds().length > 0 ? (
-								<option value='premade'>Static background</option>
+								<option value='premade'>Static image background</option>
 							) : null
 						}
 						<option value='plain'>Solid-color background</option>
-						<option value='3dBox'>Custom 3D box</option>
 						<option value='defaultPublicSpace'>Default background for new spaces</option>
 						<option value='defaultPersonalSpace'>Default background for personal space</option>
 					</Select>

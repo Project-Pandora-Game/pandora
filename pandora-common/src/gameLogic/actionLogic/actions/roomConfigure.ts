@@ -42,10 +42,11 @@ export function ActionRoomConfigure({
 
 			return c;
 		});
-	}
 
-	// Change message to chat
-	// TODO: Message to chat that room background was changed
+		processingContext.queueMessage({
+			id: 'roomConfigureBackground',
+		});
+	}
 
 	return processingContext.finalize();
 }

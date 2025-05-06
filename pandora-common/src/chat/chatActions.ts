@@ -41,6 +41,9 @@ const CHAT_ACTIONS_DEF = {
 	itemStore: `SOURCE_CHARACTER stored ITEM_ASSET_NAME in ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
 	itemUnload: `SOURCE_CHARACTER removed ITEM_ASSET_NAME_PREVIOUS from ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
 
+	// Room changes
+	roomConfigureBackground: `SOURCE_CHARACTER changed the room's background.`,
+
 	// Room device interaction
 	/** User deploys a previously stored device into the room */
 	roomDeviceDeploy: `SOURCE_CHARACTER put ITEM_ASSET_NAME into the room.`,

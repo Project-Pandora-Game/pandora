@@ -19,7 +19,6 @@ import {
 	ICharacterData,
 	ICharacterDataDirectoryUpdate,
 	ICharacterDataShardUpdate,
-	RoomBackgroundDataSchema,
 	RoomInventoryBundleSchema,
 	SPACE_DIRECTORY_PROPERTIES,
 	SpaceData,
@@ -974,7 +973,7 @@ export default class MongoDatabase implements PandoraDatabase {
 			oldSchema: SpaceDataSchema.pick({ id: true }).extend({
 				config: SpaceDirectoryConfigSchema.extend({
 					/** The ID of the background or custom data */
-					background: z.union([z.string(), RoomBackgroundDataSchema.extend({ image: HexColorStringSchema.catch('#1099bb') })]).optional(),
+					background: z.union([z.string(), z.object({ image: HexColorStringSchema.catch('#1099bb') })]).optional(),
 				}),
 				inventory: RoomInventoryBundleSchema.partial({ roomGeometry: true }),
 			}),
@@ -1014,7 +1013,7 @@ export default class MongoDatabase implements PandoraDatabase {
 
 		await characterCollection.doManualMigration(this._client, this._db, {
 			oldSchema: CharacterDatabaseDataSchema.pick({ id: true, appearance: true, personalRoom: true }).extend({
-				roomId: SpaceIdSchema.nullable().optional(),
+				roomId: SpaceIdSchema.nullable().catch(null).optional(),
 				position: z.tuple([z.number().int(), z.number().int(), z.number().int()]).optional(),
 			}),
 			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {

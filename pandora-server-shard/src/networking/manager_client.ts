@@ -545,12 +545,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 									const spaceHand = space.cardGame.getSpaceHand();
 									// Remind players of the cards on the table
 									space.handleActionMessage({
-										id: 'gamblingCardGameHandReveal',
+										id: 'gamblingCardGameRoomCards',
 										character,
 										sendTo: players,
 										dictionary: {
 											'HAND': space.cardGame.getSpaceHand(),
-											'ISARE': (spaceHand === 'Nothing' || spaceHand.length === 1) ? 'is' : 'are',
+											'ISARE': (spaceHand === 'nothing' || spaceHand.length < 3) ? 'is' : 'are',
 										},
 									});
 									//Show the crads of all players

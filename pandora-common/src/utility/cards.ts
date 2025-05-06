@@ -81,7 +81,7 @@ class CardPlayer {
 	}
 
 	public showHand() {
-		return this.hand.toString();
+		return this.hand.length > 0 ? this.hand.toString() : 'nothing';
 	}
 
 	constructor(id: CharacterId) {
@@ -138,7 +138,7 @@ export class CardGameGame {
 	}
 
 	public getSpaceHand() {
-		return this.spaceHand.toString();
+		return this.spaceHand.length > 0 ? this.spaceHand.toString() : 'nothing';
 	}
 
 	public isDealer(p: CharacterId) {

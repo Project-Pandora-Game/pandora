@@ -60,7 +60,7 @@
 		"@types/express": "4.17.21",
 		"@types/json-diff": "1.0.3",
 		"@types/lodash-es": "4.17.12",
-		"@types/node": "22.15.12",
+		"@types/node": "22.15.14",
 		"@types/wtfnode": "0.7.3",
 		"discord-api-types": "0.38.3",
 		"jest": "29.7.0",

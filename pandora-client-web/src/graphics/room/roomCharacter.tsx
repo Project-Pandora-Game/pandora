@@ -5,7 +5,6 @@ import {
 	AssetFrameworkCharacterState,
 	AssetFrameworkGlobalState,
 	CHARACTER_SETTINGS_DEFAULT,
-	CharacterRoomPosition,
 	CharacterSize,
 	ICharacterRoomData,
 	LegsPose,
@@ -13,6 +12,7 @@ import {
 } from 'pandora-common';
 import { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle, type Cursor, type EventMode, type GraphicsContext } from 'pixi.js';
 import { ReactElement, useCallback, useMemo, useRef } from 'react';
+import { toast } from 'react-toastify';
 import { z } from 'zod';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
 import { BrowserStorage } from '../../browserStorage.ts';
@@ -20,9 +20,10 @@ import { Character, useCharacterData } from '../../character/character.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { useCharacterRestrictionsManager } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { THEME_FONT } from '../../components/gameContext/interfaceSettingsProvider.tsx';
+import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
-import { ShardConnector } from '../../networking/shardConnector.ts';
 import { useObservable } from '../../observable.ts';
+import { TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
@@ -46,7 +47,6 @@ export type RoomCharacterInteractiveProps = {
 	spaceInfo: Immutable<SpaceClientInfo>;
 	debugConfig: ChatroomDebugConfig;
 	projectionResolver: Immutable<RoomProjectionResolver>;
-	shard: ShardConnector | null;
 };
 
 type RoomCharacterDisplayProps = {
@@ -150,8 +150,8 @@ export type RoomCharacterCalculatedPosition = {
 	rotationAngle: number;
 };
 
-export function useRoomCharacterPosition(position: CharacterRoomPosition, characterState: AssetFrameworkCharacterState, projectionResolver: Immutable<RoomProjectionResolver>): RoomCharacterCalculatedPosition {
-	const [posX, posY, yOffsetExtra] = projectionResolver.fixupPosition(position);
+export function useRoomCharacterPosition(characterState: AssetFrameworkCharacterState, projectionResolver: Immutable<RoomProjectionResolver>): RoomCharacterCalculatedPosition {
+	const [posX, posY, yOffsetExtra] = projectionResolver.fixupPosition(characterState.position.position);
 
 	const {
 		baseScale,
@@ -230,12 +230,9 @@ function RoomCharacterInteractiveImpl({
 	spaceInfo,
 	debugConfig,
 	projectionResolver,
-	shard,
 }: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
+	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 	const id = characterState.id;
-	const {
-		position: dataPosition,
-	} = useCharacterData(character);
 
 	const {
 		roomSceneMode,
@@ -245,12 +242,26 @@ function RoomCharacterInteractiveImpl({
 	const {
 		yOffsetExtra,
 		scale,
-	} = useRoomCharacterPosition(dataPosition, characterState, projectionResolver);
+	} = useRoomCharacterPosition(characterState, projectionResolver);
 
-	const setPositionRaw = useEvent((newX: number, newY: number): void => {
-		shard?.sendMessage('roomCharacterMove', {
-			id,
-			position: projectionResolver.fixupPosition([newX, newY, yOffsetExtra]),
+	const disableManualMove = characterState.position.following != null;
+
+	const setPositionRaw = useEvent((newX: number, newY: number) => {
+		if (disableManualMove) {
+			toast('Character that is following another character cannot be moved manually.', TOAST_OPTIONS_WARNING);
+			return;
+		}
+
+		execute({
+			type: 'moveCharacter',
+			target: {
+				type: 'character',
+				characterId: id,
+			},
+			moveTo: {
+				type: 'normal',
+				position: projectionResolver.fixupPosition([newX, newY, yOffsetExtra]),
+			},
 		});
 	});
 
@@ -346,7 +357,6 @@ function RoomCharacterDisplay({
 }: RoomCharacterDisplayProps & CharacterStateProps): ReactElement | null {
 	const {
 		name,
-		position: dataPosition,
 		publicSettings: { labelColor },
 		isOnline,
 	} = useCharacterData(character);
@@ -365,7 +375,7 @@ function RoomCharacterDisplay({
 		scale,
 		pivot,
 		rotationAngle,
-	} = useRoomCharacterPosition(dataPosition, characterState, projectionResolver);
+	} = useRoomCharacterPosition(characterState, projectionResolver);
 
 	const backView = characterState.actualPose.view === 'back';
 

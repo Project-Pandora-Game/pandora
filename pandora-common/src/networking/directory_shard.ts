@@ -10,6 +10,7 @@ import { Immutable } from 'immer';
 
 export const ShardAccountDefinitionSchema = z.object({
 	id: z.number(),
+	displayName: z.string(),
 	roles: AccountRoleInfoSchema.optional(),
 });
 export type IShardAccountDefinition = z.infer<typeof ShardAccountDefinitionSchema>;

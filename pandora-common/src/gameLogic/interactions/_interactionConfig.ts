@@ -57,6 +57,13 @@ export const INTERACTION_CONFIG = {
 			allowOthers: 'yes',
 		},
 	},
+	moveCharacter: {
+		visibleName: 'Move or lead this character inside rooms (even as non-admin)',
+		icon: 'movement',
+		defaultPermissions: {
+			allowOthers: 'yes',
+		},
+	},
 	deviceEnterLeave: {
 		visibleName: 'Enter or leave a device',
 		icon: 'device',

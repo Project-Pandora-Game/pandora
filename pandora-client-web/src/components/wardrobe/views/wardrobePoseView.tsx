@@ -7,6 +7,7 @@ import {
 	ArmRotationSchema,
 	Assert,
 	AssetFrameworkCharacterState,
+	AssetFrameworkRoomState,
 	AssetsPosePreset,
 	AssetsPosePresets,
 	BONE_MAX,
@@ -34,7 +35,7 @@ import bodyIcon from '../../../assets/icons/body.svg';
 import itemSettingIcon from '../../../assets/icons/item_setting.svg';
 import starIcon from '../../../assets/icons/star.svg';
 import { useBrowserStorage } from '../../../browserStorage.ts';
-import { IChatroomCharacter, useCharacterData } from '../../../character/character.ts';
+import { IChatroomCharacter } from '../../../character/character.ts';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { useDebouncedValue } from '../../../common/useDebounceValue.ts';
 import { useEvent } from '../../../common/useEvent.ts';
@@ -53,7 +54,6 @@ import { Column, Row } from '../../common/container/container.tsx';
 import { FieldsetToggle } from '../../common/fieldsetToggle/index.tsx';
 import { SelectionIndicator } from '../../common/selectionIndicator/selectionIndicator.tsx';
 import { useCheckAddPermissions } from '../../gameContext/permissionCheckProvider.tsx';
-import { useShardConnector } from '../../gameContext/shardConnectorContextProvider.tsx';
 import { ResolveItemDisplayName } from '../itemDetail/wardrobeItemName.tsx';
 import { WardrobeStoredPosePresets } from '../poseDetail/storedPosePresets.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteCallback, useWardrobePermissionRequestCallback } from '../wardrobeActionContext.tsx';
@@ -542,7 +542,7 @@ export function WardrobePoseGui({ character, characterState }: {
 											/>
 										))
 								}
-								<RoomManualYOffsetControl character={ character } />
+								<RoomManualYOffsetControl characterState={ characterState } />
 							</>
 						) : focusedCategory === 'manual' ? (
 							<FieldsetToggle legend='Manual posing' persistent='bone-ui-dev-pose'>
@@ -550,7 +550,7 @@ export function WardrobePoseGui({ character, characterState }: {
 									<WardrobeViewPose characterState={ characterState } setPose={ setPose } />
 									<WardrobeArmPoses characterState={ characterState } setPose={ setPose } />
 									<WardrobeLegsPose characterState={ characterState } setPose={ setPose } />
-									<RoomManualYOffsetControl character={ character } />
+									<RoomManualYOffsetControl characterState={ characterState } />
 									<br />
 									{
 										allBones
@@ -730,8 +730,9 @@ async function GeneratePosePreview(
 
 	const pose = MergePartialAppearancePoses(preset, preset.optional);
 
+	const spaceState = AssetFrameworkRoomState.createDefault(assetManager, null);
 	const previewCharacterState = AssetFrameworkCharacterState
-		.createDefault(assetManager, 'c0')
+		.createDefault(assetManager, 'c0', spaceState)
 		.produceWithPose(preview.basePose ?? {}, 'pose')
 		.produceWithPose(pose, 'pose');
 
@@ -862,32 +863,39 @@ export function BoneRowElement({ definition, onChange, characterState }: {
 	);
 }
 
-function RoomManualYOffsetControl({ character }: {
-	character: IChatroomCharacter;
+function RoomManualYOffsetControl({ characterState }: {
+	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
+	const [execute] = useWardrobeExecuteCallback({ allowMultipleSimultaneousExecutions: true });
 
-	const {
-		id,
-		position,
-	} = useCharacterData(character);
+	const [yOffset, setYOffsetLocal] = useUpdatedUserInput(characterState.position.position[2], [characterState.id]);
 
-	const [yOffset, setYOffsetLocal] = useUpdatedUserInput(position[2], [character]);
+	const disableManualMove = characterState.position.following != null;
 
-	const shard = useShardConnector();
+	const setYOffset = useEvent((newYOffset: number) => {
+		if (disableManualMove)
+			return;
 
-	const setYOffset = useCallback((newYOffset: number) => {
+		const position = characterState.position.position;
 		setYOffsetLocal(newYOffset);
-		shard?.sendMessage('roomCharacterMove', {
-			id,
-			position: [position[0], position[1], newYOffset],
+		execute({
+			type: 'moveCharacter',
+			target: {
+				type: 'character',
+				characterId: characterState.id,
+			},
+			moveTo: {
+				type: 'normal',
+				position: [position[0], position[1], newYOffset],
+			},
 		});
-	}, [setYOffsetLocal, shard, id, position]);
+	});
 
 	return (
 		<Row padding='small'>
 			<Row alignY='center'>Character Y Offset:</Row>
-			<NumberInput className='positioning-input' step={ 1 } value={ yOffset } onChange={ setYOffset } />
-			<Button className='slim' onClick={ () => setYOffset(0) } disabled={ yOffset === 0 }>
+			<NumberInput className='positioning-input' step={ 1 } value={ yOffset } onChange={ setYOffset } disabled={ disableManualMove } />
+			<Button className='slim' onClick={ () => setYOffset(0) } disabled={ disableManualMove || yOffset === 0 }>
 				↺
 			</Button>
 		</Row>

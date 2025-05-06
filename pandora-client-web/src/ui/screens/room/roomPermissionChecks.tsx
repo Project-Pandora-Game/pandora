@@ -5,7 +5,7 @@ import {
 } from 'react';
 import { toast } from 'react-toastify';
 import { useCharacterRestrictionManager, type Character } from '../../../character/character.ts';
-import { IsSpaceAdmin, useActionSpaceContext, useCharacterRestrictionsManager, useCharacterState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { IsSpaceAdmin, useActionSpaceContext, useGameState, useGlobalState, useSpaceCharacters, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayerState } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue.ts';
 import { DeviceOverlayState } from '../../../graphics/room/roomDevice.tsx';
@@ -60,38 +60,29 @@ export function useRoomConstructionModeCheckProvider(): void {
  * Checks if player can move the target character.
  * @param target - The character to be moved. If `null` is used, the check always fails.
  */
-export function useCanMoveCharacter(target: Character | null): boolean {
-	const { player, globalState } = usePlayerState();
-	const currentAccount = useCurrentAccount();
-	const spaceInfo = useSpaceInfo();
-	const isPlayerAdmin = IsSpaceAdmin(spaceInfo.config, currentAccount);
+export function useCanMoveCharacter(target: Character | null): 'allowed' | 'forbidden' | 'prompt' | null {
+	const action = useMemo((): AppearanceAction | null => target != null ? ({
+		type: 'moveCharacter',
+		target: { type: 'character', characterId: target.id },
+		moveTo: { type: 'normal', position: [0, 0, 0] },
+	}) : null, [target]);
+	const checkResult = useStaggeredAppearanceActionResult(action, { immediate: true });
 
-	const targetState = useCharacterState(globalState, target?.id ?? null);
+	return useMemo((): 'allowed' | 'forbidden' | 'prompt' | null => {
+		if (target == null)
+			return 'forbidden';
 
-	const playerHasBlockedMovement = useCharacterRestrictionsManager(globalState, player, (manager) => manager.getEffects().blockRoomMovement);
+		if (checkResult == null)
+			return null;
 
-	// See Space.updateCharacterPosition on shard for server-side version of this.
-	return useMemo((): boolean => {
-		if (target == null || targetState == null)
-			return false;
+		if (checkResult.valid)
+			return 'allowed';
 
-		// Characters in a room device cannot be used
-		if (targetState.getRoomDeviceWearablePart() != null)
-			return false;
+		if (checkResult.prompt != null)
+			return 'prompt';
 
-		// If moving self, must not be restricted by items
-		if (target.id === player.id) {
-			if (playerHasBlockedMovement)
-				return false;
-		}
-
-		// Only admin can move other characters
-		if (target.id !== player.id && !isPlayerAdmin) {
-			return false;
-		}
-
-		return true;
-	}, [isPlayerAdmin, player, playerHasBlockedMovement, target, targetState]);
+		return 'forbidden';
+	}, [checkResult, target]);
 }
 
 /**
@@ -129,24 +120,31 @@ export function RoomScreenSceneModeCheckProvider(): null {
 		setRoomSceneMode,
 	} = useRoomScreenContext();
 	const spaceCharacters = useSpaceCharacters();
+	const globalState = useGlobalState(useGameState());
 
 	const moveTarget = (roomSceneMode.mode === 'moveCharacter' ? spaceCharacters.find((c) => c.id === roomSceneMode.characterId) : undefined) ?? null;
+	const moveTargetState = moveTarget != null ? globalState.getCharacterState(moveTarget.id) : null;
 	const canMoveTarget = useCanMoveCharacter(moveTarget);
 
 	const poseTarget = (roomSceneMode.mode === 'poseCharacter' ? spaceCharacters.find((c) => c.id === roomSceneMode.characterId) : undefined) ?? null;
 	const canPoseTarget = useCanPoseCharacter(poseTarget);
 
 	useEffect(() => {
-		if (roomSceneMode.mode === 'moveCharacter' && !canMoveTarget) {
-			toast('You cannot move this character.', TOAST_OPTIONS_WARNING);
-			setRoomSceneMode({ mode: 'normal' });
+		if (roomSceneMode.mode === 'moveCharacter') {
+			if (canMoveTarget === 'forbidden') {
+				toast('You cannot move this character.', TOAST_OPTIONS_WARNING);
+				setRoomSceneMode({ mode: 'normal' });
+			} else if (moveTargetState?.position.following != null) {
+				toast('Character that is following another character cannot be moved manually.', TOAST_OPTIONS_WARNING);
+				setRoomSceneMode({ mode: 'normal' });
+			}
 		}
 
 		if (roomSceneMode.mode === 'poseCharacter' && canPoseTarget === 'forbidden') {
 			toast('You cannot pose this character.', TOAST_OPTIONS_WARNING);
 			setRoomSceneMode({ mode: 'normal' });
 		}
-	}, [roomSceneMode, setRoomSceneMode, canMoveTarget, canPoseTarget]);
+	}, [roomSceneMode, setRoomSceneMode, canMoveTarget, canPoseTarget, moveTargetState]);
 
 	return null;
 }

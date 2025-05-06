@@ -1,7 +1,6 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
 import { AssetPreferencesPublicSchema } from '../character/assetPreferences.ts';
-import { CharacterRoomPositionSchema } from '../character/characterData.ts';
 import { CharacterSettingsKeysSchema, CharacterSettingsSchema } from '../character/characterSettings.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
 import { ChatCharacterStatusSchema, ClientChatMessagesSchema } from '../chat/chat.ts';
@@ -47,13 +46,6 @@ export const ClientShardSchema = {
 	chatMessageAck: {
 		request: z.object({
 			lastTime: z.number().min(0),
-		}),
-		response: null,
-	},
-	roomCharacterMove: {
-		request: z.object({
-			id: CharacterIdSchema.optional(),
-			position: CharacterRoomPositionSchema,
 		}),
 		response: null,
 	},

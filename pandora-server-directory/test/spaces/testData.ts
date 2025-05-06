@@ -1,4 +1,4 @@
-import { AccountId, CloneDeepMutable, DEFAULT_BACKGROUND, SpaceDirectoryConfig } from 'pandora-common';
+import { AccountId, SpaceDirectoryConfig } from 'pandora-common';
 import { ACTOR_PANDORA } from '../../src/account/actorPandora.ts';
 
 const TEST_SPACE_DEFAULTS: Readonly<SpaceDirectoryConfig> = {
@@ -11,7 +11,6 @@ const TEST_SPACE_DEFAULTS: Readonly<SpaceDirectoryConfig> = {
 	allow: [],
 	public: 'public-with-admin',
 	features: [],
-	background: CloneDeepMutable(DEFAULT_BACKGROUND),
 	ghostManagement: null,
 };
 

@@ -44,7 +44,7 @@ function CharacterProfileContent({ character, gameState }: { character: Characte
 		<Row className='profileView flex-1' gap='none' overflowY='hidden'>
 			{
 				characterState != null && !isNarrowScreen ? (
-					<CharacterPreview character={ character } characterState={ characterState } />
+					<CharacterPreview character={ character } characterState={ characterState } globalState={ globalState } />
 				) : null
 			}
 			<Column className='flex-1' overflowY='auto'>

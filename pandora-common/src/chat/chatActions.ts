@@ -41,6 +41,9 @@ const CHAT_ACTIONS_DEF = {
 	itemStore: `SOURCE_CHARACTER stored ITEM_ASSET_NAME in ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
 	itemUnload: `SOURCE_CHARACTER removed ITEM_ASSET_NAME_PREVIOUS from ITEM_CONTAINER_SIMPLE_DYNAMIC.`,
 
+	// Room changes
+	roomConfigureBackground: `SOURCE_CHARACTER changed the room's background.`,
+
 	// Room device interaction
 	/** User deploys a previously stored device into the room */
 	roomDeviceDeploy: `SOURCE_CHARACTER put ITEM_ASSET_NAME into the room.`,
@@ -52,6 +55,12 @@ const CHAT_ACTIONS_DEF = {
 	roomDeviceSlotLeave: `SOURCE_CHARACTER let TARGET_CHARACTER_DYNAMIC_REFLEXIVE out of ITEM_ASSET_NAME.`,
 	/** Room admin clears saved character id from slot, while target character is not in the room */
 	roomDeviceSlotClear: `SOURCE_CHARACTER freed up ITEM_ASSET_NAME for new usage.`,
+
+	// Character position related
+	characterPositionFollowStartLead: `SOURCE_CHARACTER started leading of TARGET_CHARACTER.`,
+	characterPositionFollowStopLead: `SOURCE_CHARACTER stopped leading of TARGET_CHARACTER.`,
+	characterPositionFollowStartFollow: `SOURCE_CHARACTER started following TARGET_CHARACTER.`,
+	characterPositionFollowStopFollow: `SOURCE_CHARACTER stopped following TARGET_CHARACTER.`,
 
 	// Character modifiers
 	characterModifierAdd: `SOURCE_CHARACTER added a new "MODIFIER_NAME" modifier on you.`,

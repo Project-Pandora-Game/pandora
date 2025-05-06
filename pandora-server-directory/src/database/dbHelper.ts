@@ -4,8 +4,9 @@ import {
 	ASSET_PREFERENCES_DEFAULT,
 	AccountId,
 	CharacterId,
+	CloneDeepMutable,
 	ICharacterData,
-	ROOM_INVENTORY_BUNDLE_DEFAULT,
+	ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE,
 	SpaceData,
 	SpaceDirectoryConfig,
 	SpaceId,
@@ -31,7 +32,6 @@ export function CreateCharacter(accountId: number, id: CharacterId): [DatabaseCh
 		accessId: nanoid(8),
 		settings: {},
 		assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
-		position: [-1, -1, 0],
 	};
 
 	return [info, char];
@@ -46,7 +46,7 @@ export function CreateSpace(data: SpaceCreationData, id?: SpaceId): SpaceData {
 	return {
 		id: id ?? `s/${nanoid()}`,
 		accessId: '',
-		inventory: ROOM_INVENTORY_BUNDLE_DEFAULT,
+		inventory: CloneDeepMutable(ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE),
 		invites: [],
 		...data,
 	};

@@ -8,6 +8,7 @@ import {
 	CloneDeepMutable,
 	Coordinates,
 	EMPTY_ARRAY,
+	GetRoomPositionBounds,
 	ICharacterRoomData,
 	IRoomDeviceGraphicsLayerSlot,
 	IRoomDeviceGraphicsLayerSprite,
@@ -35,6 +36,7 @@ import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
 import { Sprite } from '../baseComponents/sprite.ts';
 import type { TransitionedContainerCustomProps } from '../common/transitions/transitionedContainer.ts';
+import { usePixiApplyMaskSource, usePixiMaskSource, type PixiMaskSource } from '../common/useApplyMask.ts';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
@@ -389,30 +391,52 @@ export function RoomDevice({
 		y: asset.definition.pivot.y,
 	}), [asset]);
 
+	const background = globalState.room.roomBackground;
+	const maskDraw = useCallback((g: PIXI.GraphicsContext) => {
+		const { minX, maxX } = GetRoomPositionBounds(background);
+		const ceiling = background.ceiling || (background.imageSize[1] + yOffsetExtra);
+		const [x1, y1] = projectionResolver.transform(minX, deploymentY, 0);
+		const [x2, y2] = projectionResolver.transform(maxX, deploymentY, 0);
+		const [x3, y3] = projectionResolver.transform(maxX, deploymentY, ceiling);
+		const [x4, y4] = projectionResolver.transform(minX, deploymentY, ceiling);
+
+		g.poly([x1, y1, x2, y2, x3, y3, x4, y4])
+			.fill({ color: 0xffffff });
+	}, [background, deploymentY, projectionResolver, yOffsetExtra]);
+
+	const roomMask = usePixiMaskSource();
+
 	return (
-		<RoomDeviceGraphics
-			globalState={ globalState }
-			item={ item }
-			position={ { x, y: y - yOffsetExtra } }
-			scale={ { x: scale, y: scale } }
-			pivot={ pivot }
-			hitArea={ hitArea }
-			eventMode={ eventMode }
-			cursor={ cursor }
-			onPointerDown={ onPointerDown }
-			onPointerUp={ onPointerUp }
-			onPointerUpOutside={ onPointerUp }
-			zIndex={ -deploymentY }
-		>
-			{ children }
-			{
-				!debugConfig?.deviceDebugOverlay ? null : (
-					<Container zIndex={ 99999 }>
-						<RoomDeviceDebugGraphics pivot={ pivot } />
-					</Container>
-				)
-			}
-		</RoomDeviceGraphics>
+		<>
+			<RoomDeviceGraphics
+				globalState={ globalState }
+				item={ item }
+				position={ { x, y: y - yOffsetExtra } }
+				scale={ { x: scale, y: scale } }
+				pivot={ pivot }
+				hitArea={ hitArea }
+				eventMode={ eventMode }
+				cursor={ cursor }
+				onPointerDown={ onPointerDown }
+				onPointerUp={ onPointerUp }
+				onPointerUpOutside={ onPointerUp }
+				zIndex={ -deploymentY }
+				roomMask={ roomMask }
+			>
+				{ children }
+				{
+					!debugConfig?.deviceDebugOverlay ? null : (
+						<Container zIndex={ 99999 }>
+							<RoomDeviceDebugGraphics pivot={ pivot } />
+						</Container>
+					)
+				}
+			</RoomDeviceGraphics>
+			<Graphics
+				ref={ roomMask.maskRef }
+				draw={ maskDraw }
+			/>
+		</>
 	);
 }
 
@@ -450,6 +474,7 @@ export interface RoomDeviceGraphicsProps extends ChildrenProps {
 	eventMode?: PIXI.EventMode;
 	cursor?: PIXI.Cursor;
 	zIndex?: number;
+	roomMask?: PixiMaskSource;
 
 	onPointerDown?: (event: PIXI.FederatedPointerEvent) => void;
 	onPointerUp?: (event: PIXI.FederatedPointerEvent) => void;
@@ -471,6 +496,7 @@ function RoomDeviceGraphicsWithManagerImpl({
 	cursor,
 	eventMode,
 	hitArea,
+	roomMask,
 	...graphicsProps
 }: RoomDeviceGraphicsProps, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
 	const asset = item.asset;
@@ -503,7 +529,7 @@ function RoomDeviceGraphicsWithManagerImpl({
 					asset.definition.graphicsLayers.map((layer, i) => {
 						let graphics: ReactElement;
 						if (layer.type === 'sprite') {
-							graphics = <RoomDeviceGraphicsLayerSprite item={ item } layer={ layer } />;
+							graphics = <RoomDeviceGraphicsLayerSprite item={ item } layer={ layer } roomMask={ roomMask } />;
 						} else if (layer.type === 'slot') {
 							graphics = <RoomDeviceGraphicsLayerSlot globalState={ globalState } item={ item } layer={ layer } />;
 						} else {
@@ -531,10 +557,11 @@ function RoomDeviceGraphicsImpl(props: RoomDeviceGraphicsProps, ref: React.Forwa
 
 const RoomDeviceGraphics = React.forwardRef(RoomDeviceGraphicsImpl);
 
-function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
+function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture, roomMask }: {
 	item: ItemRoomDevice;
 	layer: Immutable<IRoomDeviceGraphicsLayerSprite>;
 	getTexture?: (path: string) => PIXI.Texture;
+	roomMask?: PixiMaskSource;
 }): ReactElement | null {
 
 	const evaluator = useStandaloneConditionEvaluator(item.assetManager);
@@ -559,8 +586,11 @@ function RoomDeviceGraphicsLayerSprite({ item, layer, getTexture }: {
 	const filters = usePlayerVisionFilters(false);
 	const actualFilters = useMemo<PIXI.Filter[] | undefined>(() => filters?.slice(), [filters]);
 
+	const applyRoomMask = usePixiApplyMaskSource(roomMask ?? null);
+
 	return (
 		<Sprite
+			ref={ layer.clipToRoom ? applyRoomMask : null }
 			x={ offset?.x ?? 0 }
 			y={ offset?.y ?? 0 }
 			scale={ scale }

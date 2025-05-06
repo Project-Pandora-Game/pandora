@@ -156,10 +156,10 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 		this.data = {
 			id: this.id,
 			accountId: 0,
+			accountDisplayName: 'EditorCharacter',
 			name: 'EditorCharacter',
 			profileDescription: 'An editor character',
 			publicSettings: {},
-			position: [0, 0, 0],
 			isOnline: true,
 			assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 		};

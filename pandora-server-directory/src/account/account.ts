@@ -158,6 +158,7 @@ export class Account implements ActorIdentity {
 	public getShardAccountDefinition(): IShardAccountDefinition {
 		return {
 			id: this.id,
+			displayName: this.displayName,
 			roles: this.roles.getSelfInfo(),
 		};
 	}

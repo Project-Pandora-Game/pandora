@@ -13,21 +13,27 @@ import {
 	CharacterDataSchema,
 	CharacterId,
 	CharacterIdSchema,
+	CloneDeepMutable,
 	GetLogger,
+	HexColorStringSchema,
 	ICharacterData,
 	ICharacterDataDirectoryUpdate,
 	ICharacterDataShardUpdate,
+	RoomBackgroundDataSchema,
+	RoomInventoryBundleSchema,
 	SPACE_DIRECTORY_PROPERTIES,
 	SpaceData,
 	SpaceDataDirectoryUpdate,
 	SpaceDataSchema,
 	SpaceDataShardUpdate,
+	SpaceDirectoryConfigSchema,
 	SpaceDirectoryData,
 	SpaceId,
 	SpaceIdSchema,
 	ZodCast,
 	ZodTemplateString,
 	type ICharacterDataShard,
+	type RoomGeometryConfig,
 } from 'pandora-common';
 import { z } from 'zod';
 import { ENV } from '../config.ts';
@@ -952,6 +958,97 @@ export default class MongoDatabase implements PandoraDatabase {
 						{
 							$set: {
 								currentSpace: UpdateSpaceId(character.currentSpace),
+							},
+						},
+					);
+					Assert(matchedCount === 1);
+				}
+			},
+		});
+
+		//#endregion
+
+		//#region Move space background configuration and character position data (04/2025)
+
+		await spaceCollection.doManualMigration(this._client, this._db, {
+			oldSchema: SpaceDataSchema.pick({ id: true }).extend({
+				config: SpaceDirectoryConfigSchema.extend({
+					/** The ID of the background or custom data */
+					background: z.union([z.string(), RoomBackgroundDataSchema.extend({ image: HexColorStringSchema.catch('#1099bb') })]).optional(),
+				}),
+				inventory: RoomInventoryBundleSchema.partial({ roomGeometry: true }),
+			}),
+			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+				for await (const space of oldStream) {
+					if (space == null || space.config.background == null)
+						continue;
+
+					requireFullMigration = true;
+					migrationLogger.verbose(`Migrating space background for ${space.id}`);
+
+					const newBackground: RoomGeometryConfig = space.inventory.roomGeometry ?? (
+						typeof space.config.background === 'string' ? {
+							type: 'premade',
+							id: space.config.background,
+						} : {
+							type: 'plain',
+							image: space.config.background.image,
+						}
+					);
+
+					const { matchedCount } = await oldCollection.updateOne(
+						{ id: space.id },
+						{
+							$unset: {
+								'config.background': true,
+							},
+							$set: {
+								'inventory.roomGeometry': newBackground,
+							},
+						},
+					);
+					Assert(matchedCount === 1);
+				}
+			},
+		});
+
+		await characterCollection.doManualMigration(this._client, this._db, {
+			oldSchema: CharacterDatabaseDataSchema.pick({ id: true, appearance: true, personalRoom: true }).extend({
+				roomId: SpaceIdSchema.nullable().optional(),
+				position: z.tuple([z.number().int(), z.number().int(), z.number().int()]).optional(),
+			}),
+			migrate: async ({ oldCollection, oldStream, migrationLogger }) => {
+				for await (const character of oldStream) {
+					if (character == null || character.position == null)
+						continue;
+
+					requireFullMigration = true;
+					migrationLogger.verbose(`Migrating character position for ${character.id}`);
+
+					const newAppearance = CloneDeepMutable(character.appearance);
+					if (newAppearance != null) {
+						newAppearance.position = {
+							type: 'normal',
+							position: character.position,
+						};
+						newAppearance.space = character.roomId ?? null;
+					}
+
+					const newPersonalRoom = CloneDeepMutable(character.personalRoom);
+					if (newPersonalRoom != null) {
+						newPersonalRoom.inventory.roomGeometry = { type: 'defaultPersonalSpace' };
+					}
+
+					const { matchedCount } = await oldCollection.updateOne(
+						{ id: character.id },
+						{
+							$unset: {
+								roomId: true,
+								position: true,
+							},
+							$set: {
+								appearance: newAppearance,
+								personalRoom: newPersonalRoom,
 							},
 						},
 					);

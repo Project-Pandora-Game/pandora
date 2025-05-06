@@ -177,6 +177,10 @@
 	text-overflow: ellipsis;
 }
 
+.contain-size {
+	contain: size;
+}
+
 .pointer-events-disable {
 	pointer-events: none;
 }

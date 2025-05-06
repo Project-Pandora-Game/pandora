@@ -9,15 +9,17 @@ import {
 	FilterItemType,
 	ICharacterRoomData,
 	ItemRoomDevice,
-	ResolveBackground,
+	RectangleSchema,
 	RoomBackgroundData,
 	SpaceClientInfo,
+	SpaceIdSchema,
 } from 'pandora-common';
 import { IBounceOptions } from 'pixi-viewport';
 import * as PIXI from 'pixi.js';
 import { Filter, Rectangle } from 'pixi.js';
 import React, { ReactElement, useCallback, useMemo, useRef } from 'react';
-import { useAssetManager } from '../../assets/assetManager.tsx';
+import { z as zod } from 'zod';
+import { BrowserStorage } from '../../browserStorage.ts';
 import { Character, useCharacterData, useCharacterRestrictionManager } from '../../character/character.ts';
 import { CommonProps } from '../../common/reactTypes.ts';
 import { useEvent } from '../../common/useEvent.ts';
@@ -25,17 +27,16 @@ import { useActionSpaceContext, useCharacterState, useGameState, useGlobalState,
 import { THEME_NORMAL_BACKGROUND } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { permissionCheckContext } from '../../components/gameContext/permissionCheckProvider.tsx';
 import { usePlayer, usePlayerState } from '../../components/gameContext/playerContextProvider.tsx';
-import { useShardConnector } from '../../components/gameContext/shardConnectorContextProvider.tsx';
 import { wardrobeActionContext } from '../../components/wardrobe/wardrobeActionContext.tsx';
-import { ShardConnector } from '../../networking/shardConnector.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { serviceManagerContext } from '../../services/serviceProvider.tsx';
 import { roomScreenContext, useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { ChatroomDebugConfig, useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
-import { PixiViewportRef, PixiViewportSetupCallback } from '../baseComponents/pixiViewport.tsx';
-import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../graphicsScene.tsx';
+import { PixiViewportRef, PixiViewportSetupCallback, type PixiViewportProps } from '../baseComponents/pixiViewport.tsx';
+import { GraphicsBackground } from '../graphicsBackground.tsx';
+import { GraphicsScene, GraphicsSceneProps } from '../graphicsScene.tsx';
 import { RoomCharacterInteractive } from './roomCharacter.tsx';
 import { RoomCharacterMovementTool, RoomCharacterPosingTool } from './roomCharacterPosing.tsx';
 import { RoomDeviceInteractive, RoomDeviceMovementTool } from './roomDevice.tsx';
@@ -51,7 +52,6 @@ const BASE_BOUNCE_OPTIONS: IBounceOptions = {
 
 interface RoomGraphicsSceneProps extends CommonProps {
 	characters: readonly Character<ICharacterRoomData>[];
-	shard: ShardConnector | null;
 	gameState: GameState;
 	globalState: AssetFrameworkGlobalState;
 	info: Immutable<SpaceClientInfo>;
@@ -59,20 +59,25 @@ interface RoomGraphicsSceneProps extends CommonProps {
 	onPointerDown: (event: React.PointerEvent<HTMLDivElement>) => void;
 }
 
+const RoomViewportLastPositionDataSchema = zod.object({
+	spaceId: SpaceIdSchema.nullable(),
+	roomBackgroundWidth: zod.number(),
+	roomBackgroundHeight: zod.number(),
+	visibleArea: RectangleSchema,
+}).nullable();
+const RoomViewportLastPosition = BrowserStorage.createSession('room.viewport.lastPosition', null, RoomViewportLastPositionDataSchema);
+
 export function RoomGraphicsScene({
 	id,
 	className,
 	children,
 	characters,
-	shard,
 	gameState,
 	globalState,
 	info,
 	debugConfig,
 	onPointerDown,
 }: RoomGraphicsSceneProps): ReactElement {
-	const assetManager = useAssetManager();
-
 	const {
 		roomSceneMode,
 	} = useRoomScreenContext();
@@ -80,17 +85,16 @@ export function RoomGraphicsScene({
 	const roomState = globalState.room;
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
 	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
-		const resolved = ResolveBackground(assetManager, info.background);
-
-		if (debugConfig?.enabled && debugConfig.roomScalingHelperData != null && info.features.includes('development')) {
-			return CalculateBackgroundDataFromCalibrationData(resolved.image, {
+		if (debugConfig?.enabled && debugConfig.roomScalingHelperData != null && roomState.roomBackground.graphics.type === 'image' && info.features.includes('development')) {
+			return CalculateBackgroundDataFromCalibrationData(roomState.roomBackground.graphics.image, {
 				...debugConfig.roomScalingHelperData,
-				imageSize: resolved.imageSize,
+				imageSize: roomState.roomBackground.imageSize,
 			});
 		}
 
-		return resolved;
-	}, [assetManager, info, debugConfig]);
+		return roomState.roomBackground;
+	}, [roomState, info, debugConfig]);
+	const spaceId = roomState.spaceId;
 
 	const projectionResolver = useRoomViewProjection(roomBackground);
 
@@ -157,24 +161,59 @@ export function RoomGraphicsScene({
 				...BASE_BOUNCE_OPTIONS,
 				bounceBox: new Rectangle(-BONCE_OVERFLOW, -BONCE_OVERFLOW, roomBackgroundWidth + 2 * BONCE_OVERFLOW, roomBackgroundHeight + 2 * BONCE_OVERFLOW),
 			});
-	}, [roomBackgroundWidth, roomBackgroundHeight]);
+
+		const lastState = RoomViewportLastPosition.value;
+		if (lastState != null && lastState.spaceId === spaceId && lastState.roomBackgroundHeight === roomBackgroundHeight && lastState.roomBackgroundWidth === roomBackgroundWidth) {
+			viewport.fit(false, lastState.visibleArea.width, lastState.visibleArea.height);
+			viewport.moveCenter(lastState.visibleArea.x + lastState.visibleArea.width / 2, lastState.visibleArea.y + lastState.visibleArea.height / 2);
+		} else {
+			RoomViewportLastPosition.value = null;
+		}
+	}, [roomBackgroundWidth, roomBackgroundHeight, spaceId]);
+
+	const viewportOnMove = useCallback<PixiViewportProps['onMove'] & {}>((viewport) => {
+		RoomViewportLastPosition.value = {
+			spaceId,
+			roomBackgroundWidth: viewport.worldWidth,
+			roomBackgroundHeight: viewport.worldHeight,
+			visibleArea: {
+				x: clamp(viewport.corner.x, 0, viewport.worldWidth),
+				y: clamp(viewport.corner.y, 0, viewport.worldHeight),
+				width: clamp(viewport.screenWidth / viewport.scale.x, 1, viewport.worldWidth),
+				height: clamp(viewport.screenHeight / viewport.scale.y, 1, viewport.worldHeight),
+			},
+		};
+	}, [spaceId]);
 
 	const viewportRef = useRef<PixiViewportRef>(null);
 
 	const onDoubleClick = useEvent((event: React.PointerEvent<HTMLDivElement>) => {
-		viewportRef.current?.center();
-		event.stopPropagation();
-		event.preventDefault();
+		const viewport = viewportRef.current?.viewport;
+		if (viewport == null)
+			return;
+
+		const outerZoomScale = viewport.findFit(viewport.worldWidth, viewport.worldHeight);
+
+		if (Math.abs(Math.max(viewport.scale.x, viewport.scale.y) - outerZoomScale) > Number.EPSILON) {
+			viewportRef.current?.center();
+			event.stopPropagation();
+			event.preventDefault();
+		} else {
+			viewportRef.current?.fitCover();
+			event.stopPropagation();
+			event.preventDefault();
+		}
 	});
 
 	const sceneOptions = useMemo((): GraphicsSceneProps => ({
 		viewportConfig,
 		viewportRef,
+		viewportOnMove,
 		forwardContexts: [serviceManagerContext, roomScreenContext, wardrobeActionContext, permissionCheckContext],
 		worldWidth: roomBackgroundWidth,
 		worldHeight: roomBackgroundHeight,
 		backgroundColor: Number.parseInt(THEME_NORMAL_BACKGROUND.substring(1, 7), 16),
-	}), [viewportConfig, roomBackgroundWidth, roomBackgroundHeight]);
+	}), [viewportConfig, viewportOnMove, roomBackgroundWidth, roomBackgroundHeight]);
 
 	return (
 		<GraphicsScene
@@ -199,7 +238,6 @@ export function RoomGraphicsScene({
 							spaceInfo={ info }
 							debugConfig={ debugConfig }
 							projectionResolver={ projectionResolver }
-							shard={ shard }
 						/>
 					))
 				}
@@ -226,7 +264,6 @@ export function RoomGraphicsScene({
 							spaceInfo={ info }
 							debugConfig={ debugConfig }
 							projectionResolver={ projectionResolver }
-							shard={ shard }
 						/>
 					) : null))
 				}
@@ -239,7 +276,6 @@ export function RoomGraphicsScene({
 							spaceInfo={ info }
 							debugConfig={ debugConfig }
 							projectionResolver={ projectionResolver }
-							shard={ shard }
 						/>
 					) : null))
 				}
@@ -266,8 +302,7 @@ export function RoomGraphicsScene({
 			}
 			<GraphicsBackground
 				zIndex={ -1000 }
-				background={ roomBackground.image }
-				backgroundSize={ roomBackground.imageSize }
+				background={ roomBackground }
 				backgroundFilters={ usePlayerVisionFilters(false) }
 			/>
 		</GraphicsScene>
@@ -478,7 +513,6 @@ export function RoomScene({ className }: {
 	const gameState = useGameState();
 	const info = useSpaceInfo();
 	const characters = useSpaceCharacters();
-	const shard = useShardConnector();
 
 	const {
 		contextMenuFocus,
@@ -508,7 +542,6 @@ export function RoomScene({ className }: {
 		<RoomGraphicsScene
 			className={ className }
 			characters={ characters }
-			shard={ shard }
 			gameState={ gameState }
 			globalState={ globalState }
 			info={ info.config }

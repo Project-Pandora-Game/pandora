@@ -15,21 +15,16 @@ import {
 	AssetFrameworkRoomState,
 	AssetManager,
 	CharacterId,
-	CharacterRoomPosition,
 	ChatCharacterStatus,
-	CloneDeepMutable,
 	EMPTY_ARRAY,
 	GameStateUpdate,
-	GenerateInitialRoomPosition,
 	IChatMessage,
 	IChatMessageActionTargetCharacter,
 	IChatMessageDirectoryAction,
 	IChatSegment,
 	IClientMessage,
 	IShardClient,
-	IsValidRoomPosition,
 	Logger,
-	ResolveBackground,
 	RoomInventory,
 	RoomInventoryBundle,
 	ServerRoom,
@@ -56,6 +51,7 @@ const ACTION_CACHE_TIMEOUT = 60_000; // 10 minutes
 export const SPACE_TICK_INTERVAL = 60_000;
 
 export abstract class Space extends ServerRoom<IShardClient> {
+	public readonly id: SpaceId | null;
 
 	protected readonly characters: Set<Character> = new Set();
 	protected readonly history = new Map<CharacterId, Map<number, number>>();
@@ -72,14 +68,14 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	/** Data for what character modifier effects were sent to the room last, used for creating delta updates when effects change */
 	private _lastSentModifierEffects: SpaceCharacterModifierEffectData = {};
 
-	public abstract get id(): SpaceId | null;
 	public abstract get owners(): readonly AccountId[];
 	public abstract get config(): SpaceDirectoryConfig;
 
 	protected readonly logger: Logger;
 
-	constructor(inventory: RoomInventoryBundle, logger: Logger) {
+	constructor(id: SpaceId | null, inventory: RoomInventoryBundle, logger: Logger) {
 		super();
+		this.id = id;
 		this.logger = logger;
 		this.logger.verbose('Loaded');
 
@@ -90,8 +86,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		const initialState = AssetFrameworkGlobalState.createDefault(
 			assetManager,
 			AssetFrameworkRoomState
-				.loadFromBundle(assetManager, inventory, this.logger.prefixMessages('Room inventory load:')),
-		);
+				.loadFromBundle(assetManager, inventory, id, this.logger.prefixMessages('Room inventory load:')),
+		).runAutomaticActions();
 
 		// Check if room state changed and if it did queue saving the changes
 		{
@@ -124,22 +120,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 		// Background definition might have changed, make sure all characters are still inside range
 		const update: GameStateUpdate = {};
-
-		// Put characters into correct place if needed
-		// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
-		if (!this.getInfo().features.includes('development')) {
-			const roomBackground = ResolveBackground(assetManager, this.config.background);
-			for (const character of this.characters) {
-				if (!IsValidRoomPosition(roomBackground, character.position)) {
-					character.position = GenerateInitialRoomPosition(roomBackground);
-
-					update.characters ??= {};
-					update.characters[character.id] = {
-						position: character.position,
-					};
-				}
-			}
-		}
 
 		if (update.characters) {
 			this.sendUpdateToAllCharacters(update);
@@ -302,40 +282,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 		return false;
 	}
 
-	public updateCharacterPosition(source: Character, id: CharacterId, newPosition: CharacterRoomPosition): void {
-		// Development rooms don't have position enforcement to allow fine-tuning positioning arguments
-		if (!this.getInfo().features.includes('development')) {
-			const roomBackground = ResolveBackground(assetManager, this.config.background);
-
-			if (!IsValidRoomPosition(roomBackground, newPosition)) {
-				return;
-			}
-		}
-
-		const character = this.getCharacterById(id);
-		if (!character) {
-			return;
-		}
-		// If moving self, must not be restricted by items
-		if (character.id === source.id) {
-			const restrictionManager = character.getRestrictionManager();
-			if (restrictionManager.getEffects().blockRoomMovement)
-				return;
-		}
-		// Only admin can move other characters
-		if (character.id !== source.id && !this.isAdmin(source)) {
-			return;
-		}
-		character.position = CloneDeepMutable(newPosition);
-		this.sendUpdateToAllCharacters({
-			characters: {
-				[character.id]: {
-					position: character.position,
-				},
-			},
-		});
-	}
-
 	public getAllCharacters(): Character[] {
 		return [...this.characters.values()];
 	}
@@ -351,9 +297,6 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	}
 
 	public characterAdd(character: Character, appearance: AppearanceBundle): void {
-		// Position character to the side of the room ±20% of character width randomly (to avoid full overlap with another characters)
-		const roomBackground = ResolveBackground(assetManager, this.config.background);
-		character.initRoomPosition(this.id, roomBackground);
 		const logger = this.logger.prefixMessages(`Character ${character.id} join:`);
 
 		this.runWithSuppressedUpdates(() => {

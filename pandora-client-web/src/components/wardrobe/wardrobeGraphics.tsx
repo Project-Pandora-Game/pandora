@@ -10,20 +10,19 @@ import {
 	ICharacterRoomData,
 	ItemRoomDevice,
 	Rectangle,
-	ResolveBackground,
 	RoomBackgroundData,
 	SpaceClientInfo,
 } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, ReactNode, useCallback, useId, useMemo, useRef, useState } from 'react';
-import { useAssetManager } from '../../assets/assetManager.tsx';
 import { Character, IChatroomCharacter } from '../../character/character.ts';
 import { Checkbox } from '../../common/userInteraction/checkbox.tsx';
 import { Container } from '../../graphics/baseComponents/container.ts';
 import { Graphics } from '../../graphics/baseComponents/graphics.ts';
 import { PixiViewportSetupCallback, type PixiViewportRef } from '../../graphics/baseComponents/pixiViewport.tsx';
+import { GraphicsBackground } from '../../graphics/graphicsBackground.tsx';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, type GraphicsCharacterLayerFilter } from '../../graphics/graphicsCharacter.tsx';
-import { GraphicsBackground, GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene.tsx';
+import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../../graphics/graphicsSettings.tsx';
 import { CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION, RoomCharacter, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter.tsx';
 import { RoomDevice } from '../../graphics/room/roomDevice.tsx';
@@ -32,7 +31,6 @@ import { useObservable } from '../../observable.ts';
 import { serviceManagerContext } from '../../services/serviceProvider.tsx';
 import { Button } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
-import { useSpaceInfo } from '../gameContext/gameStateContextProvider.tsx';
 import { THEME_NORMAL_BACKGROUND } from '../gameContext/interfaceSettingsProvider.tsx';
 import { useAppearanceActionEvent } from '../gameContext/shardConnectorContextProvider.tsx';
 import { WardrobeActionAttemptOverlay } from './views/wardrobeActionAttempt.tsx';
@@ -122,6 +120,7 @@ export function WardrobeCharacterPreview({ character, characterState, globalStat
 		<CharacterPreview
 			character={ character }
 			characterState={ characterState }
+			globalState={ globalState }
 			hideClothes={ allowHideItems && hideItems }
 			overlay={ overlay }
 			viewportRef={ viewportRef }
@@ -129,21 +128,17 @@ export function WardrobeCharacterPreview({ character, characterState, globalStat
 	);
 }
 
-export function CharacterPreview({ character, characterState, hideClothes = false, overlay, viewportRef }: {
+export function CharacterPreview({ character, characterState, globalState, hideClothes = false, overlay, viewportRef }: {
 	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
+	globalState: AssetFrameworkGlobalState;
 	hideClothes?: boolean;
 	overlay?: ReactNode;
 	viewportRef?: React.Ref<PixiViewportRef>;
 }): ReactElement {
-	const spaceInfo = useSpaceInfo();
-	const assetManager = useAssetManager();
-
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
-	const roomBackground = useMemo((): Immutable<RoomBackgroundData> => {
-		return ResolveBackground(assetManager, spaceInfo.config.background);
-	}, [assetManager, spaceInfo]);
+	const roomBackground = globalState.room.roomBackground;
 	const projectionResolver = useRoomViewProjection(roomBackground);
 
 	const viewportConfig = useCallback<PixiViewportSetupCallback>((viewport, { worldWidth }) => {
@@ -204,7 +199,6 @@ export function CharacterPreview({ character, characterState, hideClothes = fals
 			{
 				roomBackground ? (
 					<WardrobeRoomBackground
-						character={ character }
 						characterState={ characterState }
 						roomBackground={ roomBackground }
 						projectionResolver={ projectionResolver }
@@ -218,28 +212,29 @@ export function CharacterPreview({ character, characterState, hideClothes = fals
 function WardrobeRoomBackground({
 	roomBackground,
 	projectionResolver,
-	character,
 	characterState,
 }: {
 	roomBackground: Immutable<RoomBackgroundData>;
 	projectionResolver: Immutable<RoomProjectionResolver>;
-	character: IChatroomCharacter;
 	characterState: AssetFrameworkCharacterState;
 }): ReactElement {
-	const { position, scale, pivot, yOffset } = useRoomCharacterPosition(character.data.position, characterState, projectionResolver);
+	const { position, scale, pivot, yOffset } = useRoomCharacterPosition(characterState, projectionResolver);
 	const filters = usePlayerVisionFilters(false);
 
 	const inverseScale = 1 / scale;
 
 	return (
-		<GraphicsBackground
-			zIndex={ -1000 }
-			background={ roomBackground.image }
+		<Container
 			x={ pivot.x - position.x * inverseScale }
 			y={ pivot.y + yOffset - position.y * inverseScale }
-			backgroundSize={ [roomBackground.imageSize[0] * inverseScale, roomBackground.imageSize[1] * inverseScale] }
-			backgroundFilters={ filters }
-		/>
+			zIndex={ -1000 }
+			scale={ inverseScale }
+		>
+			<GraphicsBackground
+				background={ roomBackground }
+				backgroundFilters={ filters }
+			/>
+		</Container>
 	);
 }
 
@@ -291,7 +286,6 @@ export function WardrobeRoomPreview({ isPreview, globalState, ...graphicsProps }
 interface RoomPreviewProps {
 	characters: readonly Character<ICharacterRoomData>[];
 	globalState: AssetFrameworkGlobalState;
-	info: SpaceClientInfo;
 	overlay?: ReactNode;
 	focusDevice?: ItemRoomDevice;
 }
@@ -299,15 +293,12 @@ interface RoomPreviewProps {
 export function RoomPreview({
 	characters,
 	globalState,
-	info,
 	overlay,
 	focusDevice,
 }: RoomPreviewProps): ReactElement {
-	const assetManager = useAssetManager();
-
 	const roomState = globalState.room;
 	const roomDevices = useMemo((): readonly ItemRoomDevice[] => (roomState?.items.filter(FilterItemType('roomDevice')) ?? []), [roomState]);
-	const roomBackground = useMemo(() => ResolveBackground(assetManager, info.background), [assetManager, info.background]);
+	const roomBackground = roomState.roomBackground;
 	const projectionResolver = useRoomViewProjection(roomBackground);
 
 	const borderDraw = useCallback((g: PIXI.GraphicsContext) => {
@@ -421,8 +412,7 @@ export function RoomPreview({
 				</Container>
 				<GraphicsBackground
 					zIndex={ -1000 }
-					background={ roomBackground.image }
-					backgroundSize={ roomBackground.imageSize }
+					background={ roomBackground }
 					backgroundFilters={ usePlayerVisionFilters(false) }
 				/>
 			</Container>

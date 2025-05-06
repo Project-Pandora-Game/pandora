@@ -99,10 +99,10 @@ export class ItemRoomDevice extends ItemBase<'roomDevice'> implements ItemRoomDe
 		// Load device-specific data
 		const roomDeviceData: RoomDeviceBundle = bundle.roomDeviceData ?? {
 			deployment: {
+				deployed: false,
 				x: Math.floor(200 + Math.random() * 800),
 				y: 0,
 				yOffset: 0,
-				deployed: false,
 			},
 			slotOccupancy: {},
 		};

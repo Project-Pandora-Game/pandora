@@ -3,7 +3,7 @@ import type { ModuleActionData, ModuleActionProblem } from '../../assets/modules
 import type { Restriction } from '../../character/restrictionTypes.ts';
 import type { CharacterModifierActionError } from '../characterModifiers/characterModifierData.ts';
 
-export type InvalidActionReason = 'noDeleteRoomDeviceWearable' | 'noDeleteDeployedRoomDevice';
+export type InvalidActionReason = 'noDeleteRoomDeviceWearable' | 'noDeleteDeployedRoomDevice' | 'characterMoveCannotFollowTarget';
 
 export type AppearanceActionProblem =
 	| {

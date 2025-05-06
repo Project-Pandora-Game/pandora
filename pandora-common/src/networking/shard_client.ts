@@ -2,7 +2,7 @@ import { Immutable } from 'immer';
 import { z } from 'zod';
 import type { AssetsDefinitionFile } from '../assets/definitions.ts';
 import { AssetFrameworkGlobalStateClientBundle, AssetFrameworkGlobalStateClientDeltaBundleSchema } from '../assets/state/globalState.ts';
-import type { CharacterRoomPosition, ICharacterPrivateData, ICharacterPublicData } from '../character/characterData.ts';
+import type { ICharacterPrivateData, ICharacterPublicData } from '../character/characterData.ts';
 import type { CharacterPublicSettings } from '../character/characterSettings.ts';
 import { AssetPreferencesPublic, CharacterIdSchema, CharacterPrivateDataSchema } from '../character/index.ts';
 import { ChatCharacterStatusSchema, type IChatMessage } from '../chat/chat.ts';
@@ -14,9 +14,8 @@ import { ZodCast } from '../validation.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
 export type ICharacterRoomData = ICharacterPublicData & {
+	accountDisplayName: string;
 	assetPreferences: AssetPreferencesPublic;
-	// TODO(spaces): Move this to be part of character state (roomId is used to reset position when room changes)
-	position: CharacterRoomPosition;
 	publicSettings: Partial<CharacterPublicSettings>;
 	isOnline: boolean;
 };

@@ -1,8 +1,7 @@
 import { Draft } from 'immer';
-import { AssertNotNullable, CloneDeepMutable, ICharacterRoomData, ResolveBackground, RoomBackgroundCalibrationDataSchema } from 'pandora-common';
-import { ReactElement, useMemo } from 'react';
+import { AssertNotNullable, CloneDeepMutable, ICharacterRoomData, RoomBackgroundCalibrationDataSchema } from 'pandora-common';
+import { ReactElement } from 'react';
 import { z } from 'zod';
-import { useAssetManager } from '../../../assets/assetManager.tsx';
 import { BrowserStorage } from '../../../browserStorage.ts';
 import { Character, useCharacterData } from '../../../character/character.ts';
 import { useEvent } from '../../../common/useEvent.ts';
@@ -10,7 +9,7 @@ import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
 import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.tsx';
-import { useGameState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { useCharacterState, useGameState, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { USER_DEBUG } from '../../../config/Environment.ts';
 import { useObservable } from '../../../observable.ts';
 
@@ -40,10 +39,10 @@ export function useDebugConfig(): ChatroomDebugConfig {
 }
 
 export function ChatroomDebugConfigView(): ReactElement {
-	const assetManager = useAssetManager();
 	const gameState = useGameState();
+	const globalState = useGlobalState(gameState);
 	const spaceConfig = useObservable(gameState.currentSpace).config;
-	const roomBackground = useMemo(() => ResolveBackground(assetManager, spaceConfig.background), [assetManager, spaceConfig.background]);
+	const roomBackground = globalState.room.roomBackground;
 
 	const chatroomDebugConfig = useObservable(ChatroomDebugConfigStorage) ?? DEFAULT_DEBUG_CONFIG;
 
@@ -165,7 +164,6 @@ export function ChatroomDebugConfigView(): ReactElement {
 								/>
 								<NumberInput
 									min={ 0.01 }
-									max={ 2 }
 									step={ 0.01 }
 									value={ chatroomDebugConfig.roomScalingHelperData.areaCoverage }
 									onChange={ (newValue) => {
@@ -348,13 +346,16 @@ function ChatroomDebugCharacterView({
 	character: Character<ICharacterRoomData>;
 }): ReactElement {
 	const characterData = useCharacterData(character);
+	const gameState = useGameState();
+	const globalState = useGlobalState(gameState);
+	const playerState = useCharacterState(globalState, characterData.id);
 
 	return (
 		<Column padding='small' gap='none'>
 			<span>Name: { characterData.name }</span>
 			<span>Character ID: { characterData.id }</span>
 			<span>Account ID: { characterData.accountId }</span>
-			<span>Position: { `[${characterData.position[0]}, ${characterData.position[1]}]` }</span>
+			<span>Position: { JSON.stringify(playerState?.position) }</span>
 		</Column>
 	);
 }

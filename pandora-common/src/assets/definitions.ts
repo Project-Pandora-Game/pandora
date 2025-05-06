@@ -3,7 +3,6 @@ import { z } from 'zod';
 import type { AssetPreferenceType } from '../character/index.ts';
 import type { CharacterModifierSpecificTemplate, CharacterModifierType } from '../gameLogic/index.ts';
 import type { LockSetup } from '../gameLogic/locks/lockSetup.ts';
-import type { RoomBackgroundData } from '../space/room.ts';
 import type { Satisfies } from '../utility/misc.ts';
 import { HexRGBAColorString } from '../validation.ts';
 import type { AssetId } from './base.ts';
@@ -12,6 +11,7 @@ import type { AssetModuleDefinition } from './modules.ts';
 import type { AssetProperties } from './properties.ts';
 import type { RoomDeviceProperties } from './roomDeviceProperties.ts';
 import type { AssetsPosePreset, AssetsPosePresets, PartialAppearancePose } from './state/characterStatePose.ts';
+import type { RoomBackgroundData } from './state/roomGeometry.ts';
 
 // Each asset must have a size (bodyparts and only bodyparts have `bodypart` size)
 // The size is used to make sure you cannot infinitely recurse storing items into one another
@@ -250,6 +250,12 @@ export type IRoomDeviceGraphicsLayerSprite = {
 		offset: Coordinates;
 		condition: Condition;
 	}[];
+	/**
+	 * Clips the graphics to the room, at the matching perspective transform depth.
+	 * This is useful mainly for items that want to stop at a wall or ceiling (e.g. a chain going to ceiling), no matter how far the wall is.
+	 * @default false
+	 */
+	clipToRoom?: boolean;
 };
 
 export type IRoomDeviceGraphicsCharacterPosition = {
@@ -472,6 +478,15 @@ export interface RoomBackgroundTagDefinition {
 	category: string;
 }
 
+export type AssetsTileTextureInfo = {
+	/** The unique identifier for this texture */
+	id: string;
+	/** The visible name for this texture */
+	name: string;
+	/** File with the texture */
+	image: string;
+};
+
 export type CharacterModifierInbuiltTemplates = {
 	[Type in CharacterModifierType]?: (Extract<CharacterModifierSpecificTemplate, { type: Type; }>)[];
 };
@@ -497,6 +512,8 @@ export interface AssetsDefinitionFile {
 	graphicsSourceId: string;
 	backgroundTags: Record<string, RoomBackgroundTagDefinition>;
 	backgrounds: RoomBackgroundInfo[];
+	/** Tiles usable for custom backgrounds. Each describes a texture that can be used. */
+	tileTextures: AssetsTileTextureInfo[];
 	attributes: Record<string, AssetAttributeDefinition>;
 	randomization: AppearanceRandomizationData;
 	characterModifierTemplates: CharacterModifierInbuiltTemplates;

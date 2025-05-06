@@ -14,6 +14,7 @@ export function RedactSensitiveActionData(originalAction: Immutable<AppearanceAc
 		case 'create':
 		case 'delete':
 		case 'transfer':
+		case 'moveCharacter':
 		case 'pose':
 		case 'body':
 		case 'move':
@@ -24,6 +25,7 @@ export function RedactSensitiveActionData(originalAction: Immutable<AppearanceAc
 		case 'roomDeviceDeploy':
 		case 'roomDeviceEnter':
 		case 'roomDeviceLeave':
+		case 'roomConfigure':
 		case 'actionAttemptInterrupt':
 			break;
 

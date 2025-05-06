@@ -8,13 +8,13 @@ import crossIcon from '../../../assets/icons/cross.svg';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { useAsyncEvent, useEvent } from '../../../common/useEvent.ts';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
+import { Button, IconButton } from '../../../components/common/button/button.tsx';
+import { Column, Row } from '../../../components/common/container/container.tsx';
+import { ModalDialog } from '../../../components/dialog/dialog.tsx';
+import { useResolveCharacterName, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
-import type { SelfSelect } from '../../../ui/components/chat/commandsHelpers.ts';
-import { Button, IconButton } from '../../common/button/button.tsx';
-import { Column, Row } from '../../common/container/container.tsx';
-import { ModalDialog } from '../../dialog/dialog.tsx';
-import { useResolveCharacterName, useSpaceCharacters } from '../../gameContext/gameStateContextProvider.tsx';
+import type { SelfSelect } from '../chat/commandsHelpers.ts';
 import './characterListInput.scss';
 
 export interface CharacterListInputProps {

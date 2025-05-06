@@ -36,6 +36,8 @@ export function DescribeGameLogicAction({ action, ...props }: DescribeGameLogicA
 			return <DescribeGameLogicActionDelete action={ action } { ...props } />;
 		case 'transfer':
 			return <DescribeGameLogicActionTransfer action={ action } { ...props } />;
+		case 'moveCharacter':
+			return <DescribeGameLogicActionMoveCharacter action={ action } { ...props } />;
 		case 'pose':
 			return <DescribeGameLogicActionPose action={ action } { ...props } />;
 		case 'body':
@@ -58,6 +60,8 @@ export function DescribeGameLogicAction({ action, ...props }: DescribeGameLogicA
 			return <DescribeGameLogicActionRoomDeviceEnter action={ action } { ...props } />;
 		case 'roomDeviceLeave':
 			return <DescribeGameLogicActionRoomDeviceLeave action={ action } { ...props } />;
+		case 'roomConfigure':
+			return <DescribeGameLogicActionRoomConfigure action={ action } { ...props } />;
 		case 'actionAttemptInterrupt':
 			return <DescribeGameLogicActionInterrupt action={ action } { ...props } />;
 	}
@@ -110,6 +114,10 @@ function DescribeGameLogicActionTransfer({ action, globalState }: DescribeGameLo
 			{ isTargetPhysicallyEquipped ? ' onto' : ' into' } <DescribeContainer target={ action.target } container={ action.container } globalState={ globalState } />.
 		</>
 	);
+}
+
+function DescribeGameLogicActionMoveCharacter({ action }: DescribeGameLogicActionProps<'moveCharacter'>): ReactElement {
+	return <>Move <DescribeSpaceCharacter id={ action.target.characterId } form='normal' />.</>;
 }
 
 function DescribeGameLogicActionPose({ action }: DescribeGameLogicActionProps<'pose'>): ReactElement {
@@ -275,6 +283,10 @@ function DescribeGameLogicActionRoomDeviceLeave({ action, actionOriginator, glob
 			{ ' from' } the "{ slotName }" slot of the <DescribeItem item={ item } />.
 		</>
 	);
+}
+
+function DescribeGameLogicActionRoomConfigure(_props: DescribeGameLogicActionProps<'roomConfigure'>): ReactElement {
+	return <>Update the room's configuration.</>;
 }
 
 function DescribeGameLogicActionInterrupt({ action }: DescribeGameLogicActionProps<'actionAttemptInterrupt'>): ReactElement {

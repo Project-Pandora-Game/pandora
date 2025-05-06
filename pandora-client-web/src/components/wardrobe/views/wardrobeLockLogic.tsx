@@ -20,7 +20,7 @@ import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
-import { CharacterListInputActionButtons, CharacterListInputActions, type CharacterListInputAddButtonProps, type CharacterListInputRemoveButtonProps } from '../../common/characterListInput/characterListInput.tsx';
+import { CharacterListInputActionButtons, CharacterListInputActions, type CharacterListInputAddButtonProps, type CharacterListInputRemoveButtonProps } from '../../../ui/components/characterListInput/characterListInput.tsx';
 import { Column, Row } from '../../common/container/container.tsx';
 import { useConfirmDialog } from '../../dialog/dialog.tsx';
 import { usePlayerState } from '../../gameContext/playerContextProvider.tsx';

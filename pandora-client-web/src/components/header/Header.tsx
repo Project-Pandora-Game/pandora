@@ -27,7 +27,9 @@ import { HeaderButton } from './HeaderButton.tsx';
 import './header.scss';
 import { LeaveButton } from './leaveButton.tsx';
 
-function LeftHeader(): ReactElement {
+function LeftHeader({ onAnyClick }: {
+	onAnyClick?: () => void;
+}): ReactElement {
 	const connectionInfo = useShardConnectionInfo();
 
 	const characterData = usePlayerData();
@@ -78,8 +80,9 @@ function LeftHeader(): ReactElement {
 	const goToWardrobe = useCallback(() => {
 		if (connectionInfo != null) {
 			navigate(`/wardrobe/character/${connectionInfo.characterId}`);
+			onAnyClick?.();
 		}
-	}, [navigate, connectionInfo]);
+	}, [navigate, onAnyClick, connectionInfo]);
 
 	return (
 		<div className='leftHeader flex'>
@@ -234,7 +237,7 @@ function OverlayHeader({ onClose: close, visible }: {
 		<DialogInPortal priority={ 5 } location='mainOverlay'>
 			<Column className={ classNames('OverlayHeader', visible ? null : 'hide') }>
 				<Column className='content'>
-					<LeftHeader />
+					<LeftHeader onAnyClick={ close } />
 					<hr />
 					<RightHeader onAnyClick={ close } />
 				</Column>

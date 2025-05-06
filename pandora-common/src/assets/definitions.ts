@@ -250,6 +250,12 @@ export type IRoomDeviceGraphicsLayerSprite = {
 		offset: Coordinates;
 		condition: Condition;
 	}[];
+	/**
+	 * Clips the graphics to the room, at the matching perspective transform depth.
+	 * This is useful mainly for items that want to stop at a wall or ceiling (e.g. a chain going to ceiling), no matter how far the wall is.
+	 * @default false
+	 */
+	clipToRoom?: boolean;
 };
 
 export type IRoomDeviceGraphicsCharacterPosition = {

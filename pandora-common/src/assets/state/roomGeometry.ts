@@ -14,8 +14,8 @@ export const RoomBackground3dBoxSideSchema = z.object({
 	texture: z.string(),
 	tint: HexColorStringSchema,
 	rotate: z.boolean().catch(false),
-	tileScale: z.number().int().positive().max(8).catch(2),
-}).catch({ texture: '*', tint: '#000000', rotate: false, tileScale: 2 });
+	tileScale: z.number().int().positive().max(10).catch(2),
+}).catch({ texture: '*', tint: '#ffffff', rotate: false, tileScale: 4 });
 export type RoomBackground3dBoxSide = z.infer<typeof RoomBackground3dBoxSideSchema>;
 export const RoomBackgroundGraphicsSchema3dBoxSchema = z.object({
 	type: z.literal('3dBox'),

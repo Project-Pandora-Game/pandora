@@ -58,8 +58,10 @@ function RoomCharacterMovementToolImpl({
 	const disableManualMove = characterState.position.following != null;
 
 	const setPositionRaw = useEvent((newX: number, newY: number, newYOffset: number) => {
-		if (disableManualMove)
+		if (disableManualMove) {
+			toast('Character that is following another character cannot be moved manually.', TOAST_OPTIONS_WARNING);
 			return;
+		}
 
 		execute({
 			type: 'moveCharacter',

@@ -12,6 +12,7 @@ import {
 } from 'pandora-common';
 import { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle, type Cursor, type EventMode, type GraphicsContext } from 'pixi.js';
 import { ReactElement, useCallback, useMemo, useRef } from 'react';
+import { toast } from 'react-toastify';
 import { z } from 'zod';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
 import { BrowserStorage } from '../../browserStorage.ts';
@@ -22,6 +23,7 @@ import { THEME_FONT } from '../../components/gameContext/interfaceSettingsProvid
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
+import { TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
 import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
@@ -245,8 +247,10 @@ function RoomCharacterInteractiveImpl({
 	const disableManualMove = characterState.position.following != null;
 
 	const setPositionRaw = useEvent((newX: number, newY: number) => {
-		if (disableManualMove)
+		if (disableManualMove) {
+			toast('Character that is following another character cannot be moved manually.', TOAST_OPTIONS_WARNING);
 			return;
+		}
 
 		execute({
 			type: 'moveCharacter',

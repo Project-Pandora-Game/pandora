@@ -128,7 +128,12 @@ function GraphicsBackground3DBox({
 		const { ceiling } = background;
 		const { minX, maxX, minY, maxY } = GetRoomPositionBounds(background);
 
-		function CreateTiledMesh(width: number, height: number, data: RoomBackground3dBoxSide, transform: (u: number, v: number) => [x: number, y: number]): GraphicsBackground3DBoxPart {
+		function CreateTiledMesh(
+			width: number,
+			height: number,
+			data: RoomBackground3dBoxSide,
+			transform: (u: number, v: number) => [x: number, y: number],
+		): GraphicsBackground3DBoxPart {
 			const tileSize = GRAPHICS_BACKGROUND_TILE_SIZE * data.tileScale;
 			const squareSize = tileSize / (2 ** GRAPHICS_BACKGROUND_TILE_SUBDIVISION);
 			const widthCount = Math.ceil(width / squareSize);
@@ -149,7 +154,7 @@ function GraphicsBackground3DBox({
 					vertices[index] = remmappedX;
 					vertices[index + 1] = remmappedY;
 					uvs[index] = (data.rotate ? yCoordinate : xCoordinate) / tileSize;
-					uvs[index + 1] = (data.rotate ? xCoordinate : yCoordinate) / tileSize;
+					uvs[index + 1] = (data.rotate ? (tileSize - xCoordinate) : yCoordinate) / tileSize;
 				}
 			}
 
@@ -183,23 +188,33 @@ function GraphicsBackground3DBox({
 			maxX - minX,
 			maxY - minY,
 			graphics.floor,
-			(u, v) => projection.transform(minX + u, minY + v, 0),
+			(u, v) => projection.transform(minX + u, maxY - v, 0),
 		));
 
 		result.push(CreateTiledMesh(
 			maxX - minX,
 			ceiling - 0,
 			graphics.wallBack,
-			(u, v) => projection.transform(minX + u, maxY, v),
+			(u, v) => projection.transform(minX + u, maxY, ceiling - v),
 		));
 
 		if (graphics.wallLeft != null) {
-			result.push(CreateTiledMesh(
+			const leftWall = CreateTiledMesh(
 				maxY - minY,
 				ceiling - 0,
 				graphics.wallLeft,
-				(u, v) => projection.transform(minX, minY + u, v),
-			));
+				(u, v) => projection.transform(minX, minY + u, ceiling - v),
+			);
+			// We need little UV adjustment to cutoff near the left side instead of right one for the left wall specifically
+			const tileSize = GRAPHICS_BACKGROUND_TILE_SIZE * graphics.wallLeft.tileScale;
+			const tileOverlap = (maxY - minY) % tileSize;
+			if (tileOverlap !== 0) {
+				const shift = tileOverlap / tileSize;
+				for (let i = (graphics.wallLeft.rotate ? 1 : 0); i < leftWall.uvs.length; i += 2) {
+					leftWall.uvs[i] -= shift;
+				}
+			}
+			result.push(leftWall);
 		}
 
 		if (graphics.wallRight != null) {
@@ -207,7 +222,7 @@ function GraphicsBackground3DBox({
 				maxY - minY,
 				ceiling - 0,
 				graphics.wallRight,
-				(u, v) => projection.transform(maxX, minY + u, v),
+				(u, v) => projection.transform(maxX, maxY - u, ceiling - v),
 			));
 		}
 
@@ -216,7 +231,7 @@ function GraphicsBackground3DBox({
 				maxX - minX,
 				maxY - minY,
 				graphics.ceiling,
-				(u, v) => projection.transform(minX + u, minY + v, ceiling),
+				(u, v) => projection.transform(minX + u, maxY - v, ceiling),
 			));
 		}
 

@@ -52,25 +52,25 @@ const DEFAULT_BACKGROUND_3D_BOX: Extract<Immutable<RoomGeometryConfig>, { type: 
 		},
 		wallBack: {
 			texture: '*',
-			tint: '#505050',
+			tint: '#808080',
 			rotate: false,
 			tileScale: 2,
 		},
 		wallLeft: {
 			texture: '*',
-			tint: '#404040',
+			tint: '#707070',
 			rotate: false,
 			tileScale: 2,
 		},
 		wallRight: {
 			texture: '*',
-			tint: '#404040',
+			tint: '#707070',
 			rotate: false,
 			tileScale: 2,
 		},
 		ceiling: {
 			texture: '*',
-			tint: '#808080',
+			tint: '#AAAAAA',
 			rotate: false,
 			tileScale: 2,
 		},
@@ -677,7 +677,7 @@ function BackgroundSelectDialog3dBoxSideDialog({ current, value, onChange, title
 							rangeSlider
 							aria-label='Camera height'
 							min={ 1 }
-							max={ RoomBackground3dBoxSideSchema._def.innerType.shape.tileScale._def.innerType.maxValue ?? 10 }
+							max={ RoomBackground3dBoxSideSchema.shape.tileScale._def.innerType.maxValue ?? 10 }
 							step={ 1 }
 							value={ value.tileScale }
 							onChange={ (newValue) => onChange(produce(value, (d) => {
@@ -688,7 +688,7 @@ function BackgroundSelectDialog3dBoxSideDialog({ current, value, onChange, title
 							className='flex-grow-1 value'
 							aria-label='Camera height'
 							min={ 1 }
-							max={ RoomBackground3dBoxSideSchema._def.innerType.shape.tileScale._def.innerType.maxValue ?? 10 }
+							max={ RoomBackground3dBoxSideSchema.shape.tileScale._def.innerType.maxValue ?? 10 }
 							step={ 1 }
 							value={ value.tileScale }
 							onChange={ (newValue) => onChange(produce(value, (d) => {

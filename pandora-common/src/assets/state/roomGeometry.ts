@@ -11,11 +11,11 @@ import type { AssetFrameworkCharacterState } from './characterState.ts';
 import type { AssetFrameworkGlobalState } from './globalState.ts';
 
 export const RoomBackground3dBoxSideSchema = z.object({
-	texture: z.string(),
-	tint: HexColorStringSchema,
+	texture: z.string().catch('*'),
+	tint: HexColorStringSchema.catch('#FFFFFF'),
 	rotate: z.boolean().catch(false),
 	tileScale: z.number().int().positive().max(10).catch(2),
-}).catch({ texture: '*', tint: '#ffffff', rotate: false, tileScale: 4 });
+});
 export type RoomBackground3dBoxSide = z.infer<typeof RoomBackground3dBoxSideSchema>;
 export const RoomBackgroundGraphicsSchema3dBoxSchema = z.object({
 	type: z.literal('3dBox'),

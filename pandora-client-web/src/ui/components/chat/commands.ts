@@ -325,8 +325,8 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		key: ['cards'],
 		description: 'Play a game of cards',
 		longDescription: `You can 'create' or 'stop' a game of cards, 'join' an existing one, 'deal' cards open or face down to player or the room,
-		'check' your hand or 'show' the crads that were dealt to you`,
-		usage: 'create | stop | join | deal <target> /hidden | check | show',
+		'check' your hand or 'reveal' the cards that were dealt to all players, ending the game.`,
+		usage: 'create | stop | join | deal <target> /hidden | check | reveal',
 		handler: CreateClientCommand()
 			.fork('action', (ctx) => ({
 				create: {

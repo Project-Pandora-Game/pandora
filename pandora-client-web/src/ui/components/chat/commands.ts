@@ -386,7 +386,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 						}),
 				},
 				reveal: {
-					description: 'Reveal the cards that were dealt to you.',
+					description: `Reveal the cards of all players. Only available for the game's creator.`,
 					handler: ctx
 						.handler(({ shardConnector }) => {
 							shardConnector.sendMessage('gamblingAction', {

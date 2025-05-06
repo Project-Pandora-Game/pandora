@@ -13,7 +13,7 @@ import {
 	AssetFrameworkGlobalStateContainer,
 	AssetFrameworkRoomState,
 	AssetManager,
-	CardGame,
+	CardGameGame,
 	CharacterId,
 	CharacterRoomPosition,
 	ChatCharacterStatus,
@@ -73,7 +73,7 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 	protected readonly logger: Logger;
 
-	public cardGame: CardGame | null = null;
+	public cardGame: CardGameGame | null = null;
 
 	constructor(inventory: RoomInventoryBundle, logger: Logger) {
 		super();

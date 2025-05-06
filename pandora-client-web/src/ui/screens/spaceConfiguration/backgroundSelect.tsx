@@ -445,14 +445,21 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 				}
 			</Row>
 			<Row alignY='center'>
-				<Checkbox checked readOnly onChange={ noop } />
+				<Checkbox
+					checked={ selectedBackground.graphics.ceiling != null }
+					onChange={ (checked) => {
+						setSelectedBackground(produce(selectedBackground, (d) => {
+							d.graphics.ceiling = checked ? DEFAULT_BACKGROUND_3D_BOX.graphics.ceiling : null;
+						}));
+					} }
+				/>
 				<BackgroundSelectDialog3dBoxSide
-					title='Floor'
-					current={ current.type === '3dBox' ? current.graphics.floor : null }
-					value={ selectedBackground.graphics.floor }
+					title='Ceiling'
+					current={ current.type === '3dBox' ? current.graphics.ceiling : null }
+					value={ selectedBackground.graphics.ceiling }
 					onChange={ (newValue) => {
 						setSelectedBackground(produce(selectedBackground, (d) => {
-							d.graphics.floor = newValue;
+							d.graphics.ceiling = newValue;
 						}));
 					} }
 				/>
@@ -511,21 +518,14 @@ function BackgroundSelectDialog3dBox({ current, selectedBackground, setSelectedB
 				/>
 			</Row>
 			<Row alignY='center'>
-				<Checkbox
-					checked={ selectedBackground.graphics.ceiling != null }
-					onChange={ (checked) => {
-						setSelectedBackground(produce(selectedBackground, (d) => {
-							d.graphics.ceiling = checked ? DEFAULT_BACKGROUND_3D_BOX.graphics.ceiling : null;
-						}));
-					} }
-				/>
+				<Checkbox checked readOnly onChange={ noop } />
 				<BackgroundSelectDialog3dBoxSide
-					title='Ceiling'
-					current={ current.type === '3dBox' ? current.graphics.ceiling : null }
-					value={ selectedBackground.graphics.ceiling }
+					title='Floor'
+					current={ current.type === '3dBox' ? current.graphics.floor : null }
+					value={ selectedBackground.graphics.floor }
 					onChange={ (newValue) => {
 						setSelectedBackground(produce(selectedBackground, (d) => {
-							d.graphics.ceiling = newValue;
+							d.graphics.floor = newValue;
 						}));
 					} }
 				/>

@@ -400,7 +400,12 @@ export function RoomDevice({
 		const [x3, y3] = projectionResolver.transform(maxX, deploymentY, ceiling);
 		const [x4, y4] = projectionResolver.transform(minX, deploymentY, ceiling);
 
-		g.poly([x1, y1, x2, y2, x3, y3, x4, y4])
+		g.poly([
+			x1, y1,
+			x2, y2,
+			x3, background.ceiling ? y3 : 0,
+			x4, background.ceiling ? y4 : 0,
+		])
 			.fill({ color: 0xffffff });
 	}, [background, deploymentY, projectionResolver, yOffsetExtra]);
 

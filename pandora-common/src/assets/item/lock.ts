@@ -2,11 +2,12 @@ import type { Immutable } from 'immer';
 
 import { ItemInteractionType } from '../../character/restrictionTypes.ts';
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
-import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation.ts';
+import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { Asset } from '../asset.ts';
 import type { IExportOptions } from '../modules/common.ts';
 import type { AssetProperties } from '../properties.ts';
 import type { IItemLoadContext, IItemValidationContext, ItemBundle } from './base.ts';
+import type { AppearanceItems } from './items.ts';
 
 import { AssertNever, MemoizeNoArg } from '../../utility/misc.ts';
 

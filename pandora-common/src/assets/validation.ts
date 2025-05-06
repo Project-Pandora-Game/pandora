@@ -1,6 +1,7 @@
-import type { AppearanceItems, AppearanceValidationResult } from './appearanceValidation.ts';
+import type { AppearanceValidationResult } from './appearanceValidation.ts';
 import type { AssetManager } from './assetManager.ts';
 import type { IItemLocationDescriptor, ItemId } from './item/index.ts';
+import type { AppearanceItems } from './item/items.ts';
 import { ITEM_LIMIT_CHARACTER_WORN, ITEM_LIMIT_ROOM_INVENTORY } from './itemLimits.ts';
 import type { AssetFrameworkRoomState } from './state/roomState.ts';
 

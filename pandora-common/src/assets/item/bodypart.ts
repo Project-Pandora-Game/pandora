@@ -3,12 +3,12 @@ import { first } from 'lodash-es';
 
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
 import type { HexRGBAColorString } from '../../validation.ts';
-import type { AppearanceItems } from '../appearanceValidation.ts';
 import type { Asset } from '../asset.ts';
 import type { AssetColorization } from '../definitions.ts';
 import type { IItemModule } from '../modules/common.ts';
 import type { AssetProperties } from '../properties.ts';
 import type { ColorGroupResult, IItemLoadContext, ItemBundle } from './base.ts';
+import type { AppearanceItems } from './items.ts';
 
 import { MemoizeNoArg } from '../../utility/misc.ts';
 import { ItemModuleAction, LoadItemModule } from '../modules.ts';

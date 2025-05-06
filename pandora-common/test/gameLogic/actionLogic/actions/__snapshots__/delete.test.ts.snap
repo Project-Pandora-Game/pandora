@@ -1,0 +1,89 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ActionDelete Deletes optional bodypart item 1`] = `
+[
+  {
+    "asset": "a/body/base",
+  },
+  {
+    "asset": "a/body/head",
+  },
+  {
+    "asset": "a/body/eyes",
+  },
+  {
+    "asset": "a/body/lips",
+  },
+  {
+    "asset": "a/headwear/top_hat",
+  },
+]
+`;
+
+exports[`ActionDelete Deletes worn item 1`] = `
+[
+  {
+    "asset": "a/body/base",
+  },
+  {
+    "asset": "a/body/head",
+  },
+  {
+    "asset": "a/body/eyes",
+  },
+  {
+    "asset": "a/body/lips",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+  {
+    "asset": "a/panties/style1",
+  },
+]
+`;
+
+exports[`ActionDelete Fails if deleting nonexistent item: problems 1`] = `
+[
+  {
+    "restriction": {
+      "type": "invalid",
+    },
+    "result": "restrictionError",
+  },
+  {
+    "reason": undefined,
+    "result": "invalidAction",
+  },
+]
+`;
+
+exports[`ActionDelete Fails if deleting required bodypart: problems 1`] = `
+[
+  {
+    "result": "validationError",
+    "validationError": {
+      "problem": "bodypartError",
+      "problemDetail": "missingRequired",
+    },
+  },
+]
+`;
+
+exports[`ActionDelete Fails if manipulating bodypart in space that does not allow it: problems 1`] = `
+[
+  {
+    "restriction": {
+      "type": "modifyBodyRoom",
+    },
+    "result": "restrictionError",
+  },
+  {
+    "result": "validationError",
+    "validationError": {
+      "problem": "bodypartError",
+      "problemDetail": "missingRequired",
+    },
+  },
+]
+`;

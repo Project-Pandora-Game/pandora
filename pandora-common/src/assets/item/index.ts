@@ -8,4 +8,5 @@ export * from './roomDevice.ts';
 export * from './roomDeviceWearablePart.ts';
 
 // must be last
+export * from './items.ts';
 export * from './unified.ts';

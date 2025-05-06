@@ -86,9 +86,8 @@ function DirectMessageList(): ReactElement | null {
 			>
 				<Column gap='none' className='messagesContainer'>
 					{ encryptedMessages.map((message, i) => (
-						<>
+						<React.Fragment key={ message.time }>
 							<DirectMessageElement
-								key={ message.time }
 								message={ message }
 								currentAccount={ account }
 							/>
@@ -97,7 +96,7 @@ function DirectMessageList(): ReactElement | null {
 									<OldMessagesKeyWarning />
 								) : null
 							}
-						</>
+						</React.Fragment>
 					)) }
 				</Column>
 			</Scrollable>

@@ -134,6 +134,9 @@ export class ItemRoomDeviceWearablePart extends ItemBase<'roomDeviceWearablePart
 
 	public updateRoomStateLink(roomDevice: ItemRoomDevice | null): ItemRoomDeviceWearablePart {
 		Assert(roomDevice == null || this.roomDeviceLink?.device === roomDevice.id);
+		if (this.roomDevice === roomDevice)
+			return this;
+
 		return this.withProps({
 			roomDevice,
 		});

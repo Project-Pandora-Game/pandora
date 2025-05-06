@@ -5,12 +5,13 @@ import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/
 import type { InteractionId } from '../../gameLogic/interactions/index.ts';
 import { LockActionSchema } from '../../gameLogic/locks/lockLogic.ts';
 import { AssertNever, Satisfies } from '../../utility/misc.ts';
-import { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation.ts';
+import { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { Asset } from '../asset.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { ConditionOperator } from '../graphics/index.ts';
 import { __internal_ItemBundleSchemaRecursive, __internal_ItemTemplateSchemaRecursive } from '../item/_internalRecursion.ts';
 import { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item/base.ts';
+import type { AppearanceItems } from '../item/index.ts';
 import { ItemLock } from '../item/lock.ts';
 import type { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common.ts';
 

@@ -5,10 +5,10 @@ import { ItemInteractionType } from '../../character/restrictionTypes.ts';
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
 import type { InteractionId } from '../../gameLogic/interactions/index.ts';
 import { Satisfies } from '../../utility/misc.ts';
-import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation.ts';
+import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
 import type { ConditionOperator } from '../graphics/index.ts';
-import type { IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item/index.ts';
+import type { AppearanceItems, IItemCreationContext, IItemLoadContext, IItemValidationContext } from '../item/index.ts';
 import { IAssetModuleDefinition, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common.ts';
 
 export interface IModuleTypedOption<TProperties> {

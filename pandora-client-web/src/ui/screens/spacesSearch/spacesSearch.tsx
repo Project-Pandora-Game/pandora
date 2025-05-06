@@ -345,6 +345,7 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 	const confirm = useConfirmDialog();
 	const contacts = useAccountContacts('friend');
 	const blockedAccounts = useAccountContacts('blocked');
+	const navigate = useNavigatePandora();
 
 	const [join, processing] = useAsyncEvent(
 		async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -366,6 +367,9 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 			}
 
 			SpaceJoinProgress.show('progress', 'Joining space...');
+			// Hide at this point and navigate to room view to let user see the load progress
+			hide?.();
+			navigate('/room');
 			return directoryConnector.awaitResponse('spaceEnter', { id: info.id, invite: invite?.id });
 		},
 		(resp) => {
@@ -377,7 +381,7 @@ export function SpaceDetails({ info, hasFullInfo, hide, invite, redirectBeforeLe
 					SpaceJoinProgress.show('success', 'Space joined!');
 					break;
 				case 'notFound':
-					hide?.();
+					SpaceJoinProgress.show('error', 'Space not found');
 					break;
 				case 'spaceFull':
 					SpaceJoinProgress.show('error', 'Space is full');

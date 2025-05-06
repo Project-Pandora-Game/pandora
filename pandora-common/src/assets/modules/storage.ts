@@ -4,12 +4,13 @@ import { ItemInteractionType } from '../../character/restrictionTypes.ts';
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
 import type { InteractionId } from '../../gameLogic/interactions/index.ts';
 import { IsNotNullable, Satisfies } from '../../utility/misc.ts';
-import { AppearanceItems, AppearanceValidationCombineResults, AppearanceValidationResult } from '../appearanceValidation.ts';
+import { AppearanceValidationCombineResults, AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { AssetManager } from '../assetManager.ts';
 import { AssetSize, AssetSizeMapping } from '../definitions.ts';
 import { ConditionOperator } from '../graphics/index.ts';
 import { __internal_ItemBundleSchemaRecursive, __internal_ItemTemplateSchemaRecursive } from '../item/_internalRecursion.ts';
 import { IItemCreationContext, IItemLoadContext, IItemValidationContext, Item, ItemId } from '../item/base.ts';
+import type { AppearanceItems } from '../item/index.ts';
 import { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common.ts';
 
 export type IModuleConfigStorage<TProperties, TStaticData> = IModuleConfigCommon<'storage', TProperties, TStaticData> & {

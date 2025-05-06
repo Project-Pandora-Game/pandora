@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ActionTargetSelectorSchema, ItemContainerPathSchema } from '../../../assets/appearanceTypes.ts';
-import type { AppearanceItems } from '../../../assets/appearanceValidation.ts';
+import type { AppearanceItems } from '../../../assets/index.ts';
 import { ItemIdSchema, type ItemId } from '../../../assets/item/base.ts';
 import { ItemTemplateSchema } from '../../../assets/item/unified.ts';
 import { ItemInteractionType } from '../../../character/restrictionTypes.ts';

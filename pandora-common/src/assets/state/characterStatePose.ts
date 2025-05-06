@@ -1,6 +1,7 @@
 import { Immutable, freeze, produce } from 'immer';
 import { clamp, isEqual } from 'lodash-es';
 import { z } from 'zod';
+import { CalculateObjectKeysDelta } from '../../utility/deltas.ts';
 import type { Satisfies } from '../../utility/misc.ts';
 import type { AssetManager } from '../assetManager.ts';
 import type { BoneType, CharacterView, LayerPriority, LegsPose } from '../graphics/index.ts';
@@ -169,6 +170,33 @@ export function ProduceAppearancePose(
 			}
 		}
 	});
+}
+
+// The code below needs to be updated if appearance pose's properties change
+type __satisfies__CalculateAppearancePosesDeltaKeys = Satisfies<keyof AppearancePose, 'bones' | 'leftArm' | 'rightArm' | 'armsOrder' | 'legs' | 'view'>;
+export function CalculateAppearancePosesDelta(assetManager: AssetManager, base: Immutable<AppearancePose>, target: Immutable<AppearancePose>): PartialAppearancePose {
+	const result: PartialAppearancePose = {};
+
+	for (const bone of assetManager.getAllBones()) {
+		if ((base.bones[bone.name] ?? 0) !== (target.bones[bone.name] ?? 0)) {
+			result.bones ??= {};
+			result.bones[bone.name] = (target.bones[bone.name] ?? 0);
+		}
+	}
+
+	result.leftArm = CalculateObjectKeysDelta(base.leftArm, target.leftArm);
+	result.rightArm = CalculateObjectKeysDelta(base.rightArm, target.rightArm);
+	result.armsOrder = CalculateObjectKeysDelta(base.armsOrder, target.armsOrder);
+
+	if (base.legs !== target.legs) {
+		result.legs = target.legs;
+	}
+
+	if (base.view !== target.view) {
+		result.view = target.view;
+	}
+
+	return result;
 }
 
 /**

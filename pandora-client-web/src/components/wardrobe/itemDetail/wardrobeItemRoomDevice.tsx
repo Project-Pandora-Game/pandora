@@ -8,6 +8,7 @@ import {
 	ItemPath,
 	RoomDeviceDeploymentPosition,
 	RoomDeviceSlot,
+	type AppearanceAction,
 } from 'pandora-common';
 import { ReactElement, ReactNode, useCallback, useMemo, useState } from 'react';
 import { ICharacter } from '../../../character/character.ts';
@@ -79,12 +80,13 @@ function WardrobeRoomDeviceDeploymentPosition({ deployment, item }: {
 	const [positionY, setPositionY] = useUpdatedUserInput(deployment.y, [item]);
 	const [positionYOffset, setPositionYOffset] = useUpdatedUserInput(deployment.yOffset, [item]);
 
-	const checkResult = useStaggeredAppearanceActionResult({
+	const checkAction = useMemo((): AppearanceAction => ({
 		type: 'roomDeviceDeploy',
 		target: targetSelector,
 		item,
 		deployment: { deployed: true, position: deployment },
-	});
+	}), [targetSelector, item, deployment]);
+	const checkResult = useStaggeredAppearanceActionResult(checkAction);
 	const disabled = checkResult == null || !checkResult.valid || checkResult.getActionSlowdownTime() > 0;
 
 	const onChangeCaller = useCallback((newPosition: Immutable<RoomDeviceDeploymentPosition>) => {

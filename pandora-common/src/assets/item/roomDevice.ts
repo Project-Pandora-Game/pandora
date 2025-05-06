@@ -4,12 +4,13 @@ import { z } from 'zod';
 
 import type { AppearanceModuleActionContext } from '../../gameLogic/actionLogic/appearanceActions.ts';
 import type { HexRGBAColorString } from '../../validation.ts';
-import type { AppearanceItems, AppearanceValidationResult } from '../appearanceValidation.ts';
+import type { AppearanceValidationResult } from '../appearanceValidation.ts';
 import type { Asset } from '../asset.ts';
 import type { RoomDeviceModuleStaticData } from '../definitions.ts';
 import type { IExportOptions, IItemModule } from '../modules/common.ts';
 import type { AssetProperties } from '../properties.ts';
 import type { IItemLoadContext, IItemValidationContext, ItemBundle, ItemTemplate } from './base.ts';
+import type { AppearanceItems } from './items.ts';
 
 import { CharacterId, CharacterIdSchema } from '../../character/characterTypes.ts';
 import { MemoizeNoArg } from '../../utility/misc.ts';

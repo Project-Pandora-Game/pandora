@@ -1,4 +1,5 @@
 export * from './characterModifierBaseData.ts';
+export * from './characterModifierClientData.ts';
 export * from './characterModifierData.ts';
 export * from './characterModifierInstance.ts';
 export * from './characterModifierLocks.ts';

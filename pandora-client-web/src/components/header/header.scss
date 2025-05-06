@@ -15,6 +15,26 @@
 
 		&.rightHeader, &.leftHeader {
 			align-items: stretch;
+
+			.currentCharacter {
+				display: flex;
+				height: 100%;
+				padding: 1px;
+				gap: 1px;
+				border-width: 1px;
+
+				.avatar {
+					height: 100%;
+					aspect-ratio: 1;
+					object-fit: contain;
+					contain: size;
+				}
+
+				&:hover img {
+					filter: brightness(80%);
+				}
+			}
+
 		}
 
 		.label {
@@ -26,7 +46,7 @@
 		@include common.center-flex;
 		min-width: 6em;
 		min-height: HeaderButton.$header-button-height;
-		padding: 0 1em;
+		padding: 0 0.5em;
 	}
 
 	.collapsableHeaderButton {
@@ -89,11 +109,27 @@
 			}
 
 			> span {
-				justify-content: center;
+				padding: 0 1em 0 3.7em;
 			}
 
 			.label {
 				padding: 0 0.2em;
+			}
+
+			.currentCharacter {
+				display: flex;
+
+				.avatar {
+					height: 2.1em;
+					aspect-ratio: 1;
+					margin: 0 0.2em;
+					object-fit: contain;
+					contain: size;
+				}
+
+				&:hover img {
+					filter: brightness(80%);
+				}
 			}
 		}
 	}

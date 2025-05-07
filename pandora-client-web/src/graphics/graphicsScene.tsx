@@ -1,18 +1,16 @@
 import classNames from 'classnames';
 import { CharacterSize } from 'pandora-common';
-import { type Application, Filter } from 'pixi.js';
+import { type Application } from 'pixi.js';
 import React, { Context, ReactElement, ReactNode, Ref, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useImageResolutionAlternative } from '../assets/assetGraphicsCalculations.ts';
 import { ChildrenProps } from '../common/reactTypes.ts';
 import { LocalErrorBoundary } from '../components/error/localErrorBoundary.tsx';
-import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback } from './baseComponents/pixiViewport.tsx';
-import { Sprite } from './baseComponents/sprite.ts';
+import { PixiViewport, PixiViewportRef, PixiViewportSetupCallback, type PixiViewportProps } from './baseComponents/pixiViewport.tsx';
 import { GraphicsSceneRendererShared } from './graphicsSceneRenderer.tsx';
 import { useGraphicsSettings } from './graphicsSettings.tsx';
-import { useTexture } from './useTexture.ts';
 
 export type GraphicsSceneProps = {
 	viewportConfig?: PixiViewportSetupCallback;
+	viewportOnMove?: PixiViewportProps['onMove'];
 	viewportRef?: Ref<PixiViewportRef>;
 	worldWidth?: number;
 	worldHeight?: number;
@@ -31,6 +29,7 @@ function GraphicsSceneCore({
 	div,
 	resolution,
 	viewportConfig,
+	viewportOnMove,
 	viewportRef,
 	worldWidth,
 	worldHeight,
@@ -106,80 +105,13 @@ function GraphicsSceneCore({
 				worldWidth={ worldWidth ?? CharacterSize.WIDTH }
 				worldHeight={ worldHeight ?? CharacterSize.HEIGHT }
 				setup={ viewportSetup }
+				onMove={ viewportOnMove }
 				ref={ viewportRef }
 				sortableChildren
 			>
 				{ children }
 			</PixiViewport>
 		</GraphicsSceneRendererShared>
-	);
-}
-
-export function GraphicsBackground({
-	background,
-	backgroundSize,
-	backgroundFilters,
-	zIndex,
-	x,
-	y,
-}: {
-	background?: string | number;
-	backgroundSize?: readonly [number, number];
-	backgroundFilters?: Filter[];
-	zIndex?: number;
-	x?: number;
-	y?: number;
-}): ReactElement | null {
-	const backgroundResult = useMemo<{
-		backgroundTint: number;
-		backgroundAlpha: number;
-		backgroundImage: string;
-	}>(() => {
-		// Number is color in pixi format
-		if (typeof background === 'number') {
-			return {
-				backgroundTint: background,
-				backgroundAlpha: 1,
-				backgroundImage: '*',
-			};
-		}
-		// If background is not defined, use default one
-		if (!background) {
-			return {
-				backgroundTint: DEFAULT_BACKGROUND_COLOR,
-				backgroundAlpha: 1,
-				backgroundImage: '*',
-			};
-		}
-		// Parse color in hex format, with optional alpha
-		if (/^#[0-9a-f]{6}([0-9a-f]{2})?$/i.test(background)) {
-			return {
-				backgroundTint: parseInt(background.substring(1, 7), 16),
-				backgroundAlpha: background.length > 7 ? (parseInt(background.substring(7, 9), 16) / 255) : 1,
-				backgroundImage: '*',
-			};
-		}
-		// Otherwise try to use background as image path
-		return {
-			backgroundTint: 0xffffff,
-			backgroundAlpha: 1,
-			backgroundImage: background,
-		};
-	}, [background]);
-
-	const backgroundTexture = useTexture(useImageResolutionAlternative(backgroundResult.backgroundImage).image, true);
-
-	return (
-		<Sprite
-			x={ x ?? 0 }
-			y={ y ?? 0 }
-			width={ backgroundSize?.[0] }
-			height={ backgroundSize?.[1] }
-			zIndex={ zIndex }
-			texture={ backgroundTexture }
-			tint={ backgroundResult.backgroundTint }
-			filters={ backgroundFilters }
-		/>
 	);
 }
 

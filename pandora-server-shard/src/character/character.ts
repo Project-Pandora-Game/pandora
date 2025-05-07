@@ -16,11 +16,9 @@ import {
 	CharacterDataShardSchema,
 	CharacterId,
 	CharacterRestrictionsManager,
-	CharacterRoomPosition,
 	CleanupAssetPreferences,
 	CloneDeepMutable,
 	GameLogicCharacterServer,
-	GenerateInitialRoomPosition,
 	GetDefaultAppearanceBundle,
 	GetLogger,
 	ICharacterDataShardUpdate,
@@ -32,13 +30,11 @@ import {
 	IShardCharacterDefinition,
 	IShardClientChangeEvents,
 	IsAuthorized,
-	IsValidRoomPosition,
 	KnownObject,
 	Logger,
 	NOT_NARROWING_FALSE,
-	ROOM_INVENTORY_BUNDLE_DEFAULT,
+	ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE,
 	ResolveAssetPreference,
-	RoomBackgroundData,
 	SpaceId,
 	type AppearanceActionProcessingResult,
 	type CharacterSettings,
@@ -170,25 +166,6 @@ export class Character {
 
 	private logger: Logger;
 
-	public set position(value: CharacterRoomPosition) {
-		this.data.position = value;
-		this.modified.add('position');
-	}
-
-	public get position(): CharacterRoomPosition {
-		return this.data.position;
-	}
-
-	public initRoomPosition(spaceId: SpaceId | null, roomBackground: Immutable<RoomBackgroundData>) {
-		if (this.data.roomId === spaceId && IsValidRoomPosition(roomBackground, this.data.position)) {
-			return;
-		}
-		this.data.roomId = spaceId;
-		this.data.position = GenerateInitialRoomPosition(roomBackground);
-		this.modified.add('roomId');
-		this.modified.add('position');
-	}
-
 	constructor(data: ICharacterDataShard, account: IShardAccountDefinition, connectSecret: string | null, spaceId: SpaceId | null) {
 		this.logger = GetLogger('Character', `[Character ${data.id}]`);
 		this.data = data;
@@ -196,7 +173,7 @@ export class Character {
 		this.connectSecret = connectSecret;
 		this.lastOnline = Date.now();
 
-		this._personalSpace = new PersonalSpace(this, data.personalRoom?.inventory ?? CloneDeepMutable(ROOM_INVENTORY_BUNDLE_DEFAULT));
+		this._personalSpace = new PersonalSpace(this, data.personalRoom?.inventory ?? CloneDeepMutable(ROOM_INVENTORY_BUNDLE_DEFAULT_PERSONAL_SPACE));
 
 		const originalInteractionConfig = data.interactionConfig;
 		const originalAssetPreferencesConfig = CloneDeepMutable(data.assetPreferences);
@@ -277,6 +254,7 @@ export class Character {
 		if (data.account.id !== this.data.accountId) {
 			throw new Error('Character update changes account');
 		}
+		const oldData = this.accountData;
 		this.accountData = data.account;
 		if (data.accessId !== this.data.accessId) {
 			this.logger.warning('Access id changed! This could be a bug');
@@ -311,6 +289,11 @@ export class Character {
 			}
 		}
 		this.linkSpace(data.space);
+		if (data.account.displayName !== oldData.displayName) {
+			this._sendDataUpdate({
+				accountDisplayName: data.account.displayName,
+			});
+		}
 	}
 
 	public isAuthorized(role: AccountRole): boolean {
@@ -479,9 +462,9 @@ export class Character {
 		return {
 			id: this.id,
 			accountId: this.accountId,
+			accountDisplayName: this.accountData.displayName,
 			name: this.name,
 			profileDescription: this.profileDescription,
-			position: this.position,
 			publicSettings: cloneDeep(pick(this.data.settings, CHARACTER_PUBLIC_SETTINGS)),
 			isOnline: this.isOnline,
 			assetPreferences: this.assetPreferences,

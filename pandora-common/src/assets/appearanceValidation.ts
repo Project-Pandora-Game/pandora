@@ -101,7 +101,7 @@ export function AppearanceValidateRequirements(attributes: ReadonlySet<string>, 
 }
 
 /** Validates items prefix, ignoring required items */
-export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>, roomState: AssetFrameworkRoomState | null): AppearanceValidationResult {
+export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>, roomState: AssetFrameworkRoomState): AppearanceValidationResult {
 	// Bodypart validation
 
 	// Check bodypart order
@@ -191,7 +191,7 @@ export function ValidateAppearanceItemsPrefix(assetManager: AssetManager, items:
 }
 
 /** Validates the appearance items, including all prefixes and required items */
-export function ValidateAppearanceItems(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>, roomState: AssetFrameworkRoomState | null): AppearanceValidationResult {
+export function ValidateAppearanceItems(assetManager: AssetManager, items: AppearanceItems<WearableAssetType>, roomState: AssetFrameworkRoomState): AppearanceValidationResult {
 	// Validate prefixes
 	for (let i = 1; i <= items.length; i++) {
 		const r = ValidateAppearanceItemsPrefix(assetManager, items.slice(0, i), roomState);
@@ -214,7 +214,7 @@ export function ValidateAppearanceItems(assetManager: AssetManager, items: Appea
 	return { success: true };
 }
 
-export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, owner: { id: CharacterId; }, roomState: AssetFrameworkRoomState | null, logger?: Logger): AppearanceItems<WearableAssetType> {
+export function CharacterAppearanceLoadAndValidate(assetManager: AssetManager, originalInput: AppearanceItems, owner: { id: CharacterId; }, roomState: AssetFrameworkRoomState, logger?: Logger): AppearanceItems<WearableAssetType> {
 	// First sort input so bodyparts are ordered correctly work
 	const input = AppearanceItemsFixBodypartOrder(assetManager, originalInput);
 

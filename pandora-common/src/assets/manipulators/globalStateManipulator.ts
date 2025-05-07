@@ -39,6 +39,15 @@ export class AssetFrameworkGlobalStateManipulator {
 		return true;
 	}
 
+	public produceMapCharacters(producer: (character: AssetFrameworkCharacterState) => AssetFrameworkCharacterState | null): boolean {
+		for (const id of Array.from(this.currentState.characters.keys())) {
+			if (!this.produceCharacterState(id, producer))
+				return false;
+		}
+
+		return true;
+	}
+
 	public produceRoomState(producer: (currentState: AssetFrameworkRoomState) => AssetFrameworkRoomState | null): boolean {
 		const newState = this.currentState.produceRoomState(producer);
 

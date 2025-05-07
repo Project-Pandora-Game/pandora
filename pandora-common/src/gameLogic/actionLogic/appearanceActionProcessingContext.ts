@@ -19,6 +19,7 @@ import { RoomInventory } from '../../assets/roomInventory.ts';
 import type { AssetFrameworkGlobalState } from '../../assets/state/globalState.ts';
 import type { CharacterId, CharacterRestrictionsManager } from '../../character/index.ts';
 import type { ItemInteractionType, Restriction } from '../../character/restrictionTypes.ts';
+import type { ActionSpaceContext } from '../../space/index.ts';
 import { Assert, AssertNever, AssertNotNullable } from '../../utility/misc.ts';
 import type { AppearanceAction, GameLogicCharacter, GameLogicPermission, InteractionId } from '../index.ts';
 import type { AppearanceActionData, AppearanceActionProblem, InvalidActionReason } from './appearanceActionProblems.ts';
@@ -91,7 +92,7 @@ export class AppearanceActionProcessingContext {
 		if (char == null)
 			return null;
 
-		return char.getRestrictionManager(this.manipulator.currentState, this._context.spaceContext);
+		return char.getRestrictionManager(this.manipulator.currentState, this.getSpaceContext());
 	}
 
 	public getTargetCharacter(target: ActionCharacterSelector): ActionTargetCharacter | null {
@@ -117,6 +118,10 @@ export class AppearanceActionProcessingContext {
 		}
 
 		AssertNever(target);
+	}
+
+	public getSpaceContext(): ActionSpaceContext {
+		return this._context.spaceContext;
 	}
 
 	public queueMessage(message: ActionHandlerMessageWithTarget): void {
@@ -232,7 +237,8 @@ export class AppearanceActionProcessingContext {
 	}
 
 	public finalize(): AppearanceActionProcessingResultValid | AppearanceActionProcessingResultInvalid {
-		const validationResult = this.manipulator.currentState.validate();
+		const resultState = this.manipulator.currentState.runAutomaticActions();
+		const validationResult = resultState.validate();
 		if (!validationResult.success) {
 			this.addProblem({
 				result: 'validationError',
@@ -242,7 +248,7 @@ export class AppearanceActionProcessingContext {
 		if (this._actionProblems.length > 0)
 			return new AppearanceActionProcessingResultInvalid(this);
 
-		return new AppearanceActionProcessingResultValid(this, this.manipulator.currentState);
+		return new AppearanceActionProcessingResultValid(this, resultState);
 	}
 
 	/**

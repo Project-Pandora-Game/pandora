@@ -6,13 +6,13 @@ export function TestCreateGameLogicCharacter(accountId: AccountId, id: Character
 	const CHARACTER_DATA: Immutable<ICharacterRoomData> = {
 		id,
 		accountId,
+		accountDisplayName: `Test${accountId}`,
 		name: `Test${id.toUpperCase()}`,
 		profileDescription: '',
 		assetPreferences: {
 			assets: {},
 			attributes: {},
 		},
-		position: [0, 0, 0],
 		publicSettings: {},
 		isOnline: true,
 	};

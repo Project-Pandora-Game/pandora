@@ -1,13 +1,9 @@
-import { cloneDeep } from 'lodash-es';
-import { AccountId, DEFAULT_BACKGROUND, GetLogger, RoomInventoryBundle, SpaceDirectoryConfig } from 'pandora-common';
-import { assetManager } from '../assets/assetManager.ts';
+import { AccountId, GetLogger, RoomInventoryBundle, SpaceDirectoryConfig } from 'pandora-common';
 import { Character } from '../character/character.ts';
 import { Space } from './space.ts';
 
 export class PersonalSpace extends Space {
 	private readonly _character: Character;
-
-	public readonly id: null = null;
 
 	public override get owners(): readonly AccountId[] {
 		return [this._character.accountId];
@@ -26,15 +22,12 @@ export class PersonalSpace extends Space {
 			banned: [],
 			admin: [],
 			allow: [],
-			// Try to use the first background (if there is some)
-			// otherwise default to the default, solid-color background (important for tests that don't have any assets).
-			background: assetManager.getBackgrounds()[0].id ?? cloneDeep(DEFAULT_BACKGROUND),
 			ghostManagement: null,
 		};
 	}
 
 	constructor(character: Character, inventory: RoomInventoryBundle) {
-		super(inventory, GetLogger('Space', `[PersonalSpace ${character.id}]`));
+		super(null, inventory, GetLogger('Space', `[PersonalSpace ${character.id}]`));
 		this._character = character;
 	}
 

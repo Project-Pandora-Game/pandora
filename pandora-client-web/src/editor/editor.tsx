@@ -68,19 +68,21 @@ export class Editor extends TypedEventEmitter<{
 			}
 		});
 
+		const spaceState = AssetFrameworkRoomState.createDefault(assetManager, null);
 		this.globalState = new AssetFrameworkGlobalStateContainer(
 			logger.prefixMessages('[Asset framework state]'),
 			() => {
 				this.emit('globalStateChange', true);
 			},
 			AssetFrameworkGlobalState
-				.createDefault(assetManager, AssetFrameworkRoomState.createDefault(assetManager))
+				.createDefault(assetManager, spaceState)
 				.withCharacter(
 					EDITOR_CHARACTER_ID,
 					AssetFrameworkCharacterState
-						.createDefault(assetManager, EDITOR_CHARACTER_ID)
+						.createDefault(assetManager, EDITOR_CHARACTER_ID, spaceState)
 						.produceWithRestrictionOverride({ type: 'safemode', allowLeaveAt: 0 }),
-				),
+				)
+				.runAutomaticActions(),
 		);
 
 		this.character = new EditorCharacter(this);

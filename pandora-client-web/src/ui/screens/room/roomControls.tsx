@@ -2,6 +2,7 @@ import { AssertNotNullable, CHARACTER_SETTINGS_DEFAULT, ICharacterRoomData } fro
 import React, {
 	ReactElement, useCallback,
 	useMemo,
+	useState,
 	type ReactNode,
 } from 'react';
 import { useLocation } from 'react-router';
@@ -27,6 +28,7 @@ import { useObservable } from '../../../observable.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useChatInput } from '../../components/chat/chatInput.tsx';
 import { PrivateRoomTutorialList } from '../../tutorial/privateTutorials.tsx';
+import { BackgroundSelectDialog } from '../spaceConfiguration/backgroundSelect.tsx';
 import { CharacterPreviewGenerationButton } from './characterPreviewGeneration.tsx';
 import { useRoomScreenContext } from './roomContext.tsx';
 import { ChatroomDebugConfigView } from './roomDebug.tsx';
@@ -111,6 +113,10 @@ export function PersonalSpaceControls(): ReactElement {
 	const navigate = useNavigatePandora();
 	const player = usePlayer();
 	AssertNotNullable(player);
+	const gameState = useGameState();
+	const globalState = useGlobalState(gameState);
+
+	const [showBackgrounds, setShowBackgrounds] = useState(false);
 
 	return (
 		<Column padding='medium' className='controls'>
@@ -152,6 +158,15 @@ export function PersonalSpaceControls(): ReactElement {
 				<Button onClick={ () => navigate('/wardrobe/room-inventory') } >
 					<img src={ storageIcon } />Room inventory
 				</Button>
+				<Button
+					onClick={ () => setShowBackgrounds(true) }
+				>
+					Change room background
+				</Button>
+				{ showBackgrounds ? <BackgroundSelectDialog
+					hide={ () => setShowBackgrounds(false) }
+					current={ globalState.room.roomGeometryConfig }
+				/> : null }
 			</Row>
 			<div className='character-info'>
 				<DisplayCharacter char={ player } />

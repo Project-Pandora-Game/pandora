@@ -8,9 +8,9 @@ import './accountContacts.scss';
 const ACCOUNT_CONTACTS = new Observable<readonly IAccountContact[]>([]);
 const FRIEND_STATUS = new Observable<readonly IAccountFriendStatus[]>([]);
 
-export function useAccountContacts(type: IAccountContact['type']) {
+export function useAccountContacts(type: IAccountContact['type'] | null) {
 	const rel = useObservable(ACCOUNT_CONTACTS);
-	return useMemo(() => rel.filter((r) => r.type === type), [rel, type]);
+	return useMemo(() => (type === null ? rel : rel.filter((r) => r.type === type)), [rel, type]);
 }
 
 export function useAccountContact(id: AccountId): IAccountContact | undefined {

@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import { clamp, isObject, sortBy } from 'lodash-es';
 import { GetLogger } from 'pandora-common';
-import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type Ref } from 'react';
+import React, { createContext, ReactElement, ReactNode, useCallback, useContext, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, type Ref } from 'react';
 import { createHtmlPortalNode, HtmlPortalNode, InPortal, OutPortal } from 'react-reverse-portal';
 import { Rnd } from 'react-rnd';
 import crossIcon from '../../assets/icons/cross.svg';
@@ -32,6 +32,8 @@ type PortalEntry = {
 };
 
 const PORTALS = new Observable<readonly PortalEntry[]>([]);
+
+export const DraggableDialogPriorityContext = createContext(-1);
 
 export function Dialogs({ location }: {
 	location: DialogLocation;
@@ -159,11 +161,13 @@ export function ModalDialog({ children, priority, position = 'center', contentOv
 
 	return (
 		<DialogInPortal priority={ priority }>
-			<div id={ id } className={ classNames('dialog', position, className) } onClick={ clickSink } onPointerDown={ clickSink } onPointerUp={ clickSink }>
-				<div className={ classNames('dialog-content', `overflow-${contentOverflow}`) } >
-					{ children }
+			<DraggableDialogPriorityContext.Provider value={ (priority ?? 0) + 1 }>
+				<div id={ id } className={ classNames('dialog', position, className) } onClick={ clickSink } onPointerDown={ clickSink } onPointerUp={ clickSink }>
+					<div className={ classNames('dialog-content', `overflow-${contentOverflow}`) } >
+						{ children }
+					</div>
 				</div>
-			</div>
+			</DraggableDialogPriorityContext.Provider>
 		</DialogInPortal>
 	);
 }
@@ -320,8 +324,10 @@ export function DraggableDialog({
 		}
 	}, []);
 
+	const priority = useContext(DraggableDialogPriorityContext);
+
 	return (
-		<DialogInPortal priority={ -1 } ref={ portalRef } onMount={ onMount }>
+		<DialogInPortal priority={ priority } ref={ portalRef } onMount={ onMount }>
 			<div
 				className={ modal ? 'overlay-bounding-box modal' : 'overlay-bounding-box' }
 				// Prevent clicks from bubbling through the portal

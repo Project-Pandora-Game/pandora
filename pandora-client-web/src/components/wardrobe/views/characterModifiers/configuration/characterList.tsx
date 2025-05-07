@@ -4,7 +4,7 @@ import { CharacterModifierBuildConfigurationSchemaSingle } from 'pandora-common/
 import type { ReactElement } from 'react';
 import { useMemo } from 'react';
 import type { Promisable } from 'type-fest';
-import { CharacterListInput } from '../../../../common/characterListInput/characterListInput.tsx';
+import { CharacterListInput } from '../../../../../ui/components/characterListInput/characterListInput.tsx';
 import { FieldsetToggle } from '../../../../common/fieldsetToggle/index.tsx';
 
 export function WardrobeCharacterModifierConfigCharacterList({ definition, value, onChange }: {

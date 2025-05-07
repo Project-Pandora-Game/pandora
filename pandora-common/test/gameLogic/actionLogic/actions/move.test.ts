@@ -9,8 +9,8 @@ describe('ActionMoveItem', () => {
 	it('Reorders item downwards', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character, [
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room, [
 				'a/panties/style1',
 				'a/panties/style1',
 				'a/headwear/top_hat',
@@ -46,8 +46,8 @@ describe('ActionMoveItem', () => {
 	it('Reorders item downwards by more than one', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character, [
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room, [
 				'a/panties/style1',
 				'a/panties/style1',
 				'a/headwear/top_hat',
@@ -83,8 +83,8 @@ describe('ActionMoveItem', () => {
 	it('Reorders item upwards', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character, [
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room, [
 				'a/headwear/top_hat',
 				'a/panties/style1',
 				'a/panties/style1',
@@ -120,8 +120,8 @@ describe('ActionMoveItem', () => {
 	it('Reorders item upwards by more than one', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character, [
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room, [
 				'a/headwear/top_hat',
 				'a/panties/style1',
 				'a/panties/style1',
@@ -157,8 +157,8 @@ describe('ActionMoveItem', () => {
 	it('Fails if reordering between bodyparts', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character, [
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room, [
 				'a/panties/style1',
 				'a/panties/style1',
 				'a/headwear/top_hat',
@@ -193,8 +193,8 @@ describe('ActionMoveItem', () => {
 	it('Fails if reordering out of bounds downwards', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character, [
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room, [
 				'a/panties/style1',
 				'a/panties/style1',
 				'a/headwear/top_hat',
@@ -229,8 +229,8 @@ describe('ActionMoveItem', () => {
 	it('Fails if reordering out of bounds upwards', () => {
 		const assetManager = TestAssetsLoadAssetManager();
 		const character = TestCreateGameLogicCharacter(1, 'c1');
-		const baseState = TestCreateGlobalState(assetManager, [
-			TestCreateCharacterState(assetManager, character, [
+		const baseState = TestCreateGlobalState(assetManager, null, [
+			(room) => TestCreateCharacterState(assetManager, character, room, [
 				'a/headwear/top_hat',
 				'a/panties/style1',
 				'a/panties/style1',

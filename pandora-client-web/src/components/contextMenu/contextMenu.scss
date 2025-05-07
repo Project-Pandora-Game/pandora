@@ -37,6 +37,10 @@ $context-menu-themes: (
 		@include common.center-flex;
 		margin: 0;
 		padding: 0.2em 0.5em;
+
+		&.dim {
+			color: common.$theme-normal-text-dim;
+		}
 	}
 
 	button {

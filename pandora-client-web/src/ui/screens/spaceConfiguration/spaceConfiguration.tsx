@@ -1,67 +1,67 @@
+import classNames from 'classnames';
 import { Immutable } from 'immer';
-import { noop, uniq } from 'lodash-es';
+import { noop } from 'lodash-es';
 import {
 	AccountId,
 	AssertNever,
 	AssertNotNullable,
-	AssetManager,
 	CloneDeepMutable,
-	DEFAULT_BACKGROUND,
 	EMPTY,
 	FormatTimeInterval,
 	GetLogger,
 	IDirectoryShardInfo,
 	IsAuthorized,
-	IsObject,
 	LIMIT_SPACE_DESCRIPTION_LENGTH,
 	LIMIT_SPACE_ENTRYTEXT_LENGTH,
 	LIMIT_SPACE_MAX_CHARACTER_NUMBER,
 	LIMIT_SPACE_NAME_LENGTH,
-	RoomBackgroundInfo,
-	RoomBackgroundTagDefinition,
 	SpaceBaseInfoSchema,
 	SpaceDirectoryConfig,
+	SpaceDirectoryConfigSchema,
 	SpaceFeature,
 	SpaceGhostManagementConfigSchema,
 	SpaceId,
 	SpaceInvite,
 	SpacePublicSettingSchema,
 	ZodMatcher,
+	type AssetFrameworkGlobalState,
 	type CurrentSpaceInfo,
+	type IDirectoryAccountInfo,
+	type RoomBackgroundData,
 	type SpaceGhostManagementConfig,
 } from 'pandora-common';
 import React, { ReactElement, ReactNode, useCallback, useEffect, useId, useMemo, useReducer, useRef, useState } from 'react';
-import { Link, Navigate } from 'react-router';
+import { Navigate } from 'react-router';
 import { toast } from 'react-toastify';
-import { GetAssetsSourceUrl, useAssetManager } from '../../../assets/assetManager.tsx';
+import { GetAssetsSourceUrl } from '../../../assets/assetManager.tsx';
 import { CopyToClipboard } from '../../../common/clipboard.ts';
 import { useCurrentTime } from '../../../common/useCurrentTime.ts';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
-import { useInputAutofocus } from '../../../common/userInteraction/inputAutofocus.ts';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
-import { ColorInput } from '../../../components/common/colorInput/colorInput.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
-import { FieldsetToggle } from '../../../components/common/fieldsetToggle/index.tsx';
-import { SelectionIndicator } from '../../../components/common/selectionIndicator/selectionIndicator.tsx';
 import { Tab, TabContainer } from '../../../components/common/tabs/tabs.tsx';
 import { ModalDialog, useConfirmDialog } from '../../../components/dialog/dialog.tsx';
 import {
 	useDirectoryChangeListener,
 	useDirectoryConnector,
 } from '../../../components/gameContext/directoryConnectorContextProvider.tsx';
-import { IsSpaceAdmin, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { IsSpaceAdmin, useGameState, useGlobalState, useSpaceInfo } from '../../../components/gameContext/gameStateContextProvider.tsx';
+import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { SelectSettingInput } from '../../../components/settings/helpers/settingsInputs.tsx';
+import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
 import bodyChange from '../../../icons/body-change.svg';
 import devMode from '../../../icons/developer.svg';
 import { DirectoryConnector } from '../../../networking/directoryConnector.ts';
 import { PersistentToast, TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
+import { AccountListInput } from '../../components/accountListInput/accountListInput.tsx';
+import { BackgroundSelectDialog } from './backgroundSelect.tsx';
 import './spaceConfiguration.scss';
 
 export const DESCRIPTION_TEXTBOX_SIZE = 16;
@@ -81,7 +81,6 @@ function DefaultConfig(): SpaceDirectoryConfig {
 		allow: [],
 		public: 'private',
 		features: [],
-		background: CloneDeepMutable(DEFAULT_BACKGROUND),
 		ghostManagement: null,
 	};
 }
@@ -104,12 +103,12 @@ export function SpaceCreate(): ReactElement {
 }
 
 export function SpaceConfiguration({ creation = false }: { creation?: boolean; } = {}): ReactElement | null {
-	const idPrefix = useId();
-
 	const navigate = useNavigatePandora();
+	const create = useCreateSpace();
+	const directoryConnector = useDirectoryConnector();
+
 	const currentAccount = useCurrentAccount();
 	AssertNotNullable(currentAccount);
-	const create = useCreateSpace();
 	let currentSpaceInfo: Immutable<CurrentSpaceInfo> | null = useSpaceInfo();
 	const lastSpaceId = useRef<SpaceId>(null);
 	const isInPublicSpace = currentSpaceInfo.id != null;
@@ -122,7 +121,11 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 			lastSpaceId.current = currentSpaceInfo.id;
 		}
 	}
-	const [modifiedData, setModifiedData] = useReducer((oldState: Partial<SpaceDirectoryConfig>, action: Partial<SpaceDirectoryConfig>) => {
+
+	const isPlayerAdmin = creation || currentSpaceInfo == null || IsSpaceAdmin(currentSpaceInfo.config, currentAccount);
+	const canEdit = isPlayerAdmin && (creation || currentSpaceInfo?.id != null);
+
+	const [modifiedData, updateConfig] = useReducer((oldState: Partial<SpaceDirectoryConfig>, action: Partial<SpaceDirectoryConfig>) => {
 		const result: Partial<SpaceDirectoryConfig> = {
 			...oldState,
 			...action,
@@ -139,26 +142,337 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 		}
 		return result;
 	}, {});
-	const directoryConnector = useDirectoryConnector();
-	const shards = useShards();
-	const accountId = currentAccount.id;
-	const [showBackgrounds, setShowBackgrounds] = useState(false);
+	const [showCommitDialog, setShowCommitDialog] = useState(false);
 
-	const currentConfig: SpaceDirectoryConfig = useMemo(() => ({
-		...(CloneDeepMutable(currentSpaceInfo?.config ?? DefaultConfig())),
+	const currentConfig = useMemo((): Immutable<SpaceDirectoryConfig> => canEdit ? ({
+		...(currentSpaceInfo?.config ?? DefaultConfig()),
 		...modifiedData,
-	}), [currentSpaceInfo, modifiedData]);
-	const currentSpaceId: SpaceId | null = currentSpaceInfo?.id ?? null;
+	}) : (currentSpaceInfo?.config ?? DefaultConfig()), [canEdit, currentSpaceInfo, modifiedData]);
 
-	const isPlayerOwner = !!(creation || accountId && currentSpaceInfo?.config.owners.includes(accountId));
-	const isPlayerAdmin = creation || currentSpaceInfo == null || IsSpaceAdmin(currentSpaceInfo.config, currentAccount);
-	const canEdit = isPlayerAdmin && (creation || currentSpaceId != null);
+	const close = useCallback(() => {
+		navigate(creation ? '/spaces/search' : '/room');
+	}, [creation, navigate]);
 
+	const [commit, processingCommit] = useAsyncEvent(async () => {
+		if (creation) {
+			await create(CloneDeepMutable(currentConfig));
+		} else {
+			UpdateSpace(directoryConnector, modifiedData, () => navigate('/room'));
+		}
+	}, null);
+
+	const onCloseClick = useCallback(() => {
+		// If there is no pending modification, close immediately
+		if (!canEdit || Object.keys(modifiedData).length === 0) {
+			close();
+			return;
+		}
+		// Otherwise show close confirmation dialog
+		setShowCommitDialog(true);
+	}, [canEdit, close, modifiedData]);
+
+	const tabProps: SpaceConfigurationTabProps = {
+		creation,
+		canEdit,
+		currentConfig,
+		updateConfig,
+		currentAccount,
+		currentSpaceInfo,
+		isPlayerAdmin,
+	};
+
+	if (!creation && currentSpaceInfo != null && currentSpaceInfo.id !== lastSpaceId.current) {
+		// If space id changes abruptly, navigate to default view (this is likely some form of kick or the space stopping to exist)
+		return <Navigate to='/' />;
+	} else if (creation && isInPublicSpace) {
+		// If in a public space, you cannot make a new space directly (as you need to leave first)
+		return <Navigate to='/room' />;
+	}
+
+	return (
+		<div
+			className={ classNames(
+				'spaceConfigurationScreen',
+				creation ? 'creation' : 'configuration',
+			) }
+		>
+			<TabContainer className='flex-1' allowWrap>
+				<Tab name='General'>
+					<SpaceConfigurationTab { ...tabProps } element={ SpaceConfigurationGeneral } />
+				</Tab>
+				<Tab name='Rights management'>
+					<SpaceConfigurationTab { ...tabProps } element={ SpaceConfigurationRights } />
+				</Tab>
+				<Tab name='Room management'>
+					<SpaceConfigurationTab { ...tabProps } element={ SpaceConfigurationRoom } />
+				</Tab>
+				{
+					currentConfig.features.includes('development') && isDeveloper ? (
+						<Tab name='Development settings'>
+							<SpaceConfigurationTab { ...tabProps } element={ SpaceConfigurationDebug } />
+						</Tab>
+					) : null
+				}
+				<Tab name='◄ Close' tabClassName='slim' onClick={ onCloseClick } />
+			</TabContainer>
+			{
+				creation ? (
+					<Column padding='medium' alignX='center'>
+						<Button className='creationButton'
+							onClick={ commit }
+							disabled={ processingCommit }
+						>
+							Create space
+						</Button>
+					</Column>
+				) : null
+			}
+			{
+				showCommitDialog ? (
+					<ModalDialog>
+						<Column>
+							<h2>Unsaved changes</h2>
+							{
+								creation ? (
+									<p>Create a space with this configuration?</p>
+								) : (
+									<p>Confirm your changes to the space's configuration?</p>
+								)
+							}
+							<Row wrap gap='large' alignY='center'>
+								<Button
+									onClick={ close }
+									disabled={ processingCommit }
+								>
+									Discard all changes
+								</Button>
+								<Button
+									slim
+									onClick={ () => {
+										setShowCommitDialog(false);
+									} }
+									disabled={ processingCommit }
+								>
+									Edit the configuration further
+								</Button>
+								<Button
+									onClick={ commit }
+									disabled={ processingCommit }
+								>
+									{ creation ? 'Create space' : 'Update space' }
+								</Button>
+							</Row>
+						</Column>
+					</ModalDialog>
+				) : null
+			}
+		</div>
+	);
+}
+
+type SpaceConfigurationTabProps = {
+	creation: boolean;
+	canEdit: boolean;
+	currentConfig: Immutable<SpaceDirectoryConfig>;
+	updateConfig: (update: Partial<SpaceDirectoryConfig>) => void;
+	currentAccount: IDirectoryAccountInfo;
+	isPlayerAdmin: boolean;
+	currentSpaceInfo: Immutable<CurrentSpaceInfo> | null;
+};
+
+function SpaceConfigurationTab({ element: Element, ...props }: SpaceConfigurationTabProps & { element: (props: SpaceConfigurationTabProps) => ReactElement | null; }): ReactElement {
+	return (
+		<div className='tab-wrapper'>
+			<Column className='flex-1' alignX='center'>
+				<Column className='flex-grow-1' alignY='center' padding='large' gap='large'>
+					<Element { ...props } />
+				</Column>
+			</Column>
+		</div>
+	);
+}
+
+function SpaceConfigurationGeneral({
+	creation,
+	canEdit,
+	currentConfig,
+	updateConfig,
+}: SpaceConfigurationTabProps): ReactElement {
+	const idPrefix = useId();
+
+	return (
+		<>
+			<fieldset>
+				<legend>Space size</legend>
+				<div className='input-container'>
+					<label>(maximum number of characters allowed inside - from 1 to { LIMIT_SPACE_MAX_CHARACTER_NUMBER })</label>
+					<NumberInput
+						autoComplete='none'
+						value={ currentConfig.maxUsers }
+						min={ 1 }
+						max={ LIMIT_SPACE_MAX_CHARACTER_NUMBER }
+						readOnly={ !canEdit }
+						onChange={ (newValue) => updateConfig({ maxUsers: newValue }) }
+					/>
+				</div>
+			</fieldset>
+			<fieldset>
+				<legend>Space visibility</legend>
+				<div className='input-container'>
+					<label>
+						Finding and accessing this space
+						<ContextHelpButton>
+							<p>
+								This setting affects who can see and enter this space.<br />
+								It has the following options:
+							</p>
+							<h3>Locked</h3>
+							<ul>
+								<li>Owners, Admins and "Allowed users" users can see this space.</li>
+								<li>Owners and Admins can join at any time. They are asked for confirmation before entering.</li>
+								<li>"Join-me" invitations can be created only by Owners and Admins. Anyone can join using them.</li>
+								<li>"Space-bound" invitations cannot be used. Existing space-bound invitations are kept for when the space is unlocked.</li>
+							</ul>
+							<h3>Private</h3>
+							<ul>
+								<li>Owners, Admins and "Allowed users" users can see this space.</li>
+								<li>Owners, Admins and "Allowed users" users can join at any time.</li>
+								<li>"Join-me" invitations can be created only by Owners and Admins. Anyone can join using them.</li>
+								<li>"Space-bound" invitations can be used to join.</li>
+							</ul>
+							<h3>Public while an admin is inside</h3>
+							<ul>
+								<li>Anyone can see this space while there currently is an <strong>online admin</strong> inside. Otherwise only Owners, Admins and "Allowed users" users can see it.</li>
+								<li>Anyone non-banned who can see this space can join at any time.</li>
+								<li>"Join-me" invitations can be created and used by anyone.</li>
+								<li>"Space-bound" invitations can be used to join.</li>
+							</ul>
+							<h3>Public</h3>
+							<ul>
+								<li>Anyone can see this space while there currently is <strong>any online character</strong> inside. Otherwise only Owners, Admins and "Allowed users" users can see it.</li>
+								<li>Anyone non-banned who can see this space can join at any time.</li>
+								<li>"Join-me" invitations can be created and used by anyone.</li>
+								<li>"Space-bound" invitations can be used to join.</li>
+							</ul>
+						</ContextHelpButton>
+					</label>
+					<Select
+						className='contain-size'
+						value={ currentConfig.public }
+						onChange={ (e) => updateConfig({ public: SpacePublicSettingSchema.parse(e.target.value) }) }
+						noScrollChange
+						disabled={ !canEdit }
+					>
+						<option value='locked'>Locked</option>
+						<option value='private'>Private</option>
+						<option value='public-with-admin'>Public while an admin is inside</option>
+						<option value='public-with-anyone'>Public</option>
+					</Select>
+				</div>
+			</fieldset>
+			<fieldset>
+				<legend>Space presentation</legend>
+				<div className='input-container'>
+					<label>Space name ({ currentConfig.name.length }/{ LIMIT_SPACE_NAME_LENGTH } characters)</label>
+					<TextInput
+						autoComplete='none'
+						value={ currentConfig.name }
+						onChange={ (newValue) => updateConfig({ name: newValue }) }
+						readOnly={ !canEdit }
+					/>
+					{ canEdit && !IsValidName(currentConfig.name) ? (<div className='error'>Invalid name</div>) : null }
+				</div>
+				<div className='input-container'>
+					<label>Space description ({ currentConfig.description.length }/{ LIMIT_SPACE_DESCRIPTION_LENGTH } characters)</label>
+					<textarea
+						value={ currentConfig.description }
+						onChange={ (event) => updateConfig({ description: event.target.value }) }
+						readOnly={ !canEdit }
+						rows={ DESCRIPTION_TEXTBOX_SIZE }
+					/>
+					{ canEdit && !IsValidDescription(currentConfig.description) ? (<div className='error'>Invalid description</div>) : null }
+				</div>
+				<div className='input-container'>
+					<label>
+						Entry message
+						<ContextHelpButton>
+							<p>
+								This text is shown to a new player entering the space.<br />
+								Use it for a narrative, instructions, or to describe special features<br />
+								of the room, like things that are not shown, smells, temperature and so on.
+							</p>
+						</ContextHelpButton>
+						({ currentConfig.entryText.length }/{ LIMIT_SPACE_ENTRYTEXT_LENGTH } characters)
+					</label>
+					<textarea
+						value={ currentConfig.entryText }
+						onChange={ (event) => updateConfig({ entryText: event.target.value }) }
+						readOnly={ !canEdit }
+						rows={ ENTRY_TEXT_TEXTBOX_SIZE }
+					/>
+					{ canEdit && !IsValidEntryText(currentConfig.entryText) ? (<div className='error'>Invalid entry text</div>) : null }
+				</div>
+			</fieldset>
+			{
+				creation ? (
+					<div className='input-container'>
+						<label>Features (cannot be changed after creation)</label>
+						{
+							SPACE_FEATURES.map((feature) => (
+								<div key={ feature.id }>
+									<Checkbox
+										id={ `${idPrefix}-feature-${feature.id}` }
+										checked={ currentConfig.features.includes(feature.id) }
+										onChange={ (newValue) => {
+											if (newValue) {
+												if (!currentConfig.features.includes(feature.id)) {
+													updateConfig({ features: [...currentConfig.features, feature.id] });
+												}
+											} else {
+												updateConfig({ features: currentConfig.features.filter((f) => f !== feature.id) });
+											}
+										} }
+									/>
+									<label htmlFor={ `${idPrefix}-feature-${feature.id}` }> { feature.name }</label>
+								</div>
+							))
+						}
+					</div>
+				) : (
+					<div className='input-container'>
+						<label>Features (cannot be changed after creation)</label>
+						<ul>
+							{
+								SPACE_FEATURES
+									.filter((feature) => currentConfig.features.includes(feature.id))
+									.map((feature) => (
+										<li key={ feature.id }>{ feature.name }</li>
+									))
+							}
+						</ul>
+					</div>
+				)
+			}
+		</>
+	);
+}
+
+function SpaceConfigurationRights({
+	creation,
+	canEdit,
+	currentConfig,
+	updateConfig,
+	currentAccount,
+	currentSpaceInfo,
+	isPlayerAdmin,
+}: SpaceConfigurationTabProps): ReactElement {
+	const idPrefix = useId();
+
+	const accountId = currentAccount.id;
 	const owners: readonly AccountId[] = useMemo(() => (
 		creation ? [accountId] : (currentSpaceInfo?.config.owners ?? [])
 	), [creation, accountId, currentSpaceInfo]);
-
-	const currentConfigBackground = currentConfig.background;
+	const isPlayerOwner = !!(creation || accountId && currentSpaceInfo?.config.owners.includes(accountId));
 
 	const invalidBans = useMemo(() => ({
 		note: 'Owners and admins will be removed from the ban list automatically.',
@@ -176,347 +490,226 @@ export function SpaceConfiguration({ creation = false }: { creation?: boolean; }
 		],
 	}), [owners, currentConfig.admin, currentConfig.banned]);
 
-	if (!creation && currentSpaceInfo != null && currentSpaceInfo.id !== lastSpaceId.current) {
-		// If space id changes abruptly, navigate to default view (this is likely some form of kick or the space stopping to exist)
-		return <Navigate to='/' />;
-	} else if (creation && isInPublicSpace) {
-		// If in a public space, you cannot make a new space directly (as you need to leave first)
-		return <Navigate to='/room' />;
-	}
-
-	if (shards && currentConfig.development?.shardId && !shards.some((s) => s.id === currentConfig.development?.shardId)) {
-		delete currentConfig.development.shardId;
-	}
-
-	const configurableElements = (
+	return (
 		<>
-			<div className='input-container'>
-				<label>Space name ({ currentConfig.name.length }/{ LIMIT_SPACE_NAME_LENGTH } characters)</label>
-				<TextInput
-					autoComplete='none'
-					value={ currentConfig.name }
-					onChange={ (newValue) => setModifiedData({ name: newValue }) }
-					readOnly={ !canEdit }
-				/>
-				{ canEdit && !IsValidName(currentConfig.name) ? (<div className='error'>Invalid name</div>) : null }
-			</div>
-			<div className='input-container'>
-				<label>Space size (maximum number of characters allowed inside - from 1 to { LIMIT_SPACE_MAX_CHARACTER_NUMBER })</label>
-				<NumberInput
-					autoComplete='none'
-					value={ currentConfig.maxUsers }
-					min={ 1 }
-					max={ LIMIT_SPACE_MAX_CHARACTER_NUMBER }
-					readOnly={ !canEdit }
-					onChange={ (newValue) => setModifiedData({ maxUsers: newValue }) }
-				/>
-			</div>
-			<FieldsetToggle legend='Presentation and access'>
-				<div className='input-container'>
-					<label>Space description ({ currentConfig.description.length }/{ LIMIT_SPACE_DESCRIPTION_LENGTH } characters)</label>
-					<textarea
-						value={ currentConfig.description }
-						onChange={ (event) => setModifiedData({ description: event.target.value }) }
-						readOnly={ !canEdit }
-						rows={ DESCRIPTION_TEXTBOX_SIZE }
-					/>
-					{ canEdit && !IsValidDescription(currentConfig.description) ? (<div className='error'>Invalid description</div>) : null }
-				</div>
-				<div className='input-container'>
-					<label>
-						Entry text
-						<ContextHelpButton>
-							<p>
-								This text is shown to a new player entering the space.<br />
-								Use it to describe special features of the room, <br />
-								like things that are not shown, smells, temperature and so on.
-							</p>
-						</ContextHelpButton>
-						({ currentConfig.entryText.length }/{ LIMIT_SPACE_ENTRYTEXT_LENGTH } characters)
-					</label>
-					<textarea
-						value={ currentConfig.entryText }
-						onChange={ (event) => setModifiedData({ entryText: event.target.value }) }
-						readOnly={ !canEdit }
-						rows={ ENTRY_TEXT_TEXTBOX_SIZE }
-					/>
-					{ canEdit && !IsValidEntryText(currentConfig.entryText) ? (<div className='error'>Invalid entry text</div>) : null }
-				</div>
-				<div className='input-container'>
-					<label>
-						Space visibility
-						<ContextHelpButton>
-							<p>
-								This setting affects who can see and enter this space.<br />
-								It has the following options:
-							</p>
-							<h3>Locked</h3>
-							<ul>
-								<li>Owners, Admins and Allow-listed users can see this space.</li>
-								<li>Owners and Admins can join at any time. They are asked for confirmation before entering.</li>
-								<li>"Join-me" invitations can be created only by Owners and Admins. Anyone can join using them.</li>
-								<li>"Space-bound" invitations cannot be used. Existing space-bound invitations are kept for when the space is unlocked.</li>
-							</ul>
-							<h3>Private</h3>
-							<ul>
-								<li>Owners, Admins and Allow-listed users can see this space.</li>
-								<li>Owners, Admins and Allow-listed users can join at any time.</li>
-								<li>"Join-me" invitations can be created only by Owners and Admins. Anyone can join using them.</li>
-								<li>"Space-bound" invitations can be used to join.</li>
-							</ul>
-							<h3>Public while an admin is inside</h3>
-							<ul>
-								<li>Anyone can see this space while there currently is an <strong>online admin</strong> inside. Otherwise only Owners, Admins and Allow-listed users can see it.</li>
-								<li>Anyone non-banned who can see this space can join at any time.</li>
-								<li>"Join-me" invitations can be created and used by anyone.</li>
-								<li>"Space-bound" invitations can be used to join.</li>
-							</ul>
-							<h3>Public</h3>
-							<ul>
-								<li>Anyone can see this space while there currently is <strong>any online character</strong> inside. Otherwise only Owners, Admins and Allow-listed users can see it.</li>
-								<li>Anyone non-banned who can see this space can join at any time.</li>
-								<li>"Join-me" invitations can be created and used by anyone.</li>
-								<li>"Space-bound" invitations can be used to join.</li>
-							</ul>
-						</ContextHelpButton>
-					</label>
-					<Select
-						value={ currentConfig.public }
-						onChange={ (e) => setModifiedData({ public: SpacePublicSettingSchema.parse(e.target.value) }) }
-						noScrollChange
-						disabled={ !canEdit }
-					>
-						<option value='locked'>Locked</option>
-						<option value='private'>Private</option>
-						<option value='public-with-admin'>Public while an admin is inside</option>
-						<option value='public-with-anyone'>Public</option>
-					</Select>
-				</div>
-			</FieldsetToggle>
-			<FieldsetToggle legend='Ownership'>
+			<fieldset>
+				<legend>Ownership</legend>
 				<div className='input-container'>
 					<label>Owners</label>
 					<Row>
-						<NumberListArea className='flex-1' values={ owners } setValues={ () => { /* NOOP */ } } readOnly />
-						{ !creation && currentSpaceInfo != null && currentSpaceId != null && isPlayerOwner ? <SpaceOwnershipRemoval id={ currentSpaceId } name={ currentSpaceInfo.config.name } /> : null }
+						<Column className='flex-1'>
+							<AccountListInput
+								value={ owners }
+								allowSelf
+							/>
+						</Column>
+						{ !creation && currentSpaceInfo?.id != null && isPlayerOwner ? <SpaceOwnershipRemoval id={ currentSpaceInfo.id } name={ currentSpaceInfo.config.name } /> : null }
 					</Row>
 				</div>
-			</FieldsetToggle>
-			<FieldsetToggle legend='Background'>
-				{ showBackgrounds && <BackgroundSelectDialog
-					hide={ () => setShowBackgrounds(false) }
-					current={ currentConfigBackground }
-					select={ (background) => setModifiedData({ background }) }
-				/> }
-				{
-					typeof currentConfigBackground === 'string' ? (
-						<Column>
-							<BackgroundInfo background={ currentConfigBackground } />
-							<Button
-								onClick={ () => setShowBackgrounds(true) }
-								disabled={ !canEdit }
-							>
-								Select a background
-							</Button>
-						</Column>
-					) : (
-						<>
-							<div className='input-container'>
-								<label>Background color</label>
-								<Row alignY='center'>
-									<ColorInput
-										initialValue={ currentConfigBackground.image.startsWith('#') ? currentConfigBackground.image : '#FFFFFF' }
-										onChange={ (color) => setModifiedData({ background: { ...currentConfigBackground, image: color } }) }
-										disabled={ !canEdit }
-										title='Background'
-										classNameTextInput='flex-1'
+			</fieldset>
+			<fieldset>
+				<legend>Admins</legend>
+				<div className='input-container'>
+					<AccountListInput
+						value={ currentConfig.admin }
+						onChange={ canEdit ? ((admin) => updateConfig({ admin: admin.slice() })) : undefined }
+						allowSelf
+					/>
+				</div>
+			</fieldset>
+			<fieldset>
+				<legend>Banned users</legend>
+				<div className='input-container'>
+					<AccountListInput
+						value={ currentConfig.banned }
+						onChange={ canEdit ? ((banned) => updateConfig({ banned: banned.slice() })) : undefined }
+						allowSelf
+					/>
+					<NumberListWarning values={ currentConfig.banned } invalid={ invalidBans } />
+				</div>
+			</fieldset>
+			<fieldset>
+				<legend>
+					<span>Allowed users</span>
+					<ContextHelpButton>
+						<p>
+							"Allowed users" have special access rights to this space.<br />
+						</p>
+						<ul>
+							<li>They can always see this space in their list of spaces, even while it is empty.</li>
+							<li>They can always join the space while it is public or private.</li>
+							<li>They can see who is currently inside without joining, unless the space is locked.</li>
+							<li>They also cannot join the space while it is locked.</li>
+						</ul>
+					</ContextHelpButton>
+				</legend>
+				<div className='input-container'>
+					<AccountListInput
+						value={ currentConfig.allow }
+						onChange={ canEdit ? ((allow) => updateConfig({ allow: allow.slice() })) : undefined }
+						allowSelf
+					/>
+					<NumberListWarning values={ currentConfig.allow } invalid={ invalidAllow } />
+				</div>
+			</fieldset>
+			<fieldset>
+				<legend>Offline character management</legend>
+				<Column>
+					<Row>
+						<Checkbox
+							id={ `${idPrefix}-ghostmanagement-enable` }
+							checked={ currentConfig.ghostManagement != null }
+							onChange={ (newValue) => {
+								updateConfig({
+									ghostManagement: newValue ? {
+										ignore: 'admin',
+										timer: 2,
+										affectCharactersInRoomDevice: false,
+									} : null,
+								});
+							} }
+							disabled={ !canEdit }
+						/>
+						<label htmlFor={ `${idPrefix}-ghostmanagement-enable` }>Enable automatic offline character removal</label>
+					</Row>
+					{
+								currentConfig.ghostManagement != null ? (
+									<GhostManagement
+										config={ currentConfig.ghostManagement }
+										setConfig={ (newConfig) => {
+											updateConfig({ ghostManagement: newConfig });
+										} }
+										canEdit={ canEdit }
 									/>
-								</Row>
-							</div>
-							<br />
-							<Button
-								onClick={ () => setShowBackgrounds(true) }
-								disabled={ !canEdit }
-							>
-								Select a background
-							</Button>
-						</>
-					)
-				}
-			</FieldsetToggle>
+								) : null
+					}
+				</Column>
+			</fieldset>
+			{ (!creation && currentSpaceInfo?.id != null) && <SpaceInvites spaceId={ currentSpaceInfo.id } isPlayerAdmin={ isPlayerAdmin } /> }
 		</>
 	);
+}
 
-	if (creation) {
+function SpaceConfigurationRoom({
+	creation,
+	currentSpaceInfo,
+}: SpaceConfigurationTabProps): ReactElement {
+	const player = usePlayer();
+	AssertNotNullable(player);
+	const gameState = useGameState();
+	const globalState = useGlobalState(gameState);
+
+	if (creation || currentSpaceInfo == null || globalState.room.spaceId !== currentSpaceInfo.id) {
 		return (
-			<div className='spaceConfigurationScreen creation'>
-				<Link to='/spaces/search'>◄ Back</Link>
-				<p>Space creation</p>
-				{ configurableElements }
-				<div className='input-container'>
-					<label>Features (cannot be changed after creation)</label>
-					{
-						SPACE_FEATURES.map((feature) => (
-							(feature.id !== 'development' || (feature.id === 'development' && isDeveloper)) &&
-							<div key={ feature.id }>
-								<Checkbox
-									id={ `${idPrefix}-feature-${feature.id}` }
-									checked={ currentConfig.features.includes(feature.id) }
-									onChange={ (newValue) => {
-										if (newValue) {
-											if (!currentConfig.features.includes(feature.id)) {
-												setModifiedData({ features: [...currentConfig.features, feature.id] });
-											}
-										} else {
-											setModifiedData({ features: currentConfig.features.filter((f) => f !== feature.id) });
-										}
-									} }
-								/>
-								<label htmlFor={ `${idPrefix}-feature-${feature.id}` }> { feature.name }</label>
-							</div>
-						))
-					}
-				</div>
-				{
-					currentConfig.features.includes('development') && isDeveloper &&
-					<div className='input-container'>
-						<h3>Development settings</h3>
-						<label>Shard for space</label>
-						<Select disabled={ !shards } value={ currentConfig.development?.shardId ?? '[Auto]' } onChange={
-							(event) => {
-								const value = event.target.value;
-								setModifiedData({
-									development: {
-										...currentConfig.development,
-										shardId: value === '[Auto]' ? undefined : value,
-									},
-								});
-							}
-						}>
-							{
-								!shards ?
-									<option>Loading...</option> :
-									<>
-										<option key='[Auto]' value='[Auto]' >[Auto]</option>
-										{
-											shards.map((shard) => <option key={ shard.id } value={ shard.id }>{ shard.id } ({ shard.publicURL }) [v{ shard.version }]</option>)
-										}
-									</>
-							}
-						</Select>
-						<div className='input-line'>
-							<label>Auto admin for developers</label>
-							<Checkbox
-								checked={ currentConfig.development?.autoAdmin ?? false }
-								onChange={ (newValue) => {
-									setModifiedData({
-										development: {
-											...currentConfig.development,
-											autoAdmin: newValue,
-										},
-									});
-								} }
-							/>
-						</div>
-						<div className='input-line'>
-							<label>Bypass safemode cooldown</label>
-							<Checkbox
-								checked={ currentConfig.development?.disableSafemodeCooldown ?? false }
-								onChange={ (newValue) => {
-									setModifiedData({
-										development: {
-											...currentConfig.development,
-											disableSafemodeCooldown: newValue,
-										},
-									});
-								} }
-							/>
-						</div>
-					</div>
-				}
-				<Button onClick={ () => void create(currentConfig) }>Create space</Button>
-			</div>
+			<strong>Room configuration can only be changed from inside the space</strong>
 		);
 	}
 
 	return (
-		<div className='spaceConfigurationScreen configuration'>
-			<TabContainer className='flex-1'>
-				<Tab name='General'>
-					<div className='spaceConfigurationScreen-tab'>
-						<br />
-						{ configurableElements }
-						<div className='input-container'>
-							<label>Features (cannot be changed after creation)</label>
-							<ul>
+		<WardrobeActionContextProvider player={ player }>
+			<SpaceConfigurationRoomInner
+				globalState={ globalState }
+			/>
+		</WardrobeActionContextProvider>
+	);
+}
+
+type SpaceConfigurationRoomInnerProps = {
+	globalState: AssetFrameworkGlobalState;
+};
+
+function SpaceConfigurationRoomInner({
+	globalState,
+}: SpaceConfigurationRoomInnerProps): ReactElement {
+	const [showBackgrounds, setShowBackgrounds] = useState(false);
+
+	return (
+		<fieldset>
+			<legend>Room background</legend>
+			{ showBackgrounds && <BackgroundSelectDialog
+				hide={ () => setShowBackgrounds(false) }
+				current={ globalState.room.roomGeometryConfig }
+			/> }
+			<Column>
+				<BackgroundInfo background={ globalState.room.roomBackground } />
+				<Button
+					onClick={ () => setShowBackgrounds(true) }
+				>
+					Select a background
+				</Button>
+			</Column>
+		</fieldset>
+	);
+}
+
+function SpaceConfigurationDebug({
+	currentConfig,
+	updateConfig,
+}: SpaceConfigurationTabProps): ReactElement {
+	const shards = useShards();
+
+	useEffect(() => {
+		if (shards && currentConfig.development?.shardId && !shards.some((s) => s.id === currentConfig.development?.shardId)) {
+			const newDevelopment = CloneDeepMutable(currentConfig.development);
+			delete newDevelopment.shardId;
+			updateConfig({ development: newDevelopment });
+		}
+	}, [currentConfig, shards, updateConfig]);
+
+	return (
+		<div className='input-container'>
+			<h3>Development settings</h3>
+			<label>Shard for space</label>
+			<Select disabled={ !shards } value={ currentConfig.development?.shardId ?? '[Auto]' } onChange={
+				(event) => {
+					const value = event.target.value;
+					updateConfig({
+						development: {
+							...currentConfig.development,
+							shardId: value === '[Auto]' ? undefined : value,
+						},
+					});
+				}
+			}>
+				{
+						!shards ?
+							<option>Loading...</option> :
+							<>
+								<option key='[Auto]' value='[Auto]' >[Auto]</option>
 								{
-									SPACE_FEATURES
-										.filter((feature) => currentConfig.features.includes(feature.id))
-										.map((feature) => (
-											<li key={ feature.id }>{ feature.name }</li>
-										))
+									shards.map((shard) => <option key={ shard.id } value={ shard.id }>{ shard.id } ({ shard.publicURL }) [v{ shard.version }]</option>)
 								}
-							</ul>
-						</div>
-						{ canEdit && <Button className='fill-x' onClick={ () => UpdateSpace(directoryConnector, modifiedData, () => navigate('/room')) }>Update space</Button> }
-					</div>
-				</Tab>
-				<Tab name='Visitor Management'>
-					<div className='spaceConfigurationScreen-tab'>
-						<br />
-						<FieldsetToggle legend='Permission lists'>
-							<div className='input-container'>
-								<label>Admins</label>
-								<NumberListArea values={ currentConfig.admin } setValues={ (admin) => setModifiedData({ admin }) } readOnly={ !canEdit } />
-							</div>
-							<div className='input-container'>
-								<label>Banned users</label>
-								<NumberListArea values={ currentConfig.banned } setValues={ (banned) => setModifiedData({ banned }) } readOnly={ !canEdit } invalid={ invalidBans } />
-							</div>
-							<div className='input-container'>
-								<label>Allowed users</label>
-								<NumberListArea values={ currentConfig.allow } setValues={ (allow) => setModifiedData({ allow }) } readOnly={ !canEdit } invalid={ invalidAllow } />
-							</div>
-						</FieldsetToggle>
-						<FieldsetToggle legend='Offline character management'>
-							<Column>
-								<Row>
-									<Checkbox
-										id={ `${idPrefix}-ghostmanagement-enable` }
-										checked={ currentConfig.ghostManagement != null }
-										onChange={ (newValue) => {
-											setModifiedData({
-												ghostManagement: newValue ? {
-													ignore: 'admin',
-													timer: 2,
-													affectCharactersInRoomDevice: false,
-												} : null,
-											});
-										} }
-										disabled={ !canEdit }
-									/>
-									<label htmlFor={ `${idPrefix}-ghostmanagement-enable` }>Enable automatic offline character removal</label>
-								</Row>
-								{
-									currentConfig.ghostManagement != null ? (
-										<GhostManagement
-											config={ currentConfig.ghostManagement }
-											setConfig={ (newConfig) => {
-												setModifiedData({ ghostManagement: newConfig });
-											} }
-											canEdit={ canEdit }
-										/>
-									) : null
-								}
-							</Column>
-						</FieldsetToggle>
-						{ (!creation && currentSpaceId != null) && <SpaceInvites spaceId={ currentSpaceId } isPlayerAdmin={ isPlayerAdmin } /> }
-						<br />
-						{ canEdit && <Button className='fill-x' onClick={ () => UpdateSpace(directoryConnector, modifiedData, () => navigate('/room')) }>Update space</Button> }
-					</div>
-				</Tab>
-				<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/room') } />
-			</TabContainer>
+							</>
+				}
+			</Select>
+			<div className='input-line'>
+				<label>Auto admin for developers</label>
+				<Checkbox
+					checked={ currentConfig.development?.autoAdmin ?? false }
+					onChange={ (newValue) => {
+						updateConfig({
+							development: {
+								...currentConfig.development,
+								autoAdmin: newValue,
+							},
+						});
+					} }
+				/>
+			</div>
+			<div className='input-line'>
+				<label>Bypass safemode cooldown</label>
+				<Checkbox
+					checked={ currentConfig.development?.disableSafemodeCooldown ?? false }
+					onChange={ (newValue) => {
+						updateConfig({
+							development: {
+								...currentConfig.development,
+								disableSafemodeCooldown: newValue,
+							},
+						});
+					} }
+				/>
+			</div>
 		</div>
 	);
 }
@@ -530,7 +723,7 @@ function GhostManagement({ config, setConfig, canEdit }: {
 
 	return (
 		<>
-			<Column>
+			<Column gap='small'>
 				<label>Autokick offline characters after (minutes)</label>
 				<NumberInput
 					min={ 0 }
@@ -612,13 +805,16 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 	const addInvite = useCallback((invite: SpaceInvite) => setInvites((inv) => [...inv, invite]), []);
 
 	return (
-		<FieldsetToggle legend='Invites'>
-			<Column gap='medium'>
-				<div onClick={ copyPublic } className='permanentInvite'>
-					<span className='text'>Permanent public invite link:</span>
-					<span className='invite'>{ permaLink }</span>
-				</div>
-				<Button onClick={ () => setShowCreation(true) }>Create New Invite</Button>
+		<fieldset>
+			<legend>Space invites management</legend>
+			<Column gap='large'>
+				<Column gap='medium'>
+					<div onClick={ copyPublic } className='permanentInvite'>
+						<span className='text'>Permanent public invite link:</span>
+						<span className='invite'>{ permaLink }</span>
+					</div>
+					<Button onClick={ () => setShowCreation(true) }>Create New Invite</Button>
+				</Column>
 				<table className='spaceInvitesTable'>
 					<thead>
 						<tr>
@@ -641,7 +837,7 @@ function SpaceInvites({ spaceId, isPlayerAdmin }: { spaceId: SpaceId; isPlayerAd
 				</table>
 				{ showCreation && <SpaceInviteCreation closeDialog={ () => setShowCreation(false) } addInvite={ addInvite } isPlayerAdmin={ isPlayerAdmin } /> }
 			</Column>
-		</FieldsetToggle>
+		</fieldset>
 	);
 }
 
@@ -793,7 +989,7 @@ export function SpaceOwnershipRemoval({ buttonClassName, ...data }: { id: SpaceI
 	const [state, setState] = useState<boolean>(false);
 	return (
 		<>
-			<Button className={ buttonClassName } onClick={ () => setState(true) }>Give up space ownership</Button>
+			<Button className={ buttonClassName } onClick={ () => setState(true) }>Give up your space ownership</Button>
 			{
 				state ? (
 					<SpaceOwnershipRemovalDialog { ...data } closeDialog={ () => setState(false) } />
@@ -849,19 +1045,11 @@ function SpaceOwnershipRemovalDialog({ id, name, closeDialog }: { id: SpaceId; n
 	);
 }
 
-function NumberListArea({ values, setValues, readOnly, invalid, ...props }: {
+function NumberListWarning({ values, invalid }: {
 	values: readonly number[];
-	setValues: (newValue: number[]) => void;
-	readOnly: boolean;
-	className?: string;
-	invalid?: { note: string; when: { reason: string; list: readonly number[]; }[]; };
-}): ReactElement {
-	const [text, setText] = useState(values.join(', '));
-
+	invalid: { note: string; when: { reason: string; list: readonly number[]; }[]; };
+}): ReactElement | null {
 	const invalidWarning = useMemo(() => {
-		if (!invalid)
-			return null;
-
 		const result: ReactNode[] = [];
 
 		for (const { reason, list } of invalid.when) {
@@ -879,228 +1067,26 @@ function NumberListArea({ values, setValues, readOnly, invalid, ...props }: {
 		return result;
 	}, [invalid, values]);
 
-	const onChange = useCallback((event: React.ChangeEvent<HTMLTextAreaElement>) => {
-		const value = event.target.value;
-		const split = value.split(',');
-		const last = split[split.length - 1];
-		const unique = new Set<number>();
-		const rest = split
-			.slice(0, split.length - 1)
-			.map((str) => Number.parseInt(str.trim(), 10))
-			.filter((n) => Number.isInteger(n))
-			.filter((n) => n > 0)
-			.filter((n) => !unique.has(n) && unique.add(n));
-
-		const lastNumber = Number.parseInt(last.trim(), 10);
-		if (Number.isInteger(lastNumber) && lastNumber > 0) {
-			if (!unique.has(lastNumber)) {
-				rest.push(lastNumber);
-				setText(rest.join(', '));
-			} else {
-				setText(rest.join(', ') + ', ' + lastNumber.toString());
-			}
-			setValues(rest);
-		} else if (last === '' && value[value.length - 1] === ',') {
-			setText(rest.join(', ') + ',');
-			setValues(rest);
-		} else if (last === '') {
-			setText(rest.join(','));
-			setValues(rest);
-		} else {
-			setText(rest.join(', ') + ',' + last);
-			setValues(rest);
-		}
-	}, [setValues]);
-
-	return (
-		<>
-			<textarea value={ text } onChange={ onChange } readOnly={ readOnly } { ...props } />
-			{ invalidWarning && <Column gap='none'>{ invalidWarning }</Column> }
-		</>
-	);
-}
-
-function BackgroundInfo({ background }: { background: string; }): ReactElement {
-	const assetManager = useAssetManager();
-	const backgroundInfo = useMemo(() => assetManager.getBackgrounds().find((b) => b.id === background), [assetManager, background]);
-
-	if (backgroundInfo == null) {
-		return (
-			<Column className='backgroundInfo'>
-				[ ERROR: Unknown background "{ background }" ]
-			</Column>
-		);
+	if (!invalidWarning) {
+		return null;
 	}
 
 	return (
-		<Row alignX='space-between' className='backgroundInfo'>
-			<span className='name'>{ backgroundInfo.name }</span>
+		<Column gap='none'>{ invalidWarning }</Column>
+	);
+}
+
+function BackgroundInfo({ background }: { background: Immutable<RoomBackgroundData>; }): ReactElement | null {
+	if (background.graphics.type !== 'image' || background.graphics.image.startsWith('#')) {
+		return null;
+	}
+
+	return (
+		<Row alignX='center' className='backgroundInfo'>
 			<div className='preview'>
-				<img src={ GetAssetsSourceUrl() + backgroundInfo.image } />
+				<img src={ GetAssetsSourceUrl() + background.graphics.image } />
 			</div>
 		</Row>
-	);
-}
-
-function BackgroundSelectDialog({ hide, current, select }: {
-	hide: () => void;
-	current: string | SpaceDirectoryConfig['background'];
-	select: (background: SpaceDirectoryConfig['background']) => void;
-}): ReactElement | null {
-	const assetManager = useAssetManager();
-	const [selectedBackground, setSelectedBackground] = useState(current);
-
-	useEffect(() => {
-		setSelectedBackground(current);
-	}, [current]);
-
-	const [nameFilter, setNameFilter] = useState('');
-	const [selection, setSelection] = useState(() => BackgroundSelectionStateClass.create(assetManager));
-
-	/** Comparator for sorting backgrounds */
-	const backgroundSortOrder = useCallback((a: Readonly<RoomBackgroundInfo>, b: Readonly<RoomBackgroundInfo>): number => {
-		return a.name.localeCompare(b.name);
-	}, []);
-
-	const backgroundsToShow = useMemo(() => {
-		const filterParts = nameFilter.toLowerCase().trim().split(/\s+/);
-		return selection.backgrounds
-			.filter((b) => filterParts.every((f) => b.name.toLowerCase().includes(f)))
-			.sort(backgroundSortOrder);
-	}, [selection, nameFilter, backgroundSortOrder]);
-
-	const nameFilterInput = useRef<TextInput>(null);
-	useInputAutofocus(nameFilterInput);
-
-	return (
-		<ModalDialog position='top'>
-			<div className='backgroundSelect'>
-				<div className='header'>
-					<div className='header-filter'>
-						<span>Select a background for the room</span>
-						<TextInput ref={ nameFilterInput }
-							className='input-filter'
-							placeholder='Background name…'
-							value={ nameFilter }
-							onChange={ setNameFilter }
-						/>
-					</div>
-					<div className='header-tags'>
-						{
-							selection.knownCategories.map((category) => (
-								<TagCategoryButton
-									key={ category }
-									category={ category }
-									selection={ selection }
-									setSelection={ setSelection }
-								/>
-							))
-						}
-					</div>
-				</div>
-				<div className='backgrounds'>
-					{ backgroundsToShow
-						.map((b) => (
-							<SelectionIndicator key={ b.id }
-								padding='tiny'
-								selected={ b.id === selectedBackground }
-								active={ b.id === current }
-							>
-								<Button
-									className='fill'
-									onClick={ () => {
-										setSelectedBackground(b.id);
-									} }
-								>
-									<Column
-										alignX='center'
-										alignY='center'
-										className='details fill'
-									>
-										<div className='preview'>
-											<img src={ GetAssetsSourceUrl() + b.preview } />
-										</div>
-										<div className='name'>{ b.name }</div>
-									</Column>
-								</Button>
-							</SelectionIndicator>
-						)) }
-				</div>
-				<Row className='footer' alignX='space-between' wrap>
-					<Button onClick={ hide }>Cancel</Button>
-					<Button
-						disabled={ IsObject(current) }
-						className='hideDisabled'
-						onClick={ () => {
-							select(CloneDeepMutable(DEFAULT_BACKGROUND));
-							hide();
-						} }>
-						Solid-color background
-					</Button>
-					<Button
-						onClick={ () => {
-							select(selectedBackground);
-							hide();
-						} }
-					>
-						Confirm
-					</Button>
-				</Row>
-			</div>
-		</ModalDialog>
-	);
-}
-
-type BackgroundTag = Readonly<RoomBackgroundTagDefinition & { id: string; }>;
-
-function TagCategoryButton({ category, selection, setSelection }: {
-	category: string;
-	selection: BackgroundSelectionStateClass;
-	setSelection: (selection: BackgroundSelectionStateClass) => void;
-}): ReactElement {
-	const selected = selection.isSelectedCategory(category);
-	const onClick = useCallback((ev: React.MouseEvent) => {
-		ev.preventDefault();
-		ev.stopPropagation();
-		setSelection(selection.toggleCategory(category));
-	}, [category, selection, setSelection]);
-	return (
-		<div className='dropdown'>
-			<Button className='slim dropdown-button' onClick={ onClick }>
-				{ category }
-				<span>{ selected ? '✓' : ' ' }</span>
-			</Button>
-			<div className='dropdown-content'>
-				{ selection.getTagsByCategory(category).map((tag) => (
-					<TagButton key={ tag.id } id={ tag.id } name={ tag.name } selection={ selection } setSelection={ setSelection } />
-				)) }
-			</div>
-		</div>
-	);
-}
-
-function TagButton({ id, name, selection, setSelection }: {
-	id: string;
-	name: string;
-	selection: BackgroundSelectionStateClass;
-	setSelection: (selection: BackgroundSelectionStateClass) => void;
-}): ReactElement {
-	const selected = selection.isSelectedTag(id);
-	const onClick = useCallback((ev: React.MouseEvent) => {
-		ev.preventDefault();
-		ev.stopPropagation();
-		setSelection(selection.toggleTag(id));
-	}, [id, selection, setSelection]);
-	const onDoubleClick = useCallback((ev: React.MouseEvent) => {
-		ev.preventDefault();
-		ev.stopPropagation();
-		setSelection(selection.fullToggleTag(id));
-	}, [id, selection, setSelection]);
-	return (
-		<a onClick={ onClick } onDoubleClick={ onDoubleClick }>
-			<span>{ selected ? '✓' : ' ' }</span>
-			{ name }
-		</a>
 	);
 }
 
@@ -1110,6 +1096,12 @@ function useCreateSpace(): (config: SpaceDirectoryConfig) => Promise<void> {
 	const directoryConnector = useDirectoryConnector();
 	const navigate = useNavigatePandora();
 	return useCallback(async (config) => {
+		const validatedConfig = SpaceDirectoryConfigSchema.safeParse(config);
+		if (!validatedConfig.success) {
+			const issue = validatedConfig.error.issues.length > 0 ? validatedConfig.error.issues[0] : undefined;
+			SpaceConfigurationProgress.show('error', `Error during space creation:\nInvalid data${issue ? (`:\n\t"${issue.path.join('/')}" ${issue.message}`) : ''}`);
+			return;
+		}
 		try {
 			SpaceConfigurationProgress.show('progress', 'Creating space...');
 			const result = await directoryConnector.awaitResponse('spaceCreate', config);
@@ -1160,153 +1152,3 @@ function useShards(): IDirectoryShardInfo[] | undefined {
 
 	return shards;
 }
-
-interface BackgroundSelectionState {
-	readonly availableBackgrounds: readonly Readonly<RoomBackgroundInfo>[];
-	readonly availableTags: ReadonlyMap<string, readonly BackgroundTag[]>;
-	readonly backgroundTags: ReadonlyMap<string, Readonly<RoomBackgroundTagDefinition>>;
-	readonly tagToCategory: ReadonlyMap<string, string>;
-	readonly categories: readonly string[];
-	readonly selectedCategories: Set<string>;
-	readonly selectedTags: ReadonlyMap<string, Set<string>>;
-}
-
-class BackgroundSelectionStateClass {
-	private readonly state: BackgroundSelectionState;
-	public readonly backgrounds: readonly Readonly<RoomBackgroundInfo>[];
-	public readonly categories: ReadonlySet<string>;
-
-	public get knownCategories(): readonly string[] {
-		return this.state.categories;
-	}
-
-	private constructor(state: BackgroundSelectionState) {
-		this.state = state;
-		this.backgrounds = state.availableBackgrounds.filter((b) => BackgroundSelectionStateClass.isSelected(state, b));
-		this.categories = this.state.selectedCategories;
-	}
-
-	public static create(assetManager: AssetManager): BackgroundSelectionStateClass {
-		const availableBackgrounds = assetManager.getBackgrounds();
-		const backgroundTags = assetManager.backgroundTags;
-		const categories = uniq([...backgroundTags.values()].map((tag) => tag.category));
-		const tagToCategory = new Map<string, string>();
-		for (const [id, tag] of backgroundTags.entries()) {
-			tagToCategory.set(id, tag.category);
-		}
-		const availableTags = new Map<string, readonly BackgroundTag[]>();
-		const selectedTags = new Map<string, Set<string>>();
-		for (const category of categories) {
-			selectedTags.set(category, new Set<string>());
-			const tags: BackgroundTag[] = [];
-			for (const [id, tag] of backgroundTags.entries()) {
-				if (tag.category === category) {
-					tags.push({ ...tag, id });
-				}
-			}
-			availableTags.set(category, tags);
-		}
-		return new BackgroundSelectionStateClass({
-			availableBackgrounds,
-			availableTags,
-			backgroundTags,
-			tagToCategory,
-			categories,
-			selectedCategories: new Set<string>(),
-			selectedTags,
-		});
-	}
-
-	public isSelectedCategory(category: string): boolean {
-		return this.state.selectedCategories.has(category);
-	}
-
-	public isSelectedTag(tag: string): boolean {
-		const category = this.state.tagToCategory.get(tag);
-		if (!category) {
-			return false;
-		}
-		const tags = this.state.selectedTags.get(category);
-		return tags != null && tags.has(tag);
-	}
-
-	public toggleTag(tag: string): BackgroundSelectionStateClass {
-		const category = this.state.tagToCategory.get(tag);
-		if (!category) {
-			return this;
-		}
-		const selected = this.state.selectedTags.get(category);
-		if (!selected) {
-			return this;
-		}
-		if (!selected.delete(tag)) {
-			selected.add(tag);
-			this.state.selectedCategories.add(category);
-
-		} else if (selected.size === 0) {
-			this.state.selectedCategories.delete(category);
-		}
-		return new BackgroundSelectionStateClass(this.state);
-	}
-
-	public fullToggleTag(tag: string): BackgroundSelectionStateClass {
-		const category = this.state.tagToCategory.get(tag);
-		if (!category) {
-			return this;
-		}
-		const selected = this.state.selectedTags.get(category);
-		if (!selected) {
-			return this;
-		}
-		this.state.selectedCategories.add(category);
-		if (!selected.has(tag)) {
-			selected.clear();
-			selected.add(tag);
-		} else {
-			const tags = this.state.availableTags.get(category)!;
-			selected.clear();
-			for (const t of tags) {
-				if (t.id !== tag) {
-					selected.add(t.id);
-				}
-			}
-		}
-		return new BackgroundSelectionStateClass(this.state);
-	}
-
-	public toggleCategory(category: string): BackgroundSelectionStateClass {
-		const selected = this.state.selectedTags.get(category);
-		if (!selected) {
-			return this;
-		}
-		if (!this.state.selectedCategories.delete(category)) {
-			this.state.selectedCategories.add(category);
-			const tags = this.state.availableTags.get(category)!;
-			for (const t of tags) {
-				selected.add(t.id);
-			}
-		} else {
-			selected.clear();
-		}
-		return new BackgroundSelectionStateClass(this.state);
-	}
-
-	public getTagsByCategory(category: string): readonly BackgroundTag[] {
-		return this.state.availableTags.get(category) ?? EMPTY_ARRAY;
-	}
-
-	private static isSelected(state: BackgroundSelectionState, info: Readonly<RoomBackgroundInfo>): boolean {
-		if (state.selectedCategories.size === 0) {
-			return true;
-		}
-		for (const category of state.selectedCategories) {
-			const tags = state.selectedTags.get(category);
-			if (!tags || !info.tags.some((tag) => tags.has(tag))) {
-				return false;
-			}
-		}
-		return true;
-	}
-}
-
-const EMPTY_ARRAY: readonly [] = Object.freeze([]);

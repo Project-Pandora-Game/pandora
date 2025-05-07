@@ -20,6 +20,7 @@ export const TEST_ASSETS_DEFINITION = freeze<Immutable<AssetsDefinitionFile>>({
 	bodyparts: ASSET_TEST_BODYPARTS,
 	backgroundTags: AssetTestLoadBackgroundTags(),
 	backgrounds: AssetTestLoadBackgrounds(),
+	tileTextures: [],
 	graphicsId: 'graphicsId', // Not used in logic tests
 	graphicsSourceId: 'graphicsSourceId', // Not used in logic tests
 	attributes: ASSET_TEST_ATTRIBUTES_DEFINITION,

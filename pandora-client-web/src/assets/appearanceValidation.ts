@@ -76,6 +76,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 					return `You cannot delete manifestation of a room device. Use the device's menu to exit it instead.`;
 				case 'noDeleteDeployedRoomDevice':
 					return `You cannot delete a deployed room device. Use the device's menu to store it first.`;
+				case 'characterMoveCannotFollowTarget':
+					return `The target character cannot be followed. Only characters in a room that are not following someone can be followed.`;
 			}
 			AssertNever(result.reason);
 		}
@@ -127,6 +129,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 				return `The ${describeItem(e.asset, e.itemName)} cannot be added, removed, or modified, because "${DescribeAttribute(assetManager, e.attribute)}" is covered by another item.`;
 			case 'blockedHands':
 				return `You need to be able to use hands to do this.`;
+			case 'blockedMove':
+				return `An item or character modifier is preventing you from moving.`;
 			case 'safemodeInteractOther':
 				return `You cannot touch others while either you or they are in safemode or timeout mode.`;
 			case 'modifyBodyRoom':

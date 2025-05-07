@@ -39,6 +39,7 @@ import {
 	SpaceIdSchema,
 	TypedEventEmitter,
 	ZodCast,
+	type AccountId,
 	type ActionTargetSelector,
 	type AppearanceAction,
 	type AssetFrameworkGlobalStateClientDeltaBundle,
@@ -64,6 +65,7 @@ import type { NotificationData } from '../../services/notificationHandler.ts';
 import { IChatMessageProcessed } from '../../ui/components/chat/chatMessages.tsx';
 import { ChatParser } from '../../ui/components/chat/chatParser.ts';
 import { useShardConnector } from './shardConnectorContextProvider.tsx';
+import { useAccountContacts } from '../accountContacts/accountContactContext.ts';
 
 const logger = GetLogger('GameState');
 
@@ -181,7 +183,7 @@ export class GameState extends TypedEventEmitter<{
 		}
 
 		const loadedGlobalState = AssetFrameworkGlobalState
-			.loadFromBundle(GetCurrentAssetManager(), globalState, this.logger.prefixMessages('State bundle load:'));
+			.loadFromBundle(GetCurrentAssetManager(), globalState, id, this.logger.prefixMessages('State bundle load:'));
 
 		this.globalState = new AssetFrameworkGlobalStateContainer(
 			this.logger,
@@ -246,7 +248,7 @@ export class GameState extends TypedEventEmitter<{
 		}
 		this._updateCharacters(characters);
 		logger.debug('Loaded data', data);
-		this._updateGlobalState(data.globalState);
+		this._updateGlobalState(id, data.globalState);
 		this.characterModifierEffects.value = freeze(characterModifierEffects, true);
 	}
 
@@ -335,13 +337,13 @@ export class GameState extends TypedEventEmitter<{
 		});
 	}
 
-	private _updateGlobalState(bundle: AssetFrameworkGlobalStateClientBundle): void {
+	private _updateGlobalState(spaceId: SpaceId | null, bundle: AssetFrameworkGlobalStateClientBundle): void {
 		if (!bundle.clientOnly) {
 			this.logger.error('Received global state update that is not client-only');
 		}
 		this.globalState.setState(
 			AssetFrameworkGlobalState
-				.loadFromBundle(GetCurrentAssetManager(), bundle, this.logger.prefixMessages('State bundle load:')),
+				.loadFromBundle(GetCurrentAssetManager(), bundle, spaceId, this.logger.prefixMessages('State bundle load:')),
 		);
 	}
 
@@ -671,6 +673,31 @@ export function useResolveCharacterName(characterId: CharacterId): string | null
 	const data = useCharacterDataOptional(character ?? null);
 
 	return (data != null) ? data.name : null;
+}
+
+export function useResolveAccountName(accountId: AccountId): string | null {
+	const currentAccount = useCurrentAccount();
+
+	// Look through contacts
+	const contacts = useAccountContacts(null);
+	const contact = contacts.find((a) => a.id === accountId);
+
+	// Look through space characters to see if we find character of this account
+	const characters = useSpaceCharacters();
+	const character = characters.find((c) => c.data.accountId === accountId);
+	const characterData = useCharacterDataOptional(character ?? null);
+
+	if (accountId === 0) {
+		return '[[Pandora]]';
+	} else if (currentAccount?.id === accountId) {
+		return currentAccount.displayName;
+	} else if (contact != null) {
+		return contact.displayName;
+	} else if (characterData != null) {
+		return characterData.accountDisplayName;
+	}
+
+	return null;
 }
 
 export function useSpaceInfo(): Immutable<CurrentSpaceInfo> {

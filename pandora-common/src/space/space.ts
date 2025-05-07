@@ -3,13 +3,12 @@ import { cloneDeep } from 'lodash-es';
 import { z } from 'zod';
 import { AccountId, AccountIdSchema } from '../account/account.ts';
 import type { AssetFrameworkGlobalState } from '../assets/index.ts';
-import { ROOM_INVENTORY_BUNDLE_DEFAULT, RoomInventoryBundleSchema } from '../assets/state/roomState.ts';
+import { ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE, RoomInventoryBundleSchema } from '../assets/state/roomState.ts';
 import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
 import type { CharacterModifierEffectData } from '../gameLogic/index.ts';
 import { LIMIT_SPACE_DESCRIPTION_LENGTH, LIMIT_SPACE_ENTRYTEXT_LENGTH, LIMIT_SPACE_MAX_CHARACTER_NUMBER, LIMIT_SPACE_NAME_LENGTH, LIMIT_SPACE_NAME_PATTERN } from '../inputLimits.ts';
-import { ArrayToRecordKeys, CloneDeepMutable } from '../utility/misc.ts';
-import { HexColorStringSchema, ZodArrayWithInvalidDrop, ZodTemplateString, ZodTrimedRegex } from '../validation.ts';
-import { DEFAULT_BACKGROUND, RoomBackgroundDataSchema } from './room.ts';
+import { ArrayToRecordKeys } from '../utility/misc.ts';
+import { ZodArrayWithInvalidDrop, ZodTemplateString, ZodTrimedRegex } from '../validation.ts';
 
 export const ShardFeatureSchema = z.enum(['development']);
 export type ShardFeature = z.infer<typeof ShardFeatureSchema>;
@@ -143,8 +142,6 @@ export const SpaceDirectoryConfigSchema = SpaceBaseInfoSchema.extend({
 	admin: AccountIdSchema.array(),
 	/** Account ids that always allow to enter */
 	allow: AccountIdSchema.array().default([]),
-	/** The ID of the background or custom data */
-	background: z.union([z.string(), RoomBackgroundDataSchema.extend({ image: HexColorStringSchema.catch('#1099bb') })]).catch(CloneDeepMutable(DEFAULT_BACKGROUND)),
 	/** Automatic space ghost management settings. `null` if disabled completely. */
 	ghostManagement: SpaceGhostManagementConfigSchema.nullable().default(null),
 });
@@ -168,7 +165,7 @@ export type SpaceListInfo = SpaceBaseInfo & {
 };
 
 /** Info sent to client when displaying details about a space */
-export type SpaceListExtendedInfo = SpaceListInfo & Pick<SpaceDirectoryConfig, 'features' | 'admin' | 'background'> & {
+export type SpaceListExtendedInfo = SpaceListInfo & Pick<SpaceDirectoryConfig, 'features' | 'admin'> & {
 	// Note: `isAdmin` is not part of the basic info (`SpaceListInfo`), as it has more complex check than `isOwner` and shouldn't be done en masse
 	/** Whether the account that requested the info is admin of this space */
 	isAdmin: boolean;
@@ -202,7 +199,7 @@ export const SpaceDataSchema = z.object({
 	/** Account IDs of accounts owning this space */
 	owners: AccountIdSchema.array(),
 	config: SpaceDirectoryConfigSchema,
-	inventory: RoomInventoryBundleSchema.default(() => cloneDeep(ROOM_INVENTORY_BUNDLE_DEFAULT)),
+	inventory: RoomInventoryBundleSchema.default(() => cloneDeep(ROOM_INVENTORY_BUNDLE_DEFAULT_PUBLIC_SPACE)),
 	invites: ZodArrayWithInvalidDrop(SpaceInviteSchema, z.record(z.unknown())).default([]),
 });
 /** Space data stored in database */

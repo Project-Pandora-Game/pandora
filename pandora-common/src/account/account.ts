@@ -12,3 +12,7 @@ export const AccountIdSchema = z.number().int().nonnegative();
  * @note Normal user accounts start from id `1`, the account `0` is a meta-account for Pandora itself.
  */
 export type AccountId = z.infer<typeof AccountIdSchema>;
+
+export function CompareAccountIds(a: AccountId, b: AccountId): number {
+	return a - b;
+}

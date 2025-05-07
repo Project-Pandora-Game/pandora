@@ -11,6 +11,7 @@ import {
 	AssetFrameworkRoomState,
 	CloneDeepMutable,
 	CreateItemBundleFromTemplate,
+	GetDefaultAppearanceBundle,
 	GetLogger,
 	ITEM_LIMIT_ACCOUNT_OUTFIT_STORAGE,
 	ItemContainerPath,
@@ -328,7 +329,7 @@ function OutfitPreview({ outfit }: {
 
 	const baseCharacterState = (targetSelector.type === 'character' ? globalState.getCharacterState(targetSelector.characterId) : null) ?? playerState;
 
-	const characterState = useMemo((): AssetFrameworkCharacterState => {
+	const [characterState, previewState] = useMemo((): [AssetFrameworkCharacterState, AssetFrameworkGlobalState] => {
 		// As a base use the current character, but only body - not any items
 		const templateBundle = baseCharacterState.items
 			.filter((item) => item.isType('bodypart'))
@@ -359,19 +360,21 @@ function OutfitPreview({ outfit }: {
 			}
 		}
 
-		const characterBundle: AppearanceBundle = {
-			items: templateBundle,
-			requestedPose: CloneDeepMutable(baseCharacterState.requestedPose),
-		};
-		return AssetFrameworkCharacterState.loadFromBundle(assetManager, baseCharacterState.id, characterBundle, null, undefined);
+		const characterBundle: AppearanceBundle = GetDefaultAppearanceBundle();
+		characterBundle.items = templateBundle;
+		characterBundle.requestedPose = CloneDeepMutable(baseCharacterState.requestedPose);
+		const previewSpaceState = AssetFrameworkRoomState.createDefault(assetManager, null);
+		const previewCharacterState = AssetFrameworkCharacterState.loadFromBundle(assetManager, baseCharacterState.id, characterBundle, previewSpaceState, undefined);
+		return [
+			previewCharacterState,
+			AssetFrameworkGlobalState.createDefault(assetManager, previewSpaceState)
+				.withCharacter(previewCharacterState.id, previewCharacterState),
+		];
 	}, [assetManager, baseCharacterState, outfit, player]);
 
 	useEffect(() => {
 		if (!isHovering || !wardrobeHoverPreview)
 			return;
-
-		let previewState = AssetFrameworkGlobalState.createDefault(assetManager, AssetFrameworkRoomState.createDefault(assetManager));
-		previewState = previewState.withCharacter(characterState.id, characterState);
 
 		actionPreviewState.value = previewState;
 
@@ -380,7 +383,7 @@ function OutfitPreview({ outfit }: {
 				actionPreviewState.value = null;
 			}
 		};
-	}, [isHovering, wardrobeHoverPreview, actionPreviewState, assetManager, characterState]);
+	}, [isHovering, wardrobeHoverPreview, actionPreviewState, previewState]);
 
 	const { pivot } = useRoomCharacterOffsets(characterState);
 	const filters = usePlayerVisionFilters(true);

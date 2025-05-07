@@ -152,7 +152,7 @@ export class Space {
 	public getListExtendedInfo(queryingAccount: Account, accountFriends: ReadonlySet<AccountId>): SpaceListExtendedInfo {
 		return ({
 			...this.getListInfo(queryingAccount, accountFriends),
-			...pick(this.config, ['features', 'admin', 'background']),
+			...pick(this.config, ['features', 'admin']),
 			owners: Array.from(this._owners),
 			isAdmin: this.isAdmin(queryingAccount),
 			isAllowed: this.isAllowed(queryingAccount),
@@ -234,9 +234,6 @@ export class Space {
 		if (changes.public !== undefined) {
 			this.config.public = changes.public;
 		}
-		if (changes.background) {
-			this.config.background = changes.background;
-		}
 		if (changes.ghostManagement !== undefined) {
 			this.config.ghostManagement = cloneDeep(changes.ghostManagement);
 		}
@@ -267,8 +264,6 @@ export class Space {
 				changeList.push('ban list');
 			if (changes.allow)
 				changeList.push('allow list');
-			if (changes.background)
-				changeList.push('background');
 			if (changes.ghostManagement !== undefined)
 				changeList.push('offline character management settings');
 

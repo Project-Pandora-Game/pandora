@@ -78,6 +78,9 @@ export type Restriction =
 		type: 'blockedHands';
 	}
 	| {
+		type: 'blockedMove';
+	}
+	| {
 		type: 'safemodeInteractOther';
 	}
 	| {

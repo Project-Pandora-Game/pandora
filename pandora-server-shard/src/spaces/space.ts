@@ -62,6 +62,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 
 	private readonly _gameState: AssetFrameworkGlobalStateContainer;
 
+	public cardGame: CardGameGame | null = null;
+
 	public get currentState(): AssetFrameworkGlobalState {
 		return this._gameState.currentState;
 	}

@@ -41,7 +41,9 @@ export const CharacterPrivateDataSchema = CharacterPublicDataSchema.extend({
 /** Data about character, that is visible only to the character itself */
 export type ICharacterPrivateData = z.infer<typeof CharacterPrivateDataSchema>;
 
-/** Data about character, as seen by server */
+/** Data about character, as seen by server.
+ * All of this is persisted in the Pandora database
+ **/
 export const CharacterDataSchema = CharacterPrivateDataSchema.extend({
 	accessId: z.string(),
 	appearance: AppearanceBundleSchema.optional(),

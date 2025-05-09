@@ -368,8 +368,8 @@ importers:
         specifier: 16.5.0
         version: 16.5.0
       express:
-        specifier: 4.21.2
-        version: 4.21.2
+        specifier: 5.1.0
+        version: 5.1.0
       json-diff:
         specifier: 1.0.6
         version: 1.0.6
@@ -411,8 +411,8 @@ importers:
         specifier: 1.4.2
         version: 1.4.2
       '@types/express':
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 5.0.1
+        version: 5.0.1
       '@types/json-diff':
         specifier: 1.0.3
         version: 1.0.3
@@ -471,8 +471,8 @@ importers:
         specifier: 16.5.0
         version: 16.5.0
       express:
-        specifier: 4.21.2
-        version: 4.21.2
+        specifier: 5.1.0
+        version: 5.1.0
       immer:
         specifier: 10.1.1
         version: 10.1.1
@@ -514,8 +514,8 @@ importers:
         specifier: 1.4.2
         version: 1.4.2
       '@types/express':
-        specifier: 4.17.21
-        version: 4.17.21
+        specifier: 5.0.1
+        version: 5.0.1
       '@types/json-diff':
         specifier: 1.0.3
         version: 1.0.3
@@ -1812,8 +1812,14 @@ packages:
   '@types/express-serve-static-core@4.19.6':
     resolution: {integrity: sha512-N4LZ2xG7DatVqhCZzOGb1Yi5lMbXSZcmdLDe9EzSndPV2HpWYWzRbaerl2n27irrm94EPpprqa8KpskPT085+A==}
 
+  '@types/express-serve-static-core@5.0.6':
+    resolution: {integrity: sha512-3xhRnjJPkULekpSzgtoNYYcTWgEZkp4myc+Saevii5JPnHNvHMRlBSHDbs7Bh1iPPoVTERHEZXyhyLbMEsExsA==}
+
   '@types/express@4.17.21':
     resolution: {integrity: sha512-ejlPM315qwLpaQlQDTjPdsUFSc6ZsP4AN6AlWnogPjQ7CVi7PYF3YVz+CY3jE2pwYf7E/7HlDAN0rV2GxTG0HQ==}
+
+  '@types/express@5.0.1':
+    resolution: {integrity: sha512-UZUw8vjpWFXuDnjFTh7/5c2TWDlQqeXHi6hcN7F2XSVT5P+WmUnnbFS3KA6Jnc6IsEqI2qCVu2bK0R0J4A8ZQQ==}
 
   '@types/glob@7.2.0':
     resolution: {integrity: sha512-ZUxbzKl0IfJILTS6t7ip5fQQM/J3TJYubDm3nMbgubNNYS62eXeUpoLUC8/7fJNiFYHTrGPQn7hspDUzIHX3UA==}
@@ -8443,11 +8449,24 @@ snapshots:
       '@types/range-parser': 1.2.7
       '@types/send': 0.17.4
 
+  '@types/express-serve-static-core@5.0.6':
+    dependencies:
+      '@types/node': 22.15.17
+      '@types/qs': 6.9.18
+      '@types/range-parser': 1.2.7
+      '@types/send': 0.17.4
+
   '@types/express@4.17.21':
     dependencies:
       '@types/body-parser': 1.19.5
       '@types/express-serve-static-core': 4.19.6
       '@types/qs': 6.9.18
+      '@types/serve-static': 1.15.7
+
+  '@types/express@5.0.1':
+    dependencies:
+      '@types/body-parser': 1.19.5
+      '@types/express-serve-static-core': 5.0.6
       '@types/serve-static': 1.15.7
 
   '@types/glob@7.2.0':
@@ -8553,7 +8572,7 @@ snapshots:
 
   '@types/serve-index@1.9.4':
     dependencies:
-      '@types/express': 4.17.21
+      '@types/express': 5.0.1
 
   '@types/serve-static@1.15.7':
     dependencies:

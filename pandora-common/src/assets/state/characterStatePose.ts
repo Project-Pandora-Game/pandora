@@ -4,8 +4,8 @@ import { z } from 'zod';
 import { CalculateObjectKeysDelta } from '../../utility/deltas.ts';
 import type { Satisfies } from '../../utility/misc.ts';
 import type { AssetManager } from '../assetManager.ts';
-import type { BoneType, CharacterView, LayerPriority, LegsPose } from '../graphics/index.ts';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, CharacterViewSchema, LegsPoseSchema } from '../graphics/index.ts';
+import type { BoneType, CharacterView, LayerPriority } from '../graphics/index.ts';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, BoneName, BoneNameSchema, CharacterViewSchema, LegSideOrderSchema, LegsPoseSchema } from '../graphics/index.ts';
 
 export const AppearanceArmPoseSchema = z.object({
 	position: ArmPoseSchema.catch('front'),
@@ -19,6 +19,12 @@ export const AppearanceArmsOrderSchema = z.object({
 });
 export type AppearanceArmsOrder = z.infer<typeof AppearanceArmsOrderSchema>;
 
+export const AppearanceLegsPoseSchema = z.object({
+	upper: LegSideOrderSchema.catch('left'),
+	pose: LegsPoseSchema.catch('standing'),
+});
+export type AppearanceLegsPose = z.infer<typeof AppearanceLegsPoseSchema>;
+
 export const BONE_MIN = -180;
 export const BONE_MAX = 180;
 
@@ -27,7 +33,12 @@ export const AppearancePoseSchema = z.object({
 	leftArm: AppearanceArmPoseSchema.default({}),
 	rightArm: AppearanceArmPoseSchema.default({}),
 	armsOrder: AppearanceArmsOrderSchema.default({}),
-	legs: LegsPoseSchema.default('standing'),
+	legs: z.preprocess((value) => {
+		return typeof value === 'string' ? { pose: value } : value;
+	}, AppearanceLegsPoseSchema).catch({
+		upper: 'left',
+		pose: 'standing',
+	}),
 	view: CharacterViewSchema.catch('front'),
 });
 export type AppearancePose = z.infer<typeof AppearancePoseSchema>;
@@ -47,7 +58,10 @@ export function GetDefaultAppearancePose(): AppearancePose {
 		leftArm: GetDefaultAppearanceArmPose(),
 		rightArm: GetDefaultAppearanceArmPose(),
 		armsOrder: { upper: 'left' },
-		legs: 'standing',
+		legs: {
+			upper: 'left',
+			pose: 'standing',
+		},
 		view: 'front',
 	};
 }
@@ -58,7 +72,7 @@ export type PartialAppearancePose<Bones extends BoneName = BoneName> = {
 	leftArm?: Partial<AppearanceArmPose>;
 	rightArm?: Partial<AppearanceArmPose>;
 	armsOrder?: Partial<AppearanceArmsOrder>;
-	legs?: LegsPose;
+	legs?: Partial<AppearanceLegsPose>;
 	view?: CharacterView;
 };
 
@@ -68,7 +82,7 @@ export const PartialAppearancePoseSchema = z.object({
 	leftArm: AppearanceArmPoseSchema.partial().optional(),
 	rightArm: AppearanceArmPoseSchema.partial().optional(),
 	armsOrder: AppearanceArmsOrderSchema.partial().optional(),
-	legs: LegsPoseSchema.optional(),
+	legs: AppearanceLegsPoseSchema.partial().optional(),
 	view: CharacterViewSchema.optional(),
 });
 type __satisfies__PartialAppearancePoseSchema = Satisfies<PartialAppearancePose<string>, z.infer<typeof PartialAppearancePoseSchema>>;
@@ -105,7 +119,7 @@ export function MergePartialAppearancePoses(base: Immutable<PartialAppearancePos
 		leftArm: { ...base.leftArm, ...extend.leftArm },
 		rightArm: { ...base.rightArm, ...extend.rightArm },
 		armsOrder: { ...base.armsOrder, ...extend.armsOrder },
-		legs: extend.legs ?? base.legs,
+		legs: { ...base.legs, ...extend.legs },
 		view: extend.view ?? base.view,
 	};
 }
@@ -152,8 +166,11 @@ export function ProduceAppearancePose(
 		}
 
 		// Update legs
-		if (pose.legs != null) {
-			draft.legs = pose.legs;
+		{
+			const legs = { ...basePose.legs, ...pose.legs };
+			if (!isEqual(basePose.legs, legs)) {
+				draft.legs = freeze(legs, true);
+			}
 		}
 
 		// Update bones
@@ -187,10 +204,7 @@ export function CalculateAppearancePosesDelta(assetManager: AssetManager, base: 
 	result.leftArm = CalculateObjectKeysDelta(base.leftArm, target.leftArm);
 	result.rightArm = CalculateObjectKeysDelta(base.rightArm, target.rightArm);
 	result.armsOrder = CalculateObjectKeysDelta(base.armsOrder, target.armsOrder);
-
-	if (base.legs !== target.legs) {
-		result.legs = target.legs;
-	}
+	result.legs = CalculateObjectKeysDelta(base.legs, target.legs);
 
 	if (base.view !== target.view) {
 		result.view = target.view;

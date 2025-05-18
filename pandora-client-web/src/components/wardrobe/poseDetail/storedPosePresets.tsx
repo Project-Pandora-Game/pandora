@@ -1,3 +1,4 @@
+import { produce } from 'immer';
 import { capitalize, clamp, cloneDeep, noop, omit } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import {
@@ -338,7 +339,10 @@ function PosePresetEditingDialog({ preset, close }: { preset: AssetFrameworkPose
 					...characterState.actualPose.armsOrder,
 					...preset.pose.armsOrder,
 				},
-				legs: preset.pose.legs ?? characterState.actualPose.legs,
+				legs: {
+					...characterState.actualPose.legs,
+					...preset.pose.legs,
+				},
 			},
 		});
 	}, [preset, setEdit, allBones, characterState]);
@@ -509,24 +513,48 @@ function PosePresetArmsOrder({ preset }: { preset: AssetFrameworkPosePresetWithI
 
 function PosePresetLegPoses({ preset }: { preset: AssetFrameworkPosePresetWithId; }): ReactNode {
 	const { characterState, setEdit } = usePosePresetContext();
-	const onChange = React.useCallback((checked: boolean) => {
-		if (checked) {
-			setEdit({ ...preset, pose: { ...preset.pose, legs: characterState.actualPose.legs } });
-		} else {
-			const pose = { ...preset.pose };
-			delete pose.legs;
-			setEdit({ ...preset, pose });
-		}
-	}, [preset, setEdit, characterState]);
 
 	return (
-		<tr>
-			<td>
-				<Checkbox checked={ preset.pose.legs != null } onChange={ onChange } />
-			</td>
-			<td>Legs</td>
-			<td>{ preset.pose.legs ?? characterState.actualPose.legs }</td>
-		</tr>
+		<>
+			<tr>
+				<td>
+					<Checkbox
+						checked={ preset.pose.legs?.pose != null }
+						onChange={ (checked) => {
+							setEdit(produce(preset, (d) => {
+								d.pose.legs ??= {};
+								if (checked) {
+									d.pose.legs.pose = characterState.actualPose.legs.pose;
+								} else {
+									delete d.pose.legs.pose;
+								}
+							}));
+						} }
+					/>
+				</td>
+				<td>Legs state</td>
+				<td>{ preset.pose.legs?.pose ?? characterState.actualPose.legs.pose }</td>
+			</tr>
+			<tr>
+				<td>
+					<Checkbox
+						checked={ preset.pose.legs?.upper != null }
+						onChange={ (checked) => {
+							setEdit(produce(preset, (d) => {
+								d.pose.legs ??= {};
+								if (checked) {
+									d.pose.legs.upper = characterState.actualPose.legs.upper;
+								} else {
+									delete d.pose.legs.upper;
+								}
+							}));
+						} }
+					/>
+				</td>
+				<td>Upper leg order</td>
+				<td>{ preset.pose.legs?.upper ?? characterState.actualPose.legs.upper }</td>
+			</tr>
+		</>
 	);
 
 }

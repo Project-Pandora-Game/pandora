@@ -21,6 +21,15 @@ export const LAYER_PRIORITIES = [
 	'BELOW_BODY_SOLES',
 	'BODY_SOLES',
 	'BELOW_BODY',
+
+	'BELOW_LEG_LEFT',
+	'LEG_LEFT',
+	'ABOVE_LEG_LEFT',
+
+	'BELOW_LEG_RIGHT',
+	'LEG_RIGHT',
+	'ABOVE_LEG_RIGHT',
+
 	'BODY',
 	'BELOW_BREASTS',
 	'BREASTS',
@@ -49,6 +58,15 @@ export const PRIORITY_ORDER_MIRROR: Partial<Record<LayerPriority, LayerPriority>
 
 	ABOVE_ARM_LEFT: 'ABOVE_ARM_RIGHT',
 	ABOVE_ARM_RIGHT: 'ABOVE_ARM_LEFT',
+
+	BELOW_LEG_LEFT: 'BELOW_LEG_RIGHT',
+	BELOW_LEG_RIGHT: 'BELOW_LEG_LEFT',
+
+	LEG_LEFT: 'LEG_RIGHT',
+	LEG_RIGHT: 'LEG_LEFT',
+
+	ABOVE_LEG_LEFT: 'ABOVE_LEG_RIGHT',
+	ABOVE_LEG_RIGHT: 'ABOVE_LEG_LEFT',
 };
 if (!(Object.entries(PRIORITY_ORDER_MIRROR)).every(([original, mirror]) => PRIORITY_ORDER_MIRROR[mirror] === original)) {
 	throw new Error('PRIORITY_ORDER_MIRROR not valid');

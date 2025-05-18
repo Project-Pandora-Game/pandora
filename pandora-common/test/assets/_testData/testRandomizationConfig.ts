@@ -25,7 +25,9 @@ export const ASSET_TEST_APPEARANCE_RANDOMIZATION_CONFIG: AppearanceRandomization
 			rotation: 'forward',
 			fingers: 'spread',
 		},
-		legs: 'standing',
+		legs: {
+			pose: 'standing',
+		},
 		bones: {
 			arm_r: 74,
 			arm_l: 74,

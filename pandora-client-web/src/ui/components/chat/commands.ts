@@ -356,7 +356,9 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				gameState.doImmediateAction({
 					type: 'pose',
 					target: player.data.id,
-					legs: 'standing',
+					legs: {
+						pose: 'standing',
+					},
 				}).catch(() => { /** TODO */ });
 				return true;
 			}),
@@ -375,7 +377,9 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				gameState.doImmediateAction({
 					type: 'pose',
 					target: player.data.id,
-					legs: 'kneeling',
+					legs: {
+						pose: 'kneeling',
+					},
 				}).catch(() => { /** TODO */ });
 				return true;
 			}),
@@ -394,7 +398,9 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				gameState.doImmediateAction({
 					type: 'pose',
 					target: player.data.id,
-					legs: 'sitting',
+					legs: {
+						pose: 'sitting',
+					},
 				}).catch(() => { /** TODO */ });
 				return true;
 			}),

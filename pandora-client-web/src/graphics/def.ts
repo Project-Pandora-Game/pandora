@@ -19,7 +19,7 @@ export type LayerState = {
 	state?: LayerStateOverrides;
 };
 
-export function ComputeLayerPriorityOrder({ view, armsOrder, leftArm, rightArm }: Immutable<AppearancePose>): readonly LayerPriority[] {
+export function ComputeLayerPriorityOrder({ view, armsOrder, leftArm, rightArm, legs }: Immutable<AppearancePose>): readonly LayerPriority[] {
 	function ReverseIf(condition: boolean, ...arr: ((LayerPriority | null)[] | null)[]): (LayerPriority | null)[] {
 		return condition ? arr.reverse().flat() : arr.flat();
 	}
@@ -59,6 +59,20 @@ export function ComputeLayerPriorityOrder({ view, armsOrder, leftArm, rightArm }
 		'BELOW_BODY_SOLES',
 		'BODY_SOLES',
 		'BELOW_BODY',
+
+		...(ReverseIf(legs.upper === 'left',
+			[
+				`BELOW_LEG_LEFT`,
+				`LEG_LEFT`,
+				`ABOVE_LEG_LEFT`,
+			],
+			[
+				`BELOW_LEG_RIGHT`,
+				`LEG_RIGHT`,
+				`ABOVE_LEG_RIGHT`,
+			],
+		)),
+
 		'BODY',
 		'BELOW_BREASTS',
 		'BREASTS',
@@ -119,6 +133,8 @@ export const PRIORITY_ORDER_REVERSE_PRIORITIES: ReadonlySet<LayerPriority> = new
 	'BELOW_BACK_HAIR',
 	'BACK_HAIR',
 	'BELOW_BODY_SOLES',
+	'BELOW_LEG_LEFT',
+	'BELOW_LEG_RIGHT',
 	'BELOW_BODY',
 	'BELOW_BREASTS',
 	'BELOW_ARM_LEFT',

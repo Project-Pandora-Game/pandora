@@ -210,7 +210,9 @@ export const ASSET_TEST_POSE_PRESETS: AssetsPosePresets<AssetTestBones> =
 				size: 700,
 				highlight: ['BODY', 'BREASTS'],
 				basePose: {
-					legs: 'standing',
+					legs: {
+						pose: 'standing',
+					},
 					bones: {
 						leg_r: 0,
 						leg_l: 0,
@@ -224,7 +226,9 @@ export const ASSET_TEST_POSE_PRESETS: AssetsPosePresets<AssetTestBones> =
 						leg_r: 0,
 						leg_l: 0,
 					},
-					legs: 'standing',
+					legs: {
+						pose: 'standing',
+					},
 				},
 				{
 					name: 'Closed',
@@ -232,7 +236,9 @@ export const ASSET_TEST_POSE_PRESETS: AssetsPosePresets<AssetTestBones> =
 						leg_r: 2,
 						leg_l: 2,
 					},
-					legs: 'standing',
+					legs: {
+						pose: 'standing',
+					},
 				},
 				{
 					name: 'Spread',
@@ -240,7 +246,9 @@ export const ASSET_TEST_POSE_PRESETS: AssetsPosePresets<AssetTestBones> =
 						leg_r: -18,
 						leg_l: -18,
 					},
-					legs: 'standing',
+					legs: {
+						pose: 'standing',
+					},
 				},
 				{
 					name: 'Full split',
@@ -248,7 +256,9 @@ export const ASSET_TEST_POSE_PRESETS: AssetsPosePresets<AssetTestBones> =
 						leg_r: -85,
 						leg_l: -85,
 					},
-					legs: 'standing',
+					legs: {
+						pose: 'standing',
+					},
 					preview: {
 						y: 500,
 						size: 1200,
@@ -265,7 +275,9 @@ export const ASSET_TEST_POSE_PRESETS: AssetsPosePresets<AssetTestBones> =
 					arms: {
 						position: 'back',
 					},
-					legs: 'kneeling',
+					legs: {
+						pose: 'kneeling',
+					},
 					bones: {
 						arm_r: 74,
 						arm_l: 74,
@@ -284,7 +296,9 @@ export const ASSET_TEST_POSE_PRESETS: AssetsPosePresets<AssetTestBones> =
 						leg_r: 0,
 						leg_l: 0,
 					},
-					legs: 'kneeling',
+					legs: {
+						pose: 'kneeling',
+					},
 				},
 				{
 					name: 'Kneeling spread',
@@ -292,7 +306,9 @@ export const ASSET_TEST_POSE_PRESETS: AssetsPosePresets<AssetTestBones> =
 						leg_r: -16,
 						leg_l: -16,
 					},
-					legs: 'kneeling',
+					legs: {
+						pose: 'kneeling',
+					},
 				},
 			],
 		},
@@ -307,7 +323,9 @@ export const ASSET_TEST_POSE_PRESETS: AssetsPosePresets<AssetTestBones> =
 						rotation: 'down',
 						fingers: 'spread',
 					},
-					legs: 'sitting',
+					legs: {
+						pose: 'sitting',
+					},
 					bones: {
 						arm_r: 74,
 						arm_l: 74,
@@ -326,7 +344,9 @@ export const ASSET_TEST_POSE_PRESETS: AssetsPosePresets<AssetTestBones> =
 						leg_r: 0,
 						leg_l: 0,
 					},
-					legs: 'sitting',
+					legs: {
+						pose: 'sitting',
+					},
 				},
 				{
 					name: 'Sitting spread',
@@ -334,7 +354,9 @@ export const ASSET_TEST_POSE_PRESETS: AssetsPosePresets<AssetTestBones> =
 						leg_r: -16,
 						leg_l: -16,
 					},
-					legs: 'sitting',
+					legs: {
+						pose: 'sitting',
+					},
 				},
 			],
 		},

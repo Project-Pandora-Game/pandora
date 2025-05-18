@@ -6,7 +6,7 @@ import type { LockSetup } from '../gameLogic/locks/lockSetup.ts';
 import type { Satisfies } from '../utility/misc.ts';
 import { HexRGBAColorString } from '../validation.ts';
 import type { AssetId } from './base.ts';
-import type { ArmFingers, ArmPose, ArmRotation, ArmSegmentOrder, BoneDefinitionCompressed, BoneName, CharacterView, Condition, Coordinates, LayerImageOverride, LegsPose } from './graphics/index.ts';
+import type { ArmFingers, ArmPose, ArmRotation, ArmSegmentOrder, BoneDefinitionCompressed, BoneName, CharacterView, Condition, Coordinates, LayerImageOverride, LegSideOrder, LegsPose } from './graphics/index.ts';
 import type { AssetModuleDefinition } from './modules.ts';
 import type { AssetProperties } from './properties.ts';
 import type { RoomDeviceProperties } from './roomDeviceProperties.ts';
@@ -44,13 +44,18 @@ export type AssetDefinitionArmOrderPoseLimit = {
 	upper?: ArmSegmentOrder | ArmSegmentOrder[];
 };
 
+export type AssetDefinitionLegsPosePoseLimit = {
+	upper?: LegSideOrder | LegSideOrder[];
+	pose?: LegsPose | LegsPose[];
+};
+
 export interface AssetDefinitionPoseLimit<A extends AssetDefinitionExtraArgs = AssetDefinitionExtraArgs> {
 	bones?: Partial<Record<A['bones'], number | [number, number][]>>;
 	arms?: AssetDefinitionArmPoseLimit;
 	leftArm?: AssetDefinitionArmPoseLimit;
 	rightArm?: AssetDefinitionArmPoseLimit;
 	armsOrder?: AssetDefinitionArmOrderPoseLimit;
-	legs?: LegsPose | LegsPose[];
+	legs?: AssetDefinitionLegsPosePoseLimit;
 	view?: CharacterView;
 }
 

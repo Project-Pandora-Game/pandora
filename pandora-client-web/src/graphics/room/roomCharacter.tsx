@@ -96,7 +96,7 @@ export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterS
 	const evaluator = useAppearanceConditionEvaluator(characterState);
 
 	let baseScale = 1;
-	if (evaluator.pose.legs === 'sitting') {
+	if (evaluator.pose.legs.pose === 'sitting') {
 		baseScale *= 0.9;
 	}
 
@@ -105,9 +105,9 @@ export function useRoomCharacterOffsets(characterState: AssetFrameworkCharacterS
 		sitting: 0,
 		kneeling: 242,
 	};
-	const legEffectCharacterOffsetBase = evaluator.pose.legs === 'sitting' ? 135 : legEffectMap.standing;
-	const legEffect = legEffectMap[evaluator.pose.legs]
-		+ (evaluator.pose.legs !== 'kneeling' ? 0.11 : 0) * evaluator.getBoneLikeValue('tiptoeing');
+	const legEffectCharacterOffsetBase = evaluator.pose.legs.pose === 'sitting' ? 135 : legEffectMap.standing;
+	const legEffect = legEffectMap[evaluator.pose.legs.pose]
+		+ (evaluator.pose.legs.pose !== 'kneeling' ? 0.11 : 0) * evaluator.getBoneLikeValue('tiptoeing');
 
 	const effectiveLegAngle = Math.min(Math.abs(evaluator.getBoneLikeValue('leg_l')), Math.abs(evaluator.getBoneLikeValue('leg_r')), 90);
 

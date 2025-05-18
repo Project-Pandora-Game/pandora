@@ -405,13 +405,42 @@ export function WardrobeLegsPose({ setPose, characterState }: {
 											key={ r }
 											preset={ {
 												name: capitalize(r),
-												legs: r,
+												legs: {
+													pose: r,
+												},
 											} }
 											characterState={ characterState }
 											setPose={ setPose }
 										/>
 									))
 								}
+							</Row>
+						</td>
+					</tr>
+					<tr>
+						<td>Upper leg order</td>
+						<td>
+							<Row gap='tiny' wrap>
+								<PoseButton
+									preset={ {
+										name: 'Left first',
+										legs: {
+											upper: 'left',
+										},
+									} }
+									characterState={ characterState }
+									setPose={ setPose }
+								/>
+								<PoseButton
+									preset={ {
+										name: 'Right first',
+										legs: {
+											upper: 'right',
+										},
+									} }
+									characterState={ characterState }
+									setPose={ setPose }
+								/>
 							</Row>
 						</td>
 					</tr>

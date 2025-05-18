@@ -2,9 +2,9 @@ import { Immutable } from 'immer';
 import { isEqual } from 'lodash-es';
 import { ZodEnum } from 'zod';
 import { Assert, CloneDeepMutable, IntervalSetIntersection, IsReadonlyArray, type Satisfies } from '../utility/misc.ts';
-import type { AssetDefinitionArmOrderPoseLimit, AssetDefinitionArmPoseLimit, AssetDefinitionPoseLimit, AssetDefinitionPoseLimits } from './definitions.ts';
-import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, CharacterViewSchema, LegsPoseSchema } from './graphics/index.ts';
-import type { AppearanceArmPose, AppearanceArmsOrder, AppearancePose } from './state/characterStatePose.ts';
+import type { AssetDefinitionArmOrderPoseLimit, AssetDefinitionArmPoseLimit, AssetDefinitionLegsPosePoseLimit, AssetDefinitionPoseLimit, AssetDefinitionPoseLimits } from './definitions.ts';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, ArmSegmentOrderSchema, CharacterViewSchema, LegSideOrderSchema, LegsPoseSchema } from './graphics/index.ts';
+import type { AppearanceArmPose, AppearanceArmsOrder, AppearanceLegsPose, AppearancePose } from './state/characterStatePose.ts';
 import { GetDefaultAppearancePose, PartialAppearancePose } from './state/characterStatePose.ts';
 
 type PoseTypeBase = Partial<Record<string, number | string | Partial<Record<string, number | string>>>>;
@@ -12,17 +12,17 @@ type PoseTypeBase = Partial<Record<string, number | string | Partial<Record<stri
 /** Converts partial pose object to dimension keys for the pose limit tree. */
 type PoseTypeToDimensions<T extends PoseTypeBase> = {
 	[K in (keyof T) & string]:
-		NonNullable<T[K]> extends Partial<Record<string, number | string>> ? `${K}.${(keyof NonNullable<T[K]>) & string}` :
-		K
+	NonNullable<T[K]> extends Partial<Record<string, number | string>> ? `${K}.${(keyof NonNullable<T[K]>) & string}` :
+	K
 }[(keyof T) & string];
 
 /** Converts partial pose object to limits for that object */
 export type PoseTypeToLimits<T extends PoseTypeBase> = {
 	[K in (keyof T) & string]?:
-		NonNullable<T[K]> extends Partial<Record<string, number | string>> ? PoseTypeToLimits<NonNullable<T[K]>> :
-		NonNullable<T[K]> extends number ? (number | [number, number][]) :
-		NonNullable<T[K]> extends string ? (NonNullable<T[K]> | NonNullable<T[K]>[]) :
-		never
+	NonNullable<T[K]> extends Partial<Record<string, number | string>> ? PoseTypeToLimits<NonNullable<T[K]>> :
+	NonNullable<T[K]> extends number ? (number | [number, number][]) :
+	NonNullable<T[K]> extends string ? (NonNullable<T[K]> | NonNullable<T[K]>[]) :
+	never
 };
 
 // Create a strongly-typed dimensional data, where each dimension is named and its value is a numeric coordinate.
@@ -307,7 +307,7 @@ function FromPose({ bones, leftArm, rightArm, arms, armsOrder, legs, view }: Imm
 	FromArmPose(data, 'leftArm', { ...arms, ...leftArm });
 	FromArmPose(data, 'rightArm', { ...arms, ...rightArm });
 	FromArmsOrder(data, armsOrder);
-	FromPoseEnumValue(data, 'legs', LegsPoseSchema, legs);
+	FromLegsPose(data, legs);
 	FromPoseEnumValue(data, 'view', CharacterViewSchema, view);
 
 	return data;
@@ -321,6 +321,11 @@ function FromArmPose(data: Map<TreeLimitDimension, number>, prefix: 'leftArm' | 
 
 function FromArmsOrder(data: Map<TreeLimitDimension, number>, { upper }: Partial<AppearanceArmsOrder> = {}): void {
 	FromPoseEnumValue(data, 'armsOrder.upper', ArmSegmentOrderSchema, upper);
+}
+
+function FromLegsPose(data: Map<TreeLimitDimension, number>, { upper, pose }: Partial<AppearanceLegsPose> = {}): void {
+	FromPoseEnumValue(data, 'legs.upper', LegSideOrderSchema, upper);
+	FromPoseEnumValue(data, 'legs.pose', LegsPoseSchema, pose);
 }
 
 function FromLimit({ bones, leftArm, rightArm, arms, armsOrder, legs, view }: Immutable<AssetDefinitionPoseLimit>): TreeLimitDimensionData {
@@ -340,8 +345,8 @@ function FromLimit({ bones, leftArm, rightArm, arms, armsOrder, legs, view }: Im
 	FromArmLimit(data, 'leftArm', { ...arms, ...leftArm });
 	FromArmLimit(data, 'rightArm', { ...arms, ...rightArm });
 	FromArmsOrderLimit(data, armsOrder);
+	FromLegsLimit(data, legs);
 	FromLimitEnumValue(data, 'view', CharacterViewSchema, view);
-	FromLimitEnumValue(data, 'legs', LegsPoseSchema, legs);
 	return data;
 }
 
@@ -353,6 +358,11 @@ function FromArmLimit(data: TreeLimitMutableDimensionData, prefix: 'leftArm' | '
 
 function FromArmsOrderLimit(data: TreeLimitMutableDimensionData, { upper }: Immutable<AssetDefinitionArmOrderPoseLimit> = {}): void {
 	FromLimitEnumValue(data, 'armsOrder.upper', ArmSegmentOrderSchema, upper);
+}
+
+function FromLegsLimit(data: TreeLimitMutableDimensionData, { upper, pose }: Immutable<AssetDefinitionLegsPosePoseLimit> = {}): void {
+	FromLimitEnumValue(data, 'legs.upper', LegSideOrderSchema, upper);
+	FromLimitEnumValue(data, 'legs.pose', LegsPoseSchema, pose);
 }
 
 function FromPoseEnumValue<E extends [string, ...string[]]>(data: Map<TreeLimitDimension, number>, property: TreeLimitDimension, schema: ZodEnum<E>, value: E[number] | undefined): void {
@@ -388,14 +398,19 @@ function ToArmsOrder(data: ReadonlyMap<TreeLimitDimension, number>, pose: Appear
 	IndexToEnum(ArmSegmentOrderSchema, data.get('armsOrder.upper'), (value) => pose.armsOrder.upper = value);
 }
 
+function ToLegsPose(data: ReadonlyMap<TreeLimitDimension, number>, pose: AppearancePose): void {
+	IndexToEnum(LegSideOrderSchema, data.get('legs.upper'), (value) => pose.legs.upper = value);
+	IndexToEnum(LegsPoseSchema, data.get('legs.pose'), (value) => pose.legs.pose = value);
+}
+
 function ToPose(data: ReadonlyMap<TreeLimitDimension, number>): AppearancePose {
 	const pose = GetDefaultAppearancePose();
 
 	ToArmPose(data, 'leftArm', pose);
 	ToArmPose(data, 'rightArm', pose);
 	ToArmsOrder(data, pose);
+	ToLegsPose(data, pose);
 
-	IndexToEnum(LegsPoseSchema, data.get('legs'), (value) => pose.legs = value);
 	IndexToEnum(CharacterViewSchema, data.get('view'), (value) => pose.view = value);
 
 	for (const [key, value] of data) {

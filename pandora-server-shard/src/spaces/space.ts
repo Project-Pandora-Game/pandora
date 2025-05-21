@@ -14,6 +14,7 @@ import {
 	AssetFrameworkGlobalStateContainer,
 	AssetFrameworkRoomState,
 	AssetManager,
+	CardGameGame,
 	CharacterId,
 	ChatCharacterStatus,
 	EMPTY_ARRAY,
@@ -60,6 +61,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	protected readonly tickInterval: NodeJS.Timeout;
 
 	private readonly _gameState: AssetFrameworkGlobalStateContainer;
+
+	public cardGame: CardGameGame | null = null;
 
 	public get currentState(): AssetFrameworkGlobalState {
 		return this._gameState.currentState;

@@ -129,8 +129,8 @@ importers:
         specifier: 4.8.1
         version: 4.8.1
       zod:
-        specifier: 3.25.20
-        version: 3.25.20
+        specifier: 3.25.23
+        version: 3.25.23
     devDependencies:
       '@jest/globals':
         specifier: 29.7.0
@@ -313,8 +313,8 @@ importers:
         specifier: 4.41.0
         version: 4.41.0
       zod:
-        specifier: 3.25.20
-        version: 3.25.20
+        specifier: 3.25.23
+        version: 3.25.23
     devDependencies:
       '@jest/globals':
         specifier: 29.7.0
@@ -401,8 +401,8 @@ importers:
         specifier: 0.10.0
         version: 0.10.0
       zod:
-        specifier: 3.25.20
-        version: 3.25.20
+        specifier: 3.25.23
+        version: 3.25.23
     devDependencies:
       '@jest/globals':
         specifier: 29.7.0
@@ -504,8 +504,8 @@ importers:
         specifier: 0.10.0
         version: 0.10.0
       zod:
-        specifier: 3.25.20
-        version: 3.25.20
+        specifier: 3.25.23
+        version: 3.25.23
     devDependencies:
       '@jest/globals':
         specifier: 29.7.0
@@ -6607,8 +6607,8 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  zod@3.25.20:
-    resolution: {integrity: sha512-z03fqpTMDF1G02VLKUMt6vyACE7rNWkh3gpXVHgPTw28NPtDFRGvcpTtPwn2kMKtQ0idtYJUTxchytmnqYswcw==}
+  zod@3.25.23:
+    resolution: {integrity: sha512-Od2bdMosahjSrSgJtakrwjMDb1zM1A3VIHCPGveZt/3/wlrTWBya2lmEh2OYe4OIu8mPTmmr0gnLHIWQXdtWBg==}
 
 snapshots:
 
@@ -13824,4 +13824,4 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zod@3.25.20: {}
+  zod@3.25.23: {}

@@ -4,6 +4,7 @@ import {
 	AssertNever,
 	AssetSourceGraphicsDefinitionSchema,
 	CharacterSize,
+	CloneDeepMutable,
 	EMPTY_ARRAY,
 	LayerMirror,
 	type AssetId,
@@ -68,71 +69,75 @@ export class EditorAssetGraphics {
 		this.onChangeHandler?.();
 	}
 
-	public addLayer(type: GraphicsSourceLayerType): EditorAssetGraphicsLayer {
+	public addLayer(layer: GraphicsSourceLayerType | Immutable<GraphicsSourceLayer>, insertIndex?: number): EditorAssetGraphicsLayer {
 		let layerDefinition: GraphicsSourceLayer;
-		switch (type) {
-			case 'mesh':
-				layerDefinition = {
-					x: 0,
-					y: 0,
-					width: CharacterSize.WIDTH,
-					height: CharacterSize.HEIGHT,
-					name: '',
-					priority: 'OVERLAY',
-					type: 'mesh',
-					points: '',
-					mirror: LayerMirror.NONE,
-					colorizationKey: undefined,
-					image: {
-						image: '',
-						overrides: [],
-					},
-				};
-				break;
-			case 'alphaImageMesh':
-				layerDefinition = {
-					x: 0,
-					y: 0,
-					width: CharacterSize.WIDTH,
-					height: CharacterSize.HEIGHT,
-					name: '',
-					priority: 'OVERLAY',
-					type: 'alphaImageMesh',
-					points: '',
-					mirror: LayerMirror.NONE,
-					image: {
-						image: '',
-						overrides: [],
-					},
-				};
-				break;
-			case 'autoMesh':
-				layerDefinition = {
-					x: 0,
-					y: 0,
-					width: CharacterSize.WIDTH,
-					height: CharacterSize.HEIGHT,
-					name: '',
-					type: 'autoMesh',
-					points: '',
-					automeshTemplate: '',
-					graphicalLayers: [
-						{ name: '' },
-					],
-					variables: [],
-					imageMap: {
-						'': [''],
-					},
-				};
-				break;
-			default:
-				AssertNever(type);
+		if (typeof layer === 'string') {
+			switch (layer) {
+				case 'mesh':
+					layerDefinition = {
+						x: 0,
+						y: 0,
+						width: CharacterSize.WIDTH,
+						height: CharacterSize.HEIGHT,
+						name: '',
+						priority: 'OVERLAY',
+						type: 'mesh',
+						points: '',
+						mirror: LayerMirror.NONE,
+						colorizationKey: undefined,
+						image: {
+							image: '',
+							overrides: [],
+						},
+					};
+					break;
+				case 'alphaImageMesh':
+					layerDefinition = {
+						x: 0,
+						y: 0,
+						width: CharacterSize.WIDTH,
+						height: CharacterSize.HEIGHT,
+						name: '',
+						priority: 'OVERLAY',
+						type: 'alphaImageMesh',
+						points: '',
+						mirror: LayerMirror.NONE,
+						image: {
+							image: '',
+							overrides: [],
+						},
+					};
+					break;
+				case 'autoMesh':
+					layerDefinition = {
+						x: 0,
+						y: 0,
+						width: CharacterSize.WIDTH,
+						height: CharacterSize.HEIGHT,
+						name: '',
+						type: 'autoMesh',
+						points: '',
+						automeshTemplate: '',
+						graphicalLayers: [
+							{ name: '' },
+						],
+						variables: [],
+						imageMap: {
+							'': [''],
+						},
+					};
+					break;
+				default:
+					AssertNever(layer);
+			}
+		} else {
+			layerDefinition = CloneDeepMutable(layer);
 		}
 		const newLayer = EditorAssetGraphicsLayerContainer.create(freeze(layerDefinition, true), this);
 		newLayer.definition.subscribe(() => {
 			this.onChange();
 		});
-		this._layers.produce((v) => [...v, newLayer]);
+		this._layers.produce((v) => v.toSpliced(insertIndex ?? v.length, 0, newLayer));
 		this.onChange();
 		return newLayer;
 	}

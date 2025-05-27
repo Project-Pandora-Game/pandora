@@ -79,6 +79,51 @@
 			"suggestPathMappingWizard": false
 		},
 		{
+			"name": "Run Editor (Chrome)",
+			"request": "launch",
+			"type": "chrome",
+			"linux": {
+				"runtimeExecutable": "/usr/bin/chromium"
+			},
+			"runtimeArgs": [
+				"--incognito"
+			],
+			"url": "http://localhost:6969/editor",
+			"webRoot": "${workspaceFolder}/pandora-client-web/src",
+			"sourceMaps": true,
+			"sourceMapPathOverrides": {
+				"webpack:///./~/*": "${workspaceFolder}/pandora-client-web/node_modules/*",
+				"webpack://?:*/*": "${workspaceFolder}/pandora-client-web/*"
+			},
+			"skipFiles": [
+				"<node_internals>/**",
+				"**/node_modules/**",
+				"!**/node_modules/pandora-common/**",
+				"!**/node_modules/.pnpm/pandora-common/**"
+			],
+			"preLaunchTask": "pandora-client-web: dev"
+		},
+		{
+			"name": "Run Editor (Firefox)",
+			"request": "launch",
+			"type": "firefox",
+			"reAttach": true,
+			"url": "http://localhost:6969/editor",
+			"webRoot": "${workspaceFolder}/pandora-client-web/dist",
+			"preLaunchTask": "pandora-client-web: dev",
+			"pathMappings": [
+				{
+					"url": "webpack://pandora-client-web/src",
+					"path": "${workspaceFolder}/pandora-client-web/src"
+				},
+				{
+					"url": "webpack://pandora-client-web/pandora-common/src",
+					"path": "${workspaceFolder}/pandora-common/src"
+				},
+			],
+			"suggestPathMappingWizard": false
+		},
+		{
 			"name": "Run Directory Server",
 			"type": "node",
 			"request": "attach",

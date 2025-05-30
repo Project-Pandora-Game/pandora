@@ -326,7 +326,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		description: 'Play a game of cards',
 		longDescription: `You can 'create' or 'stop' a game of cards, 'join' an existing one, 'deal' cards open or face down to player or the room,
 		'check' your hand or 'reveal' the cards that were dealt to all players, ending the game.`,
-		usage: 'create | stop | join | deal <target> /hidden | check | reveal',
+		usage: 'create | stop | join | dealTable | dealOpenly <target> | deal <target>  | check | reveal',
 		handler: CreateClientCommand()
 			.fork('action', (ctx) => ({
 				create: {
@@ -335,7 +335,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 						.handler(({ shardConnector }) => {
 							shardConnector.sendMessage('gamblingAction', {
 								type: 'cards',
-								msgOption: 'create',
+								action: { action: 'create' },
 							});
 							return true;
 						}),
@@ -346,7 +346,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 						.handler(({ shardConnector }) => {
 							shardConnector.sendMessage('gamblingAction', {
 								type: 'cards',
-								msgOption: 'stop',
+								action: { action: 'stop' },
 							});
 							return true;
 						}),
@@ -357,32 +357,63 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 						.handler(({ shardConnector }) => {
 							shardConnector.sendMessage('gamblingAction', {
 								type: 'cards',
-								msgOption: 'join',
+								action: { action: 'join' },
 							});
 							return true;
 						}),
 				},
-				deal: {
-					description: `Deal one card from the space's deck to a player or the room. Only possible for the game creator.`,
+				dealTable: {
+					description: `Deal one card from the space's deck to the room's table. Only possible for the game creator.`,
+					handler: ctx
+						.handler(({ shardConnector }) => {
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'cards',
+								action: {
+									action: 'dealTable',
+									dealHidden: false,
+								},
+							});
+							return true;
+						}),
+				},
+				dealOpenly: {
+					description: `Deal one card from the space's deck openly to a player. Only possible for the game creator.`,
 					handler: ctx
 						.argument('target', CommandStepOptional(CommandSelectorCharacter({ allowSelf: 'any' })))
-						.argument('option', CommandSelectorEnum(['', '/hidden']))
-						.handler(({ shardConnector }, { target, option }) => {
+						.handler(({ shardConnector }, { target }) => {
 							if (target) { //Deal card to a player
 								shardConnector.sendMessage('gamblingAction', {
 									type: 'cards',
-									targetId: target.data.id,
-									msgOption: 'deal',
-									dealHidden: option === '/hidden',
+									action: {
+										action: 'dealOpenly',
+										dealHidden: false,
+										targetId: target.data.id,
+									},
 								});
-							} else { //Deal card to room
+								return true;
+							} else {
+								return false;
+							}
+						}),
+				},
+				deal: {
+					description: `Deal one card from the space's deck hidden to a player. Only possible for the game creator.`,
+					handler: ctx
+						.argument('target', CommandStepOptional(CommandSelectorCharacter({ allowSelf: 'any' })))
+						.handler(({ shardConnector }, { target }) => {
+							if (target) { //Deal card to a player
 								shardConnector.sendMessage('gamblingAction', {
 									type: 'cards',
-									msgOption: 'deal',
-									dealHidden: false, // Cards to the room are always dealt openly
+									action: {
+										action: 'deal',
+										dealHidden: true,
+										targetId: target.data.id,
+									},
 								});
+								return true;
+							} else {
+								return false;
 							}
-							return true;
 						}),
 				},
 				reveal: {
@@ -391,7 +422,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 						.handler(({ shardConnector }) => {
 							shardConnector.sendMessage('gamblingAction', {
 								type: 'cards',
-								msgOption: 'reveal',
+								action: { action: 'reveal' },
 							});
 							return true;
 						}),
@@ -402,7 +433,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 						.handler(({ shardConnector }) => {
 							shardConnector.sendMessage('gamblingAction', {
 								type: 'cards',
-								msgOption: 'check',
+								action: { action: 'check' },
 							});
 							return true;
 						}),

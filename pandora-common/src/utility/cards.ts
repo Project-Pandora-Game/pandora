@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { CharacterId } from '../character/characterTypes.ts';
+import { CharacterIdSchema } from '../character/characterTypes.ts';
 import { ShuffleArray } from './misc.ts';
 
 // Define Suits and Ranks
@@ -164,6 +165,41 @@ export class CardGameGame {
 		this.players = [new CardPlayer(this.dealer)]; // No need to check, as we know the list of players is empty
 	}
 }
+
+// The commands for the CardGame
+//msgOption: z.enum(['create', 'stop', 'join', 'dealTable', 'dealOpenly', 'deal', 'check', 'reveal']),
+
+export const CardGameActionSchema = z.discriminatedUnion('action', [
+	z.object({
+		action: z.literal('create'),
+	}),
+	z.object({
+		action: z.literal('stop'),
+	}),
+	z.object({
+		action: z.literal('join'),
+	}),
+	z.object({
+		action: z.literal('dealTable'),
+		dealHidden: z.boolean(),
+	}),
+	z.object({
+		action: z.literal('dealOpenly'),
+		dealHidden: z.boolean(),
+		targetId: CharacterIdSchema,
+	}),
+	z.object({
+		action: z.literal('deal'),
+		dealHidden: z.boolean(),
+		targetId: CharacterIdSchema,
+	}),
+	z.object({
+		action: z.literal('check'),
+	}),
+	z.object({
+		action: z.literal('reveal'),
+	}),
+]);
 
 // Validate a plain object and then create a class instance
 export const CardGameCardSchema = z.object({

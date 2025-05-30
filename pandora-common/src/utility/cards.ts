@@ -185,16 +185,13 @@ export const CardGameActionSchema = z.discriminatedUnion('action', [
 	}),
 	z.object({
 		action: z.literal('dealTable'),
-		dealHidden: z.boolean(),
 	}),
 	z.object({
 		action: z.literal('dealOpenly'),
-		dealHidden: z.boolean(),
 		targetId: CharacterIdSchema,
 	}),
 	z.object({
 		action: z.literal('deal'),
-		dealHidden: z.boolean(),
 		targetId: CharacterIdSchema,
 	}),
 	z.object({

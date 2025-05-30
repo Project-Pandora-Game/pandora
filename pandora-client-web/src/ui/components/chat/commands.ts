@@ -370,7 +370,6 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 								type: 'cards',
 								action: {
 									action: 'dealTable',
-									dealHidden: false,
 								},
 							});
 							return true;
@@ -386,7 +385,6 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 									type: 'cards',
 									action: {
 										action: 'dealOpenly',
-										dealHidden: false,
 										targetId: target.data.id,
 									},
 								});
@@ -406,7 +404,6 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 									type: 'cards',
 									action: {
 										action: 'deal',
-										dealHidden: true,
 										targetId: target.data.id,
 									},
 								});

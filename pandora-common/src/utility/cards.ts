@@ -127,6 +127,10 @@ export class CardGameGame {
 		}
 	}
 
+	public checkPlayer(c: CharacterId) {
+		return this.players.find((p) => p.getId() === c);
+	}
+
 	public getPlayerHand(c: CharacterId) {
 		const player = this.players.find((p) => p.getId() === c);
 		if (player) {

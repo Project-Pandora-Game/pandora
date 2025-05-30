@@ -100,6 +100,7 @@ const CHAT_ACTIONS_DEF = {
 	gamblingCardGameEmpty: 'There are no cards left in the deck.',
 	gamblingCardGameStopped: 'The current game has been cancelled by SOURCE_CHARACTER.',
 	gamblingCardGameNotAllowed: 'Only the dealer is allowed to do this.',
+	gamblingCardNotAPlayer: `The given player is not part of the game. Ask them to 'join' first.`,
 
 	// Lock actions
 	lockLock: `SOURCE_CHARACTER clicked ITEM_ASSET_NAME on ITEM_CONTAINER_SIMPLE_DYNAMIC shut.`,

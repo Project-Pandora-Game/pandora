@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import type { CharacterId } from '../character/characterTypes.ts';
+import { ShuffleArray } from './misc.ts';
 
 // Define Suits and Ranks
 const suits = [
@@ -10,29 +11,31 @@ const suits = [
 ] as const;
 const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', 'T', 'J', 'Q', 'K', 'A'] as const;
 
+// Define allowed values
+const SuitSchema = z.enum(suits);
+const RankSchema = z.enum(ranks);
+
+// Type definitions
+type CardGameSuit = z.infer<typeof SuitSchema>;
+type CardGameRank = z.infer<typeof RankSchema>;
+type CardArray = CardGameCard[];
+
 // Define CardGameCard class
 export class CardGameCard {
-	public readonly suit: string;
-	public readonly rank: string;
+	public readonly suit: CardGameSuit;
+	public readonly rank: CardGameRank;
 
 	public toString() {
 		return `${this.rank}${this.suit}`;
 	}
 
-	constructor(s?: string, r?: string) {
-		this.suit = s ? s : '\u2665';
-		this.rank = r ? r : '2';
-	}
-}
-
-class CardArray extends Array<CardGameCard> {
-	public override toString(): string {
-		return `[ ${this.map((card) => card.toString()).join(', ')} ]`;
+	constructor(s: CardGameSuit = '\u2661', r: CardGameRank = '2') {
+		this.suit = s;
+		this.rank = r;
 	}
 }
 
 // A deck of cards
-
 class CardDeck {
 	private deck: CardArray = [];
 
@@ -41,10 +44,7 @@ class CardDeck {
 	}
 
 	private shuffle() {
-		for (let i = this.deck.length - 1; i > 0; i--) {
-			const j = Math.floor(Math.random() * (i + 1));
-			[this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
-		}
+		ShuffleArray(this.deck);
 	}
 
 	public create() {
@@ -68,6 +68,7 @@ class CardDeck {
 	}
 }
 
+// The gambler
 class CardPlayer {
 	private id: CharacterId;
 	private hand: CardArray = [];
@@ -89,6 +90,7 @@ class CardPlayer {
 	}
 }
 
+// The actual game
 export class CardGameGame {
 	private deck: CardDeck;
 	private dealer: CharacterId;
@@ -159,25 +161,12 @@ export class CardGameGame {
 			this.deck = d;
 		}
 		this.dealer = creator;
-		this.players.push(new CardPlayer(this.dealer)); // No need to check, as we know the list of players is empty
+		this.players = [new CardPlayer(this.dealer)]; // No need to check, as we know the list of players is empty
 	}
 }
-
-// Zod stuff
-
-// Define allowed values
-const SuitSchema = z.enum(suits);
-const RankSchema = z.enum(ranks);
 
 // Validate a plain object and then create a class instance
 export const CardGameCardSchema = z.object({
 	suit: SuitSchema,
 	rank: RankSchema,
 }).transform((data) => new CardGameCard(data.suit, data.rank));
-
-/*
-export const CardGameCardDeckSchema = z.array(CardGameCardSchema).transform((cards) => {
-	const deck = new CardDeck(cards);
-	return deck;
-});
-*/

@@ -59,6 +59,7 @@ You can, however, exclude characters or specific words from its effect or specif
 			default: 0,
 			options: {
 				min: 0,
+				max: 100,
 			},
 		},
 	},
@@ -89,7 +90,7 @@ You can, however, exclude characters or specific words from its effect or specif
 					return match;
 				}
 
-				//Chaeck for length
+				//Check for length
 				return match.length > config.wordLength ? customImpairment.distortWord(match) : match;
 
 			});

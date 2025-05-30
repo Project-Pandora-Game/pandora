@@ -504,7 +504,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 											id: 'gamblingCardNotAPlayer',
 											sendTo: [client.character.id],
 										});
-										break;
+										break; //Done on purpose
 									}
 									const card = space.cardGame.dealTo(game.action.targetId);
 									if (!card) {
@@ -540,7 +540,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 											id: 'gamblingCardNotAPlayer',
 											sendTo: [client.character.id],
 										});
-										break;
+										break; //Done on purpose
 									}
 									const card = space.cardGame.dealTo(game.action.targetId);
 									if (!card) {
@@ -583,6 +583,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 									sendTo: [client.character.id],
 									dictionary: {
 										'HAND': space.cardGame.getPlayerHand(client.character.id),
+										'TABLE': space.cardGame.getSpaceHand(),
 									},
 								});
 								break;

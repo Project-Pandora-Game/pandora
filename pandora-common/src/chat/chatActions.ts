@@ -93,7 +93,7 @@ const CHAT_ACTIONS_DEF = {
 	gamblingCardGameDealPlayerOpen: 'SOURCE_CHARACTER deals CARD to TARGET_CHARACTER.',
 	gamblingCardGameDealPlayerSecret: 'SOURCE_CHARACTER deals a card face down to TARGET_CHARACTER.',
 	gamblingCardGameDealToYou: 'SOURCE_CHARACTER deals CARD to you.',
-	gamblingCardGameHandCheck: 'You are currently holding HAND.',
+	gamblingCardGameHandCheck: 'You are currently holding HAND.\n On the table are TABLE.',
 	gamblingCardGameEnds: 'SOURCE_CHARACTER ends the game and all hands are revealed.',
 	gamblingCardGameHandReveal: 'PLAYER shows his hand and reveals HAND.',
 	gamblingCardGameRoomCards: 'On the table ISARE HAND.',

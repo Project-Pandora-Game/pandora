@@ -54,9 +54,9 @@ You can, however, exclude characters or specific words from its effect or specif
 			},
 		},
 		wordLength: {
-			name: 'Distort only words that are longer than a given value',
+			name: 'Words with at most this many letters can always be understood',
 			type: 'number',
-			default: 8,
+			default: 0,
 			options: {
 				min: 0,
 			},
@@ -89,7 +89,9 @@ You can, however, exclude characters or specific words from its effect or specif
 					return match;
 				}
 
-				return match.length >= config.wordLength ? customImpairment.distortWord(match) : match;
+				//Chaeck for length
+				return match.length > config.wordLength ? customImpairment.distortWord(match) : match;
+
 			});
 		}
 

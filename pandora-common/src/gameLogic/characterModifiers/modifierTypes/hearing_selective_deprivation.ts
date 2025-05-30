@@ -54,21 +54,11 @@ You can, however, exclude characters or specific words from its effect or specif
 			},
 		},
 		wordLength: {
-			name: 'Distort words that are longer than a given value',
+			name: 'Distort only words that are longer than a given value',
 			type: 'number',
 			default: 8,
 			options: {
 				min: 0,
-			},
-		},
-		longWordDistortion: {
-			name: 'Intensity of long word scrambling',
-			type: 'number',
-			default: 9,
-			options: {
-				min: 0,
-				max: 10,
-				withSlider: true,
 			},
 		},
 	},
@@ -82,13 +72,6 @@ You can, however, exclude characters or specific words from its effect or specif
 			frequencyLoss: config.intensity,
 			middleLoss: config.intensity,
 			vowelLoss: config.intensity,
-		});
-
-		const longWordImpairment = new HearingImpairment(metadata.from, {
-			distortion: config.longWordDistortion,
-			frequencyLoss: config.longWordDistortion,
-			middleLoss: config.longWordDistortion,
-			vowelLoss: config.longWordDistortion,
 		});
 
 		const wordAllowlist = config.wordAllowlist.map((w) => w.trim().toLowerCase()).filter(Boolean);
@@ -106,8 +89,7 @@ You can, however, exclude characters or specific words from its effect or specif
 					return match;
 				}
 
-				return match.length >= config.wordLength ?
-					longWordImpairment.distortWord(match) : customImpairment.distortWord(match);
+				return match.length >= config.wordLength ? customImpairment.distortWord(match) : match;
 			});
 		}
 

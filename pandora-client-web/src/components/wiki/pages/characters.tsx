@@ -191,10 +191,10 @@ export function WikiCharacters(): ReactElement {
 			<ul>
 				<li>An added modifier can be set to "enabled" or "disabled" with the toggle on the top left. Disabled modifiers have no effect and their activation conditions are ignored.</li>
 				<li>The same modifier type can be added multiple times to a single character. These instances of the modifier are additive to one another.</li>
-				<li>Conflicts between character modifiers are resolved by the order of the added modifier list (the first entry has the highest priority).</li>
+				<li>Conflicts between character modifiers are resolved by the order of the added modifier list (e.g. the first entry has the highest priority and applies its effect first).</li>
 				<li>You can only change the order of a modifier in the current modifiers list when permitted to edit all the modifiers between the current and desired position.</li>
 				<li>Modifier configurations can be exported in form of a longer text code that can be stored outside of Pandora and later be imported again for reuse.</li>
-				<li>Some modifier types come with preconfigured templates showcasing how they can be used.</li>
+				<li>Some modifier types come with pre-configured templates showcasing how they can be used.</li>
 			</ul>
 			<p />
 			<p>

@@ -107,6 +107,10 @@ export class CardGameGame {
 		}
 	}
 
+	public leaveGame(c: CharacterId) {
+		this.players.filter((p) => p.getId() !== c);
+	}
+
 	public dealTo(c?: CharacterId) {
 		//Deal a card either to the room or to a player
 		if (c) {
@@ -171,7 +175,6 @@ export class CardGameGame {
 }
 
 // The commands for the CardGame
-//msgOption: z.enum(['create', 'stop', 'join', 'dealTable', 'dealOpenly', 'deal', 'check', 'reveal']),
 
 export const CardGameActionSchema = z.discriminatedUnion('action', [
 	z.object({

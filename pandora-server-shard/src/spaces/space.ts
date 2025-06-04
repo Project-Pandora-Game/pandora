@@ -356,11 +356,34 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	}
 
 	/**
-	 * Removes a character from the space
+	 * Removes a character from the space and stops any ongoing game, if it
+	 * was initiated by the leaving player
 	 * @param character - The character being removed
 	 */
 	public characterRemove(character: Character): void {
 		this.runWithSuppressedUpdates(() => {
+			if (this.cardGame) {
+				// Stop a game, if character is dealer of a current game
+				if (this.cardGame.isDealer(character.id)) {
+					//Send an information to all but the leaving character
+					this.cardGame.getPlayerIds().forEach((p) => {
+						if (!this.cardGame?.isDealer(p)) {
+							this.handleActionMessage({
+								id: 'gamblingCardGameStopped',
+								character: {
+									type: 'character',
+									id: character.id,
+								},
+								sendTo: [p],
+							});
+						}
+					});
+					this.cardGame = null;
+					this.logger.debug(`Local card game stopped, because dealer left`);
+				} else {
+					this.cardGame.leaveGame(character.id);
+				}
+			}
 			// Remove character
 			const originalState = this._gameState.currentState;
 			let newState = originalState;

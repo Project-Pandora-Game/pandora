@@ -31,21 +31,21 @@
 	"dependencies": {
 		"@types/async-lock": "1.4.2",
 		"@types/lodash-es": "4.17.12",
-		"@types/node": "22.15.29",
+		"@types/node": "22.15.14",
 		"async-lock": "1.4.1",
 		"delaunator": "5.0.1",
 		"immer": "10.1.1",
 		"lodash-es": "4.17.21",
 		"nanoid": "5.1.5",
 		"type-fest": "4.41.0",
-		"zod": "3.25.42"
+		"zod": "3.24.4"
 	},
 	"devDependencies": {
 		"@jest/globals": "29.7.0",
 		"@types/delaunator": "5.0.3",
 		"jest": "29.7.0",
 		"rimraf": "6.0.1",
-		"ts-jest": "29.3.4",
+		"ts-jest": "29.3.2",
 		"ts-mockito": "2.6.1",
 		"tslib": "2.8.1",
 		"typescript": "5.8.3"

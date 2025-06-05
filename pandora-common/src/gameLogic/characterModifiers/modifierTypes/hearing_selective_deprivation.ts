@@ -53,15 +53,6 @@ You can, however, exclude characters or specific words from its effect or specif
 				withSlider: true,
 			},
 		},
-		wordLength: {
-			name: 'Words with at most this many letters can always be understood',
-			type: 'number',
-			default: 0,
-			options: {
-				min: 0,
-				max: 100,
-			},
-		},
 	},
 
 	processReceivedChatMessageBeforeFilters(config, content, metadata) {
@@ -90,9 +81,7 @@ You can, however, exclude characters or specific words from its effect or specif
 					return match;
 				}
 
-				//Check for length
-				return match.length > config.wordLength ? customImpairment.distortWord(match) : match;
-
+				return customImpairment.distortWord(match);
 			});
 		}
 

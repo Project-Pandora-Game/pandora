@@ -82,7 +82,9 @@ export const PartialAppearancePoseSchema = z.object({
 	leftArm: AppearanceArmPoseSchema.partial().optional().catch(undefined),
 	rightArm: AppearanceArmPoseSchema.partial().optional().catch(undefined),
 	armsOrder: AppearanceArmsOrderSchema.partial().optional().catch(undefined),
-	legs: AppearanceLegsPoseSchema.partial().optional().catch(undefined),
+	legs: z.preprocess((value) => {
+		return typeof value === 'string' ? { pose: value } : value;
+	}, AppearanceLegsPoseSchema.partial()).optional().catch(undefined),
 	view: CharacterViewSchema.optional().catch(undefined),
 });
 type __satisfies__PartialAppearancePoseSchema = Satisfies<PartialAppearancePose<string>, z.infer<typeof PartialAppearancePoseSchema>>;

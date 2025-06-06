@@ -251,8 +251,8 @@ export function PreviewCutter() {
 	return (
 		<FieldsetToggle legend={ legend } forceOpen={ state.enabled } onChange={ onChange } className='previewCutter'>
 			<div>
-				<label htmlFor='preview-cutter-centered'>Centered</label>
-				<Checkbox id='preview-cutter-centered' checked={ state.centered } onChange={ setCentered } />
+				<label htmlFor='preview-cutter-size'>Size</label>
+				<NumberInput id='preview-cutter-size' min={ PREVIEW_CUTTER_MIN_SIZE } max={ PREVIEW_CUTTER_MAX_SIZE } value={ state.size } step={ 2 } onChange={ setSize } />
 			</div>
 			{
 				!state.centered ? (
@@ -267,8 +267,8 @@ export function PreviewCutter() {
 				<NumberInput id='preview-cutter-y' min={ -state.size } max={ CharacterSize.HEIGHT + state.size } value={ state.position.y } onChange={ setY } />
 			</div>
 			<div>
-				<label htmlFor='preview-cutter-size'>Size</label>
-				<NumberInput id='preview-cutter-size' min={ PREVIEW_CUTTER_MIN_SIZE } max={ PREVIEW_CUTTER_MAX_SIZE } value={ state.size } step={ 2 } onChange={ setSize } />
+				<label htmlFor='preview-cutter-centered'>Centered</label>
+				<Checkbox id='preview-cutter-centered' checked={ state.centered } onChange={ setCentered } />
 			</div>
 			<div>
 				<label htmlFor='preview-cutter-overrides'>Automatically configure layers</label>

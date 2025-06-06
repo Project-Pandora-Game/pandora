@@ -347,6 +347,9 @@ function AssetLayerListLayer({ asset, layer }: { asset: EditorAssetGraphics; lay
 				// eslint-disable-next-line no-alert
 				if (!confirm(`Are you sure you want to delete layer '${name}'?`))
 					return;
+				if (editor.targetLayer.value === layer) {
+					editor.targetLayer.value = null;
+				}
 				asset.deleteLayer(layer);
 			} } title='DELETE this layer'>
 				🗑️

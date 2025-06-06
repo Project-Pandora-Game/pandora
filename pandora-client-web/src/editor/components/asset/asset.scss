@@ -25,6 +25,8 @@
 					color: common.$theme-editor-asset-layerentry-text;
 					min-width: 0;
 					padding: 0.4em;
+					overflow: hidden;
+					text-overflow: ellipsis;
 				}
 
 				.layerName {

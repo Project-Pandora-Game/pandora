@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { RectangleSchema } from '../../graphics/common.ts';
 import { AttributeNameSchema } from '../../graphics/conditions.ts';
-import { LayerImageOverrideSchema, LayerMirrorSchema, LayerPrioritySchema } from '../../graphics/layers/common.ts';
+import { LayerImageOverrideSchema, LayerMirrorSchema, LayerPrioritySchema, LayerStateOverridesSchema } from '../../graphics/layers/common.ts';
 
 export const GraphicsSourceAutoMeshTemplateSchema = z.object({
 	name: z.string(),
@@ -18,6 +18,8 @@ export const GraphicsSourceAutoMeshGraphicalLayerSchema = z.object({
 	name: z.string(),
 	colorizationKey: z.string().optional(),
 	imageOverrides: LayerImageOverrideSchema.array().optional(),
+	/** Overrides applied to this layer while generating an item preview. */
+	previewOverrides: LayerStateOverridesSchema.optional(),
 });
 export type GraphicsSourceAutoMeshGraphicalLayer = z.infer<typeof GraphicsSourceAutoMeshGraphicalLayerSchema>;
 

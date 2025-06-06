@@ -12,7 +12,6 @@ import type { CharacterView } from './graphics/index.ts';
 import type { Item } from './item/index.ts';
 import type { AppearanceItems } from './item/items.ts';
 import type { AssetFrameworkCharacterState } from './state/characterState.ts';
-import type { CharacterArmsPose } from './state/characterStatePose.ts';
 import type { RestrictionOverride } from './state/characterStateTypes.ts';
 import type { AssetFrameworkGlobalState } from './state/globalState.ts';
 
@@ -63,14 +62,6 @@ export class CharacterAppearance implements ActionTargetCharacter {
 
 	public getAllItems(): AppearanceItems<WearableAssetType> {
 		return this._items;
-	}
-
-	public getArmsPose(): CharacterArmsPose {
-		return {
-			leftArm: this.characterState.actualPose.leftArm,
-			rightArm: this.characterState.actualPose.rightArm,
-			armsOrder: this.characterState.actualPose.armsOrder,
-		};
 	}
 
 	public getView(): CharacterView {

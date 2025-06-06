@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { CharacterViewSchema, LegsPoseSchema } from '../../../assets/graphics/conditions.ts';
-import { AppearanceArmPoseSchema, AppearanceArmsOrderSchema, AppearancePoseSchema } from '../../../assets/state/characterStatePose.ts';
+import { CharacterViewSchema } from '../../../assets/graphics/conditions.ts';
+import { AppearanceArmPoseSchema, AppearanceArmsOrderSchema, AppearanceLegsPoseSchema, AppearancePoseSchema } from '../../../assets/state/characterStatePose.ts';
 import { CharacterIdSchema } from '../../../character/characterTypes.ts';
 import type { AppearanceActionProcessingResult } from '../appearanceActionProcessingContext.ts';
 import type { AppearanceActionHandlerArg } from './_common.ts';
@@ -12,7 +12,7 @@ export const AppearanceActionPose = z.object({
 	leftArm: AppearanceArmPoseSchema.partial().optional(),
 	rightArm: AppearanceArmPoseSchema.partial().optional(),
 	armsOrder: AppearanceArmsOrderSchema.partial().optional(),
-	legs: LegsPoseSchema.optional(),
+	legs: AppearanceLegsPoseSchema.partial().optional(),
 	view: CharacterViewSchema.optional(),
 });
 

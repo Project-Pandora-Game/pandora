@@ -160,9 +160,9 @@ export class AppearanceConditionEvaluator extends ConditionEvaluatorBase {
 		} else if ('legs' in condition) {
 			Assert(condition.legs != null);
 			if (condition.legs.startsWith('!')) {
-				return this.pose.legs !== condition.legs.slice(1);
+				return this.pose.legs.pose !== condition.legs.slice(1);
 			}
-			return this.pose.legs === condition.legs;
+			return this.pose.legs.pose === condition.legs;
 		} else if ('view' in condition) {
 			Assert(condition.view != null);
 			return this.pose.view === condition.view;

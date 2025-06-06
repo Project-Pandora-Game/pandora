@@ -1,8 +1,12 @@
-import type { Immutable } from 'immer';
+import { produce, type Immutable } from 'immer';
+import { noop } from 'lodash-es';
 import { Assert, AssertNever, type GraphicsSourceLayer } from 'pandora-common';
-import { ReactElement } from 'react';
+import { ReactElement, useCallback } from 'react';
+import deleteIcon from '../../../assets/icons/delete.svg';
+import editIcon from '../../../assets/icons/edit.svg';
 import { TextInput } from '../../../common/userInteraction/input/textInput.tsx';
 import { Row } from '../../../components/common/container/container.tsx';
+import { useConfirmDialog } from '../../../components/dialog/dialog.tsx';
 import { ContextHelpButton } from '../../../components/help/contextHelpButton.tsx';
 import { StripAssetIdPrefix } from '../../../graphics/utility.ts';
 import { useObservable } from '../../../observable.ts';
@@ -38,6 +42,7 @@ export function LayerUI(): ReactElement {
 	return (
 		<div className='editor-setupui' key={ `${asset.id}/${selectedLayer.index}` }>
 			<LayerName layer={ selectedLayer } />
+			<LayerQuickActions layer={ selectedLayer } />
 			{
 				(selectedLayer.type === 'mesh' || selectedLayer.type === 'alphaImageMesh') ? (
 					<LayerMeshUI asset={ asset } layer={ selectedLayer } />
@@ -83,5 +88,58 @@ function LayerName({ layer }: { layer: EditorAssetGraphicsLayer; }): ReactElemen
 				/>
 			</Row>
 		</>
+	);
+}
+
+function LayerQuickActions({ layer }: {
+	layer: EditorAssetGraphicsLayer;
+}): ReactElement | null {
+	const editor = useEditor();
+	const confirm = useConfirmDialog();
+	const name = useLayerName(layer);
+
+	const deleteLayer = useCallback(() => {
+		confirm('Confirm deletion', `Are you sure you want to delete layer '${name}'?`)
+			.then((result) => {
+				if (!result)
+					return;
+
+				if (editor.targetLayer.value === layer) {
+					editor.targetLayer.value = null;
+				}
+				layer.asset.deleteLayer(layer);
+			})
+			.catch(noop);
+	}, [editor, confirm, layer, name]);
+
+	const duplicateLayer = useCallback(() => {
+		let newName: string;
+		const existingNameMatch = /^(.*) \(([0-9]+)\)$/.exec(name);
+		if (existingNameMatch != null) {
+			newName = `${existingNameMatch[1]} (${Number.parseInt(existingNameMatch[2]) + 1})`;
+		} else {
+			newName = name + ' (2)';
+		}
+		const copy = produce(layer.definition.value, (d) => {
+			d.name = newName;
+		});
+		editor.targetLayer.value = layer.asset.addLayer(copy, layer.index + 1);
+	}, [editor, layer, name]);
+
+	return (
+		<Row>
+			<button
+				className='wardrobeActionButton allowed'
+				onClick={ deleteLayer }
+			>
+				<img src={ deleteIcon } alt='Delete action' />&nbsp;Delete
+			</button>
+			<button
+				className='wardrobeActionButton allowed'
+				onClick={ duplicateLayer }
+			>
+				<img src={ editIcon } alt='Duplicate action' />&nbsp;Duplicate
+			</button>
+		</Row>
 	);
 }

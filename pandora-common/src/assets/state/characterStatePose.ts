@@ -77,13 +77,13 @@ export type PartialAppearancePose<Bones extends BoneName = BoneName> = {
 };
 
 export const PartialAppearancePoseSchema = z.object({
-	bones: z.record(BoneNameSchema, z.number().int().min(BONE_MIN).max(BONE_MAX).optional()).optional(),
-	arms: AppearanceArmPoseSchema.partial().optional(),
-	leftArm: AppearanceArmPoseSchema.partial().optional(),
-	rightArm: AppearanceArmPoseSchema.partial().optional(),
-	armsOrder: AppearanceArmsOrderSchema.partial().optional(),
-	legs: AppearanceLegsPoseSchema.partial().optional(),
-	view: CharacterViewSchema.optional(),
+	bones: z.record(BoneNameSchema, z.number().int().min(BONE_MIN).max(BONE_MAX).optional()).optional().catch(undefined),
+	arms: AppearanceArmPoseSchema.partial().optional().catch(undefined),
+	leftArm: AppearanceArmPoseSchema.partial().optional().catch(undefined),
+	rightArm: AppearanceArmPoseSchema.partial().optional().catch(undefined),
+	armsOrder: AppearanceArmsOrderSchema.partial().optional().catch(undefined),
+	legs: AppearanceLegsPoseSchema.partial().optional().catch(undefined),
+	view: CharacterViewSchema.optional().catch(undefined),
 });
 type __satisfies__PartialAppearancePoseSchema = Satisfies<PartialAppearancePose<string>, z.infer<typeof PartialAppearancePoseSchema>>;
 

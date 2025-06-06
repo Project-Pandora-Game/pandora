@@ -13,6 +13,7 @@ import {
 	IDirectoryDirectMessageInfo,
 	IShardTokenInfo,
 	LIMIT_ACCOUNT_PROFILE_LENGTH,
+	ZodArrayWithInvalidDrop,
 	ZodCast,
 	ZodTemplateString,
 	ZodTruncate,
@@ -102,7 +103,7 @@ export const DatabaseAccountSchema = z.object({
 	settingsCooldowns: AccountSettingsCooldownsSchema.default(() => ({})),
 	directMessages: ZodCast<DatabaseDirectMessageInfo>().array().optional(),
 	storedOutfits: AssetFrameworkOutfitWithIdSchema.array().catch(() => []),
-	storedPosePresets: AssetFrameworkPosePresetWithIdSchema.array().catch(() => []),
+	storedPosePresets: ZodArrayWithInvalidDrop(AssetFrameworkPosePresetWithIdSchema, z.record(z.unknown())).catch(() => []),
 });
 /** Representation of account stored in database */
 export type DatabaseAccount = z.infer<typeof DatabaseAccountSchema>;

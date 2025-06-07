@@ -77,6 +77,17 @@ export class GraphicsApplicationManager extends TypedEventEmitter<{
 	public _triggerBeforeDestroy() {
 		this.emit('beforeDestroy', undefined);
 	}
+
+	public resetApp() {
+		const app = this.app;
+		if (app == null)
+			return;
+
+		// Reset some things that should not persist past app being released
+		app.ticker.stop();
+		app.ticker.lastTime = -1;
+		app.renderer.clear();
+	}
 }
 
 let cleanupInitialized = false;
@@ -127,6 +138,8 @@ export function WaitForApplicationManager(): Promise<GraphicsApplicationManager>
 }
 
 export function ReleaseApplicationManager(app: GraphicsApplicationManager): void {
+	app.resetApp();
+
 	const queueWaiter = ManagerQueue.shift();
 	if (queueWaiter != null) {
 		queueMicrotask(() => {

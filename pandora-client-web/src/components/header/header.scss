@@ -70,6 +70,33 @@
 	}
 }
 
+.ServerAnnouncementHeader {
+	@include common.flex(row);
+	background: common.$theme-header-background;
+	color: common.$theme-header-text;
+	width: 100%;
+	position: relative;
+	min-height: 1em;
+	padding: common.spacing(small);
+	gap: common.spacing(small);
+	border-bottom: 2px solid common.$theme-separator;
+	align-items: center;
+
+	&.type-info {
+		background: common.$theme-noticebox-background;
+		color: common.$theme-noticebox-text;
+	}
+
+	&.type-warning {
+		background: common.$theme-warningbox-background;
+		color: common.$theme-warningbox-text;
+	}
+
+	> .IconButton {
+		height: 2em;
+	}
+}
+
 .OverlayHeader {
 	position: absolute;
 	inset: 0;

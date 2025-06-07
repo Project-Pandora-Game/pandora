@@ -2,26 +2,12 @@ import { Immutable } from 'immer';
 import { z } from 'zod';
 import { AccountId, AccountIdSchema, IAccountRoleInfo, type AccountSettings, type AccountSettingsCooldowns } from '../account/index.ts';
 import type { CharacterId } from '../character/index.ts';
+import type { IDirectoryStatus } from '../directory/status.ts';
 import type { ShardFeature } from '../space/space.ts';
 import { Satisfies } from '../utility/misc.ts';
 import { ZodCast, type HexColorString } from '../validation.ts';
 import type { IAccountContact, IAccountFriendStatus } from './client_directory.ts';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
-
-export type IDirectoryStatus = {
-	time: number;
-	onlineAccounts: number;
-	onlineCharacters: number;
-	betaKeyRequired?: true;
-	captchaSiteKey?: string;
-};
-export function CreateDefaultDirectoryStatus(): IDirectoryStatus {
-	return {
-		time: Date.now(),
-		onlineAccounts: 0,
-		onlineCharacters: 0,
-	};
-}
 
 // TODO: This needs reasonable size limits
 export const AccountCryptoKeySchema = z.object({

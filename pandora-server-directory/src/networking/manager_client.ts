@@ -1,4 +1,5 @@
-import { AccountRole, Assert, AssertNever, AssertNotNullable, Awaitable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId } from 'pandora-common';
+import { cloneDeep } from 'lodash-es';
+import { AccountRole, Assert, AssertNever, AssertNotNullable, Awaitable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId, type DirectoryStatusAnnouncement } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
 import promClient from 'prom-client';
 import { z } from 'zod';
@@ -41,6 +42,8 @@ const messagesMetric = new promClient.Counter({
 
 /** Class that stores all currently connected clients */
 export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientDirectory, ClientConnection>, ServerService {
+	public announcement: DirectoryStatusAnnouncement | undefined;
+
 	private connectedClients: Set<ClientConnection> = new Set();
 
 	private readonly messageHandler: MessageHandler<IClientDirectory, ClientConnection>;
@@ -74,6 +77,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		for (const connection of this.connectedClients) {
 			connection.sendMessage('serverStatus', status);
 		}
+	}
+
+	public setAnnouncement(announcement: DirectoryStatusAnnouncement | null): void {
+		this.announcement = announcement ?? undefined;
+		this.broadcastStatusUpdate();
 	}
 
 	constructor() {
@@ -1023,6 +1031,9 @@ function MakeStatus(): IDirectoryStatus {
 	}
 	if (HCAPTCHA_SECRET_KEY && HCAPTCHA_SECRET_KEY) {
 		result.captchaSiteKey = HCAPTCHA_SITE_KEY;
+	}
+	if (ConnectionManagerClient.announcement != null) {
+		result.announcement = cloneDeep(ConnectionManagerClient.announcement);
 	}
 	return result;
 }

@@ -8,6 +8,7 @@ import { useDirectoryConnector } from '../gameContext/directoryConnectorContextP
 import { BetaKeys } from './betaKeys/betaKeys.tsx';
 import './management.scss';
 import { Roles } from './roles/roles.tsx';
+import { ServerManagement } from './server/server.tsx';
 import { Shards } from './shards/shards.tsx';
 
 export function ManagementRoutes(): ReactElement | null {
@@ -34,6 +35,9 @@ export function ManagementRoutes(): ReactElement | null {
 					</UrlTab>
 				) : null
 			}
+			<UrlTab name='Server' urlChunk='server'>
+				<ServerManagement />
+			</UrlTab>
 			<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
 		</UrlTabContainer>
 	);

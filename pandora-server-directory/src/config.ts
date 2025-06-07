@@ -15,6 +15,8 @@ export const EnvParser = CreateEnvParser({
 	SERVER_HTTPS_KEY: z.string().default(''),
 	/** Secret key used to authenticate Shards connecting to Directory */
 	SHARD_SHARED_SECRET: z.string().default(''),
+	/** Secret key used to authenticate against management endpoints */
+	ADMIN_ENDPOINT_TOKEN: z.string().default(''),
 	/** How many hops are we after a trusted reverse proxy */
 	TRUSTED_REVERSE_PROXY_HOPS: z.number().default(0),
 

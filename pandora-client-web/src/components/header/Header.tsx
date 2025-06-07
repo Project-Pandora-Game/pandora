@@ -1,7 +1,9 @@
 import classNames from 'classnames';
-import { GetLogger, IsAuthorized } from 'pandora-common';
+import { isEqual } from 'lodash-es';
+import { DirectoryStatusAnnouncement, GetLogger, IsAuthorized } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import crossIcon from '../../assets/icons/cross.svg';
 import friendsIcon from '../../assets/icons/friends.svg';
 import managementIcon from '../../assets/icons/management.svg';
 import notificationsIcon from '../../assets/icons/notification.svg';
@@ -16,10 +18,11 @@ import { NotificationSource, useNotification, type NotificationHeaderKeys } from
 import { useService } from '../../services/serviceProvider.tsx';
 import { useIsNarrowScreen } from '../../styles/mediaQueries.ts';
 import { AccountContactContext, useAccountContacts } from '../accountContacts/accountContactContext.ts';
+import { Button, IconButton } from '../common/button/button.tsx';
 import { IconHamburger } from '../common/button/domIcons.tsx';
 import { Column, Row } from '../common/container/container.tsx';
-import { DialogInPortal } from '../dialog/dialog.tsx';
-import { GetDirectoryUrl, useAuthTokenHeader } from '../gameContext/directoryConnectorContextProvider.tsx';
+import { DialogInPortal, DraggableDialog } from '../dialog/dialog.tsx';
+import { GetDirectoryUrl, useAuthTokenHeader, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { useNotificationHeader } from '../gameContext/notificationProvider.tsx';
 import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider.tsx';
@@ -277,17 +280,76 @@ export function Header(): ReactElement {
 	const isNarrow = useIsNarrowScreen();
 
 	return (
-		<header className='Header'>
+		<>
+			<header className='Header'>
+				{
+					isNarrow ? (
+						<CollapsableHeader />
+					) : (
+						<>
+							<LeftHeader />
+							<RightHeader />
+						</>
+					)
+				}
+			</header>
+			<Announcement />
+		</>
+	);
+}
+
+function Announcement(): ReactElement | null {
+	const { announcement } = useObservable(useDirectoryConnector().directoryStatus);
+
+	const [open, setOpen] = useState(false);
+	const [dismissedAnnouncement, setDismissedAnnouncement] = useState<DirectoryStatusAnnouncement | null>(null);
+
+	useEffect(() => {
+		if (open && announcement == null) {
+			setOpen(false);
+		}
+	}, [announcement, open]);
+
+	if (announcement == null || isEqual(announcement, dismissedAnnouncement))
+		return null;
+
+	return (
+		<>
+			<div className={ `ServerAnnouncementHeader type-${announcement.type}` }>
+				<Button
+					theme='transparent'
+					className='flex-1'
+					onClick={ () => {
+						setOpen((v) => !v);
+					} }
+					slim
+				>
+					{ announcement.title } { announcement.content ? '(…)' : null }
+				</Button>
+				<IconButton
+					onClick={ () => {
+						setDismissedAnnouncement(announcement);
+					} }
+					theme='default'
+					src={ crossIcon }
+					alt='Dismiss announcement'
+				/>
+			</div>
 			{
-				isNarrow ? (
-					<CollapsableHeader />
-				) : (
-					<>
-						<LeftHeader />
-						<RightHeader />
-					</>
-				)
+				open ? (
+					<DraggableDialog
+						close={ () => {
+							setOpen(false);
+						} }
+						title='Announcement'
+					>
+						<h2>{ announcement.title }</h2>
+						<p className='display-linebreak'>
+							{ announcement.content }
+						</p>
+					</DraggableDialog>
+				) : null
 			}
-		</header>
+		</>
 	);
 }

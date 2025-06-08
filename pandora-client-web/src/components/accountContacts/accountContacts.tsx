@@ -1,7 +1,14 @@
 import { capitalize } from 'lodash-es';
-import { AccountId, IAccountContact, IAccountFriendStatus } from 'pandora-common';
+import { AccountId, IAccountContact, IAccountFriendStatus, type AccountOnlineStatus } from 'pandora-common';
 import React, { useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router';
+import statusIconAway from '../../assets/icons/state-away.svg';
+import statusIconDND from '../../assets/icons/state-dnd.svg';
+import statusIconLookingDom from '../../assets/icons/state-dom.svg';
+import statusIconOffline from '../../assets/icons/state-offline.svg';
+import statusIconOnline from '../../assets/icons/state-online.svg';
+import statusIconLookingSub from '../../assets/icons/state-sub.svg';
+import statusIconLookingSwitch from '../../assets/icons/state-switch.svg';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
@@ -170,14 +177,17 @@ function ShowFriends() {
 	const friendsWithStatus = useMemo(() => {
 		return friends.map((friend) => {
 			const stat = status.find((s) => s.id === friend.id);
-			return {
-				id: friend.id,
-				displayName: friend.displayName,
-				labelColor: (stat?.online ? stat?.labelColor : null) ?? 'transparent', // We hide the label coloring if account is offline, as we can't get it without loading the account from DB
-				time: friend.time,
-				online: stat?.online === true,
-				characters: stat?.characters,
-			};
+			return (
+				<FriendRow key={ friend.id }
+					id={ friend.id }
+					displayName={ friend.displayName }
+					// We hide the label coloring if account is offline, as we can't get it without loading the account from DB
+					labelColor={ ((stat?.status !== 'offline') ? stat?.labelColor : null) ?? 'transparent' }
+					time={ friend.time }
+					status={ stat?.status ?? 'offline' }
+					characters={ stat?.characters }
+				/>
+			);
 		});
 	}, [friends, status]);
 
@@ -187,7 +197,7 @@ function ShowFriends() {
 				<colgroup>
 					<col style={ { width: '1%' } } />
 					<col />
-					<col />
+					<col style={ { width: '1%' } } />
 					<col />
 					<col style={ { width: '1%' } } />
 					<col style={ { width: '1%' } } />
@@ -203,9 +213,7 @@ function ShowFriends() {
 					</tr>
 				</thead>
 				<tbody>
-					{ friendsWithStatus.map((friend) => (
-						<FriendRow key={ friend.id } { ...friend } />
-					)) }
+					{ friendsWithStatus }
 				</tbody>
 			</table>
 		</Scrollable>
@@ -219,19 +227,39 @@ export function useGoToDM(id: AccountId) {
 	}, [id, navigate]);
 }
 
+const FRIEND_STATUS_ICONS: Record<AccountOnlineStatus, string> = {
+	'online': statusIconOnline,
+	'looking-switch': statusIconLookingSwitch,
+	'looking-dom': statusIconLookingDom,
+	'looking-sub': statusIconLookingSub,
+	'away': statusIconAway,
+	'dnd': statusIconDND,
+	'offline': statusIconOffline,
+};
+
+const FRIEND_STATUS_NAMES: Record<AccountOnlineStatus, string> = {
+	'online': 'Online',
+	'looking-switch': 'Looking to play',
+	'looking-dom': 'Looking to dom',
+	'looking-sub': 'Looking to sub',
+	'away': 'Away',
+	'dnd': 'Do Not Disturb',
+	'offline': 'Offline',
+};
+
 function FriendRow({
 	id,
 	displayName,
 	labelColor,
 	time,
-	online,
+	status,
 	characters,
 }: {
 	id: AccountId;
 	displayName: string;
 	labelColor: string;
 	time: number;
-	online: boolean;
+	status: AccountOnlineStatus;
 	characters?: IAccountFriendStatus['characters'];
 }) {
 	const directory = useDirectoryConnector();
@@ -257,7 +285,7 @@ function FriendRow({
 	}, [navigate, id, location.pathname]);
 
 	return (
-		<tr className={ online ? 'friend online' : 'friend offline' }>
+		<tr className={ (status !== 'offline') ? 'friend online' : 'friend offline' }>
 			<td className='selectable'>{ id }</td>
 			<td
 				className='selectable'
@@ -268,11 +296,15 @@ function FriendRow({
 				{ displayName }
 			</td>
 			<td className='status'>
-				<Row className='fill' alignX='center' alignY='center'>
-					<span className='indicator'>
-						{ online ? '\u25CF' : '\u25CB' }
+				<Row alignX='start' alignY='center'>
+					<img
+						className='indicator'
+						src={ FRIEND_STATUS_ICONS[status] }
+						alt={ FRIEND_STATUS_NAMES[status] }
+					/>
+					<span>
+						{ FRIEND_STATUS_NAMES[status] }
 					</span>
-					{ online ? 'Online' : 'Offline' }
 				</Row>
 			</td>
 			<td>{ characters?.map((c) => c.name).join(', ') }</td>

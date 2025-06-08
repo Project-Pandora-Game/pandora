@@ -45,7 +45,7 @@ export const AccountContactContext = new class AccountContactContext extends Typ
 		// Update friend side
 		{
 			const filtered = FRIEND_STATUS.value.filter((status) => status.id !== friendStatus.id);
-			if (friendStatus.online !== 'delete') {
+			if (friendStatus.status !== null) {
 				filtered.push(friendStatus);
 			}
 			FRIEND_STATUS.value = filtered;

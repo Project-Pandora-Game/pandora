@@ -38,6 +38,10 @@
 
 //#region Positioning
 
+.position-relative {
+	position: relative;
+}
+
 .center-absolute {
 	@include common.center-absolute;
 }

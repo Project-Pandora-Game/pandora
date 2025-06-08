@@ -1,6 +1,6 @@
 import AsyncLock from 'async-lock';
 import { isEqual } from 'lodash-es';
-import { AccountId, AssertNever, GetLogger, IAccountContact, IAccountFriendStatus, IDirectoryClientArgument, IsNotNullable, Logger, PromiseOnce, type AccountContactsInitData, type AccountContactsUpdateData } from 'pandora-common';
+import { AccountId, AssertNever, GetLogger, IAccountContact, IAccountFriendStatus, IDirectoryClientArgument, IsNotNullable, Logger, PromiseOnce, type AccountContactsInitData, type AccountContactsUpdateData, type AccountOnlineStatus } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DatabaseAccountContact, DatabaseAccountContactType } from '../database/databaseStructure.ts';
 import type { ClientConnection } from '../networking/connection_client.ts';
@@ -37,13 +37,12 @@ export class AccountContacts {
 			return null;
 		}
 		const accountSettings = this.account.getEffectiveSettings();
-		const showStatus = !accountSettings.hideOnlineStatus;
-		const online = showStatus && this.account.isOnline();
+		const status: AccountOnlineStatus = this.account.isOnline() ? accountSettings.onlineStatus : 'offline';
 		return {
 			id: this.account.id,
 			labelColor: accountSettings.labelColor,
-			online,
-			characters: !online ? [] : (
+			status,
+			characters: (status !== 'offline') ? (
 				[...this.account.characters.values()]
 					.filter((char) => char.isOnline())
 					.map((char): NonNullable<IAccountFriendStatus['characters']>[number] => ({
@@ -51,7 +50,7 @@ export class AccountContacts {
 						name: char.data.name,
 						space: char.loadedCharacter?.space?.isPublic ? char.loadedCharacter.space.id : null,
 					}))
-			),
+			) : [],
 		};
 	}
 
@@ -277,7 +276,7 @@ export class AccountContacts {
 		if (existing?.contact.type === 'mutualBlock' && newContact.contact.type === 'oneSidedBlock') {
 			this.account.associatedConnections.sendMessage('accountContactUpdate', {
 				contact: { id, type: 'none' },
-				friendStatus: { id, online: 'delete' },
+				friendStatus: { id, status: null },
 			});
 			return;
 		}
@@ -286,7 +285,7 @@ export class AccountContacts {
 			this.logger.warning(`Could not find name for account ${id}`);
 			return;
 		}
-		let friendStatus: IDirectoryClientArgument['accountContactUpdate']['friendStatus'] = { id, online: 'delete' };
+		let friendStatus: IDirectoryClientArgument['accountContactUpdate']['friendStatus'] = { id, status: null };
 		if (newContact.contact.type === 'friend') {
 			const friendAccount = accountManager.getAccountById(id);
 			const actualStatus = friendAccount?.contacts.getStatus();
@@ -308,7 +307,7 @@ export class AccountContacts {
 		}
 		this.account.associatedConnections.sendMessage('accountContactUpdate', {
 			contact: { id, type: 'none' },
-			friendStatus: { id, online: 'delete' },
+			friendStatus: { id, status: null },
 		});
 	}
 
@@ -381,7 +380,7 @@ export class AccountContacts {
 			return;
 		}
 		this.lastStatus = status;
-		const data: AccountContactsUpdateData['friendStatus'] = status == null ? { id: this.account.id, online: 'delete' } as const : status;
+		const data: AccountContactsUpdateData['friendStatus'] = status == null ? { id: this.account.id, status: null } as const : status;
 		for (const account of accountManager.onlineAccounts) {
 			if (account.id === this.account.id) {
 				continue;

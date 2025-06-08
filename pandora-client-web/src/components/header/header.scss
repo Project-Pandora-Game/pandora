@@ -1,6 +1,47 @@
 @use '../../styles/common';
 @use 'HeaderButton';
 
+.Header, .OverlayHeader {
+	.onlineStatusIndicator {
+		width: 1.25em !important;
+		height: 1.25em !important;
+		margin: 0 common.spacing('small') !important;
+		object-fit: contain;
+	}
+
+	.statusSelectorMenuContainer {
+		position: absolute;
+		z-index: 1001;
+		top: 100%;
+		max-height: 0;
+		width: max(100%, 8em);
+		left: calc(min(0px, 50% - 4em));
+		overflow: hidden;
+
+		transition: all 350ms linear;
+
+		.statusSelectorMenu {
+			@include common.flex(column);
+
+			padding: common.spacing('small');
+			gap: common.spacing('small');
+			max-height: 50vh;
+			overflow-y: scroll;
+			border: 3px solid common.$theme-separator;
+			background: common.$theme-header-collapsable-background;
+			color: common.$theme-header-collapsable-text;
+
+			.Button {
+				min-height: 2.5em;
+			}
+		}
+
+		&.open {
+			max-height: 50vh;
+		}
+	}
+}
+
 .Header {
 	@include common.flex(row, wrap);
 	background: common.$theme-header-background;
@@ -42,7 +83,7 @@
 		}
 	}
 
-	span {
+	.label, .headerText {
 		@include common.center-flex;
 		min-width: 6em;
 		min-height: HeaderButton.$header-button-height;
@@ -127,7 +168,7 @@
 			min-height: HeaderButton.$header-button-height;
 			flex: unset;
 
-			> button, > span {
+			> button, > span, > .currentAccount > button {
 				@include common.flex(row);
 				align-items: center;
 				min-width: 6em;
@@ -135,8 +176,13 @@
 				padding: 0 1em;
 			}
 
-			> span {
+			> span, > .currentAccount > button {
 				padding: 0 1em 0 3.7em;
+			}
+
+			> .currentAccount > button {
+				width: 100%;
+				justify-content: start;
 			}
 
 			.label {

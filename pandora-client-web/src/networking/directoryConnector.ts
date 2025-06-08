@@ -94,7 +94,7 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 		somethingChanged: ({ changes }) => {
 			this.emit('somethingChanged', changes);
 		},
-		friendStatus: (data) => AccountContactContext.handleFriendStatus(data),
+		accountContactInit: (data) => AccountContactContext.handleAccountContactInit(data),
 		accountContactUpdate: (data) => AccountContactContext.handleAccountContactUpdate(data),
 	};
 
@@ -126,7 +126,7 @@ export class DirectoryConnector extends Service<DirectoryConnectorServiceConfig>
 			somethingChanged: true,
 			directMessageNew: true,
 			directMessageAction: true,
-			friendStatus: true,
+			accountContactInit: true,
 			accountContactUpdate: true,
 		};
 

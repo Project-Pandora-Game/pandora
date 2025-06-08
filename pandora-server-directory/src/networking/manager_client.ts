@@ -104,7 +104,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			queryConnections: this.handleQueryConnections.bind(this),
 			extendLoginToken: this.handleExtendLoginToken.bind(this),
 
-			getAccountContacts: this.handleGetAccountContacts.bind(this),
 			getAccountInfo: this.handleGetAccountInfo.bind(this),
 			updateProfileDescription: this.handleUpdateProfileDescription.bind(this),
 
@@ -905,16 +904,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 	}
 
 	//#endregion Direct Messages
-
-	private async handleGetAccountContacts(_: IClientDirectoryArgument['getAccountContacts'], connection: ClientConnection): IClientDirectoryPromiseResult['getAccountContacts'] {
-		if (!connection.account)
-			throw new BadMessageError();
-
-		const contacts = await connection.account.contacts.getAll();
-		const friends = await connection.account.contacts.getFriendsStatus();
-
-		return { friends, contacts };
-	}
 
 	private async handleGetAccountInfo({ accountId }: IClientDirectoryArgument['getAccountInfo'], connection: ClientConnection): IClientDirectoryPromiseResult['getAccountInfo'] {
 		if (!connection.account)

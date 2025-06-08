@@ -1,8 +1,9 @@
 import AsyncLock from 'async-lock';
 import { isEqual } from 'lodash-es';
-import { AccountId, AssertNever, GetLogger, IAccountContact, IAccountFriendStatus, IDirectoryClientArgument, IsNotNullable, Logger, PromiseOnce } from 'pandora-common';
+import { AccountId, AssertNever, GetLogger, IAccountContact, IAccountFriendStatus, IDirectoryClientArgument, IsNotNullable, Logger, PromiseOnce, type AccountContactsInitData, type AccountContactsUpdateData } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DatabaseAccountContact, DatabaseAccountContactType } from '../database/databaseStructure.ts';
+import type { ClientConnection } from '../networking/connection_client.ts';
 import { Space } from '../spaces/space.ts';
 import { Account } from './account.ts';
 import { accountManager } from './accountManager.ts';
@@ -54,21 +55,6 @@ export class AccountContacts {
 		};
 	}
 
-	public async getAll(): Promise<IAccountContact[]> {
-		await this.load();
-		const isNotBlockedBy = ({ contact }: AccountContactCache) => {
-			return contact.type !== 'oneSidedBlock' || contact.from === this.account.id;
-		};
-		const filtered = [...this.contacts.values()]
-			.filter(isNotBlockedBy);
-
-		const ids = await GetDatabase().queryAccountDisplayNames(filtered.map((contact) => contact.id));
-
-		return filtered
-			.filter((contact) => ids[contact.id] != null)
-			.map((contact) => this.cacheToClientData(contact, ids[contact.id]));
-	}
-
 	/**
 	 * Returns a queryable set of all accounts that are friends of this account.
 	 */
@@ -81,13 +67,37 @@ export class AccountContacts {
 		);
 	}
 
-	public async getFriendsStatus(): Promise<IAccountFriendStatus[]> {
+	public async sendFullContactsStatus(connection: ClientConnection): Promise<void> {
 		await this.load();
-		return [...this.contacts.values()]
-			.filter((contact) => contact.contact.type === 'friend')
-			.map((contact) => accountManager.getAccountById(contact.id))
-			.map((acc) => acc?.contacts.getStatus())
-			.filter(IsNotNullable);
+
+		const isNotBlockedBy = ({ contact }: AccountContactCache) => {
+			return contact.type !== 'oneSidedBlock' || contact.from === this.account.id;
+		};
+
+		let contacts: AccountContactCache[];
+		let names: Record<number, string>;
+		do {
+			contacts = [...this.contacts.values()].filter(isNotBlockedBy);
+			names = await GetDatabase().queryAccountDisplayNames(contacts.map((contact) => contact.id));
+
+			// Check against race conditions with contacts updating
+		} while ([...this.contacts.values()].filter(isNotBlockedBy).some((c) => !contacts.includes(c)));
+
+		// Put together up-to-date data
+		const data: AccountContactsInitData = {
+			contacts: contacts
+				.filter((contact) => names[contact.id] != null)
+				.map((contact) => this.cacheToClientData(contact, names[contact.id])),
+			friends: [...this.contacts.values()]
+				.filter((contact) => contact.contact.type === 'friend')
+				.map((contact) => accountManager.getAccountById(contact.id))
+				.map((acc) => acc?.contacts.getStatus())
+				.filter(IsNotNullable),
+		};
+
+		if (connection.account === this.account) {
+			connection.sendMessage('accountContactInit', data);
+		}
 	}
 
 	public async canReceiveDM(from: Account): Promise<boolean> {
@@ -253,11 +263,6 @@ export class AccountContacts {
 	private async update(contact: DatabaseAccountContact): Promise<void> {
 		const id = contact.accounts[0] === this.account.id ? contact.accounts[1] : contact.accounts[0];
 		const existing = this.get(id);
-		const displayName = (await GetDatabase().queryAccountDisplayNames([id]))[id];
-		if (!displayName) {
-			this.logger.warning(`Could not find name for account ${id}`);
-			return;
-		}
 		this.setAccountContact(id, contact.updated, contact.contact);
 		const newContact = this.get(id);
 		if (!newContact)
@@ -274,6 +279,11 @@ export class AccountContacts {
 				contact: { id, type: 'none' },
 				friendStatus: { id, online: 'delete' },
 			});
+			return;
+		}
+		const displayName = (await GetDatabase().queryAccountDisplayNames([id]))[id];
+		if (!displayName) {
+			this.logger.warning(`Could not find name for account ${id}`);
 			return;
 		}
 		let friendStatus: IDirectoryClientArgument['accountContactUpdate']['friendStatus'] = { id, online: 'delete' };
@@ -326,8 +336,10 @@ export class AccountContacts {
 			return;
 		}
 		const contact = await GetDatabase().setAccountContact(this.account.id, other, type);
-		await this.update(contact);
-		await accountManager.getAccountById(other)?.contacts.update(contact);
+		await Promise.all([
+			this.update(contact),
+			accountManager.getAccountById(other)?.contacts.update(contact),
+		]);
 	}
 
 	private setAccountContact(id: AccountId, updated: number, contact: DatabaseAccountContactType): void {
@@ -369,7 +381,7 @@ export class AccountContacts {
 			return;
 		}
 		this.lastStatus = status;
-		const data = status == null ? { id: this.account.id, online: 'delete' } as const : status;
+		const data: AccountContactsUpdateData['friendStatus'] = status == null ? { id: this.account.id, online: 'delete' } as const : status;
 		for (const account of accountManager.onlineAccounts) {
 			if (account.id === this.account.id) {
 				continue;
@@ -378,7 +390,9 @@ export class AccountContacts {
 			if (!contact || contact.contact.type !== 'friend') {
 				continue;
 			}
-			account.associatedConnections.sendMessage('friendStatus', data);
+			account.associatedConnections.sendMessage('accountContactUpdate', {
+				friendStatus: data,
+			});
 		}
 	}
 

@@ -1,12 +1,11 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
-import { AccountId, AccountIdSchema, IAccountRoleInfo, type AccountSettings, type AccountSettingsCooldowns } from '../account/index.ts';
+import { AccountContactsInitDataSchema, AccountContactsUpdateDataSchema, AccountId, AccountIdSchema, IAccountRoleInfo, type AccountSettings, type AccountSettingsCooldowns } from '../account/index.ts';
 import type { CharacterId } from '../character/index.ts';
 import type { IDirectoryStatus } from '../directory/status.ts';
 import type { ShardFeature } from '../space/space.ts';
 import { Satisfies } from '../utility/misc.ts';
 import { ZodCast, type HexColorString } from '../validation.ts';
-import type { IAccountContact, IAccountFriendStatus } from './client_directory.ts';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
 // TODO: This needs reasonable size limits
@@ -142,15 +141,12 @@ export const DirectoryClientSchema = {
 		}>(),
 		response: null,
 	},
-	friendStatus: {
-		request: ZodCast<IAccountFriendStatus | { id: AccountId; online: 'delete'; }>(),
+	accountContactInit: {
+		request: AccountContactsInitDataSchema,
 		response: null,
 	},
 	accountContactUpdate: {
-		request: ZodCast<{
-			contact: IAccountContact | { id: AccountId; type: 'none'; };
-			friendStatus: IAccountFriendStatus | { id: AccountId; online: 'delete'; };
-		}>(),
+		request: AccountContactsUpdateDataSchema,
 		response: null,
 	},
 } as const satisfies Immutable<SocketInterfaceDefinition>;

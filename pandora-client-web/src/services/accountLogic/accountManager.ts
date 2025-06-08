@@ -123,9 +123,7 @@ export class AccountManager extends Service<AccountManagerServiceConfig> {
 		// Update current account
 		this._currentAccount.value = account ? freeze(account) : null;
 		// Clear saved token if no account
-		if (account != null) {
-			await AccountContactContext.initStatus(directoryConnector);
-		} else {
+		if (account == null) {
 			directoryConnector.authToken.value = undefined;
 			Assert(character == null);
 		}

@@ -88,6 +88,12 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 			this._loginToken = token;
 			this._loginTokenEventUnsubscribe = token.onAny((ev) => this.onTokenEvent(ev));
 			account.associatedConnections.join(this);
+
+			// Send initial contact list data
+			account.contacts.sendFullContactsStatus(this)
+				.catch((err) => {
+					this.logger.warning('Error sending full contacts status:', err);
+				});
 		}
 	}
 

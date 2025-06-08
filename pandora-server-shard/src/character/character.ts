@@ -107,10 +107,10 @@ export class Character {
 	public setSpace(space: Space | null, appearance: AppearanceBundle): void {
 		if (this.connection) {
 			if (this._context.state === 'space') {
-				this.connection.leaveRoom(this._context.space);
+				this._context.space.leave(this.connection);
 			}
 			if (space) {
-				this.connection.joinRoom(space);
+				space.join(this.connection);
 			}
 		}
 		if (space) {
@@ -352,7 +352,7 @@ export class Character {
 			this.logger.debug(`Connected (${connection.id})`);
 			connection.character = this;
 			if (this._context.state === 'space') {
-				connection.joinRoom(this._context.space);
+				this._context.space.join(connection);
 			}
 			this._connection = connection;
 		} else if (this.isValid && this.connectSecret != null) {

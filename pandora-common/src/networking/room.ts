@@ -1,4 +1,4 @@
-import { TypedEventEmitter } from '../event.ts';
+import { TypedEventEmitter, type ITypedEventEmitter } from '../event.ts';
 import type { IIncomingConnection } from './connection.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceOneshotMessages, SocketInterfaceRequest } from './helpers.ts';
 
@@ -6,10 +6,21 @@ export interface IServerSocket<OutboundT extends SocketInterfaceDefinition> {
 	sendToAll<K extends SocketInterfaceOneshotMessages<OutboundT>>(client: ReadonlySet<IIncomingConnection<OutboundT>>, messageType: K, message: SocketInterfaceRequest<OutboundT>[K]): void;
 }
 
-export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT extends IIncomingConnection<OutboundT> = IIncomingConnection<OutboundT>> extends TypedEventEmitter<{
+type ServerRoomEvents<ClientT> = {
 	join: ClientT;
 	leave: ClientT;
-}> {
+};
+
+export interface IServerRoom<OutboundT extends SocketInterfaceDefinition, out ClientT extends IIncomingConnection<OutboundT> = IIncomingConnection<OutboundT>> extends ITypedEventEmitter<ServerRoomEvents<ClientT>> {
+	readonly clients: ClientT[];
+
+	hasClients(): boolean;
+	leave(client: IIncomingConnection<OutboundT>): void;
+
+	sendMessage<K extends SocketInterfaceOneshotMessages<OutboundT>>(messageType: K, message: SocketInterfaceRequest<OutboundT>[K]): void;
+}
+
+export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT extends IIncomingConnection<OutboundT> = IIncomingConnection<OutboundT>> extends TypedEventEmitter<ServerRoomEvents<ClientT>> implements IServerRoom<OutboundT, ClientT> {
 	private readonly _servers = new Map<IServerSocket<OutboundT>, Set<ClientT>>();
 	private readonly _clients = new Map<string, IServerSocket<OutboundT>>();
 
@@ -21,7 +32,8 @@ export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT ext
 		return this._servers.size > 0;
 	}
 
-	public join(server: IServerSocket<OutboundT>, client: ClientT): void {
+	public join(client: ClientT): void {
+		const server = client.socketServer;
 		if (this._clients.has(client.id)) {
 			return;
 		}
@@ -32,10 +44,12 @@ export class ServerRoom<OutboundT extends SocketInterfaceDefinition, ClientT ext
 			clients.add(client);
 		}
 		this._clients.set(client.id, server);
+		client._internalRooms.add(this);
 		this.emit('join', client);
 	}
 
 	public leave(client: ClientT): void {
+		client._internalRooms.delete(this);
 		const serverId = this._clients.get(client.id);
 		if (!serverId) {
 			return;

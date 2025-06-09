@@ -96,6 +96,10 @@ export const AccountSettingsSchema = z.object({
 	 * Controls how big the font size used for the name of the character is
 	 */
 	interfaceChatroomCharacterNameFontSize: z.enum(['xs', 's', 'm', 'l', 'xl']),
+	/**
+	 * Controls if the away status icon shall be shown under the name of characters on the canvas
+	 */
+	interfaceChatroomCharacterAwayStatusIconDisplay: z.boolean(),
 	/** Controls how item names appear in chat action messages */
 	interfaceChatroomItemDisplayNameType: ItemDisplayNameTypeSchema,
 	/**
@@ -145,6 +149,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceChatroomOfflineCharacterFilter: 'ghost',
 	interfaceChatroomChatFontSize: 'm',
 	interfaceChatroomCharacterNameFontSize: 'm',
+	interfaceChatroomCharacterAwayStatusIconDisplay: true,
 	interfaceChatroomItemDisplayNameType: 'custom',
 	chatCommandHintBehavior: 'always-show',
 	notificationRoomEntrySound: '',

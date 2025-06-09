@@ -127,6 +127,7 @@ function ChatroomSettings(): ReactElement {
 	return (
 		<fieldset>
 			<legend>Chatroom UI</legend>
+			<ChatroomCharacterAwayStatusIconDisplay />
 			<ChatroomGraphicsRatio />
 			<ChatroomChatFontSize />
 			<ChatroomChatCommandHintBehavior />
@@ -267,6 +268,10 @@ function WardrobeSettings(): ReactElement {
 			<SelectAccountSettings setting='wardrobeItemRequireFreeHandsToUseDefault' label='Bound usage pre-selection when creating new items' stringify={ WARDROBE_ITEM_REQUIRE_FREE_HANDS_TO_USE_DEFAULT } />
 		</fieldset>
 	);
+}
+
+function ChatroomCharacterAwayStatusIconDisplay(): ReactElement {
+	return <ToggleAccountSetting setting='interfaceChatroomCharacterAwayStatusIconDisplay' label='Show away status icon under characters on the canvas' />;
 }
 
 function WardrobeShowExtraButtons(): ReactElement {

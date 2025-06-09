@@ -15,6 +15,7 @@ import { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
+import statusIconAway from '../../assets/icons/state-away.svg';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { Character, useCharacterData } from '../../character/character.ts';
 import { useEvent } from '../../common/useEvent.ts';
@@ -361,7 +362,7 @@ function RoomCharacterDisplay({
 		isOnline,
 	} = useCharacterData(character);
 
-	const { interfaceChatroomOfflineCharacterFilter, interfaceChatroomCharacterNameFontSize } = useAccountSettings();
+	const { interfaceChatroomCharacterAwayStatusIconDisplay, interfaceChatroomOfflineCharacterFilter, interfaceChatroomCharacterNameFontSize, onlineStatus } = useAccountSettings();
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
 	const playerFilters = usePlayerVisionFilters(character.isPlayer());
@@ -383,6 +384,10 @@ function RoomCharacterDisplay({
 
 	const labelX = 0;
 	const labelY = PIVOT_TO_LABEL_OFFSET;
+
+	const showAwayIcon = isOnline && interfaceChatroomCharacterAwayStatusIconDisplay && onlineStatus === 'away';
+	const awayIconTexture = useTexture(statusIconAway);
+	const awayIconY = labelY + 50;
 
 	const showDisconnectedIcon = !isOnline && interfaceChatroomOfflineCharacterFilter === 'icon';
 	const disconnectedIconTexture = useTexture(disconnectedIcon);
@@ -461,6 +466,17 @@ function RoomCharacterDisplay({
 						text={ name }
 					/>
 				) : null
+			}
+			{
+				!showAwayIcon ? null : (
+					<Sprite
+						anchor={ { x: 0.5, y: 0.5 } }
+						texture={ awayIconTexture }
+						position={ { x: labelX, y: awayIconY } }
+						width={ 48 }
+						height={ 48 }
+					/>
+				)
 			}
 			{
 				!showDisconnectedIcon ? null : (

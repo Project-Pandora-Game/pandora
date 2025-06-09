@@ -227,7 +227,7 @@ export function useGoToDM(id: AccountId) {
 	}, [id, navigate]);
 }
 
-const FRIEND_STATUS_ICONS: Record<AccountOnlineStatus, string> = {
+export const FRIEND_STATUS_ICONS: Record<AccountOnlineStatus, string> = {
 	'online': statusIconOnline,
 	'looking-switch': statusIconLookingSwitch,
 	'looking-dom': statusIconLookingDom,
@@ -237,7 +237,7 @@ const FRIEND_STATUS_ICONS: Record<AccountOnlineStatus, string> = {
 	'offline': statusIconOffline,
 };
 
-const FRIEND_STATUS_NAMES: Record<AccountOnlineStatus, string> = {
+export const FRIEND_STATUS_NAMES: Record<AccountOnlineStatus, string> = {
 	'online': 'Online',
 	'looking-switch': 'Looking to play',
 	'looking-dom': 'Looking to dom',

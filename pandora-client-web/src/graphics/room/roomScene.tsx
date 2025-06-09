@@ -479,7 +479,7 @@ export function usePlayerVisionFilters(targetIsPlayer: boolean): Filter[] {
 
 export function useCharacterDisplayFilters(character: Character<ICharacterRoomData>): Filter[] {
 	const {
-		isOnline,
+		onlineStatus,
 	} = useCharacterData(character);
 
 	const { interfaceChatroomOfflineCharacterFilter } = useAccountSettings();
@@ -504,7 +504,7 @@ export function useCharacterDisplayFilters(character: Character<ICharacterRoomDa
 		AssertNever(interfaceChatroomOfflineCharacterFilter);
 	}, [interfaceChatroomOfflineCharacterFilter]);
 
-	return isOnline ? onlineFilters : offlineFilters;
+	return (onlineStatus !== 'offline') ? onlineFilters : offlineFilters;
 }
 
 export function RoomScene({ className }: {

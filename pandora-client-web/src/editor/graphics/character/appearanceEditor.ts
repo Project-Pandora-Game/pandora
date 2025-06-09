@@ -160,7 +160,7 @@ export class EditorCharacter extends TypedEventEmitter<CharacterEvents<ICharacte
 			name: 'EditorCharacter',
 			profileDescription: 'An editor character',
 			publicSettings: {},
-			isOnline: true,
+			onlineStatus: 'online',
 			assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
 		};
 		this.gameLogicCharacter = new GameLogicCharacterClient(() => this.data, this.logger.prefixMessages('[GameLogic]'));

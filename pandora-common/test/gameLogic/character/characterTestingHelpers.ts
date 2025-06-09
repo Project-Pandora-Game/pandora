@@ -14,7 +14,7 @@ export function TestCreateGameLogicCharacter(accountId: AccountId, id: Character
 			attributes: {},
 		},
 		publicSettings: {},
-		isOnline: true,
+		onlineStatus: 'online',
 	};
 	freeze(CHARACTER_DATA, true);
 

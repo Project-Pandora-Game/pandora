@@ -1,17 +1,18 @@
-import type { SocketInterfaceRequest, SocketInterfaceResponse, SocketInterfaceHandlerResult, SocketInterfaceHandlerPromiseResult, SocketInterfaceDefinitionVerified, SocketInterfaceDefinition } from './helpers.ts';
-import { CharacterIdSchema } from '../character/index.ts';
-import { SpaceDataSchema, SpaceIdSchema } from '../space/space.ts';
-import type { IChatMessageDirectoryAction } from '../chat/index.ts';
-import { z } from 'zod';
-import { AccountRoleInfoSchema } from '../account/index.ts';
-import { ZodCast } from '../validation.ts';
-import { Satisfies } from '../utility/misc.ts';
 import { Immutable } from 'immer';
+import { z } from 'zod';
+import { AccountOnlineStatusSchema, AccountRoleInfoSchema } from '../account/index.ts';
+import { CharacterIdSchema } from '../character/index.ts';
+import type { IChatMessageDirectoryAction } from '../chat/index.ts';
+import { SpaceDataSchema, SpaceIdSchema } from '../space/space.ts';
+import { Satisfies } from '../utility/misc.ts';
+import { ZodCast } from '../validation.ts';
+import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
 export const ShardAccountDefinitionSchema = z.object({
 	id: z.number(),
 	displayName: z.string(),
 	roles: AccountRoleInfoSchema.optional(),
+	onlineStatus: AccountOnlineStatusSchema,
 });
 export type IShardAccountDefinition = z.infer<typeof ShardAccountDefinitionSchema>;
 

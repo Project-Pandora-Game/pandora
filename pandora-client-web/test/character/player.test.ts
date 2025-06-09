@@ -49,7 +49,7 @@ function MockPlayerData(overrides?: Partial<ICharacterPrivateData & ICharacterRo
 		settings: {},
 		publicSettings: {},
 		assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
-		isOnline: true,
+		onlineStatus: 'online',
 		...overrides,
 	};
 }

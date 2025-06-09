@@ -359,10 +359,10 @@ function RoomCharacterDisplay({
 	const {
 		name,
 		publicSettings: { labelColor },
-		isOnline,
+		onlineStatus,
 	} = useCharacterData(character);
 
-	const { interfaceChatroomCharacterAwayStatusIconDisplay, interfaceChatroomOfflineCharacterFilter, interfaceChatroomCharacterNameFontSize, onlineStatus } = useAccountSettings();
+	const { interfaceChatroomCharacterAwayStatusIconDisplay, interfaceChatroomOfflineCharacterFilter, interfaceChatroomCharacterNameFontSize } = useAccountSettings();
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
 	const playerFilters = usePlayerVisionFilters(character.isPlayer());
@@ -385,10 +385,10 @@ function RoomCharacterDisplay({
 	const labelX = 0;
 	const labelY = PIVOT_TO_LABEL_OFFSET;
 
-	const showAwayIcon = isOnline && interfaceChatroomCharacterAwayStatusIconDisplay && onlineStatus === 'away';
+	const showAwayIcon = onlineStatus === 'away' && interfaceChatroomCharacterAwayStatusIconDisplay;
 	const awayIconTexture = useTexture(statusIconAway);
 
-	const showDisconnectedIcon = !isOnline && interfaceChatroomOfflineCharacterFilter === 'icon';
+	const showDisconnectedIcon = onlineStatus === 'offline' && interfaceChatroomOfflineCharacterFilter === 'icon';
 	const disconnectedIconTexture = useTexture(disconnectedIcon);
 	const disconnectedIconY = labelY + 50;
 

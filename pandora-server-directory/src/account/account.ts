@@ -160,6 +160,7 @@ export class Account implements ActorIdentity {
 			id: this.id,
 			displayName: this.displayName,
 			roles: this.roles.getSelfInfo(),
+			onlineStatus: this.isOnline() ? (this.data.settings.onlineStatus ?? 'online') : 'offline',
 		};
 	}
 

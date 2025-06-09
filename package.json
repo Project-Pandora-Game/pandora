@@ -48,7 +48,7 @@
 	},
 	"devDependencies": {
 		"@eslint/js": "9.28.0",
-		"@stylistic/eslint-plugin": "4.4.0",
+		"@stylistic/eslint-plugin": "4.4.1",
 		"eslint": "9.28.0",
 		"eslint-plugin-import": "2.31.0",
 		"eslint-plugin-react": "7.37.5",

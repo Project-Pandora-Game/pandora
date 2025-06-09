@@ -10,7 +10,7 @@ import {
 	LegsPose,
 	SpaceClientInfo,
 } from 'pandora-common';
-import { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle, type Cursor, type EventMode, type GraphicsContext } from 'pixi.js';
+import { CanvasTextMetrics, DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle, type Cursor, type EventMode, type GraphicsContext } from 'pixi.js';
 import { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
@@ -387,7 +387,6 @@ function RoomCharacterDisplay({
 
 	const showAwayIcon = isOnline && interfaceChatroomCharacterAwayStatusIconDisplay && onlineStatus === 'away';
 	const awayIconTexture = useTexture(statusIconAway);
-	const awayIconY = labelY + 50;
 
 	const showDisconnectedIcon = !isOnline && interfaceChatroomOfflineCharacterFilter === 'icon';
 	const disconnectedIconTexture = useTexture(disconnectedIcon);
@@ -405,6 +404,14 @@ function RoomCharacterDisplay({
 		default:
 			AssertNever(interfaceChatroomCharacterNameFontSize);
 	}
+
+	const style = new TextStyle({
+		fontFamily: THEME_FONT.slice(),
+		fontSize: 32 * fontScale,
+		fill: labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor,
+		align: 'center',
+		dropShadow: { blur: 4 },
+	});
 
 	// If character is in a device, do not render it here, it will be rendered by the device
 	const roomDeviceLink = useCharacterRestrictionsManager(globalState, character, (rm) => rm.getRoomDeviceLink());
@@ -456,13 +463,7 @@ function RoomCharacterDisplay({
 					<Text
 						anchor={ { x: 0.5, y: 0.5 } }
 						position={ { x: labelX, y: labelY } }
-						style={ new TextStyle({
-							fontFamily: THEME_FONT.slice(),
-							fontSize: 32 * fontScale,
-							fill: labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor,
-							align: 'center',
-							dropShadow: { blur: 4 },
-						}) }
+						style={ style }
 						text={ name }
 					/>
 				) : null
@@ -472,9 +473,12 @@ function RoomCharacterDisplay({
 					<Sprite
 						anchor={ { x: 0.5, y: 0.5 } }
 						texture={ awayIconTexture }
-						position={ { x: labelX, y: awayIconY } }
-						width={ 48 }
-						height={ 48 }
+						position={ {
+							x: labelX - 32 * fontScale / 1.2 - CanvasTextMetrics.measureText(name, style).maxLineWidth / 2,
+							y: labelY,
+						} }
+						width={ 32 * fontScale }
+						height={ 32 * fontScale }
 					/>
 				)
 			}

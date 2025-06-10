@@ -26,6 +26,7 @@ export function InterfaceSettings(): ReactElement | null {
 		<>
 			<ThemeSettings />
 			<ChatroomSettings />
+			<RoomGraphicsSettings />
 			<WardrobeSettings />
 			<TutorialSettings />
 		</>
@@ -131,8 +132,6 @@ function ChatroomSettings(): ReactElement {
 			<ChatroomGraphicsRatio />
 			<ChatroomChatFontSize />
 			<ChatroomChatCommandHintBehavior />
-			<ChatroomCharacterNameFontSize />
-			<ChatroomOfflineCharacters />
 			<SelectAccountSettings setting='interfaceChatroomItemDisplayNameType' label='Item name display' stringify={ ITEM_DISPLAY_NAME_TYPE_DESCRIPTION } />
 		</fieldset>
 	);
@@ -209,18 +208,6 @@ function ChatroomGraphicsRatio(): ReactElement {
 	);
 }
 
-function ChatroomCharacterNameFontSize(): ReactElement {
-	const SELECTION_DESCRIPTIONS = useMemo((): Record<AccountSettings['interfaceChatroomCharacterNameFontSize'], string> => ({
-		xs: 'Extra small',
-		s: 'Small',
-		m: 'Medium (default)',
-		l: 'Large',
-		xl: 'Extra large',
-	}), []);
-
-	return <SelectAccountSettings setting='interfaceChatroomCharacterNameFontSize' label='Font size of the name of the character on the canvas' stringify={ SELECTION_DESCRIPTIONS } />;
-}
-
 function ChatroomChatFontSize(): ReactElement {
 	const SELECTION_DESCRIPTIONS = useMemo((): Record<AccountSettings['interfaceChatroomChatFontSize'], string> => ({
 		xs: 'Extra small',
@@ -240,6 +227,39 @@ function ChatroomChatCommandHintBehavior(): ReactElement {
 	}), []);
 
 	return <SelectAccountSettings setting='chatCommandHintBehavior' label='Command hint behavior' stringify={ SELECTION_DESCRIPTIONS } />;
+}
+
+function RoomGraphicsSettings(): ReactElement {
+	return (
+		<fieldset>
+			<legend>Room graphics UI</legend>
+			<ChatroomCharacterNameFontSize />
+			<ChatroomOfflineCharacters />
+			<ChatroomCharacterPosintStyle />
+		</fieldset>
+	);
+}
+
+function ChatroomCharacterNameFontSize(): ReactElement {
+	const SELECTION_DESCRIPTIONS = useMemo((): Record<AccountSettings['interfaceChatroomCharacterNameFontSize'], string> => ({
+		xs: 'Extra small',
+		s: 'Small',
+		m: 'Medium (default)',
+		l: 'Large',
+		xl: 'Extra large',
+	}), []);
+
+	return <SelectAccountSettings setting='interfaceChatroomCharacterNameFontSize' label='Font size of the name of the character on the canvas' stringify={ SELECTION_DESCRIPTIONS } />;
+}
+
+function ChatroomCharacterPosintStyle(): ReactElement {
+	const SELECTION_DESCRIPTIONS = useMemo((): Record<AccountSettings['interfacePosingStyle'], string> => ({
+		inverse: 'Inverse posing (dragging limbs to their position) [default]',
+		forward: 'Forward posing (directly manipulating bone rotation)',
+		both: 'Both (shows both inverse and forward posing elements)',
+	}), []);
+
+	return <SelectAccountSettings setting='interfacePosingStyle' label='Character posing interface style' stringify={ SELECTION_DESCRIPTIONS } />;
 }
 
 function ChatroomOfflineCharacters(): ReactElement {

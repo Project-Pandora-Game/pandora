@@ -1,11 +1,12 @@
 import * as PIXI from 'pixi.js';
-import { ReactElement, useCallback } from 'react';
+import { ReactElement, useCallback, type ForwardedRef } from 'react';
 import { Graphics, type GraphicsProps } from './baseComponents/graphics.ts';
 
 export interface MovementHelperGraphicsProps extends Omit<GraphicsProps, 'draw'> {
 	radius: number;
 	colorUpDown?: number;
 	colorLeftRight?: number;
+	ref?: ForwardedRef<PIXI.Graphics>;
 }
 
 export function MovementHelperGraphics({

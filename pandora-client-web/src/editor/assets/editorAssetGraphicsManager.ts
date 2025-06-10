@@ -30,7 +30,7 @@ export class EditorAssetGraphicsManagerClass {
 	private readonly logger = GetLogger('EditorAssetGraphicsManager');
 
 	private _originalSourceDefinitions: Immutable<GraphicsSourceDefinitionFile> = { assets: {}, pointTemplates: {} };
-	private _originalGraphicsDefinitions: Immutable<GraphicsDefinitionFile> = { assets: {}, pointTemplates: {}, imageFormats: {} };
+	private _originalGraphicsDefinitions: Immutable<GraphicsDefinitionFile> = { assets: {}, pointTemplates: {}, imageFormats: {}, inversePosingHandles: [] };
 
 	private _editedAssetGraphics = new Observable<ReadonlyMap<AssetId, EditorAssetGraphics>>(new Map());
 	private readonly _editedGraphicsBuildCache = new Map<AssetId, Immutable<AssetGraphicsDefinition>>();

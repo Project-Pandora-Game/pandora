@@ -5,6 +5,7 @@ import {
 	GraphicsDefinitionFile,
 	PointTemplate,
 	TypedEventEmitter,
+	type InversePosingHandle,
 	type ITypedEventEmitter,
 } from 'pandora-common';
 import { Texture, type TextureSource } from 'pixi.js';
@@ -175,6 +176,8 @@ export class GraphicsManager {
 
 	public readonly assetGraphics: Immutable<Partial<Record<AssetId, AssetGraphicsDefinition>>>;
 	public readonly pointTemplates: ReadonlyMap<string, Immutable<PointTemplate>>;
+	/** UI handles used for inverse kinematic posing of the character. */
+	public readonly inversePosingHandles: Immutable<InversePosingHandle[]>;
 
 	constructor(loader: IGraphicsLoader, definitionsHash: string, data: Immutable<GraphicsDefinitionFile>) {
 		this.loader = loader;
@@ -187,6 +190,8 @@ export class GraphicsManager {
 		this.pointTemplates = pointTemplates;
 		// Load assets
 		this.assetGraphics = freeze(data.assets, true);
+		// Load the rest
+		this.inversePosingHandles = freeze(data.inversePosingHandles, true);
 	}
 
 	public static async create(loader: IGraphicsLoader, definitionsHash: string, data: Immutable<GraphicsDefinitionFile>): Promise<GraphicsManager> {

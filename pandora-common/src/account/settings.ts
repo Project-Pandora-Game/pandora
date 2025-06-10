@@ -103,6 +103,13 @@ export const AccountSettingsSchema = z.object({
 	/** Controls how item names appear in chat action messages */
 	interfaceChatroomItemDisplayNameType: ItemDisplayNameTypeSchema,
 	/**
+	 * What style of posing elements should be displayed.
+	 * - `inverse` - Only inverse kinematics helpers should be shown
+	 * - `forward` - Only direct bone manipulation helpers should be shown
+	 * - `both` - Both variants should be shown
+	 */
+	interfacePosingStyle: z.enum(['inverse', 'forward', 'both']),
+	/**
 	 * How should command autocomplete behave.
 	 * - `always-show` - The help is always shown while typing a command
 	 * - `on-tab` The help is shown only when explicitly requested by pressing Tab
@@ -151,6 +158,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceChatroomCharacterNameFontSize: 'm',
 	interfaceChatroomCharacterAwayStatusIconDisplay: true,
 	interfaceChatroomItemDisplayNameType: 'custom',
+	interfacePosingStyle: 'inverse',
 	chatCommandHintBehavior: 'always-show',
 	notificationRoomEntrySound: '',
 	notificationVolume: '100',

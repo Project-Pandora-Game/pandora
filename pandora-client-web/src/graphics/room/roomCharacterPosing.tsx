@@ -1,14 +1,18 @@
+import { produce, type Immutable } from 'immer';
 import { throttle } from 'lodash-es';
-import { Assert, CharacterSize, type AssetFrameworkCharacterState, type BoneDefinition, type PartialAppearancePose } from 'pandora-common';
+import { Assert, CharacterSize, EMPTY_ARRAY, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type PartialAppearancePose } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../assets/assetManager.tsx';
+import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { useEvent } from '../../common/useEvent.ts';
 import { usePlayer } from '../../components/gameContext/playerContextProvider.tsx';
 import { useWardrobeExecuteCallback, WardrobeActionContextProvider } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
+import { useObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_WARNING } from '../../persistentToast.ts';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { useCanMoveCharacter, useCanPoseCharacter } from '../../ui/screens/room/roomPermissionChecks.tsx';
 import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
@@ -20,7 +24,9 @@ import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
 import { useTickerRef } from '../reconciler/tick.ts';
 import { GetAngle } from '../utility.ts';
+import { FindInverseKinematicOptimum } from '../utility/inverseKinematics.ts';
 import { CHARACTER_WAIT_DRAG_THRESHOLD, PIVOT_TO_LABEL_OFFSET, useRoomCharacterPosition, type CharacterStateProps, type RoomCharacterInteractiveProps } from './roomCharacter.tsx';
+import type { RoomProjectionResolver } from './roomScene.tsx';
 
 export function RoomCharacterMovementTool({
 	globalState,
@@ -255,8 +261,11 @@ function RoomCharacterPosingToolImpl({
 	characterState,
 	projectionResolver,
 }: RoomCharacterInteractiveProps & CharacterStateProps): ReactElement | null {
+	const { interfacePosingStyle } = useAccountSettings();
+
 	const assetManager = useAssetManager();
 	const bones = useMemo(() => assetManager.getAllBones(), [assetManager]);
+	const graphicsManager = useObservable(GraphicsManagerInstance);
 	const id = characterState.id;
 
 	const {
@@ -304,22 +313,43 @@ function RoomCharacterPosingToolImpl({
 				angle={ rotationAngle }
 			>
 				{
-					bones
-						.filter((b) => b.x !== 0 && b.y !== 0)
-						.map((bone) => (
-							<PosingToolBone
-								key={ bone.name }
-								characterState={ characterState }
-								definition={ bone }
-								onRotate={ (newRotation) => {
-									setPose({
-										bones: {
-											[bone.name]: newRotation,
-										},
-									});
-								} }
-							/>
-						))
+					(interfacePosingStyle === 'forward' || interfacePosingStyle === 'both') ? (
+						bones
+							.filter((b) => b.x !== 0 && b.y !== 0)
+							.map((bone) => (
+								<PosingToolBone
+									key={ bone.name }
+									characterState={ characterState }
+									definition={ bone }
+									onRotate={ (newRotation) => {
+										setPose({
+											bones: {
+												[bone.name]: newRotation,
+											},
+										});
+									} }
+								/>
+							))
+					) : null
+				}
+				{
+					(interfacePosingStyle === 'inverse' || interfacePosingStyle === 'both') ? (
+						graphicsManager?.inversePosingHandles
+							.filter((h) => h.excludeFromCharacterTransforms !== true)
+							.map((h, i) => (
+								<PosingToolIKHandle
+									key={ i }
+									ikHandle={ h }
+									characterState={ characterState }
+									projectionResolver={ projectionResolver }
+									onRotate={ (newRotation) => {
+										setPose({
+											bones: newRotation,
+										});
+									} }
+								/>
+							))
+					) : null
 				}
 				{
 					canMoveCharacter !== 'forbidden' ? (
@@ -353,19 +383,205 @@ function RoomCharacterPosingToolImpl({
 					} }
 				/>
 			</Container>
-			<PosingToolBone
-				characterState={ characterState }
-				definition={ characterRotationBone }
-				bonePoseOverride={ { x: pivot.x, y: pivot.y - yOffsetExtra } }
-				onRotate={ (newRotation) => {
-					setPose({
-						bones: {
-							[characterRotationBone.name]: newRotation,
-						},
-					});
-				} }
-			/>
+			{
+				(interfacePosingStyle === 'forward' || interfacePosingStyle === 'both') ? (
+					<PosingToolBone
+						characterState={ characterState }
+						definition={ characterRotationBone }
+						bonePoseOverride={ { x: pivot.x, y: pivot.y - yOffsetExtra } }
+						onRotate={ (newRotation) => {
+							setPose({
+								bones: {
+									[characterRotationBone.name]: newRotation,
+								},
+							});
+						} }
+					/>
+				) : null
+			}
+			{
+				(interfacePosingStyle === 'inverse' || interfacePosingStyle === 'both') ? (
+					graphicsManager?.inversePosingHandles
+						.filter((h) => h.excludeFromCharacterTransforms === true)
+						.map((h, i) => (
+							<PosingToolIKHandle
+								key={ i }
+								ikHandle={ h }
+								characterState={ characterState }
+								projectionResolver={ projectionResolver }
+								onRotate={ (newRotation) => {
+									setPose({
+										bones: newRotation,
+									});
+								} }
+							/>
+						))
+				) : null
+			}
 		</Container>
+	);
+}
+
+type PosingToolIKHandleProps = {
+	ikHandle: Immutable<InversePosingHandle>;
+	characterState: AssetFrameworkCharacterState;
+	projectionResolver: Immutable<RoomProjectionResolver>;
+	onRotate: (newRotation: Record<string, number>) => void;
+};
+
+/** A single inverse kinematics posing handle. Handles are defined in asset repository. */
+function PosingToolIKHandle({
+	ikHandle,
+	characterState,
+	projectionResolver,
+	onRotate,
+}: PosingToolIKHandleProps): ReactElement {
+	const assetManager = useAssetManager();
+
+	const hitAreaRadius = 25;
+	const hitArea = useMemo(() => new PIXI.Rectangle(-hitAreaRadius, -hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius]);
+	const graphicsRef = useRef<PIXI.Graphics>(null);
+
+	const dragging = useRef<PIXI.Point | null>(null);
+	/** Time at which user pressed button/touched */
+	const pointerDown = useRef<number | null>(null);
+
+	const {
+		yOffsetExtra,
+		pivot,
+	} = useRoomCharacterPosition(characterState, projectionResolver);
+
+	const { bones } = useMemo((): {
+		bones: BoneDefinition[];
+	} => {
+		const tmpBones: BoneDefinition[] = [];
+
+		let parentBone: BoneDefinition | undefined = assetManager.getBoneByName(ikHandle.parentBone);
+		while (parentBone != null) {
+			// HACK: Special handling for the character rotation bone
+			if (parentBone.name === 'character_rotation') {
+				Assert(parentBone.x === 0 && parentBone.y === 0);
+				Assert(parentBone.parent == null);
+				parentBone = produce(parentBone, (d) => {
+					d.x = pivot.x;
+					d.y = pivot.y - yOffsetExtra;
+				});
+			}
+			tmpBones.unshift(parentBone);
+			parentBone = parentBone.parent;
+		}
+
+		return {
+			bones: tmpBones,
+		};
+	}, [assetManager, ikHandle, yOffsetExtra, pivot]);
+
+	const evaluator = useAppearanceConditionEvaluator(characterState);
+	const handlePosition = useMemo(() => evaluator.evalTransform([ikHandle.x, ikHandle.y], ikHandle.transforms ?? EMPTY_ARRAY, false, null), [ikHandle, evaluator]);
+
+	const onMove = useEvent((x: number, y: number): void => {
+		const result = FindInverseKinematicOptimum(
+			bones,
+			handlePosition,
+			[x, y],
+			bones.map((b) => (characterState.actualPose.bones[b.name] ?? 0)),
+		);
+
+		const newRotation: Record<string, number> = {};
+		Assert(result.length === bones.length);
+		for (let i = 0; i < bones.length; i++) {
+			newRotation[bones[i].name] = result[i];
+		}
+		onRotate(newRotation);
+	});
+
+	const onDragStart = useCallback((event: PIXI.FederatedPointerEvent) => {
+		if (dragging.current || !graphicsRef.current) return;
+		dragging.current = event.getLocalPosition<PIXI.Point>(graphicsRef.current.parent);
+	}, []);
+
+	const onDragMove = useEvent((event: PIXI.FederatedPointerEvent) => {
+		if (!dragging.current || !graphicsRef.current) return;
+
+		const dragPointerEnd = event.getLocalPosition(graphicsRef.current.parent);
+		onMove(
+			dragPointerEnd.x,
+			dragPointerEnd.y,
+		);
+	});
+
+	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
+		event.stopPropagation();
+		pointerDown.current = Date.now();
+	}, []);
+
+	const onPointerUp = useEvent((_event: PIXI.FederatedPointerEvent) => {
+		dragging.current = null;
+		if (
+			pointerDown.current !== null &&
+			Date.now() < pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD
+		) {
+			// Reset all relevant bones on short click
+			const newRotation: Record<string, number> = {};
+			for (const b of bones) {
+				newRotation[b.name] = 0;
+			}
+			onRotate(newRotation);
+		}
+		pointerDown.current = null;
+	});
+
+	const onPointerMove = useCallback((event: PIXI.FederatedPointerEvent) => {
+		if (pointerDown.current !== null) {
+			event.stopPropagation();
+		}
+		if (dragging.current) {
+			onDragMove(event);
+		} else if (
+			pointerDown.current !== null &&
+			Date.now() >= pointerDown.current + CHARACTER_WAIT_DRAG_THRESHOLD
+		) {
+			onDragStart(event);
+		}
+	}, [onDragMove, onDragStart]);
+
+	const { currentPosition, currentAngle } = useMemo((): { currentPosition: PIXI.Point; currentAngle: number; } => {
+		const point = new PIXI.Point(...handlePosition);
+		const m = new PIXI.Matrix().identity();
+		const link = new PIXI.Point();
+		let tmpAngle = 0;
+		for (const b of bones) {
+			const value = (characterState.actualPose.bones[b.name] ?? 0) * (b.isMirror ? -1 : 1);
+			tmpAngle += value;
+			link.set(b.x, b.y);
+			m.apply(link, link);
+			m
+				.translate(-link.x, -link.y)
+				.rotate(value * PIXI.DEG_TO_RAD)
+				.translate(link.x, link.y);
+		}
+		return {
+			currentPosition: m.apply(point, point),
+			currentAngle: tmpAngle,
+		};
+	}, [handlePosition, bones, characterState.actualPose]);
+
+	return (
+		<MovementHelperGraphics
+			ref={ graphicsRef }
+			radius={ hitAreaRadius }
+			colorUpDown={ (ikHandle.style === 'up-down' || ikHandle.style === 'move') ? 0xcccccc : undefined }
+			colorLeftRight={ (ikHandle.style === 'left-right' || ikHandle.style === 'move') ? 0xcccccc : undefined }
+			angle={ currentAngle }
+			position={ { x: currentPosition.x, y: currentPosition.y } }
+			hitArea={ hitArea }
+			eventMode='static'
+			cursor='move'
+			onpointerdown={ onPointerDown }
+			onpointerup={ onPointerUp }
+			onpointerupoutside={ onPointerUp }
+			onglobalpointermove={ onPointerMove }
+		/>
 	);
 }
 

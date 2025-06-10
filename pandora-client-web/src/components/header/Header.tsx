@@ -172,6 +172,7 @@ function RightHeader({ onAnyClick }: {
 					<DivContainer className='position-relative currentAccount'>
 						<Button
 							theme='transparent'
+							title='Availability status'
 							slim
 							onClick={ () => {
 								setShowOnlineStatusMenu((v) => !v);

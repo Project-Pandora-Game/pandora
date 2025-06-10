@@ -63,7 +63,7 @@ export function WikiCharacters(): ReactElement {
 				Moreover, when the play partner supports the scene well, it is also not necessary to understand "gag-talk" to feel on top of things.
 				Users with gag effects on their character may want to
 				describe and convey important non-verbal communication towards the play partner in the
-				form of <Link to='/wiki/items#SP_Room_chat_Chat_modes'>emotes</Link>.
+				form of <Link to='/wiki/chat#CHA_Chat_modes'>emotes</Link>.
 				This can be describing things the play partner could notice, such as discomfort, the state of the own body, or a hint towards
 				what the muffled sentence likely meant from the tone and strength of the voice. A good roleplaying scene relies on all parties
 				to describe the scene in detail.

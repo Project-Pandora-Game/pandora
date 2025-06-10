@@ -390,7 +390,6 @@ function RoomCharacterDisplay({
 
 	const showDisconnectedIcon = onlineStatus === 'offline' && interfaceChatroomOfflineCharacterFilter === 'icon';
 	const disconnectedIconTexture = useTexture(disconnectedIcon);
-	const disconnectedIconY = labelY + 50;
 
 	showName = useObservable(SettingDisplayCharacterName) && showName;
 
@@ -487,9 +486,12 @@ function RoomCharacterDisplay({
 					<Sprite
 						anchor={ { x: 0.5, y: 0.5 } }
 						texture={ disconnectedIconTexture }
-						position={ { x: labelX, y: disconnectedIconY } }
-						width={ 64 }
-						height={ 64 }
+						position={ {
+							x: labelX + 36 * fontScale / 1.2 + CanvasTextMetrics.measureText(name, style).maxLineWidth / 2,
+							y: labelY,
+						} }
+						width={ 56 * fontScale }
+						height={ 56 * fontScale }
 					/>
 				)
 			}

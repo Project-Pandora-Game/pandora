@@ -10,7 +10,7 @@ import {
 	LegsPose,
 	SpaceClientInfo,
 } from 'pandora-common';
-import { CanvasTextMetrics, DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle, type Cursor, type EventMode, type GraphicsContext } from 'pixi.js';
+import { CanvasTextMetrics, DEG_TO_RAD, FederatedPointerEvent, GraphicsContext, Point, Rectangle, TextStyle, type Cursor, type EventMode } from 'pixi.js';
 import { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
@@ -19,6 +19,7 @@ import statusIconAway from '../../assets/icons/state-away.svg';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { Character, useCharacterData } from '../../character/character.ts';
 import { useEvent } from '../../common/useEvent.ts';
+import { useFetchedResourceText } from '../../common/useFetch.ts';
 import { useCharacterRestrictionsManager } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { THEME_FONT } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
@@ -31,14 +32,12 @@ import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { useAppearanceConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
-import { Sprite } from '../baseComponents/sprite.ts';
 import { Text } from '../baseComponents/text.ts';
 import { TransitionedContainer } from '../common/transitions/transitionedContainer.ts';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
 import { useTickerRef } from '../reconciler/tick.ts';
-import { useTexture } from '../useTexture.ts';
 import { CalculateCharacterDeviceSlotPosition } from './roomDevice.tsx';
 import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene.tsx';
 
@@ -386,10 +385,22 @@ function RoomCharacterDisplay({
 	const labelY = PIVOT_TO_LABEL_OFFSET;
 
 	const showAwayIcon = onlineStatus === 'away' && interfaceChatroomCharacterAwayStatusIconDisplay;
-	const awayIconTexture = useTexture(statusIconAway);
+	const awayIconTexture = useFetchedResourceText(statusIconAway);
+	const drawAwayIcon = useCallback((g: GraphicsContext) => {
+		g.clear();
+		if (awayIconTexture) {
+			g.svg(awayIconTexture);
+		}
+	}, [awayIconTexture]);
 
 	const showDisconnectedIcon = onlineStatus === 'offline' && interfaceChatroomOfflineCharacterFilter === 'icon';
-	const disconnectedIconTexture = useTexture(disconnectedIcon);
+	const disconnectedIconTexture = useFetchedResourceText(disconnectedIcon);
+	const drawDisconnectedIcon = useCallback((g: GraphicsContext) => {
+		g.clear();
+		if (disconnectedIconTexture) {
+			g.svg(disconnectedIconTexture);
+		}
+	}, [disconnectedIconTexture]);
 
 	showName = useObservable(SettingDisplayCharacterName) && showName;
 
@@ -469,29 +480,25 @@ function RoomCharacterDisplay({
 			}
 			{
 				!showAwayIcon ? null : (
-					<Sprite
-						anchor={ { x: 0.5, y: 0.5 } }
-						texture={ awayIconTexture }
+					<Graphics
+						draw={ drawAwayIcon }
 						position={ {
-							x: labelX - 32 * fontScale / 1.2 - CanvasTextMetrics.measureText(name, style).maxLineWidth / 2,
-							y: labelY,
+							x: labelX - 32 * 1.3 * fontScale - CanvasTextMetrics.measureText(name, style).maxLineWidth / 2,
+							y: labelY - 32 * 0.5 * fontScale,
 						} }
-						width={ 32 * fontScale }
-						height={ 32 * fontScale }
+						scale={ (32 / 50) * fontScale }
 					/>
 				)
 			}
 			{
 				!showDisconnectedIcon ? null : (
-					<Sprite
-						anchor={ { x: 0.5, y: 0.5 } }
-						texture={ disconnectedIconTexture }
+					<Graphics
+						draw={ drawDisconnectedIcon }
 						position={ {
-							x: labelX + 36 * fontScale / 1.2 + CanvasTextMetrics.measureText(name, style).maxLineWidth / 2,
-							y: labelY,
+							x: labelX + 2 * fontScale + CanvasTextMetrics.measureText(name, style).maxLineWidth / 2,
+							y: labelY - 56 * 0.5 * fontScale,
 						} }
-						width={ 56 * fontScale }
-						height={ 56 * fontScale }
+						scale={ (56 / 600) * fontScale }
 					/>
 				)
 			}

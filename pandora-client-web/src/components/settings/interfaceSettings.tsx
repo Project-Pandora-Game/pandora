@@ -245,7 +245,7 @@ function ChatroomChatCommandHintBehavior(): ReactElement {
 function ChatroomOfflineCharacters(): ReactElement {
 	const SELECTION_DESCRIPTIONS = useMemo((): Record<AccountSettings['interfaceChatroomOfflineCharacterFilter'], string> => ({
 		none: 'No effect (displayed the same as online characters)',
-		icon: 'Show icon under the character name',
+		icon: 'Show icon next to the character name',
 		darken: 'Darken',
 		ghost: 'Ghost (darken + semi-transparent)',
 	}), []);

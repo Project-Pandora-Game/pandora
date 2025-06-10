@@ -16,7 +16,6 @@ import {
 	RoomDeviceDeploymentPosition,
 	SpaceIdSchema,
 } from 'pandora-common';
-import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, ReactNode, useCallback, useMemo, useRef } from 'react';
 import { z } from 'zod';
@@ -29,6 +28,7 @@ import { useAsyncEvent, useEvent } from '../../common/useEvent.ts';
 import { useCharacterRestrictionsManager, useSpaceCharacters, type GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { useStandaloneConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
@@ -42,9 +42,10 @@ import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
 import { SwapCullingDirection, useItemColor } from '../layers/graphicsLayerCommon.tsx';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
+import type { PixiPointLike } from '../reconciler/component.ts';
 import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
-import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, useRoomCharacterOffsets } from './roomCharacter.tsx';
+import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, RoomCharacterLabel, SettingDisplayCharacterName, useRoomCharacterOffsets } from './roomCharacter.tsx';
 import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene.tsx';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
@@ -65,11 +66,6 @@ type RoomDeviceProps = {
 	projectionResolver: Immutable<RoomProjectionResolver>;
 
 	children?: ReactNode;
-	hitArea?: PIXI.Rectangle;
-	cursor?: PIXI.Cursor;
-	eventMode?: PIXI.EventMode;
-	onPointerDown?: (event: FederatedPointerEvent) => void;
-	onPointerUp?: (event: FederatedPointerEvent) => void;
 };
 
 export const DeviceOverlaySettingSchema = z.enum(['never', 'interactable', 'always']);
@@ -285,7 +281,7 @@ export function RoomDeviceInteractive({
 	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
 
 	const hitAreaRadius = 50;
-	const hitArea = useMemo(() => new PIXI.Rectangle(labelX - hitAreaRadius, labelY - hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius, labelX, labelY]);
+	const hitArea = useMemo(() => new PIXI.Rectangle(-hitAreaRadius, -hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius]);
 
 	/** Time at which user pressed button/touched */
 	const pointerDown = useRef<number | null>(null);
@@ -336,28 +332,116 @@ export function RoomDeviceInteractive({
 			.fill({ color: roomConstructionMode ? 0x000000 : 0x0000ff, alpha: roomConstructionMode ? 0.8 : 0.4 });
 	}, [showMenuHelper, roomConstructionMode, hitAreaRadius]);
 
+	const showCharacterNames = useObservable(SettingDisplayCharacterName);
+
 	return (
 		<RoomDevice
 			globalState={ globalState }
 			item={ item }
 			deployment={ deployment }
 			projectionResolver={ projectionResolver }
-			hitArea={ hitArea }
-			cursor={ enableMenu ? 'pointer' : 'none' }
-			eventMode={ enableMenu ? 'static' : 'none' }
-			onPointerDown={ onPointerDown }
-			onPointerUp={ onPointerUp }
 		>
+			<Container
+				zIndex={ 99998 }
+				position={ { x: labelX, y: labelY } }
+				hitArea={ hitArea }
+				cursor={ enableMenu ? 'pointer' : 'default' }
+				eventMode={ enableMenu ? 'static' : 'auto' }
+				onpointerdown={ onPointerDown }
+				onpointerup={ onPointerUp }
+				onpointerupoutside={ onPointerUp }
+			>
+				{
+					enableMenu ? (
+						<Graphics
+							draw={ deviceMenuHelperDraw }
+						/>
+					) : null
+				}
+			</Container>
 			{
-				enableMenu ? (
-					<Graphics
+				showCharacterNames ? (
+					<RoomDeviceCharacterNames
+						item={ item }
 						zIndex={ 99998 }
-						draw={ deviceMenuHelperDraw }
-						position={ { x: labelX, y: labelY } }
+						position={ { x: labelX, y: labelY + 85 } }
 					/>
 				) : null
 			}
 		</RoomDevice>
+	);
+}
+
+function RoomDeviceCharacterNames({ position, zIndex, item }: {
+	position: PixiPointLike;
+	zIndex?: number;
+	item: ItemRoomDevice;
+}): ReactElement {
+	const {
+		openContextMenu,
+	} = useRoomScreenContext();
+
+	const {
+		interfaceChatroomCharacterNameFontSize,
+	} = useAccountSettings();
+
+	let fontScale: number;
+	switch (interfaceChatroomCharacterNameFontSize) {
+		case 'xs': fontScale = 0.6; break;
+		case 's': fontScale = 1.0; break;
+		case 'm': fontScale = 1.4; break;
+		case 'l': fontScale = 1.8; break;
+		case 'xl': fontScale = 2.2; break;
+		default:
+			AssertNever(interfaceChatroomCharacterNameFontSize);
+	}
+
+	const spacing = 42 * fontScale;
+
+	const characters = useSpaceCharacters();
+
+	return (
+		<Container position={ position } zIndex={ zIndex }>
+			{
+				useMemo(() => {
+					if (characters == null)
+						return null;
+
+					const result: ReactNode[] = [];
+
+					for (const slot of Object.keys(item.asset.definition.slots)) {
+						const characterId = item.slotOccupancy.get(slot);
+						const character = characterId != null ? characters.find((c) => c.id === characterId) : undefined;
+
+						if (character != null) {
+							result.push(
+								<Container
+									x={ 0 }
+									y={ (result.length + 0.5) * spacing }
+									eventMode='static'
+									cursor='pointer'
+									hitArea={ new PIXI.Rectangle(-100, -0.5 * spacing, 200, spacing) }
+									onpointerup={ (event) => {
+										openContextMenu(character, {
+											x: event.pageX,
+											y: event.pageY,
+										});
+									} }
+								>
+									<RoomCharacterLabel
+										key={ character.id }
+										character={ character }
+
+									/>
+								</Container>,
+							);
+						}
+					}
+
+					return result;
+				}, [characters, item, spacing, openContextMenu])
+			}
+		</Container>
 	);
 }
 
@@ -368,11 +452,6 @@ export function RoomDevice({
 	projectionResolver,
 
 	children,
-	hitArea,
-	cursor,
-	eventMode,
-	onPointerDown,
-	onPointerUp,
 }: RoomDeviceProps): ReactElement | null {
 	const asset = item.asset;
 	const debugConfig = useDebugConfig();
@@ -419,12 +498,6 @@ export function RoomDevice({
 				position={ { x, y: y - yOffsetExtra } }
 				scale={ { x: scale, y: scale } }
 				pivot={ pivot }
-				hitArea={ hitArea }
-				eventMode={ eventMode }
-				cursor={ cursor }
-				onPointerDown={ onPointerDown }
-				onPointerUp={ onPointerUp }
-				onPointerUpOutside={ onPointerUp }
 				zIndex={ -deploymentY }
 				roomMask={ roomMask }
 			>
@@ -475,16 +548,8 @@ export interface RoomDeviceGraphicsProps extends ChildrenProps {
 	position?: PointLike;
 	scale?: PointLike;
 	pivot?: PointLike;
-	hitArea?: PIXI.Rectangle;
-	eventMode?: PIXI.EventMode;
-	cursor?: PIXI.Cursor;
 	zIndex?: number;
 	roomMask?: PixiMaskSource;
-
-	onPointerDown?: (event: PIXI.FederatedPointerEvent) => void;
-	onPointerUp?: (event: PIXI.FederatedPointerEvent) => void;
-	onPointerUpOutside?: (event: PIXI.FederatedPointerEvent) => void;
-	onPointerMove?: (event: PIXI.FederatedPointerEvent) => void;
 }
 
 function RoomDeviceGraphicsWithManagerImpl({
@@ -493,14 +558,7 @@ function RoomDeviceGraphicsWithManagerImpl({
 	position: positionOffset,
 	scale: scaleExtra,
 	pivot: pivotExtra,
-	onPointerDown,
-	onPointerUp,
-	onPointerUpOutside,
-	onPointerMove,
 	children,
-	cursor,
-	eventMode,
-	hitArea,
 	roomMask,
 	...graphicsProps
 }: RoomDeviceGraphicsProps, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
@@ -521,13 +579,6 @@ function RoomDeviceGraphicsWithManagerImpl({
 			position={ position }
 			scale={ scale }
 			sortableChildren
-			cursor={ cursor ?? 'default' }
-			eventMode={ eventMode ?? 'auto' }
-			hitArea={ hitArea ?? null }
-			onpointerdown={ onPointerDown }
-			onpointerup={ onPointerUp }
-			onpointerupoutside={ onPointerUpOutside }
-			onpointermove={ onPointerMove }
 		>
 			<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
 				{

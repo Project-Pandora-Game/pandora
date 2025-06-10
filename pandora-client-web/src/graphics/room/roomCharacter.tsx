@@ -37,6 +37,7 @@ import { TransitionedContainer } from '../common/transitions/transitionedContain
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
+import type { PixiPointLike } from '../reconciler/component.ts';
 import { useTickerRef } from '../reconciler/tick.ts';
 import { CalculateCharacterDeviceSlotPosition } from './roomDevice.tsx';
 import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene.tsx';
@@ -355,13 +356,6 @@ function RoomCharacterDisplay({
 	onPointerMove,
 	onPointerUp,
 }: RoomCharacterDisplayProps & CharacterStateProps): ReactElement | null {
-	const {
-		name,
-		publicSettings: { labelColor },
-		onlineStatus,
-	} = useCharacterData(character);
-
-	const { interfaceChatroomCharacterAwayStatusIconDisplay, interfaceChatroomOfflineCharacterFilter, interfaceChatroomCharacterNameFontSize } = useAccountSettings();
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
 	const playerFilters = usePlayerVisionFilters(character.isPlayer());
@@ -384,44 +378,7 @@ function RoomCharacterDisplay({
 	const labelX = 0;
 	const labelY = PIVOT_TO_LABEL_OFFSET;
 
-	const showAwayIcon = onlineStatus === 'away' && interfaceChatroomCharacterAwayStatusIconDisplay;
-	const awayIconTexture = useFetchedResourceText(statusIconAway);
-	const drawAwayIcon = useCallback((g: GraphicsContext) => {
-		g.clear();
-		if (awayIconTexture) {
-			g.svg(awayIconTexture);
-		}
-	}, [awayIconTexture]);
-
-	const showDisconnectedIcon = onlineStatus === 'offline' && interfaceChatroomOfflineCharacterFilter === 'icon';
-	const disconnectedIconTexture = useFetchedResourceText(disconnectedIcon);
-	const drawDisconnectedIcon = useCallback((g: GraphicsContext) => {
-		g.clear();
-		if (disconnectedIconTexture) {
-			g.svg(disconnectedIconTexture);
-		}
-	}, [disconnectedIconTexture]);
-
 	showName = useObservable(SettingDisplayCharacterName) && showName;
-
-	let fontScale: number;
-	switch (interfaceChatroomCharacterNameFontSize) {
-		case 'xs': fontScale = 0.6; break;
-		case 's': fontScale = 1.0; break;
-		case 'm': fontScale = 1.4; break;
-		case 'l': fontScale = 1.8; break;
-		case 'xl': fontScale = 2.2; break;
-		default:
-			AssertNever(interfaceChatroomCharacterNameFontSize);
-	}
-
-	const style = new TextStyle({
-		fontFamily: THEME_FONT.slice(),
-		fontSize: 32 * fontScale,
-		fill: labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor,
-		align: 'center',
-		dropShadow: { blur: 4 },
-	});
 
 	// If character is in a device, do not render it here, it will be rendered by the device
 	const roomDeviceLink = useCharacterRestrictionsManager(globalState, character, (rm) => rm.getRoomDeviceLink());
@@ -470,21 +427,94 @@ function RoomCharacterDisplay({
 			</GraphicsCharacter>
 			{
 				showName ? (
-					<Text
-						anchor={ { x: 0.5, y: 0.5 } }
+					<RoomCharacterLabel
 						position={ { x: labelX, y: labelY } }
-						style={ style }
-						text={ name }
+						character={ character }
 					/>
 				) : null
 			}
+			{
+				!debugConfig?.characterDebugOverlay ? null : (
+					<Container zIndex={ 99999 }>
+						<RoomCharacterDebugGraphicsOuter pivot={ pivot } hitArea={ hitArea } />
+					</Container>
+				)
+			}
+		</TransitionedContainer>
+	);
+}
+
+export function RoomCharacterLabel({ position, character }: {
+	position?: PixiPointLike;
+	character: Character<ICharacterRoomData>;
+}): ReactElement {
+	const {
+		name,
+		publicSettings: { labelColor },
+		onlineStatus,
+	} = useCharacterData(character);
+
+	const {
+		interfaceChatroomCharacterAwayStatusIconDisplay,
+		interfaceChatroomOfflineCharacterFilter,
+		interfaceChatroomCharacterNameFontSize,
+	} = useAccountSettings();
+
+	const showAwayIcon = onlineStatus === 'away' && interfaceChatroomCharacterAwayStatusIconDisplay;
+	const awayIconTexture = useFetchedResourceText(statusIconAway);
+	const drawAwayIcon = useCallback((g: GraphicsContext) => {
+		g.clear();
+		if (awayIconTexture) {
+			g.svg(awayIconTexture);
+		}
+	}, [awayIconTexture]);
+
+	const showDisconnectedIcon = onlineStatus === 'offline' && interfaceChatroomOfflineCharacterFilter === 'icon';
+	const disconnectedIconTexture = useFetchedResourceText(disconnectedIcon);
+	const drawDisconnectedIcon = useCallback((g: GraphicsContext) => {
+		g.clear();
+		if (disconnectedIconTexture) {
+			g.svg(disconnectedIconTexture);
+		}
+	}, [disconnectedIconTexture]);
+
+	let fontScale: number;
+	switch (interfaceChatroomCharacterNameFontSize) {
+		case 'xs': fontScale = 0.6; break;
+		case 's': fontScale = 1.0; break;
+		case 'm': fontScale = 1.4; break;
+		case 'l': fontScale = 1.8; break;
+		case 'xl': fontScale = 2.2; break;
+		default:
+			AssertNever(interfaceChatroomCharacterNameFontSize);
+	}
+
+	const style = useMemo(() => new TextStyle({
+		fontFamily: THEME_FONT.slice(),
+		fontSize: 32 * fontScale,
+		fill: labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor,
+		align: 'center',
+		dropShadow: { blur: 4 },
+	}), [fontScale, labelColor]);
+
+	const nameMeasure = useMemo(() => CanvasTextMetrics.measureText(name, style), [name, style]);
+
+	return (
+		<Container
+			position={ position }
+		>
+			<Text
+				anchor={ { x: 0.5, y: 0.5 } }
+				style={ style }
+				text={ name }
+			/>
 			{
 				!showAwayIcon ? null : (
 					<Graphics
 						draw={ drawAwayIcon }
 						position={ {
-							x: labelX - 32 * 1.3 * fontScale - CanvasTextMetrics.measureText(name, style).maxLineWidth / 2,
-							y: labelY - 32 * 0.5 * fontScale,
+							x: - 32 * 1.3 * fontScale - nameMeasure.maxLineWidth / 2,
+							y: - 32 * 0.5 * fontScale,
 						} }
 						scale={ (32 / 50) * fontScale }
 					/>
@@ -495,21 +525,14 @@ function RoomCharacterDisplay({
 					<Graphics
 						draw={ drawDisconnectedIcon }
 						position={ {
-							x: labelX + 2 * fontScale + CanvasTextMetrics.measureText(name, style).maxLineWidth / 2,
-							y: labelY - 56 * 0.5 * fontScale,
+							x: + 2 * fontScale + nameMeasure.maxLineWidth / 2,
+							y: - 56 * 0.5 * fontScale,
 						} }
 						scale={ (56 / 600) * fontScale }
 					/>
 				)
 			}
-			{
-				!debugConfig?.characterDebugOverlay ? null : (
-					<Container zIndex={ 99999 }>
-						<RoomCharacterDebugGraphicsOuter pivot={ pivot } hitArea={ hitArea } />
-					</Container>
-				)
-			}
-		</TransitionedContainer>
+		</Container>
 	);
 }
 

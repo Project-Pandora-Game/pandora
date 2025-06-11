@@ -158,7 +158,7 @@ export function PosingStateHelperGraphics<const TValue extends string | number>(
 	const dragging = useRef<PIXI.Point | null>(null);
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (event.button === 0) {
+		if (event.button !== 1) {
 			event.stopPropagation();
 			dragging.current = event.getLocalPosition<PIXI.Point>(event.target);
 			onMove(dragging.current.x, dragging.current.y);

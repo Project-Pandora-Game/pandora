@@ -509,7 +509,7 @@ function PosingToolIKHandle({
 	});
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (event.button === 0) {
+		if (event.button !== 1) {
 			event.stopPropagation();
 			pointerDown.current = Date.now();
 		}
@@ -733,7 +733,7 @@ function PosingToolBone({
 	});
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (event.button === 0) {
+		if (event.button !== 1) {
 			event.stopPropagation();
 			pointerDown.current = Date.now();
 		}
@@ -814,7 +814,7 @@ function SwitchModeMovementButton({
 	const held = useRef(false);
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (event.button === 0) {
+		if (event.button !== 1) {
 			event.stopPropagation();
 			held.current = true;
 		}
@@ -866,7 +866,7 @@ function SwitchModePosingButton({
 	const POSING_ICON_PATH = 'M12 1a2 2 0 1 1-2 2 2 2 0 0 1 2-2zm8.79 4.546L14.776 6H9.223l-6.012-.454a.72.72 0 0 0-.168 1.428l6.106.97a.473.473 0 0 1 .395.409L10 12 6.865 22.067a.68.68 0 0 0 .313.808l.071.04a.707.707 0 0 0 .994-.338L12 13.914l3.757 8.663a.707.707 0 0 0 .994.338l.07-.04a.68.68 0 0 0 .314-.808L14 12l.456-3.647a.473.473 0 0 1 .395-.409l6.106-.97a.72.72 0 0 0-.168-1.428z';
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (event.button === 0) {
+		if (event.button !== 1) {
 			event.stopPropagation();
 			held.current = true;
 		}
@@ -932,7 +932,7 @@ function SwitchHandPositionButton({
 	const POSING_ICON_PATH_3 = 'M13 30a1 1 0 0 1-.707-1.707L13.586 27l-1.293-1.293a1 1 0 0 1 1.414-1.414l2 2a1 1 0 0 1 0 1.414l-2 2A1 1 0 0 1 13 30zm-1.762-16.966l1.598-2.152 1.877-1.793s-.625-.746-1.399-.746c-.347 0-.665.099-.956.298s-.553.496-.79.894a4.97 4.97 0 0 0-.777.332c-.041-.414-.091-.72-.149-.918l1.078-4.185c.255-1.009.317-1.519-.291-1.789S10.2 3.45 9.881 4.4L8.858 7.631l.031-4.156c0-1.02-.322-1.53-.966-1.53-.65 0-.975.452-.975 1.356v4.155l-1.045-3.64c-.259-.644-.716-1.278-1.323-1.075S4 3.943 4.169 4.583L5.1 8.132 3.598 5.65c-.46-.797-1.253-.951-1.432-.765-.286.297-.477.927.042 1.833l1.658 2.886 1.48 5.127v.997h4.321v-1.285c.502-.344.936-.813 1.571-1.408zm9.382 5.925l-1.598 2.152-1.877 1.793s.625.746 1.399.746c.347 0 .665-.099.956-.298s.553-.496.79-.894a4.97 4.97 0 0 0 .777-.332c.041.414.091.72.149.918l-1.078 4.185c-.255 1.009-.317 1.519.291 1.789s1.229-.475 1.549-1.424L23 24.362l-.031 4.156c0 1.02.322 1.53.966 1.53.65 0 .975-.452.975-1.356v-4.155l1.046 3.639c.259.644.716 1.278 1.323 1.075s.579-1.202.411-1.842l-.932-3.548 1.503 2.482c.46.797 1.253.951 1.432.765.286-.297.477-.927-.042-1.833l-1.658-2.886-1.48-5.127v-.997h-4.321v1.285c-.502.344-.936.813-1.571 1.408z';
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (event.button === 0) {
+		if (event.button !== 1) {
 			event.stopPropagation();
 			held.current = true;
 		}
@@ -999,7 +999,7 @@ function ExitPosingUiButton({
 	const held = useRef(false);
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (event.button === 0) {
+		if (event.button !== 1) {
 			event.stopPropagation();
 			held.current = true;
 		}
@@ -1077,7 +1077,7 @@ function TurnAroundButton({
 	const held = useRef(false);
 
 	const onPointerDown = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (event.button === 0) {
+		if (event.button !== 1) {
 			event.stopPropagation();
 			held.current = true;
 		}

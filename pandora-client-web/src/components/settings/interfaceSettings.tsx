@@ -128,7 +128,6 @@ function ChatroomSettings(): ReactElement {
 	return (
 		<fieldset>
 			<legend>Chatroom UI</legend>
-			<ChatroomCharacterAwayStatusIconDisplay />
 			<ChatroomGraphicsRatio />
 			<ChatroomChatFontSize />
 			<ChatroomChatCommandHintBehavior />
@@ -233,6 +232,7 @@ function RoomGraphicsSettings(): ReactElement {
 	return (
 		<fieldset>
 			<legend>Room graphics UI</legend>
+			<ChatroomCharacterAwayStatusIconDisplay />
 			<ChatroomCharacterNameFontSize />
 			<ChatroomOfflineCharacters />
 			<ChatroomCharacterPosintStyle />
@@ -255,7 +255,7 @@ function ChatroomCharacterNameFontSize(): ReactElement {
 function ChatroomCharacterPosintStyle(): ReactElement {
 	const SELECTION_DESCRIPTIONS = useMemo((): Record<AccountSettings['interfacePosingStyle'], string> => ({
 		inverse: 'Inverse posing (dragging limbs to their position) [default]',
-		forward: 'Forward posing (directly manipulating bone rotation)',
+		forward: 'Forward posing (directly manipulating bone/joint rotation)',
 		both: 'Both (shows both inverse and forward posing elements)',
 	}), []);
 

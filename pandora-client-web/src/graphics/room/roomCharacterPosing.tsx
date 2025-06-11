@@ -1,12 +1,13 @@
 import { produce, type Immutable } from 'immer';
 import { throttle } from 'lodash-es';
-import { ArmFingersSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type PartialAppearancePose } from 'pandora-common';
+import { ArmFingersSchema, ArmPoseSchema, ArmRotationSchema, Assert, CharacterSize, EMPTY_ARRAY, type AssetFrameworkCharacterState, type BoneDefinition, type InversePosingHandle, type PartialAppearancePose } from 'pandora-common';
 import * as PIXI from 'pixi.js';
 import { ReactElement, useCallback, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAssetManager } from '../../assets/assetManager.tsx';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { useEvent } from '../../common/useEvent.ts';
+import { useInterfaceAccentColorPacked } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { usePlayer } from '../../components/gameContext/playerContextProvider.tsx';
 import { useWardrobeExecuteCallback, WardrobeActionContextProvider } from '../../components/wardrobe/wardrobeActionContext.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
@@ -390,12 +391,15 @@ function RoomCharacterPosingToolImpl({
 				<SwitchHandPositionButton
 					position={ { x: pivot.x + 100, y: pivot.y + 80 } }
 					radius={ 25 }
+					poseIndex={ ArmPoseSchema.options.indexOf(characterState.requestedPose.leftArm.position) }
+					poseCount={ ArmPoseSchema.options.length }
 					onClick={ () => {
 						setPose({
 							leftArm: {
-								position: characterState.requestedPose.leftArm.position === 'back' ?
-								'back_below_hair' : characterState.requestedPose.leftArm.position === 'back_below_hair' ?
-								'front' : characterState.requestedPose.leftArm.position === 'front' ? 'front_above_hair' : 'back',
+								position: characterState.requestedPose.leftArm.position === 'front_above_hair' ? 'front' :
+								characterState.requestedPose.leftArm.position === 'front' ? 'back' :
+								characterState.requestedPose.leftArm.position === 'back' ? 'back_below_hair' :
+								'front_above_hair',
 							},
 						});
 					} }
@@ -403,12 +407,15 @@ function RoomCharacterPosingToolImpl({
 				<SwitchHandPositionButton
 					position={ { x: pivot.x - 100, y: pivot.y + 80 } }
 					radius={ 25 }
+					poseIndex={ ArmPoseSchema.options.indexOf(characterState.requestedPose.rightArm.position) }
+					poseCount={ ArmPoseSchema.options.length }
 					onClick={ () => {
 						setPose({
 							rightArm: {
-								position: characterState.requestedPose.rightArm.position === 'back' ?
-								'back_below_hair' : characterState.requestedPose.rightArm.position === 'back_below_hair' ?
-								'front' : characterState.requestedPose.rightArm.position === 'front' ? 'front_above_hair' : 'back',
+								position: characterState.requestedPose.rightArm.position === 'front_above_hair' ? 'front' :
+								characterState.requestedPose.rightArm.position === 'front' ? 'back' :
+								characterState.requestedPose.rightArm.position === 'back' ? 'back_below_hair' :
+								'front_above_hair',
 							},
 						});
 					} }
@@ -919,11 +926,16 @@ function SwitchHandPositionButton({
 	position,
 	radius,
 	onClick,
+	poseIndex,
+	poseCount,
 }: {
 	position: Readonly<PointLike>;
 	radius: number;
 	onClick: () => void;
+	poseIndex: number;
+	poseCount: number;
 }): ReactElement {
+	const accentColor = useInterfaceAccentColorPacked();
 	const hitArea = useMemo(() => new PIXI.Rectangle(-radius, -radius, 2 * radius, 2 * radius), [radius]);
 	const held = useRef(false);
 	/** Sized 32x32 */
@@ -954,6 +966,12 @@ function SwitchHandPositionButton({
 	}, []);
 
 	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
+		const currentStart = poseIndex / poseCount;
+
+		g
+			.rect(-radius, -radius + (2 * radius * currentStart), 2 * radius, 2 * radius / poseCount)
+			.fill({ color: accentColor, alpha: 1 });
+
 		g
 			.rect(-radius, -radius, 2 * radius, 2 * radius)
 			.fill({ color: 0x000000, alpha: 0.4 })
@@ -967,7 +985,7 @@ function SwitchHandPositionButton({
 			.path(new PIXI.GraphicsPath(POSING_ICON_PATH_3))
 			.resetTransform()
 			.fill({ color: 0xffffff, alpha: 1 });
-	}, [radius]);
+	}, [accentColor, radius, poseIndex, poseCount]);
 
 	return (
 		<Graphics

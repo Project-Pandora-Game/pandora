@@ -312,6 +312,27 @@ function RoomCharacterPosingToolImpl({
 				pivot={ pivot }
 				angle={ rotationAngle }
 			>
+				<ExitPosingUiButton
+					position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT + 4 } }
+					radius={ 44 }
+					onClick={ () => {
+						setRoomSceneMode({ mode: 'normal' });
+					} }
+				/>
+				{
+					canMoveCharacter !== 'forbidden' ? (
+						<SwitchModeMovementButton
+							position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 } }
+							radius={ 40 }
+							onClick={ () => {
+								if (canMoveCharacter === 'prompt') {
+									toast(`Attempting to move this character will ask them for permission.`, TOAST_OPTIONS_WARNING);
+								}
+								setRoomSceneMode({ mode: 'moveCharacter', characterId: id });
+							} }
+						/>
+					) : null
+				}
 				{
 					(interfacePosingStyle === 'forward' || interfacePosingStyle === 'both') ? (
 						bones
@@ -351,27 +372,6 @@ function RoomCharacterPosingToolImpl({
 							))
 					) : null
 				}
-				{
-					canMoveCharacter !== 'forbidden' ? (
-						<SwitchModeMovementButton
-							position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT - 90 } }
-							radius={ 40 }
-							onClick={ () => {
-								if (canMoveCharacter === 'prompt') {
-									toast(`Attempting to move this character will ask them for permission.`, TOAST_OPTIONS_WARNING);
-								}
-								setRoomSceneMode({ mode: 'moveCharacter', characterId: id });
-							} }
-						/>
-					) : null
-				}
-				<ExitPosingUiButton
-					position={ { x: 0.5 * CharacterSize.WIDTH, y: 0.4 * CharacterSize.HEIGHT } }
-					radius={ 40 }
-					onClick={ () => {
-						setRoomSceneMode({ mode: 'normal' });
-					} }
-				/>
 				<TurnAroundButton
 					position={ { x: pivot.x, y: pivot.y + 80 } }
 					radiusSmall={ 20 }

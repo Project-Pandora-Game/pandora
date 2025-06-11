@@ -10,15 +10,10 @@ export const InversePosingHandleSchema = z.object({
 	x: z.number(),
 	/** Position of the handle (Y coordinate) */
 	y: z.number(),
-	/** How should the handle be drawn. */
-	style: z.enum(['left-right', 'up-down', 'move']),
+	/** How should the handle be drawn. Hand variants add additional controls. */
+	style: z.enum(['left-right', 'up-down', 'move', 'hand-left', 'hand-right']),
 	/** Optional transforms applied to the position before using it any further. */
 	transforms: TransformDefinitionSchema.array().optional(),
-	/**
-	 * Whether this handle should ignore character rotation and scale transforms. Useful if it is meant to manipulate exactly those.
-	 * @default false
-	 */
-	excludeFromCharacterTransforms: z.boolean().optional(),
 });
 /** A UI handle used for inverse kinematic posing of the character. */
 export type InversePosingHandle = z.infer<typeof InversePosingHandleSchema>;

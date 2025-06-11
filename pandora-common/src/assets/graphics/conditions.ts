@@ -12,7 +12,7 @@ export type CharacterView = z.infer<typeof CharacterViewSchema>;
 export const ArmPoseSchema = z.enum(['front_above_hair', 'front', 'back', 'back_below_hair']);
 export type ArmPose = z.infer<typeof ArmPoseSchema>;
 
-export const ArmRotationSchema = z.enum(['up', 'down', 'forward', 'backward']);
+export const ArmRotationSchema = z.enum(['backward', 'up', 'forward', 'down']);
 export type ArmRotation = z.infer<typeof ArmRotationSchema>;
 
 export const ArmFingersSchema = z.enum(['spread', 'fist']);

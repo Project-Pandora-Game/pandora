@@ -577,13 +577,15 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								break;
 							}
 							case 'check': {
+								const spaceHand = space.cardGame.getSpaceHand();
 								space.handleActionMessage({
 									id: 'gamblingCardGameHandCheck',
 									character,
 									sendTo: [client.character.id],
 									dictionary: {
 										'HAND': space.cardGame.getPlayerHand(client.character.id),
-										'TABLE': space.cardGame.getSpaceHand(),
+										'ISARE': (spaceHand === 'nothing' || spaceHand.length < 2) ? 'is' : 'are',
+										'TABLE': spaceHand,
 									},
 								});
 								break;
@@ -599,11 +601,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 										character,
 										sendTo: players,
 										dictionary: {
-											'HAND': space.cardGame.getSpaceHand(),
-											'ISARE': (spaceHand === 'nothing' || spaceHand.length < 3) ? 'is' : 'are',
+											'HAND': spaceHand,
+											'ISARE': (spaceHand === 'nothing' || spaceHand.length < 2) ? 'is' : 'are',
 										},
 									});
-									//Show the crads of all players
+									//Show the cards of all players
 									players.forEach((id) => space.handleActionMessage({
 										id: 'gamblingCardGameHandReveal',
 										character,

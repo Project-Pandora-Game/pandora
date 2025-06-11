@@ -12,11 +12,6 @@ import { ASSET_PREFERENCES_DEFAULT, AssetPreferencesServerSchema } from './asset
 import { CharacterSettingsSchema } from './characterSettings.ts';
 import { CharacterIdSchema } from './characterTypes.ts';
 
-export const CharacterRoomPositionSchema = z.tuple([z.number().int(), z.number().int(), z.number().int()])
-	.catch([0, 0, 0])
-	.readonly();
-export type CharacterRoomPosition = readonly [x: number, y: number, yOffset: number];
-
 /** Data about character, that is visible to everyone in the same space */
 export const CharacterPublicDataSchema = z.object({
 	id: CharacterIdSchema,

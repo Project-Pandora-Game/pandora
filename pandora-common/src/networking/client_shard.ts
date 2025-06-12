@@ -8,6 +8,7 @@ import { AppearanceActionSchema } from '../gameLogic/actionLogic/actions/_index.
 import { AppearanceActionData, AppearanceActionProblem } from '../gameLogic/actionLogic/appearanceActionProblems.ts';
 import { CharacterModifierConfigurationChangeSchema, CharacterModifierIdSchema, CharacterModifierInstanceClientDataSchema, CharacterModifierLockActionSchema, CharacterModifierTemplateSchema, PermissionConfigChangeSchema, PermissionConfigSchema, PermissionGroupSchema, PermissionSetupSchema, PermissionTypeSchema } from '../gameLogic/index.ts';
 import { LIMIT_CHARACTER_PROFILE_LENGTH } from '../inputLimits.ts';
+import { CardGameActionSchema } from '../utility/cards.ts';
 import { Satisfies } from '../utility/misc.ts';
 import { CharacterInputNameSchema, ZodCast } from '../validation.ts';
 import { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
@@ -137,6 +138,10 @@ export const ClientShardSchema = {
 			z.object({
 				type: z.literal('rps'), // Rock Paper Scissors
 				choice: z.enum(['rock', 'paper', 'scissors', 'show']),
+			}),
+			z.object({
+				type: z.literal('cards'), //CardGameCard game related messages
+				action: CardGameActionSchema,
 			}),
 		]),
 		response: null,

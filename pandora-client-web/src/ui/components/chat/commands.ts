@@ -307,7 +307,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 								return { success: false, error: 'Maximum sides (100)/ dice (10) exceeded' };
 							}
 						} else {
-							return { success: false, error: `Invalid Options: '${input}'` };
+							return { success: false, error: `Invalid options: '${input}'` };
 						} // RegEx test
 					}
 					return { success: true, value: { dice, sides, hidden } };
@@ -320,6 +320,131 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				});
 				return true;
 			}),
+	},
+	{
+		key: ['cards'],
+		description: 'Play a game of cards',
+		longDescription: `You can 'create' or 'stop' a game of cards, 'join' an existing one, 'deal' cards open or face down to player or the room,
+		'check' your hand or 'reveal' the cards that were dealt to all players, ending the game.`,
+		usage: 'create [public]| stop | join | dealTable | dealOpenly <target> | deal <target>  | check | reveal',
+		handler: CreateClientCommand()
+			.fork('action', (ctx) => ({
+				create: {
+					description: 'Create a new game with a deck of 52 cards for the current space.',
+					handler: ctx
+						.argument('options', {
+							autocompleteCustomName: '[public]',
+							preparse: 'allTrimmed',
+							parse: (input) => {
+								input = input.toUpperCase();
+								return { success: true, value: { publicGame: input === 'PUBLIC' } };
+							},
+						})
+						.handler(({ shardConnector }, { options }) => {
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'cards',
+								action: {
+									action: 'create',
+									public: options.publicGame,
+								},
+							});
+							return true;
+						}),
+				},
+				stop: {
+					description: 'Stop an ongoing game. Only possible for the creator of the game.',
+					handler: ctx
+						.handler(({ shardConnector }) => {
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'cards',
+								action: { action: 'stop' },
+							});
+							return true;
+						}),
+				},
+				join: {
+					description: 'Join an ongoing game.',
+					handler: ctx
+						.handler(({ shardConnector }) => {
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'cards',
+								action: { action: 'join' },
+							});
+							return true;
+						}),
+				},
+				dealTable: {
+					description: `Deal one card from the space's deck to the room's table. Only possible for the game creator.`,
+					handler: ctx
+						.handler(({ shardConnector }) => {
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'cards',
+								action: { action: 'dealTable' },
+							});
+							return true;
+						}),
+				},
+				dealOpenly: {
+					description: `Deal one card from the space's deck openly to a player. Only possible for the game creator.`,
+					handler: ctx
+						.argument('target', CommandStepOptional(CommandSelectorCharacter({ allowSelf: 'any' })))
+						.handler(({ shardConnector }, { target }) => {
+							if (target) { //Deal card to a player
+								shardConnector.sendMessage('gamblingAction', {
+									type: 'cards',
+									action: {
+										action: 'dealOpenly',
+										targetId: target.data.id,
+									},
+								});
+								return true;
+							} else {
+								return false;
+							}
+						}),
+				},
+				deal: {
+					description: `Deal one card from the space's deck hidden to a player. Only possible for the game creator.`,
+					handler: ctx
+						.argument('target', CommandStepOptional(CommandSelectorCharacter({ allowSelf: 'any' })))
+						.handler(({ shardConnector }, { target }) => {
+							if (target) { //Deal card to a player
+								shardConnector.sendMessage('gamblingAction', {
+									type: 'cards',
+									action: {
+										action: 'deal',
+										targetId: target.data.id,
+									},
+								});
+								return true;
+							} else {
+								return false;
+							}
+						}),
+				},
+				reveal: {
+					description: `Reveal the cards of all players. Only available for the game's creator.`,
+					handler: ctx
+						.handler(({ shardConnector }) => {
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'cards',
+								action: { action: 'reveal' },
+							});
+							return true;
+						}),
+				},
+				check: {
+					description: 'Have a look at the cards that were dealt to you',
+					handler: ctx
+						.handler(({ shardConnector }) => {
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'cards',
+								action: { action: 'check' },
+							});
+							return true;
+						}),
+				},
+			})),
 	},
 	//#endregion
 	//#region Commands to change the player's pose

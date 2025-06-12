@@ -14,6 +14,7 @@ import {
 	AssetFrameworkGlobalStateContainer,
 	AssetFrameworkRoomState,
 	AssetManager,
+	CardGameGame,
 	CharacterId,
 	ChatCharacterStatus,
 	EMPTY_ARRAY,
@@ -72,6 +73,8 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	public abstract get config(): SpaceDirectoryConfig;
 
 	protected readonly logger: Logger;
+
+	public cardGame: CardGameGame | null = null;
 
 	constructor(id: SpaceId | null, inventory: RoomInventoryBundle, logger: Logger) {
 		super();
@@ -351,11 +354,31 @@ export abstract class Space extends ServerRoom<IShardClient> {
 	}
 
 	/**
-	 * Removes a character from the space
+	 * Removes a character from the space and stops any ongoing game, if it
+	 * was initiated by the leaving player
 	 * @param character - The character being removed
 	 */
 	public characterRemove(character: Character): void {
 		this.runWithSuppressedUpdates(() => {
+			if (this.cardGame) {
+				// Stop a game, if character is dealer of a current game
+				if (this.cardGame.isDealer(character.id)) {
+					//Send an information to all but the leaving character
+					const targets = this.cardGame.getPlayerIds().filter((id) => id !== character.id);
+
+					this.handleActionMessage({
+						id: 'gamblingCardGameStopped',
+						character: {
+							type: 'character',
+							id: character.id,
+						},
+						sendTo: targets,
+					});
+					this.cardGame = null;
+				} else {
+					this.cardGame.leaveGame(character.id);
+				}
+			}
 			// Remove character
 			const originalState = this._gameState.currentState;
 			let newState = originalState;

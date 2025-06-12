@@ -835,11 +835,8 @@ function SwitchModeMovementButton({
 		}
 	}, [onClick]);
 
-	const onPointerUpOutside = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (held.current) {
-			event.stopPropagation();
-			held.current = false;
-		}
+	const onPointerUpOutside = useCallback((_event: PIXI.FederatedPointerEvent) => {
+		held.current = false;
 	}, []);
 
 	return (
@@ -887,11 +884,8 @@ function SwitchModePosingButton({
 		}
 	}, [onClick]);
 
-	const onPointerUpOutside = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (held.current) {
-			event.stopPropagation();
-			held.current = false;
-		}
+	const onPointerUpOutside = useCallback((_event: PIXI.FederatedPointerEvent) => {
+		held.current = false;
 	}, []);
 
 	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
@@ -958,11 +952,8 @@ function SwitchHandPositionButton({
 		}
 	}, [onClick]);
 
-	const onPointerUpOutside = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (held.current) {
-			event.stopPropagation();
-			held.current = false;
-		}
+	const onPointerUpOutside = useCallback((_event: PIXI.FederatedPointerEvent) => {
+		held.current = false;
 	}, []);
 
 	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
@@ -1031,11 +1022,8 @@ function ExitPosingUiButton({
 		}
 	}, [onClick]);
 
-	const onPointerUpOutside = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (held.current) {
-			event.stopPropagation();
-			held.current = false;
-		}
+	const onPointerUpOutside = useCallback((_event: PIXI.FederatedPointerEvent) => {
+		held.current = false;
 	}, []);
 
 	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {
@@ -1109,11 +1097,8 @@ function TurnAroundButton({
 		}
 	}, [onClick]);
 
-	const onPointerUpOutside = useCallback((event: PIXI.FederatedPointerEvent) => {
-		if (held.current) {
-			event.stopPropagation();
-			held.current = false;
-		}
+	const onPointerUpOutside = useCallback((_event: PIXI.FederatedPointerEvent) => {
+		held.current = false;
 	}, []);
 
 	const graphicsDraw = useCallback((g: PIXI.GraphicsContext) => {

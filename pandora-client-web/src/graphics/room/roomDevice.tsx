@@ -16,6 +16,7 @@ import {
 	RoomDeviceDeploymentPosition,
 	SpaceIdSchema,
 } from 'pandora-common';
+import type { FederatedPointerEvent } from 'pixi.js';
 import * as PIXI from 'pixi.js';
 import React, { ReactElement, ReactNode, useCallback, useMemo, useRef } from 'react';
 import { z } from 'zod';
@@ -42,7 +43,6 @@ import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
 import { SwapCullingDirection, useItemColor } from '../layers/graphicsLayerCommon.tsx';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
-import type { PixiPointLike } from '../reconciler/component.ts';
 import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
 import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, RoomCharacterLabel, SettingDisplayCharacterName, useRoomCharacterOffsets } from './roomCharacter.tsx';
@@ -66,6 +66,11 @@ type RoomDeviceProps = {
 	projectionResolver: Immutable<RoomProjectionResolver>;
 
 	children?: ReactNode;
+	hitArea?: PIXI.Rectangle;
+	cursor?: PIXI.Cursor;
+	eventMode?: PIXI.EventMode;
+	onPointerDown?: (event: FederatedPointerEvent) => void;
+	onPointerUp?: (event: FederatedPointerEvent) => void;
 };
 
 export const DeviceOverlaySettingSchema = z.enum(['never', 'interactable', 'always']);
@@ -281,7 +286,7 @@ export function RoomDeviceInteractive({
 	const labelY = pivot.y + PIVOT_TO_LABEL_OFFSET;
 
 	const hitAreaRadius = 50;
-	const hitArea = useMemo(() => new PIXI.Rectangle(-hitAreaRadius, -hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius]);
+	const hitArea = useMemo(() => new PIXI.Rectangle(labelX - hitAreaRadius, labelY - hitAreaRadius, 2 * hitAreaRadius, 2 * hitAreaRadius), [hitAreaRadius, labelX, labelY]);
 
 	/** Time at which user pressed button/touched */
 	const pointerDown = useRef<number | null>(null);
@@ -335,48 +340,46 @@ export function RoomDeviceInteractive({
 	const showCharacterNames = useObservable(SettingDisplayCharacterName);
 
 	return (
-		<RoomDevice
-			globalState={ globalState }
-			item={ item }
-			deployment={ deployment }
-			projectionResolver={ projectionResolver }
-		>
-			<Container
-				zIndex={ 99998 }
-				position={ { x: labelX, y: labelY } }
+		<>
+			<RoomDevice
+				globalState={ globalState }
+				item={ item }
+				deployment={ deployment }
+				projectionResolver={ projectionResolver }
 				hitArea={ hitArea }
-				cursor={ enableMenu ? 'pointer' : 'default' }
-				eventMode={ enableMenu ? 'static' : 'auto' }
-				onpointerdown={ onPointerDown }
-				onpointerup={ onPointerUp }
-				onpointerupoutside={ onPointerUp }
+				cursor={ enableMenu ? 'pointer' : 'none' }
+				eventMode={ enableMenu ? 'static' : 'none' }
+				onPointerDown={ onPointerDown }
+				onPointerUp={ onPointerUp }
 			>
 				{
 					enableMenu ? (
 						<Graphics
+							zIndex={ 99998 }
 							draw={ deviceMenuHelperDraw }
+							position={ { x: labelX, y: labelY } }
 						/>
 					) : null
 				}
-			</Container>
+			</RoomDevice>
 			{
 				showCharacterNames ? (
 					<RoomDeviceCharacterNames
 						item={ item }
-						zIndex={ 99998 }
-						position={ { x: labelX, y: labelY + 85 } }
+						deployment={ deployment }
+						projectionResolver={ projectionResolver }
 					/>
 				) : null
 			}
-		</RoomDevice>
+		</>
 	);
 }
 
-function RoomDeviceCharacterNames({ position, zIndex, item }: {
-	position: PixiPointLike;
-	zIndex?: number;
-	item: ItemRoomDevice;
-}): ReactElement {
+function RoomDeviceCharacterNames({
+	item,
+	deployment,
+	projectionResolver,
+}: Pick<RoomDeviceProps, 'item' | 'deployment' | 'projectionResolver'>): ReactElement {
 	const {
 		openContextMenu,
 	} = useRoomScreenContext();
@@ -396,52 +399,76 @@ function RoomDeviceCharacterNames({ position, zIndex, item }: {
 			AssertNever(interfaceChatroomCharacterNameFontSize);
 	}
 
-	const spacing = 42 * fontScale;
-
 	const characters = useSpaceCharacters();
 
+	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
+		deployment.x,
+		deployment.y,
+		deployment.yOffset,
+	]);
+
+	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, 0);
+	const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
+
 	return (
-		<Container position={ position } zIndex={ zIndex }>
+		<>
 			{
 				useMemo(() => {
 					if (characters == null)
 						return null;
 
 					const result: ReactNode[] = [];
+					const spacing = 42 * fontScale;
 
 					for (const slot of Object.keys(item.asset.definition.slots)) {
 						const characterId = item.slotOccupancy.get(slot);
 						const character = characterId != null ? characters.find((c) => c.id === characterId) : undefined;
+						let held = false;
 
-						if (character != null) {
-							result.push(
-								<Container
-									x={ 0 }
-									y={ (result.length + 0.5) * spacing }
-									eventMode='static'
-									cursor='pointer'
-									hitArea={ new PIXI.Rectangle(-100, -0.5 * spacing, 200, spacing) }
-									onpointerup={ (event) => {
+						if (character == null)
+							continue;
+
+						result.push(
+							<Container
+								key={ character.id }
+								position={ { x, y: y - yOffsetExtra + scale * ((result.length + 0.5) * spacing + PIVOT_TO_LABEL_OFFSET + 85) } }
+								scale={ { x: scale, y: scale } }
+								sortableChildren
+								cursor='pointer'
+								eventMode='static'
+								hitArea={ new PIXI.Rectangle(-100, -0.5 * spacing, 200, spacing) }
+								onpointerdown={ (ev) => {
+									if (ev.button !== 1) {
+										ev.stopPropagation();
+										held = true;
+									}
+								} }
+								onpointerup={ (ev) => {
+									if (held) {
+										ev.stopPropagation();
+										held = false;
 										openContextMenu(character, {
-											x: event.pageX,
-											y: event.pageY,
+											x: ev.pageX,
+											y: ev.pageY,
 										});
-									} }
-								>
-									<RoomCharacterLabel
-										key={ character.id }
-										character={ character }
-
-									/>
-								</Container>,
-							);
-						}
+									}
+								} }
+								onpointerupoutside={ () => {
+									held = false;
+								} }
+								zIndex={ -deploymentY - 0.5 }
+							>
+								<RoomCharacterLabel
+									character={ character }
+								/>
+							</Container>,
+						);
 					}
 
 					return result;
-				}, [characters, item, spacing, openContextMenu])
+				}, [characters, deploymentY, fontScale, item, openContextMenu, scale, x, y, yOffsetExtra])
 			}
-		</Container>
+		</>
 	);
 }
 
@@ -452,6 +479,11 @@ export function RoomDevice({
 	projectionResolver,
 
 	children,
+	hitArea,
+	cursor,
+	eventMode,
+	onPointerDown,
+	onPointerUp,
 }: RoomDeviceProps): ReactElement | null {
 	const asset = item.asset;
 	const debugConfig = useDebugConfig();
@@ -498,6 +530,12 @@ export function RoomDevice({
 				position={ { x, y: y - yOffsetExtra } }
 				scale={ { x: scale, y: scale } }
 				pivot={ pivot }
+				hitArea={ hitArea }
+				eventMode={ eventMode }
+				cursor={ cursor }
+				onPointerDown={ onPointerDown }
+				onPointerUp={ onPointerUp }
+				onPointerUpOutside={ onPointerUp }
 				zIndex={ -deploymentY }
 				roomMask={ roomMask }
 			>
@@ -548,8 +586,16 @@ export interface RoomDeviceGraphicsProps extends ChildrenProps {
 	position?: PointLike;
 	scale?: PointLike;
 	pivot?: PointLike;
+	hitArea?: PIXI.Rectangle;
+	eventMode?: PIXI.EventMode;
+	cursor?: PIXI.Cursor;
 	zIndex?: number;
 	roomMask?: PixiMaskSource;
+
+	onPointerDown?: (event: PIXI.FederatedPointerEvent) => void;
+	onPointerUp?: (event: PIXI.FederatedPointerEvent) => void;
+	onPointerUpOutside?: (event: PIXI.FederatedPointerEvent) => void;
+	onPointerMove?: (event: PIXI.FederatedPointerEvent) => void;
 }
 
 function RoomDeviceGraphicsWithManagerImpl({
@@ -558,7 +604,14 @@ function RoomDeviceGraphicsWithManagerImpl({
 	position: positionOffset,
 	scale: scaleExtra,
 	pivot: pivotExtra,
+	onPointerDown,
+	onPointerUp,
+	onPointerUpOutside,
+	onPointerMove,
 	children,
+	cursor,
+	eventMode,
+	hitArea,
 	roomMask,
 	...graphicsProps
 }: RoomDeviceGraphicsProps, ref: React.ForwardedRef<PIXI.Container>): ReactElement {
@@ -579,6 +632,13 @@ function RoomDeviceGraphicsWithManagerImpl({
 			position={ position }
 			scale={ scale }
 			sortableChildren
+			cursor={ cursor ?? 'default' }
+			eventMode={ eventMode ?? 'auto' }
+			hitArea={ hitArea ?? null }
+			onpointerdown={ onPointerDown }
+			onpointerup={ onPointerUp }
+			onpointerupoutside={ onPointerUpOutside }
+			onpointermove={ onPointerMove }
 		>
 			<SwapCullingDirection swap={ (scale.x >= 0) !== (scale.y >= 0) }>
 				{

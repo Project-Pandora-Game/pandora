@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { AccountIdSchema } from '../../account/account.ts';
+import { AccountIdSchema, AccountManagementDisableInfoSchema } from '../../account/account.ts';
 import type { IAccountRoleManageInfo } from '../../account/accountRoles.ts';
 import { AccountOnlineStatusSchema } from '../../account/contacts.ts';
 import { CharacterIdSchema } from '../../character/characterTypes.ts';
@@ -9,6 +9,7 @@ import { ZodCast } from '../../validation.ts';
 export const ManagementAccountInfoSecureSchema = z.object({
 	activated: z.boolean(),
 	githubLink: ZodCast<{ id: number; login: string; }>().nullable(),
+	disabled: AccountManagementDisableInfoSchema.nullable(),
 });
 export type ManagementAccountInfoSecure = z.infer<typeof ManagementAccountInfoSecureSchema>;
 

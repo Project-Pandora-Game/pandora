@@ -101,6 +101,8 @@ export class AccountManager extends Service<AccountManagerServiceConfig> {
 					}
 				}
 				return 'invalidSecondFactor';
+			case 'accountDisabled':
+				return result;
 			default:
 				return result.result;
 		}

@@ -144,6 +144,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 			// Management/admin endpoints; these require specific roles to be used
 			manageAccountGet: Auth('developer', this.handleManageAccountGet.bind(this)),
+			manageAccountDisable: Auth('developer', this.handleManageAccountDisable.bind(this)),
 			manageSetAccountRole: Auth('developer', this.handleManageSetAccountRole.bind(this)),
 			manageCreateShardToken: Auth('developer', this.handleManageCreateShardToken.bind(this)),
 			manageInvalidateShardToken: Auth('developer', this.handleManageInvalidateShardToken.bind(this)),
@@ -209,13 +210,22 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		// Verify account is activated or activate it
 		if (!account.secure.isActivated()) {
 			if (verificationToken === undefined) {
-				AUDIT_LOG.verbose(`${connection.id} failed login: account not active`);
+				AUDIT_LOG.verbose(`${connection.id} failed login: account ${account.id} is not active`);
 				return { result: 'verificationRequired' };
 			}
 			if (!await account.secure.activateAccount(verificationToken)) {
 				AUDIT_LOG.verbose(`${connection.id} failed account activation: invalid token`);
 				return { result: 'invalidToken' };
 			}
+		}
+		// Verify account is not disabled by moderator
+		const disabled = account.secure.isDisabled();
+		if (disabled) {
+			AUDIT_LOG.verbose(`${connection.id} failed login: account ${account.id} is disabled`);
+			return {
+				result: 'accountDisabled',
+				reason: disabled.publicReason,
+			};
 		}
 		// Generate new auth token for new login
 		const token = await account.secure.generateNewLoginToken();
@@ -743,6 +753,33 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return {
 			result: 'ok',
 			info: account.getAdminInfo(),
+		};
+	}
+
+	private async handleManageAccountDisable({ id, disable }: IClientDirectoryArgument['manageAccountDisable'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryPromiseResult['manageAccountDisable'] {
+		const admin = connection.account;
+		logger.alert(`[Management] ${admin.username} (${admin.id}): manageAccountDisable(id=${id},disable=${JSON.stringify(disable)})`);
+		const account = await accountManager.loadAccountById(id);
+		if (!account)
+			return { result: 'notFound' };
+
+		if (
+			account.roles.isAuthorized('admin') ||
+			(account.roles.isAuthorized('developer') && !admin.roles.isAuthorized('admin')) ||
+			account.id === admin.id
+		) {
+			return { result: 'notAllowed' };
+		}
+
+		await account.secure.adminDisableAccount(disable != null ? {
+			disabledBy: admin.id,
+			time: Date.now(),
+			publicReason: disable.publicReason,
+			internalReason: disable.internalReason,
+		} : null);
+
+		return {
+			result: 'ok',
 		};
 	}
 

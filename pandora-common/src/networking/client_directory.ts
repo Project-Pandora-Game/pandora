@@ -1,6 +1,6 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
-import { AccountIdSchema, AccountRoleSchema, AccountSettingsKeysSchema, AccountSettingsSchema, ConfiguredAccountRoleSchema } from '../account/index.ts';
+import { AccountIdSchema, AccountManagementDisableInfoSchema, AccountRoleSchema, AccountSettingsKeysSchema, AccountSettingsSchema, ConfiguredAccountRoleSchema } from '../account/index.ts';
 import { AssetFrameworkOutfitWithIdSchema, AssetFrameworkPosePresetWithIdSchema } from '../assets/item/unified.ts';
 import { CharacterSelfInfoSchema } from '../character/characterData.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
@@ -96,6 +96,9 @@ export const ClientDirectorySchema = {
 			secondFactor: SecondFactorDataSchema.optional(),
 		}),
 		response: ZodCast<{ result: 'verificationRequired' | 'invalidToken' | 'unknownCredentials'; } | SecondFactorResponse | {
+			result: 'accountDisabled';
+			reason: string;
+		} | {
 			result: 'ok';
 			token: { value: string; expires: number; };
 			account: IDirectoryAccountInfo;
@@ -480,6 +483,13 @@ export const ClientDirectorySchema = {
 			id: AccountIdSchema,
 		}),
 		response: ManagementAccountQueryResultSchema,
+	},
+	manageAccountDisable: {
+		request: z.object({
+			id: AccountIdSchema,
+			disable: AccountManagementDisableInfoSchema.omit({ time: true, disabledBy: true }).nullable(),
+		}),
+		response: ZodCast<{ result: 'ok' | 'notFound' | 'notAllowed'; }>(),
 	},
 	manageSetAccountRole: {
 		request: z.object({

@@ -181,9 +181,9 @@ function RightHeader({ onAnyClick }: {
 							<span className='label'>Current account:</span>
 							<img
 								className='onlineStatusIndicator'
-								src={ STATUS_ICONS[onlineStatus] }
-								alt={ STATUS_NAMES[onlineStatus] }
-								title={ STATUS_NAMES[onlineStatus] }
+								src={ HEADER_STATUS_SELECTOR_ICONS[onlineStatus] }
+								alt={ HEADER_STATUS_SELECTOR_NAMES[onlineStatus] }
+								title={ HEADER_STATUS_SELECTOR_NAMES[onlineStatus] }
 							/>
 							{ currentAccount.settings.displayName || currentAccount.username }
 						</Button>
@@ -231,11 +231,11 @@ function StatusSelector({ open, close }: {
 							<Row gap='tiny' alignY='center' className='fill-x fit'>
 								<img
 									className='onlineStatusIndicator'
-									src={ STATUS_ICONS[o] }
-									alt={ STATUS_NAMES[o] }
+									src={ HEADER_STATUS_SELECTOR_ICONS[o] }
+									alt={ HEADER_STATUS_SELECTOR_NAMES[o] }
 								/>
 								<span className='flex-1'>
-									{ STATUS_NAMES[o] }
+									{ HEADER_STATUS_SELECTOR_NAMES[o] }
 								</span>
 							</Row>
 						</Button>
@@ -246,7 +246,7 @@ function StatusSelector({ open, close }: {
 	);
 }
 
-const STATUS_ICONS: Record<AccountOnlineStatus, string> = {
+export const HEADER_STATUS_SELECTOR_ICONS: Record<AccountOnlineStatus, string> = {
 	'online': statusIconOnline,
 	'looking-switch': statusIconLookingSwitch,
 	'looking-dom': statusIconLookingDom,
@@ -256,7 +256,7 @@ const STATUS_ICONS: Record<AccountOnlineStatus, string> = {
 	'offline': statusIconInvisible,
 };
 
-const STATUS_NAMES: Record<AccountOnlineStatus, string> = {
+export const HEADER_STATUS_SELECTOR_NAMES: Record<AccountOnlineStatus, string> = {
 	'online': 'Online',
 	'looking-switch': 'Looking to play',
 	'looking-dom': 'Looking to dom',

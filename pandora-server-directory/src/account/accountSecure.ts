@@ -1,4 +1,4 @@
-import { Assert, AssertNever, GetLogger, IAccountCryptoKey, Logger, TypedEventEmitter, type ManagementAccountInfoSecure } from 'pandora-common';
+import { Assert, AssertNever, GetLogger, IAccountCryptoKey, Logger, TypedEventEmitter, type AccountManagementDisableInfo, type ManagementAccountInfoSecure } from 'pandora-common';
 import { ENV } from '../config.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DatabaseAccountSecure, DatabaseAccountToken, GitHubInfo } from '../database/databaseStructure.ts';
@@ -45,6 +45,10 @@ export default class AccountSecure {
 
 	public isActivated(): boolean {
 		return this.#secure.activated;
+	}
+
+	public isDisabled(): Readonly<AccountManagementDisableInfo> | false {
+		return cloneDeep(this.#secure.disabled ?? false);
 	}
 
 	public async sendActivation(email: string): Promise<void> {
@@ -123,11 +127,11 @@ export default class AccountSecure {
 		if (!this.isActivated() || !await this.verifyPassword(passwordOld) || !await this.#validateCryptoKey(cryptoKey))
 			return false;
 
+		this.#secure.password = await GeneratePasswordHash(passwordNew);
+		this.#secure.cryptoKey = cloneDeep(cryptoKey);
 		// Invalidate all login tokens
 		this.#invalidateToken(AccountTokenReason.LOGIN);
 		this.#invalidateToken(AccountTokenReason.PASSWORD_RESET);
-		this.#secure.password = await GeneratePasswordHash(passwordNew);
-		this.#secure.cryptoKey = cloneDeep(cryptoKey);
 
 		await this.#updateDatabase();
 
@@ -168,6 +172,7 @@ export default class AccountSecure {
 	}
 
 	public generateNewLoginToken(): Promise<AccountToken> {
+		Assert(!this.isDisabled());
 		return this.#generateToken(AccountTokenReason.LOGIN);
 	}
 
@@ -249,7 +254,19 @@ export default class AccountSecure {
 		return cloneDeep<ManagementAccountInfoSecure>({
 			activated: this.isActivated(),
 			githubLink: this.getGitHubStatus() ?? null,
+			disabled: this.#secure.disabled ?? null,
 		});
+	}
+
+	public async adminDisableAccount(disabled: AccountManagementDisableInfo | null): Promise<void> {
+		this.#secure.disabled = cloneDeep(disabled ?? undefined);
+
+		if (disabled != null) {
+			// Invalidate all login tokens for disabled accounts (this forces logout)
+			this.#invalidateToken(AccountTokenReason.LOGIN);
+		}
+
+		await this.#updateDatabase();
 	}
 
 	public getCryptoKey(): IAccountCryptoKey | undefined {

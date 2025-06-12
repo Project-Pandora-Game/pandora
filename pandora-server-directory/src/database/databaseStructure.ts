@@ -2,6 +2,7 @@ import {
 	AccountCryptoKeySchema,
 	AccountId,
 	AccountIdSchema,
+	AccountManagementDisableInfoSchema,
 	AccountSettingsCooldownsSchema,
 	AccountSettingsSchema,
 	ArrayToRecordKeys,
@@ -42,9 +43,13 @@ export const GitHubInfoSchema = z.object({
 export type GitHubInfo = z.infer<typeof GitHubInfoSchema>;
 
 export const DatabaseAccountSecureSchema = z.object({
+	/** If this account has activated email */
 	activated: z.boolean(),
+	/** Password hash */
 	password: z.string(),
 	emailHash: z.string(),
+	/** If this account has been disabled by moderator */
+	disabled: AccountManagementDisableInfoSchema.optional(),
 	tokens: DatabaseAccountTokenSchema.array(),
 	github: GitHubInfoSchema.optional(),
 	cryptoKey: AccountCryptoKeySchema.optional(),

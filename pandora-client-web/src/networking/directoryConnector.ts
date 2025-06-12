@@ -31,7 +31,13 @@ import { PersistentToast } from '../persistentToast.ts';
 import type { ClientServices } from '../services/clientServices.ts';
 import type { Connector, SocketIOConnectorFactory } from './socketio_connector.ts';
 
-export type LoginResponse = 'ok' | 'verificationRequired' | 'invalidToken' | 'unknownCredentials' | 'invalidSecondFactor';
+export type LoginResponse =
+	| 'ok'
+	| 'verificationRequired'
+	| 'invalidToken'
+	| 'unknownCredentials'
+	| 'invalidSecondFactor'
+	| { result: 'accountDisabled'; reason: string; };
 
 /** State of connection to Directory */
 export enum DirectoryConnectionState {

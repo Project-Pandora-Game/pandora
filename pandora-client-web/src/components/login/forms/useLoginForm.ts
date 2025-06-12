@@ -71,8 +71,12 @@ export function useLoginForm(useAuthData = false): UseLoginFormReturn {
 			setErrorMessage('Invalid verification code. Please make sure you entered your code correctly.');
 		} else if (result === 'invalidSecondFactor') {
 			setErrorMessage('Invalid second factor');
-		} else if (result !== 'verificationRequired') {
-			AssertNever(result);
+		} else if (result === 'verificationRequired') {
+			// NOOP
+		} else if (result.result === 'accountDisabled') {
+			setErrorMessage('This account is disabled with the following reason: \n' + result.reason);
+		} else {
+			AssertNever(result.result);
 		}
 	});
 

@@ -16,3 +16,11 @@ export type AccountId = z.infer<typeof AccountIdSchema>;
 export function CompareAccountIds(a: AccountId, b: AccountId): number {
 	return a - b;
 }
+
+export const AccountManagementDisableInfoSchema = z.object({
+	time: z.number(),
+	publicReason: z.string(),
+	internalReason: z.string(),
+	disabledBy: AccountIdSchema,
+});
+export type AccountManagementDisableInfo = z.infer<typeof AccountManagementDisableInfoSchema>;

@@ -97,6 +97,7 @@ export class CardGameGame {
 	private dealer: CharacterId;
 	private spaceHand: CardArray;
 	private players: CardPlayer[];
+	private public: boolean;
 
 	public joinGame(c: CharacterId) {
 		if (!this.players.some((p) => p.getId() === c)) {
@@ -160,9 +161,14 @@ export class CardGameGame {
 		return this.dealer;
 	}
 
-	constructor(creator: CharacterId, d?: CardDeck) {
+	public isPublic() {
+		return this.public;
+	}
+
+	constructor(creator: CharacterId, p: boolean, d?: CardDeck) {
 		this.players = [];
 		this.spaceHand = [];
+		this.public = p;
 		if (!d) {
 			this.deck = new CardDeck();
 			this.deck.create();
@@ -170,7 +176,7 @@ export class CardGameGame {
 			this.deck = d;
 		}
 		this.dealer = creator;
-		this.players = [new CardPlayer(this.dealer)]; // No need to check, as we know the list of players is empty
+		this.players = [new CardPlayer(this.dealer)];
 	}
 }
 
@@ -179,6 +185,7 @@ export class CardGameGame {
 export const CardGameActionSchema = z.discriminatedUnion('action', [
 	z.object({
 		action: z.literal('create'),
+		public: z.boolean(),
 	}),
 	z.object({
 		action: z.literal('stop'),

@@ -419,8 +419,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			case 'cards': {
 				const player = space.getCharacterById(character.id);
 				if (player) {
-
 					if (space.cardGame) {
+						const receivers = space.cardGame.isPublic() ? undefined : space.cardGame.getPlayerIds();
 						switch (game.action.action) {
 							case 'create':
 								// only one game can be there at a time
@@ -434,12 +434,12 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								});
 								break;
 							case 'stop': {
-								// stops the current game
-								if (space.cardGame.isDealer(client.character.id)) {
+								// stops the current game, allowed for dealers and room admins
+								if (space.cardGame.isDealer(client.character.id) || space.isAdmin(client.character)) {
 									space.handleActionMessage({
 										id: 'gamblingCardGameStopped',
 										character,
-										sendTo: space.cardGame.getPlayerIds(), // Send messages only to players
+										sendTo: receivers,
 									});
 									space.cardGame = null;
 								} else {
@@ -456,7 +456,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 									space.handleActionMessage({
 										id: 'gamblingCardGameJoined',
 										character,
-										sendTo: space.cardGame.getPlayerIds(),
+										sendTo: receivers,
 									});
 								} else {
 									space.handleActionMessage({
@@ -481,7 +481,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 										space.handleActionMessage({
 											id: 'gamblingCardGameDealOpen',
 											character,
-											sendTo: space.cardGame.getPlayerIds(), // Send messages only to players
+											sendTo: receivers,
 											dictionary: {
 												'CARD': card.toString(),
 											},
@@ -513,11 +513,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 											sendTo: [client.character.id],
 										});
 									} else {
-										//Dealt to the player openly
+										//Deal to the player openly
 										space.handleActionMessage({
 											id: 'gamblingCardGameDealPlayerOpen',
 											character,
-											sendTo: space.cardGame.getPlayerIds(), // Send messages only to players
+											sendTo: receivers,
 											dictionary: {
 												'CARD': card.toString(),
 											},
@@ -552,8 +552,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 										space.handleActionMessage({
 											id: 'gamblingCardGameDealPlayerSecret',
 											character,
-											// target: space.getCharacterById(game.action.targetId),
-											sendTo: space.cardGame.getPlayerIds(), // Send messages only to players
+											target: { type: 'character', id: game.action.targetId },
+											sendTo: receivers,
 											dictionary: {
 												'TARGET_CHARACTER': `${space.getCharacterById(game.action.targetId)?.name}`,
 											},
@@ -593,23 +593,22 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 							case 'reveal': {
 								if (space.cardGame.isDealer(client.character.id)) {
 									// Send the cards of all players to the players and end the game
-									const players = space.cardGame.getPlayerIds();
 									const spaceHand = space.cardGame.getSpaceHand();
 									// Remind players of the cards on the table
 									space.handleActionMessage({
 										id: 'gamblingCardGameRoomCards',
 										character,
-										sendTo: players,
+										sendTo: receivers,
 										dictionary: {
 											'HAND': spaceHand,
 											'ISARE': (spaceHand === 'nothing' || spaceHand.length < 2) ? 'is' : 'are',
 										},
 									});
 									//Show the cards of all players
-									players.forEach((id) => space.handleActionMessage({
+									space.cardGame.getPlayerIds().forEach((id) => space.handleActionMessage({
 										id: 'gamblingCardGameHandReveal',
 										character,
-										sendTo: players,
+										sendTo: receivers,
 										dictionary: {
 											'PLAYER': `${space.getCharacterById(id)?.name}`,
 											'HAND': `${space.cardGame?.getPlayerHand(id)}`,
@@ -630,7 +629,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 						}
 					} else {
 						if (game.action.action === 'create') {
-							space.cardGame = new CardGameGame(character.id);
+							space.cardGame = new CardGameGame(character.id, game.action.public);
 							space.handleActionMessage({
 								id: 'gamblingCardGameCreation',
 								character,

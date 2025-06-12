@@ -1,4 +1,4 @@
-import { Assert, AssertNever, GetLogger, IAccountCryptoKey, Logger, TypedEventEmitter } from 'pandora-common';
+import { Assert, AssertNever, GetLogger, IAccountCryptoKey, Logger, TypedEventEmitter, type ManagementAccountInfoSecure } from 'pandora-common';
 import { ENV } from '../config.ts';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DatabaseAccountSecure, DatabaseAccountToken, GitHubInfo } from '../database/databaseStructure.ts';
@@ -243,6 +243,13 @@ export default class AccountSecure {
 		await this.#account.roles.setGitHubStatus(newInfo.role, newInfo.teams);
 
 		return true;
+	}
+
+	public getAdminInfo(): Readonly<ManagementAccountInfoSecure> {
+		return cloneDeep<ManagementAccountInfoSecure>({
+			activated: this.isActivated(),
+			githubLink: this.getGitHubStatus() ?? null,
+		});
 	}
 
 	public getCryptoKey(): IAccountCryptoKey | undefined {

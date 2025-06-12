@@ -143,7 +143,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			blockList: this.handleBlockList.bind(this),
 
 			// Management/admin endpoints; these require specific roles to be used
-			manageGetAccountRoles: Auth('developer', this.handleManageGetAccountRoles.bind(this)),
+			manageAccountGet: Auth('developer', this.handleManageAccountGet.bind(this)),
 			manageSetAccountRole: Auth('developer', this.handleManageSetAccountRole.bind(this)),
 			manageCreateShardToken: Auth('developer', this.handleManageCreateShardToken.bind(this)),
 			manageInvalidateShardToken: Auth('developer', this.handleManageInvalidateShardToken.bind(this)),
@@ -734,15 +734,15 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result: 'ok' };
 	}
 
-	private async handleManageGetAccountRoles({ id }: IClientDirectoryArgument['manageGetAccountRoles'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryPromiseResult['manageGetAccountRoles'] {
-		logger.verbose(`[Management] ${connection.account.username} (${connection.account.id}): manageGetAccountRoles(id=${id})`);
+	private async handleManageAccountGet({ id }: IClientDirectoryArgument['manageAccountGet'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryPromiseResult['manageAccountGet'] {
+		logger.verbose(`[Management] ${connection.account.username} (${connection.account.id}): manageAccountGet(id=${id})`);
 		const account = await accountManager.loadAccountById(id);
 		if (!account)
 			return { result: 'notFound' };
 
 		return {
 			result: 'ok',
-			roles: account.roles.getAdminInfo(),
+			info: account.getAdminInfo(),
 		};
 	}
 

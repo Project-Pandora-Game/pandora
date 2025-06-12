@@ -1,9 +1,10 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
-import { AccountIdSchema, AccountRoleSchema, AccountSettingsKeysSchema, AccountSettingsSchema, ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account/index.ts';
+import { AccountIdSchema, AccountRoleSchema, AccountSettingsKeysSchema, AccountSettingsSchema, ConfiguredAccountRoleSchema } from '../account/index.ts';
 import { AssetFrameworkOutfitWithIdSchema, AssetFrameworkPosePresetWithIdSchema } from '../assets/item/unified.ts';
 import { CharacterSelfInfoSchema } from '../character/characterData.ts';
 import { CharacterIdSchema } from '../character/characterTypes.ts';
+import { ManagementAccountQueryResultSchema } from '../directory/management/account.ts';
 import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from '../inputLimits.ts';
 import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceIdSchema, SpaceInvite, SpaceInviteCreateSchema, SpaceInviteIdSchema, SpaceListExtendedInfo, SpaceListInfo } from '../space/space.ts';
 import { Satisfies } from '../utility/misc.ts';
@@ -474,14 +475,11 @@ export const ClientDirectorySchema = {
 	//#region Management/admin endpoints; these require specific roles to be used
 
 	// Account role assignment
-	manageGetAccountRoles: {
+	manageAccountGet: {
 		request: z.object({
-			id: z.number(),
+			id: AccountIdSchema,
 		}),
-		response: ZodCast<{ result: 'notFound'; } | {
-			result: 'ok';
-			roles: IAccountRoleManageInfo;
-		}>(),
+		response: ManagementAccountQueryResultSchema,
 	},
 	manageSetAccountRole: {
 		request: z.object({

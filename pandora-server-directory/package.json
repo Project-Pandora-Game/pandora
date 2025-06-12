@@ -38,8 +38,8 @@
 		]
 	},
 	"dependencies": {
-		"@aws-sdk/client-ses": "3.826.0",
-		"@aws-sdk/credential-provider-node": "3.826.0",
+		"@aws-sdk/client-ses": "3.828.0",
+		"@aws-sdk/credential-provider-node": "3.828.0",
 		"@octokit/auth-oauth-app": "9.0.1",
 		"@octokit/rest": "22.0.0",
 		"argon2": "0.43.0",
@@ -73,7 +73,7 @@
 		"jest": "29.7.0",
 		"nodemon": "3.1.10",
 		"rimraf": "6.0.1",
-		"ts-jest": "29.3.4",
+		"ts-jest": "29.4.0",
 		"ts-mockito": "2.6.1",
 		"tsc-watch": "6.3.1",
 		"tslib": "2.8.1",

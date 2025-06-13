@@ -15,7 +15,13 @@ import type { AppearanceItems } from '../item/index.ts';
 import { IAssetModuleDefinition, IExportOptions, IItemModule, IModuleActionCommon, IModuleConfigCommon, IModuleItemDataCommon } from './common.ts';
 
 export type ModuleConfigText<TProperties, TStaticData> = IModuleConfigCommon<'text', TProperties, TStaticData> & {
-	maxLength: number;
+	/**
+	 * The maximum length of the text, in characters.
+	 *
+	 * Cannot be more than `LIMIT_ITEM_MODULE_TEXT_LENGTH`.
+	 * @default LIMIT_ITEM_MODULE_TEXT_LENGTH
+	 */
+	maxLength?: number;
 };
 
 export const ModuleItemDataTextTextSchema = z.string()
@@ -113,7 +119,7 @@ export class ItemModuleText<TProperties = unknown, TStaticData = unknown> implem
 	}
 
 	public static loadFromData<TProperties, TStaticData>(config: Immutable<ModuleConfigText<TProperties, TStaticData>>, data: ModuleItemDataText, context: IItemLoadContext): ItemModuleText<TProperties, TStaticData> {
-		const limit = Math.min(LIMIT_ITEM_MODULE_TEXT_LENGTH, config.maxLength);
+		const limit = Math.min(LIMIT_ITEM_MODULE_TEXT_LENGTH, config.maxLength ?? LIMIT_ITEM_MODULE_TEXT_LENGTH);
 
 		return new ItemModuleText({
 			assetManager: context.assetManager,
@@ -156,7 +162,7 @@ export class ItemModuleText<TProperties = unknown, TStaticData = unknown> implem
 		}
 
 		// Text must have correct length
-		if (this.text.length > Math.min(LIMIT_ITEM_MODULE_TEXT_LENGTH, this.config.maxLength)) {
+		if (this.text.length > Math.min(LIMIT_ITEM_MODULE_TEXT_LENGTH, this.config.maxLength ?? LIMIT_ITEM_MODULE_TEXT_LENGTH)) {
 			return {
 				success: false,
 				error: {

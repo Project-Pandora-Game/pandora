@@ -83,7 +83,7 @@ function WardrobeModuleConfigTextEdit({ target, item, moduleName, m, stopEdit }:
 					setText(ev.target.value);
 				} }
 				disabled={ currentlyAttempting }
-				maxLength={ Math.min(LIMIT_ITEM_MODULE_TEXT_LENGTH, m.config.maxLength) }
+				maxLength={ Math.min(LIMIT_ITEM_MODULE_TEXT_LENGTH, m.config.maxLength ?? LIMIT_ITEM_MODULE_TEXT_LENGTH) }
 				style={ { fontFamily: PANDORA_FONTS[font].cssSelector } }
 			/>
 			<Row alignY='center'>
@@ -158,7 +158,7 @@ export function WardrobeModuleTemplateConfigText({ template, definition, onTempl
 						d.text = ev.target.value;
 					}));
 				} }
-				maxLength={ Math.min(LIMIT_ITEM_MODULE_TEXT_LENGTH, definition.maxLength) }
+				maxLength={ Math.min(LIMIT_ITEM_MODULE_TEXT_LENGTH, definition.maxLength ?? LIMIT_ITEM_MODULE_TEXT_LENGTH) }
 				style={ { fontFamily: PANDORA_FONTS[template.font].cssSelector } }
 			/>
 			<Row alignY='center'>

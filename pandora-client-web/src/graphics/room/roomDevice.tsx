@@ -42,6 +42,7 @@ import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graph
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
 import { SwapCullingDirection, useItemColor } from '../layers/graphicsLayerCommon.tsx';
+import { GraphicsLayerRoomDeviceText } from '../layers/graphicsLayerText.tsx';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
 import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
@@ -648,6 +649,8 @@ function RoomDeviceGraphicsWithManagerImpl({
 							graphics = <RoomDeviceGraphicsLayerSprite item={ item } layer={ layer } roomMask={ roomMask } />;
 						} else if (layer.type === 'slot') {
 							graphics = <RoomDeviceGraphicsLayerSlot globalState={ globalState } item={ item } layer={ layer } />;
+						} else if (layer.type === 'text') {
+							graphics = <GraphicsLayerRoomDeviceText item={ item } layer={ layer } />;
 						} else {
 							AssertNever(layer);
 						}

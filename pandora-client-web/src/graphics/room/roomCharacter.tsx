@@ -10,14 +10,16 @@ import {
 	LegsPose,
 	SpaceClientInfo,
 } from 'pandora-common';
-import { DEG_TO_RAD, FederatedPointerEvent, Point, Rectangle, TextStyle, type Cursor, type EventMode, type GraphicsContext } from 'pixi.js';
+import { CanvasTextMetrics, DEG_TO_RAD, FederatedPointerEvent, GraphicsContext, Point, Rectangle, TextStyle, type Cursor, type EventMode } from 'pixi.js';
 import { ReactElement, useCallback, useMemo, useRef } from 'react';
 import { toast } from 'react-toastify';
 import { z } from 'zod';
 import disconnectedIcon from '../../assets/icons/disconnected.svg';
+import statusIconAway from '../../assets/icons/state-away.svg';
 import { BrowserStorage } from '../../browserStorage.ts';
 import { Character, useCharacterData } from '../../character/character.ts';
 import { useEvent } from '../../common/useEvent.ts';
+import { useFetchedResourceText } from '../../common/useFetch.ts';
 import { useCharacterRestrictionsManager } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { THEME_FONT } from '../../components/gameContext/interfaceSettingsProvider.tsx';
 import { useWardrobeExecuteCallback } from '../../components/wardrobe/wardrobeActionContext.tsx';
@@ -30,14 +32,13 @@ import { ChatroomDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { useAppearanceConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
-import { Sprite } from '../baseComponents/sprite.ts';
 import { Text } from '../baseComponents/text.ts';
 import { TransitionedContainer } from '../common/transitions/transitionedContainer.ts';
 import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
+import type { PixiPointLike } from '../reconciler/component.ts';
 import { useTickerRef } from '../reconciler/tick.ts';
-import { useTexture } from '../useTexture.ts';
 import { CalculateCharacterDeviceSlotPosition } from './roomDevice.tsx';
 import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene.tsx';
 
@@ -355,13 +356,6 @@ function RoomCharacterDisplay({
 	onPointerMove,
 	onPointerUp,
 }: RoomCharacterDisplayProps & CharacterStateProps): ReactElement | null {
-	const {
-		name,
-		publicSettings: { labelColor },
-		isOnline,
-	} = useCharacterData(character);
-
-	const { interfaceChatroomOfflineCharacterFilter, interfaceChatroomCharacterNameFontSize } = useAccountSettings();
 	const smoothMovementEnabled = useGraphicsSmoothMovementEnabled();
 
 	const playerFilters = usePlayerVisionFilters(character.isPlayer());
@@ -384,22 +378,7 @@ function RoomCharacterDisplay({
 	const labelX = 0;
 	const labelY = PIVOT_TO_LABEL_OFFSET;
 
-	const showDisconnectedIcon = !isOnline && interfaceChatroomOfflineCharacterFilter === 'icon';
-	const disconnectedIconTexture = useTexture(disconnectedIcon);
-	const disconnectedIconY = labelY + 50;
-
 	showName = useObservable(SettingDisplayCharacterName) && showName;
-
-	let fontScale: number;
-	switch (interfaceChatroomCharacterNameFontSize) {
-		case 'xs': fontScale = 0.6; break;
-		case 's': fontScale = 1.0; break;
-		case 'm': fontScale = 1.4; break;
-		case 'l': fontScale = 1.8; break;
-		case 'xl': fontScale = 2.2; break;
-		default:
-			AssertNever(interfaceChatroomCharacterNameFontSize);
-	}
 
 	// If character is in a device, do not render it here, it will be rendered by the device
 	const roomDeviceLink = useCharacterRestrictionsManager(globalState, character, (rm) => rm.getRoomDeviceLink());
@@ -448,30 +427,11 @@ function RoomCharacterDisplay({
 			</GraphicsCharacter>
 			{
 				showName ? (
-					<Text
-						anchor={ { x: 0.5, y: 0.5 } }
+					<RoomCharacterLabel
 						position={ { x: labelX, y: labelY } }
-						style={ new TextStyle({
-							fontFamily: THEME_FONT.slice(),
-							fontSize: 32 * fontScale,
-							fill: labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor,
-							align: 'center',
-							dropShadow: { blur: 4 },
-						}) }
-						text={ name }
+						character={ character }
 					/>
 				) : null
-			}
-			{
-				!showDisconnectedIcon ? null : (
-					<Sprite
-						anchor={ { x: 0.5, y: 0.5 } }
-						texture={ disconnectedIconTexture }
-						position={ { x: labelX, y: disconnectedIconY } }
-						width={ 64 }
-						height={ 64 }
-					/>
-				)
 			}
 			{
 				!debugConfig?.characterDebugOverlay ? null : (
@@ -481,6 +441,98 @@ function RoomCharacterDisplay({
 				)
 			}
 		</TransitionedContainer>
+	);
+}
+
+export function RoomCharacterLabel({ position, character }: {
+	position?: PixiPointLike;
+	character: Character<ICharacterRoomData>;
+}): ReactElement {
+	const {
+		name,
+		publicSettings: { labelColor },
+		onlineStatus,
+	} = useCharacterData(character);
+
+	const {
+		interfaceChatroomCharacterAwayStatusIconDisplay,
+		interfaceChatroomOfflineCharacterFilter,
+		interfaceChatroomCharacterNameFontSize,
+	} = useAccountSettings();
+
+	const showAwayIcon = onlineStatus === 'away' && interfaceChatroomCharacterAwayStatusIconDisplay;
+	const awayIconTexture = useFetchedResourceText(statusIconAway);
+	const drawAwayIcon = useCallback((g: GraphicsContext) => {
+		g.clear();
+		if (awayIconTexture) {
+			g.svg(awayIconTexture);
+		}
+	}, [awayIconTexture]);
+
+	const showDisconnectedIcon = onlineStatus === 'offline' && interfaceChatroomOfflineCharacterFilter === 'icon';
+	const disconnectedIconTexture = useFetchedResourceText(disconnectedIcon);
+	const drawDisconnectedIcon = useCallback((g: GraphicsContext) => {
+		g.clear();
+		if (disconnectedIconTexture) {
+			g.svg(disconnectedIconTexture);
+		}
+	}, [disconnectedIconTexture]);
+
+	let fontScale: number;
+	switch (interfaceChatroomCharacterNameFontSize) {
+		case 'xs': fontScale = 0.6; break;
+		case 's': fontScale = 1.0; break;
+		case 'm': fontScale = 1.4; break;
+		case 'l': fontScale = 1.8; break;
+		case 'xl': fontScale = 2.2; break;
+		default:
+			AssertNever(interfaceChatroomCharacterNameFontSize);
+	}
+
+	const style = useMemo(() => new TextStyle({
+		fontFamily: THEME_FONT.slice(),
+		fontSize: 32 * fontScale,
+		fill: labelColor ?? CHARACTER_SETTINGS_DEFAULT.labelColor,
+		align: 'center',
+		dropShadow: { blur: 4 },
+	}), [fontScale, labelColor]);
+
+	const nameMeasure = useMemo(() => CanvasTextMetrics.measureText(name, style), [name, style]);
+
+	return (
+		<Container
+			position={ position }
+		>
+			<Text
+				anchor={ { x: 0.5, y: 0.5 } }
+				style={ style }
+				text={ name }
+			/>
+			{
+				!showAwayIcon ? null : (
+					<Graphics
+						draw={ drawAwayIcon }
+						position={ {
+							x: - 32 * 1.3 * fontScale - nameMeasure.maxLineWidth / 2,
+							y: - 32 * 0.5 * fontScale,
+						} }
+						scale={ (32 / 50) * fontScale }
+					/>
+				)
+			}
+			{
+				!showDisconnectedIcon ? null : (
+					<Graphics
+						draw={ drawDisconnectedIcon }
+						position={ {
+							x: + 2 * fontScale + nameMeasure.maxLineWidth / 2,
+							y: - 56 * 0.5 * fontScale,
+						} }
+						scale={ (56 / 600) * fontScale }
+					/>
+				)
+			}
+		</Container>
 	);
 }
 

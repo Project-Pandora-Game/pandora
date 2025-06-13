@@ -1,13 +1,14 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
-import { AccountId, AccountIdSchema, AccountRoleSchema, AccountSettingsKeysSchema, AccountSettingsSchema, ConfiguredAccountRoleSchema, IAccountRoleManageInfo } from '../account/index.ts';
+import { AccountIdSchema, AccountManagementDisableInfoSchema, AccountRoleSchema, AccountSettingsKeysSchema, AccountSettingsSchema, ConfiguredAccountRoleSchema } from '../account/index.ts';
 import { AssetFrameworkOutfitWithIdSchema, AssetFrameworkPosePresetWithIdSchema } from '../assets/item/unified.ts';
 import { CharacterSelfInfoSchema } from '../character/characterData.ts';
-import { CharacterId, CharacterIdSchema } from '../character/characterTypes.ts';
+import { CharacterIdSchema } from '../character/characterTypes.ts';
+import { ManagementAccountQueryResultSchema } from '../directory/management/account.ts';
 import { LIMIT_ACCOUNT_PROFILE_LENGTH, LIMIT_DIRECT_MESSAGE_LENGTH_BASE64 } from '../inputLimits.ts';
-import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceId, SpaceIdSchema, SpaceInvite, SpaceInviteCreateSchema, SpaceInviteIdSchema, SpaceListExtendedInfo, SpaceListInfo } from '../space/space.ts';
+import { SpaceDirectoryConfigSchema, SpaceDirectoryUpdateSchema, SpaceIdSchema, SpaceInvite, SpaceInviteCreateSchema, SpaceInviteIdSchema, SpaceListExtendedInfo, SpaceListInfo } from '../space/space.ts';
 import { Satisfies } from '../utility/misc.ts';
-import { DisplayNameSchema, EmailAddressSchema, HexColorString, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodBase64Regex, ZodCast, ZodTruncate } from '../validation.ts';
+import { DisplayNameSchema, EmailAddressSchema, HexColorStringSchema, PasswordSha512Schema, SimpleTokenSchema, UserNameSchema, ZodBase64Regex, ZodCast, ZodTruncate } from '../validation.ts';
 import { AccountCryptoKeySchema, IDirectoryAccountInfo, IDirectoryDirectMessage, IDirectoryDirectMessageAccount, IDirectoryDirectMessageInfo, IDirectoryShardInfo } from './directory_client.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceDefinitionVerified, SocketInterfaceHandlerPromiseResult, SocketInterfaceHandlerResult, SocketInterfaceRequest, SocketInterfaceResponse } from './helpers.ts';
 
@@ -58,32 +59,6 @@ export type SpaceExtendedInfoResponse = {
 	invite?: SpaceInvite;
 };
 
-export type IAccountContact = {
-	/** Account id of the other account */
-	id: AccountId;
-	/** Account name of the other account */
-	displayName: string;
-	/** Time the contact was updated */
-	time: number;
-	/** Type of contact */
-	type: 'friend' | 'pending' | 'incoming' | 'blocked';
-};
-
-export type IAccountFriendStatus = {
-	/** Account id of the friend */
-	id: AccountId;
-	/** The current label color of the account */
-	labelColor: HexColorString;
-	/** If the friend is online */
-	online: boolean;
-	/** List of online characters the friend has */
-	characters?: {
-		id: CharacterId;
-		name: string;
-		space: SpaceId | null;
-	}[];
-};
-
 export const AccountPublicInfoSchema = z.object({
 	id: AccountIdSchema,
 	displayName: z.string(),
@@ -121,6 +96,9 @@ export const ClientDirectorySchema = {
 			secondFactor: SecondFactorDataSchema.optional(),
 		}),
 		response: ZodCast<{ result: 'verificationRequired' | 'invalidToken' | 'unknownCredentials'; } | SecondFactorResponse | {
+			result: 'accountDisabled';
+			reason: string;
+		} | {
 			result: 'ok';
 			token: { value: string; expires: number; };
 			account: IDirectoryAccountInfo;
@@ -258,13 +236,6 @@ export const ClientDirectorySchema = {
 	},
 	//#endregion
 
-	getAccountContacts: {
-		request: z.object({}),
-		response: ZodCast<{
-			contacts: IAccountContact[];
-			friends: IAccountFriendStatus[];
-		}>(),
-	},
 	getAccountInfo: {
 		request: z.object({
 			accountId: AccountIdSchema,
@@ -507,14 +478,18 @@ export const ClientDirectorySchema = {
 	//#region Management/admin endpoints; these require specific roles to be used
 
 	// Account role assignment
-	manageGetAccountRoles: {
+	manageAccountGet: {
 		request: z.object({
-			id: z.number(),
+			id: AccountIdSchema,
 		}),
-		response: ZodCast<{ result: 'notFound'; } | {
-			result: 'ok';
-			roles: IAccountRoleManageInfo;
-		}>(),
+		response: ManagementAccountQueryResultSchema,
+	},
+	manageAccountDisable: {
+		request: z.object({
+			id: AccountIdSchema,
+			disable: AccountManagementDisableInfoSchema.omit({ time: true, disabledBy: true }).nullable(),
+		}),
+		response: ZodCast<{ result: 'ok' | 'notFound' | 'notAllowed'; }>(),
 	},
 	manageSetAccountRole: {
 		request: z.object({

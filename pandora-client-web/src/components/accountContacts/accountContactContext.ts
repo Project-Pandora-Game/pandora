@@ -1,4 +1,4 @@
-import { AccountId, AsyncSynchronized, IAccountContact, IAccountFriendStatus, IClientDirectory, IConnectionBase, IDirectoryClientArgument, TypedEventEmitter } from 'pandora-common';
+import { AccountId, IAccountContact, IAccountFriendStatus, IDirectoryClientArgument, TypedEventEmitter } from 'pandora-common';
 import { useMemo } from 'react';
 import { toast } from 'react-toastify';
 import { Observable, useObservable } from '../../observable.ts';
@@ -25,39 +25,14 @@ export function useFriendStatus() {
 export const AccountContactContext = new class AccountContactContext extends TypedEventEmitter<{
 	incoming: IAccountContact & { type: 'incoming'; };
 }> {
-	private _queue: (() => void)[] = [];
-	private _useQueue = true;
-
-	@AsyncSynchronized()
-	public async initStatus(connection: IConnectionBase<IClientDirectory>): Promise<void> {
-		if (!this._useQueue) {
-			return;
-		}
-		const { friends, contacts } = await connection.awaitResponse('getAccountContacts', {});
+	public handleAccountContactInit({ friends, contacts }: IDirectoryClientArgument['accountContactInit']): void {
 		ACCOUNT_CONTACTS.value = contacts;
 		FRIEND_STATUS.value = friends;
-		this._dequeue();
 	}
 
-	public handleFriendStatus(data: IDirectoryClientArgument['friendStatus']) {
-		if (this._useQueue) {
-			this._queue.push(() => this.handleFriendStatus(data));
-			return;
-		}
-		const filtered = FRIEND_STATUS.value.filter((status) => status.id !== data.id);
-		if (data.online !== 'delete') {
-			filtered.push(data);
-		}
-		FRIEND_STATUS.value = filtered;
-	}
-
-	public handleAccountContactUpdate({ contact, friendStatus }: IDirectoryClientArgument['accountContactUpdate']) {
-		if (this._useQueue) {
-			this._queue.push(() => this.handleAccountContactUpdate({ contact, friendStatus }));
-			return;
-		}
+	public handleAccountContactUpdate({ contact, friendStatus }: IDirectoryClientArgument['accountContactUpdate']): void {
 		// Update relationship side
-		{
+		if (contact != null) {
 			const filtered = ACCOUNT_CONTACTS.value.filter((current) => current.id !== contact.id);
 			if (contact.type !== 'none') {
 				filtered.push(contact);
@@ -70,7 +45,7 @@ export const AccountContactContext = new class AccountContactContext extends Typ
 		// Update friend side
 		{
 			const filtered = FRIEND_STATUS.value.filter((status) => status.id !== friendStatus.id);
-			if (friendStatus.online !== 'delete') {
+			if (friendStatus.status !== null) {
 				filtered.push(friendStatus);
 			}
 			FRIEND_STATUS.value = filtered;
@@ -78,15 +53,8 @@ export const AccountContactContext = new class AccountContactContext extends Typ
 	}
 
 	public handleLogout() {
-		this._useQueue = true;
 		FRIEND_STATUS.value = [];
 		ACCOUNT_CONTACTS.value = [];
-	}
-
-	private _dequeue() {
-		this._useQueue = false;
-		this._queue.forEach((fn) => fn());
-		this._queue = [];
 	}
 };
 

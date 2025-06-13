@@ -13,6 +13,7 @@ import {
 	CHARACTER_PUBLIC_SETTINGS,
 	CHARACTER_SETTINGS_DEFAULT,
 	CHARACTER_SHARD_UPDATEABLE_PROPERTIES,
+	CalculateObjectKeysDelta,
 	CharacterDataShardSchema,
 	CharacterId,
 	CharacterRestrictionsManager,
@@ -107,10 +108,10 @@ export class Character {
 	public setSpace(space: Space | null, appearance: AppearanceBundle): void {
 		if (this.connection) {
 			if (this._context.state === 'space') {
-				this.connection.leaveRoom(this._context.space);
+				this._context.space.leave(this.connection);
 			}
 			if (space) {
-				this.connection.joinRoom(space);
+				space.join(this.connection);
 			}
 		}
 		if (space) {
@@ -254,7 +255,7 @@ export class Character {
 		if (data.account.id !== this.data.accountId) {
 			throw new Error('Character update changes account');
 		}
-		const oldData = this.accountData;
+		const oldData = this.getRoomData();
 		this.accountData = data.account;
 		if (data.accessId !== this.data.accessId) {
 			this.logger.warning('Access id changed! This could be a bug');
@@ -279,20 +280,12 @@ export class Character {
 				if (!this.isOnline) {
 					this.messageQueue.length = 0;
 				}
-				this._loadedSpace?.sendUpdateToAllCharacters({
-					characters: {
-						[this.id]: {
-							isOnline: this.isOnline,
-						},
-					},
-				});
 			}
 		}
 		this.linkSpace(data.space);
-		if (data.account.displayName !== oldData.displayName) {
-			this._sendDataUpdate({
-				accountDisplayName: data.account.displayName,
-			});
+		const roomDataUpdate = CalculateObjectKeysDelta(oldData, this.getRoomData());
+		if (roomDataUpdate != null) {
+			this._sendDataUpdate(roomDataUpdate);
 		}
 	}
 
@@ -352,7 +345,7 @@ export class Character {
 			this.logger.debug(`Connected (${connection.id})`);
 			connection.character = this;
 			if (this._context.state === 'space') {
-				connection.joinRoom(this._context.space);
+				this._context.space.join(connection);
 			}
 			this._connection = connection;
 		} else if (this.isValid && this.connectSecret != null) {
@@ -466,7 +459,8 @@ export class Character {
 			name: this.name,
 			profileDescription: this.profileDescription,
 			publicSettings: cloneDeep(pick(this.data.settings, CHARACTER_PUBLIC_SETTINGS)),
-			isOnline: this.isOnline,
+			// Send offline only if the character is offline. If character is online send account status (replacing invisible by online)
+			onlineStatus: this.isOnline ? (this.accountData.onlineStatus !== 'offline' ? this.accountData.onlineStatus : 'online') : 'offline',
 			assetPreferences: this.assetPreferences,
 		};
 	}

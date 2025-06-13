@@ -1,4 +1,5 @@
-import { AccountRole, Assert, AssertNever, AssertNotNullable, Awaitable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId } from 'pandora-common';
+import { cloneDeep } from 'lodash-es';
+import { AccountRole, Assert, AssertNever, AssertNotNullable, Awaitable, BadMessageError, ClientDirectoryAuthMessageSchema, GetLogger, IClientDirectory, IClientDirectoryArgument, IClientDirectoryAuthMessage, IClientDirectoryPromiseResult, IClientDirectoryResult, IDirectoryStatus, IMessageHandler, IShardTokenConnectInfo, LIMIT_CHARACTER_COUNT, MessageHandler, SecondFactorData, SecondFactorResponse, SecondFactorType, ServerService, type CharacterId, type DirectoryStatusAnnouncement } from 'pandora-common';
 import { SocketInterfaceRequest, SocketInterfaceResponse } from 'pandora-common/dist/networking/helpers.js';
 import promClient from 'prom-client';
 import { z } from 'zod';
@@ -41,6 +42,8 @@ const messagesMetric = new promClient.Counter({
 
 /** Class that stores all currently connected clients */
 export const ConnectionManagerClient = new class ConnectionManagerClient implements IMessageHandler<IClientDirectory, ClientConnection>, ServerService {
+	public announcement: DirectoryStatusAnnouncement | undefined;
+
 	private connectedClients: Set<ClientConnection> = new Set();
 
 	private readonly messageHandler: MessageHandler<IClientDirectory, ClientConnection>;
@@ -76,6 +79,11 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		}
 	}
 
+	public setAnnouncement(announcement: DirectoryStatusAnnouncement | null): void {
+		this.announcement = announcement ?? undefined;
+		this.broadcastStatusUpdate();
+	}
+
 	constructor() {
 		this.messageHandler = new MessageHandler<IClientDirectory, ClientConnection>({
 			// Before Login
@@ -96,7 +104,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			queryConnections: this.handleQueryConnections.bind(this),
 			extendLoginToken: this.handleExtendLoginToken.bind(this),
 
-			getAccountContacts: this.handleGetAccountContacts.bind(this),
 			getAccountInfo: this.handleGetAccountInfo.bind(this),
 			updateProfileDescription: this.handleUpdateProfileDescription.bind(this),
 
@@ -136,7 +143,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 			blockList: this.handleBlockList.bind(this),
 
 			// Management/admin endpoints; these require specific roles to be used
-			manageGetAccountRoles: Auth('developer', this.handleManageGetAccountRoles.bind(this)),
+			manageAccountGet: Auth('developer', this.handleManageAccountGet.bind(this)),
+			manageAccountDisable: Auth('developer', this.handleManageAccountDisable.bind(this)),
 			manageSetAccountRole: Auth('developer', this.handleManageSetAccountRole.bind(this)),
 			manageCreateShardToken: Auth('developer', this.handleManageCreateShardToken.bind(this)),
 			manageInvalidateShardToken: Auth('developer', this.handleManageInvalidateShardToken.bind(this)),
@@ -202,13 +210,22 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		// Verify account is activated or activate it
 		if (!account.secure.isActivated()) {
 			if (verificationToken === undefined) {
-				AUDIT_LOG.verbose(`${connection.id} failed login: account not active`);
+				AUDIT_LOG.verbose(`${connection.id} failed login: account ${account.id} is not active`);
 				return { result: 'verificationRequired' };
 			}
 			if (!await account.secure.activateAccount(verificationToken)) {
 				AUDIT_LOG.verbose(`${connection.id} failed account activation: invalid token`);
 				return { result: 'invalidToken' };
 			}
+		}
+		// Verify account is not disabled by moderator
+		const disabled = account.secure.isDisabled();
+		if (disabled) {
+			AUDIT_LOG.verbose(`${connection.id} failed login: account ${account.id} is disabled`);
+			return {
+				result: 'accountDisabled',
+				reason: disabled.publicReason,
+			};
 		}
 		// Generate new auth token for new login
 		const token = await account.secure.generateNewLoginToken();
@@ -727,15 +744,42 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 		return { result: 'ok' };
 	}
 
-	private async handleManageGetAccountRoles({ id }: IClientDirectoryArgument['manageGetAccountRoles'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryPromiseResult['manageGetAccountRoles'] {
-		logger.verbose(`[Management] ${connection.account.username} (${connection.account.id}): manageGetAccountRoles(id=${id})`);
+	private async handleManageAccountGet({ id }: IClientDirectoryArgument['manageAccountGet'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryPromiseResult['manageAccountGet'] {
+		logger.verbose(`[Management] ${connection.account.username} (${connection.account.id}): manageAccountGet(id=${id})`);
 		const account = await accountManager.loadAccountById(id);
 		if (!account)
 			return { result: 'notFound' };
 
 		return {
 			result: 'ok',
-			roles: account.roles.getAdminInfo(),
+			info: account.getAdminInfo(),
+		};
+	}
+
+	private async handleManageAccountDisable({ id, disable }: IClientDirectoryArgument['manageAccountDisable'], connection: ClientConnection & { readonly account: Account; }): IClientDirectoryPromiseResult['manageAccountDisable'] {
+		const admin = connection.account;
+		logger.alert(`[Management] ${admin.username} (${admin.id}): manageAccountDisable(id=${id},disable=${JSON.stringify(disable)})`);
+		const account = await accountManager.loadAccountById(id);
+		if (!account)
+			return { result: 'notFound' };
+
+		if (
+			account.roles.isAuthorized('admin') ||
+			(account.roles.isAuthorized('developer') && !admin.roles.isAuthorized('admin')) ||
+			account.id === admin.id
+		) {
+			return { result: 'notAllowed' };
+		}
+
+		await account.secure.adminDisableAccount(disable != null ? {
+			disabledBy: admin.id,
+			time: Date.now(),
+			publicReason: disable.publicReason,
+			internalReason: disable.internalReason,
+		} : null);
+
+		return {
+			result: 'ok',
 		};
 	}
 
@@ -898,16 +942,6 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 
 	//#endregion Direct Messages
 
-	private async handleGetAccountContacts(_: IClientDirectoryArgument['getAccountContacts'], connection: ClientConnection): IClientDirectoryPromiseResult['getAccountContacts'] {
-		if (!connection.account)
-			throw new BadMessageError();
-
-		const contacts = await connection.account.contacts.getAll();
-		const friends = await connection.account.contacts.getFriendsStatus();
-
-		return { friends, contacts };
-	}
-
 	private async handleGetAccountInfo({ accountId }: IClientDirectoryArgument['getAccountInfo'], connection: ClientConnection): IClientDirectoryPromiseResult['getAccountInfo'] {
 		if (!connection.account)
 			throw new BadMessageError();
@@ -1023,6 +1057,9 @@ function MakeStatus(): IDirectoryStatus {
 	}
 	if (HCAPTCHA_SECRET_KEY && HCAPTCHA_SECRET_KEY) {
 		result.captchaSiteKey = HCAPTCHA_SITE_KEY;
+	}
+	if (ConnectionManagerClient.announcement != null) {
+		result.announcement = cloneDeep(ConnectionManagerClient.announcement);
 	}
 	return result;
 }

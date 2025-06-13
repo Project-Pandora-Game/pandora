@@ -75,7 +75,7 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 			Assert(this.rooms.has(this._account.associatedConnections));
 			this.setCharacter(null);
 			this._account.touch();
-			this.leaveRoom(this._account.associatedConnections);
+			this._account.associatedConnections.leave(this);
 			this._loginToken = null;
 			this._loginTokenEventUnsubscribe?.();
 			this._loginTokenEventUnsubscribe = null;
@@ -87,7 +87,13 @@ export class ClientConnection extends IncomingConnection<IDirectoryClient, IClie
 			this._account = account;
 			this._loginToken = token;
 			this._loginTokenEventUnsubscribe = token.onAny((ev) => this.onTokenEvent(ev));
-			this.joinRoom(account.associatedConnections);
+			account.associatedConnections.join(this);
+
+			// Send initial contact list data
+			account.contacts.sendFullContactsStatus(this)
+				.catch((err) => {
+					this.logger.warning('Error sending full contacts status:', err);
+				});
 		}
 	}
 

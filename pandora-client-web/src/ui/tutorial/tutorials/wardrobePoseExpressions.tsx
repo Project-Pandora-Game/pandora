@@ -436,16 +436,19 @@ export const TUTORIAL_WARDROBE_POSING_EXPRESSIONS: TutorialConfig = {
 					text: (
 						<>
 							<p>
-								In this mode you can see circles over the character's body that you can drag to rotate the various joints/bones of
-								the character body (move or minimize this popup if needed).
-								Each one matches a slider from the "Manual pose" section in the "Pose" tab.<br />
-								Hint: To achieve the most accurate rotation control, hold a circle and drag in the direction of the arrow on it and only then drag
-								in a circle around the bone with some distance to it for a better control of the angle of the desired rotation.
+								In this mode you can see buttons over the character's body that you can interact with to change the pose of
+								the body (move or minimize this popup if needed).<br />
+								You can drag the hand icons on top of both wrists to change lower and upper arms as you desire. The connected circles
+								next to hand buttons can be clicked or dragged to change the hands. Note that those additional UI elements can be toggled to be hidden by
+								clicking on the hand buttons.<br />
+								Similarly, you can drag the ankle buttons to change the leg angles. Dragging the left-right button over the stomach rotates the
+								whole character. Simply clicking it resets the rotation to the default.
 							</p>
 							<ul>
 								<li>Clicking the left-right arrow at the bottom allows you to turn the character around.</li>
 								<li>The four-way arrow in the center allows you to switch to the character move mode. Please note that this button might not always be available.</li>
-								<li>You can exit the manual posing mode by clicking the red "X" in the middle of the character.</li>
+								<li>You can exit the manual posing mode by clicking the red "X" below the character.</li>
+								<li>The two squares left and right of the red "X" change each arm's position to be in oneof the four states behind or in front of the body.</li>
 							</ul>
 							<p>
 								<br />

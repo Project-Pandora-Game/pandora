@@ -15,6 +15,7 @@ import { Character, useCharacterData, useCharacterDataMultiple } from '../../../
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
 import { Select, type SelectProps } from '../../../common/userInteraction/select/select.tsx';
 import { useFriendStatus } from '../../../components/accountContacts/accountContactContext.ts';
+import { FRIEND_STATUS_ICONS, FRIEND_STATUS_NAMES } from '../../../components/accountContacts/accountContacts.tsx';
 import { CharacterRestrictionOverrideWarningContent, GetRestrictionOverrideText, useRestrictionOverrideDialogContext } from '../../../components/characterRestrictionOverride/characterRestrictionOverride.tsx';
 import { Button } from '../../../components/common/button/button.tsx';
 import { Column, Row } from '../../../components/common/container/container.tsx';
@@ -52,7 +53,7 @@ export function RoomControls(): ReactElement | null {
 		const getCharOrder = (character: Character<ICharacterRoomData>) => {
 			const isPlayer = character.isPlayer();
 			const isSameAccount = character.data.accountId === player?.data.accountId;
-			const isOnline = character.data.isOnline;
+			const isOnline = character.data.onlineStatus !== 'offline';
 			const isFriend = friends.some((friend) => friend.id === character.data.accountId);
 
 			if (isPlayer)
@@ -199,7 +200,7 @@ function SpaceVisibilityWarning(): ReactElement | null {
 	// In all other cases it is either intentionally private or public because of this user
 	if (
 		spaceConfig.public === 'public-with-admin' &&
-		!characterData.some((c) => c.isOnline && ctx.isAdmin(c.accountId))
+		!characterData.some((c) => c.onlineStatus !== 'offline' && ctx.isAdmin(c.accountId))
 	) {
 		return (
 			<span className='space-warning'>
@@ -294,7 +295,6 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 
 	const data = useCharacterData(char);
 	const state = useCharacterState(globalState, char.id);
-	const isOnline = data.isOnline;
 	const isAdmin = IsSpaceAdmin(spaceInfo.config, { id: data.accountId });
 
 	const isPlayer = char.id === playerId;
@@ -331,11 +331,20 @@ function DisplayCharacter({ char }: { char: Character<ICharacterRoomData>; }): R
 						</span>
 					) : null
 				}
-				{ isOnline ? null : (
-					<span className='offline'>
-						Offline
-					</span>
-				) }
+				{
+					data.onlineStatus === 'online' ? (
+						null // No need to show online status
+					) : (
+						<span className={ `status status-${data.onlineStatus}` }>
+							<img
+								className='indicator'
+								src={ FRIEND_STATUS_ICONS[data.onlineStatus] }
+								alt={ FRIEND_STATUS_NAMES[data.onlineStatus] }
+							/>
+							{ FRIEND_STATUS_NAMES[data.onlineStatus] }
+						</span>
+					)
+				}
 				<CharacterRestrictionOverrideWarningContent mode={ state?.restrictionOverride } />
 			</legend>
 			<Column>

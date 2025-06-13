@@ -3,6 +3,7 @@ export * from './assets/index.ts';
 export * from './character/index.ts';
 export * from './chat/index.ts';
 export * from './commands/index.ts';
+export * from './directory/index.ts';
 export * from './environment.ts';
 export * from './event.ts';
 export * from './gameLogic/index.ts';

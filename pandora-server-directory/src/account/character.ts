@@ -1,3 +1,4 @@
+import { cloneDeep } from 'lodash-es';
 import { nanoid } from 'nanoid';
 import {
 	Assert,
@@ -13,6 +14,7 @@ import {
 	SpaceInviteId,
 	type ICharacterData,
 	type ICharacterDataDirectoryUpdate,
+	type ManagementAccountInfoCharacter,
 } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import type { DatabaseCharacterSelfInfo } from '../database/databaseStructure.ts';
@@ -82,6 +84,13 @@ export class CharacterInfo {
 			return 'inCreation';
 
 		return '';
+	}
+
+	public getAdminInfo(): Readonly<ManagementAccountInfoCharacter> {
+		return cloneDeep<ManagementAccountInfoCharacter>({
+			...this.data,
+			state: this.getInfoState(),
+		});
 	}
 
 	@AsyncSynchronized('object')

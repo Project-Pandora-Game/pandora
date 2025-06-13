@@ -77,6 +77,18 @@ $theme-button: (
 		focus-outline: #b00,
 		icon-filter: none
 	),
+	"transparent": (
+		border: transparent,
+		background: transparent,
+		color: inherit,
+		hover-background: color-mix(in srgb, transparent, $theme-accent-color 65%),
+		hover-color: inherit,
+		disabled-border: transparent,
+		disabled-background: transparent,
+		disabled-color: inherit,
+		focus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%),
+		icon-filter: none
+	),
 );
 $theme-button-selected-outline: color-mix(in srgb, #888, $theme-accent-color 60%);
 $theme-buttonicon-hamburger-color: #ccc;
@@ -87,6 +99,10 @@ $theme-link: #58e;
 $theme-link-visited: #8ae;
 $theme-link-active: #ccc;
 $theme-link-visiblefocus-outline: color-mix(in srgb, #fff, $theme-accent-color 65%);
+
+// Boxes: Notice
+$theme-noticebox-background: #42428a;
+$theme-noticebox-text: $theme-normal-text;
 
 // Boxes: Warning
 $theme-warningbox-background: $themecolor-warning;
@@ -479,9 +495,6 @@ $theme-profile-description-border: $theme-separator;
 $theme-profile-description-edit-background: $theme-input-focused-background;
 $theme-profile-description-edit-text: $theme-input-text;
 $theme-profile-description-edit-border: #850000;
-
-$theme-contacts-status-online: #080;
-$theme-contacts-status-offline: #666;
 
 //#endregion
 

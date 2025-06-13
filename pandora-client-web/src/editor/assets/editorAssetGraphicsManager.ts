@@ -30,7 +30,7 @@ export class EditorAssetGraphicsManagerClass {
 	private readonly logger = GetLogger('EditorAssetGraphicsManager');
 
 	private _originalSourceDefinitions: Immutable<GraphicsSourceDefinitionFile> = { assets: {}, pointTemplates: {} };
-	private _originalGraphicsDefinitions: Immutable<GraphicsDefinitionFile> = { assets: {}, pointTemplates: {}, imageFormats: {} };
+	private _originalGraphicsDefinitions: Immutable<GraphicsDefinitionFile> = { assets: {}, pointTemplates: {}, imageFormats: {}, inversePosingHandles: [] };
 
 	private _editedAssetGraphics = new Observable<ReadonlyMap<AssetId, EditorAssetGraphics>>(new Map());
 	private readonly _editedGraphicsBuildCache = new Map<AssetId, Immutable<AssetGraphicsDefinition>>();
@@ -177,12 +177,13 @@ export class EditorAssetGraphicsManagerClass {
 		const buildTextures = new Map<string, Texture>();
 
 		try {
-			const logicAsset = GetCurrentAssetManager().getAssetById(asset.id);
+			const assetManager = GetCurrentAssetManager();
+			const logicAsset = assetManager.getAssetById(asset.id);
 			if (logicAsset == null) {
 				throw new Error('Asset not found');
 			}
 
-			const graphicsDefinition = await EditorBuildAssetGraphics(asset, logicAsset, logger, buildTextures);
+			const graphicsDefinition = await EditorBuildAssetGraphics(asset, logicAsset, assetManager, logger, buildTextures);
 			this._editedGraphicsBuildCache.set(asset.id, freeze(graphicsDefinition, true));
 			asset.buildTextures.value = buildTextures;
 		} catch (error) {

@@ -1,25 +1,35 @@
 import classNames from 'classnames';
-import { GetLogger, IsAuthorized } from 'pandora-common';
+import { isEqual } from 'lodash-es';
+import { AccountOnlineStatusSchema, DirectoryStatusAnnouncement, GetLogger, IsAuthorized, type AccountOnlineStatus } from 'pandora-common';
 import React, { ReactElement, useCallback, useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import crossIcon from '../../assets/icons/cross.svg';
 import friendsIcon from '../../assets/icons/friends.svg';
 import managementIcon from '../../assets/icons/management.svg';
 import notificationsIcon from '../../assets/icons/notification.svg';
 import settingsIcon from '../../assets/icons/setting.svg';
+import statusIconAway from '../../assets/icons/state-away.svg';
+import statusIconDND from '../../assets/icons/state-dnd.svg';
+import statusIconLookingDom from '../../assets/icons/state-dom.svg';
+import statusIconInvisible from '../../assets/icons/state-invisible.svg';
+import statusIconOnline from '../../assets/icons/state-online.svg';
+import statusIconLookingSub from '../../assets/icons/state-sub.svg';
+import statusIconLookingSwitch from '../../assets/icons/state-switch.svg';
 import wikiIcon from '../../assets/icons/wiki.svg';
 import { useObservable, useObservableMultiple } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
-import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
+import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat.ts';
 import { NotificationSource, useNotification, type NotificationHeaderKeys } from '../../services/notificationHandler.ts';
 import { useService } from '../../services/serviceProvider.tsx';
 import { useIsNarrowScreen } from '../../styles/mediaQueries.ts';
 import { AccountContactContext, useAccountContacts } from '../accountContacts/accountContactContext.ts';
+import { Button, IconButton } from '../common/button/button.tsx';
 import { IconHamburger } from '../common/button/domIcons.tsx';
-import { Column, Row } from '../common/container/container.tsx';
-import { DialogInPortal } from '../dialog/dialog.tsx';
-import { GetDirectoryUrl, useAuthTokenHeader } from '../gameContext/directoryConnectorContextProvider.tsx';
+import { Column, DivContainer, Row } from '../common/container/container.tsx';
+import { DialogInPortal, DraggableDialog } from '../dialog/dialog.tsx';
+import { GetDirectoryUrl, useAuthTokenHeader, useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
 import { useNotificationHeader } from '../gameContext/notificationProvider.tsx';
 import { usePlayerData } from '../gameContext/playerContextProvider.tsx';
 import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProvider.tsx';
@@ -89,14 +99,14 @@ function LeftHeader({ onAnyClick }: {
 			{ connectionInfo && (
 				<button onClick={ goToWardrobe } title='Go to wardrobe' className='HeaderButton currentCharacter'>
 					{ preview ? (<img className='avatar' src={ preview } />) : null }
-					<span>
+					<span className='headerText'>
 						<span className='label'>Current character:</span>
 						{ characterName ?? `[Character ${connectionInfo.characterId}]` }
 					</span>
 				</button>
 			) }
 			{ !connectionInfo && (
-				<span>
+				<span className='headerText'>
 					<span className='label'>Current character:</span>
 					[no character selected]
 				</span>
@@ -109,10 +119,13 @@ function RightHeader({ onAnyClick }: {
 	onAnyClick?: () => void;
 }): ReactElement {
 	const currentAccount = useCurrentAccount();
+	const { onlineStatus } = useAccountSettings();
 	const navigate = useNavigatePandora();
 	const loggedIn = currentAccount != null;
 
 	const isDeveloper = currentAccount?.roles !== undefined && IsAuthorized(currentAccount.roles, 'developer');
+
+	const [showOnlineStatusMenu, setShowOnlineStatusMenu] = useState(false);
 
 	return (
 		<div className='rightHeader'>
@@ -156,17 +169,102 @@ function RightHeader({ onAnyClick }: {
 							} }
 						/>
 					) }
-					<span>
-						<span className='label'>Current account:</span>
-						{ currentAccount.settings.displayName || currentAccount.username }
-					</span>
+					<DivContainer className='position-relative currentAccount'>
+						<Button
+							theme='transparent'
+							title='Availability status'
+							slim
+							onClick={ () => {
+								setShowOnlineStatusMenu((v) => !v);
+							} }
+						>
+							<span className='label'>Current account:</span>
+							<img
+								className='onlineStatusIndicator'
+								src={ HEADER_STATUS_SELECTOR_ICONS[onlineStatus] }
+								alt={ HEADER_STATUS_SELECTOR_NAMES[onlineStatus] }
+								title={ HEADER_STATUS_SELECTOR_NAMES[onlineStatus] }
+							/>
+							{ currentAccount.settings.displayName || currentAccount.username }
+						</Button>
+						<StatusSelector
+							open={ showOnlineStatusMenu }
+							close={ () => {
+								setShowOnlineStatusMenu(false);
+							} }
+						/>
+					</DivContainer>
 					<LeaveButton onClickExtra={ onAnyClick } />
 				</>
 			) }
-			{ !loggedIn && <span>[not logged in]</span> }
+			{ !loggedIn && <span className='headerText'>[not logged in]</span> }
 		</div>
 	);
 }
+
+function StatusSelector({ open, close }: {
+	open: boolean;
+	close: () => void;
+}): ReactElement {
+	const directory = useDirectoryConnector();
+
+	return (
+		<div className={ open ? 'statusSelectorMenuContainer open' : 'statusSelectorMenuContainer' }>
+			<div className='statusSelectorMenu'>
+				{
+					AccountOnlineStatusSchema.options.map((o) => (
+						<Button key={ o }
+							theme='transparent'
+							onClick={ () => {
+								directory.awaitResponse('changeSettings', {
+									type: 'set',
+									settings: { onlineStatus: o },
+								})
+									.catch((err: unknown) => {
+										toast('Failed to set your online status. Please try again.', TOAST_OPTIONS_ERROR);
+										GetLogger('StatusSelector').error('Failed to update:', err);
+									});
+								close();
+							} }
+							slim
+						>
+							<Row gap='tiny' alignY='center' className='fill-x fit'>
+								<img
+									className='onlineStatusIndicator'
+									src={ HEADER_STATUS_SELECTOR_ICONS[o] }
+									alt={ HEADER_STATUS_SELECTOR_NAMES[o] }
+								/>
+								<span className='flex-1'>
+									{ HEADER_STATUS_SELECTOR_NAMES[o] }
+								</span>
+							</Row>
+						</Button>
+					))
+				}
+			</div>
+		</div>
+	);
+}
+
+export const HEADER_STATUS_SELECTOR_ICONS: Record<AccountOnlineStatus, string> = {
+	'online': statusIconOnline,
+	'looking-switch': statusIconLookingSwitch,
+	'looking-dom': statusIconLookingDom,
+	'looking-sub': statusIconLookingSub,
+	'away': statusIconAway,
+	'dnd': statusIconDND,
+	'offline': statusIconInvisible,
+};
+
+export const HEADER_STATUS_SELECTOR_NAMES: Record<AccountOnlineStatus, string> = {
+	'online': 'Online',
+	'looking-switch': 'Looking to play',
+	'looking-dom': 'Looking to dom',
+	'looking-sub': 'Looking to sub',
+	'away': 'Away',
+	'dnd': 'Do Not Disturb',
+	'offline': 'Invisible',
+};
 
 function NotificationButton({ icon, title, type, onClick }: {
 	icon: string;
@@ -256,7 +354,7 @@ function CollapsableHeader(): ReactElement {
 
 	return (
 		<Row alignX='space-between' alignY='center' className='flex-1'>
-			<span>
+			<span className='headerText'>
 				{
 					currentAccount == null ? '[not logged in]' :
 					connectionInfo == null ? '[no character selected]' :
@@ -277,17 +375,76 @@ export function Header(): ReactElement {
 	const isNarrow = useIsNarrowScreen();
 
 	return (
-		<header className='Header'>
+		<>
+			<header className='Header'>
+				{
+					isNarrow ? (
+						<CollapsableHeader />
+					) : (
+						<>
+							<LeftHeader />
+							<RightHeader />
+						</>
+					)
+				}
+			</header>
+			<Announcement />
+		</>
+	);
+}
+
+function Announcement(): ReactElement | null {
+	const { announcement } = useObservable(useDirectoryConnector().directoryStatus);
+
+	const [open, setOpen] = useState(false);
+	const [dismissedAnnouncement, setDismissedAnnouncement] = useState<DirectoryStatusAnnouncement | null>(null);
+
+	useEffect(() => {
+		if (open && announcement == null) {
+			setOpen(false);
+		}
+	}, [announcement, open]);
+
+	if (announcement == null || isEqual(announcement, dismissedAnnouncement))
+		return null;
+
+	return (
+		<>
+			<div className={ `ServerAnnouncementHeader type-${announcement.type}` }>
+				<Button
+					theme='transparent'
+					className='flex-1'
+					onClick={ () => {
+						setOpen((v) => !v);
+					} }
+					slim
+				>
+					{ announcement.title } { announcement.content ? '(…)' : null }
+				</Button>
+				<IconButton
+					onClick={ () => {
+						setDismissedAnnouncement(announcement);
+					} }
+					theme='default'
+					src={ crossIcon }
+					alt='Dismiss announcement'
+				/>
+			</div>
 			{
-				isNarrow ? (
-					<CollapsableHeader />
-				) : (
-					<>
-						<LeftHeader />
-						<RightHeader />
-					</>
-				)
+				open ? (
+					<DraggableDialog
+						close={ () => {
+							setOpen(false);
+						} }
+						title='Announcement'
+					>
+						<h2>{ announcement.title }</h2>
+						<p className='display-linebreak'>
+							{ announcement.content }
+						</p>
+					</DraggableDialog>
+				) : null
 			}
-		</header>
+		</>
 	);
 }

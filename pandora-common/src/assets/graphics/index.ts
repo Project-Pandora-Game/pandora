@@ -2,6 +2,7 @@ export * from './common.ts';
 export * from './compressed.ts';
 export * from './conditions.ts';
 export * from './graphics.ts';
+export * from './inversePosing.ts';
 export * from './layer.ts';
 export * from './layers/index.ts';
 export * from './mirroring.ts';

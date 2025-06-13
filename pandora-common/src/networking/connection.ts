@@ -6,7 +6,7 @@ import { IsObject } from '../validation.ts';
 import { DEFAULT_ACK_TIMEOUT, MESSAGE_HANDLER_DEBUG_ALL, MESSAGE_HANDLER_DEBUG_MESSAGES } from './config.ts';
 import type { SocketInterfaceDefinition, SocketInterfaceOneshotMessages, SocketInterfaceRequest, SocketInterfaceRespondedMessages, SocketInterfaceResponse } from './helpers.ts';
 import { BadMessageError, IMessageHandler } from './message_handler.ts';
-import type { IServerSocket, ServerRoom } from './room.ts';
+import type { IServerRoom, IServerSocket } from './room.ts';
 import { EmitterWithAck, IncomingSocket, MessageCallback, MockConnectionSocket } from './socket.ts';
 
 export interface IConnectionBase<OutboundT extends SocketInterfaceDefinition> {
@@ -32,11 +32,15 @@ export interface IConnectionBase<OutboundT extends SocketInterfaceDefinition> {
 
 export interface IIncomingConnection<OutboundT extends SocketInterfaceDefinition> extends IConnectionBase<OutboundT> {
 	readonly id: string;
+	readonly socketServer: IServerSocket<OutboundT>;
 	/** Check if this connection is still connected */
 	isConnected(): boolean;
 
-	joinRoom(room: ServerRoom<OutboundT>): void;
-	leaveRoom(room: ServerRoom<OutboundT>): void;
+	/**
+	 * Used for keeping tracks of rooms the connection is in. Do not use directly.
+	 * @private
+	*/
+	readonly _internalRooms: Set<IServerRoom<OutboundT>>;
 }
 
 /** Allows sending messages */
@@ -291,8 +295,8 @@ export abstract class IncomingConnection<
 	IncomingT extends SocketInterfaceDefinition,
 	SocketT extends IncomingSocket = IncomingSocket,
 > extends ConnectionBase<OutboundT, IncomingT, SocketT> implements IIncomingConnection<OutboundT> {
-	private _rooms: Set<ServerRoom<OutboundT>> = new Set();
-	private _server: IServerSocket<OutboundT>;
+	public readonly _internalRooms: Set<IServerRoom<OutboundT>> = new Set();
+	public readonly socketServer: IServerSocket<OutboundT>;
 
 	constructor(
 		server: IServerSocket<OutboundT>,
@@ -301,7 +305,7 @@ export abstract class IncomingConnection<
 		logger: Logger,
 	) {
 		super(socket, schema, logger);
-		this._server = server;
+		this.socketServer = server;
 		socket.onDisconnect = (reason) => this.onDisconnect(reason);
 		socket.onMessage = (...args) => this.handleMessage(...args);
 	}
@@ -310,8 +314,8 @@ export abstract class IncomingConnection<
 		return this.socket.id;
 	}
 
-	public get rooms(): ReadonlySet<ServerRoom<OutboundT>> {
-		return this._rooms;
+	public get rooms(): ReadonlySet<IServerRoom<OutboundT>> {
+		return this._internalRooms;
 	}
 
 	/** Check if this connection is still connected */
@@ -321,16 +325,7 @@ export abstract class IncomingConnection<
 
 	/** Handler for when client disconnects */
 	protected onDisconnect(_reason: string): void {
-		[...this._rooms].forEach((room) => room.leave(this));
-	}
-
-	public joinRoom(room: ServerRoom<OutboundT>): void {
-		room.join(this._server, this);
-		this._rooms.add(room);
-	}
-
-	public leaveRoom(room: ServerRoom<OutboundT>): void {
-		room.leave(this);
+		[...this._internalRooms].forEach((room) => room.leave(this));
 	}
 }
 

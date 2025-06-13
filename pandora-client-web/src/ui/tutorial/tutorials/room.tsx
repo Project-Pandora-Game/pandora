@@ -51,7 +51,7 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 						<>
 							<p>
 								First lets have a look at the "Header".<br />
-								Header shows some basic information about your state and allows quickly navigating to some other screens.
+								This navigation bar at the top shows some basic information about your state and allows quickly navigating to some other screens.
 							</p>
 							<p>
 								<i>
@@ -67,21 +67,24 @@ export const TUTORIAL_ROOM: TutorialConfig = {
 				{
 					text: (
 						<p>
-							On the very left (or top if you are are on a narrow device) you can see your currently selected character's name.<br />
-							This can be useful, as Pandora allows you to open multiple characters from the same account at the same time - so long you open each in a different browser tab.
+							On the very left (or top if you are are on a narrow device) you can see your currently selected character's name and a character portrait that you can configure in the settings.<br />
+							This info can be useful for orientation, as Pandora allows you to open multiple characters from the same account at the same time - as long as you open each in a different browser tab or window.
+							The name also doubles as a shortcut to the wardrobe.
 						</p>
 					),
-					highlight: [{ query: '.Header .leftHeader > span', inset: true }],
+					highlight: [{ query: '.Header .leftHeader > button[title="Go to wardrobe"]', inset: true }],
 					conditions: [{ type: 'next' }],
 				},
 				{
 					text: (
 						<p>
-							On the the right (or bottom) you can see the account you are currently logged into.<br />
-							While Pandora does not forbid the creation of multiple accounts, you cannot log into multiple accounts at the same time.
+							On the the right (or bottom) you can see your online status next to the account you are currently logged into.<br />
+							While Pandora does not forbid the creation of multiple accounts, you cannot log into multiple accounts at the same time.<br />
+							Clicking on the account name opens a drop-down menu that lets you select your user availability status inside Pandora. Your status is shared with other users.
+							Each state is explained in more detail in Pandora's wiki.
 						</p>
 					),
-					highlight: [{ query: '.Header .rightHeader > span', inset: true }],
+					highlight: [{ query: '.Header .rightHeader > div > button[title="Availability status"]', inset: true }],
 					conditions: [{ type: 'next' }],
 				},
 				{

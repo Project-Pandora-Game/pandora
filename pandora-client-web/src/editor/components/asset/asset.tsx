@@ -162,6 +162,12 @@ function AddLayerUiDialog({ close, selectedAsset }: { close: () => void; selecte
 					Add image layer
 				</Button>
 				<Button onClick={ () => {
+					editor.targetLayer.value = selectedAsset.addLayer('text');
+					close();
+				} }>
+					Add text layer
+				</Button>
+				<Button onClick={ () => {
 					editor.targetLayer.value = selectedAsset.addLayer('alphaImageMesh');
 					close();
 				} }>

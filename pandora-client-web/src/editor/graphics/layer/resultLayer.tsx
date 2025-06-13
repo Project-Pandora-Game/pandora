@@ -24,6 +24,8 @@ export function ResultLayer({
 		case 'mesh':
 		case 'alphaImageMesh':
 			return <ResultMeshLayer { ...props } layer={ layer } />;
+		case 'text':
+			return <ResultTextLayer { ...props } layer={ layer } />;
 	}
 	AssertNever(layer);
 }
@@ -119,6 +121,58 @@ export function ResultMeshLayer({
 							/>
 						)) }
 					</Container>
+				)
+			}
+		</>
+	);
+}
+
+function ResultTextLayer({
+	layer,
+	item,
+	characterState,
+	characterBlinking,
+	...props
+}: GraphicsLayerProps<'text'>): ReactElement {
+	const editor = useEditor();
+	const editorLayer = GetEditorSourceLayerForRuntimeLayer(layer);
+	const showHelpers = useObservable(editor.targetLayer) === editorLayer && editorLayer != null;
+
+	const drawWireFrame = useCallback((g: PIXI.GraphicsContext) => {
+		// Borders of the layer
+		g.rect(0, 0, layer.width, layer.height)
+			.stroke({ width: 2, color: 0x000088, alpha: 0.6, pixelLine: true });
+
+	}, [layer]);
+
+	const currentlyBlinking = useNullableObservable(characterBlinking) ?? false;
+	const evaluator = useAppearanceConditionEvaluator(characterState, currentlyBlinking);
+
+	const position = useMemo(() => {
+		const point = new PIXI.Point(layer.x, layer.y);
+		if (layer.followBone != null) {
+			evaluator.evalBoneTransform(layer.followBone).apply(point, point);
+		}
+		return point;
+	}, [layer, evaluator]);
+
+	return (
+		<>
+			<EditorLayer
+				{ ...props }
+				layer={ layer }
+				item={ item }
+				characterState={ characterState }
+				characterBlinking={ characterBlinking }
+			/>
+			{
+				!showHelpers ? null : (
+					<Graphics
+						position={ position }
+						angle={ (layer.followBone != null ? evaluator.evalBoneTransformAngle(layer.followBone) : 0) + layer.angle }
+						zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
+						draw={ drawWireFrame }
+					/>
 				)
 			}
 		</>

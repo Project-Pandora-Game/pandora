@@ -25,6 +25,7 @@ import {
 	type AccountSettingsKeys,
 	type AssetFrameworkPosePresetWithId,
 	type Logger,
+	type ManagementAccountInfo,
 } from 'pandora-common';
 import { GetDatabase } from '../database/databaseProvider.ts';
 import { DatabaseAccount, DatabaseAccountUpdate, DatabaseAccountWithSecure, DirectMessageAccounts, type DatabaseCharacterSelfInfo } from '../database/databaseStructure.ts';
@@ -160,7 +161,21 @@ export class Account implements ActorIdentity {
 			id: this.id,
 			displayName: this.displayName,
 			roles: this.roles.getSelfInfo(),
+			onlineStatus: this.isOnline() ? (this.data.settings.onlineStatus ?? 'online') : 'offline',
 		};
+	}
+
+	public getAdminInfo(): Readonly<ManagementAccountInfo> {
+		return cloneDeep<ManagementAccountInfo>({
+			id: this.id,
+			username: this.username,
+			displayName: this.displayName,
+			onlineStatus: this.isOnline() ? (this.data.settings.onlineStatus ?? 'online') : null,
+			created: this.data.created,
+			secure: this.secure.getAdminInfo(),
+			characters: Array.from(this.characters.values()).map((c) => c.getAdminInfo()),
+			roles: this.roles.getAdminInfo(),
+		});
 	}
 
 	@AsyncSynchronized('object')

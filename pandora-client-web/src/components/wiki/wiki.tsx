@@ -4,6 +4,7 @@ import { useNavigatePandora } from '../../routing/navigate.ts';
 import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs.tsx';
 import { PrivacyPolicyContent } from '../Eula/privacyPolicy.tsx';
+import { WikiChat } from './pages/chat.tsx';
 import { WikiCharacters } from './pages/characters.tsx';
 import { WikiContact } from './pages/contact.tsx';
 import { WikiHistory } from './pages/history.tsx';
@@ -27,6 +28,9 @@ export default function Wiki(): ReactElement {
 			</UrlTab>
 			<WikiContentTab name='New User Guide' urlChunk='new'>
 				<WikiNew />
+			</WikiContentTab>
+			<WikiContentTab name='Chat' urlChunk='chat'>
+				<WikiChat />
 			</WikiContentTab>
 			<WikiContentTab name='Spaces' urlChunk='spaces'>
 				<WikiSpaces />

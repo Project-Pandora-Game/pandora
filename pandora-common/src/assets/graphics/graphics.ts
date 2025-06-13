@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { AssetIdSchema } from '../base.ts';
 import type { BoneType } from './conditions.ts';
+import { InversePosingHandleSchema } from './inversePosing.ts';
 import { GraphicsLayerSchema } from './layer.ts';
 import { PointTemplateSchema } from './points.ts';
 
@@ -34,6 +35,8 @@ export const GraphicsDefinitionFileSchema = z.object({
 	assets: z.record(AssetIdSchema, AssetGraphicsDefinitionSchema),
 	pointTemplates: z.record(z.string(), PointTemplateSchema),
 	imageFormats: z.record(GraphicsImageFormatSchema, z.string()),
+	/** UI handles used for inverse kinematic posing of the character. */
+	inversePosingHandles: InversePosingHandleSchema.array(),
 });
 
 export type GraphicsDefinitionFile = z.infer<typeof GraphicsDefinitionFileSchema>;

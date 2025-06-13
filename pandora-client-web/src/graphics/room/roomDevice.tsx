@@ -29,6 +29,7 @@ import { useAsyncEvent, useEvent } from '../../common/useEvent.ts';
 import { useCharacterRestrictionsManager, useSpaceCharacters, type GameState } from '../../components/gameContext/gameStateContextProvider.tsx';
 import { LIVE_UPDATE_THROTTLE } from '../../config/Environment.ts';
 import { useObservable } from '../../observable.ts';
+import { useAccountSettings } from '../../services/accountLogic/accountManagerHooks.ts';
 import { useRoomScreenContext } from '../../ui/screens/room/roomContext.tsx';
 import { useDebugConfig } from '../../ui/screens/room/roomDebug.tsx';
 import { useStandaloneConditionEvaluator, type AppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
@@ -41,10 +42,11 @@ import { CHARACTER_PIVOT_POSITION, GraphicsCharacter, PointLike } from '../graph
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MASK_SIZE } from '../layers/graphicsLayerAlphaImageMesh.tsx';
 import { SwapCullingDirection, useItemColor } from '../layers/graphicsLayerCommon.tsx';
+import { GraphicsLayerRoomDeviceText } from '../layers/graphicsLayerText.tsx';
 import { MovementHelperGraphics } from '../movementHelper.tsx';
 import { useTexture } from '../useTexture.ts';
 import { EvaluateCondition } from '../utility.ts';
-import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, useRoomCharacterOffsets } from './roomCharacter.tsx';
+import { CHARACTER_MOVEMENT_TRANSITION_DURATION_NORMAL, RoomCharacterLabel, SettingDisplayCharacterName, useRoomCharacterOffsets } from './roomCharacter.tsx';
 import { RoomProjectionResolver, useCharacterDisplayFilters, usePlayerVisionFilters } from './roomScene.tsx';
 
 const PIVOT_TO_LABEL_OFFSET = 100;
@@ -336,28 +338,138 @@ export function RoomDeviceInteractive({
 			.fill({ color: roomConstructionMode ? 0x000000 : 0x0000ff, alpha: roomConstructionMode ? 0.8 : 0.4 });
 	}, [showMenuHelper, roomConstructionMode, hitAreaRadius]);
 
+	const showCharacterNames = useObservable(SettingDisplayCharacterName);
+
 	return (
-		<RoomDevice
-			globalState={ globalState }
-			item={ item }
-			deployment={ deployment }
-			projectionResolver={ projectionResolver }
-			hitArea={ hitArea }
-			cursor={ enableMenu ? 'pointer' : 'none' }
-			eventMode={ enableMenu ? 'static' : 'none' }
-			onPointerDown={ onPointerDown }
-			onPointerUp={ onPointerUp }
-		>
+		<>
+			<RoomDevice
+				globalState={ globalState }
+				item={ item }
+				deployment={ deployment }
+				projectionResolver={ projectionResolver }
+				hitArea={ hitArea }
+				cursor={ enableMenu ? 'pointer' : 'none' }
+				eventMode={ enableMenu ? 'static' : 'none' }
+				onPointerDown={ onPointerDown }
+				onPointerUp={ onPointerUp }
+			>
+				{
+					enableMenu ? (
+						<Graphics
+							zIndex={ 99998 }
+							draw={ deviceMenuHelperDraw }
+							position={ { x: labelX, y: labelY } }
+						/>
+					) : null
+				}
+			</RoomDevice>
 			{
-				enableMenu ? (
-					<Graphics
-						zIndex={ 99998 }
-						draw={ deviceMenuHelperDraw }
-						position={ { x: labelX, y: labelY } }
+				showCharacterNames ? (
+					<RoomDeviceCharacterNames
+						item={ item }
+						deployment={ deployment }
+						projectionResolver={ projectionResolver }
 					/>
 				) : null
 			}
-		</RoomDevice>
+		</>
+	);
+}
+
+function RoomDeviceCharacterNames({
+	item,
+	deployment,
+	projectionResolver,
+}: Pick<RoomDeviceProps, 'item' | 'deployment' | 'projectionResolver'>): ReactElement {
+	const {
+		openContextMenu,
+	} = useRoomScreenContext();
+
+	const {
+		interfaceChatroomCharacterNameFontSize,
+	} = useAccountSettings();
+
+	let fontScale: number;
+	switch (interfaceChatroomCharacterNameFontSize) {
+		case 'xs': fontScale = 0.6; break;
+		case 's': fontScale = 1.0; break;
+		case 'm': fontScale = 1.4; break;
+		case 'l': fontScale = 1.8; break;
+		case 'xl': fontScale = 2.2; break;
+		default:
+			AssertNever(interfaceChatroomCharacterNameFontSize);
+	}
+
+	const characters = useSpaceCharacters();
+
+	const [deploymentX, deploymentY, yOffsetExtra] = projectionResolver.fixupPosition([
+		deployment.x,
+		deployment.y,
+		deployment.yOffset,
+	]);
+
+	const [x, y] = projectionResolver.transform(deploymentX, deploymentY, 0);
+	const scale = projectionResolver.scaleAt(deploymentX, deploymentY, 0);
+
+	return (
+		<>
+			{
+				useMemo(() => {
+					if (characters == null)
+						return null;
+
+					const result: ReactNode[] = [];
+					const spacing = 42 * fontScale;
+
+					for (const slot of Object.keys(item.asset.definition.slots)) {
+						const characterId = item.slotOccupancy.get(slot);
+						const character = characterId != null ? characters.find((c) => c.id === characterId) : undefined;
+						let held = false;
+
+						if (character == null)
+							continue;
+
+						result.push(
+							<Container
+								key={ character.id }
+								position={ { x, y: y - yOffsetExtra + scale * ((result.length + 0.5) * spacing + PIVOT_TO_LABEL_OFFSET + 85) } }
+								scale={ { x: scale, y: scale } }
+								sortableChildren
+								cursor='pointer'
+								eventMode='static'
+								hitArea={ new PIXI.Rectangle(-100, -0.5 * spacing, 200, spacing) }
+								onpointerdown={ (ev) => {
+									if (ev.button !== 1) {
+										ev.stopPropagation();
+										held = true;
+									}
+								} }
+								onpointerup={ (ev) => {
+									if (held) {
+										ev.stopPropagation();
+										held = false;
+										openContextMenu(character, {
+											x: ev.pageX,
+											y: ev.pageY,
+										});
+									}
+								} }
+								onpointerupoutside={ () => {
+									held = false;
+								} }
+								zIndex={ -deploymentY - 0.5 }
+							>
+								<RoomCharacterLabel
+									character={ character }
+								/>
+							</Container>,
+						);
+					}
+
+					return result;
+				}, [characters, deploymentY, fontScale, item, openContextMenu, scale, x, y, yOffsetExtra])
+			}
+		</>
 	);
 }
 
@@ -537,6 +649,8 @@ function RoomDeviceGraphicsWithManagerImpl({
 							graphics = <RoomDeviceGraphicsLayerSprite item={ item } layer={ layer } roomMask={ roomMask } />;
 						} else if (layer.type === 'slot') {
 							graphics = <RoomDeviceGraphicsLayerSlot globalState={ globalState } item={ item } layer={ layer } />;
+						} else if (layer.type === 'text') {
+							graphics = <GraphicsLayerRoomDeviceText item={ item } layer={ layer } />;
 						} else {
 							AssertNever(layer);
 						}

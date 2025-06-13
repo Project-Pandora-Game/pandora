@@ -18,24 +18,21 @@
 	}
 
 	.friend {
-		.status .indicator {
-			font-size: x-large;
-		}
+		.status {
+			> div {
+				min-width: max-content;
+			}
 
-		&.online {
-			.status .indicator {
-				color: common.$theme-contacts-status-online;
+			.indicator {
+				width: 1.5em;
+				height: 1.5em;
+				object-fit: contain;
 			}
 		}
 
 		&.offline {
 			.status {
-				font-style: italic;
-
-				.indicator {
-					color: common.$theme-contacts-status-offline;
-					font-style: normal;
-				}
+				color: common.$theme-normal-text-dim;
 			}
 		}
 	}

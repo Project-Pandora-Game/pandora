@@ -200,7 +200,7 @@ export abstract class ItemBase<Type extends AssetType = AssetType> implements It
 			};
 
 		for (const module of this.getModules().values()) {
-			const r = module.validate(context);
+			const r = module.validate(context, this.asset);
 			if (!r.success)
 				return r;
 		}

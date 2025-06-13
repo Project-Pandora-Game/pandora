@@ -1,5 +1,5 @@
 import { type Immutable } from 'immer';
-import { Assert, AssertNotNullable, EMPTY_ARRAY, LoadAssetLayer, type Asset, type AssetGraphicsDefinition, type GraphicsBuildContext, type GraphicsBuildImageResource, type GraphicsLayer, type ImageBoundingBox, type Logger } from 'pandora-common';
+import { Assert, AssertNotNullable, EMPTY_ARRAY, LoadAssetLayer, type Asset, type AssetGraphicsDefinition, type AssetManager, type GraphicsBuildContext, type GraphicsBuildContextAssetData, type GraphicsBuildImageResource, type GraphicsLayer, type ImageBoundingBox, type Logger } from 'pandora-common';
 import { Application, Rectangle, Texture } from 'pixi.js';
 import { GraphicsManagerInstance } from '../../assets/graphicsManager.ts';
 import { ArrayToBase64 } from '../../crypto/helpers.ts';
@@ -74,14 +74,19 @@ class EditorImageResource implements GraphicsBuildImageResource {
 	}
 }
 
-export function EditorBuildAssetGraphicsContext(asset: EditorAssetGraphics, logicAsset: Asset, buildTextures?: Map<string, Texture>): GraphicsBuildContext {
+export function EditorBuildAssetGraphicsContext(asset: EditorAssetGraphics, logicAsset: Asset, assetManager: AssetManager, buildTextures?: Map<string, Texture>): GraphicsBuildContext {
 	const graphicsManager = GraphicsManagerInstance.value;
 	AssertNotNullable(graphicsManager);
 
-	const builtAssetData: GraphicsBuildContext['builtAssetData'] = {
+	const builtAssetData: Immutable<GraphicsBuildContextAssetData> = {
 		modules: (logicAsset.isType('personal') || logicAsset.isType('bodypart')) ? (
 			logicAsset.definition.modules
 		) : undefined,
+		colorizationKeys: new Set(
+			(logicAsset.isType('personal') || logicAsset.isType('bodypart') || logicAsset.isType('roomDevice')) ?
+				Object.keys(logicAsset.definition.colorization ?? {}) :
+				[],
+		),
 	};
 
 	const textures = asset.textures.value;
@@ -90,6 +95,9 @@ export function EditorBuildAssetGraphicsContext(asset: EditorAssetGraphics, logi
 		runImageBasedChecks: true,
 		generateOptimizedTextures: buildTextures != null,
 		generateResolutions: EMPTY_ARRAY,
+		getBones() {
+			return assetManager.getAllBones();
+		},
 		getPointTemplate(name) {
 			return EditorAssetGraphicsManager.editedPointTemplates.value.get(name) ??
 				EditorAssetGraphicsManager.originalPointTemplates[name];
@@ -109,10 +117,11 @@ export function EditorBuildAssetGraphicsContext(asset: EditorAssetGraphics, logi
 export async function EditorBuildAssetGraphics(
 	asset: EditorAssetGraphics,
 	logicAsset: Asset,
+	assetManager: AssetManager,
 	logger: Logger,
 	buildTextures: Map<string, Texture>,
 ): Promise<Immutable<AssetGraphicsDefinition>> {
-	const assetLoadContext: GraphicsBuildContext = EditorBuildAssetGraphicsContext(asset, logicAsset, buildTextures);
+	const assetLoadContext: GraphicsBuildContext = EditorBuildAssetGraphicsContext(asset, logicAsset, assetManager, buildTextures);
 
 	const layers = (await Promise.all(asset.layers.value.map((sourceLayer) =>
 		LoadAssetLayer(sourceLayer.definition.value, assetLoadContext, logger)

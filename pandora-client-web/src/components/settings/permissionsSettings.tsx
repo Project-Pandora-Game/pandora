@@ -8,6 +8,7 @@ import arrowRight from '../../assets/icons/arrow-right.svg';
 import body from '../../assets/icons/body.svg';
 import color from '../../assets/icons/color.svg';
 import deviceSvg from '../../assets/icons/device.svg';
+import editIcon from '../../assets/icons/edit.svg';
 import forbid from '../../assets/icons/forbidden.svg';
 import lock from '../../assets/icons/lock.svg';
 import modificationEdit from '../../assets/icons/modification-edit.svg';
@@ -88,6 +89,8 @@ function GetIcon(icon: string): string {
 			return color;
 		case 'lock':
 			return lock;
+		case 'text':
+			return editIcon;
 		case 'on-off':
 			return onOff;
 		case 'setting':

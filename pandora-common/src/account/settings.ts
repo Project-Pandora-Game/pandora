@@ -3,6 +3,7 @@ import { TimeSpanMs } from '../utility/formatting.ts';
 import { EMPTY_ARRAY, KnownObject, ParseArrayNotEmpty } from '../utility/misc.ts';
 import { DisplayNameSchema, HexColorStringSchema } from '../validation.ts';
 import { AccountRoleSchema } from './accountRoles.ts';
+import { AccountOnlineStatusSchema } from './contacts.ts';
 import { TutorialIdSchema } from './tutorials.ts';
 
 //#region Settings declarations
@@ -14,8 +15,7 @@ export const AccountSettingsSchema = z.object({
 	visibleRoles: z.array(AccountRoleSchema).max(AccountRoleSchema.options.length),
 	labelColor: HexColorStringSchema,
 	displayName: DisplayNameSchema.nullable(),
-	/** Hides online status from friends */
-	hideOnlineStatus: z.boolean(),
+	onlineStatus: AccountOnlineStatusSchema,
 	/**
 	 * - 'all' - Allow direct messages from anyone
 	 * - 'space' - Allow direct messages from friends and people in the same space
@@ -96,8 +96,19 @@ export const AccountSettingsSchema = z.object({
 	 * Controls how big the font size used for the name of the character is
 	 */
 	interfaceChatroomCharacterNameFontSize: z.enum(['xs', 's', 'm', 'l', 'xl']),
+	/**
+	 * Controls if the away status icon shall be shown under the name of characters on the canvas
+	 */
+	interfaceChatroomCharacterAwayStatusIconDisplay: z.boolean(),
 	/** Controls how item names appear in chat action messages */
 	interfaceChatroomItemDisplayNameType: ItemDisplayNameTypeSchema,
+	/**
+	 * What style of posing elements should be displayed.
+	 * - `inverse` - Only inverse kinematics helpers should be shown
+	 * - `forward` - Only direct bone manipulation helpers should be shown
+	 * - `both` - Both variants should be shown
+	 */
+	interfacePosingStyle: z.enum(['inverse', 'forward', 'both']),
 	/**
 	 * How should command autocomplete behave.
 	 * - `always-show` - The help is always shown while typing a command
@@ -126,7 +137,7 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	visibleRoles: [],
 	labelColor: '#ffffff',
 	displayName: null,
-	hideOnlineStatus: false,
+	onlineStatus: 'online',
 	allowDirectMessagesFrom: 'all',
 	wardrobeExtraActionButtons: true,
 	wardrobeHoverPreview: true,
@@ -145,7 +156,9 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	interfaceChatroomOfflineCharacterFilter: 'ghost',
 	interfaceChatroomChatFontSize: 'm',
 	interfaceChatroomCharacterNameFontSize: 'm',
+	interfaceChatroomCharacterAwayStatusIconDisplay: true,
 	interfaceChatroomItemDisplayNameType: 'custom',
+	interfacePosingStyle: 'inverse',
 	chatCommandHintBehavior: 'always-show',
 	notificationRoomEntrySound: '',
 	notificationVolume: '100',

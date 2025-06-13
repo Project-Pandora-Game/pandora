@@ -19,7 +19,7 @@ const mockData: ICharacterRoomData = {
 	profileDescription: 'A mock character',
 	publicSettings: {},
 	assetPreferences: cloneDeep(ASSET_PREFERENCES_DEFAULT),
-	isOnline: true,
+	onlineStatus: 'online',
 };
 describe('Character', () => {
 	let mock: Character;

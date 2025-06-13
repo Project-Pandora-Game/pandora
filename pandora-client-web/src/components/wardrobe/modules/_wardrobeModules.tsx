@@ -2,11 +2,13 @@ import { AssertNever } from 'pandora-common';
 import { IItemModule } from 'pandora-common/dist/assets/modules/common.js';
 import { ItemModuleLockSlot } from 'pandora-common/dist/assets/modules/lockSlot.js';
 import { ItemModuleStorage } from 'pandora-common/dist/assets/modules/storage.js';
+import { ItemModuleText } from 'pandora-common/dist/assets/modules/text.js';
 import { ItemModuleTyped } from 'pandora-common/dist/assets/modules/typed.js';
 import { ReactElement } from 'react';
 import { WardrobeModuleProps, WardrobeModuleTemplateProps } from '../wardrobeTypes.ts';
 import { WardrobeModuleConfigLockSlot, WardrobeModuleTemplateConfigLockSlot } from './wardrobeModuleLockSlot.tsx';
 import { WardrobeModuleConfigStorage, WardrobeModuleTemplateConfigStorage } from './wardrobeModuleStorage.tsx';
+import { WardrobeModuleConfigText, WardrobeModuleTemplateConfigText } from './wardrobeModuleText.tsx';
 import { WardrobeModuleConfigTyped, WardrobeModuleTemplateConfigTyped } from './wardrobeModuleTyped.tsx';
 
 export function WardrobeModuleConfig({ m, ...props }: WardrobeModuleProps<IItemModule>): ReactElement {
@@ -18,6 +20,9 @@ export function WardrobeModuleConfig({ m, ...props }: WardrobeModuleProps<IItemM
 	}
 	if (m instanceof ItemModuleLockSlot) {
 		return <WardrobeModuleConfigLockSlot { ...props } m={ m } />;
+	}
+	if (m instanceof ItemModuleText) {
+		return <WardrobeModuleConfigText { ...props } m={ m } />;
 	}
 	return <>[ ERROR: UNKNOWN MODULE TYPE ]</>;
 }
@@ -31,6 +36,9 @@ export function WardrobeModuleTemplateConfig({ definition, template, ...props }:
 	}
 	if (definition.type === 'lockSlot') {
 		return <WardrobeModuleTemplateConfigLockSlot { ...props } definition={ definition } template={ template?.type === 'lockSlot' ? template : undefined } />;
+	}
+	if (definition.type === 'text') {
+		return <WardrobeModuleTemplateConfigText { ...props } definition={ definition } template={ template?.type === 'text' ? template : undefined } />;
 	}
 	AssertNever(definition);
 }

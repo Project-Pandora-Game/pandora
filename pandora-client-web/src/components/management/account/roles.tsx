@@ -1,9 +1,8 @@
-import { AccountRole, ConfiguredAccountRole, ConfiguredAccountRoleSchema, IAccountRoleManageInfo, IRoleManageInfo, IsAuthorized, ZodMatcher } from 'pandora-common';
+import { AccountRole, ConfiguredAccountRole, ConfiguredAccountRoleSchema, IAccountRoleManageInfo, IRoleManageInfo, IsAuthorized, ZodMatcher, type AccountId } from 'pandora-common';
 import { createContext, ReactElement, useContext, useMemo, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useAsyncEvent } from '../../../common/useEvent.ts';
 import { Checkbox } from '../../../common/userInteraction/checkbox.tsx';
-import { NumberInput } from '../../../common/userInteraction/input/numberInput.tsx';
 import { Select } from '../../../common/userInteraction/select/select.tsx';
 import { TOAST_OPTIONS_ERROR } from '../../../persistentToast.ts';
 import { Button } from '../../common/button/button.tsx';
@@ -18,40 +17,20 @@ const RoleListContext = createContext({
 
 const IsConfiguredAccountRole = ZodMatcher(ConfiguredAccountRoleSchema);
 
-export function Roles(): ReactElement {
-	const connector = useDirectoryConnector();
-	const [id, setId] = useState(0);
-	const [roles, setRoles] = useState<IAccountRoleManageInfo | null>(null);
-
-	const [onLoadAccount, processing] = useAsyncEvent(
-		() => connector.awaitResponse('manageGetAccountRoles', { id }),
-		(data) => {
-			if (data.result !== 'ok') {
-				toast('Failed to load account role, ' + data.result, TOAST_OPTIONS_ERROR);
-				setRoles(null);
-				return;
-			}
-			setRoles(data.roles);
-		},
-	);
-
+export function Roles({ id, roles, reload }: {
+	id: AccountId;
+	roles: IAccountRoleManageInfo;
+	reload: () => void;
+}): ReactElement {
 	const context = useMemo(() => ({
 		id,
 		roles,
-		reload: () => void onLoadAccount(),
-	}), [id, roles, onLoadAccount]);
+		reload,
+	}), [id, roles, reload]);
 
 	return (
 		<RoleListContext.Provider value={ context }>
-			<div className='roles'>
-				<div className='input-row'>
-					<label>Account ID</label>
-					<NumberInput value={ id } min={ 0 } readOnly={ processing } onChange={ (newValue) => {
-						setId(newValue);
-						setRoles(null);
-					} } />
-					<Button className='slim' onClick={ () => void onLoadAccount() } disabled={ id <= 0 }>Load</Button>
-				</div>
+			<div className='management-roles'>
 				<table>
 					<thead>
 						<tr>

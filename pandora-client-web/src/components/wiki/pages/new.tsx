@@ -102,7 +102,8 @@ export function WikiNew(): ReactElement {
 
 			<p>
 				There are further advanced, chat-related topics that you can read about in the other tabs of this wiki, such
-				as switching <Link to='/wiki/spaces#SP_Room_chat_Chat_modes'>"chat modes"</Link> or <Link to='/wiki/spaces#SP_Room_chat_Editing_text'>"text editing"</Link>.
+				as switching <Link to='/wiki/chat#CHA_Chat_modes'>"chat modes"</Link>, <Link to='/wiki/chat#CHA_Text_formatting'>"text formatting/styling"</Link>,
+				or <Link to='/wiki/chat#CHA_Editing_text'>"text editing"</Link>.
 			</p>
 
 			<h3>User safety</h3>

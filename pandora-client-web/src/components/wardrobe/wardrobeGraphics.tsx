@@ -342,6 +342,14 @@ export function RoomPreview({
 					const height = Math.ceil(characterScale * CharacterSize.HEIGHT);
 					itemBottom = Math.max(itemBottom, y + height);
 				}
+			} else if (layer.type === 'text') {
+				const offsetX = layer.offset?.x ?? 0;
+				const offsetY = layer.offset?.y ?? 0;
+
+				itemLeft = Math.min(itemLeft, offsetX);
+				itemTop = Math.min(itemTop, offsetY);
+				itemRight = Math.max(itemRight, offsetX + layer.size.width);
+				itemBottom = Math.max(itemBottom, offsetY + layer.size.height);
 			} else {
 				AssertNever(layer);
 			}

@@ -44,6 +44,10 @@ export type AppearanceValidationError =
 		itemName: string;
 	}
 	| {
+		problem: 'invalidText';
+		asset: AssetId;
+	}
+	| {
 		problem: 'canOnlyBeInOneDevice';
 	}
 	// Generic catch-all problem, supposed to be used when something simply went wrong (like bad data, non-unique ID, and so on...)

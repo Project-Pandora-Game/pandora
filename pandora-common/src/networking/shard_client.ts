@@ -1,5 +1,6 @@
 import { Immutable } from 'immer';
 import { z } from 'zod';
+import type { AccountOnlineStatus } from '../account/contacts.ts';
 import type { AssetsDefinitionFile } from '../assets/definitions.ts';
 import { AssetFrameworkGlobalStateClientBundle, AssetFrameworkGlobalStateClientDeltaBundleSchema } from '../assets/state/globalState.ts';
 import type { ICharacterPrivateData, ICharacterPublicData } from '../character/characterData.ts';
@@ -17,7 +18,7 @@ export type ICharacterRoomData = ICharacterPublicData & {
 	accountDisplayName: string;
 	assetPreferences: AssetPreferencesPublic;
 	publicSettings: Partial<CharacterPublicSettings>;
-	isOnline: boolean;
+	onlineStatus: AccountOnlineStatus;
 };
 
 export const SpaceLoadDataSchema = z.object({

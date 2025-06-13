@@ -31,8 +31,8 @@ export function LayerMeshUI({ asset, layer }: {
 				(layer.type === 'mesh') ? (
 					<>
 						<hr />
-						<ColorizationSetting layer={ layer } />
-						<ColorPicker layer={ layer } asset={ asset } />
+						<LayerColorizationSetting layer={ layer } />
+						<EditorLayerColorPicker layer={ layer } asset={ asset } />
 					</>
 				) : null
 			}
@@ -40,7 +40,7 @@ export function LayerMeshUI({ asset, layer }: {
 			<LayerHeightAndWidthSetting layer={ layer } asset={ asset } />
 			<LayerOffsetSetting layer={ layer } asset={ asset } />
 			<hr />
-			<LayerPrioritySelect layer={ layer } asset={ asset } />
+			<EditorLayerPrioritySelect layer={ layer } asset={ asset } />
 			<LayerTemplateSelect layer={ layer } />
 			<LayerPointsFilterEdit layer={ layer } />
 			<LayerMirrorSelect layer={ layer } asset={ asset } />
@@ -108,7 +108,7 @@ function LayerImageSelect({ layer, asset, stop }: { layer: EditorAssetGraphicsLa
 	);
 }
 
-function ColorizationSetting({ layer }: { layer: EditorAssetGraphicsLayer<'mesh'>; }): ReactElement | null {
+export function LayerColorizationSetting({ layer }: { layer: EditorAssetGraphicsLayer<'mesh' | 'text'>; }): ReactElement | null {
 	const value = useObservable(layer.definition).colorizationKey ?? '';
 	const onChange = useEvent((newValue: string) => {
 		layer.modifyDefinition((d) => {
@@ -189,7 +189,7 @@ function ColorizationSetting({ layer }: { layer: EditorAssetGraphicsLayer<'mesh'
 	);
 }
 
-function ColorPicker({ layer }: { layer: EditorAssetGraphicsLayer<'mesh'>; asset: EditorAssetGraphics; }): ReactElement | null {
+export function EditorLayerColorPicker({ layer }: { layer: EditorAssetGraphicsLayer<'mesh' | 'text'>; asset: EditorAssetGraphics; }): ReactElement | null {
 	const editor = useEditor();
 
 	const visibleName = useLayerName(layer);
@@ -224,7 +224,7 @@ function ColorPicker({ layer }: { layer: EditorAssetGraphicsLayer<'mesh'>; asset
 	);
 }
 
-function LayerPrioritySelect({ layer }: { layer: EditorAssetGraphicsLayer<'mesh' | 'alphaImageMesh'>; asset: EditorAssetGraphics; }): ReactElement | null {
+export function EditorLayerPrioritySelect({ layer }: { layer: EditorAssetGraphicsLayer<'mesh' | 'alphaImageMesh' | 'text'>; asset: EditorAssetGraphics; }): ReactElement | null {
 	const {
 		priority: layerPriority,
 	} = useObservable(layer.definition);

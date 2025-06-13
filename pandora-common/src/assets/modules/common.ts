@@ -59,7 +59,7 @@ export interface IItemModule<out TProperties = unknown, out TStaticData = unknow
 	exportToTemplate(): IAssetModuleTypes<TProperties, TStaticData>[Type]['template'];
 	exportData(options: IExportOptions): IAssetModuleTypes<TProperties, TStaticData>[Type]['data'];
 
-	validate(context: IItemValidationContext): AppearanceValidationResult;
+	validate(context: IItemValidationContext, asset: Asset): AppearanceValidationResult;
 
 	getProperties(): readonly Immutable<TProperties>[];
 

@@ -5,9 +5,10 @@ import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import { Tab, UrlTab, UrlTabContainer } from '../common/tabs/tabs.tsx';
 import { useDirectoryConnector } from '../gameContext/directoryConnectorContextProvider.tsx';
+import { ManagementAccounts } from './account/account.tsx';
 import { BetaKeys } from './betaKeys/betaKeys.tsx';
 import './management.scss';
-import { Roles } from './roles/roles.tsx';
+import { ServerManagement } from './server/server.tsx';
 import { Shards } from './shards/shards.tsx';
 
 export function ManagementRoutes(): ReactElement | null {
@@ -24,8 +25,8 @@ export function ManagementRoutes(): ReactElement | null {
 			<UrlTab name='Shards' urlChunk='shards'>
 				<Shards />
 			</UrlTab>
-			<UrlTab name='Roles' urlChunk='roles'>
-				<Roles />
+			<UrlTab name='Accounts' urlChunk='accounts'>
+				<ManagementAccounts />
 			</UrlTab>
 			{
 				(directoryStatus.betaKeyRequired) ? (
@@ -34,6 +35,9 @@ export function ManagementRoutes(): ReactElement | null {
 					</UrlTab>
 				) : null
 			}
+			<UrlTab name='Server' urlChunk='server'>
+				<ServerManagement />
+			</UrlTab>
 			<Tab name='◄ Back' tabClassName='slim' onClick={ () => navigate('/') } />
 		</UrlTabContainer>
 	);

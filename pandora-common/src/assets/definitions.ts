@@ -6,7 +6,7 @@ import type { LockSetup } from '../gameLogic/locks/lockSetup.ts';
 import type { Satisfies } from '../utility/misc.ts';
 import { HexRGBAColorString } from '../validation.ts';
 import type { AssetId } from './base.ts';
-import type { ArmFingers, ArmPose, ArmRotation, ArmSegmentOrder, BoneDefinitionCompressed, BoneName, CharacterView, Condition, Coordinates, LayerImageOverride, LegSideOrder, LegsPose } from './graphics/index.ts';
+import type { ArmFingers, ArmPose, ArmRotation, ArmSegmentOrder, BoneDefinitionCompressed, BoneName, CharacterView, Condition, Coordinates, LayerImageOverride, LegSideOrder, LegsPose, Size } from './graphics/index.ts';
 import type { AssetModuleDefinition } from './modules.ts';
 import type { AssetProperties } from './properties.ts';
 import type { RoomDeviceProperties } from './roomDeviceProperties.ts';
@@ -302,7 +302,28 @@ export type IRoomDeviceGraphicsLayerSlot = {
 	characterPositionOverrides?: IRoomDeviceGraphicsCharacterPositionOverride[];
 };
 
-export type IRoomDeviceGraphicsLayer = IRoomDeviceGraphicsLayerSprite | IRoomDeviceGraphicsLayerSlot;
+export type IRoomDeviceGraphicsLayerText = {
+	type: 'text';
+	/** Module from which text is used. Must be a 'text' type module. */
+	dataModule: string;
+	/**
+	 * Offset of this layer relative to top-left
+	 */
+	offset?: Coordinates;
+	/** Size for the text */
+	size: Size;
+	/** Angle of the text */
+	angle?: number;
+	/**
+	 * Maximum font size to use. Affects size of small text and performance.
+	 * @default 32
+	 */
+	fontSize: number;
+	/** Key of colorization to use for the text */
+	colorizationKey?: string;
+};
+
+export type IRoomDeviceGraphicsLayer = IRoomDeviceGraphicsLayerSprite | IRoomDeviceGraphicsLayerSlot | IRoomDeviceGraphicsLayerText;
 
 export interface RoomDeviceModuleStaticData {
 	/**

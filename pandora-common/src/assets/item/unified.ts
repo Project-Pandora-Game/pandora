@@ -146,6 +146,8 @@ export function ItemTemplateMeasureCost(template: ItemTemplate): number {
 			if (moduleTemplate.lock != null) {
 				result += ItemTemplateMeasureCost(moduleTemplate.lock);
 			}
+		} else if (moduleTemplate.type === 'text') {
+			// No cost for text modules
 		} else {
 			AssertNever(moduleTemplate);
 		}

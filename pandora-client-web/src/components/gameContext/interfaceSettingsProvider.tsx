@@ -14,3 +14,9 @@ export function InterfaceSettingsProvider(): null {
 
 export const THEME_NORMAL_BACKGROUND: HexColorString = '#0d1111';
 export const THEME_FONT: readonly string[] = ['InterVariable', 'Arial', 'Helvetica', 'sans-serif'];
+
+export function useInterfaceAccentColorPacked(): number {
+	const { interfaceAccentColor } = useAccountSettings();
+
+	return Number.parseInt(interfaceAccentColor.slice(1), 16);
+}

@@ -57,6 +57,13 @@ export const INTERACTION_CONFIG = {
 			allowOthers: 'yes',
 		},
 	},
+	useTextModule: {
+		visibleName: 'Change the text on worn items',
+		icon: 'text',
+		defaultPermissions: {
+			allowOthers: 'yes',
+		},
+	},
 	moveCharacter: {
 		visibleName: 'Move or lead this character inside rooms (even as non-admin)',
 		icon: 'movement',

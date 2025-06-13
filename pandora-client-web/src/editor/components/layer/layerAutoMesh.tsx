@@ -396,7 +396,7 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsLayer<'au
 		if (asset == null)
 			return;
 
-		const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset);
+		const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset, assetManager);
 		const existingVariants: AutoMeshLayerGenerateVariableValue[][] = [];
 
 		for (const variable of variables) {
@@ -426,7 +426,7 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsLayer<'au
 			d.imageMap = newImages;
 
 		});
-	}, [asset, layer, variables]);
+	}, [asset, assetManager, layer, variables]);
 
 	const reorderVariable = useCallback((startIndex: number, shift: number | null) => {
 		if (asset == null ||
@@ -438,7 +438,7 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsLayer<'au
 			return;
 		}
 
-		const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset);
+		const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset, assetManager);
 		const existingVariants: AutoMeshLayerGenerateVariableValue[][] = [];
 
 		for (const variable of variables) {
@@ -477,7 +477,7 @@ function LayerAutomeshVariables({ layer }: { layer: EditorAssetGraphicsLayer<'au
 			d.imageMap = newImages;
 
 		});
-	}, [asset, layer, variables]);
+	}, [asset, assetManager, layer, variables]);
 
 	if (asset == null)
 		return null;
@@ -572,7 +572,7 @@ function LayerAutomeshVariableAddDialog({ close, layer, asset, addVariable }: {
 	const assetManager = useAssetManagerEditor();
 	const [selectedType, setSelectedType] = useState<GraphicsSourceAutoMeshLayerVariable['type'] | null>(null);
 
-	const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset);
+	const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset, assetManager);
 
 	return (
 		<ModalDialog>
@@ -796,7 +796,7 @@ function LayerAutomeshImages({ layer }: { layer: EditorAssetGraphicsLayer<'autoM
 		);
 	}
 
-	const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset);
+	const buildContext = EditorBuildAssetGraphicsContext(layer.asset, asset, assetManager);
 	const variants: AutoMeshLayerGenerateVariableValue[][] = [];
 
 	for (const variable of variables) {

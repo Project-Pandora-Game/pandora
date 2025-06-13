@@ -16,6 +16,7 @@ import { useEditor } from '../../editorContextProvider.tsx';
 import './layer.scss';
 import { LayerAutoMeshUI } from './layerAutoMesh.tsx';
 import { LayerMeshUI } from './layerMesh.tsx';
+import { LayerTextUI } from './layerText.tsx';
 
 export function LayerUI(): ReactElement {
 	const editor = useEditor();
@@ -49,6 +50,9 @@ export function LayerUI(): ReactElement {
 				) :
 				(selectedLayer.type === 'autoMesh') ? (
 					<LayerAutoMeshUI asset={ asset } layer={ selectedLayer } />
+				) :
+				(selectedLayer.type === 'text') ? (
+					<LayerTextUI layer={ selectedLayer } />
 				) :
 				AssertNever(selectedLayer)
 			}

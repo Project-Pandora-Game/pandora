@@ -27,7 +27,7 @@ import { GraphicsManagerInstance } from './graphicsManager.ts';
 export const SCALING_IMAGE_UV_EMPTY: Record<BoneName, number> = Object.freeze({});
 export function useLayerImageSource(
 	evaluator: AppearanceConditionEvaluator,
-	{ image: scalingBaseimage, scaling }: Pick<Immutable<GraphicsLayer>, 'image' | 'scaling'>,
+	{ image: scalingBaseimage, scaling }: Pick<Immutable<Extract<GraphicsLayer, { type: 'mesh'; }>>, 'image' | 'scaling'>,
 	item: Item | null,
 ): Immutable<{ setting: Immutable<LayerImageSetting>; image: string; imageUv: Record<BoneName, number>; }> {
 	const [setting, scalingUv] = useMemo((): Immutable<[LayerImageSetting, scalingUv: Record<BoneName, number>]> => {
@@ -85,7 +85,7 @@ export function CalculatePointDefinitionsFromTemplate(template: Immutable<PointT
 	return result;
 }
 
-export function useLayerMeshPoints({ points, pointType, pointFilterMask }: Pick<Immutable<GraphicsLayer>, 'points' | 'pointType' | 'pointFilterMask'>): {
+export function useLayerMeshPoints({ points, pointType, pointFilterMask }: Pick<Immutable<Extract<GraphicsLayer, { type: 'mesh'; }>>, 'points' | 'pointType' | 'pointFilterMask'>): {
 	readonly points: Immutable<PointDefinitionCalculated[]>;
 	readonly triangles: Uint32Array;
 } {

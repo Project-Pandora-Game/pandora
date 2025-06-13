@@ -127,6 +127,21 @@ export class EditorAssetGraphics {
 						},
 					};
 					break;
+				case 'text':
+					layerDefinition = {
+						x: CharacterSize.WIDTH / 2 - 100,
+						y: CharacterSize.HEIGHT / 2,
+						width: 200,
+						height: 50,
+						type: 'text',
+						name: '',
+						priority: 'OVERLAY',
+						angle: 0,
+						dataModule: '',
+						followBone: null,
+						fontSize: 32,
+					};
+					break;
 				default:
 					AssertNever(layer);
 			}

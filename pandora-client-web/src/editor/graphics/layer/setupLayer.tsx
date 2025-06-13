@@ -45,6 +45,8 @@ export function SetupLayerSelected({
 			return <SetupAlphaImageMeshLayerSelected { ...props } layer={ layer } />;
 		case 'autoMesh':
 			return <SetupAutomeshLayerSelected { ...props } layer={ layer } />;
+		case 'text':
+			return <SetupTextLayerSelected { ...props } layer={ layer } />;
 	}
 	AssertNever(layer);
 }
@@ -353,6 +355,45 @@ export function SetupAutomeshLayerSelected({
 				images={ images }
 				area={ definition }
 				asset={ layer.asset }
+			/>
+		</Container>
+	);
+}
+
+export function SetupTextLayerSelected({
+	zIndex,
+	layer,
+}: {
+	characterState: AssetFrameworkCharacterState;
+	zIndex: number;
+	layer: EditorAssetGraphicsLayer<'text'>;
+}): ReactElement {
+
+	const definition = useObservable(layer.definition);
+	const {
+		height,
+		width,
+		x, y,
+		angle,
+	} = definition;
+
+	const drawWireFrame = useCallback((g: PIXI.GraphicsContext) => {
+		// Borders of the layer
+		g.rect(0, 0, width, height)
+			.stroke({ width: 2, color: 0x000088, alpha: 0.6, pixelLine: true });
+
+	}, [width, height]);
+
+	return (
+		<Container
+			zIndex={ zIndex }
+			sortableChildren
+		>
+			<Graphics
+				position={ { x, y } }
+				angle={ angle }
+				zIndex={ EDITOR_LAYER_Z_INDEX_EXTRA }
+				draw={ drawWireFrame }
 			/>
 		</Container>
 	);

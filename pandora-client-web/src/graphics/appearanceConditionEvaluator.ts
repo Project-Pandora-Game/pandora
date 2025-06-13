@@ -13,6 +13,7 @@ import {
 	TransformDefinition,
 	type BoneDefinition,
 } from 'pandora-common';
+import { DEG_TO_RAD, Matrix, Point } from 'pixi.js';
 import { useMemo } from 'react';
 import { EvaluateCondition, RotateVector } from './utility.ts';
 
@@ -96,6 +97,41 @@ export abstract class ConditionEvaluatorBase {
 		return [resX, resY];
 	}
 	//#endregion
+
+	public evalBoneTransform(bone: string, matrix?: Matrix): Matrix {
+		matrix ??= new Matrix();
+
+		const bones: BoneDefinition[] = [];
+		let parentBone: BoneDefinition | undefined = this._getBone(bone);
+		while (parentBone != null) {
+			bones.unshift(parentBone);
+			parentBone = parentBone.parent;
+		}
+
+		matrix.identity();
+		const link = new Point();
+		for (const b of bones) {
+			link.set(b.x, b.y);
+			matrix.apply(link, link);
+			matrix
+				.translate(-link.x, -link.y)
+				.rotate(this.getBoneLikeValue(b.name) * DEG_TO_RAD * (b.isMirror ? -1 : 1))
+				.translate(link.x, link.y);
+		}
+
+		return matrix;
+	}
+
+	public evalBoneTransformAngle(bone: string): number {
+		let result: number = 0;
+		let parentBone: BoneDefinition | undefined = this._getBone(bone);
+		while (parentBone != null) {
+			result += this.getBoneLikeValue(parentBone.name) * (parentBone.isMirror ? -1 : 1);
+			parentBone = parentBone.parent;
+		}
+
+		return result;
+	}
 
 	protected _getBone(bone: string): BoneDefinition {
 		const definition = this.assetManager.getBoneByName(bone);

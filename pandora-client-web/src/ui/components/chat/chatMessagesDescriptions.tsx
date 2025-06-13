@@ -197,6 +197,9 @@ function DescribeGameLogicActionModuleAction({ action, globalState }: DescribeGa
 					AssertNever(action.action.lockAction);
 			}
 			break;
+		case 'text':
+			actionDescription = <>Change text of the "{ moduleName }" module</>;
+			break;
 		default:
 			AssertNever(action.action);
 	}

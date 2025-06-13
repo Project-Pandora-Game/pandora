@@ -8,6 +8,7 @@ import type { IItemCreationContext, IItemLoadContext } from './item/index.ts';
 import type { IAssetModuleDefinition, IItemModule, IModuleConfigCommon } from './modules/common.ts';
 import { IModuleConfigLockSlot, ItemModuleLockSlotActionSchema, LockSlotModuleDefinition, ModuleItemDataLockSlotSchema, ModuleItemTemplateLockSlotSchema } from './modules/lockSlot.ts';
 import { IModuleConfigStorage, ItemModuleStorageActionSchema, ModuleItemDataStorageSchema, ModuleItemTemplateStorageSchema, StorageModuleDefinition } from './modules/storage.ts';
+import { ItemModuleTextActionSchema, ModuleItemDataTextSchema, ModuleItemTemplateTextSchema, TextModuleDefinition, type ModuleConfigText } from './modules/text.ts';
 import { IModuleConfigTyped, ItemModuleTypedActionSchema, ModuleItemDataTypedSchema, ModuleItemTemplateTypedSchema, TypedModuleDefinition } from './modules/typed.ts';
 
 //#region Module definitions
@@ -28,18 +29,25 @@ export const IAssetModuleTypesSchemas = {
 		template: ModuleItemTemplateLockSlotSchema,
 		actions: ItemModuleLockSlotActionSchema,
 	},
+	text: {
+		data: ModuleItemDataTextSchema,
+		template: ModuleItemTemplateTextSchema,
+		actions: ItemModuleTextActionSchema,
+	},
 } as const satisfies Readonly<Record<string, IModuleTypeBaseSchema>>;
 
 export type IAssetModuleConfigs<out TProperties, out TStaticData> = Satisfies<{
 	typed: IModuleConfigTyped<TProperties, TStaticData>;
 	storage: IModuleConfigStorage<TProperties, TStaticData>;
 	lockSlot: IModuleConfigLockSlot<TProperties, TStaticData>;
+	text: ModuleConfigText<TProperties, TStaticData>;
 }, { [Type in ModuleType]: IModuleConfigCommon<Type, TProperties, TStaticData> }>;
 
 export const MODULE_TYPES: { [Type in ModuleType]: IAssetModuleDefinition<Type>; } = {
 	typed: new TypedModuleDefinition(),
 	storage: new StorageModuleDefinition(),
 	lockSlot: new LockSlotModuleDefinition(),
+	text: new TextModuleDefinition(),
 };
 
 /** Problems performing actions on modules */
@@ -132,6 +140,8 @@ export function GetModuleStaticAttributes<TProperties, TStaticData>(moduleDefini
 			return MODULE_TYPES.storage.getStaticAttributes(moduleDefinition, staticAttributesExtractor);
 		case 'lockSlot':
 			return MODULE_TYPES.lockSlot.getStaticAttributes(moduleDefinition, staticAttributesExtractor);
+		case 'text':
+			return MODULE_TYPES.text.getStaticAttributes(moduleDefinition, staticAttributesExtractor);
 		default:
 			AssertNever(moduleDefinition);
 	}
@@ -161,6 +171,13 @@ export function CreateModuleDataFromTemplate<TProperties, TStaticData>(moduleDef
 		case 'lockSlot':
 			Assert(template.type === 'lockSlot');
 			return MODULE_TYPES.lockSlot.makeDataFromTemplate(
+				moduleDefinition,
+				template,
+				context,
+			);
+		case 'text':
+			Assert(template.type === 'text');
+			return MODULE_TYPES.text.makeDataFromTemplate(
 				moduleDefinition,
 				template,
 				context,
@@ -196,6 +213,14 @@ export function LoadItemModule<TProperties, TStaticData>(moduleDefinition: Immut
 			data ??= MODULE_TYPES.lockSlot.makeDefaultData(moduleDefinition);
 			Assert(data.type === 'lockSlot');
 			return MODULE_TYPES.lockSlot.loadModule(
+				moduleDefinition,
+				data,
+				context,
+			);
+		case 'text':
+			data ??= MODULE_TYPES.text.makeDefaultData(moduleDefinition);
+			Assert(data.type === 'text');
+			return MODULE_TYPES.text.loadModule(
 				moduleDefinition,
 				data,
 				context,

@@ -60,6 +60,9 @@ export const LIMIT_ITEM_NAME_PATTERN = /^[a-zA-Z0-9_\- ']*$/;
 /** The maximum length of a custom item description */
 export const LIMIT_ITEM_DESCRIPTION_LENGTH = 1_000;
 
+/** Maximum length of text for text item module that caps even asset limits. Lower of this and asset limit wins. */
+export const LIMIT_ITEM_MODULE_TEXT_LENGTH = 256;
+
 /** The maximum length of an account profile description */
 export const LIMIT_ACCOUNT_PROFILE_LENGTH = 5_000;
 

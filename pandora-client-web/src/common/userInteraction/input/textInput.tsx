@@ -11,6 +11,7 @@ const FORWARDED_PROPS = [
 	'readOnly',
 	'disabled',
 	'autoFocus',
+	'style',
 	// Validation
 	'maxLength',
 	'minLength',

@@ -191,6 +191,8 @@ export function RenderAppearanceActionProblem(assetManager: AssetManagerClient, 
 					`At most ${e.limit} items can be present.`;
 			case 'contentNotAllowed':
 				return `The ${describeItem(e.asset, e.itemName)} cannot be used in that way.`;
+			case 'invalidText':
+				return `The text is not valid.`;
 			case 'canOnlyBeInOneDevice':
 				return `Character can only be in a single device at a time.`;
 			case 'invalid':

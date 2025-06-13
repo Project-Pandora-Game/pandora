@@ -121,30 +121,7 @@ export class AssetManager {
 		//#endregion
 
 		//#region Load bones
-		const bones = new Map<string, BoneDefinition>();
-
-		for (const [name, bone] of Object.entries(fullData.bones)) {
-			const parent = bone.parent ? bones.get(bone.parent) : undefined;
-			if (bone.parent && !parent) {
-				throw new Error(`Parents must be defined before bones that use them ('${name}' depends on '${bone.parent}', but parent not found)`);
-			}
-			const newBone = this.createBone(name, bone, parent);
-			bones.set(name, newBone);
-
-			if (!bone.mirror) continue;
-			if (name.endsWith('_l') && !bone.mirror.endsWith('_r'))
-				throw new Error(`Mirrored bone ${name} has invalid mirror name ${bone.mirror}, mirror must end with _r`);
-			if (name.endsWith('_r') && !bone.mirror.endsWith('_l'))
-				throw new Error(`Mirrored bone ${name} has invalid mirror name ${bone.mirror}, mirror must end with _l`);
-			if (!name.endsWith('_l') && !name.endsWith('_r'))
-				throw new Error(`Mirrored bone ${name} has invalid name, name must end with _l or _r`);
-
-			bones.set(bone.mirror, this.createBone(bone.mirror, {
-				...bone,
-			}, parent?.mirror ?? parent, newBone));
-		}
-
-		this._bones = bones;
+		this._bones = AssetManager.loadBones(fullData.bones);
 		//#endregion
 
 		//#region Load attributes
@@ -172,7 +149,7 @@ export class AssetManager {
 		//#endregion
 	}
 
-	protected createBone(name: string, bone: Immutable<BoneDefinitionCompressed>, parent?: BoneDefinition, mirror?: BoneDefinition): BoneDefinition {
+	protected static createBone(name: string, bone: Immutable<BoneDefinitionCompressed>, parent?: BoneDefinition, mirror?: BoneDefinition): BoneDefinition {
 		const [x, y] = bone.pos ?? [0, 0];
 		const res: BoneDefinition = {
 			name,
@@ -234,5 +211,32 @@ export class AssetManager {
 			logger,
 			loadItemFromBundle: LoadItemFromBundle,
 		});
+	}
+
+	public static loadBones(boneDefinitions: Immutable<Record<string, BoneDefinitionCompressed>>): ReadonlyMap<string, BoneDefinition> {
+		const bones = new Map<string, BoneDefinition>();
+
+		for (const [name, bone] of Object.entries(boneDefinitions)) {
+			const parent = bone.parent ? bones.get(bone.parent) : undefined;
+			if (bone.parent && !parent) {
+				throw new Error(`Parents must be defined before bones that use them ('${name}' depends on '${bone.parent}', but parent not found)`);
+			}
+			const newBone = AssetManager.createBone(name, bone, parent);
+			bones.set(name, newBone);
+
+			if (!bone.mirror) continue;
+			if (name.endsWith('_l') && !bone.mirror.endsWith('_r'))
+				throw new Error(`Mirrored bone ${name} has invalid mirror name ${bone.mirror}, mirror must end with _r`);
+			if (name.endsWith('_r') && !bone.mirror.endsWith('_l'))
+				throw new Error(`Mirrored bone ${name} has invalid mirror name ${bone.mirror}, mirror must end with _l`);
+			if (!name.endsWith('_l') && !name.endsWith('_r'))
+				throw new Error(`Mirrored bone ${name} has invalid name, name must end with _l or _r`);
+
+			bones.set(bone.mirror, AssetManager.createBone(bone.mirror, {
+				...bone,
+			}, parent?.mirror ?? parent, newBone));
+		}
+
+		return bones;
 	}
 }

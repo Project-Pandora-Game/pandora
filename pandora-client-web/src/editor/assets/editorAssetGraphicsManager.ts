@@ -177,12 +177,13 @@ export class EditorAssetGraphicsManagerClass {
 		const buildTextures = new Map<string, Texture>();
 
 		try {
-			const logicAsset = GetCurrentAssetManager().getAssetById(asset.id);
+			const assetManager = GetCurrentAssetManager();
+			const logicAsset = assetManager.getAssetById(asset.id);
 			if (logicAsset == null) {
 				throw new Error('Asset not found');
 			}
 
-			const graphicsDefinition = await EditorBuildAssetGraphics(asset, logicAsset, logger, buildTextures);
+			const graphicsDefinition = await EditorBuildAssetGraphics(asset, logicAsset, assetManager, logger, buildTextures);
 			this._editedGraphicsBuildCache.set(asset.id, freeze(graphicsDefinition, true));
 			asset.buildTextures.value = buildTextures;
 		} catch (error) {

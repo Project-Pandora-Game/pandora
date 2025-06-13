@@ -6,6 +6,7 @@ import {
 	type GraphicsSourceLayer,
 	type GraphicsSourceLayerType,
 	type GraphicsSourceMeshLayer,
+	type GraphicsSourceTextLayer,
 } from 'pandora-common';
 import { Observable, type ReadonlyObservable } from '../../observable.ts';
 import type { EditorAssetGraphics } from './editorAssetGraphics.ts';
@@ -77,6 +78,8 @@ export class EditorAssetGraphicsLayerContainer<TLayer extends GraphicsSourceLaye
 				return new EditorAssetGraphicsLayerContainer<GraphicsSourceAlphaImageMeshLayer>(asset, definition);
 			case 'autoMesh':
 				return new EditorAssetGraphicsLayerContainer<GraphicsSourceAutoMeshLayer>(asset, definition);
+			case 'text':
+				return new EditorAssetGraphicsLayerContainer<GraphicsSourceTextLayer>(asset, definition);
 			default:
 		}
 		AssertNever(definition);

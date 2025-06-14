@@ -94,10 +94,10 @@ importers:
         version: link:../pandora-common
       pixi-viewport:
         specifier: 6.0.3
-        version: 6.0.3(pixi.js@8.9.2)
+        version: 6.0.3(pixi.js@8.10.1)
       pixi.js:
-        specifier: 8.9.2
-        version: 8.9.2
+        specifier: 8.10.1
+        version: 8.10.1
       react:
         specifier: 19.1.0
         version: 19.1.0
@@ -1789,8 +1789,8 @@ packages:
   '@types/delaunator@5.0.3':
     resolution: {integrity: sha512-6tTLP8NX0OwtB/fmW9bXp4EWPptawTSsrSGjboWRuzqkxNEEJGyzRPHbr8wnV2DBWfAZ+EPTOvW3B/KysJrl2g==}
 
-  '@types/earcut@2.1.4':
-    resolution: {integrity: sha512-qp3m9PPz4gULB9MhjGID7wpo3gJ4bTGXm7ltNDsmOvsPduTeHp8wSW9YckBj3mljeOh4F0m2z/0JKAALRKbmLQ==}
+  '@types/earcut@3.0.0':
+    resolution: {integrity: sha512-k/9fOUGO39yd2sCjrbAJvGDEQvRwRnQIZlBz43roGwUZo5SHAmyVvSFyaVVZkicRVCaDXPKlbxrUcBuJoSWunQ==}
 
   '@types/eslint-scope@3.7.7':
     resolution: {integrity: sha512-MzMFlSLBqNF2gcHWO0G1vP/YQyfvrxZ0bF+u7mzUdZ1/xK4A4sru+nraZz5i3iEIk1l1uyicaDVTB4QbbEkAYg==}
@@ -3082,8 +3082,8 @@ packages:
   duplexer@0.1.2:
     resolution: {integrity: sha512-jtD6YG370ZCIi/9GTaJKQxWTZD045+4R4hTk/x1UyoqadyJ9x9CgSi1RlVDQF8U2sxLLSnFkCaMihqljHIWgMg==}
 
-  earcut@2.2.4:
-    resolution: {integrity: sha512-/pjZsA1b4RPHbeWZQn66SWS8nZZWLQQ23oE3Eam7aroEFGEvwKAsJfZ9ytiEMycfzXWpca4FA9QIOehf7PocBQ==}
+  earcut@3.0.1:
+    resolution: {integrity: sha512-0l1/0gOjESMeQyYaK5IDiPNvFeu93Z/cO0TjZh9eZ1vyCtZnA7KMZ8rQggpsJHIbGSdrqYq9OhuveadOVHCshw==}
 
   eastasianwidth@0.2.0:
     resolution: {integrity: sha512-I88TYZWc9XiYHRQ4/3c5rjjfgkjhLyW2luGIheGERbNQ6OY7yTybanSpDXZa8y7VUP9YmDcYa+eyq4ca7iLqWA==}
@@ -4882,8 +4882,8 @@ packages:
     peerDependencies:
       pixi.js: '>=8'
 
-  pixi.js@8.9.2:
-    resolution: {integrity: sha512-oLFBkOOA/O6OpT5T8o05AxgZB9x9yWNzEQ+WTNZZFoCvfU2GdT4sFTjpVFuHQzgZPmAm/1IFhKdNiXVnlL8PRw==}
+  pixi.js@8.10.1:
+    resolution: {integrity: sha512-wjKJXawhTUxuyKIuwE3jK05eBh5I4GKy+YrRVniURFRkK7pYEvRvnV41dEqz6owSXav/YMXdG5783YDJeamiow==}
 
   pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
@@ -8347,7 +8347,7 @@ snapshots:
 
   '@types/delaunator@5.0.3': {}
 
-  '@types/earcut@2.1.4': {}
+  '@types/earcut@3.0.0': {}
 
   '@types/eslint-scope@3.7.7':
     dependencies:
@@ -9794,7 +9794,7 @@ snapshots:
 
   duplexer@0.1.2: {}
 
-  earcut@2.2.4: {}
+  earcut@3.0.1: {}
 
   eastasianwidth@0.2.0: {}
 
@@ -11946,18 +11946,18 @@ snapshots:
 
   pirates@4.0.7: {}
 
-  pixi-viewport@6.0.3(pixi.js@8.9.2):
+  pixi-viewport@6.0.3(pixi.js@8.10.1):
     dependencies:
-      pixi.js: 8.9.2
+      pixi.js: 8.10.1
 
-  pixi.js@8.9.2:
+  pixi.js@8.10.1:
     dependencies:
       '@pixi/colord': 2.9.6
       '@types/css-font-loading-module': 0.0.12
-      '@types/earcut': 2.1.4
+      '@types/earcut': 3.0.0
       '@webgpu/types': 0.1.60
       '@xmldom/xmldom': 0.8.10
-      earcut: 2.2.4
+      earcut: 3.0.1
       eventemitter3: 5.0.1
       gifuct-js: 2.1.2
       ismobilejs: 1.1.1

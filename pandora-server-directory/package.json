@@ -75,7 +75,7 @@
 		"rimraf": "6.0.1",
 		"ts-jest": "29.4.0",
 		"ts-mockito": "2.6.1",
-		"tsc-watch": "6.3.1",
+		"tsc-watch": "7.1.1",
 		"tslib": "2.8.1",
 		"type-fest": "4.41.0",
 		"typescript": "5.8.3"

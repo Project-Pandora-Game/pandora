@@ -458,6 +458,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 										character,
 										sendTo: receivers,
 									});
+									space.handleActionMessage({
+										id: 'gamblingCardGameYouJoined',
+										character,
+										sendTo: [client.character.id],
+										dictionary: {
+											'DEALER': `${space.getCharacterById(space.cardGame.getDealerId())?.name}`,
+										},
+									});
 								} else {
 									space.handleActionMessage({
 										id: 'gamblingCardGameJoinedAlready',

@@ -88,6 +88,7 @@ const CHAT_ACTIONS_DEF = {
 	gamblingCardGameAlreadyCreated: 'There is already a game ongoing, hosted by DEALER.',
 	gamblingCardGameNoGame: `You have to 'create' a game first, before you can play.`,
 	gamblingCardGameJoined: 'SOURCE_CHARACTER joins the game.',
+	gamblingCardGameYouJoined: 'You joined the game hosted by DEALER.',
 	gamblingCardGameJoinedAlready: 'You are already part of this game.',
 	gamblingCardGameDealOpen: 'SOURCE_CHARACTER deals CARD.',
 	gamblingCardGameDealPlayerOpen: 'SOURCE_CHARACTER deals CARD to TARGET_CHARACTER.',

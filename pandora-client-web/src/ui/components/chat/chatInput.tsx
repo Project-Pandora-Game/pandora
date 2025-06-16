@@ -272,7 +272,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 		}
 	});
 
-	const handleSend = useCallback((input: string): boolean => {
+	const handleSend = useCallback((input: string, forceOOC: boolean): boolean => {
 		setAutocompleteHint(null);
 		if (
 			input.startsWith(COMMAND_KEY) &&
@@ -295,7 +295,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 			sender.sendMessage(input, {
 				target: target?.data.id,
 				editing: editing?.target || undefined,
-				type: mode?.type || undefined,
+				type: mode?.type || (forceOOC ? 'ooc' : undefined),
 				raw: mode?.raw || undefined,
 			});
 			return true;
@@ -309,7 +309,7 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 			ev.preventDefault();
 			ev.stopPropagation();
 			try {
-				if (handleSend(input)) {
+				if (handleSend(input, ev.altKey)) {
 					textarea.value = '';
 					inputHistoryIndex.current = -1;
 					setEditing(null);

@@ -287,6 +287,11 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 				input = input.slice(1);
 			}
 			input = input.trim();
+			const type = mode?.type || (forceOOC ? 'ooc' : undefined);
+			const raw = mode?.raw || undefined;
+			if (type === 'ooc' && !raw && input.startsWith('((')) {
+				input = input.slice(2).trim();
+			}
 			// Ignore empty input, unless editing
 			if (editing == null && !input) {
 				return false;
@@ -295,8 +300,8 @@ function TextAreaImpl({ messagesDiv, scrollMessagesView }: {
 			sender.sendMessage(input, {
 				target: target?.data.id,
 				editing: editing?.target || undefined,
-				type: mode?.type || (forceOOC ? 'ooc' : undefined),
-				raw: mode?.raw || undefined,
+				type,
+				raw,
 			});
 			return true;
 		}

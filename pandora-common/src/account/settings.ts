@@ -1,4 +1,6 @@
 import { z } from 'zod';
+import { ClientNotificationGlobalSettings } from '../client/notificationDefinition.ts';
+import { NotificationTypesSettingsSchema } from '../client/notifications.ts';
 import { TimeSpanMs } from '../utility/formatting.ts';
 import { EMPTY_ARRAY, KnownObject, ParseArrayNotEmpty } from '../utility/misc.ts';
 import { DisplayNameSchema, HexColorStringSchema } from '../validation.ts';
@@ -125,6 +127,8 @@ export const AccountSettingsSchema = z.object({
 	 * @default 100
 	 */
 	notificationVolume: z.enum(['0', '25', '50', '75', '100']),
+	notificationGlobalSettings: ClientNotificationGlobalSettings,
+	notificationTypeSettings: NotificationTypesSettingsSchema,
 	/**
 	 * Set of tutorials the user completed in the past. Should only contain unique values (optimally sorted by the order in the schema).
 	 */
@@ -162,6 +166,14 @@ export const ACCOUNT_SETTINGS_DEFAULT = Object.freeze<AccountSettings>({
 	chatCommandHintBehavior: 'always-show',
 	notificationRoomEntrySound: '',
 	notificationVolume: '100',
+	notificationGlobalSettings: {
+		sound: {
+			sound: '',
+			volume: '100',
+		},
+		usePlatformPopup: false,
+	},
+	notificationTypeSettings: {},
 	tutorialCompleted: EMPTY_ARRAY,
 });
 

@@ -2,6 +2,7 @@ export * from './account/index.ts';
 export * from './assets/index.ts';
 export * from './character/index.ts';
 export * from './chat/index.ts';
+export * from './client/index.ts';
 export * from './commands/index.ts';
 export * from './directory/index.ts';
 export * from './environment.ts';

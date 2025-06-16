@@ -38,7 +38,9 @@ export type ClientNotificationTypeDefinitionDataShape = {
 }[ClientNotificationGroup];
 
 export const ClientNotificationSoundSchema = z.enum(['', 'alert', 'bell', 'bing', 'dingding']);
+export type ClientNotificationSound = z.infer<typeof ClientNotificationSoundSchema>;
 export const ClientNotificationSoundVolumeSchema = z.enum(['0', '25', '50', '75', '100']);
+export type ClientNotificationSoundVolume = z.infer<typeof ClientNotificationSoundVolumeSchema>;
 
 export const ClientNotificationSoundSettingsSchema = z.object({
 	/** What sound should this notification produce. */

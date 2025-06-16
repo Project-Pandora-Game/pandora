@@ -143,7 +143,7 @@ for (const type of Object.values(CLIENT_NOTIFICATION_TYPES)) {
 export const ClientNotificationGroupSchema = z.enum(ParseArrayNotEmpty(KnownObject.keys(CLIENT_NOTIFICATION_GROUPS)));
 export type ClientNotificationGroup = z.infer<typeof ClientNotificationGroupSchema>;
 
-export const ClientNotificationTypeSchema = z.enum(ParseArrayNotEmpty(KnownObject.keys(CLIENT_NOTIFICATION_GROUPS)));
+export const ClientNotificationTypeSchema = z.enum(ParseArrayNotEmpty(KnownObject.keys(CLIENT_NOTIFICATION_TYPES)));
 export type ClientNotificationType = z.infer<typeof ClientNotificationTypeSchema>;
 
 export const NotificationTypesSettingsSchema = z.record(ClientNotificationTypeSchema, ClientNotificationTypeSettingSchema.optional());

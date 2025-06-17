@@ -197,6 +197,8 @@ export class NotificationHandler extends Service<NotificationHandlerServiceConfi
 
 	public addSuppressionHook(hook: NotificationSuppressionHook): () => void {
 		this._suppress.add(hook);
+		// auto-clear newly suppressed notifications
+		this._onFocus();
 		return () => {
 			this._suppress.delete(hook);
 		};

@@ -428,7 +428,7 @@ export function RenderActionContentToString(
 
 	if (action.type === 'action') {
 		return [
-			actionText,
+			`(${ actionText })`,
 			null,
 		];
 	} else if (action.type === 'serverMessage') {

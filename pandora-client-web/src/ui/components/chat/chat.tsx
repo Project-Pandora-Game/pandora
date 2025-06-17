@@ -1,5 +1,6 @@
 import classNames from 'classnames';
-import { AssertNever, CharacterId, IChatMessageChat, type HexColorString } from 'pandora-common';
+import type { Immutable } from 'immer';
+import { AssertNever, CharacterId, IChatMessageChat, type AccountSettings, type HexColorString } from 'pandora-common';
 import React, {
 	memo,
 	ReactElement,
@@ -10,7 +11,7 @@ import React, {
 	useState,
 	type ReactNode,
 } from 'react';
-import { useAssetManager } from '../../../assets/assetManager.tsx';
+import { GetCurrentAssetManager, useAssetManager } from '../../../assets/assetManager.tsx';
 import { useAutoScroll } from '../../../common/useAutoScroll.ts';
 import { Column } from '../../../components/common/container/container.tsx';
 import { Scrollable } from '../../../components/common/scrollbar/scrollbar.tsx';
@@ -173,9 +174,9 @@ const Message = memo(function Message({ message, playerId }: { message: IChatMes
 	return ChatMessageEquals(prev.message, next.message) && prev.playerId === next.playerId;
 });
 
-export function RenderChatMessageToString(message: IChatMessageProcessed): string {
+export function RenderChatMessageToString(message: IChatMessageProcessed, accountSettings: Immutable<AccountSettings>): string {
 	if (IsActionMessage(message)) {
-		return RenderActionMessageToString(message);
+		return RenderActionMessageToString(message, accountSettings);
 	}
 	if (message.type === 'deleted') {
 		return '';
@@ -410,6 +411,10 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 }
 
 function RenderChatNameToString(message: IChatMessageChat): string {
+	// Emote has no name
+	if (message.type === 'emote')
+		return '';
+
 	const [before, after] = (() => {
 		switch (message.type) {
 			case 'ooc':
@@ -522,11 +527,10 @@ export function ActionMessage({ message, ignoreColor = false }: { message: IChat
 	);
 }
 
-export function RenderActionMessageToString(message: IChatActionMessageProcessed): string {
-	const assetManager = useAssetManager();
-	const { interfaceChatroomItemDisplayNameType } = useAccountSettings();
+export function RenderActionMessageToString(message: IChatActionMessageProcessed, { interfaceChatroomItemDisplayNameType }: Immutable<AccountSettings>): string {
+	const assetManager = GetCurrentAssetManager();
 
-	const [content, extraContent] = useMemo(() => RenderActionContentToString(message, assetManager, interfaceChatroomItemDisplayNameType), [message, assetManager, interfaceChatroomItemDisplayNameType]);
+	const [content, extraContent] = RenderActionContentToString(message, assetManager, interfaceChatroomItemDisplayNameType);
 
 	// If there is nothing to display, hide this message
 	if (content == null && extraContent == null)

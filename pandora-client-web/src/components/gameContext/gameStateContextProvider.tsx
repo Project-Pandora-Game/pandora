@@ -59,7 +59,7 @@ import { PlayerCharacter } from '../../character/player.ts';
 import { ShardConnector } from '../../networking/shardConnector.ts';
 import { Observable, useNullableObservable, useObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
-import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
+import { GetAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import { RenderChatMessageToString } from '../../ui/components/chat/chat.tsx';
 import { IChatMessageProcessed } from '../../ui/components/chat/chatMessages.tsx';
 import { ChatParser } from '../../ui/components/chat/chatParser.ts';
@@ -391,73 +391,88 @@ export class GameState extends TypedEventEmitter<{
 					continue;
 				}
 			} else {
+				const { accountManager, notificationHandler } = this._shard.serviceDeps;
 				//#region Notifications
-				const messageContent = RenderChatMessageToString(message);
-				if (message.type === 'chat') {
-					this._shard.notificationHandler.notify({
-						type: message.to != null ? 'chatMessagesWhisper' : 'chatMessagesMessage',
-						metadata: {
-							from: message.from.id,
-						},
-						time: message.time,
-						title: `Chat message from ${message.from.name} (${message.from.id})`,
-						content: messageContent,
-					});
-				} else if (message.type === 'me' || message.type === 'emote') {
-					this._shard.notificationHandler.notify({
-						type: 'chatMessagesEmote',
-						metadata: {
-							from: message.from.id,
-						},
-						time: message.time,
-						title: `Chat message from ${message.from.name} (${message.from.id})`,
-						content: messageContent,
-					});
-				} else if (message.type === 'ooc') {
-					this._shard.notificationHandler.notify({
-						type: message.to != null ? 'chatMessagesOOCWhisper' : 'chatMessagesOOC',
-						metadata: {
-							from: message.from.id,
-						},
-						time: message.time,
-						title: `OOC Chat message from ${message.from.name} (${message.from.id})`,
-						content: messageContent,
-					});
-				} else if (message.type === 'action') {
-					this._shard.notificationHandler.notify({
-						type: 'chatMessagesAction',
-						metadata: {
-							from: message.data?.character?.id ?? null,
-							action: message.id,
-						},
-						time: message.time,
-						title: message.data?.character != null ? `Action from ${message.data.character.name} (${message.data.character.id})` : 'Action',
-						content: messageContent,
-					});
-				} else if (message.type === 'serverMessage') {
-					if (message.id === 'characterEntered' && message.data?.character?.type === 'character') {
-						if (message.data.character.id !== this.playerId) {
-							this._shard.notificationHandler.notify({
-								type: 'spaceCharacterJoined',
+				try {
+					const messageContent = RenderChatMessageToString(message, GetAccountSettings(accountManager));
+					if (message.type === 'chat') {
+						if (message.from.id !== this.player.id) {
+							notificationHandler.notify({
+								type: message.to != null ? 'chatMessagesWhisper' : 'chatMessagesMessage',
 								metadata: {
-									id: message.data.character.id,
+									from: message.from.id,
 								},
 								time: message.time,
-								title: `${message.data.character.name} (${message.data.character.id}) joined the space`,
+								title: `Chat message from ${message.from.name} (${message.from.id})`,
+								content: messageContent,
 							});
 						}
-					} else {
-						this._shard.notificationHandler.notify({
-							type: 'chatMessagesServer',
-							metadata: {
-								from: message.data?.character?.id ?? null,
-								action: message.id,
-							},
-							time: message.time,
-							title: 'Server message',
-							content: messageContent,
-						});
+					} else if (message.type === 'me' || message.type === 'emote') {
+						if (message.from.id !== this.player.id) {
+							notificationHandler.notify({
+								type: 'chatMessagesEmote',
+								metadata: {
+									from: message.from.id,
+								},
+								time: message.time,
+								title: `Chat message from ${message.from.name} (${message.from.id})`,
+								content: messageContent,
+							});
+						}
+					} else if (message.type === 'ooc') {
+						if (message.from.id !== this.player.id) {
+							notificationHandler.notify({
+								type: message.to != null ? 'chatMessagesOOCWhisper' : 'chatMessagesOOC',
+								metadata: {
+									from: message.from.id,
+								},
+								time: message.time,
+								title: `OOC Chat message from ${message.from.name} (${message.from.id})`,
+								content: messageContent,
+							});
+						}
+					} else if (message.type === 'action') {
+						if (message.data?.character?.id == null || message.data.character.id !== this.player.id) {
+							notificationHandler.notify({
+								type: 'chatMessagesAction',
+								metadata: {
+									from: message.data?.character?.id ?? null,
+									action: message.id,
+								},
+								time: message.time,
+								title: message.data?.character != null ? `Action from ${message.data.character.name} (${message.data.character.id})` : 'Action',
+								content: messageContent,
+							});
+						}
+					} else if (message.type === 'serverMessage') {
+						if (message.id === 'characterEntered' && message.data?.character?.type === 'character') {
+							if (message.data.character.id !== this.playerId) {
+								notificationHandler.notify({
+									type: 'spaceCharacterJoined',
+									metadata: {
+										id: message.data.character.id,
+									},
+									time: message.time,
+									title: `${message.data.character.name} (${message.data.character.id}) joined the space`,
+								});
+							}
+						} else {
+							if (message.data?.character?.id == null || message.data.character.id !== this.player.id) {
+								notificationHandler.notify({
+									type: 'chatMessagesServer',
+									metadata: {
+										from: message.data?.character?.id ?? null,
+										action: message.id,
+									},
+									time: message.time,
+									title: 'Server message',
+									content: messageContent,
+								});
+							}
+						}
 					}
+				} catch (e) {
+					this.logger.error('Error delivering message notification:', e, '\nFor message:', message);
 				}
 				//#endregion
 
@@ -603,7 +618,7 @@ export class GameState extends TypedEventEmitter<{
 		{
 			const restrictionManager = this.player.getRestrictionManager(
 				this.globalState.currentState,
-				MakeActionSpaceContext(this.currentSpace.value, this._shard.accountManager.currentAccount.value, this.characterModifierEffects.value),
+				MakeActionSpaceContext(this.currentSpace.value, this._shard.serviceDeps.accountManager.currentAccount.value, this.characterModifierEffects.value),
 			);
 			for (const checkMessage of messages) {
 				const blockCheck = restrictionManager.checkChatMessage(checkMessage);

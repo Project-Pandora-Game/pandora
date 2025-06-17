@@ -1,18 +1,13 @@
-import { Assert } from 'pandora-common';
 import { ShardConnectionState, ShardConnector } from '../../src/networking/shardConnector.ts';
+import type { ClientServices } from '../../src/services/clientServices.ts';
 import { MockConnectionInfo } from '../mocks/networking/mockShardConnector.ts';
 import { MockServiceManager } from '../testUtils.tsx';
 
 describe('ShardConnector', () => {
 	const serviceManager = MockServiceManager();
-	Assert(serviceManager.services.directoryConnector != null);
-	Assert(serviceManager.services.accountManager != null);
-	Assert(serviceManager.services.notificationHandler != null);
 	const mockShardConnector = new ShardConnector(
 		MockConnectionInfo(),
-		serviceManager.services.directoryConnector,
-		serviceManager.services.accountManager,
-		serviceManager.services.notificationHandler,
+		serviceManager.services as Readonly<ClientServices>,
 	);
 
 	it('default state should be NONE', () => {

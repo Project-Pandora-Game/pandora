@@ -1,6 +1,5 @@
 import type { Immutable } from 'immer';
 import {
-	AssertNever,
 	AssertNotNullable,
 	CharacterIdSchema,
 	ICharacterRoomData,
@@ -8,7 +7,6 @@ import {
 } from 'pandora-common';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { Link, Navigate, Route, Routes, useLocation, useParams } from 'react-router';
-import { z } from 'zod';
 import { Character, IChatroomCharacter } from '../../character/character.ts';
 import { useObservable } from '../../observable.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
@@ -27,21 +25,7 @@ import { WardrobeEffectsModifiers } from './wardrobeEffectsModifiers.tsx';
 import { WardrobeCharacterPreview, WardrobeRoomPreview } from './wardrobeGraphics.tsx';
 import { WardrobeItemPreferences } from './wardrobeItemPreferences.tsx';
 import { WardrobeItemManipulation } from './wardrobeItems.tsx';
-import { WardrobeFocusSchema } from './wardrobeTypes.ts';
-
-export const WardrobeLocationStateSchema = z.object({
-	initialFocus: WardrobeFocusSchema.optional(),
-}).passthrough();
-export type WardrobeLocationState = z.infer<typeof WardrobeLocationStateSchema>;
-
-export function ActionTargetToWardrobeUrl(target: ActionTargetSelector): string {
-	if (target.type === 'character') {
-		return `/wardrobe/character/${target.characterId}`;
-	} else if (target.type === 'roomInventory') {
-		return '/wardrobe/room-inventory';
-	}
-	AssertNever(target);
-}
+import { WardrobeLocationStateSchema, type WardrobeLocationState } from './wardrobeNavigation.tsx';
 
 export function WardrobeRouter(): ReactElement | null {
 	return (

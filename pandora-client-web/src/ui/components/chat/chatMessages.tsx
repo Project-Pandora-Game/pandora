@@ -25,7 +25,7 @@ import { GetCurrentAssetManager } from '../../../assets/assetManager.tsx';
 import { useGameState, useGlobalState, useStateFindItemById } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { ResolveItemDisplayNameType } from '../../../components/wardrobe/itemDetail/wardrobeItemName.tsx';
 import { OpenRoomItemDialog } from '../../screens/room/roomItemDialogList.ts';
-import { RenderedLink } from '../../screens/spaceJoin/spaceJoin.tsx';
+import { RenderedLink } from './links.tsx';
 
 export type IChatDeletedMessageProcessed = IChatMessageDeleted & {
 	/** Time the message was sent, guaranteed to be unique */

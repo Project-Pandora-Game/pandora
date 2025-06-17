@@ -5,13 +5,13 @@ import { Character } from '../../../character/character.ts';
 import type { ChildrenProps } from '../../../common/reactTypes.ts';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
 import { WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
-import type { PointLike } from '../../../graphics/graphicsCharacter.tsx';
+import type { PointLike } from '../../../graphics/common/point.ts';
 import { CharacterContextMenu } from '../../../graphics/room/contextMenus/characterContextMenu.tsx';
 import { DeviceContextMenu } from '../../../graphics/room/contextMenus/deviceContextMenu.tsx';
-import { useIsRoomConstructionModeEnabled } from '../../../graphics/room/roomDevice.tsx';
 import { useProvideTutorialFlag } from '../../tutorial/tutorialSystem/tutorialExternalConditions.tsx';
 import { RoomItemDialogsProviderEnabler } from './roomItemDialog.tsx';
 import { RoomScreenSceneModeCheckProvider } from './roomPermissionChecks.tsx';
+import { useIsRoomConstructionModeEnabled } from './roomState.ts';
 
 export type IRoomSceneMode = {
 	mode: 'normal';

@@ -11,15 +11,15 @@ import { useContextMenuPosition } from '../../../components/contextMenu/index.ts
 import { DialogInPortal } from '../../../components/dialog/dialog.tsx';
 import { useGameState, useGameStateOptional, useGlobalState, useSpaceCharacters } from '../../../components/gameContext/gameStateContextProvider.tsx';
 import { usePlayer } from '../../../components/gameContext/playerContextProvider.tsx';
-import type { WardrobeLocationState } from '../../../components/wardrobe/wardrobe.tsx';
 import { useWardrobeActionContext, useWardrobeExecuteChecked, WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue.ts';
 import { ActionWarningContent } from '../../../components/wardrobe/wardrobeComponents.tsx';
-import { PointLike } from '../../../graphics/graphicsCharacter.tsx';
+import type { WardrobeLocationState } from '../../../components/wardrobe/wardrobeNavigation.tsx';
 import { TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext.tsx';
-import { useIsRoomConstructionModeEnabled } from '../roomDevice.tsx';
+import { useIsRoomConstructionModeEnabled } from '../../../ui/screens/room/roomState.ts';
+import { PointLike } from '../../common/point.ts';
 
 function StoreDeviceMenu({ device, close }: {
 	device: ItemRoomDevice;

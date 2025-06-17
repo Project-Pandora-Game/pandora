@@ -8,7 +8,7 @@ import crossIcon from '../../assets/icons/cross.svg';
 import { type CommonProps } from '../../common/reactTypes.ts';
 import { useAsyncEvent, useEvent } from '../../common/useEvent.ts';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
-import type { PointLike } from '../../graphics/graphicsCharacter.tsx';
+import type { PointLike } from '../../graphics/common/point.ts';
 import { Observable, useObservable } from '../../observable.ts';
 import { Button, ButtonProps } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';

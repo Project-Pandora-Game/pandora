@@ -30,13 +30,13 @@ import { usePlayerState } from '../../../components/gameContext/playerContextPro
 import { useWardrobeExecuteChecked, WardrobeActionContextProvider } from '../../../components/wardrobe/wardrobeActionContext.tsx';
 import { useStaggeredAppearanceActionResult } from '../../../components/wardrobe/wardrobeCheckQueue.ts';
 import { GameLogicActionButton } from '../../../components/wardrobe/wardrobeComponents.tsx';
-import { PointLike } from '../../../graphics/graphicsCharacter.tsx';
 import { TOAST_OPTIONS_ERROR, TOAST_OPTIONS_WARNING } from '../../../persistentToast.ts';
 import { useNavigatePandora } from '../../../routing/navigate.ts';
 import { useCurrentAccount } from '../../../services/accountLogic/accountManagerHooks.ts';
 import { useChatInput } from '../../../ui/components/chat/chatInput.tsx';
 import { useRoomScreenContext } from '../../../ui/screens/room/roomContext.tsx';
 import { useCanMoveCharacter, useCanPoseCharacter } from '../../../ui/screens/room/roomPermissionChecks.tsx';
+import { PointLike } from '../../common/point.ts';
 
 type MenuType = 'main' | 'admin' | 'contacts' | 'follow';
 

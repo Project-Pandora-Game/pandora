@@ -48,6 +48,10 @@ class CardDeck {
 		ShuffleArray(this.deck);
 	}
 
+	public get cardsLeft() {
+		return this.deck.length;
+	}
+
 	public create() {
 		for (const suit of suits) {
 			for (const rank of ranks) {
@@ -112,24 +116,24 @@ export class CardGameGame {
 		this.players.filter((p) => p.getId() !== c);
 	}
 
-	public dealTo(c?: CharacterId) {
+	public dealTo(n: number, c?: CharacterId): CardArray | null {
+		if (n > this.deck.cardsLeft) return null;
 		//Deal a card either to the room or to a player
+		const cards: CardArray = [];
+		for (let i = 0; i < n; i++) {
+			const card = this.deck.deal();
+			if (!card) break; //Cannot happen because of prior check
+			cards.push(card);
+		}
 		if (c) {
 			const player = this.players.find((p) => p.getId() === c);
-			if (player) {
-				const card = this.deck.deal();
-				if (card)
-					player.receiveCard(card);
-				return card;
-			} else {
-				return null;
-			}
+			if (!player) return null;
+
+			cards.forEach((ca) => player.receiveCard(ca));
 		} else {
-			const card = this.deck.deal();
-			if (card)
-				this.spaceHand.push(card);
-			return card;
+			this.spaceHand.push(...cards);
 		}
+		return cards;
 	}
 
 	public checkPlayer(c: CharacterId) {
@@ -195,14 +199,17 @@ export const CardGameActionSchema = z.discriminatedUnion('action', [
 	}),
 	z.object({
 		action: z.literal('dealTable'),
+		number: z.number().optional().default(1),
 	}),
 	z.object({
 		action: z.literal('dealOpenly'),
 		targetId: CharacterIdSchema,
+		number: z.number().optional().default(1),
 	}),
 	z.object({
 		action: z.literal('deal'),
 		targetId: CharacterIdSchema,
+		number: z.number().optional().default(1),
 	}),
 	z.object({
 		action: z.literal('check'),

@@ -9,7 +9,7 @@ import { ChatMode } from './chatInput.tsx';
 import { COMMAND_FOLLOW, COMMAND_LEAD, COMMAND_STOPFOLLOW } from './commands/lead_follow.ts';
 import { COMMAND_POSEMANUAL } from './commands/posemanual.ts';
 import { COMMAND_POSEPRESET } from './commands/posepreset.ts';
-import { CommandSelectorCharacter, CommandSelectorGameLogicActionTarget, CommandSelectorItem, CreateClientCommand } from './commandsHelpers.ts';
+import { CommandSelectorCharacter, CommandSelectorGameLogicActionTarget, CommandSelectorItem, CreateClientCommand, CommandSelectorNumber } from './commandsHelpers.ts';
 import type { IClientCommand, ICommandExecutionContextClient } from './commandsProcessor.ts';
 
 function CreateMessageTypeParser(names: [string, ...string[]], raw: boolean, type: IChatType, longDescription: string, allowModeSet: boolean = true): IClientCommand<ICommandExecutionContextClient> {
@@ -379,21 +379,13 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 					description: `Deal cards from the space's deck to the space's table. Only possible for the game creator.`,
 					usage: '[#cards]',
 					handler: ctx
-						.argument('options', {
-							preparse: 'allTrimmed',
-							parse: (input) => {
-								if (input === '' || /^\d+$/.test(input))
-									return { success: true, value: { cards: parseInt(input) > 0 ? parseInt(input) : 1 } };
-								else
-									return { success: false, error: 'Only numbers allowed.' };
-							},
-						})
-						.handler(({ shardConnector }, { options }) => {
+						.argument('cards', CommandSelectorNumber())
+						.handler(({ shardConnector }, { cards }) => {
 							shardConnector.sendMessage('gamblingAction', {
 								type: 'cards',
 								action: {
 									action: 'dealTable',
-									number: options.cards,
+									number: cards,
 								},
 							});
 							return true;
@@ -404,15 +396,15 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 					usage: '<target> [#cards]',
 					handler: ctx
 						.argument('target', CommandSelectorCharacter({ allowSelf: 'any' }))
-						.handler({ restArgName: 'cards' }, ({ shardConnector }, { target }, cards) => {
-							if (cards === '' || /^\d+$/.test(cards)) {
-								const c = parseInt(cards) > 0 ? parseInt(cards) : 1;
+						.argument('cards', CommandSelectorNumber())
+						.handler(({ shardConnector }, { target, cards }) => {
+							if (target) {
 								shardConnector.sendMessage('gamblingAction', {
 									type: 'cards',
 									action: {
 										action: 'dealOpenly',
 										targetId: target.data.id,
-										number: c,
+										number: cards,
 									},
 								});
 								return true;
@@ -426,15 +418,15 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 					usage: '<target> [#cards]',
 					handler: ctx
 						.argument('target', CommandSelectorCharacter({ allowSelf: 'any' }))
-						.handler({ restArgName: 'cards' }, ({ shardConnector }, { target }, cards) => {
-							if (cards === '' || /^\d+$/.test(cards)) {
-								const c = parseInt(cards) > 0 ? parseInt(cards) : 1;
+						.argument('cards', CommandSelectorNumber())
+						.handler(({ shardConnector }, { target, cards }) => {
+							if (target) {
 								shardConnector.sendMessage('gamblingAction', {
 									type: 'cards',
 									action: {
 										action: 'dealOpenly',
 										targetId: target.data.id,
-										number: c,
+										number: cards,
 									},
 								});
 								return true;

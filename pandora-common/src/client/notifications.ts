@@ -13,8 +13,11 @@ export const CLIENT_NOTIFICATION_GROUPS = {
 	chatMessages: {
 		name: 'Chat messages',
 	},
-	directMessages: {
-		name: 'Direct messages',
+	contacts: {
+		name: 'Direct messages and contacts',
+	},
+	space: {
+		name: 'Space-wide events',
 	},
 } as const satisfies Readonly<Record<string, Readonly<ClientNotificationGroupDefinitionBase>>>;
 
@@ -33,7 +36,7 @@ freeze(DEFAULT_DISABLED, true);
 
 export const CLIENT_NOTIFICATION_TYPES = {
 	chatMessagesMessage: {
-		name: 'Character says something',
+		name: 'A character says something',
 		group: 'chatMessages',
 		metadata: z.object({
 			from: CharacterIdSchema,
@@ -42,7 +45,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 		defaultSettings: DEFAULT_DISABLED,
 	},
 	chatMessagesEmote: {
-		name: 'Character performs custom action (emote)',
+		name: 'A character performs custom action (emote)',
 		group: 'chatMessages',
 		metadata: z.object({
 			from: CharacterIdSchema,
@@ -51,7 +54,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 		defaultSettings: DEFAULT_DISABLED,
 	},
 	chatMessagesOOC: {
-		name: 'Character says something in OOC',
+		name: 'A character says something in OOC',
 		group: 'chatMessages',
 		metadata: z.object({
 			from: CharacterIdSchema,
@@ -60,7 +63,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 		defaultSettings: DEFAULT_DISABLED,
 	},
 	chatMessagesWhisper: {
-		name: 'Character whispers something to you',
+		name: 'A character whispers something to you',
 		group: 'chatMessages',
 		metadata: z.object({
 			from: CharacterIdSchema,
@@ -69,7 +72,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 		defaultSettings: DEFAULT_DISABLED,
 	},
 	chatMessagesOOCWhisper: {
-		name: 'Character whispers something to you OOC',
+		name: 'A character whispers something to you OOC',
 		group: 'chatMessages',
 		metadata: z.object({
 			from: CharacterIdSchema,
@@ -78,7 +81,7 @@ export const CLIENT_NOTIFICATION_TYPES = {
 		defaultSettings: DEFAULT_DISABLED,
 	},
 	chatMessagesAction: {
-		name: 'Character performs an action',
+		name: 'A character performs an action',
 		group: 'chatMessages',
 		metadata: z.object({
 			action: ZodCast<ChatActionId>(),
@@ -97,9 +100,18 @@ export const CLIENT_NOTIFICATION_TYPES = {
 		suppressable: 'the chat is visible',
 		defaultSettings: DEFAULT_DISABLED,
 	},
-	directMessagesReceivedContact: {
+	chatMessagesOwnName: {
+		name: 'Your character name is mentioned in the chat',
+		group: 'chatMessages',
+		metadata: z.object({
+			from: CharacterIdSchema,
+		}),
+		suppressable: 'the chat is visible',
+		defaultSettings: DEFAULT_DISABLED,
+	},
+	contactsDirectMessageReceivedContact: {
 		name: 'A direct message is received from a contact',
-		group: 'directMessages',
+		group: 'contacts',
 		metadata: z.object({
 			from: AccountIdSchema,
 		}),
@@ -111,9 +123,9 @@ export const CLIENT_NOTIFICATION_TYPES = {
 			suppression: 'not-suppressed',
 		},
 	},
-	directMessagesReceivedUnknown: {
+	contactsDirectMessageReceivedUnknown: {
 		name: 'A direct message is received from a non-contact',
-		group: 'directMessages',
+		group: 'contacts',
 		metadata: z.object({
 			from: AccountIdSchema,
 		}),
@@ -124,6 +136,40 @@ export const CLIENT_NOTIFICATION_TYPES = {
 			sound: {},
 			suppression: 'not-suppressed',
 		},
+	},
+	contactsNewContactRequest: {
+		name: 'A request to add someone to your contacts was received',
+		group: 'contacts',
+		metadata: z.object({
+			from: AccountIdSchema,
+		}),
+		suppressable: 'the contacts screen is open',
+		defaultSettings: {
+			persist: true,
+			popup: true,
+			sound: {},
+			suppression: 'not-suppressed',
+		},
+	},
+	spaceJoinedSpaceContact: {
+		name: 'One of your contacts joins the current space',
+		group: 'space',
+		metadata: z.object({
+			action: ZodCast<ChatActionId>(),
+			from: AccountIdSchema,
+		}),
+		suppressable: 'the chat is visible',
+		defaultSettings: DEFAULT_DISABLED,
+	},
+	spaceJoinedSpaceUnknown: {
+		name: 'A user not one of your contacts joins the current space',
+		group: 'space',
+		metadata: z.object({
+			action: ZodCast<ChatActionId>(),
+			from: AccountIdSchema,
+		}),
+		suppressable: 'the chat is visible',
+		defaultSettings: DEFAULT_DISABLED,
 	},
 } as const satisfies Readonly<ClientNotificationTypeDefinitionDataShape>;
 

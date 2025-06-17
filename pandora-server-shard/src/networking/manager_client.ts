@@ -478,8 +478,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 							case 'dealTable': {
 								if (space.cardGame.isDealer(client.character.id)) {
 									// Deals a card to the whole room
-									const card = space.cardGame.dealTo();
-									if (!card) {
+									const cards = space.cardGame.dealTo(game.action.number);
+									if (!cards) {
 										space.handleActionMessage({
 											id: 'gamblingCardGameEmpty',
 											sendTo: [client.character.id],
@@ -491,7 +491,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 											character,
 											sendTo: receivers,
 											dictionary: {
-												'CARD': card.toString(),
+												'CARD': cards.toString(),
 											},
 										});
 									}
@@ -514,7 +514,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 										});
 										break; //Done on purpose
 									}
-									const card = space.cardGame.dealTo(game.action.targetId);
+									const card = space.cardGame.dealTo(game.action.number, game.action.targetId);
 									if (!card) {
 										space.handleActionMessage({
 											id: 'gamblingCardGameEmpty',
@@ -550,7 +550,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 										});
 										break; //Done on purpose
 									}
-									const card = space.cardGame.dealTo(game.action.targetId);
+									const card = space.cardGame.dealTo(game.action.number, game.action.targetId);
 									if (!card) {
 										space.handleActionMessage({
 											id: 'gamblingCardGameEmpty',

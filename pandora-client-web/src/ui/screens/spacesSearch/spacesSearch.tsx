@@ -307,7 +307,6 @@ function SpaceDetailsDialog({ baseInfo, hide }: {
 			background: '',
 			isAdmin: false,
 			isAllowed: false,
-			owners: [],
 			characters: [],
 		};
 	}, [extendedInfo, baseInfo]);

@@ -19,15 +19,15 @@ import { useCanMoveCharacter, useCanPoseCharacter } from '../../ui/screens/room/
 import { useAppearanceConditionEvaluator } from '../appearanceConditionEvaluator.ts';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
+import { type PointLike } from '../common/point.ts';
 import { TransitionedContainer } from '../common/transitions/transitionedContainer.ts';
-import { type PointLike } from '../graphicsCharacter.tsx';
 import { useGraphicsSmoothMovementEnabled } from '../graphicsSettings.tsx';
 import { MovementHelperGraphics, PosingStateHelperGraphics } from '../movementHelper.tsx';
 import { useTickerRef } from '../reconciler/tick.ts';
 import { GetAngle } from '../utility.ts';
 import { FindInverseKinematicOptimum } from '../utility/inverseKinematics.ts';
 import { CHARACTER_WAIT_DRAG_THRESHOLD, PIVOT_TO_LABEL_OFFSET, useRoomCharacterPosition, type CharacterStateProps, type RoomCharacterInteractiveProps } from './roomCharacter.tsx';
-import type { RoomProjectionResolver } from './roomScene.tsx';
+import type { RoomProjectionResolver } from './roomProjection.tsx';
 
 export function RoomCharacterMovementTool({
 	globalState,

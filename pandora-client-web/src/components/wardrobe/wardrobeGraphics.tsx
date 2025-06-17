@@ -26,7 +26,8 @@ import { GraphicsScene, GraphicsSceneProps } from '../../graphics/graphicsScene.
 import { useGraphicsSmoothMovementEnabled } from '../../graphics/graphicsSettings.tsx';
 import { CHARACTER_MOVEMENT_TRANSITION_DURATION_MANIPULATION, RoomCharacter, useRoomCharacterOffsets, useRoomCharacterPosition } from '../../graphics/room/roomCharacter.tsx';
 import { RoomDevice } from '../../graphics/room/roomDevice.tsx';
-import { RoomProjectionResolver, usePlayerVisionFilters, useRoomViewProjection } from '../../graphics/room/roomScene.tsx';
+import { useRoomViewProjection, type RoomProjectionResolver } from '../../graphics/room/roomProjection.tsx';
+import { usePlayerVisionFilters } from '../../graphics/room/roomScene.tsx';
 import { useObservable } from '../../observable.ts';
 import { serviceManagerContext } from '../../services/serviceProvider.tsx';
 import { Button } from '../common/button/button.tsx';

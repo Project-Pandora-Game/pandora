@@ -3,7 +3,7 @@ import * as PIXI from 'pixi.js';
 import { ReactElement, ReactNode, createContext, useContext, useLayoutEffect, useMemo, useRef } from 'react';
 import { Container } from '../baseComponents/container.ts';
 import { Graphics } from '../baseComponents/graphics.ts';
-import { PointLike } from '../graphicsCharacter.tsx';
+import { PointLike } from '../common/point.ts';
 import { PixiElementRequestUpdate } from '../reconciler/element.ts';
 
 /** Time after which a new asset appearing won't hide the container again */

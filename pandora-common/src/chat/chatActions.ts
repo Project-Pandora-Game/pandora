@@ -98,7 +98,7 @@ const CHAT_ACTIONS_DEF = {
 	gamblingCardGameEnds: 'SOURCE_CHARACTER ends the game and all hands are revealed.',
 	gamblingCardGameHandReveal: 'PLAYER shows their hand and reveals HAND.',
 	gamblingCardGameRoomCards: 'On the table ISARE HAND.',
-	gamblingCardGameEmpty: 'There are no cards left in the deck.',
+	gamblingCardGameEmpty: 'There are not enough cards left in the deck.',
 	gamblingCardGameStopped: 'The current game has been cancelled by SOURCE_CHARACTER.',
 	gamblingCardGameNotAllowed: 'Only the dealer is allowed to do this.',
 	gamblingCardNotAPlayer: `The given player is not part of the game. Ask them to 'join' first.`,

@@ -1,6 +1,5 @@
 import { Assert, BONE_MAX, BONE_MIN, type BoneDefinition } from 'pandora-common';
 import { DEG_TO_RAD, Matrix, Point } from 'pixi.js';
-import 'pixi.js/math-extras';
 
 /**
  * Ratio of how much to prefer getting one pixel closer to the target than one degree of squared joint movement.

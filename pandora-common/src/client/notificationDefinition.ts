@@ -48,6 +48,7 @@ export const ClientNotificationSoundSettingsSchema = z.object({
 	/** What volume should this notification produce. */
 	volume: ClientNotificationSoundVolumeSchema.catch('100'),
 });
+export type ClientNotificationSoundSettings = z.infer<typeof ClientNotificationSoundSettingsSchema>;
 
 /**
  * When should notification be triggered, vs when it should be suppressed:
@@ -72,8 +73,9 @@ export const ClientNotificationTypeSettingSchema = z.object({
 });
 export type ClientNotificationTypeSetting = z.infer<typeof ClientNotificationTypeSettingSchema>;
 
-export const ClientNotificationGlobalSettings = z.object({
+export const ClientNotificationGlobalSettingsSchema = z.object({
 	sound: ClientNotificationSoundSettingsSchema,
 	/** Whether to use platform popup mechanism if Pandora is not focused instead of toast, for types that specifc `popup` presentation. */
 	usePlatformPopup: z.boolean().catch(false),
 });
+export type ClientNotificationGlobalSettings = z.infer<typeof ClientNotificationGlobalSettingsSchema>;

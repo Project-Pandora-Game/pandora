@@ -8,7 +8,7 @@ import notificationIcon from '../../assets/icons/notification.svg';
 import soundOffIcon from '../../assets/icons/sound-0.svg';
 import soundOnIcon from '../../assets/icons/sound-3.svg';
 import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
-import { NOTIFICATION_AUDIO_NAMES, NOTIFICATION_AUDIO_SOUNDS, NOTIFICATION_AUDIO_VOLUME } from '../../services/notificationHandler.ts';
+import { NOTIFICATION_AUDIO_NAMES, NOTIFICATION_AUDIO_SOUNDS, NOTIFICATION_AUDIO_VOLUME } from '../../services/notificationHandler.tsx';
 import { Button } from '../common/button/button.tsx';
 import { Column } from '../common/container/container.tsx';
 import { useAccountSettingDriver } from './helpers/accountSettings.tsx';
@@ -71,7 +71,7 @@ function NotificationGlobalSettings(): ReactElement {
 			<h2>Popups</h2>
 			<ToggleSettingInput
 				driver={ useSubsettingDriver(globalSettingsDriver, 'usePlatformPopup') }
-				label='Use platform popup if available (requires extra permission)'
+				label='Use system popup if available (requires extra permission)'
 			/>
 		</fieldset>
 	);

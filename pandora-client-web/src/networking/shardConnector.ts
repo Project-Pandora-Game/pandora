@@ -20,6 +20,7 @@ import { ConfigServerIndex } from '../config/searchArgs.ts';
 import { Observable, ReadonlyObservable } from '../observable.ts';
 import { PersistentToast } from '../persistentToast.ts';
 import type { AccountManager } from '../services/accountLogic/accountManager.ts';
+import type { NotificationHandler } from '../services/notificationHandler.tsx';
 import type { DirectoryConnector } from './directoryConnector.ts';
 import { type Connector, type SocketIOConnectorFactory } from './socketio_connector.ts';
 
@@ -60,6 +61,7 @@ export class ShardConnector implements IConnectionBase<IClientShard> {
 
 	public readonly directoryConnector: DirectoryConnector;
 	public readonly accountManager: AccountManager;
+	public readonly notificationHandler: NotificationHandler;
 
 	/** Current state of the connection */
 	public get state(): ReadonlyObservable<ShardConnectionState> {
@@ -81,11 +83,17 @@ export class ShardConnector implements IConnectionBase<IClientShard> {
 
 	private _connector: Connector<IClientShard> | null = null;
 
-	constructor(info: IDirectoryCharacterConnectionInfo, directoryConnector: DirectoryConnector, accountManager: AccountManager) {
+	constructor(
+		info: IDirectoryCharacterConnectionInfo,
+		directoryConnector: DirectoryConnector,
+		accountManager: AccountManager,
+		notificationHandler: NotificationHandler,
+	) {
 		this._connectionInfo = new Observable<IDirectoryCharacterConnectionInfo>(info);
 		this._gameState = new Observable<GameState | null>(null);
 		this.directoryConnector = directoryConnector;
 		this.accountManager = accountManager;
+		this.notificationHandler = notificationHandler;
 
 		// Setup message handler
 		this._messageHandler = new MessageHandler<IShardClient>({

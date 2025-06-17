@@ -12,6 +12,7 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { LoadedDirectMessage } from '../../services/accountLogic/directMessages/directMessageChat.ts';
+import { useNotificationSuppress, type NotificationSuppressionHook } from '../../services/notificationHandler.tsx';
 import { AutoCompleteHint, IChatInputHandler, chatInputContext, useChatInput } from '../../ui/components/chat/chatInput.tsx';
 import { RenderChatPart } from '../../ui/components/chat/chatMessages.tsx';
 import { AutocompleteDisplayData, COMMAND_KEY, CommandAutocomplete, CommandAutocompleteCycle, ICommandInvokeContext, RunCommand } from '../../ui/components/chat/commandsProcessor.ts';
@@ -46,6 +47,13 @@ export function DirectMessage({ accountId }: { accountId: number; }): ReactEleme
 		allowCommands: true,
 		ref,
 	}), [autocompleteHint]);
+
+	useNotificationSuppress(useCallback<NotificationSuppressionHook>((notification) => {
+		return (
+			notification.type === 'contactsDirectMessageReceivedContact' ||
+			notification.type === 'contactsDirectMessageReceivedUnknown'
+		) && notification.metadata.from === accountId;
+	}, [accountId]));
 
 	return (
 		<div className='chatArea'>

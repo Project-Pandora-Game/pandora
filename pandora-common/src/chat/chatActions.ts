@@ -90,7 +90,7 @@ const CHAT_ACTIONS_DEF = {
 	gamblingCardGameJoined: 'SOURCE_CHARACTER joins the game.',
 	gamblingCardGameYouJoined: 'You joined the game hosted by DEALER.',
 	gamblingCardGameJoinedAlready: 'You are already part of this game.',
-	gamblingCardGameDealOpen: 'SOURCE_CHARACTER deals CARD.',
+	gamblingCardGameDealOpen: 'SOURCE_CHARACTER deals CARD openly to the table.',
 	gamblingCardGameDealPlayerOpen: 'SOURCE_CHARACTER deals CARD to TARGET_CHARACTER.',
 	gamblingCardGameDealPlayerSecret: 'SOURCE_CHARACTER deals a card face down to TARGET_CHARACTER.',
 	gamblingCardGameDealToYou: 'SOURCE_CHARACTER deals CARD to you.',

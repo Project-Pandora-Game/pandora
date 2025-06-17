@@ -52,7 +52,7 @@
 		"socket.io": "4.8.1",
 		"socket.io-client": "4.8.1",
 		"wtfnode": "0.10.0",
-		"zod": "3.25.64"
+		"zod": "3.25.67"
 	},
 	"devDependencies": {
 		"@jest/globals": "29.7.0",
@@ -60,9 +60,9 @@
 		"@types/express": "4.17.23",
 		"@types/json-diff": "1.0.3",
 		"@types/lodash-es": "4.17.12",
-		"@types/node": "22.15.31",
+		"@types/node": "22.15.32",
 		"@types/wtfnode": "0.7.3",
-		"discord-api-types": "0.38.11",
+		"discord-api-types": "0.38.12",
 		"jest": "29.7.0",
 		"nodemon": "3.1.10",
 		"rimraf": "6.0.1",

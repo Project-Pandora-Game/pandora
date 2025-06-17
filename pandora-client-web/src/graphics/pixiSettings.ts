@@ -1,4 +1,5 @@
 // PIXI plugins
+import 'pixi.js/math-extras';
 import 'pixi.js/unsafe-eval';
 
 /**

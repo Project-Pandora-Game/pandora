@@ -21,10 +21,10 @@ import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useAccountSettings, useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat.ts';
-import { NotificationSource, useNotification, type NotificationHeaderKeys } from '../../services/notificationHandler.ts';
+import { useNotify } from '../../services/notificationHandler.tsx';
 import { useService } from '../../services/serviceProvider.tsx';
 import { useIsNarrowScreen } from '../../styles/mediaQueries.ts';
-import { AccountContactContext, useAccountContacts } from '../accountContacts/accountContactContext.ts';
+import { AccountContactContext, GetCurrentAccountContacts, useAccountContacts } from '../accountContacts/accountContactContext.ts';
 import { Button, IconButton } from '../common/button/button.tsx';
 import { IconHamburger } from '../common/button/domIcons.tsx';
 import { Column, DivContainer, Row } from '../common/container/container.tsx';
@@ -143,7 +143,6 @@ function RightHeader({ onAnyClick }: {
 					<NotificationButton
 						icon={ notificationsIcon }
 						title='Notifications'
-						type='notifications'
 						onClick={ () => {
 							toast('Not implemented yet, notifications cleared', TOAST_OPTIONS_ERROR);
 						} }
@@ -266,13 +265,12 @@ export const HEADER_STATUS_SELECTOR_NAMES: Record<AccountOnlineStatus, string> =
 	'offline': 'Invisible',
 };
 
-function NotificationButton({ icon, title, type, onClick }: {
+function NotificationButton({ icon, title, onClick }: {
 	icon: string;
 	title: string;
-	type: NotificationHeaderKeys;
 	onClick: (_: React.MouseEvent<HTMLButtonElement>) => void;
 }): ReactElement {
-	const [notification, clearNotifications] = useNotificationHeader(type);
+	const [notifications, clearNotifications] = useNotificationHeader();
 
 	const onNotificationClick = useCallback((ev: React.MouseEvent<HTMLButtonElement>) => {
 		clearNotifications();
@@ -282,9 +280,9 @@ function NotificationButton({ icon, title, type, onClick }: {
 	return (
 		<HeaderButton
 			icon={ icon }
-			iconAlt={ `${ notification.length } ${ title }` }
+			iconAlt={ `${ notifications.length } ${ title }` }
 			title={ title }
-			badge={ notification.length }
+			badge={ notifications.length }
 			onClick={ onNotificationClick } />
 	);
 }
@@ -294,7 +292,7 @@ function FriendsHeaderButton({ onClickExtra }: {
 }): ReactElement {
 	const navigate = useNavigatePandora();
 	const directMessageManager = useService('directMessageManager');
-	const notifyDirectMessage = useNotification(NotificationSource.DIRECT_MESSAGE);
+	const notify = useNotify();
 	const unreadDirectMessageCount = useObservableMultiple(
 		useObservable(directMessageManager.chats)
 			.map((c) => c.displayInfo),
@@ -302,16 +300,29 @@ function FriendsHeaderButton({ onClickExtra }: {
 	const incomingFriendRequestCount = useAccountContacts('incoming').length;
 	const notificationCount = unreadDirectMessageCount + incomingFriendRequestCount;
 
-	useEffect(() => directMessageManager.on('newMessage', (_chat: DirectMessageChat) => {
-		notifyDirectMessage({
-			// TODO: notification
+	useEffect(() => directMessageManager.on('newMessage', (chat: DirectMessageChat) => {
+		const contacts = GetCurrentAccountContacts();
+		const isContact = contacts.some((c) => c.id === chat.id);
+		notify({
+			type: isContact ? 'contactsDirectMessageReceivedContact' : 'contactsDirectMessageReceivedUnknown',
+			metadata: {
+				from: chat.id,
+			},
+			time: Date.now(),
+			title: `Direct message from ${chat.displayInfo.value.displayName ?? '[unknown]'} (${chat.id})`,
 		});
-	}), [directMessageManager, notifyDirectMessage]);
+	}), [directMessageManager, notify]);
 
-	const notifyFriendRequest = useNotification(NotificationSource.INCOMING_FRIEND_REQUEST);
-	useEffect(() => AccountContactContext.on('incoming', () => notifyFriendRequest({
-		// TODO: ...
-	})), [notifyFriendRequest]);
+	useEffect(() => AccountContactContext.on('incoming', (contact) => {
+		notify({
+			type: 'contactsNewContactRequest',
+			metadata: {
+				from: contact.id,
+			},
+			time: Date.now(),
+			title: `${contact.displayName} (${contact.id}) sent you a contacts request`,
+		});
+	}), [notify]);
 
 	return (
 		<HeaderButton

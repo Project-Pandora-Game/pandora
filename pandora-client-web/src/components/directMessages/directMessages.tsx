@@ -11,7 +11,6 @@ import { useRoutingParentPath } from '../../routing/routingUtils.ts';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
 import type { DirectMessageChat } from '../../services/accountLogic/directMessages/directMessageChat.ts';
 import type { DirectMessageCryptoState } from '../../services/accountLogic/directMessages/directMessageManager.ts';
-import { NotificationSource, useNotificationSuppressed } from '../../services/notificationHandler.ts';
 import { useService } from '../../services/serviceProvider.tsx';
 import { Sleep } from '../../utility.ts';
 import { Button } from '../common/button/button.tsx';
@@ -69,10 +68,6 @@ function DirectMessagesInner(): ReactElement {
 					));
 			});
 	}, [chats, selected, flt]);
-
-	// If this menu is visible, then suppress and clear DM notifications.
-	// TODO: It would be better to only suppress those from the `selected` chat.
-	useNotificationSuppressed(NotificationSource.DIRECT_MESSAGE);
 
 	return (
 		<div className='direct-messages'>

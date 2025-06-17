@@ -19,10 +19,10 @@ import { useChatMessages, useChatMessageSender, useGameState } from '../../../co
 import { usePlayerId } from '../../../components/gameContext/playerContextProvider.tsx';
 import { useShardConnector } from '../../../components/gameContext/shardConnectorContextProvider.tsx';
 import { useAccountSettings } from '../../../services/accountLogic/accountManagerHooks.ts';
-import { NotificationSource, useNotificationSuppressed } from '../../../services/notificationHandler.ts';
+import { useNotificationSuppress, type NotificationSuppressionHook } from '../../../services/notificationHandler.tsx';
 import { useChatInjectedMessages } from './chatInjectedMessages.tsx';
 import { AutoCompleteHint, ChatInputArea, useChatCommandContext, useChatInput } from './chatInput.tsx';
-import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderChatPart, type IChatActionMessageProcessed, type IChatNormalMessageProcessed } from './chatMessages.tsx';
+import { IChatMessageProcessed, IsActionMessage, RenderActionContent, RenderActionContentToString, RenderChatPart, RenderChatPartToString, type IChatActionMessageProcessed, type IChatNormalMessageProcessed } from './chatMessages.tsx';
 import { COMMANDS } from './commands.ts';
 
 export function Chat(): ReactElement | null {
@@ -35,7 +35,18 @@ export function Chat(): ReactElement | null {
 	const lastMessageCount = useRef(0);
 	let newMessageCount = 0;
 
-	useNotificationSuppressed(NotificationSource.CHAT_MESSAGE, isScrolling);
+	useNotificationSuppress(useCallback<NotificationSuppressionHook>((notification) => {
+		return (
+			notification.type === 'chatMessagesMessage' ||
+			notification.type === 'chatMessagesEmote' ||
+			notification.type === 'chatMessagesOOC' ||
+			notification.type === 'chatMessagesWhisper' ||
+			notification.type === 'chatMessagesOOCWhisper' ||
+			notification.type === 'chatMessagesAction' ||
+			notification.type === 'chatMessagesServer' ||
+			notification.type === 'spaceCharacterJoined'
+		);
+	}, []));
 
 	const playerId = usePlayerId();
 
@@ -162,6 +173,16 @@ const Message = memo(function Message({ message, playerId }: { message: IChatMes
 	return ChatMessageEquals(prev.message, next.message) && prev.playerId === next.playerId;
 });
 
+export function RenderChatMessageToString(message: IChatMessageProcessed): string {
+	if (IsActionMessage(message)) {
+		return RenderActionMessageToString(message);
+	}
+	if (message.type === 'deleted') {
+		return '';
+	}
+	return RenderUserMessageToString(message);
+}
+
 function DisplayUserMessage({ message, playerId }: { message: IChatNormalMessageProcessed; playerId: CharacterId | null; }): ReactElement {
 	const [before, after] = useMemo(() => {
 		switch (message.type) {
@@ -206,6 +227,25 @@ function DisplayUserMessage({ message, playerId }: { message: IChatNormalMessage
 			) : null }
 		</>
 	);
+}
+
+function RenderUserMessageToString(message: IChatNormalMessageProcessed): string {
+	const [before, after] = (() => {
+		switch (message.type) {
+			case 'ooc':
+				return ['', ' ))'];
+			case 'emote':
+			case 'me':
+				return ['*', '*'];
+			default:
+				return ['', ''];
+		}
+	})();
+
+	return before +
+		RenderChatNameToString(message) +
+		message.parts.map((c) => RenderChatPartToString(c, message.type === 'ooc')).join('') +
+		after;
 }
 
 function DisplayContextMenuItems({ close, id }: { close: () => void; id: number; }): ReactElement {
@@ -369,6 +409,29 @@ function DisplayName({ message, color }: { message: IChatMessageChat; color: str
 	);
 }
 
+function RenderChatNameToString(message: IChatMessageChat): string {
+	const [before, after] = (() => {
+		switch (message.type) {
+			case 'ooc':
+				return ['[OOC] ', ': (( '];
+			case 'chat':
+				return ['', ': '];
+			case 'me':
+				// For /me messages that start with 's we don't insert a space, so the displayed message becomes "Name's"
+				// This works for both `*'s thing` and `/me 's thing`, which both display as `Name's thing`
+				return ['', message.parts.length > 0 && message.parts[0][1].startsWith('\'s') ? '' : ' '];
+			default:
+				return ['', ''];
+		}
+	})();
+
+	if ('to' in message && message.to) {
+		return before + message.from.name + ' -> ' + message.to.name + after;
+	}
+
+	return before + message.from.name + after;
+}
+
 export function ActionMessageElement({ type, labelColor, messageTime, edited, repetitions = 1, children, extraContent, defaultUnfolded = false }: {
 	type: 'action' | 'serverMessage';
 	labelColor?: HexColorString;
@@ -457,4 +520,18 @@ export function ActionMessage({ message, ignoreColor = false }: { message: IChat
 			{ content }
 		</ActionMessageElement>
 	);
+}
+
+export function RenderActionMessageToString(message: IChatActionMessageProcessed): string {
+	const assetManager = useAssetManager();
+	const { interfaceChatroomItemDisplayNameType } = useAccountSettings();
+
+	const [content, extraContent] = useMemo(() => RenderActionContentToString(message, assetManager, interfaceChatroomItemDisplayNameType), [message, assetManager, interfaceChatroomItemDisplayNameType]);
+
+	// If there is nothing to display, hide this message
+	if (content == null && extraContent == null)
+		return '';
+
+	return content +
+		(extraContent != null ? ' ( ... )' : '');
 }

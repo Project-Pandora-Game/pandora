@@ -7,7 +7,13 @@ describe('ShardConnector', () => {
 	const serviceManager = MockServiceManager();
 	Assert(serviceManager.services.directoryConnector != null);
 	Assert(serviceManager.services.accountManager != null);
-	const mockShardConnector = new ShardConnector(MockConnectionInfo(), serviceManager.services.directoryConnector, serviceManager.services.accountManager);
+	Assert(serviceManager.services.notificationHandler != null);
+	const mockShardConnector = new ShardConnector(
+		MockConnectionInfo(),
+		serviceManager.services.directoryConnector,
+		serviceManager.services.accountManager,
+		serviceManager.services.notificationHandler,
+	);
 
 	it('default state should be NONE', () => {
 		expect(mockShardConnector.state.value).toBe(ShardConnectionState.NONE);

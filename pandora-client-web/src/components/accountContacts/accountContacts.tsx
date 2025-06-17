@@ -12,7 +12,7 @@ import statusIconLookingSwitch from '../../assets/icons/state-switch.svg';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { useKeyDownEvent } from '../../common/useKeyDownEvent.ts';
 import { useNavigatePandora } from '../../routing/navigate.ts';
-import { NotificationSource, useNotificationSuppressed } from '../../services/notificationHandler.ts';
+import { NotificationSuppressionHook, useNotificationSuppress } from '../../services/notificationHandler.tsx';
 import { Button } from '../common/button/button.tsx';
 import { DivContainer, Row } from '../common/container/container.tsx';
 import { Scrollable } from '../common/scrollbar/scrollbar.tsx';
@@ -67,7 +67,9 @@ function AccountContactHeader({ type }: { type: IAccountContact['type']; }) {
 }
 
 function ClearIncoming() {
-	useNotificationSuppressed(NotificationSource.INCOMING_FRIEND_REQUEST);
+	useNotificationSuppress(useCallback<NotificationSuppressionHook>((notification) => {
+		return notification.type === 'contactsNewContactRequest';
+	}, []));
 	return null;
 }
 

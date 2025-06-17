@@ -100,15 +100,6 @@ export const CLIENT_NOTIFICATION_TYPES = {
 		suppressable: 'the chat is visible',
 		defaultSettings: DEFAULT_DISABLED,
 	},
-	chatMessagesOwnName: {
-		name: 'Your character name is mentioned in the chat',
-		group: 'chatMessages',
-		metadata: z.object({
-			from: CharacterIdSchema,
-		}),
-		suppressable: 'the chat is visible',
-		defaultSettings: DEFAULT_DISABLED,
-	},
 	contactsDirectMessageReceivedContact: {
 		name: 'A direct message is received from a contact',
 		group: 'contacts',
@@ -151,22 +142,11 @@ export const CLIENT_NOTIFICATION_TYPES = {
 			suppression: 'not-suppressed',
 		},
 	},
-	spaceJoinedSpaceContact: {
-		name: 'One of your contacts joins the current space',
+	spaceCharacterJoined: {
+		name: 'A character joins the current space',
 		group: 'space',
 		metadata: z.object({
-			action: ZodCast<ChatActionId>(),
-			from: AccountIdSchema,
-		}),
-		suppressable: 'the chat is visible',
-		defaultSettings: DEFAULT_DISABLED,
-	},
-	spaceJoinedSpaceUnknown: {
-		name: 'A user not one of your contacts joins the current space',
-		group: 'space',
-		metadata: z.object({
-			action: ZodCast<ChatActionId>(),
-			from: AccountIdSchema,
+			id: CharacterIdSchema,
 		}),
 		suppressable: 'the chat is visible',
 		defaultSettings: DEFAULT_DISABLED,

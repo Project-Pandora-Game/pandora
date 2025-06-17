@@ -44,7 +44,6 @@ import {
 	type AppearanceAction,
 	type AssetFrameworkGlobalStateClientDeltaBundle,
 	type CurrentSpaceInfo,
-	type IChatMessageActionTargetCharacter,
 	type IClientShardPromiseResult,
 	type ItemContainerPath,
 	type ItemId,
@@ -61,11 +60,11 @@ import { ShardConnector } from '../../networking/shardConnector.ts';
 import { Observable, useNullableObservable, useObservable } from '../../observable.ts';
 import { TOAST_OPTIONS_ERROR } from '../../persistentToast.ts';
 import { useCurrentAccount } from '../../services/accountLogic/accountManagerHooks.ts';
-import type { NotificationData } from '../../services/notificationHandler.ts';
+import { RenderChatMessageToString } from '../../ui/components/chat/chat.tsx';
 import { IChatMessageProcessed } from '../../ui/components/chat/chatMessages.tsx';
 import { ChatParser } from '../../ui/components/chat/chatParser.ts';
-import { useShardConnector } from './shardConnectorContextProvider.tsx';
 import { useAccountContacts } from '../accountContacts/accountContactContext.ts';
+import { useShardConnector } from './shardConnectorContextProvider.tsx';
 
 const logger = GetLogger('GameState');
 
@@ -113,8 +112,6 @@ export class ChatSendError extends Error {
 
 export class GameState extends TypedEventEmitter<{
 	globalStateChange: true;
-	messageNotify: NotificationData;
-	characterEntered: IChatMessageActionTargetCharacter;
 	permissionPrompt: PermissionPromptData;
 }> implements IChatMessageSender {
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
@@ -367,8 +364,6 @@ export class GameState extends TypedEventEmitter<{
 		let nextMessages = [...this.messages.value];
 		const insertIndexes = new Map<number, number>();
 
-		let notified = false;
-
 		for (const message of messages) {
 			if (message.type === 'deleted') {
 				let found = false;
@@ -396,11 +391,75 @@ export class GameState extends TypedEventEmitter<{
 					continue;
 				}
 			} else {
-				// Emit events for some message types
-				if (message.type === 'serverMessage' && message.id === 'characterEntered' && message.data?.character?.type === 'character') {
-					if (message.data.character.id !== this.playerId)
-						this.emit('characterEntered', message.data.character);
+				//#region Notifications
+				const messageContent = RenderChatMessageToString(message);
+				if (message.type === 'chat') {
+					this._shard.notificationHandler.notify({
+						type: message.to != null ? 'chatMessagesWhisper' : 'chatMessagesMessage',
+						metadata: {
+							from: message.from.id,
+						},
+						time: message.time,
+						title: `Chat message from ${message.from.name} (${message.from.id})`,
+						content: messageContent,
+					});
+				} else if (message.type === 'me' || message.type === 'emote') {
+					this._shard.notificationHandler.notify({
+						type: 'chatMessagesEmote',
+						metadata: {
+							from: message.from.id,
+						},
+						time: message.time,
+						title: `Chat message from ${message.from.name} (${message.from.id})`,
+						content: messageContent,
+					});
+				} else if (message.type === 'ooc') {
+					this._shard.notificationHandler.notify({
+						type: message.to != null ? 'chatMessagesOOCWhisper' : 'chatMessagesOOC',
+						metadata: {
+							from: message.from.id,
+						},
+						time: message.time,
+						title: `OOC Chat message from ${message.from.name} (${message.from.id})`,
+						content: messageContent,
+					});
+				} else if (message.type === 'action') {
+					this._shard.notificationHandler.notify({
+						type: 'chatMessagesAction',
+						metadata: {
+							from: message.data?.character?.id ?? null,
+							action: message.id,
+						},
+						time: message.time,
+						title: message.data?.character != null ? `Action from ${message.data.character.name} (${message.data.character.id})` : 'Action',
+						content: messageContent,
+					});
+				} else if (message.type === 'serverMessage') {
+					if (message.id === 'characterEntered' && message.data?.character?.type === 'character') {
+						if (message.data.character.id !== this.playerId) {
+							this._shard.notificationHandler.notify({
+								type: 'spaceCharacterJoined',
+								metadata: {
+									id: message.data.character.id,
+								},
+								time: message.time,
+								title: `${message.data.character.name} (${message.data.character.id}) joined the space`,
+							});
+						}
+					} else {
+						this._shard.notificationHandler.notify({
+							type: 'chatMessagesServer',
+							metadata: {
+								from: message.data?.character?.id ?? null,
+								action: message.id,
+							},
+							time: message.time,
+							title: 'Server message',
+							content: messageContent,
+						});
+					}
 				}
+				//#endregion
 
 				// Action messages can get deduplicated
 				let skip = false;
@@ -425,10 +484,6 @@ export class GameState extends TypedEventEmitter<{
 				// Add the message to chat
 				if (!skip) {
 					nextMessages.push(message);
-				}
-				if (!notified) {
-					this.emit('messageNotify', { time: Date.now() });
-					notified = true;
 				}
 			}
 		}

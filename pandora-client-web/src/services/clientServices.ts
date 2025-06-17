@@ -2,7 +2,7 @@ import { BaseServicesDefinition, Satisfies, ServiceManager } from 'pandora-commo
 import { DirectoryConnectorServiceProvider, type DirectoryConnector } from '../networking/directoryConnector.ts';
 import { AccountManagerServiceProvider, type AccountManager } from './accountLogic/accountManager.ts';
 import { DirectMessageManagerServiceProvider, type DirectMessageManager } from './accountLogic/directMessages/directMessageManager.ts';
-import { NotificationHandlerServiceProvider, type NotificationHandler } from './notificationHandler.ts';
+import { NotificationHandlerServiceProvider, type NotificationHandler } from './notificationHandler.tsx';
 import { ShardConnectionManagerServiceProvider, type IShardConnectionManager } from './shardConnectionManager.ts';
 
 /** Services available on Padora's client, when running in normal user mode. */

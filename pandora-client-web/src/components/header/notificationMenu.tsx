@@ -6,6 +6,7 @@ import crossIcon from '../../assets/icons/cross.svg';
 import deleteIcon from '../../assets/icons/delete.svg';
 import type { NotificationEntry } from '../../services/notificationHandler.tsx';
 import { useService } from '../../services/serviceProvider.tsx';
+import { NotificationPermissionRequest } from '../../ui/components/notifications/notificationPermissionRequest.tsx';
 import { Button, IconButton } from '../common/button/button.tsx';
 import { Column, Row } from '../common/container/container.tsx';
 import { DialogInPortal } from '../dialog/dialog.tsx';
@@ -40,6 +41,7 @@ export function NotificationMenu({ visible, close, notifications, clearNotificat
 					</Button>
 				</Row>
 				<Column className='content' overflowX='auto' overflowY='auto' padding='medium'>
+					<NotificationPermissionRequest />
 					{
 						notifications.length > 0 ? (
 							Array.from(notifications).reverse().map((n, i) => (

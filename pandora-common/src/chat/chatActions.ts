@@ -92,7 +92,7 @@ const CHAT_ACTIONS_DEF = {
 	gamblingCardGameJoinedAlready: 'You are already part of this game.',
 	gamblingCardGameDealOpen: 'SOURCE_CHARACTER deals CARD openly to the table.',
 	gamblingCardGameDealPlayerOpen: 'SOURCE_CHARACTER deals CARD to TARGET_CHARACTER.',
-	gamblingCardGameDealPlayerSecret: 'SOURCE_CHARACTER deals a card face down to TARGET_CHARACTER.',
+	gamblingCardGameDealPlayerSecret: 'SOURCE_CHARACTER deals COUNT face down to TARGET_CHARACTER.',
 	gamblingCardGameDealToYou: 'SOURCE_CHARACTER deals CARD to you.',
 	gamblingCardGameHandCheck: 'You are currently holding HAND.\nOn the table ISARE TABLE.',
 	gamblingCardGameEnds: 'SOURCE_CHARACTER ends the game and all hands are revealed.',

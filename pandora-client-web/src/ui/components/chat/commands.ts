@@ -424,7 +424,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 								shardConnector.sendMessage('gamblingAction', {
 									type: 'cards',
 									action: {
-										action: 'dealOpenly',
+										action: 'deal',
 										targetId: target.data.id,
 										number: cards,
 									},

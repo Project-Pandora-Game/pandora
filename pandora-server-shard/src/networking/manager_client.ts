@@ -616,7 +616,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 									});
 									//Show the cards of all players
 									space.cardGame.getPlayerIds().forEach((id) => space.handleActionMessage({
-										id: 'gamblingCardGameHandReveal',
+										id: 'gamblingCardGameHandShow',
 										character,
 										sendTo: receivers,
 										dictionary: {
@@ -632,6 +632,18 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 										character,
 									});
 								}
+								break;
+							}
+							case 'show': {
+								space.handleActionMessage({
+									id: 'gamblingCardGameHandShow',
+									character,
+									sendTo: receivers,
+									dictionary: {
+										'PLAYER': `${space.getCharacterById(client.character.id)?.name}`,
+										'HAND': `${space.cardGame?.getPlayerHand(client.character.id)}`,
+									},
+								});
 								break;
 							}
 							default:

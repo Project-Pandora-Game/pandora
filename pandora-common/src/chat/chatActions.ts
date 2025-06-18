@@ -96,7 +96,7 @@ const CHAT_ACTIONS_DEF = {
 	gamblingCardGameDealToYou: 'SOURCE_CHARACTER deals CARD to you.',
 	gamblingCardGameHandCheck: 'You are currently holding HAND.\nOn the table ISARE TABLE.',
 	gamblingCardGameEnds: 'SOURCE_CHARACTER ends the game and all hands are revealed.',
-	gamblingCardGameHandReveal: 'PLAYER shows their hand and reveals HAND.',
+	gamblingCardGameHandShow: 'PLAYER shows their hand and reveals HAND.',
 	gamblingCardGameRoomCards: 'On the table ISARE HAND.',
 	gamblingCardGameEmpty: 'There are not enough cards left in the deck.',
 	gamblingCardGameStopped: 'The current game has been cancelled by SOURCE_CHARACTER.',

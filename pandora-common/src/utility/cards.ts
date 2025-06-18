@@ -217,6 +217,9 @@ export const CardGameActionSchema = z.discriminatedUnion('action', [
 	z.object({
 		action: z.literal('reveal'),
 	}),
+	z.object({
+		action: z.literal('show'),
+	}),
 ]);
 
 // Validate a plain object and then create a class instance

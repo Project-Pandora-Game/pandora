@@ -514,7 +514,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 										});
 										break; //Done on purpose
 									}
-									const card = space.cardGame.dealTo(game.action.number, game.action.targetId);
+									const card = space.cardGame.dealTo(game.action.number, game.action.targetId, true);
 									if (!card) {
 										space.handleActionMessage({
 											id: 'gamblingCardGameEmpty',
@@ -551,7 +551,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 										});
 										break; //Done on purpose
 									}
-									const cards = space.cardGame.dealTo(game.action.number, game.action.targetId);
+									const cards = space.cardGame.dealTo(game.action.number, game.action.targetId, false);
 									if (!cards) {
 										space.handleActionMessage({
 											id: 'gamblingCardGameEmpty',
@@ -587,17 +587,29 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								break;
 							}
 							case 'check': {
+								// Show the player's hand and all already revealed cards
 								const spaceHand = space.cardGame.getSpaceHand();
 								space.handleActionMessage({
 									id: 'gamblingCardGameHandCheck',
 									character,
 									sendTo: [client.character.id],
 									dictionary: {
-										'HAND': space.cardGame.getPlayerHand(client.character.id),
+										'HAND': space.cardGame.getPlayerHand(client.character.id, false),
 										'ISARE': (spaceHand === 'nothing' || spaceHand.length < 2) ? 'is' : 'are',
 										'TABLE': spaceHand,
 									},
 								});
+								//Show the revealed cards of all players
+								space.cardGame.getPlayerIds().filter((p) => p !== character.id).
+									forEach((id) => space.handleActionMessage({
+										id: 'gamblingCardGamePlayerCheck',
+										character,
+										sendTo: [character.id],
+										dictionary: {
+											'PLAYER': `${space.getCharacterById(id)?.name}`,
+											'HAND': `${space.cardGame?.getPlayerHand(id, true)}`,
+										},
+									}));
 								break;
 							}
 							case 'reveal': {
@@ -621,7 +633,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 										sendTo: receivers,
 										dictionary: {
 											'PLAYER': `${space.getCharacterById(id)?.name}`,
-											'HAND': `${space.cardGame?.getPlayerHand(id)}`,
+											'HAND': `${space.cardGame?.getPlayerHand(id, false)}`,
 										},
 									}));
 									space.cardGame = null;
@@ -635,13 +647,14 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 								break;
 							}
 							case 'show': {
+								space.cardGame.revealHand(client.character.id);
 								space.handleActionMessage({
 									id: 'gamblingCardGameHandShow',
 									character,
 									sendTo: receivers,
 									dictionary: {
 										'PLAYER': `${space.getCharacterById(client.character.id)?.name}`,
-										'HAND': `${space.cardGame?.getPlayerHand(client.character.id)}`,
+										'HAND': `${space.cardGame?.getPlayerHand(client.character.id, true)}`,
 									},
 								});
 								break;

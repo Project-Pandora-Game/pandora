@@ -448,7 +448,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 						}),
 				},
 				check: {
-					description: 'Have a look at the cards that were dealt to you',
+					description: 'Have a look at the cards that were dealt and revealed',
 					usage: '',
 					handler: ctx
 						.handler(({ shardConnector }) => {
@@ -466,7 +466,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 						.handler(({ shardConnector }) => {
 							shardConnector.sendMessage('gamblingAction', {
 								type: 'cards',
-								action: { action: 'check' },
+								action: { action: 'show' },
 							});
 							return true;
 						}),

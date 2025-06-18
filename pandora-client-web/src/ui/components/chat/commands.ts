@@ -326,7 +326,7 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 		description: 'Play a game of cards',
 		longDescription: `You can 'create' or 'stop' a game of cards, 'join' an existing one, 'deal' cards open or face down to player or the room,
 		'check' your hand or 'reveal' the cards that were dealt to all players, ending the game.`,
-		usage: 'create [public]| stop | join | dealTable [#cards] | dealOpenly <target> [#cards] | deal <target> [#cards] | check | reveal',
+		usage: 'create [public]| stop | join | dealTable [#cards] | dealOpenly <target> [#cards] | deal <target> [#cards] | check | show | reveal',
 		handler: CreateClientCommand()
 			.fork('action', (ctx) => ({
 				create: {
@@ -449,6 +449,18 @@ export const COMMANDS: readonly IClientCommand<ICommandExecutionContextClient>[]
 				},
 				check: {
 					description: 'Have a look at the cards that were dealt to you',
+					usage: '',
+					handler: ctx
+						.handler(({ shardConnector }) => {
+							shardConnector.sendMessage('gamblingAction', {
+								type: 'cards',
+								action: { action: 'check' },
+							});
+							return true;
+						}),
+				},
+				show: {
+					description: 'Show your current cards to all players',
 					usage: '',
 					handler: ctx
 						.handler(({ shardConnector }) => {

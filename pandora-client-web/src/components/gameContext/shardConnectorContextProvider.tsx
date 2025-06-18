@@ -10,12 +10,14 @@ import { useDebugExpose } from '../../common/useDebugExpose.ts';
 import { useAsyncEvent } from '../../common/useEvent.ts';
 import { ShardConnector } from '../../networking/shardConnector.ts';
 import { useNullableObservable, useObservable } from '../../observable.ts';
+import { useNavigatePandora } from '../../routing/navigate.ts';
 import { useService } from '../../services/serviceProvider.tsx';
 import { useDebugContext } from '../error/debugContextProvider.tsx';
 import { useDirectoryConnector } from './directoryConnectorContextProvider.tsx';
 import { useGameStateOptional } from './gameStateContextProvider.tsx';
 
 export function ShardConnectorContextProvider(): null {
+	const navigate = useNavigatePandora();
 	const directoryConnector = useDirectoryConnector();
 	const directoryState = useObservable(directoryConnector.state);
 	const directoryStatus = useObservable(directoryConnector.directoryStatus);
@@ -27,6 +29,12 @@ export function ShardConnectorContextProvider(): null {
 	const { setDebugData } = useDebugContext();
 
 	const gameState = useNullableObservable(shardConnector?.gameState);
+
+	useEffect(() => {
+		return gameState?.on('uiNavigate', (target) => {
+			navigate(target);
+		});
+	}, [gameState, navigate]);
 
 	useEffect(() => {
 		setDebugData({

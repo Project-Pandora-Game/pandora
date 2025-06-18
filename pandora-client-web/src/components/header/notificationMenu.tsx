@@ -45,7 +45,24 @@ export function NotificationMenu({ visible, close, notifications, clearNotificat
 							Array.from(notifications).reverse().map((n, i) => (
 								<Column key={ i } className='notificationEntry' alignY='start' padding='medium'>
 									<Row>
-										<strong className='zero-width flex-1 title'>{ n.title ?? CLIENT_NOTIFICATION_TYPES[n.type].name }</strong>
+										{
+											n.onClick != null ? (
+												<Button
+													onClick={ () => {
+														notificationHandler.dismissNotification(n);
+														close();
+														n.onClick?.();
+													} }
+													className='zero-width flex-1 title'
+													theme='transparent'
+													slim
+												>
+													{ n.title ?? CLIENT_NOTIFICATION_TYPES[n.type].name }
+												</Button>
+											) : (
+												<span className='zero-width flex-1 title'>{ n.title ?? CLIENT_NOTIFICATION_TYPES[n.type].name }</span>
+											)
+										}
 										<IconButton
 											onClick={ () => {
 												notificationHandler.dismissNotification(n);

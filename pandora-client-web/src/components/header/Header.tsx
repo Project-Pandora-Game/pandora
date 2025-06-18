@@ -36,6 +36,7 @@ import { useShardConnectionInfo } from '../gameContext/shardConnectorContextProv
 import { HeaderButton } from './HeaderButton.tsx';
 import './header.scss';
 import { LeaveButton } from './leaveButton.tsx';
+import { NotificationMenu } from './notificationMenu.tsx';
 
 function LeftHeader({ onAnyClick }: {
 	onAnyClick?: () => void;
@@ -144,7 +145,7 @@ function RightHeader({ onAnyClick }: {
 						icon={ notificationsIcon }
 						title='Notifications'
 						onClick={ () => {
-							toast('Not implemented yet, notifications cleared', TOAST_OPTIONS_ERROR);
+							onAnyClick?.();
 						} }
 					/>
 					<FriendsHeaderButton onClickExtra={ onAnyClick } />
@@ -271,19 +272,38 @@ function NotificationButton({ icon, title, onClick }: {
 	onClick: (_: React.MouseEvent<HTMLButtonElement>) => void;
 }): ReactElement {
 	const [notifications, clearNotifications] = useNotificationHeader();
+	const [showOverlay, setShowOverlay] = useState(false);
 
 	const onNotificationClick = useCallback((ev: React.MouseEvent<HTMLButtonElement>) => {
-		clearNotifications();
-		onClick(ev);
-	}, [clearNotifications, onClick]);
+		setShowOverlay((v) => {
+			if (!v) {
+				// Hide collapsable header after 200ms (matching opening transition of notification menu), if opening the menu
+				setTimeout(() => {
+					onClick(ev);
+				}, 200);
+			}
+			return !v;
+		});
+	}, [onClick]);
 
 	return (
-		<HeaderButton
-			icon={ icon }
-			iconAlt={ `${ notifications.length } ${ title }` }
-			title={ title }
-			badge={ notifications.length }
-			onClick={ onNotificationClick } />
+		<>
+			<HeaderButton
+				icon={ icon }
+				iconAlt={ `${ notifications.length } ${ title }` }
+				title={ title }
+				badge={ notifications.length }
+				onClick={ onNotificationClick }
+			/>
+			<NotificationMenu
+				visible={ showOverlay }
+				close={ () => {
+					setShowOverlay(false);
+				} }
+				notifications={ notifications }
+				clearNotifications={ clearNotifications }
+			/>
+		</>
 	);
 }
 

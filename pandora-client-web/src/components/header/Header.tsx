@@ -275,6 +275,10 @@ function NotificationButton({ icon, title, onClick }: {
 	const [notifications, clearNotifications] = useNotificationHeader();
 	const [showOverlay, setShowOverlay] = useState(false);
 
+	const { notificationGlobalSettings } = useAccountSettings();
+	const notificationPermissionState = useObservable((useService('browserPermissionManager')).permissionStates).notifications;
+	const shouldNotifyAboutNotificationPermission = notificationGlobalSettings.usePlatformPopup && notificationPermissionState === 'prompt';
+
 	const onNotificationClick = useCallback((ev: React.MouseEvent<HTMLButtonElement>) => {
 		setShowOverlay((v) => {
 			if (!v) {
@@ -293,7 +297,7 @@ function NotificationButton({ icon, title, onClick }: {
 				icon={ icon }
 				iconAlt={ `${ notifications.length } ${ title }` }
 				title={ title }
-				badge={ notifications.length }
+				badge={ notifications.length + (shouldNotifyAboutNotificationPermission ? 1 : 0) }
 				onClick={ onNotificationClick }
 			/>
 			<NotificationMenu

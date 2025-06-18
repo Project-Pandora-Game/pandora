@@ -40,10 +40,3 @@ export function useNotificationHeader(): [Immutable<NotificationEntry[]>, () => 
 		useCallback(() => notificationHandler.clearAllNotifications(), [notificationHandler]),
 	];
 }
-
-export function useNotificationPermissionCheck(): () => void {
-	const notificationHandler = useService('notificationHandler');
-	return useCallback(() => {
-		notificationHandler.popupCheckEnabled(true).catch(() => { /** noop */ });
-	}, [notificationHandler]);
-}

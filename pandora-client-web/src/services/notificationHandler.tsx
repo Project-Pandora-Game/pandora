@@ -227,18 +227,6 @@ export class NotificationHandler extends Service<NotificationHandlerServiceConfi
 		}
 	}
 
-	public async popupCheckEnabled(userAction = false): Promise<boolean> {
-		if (!Notification) {
-			return false;
-		}
-		if (Notification.permission === 'default' && userAction) {
-			if (await Notification.requestPermission() === 'granted') {
-				return true;
-			}
-		}
-		return Notification.permission === 'granted';
-	}
-
 	private readonly _onFocus = () => {
 		// When window is focused, auto-clear all newly suppressed notifications
 		this._notifications.value.forEach((n) => {

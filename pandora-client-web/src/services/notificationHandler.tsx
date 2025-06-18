@@ -58,6 +58,7 @@ interface NotificationEntryData<TType extends ClientNotificationType> {
 	time: number;
 	title?: string;
 	content?: string;
+	onClick?: () => void;
 }
 
 /** A notification data, including metadata and content */
@@ -140,6 +141,9 @@ export class NotificationHandler extends Service<NotificationHandlerServiceConfi
 			platformNotification.onclick = () => {
 				window.focus();
 				platformNotification.close();
+				this._popups.delete(notification);
+				this.dismissNotification(notification);
+				notification.onClick?.();
 			};
 		} else {
 			toast(
@@ -155,6 +159,10 @@ export class NotificationHandler extends Service<NotificationHandlerServiceConfi
 					closeOnClick: true,
 					closeButton: true,
 					draggable: true,
+					onClick: () => {
+						this.dismissNotification(notification);
+						notification.onClick?.();
+					},
 				},
 			);
 		}

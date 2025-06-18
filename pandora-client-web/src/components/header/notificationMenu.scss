@@ -44,6 +44,14 @@
 				height: 2em;
 			}
 
+			.title {
+				font-weight: bold;
+
+				&.Button {
+					justify-content: start;
+				}
+			}
+
 			p {
 				margin: 0;
 				max-width: 100%;

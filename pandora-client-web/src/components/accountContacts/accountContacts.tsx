@@ -222,10 +222,14 @@ function ShowFriends() {
 	);
 }
 
+export function GetAccountDMUrl(target: AccountId): string {
+	return `/contacts/dm/${target}`;
+}
+
 export function useGoToDM(id: AccountId) {
 	const navigate = useNavigatePandora();
 	return useCallback(() => {
-		navigate(`/contacts/dm/${id}`);
+		navigate(GetAccountDMUrl(id));
 	}, [id, navigate]);
 }
 

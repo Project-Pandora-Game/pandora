@@ -113,6 +113,8 @@ export class ChatSendError extends Error {
 export class GameState extends TypedEventEmitter<{
 	globalStateChange: true;
 	permissionPrompt: PermissionPromptData;
+	/** Request for navigating to some URL. Used by notification click mechanism to show chat. */
+	uiNavigate: string;
 }> implements IChatMessageSender {
 	public readonly globalState: AssetFrameworkGlobalStateContainer;
 
@@ -395,6 +397,9 @@ export class GameState extends TypedEventEmitter<{
 				//#region Notifications
 				try {
 					const messageContent = RenderChatMessageToString(message, GetAccountSettings(accountManager));
+					const showChat = () => {
+						this.emit('uiNavigate', '/room');
+					};
 					if (message.type === 'chat') {
 						if (message.from.id !== this.player.id) {
 							notificationHandler.notify({
@@ -405,6 +410,7 @@ export class GameState extends TypedEventEmitter<{
 								time: message.time,
 								title: `Chat message from ${message.from.name} (${message.from.id})`,
 								content: messageContent,
+								onClick: showChat,
 							});
 						}
 					} else if (message.type === 'me' || message.type === 'emote') {
@@ -417,6 +423,7 @@ export class GameState extends TypedEventEmitter<{
 								time: message.time,
 								title: `Chat message from ${message.from.name} (${message.from.id})`,
 								content: messageContent,
+								onClick: showChat,
 							});
 						}
 					} else if (message.type === 'ooc') {
@@ -429,6 +436,7 @@ export class GameState extends TypedEventEmitter<{
 								time: message.time,
 								title: `OOC Chat message from ${message.from.name} (${message.from.id})`,
 								content: messageContent,
+								onClick: showChat,
 							});
 						}
 					} else if (message.type === 'action') {
@@ -442,6 +450,7 @@ export class GameState extends TypedEventEmitter<{
 								time: message.time,
 								title: message.data?.character != null ? `Action from ${message.data.character.name} (${message.data.character.id})` : 'Action',
 								content: messageContent,
+								onClick: showChat,
 							});
 						}
 					} else if (message.type === 'serverMessage') {
@@ -454,6 +463,7 @@ export class GameState extends TypedEventEmitter<{
 									},
 									time: message.time,
 									title: `${message.data.character.name} (${message.data.character.id}) joined the space`,
+									onClick: showChat,
 								});
 							}
 						} else {
@@ -467,6 +477,7 @@ export class GameState extends TypedEventEmitter<{
 									time: message.time,
 									title: 'Server message',
 									content: messageContent,
+									onClick: showChat,
 								});
 							}
 						}

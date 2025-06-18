@@ -25,6 +25,7 @@ import { useNotify } from '../../services/notificationHandler.tsx';
 import { useService } from '../../services/serviceProvider.tsx';
 import { useIsNarrowScreen } from '../../styles/mediaQueries.ts';
 import { AccountContactContext, GetCurrentAccountContacts, useAccountContacts } from '../accountContacts/accountContactContext.ts';
+import { GetAccountDMUrl } from '../accountContacts/accountContacts.tsx';
 import { Button, IconButton } from '../common/button/button.tsx';
 import { IconHamburger } from '../common/button/domIcons.tsx';
 import { Column, DivContainer, Row } from '../common/container/container.tsx';
@@ -330,8 +331,11 @@ function FriendsHeaderButton({ onClickExtra }: {
 			},
 			time: Date.now(),
 			title: `Direct message from ${chat.displayInfo.value.displayName ?? '[unknown]'} (${chat.id})`,
+			onClick: () => {
+				navigate(GetAccountDMUrl(chat.id));
+			},
 		});
-	}), [directMessageManager, notify]);
+	}), [directMessageManager, notify, navigate]);
 
 	useEffect(() => AccountContactContext.on('incoming', (contact) => {
 		notify({
@@ -341,8 +345,11 @@ function FriendsHeaderButton({ onClickExtra }: {
 			},
 			time: Date.now(),
 			title: `${contact.displayName} (${contact.id}) sent you a contacts request`,
+			onClick: () => {
+				navigate('/contacts/incoming');
+			},
 		});
-	}), [notify]);
+	}), [notify, navigate]);
 
 	return (
 		<HeaderButton

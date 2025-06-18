@@ -528,6 +528,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 											sendTo: receivers,
 											dictionary: {
 												'CARD': card.toString(),
+												'TARGET_CHARACTER': `${space.getCharacterById(game.action.targetId)?.name}`,
 											},
 										});
 									}
@@ -550,8 +551,8 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 										});
 										break; //Done on purpose
 									}
-									const card = space.cardGame.dealTo(game.action.number, game.action.targetId);
-									if (!card) {
+									const cards = space.cardGame.dealTo(game.action.number, game.action.targetId);
+									if (!cards) {
 										space.handleActionMessage({
 											id: 'gamblingCardGameEmpty',
 											sendTo: [client.character.id],
@@ -563,6 +564,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 											target: { type: 'character', id: game.action.targetId },
 											sendTo: receivers,
 											dictionary: {
+												'COUNT': `${cards.length === 1 ? 'a card' : 'some cards'}`,
 												'TARGET_CHARACTER': `${space.getCharacterById(game.action.targetId)?.name}`,
 											},
 										});
@@ -571,7 +573,7 @@ export const ConnectionManagerClient = new class ConnectionManagerClient impleme
 											character,
 											sendTo: [game.action.targetId],
 											dictionary: {
-												'CARD': card.toString(),
+												'CARD': cards.toString(),
 											},
 										});
 									}

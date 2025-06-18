@@ -25,15 +25,31 @@ type CardArray = CardGameCard[];
 export class CardGameCard {
 	public readonly suit: CardGameSuit;
 	public readonly rank: CardGameRank;
+	private faceDown: boolean;
 
 	public toString() {
 		return `${this.rank}${this.suit}`;
 	}
 
+	public reveal() {
+		this.faceDown = false;
+	}
+
+	public isRevieled() {
+		return !this.faceDown;
+	}
+
 	constructor(s: CardGameSuit = '\u2661', r: CardGameRank = '2') {
 		this.suit = s;
 		this.rank = r;
+		this.faceDown = true;
 	}
+}
+
+// Helper functions
+function CardArraysToString(...cardGroups: CardArray[]) {
+	const cards = cardGroups.flat();
+	return cards.length === 0 ? 'nothing' : cards.map((c) => c.toString()).join(', ');
 }
 
 // A deck of cards
@@ -82,12 +98,19 @@ class CardPlayer {
 		return this.id;
 	}
 
-	public receiveCard(c: CardGameCard) {
+	public receiveCard(c: CardGameCard, open: boolean = false) {
+		if (open) c.reveal();
 		this.hand.push(c);
 	}
 
+	public getCards(revealed: boolean) {
+		const cards = revealed ? this.hand.filter((c) => c.isRevieled()) : this.hand.filter((c) => !c.isRevieled());
+		return cards;
+	}
+
 	public showHand() {
-		return this.hand.length > 0 ? this.hand.toString() : 'nothing';
+		this.hand.forEach((c) => c.reveal());
+		return CardArraysToString(this.hand);
 	}
 
 	constructor(id: CharacterId) {
@@ -113,10 +136,10 @@ export class CardGameGame {
 	}
 
 	public leaveGame(c: CharacterId) {
-		this.players.filter((p) => p.getId() !== c);
+		this.players = this.players.filter((p) => p.getId() !== c);
 	}
 
-	public dealTo(n: number, c?: CharacterId): CardArray | null {
+	public dealTo(n: number, c?: CharacterId, open: boolean = false): CardArray | null {
 		if (n > this.deck.cardsLeft) return null;
 		//Deal a card either to the room or to a player
 		const cards: CardArray = [];
@@ -129,24 +152,28 @@ export class CardGameGame {
 			const player = this.players.find((p) => p.getId() === c);
 			if (!player) return null;
 
-			cards.forEach((ca) => player.receiveCard(ca));
+			cards.forEach((ca) => player.receiveCard(ca, open));
 		} else {
 			this.spaceHand.push(...cards);
 		}
 		return cards;
 	}
 
+	public revealHand(c: CharacterId) {
+		this.players.find((p) => p.getId() === c)?.showHand();
+	}
+
 	public checkPlayer(c: CharacterId) {
 		return this.players.find((p) => p.getId() === c);
 	}
 
-	public getPlayerHand(c: CharacterId) {
+	public getPlayerHand(c: CharacterId, revealedOnly: boolean) {
 		const player = this.players.find((p) => p.getId() === c);
-		if (player) {
-			return player.showHand();
-		} else {
+		if (!player)
 			return 'Nothing';
-		}
+		return revealedOnly
+			? CardArraysToString(player.getCards(true))
+			: CardArraysToString(player.getCards(true), player.getCards(false));
 	}
 
 	public getPlayerIds() {
@@ -154,7 +181,7 @@ export class CardGameGame {
 	}
 
 	public getSpaceHand() {
-		return this.spaceHand.length > 0 ? this.spaceHand.toString() : 'nothing';
+		return CardArraysToString(this.spaceHand);
 	}
 
 	public isDealer(p: CharacterId) {
